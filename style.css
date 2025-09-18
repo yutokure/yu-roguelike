@@ -50,6 +50,28 @@ body.in-game #game-container {
     border: 1px solid rgba(255,255,255,0.2);
 }
 
+.selection-card-footer {
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(102,126,234,0.3);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    color: #4c566a;
+}
+
+.selection-card-footer .game-brand {
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.selection-card-footer .game-version {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+}
+
 /* Tabs */
 .tabs {
     display: flex;

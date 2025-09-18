@@ -8,17 +8,48 @@
                               { w:16, h:16, m:40,  bonus:200  }
     );
 
+    const wrapper = document.createElement('div');
+    wrapper.style.maxWidth = '640px';
+    wrapper.style.margin = '0 auto';
+    wrapper.style.padding = '12px 16px 18px';
+    wrapper.style.boxSizing = 'border-box';
+    wrapper.style.background = '#000';
+    wrapper.style.borderRadius = '16px';
+    wrapper.style.boxShadow = '0 12px 32px rgba(0,0,0,0.55)';
+    wrapper.style.color = '#f1f5f9';
+
     const canvas = document.createElement('canvas');
     canvas.width = Math.min(640, root.clientWidth||640);
     canvas.height = Math.round(canvas.width * (cfg.h/cfg.w));
-    canvas.style.display='block'; canvas.style.margin='0 auto'; canvas.style.borderRadius='6px';
+    canvas.style.display='block'; canvas.style.margin='12px auto 0'; canvas.style.borderRadius='10px';
+    canvas.style.border='3px solid #f8fafc';
+
     const topBar = document.createElement('div');
     topBar.className = 'ms-topbar';
+    topBar.style.display = 'flex';
+    topBar.style.justifyContent = 'space-between';
+    topBar.style.alignItems = 'center';
+    topBar.style.gap = '12px';
+    topBar.style.padding = '4px 0';
+    topBar.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
+    topBar.style.fontSize = '13px';
+
     const info = document.createElement('span');
+    info.style.fontVariantNumeric = 'tabular-nums';
     const btnR = document.createElement('button'); btnR.textContent='再開/再起動 (R)';
+    btnR.style.padding = '6px 12px';
+    btnR.style.border = 'none';
+    btnR.style.borderRadius = '999px';
+    btnR.style.background = '#1e293b';
+    btnR.style.color = '#f8fafc';
+    btnR.style.fontWeight = '600';
+    btnR.style.cursor = 'pointer';
+    btnR.style.boxShadow = 'inset 0 0 0 1px rgba(148,163,184,0.4)';
+
     topBar.appendChild(info); topBar.appendChild(btnR);
-    root.appendChild(topBar);
-    root.appendChild(canvas);
+    wrapper.appendChild(topBar);
+    wrapper.appendChild(canvas);
+    root.appendChild(wrapper);
     const ctx = canvas.getContext('2d');
 
     let cellSize = Math.floor(Math.min(canvas.width/cfg.w, canvas.height/cfg.h));
@@ -102,7 +133,7 @@
 
     function start(){ if(running) return; running=true; canvas.addEventListener('click', onClick); canvas.addEventListener('contextmenu', onContext); document.addEventListener('keydown', onKey); btnR.onclick = restart; draw(); }
     function stop(){ if(!running) return; running=false; canvas.removeEventListener('click', onClick); canvas.removeEventListener('contextmenu', onContext); document.removeEventListener('keydown', onKey); }
-    function destroy(){ try{ stop(); canvas.remove(); topBar.remove(); }catch{} }
+    function destroy(){ try{ stop(); wrapper.remove(); }catch{} }
     function restart(){ stop(); initBoard(); start(); }
     function getScore(){ return ended && openedSafe>0 ? Math.floor(1000000/Math.max(1,(clearTime-startTime))) : openedSafe; }
 
@@ -111,4 +142,3 @@
 
   window.registerMiniGame({ id:'minesweeper', name:'マインスイーパー', description:'開放×0.1 / クリア: 25/200/1600', create });
 })();
-

@@ -1,6 +1,7 @@
 (function(){
   /** MiniExp MOD: 1010-style block puzzle (v0.1.0) */
   const BOARD_SIZE = 10;
+  const FLASH_DURATION = 240;
   const XP_TABLE = { 1:2, 2:10, 3:25, 4:50, 5:150 };
   const PALETTE = ['#38bdf8','#f97316','#34d399','#facc15','#f87171','#a78bfa','#fb7185','#94a3b8'];
   const DIFF_WEIGHTS = {
@@ -90,22 +91,32 @@
 
     const container = document.createElement('div');
     container.style.position = 'relative';
-    container.style.width = `${boardPx}px`;
+    container.style.width = `${boardPx + 24}px`;
     container.style.margin = '0 auto';
     container.style.userSelect = 'none';
+    container.style.padding = '12px 12px 18px';
+    container.style.background = '#000';
+    container.style.borderRadius = '16px';
+    container.style.boxShadow = '0 12px 32px rgba(0,0,0,0.55)';
+    container.style.color = '#f1f5f9';
+    container.style.boxSizing = 'border-box';
 
     const hud = document.createElement('div');
     hud.style.display = 'flex';
     hud.style.justifyContent = 'space-between';
     hud.style.alignItems = 'center';
+    hud.style.flexWrap = 'wrap';
+    hud.style.gap = '6px';
     hud.style.padding = '6px 4px 10px';
     hud.style.font = '600 12px system-ui, sans-serif';
     hud.style.color = '#e2e8f0';
 
     const lineInfo = document.createElement('div');
     const moveInfo = document.createElement('div');
+    const comboInfo = document.createElement('div');
     hud.appendChild(lineInfo);
     hud.appendChild(moveInfo);
+    hud.appendChild(comboInfo);
 
     const boardCanvas = document.createElement('canvas');
     boardCanvas.width = boardPx;
@@ -114,6 +125,7 @@
     boardCanvas.style.margin = '0 auto';
     boardCanvas.style.borderRadius = '10px';
     boardCanvas.style.background = '#0f172a';
+    boardCanvas.style.border = '3px solid #f8fafc';
     boardCanvas.style.touchAction = 'none';
     const boardCtx = boardCanvas.getContext('2d');
 
@@ -143,14 +155,31 @@
     let hover = null;
     let dragCanvas = null;
     let totalLines = 0;
+    let totalXp = 0;
+    let lastXpGain = 0;
     let moves = 0;
+    let currentCombo = 0;
+    let maxCombo = 0;
+    let largestClear = 0;
+    let lastClearCount = 0;
     let ended = false;
     let endText = '';
     let flashRows = [];
     let flashCols = [];
-    let flashTimer = 0;
+    let flashUntil = 0;
+    let animationFrameId = null;
+
+    function requestNextFrame(){
+      if (animationFrameId !== null) return;
+      if (typeof requestAnimationFrame !== 'function') return;
+      animationFrameId = requestAnimationFrame(() => {
+        animationFrameId = null;
+        drawBoard();
+      });
+    }
 
     function drawBoard(){
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
       boardCtx.clearRect(0, 0, boardPx, boardPx);
       boardCtx.fillStyle = '#0f172a';
       boardCtx.fillRect(0, 0, boardPx, boardPx);
@@ -195,18 +224,27 @@
         boardCtx.restore();
       }
 
-      if (flashTimer > 0){
-        const alpha = Math.max(0, Math.min(1, flashTimer / 200));
-        boardCtx.save();
-        boardCtx.globalAlpha = alpha;
-        boardCtx.fillStyle = 'rgba(190,242,100,0.65)';
-        for (const ry of flashRows){
-          boardCtx.fillRect(0, ry * cellPx, boardPx, cellPx);
+      const hasFlash = flashRows.length || flashCols.length;
+      if (hasFlash){
+        const remaining = flashUntil - now;
+        if (remaining > 0){
+          const alpha = Math.max(0, Math.min(1, remaining / FLASH_DURATION));
+          boardCtx.save();
+          boardCtx.globalAlpha = alpha;
+          boardCtx.fillStyle = 'rgba(190,242,100,0.65)';
+          for (const ry of flashRows){
+            boardCtx.fillRect(0, ry * cellPx, boardPx, cellPx);
+          }
+          for (const cx of flashCols){
+            boardCtx.fillRect(cx * cellPx, 0, cellPx, boardPx);
+          }
+          boardCtx.restore();
+          requestNextFrame();
+        } else {
+          flashRows = [];
+          flashCols = [];
+          flashUntil = 0;
         }
-        for (const cx of flashCols){
-          boardCtx.fillRect(cx * cellPx, 0, cellPx, boardPx);
-        }
-        boardCtx.restore();
       }
 
       if (ended){
@@ -244,7 +282,15 @@
       } else {
         xp = xpForLines(major);
       }
-      if (xp > 0) awardXp(xp, { type: 'lineclear', rows, cols, difficulty });
+      if (xp > 0){
+        totalXp += xp;
+        lastXpGain = xp;
+        lastClearCount = rows + cols ? rows + cols : major;
+        awardXp(xp, { type: 'lineclear', rows, cols, difficulty });
+      } else {
+        lastXpGain = 0;
+        lastClearCount = 0;
+      }
       const level = rows + cols ? rows + cols : major;
       xpPopup(xp, level);
     }
@@ -252,11 +298,10 @@
     function setFlash(rows, cols){
       flashRows = rows.slice();
       flashCols = cols.slice();
-      flashTimer = 220;
-      setTimeout(() => {
-        flashTimer = 0;
-        drawBoard();
-      }, 180);
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      flashUntil = now + FLASH_DURATION;
+      drawBoard();
+      requestNextFrame();
     }
 
     function fits(x, y, shape){
@@ -290,7 +335,7 @@
         }
         if (full) filledCols.push(x);
       }
-      if (!filledRows.length && !filledCols.length) return false;
+      if (!filledRows.length && !filledCols.length) return { cleared: 0, rows: 0, cols: 0 };
       for (const y of filledRows){
         board[y] = Array(BOARD_SIZE).fill(null);
       }
@@ -301,15 +346,19 @@
           }
         }
       }
-      totalLines += filledRows.length + filledCols.length;
+      const cleared = filledRows.length + filledCols.length;
+      totalLines += cleared;
+      largestClear = Math.max(largestClear, cleared);
       xpAward(filledRows.length, filledCols.length);
       setFlash(filledRows, filledCols);
-      return true;
+      return { cleared, rows: filledRows.length, cols: filledCols.length };
     }
 
     function updateHud(){
-      lineInfo.textContent = `ライン: ${totalLines}`;
+      lineInfo.textContent = `ライン: ${totalLines} / 最大同時: ${largestClear}`;
       moveInfo.textContent = `手番: ${moves} / 残ブロック: ${currentPieces.length}`;
+      const lastDetail = lastXpGain > 0 ? ` / 最終:+${lastXpGain}XP(${lastClearCount}ライン)` : '';
+      comboInfo.textContent = `コンボ: ${currentCombo} (最大 ${maxCombo}) / XP: ${totalXp}${lastDetail}`;
     }
 
     function hasPlacement(piece){
@@ -332,10 +381,33 @@
       drawBoard();
     }
 
-    function createPiece(){
-      const shape = pickShape(difficultyKey);
+    function createPiece(forcedShape){
+      const shape = forcedShape || pickShape(difficultyKey);
       const color = PALETTE[(Math.random() * PALETTE.length) | 0];
       return { id: `${shape.id}-${Math.random().toString(16).slice(2,6)}`, shape, color };
+    }
+
+    function ensureFallbackPieces(){
+      if (anyMoveAvailable()) return true;
+      const orderedShapes = SHAPES.slice().sort((a, b) => {
+        if (a.size !== b.size) return a.size - b.size;
+        if (a.complexity !== b.complexity) return a.complexity - b.complexity;
+        return a.irregular === b.irregular ? 0 : (a.irregular ? 1 : -1);
+      });
+      for (const shape of orderedShapes){
+        for (let i = 0; i < currentPieces.length; i++){
+          const keep = currentPieces[i];
+          currentPieces[i] = createPiece(shape);
+          if (anyMoveAvailable()) return true;
+          currentPieces[i] = keep;
+        }
+      }
+      const singleShape = orderedShapes[0];
+      if (singleShape){
+        currentPieces = [createPiece(singleShape), createPiece(singleShape), createPiece(singleShape)];
+        if (anyMoveAvailable()) return true;
+      }
+      return false;
     }
 
     function generateSet(initial){
@@ -344,11 +416,12 @@
         currentPieces = [createPiece(), createPiece(), createPiece()];
         if (anyMoveAvailable()) break;
       }
-      if (!anyMoveAvailable()){
+      if (!ensureFallbackPieces()){
         if (initial){
           board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null));
         }
         endGame('置けるピースが生成できませんでした');
+        return;
       }
       renderShelf();
       updateHud();
@@ -375,8 +448,9 @@
         canvas.height = height;
         canvas.style.background = '#0b1626';
         canvas.style.borderRadius = '8px';
-        canvas.style.flex = '1';
-        canvas.style.maxWidth = `${Math.max(width, cellPx * 3)}px`;
+        canvas.style.flex = 'none';
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
         canvas.style.touchAction = 'none';
         canvas.style.cursor = 'grab';
         canvas.style.boxShadow = 'inset 0 0 0 1px rgba(148,163,184,0.18)';
@@ -487,7 +561,15 @@
         placePiece(dropHover.x, dropHover.y, piece);
         moves += 1;
         removePieceFromShelf(piece);
-        clearLines();
+        const clearResult = clearLines();
+        if (clearResult.cleared > 0){
+          currentCombo += 1;
+          maxCombo = Math.max(maxCombo, currentCombo);
+        } else {
+          currentCombo = 0;
+          lastXpGain = 0;
+          lastClearCount = 0;
+        }
         if (!currentPieces.length && !ended){
           generateSet(false);
         }
@@ -502,12 +584,22 @@
     function reset(){
       board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null));
       totalLines = 0;
+      totalXp = 0;
+      lastXpGain = 0;
       moves = 0;
+      currentCombo = 0;
+      maxCombo = 0;
+      largestClear = 0;
+      lastClearCount = 0;
       ended = false;
       endText = '';
       flashRows = [];
       flashCols = [];
-      flashTimer = 0;
+      flashUntil = 0;
+      if (animationFrameId !== null && typeof cancelAnimationFrame === 'function'){
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
       currentPieces = [];
       renderShelf();
       generateSet(true);
@@ -538,6 +630,10 @@
       window.removeEventListener('pointermove', onDragMove);
       window.removeEventListener('pointerup', onDragEnd);
       window.removeEventListener('pointercancel', onDragEnd);
+      if (animationFrameId !== null && typeof cancelAnimationFrame === 'function'){
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
       try { if (dragCanvas && dragCanvas.parentNode) dragCanvas.parentNode.removeChild(dragCanvas); } catch {}
       dragCanvas = null;
       dragging = null;

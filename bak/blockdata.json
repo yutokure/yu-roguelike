@@ -1,0 +1,3085 @@
+{
+  "version": 1,
+  "blocks1": [
+    {
+      "key": "b1001",
+      "name": "蒼穹の",
+      "level": -5,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1002",
+      "name": "翠緑の",
+      "level": -5,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1003",
+      "name": "深紅の",
+      "level": -4,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "single-room",
+      "bossFloors": []
+    },
+    {
+      "key": "b1004",
+      "name": "朽ちた",
+      "level": -4,
+      "size": -1,
+      "depth": -1,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1005",
+      "name": "忘却の",
+      "level": -3,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1006",
+      "name": "静寂の",
+      "level": -3,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1007",
+      "name": "咆哮する",
+      "level": -3,
+      "size": 1,
+      "depth": 1,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1008",
+      "name": "燐光の",
+      "level": -2,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1009",
+      "name": "幽影の",
+      "level": -2,
+      "size": 0,
+      "depth": 1,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1010",
+      "name": "凍てつく",
+      "level": -1,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1011",
+      "name": "星霜の",
+      "level": -1,
+      "size": 1,
+      "depth": 1,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b1012",
+      "name": "月下の",
+      "level": -1,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1013",
+      "name": "灼熱の",
+      "level": 0,
+      "size": 1,
+      "depth": 0,
+      "chest": "less",
+      "type": "snake",
+      "bossFloors": []
+    },
+    {
+      "key": "b1014",
+      "name": "嵐の",
+      "level": 0,
+      "size": 1,
+      "depth": 0,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1015",
+      "name": "奈落の",
+      "level": 1,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": [
+        5,
+        10,
+        15
+      ]
+    },
+    {
+      "key": "b1016",
+      "name": "黄金の",
+      "level": 1,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1017",
+      "name": "紫紺の",
+      "level": 1,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1018",
+      "name": "木霊する",
+      "level": 2,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1019",
+      "name": "双影の",
+      "level": 2,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1020",
+      "name": "聖別の",
+      "level": 3,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b1021",
+      "name": "呪詛の",
+      "level": 3,
+      "size": 0,
+      "depth": 1,
+      "chest": "less",
+      "type": null,
+      "bossFloors": [
+        5,
+        10
+      ]
+    },
+    {
+      "key": "b1022",
+      "name": "薄暮の",
+      "level": 3,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b1023",
+      "name": "氷雪の",
+      "level": 4,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1024",
+      "name": "こもれびの径",
+      "level": 4,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "field",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b1025",
+      "name": "翠雨Meadow",
+      "level": 5,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1026",
+      "name": "朧の里",
+      "level": 5,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1027",
+      "name": "ひなたの丘",
+      "level": 6,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1028",
+      "name": "ブリーズ渓谷",
+      "level": 6,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1029",
+      "name": "朝霧ハイランド",
+      "level": 6,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1030",
+      "name": "風花の岬",
+      "level": 7,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1031",
+      "name": "みずいろ野",
+      "level": 7,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1032",
+      "name": "Mossの苔庭",
+      "level": 8,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1033",
+      "name": "そよ風パセオ",
+      "level": 8,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1034",
+      "name": "青葉テラス",
+      "level": 8,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b1035",
+      "name": "やまなみロード",
+      "level": 9,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1036",
+      "name": "フォレスト小径",
+      "level": 9,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1037",
+      "name": "しずくの森",
+      "level": 10,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1038",
+      "name": "霞む谷戸",
+      "level": 10,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1039",
+      "name": "Verdant原",
+      "level": 10,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1040",
+      "name": "さざなみ平原",
+      "level": 11,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1041",
+      "name": "鎌倉Green",
+      "level": 11,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1042",
+      "name": "奈良の野辺",
+      "level": 12,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1043",
+      "name": "上野の風景",
+      "level": 12,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b1044",
+      "name": "ネオン薄光",
+      "level": 12,
+      "size": -1,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1045",
+      "name": "朽都ルインズ",
+      "level": 13,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1046",
+      "name": "錆色アベニュー",
+      "level": 13,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1047",
+      "name": "すきまの横丁",
+      "level": 14,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1048",
+      "name": "グレイ灰街",
+      "level": 14,
+      "size": -1,
+      "depth": 0,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1049",
+      "name": "雨宿りアーケード",
+      "level": 14,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1050",
+      "name": "廃線メモリー",
+      "level": 15,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1051",
+      "name": "ナイトTokyo",
+      "level": 15,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1052",
+      "name": "新宿Backstreet",
+      "level": 16,
+      "size": -1,
+      "depth": 0,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1053",
+      "name": "渋谷の残響",
+      "level": 16,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1054",
+      "name": "ほこりのビル群",
+      "level": 16,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1055",
+      "name": "Rustドック",
+      "level": 17,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1056",
+      "name": "煙る湾岸",
+      "level": 17,
+      "size": -1,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1057",
+      "name": "チルな雑居",
+      "level": 18,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1058",
+      "name": "失われた広場",
+      "level": 18,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1059",
+      "name": "さみだれ交差点",
+      "level": 18,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1060",
+      "name": "Ruinの屋上",
+      "level": 19,
+      "size": -1,
+      "depth": 0,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1061",
+      "name": "下北沢Alley",
+      "level": 19,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1062",
+      "name": "沈む工場港",
+      "level": 20,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1063",
+      "name": "港区の影",
+      "level": 20,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b1064",
+      "name": "星明りプラットフォーム",
+      "level": 20,
+      "size": 1,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b1065",
+      "name": "天穹ドーム",
+      "level": 21,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1066",
+      "name": "ほしなみ回廊",
+      "level": 21,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1067",
+      "name": "セレスティア京",
+      "level": 22,
+      "size": 1,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1068",
+      "name": "夜風オービタ",
+      "level": 22,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1069",
+      "name": "Eclipseの庭",
+      "level": 22,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b1070",
+      "name": "銀河バルコニー",
+      "level": 23,
+      "size": 1,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1071",
+      "name": "しじまの宙",
+      "level": 23,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1072",
+      "name": "Nebula小町",
+      "level": 24,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1073",
+      "name": "蒼星テラス",
+      "level": 24,
+      "size": 1,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1074",
+      "name": "オーロラ橋",
+      "level": 24,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b1075",
+      "name": "つきかげ広場",
+      "level": 25,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1076",
+      "name": "Stardust路",
+      "level": 25,
+      "size": 1,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1077",
+      "name": "大気ステップ",
+      "level": 26,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1078",
+      "name": "ほのぼの星屑",
+      "level": 26,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1079",
+      "name": "Gravity坂",
+      "level": 27,
+      "size": 1,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b1080",
+      "name": "宙港うらら",
+      "level": 27,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1081",
+      "name": "ひかりアトリウム",
+      "level": 27,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1082",
+      "name": "ミルキー峡",
+      "level": 28,
+      "size": 1,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b1083",
+      "name": "時雨Constellation",
+      "level": 28,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b1084",
+      "name": "水鏡ラグーン",
+      "level": 29,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1085",
+      "name": "うすもや水路",
+      "level": 29,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1086",
+      "name": "霜夜バレー",
+      "level": 29,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1087",
+      "name": "アイスの洞",
+      "level": 30,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1088",
+      "name": "さざ波ガーデン",
+      "level": 30,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1089",
+      "name": "氷雨テラス",
+      "level": 31,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1090",
+      "name": "ミスト渓谷",
+      "level": 31,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1091",
+      "name": "雪白プロムナード",
+      "level": 31,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1092",
+      "name": "こおりの巣",
+      "level": 32,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1093",
+      "name": "フロスト街",
+      "level": 32,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1094",
+      "name": "凍土ひだまり",
+      "level": 33,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1095",
+      "name": "しぶきの汀",
+      "level": 33,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1096",
+      "name": "Glacial横町",
+      "level": 33,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1097",
+      "name": "露光の池",
+      "level": 34,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1098",
+      "name": "みぞれ街道",
+      "level": 34,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1099",
+      "name": "霧笛の埠頭",
+      "level": 35,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b1100",
+      "name": "ひょうの路地",
+      "level": 35,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    }
+  ],
+  "blocks2": [
+    {
+      "key": "b2001",
+      "name": "古の",
+      "level": -5,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b2002",
+      "name": "錆びた",
+      "level": -5,
+      "size": -1,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2003",
+      "name": "水没した",
+      "level": -4,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2004",
+      "name": "機械仕掛けの",
+      "level": -4,
+      "size": 1,
+      "depth": 0,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2005",
+      "name": "眠れる",
+      "level": -3,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b2006",
+      "name": "断絶した",
+      "level": -3,
+      "size": -1,
+      "depth": 1,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2007",
+      "name": "無窮の",
+      "level": -3,
+      "size": 1,
+      "depth": 2,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2008",
+      "name": "螺旋の",
+      "level": -2,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2009",
+      "name": "かすかな",
+      "level": -2,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b2010",
+      "name": "緻密な",
+      "level": -1,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2011",
+      "name": "有棘の",
+      "level": -1,
+      "size": 0,
+      "depth": 1,
+      "chest": "less",
+      "type": "snake",
+      "bossFloors": []
+    },
+    {
+      "key": "b2012",
+      "name": "ひび割れた",
+      "level": -1,
+      "size": -1,
+      "depth": 0,
+      "chest": "less",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b2013",
+      "name": "忘れられた",
+      "level": 0,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b2014",
+      "name": "密やかな",
+      "level": 0,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b2015",
+      "name": "歪なる",
+      "level": 1,
+      "size": 0,
+      "depth": 1,
+      "chest": "less",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b2016",
+      "name": "灼けた",
+      "level": 1,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "snake",
+      "bossFloors": []
+    },
+    {
+      "key": "b2017",
+      "name": "谺する",
+      "level": 1,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b2018",
+      "name": "縛られた",
+      "level": 2,
+      "size": -1,
+      "depth": 1,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2019",
+      "name": "燦めく",
+      "level": 2,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2020",
+      "name": "灰の",
+      "level": 3,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b2021",
+      "name": "虚ろなる",
+      "level": 3,
+      "size": 0,
+      "depth": 1,
+      "chest": "less",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2022",
+      "name": "人知れぬ",
+      "level": 3,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": null,
+      "bossFloors": []
+    },
+    {
+      "key": "b2023",
+      "name": "原初の",
+      "level": 4,
+      "size": 1,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2024",
+      "name": "慟哭の祠",
+      "level": 4,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b2025",
+      "name": "さびしさの路",
+      "level": 5,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2026",
+      "name": "怒りの砦",
+      "level": 5,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2027",
+      "name": "憂鬱カタコンベ",
+      "level": 6,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2028",
+      "name": "悲嘆の地下室",
+      "level": 6,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2029",
+      "name": "ときめきの小径",
+      "level": 6,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2030",
+      "name": "狂喜の広間",
+      "level": 7,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2031",
+      "name": "哀歌の回廊",
+      "level": 7,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2032",
+      "name": "Lonely塔",
+      "level": 8,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2033",
+      "name": "Melancholy坂",
+      "level": 8,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2034",
+      "name": "儚いネクロポリス",
+      "level": 8,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b2035",
+      "name": "呪縛の蔵",
+      "level": 9,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2036",
+      "name": "やすらぎの縁",
+      "level": 9,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2037",
+      "name": "ざわめく霊園",
+      "level": 10,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2038",
+      "name": "祈りのクレプス",
+      "level": 10,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2039",
+      "name": "しじまの墓域",
+      "level": 10,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2040",
+      "name": "Furyの洞",
+      "level": 11,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2041",
+      "name": "Calmの庭",
+      "level": 11,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2042",
+      "name": "怨念アトリウム",
+      "level": 12,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2043",
+      "name": "希望のランタン街",
+      "level": 12,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2044",
+      "name": "鉄屑ヤード",
+      "level": 12,
+      "size": 1,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2045",
+      "name": "スプロケット通り",
+      "level": 13,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2046",
+      "name": "きしむ工廠",
+      "level": 13,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2047",
+      "name": "Rustベイ",
+      "level": 14,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2048",
+      "name": "歯車アベニュー",
+      "level": 14,
+      "size": 1,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2049",
+      "name": "油膜の床",
+      "level": 14,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2050",
+      "name": "錆鉄プラットホーム",
+      "level": 15,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2051",
+      "name": "ギアの祠",
+      "level": 15,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2052",
+      "name": "ボルトの迷路",
+      "level": 16,
+      "size": 1,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2053",
+      "name": "蒸気の小路",
+      "level": 16,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2054",
+      "name": "クランク横丁",
+      "level": 16,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2055",
+      "name": "溶接アーケード",
+      "level": 17,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2056",
+      "name": "ワイヤー橋",
+      "level": 17,
+      "size": 1,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2057",
+      "name": "こてさび通路",
+      "level": 18,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2058",
+      "name": "スモッグファクトリ",
+      "level": 18,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2059",
+      "name": "マシナリ京都",
+      "level": 18,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2060",
+      "name": "Sparkの坑",
+      "level": 19,
+      "size": 1,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2061",
+      "name": "ピストン広場",
+      "level": 19,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2062",
+      "name": "鋼の肺",
+      "level": 20,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2063",
+      "name": "ガス灯の棟",
+      "level": 20,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b2064",
+      "name": "風鳴りデューン",
+      "level": 20,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2065",
+      "name": "ささやきの砂原",
+      "level": 21,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2066",
+      "name": "音叉の谷",
+      "level": 21,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2067",
+      "name": "シロッコ坂",
+      "level": 22,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2068",
+      "name": "Mirageの浜",
+      "level": 22,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2069",
+      "name": "すなじの街路",
+      "level": 22,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2070",
+      "name": "旋風パサージュ",
+      "level": 23,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2071",
+      "name": "わずかな足跡群",
+      "level": 23,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2072",
+      "name": "笛吹く峡",
+      "level": 24,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2073",
+      "name": "うたかたのオアシス",
+      "level": 24,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2074",
+      "name": "ハマダーン路",
+      "level": 24,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2075",
+      "name": "Dustの双丘",
+      "level": 25,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2076",
+      "name": "からっ風の岡",
+      "level": 25,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2077",
+      "name": "こだまの盆地",
+      "level": 26,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2078",
+      "name": "ドラムサンド",
+      "level": 26,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2079",
+      "name": "カスバ小径",
+      "level": 27,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2080",
+      "name": "奈良Sirocco",
+      "level": 27,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2081",
+      "name": "風紋ギャラリー",
+      "level": 27,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2082",
+      "name": "さらさら峡谷",
+      "level": 28,
+      "size": 0,
+      "depth": 0,
+      "chest": "less",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b2083",
+      "name": "Whisper砂丘",
+      "level": 28,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b2084",
+      "name": "蔦絡む巣",
+      "level": 29,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2085",
+      "name": "けものみち",
+      "level": 29,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2086",
+      "name": "朽ち葉ガーデン",
+      "level": 29,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2087",
+      "name": "毒霧の沼",
+      "level": 30,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2088",
+      "name": "クローの洞",
+      "level": 30,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2089",
+      "name": "みどりの巣穴",
+      "level": 31,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": [
+        5
+      ]
+    },
+    {
+      "key": "b2090",
+      "name": "猛獣の檻庭",
+      "level": 31,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2091",
+      "name": "かげる樹海",
+      "level": 31,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2092",
+      "name": "Venom谷",
+      "level": 32,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2093",
+      "name": "さびし森",
+      "level": 32,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2094",
+      "name": "ひそやかな巣窟",
+      "level": 33,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2095",
+      "name": "スパイク窪地",
+      "level": 33,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2096",
+      "name": "暗獣の巣",
+      "level": 33,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2097",
+      "name": "霞むバイオーム",
+      "level": 34,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2098",
+      "name": "ポイズンの泉",
+      "level": 34,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b2099",
+      "name": "熊笹の径",
+      "level": 35,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": [
+        5
+      ]
+    },
+    {
+      "key": "b2100",
+      "name": "狼煙の丘",
+      "level": 35,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    }
+  ],
+  "blocks3": [
+    {
+      "key": "b3001",
+      "name": "庭園",
+      "level": -5,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3002",
+      "name": "聖堂",
+      "level": -5,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3003",
+      "name": "迷宮",
+      "level": -4,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": [
+        5,
+        10,
+        15
+      ]
+    },
+    {
+      "key": "b3004",
+      "name": "回廊",
+      "level": -4,
+      "size": 1,
+      "depth": 1,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3005",
+      "name": "遺跡",
+      "level": -3,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3006",
+      "name": "城砦",
+      "level": -3,
+      "size": 1,
+      "depth": 1,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3007",
+      "name": "廃都",
+      "level": -3,
+      "size": 1,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3008",
+      "name": "研究所",
+      "level": -2,
+      "size": 0,
+      "depth": 1,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3009",
+      "name": "砂海",
+      "level": -2,
+      "size": 1,
+      "depth": 0,
+      "chest": "normal",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b3010",
+      "name": "洞窟",
+      "level": -1,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3011",
+      "name": "樹海",
+      "level": -1,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "field",
+      "bossFloors": []
+    },
+    {
+      "key": "b3012",
+      "name": "地下墓地",
+      "level": -1,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": [
+        5,
+        10
+      ]
+    },
+    {
+      "key": "b3013",
+      "name": "祭壇",
+      "level": 0,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3014",
+      "name": "神殿",
+      "level": 0,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3015",
+      "name": "監獄",
+      "level": 1,
+      "size": 0,
+      "depth": 1,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3016",
+      "name": "機械塔",
+      "level": 1,
+      "size": 1,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3017",
+      "name": "要塞",
+      "level": 1,
+      "size": 1,
+      "depth": 1,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3018",
+      "name": "氷窟",
+      "level": 2,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3019",
+      "name": "火山窟",
+      "level": 2,
+      "size": 0,
+      "depth": 1,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3020",
+      "name": "闘技場",
+      "level": 3,
+      "size": 0,
+      "depth": 0,
+      "chest": "more",
+      "type": "single-room",
+      "bossFloors": [
+        5,
+        10,
+        15
+      ]
+    },
+    {
+      "key": "b3021",
+      "name": "境界域",
+      "level": 3,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3022",
+      "name": "浮遊島",
+      "level": 3,
+      "size": 1,
+      "depth": 0,
+      "chest": "more",
+      "type": "circle",
+      "bossFloors": []
+    },
+    {
+      "key": "b3023",
+      "name": "聖域",
+      "level": 4,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle-rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3024",
+      "name": "裂け目",
+      "level": 4,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "mixed",
+      "bossFloors": [
+        15
+      ]
+    },
+    {
+      "key": "b3025",
+      "name": "王都アーケイディア",
+      "level": 5,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3026",
+      "name": "いにしえの柱廊",
+      "level": 5,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3027",
+      "name": "レリクス石庭",
+      "level": 6,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3028",
+      "name": "祭壇の間",
+      "level": 6,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3029",
+      "name": "聖塔の回廊",
+      "level": 6,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3030",
+      "name": "奈良神苑",
+      "level": 7,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "circle-rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3031",
+      "name": "祠宮の庭",
+      "level": 7,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3032",
+      "name": "Temple小径",
+      "level": 8,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3033",
+      "name": "礎のドーム",
+      "level": 8,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3034",
+      "name": "祈祷のテラス",
+      "level": 8,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3035",
+      "name": "古代のオベリスク",
+      "level": 9,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3036",
+      "name": "きよき大路",
+      "level": 9,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3037",
+      "name": "アーカイブの庫",
+      "level": 10,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3038",
+      "name": "朱雀門プラザ",
+      "level": 10,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3039",
+      "name": "Ruinsの中庭",
+      "level": 10,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3040",
+      "name": "伽藍の回向",
+      "level": 11,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "circle-rooms",
+      "bossFloors": [
+        10
+      ]
+    },
+    {
+      "key": "b3041",
+      "name": "石畳プロムナード",
+      "level": 11,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3042",
+      "name": "正殿の階",
+      "level": 12,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3043",
+      "name": "古城の翼廊",
+      "level": 12,
+      "size": 0,
+      "depth": 1,
+      "chest": "more",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3044",
+      "name": "聖都Galleria",
+      "level": 12,
+      "size": 0,
+      "depth": 1,
+      "chest": "normal",
+      "type": "circle-rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3045",
+      "name": "雪灯の野",
+      "level": 13,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3046",
+      "name": "白氷の窪地",
+      "level": 13,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3047",
+      "name": "こごえる街路",
+      "level": 14,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3048",
+      "name": "オーロラの丘",
+      "level": 14,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3049",
+      "name": "霜星の峡",
+      "level": 14,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3050",
+      "name": "Frost京",
+      "level": 15,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3051",
+      "name": "氷霞の路",
+      "level": 15,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3052",
+      "name": "ミルク色の平原",
+      "level": 16,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3053",
+      "name": "吹雪の回廊",
+      "level": 16,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3054",
+      "name": "しずかな氷穴",
+      "level": 16,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3055",
+      "name": "北極光テラス",
+      "level": 17,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3056",
+      "name": "アイシクルの庭",
+      "level": 17,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3057",
+      "name": "霧氷ハーバー",
+      "level": 18,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3058",
+      "name": "セイバン雪脈",
+      "level": 18,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3059",
+      "name": "Gelidの湾",
+      "level": 18,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3060",
+      "name": "ツンドラ横町",
+      "level": 19,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3061",
+      "name": "寒月の辻",
+      "level": 19,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3062",
+      "name": "ふぶきの峰",
+      "level": 20,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3063",
+      "name": "しらゆきの里",
+      "level": 20,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "wide-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3064",
+      "name": "Aurora橋上",
+      "level": 20,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3065",
+      "name": "まぼろしの街",
+      "level": 21,
+      "size": 1,
+      "depth": 2,
+      "chest": "more",
+      "type": "mixed",
+      "bossFloors": [
+        5,
+        10,
+        15
+      ]
+    },
+    {
+      "key": "b3066",
+      "name": "夢見のプロムナード",
+      "level": 21,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3067",
+      "name": "フェイブル回廊",
+      "level": 22,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3068",
+      "name": "フィクションの庭",
+      "level": 22,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3069",
+      "name": "ねむり雲",
+      "level": 22,
+      "size": 1,
+      "depth": 2,
+      "chest": "more",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3070",
+      "name": "幻想パサージュ",
+      "level": 23,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3071",
+      "name": "Illusion丘",
+      "level": 23,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3072",
+      "name": "白昼夢テラス",
+      "level": 24,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3073",
+      "name": "うつつの割れ目",
+      "level": 24,
+      "size": 1,
+      "depth": 2,
+      "chest": "more",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3074",
+      "name": "虚実の塔",
+      "level": 24,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3075",
+      "name": "Dreamの階",
+      "level": 25,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "mixed",
+      "bossFloors": [
+        5,
+        10,
+        15
+      ]
+    },
+    {
+      "key": "b3076",
+      "name": "ふわりの小町",
+      "level": 25,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3077",
+      "name": "影絵の館",
+      "level": 26,
+      "size": 1,
+      "depth": 2,
+      "chest": "more",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3078",
+      "name": "さざめく世界端",
+      "level": 26,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3079",
+      "name": "きらめく泡沫",
+      "level": 27,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3080",
+      "name": "うつろいの路",
+      "level": 27,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3081",
+      "name": "異邦アーケード",
+      "level": 27,
+      "size": 1,
+      "depth": 2,
+      "chest": "more",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3082",
+      "name": "イマジナリ京都",
+      "level": 28,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3083",
+      "name": "Mirageの街角",
+      "level": 28,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "mixed",
+      "bossFloors": []
+    },
+    {
+      "key": "b3084",
+      "name": "まどろみの凹室",
+      "level": 29,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "narrow-maze",
+      "bossFloors": []
+    },
+    {
+      "key": "b3085",
+      "name": "地下の鼓動",
+      "level": 29,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3086",
+      "name": "きのこカタコンベ",
+      "level": 29,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3087",
+      "name": "胞子の回廊",
+      "level": 30,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3088",
+      "name": "マイセリア庭",
+      "level": 30,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3089",
+      "name": "脈打つ洞",
+      "level": 31,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3090",
+      "name": "ひそみの坑",
+      "level": 31,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3091",
+      "name": "Rootの迷路",
+      "level": 31,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3092",
+      "name": "暗渠の川辺",
+      "level": 32,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3093",
+      "name": "朽ち縄の井戸",
+      "level": 32,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3094",
+      "name": "菌糸の広間",
+      "level": 33,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3095",
+      "name": "ツタの横穴",
+      "level": 33,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3096",
+      "name": "じわりの堆",
+      "level": 33,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3097",
+      "name": "コロニーの隙",
+      "level": 34,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3098",
+      "name": "Sporeの街",
+      "level": 34,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    },
+    {
+      "key": "b3099",
+      "name": "地下街アンダー",
+      "level": 35,
+      "size": 0,
+      "depth": 2,
+      "chest": "less",
+      "type": "rooms",
+      "bossFloors": []
+    },
+    {
+      "key": "b3100",
+      "name": "ざらつく床",
+      "level": 35,
+      "size": 0,
+      "depth": 2,
+      "chest": "normal",
+      "type": "cave",
+      "bossFloors": []
+    }
+  ]
+}

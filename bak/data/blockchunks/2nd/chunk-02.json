@@ -1,0 +1,202 @@
+[
+  {
+    "key": "b2044",
+    "name": "鉄屑ヤード",
+    "level": 0,
+    "size": 1,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2045",
+    "name": "スプロケット通り",
+    "level": 1,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2046",
+    "name": "きしむ工廠",
+    "level": 2,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2047",
+    "name": "Rustベイ",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2048",
+    "name": "歯車アベニュー",
+    "level": 4,
+    "size": 1,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2049",
+    "name": "油膜の床",
+    "level": 0,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2050",
+    "name": "錆鉄プラットホーム",
+    "level": 1,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2051",
+    "name": "ギアの祠",
+    "level": 2,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2052",
+    "name": "ボルトの迷路",
+    "level": 3,
+    "size": 1,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2053",
+    "name": "蒸気の小路",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2054",
+    "name": "クランク横丁",
+    "level": 0,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2055",
+    "name": "溶接アーケード",
+    "level": 1,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2056",
+    "name": "ワイヤー橋",
+    "level": 2,
+    "size": 1,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2057",
+    "name": "こてさび通路",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2058",
+    "name": "スモッグファクトリ",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2059",
+    "name": "マシナリ京都",
+    "level": 0,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2060",
+    "name": "Sparkの坑",
+    "level": 1,
+    "size": 1,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2061",
+    "name": "ピストン広場",
+    "level": 2,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2062",
+    "name": "鋼の肺",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2063",
+    "name": "ガス灯の棟",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  }
+]

@@ -1,0 +1,176 @@
+[
+  {
+    "key": "b2084",
+    "name": "蔦絡む巣",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2085",
+    "name": "けものみち",
+    "level": 5,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2086",
+    "name": "朽ち葉ガーデン",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2087",
+    "name": "毒霧の沼",
+    "level": 7,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2088",
+    "name": "クローの洞",
+    "level": 8,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2089",
+    "name": "みどりの巣穴",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": [
+      5
+    ]
+  },
+  {
+    "key": "b2090",
+    "name": "猛獣の檻庭",
+    "level": 5,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2091",
+    "name": "かげる樹海",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2092",
+    "name": "Venom谷",
+    "level": 7,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2093",
+    "name": "さびし森",
+    "level": 8,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2094",
+    "name": "ひそやかな巣窟",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2095",
+    "name": "スパイク窪地",
+    "level": 5,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2096",
+    "name": "暗獣の巣",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2097",
+    "name": "霞むバイオーム",
+    "level": 7,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2098",
+    "name": "ポイズンの泉",
+    "level": 8,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b2099",
+    "name": "熊笹の径",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": [
+      5
+    ]
+  },
+  {
+    "key": "b2100",
+    "name": "狼煙の丘",
+    "level": 5,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  }
+]

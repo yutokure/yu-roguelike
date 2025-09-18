@@ -1,0 +1,210 @@
+[
+  {
+    "key": "b3065",
+    "name": "まぼろしの街",
+    "level": 7,
+    "size": 1,
+    "depth": 2,
+    "chest": "more",
+    "type": "mixed",
+    "bossFloors": [
+      5,
+      10,
+      15
+    ]
+  },
+  {
+    "key": "b3066",
+    "name": "夢見のプロムナード",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3067",
+    "name": "フェイブル回廊",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "mixed",
+    "bossFloors": []
+  },
+  {
+    "key": "b3068",
+    "name": "フィクションの庭",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3069",
+    "name": "ねむり雲",
+    "level": 11,
+    "size": 1,
+    "depth": 2,
+    "chest": "more",
+    "type": "mixed",
+    "bossFloors": []
+  },
+  {
+    "key": "b3070",
+    "name": "幻想パサージュ",
+    "level": 7,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3071",
+    "name": "Illusion丘",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "mixed",
+    "bossFloors": []
+  },
+  {
+    "key": "b3072",
+    "name": "白昼夢テラス",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3073",
+    "name": "うつつの割れ目",
+    "level": 10,
+    "size": 1,
+    "depth": 2,
+    "chest": "more",
+    "type": "mixed",
+    "bossFloors": []
+  },
+  {
+    "key": "b3074",
+    "name": "虚実の塔",
+    "level": 11,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3075",
+    "name": "Dreamの階",
+    "level": 7,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "mixed",
+    "bossFloors": [
+      5,
+      10,
+      15
+    ]
+  },
+  {
+    "key": "b3076",
+    "name": "ふわりの小町",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3077",
+    "name": "影絵の館",
+    "level": 9,
+    "size": 1,
+    "depth": 2,
+    "chest": "more",
+    "type": "mixed",
+    "bossFloors": []
+  },
+  {
+    "key": "b3078",
+    "name": "さざめく世界端",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3079",
+    "name": "きらめく泡沫",
+    "level": 11,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "mixed",
+    "bossFloors": []
+  },
+  {
+    "key": "b3080",
+    "name": "うつろいの路",
+    "level": 7,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3081",
+    "name": "異邦アーケード",
+    "level": 8,
+    "size": 1,
+    "depth": 2,
+    "chest": "more",
+    "type": "mixed",
+    "bossFloors": []
+  },
+  {
+    "key": "b3082",
+    "name": "イマジナリ京都",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3083",
+    "name": "Mirageの街角",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "mixed",
+    "bossFloors": []
+  },
+  {
+    "key": "b3084",
+    "name": "まどろみの凹室",
+    "level": 11,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  }
+]

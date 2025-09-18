@@ -1,0 +1,210 @@
+[
+  {
+    "key": "b3025",
+    "name": "王都アーケイディア",
+    "level": 9,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b3026",
+    "name": "いにしえの柱廊",
+    "level": 10,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "circle-rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3027",
+    "name": "レリクス石庭",
+    "level": 11,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3028",
+    "name": "祭壇の間",
+    "level": 12,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle-rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3029",
+    "name": "聖塔の回廊",
+    "level": 13,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3030",
+    "name": "奈良神苑",
+    "level": 14,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "circle-rooms",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b3031",
+    "name": "祠宮の庭",
+    "level": 15,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3032",
+    "name": "Temple小径",
+    "level": 9,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "circle-rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3033",
+    "name": "礎のドーム",
+    "level": 10,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3034",
+    "name": "祈祷のテラス",
+    "level": 11,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle-rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3035",
+    "name": "古代のオベリスク",
+    "level": 12,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b3036",
+    "name": "きよき大路",
+    "level": 13,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "circle-rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3037",
+    "name": "アーカイブの庫",
+    "level": 14,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3038",
+    "name": "朱雀門プラザ",
+    "level": 15,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "circle-rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3039",
+    "name": "Ruinsの中庭",
+    "level": 9,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3040",
+    "name": "伽藍の回向",
+    "level": 10,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle-rooms",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b3041",
+    "name": "石畳プロムナード",
+    "level": 11,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3042",
+    "name": "正殿の階",
+    "level": 12,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "circle-rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3043",
+    "name": "古城の翼廊",
+    "level": 13,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3044",
+    "name": "聖都Galleria",
+    "level": 14,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "circle-rooms",
+    "bossFloors": []
+  }
+]

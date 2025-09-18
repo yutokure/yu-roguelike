@@ -1,0 +1,202 @@
+[
+  {
+    "key": "b1044",
+    "name": "ネオン薄光",
+    "level": -2,
+    "size": -1,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1045",
+    "name": "朽都ルインズ",
+    "level": -1,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1046",
+    "name": "錆色アベニュー",
+    "level": 0,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1047",
+    "name": "すきまの横丁",
+    "level": 1,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1048",
+    "name": "グレイ灰街",
+    "level": 2,
+    "size": -1,
+    "depth": 0,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1049",
+    "name": "雨宿りアーケード",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1050",
+    "name": "廃線メモリー",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1051",
+    "name": "ナイトTokyo",
+    "level": -2,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1052",
+    "name": "新宿Backstreet",
+    "level": -1,
+    "size": -1,
+    "depth": 0,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1053",
+    "name": "渋谷の残響",
+    "level": 0,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1054",
+    "name": "ほこりのビル群",
+    "level": 1,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1055",
+    "name": "Rustドック",
+    "level": 2,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1056",
+    "name": "煙る湾岸",
+    "level": 3,
+    "size": -1,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1057",
+    "name": "チルな雑居",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1058",
+    "name": "失われた広場",
+    "level": -2,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1059",
+    "name": "さみだれ交差点",
+    "level": -1,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1060",
+    "name": "Ruinの屋上",
+    "level": 0,
+    "size": -1,
+    "depth": 0,
+    "chest": "normal",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1061",
+    "name": "下北沢Alley",
+    "level": 1,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b1062",
+    "name": "沈む工場港",
+    "level": 2,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "narrow-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1063",
+    "name": "港区の影",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  }
+]

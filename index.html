@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ローグライクゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>ローグライクゲーム</h1>
+    <div id="selection-screen">
+        <div class="selection-card">
+            <h2>ダンジョン選択</h2>
+            <div class="row">
+                <label for="difficulty-select">難易度</label>
+                <select id="difficulty-select">
+                    <option value="Very Easy">Very Easy</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Normal" selected>Normal</option>
+                    <option value="Second">Second</option>
+                    <option value="Hard">Hard</option>
+                    <option value="Very Hard">Very Hard</option>
+                </select>
+            </div>
+            <div class="tabs" role="tablist" aria-label="ダンジョン選択タブ">
+                <button id="tab-button-normal" class="tab-button active" role="tab" aria-selected="true" aria-controls="tab-normal">通常</button>
+                <button id="tab-button-blockdim" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-blockdim">ブロック次元</button>
+                <button id="tab-button-miniexp" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-miniexp">ミニゲー経験</button>
+            </div>
+            <div id="tab-normal" class="tab-content active" role="tabpanel" aria-labelledby="tab-button-normal">
+            <div class="row">
+                <div class="worlds">
+                    <span>世界</span>
+                    <div id="world-buttons"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="dungeons">
+                    <span>ダンジョン</span>
+                    <div id="dungeon-buttons"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div id="dungeon-detail-card" class="dungeon-detail-card" style="display: none;">
+                    <h3 id="dungeon-name">ダンジョン名</h3>
+                    <div class="detail-row">
+                        <span class="label">種類:</span>
+                        <span id="dungeon-type">フィールド</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">推奨レベル:</span>
+                        <span id="dungeon-recommended-level">1</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">ダメージ倍率:</span>
+                        <span id="dungeon-damage-multiplier">与: 1.6x / 被: 0.5x</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">説明:</span>
+                        <span id="dungeon-description">ダンジョンの説明</span>
+                    </div>
+                    <button id="start-dungeon-btn" class="start-btn">ダンジョンに入る</button>
+                </div>
+            </div>
+            </div>
+            <div id="tab-blockdim" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-blockdim">
+                <div class="row">
+                    <div class="bdim-field">
+                        <label for="bdim-nested">NESTED次元</label>
+                        <input id="bdim-nested" type="number" min="1" max="99999999" step="1" value="1" title="NESTED次元: 推奨Lvが2600*(N-1)増加します" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="bdim-grid">
+                        <div class="bdim-field">
+                            <label>次元</label>
+                            <div id="bdim-list-dimension" class="bdim-list" role="listbox" tabindex="0" aria-label="次元"></div>
+                        </div>
+                        <div class="bdim-field">
+                            <label>1st</label>
+                            <div id="bdim-list-1st" class="bdim-list" role="listbox" tabindex="0" aria-label="1st"></div>
+                        </div>
+                        <div class="bdim-field">
+                            <label>2nd</label>
+                            <div id="bdim-list-2nd" class="bdim-list" role="listbox" tabindex="0" aria-label="2nd"></div>
+                        </div>
+                        <div class="bdim-field">
+                            <label>3rd</label>
+                            <div id="bdim-list-3rd" class="bdim-list" role="listbox" tabindex="0" aria-label="3rd"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div id="bdim-card" class="bdim-card">
+                        <h3>合成プレビュー</h3>
+                        <div class="bdim-card-row"><span class="label">選択</span><span id="bdim-card-selection">-</span></div>
+                        <div class="bdim-card-row"><span class="label">推奨Lv</span><span id="bdim-card-level">-</span></div>
+                        <div class="bdim-card-row"><span class="label">タイプ</span><span id="bdim-card-type">-</span></div>
+                        <div class="bdim-card-row"><span class="label">深さ</span><span id="bdim-card-depth">-</span></div>
+                        <div class="bdim-card-row"><span class="label">サイズ</span><span id="bdim-card-size">-</span></div>
+                        <div class="bdim-card-row"><span class="label">宝箱</span><span id="bdim-card-chest">-</span></div>
+                        <div class="bdim-card-row"><span class="label">ボス階</span><span id="bdim-card-boss">-</span></div>
+                        <small class="bdim-note">同一選択は同一生成（固定シード）</small>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                            <button id="bdim-start-button" class="start-btn" disabled>Gate</button>
+                            <button id="bdim-add-bookmark" title="現在の組み合わせをブックマーク">★ ブックマーク追加</button>
+                            <button id="bdim-clear-history" title="Gate履歴を全消去">履歴クリア</button>
+                        </div>
+                        <!-- ランダム選択（等確率）ボタン（Gateボタンの下） -->
+                        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <button id="bdim-random-button" title="1st/2nd/3rd をランダムに選択">🎲 ランダム選択（1st/2nd/3rd）</button>
+                        </div>
+                        <!-- 重み付きランダム設定 -->
+                        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <label for="bdim-random-target">目標Lv(ブロック合計)</label>
+                            <input id="bdim-random-target" type="number" min="-10" max="102" step="1" value="0" style="width:96px" title="次元の基準Lvは無視し、ブロック3つのLv合計のみ" />
+                            <label for="bdim-random-type">タイプ優先</label>
+                            <select id="bdim-random-type" title="一致タイプを優先的に選びます">
+                                <option value="">指定なし</option>
+                                <option value="field">field</option>
+                                <option value="cave">cave</option>
+                                <option value="grid">grid</option>
+                                <option value="open-space">open-space</option>
+                                <option value="maze">maze</option>
+                                <option value="rooms">rooms</option>
+                                <option value="single-room">single-room</option>
+                                <option value="circle">circle</option>
+                                <option value="narrow-maze">narrow-maze</option>
+                                <option value="wide-maze">wide-maze</option>
+                                <option value="snake">snake</option>
+                                <option value="circle-rooms">circle-rooms</option>
+                            </select>
+                            <button id="bdim-weighted-random-button" title="目標Lvとタイプ優先でランダム選択">🎯 重み付きランダム</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="bdim-card" style="background:linear-gradient(135deg,#764ba2,#667eea);">
+                        <h3>Gate履歴</h3>
+                        <div id="bdim-history" aria-live="polite"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="bdim-card" style="background:linear-gradient(135deg,#764ba2,#667eea);">
+                        <h3>ブロックブックマーク</h3>
+                        <div id="bdim-bookmarks" aria-live="polite"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-miniexp" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-miniexp">
+                <div class="row">
+                    <div class="miniexp-layout">
+                        <div id="miniexp-cat-list" class="miniexp-cat-list" role="listbox" aria-label="カテゴリ一覧" tabindex="0"></div>
+                        <div id="miniexp-list" class="miniexp-list" role="listbox" aria-label="ミニゲーム一覧" tabindex="0"></div>
+                        <div class="miniexp-panel">
+                            <div class="miniexp-toolbar">
+                                <label for="miniexp-difficulty">難易度</label>
+                                <select id="miniexp-difficulty">
+                                    <option value="EASY">EASY</option>
+                                    <option value="NORMAL" selected>NORMAL</option>
+                                    <option value="HARD">HARD</option>
+                                </select>
+                                <button id="miniexp-start">開始</button>
+                                <button id="miniexp-pause" disabled>一時停止</button>
+                                <button id="miniexp-restart" disabled>再開/再起動</button>
+                                <button id="miniexp-quit" disabled>終了</button>
+                            </div>
+                            <div id="miniexp-container" class="miniexp-container" aria-live="polite"></div>
+                            <div id="miniexp-hud" class="miniexp-hud" aria-live="polite"></div>
+                            <div id="miniexp-player-hud" class="miniexp-player-hud" aria-live="polite">
+                                <div class="mini-stat-line"><span>Lv</span><span id="miniexp-hud-level">1</span></div>
+                                <div class="mini-bar exp">
+                                    <div class="mini-bar-label">EXP <span id="miniexp-hud-exp-text">0/1000</span></div>
+                                    <div class="mini-bar-track"><div id="miniexp-exp-bar" class="mini-bar-fill"></div></div>
+                                </div>
+                            </div>
+                            <div id="miniexp-placeholder" class="miniexp-placeholder">左の一覧からミニゲームを選択してください。</div>
+                            <div id="miniexp-records" class="miniexp-records" aria-live="polite"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="player-summary"></div>
+    <div id="toolbar">
+        <button id="btn-back">戻る</button>
+        <button id="btn-items">アイテム</button>
+        <button id="btn-status">ステータス</button>
+        <button id="btn-import">インポート</button>
+        <button id="btn-export">エクスポート</button>
+        <input type="file" id="import-file" accept="application/json" style="display:none" />
+        <div id="floor-indicator">1F</div>
+    </div>
+    <div id="game-screen" style="display:none;">
+        <div id="game-container">
+        <div id="game-stage"><canvas id="game-canvas"></canvas></div>
+        <div id="ui-container">
+            <div id="player-stats">
+                <div class="card">
+                    <div class="stat-line"><span>レベル</span><span id="stat-level">1</span></div>
+                    <div class="stat-line"><span>攻撃</span><span id="stat-atk">10</span></div>
+                    <div class="stat-line"><span>防御</span><span id="stat-def">10</span></div>
+                    <div class="bar hp">
+                        <div class="bar-label">HP <span id="stat-hp-text">100/100</span></div>
+                        <div class="bar-track"><div id="hp-bar" class="bar-fill"></div></div>
+                    </div>
+                    <div class="bar exp">
+                        <div class="bar-label">EXP <span id="stat-exp-text">0/1000</span></div>
+                        <div class="bar-track"><div id="exp-bar" class="bar-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div id="message-log"></div>
+        </div>
+        <!-- 右側ポップアップ用の常時空白スペース -->
+        <div id="popup-spacer" aria-hidden="true"></div>
+        </div>
+    </div>
+    <div id="game-over-screen" style="display: none;">
+        <div class="game-over-overlay">
+            <div class="game-over-card">
+                <div class="game-over-icon">☠️</div>
+                <h2 class="game-over-title">ゲームオーバー</h2>
+                <p class="game-over-message">冒険はここで終わりです...</p>
+                <div class="game-over-stats">
+                    <div class="final-stat">
+                        <span class="stat-label">到達階層</span>
+                        <span id="final-floor" class="stat-value">1F</span>
+                    </div>
+                    <div class="final-stat">
+                        <span class="stat-label">最終レベル</span>
+                        <span id="final-level" class="stat-value">1</span>
+                    </div>
+                </div>
+                <button id="restart-button" class="restart-btn">もう一度プレイ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- アイテムモーダル -->
+    <div id="items-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>アイテム</h3>
+            <div class="item-row">
+                <span>HP30%回復ポーション</span>
+                <span>x <span id="inv-potion30">0</span></span>
+                <button id="use-potion30">使用</button>
+            </div>
+            <div class="item-row">
+                <span>最大HP強化アイテム</span>
+                <span>x <span id="inv-hp-boost">0</span></span>
+                <button id="use-hp-boost">使用</button>
+            </div>
+            <div class="item-row">
+                <span>攻撃力強化アイテム</span>
+                <span>x <span id="inv-atk-boost">0</span></span>
+                <button id="use-atk-boost">使用</button>
+            </div>
+            <div class="item-row">
+                <span>防御力強化アイテム</span>
+                <span>x <span id="inv-def-boost">0</span></span>
+                <button id="use-def-boost">使用</button>
+            </div>
+            <button class="close-modal" data-target="items-modal">閉じる</button>
+        </div>
+    </div>
+
+    <!-- ステータスモーダル -->
+    <div id="status-modal" class="modal" style="display:none;">
+        <div class="modal-content status-modal">
+            <h3>プレイヤーステータス</h3>
+            <div class="status-section">
+                <h4>基本ステータス</h4>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">レベル</span>
+                        <span class="status-value" id="modal-level">1</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">経験値</span>
+                        <span class="status-value" id="modal-exp">0 / 1000</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">HP</span>
+                        <span class="status-value hp" id="modal-hp">100 / 100</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">攻撃力</span>
+                        <span class="status-value attack" id="modal-attack">10</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">防御力</span>
+                        <span class="status-value defense" id="modal-defense">10</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">現在階層</span>
+                        <span class="status-value" id="modal-floor">1F</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status-section">
+                <h4>所持アイテム</h4>
+                <div class="inventory-grid">
+                    <div class="inventory-item">
+                        <span class="item-name">HP30%回復ポーション</span>
+                        <span class="item-count" id="modal-potion30">x 0</span>
+                    </div>
+                    <div class="inventory-item">
+                        <span class="item-name">最大HP強化アイテム</span>
+                        <span class="item-count" id="modal-hp-boost">x 0</span>
+                    </div>
+                    <div class="inventory-item">
+                        <span class="item-name">攻撃力強化アイテム</span>
+                        <span class="item-count" id="modal-atk-boost">x 0</span>
+                    </div>
+                    <div class="inventory-item">
+                        <span class="item-name">防御力強化アイテム</span>
+                        <span class="item-count" id="modal-def-boost">x 0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status-section">
+                <h4>ゲーム設定</h4>
+                <div class="settings-info">
+                    <div class="setting-item">
+                        <span class="setting-label">選択世界</span>
+                        <span class="setting-value" id="modal-world">A世界</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">難易度</span>
+                        <span class="setting-value" id="modal-difficulty">Normal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status-section" id="modal-dungeon-section">
+                <h4>ダンジョン情報</h4>
+                <div class="settings-info">
+                    <div class="setting-item">
+                        <span class="setting-label">構成</span>
+                        <span class="setting-value" id="modal-dungeon-summary">-</span>
+                    </div>
+                    <div class="setting-item" id="modal-dungeon-type-row" style="display:none;">
+                        <span class="setting-label">タイプ</span>
+                        <span class="setting-value" id="modal-dungeon-type">-</span>
+                    </div>
+                </div>
+            </div>
+            <button class="close-modal" data-target="status-modal">閉じる</button>
+        </div>
+    </div>
+
+    <!-- 敵情報モーダル -->
+    <div id="enemy-info-modal" class="modal" style="display:none;">
+        <div class="modal-content enemy-modal">
+            <h3 id="enemy-modal-title">敵の情報</h3>
+            <div class="enemy-stats">
+                <div class="stat-row">
+                    <span class="label">レベル:</span>
+                    <span id="enemy-modal-level">1</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">HP:</span>
+                    <span id="enemy-modal-hp">50/50</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">攻撃力:</span>
+                    <span id="enemy-modal-attack">8</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">防御力:</span>
+                    <span id="enemy-modal-defense">8</span>
+                </div>
+            </div>
+            <div class="damage-simulation">
+                <h4>ダメージ予測</h4>
+                <div class="damage-row damage-deal">
+                    <span class="label">与ダメージ範囲:</span>
+                    <span id="damage-deal-range">10-15</span>
+                </div>
+                <div class="damage-row damage-take">
+                    <span class="label">被ダメージ範囲:</span>
+                    <span id="damage-take-range">8-12</span>
+                </div>
+                <div class="hit-rate-info">
+                    <div class="hit-rate-row">
+                        <span class="label">命中率:</span>
+                        <span id="hit-rate">80%</span>
+                    </div>
+                    <div class="hit-rate-row">
+                        <span class="label">敵の命中率:</span>
+                        <span id="enemy-hit-rate">80%</span>
+                    </div>
+                </div>
+            </div>
+            <button class="close-modal" data-target="enemy-info-modal">閉じる</button>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>

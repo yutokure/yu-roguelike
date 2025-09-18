@@ -1,0 +1,210 @@
+[
+  {
+    "key": "b1064",
+    "name": "星明りプラットフォーム",
+    "level": 10,
+    "size": 1,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b1065",
+    "name": "天穹ドーム",
+    "level": 11,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1066",
+    "name": "ほしなみ回廊",
+    "level": 12,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": []
+  },
+  {
+    "key": "b1067",
+    "name": "セレスティア京",
+    "level": 13,
+    "size": 1,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1068",
+    "name": "夜風オービタ",
+    "level": 14,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": []
+  },
+  {
+    "key": "b1069",
+    "name": "Eclipseの庭",
+    "level": 15,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b1070",
+    "name": "銀河バルコニー",
+    "level": 16,
+    "size": 1,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": []
+  },
+  {
+    "key": "b1071",
+    "name": "しじまの宙",
+    "level": 17,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1072",
+    "name": "Nebula小町",
+    "level": 18,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": []
+  },
+  {
+    "key": "b1073",
+    "name": "蒼星テラス",
+    "level": 10,
+    "size": 1,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1074",
+    "name": "オーロラ橋",
+    "level": 11,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b1075",
+    "name": "つきかげ広場",
+    "level": 12,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1076",
+    "name": "Stardust路",
+    "level": 13,
+    "size": 1,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": []
+  },
+  {
+    "key": "b1077",
+    "name": "大気ステップ",
+    "level": 14,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1078",
+    "name": "ほのぼの星屑",
+    "level": 15,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": []
+  },
+  {
+    "key": "b1079",
+    "name": "Gravity坂",
+    "level": 16,
+    "size": 1,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b1080",
+    "name": "宙港うらら",
+    "level": 17,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": []
+  },
+  {
+    "key": "b1081",
+    "name": "ひかりアトリウム",
+    "level": 18,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b1082",
+    "name": "ミルキー峡",
+    "level": 10,
+    "size": 1,
+    "depth": 1,
+    "chest": "more",
+    "type": "circle",
+    "bossFloors": []
+  },
+  {
+    "key": "b1083",
+    "name": "時雨Constellation",
+    "level": 11,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  }
+]

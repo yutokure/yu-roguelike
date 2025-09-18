@@ -1,0 +1,172 @@
+[
+  {
+    "key": "b1084",
+    "name": "水鏡ラグーン",
+    "level": 6,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1085",
+    "name": "うすもや水路",
+    "level": 7,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1086",
+    "name": "霜夜バレー",
+    "level": 8,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1087",
+    "name": "アイスの洞",
+    "level": 9,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1088",
+    "name": "さざ波ガーデン",
+    "level": 10,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1089",
+    "name": "氷雨テラス",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1090",
+    "name": "ミスト渓谷",
+    "level": 7,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1091",
+    "name": "雪白プロムナード",
+    "level": 8,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1092",
+    "name": "こおりの巣",
+    "level": 9,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1093",
+    "name": "フロスト街",
+    "level": 10,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1094",
+    "name": "凍土ひだまり",
+    "level": 6,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1095",
+    "name": "しぶきの汀",
+    "level": 7,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1096",
+    "name": "Glacial横町",
+    "level": 8,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1097",
+    "name": "露光の池",
+    "level": 9,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1098",
+    "name": "みぞれ街道",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1099",
+    "name": "霧笛の埠頭",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b1100",
+    "name": "ひょうの路地",
+    "level": 7,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  }
+]

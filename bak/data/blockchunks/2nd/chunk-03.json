@@ -1,0 +1,202 @@
+[
+  {
+    "key": "b2064",
+    "name": "風鳴りデューン",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2065",
+    "name": "ささやきの砂原",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2066",
+    "name": "音叉の谷",
+    "level": 5,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2067",
+    "name": "シロッコ坂",
+    "level": 6,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2068",
+    "name": "Mirageの浜",
+    "level": 7,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2069",
+    "name": "すなじの街路",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2070",
+    "name": "旋風パサージュ",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2071",
+    "name": "わずかな足跡群",
+    "level": 5,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2072",
+    "name": "笛吹く峡",
+    "level": 6,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2073",
+    "name": "うたかたのオアシス",
+    "level": 7,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2074",
+    "name": "ハマダーン路",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2075",
+    "name": "Dustの双丘",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2076",
+    "name": "からっ風の岡",
+    "level": 5,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2077",
+    "name": "こだまの盆地",
+    "level": 6,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2078",
+    "name": "ドラムサンド",
+    "level": 7,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2079",
+    "name": "カスバ小径",
+    "level": 3,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2080",
+    "name": "奈良Sirocco",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2081",
+    "name": "風紋ギャラリー",
+    "level": 5,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b2082",
+    "name": "さらさら峡谷",
+    "level": 6,
+    "size": 0,
+    "depth": 0,
+    "chest": "less",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b2083",
+    "name": "Whisper砂丘",
+    "level": 7,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  }
+]

@@ -1,0 +1,206 @@
+[
+  {
+    "key": "b2024",
+    "name": "慟哭の祠",
+    "level": 1,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b2025",
+    "name": "さびしさの路",
+    "level": 2,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2026",
+    "name": "怒りの砦",
+    "level": 3,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2027",
+    "name": "憂鬱カタコンベ",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2028",
+    "name": "悲嘆の地下室",
+    "level": 5,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2029",
+    "name": "ときめきの小径",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2030",
+    "name": "狂喜の広間",
+    "level": 1,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2031",
+    "name": "哀歌の回廊",
+    "level": 2,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2032",
+    "name": "Lonely塔",
+    "level": 3,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2033",
+    "name": "Melancholy坂",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2034",
+    "name": "儚いネクロポリス",
+    "level": 5,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b2035",
+    "name": "呪縛の蔵",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2036",
+    "name": "やすらぎの縁",
+    "level": 1,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2037",
+    "name": "ざわめく霊園",
+    "level": 2,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2038",
+    "name": "祈りのクレプス",
+    "level": 3,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2039",
+    "name": "しじまの墓域",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2040",
+    "name": "Furyの洞",
+    "level": 5,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2041",
+    "name": "Calmの庭",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2042",
+    "name": "怨念アトリウム",
+    "level": 1,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b2043",
+    "name": "希望のランタン街",
+    "level": 2,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "rooms",
+    "bossFloors": []
+  }
+]

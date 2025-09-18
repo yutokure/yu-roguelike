@@ -1,0 +1,202 @@
+[
+  {
+    "key": "b3045",
+    "name": "雪灯の野",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3046",
+    "name": "白氷の窪地",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3047",
+    "name": "こごえる街路",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3048",
+    "name": "オーロラの丘",
+    "level": 11,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3049",
+    "name": "霜星の峡",
+    "level": 12,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3050",
+    "name": "Frost京",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3051",
+    "name": "氷霞の路",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3052",
+    "name": "ミルク色の平原",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3053",
+    "name": "吹雪の回廊",
+    "level": 11,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3054",
+    "name": "しずかな氷穴",
+    "level": 12,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3055",
+    "name": "北極光テラス",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3056",
+    "name": "アイシクルの庭",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3057",
+    "name": "霧氷ハーバー",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3058",
+    "name": "セイバン雪脈",
+    "level": 11,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3059",
+    "name": "Gelidの湾",
+    "level": 12,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3060",
+    "name": "ツンドラ横町",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3061",
+    "name": "寒月の辻",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3062",
+    "name": "ふぶきの峰",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3063",
+    "name": "しらゆきの里",
+    "level": 11,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "wide-maze",
+    "bossFloors": []
+  },
+  {
+    "key": "b3064",
+    "name": "Aurora橋上",
+    "level": 12,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  }
+]

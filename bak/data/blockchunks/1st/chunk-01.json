@@ -1,0 +1,206 @@
+[
+  {
+    "key": "b1024",
+    "name": "こもれびの径",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "field",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b1025",
+    "name": "翠雨Meadow",
+    "level": 5,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1026",
+    "name": "朧の里",
+    "level": 6,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1027",
+    "name": "ひなたの丘",
+    "level": 7,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1028",
+    "name": "ブリーズ渓谷",
+    "level": 8,
+    "size": 0,
+    "depth": 0,
+    "chest": "more",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1029",
+    "name": "朝霧ハイランド",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1030",
+    "name": "風花の岬",
+    "level": 5,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1031",
+    "name": "みずいろ野",
+    "level": 6,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1032",
+    "name": "Mossの苔庭",
+    "level": 7,
+    "size": 0,
+    "depth": 0,
+    "chest": "more",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1033",
+    "name": "そよ風パセオ",
+    "level": 8,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1034",
+    "name": "青葉テラス",
+    "level": 4,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": [
+      10
+    ]
+  },
+  {
+    "key": "b1035",
+    "name": "やまなみロード",
+    "level": 5,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1036",
+    "name": "フォレスト小径",
+    "level": 6,
+    "size": 0,
+    "depth": 1,
+    "chest": "more",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1037",
+    "name": "しずくの森",
+    "level": 7,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1038",
+    "name": "霞む谷戸",
+    "level": 8,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1039",
+    "name": "Verdant原",
+    "level": 4,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1040",
+    "name": "さざなみ平原",
+    "level": 5,
+    "size": 0,
+    "depth": 0,
+    "chest": "more",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1041",
+    "name": "鎌倉Green",
+    "level": 6,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1042",
+    "name": "奈良の野辺",
+    "level": 7,
+    "size": 0,
+    "depth": 1,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  },
+  {
+    "key": "b1043",
+    "name": "上野の風景",
+    "level": 8,
+    "size": 0,
+    "depth": 0,
+    "chest": "normal",
+    "type": "field",
+    "bossFloors": []
+  }
+]

@@ -1,0 +1,162 @@
+[
+  {
+    "key": "b3085",
+    "name": "地下の鼓動",
+    "level": 6,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3086",
+    "name": "きのこカタコンベ",
+    "level": 7,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3087",
+    "name": "胞子の回廊",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3088",
+    "name": "マイセリア庭",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3089",
+    "name": "脈打つ洞",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3090",
+    "name": "ひそみの坑",
+    "level": 6,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3091",
+    "name": "Rootの迷路",
+    "level": 7,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3092",
+    "name": "暗渠の川辺",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3093",
+    "name": "朽ち縄の井戸",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3094",
+    "name": "菌糸の広間",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3095",
+    "name": "ツタの横穴",
+    "level": 6,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3096",
+    "name": "じわりの堆",
+    "level": 7,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3097",
+    "name": "コロニーの隙",
+    "level": 8,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3098",
+    "name": "Sporeの街",
+    "level": 9,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  },
+  {
+    "key": "b3099",
+    "name": "地下街アンダー",
+    "level": 10,
+    "size": 0,
+    "depth": 2,
+    "chest": "less",
+    "type": "rooms",
+    "bossFloors": []
+  },
+  {
+    "key": "b3100",
+    "name": "ざらつく床",
+    "level": 6,
+    "size": 0,
+    "depth": 2,
+    "chest": "normal",
+    "type": "cave",
+    "bossFloors": []
+  }
+]

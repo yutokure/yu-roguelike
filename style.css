@@ -1,0 +1,1128 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+/* 探索画面レイアウト（全画面・スクロール抑止） */
+body.in-game {
+    overflow: hidden; /* ページの縦横スクロールを無効化 */
+    padding: 0;       /* 余白を消して100vw/100vhにフィット */
+}
+/* モーダル表示中は一時的にスクロールを許可 */
+body.in-game.modal-open { overflow: auto; }
+body.in-game h1 { display: none; }
+body.in-game #game-screen { width: 100vw; max-width: 100vw; padding-top: var(--toolbar-height, 0px); }
+body.in-game #toolbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+body.in-game #game-container { 
+    width: 100vw; 
+    max-width: 100vw; 
+    height: calc(100vh - var(--toolbar-height, 0px)); 
+    box-sizing: border-box; 
+    overflow: hidden;
+}
+/* ステータス右側の常時空白スペース（ポップアップ用） */
+#popup-spacer { flex: 0 0 var(--popup-space, 160px); pointer-events: none; }
+
+#selection-screen {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    min-height: 100vh;
+    align-items: center;
+    padding-bottom: var(--selection-footer-h, 140px); /* フッター分の余白を確保 */
+}
+
+.selection-card { 
+    background: rgba(255,255,255,0.95); 
+    backdrop-filter: blur(10px);
+    padding: 24px; 
+    border-radius: 20px; 
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3); 
+    width: 800px; 
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 6px;
+    margin: 8px 0 0 0;
+    border-bottom: 2px solid rgba(102,126,234,0.35);
+    align-items: flex-end;
+}
+/* Increase specificity to override .selection-card button */
+.selection-card .tab-button {
+    appearance: none;
+    background: #eef2ff;
+    background-image: none;
+    color: #2c3e50;
+    font-weight: 700;
+    border: 1px solid rgba(102,126,234,0.5);
+    border-bottom: none;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding: 10px 16px;
+    margin: 0;
+    box-shadow: none;
+    cursor: pointer;
+    transform: none;
+    position: relative;
+    top: 2px; /* sit on the border */
+}
+.selection-card .tab-button:hover {
+    background: #e5e9ff;
+}
+.selection-card .tab-button.active {
+    background: #ffffff;
+    color: #2c3e50;
+    border-color: rgba(102,126,234,0.6);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+    z-index: 1;
+}
+.tab-content {
+    background: #ffffff;
+    border: 1px solid rgba(102,126,234,0.6);
+    border-top: none;
+    border-radius: 0 12px 12px 12px;
+    padding: 10px;
+    margin-top: -1px; /* connect to tab */
+}
+
+/* BlockDim UI */
+.bdim-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+.bdim-field label { display: block; font-weight: bold; color: #2c3e50; margin-bottom: 6px; }
+.bdim-field select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    background: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+.bdim-field input[type="number"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    background: white;
+    font-weight: bold;
+}
+.bdim-list {
+    width: 100%;
+    max-height: 220px;
+    overflow: auto;
+    padding: 6px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    background: white;
+}
+.bdim-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.bdim-option:hover { background: #eef2ff; }
+.bdim-option.selected { background: #c7d2fe; font-weight: 700; }
+.bdim-tag { font-size: 11px; color: #4b5563; background: #e5e7eb; padding: 2px 6px; border-radius: 999px; }
+.bdim-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 16px;
+    width: 100%;
+    color: #fff;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.bdim-card h3 { margin: 0 0 12px 0; text-align: center; }
+.bdim-card-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.2); }
+.bdim-card-row:last-of-type { border-bottom: none; }
+.bdim-card-row .label { font-weight: bold; opacity: 0.9; }
+.bdim-note { display: block; margin-top: 8px; opacity: 0.9; }
+
+.selection-card h2 {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 32px;
+    margin-bottom: 24px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* MiniExp UI */
+.miniexp-layout { display: grid; grid-template-columns: 260px 1fr; gap: 12px; width: 100%; }
+.miniexp-cat-list { grid-column: 1; grid-row: 1; }
+.miniexp-list { grid-column: 1; grid-row: 2; }
+.miniexp-panel { grid-column: 2; grid-row: 1 / span 2; width: 100%; }
+.miniexp-cat-list {
+    width: 100%;
+    padding: 6px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    background: white;
+    margin-bottom: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.miniexp-cat-list .cat-btn {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(102,126,234,0.45);
+    background: #eef2ff;
+    color: #1f2937;
+    font-weight: 700;
+    cursor: pointer;
+}
+.miniexp-cat-list .cat-btn.active {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+    border-color: transparent;
+}
+.miniexp-list {
+    width: 100%;
+    max-height: 420px;
+    overflow: auto;
+    padding: 6px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    background: white;
+}
+.miniexp-card {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 8px; margin: 6px 0; border: 1px solid rgba(102,126,234,0.35);
+    border-radius: 8px; background: #f8f9ff;
+}
+.miniexp-card h4 { margin: 0; font-size: 14px; color: #2c3e50; }
+.miniexp-card .desc { font-size: 12px; color: #4b5563; }
+.miniexp-card .meta { font-size: 11px; color: #6b7280; }
+.miniexp-card button { align-self: flex-start; }
+.miniexp-panel { background: #ffffff; border: 1px solid rgba(102,126,234,0.35); border-radius: 8px; padding: 10px; min-height: 200px; }
+.miniexp-placeholder { color: #6b7280; font-size: 12px; }
+
+.miniexp-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+#miniexp-difficulty { padding: 6px 10px; border: 2px solid #667eea; border-radius: 8px; background: white; font-weight: bold; }
+#miniexp-start, #miniexp-pause, #miniexp-restart, #miniexp-quit { padding: 8px 12px; border-radius: 8px; border: none; color: #fff; font-weight: bold; cursor: pointer; white-space: nowrap; }
+#miniexp-start { background: linear-gradient(135deg, #22c55e, #16a34a); }
+#miniexp-pause { background: linear-gradient(135deg, #f59e0b, #d97706); }
+#miniexp-restart { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+#miniexp-quit { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.miniexp-container { position: relative; min-height: 360px; background: #0f172a0d; border: 1px dashed rgba(102,126,234,0.35); border-radius: 8px; }
+.miniexp-hud { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; transform: translateX(calc(100% + 8px)); }
+.exp-badge { background: rgba(34,197,94,0.95); color: #fff; padding: 4px 8px; border-radius: 999px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: fadeUp 1.2s ease forwards; font-weight: 700; font-size: 12px; }
+/* Combo-styled badges (for chain popups) */
+.exp-badge.combo { font-size: 14px; padding: 6px 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+.exp-badge.combo.c1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.exp-badge.combo.c2 { background: linear-gradient(135deg, #06b6d4, #3b82f6); font-size: 16px; }
+.exp-badge.combo.c3 { background: linear-gradient(135deg, #a21caf, #f43f5e); font-size: 18px; }
+/* Floating variant (positioned at cursor) */
+.exp-badge.float { position: absolute; transform: translate(-50%, -100%); animation: floatRise 1.25s ease forwards; pointer-events: none; white-space: nowrap; }
+@keyframes floatRise {
+  0% { opacity: 0; transform: translate(-50%, -6px) scale(0.92); }
+  12% { opacity: 1; transform: translate(-50%, -12px) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
+}
+@keyframes fadeUp { 0% { opacity: 0; transform: translateY(6px); } 10% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
+.miniexp-player-hud { position: absolute; right: 8px; bottom: 8px; min-width: 200px; padding: 8px; background: rgba(255,255,255,0.9); border: 1px solid rgba(102,126,234,0.35); border-radius: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+.mini-stat-line { display: flex; justify-content: space-between; font-weight: 800; color: #111827; }
+.mini-bar-label { font-size: 12px; color: #334155; margin-bottom: 2px; }
+.mini-bar-track { width: 100%; height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+.mini-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#22c55e,#86efac); transition: width 0.25s ease; }
+
+.miniexp-records { margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 8px; }
+.miniexp-records .rec-card { background: #f8fafc; border: 1px solid rgba(100,116,139,0.25); border-radius: 8px; padding: 8px 10px; }
+.miniexp-records .rec-title { font-size: 12px; color: #475569; }
+.miniexp-records .rec-value { font-weight: 800; font-size: 16px; color: #0f172a; }
+
+.selection-card .row { 
+    display: flex; 
+    align-items: center; 
+    gap: 16px; 
+    margin: 16px 0; 
+    padding: 12px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#world-buttons, #dungeon-buttons { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 8px; 
+}
+
+.selection-card button { 
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.selection-card button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.selection-card .selected { 
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(238, 90, 36, 0.4);
+}
+
+#difficulty-select {
+    padding: 8px 12px;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    background: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+label {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+/* Player Status Card */
+.player-status-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 16px 0;
+    color: white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* 選択画面用固定フッター（プレイヤーステータス） */
+#player-summary {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 900;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: center;
+    pointer-events: none; /* 背景操作を邪魔しない */
+}
+#player-summary .player-status-card {
+    pointer-events: auto; /* カード自体の操作は可能に */
+    width: min(1000px, 95vw);
+    margin: 0 auto;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+/* 折りたたみトグルボタン */
+#player-summary .summary-toggle {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(102,126,234,0.4);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    pointer-events: auto;
+}
+#player-summary .summary-toggle:hover { filter: brightness(1.05); }
+
+/* 折りたたみ状態（下方向に隠す） */
+#player-summary.collapsed .player-status-card {
+    transform: translateY(120%);
+    opacity: 0.6;
+    pointer-events: none;
+}
+#player-summary.collapsed .summary-toggle { bottom: 10px; }
+/* 探索画面中は選択フッターを非表示 */
+body.in-game #player-summary { display: none; }
+
+.player-status-card h3 {
+    margin: 0 0 16px 0;
+    text-align: center;
+    font-size: 20px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.stat-label {
+    font-weight: bold;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.stat-value {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.stat-value.level {
+    color: #ffd700;
+}
+
+.stat-value.hp {
+    color: #ff6b6b;
+}
+
+.stat-value.attack {
+    color: #ff8c42;
+}
+
+.stat-value.defense {
+    color: #74c0fc;
+}
+
+/* ダンジョン詳細カード */
+.dungeon-detail-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 16px 0;
+    color: white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.dungeon-detail-card h3 {
+    margin: 0 0 16px 0;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 12px 0;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.detail-row:last-of-type {
+    border-bottom: none;
+}
+
+.detail-row .label {
+    font-weight: bold;
+    opacity: 0.9;
+}
+
+.start-btn {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 16px;
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+    transition: all 0.3s ease;
+}
+
+.start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(238, 90, 36, 0.6);
+}
+
+.start-btn:active {
+    transform: translateY(0);
+}
+
+/* 敵情報モーダル */
+.enemy-modal {
+    width: 400px;
+    max-width: 90vw;
+}
+
+.enemy-stats {
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.stat-row, .damage-row, .hit-rate-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    padding: 4px 0;
+}
+
+.damage-simulation {
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.damage-simulation h4 {
+    margin: 0 0 12px 0;
+    color: #ffd700;
+    text-align: center;
+}
+
+.damage-deal {
+    border-left: 4px solid #4CAF50;
+    padding-left: 8px;
+}
+
+.damage-take {
+    border-left: 4px solid #f44336;
+    padding-left: 8px;
+}
+
+.hit-rate-info {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.stat-row .label, .damage-row .label, .hit-rate-row .label {
+    font-weight: bold;
+    opacity: 0.9;
+}
+
+#enemy-modal-level {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+#damage-deal-range {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+#damage-take-range {
+    color: #f44336;
+    font-weight: bold;
+}
+
+#hit-rate, #enemy-hit-rate {
+    color: #2196F3;
+    font-weight: bold;
+}
+
+#toolbar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    gap: 12px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+#toolbar button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 14px;
+}
+
+#toolbar button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #5a6fd8, #6a4190);
+}
+
+#game-container {
+    display: flex;
+    gap: 24px;
+    width: min(1200px, 95vw);
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+#game-stage { 
+    width: 100%; 
+    aspect-ratio: 4 / 3; 
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+#game-canvas { 
+    border: 2px solid rgba(102, 126, 234, 0.3); 
+    background-color: #f8f9fa; 
+    width: 100%; 
+    height: 100%; 
+    display: block;
+    border-radius: 10px;
+}
+
+#ui-container {
+    width: clamp(220px, 22vw, 300px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#player-stats .card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+}
+
+.stat-line { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-bottom: 8px;
+    padding: 4px 0;
+    font-weight: bold;
+}
+
+.stat-line span:first-child {
+    opacity: 0.9;
+}
+
+.stat-line span:last-child {
+    color: #ffd700;
+}
+.bar { margin: 12px 0; }
+
+.bar-label { 
+    font-size: 13px; 
+    color: rgba(255,255,255,0.9); 
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+.bar-track { 
+    width: 100%; 
+    height: 14px; 
+    background: rgba(255,255,255,0.2); 
+    border-radius: 8px; 
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.bar-fill { 
+    height: 100%; 
+    width: 0%; 
+    transition: width 0.3s ease;
+    border-radius: 7px;
+}
+
+.bar.hp .bar-fill { 
+    background: linear-gradient(90deg, #ff6b6b, #fa5252);
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
+.bar.exp .bar-fill { 
+    background: linear-gradient(90deg, #74c0fc, #4dabf7);
+    box-shadow: 0 0 10px rgba(116, 192, 252, 0.5);
+}
+
+#game-over-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+.popup-text { position: absolute; pointer-events: none; }
+
+#floor-indicator { 
+    margin-left: auto; 
+    font-weight: bold; 
+    font-size: clamp(16px, 2vw, 20px);
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    overflow: auto; /* 内容がはみ出す場合にスクロール可 */
+}
+
+.modal-content {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 24px;
+    width: 400px;
+    max-width: 90vw;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #2c3e50;
+    max-height: 90vh;        /* 画面内に収める */
+    overflow: auto;          /* モーダル内スクロール */
+}
+
+.modal-content h3 {
+    margin: 0 0 20px 0;
+    text-align: center;
+    font-size: 24px;
+    color: #2c3e50;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.item-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    justify-content: space-between;
+    padding: 12px;
+    margin: 8px 0;
+    background: rgba(255,255,255,0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.item-row button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.item-row button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.close-modal { 
+    margin-top: 16px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.close-modal:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(238, 90, 36, 0.4);
+}
+
+/* Game Screen Styling */
+#game-screen {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+h1 {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Status Modal Styling */
+.status-modal {
+    width: 500px;
+    max-width: 95vw;
+}
+
+.status-section {
+    margin: 20px 0;
+    padding: 16px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.status-section h4 {
+    margin: 0 0 16px 0;
+    color: #667eea;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.status-label {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.status-value {
+    font-weight: bold;
+    font-size: 16px;
+    color: #667eea;
+}
+
+.status-value.hp {
+    color: #ff6b6b;
+}
+
+.status-value.attack {
+    color: #ff8c42;
+}
+
+.status-value.defense {
+    color: #74c0fc;
+}
+
+.inventory-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.inventory-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.item-name {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.item-count {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 14px;
+}
+
+.settings-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.setting-label {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.setting-value {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 14px;
+}
+
+#message-log {
+    margin-top: 12px;
+    height: clamp(160px, 24vh, 280px);
+    overflow-y: auto;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.log-line { 
+    white-space: pre-wrap; 
+    color: #2c3e50;
+    padding: 2px 0;
+    border-radius: 4px;
+    margin: 1px 0;
+}
+
+.log-sep { 
+    color: #667eea; 
+    text-align: center;
+    font-weight: bold;
+    margin: 4px 0;
+}
+
+/* Game Over Screen Styling */
+#game-over-screen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+}
+
+.game-over-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, 
+        rgba(0, 0, 0, 0.8) 0%, 
+        rgba(102, 126, 234, 0.3) 50%, 
+        rgba(0, 0, 0, 0.8) 100%);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: gameOverFadeIn 0.8s ease-out;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.game-over-card {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(255, 255, 255, 0.9) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 24px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    min-width: 400px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: gameOverSlideUp 0.8s ease-out 0.3s both;
+    margin: 0;
+    position: relative;
+}
+
+.game-over-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: gameOverPulse 2s ease-in-out infinite;
+}
+
+.game-over-title {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 0 0 16px 0;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-over-message {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 32px;
+    opacity: 0.8;
+}
+
+.game-over-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+    padding: 20px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 16px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.final-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.final-stat .stat-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #666;
+    opacity: 0.8;
+}
+
+.final-stat .stat-value {
+    font-size: 28px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.restart-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    min-width: 200px;
+}
+
+.restart-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #5a6fd8, #6b5b95);
+}
+
+.restart-btn:active {
+    transform: translateY(-1px);
+}
+
+@keyframes gameOverFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes gameOverSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes gameOverPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}

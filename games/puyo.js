@@ -135,6 +135,7 @@
 
     function lockPiece(){
       placeCurrent();
+      applyGravity();
       current = null;
       fallTimer = 0;
       lockTimer = 0;

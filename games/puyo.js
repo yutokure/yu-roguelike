@@ -243,15 +243,30 @@
     }
 
     function draw(){
-      ctx.fillStyle = '#0b1120';
+      ctx.fillStyle = '#030712';
       ctx.fillRect(0,0,W,H);
       const margin = 24;
-      const baseCell = Math.floor((W - margin*2 - 140) / COLS);
-      const cell = Math.max(12, Math.floor(baseCell * 0.5));
+      const oy = 96;
+      const usableWidth = W - margin * 2 - 160;
+      const cell = Math.max(20, Math.min(36, Math.floor(usableWidth / COLS)));
       const gridW = cell * COLS;
       const gridH = cell * ROWS;
       const ox = margin;
-      const oy = 40;
+
+      // board background panel
+      const boardBgX = ox - 12;
+      const boardBgY = oy - 24;
+      const boardBgW = gridW + 24;
+      const boardBgH = gridH + 36;
+      ctx.fillStyle = 'rgba(15,23,42,0.85)';
+      if (ctx.roundRect){
+        ctx.beginPath();
+        ctx.roundRect(boardBgX, boardBgY, boardBgW, boardBgH, 16);
+        ctx.fill();
+      } else {
+        ctx.fillRect(boardBgX, boardBgY, boardBgW, boardBgH);
+      }
+
       ctx.strokeStyle = 'rgba(148,163,184,0.18)';
       ctx.lineWidth = 1;
       for (let y=0;y<=ROWS;y++){
@@ -279,33 +294,61 @@
           drawBlob(ox + x*cell, oy + y*cell, cell, COLORS[color]);
         });
       }
-      // preview panel
-      const panelX = ox + gridW + 24;
-      const panelY = oy;
-      const panelW = Math.max(120, W - panelX - margin);
-      ctx.fillStyle = '#cbd5f5';
+      // info labels
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '600 16px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText('FALLING PUYOS', margin, 38);
       ctx.font = '14px "Segoe UI", system-ui, sans-serif';
-      ctx.fillText(`難易度: ${difficulty}`, margin, 24);
-      ctx.fillText(`消去数: ${totalCleared}`, margin, 44);
-      ctx.fillText(`最大連鎖: ${maxChain}`, margin, 64);
-      if (lastChainCleared > 0){
-        ctx.fillText(`直近消去: ${lastChainCleared}`, margin, 84);
-      }
-      ctx.fillStyle = 'rgba(148,163,184,0.2)';
-      ctx.fillRect(panelX, panelY, panelW, gridH);
-      ctx.strokeStyle = 'rgba(148,163,184,0.35)';
-      ctx.strokeRect(panelX+0.5, panelY+0.5, panelW-1, gridH-1);
       ctx.fillStyle = '#cbd5f5';
+      ctx.fillText(`難易度: ${difficulty}`, margin, 62);
+      ctx.fillText(`消去数: ${totalCleared}`, margin, 82);
+      ctx.fillText(`最大連鎖: ${maxChain}`, margin, 102);
+      if (lastChainCleared > 0){
+        ctx.fillText(`直近消去: ${lastChainCleared}`, margin, 122);
+      }
+
+      // preview panel
+      const panelX = ox + gridW + 28;
+      const panelY = oy - 12;
+      const panelW = Math.max(140, W - panelX - margin);
+      const panelH = gridH + 24;
+      const panelRadius = 18;
+      if (ctx.roundRect){
+        ctx.fillStyle = 'rgba(30,41,59,0.82)';
+        ctx.beginPath();
+        ctx.roundRect(panelX, panelY, panelW, panelH, panelRadius);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(148,163,184,0.28)';
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = 'rgba(30,41,59,0.82)';
+        ctx.fillRect(panelX, panelY, panelW, panelH);
+        ctx.strokeStyle = 'rgba(148,163,184,0.28)';
+        ctx.strokeRect(panelX+0.5, panelY+0.5, panelW-1, panelH-1);
+      }
+      ctx.fillStyle = '#f1f5f9';
+      ctx.font = '600 14px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText('NEXT', panelX + 20, panelY + 30);
       ctx.font = '13px "Segoe UI", system-ui, sans-serif';
-      ctx.fillText('NEXT', panelX + 16, panelY + 20);
-      let previewY = panelY + 44;
-      const previewCell = Math.max(12, Math.floor((panelW - 40) / 3));
+      ctx.fillStyle = '#cbd5f5';
+      let previewY = panelY + 54;
+      const previewCell = Math.max(16, Math.min(Math.floor(cell * 0.85), Math.floor((panelW - 72) / 2)));
+      const previewGap = previewCell * 2 + 16;
+      const previewX = panelX + panelW / 2 - previewCell / 2;
       nextQueue.forEach((pair, idx) => {
         if (idx >= 3) return;
-        const baseX = panelX + 32;
-        const baseY = previewY + idx * (previewCell*2 + 12);
-        drawBlob(baseX, baseY, previewCell, COLORS[pair[0]]);
-        drawBlob(baseX, baseY + previewCell, previewCell, COLORS[pair[1]]);
+        const baseY = previewY + idx * previewGap;
+        if (ctx.roundRect){
+          ctx.fillStyle = 'rgba(148,163,184,0.08)';
+          ctx.beginPath();
+          ctx.roundRect(panelX + 18, baseY - 12, panelW - 36, previewCell * 2 + 24, 14);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = 'rgba(148,163,184,0.08)';
+          ctx.fillRect(panelX + 18, baseY - 12, panelW - 36, previewCell * 2 + 24);
+        }
+        drawBlob(previewX, baseY, previewCell, COLORS[pair[0]]);
+        drawBlob(previewX, baseY + previewCell, previewCell, COLORS[pair[1]]);
       });
 
       if (ended){

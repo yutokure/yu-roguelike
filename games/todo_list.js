@@ -68,6 +68,10 @@
       editingTaskId: null,
       sessionXp: 0
     };
+    const collapseState = {
+      pending: false,
+      completed: false
+    };
 
     const today = (() => {
       try {
@@ -268,6 +272,7 @@
     pendingTitle.style.fontSize = '18px';
     pendingTitle.style.color = '#b91c1c';
     const pendingList = document.createElement('div');
+    pendingList.id = 'todo_pending_list';
     pendingList.style.display = 'flex';
     pendingList.style.flexDirection = 'column';
     pendingList.style.gap = '12px';
@@ -282,12 +287,16 @@
     completedTitle.style.fontSize = '18px';
     completedTitle.style.color = '#6b7280';
     const completedList = document.createElement('div');
+    completedList.id = 'todo_completed_list';
     completedList.style.display = 'flex';
     completedList.style.flexDirection = 'column';
     completedList.style.gap = '12px';
 
     completedSection.appendChild(completedTitle);
     completedSection.appendChild(completedList);
+
+    const updatePendingVisibility = makeCollapsibleSection(pendingTitle, pendingList, 'pending');
+    const updateCompletedVisibility = makeCollapsibleSection(completedTitle, completedList, 'completed');
 
     listsWrap.appendChild(pendingSection);
     listsWrap.appendChild(completedSection);
@@ -353,6 +362,62 @@
       } else {
         done.forEach(task => completedList.appendChild(renderTaskCard(task)));
       }
+
+      updatePendingVisibility();
+      updateCompletedVisibility();
+    }
+
+    function makeCollapsibleSection(titleEl, listEl, key){
+      const labelText = titleEl.textContent;
+      const icon = document.createElement('span');
+      icon.textContent = '▼';
+      icon.style.display = 'inline-flex';
+      icon.style.alignItems = 'center';
+      icon.style.justifyContent = 'center';
+      icon.style.width = '18px';
+      icon.style.fontSize = '12px';
+      icon.style.color = titleEl.style.color || '#111827';
+
+      const label = document.createElement('span');
+      label.textContent = labelText;
+
+      titleEl.textContent = '';
+      titleEl.appendChild(icon);
+      titleEl.appendChild(label);
+      titleEl.style.display = 'flex';
+      titleEl.style.alignItems = 'center';
+      titleEl.style.gap = '6px';
+      titleEl.style.cursor = 'pointer';
+      titleEl.style.userSelect = 'none';
+      titleEl.tabIndex = 0;
+      titleEl.setAttribute('role', 'button');
+      if (!listEl.id){
+        listEl.id = `todo_section_${key}`;
+      }
+      titleEl.setAttribute('aria-controls', listEl.id);
+
+      function update(){
+        const collapsed = !!collapseState[key];
+        icon.textContent = collapsed ? '▶' : '▼';
+        listEl.style.display = collapsed ? 'none' : 'flex';
+        titleEl.setAttribute('aria-expanded', String(!collapsed));
+      }
+
+      function toggle(){
+        collapseState[key] = !collapseState[key];
+        update();
+      }
+
+      titleEl.addEventListener('click', toggle);
+      titleEl.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' '){
+          event.preventDefault();
+          toggle();
+        }
+      });
+
+      update();
+      return update;
     }
 
     function renderTaskCard(task){

@@ -246,7 +246,8 @@
       ctx.fillStyle = '#0b1120';
       ctx.fillRect(0,0,W,H);
       const margin = 24;
-      const cell = Math.floor((W - margin*2 - 140) / COLS);
+      const baseCell = Math.floor((W - margin*2 - 140) / COLS);
+      const cell = Math.max(12, Math.floor(baseCell * 0.5));
       const gridW = cell * COLS;
       const gridH = cell * ROWS;
       const ox = margin;

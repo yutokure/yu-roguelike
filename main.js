@@ -4141,6 +4141,10 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     let leveled = 0;
     while (player.exp >= 1000) {
         player.exp -= 1000;
+        const beforeLevel = player.level;
+        const beforeMaxHp = player.maxHp;
+        const beforeAttack = player.attack;
+        const beforeDefense = player.defense;
         player.level += 1;
         player.maxHp += 5;
         player.attack += 1;
@@ -4148,6 +4152,10 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
         player.hp = player.maxHp;
         leveled++;
         try { showLevelUpPopup(); } catch {}
+        try {
+            const levelUpMsg = `レベルアップ！レベル：${player.level} (+${player.level - beforeLevel})|最大HP：${player.maxHp}(+${player.maxHp - beforeMaxHp})|攻撃力：${player.attack}(+${player.attack - beforeAttack})|防御力：${player.defense}(+${player.defense - beforeDefense})`;
+            addMessage(levelUpMsg);
+        } catch {}
         if (expBar) {
             expBar.style.transition = 'width 0.25s';
             expBar.style.width = '100%';

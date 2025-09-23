@@ -16,7 +16,7 @@
 
     const canvas = document.createElement('canvas');
     const W = Math.max(360, Math.min(520, root.clientWidth || 420));
-    const H = Math.max(480, Math.min(620, root.clientHeight || 540));
+    const H = Math.max(540, Math.min(620, root.clientHeight || 540));
     canvas.width = W;
     canvas.height = H;
     canvas.style.display = 'block';

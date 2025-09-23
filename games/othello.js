@@ -4,6 +4,17 @@
   const DIRS = [
     [1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]
   ];
+  const POSITION_WEIGHTS = [
+    [120,-25, 20,  5,  5, 20,-25,120],
+    [-25,-40, -5, -5, -5, -5,-40,-25],
+    [ 20, -5, 10,  2,  2, 10, -5, 20],
+    [  5, -5,  2,  1,  1,  2, -5,  5],
+    [  5, -5,  2,  1,  1,  2, -5,  5],
+    [ 20, -5, 10,  2,  2, 10, -5, 20],
+    [-25,-40, -5, -5, -5, -5,-40,-25],
+    [120,-25, 20,  5,  5, 20,-25,120]
+  ];
+  const HARD_DEPTH = 4;
 
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty)||'NORMAL';
@@ -30,19 +41,94 @@
     board[3][3]=WHITE; board[4][4]=WHITE; board[3][4]=BLACK; board[4][3]=BLACK;
 
     function inb(x,y){ return x>=0 && x<SIZE && y>=0 && y<SIZE; }
-    function flipsAt(x,y,color){
-      if (board[y][x] !== EMPTY) return [];
+    function flipsAt(x,y,color, targetBoard=board){
+      if (targetBoard[y][x] !== EMPTY) return [];
       const flips = [];
       for (const [dx,dy] of DIRS){
         let cx=x+dx, cy=y+dy; const line=[];
-        while(inb(cx,cy) && board[cy][cx] === -color){ line.push([cx,cy]); cx+=dx; cy+=dy; }
-        if (inb(cx,cy) && board[cy][cx] === color && line.length>0){ flips.push(...line); }
+        while(inb(cx,cy) && targetBoard[cy][cx] === -color){ line.push([cx,cy]); cx+=dx; cy+=dy; }
+        if (inb(cx,cy) && targetBoard[cy][cx] === color && line.length>0){ flips.push(...line); }
       }
       return flips;
     }
-    function legalMoves(color){
-      const mv=[]; for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){ const f=flipsAt(x,y,color); if (f.length>0) mv.push({x,y,flips:f}); }
+    function legalMoves(color, targetBoard=board){
+      const mv=[]; for(let y=0;y<SIZE;y++) for(let x=0;x<SIZE;x++){ const f=flipsAt(x,y,color,targetBoard); if (f.length>0) mv.push({x,y,flips:f}); }
       return mv;
+    }
+
+    function applyMoveOnBoard(srcBoard, mv, color){
+      const next = srcBoard.map(row=>row.slice());
+      next[mv.y][mv.x] = color;
+      for (const [fx,fy] of mv.flips){ next[fy][fx] = color; }
+      return next;
+    }
+
+    function isAdjacentToEmptyCorner(x,y,targetBoard){
+      const corners = [[0,0],[0,SIZE-1],[SIZE-1,0],[SIZE-1,SIZE-1]];
+      for (const [cx,cy] of corners){
+        if (targetBoard[cy][cx] !== EMPTY) continue;
+        if (Math.abs(cx-x) <= 1 && Math.abs(cy-y) <= 1 && (cx !== x || cy !== y)){
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function evaluateMoveNormal(mv){
+      let score = mv.flips.length * 1.6;
+      score += POSITION_WEIGHTS[mv.y][mv.x];
+      if (isAdjacentToEmptyCorner(mv.x, mv.y, board)) score -= 15;
+      const simulated = applyMoveOnBoard(board, mv, WHITE);
+      const myFollow = legalMoves(WHITE, simulated).length;
+      const oppMoves = legalMoves(BLACK, simulated).length;
+      score += (myFollow - oppMoves) * 1.2;
+      return score;
+    }
+
+    function evaluateBoard(targetBoard){
+      let value = 0;
+      let whiteCount = 0, blackCount = 0;
+      for (let y=0;y<SIZE;y++) for (let x=0;x<SIZE;x++){
+        const cell = targetBoard[y][x];
+        if (cell === WHITE){ value += POSITION_WEIGHTS[y][x]; whiteCount++; }
+        else if (cell === BLACK){ value -= POSITION_WEIGHTS[y][x]; blackCount++; }
+      }
+      const mobility = legalMoves(WHITE, targetBoard).length - legalMoves(BLACK, targetBoard).length;
+      value += mobility * 5;
+      value += (whiteCount - blackCount) * 1.5;
+      return value;
+    }
+
+    function minimax(targetBoard, depth, isWhiteTurn, alpha, beta){
+      if (depth === 0){ return evaluateBoard(targetBoard); }
+      const color = isWhiteTurn ? WHITE : BLACK;
+      const moves = legalMoves(color, targetBoard);
+      if (moves.length === 0){
+        const oppMoves = legalMoves(-color, targetBoard);
+        if (oppMoves.length === 0) return evaluateBoard(targetBoard);
+        return minimax(targetBoard, depth-1, !isWhiteTurn, alpha, beta);
+      }
+      if (isWhiteTurn){
+        let best = -Infinity;
+        for (const mv of moves){
+          const next = applyMoveOnBoard(targetBoard, mv, WHITE);
+          const val = minimax(next, depth-1, false, alpha, beta);
+          if (val > best) best = val;
+          if (best > alpha) alpha = best;
+          if (beta <= alpha) break;
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (const mv of moves){
+          const next = applyMoveOnBoard(targetBoard, mv, BLACK);
+          const val = minimax(next, depth-1, true, alpha, beta);
+          if (val < best) best = val;
+          if (best < beta) beta = best;
+          if (beta <= alpha) break;
+        }
+        return best;
+      }
     }
 
     function draw(){
@@ -135,18 +221,22 @@
       if (difficulty==='EASY'){
         choice = moves[(Math.random()*moves.length)|0];
       } else {
-        // NORMAL/HARD: greedy + corner weight
-        const corner = (x,y)=> ( (x===0||x===SIZE-1) && (y===0||y===SIZE-1) ) ? 5 : 0;
-        let best=-1e9;
-        for (const m of moves){
-          let score = m.flips.length;
-          score += corner(m.x,m.y)*2;
-          if (difficulty==='HARD'){
-            // mobility heuristic: reduce player's next legal moves
-            const tmp = cloneBoard(board); applyMove({x:m.x,y:m.y,flips:m.flips}, WHITE, false);
-            const opp = legalMoves(BLACK).length; score -= opp*0.2; board = tmp; // revert via clone
+        if (difficulty === 'NORMAL'){
+          let best = -Infinity;
+          for (const m of moves){
+            const score = evaluateMoveNormal(m);
+            if (score > best){ best = score; choice = m; }
           }
-          if (score>best){ best=score; choice=m; }
+        } else {
+          let best = -Infinity;
+          let maxDepth = HARD_DEPTH;
+          const emptyCount = board.flat().filter(v=>v===EMPTY).length;
+          if (emptyCount <= 10) maxDepth = HARD_DEPTH + 1;
+          for (const m of moves){
+            const next = applyMoveOnBoard(board, m, WHITE);
+            const score = minimax(next, maxDepth-1, false, -Infinity, Infinity);
+            if (score > best){ best = score; choice = m; }
+          }
         }
       }
       applyMove(choice, WHITE, false);
@@ -154,8 +244,6 @@
       endIfNoMoves();
       draw();
     }
-
-    function cloneBoard(src){ return src.map(row=>row.slice()); }
 
     let lastHoverKey = '';
     function mousemove(e){

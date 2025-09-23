@@ -29,15 +29,15 @@
     { id: 'memory', title: '神経衰弱', icon: '🧠', phase: 1, implemented: true, description: 'ペアを揃える定番記憶ゲーム。' },
     { id: 'blackjack', title: 'ブラックジャック', icon: '🃏', phase: 1, implemented: true, description: '21を目指してディーラーと勝負。' },
     { id: 'baba', title: 'ババ抜き', icon: '😼', phase: 1, implemented: true, description: 'ジョーカーを最後まで残さないように。' },
-    { id: 'klondike', title: 'ソリティア（クロンダイク）', icon: '🂮', phase: 2, implemented: false, description: '7列の場札から台札を揃えるソリティア。' },
-    { id: 'spider', title: 'スパイダーソリティア', icon: '🕷️', phase: 3, implemented: false, description: '完成した列を確実に作る耐久ソリティア。' },
-    { id: 'freecell', title: 'フリーセル', icon: '🗄️', phase: 2, implemented: false, description: '4つのセルを駆使するソリティア。' },
-    { id: 'hearts', title: 'ハーツ', icon: '♥️', phase: 3, implemented: false, description: 'ハートを避けるトリックテイキング。' },
-    { id: 'sevens', title: '七並べ', icon: '7️⃣', phase: 2, implemented: false, description: '7を基点にカードを並べる。' },
-    { id: 'poker', title: 'ポーカー（ドロー）', icon: '♠️', phase: 2, implemented: false, description: '役を完成させて高得点を狙う。' },
-    { id: 'jiji', title: 'ジジ抜き', icon: '👴', phase: 2, implemented: false, description: 'ジョーカー設定可のババ抜き拡張。' },
-    { id: 'daifugo', title: '大富豪', icon: '👑', phase: 3, implemented: false, description: '革命必至の手札管理ゲーム。' },
-    { id: 'pageone', title: 'ページワン', icon: '📖', phase: 2, implemented: false, description: 'UNOの祖先とされる定番ゲーム。' }
+    { id: 'klondike', title: 'ソリティア（クロンダイク）', icon: '🂮', phase: 2, implemented: true, description: '7列の場札から台札を揃えるソリティア。' },
+    { id: 'spider', title: 'スパイダーソリティア', icon: '🕷️', phase: 3, implemented: true, description: '完成した列を確実に作る耐久ソリティア。' },
+    { id: 'freecell', title: 'フリーセル', icon: '🗄️', phase: 2, implemented: true, description: '4つのセルを駆使するソリティア。' },
+    { id: 'hearts', title: 'ハーツ', icon: '♥️', phase: 3, implemented: true, description: 'ハートを避けるトリックテイキング。' },
+    { id: 'sevens', title: '七並べ', icon: '7️⃣', phase: 2, implemented: true, description: '7を基点にカードを並べる。' },
+    { id: 'poker', title: 'ポーカー（ドロー）', icon: '♠️', phase: 2, implemented: true, description: '役を完成させて高得点を狙う。' },
+    { id: 'jiji', title: 'ジジ抜き', icon: '👴', phase: 2, implemented: true, description: 'ジョーカー設定可のババ抜き拡張。' },
+    { id: 'daifugo', title: '大富豪', icon: '👑', phase: 3, implemented: true, description: '革命必至の手札管理ゲーム。' },
+    { id: 'pageone', title: 'ページワン', icon: '📖', phase: 2, implemented: true, description: 'UNOの祖先とされる定番ゲーム。' }
   ];
 
   const CARD_BACK_OPTIONS = [
@@ -114,6 +114,56 @@
     .mini-trump-wrapper[data-card-back="forest"] .mini-trump-card.face-down{background:linear-gradient(135deg,#134e4a,#0f766e);color:#5eead4;border-color:rgba(45,212,191,0.85);}
     .mini-trump-card.interactive{cursor:pointer;}
     .mini-trump-card.interactive:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(37,99,235,0.32);}
+    .mini-trump-card.selected{outline:2px solid #fbbf24;outline-offset:-3px;}
+    .mini-trump-klondike{display:flex;flex-direction:column;gap:18px;align-items:center;justify-content:flex-start;padding-top:8px;}
+    .mini-trump-klondike-top{display:flex;gap:24px;justify-content:space-between;width:100%;max-width:820px;}
+    .mini-trump-klondike-stack{display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .mini-trump-klondike-stock{display:flex;gap:16px;}
+    .mini-trump-klondike-tableau{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;width:100%;max-width:860px;}
+    .mini-trump-pile{width:80px;height:112px;border-radius:10px;border:1px dashed rgba(148,163,184,0.45);position:relative;display:flex;align-items:flex-end;justify-content:center;padding:6px;box-sizing:border-box;transition:border .2s,box-shadow .2s,background .2s;}
+    .mini-trump-pile.interactive{cursor:pointer;}
+    .mini-trump-pile.empty{background:rgba(15,23,42,0.3);}
+    .mini-trump-pile.drop-target{border-color:rgba(74,222,128,0.85);box-shadow:0 0 0 2px rgba(74,222,128,0.35);}
+    .mini-trump-klondike-foundations{display:flex;gap:16px;}
+    .mini-trump-klondike-foundations .mini-trump-pile{width:78px;}
+    .mini-trump-klondike-column{position:relative;min-height:140px;padding:6px;border-radius:10px;border:1px dashed rgba(148,163,184,0.35);background:rgba(15,23,42,0.28);box-sizing:border-box;transition:border .2s,box-shadow .2s;}
+    .mini-trump-klondike-column.drop-target{border-color:rgba(74,222,128,0.85);box-shadow:0 0 0 2px rgba(74,222,128,0.35);}
+    .mini-trump-klondike-column.empty{background:rgba(15,23,42,0.18);}
+    .mini-trump-klondike-column .mini-trump-card{position:absolute;left:50%;transform:translateX(-50%);transition:transform .15s;}
+    .mini-trump-klondike-placeholder{font-size:18px;color:rgba(148,163,184,0.8);}
+    .mini-trump-klondike-waste{position:absolute;inset:0;}
+    .mini-trump-klondike-info{font-size:13px;color:#94a3b8;text-align:center;}
+    .mini-trump-spider{display:flex;flex-direction:column;gap:18px;align-items:center;padding-top:8px;}
+    .mini-trump-spider-top{display:flex;gap:24px;align-items:flex-start;justify-content:space-between;width:100%;max-width:920px;}
+    .mini-trump-spider-stock{display:flex;gap:14px;align-items:flex-start;}
+    .mini-trump-spider-columns{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:10px;width:100%;max-width:920px;}
+    .mini-trump-spider-column{position:relative;min-height:140px;padding:6px;border-radius:10px;border:1px dashed rgba(148,163,184,0.35);background:rgba(15,23,42,0.28);box-sizing:border-box;transition:border .2s,box-shadow .2s;}
+    .mini-trump-spider-column.drop-target{border-color:rgba(74,222,128,0.85);box-shadow:0 0 0 2px rgba(74,222,128,0.35);}
+    .mini-trump-spider-column.empty{background:rgba(15,23,42,0.18);}
+    .mini-trump-spider-column .mini-trump-card{position:absolute;left:50%;transform:translateX(-50%);transition:transform .15s;}
+    .mini-trump-freecell{display:flex;flex-direction:column;gap:18px;align-items:center;padding-top:8px;}
+    .mini-trump-freecell-top{display:flex;gap:24px;align-items:flex-start;justify-content:space-between;width:100%;max-width:960px;}
+    .mini-trump-freecell-cells,.mini-trump-freecell-foundations{display:flex;gap:12px;}
+    .mini-trump-freecell-columns{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px;width:100%;max-width:960px;}
+    .mini-trump-freecell-column{position:relative;min-height:140px;padding:6px;border-radius:10px;border:1px dashed rgba(148,163,184,0.35);background:rgba(15,23,42,0.28);box-sizing:border-box;transition:border .2s,box-shadow .2s;}
+    .mini-trump-freecell-column.drop-target{border-color:rgba(74,222,128,0.85);box-shadow:0 0 0 2px rgba(74,222,128,0.35);}
+    .mini-trump-freecell-column.empty{background:rgba(15,23,42,0.18);}
+    .mini-trump-freecell-column .mini-trump-card{position:absolute;left:50%;transform:translateX(-50%);transition:transform .12s;}
+    .mini-trump-table-game{display:flex;flex-direction:column;gap:18px;align-items:center;padding:12px 0;width:100%;}
+    .mini-trump-table-layout{display:grid;gap:18px;grid-template-columns:repeat(2,minmax(0,1fr));max-width:780px;width:100%;}
+    .mini-trump-table-players{display:flex;flex-direction:column;gap:12px;}
+    .mini-trump-table-player{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:rgba(15,23,42,0.35);border:1px solid rgba(148,163,184,0.18);}
+    .mini-trump-table-player.active{border-color:rgba(96,165,250,0.7);box-shadow:0 0 0 2px rgba(37,99,235,0.28);}
+    .mini-trump-table-player .name{font-weight:600;color:#e2e8f0;}
+    .mini-trump-table-player .meta{margin-left:auto;font-size:12px;color:#94a3b8;display:flex;gap:8px;align-items:center;}
+    .mini-trump-table-board{background:rgba(15,23,42,0.32);border:1px solid rgba(148,163,184,0.2);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:14px;}
+    .mini-trump-trick{display:flex;justify-content:center;gap:18px;align-items:center;flex-wrap:wrap;min-height:120px;}
+    .mini-trump-trick-card{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:#94a3b8;}
+    .mini-trump-hand-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+    .mini-trump-hand-row button{border:none;border-radius:8px;padding:6px 10px;background:rgba(148,163,184,0.12);color:#e2e8f0;font-weight:600;cursor:pointer;transition:background .2s,transform .15s;}
+    .mini-trump-hand-row button:hover{background:rgba(148,163,184,0.22);transform:translateY(-2px);}
+    .mini-trump-hand-row button.disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+    .mini-trump-table-summary{font-size:13px;color:#cbd5f5;display:flex;flex-direction:column;gap:6px;}
     .mini-trump-grid{display:grid;gap:12px;justify-content:center;}
     .mini-trump-fan{position:relative;}
     .mini-trump-blackjack{display:flex;flex-direction:column;gap:16px;align-items:center;}
@@ -127,9 +177,60 @@
     .mini-trump-baba-player .name{font-weight:600;color:#e2e8f0;}
     .mini-trump-baba-player .hand{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
     .mini-trump-baba-player .hand button{width:48px;height:68px;border-radius:8px;border:none;background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#e2e8f0;cursor:pointer;font-weight:600;}
-    .mini-trump-baba-player .hand button:hover{background:linear-gradient(135deg,#1e3a8a,#2563eb);} 
+    .mini-trump-baba-player .hand button:hover{background:linear-gradient(135deg,#1e3a8a,#2563eb);}
     .mini-trump-baba-player .hand-empty{font-size:12px;color:#94a3b8;}
     .mini-trump-finished{font-size:12px;color:#38bdf8;margin-top:6px;}
+    .mini-trump-poker{display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:8px;width:100%;}
+    .mini-trump-poker-board{display:flex;flex-direction:column;gap:16px;width:100%;max-width:860px;}
+    .mini-trump-poker-opponents{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+    .mini-trump-poker-opponent{background:rgba(15,23,42,0.42);border:1px solid rgba(148,163,184,0.18);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;min-height:120px;}
+    .mini-trump-poker-opponent.active{border-color:rgba(96,165,250,0.65);box-shadow:0 0 0 2px rgba(37,99,235,0.32);}
+    .mini-trump-poker-opponent .name{font-weight:600;color:#e2e8f0;}
+    .mini-trump-poker-opponent .cards{display:flex;gap:6px;flex-wrap:wrap;}
+    .mini-trump-poker-opponent .cards .mini-trump-card{width:48px;height:68px;}
+    .mini-trump-poker-player{background:rgba(15,23,42,0.45);border:1px solid rgba(148,163,184,0.2);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;}
+    .mini-trump-poker-player h3{margin:0;font-size:15px;color:#e2e8f0;}
+    .mini-trump-poker-hand{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+    .mini-trump-poker-card{position:relative;cursor:pointer;}
+    .mini-trump-poker-card.hold::after{content:'HOLD';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:11px;background:rgba(56,189,248,0.85);color:#0f172a;padding:2px 6px;border-radius:999px;font-weight:700;letter-spacing:0.04em;}
+    .mini-trump-poker-card.locked{cursor:default;}
+    .mini-trump-poker-summary{font-size:13px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;}
+    .mini-trump-jiji-table{display:flex;flex-direction:column;gap:18px;align-items:center;}
+    .mini-trump-jiji-center{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+    .mini-trump-jiji-table-card{background:rgba(15,23,42,0.42);border:1px solid rgba(148,163,184,0.25);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;min-width:160px;}
+    .mini-trump-jiji-table-card.swap-ready{border-color:rgba(248,250,252,0.65);box-shadow:0 0 0 2px rgba(248,250,252,0.25);}
+    .mini-trump-jiji-table-card button{border:none;border-radius:8px;background:rgba(37,99,235,0.28);color:#e0f2fe;padding:6px 12px;cursor:pointer;font-weight:600;}
+    .mini-trump-jiji-table-card button:disabled{opacity:0.5;cursor:not-allowed;}
+    .mini-trump-jiji-table-card .label{font-size:13px;color:#e2e8f0;font-weight:600;}
+    .mini-trump-jiji-table-card .meta{font-size:12px;color:#94a3b8;}
+    .mini-trump-daifugo{display:flex;flex-direction:column;gap:18px;align-items:center;width:100%;padding-top:8px;}
+    .mini-trump-daifugo-board{width:100%;max-width:880px;display:flex;flex-direction:column;gap:16px;}
+    .mini-trump-daifugo-players{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+    .mini-trump-daifugo-player{background:rgba(15,23,42,0.42);border:1px solid rgba(148,163,184,0.2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;}
+    .mini-trump-daifugo-player.active{border-color:rgba(56,189,248,0.8);box-shadow:0 0 0 2px rgba(56,189,248,0.35);}
+    .mini-trump-daifugo-player .name{font-weight:600;color:#e2e8f0;}
+    .mini-trump-daifugo-player .meta{font-size:12px;color:#94a3b8;}
+    .mini-trump-daifugo-center{display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;}
+    .mini-trump-daifugo-center .pile{display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(15,23,42,0.38);border:1px dashed rgba(148,163,184,0.28);border-radius:12px;padding:12px;min-width:160px;}
+    .mini-trump-daifugo-center .pile h4{margin:0;font-size:13px;color:#e2e8f0;}
+    .mini-trump-daifugo-hand{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+    .mini-trump-daifugo-hand button{border:none;border-radius:8px;background:rgba(59,130,246,0.24);color:#e0f2fe;padding:8px 12px;font-weight:600;cursor:pointer;}
+    .mini-trump-daifugo-hand button.disabled{opacity:0.4;cursor:not-allowed;}
+    .mini-trump-daifugo-history{font-size:12px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;}
+    .mini-trump-pageone{display:flex;flex-direction:column;gap:16px;align-items:center;width:100%;padding-top:8px;}
+    .mini-trump-pageone-board{width:100%;max-width:840px;display:flex;flex-direction:column;gap:16px;}
+    .mini-trump-pageone-opponents{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+    .mini-trump-pageone-opponent{background:rgba(15,23,42,0.4);border:1px solid rgba(148,163,184,0.18);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;}
+    .mini-trump-pageone-opponent.active{border-color:rgba(37,99,235,0.62);box-shadow:0 0 0 2px rgba(37,99,235,0.32);}
+    .mini-trump-pageone-opponent .name{font-weight:600;color:#e2e8f0;}
+    .mini-trump-pageone-opponent .meta{font-size:12px;color:#94a3b8;}
+    .mini-trump-pageone-center{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;}
+    .mini-trump-pageone-center .deck,.mini-trump-pageone-center .discard{background:rgba(15,23,42,0.38);border:1px solid rgba(148,163,184,0.22);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;align-items:center;min-width:150px;}
+    .mini-trump-pageone-center h4{margin:0;font-size:13px;color:#e2e8f0;}
+    .mini-trump-pageone-hand{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+    .mini-trump-pageone-hand button{border:none;border-radius:8px;background:rgba(59,130,246,0.25);color:#e2e8f0;padding:8px 12px;font-weight:600;cursor:pointer;}
+    .mini-trump-pageone-hand button.disabled{opacity:0.4;cursor:not-allowed;}
+    .mini-trump-pageone-status{font-size:12px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;text-align:center;}
     @media (max-width:960px){
       .mini-trump-wrapper{flex-direction:column;}
       .mini-trump-nav{width:100%;flex-direction:row;}
@@ -804,7 +905,16 @@
 
       let runtime;
       try {
-        if (def.id === 'memory') runtime = createMemoryGame(gameRoot, context);
+        if (def.id === 'klondike') runtime = createKlondikeGame(gameRoot, context);
+        else if (def.id === 'spider') runtime = createSpiderGame(gameRoot, context);
+        else if (def.id === 'freecell') runtime = createFreecellGame(gameRoot, context);
+        else if (def.id === 'hearts') runtime = createHeartsGame(gameRoot, context);
+        else if (def.id === 'sevens') runtime = createSevensGame(gameRoot, context);
+        else if (def.id === 'poker') runtime = createPokerGame(gameRoot, context);
+        else if (def.id === 'jiji') runtime = createJijiGame(gameRoot, context);
+        else if (def.id === 'daifugo') runtime = createDaifugoGame(gameRoot, context);
+        else if (def.id === 'pageone') runtime = createPageOneGame(gameRoot, context);
+        else if (def.id === 'memory') runtime = createMemoryGame(gameRoot, context);
         else if (def.id === 'blackjack') runtime = createBlackjackGame(gameRoot, context);
         else if (def.id === 'baba') runtime = createBabaGame(gameRoot, context);
         else runtime = createPlaceholderGame(gameRoot, context, def);
@@ -888,6 +998,1962 @@
       getScore(){
         try { return state.currentRuntime && state.currentRuntime.getScore ? state.currentRuntime.getScore() : 0; } catch{ return 0; }
       }
+    };
+  }
+
+  function createKlondikeGame(container, ctx){
+    const foundationDefs = SUITS.filter(s => s.id !== 'joker').map(s => ({ suit: s.id, symbol: s.symbol, label: s.label }));
+    const foundationIndex = new Map(foundationDefs.map((def, idx) => [def.suit, idx]));
+
+    const state = {
+      stock: [],
+      waste: [],
+      tableaus: [],
+      foundations: [],
+      selected: null,
+      moves: 0,
+      recycles: 0,
+      finished: false
+    };
+
+    const root = document.createElement('div');
+    root.className = 'mini-trump-klondike';
+
+    const topRow = document.createElement('div');
+    topRow.className = 'mini-trump-klondike-top';
+
+    const stockGroup = document.createElement('div');
+    stockGroup.className = 'mini-trump-klondike-stock';
+
+    const stockStack = createStack('山札', 'stock');
+    stockStack.pile.classList.add('interactive');
+    stockStack.pile.addEventListener('click', () => drawFromStock());
+
+    const wasteStack = createStack('捨て札', 'waste');
+    wasteStack.pile.addEventListener('click', () => handleWasteClick());
+
+    stockGroup.appendChild(stockStack.wrapper);
+    stockGroup.appendChild(wasteStack.wrapper);
+
+    const foundationGroup = document.createElement('div');
+    foundationGroup.className = 'mini-trump-klondike-foundations';
+    const foundationStacks = [];
+    foundationDefs.forEach((def, idx) => {
+      const stack = createStack(`${def.symbol} 台札`, 'foundation');
+      stack.pile.addEventListener('click', () => handleFoundationClick(idx));
+      foundationGroup.appendChild(stack.wrapper);
+      foundationStacks.push(stack);
+    });
+
+    topRow.appendChild(stockGroup);
+    topRow.appendChild(foundationGroup);
+
+    const tableauRow = document.createElement('div');
+    tableauRow.className = 'mini-trump-klondike-tableau';
+    const columnEls = [];
+    for (let i = 0; i < 7; i++) {
+      const col = document.createElement('div');
+      col.className = 'mini-trump-klondike-column empty';
+      col.dataset.column = String(i);
+      col.addEventListener('click', (ev) => {
+        if (ev.target !== col) return;
+        if (state.selected) {
+          if (!moveSelectedToTableau(i)) {
+            ctx.showToast('その列には移動できません。', { type: 'warn', duration: 1500 });
+          }
+        }
+      });
+      columnEls.push(col);
+      tableauRow.appendChild(col);
+    }
+
+    const info = document.createElement('div');
+    info.className = 'mini-trump-klondike-info';
+    info.textContent = '山札をめくるか、場札を選択して移動しましょう。';
+
+    root.appendChild(topRow);
+    root.appendChild(tableauRow);
+    root.appendChild(info);
+
+    container.innerHTML = '';
+    container.appendChild(root);
+
+    function createStack(labelText, pileClass){
+      const wrapper = document.createElement('div');
+      wrapper.className = 'mini-trump-klondike-stack';
+      const pile = document.createElement('div');
+      pile.className = `mini-trump-pile ${pileClass || ''}`.trim();
+      const label = document.createElement('div');
+      label.className = 'mini-trump-meta';
+      label.textContent = labelText;
+      wrapper.appendChild(pile);
+      wrapper.appendChild(label);
+      return { wrapper, pile, label };
+    }
+
+    function restart(){
+      const deck = ctx.cardUtils.createDeck();
+      ctx.cardUtils.shuffle(deck);
+      state.tableaus = [];
+      for (let col = 0; col < 7; col++) {
+        const column = [];
+        for (let depth = 0; depth <= col; depth++) {
+          const card = deck.pop();
+          column.push({ card, faceUp: depth === col });
+        }
+        state.tableaus.push(column);
+      }
+      state.stock = deck;
+      state.waste = [];
+      state.foundations = foundationDefs.map(def => ({ suit: def.suit, symbol: def.symbol, label: def.label, cards: [] }));
+      state.selected = null;
+      state.moves = 0;
+      state.recycles = 0;
+      state.finished = false;
+      setDefaultActions();
+      render();
+      ctx.showToast('新しい配置でゲームを開始しました。', { duration: 1600 });
+    }
+
+    function setDefaultActions(){
+      ctx.setActions([
+        { label: '山札をめくる (D)', variant: 'primary', hotkey: 'D', onClick: () => drawFromStock() },
+        { label: '自動で台札へ (A)', variant: 'secondary', hotkey: 'A', onClick: () => autoMoveToFoundation() },
+        { label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => restart() },
+        { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+    }
+
+    function drawFromStock(){
+      if (state.finished) return;
+      if (state.stock.length) {
+        const card = state.stock.pop();
+        state.waste.push({ card, faceUp: true });
+        state.moves++;
+        state.selected = null;
+        ctx.award(1, { type: 'klondike-stock' });
+        ctx.playClick();
+        render();
+        return;
+      }
+      if (!state.waste.length) {
+        ctx.showToast('山札も捨て札も空です。', { type: 'warn', duration: 1500 });
+        return;
+      }
+      state.stock = state.waste.map(entry => entry.card).reverse();
+      state.waste = [];
+      state.selected = null;
+      state.recycles++;
+      ctx.showToast('捨て札を山札に戻しました。', { duration: 1600 });
+      ctx.playClick();
+      render();
+    }
+
+    function handleWasteClick(){
+      if (!state.waste.length) return;
+      if (state.selected && state.selected.type === 'waste') {
+        state.selected = null;
+      } else {
+        state.selected = { type: 'waste' };
+      }
+      render();
+    }
+
+    function handleWasteDoubleClick(){
+      if (!state.waste.length || state.finished) return;
+      const source = { type: 'waste' };
+      if (moveStackToFoundationFrom(source)) {
+        applyPostMove(source);
+      } else {
+        ctx.showToast('台札に置ける場所がありません。', { type: 'warn', duration: 1500 });
+      }
+    }
+
+    function handleFoundationClick(index){
+      if (state.finished) return;
+      if (state.selected) {
+        if (moveSelectedToFoundation(index)) {
+          return;
+        }
+      }
+      const pile = state.foundations[index];
+      if (!pile.cards.length) return;
+      if (state.selected && state.selected.type === 'foundation' && state.selected.index === index) {
+        state.selected = null;
+      } else {
+        state.selected = { type: 'foundation', index };
+      }
+      render();
+    }
+
+    function handleTableauCardClick(columnIndex, cardIndex){
+      if (state.finished) return;
+      const column = state.tableaus[columnIndex];
+      if (!column) return;
+      const entry = column[cardIndex];
+      if (!entry) return;
+      const fromSameColumn = state.selected && state.selected.type === 'tableau' && state.selected.column === columnIndex;
+      if (state.selected && !fromSameColumn) {
+        const moved = moveSelectedToTableau(columnIndex);
+        if (moved) return;
+        ctx.showToast('その列には移動できません。', { type: 'warn', duration: 1500 });
+        return;
+      }
+      if (!entry.faceUp) {
+        if (cardIndex === column.length - 1) {
+          entry.faceUp = true;
+          ctx.playClick();
+          render();
+        } else {
+          ctx.showToast('このカードはまだ表にできません。', { type: 'warn', duration: 1500 });
+        }
+        return;
+      }
+      if (state.selected && state.selected.type === 'tableau' && state.selected.column === columnIndex && state.selected.index === cardIndex) {
+        state.selected = null;
+      } else {
+        const tail = column.slice(cardIndex);
+        if (tail.some(item => !item.faceUp)) {
+          ctx.showToast('裏向きのカードは移動できません。', { type: 'warn', duration: 1500 });
+          return;
+        }
+        state.selected = { type: 'tableau', column: columnIndex, index: cardIndex };
+      }
+      render();
+    }
+
+    function handleTableauDoubleClick(columnIndex, cardIndex){
+      if (state.finished) return;
+      const column = state.tableaus[columnIndex];
+      if (!column || !column.length) return;
+      if (cardIndex !== column.length - 1) return;
+      const entry = column[cardIndex];
+      if (!entry || !entry.faceUp) return;
+      const source = { type: 'tableau', column: columnIndex, index: cardIndex };
+      if (moveStackToFoundationFrom(source)) {
+        applyPostMove(source);
+      } else {
+        state.selected = { type: 'tableau', column: columnIndex, index: cardIndex };
+        render();
+      }
+    }
+
+    function moveSelectedToFoundation(index){
+      if (!state.selected) return false;
+      const source = state.selected;
+      const moved = moveStackToFoundationFrom(source, index);
+      if (!moved) {
+        ctx.showToast('そのカードは台札に置けません。', { type: 'warn', duration: 1500 });
+        return false;
+      }
+      applyPostMove(source);
+      return true;
+    }
+
+    function moveSelectedToTableau(columnIndex){
+      if (!state.selected) return false;
+      const source = state.selected;
+      if (source.type === 'tableau' && source.column === columnIndex) {
+        state.selected = null;
+        render();
+        return true;
+      }
+      const moved = moveStackToTableauFrom(source, columnIndex);
+      if (!moved) return false;
+      applyPostMove(source);
+      return true;
+    }
+
+    function moveStackToFoundationFrom(source, forcedIndex){
+      const stack = peekStack(source);
+      if (stack.length !== 1) return false;
+      const entry = stack[0];
+      const card = entry.card;
+      if (!card) return false;
+      const targetIndex = typeof forcedIndex === 'number' ? forcedIndex : foundationIndex.get(card.suit);
+      if (targetIndex == null) return false;
+      const target = state.foundations[targetIndex];
+      if (!target) return false;
+      if (!canPlaceOnFoundation(card, target)) return false;
+      const removed = takeStack(source);
+      target.cards.push(removed[0].card);
+      state.moves++;
+      ctx.award(1, { type: 'klondike-move', to: 'foundation', suit: target.suit });
+      if (target.cards.length === 13) {
+        ctx.award(25, { type: 'klondike-foundation', suit: target.suit });
+        ctx.showToast(`${target.label}の台札を完成！`, { duration: 2000 });
+      }
+      return true;
+    }
+
+    function moveStackToTableauFrom(source, columnIndex){
+      const stack = peekStack(source);
+      if (!stack.length) return false;
+      const column = state.tableaus[columnIndex];
+      if (!column) return false;
+      if (!canPlaceStackOnTableau(stack, column)) return false;
+      const removed = takeStack(source);
+      removed.forEach(entry => {
+        column.push({ card: entry.card, faceUp: true });
+      });
+      state.moves++;
+      ctx.award(1, { type: 'klondike-move', to: 'tableau', column: columnIndex });
+      return true;
+    }
+
+    function peekStack(source){
+      if (!source) return [];
+      if (source.type === 'waste') {
+        if (!state.waste.length) return [];
+        return [state.waste[state.waste.length - 1]];
+      }
+      if (source.type === 'tableau') {
+        const column = state.tableaus[source.column];
+        if (!column) return [];
+        return column.slice(source.index);
+      }
+      if (source.type === 'foundation') {
+        const pile = state.foundations[source.index];
+        if (!pile || !pile.cards.length) return [];
+        return [{ card: pile.cards[pile.cards.length - 1], faceUp: true }];
+      }
+      return [];
+    }
+
+    function takeStack(source){
+      if (!source) return [];
+      if (source.type === 'waste') {
+        if (!state.waste.length) return [];
+        return state.waste.splice(state.waste.length - 1, 1);
+      }
+      if (source.type === 'tableau') {
+        const column = state.tableaus[source.column];
+        if (!column) return [];
+        return column.splice(source.index);
+      }
+      if (source.type === 'foundation') {
+        const pile = state.foundations[source.index];
+        if (!pile || !pile.cards.length) return [];
+        const card = pile.cards.pop();
+        return [{ card, faceUp: true }];
+      }
+      return [];
+    }
+
+    function canPlaceOnFoundation(card, target){
+      if (!card || !target) return false;
+      if (card.suit !== target.suit) return false;
+      const needed = target.cards.length + 1;
+      return ctx.cardUtils.cardValue(card) === needed;
+    }
+
+    function canPlaceStackOnTableau(stack, column){
+      if (!stack.length) return false;
+      const lead = stack[0];
+      if (!lead.faceUp) return false;
+      const leadCard = lead.card;
+      if (!leadCard) return false;
+      if (!column.length) {
+        return ctx.cardUtils.cardValue(leadCard) === 13;
+      }
+      const target = column[column.length - 1];
+      if (!target.faceUp) return false;
+      const targetVal = ctx.cardUtils.cardValue(target.card);
+      const leadVal = ctx.cardUtils.cardValue(leadCard);
+      if (target.card.color === leadCard.color) return false;
+      return targetVal === leadVal + 1;
+    }
+
+    function autoMoveToFoundation(){
+      if (state.finished) return;
+      let moved = false;
+      let guard = 0;
+      while (guard < 64) {
+        guard++;
+        let source = null;
+        if (state.waste.length) {
+          const topWaste = state.waste[state.waste.length - 1];
+          const idx = foundationIndex.get(topWaste.card.suit);
+          if (idx != null && canPlaceOnFoundation(topWaste.card, state.foundations[idx])) {
+            source = { type: 'waste' };
+          }
+        }
+        if (!source) {
+          for (let i = 0; i < state.tableaus.length; i++) {
+            const column = state.tableaus[i];
+            if (!column.length) continue;
+            const top = column[column.length - 1];
+            if (!top.faceUp) continue;
+            const idx = foundationIndex.get(top.card.suit);
+            if (idx != null && canPlaceOnFoundation(top.card, state.foundations[idx])) {
+              source = { type: 'tableau', column: i, index: column.length - 1 };
+              break;
+            }
+          }
+        }
+        if (!source) break;
+        if (!moveStackToFoundationFrom(source)) break;
+        applyPostMove(source, { skipRender: true, skipWinCheck: true });
+        moved = true;
+      }
+      if (moved) {
+        ctx.playClick();
+        render();
+        checkWin();
+      } else {
+        ctx.showToast('移動できるカードがありません。', { type: 'warn', duration: 1500 });
+      }
+    }
+
+    function applyPostMove(source, opts){
+      if (source && source.type === 'tableau') {
+        const column = state.tableaus[source.column];
+        if (column && column.length) {
+          const last = column[column.length - 1];
+          if (last && !last.faceUp) {
+            last.faceUp = true;
+          }
+        }
+      }
+      state.selected = null;
+      if (opts && opts.skipRender) return;
+      ctx.playClick();
+      render();
+      if (!opts || !opts.skipWinCheck) {
+        checkWin();
+      }
+    }
+
+    function checkWin(){
+      if (state.finished) return;
+      const total = state.foundations.reduce((sum, pile) => sum + pile.cards.length, 0);
+      if (total === 52) {
+        finishGame();
+      }
+    }
+
+    function finishGame(){
+      state.finished = true;
+      ctx.award(150, { type: 'klondike-clear', moves: state.moves });
+      ctx.showToast('クロンダイクをクリアしました！', { duration: 3200 });
+      ctx.commitStats({ plays: 1, wins: 1, score: state.moves, bestMode: 'lower' });
+      ctx.setActions([
+        { label: '新しいゲーム (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+      render();
+    }
+
+    function updateInfo(){
+      if (state.finished) {
+        info.textContent = 'おめでとうございます！新しいゲームで腕試ししましょう。';
+      } else if (state.selected) {
+        info.textContent = '移動先をクリックしてください。空列にはキングのみ置けます。';
+      } else if (!state.waste.length && !state.stock.length) {
+        info.textContent = '捨て札をクリックして山札に戻しましょう。';
+      } else {
+        info.textContent = '山札をめくるか、場札を選択して移動しましょう。';
+      }
+    }
+
+    function updateHud(){
+      const foundationText = state.foundations.map(p => `${p.symbol}${p.cards.length}`).join(' / ');
+      ctx.setStatus(`移動 ${state.moves} 手 ・ 再構築 ${state.recycles} 回 ・ 山札 ${state.stock.length} ・ 捨て札 ${state.waste.length} ・ 台札 ${foundationText}`);
+      const stats = ctx.stats();
+      const best = stats.bestScore != null ? `${stats.bestScore} 手` : '---';
+      ctx.setScore(`通算 ${stats.plays || 0} 回 / 勝利 ${stats.wins || 0} 回 / ベスト ${best}`);
+    }
+
+    function render(){
+      renderStock();
+      renderWaste();
+      renderFoundations();
+      renderTableaus();
+      updateInfo();
+      updateHud();
+    }
+
+    function renderStock(){
+      const pile = stockStack.pile;
+      pile.innerHTML = '';
+      pile.classList.remove('empty');
+      pile.classList.add('interactive');
+      if (!state.stock.length) {
+        pile.classList.add('empty');
+        const placeholder = document.createElement('div');
+        placeholder.className = 'mini-trump-klondike-placeholder';
+        placeholder.textContent = state.waste.length ? '返す' : '空';
+        pile.appendChild(placeholder);
+      } else {
+        const top = state.stock[state.stock.length - 1];
+        const cardEl = ctx.cardUtils.renderCard(top, { faceUp: false });
+        pile.appendChild(cardEl);
+      }
+    }
+
+    function renderWaste(){
+      const pile = wasteStack.pile;
+      pile.innerHTML = '';
+      pile.classList.toggle('empty', state.waste.length === 0);
+      pile.classList.toggle('interactive', state.waste.length > 0);
+      if (!state.waste.length) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'mini-trump-klondike-placeholder';
+        placeholder.textContent = '---';
+        pile.appendChild(placeholder);
+        return;
+      }
+      const inner = document.createElement('div');
+      inner.className = 'mini-trump-klondike-waste';
+      pile.appendChild(inner);
+      const maxDisplay = Math.min(3, state.waste.length);
+      const start = state.waste.length - maxDisplay;
+      for (let i = start; i < state.waste.length; i++) {
+        const entry = state.waste[i];
+        const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: true });
+        const offset = i - start;
+        cardEl.style.position = 'absolute';
+        cardEl.style.left = `${offset * 18}px`;
+        cardEl.style.top = `${offset * 4}px`;
+        if (i === state.waste.length - 1) {
+          cardEl.classList.add('interactive');
+          cardEl.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            handleWasteClick();
+          });
+          cardEl.addEventListener('dblclick', (ev) => {
+            ev.stopPropagation();
+            handleWasteDoubleClick();
+          });
+          if (state.selected && state.selected.type === 'waste') {
+            cardEl.classList.add('selected');
+          }
+        }
+        inner.appendChild(cardEl);
+      }
+    }
+
+    function renderFoundations(){
+      foundationStacks.forEach((stack, idx) => {
+        const pile = stack.pile;
+        pile.innerHTML = '';
+        const statePile = state.foundations[idx];
+        const stackCards = statePile.cards;
+        if (!stackCards.length) {
+          pile.classList.add('empty');
+          pile.classList.remove('drop-target');
+          const placeholder = document.createElement('div');
+          placeholder.className = 'mini-trump-klondike-placeholder';
+          placeholder.textContent = statePile.symbol;
+          pile.appendChild(placeholder);
+        } else {
+          pile.classList.remove('empty');
+          const card = stackCards[stackCards.length - 1];
+          const cardEl = ctx.cardUtils.renderCard(card, { faceUp: true });
+          cardEl.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            handleFoundationClick(idx);
+          });
+          if (state.selected && state.selected.type === 'foundation' && state.selected.index === idx) {
+            cardEl.classList.add('selected');
+          }
+          pile.appendChild(cardEl);
+        }
+        if (state.selected) {
+          const stackPeek = peekStack(state.selected);
+          if (stackPeek.length === 1 && canPlaceOnFoundation(stackPeek[0].card, statePile)) {
+            pile.classList.add('drop-target');
+          } else {
+            pile.classList.remove('drop-target');
+          }
+        } else {
+          pile.classList.remove('drop-target');
+        }
+      });
+    }
+
+    function renderTableaus(){
+      columnEls.forEach((colEl, idx) => {
+        const column = state.tableaus[idx];
+        colEl.innerHTML = '';
+        if (!column.length) {
+          colEl.classList.add('empty');
+        } else {
+          colEl.classList.remove('empty');
+        }
+        if (state.selected && canDropOnTableau(idx)) {
+          colEl.classList.add('drop-target');
+        } else {
+          colEl.classList.remove('drop-target');
+        }
+        column.forEach((entry, cardIndex) => {
+          const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: entry.faceUp });
+          cardEl.style.top = `${cardIndex * 26}px`;
+          if (entry.faceUp) {
+            cardEl.classList.add('interactive');
+            cardEl.addEventListener('click', (ev) => {
+              ev.stopPropagation();
+              handleTableauCardClick(idx, cardIndex);
+            });
+            cardEl.addEventListener('dblclick', (ev) => {
+              ev.stopPropagation();
+              handleTableauDoubleClick(idx, cardIndex);
+            });
+          } else {
+            cardEl.addEventListener('click', (ev) => {
+              ev.stopPropagation();
+              handleTableauCardClick(idx, cardIndex);
+            });
+          }
+          if (state.selected && state.selected.type === 'tableau' && state.selected.column === idx && cardIndex >= state.selected.index) {
+            cardEl.classList.add('selected');
+          }
+          colEl.appendChild(cardEl);
+        });
+      });
+    }
+
+    function canDropOnTableau(columnIndex){
+      if (!state.selected) return false;
+      const stack = peekStack(state.selected);
+      if (!stack.length) return false;
+      const column = state.tableaus[columnIndex];
+      return canPlaceStackOnTableau(stack, column);
+    }
+
+    restart();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){ return ctx.stats().bestScore || 0; }
+    };
+  }
+
+  function createSpiderGame(container, ctx){
+    const root = document.createElement('div');
+    root.className = 'mini-trump-spider';
+    container.appendChild(root);
+
+    const top = document.createElement('div');
+    top.className = 'mini-trump-spider-top';
+    root.appendChild(top);
+
+    const stockWrapper = document.createElement('div');
+    stockWrapper.className = 'mini-trump-spider-stock';
+    top.appendChild(stockWrapper);
+
+    const stockPile = document.createElement('div');
+    stockPile.className = 'mini-trump-pile empty';
+    stockWrapper.appendChild(stockPile);
+
+    const stockInfo = document.createElement('div');
+    stockInfo.className = 'mini-trump-meta';
+    stockWrapper.appendChild(stockInfo);
+
+    const completeWrapper = document.createElement('div');
+    completeWrapper.className = 'mini-trump-klondike-foundations';
+    top.appendChild(completeWrapper);
+
+    const completeLabel = document.createElement('div');
+    completeLabel.className = 'mini-trump-meta';
+    completeWrapper.appendChild(completeLabel);
+
+    const columns = document.createElement('div');
+    columns.className = 'mini-trump-spider-columns';
+    root.appendChild(columns);
+
+    const columnEls = Array.from({ length: 10 }, (_, idx) => {
+      const col = document.createElement('div');
+      col.className = 'mini-trump-spider-column empty';
+      col.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        handleColumnClick(idx);
+      });
+      columns.appendChild(col);
+      return col;
+    });
+
+    const state = {
+      columns: Array.from({ length: 10 }, () => []),
+      stock: [],
+      moves: 0,
+      score: 500,
+      completed: 0,
+      selected: null,
+      finished: false
+    };
+
+    function restart(){
+      const deck = ctx.cardUtils.createDeck({ decks: 2 }).slice();
+      ctx.cardUtils.shuffle(deck);
+      state.columns = Array.from({ length: 10 }, () => []);
+      for (let c = 0; c < 10; c++) {
+        const count = c < 4 ? 6 : 5;
+        for (let i = 0; i < count; i++) {
+          const card = drawCard(deck);
+          if (!card) continue;
+          state.columns[c].push({ card, faceUp: i === count - 1 });
+        }
+      }
+      state.stock = [];
+      while (deck.length) {
+        const pack = deck.splice(0, 10).map(card => ({ card, faceUp: true }));
+        state.stock.push(pack);
+      }
+      state.moves = 0;
+      state.score = 500;
+      state.completed = 0;
+      state.selected = null;
+      state.finished = false;
+      ctx.commitStats({ plays: 1 });
+      render();
+    }
+
+    function currentSelection(){
+      if (!state.selected) return [];
+      const column = state.columns[state.selected.column];
+      if (!column) return [];
+      return column.slice(state.selected.index);
+    }
+
+    function isOrderedRun(cards){
+      if (!cards.length) return false;
+      for (let i = 0; i < cards.length - 1; i++) {
+        const a = cards[i].card;
+        const b = cards[i + 1].card;
+        if (a.suit !== b.suit) return false;
+        if (a.rankValue !== b.rankValue + 1) return false;
+      }
+      return true;
+    }
+
+    function columnTopCard(idx){
+      const column = state.columns[idx];
+      return column && column.length ? column[column.length - 1] : null;
+    }
+
+    function canDropRunOnColumn(run, idx){
+      if (!run.length) return false;
+      const column = state.columns[idx];
+      if (!column.length) {
+        return run[0].card.rankValue === 13; // King only
+      }
+      const top = column[column.length - 1];
+      return top.card.rankValue === run[0].card.rankValue + 1;
+    }
+
+    function handleColumnCardClick(colIdx, cardIdx){
+      const column = state.columns[colIdx];
+      if (!column || !column.length) return;
+      const entry = column[cardIdx];
+      if (!entry || !entry.faceUp) return;
+      if (state.selected && state.selected.column === colIdx && state.selected.index === cardIdx) {
+        state.selected = null;
+        render();
+        return;
+      }
+      const run = column.slice(cardIdx);
+      if (!isOrderedRun(run)) {
+        ctx.showToast('連続した同スートの列のみ移動できます。', { type: 'warn', duration: 1800 });
+        return;
+      }
+      state.selected = { column: colIdx, index: cardIdx };
+      ctx.playClick();
+      render();
+    }
+
+    function handleColumnClick(colIdx){
+      const column = state.columns[colIdx];
+      if (state.selected) {
+        if (state.selected.column === colIdx) {
+          state.selected = null;
+          render();
+          return;
+        }
+        const source = state.columns[state.selected.column];
+        if (!source) return;
+        const run = source.slice(state.selected.index);
+        if (!isOrderedRun(run)) return;
+        if (!canDropRunOnColumn(run, colIdx)) {
+          ctx.showToast('移動できない列です。', { type: 'warn', duration: 1400 });
+          return;
+        }
+        for (let i = state.selected.index; i < source.length; i++) {
+          source[i].justMoved = true;
+        }
+        const moved = source.splice(state.selected.index);
+        state.columns[colIdx].push(...moved.map(entry => ({ card: entry.card, faceUp: true })));
+        const prev = source[source.length - 1];
+        if (prev && !prev.faceUp) prev.faceUp = true;
+        state.selected = null;
+        state.moves += 1;
+        state.score = Math.max(0, state.score - 1);
+        ctx.playClick();
+        checkColumnForSequence(colIdx);
+        render();
+        checkWin();
+      } else if (column && column.length) {
+        const topIndex = column.length - 1;
+        const entry = column[topIndex];
+        if (!entry.faceUp) return;
+        handleColumnCardClick(colIdx, topIndex);
+      }
+    }
+
+    function dealStock(){
+      if (!state.stock.length) return;
+      if (state.columns.some(col => !col.length)) {
+        ctx.showToast('空の列があるときは配れません。', { type: 'warn', duration: 1600 });
+        return;
+      }
+      const pack = state.stock.shift();
+      for (let i = 0; i < state.columns.length; i++) {
+        const entry = pack[i];
+        if (entry) {
+          state.columns[i].push({ card: entry.card, faceUp: true });
+        }
+      }
+      state.selected = null;
+      state.moves += 1;
+      state.score = Math.max(0, state.score - 1);
+      ctx.award(2, { type: 'spider-deal', remaining: state.stock.length });
+      ctx.playClick();
+      render();
+      checkWin();
+    }
+
+    function checkColumnForSequence(idx){
+      const column = state.columns[idx];
+      if (!column || column.length < 13) return;
+      const tail = column.slice(column.length - 13);
+      if (!isOrderedRun(tail)) return;
+      const suits = new Set(tail.map(entry => entry.card.suit));
+      if (suits.size !== 1) return;
+      column.splice(column.length - 13, 13);
+      state.completed += 1;
+      state.score += 100;
+      ctx.award(20, { type: 'spider-sequence', column: idx, completed: state.completed });
+      ctx.showToast(`${formatCard(tail[0].card, { style: 'symbol' })}の列を完成！`, { duration: 2000 });
+      const top = column[column.length - 1];
+      if (top && !top.faceUp) top.faceUp = true;
+    }
+
+    function checkWin(){
+      if (state.finished) return;
+      if (state.completed === 8) {
+        state.finished = true;
+        state.score += state.stock.length * 10;
+        ctx.award(250, { type: 'spider-clear', moves: state.moves });
+        ctx.showToast('スパイダーソリティアを制覇！', { duration: 3200 });
+        ctx.commitStats({ wins: 1, score: state.score, bestMode: 'higher' });
+        ctx.setActions([
+          { label: 'もう一度遊ぶ (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+          { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        ]);
+        render();
+      }
+    }
+
+    function renderStock(){
+      stockPile.innerHTML = '';
+      if (!state.stock.length) {
+        stockPile.classList.add('empty');
+      } else {
+        stockPile.classList.remove('empty');
+        const card = ctx.cardUtils.renderCard({ rankLabel: '?', suitSymbol: '?', suit: 'joker', color: 'black' }, { faceUp: false });
+        stockPile.appendChild(card);
+      }
+      stockInfo.textContent = `山札 ${state.stock.length} 回`;
+    }
+
+    function renderColumns(){
+      columnEls.forEach((colEl, idx) => {
+        const column = state.columns[idx];
+        colEl.innerHTML = '';
+        if (!column.length) {
+          colEl.classList.add('empty');
+        } else {
+          colEl.classList.remove('empty');
+        }
+        const run = currentSelection();
+        if (state.selected && state.selected.column !== idx && canDropRunOnColumn(run, idx)) {
+          colEl.classList.add('drop-target');
+        } else {
+          colEl.classList.remove('drop-target');
+        }
+        column.forEach((entry, cardIdx) => {
+          const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: entry.faceUp });
+          cardEl.style.top = `${cardIdx * 24}px`;
+          cardEl.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            handleColumnCardClick(idx, cardIdx);
+          });
+          if (state.selected && state.selected.column === idx && cardIdx >= state.selected.index) {
+            cardEl.classList.add('selected');
+          }
+          colEl.appendChild(cardEl);
+        });
+      });
+    }
+
+    function updateHud(){
+      const columnCounts = state.columns.map(col => col.filter(entry => entry.faceUp).length).join('/');
+      ctx.setStatus(`移動 ${state.moves} 回 ・ 完成列 ${state.completed} / 8 ・ 山札 ${state.stock.length}`);
+      ctx.setScore(`スコア ${state.score} ・ 表向き ${columnCounts}`);
+      completeLabel.textContent = `完成列 ${state.completed} / 8`;
+    }
+
+    function render(){
+      renderStock();
+      renderColumns();
+      updateHud();
+      if (!state.finished) updateActions();
+    }
+
+    function updateActions(){
+      const canDeal = state.stock.length > 0 && state.columns.every(col => col.length);
+      ctx.setActions([
+        { label: '山札を配る (D)', variant: 'primary', hotkey: 'D', onClick: () => dealStock(), disabled: !canDeal },
+        { label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => restart() },
+        { label: '一覧へ戻る (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+    }
+
+    restart();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){ return state.score || 0; }
+    };
+  }
+
+  function createFreecellGame(container, ctx){
+    const root = document.createElement('div');
+    root.className = 'mini-trump-freecell';
+    container.appendChild(root);
+
+    const top = document.createElement('div');
+    top.className = 'mini-trump-freecell-top';
+    root.appendChild(top);
+
+    const cellsRow = document.createElement('div');
+    cellsRow.className = 'mini-trump-freecell-cells';
+    top.appendChild(cellsRow);
+
+    const foundationsRow = document.createElement('div');
+    foundationsRow.className = 'mini-trump-freecell-foundations';
+    top.appendChild(foundationsRow);
+
+    const columns = document.createElement('div');
+    columns.className = 'mini-trump-freecell-columns';
+    root.appendChild(columns);
+
+    const cellEls = Array.from({ length: 4 }, (_, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'mini-trump-pile empty';
+      cell.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        handleCellClick(idx);
+      });
+      cellsRow.appendChild(cell);
+      return cell;
+    });
+
+    const foundationDefs = SUITS.filter(s => s.id !== 'joker');
+    const foundationEls = foundationDefs.map((suit, idx) => {
+      const pile = document.createElement('div');
+      pile.className = 'mini-trump-pile empty';
+      pile.dataset.suit = suit.id;
+      pile.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        handleFoundationClick(suit.id);
+      });
+      foundationsRow.appendChild(pile);
+      return pile;
+    });
+
+    const columnEls = Array.from({ length: 8 }, (_, idx) => {
+      const col = document.createElement('div');
+      col.className = 'mini-trump-freecell-column empty';
+      col.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        handleColumnClick(idx);
+      });
+      columns.appendChild(col);
+      return col;
+    });
+
+    const state = {
+      columns: Array.from({ length: 8 }, () => []),
+      cells: [null, null, null, null],
+      foundations: foundationDefs.reduce((acc, suit) => { acc[suit.id] = []; return acc; }, {}),
+      selected: null,
+      moves: 0,
+      finished: false
+    };
+
+    function restart(){
+      const deck = ctx.cardUtils.createDeck().slice();
+      ctx.cardUtils.shuffle(deck);
+      state.columns = Array.from({ length: 8 }, () => []);
+      for (let i = 0; i < deck.length; i++) {
+        const col = i % 8;
+        const card = deck[i];
+        state.columns[col].push({ card, faceUp: true });
+      }
+      state.cells = [null, null, null, null];
+      Object.keys(state.foundations).forEach(suit => { state.foundations[suit] = []; });
+      state.selected = null;
+      state.moves = 0;
+      state.finished = false;
+      ctx.commitStats({ plays: 1 });
+      ctx.setActions([
+        { label: '新しいゲーム (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { label: 'ヒント', variant: 'secondary', onClick: () => showHint() },
+        { label: '一覧に戻る (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+      render();
+    }
+
+    function getMovableRun(column, start){
+      const run = column.slice(start);
+      if (!run.length) return [];
+      for (let i = 0; i < run.length - 1; i++) {
+        const a = run[i].card;
+        const b = run[i + 1].card;
+        if (a.rankValue !== b.rankValue + 1) return [];
+        if (a.color === b.color) return [];
+      }
+      return run;
+    }
+
+    function freeMoveCapacity(){
+      const freeCells = state.cells.filter(cell => !cell).length;
+      const emptyColumns = state.columns.filter(col => !col.length).length;
+      return (freeCells + 1) * Math.pow(2, emptyColumns);
+    }
+
+    function handleColumnCardClick(colIdx, cardIdx){
+      const column = state.columns[colIdx];
+      if (!column.length) return;
+      const run = getMovableRun(column, cardIdx);
+      if (!run.length) {
+        ctx.showToast('交互色の連続したカードのみ移動できます。', { type: 'warn', duration: 1600 });
+        return;
+      }
+      if (run.length > freeMoveCapacity()) {
+        ctx.showToast('空きセルと空列が不足しています。', { type: 'warn', duration: 1600 });
+        return;
+      }
+      state.selected = { type: 'column', column: colIdx, index: cardIdx };
+      ctx.playClick();
+      render();
+    }
+
+    function handleColumnClick(colIdx){
+      if (!state.selected) return;
+      if (state.selected.type === 'column' && state.selected.column === colIdx) {
+        state.selected = null;
+        render();
+        return;
+      }
+      const column = state.columns[colIdx];
+      const stack = column && column.length ? column[column.length - 1].card : null;
+      const moving = getSelectedCards();
+      if (!moving.length) return;
+      const first = moving[0].card;
+      if (!column.length) {
+        // any card allowed on empty column
+      } else {
+        if (stack.rankValue !== first.rankValue + 1 || stack.color === first.color) {
+          ctx.showToast('置けるのは交互色で1小さいカードです。', { type: 'warn', duration: 1500 });
+          return;
+        }
+      }
+      moveSelectedToColumn(colIdx);
+    }
+
+    function handleCellClick(idx){
+      if (state.selected) {
+        const moving = getSelectedCards();
+        if (moving.length !== 1) {
+          ctx.showToast('セルには1枚のみ置けます。', { type: 'warn', duration: 1400 });
+          return;
+        }
+        if (state.cells[idx]) {
+          ctx.showToast('すでにカードがあります。', { type: 'warn', duration: 1400 });
+          return;
+        }
+        removeSelected((cardObj) => {
+          state.cells[idx] = { card: cardObj.card };
+        });
+      } else {
+        const entry = state.cells[idx];
+        if (!entry) return;
+        state.selected = { type: 'cell', index: idx };
+        ctx.playClick();
+        render();
+      }
+    }
+
+    function handleFoundationClick(suit){
+      const moving = getSelectedCards();
+      if (moving.length !== 1) {
+        ctx.showToast('台札には1枚ずつ積みます。', { type: 'warn', duration: 1400 });
+        return;
+      }
+      const card = moving[0].card;
+      if (card.suit !== suit) {
+        ctx.showToast('同じスートのみ移動できます。', { type: 'warn', duration: 1400 });
+        return;
+      }
+      const pile = state.foundations[suit];
+      const expected = pile.length + 1;
+      if (card.rankValue !== expected) {
+        ctx.showToast(`${expected === 1 ? 'A' : expected} を待っています。`, { type: 'warn', duration: 1400 });
+        return;
+      }
+      removeSelected(() => {
+        pile.push(card);
+        ctx.award(4, { type: 'freecell-foundation', suit, rank: card.rankValue });
+      });
+      if (pile.length === 13 && Object.values(state.foundations).every(p => p.length === 13)) {
+        finishGame();
+      }
+    }
+
+    function removeSelected(cb){
+      if (!state.selected) return;
+      if (state.selected.type === 'column') {
+        const column = state.columns[state.selected.column];
+        const removed = column.splice(state.selected.index);
+        cb && removed.forEach(entry => cb(entry));
+        state.moves += 1;
+        state.selected = null;
+        ctx.playClick();
+        render();
+      } else if (state.selected.type === 'cell') {
+        const cell = state.cells[state.selected.index];
+        if (!cell) return;
+        const entry = { card: cell.card };
+        state.cells[state.selected.index] = null;
+        cb && cb(entry);
+        state.moves += 1;
+        state.selected = null;
+        ctx.playClick();
+        render();
+      }
+    }
+
+    function getSelectedCards(){
+      if (!state.selected) return [];
+      if (state.selected.type === 'column') {
+        return getMovableRun(state.columns[state.selected.column], state.selected.index);
+      }
+      if (state.selected.type === 'cell') {
+        const entry = state.cells[state.selected.index];
+        return entry ? [{ card: entry.card }] : [];
+      }
+      return [];
+    }
+
+    function moveSelectedToColumn(targetIdx){
+      if (!state.selected) return;
+      if (state.selected.type === 'column') {
+        const column = state.columns[state.selected.column];
+        const moved = column.splice(state.selected.index);
+        state.columns[targetIdx].push(...moved);
+        state.moves += 1;
+        state.selected = null;
+        ctx.playClick();
+        render();
+      } else if (state.selected.type === 'cell') {
+        const entry = state.cells[state.selected.index];
+        if (!entry) return;
+        state.columns[targetIdx].push({ card: entry.card, faceUp: true });
+        state.cells[state.selected.index] = null;
+        state.moves += 1;
+        state.selected = null;
+        ctx.playClick();
+        render();
+      }
+    }
+
+    function showHint(){
+      const moves = computeAvailableMoves();
+      if (!moves.length) {
+        ctx.showToast('利用できる移動はありません。', { duration: 1600 });
+        return;
+      }
+      const best = moves[0];
+      ctx.showToast(best.message, { duration: 2200 });
+    }
+
+    function computeAvailableMoves(){
+      const moves = [];
+      state.columns.forEach((column, idx) => {
+        if (!column.length) return;
+        for (let i = 0; i < column.length; i++) {
+          const run = getMovableRun(column, i);
+          if (!run.length) continue;
+          if (run.length > freeMoveCapacity()) continue;
+          const card = run[0].card;
+          state.columns.forEach((target, tIdx) => {
+            if (idx === tIdx) return;
+            if (!target.length) {
+              moves.push({ message: `${formatCard(card)} を空列へ移動できます。`, weight: 1 });
+            } else {
+              const top = target[target.length - 1].card;
+              if (top.rankValue === card.rankValue + 1 && top.color !== card.color) {
+                moves.push({ message: `${formatCard(card)} を ${formatCard(top)} の上に移動できます。`, weight: 2 });
+              }
+            }
+          });
+        }
+      });
+      state.cells.forEach((cell, idx) => {
+        if (!cell) return;
+        const card = cell.card;
+        Object.entries(state.foundations).forEach(([suit, pile]) => {
+          if (suit === card.suit && card.rankValue === pile.length + 1) {
+            moves.push({ message: `${formatCard(card)} を台札に移動できます。`, weight: 5 });
+          }
+        });
+      });
+      moves.sort((a, b) => b.weight - a.weight);
+      return moves;
+    }
+
+    function finishGame(){
+      if (state.finished) return;
+      state.finished = true;
+      ctx.award(300, { type: 'freecell-clear', moves: state.moves });
+      ctx.showToast('フリーセルクリア！おめでとうございます。', { duration: 3200 });
+      ctx.commitStats({ wins: 1, score: state.moves, bestMode: 'lower' });
+      ctx.setActions([
+        { label: '新しいゲーム (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { label: '一覧に戻る (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+      render();
+    }
+
+    function renderCells(){
+      cellEls.forEach((cellEl, idx) => {
+        cellEl.innerHTML = '';
+        const entry = state.cells[idx];
+        if (!entry) {
+          cellEl.classList.add('empty');
+          cellEl.classList.remove('drop-target');
+        } else {
+          cellEl.classList.remove('empty');
+          const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: true, size: 'small' });
+          if (state.selected && state.selected.type === 'cell' && state.selected.index === idx) {
+            cardEl.classList.add('selected');
+          }
+          cellEl.appendChild(cardEl);
+        }
+      });
+    }
+
+    function renderFoundations(){
+      foundationEls.forEach((pileEl) => {
+        const suit = pileEl.dataset.suit;
+        const pile = state.foundations[suit];
+        pileEl.innerHTML = '';
+        if (!pile.length) {
+          pileEl.classList.add('empty');
+          const placeholder = document.createElement('div');
+          placeholder.className = 'mini-trump-klondike-placeholder';
+          placeholder.textContent = SUITS.find(s => s.id === suit)?.symbol || '';
+          pileEl.appendChild(placeholder);
+        } else {
+          pileEl.classList.remove('empty');
+          const cardEl = ctx.cardUtils.renderCard(pile[pile.length - 1], { faceUp: true, size: 'small' });
+          pileEl.appendChild(cardEl);
+        }
+      });
+    }
+
+    function renderColumns(){
+      const selection = state.selected && state.selected.type === 'column' ? getMovableRun(state.columns[state.selected.column], state.selected.index) : [];
+      columnEls.forEach((colEl, idx) => {
+        colEl.innerHTML = '';
+        const column = state.columns[idx];
+        if (!column.length) {
+          colEl.classList.add('empty');
+        } else {
+          colEl.classList.remove('empty');
+        }
+        if (state.selected && state.selected.type !== 'foundation' && state.selected.column !== idx) {
+          const run = selection;
+          if (run.length) {
+            if (!column.length || (column[column.length - 1].card.rankValue === run[0].card.rankValue + 1 && column[column.length - 1].card.color !== run[0].card.color)) {
+              colEl.classList.add('drop-target');
+            } else {
+              colEl.classList.remove('drop-target');
+            }
+          } else {
+            colEl.classList.remove('drop-target');
+          }
+        } else {
+          colEl.classList.remove('drop-target');
+        }
+        column.forEach((entry, cardIdx) => {
+          const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: true });
+          cardEl.style.top = `${cardIdx * 26}px`;
+          cardEl.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            handleColumnCardClick(idx, cardIdx);
+          });
+          if (state.selected && state.selected.type === 'column' && state.selected.column === idx && cardIdx >= state.selected.index) {
+            cardEl.classList.add('selected');
+          }
+          colEl.appendChild(cardEl);
+        });
+      });
+    }
+
+    function updateHud(){
+      const foundationStatus = foundationDefs.map(suit => `${suit.symbol}${state.foundations[suit.id].length}`).join(' / ');
+      ctx.setStatus(`移動 ${state.moves} 回 ・ セル空き ${state.cells.filter(c => !c).length} ・ 台札 ${foundationStatus}`);
+      const stats = ctx.stats();
+      const best = stats.bestScore != null ? `${stats.bestScore} 手` : '---';
+      ctx.setScore(`通算 ${stats.plays || 0} 回 / 勝利 ${stats.wins || 0} 回 / ベスト ${best}`);
+    }
+
+    function render(){
+      renderCells();
+      renderFoundations();
+      renderColumns();
+      updateHud();
+    }
+
+    restart();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){ return ctx.stats().bestScore || 0; }
+    };
+  }
+
+  function createHeartsGame(container, ctx){
+    const playerNames = ['あなた', '北', '東', '西'];
+    const state = {
+      players: [],
+      trick: [],
+      leadSuit: null,
+      heartsBroken: false,
+      turn: 0,
+      trickNumber: 0,
+      totals: [0, 0, 0, 0],
+      roundScores: [0, 0, 0, 0],
+      finished: false,
+      awaitingPlayer: false
+    };
+
+    const root = document.createElement('div');
+    root.className = 'mini-trump-table-game';
+    container.appendChild(root);
+
+    const layout = document.createElement('div');
+    layout.className = 'mini-trump-table-layout';
+    root.appendChild(layout);
+
+    const playerList = document.createElement('div');
+    playerList.className = 'mini-trump-table-players';
+    layout.appendChild(playerList);
+
+    const board = document.createElement('div');
+    board.className = 'mini-trump-table-board';
+    layout.appendChild(board);
+
+    const trickRow = document.createElement('div');
+    trickRow.className = 'mini-trump-trick';
+    board.appendChild(trickRow);
+
+    const handRow = document.createElement('div');
+    handRow.className = 'mini-trump-hand-row';
+    board.appendChild(handRow);
+
+    const summary = document.createElement('div');
+    summary.className = 'mini-trump-table-summary';
+    board.appendChild(summary);
+
+    const playerEls = playerNames.map((name, idx) => {
+      const el = document.createElement('div');
+      el.className = 'mini-trump-table-player';
+      const label = document.createElement('div');
+      label.className = 'name';
+      label.textContent = name;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      el.appendChild(label);
+      el.appendChild(meta);
+      playerList.appendChild(el);
+      return { el, meta };
+    });
+
+    function restart(){
+      state.players = playerNames.map((name, idx) => ({
+        name,
+        hand: [],
+        taken: [],
+        idx
+      }));
+      const deck = ctx.cardUtils.createDeck().filter(card => card.suit !== 'joker');
+      ctx.cardUtils.shuffle(deck);
+      for (let i = 0; i < deck.length; i++) {
+        const player = state.players[i % 4];
+        player.hand.push(deck[i]);
+      }
+      state.players.forEach(player => player.hand.sort((a, b) => (a.suit > b.suit ? 1 : a.suit < b.suit ? -1 : a.rankValue - b.rankValue)));
+      state.trick = [];
+      state.trickNumber = 0;
+      state.heartsBroken = false;
+      state.leadSuit = null;
+      state.roundScores = [0, 0, 0, 0];
+      state.finished = false;
+      const starter = state.players.find(p => p.hand.some(card => card.suit === 'club' && card.rankValue === 2));
+      state.turn = starter ? starter.idx : 0;
+      state.awaitingPlayer = state.turn === 0;
+      ctx.commitStats({ plays: 1 });
+      ctx.setActions([
+        { label: '新しいディール (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { label: '一覧に戻る (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+      render();
+      maybeRunAi();
+    }
+
+    function maybeRunAi(){
+      if (state.finished) return;
+      if (state.turn !== 0) {
+        state.awaitingPlayer = false;
+        setTimeout(() => {
+          const legal = legalCards(state.turn);
+          const card = chooseAiCard(state.turn, legal);
+          playCard(state.turn, card);
+        }, 260);
+      } else {
+        state.awaitingPlayer = true;
+        render();
+      }
+    }
+
+    function legalCards(playerIdx){
+      const player = state.players[playerIdx];
+      const hand = player.hand;
+      if (!state.trick.length) {
+        const hasTwoClub = hand.some(card => card.suit === 'club' && card.rankValue === 2);
+        if (state.trickNumber === 0 && hasTwoClub) {
+          return hand.filter(card => card.suit === 'club' && card.rankValue === 2);
+        }
+        let legal = hand.slice();
+        if (!state.heartsBroken) {
+          const nonHearts = legal.filter(card => card.suit !== 'heart');
+          if (nonHearts.length && !(state.trickNumber === 0)) legal = nonHearts;
+        }
+        return legal;
+      }
+      const leadSuit = state.leadSuit;
+      const follow = hand.filter(card => card.suit === leadSuit);
+      if (follow.length) return follow;
+      if (state.trickNumber === 0) {
+        return hand.filter(card => card.suit !== 'heart' && !(card.suit === 'spade' && card.rankValue === 12)) || hand.slice();
+      }
+      return hand.slice();
+    }
+
+    function chooseAiCard(idx, legal){
+      if (!legal.length) return null;
+      legal.sort((a, b) => a.rankValue - b.rankValue);
+      if (!state.trick.length) {
+        return legal[0];
+      }
+      const safe = legal.filter(card => card.suit !== 'heart' && !(card.suit === 'spade' && card.rankValue === 12));
+      if (safe.length) return safe[0];
+      return legal[legal.length - 1];
+    }
+
+    function playCard(playerIdx, card){
+      const player = state.players[playerIdx];
+      const handIdx = player.hand.findIndex(c => c.id === card.id);
+      if (handIdx === -1) return;
+      player.hand.splice(handIdx, 1);
+      if (!state.trick.length) {
+        state.leadSuit = card.suit;
+        if (card.suit === 'heart') state.heartsBroken = true;
+      } else if (card.suit === 'heart') {
+        state.heartsBroken = true;
+      }
+      state.trick.push({ player: playerIdx, card });
+      if (playerIdx === 0) state.awaitingPlayer = false;
+      if (state.trick.length === 4) {
+        render();
+        setTimeout(resolveTrick, 400);
+      } else {
+        state.turn = (state.turn + 1) % 4;
+        render();
+        maybeRunAi();
+      }
+    }
+
+    function resolveTrick(){
+      const leadSuit = state.leadSuit;
+      let winner = state.trick[0];
+      for (const entry of state.trick.slice(1)) {
+        if (entry.card.suit === leadSuit && entry.card.rankValue > winner.card.rankValue) {
+          winner = entry;
+        }
+      }
+      const points = state.trick.reduce((sum, entry) => {
+        if (entry.card.suit === 'heart') return sum + 1;
+        if (entry.card.suit === 'spade' && entry.card.rankValue === 12) return sum + 13;
+        return sum;
+      }, 0);
+      state.players[winner.player].taken.push(...state.trick);
+      state.roundScores[winner.player] += points;
+      state.trick = [];
+      state.leadSuit = null;
+      state.trickNumber += 1;
+      state.turn = winner.player;
+      if (state.players.every(p => p.hand.length === 0)) {
+        finishRound();
+      } else {
+        render();
+        maybeRunAi();
+      }
+    }
+
+    function finishRound(){
+      const shooter = state.roundScores.findIndex(score => score === 26);
+      if (shooter !== -1) {
+        state.roundScores = state.roundScores.map((score, idx) => idx === shooter ? 0 : score + 26);
+      }
+      for (let i = 0; i < state.totals.length; i++) {
+        state.totals[i] += state.roundScores[i];
+      }
+      ctx.award(80, { type: 'hearts-round', scores: state.roundScores.slice() });
+      state.finished = true;
+      const playerScore = state.roundScores[0];
+      if (playerScore === Math.min(...state.roundScores)) {
+        ctx.commitStats({ wins: 1 });
+        ctx.showToast('ハーツでラウンド勝利！', { duration: 2800 });
+      }
+      ctx.setActions([
+        { label: '次のディール (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+      render();
+    }
+
+    function handlePlayerChoice(card){
+      if (state.turn !== 0) return;
+      const legal = legalCards(0);
+      if (!legal.some(c => c.id === card.id)) {
+        ctx.showToast('そのカードは出せません。', { type: 'warn', duration: 1500 });
+        return;
+      }
+      playCard(0, card);
+    }
+
+    function updateHud(){
+      const trickDisplay = Math.min(13, state.trickNumber + 1);
+      ctx.setStatus(`トリック ${trickDisplay}/13 ・ ハート解禁 ${state.heartsBroken ? '済' : '未'}`);
+      const scoreLine = state.totals.map((score, idx) => `${playerNames[idx]} ${score}点`).join(' / ');
+      ctx.setScore(scoreLine);
+    }
+
+    function renderPlayers(){
+      playerEls.forEach(({ el, meta }, idx) => {
+        const player = state.players[idx];
+        if (!player) return;
+        if (state.turn === idx && !state.finished) el.classList.add('active'); else el.classList.remove('active');
+        const taken = state.roundScores[idx];
+        meta.textContent = `手札${player.hand.length}枚 / ラウンド${taken}点 / 通算${state.totals[idx]}点`;
+      });
+    }
+
+    function renderTrick(){
+      trickRow.innerHTML = '';
+      state.trick.forEach(entry => {
+        const container = document.createElement('div');
+        container.className = 'mini-trump-trick-card';
+        const name = document.createElement('div');
+        name.textContent = playerNames[entry.player];
+        const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: true, size: 'small' });
+        container.appendChild(name);
+        container.appendChild(cardEl);
+        trickRow.appendChild(container);
+      });
+    }
+
+    function renderHand(){
+      handRow.innerHTML = '';
+      const player = state.players[0];
+      if (!player) return;
+      const legal = state.finished ? [] : legalCards(0);
+      player.hand.forEach(card => {
+        const btn = document.createElement('button');
+        btn.textContent = formatCard(card);
+        if (state.turn !== 0 || state.finished || !legal.some(c => c.id === card.id)) {
+          btn.classList.add('disabled');
+          btn.disabled = true;
+        } else {
+          btn.addEventListener('click', () => handlePlayerChoice(card));
+        }
+        handRow.appendChild(btn);
+      });
+    }
+
+    function renderSummary(){
+      const lines = [];
+      lines.push(`ハート解禁: ${state.heartsBroken ? 'はい' : 'いいえ'}`);
+      if (state.finished) {
+        const ranking = state.roundScores
+          .map((score, idx) => ({ score, name: playerNames[idx] }))
+          .sort((a, b) => a.score - b.score)
+          .map(entry => `${entry.name}: ${entry.score}点`)
+          .join(' / ');
+        lines.push(`ラウンド結果: ${ranking}`);
+      } else if (state.trick.length) {
+        lines.push(`${playerNames[state.turn]} の番です。`);
+      } else {
+        lines.push(`${playerNames[state.turn]} がリードします。`);
+      }
+      summary.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+    }
+
+    function render(){
+      renderPlayers();
+      renderTrick();
+      renderHand();
+      renderSummary();
+      updateHud();
+    }
+
+    restart();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){ return -state.roundScores[0]; }
+    };
+  }
+
+  function createSevensGame(container, ctx){
+    const playerNames = ['あなた', '北', '東', '西'];
+    const suits = SUITS.filter(s => s.id !== 'joker');
+    const root = document.createElement('div');
+    root.className = 'mini-trump-table-game';
+    container.appendChild(root);
+
+    const layout = document.createElement('div');
+    layout.className = 'mini-trump-table-layout';
+    root.appendChild(layout);
+
+    const playerList = document.createElement('div');
+    playerList.className = 'mini-trump-table-players';
+    layout.appendChild(playerList);
+
+    const board = document.createElement('div');
+    board.className = 'mini-trump-table-board';
+    layout.appendChild(board);
+
+    const boardStatus = document.createElement('div');
+    boardStatus.className = 'mini-trump-table-summary';
+    board.appendChild(boardStatus);
+
+    const boardRows = suits.map((suit) => {
+      const row = document.createElement('div');
+      row.className = 'mini-trump-table-summary';
+      row.style.flexDirection = 'row';
+      row.style.flexWrap = 'wrap';
+      board.appendChild(row);
+      return { suit, row };
+    });
+
+    const handRow = document.createElement('div');
+    handRow.className = 'mini-trump-hand-row';
+    board.appendChild(handRow);
+
+    const playerEls = playerNames.map((name) => {
+      const el = document.createElement('div');
+      el.className = 'mini-trump-table-player';
+      const label = document.createElement('div');
+      label.className = 'name';
+      label.textContent = name;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      el.appendChild(label);
+      el.appendChild(meta);
+      playerList.appendChild(el);
+      return { el, meta };
+    });
+
+    const state = {
+      players: [],
+      board: suits.reduce((acc, suit) => {
+        acc[suit.id] = { low: 7, high: 7, cards: [] };
+        return acc;
+      }, {}),
+      turn: 0,
+      passes: 0,
+      finished: false,
+      log: []
+    };
+
+    function restart(){
+      const deck = ctx.cardUtils.createDeck().filter(card => card.suit !== 'joker');
+      ctx.cardUtils.shuffle(deck);
+      state.players = playerNames.map((name, idx) => ({ name, idx, hand: [] }));
+      for (let i = 0; i < deck.length; i++) {
+        state.players[i % 4].hand.push(deck[i]);
+      }
+      state.players.forEach(player => player.hand.sort((a, b) => (a.suit > b.suit ? 1 : a.suit < b.suit ? -1 : a.rankValue - b.rankValue)));
+      suits.forEach(suit => {
+        state.board[suit.id] = { low: 7, high: 7, cards: [] };
+      });
+      state.passes = 0;
+      state.finished = false;
+      state.log = [];
+      placeInitialSeven();
+      ctx.commitStats({ plays: 1 });
+      render();
+      maybeRunAi();
+    }
+
+    function placeInitialSeven(){
+      const starter = state.players.find(player => player.hand.some(card => card.suit === 'diamond' && card.rankValue === 7));
+      if (!starter) {
+        state.turn = 0;
+        return;
+      }
+      const idx = starter.hand.findIndex(card => card.suit === 'diamond' && card.rankValue === 7);
+      if (idx === -1) {
+        state.turn = starter.idx;
+        return;
+      }
+      const card = starter.hand.splice(idx, 1)[0];
+      placeCardOnBoard(card);
+      state.log.push(`${starter.name} が ${formatCard(card)} を開始に配置。`);
+      ctx.award(5, { type: 'sevens-start' });
+      state.turn = (starter.idx + 1) % 4;
+    }
+
+    function legalCards(playerIdx){
+      const player = state.players[playerIdx];
+      return player.hand.filter(card => {
+        const suitBoard = state.board[card.suit];
+        if (!suitBoard.cards.length) {
+          return card.rankValue === 7;
+        }
+        if (card.rankValue === 7) return true;
+        if (card.rankValue === suitBoard.low - 1 && card.rankValue >= 1) return true;
+        if (card.rankValue === suitBoard.high + 1 && card.rankValue <= 13) return true;
+        return false;
+      });
+    }
+
+    function handlePlayerCard(card){
+      if (state.finished || state.turn !== 0) return;
+      const legal = legalCards(0);
+      if (!legal.some(c => c.id === card.id)) {
+        ctx.showToast('そのカードは並べられません。', { type: 'warn', duration: 1500 });
+        return;
+      }
+      playCard(0, card);
+    }
+
+    function handlePlayerPass(){
+      if (state.finished || state.turn !== 0) return;
+      const legal = legalCards(0);
+      if (legal.length) {
+        ctx.showToast('出せるカードがあります。', { type: 'warn', duration: 1400 });
+        return;
+      }
+      passTurn(0);
+    }
+
+    function maybeRunAi(){
+      if (state.finished) return;
+      if (state.turn === 0) {
+        render();
+        return;
+      }
+      setTimeout(() => {
+        const legal = legalCards(state.turn);
+        if (legal.length) {
+          const card = chooseAiCard(legal);
+          playCard(state.turn, card);
+        } else {
+          passTurn(state.turn);
+        }
+      }, 260);
+    }
+
+    function chooseAiCard(cards){
+      const sorted = cards.slice().sort((a, b) => a.rankValue - b.rankValue);
+      return sorted[0];
+    }
+
+    function playCard(playerIdx, card){
+      const player = state.players[playerIdx];
+      const index = player.hand.findIndex(c => c.id === card.id);
+      if (index === -1) return;
+      player.hand.splice(index, 1);
+      placeCardOnBoard(card);
+      ctx.award(2, { type: 'sevens-play', suit: card.suit, rank: card.rank });
+      state.log.push(`${player.name} が ${formatCard(card)} を配置。`);
+      if (player.hand.length === 0) {
+        finishGame(player);
+        return;
+      }
+      state.passes = 0;
+      state.turn = (state.turn + 1) % 4;
+      render();
+      maybeRunAi();
+    }
+
+    function updateActions(){
+      if (state.finished) return;
+      const legal = state.turn === 0 ? legalCards(0) : [];
+      ctx.setActions([
+        { label: '再戦 (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { label: 'パス', variant: 'secondary', onClick: () => handlePlayerPass(), disabled: state.turn !== 0 || legal.length > 0 },
+        { label: '一覧に戻る (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+    }
+
+    function placeCardOnBoard(card){
+      const boardSuit = state.board[card.suit];
+      if (!boardSuit.cards.includes(card.rankValue)) {
+        boardSuit.cards.push(card.rankValue);
+        boardSuit.cards.sort((a, b) => a - b);
+      }
+      if (card.rankValue < boardSuit.low) boardSuit.low = card.rankValue;
+      if (card.rankValue > boardSuit.high) boardSuit.high = card.rankValue;
+    }
+
+    function passTurn(playerIdx){
+      state.log.push(`${state.players[playerIdx].name} はパス。`);
+      state.passes += 1;
+      state.turn = (state.turn + 1) % 4;
+      if (state.passes >= 4) {
+        ctx.showToast('全員がパスしました。状況が進むまで待ちましょう。', { duration: 2000 });
+        state.passes = 0;
+      }
+      render();
+      maybeRunAi();
+    }
+
+    function finishGame(player){
+      if (state.finished) return;
+      state.finished = true;
+      ctx.award(120, { type: 'sevens-clear', winner: player.name });
+      ctx.commitStats({ wins: player.idx === 0 ? 1 : 0 });
+      ctx.showToast(`${player.name} の勝利！`, { duration: 2800 });
+      ctx.setActions([
+        { label: '再戦 (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+      render();
+    }
+
+    function renderPlayers(){
+      playerEls.forEach(({ el, meta }, idx) => {
+        const player = state.players[idx];
+        if (!player) return;
+        if (state.turn === idx && !state.finished) el.classList.add('active'); else el.classList.remove('active');
+        meta.textContent = `手札 ${player.hand.length} 枚`;
+      });
+    }
+
+    function renderBoard(){
+      boardRows.forEach(({ suit, row }) => {
+        row.innerHTML = '';
+        const info = state.board[suit.id];
+        const played = info.cards.slice().sort((a, b) => a - b);
+        const frag = document.createDocumentFragment();
+        const label = document.createElement('div');
+        label.textContent = `${suit.symbol} :`;
+        frag.appendChild(label);
+        if (!played.length) {
+          const placeholder = document.createElement('div');
+          placeholder.textContent = '---';
+          placeholder.style.opacity = '0.6';
+          frag.appendChild(placeholder);
+        } else {
+          for (let rank = info.low; rank <= info.high; rank++) {
+            const span = document.createElement('div');
+            span.textContent = rankLabel(rank);
+            span.style.marginRight = '6px';
+            span.style.fontWeight = played.includes(rank) ? '700' : '400';
+            frag.appendChild(span);
+          }
+        }
+        row.appendChild(frag);
+      });
+      boardStatus.innerHTML = state.log.slice(-4).map(item => `<div>${item}</div>`).join('');
+    }
+
+    function rankLabel(value){
+      if (value === 1) return 'A';
+      if (value === 11) return 'J';
+      if (value === 12) return 'Q';
+      if (value === 13) return 'K';
+      return String(value);
+    }
+
+    function renderHand(){
+      handRow.innerHTML = '';
+      const player = state.players[0];
+      if (!player) return;
+      const legal = legalCards(0);
+      player.hand.forEach(card => {
+        const btn = document.createElement('button');
+        btn.textContent = formatCard(card);
+        if (state.finished || state.turn !== 0 || !legal.some(c => c.id === card.id)) {
+          btn.classList.add('disabled');
+          btn.disabled = true;
+        } else {
+          btn.addEventListener('click', () => handlePlayerCard(card));
+        }
+        handRow.appendChild(btn);
+      });
+    }
+
+    function updateHud(){
+      const leader = state.players.reduce((best, player) => {
+        if (player.hand.length < best.count) return { name: player.name, count: player.hand.length };
+        return best;
+      }, { name: '', count: Infinity });
+      ctx.setStatus(`手番: ${playerNames[state.turn]} ・ パス連続 ${state.passes}`);
+      ctx.setScore(`最少手札: ${leader.count === Infinity ? '-' : `${leader.name} (${leader.count}枚)`}`);
+    }
+
+    function render(){
+      renderPlayers();
+      renderBoard();
+      renderHand();
+      updateHud();
+      if (!state.finished) updateActions();
+    }
+
+    restart();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){ return state.finished && state.players[0].hand.length === 0 ? 1 : 0; }
     };
   }
 
@@ -1590,6 +3656,1366 @@
       stop(){},
       destroy(){},
       getScore(){ return players[0].finishedAt || 0; }
+    };
+  }
+
+  function createPokerGame(container, ctx){
+    const opponents = [
+      { id: 1, name: 'AI-1', hand: [], result: null },
+      { id: 2, name: 'AI-2', hand: [], result: null },
+      { id: 3, name: 'AI-3', hand: [], result: null }
+    ];
+    const state = {
+      deck: [],
+      playerHand: [],
+      holds: new Set(),
+      stage: 'hold',
+      showdown: null,
+      rounds: 0
+    };
+
+    const root = document.createElement('div');
+    root.className = 'mini-trump-poker';
+    const board = document.createElement('div');
+    board.className = 'mini-trump-poker-board';
+    const opponentList = document.createElement('div');
+    opponentList.className = 'mini-trump-poker-opponents';
+    const playerBox = document.createElement('div');
+    playerBox.className = 'mini-trump-poker-player';
+    const playerTitle = document.createElement('h3');
+    playerTitle.textContent = 'あなたの手札';
+    const handRow = document.createElement('div');
+    handRow.className = 'mini-trump-poker-hand';
+    const summary = document.createElement('div');
+    summary.className = 'mini-trump-poker-summary';
+
+    container.innerHTML = '';
+    container.appendChild(root);
+    root.appendChild(board);
+    board.appendChild(opponentList);
+    board.appendChild(playerBox);
+    playerBox.appendChild(playerTitle);
+    playerBox.appendChild(handRow);
+    playerBox.appendChild(summary);
+
+    const opponentRefs = opponents.map(opponent => {
+      const el = document.createElement('div');
+      el.className = 'mini-trump-poker-opponent';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = opponent.name;
+      const cards = document.createElement('div');
+      cards.className = 'cards';
+      const result = document.createElement('div');
+      result.className = 'mini-trump-poker-summary';
+      el.appendChild(name);
+      el.appendChild(cards);
+      el.appendChild(result);
+      opponentList.appendChild(el);
+      return { el, cards, result };
+    });
+
+    ctx.onSettingsChange(() => render());
+
+    function initRound(){
+      const deck = ctx.cardUtils.createDeck();
+      const filtered = deck.filter(card => card.suit !== 'joker');
+      ctx.cardUtils.shuffle(filtered);
+      state.deck = filtered;
+      state.playerHand = [];
+      state.holds = new Set();
+      state.showdown = null;
+      state.stage = 'hold';
+      opponents.forEach(op => { op.hand = []; op.result = null; });
+
+      dealInitial();
+      state.holds = new Set(state.playerHand.map(card => card.id));
+      state.rounds += 1;
+      ctx.setStatus('保持するカードを選んで「交換する」を押してください。');
+      updateHud();
+      updateActions();
+      render();
+    }
+
+    function dealInitial(){
+      for (let i = 0; i < 5; i++) {
+        state.playerHand.push(ctx.cardUtils.drawCard(state.deck));
+        opponents.forEach(opponent => {
+          opponent.hand.push(ctx.cardUtils.drawCard(state.deck));
+        });
+      }
+    }
+
+    function updateHud(){
+      const stats = ctx.stats();
+      const bestLabel = stats.bestScore != null ? scoreToHandLabel(stats.bestScore) : '---';
+      ctx.setScore(`通算 ${stats.plays || 0} ハンド / 勝利 ${stats.wins || 0} / ベスト ${bestLabel}`);
+    }
+
+    function updateActions(){
+      if (state.stage === 'hold') {
+        ctx.setActions([
+          { label: '交換する (D)', variant: 'primary', hotkey: 'D', onClick: () => executeDraw() },
+          { label: '勝負 (S)', variant: 'secondary', hotkey: 'S', onClick: () => resolveShowdown() },
+          { label: 'ヒント (H)', variant: 'secondary', hotkey: 'H', onClick: () => ctx.showToast('残したいカードを「HOLD」にして交換しましょう。') },
+          { label: '新しいハンド (R)', variant: 'secondary', hotkey: 'R', onClick: () => initRound() },
+          { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        ]);
+      } else {
+        ctx.setActions([
+          { label: '次のハンド (R)', variant: 'primary', hotkey: 'R', onClick: () => initRound() },
+          { label: 'ヒント (H)', variant: 'secondary', hotkey: 'H', onClick: () => ctx.showToast('保持するカードを工夫すると強い役が狙えます。') },
+          { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        ]);
+      }
+    }
+
+    function toggleHold(card){
+      if (state.stage !== 'hold') return;
+      if (!state.holds.has(card.id)) {
+        const discardCount = 5 - state.holds.size;
+        if (discardCount >= 3) {
+          ctx.showToast('一度に捨てられるのは3枚までです。', { type: 'warn' });
+          return;
+        }
+        state.holds.add(card.id);
+      } else {
+        if (state.holds.size <= 1) {
+          ctx.showToast('最低1枚は保持してください。', { type: 'warn' });
+          return;
+        }
+        state.holds.delete(card.id);
+      }
+      renderHand();
+    }
+
+    function executeDraw(){
+      if (state.stage !== 'hold') return;
+      replaceCards(state.playerHand, state.holds);
+      opponents.forEach(opponent => {
+        const holdSet = chooseAiHolds(opponent.hand);
+        replaceCards(opponent.hand, holdSet);
+      });
+      resolveShowdown();
+    }
+
+    function replaceCards(hand, holdSet){
+      for (let i = 0; i < hand.length; i++) {
+        const card = hand[i];
+        if (!card || !holdSet.has(card.id)) {
+          const next = ctx.cardUtils.drawCard(state.deck);
+          if (next) {
+            hand[i] = next;
+          }
+        }
+      }
+    }
+
+    function resolveShowdown(skipAward){
+      const playerEval = evaluateHand(state.playerHand);
+      const results = [
+        { player: 0, name: 'あなた', eval: playerEval, score: handScore(playerEval), hand: state.playerHand.slice(), human: true }
+      ];
+      opponents.forEach(opponent => {
+        const evalResult = evaluateHand(opponent.hand);
+        results.push({
+          player: opponent.id,
+          name: opponent.name,
+          eval: evalResult,
+          score: handScore(evalResult),
+          hand: opponent.hand.slice(),
+          human: false
+        });
+        opponent.result = evalResult;
+      });
+      results.sort((a, b) => b.score - a.score);
+      const bestScore = results[0].score;
+      const winners = results.filter(entry => entry.score === bestScore);
+      const playerPlacement = results.findIndex(entry => entry.player === 0) + 1;
+      const stats = ctx.stats();
+      const awardTable = [8, 15, 25, 35, 60, 90, 120, 150, 180, 220];
+      const baseAward = awardTable[playerEval.rank] ?? 10;
+      if (!skipAward) ctx.award(baseAward, { type: 'poker-hand', label: playerEval.label, rank: playerEval.rank });
+      if (playerPlacement === 1) {
+        ctx.award(90, { type: 'poker-win', label: playerEval.label });
+      }
+      ctx.commitStats({ plays: 1, wins: playerPlacement === 1 ? 1 : 0, score: handScore(playerEval), bestMode: 'higher' });
+      state.stage = 'result';
+      state.showdown = { results, winners, placement: playerPlacement };
+      const winnerNames = winners.map(w => w.name).join(' / ');
+      ctx.setStatus(`勝者: ${winnerNames} ・ あなたは ${playerPlacement} 位 (${playerEval.label})`);
+      updateHud();
+      updateActions();
+      render();
+    }
+
+    function chooseAiHolds(hand){
+      const holdSet = new Set();
+      const evalResult = evaluateHand(hand);
+      if (evalResult.rank >= 4) {
+        // flush or better → 全保持
+        hand.forEach(card => holdSet.add(card.id));
+        return holdSet;
+      }
+      const counts = rankCounts(hand);
+      const suitCounts = suitCountsMap(hand);
+      const targetSuit = Array.from(suitCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0];
+      hand.forEach(card => {
+        if (counts.get(card.rankValue === 1 ? 14 : card.rankValue) > 1) {
+          holdSet.add(card.id);
+        }
+      });
+      if (holdSet.size <= 1 && targetSuit && suitCounts.get(targetSuit) >= 3) {
+        hand.forEach(card => {
+          if (card.suit === targetSuit) holdSet.add(card.id);
+        });
+      }
+      if (!holdSet.size) {
+        const sorted = hand.slice().sort((a, b) => (valueOf(b) - valueOf(a)));
+        sorted.slice(0, 2).forEach(card => holdSet.add(card.id));
+      }
+      return holdSet;
+    }
+
+    function renderHand(){
+      handRow.innerHTML = '';
+      state.playerHand.forEach(card => {
+        const el = ctx.cardUtils.renderCard(card, { faceUp: true, size: 'small', interactive: state.stage === 'hold' });
+        if (state.stage === 'hold') {
+          el.addEventListener('click', () => toggleHold(card));
+        }
+        if (state.holds.has(card.id)) el.classList.add('hold'); else el.classList.remove('hold');
+        if (state.stage !== 'hold') el.classList.add('locked');
+        handRow.appendChild(el);
+      });
+      renderSummary();
+    }
+
+    function renderOpponents(){
+      opponents.forEach((opponent, idx) => {
+        const ref = opponentRefs[idx];
+        ref.cards.innerHTML = '';
+        if (state.stage === 'result' && opponent.result) {
+          opponent.hand.forEach(card => {
+            const el = ctx.cardUtils.renderCard(card, { faceUp: true, size: 'tiny' });
+            ref.cards.appendChild(el);
+          });
+          ref.result.innerHTML = `<div>${opponent.result.label}</div>`;
+        } else {
+          opponent.hand.forEach(() => {
+            const el = ctx.cardUtils.renderCard({ suit: 'joker', rank: 'X', rankValue: 0, rankLabel: 'X', suitLabel: 'Back', suitSymbol: '' }, { faceUp: false, size: 'tiny' });
+            ref.cards.appendChild(el);
+          });
+          ref.result.innerHTML = `<div>交換待ち...</div>`;
+        }
+        if (state.showdown && state.showdown.results[0].player === opponent.id) ref.el.classList.add('active'); else ref.el.classList.remove('active');
+      });
+    }
+
+    function renderSummary(){
+      if (!state.showdown) {
+        summary.innerHTML = `<div>交換しないカードは「HOLD」が表示されます。</div><div>山札: ${state.deck.length} 枚</div>`;
+      } else {
+        const player = state.showdown.results.find(entry => entry.player === 0);
+        summary.innerHTML = `<div>${player.eval.label}</div><div>順位: ${state.showdown.placement} 位</div>`;
+      }
+    }
+
+    function render(){
+      renderHand();
+      renderOpponents();
+    }
+
+    function valueOf(card){
+      if (!card) return 0;
+      return card.rankValue === 1 ? 14 : card.rankValue;
+    }
+
+    function rankCounts(hand){
+      const counts = new Map();
+      hand.forEach(card => {
+        const value = valueOf(card);
+        counts.set(value, (counts.get(value) || 0) + 1);
+      });
+      return counts;
+    }
+
+    function suitCountsMap(hand){
+      const counts = new Map();
+      hand.forEach(card => counts.set(card.suit, (counts.get(card.suit) || 0) + 1));
+      return counts;
+    }
+
+    function evaluateHand(hand){
+      const values = hand.map(valueOf).sort((a, b) => b - a);
+      const suits = suitCountsMap(hand);
+      const counts = rankCounts(hand);
+      const sortedCounts = Array.from(counts.entries()).sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return b[0] - a[0];
+      });
+      let isStraight = false;
+      let straightHigh = values[0];
+      const unique = Array.from(new Set(values));
+      if (unique.length === 5) {
+        if (values[0] - values[4] === 4) {
+          isStraight = true;
+          straightHigh = values[0];
+        } else if (values[0] === 14 && values[1] === 5 && values[2] === 4 && values[3] === 3 && values[4] === 2) {
+          isStraight = true;
+          straightHigh = 5;
+        }
+      }
+      const isFlush = Array.from(suits.values()).some(count => count === 5);
+      let rank = 0;
+      let label = 'ハイカード';
+      let tiebreak = values.slice();
+      if (isStraight && isFlush) {
+        if (straightHigh === 14) {
+          rank = 9;
+          label = 'ロイヤルフラッシュ';
+          tiebreak = [14];
+        } else {
+          rank = 8;
+          label = 'ストレートフラッシュ';
+          tiebreak = [straightHigh];
+        }
+      } else if (sortedCounts[0][1] === 4) {
+        rank = 7;
+        label = 'フォーカード';
+        tiebreak = [sortedCounts[0][0], sortedCounts[1][0]];
+      } else if (sortedCounts[0][1] === 3 && sortedCounts[1][1] === 2) {
+        rank = 6;
+        label = 'フルハウス';
+        tiebreak = [sortedCounts[0][0], sortedCounts[1][0]];
+      } else if (isFlush) {
+        rank = 5;
+        label = 'フラッシュ';
+        tiebreak = values.slice();
+      } else if (isStraight) {
+        rank = 4;
+        label = 'ストレート';
+        tiebreak = [straightHigh];
+      } else if (sortedCounts[0][1] === 3) {
+        rank = 3;
+        label = 'スリーカード';
+        const rest = values.filter(v => v !== sortedCounts[0][0]).sort((a, b) => b - a);
+        tiebreak = [sortedCounts[0][0], ...rest];
+      } else if (sortedCounts[0][1] === 2 && sortedCounts[1][1] === 2) {
+        rank = 2;
+        label = 'ツーペア';
+        const kicker = values.filter(v => v !== sortedCounts[0][0] && v !== sortedCounts[1][0])[0];
+        const highPair = Math.max(sortedCounts[0][0], sortedCounts[1][0]);
+        const lowPair = Math.min(sortedCounts[0][0], sortedCounts[1][0]);
+        tiebreak = [highPair, lowPair, kicker];
+      } else if (sortedCounts[0][1] === 2) {
+        rank = 1;
+        label = 'ワンペア';
+        const rest = values.filter(v => v !== sortedCounts[0][0]).sort((a, b) => b - a);
+        tiebreak = [sortedCounts[0][0], ...rest];
+      }
+      return { rank, label, values: tiebreak };
+    }
+
+    function handScore(result){
+      let score = result.rank * 1000000;
+      result.values.forEach(val => {
+        score = score * 20 + val;
+      });
+      return score;
+    }
+
+    function scoreToHandLabel(score){
+      if (score == null) return '---';
+      const rank = Math.floor(score / 1000000);
+      const labels = ['ハイカード', 'ワンペア', 'ツーペア', 'スリーカード', 'ストレート', 'フラッシュ', 'フルハウス', 'フォーカード', 'ストレートフラッシュ', 'ロイヤルフラッシュ'];
+      return labels[rank] || '---';
+    }
+
+    initRound();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){
+        return state.showdown ? state.showdown.results.find(entry => entry.player === 0)?.score || 0 : 0;
+      }
+    };
+  }
+
+  function createJijiGame(container, ctx){
+    const players = [
+      { id: 0, name: 'You', human: true, hand: [], finishedAt: null },
+      { id: 1, name: 'AI-1', human: false, hand: [], finishedAt: null },
+      { id: 2, name: 'AI-2', human: false, hand: [], finishedAt: null },
+      { id: 3, name: 'AI-3', human: false, hand: [], finishedAt: null }
+    ];
+    const state = {
+      order: [],
+      current: 0,
+      finished: false,
+      tableCard: null,
+      selectingSwap: false,
+      jijiId: null,
+      jijiHolder: null
+    };
+
+    const layout = document.createElement('div');
+    layout.className = 'mini-trump-jiji-table';
+    const center = document.createElement('div');
+    center.className = 'mini-trump-jiji-center';
+    const tableEl = document.createElement('div');
+    tableEl.className = 'mini-trump-jiji-table-card';
+    const tableLabel = document.createElement('div');
+    tableLabel.className = 'label';
+    tableLabel.textContent = '台札';
+    const tableCardHost = document.createElement('div');
+    const tableMeta = document.createElement('div');
+    tableMeta.className = 'meta';
+    const swapButton = document.createElement('button');
+    swapButton.type = 'button';
+    swapButton.textContent = '交換モード';
+    tableEl.appendChild(tableLabel);
+    tableEl.appendChild(tableCardHost);
+    tableEl.appendChild(tableMeta);
+    tableEl.appendChild(swapButton);
+    center.appendChild(tableEl);
+
+    const ring = document.createElement('div');
+    ring.className = 'mini-trump-baba-ring';
+
+    layout.appendChild(center);
+    layout.appendChild(ring);
+    container.innerHTML = '';
+    container.appendChild(layout);
+
+    swapButton.addEventListener('click', () => {
+      if (state.finished) return;
+      const player = players[state.current];
+      if (!player || !player.human) return;
+      if (!state.tableCard) {
+        ctx.showToast('交換できる台札がありません。', { type: 'warn' });
+        return;
+      }
+      state.selectingSwap = !state.selectingSwap;
+      updateSwapState();
+      render();
+    });
+
+    ctx.setActions([
+      { label: 'ヒント (H)', variant: 'secondary', hotkey: 'H', onClick: () => ctx.showToast('台札と同じランクを揃えると手札を減らせます。') },
+      { label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => initGame() },
+      { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+    ]);
+
+    function initGame(){
+      players.forEach(p => { p.hand = []; p.finishedAt = null; });
+      state.order = [];
+      state.current = 0;
+      state.finished = false;
+      state.tableCard = null;
+      state.selectingSwap = false;
+      state.jijiId = null;
+      state.jijiHolder = null;
+
+      let deck = ctx.cardUtils.createDeck({ jokers: 2 }).filter(card => card.rank !== 'JOKER' || card.suit === 'joker');
+      ctx.cardUtils.shuffle(deck);
+      const jokers = deck.filter(card => card.suit === 'joker');
+      if (jokers.length) {
+        const chosen = jokers[Math.floor(Math.random() * jokers.length)];
+        chosen.isJiji = true;
+        state.jijiId = chosen.id;
+      }
+
+      let table = ctx.cardUtils.drawCard(deck);
+      while (table && table.id === state.jijiId) {
+        deck.push(table);
+        ctx.cardUtils.shuffle(deck);
+        table = ctx.cardUtils.drawCard(deck);
+      }
+      state.tableCard = table;
+
+      let idx = 0;
+      while (deck.length) {
+        const card = ctx.cardUtils.drawCard(deck);
+        const player = players[idx % players.length];
+        player.hand.push(card);
+        if (card.id === state.jijiId) state.jijiHolder = player.id;
+        idx++;
+      }
+
+      players.forEach(player => removePairs(player));
+      state.current = findNextActive(0);
+      ctx.setStatus('あなたの番：必要なら台札と交換し、右隣からカードを引きましょう。');
+      render();
+      updateHud();
+    }
+
+    function updateHud(){
+      const stats = ctx.stats();
+      const human = players[0];
+      const best = stats.bestScore != null ? `${stats.bestScore} 位` : '---';
+      ctx.setScore(`通算 ${stats.plays || 0} 回 / ベスト ${best} / 手札 ${human.hand.length} 枚`);
+    }
+
+    function updateSwapState(){
+      if (state.selectingSwap) {
+        swapButton.textContent = '交換モード解除';
+        tableEl.classList.add('swap-ready');
+        ctx.setStatus('交換するカードを自分の手札から選んでください。');
+      } else {
+        swapButton.textContent = '交換モード';
+        tableEl.classList.remove('swap-ready');
+        if (state.current === 0) {
+          ctx.setStatus('台札と交換するか、右隣からカードを引いてください。');
+        }
+      }
+    }
+
+    function findNextActive(start){
+      let i = start;
+      for (let attempt = 0; attempt < players.length; attempt++) {
+        const player = players[i % players.length];
+        if (player.hand.length > 0) return i % players.length;
+        i++;
+      }
+      return start % players.length;
+    }
+
+    function removePairs(player, opts = {}){
+      const counts = new Map();
+      for (const card of player.hand) {
+        if (card.id === state.jijiId) continue;
+        const value = card.rank;
+        counts.set(value, (counts.get(value) || 0) + 1);
+      }
+      const toRemove = new Set();
+      counts.forEach((count, rank) => {
+        const pairs = Math.floor(count / 2);
+        if (pairs <= 0) return;
+        let removed = 0;
+        for (let i = player.hand.length - 1; i >= 0 && removed < pairs * 2; i--) {
+          const card = player.hand[i];
+          if (card.rank === rank && card.id !== state.jijiId) {
+            toRemove.add(card.id);
+            removed++;
+          }
+        }
+        if (player.human && opts.award !== false) ctx.award(5, { type: 'jiji-pair', rank });
+      });
+      if (toRemove.size) {
+        player.hand = player.hand.filter(card => !toRemove.has(card.id));
+      }
+      if (player.hand.length === 0 && player.finishedAt == null) {
+        player.finishedAt = state.order.length + 1;
+        state.order.push(player.id);
+        if (player.id === 0) {
+          ctx.award(90, { type: 'jiji-finish', place: player.finishedAt });
+          ctx.showToast(`上がり！順位 ${player.finishedAt}`, { duration: 2600 });
+        }
+      }
+    }
+
+    function swapWithTable(player, idx){
+      if (!state.tableCard) {
+        ctx.showToast('台札がありません。', { type: 'warn' });
+        state.selectingSwap = false;
+        updateSwapState();
+        render();
+        return;
+      }
+      const card = player.hand[idx];
+      if (!card) return;
+      if (card.id === state.jijiId) {
+        if (player.human) ctx.showToast('ジジは台札に置けません。', { type: 'warn' });
+        return;
+      }
+      const newCard = state.tableCard;
+      player.hand[idx] = newCard;
+      state.tableCard = card;
+      if (newCard && newCard.id === state.jijiId) state.jijiHolder = player.id;
+      if (card.id === state.jijiId) state.jijiHolder = player.id;
+      state.selectingSwap = false;
+      updateSwapState();
+      removePairs(player);
+      render();
+      if (player.human) {
+        ctx.showToast('台札と交換しました。');
+      }
+    }
+
+    function executeTurn(player){
+      if (state.finished) return;
+      if (player.human) {
+        render();
+        return;
+      }
+      aiMaybeSwap(player);
+      drawFromNext(player);
+    }
+
+    function aiMaybeSwap(player){
+      if (!state.tableCard) return;
+      const tableRank = state.tableCard.rank;
+      if (!tableRank) return;
+      const jijiIndex = player.hand.findIndex(card => card.id === state.jijiId);
+      const matchIndex = player.hand.findIndex(card => card.rank === tableRank && card.id !== state.jijiId);
+      if (jijiIndex !== -1 && state.tableCard.rank !== 'JOKER') {
+        // try to get rid of jiji by pairing
+        const pairIdx = player.hand.findIndex(card => card.rank === state.tableCard.rank && card.id !== state.jijiId);
+        if (pairIdx !== -1) {
+          swapWithTable(player, pairIdx);
+        }
+        return;
+      }
+      if (matchIndex !== -1) {
+        swapWithTable(player, matchIndex);
+      }
+    }
+
+    function drawFromNext(player){
+      const nextIndex = findNextActive((player.id + 1) % players.length);
+      const target = players[nextIndex];
+      if (!target || target.hand.length === 0) {
+        advanceTurn();
+        return;
+      }
+      const idx = Math.floor(Math.random() * target.hand.length);
+      const drawn = target.hand.splice(idx, 1)[0];
+      if (!drawn) {
+        advanceTurn();
+        return;
+      }
+      player.hand.push(drawn);
+      if (drawn.id === state.jijiId) state.jijiHolder = player.id;
+      removePairs(player);
+      removePairs(target, { award: false });
+      advanceTurn();
+    }
+
+    function handleHumanDraw(targetIdx, cardIdx){
+      if (state.finished) return;
+      const human = players[0];
+      if (state.current !== 0) return;
+      const target = players[targetIdx];
+      if (!target || target.hand.length <= cardIdx) return;
+      if (state.selectingSwap) {
+        ctx.showToast('交換モードを終了してください。', { type: 'warn' });
+        return;
+      }
+      const drawn = target.hand.splice(cardIdx, 1)[0];
+      if (drawn) {
+        human.hand.push(drawn);
+        if (drawn.id === state.jijiId) state.jijiHolder = 0;
+      }
+      removePairs(human);
+      removePairs(target, { award: false });
+      advanceTurn();
+    }
+
+    function advanceTurn(){
+      if (checkGameEnd()) return;
+      state.current = findNextActive((state.current + 1) % players.length);
+      const current = players[state.current];
+      state.selectingSwap = false;
+      updateSwapState();
+      if (current.human) {
+        ctx.setStatus('台札と交換するか、右隣からカードを引いてください。');
+        render();
+      } else {
+        ctx.setStatus(`${current.name} の番`);
+        render();
+        setTimeout(() => executeTurn(current), 600);
+      }
+    }
+
+    function checkGameEnd(){
+      const active = players.filter(p => p.hand.length > 0);
+      if (active.length <= 1) {
+        state.finished = true;
+        const loser = active[0];
+        ctx.showToast(`${loser.name} がジジを持っています。ゲーム終了！`, { duration: 2800 });
+        ctx.commitStats({ plays: 1, wins: players[0].finishedAt === 1 ? 1 : 0, score: players[0].finishedAt || players.length, bestMode: 'lower' });
+        ctx.setActions([
+          { label: '再戦する', variant: 'primary', onClick: () => initGame() },
+          { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        ]);
+        updateHud();
+        return true;
+      }
+      return false;
+    }
+
+    function render(){
+      renderTable();
+      renderPlayers();
+      updateHud();
+    }
+
+    function renderTable(){
+      tableCardHost.innerHTML = '';
+      if (state.tableCard) {
+        const el = ctx.cardUtils.renderCard(state.tableCard, { faceUp: true, size: 'small' });
+        tableCardHost.appendChild(el);
+        tableMeta.textContent = `ランク: ${state.tableCard.rankLabel}`;
+      } else {
+        tableMeta.textContent = '台札なし';
+      }
+      swapButton.disabled = state.finished || state.current !== 0 || !state.tableCard;
+      updateSwapState();
+    }
+
+    function renderPlayers(){
+      ring.innerHTML = '';
+      const humanTargetIndex = findNextActive((0 + 1) % players.length);
+      for (const player of players) {
+        const card = document.createElement('div');
+        card.className = 'mini-trump-baba-player';
+        if (player.id === state.current) card.classList.add('active');
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = player.name + (player.human ? ' (You)' : '');
+        card.appendChild(name);
+        const handBox = document.createElement('div');
+        handBox.className = 'hand';
+        if (player.hand.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'hand-empty';
+          empty.textContent = player.finishedAt ? `上がり (${player.finishedAt}位)` : '手札なし';
+          handBox.appendChild(empty);
+        } else if (player.human) {
+          player.hand.forEach((cardInfo, idx) => {
+            const el = ctx.cardUtils.renderCard(cardInfo, { faceUp: true, size: 'tiny', interactive: state.selectingSwap && state.current === 0 });
+            if (state.selectingSwap && state.current === 0 && cardInfo.id !== state.jijiId) {
+              el.addEventListener('click', () => swapWithTable(player, idx));
+            }
+            handBox.appendChild(el);
+          });
+        } else {
+          for (let i = 0; i < player.hand.length; i++) {
+            const btn = document.createElement('button');
+            btn.dataset.targetCard = String(i);
+            btn.textContent = '?';
+            if (players[state.current].human && player.id === humanTargetIndex && !state.selectingSwap) {
+              btn.disabled = false;
+              btn.addEventListener('click', () => handleHumanDraw(player.id, i));
+            } else {
+              btn.disabled = true;
+            }
+            handBox.appendChild(btn);
+          }
+        }
+        card.appendChild(handBox);
+        if (player.finishedAt) {
+          const finished = document.createElement('div');
+          finished.className = 'mini-trump-finished';
+          finished.textContent = `${player.finishedAt} 位確定`;
+          card.appendChild(finished);
+        }
+        ring.appendChild(card);
+      }
+    }
+
+    initGame();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){ return players[0].finishedAt || 0; }
+    };
+  }
+
+  function createDaifugoGame(container, ctx){
+    const players = [
+      { id: 0, name: 'あなた', human: true, hand: [], finishedAt: null },
+      { id: 1, name: '北', human: false, hand: [], finishedAt: null },
+      { id: 2, name: '東', human: false, hand: [], finishedAt: null },
+      { id: 3, name: '西', human: false, hand: [], finishedAt: null }
+    ];
+    const state = {
+      deck: [],
+      leadValue: null,
+      leadPlayer: null,
+      current: 0,
+      passCount: 0,
+      history: [],
+      finished: false,
+      order: []
+    };
+
+    const root = document.createElement('div');
+    root.className = 'mini-trump-daifugo';
+    const board = document.createElement('div');
+    board.className = 'mini-trump-daifugo-board';
+    const playerGrid = document.createElement('div');
+    playerGrid.className = 'mini-trump-daifugo-players';
+    const center = document.createElement('div');
+    center.className = 'mini-trump-daifugo-center';
+    const pile = document.createElement('div');
+    pile.className = 'pile';
+    const pileTitle = document.createElement('h4');
+    pileTitle.textContent = '現在の場';
+    const pileBody = document.createElement('div');
+    pile.appendChild(pileTitle);
+    pile.appendChild(pileBody);
+    const log = document.createElement('div');
+    log.className = 'mini-trump-daifugo-history';
+    center.appendChild(pile);
+    center.appendChild(log);
+    const handRow = document.createElement('div');
+    handRow.className = 'mini-trump-daifugo-hand';
+
+    container.innerHTML = '';
+    container.appendChild(root);
+    root.appendChild(board);
+    board.appendChild(playerGrid);
+    board.appendChild(center);
+    board.appendChild(handRow);
+
+    const playerEls = players.map(player => {
+      const el = document.createElement('div');
+      el.className = 'mini-trump-daifugo-player';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = player.name;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      el.appendChild(name);
+      el.appendChild(meta);
+      playerGrid.appendChild(el);
+      return { el, meta };
+    });
+
+    function initGame(){
+      players.forEach(p => { p.hand = []; p.finishedAt = null; });
+      state.deck = ctx.cardUtils.createDeck().filter(card => card.suit !== 'joker');
+      ctx.cardUtils.shuffle(state.deck);
+      state.leadValue = null;
+      state.leadPlayer = null;
+      state.current = 0;
+      state.passCount = 0;
+      state.history = [];
+      state.finished = false;
+      state.order = [];
+
+      dealCards();
+      state.current = findStartPlayer();
+      ctx.setStatus(`${players[state.current].name} のリード`);
+      updateActions();
+      render();
+      ctx.commitStats({ plays: 1 });
+      advanceTurn({ stay: true });
+    }
+
+    function dealCards(){
+      for (let i = 0; i < 13; i++) {
+        players.forEach(player => {
+          const card = ctx.cardUtils.drawCard(state.deck);
+          if (card) player.hand.push(card);
+        });
+      }
+      players.forEach(player => {
+        player.hand.sort((a, b) => valueOf(a) - valueOf(b));
+      });
+    }
+
+    function findStartPlayer(){
+      let starter = 0;
+      players.forEach(player => {
+        const hasThreeDiamond = player.hand.some(card => card.suit === 'diamond' && card.rankValue === 3);
+        if (hasThreeDiamond) starter = player.id;
+      });
+      return starter;
+    }
+
+    function valueOf(card){
+      return card.rankValue === 1 ? 14 : card.rankValue;
+    }
+
+    function legalCards(player){
+      if (state.leadValue == null || state.leadPlayer === player.id) {
+        return player.hand.slice();
+      }
+      return player.hand.filter(card => valueOf(card) > state.leadValue);
+    }
+
+    function playCard(player, card){
+      const index = player.hand.findIndex(c => c.id === card.id);
+      if (index === -1) return;
+      player.hand.splice(index, 1);
+      state.leadValue = valueOf(card);
+      state.leadPlayer = player.id;
+      state.passCount = 0;
+      state.history.unshift(`${player.name}: ${formatCard(card)}`);
+      if (state.history.length > 6) state.history.length = 6;
+      if (player.hand.length === 0 && player.finishedAt == null) {
+        player.finishedAt = state.order.length + 1;
+        state.order.push(player.id);
+        if (player.id === 0) ctx.award(120, { type: 'daifugo-finish', place: player.finishedAt });
+      }
+      if (checkFinish()) return;
+      render();
+      advanceTurn();
+    }
+
+    function pass(player){
+      state.passCount += 1;
+      state.history.unshift(`${player.name}: パス`);
+      if (state.history.length > 6) state.history.length = 6;
+      const active = players.filter(p => p.hand.length > 0).length;
+      if (state.passCount >= Math.max(1, active - 1)) {
+        const lead = state.leadPlayer;
+        state.leadValue = null;
+        state.leadPlayer = null;
+        state.passCount = 0;
+        state.current = lead != null ? lead : player.id;
+        return true;
+      }
+      return false;
+    }
+
+    function checkFinish(){
+      const remaining = players.filter(p => p.hand.length > 0);
+      if (remaining.length <= 1) {
+        state.finished = true;
+        if (remaining.length === 1) {
+          const loser = remaining[0];
+          loser.finishedAt = players.length;
+          state.order.push(loser.id);
+        }
+        const placement = players[0].finishedAt || players.length;
+        const awards = [0, 150, 80, 40, 10];
+        if (placement <= 4) ctx.award(awards[placement], { type: 'daifugo-result', place: placement });
+        ctx.commitStats({ wins: placement === 1 ? 1 : 0, score: placement, bestMode: 'lower' });
+        ctx.setStatus('ラウンド終了');
+        ctx.setActions([
+          { label: '次のラウンド (R)', variant: 'primary', hotkey: 'R', onClick: () => initGame() },
+          { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        ]);
+        updateHud();
+        render();
+        return true;
+      }
+      return false;
+    }
+
+    function advanceTurn(opts = {}){
+      if (state.finished) return;
+      if (!opts.stay) {
+        state.current = (state.current + 1) % players.length;
+      } else {
+        state.current = state.current % players.length;
+      }
+      const player = players[state.current];
+      if (player.hand.length === 0) {
+        advanceTurn({ stay: false });
+        return;
+      }
+      if (player.human) {
+        ctx.setStatus(state.leadValue == null ? '好きなカードを出してください。' : `場より強いカードを出すかパス (P) してください。`);
+        updateActions();
+        render();
+      } else {
+        updateActions();
+        render();
+        setTimeout(() => aiTakeTurn(player), 650);
+      }
+    }
+
+    function aiTakeTurn(player){
+      if (state.finished) return;
+      const legal = legalCards(player);
+      if (!legal.length) {
+      const reset = pass(player);
+      render();
+      advanceTurn({ stay: reset });
+      return;
+    }
+      const choice = legal.sort((a, b) => valueOf(a) - valueOf(b))[0];
+      playCard(player, choice);
+    }
+
+    function handleHumanPlay(card){
+      if (state.current !== 0 || state.finished) return;
+      const legal = legalCards(players[0]);
+      if (!legal.some(c => c.id === card.id)) {
+        ctx.showToast('そのカードは出せません。', { type: 'warn' });
+        return;
+      }
+      playCard(players[0], card);
+    }
+
+    function handleHumanPass(){
+      if (state.current !== 0 || state.finished) return;
+      if (state.leadValue == null) {
+        ctx.showToast('最初のリードではパスできません。', { type: 'warn' });
+        return;
+      }
+      const reset = pass(players[0]);
+      render();
+      advanceTurn({ stay: reset });
+    }
+
+    function updateActions(){
+      if (state.finished) return;
+      const actions = [];
+      if (state.current === 0 && state.leadValue != null) {
+        actions.push({ label: 'パス (P)', variant: 'secondary', hotkey: 'P', onClick: () => handleHumanPass() });
+      }
+      actions.push({ label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => initGame() });
+      actions.push({ label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() });
+      ctx.setActions(actions);
+    }
+
+    function updateHud(){
+      const stats = ctx.stats();
+      const best = stats.bestScore != null ? `${stats.bestScore} 位` : '---';
+      ctx.setScore(`通算 ${stats.plays || 0} 回 / 勝利 ${stats.wins || 0} / ベスト ${best}`);
+    }
+
+    function render(){
+      renderPlayers();
+      renderPile();
+      renderHand();
+      renderHistory();
+      updateHud();
+    }
+
+    function renderPlayers(){
+      playerEls.forEach(({ el, meta }, idx) => {
+        const player = players[idx];
+        if (!player) return;
+        if (state.current === idx && !state.finished) el.classList.add('active'); else el.classList.remove('active');
+        const status = player.finishedAt ? `${player.finishedAt} 位` : `${player.hand.length} 枚`;
+        meta.textContent = status;
+      });
+    }
+
+    function renderPile(){
+      if (state.leadValue == null) {
+        pileBody.textContent = 'リセット';
+      } else {
+        pileBody.textContent = `要求値: ${state.leadValue}`;
+      }
+    }
+
+    function renderHand(){
+      handRow.innerHTML = '';
+      const player = players[0];
+      const legal = legalCards(player);
+      player.hand.forEach(card => {
+        const btn = document.createElement('button');
+        btn.textContent = formatCard(card);
+        if (!legal.some(c => c.id === card.id) || state.finished || state.current !== 0) {
+          btn.classList.add('disabled');
+          btn.disabled = true;
+        } else {
+          btn.addEventListener('click', () => handleHumanPlay(card));
+        }
+        handRow.appendChild(btn);
+      });
+    }
+
+    function renderHistory(){
+      log.innerHTML = '';
+      state.history.forEach(entry => {
+        const line = document.createElement('div');
+        line.textContent = entry;
+        log.appendChild(line);
+      });
+    }
+
+    initGame();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){ return players[0].finishedAt || 0; }
+    };
+  }
+
+  function createPageOneGame(container, ctx){
+    const players = [
+      { id: 0, name: 'あなた', human: true, hand: [], declared: false },
+      { id: 1, name: '北', human: false, hand: [], declared: false },
+      { id: 2, name: '東', human: false, hand: [], declared: false },
+      { id: 3, name: '西', human: false, hand: [], declared: false }
+    ];
+    const state = {
+      deck: [],
+      discard: [],
+      turn: 0,
+      finished: false,
+      drawUsed: false,
+      turns: 0
+    };
+
+    const root = document.createElement('div');
+    root.className = 'mini-trump-pageone';
+    const board = document.createElement('div');
+    board.className = 'mini-trump-pageone-board';
+    const opponentRow = document.createElement('div');
+    opponentRow.className = 'mini-trump-pageone-opponents';
+    const center = document.createElement('div');
+    center.className = 'mini-trump-pageone-center';
+    const deckBox = document.createElement('div');
+    deckBox.className = 'deck';
+    const deckTitle = document.createElement('h4');
+    deckTitle.textContent = '山札';
+    const deckCount = document.createElement('div');
+    deckBox.appendChild(deckTitle);
+    deckBox.appendChild(deckCount);
+    const discardBox = document.createElement('div');
+    discardBox.className = 'discard';
+    const discardTitle = document.createElement('h4');
+    discardTitle.textContent = '捨て札';
+    const discardTop = document.createElement('div');
+    discardBox.appendChild(discardTitle);
+    discardBox.appendChild(discardTop);
+    center.appendChild(deckBox);
+    center.appendChild(discardBox);
+    const handRow = document.createElement('div');
+    handRow.className = 'mini-trump-pageone-hand';
+    const statusBox = document.createElement('div');
+    statusBox.className = 'mini-trump-pageone-status';
+
+    container.innerHTML = '';
+    container.appendChild(root);
+    root.appendChild(board);
+    board.appendChild(opponentRow);
+    board.appendChild(center);
+    board.appendChild(handRow);
+    board.appendChild(statusBox);
+
+    const opponentRefs = players.slice(1).map(player => {
+      const el = document.createElement('div');
+      el.className = 'mini-trump-pageone-opponent';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = player.name;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      el.appendChild(name);
+      el.appendChild(meta);
+      opponentRow.appendChild(el);
+      return { player, el, meta };
+    });
+
+    function initGame(){
+      players.forEach(player => { player.hand = []; player.declared = false; });
+      state.deck = ctx.cardUtils.createDeck().filter(card => card.suit !== 'joker');
+      ctx.cardUtils.shuffle(state.deck);
+      state.discard = [];
+      state.turn = 0;
+      state.finished = false;
+      state.drawUsed = false;
+      state.turns = 0;
+
+      for (let i = 0; i < 7; i++) {
+        players.forEach(player => {
+          const card = ctx.cardUtils.drawCard(state.deck);
+          if (card) player.hand.push(card);
+        });
+      }
+      const starter = ctx.cardUtils.drawCard(state.deck);
+      if (starter) state.discard.push(starter);
+      ctx.setStatus('同じ数字か同じスートのカードを出してください。');
+      updateActions();
+      render();
+      ctx.commitStats({ plays: 1 });
+    }
+
+    function updateActions(){
+      if (state.finished) return;
+      const actions = [];
+      if (state.turn === 0 && !state.drawUsed) {
+        actions.push({ label: 'ドロー (D)', variant: 'primary', hotkey: 'D', onClick: () => handleDraw() });
+      }
+      actions.push({ label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => initGame() });
+      actions.push({ label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() });
+      ctx.setActions(actions);
+    }
+
+    function handleDraw(){
+      if (state.turn !== 0 || state.drawUsed || state.finished) return;
+      drawCard(players[0]);
+      state.drawUsed = true;
+      render();
+      setTimeout(() => advanceTurn(), 400);
+    }
+
+    function drawCard(player){
+      if (!state.deck.length) reshuffleDeck();
+      const card = ctx.cardUtils.drawCard(state.deck);
+      if (card) player.hand.push(card);
+      return card;
+    }
+
+    function reshuffleDeck(){
+      const top = state.discard.pop();
+      const rest = state.discard.splice(0);
+      ctx.cardUtils.shuffle(rest);
+      state.deck.push(...rest);
+      if (top) state.discard.push(top);
+    }
+
+    function legalCards(player){
+      const top = state.discard[state.discard.length - 1];
+      if (!top) return player.hand.slice();
+      return player.hand.filter(card => card.rank === top.rank || card.suit === top.suit);
+    }
+
+    function playCard(player, card){
+      const idx = player.hand.findIndex(c => c.id === card.id);
+      if (idx === -1) return;
+      player.hand.splice(idx, 1);
+      state.discard.push(card);
+      state.drawUsed = false;
+      state.turns += 1;
+      if (player.hand.length === 1) {
+        player.declared = true;
+        if (player.human) ctx.showToast('「ページワン！」', { duration: 1800 });
+      }
+      if (player.hand.length === 0) {
+        finishGame(player.id);
+        return;
+      }
+      advanceTurn();
+    }
+
+    function finishGame(winnerId){
+      state.finished = true;
+      const humanWin = winnerId === 0;
+      if (humanWin) {
+        ctx.award(90, { type: 'pageone-win', turns: state.turns });
+      }
+      ctx.commitStats({ wins: humanWin ? 1 : 0, score: humanWin ? 1 : 0, bestMode: 'higher' });
+      ctx.setStatus(`${players[winnerId].name} の勝利！`);
+      ctx.setActions([
+        { label: 'もう一度 (R)', variant: 'primary', hotkey: 'R', onClick: () => initGame() },
+        { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+      render();
+    }
+
+    function advanceTurn(){
+      if (state.finished) return;
+      state.turn = (state.turn + 1) % players.length;
+      if (state.turn === 0) {
+        ctx.setStatus('同じ数字か同じスートのカードを出してください。');
+        state.drawUsed = false;
+        updateActions();
+        render();
+      } else {
+        updateActions();
+        render();
+        setTimeout(() => aiTurn(players[state.turn]), 480);
+      }
+    }
+
+    function aiTurn(player){
+      if (state.finished) return;
+      const legal = legalCards(player);
+      if (legal.length) {
+        legal.sort((a, b) => valueOfCard(a) - valueOfCard(b));
+        playCard(player, legal[0]);
+      } else {
+        const card = drawCard(player);
+        if (card) {
+          const plays = legalCards(player);
+          if (plays.some(c => c.id === card.id)) {
+            playCard(player, card);
+            return;
+          }
+        }
+        advanceTurn();
+      }
+    }
+
+    function valueOfCard(card){
+      return card.rankValue === 1 ? 14 : card.rankValue;
+    }
+
+    function handleHumanPlay(card){
+      if (state.turn !== 0 || state.finished) return;
+      const legal = legalCards(players[0]);
+      if (!legal.some(c => c.id === card.id)) {
+        ctx.showToast('そのカードは出せません。', { type: 'warn' });
+        return;
+      }
+      playCard(players[0], card);
+    }
+
+    function render(){
+      renderOpponents();
+      renderCenter();
+      renderHand();
+      renderStatus();
+      updateHud();
+    }
+
+    function renderOpponents(){
+      opponentRefs.forEach(ref => {
+        const { player, el, meta } = ref;
+        if (state.turn === player.id && !state.finished) el.classList.add('active'); else el.classList.remove('active');
+        meta.textContent = `${player.hand.length} 枚${player.declared ? ' / 宣言済' : ''}`;
+      });
+    }
+
+    function renderCenter(){
+      deckCount.textContent = `${state.deck.length} 枚`; 
+      discardTop.innerHTML = '';
+      const top = state.discard[state.discard.length - 1];
+      if (top) {
+        discardTop.textContent = formatCard(top);
+      } else {
+        discardTop.textContent = '---';
+      }
+    }
+
+    function renderHand(){
+      handRow.innerHTML = '';
+      const player = players[0];
+      const legal = legalCards(player);
+      player.hand.forEach(card => {
+        const btn = document.createElement('button');
+        btn.textContent = formatCard(card);
+        if (state.turn !== 0 || state.finished || !legal.some(c => c.id === card.id)) {
+          btn.classList.add('disabled');
+          btn.disabled = true;
+        } else {
+          btn.addEventListener('click', () => handleHumanPlay(card));
+        }
+        handRow.appendChild(btn);
+      });
+    }
+
+    function renderStatus(){
+      statusBox.innerHTML = '';
+      const line1 = document.createElement('div');
+      const top = state.discard[state.discard.length - 1];
+      line1.textContent = top ? `現在の場: ${formatCard(top)}` : '現在の場: ---';
+      const line2 = document.createElement('div');
+      line2.textContent = state.turn === 0 ? 'あなたの番です。' : `${players[state.turn].name} の番`;
+      statusBox.appendChild(line1);
+      statusBox.appendChild(line2);
+    }
+
+    function updateHud(){
+      const stats = ctx.stats();
+      ctx.setScore(`通算 ${stats.plays || 0} 回 / 勝利 ${stats.wins || 0}`);
+    }
+
+    initGame();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){},
+      getScore(){ return state.turns; }
     };
   }
 

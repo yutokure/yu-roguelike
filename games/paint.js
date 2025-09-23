@@ -74,6 +74,11 @@
     } catch {}
   }
 
+  function setImportantColor(element, color){
+    if (!element) return;
+    element.style.setProperty('color', color, 'important');
+  }
+
   function create(root, awardXp){
     if (!root) throw new Error('MiniExp Paint requires a container');
 
@@ -128,11 +133,6 @@
     let secondarySwatch;
     let primaryInput;
     let secondaryInput;
-
-    function setImportantColor(element, color){
-      if (!element) return;
-      element.style.setProperty('color', color, 'important');
-    }
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';

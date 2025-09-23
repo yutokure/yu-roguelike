@@ -129,6 +129,11 @@
     let primaryInput;
     let secondaryInput;
 
+    function setImportantColor(element, color){
+      if (!element) return;
+      element.style.setProperty('color', color, 'important');
+    }
+
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
     wrapper.style.height = '100%';
@@ -149,7 +154,7 @@
     frame.style.overflow = 'hidden';
     frame.style.fontFamily = '"Segoe UI", "Yu Gothic", sans-serif';
     frame.style.position = 'relative';
-    frame.style.color = '#1f2937';
+    setImportantColor(frame, '#1f2937');
 
     const titleBar = document.createElement('div');
     titleBar.style.display = 'flex';
@@ -171,7 +176,7 @@
     titleLabel.style.flex = '1';
     titleLabel.style.fontSize = '15px';
     titleLabel.style.fontWeight = '600';
-    titleLabel.style.color = '#1e293b';
+    setImportantColor(titleLabel, '#1e293b');
 
     const windowControls = document.createElement('div');
     windowControls.style.display = 'flex';
@@ -187,7 +192,7 @@
       btn.style.borderRadius = '6px';
       btn.style.background = 'transparent';
       btn.style.cursor = 'pointer';
-      btn.style.color = '#334155';
+      setImportantColor(btn, '#334155');
       btn.addEventListener('pointerenter', () => { btn.style.background = symbol === '×' ? '#fee2e2' : '#e2e8f0'; });
       btn.addEventListener('pointerleave', () => { btn.style.background = 'transparent'; });
       if (symbol === '×') {
@@ -300,7 +305,7 @@
     statusBar.style.alignItems = 'center';
     statusBar.style.padding = '0 14px';
     statusBar.style.fontSize = '12px';
-    statusBar.style.color = '#475569';
+    setImportantColor(statusBar, '#475569');
     statusBar.style.gap = '16px';
 
     const statusPosition = document.createElement('span');
@@ -1046,7 +1051,7 @@
       btn.style.fontSize = '13px';
       btn.style.cursor = 'pointer';
       btn.style.background = 'rgba(255,255,255,0.8)';
-      btn.style.color = '#1f2937';
+      setImportantColor(btn, '#1f2937');
       btn.style.fontWeight = '500';
       btn.addEventListener('click', () => selectTool(id));
       btn.addEventListener('pointerenter', () => btn.style.boxShadow = '0 6px 14px rgba(15,23,42,0.18)');
@@ -1063,14 +1068,14 @@
     fillToggle.style.padding = '8px 12px';
     fillToggle.style.fontSize = '13px';
     fillToggle.style.cursor = 'pointer';
-    fillToggle.style.color = '#0f172a';
+    setImportantColor(fillToggle, '#0f172a');
     fillToggle.addEventListener('click', toggleFillMode);
     toolRow.appendChild(fillToggle);
 
     const brushLabel = document.createElement('span');
     brushLabel.textContent = 'サイズ';
     brushLabel.style.fontSize = '12px';
-    brushLabel.style.color = '#475569';
+    setImportantColor(brushLabel, '#475569');
 
     brushSlider = document.createElement('input');
     brushSlider.type = 'range';
@@ -1082,12 +1087,12 @@
     brushValue = document.createElement('span');
     brushValue.style.minWidth = '48px';
     brushValue.style.fontSize = '12px';
-    brushValue.style.color = '#1f2937';
+    setImportantColor(brushValue, '#1f2937');
 
     const zoomLabel = document.createElement('span');
     zoomLabel.textContent = 'ズーム';
     zoomLabel.style.fontSize = '12px';
-    zoomLabel.style.color = '#475569';
+    setImportantColor(zoomLabel, '#475569');
 
     zoomSlider = document.createElement('input');
     zoomSlider.type = 'range';
@@ -1099,7 +1104,7 @@
     zoomValue = document.createElement('span');
     zoomValue.style.minWidth = '48px';
     zoomValue.style.fontSize = '12px';
-    zoomValue.style.color = '#1f2937';
+    setImportantColor(zoomValue, '#1f2937');
 
     sizeGroup.appendChild(brushLabel);
     sizeGroup.appendChild(brushSlider);
@@ -1124,7 +1129,7 @@
     swapBtn.style.padding = '8px 10px';
     swapBtn.style.fontSize = '14px';
     swapBtn.style.cursor = 'pointer';
-    swapBtn.style.color = '#1f2937';
+    setImportantColor(swapBtn, '#1f2937');
     swapBtn.addEventListener('click', swapColors);
 
     primaryInput = document.createElement('input');
@@ -1155,7 +1160,7 @@
     const primaryCaption = document.createElement('span');
     primaryCaption.textContent = '前景';
     primaryCaption.style.fontSize = '11px';
-    primaryCaption.style.color = '#475569';
+    setImportantColor(primaryCaption, '#475569');
     primaryWrap.appendChild(primarySwatch);
     primaryWrap.appendChild(primaryCaption);
 
@@ -1167,7 +1172,7 @@
     const secondaryCaption = document.createElement('span');
     secondaryCaption.textContent = '背景';
     secondaryCaption.style.fontSize = '11px';
-    secondaryCaption.style.color = '#475569';
+    setImportantColor(secondaryCaption, '#475569');
     secondaryWrap.appendChild(secondarySwatch);
     secondaryWrap.appendChild(secondaryCaption);
 
@@ -1279,7 +1284,7 @@
     btn.style.cursor = 'pointer';
     btn.style.background = 'rgba(255,255,255,0.85)';
     btn.style.fontWeight = '500';
-    btn.style.color = '#1f2937';
+    setImportantColor(btn, '#1f2937');
     btn.addEventListener('click', handler);
     btn.addEventListener('pointerenter', () => btn.style.boxShadow = '0 8px 16px rgba(15,23,42,0.16)');
     btn.addEventListener('pointerleave', () => btn.style.boxShadow = 'none');

@@ -3,6 +3,8 @@
 window.MINIEXP_MANIFEST = [
   { id: 'snake',       name: 'スネーク',        entry: 'games/snake.js',       version: '0.1.0', author: 'builtin', description: '餌を取ると+1EXP', category: 'アクション' },
   { id: 'othello',     name: 'オセロ',          entry: 'games/othello.js',     version: '0.1.0', author: 'builtin', description: 'ひっくり返し×0.5EXP＋勝利ボーナス', category: 'ボード' },
+  { id: 'checkers',    name: 'チェッカー',      entry: 'games/checkers.js',    version: '0.1.0', author: 'mod', description:
+'ジャンプで駒取りしつつ王冠を目指すクラシックボードゲーム', category: 'ボード' },
   { id: 'connect6',    name: 'コネクトシックス', entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '六目並べ。配置+1/リーチ+10/勝利で高EXP', category: 'ボード' },
   { id: 'gomoku',      name: '五目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '配置+1/リーチ+10/勝利ボーナス', category: 'ボード' },
   { id: 'connect4',    name: '四目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '落下式四目。配置+1/リーチ+10', category: 'ボード' },

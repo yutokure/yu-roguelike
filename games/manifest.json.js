@@ -18,6 +18,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'invaders',    name: 'インベーダー風',    entry: 'games/invaders.js',   version: '0.1.0', author: 'builtin', description: '撃破+1 / 全滅+50', category: 'シューティング' },
   { id: 'pacman',      name: 'パックマン風',      entry: 'games/pacman.js',     version: '0.1.0', author: 'builtin', description: '餌+0.5 / 全取得+100', category: 'アクション' },
   { id: 'tetris',      name: 'テトリス風',        entry: 'games/tetris.js',     version: '0.1.0', author: 'builtin', description: 'REN×1.5^n / T-Spin', category: 'パズル' },
+  { id: 'falling_puyos', name: 'ぷよぷよ風',      entry: 'games/puyo.js',      version: '0.1.0', author: 'mod', description: '4つ同色で消去。連鎖で倍率UP', category: 'パズル' },
   { id: 'triomino_columns', name: 'トリオミノコラムス', entry: 'games/triomino_columns.js', version: '0.1.0', author: 'mod', description: 'トリオトスDX風！ラインスパーク＆ホールド対応', category: 'パズル' },
   { id: 'game2048',    name: '2048',             entry: 'games/2048.js',       version: '0.1.0', author: 'builtin', description: '合成log2 / 2048で+777', category: 'パズル' },
   // New mini-games (MOD)

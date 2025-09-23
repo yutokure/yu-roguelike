@@ -13,6 +13,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'same',        name: 'セイムゲーム',    entry: 'games/same.js',        version: '0.1.0', author: 'builtin', description: '同色まとめ消し×0.5EXP', category: 'パズル' },
   { id: 'match3',      name: 'マッチ3',          entry: 'games/match3.js',      version: '0.1.0', author: 'builtin', description: '3:+1 / 4:+3 / 5:+10、連鎖×1.5', category: 'パズル' },
   { id: 'minesweeper', name: 'マインスイーパー', entry: 'games/minesweeper.js', version: '0.1.0', author: 'builtin', description: '開放×0.1 / クリア: 25/200/1600', category: 'パズル' },
+  { id: 'sudoku',      name: 'ナンプレ',        entry: 'games/sudoku.js',     version: '0.1.0', author: 'mod', description: '正解入力でEXP / クリアボーナス', category: 'パズル' },
   { id: 'ultimate_ttt', name: 'スーパー三目並べ', entry: 'games/ultimate_ttt.js', version: '0.1.0', author: 'mod', description: '小盤制覇+25/配置+1/リーチ+10/勝利ボーナス', category: 'ボード' },
   { id: 'sliding_puzzle', name: 'スライドパズル', entry: 'games/sliding_puzzle.js', version: '0.1.0', author: 'mod', description: '難易度で8/15/24のスライドパズル', category: 'パズル' },
   { id: 'invaders',    name: 'インベーダー風',    entry: 'games/invaders.js',   version: '0.1.0', author: 'builtin', description: '撃破+1 / 全滅+50', category: 'シューティング' },

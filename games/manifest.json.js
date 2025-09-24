@@ -30,9 +30,12 @@ window.MINIEXP_MANIFEST = [
   // New mini-games (MOD)
   { id: 'todo_list',   name: 'ToDoリスト',       entry: 'games/todo_list.js',  version: '0.1.0', author: 'mod', description: 'タスク完了で設定EXP / 失敗は獲得なし', category: 'ユーティリティ' },
   { id: 'notepad',     name: 'メモ帳',           entry: 'games/notepad.js',    version: '0.1.0', author: 'mod', description: '開く+5 / 編集+1 / 保存+5 EXP', category: 'ユーティリティ' },
+  { id: 'exceler',    name: '表計算エクセラー', entry: 'games/exceler.js', version: '0.1.0', author: 'mod', description: 'XLSXの読み書きと主要関数・書式対応の軽量スプレッドシート', category: 'ユーティリティ' },
   { id: 'paint',       name: 'ペイント',         entry: 'games/paint.js',      version: '0.1.0', author: 'mod', description: '描画+1 / 塗りつぶし+3 / 保存+8 EXP', category: 'ユーティリティ' },
+  { id: 'clock_hub',   name: '時計ハブ',         entry: 'games/clock_hub.js',  version: '0.1.0', author: 'mod', description: '多彩な時計と時間情報、節目EXPを備えたユーティリティ', category: 'ユーティリティ' },
   { id: 'calculator',  name: '電卓',             entry: 'games/calculator.js', version: '0.1.0', author: 'mod', description: 'ユーティリティ電卓。数字入力+1 / 計算確定+5EXP', category: 'ユーティリティ' },
   { id: 'math_lab',    name: '数学ラボ',         entry: 'games/math_lab.js',   version: '0.1.0', author: 'mod', description: '高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション', category: 'ユーティリティ' },
+  { id: 'wording',     name: 'Wording',         entry: 'games/wording.js',    version: '0.1.0', author: 'mod', description: '編集+1 / 書式+2 / 保存+6 EXP のワープロ', category: 'ユーティリティ' },
   { id: 'aim',           name: '的あて（エイム）',     entry: 'games/aim.js',             version: '0.1.0', author: 'builtin', description: '命中で1〜3EXP／連続命中ボーナス', category: 'シューティング' },
   { id: 'dodge_race',    name: '回避レース',           entry: 'games/dodge_race.js',       version: '0.1.0', author: 'builtin', description: '距離で微量EXP／CP+5', category: 'アクション' },
   { id: 'falling_shooter', name: '落下ブロック・シューター', entry: 'games/falling_shooter.js', version: '0.1.0', author: 'builtin', description: '破壊で1〜数EXP（大きいほど高EXP）', category: 'シューティング' },

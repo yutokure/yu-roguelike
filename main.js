@@ -318,7 +318,7 @@ function resetTileMetadata() {
     tileMeta = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
 }
 
-ffunction ensureTileMeta(x, y) {
+function ensureTileMeta(x, y) {
     if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return null;
     if (!tileMeta[y]) tileMeta[y] = Array(MAP_WIDTH).fill(null);
     if (!tileMeta[y][x]) tileMeta[y][x] = {};

@@ -450,7 +450,7 @@ function composeSpec(dim, b1, b2, b3, nested = 1) {
     // 新仕様: タイプはブロック由来の組み合わせで混合させる
     const pool = [b1.type, b2.type, b3.type].filter(t => !!t);
     const uniquePool = Array.from(new Set(pool));
-    const type = uniquePool.length > 0 ? 'mixed' : 'mixed';
+    const type = uniquePool.length === 1 ? uniquePool[0] : 'mixed';
     const bossFloors = unionNormalize([b1.bossFloors, b2.bossFloors, b3.bossFloors]).filter(n => n>=1 && n<=depth);
     // typePool を追加して混合対象を明示（空ならデフォルト混合）
     return { level, sizeFactor, depth, chestBias, type, bossFloors, typePool: uniquePool };

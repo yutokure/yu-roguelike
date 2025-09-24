@@ -4508,32 +4508,94 @@ async function initMiniExpUI() {
 }
 
 // Mini game registry for MODs
+function cleanupMiniGameWaiter(id, entry) {
+    const list = __miniGameWaiters[id];
+    if (!list) return;
+    const idx = list.indexOf(entry);
+    if (idx >= 0) list.splice(idx, 1);
+    if (list.length === 0) delete __miniGameWaiters[id];
+}
+
+function rejectMiniGameWaiters(id, error) {
+    const list = __miniGameWaiters[id];
+    if (!list) return;
+    list.forEach(entry => {
+        try {
+            if (entry && typeof entry === 'object') {
+                if (entry.timer) clearTimeout(entry.timer);
+                entry.reject && entry.reject(error);
+            } else if (typeof entry === 'function') {
+                entry(null);
+            }
+        } catch {}
+    });
+    delete __miniGameWaiters[id];
+}
+
 window.registerMiniGame = function(def) {
     if (!def || !def.id) return;
     __miniGameRegistry[def.id] = def;
-    if (__miniGameWaiters[def.id]) {
-        __miniGameWaiters[def.id].forEach(fn => { try { fn(def); } catch {} });
-        delete __miniGameWaiters[def.id];
-    }
+    const list = __miniGameWaiters[def.id];
+    if (!list) return;
+    list.forEach(entry => {
+        try {
+            if (entry && typeof entry === 'object') {
+                if (entry.timer) clearTimeout(entry.timer);
+                entry.resolve && entry.resolve(def);
+            } else if (typeof entry === 'function') {
+                entry(def);
+            }
+        } catch {}
+    });
+    delete __miniGameWaiters[def.id];
 };
 
-function waitForMiniGame(id) {
-    return new Promise(resolve => {
+function waitForMiniGame(id, opts = {}) {
+    return new Promise((resolve, reject) => {
         if (__miniGameRegistry[id]) { resolve(__miniGameRegistry[id]); return; }
-        (__miniGameWaiters[id] ||= []).push(resolve);
+        const timeoutMs = Number(opts.timeout ?? opts.timeoutMs ?? 15000);
+        const entry = { resolve, reject, timer: null };
+        if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+            entry.timer = setTimeout(() => {
+                cleanupMiniGameWaiter(id, entry);
+                reject(new Error('Mini game registration timed out'));
+            }, timeoutMs);
+        }
+        (__miniGameWaiters[id] ||= []).push(entry);
     });
 }
 
 async function loadMiniGameScript(def) {
     if (__miniGameRegistry[def.id]) return __miniGameRegistry[def.id];
     const url = def.entry || `games/${def.id}.js`;
-    await new Promise((ok, ng) => {
-        const s = document.createElement('script');
-        s.src = url; s.async = true;
-        s.onload = () => ok(); s.onerror = () => ok(); // 失敗しても待機側で諦める
-        document.head.appendChild(s);
+    const waitPromise = waitForMiniGame(def.id, { timeout: 15000 });
+    try {
+        await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            let done = false;
+            const finish = (err) => {
+                if (done) return;
+                done = true;
+                if (err) reject(err);
+                else resolve();
+            };
+            s.src = url;
+            s.async = true;
+            s.onload = () => finish();
+            s.onerror = () => {
+                if (s.parentNode) { try { s.parentNode.removeChild(s); } catch {} }
+                finish(new Error('Failed to load mini game script'));
+            };
+            document.head.appendChild(s);
+        });
+    } catch (err) {
+        rejectMiniGameWaiters(def.id, err);
+        throw err;
+    }
+    return await waitPromise.catch(err => {
+        rejectMiniGameWaiters(def.id, err);
+        throw err;
     });
-    return await waitForMiniGame(def.id);
 }
 
 function showMiniExpBadge(text, opts = null) {
@@ -4610,17 +4672,33 @@ async function startSelectedMiniGame() {
     const list = __miniManifest || await loadMiniManifestOnce();
     const def = list.find(x => x.id === miniExpState.selected);
     if (!def) return;
-    const mod = await loadMiniGameScript(def);
+    if (miniexpStartBtn) miniexpStartBtn.disabled = true;
+    if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームを読み込んでいます…';
+    let mod = null;
+    try {
+        mod = await loadMiniGameScript(def);
+    } catch (err) {
+        if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームのロードに失敗しました。';
+        if (miniexpStartBtn) miniexpStartBtn.disabled = false;
+        return;
+    }
     if (!mod || typeof mod.create !== 'function') {
         if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームのロードに失敗しました。';
+        if (miniexpStartBtn) miniexpStartBtn.disabled = false;
         return;
     }
     if (miniexpContainer) miniexpContainer.innerHTML = '';
     __miniSessionExp = 0;
-    const runtime = mod.create(miniexpContainer, (n, meta) => awardXpFromMini(n, def.id), { difficulty: (miniexpDifficulty?.value||'NORMAL') });
+    let runtime = null;
+    try {
+        runtime = mod.create(miniexpContainer, (n, meta) => awardXpFromMini(n, def.id), { difficulty: (miniexpDifficulty?.value||'NORMAL') });
+    } catch (err) {
+        if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームの開始に失敗しました。';
+        if (miniexpStartBtn) miniexpStartBtn.disabled = false;
+        return;
+    }
     try { runtime.start(); } catch {}
     __currentMini = runtime;
-    if (miniexpStartBtn) miniexpStartBtn.disabled = true;
     if (miniexpPauseBtn) { miniexpPauseBtn.disabled = false; miniexpPauseBtn.textContent = '一時停止'; }
     if (miniexpRestartBtn) miniexpRestartBtn.disabled = false;
     if (miniexpQuitBtn) miniexpQuitBtn.disabled = false;

@@ -7,6 +7,7 @@ window.MINIEXP_MANIFEST = [
 'ジャンプで駒取りしつつ王冠を目指すクラシックボードゲーム', category: 'ボード' },
   { id: 'connect6',    name: 'コネクトシックス', entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '六目並べ。配置+1/リーチ+10/勝利で高EXP', category: 'ボード' },
   { id: 'gomoku',      name: '五目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '配置+1/リーチ+10/勝利ボーナス', category: 'ボード' },
+  { id: 'go',          name: '囲碁',            entry: 'games/go.js',             version: '0.1.0', author: 'mod', description: '配置+1/捕獲ボーナス/勝利EXP', category: 'ボード' },
   { id: 'connect4',    name: '四目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '落下式四目。配置+1/リーチ+10', category: 'ボード' },
   { id: 'tic_tac_toe', name: '三目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '配置+1/リーチ+10/シンプル勝利EXP', category: 'ボード' },
   { id: 'breakout',    name: 'ブロック崩し',    entry: 'games/breakout.js',    version: '0.1.0', author: 'builtin', description: 'ブロック破壊で+1EXP', category: 'アクション' },

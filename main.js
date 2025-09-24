@@ -2585,7 +2585,7 @@ function countFloorTiles() {
     return n;
 }
 
-ffunction ensureMinimumFloors(minTiles = 10) {
+function ensureMinimumFloors(minTiles = 10) {
     const floors = countFloorTiles();
     if (floors >= minTiles) return;
     // Carve a small room at center as a safety fallback
@@ -3361,7 +3361,7 @@ function createCorridor(x1, y1, x2, y2) {
 }
 
 // 接続性を確保する関数 (4方向移動のみ)
-ffunction ensureConnectivity() {
+function ensureConnectivity() {
     // Build 4-neighbor connected components of floor tiles
     function getComponents() {
         const comps = [];
@@ -5010,7 +5010,7 @@ function openChest(chest) {
     saveAll();
 }
 let audioCtx;
-ffunction ensureAudio() {
+function ensureAudio() {
     if (!audioCtx) {
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();

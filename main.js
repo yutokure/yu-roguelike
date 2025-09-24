@@ -120,20 +120,6 @@ let __miniManifest = null; // [{id,name,entry,version,author,icon,description}]
 let __miniGameRegistry = {}; // id -> def
 let __miniGameWaiters = {};  // id -> [resolve]
 let __currentMini = null;    // runtime
-const __MINI_PENDING = Symbol('mini-start-pending');
-
-function isMiniStartupPending(val) {
-    return !!(val && val[__MINI_PENDING]);
-}
-
-function resetMiniUiToIdle() {
-    if (miniexpContainer) miniexpContainer.innerHTML = '';
-    if (miniexpStartBtn) miniexpStartBtn.disabled = false;
-    if (miniexpPauseBtn) { miniexpPauseBtn.disabled = true; miniexpPauseBtn.textContent = '一時停止'; }
-    if (miniexpRestartBtn) miniexpRestartBtn.disabled = true;
-    if (miniexpQuitBtn) miniexpQuitBtn.disabled = true;
-    __miniPaused = false;
-}
 let __miniSessionExp = 0;    // セッション内の獲得EXP合計
 let __miniPaused = false;
 
@@ -4622,25 +4608,33 @@ function awardXpFromMini(n, reason='') {
 async function startSelectedMiniGame() {
     if (!miniExpState.selected || __currentMini) return;
     if (miniexpStartBtn) miniexpStartBtn.disabled = true;
-    const pendingToken = { [__MINI_PENDING]: true };
+    const restoreIdle = () => {
+        if (miniexpContainer) miniexpContainer.innerHTML = '';
+        if (miniexpStartBtn) miniexpStartBtn.disabled = false;
+        if (miniexpPauseBtn) { miniexpPauseBtn.disabled = true; miniexpPauseBtn.textContent = '一時停止'; }
+        if (miniexpRestartBtn) miniexpRestartBtn.disabled = true;
+        if (miniexpQuitBtn) miniexpQuitBtn.disabled = true;
+        __miniPaused = false;
+    };
+    const pendingToken = { __pending: true };
     __currentMini = pendingToken;
     try {
         const list = __miniManifest || await loadMiniManifestOnce();
         if (__currentMini !== pendingToken) {
-            if (!__currentMini) resetMiniUiToIdle();
+            if (!__currentMini) restoreIdle();
             return;
         }
         const def = list.find(x => x.id === miniExpState.selected);
         if (!def) {
             if (__currentMini === pendingToken) {
                 __currentMini = null;
-                resetMiniUiToIdle();
+                restoreIdle();
             }
             return;
         }
         const mod = await loadMiniGameScript(def);
         if (__currentMini !== pendingToken) {
-            if (!__currentMini) resetMiniUiToIdle();
+            if (!__currentMini) restoreIdle();
             return;
         }
         if (!mod || typeof mod.create !== 'function') {
@@ -4654,7 +4648,7 @@ async function startSelectedMiniGame() {
         if (__currentMini !== pendingToken) {
             try { runtime.stop && runtime.stop(); } catch {}
             try { runtime.destroy && runtime.destroy(); } catch {}
-            if (!__currentMini) resetMiniUiToIdle();
+            if (!__currentMini) restoreIdle();
             return;
         }
         __currentMini = runtime;
@@ -4664,7 +4658,7 @@ async function startSelectedMiniGame() {
         if (miniexpQuitBtn) miniexpQuitBtn.disabled = false;
     } catch (err) {
         if (__currentMini === pendingToken) __currentMini = null;
-        resetMiniUiToIdle();
+        restoreIdle();
         if (err?.message !== 'mini-load-failed' && typeof console !== 'undefined' && typeof console.warn === 'function') {
             console.warn('Mini start failed:', err);
         }
@@ -4673,9 +4667,14 @@ async function startSelectedMiniGame() {
 
 function quitMiniGame() {
     if (!__currentMini) return;
-    if (isMiniStartupPending(__currentMini)) {
+    if (__currentMini.__pending) {
         __currentMini = null;
-        resetMiniUiToIdle();
+        if (miniexpContainer) miniexpContainer.innerHTML = '';
+        if (miniexpStartBtn) miniexpStartBtn.disabled = false;
+        if (miniexpPauseBtn) { miniexpPauseBtn.disabled = true; miniexpPauseBtn.textContent = '一時停止'; }
+        if (miniexpRestartBtn) miniexpRestartBtn.disabled = true;
+        if (miniexpQuitBtn) miniexpQuitBtn.disabled = true;
+        __miniPaused = false;
         return;
     }
     try { __currentMini.stop && __currentMini.stop(); } catch {}
@@ -4692,7 +4691,12 @@ function quitMiniGame() {
         saveAll();
     } catch {}
     __currentMini = null;
-    resetMiniUiToIdle();
+    if (miniexpContainer) miniexpContainer.innerHTML = '';
+    if (miniexpStartBtn) miniexpStartBtn.disabled = false;
+    if (miniexpPauseBtn) { miniexpPauseBtn.disabled = true; miniexpPauseBtn.textContent = '一時停止'; }
+    if (miniexpRestartBtn) miniexpRestartBtn.disabled = true;
+    if (miniexpQuitBtn) miniexpQuitBtn.disabled = true;
+    __miniPaused = false;
 }
 
 miniexpStartBtn && miniexpStartBtn.addEventListener('click', () => {
@@ -4703,7 +4707,7 @@ miniexpStartBtn && miniexpStartBtn.addEventListener('click', () => {
 miniexpQuitBtn && miniexpQuitBtn.addEventListener('click', quitMiniGame);
 
 miniexpPauseBtn && miniexpPauseBtn.addEventListener('click', () => {
-    if (!__currentMini || isMiniStartupPending(__currentMini)) return;
+    if (!__currentMini || __currentMini.__pending) return;
     if (!__miniPaused) { __currentMini.stop && __currentMini.stop(); __miniPaused = true; miniexpPauseBtn.textContent = '再開'; }
     else { __currentMini.start && __currentMini.start(); __miniPaused = false; miniexpPauseBtn.textContent = '一時停止'; }
 });

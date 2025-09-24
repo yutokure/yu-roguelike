@@ -6267,6 +6267,7 @@ async function startSelectedMiniGame() {
     }
     if (miniexpContainer) miniexpContainer.innerHTML = '';
     __miniSessionExp = 0;
+    __miniPaused = false;
     let runtime = null;
     try {
         runtime = mod.create(miniexpContainer, (n, meta) => awardXpFromMini(n, def.id), { difficulty: (miniexpDifficulty?.value||'NORMAL') });
@@ -6277,6 +6278,7 @@ async function startSelectedMiniGame() {
     }
     try { runtime.start(); } catch {}
     __currentMini = runtime;
+    __miniPaused = false;
     if (miniexpPauseBtn) { miniexpPauseBtn.disabled = false; miniexpPauseBtn.textContent = '一時停止'; }
     if (miniexpRestartBtn) miniexpRestartBtn.disabled = false;
     if (miniexpQuitBtn) miniexpQuitBtn.disabled = false;
@@ -6302,6 +6304,7 @@ function quitMiniGame() {
         saveAll();
     } catch {}
     __currentMini = null;
+    __miniPaused = false;
     if (miniexpContainer) miniexpContainer.innerHTML = '';
     if (miniexpStartBtn) miniexpStartBtn.disabled = false;
     if (miniexpPauseBtn) { miniexpPauseBtn.disabled = true; miniexpPauseBtn.textContent = '一時停止'; }

@@ -851,18 +851,33 @@
       lastSegments = segments;
     }
 
-    timer = setInterval(update, UPDATE_INTERVAL);
-    state.running = true;
-    update();
-
-    function quit(){
-      if (!state.running) return;
-      clearInterval(timer);
-      state.running = false;
-      wrapper.remove();
+    function start(){
+      if (state.running) return;
+      state.running = true;
+      timer = setInterval(update, UPDATE_INTERVAL);
+      lastSegments = null;
+      update();
     }
 
-    return { quit };
+    function stop(){
+      if (!state.running) return;
+      state.running = false;
+      if (timer){
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function destroy(){
+      stop();
+      try { wrapper.remove(); } catch {}
+    }
+
+    function quit(){
+      destroy();
+    }
+
+    return { start, stop, destroy, quit };
   }
 
   window.registerMiniGame({

@@ -421,6 +421,7 @@ let blockDimState = { enabled: false, dimKey: 'a', b1Key: null, b2Key: null, b3K
 let blockDimTables = { dimensions: [], blocks1: [], blocks2: [], blocks3: [] };
 let blockDimHistory = [];
 let blockDimBookmarks = [];
+let __lastSavedBlockDimSelectionKey = null;
 
 function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
 function majority(arr) {
@@ -453,6 +454,17 @@ function composeSpec(dim, b1, b2, b3, nested = 1) {
     const bossFloors = unionNormalize([b1.bossFloors, b2.bossFloors, b3.bossFloors]).filter(n => n>=1 && n<=depth);
     // typePool を追加して混合対象を明示（空ならデフォルト混合）
     return { level, sizeFactor, depth, chestBias, type, bossFloors, typePool: uniquePool };
+}
+
+function snapshotBlockDimSelection(state) {
+    if (!state || !state.enabled) return null;
+    return JSON.stringify({
+        nested: state.nested || 1,
+        dimKey: state.dimKey || null,
+        b1Key: state.b1Key || null,
+        b2Key: state.b2Key || null,
+        b3Key: state.b3Key || null
+    });
 }
 
 // ---- Deterministic RNG (seeded) ----
@@ -751,6 +763,15 @@ function onBlockDimChanged() {
     blockDimState = { enabled: true, nested, dimKey: dim.key, b1Key: b1.key, b2Key: b2.key, b3Key: b3.key, spec, seed };
     renderBdimPreview(spec);
     // Preview updated
+    const selectionSnapshot = snapshotBlockDimSelection(blockDimState);
+    if (selectionSnapshot !== __lastSavedBlockDimSelectionKey) {
+        try {
+            saveAll();
+            __lastSavedBlockDimSelectionKey = selectionSnapshot;
+        } catch (err) {
+            console.error('Failed to persist BlockDim selection', err);
+        }
+    }
 }
 
 // 1st/2nd/3rd をランダムに選択
@@ -4035,6 +4056,7 @@ importFileInput && importFileInput.addEventListener('change', async (e) => {
         } else {
             blockDimState = { enabled: false, dimKey: 'a', b1Key: null, b2Key: null, b3Key: null, spec: null };
         }
+        __lastSavedBlockDimSelectionKey = snapshotBlockDimSelection(blockDimState);
         if (Array.isArray(data.blockDimHistory)) blockDimHistory = data.blockDimHistory;
         if (Array.isArray(data.blockDimBookmarks)) blockDimBookmarks = data.blockDimBookmarks;
         if (data.miniExp) miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, ...data.miniExp };
@@ -4129,6 +4151,7 @@ try {
         if (data.blockDim && data.blockDim.enabled) {
             blockDimState = { enabled: true, nested: (data.blockDim.nested||1), ...data.blockDim };
         }
+        __lastSavedBlockDimSelectionKey = snapshotBlockDimSelection(blockDimState);
         if (Array.isArray(data.blockDimHistory)) blockDimHistory = data.blockDimHistory;
         if (Array.isArray(data.blockDimBookmarks)) blockDimBookmarks = data.blockDimBookmarks;
         

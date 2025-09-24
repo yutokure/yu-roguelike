@@ -30,6 +30,7 @@ window.MINIEXP_MANIFEST = [
   // New mini-games (MOD)
   { id: 'todo_list',   name: 'ToDoリスト',       entry: 'games/todo_list.js',  version: '0.1.0', author: 'mod', description: 'タスク完了で設定EXP / 失敗は獲得なし', category: 'ユーティリティ' },
   { id: 'notepad',     name: 'メモ帳',           entry: 'games/notepad.js',    version: '0.1.0', author: 'mod', description: '開く+5 / 編集+1 / 保存+5 EXP', category: 'ユーティリティ' },
+  { id: 'exceler',    name: '表計算エクセラー', entry: 'games/exceler.js', version: '0.1.0', author: 'mod', description: 'XLSXの読み書きと主要関数・書式対応の軽量スプレッドシート', category: 'ユーティリティ' },
   { id: 'paint',       name: 'ペイント',         entry: 'games/paint.js',      version: '0.1.0', author: 'mod', description: '描画+1 / 塗りつぶし+3 / 保存+8 EXP', category: 'ユーティリティ' },
   { id: 'calculator',  name: '電卓',             entry: 'games/calculator.js', version: '0.1.0', author: 'mod', description: 'ユーティリティ電卓。数字入力+1 / 計算確定+5EXP', category: 'ユーティリティ' },
   { id: 'aim',           name: '的あて（エイム）',     entry: 'games/aim.js',             version: '0.1.0', author: 'builtin', description: '命中で1〜3EXP／連続命中ボーナス', category: 'シューティング' },

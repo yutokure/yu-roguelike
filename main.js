@@ -4628,7 +4628,11 @@ async function startSelectedMiniGame() {
 
 function quitMiniGame() {
     if (!__currentMini) return;
+    let finalScore = NaN;
     try { __currentMini.stop && __currentMini.stop(); } catch {}
+    try {
+        finalScore = (typeof __currentMini.getScore === 'function') ? Number(__currentMini.getScore()) : NaN;
+    } catch {}
     try { __currentMini.destroy && __currentMini.destroy(); } catch {}
     // 記録更新（プレイ回数/ベストスコア/最終プレイ時刻）
     try {
@@ -4636,7 +4640,7 @@ function quitMiniGame() {
         const rec = (miniExpState.records[gid] ||= { id: gid, bestScore: 0, totalPlays: 0, totalExpEarned: 0, lastPlayedAt: 0 });
         rec.totalPlays = (rec.totalPlays||0) + 1;
         rec.lastPlayedAt = Date.now();
-        const sc = (typeof __currentMini.getScore === 'function') ? Number(__currentMini.getScore()) : NaN;
+        const sc = finalScore;
         if (Number.isFinite(sc)) rec.bestScore = Math.max(rec.bestScore||0, sc);
         renderMiniExpRecords();
         saveAll();

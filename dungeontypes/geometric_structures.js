@@ -19,6 +19,74 @@
     for(;;){ for(let yy=-th;yy<=th;yy++) for(let xx=-th;xx<=th;xx++) setF(ctx,x1+xx,y1+yy); if(x1===x2&&y1===y2) break; e2=2*err; if(e2>=dy){err+=dy;x1+=sx;} if(e2<=dx){err+=dx;y1+=sy;} }
   }
 
+  function placeStructure(ctx, id, x, y, opts){
+    if (!ctx || !ctx.structures) return false;
+    const base = Object.assign({ anchor:'center', strict:false }, opts || {});
+    return ctx.structures.place(id, x, y, base);
+  }
+
+  function randomRotation(ctx){
+    const rng = ctx.random?.() ?? Math.random();
+    return Math.floor(rng * 360) % 360;
+  }
+
+  const structures = [
+    {
+      id:'geo_cross_plaza',
+      name:'Geo Cross Plaza',
+      anchor:'center',
+      tags:['geo','plaza','geo-tile'],
+      pattern:[
+        '  ...  ',
+        '  ...  ',
+        '.......',
+        '.......',
+        '  ...  ',
+        '  ...  '
+      ]
+    },
+    {
+      id:'geo_ring_gate',
+      name:'Geo Ring Gate',
+      anchor:'center',
+      tags:['geo','gate','geo-tile'],
+      pattern:[
+        '..###..',
+        '.#...#.',
+        '#.....#',
+        '#.....#',
+        '.#...#.',
+        '..###..'
+      ]
+    },
+    {
+      id:'geo_corner_turn',
+      name:'Geo Corner Turn',
+      anchor:'center',
+      tags:['geo','corridor','geo-tile'],
+      pattern:[
+        '.....',
+        '...##',
+        '...##',
+        '.....',
+        '.....'
+      ]
+    },
+    {
+      id:'geo_split_hall',
+      name:'Geo Split Hall',
+      anchor:'center',
+      tags:['geo','corridor','geo-tile'],
+      pattern:[
+        '##...##',
+        '##...##',
+        '.......',
+        '##...##',
+        '##...##'
+      ]
+    }
+  ];
+
   // 1) Ring-linked rooms
   function genRingLinked(ctx){
     const W=ctx.width,H=ctx.height; const step=Math.max(8, Math.floor(Math.min(W,H)/5)); const r=Math.max(3, Math.floor(step/3));
@@ -28,6 +96,16 @@
     // connect neighbors
     for(let y=step; y<H-step; y+=step){
       for(let x=step; x<W-step; x+=step){ if(x+step<W-step) line(ctx,x+r,y, x+step-r, y,1); if(y+step<H-step) line(ctx,x,y+r, x, y+step-r,1); }
+    }
+    if (ctx.structures) {
+      for(let y=step; y<H-step; y+=step){
+        for(let x=step; x<W-step; x+=step){
+          if ((ctx.random?.() ?? Math.random()) < 0.35) {
+            placeStructure(ctx,'geo_ring_gate',x,y,{ rotation: randomRotation(ctx), scaleX: 1.5, scaleY: 1 });
+          }
+        }
+      }
+      placeStructure(ctx,'geo_cross_plaza',Math.floor(W/2),Math.floor(H/2));
     }
     ctx.ensureConnectivity();
   }
@@ -50,6 +128,16 @@
     }
     // link nearby centers
     for(let y=2+R; y<H-2-R; y+=dy){ for(let x=2+R; x<W-2-R; x+=dx){ if(x+dx<W-2-R) line(ctx,x,y, x+dx,y,1); if(y+dy<H-2-R) line(ctx,x,y, x+(dx/2|0), y+dy,1); }}
+    if (ctx.structures) {
+      for(let row=0, y=2+R; y<H-2-R; y+=dy, row++){
+        const x0 = 2+R + (row%2 ? Math.floor(dx/2) : 0);
+        for(let x=x0; x<W-2-R; x+=dx){
+          if ((ctx.random?.() ?? Math.random()) < 0.25) {
+            placeStructure(ctx,'geo_corner_turn',x,y,{ rotation: randomRotation(ctx), scale:{ x: 1, y: 1.75 } });
+          }
+        }
+      }
+    }
     ctx.ensureConnectivity();
   }
 
@@ -69,6 +157,9 @@
   function genSpiral(ctx){
     const W=ctx.width,H=ctx.height; let l=1,t=1,r=W-2,b=H-2; const w=1;
     while(l<r && t<b){ for(let x=l;x<=r;x++) for(let k=-w;k<=w;k++) setF(ctx,x,t+k); t++; for(let y=t;y<=b;y++) for(let k=-w;k<=w;k++) setF(ctx,r+k,y); r--; if(!(l<r&&t<b)) break; for(let x=r;x>=l;x--) for(let k=-w;k<=w;k++) setF(ctx,x,b+k); b--; for(let y=b;y>=t;y--) for(let k=-w;k<=w;k++) setF(ctx,l+k,y); l++; }
+    if (ctx.structures) {
+        placeStructure(ctx,'geo_split_hall',Math.floor(W/2),Math.floor(H/2),{ rotation: randomRotation(ctx), scaleY: 1.5 });
+    }
     ctx.ensureConnectivity();
   }
 
@@ -112,6 +203,22 @@
       for(let x=0;x<=R;x++){ const half = Math.floor((x*H)/(2*R)); const x0=cx-R+x; for(let y=cy-half;y<=cy+half;y++) setF(ctx,x0,y); }
     } ctx.ensureConnectivity(); }
 
+  function genStructureMosaic(ctx){
+    if (!ctx.structures) { genBubbleRooms(ctx); return; }
+    const pool = ctx.structures.list({ tags:['geo-tile'] });
+    if (!pool.length) { genBubbleRooms(ctx); return; }
+    const W=ctx.width,H=ctx.height;
+    const step=Math.max(6, Math.floor(Math.min(W,H)/6));
+    for(let y=3; y<H-3; y+=step){
+      for(let x=3; x<W-3; x+=step){
+        const choice = pool[Math.floor(((ctx.random?.() ?? Math.random()) % 1) * pool.length)];
+        if (!choice) continue;
+        placeStructure(ctx, choice.id, x, y, { rotation: randomRotation(ctx) });
+      }
+    }
+    ctx.ensureConnectivity();
+  }
+
   const gens = [
     { id:'ring-linked-rooms', name:'リング連結部屋', algorithm:genRingLinked, mixin:{ normalMixed:0.45, blockDimMixed:0.45, tags:['rooms'] } },
     { id:'hex-lattice-rooms', name:'六角格子部屋', algorithm:genHexLattice, mixin:{ normalMixed:0.4, blockDimMixed:0.5, tags:['sf','grid'] } },
@@ -121,6 +228,84 @@
     { id:'square-tower',      name:'四角の塔', algorithm:genSquareTower, mixin:{ normalMixed:0.35, blockDimMixed:0.45, tags:['rooms'] } },
     { id:'diamond-room',      name:'ダイヤの部屋', algorithm:genDiamond, mixin:{ normalMixed:0.3, blockDimMixed:0.3, tags:['single'] } },
     { id:'triangle-room',     name:'三角の部屋', algorithm:genTriangle, mixin:{ normalMixed:0.3, blockDimMixed:0.3, tags:['single'] } },
+    { id:'structure-mosaic',  name:'構造モザイク', algorithm:genStructureMosaic, mixin:{ normalMixed:0.3, blockDimMixed:0.35, tags:['rooms','modular'] } },
+    {
+      id:'geo-fixed-labyrinth',
+      name:'固定幾何ラビリンス',
+      description:'固定マップを用いた幾何学迷宮。各階層のレイアウトを固定しつつ構造APIのテンプレートとして利用できます。',
+      floors:{
+        max:3,
+        bossFloors:[3],
+        maps:[
+          {
+            floor:1,
+            layout:[
+              '#####################',
+              '#...................#',
+              '#.###.###.###.###.###',
+              '#.###.###.###.###.###',
+              '#.###.###.###.###.###',
+              '#...................#',
+              '#.###.###.###.###.###',
+              '#.###.###.###.###.###',
+              '#.###.###.###.###.###',
+              '#...................#',
+              '#.###.###.###.###.###',
+              '#.###.###.###.###.###',
+              '#.###.###.###.###.###',
+              '#...................#',
+              '#####################'
+            ]
+          },
+          {
+            floor:2,
+            layout:[
+              '#####################',
+              '#...................#',
+              '#.#################.#',
+              '#.#...............#.#',
+              '#.#.#############.#.#',
+              '#.#.#...........#.#.#',
+              '#.#.#.#########.#.#.#',
+              '#.#.#.#.......#.#.#.#',
+              '#.#.#.#.#####.#.#.#.#',
+              '#.#.#.#.#...#.#.#.#.#',
+              '#.#.#.#.#.#.#.#.#.#.#',
+              '#.#.#.#.#.#.#.#.#.#.#',
+              '#.#...#.#.#.#.#...#.#',
+              '#.#####.#.#.#.#####.#',
+              '#####################'
+            ]
+          },
+          {
+            floor:3,
+            layout:[
+              '#####################',
+              '#.......###.......###',
+              '#.#####.#.#.#####..##',
+              '#.#...#.#.#.#...#..##',
+              '#.#.#.#.#.#.#.#.#..##',
+              '#...#.#...#...#.#..##',
+              '#####.#########.#####',
+              '#..................##',
+              '#####.#########.#####',
+              '#...#.#...#...#.#..##',
+              '#.#.#.#.#.#.#.#.#..##',
+              '#.#...#.#.#.#...#..##',
+              '#.#####.#.#.#####..##',
+              '#.......###.......###',
+              '#####################'
+            ]
+          }
+        ]
+      },
+      algorithm:function algorithm(ctx){
+        if (!ctx.fixedMaps?.applyCurrent?.()) {
+          genRingLinked(ctx);
+        }
+      },
+      mixin:{ normalMixed:0.25, blockDimMixed:0.25, tags:['fixed','rooms'] }
+    }
   ];
 
   function mkBoss(d){ const r=[]; if(d>=5) r.push(5); if(d>=10) r.push(10); if(d>=15) r.push(15); return r; }
@@ -132,6 +317,7 @@
       { key:'geo_theme_03', name:'Geo Theme III',level:+16, size:+1, depth:+2, chest:'more',  type:types[2], bossFloors:mkBoss(12) },
       { key:'geo_theme_04', name:'Geo Theme IV',level:+22, size:+2, depth:+2, chest:'normal', type:types[3], bossFloors:mkBoss(14) },
       { key:'geo_theme_05', name:'Geo Theme V', level:+28, size:+2, depth:+3, chest:'less',   type:types[4], bossFloors:mkBoss(15) },
+      { key:'geo_fixed_trial', name:'Geo Fixed Trial', level:+12, size:0, depth:+1, chest:'normal', type:'geo-fixed-labyrinth', bossFloors:[3] }
     ],
     blocks2:[
       { key:'geo_core_01', name:'Geo Core I', level:+0,  size:+1, depth:0, chest:'normal', type:types[5] },
@@ -145,9 +331,9 @@
       { key:'geo_relic_02', name:'Geo Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:types[3], bossFloors:[10] },
       { key:'geo_relic_03', name:'Geo Relic III',level:+18, size:+1, depth:+3, chest:'less', type:types[4], bossFloors:[15] },
       { key:'geo_relic_04', name:'Geo Relic IV', level:+24, size:+2, depth:+3, chest:'more', type:types[5], bossFloors:[10,15] },
-      { key:'geo_relic_05', name:'Geo Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:types[6], bossFloors:[5,10,15] },
+      { key:'geo_relic_05', name:'Geo Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:types[8], bossFloors:[5,10,15] },
     ]
   };
 
-  window.registerDungeonAddon({ id:'geometric_pack', name:'Geometric Structures Pack', version:'1.0.0', blocks, generators:gens });
+  window.registerDungeonAddon({ id:'geometric_pack', name:'Geometric Structures Pack', version:'1.0.0', blocks, generators:gens, structures });
 })();

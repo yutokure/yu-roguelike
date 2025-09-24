@@ -79,6 +79,40 @@ TypeScript 風の論理定義です。実装はプレーンJSでOK。
 ```ts
 type ChestBias = 'less' | 'normal' | 'more';
 
+type StructureChar =
+  | '#'
+  | 'W'
+  | 'X'
+  | '.'
+  | 'F'
+  | '0'
+  | ' '
+  | '_'
+  | '-'
+  | '~';
+
+interface StructureDef {
+  id: string;
+  name?: string;
+  pattern: Array<string | StructureChar[]>;
+  anchor?: 'center' | 'top-left' | { x: number; y: number };
+  tags?: string[];
+  allowRotation?: boolean;
+  allowMirror?: boolean;
+  meta?: Record<string, unknown>;
+}
+
+interface StructurePlacementOptions {
+  rotation?: number; // 0〜359 を 1 度単位で指定可能
+  flipH?: boolean;
+  flipV?: boolean;
+  anchor?: 'center' | 'top-left' | { x: number; y: number };
+  strict?: boolean;
+  scale?: number | { x?: number; y?: number } | [number, number];
+  scaleX?: number;
+  scaleY?: number;
+}
+
 /** BlockDim のブロック（1st/2nd/3rd 用）。`ブロック次元の設計.md` 準拠 */
 interface BlockSpec {
   key: string;              // 一意キー（英数・ハイフン）
@@ -100,8 +134,17 @@ interface DungeonGeneratorDef {
   id: string;               // 例: 'lava-caves'
   name?: string;            // 表示名
   description?: string;
+  floors?: {                // 固定マップを指定する場合（任意）
+    max?: number;           // 階層数（未指定なら maps の最大 floor）
+    bossFloors?: number[];  // ボス階層。未指定なら max を最終階として扱う
+    maps: Array<{
+      floor?: number;       // 1始まり。省略時は配列順に割り当て
+      layout: string[];     // `#`=壁, `.`=床, 空白=無（壁扱い）
+    }>;
+  };
   // 生成アルゴリズム本体。ctx.map を壁(1)/床(0)で直接書き換えるか、2次元配列を返しても良い。
-  algorithm: (ctx: GenContext) => void | number[][];
+  // 固定マップのみを使用する場合は省略可（ホストが自動で適用）。
+  algorithm?: (ctx: GenContext) => void | number[][];
   // 混合型への参加設定
   mixin?: {
     normalMixed?: number;   // Normal の 'mixed' に出現する確率重み（0 なら不参加）
@@ -113,6 +156,10 @@ interface DungeonGeneratorDef {
 interface GenContext {
   width: number; height: number;
   map: number[][];          // 1=壁, 0=床（外周は後で壁に固定される）
+  floor: number;            // 現在の階層（1始まり）
+  maxFloor: number;         // 現在のダンジョンの最終階（`floors.max` 等を考慮）
+  generatorId: string | null; // 実行中ジェネレータID
+  addonId: string | null;     // 登録元アドオンID
   random: () => number;     // 0..1（BlockDimではシード固定）。Math.random 互換
   inBounds(x:number,y:number): boolean; // 外周(1,1)-(w-2,h-2) を推奨
   set(x:number,y:number,v:0|1): void;   // map[y][x]=v の糖衣
@@ -125,6 +172,21 @@ interface GenContext {
   setFloorType(x:number,y:number,type:'normal'|'ice'|'poison'): void; // 床の特性
   clearTileMeta(x:number,y:number): void; // カラー/特性の初期化
   getTileMeta(x:number,y:number): { floorColor?:string; wallColor?:string; floorType?:string } | null;
+  structures: {
+    get(id: string): StructureDef | null;
+    list(filter?: { tag?: string; tags?: string[]; addonId?: string; excludeTags?: string[] }): StructureDef[];
+    pick(filter?: { tag?: string; tags?: string[]; addonId?: string; excludeTags?: string[] }, rng?: () => number): StructureDef | null;
+    place(structureId: string | StructureDef, x: number, y: number, opts?: StructurePlacementOptions): boolean;
+    placePattern(pattern: StructureDef['pattern'], x: number, y: number, opts?: StructurePlacementOptions & { allowRotation?: boolean; allowMirror?: boolean }): boolean;
+  };
+  fixedMaps: {
+    available: boolean;
+    meta?: { max: number; bossFloors: number[]; addonId?: string | null; generatorId: string };
+    list(): { floor: number; width: number; height: number }[];
+    get(floor?: number): { floor: number; width: number; height: number; layout: string[] } | null;
+    apply(floor?: number): boolean;      // 指定フロアの固定マップを即座に適用
+    applyCurrent(): boolean;             // 現在の階層番号で適用
+  };
 }
 ```
 
@@ -133,6 +195,9 @@ interface GenContext {
   - `'ice'`    : プレイヤーが進入すると同じ方向に滑走し、非氷床か障害物で停止
   - `'poison'` : 通過するたびにプレイヤーが最大HPの10%（最低1）ダメージ
 - `setFloorColor` / `setWallColor` を省略した場合はデフォルト色（床: `#ced6e0`, 壁: `#2f3542`）が使用されます。`floorType` が `ice`/`poison` の場合は未指定でも視認しやすい補助色が自動適用されます。
+- `floors` を指定したジェネレータは、`max` が `getMaxFloor()` の結果へ反映され、`bossFloors` は `isBossFloor()` 判定に利用されます。`maps` に登録したレイアウトは `ctx.fixedMaps.applyCurrent()` で適用可能です。
+- `ctx.fixedMaps` は固定マップの一覧取得 (`list()`)、特定階層のプレビュー (`get()`)、適用 (`apply()` / `applyCurrent()`) を提供します。固定マップが未定義の場合は `available:false` となり安全に無視できます。
+- `floors` のみを記述して `algorithm` を省略した場合、ホストは `ctx.fixedMaps.applyCurrent()` を内部で呼び出して指定レイアウトを適用し、追加のランダム生成を実施しません。
 
 ---
 
@@ -158,13 +223,49 @@ interface DungeonAddon {
 
   // 生成タイプの追加
   generators?: DungeonGeneratorDef[];
+
+  // 構造パターンの追加（任意）
+  structures?: StructureDef[];
 }
 ```
 
 登録は JS 内で以下のように行います。
 ```js
-window.registerDungeonAddon({ id:'lava_pack', blocks:{ /*...*/ }, generators:[ /*...*/ ] });
+window.registerDungeonAddon({
+  id:'lava_pack',
+  blocks:{ /*...*/ },
+  generators:[ /*...*/ ],
+  structures:[ /* 壁/床パターンを同ファイル内に記述 */ ]
+});
 ```
+
+### 5.1 構造（Structure）サポート
+
+- `structures` プロパティで壁・床・無からなる 2D パターンを登録できます。
+- 追加された構造は全てのダンジョン生成アルゴリズムから `ctx.structures` 経由で利用できます。
+- 構造定義は各ダンジョン生成追加 Mod のファイル内で `window.registerDungeonAddon({...})` と併せて記述し、ひとつのモジュールで完結させます。
+
+#### 5.1.1 パターン表現
+
+- 1 行ずつの文字列、または `['#', '.', ' ']` のような配列で表現します。
+- 文字の意味は次の通りです。
+
+| 文字 | 意味 |
+|------|------|
+| `#`, `W`, `X`, `1` | 壁 (map = 1) |
+| `.`, `F`, `0` | 床 (map = 0) |
+| スペース, `_`, `-`, `~` | 無（変更しない） |
+
+- 行長が揃っていない場合は最長行に合わせて残りを無で埋めます。
+
+#### 5.1.2 アンカーと配置
+
+- `anchor` を省略すると中心セルが基準点になります。`'top-left'` や `{ x: number, y: number }` で任意指定可。
+- `ctx.structures.place(id, x, y, opts)` の `(x, y)` はアンカー位置として扱われ、`opts.rotation`（0〜359 を 1 度単位で指定可）、`flipH`/`flipV`、`scale`（`scaleX` / `scaleY` で縦横それぞれの比率指定が可能）、`strict`（はみ出し時に配置を中止）を指定できます。指定された回転・反転・スケール後のパターンが設置されます。
+  - `scale` 関連の値は 0 以外の数値を指定してください。負数を指定した場合は絶対値が使用されます（反転は `flipH` / `flipV` で行えます）。
+- `ctx.structures.placePattern(pattern, x, y, opts)` で一時的なパターンをレジストリ登録せずに配置できます。
+- `ctx.structures.list()/pick()` によりタグやアドオンIDでフィルタした一覧・ランダム取得が可能です。
+- `get` / `list` / `pick` の戻り値には `pattern`（文字列配列）に加えて `width` / `height` / `source` などの派生情報が含まれます。
 
 ---
 
@@ -354,11 +455,62 @@ window.DUNGEONTYPE_MANIFEST = [
 /** @typedef {'less'|'normal'|'more'} ChestBias */
 /** @typedef {{key:string,name?:string,baseLevel:number}} Dimension */
 /** @typedef {{key:string,name?:string,level?:number,size?:number,depth?:number,chest?:ChestBias,type?:string|null,bossFloors?:number[],weight?:number}} BlockSpec */
-/** @typedef {{width:number,height:number,map:number[][],random:Function,inBounds:(x:number,y:number)=>boolean,set:(x:number,y:number,v:0|1)=>void,get:(x:number,y:number)=>0|1,ensureConnectivity:Function,carvePath:Function,aStar:Function}} GenContext */
-/** @typedef {{id:string,name?:string,description?:string,algorithm:(ctx:GenContext)=>void|number[][],mixin?:{normalMixed?:number,blockDimMixed?:number,tags?:string[]}}} DungeonGeneratorDef */
+/** @typedef {{
+ *   width:number,
+ *   height:number,
+ *   map:number[][],
+ *   floor:number,
+ *   maxFloor:number,
+ *   generatorId:(string|null),
+ *   addonId:(string|null),
+ *   random:Function,
+ *   inBounds:(x:number,y:number)=>boolean,
+ *   set:(x:number,y:number,v:0|1)=>void,
+ *   get:(x:number,y:number)=>0|1,
+ *   ensureConnectivity:Function,
+ *   carvePath:Function,
+ *   aStar:Function,
+ *   fixedMaps:{
+ *     available:boolean,
+ *     meta?:{max:number,bossFloors:number[],addonId?:string|null,generatorId:string},
+ *     list:()=>{floor:number,width:number,height:number}[],
+ *     get:(floor?:number)=>{floor:number,width:number,height:number,layout:string[]}|null,
+ *     apply:(floor?:number)=>boolean,
+ *     applyCurrent:()=>boolean
+ *   }
+ * }} GenContext */
+/** @typedef {{id:string,name?:string,description?:string,floors?:{max?:number,bossFloors?:number[],maps:{floor?:number,layout:string[]}[]},algorithm:(ctx:GenContext)=>void|number[][],mixin?:{normalMixed?:number,blockDimMixed?:number,tags?:string[]}}} DungeonGeneratorDef */
 /** @typedef {{id:string,name?:string,version?:string,author?:string,description?:string,api?:string,blocks?:{dimensions?:Dimension[],blocks1?:BlockSpec[],blocks2?:BlockSpec[],blocks3?:BlockSpec[]},generators?:DungeonGeneratorDef[]}} DungeonAddon */
 ```
 
 ---
 
-最終更新: 2025-09-15
+---
+
+## 15. ツールズタブ: ダンジョンタイプMod作成ツール
+
+v1.1 以降のトップ画面には「ツールズ」タブが追加され、ブラウザ上で MOD ファイルの雛形を生成できる支援ツールを搭載しています。UI から各項目を入力すると `registerDungeonAddon({ ... })` 形式の JS ファイルを即時プレビューし、コピー/ダウンロードできます。
+
+### 15.1 画面構成
+- **アドオン情報**: `id` / `name` / `version` / `author` / `description` を入力するとヘッダー部へ反映されます。`id` は英数字・ハイフン・アンダースコアのみが許可されます。
+- **構造ライブラリ**: 複数の構造パターンを管理できます。サイズを指定し、セルをクリックすると「空白 → 床 → 壁」が循環します。アンカー位置や回転/反転の可否、タグ一覧も設定可能です。パターンは `pattern: ['..##', ...]` 形式で出力されます。
+- **生成アルゴリズム**: 生成タイプごとに ID/名前/説明/混合参加率（Normal・BlockDim）/タグを編集し、アルゴリズムコードを記述します。テンプレート（空/部屋サンプル/構造配置サンプル）を適用してスケルトンを挿入できます。コード欄を編集するとプレビューがリアルタイムで更新されます。
+- **BlockDim ブロック定義**: 1st/2nd/3rd それぞれのブロックカードを追加し、`key`/`name`/`level`/`size`/`depth`/`chest`/`type`/`bossFloors`/`description` を設定できます。入力した値は `blocks1/blocks2/blocks3` 配列として書き出されます。
+- **出力**: 現在の入力から生成された JS コードと検証結果を表示します。必須項目が未入力・重複している場合は警告リストが表示され、コピー/ダウンロードボタンが無効化されます。
+
+### 15.2 生成されるコードの特徴
+- 先頭に `// Generated by Tools - Dungeon Type Mod Maker` を付与します。
+- `structures` 配列は `pattern` の各行を `' '` / `'.'` / `'#'` で出力し、`anchor`/`allowRotation`/`allowMirror`/`tags` を反映します。
+- `generators` 配列は `algorithm: function(ctx) { ... }` としてインライン定義し、`mixin` オブジェクトを必要に応じて生成します。
+- BlockDim ブロックは数値項目を `number` として出力し、ボス階層は `[5, 10]` のような配列になります。
+- 最後に `window.registerDungeonAddon(addon);` を呼び出す IIFE でラップします。
+
+### 15.3 ワークフロー例
+1. アドオン情報で `id` と表示名を入力。
+2. 構造ライブラリで部屋パターンを作成し、アンカーやタグを設定。
+3. 生成アルゴリズムでテンプレートを適用し、`ctx.structures.place(...)` などを追記。
+4. BlockDim の 1st/2nd/3rd に対応するブロックを登録し、`type` に生成タイプ ID を紐付け。
+5. 出力セクションでエラーがないことを確認し、`コピー` または `.js ダウンロード` を実行。
+6. ダウンロードしたファイルを `dungeontypes/` に配置し、`manifest.json.js` に `entry` を追加。
+
+最終更新: 2025-09-16

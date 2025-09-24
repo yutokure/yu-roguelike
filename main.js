@@ -2823,14 +2823,19 @@ function drawMap() {
     const endX = startX + VIEWPORT_WIDTH;
     const endY = startY + VIEWPORT_HEIGHT;
 
+    const cellW = canvas.width / VIEWPORT_WIDTH;
+    const cellH = canvas.height / VIEWPORT_HEIGHT;
+
     for (let y = startY; y < endY; y++) {
         for (let x = startX; x < endX; x++) {
-            const cellW = canvas.width / VIEWPORT_WIDTH;
-            const cellH = canvas.height / VIEWPORT_HEIGHT;
             const screenX = (x - startX) * cellW;
             const screenY = (y - startY) * cellH;
-            const isWall = map[y][x] === 1;
-            ctx.fillStyle = getTileRenderColor(x, y, isWall);
+            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) {
+                ctx.fillStyle = DEFAULT_WALL_COLOR;
+            } else {
+                const isWall = map[y][x] === 1;
+                ctx.fillStyle = getTileRenderColor(x, y, isWall);
+            }
             ctx.fillRect(screenX, screenY, cellW, cellH);
         }
     }

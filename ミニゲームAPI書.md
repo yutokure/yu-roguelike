@@ -1,4 +1,4 @@
-# ミニゲームAPI書（MiniExp MOD API v0.1）
+# ミニゲームAPI書（MiniExp MOD API v0.2）
 
 本書は「ミニゲー経験」タブに統合されるミニゲーム（以下、MOD）の作成・導入・実行に関するAPI仕様です。最小の手順で作れること、リアルタイムにプレイヤーEXPへ反映されること、既存のUI/保存と矛盾しないことを目的とします。
 
@@ -9,11 +9,11 @@
 - 互換: 既存の探索/ブロック次元とは独立。EXP・レベルのみ共有します。
 
 ## 仕組みの流れ
-1) `games/manifest.json` を読み込み、一覧に表示（フォールバックで内蔵の定義を表示）。
+1) `games/manifest.json.js`（`window.MINIEXP_MANIFEST` を公開するJS）を読み込み、一覧とカテゴリを構築（失敗時は内蔵定義を使用）。
 2) ユーザーが選択→「開始」でエントリJS（`entry`）を `<script>` として読み込み。
 3) 読み込み済みスクリプトは `window.registerMiniGame(def)` を呼び、ホストへ登録。
 4) ホストが `def.create(root, awardXp, { difficulty })` を呼び、返ってきた `runtime.start()` を実行。
-5) `awardXp(n)` を呼ぶたびにEXPが加算され、HUD/ポップが更新されます。
+5) `awardXp(n)` を呼ぶたびにEXPが加算され、HUD/ポップが更新されます（戻り値は実際に加算された数値）。
 6) 「終了」で `runtime.stop()`→`runtime.destroy()`→コンテナを解放。
 
 7) 記録（records）: ホストはゲームごとに以下を自動で集計/保存します。
@@ -22,8 +22,8 @@
    - `bestScore`: `runtime.getScore?.()` を終了時に呼び、最大値を保持（未実装なら無視）。
    - `lastPlayedAt`: 終了時に `Date.now()` を保存。
 
-## マニフェスト（games/manifest.json）
-- 形式: JSON配列
+## マニフェスト（games/manifest.json.js）
+- 形式: `window.MINIEXP_MANIFEST = [...];` を格納したJS（`file://` 実行でも `<script>` で読み込めるようJSONではなくJSファイル）。
 - 要素スキーマ:
   - `id` string: 一意なID（英数・ハイフン推奨）
   - `name` string: 一覧表示名
@@ -32,7 +32,7 @@
   - `author` string: 任意
   - `icon` string: 任意（相対パス）
   - `description` string: 任意（一覧の説明文）
-  - `category` string | string[]: カテゴリ（例: "パズル" / "アクション" / "シューティング" など）。複数所属も可。
+  - `category` string | string[]: カテゴリ（例: "パズル" / "アクション" / "シューティング" など）。複数所属も可。ホストはカテゴリごとのフィルターボタンを自動生成します。
 
 例:
 ```json
@@ -57,7 +57,7 @@ interface MiniGameDef {
 }
 
 interface MiniGameRuntime {
-  start(): void;   // 実行開始（タイマー/ループ開始、イベント登録）
+  start(): void;   // 実行開始または再開（Pause→Resumeでも呼ばれる）
   stop(): void;    // 一時停止 or 終了（タイマー停止、必要なら状態保持）
   destroy(): void; // 完全破棄（DOM/イベント/タイマーを必ず解放）
   getScore?(): number; // 任意：記録表示や保存に使う
@@ -65,16 +65,17 @@ interface MiniGameRuntime {
 ```
 
 備考:
-- `awardXp(n, meta)` は EXP を即時加算し、HUD/ポップを更新します。戻り値として実際に加算された数値（number）を返します（v0.1時点）。
+- `awardXp(n, meta)` は EXP を即時加算し、HUD/ポップを更新します。戻り値として実際に加算された数値（number）を返します。
 - `opts.difficulty` はタブのUIから選択された値（`EASY|NORMAL|HARD`）。ゲームロジックやスピードに反映してください。
 - MODは `create()` 内で自前のイベントリスナーを追加し、`destroy()` で必ず除去してください。
+- `start()` はホストの一時停止解除でも呼ばれるため、停止→再開で複数回呼ばれても安全な実装（idempotent）にしてください。
 
 ## 推奨実装パターン
 - ループ: `requestAnimationFrame` で60FPS目安。タイムステップが必要な場合のみ `setInterval` を使用。
 - 入力: キー/マウス/タッチは必要に応じ `e.preventDefault()` を活用（タブ内でスクロールが起きやすいため）。
 - キャンバスサイズ: ルート要素の幅に合わせる場合は `ResizeObserver` 等で追従。
 - 効果音: `awardXp` 呼び出し時にホスト側でピックアップ音が鳴ります。追加音を鳴らす場合は `window.ensureAudio?.()` → `window.playSfx?.('attack'|'damage'|'pickup'|'stair')` を任意で利用可能（存在チェック推奨）。
-- パフォーマンス: 大量の `awardXp` 呼び出しはHUDポップが増えるため、200ms程度の間隔で合算して呼ぶと視認性が向上します（ホスト側は各呼び出しを個別に表示）。
+- HUDポップ: `awardXp` が呼ばれるたびにホストが `+N EXP` のバッジを表示します。必要に応じて `window.showTransientPopupAt(x,y,text,opts)` でカスタムポップを追加可能（存在チェック推奨）。
 - セーブ: 現状、各ミニゲーム固有のスコアはホストが自動保存しません。必要なら内部でlocalStorageを使うか、今後の `miniExpState.records` 連携を待ってください。
  - 記録: ホストが `totalExpEarned/totalPlays/bestScore/lastPlayedAt` を自動保存（`miniExpState.records`）。`getScore()` を実装すると `bestScore` が更新されます。
 
@@ -129,12 +130,13 @@ interface MiniGameRuntime {
 ## 付録B: ホスト提供ユーティリティ（存在チェック推奨）
 - `window.ensureAudio?(): void` — AudioContextの遅延初期化。
 - `window.playSfx?(type: 'attack'|'pickup'|'damage'|'stair')` — 簡易SE。
+- `window.showTransientPopupAt?(x:number, y:number, text:string, opts?:{variant?:'combo',level?:number})` — ミニゲーム領域上に一時ポップを表示。
 - これらは環境により未定義のことがあるため、呼び出し時は `window.playSfx && window.playSfx('pickup')` のように防御的に利用する。
 
 ## 付録C: 入力・レイアウト・一時停止の指針
 - キー: `addEventListener('keydown', handler, { passive:false })`。スクロール抑止が必要なキーでのみ `preventDefault()`。
 - 画面: `#miniexp-container` は最小高 ~360px。キャンバスは `root.clientWidth` に追従し、縦横比を固定するか、内部グリッドをスケール。
-- 一時停止: `visibilitychange` で `document.hidden` の間は `stop()`、復帰時に `start()` を推奨。
+- 一時停止: `visibilitychange` やホストの Pause 操作で `stop()`、復帰時に `start()` を推奨。ホストは P キーショートカットからも `stop()`/`start()` を呼びます。
 
 ## 付録D: JSDoc 型定義（エディタ補完用）
 ```ts
@@ -166,4 +168,4 @@ interface MiniGameRuntime {
 - [ ] 例外処理とエラー復帰がある
 - [ ] `visibilitychange` で停止/再開（推奨）
 
-最終更新: 2025-09-15
+最終更新: 2025-02-17

@@ -276,7 +276,10 @@
       if (window.showTransientPopupAt){
         try {
           const rect = canvas.getBoundingClientRect();
-          window.showTransientPopupAt(rect.left + player.x, rect.top + player.y, '+' + amount, { variant: 'combo', level: Math.min(5, checkpointsAwarded + 1) });
+          const wrapperRect = wrapper.getBoundingClientRect();
+          const x = rect.left + player.x - wrapperRect.left;
+          const y = rect.top + player.y - wrapperRect.top;
+          window.showTransientPopupAt(x, y, '+' + amount, { variant: 'combo', level: Math.min(5, checkpointsAwarded + 1) });
         } catch {}
       }
     }
@@ -292,7 +295,10 @@
       if (window.showTransientPopupAt){
         try {
           const rect = canvas.getBoundingClientRect();
-          window.showTransientPopupAt(rect.left + finishPoint.x, rect.top + finishPoint.y, '+' + amount, { variant: 'win' });
+          const wrapperRect = wrapper.getBoundingClientRect();
+          const x = rect.left + finishPoint.x - wrapperRect.left;
+          const y = rect.top + finishPoint.y - wrapperRect.top;
+          window.showTransientPopupAt(x, y, '+' + amount, { variant: 'win' });
         } catch {}
       }
     }

@@ -1148,3 +1148,511 @@ h1 {
         opacity: 0.8;
     }
 }
+
+/* ---------------- Tools Tab / Mod Maker ---------------- */
+.tools-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px;
+    width: 100%;
+}
+
+.tools-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tools-sidebar .tool-item {
+    appearance: none;
+    border: 1px solid rgba(102,126,234,0.35);
+    background: #eef2ff;
+    color: #1f2937;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tools-sidebar .tool-item:hover {
+    background: #e0e7ff;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.25);
+}
+
+.tools-sidebar .tool-item.active {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(102,126,234,0.35);
+}
+
+.tool-hint {
+    font-size: 12px;
+    color: #475569;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.tool-panel {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 16px;
+    padding: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tool-panel.active { display: flex; }
+
+.tool-panel-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    color: #1f2937;
+}
+
+.tool-panel-header p {
+    margin: 0;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.modmaker-section {
+    background: #f8f9ff;
+    border: 1px solid rgba(102,126,234,0.2);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.section-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-title-row h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #1f2937;
+}
+
+.section-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.section-actions button,
+.modmaker-template-bar button,
+.modmaker-grid-toolbar .toolbar-buttons button,
+.modmaker-output-actions button,
+.modmaker-add-block {
+    appearance: none;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.section-actions button:hover,
+.modmaker-template-bar button:hover,
+.modmaker-grid-toolbar .toolbar-buttons button:hover,
+.modmaker-output-actions button:hover,
+.modmaker-add-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102,126,234,0.35);
+}
+
+.section-actions button:disabled,
+.modmaker-output-actions button:disabled {
+    background: #cbd5f5;
+    box-shadow: none;
+    cursor: not-allowed;
+    color: #475569;
+}
+
+.modmaker-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.modmaker-form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.modmaker-form-grid label.checkbox-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
+
+.modmaker-form-grid label.full {
+    grid-column: 1 / -1;
+}
+
+.modmaker-form-grid input,
+.modmaker-form-grid textarea,
+.modmaker-template-bar select,
+.modmaker-template-bar label {
+    font-weight: normal;
+}
+
+.modmaker-form-grid input,
+.modmaker-form-grid textarea,
+.modmaker-template-bar select {
+    padding: 8px 10px;
+    border: 1px solid rgba(102,126,234,0.4);
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+}
+
+.modmaker-form-grid textarea,
+.modmaker-output textarea,
+#modmaker-generator-code,
+#modmaker-pattern-preview,
+#modmaker-output {
+    font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.modmaker-form-grid textarea { resize: vertical; }
+
+.modmaker-structures,
+.modmaker-generators {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 12px;
+}
+
+.modmaker-list {
+    background: #fff;
+    border: 1px solid rgba(102,126,234,0.3);
+    border-radius: 10px;
+    padding: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modmaker-list button {
+    appearance: none;
+    border: 1px solid rgba(102,126,234,0.2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: #eef2ff;
+    color: #1f2937;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.modmaker-list button.active {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+}
+
+.modmaker-grid-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.modmaker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(22px, 22px));
+    gap: 2px;
+    justify-content: start;
+    background: #fff;
+    border: 1px solid rgba(102,126,234,0.3);
+    border-radius: 10px;
+    padding: 8px;
+    overflow: auto;
+    max-width: 100%;
+}
+
+.modmaker-grid.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+    padding: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.modmaker-grid.placeholder span {
+    pointer-events: none;
+}
+
+.modmaker-fixed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: opacity 0.2s ease;
+}
+
+.modmaker-fixed.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.modmaker-fixed-note {
+    font-size: 12px;
+    color: #4b5563;
+    margin: 0;
+}
+
+.modmaker-fixed-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+@media (min-width: 960px) {
+    .modmaker-fixed-editor {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+}
+
+.fixed-floor-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.fixed-floor-list button {
+    min-width: 56px;
+}
+
+.modmaker-fixed-grid-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modmaker-fixed-sizebar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.modmaker-fixed-sizebar label {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+.modmaker-fixed-sizebar input {
+    width: 88px;
+}
+
+#modmaker-fixed-copy-prev {
+    margin-left: auto;
+}
+
+.modmaker-cell {
+    width: 22px;
+    height: 22px;
+    border: 1px solid rgba(148,163,184,0.4);
+    border-radius: 4px;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.modmaker-cell.state-floor {
+    background: #bbf7d0;
+    border-color: #4ade80;
+}
+
+.modmaker-cell.state-wall {
+    background: #fecaca;
+    border-color: #f87171;
+}
+
+.modmaker-cell.state-void {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    box-shadow: inset 0 0 0 1px rgba(148,163,184,0.35);
+}
+
+.modmaker-cell.anchor::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #312e81;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.35);
+}
+
+.modmaker-structure-editor,
+.modmaker-generator-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modmaker-template-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+.modmaker-template-bar select {
+    min-width: 180px;
+}
+
+.modmaker-generator-editor textarea,
+.modmaker-structure-editor textarea,
+.modmaker-output textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: #0f172a;
+    color: #e2e8f0;
+    border: 1px solid rgba(148,163,184,0.4);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.modmaker-output textarea { min-height: 220px; }
+
+.modmaker-blocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.modmaker-block-tier {
+    background: #fff;
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modmaker-block-tier h5 {
+    margin: 0;
+    font-size: 15px;
+    color: #1f2937;
+}
+
+.modmaker-block-card {
+    border: 1px solid rgba(148,163,184,0.4);
+    border-radius: 10px;
+    padding: 8px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modmaker-block-card header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.modmaker-block-card header button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: #ef4444;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.modmaker-block-card header button:hover {
+    text-decoration: underline;
+}
+
+.modmaker-block-card label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.modmaker-block-card input,
+.modmaker-block-card select,
+.modmaker-block-card textarea {
+    padding: 6px 8px;
+    border: 1px solid rgba(148,163,184,0.5);
+    border-radius: 8px;
+    font-size: 13px;
+    background: #fff;
+}
+
+.modmaker-block-card textarea { resize: vertical; min-height: 60px; }
+
+.modmaker-errors {
+    color: #dc2626;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 20px;
+}
+
+.modmaker-errors ul {
+    margin: 4px 0 0 16px;
+    padding: 0;
+}
+
+.modmaker-errors li { margin-bottom: 2px; }
+
+.modmaker-output-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 980px) {
+    .tools-layout { grid-template-columns: 1fr; }
+    .tools-sidebar { flex-direction: row; flex-wrap: wrap; }
+    .tools-sidebar .tool-item { flex: 1 1 160px; text-align: center; }
+    .tool-hint { width: 100%; }
+    .modmaker-structures,
+    .modmaker-generators { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .modmaker-blocks { grid-template-columns: 1fr; }
+}

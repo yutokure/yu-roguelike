@@ -47,5 +47,6 @@ window.MINIEXP_MANIFEST = [
   { id: 'dino_runner',   name: 'ダイノランナー',       entry: 'games/dino_runner.js',      version: '0.1.0', author: 'mod', description: '恐竜で障害物ジャンプ／距離EXP', category: 'アクション' },
   { id: 'ten_ten',       name: '1010パズル',           entry: 'games/ten_ten.js',          version: '0.1.0', author: 'builtin', description: 'ラインでEXP／クロス消しは倍増', category: 'パズル' },
   { id: 'trump_games',   name: 'トランプセレクション', entry: 'games/trump_games.js',      version: '0.1.0', author: 'mod', description: 'トランプゲームハブ（神経衰弱・ブラックジャック・ババ抜き収録）', category: 'ボード' },
+  { id: 'gamble_hall',  name: 'ギャンブルホール',     entry: 'games/gamble_hall.js',  version: '0.1.0', author: 'mod', description: 'EXPを賭けるルーレットとパチンコスロットの複合MOD', category: 'ギャンブル' },
   { id: 'physics_sandbox', name: '物理遊び', entry: 'games/physics_sandbox.js', version: '0.1.0', author: 'mod', description: '火・水・ツタ・雷・回路を組み合わせるトイ系物理サンドボックス', category: 'トイ' }
 ];

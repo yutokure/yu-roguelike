@@ -47,12 +47,24 @@
   }
   const STORAGE_KEY = 'MiniExpPhysicsLayouts';
   const MATERIALS = {
-    wood:  { id:'wood',  label:'木材',    density:0.6, restitution:0.25, friction:0.5, color:'#c97a43', flammability:0.8, conductivity:0.1 },
-    metal: { id:'metal', label:'金属',    density:1.8, restitution:0.15, friction:0.3, color:'#9aa0a6', flammability:0.0, conductivity:0.9 },
-    rubber:{ id:'rubber',label:'ゴム',    density:0.9, restitution:0.75, friction:0.9, color:'#22262b', flammability:0.2, conductivity:0.05 },
-    stone: { id:'stone', label:'石材',    density:1.4, restitution:0.1, friction:0.7, color:'#6b7280', flammability:0.05, conductivity:0.2 },
-    gel:   { id:'gel',   label:'ゼラチン', density:0.4, restitution:0.55, friction:0.2, color:'#60a5fa', flammability:0.0, conductivity:0.3 },
-    plasma:{ id:'plasma',label:'プラズマ', density:0.1, restitution:0.95, friction:0.05, color:'#f97316', flammability:1.0, conductivity:0.95 }
+    wood:  { id:'wood',  label:'木材',    density:0.6, restitution:0.25, friction:0.5, color:'#c97a43', flammability:0.8, conductivity:0.1,
+             thermalConductivity:0.18, heatCapacity:1.9, ignitionPoint:320, meltingPoint:620, baseTemperature:20 },
+    metal: { id:'metal', label:'金属',    density:1.8, restitution:0.15, friction:0.3, color:'#9aa0a6', flammability:0.0, conductivity:0.9,
+             thermalConductivity:0.72, heatCapacity:0.9, ignitionPoint:900, meltingPoint:1500, baseTemperature:20 },
+    rubber:{ id:'rubber',label:'ゴム',    density:0.9, restitution:0.75, friction:0.9, color:'#22262b', flammability:0.2, conductivity:0.05,
+             thermalConductivity:0.16, heatCapacity:1.7, ignitionPoint:310, meltingPoint:520, baseTemperature:20 },
+    stone: { id:'stone', label:'石材',    density:1.4, restitution:0.1, friction:0.7, color:'#6b7280', flammability:0.05, conductivity:0.2,
+             thermalConductivity:0.35, heatCapacity:0.85, ignitionPoint:800, meltingPoint:1200, baseTemperature:20 },
+    gel:   { id:'gel',   label:'ゼラチン', density:0.4, restitution:0.55, friction:0.2, color:'#60a5fa', flammability:0.0, conductivity:0.3,
+             thermalConductivity:0.28, heatCapacity:3.2, ignitionPoint:260, meltingPoint:180, baseTemperature:15 },
+    plasma:{ id:'plasma',label:'プラズマ', density:0.1, restitution:0.95, friction:0.05, color:'#f97316', flammability:1.0, conductivity:0.95,
+             thermalConductivity:0.95, heatCapacity:0.5, ignitionPoint:1800, meltingPoint:2400, baseTemperature:800 },
+    ice:   { id:'ice',   label:'氷結',    density:0.92, restitution:0.05, friction:0.08, color:'#a5f3fc', flammability:0.0, conductivity:0.2,
+             thermalConductivity:0.42, heatCapacity:2.1, ignitionPoint:0, meltingPoint:0, baseTemperature:-10 },
+    sand:  { id:'sand',  label:'砂',      density:1.1, restitution:0.18, friction:0.85, color:'#f5d0a9', flammability:0.05, conductivity:0.05,
+             thermalConductivity:0.25, heatCapacity:0.9, ignitionPoint:750, meltingPoint:1400, baseTemperature:20 },
+    glass: { id:'glass', label:'ガラス',  density:0.7, restitution:0.4,  friction:0.2, color:'#bae6fd', flammability:0.0, conductivity:0.35,
+             thermalConductivity:0.5, heatCapacity:0.84, ignitionPoint:900, meltingPoint:1100, baseTemperature:20 }
   };
   const DEFAULT_MATERIAL = 'wood';
 
@@ -62,8 +74,11 @@
     { id:'add-box', label:'箱', title:'箱型の剛体を追加' },
     { id:'add-fire', label:'火', title:'炎エミッタを追加' },
     { id:'add-water', label:'水', title:'水エミッタを追加' },
+    { id:'add-ice', label:'氷', title:'氷結エミッタを追加' },
+    { id:'add-wind', label:'風', title:'風のエミッタを追加' },
     { id:'add-vine', label:'ツタ', title:'ツタエミッタを追加' },
     { id:'add-lightning', label:'雷', title:'雷エミッタを追加' },
+    { id:'add-acid', label:'酸', title:'酸性エミッタを追加' },
     { id:'add-circuit', label:'回路', title:'回路ノードを追加' }
   ];
 
@@ -89,6 +104,55 @@
 
   function deepClone(obj){
     return JSON.parse(JSON.stringify(obj));
+  }
+
+  const FLUID_RADIUS = 5;
+  const LIQUID_TYPES = new Set(['water','acid']);
+  const FIRE_BASE_TEMPERATURE = 900;
+  const STEAM_CONDENSE_TEMP = 60;
+
+  function isLiquidParticle(p){
+    return !!p && LIQUID_TYPES.has(p.type);
+  }
+
+  function flameColor(temp){
+    const t = clamp((temp - 200) / 1000, 0, 1);
+    const r = 255;
+    const g = Math.round(120 + 110 * t);
+    const b = Math.round(40 + 160 * t * (1 - 0.25 * t));
+    const a = 0.45 + 0.45 * t;
+    return `rgba(${r},${g},${b},${clamp(a, 0.1, 0.9)})`;
+  }
+
+  function waterColor(temp){
+    const t = clamp((temp - 15) / 90, 0, 1);
+    const cold = [70, 140, 255];
+    const hot = [210, 120, 120];
+    const r = Math.round(lerp(cold[0], hot[0], t));
+    const g = Math.round(lerp(cold[1], hot[1], t));
+    const b = Math.round(lerp(cold[2], hot[2], t));
+    return `rgba(${r},${g},${b},0.7)`;
+  }
+
+  function acidColor(temp){
+    const t = clamp((temp - 20) / 120, 0, 1);
+    const cold = [160, 240, 80];
+    const hot = [255, 180, 60];
+    const r = Math.round(lerp(cold[0], hot[0], t));
+    const g = Math.round(lerp(cold[1], hot[1], t));
+    const b = Math.round(lerp(cold[2], hot[2], t));
+    return `rgba(${r},${g},${b},0.7)`;
+  }
+
+  function adjustBodyTemperature(body, delta){
+    if (!body) return;
+    const maxTemp = (body.meltingPoint ?? 1200) + 600;
+    body.temperature = clamp((body.temperature ?? state.ambientTemperature) + delta, -200, maxTemp);
+  }
+
+  function adjustParticleTemperature(particle, delta){
+    if (!particle) return;
+    particle.temperature = clamp((particle.temperature ?? state.ambientTemperature) + delta, -200, 2500);
   }
 
   function create(root, awardXp, opts){
@@ -117,7 +181,10 @@
       bounds:{ width:900, height:560 },
       accumulator:0,
       lastTimestamp:0,
-      loopHandle:null
+      loopHandle:null,
+      solverIterations:3,
+      substeps:2,
+      ambientTemperature:20
     };
     const gravityScale = difficulty === 'EASY' ? 0.8 : difficulty === 'HARD' ? 1.25 : 1;
     state.gravity.y *= gravityScale;
@@ -238,7 +305,15 @@
         wetness:0,
         vineGrip:0,
         chargeTimer:0,
-        damage:0
+        damage:0,
+        freezeTimer:0,
+        corrosion:0,
+        temperature: state.ambientTemperature,
+        heatCapacity:1,
+        thermalConductivity:0.2,
+        ignitionPoint:320,
+        meltingPoint:800,
+        baseTemperature: state.ambientTemperature
       });
       applyMaterial(body, body.material);
       if (kind === 'circle') body.radius = clamp(body.radius, 8, 160);
@@ -263,6 +338,7 @@
         rate: params?.rate ?? 8,
         spread: params?.spread ?? 0.3,
         power: params?.power ?? 1,
+        direction: params?.direction ?? 270,
         enabled: true,
         lifetime: params?.lifetime ?? 0,
         accum:0,
@@ -279,15 +355,23 @@
 
     function applyMaterial(body, materialId){
       const mat = MATERIALS[materialId] || MATERIALS[DEFAULT_MATERIAL];
+      const hadTemp = typeof body.temperature === 'number' && Number.isFinite(body.temperature);
+      const prevTemp = hadTemp ? body.temperature : (mat.baseTemperature ?? state.ambientTemperature);
       body.material = mat.id;
       body.restitution = mat.restitution;
       body.friction = mat.friction;
       body.color = mat.color;
+      body.thermalConductivity = mat.thermalConductivity ?? body.thermalConductivity ?? 0.2;
+      body.heatCapacity = mat.heatCapacity ?? body.heatCapacity ?? 1;
+      body.ignitionPoint = mat.ignitionPoint ?? body.ignitionPoint ?? 320;
+      body.meltingPoint = mat.meltingPoint ?? body.meltingPoint ?? 800;
+      body.baseTemperature = mat.baseTemperature ?? state.ambientTemperature;
       const area = body.shape === 'circle' ? Math.PI * body.radius * body.radius : body.width * body.height;
       const density = mat.density;
       const mass = Math.max(0.05, area * density * 0.001);
       body.mass = body.static ? Infinity : mass;
       body.invMass = body.static ? 0 : (1 / mass);
+      body.temperature = hadTemp ? prevTemp : body.baseTemperature;
     }
 
     function selectObject(obj, kind){
@@ -439,8 +523,11 @@
       switch(tool){
         case 'add-fire': return 'fire';
         case 'add-water': return 'water';
+        case 'add-ice': return 'ice';
+        case 'add-wind': return 'wind';
         case 'add-vine': return 'vine';
         case 'add-lightning': return 'lightning';
+        case 'add-acid': return 'acid';
         case 'add-circuit': return 'circuit';
       }
       return 'fire';
@@ -471,6 +558,7 @@
       if (effective <= 0) return;
       const prev = body.burnTimer;
       body.burnTimer = clamp(body.burnTimer + effective, 0, 30);
+      adjustBodyTemperature(body, effective * 8);
       if (prev === 0 && body.burnTimer > 0) gainXp(3, { reason:'ignite' });
     }
 
@@ -478,6 +566,34 @@
       if (!body) return;
       body.wetness = clamp(body.wetness + amount, 0, 12);
       if (amount > 0.4) body.burnTimer = Math.max(0, body.burnTimer - amount * 1.2);
+      adjustBodyTemperature(body, -amount * 4);
+    }
+
+    function freezeBody(body, amount){
+      if (!body) return;
+      const prev = body.freezeTimer;
+      body.freezeTimer = clamp(body.freezeTimer + amount, 0, 12);
+      body.wetness = clamp(body.wetness + amount * 0.4, 0, 12);
+      body.burnTimer = Math.max(0, body.burnTimer - amount * 1.5);
+      adjustBodyTemperature(body, -amount * 6);
+      if (prev <= 0 && body.freezeTimer > 0) gainXp(3, { reason:'freeze' });
+    }
+
+    function corrodeBody(body, amount){
+      if (!body) return;
+      const prev = body.corrosion;
+      body.corrosion = clamp(body.corrosion + amount, 0, 40);
+      adjustBodyTemperature(body, amount * 0.8);
+      if (amount > 0.25 && body.corrosion > prev) gainXp(4, { reason:'corrode' });
+    }
+
+    function pushBody(body, directionDeg, strength){
+      if (!body || body.static) return;
+      const rad = (directionDeg * Math.PI) / 180;
+      const fx = Math.cos(rad) * strength;
+      const fy = Math.sin(rad) * strength;
+      body.vx += fx * (body.invMass || 0);
+      body.vy += fy * (body.invMass || 0);
     }
 
     function entangleBody(body, amount){
@@ -539,19 +655,45 @@
         vx:0,
         vy:0,
         life: type === 'lightning' ? 0.6 : type === 'spark' ? 0.4 : 1.6,
-        payload: {}
+        payload: {},
+        radius: isLiquidParticle({ type }) ? FLUID_RADIUS : 4,
+        temperature: state.ambientTemperature,
+        seed: Math.random(),
+        maxLife: 0,
+        supported:false,
+        age:0
       }, extras || {});
       switch(type){
         case 'fire':
           particle.vx = (Math.random()-0.5)*40;
           particle.vy = -80 - Math.random()*40;
-          particle.life = 1.2 + Math.random()*0.8;
+          particle.life = 1.4 + Math.random()*0.8;
+          particle.temperature = FIRE_BASE_TEMPERATURE * (particle.power || 1);
+          particle.radius = 4.5 + Math.random()*1.5;
+          particle.maxLife = particle.life;
           break;
         case 'water':
           particle.vx = (Math.random()-0.5)*20;
           particle.vy = 60 + Math.random()*60;
-          particle.life = 2.5;
+          particle.life = 60;
+          particle.maxLife = 60;
+          particle.temperature = state.ambientTemperature;
+          particle.radius = FLUID_RADIUS;
           break;
+        case 'ice':
+          particle.vx = (Math.random()-0.5)*18;
+          particle.vy = 40 + Math.random()*40;
+          particle.life = 4;
+          particle.temperature = Math.min(0, state.ambientTemperature - 20);
+          break;
+        case 'wind': {
+          const ang = ((particle.direction ?? 0) * Math.PI) / 180;
+          const speed = 180 * (particle.power || 1);
+          particle.vx = Math.cos(ang) * speed;
+          particle.vy = Math.sin(ang) * speed;
+          particle.life = 0.9;
+          break;
+        }
         case 'vine':
           particle.vx = (Math.random()-0.5)*10;
           particle.vy = 30 + Math.random()*30;
@@ -566,6 +708,20 @@
           particle.vx = (Math.random()-0.5)*120;
           particle.vy = (Math.random()-0.5)*120;
           particle.life = 0.5;
+          break;
+        case 'acid':
+          particle.vx = (Math.random()-0.5)*22;
+          particle.vy = 70 + Math.random()*70;
+          particle.life = 48;
+          particle.maxLife = 48;
+          particle.temperature = state.ambientTemperature + 5;
+          particle.radius = FLUID_RADIUS;
+          break;
+        case 'steam':
+          particle.vx = (Math.random()-0.5)*60;
+          particle.vy = -80 - Math.random()*40;
+          particle.life = 1.4;
+          particle.temperature = Math.max(100, state.ambientTemperature + 20);
           break;
       }
       state.particles.push(particle);
@@ -587,11 +743,20 @@
             case 'water':
               spawnParticle('water', emitter.x + (Math.random()-0.5)*12, emitter.y, { power: emitter.power || 1 });
               break;
+            case 'ice':
+              spawnParticle('ice', emitter.x + (Math.random()-0.5)*12, emitter.y, { power: emitter.power || 1 });
+              break;
+            case 'wind':
+              spawnParticle('wind', emitter.x, emitter.y, { power: emitter.power || 1, direction: emitter.direction || 0 });
+              break;
             case 'vine':
               spawnParticle('vine', emitter.x, emitter.y, { power: emitter.power || 1 });
               break;
             case 'lightning':
               spawnParticle('lightning', emitter.x, emitter.y, { power: emitter.power || 1 });
+              break;
+            case 'acid':
+              spawnParticle('acid', emitter.x + (Math.random()-0.5)*10, emitter.y, { power: emitter.power || 1 });
               break;
             case 'circuit':
               break;
@@ -603,19 +768,45 @@
     function updateParticles(dt){
       const bodies = state.bodies;
       const remove = [];
+      const liquids = [];
       for (let i=0;i<state.particles.length;i++){
         const p = state.particles[i];
         p.life -= dt;
         if (p.life <= 0) { remove.push(i); continue; }
+        if (p.maxLife > 0) p.life = Math.min(p.life, p.maxLife);
+        p.age = (p.age || 0) + dt;
+        if (isLiquidParticle(p)) {
+          p.radius = p.radius || FLUID_RADIUS;
+          p.supported = false;
+        }
         switch(p.type){
-          case 'fire':
-            p.vy -= 80 * dt;
-            p.vx += (Math.random()-0.5)*20*dt;
+          case 'fire': {
+            const swirl = Math.sin((p.seed || 0) * Math.PI * 2 + p.age * 10);
+            p.vx += swirl * 60 * dt;
+            p.vy -= (120 + (p.temperature || FIRE_BASE_TEMPERATURE) * 0.04) * dt;
+            p.vx *= (1 - clamp(0.8 * dt, 0, 0.2));
+            adjustParticleTemperature(p, -180 * dt);
+            p.radius = 3 + clamp((p.temperature - 250) / 600, 0, 1) * 3.5;
             break;
+          }
           case 'water':
-            p.vy += state.gravity.y * 0.6 * dt;
-            p.vx *= (1 - 0.4*dt);
+            p.vy += state.gravity.y * 0.9 * dt;
+            p.vx *= (1 - clamp(1.6 * dt, 0, 0.7));
+            adjustParticleTemperature(p, (state.ambientTemperature - p.temperature) * 0.25 * dt);
             break;
+          case 'ice':
+            p.vy += state.gravity.y * 0.65 * dt;
+            p.vx *= (1 - clamp(0.9 * dt, 0, 0.6));
+            adjustParticleTemperature(p, (Math.min(-10, state.ambientTemperature - 20) - p.temperature) * 0.3 * dt);
+            break;
+          case 'wind': {
+            const ang = ((p.direction ?? 0) * Math.PI) / 180;
+            const targetVx = Math.cos(ang) * 220 * (p.power || 1);
+            const targetVy = Math.sin(ang) * 220 * (p.power || 1);
+            p.vx = lerp(p.vx, targetVx, clamp(3*dt, 0, 1));
+            p.vy = lerp(p.vy, targetVy, clamp(3*dt, 0, 1));
+            break;
+          }
           case 'vine':
             p.vy += state.gravity.y * 0.2 * dt;
             p.vx *= (1 - 0.5*dt);
@@ -627,46 +818,230 @@
             p.vx *= (1 - 0.6*dt);
             p.vy *= (1 - 0.6*dt);
             break;
+          case 'acid':
+            p.vy += state.gravity.y * 0.95 * dt;
+            p.vx *= (1 - clamp(1.2 * dt, 0, 0.65));
+            adjustParticleTemperature(p, (state.ambientTemperature + 15 - p.temperature) * 0.2 * dt);
+            break;
+          case 'steam':
+            p.vy -= 120 * dt;
+            p.vx += (Math.random()-0.5) * 40 * dt;
+            adjustParticleTemperature(p, -60 * dt);
+            if (p.temperature < STEAM_CONDENSE_TEMP && Math.random() < dt * 2){
+              p.type = 'water';
+              p.radius = FLUID_RADIUS;
+              p.life = Math.max(p.life, 8);
+              p.maxLife = 18;
+              p.temperature = state.ambientTemperature;
+              p.vx *= 0.5;
+              p.vy = Math.min(p.vy, 0);
+            }
+            break;
         }
         p.x += p.vx * dt;
         p.y += p.vy * dt;
+        let supported = false;
+        if (isLiquidParticle(p)) {
+          if (resolveLiquidBounds(p)) supported = true;
+          for (const body of bodies){
+            if (resolveLiquidBodyContact(p, body)) supported = true;
+          }
+          liquids.push(p);
+          if (supported) {
+            if (Math.abs(p.vy) < 15) p.vy = 0;
+            p.vx *= (1 - clamp(5*dt, 0, 0.85));
+          }
+          p.supported = supported;
+          if (supported && p.maxLife > 0) {
+            p.life = Math.min(p.maxLife, p.life + dt * 0.8);
+          }
+        }
         if (p.x < -32 || p.x > state.bounds.width + 32 || p.y < -64 || p.y > state.bounds.height + 64) {
           remove.push(i);
           continue;
         }
         for (const body of bodies){
           if (!intersectsParticleBody(p, body)) continue;
-          if (p.type === 'fire') {
-            igniteBody(body, 0.4 * (p.power || 1) * dt * 60);
-          } else if (p.type === 'water') {
-            soakBody(body, 0.3 * (p.power || 1) * dt * 60);
-            body.vy -= 15*dt;
-          } else if (p.type === 'vine') {
-            entangleBody(body, 0.15 * (p.power || 1));
-            attemptGrowVine(p, body);
-          } else if (p.type === 'lightning') {
-            chargeBody(body, 0.5 * (p.power || 1));
-            const node = nearestCircuitNode(p.x, p.y, 40);
-            if (node) powerCircuitNode(node, 3);
-          } else if (p.type === 'spark') {
-            chargeBody(body, 0.2 * (p.power || 1));
-          }
+          handleParticleBodyContact(p, body, dt);
         }
         if (p.type === 'lightning' || p.type === 'spark') {
-          const node = nearestCircuitNode(p.x, p.y, 28);
-          if (node) powerCircuitNode(node, 2.5);
+          const radius = p.type === 'lightning' ? 40 : 28;
+          const node = nearestCircuitNode(p.x, p.y, radius);
+          if (node) powerCircuitNode(node, p.type === 'lightning' ? 3 : 2.5);
         }
       }
+      if (liquids.length > 1) resolveLiquidInteractions(liquids, dt);
       for (let i=remove.length-1;i>=0;i--) state.particles.splice(remove[i],1);
     }
 
-    function intersectsParticleBody(p, body){
+    function resolveLiquidBounds(p){
+      const r = p.radius || FLUID_RADIUS;
+      let supported = false;
+      if (p.x < r) { p.x = r; if (p.vx < 0) p.vx *= -0.3; }
+      if (p.x > state.bounds.width - r) { p.x = state.bounds.width - r; if (p.vx > 0) p.vx *= -0.3; }
+      if (p.y >= state.bounds.height - r) { p.y = state.bounds.height - r; if (p.vy > 0) p.vy = 0; supported = true; }
+      if (p.y < r) { p.y = r; if (p.vy < 0) p.vy = 0; }
+      return supported;
+    }
+
+    function resolveLiquidBodyContact(p, body){
+      const r = p.radius || FLUID_RADIUS;
       if (body.shape === 'circle') {
         const dx = p.x - body.x;
         const dy = p.y - body.y;
-        return (dx*dx + dy*dy) <= Math.pow(body.radius + 6, 2);
+        const dist = Math.hypot(dx, dy) || 0.0001;
+        const minDist = body.radius + r;
+        if (dist < minDist) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const penetration = minDist - dist + 0.2;
+          p.x += nx * penetration;
+          p.y += ny * penetration;
+          const vn = p.vx * nx + p.vy * ny;
+          if (vn < 0) {
+            p.vx -= vn * nx;
+            p.vy -= vn * ny;
+          }
+          p.vx *= 0.92;
+          p.vy *= 0.92;
+          return ny < -0.2;
+        }
+        return false;
       }
-      return Math.abs(p.x - body.x) <= body.width/2 + 6 && Math.abs(p.y - body.y) <= body.height/2 + 6;
+      const halfW = (body.width || 0) / 2 + r;
+      const halfH = (body.height || 0) / 2 + r;
+      const dx = p.x - body.x;
+      const dy = p.y - body.y;
+      if (Math.abs(dx) <= halfW && Math.abs(dy) <= halfH) {
+        const penX = halfW - Math.abs(dx);
+        const penY = halfH - Math.abs(dy);
+        if (penX < penY) {
+          const sx = dx < 0 ? -1 : 1;
+          p.x = body.x + sx * halfW;
+          if (p.vx * sx > 0) p.vx = 0;
+          p.vy *= 0.88;
+          return false;
+        }
+        const sy = dy < 0 ? -1 : 1;
+        p.y = body.y + sy * halfH;
+        if (p.vy * sy > 0) p.vy = 0;
+        p.vx *= 0.88;
+        return sy < 0;
+      }
+      return false;
+    }
+
+    function resolveLiquidInteractions(liquids, dt){
+      const relax = clamp(dt * 25, 0, 0.6);
+      for (let i=0;i<liquids.length;i++){
+        const a = liquids[i];
+        if (!isLiquidParticle(a)) continue;
+        for (let j=i+1;j<liquids.length;j++){
+          const b = liquids[j];
+          if (!isLiquidParticle(b)) continue;
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const dist = Math.hypot(dx, dy) || 0.0001;
+          const desired = (a.radius || FLUID_RADIUS) + (b.radius || FLUID_RADIUS) - 1.5;
+          if (dist < desired) {
+            const nx = dx / dist;
+            const ny = dy / dist;
+            const overlap = desired - dist;
+            const push = overlap * 0.5;
+            a.x -= nx * push;
+            a.y -= ny * push;
+            b.x += nx * push;
+            b.y += ny * push;
+            const avgVx = (a.vx + b.vx) / 2;
+            const avgVy = (a.vy + b.vy) / 2;
+            a.vx = lerp(a.vx, avgVx, relax);
+            a.vy = lerp(a.vy, avgVy, relax);
+            b.vx = lerp(b.vx, avgVx, relax);
+            b.vy = lerp(b.vy, avgVy, relax);
+            if (dy > 0) a.supported = true;
+            if (dy < 0) b.supported = true;
+          }
+        }
+      }
+    }
+
+    function handleParticleBodyContact(p, body, dt){
+      switch(p.type){
+        case 'fire': {
+          igniteBody(body, 0.45 * (p.power || 1) * dt * 60);
+          const heat = (p.temperature || FIRE_BASE_TEMPERATURE) - (body.temperature || state.ambientTemperature);
+          adjustBodyTemperature(body, heat * 0.015);
+          adjustParticleTemperature(p, -heat * 0.01 * dt);
+          break;
+        }
+        case 'water': {
+          soakBody(body, 0.35 * (p.power || 1) * dt * 60);
+          body.vy -= 15*dt;
+          const diff = body.temperature - p.temperature;
+          adjustBodyTemperature(body, -diff * 0.02);
+          adjustParticleTemperature(p, diff * 0.03);
+          if (body.temperature > body.ignitionPoint && Math.random() < clamp((body.temperature - body.ignitionPoint)/400, 0, 0.6) * dt) {
+            p.type = 'steam';
+            p.temperature = Math.max(120, body.temperature);
+            p.vx *= 0.4;
+            p.vy = -80;
+            p.life = 1.5;
+            p.radius = 4;
+            return;
+          }
+          if (body.temperature < 0 && Math.random() < dt * 3) {
+            p.type = 'ice';
+            p.temperature = Math.min(body.temperature, 0);
+            p.vx *= 0.3;
+            p.vy *= 0.3;
+          }
+          if (body.burnTimer > 4 && Math.random() < 0.35) {
+            spawnParticle('steam', body.x, body.y - (body.height || body.radius) * 0.6, { power: Math.min(1.2, body.burnTimer/10) });
+          }
+          break;
+        }
+        case 'vine':
+          entangleBody(body, 0.15 * (p.power || 1));
+          attemptGrowVine(p, body);
+          break;
+        case 'lightning':
+          chargeBody(body, 0.5 * (p.power || 1));
+          break;
+        case 'spark':
+          chargeBody(body, 0.2 * (p.power || 1));
+          break;
+        case 'ice':
+          freezeBody(body, 0.35 * (p.power || 1));
+          adjustBodyTemperature(body, Math.min(-10, p.temperature || -10) * 0.02);
+          break;
+        case 'wind':
+          pushBody(body, p.direction ?? 0, (p.power || 1) * 140 * dt);
+          break;
+        case 'acid': {
+          corrodeBody(body, 0.3 * (p.power || 1) * dt * 60);
+          const diff = (p.temperature ?? state.ambientTemperature) - (body.temperature ?? state.ambientTemperature);
+          adjustBodyTemperature(body, diff * 0.01);
+          break;
+        }
+        case 'steam':
+          soakBody(body, 0.05 * (p.power || 1));
+          adjustBodyTemperature(body, (p.temperature - (body.temperature || state.ambientTemperature)) * 0.01);
+          break;
+      }
+      if (p.type === 'lightning') {
+        const node = nearestCircuitNode(p.x, p.y, 40);
+        if (node) powerCircuitNode(node, 3);
+      }
+    }
+
+    function intersectsParticleBody(p, body){
+      const r = (p.radius || 6) + 2;
+      if (body.shape === 'circle') {
+        const dx = p.x - body.x;
+        const dy = p.y - body.y;
+        return (dx*dx + dy*dy) <= Math.pow(body.radius + r, 2);
+      }
+      return Math.abs(p.x - body.x) <= body.width/2 + r && Math.abs(p.y - body.y) <= body.height/2 + r;
     }
 
     function attemptGrowVine(particle, body){
@@ -715,6 +1090,11 @@
             body.vx += (Math.random()-0.5) * 40 * dt;
             body.vy -= Math.random() * 30 * dt;
           }
+          if (body.freezeTimer > 0) {
+            const damp = clamp(body.freezeTimer / 12, 0, 1);
+            body.vx *= (1 - 0.35 * damp * dt);
+            body.vy *= (1 - 0.35 * damp * dt);
+          }
           body.x += body.vx * dt;
           body.y += body.vy * dt;
         }
@@ -722,6 +1102,8 @@
         body.wetness = Math.max(0, body.wetness - dt * 0.3);
         body.vineGrip = Math.max(0, body.vineGrip - dt * 0.2);
         body.chargeTimer = Math.max(0, body.chargeTimer - dt * 0.5);
+        body.freezeTimer = Math.max(0, body.freezeTimer - dt * 0.6);
+        body.corrosion = Math.max(0, body.corrosion - dt * 0.2);
         if (!body.static) {
           if (body.shape === 'circle') {
             if (body.x - body.radius < 0) { body.x = body.radius; body.vx = Math.abs(body.vx) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vx)); }
@@ -744,16 +1126,116 @@
           }
           applyMaterial(body, body.material);
         }
+        if (!body.static && body.corrosion > 0.4) {
+          const erosion = clamp(body.corrosion / 40, 0, 0.6) * 0.002 * dt * 60;
+          if (erosion > 0) {
+            if (body.shape === 'circle') body.radius = Math.max(6, body.radius * (1 - erosion));
+            else {
+              body.width = Math.max(12, body.width * (1 - erosion));
+              body.height = Math.max(12, body.height * (1 - erosion));
+            }
+            applyMaterial(body, body.material);
+          }
+        }
       }
-      resolveCollisions();
+      resolveCollisions(state.solverIterations);
     }
 
-    function resolveCollisions(){
-      for (let i=0;i<state.bodies.length;i++){
-        for (let j=i+1;j<state.bodies.length;j++){
-          const a = state.bodies[i];
-          const b = state.bodies[j];
-          handleCollisionPair(a,b);
+    function bodiesThermallyTouching(a, b){
+      if (!a || !b) return false;
+      if (a.shape === 'circle' && b.shape === 'circle') {
+        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+        return dist <= a.radius + b.radius + 16;
+      }
+      const bounds = (body) => {
+        if (body.shape === 'circle') {
+          return {
+            minX: body.x - body.radius,
+            maxX: body.x + body.radius,
+            minY: body.y - body.radius,
+            maxY: body.y + body.radius
+          };
+        }
+        return {
+          minX: body.x - body.width/2,
+          maxX: body.x + body.width/2,
+          minY: body.y - body.height/2,
+          maxY: body.y + body.height/2
+        };
+      };
+      const A = bounds(a);
+      const B = bounds(b);
+      const margin = 12;
+      return !(A.maxX + margin < B.minX || A.minX - margin > B.maxX || A.maxY + margin < B.minY || A.minY - margin > B.maxY);
+    }
+
+    function updateThermodynamics(dt){
+      const ambient = state.ambientTemperature;
+      const bodies = state.bodies;
+      for (const body of bodies){
+        const mat = MATERIALS[body.material] || MATERIALS[DEFAULT_MATERIAL];
+        const conductivity = body.thermalConductivity ?? mat.thermalConductivity ?? 0.25;
+        const burnFactor = clamp(body.burnTimer / 30, 0, 1);
+        const ambientDiff = ambient - (body.temperature ?? ambient);
+        adjustBodyTemperature(body, ambientDiff * conductivity * 0.05 * dt);
+        if (body.burnTimer > 0) {
+          const target = (body.ignitionPoint ?? 320) + 220;
+          adjustBodyTemperature(body, (target - body.temperature) * 0.18 * burnFactor * dt);
+        }
+        if (body.wetness > 0.1) {
+          adjustBodyTemperature(body, -body.wetness * 0.5 * dt);
+        }
+        if (body.freezeTimer > 0.1) {
+          adjustBodyTemperature(body, -body.freezeTimer * 0.4 * dt);
+        }
+        if (body.temperature > body.ignitionPoint && mat.flammability > 0) {
+          body.burnTimer = clamp(body.burnTimer + (body.temperature - body.ignitionPoint) * mat.flammability * 0.01 * dt, 0, 30);
+        }
+        if (!body.static && body.temperature > body.meltingPoint + 40) {
+          const melt = clamp((body.temperature - body.meltingPoint) / 400, 0, 1) * dt;
+          if (body.shape === 'circle') body.radius = Math.max(6, body.radius * (1 - 0.015 * melt));
+          else {
+            body.width = Math.max(12, body.width * (1 - 0.015 * melt));
+            body.height = Math.max(12, body.height * (1 - 0.015 * melt));
+          }
+          applyMaterial(body, body.material);
+        }
+        if (body.burnTimer > 0.6) {
+          const rate = clamp(body.burnTimer / 8, 0.1, 4);
+          if (Math.random() < rate * dt) {
+            const offsetX = (Math.random()-0.5) * (body.width || body.radius*1.2 || 20);
+            const offsetY = - (body.height || body.radius) * (0.3 + Math.random()*0.4);
+            spawnParticle('fire', body.x + offsetX, body.y + offsetY, {
+              power: clamp(body.burnTimer / 8, 0.5, 2.5),
+              temperature: Math.max(body.temperature, FIRE_BASE_TEMPERATURE)
+            });
+          }
+        }
+      }
+      for (let i=0;i<bodies.length;i++){
+        for (let j=i+1;j<bodies.length;j++){
+          const a = bodies[i];
+          const b = bodies[j];
+          if (!bodiesThermallyTouching(a,b)) continue;
+          const cond = Math.min(a.thermalConductivity ?? 0.25, b.thermalConductivity ?? 0.25);
+          const diff = (b.temperature ?? ambient) - (a.temperature ?? ambient);
+          if (Math.abs(diff) < 0.01) continue;
+          const flow = diff * cond * 0.08 * dt;
+          adjustBodyTemperature(a, flow);
+          adjustBodyTemperature(b, -flow);
+        }
+      }
+    }
+
+    function resolveCollisions(iterations){
+      const passes = Math.max(1, Math.floor(iterations || 1));
+      for (let iter=0; iter<passes; iter++){
+        for (let i=0;i<state.bodies.length;i++){
+          for (let j=i+1;j<state.bodies.length;j++){
+            const a = state.bodies[i];
+            const b = state.bodies[j];
+            handleCollisionPair(a,b);
+          }
         }
       }
     }
@@ -791,6 +1273,7 @@
       const iy = impulse * ny;
       if (!a.static) { a.vx -= ix * a.invMass; a.vy -= iy * a.invMass; }
       if (!b.static) { b.vx += ix * b.invMass; b.vy += iy * b.invMass; }
+      applyFrictionImpulse(a,b,nx,ny,invMassSum, Math.abs(impulse));
       registerCollisionXp(a,b, Math.abs(impulse));
     }
 
@@ -801,22 +1284,25 @@
       const dy = b.y - a.y;
       const py = (b.height/2 + a.height/2) - Math.abs(dy);
       if (py <= 0) return;
+      const invMassSum = a.invMass + b.invMass;
       const restitution = Math.min(a.restitution, b.restitution);
       if (px < py) {
         const sx = Math.sign(dx) || 1;
         separateAlongAxis(a,b, px, sx, 0);
         const rvx = (b.vx - a.vx) * sx;
-        const impulse = -(1 + restitution) * rvx / (a.invMass + b.invMass || 1);
+        const impulse = -(1 + restitution) * rvx / (invMassSum || 1);
         if (!a.static) a.vx -= impulse * a.invMass * sx;
         if (!b.static) b.vx += impulse * b.invMass * sx;
+        applyFrictionImpulse(a,b,sx,0,invMassSum, Math.abs(impulse));
         registerCollisionXp(a,b, Math.abs(impulse));
       } else {
         const sy = Math.sign(dy) || 1;
         separateAlongAxis(a,b, py, 0, sy);
         const rvy = (b.vy - a.vy) * sy;
-        const impulse = -(1 + restitution) * rvy / (a.invMass + b.invMass || 1);
+        const impulse = -(1 + restitution) * rvy / (invMassSum || 1);
         if (!a.static) a.vy -= impulse * a.invMass * sy;
         if (!b.static) b.vy += impulse * b.invMass * sy;
+        applyFrictionImpulse(a,b,0,sy,invMassSum, Math.abs(impulse));
         registerCollisionXp(a,b, Math.abs(impulse));
       }
     }
@@ -855,7 +1341,46 @@
       const iy = impulse * ny;
       if (!circle.static) { circle.vx -= ix * circle.invMass; circle.vy -= iy * circle.invMass; }
       if (!box.static) { box.vx += ix * box.invMass; box.vy += iy * box.invMass; }
+      applyFrictionImpulse(circle, box, nx, ny, invMassSum, Math.abs(impulse));
       registerCollisionXp(circle, box, Math.abs(impulse));
+    }
+
+    function effectiveFriction(body){
+      if (!body) return 0.5;
+      let value = body.friction ?? 0.5;
+      if (body.wetness > 3) value *= 1.2;
+      if (body.freezeTimer > 0.5) value *= 0.7;
+      if (body.vineGrip > 0.5) value *= 1.15;
+      return clamp(value, 0, 1.2);
+    }
+
+    function applyFrictionImpulse(a,b,nx,ny,invMassSum, normalImpulse){
+      if (!a || !b) return;
+      if ((a.static && b.static) || invMassSum <= 0) return;
+      const rvx = b.vx - a.vx;
+      const rvy = b.vy - a.vy;
+      const velAlongNormal = rvx * nx + rvy * ny;
+      const tx = rvx - velAlongNormal * nx;
+      const ty = rvy - velAlongNormal * ny;
+      const len = Math.hypot(tx, ty);
+      if (len < 1e-6) return;
+      const tangentX = tx / len;
+      const tangentY = ty / len;
+      const vt = rvx * tangentX + rvy * tangentY;
+      if (Math.abs(vt) < 1e-4) return;
+      const mu = Math.sqrt(effectiveFriction(a) * effectiveFriction(b));
+      let jt = -vt;
+      jt /= invMassSum || 1;
+      const maxFriction = normalImpulse * mu;
+      jt = clamp(jt, -maxFriction, maxFriction);
+      if (!a.static) {
+        a.vx -= jt * tangentX * a.invMass;
+        a.vy -= jt * tangentY * a.invMass;
+      }
+      if (!b.static) {
+        b.vx += jt * tangentX * b.invMass;
+        b.vy += jt * tangentY * b.invMass;
+      }
     }
 
     function registerCollisionXp(a,b, impulse){
@@ -877,7 +1402,16 @@
       info2.className = 'phys-hud-line';
       const powered = state.emitters.filter(e => e.kind === 'circuit' && e.poweredTicks > 0).length;
       info2.textContent = `Powered ${powered} / Gravity ${state.gravity.y.toFixed(0)} / EXP ${state.sessionExp.toFixed(1)}`;
-      hud.append(info, info2);
+      const info3 = document.createElement('div');
+      info3.className = 'phys-hud-line';
+      info3.textContent = `Solver ${state.solverIterations} iter × ${state.substeps} sub`;
+      const temps = state.bodies.map(b => b.temperature ?? state.ambientTemperature);
+      const avgTemp = temps.length ? temps.reduce((sum, v) => sum + v, 0) / temps.length : state.ambientTemperature;
+      const maxTemp = temps.length ? Math.max(...temps) : state.ambientTemperature;
+      const info4 = document.createElement('div');
+      info4.className = 'phys-hud-line';
+      info4.textContent = `平均温度 ${avgTemp.toFixed(1)}°C / 周囲 ${state.ambientTemperature.toFixed(1)}°C / 最高 ${maxTemp.toFixed(1)}°C`;
+      hud.append(info, info2, info3, info4);
     }
 
     function renderInspector(){
@@ -911,7 +1445,43 @@
         state.airDrag = Number(dragInput.value);
         dragLabel.textContent = `空気抵抗 (${state.airDrag.toFixed(2)})`;
       });
-      worldSection.append(gLabel, gInput, dragLabel, dragInput);
+      const iterLabel = document.createElement('label');
+      iterLabel.textContent = `反復回数 (${state.solverIterations})`;
+      const iterInput = document.createElement('input');
+      iterInput.type = 'range';
+      iterInput.min = '1';
+      iterInput.max = '6';
+      iterInput.step = '1';
+      iterInput.value = String(state.solverIterations);
+      iterInput.addEventListener('input', () => {
+        state.solverIterations = Math.round(Number(iterInput.value) || 1);
+        iterLabel.textContent = `反復回数 (${state.solverIterations})`;
+      });
+      const subLabel = document.createElement('label');
+      subLabel.textContent = `サブステップ (${state.substeps})`;
+      const subInput = document.createElement('input');
+      subInput.type = 'range';
+      subInput.min = '1';
+      subInput.max = '6';
+      subInput.step = '1';
+      subInput.value = String(state.substeps);
+      subInput.addEventListener('input', () => {
+        state.substeps = Math.max(1, Math.round(Number(subInput.value) || 1));
+        subLabel.textContent = `サブステップ (${state.substeps})`;
+      });
+      const ambientLabel = document.createElement('label');
+      ambientLabel.textContent = `周囲温度 (${state.ambientTemperature.toFixed(1)}°C)`;
+      const ambientInput = document.createElement('input');
+      ambientInput.type = 'range';
+      ambientInput.min = '-80';
+      ambientInput.max = '400';
+      ambientInput.step = '1';
+      ambientInput.value = String(state.ambientTemperature);
+      ambientInput.addEventListener('input', () => {
+        state.ambientTemperature = Math.round(Number(ambientInput.value) || 0);
+        ambientLabel.textContent = `周囲温度 (${state.ambientTemperature.toFixed(1)}°C)`;
+      });
+      worldSection.append(gLabel, gInput, dragLabel, dragInput, iterLabel, iterInput, subLabel, subInput, ambientLabel, ambientInput);
       inspector.appendChild(worldSection);
 
       const selected = getSelected();
@@ -1063,6 +1633,22 @@
 
       section.append(h, kindLabel, rateLabel, rateInput, powerLabel, powerInput);
 
+      if (emitter.kind === 'wind') {
+        const dirLabel = document.createElement('label');
+        const current = Math.round(emitter.direction ?? 0);
+        dirLabel.textContent = `向き (${current}°)`;
+        const dirInput = document.createElement('input');
+        dirInput.type = 'range';
+        dirInput.min = '0';
+        dirInput.max = '359';
+        dirInput.value = String(current);
+        dirInput.addEventListener('input', () => {
+          emitter.direction = Math.round(Number(dirInput.value) || 0);
+          dirLabel.textContent = `向き (${emitter.direction}°)`;
+        });
+        section.append(dirLabel, dirInput);
+      }
+
       if (emitter.kind === 'circuit') {
         const sourceToggle = document.createElement('label'); sourceToggle.className = 'phys-checkbox';
         const sourceInput = document.createElement('input'); sourceInput.type = 'checkbox'; sourceInput.checked = emitter.source;
@@ -1099,11 +1685,16 @@
     }
 
     function updateWorld(dt){
-      updateBodies(dt);
-      updateEmitters(dt);
-      updateParticles(dt);
-      updateVines(dt);
-      propagateCircuit(dt);
+      const steps = Math.max(1, Math.floor(state.substeps || 1));
+      const stepDt = dt / steps;
+      for (let i=0;i<steps;i++){
+        updateBodies(stepDt);
+        updateEmitters(stepDt);
+        updateParticles(stepDt);
+        updateThermodynamics(stepDt);
+        updateVines(stepDt);
+        propagateCircuit(stepDt);
+      }
     }
 
     function renderWorld(){
@@ -1135,8 +1726,13 @@
       // bodies
       state.bodies.forEach(body => {
         let fill = body.color;
+        const tempDiff = (body.temperature ?? state.ambientTemperature) - state.ambientTemperature;
+        if (tempDiff > 5) fill = mixColor(fill, '#f97316', clamp(tempDiff/300, 0, 0.6));
+        if (tempDiff < -5) fill = mixColor(fill, '#38bdf8', clamp(Math.abs(tempDiff)/200, 0, 0.5));
         if (body.burnTimer > 0) fill = mixColor(fill, '#f97316', clamp(body.burnTimer/12, 0, 1));
         if (body.wetness > 0) fill = mixColor(fill, '#60a5fa', clamp(body.wetness/6, 0, 0.8));
+        if (body.freezeTimer > 0) fill = mixColor(fill, '#bfdbfe', clamp(body.freezeTimer/10, 0, 0.6));
+        if (body.corrosion > 0) fill = mixColor(fill, '#bef264', clamp(body.corrosion/18, 0, 0.5));
         if (body.chargeTimer > 0) fill = mixColor(fill, '#facc15', clamp(body.chargeTimer/5, 0, 0.6));
         ctx.fillStyle = fill;
         ctx.strokeStyle = state.selection === body.id ? '#facc15' : 'rgba(15,23,42,0.8)';
@@ -1154,8 +1750,11 @@
         const colors = {
           fire:'#f97316',
           water:'#3b82f6',
+          ice:'#bae6fd',
+          wind:'#38bdf8',
           vine:'#22c55e',
           lightning:'#eab308',
+          acid:'#facc15',
           circuit: emitter.poweredTicks > 0 ? '#67e8f9' : '#94a3b8'
         };
         ctx.fillStyle = colors[emitter.kind] || '#e2e8f0';
@@ -1176,15 +1775,45 @@
 
       // particles
       state.particles.forEach(p => {
+        let radius = p.radius || 4;
         switch(p.type){
-          case 'fire': ctx.fillStyle = 'rgba(249,115,22,0.6)'; break;
-          case 'water': ctx.fillStyle = 'rgba(96,165,250,0.7)'; break;
-          case 'vine': ctx.fillStyle = 'rgba(34,197,94,0.6)'; break;
-          case 'lightning': ctx.fillStyle = 'rgba(234,179,8,0.8)'; break;
-          case 'spark': ctx.fillStyle = 'rgba(103,232,249,0.8)'; break;
-          default: ctx.fillStyle = 'rgba(226,232,240,0.6)';
+          case 'fire':
+            ctx.fillStyle = flameColor(p.temperature ?? FIRE_BASE_TEMPERATURE);
+            radius = Math.max(3, p.radius || 4);
+            break;
+          case 'water':
+            ctx.fillStyle = waterColor(p.temperature ?? state.ambientTemperature);
+            radius = Math.max(3, p.radius || FLUID_RADIUS);
+            break;
+          case 'vine':
+            ctx.fillStyle = 'rgba(34,197,94,0.6)';
+            break;
+          case 'lightning':
+            ctx.fillStyle = 'rgba(234,179,8,0.8)';
+            break;
+          case 'spark':
+            ctx.fillStyle = 'rgba(103,232,249,0.8)';
+            break;
+          case 'ice':
+            ctx.fillStyle = 'rgba(191,219,254,0.7)';
+            radius = Math.max(3, p.radius || 4);
+            break;
+          case 'wind':
+            ctx.fillStyle = 'rgba(56,189,248,0.35)';
+            break;
+          case 'acid':
+            ctx.fillStyle = acidColor(p.temperature ?? state.ambientTemperature);
+            radius = Math.max(3, p.radius || FLUID_RADIUS);
+            break;
+          case 'steam': {
+            const alpha = clamp((p.temperature ?? 100) / 180, 0.2, 0.6);
+            ctx.fillStyle = `rgba(226,232,240,${alpha})`;
+            break;
+          }
+          default:
+            ctx.fillStyle = 'rgba(226,232,240,0.6)';
         }
-        ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI*2); ctx.fill();
       });
     }
 
@@ -1225,6 +1854,9 @@
       return {
         gravity: Object.assign({}, state.gravity),
         airDrag: state.airDrag,
+        solverIterations: state.solverIterations,
+        substeps: state.substeps,
+        ambientTemperature: state.ambientTemperature,
         bodies: state.bodies.map(b => deepClone(b)),
         emitters: state.emitters.map(e => deepClone(e)),
         vines: state.vines.map(v => deepClone(v))
@@ -1235,10 +1867,27 @@
       if (!snap) return;
       state.gravity = Object.assign({ x:0, y:600 }, snap.gravity || {});
       state.airDrag = snap.airDrag ?? state.airDrag;
-      state.bodies = (snap.bodies || []).map(b => Object.assign({}, b));
+      state.solverIterations = Math.max(1, Math.floor(snap.solverIterations || state.solverIterations || 1));
+      state.substeps = Math.max(1, Math.floor(snap.substeps || state.substeps || 1));
+      state.ambientTemperature = typeof snap.ambientTemperature === 'number' ? snap.ambientTemperature : state.ambientTemperature;
+      state.bodies = (snap.bodies || []).map(b => {
+        const copy = Object.assign({}, b);
+        if (typeof copy.temperature !== 'number') {
+          const mat = MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL];
+          copy.temperature = mat?.baseTemperature ?? state.ambientTemperature;
+        }
+        if (typeof copy.heatCapacity !== 'number') copy.heatCapacity = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.heatCapacity ?? 1;
+        if (typeof copy.thermalConductivity !== 'number') copy.thermalConductivity = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.thermalConductivity ?? 0.2;
+        if (typeof copy.ignitionPoint !== 'number') copy.ignitionPoint = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.ignitionPoint ?? 320;
+        if (typeof copy.meltingPoint !== 'number') copy.meltingPoint = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.meltingPoint ?? 800;
+        if (typeof copy.baseTemperature !== 'number') copy.baseTemperature = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.baseTemperature ?? state.ambientTemperature;
+        return copy;
+      });
+      state.bodies.forEach(body => applyMaterial(body, body.material));
       state.emitters = (snap.emitters || []).map(e => {
         const copy = Object.assign({}, e);
         copy.connections = Array.isArray(copy.connections) ? Array.from(copy.connections) : [];
+        if (typeof copy.direction !== 'number') copy.direction = 270;
         return copy;
       });
       state.vines = (snap.vines || []).map(v => Object.assign({}, v));

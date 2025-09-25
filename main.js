@@ -122,7 +122,7 @@ let __miniManifest = null; // [{id,name,entry,version,author,icon,description}]
 let __miniGameRegistry = {}; // id -> def
 let __miniGameWaiters = {};  // id -> [resolve]
 let __currentMini = null;    // runtime
-let __miniSessionExp = 0;    // セッション内の獲得EXP合計
+let __miniSessionExp = 0;    // セッション内の獲得EXP純増減
 let __miniPaused = false;
 
 let __toolsInited = false;
@@ -5712,6 +5712,23 @@ try {
 } catch {}
 
 // 共通EXP付与（ミニゲー/戦闘 共用）
+function spendExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
+    const v = Math.max(0, Math.floor(Number(amount) || 0));
+    if (!Number.isFinite(v) || v <= 0) return 0;
+    const available = Math.max(0, Math.floor(player.exp || 0));
+    const spent = Math.min(v, available);
+    if (spent <= 0) return 0;
+    player.exp = Math.max(0, (player.exp || 0) - spent);
+    prevExp = player.exp || 0;
+    if (opts.popup) {
+        try { addMessage(`経験値を ${Math.floor(spent)} 消費。（${opts.source}${opts.reason ? ': ' + opts.reason : ''}）`); } catch {}
+    }
+    try { updateUI(); } catch {}
+    try { renderMiniExpPlayerHud(); } catch {}
+    try { saveAll(); } catch {}
+    return spent;
+}
+
 function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     const v = Math.max(0, Number(amount) || 0);
     if (v <= 0) return 0;
@@ -6176,17 +6193,29 @@ async function loadMiniGameScript(def) {
     });
 }
 
+function applyMiniExpBadgeOptions(el, opts = null) {
+    if (!opts) return;
+    if (opts.variant === 'combo') {
+        el.classList.add('combo');
+        const lvl = Number(opts.level || 1);
+        const tier = lvl >= 5 ? 'c3' : (lvl >= 3 ? 'c2' : 'c1');
+        el.classList.add(tier);
+    }
+    if (opts.tone === 'loss') {
+        el.classList.add('loss');
+        const lossBg = opts.variant === 'combo'
+            ? 'linear-gradient(135deg, #be123c, #ef4444)'
+            : 'rgba(239,68,68,0.92)';
+        el.style.background = lossBg;
+    }
+}
+
 function showMiniExpBadge(text, opts = null) {
     const hud = document.getElementById('miniexp-hud');
     if (!hud) return;
     const el = document.createElement('div');
     el.className = 'exp-badge';
-    if (opts && opts.variant === 'combo') {
-        el.classList.add('combo');
-        const lvl = Number(opts.level||1);
-        const tier = lvl >= 5 ? 'c3' : (lvl >= 3 ? 'c2' : 'c1');
-        el.classList.add(tier);
-    }
+    applyMiniExpBadgeOptions(el, opts);
     el.textContent = text;
     hud.appendChild(el);
     setTimeout(() => { try { el.remove(); } catch {} }, 1200);
@@ -6199,12 +6228,7 @@ function showTransientPopupAt(x, y, text, opts = null) {
         if (!container) return;
         const el = document.createElement('div');
         el.className = 'exp-badge float';
-        if (opts && opts.variant === 'combo') {
-            el.classList.add('combo');
-            const lvl = Number(opts.level||1);
-            const tier = lvl >= 5 ? 'c3' : (lvl >= 3 ? 'c2' : 'c1');
-            el.classList.add(tier);
-        }
+        applyMiniExpBadgeOptions(el, opts);
         el.textContent = text;
         el.style.left = `${x}px`;
         el.style.top = `${y}px`;
@@ -6228,22 +6252,40 @@ function renderMiniExpPlayerHud() {
 }
 
 function awardXpFromMini(n, reason='') {
+    const amount = Number(n) || 0;
+    if (!Number.isFinite(amount) || amount === 0) return 0;
     ensureAudio();
-    playSfx && playSfx('pickup');
-    const gained = grantExp(n, { source: 'mini', reason });
-    showMiniExpBadge(`+${Math.floor(gained)} EXP`);
+    const isGain = amount > 0;
+    if (isGain) playSfx && playSfx('pickup');
+    else playSfx && playSfx('damage');
+    let delta = 0;
+    if (isGain) {
+        const gained = grantExp(amount, { source: 'mini', reason, popup: false });
+        if (!gained) return 0;
+        delta = Number(gained) || 0;
+        showMiniExpBadge(`+${Math.floor(delta)} EXP`, { tone: 'gain' });
+    } else {
+        const spent = spendExp(-amount, { source: 'mini', reason, popup: false });
+        if (!spent) return 0;
+        delta = -Number(spent || 0);
+        showMiniExpBadge(`-${Math.floor(spent)} EXP`, { tone: 'loss' });
+    }
     renderMiniExpPlayerHud();
-    // 記録: セッション合計と通算
-    __miniSessionExp += (Number(gained)||0);
+    __miniSessionExp += delta;
     try {
         const gid = miniExpState.selected || reason || 'unknown';
         const rec = (miniExpState.records[gid] ||= { id: gid, bestScore: 0, totalPlays: 0, totalExpEarned: 0, lastPlayedAt: 0 });
-        rec.totalExpEarned = (rec.totalExpEarned||0) + (Number(gained)||0);
+        rec.totalExpEarned = (rec.totalExpEarned||0) + delta;
         renderMiniExpRecords();
         saveAll();
     } catch {}
-    return gained;
+    return delta;
 }
+
+function getMiniExpBalance() {
+    return Math.floor(Math.max(0, player?.exp || 0));
+}
+window.getMiniExpBalance = getMiniExpBalance;
 
 async function startSelectedMiniGame() {
     if (!miniExpState.selected || __currentMini) return;
@@ -6350,10 +6392,12 @@ function renderMiniExpRecords() {
     };
     const best = rec?.bestScore ?? 0;
     const plays = rec?.totalPlays ?? 0;
-    const totalExp = Math.floor(rec?.totalExpEarned ?? 0);
+    const totalExpRaw = rec?.totalExpEarned ?? 0;
+    const totalExp = Math.floor(totalExpRaw);
+    const totalExpText = totalExp > 0 ? `+${totalExp}` : String(totalExp);
     box.appendChild(mk('ベストスコア', String(best)));
     box.appendChild(mk('通算プレイ', String(plays)));
-    box.appendChild(mk('通算獲得EXP', String(totalExp)));
+    box.appendChild(mk('通算獲得EXP', totalExpText));
 }
 
 // -------------- Dungeon Addons (生成MOD) --------------

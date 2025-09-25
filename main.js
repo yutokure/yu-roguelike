@@ -4953,6 +4953,8 @@ function updateUI() {
     if (statExpText) statExpText.textContent = `${expDisp}/${expMax}`;
     if (hpBar) hpBar.style.width = `${hpPct * 100}%`;
     if (expBar) expBar.style.width = `${expPct * 100}%`;
+
+    updatePlayerSummaryCard({ level, currentHp, expDisp, expMax });
     
     // Update item modal - fix NaN issue
     const potion30Count = player.inventory?.potion30 || 0;
@@ -5041,6 +5043,24 @@ function updateUI() {
     if (floorEl) floorEl.textContent = `${dungeonLevel}F`;
 
     // メッセージログは addMessage で更新
+}
+
+function updatePlayerSummaryCard({ level = player.level || 1, currentHp = player.hp || 0, expDisp = Math.floor(player.exp || 0), expMax = 1000 } = {}) {
+    if (!playerSummaryDiv) return;
+    const card = playerSummaryDiv.querySelector('.player-status-card');
+    if (!card) return;
+
+    const levelEl = card.querySelector('.stat-value.level');
+    const hpEl = card.querySelector('.stat-value.hp');
+    const expEl = card.querySelector('.stat-value.exp');
+    const atkEl = card.querySelector('.stat-value.attack');
+    const defEl = card.querySelector('.stat-value.defense');
+
+    if (levelEl) levelEl.textContent = level;
+    if (hpEl) hpEl.textContent = `${currentHp}/${player.maxHp || 0}`;
+    if (expEl) expEl.textContent = `${expDisp}/${expMax}`;
+    if (atkEl) atkEl.textContent = player.attack || 0;
+    if (defEl) defEl.textContent = player.defense || 0;
 }
 
 function addMessage(message) {
@@ -5932,7 +5952,7 @@ function buildSelection() {
                 </div>
                 <div class=\"stat-item\">
                     <span class=\"stat-label\">経験値</span>
-                    <span class=\"stat-value\">${Math.floor(player.exp || 0)}/${expMaxSelect}</span>
+                    <span class=\"stat-value exp\">${Math.floor(player.exp || 0)}/${expMaxSelect}</span>
                 </div>
                 <div class=\"stat-item\">
                     <span class=\"stat-label\">攻撃力</span>
@@ -5950,6 +5970,7 @@ function buildSelection() {
     else playerSummaryDiv.classList.remove('collapsed');
     const toggleBtn = document.getElementById('player-summary-toggle');
     if (toggleBtn) toggleBtn.addEventListener('click', () => toggleSelectionFooter());
+    updatePlayerSummaryCard();
     measureSelectionFooterHeight();
     // レイアウト反映（高さ計測）
     measureSelectionFooterHeight();

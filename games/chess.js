@@ -54,8 +54,24 @@
     document.head.appendChild(style);
   }
 
+  function boardCells(board){
+    return board && board.cells ? board.cells : board;
+  }
+
   function cloneBoard(board){
-    return board.map(row => row.slice());
+    const cells = boardCells(board);
+    const clone = cells.map(row => row.slice());
+    if (board && board.cells){
+      return {
+        cells: clone,
+        castling: {
+          w: { kingSide: !!board.castling?.w?.kingSide, queenSide: !!board.castling?.w?.queenSide },
+          b: { kingSide: !!board.castling?.b?.kingSide, queenSide: !!board.castling?.b?.queenSide }
+        },
+        enPassant: board.enPassant ? { x: board.enPassant.x, y: board.enPassant.y } : null
+      };
+    }
+    return clone;
   }
 
   function inBounds(x, y){
@@ -76,44 +92,124 @@
       fromX, fromY, toX, toY,
       piece: options.piece || null,
       captured: options.captured || null,
-      promote: options.promote || false
+      promote: options.promote || false,
+      promoteTo: options.promoteTo || null,
+      castle: options.castle || null,
+      enPassant: options.enPassant || false
     };
+  }
+
+  function promotionPieceFor(piece, desired){
+    const color = pieceColor(piece);
+    if (!desired){
+      return color === 'w' ? 'Q' : 'q';
+    }
+    const lower = desired.toString().toLowerCase();
+    const mapped = lower === 'r' ? 'r' : lower === 'b' ? 'b' : lower === 'n' ? 'n' : 'q';
+    return color === 'w' ? mapped.toUpperCase() : mapped;
   }
 
   function applyMoveOn(board, move){
     const next = cloneBoard(board);
-    const piece = next[move.fromY][move.fromX];
-    next[move.fromY][move.fromX] = null;
+    const cells = boardCells(next);
+    const piece = cells[move.fromY][move.fromX];
+    const color = pieceColor(piece);
+    cells[move.fromY][move.fromX] = null;
     let placed = piece;
-    if (move.promote){
-      placed = pieceColor(piece) === 'w' ? 'Q' : 'q';
+
+    if (!next.castling){
+      next.castling = {
+        w: { kingSide: false, queenSide: false },
+        b: { kingSide: false, queenSide: false }
+      };
     }
-    next[move.toY][move.toX] = placed;
+    if (!next.castling[color]){
+      next.castling[color] = { kingSide: false, queenSide: false };
+    }
+    const opponentColor = opposite(color);
+    if (!next.castling[opponentColor]){
+      next.castling[opponentColor] = { kingSide: false, queenSide: false };
+    }
+
+    next.enPassant = null;
+
+    if (move.castle){
+      const isKingSide = move.toX > move.fromX;
+      const rookFromX = isKingSide ? move.toX + 1 : move.toX - 2;
+      const rookToX = isKingSide ? move.toX - 1 : move.toX + 1;
+      cells[move.toY][rookFromX] = null;
+      cells[move.toY][rookToX] = color === 'w' ? 'R' : 'r';
+      next.castling[color].kingSide = false;
+      next.castling[color].queenSide = false;
+    } else if (piece.toLowerCase() === 'k'){
+      next.castling[color].kingSide = false;
+      next.castling[color].queenSide = false;
+    }
+
+    if (piece.toLowerCase() === 'r'){
+      if (color === 'w'){
+        if (move.fromX === 0 && move.fromY === 7) next.castling.w.queenSide = false;
+        if (move.fromX === 7 && move.fromY === 7) next.castling.w.kingSide = false;
+      } else {
+        if (move.fromX === 0 && move.fromY === 0) next.castling.b.queenSide = false;
+        if (move.fromX === 7 && move.fromY === 0) next.castling.b.kingSide = false;
+      }
+    }
+
+    if (move.enPassant){
+      const captureY = move.toY + (color === 'w' ? 1 : -1);
+      if (inBounds(move.toX, captureY)){
+        cells[captureY][move.toX] = null;
+      }
+    }
+
+    if (move.promote){
+      placed = promotionPieceFor(piece, move.promoteTo);
+    }
+
+    cells[move.toY][move.toX] = placed;
+
+    if (move.captured && move.captured.toLowerCase() === 'r'){
+      const opponent = opposite(color);
+      if (move.toX === 0 && move.toY === (opponent === 'w' ? 7 : 0)){
+        next.castling[opponent].queenSide = false;
+      } else if (move.toX === 7 && move.toY === (opponent === 'w' ? 7 : 0)){
+        next.castling[opponent].kingSide = false;
+      }
+    }
+
+    if (piece.toLowerCase() === 'p' && Math.abs(move.toY - move.fromY) === 2){
+      const dir = color === 'w' ? -1 : 1;
+      next.enPassant = { x: move.fromX, y: move.fromY + dir };
+    }
+
     return next;
   }
 
   function findKing(board, color){
+    const cells = boardCells(board);
     const target = color === 'w' ? 'K' : 'k';
     for (let y = 0; y < BOARD_SIZE; y++){
       for (let x = 0; x < BOARD_SIZE; x++){
-        if (board[y][x] === target) return { x, y };
+        if (cells[y][x] === target) return { x, y };
       }
     }
     return null;
   }
 
   function isSquareAttacked(board, x, y, byColor){
+    const cells = boardCells(board);
     const forward = byColor === 'w' ? -1 : 1;
     const pawnRow = y + forward;
-    if (inBounds(x - 1, pawnRow) && board[pawnRow][x - 1] === (byColor === 'w' ? 'P' : 'p')) return true;
-    if (inBounds(x + 1, pawnRow) && board[pawnRow][x + 1] === (byColor === 'w' ? 'P' : 'p')) return true;
+    if (inBounds(x - 1, pawnRow) && cells[pawnRow][x - 1] === (byColor === 'w' ? 'P' : 'p')) return true;
+    if (inBounds(x + 1, pawnRow) && cells[pawnRow][x + 1] === (byColor === 'w' ? 'P' : 'p')) return true;
 
     const knightMoves = [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
     for (const [dx, dy] of knightMoves){
       const nx = x + dx;
       const ny = y + dy;
       if (!inBounds(nx, ny)) continue;
-      const p = board[ny][nx];
+      const p = cells[ny][nx];
       if (p && pieceColor(p) === byColor && p.toLowerCase() === 'n') return true;
     }
 
@@ -122,7 +218,7 @@
       let nx = x + dx;
       let ny = y + dy;
       while (inBounds(nx, ny)){
-        const p = board[ny][nx];
+        const p = cells[ny][nx];
         if (p){
           if (pieceColor(p) === byColor){
             const lower = p.toLowerCase();
@@ -141,7 +237,7 @@
       let nx = x + dx;
       let ny = y + dy;
       while (inBounds(nx, ny)){
-        const p = board[ny][nx];
+        const p = cells[ny][nx];
         if (p){
           if (pieceColor(p) === byColor){
             const lower = p.toLowerCase();
@@ -162,7 +258,7 @@
         const nx = x + dx;
         const ny = y + dy;
         if (!inBounds(nx, ny)) continue;
-        if (board[ny][nx] === king) return true;
+        if (cells[ny][nx] === king) return true;
       }
     }
     return false;
@@ -175,7 +271,8 @@
   }
 
   function generatePseudoMoves(board, x, y){
-    const piece = board[y][x];
+    const cells = boardCells(board);
+    const piece = cells[y][x];
     if (!piece) return [];
     const color = pieceColor(piece);
     const lower = piece.toLowerCase();
@@ -184,11 +281,11 @@
       const dir = color === 'w' ? -1 : 1;
       const startRow = color === 'w' ? 6 : 1;
       const nextY = y + dir;
-      if (inBounds(x, nextY) && !board[nextY][x]){
+      if (inBounds(x, nextY) && !cells[nextY][x]){
         const promote = (color === 'w' && nextY === 0) || (color === 'b' && nextY === BOARD_SIZE - 1);
         moves.push(createMove(x, y, x, nextY, { piece, promote }));
         const jumpY = y + dir * 2;
-        if (y === startRow && !board[jumpY][x]){
+        if (y === startRow && !cells[jumpY][x] && !cells[nextY][x]){
           moves.push(createMove(x, y, x, jumpY, { piece }));
         }
       }
@@ -196,10 +293,15 @@
         const nx = x + dx;
         const ny = y + dir;
         if (!inBounds(nx, ny)) continue;
-        const target = board[ny][nx];
+        const target = cells[ny][nx];
         if (target && pieceColor(target) !== color){
           const promote = (color === 'w' && ny === 0) || (color === 'b' && ny === BOARD_SIZE - 1);
           moves.push(createMove(x, y, nx, ny, { piece, captured: target, promote }));
+        } else if (board.enPassant && board.enPassant.x === nx && board.enPassant.y === ny){
+          const captured = cells[y][nx];
+          if (captured && pieceColor(captured) !== color && captured.toLowerCase() === 'p'){
+            moves.push(createMove(x, y, nx, ny, { piece, captured, enPassant: true }));
+          }
         }
       }
     } else if (lower === 'n'){
@@ -208,7 +310,7 @@
         const nx = x + dx;
         const ny = y + dy;
         if (!inBounds(nx, ny)) continue;
-        const target = board[ny][nx];
+        const target = cells[ny][nx];
         if (!target || pieceColor(target) !== color){
           moves.push(createMove(x, y, nx, ny, { piece, captured: target || null }));
         }
@@ -221,7 +323,7 @@
         let nx = x + dx;
         let ny = y + dy;
         while (inBounds(nx, ny)){
-          const target = board[ny][nx];
+          const target = cells[ny][nx];
           if (!target){
             moves.push(createMove(x, y, nx, ny, { piece }));
           } else {
@@ -241,9 +343,40 @@
           const nx = x + dx;
           const ny = y + dy;
           if (!inBounds(nx, ny)) continue;
-          const target = board[ny][nx];
+          const target = cells[ny][nx];
           if (!target || pieceColor(target) !== color){
             moves.push(createMove(x, y, nx, ny, { piece, captured: target || null }));
+          }
+        }
+      }
+      const rights = board.castling ? board.castling[color] : null;
+      if (rights && rights.kingSide && !isKingInCheck(board, color)){
+        const squares = [x + 1, x + 2];
+        if (squares.every(nx => inBounds(nx, y) && !cells[y][nx])){
+          if (!isSquareAttacked(board, x + 1, y, opposite(color)) && !isSquareAttacked(board, x + 2, y, opposite(color))){
+            const rookSquare = x + 3;
+            if (inBounds(rookSquare, y)){
+              const rook = cells[y][rookSquare];
+              if (rook && pieceColor(rook) === color && rook.toLowerCase() === 'r'){
+                moves.push(createMove(x, y, x + 2, y, { piece, castle: { side: 'king' } }));
+              }
+            }
+          }
+        }
+      }
+      if (rights && rights.queenSide && !isKingInCheck(board, color)){
+        const path = [x - 1, x - 2];
+        const betweenClear = path.every(nx => inBounds(nx, y) && !cells[y][nx]);
+        const bSquare = x - 3;
+        if (betweenClear && inBounds(bSquare, y) && !cells[y][bSquare]){
+          if (!isSquareAttacked(board, x - 1, y, opposite(color)) && !isSquareAttacked(board, x - 2, y, opposite(color))){
+            const rookSquare = x - 4;
+            if (inBounds(rookSquare, y)){
+              const rook = cells[y][rookSquare];
+              if (rook && pieceColor(rook) === color && rook.toLowerCase() === 'r'){
+                moves.push(createMove(x, y, x - 2, y, { piece, castle: { side: 'queen' } }));
+              }
+            }
           }
         }
       }
@@ -253,9 +386,10 @@
 
   function generateLegalMoves(board, color){
     const moves = [];
+    const cells = boardCells(board);
     for (let y = 0; y < BOARD_SIZE; y++){
       for (let x = 0; x < BOARD_SIZE; x++){
-        const piece = board[y][x];
+        const piece = cells[y][x];
         if (!piece || pieceColor(piece) !== color) continue;
         const pseudo = generatePseudoMoves(board, x, y);
         for (const move of pseudo){
@@ -271,9 +405,10 @@
 
   function evaluateBoard(board){
     let score = 0;
+    const cells = boardCells(board);
     for (let y = 0; y < BOARD_SIZE; y++){
       for (let x = 0; x < BOARD_SIZE; x++){
-        const piece = board[y][x];
+        const piece = cells[y][x];
         if (!piece) continue;
         const value = PIECE_VALUES[piece.toLowerCase()] || 0;
         if (pieceColor(piece) === 'b') score += value;
@@ -335,21 +470,43 @@
   }
 
   function insufficientMaterial(board){
-    const pieces = [];
+    const cells = boardCells(board);
+    let minors = [];
     for (let y = 0; y < BOARD_SIZE; y++){
       for (let x = 0; x < BOARD_SIZE; x++){
-        const piece = board[y][x];
+        const piece = cells[y][x];
         if (!piece) continue;
         const lower = piece.toLowerCase();
-        if (lower !== 'k') pieces.push(piece);
+        if (lower === 'p' || lower === 'q' || lower === 'r') return false;
+        if (lower !== 'k'){
+          minors.push({ piece, squareColor: (x + y) % 2 });
+        }
       }
     }
-    if (pieces.length === 0) return true;
-    if (pieces.length === 1){
-      const lower = pieces[0].toLowerCase();
+    if (minors.length === 0) return true;
+    if (minors.length === 1){
+      const lower = minors[0].piece.toLowerCase();
       return lower === 'b' || lower === 'n';
     }
+    if (minors.length === 2){
+      const [a, b] = minors;
+      const lowerA = a.piece.toLowerCase();
+      const lowerB = b.piece.toLowerCase();
+      if (lowerA === 'n' && lowerB === 'n') return true;
+      if (lowerA === 'b' && lowerB === 'b' && a.squareColor === b.squareColor) return true;
+    }
     return false;
+  }
+
+  function createInitialBoard(){
+    return {
+      cells: START_POSITION.map(row => row.slice()),
+      castling: {
+        w: { kingSide: true, queenSide: true },
+        b: { kingSide: true, queenSide: true }
+      },
+      enPassant: null
+    };
   }
 
   function create(root, awardXp = () => {}, options = {}){
@@ -407,7 +564,7 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    let board = cloneBoard(START_POSITION);
+    let board = createInitialBoard();
     let turn = 'w';
     let running = false;
     let selected = null;
@@ -441,6 +598,7 @@
     }
 
     function drawBoard(){
+      const cells = boardCells(board);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (let y = 0; y < BOARD_SIZE; y++){
         for (let x = 0; x < BOARD_SIZE; x++){
@@ -481,7 +639,7 @@
       ctx.font = '42px "Segoe UI Symbol", "Noto Sans Symbols2", sans-serif';
       for (let y = 0; y < BOARD_SIZE; y++){
         for (let x = 0; x < BOARD_SIZE; x++){
-          const piece = board[y][x];
+          const piece = cells[y][x];
           if (!piece) continue;
           ctx.fillStyle = pieceColor(piece) === 'w' ? '#1f2937' : '#0f172a';
           ctx.fillText(PIECE_GLYPHS[piece] || '?', (x + 0.5) * TILE_SIZE, (y + 0.5) * TILE_SIZE + 3);
@@ -538,25 +696,23 @@
     }
 
     function executeMove(move, mover){
-      const target = board[move.toY][move.toX];
-      const piece = board[move.fromY][move.fromX];
-      board[move.fromY][move.fromX] = null;
-      let placed = piece;
-      if (move.promote){
-        placed = mover === 'w' ? 'Q' : 'q';
-        if (mover === 'w'){
-          awardXp(PROMOTE_EXP, { reason: 'promotion' });
-          playerScore += 9;
-        }
+      const cells = boardCells(board);
+      const piece = cells[move.fromY][move.fromX];
+      const captured = move.captured || cells[move.toY][move.toX] || null;
+
+      if (move.promote && mover === 'w'){
+        awardXp(PROMOTE_EXP, { reason: 'promotion' });
+        playerScore += 9;
       }
-      board[move.toY][move.toX] = placed;
+
+      board = applyMoveOn(board, move);
       lastMove = { ...move };
       resetSelection();
 
-      if (target){
+      if (captured){
         halfMoveClock = 0;
         if (mover === 'w'){
-          const lower = target.toLowerCase();
+          const lower = captured.toLowerCase();
           const exp = CAPTURE_EXP[lower] || 40;
           awardXp(exp, { reason: 'capture' });
           playerScore += (PIECE_VALUES[lower] || 0) / 100 * 10;
@@ -570,22 +726,28 @@
       totalMoves++;
       turn = opposite(mover);
 
-      if (mover === 'w'){
-        const enemyKing = findKing(board, 'b');
-        if (enemyKing && isSquareAttacked(board, enemyKing.x, enemyKing.y, 'w')){
+      const opponent = turn;
+      const moverColor = mover;
+      const king = findKing(board, opponent);
+      const attacker = opposite(opponent);
+      const inCheck = king && isSquareAttacked(board, king.x, king.y, attacker);
+      if (inCheck){
+        if (moverColor === 'w'){
           awardXp(CHECK_EXP, { reason: 'check' });
           setMessage('チェック！');
         } else {
-          setMessage('');
+          setMessage('チェックされています！');
         }
+      } else if (moverColor === 'w'){
+        setMessage('');
+      } else {
+        setMessage('');
       }
 
       if (!evaluateGameEnd(mover)){
+        updateInfo();
         if (turn === 'b'){
-          updateInfo();
           startAiTurn();
-        } else {
-          updateInfo();
         }
       }
     }
@@ -598,10 +760,20 @@
       const x = Math.floor((ev.clientX - rect.left) * scaleX / TILE_SIZE);
       const y = Math.floor((ev.clientY - rect.top) * scaleY / TILE_SIZE);
       if (!inBounds(x, y)) return;
-      const piece = board[y][x];
+      const cells = boardCells(board);
+      const piece = cells[y][x];
       if (selected){
         const move = legalMoves.find(m => m.toX === x && m.toY === y);
         if (move){
+          if (move.promote){
+            const choice = window.prompt('昇格する駒を選んでください (Q/R/B/N)', 'Q');
+            if (choice){
+              const trimmed = choice.trim();
+              move.promoteTo = (trimmed.charAt(0) || 'Q').toUpperCase();
+            } else {
+              move.promoteTo = 'Q';
+            }
+          }
           executeMove(move, 'w');
           drawBoard();
           return;
@@ -623,7 +795,7 @@
         clearTimeout(aiTimer);
         aiTimer = null;
       }
-      board = cloneBoard(START_POSITION);
+      board = createInitialBoard();
       turn = 'w';
       lastMove = null;
       resetSelection();

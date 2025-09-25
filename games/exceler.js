@@ -20,12 +20,22 @@
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const XP_DEBOUNCE_MS = 500;
   const FORMAT_XP_THRESHOLD = 3;
+  const VISIBLE_ROWS = 10;
+  const VISIBLE_COLS = 6;
+  const ROW_HEIGHT = 28;
+  const COL_WIDTH = 120;
+  const DEFAULT_GRID_BORDER = '1px solid rgba(148,163,184,0.12)';
+  const DEFAULT_BORDER_COLOR = '#60a5fa';
 
   const FORMAT_PRESETS = {
     general: { numFmtId: 0, pattern: 'General' },
     number: { numFmtId: 2, pattern: '0.00' },
     currency: { numFmtId: 164, pattern: '\u00a5#,##0.00' },
-    percent: { numFmtId: 10, pattern: '0.00%' }
+    percent: { numFmtId: 10, pattern: '0.00%' },
+    comma: { numFmtId: 3, pattern: '#,##0' },
+    scientific: { numFmtId: 11, pattern: '0.00E+00' },
+    date: { numFmtId: 14, pattern: 'yyyy-mm-dd' },
+    time: { numFmtId: 21, pattern: 'hh:mm:ss' }
   };
 
   const DEFAULT_STYLE = {
@@ -36,12 +46,61 @@
     fillColor: 'transparent',
     horizontalAlign: 'left',
     verticalAlign: 'middle',
-    fontSize: 14
+    fontSize: 14,
+    borderTop: 0,
+    borderRight: 0,
+    borderBottom: 0,
+    borderLeft: 0,
+    borderStyle: 'solid',
+    borderColor: DEFAULT_BORDER_COLOR
   };
 
   const SUPPORTED_FUNCTIONS = new Set([
-    'SUM','AVERAGE','MIN','MAX','COUNT','COUNTA','IF','ROUND','ROUNDUP','ROUNDDOWN','ABS','INT','MOD','POWER','SQRT','CONCAT','TEXT','LEN','SUBTOTAL'
+    'SUM','AVERAGE','MIN','MAX','COUNT','COUNTA','IF','ROUND','ROUNDUP','ROUNDDOWN','ABS','INT','MOD','POWER','SQRT','CONCAT','TEXT','LEN','SUBTOTAL',
+    'SUMIF','COUNTIF','AVERAGEIF','IFERROR','PRODUCT','VLOOKUP','HLOOKUP','INDEX','MATCH','TODAY','NOW','DATE','TIME','UPPER','LOWER','LEFT','RIGHT','MID','TRIM','CONCATENATE'
   ]);
+
+  const FUNCTION_DESCRIPTIONS = {
+    SUM: '数値の合計を求めます。',
+    AVERAGE: '数値の平均を返します。',
+    MIN: '最小値を返します。',
+    MAX: '最大値を返します。',
+    COUNT: '数値が入力されたセルをカウントします。',
+    COUNTA: '空白でないセルをカウントします。',
+    IF: '条件に応じて値を切り替えます。',
+    ROUND: '指定した桁数で四捨五入します。',
+    ROUNDUP: '指定した桁数で切り上げます。',
+    ROUNDDOWN: '指定した桁数で切り捨てます。',
+    ABS: '絶対値を返します。',
+    INT: '整数部分を返します。',
+    MOD: '除算の余りを返します。',
+    POWER: '累乗を計算します。',
+    SQRT: '平方根を求めます。',
+    CONCAT: '文字列を結合します。',
+    CONCATENATE: '文字列を結合します。',
+    TEXT: '数値を書式設定して文字列にします。',
+    LEN: '文字列の長さを返します。',
+    SUBTOTAL: '指定した集計を実行します。',
+    SUMIF: '条件に一致する値の合計を計算します。',
+    COUNTIF: '条件に一致するセルを数えます。',
+    AVERAGEIF: '条件に一致する値の平均を計算します。',
+    IFERROR: 'エラー時に代替値を返します。',
+    PRODUCT: '数値をすべて乗算します。',
+    VLOOKUP: '縦方向に検索して値を返します。',
+    HLOOKUP: '横方向に検索して値を返します。',
+    INDEX: '範囲から行・列を指定して値を取得します。',
+    MATCH: '範囲内で検索値の位置を返します。',
+    TODAY: '本日の日付を返します。',
+    NOW: '現在の日付と時刻を返します。',
+    DATE: '年・月・日から日付を生成します。',
+    TIME: '時刻を生成します。',
+    UPPER: '文字列を大文字に変換します。',
+    LOWER: '文字列を小文字に変換します。',
+    LEFT: '先頭から指定文字数を取得します。',
+    RIGHT: '末尾から指定文字数を取得します。',
+    MID: '指定位置から文字列を取得します。',
+    TRIM: '余分な空白を除去します。'
+  };
 
   function clamp(value, min, max){
     return Math.max(min, Math.min(max, value));
@@ -110,6 +169,17 @@
     };
   }
 
+  function createSheetRecord(name){
+    return {
+      name,
+      cells: new Map(),
+      selection: { startRow: 0, startCol: 0, endRow: 0, endCol: 0 },
+      undoStack: [],
+      redoStack: [],
+      dirty: false
+    };
+  }
+
   function expandRange(range){
     const cells = [];
     for (let r = range.startRow; r <= range.endRow; r++){
@@ -129,8 +199,59 @@
     return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function excelSerialToDate(serial){
+    if (!Number.isFinite(serial)) return null;
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const millis = serial * 24 * 60 * 60 * 1000;
+    return new Date(excelEpoch.getTime() + millis);
+  }
+
+  function ensureDate(value){
+    if (value instanceof Date) return value;
+    if (typeof value === 'number' && Number.isFinite(value)){ return excelSerialToDate(value); }
+    if (typeof value === 'string' && value){
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+    return null;
+  }
+
+  function formatDateValue(value){
+    const date = ensureDate(value);
+    if (!date) return '';
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatTimeValue(value){
+    if (value instanceof Date){
+      return value.toTimeString().slice(0, 8);
+    }
+    const num = typeof value === 'number' ? value : Number(value);
+    if (Number.isFinite(num)){
+      const totalSeconds = Math.floor((num % 1) * 24 * 60 * 60);
+      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+      const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+      const seconds = String(totalSeconds % 60).padStart(2, '0');
+      return `${hours}:${minutes}:${seconds}`;
+    }
+    if (typeof value === 'string'){
+      const parsed = new Date(`1970-01-01T${value}`);
+      if (!Number.isNaN(parsed.getTime())){
+        return parsed.toTimeString().slice(0, 8);
+      }
+    }
+    return '';
+  }
+
   function formatDisplay(value, cell){
     if (value == null) return '';
+    if (value instanceof Date){
+      if (cell.format === 'time') return formatTimeValue(value);
+      return formatDateValue(value);
+    }
     if (typeof value === 'number' && Number.isFinite(value)){
       switch (cell.format){
         case 'number':
@@ -139,6 +260,14 @@
           return value.toLocaleString(undefined, { style: 'currency', currency: 'JPY' });
         case 'percent':
           return (value * 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+        case 'comma':
+          return value.toLocaleString();
+        case 'scientific':
+          return value.toExponential(2);
+        case 'date':
+          return formatDateValue(value);
+        case 'time':
+          return formatTimeValue(value);
         default:
           return String(value);
       }
@@ -146,19 +275,27 @@
     if (typeof value === 'boolean'){
       return value ? 'TRUE' : 'FALSE';
     }
+    if (cell.format === 'date'){ return formatDateValue(value); }
+    if (cell.format === 'time'){ return formatTimeValue(value); }
     return String(value);
   }
   function create(root, awardXp){
     if (!root) throw new Error('MiniExp exceler requires a root element');
 
     const state = {
-      cells: new Map(),
+      sheets: [createSheetRecord('Sheet1')],
+      sheetCounter: 1,
+      activeSheetIndex: 0,
+      get cells(){ return this.sheets[this.activeSheetIndex].cells; },
+      get undoStack(){ return this.sheets[this.activeSheetIndex].undoStack; },
+      set undoStack(stack){ this.sheets[this.activeSheetIndex].undoStack = stack; },
+      get redoStack(){ return this.sheets[this.activeSheetIndex].redoStack; },
+      set redoStack(stack){ this.sheets[this.activeSheetIndex].redoStack = stack; },
+      get selection(){ return this.sheets[this.activeSheetIndex].selection; },
+      set selection(sel){ this.sheets[this.activeSheetIndex].selection = sel; },
       rows: ROW_COUNT,
       cols: COL_COUNT,
-      selection: { startRow: 0, startCol: 0, endRow: 0, endCol: 0 },
       clipboard: null,
-      undoStack: [],
-      redoStack: [],
       dirty: false,
       filename: '新しいブック.xlsx',
       sessionXp: 0,
@@ -167,11 +304,68 @@
       warning: '',
       running: false,
       autoSaveTimer: null,
-      isSelecting: false
+      isSelecting: false,
+      showGridLines: true,
+      zoom: 1
     };
 
     const elements = {};
     const cellElements = new Map();
+
+    function currentSheet(){
+      return state.sheets[state.activeSheetIndex];
+    }
+
+    function markDirty(){
+      state.dirty = true;
+      currentSheet().dirty = true;
+    }
+
+    function sanitizeSelection(sel){
+      const startRow = clamp(sel.startRow ?? 0, 0, state.rows - 1);
+      const startCol = clamp(sel.startCol ?? 0, 0, state.cols - 1);
+      const endRow = clamp(sel.endRow ?? startRow, 0, state.rows - 1);
+      const endCol = clamp(sel.endCol ?? startCol, 0, state.cols - 1);
+      const normalized = normalizeRange({ row: startRow, col: startCol }, { row: endRow, col: endCol });
+      return { startRow: normalized.startRow, startCol: normalized.startCol, endRow: normalized.endRow, endCol: normalized.endCol };
+    }
+
+    function nextSheetName(){
+      let candidate;
+      do {
+        state.sheetCounter += 1;
+        candidate = `Sheet${state.sheetCounter}`;
+      } while (state.sheets.some(sheet => sheet.name === candidate));
+      return candidate;
+    }
+
+    function updateSubtitle(){
+      if (elements.subtitle){
+        elements.subtitle.textContent = `${state.filename} — ${currentSheet().name}`;
+      }
+    }
+
+    function updateZoom(){
+      const colWidth = COL_WIDTH * state.zoom;
+      const rowHeight = ROW_HEIGHT * state.zoom;
+      if (elements.grid){
+        elements.grid.style.gridTemplateColumns = `80px repeat(${COL_COUNT}, ${colWidth}px)`;
+        elements.grid.style.gridAutoRows = `${rowHeight}px`;
+        elements.grid.style.width = `${80 + COL_COUNT * colWidth}px`;
+      }
+      if (elements.viewport){
+        const viewportHeight = rowHeight * (VISIBLE_ROWS + 1);
+        const viewportWidth = 80 + VISIBLE_COLS * colWidth;
+        elements.viewport.style.height = `${viewportHeight}px`;
+        elements.viewport.style.maxHeight = `${viewportHeight}px`;
+        elements.viewport.style.width = `${viewportWidth}px`;
+        elements.viewport.style.maxWidth = `${viewportWidth}px`;
+      }
+      if (elements.zoomLabel){
+        elements.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
+      }
+      cellElements.forEach((_el, key) => updateCellElement(key));
+    }
 
     function award(type, amount){
       if (typeof awardXp === 'function'){
@@ -215,7 +409,7 @@
         updateCellElement(key);
       });
       recalcAll();
-      state.dirty = true;
+      markDirty();
       updateNameAndFormula();
       autoSaveLater();
     }
@@ -235,8 +429,9 @@
 
     function applySelection(sel){
       clearSelection();
-      state.selection = sel;
-      const { startRow, startCol, endRow, endCol } = sel;
+      const normalized = sanitizeSelection(sel);
+      state.selection = Object.assign({}, normalized);
+      const { startRow, startCol, endRow, endCol } = state.selection;
       for (let r = startRow; r <= endRow; r++){
         for (let c = startCol; c <= endCol; c++){
           const ref = cellKey(c, r);
@@ -267,11 +462,20 @@
       updateStatusBar();
     }
 
+    function insertFunctionTemplate(name){
+      if (!name) return;
+      const upper = name.toUpperCase();
+      elements.formulaInput.value = `=${upper}()`;
+      elements.formulaInput.focus();
+      const caret = Math.max(0, elements.formulaInput.value.length - 1);
+      elements.formulaInput.setSelectionRange(caret, caret);
+    }
+
     function updateStatusBar(){
       const { startRow, startCol } = state.selection;
       const ref = cellKey(startCol, startRow);
       const cell = state.cells.get(ref);
-      let info = ref;
+      let info = `${currentSheet().name} | ${ref}`;
       if (cell){
         info += ' | ' + (cell.format || 'general');
         if (cell.computed){
@@ -306,7 +510,6 @@
       title.style.letterSpacing = '0.03em';
 
       const subtitle = document.createElement('div');
-      subtitle.textContent = state.filename;
       subtitle.style.fontSize = '13px';
       subtitle.style.opacity = '0.85';
 
@@ -330,6 +533,7 @@
       header.appendChild(buttonRow);
 
       elements.subtitle = subtitle;
+      updateSubtitle();
       return header;
     }
 
@@ -372,90 +576,327 @@
       return btn;
     }
 
-    function createToolbar(){
-      const toolbar = document.createElement('div');
-      toolbar.style.display = 'grid';
-      toolbar.style.gridTemplateColumns = 'repeat(auto-fit, minmax(180px, 1fr))';
-      toolbar.style.gap = '10px';
-      toolbar.style.padding = '16px 20px';
-      toolbar.style.background = 'rgba(15,23,42,0.75)';
-      toolbar.style.borderBottom = '1px solid rgba(148,163,184,0.2)';
+    function createRibbonGroup(title){
+      const group = document.createElement('div');
+      group.style.display = 'flex';
+      group.style.flexDirection = 'column';
+      group.style.gap = '8px';
+      group.style.padding = '12px';
+      group.style.minWidth = '200px';
+      group.style.background = 'rgba(15,23,42,0.55)';
+      group.style.border = '1px solid rgba(148,163,184,0.18)';
+      group.style.borderRadius = '12px';
 
-      const undoBtn = createToolButton('↺ 元に戻す', handleUndo);
-      const redoBtn = createToolButton('↻ やり直し', handleRedo);
-      const boldBtn = createToggleButton('B', 'bold');
-      boldBtn.style.fontWeight = '700';
-      const italicBtn = createToggleButton('I', 'italic');
-      italicBtn.style.fontStyle = 'italic';
-      const underlineBtn = createToggleButton('U', 'underline');
-      underlineBtn.style.textDecoration = 'underline';
+      const body = document.createElement('div');
+      body.style.display = 'flex';
+      body.style.flexWrap = 'wrap';
+      body.style.gap = '6px';
 
-      const fontSize = document.createElement('input');
-      fontSize.type = 'number';
-      fontSize.min = '8';
-      fontSize.max = '32';
-      fontSize.value = '14';
-      fontSize.title = 'フォントサイズ';
-      fontSize.style.background = 'rgba(30,41,59,0.6)';
-      fontSize.style.border = '1px solid rgba(148,163,184,0.25)';
-      fontSize.style.color = '#e2e8f0';
-      fontSize.style.borderRadius = '8px';
-      fontSize.style.padding = '8px 10px';
-      fontSize.addEventListener('change', () => applyFormat({ fontSize: clamp(parseInt(fontSize.value, 10) || 14, 8, 32) }));
+      const caption = document.createElement('div');
+      caption.textContent = title;
+      caption.style.fontSize = '11px';
+      caption.style.color = '#94a3b8';
+      caption.style.textTransform = 'uppercase';
+      caption.style.letterSpacing = '0.12em';
+      caption.style.textAlign = 'center';
 
-      const textColor = document.createElement('input');
-      textColor.type = 'color';
-      textColor.value = '#f8fafc';
-      textColor.addEventListener('input', () => applyFormat({ textColor: textColor.value }));
+      group.appendChild(body);
+      group.appendChild(caption);
+      return { container: group, body };
+    }
 
-      const fillColor = document.createElement('input');
-      fillColor.type = 'color';
-      fillColor.value = '#0f172a';
-      fillColor.addEventListener('input', () => applyFormat({ fillColor: fillColor.value }));
+    function createRibbon(){
+      const ribbon = document.createElement('div');
+      ribbon.style.display = 'flex';
+      ribbon.style.flexDirection = 'column';
+      ribbon.style.background = 'rgba(15,23,42,0.75)';
+      ribbon.style.borderBottom = '1px solid rgba(148,163,184,0.2)';
 
-      const alignLeft = createToolButton('⟸ 左寄せ', () => applyFormat({ horizontalAlign: 'left' }));
-      const alignCenter = createToolButton('⇔ 中央', () => applyFormat({ horizontalAlign: 'center' }));
-      const alignRight = createToolButton('⟹ 右寄せ', () => applyFormat({ horizontalAlign: 'right' }));
-      const alignTop = createToolButton('⇑ 上', () => applyFormat({ verticalAlign: 'top' }));
-      const alignMiddle = createToolButton('⇕ 中央', () => applyFormat({ verticalAlign: 'middle' }));
-      const alignBottom = createToolButton('⇓ 下', () => applyFormat({ verticalAlign: 'bottom' }));
+      const tabRow = document.createElement('div');
+      tabRow.style.display = 'flex';
+      tabRow.style.gap = '8px';
+      tabRow.style.padding = '10px 20px';
+      tabRow.style.alignItems = 'center';
 
-      const formatSelect = document.createElement('select');
-      formatSelect.style.background = 'rgba(30,41,59,0.6)';
-      formatSelect.style.border = '1px solid rgba(148,163,184,0.25)';
-      formatSelect.style.color = '#e2e8f0';
-      formatSelect.style.borderRadius = '8px';
-      formatSelect.style.padding = '8px 10px';
-      [['general','標準'],['number','数値'],['currency','通貨'],['percent','パーセント']].forEach(([value,label]) => {
-        const opt = document.createElement('option');
-        opt.value = value;
-        opt.textContent = label;
-        formatSelect.appendChild(opt);
+      const content = document.createElement('div');
+      content.style.padding = '12px 20px';
+      content.style.display = 'flex';
+      content.style.flexWrap = 'wrap';
+      content.style.gap = '16px';
+
+      ribbon.appendChild(tabRow);
+      ribbon.appendChild(content);
+
+      const tabs = [
+        { id: 'home', label: 'ホーム', builder: buildHomePanel },
+        { id: 'formulas', label: '数式', builder: buildFormulaPanel },
+        { id: 'view', label: '表示', builder: buildViewPanel }
+      ];
+
+      const tabButtons = new Map();
+      let activeTab = 'home';
+
+      tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = tab.label;
+        btn.style.padding = '8px 16px';
+        btn.style.borderRadius = '999px';
+        btn.style.border = '1px solid rgba(148,163,184,0.25)';
+        btn.style.background = 'rgba(30,41,59,0.4)';
+        btn.style.color = '#e2e8f0';
+        btn.style.cursor = 'pointer';
+        btn.style.fontWeight = '600';
+        btn.addEventListener('click', () => setActiveTab(tab.id));
+        tabButtons.set(tab.id, btn);
+        tabRow.appendChild(btn);
       });
-      formatSelect.addEventListener('change', () => applyFormat({ format: formatSelect.value }));
 
-      toolbar.appendChild(undoBtn);
-      toolbar.appendChild(redoBtn);
-      toolbar.appendChild(boldBtn);
-      toolbar.appendChild(italicBtn);
-      toolbar.appendChild(underlineBtn);
-      toolbar.appendChild(fontSize);
-      toolbar.appendChild(textColor);
-      toolbar.appendChild(fillColor);
-      toolbar.appendChild(alignLeft);
-      toolbar.appendChild(alignCenter);
-      toolbar.appendChild(alignRight);
-      toolbar.appendChild(alignTop);
-      toolbar.appendChild(alignMiddle);
-      toolbar.appendChild(alignBottom);
-      toolbar.appendChild(formatSelect);
+      function setActiveTab(id){
+        activeTab = id;
+        tabButtons.forEach((btn, key) => {
+          const isActive = key === id;
+          btn.style.background = isActive ? 'rgba(59,130,246,0.35)' : 'rgba(30,41,59,0.4)';
+          btn.style.color = isActive ? '#bfdbfe' : '#e2e8f0';
+        });
+        content.innerHTML = '';
+        const tab = tabs.find(t => t.id === id);
+        if (tab){
+          content.appendChild(tab.builder());
+        }
+      }
 
-      elements.boldBtn = boldBtn;
-      elements.italicBtn = italicBtn;
-      elements.underlineBtn = underlineBtn;
-      elements.formatSelect = formatSelect;
+      setActiveTab(activeTab);
+      return ribbon;
 
-      return toolbar;
+      function buildHomePanel(){
+        const panel = document.createElement('div');
+        panel.style.display = 'flex';
+        panel.style.flexWrap = 'wrap';
+        panel.style.gap = '16px';
+
+        const clipboard = createRibbonGroup('クリップボード');
+        const undoBtn = createToolButton('↺ 元に戻す', handleUndo);
+        const redoBtn = createToolButton('↻ やり直し', handleRedo);
+        clipboard.body.appendChild(undoBtn);
+        clipboard.body.appendChild(redoBtn);
+
+        const fontGroup = createRibbonGroup('フォント');
+        const boldBtn = createToggleButton('B', 'bold');
+        boldBtn.style.fontWeight = '700';
+        const italicBtn = createToggleButton('I', 'italic');
+        italicBtn.style.fontStyle = 'italic';
+        const underlineBtn = createToggleButton('U', 'underline');
+        underlineBtn.style.textDecoration = 'underline';
+
+        const fontSize = document.createElement('input');
+        fontSize.type = 'number';
+        fontSize.min = '8';
+        fontSize.max = '48';
+        fontSize.value = String(DEFAULT_STYLE.fontSize);
+        fontSize.title = 'フォントサイズ';
+        fontSize.style.background = 'rgba(30,41,59,0.6)';
+        fontSize.style.border = '1px solid rgba(148,163,184,0.25)';
+        fontSize.style.color = '#e2e8f0';
+        fontSize.style.borderRadius = '8px';
+        fontSize.style.padding = '8px 10px';
+        fontSize.addEventListener('change', () => applyFormat({ fontSize: clamp(parseInt(fontSize.value, 10) || DEFAULT_STYLE.fontSize, 8, 72) }));
+
+        const textColor = document.createElement('input');
+        textColor.type = 'color';
+        textColor.value = DEFAULT_STYLE.textColor;
+        textColor.addEventListener('input', () => applyFormat({ textColor: textColor.value }));
+
+        const fillColor = document.createElement('input');
+        fillColor.type = 'color';
+        fillColor.value = '#0f172a';
+        fillColor.addEventListener('input', () => applyFormat({ fillColor: fillColor.value }));
+
+        fontGroup.body.appendChild(boldBtn);
+        fontGroup.body.appendChild(italicBtn);
+        fontGroup.body.appendChild(underlineBtn);
+        fontGroup.body.appendChild(fontSize);
+        fontGroup.body.appendChild(textColor);
+        fontGroup.body.appendChild(fillColor);
+
+        const alignGroup = createRibbonGroup('配置 / 罫線');
+        const alignLeft = createToolButton('⟸ 左寄せ', () => applyFormat({ horizontalAlign: 'left' }));
+        const alignCenter = createToolButton('⇔ 中央', () => applyFormat({ horizontalAlign: 'center' }));
+        const alignRight = createToolButton('⟹ 右寄せ', () => applyFormat({ horizontalAlign: 'right' }));
+        const alignTop = createToolButton('⇑ 上', () => applyFormat({ verticalAlign: 'top' }));
+        const alignMiddle = createToolButton('⇕ 中央', () => applyFormat({ verticalAlign: 'middle' }));
+        const alignBottom = createToolButton('⇓ 下', () => applyFormat({ verticalAlign: 'bottom' }));
+
+        const borderColor = document.createElement('input');
+        borderColor.type = 'color';
+        borderColor.value = DEFAULT_BORDER_COLOR;
+        borderColor.title = '罫線色';
+        borderColor.addEventListener('input', () => applyFormat({ borderColor: borderColor.value }));
+
+        const borderSelect = document.createElement('select');
+        borderSelect.style.background = 'rgba(30,41,59,0.6)';
+        borderSelect.style.border = '1px solid rgba(148,163,184,0.25)';
+        borderSelect.style.color = '#e2e8f0';
+        borderSelect.style.borderRadius = '8px';
+        borderSelect.style.padding = '8px 10px';
+        [['', '罫線スタイル'], ['outline', '外枠'], ['all', '格子'], ['top', '上罫線'], ['bottom', '下罫線'], ['left', '左罫線'], ['right', '右罫線'], ['clear', '罫線を消去']]
+          .forEach(([value, label]) => {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = label;
+            borderSelect.appendChild(opt);
+          });
+        borderSelect.addEventListener('change', () => {
+          if (borderSelect.value){
+            applyBorders(borderSelect.value);
+            borderSelect.value = '';
+          }
+        });
+
+        alignGroup.body.appendChild(alignLeft);
+        alignGroup.body.appendChild(alignCenter);
+        alignGroup.body.appendChild(alignRight);
+        alignGroup.body.appendChild(alignTop);
+        alignGroup.body.appendChild(alignMiddle);
+        alignGroup.body.appendChild(alignBottom);
+        alignGroup.body.appendChild(borderColor);
+        alignGroup.body.appendChild(borderSelect);
+
+        const numberGroup = createRibbonGroup('数値');
+        const formatSelect = document.createElement('select');
+        formatSelect.style.background = 'rgba(30,41,59,0.6)';
+        formatSelect.style.border = '1px solid rgba(148,163,184,0.25)';
+        formatSelect.style.color = '#e2e8f0';
+        formatSelect.style.borderRadius = '8px';
+        formatSelect.style.padding = '8px 10px';
+        [
+          ['general','標準'],
+          ['number','数値'],
+          ['currency','通貨'],
+          ['percent','パーセント'],
+          ['comma','桁区切り'],
+          ['scientific','指数'],
+          ['date','日付'],
+          ['time','時刻']
+        ].forEach(([value,label]) => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = label;
+          formatSelect.appendChild(opt);
+        });
+        formatSelect.addEventListener('change', () => applyFormat({ format: formatSelect.value }));
+        numberGroup.body.appendChild(formatSelect);
+
+        elements.boldBtn = boldBtn;
+        elements.italicBtn = italicBtn;
+        elements.underlineBtn = underlineBtn;
+        elements.formatSelect = formatSelect;
+        elements.borderColorInput = borderColor;
+
+        panel.appendChild(clipboard.container);
+        panel.appendChild(fontGroup.container);
+        panel.appendChild(alignGroup.container);
+        panel.appendChild(numberGroup.container);
+        return panel;
+      }
+
+      function buildFormulaPanel(){
+        const panel = document.createElement('div');
+        panel.style.display = 'flex';
+        panel.style.flexWrap = 'wrap';
+        panel.style.gap = '16px';
+
+        const fxGroup = createRibbonGroup('関数ライブラリ');
+        const select = document.createElement('select');
+        select.style.background = 'rgba(30,41,59,0.6)';
+        select.style.border = '1px solid rgba(148,163,184,0.25)';
+        select.style.color = '#e2e8f0';
+        select.style.borderRadius = '8px';
+        select.style.padding = '8px 12px';
+        const sorted = Array.from(SUPPORTED_FUNCTIONS).sort();
+        sorted.forEach(fn => {
+          const opt = document.createElement('option');
+          opt.value = fn;
+          opt.textContent = fn;
+          select.appendChild(opt);
+        });
+
+        const insertBtn = createToolButton('関数を挿入', () => insertFunctionTemplate(select.value));
+        const description = document.createElement('div');
+        description.style.fontSize = '12px';
+        description.style.color = '#cbd5f5';
+        description.style.maxWidth = '260px';
+        description.textContent = FUNCTION_DESCRIPTIONS[select.value] || '';
+        select.addEventListener('change', () => {
+          description.textContent = FUNCTION_DESCRIPTIONS[select.value] || '';
+        });
+
+        fxGroup.body.appendChild(select);
+        fxGroup.body.appendChild(insertBtn);
+        fxGroup.body.appendChild(description);
+
+        const helperGroup = createRibbonGroup('数式アシスト');
+        const sumBtn = createToolButton('Σ SUM', () => insertFunctionTemplate('SUM'));
+        const avgBtn = createToolButton('AVG', () => insertFunctionTemplate('AVERAGE'));
+        const ifBtn = createToolButton('IF', () => insertFunctionTemplate('IF'));
+        helperGroup.body.appendChild(sumBtn);
+        helperGroup.body.appendChild(avgBtn);
+        helperGroup.body.appendChild(ifBtn);
+
+        panel.appendChild(fxGroup.container);
+        panel.appendChild(helperGroup.container);
+        return panel;
+      }
+
+      function buildViewPanel(){
+        const panel = document.createElement('div');
+        panel.style.display = 'flex';
+        panel.style.flexWrap = 'wrap';
+        panel.style.gap = '16px';
+
+        const displayGroup = createRibbonGroup('表示設定');
+        const gridToggleLabel = document.createElement('label');
+        gridToggleLabel.style.display = 'flex';
+        gridToggleLabel.style.alignItems = 'center';
+        gridToggleLabel.style.gap = '6px';
+        gridToggleLabel.style.color = '#e2e8f0';
+        const gridToggle = document.createElement('input');
+        gridToggle.type = 'checkbox';
+        gridToggle.checked = state.showGridLines;
+        gridToggle.addEventListener('change', () => {
+          state.showGridLines = gridToggle.checked;
+          cellElements.forEach((_el, key) => updateCellElement(key));
+        });
+        const gridLabel = document.createElement('span');
+        gridLabel.textContent = 'グリッド線を表示';
+        gridToggleLabel.appendChild(gridToggle);
+        gridToggleLabel.appendChild(gridLabel);
+        displayGroup.body.appendChild(gridToggleLabel);
+
+        const zoomGroup = createRibbonGroup('ズーム');
+        const zoomSlider = document.createElement('input');
+        zoomSlider.type = 'range';
+        zoomSlider.min = '50';
+        zoomSlider.max = '200';
+        zoomSlider.value = String(Math.round(state.zoom * 100));
+        zoomSlider.addEventListener('input', () => {
+          state.zoom = clamp(Number(zoomSlider.value) / 100, 0.5, 2);
+          updateZoom();
+        });
+        const zoomLabel = document.createElement('div');
+        zoomLabel.style.fontSize = '12px';
+        zoomLabel.style.color = '#cbd5f5';
+        zoomLabel.style.textAlign = 'center';
+        zoomLabel.style.minWidth = '60px';
+        zoomGroup.body.appendChild(zoomSlider);
+        zoomGroup.body.appendChild(zoomLabel);
+        elements.zoomLabel = zoomLabel;
+        updateZoom();
+
+        panel.appendChild(displayGroup.container);
+        panel.appendChild(zoomGroup.container);
+        return panel;
+      }
     }
 
     function createFormulaBar(){
@@ -510,18 +951,24 @@
       viewport.style.overflow = 'auto';
       viewport.style.position = 'relative';
       viewport.style.background = 'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.12), rgba(15,23,42,0.92))';
+      const viewportHeight = ROW_HEIGHT * (VISIBLE_ROWS + 1);
+      const viewportWidth = 80 + VISIBLE_COLS * COL_WIDTH;
+      viewport.style.height = `${viewportHeight}px`;
+      viewport.style.maxHeight = `${viewportHeight}px`;
+      viewport.style.width = `${viewportWidth}px`;
+      viewport.style.maxWidth = `${viewportWidth}px`;
 
       const grid = document.createElement('div');
       grid.style.display = 'grid';
-      grid.style.gridTemplateColumns = `80px repeat(${COL_COUNT}, minmax(100px, 1fr))`;
-      grid.style.gridAutoRows = '28px';
-      grid.style.minWidth = '100%';
+      grid.style.gridTemplateColumns = `80px repeat(${COL_COUNT}, ${COL_WIDTH}px)`;
+      grid.style.gridAutoRows = `${ROW_HEIGHT}px`;
+      grid.style.width = `${80 + COL_COUNT * COL_WIDTH}px`;
 
       for (let r = -1; r < ROW_COUNT; r++){
         for (let c = -1; c < COL_COUNT; c++){
           const cell = document.createElement('div');
-          cell.style.borderRight = '1px solid rgba(148,163,184,0.12)';
-          cell.style.borderBottom = '1px solid rgba(148,163,184,0.12)';
+          cell.style.borderRight = DEFAULT_GRID_BORDER;
+          cell.style.borderBottom = DEFAULT_GRID_BORDER;
           cell.style.display = 'flex';
           cell.style.alignItems = 'center';
           cell.style.padding = '0 8px';
@@ -576,7 +1023,105 @@
       elements.grid = grid;
       elements.viewport = viewport;
       viewport.appendChild(grid);
+      updateZoom();
       return viewport;
+    }
+
+    function createSheetTabs(){
+      const bar = document.createElement('div');
+      bar.style.display = 'flex';
+      bar.style.alignItems = 'center';
+      bar.style.justifyContent = 'space-between';
+      bar.style.padding = '10px 20px';
+      bar.style.background = 'rgba(15,23,42,0.72)';
+      bar.style.borderBottom = '1px solid rgba(148,163,184,0.2)';
+      elements.sheetTabsBar = bar;
+      renderSheetTabs();
+      return bar;
+    }
+
+    function renderSheetTabs(){
+      if (!elements.sheetTabsBar) return;
+      elements.sheetTabsBar.innerHTML = '';
+      const tabsWrap = document.createElement('div');
+      tabsWrap.style.display = 'flex';
+      tabsWrap.style.gap = '6px';
+      tabsWrap.style.flexWrap = 'wrap';
+      state.sheets.forEach((sheet, index) => {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.textContent = sheet.name;
+        tab.style.padding = '6px 14px';
+        tab.style.borderRadius = '999px';
+        tab.style.border = '1px solid rgba(148,163,184,0.25)';
+        const active = index === state.activeSheetIndex;
+        tab.style.background = active ? 'rgba(59,130,246,0.35)' : 'rgba(30,41,59,0.5)';
+        tab.style.color = active ? '#bfdbfe' : '#e2e8f0';
+        tab.style.cursor = 'pointer';
+        tab.style.fontWeight = active ? '700' : '500';
+        tab.addEventListener('click', () => activateSheet(index));
+        tab.addEventListener('dblclick', () => renameSheet(index));
+        tabsWrap.appendChild(tab);
+      });
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.textContent = '+';
+      addBtn.style.padding = '6px 12px';
+      addBtn.style.borderRadius = '8px';
+      addBtn.style.border = '1px solid rgba(148,163,184,0.25)';
+      addBtn.style.background = 'rgba(59,130,246,0.3)';
+      addBtn.style.color = '#e0f2fe';
+      addBtn.style.cursor = 'pointer';
+      addBtn.addEventListener('click', addSheet);
+      elements.sheetTabsBar.appendChild(tabsWrap);
+      elements.sheetTabsBar.appendChild(addBtn);
+    }
+
+    function addSheet(){
+      const sheet = createSheetRecord(nextSheetName());
+      state.sheets.push(sheet);
+      activateSheet(state.sheets.length - 1);
+      markDirty();
+      autoSaveLater();
+    }
+
+    function renameSheet(index){
+      const sheet = state.sheets[index];
+      if (!sheet) return;
+      const input = prompt('シート名を入力', sheet.name);
+      if (input == null) return;
+      const trimmed = input.trim();
+      if (!trimmed) return;
+      if (state.sheets.some((s, i) => i !== index && s.name === trimmed)){
+        alert('同じ名前のシートがあります。');
+        return;
+      }
+      sheet.name = trimmed;
+      const match = /^Sheet(\d+)$/.exec(trimmed);
+      if (match){
+        state.sheetCounter = Math.max(state.sheetCounter, parseInt(match[1], 10));
+      }
+      renderSheetTabs();
+      updateSubtitle();
+      markDirty();
+      autoSaveLater();
+    }
+
+    function activateSheet(index){
+      if (index < 0 || index >= state.sheets.length) return;
+      if (index === state.activeSheetIndex) return;
+      const previous = currentSheet();
+      previous.selection = Object.assign({}, state.selection);
+      state.activeSheetIndex = index;
+      const next = currentSheet();
+      if (!next.selection){
+        next.selection = { startRow: 0, startCol: 0, endRow: 0, endCol: 0 };
+      }
+      renderSheetTabs();
+      updateSubtitle();
+      cellElements.forEach((_el, key) => updateCellElement(key));
+      recalcAll();
+      applySelection(next.selection);
     }
 
     function createStatusBar(){
@@ -619,8 +1164,9 @@
       wrapper.style.overflow = 'hidden';
 
       wrapper.appendChild(createHeader());
-      wrapper.appendChild(createToolbar());
+      wrapper.appendChild(createRibbon());
       wrapper.appendChild(createFormulaBar());
+      wrapper.appendChild(createSheetTabs());
       wrapper.appendChild(createGrid());
       wrapper.appendChild(createStatusBar());
 
@@ -780,7 +1326,7 @@
       recalcAll();
       const diff = new Map([[ref, { before: beforeCell, after: cloneCell(current) }]]);
       pushUndo(createDelta(diff));
-      state.dirty = true;
+      markDirty();
       award('edit', 1);
       updateNameAndFormula();
       autoSaveLater();
@@ -802,7 +1348,7 @@
       if (diff.size){
         recalcAll();
         pushUndo(createDelta(diff));
-        state.dirty = true;
+        markDirty();
         award('edit', 1);
         updateNameAndFormula();
         autoSaveLater();
@@ -877,7 +1423,7 @@
       if (diff.size){
         recalcAll();
         pushUndo(createDelta(diff));
-        state.dirty = true;
+        markDirty();
         award('edit', 1);
         updateNameAndFormula();
         autoSaveLater();
@@ -904,7 +1450,7 @@
       if (diff.size){
         recalcAll();
         pushUndo(createDelta(diff));
-        state.dirty = true;
+        markDirty();
         state.formatOps += 1;
         if (state.formatOps >= FORMAT_XP_THRESHOLD){
           award('format', 2);
@@ -932,7 +1478,7 @@
       if (diff.size){
         recalcAll();
         pushUndo(createDelta(diff));
-        state.dirty = true;
+        markDirty();
         state.formatOps += 1;
         if (state.formatOps >= FORMAT_XP_THRESHOLD){
           award('format', 2);
@@ -940,6 +1486,67 @@
         }
         autoSaveLater();
       }
+    }
+
+    function applyBorders(mode){
+      const { startRow, startCol, endRow, endCol } = state.selection;
+      const diff = new Map();
+      const top = startRow;
+      const bottom = endRow;
+      const left = startCol;
+      const right = endCol;
+      for (let r = startRow; r <= endRow; r++){
+        for (let c = startCol; c <= endCol; c++){
+          const ref = cellKey(c, r);
+          const beforeCell = cloneCell(state.cells.get(ref));
+          const cell = cloneCell(state.cells.get(ref) || createEmptyCell());
+          cell.style = Object.assign({}, DEFAULT_STYLE, cell.style);
+          const sides = ['Top','Right','Bottom','Left'];
+          if (mode === 'clear'){
+            sides.forEach(side => { cell.style['border' + side] = 0; });
+          } else {
+            if (mode === 'outline' || mode === 'all'){
+              const width = mode === 'outline' ? 2 : 1;
+              cell.style.borderTop = r === top ? width : (mode === 'all' ? 1 : 0);
+              cell.style.borderBottom = r === bottom ? width : (mode === 'all' ? 1 : 0);
+              cell.style.borderLeft = c === left ? width : (mode === 'all' ? 1 : 0);
+              cell.style.borderRight = c === right ? width : (mode === 'all' ? 1 : 0);
+            }
+            if (mode === 'top') cell.style.borderTop = 2;
+            if (mode === 'bottom') cell.style.borderBottom = 2;
+            if (mode === 'left') cell.style.borderLeft = 2;
+            if (mode === 'right') cell.style.borderRight = 2;
+          }
+          cell.style.borderStyle = cell.style.borderStyle || 'solid';
+          state.cells.set(ref, cell);
+          updateCellElement(ref);
+          diff.set(ref, { before: beforeCell, after: cloneCell(cell) });
+        }
+      }
+      if (diff.size){
+        pushUndo(createDelta(diff));
+        markDirty();
+        state.formatOps += 1;
+        if (state.formatOps >= FORMAT_XP_THRESHOLD){
+          award('format', 2);
+          state.formatOps = 0;
+        }
+        autoSaveLater();
+      }
+    }
+
+    function applyCellBorders(el, style){
+      const color = style.borderColor || DEFAULT_BORDER_COLOR;
+      const lineStyle = style.borderStyle || 'solid';
+      const defaultBorder = state.showGridLines ? DEFAULT_GRID_BORDER : '1px solid transparent';
+      ['Top','Right','Bottom','Left'].forEach(side => {
+        const width = style['border' + side];
+        if (width && width > 0){
+          el.style['border' + side] = `${width}px ${lineStyle} ${color}`;
+        } else {
+          el.style['border' + side] = defaultBorder;
+        }
+      });
     }
 
     function updateCellElement(ref){
@@ -955,6 +1562,8 @@
         el.style.background = 'rgba(15,23,42,0.55)';
         el.style.justifyContent = 'flex-start';
         el.style.alignItems = 'center';
+        el.style.fontSize = `${DEFAULT_STYLE.fontSize * state.zoom}px`;
+        applyCellBorders(el, DEFAULT_STYLE);
         return;
       }
       const computed = cell.computed || { display: cell.value || '', raw: cell.value || '', type: 'text' };
@@ -968,6 +1577,8 @@
       if (cell.style.verticalAlign === 'top') el.style.alignItems = 'flex-start';
       else if (cell.style.verticalAlign === 'bottom') el.style.alignItems = 'flex-end';
       else el.style.alignItems = 'center';
+      el.style.fontSize = `${(cell.style.fontSize || DEFAULT_STYLE.fontSize) * state.zoom}px`;
+      applyCellBorders(el, cell.style);
     }
 
     function recalcAll(){
@@ -1067,7 +1678,7 @@
           case 'binary':
             return evaluateBinary(node);
           case 'function':
-            return evaluateFunction(node.name, node.args.map(evaluateNode));
+            return evaluateFunction(node.name, node.args.map(evaluateNode), node.args);
           default:
             return 0;
         }
@@ -1098,12 +1709,75 @@
         }
       }
 
-      function evaluateFunction(name, args){
+      function evaluateFunction(name, args, rawArgs = []){
         const upper = name.toUpperCase();
         if (!SUPPORTED_FUNCTIONS.has(upper)){
           return '#NAME?';
         }
         const flatArgs = args.flatMap(arg => Array.isArray(arg) ? arg : [arg]);
+        const firstValue = (value) => Array.isArray(value) ? value[0] : value;
+        const getRangeMeta = (index) => {
+          const raw = rawArgs[index];
+          if (!raw || raw.type !== 'range') return null;
+          const width = Math.max(1, raw.endCol - raw.startCol + 1);
+          const height = Math.max(1, raw.endRow - raw.startRow + 1);
+          return { width, height };
+        };
+
+        function wildcardCompare(value, pattern){
+          const valStr = String(value ?? '');
+          const patStr = String(pattern ?? '');
+          const escaped = patStr.replace(/([.+^${}()|[\]\\])/g, '\\$1');
+          const regex = new RegExp(`^${escaped.replace(/\*/g, '.*').replace(/\?/g, '.')}$`, 'i');
+          return regex.test(valStr);
+        }
+
+        function matchCriteria(value, criteria){
+          const crit = firstValue(criteria);
+          const sample = firstValue(value);
+          if (crit == null){
+            return sample == null || sample === '';
+          }
+          if (typeof crit === 'number') return toNumber(sample) === crit;
+          if (typeof crit === 'boolean') return truthy(sample) === crit;
+          const text = String(crit).trim();
+          if (!text.length){
+            return sample == null || sample === '';
+          }
+          if (text === '""'){
+            return sample == null || sample === '';
+          }
+          const opMatch = text.match(/^(<>|>=|<=|=|>|<)(.*)$/);
+          if (opMatch){
+            const op = opMatch[1];
+            const operandText = opMatch[2].trim();
+            let operandNum = Number(operandText);
+            if (Number.isNaN(operandNum) && operandText.endsWith('%')){
+              operandNum = Number(operandText.slice(0, -1)) / 100;
+            }
+            const sampleNum = toNumber(sample);
+            if (!Number.isNaN(operandNum) && !Number.isNaN(sampleNum)){
+              switch (op){
+                case '=': return sampleNum === operandNum;
+                case '<>': return sampleNum !== operandNum;
+                case '>': return sampleNum > operandNum;
+                case '<': return sampleNum < operandNum;
+                case '>=': return sampleNum >= operandNum;
+                case '<=': return sampleNum <= operandNum;
+              }
+            }
+            const left = String(sample ?? '');
+            const right = operandText === '""' ? '' : operandText;
+            if (op === '=') return wildcardCompare(left, right);
+            if (op === '<>') return !wildcardCompare(left, right);
+            if (op === '>') return left > right;
+            if (op === '<') return left < right;
+            if (op === '>=') return left >= right;
+            if (op === '<=') return left <= right;
+          }
+          return wildcardCompare(sample, text);
+        }
+
         switch (upper){
           case 'SUM':
             return flatArgs.reduce((acc, val) => isNumber(val) ? acc + Number(val) : acc, 0);
@@ -1155,12 +1829,203 @@
             return Math.sqrt(Math.max(0, toNumber(args[0] ?? 0)));
           case 'CONCAT':
             return flatArgs.map(v => v == null ? '' : String(v)).join('');
+          case 'CONCATENATE':
+            return evaluateFunction('CONCAT', args, rawArgs);
           case 'TEXT':
             return formatText(args[0], args[1]);
           case 'LEN':
             return String(Array.isArray(args[0]) ? args[0][0] ?? '' : args[0] ?? '').length;
           case 'SUBTOTAL':
             return subtotal(args);
+          case 'PRODUCT':
+            return flatArgs.filter(isNumber).reduce((acc, val) => acc * Number(val), 1);
+          case 'SUMIF': {
+            const rangeValues = Array.isArray(args[0]) ? args[0] : [args[0]];
+            const criteria = args[1];
+            const sumValues = args[2] ? (Array.isArray(args[2]) ? args[2] : [args[2]]) : rangeValues;
+            const length = Math.min(rangeValues.length, sumValues.length);
+            let total = 0;
+            for (let i = 0; i < length; i++){
+              if (matchCriteria(rangeValues[i], criteria)){
+                total += toNumber(sumValues[i] ?? 0);
+              }
+            }
+            return total;
+          }
+          case 'COUNTIF': {
+            const rangeValues = Array.isArray(args[0]) ? args[0] : [args[0]];
+            let count = 0;
+            for (let i = 0; i < rangeValues.length; i++){
+              if (matchCriteria(rangeValues[i], args[1])) count += 1;
+            }
+            return count;
+          }
+          case 'AVERAGEIF': {
+            const rangeValues = Array.isArray(args[0]) ? args[0] : [args[0]];
+            const criteria = args[1];
+            const avgValues = args[2] ? (Array.isArray(args[2]) ? args[2] : [args[2]]) : rangeValues;
+            const length = Math.min(rangeValues.length, avgValues.length);
+            let total = 0;
+            let count = 0;
+            for (let i = 0; i < length; i++){
+              if (matchCriteria(rangeValues[i], criteria)){
+                total += toNumber(avgValues[i] ?? 0);
+                count += 1;
+              }
+            }
+            return count ? total / count : '#DIV/0!';
+          }
+          case 'IFERROR': {
+            const value = firstValue(args[0]);
+            if (isError(value)){
+              return firstValue(args[1]);
+            }
+            return value;
+          }
+          case 'VLOOKUP': {
+            const lookupValue = firstValue(args[0]);
+            const tableValues = Array.isArray(args[1]) ? args[1] : [args[1]];
+            const meta = getRangeMeta(1);
+            if (!meta) return '#N/A';
+            const colIndex = Math.max(1, Math.floor(toNumber(args[2] ?? 1)));
+            if (colIndex < 1 || colIndex > meta.width) return '#REF!';
+            const approximate = truthy(firstValue(args[3] ?? false));
+            if (approximate){
+              let bestRow = -1;
+              for (let r = 0; r < meta.height; r++){
+                const candidate = tableValues[r * meta.width];
+                if (toComparable(candidate) <= toComparable(lookupValue)){
+                  bestRow = r;
+                } else {
+                  break;
+                }
+              }
+              if (bestRow >= 0){
+                const idx = bestRow * meta.width + (colIndex - 1);
+                return tableValues[idx] ?? '#N/A';
+              }
+              return '#N/A';
+            }
+            for (let r = 0; r < meta.height; r++){
+              const candidate = tableValues[r * meta.width];
+              if (normalizeValue(candidate) === normalizeValue(lookupValue)){
+                const idx = r * meta.width + (colIndex - 1);
+                return tableValues[idx] ?? '#N/A';
+              }
+            }
+            return '#N/A';
+          }
+          case 'HLOOKUP': {
+            const lookupValue = firstValue(args[0]);
+            const tableValues = Array.isArray(args[1]) ? args[1] : [args[1]];
+            const meta = getRangeMeta(1);
+            if (!meta) return '#N/A';
+            const rowIndex = Math.max(1, Math.floor(toNumber(args[2] ?? 1)));
+            if (rowIndex < 1 || rowIndex > meta.height) return '#REF!';
+            const approximate = truthy(firstValue(args[3] ?? false));
+            if (approximate){
+              let bestCol = -1;
+              for (let c = 0; c < meta.width; c++){
+                const candidate = tableValues[c];
+                if (toComparable(candidate) <= toComparable(lookupValue)){
+                  bestCol = c;
+                } else {
+                  break;
+                }
+              }
+              if (bestCol >= 0){
+                const idx = (rowIndex - 1) * meta.width + bestCol;
+                return tableValues[idx] ?? '#N/A';
+              }
+              return '#N/A';
+            }
+            for (let c = 0; c < meta.width; c++){
+              const candidate = tableValues[c];
+              if (normalizeValue(candidate) === normalizeValue(lookupValue)){
+                const idx = (rowIndex - 1) * meta.width + c;
+                return tableValues[idx] ?? '#N/A';
+              }
+            }
+            return '#N/A';
+          }
+          case 'INDEX': {
+            const meta = getRangeMeta(0);
+            if (!meta) return '#REF!';
+            const values = Array.isArray(args[0]) ? args[0] : [args[0]];
+            const row = Math.max(1, Math.floor(toNumber(args[1] ?? 1)));
+            const col = args[2] != null ? Math.max(1, Math.floor(toNumber(args[2]))) : 1;
+            if (row < 1 || row > meta.height || col < 1 || col > meta.width) return '#REF!';
+            const idx = (row - 1) * meta.width + (col - 1);
+            return values[idx] ?? '#REF!';
+          }
+          case 'MATCH': {
+            const lookup = firstValue(args[0]);
+            const values = Array.isArray(args[1]) ? args[1] : [args[1]];
+            const matchType = Math.trunc(toNumber(args[2] ?? 1));
+            if (!values.length) return '#N/A';
+            if (matchType === 0){
+              for (let i = 0; i < values.length; i++){
+                if (normalizeValue(values[i]) === normalizeValue(lookup)) return i + 1;
+              }
+              return '#N/A';
+            }
+            if (matchType > 0){
+              let bestIndex = -1;
+              for (let i = 0; i < values.length; i++){
+                if (toComparable(values[i]) <= toComparable(lookup)){
+                  bestIndex = i;
+                } else {
+                  break;
+                }
+              }
+              return bestIndex === -1 ? '#N/A' : bestIndex + 1;
+            }
+            for (let i = 0; i < values.length; i++){
+              if (toComparable(values[i]) <= toComparable(lookup)) return i + 1;
+            }
+            return '#N/A';
+          }
+          case 'TODAY': {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return today;
+          }
+          case 'NOW':
+            return new Date();
+          case 'DATE': {
+            const year = Math.trunc(toNumber(args[0] ?? 0));
+            const month = Math.trunc(toNumber(args[1] ?? 1));
+            const day = Math.trunc(toNumber(args[2] ?? 1));
+            return new Date(Date.UTC(year, month - 1, day));
+          }
+          case 'TIME': {
+            const hours = Math.trunc(toNumber(args[0] ?? 0));
+            const minutes = Math.trunc(toNumber(args[1] ?? 0));
+            const seconds = Math.trunc(toNumber(args[2] ?? 0));
+            return new Date(Date.UTC(1970, 0, 1, hours, minutes, seconds));
+          }
+          case 'UPPER':
+            return String(firstValue(args[0]) ?? '').toUpperCase();
+          case 'LOWER':
+            return String(firstValue(args[0]) ?? '').toLowerCase();
+          case 'LEFT': {
+            const text = String(firstValue(args[0]) ?? '');
+            const count = Math.max(0, Math.floor(toNumber(args[1] ?? 1)));
+            return text.slice(0, count);
+          }
+          case 'RIGHT': {
+            const text = String(firstValue(args[0]) ?? '');
+            const count = Math.max(0, Math.floor(toNumber(args[1] ?? 1)));
+            return count ? text.slice(-count) : '';
+          }
+          case 'MID': {
+            const text = String(firstValue(args[0]) ?? '');
+            const start = Math.max(1, Math.floor(toNumber(args[1] ?? 1)));
+            const length = Math.max(0, Math.floor(toNumber(args[2] ?? text.length)));
+            return text.substr(start - 1, length);
+          }
+          case 'TRIM':
+            return String(firstValue(args[0]) ?? '').trim().replace(/\s+/g, ' ');
           default:
             return '#NAME?';
         }
@@ -1481,9 +2346,9 @@
       return { parseExpression, atEnd };
     }
 
-    function storableCells(){
+    function storableCells(map = state.cells){
       const result = {};
-      state.cells.forEach((cell, key) => {
+      map.forEach((cell, key) => {
         result[key] = {
           value: cell.value,
           formula: cell.formula,
@@ -1510,14 +2375,18 @@
 
     function handleNewWorkbook(){
       if (state.dirty && !confirm('未保存の変更があります。続行しますか？')) return;
-      state.cells.clear();
+      state.sheets = [createSheetRecord('Sheet1')];
+      state.activeSheetIndex = 0;
+      state.sheetCounter = 1;
       state.filename = '新しいブック.xlsx';
-      state.warning = '新規ブックは互換性制限があります。図形/マクロ/複数シートは未対応です。';
-      elements.subtitle.textContent = state.filename;
+      state.warning = '新規ブックは互換性制限があります。図形/マクロは未対応です。';
+      state.dirty = false;
+      renderSheetTabs();
+      updateSubtitle();
       cellElements.forEach((_el, key) => updateCellElement(key));
       recalcAll();
-      state.undoStack = [];
-      state.redoStack = [];
+      state.formatOps = 0;
+      applySelection(currentSheet().selection);
       autoSaveLater();
     }
 
@@ -1537,8 +2406,8 @@
           try {
             loadWorkbook(new Uint8Array(reader.result));
             state.filename = file.name;
-            elements.subtitle.textContent = state.filename;
-            state.warning = '互換性注意: 図形・マクロ・複数シート・外部参照は読み込まれていません。';
+            updateSubtitle();
+            state.warning = '互換性注意: 図形・マクロ・複数シート (先頭シートのみ読み込み)・外部参照は読み込まれていません。';
             award('import', 10);
             alert('互換性注意: 未対応の機能は破棄されます。');
           } catch (err){
@@ -1579,7 +2448,10 @@
       const parser = new DOMParser();
       const doc = parser.parseFromString(sheetXml, 'application/xml');
       const rows = doc.getElementsByTagName('row');
-      state.cells.clear();
+      const sheetRecord = createSheetRecord('Sheet1');
+      state.sheets = [sheetRecord];
+      state.activeSheetIndex = 0;
+      state.sheetCounter = 1;
       for (let i = 0; i < rows.length; i++){
         const row = rows[i];
         const cells = row.getElementsByTagName('c');
@@ -1613,18 +2485,22 @@
               cell.value = raw;
             }
           }
-          state.cells.set(ref, cell);
+          sheetRecord.cells.set(ref, cell);
         }
       }
+      renderSheetTabs();
+      updateSubtitle();
       cellElements.forEach((_el, key) => updateCellElement(key));
       recalcAll();
-      state.undoStack = [];
-      state.redoStack = [];
+      applySelection(sheetRecord.selection);
+      state.dirty = false;
+      sheetRecord.dirty = false;
+      state.formatOps = 0;
       autoSaveLater();
     }
 
     function handleExport(){
-      alert('互換性注意: 図形・マクロ・複数シート・書式の一部は保存されません。');
+      alert('互換性注意: 図形・マクロ・複数シート・書式の一部は保存されません (エクスポートされるのは表示中のシートのみ)。');
       try {
         const zip = buildWorkbook();
         const blob = new Blob([zip], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -1652,6 +2528,7 @@
         return idx;
       }
 
+      const sheetName = escapeXml(currentSheet().name || 'Sheet1');
       let rowsXml = '';
       for (let r = 0; r < state.rows; r++){
         let rowXml = `<row r="${r+1}">`;
@@ -1711,7 +2588,7 @@
         'docProps/app.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">\n  <Application>MiniExp Exceler</Application>\n</Properties>`,
         'docProps/core.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/">\n  <dc:title>${escapeXml(state.filename)}</dc:title>\n  <dc:creator>MiniExp</dc:creator>\n  <cp:lastModifiedBy>MiniExp</cp:lastModifiedBy>\n  <dcterms:created xsi:type="dcterms:W3CDTF" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${new Date().toISOString()}</dcterms:created>\n</cp:coreProperties>`,
         'xl/_rels/workbook.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>${sharedXml ? '\n  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>' : ''}\n</Relationships>`,
-        'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n  <sheets>\n    <sheet name="Sheet1" sheetId="1" r:id="rId1"/>\n  </sheets>\n</workbook>`,
+        'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n  <sheets>\n    <sheet name="${sheetName}" sheetId="1" r:id="rId1"/>\n  </sheets>\n</workbook>`,
         'xl/worksheets/sheet1.xml': sheetXml
       };
       if (sharedXml){
@@ -1721,7 +2598,7 @@
     }
 
     function showCompatibilityModal(){
-      const message = '互換性について\n- 1シートのみ対応\n- 図形・マクロ・ピボット・外部リンクは未対応\n- 条件付き書式・結合セルは保持されません';
+      const message = '互換性について\n- 複数シートのエクスポートは先頭シートのみ対応\n- 図形・マクロ・ピボット・外部リンクは未対応\n- 条件付き書式・結合セルは保持されません';
       alert(message);
     }
 
@@ -1736,11 +2613,17 @@
 
     function savePersistent(){
       try {
+        const sheets = state.sheets.map(sheet => ({
+          name: sheet.name,
+          cells: storableCells(sheet.cells),
+          selection: sheet.selection
+        }));
         const payload = {
           filename: state.filename,
           warning: state.warning,
-          cells: storableCells(),
-          selection: state.selection
+          sheets,
+          activeSheetIndex: state.activeSheetIndex,
+          sheetCounter: state.sheetCounter
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       } catch {}
@@ -1754,24 +2637,61 @@
         if (!payload || typeof payload !== 'object') return;
         state.filename = typeof payload.filename === 'string' ? payload.filename : state.filename;
         state.warning = typeof payload.warning === 'string' ? payload.warning : state.warning;
-        elements.subtitle.textContent = state.filename;
-        state.cells.clear();
-        if (payload.cells && typeof payload.cells === 'object'){
-          Object.keys(payload.cells).forEach(ref => {
-            const data = payload.cells[ref];
-            const cell = createEmptyCell();
-            cell.value = data.value;
-            cell.formula = data.formula;
-            cell.format = data.format || 'general';
-            cell.style = Object.assign({}, DEFAULT_STYLE, data.style || {});
-            state.cells.set(ref, cell);
+        const restoredSheets = Array.isArray(payload.sheets) && payload.sheets.length ? payload.sheets : null;
+        if (restoredSheets){
+          state.sheets = restoredSheets.map((sheet, index) => {
+            const record = createSheetRecord(typeof sheet.name === 'string' && sheet.name.trim() ? sheet.name.trim() : `Sheet${index + 1}`);
+            if (sheet.selection){
+              record.selection = sanitizeSelection(sheet.selection);
+            }
+            if (sheet.cells && typeof sheet.cells === 'object'){
+              Object.keys(sheet.cells).forEach(ref => {
+                const data = sheet.cells[ref];
+                if (!data) return;
+                const cell = createEmptyCell();
+                cell.value = data.value;
+                cell.formula = data.formula;
+                cell.format = data.format || 'general';
+                cell.style = Object.assign({}, DEFAULT_STYLE, data.style || {});
+                record.cells.set(ref, cell);
+              });
+            }
+            record.undoStack = [];
+            record.redoStack = [];
+            record.dirty = false;
+            return record;
           });
+          state.sheetCounter = typeof payload.sheetCounter === 'number' ? Math.max(payload.sheetCounter, state.sheets.length) : state.sheets.length;
+          state.activeSheetIndex = clamp(typeof payload.activeSheetIndex === 'number' ? Math.floor(payload.activeSheetIndex) : 0, 0, state.sheets.length - 1);
+        } else {
+          const legacySheet = createSheetRecord('Sheet1');
+          if (payload.cells && typeof payload.cells === 'object'){
+            Object.keys(payload.cells).forEach(ref => {
+              const data = payload.cells[ref];
+              if (!data) return;
+              const cell = createEmptyCell();
+              cell.value = data.value;
+              cell.formula = data.formula;
+              cell.format = data.format || 'general';
+              cell.style = Object.assign({}, DEFAULT_STYLE, data.style || {});
+              legacySheet.cells.set(ref, cell);
+            });
+          }
+          if (payload.selection){
+            legacySheet.selection = sanitizeSelection(payload.selection);
+          }
+          state.sheets = [legacySheet];
+          state.sheetCounter = 1;
+          state.activeSheetIndex = 0;
         }
+        renderSheetTabs();
+        updateSubtitle();
         cellElements.forEach((_el, key) => updateCellElement(key));
         recalcAll();
-        if (payload.selection){
-          applySelection(payload.selection);
-        }
+        applySelection(currentSheet().selection);
+        state.dirty = false;
+        state.formatOps = 0;
+        state.sheets.forEach(sheet => { sheet.dirty = false; });
       } catch {}
     }
 
@@ -1784,7 +2704,7 @@
       state.running = true;
       buildLayout();
       restorePersistent();
-      applySelection(state.selection);
+      applySelection(currentSheet().selection);
       award('open', 8);
     }
 

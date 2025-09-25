@@ -38,6 +38,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'math_lab',    name: '数学ラボ',         entry: 'games/math_lab.js',   version: '0.1.0', author: 'mod', description: '高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション', category: 'ユーティリティ' },
   { id: 'wording',     name: 'Wording',         entry: 'games/wording.js',    version: '0.1.0', author: 'mod', description: '編集+1 / 書式+2 / 保存+6 EXP のワープロ', category: 'ユーティリティ' },
   { id: 'music_player', name: 'ミュージックプレイヤー', entry: 'games/music_player.js', version: '0.1.0', author: 'mod', description: 'ローカル音源再生・視覚化・EQ搭載。再生や取り込みでEXP獲得', category: 'ユーティリティ' },
+  { id: 'tester',      name: 'JSテスター',       entry: 'games/tester.js',     version: '0.1.0', author: 'mod', description: 'JS機能テストとCPUベンチマーク、ブロック式アドベンチャー作成ツール', category: 'ユーティリティ' }, 
   { id: 'aim',           name: '的あて（エイム）',     entry: 'games/aim.js',             version: '0.1.0', author: 'builtin', description: '命中で1〜3EXP／連続命中ボーナス', category: 'シューティング' },
   { id: 'dodge_race',    name: '回避レース',           entry: 'games/dodge_race.js',       version: '0.1.0', author: 'builtin', description: '距離で微量EXP／CP+5', category: 'アクション' },
   { id: 'falling_shooter', name: '落下ブロック・シューター', entry: 'games/falling_shooter.js', version: '0.1.0', author: 'builtin', description: '破壊で1〜数EXP（大きいほど高EXP）', category: 'シューティング' },

@@ -604,52 +604,30 @@ function isBossFloor(level) {
 
 async function loadBlockDataOnce() {
     if (blockDimTables.__loaded) return blockDimTables;
-    try {
-        const res = await fetch('blockdata.json', { cache: 'no-store' });
-        const json = await res.json();
-        // Dimensions: if provided use it, else synthesize a..z 100刻み
-        let dims = json.dimensions;
-        if (!Array.isArray(dims) || dims.length === 0) {
-            dims = Array.from({length:26}, (_,i) => {
-                const key = String.fromCharCode('a'.charCodeAt(0)+i);
-                return { key, name: key.toUpperCase(), baseLevel: 1 + i*100 };
-            });
+
+    const errors = [];
+    let data = null;
+
+    if (location.protocol !== 'file:') {
+        try {
+            data = await loadBlockDataViaFetch();
+        } catch (e) {
+            errors.push(e);
         }
-        blockDimTables = {
-            dimensions: dims,
-            blocks1: Array.isArray(json.blocks1) ? json.blocks1 : [],
-            blocks2: Array.isArray(json.blocks2) ? json.blocks2 : [],
-            blocks3: Array.isArray(json.blocks3) ? json.blocks3 : [],
-            __loaded: true
-        };
-        try { flushPendingDungeonBlocks && flushPendingDungeonBlocks(); } catch {}
-    } catch (e) {
-        console.error('Failed to load blockdata.json', e);
-        // file:// プロトコル時のフォールバック: blockdata.js を script タグで読み込む
-        if (location.protocol === 'file:') {
-            try {
-                const data = await loadBlockDataViaScript();
-                let dims = data.dimensions;
-                if (!Array.isArray(dims) || dims.length === 0) {
-                    dims = Array.from({length:26}, (_,i) => {
-                        const key = String.fromCharCode('a'.charCodeAt(0)+i);
-                        return { key, name: key.toUpperCase(), baseLevel: 1 + i*100 };
-                    });
-                }
-                blockDimTables = {
-                    dimensions: dims,
-                    blocks1: Array.isArray(data.blocks1) ? data.blocks1 : [],
-                    blocks2: Array.isArray(data.blocks2) ? data.blocks2 : [],
-                    blocks3: Array.isArray(data.blocks3) ? data.blocks3 : [],
-                    __loaded: true
-                };
-                try { flushPendingDungeonBlocks && flushPendingDungeonBlocks(); } catch {}
-                return blockDimTables;
-            } catch (e2) {
-                console.error('Failed to load blockdata.js fallback', e2);
-            }
+    }
+
+    if (!data) {
+        try {
+            data = await loadBlockDataViaScript();
+        } catch (e) {
+            errors.push(e);
         }
-        // 最小フォールバック（UIを壊さない）
+    }
+
+    if (!data) {
+        if (errors.length) {
+            console.warn('BlockDim data could not be loaded, falling back to defaults:', errors);
+        }
         blockDimTables = {
             dimensions: [{ key:'a', name:'A', baseLevel:1 }],
             blocks1: [{ key:'b1001', name:'サンプル1', level:0, size:0, depth:0, chest:'normal', type:null, bossFloors:[] }],
@@ -658,8 +636,27 @@ async function loadBlockDataOnce() {
             __loaded: true
         };
         try { flushPendingDungeonBlocks && flushPendingDungeonBlocks(); } catch {}
+        return blockDimTables;
     }
+
+    const dims = normalizeDimensions(data.dimensions);
+    blockDimTables = {
+        dimensions: dims,
+        blocks1: Array.isArray(data.blocks1) ? data.blocks1 : [],
+        blocks2: Array.isArray(data.blocks2) ? data.blocks2 : [],
+        blocks3: Array.isArray(data.blocks3) ? data.blocks3 : [],
+        __loaded: true
+    };
+    try { flushPendingDungeonBlocks && flushPendingDungeonBlocks(); } catch {}
     return blockDimTables;
+}
+
+async function loadBlockDataViaFetch() {
+    const res = await fetch('blockdata.json', { cache: 'no-store' });
+    if (!res.ok) {
+        throw new Error(`HTTP ${res.status} ${res.statusText || ''}`.trim());
+    }
+    return res.json();
 }
 
 function loadBlockDataViaScript() {
@@ -671,8 +668,18 @@ function loadBlockDataViaScript() {
         const s = document.createElement('script');
         s.src = 'blockdata.js';
         s.onload = () => resolve(window.__BLOCKDATA || {});
-        s.onerror = reject;
+        s.onerror = (err) => reject(err || new Error('Failed to load blockdata.js'));
         document.head.appendChild(s);
+    });
+}
+
+function normalizeDimensions(dimensions) {
+    if (Array.isArray(dimensions) && dimensions.length > 0) {
+        return dimensions;
+    }
+    return Array.from({length:26}, (_,i) => {
+        const key = String.fromCharCode('a'.charCodeAt(0)+i);
+        return { key, name: key.toUpperCase(), baseLevel: 1 + i*100 };
     });
 }
 

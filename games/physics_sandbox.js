@@ -48,30 +48,32 @@
   const STORAGE_KEY = 'MiniExpPhysicsLayouts';
   const MATERIALS = {
     wood:  { id:'wood',  label:'木材',    density:0.6, restitution:0.25, friction:0.5, color:'#c97a43', flammability:0.8, conductivity:0.1,
-             thermalConductivity:0.18, heatCapacity:1.9, ignitionPoint:320, meltingPoint:620, baseTemperature:20 },
+             thermalConductivity:0.18, heatCapacity:1.9, ignitionPoint:320, meltingPoint:620, boilingPoint:900, freezePoint:-40, baseTemperature:20 },
     metal: { id:'metal', label:'金属',    density:1.8, restitution:0.15, friction:0.3, color:'#9aa0a6', flammability:0.0, conductivity:0.9,
-             thermalConductivity:0.72, heatCapacity:0.9, ignitionPoint:900, meltingPoint:1500, baseTemperature:20 },
+             thermalConductivity:0.72, heatCapacity:0.9, ignitionPoint:900, meltingPoint:1500, boilingPoint:2900, freezePoint:-80, baseTemperature:20 },
     rubber:{ id:'rubber',label:'ゴム',    density:0.9, restitution:0.75, friction:0.9, color:'#22262b', flammability:0.2, conductivity:0.05,
-             thermalConductivity:0.16, heatCapacity:1.7, ignitionPoint:310, meltingPoint:520, baseTemperature:20 },
+             thermalConductivity:0.16, heatCapacity:1.7, ignitionPoint:310, meltingPoint:520, boilingPoint:850, freezePoint:-60, baseTemperature:20 },
     stone: { id:'stone', label:'石材',    density:1.4, restitution:0.1, friction:0.7, color:'#6b7280', flammability:0.05, conductivity:0.2,
-             thermalConductivity:0.35, heatCapacity:0.85, ignitionPoint:800, meltingPoint:1200, baseTemperature:20 },
+             thermalConductivity:0.35, heatCapacity:0.85, ignitionPoint:800, meltingPoint:1200, boilingPoint:2600, freezePoint:-120, baseTemperature:20 },
     gel:   { id:'gel',   label:'ゼラチン', density:0.4, restitution:0.55, friction:0.2, color:'#60a5fa', flammability:0.0, conductivity:0.3,
-             thermalConductivity:0.28, heatCapacity:3.2, ignitionPoint:260, meltingPoint:180, baseTemperature:15 },
+             thermalConductivity:0.28, heatCapacity:3.2, ignitionPoint:260, meltingPoint:180, boilingPoint:260, freezePoint:-10, baseTemperature:15 },
     plasma:{ id:'plasma',label:'プラズマ', density:0.1, restitution:0.95, friction:0.05, color:'#f97316', flammability:1.0, conductivity:0.95,
-             thermalConductivity:0.95, heatCapacity:0.5, ignitionPoint:1800, meltingPoint:2400, baseTemperature:800 },
+             thermalConductivity:0.95, heatCapacity:0.5, ignitionPoint:1800, meltingPoint:2400, boilingPoint:3200, freezePoint:400, baseTemperature:800 },
     ice:   { id:'ice',   label:'氷結',    density:0.92, restitution:0.05, friction:0.08, color:'#a5f3fc', flammability:0.0, conductivity:0.2,
-             thermalConductivity:0.42, heatCapacity:2.1, ignitionPoint:0, meltingPoint:0, baseTemperature:-10 },
+             thermalConductivity:0.42, heatCapacity:2.1, ignitionPoint:0, meltingPoint:0, boilingPoint:100, freezePoint:-40, baseTemperature:-10 },
     sand:  { id:'sand',  label:'砂',      density:1.1, restitution:0.18, friction:0.85, color:'#f5d0a9', flammability:0.05, conductivity:0.05,
-             thermalConductivity:0.25, heatCapacity:0.9, ignitionPoint:750, meltingPoint:1400, baseTemperature:20 },
+             thermalConductivity:0.25, heatCapacity:0.9, ignitionPoint:750, meltingPoint:1400, boilingPoint:2600, freezePoint:-120, baseTemperature:20 },
     glass: { id:'glass', label:'ガラス',  density:0.7, restitution:0.4,  friction:0.2, color:'#bae6fd', flammability:0.0, conductivity:0.35,
-             thermalConductivity:0.5, heatCapacity:0.84, ignitionPoint:900, meltingPoint:1100, baseTemperature:20 }
+             thermalConductivity:0.5, heatCapacity:0.84, ignitionPoint:900, meltingPoint:1100, boilingPoint:2300, freezePoint:-90, baseTemperature:20 }
   };
   const DEFAULT_MATERIAL = 'wood';
 
   const TOOLS = [
     { id:'select', label:'選択', title:'図形やエミッタを選択・ドラッグ' },
+    { id:'god-finger', label:'神の指', title:'シミュレーション中の物体を直接つかんで動かす' },
     { id:'add-circle', label:'円', title:'円形の剛体を追加' },
     { id:'add-box', label:'箱', title:'箱型の剛体を追加' },
+    { id:'add-wall', label:'絶対壁', title:'壊れない壁を描画' },
     { id:'add-fire', label:'火', title:'炎エミッタを追加' },
     { id:'add-water', label:'水', title:'水エミッタを追加' },
     { id:'add-ice', label:'氷', title:'氷結エミッタを追加' },
@@ -100,6 +102,16 @@
     };
     const a = parse(color); const b = parse(overlay);
     return `#${toHex(lerp(a[0],b[0],amt))}${toHex(lerp(a[1],b[1],amt))}${toHex(lerp(a[2],b[2],amt))}`;
+  }
+
+  const PHASE_LABELS = { solid:'固体', liquid:'液体', gas:'気体' };
+  function phaseLabel(phase){ return PHASE_LABELS[phase] || PHASE_LABELS.solid; }
+  function phaseSymbol(phase){
+    switch(phase){
+      case 'liquid': return 'L';
+      case 'gas': return 'G';
+      default: return 'S';
+    }
   }
 
   function deepClone(obj){
@@ -146,6 +158,10 @@
 
   function adjustBodyTemperature(body, delta){
     if (!body) return;
+    if (body.absoluteWall) {
+      body.temperature = state.ambientTemperature;
+      return;
+    }
     const maxTemp = (body.meltingPoint ?? 1200) + 600;
     body.temperature = clamp((body.temperature ?? state.ambientTemperature) + delta, -200, maxTemp);
   }
@@ -176,6 +192,7 @@
       collisionCooldown:new Map(),
       sessionExp:0,
       pendingConnection:null,
+      godFinger:null,
       savedLayouts:loadLayouts(),
       initialSnapshot:null,
       bounds:{ width:900, height:560 },
@@ -260,6 +277,7 @@
 
     function setTool(toolId){
       state.tool = toolId;
+      if (toolId !== 'god-finger') state.godFinger = null;
       const buttons = toolGroup.querySelectorAll('button');
       buttons.forEach(btn => {
         if (btn.dataset.tool === toolId) btn.classList.add('active');
@@ -295,6 +313,8 @@
         height: params?.height ?? 80,
         radius: params?.radius ?? 40,
         static: !!params?.static,
+        absoluteWall: !!params?.absoluteWall,
+        phase: params?.phase || 'solid',
         material: params?.material || DEFAULT_MATERIAL,
         mass: 1,
         invMass: 1,
@@ -313,7 +333,11 @@
         thermalConductivity:0.2,
         ignitionPoint:320,
         meltingPoint:800,
-        baseTemperature: state.ambientTemperature
+        boilingPoint: params?.boilingPoint,
+        freezePoint: params?.freezePoint,
+        baseTemperature: state.ambientTemperature,
+        baseRestitution: params?.restitution ?? 0.3,
+        baseFriction: params?.friction ?? 0.4
       });
       applyMaterial(body, body.material);
       if (kind === 'circle') body.radius = clamp(body.radius, 8, 160);
@@ -358,20 +382,36 @@
       const hadTemp = typeof body.temperature === 'number' && Number.isFinite(body.temperature);
       const prevTemp = hadTemp ? body.temperature : (mat.baseTemperature ?? state.ambientTemperature);
       body.material = mat.id;
-      body.restitution = mat.restitution;
-      body.friction = mat.friction;
-      body.color = mat.color;
+      body.baseRestitution = mat.restitution;
+      body.baseFriction = mat.friction;
+      if (!body.absoluteWall) {
+        body.restitution = mat.restitution;
+        body.friction = mat.friction;
+      }
+      body.color = body.absoluteWall ? '#1f2937' : mat.color;
       body.thermalConductivity = mat.thermalConductivity ?? body.thermalConductivity ?? 0.2;
       body.heatCapacity = mat.heatCapacity ?? body.heatCapacity ?? 1;
       body.ignitionPoint = mat.ignitionPoint ?? body.ignitionPoint ?? 320;
       body.meltingPoint = mat.meltingPoint ?? body.meltingPoint ?? 800;
+      body.boilingPoint = mat.boilingPoint ?? body.boilingPoint ?? (body.meltingPoint + 400);
+      body.freezePoint = mat.freezePoint ?? body.freezePoint ?? Math.max(-120, body.meltingPoint - 200);
       body.baseTemperature = mat.baseTemperature ?? state.ambientTemperature;
       const area = body.shape === 'circle' ? Math.PI * body.radius * body.radius : body.width * body.height;
       const density = mat.density;
       const mass = Math.max(0.05, area * density * 0.001);
       body.mass = body.static ? Infinity : mass;
       body.invMass = body.static ? 0 : (1 / mass);
-      body.temperature = hadTemp ? prevTemp : body.baseTemperature;
+      body.phase = body.phase || 'solid';
+      if (body.absoluteWall) {
+        body.static = true;
+        body.mass = Infinity;
+        body.invMass = 0;
+        body.restitution = 0;
+        body.friction = 0.98;
+        body.baseRestitution = 0;
+        body.baseFriction = 0.98;
+      }
+      body.temperature = body.absoluteWall ? state.ambientTemperature : (hadTemp ? prevTemp : body.baseTemperature);
     }
 
     function selectObject(obj, kind){
@@ -449,19 +489,47 @@
         const hit = findObjectAt(pos.x, pos.y);
         if (hit) {
           selectObject(hit.obj, hit.kind);
-          if (hit.kind === 'body' && !state.running) {
-            dragInfo = { id: hit.obj.id, kind:'body', offsetX: pos.x - hit.obj.x, offsetY: pos.y - hit.obj.y };
-          } else if (hit.kind === 'emitter' && !state.running) {
-            dragInfo = { id: hit.obj.id, kind:'emitter', offsetX: pos.x - hit.obj.x, offsetY: pos.y - hit.obj.y };
+          if (hit.kind === 'body') {
+            dragInfo = { id: hit.obj.id, kind:'body', mode:'select', offsetX: pos.x - hit.obj.x, offsetY: pos.y - hit.obj.y };
+          } else if (hit.kind === 'emitter') {
+            dragInfo = { id: hit.obj.id, kind:'emitter', mode:'select', offsetX: pos.x - hit.obj.x, offsetY: pos.y - hit.obj.y };
           }
         } else {
           selectObject(null, null);
+          dragInfo = null;
+        }
+      } else if (state.tool === 'god-finger') {
+        const hit = findObjectAt(pos.x, pos.y);
+        if (hit && hit.kind === 'body') {
+          const body = hit.obj;
+          selectObject(body, 'body');
+          const offsetX = pos.x - body.x;
+          const offsetY = pos.y - body.y;
+          const halfW = body.shape === 'circle' ? body.radius : body.width/2;
+          const halfH = body.shape === 'circle' ? body.radius : body.height/2;
+          dragInfo = { id: body.id, kind:'body', mode:'god', offsetX, offsetY };
+          state.godFinger = {
+            id: body.id,
+            offsetX,
+            offsetY,
+            targetX: clamp(pos.x - offsetX, halfW, state.bounds.width - halfW),
+            targetY: clamp(pos.y - offsetY, halfH, state.bounds.height - halfH),
+            pointerX: pos.x,
+            pointerY: pos.y,
+            active: true
+          };
+        } else {
+          state.godFinger = null;
+          dragInfo = null;
         }
       } else if (state.tool === 'add-circle') {
         const body = spawnBody('circle', { x: pos.x, y: pos.y });
         drawPreview = { id: body.id, shape:'circle', origin:pos, min:12 };
       } else if (state.tool === 'add-box') {
         const body = spawnBody('box', { x: pos.x, y: pos.y });
+        drawPreview = { id: body.id, shape:'box', origin:pos };
+      } else if (state.tool === 'add-wall') {
+        const body = spawnBody('box', { x: pos.x, y: pos.y, static:true, material:'stone', color:'#1f2937', absoluteWall:true });
         drawPreview = { id: body.id, shape:'box', origin:pos };
       } else {
         const emitter = spawnEmitter(toolToKind(state.tool), { x: pos.x, y: pos.y });
@@ -488,11 +556,34 @@
           applyMaterial(body, body.material);
         }
       } else if (dragInfo) {
-        if (dragInfo.kind === 'body') {
+        if (dragInfo.mode === 'god') {
+          const body = state.bodies.find(b => b.id === dragInfo.id);
+          if (!body) { state.godFinger = null; return; }
+          const halfW = body.shape === 'circle' ? body.radius : body.width/2;
+          const halfH = body.shape === 'circle' ? body.radius : body.height/2;
+          const targetX = clamp(pos.x - dragInfo.offsetX, halfW, state.bounds.width - halfW);
+          const targetY = clamp(pos.y - dragInfo.offsetY, halfH, state.bounds.height - halfH);
+          state.godFinger = Object.assign(state.godFinger || {}, {
+            id: body.id,
+            offsetX: dragInfo.offsetX,
+            offsetY: dragInfo.offsetY,
+            targetX,
+            targetY,
+            pointerX: pos.x,
+            pointerY: pos.y,
+            active: true
+          });
+        } else if (dragInfo.kind === 'body') {
           const body = state.bodies.find(b => b.id === dragInfo.id);
           if (body) {
-            body.x = clamp(pos.x - dragInfo.offsetX, body.width/2, state.bounds.width - body.width/2);
-            body.y = clamp(pos.y - dragInfo.offsetY, body.height/2, state.bounds.height - body.height/2);
+            const halfW = body.shape === 'circle' ? body.radius : body.width/2;
+            const halfH = body.shape === 'circle' ? body.radius : body.height/2;
+            const targetX = clamp(pos.x - dragInfo.offsetX, halfW, state.bounds.width - halfW);
+            const targetY = clamp(pos.y - dragInfo.offsetY, halfH, state.bounds.height - halfH);
+            body.x = targetX;
+            body.y = targetY;
+            body.vx = 0;
+            body.vy = 0;
           }
         } else if (dragInfo.kind === 'emitter') {
           const emitter = state.emitters.find(e => e.id === dragInfo.id);
@@ -508,6 +599,7 @@
       pointerDown = false;
       drawPreview = null;
       dragInfo = null;
+      state.godFinger = null;
     };
 
     const handleKeyDown = (evt) => {
@@ -552,7 +644,7 @@
     }
 
     function igniteBody(body, intensity){
-      if (!body) return;
+      if (!body || body.absoluteWall) return;
       const mat = MATERIALS[body.material] || MATERIALS[DEFAULT_MATERIAL];
       const effective = Math.max(0, intensity * mat.flammability - body.wetness * 0.3);
       if (effective <= 0) return;
@@ -563,14 +655,14 @@
     }
 
     function soakBody(body, amount){
-      if (!body) return;
+      if (!body || body.absoluteWall) return;
       body.wetness = clamp(body.wetness + amount, 0, 12);
       if (amount > 0.4) body.burnTimer = Math.max(0, body.burnTimer - amount * 1.2);
       adjustBodyTemperature(body, -amount * 4);
     }
 
     function freezeBody(body, amount){
-      if (!body) return;
+      if (!body || body.absoluteWall) return;
       const prev = body.freezeTimer;
       body.freezeTimer = clamp(body.freezeTimer + amount, 0, 12);
       body.wetness = clamp(body.wetness + amount * 0.4, 0, 12);
@@ -580,7 +672,7 @@
     }
 
     function corrodeBody(body, amount){
-      if (!body) return;
+      if (!body || body.absoluteWall) return;
       const prev = body.corrosion;
       body.corrosion = clamp(body.corrosion + amount, 0, 40);
       adjustBodyTemperature(body, amount * 0.8);
@@ -597,14 +689,14 @@
     }
 
     function entangleBody(body, amount){
-      if (!body) return;
+      if (!body || body.absoluteWall) return;
       const prev = body.vineGrip;
       body.vineGrip = clamp(body.vineGrip + amount, 0, 10);
       if (prev < 0.1 && body.vineGrip >= 0.1) gainXp(2, { reason:'vine-grip' });
     }
 
     function chargeBody(body, energy){
-      if (!body) return;
+      if (!body || body.absoluteWall) return;
       const prev = body.chargeTimer;
       body.chargeTimer = clamp(body.chargeTimer + energy, 0, 10);
       if (prev === 0 && body.chargeTimer > 0) gainXp(4, { reason:'charge' });
@@ -838,6 +930,32 @@
             }
             break;
         }
+        if (p.type === 'water') {
+          const temp = p.temperature ?? state.ambientTemperature;
+          if (temp > 105) {
+            p.type = 'steam';
+            p.radius = 4;
+            p.life = Math.max(p.life, 1.6);
+            p.maxLife = Math.max(p.maxLife || 0, 18);
+            p.vy = Math.min(p.vy, -60);
+            p.temperature = Math.max(110, temp);
+          } else if (temp < 0) {
+            p.type = 'ice';
+            p.radius = FLUID_RADIUS;
+            p.life = Math.max(p.life, 20);
+            p.maxLife = Math.max(p.maxLife || 0, 40);
+            p.temperature = Math.min(temp, 0);
+          }
+        } else if (p.type === 'ice') {
+          const temp = p.temperature ?? state.ambientTemperature;
+          if (temp > 2) {
+            p.type = 'water';
+            p.radius = FLUID_RADIUS;
+            p.life = Math.max(p.life, 18);
+            p.maxLife = Math.max(p.maxLife || 0, 40);
+            p.temperature = Math.max(temp, state.ambientTemperature);
+          }
+        }
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         let supported = false;
@@ -966,6 +1084,7 @@
     }
 
     function handleParticleBodyContact(p, body, dt){
+      if (body?.absoluteWall) return;
       switch(p.type){
         case 'fire': {
           igniteBody(body, 0.45 * (p.power || 1) * dt * 60);
@@ -1075,12 +1194,37 @@
     }
 
     function updateBodies(dt){
+      if (state.godFinger && !state.bodies.some(b => b.id === state.godFinger.id)) state.godFinger = null;
       for (const [key, value] of state.collisionCooldown.entries()){
         const remain = value - dt;
         if (remain <= 0) state.collisionCooldown.delete(key);
         else state.collisionCooldown.set(key, remain);
       }
       for (const body of state.bodies){
+        if (state.godFinger && state.godFinger.id === body.id) {
+          const gf = state.godFinger;
+          const halfW = body.shape === 'circle' ? body.radius : body.width/2;
+          const halfH = body.shape === 'circle' ? body.radius : body.height/2;
+          const targetX = clamp((gf.targetX ?? body.x), halfW, state.bounds.width - halfW);
+          const targetY = clamp((gf.targetY ?? body.y), halfH, state.bounds.height - halfH);
+          if (body.static || body.absoluteWall) {
+            body.x = targetX;
+            body.y = targetY;
+          } else {
+            const dx = targetX - body.x;
+            const dy = targetY - body.y;
+            const stiffness = 40;
+            const damping = 12;
+            body.vx += dx * stiffness * dt;
+            body.vy += dy * stiffness * dt;
+            body.vx *= (1 - clamp(damping * dt, 0, 0.9));
+            body.vy *= (1 - clamp(damping * dt, 0, 0.9));
+            if (Math.hypot(dx, dy) < 6) {
+              body.vx *= (1 - clamp(10 * dt, 0, 0.9));
+              body.vy *= (1 - clamp(10 * dt, 0, 0.9));
+            }
+          }
+        }
         if (!body.static) {
           body.vx += state.gravity.x * dt;
           body.vy += state.gravity.y * dt;
@@ -1143,6 +1287,7 @@
 
     function bodiesThermallyTouching(a, b){
       if (!a || !b) return false;
+      if (a.absoluteWall || b.absoluteWall) return false;
       if (a.shape === 'circle' && b.shape === 'circle') {
         const dist = Math.hypot(a.x - b.x, a.y - b.y);
         return dist <= a.radius + b.radius + 16;
@@ -1173,6 +1318,11 @@
       const ambient = state.ambientTemperature;
       const bodies = state.bodies;
       for (const body of bodies){
+        if (body.absoluteWall) {
+          body.temperature = state.ambientTemperature;
+          body.phase = 'solid';
+          continue;
+        }
         const mat = MATERIALS[body.material] || MATERIALS[DEFAULT_MATERIAL];
         const conductivity = body.thermalConductivity ?? mat.thermalConductivity ?? 0.25;
         const burnFactor = clamp(body.burnTimer / 30, 0, 1);
@@ -1225,6 +1375,151 @@
           adjustBodyTemperature(b, -flow);
         }
       }
+    }
+
+    function applyPhaseTransition(body, nextPhase){
+      const prev = body.phase || 'solid';
+      if (prev === nextPhase) return;
+      body.phase = nextPhase;
+      body.phaseAge = 0;
+      if (nextPhase === 'liquid') {
+        gainXp(1.5, { reason:'phase-liquid' });
+      } else if (nextPhase === 'gas') {
+        for (let i=0;i<3;i++) {
+          spawnParticle('steam', body.x + (Math.random()-0.5) * (body.width || body.radius * 2 || 40), body.y + (Math.random()-0.5) * (body.height || body.radius * 2 || 40), {
+            temperature: Math.max(120, body.temperature || state.ambientTemperature + 40)
+          });
+        }
+        gainXp(2.5, { reason:'phase-gas' });
+      } else if (nextPhase === 'solid' && prev !== 'solid') {
+        gainXp(1, { reason:'phase-solid' });
+      }
+    }
+
+    function processParticleReactions(dt, waters, fires, acids, ices){
+      const fireDistSq = 18 * 18;
+      for (const water of waters){
+        for (const fire of fires){
+          const dx = fire.x - water.x;
+          const dy = fire.y - water.y;
+          if ((dx*dx + dy*dy) <= fireDistSq){
+            if (water.type === 'water') {
+              water.type = 'steam';
+              water.temperature = Math.max(110, water.temperature, fire.temperature || FIRE_BASE_TEMPERATURE);
+              water.life = Math.max(water.life, 1.2);
+              water.maxLife = Math.max(water.maxLife || 0, 18);
+              water.vx *= 0.5;
+              water.vy = Math.min(water.vy, -80);
+              water.radius = 4;
+            }
+            fire.life = Math.max(0.1, fire.life - dt * 2);
+            adjustParticleTemperature(fire, -220 * dt);
+          }
+        }
+        for (const acid of acids){
+          const dx = acid.x - water.x;
+          const dy = acid.y - water.y;
+          if ((dx*dx + dy*dy) <= 17 * 17){
+            acid.type = 'water';
+            acid.temperature = Math.max(acid.temperature, water.temperature + 5);
+            acid.life = Math.min(acid.life, 24);
+            acid.maxLife = Math.max(acid.maxLife || 0, 24);
+            if (Math.random() < dt * 2) {
+              spawnParticle('steam', (acid.x + water.x) / 2, (acid.y + water.y) / 2, { temperature: Math.max(100, acid.temperature) });
+            }
+          }
+        }
+      }
+      const meltDistSq = 17 * 17;
+      for (const ice of ices){
+        for (const fire of fires){
+          const dx = fire.x - ice.x;
+          const dy = fire.y - ice.y;
+          if ((dx*dx + dy*dy) <= meltDistSq){
+            ice.type = 'water';
+            ice.temperature = Math.max(ice.temperature, 20);
+            ice.life = Math.max(ice.life, 16);
+            ice.radius = FLUID_RADIUS;
+          }
+        }
+      }
+    }
+
+    function updateChemistry(dt){
+      const waters = [];
+      const fires = [];
+      const acids = [];
+      const ices = [];
+      for (const p of state.particles){
+        switch(p.type){
+          case 'water': waters.push(p); break;
+          case 'fire': fires.push(p); break;
+          case 'acid': acids.push(p); break;
+          case 'ice': ices.push(p); break;
+        }
+      }
+      for (const body of state.bodies){
+        if (body.absoluteWall) continue;
+        const temp = body.temperature ?? state.ambientTemperature;
+        const melt = body.meltingPoint ?? 800;
+        const boil = body.boilingPoint ?? (melt + 400);
+        const freeze = body.freezePoint ?? Math.max(-120, melt - 200);
+        let desiredPhase = body.phase || 'solid';
+        if (temp >= boil) desiredPhase = 'gas';
+        else if (temp >= melt) desiredPhase = 'liquid';
+        else if (temp <= freeze) desiredPhase = 'solid';
+        else if (desiredPhase === 'gas' && temp < boil - 80) desiredPhase = 'liquid';
+        else if (desiredPhase === 'liquid' && temp < melt - 40) desiredPhase = 'solid';
+        if (desiredPhase !== body.phase) applyPhaseTransition(body, desiredPhase);
+        body.phase = body.phase || desiredPhase;
+        body.phaseAge = (body.phaseAge || 0) + dt;
+        const baseRest = body.baseRestitution ?? body.restitution;
+        const baseFric = body.baseFriction ?? body.friction;
+        if (body.phase === 'liquid') {
+          body.restitution = lerp(body.restitution, baseRest * 0.55, clamp(4*dt, 0, 1));
+          body.friction = lerp(body.friction, Math.max(0.05, baseFric * 0.6), clamp(4*dt, 0, 1));
+        } else if (body.phase === 'gas') {
+          body.restitution = lerp(body.restitution, 0.05, clamp(4*dt, 0, 1));
+          body.friction = lerp(body.friction, 0.03, clamp(4*dt, 0, 1));
+          if (!body.static) {
+            body.vx *= (1 - clamp(0.45 * dt, 0, 0.35));
+            body.vy *= (1 - clamp(0.45 * dt, 0, 0.35));
+          }
+          if (!body.static && Math.random() < dt * 0.3) {
+            const shrink = clamp(dt * 6, 0, 0.25);
+            if (body.shape === 'circle') body.radius = Math.max(6, body.radius * (1 - shrink));
+            else {
+              body.width = Math.max(12, body.width * (1 - shrink));
+              body.height = Math.max(12, body.height * (1 - shrink));
+            }
+            const mat = MATERIALS[body.material] || MATERIALS[DEFAULT_MATERIAL];
+            const area = body.shape === 'circle' ? Math.PI * body.radius * body.radius : body.width * body.height;
+            const density = mat?.density ?? 1;
+            const mass = Math.max(0.05, area * density * 0.001);
+            body.mass = body.static ? Infinity : mass;
+            body.invMass = body.static ? 0 : (1 / mass);
+          }
+        } else {
+          body.restitution = lerp(body.restitution, baseRest, clamp(5*dt, 0, 1));
+          body.friction = lerp(body.friction, baseFric, clamp(5*dt, 0, 1));
+        }
+        if (body.wetness > 2 && temp > Math.max(95, (body.boilingPoint ?? 120) - 20)) {
+          if (Math.random() < clamp(body.wetness * dt * 0.6, 0, 0.85)) {
+            spawnParticle('steam', body.x + (Math.random()-0.5) * (body.width || body.radius || 24), body.y - (body.height || body.radius || 24) * 0.4, {
+              temperature: Math.max(100, temp)
+            });
+            body.wetness = Math.max(0, body.wetness - 0.3);
+          }
+        }
+        if (body.corrosion > 12 && body.material === 'metal') {
+          if (Math.random() < dt * 0.6) {
+            spawnParticle('spark', body.x + (Math.random()-0.5) * (body.width || body.radius || 20), body.y + (Math.random()-0.5) * (body.height || body.radius || 20), {
+              power: clamp(1 + body.corrosion / 20, 1, 3)
+            });
+          }
+        }
+      }
+      processParticleReactions(dt, waters, fires, acids, ices);
     }
 
     function resolveCollisions(iterations){
@@ -1411,7 +1706,15 @@
       const info4 = document.createElement('div');
       info4.className = 'phys-hud-line';
       info4.textContent = `平均温度 ${avgTemp.toFixed(1)}°C / 周囲 ${state.ambientTemperature.toFixed(1)}°C / 最高 ${maxTemp.toFixed(1)}°C`;
-      hud.append(info, info2, info3, info4);
+      const phaseCounts = state.bodies.reduce((acc, body) => {
+        const key = body.absoluteWall ? 'solid' : (body.phase || 'solid');
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+      const info5 = document.createElement('div');
+      info5.className = 'phys-hud-line';
+      info5.textContent = `状態 固体${phaseCounts.solid || 0} / 液体${phaseCounts.liquid || 0} / 気体${phaseCounts.gas || 0}`;
+      hud.append(info, info2, info3, info4, info5);
     }
 
     function renderInspector(){
@@ -1534,6 +1837,9 @@
       section.className = 'phys-section';
       const h = document.createElement('h4');
       h.textContent = '図形プロパティ';
+      const phaseInfo = document.createElement('p');
+      phaseInfo.className = 'phys-hint';
+      phaseInfo.textContent = `状態: ${phaseLabel(body.phase || 'solid')}`;
       const matLabel = document.createElement('label');
       matLabel.textContent = '素材プリセット';
       const matSelect = document.createElement('select');
@@ -1546,6 +1852,9 @@
       });
       matSelect.addEventListener('change', () => {
         applyMaterial(body, matSelect.value);
+        body.baseRestitution = body.restitution;
+        body.baseFriction = body.friction;
+        renderInspector();
       });
 
       const massLabel = document.createElement('label');
@@ -1567,6 +1876,7 @@
       restInput.addEventListener('input', () => {
         body.restitution = Number(restInput.value);
         restLabel.textContent = `反発 (${body.restitution.toFixed(2)})`;
+        body.baseRestitution = body.restitution;
       });
       const fricLabel = document.createElement('label'); fricLabel.textContent = `摩擦 (${body.friction.toFixed(2)})`;
       const fricInput = document.createElement('input');
@@ -1574,9 +1884,24 @@
       fricInput.addEventListener('input', () => {
         body.friction = Number(fricInput.value);
         fricLabel.textContent = `摩擦 (${body.friction.toFixed(2)})`;
+        body.baseFriction = body.friction;
       });
 
-      section.append(h, matLabel, matSelect, massLabel, staticToggle, restLabel, restInput, fricLabel, fricInput);
+      if (body.absoluteWall) {
+        matSelect.disabled = true;
+        staticInput.disabled = true;
+        restInput.disabled = true;
+        fricInput.disabled = true;
+      }
+
+      section.append(h, phaseInfo, matLabel, matSelect, massLabel, staticToggle, restLabel, restInput, fricLabel, fricInput);
+
+      if (body.absoluteWall) {
+        const wallNote = document.createElement('p');
+        wallNote.className = 'phys-hint';
+        wallNote.textContent = '絶対壁は素材と物性が固定されています。サイズと位置のみ変更できます。';
+        section.appendChild(wallNote);
+      }
 
       if (body.shape === 'circle') {
         const rLabel = document.createElement('label'); rLabel.textContent = `半径 (${body.radius.toFixed(1)})`;
@@ -1692,6 +2017,7 @@
         updateEmitters(stepDt);
         updateParticles(stepDt);
         updateThermodynamics(stepDt);
+        updateChemistry(stepDt);
         updateVines(stepDt);
         propagateCircuit(stepDt);
       }
@@ -1726,23 +2052,56 @@
       // bodies
       state.bodies.forEach(body => {
         let fill = body.color;
-        const tempDiff = (body.temperature ?? state.ambientTemperature) - state.ambientTemperature;
-        if (tempDiff > 5) fill = mixColor(fill, '#f97316', clamp(tempDiff/300, 0, 0.6));
-        if (tempDiff < -5) fill = mixColor(fill, '#38bdf8', clamp(Math.abs(tempDiff)/200, 0, 0.5));
-        if (body.burnTimer > 0) fill = mixColor(fill, '#f97316', clamp(body.burnTimer/12, 0, 1));
-        if (body.wetness > 0) fill = mixColor(fill, '#60a5fa', clamp(body.wetness/6, 0, 0.8));
-        if (body.freezeTimer > 0) fill = mixColor(fill, '#bfdbfe', clamp(body.freezeTimer/10, 0, 0.6));
-        if (body.corrosion > 0) fill = mixColor(fill, '#bef264', clamp(body.corrosion/18, 0, 0.5));
-        if (body.chargeTimer > 0) fill = mixColor(fill, '#facc15', clamp(body.chargeTimer/5, 0, 0.6));
+        if (body.absoluteWall) {
+          fill = '#111827';
+        } else {
+          const tempDiff = (body.temperature ?? state.ambientTemperature) - state.ambientTemperature;
+          if (tempDiff > 5) fill = mixColor(fill, '#f97316', clamp(tempDiff/300, 0, 0.6));
+          if (tempDiff < -5) fill = mixColor(fill, '#38bdf8', clamp(Math.abs(tempDiff)/200, 0, 0.5));
+          if (body.burnTimer > 0) fill = mixColor(fill, '#f97316', clamp(body.burnTimer/12, 0, 1));
+          if (body.wetness > 0) fill = mixColor(fill, '#60a5fa', clamp(body.wetness/6, 0, 0.8));
+          if (body.freezeTimer > 0) fill = mixColor(fill, '#bfdbfe', clamp(body.freezeTimer/10, 0, 0.6));
+          if (body.corrosion > 0) fill = mixColor(fill, '#bef264', clamp(body.corrosion/18, 0, 0.5));
+          if (body.chargeTimer > 0) fill = mixColor(fill, '#facc15', clamp(body.chargeTimer/5, 0, 0.6));
+          if (body.phase === 'gas') fill = mixColor(fill, '#e2e8f0', 0.2);
+          if (body.phase === 'liquid') fill = mixColor(fill, '#3b82f6', 0.2);
+        }
         ctx.fillStyle = fill;
-        ctx.strokeStyle = state.selection === body.id ? '#facc15' : 'rgba(15,23,42,0.8)';
-        ctx.lineWidth = state.selection === body.id ? 3 : 1.5;
+        ctx.strokeStyle = body.absoluteWall ? 'rgba(148,163,184,0.6)' : (state.selection === body.id ? '#facc15' : 'rgba(15,23,42,0.8)');
+        ctx.lineWidth = state.selection === body.id ? 3 : (body.absoluteWall ? 2.2 : 1.5);
         if (body.shape === 'circle') {
           ctx.beginPath(); ctx.arc(body.x, body.y, body.radius, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         } else {
           ctx.beginPath(); ctx.rect(body.x - body.width/2, body.y - body.height/2, body.width, body.height); ctx.fill(); ctx.stroke();
         }
+        if (!body.absoluteWall) {
+          const symbol = phaseSymbol(body.phase);
+          if (symbol) {
+            const prevAlign = ctx.textAlign;
+            const prevBaseline = ctx.textBaseline;
+            ctx.font = '11px "Segoe UI",sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(248,250,252,0.9)';
+            ctx.fillText(symbol, body.x, body.y);
+            ctx.textAlign = prevAlign;
+            ctx.textBaseline = prevBaseline;
+          }
+        }
       });
+
+      if (state.godFinger && state.godFinger.pointerX != null) {
+        ctx.strokeStyle = 'rgba(250,204,21,0.7)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(state.godFinger.pointerX, state.godFinger.pointerY, 20, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(state.godFinger.pointerX - 6, state.godFinger.pointerY + 10);
+        ctx.lineTo(state.godFinger.pointerX, state.godFinger.pointerY - 12);
+        ctx.lineTo(state.godFinger.pointerX + 6, state.godFinger.pointerY + 10);
+        ctx.stroke();
+      }
 
       // emitters
       state.emitters.forEach(emitter => {
@@ -1881,6 +2240,19 @@
         if (typeof copy.ignitionPoint !== 'number') copy.ignitionPoint = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.ignitionPoint ?? 320;
         if (typeof copy.meltingPoint !== 'number') copy.meltingPoint = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.meltingPoint ?? 800;
         if (typeof copy.baseTemperature !== 'number') copy.baseTemperature = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.baseTemperature ?? state.ambientTemperature;
+        if (typeof copy.boilingPoint !== 'number') copy.boilingPoint = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.boilingPoint ?? ((copy.meltingPoint ?? 800) + 400);
+        if (typeof copy.freezePoint !== 'number') copy.freezePoint = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.freezePoint ?? Math.max(-120, (copy.meltingPoint ?? 800) - 200);
+        copy.phase = copy.phase || 'solid';
+        copy.absoluteWall = !!copy.absoluteWall;
+        if (typeof copy.baseRestitution !== 'number') {
+          const mat = MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL];
+          copy.baseRestitution = mat?.restitution ?? copy.restitution ?? 0.3;
+        }
+        if (typeof copy.baseFriction !== 'number') {
+          const mat = MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL];
+          copy.baseFriction = mat?.friction ?? copy.friction ?? 0.4;
+        }
+        if (copy.absoluteWall) copy.static = true;
         return copy;
       });
       state.bodies.forEach(body => applyMaterial(body, body.material));

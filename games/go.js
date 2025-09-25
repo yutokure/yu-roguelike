@@ -8,6 +8,7 @@
   const STAR_POINTS = [
     [2,2],[6,2],[2,6],[6,6],[4,4]
   ];
+  const KOMI = 6.5;
   const XP_WIN = { EASY: 90, NORMAL: 180, HARD: 320 };
   const CAPTURE_MULT = { EASY: 2, NORMAL: 2.5, HARD: 3 };
 
@@ -78,11 +79,20 @@
     let blackCaptures = 0;
     let whiteCaptures = 0;
     let thinking = false;
+    let history = new Set([boardHash(board)]);
 
     function inBounds(x,y){ return x>=0 && x<SIZE && y>=0 && y<SIZE; }
     const neighbors = [[1,0],[-1,0],[0,1],[0,-1]];
 
     function cloneBoard(src){ return src.map(row => row.slice()); }
+
+    function boardHash(target){
+      return target.map(row => row.join(',')).join('|');
+    }
+
+    function isKoViolation(simBoard){
+      return history.has(boardHash(simBoard));
+    }
 
     function collectGroup(target, sx, sy){
       const color = target[sy][sx];
@@ -137,6 +147,7 @@
           if (board[y][x] !== EMPTY) continue;
           const sim = simulateMove(board, x, y, color);
           if (!sim) continue;
+          if (isKoViolation(sim.board)) continue;
           let friendAdj = 0, enemyAdj = 0;
           for (const [dx,dy] of neighbors){
             const nx = x+dx, ny = y+dy;
@@ -197,7 +208,7 @@
       const terr = territoryScore(target);
       return {
         black: blackStones + terr.black + blackCaptures,
-        white: whiteStones + terr.white + whiteCaptures
+        white: whiteStones + terr.white + whiteCaptures + KOMI
       };
     }
 
@@ -205,7 +216,7 @@
       if (text){ info.textContent = text; return; }
       if (ended){ return; }
       const turnText = turn === BLACK ? 'あなたの番 (黒)' : 'AIの番 (白)';
-      info.textContent = `${turnText} ｜ 黒 捕獲:${blackCaptures} ｜ 白 捕獲:${whiteCaptures}`;
+      info.textContent = `${turnText} ｜ 黒 捕獲:${blackCaptures} ｜ 白 捕獲:${whiteCaptures} (コミ+${KOMI})`;
     }
 
     function draw(){
@@ -270,11 +281,16 @@
     function applyMove(x, y, color, isPlayer){
       const sim = simulateMove(board, x, y, color);
       if (!sim) return false;
+      if (isKoViolation(sim.board)){
+        if (isPlayer) updateInfo('その手はコウで禁じられています');
+        return false;
+      }
       board = sim.board;
       lastMove = { x, y, color };
       if (color === BLACK) blackCaptures += sim.captured;
       else whiteCaptures += sim.captured;
       consecutivePasses = 0;
+      history.add(boardHash(board));
       if (awardXp){
         awardXp(1, { type:'place', game:'go' });
         if (sim.captured > 0){
@@ -291,6 +307,11 @@
     function endGame(reason, winner){
       if (ended) return;
       ended = true;
+      const resolution = resolveDeadGroups(board);
+      board = resolution.board;
+      if (resolution.captures.black) blackCaptures += resolution.captures.black;
+      if (resolution.captures.white) whiteCaptures += resolution.captures.white;
+      draw();
       const finalScore = computeScore(board);
       const diff = finalScore.black - finalScore.white;
       let msg;
@@ -302,7 +323,7 @@
         else winner = 0;
         msg = diff === 0 ? '持碁 (引き分け)' : (winner === BLACK ? 'あなたの勝ち！' : 'AIの勝ち…');
       }
-      msg += ` ｜ 黒 ${finalScore.black} - 白 ${finalScore.white}`;
+      msg += ` ｜ 黒 ${formatScore(finalScore.black)} - 白 ${formatScore(finalScore.white)}`;
       updateInfo(msg);
       if (winner === BLACK && awardXp){
         const xp = XP_WIN[difficulty] || XP_WIN.NORMAL;
@@ -371,6 +392,7 @@
           if (targetBoard[y][x] !== EMPTY) continue;
           const sim = simulateMove(targetBoard, x, y, color);
           if (!sim) continue;
+          if (isKoViolation(sim.board)) continue;
           replies.push(sim.captured * 6 + sim.liberties * 0.4);
         }
       }
@@ -403,7 +425,7 @@
         return;
       }
       const sim = simulateMove(board, x, y, BLACK);
-      if (!sim){ if (hover){ hover = null; draw(); } return; }
+      if (!sim || isKoViolation(sim.board)){ if (hover){ hover = null; draw(); } return; }
       if (!hover || hover.x !== x || hover.y !== y){
         hover = { x, y };
         draw();
@@ -449,6 +471,7 @@
       blackCaptures = 0;
       whiteCaptures = 0;
       thinking = false;
+      history = new Set([boardHash(board)]);
       updateInfo('囲碁 9×9 — あなたが先手 (黒)');
       draw();
     }
@@ -467,6 +490,99 @@
     function getScore(){
       const final = computeScore(board);
       return final.black - final.white;
+    }
+
+    function formatScore(value){
+      const rounded = Math.round(value * 10) / 10;
+      return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
+    }
+
+    function resolveDeadGroups(base){
+      const working = cloneBoard(base);
+      const regionId = Array.from({length: SIZE}, () => Array(SIZE).fill(-1));
+      const regionOwner = [];
+      let regionIndex = 0;
+
+      for (let y=0;y<SIZE;y++){
+        for (let x=0;x<SIZE;x++){
+          if (working[y][x] !== EMPTY || regionId[y][x] !== -1) continue;
+          const queue = [[x,y]];
+          regionId[y][x] = regionIndex;
+          const borders = new Set();
+          while(queue.length){
+            const [cx,cy] = queue.shift();
+            for (const [dx,dy] of neighbors){
+              const nx = cx+dx, ny = cy+dy;
+              if (!inBounds(nx,ny)) continue;
+              const cell = working[ny][nx];
+              if (cell === EMPTY){
+                if (regionId[ny][nx] === -1){
+                  regionId[ny][nx] = regionIndex;
+                  queue.push([nx,ny]);
+                }
+              } else {
+                borders.add(cell);
+              }
+            }
+          }
+          let owner = 0;
+          if (borders.size === 1){
+            owner = borders.has(BLACK) ? BLACK : WHITE;
+          }
+          regionOwner[regionIndex] = owner;
+          regionIndex++;
+        }
+      }
+
+      const captures = { black: 0, white: 0 };
+      const visited = Array.from({length: SIZE}, () => Array(SIZE).fill(false));
+      for (let y=0;y<SIZE;y++){
+        for (let x=0;x<SIZE;x++){
+          if (working[y][x] === EMPTY || visited[y][x]) continue;
+          const color = working[y][x];
+          const stack = [[x,y]];
+          const stones = [];
+          const libertyRegions = new Set();
+          visited[y][x] = true;
+          while(stack.length){
+            const [cx,cy] = stack.pop();
+            stones.push([cx,cy]);
+            for (const [dx,dy] of neighbors){
+              const nx = cx+dx, ny = cy+dy;
+              if (!inBounds(nx,ny)) continue;
+              const cell = working[ny][nx];
+              if (cell === EMPTY){
+                const rid = regionId[ny][nx];
+                if (rid !== -1) libertyRegions.add(rid);
+              } else if (cell === color && !visited[ny][nx]){
+                visited[ny][nx] = true;
+                stack.push([nx,ny]);
+              }
+            }
+          }
+          let alive = false;
+          if (libertyRegions.size === 0){
+            alive = false;
+          } else {
+            for (const rid of libertyRegions){
+              const owner = regionOwner[rid];
+              if (owner === 0 || owner === color){
+                alive = true;
+                break;
+              }
+            }
+          }
+          if (!alive){
+            for (const [sx,sy] of stones){
+              working[sy][sx] = EMPTY;
+            }
+            if (color === BLACK) captures.white += stones.length;
+            else captures.black += stones.length;
+          }
+        }
+      }
+
+      return { board: working, captures };
     }
 
     // expose restart via pause menu if needed

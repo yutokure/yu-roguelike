@@ -52,5 +52,6 @@ window.MINIEXP_MANIFEST = [
   { id: 'ten_ten',       name: '1010パズル',           entry: 'games/ten_ten.js',          version: '0.1.0', author: 'builtin', description: 'ラインでEXP／クロス消しは倍増', category: 'パズル' },
   { id: 'trump_games',   name: 'トランプセレクション', entry: 'games/trump_games.js',      version: '0.1.0', author: 'mod', description: 'トランプゲームハブ（神経衰弱・ブラックジャック・ババ抜き収録）', category: 'ボード' },
   { id: 'gamble_hall',  name: 'ギャンブルホール',     entry: 'games/gamble_hall.js',  version: '0.1.0', author: 'mod', description: 'EXPを賭けるルーレットとパチンコスロットの複合MOD', category: 'ギャンブル' },
+  { id: 'electro_instrument', name: '電子楽器スタジオ', entry: 'games/electro_instrument.js', version: '0.1.0', author: 'mod', description: 'ピアノ鍵盤と多彩な音色で自由に演奏し音ごとにEXP獲得', category: 'トイ' },
   { id: 'physics_sandbox', name: '物理遊び', entry: 'games/physics_sandbox.js', version: '0.1.0', author: 'mod', description: '火・水・ツタ・雷・回路を組み合わせるトイ系物理サンドボックス', category: 'トイ' }
 ];

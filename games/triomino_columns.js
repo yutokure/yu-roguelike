@@ -845,12 +845,17 @@
     function applyMultiInjection(piece){
       if (!piece || !piece.blocks) return;
       const order = [1, 0, 2];
-      const limit = Math.min(piece.blocks.length, Math.min(3, Math.max(0, piece.multiInjected | 0)));
-      for (let i = 0; i < limit && i < order.length; i++){
+      const desired = Math.min(piece.blocks.length, Math.min(3, Math.max(0, piece.multiInjected | 0)));
+      if (!desired) return;
+      let existing = piece.blocks.reduce((acc, block) => acc + (block && block.multi ? 1 : 0), 0);
+      for (let i = 0; i < order.length && existing < desired; i++){
         const idx = order[i];
         const base = piece.blocks[idx] || {};
+        if (base.multi) continue;
         piece.blocks[idx] = { mark: 'multi', color: MULTI_COLOR, name: 'マルチ', multi: true, garbage: false };
+        existing += 1;
       }
+      piece.multiInjected = Math.max(desired, existing);
     }
 
     function processPostSettle(boardState){

@@ -793,7 +793,13 @@
 
     function setupYouTubePlayer(videoId){
       ensureYouTubeApi().then(YT => {
-        if (state.destroyed || state.currentSource !== 'youtube') return;
+        if (
+          state.destroyed ||
+          state.currentSource !== 'youtube' ||
+          state.currentMeta?.source !== videoId
+        ){
+          return;
+        }
         youtubeContainer.innerHTML = '';
         if (!YT || typeof YT.Player !== 'function'){
           const iframe = document.createElement('iframe');
@@ -806,7 +812,11 @@
           youtubeContainer.appendChild(iframe);
           state.youtubeFallbackIframe = iframe;
           setStatus('YouTube (簡易モード) を読み込みました。');
-          if (state.pendingLoad && state.pendingLoad.type === 'youtube'){
+          if (
+            state.currentMeta?.source === videoId &&
+            state.pendingLoad &&
+            state.pendingLoad.type === 'youtube'
+          ){
             grantLoadXp();
             setMessage('success', 'YouTube 動画を簡易モードで読み込みました。');
           }
@@ -825,6 +835,17 @@
           },
           events: {
             onReady(event){
+              if (
+                state.currentSource !== 'youtube' ||
+                state.currentMeta?.source !== videoId
+              ){
+                try {
+                  event?.target?.destroy?.();
+                } catch (err){
+                  console.warn('Failed to destroy stale YouTube player', err);
+                }
+                return;
+              }
               state.youtubePlayer = event.target;
               const duration = Number.isFinite(event.target.getDuration?.()) ? event.target.getDuration() : null;
               if (state.currentMeta){
@@ -842,6 +863,7 @@
             },
             onStateChange(event){
               if (state.currentSource !== 'youtube') return;
+              if (state.currentMeta?.source !== videoId) return;
               const playerState = event.data;
               if (playerState === window.YT.PlayerState.PLAYING){
                 setStatus('再生中');

@@ -6494,7 +6494,8 @@ function renderMiniExpRecords() {
     const totalExpRaw = rec?.totalExpEarned ?? 0;
     const totalExp = Math.floor(totalExpRaw);
     const totalExpText = totalExp > 0 ? `+${totalExp}` : String(totalExp);
-    box.appendChild(mk('ベストスコア', String(best)));
+    const formattedBest = Number.isFinite(best) ? best.toFixed(2) : String(best);
+    box.appendChild(mk('ベストスコア', formattedBest));
     box.appendChild(mk('通算プレイ', String(plays)));
     box.appendChild(mk('通算獲得EXP', totalExpText));
 }

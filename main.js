@@ -151,6 +151,7 @@ const modMakerState = {
         blocks2: [],
         blocks3: []
     },
+    allowEmptyStructures: false,
     selectedStructure: 0,
     selectedGenerator: 0
 };
@@ -1276,12 +1277,11 @@ function initToolsTab() {
     }
     if (modMakerRefs.removeStructure) {
         modMakerRefs.removeStructure.addEventListener('click', () => {
-            if (modMakerState.structures.length <= 1) {
-                const single = modMakerState.structures[0];
-                if (single) single.matrix = modMakerCreateMatrix(single.width, single.height, null);
-            } else {
-                modMakerState.structures.splice(modMakerState.selectedStructure, 1);
-                modMakerState.selectedStructure = Math.max(0, modMakerState.selectedStructure - 1);
+            if (!modMakerState.structures.length) return;
+            const index = Math.max(0, Math.min(modMakerState.selectedStructure || 0, modMakerState.structures.length - 1));
+            modMakerState.structures.splice(index, 1);
+            if (!modMakerState.structures.length) {
+                modMakerState.allowEmptyStructures = true;
             }
             ensureModMakerDefaults();
             renderModMaker();
@@ -1508,7 +1508,12 @@ function initToolsTab() {
 }
 function ensureModMakerDefaults() {
     if (!Array.isArray(modMakerState.structures)) modMakerState.structures = [];
-    if (!modMakerState.structures.length) modMakerState.structures.push(createNewStructure());
+    if (typeof modMakerState.allowEmptyStructures !== 'boolean') {
+        modMakerState.allowEmptyStructures = modMakerState.structures.length === 0;
+    }
+    if (!modMakerState.structures.length && !modMakerState.allowEmptyStructures) {
+        modMakerState.structures.push(createNewStructure());
+    }
     if (!Array.isArray(modMakerState.generators)) modMakerState.generators = [];
     if (!modMakerState.generators.length) modMakerState.generators.push(createNewGenerator());
     modMakerState.generators.forEach(gen => ensureGeneratorFixedState(gen));
@@ -1518,7 +1523,14 @@ function ensureModMakerDefaults() {
     for (const tier of ['blocks1', 'blocks2', 'blocks3']) {
         if (!Array.isArray(modMakerState.blocks[tier])) modMakerState.blocks[tier] = [];
     }
-    modMakerState.selectedStructure = Math.min(Math.max(0, modMakerState.selectedStructure || 0), modMakerState.structures.length - 1);
+    if (!modMakerState.structures.length) {
+        modMakerState.selectedStructure = -1;
+    } else {
+        modMakerState.selectedStructure = Math.min(
+            Math.max(0, Math.floor(modMakerState.selectedStructure ?? 0)),
+            modMakerState.structures.length - 1
+        );
+    }
     modMakerState.selectedGenerator = Math.min(Math.max(0, modMakerState.selectedGenerator || 0), modMakerState.generators.length - 1);
 }
 
@@ -1654,6 +1666,7 @@ function createNewBlockEntry(tier) {
         chest: 'normal',
         type: '',
         bossFloors: '',
+        weight: '',
         description: ''
     };
 }
@@ -1712,9 +1725,21 @@ function fillStructureCells(fill) {
 }
 
 function renderStructureGrid(structure) {
-    if (!modMakerRefs?.grid || !structure) return;
+    if (!modMakerRefs?.grid) return;
     const grid = modMakerRefs.grid;
     grid.innerHTML = '';
+    if (!structure) {
+        grid.classList.add('placeholder');
+        grid.setAttribute('aria-disabled', 'true');
+        grid.style.gridTemplateColumns = '';
+        const note = document.createElement('span');
+        note.setAttribute('role', 'note');
+        note.textContent = '構造を追加してください。';
+        grid.appendChild(note);
+        return;
+    }
+    grid.classList.remove('placeholder');
+    grid.setAttribute('aria-disabled', 'false');
     grid.style.gridTemplateColumns = `repeat(${structure.width}, minmax(22px, 22px))`;
     for (let y = 0; y < structure.height; y++) {
         for (let x = 0; x < structure.width; x++) {
@@ -1968,7 +1993,10 @@ function renderModMakerBlocks() {
             card.className = 'modmaker-block-card';
             const header = document.createElement('header');
             const title = document.createElement('div');
-            title.textContent = entry.name || entry.key || `${tier.toUpperCase()} #${index + 1}`;
+            const updateTitle = () => {
+                title.textContent = entry.name || entry.key || `${tier.toUpperCase()} #${index + 1}`;
+            };
+            updateTitle();
             header.appendChild(title);
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
@@ -1980,15 +2008,51 @@ function renderModMakerBlocks() {
             header.appendChild(removeBtn);
             card.appendChild(header);
 
-            card.appendChild(createBlockField('キー', entry.key, (val) => { entry.key = val.trim(); }));
-            card.appendChild(createBlockField('名前', entry.name, (val) => { entry.name = val; }));
-            card.appendChild(createBlockField('レベル補正', entry.level, (val) => { entry.level = val; }, { placeholder: '例: +0' }));
-            card.appendChild(createBlockField('サイズ補正', entry.size, (val) => { entry.size = val; }, { placeholder: '例: +1' }));
-            card.appendChild(createBlockField('深さ補正', entry.depth, (val) => { entry.depth = val; }, { placeholder: '例: +1' }));
-            card.appendChild(createBlockField('宝箱タイプ', entry.chest, (val) => { entry.chest = val; }, { placeholder: 'normal/more/less' }));
-            card.appendChild(createBlockField('タイプID', entry.type, (val) => { entry.type = val; }, { placeholder: '例: custom-dungeon' }));
-            card.appendChild(createBlockField('ボス階層', entry.bossFloors, (val) => { entry.bossFloors = val; }, { placeholder: '例: 5,10,15' }));
-            card.appendChild(createBlockField('説明・メモ', entry.description, (val) => { entry.description = val; }, { multiline: true, rows: 2 }));
+            const notifyChanged = (shouldUpdateTitle = false) => {
+                refreshModMakerPreview();
+                if (shouldUpdateTitle) updateTitle();
+            };
+
+            card.appendChild(createBlockField('キー', entry.key, (val) => {
+                entry.key = val;
+                notifyChanged(true);
+            }, { deferRender: true }));
+            card.appendChild(createBlockField('名前', entry.name, (val) => {
+                entry.name = val;
+                notifyChanged(true);
+            }, { deferRender: true }));
+            card.appendChild(createBlockField('レベル補正', entry.level, (val) => {
+                entry.level = val;
+                notifyChanged();
+            }, { placeholder: '例: +0', deferRender: true }));
+            card.appendChild(createBlockField('サイズ補正', entry.size, (val) => {
+                entry.size = val;
+                notifyChanged();
+            }, { placeholder: '例: +1', deferRender: true }));
+            card.appendChild(createBlockField('深さ補正', entry.depth, (val) => {
+                entry.depth = val;
+                notifyChanged();
+            }, { placeholder: '例: +1', deferRender: true }));
+            card.appendChild(createBlockField('宝箱タイプ', entry.chest, (val) => {
+                entry.chest = val;
+                notifyChanged();
+            }, { placeholder: 'normal/more/less', deferRender: true }));
+            card.appendChild(createBlockField('タイプID', entry.type, (val) => {
+                entry.type = val;
+                notifyChanged();
+            }, { placeholder: '例: custom-dungeon', deferRender: true }));
+            card.appendChild(createBlockField('ボス階層', entry.bossFloors, (val) => {
+                entry.bossFloors = val;
+                notifyChanged();
+            }, { placeholder: '例: 5,10,15', deferRender: true }));
+            card.appendChild(createBlockField('重み', entry.weight, (val) => {
+                entry.weight = val;
+                notifyChanged();
+            }, { placeholder: '例: 1', type: 'number', step: 'any', min: '0', deferRender: true }));
+            card.appendChild(createBlockField('説明・メモ', entry.description, (val) => {
+                entry.description = val;
+                notifyChanged();
+            }, { multiline: true, rows: 2, deferRender: true }));
 
             container.appendChild(card);
         });
@@ -1999,7 +2063,13 @@ function createBlockField(labelText, value, onChange, options = {}) {
     const label = document.createElement('label');
     label.textContent = labelText;
     const control = options.multiline ? document.createElement('textarea') : document.createElement('input');
-    if (!options.multiline) control.type = options.type || 'text';
+    if (!options.multiline) {
+        control.type = options.type || 'text';
+        if (options.min != null) control.min = options.min;
+        if (options.max != null) control.max = options.max;
+        if (options.step != null) control.step = options.step;
+        if (options.inputMode) control.inputMode = options.inputMode;
+    }
     if (options.placeholder) control.placeholder = options.placeholder;
     if (options.rows && options.multiline) control.rows = options.rows;
     control.value = value ?? '';
@@ -2038,6 +2108,9 @@ function renderModMaker() {
             modMakerRefs.structureList.appendChild(btn);
         });
     }
+    if (modMakerRefs.removeStructure) {
+        modMakerRefs.removeStructure.disabled = !modMakerState.structures.length;
+    }
 
     if (modMakerRefs.structureId) {
         modMakerRefs.structureId.disabled = !structure;
@@ -2069,6 +2142,9 @@ function renderModMaker() {
         modMakerRefs.structureAllowMirror.disabled = !structure;
         modMakerRefs.structureAllowMirror.checked = !!structure?.allowMirror;
     }
+    if (modMakerRefs.fillEmpty) modMakerRefs.fillEmpty.disabled = !structure;
+    if (modMakerRefs.fillFloor) modMakerRefs.fillFloor.disabled = !structure;
+    if (modMakerRefs.fillWall) modMakerRefs.fillWall.disabled = !structure;
     if (modMakerRefs.structureWidth) {
         modMakerRefs.structureWidth.disabled = !structure;
         modMakerRefs.structureWidth.value = structure ? structure.width : 1;
@@ -2077,7 +2153,7 @@ function renderModMaker() {
         modMakerRefs.structureHeight.disabled = !structure;
         modMakerRefs.structureHeight.value = structure ? structure.height : 1;
     }
-    if (structure) renderStructureGrid(structure);
+    renderStructureGrid(structure);
     if (modMakerRefs.patternPreview) {
         modMakerRefs.patternPreview.value = structure ? modMakerPatternFromMatrix(structure.matrix).join('\n') : '';
     }
@@ -2222,11 +2298,19 @@ function buildModMakerOutput() {
             const size = parseNumber(entry.size);
             const depth = parseNumber(entry.depth);
             const bossFloors = parseBossFloors(entry.bossFloors || '');
+            const weight = parseNumber(entry.weight);
             const record = { key };
             if ((entry.name || '').trim()) record.name = entry.name.trim();
             if (Number.isFinite(level)) record.level = level;
             if (Number.isFinite(size)) record.size = size;
             if (Number.isFinite(depth)) record.depth = depth;
+            if (Number.isFinite(weight)) {
+                if (weight <= 0) {
+                    errors.push(`${tier.toUpperCase()} ブロック${idx + 1}の重みは正の数で指定してください。`);
+                } else {
+                    record.weight = weight;
+                }
+            }
             if ((entry.chest || '').trim()) record.chest = entry.chest.trim();
             if ((entry.type || '').trim()) record.type = entry.type.trim();
             if (bossFloors.length) record.bossFloors = bossFloors;
@@ -2438,6 +2522,7 @@ function buildBlockEntryLines(entry, baseIndent = 4) {
     if (Object.prototype.hasOwnProperty.call(entry, 'level')) props.push([`level: ${entry.level}`]);
     if (Object.prototype.hasOwnProperty.call(entry, 'size')) props.push([`size: ${entry.size}`]);
     if (Object.prototype.hasOwnProperty.call(entry, 'depth')) props.push([`depth: ${entry.depth}`]);
+    if (typeof entry.weight === 'number') props.push([`weight: ${entry.weight}`]);
     if (entry.chest) props.push([`chest: ${jsString(entry.chest)}`]);
     if (entry.type) props.push([`type: ${jsString(entry.type)}`]);
     if (Array.isArray(entry.bossFloors) && entry.bossFloors.length) props.push([`bossFloors: [${entry.bossFloors.join(', ')}]`]);

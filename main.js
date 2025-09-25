@@ -67,6 +67,7 @@ const miniexpPauseBtn = document.getElementById('miniexp-pause');
 const miniexpRestartBtn = document.getElementById('miniexp-restart');
 const miniexpDifficulty = document.getElementById('miniexp-difficulty');
 const miniexpContainer = document.getElementById('miniexp-container');
+const miniexpDisplayModes = document.getElementById('miniexp-display-modes');
 // BlockDim UI elements
 // BlockDim listbox UI elements
 const bdimDimList = document.getElementById('bdim-list-dimension');
@@ -116,7 +117,13 @@ const VIEWPORT_HEIGHT = 15;
 let currentMode = 'normal';
 // MiniExp state (mods)
 const MINI_ALL_CATEGORY = '__ALL__';
-let miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY };
+const MINI_EXP_DISPLAY_MODES = [
+    { id: 'tile', label: 'タイル' },
+    { id: 'list', label: 'リスト' },
+    { id: 'wrap', label: '羅列' },
+    { id: 'detail', label: '詳細' }
+];
+let miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail' };
 let __miniExpInited = false;
 let __miniManifest = null; // [{id,name,entry,version,author,icon,description}]
 let __miniGameRegistry = {}; // id -> def
@@ -5725,7 +5732,10 @@ importFileInput && importFileInput.addEventListener('change', async (e) => {
         __lastSavedBlockDimSelectionKey = snapshotBlockDimSelection(blockDimState);
         if (Array.isArray(data.blockDimHistory)) blockDimHistory = data.blockDimHistory;
         if (Array.isArray(data.blockDimBookmarks)) blockDimBookmarks = data.blockDimBookmarks;
-        if (data.miniExp) miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, ...data.miniExp };
+        if (data.miniExp) {
+            miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail', ...data.miniExp };
+            miniExpState.displayMode = normalizeMiniExpDisplayMode(miniExpState.displayMode);
+        }
         buildSelection();
         renderHistoryAndBookmarks();
         // インポート後は選択画面に戻す（モードは保存値を尊重）
@@ -5820,7 +5830,11 @@ try {
         __lastSavedBlockDimSelectionKey = snapshotBlockDimSelection(blockDimState);
         if (Array.isArray(data.blockDimHistory)) blockDimHistory = data.blockDimHistory;
         if (Array.isArray(data.blockDimBookmarks)) blockDimBookmarks = data.blockDimBookmarks;
-        
+        if (data.miniExp) {
+            miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail', ...data.miniExp };
+            miniExpState.displayMode = normalizeMiniExpDisplayMode(miniExpState.displayMode);
+        }
+
         // Initialize previous values to current values to prevent false change indicators
         prevHp = player.hp || 100;
         prevExp = player.exp || 0;
@@ -6132,6 +6146,39 @@ function buildCategoryMap(manifest) {
     return map;
 }
 
+function normalizeMiniExpDisplayMode(mode) {
+    const fallback = 'detail';
+    if (!mode) return fallback;
+    return MINI_EXP_DISPLAY_MODES.some(opt => opt.id === mode) ? mode : fallback;
+}
+
+function getMiniExpDisplayMode() {
+    const normalized = normalizeMiniExpDisplayMode(miniExpState.displayMode);
+    if (miniExpState.displayMode !== normalized) miniExpState.displayMode = normalized;
+    return normalized;
+}
+
+function renderMiniExpDisplayModes(manifest) {
+    if (!miniexpDisplayModes) return;
+    const list = manifest || __miniManifest || [];
+    const current = getMiniExpDisplayMode();
+    miniexpDisplayModes.innerHTML = '';
+    MINI_EXP_DISPLAY_MODES.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'display-btn' + (current === opt.id ? ' active' : '');
+        btn.textContent = opt.label;
+        btn.addEventListener('click', () => {
+            if (miniExpState.displayMode === opt.id) return;
+            miniExpState.displayMode = opt.id;
+            renderMiniExpDisplayModes(list);
+            renderMiniExpList(list);
+            saveAll();
+        });
+        miniexpDisplayModes.appendChild(btn);
+    });
+}
+
 function renderMiniExpCategories(manifest) {
     if (!miniexpCatList) return;
     miniexpCatList.innerHTML = '';
@@ -6171,8 +6218,12 @@ function getFilteredManifest(manifest) {
 
 function renderMiniExpList(manifest) {
     if (!miniexpList) return;
+    const list = manifest || __miniManifest || [];
+    const mode = getMiniExpDisplayMode();
     miniexpList.innerHTML = '';
-    const filtered = getFilteredManifest(manifest);
+    miniexpList.classList.remove('mode-detail', 'mode-tile', 'mode-list', 'mode-wrap');
+    miniexpList.classList.add(`mode-${mode}`);
+    const filtered = getFilteredManifest(list);
     if (!filtered || filtered.length === 0) {
         const p = document.createElement('div');
         p.textContent = '該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。';
@@ -6180,22 +6231,39 @@ function renderMiniExpList(manifest) {
         return;
     }
     filtered.forEach(def => {
-        const card = document.createElement('div');
-        card.className = 'miniexp-card';
-        const h = document.createElement('h4'); h.textContent = def.name || def.id;
-        const d = document.createElement('div'); d.className = 'desc'; d.textContent = def.description || '';
-        const m = document.createElement('div'); m.className = 'meta'; m.textContent = `v${def.version||'0.0.0'} ${def.author?(' / '+def.author):''}`;
-        const btn = document.createElement('button');
-        btn.textContent = miniExpState.selected === def.id ? '選択中' : '選択';
-        btn.addEventListener('click', () => {
+        const isSelected = miniExpState.selected === def.id;
+        const name = def.name || def.id;
+        const selectGame = () => {
             miniExpState.selected = def.id;
-            renderMiniExpList(manifest);
-            if (miniexpPlaceholder) miniexpPlaceholder.textContent = `${def.name||def.id} を選択しました。`;
+            renderMiniExpList(list);
+            if (miniexpPlaceholder) miniexpPlaceholder.textContent = `${name} を選択しました。`;
             renderMiniExpRecords();
             saveAll();
-        });
-        card.appendChild(h); card.appendChild(d); card.appendChild(m); card.appendChild(btn);
-        miniexpList.appendChild(card);
+        };
+        if (mode === 'detail') {
+            const card = document.createElement('div');
+            card.className = 'miniexp-card' + (isSelected ? ' selected' : '');
+            const h = document.createElement('h4'); h.textContent = name;
+            const d = document.createElement('div'); d.className = 'desc'; d.textContent = def.description || '';
+            const m = document.createElement('div'); m.className = 'meta'; m.textContent = `v${def.version||'0.0.0'} ${def.author?(' / '+def.author):''}`;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = isSelected ? '選択中' : '選択';
+            btn.addEventListener('click', selectGame);
+            card.appendChild(h);
+            card.appendChild(d);
+            card.appendChild(m);
+            card.appendChild(btn);
+            miniexpList.appendChild(card);
+        } else {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'miniexp-entry' + (isSelected ? ' selected' : '');
+            btn.textContent = name;
+            if (def.description) btn.title = def.description;
+            btn.addEventListener('click', selectGame);
+            miniexpList.appendChild(btn);
+        }
     });
 }
 
@@ -6205,6 +6273,8 @@ async function initMiniExpUI() {
         const list = await loadMiniManifestOnce();
         // 初回表示時にカテゴリ→ゲームの順で描画
         renderMiniExpCategories(list);
+        miniExpState.displayMode = normalizeMiniExpDisplayMode(miniExpState.displayMode);
+        renderMiniExpDisplayModes(list);
         renderMiniExpList(list);
         if (miniexpPlaceholder && miniExpState.selected) {
             const sel = list.find(x=>x.id===miniExpState.selected);

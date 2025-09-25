@@ -135,9 +135,31 @@
     const moves = collectMoves(board, cfg);
     let count = 0;
     for (const mv of moves){
-      if (wouldWin(board, cfg.cols, cfg.rows, mv.x, mv.y, color, cfg.winLength)) count++;
+      if (wouldWin(board, cfg.cols, cfg.rows, mv.x, mv.y, color, cfg.winLength)){
+        count++;
+        if (count >= 3) break;
+      }
     }
     return count;
+  }
+
+  function prioritizeMovesForColor(board, cfg, color, limit){
+    const moves = collectMoves(board, cfg);
+    if (!limit || moves.length <= limit) return moves;
+    const immediate = [];
+    const scored = [];
+    for (const mv of moves){
+      if (wouldWin(board, cfg.cols, cfg.rows, mv.x, mv.y, color, cfg.winLength)){
+        immediate.push(mv);
+      } else {
+        const score = evaluateMove(board, cfg, mv, color);
+        scored.push({ mv, score });
+      }
+    }
+    if (immediate.length >= limit) return immediate;
+    scored.sort((a, b) => b.score - a.score);
+    const needed = limit - immediate.length;
+    return immediate.concat(scored.slice(0, needed).map(entry => entry.mv));
   }
 
   function ticTacToeBestMove(board, cfg){
@@ -500,7 +522,8 @@
       let score = evaluateMove(board, cfg, mv, AI);
       if (difficulty === 'HARD'){
         board[mv.y][mv.x] = AI;
-        const replies = collectMoves(board, cfg);
+        const branchLimit = cfg.dropMode ? 5 : 6;
+        const replies = prioritizeMovesForColor(board, cfg, PLAYER, branchLimit);
         let worstThreat = 0;
         for (const rep of replies){
           board[rep.y][rep.x] = PLAYER;
@@ -513,7 +536,8 @@
             else if (winCount === 1) threat += 180;
             if (createsReach(board, cols, rows, rep.x, rep.y, PLAYER, winLength)) threat += 80;
 
-            const followMoves = collectMoves(board, cfg);
+            const followLimit = cfg.dropMode ? 4 : 5;
+            const followMoves = prioritizeMovesForColor(board, cfg, PLAYER, followLimit);
             let bestPlayerFollow = 0;
             for (const fm of followMoves){
               const val = evaluateMove(board, cfg, fm, PLAYER);
@@ -522,7 +546,8 @@
             threat += bestPlayerFollow * 0.6;
 
             let bestCounter = 0;
-            for (const counter of followMoves){
+            const counterMoves = prioritizeMovesForColor(board, cfg, AI, followLimit);
+            for (const counter of counterMoves){
               board[counter.y][counter.x] = AI;
               let counterScore = 0;
               if (checkWin(board, cols, rows, counter.x, counter.y, AI, winLength)) counterScore = 900;
@@ -858,6 +883,7 @@
       }
 
       function reset(){
+        cancelAiTimer();
         for (let y=0;y<cfg.rows;y++) board[y].fill(EMPTY);
         turn = PLAYER;
         ended = false;
@@ -870,6 +896,7 @@
       }
 
       function finish(text){
+        cancelAiTimer();
         ended = true;
         resultText = text;
         clearThreats();
@@ -898,11 +925,12 @@
         turn = AI;
         refreshThreats({ trigger: 'playerMove', move: { x, y } });
         draw();
-        setTimeout(aiTurn, difficulty === 'HARD' ? 80 : 160);
+        scheduleAiTurn(difficulty === 'HARD' ? 80 : 160);
       }
 
       function aiTurn(){
-        if (ended || turn !== AI) return;
+        aiTimer = null;
+        if (!running || ended || turn !== AI) return;
         const mv = chooseAiMove(board, cfg, difficulty);
         if (!mv){ finish('引き分け'); return; }
         board[mv.y][mv.x] = AI;
@@ -928,8 +956,12 @@
       function handleClick(e){
         if (ended || turn !== PLAYER) return;
         if (cfg.dropMode){
-          if (!hover) return;
-          const col = hover.col;
+          let col = hover?.col;
+          if (col == null){
+            const { x } = canvasPosToCell(e);
+            if (Number.isFinite(x) && x >= 0 && x < cfg.cols) col = x;
+          }
+          if (col == null || !columnHasSpace(col)) return;
           for (let y = cfg.rows - 1; y >= 0; y--){
             if (board[y][col] === EMPTY){ processPlayerMove(col, y); return; }
           }
@@ -962,8 +994,12 @@
 
       function handleKey(e){ if (e.key === 'r' || e.key === 'R') { reset(); } }
 
-      function start(){ if (running) return; running = true; canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); refreshThreats({ trigger: 'start' }); draw(); if (turn === AI) setTimeout(aiTurn, 200); }
-      function stop(){ if (!running) return; running = false; canvas.removeEventListener('click', handleClick); canvas.removeEventListener('mousemove', handleMove); canvas.removeEventListener('mouseleave', handleLeave); window.removeEventListener('keydown', handleKey); }
+      let aiTimer = null;
+      function cancelAiTimer(){ if (aiTimer){ clearTimeout(aiTimer); aiTimer = null; } }
+      function scheduleAiTurn(delay){ cancelAiTimer(); aiTimer = setTimeout(aiTurn, delay); }
+
+      function start(){ if (running) return; running = true; canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); refreshThreats({ trigger: 'start' }); draw(); if (turn === AI) scheduleAiTurn(200); }
+      function stop(){ if (!running) return; running = false; cancelAiTimer(); canvas.removeEventListener('click', handleClick); canvas.removeEventListener('mousemove', handleMove); canvas.removeEventListener('mouseleave', handleLeave); window.removeEventListener('keydown', handleKey); }
       function destroy(){ try { stop(); clearThreats(); root.removeChild(canvas); } catch {} }
       function getScore(){ let player=0, ai=0; for (let y=0;y<cfg.rows;y++) for (let x=0;x<cfg.cols;x++){ if(board[y][x]===PLAYER) player++; else if(board[y][x]===AI) ai++; } return player - ai; }
 

@@ -388,8 +388,8 @@
     const lines = [];
     const iso = new Date().toISOString();
     lines.push('<?xml version="1.0" encoding="UTF-8"?>');
-    lines.push(`<mxfile host="app.diagrams.net" modified="${iso}" agent="MiniExp Diagram Maker" version="21.6.5" type="device">`);
-    lines.push(`  <diagram id="${escapeXml(diagram.id || 'diagram-1')}" name="${escapeXml(diagram.name || 'ページ 1')}">`);
+    lines.push('<mxfile host="app.diagrams.net" modified="' + iso + '" agent="MiniExp Diagram Maker" version="21.6.5" type="device">');
+    lines.push('  <diagram id="' + escapeXml(diagram.id || 'diagram-1') + '" name="' + escapeXml(diagram.name || 'ページ 1') + '">');
     lines.push('    <mxGraphModel dx="1024" dy="768" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">');
     lines.push('      <root>');
     lines.push('        <mxCell id="0"/>');
@@ -399,7 +399,14 @@
       const layer = findLayer(diagram, layerId);
       if (!layer) return;
       layerIds.add(layer.id);
-      lines.push(`        <mxCell id="${escapeXml(layer.id)}" parent="1" value="${escapeXml(layer.name || layer.id)}" ${layer.visible === false ? 'visible="0" ' : ''}${layer.locked ? 'locked="1" ' : ''}/>');
+      const attrs = [
+        'id="' + escapeXml(layer.id) + '"',
+        'parent="1"',
+        'value="' + escapeXml(layer.name || layer.id) + '"'
+      ];
+      if (layer.visible === false) attrs.push('visible="0"');
+      if (layer.locked) attrs.push('locked="1"');
+      lines.push('        <mxCell ' + attrs.join(' ') + '/>');
     });
     for (const node of diagram.nodes) {
       const layerId = layerIds.has(node.layer) ? node.layer : (diagram.layerOrder[0] || '1');
@@ -414,8 +421,8 @@
         align: 'center',
         verticalAlign: 'middle'
       });
-      lines.push(`        <mxCell id="${escapeXml(node.id)}" value="${escapeXml(node.text || '')}" style="${escapeXml(style)}" vertex="1" parent="${escapeXml(layerId)}">`);
-      lines.push(`          <mxGeometry x="${Number(node.x || 0)}" y="${Number(node.y || 0)}" width="${Number(node.width || 120)}" height="${Number(node.height || 60)}" as="geometry"/>`);
+      lines.push('        <mxCell id="' + escapeXml(node.id) + '" value="' + escapeXml(node.text || '') + '" style="' + escapeXml(style) + '" vertex="1" parent="' + escapeXml(layerId) + '">');
+      lines.push('          <mxGeometry x="' + Number(node.x || 0) + '" y="' + Number(node.y || 0) + '" width="' + Number(node.width || 120) + '" height="' + Number(node.height || 60) + '" as="geometry"/>');
       lines.push('        </mxCell>');
     }
     for (const edge of diagram.edges) {
@@ -428,10 +435,14 @@
         strokeColor: edge.stroke || DEFAULT_STYLE.stroke,
         strokeWidth: edge.strokeWidth ?? DEFAULT_STYLE.strokeWidth
       });
-      lines.push(`        <mxCell id="${escapeXml(edge.id)}" style="${escapeXml(style)}" edge="1" parent="${escapeXml(layerId)}" ${edge.source ? `source="${escapeXml(edge.source)}" ` : ''}${edge.target ? `target="${escapeXml(edge.target)}" ` : ''}>`);
+      let edgeLine = '        <mxCell id="' + escapeXml(edge.id) + '" style="' + escapeXml(style) + '" edge="1" parent="' + escapeXml(layerId) + '"';
+      if (edge.source) edgeLine += ' source="' + escapeXml(edge.source) + '"';
+      if (edge.target) edgeLine += ' target="' + escapeXml(edge.target) + '"';
+      edgeLine += '>';
+      lines.push(edgeLine);
       lines.push('          <mxGeometry relative="1" as="geometry">');
       for (const point of edge.points || []) {
-        lines.push(`            <mxPoint x="${Number(point.x)}" y="${Number(point.y)}"/>`);
+        lines.push('            <mxPoint x="' + Number(point.x) + '" y="' + Number(point.y) + '"/>');
       }
       lines.push('          </mxGeometry>');
       lines.push('        </mxCell>');
@@ -440,8 +451,7 @@
     lines.push('    </mxGraphModel>');
     lines.push('  </diagram>');
     lines.push('</mxfile>');
-    return lines.join('
-');
+    return lines.join('\n');
   }
 
   function create(root, awardXp){

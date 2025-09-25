@@ -194,6 +194,7 @@
     ribbonArea.style.flexDirection = 'column';
 
     const quickBar = document.createElement('div');
+    const quickBarButtons = [];
     quickBar.style.display = 'flex';
     quickBar.style.alignItems = 'center';
     quickBar.style.gap = '6px';
@@ -223,6 +224,7 @@
         btn.style.transform = 'translateY(0)';
         btn.style.boxShadow = 'none';
       });
+      quickBarButtons.push(btn);
       return btn;
     }
 
@@ -261,6 +263,8 @@
 
     const tabButtons = new Map();
 
+    const ribbonTabButtons = [];
+
     tabs.forEach(tab => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -279,6 +283,7 @@
       });
       tabButtons.set(tab.id, btn);
       tabBar.appendChild(btn);
+      ribbonTabButtons.push(btn);
     });
 
     const ribbonContent = document.createElement('div');
@@ -889,13 +894,42 @@
     }
 
     function updateTheme(){
-      if (state.theme === 'dark') {
+      const isDark = state.theme === 'dark';
+      if (isDark) {
         page.style.background = '#f1f5f9';
         editor.style.color = '#0f172a';
+        ribbonArea.style.background = '#1e293b';
+        quickBar.style.background = 'rgba(30,41,59,0.88)';
+        quickBar.style.color = '#e2e8f0';
+        tabBar.style.background = 'rgba(15,23,42,0.65)';
       } else {
         page.style.background = '#ffffff';
         editor.style.color = '#111827';
+        ribbonArea.style.background = '#f8fafc';
+        quickBar.style.background = 'rgba(226,232,240,0.7)';
+        quickBar.style.color = '#0f172a';
+        tabBar.style.background = 'transparent';
       }
+
+      quickBarButtons.forEach(btn => {
+        if (isDark) {
+          btn.style.background = 'rgba(51,65,85,0.95)';
+          btn.style.border = '1px solid rgba(148,163,184,0.55)';
+          btn.style.color = '#e2e8f0';
+          const span = btn.querySelector('span');
+          if (span) span.style.color = '#e2e8f0';
+        } else {
+          btn.style.background = '#fff';
+          btn.style.border = '1px solid rgba(148,163,184,0.4)';
+          btn.style.color = '#0f172a';
+          const span = btn.querySelector('span');
+          if (span) span.style.color = '#1f2937';
+        }
+      });
+
+      ribbonTabButtons.forEach(btn => {
+        btn.style.color = isDark ? '#e2e8f0' : '#1e293b';
+      });
     }
 
     function updateTitle(){

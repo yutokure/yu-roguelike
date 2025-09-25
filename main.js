@@ -122,10 +122,43 @@ let __miniManifest = null; // [{id,name,entry,version,author,icon,description}]
 let __miniGameRegistry = {}; // id -> def
 let __miniGameWaiters = {};  // id -> [resolve]
 let __currentMini = null;    // runtime
-let __miniSessionExp = 0;    // セッション内の獲得EXP合計
+let __miniSessionExp = 0;    // セッション内の獲得EXP純増減
 let __miniPaused = false;
 
 let __toolsTabInitialized = false;
+let __toolsInited = false;
+let modMakerRefs = null;
+
+const MOD_MAKER_TEMPLATES = {
+    blank: `function algorithm(ctx) {\n  const { width, height, map } = ctx;\n  for (let y = 1; y < height - 1; y++) {\n    for (let x = 1; x < width - 1; x++) {\n      map[y][x] = 0;\n    }\n  }\n  ctx.ensureConnectivity();\n}\n`,
+    rooms: `function algorithm(ctx) {\n  const { width, height, map, random } = ctx;\n  const roomCount = Math.max(4, Math.floor((width + height) / 6));\n  const rooms = [];\n  for (let i = 0; i < roomCount; i++) {\n    const w = 4 + Math.floor(random() * 6);\n    const h = 4 + Math.floor(random() * 6);\n    const x = 2 + Math.floor(random() * Math.max(1, width - w - 4));\n    const y = 2 + Math.floor(random() * Math.max(1, height - h - 4));\n    rooms.push({ x, y, w, h });\n    for (let yy = y; yy < y + h; yy++) {\n      for (let xx = x; xx < x + w; xx++) map[yy][xx] = 0;\n    }\n  }\n  for (let i = 1; i < rooms.length; i++) {\n    const a = rooms[i - 1];\n    const b = rooms[i];\n    const ax = a.x + (a.w >> 1);\n    const ay = a.y + (a.h >> 1);\n    const bx = b.x + (b.w >> 1);\n    const by = b.y + (b.h >> 1);\n    for (let xx = Math.min(ax, bx); xx <= Math.max(ax, bx); xx++) map[ay][xx] = 0;\n    for (let yy = Math.min(ay, by); yy <= Math.max(ay, by); yy++) map[yy][bx] = 0;\n  }\n  ctx.ensureConnectivity();\n}\n`,
+    structure: `function algorithm(ctx) {\n  const { width, height, map, random, structures } = ctx;\n  for (let y = 1; y < height - 1; y++) {\n    for (let x = 1; x < width - 1; x++) map[y][x] = 1;\n  }\n  const cx = Math.floor(width / 2);\n  const cy = Math.floor(height / 2);\n  if (structures && typeof structures.list === 'function') {\n    const pool = structures.list();\n    if (pool && pool.length) {\n      const rand = typeof random === 'function' ? random : Math.random;\n      const chosen = pool[Math.floor(rand() * pool.length) % pool.length];\n      if (chosen && chosen.id) {\n        const rot = Math.floor(rand() * 360) % 360;\n        structures.place(chosen.id, cx, cy, { rotation: rot });\n      }\n    }\n  }\n  ctx.ensureConnectivity();\n}\n`
+};
+
+MOD_MAKER_TEMPLATES.fixed = `function algorithm(ctx) {\n  const applied = ctx.fixedMaps?.applyCurrent?.();\n  if (!applied) {\n    for (let y = 1; y < ctx.height - 1; y++) {\n      for (let x = 1; x < ctx.width - 1; x++) ctx.map[y][x] = 0;\n    }\n    ctx.ensureConnectivity();\n  }\n}\n`;
+
+const modMakerState = {
+    metadata: {
+        id: 'custom_pack',
+        name: 'Custom Dungeon Pack',
+        version: '1.0.0',
+        author: '',
+        description: ''
+    },
+    structures: [],
+    generators: [],
+    blocks: {
+        blocks1: [],
+        blocks2: [],
+        blocks3: []
+    },
+    allowEmptyStructures: false,
+    selectedStructure: 0,
+    selectedGenerator: 0
+};
+
+let modMakerCopyTimer = null;
+let modMakerCopyLabel = 'クリップボードにコピー';
 
 // マップサイズを階層に応じて更新（BlockDim の sizeFactor を反映）
 function updateMapSize() {
@@ -1121,6 +1154,1470 @@ function setupTabs() {
         });
     }
 }
+
+// -------------- Tools Tab: Dungeon Mod Maker --------------
+const MOD_MAKER_MAX_STRUCTURE_SIZE = 31;
+const MOD_MAKER_DEFAULT_FIXED_WIDTH = 21;
+const MOD_MAKER_DEFAULT_FIXED_HEIGHT = 15;
+const MOD_MAKER_MIN_FIXED_SIZE = 5;
+const MOD_MAKER_MAX_FIXED_SIZE = 75;
+const MOD_MAKER_MAX_FLOOR_COUNT = 60;
+
+function initToolsTab() {
+    if (!tabTools) return;
+
+    const menuButtons = Array.from(tabTools.querySelectorAll('[data-tool-target]'));
+    const panels = Array.from(tabTools.querySelectorAll('[data-tool-panel]'));
+    const activateToolPanel = (toolId) => {
+        menuButtons.forEach(btn => {
+            const active = btn.dataset.toolTarget === toolId;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        panels.forEach(panel => {
+            const active = panel.dataset.toolPanel === toolId;
+            panel.classList.toggle('active', active);
+        });
+    };
+    activateToolPanel('mod-maker');
+    menuButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.toolTarget;
+            if (target) activateToolPanel(target);
+        });
+    });
+
+    modMakerRefs = {
+        addonId: document.getElementById('modmaker-addon-id'),
+        addonName: document.getElementById('modmaker-addon-name'),
+        addonVersion: document.getElementById('modmaker-addon-version'),
+        addonAuthor: document.getElementById('modmaker-addon-author'),
+        addonDescription: document.getElementById('modmaker-addon-description'),
+        structureList: document.getElementById('modmaker-structure-list'),
+        addStructure: document.getElementById('modmaker-add-structure'),
+        removeStructure: document.getElementById('modmaker-remove-structure'),
+        structureId: document.getElementById('modmaker-structure-id'),
+        structureName: document.getElementById('modmaker-structure-name'),
+        structureAnchorX: document.getElementById('modmaker-structure-anchor-x'),
+        structureAnchorY: document.getElementById('modmaker-structure-anchor-y'),
+        structureTags: document.getElementById('modmaker-structure-tags'),
+        structureAllowRotate: document.getElementById('modmaker-structure-allow-rotate'),
+        structureAllowMirror: document.getElementById('modmaker-structure-allow-mirror'),
+        structureWidth: document.getElementById('modmaker-structure-width'),
+        structureHeight: document.getElementById('modmaker-structure-height'),
+        grid: document.getElementById('modmaker-grid'),
+        patternPreview: document.getElementById('modmaker-pattern-preview'),
+        fillEmpty: document.getElementById('modmaker-fill-empty'),
+        fillFloor: document.getElementById('modmaker-fill-floor'),
+        fillWall: document.getElementById('modmaker-fill-wall'),
+        fixedContainer: document.getElementById('modmaker-fixed-container'),
+        fixedEnabled: document.getElementById('modmaker-fixed-enabled'),
+        fixedFloorCount: document.getElementById('modmaker-fixed-floor-count'),
+        fixedBossFloors: document.getElementById('modmaker-fixed-boss-floors'),
+        fixedFloorList: document.getElementById('modmaker-fixed-floor-list'),
+        fixedWidth: document.getElementById('modmaker-fixed-width'),
+        fixedHeight: document.getElementById('modmaker-fixed-height'),
+        fixedCopyPrev: document.getElementById('modmaker-fixed-copy-prev'),
+        fixedFillWall: document.getElementById('modmaker-fixed-fill-wall'),
+        fixedFillFloor: document.getElementById('modmaker-fixed-fill-floor'),
+        fixedFillVoid: document.getElementById('modmaker-fixed-fill-void'),
+        fixedGrid: document.getElementById('modmaker-fixed-grid'),
+        generatorList: document.getElementById('modmaker-generator-list'),
+        addGenerator: document.getElementById('modmaker-add-generator'),
+        removeGenerator: document.getElementById('modmaker-remove-generator'),
+        generatorId: document.getElementById('modmaker-generator-id'),
+        generatorName: document.getElementById('modmaker-generator-name'),
+        generatorDescription: document.getElementById('modmaker-generator-description'),
+        generatorNormalMix: document.getElementById('modmaker-generator-normal-mix'),
+        generatorBlockdimMix: document.getElementById('modmaker-generator-blockdim-mix'),
+        generatorTags: document.getElementById('modmaker-generator-tags'),
+        templateSelect: document.getElementById('modmaker-template-select'),
+        templateApply: document.getElementById('modmaker-apply-template'),
+        generatorCode: document.getElementById('modmaker-generator-code'),
+        blocks: {
+            blocks1: document.getElementById('modmaker-blocks1'),
+            blocks2: document.getElementById('modmaker-blocks2'),
+            blocks3: document.getElementById('modmaker-blocks3')
+        },
+        output: document.getElementById('modmaker-output'),
+        copy: document.getElementById('modmaker-copy'),
+        download: document.getElementById('modmaker-download'),
+        errors: document.getElementById('modmaker-errors')
+    };
+
+    ensureModMakerDefaults();
+
+    const bindInput = (el, handler, event = 'input') => {
+        if (!el) return;
+        el.addEventListener(event, handler);
+    };
+
+    bindInput(modMakerRefs.addonId, () => {
+        modMakerState.metadata.id = modMakerRefs.addonId.value.trim();
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.addonName, () => {
+        modMakerState.metadata.name = modMakerRefs.addonName.value;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.addonVersion, () => {
+        modMakerState.metadata.version = modMakerRefs.addonVersion.value;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.addonAuthor, () => {
+        modMakerState.metadata.author = modMakerRefs.addonAuthor.value;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.addonDescription, () => {
+        modMakerState.metadata.description = modMakerRefs.addonDescription.value;
+        renderModMaker();
+    });
+
+    if (modMakerRefs.addStructure) {
+        modMakerRefs.addStructure.addEventListener('click', () => {
+            modMakerState.structures.push(createNewStructure());
+            modMakerState.selectedStructure = modMakerState.structures.length - 1;
+            renderModMaker();
+        });
+    }
+    if (modMakerRefs.removeStructure) {
+        modMakerRefs.removeStructure.addEventListener('click', () => {
+            if (!modMakerState.structures.length) return;
+            const index = Math.max(0, Math.min(modMakerState.selectedStructure || 0, modMakerState.structures.length - 1));
+            modMakerState.structures.splice(index, 1);
+            if (!modMakerState.structures.length) {
+                modMakerState.allowEmptyStructures = true;
+            }
+            ensureModMakerDefaults();
+            renderModMaker();
+        });
+    }
+
+    bindInput(modMakerRefs.structureId, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        structure.id = modMakerRefs.structureId.value.trim();
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.structureName, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        structure.name = modMakerRefs.structureName.value;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.structureAnchorX, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        structure.anchorX = clampAnchor(modMakerRefs.structureAnchorX.value, structure.width - 1);
+        renderModMaker();
+    }, 'change');
+    bindInput(modMakerRefs.structureAnchorY, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        structure.anchorY = clampAnchor(modMakerRefs.structureAnchorY.value, structure.height - 1);
+        renderModMaker();
+    }, 'change');
+    bindInput(modMakerRefs.structureTags, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        structure.tagsText = modMakerRefs.structureTags.value;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.structureAllowRotate, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        structure.allowRotation = !!modMakerRefs.structureAllowRotate.checked;
+        renderModMaker();
+    }, 'change');
+    bindInput(modMakerRefs.structureAllowMirror, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        structure.allowMirror = !!modMakerRefs.structureAllowMirror.checked;
+        renderModMaker();
+    }, 'change');
+    bindInput(modMakerRefs.structureWidth, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        const width = clampStructureSize(modMakerRefs.structureWidth.value);
+        resizeStructure(structure, width, structure.height);
+        renderModMaker();
+    }, 'change');
+    bindInput(modMakerRefs.structureHeight, () => {
+        const structure = getSelectedStructure();
+        if (!structure) return;
+        const height = clampStructureSize(modMakerRefs.structureHeight.value);
+        resizeStructure(structure, structure.width, height);
+        renderModMaker();
+    }, 'change');
+
+    if (modMakerRefs.fillEmpty) {
+        modMakerRefs.fillEmpty.addEventListener('click', () => fillStructureCells(null));
+    }
+    if (modMakerRefs.fillFloor) {
+        modMakerRefs.fillFloor.addEventListener('click', () => fillStructureCells(0));
+    }
+    if (modMakerRefs.fillWall) {
+        modMakerRefs.fillWall.addEventListener('click', () => fillStructureCells(1));
+    }
+
+    bindInput(modMakerRefs.fixedEnabled, () => {
+        const fixed = getSelectedFixedState();
+        if (!fixed) return;
+        const generator = getSelectedGenerator();
+        const enabled = !!modMakerRefs.fixedEnabled.checked;
+        fixed.enabled = enabled;
+        if (enabled && generator && !(generator.code || '').trim()) {
+            generator.code = MOD_MAKER_TEMPLATES.fixed.trim();
+        }
+        renderModMaker();
+    }, 'change');
+
+    bindInput(modMakerRefs.fixedFloorCount, () => {
+        const fixed = getSelectedFixedState();
+        if (!fixed) return;
+        fixed.floorCount = clampFixedFloorCount(modMakerRefs.fixedFloorCount.value);
+        ensureGeneratorFixedState(getSelectedGenerator());
+        renderModMaker();
+    }, 'change');
+
+    bindInput(modMakerRefs.fixedBossFloors, () => {
+        const fixed = getSelectedFixedState();
+        if (!fixed) return;
+        fixed.bossFloorsText = modMakerRefs.fixedBossFloors.value;
+        renderModMaker();
+    });
+
+    bindInput(modMakerRefs.fixedWidth, () => {
+        const floor = getSelectedFixedFloor();
+        if (!floor) return;
+        resizeFixedFloor(floor, modMakerRefs.fixedWidth.value, floor.height);
+        renderModMaker();
+    }, 'change');
+
+    bindInput(modMakerRefs.fixedHeight, () => {
+        const floor = getSelectedFixedFloor();
+        if (!floor) return;
+        resizeFixedFloor(floor, floor.width, modMakerRefs.fixedHeight.value);
+        renderModMaker();
+    }, 'change');
+
+    if (modMakerRefs.fixedCopyPrev) {
+        modMakerRefs.fixedCopyPrev.addEventListener('click', () => copyFixedFloorFromPrev());
+    }
+    if (modMakerRefs.fixedFillWall) {
+        modMakerRefs.fixedFillWall.addEventListener('click', () => fillFixedFloor(1));
+    }
+    if (modMakerRefs.fixedFillFloor) {
+        modMakerRefs.fixedFillFloor.addEventListener('click', () => fillFixedFloor(0));
+    }
+    if (modMakerRefs.fixedFillVoid) {
+        modMakerRefs.fixedFillVoid.addEventListener('click', () => fillFixedFloor(null));
+    }
+
+    if (modMakerRefs.addGenerator) {
+        modMakerRefs.addGenerator.addEventListener('click', () => {
+            modMakerState.generators.push(createNewGenerator());
+            modMakerState.selectedGenerator = modMakerState.generators.length - 1;
+            renderModMaker();
+        });
+    }
+    if (modMakerRefs.removeGenerator) {
+        modMakerRefs.removeGenerator.addEventListener('click', () => {
+            if (modMakerState.generators.length <= 1) {
+                const single = modMakerState.generators[0];
+                if (single) single.code = MOD_MAKER_TEMPLATES.blank;
+            } else {
+                modMakerState.generators.splice(modMakerState.selectedGenerator, 1);
+                modMakerState.selectedGenerator = Math.max(0, modMakerState.selectedGenerator - 1);
+            }
+            ensureModMakerDefaults();
+            renderModMaker();
+        });
+    }
+
+    bindInput(modMakerRefs.generatorId, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        generator.id = modMakerRefs.generatorId.value.trim();
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.generatorName, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        generator.name = modMakerRefs.generatorName.value;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.generatorDescription, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        generator.description = modMakerRefs.generatorDescription.value;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.generatorNormalMix, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        const value = Number(modMakerRefs.generatorNormalMix.value);
+        generator.mixinNormal = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.generatorBlockdimMix, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        const value = Number(modMakerRefs.generatorBlockdimMix.value);
+        generator.mixinBlockDim = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
+        renderModMaker();
+    });
+    bindInput(modMakerRefs.generatorTags, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        generator.tagsText = modMakerRefs.generatorTags.value;
+        renderModMaker();
+    });
+
+    if (modMakerRefs.templateSelect) modMakerRefs.templateSelect.value = 'blank';
+    if (modMakerRefs.templateApply) {
+        modMakerRefs.templateApply.addEventListener('click', () => {
+            const generator = getSelectedGenerator();
+            if (!generator) return;
+            const key = modMakerRefs.templateSelect ? modMakerRefs.templateSelect.value : 'blank';
+            const template = MOD_MAKER_TEMPLATES[key] || MOD_MAKER_TEMPLATES.blank;
+            generator.code = template;
+            if (key === 'fixed') {
+                const fixed = ensureGeneratorFixedState(generator);
+                if (fixed) fixed.enabled = true;
+            }
+            renderModMaker();
+        });
+    }
+    bindInput(modMakerRefs.generatorCode, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        generator.code = modMakerRefs.generatorCode.value;
+        refreshModMakerPreview();
+    });
+
+    const blockAddButtons = tabTools.querySelectorAll('.modmaker-add-block');
+    blockAddButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tier = btn.dataset.tier;
+            if (!tier || !modMakerState.blocks[tier]) return;
+            modMakerState.blocks[tier].push(createNewBlockEntry(tier));
+            renderModMaker();
+        });
+    });
+
+    if (modMakerRefs.copy) modMakerRefs.copy.addEventListener('click', copyModMakerOutput);
+    if (modMakerRefs.download) modMakerRefs.download.addEventListener('click', downloadModMakerOutput);
+
+    renderModMaker();
+}
+function ensureModMakerDefaults() {
+    if (!Array.isArray(modMakerState.structures)) modMakerState.structures = [];
+    if (typeof modMakerState.allowEmptyStructures !== 'boolean') {
+        modMakerState.allowEmptyStructures = modMakerState.structures.length === 0;
+    }
+    if (!modMakerState.structures.length && !modMakerState.allowEmptyStructures) {
+        modMakerState.structures.push(createNewStructure());
+    }
+    if (!Array.isArray(modMakerState.generators)) modMakerState.generators = [];
+    if (!modMakerState.generators.length) modMakerState.generators.push(createNewGenerator());
+    modMakerState.generators.forEach(gen => ensureGeneratorFixedState(gen));
+    if (!modMakerState.blocks || typeof modMakerState.blocks !== 'object') {
+        modMakerState.blocks = { blocks1: [], blocks2: [], blocks3: [] };
+    }
+    for (const tier of ['blocks1', 'blocks2', 'blocks3']) {
+        if (!Array.isArray(modMakerState.blocks[tier])) modMakerState.blocks[tier] = [];
+    }
+    if (!modMakerState.structures.length) {
+        modMakerState.selectedStructure = -1;
+    } else {
+        modMakerState.selectedStructure = Math.min(
+            Math.max(0, Math.floor(modMakerState.selectedStructure ?? 0)),
+            modMakerState.structures.length - 1
+        );
+    }
+    modMakerState.selectedGenerator = Math.min(Math.max(0, modMakerState.selectedGenerator || 0), modMakerState.generators.length - 1);
+}
+
+function modMakerCreateMatrix(width, height, fill = null) {
+    const w = Math.max(1, Math.floor(width));
+    const h = Math.max(1, Math.floor(height));
+    const rows = [];
+    for (let y = 0; y < h; y++) {
+        const row = [];
+        for (let x = 0; x < w; x++) row.push(fill);
+        rows.push(row);
+    }
+    return rows;
+}
+
+function createNewStructure() {
+    const width = 7;
+    const height = 7;
+    return {
+        id: `structure_${Math.random().toString(36).slice(2, 7)}`,
+        name: '',
+        width,
+        height,
+        anchorX: Math.floor(width / 2),
+        anchorY: Math.floor(height / 2),
+        allowRotation: true,
+        allowMirror: true,
+        tagsText: '',
+        matrix: modMakerCreateMatrix(width, height, null)
+    };
+}
+
+function createNewGenerator() {
+    return {
+        id: `custom_${Math.random().toString(36).slice(2, 7)}`,
+        name: '',
+        description: '',
+        mixinNormal: 0,
+        mixinBlockDim: 0,
+        tagsText: '',
+        code: MOD_MAKER_TEMPLATES.blank,
+        fixed: createDefaultFixedState()
+    };
+}
+
+function createDefaultFixedState() {
+    return {
+        enabled: false,
+        floorCount: 1,
+        bossFloorsText: '',
+        selected: 0,
+        floors: [createFixedFloor()]
+    };
+}
+
+function createFixedFloor(width = MOD_MAKER_DEFAULT_FIXED_WIDTH, height = MOD_MAKER_DEFAULT_FIXED_HEIGHT, sourceMatrix = null) {
+    const w = clampFixedMapSize(width, MOD_MAKER_DEFAULT_FIXED_WIDTH);
+    const h = clampFixedMapSize(height, MOD_MAKER_DEFAULT_FIXED_HEIGHT);
+    const matrix = [];
+    for (let y = 0; y < h; y++) {
+        const row = [];
+        for (let x = 0; x < w; x++) {
+            const base = sourceMatrix?.[y]?.[x];
+            if (base === 0) row.push(0);
+            else if (base === 1) row.push(1);
+            else row.push(null);
+        }
+        matrix.push(row);
+    }
+    return { width: w, height: h, matrix };
+}
+
+function cloneFixedFloor(floor) {
+    if (!floor) return createFixedFloor();
+    return createFixedFloor(floor.width, floor.height, floor.matrix);
+}
+
+function clampFixedFloorCount(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 1;
+    return Math.max(1, Math.min(MOD_MAKER_MAX_FLOOR_COUNT, Math.floor(n)));
+}
+
+function clampFixedMapSize(value, fallback) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback != null ? fallback : MOD_MAKER_DEFAULT_FIXED_WIDTH;
+    return Math.max(MOD_MAKER_MIN_FIXED_SIZE, Math.min(MOD_MAKER_MAX_FIXED_SIZE, Math.floor(n)));
+}
+
+function ensureGeneratorFixedState(generator) {
+    if (!generator) return null;
+    if (!generator.fixed || typeof generator.fixed !== 'object') {
+        generator.fixed = createDefaultFixedState();
+    }
+    const fixed = generator.fixed;
+    fixed.floorCount = clampFixedFloorCount(fixed.floorCount);
+    if (!Array.isArray(fixed.floors) || !fixed.floors.length) {
+        fixed.floors = [createFixedFloor()];
+    }
+    while (fixed.floors.length < fixed.floorCount) {
+        const prev = fixed.floors[fixed.floors.length - 1];
+        fixed.floors.push(cloneFixedFloor(prev));
+    }
+    if (fixed.floors.length > fixed.floorCount) {
+        fixed.floors.length = fixed.floorCount;
+    }
+    if (!Number.isFinite(fixed.selected)) fixed.selected = 0;
+    fixed.selected = Math.min(Math.max(0, Math.floor(fixed.selected)), Math.max(0, fixed.floors.length - 1));
+    return fixed;
+}
+
+function getSelectedFixedState() {
+    const generator = getSelectedGenerator();
+    return ensureGeneratorFixedState(generator);
+}
+
+function getSelectedFixedFloor() {
+    const fixed = getSelectedFixedState();
+    if (!fixed) return null;
+    return fixed.floors[fixed.selected] || null;
+}
+
+function createNewBlockEntry(tier) {
+    const current = Array.isArray(modMakerState.blocks?.[tier]) ? modMakerState.blocks[tier].length + 1 : 1;
+    const suffix = String(current).padStart(2, '0');
+    const prefix = tier === 'blocks1' ? 'block1_' : tier === 'blocks2' ? 'block2_' : 'block3_';
+    return {
+        key: `${prefix}${suffix}`,
+        name: '',
+        level: '0',
+        size: '0',
+        depth: '0',
+        chest: 'normal',
+        type: '',
+        bossFloors: '',
+        weight: '',
+        description: ''
+    };
+}
+
+function getSelectedStructure() {
+    return modMakerState.structures[modMakerState.selectedStructure] || null;
+}
+
+function getSelectedGenerator() {
+    return modMakerState.generators[modMakerState.selectedGenerator] || null;
+}
+
+function clampStructureSize(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 1;
+    return Math.min(MOD_MAKER_MAX_STRUCTURE_SIZE, Math.max(1, Math.floor(n)));
+}
+
+function clampAnchor(value, max) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 0;
+    return Math.min(Math.max(0, Math.floor(n)), Math.max(0, max));
+}
+
+function resizeStructure(structure, width, height) {
+    const w = clampStructureSize(width);
+    const h = clampStructureSize(height);
+    const next = modMakerCreateMatrix(w, h, null);
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            next[y][x] = structure.matrix?.[y]?.[x] ?? null;
+        }
+    }
+    structure.width = w;
+    structure.height = h;
+    structure.matrix = next;
+    structure.anchorX = clampAnchor(structure.anchorX, w - 1);
+    structure.anchorY = clampAnchor(structure.anchorY, h - 1);
+}
+
+function cycleStructureCell(value) {
+    if (value === null || typeof value === 'undefined') return 0;
+    if (value === 0) return 1;
+    return null;
+}
+
+function fillStructureCells(fill) {
+    const structure = getSelectedStructure();
+    if (!structure) return;
+    for (let y = 0; y < structure.height; y++) {
+        for (let x = 0; x < structure.width; x++) {
+            structure.matrix[y][x] = fill;
+        }
+    }
+    renderModMaker();
+}
+
+function renderStructureGrid(structure) {
+    if (!modMakerRefs?.grid) return;
+    const grid = modMakerRefs.grid;
+    grid.innerHTML = '';
+    if (!structure) {
+        grid.classList.add('placeholder');
+        grid.setAttribute('aria-disabled', 'true');
+        grid.style.gridTemplateColumns = '';
+        const note = document.createElement('span');
+        note.setAttribute('role', 'note');
+        note.textContent = '構造を追加してください。';
+        grid.appendChild(note);
+        return;
+    }
+    grid.classList.remove('placeholder');
+    grid.setAttribute('aria-disabled', 'false');
+    grid.style.gridTemplateColumns = `repeat(${structure.width}, minmax(22px, 22px))`;
+    for (let y = 0; y < structure.height; y++) {
+        for (let x = 0; x < structure.width; x++) {
+            const cell = structure.matrix?.[y]?.[x] ?? null;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'modmaker-cell';
+            if (cell === 0) btn.classList.add('state-floor');
+            if (cell === 1) btn.classList.add('state-wall');
+            if (x === structure.anchorX && y === structure.anchorY) btn.classList.add('anchor');
+            btn.title = `(${x}, ${y})`;
+            btn.addEventListener('click', () => {
+                structure.matrix[y][x] = cycleStructureCell(structure.matrix[y][x]);
+                renderModMaker();
+            });
+            grid.appendChild(btn);
+        }
+    }
+}
+
+function resizeFixedFloor(floor, width, height) {
+    if (!floor) return;
+    const w = clampFixedMapSize(width, floor.width || MOD_MAKER_DEFAULT_FIXED_WIDTH);
+    const h = clampFixedMapSize(height, floor.height || MOD_MAKER_DEFAULT_FIXED_HEIGHT);
+    const next = [];
+    for (let y = 0; y < h; y++) {
+        const row = [];
+        for (let x = 0; x < w; x++) {
+            const val = floor.matrix?.[y]?.[x];
+            if (val === 0) row.push(0);
+            else if (val === 1) row.push(1);
+            else row.push(null);
+        }
+        next.push(row);
+    }
+    floor.width = w;
+    floor.height = h;
+    floor.matrix = next;
+}
+
+function cycleFixedCell(value) {
+    if (value === 1) return 0;
+    if (value === 0) return null;
+    return 1;
+}
+
+function fillFixedFloor(fill) {
+    const floor = getSelectedFixedFloor();
+    if (!floor) return;
+    for (let y = 0; y < floor.height; y++) {
+        for (let x = 0; x < floor.width; x++) {
+            floor.matrix[y][x] = fill;
+        }
+    }
+    renderModMaker();
+}
+
+function copyFixedFloorFromPrev() {
+    const fixed = getSelectedFixedState();
+    if (!fixed) return;
+    const idx = fixed.selected;
+    if (idx <= 0) return;
+    const prev = fixed.floors[idx - 1];
+    const current = fixed.floors[idx];
+    if (!prev || !current) return;
+    const cloned = cloneFixedFloor(prev);
+    current.width = cloned.width;
+    current.height = cloned.height;
+    current.matrix = cloned.matrix;
+    renderModMaker();
+}
+
+function renderFixedMapGrid(fixed) {
+    if (!modMakerRefs?.fixedGrid) return;
+    const grid = modMakerRefs.fixedGrid;
+    grid.setAttribute('aria-live', 'polite');
+    if (!fixed || !fixed.enabled) {
+        grid.classList.add('placeholder');
+        grid.setAttribute('aria-disabled', 'true');
+        grid.innerHTML = '<span role="note">固定マップを有効にすると編集できます。</span>';
+        grid.style.gridTemplateColumns = '';
+        return;
+    }
+    const floor = fixed.floors[fixed.selected];
+    if (!floor) {
+        grid.classList.add('placeholder');
+        grid.setAttribute('aria-disabled', 'true');
+        grid.innerHTML = '<span role="note">階層を追加してください。</span>';
+        grid.style.gridTemplateColumns = '';
+        return;
+    }
+    grid.setAttribute('aria-disabled', 'false');
+    grid.classList.remove('placeholder');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${floor.width}, minmax(22px, 22px))`;
+    for (let y = 0; y < floor.height; y++) {
+        for (let x = 0; x < floor.width; x++) {
+            const cell = floor.matrix?.[y]?.[x];
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'modmaker-cell';
+            if (cell === 0) btn.classList.add('state-floor');
+            else if (cell === 1) btn.classList.add('state-wall');
+            else btn.classList.add('state-void');
+            btn.title = `(${x}, ${y})`;
+            btn.addEventListener('click', () => {
+                if (!fixed.enabled) return;
+                floor.matrix[y][x] = cycleFixedCell(floor.matrix[y][x]);
+                renderModMaker();
+            });
+            grid.appendChild(btn);
+        }
+    }
+}
+
+function renderModMakerFixed(fixed) {
+    if (!modMakerRefs) return;
+    const container = modMakerRefs.fixedContainer;
+    if (container) {
+        const disabled = !fixed || !fixed.enabled;
+        container.classList.toggle('disabled', disabled);
+        container.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    }
+    if (modMakerRefs.fixedEnabled) {
+        modMakerRefs.fixedEnabled.checked = !!fixed?.enabled;
+    }
+    if (modMakerRefs.fixedFloorCount) {
+        modMakerRefs.fixedFloorCount.disabled = !fixed;
+        modMakerRefs.fixedFloorCount.value = fixed ? fixed.floorCount : 1;
+    }
+    if (modMakerRefs.fixedBossFloors) {
+        modMakerRefs.fixedBossFloors.disabled = !fixed || !fixed.enabled;
+        modMakerRefs.fixedBossFloors.value = fixed?.bossFloorsText || '';
+    }
+    if (modMakerRefs.fixedFloorList) {
+        modMakerRefs.fixedFloorList.innerHTML = '';
+        if (fixed) {
+            fixed.floors.forEach((floor, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = `${idx + 1}F`;
+                btn.classList.toggle('active', idx === fixed.selected);
+                btn.disabled = !fixed.enabled;
+                btn.addEventListener('click', () => {
+                    fixed.selected = idx;
+                    renderModMaker();
+                });
+                modMakerRefs.fixedFloorList.appendChild(btn);
+            });
+        }
+    }
+    const selectedFloor = fixed?.floors?.[fixed.selected] || null;
+    if (modMakerRefs.fixedWidth) {
+        modMakerRefs.fixedWidth.disabled = !fixed || !fixed.enabled || !selectedFloor;
+        modMakerRefs.fixedWidth.value = selectedFloor ? selectedFloor.width : MOD_MAKER_DEFAULT_FIXED_WIDTH;
+    }
+    if (modMakerRefs.fixedHeight) {
+        modMakerRefs.fixedHeight.disabled = !fixed || !fixed.enabled || !selectedFloor;
+        modMakerRefs.fixedHeight.value = selectedFloor ? selectedFloor.height : MOD_MAKER_DEFAULT_FIXED_HEIGHT;
+    }
+    if (modMakerRefs.fixedCopyPrev) {
+        modMakerRefs.fixedCopyPrev.disabled = !fixed || !fixed.enabled || !selectedFloor || fixed.selected === 0;
+    }
+    if (modMakerRefs.fixedFillWall) modMakerRefs.fixedFillWall.disabled = !fixed || !fixed.enabled;
+    if (modMakerRefs.fixedFillFloor) modMakerRefs.fixedFillFloor.disabled = !fixed || !fixed.enabled;
+    if (modMakerRefs.fixedFillVoid) modMakerRefs.fixedFillVoid.disabled = !fixed || !fixed.enabled;
+    renderFixedMapGrid(fixed);
+}
+
+function modMakerPatternFromMatrix(matrix) {
+    const rows = [];
+    for (const row of matrix || []) {
+        const line = row.map(cell => {
+            if (cell === 1) return '#';
+            if (cell === 0) return '.';
+            return ' ';
+        }).join('');
+        rows.push(line);
+    }
+    return rows;
+}
+
+function modMakerPatternFromFixedMatrix(matrix, width, height) {
+    const rows = [];
+    for (let y = 0; y < height; y++) {
+        const line = [];
+        for (let x = 0; x < width; x++) {
+            const cell = matrix?.[y]?.[x];
+            if (cell === 0) line.push('.');
+            else if (cell === 1) line.push('#');
+            else line.push(' ');
+        }
+        rows.push(line.join(''));
+    }
+    return rows;
+}
+
+function normalizeGeneratorFixed(generator, index, errors) {
+    const fixed = ensureGeneratorFixedState(generator);
+    if (!fixed || !fixed.enabled) return null;
+    const floorCount = clampFixedFloorCount(fixed.floorCount);
+    if (!fixed.floors.length) {
+        errors.push(`生成タイプ${index + 1}の固定マップが未設定です。`);
+        return null;
+    }
+    const maps = [];
+    for (let i = 0; i < floorCount; i++) {
+        const floor = fixed.floors[i];
+        if (!floor) {
+            errors.push(`生成タイプ${index + 1}の${i + 1}F固定マップが不足しています。`);
+            continue;
+        }
+        const width = clampFixedMapSize(floor.width, MOD_MAKER_DEFAULT_FIXED_WIDTH);
+        const height = clampFixedMapSize(floor.height, MOD_MAKER_DEFAULT_FIXED_HEIGHT);
+        const pattern = modMakerPatternFromFixedMatrix(floor.matrix, width, height);
+        if (!pattern.some(row => row.includes('.'))) {
+            errors.push(`生成タイプ${index + 1}の${i + 1}F固定マップに床がありません。`);
+        }
+        maps.push({ floor: i + 1, layout: pattern });
+    }
+    if (!maps.length) return null;
+    const parsedBoss = Array.isArray(fixed.bossFloors)
+        ? fixed.bossFloors
+        : parseBossFloors(fixed.bossFloorsText || '');
+    const bossFloors = Array.from(new Set((parsedBoss || []).map(n => Number(n)).filter(n => Number.isFinite(n)))).sort((a, b) => a - b);
+    const result = { max: floorCount, maps };
+    if (bossFloors.length) {
+        result.bossFloors = bossFloors;
+    }
+    return result;
+}
+
+function renderModMakerBlocks() {
+    if (!modMakerRefs?.blocks) return;
+    const tiers = ['blocks1', 'blocks2', 'blocks3'];
+    for (const tier of tiers) {
+        const container = modMakerRefs.blocks[tier];
+        if (!container) continue;
+        container.innerHTML = '';
+        const entries = modMakerState.blocks[tier] || [];
+        if (!entries.length) {
+            const empty = document.createElement('p');
+            empty.textContent = '未定義です。右上の追加ボタンで作成できます。';
+            empty.style.fontSize = '12px';
+            empty.style.color = '#6b7280';
+            container.appendChild(empty);
+            continue;
+        }
+        entries.forEach((entry, index) => {
+            const card = document.createElement('div');
+            card.className = 'modmaker-block-card';
+            const header = document.createElement('header');
+            const title = document.createElement('div');
+            const updateTitle = () => {
+                title.textContent = entry.name || entry.key || `${tier.toUpperCase()} #${index + 1}`;
+            };
+            updateTitle();
+            header.appendChild(title);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.textContent = '削除';
+            removeBtn.addEventListener('click', () => {
+                modMakerState.blocks[tier].splice(index, 1);
+                renderModMaker();
+            });
+            header.appendChild(removeBtn);
+            card.appendChild(header);
+
+            const notifyChanged = (shouldUpdateTitle = false) => {
+                refreshModMakerPreview();
+                if (shouldUpdateTitle) updateTitle();
+            };
+
+            card.appendChild(createBlockField('キー', entry.key, (val) => {
+                entry.key = val;
+                notifyChanged(true);
+            }, { deferRender: true }));
+            card.appendChild(createBlockField('名前', entry.name, (val) => {
+                entry.name = val;
+                notifyChanged(true);
+            }, { deferRender: true }));
+            card.appendChild(createBlockField('レベル補正', entry.level, (val) => {
+                entry.level = val;
+                notifyChanged();
+            }, { placeholder: '例: +0', deferRender: true }));
+            card.appendChild(createBlockField('サイズ補正', entry.size, (val) => {
+                entry.size = val;
+                notifyChanged();
+            }, { placeholder: '例: +1', deferRender: true }));
+            card.appendChild(createBlockField('深さ補正', entry.depth, (val) => {
+                entry.depth = val;
+                notifyChanged();
+            }, { placeholder: '例: +1', deferRender: true }));
+            card.appendChild(createBlockField('宝箱タイプ', entry.chest, (val) => {
+                entry.chest = val;
+                notifyChanged();
+            }, { placeholder: 'normal/more/less', deferRender: true }));
+            card.appendChild(createBlockField('タイプID', entry.type, (val) => {
+                entry.type = val;
+                notifyChanged();
+            }, { placeholder: '例: custom-dungeon', deferRender: true }));
+            card.appendChild(createBlockField('ボス階層', entry.bossFloors, (val) => {
+                entry.bossFloors = val;
+                notifyChanged();
+            }, { placeholder: '例: 5,10,15', deferRender: true }));
+            card.appendChild(createBlockField('重み', entry.weight, (val) => {
+                entry.weight = val;
+                notifyChanged();
+            }, { placeholder: '例: 1', type: 'number', step: 'any', min: '0', deferRender: true }));
+            card.appendChild(createBlockField('説明・メモ', entry.description, (val) => {
+                entry.description = val;
+                notifyChanged();
+            }, { multiline: true, rows: 2, deferRender: true }));
+
+            container.appendChild(card);
+        });
+    }
+}
+
+function createBlockField(labelText, value, onChange, options = {}) {
+    const label = document.createElement('label');
+    label.textContent = labelText;
+    const control = options.multiline ? document.createElement('textarea') : document.createElement('input');
+    if (!options.multiline) {
+        control.type = options.type || 'text';
+        if (options.min != null) control.min = options.min;
+        if (options.max != null) control.max = options.max;
+        if (options.step != null) control.step = options.step;
+        if (options.inputMode) control.inputMode = options.inputMode;
+    }
+    if (options.placeholder) control.placeholder = options.placeholder;
+    if (options.rows && options.multiline) control.rows = options.rows;
+    control.value = value ?? '';
+    control.spellcheck = false;
+    control.addEventListener(options.event || 'input', () => {
+        onChange(control.value);
+        if (!options.deferRender) renderModMaker();
+    });
+    label.appendChild(control);
+    return label;
+}
+
+function renderModMaker() {
+    ensureModMakerDefaults();
+    const structure = getSelectedStructure();
+    const generator = getSelectedGenerator();
+    const fixed = generator ? ensureGeneratorFixedState(generator) : null;
+
+    if (modMakerRefs.addonId) modMakerRefs.addonId.value = modMakerState.metadata.id || '';
+    if (modMakerRefs.addonName) modMakerRefs.addonName.value = modMakerState.metadata.name || '';
+    if (modMakerRefs.addonVersion) modMakerRefs.addonVersion.value = modMakerState.metadata.version || '';
+    if (modMakerRefs.addonAuthor) modMakerRefs.addonAuthor.value = modMakerState.metadata.author || '';
+    if (modMakerRefs.addonDescription) modMakerRefs.addonDescription.value = modMakerState.metadata.description || '';
+
+    if (modMakerRefs.structureList) {
+        modMakerRefs.structureList.innerHTML = '';
+        modMakerState.structures.forEach((item, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = item.name || item.id || `構造${idx + 1}`;
+            btn.classList.toggle('active', idx === modMakerState.selectedStructure);
+            btn.addEventListener('click', () => {
+                modMakerState.selectedStructure = idx;
+                renderModMaker();
+            });
+            modMakerRefs.structureList.appendChild(btn);
+        });
+    }
+    if (modMakerRefs.removeStructure) {
+        modMakerRefs.removeStructure.disabled = !modMakerState.structures.length;
+    }
+
+    if (modMakerRefs.structureId) {
+        modMakerRefs.structureId.disabled = !structure;
+        modMakerRefs.structureId.value = structure?.id || '';
+    }
+    if (modMakerRefs.structureName) {
+        modMakerRefs.structureName.disabled = !structure;
+        modMakerRefs.structureName.value = structure?.name || '';
+    }
+    if (modMakerRefs.structureAnchorX) {
+        modMakerRefs.structureAnchorX.disabled = !structure;
+        modMakerRefs.structureAnchorX.max = structure ? Math.max(0, structure.width - 1) : 0;
+        modMakerRefs.structureAnchorX.value = structure ? structure.anchorX : 0;
+    }
+    if (modMakerRefs.structureAnchorY) {
+        modMakerRefs.structureAnchorY.disabled = !structure;
+        modMakerRefs.structureAnchorY.max = structure ? Math.max(0, structure.height - 1) : 0;
+        modMakerRefs.structureAnchorY.value = structure ? structure.anchorY : 0;
+    }
+    if (modMakerRefs.structureTags) {
+        modMakerRefs.structureTags.disabled = !structure;
+        modMakerRefs.structureTags.value = structure?.tagsText || '';
+    }
+    if (modMakerRefs.structureAllowRotate) {
+        modMakerRefs.structureAllowRotate.disabled = !structure;
+        modMakerRefs.structureAllowRotate.checked = !!structure?.allowRotation;
+    }
+    if (modMakerRefs.structureAllowMirror) {
+        modMakerRefs.structureAllowMirror.disabled = !structure;
+        modMakerRefs.structureAllowMirror.checked = !!structure?.allowMirror;
+    }
+    if (modMakerRefs.fillEmpty) modMakerRefs.fillEmpty.disabled = !structure;
+    if (modMakerRefs.fillFloor) modMakerRefs.fillFloor.disabled = !structure;
+    if (modMakerRefs.fillWall) modMakerRefs.fillWall.disabled = !structure;
+    if (modMakerRefs.structureWidth) {
+        modMakerRefs.structureWidth.disabled = !structure;
+        modMakerRefs.structureWidth.value = structure ? structure.width : 1;
+    }
+    if (modMakerRefs.structureHeight) {
+        modMakerRefs.structureHeight.disabled = !structure;
+        modMakerRefs.structureHeight.value = structure ? structure.height : 1;
+    }
+    renderStructureGrid(structure);
+    if (modMakerRefs.patternPreview) {
+        modMakerRefs.patternPreview.value = structure ? modMakerPatternFromMatrix(structure.matrix).join('\n') : '';
+    }
+
+    if (modMakerRefs.generatorList) {
+        modMakerRefs.generatorList.innerHTML = '';
+        modMakerState.generators.forEach((item, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = item.name || item.id || `生成タイプ${idx + 1}`;
+            btn.classList.toggle('active', idx === modMakerState.selectedGenerator);
+            btn.addEventListener('click', () => {
+                modMakerState.selectedGenerator = idx;
+                renderModMaker();
+            });
+            modMakerRefs.generatorList.appendChild(btn);
+        });
+    }
+
+    if (modMakerRefs.generatorId) {
+        modMakerRefs.generatorId.disabled = !generator;
+        modMakerRefs.generatorId.value = generator?.id || '';
+    }
+    if (modMakerRefs.generatorName) {
+        modMakerRefs.generatorName.disabled = !generator;
+        modMakerRefs.generatorName.value = generator?.name || '';
+    }
+    if (modMakerRefs.generatorDescription) {
+        modMakerRefs.generatorDescription.disabled = !generator;
+        modMakerRefs.generatorDescription.value = generator?.description || '';
+    }
+    if (modMakerRefs.generatorNormalMix) {
+        modMakerRefs.generatorNormalMix.disabled = !generator;
+        modMakerRefs.generatorNormalMix.value = generator ? generator.mixinNormal : 0;
+    }
+    if (modMakerRefs.generatorBlockdimMix) {
+        modMakerRefs.generatorBlockdimMix.disabled = !generator;
+        modMakerRefs.generatorBlockdimMix.value = generator ? generator.mixinBlockDim : 0;
+    }
+    if (modMakerRefs.generatorTags) {
+        modMakerRefs.generatorTags.disabled = !generator;
+        modMakerRefs.generatorTags.value = generator?.tagsText || '';
+    }
+    if (modMakerRefs.generatorCode) {
+        modMakerRefs.generatorCode.disabled = !generator;
+        modMakerRefs.generatorCode.value = generator?.code || '';
+    }
+
+    renderModMakerFixed(fixed);
+
+    renderModMakerBlocks();
+
+    const result = buildModMakerOutput();
+    updateModMakerOutputView(result);
+}
+
+function buildModMakerOutput() {
+    ensureModMakerDefaults();
+    const errors = [];
+    const metaId = (modMakerState.metadata.id || '').trim();
+    const metaName = (modMakerState.metadata.name || '').trim();
+    const metaVersion = (modMakerState.metadata.version || '').trim() || '1.0.0';
+    const metaAuthor = (modMakerState.metadata.author || '').trim();
+    const metaDescription = (modMakerState.metadata.description || '').trim();
+
+    if (!metaId) errors.push('アドオンIDを入力してください。');
+    if (metaId && !/^[a-zA-Z0-9_\-]+$/.test(metaId)) errors.push('アドオンIDは英数字・ハイフン・アンダースコアのみ使用できます。');
+
+    const normalizedStructures = [];
+    const structureIds = new Set();
+    modMakerState.structures.forEach((structure, idx) => {
+        const id = (structure.id || '').trim();
+        if (!id) errors.push(`構造${idx + 1}のIDを入力してください。`);
+        else if (structureIds.has(id)) errors.push(`構造ID「${id}」が重複しています。`);
+        else structureIds.add(id);
+        const width = clampStructureSize(structure.width);
+        const height = clampStructureSize(structure.height);
+        if (structure.anchorX < 0 || structure.anchorX >= width || structure.anchorY < 0 || structure.anchorY >= height) {
+            errors.push(`構造${idx + 1}のアンカー位置が範囲外です。`);
+        }
+        normalizedStructures.push({
+            id,
+            name: (structure.name || '').trim(),
+            anchorX: clampAnchor(structure.anchorX, width - 1),
+            anchorY: clampAnchor(structure.anchorY, height - 1),
+            allowRotation: structure.allowRotation !== false,
+            allowMirror: structure.allowMirror !== false,
+            tags: parseTags(structure.tagsText || ''),
+            pattern: modMakerPatternFromMatrix(structure.matrix || modMakerCreateMatrix(width, height, null))
+        });
+    });
+
+    const normalizedGenerators = [];
+    const generatorIds = new Set();
+    if (!modMakerState.generators.length) errors.push('生成タイプを最低1つ追加してください。');
+    modMakerState.generators.forEach((generator, idx) => {
+        const id = (generator.id || '').trim();
+        if (!id) errors.push(`生成タイプ${idx + 1}のIDを入力してください。`);
+        else if (generatorIds.has(id)) errors.push(`生成タイプID「${id}」が重複しています。`);
+        else generatorIds.add(id);
+        let code = (generator.code || '').trim();
+        const mixNormal = Number(generator.mixinNormal);
+        const mixBlock = Number(generator.mixinBlockDim);
+        if (Number.isFinite(mixNormal) && (mixNormal < 0 || mixNormal > 1)) errors.push(`生成タイプ${idx + 1}のNormal混合参加率は0〜1で指定してください。`);
+        if (Number.isFinite(mixBlock) && (mixBlock < 0 || mixBlock > 1)) errors.push(`生成タイプ${idx + 1}のBlock次元混合参加率は0〜1で指定してください。`);
+        const floors = normalizeGeneratorFixed(generator, idx, errors);
+        if (!code) {
+            if (floors) {
+                code = MOD_MAKER_TEMPLATES.fixed.trim();
+            } else {
+                errors.push(`生成タイプ${idx + 1}のアルゴリズムコードを入力してください。`);
+            }
+        }
+        normalizedGenerators.push({
+            id,
+            name: (generator.name || '').trim(),
+            description: (generator.description || '').trim(),
+            mixinNormal: Number.isFinite(mixNormal) ? Math.max(0, Math.min(1, mixNormal)) : 0,
+            mixinBlockDim: Number.isFinite(mixBlock) ? Math.max(0, Math.min(1, mixBlock)) : 0,
+            tags: parseTags(generator.tagsText || ''),
+            code,
+            floors
+        });
+    });
+
+    const normalizedBlocks = { blocks1: [], blocks2: [], blocks3: [] };
+    const blockKeys = new Set();
+    for (const tier of ['blocks1', 'blocks2', 'blocks3']) {
+        const entries = modMakerState.blocks[tier] || [];
+        entries.forEach((entry, idx) => {
+            const key = (entry.key || '').trim();
+            if (!key) {
+                errors.push(`${tier.toUpperCase()} ブロック${idx + 1}のキーを入力してください。`);
+                return;
+            }
+            if (blockKeys.has(key)) {
+                errors.push(`ブロックキー「${key}」が重複しています。`);
+                return;
+            }
+            blockKeys.add(key);
+            const level = parseNumber(entry.level);
+            const size = parseNumber(entry.size);
+            const depth = parseNumber(entry.depth);
+            const bossFloors = parseBossFloors(entry.bossFloors || '');
+            const weight = parseNumber(entry.weight);
+            const record = { key };
+            if ((entry.name || '').trim()) record.name = entry.name.trim();
+            if (Number.isFinite(level)) record.level = level;
+            if (Number.isFinite(size)) record.size = size;
+            if (Number.isFinite(depth)) record.depth = depth;
+            if (Number.isFinite(weight)) {
+                if (weight <= 0) {
+                    errors.push(`${tier.toUpperCase()} ブロック${idx + 1}の重みは正の数で指定してください。`);
+                } else {
+                    record.weight = weight;
+                }
+            }
+            if ((entry.chest || '').trim()) record.chest = entry.chest.trim();
+            if ((entry.type || '').trim()) record.type = entry.type.trim();
+            if (bossFloors.length) record.bossFloors = bossFloors;
+            if ((entry.description || '').trim()) record.description = entry.description.trim();
+            normalizedBlocks[tier].push(record);
+        });
+    }
+
+    const addonProps = [];
+    addonProps.push([`id: ${jsString(metaId)}`]);
+    if (metaName) addonProps.push([`name: ${jsString(metaName)}`]);
+    addonProps.push([`version: ${jsString(metaVersion)}`]);
+    if (metaAuthor) addonProps.push([`author: ${jsString(metaAuthor)}`]);
+    if (metaDescription) addonProps.push([`description: ${jsString(metaDescription)}`]);
+
+    if (normalizedStructures.length) {
+        const structBlock = ['structures: ['];
+        normalizedStructures.forEach((structure, idx) => {
+            const lines = buildStructureLines(structure);
+            if (idx < normalizedStructures.length - 1) {
+                lines[lines.length - 1] += ',';
+            }
+            structBlock.push(...lines);
+        });
+        structBlock.push(']');
+        addonProps.push(structBlock);
+    }
+
+    if (normalizedGenerators.length) {
+        const genBlock = ['generators: ['];
+        normalizedGenerators.forEach((generator, idx) => {
+            const lines = buildGeneratorLines(generator);
+            if (idx < normalizedGenerators.length - 1) {
+                lines[lines.length - 1] += ',';
+            }
+            genBlock.push(...lines);
+        });
+        genBlock.push(']');
+        addonProps.push(genBlock);
+    }
+
+    const blockEntries = Object.fromEntries(Object.entries(normalizedBlocks).filter(([, arr]) => arr.length));
+    if (Object.keys(blockEntries).length) {
+        const blockLines = ['blocks: {'];
+        const tiers = Object.keys(blockEntries);
+        tiers.forEach((tier, idx) => {
+            blockLines.push(`${indent(3)}${tier}: [`);
+            blockEntries[tier].forEach((entry, entryIdx) => {
+                const lines = buildBlockEntryLines(entry, 4);
+                if (entryIdx < blockEntries[tier].length - 1) {
+                    lines[lines.length - 1] += ',';
+                }
+                blockLines.push(...lines);
+            });
+            blockLines.push(`${indent(3)}]${idx < tiers.length - 1 ? ',' : ''}`);
+        });
+        blockLines.push('}');
+        addonProps.push(blockLines);
+    }
+
+    const lines = [];
+    lines.push('// Generated by Tools - Dungeon Type Mod Maker');
+    lines.push('(function(){');
+    lines.push(`${indent(1)}const addon = {`);
+    addonProps.forEach((propLines, idx) => {
+        const linesForProp = Array.isArray(propLines) ? propLines : [propLines];
+        const isLast = idx === addonProps.length - 1;
+        linesForProp.forEach((line, lineIdx) => {
+            const needsComma = !isLast && lineIdx === linesForProp.length - 1;
+            lines.push(`${indent(2)}${line}${needsComma ? ',' : ''}`);
+        });
+    });
+    lines.push(`${indent(1)}};`);
+    lines.push(`${indent(1)}window.registerDungeonAddon(addon);`);
+    lines.push('})();');
+
+    return { code: lines.join('\n'), errors };
+}
+
+function updateModMakerOutputView(result) {
+    if (!modMakerRefs) return;
+    const { code, errors } = result || { code: '', errors: [] };
+    if (modMakerRefs.output) modMakerRefs.output.value = code || '';
+    if (modMakerRefs.copy) {
+        modMakerRefs.copy.disabled = !code || errors.length > 0;
+        modMakerRefs.copy.textContent = modMakerCopyLabel;
+    }
+    if (modMakerRefs.download) modMakerRefs.download.disabled = !code || errors.length > 0;
+    if (modMakerRefs.errors) {
+        modMakerRefs.errors.innerHTML = '';
+        if (errors.length) {
+            modMakerRefs.errors.style.color = '#dc2626';
+            const heading = document.createElement('div');
+            heading.textContent = `⚠️ ${errors.length} 件の確認事項があります`;
+            const list = document.createElement('ul');
+            errors.forEach(msg => {
+                const li = document.createElement('li');
+                li.textContent = msg;
+                list.appendChild(li);
+            });
+            modMakerRefs.errors.appendChild(heading);
+            modMakerRefs.errors.appendChild(list);
+        } else {
+            modMakerRefs.errors.style.color = '#15803d';
+            modMakerRefs.errors.textContent = '✅ 出力できます';
+        }
+    }
+}
+
+function refreshModMakerPreview() {
+    updateModMakerOutputView(buildModMakerOutput());
+}
+
+function formatAlgorithmLines(code) {
+    const normalized = (code || '').replace(/\r\n/g, '\n').trim();
+    if (!normalized) {
+        return [
+            'function(ctx) {',
+            '  // TODO: ctx.map などを編集してダンジョンを生成してください。',
+            '}'
+        ];
+    }
+    const lines = normalized.split('\n');
+    if (normalized.startsWith('function')) return lines;
+    const body = lines.map(line => `  ${line}`);
+    return ['function(ctx) {', ...body, '}'];
+}
+
+function buildStructureLines(structure) {
+    const lines = [];
+    lines.push(`${indent(3)}{`);
+    lines.push(`${indent(4)}id: ${jsString(structure.id)},`);
+    if (structure.name) lines.push(`${indent(4)}name: ${jsString(structure.name)},`);
+    lines.push(`${indent(4)}anchor: { x: ${structure.anchorX}, y: ${structure.anchorY} },`);
+    lines.push(`${indent(4)}allowRotation: ${structure.allowRotation ? 'true' : 'false'},`);
+    lines.push(`${indent(4)}allowMirror: ${structure.allowMirror ? 'true' : 'false'},`);
+    if (structure.tags.length) lines.push(`${indent(4)}tags: ${JSON.stringify(structure.tags)},`);
+    lines.push(`${indent(4)}pattern: [`);
+    structure.pattern.forEach(row => {
+        lines.push(`${indent(5)}${jsString(row)},`);
+    });
+    lines.push(`${indent(4)}]`);
+    lines.push(`${indent(3)}}`);
+    return lines;
+}
+
+function buildGeneratorLines(generator) {
+    const lines = [`${indent(3)}{`];
+    const props = [];
+    props.push([`id: ${jsString(generator.id)}`]);
+    if (generator.name) props.push([`name: ${jsString(generator.name)}`]);
+    if (generator.description) props.push([`description: ${jsString(generator.description)}`]);
+    const mixParts = [];
+    if (generator.mixinNormal > 0) mixParts.push(`normalMixed: ${generator.mixinNormal}`);
+    if (generator.mixinBlockDim > 0) mixParts.push(`blockDimMixed: ${generator.mixinBlockDim}`);
+    if (generator.tags.length) mixParts.push(`tags: ${JSON.stringify(generator.tags)}`);
+    if (mixParts.length) props.push([`mixin: { ${mixParts.join(', ')} }`]);
+    if (generator.floors) {
+        const floorsLines = buildGeneratorFloorsLines(generator.floors);
+        if (floorsLines.length) props.push(floorsLines);
+    }
+    const algoLines = formatAlgorithmLines(generator.code);
+    if (algoLines.length) {
+        const prop = [`algorithm: ${algoLines[0]}`, ...algoLines.slice(1)];
+        props.push(prop);
+    }
+    props.forEach((propLines, idx) => {
+        const isLast = idx === props.length - 1;
+        propLines.forEach((line, lineIdx) => {
+            const needsComma = !isLast && lineIdx === propLines.length - 1;
+            lines.push(`${indent(4)}${line}${needsComma ? ',' : ''}`);
+        });
+    });
+    lines.push(`${indent(3)}}`);
+    return lines;
+}
+
+function buildGeneratorFloorsLines(floors) {
+    if (!floors || !Array.isArray(floors.maps) || !floors.maps.length) return [];
+    const maxFloor = Number.isFinite(floors.max) ? floors.max : floors.maps.length;
+    const lines = ['floors: {'];
+    lines.push(`  max: ${maxFloor},`);
+    const boss = Array.isArray(floors.bossFloors) ? floors.bossFloors.filter(n => Number.isFinite(n)).map(n => Math.floor(n)) : [];
+    if (boss.length) {
+        lines.push(`  bossFloors: [${boss.join(', ')}],`);
+    }
+    lines.push('  maps: [');
+    floors.maps.forEach((map, idx) => {
+        const layout = Array.isArray(map.layout) ? map.layout : [];
+        lines.push('    {');
+        lines.push(`      floor: ${Number.isFinite(map.floor) ? Math.floor(map.floor) : idx + 1},`);
+        lines.push('      layout: [');
+        layout.forEach((row, rowIdx) => {
+            const comma = rowIdx < layout.length - 1 ? ',' : '';
+            lines.push(`        ${jsString(row)}${comma}`);
+        });
+        lines.push('      ]');
+        lines.push(`    }${idx < floors.maps.length - 1 ? ',' : ''}`);
+    });
+    lines.push('  ]');
+    lines.push('}');
+    return lines;
+}
+
+function buildBlockEntryLines(entry, baseIndent = 4) {
+    const props = [];
+    props.push([`key: ${jsString(entry.key)}`]);
+    if (entry.name) props.push([`name: ${jsString(entry.name)}`]);
+    if (Object.prototype.hasOwnProperty.call(entry, 'level')) props.push([`level: ${entry.level}`]);
+    if (Object.prototype.hasOwnProperty.call(entry, 'size')) props.push([`size: ${entry.size}`]);
+    if (Object.prototype.hasOwnProperty.call(entry, 'depth')) props.push([`depth: ${entry.depth}`]);
+    if (typeof entry.weight === 'number') props.push([`weight: ${entry.weight}`]);
+    if (entry.chest) props.push([`chest: ${jsString(entry.chest)}`]);
+    if (entry.type) props.push([`type: ${jsString(entry.type)}`]);
+    if (Array.isArray(entry.bossFloors) && entry.bossFloors.length) props.push([`bossFloors: [${entry.bossFloors.join(', ')}]`]);
+    if (entry.description) props.push([`description: ${jsString(entry.description)}`]);
+    const lines = [`${indent(baseIndent)}{`];
+    props.forEach((propLines, idx) => {
+        const isLast = idx === props.length - 1;
+        propLines.forEach((line, lineIdx) => {
+            const needsComma = !isLast && lineIdx === propLines.length - 1;
+            lines.push(`${indent(baseIndent + 1)}${line}${needsComma ? ',' : ''}`);
+        });
+    });
+    lines.push(`${indent(baseIndent)}}`);
+    return lines;
+}
+
+function parseTags(text) {
+    if (!text) return [];
+    return text.split(',').map(t => t.trim()).filter(Boolean);
+}
+
+function parseBossFloors(text) {
+    if (!text) return [];
+    return text.split(/[\s,]+/).map(v => parseInt(v, 10)).filter(n => Number.isFinite(n));
+}
+
+function parseNumber(value) {
+    if (value == null || value === '') return NaN;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : NaN;
+}
+
+function indent(level) {
+    return '  '.repeat(level);
+}
+
+function jsString(value) {
+    return JSON.stringify(value ?? '');
+}
+
+async function copyModMakerOutput() {
+    if (!modMakerRefs?.output) return;
+    const text = modMakerRefs.output.value;
+    if (!text) return;
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            showModMakerCopyFeedback('コピーしました');
+            return;
+        }
+    } catch {}
+    try {
+        const textarea = modMakerRefs.output;
+        textarea.focus();
+        textarea.select();
+        const ok = document.execCommand('copy');
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        showModMakerCopyFeedback(ok ? 'コピーしました' : 'コピーできませんでした');
+    } catch {
+        showModMakerCopyFeedback('コピーできませんでした');
+    }
+}
+
+function showModMakerCopyFeedback(message) {
+    modMakerCopyLabel = message;
+    if (modMakerRefs?.copy) modMakerRefs.copy.textContent = modMakerCopyLabel;
+    if (modMakerCopyTimer) clearTimeout(modMakerCopyTimer);
+    modMakerCopyTimer = setTimeout(() => {
+        modMakerCopyLabel = 'クリップボードにコピー';
+        if (modMakerRefs?.copy) modMakerRefs.copy.textContent = modMakerCopyLabel;
+    }, 2000);
+}
+
+function downloadModMakerOutput() {
+    if (!modMakerRefs?.output) return;
+    const code = modMakerRefs.output.value;
+    if (!code) return;
+    const base = (modMakerState.metadata.id || 'dungeon_addon').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const blob = new Blob([code], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${base}.js`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+
 
 // 一元的なセーブ
 function saveAll() {
@@ -4304,6 +5801,23 @@ try {
 } catch {}
 
 // 共通EXP付与（ミニゲー/戦闘 共用）
+function spendExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
+    const v = Math.max(0, Math.floor(Number(amount) || 0));
+    if (!Number.isFinite(v) || v <= 0) return 0;
+    const available = Math.max(0, Math.floor(player.exp || 0));
+    const spent = Math.min(v, available);
+    if (spent <= 0) return 0;
+    player.exp = Math.max(0, (player.exp || 0) - spent);
+    prevExp = player.exp || 0;
+    if (opts.popup) {
+        try { addMessage(`経験値を ${Math.floor(spent)} 消費。（${opts.source}${opts.reason ? ': ' + opts.reason : ''}）`); } catch {}
+    }
+    try { updateUI(); } catch {}
+    try { renderMiniExpPlayerHud(); } catch {}
+    try { saveAll(); } catch {}
+    return spent;
+}
+
 function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     const v = Math.max(0, Number(amount) || 0);
     if (v <= 0) return 0;
@@ -4768,17 +6282,29 @@ async function loadMiniGameScript(def) {
     });
 }
 
+function applyMiniExpBadgeOptions(el, opts = null) {
+    if (!opts) return;
+    if (opts.variant === 'combo') {
+        el.classList.add('combo');
+        const lvl = Number(opts.level || 1);
+        const tier = lvl >= 5 ? 'c3' : (lvl >= 3 ? 'c2' : 'c1');
+        el.classList.add(tier);
+    }
+    if (opts.tone === 'loss') {
+        el.classList.add('loss');
+        const lossBg = opts.variant === 'combo'
+            ? 'linear-gradient(135deg, #be123c, #ef4444)'
+            : 'rgba(239,68,68,0.92)';
+        el.style.background = lossBg;
+    }
+}
+
 function showMiniExpBadge(text, opts = null) {
     const hud = document.getElementById('miniexp-hud');
     if (!hud) return;
     const el = document.createElement('div');
     el.className = 'exp-badge';
-    if (opts && opts.variant === 'combo') {
-        el.classList.add('combo');
-        const lvl = Number(opts.level||1);
-        const tier = lvl >= 5 ? 'c3' : (lvl >= 3 ? 'c2' : 'c1');
-        el.classList.add(tier);
-    }
+    applyMiniExpBadgeOptions(el, opts);
     el.textContent = text;
     hud.appendChild(el);
     setTimeout(() => { try { el.remove(); } catch {} }, 1200);
@@ -4791,12 +6317,7 @@ function showTransientPopupAt(x, y, text, opts = null) {
         if (!container) return;
         const el = document.createElement('div');
         el.className = 'exp-badge float';
-        if (opts && opts.variant === 'combo') {
-            el.classList.add('combo');
-            const lvl = Number(opts.level||1);
-            const tier = lvl >= 5 ? 'c3' : (lvl >= 3 ? 'c2' : 'c1');
-            el.classList.add(tier);
-        }
+        applyMiniExpBadgeOptions(el, opts);
         el.textContent = text;
         el.style.left = `${x}px`;
         el.style.top = `${y}px`;
@@ -4820,22 +6341,40 @@ function renderMiniExpPlayerHud() {
 }
 
 function awardXpFromMini(n, reason='') {
+    const amount = Number(n) || 0;
+    if (!Number.isFinite(amount) || amount === 0) return 0;
     ensureAudio();
-    playSfx && playSfx('pickup');
-    const gained = grantExp(n, { source: 'mini', reason });
-    showMiniExpBadge(`+${Math.floor(gained)} EXP`);
+    const isGain = amount > 0;
+    if (isGain) playSfx && playSfx('pickup');
+    else playSfx && playSfx('damage');
+    let delta = 0;
+    if (isGain) {
+        const gained = grantExp(amount, { source: 'mini', reason, popup: false });
+        if (!gained) return 0;
+        delta = Number(gained) || 0;
+        showMiniExpBadge(`+${Math.floor(delta)} EXP`, { tone: 'gain' });
+    } else {
+        const spent = spendExp(-amount, { source: 'mini', reason, popup: false });
+        if (!spent) return 0;
+        delta = -Number(spent || 0);
+        showMiniExpBadge(`-${Math.floor(spent)} EXP`, { tone: 'loss' });
+    }
     renderMiniExpPlayerHud();
-    // 記録: セッション合計と通算
-    __miniSessionExp += (Number(gained)||0);
+    __miniSessionExp += delta;
     try {
         const gid = miniExpState.selected || reason || 'unknown';
         const rec = (miniExpState.records[gid] ||= { id: gid, bestScore: 0, totalPlays: 0, totalExpEarned: 0, lastPlayedAt: 0 });
-        rec.totalExpEarned = (rec.totalExpEarned||0) + (Number(gained)||0);
+        rec.totalExpEarned = (rec.totalExpEarned||0) + delta;
         renderMiniExpRecords();
         saveAll();
     } catch {}
-    return gained;
+    return delta;
 }
+
+function getMiniExpBalance() {
+    return Math.floor(Math.max(0, player?.exp || 0));
+}
+window.getMiniExpBalance = getMiniExpBalance;
 
 async function startSelectedMiniGame() {
     if (!miniExpState.selected || __currentMini) return;
@@ -4859,6 +6398,7 @@ async function startSelectedMiniGame() {
     }
     if (miniexpContainer) miniexpContainer.innerHTML = '';
     __miniSessionExp = 0;
+    __miniPaused = false;
     let runtime = null;
     try {
         runtime = mod.create(miniexpContainer, (n, meta) => awardXpFromMini(n, def.id), { difficulty: (miniexpDifficulty?.value||'NORMAL') });
@@ -4869,6 +6409,7 @@ async function startSelectedMiniGame() {
     }
     try { runtime.start(); } catch {}
     __currentMini = runtime;
+    __miniPaused = false;
     if (miniexpPauseBtn) { miniexpPauseBtn.disabled = false; miniexpPauseBtn.textContent = '一時停止'; }
     if (miniexpRestartBtn) miniexpRestartBtn.disabled = false;
     if (miniexpQuitBtn) miniexpQuitBtn.disabled = false;
@@ -4894,6 +6435,7 @@ function quitMiniGame() {
         saveAll();
     } catch {}
     __currentMini = null;
+    __miniPaused = false;
     if (miniexpContainer) miniexpContainer.innerHTML = '';
     if (miniexpStartBtn) miniexpStartBtn.disabled = false;
     if (miniexpPauseBtn) { miniexpPauseBtn.disabled = true; miniexpPauseBtn.textContent = '一時停止'; }
@@ -4942,10 +6484,12 @@ function renderMiniExpRecords() {
     };
     const best = rec?.bestScore ?? 0;
     const plays = rec?.totalPlays ?? 0;
-    const totalExp = Math.floor(rec?.totalExpEarned ?? 0);
+    const totalExpRaw = rec?.totalExpEarned ?? 0;
+    const totalExp = Math.floor(totalExpRaw);
+    const totalExpText = totalExp > 0 ? `+${totalExp}` : String(totalExp);
     box.appendChild(mk('ベストスコア', String(best)));
     box.appendChild(mk('通算プレイ', String(plays)));
-    box.appendChild(mk('通算獲得EXP', String(totalExp)));
+    box.appendChild(mk('通算獲得EXP', totalExpText));
 }
 
 // -------------- Dungeon Addons (生成MOD) --------------

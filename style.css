@@ -1211,6 +1211,11 @@ h1 {
     min-height: 520px;
 }
 
+.tool-panel[data-tool-panel="blockdata-editor"] {
+    max-height: min(820px, 75vh);
+    overflow-y: auto;
+}
+
 .blockdata-sidebar {
     display: flex;
     flex-direction: column;

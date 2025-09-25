@@ -125,6 +125,7 @@ let __currentMini = null;    // runtime
 let __miniSessionExp = 0;    // セッション内の獲得EXP純増減
 let __miniPaused = false;
 
+let __toolsTabInitialized = false;
 let __toolsInited = false;
 let modMakerRefs = null;
 
@@ -1103,9 +1104,13 @@ function setupTabs() {
     if (tabBtnTools) {
         tabBtnTools.addEventListener('click', () => {
             activateTab('tools');
-            if (!__toolsInited) {
-                initToolsTab();
-                __toolsInited = true;
+            if (!__toolsTabInitialized) {
+                if (window.ToolsTab?.init) {
+                    window.ToolsTab.init(tabTools, { defaultTool: 'mod-maker' });
+                }
+                __toolsTabInitialized = true;
+            } else if (window.ToolsTab?.show) {
+                window.ToolsTab.show('mod-maker');
             }
         });
     }
@@ -2611,7 +2616,6 @@ function downloadModMakerOutput() {
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
 
 
 

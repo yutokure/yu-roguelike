@@ -198,25 +198,33 @@
     }
 
     function endIfNoMoves(){
-      const m1 = legalMoves(turn);
-      if (m1.length>0) return false;
-      // pass
+      const currentMoves = legalMoves(turn);
+      if (currentMoves.length>0) return 'turn_has_moves';
+      const passedColor = turn;
       turn = -turn;
-      const m2 = legalMoves(turn);
-      if (m2.length>0) return false;
-      // both no moves => end
+      const nextMoves = legalMoves(turn);
+      if (nextMoves.length>0){
+        return passedColor === BLACK ? 'player_passed' : 'ai_passed';
+      }
       ended = true; running=false;
       const s = score();
       if (s.b > s.w){ resultText = 'あなたの勝ち！'; awardXp(bonus, { type:'win' }); }
       else if (s.b < s.w){ resultText = 'あなたの負け…'; }
       else { resultText = '引き分け'; }
       draw();
-      return true;
+      return 'ended';
     }
 
     function aiMove(){
       const moves = legalMoves(WHITE);
-      if (moves.length===0){ turn = BLACK; endIfNoMoves(); draw(); return; }
+      if (moves.length===0){
+        const state = endIfNoMoves();
+        draw();
+        if (state === 'player_passed'){
+          setTimeout(()=>{ if (!ended) aiMove(); }, 240);
+        }
+        return;
+      }
       let choice = null;
       if (difficulty==='EASY'){
         choice = moves[(Math.random()*moves.length)|0];
@@ -241,8 +249,11 @@
       }
       applyMove(choice, WHITE, false);
       turn = BLACK;
-      endIfNoMoves();
+      const state = endIfNoMoves();
       draw();
+      if (state === 'player_passed'){
+        setTimeout(()=>{ if (!ended) aiMove(); }, 240);
+      }
     }
 
     let lastHoverKey = '';
@@ -263,10 +274,24 @@
         }
       }
     }
-    function click(e){ if (ended || turn!==BLACK) return; const rect = canvas.getBoundingClientRect(); const cs = canvas.width/SIZE; const x = Math.floor((e.clientX-rect.left)/cs); const y = Math.floor((e.clientY-rect.top)/cs); const mv = legalMoves(BLACK).find(m=>m.x===x && m.y===y); if (!mv) return; applyMove(mv, BLACK, true); turn = WHITE; animate(); setTimeout(()=>{ if (!endIfNoMoves()) aiMove(); }, 120); }
+    function click(e){ if (ended || turn!==BLACK) return; const rect = canvas.getBoundingClientRect(); const cs = canvas.width/SIZE; const x = Math.floor((e.clientX-rect.left)/cs); const y = Math.floor((e.clientY-rect.top)/cs); const mv = legalMoves(BLACK).find(m=>m.x===x && m.y===y); if (!mv) return; applyMove(mv, BLACK, true); turn = WHITE; animate(); setTimeout(()=>{ const state = endIfNoMoves(); if (state === 'turn_has_moves') aiMove(); }, 120); }
 
     function animate(){ cancelAnimationFrame(rafId); const step=()=>{ let done=true; for(const a of anims){ a.t = Math.min(1, a.t + 0.12); if (a.t<1) done=false; } draw(); if(!done) rafId=requestAnimationFrame(step); else anims.length=0; }; rafId=requestAnimationFrame(step); }
-    function start(){ if (!running){ running=true; canvas.addEventListener('click', click); canvas.addEventListener('mousemove', mousemove); draw(); if (endIfNoMoves()) return; if (turn===WHITE) aiMove(); } }
+    function start(){
+      if (!running){
+        running=true;
+        canvas.addEventListener('click', click);
+        canvas.addEventListener('mousemove', mousemove);
+        draw();
+        const state = endIfNoMoves();
+        if (state === 'ended') return;
+        if (state === 'player_passed'){
+          setTimeout(()=>{ if (!ended) aiMove(); }, 240);
+        } else if (turn===WHITE){
+          aiMove();
+        }
+      }
+    }
     function stop(){ if (running){ running=false; canvas.removeEventListener('click', click); canvas.removeEventListener('mousemove', mousemove); cancelAnimationFrame(rafId); } }
     function destroy(){ try{ stop(); root && root.removeChild(canvas); }catch{} }
     function getScore(){ const s=score(); return s.b - s.w; }

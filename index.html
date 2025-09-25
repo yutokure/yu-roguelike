@@ -188,6 +188,8 @@
                         <aside class="tools-sidebar" aria-label="ツール一覧">
                             <button id="tool-button-modmaker" class="tool-item active" type="button" data-tool-target="mod-maker">ダンジョンタイプMod作成</button>
                             <p class="tool-hint">構造や生成アルゴリズムを組み立てて `registerDungeonAddon` ファイルを出力します。</p>
+                            <button id="tool-button-blockdata" class="tool-item" type="button" data-tool-target="blockdata-editor">BlockData編集</button>
+                            <p class="tool-hint">BlockDim向けのブロック定義をGUIで確認・編集し、JSONをエクスポートできます。</p>
                             <button id="tool-button-image-viewer" class="tool-item" type="button" data-tool-target="image-viewer">画像ビューア</button>
                             <p class="tool-hint">スクリーンショットなどを拡大・回転・遠近表示しながらメタ情報を確認できます。</p>
                         </aside>
@@ -396,6 +398,120 @@
                                 </div>
                             </section>
                         </section>
+                        <section id="tool-blockdata-editor" class="tool-panel" data-tool-panel="blockdata-editor" aria-label="ブロックデータ編集ツール">
+                            <header class="tool-panel-header">
+                                <h3>BlockDataビジュアルエディタ</h3>
+                                <p>blockdata.json を読み込み、BlockDimブロックの一覧・編集・書き出しを行います。</p>
+                            </header>
+                            <div class="blockdata-editor">
+                                <aside class="blockdata-sidebar" aria-label="ブロック一覧">
+                                    <div class="blockdata-group">
+                                        <span class="blockdata-group-label">対象セット</span>
+                                        <div class="blockdata-group-buttons" role="tablist" aria-label="BlockDataセット">
+                                            <button type="button" class="blockdata-group-button active" data-block-group="blocks1" aria-pressed="true">1stブロック <span class="count" aria-hidden="true">0</span></button>
+                                            <button type="button" class="blockdata-group-button" data-block-group="blocks2" aria-pressed="false">2ndブロック <span class="count" aria-hidden="true">0</span></button>
+                                            <button type="button" class="blockdata-group-button" data-block-group="blocks3" aria-pressed="false">3rdブロック <span class="count" aria-hidden="true">0</span></button>
+                                        </div>
+                                    </div>
+                                    <label class="blockdata-search" for="blockdata-search-input">
+                                        <span>検索</span>
+                                        <input id="blockdata-search-input" type="search" placeholder="名前 / キーで絞り込み">
+                                    </label>
+                                    <div class="blockdata-sidebar-actions">
+                                        <button type="button" id="blockdata-create" class="blockdata-primary">+ 新規ブロック</button>
+                                    </div>
+                                    <div id="blockdata-list" class="blockdata-list" role="listbox" aria-label="ブロック候補"></div>
+                                </aside>
+                                <div class="blockdata-main">
+                                    <div class="blockdata-filebar">
+                                        <label class="blockdata-version">
+                                            <span>バージョン</span>
+                                            <input id="blockdata-version" type="number" min="1" step="1" value="1">
+                                        </label>
+                                        <div class="blockdata-file-actions">
+                                            <button type="button" id="blockdata-reload">再読込</button>
+                                            <button type="button" id="blockdata-import">インポート</button>
+                                            <button type="button" id="blockdata-copy">コピー</button>
+                                            <button type="button" id="blockdata-download">ダウンロード</button>
+                                        </div>
+                                        <input type="file" id="blockdata-import-file" accept="application/json" hidden>
+                                    </div>
+                                    <p id="blockdata-dirty-indicator" class="blockdata-dirty" aria-live="polite"></p>
+                                    <p id="blockdata-status" class="blockdata-status" role="status"></p>
+                                    <form id="blockdata-form">
+                                        <fieldset data-blockdata-fieldset disabled>
+                                            <legend id="blockdata-form-legend">ブロック詳細</legend>
+                                            <div class="blockdata-form-grid">
+                                                <label>
+                                                    <span>キー</span>
+                                                    <input id="blockdata-field-key" type="text" required placeholder="例: b3999">
+                                                </label>
+                                                <label>
+                                                    <span>名前</span>
+                                                    <input id="blockdata-field-name" type="text" required placeholder="ブロック名">
+                                                </label>
+                                                <label>
+                                                    <span>推奨Lv</span>
+                                                    <input id="blockdata-field-level" type="number" step="1" value="0">
+                                                </label>
+                                                <label>
+                                                    <span>サイズ</span>
+                                                    <input id="blockdata-field-size" type="number" step="1" value="0">
+                                                </label>
+                                                <label>
+                                                    <span>深さ</span>
+                                                    <input id="blockdata-field-depth" type="number" step="1" value="0">
+                                                </label>
+                                                <label>
+                                                    <span>宝箱</span>
+                                                    <select id="blockdata-field-chest">
+                                                        <option value="normal">normal</option>
+                                                        <option value="more">more</option>
+                                                        <option value="less">less</option>
+                                                    </select>
+                                                </label>
+                                                <label>
+                                                    <span>タイプ</span>
+                                                    <input id="blockdata-field-type" type="text" list="blockdata-type-options" placeholder="例: maze">
+                                                </label>
+                                                <label class="full">
+                                                    <span>ボス階層</span>
+                                                    <input id="blockdata-field-bossfloors" type="text" placeholder="カンマ区切り (例: 5,10)">
+                                                </label>
+                                                <label class="full">
+                                                    <span>追加プロパティ(JSON)</span>
+                                                    <textarea id="blockdata-field-extras" rows="4" placeholder="{}"></textarea>
+                                                </label>
+                                            </div>
+                                        </fieldset>
+                                        <div class="blockdata-form-actions">
+                                            <button type="button" id="blockdata-save" class="blockdata-primary" disabled>選択を保存</button>
+                                            <button type="button" id="blockdata-delete" class="blockdata-danger" disabled>削除</button>
+                                        </div>
+                                    </form>
+                                    <section class="blockdata-preview-section" aria-label="JSONプレビュー">
+                                        <header>
+                                            <h4>blockdata.jsonプレビュー</h4>
+                                            <span id="blockdata-preview-size" class="blockdata-preview-size"></span>
+                                        </header>
+                                        <textarea id="blockdata-json-preview" readonly></textarea>
+                                    </section>
+                                </div>
+                            </div>
+                            <datalist id="blockdata-type-options">
+                                <option value="field"></option>
+                                <option value="cave"></option>
+                                <option value="grid"></option>
+                                <option value="maze"></option>
+                                <option value="rooms"></option>
+                                <option value="open-space"></option>
+                                <option value="circle"></option>
+                                <option value="circle-rooms"></option>
+                                <option value="single-room"></option>
+                                <option value="narrow-maze"></option>
+                                <option value="wide-maze"></option>
+                                <option value="snake"></option>
+                            </datalist>
                         <section id="tool-image-viewer" class="tool-panel" data-tool-panel="image-viewer" aria-label="画像ビューア">
                             <header class="tool-panel-header">
                                 <h3>画像ビューア</h3>
@@ -727,6 +843,7 @@
     </div>
     <script src="js/tools/tools-tab.js"></script>
     <script src="js/tools/modmaker.js"></script>
+    <script src="js/tools/blockdata-editor.js"></script>
     <script src="js/tools/image-viewer.js"></script>
     <script src="main.js"></script>
 </body>

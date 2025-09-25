@@ -18,7 +18,11 @@
         contentHTML: typeof parsed.contentHTML === 'string' ? parsed.contentHTML : '',
         zoom: Number.isFinite(parsed.zoom) ? Math.min(200, Math.max(50, parsed.zoom)) : 100,
         theme: parsed.theme === 'dark' ? 'dark' : 'light',
-        columnCount: Number.isInteger(parsed.columnCount) ? Math.min(3, Math.max(1, parsed.columnCount)) : 1
+        columnCount: Number.isInteger(parsed.columnCount) ? Math.min(3, Math.max(1, parsed.columnCount)) : 1,
+        lineHeight: Number.isFinite(parsed.lineHeight) ? Math.min(3, Math.max(1, parsed.lineHeight)) : 1.6,
+        pageTint: typeof parsed.pageTint === 'string' ? parsed.pageTint : 'white',
+        showRuler: typeof parsed.showRuler === 'boolean' ? parsed.showRuler : true,
+        showStatusBar: typeof parsed.showStatusBar === 'boolean' ? parsed.showStatusBar : true
       };
     } catch {
       return null;
@@ -32,7 +36,11 @@
         contentHTML: state.contentHTML,
         zoom: state.zoom,
         theme: state.theme,
-        columnCount: state.columnCount
+        columnCount: state.columnCount,
+        lineHeight: state.lineHeight,
+        pageTint: state.pageTint,
+        showRuler: state.showRuler,
+        showStatusBar: state.showStatusBar
       }));
     } catch {}
   }
@@ -59,6 +67,10 @@
       zoom: persisted?.zoom || 100,
       theme: persisted?.theme || 'light',
       columnCount: persisted?.columnCount || 1,
+      lineHeight: persisted?.lineHeight || 1.6,
+      pageTint: persisted?.pageTint || 'white',
+      showRuler: persisted?.showRuler !== false,
+      showStatusBar: persisted?.showStatusBar !== false,
       ribbonTab: 'home',
       lastEditAt: 0,
       sessionXp: 0,
@@ -67,7 +79,8 @@
       searchQuery: '',
       searchIndex: -1,
       searchResults: [],
-      searchReplaceText: ''
+      searchReplaceText: '',
+      reviewHighlight: false
     };
 
     const xpCooldowns = new Map();
@@ -195,6 +208,7 @@
 
     const quickBar = document.createElement('div');
     const quickBarButtons = [];
+    const ribbonGroupButtons = [];
     quickBar.style.display = 'flex';
     quickBar.style.alignItems = 'center';
     quickBar.style.gap = '6px';
@@ -258,7 +272,9 @@
     const tabs = [
       { id:'home', label:'ホーム' },
       { id:'insert', label:'挿入' },
-      { id:'layout', label:'レイアウト' }
+      { id:'layout', label:'レイアウト' },
+      { id:'review', label:'校閲' },
+      { id:'view', label:'表示' }
     ];
 
     const tabButtons = new Map();
@@ -322,6 +338,7 @@
       btn.style.background = '#fff';
       btn.style.cursor = 'pointer';
       btn.style.fontSize = '14px';
+      btn.style.color = '#111827';
       btn.dataset.command = opts?.command || '';
       btn.addEventListener('click', () => {
         if (opts?.handler) {
@@ -331,6 +348,7 @@
         }
         if (opts?.grantXp) grantXp(opts.grantXp.type, opts.grantXp.amount, opts.grantXp.cooldown || FORMAT_COOLDOWN);
       });
+      ribbonGroupButtons.push(btn);
       return btn;
     }
 
@@ -537,6 +555,8 @@
     insertGroups.push(groupMedia);
 
     const layoutGroups = [];
+    const reviewGroups = [];
+    const viewGroups = [];
     const groupTheme = createGroup('テーマ');
     const themeRow = document.createElement('div');
     themeRow.style.display = 'flex';
@@ -582,10 +602,145 @@
     groupMargins.appendChild(marginRow);
     layoutGroups.push(groupMargins);
 
+    const groupProofing = createGroup('校閲ツール');
+    const reviewRow = document.createElement('div');
+    reviewRow.style.display = 'flex';
+    reviewRow.style.flexWrap = 'wrap';
+    reviewRow.style.gap = '6px';
+    const wordCountBtn = makeToggleButton('文字数カウント', { handler: () => {
+      const text = editor.innerText || '';
+      const trimmed = text.trim();
+      const charCount = text.replace(/\s+/g, '').length;
+      const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
+      const paragraphCount = trimmed ? trimmed.split(/\n{2,}/).length : 0;
+      showToast(`文字数: ${charCount} / 単語: ${wordCount} / 段落: ${paragraphCount}`);
+    }});
+    const readingTimeBtn = makeToggleButton('読了目安', { handler: () => {
+      const text = editor.innerText || '';
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      if (!words) {
+        showToast('本文がありません');
+        return;
+      }
+      const wordsPerMinute = 400;
+      const totalMinutes = words / wordsPerMinute;
+      let minutes = Math.floor(totalMinutes);
+      let seconds = Math.round((totalMinutes - minutes) * 60);
+      if (minutes === 0 && seconds === 0) seconds = 30;
+      if (minutes === 0) minutes = 1;
+      if (seconds >= 60) {
+        minutes += 1;
+        seconds = 0;
+      }
+      showToast(`およそ ${minutes} 分 ${seconds.toString().padStart(2, '0')} 秒で読めます`);
+    }});
+    const reviewHighlightBtn = makeToggleButton('長文検出', { handler: () => {
+      state.reviewHighlight = !state.reviewHighlight;
+      reviewHighlightBtn.textContent = state.reviewHighlight ? '長文解除' : '長文検出';
+      updateReviewHighlights();
+    }});
+    reviewRow.appendChild(wordCountBtn);
+    reviewRow.appendChild(readingTimeBtn);
+    reviewRow.appendChild(reviewHighlightBtn);
+    groupProofing.appendChild(reviewRow);
+    reviewGroups.push(groupProofing);
+
+    const groupComments = createGroup('コメント');
+    const commentRow = document.createElement('div');
+    commentRow.style.display = 'flex';
+    commentRow.style.flexWrap = 'wrap';
+    commentRow.style.gap = '6px';
+    const insertCommentBtn = makeToggleButton('コメント挿入', { handler: () => {
+      const note = prompt('コメントを入力してください');
+      if (!note) return;
+      const span = document.createElement('span');
+      span.textContent = `💬 ${note}`;
+      span.setAttribute('style', 'background:rgba(254,240,138,0.85);padding:2px 6px;border-radius:6px;margin:0 2px;font-size:13px;');
+      runCommand('insertHTML', span.outerHTML);
+    }});
+    const changeSummaryBtn = makeToggleButton('変更サマリ', { handler: () => {
+      const currentLength = (editor.innerText || '').replace(/\s+/g, '').length;
+      const savedVirtual = document.createElement('div');
+      savedVirtual.innerHTML = state.savedHTML || '';
+      const savedLength = (savedVirtual.innerText || '').replace(/\s+/g, '').length;
+      const diff = Math.abs(currentLength - savedLength);
+      if (!diff && state.contentHTML === state.savedHTML) {
+        showToast('保存済み: 差分はありません');
+      } else {
+        showToast(`未保存の差分目安: 約 ${diff} 文字`);
+      }
+    }});
+    commentRow.appendChild(insertCommentBtn);
+    commentRow.appendChild(changeSummaryBtn);
+    groupComments.appendChild(commentRow);
+    reviewGroups.push(groupComments);
+
+    const groupLineHeight = createGroup('行間');
+    const lineRow = document.createElement('div');
+    lineRow.style.display = 'flex';
+    lineRow.style.flexWrap = 'wrap';
+    lineRow.style.gap = '6px';
+    [
+      { text:'1.2 倍', value:1.2 },
+      { text:'1.5 倍', value:1.5 },
+      { text:'2.0 倍', value:2.0 }
+    ].forEach(cfg => {
+      const btn = makeToggleButton(cfg.text, { handler: () => {
+        setLineHeight(cfg.value);
+      }});
+      lineRow.appendChild(btn);
+    });
+    groupLineHeight.appendChild(lineRow);
+    viewGroups.push(groupLineHeight);
+
+    const groupGuides = createGroup('ガイド');
+    const guidesRow = document.createElement('div');
+    guidesRow.style.display = 'flex';
+    guidesRow.style.flexWrap = 'wrap';
+    guidesRow.style.gap = '6px';
+    const toggleRulerBtn = makeToggleButton('ルーラー表示', { handler: () => {
+      state.showRuler = !state.showRuler;
+      ruler.style.display = state.showRuler ? 'flex' : 'none';
+      toggleRulerBtn.textContent = state.showRuler ? 'ルーラー非表示' : 'ルーラー表示';
+      schedulePersist();
+    }});
+    toggleRulerBtn.textContent = state.showRuler ? 'ルーラー非表示' : 'ルーラー表示';
+    const toggleStatusBtn = makeToggleButton('ステータスバー', { handler: () => {
+      state.showStatusBar = !state.showStatusBar;
+      statusBar.style.display = state.showStatusBar ? 'flex' : 'none';
+      toggleStatusBtn.textContent = state.showStatusBar ? 'ステータス隠す' : 'ステータス表示';
+      schedulePersist();
+    }});
+    toggleStatusBtn.textContent = state.showStatusBar ? 'ステータス隠す' : 'ステータス表示';
+    guidesRow.appendChild(toggleRulerBtn);
+    guidesRow.appendChild(toggleStatusBtn);
+    groupGuides.appendChild(guidesRow);
+    viewGroups.push(groupGuides);
+
+    const groupPaper = createGroup('紙の色');
+    const paperRow = document.createElement('div');
+    paperRow.style.display = 'flex';
+    paperRow.style.flexWrap = 'wrap';
+    paperRow.style.gap = '6px';
+    [
+      { text:'ホワイト', value:'white' },
+      { text:'クリーム', value:'cream' },
+      { text:'グレー', value:'gray' }
+    ].forEach(cfg => {
+      const btn = makeToggleButton(cfg.text, { handler: () => {
+        setPageTint(cfg.value);
+      }});
+      paperRow.appendChild(btn);
+    });
+    groupPaper.appendChild(paperRow);
+    viewGroups.push(groupPaper);
+
     const ribbonRegistry = {
       home: homeGroups,
       insert: insertGroups,
-      layout: layoutGroups
+      layout: layoutGroups,
+      review: reviewGroups,
+      view: viewGroups
     };
 
     ribbonArea.appendChild(quickBar);
@@ -620,6 +775,7 @@
     ruler.style.color = '#334155';
     ruler.style.fontSize = '12px';
     ruler.textContent = '0      5      10      15      20      25      30';
+    ruler.style.display = state.showRuler ? 'flex' : 'none';
 
     const page = document.createElement('div');
     page.style.width = 'min(880px, 86%)';
@@ -635,8 +791,8 @@
     editor.spellcheck = true;
     editor.style.minHeight = '800px';
     editor.style.outline = 'none';
+    editor.style.lineHeight = String(state.lineHeight);
     editor.style.fontSize = '11pt';
-    editor.style.lineHeight = '1.7';
     editor.style.color = '#111827';
     editor.style.columnGap = '48px';
     editor.style.columnCount = String(state.columnCount);
@@ -646,6 +802,7 @@
     page.appendChild(editor);
     pageViewport.appendChild(ruler);
     pageViewport.appendChild(page);
+    applyPageTint();
     bodyArea.appendChild(pageViewport);
 
     const statusBar = document.createElement('div');
@@ -657,6 +814,7 @@
     statusBar.style.background = '#1e293b';
     statusBar.style.color = '#e2e8f0';
     statusBar.style.fontSize = '12px';
+    statusBar.style.display = state.showStatusBar ? 'flex' : 'none';
 
     const statusLeft = document.createElement('div');
     statusLeft.style.display = 'flex';
@@ -807,6 +965,7 @@
       state.lastEditAt = Date.now();
       schedulePersist();
       updateStatus();
+      if (state.reviewHighlight) updateReviewHighlights();
       grantXp('edit', 1, EDIT_COOLDOWN);
     });
 
@@ -851,6 +1010,7 @@
       schedulePersist();
       updateTitle();
       updateStatus();
+      if (state.reviewHighlight) updateReviewHighlights();
     }
 
     function applyInlineStyle(style){
@@ -881,6 +1041,7 @@
       schedulePersist();
       updateTitle();
       updateStatus();
+      if (state.reviewHighlight) updateReviewHighlights();
     }
 
     function changeZoom(delta){
@@ -893,23 +1054,74 @@
       schedulePersist();
     }
 
+    function setLineHeight(value){
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return;
+      const next = Math.min(2.5, Math.max(1, parseFloat(numeric.toFixed(2))));
+      state.lineHeight = next;
+      editor.style.lineHeight = String(next);
+      schedulePersist();
+      grantXp('format', 2, FORMAT_COOLDOWN);
+    }
+
+    function setPageTint(tint){
+      state.pageTint = tint;
+      applyPageTint();
+      schedulePersist();
+      grantXp('format', 2, FORMAT_COOLDOWN);
+      if (state.reviewHighlight) updateReviewHighlights();
+    }
+
+    function applyPageTint(){
+      const isDark = state.theme === 'dark';
+      let background = isDark ? '#f1f5f9' : '#ffffff';
+      let textColor = isDark ? '#0f172a' : '#111827';
+      if (!isDark) {
+        if (state.pageTint === 'cream') background = '#fff8e7';
+        if (state.pageTint === 'gray') background = '#f1f5f9';
+      } else {
+        if (state.pageTint === 'cream') background = '#fff3d9';
+        if (state.pageTint === 'gray') background = '#e2e8f0';
+      }
+      page.style.background = background;
+      editor.style.color = textColor;
+    }
+
+    function updateReviewHighlights(){
+      const highlighted = editor.querySelectorAll('[data-review-highlight="1"]');
+      highlighted.forEach(node => {
+        node.style.background = '';
+        node.style.boxShadow = '';
+        node.removeAttribute('data-review-highlight');
+      });
+      if (!state.reviewHighlight) return;
+      const color = state.theme === 'dark' ? 'rgba(251,191,36,0.25)' : 'rgba(248,113,113,0.18)';
+      const targets = editor.querySelectorAll('p, li, blockquote');
+      targets.forEach(node => {
+        const text = node.innerText ? node.innerText.replace(/\s+/g, '') : '';
+        if (text.length >= 80) {
+          node.setAttribute('data-review-highlight', '1');
+          node.style.background = color;
+          node.style.boxShadow = 'inset 0 0 0 1px rgba(248,113,113,0.45)';
+        }
+      });
+    }
+
     function updateTheme(){
       const isDark = state.theme === 'dark';
       if (isDark) {
-        page.style.background = '#f1f5f9';
-        editor.style.color = '#0f172a';
         ribbonArea.style.background = '#1e293b';
         quickBar.style.background = 'rgba(30,41,59,0.88)';
         quickBar.style.color = '#e2e8f0';
         tabBar.style.background = 'rgba(15,23,42,0.65)';
       } else {
-        page.style.background = '#ffffff';
-        editor.style.color = '#111827';
         ribbonArea.style.background = '#f8fafc';
         quickBar.style.background = 'rgba(226,232,240,0.7)';
         quickBar.style.color = '#0f172a';
         tabBar.style.background = 'transparent';
       }
+
+      applyPageTint();
 
       quickBarButtons.forEach(btn => {
         if (isDark) {
@@ -927,9 +1139,23 @@
         }
       });
 
+      ribbonGroupButtons.forEach(btn => {
+        if (isDark) {
+          btn.style.background = 'rgba(51,65,85,0.92)';
+          btn.style.border = '1px solid rgba(148,163,184,0.55)';
+          btn.style.color = '#e2e8f0';
+        } else {
+          btn.style.background = '#fff';
+          btn.style.border = '1px solid rgba(148,163,184,0.5)';
+          btn.style.color = '#111827';
+        }
+      });
+
       ribbonTabButtons.forEach(btn => {
         btn.style.color = isDark ? '#e2e8f0' : '#1e293b';
       });
+
+      if (state.reviewHighlight) updateReviewHighlights();
     }
 
     function updateTitle(){

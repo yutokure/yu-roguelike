@@ -1110,6 +1110,7 @@
       state.moves = 0;
       state.recycles = 0;
       state.finished = false;
+      ctx.commitStats({ plays: 1 });
       setDefaultActions();
       render();
       ctx.showToast('新しい配置でゲームを開始しました。', { duration: 1600 });
@@ -1675,6 +1676,26 @@
       return col;
     });
 
+    const suitOrder = SUITS.filter(s => s.id !== 'joker').map(s => s.id);
+
+    function spiderSuitIds(){
+      switch(ctx.difficulty){
+        case 'EASY':
+          return ['spade'];
+        case 'HARD':
+          return suitOrder.slice();
+        default:
+          return ['spade', 'heart'];
+      }
+    }
+
+    function buildSpiderDeck(){
+      const suitIds = spiderSuitIds();
+      const multiplier = Math.max(1, Math.floor(8 / suitIds.length));
+      const deck = ctx.cardUtils.createDeck({ decks: multiplier }).filter(card => card.suit !== 'joker' && suitIds.includes(card.suit));
+      return deck;
+    }
+
     const state = {
       columns: Array.from({ length: 10 }, () => []),
       stock: [],
@@ -1686,7 +1707,7 @@
     };
 
     function restart(){
-      const deck = ctx.cardUtils.createDeck({ decks: 2 }).slice();
+      const deck = buildSpiderDeck();
       ctx.cardUtils.shuffle(deck);
       state.columns = Array.from({ length: 10 }, () => []);
       for (let c = 0; c < 10; c++) {
@@ -1834,7 +1855,7 @@
       column.splice(column.length - 13, 13);
       state.completed += 1;
       state.score += 100;
-      ctx.award(20, { type: 'spider-sequence', column: idx, completed: state.completed });
+      ctx.award(15, { type: 'spider-sequence', column: idx, completed: state.completed });
       ctx.showToast(`${formatCard(tail[0].card, { style: 'symbol' })}の列を完成！`, { duration: 2000 });
       const top = column[column.length - 1];
       if (top && !top.faceUp) top.faceUp = true;
@@ -1996,6 +2017,10 @@
       finished: false
     };
 
+    function awardFreecellMove(target, meta = {}){
+      ctx.award(1, Object.assign({ type: 'freecell-move', target }, meta));
+    }
+
     function restart(){
       const deck = ctx.cardUtils.createDeck().slice();
       ctx.cardUtils.shuffle(deck);
@@ -2091,6 +2116,7 @@
         removeSelected((cardObj) => {
           state.cells[idx] = { card: cardObj.card };
         });
+        awardFreecellMove('cell', { cell: idx });
       } else {
         const entry = state.cells[idx];
         if (!entry) return;
@@ -2121,6 +2147,7 @@
         pile.push(card);
         ctx.award(4, { type: 'freecell-foundation', suit, rank: card.rankValue });
       });
+      awardFreecellMove('foundation', { suit, rank: card.rankValue });
       if (pile.length === 13 && Object.values(state.foundations).every(p => p.length === 13)) {
         finishGame();
       }
@@ -2163,23 +2190,31 @@
 
     function moveSelectedToColumn(targetIdx){
       if (!state.selected) return;
+      const origin = { ...state.selected };
+      const targetColumn = state.columns[targetIdx];
+      const wasEmpty = targetColumn.length === 0;
+      let moved = false;
       if (state.selected.type === 'column') {
         const column = state.columns[state.selected.column];
-        const moved = column.splice(state.selected.index);
-        state.columns[targetIdx].push(...moved);
-        state.moves += 1;
-        state.selected = null;
-        ctx.playClick();
-        render();
+        const chunk = column.splice(state.selected.index);
+        if (!chunk.length) return;
+        targetColumn.push(...chunk);
+        moved = true;
       } else if (state.selected.type === 'cell') {
         const entry = state.cells[state.selected.index];
         if (!entry) return;
-        state.columns[targetIdx].push({ card: entry.card, faceUp: true });
+        targetColumn.push({ card: entry.card, faceUp: true });
         state.cells[state.selected.index] = null;
-        state.moves += 1;
-        state.selected = null;
-        ctx.playClick();
-        render();
+        moved = true;
+      }
+      if (!moved) return;
+      state.moves += 1;
+      state.selected = null;
+      ctx.playClick();
+      render();
+      awardFreecellMove('column', { column: targetIdx, from: origin.type });
+      if (wasEmpty) {
+        ctx.award(3, { type: 'freecell-empty-column', column: targetIdx });
       }
     }
 
@@ -2231,7 +2266,7 @@
     function finishGame(){
       if (state.finished) return;
       state.finished = true;
-      ctx.award(300, { type: 'freecell-clear', moves: state.moves });
+      ctx.award(180, { type: 'freecell-clear', moves: state.moves });
       ctx.showToast('フリーセルクリア！おめでとうございます。', { duration: 3200 });
       ctx.commitStats({ wins: 1, score: state.moves, bestMode: 'lower' });
       ctx.setActions([
@@ -2517,6 +2552,14 @@
         if (entry.card.suit === 'spade' && entry.card.rankValue === 12) return sum + 13;
         return sum;
       }, 0);
+      const winnerName = winner.player === 0 ? 'you' : playerNames[winner.player];
+      if (winner.player === 0) {
+        const reward = points === 0 ? 6 : Math.max(-30, -points * 3);
+        ctx.award(reward, { type: 'hearts-trick', winner: winnerName, points });
+      } else {
+        const reward = points > 0 ? 4 : 2;
+        ctx.award(reward, { type: 'hearts-trick', winner: winnerName, points });
+      }
       state.players[winner.player].taken.push(...state.trick);
       state.roundScores[winner.player] += points;
       state.trick = [];
@@ -2845,6 +2888,9 @@
     function passTurn(playerIdx){
       state.log.push(`${state.players[playerIdx].name} はパス。`);
       state.passes += 1;
+      if (playerIdx === 0) {
+        ctx.award(-3, { type: 'sevens-pass' });
+      }
       state.turn = (state.turn + 1) % 4;
       if (state.passes >= 4) {
         ctx.showToast('全員がパスしました。状況が進むまで待ちましょう。', { duration: 2000 });
@@ -2857,7 +2903,7 @@
     function finishGame(player){
       if (state.finished) return;
       state.finished = true;
-      ctx.award(120, { type: 'sevens-clear', winner: player.name });
+      ctx.award(100, { type: 'sevens-clear', winner: player.name });
       ctx.commitStats({ wins: player.idx === 0 ? 1 : 0 });
       ctx.showToast(`${player.name} の勝利！`, { duration: 2800 });
       ctx.setActions([
@@ -3014,7 +3060,7 @@
       for (const card of chosen) {
         const a = ctx.cardUtils.cloneCard(card, idx++);
         const b = ctx.cardUtils.cloneCard(card, idx++);
-        const key = card.rank + '-' + card.color;
+        const key = card.rank + '-' + card.suit;
         pool.push({ card: a, pairKey: key });
         pool.push({ card: b, pairKey: key });
       }
@@ -3268,8 +3314,9 @@
         else if (['K','Q','J'].includes(rank) || rank === '10') total += 10;
         else total += Number(rank);
       }
-      while (total > 21 && aces > 0) { total -= 10; aces--; }
-      return total;
+      let softAces = aces;
+      while (total > 21 && softAces > 0) { total -= 10; softAces--; }
+      return { total, soft: softAces > 0 };
     }
 
     function updateStatus(){
@@ -3310,19 +3357,19 @@
     }
 
     function checkForNaturals(){
-      const playerVal = handValue(state.playerHand);
-      const dealerVal = handValue(state.dealerHand);
-      if (playerVal === 21 && dealerVal !== 21) {
+      const playerEval = handValue(state.playerHand);
+      const dealerEval = handValue(state.dealerHand);
+      if (playerEval.total === 21 && dealerEval.total !== 21) {
         setMessage('ブラックジャック！');
         settleRound('bj');
         return true;
       }
-      if (dealerVal === 21 && playerVal !== 21) {
+      if (dealerEval.total === 21 && playerEval.total !== 21) {
         setMessage('ディーラーがブラックジャック…');
         settleRound('lose');
         return true;
       }
-      if (dealerVal === 21 && playerVal === 21) {
+      if (dealerEval.total === 21 && playerEval.total === 21) {
         setMessage('両者ブラックジャック。プッシュ！');
         settleRound('push');
         return true;
@@ -3334,7 +3381,7 @@
       if (!state.inRound || state.settled) return;
       deal(state.playerHand);
       renderHands(false);
-      const value = handValue(state.playerHand);
+      const value = handValue(state.playerHand).total;
       if (value > 21) {
         setMessage(`バースト (${value})`);
         settleRound('lose');
@@ -3350,24 +3397,23 @@
 
     function dealerPlay(){
       state.dealerHand[0].faceUp = true;
-      let dealerVal = handValue(state.dealerHand);
-      const soft17 = dealerVal === 17 && state.dealerHand.some(entry => entry.card.rank === 'A');
+      let dealerEval = handValue(state.dealerHand);
       const hitSoft17 = ctx.difficulty === 'HARD';
-      while (dealerVal < 17 || (soft17 && hitSoft17 && dealerVal === 17)) {
+      while (dealerEval.total < 17 || (hitSoft17 && dealerEval.total === 17 && dealerEval.soft)) {
         deal(state.dealerHand);
-        dealerVal = handValue(state.dealerHand);
+        dealerEval = handValue(state.dealerHand);
       }
-      const playerVal = handValue(state.playerHand);
-      if (dealerVal > 21) {
-        setMessage(`ディーラーがバースト (${dealerVal})`);
+      const playerVal = handValue(state.playerHand).total;
+      if (dealerEval.total > 21) {
+        setMessage(`ディーラーがバースト (${dealerEval.total})`);
         settleRound('win');
         return;
       }
-      if (dealerVal > playerVal) {
-        setMessage(`ディーラー ${dealerVal} 対 ${playerVal}`);
+      if (dealerEval.total > playerVal) {
+        setMessage(`ディーラー ${dealerEval.total} 対 ${playerVal}`);
         settleRound('lose');
-      } else if (dealerVal < playerVal) {
-        setMessage(`勝利！${playerVal} 対 ${dealerVal}`);
+      } else if (dealerEval.total < playerVal) {
+        setMessage(`勝利！${playerVal} 対 ${dealerEval.total}`);
         settleRound('win');
       } else {
         setMessage(`プッシュ (${playerVal})`);
@@ -3579,6 +3625,9 @@
         state.finished = true;
         const loser = active[0];
         ctx.showToast(`${loser.name} がジョーカーを持っています。ゲーム終了！`, { duration: 2800 });
+        if (loser && loser.human) {
+          ctx.award(-10, { type: 'baba-joker-penalty' });
+        }
         ctx.commitStats({ plays: 1, wins: players[0].finishedAt === 1 ? 1 : 0, score: players[0].finishedAt || players.length, bestMode: 'lower' });
         ctx.setActions([
           { label: '再戦する', variant: 'primary', onClick: () => initGame() },
@@ -3772,19 +3821,19 @@
 
     function toggleHold(card){
       if (state.stage !== 'hold') return;
-      if (!state.holds.has(card.id)) {
+      if (state.holds.has(card.id)) {
+        if (state.holds.size <= 1) {
+          ctx.showToast('最低1枚は保持してください。', { type: 'warn' });
+          return;
+        }
         const discardCount = 5 - state.holds.size;
         if (discardCount >= 3) {
           ctx.showToast('一度に捨てられるのは3枚までです。', { type: 'warn' });
           return;
         }
-        state.holds.add(card.id);
-      } else {
-        if (state.holds.size <= 1) {
-          ctx.showToast('最低1枚は保持してください。', { type: 'warn' });
-          return;
-        }
         state.holds.delete(card.id);
+      } else {
+        state.holds.add(card.id);
       }
       renderHand();
     }
@@ -4336,6 +4385,9 @@
         state.finished = true;
         const loser = active[0];
         ctx.showToast(`${loser.name} がジジを持っています。ゲーム終了！`, { duration: 2800 });
+        if (loser && loser.human) {
+          ctx.award(-20, { type: 'jiji-joker-penalty' });
+        }
         ctx.commitStats({ plays: 1, wins: players[0].finishedAt === 1 ? 1 : 0, score: players[0].finishedAt || players.length, bestMode: 'lower' });
         ctx.setActions([
           { label: '再戦する', variant: 'primary', onClick: () => initGame() },
@@ -4831,8 +4883,12 @@
     function updateActions(){
       if (state.finished) return;
       const actions = [];
+      const human = players[0];
       if (state.turn === 0 && !state.drawUsed) {
         actions.push({ label: 'ドロー (D)', variant: 'primary', hotkey: 'D', onClick: () => handleDraw() });
+      }
+      if (human.hand.length === 1 && !human.declared) {
+        actions.push({ label: '宣言する (P)', variant: 'secondary', hotkey: 'P', onClick: () => handleDeclare() });
       }
       actions.push({ label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => initGame() });
       actions.push({ label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() });
@@ -4842,9 +4898,29 @@
     function handleDraw(){
       if (state.turn !== 0 || state.drawUsed || state.finished) return;
       drawCard(players[0]);
+      if (players[0].hand.length === 1 && !players[0].declared) {
+        ctx.showToast('残り1枚！「宣言する」を押してください。', { duration: 2000 });
+      }
       state.drawUsed = true;
       render();
       setTimeout(() => advanceTurn(), 400);
+    }
+
+    function handleDeclare(){
+      if (state.finished) return;
+      const human = players[0];
+      if (human.declared) {
+        ctx.showToast('すでに宣言済みです。', { duration: 1400 });
+        return;
+      }
+      if (human.hand.length !== 1) {
+        ctx.showToast('宣言できるのは残り1枚のときだけです。', { type: 'warn', duration: 1400 });
+        return;
+      }
+      human.declared = true;
+      ctx.showToast('「ページワン！」', { duration: 1800 });
+      render();
+      updateActions();
     }
 
     function drawCard(player){
@@ -4876,8 +4952,11 @@
       state.drawUsed = false;
       state.turns += 1;
       if (player.hand.length === 1) {
-        player.declared = true;
-        if (player.human) ctx.showToast('「ページワン！」', { duration: 1800 });
+        if (player.human) {
+          ctx.showToast('残り1枚！「宣言する」を押してください。', { duration: 2000 });
+        } else {
+          player.declared = true;
+        }
       }
       if (player.hand.length === 0) {
         finishGame(player.id);
@@ -4890,6 +4969,10 @@
       state.finished = true;
       const humanWin = winnerId === 0;
       if (humanWin) {
+        if (!players[0].declared) {
+          ctx.award(-10, { type: 'pageone-penalty' });
+          ctx.showToast('宣言していなかったため -10XP。', { type: 'warn', duration: 2400 });
+        }
         ctx.award(90, { type: 'pageone-win', turns: state.turns });
       }
       ctx.commitStats({ wins: humanWin ? 1 : 0, score: humanWin ? 1 : 0, bestMode: 'higher' });

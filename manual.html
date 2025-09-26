@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuローグライク マニュアル</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        body {
+            font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+            line-height: 1.7;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+            color: #222;
+        }
+        header {
+            background: linear-gradient(135deg, #274690, #576ca8);
+            color: #fff;
+            padding: 3rem 1.5rem 2rem;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.4rem;
+        }
+        header p {
+            margin: 0.5rem auto 0;
+            max-width: 680px;
+            font-size: 1.05rem;
+        }
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 3rem;
+            background: #fff;
+        }
+        nav {
+            background: #eef2f8;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        nav h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        nav ol {
+            columns: 2;
+            column-gap: 2rem;
+            padding-left: 1.2rem;
+        }
+        nav li {
+            margin: 0.4rem 0;
+            break-inside: avoid;
+        }
+        section {
+            margin-bottom: 3.5rem;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 4px solid #274690;
+            padding-bottom: 0.35rem;
+        }
+        h3 {
+            font-size: 1.35rem;
+            margin: 2rem 0 0.6rem;
+        }
+        h4 {
+            font-size: 1.15rem;
+            margin: 1.2rem 0 0.4rem;
+        }
+        p {
+            margin: 0.6rem 0;
+        }
+        ul, ol {
+            margin: 0.6rem 0 1rem 1.4rem;
+        }
+        code {
+            background: rgba(39, 70, 144, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: "Fira Code", "Source Code Pro", monospace;
+        }
+        .tip {
+            background: #f4fbf4;
+            border-left: 4px solid #2b9348;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+        .warning {
+            background: #fff7e6;
+            border-left: 4px solid #f4a259;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+        th, td {
+            border: 1px solid #ccd6eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background: #274690;
+            color: #fff;
+            font-weight: 600;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 720px) {
+            nav ol {
+                columns: 1;
+            }
+            header {
+                padding: 2.5rem 1rem 1.5rem;
+            }
+            main {
+                padding: 1.5rem 1rem 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Yuローグライク 総合マニュアル</h1>
+        <p>
+            このページは、ブラウザ上で遊べるダンジョン探索ゲーム「Yuローグライク」の使い方と開発手順をまとめた公式マニュアルです。
+            初めて触る人でも迷わず進められるよう、ゆっくり解説しています。
+        </p>
+    </header>
+    <main>
+        <nav aria-label="目次">
+            <h2>目次</h2>
+            <ol>
+                <li><a href="#about">1. マニュアルの読み方</a></li>
+                <li><a href="#overview">2. ゲーム全体の概要</a></li>
+                <li><a href="#environment">3. 必要な環境と準備</a></li>
+                <li><a href="#structure">4. フォルダーとファイル構成</a></li>
+                <li><a href="#start">5. はじめての起動</a></li>
+                <li><a href="#ui">6. 画面と操作の解説</a></li>
+                <li><a href="#data-files">7. データファイルの内容</a></li>
+                <li><a href="#customize">8. コンテンツの追加・変更</a></li>
+                <li><a href="#development">9. JavaScript の仕組み</a></li>
+                <li><a href="#minigames">10. ミニゲームとツールズ</a></li>
+                <li><a href="#workflow">11. 開発フローとヒント</a></li>
+                <li><a href="#faq">12. よくある質問</a></li>
+                <li><a href="#glossary">13. 用語集</a></li>
+                <li><a href="#appendix">14. 付録：参考情報</a></li>
+            </ol>
+        </nav>
+
+        <section id="about">
+            <h2>1. マニュアルの読み方</h2>
+            <p>
+                このマニュアルは、ゲームを遊ぶ人・開発する人の両方に役立つよう構成されています。
+                各章は短い文章でゆっくり説明しており、難しい言葉には補足や図を入れています。
+            </p>
+            <div class="tip">
+                <h3>使い方のコツ</h3>
+                <ul>
+                    <li>まずは <strong>第2章</strong> を読んでゲームの全体像をつかみましょう。</li>
+                    <li>遊ぶだけなら、第5章と第6章を読めば十分です。</li>
+                    <li>カスタマイズしたい人は、第7章と第8章をじっくり読んでください。</li>
+                    <li>JavaScript のコードを書き換える前に、第9章と第11章を確認しましょう。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="overview">
+            <h2>2. ゲーム全体の概要</h2>
+            <h3>2.1 Yuローグライクとは</h3>
+            <p>
+                Yuローグライクは、ダンジョンを選んで冒険するブラウザゲームです。HTML・CSS・JavaScript だけで動くので、
+                Web ブラウザがあればどこでも遊べます。ゲーム内では、ダンジョンの種類や難易度を選び、登場する敵やアイテムを楽しめます。
+            </p>
+            <h3>2.2 特徴</h3>
+            <ul>
+                <li>シンプルな構造で、カスタマイズしやすい。</li>
+                <li>ミニゲームや開発者向けツールが豊富。</li>
+                <li>データファイルが分かれており、ゲームバランスを調整しやすい。</li>
+                <li>初心者でも理解できるよう、コメントや設計書が多数用意されている。</li>
+            </ul>
+            <h3>2.3 想定するユーザー</h3>
+            <ul>
+                <li>ゲームを遊びたいプレイヤー</li>
+                <li>ダンジョンや敵を追加したい制作者</li>
+                <li>JavaScript を学びながらゲームを作りたい初心者</li>
+                <li>教育目的で教材として使いたい人</li>
+            </ul>
+        </section>
+
+        <section id="environment">
+            <h2>3. 必要な環境と準備</h2>
+            <h3>3.1 最低限必要なもの</h3>
+            <ul>
+                <li>モダンブラウザ（Google Chrome, Microsoft Edge, Firefox, Safari など）</li>
+                <li>テキストエディター（VS Code, Atom, メモ帳でも可）</li>
+                <li>ゲームファイル一式（GitHub からダウンロード、または git clone）</li>
+            </ul>
+            <h3>3.2 推奨ツール</h3>
+            <ul>
+                <li>Git：変更履歴を記録して、いつでも元に戻せます。</li>
+                <li>Live Server 拡張：編集した内容をブラウザで即確認できます。</li>
+                <li>画像編集ソフト：アイテムや背景画像を作りたいときに便利です。</li>
+            </ul>
+            <div class="warning">
+                <strong>注意:</strong> インターネットに接続できない環境でも遊べますが、外部からダウンロードした素材を使うときは、
+                著作権やライセンスに気をつけてください。
+            </div>
+        </section>
+
+        <section id="structure">
+            <h2>4. フォルダーとファイル構成</h2>
+            <p>
+                プロジェクトの中身を理解すると、どこを編集すればよいかがすぐわかります。
+                下の表は代表的なファイルの場所と役割です。
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>場所</th>
+                            <th>内容</th>
+                            <th>初心者向けメモ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>index.html</code></td>
+                            <td>ゲーム画面の土台。HTML のレイアウトを定義しています。</td>
+                            <td>ボタンやカードの配置を変えたいときに使います。</td>
+                        </tr>
+                        <tr>
+                            <td><code>style.css</code></td>
+                            <td>見た目（色・フォント・余白など）をまとめています。</td>
+                            <td>色を変えたいときはこのファイルを編集します。</td>
+                        </tr>
+                        <tr>
+                            <td><code>main.js</code></td>
+                            <td>ゲームのメインロジック。タブ切り替えやボタン操作を制御します。</td>
+                            <td>挙動を変えるときは慎重に。小さく編集しながら試しましょう。</td>
+                        </tr>
+                        <tr>
+                            <td><code>js/</code></td>
+                            <td>機能ごとの JavaScript ファイルが入っています。</td>
+                            <td>処理を分けたいときに便利です。</td>
+                        </tr>
+                        <tr>
+                            <td><code>games/</code></td>
+                            <td>ミニゲームなどの追加コンテンツの情報が入ります。</td>
+                            <td>新しいゲームを入れたいときに使います。</td>
+                        </tr>
+                        <tr>
+                            <td><code>dungeontypes/</code></td>
+                            <td>ダンジョンの種類に関するデータファイル群です。</td>
+                            <td>敵の強さや報酬を調整できます。</td>
+                        </tr>
+                        <tr>
+                            <td><code>blockdata.js / blockdata.json</code></td>
+                            <td>ブロック次元モード用のデータ。複雑な設定が入っています。</td>
+                            <td>最初は <code>blockdata.json</code> を読み、形を把握しましょう。</td>
+                        </tr>
+                        <tr>
+                            <td><code>tools/</code></td>
+                            <td>制作者向けのツールやテンプレートがあります。</td>
+                            <td>自分用にアレンジして使えます。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="start">
+            <h2>5. はじめての起動</h2>
+            <h3>5.1 ダウンロードと起動手順</h3>
+            <ol>
+                <li>プロジェクトのフォルダーをダウンロードします。</li>
+                <li><code>index.html</code> をダブルクリックしてブラウザで開きます。</li>
+                <li>ゲームのタイトル画面が表示されたら準備完了です。</li>
+            </ol>
+            <h3>5.2 Live Server を使う場合</h3>
+            <ol>
+                <li>VS Code を開き、左側の拡張機能から「Live Server」をインストールします。</li>
+                <li>フォルダーを開いた状態で、右下の「Go Live」ボタンを押します。</li>
+                <li>自動的にブラウザが開き、変更があるたびにページが更新されます。</li>
+            </ol>
+            <div class="tip">
+                <strong>困ったときは</strong>
+                <ul>
+                    <li>画面が真っ白なときは、ブラウザの開発者ツール（F12）でエラーを確認。</li>
+                    <li>保存し忘れると変更が反映されません。編集後は必ず保存しましょう。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="ui">
+            <h2>6. 画面と操作の解説</h2>
+            <h3>6.1 タイトル画面</h3>
+            <p>
+                画面上部にタイトルと大きなカードが表示されます。カード内で、難易度・世界・ダンジョンを順番に選びます。
+            </p>
+            <h3>6.2 タブの役割</h3>
+            <ul>
+                <li><strong>通常</strong>：一般的なダンジョンを選ぶ場所です。</li>
+                <li><strong>ブロック次元</strong>：複数のブロックを組み合わせてダンジョンを作ります。</li>
+                <li><strong>ミニゲー経験</strong>：過去に遊んだミニゲームから得た要素を確認できます。</li>
+                <li><strong>ツールズ</strong>：開発者向けの補助ツールにアクセスします。</li>
+            </ul>
+            <h3>6.3 ダンジョン詳細カード</h3>
+            <p>
+                世界とダンジョンを選ぶと、右側に詳細カードが表示されます。ここでは、ダメージ倍率・推奨レベル・説明が確認できます。
+                気に入ったら「ダンジョンに入る」ボタンを押しましょう。
+            </p>
+            <h3>6.4 ブロック次元モードの画面</h3>
+            <p>
+                ブロック次元タブでは、NESTED 値を入力し、複数のリストからブロックを選びます。選択内容は下部のプレビューに反映されます。
+                ランダム選択ボタンもあるので、迷ったら押してみましょう。
+            </p>
+        </section>
+
+        <section id="data-files">
+            <h2>7. データファイルの内容</h2>
+            <h3>7.1 blockdata.json / blockdata.js</h3>
+            <p>
+                ブロック次元で利用する設定がまとまっています。JSON 形式で書かれているため、項目名と値のペアで管理します。
+                迷ったときは、<code>blockdata.json</code> をエディターで開き、どんな構造かを見てください。
+            </p>
+            <h4>主なフィールド</h4>
+            <ul>
+                <li><strong>name</strong>：ブロックの名前</li>
+                <li><strong>level</strong>：推奨レベル</li>
+                <li><strong>type</strong>：カテゴリ（例：洞窟、塔など）</li>
+                <li><strong>size</strong>：広さや階層の情報</li>
+                <li><strong>chest</strong>：宝箱の数やレア度</li>
+            </ul>
+            <h3>7.2 dungeontypes フォルダー</h3>
+            <p>
+                世界やダンジョンを分類するファイルがあります。ゲーム内に出てくる説明文やアイコンなどもここで管理されます。
+                新しくダンジョンを追加したい場合は、既存ファイルを参考にして同じ形式で書きましょう。
+            </p>
+            <h3>7.3 games フォルダー</h3>
+            <p>
+                ミニゲームの設定やデータがまとまっています。ミニゲームを追加するときは、ここに新しいファイルを作ります。
+            </p>
+            <div class="warning">
+                <strong>バックアップ推奨:</strong> データファイルを編集する前に必ずコピーを作り、失敗しても戻せるようにしておきましょう。
+            </div>
+        </section>
+
+        <section id="customize">
+            <h2>8. コンテンツの追加・変更</h2>
+            <h3>8.1 ダンジョンを追加する手順</h3>
+            <ol>
+                <li><code>dungeontypes</code> フォルダーに新しい JSON ファイルを作る。</li>
+                <li>既存のファイルを参考に、<code>name</code>・<code>description</code>・<code>level</code> などを書き込む。</li>
+                <li><code>main.js</code> の読み込み処理に新しいファイルを追加する。</li>
+                <li>ブラウザを更新して、リストに表示されるか確認する。</li>
+            </ol>
+            <h3>8.2 難易度を調整する</h3>
+            <p>
+                難易度はダメージ倍率や敵の強さに関係します。調整したいときは、該当するダンジョンのデータを変更し、プレイして確認しましょう。
+            </p>
+            <h3>8.3 見た目を変える</h3>
+            <ul>
+                <li><code>style.css</code> の色やフォントを変更する。</li>
+                <li>背景画像を追加したい場合は、CSS に <code>background-image</code> を設定する。</li>
+                <li>ボタンの形を変えたいときは、<code>border-radius</code> や <code>box-shadow</code> を調整する。</li>
+            </ul>
+            <div class="tip">
+                <strong>少しずつ試す</strong>：大きな変更を一度に行うと原因が分かりにくくなります。
+                1つの項目を変えたら保存し、ブラウザで結果を確認しましょう。
+            </div>
+        </section>
+
+        <section id="development">
+            <h2>9. JavaScript の仕組み</h2>
+            <h3>9.1 main.js の役割</h3>
+            <p>
+                <code>main.js</code> は、ページの読み込み後にタブやボタンを動かすためのスクリプトです。
+                DOM（HTML の部品）を取得し、クリックイベントに処理を割り当てます。
+            </p>
+            <h3>9.2 データの読み込み</h3>
+            <p>
+                fetch API を使って JSON ファイルを読み込み、ダンジョンリストを作成します。Promise の仕組みが分からない場合は、
+                まずは <code>async/await</code> の基本を学んでから触ると理解しやすいです。
+            </p>
+            <h3>9.3 よく使う関数</h3>
+            <ul>
+                <li><strong>renderWorldButtons()</strong>：世界のボタンを作成。</li>
+                <li><strong>renderDungeonDetails()</strong>：選択したダンジョンの情報をカードに表示。</li>
+                <li><strong>setupTabs()</strong>：タブ切り替えの動きを初期化。</li>
+            </ul>
+            <h3>9.4 コードを読む順番</h3>
+            <ol>
+                <li><code>main.js</code> の冒頭で定義されている定数を確認。</li>
+                <li>イベントリスナーの登録部分を読む。</li>
+                <li>呼び出されている関数の中身を追っていく。</li>
+            </ol>
+        </section>
+
+        <section id="minigames">
+            <h2>10. ミニゲームとツールズ</h2>
+            <h3>10.1 ミニゲームの扱い</h3>
+            <p>
+                プロジェクトには、別のミニゲームやアイデアノートが多数含まれています。
+                <code>games</code> フォルダーにはサンプルがあるので、自分のゲームを追加するときの参考になります。
+            </p>
+            <h3>10.2 ツールズタブ</h3>
+            <p>
+                ツールズタブからは、ブロックデータ編集など、制作時に役立つユーティリティにアクセスできます。
+                まだ完成していないツールもあるため、更新履歴をチェックして進捗を把握しましょう。
+            </p>
+            <h3>10.3 連携のヒント</h3>
+            <ul>
+                <li>ミニゲームの結果を本編に反映させる場合は、共通のデータ管理ファイルを作ると便利です。</li>
+                <li>UI を統一したいときは、共通の CSS クラスを用意しましょう。</li>
+            </ul>
+            <h3>10.4 ミニゲームの遊び方</h3>
+            <p>
+                ここでは、収録されているミニゲームやユーティリティの遊び方・使い方を順番にまとめています。
+                すべてブラウザだけで動作し、基本操作はキーボードかマウスだけで完結します。
+                初めて触るときは「目的」「操作」「コツ」を確認してからプレイするとスムーズです。
+            </p>
+            <h4 id="game-2048">2048 パズル</h4>
+            <ul>
+                <li><strong>目的：</strong> 同じ数字ブロックを重ねて 2048 以上のタイルを作ります。</li>
+                <li><strong>操作：</strong> 矢印キーで全ブロックを同時にスライドさせます。</li>
+                <li><strong>コツ：</strong> 角に大きな数字を集め、行を崩さないように意識しましょう。</li>
+            </ul>
+            <h4 id="game-aim">AIM トレーナー</h4>
+            <ul>
+                <li><strong>目的：</strong> ランダムに出現するターゲットを素早くクリックし、反射神経を鍛えます。</li>
+                <li><strong>操作：</strong> マウスクリックでターゲットを消します。</li>
+                <li><strong>コツ：</strong> ポインターを中央に構え、リズムよくクリックすると高得点を狙えます。</li>
+            </ul>
+            <h4 id="game-breakout">ブロック崩し（マウス操作）</h4>
+            <ul>
+                <li><strong>目的：</strong> ボールを跳ね返して全ブロックを壊します。</li>
+                <li><strong>操作：</strong> マウスでパドルを左右に動かしてボールを弾きます。</li>
+                <li><strong>コツ：</strong> 角度を調整してブロックの隙間に入り込ませると一気に崩せます。</li>
+            </ul>
+            <h4 id="game-breakout-keyboard">ブロック崩し（キーボード操作）</h4>
+            <ul>
+                <li><strong>目的：</strong> 矢印キーでパドルを操作し、ブロックを破壊します。</li>
+                <li><strong>操作：</strong> 左右キーで移動、スペースでゲーム開始です。</li>
+                <li><strong>コツ：</strong> 連続でボールを落とさないよう、常に次の反射位置を予測しましょう。</li>
+            </ul>
+            <h4 id="game-bubble-shooter">バブルシューター</h4>
+            <ul>
+                <li><strong>目的：</strong> 同じ色のバブルを 3 個以上つなげて消し、画面上部を整理します。</li>
+                <li><strong>操作：</strong> マウスで狙いを定め、クリックでバブルを発射します。</li>
+                <li><strong>コツ：</strong> 壁に反射させて奥を狙うと連鎖が作りやすくなります。</li>
+            </ul>
+            <h4 id="game-calculator">電卓ユーティリティ</h4>
+            <ul>
+                <li><strong>目的：</strong> 四則演算を素早く計算する簡易電卓です。</li>
+                <li><strong>操作：</strong> ボタンをクリック、またはキーボードで数字・演算子を入力します。</li>
+                <li><strong>コツ：</strong> クリアボタンとバックスペースの使い分けでミスを減らせます。</li>
+            </ul>
+            <h4 id="game-checkers">チェッカー</h4>
+            <ul>
+                <li><strong>目的：</strong> 相手の駒を飛び越えて取りつつ、最後まで生き残ります。</li>
+                <li><strong>操作：</strong> 駒をクリックして移動先を選びます。取りができるときは優先です。</li>
+                <li><strong>コツ：</strong> 端に駒を残し、キング（裏返し駒）を増やす戦術が有効です。</li>
+            </ul>
+            <h4 id="game-chess">チェス</h4>
+            <ul>
+                <li><strong>目的：</strong> キングをチェックメイトして勝利します。</li>
+                <li><strong>操作：</strong> 駒をクリックし、有効なマスへ移動させます。</li>
+                <li><strong>コツ：</strong> 序盤は中央を支配し、キングの安全を確保してから攻めましょう。</li>
+            </ul>
+            <h4 id="game-clock-hub">Clock Hub</h4>
+            <ul>
+                <li><strong>目的：</strong> 世界時計やアラームをまとめて確認できる時間管理ツールです。</li>
+                <li><strong>操作：</strong> 表示したい都市を選ぶか、アラームを入力して保存します。</li>
+                <li><strong>コツ：</strong> ゲーム開発のテスト時間を設定しておくと進行管理に便利です。</li>
+            </ul>
+            <h4 id="game-counter">カウンター</h4>
+            <ul>
+                <li><strong>目的：</strong> ボタンを押すたびに数値を増やし、記録や練習回数を測ります。</li>
+                <li><strong>操作：</strong> 増減ボタンをクリック。リセットで 0 に戻ります。</li>
+                <li><strong>コツ：</strong> キーボードショートカットに慣れると素早くカウントできます。</li>
+            </ul>
+            <h4 id="game-diagram-maker">ダイアグラムメーカー</h4>
+            <ul>
+                <li><strong>目的：</strong> 図やフローチャートをブラウザ上で簡単に作成するツールです。</li>
+                <li><strong>操作：</strong> ノードを追加し、ドラッグで配置、線を引いて関係を表します。</li>
+                <li><strong>コツ：</strong> テンプレートを活用し、ミニゲームの設計図を素早く共有しましょう。</li>
+            </ul>
+            <h4 id="game-dino-runner">Dino Runner</h4>
+            <ul>
+                <li><strong>目的：</strong> 走る恐竜を障害物に当てずに走らせ続け、高スコアを目指します。</li>
+                <li><strong>操作：</strong> スペースか上キーでジャンプ、下キーでしゃがみます。</li>
+                <li><strong>コツ：</strong> 障害物の高さを覚えてジャンプのタイミングを一定に保ちましょう。</li>
+            </ul>
+            <h4 id="game-dodge-race">ドッジレース</h4>
+            <ul>
+                <li><strong>目的：</strong> 前方から来る障害物を避けながら、できるだけ長く走行します。</li>
+                <li><strong>操作：</strong> 矢印キーで左右へ移動します。</li>
+                <li><strong>コツ：</strong> 障害物の並びを予測し、早めにラインを変更すると安全です。</li>
+            </ul>
+            <h4 id="game-electro-instrument">電子楽器</h4>
+            <ul>
+                <li><strong>目的：</strong> 仮想鍵盤を鳴らして音を確認するミニシンセです。</li>
+                <li><strong>操作：</strong> キーボードやクリックで音階を鳴らします。</li>
+                <li><strong>コツ：</strong> 和音チェックや効果音の確認に使うと制作がはかどります。</li>
+            </ul>
+            <h4 id="game-exceler">表計算エクセラー</h4>
+            <ul>
+                <li><strong>目的：</strong> 簡易スプレッドシートで数値を整理・計算します。</li>
+                <li><strong>操作：</strong> セルをクリックして値や式を入力します。</li>
+                <li><strong>コツ：</strong> ダンジョンデータの調整メモに使うと変更履歴を記録しやすいです。</li>
+            </ul>
+            <h4 id="game-falling-shooter">フォーリングシューター</h4>
+            <ul>
+                <li><strong>目的：</strong> 落ちてくる敵を撃ち落として得点を稼ぎます。</li>
+                <li><strong>操作：</strong> 矢印キーで移動し、スペースでショットを発射します。</li>
+                <li><strong>コツ：</strong> 敵の降下速度を見て、移動と射撃を同時に行いましょう。</li>
+            </ul>
+            <h4 id="game-flappy-bird">フラッピーバード風</h4>
+            <ul>
+                <li><strong>目的：</strong> パイプの間を通り抜けながら飛行距離を伸ばします。</li>
+                <li><strong>操作：</strong> スペースかクリックで羽ばたきます。</li>
+                <li><strong>コツ：</strong> 長押しではなく小刻みにタップし、高さを細かく調整します。</li>
+            </ul>
+            <h4 id="game-gamble-hall">ギャンブルホール</h4>
+            <ul>
+                <li><strong>目的：</strong> シンプルな賭け遊びでポイントを増やすミニゲーム集です。</li>
+                <li><strong>操作：</strong> ベット額や選択肢をクリックして結果を確認します。</li>
+                <li><strong>コツ：</strong> 所持ポイントが尽きないよう、小さな額から試しましょう。</li>
+            </ul>
+            <h4 id="game-go">囲碁ライト</h4>
+            <ul>
+                <li><strong>目的：</strong> 石を置いて陣地を広げる囲碁の簡易版です。</li>
+                <li><strong>操作：</strong> 交点をクリックして石を配置します。</li>
+                <li><strong>コツ：</strong> 呼吸点を意識し、相手の石を囲む形を作りましょう。</li>
+            </ul>
+            <h4 id="game-invaders">インベーダー風シューティング</h4>
+            <ul>
+                <li><strong>目的：</strong> 上から降りてくる宇宙人を倒し、全波をクリアします。</li>
+                <li><strong>操作：</strong> 左右キーで移動、スペースでショットを撃ちます。</li>
+                <li><strong>コツ：</strong> 障害物を盾にしつつ、横列を一列ずつ片付けるのが安全です。</li>
+            </ul>
+            <h4 id="game-math-lab">算数ラボ</h4>
+            <ul>
+                <li><strong>目的：</strong> 計算問題を解いて基礎力を高める学習向けコンテンツです。</li>
+                <li><strong>操作：</strong> 表示された問題に解答を入力し、送信ボタンで採点します。</li>
+                <li><strong>コツ：</strong> 制限時間がある場合は暗算とメモを併用してスピードを上げましょう。</li>
+            </ul>
+            <h4 id="game-match3">マッチ3 パズル</h4>
+            <ul>
+                <li><strong>目的：</strong> 同じアイコンを 3 つ以上揃えて消し、目標スコアを達成します。</li>
+                <li><strong>操作：</strong> 隣り合うピースをドラッグまたはクリックで入れ替えます。</li>
+                <li><strong>コツ：</strong> 連鎖を狙える形を優先して入れ替えましょう。</li>
+            </ul>
+            <h4 id="game-minesweeper">マインスイーパー</h4>
+            <ul>
+                <li><strong>目的：</strong> 爆弾を踏まずに全ての安全なマスを開きます。</li>
+                <li><strong>操作：</strong> 左クリックで開く、右クリックで旗を立てます。</li>
+                <li><strong>コツ：</strong> 数字が示す周囲の爆弾数をもとに論理的に開けていきましょう。</li>
+            </ul>
+            <h4 id="game-music-player">音楽プレイヤー</h4>
+            <ul>
+                <li><strong>目的：</strong> BGM や効果音をチェックできる再生ツールです。</li>
+                <li><strong>操作：</strong> プレイリストから曲を選んで再生、シークバーで位置を調整します。</li>
+                <li><strong>コツ：</strong> ループ再生を活用し、音量バランスを事前に確認しましょう。</li>
+            </ul>
+            <h4 id="game-notepad">メモ帳ユーティリティ</h4>
+            <ul>
+                <li><strong>目的：</strong> テキストメモを簡単に書き留め、保存します。</li>
+                <li><strong>操作：</strong> 入力エリアに自由に書き込み、保存ボタンでローカルに保持します。</li>
+                <li><strong>コツ：</strong> 開発タスクやテスト結果をすぐ記録できるよう開いたままにしておきましょう。</li>
+            </ul>
+            <h4 id="game-othello">オセロ</h4>
+            <ul>
+                <li><strong>目的：</strong> 石を挟んで色を反転させ、最後に多数を確保します。</li>
+                <li><strong>操作：</strong> マスをクリックして石を置きます。</li>
+                <li><strong>コツ：</strong> 隅を取ると盤面を安定させやすいです。</li>
+            </ul>
+            <h4 id="game-pacman">パックマン風</h4>
+            <ul>
+                <li><strong>目的：</strong> 迷路内のドットを全て食べ、ゴーストを避けます。</li>
+                <li><strong>操作：</strong> 矢印キーで移動します。</li>
+                <li><strong>コツ：</strong> パワークッキーを取るタイミングを合わせ、追跡から逃れましょう。</li>
+            </ul>
+            <h4 id="game-paint">ペイントツール</h4>
+            <ul>
+                <li><strong>目的：</strong> 簡単なドット絵や図を描くツールです。</li>
+                <li><strong>操作：</strong> キャンバス上をドラッグして描画し、色や太さを選びます。</li>
+                <li><strong>コツ：</strong> レイヤーがないので、こまめに保存しながら描きましょう。</li>
+            </ul>
+            <h4 id="game-physics-sandbox">物理サンドボックス</h4>
+            <ul>
+                <li><strong>目的：</strong> 物理演算の動きを確認できるデモです。</li>
+                <li><strong>操作：</strong> オブジェクトを追加したり、重力や衝突設定を変更します。</li>
+                <li><strong>コツ：</strong> ゲームで使いたい動きを試作し、値をメモしておきましょう。</li>
+            </ul>
+            <h4 id="game-pong">ポン</h4>
+            <ul>
+                <li><strong>目的：</strong> ボールを打ち返し、相手ゴールに入れて得点します。</li>
+                <li><strong>操作：</strong> 矢印キーまたは W/S キーでパドルを上下に動かします。</li>
+                <li><strong>コツ：</strong> ボールが当たる位置で反射角度が変わるので、狙って打ち返しましょう。</li>
+            </ul>
+            <h4 id="game-pomodoro">ポモドーロタイマー</h4>
+            <ul>
+                <li><strong>目的：</strong> 25 分作業 + 5 分休憩のサイクルで集中力を保つ時間管理ツールです。</li>
+                <li><strong>操作：</strong> スタートボタンで計測を開始し、アラートに従って休憩します。</li>
+                <li><strong>コツ：</strong> マニュアルを読みながら開発する際の時間配分に便利です。</li>
+            </ul>
+            <h4 id="game-puyo">ぷよぷよ風</h4>
+            <ul>
+                <li><strong>目的：</strong> 同じ色のぷよを 4 つ以上繋げて消し、連鎖を狙います。</li>
+                <li><strong>操作：</strong> 矢印キーで移動・回転、下キーで落下速度を上げます。</li>
+                <li><strong>コツ：</strong> 階段・カギ積みなど定番の積み方を練習すると連鎖が作りやすいです。</li>
+            </ul>
+            <h4 id="game-river-crossing">川渡りパズル</h4>
+            <ul>
+                <li><strong>目的：</strong> 全員を安全に対岸へ運ぶ論理パズルです。</li>
+                <li><strong>操作：</strong> 乗せるメンバーを選び、渡るボタンで移動させます。</li>
+                <li><strong>コツ：</strong> 禁止条件を常に意識し、片道ずつ安全性を確認しましょう。</li>
+            </ul>
+            <h4 id="game-same">さめがめ</h4>
+            <ul>
+                <li><strong>目的：</strong> 同じ色が繋がったブロックを消して高得点を目指します。</li>
+                <li><strong>操作：</strong> グループをクリックするとまとめて消えます。</li>
+                <li><strong>コツ：</strong> 大きな塊ができるまで待ち、最後に連鎖させるとスコアが伸びます。</li>
+            </ul>
+            <h4 id="game-sliding-puzzle">スライディングパズル</h4>
+            <ul>
+                <li><strong>目的：</strong> バラバラのパネルを正しい順番に並べ替えます。</li>
+                <li><strong>操作：</strong> 空白と隣接するピースをクリックして入れ替えます。</li>
+                <li><strong>コツ：</strong> 上段・左列から順に揃え、最後の 2×2 を回して完成させます。</li>
+            </ul>
+            <h4 id="game-snake">スネーク</h4>
+            <ul>
+                <li><strong>目的：</strong> エサを食べて体を伸ばし、壁や自分にぶつからずに記録を更新します。</li>
+                <li><strong>操作：</strong> 矢印キーで進行方向を変えます。</li>
+                <li><strong>コツ：</strong> 余裕をもって曲がり、体が長くなったらジグザグで安全地帯を作りましょう。</li>
+            </ul>
+            <h4 id="game-steady-wire">手先のワイヤーゲーム</h4>
+            <ul>
+                <li><strong>目的：</strong> ワイヤーから外れないようにカーソルを動かす集中力ゲームです。</li>
+                <li><strong>操作：</strong> マウスでラインに沿って移動します。</li>
+                <li><strong>コツ：</strong> 細かい動きが必要なので、マウス感度を低めにすると安定します。</li>
+            </ul>
+            <h4 id="game-stone-board-games">石盤ボードゲーム集</h4>
+            <ul>
+                <li><strong>目的：</strong> 囲碁や五目並べなど石を使うボードゲームのサンプル集です。</li>
+                <li><strong>操作：</strong> ルールに応じてマスをクリックし、石を配置します。</li>
+                <li><strong>コツ：</strong> ゲームごとのルールメモを見ながら遊ぶと混乱しません。</li>
+            </ul>
+            <h4 id="game-stopwatch">ストップウォッチ</h4>
+            <ul>
+                <li><strong>目的：</strong> 経過時間を測る基本ツールです。</li>
+                <li><strong>操作：</strong> スタート・ストップ・リセットの各ボタンをクリックします。</li>
+                <li><strong>コツ：</strong> タイムアタックの記録に活用すると改善点が分かります。</li>
+            </ul>
+            <h4 id="game-sudoku">数独</h4>
+            <ul>
+                <li><strong>目的：</strong> 9×9 のマスに 1〜9 の数字を重複なく配置します。</li>
+                <li><strong>操作：</strong> マスをクリックし、数字を入力します。</li>
+                <li><strong>コツ：</strong> 行・列・ブロックごとに候補をメモし、確定情報を順番に埋めていきます。</li>
+            </ul>
+            <h4 id="game-ten-ten">テンテンパズル</h4>
+            <ul>
+                <li><strong>目的：</strong> 10 を作るように数字を組み合わせてボードを整理します。</li>
+                <li><strong>操作：</strong> 数字を選んで配置し、ラインが揃うと消えます。</li>
+                <li><strong>コツ：</strong> 余りが出ないように数字ブロックの形を確認してから置きましょう。</li>
+            </ul>
+            <h4 id="game-tester">テスターツール</h4>
+            <ul>
+                <li><strong>目的：</strong> ミニゲームの動作確認を素早く行うためのチェック用コンポーネントです。</li>
+                <li><strong>操作：</strong> テスト項目を選び、想定ケースを実行して挙動を確認します。</li>
+                <li><strong>コツ：</strong> 新機能を追加したら必ずテスターで確認し、バグを早期発見しましょう。</li>
+            </ul>
+            <h4 id="game-tetris">テトリス風</h4>
+            <ul>
+                <li><strong>目的：</strong> ブロックを積み上げずにラインを消し、スコアを伸ばします。</li>
+                <li><strong>操作：</strong> 矢印で移動・回転、下でソフトドロップ、スペースでハードドロップ。</li>
+                <li><strong>コツ：</strong> ホールド機能がある場合は使いどころを決め、T スピンなどのテクを練習しましょう。</li>
+            </ul>
+            <h4 id="game-timer">タイマー</h4>
+            <ul>
+                <li><strong>目的：</strong> 指定時間のカウントダウンを行うシンプルなツールです。</li>
+                <li><strong>操作：</strong> 分・秒を設定してスタートします。</li>
+                <li><strong>コツ：</strong> 開発の休憩やイベントの残り時間確認に活用できます。</li>
+            </ul>
+            <h4 id="game-todo-list">ToDo リスト</h4>
+            <ul>
+                <li><strong>目的：</strong> やることを整理し、進捗を管理します。</li>
+                <li><strong>操作：</strong> タスクを入力して追加、完了したらチェックを入れます。</li>
+                <li><strong>コツ：</strong> 細かい作業に分解して登録すると達成感が得られやすいです。</li>
+            </ul>
+            <h4 id="game-triomino-columns">トリオミノコラム</h4>
+            <ul>
+                <li><strong>目的：</strong> 3 つ組ブロックを落として列を揃える落ち物パズルです。</li>
+                <li><strong>操作：</strong> 矢印キーで移動・回転させ、落下位置を決めます。</li>
+                <li><strong>コツ：</strong> 色の並び替えを意識し、同色列を作って消去を狙いましょう。</li>
+            </ul>
+            <h4 id="game-trump-games">トランプゲーム集</h4>
+            <ul>
+                <li><strong>目的：</strong> ソリティアなどのトランプ遊びをまとめたコレクションです。</li>
+                <li><strong>操作：</strong> ルールに沿ってカードをドラッグ&ドロップします。</li>
+                <li><strong>コツ：</strong> 各モードのヘルプを確認し、配置手順を覚えるとスムーズです。</li>
+            </ul>
+            <h4 id="game-ultimate-ttt">アルティメット三目並べ</h4>
+            <ul>
+                <li><strong>目的：</strong> 3×3 の盤面それぞれが小さな三目並べになった上級ルールです。</li>
+                <li><strong>操作：</strong> 指定された小盤にマークを置きます。</li>
+                <li><strong>コツ：</strong> 次に相手が打つ盤面を読んで、大盤のラインを優先しましょう。</li>
+            </ul>
+            <h4 id="game-video-player">動画プレイヤー</h4>
+            <ul>
+                <li><strong>目的：</strong> チュートリアル動画やリファレンス映像を再生するツールです。</li>
+                <li><strong>操作：</strong> 動画を選び、再生ボタンやシークバーで操作します。</li>
+                <li><strong>コツ：</strong> 倍速再生を活用して学習効率を上げましょう。</li>
+            </ul>
+            <h4 id="game-whack-a-mole">モグラたたき</h4>
+            <ul>
+                <li><strong>目的：</strong> 穴から出るモグラをタイミングよく叩いて得点を稼ぎます。</li>
+                <li><strong>操作：</strong> 出現したモグラをクリックします。</li>
+                <li><strong>コツ：</strong> 出現パターンを覚え、視線を動かし過ぎないのがポイントです。</li>
+            </ul>
+            <h4 id="game-wording">ワーディングツール</h4>
+            <ul>
+                <li><strong>目的：</strong> 文章を整えたり、語句候補をまとめるライティング支援ツールです。</li>
+                <li><strong>操作：</strong> テキストを入力し、候補の提案や置き換えを確認します。</li>
+                <li><strong>コツ：</strong> ミニゲームの説明文やイベントテキストを作るときに活用すると便利です。</li>
+            </ul>
+        </section>
+
+        <section id="workflow">
+            <h2>11. 開発フローとヒント</h2>
+            <h3>11.1 作業の基本サイクル</h3>
+            <ol>
+                <li>やりたいことをメモする。</li>
+                <li>対象のファイルをバックアップする。</li>
+                <li>小さく変更し、ブラウザで確認する。</li>
+                <li>動作が安定したら、変更内容をメモや Git に記録する。</li>
+            </ol>
+            <h3>11.2 Git の簡単な使い方</h3>
+            <ul>
+                <li><code>git status</code>：変更点を確認。</li>
+                <li><code>git add .</code>：変更をステージに載せる。</li>
+                <li><code>git commit -m "メモ"</code>：変更を記録する。</li>
+                <li><code>git log</code>：過去の履歴を見る。</li>
+            </ul>
+            <h3>11.3 チーム開発するときのポイント</h3>
+            <ul>
+                <li>役割を分担し、作業中のファイルを共有する。</li>
+                <li>変更内容を README やマニュアルに追記しておく。</li>
+                <li>画面キャプチャを撮って変更点を視覚的に伝える。</li>
+            </ul>
+        </section>
+
+        <section id="faq">
+            <h2>12. よくある質問</h2>
+            <h3>Q1. 画面が正しく表示されません。</h3>
+            <p>
+                ブラウザのキャッシュが残っているかもしれません。ページをリロード（Windows: <code>Ctrl + F5</code>、Mac: <code>Cmd + Shift + R</code>）してみましょう。
+            </p>
+            <h3>Q2. データを変更したらエラーが出ました。</h3>
+            <p>
+                JSON 形式のカンマ漏れや引用符の閉じ忘れが多いです。エディターの構文チェック機能を使うと発見しやすくなります。
+            </p>
+            <h3>Q3. モバイルで遊べますか？</h3>
+            <p>
+                はい、レスポンシブデザインに対応しているのでスマートフォンでも遊べます。ただし、画面が小さいため横向きにすると操作しやすいです。
+            </p>
+        </section>
+
+        <section id="glossary">
+            <h2>13. 用語集</h2>
+            <dl>
+                <dt>DOM</dt>
+                <dd>ブラウザが理解できる HTML の部品の木構造。JavaScript で操作します。</dd>
+                <dt>JSON</dt>
+                <dd>データを「キー：値」で表す形式。人もコンピューターも読みやすいのが特徴です。</dd>
+                <dt>レスポンシブデザイン</dt>
+                <dd>画面の幅によってデザインを自動で調整する仕組み。スマホやタブレットで活躍します。</dd>
+                <dt>タブUI</dt>
+                <dd>複数の画面を切り替えるためのメニュー。クリックすると内容が変わります。</dd>
+            </dl>
+        </section>
+
+        <section id="appendix">
+            <h2>14. 付録：参考情報</h2>
+            <h3>14.1 役立つリンク</h3>
+            <ul>
+                <li><a href="https://developer.mozilla.org/ja/docs/Web" target="_blank" rel="noopener">MDN Web Docs</a>（HTML, CSS, JavaScript の公式解説）</li>
+                <li><a href="https://web.dev/" target="_blank" rel="noopener">web.dev</a>（Web 開発のベストプラクティス）</li>
+                <li><a href="https://git-scm.com/book/ja/v2" target="_blank" rel="noopener">Pro Git 日本語版</a>（Git の入門書）</li>
+            </ul>
+            <h3>14.2 更新履歴の書き方例</h3>
+            <p>
+                バージョン管理を行うときは、次のようなテンプレートを使うと便利です。
+            </p>
+            <pre><code>## 2024-04-01 更新
+- 新しいダンジョン「紅玉の塔」を追加
+- ブロック次元のランダム選択機能を改善
+- マニュアルに「よくある質問」を追記
+</code></pre>
+            <h3>14.3 次の一歩</h3>
+            <p>
+                マニュアルを読み終えたら、まずは小さな変更から挑戦してみましょう。たとえば、1つのダンジョン説明文を自分好みに書き換えるだけでも、
+                仕組みが分かるようになります。慣れてきたら、新しい敵やアイテムを追加して、オリジナルの冒険を作りましょう。
+            </p>
+        </section>
+    </main>
+    <footer>
+        © 2024 Yuローグライク Manual. このマニュアルは自由に複製・改変できますが、出典を明記してください。
+    </footer>
+</body>
+</html>

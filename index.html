@@ -188,6 +188,8 @@
                         <aside class="tools-sidebar" aria-label="ツール一覧">
                             <button id="tool-button-modmaker" class="tool-item active" type="button" data-tool-target="mod-maker">ダンジョンタイプMod作成</button>
                             <p class="tool-hint">構造や生成アルゴリズムを組み立てて `registerDungeonAddon` ファイルを出力します。</p>
+                            <button id="tool-button-sandbox" class="tool-item" type="button" data-tool-target="sandbox-editor">サンドボックスダンジョン</button>
+                            <p class="tool-hint">自由なマップと敵配置でテスト用ダンジョンを組み立てられます（経験値は獲得できません）。</p>
                             <button id="tool-button-blockdata" class="tool-item" type="button" data-tool-target="blockdata-editor">BlockData編集</button>
                             <p class="tool-hint">BlockDim向けのブロック定義をGUIで確認・編集し、JSONをエクスポートできます。</p>
                             <button id="tool-button-image-viewer" class="tool-item" type="button" data-tool-target="image-viewer">画像ビューア</button>
@@ -395,6 +397,88 @@
                                         <button id="modmaker-copy" type="button">クリップボードにコピー</button>
                                         <button id="modmaker-download" type="button">.jsファイルとしてダウンロード</button>
                                     </div>
+                                </div>
+                            </section>
+                        </section>
+                        <section id="tool-sandbox-editor" class="tool-panel" data-tool-panel="sandbox-editor" aria-label="サンドボックスダンジョンツール">
+                            <header class="tool-panel-header">
+                                <h3>サンドボックスダンジョン</h3>
+                                <p>自由にマップと敵を配置して、経験値に影響しないテスト用ダンジョンをその場で試走できます。</p>
+                            </header>
+                            <div class="sandbox-layout">
+                                <div class="sandbox-config">
+                                    <section class="sandbox-section" aria-labelledby="sandbox-map-title">
+                                        <div class="sandbox-section-header">
+                                            <h4 id="sandbox-map-title">マップ設定</h4>
+                                            <div class="sandbox-map-actions">
+                                                <button type="button" id="sandbox-fill-floor">全て床</button>
+                                                <button type="button" id="sandbox-fill-wall">全て壁</button>
+                                                <button type="button" id="sandbox-clear-markers">階段/開始位置をリセット</button>
+                                            </div>
+                                        </div>
+                                        <div class="sandbox-form-grid">
+                                            <label>幅
+                                                <input id="sandbox-width" type="number" min="5" max="60" value="21">
+                                            </label>
+                                            <label>高さ
+                                                <input id="sandbox-height" type="number" min="5" max="60" value="15">
+                                            </label>
+                                        </div>
+                                        <div class="sandbox-brush-select" role="radiogroup" aria-label="ブラシ選択">
+                                            <button type="button" class="sandbox-brush" data-brush="floor" aria-pressed="true">床</button>
+                                            <button type="button" class="sandbox-brush" data-brush="wall" aria-pressed="false">壁</button>
+                                            <button type="button" class="sandbox-brush" data-brush="start" aria-pressed="false">開始位置</button>
+                                            <button type="button" class="sandbox-brush" data-brush="stairs" aria-pressed="false">階段</button>
+                                            <button type="button" class="sandbox-brush" data-brush="enemy" aria-pressed="false">敵配置</button>
+                                        </div>
+                                        <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite">セルをクリックして編集します。</p>
+                                    </section>
+                                    <section class="sandbox-section" aria-labelledby="sandbox-player-title">
+                                        <div class="sandbox-section-header">
+                                            <h4 id="sandbox-player-title">プレイヤー設定</h4>
+                                        </div>
+                                        <div class="sandbox-form-grid">
+                                            <label>プレイヤーレベル
+                                                <input id="sandbox-player-level" type="number" min="1" max="999" value="1">
+                                            </label>
+                                            <div class="sandbox-player-preview" aria-live="polite">
+                                                <span class="label">想定ステータス</span>
+                                                <span id="sandbox-player-preview">HP 100 / 攻撃 10 / 防御 10</span>
+                                            </div>
+                                        </div>
+                                        <p class="sandbox-note">サンドボックス中は経験値が増えず、終了後に本来のレベルへ戻ります。</p>
+                                    </section>
+                                    <section class="sandbox-section" aria-labelledby="sandbox-enemy-title">
+                                        <div class="sandbox-section-header">
+                                            <h4 id="sandbox-enemy-title">敵配置</h4>
+                                            <button type="button" id="sandbox-add-enemy">+ 敵を追加</button>
+                                        </div>
+                                        <div id="sandbox-enemy-list" class="sandbox-enemy-list" aria-live="polite"></div>
+                                        <p class="sandbox-note">敵を選択し「敵配置」ブラシでマップ上の位置を更新できます。</p>
+                                    </section>
+                                </div>
+                                <div class="sandbox-map-wrapper">
+                                    <div class="sandbox-map-header">
+                                        <h4>マッププレビュー</h4>
+                                    </div>
+                                    <div id="sandbox-grid" class="sandbox-grid" role="grid" aria-label="サンドボックスマップ"></div>
+                                    <dl class="sandbox-legend">
+                                        <div><dt>■</dt><dd>壁</dd></div>
+                                        <div><dt>□</dt><dd>床</dd></div>
+                                        <div><dt>★</dt><dd>開始位置</dd></div>
+                                        <div><dt>⬆</dt><dd>階段</dd></div>
+                                        <div><dt>✦</dt><dd>敵</dd></div>
+                                    </dl>
+                                </div>
+                            </div>
+                            <section class="sandbox-section sandbox-start" aria-labelledby="sandbox-start-title">
+                                <div class="sandbox-section-header">
+                                    <h4 id="sandbox-start-title">起動</h4>
+                                </div>
+                                <div id="sandbox-validation" class="sandbox-validation" aria-live="polite"></div>
+                                <div class="sandbox-start-actions">
+                                    <button type="button" id="sandbox-start-button" class="sandbox-start-button">サンドボックスを開始</button>
+                                    <span class="sandbox-warning">※ サンドボックスでは経験値を獲得できません。</span>
                                 </div>
                             </section>
                         </section>
@@ -844,6 +928,7 @@
     <script src="js/tools/tools-tab.js"></script>
     <script src="js/tools/modmaker.js"></script>
     <script src="js/tools/blockdata-editor.js"></script>
+    <script src="js/tools/sandbox.js"></script>
     <script src="js/tools/image-viewer.js"></script>
     <script src="main.js"></script>
 </body>

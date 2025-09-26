@@ -7,6 +7,7 @@ window.MINIEXP_MANIFEST = [
 'ジャンプで駒取りしつつ王冠を目指すクラシックボードゲーム', category: 'ボード' },
   { id: 'chess',       name: 'チェス',          entry: 'games/chess.js',       version: '0.1.0', author: 'mod', description:
 '駒の組み合わせで王を詰ませる本格チェス。駒取りとチェックでEXPを獲得', category: 'ボード' },
+  { id: 'xiangqi',     name: 'シャンチー',      entry: 'games/xiangqi.js',    version: '0.1.0', author: 'mod', description: '中国の将棋・象棋。駒取り・王手・詰みでEXPを稼ごう', category: 'ボード' },
   { id: 'connect6',    name: 'コネクトシックス', entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '六目並べ。配置+1/リーチ+10/勝利で高EXP', category: 'ボード' },
   { id: 'gomoku',      name: '五目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '配置+1/リーチ+10/勝利ボーナス', category: 'ボード' },
   { id: 'go',          name: '囲碁',            entry: 'games/go.js',             version: '0.1.0', author: 'mod', description: '配置+1/捕獲ボーナス/勝利EXP', category: 'ボード' },

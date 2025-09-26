@@ -304,6 +304,48 @@
     font-size: 12px;
     color: rgba(248,250,252,0.8);
   }
+  .mini-tester-control-block {
+    background: rgba(30,41,59,0.55);
+    border: 1px solid rgba(148,163,184,0.25);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mini-tester-control-message {
+    font-weight: 600;
+    color: rgba(226,232,240,0.9);
+  }
+  .mini-tester-control-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .mini-tester-control-actions button {
+    background: rgba(96,165,250,0.2);
+    border: 1px solid rgba(59,130,246,0.35);
+    color: #dbeafe;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .mini-tester-control-actions button:hover {
+    background: rgba(96,165,250,0.32);
+  }
+  .mini-tester-control-input {
+    background: rgba(15,23,42,0.82);
+    border: 1px solid rgba(148,163,184,0.25);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #e2e8f0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .mini-tester-control-error {
+    color: #fca5a5;
+    font-size: 12px;
+  }
   `;
 
   function ensureStyles(){
@@ -951,6 +993,19 @@
             return { type: 'jump', name: 'flagName', equals: 'true', target: '', elseTarget: '' };
           case 'award':
             return { type: 'award', amount: 10, next: '' };
+          case 'control':
+            return {
+              type: 'control',
+              mode: 'confirm',
+              message: '進みますか？',
+              storeAs: 'answer',
+              yesLabel: 'はい',
+              yesValue: 'yes',
+              yesTarget: '',
+              noLabel: 'いいえ',
+              noValue: 'no',
+              noTarget: ''
+            };
           default:
             return { type: 'text', text: 'メッセージ', delivery: 'log', next: '' };
         }
@@ -970,7 +1025,7 @@
           header.appendChild(label);
 
           const typeSelect = document.createElement('select');
-          ['text', 'choice', 'set', 'jump', 'award'].forEach(t => {
+          ['text', 'choice', 'set', 'jump', 'award', 'control'].forEach(t => {
             const option = document.createElement('option');
             option.value = t;
             option.textContent = t;
@@ -1056,6 +1111,9 @@
             break;
           case 'award':
             renderAwardBlock(block, body, index);
+            break;
+          case 'control':
+            renderControlBlock(block, body, index);
             break;
         }
       }
@@ -1250,6 +1308,217 @@
         body.appendChild(nextInput);
       }
 
+      function renderControlBlock(block, body, index) {
+        if (!block.mode) block.mode = 'confirm';
+        const modeRow = document.createElement('div');
+        modeRow.style.display = 'flex';
+        modeRow.style.gap = '6px';
+        modeRow.style.alignItems = 'center';
+        const modeLabel = document.createElement('span');
+        modeLabel.textContent = '種類';
+        modeLabel.style.fontSize = '12px';
+        modeLabel.style.color = 'rgba(226,232,240,0.8)';
+        modeRow.appendChild(modeLabel);
+        const modeSelect = document.createElement('select');
+        [
+          ['confirm', '確認 (はい/いいえ)'],
+          ['prompt', '入力ボックス']
+        ].forEach(([value, label]) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          if (block.mode === value) option.selected = true;
+          modeSelect.appendChild(option);
+        });
+        modeRow.appendChild(modeSelect);
+        body.appendChild(modeRow);
+
+        const dynamic = document.createElement('div');
+        dynamic.style.display = 'flex';
+        dynamic.style.flexDirection = 'column';
+        dynamic.style.gap = '6px';
+        body.appendChild(dynamic);
+
+        const renderConfirmFields = () => {
+          if (!('storeAs' in block)) block.storeAs = 'answer';
+          if (!('message' in block)) block.message = '進みますか？';
+          if (!('yesLabel' in block)) block.yesLabel = 'はい';
+          if (!('noLabel' in block)) block.noLabel = 'いいえ';
+          if (!('yesValue' in block)) block.yesValue = 'yes';
+          if (!('noValue' in block)) block.noValue = 'no';
+
+          const textarea = document.createElement('textarea');
+          textarea.value = block.message || '';
+          textarea.placeholder = '表示するメッセージ';
+          textarea.addEventListener('input', () => { block.message = textarea.value; });
+          dynamic.appendChild(textarea);
+
+          const storeInput = document.createElement('input');
+          storeInput.type = 'text';
+          storeInput.placeholder = '結果を保存する変数名 (空=保存しない)';
+          storeInput.value = block.storeAs || '';
+          storeInput.addEventListener('input', () => { block.storeAs = storeInput.value; });
+          dynamic.appendChild(storeInput);
+
+          const yesLabel = document.createElement('input');
+          yesLabel.type = 'text';
+          yesLabel.placeholder = 'はいボタンの表示';
+          yesLabel.value = block.yesLabel || '';
+          yesLabel.addEventListener('input', () => { block.yesLabel = yesLabel.value; });
+          dynamic.appendChild(yesLabel);
+
+          const yesValue = document.createElement('input');
+          yesValue.type = 'text';
+          yesValue.placeholder = 'はいを押した時に保存する値';
+          yesValue.value = block.yesValue ?? '';
+          yesValue.addEventListener('input', () => { block.yesValue = yesValue.value; });
+          dynamic.appendChild(yesValue);
+
+          const yesTarget = document.createElement('input');
+          yesTarget.type = 'number';
+          yesTarget.placeholder = 'はいの次ブロック# (空=次)';
+          yesTarget.value = block.yesTarget ?? '';
+          yesTarget.addEventListener('input', () => { block.yesTarget = yesTarget.value; });
+          dynamic.appendChild(yesTarget);
+
+          const noLabel = document.createElement('input');
+          noLabel.type = 'text';
+          noLabel.placeholder = 'いいえボタンの表示';
+          noLabel.value = block.noLabel || '';
+          noLabel.addEventListener('input', () => { block.noLabel = noLabel.value; });
+          dynamic.appendChild(noLabel);
+
+          const noValue = document.createElement('input');
+          noValue.type = 'text';
+          noValue.placeholder = 'いいえを押した時に保存する値';
+          noValue.value = block.noValue ?? '';
+          noValue.addEventListener('input', () => { block.noValue = noValue.value; });
+          dynamic.appendChild(noValue);
+
+          const noTarget = document.createElement('input');
+          noTarget.type = 'number';
+          noTarget.placeholder = 'いいえの次ブロック# (空=次)';
+          noTarget.value = block.noTarget ?? '';
+          noTarget.addEventListener('input', () => { block.noTarget = noTarget.value; });
+          dynamic.appendChild(noTarget);
+        };
+
+        const renderPromptFields = () => {
+          if (!('storeAs' in block)) block.storeAs = 'input';
+          if (!('message' in block)) block.message = '名前を入力してください';
+          if (!('defaultValue' in block)) block.defaultValue = '';
+          if (!('defaultFrom' in block)) block.defaultFrom = '';
+          if (!('allowEmpty' in block)) block.allowEmpty = false;
+          if (!('okLabel' in block)) block.okLabel = '決定';
+          if (!('cancelLabel' in block)) block.cancelLabel = 'キャンセル';
+          if (!('cancelValue' in block)) block.cancelValue = 'cancel';
+          if (!('inputType' in block)) block.inputType = 'text';
+
+          const textarea = document.createElement('textarea');
+          textarea.value = block.message || '';
+          textarea.placeholder = '入力ボックスの前に表示する文章';
+          textarea.addEventListener('input', () => { block.message = textarea.value; });
+          dynamic.appendChild(textarea);
+
+          const storeInput = document.createElement('input');
+          storeInput.type = 'text';
+          storeInput.placeholder = '入力値を保存する変数名';
+          storeInput.value = block.storeAs || '';
+          storeInput.addEventListener('input', () => { block.storeAs = storeInput.value; });
+          dynamic.appendChild(storeInput);
+
+          const typeSelect = document.createElement('select');
+          [['text', 'テキスト'], ['number', '数値']].forEach(([value, label]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            if ((block.inputType || 'text') === value) option.selected = true;
+            typeSelect.appendChild(option);
+          });
+          typeSelect.addEventListener('change', () => { block.inputType = typeSelect.value; });
+          dynamic.appendChild(typeSelect);
+
+          const defaultInput = document.createElement('input');
+          defaultInput.type = 'text';
+          defaultInput.placeholder = '既定値 (固定文字列)';
+          defaultInput.value = block.defaultValue ?? '';
+          defaultInput.addEventListener('input', () => { block.defaultValue = defaultInput.value; });
+          dynamic.appendChild(defaultInput);
+
+          const fromInput = document.createElement('input');
+          fromInput.type = 'text';
+          fromInput.placeholder = '既定値を読み込む変数名 (空=固定)';
+          fromInput.value = block.defaultFrom || '';
+          fromInput.addEventListener('input', () => { block.defaultFrom = fromInput.value; });
+          dynamic.appendChild(fromInput);
+
+          const allowEmptyLabel = document.createElement('label');
+          allowEmptyLabel.style.display = 'flex';
+          allowEmptyLabel.style.alignItems = 'center';
+          allowEmptyLabel.style.gap = '6px';
+          const allowEmptyCheckbox = document.createElement('input');
+          allowEmptyCheckbox.type = 'checkbox';
+          allowEmptyCheckbox.checked = !!block.allowEmpty;
+          allowEmptyCheckbox.addEventListener('change', () => { block.allowEmpty = allowEmptyCheckbox.checked; });
+          allowEmptyLabel.appendChild(allowEmptyCheckbox);
+          const allowEmptyText = document.createElement('span');
+          allowEmptyText.textContent = '空入力を許可';
+          allowEmptyLabel.appendChild(allowEmptyText);
+          dynamic.appendChild(allowEmptyLabel);
+
+          const okLabelInput = document.createElement('input');
+          okLabelInput.type = 'text';
+          okLabelInput.placeholder = '決定ボタンの表示';
+          okLabelInput.value = block.okLabel || '';
+          okLabelInput.addEventListener('input', () => { block.okLabel = okLabelInput.value; });
+          dynamic.appendChild(okLabelInput);
+
+          const okTarget = document.createElement('input');
+          okTarget.type = 'number';
+          okTarget.placeholder = '決定後のブロック# (空=次)';
+          okTarget.value = block.okTarget ?? '';
+          okTarget.addEventListener('input', () => { block.okTarget = okTarget.value; });
+          dynamic.appendChild(okTarget);
+
+          const cancelLabelInput = document.createElement('input');
+          cancelLabelInput.type = 'text';
+          cancelLabelInput.placeholder = 'キャンセルボタンの表示';
+          cancelLabelInput.value = block.cancelLabel || '';
+          cancelLabelInput.addEventListener('input', () => { block.cancelLabel = cancelLabelInput.value; });
+          dynamic.appendChild(cancelLabelInput);
+
+          const cancelValueInput = document.createElement('input');
+          cancelValueInput.type = 'text';
+          cancelValueInput.placeholder = 'キャンセル時に保存する値';
+          cancelValueInput.value = block.cancelValue ?? '';
+          cancelValueInput.addEventListener('input', () => { block.cancelValue = cancelValueInput.value; });
+          dynamic.appendChild(cancelValueInput);
+
+          const cancelTarget = document.createElement('input');
+          cancelTarget.type = 'number';
+          cancelTarget.placeholder = 'キャンセル後のブロック# (空=次)';
+          cancelTarget.value = block.cancelTarget ?? '';
+          cancelTarget.addEventListener('input', () => { block.cancelTarget = cancelTarget.value; });
+          dynamic.appendChild(cancelTarget);
+        };
+
+        const rerender = () => {
+          dynamic.innerHTML = '';
+          if (block.mode === 'confirm') {
+            renderConfirmFields();
+          } else {
+            renderPromptFields();
+          }
+        };
+
+        modeSelect.addEventListener('change', () => {
+          block.mode = modeSelect.value;
+          rerender();
+        });
+
+        rerender();
+      }
+
       function appendStoryLog(content, type = 'log') {
         const entry = document.createElement('div');
         entry.className = 'mini-tester-story-log-entry';
@@ -1324,6 +1593,10 @@
               }
               index = resolveNextIndex(index, block.next);
               break;
+            case 'control':
+              const controlNext = await executeControlBlock(block, context, token, index);
+              index = typeof controlNext === 'number' ? controlNext : index + 1;
+              break;
             default:
               index++;
               break;
@@ -1351,6 +1624,174 @@
             appendStoryLog(`❌ alert実行エラー: ${err.message}`);
           }
         }
+      }
+
+      function executeControlBlock(block, context, token, currentIndex) {
+        return new Promise(resolve => {
+          const mode = block.mode || 'confirm';
+          const container = document.createElement('div');
+          container.className = 'mini-tester-control-block';
+          const makeSummary = (labelText, messageText, resultText) => {
+            container.innerHTML = '';
+            const header = document.createElement('div');
+            header.className = 'mini-tester-control-message';
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'label';
+            labelSpan.textContent = labelText;
+            header.appendChild(labelSpan);
+            if (messageText) {
+              header.appendChild(document.createTextNode(messageText));
+            }
+            container.appendChild(header);
+            if (resultText) {
+              const result = document.createElement('div');
+              result.textContent = resultText;
+              container.appendChild(result);
+            }
+          };
+
+          const labelText = mode === 'prompt' ? '入力' : '確認';
+          const messageLine = document.createElement('div');
+          messageLine.className = 'mini-tester-control-message';
+          const labelSpan = document.createElement('span');
+          labelSpan.className = 'label';
+          labelSpan.textContent = labelText;
+          messageLine.appendChild(labelSpan);
+          if (block.message) {
+            messageLine.appendChild(document.createTextNode(block.message));
+          }
+          container.appendChild(messageLine);
+
+          let settled = false;
+          const finish = (nextIndex) => {
+            if (settled) return;
+            settled = true;
+            resolve(nextIndex);
+          };
+
+          if (mode === 'prompt') {
+            const input = document.createElement('input');
+            input.className = 'mini-tester-control-input';
+            input.type = (block.inputType || 'text') === 'number' ? 'number' : 'text';
+            if (input.type === 'number') input.step = 'any';
+            let initialValue = block.defaultValue ?? '';
+            if (block.defaultFrom) {
+              const fromValue = context.flags[block.defaultFrom];
+              if (typeof fromValue !== 'undefined' && fromValue !== null) {
+                initialValue = fromValue;
+              }
+            }
+            if (typeof initialValue !== 'undefined' && initialValue !== null) {
+              input.value = String(initialValue);
+            }
+            container.appendChild(input);
+
+            const error = document.createElement('div');
+            error.className = 'mini-tester-control-error';
+            error.textContent = '';
+            container.appendChild(error);
+
+            const actions = document.createElement('div');
+            actions.className = 'mini-tester-control-actions';
+            const okBtn = document.createElement('button');
+            okBtn.textContent = block.okLabel || '決定';
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = block.cancelLabel || 'キャンセル';
+            actions.appendChild(okBtn);
+            actions.appendChild(cancelBtn);
+            container.appendChild(actions);
+
+            okBtn.addEventListener('click', () => {
+              if (storyRunToken !== token || settled) return;
+              const raw = input.value;
+              if (!block.allowEmpty && raw === '') {
+                error.textContent = '値を入力してください。';
+                input.focus();
+                return;
+              }
+              let storedValue = raw;
+              if ((block.inputType || 'text') === 'number' && raw !== '') {
+                storedValue = Number(raw);
+                if (!Number.isFinite(storedValue)) {
+                  error.textContent = '数値を入力してください。';
+                  input.focus();
+                  return;
+                }
+              }
+              error.textContent = '';
+              if (block.storeAs) {
+                context.flags[block.storeAs] = storedValue;
+                updateVariables(context.flags);
+              }
+              const summaryText = block.storeAs
+                ? `▶ ${block.storeAs} = ${JSON.stringify(storedValue)}`
+                : `▶ 値 = ${JSON.stringify(storedValue)}`;
+              makeSummary(labelText, block.message || '', summaryText);
+              finish(resolveIndex(block.okTarget, currentIndex + 1));
+            });
+
+            cancelBtn.addEventListener('click', () => {
+              if (storyRunToken !== token || settled) return;
+              const cancelValue = block.cancelValue ?? 'cancel';
+              if (block.storeAs) {
+                context.flags[block.storeAs] = cancelValue;
+                updateVariables(context.flags);
+              }
+              const summaryText = block.storeAs
+                ? `▶ キャンセル (${block.storeAs} = ${JSON.stringify(cancelValue)})`
+                : '▶ 入力をキャンセル';
+              makeSummary(labelText, block.message || '', summaryText);
+              finish(resolveIndex(block.cancelTarget, currentIndex + 1));
+            });
+          } else {
+            const actions = document.createElement('div');
+            actions.className = 'mini-tester-control-actions';
+            const yesBtn = document.createElement('button');
+            yesBtn.textContent = block.yesLabel || 'はい';
+            const noBtn = document.createElement('button');
+            noBtn.textContent = block.noLabel || 'いいえ';
+            actions.appendChild(yesBtn);
+            actions.appendChild(noBtn);
+            container.appendChild(actions);
+
+            const choose = (label, storedValue, target) => {
+              if (storyRunToken !== token || settled) return;
+              if (block.storeAs) {
+                context.flags[block.storeAs] = storedValue;
+                updateVariables(context.flags);
+              }
+              const summary = block.storeAs
+                ? `▶ ${label} を選択 → ${block.storeAs} = ${JSON.stringify(storedValue)}`
+                : `▶ ${label} を選択`;
+              makeSummary(labelText, block.message || '', summary);
+              finish(resolveIndex(target, currentIndex + 1));
+            };
+
+            yesBtn.addEventListener('click', () => {
+              const value = block.yesValue ?? block.yesLabel ?? 'yes';
+              choose(block.yesLabel || 'はい', value, block.yesTarget);
+            });
+
+            noBtn.addEventListener('click', () => {
+              const value = block.noValue ?? block.noLabel ?? 'no';
+              choose(block.noLabel || 'いいえ', value, block.noTarget);
+            });
+          }
+
+          storyLog.appendChild(container);
+          storyLog.scrollTop = storyLog.scrollHeight;
+
+          const watch = () => {
+            if (settled) return;
+            if (storyRunToken !== token) {
+              try { finish(null); } catch {}
+              container.remove();
+            } else {
+              requestAnimationFrame(watch);
+            }
+          };
+          requestAnimationFrame(watch);
+        });
       }
 
       function executeChoiceBlock(block, context, token) {

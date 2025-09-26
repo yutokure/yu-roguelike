@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuローグライク マニュアル</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        body {
+            font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+            line-height: 1.7;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+            color: #222;
+        }
+        header {
+            background: linear-gradient(135deg, #274690, #576ca8);
+            color: #fff;
+            padding: 3rem 1.5rem 2rem;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.4rem;
+        }
+        header p {
+            margin: 0.5rem auto 0;
+            max-width: 680px;
+            font-size: 1.05rem;
+        }
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 3rem;
+            background: #fff;
+        }
+        nav {
+            background: #eef2f8;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        nav h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        nav ol {
+            columns: 2;
+            column-gap: 2rem;
+            padding-left: 1.2rem;
+        }
+        nav li {
+            margin: 0.4rem 0;
+            break-inside: avoid;
+        }
+        section {
+            margin-bottom: 3.5rem;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 4px solid #274690;
+            padding-bottom: 0.35rem;
+        }
+        h3 {
+            font-size: 1.35rem;
+            margin: 2rem 0 0.6rem;
+        }
+        h4 {
+            font-size: 1.15rem;
+            margin: 1.2rem 0 0.4rem;
+        }
+        p {
+            margin: 0.6rem 0;
+        }
+        ul, ol {
+            margin: 0.6rem 0 1rem 1.4rem;
+        }
+        code {
+            background: rgba(39, 70, 144, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: "Fira Code", "Source Code Pro", monospace;
+        }
+        .tip {
+            background: #f4fbf4;
+            border-left: 4px solid #2b9348;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+        .warning {
+            background: #fff7e6;
+            border-left: 4px solid #f4a259;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+        th, td {
+            border: 1px solid #ccd6eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background: #274690;
+            color: #fff;
+            font-weight: 600;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 720px) {
+            nav ol {
+                columns: 1;
+            }
+            header {
+                padding: 2.5rem 1rem 1.5rem;
+            }
+            main {
+                padding: 1.5rem 1rem 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Yuローグライク 総合マニュアル</h1>
+        <p>
+            このページは、ブラウザ上で遊べるダンジョン探索ゲーム「Yuローグライク」の使い方と開発手順をまとめた公式マニュアルです。
+            初めて触る人でも迷わず進められるよう、ゆっくり解説しています。
+        </p>
+    </header>
+    <main>
+        <nav aria-label="目次">
+            <h2>目次</h2>
+            <ol>
+                <li><a href="#about">1. マニュアルの読み方</a></li>
+                <li><a href="#overview">2. ゲーム全体の概要</a></li>
+                <li><a href="#environment">3. 必要な環境と準備</a></li>
+                <li><a href="#structure">4. フォルダーとファイル構成</a></li>
+                <li><a href="#start">5. はじめての起動</a></li>
+                <li><a href="#ui">6. 画面と操作の解説</a></li>
+                <li><a href="#data-files">7. データファイルの内容</a></li>
+                <li><a href="#customize">8. コンテンツの追加・変更</a></li>
+                <li><a href="#development">9. JavaScript の仕組み</a></li>
+                <li><a href="#minigames">10. ミニゲームとツールズ</a></li>
+                <li><a href="#workflow">11. 開発フローとヒント</a></li>
+                <li><a href="#faq">12. よくある質問</a></li>
+                <li><a href="#glossary">13. 用語集</a></li>
+                <li><a href="#appendix">14. 付録：参考情報</a></li>
+            </ol>
+        </nav>
+
+        <section id="about">
+            <h2>1. マニュアルの読み方</h2>
+            <p>
+                このマニュアルは、ゲームを遊ぶ人・開発する人の両方に役立つよう構成されています。
+                各章は短い文章でゆっくり説明しており、難しい言葉には補足や図を入れています。
+            </p>
+            <div class="tip">
+                <h3>使い方のコツ</h3>
+                <ul>
+                    <li>まずは <strong>第2章</strong> を読んでゲームの全体像をつかみましょう。</li>
+                    <li>遊ぶだけなら、第5章と第6章を読めば十分です。</li>
+                    <li>カスタマイズしたい人は、第7章と第8章をじっくり読んでください。</li>
+                    <li>JavaScript のコードを書き換える前に、第9章と第11章を確認しましょう。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="overview">
+            <h2>2. ゲーム全体の概要</h2>
+            <h3>2.1 Yuローグライクとは</h3>
+            <p>
+                Yuローグライクは、ダンジョンを選んで冒険するブラウザゲームです。HTML・CSS・JavaScript だけで動くので、
+                Web ブラウザがあればどこでも遊べます。ゲーム内では、ダンジョンの種類や難易度を選び、登場する敵やアイテムを楽しめます。
+            </p>
+            <h3>2.2 特徴</h3>
+            <ul>
+                <li>シンプルな構造で、カスタマイズしやすい。</li>
+                <li>ミニゲームや開発者向けツールが豊富。</li>
+                <li>データファイルが分かれており、ゲームバランスを調整しやすい。</li>
+                <li>初心者でも理解できるよう、コメントや設計書が多数用意されている。</li>
+            </ul>
+            <h3>2.3 想定するユーザー</h3>
+            <ul>
+                <li>ゲームを遊びたいプレイヤー</li>
+                <li>ダンジョンや敵を追加したい制作者</li>
+                <li>JavaScript を学びながらゲームを作りたい初心者</li>
+                <li>教育目的で教材として使いたい人</li>
+            </ul>
+        </section>
+
+        <section id="environment">
+            <h2>3. 必要な環境と準備</h2>
+            <h3>3.1 最低限必要なもの</h3>
+            <ul>
+                <li>モダンブラウザ（Google Chrome, Microsoft Edge, Firefox, Safari など）</li>
+                <li>テキストエディター（VS Code, Atom, メモ帳でも可）</li>
+                <li>ゲームファイル一式（GitHub からダウンロード、または git clone）</li>
+            </ul>
+            <h3>3.2 推奨ツール</h3>
+            <ul>
+                <li>Git：変更履歴を記録して、いつでも元に戻せます。</li>
+                <li>Live Server 拡張：編集した内容をブラウザで即確認できます。</li>
+                <li>画像編集ソフト：アイテムや背景画像を作りたいときに便利です。</li>
+            </ul>
+            <div class="warning">
+                <strong>注意:</strong> インターネットに接続できない環境でも遊べますが、外部からダウンロードした素材を使うときは、
+                著作権やライセンスに気をつけてください。
+            </div>
+        </section>
+
+        <section id="structure">
+            <h2>4. フォルダーとファイル構成</h2>
+            <p>
+                プロジェクトの中身を理解すると、どこを編集すればよいかがすぐわかります。
+                下の表は代表的なファイルの場所と役割です。
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>場所</th>
+                            <th>内容</th>
+                            <th>初心者向けメモ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>index.html</code></td>
+                            <td>ゲーム画面の土台。HTML のレイアウトを定義しています。</td>
+                            <td>ボタンやカードの配置を変えたいときに使います。</td>
+                        </tr>
+                        <tr>
+                            <td><code>style.css</code></td>
+                            <td>見た目（色・フォント・余白など）をまとめています。</td>
+                            <td>色を変えたいときはこのファイルを編集します。</td>
+                        </tr>
+                        <tr>
+                            <td><code>main.js</code></td>
+                            <td>ゲームのメインロジック。タブ切り替えやボタン操作を制御します。</td>
+                            <td>挙動を変えるときは慎重に。小さく編集しながら試しましょう。</td>
+                        </tr>
+                        <tr>
+                            <td><code>js/</code></td>
+                            <td>機能ごとの JavaScript ファイルが入っています。</td>
+                            <td>処理を分けたいときに便利です。</td>
+                        </tr>
+                        <tr>
+                            <td><code>games/</code></td>
+                            <td>ミニゲームなどの追加コンテンツの情報が入ります。</td>
+                            <td>新しいゲームを入れたいときに使います。</td>
+                        </tr>
+                        <tr>
+                            <td><code>dungeontypes/</code></td>
+                            <td>ダンジョンの種類に関するデータファイル群です。</td>
+                            <td>敵の強さや報酬を調整できます。</td>
+                        </tr>
+                        <tr>
+                            <td><code>blockdata.js / blockdata.json</code></td>
+                            <td>ブロック次元モード用のデータ。複雑な設定が入っています。</td>
+                            <td>最初は <code>blockdata.json</code> を読み、形を把握しましょう。</td>
+                        </tr>
+                        <tr>
+                            <td><code>tools/</code></td>
+                            <td>制作者向けのツールやテンプレートがあります。</td>
+                            <td>自分用にアレンジして使えます。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="start">
+            <h2>5. はじめての起動</h2>
+            <h3>5.1 ダウンロードと起動手順</h3>
+            <ol>
+                <li>プロジェクトのフォルダーをダウンロードします。</li>
+                <li><code>index.html</code> をダブルクリックしてブラウザで開きます。</li>
+                <li>ゲームのタイトル画面が表示されたら準備完了です。</li>
+            </ol>
+            <h3>5.2 Live Server を使う場合</h3>
+            <ol>
+                <li>VS Code を開き、左側の拡張機能から「Live Server」をインストールします。</li>
+                <li>フォルダーを開いた状態で、右下の「Go Live」ボタンを押します。</li>
+                <li>自動的にブラウザが開き、変更があるたびにページが更新されます。</li>
+            </ol>
+            <div class="tip">
+                <strong>困ったときは</strong>
+                <ul>
+                    <li>画面が真っ白なときは、ブラウザの開発者ツール（F12）でエラーを確認。</li>
+                    <li>保存し忘れると変更が反映されません。編集後は必ず保存しましょう。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="ui">
+            <h2>6. 画面と操作の解説</h2>
+            <h3>6.1 タイトル画面</h3>
+            <p>
+                画面上部にタイトルと大きなカードが表示されます。カード内で、難易度・世界・ダンジョンを順番に選びます。
+            </p>
+            <h3>6.2 タブの役割</h3>
+            <ul>
+                <li><strong>通常</strong>：一般的なダンジョンを選ぶ場所です。</li>
+                <li><strong>ブロック次元</strong>：複数のブロックを組み合わせてダンジョンを作ります。</li>
+                <li><strong>ミニゲー経験</strong>：過去に遊んだミニゲームから得た要素を確認できます。</li>
+                <li><strong>ツールズ</strong>：開発者向けの補助ツールにアクセスします。</li>
+            </ul>
+            <h3>6.3 ダンジョン詳細カード</h3>
+            <p>
+                世界とダンジョンを選ぶと、右側に詳細カードが表示されます。ここでは、ダメージ倍率・推奨レベル・説明が確認できます。
+                気に入ったら「ダンジョンに入る」ボタンを押しましょう。
+            </p>
+            <h3>6.4 ブロック次元モードの画面</h3>
+            <p>
+                ブロック次元タブでは、NESTED 値を入力し、複数のリストからブロックを選びます。選択内容は下部のプレビューに反映されます。
+                ランダム選択ボタンもあるので、迷ったら押してみましょう。
+            </p>
+        </section>
+
+        <section id="data-files">
+            <h2>7. データファイルの内容</h2>
+            <h3>7.1 blockdata.json / blockdata.js</h3>
+            <p>
+                ブロック次元で利用する設定がまとまっています。JSON 形式で書かれているため、項目名と値のペアで管理します。
+                迷ったときは、<code>blockdata.json</code> をエディターで開き、どんな構造かを見てください。
+            </p>
+            <h4>主なフィールド</h4>
+            <ul>
+                <li><strong>name</strong>：ブロックの名前</li>
+                <li><strong>level</strong>：推奨レベル</li>
+                <li><strong>type</strong>：カテゴリ（例：洞窟、塔など）</li>
+                <li><strong>size</strong>：広さや階層の情報</li>
+                <li><strong>chest</strong>：宝箱の数やレア度</li>
+            </ul>
+            <h3>7.2 dungeontypes フォルダー</h3>
+            <p>
+                世界やダンジョンを分類するファイルがあります。ゲーム内に出てくる説明文やアイコンなどもここで管理されます。
+                新しくダンジョンを追加したい場合は、既存ファイルを参考にして同じ形式で書きましょう。
+            </p>
+            <h3>7.3 games フォルダー</h3>
+            <p>
+                ミニゲームの設定やデータがまとまっています。ミニゲームを追加するときは、ここに新しいファイルを作ります。
+            </p>
+            <div class="warning">
+                <strong>バックアップ推奨:</strong> データファイルを編集する前に必ずコピーを作り、失敗しても戻せるようにしておきましょう。
+            </div>
+        </section>
+
+        <section id="customize">
+            <h2>8. コンテンツの追加・変更</h2>
+            <h3>8.1 ダンジョンを追加する手順</h3>
+            <ol>
+                <li><code>dungeontypes</code> フォルダーに新しい JSON ファイルを作る。</li>
+                <li>既存のファイルを参考に、<code>name</code>・<code>description</code>・<code>level</code> などを書き込む。</li>
+                <li><code>main.js</code> の読み込み処理に新しいファイルを追加する。</li>
+                <li>ブラウザを更新して、リストに表示されるか確認する。</li>
+            </ol>
+            <h3>8.2 難易度を調整する</h3>
+            <p>
+                難易度はダメージ倍率や敵の強さに関係します。調整したいときは、該当するダンジョンのデータを変更し、プレイして確認しましょう。
+            </p>
+            <h3>8.3 見た目を変える</h3>
+            <ul>
+                <li><code>style.css</code> の色やフォントを変更する。</li>
+                <li>背景画像を追加したい場合は、CSS に <code>background-image</code> を設定する。</li>
+                <li>ボタンの形を変えたいときは、<code>border-radius</code> や <code>box-shadow</code> を調整する。</li>
+            </ul>
+            <div class="tip">
+                <strong>少しずつ試す</strong>：大きな変更を一度に行うと原因が分かりにくくなります。
+                1つの項目を変えたら保存し、ブラウザで結果を確認しましょう。
+            </div>
+        </section>
+
+        <section id="development">
+            <h2>9. JavaScript の仕組み</h2>
+            <h3>9.1 main.js の役割</h3>
+            <p>
+                <code>main.js</code> は、ページの読み込み後にタブやボタンを動かすためのスクリプトです。
+                DOM（HTML の部品）を取得し、クリックイベントに処理を割り当てます。
+            </p>
+            <h3>9.2 データの読み込み</h3>
+            <p>
+                fetch API を使って JSON ファイルを読み込み、ダンジョンリストを作成します。Promise の仕組みが分からない場合は、
+                まずは <code>async/await</code> の基本を学んでから触ると理解しやすいです。
+            </p>
+            <h3>9.3 よく使う関数</h3>
+            <ul>
+                <li><strong>renderWorldButtons()</strong>：世界のボタンを作成。</li>
+                <li><strong>renderDungeonDetails()</strong>：選択したダンジョンの情報をカードに表示。</li>
+                <li><strong>setupTabs()</strong>：タブ切り替えの動きを初期化。</li>
+            </ul>
+            <h3>9.4 コードを読む順番</h3>
+            <ol>
+                <li><code>main.js</code> の冒頭で定義されている定数を確認。</li>
+                <li>イベントリスナーの登録部分を読む。</li>
+                <li>呼び出されている関数の中身を追っていく。</li>
+            </ol>
+        </section>
+
+        <section id="minigames">
+            <h2>10. ミニゲームとツールズ</h2>
+            <h3>10.1 ミニゲームの扱い</h3>
+            <p>
+                プロジェクトには、別のミニゲームやアイデアノートが多数含まれています。
+                <code>games</code> フォルダーにはサンプルがあるので、自分のゲームを追加するときの参考になります。
+            </p>
+            <h3>10.2 ツールズタブ</h3>
+            <p>
+                ツールズタブからは、ブロックデータ編集など、制作時に役立つユーティリティにアクセスできます。
+                まだ完成していないツールもあるため、更新履歴をチェックして進捗を把握しましょう。
+            </p>
+            <h3>10.3 連携のヒント</h3>
+            <ul>
+                <li>ミニゲームの結果を本編に反映させる場合は、共通のデータ管理ファイルを作ると便利です。</li>
+                <li>UI を統一したいときは、共通の CSS クラスを用意しましょう。</li>
+            </ul>
+        </section>
+
+        <section id="workflow">
+            <h2>11. 開発フローとヒント</h2>
+            <h3>11.1 作業の基本サイクル</h3>
+            <ol>
+                <li>やりたいことをメモする。</li>
+                <li>対象のファイルをバックアップする。</li>
+                <li>小さく変更し、ブラウザで確認する。</li>
+                <li>動作が安定したら、変更内容をメモや Git に記録する。</li>
+            </ol>
+            <h3>11.2 Git の簡単な使い方</h3>
+            <ul>
+                <li><code>git status</code>：変更点を確認。</li>
+                <li><code>git add .</code>：変更をステージに載せる。</li>
+                <li><code>git commit -m "メモ"</code>：変更を記録する。</li>
+                <li><code>git log</code>：過去の履歴を見る。</li>
+            </ul>
+            <h3>11.3 チーム開発するときのポイント</h3>
+            <ul>
+                <li>役割を分担し、作業中のファイルを共有する。</li>
+                <li>変更内容を README やマニュアルに追記しておく。</li>
+                <li>画面キャプチャを撮って変更点を視覚的に伝える。</li>
+            </ul>
+        </section>
+
+        <section id="faq">
+            <h2>12. よくある質問</h2>
+            <h3>Q1. 画面が正しく表示されません。</h3>
+            <p>
+                ブラウザのキャッシュが残っているかもしれません。ページをリロード（Windows: <code>Ctrl + F5</code>、Mac: <code>Cmd + Shift + R</code>）してみましょう。
+            </p>
+            <h3>Q2. データを変更したらエラーが出ました。</h3>
+            <p>
+                JSON 形式のカンマ漏れや引用符の閉じ忘れが多いです。エディターの構文チェック機能を使うと発見しやすくなります。
+            </p>
+            <h3>Q3. モバイルで遊べますか？</h3>
+            <p>
+                はい、レスポンシブデザインに対応しているのでスマートフォンでも遊べます。ただし、画面が小さいため横向きにすると操作しやすいです。
+            </p>
+        </section>
+
+        <section id="glossary">
+            <h2>13. 用語集</h2>
+            <dl>
+                <dt>DOM</dt>
+                <dd>ブラウザが理解できる HTML の部品の木構造。JavaScript で操作します。</dd>
+                <dt>JSON</dt>
+                <dd>データを「キー：値」で表す形式。人もコンピューターも読みやすいのが特徴です。</dd>
+                <dt>レスポンシブデザイン</dt>
+                <dd>画面の幅によってデザインを自動で調整する仕組み。スマホやタブレットで活躍します。</dd>
+                <dt>タブUI</dt>
+                <dd>複数の画面を切り替えるためのメニュー。クリックすると内容が変わります。</dd>
+            </dl>
+        </section>
+
+        <section id="appendix">
+            <h2>14. 付録：参考情報</h2>
+            <h3>14.1 役立つリンク</h3>
+            <ul>
+                <li><a href="https://developer.mozilla.org/ja/docs/Web" target="_blank" rel="noopener">MDN Web Docs</a>（HTML, CSS, JavaScript の公式解説）</li>
+                <li><a href="https://web.dev/" target="_blank" rel="noopener">web.dev</a>（Web 開発のベストプラクティス）</li>
+                <li><a href="https://git-scm.com/book/ja/v2" target="_blank" rel="noopener">Pro Git 日本語版</a>（Git の入門書）</li>
+            </ul>
+            <h3>14.2 更新履歴の書き方例</h3>
+            <p>
+                バージョン管理を行うときは、次のようなテンプレートを使うと便利です。
+            </p>
+            <pre><code>## 2024-04-01 更新
+- 新しいダンジョン「紅玉の塔」を追加
+- ブロック次元のランダム選択機能を改善
+- マニュアルに「よくある質問」を追記
+</code></pre>
+            <h3>14.3 次の一歩</h3>
+            <p>
+                マニュアルを読み終えたら、まずは小さな変更から挑戦してみましょう。たとえば、1つのダンジョン説明文を自分好みに書き換えるだけでも、
+                仕組みが分かるようになります。慣れてきたら、新しい敵やアイテムを追加して、オリジナルの冒険を作りましょう。
+            </p>
+        </section>
+    </main>
+    <footer>
+        © 2024 Yuローグライク Manual. このマニュアルは自由に複製・改変できますが、出典を明記してください。
+    </footer>
+</body>
+</html>

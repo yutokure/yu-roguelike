@@ -59,5 +59,6 @@ window.MINIEXP_MANIFEST = [
   { id: 'gamble_hall',  name: 'ギャンブルホール',     entry: 'games/gamble_hall.js',  version: '0.1.0', author: 'mod', description: 'EXPを賭けるルーレットとパチンコスロットの複合MOD', category: 'ギャンブル' },
   { id: 'electro_instrument', name: '電子楽器スタジオ', entry: 'games/electro_instrument.js', version: '0.1.0', author: 'mod', description: 'ピアノ鍵盤と多彩な音色で自由に演奏し音ごとにEXP獲得', category: 'トイ' },
   { id: 'physics_sandbox', name: '物理遊び', entry: 'games/physics_sandbox.js', version: '0.1.0', author: 'mod', description: '火・水・ツタ・雷・回路を組み合わせるトイ系物理サンドボックス', category: 'トイ' },
-  { id: 'memo_studio', name: '暗記スタジオ', entry: 'games/memory_app.js', version: '0.1.0', author: 'mod', description: 'フラッシュカードを登録し間隔反復で学習する暗記アプリ', category: 'トイ' }
+  { id: 'memo_studio', name: '暗記スタジオ', entry: 'games/memory_app.js', version: '0.1.0', author: 'mod', description: 'フラッシュカードを登録し間隔反復で学習する暗記アプリ', category: 'トイ' },
+  { id: 'typing',      name: 'タイピングチャレンジ', entry: 'games/typing.js',      version: '0.1.0', author: 'mod', description: '60秒タイプで正確さとスピードを競うタイピングチャレンジ', category: 'スキル' },
 ];

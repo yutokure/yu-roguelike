@@ -55,6 +55,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'topdown_race',  name: 'Aurora Circuit',       entry: 'games/topdown_race.js',     version: '0.1.0', author: 'mod', description: '見下ろし型周回レース。ラップと順位でEXP獲得', category: 'アクション' },
   { id: 'falling_shooter', name: '落下ブロック・シューター', entry: 'games/falling_shooter.js', version: '0.1.0', author: 'builtin', description: '破壊で1〜数EXP（大きいほど高EXP）', category: 'シューティング' },
   { id: 'bubble_shooter', name: 'バブルシューター', entry: 'games/bubble_shooter.js', version: '0.1.0', author: 'mod', description: 'バブルを撃って3つ揃えで消去。浮いたバブルはまとめて落下', category: 'パズル' },
+  { id: 'sichuan', name: '四川省パズル', entry: 'games/sichuan.js', version: '0.1.0', author: 'mod', description: '麻雀牌のペアを線で繋いで消す四川省。連続消去でボーナスEXP', category: 'パズル' },
   { id: 'piano_tiles', name: 'リズムタイル', entry: 'games/piano_tiles.js', version: '0.1.0', author: 'mod', description: 'ピアノタイル風の4レーン譜面。タップとホールドをタイミング良く決めてコンボを伸ばそう', category: 'リズム' },
   { id: 'river_crossing', name: '川渡り',               entry: 'games/river_crossing.js',   version: '0.1.0', author: 'builtin', description: '1段前進+1／到達+50', category: 'アクション' },
   { id: 'whack_a_mole',  name: 'モグラたたき',         entry: 'games/whack_a_mole.js',     version: '0.1.0', author: 'builtin', description: '命中でEXP／連続命中ボーナス', category: 'アクション' },

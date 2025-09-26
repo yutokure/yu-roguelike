@@ -1323,6 +1323,391 @@ h1 {
     overflow-y: auto;
 }
 
+.sandbox-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.sandbox-config {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sandbox-section {
+    background: #f8faff;
+    border: 1px solid rgba(102,126,234,0.2);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sandbox-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.sandbox-section-header h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #1f2937;
+}
+
+.sandbox-map-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sandbox-map-actions button,
+#sandbox-add-enemy,
+.sandbox-start-button {
+    appearance: none;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sandbox-map-actions button:hover,
+#sandbox-add-enemy:hover,
+.sandbox-start-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102,126,234,0.35);
+}
+
+.sandbox-map-actions button:disabled,
+.sandbox-start-button:disabled {
+    background: #cbd5f5;
+    box-shadow: none;
+    color: #475569;
+    cursor: not-allowed;
+}
+
+.sandbox-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.sandbox-form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: #475569;
+}
+
+.sandbox-form-grid input {
+    border: 1px solid rgba(148,163,184,0.5);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 14px;
+}
+
+.sandbox-brush-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sandbox-brush {
+    appearance: none;
+    border: 1px solid rgba(102,126,234,0.35);
+    background: #f8fafc;
+    color: #1f2937;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.sandbox-brush[aria-pressed="true"],
+.sandbox-brush:hover {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+    border-color: transparent;
+    transform: translateY(-1px);
+}
+
+.sandbox-selected-cell {
+    margin: 0;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+.sandbox-player-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+.sandbox-player-preview .label {
+    font-weight: 600;
+    color: #4c51bf;
+}
+
+.sandbox-note {
+    margin: 0;
+    font-size: 12px;
+    color: #4b5563;
+    background: rgba(102,126,234,0.12);
+    border-radius: 8px;
+    padding: 6px 8px;
+}
+
+.sandbox-map-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sandbox-map-header h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #1f2937;
+}
+
+.sandbox-grid {
+    --sandbox-cell-size: 28px;
+    background: #f1f5f9;
+    border: 1px solid rgba(102,126,234,0.2);
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    gap: 4px;
+    max-height: 480px;
+    overflow: auto;
+}
+
+.sandbox-cell {
+    width: var(--sandbox-cell-size);
+    height: var(--sandbox-cell-size);
+    border: none;
+    border-radius: 6px;
+    background: #e2e8f0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.sandbox-cell:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(148,163,184,0.35);
+}
+
+.sandbox-cell.wall {
+    background: #1f2937;
+    color: #f8fafc;
+}
+
+.sandbox-cell.floor {
+    background: #e5edff;
+}
+
+.sandbox-cell.start {
+    background: linear-gradient(135deg,#22d3ee,#6366f1);
+    color: #fff;
+}
+
+.sandbox-cell.stairs {
+    background: linear-gradient(135deg,#fbbf24,#f97316);
+    color: #1f2937;
+}
+
+.sandbox-cell.enemy {
+    box-shadow: inset 0 0 0 2px rgba(99,102,241,0.8);
+    color: #312e81;
+}
+
+.sandbox-cell.enemy.selected-enemy {
+    box-shadow: inset 0 0 0 3px rgba(245,158,11,0.85);
+    color: #b45309;
+}
+
+.sandbox-cell.selected {
+    outline: 2px solid #f59e0b;
+    outline-offset: 1px;
+}
+
+.sandbox-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+    margin: 0;
+}
+
+.sandbox-legend div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.sandbox-legend dt {
+    margin: 0;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.sandbox-legend dd {
+    margin: 0;
+}
+
+.sandbox-enemy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 320px;
+    overflow: auto;
+}
+
+.sandbox-enemy-card {
+    border: 1px solid rgba(148,163,184,0.5);
+    border-radius: 10px;
+    padding: 10px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sandbox-enemy-card.selected {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.25);
+}
+
+.sandbox-enemy-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.sandbox-enemy-header h5 {
+    margin: 0;
+    font-size: 15px;
+    color: #1f2937;
+}
+
+.sandbox-enemy-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.sandbox-enemy-actions button {
+    appearance: none;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.sandbox-enemy-actions button.select {
+    background: rgba(99,102,241,0.12);
+    color: #4338ca;
+}
+
+.sandbox-enemy-actions button.delete {
+    background: rgba(248,113,113,0.2);
+    color: #b91c1c;
+}
+
+.sandbox-enemy-actions button:hover {
+    filter: brightness(0.95);
+}
+
+.sandbox-enemy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    font-size: 12px;
+}
+
+.sandbox-enemy-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #475569;
+}
+
+.sandbox-enemy-grid input,
+.sandbox-enemy-grid textarea {
+    border: 1px solid rgba(148,163,184,0.5);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+.sandbox-enemy-grid label.checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
+
+.sandbox-validation {
+    min-height: 24px;
+    font-size: 13px;
+    color: #b91c1c;
+}
+
+.sandbox-start {
+    gap: 16px;
+}
+
+.sandbox-start-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sandbox-warning {
+    font-size: 12px;
+    color: #b45309;
+    background: rgba(251,191,36,0.2);
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+@media (max-width: 980px) {
+    .sandbox-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .sandbox-grid {
+        --sandbox-cell-size: 24px;
+    }
+    .sandbox-enemy-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+}
+
 .blockdata-sidebar {
     display: flex;
     flex-direction: column;

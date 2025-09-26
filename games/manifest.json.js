@@ -8,6 +8,8 @@ window.MINIEXP_MANIFEST = [
   { id: 'chess',       name: 'チェス',          entry: 'games/chess.js',       version: '0.1.0', author: 'mod', description:
 '駒の組み合わせで王を詰ませる本格チェス。駒取りとチェックでEXPを獲得', category: 'ボード' },
   { id: 'xiangqi',     name: 'シャンチー',      entry: 'games/xiangqi.js',    version: '0.1.0', author: 'mod', description: '中国の将棋・象棋。駒取り・王手・詰みでEXPを稼ごう', category: 'ボード' },
+  { id: 'shogi',       name: '将棋',            entry: 'games/shogi.js',       version: '0.1.0', author: 'mod', description:
+'持ち駒と成りを駆使する本格将棋。指し手/捕獲/王手でEXP', category: 'ボード' },
   { id: 'connect6',    name: 'コネクトシックス', entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '六目並べ。配置+1/リーチ+10/勝利で高EXP', category: 'ボード' },
   { id: 'gomoku',      name: '五目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '配置+1/リーチ+10/勝利ボーナス', category: 'ボード' },
   { id: 'go',          name: '囲碁',            entry: 'games/go.js',             version: '0.1.0', author: 'mod', description: '配置+1/捕獲ボーナス/勝利EXP', category: 'ボード' },
@@ -40,6 +42,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'calculator',  name: '電卓',             entry: 'games/calculator.js', version: '0.1.0', author: 'mod', description: 'ユーティリティ電卓。数字入力+1 / 計算確定+5EXP', category: 'ユーティリティ' },
   { id: 'timer',       name: 'タイマー',         entry: 'games/timer.js',      version: '0.1.0', author: 'mod', description: 'カウントダウンとストップウォッチで時間管理', category: 'ユーティリティ' },
   { id: 'math_lab',    name: '数学ラボ',         entry: 'games/math_lab.js',   version: '0.1.0', author: 'mod', description: '高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション', category: 'ユーティリティ' },
+  { id: 'calc_combo',  name: '計算コンボ',       entry: 'games/calc_combo.js', version: '0.1.0', author: 'mod', description: '2桁までの四則演算をテンポ良く解いてコンボEXPを稼ぐ高速暗算ゲーム', category: 'パズル' },
   { id: 'blockcode',   name: 'ブロックコードラボ', entry: 'games/blockcode.js', version: '0.1.0', author: 'mod', description: 'Scratch風のブロックでミニゲームAPIを安全に試せるビジュアルプログラミング環境', category: 'ユーティリティ' },
   { id: 'wording',     name: 'Wording',         entry: 'games/wording.js',    version: '0.1.0', author: 'mod', description: '編集+1 / 書式+2 / 保存+6 EXP のワープロ', category: 'ユーティリティ' },
   { id: 'video_player', name: '動画プレイヤー', entry: 'games/video_player.js', version: '0.1.0', author: 'mod', description: 'ローカル動画とYouTubeの視聴でEXPを獲得できるユーティリティ', category: 'ユーティリティ' },
@@ -48,8 +51,10 @@ window.MINIEXP_MANIFEST = [
   { id: 'tester',      name: 'JSテスター',       entry: 'games/tester.js',     version: '0.1.0', author: 'mod', description: 'JS機能テストとCPUベンチマーク、ブロック式アドベンチャー作成ツール', category: 'ユーティリティ' }, 
   { id: 'aim',           name: '的あて（エイム）',     entry: 'games/aim.js',             version: '0.1.0', author: 'builtin', description: '命中で1〜3EXP／連続命中ボーナス', category: 'シューティング' },
   { id: 'dodge_race',    name: '回避レース',           entry: 'games/dodge_race.js',       version: '0.1.0', author: 'builtin', description: '距離で微量EXP／CP+5', category: 'アクション' },
+  { id: 'topdown_race',  name: 'Aurora Circuit',       entry: 'games/topdown_race.js',     version: '0.1.0', author: 'mod', description: '見下ろし型周回レース。ラップと順位でEXP獲得', category: 'アクション' },
   { id: 'falling_shooter', name: '落下ブロック・シューター', entry: 'games/falling_shooter.js', version: '0.1.0', author: 'builtin', description: '破壊で1〜数EXP（大きいほど高EXP）', category: 'シューティング' },
   { id: 'bubble_shooter', name: 'バブルシューター', entry: 'games/bubble_shooter.js', version: '0.1.0', author: 'mod', description: 'バブルを撃って3つ揃えで消去。浮いたバブルはまとめて落下', category: 'パズル' },
+  { id: 'piano_tiles', name: 'リズムタイル', entry: 'games/piano_tiles.js', version: '0.1.0', author: 'mod', description: 'ピアノタイル風の4レーン譜面。タップとホールドをタイミング良く決めてコンボを伸ばそう', category: 'リズム' },
   { id: 'river_crossing', name: '川渡り',               entry: 'games/river_crossing.js',   version: '0.1.0', author: 'builtin', description: '1段前進+1／到達+50', category: 'アクション' },
   { id: 'whack_a_mole',  name: 'モグラたたき',         entry: 'games/whack_a_mole.js',     version: '0.1.0', author: 'builtin', description: '命中でEXP／連続命中ボーナス', category: 'アクション' },
   { id: 'steady_wire',   name: 'イライラ棒',           entry: 'games/steady_wire.js',      version: '0.1.0', author: 'mod', description: '毎回生成されるコースを外れず進むワイヤーループ。操作方法を選んで挑戦', category: 'アクション' },
@@ -60,5 +65,6 @@ window.MINIEXP_MANIFEST = [
   { id: 'gamble_hall',  name: 'ギャンブルホール',     entry: 'games/gamble_hall.js',  version: '0.1.0', author: 'mod', description: 'EXPを賭けるルーレットとパチンコスロットの複合MOD', category: 'ギャンブル' },
   { id: 'electro_instrument', name: '電子楽器スタジオ', entry: 'games/electro_instrument.js', version: '0.1.0', author: 'mod', description: 'ピアノ鍵盤と多彩な音色で自由に演奏し音ごとにEXP獲得', category: 'トイ' },
   { id: 'physics_sandbox', name: '物理遊び', entry: 'games/physics_sandbox.js', version: '0.1.0', author: 'mod', description: '火・水・ツタ・雷・回路を組み合わせるトイ系物理サンドボックス', category: 'トイ' },
-  { id: 'memo_studio', name: '暗記スタジオ', entry: 'games/memory_app.js', version: '0.1.0', author: 'mod', description: 'フラッシュカードを登録し間隔反復で学習する暗記アプリ', category: 'トイ' }
+  { id: 'memo_studio', name: '暗記スタジオ', entry: 'games/memory_app.js', version: '0.1.0', author: 'mod', description: 'フラッシュカードを登録し間隔反復で学習する暗記アプリ', category: 'トイ' },
+  { id: 'typing',      name: 'タイピングチャレンジ', entry: 'games/typing.js',      version: '0.1.0', author: 'mod', description: '60秒タイプで正確さとスピードを競うタイピングチャレンジ', category: 'スキル' },
 ];

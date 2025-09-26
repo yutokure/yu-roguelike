@@ -68,6 +68,13 @@
   };
   const DEFAULT_MATERIAL = 'wood';
 
+  const WALL_BODIES = {
+    left:  { id:'wall-left',  static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
+    right: { id:'wall-right', static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
+    top:   { id:'wall-top',   static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
+    bottom:{ id:'wall-bottom',static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.9,  absoluteWall:true }
+  };
+
   const TOOLS = [
     { id:'select', label:'選択', title:'図形やエミッタを選択・ドラッグ' },
     { id:'god-finger', label:'神の指', title:'シミュレーション中の物体を直接つかんで動かす' },
@@ -102,6 +109,86 @@
     };
     const a = parse(color); const b = parse(overlay);
     return `#${toHex(lerp(a[0],b[0],amt))}${toHex(lerp(a[1],b[1],amt))}${toHex(lerp(a[2],b[2],amt))}`;
+  }
+
+  function normalizeAngle(angle){
+    if (!Number.isFinite(angle)) return 0;
+    return Math.atan2(Math.sin(angle), Math.cos(angle));
+  }
+
+  function bodyAxes(body){
+    const angle = normalizeAngle(body?.angle || 0);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return {
+      axisX:{ x:cos, y:sin },
+      axisY:{ x:-sin, y:cos }
+    };
+  }
+
+  function worldToLocal(body, x, y){
+    const angle = normalizeAngle(body?.angle || 0);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const dx = x - body.x;
+    const dy = y - body.y;
+    return {
+      x: dx * cos + dy * sin,
+      y: -dx * sin + dy * cos
+    };
+  }
+
+  function localToWorld(body, x, y){
+    const angle = normalizeAngle(body?.angle || 0);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return {
+      x: body.x + x * cos - y * sin,
+      y: body.y + x * sin + y * cos
+    };
+  }
+
+  function getBodySupportPoint(body, dir){
+    const len = Math.hypot(dir.x, dir.y) || 1;
+    const unit = { x: dir.x / len, y: dir.y / len };
+    if (body.shape === 'circle') {
+      return {
+        x: body.x + unit.x * body.radius,
+        y: body.y + unit.y * body.radius
+      };
+    }
+    const { axisX, axisY } = bodyAxes(body);
+    const halfW = (body.width || 0) / 2;
+    const halfH = (body.height || 0) / 2;
+    const projX = unit.x * axisX.x + unit.y * axisX.y;
+    const projY = unit.x * axisY.x + unit.y * axisY.y;
+    const signX = projX >= 0 ? 1 : -1;
+    const signY = projY >= 0 ? 1 : -1;
+    return {
+      x: body.x + axisX.x * halfW * signX + axisY.x * halfH * signY,
+      y: body.y + axisX.y * halfW * signX + axisY.y * halfH * signY
+    };
+  }
+
+  function orientedExtents(body){
+    if (body.shape === 'circle') {
+      return { halfX: body.radius, halfY: body.radius };
+    }
+    const { axisX, axisY } = bodyAxes(body);
+    const halfW = (body.width || 0) / 2;
+    const halfH = (body.height || 0) / 2;
+    return {
+      halfX: Math.abs(axisX.x) * halfW + Math.abs(axisY.x) * halfH,
+      halfY: Math.abs(axisX.y) * halfW + Math.abs(axisY.y) * halfH
+    };
+  }
+
+  function cross2D(a,b){
+    return (a.x * b.y) - (a.y * b.x);
+  }
+
+  function crossScalarVec(s, v){
+    return { x: -s * v.y, y: s * v.x };
   }
 
   const PHASE_LABELS = { solid:'固体', liquid:'液体', gas:'気体' };
@@ -318,6 +405,12 @@
         material: params?.material || DEFAULT_MATERIAL,
         mass: 1,
         invMass: 1,
+        inertia: 1,
+        invInertia: 1,
+        boundingRadius: params?.radius ?? Math.hypot((params?.width ?? 80)/2, (params?.height ?? 80)/2),
+        angle: params?.angle ?? 0,
+        angularVelocity: params?.angularVelocity ?? 0,
+        torque: 0,
         restitution: params?.restitution ?? 0.3,
         friction: params?.friction ?? 0.4,
         color: params?.color || MATERIALS[params?.material || DEFAULT_MATERIAL]?.color || '#8884d8',
@@ -339,12 +432,12 @@
         baseRestitution: params?.restitution ?? 0.3,
         baseFriction: params?.friction ?? 0.4
       });
-      applyMaterial(body, body.material);
       if (kind === 'circle') body.radius = clamp(body.radius, 8, 160);
       else {
         body.width = clamp(body.width, 20, 240);
         body.height = clamp(body.height, 20, 240);
       }
+      applyMaterial(body, body.material);
       state.bodies.push(body);
       selectObject(body, 'body');
       renderInspector();
@@ -377,6 +470,44 @@
       return emitter;
     }
 
+    function updateBodyMassProperties(body){
+      if (!body) return;
+      const mat = MATERIALS[body.material] || MATERIALS[DEFAULT_MATERIAL];
+      const area = body.shape === 'circle'
+        ? Math.PI * (body.radius || 0) * (body.radius || 0)
+        : (body.width || 0) * (body.height || 0);
+      const density = mat?.density ?? 1;
+      const mass = Math.max(0.05, area * density * 0.001);
+      body.mass = (body.static || body.absoluteWall) ? Infinity : mass;
+      body.invMass = (body.static || body.absoluteWall) ? 0 : (1 / mass);
+      if (body.shape === 'circle') {
+        const inertia = 0.5 * mass * Math.pow(body.radius || 0, 2);
+        if (body.static || body.absoluteWall) {
+          body.inertia = Infinity;
+          body.invInertia = 0;
+        } else {
+          body.inertia = Math.max(inertia, 1e-6);
+          body.invInertia = 1 / body.inertia;
+        }
+        body.boundingRadius = body.radius || 0;
+      } else {
+        const w = body.width || 0;
+        const h = body.height || 0;
+        const inertia = (mass * (w*w + h*h)) / 12;
+        if (body.static || body.absoluteWall) {
+          body.inertia = Infinity;
+          body.invInertia = 0;
+        } else {
+          body.inertia = Math.max(inertia, 1e-6);
+          body.invInertia = 1 / body.inertia;
+        }
+        body.boundingRadius = Math.hypot(w/2, h/2);
+      }
+      if (typeof body.angle !== 'number' || !Number.isFinite(body.angle)) body.angle = 0;
+      if (typeof body.angularVelocity !== 'number' || !Number.isFinite(body.angularVelocity)) body.angularVelocity = 0;
+      if (typeof body.torque !== 'number' || !Number.isFinite(body.torque)) body.torque = 0;
+    }
+
     function applyMaterial(body, materialId){
       const mat = MATERIALS[materialId] || MATERIALS[DEFAULT_MATERIAL];
       const hadTemp = typeof body.temperature === 'number' && Number.isFinite(body.temperature);
@@ -396,11 +527,6 @@
       body.boilingPoint = mat.boilingPoint ?? body.boilingPoint ?? (body.meltingPoint + 400);
       body.freezePoint = mat.freezePoint ?? body.freezePoint ?? Math.max(-120, body.meltingPoint - 200);
       body.baseTemperature = mat.baseTemperature ?? state.ambientTemperature;
-      const area = body.shape === 'circle' ? Math.PI * body.radius * body.radius : body.width * body.height;
-      const density = mat.density;
-      const mass = Math.max(0.05, area * density * 0.001);
-      body.mass = body.static ? Infinity : mass;
-      body.invMass = body.static ? 0 : (1 / mass);
       body.phase = body.phase || 'solid';
       if (body.absoluteWall) {
         body.static = true;
@@ -411,6 +537,7 @@
         body.baseRestitution = 0;
         body.baseFriction = 0.98;
       }
+      updateBodyMassProperties(body);
       body.temperature = body.absoluteWall ? state.ambientTemperature : (hadTemp ? prevTemp : body.baseTemperature);
     }
 
@@ -475,8 +602,11 @@
           const dx = x - b.x;
           const dy = y - b.y;
           if (Math.hypot(dx, dy) <= b.radius) return { obj:b, kind:'body' };
-        } else if (Math.abs(x - b.x) <= b.width/2 && Math.abs(y - b.y) <= b.height/2) {
-          return { obj:b, kind:'body' };
+        } else {
+          const local = worldToLocal(b, x, y);
+          if (Math.abs(local.x) <= (b.width/2) && Math.abs(local.y) <= (b.height/2)) {
+            return { obj:b, kind:'body' };
+          }
         }
       }
       return null;
@@ -505,8 +635,9 @@
           selectObject(body, 'body');
           const offsetX = pos.x - body.x;
           const offsetY = pos.y - body.y;
-          const halfW = body.shape === 'circle' ? body.radius : body.width/2;
-          const halfH = body.shape === 'circle' ? body.radius : body.height/2;
+          const ext = orientedExtents(body);
+          const halfW = ext.halfX;
+          const halfH = ext.halfY;
           dragInfo = { id: body.id, kind:'body', mode:'god', offsetX, offsetY };
           state.godFinger = {
             id: body.id,
@@ -559,8 +690,9 @@
         if (dragInfo.mode === 'god') {
           const body = state.bodies.find(b => b.id === dragInfo.id);
           if (!body) { state.godFinger = null; return; }
-          const halfW = body.shape === 'circle' ? body.radius : body.width/2;
-          const halfH = body.shape === 'circle' ? body.radius : body.height/2;
+          const ext = orientedExtents(body);
+          const halfW = ext.halfX;
+          const halfH = ext.halfY;
           const targetX = clamp(pos.x - dragInfo.offsetX, halfW, state.bounds.width - halfW);
           const targetY = clamp(pos.y - dragInfo.offsetY, halfH, state.bounds.height - halfH);
           state.godFinger = Object.assign(state.godFinger || {}, {
@@ -576,8 +708,9 @@
         } else if (dragInfo.kind === 'body') {
           const body = state.bodies.find(b => b.id === dragInfo.id);
           if (body) {
-            const halfW = body.shape === 'circle' ? body.radius : body.width/2;
-            const halfH = body.shape === 'circle' ? body.radius : body.height/2;
+            const ext = orientedExtents(body);
+            const halfW = ext.halfX;
+            const halfH = ext.halfY;
             const targetX = clamp(pos.x - dragInfo.offsetX, halfW, state.bounds.width - halfW);
             const targetY = clamp(pos.y - dragInfo.offsetY, halfH, state.bounds.height - halfH);
             body.x = targetX;
@@ -1201,10 +1334,12 @@
         else state.collisionCooldown.set(key, remain);
       }
       for (const body of state.bodies){
+        body.torque = 0;
         if (state.godFinger && state.godFinger.id === body.id) {
           const gf = state.godFinger;
-          const halfW = body.shape === 'circle' ? body.radius : body.width/2;
-          const halfH = body.shape === 'circle' ? body.radius : body.height/2;
+          const ext = orientedExtents(body);
+          const halfW = ext.halfX;
+          const halfH = ext.halfY;
           const targetX = clamp((gf.targetX ?? body.x), halfW, state.bounds.width - halfW);
           const targetY = clamp((gf.targetY ?? body.y), halfH, state.bounds.height - halfH);
           if (body.static || body.absoluteWall) {
@@ -1223,6 +1358,16 @@
               body.vx *= (1 - clamp(10 * dt, 0, 0.9));
               body.vy *= (1 - clamp(10 * dt, 0, 0.9));
             }
+            if (Number.isFinite(body.invInertia) && body.invInertia > 0) {
+              const pointerX = gf.pointerX ?? (body.x + gf.offsetX);
+              const pointerY = gf.pointerY ?? (body.y + gf.offsetY);
+              const rx = pointerX - body.x;
+              const ry = pointerY - body.y;
+              const forceX = dx * stiffness * (body.mass === Infinity ? 0 : body.mass);
+              const forceY = dy * stiffness * (body.mass === Infinity ? 0 : body.mass);
+              const torque = rx * forceY - ry * forceX;
+              body.torque += torque;
+            }
           }
         }
         if (!body.static) {
@@ -1239,6 +1384,29 @@
             body.vx *= (1 - 0.35 * damp * dt);
             body.vy *= (1 - 0.35 * damp * dt);
           }
+          if (Number.isFinite(body.invInertia) && body.invInertia > 0) {
+            body.angularVelocity += (body.torque || 0) * body.invInertia * dt;
+            if (body.chargeTimer > 0) {
+              body.angularVelocity += (Math.random()-0.5) * 24 * dt;
+            }
+            const speed = Math.hypot(body.vx, body.vy);
+            if (body.shape === 'box' && speed > 6) {
+              const desired = Math.atan2(body.vy, body.vx);
+              let diff = normalizeAngle(desired - body.angle);
+              diff = clamp(diff, -Math.PI/2, Math.PI/2);
+              body.angularVelocity += diff * clamp(speed / 140, -2, 2) * (state.airDrag + 0.05);
+            }
+            const angularDrag = clamp(state.airDrag * 1.8 + body.vineGrip * 0.08, 0, 6);
+            body.angularVelocity *= (1 - clamp(angularDrag * dt, 0, 0.9));
+            if (body.freezeTimer > 0) {
+              const damp = clamp(body.freezeTimer / 12, 0, 1);
+              body.angularVelocity *= (1 - clamp(damp * 0.6 * dt, 0, 0.9));
+            }
+            body.angle = normalizeAngle(body.angle + body.angularVelocity * dt);
+          } else {
+            body.angularVelocity = 0;
+            body.angle = normalizeAngle(body.angle || 0);
+          }
           body.x += body.vx * dt;
           body.y += body.vy * dt;
         }
@@ -1249,17 +1417,7 @@
         body.freezeTimer = Math.max(0, body.freezeTimer - dt * 0.6);
         body.corrosion = Math.max(0, body.corrosion - dt * 0.2);
         if (!body.static) {
-          if (body.shape === 'circle') {
-            if (body.x - body.radius < 0) { body.x = body.radius; body.vx = Math.abs(body.vx) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vx)); }
-            if (body.x + body.radius > state.bounds.width) { body.x = state.bounds.width - body.radius; body.vx = -Math.abs(body.vx) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vx)); }
-            if (body.y - body.radius < 0) { body.y = body.radius; body.vy = Math.abs(body.vy) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vy)); }
-            if (body.y + body.radius > state.bounds.height) { body.y = state.bounds.height - body.radius; body.vy = -Math.abs(body.vy) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vy)); }
-          } else {
-            if (body.x - body.width/2 < 0) { body.x = body.width/2; body.vx = Math.abs(body.vx) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vx)); }
-            if (body.x + body.width/2 > state.bounds.width) { body.x = state.bounds.width - body.width/2; body.vx = -Math.abs(body.vx) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vx)); }
-            if (body.y - body.height/2 < 0) { body.y = body.height/2; body.vy = Math.abs(body.vy) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vy)); }
-            if (body.y + body.height/2 > state.bounds.height) { body.y = state.bounds.height - body.height/2; body.vy = -Math.abs(body.vy) * body.restitution; registerCollisionXp(body, null, Math.abs(body.vy)); }
-          }
+          resolveBoundaryCollisions(body);
         }
         if (!body.static && body.burnTimer > 12) {
           const shrink = 1 - 0.002 * dt * 60;
@@ -1492,12 +1650,7 @@
               body.width = Math.max(12, body.width * (1 - shrink));
               body.height = Math.max(12, body.height * (1 - shrink));
             }
-            const mat = MATERIALS[body.material] || MATERIALS[DEFAULT_MATERIAL];
-            const area = body.shape === 'circle' ? Math.PI * body.radius * body.radius : body.width * body.height;
-            const density = mat?.density ?? 1;
-            const mass = Math.max(0.05, area * density * 0.001);
-            body.mass = body.static ? Infinity : mass;
-            body.invMass = body.static ? 0 : (1 / mass);
+            updateBodyMassProperties(body);
           }
         } else {
           body.restitution = lerp(body.restitution, baseRest, clamp(5*dt, 0, 1));
@@ -1520,6 +1673,35 @@
         }
       }
       processParticleReactions(dt, waters, fires, acids, ices);
+    }
+
+    function resolveBoundaryCollisions(body){
+      if (!body) return;
+      const bounds = state.bounds;
+      const leftSupport = getBodySupportPoint(body, { x:-1, y:0 });
+      if (leftSupport.x < 0) {
+        const penetration = -leftSupport.x;
+        const contact = { x: 0, y: clamp(leftSupport.y, 0, bounds.height) };
+        resolveContact(body, WALL_BODIES.left, { x:-1, y:0 }, penetration, contact);
+      }
+      const rightSupport = getBodySupportPoint(body, { x:1, y:0 });
+      if (rightSupport.x > bounds.width) {
+        const penetration = rightSupport.x - bounds.width;
+        const contact = { x: bounds.width, y: clamp(rightSupport.y, 0, bounds.height) };
+        resolveContact(body, WALL_BODIES.right, { x:1, y:0 }, penetration, contact);
+      }
+      const topSupport = getBodySupportPoint(body, { x:0, y:-1 });
+      if (topSupport.y < 0) {
+        const penetration = -topSupport.y;
+        const contact = { x: clamp(topSupport.x, 0, bounds.width), y: 0 };
+        resolveContact(body, WALL_BODIES.top, { x:0, y:-1 }, penetration, contact);
+      }
+      const bottomSupport = getBodySupportPoint(body, { x:0, y:1 });
+      if (bottomSupport.y > bounds.height) {
+        const penetration = bottomSupport.y - bounds.height;
+        const contact = { x: clamp(bottomSupport.x, 0, bounds.width), y: bounds.height };
+        resolveContact(body, WALL_BODIES.bottom, { x:0, y:1 }, penetration, contact);
+      }
     }
 
     function resolveCollisions(iterations){
@@ -1547,97 +1729,195 @@
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const dist = Math.hypot(dx, dy);
-      const minDist = a.radius + b.radius;
+      const minDist = (a.radius || 0) + (b.radius || 0);
       if (dist >= minDist || dist === 0) return;
       const nx = dx / dist;
       const ny = dy / dist;
       const penetration = minDist - dist;
-      const invMassSum = a.invMass + b.invMass;
-      if (invMassSum > 0){
-        if (!a.static) { a.x -= nx * penetration * (a.invMass / invMassSum); a.y -= ny * penetration * (a.invMass / invMassSum); }
-        if (!b.static) { b.x += nx * penetration * (b.invMass / invMassSum); b.y += ny * penetration * (b.invMass / invMassSum); }
-      }
-      const rvx = b.vx - a.vx;
-      const rvy = b.vy - a.vy;
-      const velAlongNormal = rvx * nx + rvy * ny;
-      if (velAlongNormal > 0) return;
-      const restitution = Math.min(a.restitution, b.restitution);
-      let impulse = -(1 + restitution) * velAlongNormal;
-      impulse /= invMassSum || 1;
-      const ix = impulse * nx;
-      const iy = impulse * ny;
-      if (!a.static) { a.vx -= ix * a.invMass; a.vy -= iy * a.invMass; }
-      if (!b.static) { b.vx += ix * b.invMass; b.vy += iy * b.invMass; }
-      applyFrictionImpulse(a,b,nx,ny,invMassSum, Math.abs(impulse));
-      registerCollisionXp(a,b, Math.abs(impulse));
+      const pointA = { x: a.x + nx * (a.radius || 0), y: a.y + ny * (a.radius || 0) };
+      const pointB = { x: b.x - nx * (b.radius || 0), y: b.y - ny * (b.radius || 0) };
+      const contact = { x: (pointA.x + pointB.x) / 2, y: (pointA.y + pointB.y) / 2 };
+      resolveContact(a, b, { x:nx, y:ny }, penetration, contact);
+    }
+
+    function projectBoxOntoAxis(box, axis){
+      const { axisX, axisY } = bodyAxes(box);
+      const halfW = (box.width || 0) / 2;
+      const halfH = (box.height || 0) / 2;
+      const centerProj = box.x * axis.x + box.y * axis.y;
+      const extent = halfW * Math.abs(axis.x * axisX.x + axis.y * axisX.y)
+        + halfH * Math.abs(axis.x * axisY.x + axis.y * axisY.y);
+      return { min: centerProj - extent, max: centerProj + extent };
     }
 
     function resolveBoxBox(a,b){
-      const dx = b.x - a.x;
-      const px = (b.width/2 + a.width/2) - Math.abs(dx);
-      if (px <= 0) return;
-      const dy = b.y - a.y;
-      const py = (b.height/2 + a.height/2) - Math.abs(dy);
-      if (py <= 0) return;
-      const invMassSum = a.invMass + b.invMass;
-      const restitution = Math.min(a.restitution, b.restitution);
-      if (px < py) {
-        const sx = Math.sign(dx) || 1;
-        separateAlongAxis(a,b, px, sx, 0);
-        const rvx = (b.vx - a.vx) * sx;
-        const impulse = -(1 + restitution) * rvx / (invMassSum || 1);
-        if (!a.static) a.vx -= impulse * a.invMass * sx;
-        if (!b.static) b.vx += impulse * b.invMass * sx;
-        applyFrictionImpulse(a,b,sx,0,invMassSum, Math.abs(impulse));
-        registerCollisionXp(a,b, Math.abs(impulse));
-      } else {
-        const sy = Math.sign(dy) || 1;
-        separateAlongAxis(a,b, py, 0, sy);
-        const rvy = (b.vy - a.vy) * sy;
-        const impulse = -(1 + restitution) * rvy / (invMassSum || 1);
-        if (!a.static) a.vy -= impulse * a.invMass * sy;
-        if (!b.static) b.vy += impulse * b.invMass * sy;
-        applyFrictionImpulse(a,b,0,sy,invMassSum, Math.abs(impulse));
-        registerCollisionXp(a,b, Math.abs(impulse));
+      const axes = [];
+      const axesA = bodyAxes(a);
+      const axesB = bodyAxes(b);
+      axes.push(axesA.axisX, axesA.axisY, axesB.axisX, axesB.axisY);
+      let minOverlap = Infinity;
+      let smallestAxis = null;
+      const centerDiff = { x: b.x - a.x, y: b.y - a.y };
+      for (const axis of axes){
+        const len = Math.hypot(axis.x, axis.y);
+        if (len === 0) continue;
+        const unit = { x: axis.x / len, y: axis.y / len };
+        const projA = projectBoxOntoAxis(a, unit);
+        const projB = projectBoxOntoAxis(b, unit);
+        const overlap = Math.min(projA.max, projB.max) - Math.max(projA.min, projB.min);
+        if (overlap <= 0) return;
+        if (overlap < minOverlap) {
+          minOverlap = overlap;
+          smallestAxis = unit;
+        }
       }
-    }
-
-    function separateAlongAxis(a,b, penetration, nx, ny){
-      const invMassSum = a.invMass + b.invMass;
-      if (invMassSum <= 0) return;
-      if (!a.static) { a.x -= nx * penetration * (a.invMass / invMassSum); a.y -= ny * penetration * (a.invMass / invMassSum); }
-      if (!b.static) { b.x += nx * penetration * (b.invMass / invMassSum); b.y += ny * penetration * (b.invMass / invMassSum); }
+      if (!smallestAxis || !Number.isFinite(minOverlap)) return;
+      let normal = smallestAxis;
+      if ((centerDiff.x * normal.x + centerDiff.y * normal.y) < 0) {
+        normal = { x: -normal.x, y: -normal.y };
+      }
+      const supportA = getBodySupportPoint(a, normal);
+      const supportB = getBodySupportPoint(b, { x:-normal.x, y:-normal.y });
+      const contact = { x: (supportA.x + supportB.x) / 2, y: (supportA.y + supportB.y) / 2 };
+      resolveContact(a, b, normal, minOverlap, contact);
     }
 
     function resolveCircleBox(circle, box){
-      const closestX = clamp(circle.x, box.x - box.width/2, box.x + box.width/2);
-      const closestY = clamp(circle.y, box.y - box.height/2, box.y + box.height/2);
-      const dx = circle.x - closestX;
-      const dy = circle.y - closestY;
-      const distSq = dx*dx + dy*dy;
-      if (distSq > circle.radius * circle.radius) return;
-      const dist = Math.sqrt(distSq) || 0.0001;
-      const nx = dx / dist;
-      const ny = dy / dist;
-      const penetration = circle.radius - dist;
-      const invMassSum = circle.invMass + box.invMass;
-      if (invMassSum > 0){
-        if (!circle.static) { circle.x += nx * penetration * (circle.invMass / invMassSum); circle.y += ny * penetration * (circle.invMass / invMassSum); }
-        if (!box.static) { box.x -= nx * penetration * (box.invMass / invMassSum); box.y -= ny * penetration * (box.invMass / invMassSum); }
+      const cos = Math.cos(box.angle || 0);
+      const sin = Math.sin(box.angle || 0);
+      const dx = circle.x - box.x;
+      const dy = circle.y - box.y;
+      const localX = cos * dx + sin * dy;
+      const localY = -sin * dx + cos * dy;
+      const halfW = (box.width || 0) / 2;
+      const halfH = (box.height || 0) / 2;
+      let closestX = clamp(localX, -halfW, halfW);
+      let closestY = clamp(localY, -halfH, halfH);
+      let diffX = localX - closestX;
+      let diffY = localY - closestY;
+      let distSq = diffX*diffX + diffY*diffY;
+      let normalLocal;
+      let penetration;
+      if (distSq < 1e-8) {
+        const dxEdge = halfW - Math.abs(localX);
+        const dyEdge = halfH - Math.abs(localY);
+        if (dxEdge < dyEdge) {
+          const sx = localX >= 0 ? 1 : -1;
+          normalLocal = { x: sx, y: 0 };
+          penetration = (circle.radius || 0) - dxEdge;
+          closestX = sx * halfW;
+          closestY = clamp(localY, -halfH, halfH);
+        } else {
+          const sy = localY >= 0 ? 1 : -1;
+          normalLocal = { x: 0, y: sy };
+          penetration = (circle.radius || 0) - dyEdge;
+          closestX = clamp(localX, -halfW, halfW);
+          closestY = sy * halfH;
+        }
+        distSq = 1;
+      } else {
+        const dist = Math.sqrt(distSq);
+        normalLocal = { x: diffX / dist, y: diffY / dist };
+        penetration = (circle.radius || 0) - dist;
       }
-      const rvx = box.vx - circle.vx;
-      const rvy = box.vy - circle.vy;
-      const velAlongNormal = rvx * nx + rvy * ny;
+      if (penetration <= 0) return;
+      const normalWorld = {
+        x: cos * normalLocal.x - sin * normalLocal.y,
+        y: sin * normalLocal.x + cos * normalLocal.y
+      };
+      const normal = { x: -normalWorld.x, y: -normalWorld.y };
+      const boxPoint = localToWorld(box, closestX, closestY);
+      const circlePoint = {
+        x: circle.x + normal.x * (circle.radius || 0),
+        y: circle.y + normal.y * (circle.radius || 0)
+      };
+      const contact = { x: (boxPoint.x + circlePoint.x) / 2, y: (boxPoint.y + circlePoint.y) / 2 };
+      resolveContact(circle, box, normal, penetration, contact);
+    }
+
+    function resolveContact(a,b, normal, penetration, contactPoint){
+      if ((!a || a.static) && (!b || b.static)) return;
+      if (penetration <= 0) return;
+      const invMassA = a?.invMass || 0;
+      const invMassB = b?.invMass || 0;
+      const invInertiaA = a?.invInertia || 0;
+      const invInertiaB = b?.invInertia || 0;
+      if ((invMassA + invMassB + invInertiaA + invInertiaB) <= 0) return;
+      const rA = a ? { x: contactPoint.x - a.x, y: contactPoint.y - a.y } : { x:0, y:0 };
+      const rB = b ? { x: contactPoint.x - b.x, y: contactPoint.y - b.y } : { x:0, y:0 };
+
+      const totalInvMass = invMassA + invMassB;
+      if (totalInvMass > 0) {
+        const percent = 0.6;
+        const slop = 0.01;
+        const correctionMag = Math.max(penetration - slop, 0) / totalInvMass * percent;
+        if (a && !a.static) {
+          a.x -= normal.x * correctionMag * invMassA;
+          a.y -= normal.y * correctionMag * invMassA;
+        }
+        if (b && !b.static) {
+          b.x += normal.x * correctionMag * invMassB;
+          b.y += normal.y * correctionMag * invMassB;
+        }
+      }
+
+      const angVelA = a?.angularVelocity || 0;
+      const angVelB = b?.angularVelocity || 0;
+      const velA = a ? { x: a.vx + (-angVelA * rA.y), y: a.vy + (angVelA * rA.x) } : { x:0, y:0 };
+      const velB = b ? { x: b.vx + (-angVelB * rB.y), y: b.vy + (angVelB * rB.x) } : { x:0, y:0 };
+      const rv = { x: velB.x - velA.x, y: velB.y - velA.y };
+      const velAlongNormal = rv.x * normal.x + rv.y * normal.y;
       if (velAlongNormal > 0) return;
-      const restitution = Math.min(circle.restitution, box.restitution);
-      let impulse = -(1 + restitution) * velAlongNormal;
-      impulse /= invMassSum || 1;
-      const ix = impulse * nx;
-      const iy = impulse * ny;
-      if (!circle.static) { circle.vx -= ix * circle.invMass; circle.vy -= iy * circle.invMass; }
-      if (!box.static) { box.vx += ix * box.invMass; box.vy += iy * box.invMass; }
-      applyFrictionImpulse(circle, box, nx, ny, invMassSum, Math.abs(impulse));
-      registerCollisionXp(circle, box, Math.abs(impulse));
+
+      const restitution = Math.min(a?.restitution ?? 0.2, b?.restitution ?? 0.2);
+      let j = -(1 + restitution) * velAlongNormal;
+      let denom = invMassA + invMassB;
+      denom += invInertiaA * Math.pow(cross2D(rA, normal), 2);
+      denom += invInertiaB * Math.pow(cross2D(rB, normal), 2);
+      if (denom <= 0) return;
+      j /= denom;
+
+      const impulse = { x: normal.x * j, y: normal.y * j };
+      if (a && !a.static) {
+        a.vx -= impulse.x * invMassA;
+        a.vy -= impulse.y * invMassA;
+        if (invInertiaA > 0) a.angularVelocity -= cross2D(rA, impulse) * invInertiaA;
+      }
+      if (b && !b.static) {
+        b.vx += impulse.x * invMassB;
+        b.vy += impulse.y * invMassB;
+        if (invInertiaB > 0) b.angularVelocity += cross2D(rB, impulse) * invInertiaB;
+      }
+
+      const tangent = { x: rv.x - velAlongNormal * normal.x, y: rv.y - velAlongNormal * normal.y };
+      const tLen = Math.hypot(tangent.x, tangent.y);
+      if (tLen > 1e-6) {
+        tangent.x /= tLen;
+        tangent.y /= tLen;
+        const vt = rv.x * tangent.x + rv.y * tangent.y;
+        let denomF = invMassA + invMassB;
+        denomF += invInertiaA * Math.pow(cross2D(rA, tangent), 2);
+        denomF += invInertiaB * Math.pow(cross2D(rB, tangent), 2);
+        if (denomF > 0) {
+          let jt = -vt / denomF;
+          const mu = Math.sqrt(effectiveFriction(a) * effectiveFriction(b));
+          const maxFriction = Math.abs(j) * mu;
+          jt = clamp(jt, -maxFriction, maxFriction);
+          const frictionImpulse = { x: tangent.x * jt, y: tangent.y * jt };
+          if (a && !a.static) {
+            a.vx -= frictionImpulse.x * invMassA;
+            a.vy -= frictionImpulse.y * invMassA;
+            if (invInertiaA > 0) a.angularVelocity -= cross2D(rA, frictionImpulse) * invInertiaA;
+          }
+          if (b && !b.static) {
+            b.vx += frictionImpulse.x * invMassB;
+            b.vy += frictionImpulse.y * invMassB;
+            if (invInertiaB > 0) b.angularVelocity += cross2D(rB, frictionImpulse) * invInertiaB;
+          }
+        }
+      }
+
+      registerCollisionXp(a, b, Math.abs(j));
     }
 
     function effectiveFriction(body){
@@ -1647,35 +1927,6 @@
       if (body.freezeTimer > 0.5) value *= 0.7;
       if (body.vineGrip > 0.5) value *= 1.15;
       return clamp(value, 0, 1.2);
-    }
-
-    function applyFrictionImpulse(a,b,nx,ny,invMassSum, normalImpulse){
-      if (!a || !b) return;
-      if ((a.static && b.static) || invMassSum <= 0) return;
-      const rvx = b.vx - a.vx;
-      const rvy = b.vy - a.vy;
-      const velAlongNormal = rvx * nx + rvy * ny;
-      const tx = rvx - velAlongNormal * nx;
-      const ty = rvy - velAlongNormal * ny;
-      const len = Math.hypot(tx, ty);
-      if (len < 1e-6) return;
-      const tangentX = tx / len;
-      const tangentY = ty / len;
-      const vt = rvx * tangentX + rvy * tangentY;
-      if (Math.abs(vt) < 1e-4) return;
-      const mu = Math.sqrt(effectiveFriction(a) * effectiveFriction(b));
-      let jt = -vt;
-      jt /= invMassSum || 1;
-      const maxFriction = normalImpulse * mu;
-      jt = clamp(jt, -maxFriction, maxFriction);
-      if (!a.static) {
-        a.vx -= jt * tangentX * a.invMass;
-        a.vy -= jt * tangentY * a.invMass;
-      }
-      if (!b.static) {
-        b.vx += jt * tangentX * b.invMass;
-        b.vy += jt * tangentY * b.invMass;
-      }
     }
 
     function registerCollisionXp(a,b, impulse){
@@ -1859,6 +2110,9 @@
 
       const massLabel = document.createElement('label');
       massLabel.textContent = `質量 (推定 ${body.mass.toFixed(2)})`;
+      const angleInfo = document.createElement('p');
+      angleInfo.className = 'phys-hint';
+      angleInfo.textContent = `角度 ${(normalizeAngle(body.angle || 0) * 180 / Math.PI).toFixed(1)}° / 角速度 ${(body.angularVelocity || 0).toFixed(2)}rad/s`;
       const staticToggle = document.createElement('label');
       staticToggle.className = 'phys-checkbox';
       const staticInput = document.createElement('input');
@@ -1894,7 +2148,7 @@
         fricInput.disabled = true;
       }
 
-      section.append(h, phaseInfo, matLabel, matSelect, massLabel, staticToggle, restLabel, restInput, fricLabel, fricInput);
+      section.append(h, phaseInfo, matLabel, matSelect, massLabel, angleInfo, staticToggle, restLabel, restInput, fricLabel, fricInput);
 
       if (body.absoluteWall) {
         const wallNote = document.createElement('p');
@@ -2069,11 +2323,47 @@
         ctx.fillStyle = fill;
         ctx.strokeStyle = body.absoluteWall ? 'rgba(148,163,184,0.6)' : (state.selection === body.id ? '#facc15' : 'rgba(15,23,42,0.8)');
         ctx.lineWidth = state.selection === body.id ? 3 : (body.absoluteWall ? 2.2 : 1.5);
+        ctx.save();
+        ctx.translate(body.x, body.y);
+        if (body.shape === 'box') ctx.rotate(body.angle || 0);
         if (body.shape === 'circle') {
-          ctx.beginPath(); ctx.arc(body.x, body.y, body.radius, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, body.radius, 0, Math.PI*2);
+          ctx.fill();
+          ctx.stroke();
         } else {
-          ctx.beginPath(); ctx.rect(body.x - body.width/2, body.y - body.height/2, body.width, body.height); ctx.fill(); ctx.stroke();
+          ctx.beginPath();
+          ctx.rect(-body.width/2, -body.height/2, body.width, body.height);
+          ctx.fill();
+          ctx.stroke();
         }
+        if (!body.absoluteWall) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(15,23,42,0.35)';
+          ctx.lineWidth = 2;
+          if (body.shape === 'circle') {
+            ctx.rotate(body.angle || 0);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.max(body.radius - 8, 12), 0);
+            ctx.stroke();
+          } else {
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.max(body.width, body.height) * 0.5, 0);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, Math.min(body.width, body.height) * 0.4);
+            ctx.stroke();
+          }
+          ctx.beginPath();
+          ctx.fillStyle = 'rgba(15,23,42,0.4)';
+          ctx.arc(0, 0, 3, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.restore();
         if (!body.absoluteWall) {
           const symbol = phaseSymbol(body.phase);
           if (symbol) {

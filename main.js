@@ -136,6 +136,226 @@ let __toolsTabInitialized = false;
 let __toolsInited = false;
 let modMakerRefs = null;
 
+const SANDBOX_DEFAULT_WIDTH = 21;
+const SANDBOX_DEFAULT_HEIGHT = 15;
+const SANDBOX_MIN_SIZE = 5;
+const SANDBOX_MAX_SIZE = 60;
+const SANDBOX_MAX_ENEMIES = 30;
+const SANDBOX_MAX_LEVEL = 999;
+
+const sandboxRuntime = {
+    active: false,
+    config: null,
+    snapshot: null,
+    expNoticeShown: false
+};
+
+function isSandboxActive() {
+    return !!(sandboxRuntime.active && sandboxRuntime.config);
+}
+
+function computeSandboxStats(levelInput) {
+    const lvl = clamp(1, SANDBOX_MAX_LEVEL, Math.floor(Number(levelInput) || 1));
+    const delta = lvl - 1;
+    return {
+        level: lvl,
+        maxHp: 100 + delta * 5,
+        attack: 10 + delta,
+        defense: 10 + delta
+    };
+}
+
+function sandboxNotifyNoExp() {
+    if (sandboxRuntime.expNoticeShown) return;
+    sandboxRuntime.expNoticeShown = true;
+    try {
+        addMessage('サンドボックスでは経験値は獲得できません。');
+    } catch {}
+}
+
+function sanitizeSandboxConfig(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const width = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(raw.width) || SANDBOX_DEFAULT_WIDTH));
+    const height = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(raw.height) || SANDBOX_DEFAULT_HEIGHT));
+    const grid = Array.from({ length: height }, (_, y) => {
+        const row = Array.from({ length: width }, (_, x) => {
+            const cell = raw.grid?.[y]?.[x];
+            return cell === 0 ? 0 : 1;
+        });
+        return row;
+    });
+    const normalizePos = (pos) => {
+        if (!pos) return null;
+        const x = Math.floor(Number(pos.x));
+        const y = Math.floor(Number(pos.y));
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        if (x < 0 || x >= width || y < 0 || y >= height) return null;
+        return { x, y };
+    };
+    let playerStart = normalizePos(raw.playerStart);
+    if (playerStart && grid[playerStart.y][playerStart.x] !== 0) playerStart = null;
+    let stairs = normalizePos(raw.stairs);
+    if (stairs && grid[stairs.y][stairs.x] !== 0) stairs = null;
+    const enemies = [];
+    if (Array.isArray(raw.enemies)) {
+        for (let i = 0; i < Math.min(raw.enemies.length, SANDBOX_MAX_ENEMIES); i++) {
+            const enemy = raw.enemies[i];
+            if (!enemy) continue;
+            const pos = normalizePos(enemy);
+            const level = clamp(1, SANDBOX_MAX_LEVEL, Math.floor(Number(enemy.level) || 1));
+            const hp = Math.max(1, Math.floor(Number(enemy.hp) || 1));
+            const attack = Math.max(0, Math.floor(Number(enemy.attack) || 0));
+            const defense = Math.max(0, Math.floor(Number(enemy.defense) || 0));
+            const name = typeof enemy.name === 'string' ? enemy.name.trim() : '';
+            enemies.push({
+                id: enemy.id || null,
+                name,
+                level,
+                hp,
+                attack,
+                defense,
+                boss: !!enemy.boss,
+                x: Number.isFinite(pos?.x) ? pos.x : null,
+                y: Number.isFinite(pos?.y) ? pos.y : null
+            });
+        }
+    }
+    const playerLevel = computeSandboxStats(raw.playerLevel).level;
+    return { width, height, grid, playerStart, stairs, enemies, playerLevel };
+}
+
+function validateSandboxConfig(config) {
+    const errors = [];
+    const warnings = [];
+    if (!config) {
+        errors.push('設定が読み取れませんでした。');
+        return { errors, warnings, config: null };
+    }
+    let floorCount = 0;
+    for (let y = 0; y < config.height; y++) {
+        for (let x = 0; x < config.width; x++) {
+            if (config.grid?.[y]?.[x] === 0) floorCount++;
+        }
+    }
+    if (floorCount === 0) {
+        errors.push('床マスが1つ以上必要です。');
+    }
+    if (!config.playerStart) {
+        errors.push('開始位置が設定されていません。');
+    } else if (config.grid?.[config.playerStart.y]?.[config.playerStart.x] !== 0) {
+        errors.push('開始位置は床マスに設定してください。');
+    }
+    if (config.stairs && config.grid?.[config.stairs.y]?.[config.stairs.x] !== 0) {
+        errors.push('階段は床マスにのみ設置できます。');
+    }
+    config.enemies.forEach((enemy, index) => {
+        if (enemy.x === null || enemy.y === null) {
+            errors.push(`敵${index + 1}の配置座標が未設定です。`);
+        } else if (config.grid?.[enemy.y]?.[enemy.x] !== 0) {
+            errors.push(`敵${index + 1}の配置は床マスに設定してください。`);
+        }
+        if (enemy.hp <= 0) {
+            errors.push(`敵${index + 1}のHPが無効です。`);
+        }
+    });
+    return { errors, warnings, config };
+}
+
+function captureSandboxSnapshot() {
+    sandboxRuntime.snapshot = {
+        player: JSON.parse(JSON.stringify(player)),
+        difficulty,
+        selectedWorld,
+        selectedDungeonBase,
+        dungeonLevel,
+        mode: currentMode,
+        selectionFooterCollapsed
+    };
+}
+
+function restoreSandboxSnapshotIfNeeded() {
+    if (!sandboxRuntime.active) return;
+    const snap = sandboxRuntime.snapshot;
+    if (snap?.player) {
+        const savedPlayer = snap.player;
+        Object.keys(player).forEach((key) => {
+            if (key === 'inventory') return;
+            if (Object.prototype.hasOwnProperty.call(savedPlayer, key)) {
+                player[key] = savedPlayer[key];
+            }
+        });
+        if (savedPlayer.inventory) {
+            player.inventory = JSON.parse(JSON.stringify(savedPlayer.inventory));
+        }
+    }
+    if (typeof snap?.difficulty !== 'undefined') difficulty = snap.difficulty;
+    if (typeof snap?.selectedWorld !== 'undefined') selectedWorld = snap.selectedWorld;
+    if (typeof snap?.selectedDungeonBase !== 'undefined') selectedDungeonBase = snap.selectedDungeonBase;
+    if (typeof snap?.dungeonLevel !== 'undefined') dungeonLevel = snap.dungeonLevel;
+    if (typeof snap?.selectionFooterCollapsed !== 'undefined') selectionFooterCollapsed = snap.selectionFooterCollapsed;
+    currentMode = snap?.mode || 'normal';
+    sandboxRuntime.active = false;
+    sandboxRuntime.config = null;
+    sandboxRuntime.snapshot = null;
+    sandboxRuntime.expNoticeShown = false;
+}
+
+function startSandboxGame(rawConfig) {
+    const sanitized = sanitizeSandboxConfig(rawConfig);
+    const validation = validateSandboxConfig(sanitized);
+    if (validation.errors.length) {
+        return { ok: false, errors: validation.errors, warnings: validation.warnings };
+    }
+    captureSandboxSnapshot();
+    sandboxRuntime.config = validation.config;
+    sandboxRuntime.active = true;
+    sandboxRuntime.expNoticeShown = false;
+
+    const stats = computeSandboxStats(validation.config.playerLevel);
+    player.level = stats.level;
+    player.maxHp = stats.maxHp;
+    player.hp = stats.maxHp;
+    player.attack = stats.attack;
+    player.defense = stats.defense;
+    player.exp = 0;
+
+    isGameOver = false;
+    playerTurn = true;
+
+    currentMode = 'sandbox';
+    restoreRandom();
+    dungeonLevel = 1;
+    updateMapSize();
+
+    if (selectionScreen) selectionScreen.style.display = 'none';
+    const tb = document.getElementById('toolbar');
+    if (tb) tb.style.display = 'flex';
+    if (gameScreen) gameScreen.style.display = 'block';
+    enterInGameLayout();
+
+    setTimeout(() => {
+        resizeCanvasToStage();
+        generateLevel();
+        updateUI();
+        try { addMessage('サンドボックスを開始しました。経験値は獲得できません。'); } catch {}
+        startGameLoop();
+    }, 100);
+
+    return { ok: true, errors: [], warnings: [] };
+}
+
+window.SandboxBridge = {
+    minSize: SANDBOX_MIN_SIZE,
+    maxSize: SANDBOX_MAX_SIZE,
+    maxLevel: SANDBOX_MAX_LEVEL,
+    maxEnemies: SANDBOX_MAX_ENEMIES,
+    computePlayerStats: computeSandboxStats,
+    sanitize: sanitizeSandboxConfig,
+    validate: (raw) => validateSandboxConfig(sanitizeSandboxConfig(raw)),
+    start: startSandboxGame,
+    isActive: () => isSandboxActive()
+};
+
 const MOD_MAKER_TEMPLATES = {
     blank: `function algorithm(ctx) {\n  const { width, height, map } = ctx;\n  for (let y = 1; y < height - 1; y++) {\n    for (let x = 1; x < width - 1; x++) {\n      map[y][x] = 0;\n    }\n  }\n  ctx.ensureConnectivity();\n}\n`,
     rooms: `function algorithm(ctx) {\n  const { width, height, map, random } = ctx;\n  const roomCount = Math.max(4, Math.floor((width + height) / 6));\n  const rooms = [];\n  for (let i = 0; i < roomCount; i++) {\n    const w = 4 + Math.floor(random() * 6);\n    const h = 4 + Math.floor(random() * 6);\n    const x = 2 + Math.floor(random() * Math.max(1, width - w - 4));\n    const y = 2 + Math.floor(random() * Math.max(1, height - h - 4));\n    rooms.push({ x, y, w, h });\n    for (let yy = y; yy < y + h; yy++) {\n      for (let xx = x; xx < x + w; xx++) map[yy][xx] = 0;\n    }\n  }\n  for (let i = 1; i < rooms.length; i++) {\n    const a = rooms[i - 1];\n    const b = rooms[i];\n    const ax = a.x + (a.w >> 1);\n    const ay = a.y + (a.h >> 1);\n    const bx = b.x + (b.w >> 1);\n    const by = b.y + (b.h >> 1);\n    for (let xx = Math.min(ax, bx); xx <= Math.max(ax, bx); xx++) map[ay][xx] = 0;\n    for (let yy = Math.min(ay, by); yy <= Math.max(ay, by); yy++) map[yy][bx] = 0;\n  }\n  ctx.ensureConnectivity();\n}\n`,
@@ -169,6 +389,11 @@ let modMakerCopyLabel = 'クリップボードにコピー';
 
 // マップサイズを階層に応じて更新（BlockDim の sizeFactor を反映）
 function updateMapSize() {
+    if (isSandboxActive()) {
+        MAP_WIDTH = sandboxRuntime.config.width;
+        MAP_HEIGHT = sandboxRuntime.config.height;
+        return;
+    }
     const baseSize = 15 + dungeonLevel * 5;
     let width = baseSize;
     let height = baseSize;
@@ -255,6 +480,8 @@ function showSelectionScreen(opts = {}) {
     try {
         if (stopLoop) stopGameLoop();
     } catch {}
+
+    restoreSandboxSnapshotIfNeeded();
 
     // 画面表示切り替え
     if (gameScreen) gameScreen.style.display = 'none';
@@ -570,6 +797,7 @@ function reseedBlockDimForFloor() {
 
 // BlockDim: フロア/ボス判定ユーティリティ
 function getMaxFloor() {
+    if (isSandboxActive()) return 1;
     if (currentMode === 'blockdim' && blockDimState?.spec) {
         return Math.max(1, Math.min(15, blockDimState.spec.depth || 10));
     }
@@ -588,6 +816,7 @@ function getMaxFloor() {
 }
 
 function isBossFloor(level) {
+    if (isSandboxActive()) return false;
     if (currentMode === 'blockdim' && blockDimState?.spec) {
         const list = blockDimState.spec.bossFloors || [];
         return list.includes(level);
@@ -2635,6 +2864,7 @@ function downloadModMakerOutput() {
 
 // 一元的なセーブ
 function saveAll() {
+    if (isSandboxActive()) return;
     try {
         localStorage.setItem('roguelike_save_v1', JSON.stringify({
             dungeonLevel,
@@ -2751,6 +2981,17 @@ function pickSpreadFloorPositions(count, minDist, exclude = []) {
 }
 
 function generateMap() {
+    if (isSandboxActive()) {
+        const cfg = sandboxRuntime.config;
+        MAP_WIDTH = cfg.width;
+        MAP_HEIGHT = cfg.height;
+        map = Array.from({ length: MAP_HEIGHT }, (_, y) => {
+            return Array.from({ length: MAP_WIDTH }, (_, x) => cfg.grid?.[y]?.[x] === 0 ? 0 : 1);
+        });
+        tileMeta = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
+        lastGeneratedGenType = 'sandbox';
+        return;
+    }
     map = [];
     tileMeta = [];
     for (let y = 0; y < MAP_HEIGHT; y++) {
@@ -4099,6 +4340,35 @@ function generateEntities() {
     items = [];
     chests = [];
 
+    if (isSandboxActive()) {
+        const cfg = sandboxRuntime.config;
+        let startPos = cfg.playerStart;
+        if (!startPos || map[startPos.y]?.[startPos.x] !== 0) {
+            startPos = randomFloorPosition();
+        }
+        player.x = startPos.x;
+        player.y = startPos.y;
+
+        for (const enemy of cfg.enemies) {
+            if (enemy.x === null || enemy.y === null) continue;
+            enemies.push({
+                x: enemy.x,
+                y: enemy.y,
+                level: enemy.level,
+                maxHp: enemy.hp,
+                hp: enemy.hp,
+                attack: enemy.attack,
+                defense: enemy.defense,
+                boss: !!enemy.boss,
+                name: enemy.name || undefined
+            });
+        }
+        stairs = cfg.stairs ? { x: cfg.stairs.x, y: cfg.stairs.y } : null;
+        bossAlive = enemies.some(e => e.boss);
+        updateCamera();
+        return;
+    }
+
     // Get current dungeon type (prefer last generated actual type in mixed)
     let genType = resolveCurrentGeneratorType() || 'field';
     // Override with actual type used by generateMap if available
@@ -4227,8 +4497,8 @@ function generateLevel() {
     generateMap();
     generateEntities();
     updateCamera();
-    bossAlive = false;
-    
+    bossAlive = isSandboxActive() ? enemies.some(e => e.boss) : false;
+
     // Boss room generation based on mode/spec
     const maxFloor = getMaxFloor();
     if (isBossFloor(dungeonLevel)) {
@@ -4450,6 +4720,9 @@ function showEnemyInfo(enemy) {
 }
 
 function recommendedLevelForSelection(world, baseLevel, floorIndex) {
+    if (isSandboxActive()) {
+        return sandboxRuntime.config?.playerLevel || 1;
+    }
     // BlockDim 優先
     if (currentMode === 'blockdim' && blockDimState?.spec) {
         return Math.max(1, blockDimState.spec.level || 1);
@@ -5422,7 +5695,7 @@ function applyPostMoveEffects() {
 
     if (isGameOver) return { continueSliding: false };
 
-    if (player.x === stairs.x && player.y === stairs.y) {
+    if (stairs && player.x === stairs.x && player.y === stairs.y) {
         const maxFloor = getMaxFloor();
         if (isBossFloor(dungeonLevel) && bossAlive) {
             addMessage('ボスを倒すまでは進めない！');
@@ -5791,6 +6064,10 @@ useDefBoostBtn && useDefBoostBtn.addEventListener('click', () => {
 });
 
 function grantExpFromEnemy(enemyLevel, isBoss = false) {
+    if (isSandboxActive()) {
+        sandboxNotifyNoExp();
+        return;
+    }
     const diff = enemyLevel - player.level;
     let gained = 0;
     if (diff >= 7) gained = 1200;
@@ -5860,6 +6137,10 @@ function spendExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
 }
 
 function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
+    if (isSandboxActive()) {
+        sandboxNotifyNoExp();
+        return 0;
+    }
     const v = Math.max(0, Number(amount) || 0);
     if (v <= 0) return 0;
     player.exp = (player.exp || 0) + v;

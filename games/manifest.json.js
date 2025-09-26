@@ -39,6 +39,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'calculator',  name: '電卓',             entry: 'games/calculator.js', version: '0.1.0', author: 'mod', description: 'ユーティリティ電卓。数字入力+1 / 計算確定+5EXP', category: 'ユーティリティ' },
   { id: 'timer',       name: 'タイマー',         entry: 'games/timer.js',      version: '0.1.0', author: 'mod', description: 'カウントダウンとストップウォッチで時間管理', category: 'ユーティリティ' },
   { id: 'math_lab',    name: '数学ラボ',         entry: 'games/math_lab.js',   version: '0.1.0', author: 'mod', description: '高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション', category: 'ユーティリティ' },
+  { id: 'blockcode',   name: 'ブロックコードラボ', entry: 'games/blockcode.js', version: '0.1.0', author: 'mod', description: 'Scratch風のブロックでミニゲームAPIを安全に試せるビジュアルプログラミング環境', category: 'ユーティリティ' },
   { id: 'wording',     name: 'Wording',         entry: 'games/wording.js',    version: '0.1.0', author: 'mod', description: '編集+1 / 書式+2 / 保存+6 EXP のワープロ', category: 'ユーティリティ' },
   { id: 'video_player', name: '動画プレイヤー', entry: 'games/video_player.js', version: '0.1.0', author: 'mod', description: 'ローカル動画とYouTubeの視聴でEXPを獲得できるユーティリティ', category: 'ユーティリティ' },
   { id: 'pomodoro',    name: 'ポモドーロタイマー', entry: 'games/pomodoro.js',  version: '0.1.0', author: 'mod', description: '集中と休憩のサイクル管理で完了ごとにEXPを得られるタイマー', category: 'ユーティリティ' },

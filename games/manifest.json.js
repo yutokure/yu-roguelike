@@ -35,6 +35,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'diagram_maker', name: 'ダイアグラムメーカー', entry: 'games/diagram_maker.js', version: '0.1.0', author: 'mod', description: 'draw.io XMLとPNG/JPG/BMP出力に対応した図表作成ユーティリティ', category: 'ユーティリティ' },
   { id: 'clock_hub',   name: '時計ハブ',         entry: 'games/clock_hub.js',  version: '0.1.0', author: 'mod', description: '多彩な時計と時間情報、節目EXPを備えたユーティリティ', category: 'ユーティリティ' },
   { id: 'calculator',  name: '電卓',             entry: 'games/calculator.js', version: '0.1.0', author: 'mod', description: 'ユーティリティ電卓。数字入力+1 / 計算確定+5EXP', category: 'ユーティリティ' },
+  { id: 'timer',       name: 'タイマー',         entry: 'games/timer.js',      version: '0.1.0', author: 'mod', description: 'カウントダウンとストップウォッチで時間管理', category: 'ユーティリティ' },
   { id: 'math_lab',    name: '数学ラボ',         entry: 'games/math_lab.js',   version: '0.1.0', author: 'mod', description: '高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション', category: 'ユーティリティ' },
   { id: 'wording',     name: 'Wording',         entry: 'games/wording.js',    version: '0.1.0', author: 'mod', description: '編集+1 / 書式+2 / 保存+6 EXP のワープロ', category: 'ユーティリティ' },
   { id: 'video_player', name: '動画プレイヤー', entry: 'games/video_player.js', version: '0.1.0', author: 'mod', description: 'ローカル動画とYouTubeの視聴でEXPを獲得できるユーティリティ', category: 'ユーティリティ' },

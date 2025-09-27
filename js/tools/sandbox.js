@@ -12,11 +12,15 @@
     const DEFAULT_WIDTH = 21;
     const DEFAULT_HEIGHT = 15;
     const DEFAULT_LEVEL = 1;
+    const MIN_SIZE_FALLBACK = 5;
+    const MAX_SIZE_FALLBACK = 60;
+    const MAX_LEVEL_FALLBACK = 999;
     const BRUSHES = ['floor', 'wall', 'start', 'stairs', 'enemy'];
 
     let refs = {};
     let state = null;
     let enemySeq = 1;
+    let pendingSerializedState = null;
 
     function captureActiveInput() {
         const active = document.activeElement;
@@ -86,6 +90,148 @@
                 y: Number.isFinite(e.y) ? e.y : null
             }))
         };
+    }
+
+    function exportSerializedState() {
+        if (!state) {
+            return pendingSerializedState ? { ...pendingSerializedState } : null;
+        }
+        return {
+            width: state.width,
+            height: state.height,
+            grid: cloneGrid(state.grid || []),
+            playerStart: state.playerStart ? { ...state.playerStart } : null,
+            stairs: state.stairs ? { ...state.stairs } : null,
+            playerLevel: state.playerLevel,
+            enemies: state.enemies.map(enemy => ({
+                id: enemy.id,
+                name: enemy.name,
+                level: enemy.level,
+                hp: enemy.hp,
+                attack: enemy.attack,
+                defense: enemy.defense,
+                boss: !!enemy.boss,
+                x: Number.isFinite(enemy.x) ? enemy.x : null,
+                y: Number.isFinite(enemy.y) ? enemy.y : null
+            })),
+            selectedEnemyId: state.selectedEnemyId || null,
+            brush: state.brush,
+            lastCell: state.lastCell ? { ...state.lastCell } : null,
+            validation: {
+                errors: Array.isArray(state.validation?.errors) ? state.validation.errors.slice() : [],
+                warnings: Array.isArray(state.validation?.warnings) ? state.validation.warnings.slice() : []
+            },
+            tempMessage: state.tempMessage || ''
+        };
+    }
+
+    function normalizePosition(pos, width, height) {
+        if (!pos || typeof pos !== 'object') return null;
+        const x = Math.floor(Number(pos.x));
+        const y = Math.floor(Number(pos.y));
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        if (x < 0 || x >= width || y < 0 || y >= height) return null;
+        return { x, y };
+    }
+
+    function normalizeEnemies(list, width, height, maxLevel) {
+        if (!Array.isArray(list)) return [];
+        const enemies = [];
+        for (const enemy of list) {
+            if (!enemy || typeof enemy !== 'object') continue;
+            const lvl = clamp(1, maxLevel, Math.floor(Number(enemy.level) || DEFAULT_LEVEL));
+            const stats = defaultEnemyStats(lvl);
+            const norm = {
+                id: typeof enemy.id === 'string' ? enemy.id : null,
+                name: typeof enemy.name === 'string' ? enemy.name : '',
+                level: lvl,
+                hp: clamp(1, Number.MAX_SAFE_INTEGER, Math.floor(Number(enemy.hp) || stats.hp)),
+                attack: clamp(0, Number.MAX_SAFE_INTEGER, Math.floor(Number(enemy.attack) || stats.attack)),
+                defense: clamp(0, Number.MAX_SAFE_INTEGER, Math.floor(Number(enemy.defense) || stats.defense)),
+                boss: !!enemy.boss,
+                x: null,
+                y: null
+            };
+            const pos = normalizePosition(enemy, width, height);
+            if (pos) {
+                norm.x = pos.x;
+                norm.y = pos.y;
+            }
+            enemies.push(norm);
+        }
+        return enemies;
+    }
+
+    function normalizeSerializedState(serialized) {
+        const minSize = Bridge?.minSize || MIN_SIZE_FALLBACK;
+        const maxSize = Bridge?.maxSize || MAX_SIZE_FALLBACK;
+        const maxLevel = Bridge?.maxLevel || MAX_LEVEL_FALLBACK;
+        const width = clamp(minSize, maxSize, Math.floor(Number(serialized?.width) || DEFAULT_WIDTH));
+        const height = clamp(minSize, maxSize, Math.floor(Number(serialized?.height) || DEFAULT_HEIGHT));
+        const grid = createEmptyGrid(width, height, 1);
+        if (Array.isArray(serialized?.grid)) {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = serialized.grid?.[y]?.[x];
+                    grid[y][x] = cell === 0 ? 0 : 1;
+                }
+            }
+        }
+        const playerLevel = clamp(1, maxLevel, Math.floor(Number(serialized?.playerLevel) || DEFAULT_LEVEL));
+        return {
+            width,
+            height,
+            grid,
+            playerStart: normalizePosition(serialized?.playerStart, width, height),
+            stairs: normalizePosition(serialized?.stairs, width, height),
+            lastCell: normalizePosition(serialized?.lastCell, width, height),
+            playerLevel,
+            enemies: normalizeEnemies(serialized?.enemies, width, height, maxLevel),
+            selectedEnemyId: typeof serialized?.selectedEnemyId === 'string' ? serialized.selectedEnemyId : null,
+            brush: BRUSHES.includes(serialized?.brush) ? serialized.brush : 'floor',
+            validation: {
+                errors: Array.isArray(serialized?.validation?.errors) ? serialized.validation.errors.map(e => String(e)) : [],
+                warnings: Array.isArray(serialized?.validation?.warnings) ? serialized.validation.warnings.map(w => String(w)) : []
+            },
+            tempMessage: typeof serialized?.tempMessage === 'string' ? serialized.tempMessage : ''
+        };
+    }
+
+    function importSerializedState(serialized) {
+        const payload = normalizeSerializedState(serialized);
+        if (!state) {
+            pendingSerializedState = payload;
+            return true;
+        }
+        state.width = payload.width;
+        state.height = payload.height;
+        state.grid = cloneGrid(payload.grid);
+        ensureStateGridSize(state.width, state.height);
+        state.grid = cloneGrid(payload.grid);
+        state.playerStart = payload.playerStart;
+        state.stairs = payload.stairs;
+        state.playerLevel = payload.playerLevel;
+        state.enemies = payload.enemies.map(enemy => ({ ...enemy, id: enemy.id || `enemy-${enemySeq++}` }));
+        state.selectedEnemyId = payload.selectedEnemyId;
+        state.brush = payload.brush;
+        state.lastCell = payload.lastCell;
+        state.validation = {
+            errors: payload.validation.errors.slice(),
+            warnings: payload.validation.warnings.slice()
+        };
+        state.compiledConfig = null;
+        state.tempMessage = payload.tempMessage;
+        if (refs.widthInput) refs.widthInput.value = state.width;
+        if (refs.heightInput) refs.heightInput.value = state.height;
+        if (refs.playerLevelInput) refs.playerLevelInput.value = state.playerLevel;
+        const maxEnemyId = state.enemies.reduce((max, enemy) => {
+            const match = typeof enemy.id === 'string' ? enemy.id.match(/(\d+)$/) : null;
+            const num = match ? Number(match[1]) : NaN;
+            return Number.isFinite(num) ? Math.max(max, num) : max;
+        }, 0);
+        enemySeq = Math.max(enemySeq, maxEnemyId + 1);
+        render();
+        return true;
     }
 
     function ensureStateGridSize(width, height) {
@@ -692,7 +838,18 @@
         }
 
         render();
+        if (pendingSerializedState) {
+            const payload = pendingSerializedState;
+            pendingSerializedState = null;
+            try { importSerializedState(payload); } catch (err) {
+                console.warn('[SandboxTool] Failed to restore pending state:', err);
+            }
+        }
     }
 
     ToolsTab.registerTool('sandbox-editor', init);
+    global.SandboxEditor = {
+        getState: exportSerializedState,
+        setState: importSerializedState
+    };
 })(window);

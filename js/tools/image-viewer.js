@@ -40,6 +40,8 @@
     let currentFile = null;
     let objectUrl = null;
     let naturalSize = { width: 0, height: 0 };
+    let pendingSerializedState = null;
+    let pendingTransform = null;
 
     function ensureStylesInjected() {
         if (document.getElementById(STYLE_ID)) {
@@ -341,6 +343,41 @@
         }
     }
 
+    function readFileAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('failed to read file'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function dataUrlToFile(dataUrl, name, typeHint) {
+        if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
+            throw new Error('invalid data URL');
+        }
+        const parts = dataUrl.split(',');
+        if (parts.length < 2) throw new Error('invalid data URL');
+        const header = parts[0];
+        const base64 = parts[1];
+        const mimeMatch = header.match(/^data:(.*?)(;base64)?$/i);
+        const mimeType = typeHint || (mimeMatch ? mimeMatch[1] : 'application/octet-stream');
+        const binary = atob(base64);
+        const len = binary.length;
+        const buffer = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            buffer[i] = binary.charCodeAt(i);
+        }
+        return new File([buffer], name || 'image', { type: mimeType });
+    }
+
+    function applyPendingTransform() {
+        if (!pendingTransform) return;
+        state = { ...defaultState(), ...pendingTransform };
+        pendingTransform = null;
+        syncInputsFromState();
+    }
+
     function syncInputsFromState() {
         if (!refs) return;
         refs.zoom.value = state.zoom;
@@ -418,6 +455,7 @@
         currentFile = null;
         naturalSize = { width: 0, height: 0 };
         setStageHasImage(false);
+        pendingTransform = null;
         if (refs?.image) {
             refs.image.removeAttribute('src');
             refs.image.style.transform = 'none';
@@ -433,6 +471,7 @@
         };
         setStageHasImage(true);
         updateMeta();
+        applyPendingTransform();
         updateTransform();
         updateValueLabels();
         setMessage('画像を読み込みました。', 'success');
@@ -536,6 +575,82 @@
         refs.stage.classList.remove('drag-over');
         const file = ev.dataTransfer?.files?.[0] || null;
         if (file) loadFile(file);
+    }
+
+    function getSerializedState() {
+        const base = {
+            transform: { ...state },
+            fileName: currentFile?.name || null,
+            fileType: currentFile?.type || null,
+            naturalSize: { ...naturalSize }
+        };
+        if (!currentFile) {
+            return Promise.resolve(base);
+        }
+        return readFileAsDataURL(currentFile)
+            .then(dataUrl => ({ ...base, fileDataUrl: dataUrl }))
+            .catch(() => ({ ...base, fileDataUrl: null }));
+    }
+
+    function applyImageViewerState(payload) {
+        pendingSerializedState = null;
+        pendingTransform = payload.transform ? { ...payload.transform } : null;
+        naturalSize = payload.naturalSize || { width: 0, height: 0 };
+        if (!payload.fileDataUrl) {
+            resetAllState();
+            state = { ...defaultState(), ...(payload.transform || {}) };
+            syncInputsFromState();
+            updateTransform();
+            updateValueLabels();
+            if (!payload.transform) clearMessage();
+            return Promise.resolve(true);
+        }
+        try {
+            const file = dataUrlToFile(payload.fileDataUrl, payload.fileName, payload.fileType);
+            return new Promise((resolve) => {
+                const handleSuccess = () => resolve(true);
+                const handleFail = () => resolve(false);
+                refs.image.addEventListener('load', handleSuccess, { once: true });
+                refs.image.addEventListener('error', handleFail, { once: true });
+                loadFile(file);
+            }).catch(() => false);
+        } catch (err) {
+            console.warn('[ImageViewer] Failed to decode snapshot image:', err);
+            resetAllState();
+            state = { ...defaultState(), ...(payload.transform || {}) };
+            syncInputsFromState();
+            updateTransform();
+            updateValueLabels();
+            return Promise.resolve(false);
+        }
+    }
+
+    function applySerializedState(snapshot) {
+        if (!snapshot || typeof snapshot !== 'object') {
+            pendingSerializedState = null;
+            resetAllState();
+            return Promise.resolve(false);
+        }
+        const transform = snapshot.transform && typeof snapshot.transform === 'object'
+            ? { ...defaultState(), ...snapshot.transform }
+            : defaultState();
+        const payload = {
+            transform,
+            fileDataUrl: typeof snapshot.fileDataUrl === 'string' ? snapshot.fileDataUrl : null,
+            fileName: typeof snapshot.fileName === 'string' ? snapshot.fileName : 'image',
+            fileType: typeof snapshot.fileType === 'string' ? snapshot.fileType : '',
+            naturalSize: snapshot.naturalSize && typeof snapshot.naturalSize === 'object'
+                ? {
+                    width: Number(snapshot.naturalSize.width) || 0,
+                    height: Number(snapshot.naturalSize.height) || 0
+                }
+                : { width: 0, height: 0 }
+        };
+        if (!refs?.panel) {
+            pendingSerializedState = payload;
+            return Promise.resolve(true);
+        }
+        return applyImageViewerState(payload);
     }
 
     function bindControlEvents() {
@@ -665,9 +780,24 @@
         bindControlEvents();
         updateMeta();
         clearMessage();
+
+        if (pendingSerializedState) {
+            const payload = pendingSerializedState;
+            pendingSerializedState = null;
+            applyImageViewerState(payload).catch(err => {
+                console.warn('[ImageViewer] Failed to apply pending state:', err);
+            });
+        }
     }
 
+    const api = {
+        init: initImageViewerTool,
+        getState: () => getSerializedState(),
+        setState: (snapshot) => applySerializedState(snapshot)
+    };
+
+    global.ImageViewerTool = Object.assign(global.ImageViewerTool || {}, api);
     if (global.ToolsTab?.registerTool) {
-        global.ToolsTab.registerTool(TOOL_ID, initImageViewerTool);
+        global.ToolsTab.registerTool(TOOL_ID, (context) => api.init(context));
     }
 })(window);

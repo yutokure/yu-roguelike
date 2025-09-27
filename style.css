@@ -1713,6 +1713,10 @@ h1 {
     --sandbox-floor-color: #94d82d;
 }
 
+.sandbox-cell.floor-bomb {
+    --sandbox-floor-color: #ff8787;
+}
+
 .sandbox-cell.start {
     background: linear-gradient(135deg,#22d3ee,#6366f1);
     color: #fff;
@@ -1765,6 +1769,10 @@ h1 {
 
 .sandbox-legend dt.legend-poison {
     color: #3f6212;
+}
+
+.sandbox-legend dt.legend-bomb {
+    color: #b91c1c;
 }
 
 .sandbox-legend dd {

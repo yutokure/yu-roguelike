@@ -6093,6 +6093,13 @@ let playerTurn = true;
 document.addEventListener('keydown', (event) => {
     if (!playerTurn || isGameOver) return;
     if (isAnyModalOpen()) return; // モーダル中はゲーム入力を無効化
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+        if (target.closest('input, textarea, select')) return;
+        const editableAncestor = target.closest('[contenteditable]');
+        if (editableAncestor instanceof HTMLElement && editableAncestor.isContentEditable) return;
+        if (target.isContentEditable) return;
+    }
     ensureAudio(); // 初回入力でオーディオ解放
 
     let acted = false;

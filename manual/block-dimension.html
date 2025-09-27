@@ -10,99 +10,90 @@
     <main>
         <h1>8. ブロック次元とは</h1>
         <section>
-            <h2>8.1 サブモード概要</h2>
+            <h2>8.1 モード概要</h2>
             <p>
-                ブロック次元は、通常のダンジョンとは異なるパズル寄りの探索モードです。
-                ブロックを配置して道を切り開き、フロアごとのクリア条件を満たすことで報酬を獲得します。
-                メイン冒険の合間に遊ぶことで、素材や特殊トークンを集められるサブコンテンツとして設計されています。
+                ブロック次元は、<strong>次元（Dimension）</strong> と 3 種の<strong>ブロック（1st / 2nd / 3rd）</strong> を組み合わせて
+                ダンジョン生成パラメータを合成するモードです。次元は a〜z の 26 種（データが無い場合でも自動補完）で、各次元
+                は 100 レベル刻みの基礎レベルを持ちます。ブロックは <code>blockdata.json</code> または <code>blockdata.js</code>
+                から読み込み、レベル補正やマップサイズ、深さ、宝箱バイアスなどを提供します。
             </p>
             <div class="tip">
-                <strong>目的の違いを理解しよう</strong>
-                <p>通常ダンジョンが戦闘重視なのに対し、ブロック次元は <strong>空間パズル</strong> と <strong>資源管理</strong> が鍵となります。</p>
+                <strong>生成ルールを把握しよう</strong>
+                <p>ブロック次元では「配置」ではなく「組み合わせ」が核です。同じ選択は常に同じダンジョンを生成するため、周回用にも活用できます。</p>
             </div>
         </section>
         <section>
-            <h2>8.2 参加方法</h2>
+            <h2>8.2 利用手順</h2>
             <ol>
-                <li>タイトル画面から <strong>ブロック次元</strong> タブを選択。</li>
-                <li>挑戦したいセクターを選び、難易度と制限ターン数を確認します。</li>
-                <li>必要条件（推奨レベル・鍵となる素材）が満たされていることを確認して出発します。</li>
-                <li>開始時に支給されるブロックセットを確認し、配置プランを考えてからスタートしましょう。</li>
+                <li>タイトル画面のタブから <strong>BlockDim</strong> を選択します。</li>
+                <li>必要に応じて <strong>NESTED</strong> 値を入力（1〜99,999,999）。数値が大きいほど推奨レベルが 2600 ずつ上昇します。</li>
+                <li>次元リストと 1st/2nd/3rd ブロックの各リストから項目を選択します。選択中の項目はクリックまたはキーボードで変更できます。</li>
+                <li>右側のプレビューカードでレベル・タイプ・深さ・サイズ係数・宝箱バイアス・ボス階層を確認します。</li>
+                <li>組み合わせを確定したら <strong>Gate開始</strong> ボタンで出撃します。</li>
             </ol>
-            <p class="small-note">セクターによっては事前に通常ダンジョンをクリアしておく必要があります。</p>
+            <p class="small-note">履歴（最大 200 件）とブックマーク（最大 100 件）は自動保存され、クリックで選択内容を再適用できます。ランダム／重み付きランダムボタンを使うとブロックを自動選択できます。</p>
         </section>
         <section>
-            <h2>8.3 ブロックの種類と効果</h2>
+            <h2>8.3 データソースとブロック属性</h2>
+            <p>
+                ブロック次元は初期化時に <code>fetch('blockdata.json')</code> を試行し、失敗した場合は <code>blockdata.js</code> をスクリプトとして読み込みます。どちらにもアクセスできない場合は簡易データ（次元 a とダミーブロック）が自動生成されます。
+            </p>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>カテゴリ</th>
-                            <th>主な効果</th>
-                            <th>使いどころ</th>
+                            <th>項目</th>
+                            <th>由来</th>
+                            <th>内容</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>道ブロック</td>
-                            <td>通路を延長し、探索範囲を広げる</td>
-                            <td>ゴールへのルート確保、宝箱への経路作成</td>
+                            <td>次元 (dimensions)</td>
+                            <td><code>baseLevel</code></td>
+                            <td>推奨レベルの基礎値（既定では a=Lv1, b=Lv101...）。</td>
                         </tr>
                         <tr>
-                            <td>ギミックブロック</td>
-                            <td>ジャンプ台やスイッチなど特殊効果を付与</td>
-                            <td>高低差の突破、時間制限ギミックの解除</td>
+                            <td>ブロック (blocks1/2/3)</td>
+                            <td><code>level</code>, <code>size</code>, <code>depth</code>, <code>chest</code>, <code>type</code></td>
+                            <td>レベル補正、サイズ係数、階層深さ、宝箱バイアス、生成タイプを提供。<code>bossFloors</code> はボス階層候補の配列。</td>
                         </tr>
                         <tr>
-                            <td>防衛ブロック</td>
-                            <td>敵の進行を遅らせたり、攻撃を遮断</td>
-                            <td>拠点防衛ステージで被害を抑える</td>
-                        </tr>
-                        <tr>
-                            <td>資源ブロック</td>
-                            <td>配置時に素材やトークンを生成</td>
-                            <td>長期戦でのリソース確保、目標ポイント稼ぎ</td>
-                        </tr>
-                        <tr>
-                            <td>イベントブロック</td>
-                            <td>設置するとクエストやNPCが出現</td>
-                            <td>隠し報酬や称号条件の達成</td>
+                            <td>履歴／ブックマーク</td>
+                            <td>ローカル保存</td>
+                            <td>選択時にシード・レベル・タイプなどを保存し、後から復元可能。</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
         <section>
-            <h2>8.4 クリア条件と報酬</h2>
+            <h2>8.4 合成ロジック</h2>
+            <p>次元と 3 ブロックから生成される <strong>ComposedSpec</strong> は以下のルールに従います。</p>
             <ul>
-                <li><strong>ターン内クリア:</strong> 制限ターン以内にゴールへ到達すると評価が上昇し、追加報酬が解放されます。</li>
-                <li><strong>素材スコア:</strong> 集めた資源ポイントが閾値を超えると希少素材が手に入ります。</li>
-                <li><strong>ノーダメージ:</strong> 敵に攻撃されずにクリアすると称号進捗が加算されます。</li>
+                <li><strong>レベル:</strong> <code>baseLevel + Σ(level)</code> に NESTED ごとの 2600 オフセットを加算し、1 以上に丸めます。</li>
+                <li><strong>サイズ係数:</strong> ブロックの <code>size</code> 合計を -2〜+2 にクランプして反映します。</li>
+                <li><strong>深さ:</strong> 各ブロックの <code>depth</code> を加算し、1〜15 に制限します。基準は深さ 1 です。</li>
+                <li><strong>宝箱バイアス:</strong> <code>less / normal / more</code> の多数決で決定します（同数時は normal &gt; more &gt; less の優先順位）。</li>
+                <li><strong>生成タイプ:</strong> ブロックの <code>type</code> が 1 種ならそのタイプ、複数混在なら <code>mixed</code> とし、使用するタイプ一覧を <code>typePool</code> として保持します。</li>
+                <li><strong>ボス階層:</strong> 3 ブロックの <code>bossFloors</code> を和集合化し、深さ以内の値のみ採用します。</li>
             </ul>
             <p>
-                獲得した素材は通常ダンジョンの装備強化だけでなく、ブロック次元専用の施設拡張にも使用できます。
-                拡張を進めると新しいブロックセットやセクターが解放され、攻略の幅が広がります。
+                同じ次元・ブロック選択からは <code>seedFromSelection</code> で求めた 32bit シードが生成され、階層ごとに <code>mixSeed</code> で派生させることでランダム要素を固定します。これにより、組み合わせが同じなら常に同じ構造を再現できます。
             </p>
         </section>
         <section>
-            <h2>8.5 攻略のヒント</h2>
-            <ol>
-                <li>開始前に支給ブロックを確認し、<strong>必要な最小ルート</strong>と<strong>寄り道ルート</strong>を分けて考えましょう。</li>
-                <li>防衛ブロックは敵のルート封鎖だけでなく、誘導して資源ブロックへアクセスさせる用途にも使えます。</li>
-                <li>配置に迷ったら <strong>一時停止</strong> で全体マップを確認し、次ターンの敵行動を先読みしましょう。</li>
-                <li>通常ダンジョンで得たスキルや装備効果が一部持ち込める場合があります。事前に相性の良いビルドを用意すると楽になります。</li>
-            </ol>
-            <div class="warning">
-                <strong>リトライのススメ</strong>
-                <p>ブロック次元は何度でも挑戦できます。配置がうまくいかなかったときは、失敗したポイントをメモして再挑戦しましょう。</p>
-            </div>
+            <h2>8.5 ランダム選択と管理機能</h2>
+            <p>
+                <strong>ランダム</strong> ボタンは現在のリストから等確率でブロックを選び、<strong>重み付きランダム</strong> ボタンは指定した目標レベルとタイプをもとにガウス分布で重み付けされた候補を選びます。Gate 開始後は履歴に自動で追加され、ブックマークに登録するとメニューからいつでも呼び出せます。各エントリは NESTED 値や seed を含むので、構成の管理が容易です。
+            </p>
         </section>
         <section>
             <h2>8.6 関連資料</h2>
             <ul>
-                <li><a href="data-files.html" target="manual-content">10. データファイルの内容</a>：<code>blockdata.json</code> の構造を確認。</li>
-                <li><a href="customize.html" target="manual-content">11. コンテンツの追加・変更</a>：ブロックやセクターの追加手順。</li>
-                <li><a href="appendix.html" target="manual-content">17. 付録：参考情報</a>：関連設計書や外部資料へのリンク。</li>
+                <li><a href="data-files.html" target="manual-content">10. データファイルの内容</a>：<code>blockdata.json</code>／<code>blockdata.js</code> の構造を確認。</li>
+                <li><a href="customize.html" target="manual-content">11. コンテンツの追加・変更</a>：ブロックや次元データの追加手順。</li>
+                <li><a href="appendix.html" target="manual-content">17. 付録：参考情報</a>：設計書や関連仕様へのリンク。</li>
             </ul>
         </section>
     </main>

@@ -142,10 +142,23 @@
       display: 'flex',
       flexDirection: 'column',
       gap: '14px',
+      height: '100%',
+      minHeight: '0',
+      overflow: 'hidden'
+    });
+
+    const functionGroupContainer = document.createElement('div');
+    Object.assign(functionGroupContainer.style, {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '14px',
+      flex: '1 1 auto',
+      minHeight: '0',
       overflowY: 'auto',
       overflowX: 'hidden',
       paddingRight: '4px'
     });
+    keypadPanel.appendChild(functionGroupContainer);
 
     const workspace = document.createElement('div');
     Object.assign(workspace.style, {
@@ -440,6 +453,9 @@
     }
 
     function buildKeypad(){
+      functionGroupContainer.innerHTML = '';
+      const existingFavorites = keypadPanel.querySelector('[data-math-lab-favorites]');
+      if (existingFavorites) existingFavorites.remove();
       buttonGroups.forEach(group => {
         const section = document.createElement('div');
         Object.assign(section.style, {
@@ -529,10 +545,11 @@
           updateCollapsed();
         });
         updateCollapsed();
-        keypadPanel.appendChild(section);
+        functionGroupContainer.appendChild(section);
       });
 
       const favorites = document.createElement('div');
+      favorites.setAttribute('data-math-lab-favorites', '1');
       Object.assign(favorites.style, {
         marginTop: 'auto',
         background: 'linear-gradient(135deg, rgba(59,130,246,0.14), rgba(15,23,42,0.4))',

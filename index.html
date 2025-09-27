@@ -506,7 +506,10 @@
                                     <div class="sandbox-map-header">
                                         <h4>マッププレビュー</h4>
                                     </div>
-                                    <div id="sandbox-grid" class="sandbox-grid" role="grid" aria-label="サンドボックスマップ"></div>
+                                    <div id="sandbox-grid" class="sandbox-grid" role="grid" aria-label="サンドボックスマップ">
+                                        <canvas id="sandbox-grid-canvas" role="presentation" aria-hidden="true"></canvas>
+                                        <div id="sandbox-grid-aria" class="visually-hidden" aria-live="polite"></div>
+                                    </div>
                                     <dl class="sandbox-legend">
                                         <div><dt>■</dt><dd>壁</dd></div>
                                         <div><dt>□</dt><dd>床</dd></div>

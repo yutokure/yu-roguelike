@@ -5,6 +5,7 @@
    */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const cfg = (
       difficulty==='HARD' ? { duration:60, spawn:0.75, minR:10, maxR:20, speed:80, comboMs:900 } :
       difficulty==='EASY' ? { duration:60, spawn:1.4,  minR:18, maxR:30, speed:50, comboMs:1300 } :
@@ -105,19 +106,35 @@
     function onClick(e){ const rect = canvas.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; tryHit(x,y); }
     function onKey(e){ if ((e.key==='r'||e.key==='R') && ended){ e.preventDefault(); reset(); start(); } }
 
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
+
     function reset(){
+      disableHostRestart();
       timeLeft = cfg.duration; ended=false; running=false; last=0; targets.length=0; hits=0; clicks=0; score=0; combo=0; lastHitAt=0;
       for(let i=0;i<3;i++) spawnTarget();
       draw();
     }
 
     function step(dt){
-      timeLeft -= dt; if (timeLeft<=0){ timeLeft=0; ended=true; running=false; }
+      timeLeft -= dt; if (timeLeft<=0){ timeLeft=0; finishGame(); }
       if (!ended) updateTargets(dt);
     }
+    function finishGame(){
+      if (!ended){
+        ended = true;
+        enableHostRestart();
+      }
+      running = false;
+    }
     function loop(ts){ const now = ts*0.001; const dt = Math.min(0.033, now-(last||now)); last=now; if(running){ step(dt); draw(); raf=requestAnimationFrame(loop); } }
-    function start(){ if(running) return; running=true; ended=false; last=0; raf=requestAnimationFrame(loop); }
-    function stop(){ if(!running) return; running=false; cancelAnimationFrame(raf); }
+    function start(){ if(running) return; running=true; ended=false; disableHostRestart(); last=0; raf=requestAnimationFrame(loop); }
+    function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
     function destroy(){ try{ stop(); canvas.remove(); canvas.removeEventListener('mousemove', onMove); canvas.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); }catch{} }
     function getScore(){ return hits*10; }
 

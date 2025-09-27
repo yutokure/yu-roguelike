@@ -1,5 +1,6 @@
 (function(){
   function create(root, awardXp, opts){
+    const shortcuts = opts?.shortcuts;
     const diff = (opts && opts.difficulty) || 'NORMAL';
     const cfg = {
       EASY:   { colors: 5, startRows: 5, shotsCycle: 8 },
@@ -48,6 +49,7 @@
     let totalDropped = 0;
     let running = true;
     let gameOver = false;
+    let loopActive = true;
     let animationId = null;
     let lastTime = null;
     const pointer = { x: SHOOTER_X, y: SHOOTER_Y - 120 };
@@ -94,6 +96,14 @@
       while (queue.length < 2) queue.push(randomColor());
     }
 
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
+
     function reset(){
       grid = [];
       floating = [];
@@ -107,6 +117,7 @@
       gameOver = false;
       running = true;
       lastTime = null;
+      disableHostRestart();
       for (let r = 0; r < cfg.startRows; r++) {
         ensureRow(r);
         for (let c = 0; c < COLS; c++) {
@@ -175,8 +186,7 @@
             col = fallback[1];
           } else {
             current = null;
-            gameOver = true;
-            running = false;
+            finishGame();
             return;
           }
         }
@@ -308,13 +318,20 @@
           if (!grid[r][c]) continue;
           const { y } = cellCenter(r, c);
           if (y + R >= FAIL_LINE) {
-            gameOver = true;
-            running = false;
             current = null;
+            finishGame();
             return;
           }
         }
       }
+    }
+
+    function finishGame(){
+      if (!gameOver) {
+        gameOver = true;
+      }
+      running = false;
+      enableHostRestart();
     }
 
     function update(dt){
@@ -508,7 +525,11 @@
 
     function step(timestamp){
       if (!running && !gameOver) {
-        animationId = requestAnimationFrame(step);
+        if (loopActive) {
+          animationId = requestAnimationFrame(step);
+        } else {
+          animationId = null;
+        }
         draw();
         return;
       }
@@ -517,7 +538,11 @@
       lastTime = timestamp;
       if (running && !gameOver) update(dt);
       draw();
-      animationId = requestAnimationFrame(step);
+      if (loopActive) {
+        animationId = requestAnimationFrame(step);
+      } else {
+        animationId = null;
+      }
     }
 
     function onMouseMove(ev){
@@ -555,17 +580,42 @@
 
     animationId = requestAnimationFrame(step);
 
-    return {
-      destroy(){
-        running = false;
-        gameOver = true;
-        if (animationId) cancelAnimationFrame(animationId);
-        canvas.removeEventListener('mousemove', onMouseMove);
-        canvas.removeEventListener('mousedown', shoot);
-        canvas.removeEventListener('touchstart', onTouch);
-        window.removeEventListener('keydown', onKey);
-        canvas.remove();
+    function start(){
+      loopActive = true;
+      disableHostRestart();
+      if (!animationId) {
+        animationId = requestAnimationFrame(step);
       }
+      running = true;
+    }
+
+    function stop(opts = {}){
+      const { keepShortcutsDisabled = false } = opts;
+      loopActive = false;
+      running = false;
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+      if (!keepShortcutsDisabled) {
+        enableHostRestart();
+      }
+    }
+
+    function destroy(){
+      stop();
+      gameOver = true;
+      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('mousedown', shoot);
+      canvas.removeEventListener('touchstart', onTouch);
+      window.removeEventListener('keydown', onKey);
+      canvas.remove();
+    }
+
+    return {
+      start,
+      stop,
+      destroy
     };
   }
 

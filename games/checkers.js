@@ -221,6 +221,7 @@
 
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const canvas = document.createElement('canvas');
     canvas.width = 480;
     canvas.height = 520;
@@ -242,7 +243,16 @@
     let legalMoves = [];
     let hover = null;
 
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
+
     function setupBoard(){
+      disableHostRestart();
       for (let y = 0; y < SIZE; y++){
         for (let x = 0; x < SIZE; x++){
           board[y][x] = 0;
@@ -392,17 +402,25 @@
       }
     }
 
+    function finishGame(text){
+      if (!ended){
+        ended = true;
+        resultText = text || resultText;
+        enableHostRestart();
+      } else if (text){
+        resultText = text;
+      }
+    }
+
     function checkForEnd(){
       const playerPieces = countPieces(board, PLAYER);
       const aiPieces = countPieces(board, AI);
       if (playerPieces === 0 || getAllMoves(PLAYER, board).length === 0){
-        ended = true;
-        resultText = '敗北...';
+        finishGame('敗北...');
         return true;
       }
       if (aiPieces === 0 || getAllMoves(AI, board).length === 0){
-        ended = true;
-        resultText = '勝利！';
+        finishGame('勝利！');
         awardXp(WIN_EXP[difficulty] || 160, { type: 'win' });
         return true;
       }
@@ -448,8 +466,7 @@
       if (ended) return;
       const move = aiChooseMove();
       if (!move){
-        ended = true;
-        resultText = '勝利！';
+        finishGame('勝利！');
         awardXp(WIN_EXP[difficulty] || 160, { type: 'win' });
         drawBoard();
         return;
@@ -525,13 +542,16 @@
       window.addEventListener('keydown', handleKey);
     }
 
-    function stop(){
+    function stop(opts = {}){
       if (!running) return;
       running = false;
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('mousemove', handleMove);
       canvas.removeEventListener('mouseleave', handleLeave);
       window.removeEventListener('keydown', handleKey);
+      if (!opts.keepShortcutsDisabled){
+        enableHostRestart();
+      }
     }
 
     function destroy(){

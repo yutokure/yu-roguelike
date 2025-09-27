@@ -76,6 +76,7 @@
 
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const cfg = { ...(DIFFICULTY[difficulty] || DIFFICULTY.NORMAL) };
     const xpSection = 25 * (cfg.xpScale || 1);
     const xpPass = 4 * (cfg.xpScale || 1);
@@ -112,6 +113,14 @@
     let nextSection = trackLength/4;
     let lastDistanceXp = 0;
     let lastSectionCheck = nextSection;
+
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
 
     const keys = new Set();
 
@@ -465,6 +474,7 @@
     function endGame(){
       if (ended) return;
       ended=true;
+      enableHostRestart();
       running=false;
       if (playerSpeed>0) playerSpeed=0;
       cancelAnimationFrame(raf);
@@ -485,8 +495,8 @@
       }
     }
 
-    function start(){ if(running) return; running=true; ended=false; paused=false; lastTs=0; raf=requestAnimationFrame(loop); }
-    function stop(){ if(!running) return; running=false; cancelAnimationFrame(raf); }
+    function start(){ if(running) return; running=true; ended=false; paused=false; disableHostRestart(); lastTs=0; raf=requestAnimationFrame(loop); }
+    function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
     function destroy(){ try{ stop(); canvas.remove(); removeControls(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); }catch{} }
     function getScore(){ return Math.floor(totalDistance); }
 

@@ -2,6 +2,7 @@
   /** MiniExp: Minesweeper (v0.1.0) */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const cfg = (
       difficulty==='HARD'   ? { w:30, h:16, m:99,  bonus:1600 } :
       difficulty==='EASY'   ? { w:9,  h:9,  m:10,  bonus:25   } :
@@ -116,10 +117,18 @@
       return true;
     }
 
+    function concludeGame(){
+      if (!ended){
+        ended = true;
+        clearTime = Date.now();
+        shortcuts?.enableKey('r');
+      }
+    }
+
     function handleOpen(x,y){ if(ended) return; const c=board[y][x]; if(c.open||c.flag) return; if(!firstClickDone){ placeMines(x,y); firstClickDone=true; }
-      if(c.mine){ c.open=true; ended=true; clearTime=Date.now(); draw(); return; }
+      if(c.mine){ c.open=true; concludeGame(); draw(); return; }
       const newly = floodOpen(x,y); if(newly>0){ openedSafe += newly; awardXp(newly*0.1, { type:'open' }); }
-      if(checkClear()){ ended=true; clearTime=Date.now(); awardXp(cfg.bonus, { type:'clear' }); }
+      if(checkClear()){ concludeGame(); awardXp(cfg.bonus, { type:'clear' }); }
       draw();
     }
 
@@ -131,10 +140,10 @@
     function onContext(e){ e.preventDefault(); if(!running) return; const p=eventToCell(e); if(!p) return; toggleFlag(p.x,p.y); }
     function onKey(e){ if(e.key==='r' || e.key==='R'){ e.preventDefault(); restart(); } }
 
-    function start(){ if(running) return; running=true; canvas.addEventListener('click', onClick); canvas.addEventListener('contextmenu', onContext); document.addEventListener('keydown', onKey); btnR.onclick = restart; draw(); }
-    function stop(){ if(!running) return; running=false; canvas.removeEventListener('click', onClick); canvas.removeEventListener('contextmenu', onContext); document.removeEventListener('keydown', onKey); }
+    function start(){ if(running) return; running=true; shortcuts?.disableKey('r'); canvas.addEventListener('click', onClick); canvas.addEventListener('contextmenu', onContext); document.addEventListener('keydown', onKey); btnR.onclick = restart; draw(); }
+    function stop(opts = {}){ if(!running) return; running=false; canvas.removeEventListener('click', onClick); canvas.removeEventListener('contextmenu', onContext); document.removeEventListener('keydown', onKey); if(!opts.keepShortcutsDisabled){ shortcuts?.enableKey('r'); } }
     function destroy(){ try{ stop(); wrapper.remove(); }catch{} }
-    function restart(){ stop(); initBoard(); start(); }
+    function restart(){ stop({ keepShortcutsDisabled: true }); initBoard(); start(); }
     function getScore(){ return ended && openedSafe>0 ? Math.floor(1000000/Math.max(1,(clearTime-startTime))) : openedSafe; }
 
     return { start, stop, destroy, getScore };

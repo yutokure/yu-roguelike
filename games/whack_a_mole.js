@@ -5,6 +5,7 @@
    */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const cfg = (
       difficulty==='HARD' ? { rows:3, cols:4, round:45, popMs:[450, 900], comboMs:900 } :
       difficulty==='EASY' ? { rows:3, cols:3, round:45, popMs:[700,1200], comboMs:1200 } :
@@ -20,6 +21,14 @@
     const holes = []; // grid of holes positions
     for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ holes.push({ c, r, x: c*CELL + CELL/2, y: r*CELL + 30 + CELL/2, up:false, ttl:0 }); }
     let score=0, hits=0, clicks=0, combo=0, lastHitAt=0;
+
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
 
     function popRandom(){
       const idx = (Math.random()*holes.length)|0; const h = holes[idx]; if(h.up) return; const dur = (cfg.popMs[0] + Math.random()*(cfg.popMs[1]-cfg.popMs[0]))*0.001; h.up = true; h.ttl = dur; }
@@ -42,10 +51,18 @@
     }
 
     function step(dt){
-      timeLeft -= dt; if (timeLeft<=0){ timeLeft=0; ended=true; running=false; }
+      timeLeft -= dt; if (timeLeft<=0){ timeLeft=0; finishGame(); }
       // decay moles, and randomly pop
       for (const h of holes){ if(h.up){ h.ttl-=dt; if(h.ttl<=0){ h.up=false; h.ttl=0; } } }
       if (Math.random() < dt * (2 + holes.filter(h=>!h.up).length*0.03)) popRandom();
+    }
+
+    function finishGame(){
+      if (!ended){
+        ended = true;
+        enableHostRestart();
+      }
+      running = false;
     }
 
     function hitAt(px, py){
@@ -58,12 +75,12 @@
     function onKey(e){ if((e.key==='r'||e.key==='R')&&ended){ e.preventDefault(); reset(); start(); } }
 
     function loop(ts){ const now=ts*0.001; const dt=Math.min(0.033, now-(last||now)); last=now; if(running){ step(dt); draw(); raf=requestAnimationFrame(loop); } }
-    function start(){ if(running) return; running=true; ended=false; last=0; raf=requestAnimationFrame(loop); }
-    function stop(){ if(!running) return; running=false; cancelAnimationFrame(raf); }
+    function start(){ if(running) return; running=true; ended=false; disableHostRestart(); last=0; raf=requestAnimationFrame(loop); }
+    function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
     function destroy(){ try{ stop(); canvas.remove(); canvas.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); }catch{} }
     function getScore(){ return hits*10; }
 
-    function reset(){ timeLeft=cfg.round; ended=false; running=false; last=0; score=0; hits=0; clicks=0; combo=0; holes.forEach(h=>{h.up=false;h.ttl=0;}); draw(); }
+    function reset(){ timeLeft=cfg.round; ended=false; running=false; last=0; score=0; hits=0; clicks=0; combo=0; holes.forEach(h=>{h.up=false;h.ttl=0;}); disableHostRestart(); draw(); }
 
     canvas.addEventListener('mousedown', onClick);
     document.addEventListener('keydown', onKey, { passive:false });

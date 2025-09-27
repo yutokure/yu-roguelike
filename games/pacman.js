@@ -2,6 +2,7 @@
   /** MiniExp: Pacman-like (v0.1.0) */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const G = 18; // tile size px (scaled later)
     const layout = [
       '#####################',
@@ -35,6 +36,14 @@
     let lives = (difficulty==='HARD'?2:3);
     let running=false, ended=false, raf=0, last=0;
     let eaten = 0; // for score
+
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
 
     // parse map
     function isWall(x,y){ if(x<0||x>=W||y<0||y>=H) return true; return layout[y][x]==='#'; }
@@ -70,7 +79,7 @@
       const nx = pac.x + pac.dir.x * s; const ny = pac.y + pac.dir.y * s;
       if (!blocked(nx, ny, {x:0,y:0})) { pac.x=wrapX(nx); pac.y=ny; }
       // pellet check
-      const tx = Math.floor(pac.x), ty = Math.floor(pac.y); const key=`${tx},${ty}`; if (pellets.has(key)){ pellets.delete(key); eaten++; awardXp(0.5, { type:'pellet' }); if (pellets.size===0){ awardXp(100, { type:'clear' }); ended=true; running=false; } }
+      const tx = Math.floor(pac.x), ty = Math.floor(pac.y); const key=`${tx},${ty}`; if (pellets.has(key)){ pellets.delete(key); eaten++; awardXp(0.5, { type:'pellet' }); if (pellets.size===0){ awardXp(100, { type:'clear' }); finishGame(); } }
       // ghosts movement: chase or random at intersections
       ghosts.forEach(g=>{
         const sp = g.speed * dt; const choices = dirs().filter(d=>!isWall(Math.floor(g.x + d.x*0.51), Math.floor(g.y + d.y*0.51)));
@@ -83,7 +92,7 @@
         g.x = wrapX(g.x + g.dir.x * sp); g.y += g.dir.y * sp;
       });
       // collision pac-ghost
-      for(const g of ghosts){ if (Math.abs(g.x - pac.x) < 0.6 && Math.abs(g.y - pac.y) < 0.6){ lives--; if(lives<=0){ ended=true; running=false; } else { resetToStart(); } break; } }
+      for(const g of ghosts){ if (Math.abs(g.x - pac.x) < 0.6 && Math.abs(g.y - pac.y) < 0.6){ lives--; if(lives<=0){ finishGame(); } else { resetToStart(); } break; } }
     }
 
     function wrapX(x){ if (x<0) return W+x; if (x>W) return x-W; return x; }
@@ -91,12 +100,20 @@
     function blocked(x,y,dir){ const nx = x + dir.x*0.51, ny = y + dir.y*0.51; return isWall(Math.floor(nx), Math.floor(ny)); }
     function resetToStart(){ for(let y=0;y<H;y++) for(let x=0;x<W;x++){ if(layout[y][x]==='P'){ pac.x=x+0.5; pac.y=y+0.5; pac.dir={x:1,y:0}; pac.next={x:1,y:0}; } if(layout[y][x]==='G'){ ghosts.forEach((g,i)=>{ if(i===0){ g.x=x+0.5; g.y=y+0.5; g.dir={x:0,y:1}; }}); } } }
 
+    function finishGame(){
+      if (!ended){
+        ended = true;
+        enableHostRestart();
+      }
+      running = false;
+    }
+
     function onKey(e){ if(e.code.startsWith('Arrow')){ e.preventDefault(); const m = {ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1}}[e.code]; pac.next=m; } if((e.key==='r'||e.key==='R') && !running){ restart(); } }
     function loop(t){ const now=t*0.001; const dt=Math.min(0.033, now-(last||now)); last=now; if(running){ step(dt); draw(); raf=requestAnimationFrame(loop);} }
-    function start(){ if(running) return; running=true; raf=requestAnimationFrame(loop); }
-    function stop(){ if(!running) return; running=false; cancelAnimationFrame(raf); }
+    function start(){ if(running) return; running=true; disableHostRestart(); raf=requestAnimationFrame(loop); }
+    function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
     function destroy(){ try{ stop(); canvas.remove(); document.removeEventListener('keydown', onKey); }catch{} }
-    function restart(){ stop(); // rebuild pellets
+    function restart(){ stop({ keepShortcutsDisabled: true }); // rebuild pellets
       pellets.clear(); eaten=0; ghosts.length=0; for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const ch = layout[y][x]; if(ch==='.'||ch==='o') pellets.add(`${x},${y}`); if (ch==='G') ghosts.push({ x:x+0.5, y:y+0.5, dir:{x:0,y:1}, speed:(difficulty==='HARD'?3.6:(difficulty==='EASY'?2.8:3.2)) }); if(ch==='P'){ pac.x=x+0.5; pac.y=y+0.5; pac.dir={x:1,y:0}; pac.next={x:1,y:0}; }} lives=(difficulty==='HARD'?2:3); ended=false; start(); }
     function getScore(){ return eaten; }
 

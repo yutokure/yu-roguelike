@@ -621,4 +621,12 @@
 
   if (!window.MiniGameMods) window.MiniGameMods = {};
   window.MiniGameMods.bubbleShooter = { create };
+  if (window.registerMiniGame) {
+    window.registerMiniGame({
+      id: 'bubble_shooter',
+      name: 'バブルシューター',
+      description: 'バブルを撃って3つ揃えで消すカジュアルパズル。浮いたバブルはまとめて落下！',
+      create
+    });
+  }
 })();

@@ -135,7 +135,48 @@
                     btn.classList.add('selected');
                 }
                 btn.textContent = icon;
-                btn.setAttribute('aria-label', `${cell === 0 ? '床' : '壁'} (${x}, ${y})`);
+                const baseLabel = `${cell === 0 ? '床' : '壁'} (${x}, ${y})`;
+                const detailParts = [];
+                if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
+                    detailParts.push('開始位置');
+                }
+                if (state.stairs && state.stairs.x === x && state.stairs.y === y) {
+                    detailParts.push('階段');
+                }
+                if (enemiesHere.length) {
+                    let enemyDetail = '';
+                    if (enemiesHere.length === 1) {
+                        const enemy = enemiesHere[0];
+                        const name = (enemy.name || '').trim();
+                        if (name) {
+                            enemyDetail = `敵: ${name}${enemy.boss ? '（ボス）' : ''}`;
+                        } else {
+                            enemyDetail = enemy.boss ? '敵: ボス1体' : '敵: 1体';
+                        }
+                    } else {
+                        const nameParts = enemiesHere
+                            .map(e => {
+                                const nm = (e.name || '').trim();
+                                return nm ? `${nm}${e.boss ? '（ボス）' : ''}` : '';
+                            })
+                            .filter(Boolean);
+                        if (nameParts.length === enemiesHere.length) {
+                            enemyDetail = `敵: ${nameParts.join('、')}`;
+                        } else {
+                            const bossCount = enemiesHere.filter(e => e.boss).length;
+                            if (bossCount && bossCount === enemiesHere.length) {
+                                enemyDetail = `敵: ボス${enemiesHere.length}体`;
+                            } else if (bossCount) {
+                                enemyDetail = `敵: ${enemiesHere.length}体（ボス${bossCount}体含む）`;
+                            } else {
+                                enemyDetail = `敵: ${enemiesHere.length}体`;
+                            }
+                        }
+                    }
+                    detailParts.push(enemyDetail);
+                }
+                const label = detailParts.length ? `${baseLabel} - ${detailParts.join(' / ')}` : baseLabel;
+                btn.setAttribute('aria-label', label);
                 frag.appendChild(btn);
             }
         }

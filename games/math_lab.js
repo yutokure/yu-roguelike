@@ -105,13 +105,20 @@
 
     root.appendChild(container);
 
-    let expressionInput, exactResultEl, approxResultEl, statusBar, variableList, historyBody;
+    let expressionInput, expressionInputClassic, expressionInputPretty;
+    let exactResultEl, approxResultEl, resultSubLabelExact, resultSubLabelApprox;
+    let statusBar, variableList, historyBody;
     let angleToggleRad, angleToggleDeg;
+    let resultToggleSymbolic, resultToggleNumeric;
+    let expressionModeToggleClassic, expressionModeTogglePretty;
     let graphInput, graphXMin, graphXMax, graphCanvas, graphMessage;
     let plotButton, evalButton, clearButton;
     let unitSelect;
     let radianMode = true;
+    let resultMode = 'symbolic';
+    let expressionMode = 'classic';
     let history = [];
+    let numericMath = null;
 
     const buttonGroups = [
       {
@@ -462,9 +469,23 @@
         fontWeight: '600'
       });
 
-      expressionInput = document.createElement('textarea');
-      expressionInput.placeholder = '式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem(["x+y=3","x-y=1"],["x","y"]))';
-      Object.assign(expressionInput.style, {
+      const inputModeSwitch = document.createElement('div');
+      Object.assign(inputModeSwitch.style, {
+        display: 'inline-flex',
+        borderRadius: '999px',
+        overflow: 'hidden',
+        border: '1px solid rgba(148,163,184,0.28)',
+        alignSelf: 'flex-start'
+      });
+
+      expressionModeToggleClassic = buildSegmentToggle('関数表記', () => setExpressionMode('classic'));
+      expressionModeTogglePretty = buildSegmentToggle('数学記号', () => setExpressionMode('pretty'));
+      inputModeSwitch.appendChild(expressionModeToggleClassic.button);
+      inputModeSwitch.appendChild(expressionModeTogglePretty.button);
+
+      expressionInputClassic = document.createElement('textarea');
+      expressionInputClassic.placeholder = '式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem(["x+y=3","x-y=1"],["x","y"]))';
+      Object.assign(expressionInputClassic.style, {
         minHeight: '110px',
         resize: 'vertical',
         borderRadius: '14px',
@@ -475,6 +496,23 @@
         background: 'rgba(15,23,42,0.65)',
         color: '#f8fafc'
       });
+
+      expressionInputPretty = document.createElement('textarea');
+      expressionInputPretty.placeholder = '例: √(2) + 1/3, 2π, (x+1)/(x−1) など数学記号で入力';
+      Object.assign(expressionInputPretty.style, {
+        minHeight: '110px',
+        resize: 'vertical',
+        borderRadius: '14px',
+        border: '1px solid rgba(148,163,184,0.22)',
+        padding: '14px',
+        fontSize: '16px',
+        fontFamily: '"Noto Sans JP", "Yu Gothic", sans-serif',
+        background: 'rgba(15,23,42,0.65)',
+        color: '#f8fafc',
+        display: 'none'
+      });
+
+      expressionInput = expressionInputClassic;
 
       const worksheetButtons = document.createElement('div');
       Object.assign(worksheetButtons.style, {
@@ -490,7 +528,9 @@
 
       const copyButton = buildPrimaryButton('結果をコピー', '#f97316');
       copyButton.addEventListener('click', () => {
-        const result = approxResultEl?.dataset.rawValue || exactResultEl?.dataset.rawValue;
+        const result = resultMode === 'numeric'
+          ? approxResultEl?.dataset.rawValue
+          : exactResultEl?.dataset.rawValue;
         if (result) {
           navigator.clipboard?.writeText(result).then(() => notifyStatus('結果をクリップボードにコピーしました。')).catch(() => notifyStatus('コピーに失敗しました…'));
         }
@@ -516,6 +556,18 @@
         color: '#bbf7d0',
         letterSpacing: '0.4px'
       });
+      const resultModeSwitch = document.createElement('div');
+      Object.assign(resultModeSwitch.style, {
+        display: 'inline-flex',
+        borderRadius: '999px',
+        overflow: 'hidden',
+        border: '1px solid rgba(16,185,129,0.35)',
+        alignSelf: 'flex-start'
+      });
+      resultToggleSymbolic = buildSegmentToggle('分数/記号', () => setResultMode('symbolic'), '#0f766e');
+      resultToggleNumeric = buildSegmentToggle('小数', () => setResultMode('numeric'), '#0f766e');
+      resultModeSwitch.appendChild(resultToggleSymbolic.button);
+      resultModeSwitch.appendChild(resultToggleNumeric.button);
       exactResultEl = document.createElement('div');
       approxResultEl = document.createElement('div');
       [exactResultEl, approxResultEl].forEach(el => {
@@ -529,21 +581,24 @@
         el.textContent = '—';
       });
 
-      const resultSubLabelExact = document.createElement('div');
+      resultSubLabelExact = document.createElement('div');
       resultSubLabelExact.textContent = 'Exact / Symbolic';
       Object.assign(resultSubLabelExact.style, { fontSize: '12px', color: '#a7f3d0', letterSpacing: '0.3px' });
-      const resultSubLabelApprox = document.createElement('div');
+      resultSubLabelApprox = document.createElement('div');
       resultSubLabelApprox.textContent = 'Approximate (10進)';
       Object.assign(resultSubLabelApprox.style, { fontSize: '12px', color: '#a7f3d0', letterSpacing: '0.3px' });
 
       resultCard.appendChild(resultTitle);
+      resultCard.appendChild(resultModeSwitch);
       resultCard.appendChild(resultSubLabelExact);
       resultCard.appendChild(exactResultEl);
       resultCard.appendChild(resultSubLabelApprox);
       resultCard.appendChild(approxResultEl);
 
       worksheet.appendChild(worksheetHeader);
-      worksheet.appendChild(expressionInput);
+      worksheet.appendChild(inputModeSwitch);
+      worksheet.appendChild(expressionInputClassic);
+      worksheet.appendChild(expressionInputPretty);
       worksheet.appendChild(worksheetButtons);
       worksheet.appendChild(resultCard);
 
@@ -724,12 +779,12 @@
       workspace.appendChild(midPanel);
       workspace.appendChild(graphCard);
 
-      expressionInput.addEventListener('keydown', evt => {
-        if (evt.key === 'Enter' && evt.shiftKey) {
-          evt.preventDefault();
-          evaluateExpression();
-        }
-      });
+      attachShiftEnterListener(expressionInputClassic);
+      attachShiftEnterListener(expressionInputPretty);
+      expressionInputPretty.addEventListener('input', syncClassicFromPretty);
+      expressionInputPretty.addEventListener('change', syncClassicFromPretty);
+      setExpressionMode('classic', true);
+      setResultMode('symbolic', true);
     }
 
     function buildPrimaryButton(label, accent){
@@ -757,6 +812,97 @@
         btn.style.boxShadow = '0 12px 24px rgba(8,12,24,0.32)';
       });
       return btn;
+    }
+
+    function buildSegmentToggle(label, onClick, accent = '#1d4ed8'){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = label;
+      Object.assign(btn.style, {
+        padding: '8px 16px',
+        fontSize: '12px',
+        border: 'none',
+        background: 'rgba(15,23,42,0.65)',
+        color: '#e2e8f0',
+        cursor: 'pointer',
+        transition: 'background 0.12s ease, color 0.12s ease'
+      });
+      btn.addEventListener('click', () => onClick());
+      const setActive = (active) => {
+        btn.style.background = active ? `linear-gradient(135deg, ${accent}66, rgba(15,23,42,0.6))` : 'rgba(15,23,42,0.65)';
+        btn.style.color = active ? '#f0fdf4' : '#cbd5f5';
+      };
+      setActive(false);
+      return { button: btn, setActive };
+    }
+
+    function attachShiftEnterListener(element){
+      if (!element) return;
+      element.addEventListener('keydown', evt => {
+        if (evt.key === 'Enter' && evt.shiftKey) {
+          evt.preventDefault();
+          evaluateExpression();
+        }
+      });
+    }
+
+    function syncClassicFromPretty(){
+      if (!expressionInputPretty || !expressionInputClassic) return;
+      expressionInputClassic.value = convertPrettyToAscii(expressionInputPretty.value);
+    }
+
+    function syncPrettyFromClassic(){
+      if (!expressionInputPretty || !expressionInputClassic) return;
+      expressionInputPretty.value = convertAsciiToPretty(expressionInputClassic.value);
+    }
+
+    function setExpressionMode(mode, silent = false){
+      if (!expressionInputClassic || !expressionInputPretty) return;
+      if (expressionMode === mode && !silent) {
+        if (expressionInput) expressionInput.focus();
+        return;
+      }
+      expressionMode = mode;
+      if (mode === 'classic') {
+        expressionInputClassic.style.display = '';
+        expressionInputPretty.style.display = 'none';
+        expressionInput = expressionInputClassic;
+        syncClassicFromPretty();
+        if (!silent) notifyStatus('入力モード: 関数表記');
+      } else {
+        syncPrettyFromClassic();
+        expressionInputClassic.style.display = 'none';
+        expressionInputPretty.style.display = '';
+        expressionInput = expressionInputPretty;
+        if (!silent) notifyStatus('入力モード: 数学記号');
+      }
+      expressionModeToggleClassic?.setActive(mode === 'classic');
+      expressionModeTogglePretty?.setActive(mode === 'pretty');
+      try { expressionInput?.focus(); } catch {}
+    }
+
+    function setResultMode(mode, silent = false){
+      if (resultMode === mode && !silent) {
+        updateResultDisplay();
+        return;
+      }
+      resultMode = mode;
+      updateResultDisplay();
+      if (!silent) {
+        notifyStatus(mode === 'symbolic' ? '結果表示: 分数/記号モード' : '結果表示: 小数モード');
+      }
+    }
+
+    function updateResultDisplay(){
+      if (!exactResultEl || !approxResultEl) return;
+      const showSymbolic = resultMode !== 'numeric';
+      exactResultEl.style.display = showSymbolic ? 'block' : 'none';
+      approxResultEl.style.display = showSymbolic ? 'none' : 'block';
+      if (resultSubLabelExact) resultSubLabelExact.style.display = showSymbolic ? 'block' : 'none';
+      if (resultSubLabelApprox) resultSubLabelApprox.style.display = showSymbolic ? 'none' : 'block';
+      resultToggleSymbolic?.setActive(showSymbolic);
+      resultToggleNumeric?.setActive(!showSymbolic);
+      updateHistory();
     }
 
     function buildToggle(label, activeState, onClick){
@@ -805,15 +951,22 @@
 
     function insertText(text){
       if (!expressionInput) return;
-      const start = expressionInput.selectionStart ?? expressionInput.value.length;
-      const end = expressionInput.selectionEnd ?? expressionInput.value.length;
-      const before = expressionInput.value.slice(0, start);
-      const after = expressionInput.value.slice(end);
-      expressionInput.value = before + text + after;
-      const pos = start + text.length;
-      expressionInput.selectionStart = pos;
-      expressionInput.selectionEnd = pos;
-      expressionInput.focus();
+      const target = expressionInput;
+      const valueToInsert = expressionMode === 'pretty' ? beautifySymbols(text) : text;
+      const start = target.selectionStart ?? target.value.length;
+      const end = target.selectionEnd ?? target.value.length;
+      const before = target.value.slice(0, start);
+      const after = target.value.slice(end);
+      target.value = before + valueToInsert + after;
+      const pos = start + valueToInsert.length;
+      target.selectionStart = pos;
+      target.selectionEnd = pos;
+      target.focus();
+      if (expressionMode === 'pretty') {
+        syncClassicFromPretty();
+      } else {
+        syncPrettyFromClassic();
+      }
     }
 
     function notifyStatus(message){
@@ -848,7 +1001,7 @@
         exprCell.textContent = item.expr;
         exprCell.style.opacity = '0.85';
         const resultCell = document.createElement('div');
-        resultCell.textContent = item.result;
+        resultCell.textContent = resultMode === 'numeric' ? item.approx : item.symbolic;
         resultCell.style.fontFamily = '"Fira Code", monospace';
         historyBody.appendChild(exprCell);
         historyBody.appendChild(resultCell);
@@ -862,7 +1015,8 @@
     }
 
     function clearWorksheet(){
-      if (expressionInput) expressionInput.value = '';
+      if (expressionInputClassic) expressionInputClassic.value = '';
+      if (expressionInputPretty) expressionInputPretty.value = '';
       setResults(null, null);
       notifyStatus('ワークシートをクリアしました。');
     }
@@ -874,12 +1028,16 @@
         approxResultEl.textContent = '—';
         delete exactResultEl.dataset.rawValue;
         delete approxResultEl.dataset.rawValue;
+        updateResultDisplay();
         return;
       }
-      exactResultEl.textContent = exact;
-      approxResultEl.textContent = approx;
-      exactResultEl.dataset.rawValue = exact;
-      approxResultEl.dataset.rawValue = approx;
+      const symbolicText = exact ?? '—';
+      const approxText = approx ?? '—';
+      exactResultEl.textContent = symbolicText;
+      approxResultEl.textContent = approxText;
+      exactResultEl.dataset.rawValue = symbolicText;
+      approxResultEl.dataset.rawValue = approxText;
+      updateResultDisplay();
     }
 
     function drawGraph(points, xRange, yRange){
@@ -919,6 +1077,147 @@
       ctx.stroke();
     }
 
+    const FRACTION_CHAR_MAP = {
+      '½': '1/2', '⅓': '1/3', '⅔': '2/3', '¼': '1/4', '¾': '3/4',
+      '⅕': '1/5', '⅖': '2/5', '⅗': '3/5', '⅘': '4/5',
+      '⅙': '1/6', '⅚': '5/6', '⅛': '1/8', '⅜': '3/8', '⅝': '5/8', '⅞': '7/8'
+    };
+
+    const SUPERSCRIPT_DIGITS = {
+      '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+      '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+      '⁺': '+', '⁻': '-'
+    };
+
+    function convertPrettyToAscii(input){
+      if (input == null) return '';
+      let expr = String(input);
+      expr = expr.replace(/\r/g, '');
+      Object.entries(FRACTION_CHAR_MAP).forEach(([char, value]) => {
+        expr = expr.split(char).join(value);
+      });
+      expr = expr.replace(/([A-Za-z0-9_\)\]])([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+)/g, (_, base, supers) => {
+        const digits = supers.split('').map(ch => SUPERSCRIPT_DIGITS[ch] ?? '').join('');
+        if (!digits) return base;
+        return base + '^' + (digits.length > 1 ? `(${digits})` : digits);
+      });
+      expr = expr.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]/g, ch => SUPERSCRIPT_DIGITS[ch] ?? '');
+      expr = expr
+        .replace(/[×∙·]/g, '*')
+        .replace(/[÷∕]/g, '/')
+        .replace(/[−–—]/g, '-')
+        .replace(/√\s*\(([^)]+)\)/g, 'sqrt($1)')
+        .replace(/√\s*([A-Za-z0-9_πΠｅℯφΦ\.]+)/g, 'sqrt($1)')
+        .replace(/∛\s*\(([^)]+)\)/g, 'nthRoot($1,3)')
+        .replace(/∛\s*([A-Za-z0-9_πΠｅℯφΦ\.]+)/g, 'nthRoot($1,3)')
+        .replace(/∜\s*\(([^)]+)\)/g, 'nthRoot($1,4)')
+        .replace(/∜\s*([A-Za-z0-9_πΠｅℯφΦ\.]+)/g, 'nthRoot($1,4)');
+      expr = expr.replace(/[πΠ]/g, 'pi');
+      expr = expr.replace(/[ｅℯ]/g, 'e');
+      expr = expr.replace(/[φΦ]/g, '(1+sqrt(5))/2');
+      expr = expr.replace(/\u2044/g, '/');
+      expr = expr.replace(/\s+/g, ' ');
+      return expr.trim();
+    }
+
+    function beautifySymbols(value){
+      if (value == null) return '';
+      let output = String(value);
+      output = output.replace(/nthRoot\(([^,]+),\s*2\)/g, '√($1)');
+      output = output.replace(/nthRoot\(([^,]+),\s*3\)/g, '∛($1)');
+      output = output.replace(/nthRoot\(([^,]+),\s*4\)/g, '∜($1)');
+      output = output.replace(/\bpi\b/g, 'π');
+      output = output.replace(/sqrt\(/g, '√(');
+      output = output.replace(/\bphi\b/g, 'φ');
+      output = output.replace(/\*/g, '·');
+      output = output.replace(/\s*\/\s*/g, '/');
+      return output;
+    }
+
+    function convertAsciiToPretty(input){
+      if (input == null) return '';
+      return beautifySymbols(input);
+    }
+
+    function convertForNumeric(value){
+      if (value == null) return value;
+      if (!mathRef) return value;
+      if (mathRef.isFraction && mathRef.isFraction(value)) {
+        return value.valueOf();
+      }
+      if (mathRef.isBigNumber && mathRef.isBigNumber(value)) {
+        return value.toNumber();
+      }
+      if (mathRef.isComplex && mathRef.isComplex(value)) {
+        const re = convertForNumeric(value.re);
+        const im = convertForNumeric(value.im);
+        if (numericMath && numericMath.complex) return numericMath.complex(re, im);
+        return { re, im };
+      }
+      if (mathRef.isMatrix && mathRef.isMatrix(value)) {
+        return value.toArray().map(item => convertForNumeric(item));
+      }
+      if (mathRef.isUnit && mathRef.isUnit(value)) {
+        return typeof value.clone === 'function' ? value.clone() : value;
+      }
+      if (Array.isArray(value)) {
+        return value.map(item => convertForNumeric(item));
+      }
+      if (typeof value === 'object') {
+        return value;
+      }
+      return value;
+    }
+
+    function buildNumericScope(source){
+      const target = Object.create(null);
+      if (!source) return target;
+      Object.keys(source).forEach(key => {
+        target[key] = convertForNumeric(source[key]);
+      });
+      return target;
+    }
+
+    function formatApproxValue(value){
+      if (value == null) return 'null';
+      if (!numericMath) return beautifySymbols(String(value));
+      if (numericMath.isMatrix && numericMath.isMatrix(value)) {
+        return value.toString();
+      }
+      if (numericMath.isUnit && numericMath.isUnit(value)) {
+        return value.toString();
+      }
+      if (numericMath.isFraction && numericMath.isFraction(value)) {
+        return numericMath.format(value.valueOf(), { precision: 14 });
+      }
+      if (numericMath.isBigNumber && numericMath.isBigNumber(value)) {
+        return numericMath.format(value, { precision: 14 });
+      }
+      if (numericMath.isComplex && numericMath.isComplex(value)) {
+        const reNum = typeof value.re === 'number' ? value.re : numericMath.number ? numericMath.number(value.re) : Number(value.re);
+        const imNum = typeof value.im === 'number' ? value.im : numericMath.number ? numericMath.number(value.im) : Number(value.im);
+        const reStr = numericMath.format(reNum, { precision: 12 });
+        const imAbs = Math.abs(imNum);
+        if (imAbs < 1e-14) {
+          return reStr;
+        }
+        const imStr = numericMath.format(imAbs, { precision: 12 });
+        const sign = imNum >= 0 ? '+' : '−';
+        return `${reStr} ${sign} ${imStr}i`;
+      }
+      if (Array.isArray(value)) {
+        return `[${value.map(formatApproxValue).join(', ')}]`;
+      }
+      if (typeof value === 'number') {
+        return numericMath.format(value, { precision: 14 });
+      }
+      try {
+        return numericMath.format(value, { precision: 14 });
+      } catch {
+        return beautifySymbols(String(value));
+      }
+    }
+
     function toNumber(value){
       if (mathRef && mathRef.isUnit && mathRef.isUnit(value)) {
         const json = typeof value.toJSON === 'function' ? value.toJSON() : null;
@@ -956,18 +1255,18 @@
         return value.toString();
       }
       if (math.isFraction && math.isFraction(value)) {
-        return value.toFraction(true);
+        return beautifySymbols(value.toFraction(false));
       }
       if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'string') {
-        return String(value);
+        return beautifySymbols(String(value));
       }
       if (Array.isArray(value)) {
         return `[${value.map(formatValue).join(', ')}]`;
       }
       if (typeof value === 'object' && value !== null) {
-        return JSON.stringify(value);
+        return beautifySymbols(JSON.stringify(value));
       }
-      return String(value);
+      return beautifySymbols(String(value));
     }
 
     function computeTetration(base, height){
@@ -1284,7 +1583,9 @@
     function bindMath(mathjs){
       mathRef = mathjs;
       math = mathjs.create(mathjs.all);
-      math.config({ number: 'number', precision: 32, matrix: 'Matrix' });
+      math.config({ number: 'Fraction', precision: 64, matrix: 'Matrix' });
+      numericMath = mathjs.create(mathjs.all);
+      numericMath.config({ number: 'number', precision: 32, matrix: 'Matrix' });
 
       const trigNames = [
         ['sin', true, false], ['cos', true, false], ['tan', true, false],
@@ -1364,6 +1665,7 @@
       };
 
       math.import(overrides, { override: true });
+      numericMath.import(overrides, { override: true });
       updateVariables();
     }
 
@@ -1372,7 +1674,14 @@
         notifyStatus('数学エンジンの初期化を待っています…');
         return;
       }
-      const expr = expressionInput.value.trim();
+      const rawExpr = expressionMode === 'pretty'
+        ? (expressionInputPretty?.value || '')
+        : (expressionInputClassic?.value || '');
+      const displayExpr = (rawExpr || '').trim();
+      const expr = convertPrettyToAscii(rawExpr).trim();
+      if (expressionMode === 'pretty' && expressionInputClassic) {
+        expressionInputClassic.value = expr;
+      }
       if (!expr) {
         notifyStatus('式を入力してください。');
         return;
@@ -1381,10 +1690,27 @@
         const node = math.parse(expr);
         const result = node.evaluate(scope);
         scope.ans = result;
-        const exact = formatValue(result);
-        const approx = math.format(result, { precision: 14 });
-        setResults(exact, approx);
-        history.push({ expr, result: approx });
+        let symbolic = formatValue(result);
+        try {
+          const simplified = math.simplify(node, scope, { exactFractions: true });
+          const simplifiedText = beautifySymbols(simplified.toString({ parenthesis: 'auto' }));
+          if (simplifiedText) {
+            symbolic = simplifiedText;
+          }
+        } catch {}
+        let approxValue;
+        try {
+          const approxScope = buildNumericScope(scope);
+          approxValue = numericMath ? numericMath.evaluate(expr, approxScope) : result;
+        } catch {
+          approxValue = result;
+        }
+        const approx = formatApproxValue(approxValue);
+        setResults(symbolic, approx);
+        const historyExpr = expressionMode === 'pretty'
+          ? (displayExpr || expr)
+          : convertAsciiToPretty(displayExpr || expr);
+        history.push({ expr: historyExpr, symbolic, approx });
         updateHistory();
         updateVariables();
         totalComputations += 1;
@@ -1401,7 +1727,8 @@
         notifyStatus('数学エンジンの初期化を待っています…');
         return;
       }
-      const expr = graphInput.value.trim();
+      const exprRaw = graphInput.value.trim();
+      const expr = convertPrettyToAscii(exprRaw);
       if (!expr) {
         notifyStatus('グラフ式を入力してください。');
         return;

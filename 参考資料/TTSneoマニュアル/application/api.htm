@@ -1,0 +1,174 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../style.css">
+	<title>APIを使ってDLLを呼び出す</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		DLL関数を呼び出す</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-extra.htm">プラグインとDLL関数</a> &gt;</div>
+</div>
+<h2>DLL関数とは？</h2>
+<blockquote>
+	<p>TTSneoは、あらかじめ用意されている機能だけでも、十分いろいろなことができますが、もちろんできないこともあります。<br>
+	しかし、別途用意されたDLL関数をTTSneoから使うことで、TTSneo標準では対応していない機能を使うことができます。</p>
+	<p>一般に、DLL関数を集めたものをAPIと呼びます。<br>
+	APIとは、多くのプログラムが共通で使う部分を１つのプログラム（DLLなど）にして、様々なプログラムから使えるようにする機能のことです。</p>
+</blockquote>
+<p>　</p>
+<h2>いざ使おうと思っても・・・</h2>
+<blockquote>
+	<p>C/C++言語やVisual Basicを利用した経験がある方であれば、DLL関数の呼び出しについてイメージできると思いますが、<br>
+	ここでは、初めての方に簡単に説明したいと思います。</p>
+</blockquote>
+<h4>まず、WindowsにはどんなDLL関数があるのか？</h4>
+<blockquote>
+	<p>Windowsには、はじめからDLL関数がたくさん用意されています。これらを「Windows API」と呼びます。<br>
+	Windows APIには、ウィンドウやボタンの表示、ネットワークへの接続などの機能がDLL関数として用意されています。<br>
+	実は、すべてのソフトが何かしらWindowsのDLL関数を利用して動作しています。</p>
+</blockquote>
+<h4>よく使われるWindowsのDLL(標準でインストールされている)</h4>
+<blockquote>
+	<p>Windowsで利用されているDLLは、たくさんありますが、下の４つがよく使うDLLファイルです。</p>
+	<p><b>kernel32.dll</b></p>
+	<blockquote>
+		<p>kernel(カーネル)とは、Windowsの中核となるプログラムです。<br>
+		主にWindowsの動作に必要な機能が用意されています。<br>
+		　→Windowsフォルダの取得など</p>
+	</blockquote>
+	<p><b>user32.dll</b></p>
+	<blockquote>
+		<p>主にユーザの操作に関係する関数があります。<br>
+		　→メッセージの表示や壁紙の変更など</p>
+	</blockquote>
+	<p><b>shell32.dll</b></p>
+	<blockquote>
+		<p>shell(シェル)とは、いろいろなソフトを起動させる機能のことをいいます。<br>
+		主にエクスプローラで頻繁に使われる関数があります。<br>
+		　→プログラムの起動、ファイルの操作など</p>
+	</blockquote>
+	<p><b>gdi32.dll</b></p>
+	<blockquote>
+		<p>主に画像関係の処理の関数があります。<br>
+		　→正方形を描く、円を描く　など</p>
+	</blockquote>
+</blockquote>
+<h4>その他のDLLファイル</h4>
+<blockquote>
+	<p>Windows標準で用意されているDLLファイル以外にも、フリーソフトなどとして公開されているDLLファイルがあります。<br>
+	これらの多くのDLL関数についても、TTSneoから利用することができます。</p>
+</blockquote>
+<p>　</p>
+<h2>DLL関数を利用するには</h2>
+<blockquote>
+	<p>TTSneoでDLL関数を使うには、「どのDLLファイルのどのDLL関数を使うのか」を教えておかなければなりません。<br>
+	DLL関数を利用するためには、「宣言」命令を使います。</p>
+	<p class="format"><span class="flag">[DLL名]</span>の<span class="flag">[DLL関数名]</span>を<span class="flag">[手順名]（[必要な情報]）</span>と宣言 </p>
+	<p>この宣言を実行すると、[手順名]にしていした命令が実行できるようになります。<br>
+	また、[手順名]を関数のように使うこともできます。</p>
+	<p>Visual Basicでは、Declare文に相当する命令です。<br>
+	ただ、必要な情報(引数)には、型を指定する必要はありません。</p>
+</blockquote>
+<p>　</p>
+<h2>DLLの関数はどうやったらわかるの？</h2>
+<blockquote>
+	<p>「宣言」命令に指定する情報は、どのDLL関数を利用したいかによって異なります。<br>
+	多くの場合、DLL関数の使い方は、C言語やVisual Basic向けに書かれています。</p>
+	<p>ここでは、Visual Basic向けに書かれた説明を、TTSneo向けに読み替えていく方法を説明します。</p>
+	<p>まず、目的のDLL関数に関する情報を、Googleなどの検索エンジンで調べましょう。<br>
+	Windows APIについては、目的の機能の他に、キーワードに「VB」 「API」を指定すると見つけることができます。 <br>
+	フリーソフトのDLLの場合は、付属のサンプルプログラム等を参考にしてください。</p>
+	<p>目的のDLL関数について書かれたサンプルが見つかったら、そのプログラムから宣言文を探しましょう。<br>
+	Visual Basicのサンプルをダウンロードした場合は、「～.bas」というファイルにある場合が多いです。Visual Basicがなくても、このファイルはメモ帳でも開けます。</p>
+	<p>次に、Declare文を探しましょう。<br>
+	行の頭が「Declare ～」「Public Declare ～」「Private Declare ～」である行がDLL呼び出しにかかわる部分です。 </p>
+	<p class="vb">Declare Sub <b><font color="#0000FF">SetWindowPos</font></b> Lib &quot;<b><font color="#008000">user32</font></b>&quot; <font color="#800000">(ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) </font></p>
+	<p><font color="#0000FF"><b>青</b></font>が[DLL関数名]、<font color="#008000"><b>緑</b></font>が[DLL名]です。<br>
+	赤が、このDLLに必要な情報(引数)を指定する部分で、この場合は7つあります。７つの変数を指定します。</p>
+	<p>この<b><font color="#0000FF">SetWindowPos</font></b>を使うときの宣言文は、次のようになります。 </p>
+	<p class="example"><b><font color="#008000">user32.dll</font></b>の<b><font color="#0000FF">SetWindowPos</font><font color="#800000">（数１、数２、数３、数４、数５、数６、数７）</font></b>を外部手順と宣言 </p>
+	<p>この命令を使うには、次のようにします。</p>
+	<p class="example">ウィンドウ１のハンドル,1,0,0,0,0,11を外部手順 </p>
+	<p>ここでは手順名を「外部手順」としていますが、TTSneoの変数・関数・命令と、名前が重ない、名前を指定してください。</p>
+	<p><b>補足</b></p>
+	<p>TTSneoデザイナの「ツール」タブにある「VBDLL宣言変換」を使えば、Declare文をTTSneoの「宣言」命令に変換することができます。</p>
+</blockquote>
+<p>　</p>
+<h2>作ってみよう！</h2>
+<blockquote>
+	<p>それでは、実際にWindows APIを使って「壁紙変更アプリ」を作ってみましょう。 </p>
+	<p class="example">user32.dllのSystemParametersInfoA（数１、数２、文字１、数３）を壁紙変更と宣言 <br>
+	タイトルは　「壁紙チェンジャー」<br>
+	<br>
+	固定ウィンドウ１の表示<br>
+	待機<br>
+	<br>
+	手順は　ウィンドウ１を閉じる<br>
+	　　終了<br>
+	終わり<br>
+	<br>
+	手順は　固定ウィンドウ１の表示<br>
+	固定ウィンドウ１を使う<br>
+	’&lt;固定ウィンドウ１&gt;<br>
+	固定ウィンドウ１の中の大きさを292，76へ変えろ<br>
+	　　その名前を「壁紙チェンジャー」へ変えろ<br>
+	　　その背景を&amp;h8000000Fへ変えろ<br>
+	テキスト１を作れ<br>
+	　　その位置と大きさを10，10，230，18へ変えろ<br>
+	ボタン１を作れ<br>
+	　　その位置と大きさを240，10，40，20へ変えろ<br>
+	　　その名前を「選択」へ変えろ<br>
+	ボタン２を作れ<br>
+	　　その位置と大きさを110，40，65，25へ変えろ<br>
+	　　その名前を「変更」へ変えろ<br>
+	’&lt;/固定ウィンドウ１&gt;<br>
+	固定ウィンドウ１を表示<br>
+	終わり<br>
+	<br>
+	手順は　固定ウィンドウ１のボタン１をクリック<br>
+	　　選択ウィンドウのフィルタを「ビットマップ|*.bmp|」に変えろ<br>
+	　　開くファイルを選択<br>
+	　　’キャンセルしたとき<br>
+	　　もし　選択ウィンドウのキャンセルは、オン　なら　手順を抜ける<br>
+	　　テキスト１の内容を選択ウィンドウのファイル名に変えろ<br>
+	終わり<br>
+	<br>
+	手順は　固定ウィンドウ１のボタン２をクリック<br>
+	　　<span class="rem">ーービットマップのみ対応</span><br>
+	　　２０、０、テキスト１の内容、２を壁紙変更<br>
+	終わり</p>
+	<p>このSystemParametersInfoA APIでは、ビットマップファイルのみ壁紙にすることができます。<br>
+	JPEGファイルなどを壁紙に設定したい場合は、一度ピクチャーオブジェクトに読み込み、ビットマップファイルとして保存して、それを壁紙に設定してください。</p>
+</blockquote>
+<p>　</p>
+<h2>うまく動かない！</h2>
+<h4>「DLLが見つかりません」や「関数名が見つかりません」が表示される </h4>
+<blockquote>
+	<p>宣言した命令が正しいか確認してください。<br>
+	分からない場合は、APIビューワやインターネットなどで確認してください。 </p>
+</blockquote>
+<h4>「強制終了」される </h4>
+<blockquote>
+	<p>宣言した引数 (「、」の数) が正しくありません。<br>
+	宣言した命令が正しいか確認してください。 </p>
+</blockquote>
+<h4>何も実行されない</h4>
+<blockquote>
+	<p>数字を指定する部分に文字を入れたり、文字を指定する部分に数字を入れたりすると、うんともすんとも言わないときがあります。 </p>
+</blockquote>
+</span></span></span></span></span></span></span></span>
+
+</body>
+
+</html>

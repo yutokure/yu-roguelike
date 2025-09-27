@@ -1,0 +1,316 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../style.css">
+	<title>WAVE、MP3、動画、音楽CDを再生する</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		WAVE、MP3、動画、音楽CDを再生する</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2012/05/30<!--webbot bot="Timestamp" endspan i-checksum="12585" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-mmedia.htm">マルチメディア</a> &gt;</div>
+</div>
+<h2>TTSneoでマルチメディア！！</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar11.png" width="122" height="119"></td>
+		<td>TTSneoでは、WAVE、MP3、ビデオクリップ、音楽CDなどのファイルを再生させることができます。<p>また、ファイルの形式によっては、再生時間やタイトルなどの情報を取得することもできます。</p>
+		</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>対応しているマルチメディア形式</h2>
+<blockquote>
+	<p>TTSneoは、効果音(WAVEファイル)やMIDI、音楽CD、ビデオを再生させることができます。</p>
+	<p>次のファイル形式が再生できます。</p>
+	<div align="center">
+		<center>
+		<table class="tablebase2" border="1" cellpadding="2">
+			<tr>
+				<th>
+				<p align="center">再生できるメディアの種類</p>
+				</th>
+			</tr>
+			<tr>
+				<td align="left">音楽CD</td>
+			</tr>
+			<tr>
+				<td align="left">WAVE形式　(*.wav)</td>
+			</tr>
+			<tr>
+				<td align="left">MIDIシーケンス　(*.mid *.rmi)</td>
+			</tr>
+			<tr>
+				<td align="left">AVI形式、MPEG形式　(*.avi,*.mpg)</td>
+			</tr>
+			<tr>
+				<td align="left">Windows Media形式　(*.wma *.wmv)</td>
+			</tr>
+			<tr>
+				<td align="left">MP3形式　(*.mp3 *.mp2)</td>
+			</tr>
+		</table>
+		</center>
+	</div>
+	<p><b>注意<br>
+	・</b>パソコンの環境によって、再生できる種類が異なることがあります。<br>
+	・ライセンス保護されたメディアは、再生できないことがあります。<br>
+	・インターネットスクリームを再生することはできません。</p>
+</blockquote>
+<p>　</p>
+<h2>再生する</h2>
+<blockquote>
+	<p>ファイルを再生させるには、「再生」命令を使います。<br>
+	「演奏」命令は、ドレミで演奏するための命令ですので、間違えないように注意してください。</p>
+	<p class="format"><span class="flag">[ファイル名]</span>を再生</p>
+	<p>同時に複数の形式を再生することはできません。<br>
+	複数の形式を再生したい場合は、<a href="mci.htm">MCI命令</a>を利用してください。</p>
+</blockquote>
+<p>　</p>
+<h4>停止させる</h4>
+<blockquote>
+	<p>停止するには、「停止」命令を使います。</p>
+	<p class="format">停止</p>
+</blockquote>
+<p>　</p>
+<h4>一時停止させる</h4>
+<blockquote>
+	<p>一時停止させるには、下のように命令します。</p>
+	<p class="format">一時停止</p>
+	<p>再開するには、もう一度「一時停止」命令を実行します。</p>
+</blockquote>
+<p>　</p>
+<h4>繰り返し再生する</h4>
+<blockquote>
+	<p>BGMなどのように繰り返し再生するには、「リピート再生」命令を使います。</p>
+	<p class="format"><span class="flag">[ファイル名]</span>をリピート再生</p>
+</blockquote>
+<p>　</p>
+<h2>ＭＩＤＩのタイトルや時間を取得する</h2>
+<blockquote>
+	<p>再生中のMIDIファイルのタイトルや時間を取得するには、下のように指定します。</p>
+	<p class="format">ＭＩＤＩのタイトル<br>
+	ＭＩＤＩの現在時間</p>
+	<p class="steps"><b>▼参照<br>
+	</b>　リファレンスの「関数」の「マルチメディア」</p>
+</blockquote>
+<p>　</p>
+<h2>ビデオクリップをピクチャーオブジェクトに表示する</h2>
+<blockquote>
+	<p>TTSneoのウィンドウやピクチャーオブジェクト内にビデオを表示するには、下のように命令します。</p>
+	<p class="format"><span class="flag">[ビデオファイル名]</span>を<span class="flag">[表示するオブジェクト名]</span>で再生</p>
+	<p>[表示するオブジェクト名]には、ウィンドウとピクチャーオブジェクトが指定できます。</p>
+	<p>何も指定しないと、新しいウィンドウが表示されます。</p>
+	<p>※ピクチャーの「自動調整」がオンの状態で再生すると、自動的にピクチャーの大きさをビデオのサイズにあわせます。<br>
+	　オフにすると、再生したときのピクチャーの大きさにあわせて再生します。</p>
+</blockquote>
+<p>　</p>
+<h2>音楽ＣＤを再生する</h2>
+<blockquote>
+	<p>音楽ＣＤを再生するには、下のように命令します。</p>
+	<p class="format">ＣＤの<span class="flag">[トラック番号]</span>トラック<span class="flag">[ドライブ名]</span>ドライブを再生</p>
+	<p>[トラック番号]は、再生する音楽トラックを番号で指定します。省略可能</p>
+	<p>[ドライブ名]は、複数のドライブを搭載しているパソコンの場合、指定できます。<br>
+	通常は設定する必要は、ありません。</p>
+	<p>　</p>
+	<p>一時停止、停止の操作は、他の形式と同じです。</p>
+	<p class="format">一時停止　<span class="rem">ーー(再開も「一時停止」命令)</span><br>
+	停止</p>
+	<p>　</p>
+</blockquote>
+<h4>再生しているトラック番号や時間の取得</h4>
+<blockquote>
+	<p>再生しているＣＤの状態を調べるには、下のようにしてください。</p>
+	<p class="format">ＣＤの現在時間<br>
+	ＣＤのトラック数</p>
+	<p>他にも状態を調べることができます。<br>
+	リファレンスの「関数」の「マルチメディア」をご覧ください。</p>
+</blockquote>
+<p>　</p>
+<h2>WAVE形式の停止と一時停止について</h2>
+<blockquote>
+	<p>TTSneo1.64以降から、WAVE形式も停止・一時停止することができるようになりました。</p>
+</blockquote>
+<p>　</p>
+<h2>Windowsで設定されている効果音を鳴らしたい</h2>
+<blockquote>
+	<p>コントロールパネルの「サウンド」プロパティで設定されている効果音を鳴らすこともできます。</p>
+	<p><b>例</b>　Windowsの起動時の効果音を再生する</p>
+	<p class="example"><b><font color="#ff00ff">「SystemStart_win」</font></b>を再生</p>
+	<p><b>▼参照</b>　リファレンスの「Windows効果音の一覧」</p>
+</blockquote>
+<p>　</p>
+<h2>プログラムの例</h2>
+<p><b>例</b>　マルチメディアプレイヤー</p>
+<p class="example">ウィンドウ１の表示<br>
+待機<br>
+<br>
+<span class="struct">手順は　ウィンドウ１の表示</span><br>
+<span class="rem">’&lt;ウィンドウ１&gt;</span><br>
+ウィンドウ１を使う<br>
+ウィンドウ１の中の大きさを242，76へ変えろ<br>
+　　その名前を「マルチメディアプレイヤー」へ変えろ<br>
+　　その背景を&amp;h8000000Fへ変えろ<br>
+テキスト１を作れ<br>
+　　その位置と大きさを10，10，160，18へ変えろ<br>
+ボタン１を作れ<br>
+　　その位置と大きさを170，10，65，25へ変えろ<br>
+　　その名前を「選択」へ変えろ<br>
+ボタン２を作れ<br>
+　　その位置と大きさを10，50，65，25へ変えろ<br>
+　　その名前を「再生|&gt;」へ変えろ<br>
+ボタン３を作れ<br>
+　　その位置と大きさを90，50，65，25へ変えろ<br>
+　　その名前を「一時停止||」へ変えろ<br>
+ボタン４を作れ<br>
+　　その位置と大きさを170，50，65，25へ変えろ<br>
+　　その名前を「停止■」へ変えろ<br>
+<span class="rem">’&lt;/ウィンドウ１&gt;</span><br>
+ウィンドウ１を表示<br>
+終わり<br>
+<br>
+<span class="struct">手順は　ウィンドウ１のボタン１を</span>クリック<br>
+　　選択ウィンドウのフィルタを「MIDI|*.mid;*.midi|Wave|*.wav|すべてのファイル|*.*|」に変えろ<br>
+　　開くファイルを選択<br>
+　　<span class="struct">もし</span>　選択ウィンドウのキャンセルは　オン　<span class="struct">なら</span>　手順から抜ける<br>
+　　テキスト１の内容を、選択ウィンドウのファイル名に変えろ<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　ウィンドウ１のボタン２をクリック</span><br>
+　　ボタン２の有効を、オフに変えろ<br>
+　　ボタン３の有効を、オンに変えろ<br>
+　　ボタン４の有効を、オンに変えろ<br>
+　　テキスト１の内容を再生<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　ウィンドウ１のボタン３をクリック</span><br>
+　　一時停止<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　ウィンドウ１のボタン４をクリック</span><br>
+　　停止<br>
+　　ボタン２の有効を、オンに変えろ<br>
+　　ボタン３の有効を、オフに変えろ<br>
+　　ボタン４の有効を、オフに変えろ<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　ウィンドウ１を閉じる</span><br>
+<span class="rem">　　ーー終了</span><br>
+　　終了<br>
+<span class="struct">終わり</span></p>
+<p>　</p>
+<p><b>例</b>　MP3プレーヤ</p>
+<p class="example">タイトルは　「TTSneo MP3プレーヤ」<br>
+固定ウィンドウ１の表示<br>
+待機<br>
+<br>
+<span class="struct">手順は　固定ウィンドウ１の表示</span><br>
+<span class="rem">’&lt;固定ウィンドウ１&gt;</span><br>
+固定ウィンドウ１を使う<br>
+固定ウィンドウ１の中の大きさを281，70へ変えろ<br>
+　　その名前を「TTSneo MP3プレーヤ」へ変えろ<br>
+　　その背景を&amp;h8000000Fへ変えろ<br>
+テキスト１を作れ<br>
+　　その位置と大きさを22，25，251，18へ変えろ<br>
+ボタン１を作れ<br>
+　　その位置と大きさを0，0，65，25へ変えろ<br>
+　　その名前を「再生」へ変えろ<br>
+ボタン２を作れ<br>
+　　その位置と大きさを70，0，65，25へ変えろ<br>
+　　その名前を「一時停止」へ変えろ<br>
+ボタン３を作れ<br>
+　　その位置と大きさを140，0，65，25へ変えろ<br>
+　　その名前を「停止」へ変えろ<br>
+ボタン６を作れ<br>
+　　その位置と大きさを210，0，65，25へ変えろ<br>
+　　その名前を「閉じる」へ変えろ<br>
+ボタン７を作れ<br>
+　　その位置と大きさを0，25，20，20へ変えろ<br>
+　　その名前を「...」へ変えろ<br>
+<span class="rem">’&lt;/固定ウィンドウ１&gt;<br>
+’自分でプログラムを入れたいときは、必ずこれより下に入力してください</span><br>
+<br>
+<span class="rem">’■ボタンの有効と無効を設定■<br>
+’再生ボタンのみ使えるようにする</span><br>
+ボタン１の有効を１に変えろ<br>
+ボタン２の有効を０に変えろ<br>
+ボタン３の有効を０に変えろ<br>
+<br>
+固定ウィンドウ１を表示<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　固定ウィンドウ１のボタン１をクリック</span><br>
+<span class="rem">　　ーーＭＰ３の再生を再生する</span><br>
+　　<span class="struct">もし</span>　テキスト１の内容は　「」　<span class="struct">なら</span>　「ファイルが指定されていません。」 を表示<br>
+<br>
+　　テキスト１の内容を再生<br>
+　　固定ウィンドウ１の名前を、ＭＰ３のタイトルに変えろ<br>
+　　その名前を「［ＭＰ３のタイトル］　　　［ＭＰ３の現在時間］／［ＭＰ３の時間］」に変えろ<br>
+　　<br>
+<span class="rem">　　ーーボタンを無効にする</span><br>
+　　ボタン１の有効を０に変えろ<br>
+　　ボタン２の有効を１に変えろ<br>
+　　ボタン３の有効を１に変えろ<br>
+　　<br>
+　　「時間の表示。待て　１」を<span class="struct">繰り返せ</span><br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　固定ウィンドウ１のボタン２をクリック</span><br>
+<span class="rem">　　ーーＭＰ３の再生を一時停止する</span><br>
+　　ーー再開するときも一時停止<br>
+　　一時停止<br>
+　　固定ウィンドウ１の名前を「［ＭＰ３のタイトル］　　　［ＭＰ３の現在時間］／［ＭＰ３の時間］」に変えろ<br>
+　　<br>
+<span class="rem">　　ーー有効/無効の設定</span><br>
+　　ボタン１の有効を０に変えろ<br>
+　　ボタン２の有効を１に変えろ<br>
+　　ボタン３の有効を１に変えろ<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　固定ウィンドウ１のボタン３をクリック</span><br>
+<span class="rem">　　ーーＭＰ３の再生を停止する</span><br>
+　　停止<br>
+　　固定ウィンドウ１の名前を、タイトルに変えろ<br>
+　　<br>
+<span class="rem">　　ーー有効/無効の設定</span><br>
+　　ボタン１の有効を１に変えろ<br>
+　　ボタン２の有効を０に変えろ<br>
+　　ボタン３の有効を０に変えろ<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　固定ウィンドウ１のボタン７をクリック</span><br>
+　　選択ウィンドウのフィルタを「MPEG Audioファイル|*.mp2;*.mp3;*.mpg|すべてのファイル|*.*|」に変えろ<br>
+　　選択ウィンドウのタイトルを「MPEGオーディオを開く」に変えろ<br>
+　　開くファイルを選択<br>
+　　<span class="struct">もし</span>　選択ウィンドウのキャンセルは、オン　<span class="struct">なら</span>　手順から抜ける<br>
+　　テキスト１の内容を、選択ウィンドウのファイル名へ変えろ<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　時間の表示</span><br>
+<span class="rem">　　ーー時間の表示</span><br>
+　　<span class="struct">もし</span>　ＭＰ３の状態は　「再生中」　<span class="struct">なら</span>　固定ウィンドウ１の名前を 「［ＭＰ３のタイトル］　　　［ＭＰ３の現在時間］／［ＭＰ３の時間］」に変えろ<br>
+　　<span class="struct">もし</span>　ＭＰ３の状態は　「停止中」　<span class="struct">なら</span>　固定ウィンドウ１の名前を、 タイトルに変えろ<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　固定ウィンドウ１のボタン６をクリック</span><br>
+<span class="rem">　　ーー終了</span><br>
+　　固定ウィンドウ１を閉じる<br>
+<span class="struct">終わり</span><br>
+<br>
+<span class="struct">手順は　固定ウィンドウ１を閉じる</span><br>
+　　終了<br>
+<span class="struct">終わり</span></p>
+<p>　</p>
+
+</body>
+
+</html>

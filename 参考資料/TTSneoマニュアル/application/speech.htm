@@ -1,0 +1,208 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>音声合成を使う</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">音声認識・音声合成プラグイン</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2004/04/10<!--webbot bot="Timestamp" endspan i-checksum="12531" -->更新</div>
+</div>
+
+<h2>概要</h2>
+<blockquote>
+	<p>Microsoftが無償提供しているSpeechAPIを利用して、TTSneo上で音声合成と認識を利用できるプラグインです。<br>
+	すべての使用するには、スピーカとマイクを接続し、必要なソフトウェアをインストールする必要があります。</p>
+	<p>とりあえず使える範囲にはなっていますので、楽しんでください。</p>
+	<p><b><font color="#FF0000">注意！</font></b></p>
+	<p>このプラグインは、Microsoftの音声合成・認識システムを利用します。<br>
+	利用するには、次のソフトウェアをすべてダウンロードする必要があります。<br>
+	（無料ダウンロード）</p>
+	<p><b>★音声合成とは、</b><br>
+	　パソコンで文字を音に変換して、声としてしゃべらせる機能。<br>
+	　Text-to-Speech(TTS)と言います。</p>
+	<p><b>★音声認識とは、</b><br>
+	　音声合成とは逆に、マイクにしゃべった声を、パソコンで処理して<br>
+	　文字として表示する機能。<br>
+	　「Speech-Recognize(SR)」と言います。</p>
+	<p>　これらの機能を組み合わせれば、HALもできるかも？？？？</p>
+</blockquote>
+<p>　</p>
+<h2>必要なソフトウェアのインストール</h2>
+<p><b>音声合成を使用する場合</b> (SAPI4.0を使用)</p>
+<blockquote>
+	<p><a href="http://activex.microsoft.com/activex/controls/sapi/spchapi.exe">
+	http://activex.microsoft.com/activex/controls/sapi/spchapi.exe</a><br>
+	をダウンロードしてインストールします。(824KB)</p>
+	<p>
+	<a href="http://www.microsoft.com/products/msagent/downloads/user.asp#tts">
+	http://www.microsoft.com/products/msagent/downloads/user.asp#tts</a><br>
+	にアクセスして[Select a Text-to-speech engine] で [・・・　Japanese(3MB)] を選び<br>
+	ダウンロードしてインストールしてください。</p>
+</blockquote>
+<p><b>音声認識を使用する場合</b></p>
+<blockquote>
+	<p>
+	<a href="http://download.microsoft.com/download/speechSDK/SDK/5.1/WXP/EN-US/speechsdk51.exe">
+	Microsoft Speech SDK 5.1</a>(68 MB)をダウンロードします。</p>
+	<p>
+	<a href="http://download.microsoft.com/download/speechSDK/SDK/5.1/WXP/EN-US/speechsdk51LangPack.exe">
+	Language Pack(Japanese&amp;Chinese)</a>(81.5MB)　をダウンロードします。（音声認識に必要）<br>
+	インストール時に「Custom」を選び「Chinese」のチェックをはずしてください。<br>
+	（中国版は不要なので）</p>
+	<p>以上で利用可能になります。<br>
+	SAPI5.1については、<a href="http://www.microsoft.com/speech/download/SDK51/">参考情報</a>をご覧ください。</p>
+	<p>　</p>
+</blockquote>
+<h2>プラグインのインストール・アンインストール</h2>
+<blockquote>
+	<p>
+	このプラグインを利用するには、添付された「TTSSpeech.dll」をWindowsのシステムフォルダにコピーし、DLLの登録を行う必要があります。</p>
+	<p><b>インストール<br>
+	</b>「インストール.tts」を起動します。<br>
+	ウィンドウの「インストール」ボタンをクリックして、メッセージをクリックすると、インストールができます。</p>
+	<p><b>アンインストール<br>
+	</b>「インストール.tts」を起動します。<br>
+	ウィンドウの「アンインストール」ボタンをクリックして、メッセージをクリックすると、アンインストールができます。</p>
+</blockquote>
+<p>　</p>
+<h2>音声合成</h2>
+<blockquote>
+	<p>音声合成.ttsを参考にしてください。</p>
+</blockquote>
+<p><b>拡張オブジェクトのプログラム</b></p>
+<p class="example">TTSSpeechN.Speech</p>
+<p><b>設定項目</b></p>
+<table border="0" cellpadding="2">
+	<tr>
+		<td class="items" align="center">設定項目</td>
+		<td class="items" align="center">説明</td>
+	</tr>
+	<tr>
+		<td class="items">性別</td>
+		<td>音声の性別（男/女）</td>
+	</tr>
+	<tr>
+		<td class="items">スピード</td>
+		<td>音声合成のスピードを設定します</td>
+	</tr>
+	<tr>
+		<td class="items">ピッチ</td>
+		<td>音声合成のピッチを設定します<br>
+		※男性と女性では値が異なります</td>
+	</tr>
+	<tr>
+		<td class="items">状態</td>
+		<td>状態を表します（再生中/停止中）</td>
+	</tr>
+</table>
+<p><b>命令</b></p>
+<table border="0" cellpadding="2">
+	<tr>
+		<td class="items" align="center">命令</td>
+		<td class="items" align="center">説明</td>
+	</tr>
+	<tr>
+		<td class="items">～の[内容]を話せ</td>
+		<td>音声合成を開始します</td>
+	</tr>
+	<tr>
+		<td class="items">～を停止</td>
+		<td>音声合成を停止します</td>
+	</tr>
+	<tr>
+		<td class="items">～を一時停止</td>
+		<td>音声合成を一時停止します<br>
+		再開する場合は、もう一度命令してください</td>
+	</tr>
+</table>
+<p><b>使用例</b></p>
+<p class="example">拡張オブジェクト１をスピーチとして作る<br>
+スピーチのプログラムを「TTSSpeechN.speech」に変えろ<br>
+スピーチの性別を女に変えろ<br>
+スピーチのスピードを150に変えろ<br>
+スピーチのピッチを170に変えろ<br>
+<br>
+メッセージは　「こんにちは」<br>
+スピーチのメッセージを話せ</p>
+<p>　</p>
+<h2>音声認識</h2>
+<blockquote>
+	<p>音声認識.ttsを参考にしてください。</p>
+</blockquote>
+<p><b>拡張オブジェクトのプログラム</b></p>
+<p class="example">TTSSpeechN.Recognize</p>
+<p><b>発生する手順</b></p>
+<table border="0" cellpadding="2">
+	<tr>
+		<td class="items" align="center">手順</td>
+		<td class="items" align="center">説明</td>
+	</tr>
+	<tr>
+		<td class="items">音声認識が認識開始</td>
+		<td>マイクから音声を受信して、音声認識を開始しました</td>
+	</tr>
+	<tr>
+		<td class="items">音声認識が認識した</td>
+		<td>音声認識が完了しました<br>
+		結果は、「内容」設定項目にあります</td>
+	</tr>
+</table>
+<p><b>設定項目</b></p>
+<table border="0" cellpadding="2">
+	<tr>
+		<td class="items" align="center">設定項目</td>
+		<td class="items" align="center">説明</td>
+	</tr>
+	<tr>
+		<td class="items">内容</td>
+		<td>認識できた文字</td>
+	</tr>
+	<tr>
+		<td class="items">文法ファイル</td>
+		<td>音声認識を高めるための定義ファイル(XML)<br>
+		詳しくは、Microsoft SAPI5.0ドキュメントをご覧ください</td>
+	</tr>
+</table>
+<p><b>使用例</b></p>
+<p class="example">ウィンドウを表示<br>
+拡張オブジェクト１を音声認識として作れ<br>
+音声認識のプログラムを「TTSSpeechN.Recognize」に変えろ<br>
+<br>
+音声認識を開始<br>
+音声認識の文法ファイルを「grammar.xml」に変えろ<br>
+待機<br>
+<br>
+手順は　音声認識が認識した<br>
+　　音声認識の内容を表示<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１を閉じる<br>
+　　音声認識を認識停止<br>
+　　終了<br>
+終わり</p>
+<p>　</p>
+<h2>注意点</h2>
+<blockquote>
+	<p>なぜか、音声認識待機中に、音声合成を実行することができません。<br>
+	ですので、しゃべらせる時は、一度音声認識を停止する必要があります。</p>
+</blockquote>
+<p>　</p>
+<h2>著作権について</h2>
+<blockquote>
+	<p>　◇　音声合成・音声認識機能は、MicrosoftのSAPIを利用しています。<br>
+	　　　この機能の著作権は、Microsoftにあります。</p>
+</blockquote>
+
+</body>
+
+</html>

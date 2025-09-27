@@ -1,0 +1,62 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../style.css">
+	<title>TTSneoファイルや命令を実行する</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		TTSneoファイルや命令を実行する</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-etc.htm">その他</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>TTSneoファイルや命令を実行する</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar7.png" width="124" height="116"></td>
+		<td>複雑なソフトを作るようになると、他のTTSneoファイルを実行したり、変数にある命令を実行させたりしたいことがあります。<p>ここでは、「実行」命令と「命令」命令を紹介します。</p>
+		</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>他のTTSneoファイルを実行する</h2>
+<blockquote>
+	<p>別のTTSneoファイルを実行するには、「実行」命令を使います。<br>
+	この命令以後にかかれている命令は、実行されません。<br>
+	変数の内容やウィンドウなどは、削除されずにそのまま実行されます。</p>
+	<p><b>書式</b></p>
+	<p class="format"><span class="flag">[TTSneoファイル名]</span>を実行</p>
+</blockquote>
+<p>　</p>
+<p><b>例</b><br>
+サンプル１.ttsからサンプル２.ttsを実行します。<br>
+「サンプル１.tts」と「サンプル２.tts」を作成してください。</p>
+<p><b>サンプル１.ttsの内容</b></p>
+<p class="example">「現在、サンプル１です。これからサンプル２を実行します。」を表示<br>
+「サンプル２.tts」<font color="#ff00ff"><b>を実行</b></font></p>
+<p><b>サンプル２.ttsの内容</b></p>
+<p class="example">「サンプル２を実行しています。」を表示 </p>
+<p>　</p>
+<h2>変数などにある命令を実行する</h2>
+<blockquote>
+	<p>通常、変数の中身をそのまま命令に使うことはできませんが、「命令」命令を使うことで、変数の中身を命令させることができます。</p>
+	<p><b>書式</b></p>
+	<p class="format"><font color="#ff8000">[命令]</font>をTTSへ命令</p>
+	<p><font color="#ff8000"><b>[命令]<br>
+	</b></font>TTSneoの命令を指定します。変数・関数も使用できます。 </p>
+	<p>複数行のTTSプログラムを実行させたい場合は、「日本語処理」命令を使ってください。</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

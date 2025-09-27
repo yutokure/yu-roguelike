@@ -1,0 +1,347 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>配列 - 一つの変数にたくさんの情報を入れる</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		８．配列 - 一つの変数にたくさんの情報を入れる</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/08/18<!--webbot bot="Timestamp" endspan i-checksum="12827" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">基本編</a> &gt;</div>
+</div>
+<h2>変数にたくさんの情報を入れたい</h2>
+<table border="0" cellpadding="10" cellspacing="0" style="border-collapse: collapse">
+	<tr>
+		<td><img border="0" src="../img/ttschar3.png" width="132" height="134"></td>
+		<td>「変数」を勉強した時は、１つの変数には、１つの情報しか保存できませんでした。<p>
+		しかし、たくさんのデータを扱うプログラムを作ろうとすると、一つの変数ではうまく作れず困ってしまいます。</p>
+		<p>そこで、TTSneoには配列という機能が用意されています。</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>配列とは、</h2>
+<blockquote>
+	<p class="neo">ねお　「今日は配列という機能の使い方を説明するね」</p>
+	<p class="tomo">とも　「配列？？そういえば、聞いたことがあるような、ないような・・・」</p>
+	<p class="neo">ねお　「配列は、１つの変数に、たくさんの情報をいれて、それを番号で出し入れする機能です。」</p>
+	<p class="tomo">とも　（うーん。意味が分からない）</p>
+	<p class="neo">ねお　「たとえば、配列をマンションのようなものとして考えてみましょう。<br>
+	下の例では、「食べ物」という名前のマンションがあります。」</p>
+</blockquote>
+<div align="center">
+	<center>
+	<table width="90%" border="0">
+		<tr>
+			<td width="100%">
+			<table borderColor="#800000" cellSpacing="0" cellPadding="5" width="100%" border="3" style="border-collapse: collapse">
+				<caption><big><big><b>食べ物</b></big></big></caption>
+				<tr>
+					<td align="middle" width="25%"><big><b><big><font size="4">
+					（１）<br>
+					</font></big></b><big><font size="4">やさい</font></big></big></td>
+					<td align="middle" width="25%"><b><big><big><font size="4">
+					（２）<br>
+					</font></big></big></b><big><big><font size="4">さかな</font></big></big></td>
+					<td align="middle" width="25%"><b><big><big><font size="4">
+					（３）<br>
+					</font></big></big></b><big><big><font size="4">くだもの</font></big></big></td>
+					<td align="middle" width="25%"><b><big><big><font size="4">
+					（４）<br>
+					</font></big></big></b><big><big><font size="4">ごはん</font></big></big></td>
+				</tr>
+			</table>
+			</td>
+		</tr>
+	</table>
+	</center>
+</div>
+<blockquote>
+	<p class="neo">ねお　「部屋１つ１つに部屋番号がついていて、部屋ごとに、文字や数字などの情報を保存したり取り出したりすることができます。」</p>
+	<p class="tomo">とも　「なんだかよく分からないけど、箱に区分けして、いろいろ入れられるってこと？」</p>
+	<p class="neo">ねお　「そう。はじめはそんな感じでいいよ。名前ではなく番号で指定できるっていうのがポイントだね」</p>
+	<p>TTSneoで、このマンションの内容を調べるには、下のようにします。</p>
+	<p class="format"><font color="#ff0000">[マンション名]</font>（<font color="#ff0000">[部屋番号]</font>）</font></p>
+	<p class="neo">ねお　「使い方は、変数や関数と同じです。」</p>
+	<p class="tomo">とも　「むーん。　たとえば、この「食べ物」の２番目の「さかな」を取り出したいときは、下のようにすればいいのかな？」</p>
+	<p class="example">食べ物（２）</p>
+	<p class="neo">ねお　「そう。取り出したい部屋を番号で指定します。<br>
+	上のマンションの図をプログラムしてみたから、よくみてみて」</p>
+</blockquote>
+<p class="example"><font color="#ff0000">食べ物（１）</font>は　「やさい」<br>
+食べ物（２）は　「さかな」<br>
+食べ物（３）は　「くだもの」<br>
+食べ物（４）は　「ごはん」<br>
+<br>
+ウィンドウ１を表示<br>
+位置は　０，１０<br>
+<br>
+４回、数に１からカウントして繰り返せ<br>
+　　<font color="#ff0000">食べ物（</font>数<font color="#ff0000">）</font>を書け<br>
+　　改行を書け<br>
+繰り返し終わり</p>
+<blockquote>
+	<p class="neo">
+	ねお　「実行すると、「食べ物」配列の１から４までに文字が保存されて、「繰り返せ」命令で内容を一つずつウィンドウに書いていきます。」</p>
+	<p class="tomo">とも　「なるほど、ここで「繰り返せ」命令を使うんだ。」</p>
+	<p class="neo">ねお　「あと、配列に内容をいれる部分は、下のように書くこともできるよ。<br>
+	｛　｝を使って、内容を一つずつ「、」で区切きます。」</p>
+	<p class="example"><span class="pink"><font color="#ff0000">好きなメニュー</font></span>は　<span class="pink">｛</span>「すし」、「うな重」、「ラーメン」、「カレーライス」<span class="pink">｝</span></p>
+	<p class="tomo">とも　「これだと、入力する手間が省けていいね」</p>
+</blockquote>
+<p>　</p>
+<h2>配列を並び替える（ソート）</h2>
+<blockquote>
+	<p class="neo">ねお　「今度は、配列の内容を並び替えること命令を紹介するね。<br>
+	まずは、並び替えに使う配列の内容を作ってみてください。」</p>
+	<p class="tomo">とも　「うん、わかった。上の例を参考にすればいいんだよね」</p>
+	<p>　</p>
+	<p>ここでは、「好きなメニュー」という名前の配列を作ります。</p>
+	<p class="example">あ（１）は　「すし」<br>
+	あ（２）は　「うな重」<br>
+	あ（３）は　「ラーメン」<br>
+	あ（４）は　「カレーライス」</p>
+	<p>とも君は、下のようにしました。<br>
+	もちろん下の方法でもＯＫです。</p>
+	<p class="example">あは　｛「すし」、「うな重」、「ラーメン」、「カレーライス」｝</p>
+	<p class="tomo">とも　「よし、できた。」</p>
+	<p class="neo">ねお　「じゃぁ　並び替えの例を紹介するね。<br>
+	いろいろ種類があるから、試してみてね」</p>
+	<p>　</p>
+</blockquote>
+<dl>
+	<h4>＜名前順に並び替える（ソート）＞</h4>
+	<blockquote>
+		<p class="example">あは　｛「すし」、「うな重」、「ラーメン」、「カレーライス」｝<br>
+		<font color="#ff0000">あを名前順に、並び替える</font><br>
+		あを表示</p>
+	</blockquote>
+	<p>　</p>
+</dl>
+<h4><b>＜逆順に並び替える＞</b></h4>
+<blockquote>
+	<p class="example">あは　｛「すし」、「うな重」、「ラーメン」、「カレーライス」｝<br>
+	<font color="#ff0000">あを逆に、並び替える</font><br>
+	あを表示</p>
+</blockquote>
+<p>　</p>
+<h4>＜大きい順・小さい順に並び替える＞</h4>
+<blockquote>
+	<p class="example">あは　｛１、１０、５、２、０｝<br>
+	あを、<font color="#ff0000">小さい順に</font>、並び替える<br>
+	あを、表示<br>
+	あを、<font color="#ff0000">大きい順に</font>、並び替える<br>
+	あを、表示</p>
+</blockquote>
+<p>　</p>
+<h4>＜ランダムに並び替える＞</h4>
+<blockquote>
+	<p>適当な順に並び替えることもできます。<br>
+	ゲームなどで、ランダムに画像や文字など出したいときなどに使えそうです。</p>
+	<p class="example">あは　｛「すし」、「うな重」、「ラーメン」、「カレーライス」｝<br>
+	<font color="#ff0000">あを、ランダムに、並び替える</font><br>
+	あを、表示</p>
+</blockquote>
+<p>　</p>
+<h4>「名前順」の欠点</h4>
+<blockquote>
+	<p>「名前順」に並び替える機能は、ひらがな・カタカナはうまく並び替えますが、<b>漢字が</b>きれいに並び替えられない一つ欠点があります。</p>
+	<p>たとえば、下のようにすると、ちゃんと並び替えてくれません。</p>
+	<p class="example">内容は　｛山田次郎、田中花子、相原貴之、高橋祐子、鈴木次郎｝<br>
+	内容を名前順に並び替え<br>
+	内容を表示</font></p>
+	<p>このような場合は、「漢字順」で並び替えてください。<br>
+	読み仮名について並び替えてくれます。</p>
+	<p class="example">内容は　｛山田次郎、田中花子、相原貴之、高橋祐子、鈴木次郎｝<br>
+	内容を漢字順に並び替え<br>
+	内容を表示</font></p>
+	<p>※ここでは配列の要素を、文字を表す「　」で囲んでいませんが、あまりおすすめしません。<br>
+	複雑なプログラムを作る際は、文字はきちんと「　」で囲んでください</p>
+</blockquote>
+</font>
+<p>　</p>
+</font>
+<h2>２次配列</h2>
+<blockquote>
+	<p class="neo">ねお　「さっきまでは、マンションは１階だけですが、何階にもすることができます。<br>
+	これを「２次配列」といいます。」</p>
+	<p class="tomo">とも　「２次配列ねぇ　つまり階数と部屋番号で内容を取り出すことができるんだ。」</p>
+	<p><b>２次配列の内容</b></p>
+	<table width="90%" border="0">
+		<tr>
+			<td width="100%">
+			<div align="center">
+				<center>
+				<table borderColor="#800000" cellSpacing="0" cellPadding="5" width="100%" border="3" style="border-collapse: collapse">
+					<caption><big><big><b>食べ物</b></big></big></caption>
+					<tr>
+						<td align="middle" nowrap>　</td>
+						<td align="middle" width="33%"><b>１号室</b></td>
+						<td align="middle" width="33%"><b>２号室</b></td>
+						<td align="middle" width="33%"><b>３号室</b></td>
+					</tr>
+					<tr>
+						<td align="middle" nowrap><b><font size="4">１階</font></b></td>
+						<td align="middle" width="33%"><font size="4">りんご</font></td>
+						<td align="middle" width="33%"><font size="4">みかん</font></td>
+						<td align="middle" width="33%"><font size="4">ぶどう</font></td>
+					</tr>
+					<tr>
+						<td align="middle" nowrap><b><font size="4">２階</font></b></td>
+						<td align="middle" width="33%"><font size="4">さけ</font></td>
+						<td align="middle" width="33%"><font size="4">たい</font></td>
+						<td align="middle" width="33%"><font size="4">さんま</font></td>
+					</tr>
+					<tr>
+						<td align="middle" nowrap><b><font size="4">３階</font></b></td>
+						<td align="middle" width="33%"><font size="4">キャベツ</font></td>
+						<td align="middle" width="33%"><font size="4">トマト</font></td>
+						<td align="middle" width="33%"><font size="4">きゅうり</font></td>
+					</tr>
+				</table>
+				</center>
+			</div>
+			</td>
+		</tr>
+	</table>
+	<p class="neo">ねお　「２次配列の書き方は、下のようになります。」</p>
+	<p class="format"><font color="#ff0000">[配列名]</font>（<font color="#ff0000">[階]</font>、<font color="#ff0000">[部屋番号]</font>）</p>
+	<p class="tomo">とも　「（　）の中に「、」ができたんだね」</p>
+	<p class="neo">ねお　「では、これを使ってプログラムを作りましょう。」</p>
+</blockquote>
+<p class="example"><span class="rem">ーー１階の内容</span><br>
+食べ物（１，１）は　「りんご」<br>
+食べ物（１，２）は　「みかん」<br>
+食べ物（１，３）は　「ぶどう」<br>
+<span class="rem">ーー２階の内容</span><br>
+食べ物（２，１）は　「さけ」<br>
+食べ物（２，２）は　「たい」<br>
+食べ物（２，３）は　「さんま」<br>
+<span class="rem">ーー３階の内容</span><br>
+食べ物（３，１）は　「キャベツ」<br>
+食べ物（３，２）は　「トマト」<br>
+食べ物（３，３）は　「きゅうり」<br>
+<br>
+ウィンドウ１を表示<br>
+ペンを上げろ<br>
+位置は　０，１０<br>
+向きは　９０<br>
+<br>
+<span class="rem">ーー中身をすべて表示する</span><br>
+３回、階に１からカウントして繰り返せ<br>
+　　’各階の表示<br>
+　　「　　」を書け<br>
+　　３回、数に１からカウントして繰り返せ<br>
+　　　　食べ物（階，数）を書け<br>
+　　　　前へ　１５<br>
+　　繰り返し終わり<br>
+　　改行を書け<br>
+繰り返し終わり</p>
+<blockquote>
+	<p class="neo">ねお　「また、２次配列の場合も、下のように配列の内容を入れることができます。」</p>
+	<p class="example">食べ物（１，０）は　｛「りんご」，「みかん」，「ぶどう」｝<br>
+	食べ物（２，０）は　｛「さけ」，「たい」，「さんま」｝<br>
+	食べ物（３，０）は　｛「キャベツ」，「トマト」，「きゅうり」｝</p>
+	<p class="tomo">とも　「部屋番号に０を指定するのがポイントなんだね」</p>
+	<p class="neo">ねお　「その通り、０は階全体を表すときに使います。」</p>
+</blockquote>
+<h4>＜２次配列の並び替え＞</h4>
+<blockquote>
+	<p>１次配列と同様に、２次配列の並び替えをすることもできます。</p>
+	<p class="example">内容（１，０）は　｛1、「ねこ」｝<br>
+	内容（２，０）は　｛2、「いぬ」｝<br>
+	内容（３，０）は　｛3、「さかな」｝<br>
+	<font color="#ff00ff">内容</font><font color="#ff0000">の２列目</font><font color="#ff00ff">を名前順に並び替え</font><br>
+	内容を表示</p>
+</blockquote>
+<p>　</p>
+<h4>＜２次配列の計算＞</h4>
+<blockquote>
+	<p>２次配列の場合、指定した列を計算することもできます。</p>
+	<p class="example">内容（１，０）は　｛せんべい、290｝<br>
+	内容（２，０）は　｛ポテチ、100｝<br>
+	内容（３，０）は　｛板チョコ、120｝<br>
+	「合計：［<font color="#ff00ff">合計（内容，</font><font color="#ff0000">２</font><font color="#ff00ff">）</font>］円」を表示 
+	</p>
+	<p class="example">内容（１，０）は　｛花子、85｝<br>
+	内容（２，０）は　｛太郎、56｝<br>
+	内容（３，０）は　｛次郎、91｝<br>
+	「平均：［<font color="#ff00ff">平均（内容，</font><font color="#ff0000">２</font><font color="#ff00ff">）</font>］点［改行］３人の偏差値：［<font color="#ff00ff">偏差値（内容，</font><font color="#ff0000">２</font><font color="#ff00ff">）</font>］」を表示</p>
+</blockquote>
+<p>　</p>
+</font>
+<h2>注意！</h2>
+<table border="0" cellpadding="10" cellspacing="0" style="border-collapse: collapse">
+	<tr>
+		<td>
+		<blockquote>
+			<p>TTSneoの配列は、０番目の配列を指定することは、できません。<br>
+			<b><font color="#ff0000">１番目から始まります。</font></b></p>
+			<p>「<font color="#ff00ff"><b>配列（１，０）は、「ＡＢＣ」</b></font>」などのようにすると、１行目の文字(１階にあるすべて内容)を「ＡＢＣ」にします。</p>
+			<p class="example">配列（１，０）は、｛ABC、DEF｝<br>
+			配列（１，２）を表示</font></p>
+			<p>上の例は、（１，○）の内容を「ABC,DEF」とすることで一度に内容を代入しています。<br>
+			「DEF」と表示されます。</p>
+		</blockquote>
+		</td>
+		<td><img border="0" src="../img/ttschar5.png" width="126" height="130"></td>
+	</tr>
+</table>
+<blockquote>
+	<p class="neo">
+	ねお　「番号だけで、たくさんの情報を保存して、番号だけで出し入れすることができるようになるから、本格的なプログラムを作るようになると便利だよ」</p>
+	<p class="tomo">とも　「なるほどねぇ　配列って今ひとつピント来ないんだよね<br>
+	変数ではだめなの？」</p>
+	<p class="neo">
+	ねお　「大半は変数でも、いいけど、住所録やカレンダなどを作るようになると、変数だけでは難しいけど、配列なら、繰り返せ命令を使って簡単にできるよ」</p>
+	<p class="tomo">とも　「そっか・・・」</p>
+	<p class="neo">ねお　「まあ、プログラミングに慣れてくれば、分かるようになるよ」</p>
+</blockquote>
+<p class="neo">　</p>
+</font>
+<h2>いろいろな配列の機能</h2>
+<blockquote>
+	<p>このページでは、配列の基本的な機能を紹介しました。<br>
+	しかし、TTSneoには、配列を利用した関数や機能がたくさん用意されています。</p>
+	<p>詳しくは、機能編で説明していますので、配列をもっと使いこなしたい方は、読んでください。</p>
+	<p class="steps"><b>▼参照</b><br>
+	「機能編」の<a href="../application/arrange2.htm">配列を使ったいろいろな機能</a></p>
+</blockquote>
+<p>　</p>
+<h2>補足:配列の表現について</h2>
+<blockquote>
+	<p>TTSneoには、変数の型という概念が存在しないため、配列は各要素を「、」(または「,」)で区切られた文字列として表されます。</p>
+	<p>そのため、要素の区切りである「、」と、配列の要素に含まれる文字列「、」とを区別するため、<br>
+	要素内に含まれる「、」をTTSneo内部表記({**}など)へ自動的に変換します。</p>
+	<p>通常の配列の操作を行う範囲では、この変換について意識する必要はありません。<br>
+	また、<font color="#0000FF">「、」や「,」を含む文字列を、配列の要素へ代入したとしても、配列のデータが破壊されることはありません。</font></p>
+	<p>一部の場合で変換操作が必要な場合でも、<font color="#FF0000">TTSneo内部表記を、「置換」関数で置き換えないでください。<br>
+	</font>そのような場合は、通常の配列操作を利用するか、「繋げろ」関数を利用することで、TTSneo内部表記から通常の文字列に復元することができます。</p>
+	<p>配列の１番目の要素を取り出すことで、TTSneo内部表記の変換が行われます。</p>
+	<p class="example">文字列は、「こんにちは{//}TTSneoです」<br>
+	文字列（１）を表示</p>
+</blockquote>
+<p>　</p>
+</font>
+<h2>練習問題っ！</h2>
+<blockquote>
+	<p>練習問題をやってみましょう。</p>
+	<p><b>問題１</b></p>
+	<p>「食べ物」配列を作って、好きな食べ物の名前を配列に４つ入れて、３番目に入れた内容を表示させてみましょう。</p>
+	<p><b>問題２</b></p>
+	<p>「食べ物」配列を名前順で並び替えてみましょう。</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

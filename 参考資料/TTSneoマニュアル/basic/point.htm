@@ -1,0 +1,287 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=x-sjis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>文法のまとめ</title>
+<base>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		１４．文法のまとめ</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">基本編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED"
+      s-format="%Y/%m/%d" startspan -->2007/01/07<!--webbot bot="Timestamp" endspan i-checksum="12376" -->更新</div>
+</div>
+<h2>このページについて</h2>
+<blockquote>
+	<p>このページでは、主にC/C++やJava、Visual Basicなどプログラミング経験がある方に<br>
+	TTSneoの言語仕様の概要を説明しています。<br>
+	詳細は、基本編に書かれているページをよくお読みください。</p>
+	<p>　</p>
+</blockquote>
+<h2>TTSneoの２つの要素「命令」「関数」</h2>
+<blockquote>
+	<p>TTSneoでは、大きく分けて「命令」と「関数」という２つの要素があります。<br>
+	どちらも一般に、「関数」「メソッド」と呼ばれるものですが、</p>
+	<p>処理だけを行う機能は、「命令」<br>
+	何らかの処理の結果を表す機能は、「関数」</p>
+	<p>と区別しています。</p>
+</blockquote>
+<p>　</p>
+<h2>日本語による命令について</h2>
+<p><b><font color="#0080FF">命令の基本形</font></b></p>
+<blockquote>
+	<p>命令の基本形は、「<b>○○を□□</b>」です。<br>
+	異常に不自然な日本語にならない限りは、すべての命令が「○○を□□」の形で表されています。</p>
+	<p>TTSneoは、「、」やスペースで単語を区切る分かち書きは、必要ありません。<br>
+	見やすさの観点から、任意で、助詞の後に「、」やスペースを入れることができます。</p>
+	<p>タブ文字は実行時にすべて無視されます。</p>
+	<p class="example">「こんにちは」を表示<br>
+	「文章.txt」を、「A:\」へ　コピー</p>
+</blockquote>
+<p></p>
+<p><b><font color="#0080FF">命令名と送りがなについて</font></b> </p>
+<blockquote>
+	<p>命令名は、リファレンスに定義されている命令が使用できます。</p>
+	<p>多くの命令の場合、送りがなは無視されます。<br>
+	「表示」命令の場合、「表示する」「表示しろ」などの複数の表現が可能です。</p>
+</blockquote>
+<blockquote>
+	<p class="example">「こんにちは」を表示<br>「こんにちは」を表示しろ<br>「こんにちは」を表示してくださいね</p>
+	<p>ただ残念ながら、下の場合も「表示」命令として判断します。(^^;)</p>
+	<p class="example">「こんにちは」を非表示<br>「こんにちは」を表示するな<br>「こんにちは」を表示しない</p>
+</blockquote>
+<blockquote>
+	<p>TTSneoは、自然言語処理を行うことが主な目的ではなく、<br>
+	あくまでもソフトウェアの開発環境という位置付けで開発しておりますので、<br>
+	プログラム作成に必要のない処理の多くは、考慮されていません。</p>
+</blockquote>
+<p><b><font color="#0080FF">命令の</font></b><font color="#0080FF"><b>助詞</b></font></p>
+<blockquote>
+	<p>命令の引数に当たるものは、助詞と名詞(評価式)の組み合わせで指定します。</p>
+	<p>指定できる助詞は、命令ごとに決められています。<br>
+	命令に指定する助詞は、リファレンスで説明されています。</p>
+	<p>適切な助詞が指定されていれば、助詞の順番は問われません。</p>
+	<p class="example">「文章.txt」を「A:\」へコピー<br>「A:\」へ　「文章.txt」を、コピー</p>
+</blockquote>
+<p>　</p>
+<p><b><font color="#0080FF">命令文の処理</font></b></p>
+<blockquote>
+	<p>TTSneoは、インタプリタ言語ですので、命令は実行時に判別されます。<br>
+	命令を判断するときは、はじめに、動詞（命令）と「～を（名詞）」、「～に（目的語）」に分けて、<br>
+	動詞（命令）が判明した際に、さらに細かく「～で」「～として」などに命令を分けて処理します。 </p>
+	<p>そのため、命令名の直前の助詞が、「～を」「～に」以外のものである場合、<br>
+	正常に命令名を区別することができない場合があります。<br>
+	その場合は、明示的に、句読点「、」を指定してください。</p>
+	<p class="example">「こんにちは」を情報で、表示</p>
+</blockquote>
+<p>　</p>
+<p><b><font color="#0080FF">文字列を指定するときは、&quot;「　」&quot;</font></b></p>
+<blockquote>
+	<p>文字列は、&quot;「　」&quot;で囲ってください。一般に、&quot; &quot;に当たるものです。<br>
+	括弧で囲まれた文字列は、評価されず、助詞なども無視されます。<br>
+	<br>
+	括弧で囲まない場合でも、問題のない場合は文字列として処理されますが、<br>
+	誤って処理される原因になりますので、おすすめできません。</p>
+	<p class="example">「次へ進みます」を表示</p>
+</blockquote>
+<p></p>
+<p>　</p>
+<p><b><font color="#0080FF">ロゴに関係する命令文</font></b></p>
+<blockquote>
+	<p>カメを利用した画像の描画命令については、「[命令]　[引数]」の形で指定します。</p>
+	<p class="example">前へ　１０</p>
+</blockquote>
+<p>　</p>
+
+<h2>文字の区別について</h2>
+<p><b><font color="#0080FF">命令名・関数名に使用する文字の区別</font></b></p>
+<blockquote>
+	<p>原則として全角を使用します。<br>
+	数値やアルファベットは半角でも指定することができます。</p>
+</blockquote>
+<p><b><font color="#0080FF">変数名</font></b></p>
+<blockquote>
+	<p>全角・半角・大文字・小文字を区別しません。<br>
+	内部では、すべて全角・大文字に変換され、同じ変数として扱われます。</p>
+</blockquote>
+<p><b><font color="#0080FF">数値型・文字列型などのデータ型の区別</font></b></p>
+<blockquote>
+	<p>変数の使用や型を宣言する必要はありません。<br>
+	メモリ上では文字列型として格納されます。<br>
+	命令や関数で指定された際に、内部で適宜、型を変換します。<br>
+	<br>
+	数字の有効範囲については、指定する命令や関数によって異なります。詳しくは、<a href="calc.htm">「計算させる」</a>をご覧ください。<br>
+	<br>
+	文字列の場合は、必ず&quot;「」&quot;で囲ってください。\や-などが含まれる文字は、計算式として処理されます。<br>
+	また、数値や計算式を強制的に文字列として処理したい場合も、&quot;「 」&quot;で囲ってください。</p>
+</blockquote>
+<p>　</p>
+<h2>記号（トークン）</h2>
+<blockquote>
+	<p>TTSneoは、BASICやロゴライターの一部の構文に、類似しています。</p>
+	<p>次のような記号を利用します。</p>
+	<p class="format">（　）　　<span class="rem">ーー引数の指定など</span><br>
+	「　」　　<span class="rem">ーー文字列を表す&quot; &quot;や' 'に相当<br>
+	</span>［　］　　<span class="rem">ーー文字列内で変数・関数の記述可能</span></p>
+	<p>C/C++やJavaにあるブロック記号「{ }」や命令の終了「;」にあたる記号はありません。<br>
+	詳しくは、この後にある「プログラム制御構文」をご覧ください。</p>
+	<p>文字列には、正規表現（「\n」や「\t」等）は使用できません。<br>
+	下のような各種関数、正規表現機能を利用してください。</p>
+	<p class="example">内容は　「たろう<font color="#FF0000">［改行］</font>はなこ」<br>
+	内容は　「<font color="#FF0000">［タブ］</font>たろう」</p>
+	<p>※TTSneoでは『　』は通常の文字として扱われます。</p>
+</blockquote>
+<p>　</p>
+<p><b><font color="#0080FF">複数行にまたがって命令を記述する</font></b></p>
+<blockquote>
+	<p>TTSneoは、BASICなどと同様、一行一命令が原則です。</p>
+	<p>複数行にまたがって記述する場合は、行の末尾に「_」を付けてください。</p>
+	<p class="example">「　//　Welcome　//_<br>
+	ようこそ！TTSneoへ」を表示</p>
+	<p>また、「、」を行の末尾に付けることもできます。ただし「、」も文字として扱われます</p>
+	<p class="example">内容は、「日本語プログラミング言語、<br>
+	TTSneo」<br>
+	<br>
+	内容を、<br>
+	　　　　　　表示</p>
+</blockquote>
+<p>　</p>
+<p><b><font color="#0080FF">一行に複数の命令を記述する</font></b></p>
+<blockquote>
+	<p>「。」を入れることで、一行に複数の命令を入力できます。 </p>
+	<p class="example">メッセージは、今。メッセージを表示</p>
+</blockquote>
+<p>　</p>
+<p><b><font color="#0080FF">コメント（注釈・説明）</font></b></p>
+<blockquote>
+	<p>プログラムの注釈は、「ーー」、「’」、「//」、「/* */」のいずれかを使います。<br>
+	「ーー」、「’」、「//」で指定した注釈は、行末まで有効です。<br>
+	<br>
+	これらの文字以降に指定された文字は、命令として処理されません。</p>
+	<p class="example">結果は　１＋１　<span class="rem">ーー計算する<br>
+	<br>
+	</span>結果を表示　<span class="rem">//結果を表示する<br>
+	<br>
+	/* このように行をまたいだ注釈を<br>
+	入れることもできます。 */</span></p>
+	<p>（TTSneoデザイナでは、[Shift]＋[F7]を押すと簡単に入力できます）</p>
+</blockquote>
+<p>　</p>
+<h2>変数</h2>
+<blockquote>
+	<p>TTSneoでは、型という概念がないため、宣言することなく変数を利用できます。</p>
+	<p>次のいずれかの命令で、変数への代入が可能です。</p>
+	<p class="example">名前は　「たろう」<br>
+	名前＝「たろう」<br>
+	名前は、「たろう」。<br>
+	名前へ「たろう」を入れろ</p>
+	<p>　</p>
+	<p class="steps"><font color="#0000FF"><b>▼参照<br>
+	</b></font>マニュアル「基本編」<br>
+	　３．<a href="var.htm">文字や数字を入れておく箱『変数』</a></p>
+	<p>　</p>
+</blockquote>
+<p><b>ローカル変数について</b></p>
+<blockquote>
+	<p>TTSneoの変数は、基本的にグローバル変数として扱われます。<br>
+	ただし、手順内でのみ有効なローカル変数を宣言することもできます。</p>
+	<p>また、ファイル単位で有効なローカル変数を定義することもできます。<br>
+	詳しくは、マニュアル・リファレンスの説明をご覧ください。</p>
+	<p class="format">ここだけの変数は、変数名、変数名、・・・</p>
+</blockquote>
+<blockquote>
+	<p class="steps"><font color="#0000FF"><b>▼参照<br>
+	</b></font>マニュアル「基本編」<br>
+	　１２．<a href="submore.htm">再帰処理とローカル変数</a></p>
+</blockquote>
+<p>　</p>
+<h2>関数</h2>
+<blockquote>
+	<p>主に結果を表す処理は、関数として登録されています。</p>
+	<p>※TTSneoでは、命令と関数を別のものとして取り扱っています</p>
+	<p><b>基本形</b></p>
+	<p class="format">関数名（引数）</p>
+	<p><b>例</b></p>
+	<p class="example">結果は　<b>入力（「メッセージをどうぞ」）</b></p>
+	<p>関数名の場合、送りがなも厳密に区別され、省略したり・変更したりすることはできません。</p>
+	<p class="steps"><font color="#0000FF"><b>▼参照<u><br>
+	</u></b></font>マニュアル「基本編」<br>
+	　４．<a href="func.htm">魔法の箱　『関数』</a></p>
+</blockquote>
+<p>　</p>
+<h2>プログラム制御構文</h2>
+<blockquote>
+	<p>TTSneoの条件分岐(if)、反復処理(for)、分岐処理(switch)にあたるプログラム制御命令は、「もし」「繰り返せ」「分岐」文です。</p>
+	<p>「{　}」のブロック記号は不要で、Visual Basicの「If Then」～「End If」の対応と同様に、<br>
+	「もし」～「もし終わり」などと指定することでブロックを指定することができます。<br>
+	ブロックのネストも可能です。</p>
+	<p class="example">もし　月は、６　なら<br>
+	　　「梅雨の季節です」を表示<br>
+	もし終わり</p>
+	<p class="example">３回、繰り返せ<br>
+	　　「わん」を表示<br>
+	繰り返し終わり</p>
+	<p class="example">数字について分岐<br>
+	1の場合<br>
+	　　～～<br>
+	他の場合<br>
+	　　～～<br>
+	分岐終わり</p>
+	<p class="steps"><font color="#0000FF"><b>▼参照<u><br>
+	</u></b></font>マニュアル「基本編」<br>
+	　５．<a href="for.htm">何度も繰り返す　『繰り返せ』</a><br>
+	　６．<a href="if.htm">判断する　『もし』</a><br>
+	　１０．<a href="switch.htm">一つの内容について分岐する　『分岐』</a></p>
+</blockquote>
+<p>　</p>
+<h2>配列</h2>
+<blockquote>
+	<p>配列の要素数を宣言する必要はありません。<br>
+	また、型という概念がないため、一般的な変数と同じように扱われます。</p>
+	<p class="format">配列名（[要素]）<br>
+	配列名（[要素]、[要素]）</p>
+	<p>TTSneoでは、配列は文字列として格納されます。<br>
+	C言語やVisual Basicとは仕組みが異なります。<br>
+	そのため、データ数が増えると、処理速度が低下します。<br>
+	配列の操作は、配列関連の関数を利用することで、処理が早くなります。</p>
+	<p>配列は、２次元まで利用可能です。</p>
+	<p>多くの情報を扱う場合は、辞書機能（連想配列）を利用してください。</p>
+</blockquote>
+<blockquote>
+	<p class="steps"><font color="#0000FF"><b>▼参照<br>
+	</b></font>マニュアル「基本編」<br>
+	　８．<a href="arrange.htm">一つの変数にたくさんの情報を入れる『配列』</a><br>
+	　１１．<a href="dic.htm">キーワードで取り出す辞書機能</a></p>
+</blockquote>
+<p>　</p>
+<h2>手順</h2>
+<blockquote>
+	<p>「手順」とは、C言語の&quot;関数&quot;、Visual Basicの&quot;プロシージャ&quot;、Java/C#の&quot;メソッド&quot;の定義に当たるものです。<br>
+	命令や関数の定義以外にも、オブジェクトのイベント処理にも使用します。<br>
+	引数の設定や再帰処理も可能です。</p>
+	<p>※手順名に変数を利用することはできません。</p>
+	<p><b><font color="#FF0000">必ず「手順」で始まり、「終わり」で終わるようにしてください。</font></b></p>
+	<p class="example">手順は　<b>手順名</b><br>
+	<br>
+	終わり</p>
+	<p class="steps"><font color="#0000FF"><b>▼参照<br>
+	</b></font>マニュアル「基本編」<br>
+	　７．<a href="sub.htm">プログラムを小分けする　『手順』</a><br>
+	　１１．<a href="usercmdfunc.htm">オリジナルの命令・関数を作る</a><br>
+	　１２．<a href="submore.htm">再帰処理とローカル変数</a></p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

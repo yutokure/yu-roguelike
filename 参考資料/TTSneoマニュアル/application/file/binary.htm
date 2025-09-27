@@ -1,0 +1,170 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../../style.css">
+<title>バイナリ形式の操作</title>
+<base>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		バイナリ形式の操作</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-file.htm">ファイル</a> &gt;</div>
+</div>
+<h2>バイナリファイルとは</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td>
+		<img border="0" src="../../img/ttschar7.png" width="124" height="116"></td>
+		<td>バイナリファイルとは、一般に画像や音楽ファイルなどのメモ帳を開いても内容が分からないファイルのことをいいます。<br>
+		（一方メモ帳で内容が分かるファイルをテキストファイルといいます。ここではテキストファイルとは区別します）<p>
+		TTSneoでは、バイナリファイルを直接、書き込んだり、読み込んだりすることができます。</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>バイナリ配列について</h2>
+<blockquote>
+	<p>TTSneoでは、バイナリファイルの内容を表すために、1バイトごとに区切られた10進数の配列を使います。<br>
+	これをTTSneoでは、「バイナリ配列」と呼びます。</p>
+</blockquote>
+<p><b>バイナリ配列の例</b></p>
+<p class="example">65,66,67,13,68,69,70</p>
+<blockquote>
+	<p>※16進数ではありませんので注意してください</p>
+</blockquote>
+<p>　</p>
+<h2>バイナリファイルの内容を調べる</h2>
+<blockquote>
+	<p>バイナリファイルの内容を、バイナリ配列として表すには、「開け」関数を使います。</p>
+	<p class="format">開け（[ファイル名]、バイナリ）</p>
+	<p>指定したファイルを開き、その内容をバイナリ配列で表します。<br>
+	バイナリ配列は、数字の配列ですので、配列の関数などが利用できます。</p>
+</blockquote>
+<p>　</p>
+<p><b>例</b>　ファイルをバイナリ配列として表示する</p>
+<p>ファイルを選択して「読み込む」ボタンを押すと、そのファイルの内容をバイナリ配列で表します。</p>
+<p class="example">ウィンドウ１の表示<br>
+待機<br>
+<br>
+手順は　ウィンドウ１の表示<br>
+ウィンドウ１を使う<br>
+<span class="rem">ーー&lt;ウィンドウ１&gt;</span><br>
+ウィンドウ１の中の大きさを312，213へ変えろ<br>
+　　その名前を「バイナリ配列の読み込み」へ変えろ<br>
+　　その背景を&amp;h8000000Fへ変えろ<br>
+テキスト１を作れ<br>
+　　その位置と大きさを20，10，160，18へ変えろ<br>
+拡張テキスト１を作れ<br>
+　　その位置と大きさを20，50，280，150へ変えろ<br>
+ボタン１を作れ<br>
+　　その位置と大きさを220，10，65，25へ変えろ<br>
+　　その名前を「読み込む」へ変えろ<br>
+ボタン２を作れ<br>
+　　その位置と大きさを180，10，20，20へ変えろ<br>
+　　その名前を「...」へ変えろ<br>
+<span class="rem">ーー&lt;/ウィンドウ１&gt;<br>
+</span>ウィンドウ１を表示<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１のボタン２をクリック<br>
+<span class="rem">ーー★ファイル名を開く</span><br>
+<span class="rem">　　</span>選択ウィンドウのタイトルを「ファイルを開く」へ変えろ<br>
+<span class="rem">　　</span>選択ウィンドウのフィルタを「すべてのファイル|*.*|」へ変えろ<br>
+<span class="rem">　　</span>開くファイルを選択<br>
+<span class="rem">　　</span>もし　選択ウィンドウのキャンセルは、オン　なら　手順から抜ける<br>
+<span class="rem">　　</span>テキスト１の内容を、選択ウィンドウのファイル名に変えろ<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１のボタン１をクリック<br>
+<span class="rem">ーー★バイナリ配列で表示する<br>
+　　</span>結果は、開け（テキスト１の内容、バイナリ）<br>
+　　拡張テキスト１の内容を、結果に変えろ<br>
+終わり</p>
+<p>　</p>
+<h2>文字をバイナリ配列に変換するには</h2>
+<blockquote>
+	<p>文字をバイナリ配列に変換するには、「バイナリ配列」関数を使います。</p>
+	<p class="format">バイナリ配列（<span class="flag">内容</span>）</p>
+	<p>この結果をそのまま、「バイナリで保存」で保存するとテキストファイルになります。</p>
+	<p>また、逆にバイナリ配列を文字へ変換するには、「復元」関数を使います。</p>
+	<p class="format">復元（<span class="flag">[内容]</span>、バイナリ）</p>
+	<p><b>例</b></p>
+	<p class="example">配列は、バイナリ配列（「TTSneoへようこそ」）<br>
+	復元（配列、バイナリ）を表示</p>
+</blockquote>
+<p>　</p>
+<h2>HTTPでダウンロードした内容をバイナリ配列で表す</h2>
+<blockquote>
+	<p>「HTTPでダウンロード」関数を使えば、インターネット上のファイルをバイナリ配列で表すことができます。</p>
+	<p class="format">HTTPでダウンロード（<span class="flag">[ファイル名]</span>、バイナリ）</p>
+	<p><b>例</b>　TTSneoバナーをバイナリ配列で保存する</p>
+	<p class="example">
+	内容は、ＨＴＴＰでダウンロード（「http://hp.vector.co.jp/authors/VA021321/ttsbanr.png」、バイナリ）<br>
+	内容を、「［デスクトップ］バナー.png」へ、バイナリで保存</p>
+</blockquote>
+<p>　</p>
+<h2>バイナリファイルとして書き込む</h2>
+<blockquote>
+	<p>バイナリファイルとしてファイルを保存するには、「保存」命令を使います。</p>
+	<p class="format"><span class="flag">[バイナリ配列]</span>を<span class="flag">[ファイル名]</span>へバイナリで保存</p>
+	<p>[バイナリ配列]には、「バイナリ配列」関数などで調べた結果を使うことができます。</p>
+	<p>　</p>
+</blockquote>
+<h4>追加保存する</h4>
+<blockquote>
+	<p>「追加保存」命令を使えば、バイナリ配列のファイルの最後にデータを追加することもできます。</p>
+	<p class="format"><font color="#ff8000">[バイナリ配列]</font>を<font color="#ff8000">[ファイル名]</font>へバイナリで追加保存</p>
+</blockquote>
+<p>　</p>
+<h2>より細かな操作をする</h2>
+<blockquote>
+	<p>プラグインを使うことで、指定した位置から読み書きすることもできます。<br>
+	複雑なバイナリ操作をする場合に便利です。</p>
+</blockquote>
+<p><b>バイナリ配列で書き込む</b></p>
+<p class="example"><span class="rem">ーー// バイナリファイルの書き込み //</span><font color="#008000"><br>
+</font><br>
+<span class="rem">ーーファイルを開く<br>
+</span>バイナリ操作の「［今の位置］Test.dat」を１で開く<br>
+<span class="rem"><br>
+’1バイト目から書き込む<br>
+</span>バイナリ操作の「66,66,13,10,65」を１に書く<br>
+<span class="rem"><br>
+’ファイルを閉じる<br>
+</span>バイナリ操作の１を閉じる</p>
+<p><b>バイナリ配列のファイルを読み込む</b></p>
+<p class="example"><span class="rem">ーー// バイナリファイルの読み込み //</span><font color="#008000"><br>
+</font><br>
+<span class="rem">ーーファイルを開く<br>
+</span>バイナリ操作の「［今の位置］Test.dat」を１で開く<br>
+<br>
+<span class="rem">ーー3バイト目から10バイト分、読み込む<br>
+</span>バイナリ操作の１を10だけ3から読む<br>
+<br>
+<span class="rem">ーーファイルを開く<br>
+</span>バイナリ操作の１を閉じる<br>
+<br>
+ファイルの内容を表示</p>
+<p>　</p>
+<h2>バイナリ配列を処理するには</h2>
+<blockquote>
+	<p>バイナリ配列は、通常の配列と同じですので、TTSneoの配列に関係する関数や命令を使うことができます。</p>
+	<p>バイナリファイルのデータを加工したいときに、「配列処理」などが利用できます。</p>
+	<p class="steps"><b>▼参照</b><br>
+	基本編→<a href="../../basic/arrange.htm">一つの変数にたくさんの情報を入れる『配列』</a><br>
+	機能編→<a href="../arrange2.htm">配列を使ったいろいろな機能</a></p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

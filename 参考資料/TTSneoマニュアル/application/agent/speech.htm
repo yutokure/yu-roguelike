@@ -1,0 +1,104 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+	<meta http-equiv="Content-Type" content="text/html; charset=x-sjis">
+			<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>音声合成</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		音声合成</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="../menu-extra.htm">プラグインとDLL関数</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>文字を読み上げる</h2>
+<blockquote>
+	<p>音声合成を利用することで、文字や文章を読み上げることができます。</p>
+</blockquote>
+<p>　</p>
+<h2>使い方</h2>
+<p><b>プラグインを利用するための命令</b></p>
+<p class="example">「TTSSpeechN.Speech」をスピーチとして利用する</p>
+<p><b>命令</b></p>
+<table border="0" id="AutoNumber1" cellpadding="2" width="70%">
+	<tr>
+		<td class="items" width="50%" align="center">命令</td>
+		<td width="50%" class="items" align="center">説明</td>
+	</tr>
+	<tr>
+		<td class="items" width="50%">～の[内容]を話せ</td>
+		<td width="50%">音声合成を開始します</td>
+	</tr>
+	<tr>
+		<td class="items" width="50%">～を停止</td>
+		<td width="50%">音声合成を停止します</td>
+	</tr>
+	<tr>
+		<td class="items" width="50%">～を一時停止</td>
+		<td width="50%">音声合成を一時停止します<br>
+		再開する場合は、もう一度命令してください</td>
+	</tr>
+</table>
+<p><b>設定項目</b></p>
+<p>◎＝設定・取得　○＝設定　□＝取得</p>
+<table border="0" id="table1" cellpadding="2" width="70%">
+	<tr>
+		<td class="items" align="center">設定項目</td>
+		<td class="items" align="center" width="10">　</td>
+		<td class="items" align="center">説明</td>
+	</tr>
+	<tr>
+		<td class="items">性別</td>
+		<td class="items" width="10">□</td>
+		<td>音声の性別（男/女）</td>
+	</tr>
+	<tr>
+		<td class="items">スピード</td>
+		<td class="items" width="10">□</td>
+		<td>音声合成のスピードを設定します</td>
+	</tr>
+	<tr>
+		<td class="items">ピッチ</td>
+		<td class="items" width="10">□</td>
+		<td>音声合成のピッチを設定します<br>
+		※男性と女性では値が異なります</td>
+	</tr>
+	<tr>
+		<td class="items">状態</td>
+		<td class="items" width="10">◎</td>
+		<td>状態を表します（再生中/停止中）</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>使用例</h2>
+<blockquote>
+	<p>音声合成を利用する簡単な例を紹介します。<br>
+	詳しい例は、サンプルの「音声合成.tts」をご覧ください。</p>
+</blockquote>
+<p class="example">「TTSSpeechN.Speech」をスピーチとして利用する<br>
+<br>
+スピーチの性別を女に変えろ<br>
+スピーチのスピードを150に変えろ<br>
+スピーチのピッチを170に変えろ<br>
+<br>
+メッセージは　「こんにちは」<br>
+スピーチのメッセージを話せ</p>
+<p>　</p>
+<h2>注意点</h2>
+<blockquote>
+	<p>音声認識待機中に、音声合成を実行することができません。<br>
+	文字を読み上げる時は、一度音声認識を停止する必要があります。</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

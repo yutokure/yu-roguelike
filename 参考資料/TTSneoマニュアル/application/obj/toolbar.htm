@@ -1,0 +1,106 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+		<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>ツールバーを使う</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		ツールバーを使う</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-obj.htm">オブジェクト</a> &gt;</div>
+</div>
+<h2>ツールバーとは</h2>
+<blockquote>
+	<p>ツールバーとは、ウィンドウのメニューの下に表示されているアイコン付きのボタンのことです。<br>
+	エディタなどのようなソフトの場合、開くや保存などがすばやく行えるようになります。</div></p>
+</blockquote>
+<p>　</p>
+<h2>ツールバーを作成する</h2>
+<blockquote>
+	<p>ツールバーを貼り付けるには、下のようにします。 </p>
+	<p>※TTSneoデザイナの「ウィンドウの編集」で貼り付ける作業のみできます。 </p>
+	<p class="example">ウィンドウ１を表示<br>
+	<br>
+	ツールバー１を作れ<br>
+	それに「new.ico」で追加<br>
+	それに「open.ico」で追加<br>
+	それに「save.ico」で追加</p>
+	<p>new.icoなどは、サンプルの「pic」フォルダにあります。 このようにすると、アイコンが３つ表示されます。</p>
+</blockquote>
+<p>　</p>
+<h2>ボタンを追加する</h2>
+<blockquote>
+	<p>ツールバーにボタンを追加するには、「追加」命令を使います。 </p>
+	<p class="format">ツールバー１に、ボタンの文字を、ボタンのアイコン名で追加</p>
+	<p>「ボタンの文字を」または「ボタンのアイコン名で」は、省略することもできます。</p>
+</blockquote>
+<p>　</p>
+<h2>区切りを追加する</h2>
+<blockquote>
+	<p>ボタンとボタンの間に区切りを挿入するには、メニューと同じように、<br>
+	ボタンの文字を「-」としてください。 </p>
+	<p class="format">ツールバー１に、「-」を追加</p>
+	<p>「ボタンの文字を」または「ボタンのアイコン名で」は、省略することもできます。</p>
+</blockquote>
+<p>　</p>
+<h2>ボタンをクリックしたときの手順を作る</h2>
+<blockquote>
+	<p>ボタンをクリックした時には、そのボタンに対応する手順が実行されます。 </p>
+	<p class="example">手順は　ウィンドウ１のツールバー１の[ボタンの番号]番目のボタンをクリック<br>
+	<br>
+	終わり</p>
+	<p>ボタンの番号とは、左から数えたボタンの番号を表します。 </p>
+	<p>※区切りも１つとして数えられます</p>
+</blockquote>
+<p>　</p>
+<h2>さらに細かい設定をしたい</h2>
+<blockquote>
+	<p>以上でツールバーの基本的な使い方は、説明しましたが、ここではツールバーの細かい設定項目について説明します。 </p>
+</blockquote>
+<h4>ボタンにチップヘルプを追加する</h4>
+<blockquote>
+	<p>ボタンにマウスを置く(ポイントする)と説明が表示されます。<br>
+	この内容を設定するには下のようにします。 </p>
+	<p class="example">ツールバー１の１番目のヒントを「新規」に変えろ</p>
+	<p class="format">ツールバー１の[ボタンの番号]番目のヒントを、説明に変えろ</p>
+</blockquote>
+<h4>ボタンをチェック可能にする</h4>
+<blockquote>
+	<p>昔のラジオのボタンのように、ボタンをチェックオブジェクトのようにすることもできます。 </p>
+	<p class="example">ツールバー１の１番目のスタイルを、１に変えろ<br>
+	ツールバー１の１番目のチェックを、オンに変えろ</p>
+	<p>このようにすると、１番目のボタンがチェック状態になります。 </p>
+</blockquote>
+<h4>ツールバーをフラットにする</h4>
+<blockquote>
+	<p>通常は、ボタンのように表示されていますが、マウスがあるところだけ浮き出して表示するフラットスタイルにすることもできます。 </p>
+	<p class="example">ツールバー１の見た目をフラットに変えろ</p>
+</blockquote>
+<h4>ツールバーの表示位置を変える</h4>
+<blockquote>
+	<p>通常は、ウィンドウの上部に表示されますが、右側や左側に表示することも可能です。 </p>
+	<p class="example">ツールバー１の配置を、右側に変えろ</p>
+	<p>指定できるのは、左側・右側・上側・下側です。</p>
+</blockquote>
+<p>　</p>
+<h2>リファレンスをご覧ください。</h2>
+<blockquote>
+	<p>リファレンスの「オブジェクト」には、ツールバーの設定項目を一覧で説明しています。<br>
+	説明できなかった部分や詳細の説明は、リファレンスをご覧ください。 
+	</div>
+	</p>
+</blockquote>
+
+</body>
+
+</html>

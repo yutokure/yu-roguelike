@@ -1,0 +1,121 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>オブジェクトの設定を変える・調べる</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		３．オブジェクトの設定を変える・調べる</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">ソフト作り編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/06/03<!--webbot bot="Timestamp" endspan i-checksum="12688" -->更新</div>
+</div>
+<h2>プログラムで名前や色を変えたい</h2>
+<blockquote>
+	<p class="neo">
+	ねお　「オブジェクトの名前や色は、ウィンドウをデザインで紹介したように、「設定」タブで変更することができますが、変数や関数を使いたいときやプログラムで名前を変えたいときは、「変えろ」命令を使います。」</p>
+	<p class="tomo">とも　「そうか。　これができれば、テキストの内容を変えることとか、背景の色を変えることとかができるんだぁ」</p>
+	<p class="tomo">　</p>
+	<p class="format"><span class="flag">［オブジェクト名］</span>の<span class="flag">［設定項目］</span>を［設定する値や内容］に変えろ</p>
+	<p><b><span class="flag">［オブジェクト名］</span></b>には、設定を変えたいオブジェクトの名前を指定します。</p>
+	<p><b><span class="flag">［設定項目］</span></b>には、変えたい項目を指定します。<br>
+	指定できるのは、「名前」「位置」「大きさ」「色」などで、指定したオブジェクトによって、違います。</p>
+	<p class="tomo">　</p>
+	<p class="tomo">とも　「[設定項目]って何？」</p>
+	<p class="neo">ねお　「オブジェクトの何を変更したいのかという名前のことです。<br>
+	オブジェクトによって設定項目は違うから、TTSneoリファレンスの各オブジェクトの説明をよく見てね」</p>
+	<p>　</p>
+</blockquote>
+<p><b>例</b>　ウィンドウの名前と背景色を変える</p>
+<p class="example">ウィンドウ１の名前を「私のソフト」に変えろ<br>
+ウィンドウ１の背景を緑に変えろ</p>
+<p>　</p>
+<h2>オブジェクトの設定や状態を調べる</h2>
+<blockquote>
+	<p class="tomo">とも　「ねえ　逆に設定を調べることはできるの？」</p>
+	<p class="neo">ねお　「設定項目の内容や値を、変数のように取り出すことが出来ます。」</p>
+	<p class="format"><span class="flag">［オブジェクト名］</span>の<span class="flag">［設定項目］</span></p>
+	<p class="neo">ねお　「下のように変数のように使うと、そのオブジェクトの設定を知ることができるよ。」</p>
+</blockquote>
+<p><b>例</b>　ウィンドウの名前を表示する</p>
+<p class="example">ウィンドウ１の名前を表示</p>
+<blockquote>
+	<p class="tomo">とも　「なるほど。」</p>
+</blockquote>
+<p>　</p>
+<h2>「それ」「その」を使って省略する</h2>
+<blockquote>
+	<p class="tomo">
+	とも　「設定をいろいろ変えていて気づいたけど、何度もボタン１・ウィンドウ１とかを繰り返すのは、面倒だよ。どうにかならないかな？」</p>
+	<p class="neo">ねお　「連続して同じオブジェクトを使うときは、何度もそのオブジェクト名を指定するのは、<br>
+	オブジェクト名の変わりに「その」「それ」を使います。」</p>
+	<p>「その」「それ」は、直前に使ったオブジェクト名を表します。<br>
+	こうすれば、いちいちオブジェクトの名前を指定する必要はありません。</p>
+	<p class="tomo">とも　「なるほど！！」　</p>
+</blockquote>
+<p class="example">ウィンドウ１を表示<br>
+　　<font color="#FF00FF"><b>その</b></font>大きさを４００、３００に変えろ<br>
+　　その名前を「私のソフト」に変えろ<br>
+<br>
+ボタン１をOKボタンとして作れ<br>
+　　その名前を「OK」に変えろ<br>
+　　その位置を５０、５０に変えろ<br>
+　　その大きさを１００、３０に変えろ</p>
+<blockquote>
+	<p class="neo">
+	ねお　「タブやスペースを入れて位置をずらすことで、見た目が見やすくなり整理しやすくなります。プログラムを見やすくするテクニックなので、ぜひ覚えてくださいね」</p>
+	<p class="tomo">とも　「[Tab]キーを押せばいいんだね。」</p>
+	<p class="neo">ねお　「TTSneoデザイナなら、複数行を選択した状態で、[Tab]を押すと、一度に移動できるよ。」</p>
+</blockquote>
+<p>　</p>
+<h4>「その」「それ」の問題点</h4>
+<blockquote>
+	<p class="tomo">とも　「ねえ、下のようにプログラムを作ったんだけど、思ったように動いてくれません。<br>
+	どうしてだろう・・・」</p>
+	<p class="neo">ねお　「うーん。自分で考えてごらん♪」</p>
+	<p class="tomo">とも　「えー」</p>
+	<p class="neo">ねお　「面倒くさがらないのっ　自分で原因を探すのもとっても大切だよ」</p>
+</blockquote>
+<p class="example">ウィンドウ１を表示<br>
+　　その大きさを４００、３００に変えろ<br>
+　　その名前を「私のソフト」に変えろ<br>
+<br>
+ボタン１をOKボタンとして作れ<br>
+　　その名前を「OK」に変えろ<br>
+　　その位置を<b><font color="#FF00FF">ウィンドウ１の中の幅－１５０、ウィンドウ１の中の高さ－１００</font></b>に変えろ<br>
+　　その大きさを１００、３０に変えろ</p>
+<blockquote>
+	<p class="tomo">とも　「実行するとウィンドウの大きさが小さくなってしまいます・・・」</p>
+	<p class="neo">
+	ねお　「うまく動かない原因は、「ウィンドウ１の中の高さ／４」で、ウィンドウ１を使ってしまったため、「その」が表すオブジェクトが「ウィンドウ」になってしまったからです。」</p>
+	<p class="tomo">とも　「どうすればいいの？」</p>
+	<p class="neo">ねお　「ここまでくれば分からない？よーく考えてみてっ！」</p>
+	<p class="tomo">とも　「そっか。それを使わずに「その」を「ボタン１」に変えれば、いいのかぁ」</p>
+	<p class="neo">ねお　「そう！順番を変えてもOKです。」</p>
+</blockquote>
+<p>　</p>
+<h2>練習問題っ！</h2>
+<blockquote>
+	<p>では、練習問題です。このページで勉強したことは、とてもよく使うので、しっかり覚えてくださいね。</p>
+	<p>※ここでは「ウィンドウの設計」を使わずに作ってみましょう。</p>
+	<p><b>問題１</b>　ピクチャーオブジェクトを作って、背景を赤に変えてください。</p>
+	<p><b>問題２</b>　文章テキストを作って、下のようなメッセージに変えてください。</p>
+	<p>こんにちは<br>
+	今日はいい天気ですね。</p>
+	<p><font color="#0000FF">ヒント</font>　改行するには、「改行」関数を使います。基本編の<a href="../basic/var.htm">変数</a>で勉強したように、「　」と［　］を使いましょう。</p>
+	<p><b>問題３</b>　その内容を「表示」命令で、表示させてみましょう。</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

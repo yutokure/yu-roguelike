@@ -1,0 +1,90 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>メールの送信</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		メールの送信</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-net.htm">インターネット</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>メールを送信する</h2>
+<blockquote>
+	<p>TTSneoでは、SMTPサーバを使ったメール送信に対応しています。<br>
+	(HotmailなどのWebメールは使用できません)</p>
+</blockquote>
+<h4>メールを送信する手順</h4>
+<blockquote>
+	<p>１．メール機能を初期化する</p>
+	<p>２．メール送信サーバと、ユーザ情報（アカウント）を設定する</p>
+	<p>３．送信するメールの本文と宛先を指定する</p>
+	<p>４．送信する</p>
+	<p>※SMTPサーバのポートを変更することが可能です<br>
+	　詳しい設定については、リファレンスをご覧ください</p>
+</blockquote>
+<h4>メールを送信する例</h4>
+<blockquote>
+	<p class="example"><span class="rem">ーーメール機能の初期化</span><br>
+	メールを初期化<br>
+	<br>
+	<span class="rem">ーーメール送信の設定</span><br>
+	メールのSMTPサーバを、「mailtest.ne.jp」に変えろ<br>
+	メールのアカウントを、「yourname」に変えろ<br>
+	メールのパスワードを、「password」に変えろ<br>
+	メールのメールアドレスを、「yourname@mailtest.ne.jp」に変えろ<br>
+	<br>
+	<span class="rem">ーーメールを送る</span><br>
+	メールの宛先を、「friend@mailtest.ne.jp」に変えろ<br>
+	メールの件名を、「テストメール」に変えろ<br>
+	メールの本文を、「テストメールです。」に変えろ<br>
+	<br>
+	メールを送信</p>
+	<p></p>
+</blockquote>
+<p>　</p>
+<h4>宛先の指定方法について</h4>
+<blockquote>
+	<p>複数のアドレスを指定する場合は、「, 」(半角の区切りとスペース)で区切ってください。 </p>
+	<p class="example">メールの宛先を「abc@bbb.co.jp, def@ccc.ac.jp」に変えろ</p>
+	<p></p>
+	<p>表示名を指定する場合は、「&quot;表示名&quot; &lt;アドレス&gt;」のように指定してください。</p>
+	<p class="example">メールの宛先を「&quot;テスト&quot;
+	<support@ddd.ne.jp />&lt;test@test.ne.jp&gt;」に変えろ</p>
+</blockquote>
+<p>　</p>
+<h4>SMTP認証が必要な場合</h4>
+<blockquote>
+	<p>SMTP認証に対応するメールサーバを使う場合は、「SMTP認証」設定項目で、認証方法を設定できます。</p>
+	<p>なし・自動・PLAIN・LOGIN・CRAMMD5　のいずれかを指定できます。</p>
+	<p class="example">メールのSMTP認証をPLAINに変えろ</p>
+	<p></p>
+</blockquote>
+<p>　</p>
+<h2>CC、BCCの宛先を指定する</h2>
+<blockquote>
+	<p>カーボンコピー（CC、BCC）する場合は、「宛先CC」「宛先BCC」設定項目で宛先を指定してください。</p>
+	<p class="format">メールの宛先CCを[メールアドレス]に変えろ<br>
+	メールの宛先BCCを[メールアドレス]に変えろ</p>
+</blockquote>
+<p>　</p>
+<h2>添付ファイルをつける</h2>
+<blockquote>
+	<p>添付ファイルが必要な場合は、「添付ファイル」設定項目にファイルを指定してください。<br>
+	複数のファイルを指定するときは、配列形式で指定します。 </p>
+	<p class="format">メールの添付ファイルを「[ファイル名]」に変えろ </p>
+</blockquote>
+
+</body>
+
+</html>

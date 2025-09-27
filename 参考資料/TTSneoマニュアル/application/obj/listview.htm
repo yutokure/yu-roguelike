@@ -1,0 +1,245 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+		<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>リストビューを使う</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		リストビューを使う</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2014/12/24<!--webbot bot="Timestamp" endspan i-checksum="12448" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-obj.htm">オブジェクト</a> &gt;</div>
+</div>
+<h2>リストビューとは</h2>
+<table border="0" cellpadding="5" cellspacing="5" width="100%">
+	<tr>
+		<td><img border="0" src="../../img/tomo.png" width="106" height="123"></td>
+		<td>
+		<p class="neo">ねお　「今度は、リストビューについて紹介します。<br>
+		リストビューとは、エクスプローラなどで使われている、アイコンの一覧を表示することができるオブジェクトです。」</p>
+		<p class="tomo">とも　「アイコンが追加できるリストってことだね！」</p>
+		<p class="neo">ねお　「そう。アイコン表示だけでなく、詳細表示にすることも可能です。」</p>
+		</td>
+		<td><img border="0" src="../../img/ttschar7.png" width="124" height="116"></td>
+	</tr>
+</table>
+<p>　</p>
+<h2>リストビューを作成する</h2>
+<blockquote>
+	<p>リストビューを貼り付けるには、下のようにします。 </p>
+	<p>※TTSneoデザイナの「ウィンドウの編集」で貼り付けることができます。 </p>
+	<p class="example">ウィンドウ１を表示<br>
+	<br>
+	リストビュー１を作れ<br>
+	その大きさを２００，２００に変えろ<br>
+	<br>
+	データ（１，０）は　「山田次郎,4/25,男」<br>
+	データ（２，０）は　「田中花子,7/31,女」<br>
+	データ（３，０）は　「相原貴之,9/12,男」<br>
+	データ（４，０）は　「高橋祐子,11/27,女」<br>
+	データ（５，０）は　「鈴木次郎,10/20,男」<br>
+	<br>
+	<span class="rem">ーーデータをリストビューへ追加</span><br>
+	それへデータの詳細一覧を「file.ico」で追加</p>
+	<p>アイコンは、任意ですので、サンプルにあるアイコンを使って試してみてください。 </p>
+	<p>※以降、例は、リストビュー１を操作するものとして説明しています。<br>
+	　リストビューの番号が違う場合は、「リストビュー２」などと変更して<br>
+	　連続して使用する場合は、「それ」を使って書き換えてください。 
+	</p>
+</blockquote>
+<p>　</p>
+<h2>項目を追加する</h2>
+<blockquote>
+	<p>プログラムを見るとよくわからないと思いますが、実行すると下のようなツリーを作ります。 </p>
+	<p class="format"><span class="flag">[名前]</span>を<span class="flag">[アイコン名]</span>でリストビュー<span class="flag">[番号]</span>に追加</p>
+	<p>親の名前は、追加する項目がどこの項目に属すかを指定します。<br>
+	深くなる場合は、「\」で親の名前を区切ります。<br>
+	ちょうどファイルのパス(アドレス)と同じだと考えてください。<br>
+	(属す項目の名前を「\」で区切りすべて指定してください)</p>
+	<p>※一番上(ルート)に追加する場合は、親の名前を省略します。 
+	</p>
+</blockquote>
+<h2>ツリーの項目を指定する方法</h2>
+<blockquote>
+	<p>指定した項目の属する情報を調べるたり設定する際に、ツリー項目を指定するには、次のように書きます。 </p>
+	<p>このページでは、次の方法の指定を[ツリー項目]と表します。</p>
+	<p>項目名は、追加するときに指定した名前です。 </p>
+	<p class="format">リストビュー<span class="flag">[番号]</span>の<span class="flag">[項目名]</span></p>
+	<p class="format">リストビュー<span class="flag">[番号]</span>の<span class="flag">[項目番号]</span>番目</p>
+	<p>また、選択している部分に関して調べるときは、下のようにすることもできます。 </p>
+	<p class="format">リストビュー<span class="flag">[番号]</span>の選択</p>
+	<p>&nbsp;</p>
+</blockquote>
+<h2>項目をクリック・ダブルクリックしたときの手順を作る</h2>
+<blockquote>
+	<p>ツリーの項目をクリックした時は、下のような手順が実行されます。 </p>
+	<p class="example">手順は　ウィンドウ１のリストビュー１をクリック<br>
+	<br>
+	終わり</p>
+	<p class="example">手順は　ウィンドウ１のリストビュー１をダブルクリック<br>
+	<br>
+	終わり</p>
+	<p>どの項目を選択したか調べるには、下のようにします。 </p>
+	<p class="format">リストビュー<span class="flag">[番号]</span>の内容</p>
+</blockquote>
+<p>　</p>
+<h2>アイコンの変更</h2>
+<blockquote>
+	<p>リストビューでは項目のアイコン画像を指定することができます。</p>
+	<p class="example">手順は　ウィンドウ１のリストビュー１を展開<br>
+	　　リストビュー１の選択の絵を「open.ico」に変えろ<br>
+	終わり<br>
+	<br>
+	手順は　ウィンドウ１のリストビュー１を折りたたむ<br>
+	　　リストビュー１の選択の絵を「close.ico」に変えろ<br>
+	終わり</p>
+</blockquote>
+<p>　</p>
+<h2>見出し（カラムヘッダ）の追加と変更</h2>
+<blockquote>
+	<p>「見た目」設定項目を「詳細」に設定した場合、見出しに表示される項目をカラム（カラムヘッダ）と言います。</p>
+	<h3>見出しを追加する</h3>
+	<p class="format">リストビュー<span class="flag">[番号]</span>に<span class="flag">[項目名]</span>を見出しとして追加</p>
+	<h3>見出しを変更する</h3>
+	<p class="format">リストビュー<span class="flag">[番号]</span>の<span class="flag">[項目名]</span>の見出しの<span class="flag">[設定項目]</span>を<span class="flag">[内容]</span>に変えろ</p>
+	<h3>見出しの設定項目</h3>
+	<table class="base" cellpadding="2">
+		<tr>
+			<td class="items" nowrap align="middle">設定項目</td>
+			<td class="items" align="middle">説明</td>
+		</tr>
+		<tr>
+			<td class="items">順番</td>
+			<td>見出しの順番（１からカラムの項目数まで）</td>
+		</tr>
+		<tr>
+			<td class="items">内容</td>
+			<td>見出しの内容</td>
+		</tr>
+		<tr>
+			<td class="items">幅</td>
+			<td>見出しのカラムの項目の幅</td>
+		</tr>
+		<tr>
+			<td class="items">表示位置</td>
+			<td>カラムの項目の見出しの位置<br>左／右／中央で指定</td>
+		</tr>
+	</table>
+</blockquote>
+<p>　</p>
+<p>　</p>
+<h2>ツリーの名称を編集できるようにする</h2>
+<blockquote>
+	<p>ツリーの項目名を変更できるようにすることもできます。<br>
+	項目名（ラベル）を変更する直前に「リストビュー１のラベル編集直前」手順が実行され、直後に「リストビュー１のラベル編集直後」手順が実行されます。 </p>
+	<p>変更後の項目名は、「リストビュー１のラベル編集後」で取得することができますので これらを使って正しい内容が指定されているか判断することができます。 </p>
+	<p>もし内容が正しくない場合は、「リストビュー１のラベル編集中止をオンに変えろ」など とすると変更されずに元に戻ります。 </p>
+	<p class="example">リストビュー１のラベル編集をオンに変えろ<br>
+	<br>
+	手順は　リストビュー１のラベル編集直後<br>
+	’ラベルの編集の確認<br>
+	もし　このラベル編集後は、「」　なら<br>
+	　　「空白にはできません」を警告で表示。<br>
+	　　このラベル編集中止をオンに変えろ<br>
+	もし終わり<br>
+	終わり</p>
+	<p>　</p>
+</blockquote>
+<h2>チェックが入れられるようする</h2>
+<blockquote>
+	<p>ツリーの各項目にチェックを入れることもできます。 </p>
+	<p class="example">リストビュー１のチェックボックスをオンに変えろ</p>
+	<p>こうすることで各項目にチェックボックスが表示されます。 </p>
+	<p>チェックされているかどうか調べる場合は、下のようにします。 </p>
+	<p class="format"><span class="flag">[ツリー項目]</span>のチェック </p>
+</blockquote>
+<h2>さらに細かい設定をしたい</h2>
+<p>以上でリストビューの基本的な使い方は、説明しましたが、ここではリストビューの細かい設定項目について説明します。 </p>
+<h4>文字の色などを変更する</h4>
+<blockquote>
+	<p>指定した部分の項目名の色や背景を変更することができます。 </p>
+	<p class="format"><span class="flag">[ツリー項目]</span>の色を青に変えろ</p>
+	<p class="format"><span class="flag">[ツリー項目]</span>の太字をオンに変えろ</p>
+	<p class="format"><span class="flag">[ツリー項目]</span>の背景を灰色に変えろ</p>
+	<p>項目名を「選択」とすると現在選択している項目に対して設定します。 </p>
+</blockquote>
+<h4>項目をチェック可能にする</h4>
+<blockquote>
+	<p>項目にチェックボックスを表示させて、チェックによって項目を選択できます。</p>
+	<p class="example">リストビュー１のチェックボックスをオンに変えろ<br>
+	リストビュー１の１番目のチェックをオンに変えろ</p>
+	<p>このようにすると、１番目のボタンがチェック状態になります。 </p>
+</blockquote>
+<h4>項目にチップヒントを表示できるようにする</h4>
+<blockquote>
+	<p>リストビューの各項目にマウスカーソルをポイントした時に、ヒント文字列を表示できます。 </p>
+	<p class="example">リストビュー１の１番目のヒントを「作成日(11/11/11)」に変えろ</p>
+</blockquote>
+<h4>項目についての情報を読み取りする</h4>
+<blockquote>
+	<p>指定した項目に関する文字列情報を格納することができます。</p>
+	<p class="example">リストビュー１の１番目のタグは、「data」<br>
+		リストビュー１の１番目のタグを表示する</p>
+</blockquote>
+<p>　</p>
+<h2>リストビューの例</h2>
+<p class="example">ウィンドウ１の表示<br>
+<br>
+<span class="rem">ーー★データの作成（配列を利用します）</span><br>
+データ（１，０）は　「山田次郎,4/25,男」<br>
+データ（２，０）は　「田中花子,7/31,女」<br>
+データ（３，０）は　「相原貴之,9/12,男」<br>
+データ（４，０）は　「高橋祐子,11/27,女」<br>
+データ（５，０）は　「鈴木次郎,10/20,男」<br>
+<br>
+<span class="rem">ーー★データをリストビューへ追加</span><br>
+<span class="pink">リストビュー２へデータの詳細一覧を「file.ico」で追加</span><br>
+待機<br>
+<br>
+手順は　ウィンドウ１の表示<br>
+ウィンドウ１を使う<br>
+’&lt;ウィンドウ１&gt;<br>
+ウィンドウ１の中の大きさを332，226へ変えろ<br>
+　　その名前を「リストビューのサンプル」へ変えろ<br>
+　　その背景を&amp;h8000000Fへ変えろ<br>
+リストビュー１を作れ<br>
+　　その位置と大きさを0，0，100，200へ変えろ<br>
+　　その一覧を「ABC［改行］CDE」へ変えろ<br>
+リストビュー２を作れ<br>
+　　その位置と大きさを110，0，200，200へ変えろ<br>
+　　その見た目を「詳細」へ変えろ<br>
+　　そのカラム一覧を「名前,誕生日,性別」へ変えろ<br>
+　　そのカラム幅一覧を96,96,96へ変えろ<br>
+’&lt;/ウィンドウ１&gt;<br>
+ウィンドウ１を表示<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１のリストビュー１をクリック<br>
+　　ウィンドウ１の名前を「［<span class="pink">リストビュー１の内容</span>］を選択中」に変えろ<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１のリストビュー２をダブルクリック<br>
+<span class="rem">　　’全内容とすると、選択された行の全情報を表示します<br>
+　　’内容とすると、選択された項目名を表示します</span><br>
+　　ウィンドウ１の名前を「［リストビュー２の全内容］を選択中」に変えろ<br>
+終わり</p>
+<p>　</p>
+<h2>リファレンスをご覧ください。</h2>
+<blockquote>
+	<p>リファレンスの「オブジェクト」には、ツールバーの設定項目を一覧で説明しています。<br>
+	説明できなかった部分や詳細の説明は、リファレンスをご覧ください。 
+	</p>
+</blockquote>
+
+</body>
+
+</html>

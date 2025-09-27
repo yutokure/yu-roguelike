@@ -1,0 +1,106 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>FTPでファイルをダウンロード・アップロード</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		FTPでファイルをダウンロード・アップロード</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-net.htm">インターネット</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>FTPとは？</h2>
+<blockquote>
+	<p class="neo">ねお　「今回は、TTSneoにあるFTP機能の使い方を紹介します。」</p>
+	<p class="tomo">とも　「FTPって何？」</p>
+	<p class="neo">ねお　「FTPとは、相手先のコンピュータ（サーバ）へファイルを送ったり(アップロード)、受け取ったり(ダウンロード)するための機能のことです。詳しくは、インターネットにある専門用語解説サイトをみてください。」</p>
+	<p class="tomo">とも　「どんなときに使うの？」</p>
+	<p class="neo">ねお　「FTPはいろいろな場合に使われているけれど、例としては、ホームページの公開サービスに登録して、ホームページや画像を送るときに、FTPを使うことができます。」</p>
+	<p class="tomo">とも　「なるほど、パソコンとパソコンのファイル転送には使える？」</p>
+	<p class="neo">ねお　「メッセンジャーなどのようなファイル転送には使えません。その場合は、TCP/IPを使ったファイル転送の説明を見てください。」</p>
+	<p class="tomo">とも　「わかった。」</p>
+	<p></p>
+</blockquote>
+<h2>FTP機能を使う前の準備</h2>
+<blockquote>
+	<p>FTPへ接続するには、通常、接続先のコンピュータ(サーバ)のアドレスと、パスワード、IDが必要です。</p>
+	<p><b>例</b>　接続先のサーバとユーザ名とパスワードを設定する</p>
+	<p class="example">ＦＴＰのサーバを、「ftp.geocities.co.jp」に変えろ</span><br>
+	ＦＴＰのユーザ名を、「*****」</span>に変えろ<br>
+	ＦＴＰのパスワードを、「******」</span>に変えろ</p>
+	<p class="tomo">とも　「ホームページ公開サービスで使うときは、登録したときに表示された、ユーザ名とパスワードを指定するんだね</p>
+	<p class="neo">ねお　「そうです。FTPの利用方法について解説しているページがあるから、それを参考に指定してください。」</p>
+	<p>　</p>
+</blockquote>
+<h2>FTP機能を使ってみる</h2>
+<blockquote>
+	<p>ではFTPを使った、ファイルのアップロードとダウンロードの方法を紹介します。</p>
+	<p>ここでは、無料のホームページ代行サービスYahoo!Geocitiesの場合を使った場合の方法を紹介します。</p>
+	<p>ホームページの管理をしたり、自分のサーバのファイルをやり取りするプログラムを作ったりするには、便利です。</p>
+	<p><b>例</b>　ファイルをアップロードする</p>
+	<p class="example">「［デスクトップフォルダ］index.html」</span>を「/XXXXXXX/0000/」</span> にアップロード<br>
+	「［デスクトップフォルダ］link.html」</span>を「/XXXXXXX/0000/」</span>にアップロード</p>
+	<p class="tomo">とも　「自分のパソコンのファイルと、転送先のフォルダを指定するんだね」</p>
+	<p class="neo">ねお　「その通り！　接続したサーバにフォルダが置いてあると考えてください。<br>
+	指定するフォルダなどが、ほかのホームページ代行サービスと違うこともありますが、説明を良く見てください。」</p>
+	<p class="neo">　</p>
+</blockquote>
+<h4>ファイルのダウンロード</h4>
+<blockquote>
+	<p>ファイルをダウンロードするには、「ダウンロード」命令を使います。</p>
+</blockquote>
+<p class="example">ＦＴＰの「/public_html/hello.exe」を「［デスクトップ］a」にダウンロード</p>
+<p>　</p>
+<h4>ファイル一覧の取得</h4>
+<blockquote>
+	<p>FTPに接続した後に、サーバにあるファイルの一覧を調べることができます。</p>
+	<p>ファイル一覧を調べるには、「ＦＴＰのファイル一覧」関数を使います。<br>
+	結果は、配列形式で表されます。</p>
+	<p class="example">一覧は、ＦＴＰのファイル一覧（「/」）</p>
+</blockquote>
+<p>　</p>
+<h2>その他、ファイルやフォルダの操作</h2>
+<blockquote>
+	<p>FTPで接続して利用できるサーバのファイルは、パソコン内のファイルのように操作することができます。プロバイダなどのFTPの場合は、制限がある場合があります。</p>
+</blockquote>
+<p>　</p>
+<h4>ファイルやディレクトリ(フォルダ)の削除</h4>
+<blockquote>
+	<p>接続したサーバ上にあるファイルやフォルダを削除することもできます。</p>
+</blockquote>
+<p class="example">ＦＴＰの「/public_html/ttsneo/」を削除</p>
+<p>　</p>
+<h4>ファイル名の変更</h4>
+<blockquote>
+	<p>ファイルやフォルダの名前を変更・移動するには、「変更」命令を使います。</p>
+</blockquote>
+<p class="example">ＦＴＰの「/public_html/hello2.exe」を「/public_html/hello.exe」に変更</p>
+<p>　</p>
+<h4>ディレクトリ(フォルダ)の作成</h4>
+<blockquote>
+	<p>新しくフォルダを作成するには、「作成」命令を使います。</p>
+</blockquote>
+<p class="example">ＦＴＰの「/public_html/hello2.exe」を作成</p>
+<p>　</p>
+<h2>FTPコマンドを使いたい</h2>
+<blockquote>
+	<p>以上で紹介した機能以外を利用したい場合は、「命令」関数を使ってFTPコマンドを送信することで操作することができます。</p>
+	<p class="format">ＦＴＰの命令（[コマンド]）</p>
+	<p>[コマンド]には、FTPで利用できるコマンドを指定します。<br>
+	結果には、成功したか失敗したか、命令の結果などが表されます。</p>
+	<p>コマンドに「HELP」を指定することで、利用できるFTPコマンドを調べることができます。</p>
+</blockquote>
+
+</body>
+
+</html>

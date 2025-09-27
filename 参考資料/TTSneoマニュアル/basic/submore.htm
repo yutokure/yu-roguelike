@@ -1,0 +1,108 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>ローカル変数と再帰処理</title>
+<base target="_self">
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">１３．ローカル変数と再帰処理</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">基本編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/09/30<!--webbot bot="Timestamp" endspan i-checksum="12877" -->更新</div>
+</div>
+
+<h2>手順の便利な機能(中級者向け)</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar9.png" width="116" height="115"></td>
+		<td>ここでは、手順の特別な使い方を紹介します。<p>
+		ここで紹介する、再帰処理とローカル変数は、絶対に必要なテクニックではないので、TTSneoでのプログラミングに慣れてから、じっくり読んでください。</p>
+		<p>初めての方は、理解する必要はありません。<br>
+		読み飛ばしてください。</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>何度も使える手順を作って楽をする</h2>
+<blockquote>
+	<p>オリジナル命令や関数は、作り方しだいで、手順まるごと、他のプログラムで再利用することができます。<br>
+	TTSneoでは、手順内でのみ有効の変数を作ることができますので、手順内の修正をしなくても、そのままオリジナル命令や関数を使うことができます。</p>
+	<p>
+	手順内でのみ利用できる変数（ローカル変数）を宣言する「ここだけの変数は」命令を使うことで、プログラムで使っている変数(グローバル変数)と、名前が重なっても、プログラムに影響することはありません。<br>
+	「ここだけの変数は」で、手順内だけの変数を作れば、変数名の衝突が起こらず、手順を気軽に使いまわしできます。 </p>
+	<p>また、オリジナル命令・関数の必要な情報（引数）として指定した変数も、手順内でのみ有効のローカル変数になります。</p>
+</blockquote>
+<p>　</p>
+<p><b>例</b>　「ここだけの変数は」命令を使った例</p>
+<p><b>太字</b>の部分を削除すると、最初の「内容」変数の内容が消えてしまいます。</p>
+<p class="example">内容は　「調子はどうですか？」<br>
+結果は、メッセージ（「こんにちは」、「TTSneo」）<br>
+「［結果］［改行］［内容］」を表示<br>
+<br>
+手順は　メッセージ（挨拶、名前）<br>
+　　<b>ここだけの変数は、内容</b><br>
+　　内容は、「［挨拶］私は、［名前］です。」<br>
+　　内容で抜ける<br>
+終わり</p>
+<p>　</p>
+<p>　</p>
+<h2>手順の再帰呼び出しを使う</h2>
+<blockquote>
+	<p>再帰呼び出しとは、手順の中で、同じ手順をもう一度実行する処理のことです。<br>
+	もう一度実行された手順が終了すると、呼び出す前の手順の続きを実行します。</p>
+	<p>手順に指定した情報（仮引数）の値は、実行された手順ごとに別々に保持されるため、<br>
+	同じ処理を何度も繰り返すような計算や操作を行う場合に便利です。</p>
+	<p>　</p>
+</blockquote>
+<h4>オリジナル命令の再帰呼び出し</h4>
+<p><b>例</b>　1,2,3,4,5,4,3,2,1を順に表示するプログラム</p>
+<p class="example">１を処理<br>
+<br>
+手順は　処理（［数字］を）<br>
+　　数字を報告<br>
+　　もし　数字は　５　なら<br>
+　　　　抜ける<br>
+　　でないなら<br>
+　　　　数字＋１を処理<br>
+　　もし終わり<br>
+　　数字を報告<br>
+終わり</p>
+<p>　</p>
+<h4>オリジナル関数の再帰呼び出し</h4>
+<p><b>例</b>　階乗計算するプログラム</p>
+<p class="example">階乗計算（５）を表示<br>
+<br>
+手順は　階乗計算（値）<br>
+　　もし　値は、０　なら　１で抜ける<br>
+　　値×［階乗計算（値-１）］で抜ける<br>
+終わり</p>
+<blockquote>
+	<p>　</p>
+</blockquote>
+<p class="example">結果は、処理（5）<br>
+結果を表示<br>
+<br>
+手順は　処理（［答え］を）<br>
+　　ここだけの変数は、数<br>
+　　もし　答えは、1　なら　答えで抜ける<br>
+　　答えは、答え-1<br>
+　　数は、処理（答え）<br>
+　　数を報告<br>
+　　答えで抜ける<br>
+終わり</p>
+<blockquote>
+	<p>　</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

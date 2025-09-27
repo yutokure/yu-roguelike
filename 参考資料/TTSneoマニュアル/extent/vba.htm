@@ -1,0 +1,179 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>VBA、WSHとの連携</title>
+<base target="_self">
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		VBA、WSHとの連携</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2005/06/24<!--webbot bot="Timestamp" endspan i-checksum="12676" -->更新</div>
+</div>
+<h2>VBAからTTSneoを操作する</h2>
+<blockquote>
+	<p>TTSneoがインストールされている環境では、TTSneoをExcelなどの「VBA」、「Windows Script 
+	Host(WSH)」などから呼び出すことができます。</p>
+	<p><font color="#FF0000"><b>注意！</b></font><br>
+	・このページで紹介する内容は、TTSneoがインストールされている環境でのみ利用できます。</p>
+	<p>・TTSneoの言語機能そのものを、他のソフトウェウの機能の一部やプラグインとして利用することは認められていません。</p>
+	<p>・従来のバージョンで提供していたTTSA(TTS for Applicaion)は、廃止されました。<br>
+	最新版では、ご利用できません。</p>
+</blockquote>
+<p>　</p>
+<h2>Excelで操作するには</h2>
+<blockquote>
+	<p>ExcelやWordに搭載されているVBAから、WSHと同じ方法でTTSneoを呼び出すことができます。</p>
+	<p class="vb">Set TTSneo = CreateObject(&quot;TTScript.TTS&quot;)<br>
+	TTSneo.Run &quot;「こんにちは」を表示&quot;,0</p>
+	<p>詳しいマクロの使い方は、ここの説明よりもわかりやすい、インターネットや書籍などがありますので、そちらをご覧ください。</p>
+	<p>ここでは、要点だけを説明します。</p>
+</blockquote>
+<p>　</p>
+<h4>マクロを使って、TTSneoの関数をExcelで使う</h4>
+<blockquote>
+	<p class="steps">１．Excel（Word）を起動します。<br>
+	２．「ツール｣メニューの「マクロ」から「Visual Basic Editor」を選びクリックします。<br>
+	３．画面が表示されましたら、「挿入」メニューの「標準モジュール」をクリックします。<br>
+	４．そうすると、新しく「Module1」ができますので、ウィンドウに次のプログラムを入れてください。</p>
+	<p class="vb">'TTSneo関数の呼び出し<br>
+	'第一引数に、TTSneo関数名を指定します<br>
+	'引数（設定項目）を指定する必要があるTTSneo関数の場合は<br>
+	'第二引数以降に指定してください<br>
+	<br>
+	Function 関数(Kansu As String, ParamArray Arr())<br>
+&nbsp;&nbsp;&nbsp; Set TTSneo = CreateObject(&quot;TTScript.TTS&quot;)<br>
+&nbsp;&nbsp;&nbsp; 関数 = TTSneo.GetSetInfo(&quot;変数&quot;, Kansu &amp; &quot;（&quot; &amp; Join(Arr, &quot;，&quot;) &amp; 
+	&quot;）&quot;)<br>
+	End Function</p>
+	<p>これを入力し終わったら、「Visual Basic Editor」を閉じて、Excelの画面に戻ります。</p>
+	<p>そして、関数を表示させたいセルで</p>
+	<p class="vb">=関数(&quot;時間&quot;)</p>
+	<p>とすると、現在の時間が表示されます。<br>
+	「&quot; &quot;」を忘れないように注意してください。</p>
+	<p>プログラムを実行しても正しく動作しない場合は、TTSneoが正しくインストールされているか確認してください。<br>
+	TTSneoをインストールしたフォルダの「setup.exe」を実行してみてください。</p>
+	<p>　</p>
+</blockquote>
+<h4>セルの内容をTTSneoで使って、セルに表示したい</h4>
+<blockquote>
+	<p>今度は、セルの内容をTTSneoの関数に代入して、その結果を使いたいという場合が出てきます。<br>
+	ちょっと見にくくなってしまうのですが、下のようにします。</p>
+	<p class="vb">=関数(&quot;<font color="#0000FF"><b>小文字</b></font>&quot; , <b>
+	<font color="#FF0000">A1</font></b> )</p>
+	<p>青色の部分がTTSneoの関数です。赤の部分が、セルの位置を示しています。</p>
+</blockquote>
+<p>　</p>
+<blockquote>
+	<p></p>
+</blockquote>
+<h2>WSHから操作しよう</h2>
+<blockquote>
+	<p>Windowsに標準でインストールされている「Windows Scripting Host」からTTSneoを利用する例を紹介します。<br>
+	※環境によってはインストールされていないことがあります</p>
+	<p>メモ帳などで次のプログラムを作って、「Test.vbs」などという名前で保存してください。</p>
+	<p class="vb">Set TTSneo = WScript.CreateObject(&quot;TTScript.TTS&quot;)<br>
+	TTSneo.Run &quot;「こんにちは［改行］今の時間は、［時間］です」を表示&quot;,0</p>
+	<p>「Test.vbs.txt」という名前で保存されてしまった場合は、「名前の変更」で「.txt」の部分を消してください。</p>
+	<p>　</p>
+</blockquote>
+<h4>詳しい説明</h4>
+<blockquote>
+	<p class="vb">Set TTSneo = WScript.CreateObject(&quot;TTScript.TTS&quot;)</p>
+	<p>TTSneoを操作できる状態にします。<br>
+	ここで、エラーが発生する場合は、TTSneoが正しくインストールされているか確認してください。</p>
+	<p class="vb">TTSneo.Run &quot;「こんにちは［改行］今の時間は、［時間］です」を表示&quot;,0</p>
+	<p>TTSneoの命令を実行します。第１引数にTTSneoの命令を指定します。</p>
+	<p>レジストリの設定やファイルの内容を変更する命令やウィンドウを使う命令は、使用できません。<br>
+	それ以外であれば、配列や関数なども使用できます。<br>
+	<br>
+	<b>▼参照<br>
+	</b><a href="../editor/safe.htm">「保護機能について」</a></p>
+</blockquote>
+<p>　</p>
+<h2>TTSneoオブジェクト</h2>
+<blockquote>
+	<p>ここでは、TTSneoオブジェクトで提供しているメソッド・プロパティについて説明します。<br>
+	ここで紹介されているメソッド・プロパティ以外は、内部用として設計したものですので、ご利用になれません。</p>
+</blockquote>
+<h4>TTSneo.Run メソッド</h4>
+<blockquote>
+	<p class="vb">TTSneo.Run &quot;[TTSneo命令]&quot;,0</p>
+	<p>TTSneoの命令を実行します。<br>
+	複数行の命令を代入すると、１行目から順に実行します。<br>
+	</p>
+	<p>この場合、変数情報などは、初期化されます。<br>
+	</p>
+	<p>ファイル操作やレジストリ操作など、パソコンの設定などを操作する危険な命令は、使えません。</p>
+	<p class="steps"><b>▼参照<br>
+	</b><a href="../editor/safe.htm">「保護機能について」</a></p>
+</blockquote>
+<h4>TTSneo.RunComnd メソッド</h4>
+<blockquote>
+	<p class="vb">TTSneo.RunComnd &quot;[TTSneo命令]&quot;</p>
+	<p>一行の命令を実行します。複数行指定できません。</p>
+	<p>変数情報などは、初期化されません。</p>
+</blockquote>
+<h4>TTSneo.RunFile メソッド</h4>
+<blockquote>
+	<p class="vb">TTSneo.RunFile &quot;[TTSneoファイル名]&quot;,0</p>
+	<p>TTSneoファイルを呼び出して実行します。</p>
+</blockquote>
+<h4>TTSneo.GetSetInfo 関数</h4>
+<blockquote>
+	<p class="vb">R = TTSneo.GetSetInfo(&quot;[設定項目]&quot;,&quot;[文字列／数値]&quot;)</p>
+	<p>TTSneoの各種情報を取得、設定します。</p>
+</blockquote>
+<div align="center">
+	<center>
+	<table cellPadding="2" border="0">
+		<tr>
+			<td align="middle" class="items"><b>[設定項目]</b></td>
+			<td align="middle" class="items"><b>内容</b></td>
+		</tr>
+		<tr>
+			<td><b>手順</b></td>
+			<td>実行しているTTSneoファイル内の指定した手順を実行します<br>
+			　[文字列／数値]には、手順名を指定します</td>
+		</tr>
+		<tr>
+			<td><b>変数</b></td>
+			<td>指定した、TTSneo関数か変数の結果を返します<br>
+			　[文字列／数値]には、関数・変数を指定します</td>
+		</tr>
+		<tr>
+			<td><b>オブジェクト</b></td>
+			<td>指定したオブジェクト式を返します<br>
+			　[文字列／数値]には、オブジェクト名を指定します</td>
+		</tr>
+		<tr>
+			<td><b>バージョン</b></td>
+			<td>TTSneoバージョンを返します<br>
+			　[文字列／数値]には、&quot;&quot;にします</td>
+		</tr>
+		<tr>
+			<td><b>エラー</b></td>
+			<td>TTSneoでエラーメッセージとして表示します<br>
+			　[文字列／数値]には、&quot;&quot;にします</td>
+		</tr>
+		<tr>
+			<td><b>コマンドライン</b></td>
+			<td>「起動時設定」関数で表される、コマンドラインを指定します<br>
+			　[文字列／数値]には、&quot;&quot;にします</td>
+		</tr>
+	</table>
+	</center>
+</div>
+
+</body>
+
+</html>

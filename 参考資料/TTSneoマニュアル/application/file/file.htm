@@ -1,0 +1,146 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+	<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>ファイルを操作する</title>
+</head>
+<body>
+
+<div id="header">
+	<div class="title">
+		ファイルを操作する</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2011/01/16<!--webbot bot="Timestamp" endspan i-checksum="12331" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt;
+		<a target="_parent" href="../index.htm">機能編</a> &gt;
+		<a target="contents" href="menu-file.htm">ファイル</a> &gt;</div>
+</div>
+<h2>ファイルのコピーと移動</h2>
+<blockquote>
+	<p class="neo">ねお　「TTSneoでは、ファイルのコピー、移動、削除などの操作をすることができます。」</p>
+	<p class="tomo">とも　「つまり、エクスプローラやマイコンピュータでマウスを使って作業していたことを、TTSneoでプログラムすることができるんだね！<br>
+	それは便利そう。」</p>
+	<p class="neo">ねお　「まずは、ファイルの操作をする基本的な命令を紹介するね」</p>
+	<p class="format"><span class="flag">[もとのファイル名]</span>を<span class="flag">[コピー先のファイル名]</span>へコピー<br>
+	<span class="flag">[もとのファイル名]</span>を<span class="flag">[コピー先のファイル名]</span>へ移動<br>
+	<span class="flag">[ファイル名]</span>を削除<br>
+	<span class="flag">[変更前のファイル名]</span>を<span class="flag">[変更後のファイル名]</span>へ名前変更</p>
+	<p class="tomo">とも　「アニメーションや確認メッセージを表示させないようにすることはできないの？」</p>
+	<p class="neo">ねお　「アニメーションを表示させたくないときや確認せずに上書きしたい時は、「<b>すぐ</b>」をつけて下さい。」</p>
+	<p class="format">～すぐコピー<br>
+	～すぐ移動<br>
+	～すぐ削除</p>
+</blockquote>
+<p>　</p>
+<h2>関連付けられたファイルを開く</h2>
+<blockquote>
+	<p class="neo">ねお　「今度は、ファイルを開いてみましょう。<br>
+	TTSneoでは、関連付けられたソフトでファイルを開かせることができます。」</p>
+	<p class="tomo">とも　「なるほど、そんなこともできるんだね」</p>
+	<p class="format">[ファイル名]を開け</p>
+	<p class="neo">ねお　「上のプログラムは、エクスプローラで開いたときと同じソフトが起動してファイルを開くようになっています。」</p>
+	<p class="tomo">とも　「ファイルを指定すれば、そのソフトを起動してくれるんだね」</p>
+	<p class="neo">　</p>
+	<p class="neo">ねお　「そう、「開け」命令は他にも、インターネットアドレスやメールアドレスを指定することもできます。次の例のように[ファイル名]の部分をインターネットアドレスやメールアドレスに変えるだけです。」 
+	</p>
+	<p class="format">「http://○○○」を開け<br>
+	「mailto:○○○」を開け</p>
+	<p class="tomo">とも　「ホームページへアクセスするのも「開く」命令なんだね」</p>
+	<p class="neo">ねお　「メールアドレスを指定したときは、新規作成画面を表示してくれます。</p>
+</blockquote>
+<p>　</p>
+<h2>プログラムの起動</h2>
+<blockquote>
+	<p class="tomo">とも　「ファイルを開かずに、プログラムを起動するにはどうするの？」</p>
+	<p class="neo">ねお　「ソフトをしたい時は、「起動」命令を使います。」</p>
+	<p>次の例では、「メモ帳(ファイル名：<font color="#ff0000">notepad.exe</font>)」を起動させます。</p>
+	<p class="example"><font color="#ff0000">「notepad.exe」</font>を起動</p>
+	<p class="tomo">とも　「なるほど、なるほど」</p>
+	<p class="neo">ねお　「ちなみにWindowsの標準プログラムであれば、「メモ帳を起動」や「ペイントを起動」としても起動するソフトもあります。」</p>
+</blockquote>
+<p>　</p>
+<h2><b>テキストファイルを開く</b></h2>
+<blockquote>
+	<p class="neo">ねお　「次は、ファイルの内容を変数に入れておく方法を説明するね。<br>
+	テキストファイルの内容を開くには、「開け」関数を使います。」</p>
+	<p class="example">開け（「文章.txt」）を表示</p>
+	<p class="tomo">とも　「これを使えば、ファイルの内容を表示したり、加工したりすることもできるんだね」</p>
+	<p class="tomo">　</p>
+</blockquote>
+<h4>EUCやJIS、UTF8のファイルを開くには</h4>
+<blockquote>
+	<p>通常は、Shift-JISのテキストファイルを開くことができますが、<br>
+	次の例のように書く文字コードがEUCとJIS、UTF8のファイルを開くこともできます。</p>
+	<p>詳しくは、<a href="textencode.htm">文字コードを指定して保存する・開く</a>をご覧ください。</p>
+	<p class="example">内容は、開け（「文章.txt」、EUC）<br>
+	内容は、開け（「文章.txt」、JIS）</p>
+</blockquote>
+<p>　</p>
+<h2>テキストファイルの保存 </h2>
+<blockquote>
+	<p class="tomo">とも　「変数の内容をテキストファイルに保存するには、どうするの？」</p>
+	<p class="neo">ねお　「「保存」命令を使います。」</p>
+	<p class="example">「文章.txt」へ「こんにちは」を保存</p>
+	<p class="neo">ねお　「保存したTTSneoファイルと同じフォルダに文章.txtというファイルができます。<br>
+	これは、メモ帳でそのまま開くことができます。」</p>
+</blockquote>
+<p>　</p>
+<h4>ファイルに追加保存する</h4>
+<blockquote>
+	<p>ファイルの末尾に内容を追加したい場合は、次の例のように書きます。</p>
+	<p class="example">「文章.txt」へ「さようなら」を追加保存</p>
+</blockquote>
+<p>　</p>
+<h4>指定した行へ追加する</h4>
+<blockquote>
+	<p>行数を指定すると、指定したファイルの指定した行に追加されます。</p>
+	<p class="example" id="prg2">「おはよう」<font color="#ff00ff"><b>を</b></font>「テスト.txt」<font color="#ff00ff"><b>の１行目</b></font><b><font color="#ff00ff">へ追加保存</font></b>
+	</p>
+</blockquote>
+<p id="prg2">　</p>
+<h2 id="prg2">デスクトップやマイドキュメントのファイルを指定する</h2>
+<blockquote>
+	<p id="prg2" class="tomo">とも　「デスクトップ」にあるファイルを、「マイドキュメント」へ移動したいんだけど、フォルダ名はどうやって指定すればいいのかな・・・</p>
+	<p id="prg2" class="neo">ねお　「「デスクトップ」関数や「マイドキュメント」関数を使えば、一発で分かります」</p>
+	<p id="prg2" class="example">「［デスクトップ］*.doc」を、マイドキュメントへ移動</p>
+	<p id="prg2" class="tomo">とも　「難しいと思っていたけれど、意外と簡単にできるんだね」</p>
+</blockquote>
+<p id="prg2" class="tomo">　</p>
+<h2>ファイルやフォルダの一覧を取得する</h2>
+<blockquote>
+	<p>TTSneoでは、配列を利用する命令・関数が多く用意されています。</p>
+	<p>ファイルやフォルダに関係する関数は、次のようなようなものがあります。<br>
+	これらの関数は、指定したフォルダにあるファイルやフォルダを配列として表します。</p>
+	<p class="format">ファイル一覧（[フォルダ名]）<br>
+	フォルダ一覧（[フォルダ名]）<br>
+	全ファイル一覧（[フォルダ名]）<br>
+	全フォルダ一覧（[フォルダ名]）</p>
+	<p>例えば、マイドキュメントにあるフォルダを調べるには、次のように書きます。 <br>
+	このプログラムは、マイドキュメントにある、1番目のフォルダの名前を表します。<br>
+	２番目以降のファイルは、「配列（２）を表示」など書くことで取得できます。</p>
+	<p class="example">配列は、フォルダ一覧（マイドキュメント）<br>
+	配列（１）を表示</p>
+	<p>また、これらの関数には、ワイルドカードと呼ばれるフィルタをかけることもできます。<br>
+	つまり、特定の種類のファイルの一覧を調べることができます。 </p>
+	<p>例えば、マイドキュメントにあるテキストファイル(txt)を調べるには、次のように書きます。 <br>
+	このプログラムは、マイドキュメントの中のすべてのフォルダにあるテキストファイルを表します。</p>
+	<p class="example">配列は、全ファイル一覧（「［マイドキュメント］*.txt」）<br>
+	配列を表示 </p>
+	<p>ファイル名の部分にある“*”は、文字数にこだわらない任意の文字を表し、txtが拡張子を表します。<br>
+	拡張子とは、ファイル名の最後の.で区切られた３文字のことです。</p>
+	<h3>拡張子を調べるには・・・</h3>
+	<p>Windowsの既定値では、拡張子が表示されていないことがあります。<br>
+	拡張子を知りたい場合は、ファイルのプロパティを見るか、<br>
+	フォルダオプションで拡張子を表示させるように設定してください。</p>
+	<p>設定するには、エクスプローラを開いて、「ツール」メニューの「フォルダオプション」を開きます。<br>
+	「表示」タブを選び、詳細設定から「登録されている拡張子は表示しない」のチェックをはずします。 </p>
+</blockquote>
+
+</body>
+
+</html>

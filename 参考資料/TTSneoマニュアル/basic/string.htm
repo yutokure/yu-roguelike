@@ -1,0 +1,217 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta name="GENERATOR" content="Microsoft FrontPage 12.0">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>文字列操作 - 文字をつなげる・切り取る</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		９．文字列操作 - 文字をつなげる・切り取る</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">基本編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2011/03/31<!--webbot bot="Timestamp" endspan i-checksum="12451" -->更新</div>
+</div>
+<h2>使えると便利な文字列操作。</h2>
+<table style="BORDER-COLLAPSE: collapse" borderColor="#111111" cellSpacing="0" cellPadding="10" width="100%" border="0">
+	<tr>
+		<td>
+		<blockquote>
+			<p>TTSneoでは、文字から特定の文字を取り出したり、置き換えたりと、いろいろな作業をすることができます。</p>
+			<p>また、そのほかにも、便利な関数が用意されています。</p>
+			<p>これを自由に使いこなせるようになれば、かなりプログラミングの可能性が広がります。</p>
+		</blockquote>
+		</td>
+		<td><img src="../img/ttschar2.png" border="0" width="133" height="131"></td>
+	</tr>
+</table>
+<hr>
+<blockquote>
+	<p class="neo">ねお　「今回は、文字に関する関数について紹介するね」</p>
+	<p class="tomo">とも　「文字に関する関数ってどういうの？」</p>
+	<p class="neo">ねお　「TTSneoには、文字から特定の部分を取り出したり、探したり、他の文字に置き換えたりする関数があるんだよ。」</p>
+	<p class="tomo">とも　「なるほどね。それは結構使えるかも」</p>
+</blockquote>
+<p>　</p>
+<h2>文字から指定した文字だけ調べる</h2>
+<blockquote>
+	<p class="neo">ねお　「今度は、文字操作の関数「左」「右」「真ん中」関数です。<br>
+	これを使えば文字を取り出すことができます。」</p>
+	<p class="neo">　</p>
+	<p class="format">左（[文字]、[文字数]）<br>
+	右（[文字]、[文字数]）<br>
+	真ん中（[文字]、[スタート位置]、[文字数]）</p>
+	<p>[文字]を、左・右から文字数だけ取り出します。</p>
+	<p>「真ん中」関数は、指定した位置から指定した文字数だけ、取り出します。<b><br>
+	</b>[文字数]を省略すると最後まで取り出します。</p>
+	<p>　</p>
+	<p class="tomo">とも　「取り出したい部分によって、使う関数が違うんだね」</p>
+	<p class="neo">ねお　「うん。では、簡単な例を作ってみましょう。<br>
+	この例では、「とも」と「ねお」を取り出します。」</p>
+	<p class="example">文章は、「ともとねおは、なかよし」<br>
+	<br>
+	<span class="rem">ーーともを取り出す</span><font color="#008000"><b><br>
+	</b></font>内容は、<b><font color="#ff00ff">左（</font></b>文章、２<font color="#ff00ff"><b>）</b></font><br>
+	内容を表示する<br>
+	<br>
+	<span class="rem">ーーねおを取り出す</span><font color="#008000"><b><br>
+	</b></font>内容は　<font color="#ff00ff"><b>真ん中（</b></font>文章、４、２<font color="#ff00ff"><b>）</b></font><br>
+	内容を表示する<br>
+	<br>
+	<span class="rem">ーーなかよしを取り出す</span><font color="#008000"><b><br>
+	</b></font>内容は　<font color="#ff00ff"><b>右（</b></font>文章、４<font color="#ff00ff"><b>）</b></font><br>
+	内容を表示する</p>
+	<p class="tomo">とも　「なるほど、こうやって、文字を取り出すんだぁ」</p>
+</blockquote>
+<p>　</p>
+<h2>文字を切り取ったり、消したりする</h2>
+<blockquote>
+	<p class="neo">
+	ねお　「次は、「切り取り」関数を紹介します。この関数は、変数に入れた文字から指定した文字だけ切り取って、切り取った残りが変数の中に残ります。」</p>
+	<p class="tomo">
+	とも　「？？　つまり、さっきの左・右・真ん中は文字を調べるだけだったけど、「切り取り」関数は文字通り切り取ってくれるということ？」</p>
+	<p class="neo">ねお　「そう。」</p>
+	<p><b>書式</b></p>
+	<p class="format">切り取り（[変数]、[方向]、[文字数]、[スタート位置(省略可)]）</p>
+	<p>[内容]の中で、[文字１]と[文字2]で囲まれた部分の[番号]番目を探します。</p>
+	<p class="example">友達は、「ともとねおは、友達」<br>
+	<br>
+	<span class="rem">ーーともを切り取る</span><br>
+	友達１は、<span class="pink">切り取り</span>（友達、左、２）<br>
+	友達１を表示<br>
+	<br>
+	<span class="rem">ーーねおを切り取る</span><br>
+	友達２は　<span class="pink">切り取り</span>（友達、２、２）<br>
+	友達２を表示<br>
+	<br>
+	<span class="rem">ーー「とは、友達」が残る</span><br>
+	友達を表示</p>
+</blockquote>
+<p>　</p>
+<h2>「取り出せ」関数</h2>
+<blockquote>
+	<p class="neo">
+	ねお　「まだまだあるよ。今度は、指定した文字と文字の間にある文字を表す「取り出せ」関数です。この関数は、HTMLのタグの取り出しなどに特に便利です。」</p>
+	<p class="tomo">とも　「HTMLはよく分からない・・・」</p>
+	<p class="neo">ねお　「もちろん、工夫次第で、ほかのことにも使えます。」</p>
+	<p><b>書式</b></p>
+	<p class="format">取り出せ（[番号]、[内容]、[文字１]、[文字２]）</p>
+	<p>[内容]の中で、[文字１]と[文字2]で囲まれた部分の[番号]番目を探します。</p>
+	<p class="example">内容は、HTTPでダウンロード（「http://www.yahoo.co.jp/」）<br>
+	<b><font color="#ff00ff">取り出せ（１，内容，「&lt;title&gt;」，「&lt;/title&gt;」）</font></b>を表示</p>
+	<p class="neo">ねお　「上のサンプルでは、Yahoo!のホームページのHTMLファイルからタイトルだけを取り出します。」</p>
+	<p class="tomo">とも　「本当だ。タイトルが表示された。」</p>
+	<p class="neo">ねお　「HTMLの取り出しは、HTMLが分からないと難しいかもしれないけど、覚えておくと便利な関数だよ」</p>
+	<p>　</p>
+</blockquote>
+<h2>「置き換え」関数</h2>
+<blockquote>
+	<p class="neo">ねお　「よし、まだまだいくよ！次は、指定した文字をすべて別の文字に置き換える機能です。」</p>
+	<p class="tomo">とも　「ぎゃぁ　本当にたくさんあるね」</p>
+	<p><b>書式</b></p>
+	<p class="format">置き換え（[内容]、[変更前の文字]、[変更後の文字]）</p>
+	<p class="example">内容は　「こんにちは★今日は★いい天気ですね★」<br>
+	内容２は　置き換え（内容，「★」，「◇◇」）<br>
+	内容２を表示</p>
+	<p class="neo">ねお　「指定した文字をすべて消したい時も、置き換え関数でできます。」</p>
+	<p class="example">内容は　「こんにちは★今日は★いい天気ですね★」<br>
+	内容２は　置き換え（内容，「★」，「」）<br>
+	内容２を表示</p>
+	<p>上のようにすれは、「★」を削除できます。</p>
+	<p class="tomo">とも　「置き換え関数は、すぐにでも使えそうだね」</p>
+	<p class="neo">
+	ねお　「そうだね。この後、機能編ではファイルの読み書きの方法を紹介するから、それを読めば、テキストファイルを置き換えるソフトとかが作れるかもね」</p>
+	<p class="tomo">とも　「そっかぁ　がんばろっと」</p>
+</blockquote>
+<p>　</p>
+<h2>文字の検索</h2>
+<blockquote>
+	<p class="neo">
+	ねお　「置き換えるたり、取り出したりするだけでなく、文字の中から、指定した文字を検索してその位置を表す「探せ」関数もあるよ」</p>
+	<p class="tomo">
+	とも　「おっ、これと、「右」「左」「真ん中」を組み合わせれば、文字が決まっていなくても特定の部分を取り出すことができるね」</p>
+	<p><b>書式</b></p>
+	<p class="format">探せ（[スタート文字数]、[内容]、[キーワード]、[区別しない(省略可能)]）</p>
+	<p>[内容]の[スタート文字数]から[キーワード]を検索します。<br>
+	大文字と小文字、全角と半角を区別しない場合は、[区別しない]を指定します。</p>
+	<p class="example"><font color="#ff00ff"><b>探せ（</b></font>１，「さあ、りんごはどこにいるでしょう？」，「りんご」<font color="#ff00ff"><b>）</b></font>を表示</p>
+	<p class="tomo">　</p>
+	<p class="tomo">とも　「実行すると、たしかに、４と表示されたね」</p>
+	<p class="neo">ねお　「これは、４番目に「りんご」という文字があるということを表しています。<br>
+	この結果を利用して下のようなことができます。」</p>
+	<p class="example">内容は、「さあ、りんごはどこにいるでしょう？」<br>
+	文字位置は、<b><font color="#ff00ff">探せ（１，内容，「りんご」）</font></b><br>
+	「［<b><font color="#ff00ff">左（内容、文字位置－１）</font></b>］みかん［<b><font color="#ff00ff">真ん中（内容、文字位置＋３）</font></b>］」を表示</p>
+	<p class="tomo">とも　「「りんご」が「みかん」に変わったね」</p>
+</blockquote>
+<p>　</p>
+<h2>文字がいくつあるか調べる</h2>
+<blockquote>
+	<p class="neo">ねお　「文字の中に、指定した文字がいくつあるかを調べるには、「いくつ」関数を使います。」</p>
+	<p class="format">いくつ（[文字]，[探す文字]）</p>
+	<p>[文字]　数える対象の文字<br>
+	[探す文字]　数える文字</p>
+	<p class="example"><font color="#ff00ff"><b>
+	いくつ（「りんごりんごりんごりりんごんごりんりんごりんごご」，「りんご」）を表示</b></font></p>
+	<p class="tomo">とも　「ぎゃ　りんごがいっぱいだ。汗　　全部で６つだね」</p>
+</blockquote>
+<p>　</p>
+<h2>何行あるか調べる</h2>
+<blockquote>
+	<p class="neo">ねお　「文字が何行あるかを調べるには、「行数」関数を使います。」</p>
+	<p class="format">行数（[文字]）</p>
+	<p class="example"><span class="rem">ーー２を表します</span><b><font color="#008000"><br>
+	</font></b>内容は　「こんにちは［改行］今日はいい天気です」<b><br>
+	<font color="#ff00ff">行数（内容）を表示</font></b></p>
+	<p class="tomo">とも　「何に使うか、よく分からないけど、なるほどねぇ」</p>
+	<p class="neo">ねお　「もっと使いこなすようになれば、わかるよっ」</p>
+</blockquote>
+<p>　</p>
+<h2>同じ文字やスペースを何文字も入れる</h2>
+<blockquote>
+	<p class="neo">
+	ねお　「最後に、あまり使う機会がないけど、文字やスペースを指定した回数だけ繰り返して表す関数があります。でも、覚えておくと便利だと思うよ。」</p>
+	<p class="tomo">とも　「メールとかの飾りを作りたいときとかに使えそうだね」</p>
+	<p class="format">繰り返せ（[数字]，[文字]）<br>
+	スペース（[数字]）</p>
+	<p>[数字]には、繰り返す回数を指定します。</p>
+	<p class="example"><font color="#ff00ff"><b>繰り返せ（１０，「★」）を表示</b></font></p>
+	<p class="example"><font color="#ff00ff"><b>内容は　スペース（255）</b></font></p>
+	<p>※DLLから値を取得するときにスペースを確保するのに使えます</p>
+</blockquote>
+<p>　</p>
+<blockquote>
+	<p class="neo">ねお　「ふう。これで文字についての関数は一通り説明できました。」</p>
+	<p class="tomo">とも　「いやぁぁ　たくさんあって、もう忘れた。汗」</p>
+	<p class="neo">ねお　「ソフトを作るとき、結構便利だから、いざって言うときに使えると思います」</p>
+	<p class="tomo">とも　「いざって時かぁ・・・　？？？」</p>
+</blockquote>
+<p>　</p>
+<h2>正規表現を使いたい</h2>
+<blockquote>
+	<p>正規表現を使って、より複雑な文字列の検索や置き換えを行うことができます。<br>
+	正規表現の使い方は、機能編をご覧ください。</p>
+	<p class="steps"><b>▼参照<br>
+	</b>「機能編」の<a href="../application/regexp.htm">正規表現</a></p>
+</blockquote>
+<p>　</p>
+<h2>練習問題っ！</h2>
+<blockquote>
+	<p>練習問題をやってみましょう。</p>
+	<p><b>問題１</b></p>
+	<p>「山川海」から、「山」、「川」、「海」を一つずつ取り出してみてください。</p>
+	<p><b>問題２</b></p>
+	<p>「ttsneo@ttsneo.ne.jp」から@より後ろの文字だけを出してみてください。</p>
+</blockquote>
+
+</body>
+
+</html>

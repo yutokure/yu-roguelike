@@ -1,0 +1,138 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>手順 - プログラムを小分けする</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">７．手順 - プログラムを小分けする</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">基本編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/05/12<!--webbot bot="Timestamp" endspan i-checksum="12623" -->更新</div>
+</div>
+
+<h2>いつもすることを一言で</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td>
+		<blockquote>
+			<p>
+			朝起きて、「顔を洗って、歯磨きをして、服を着替えて、靴下をはいて....」という、いつものことをまとめて、「みじたくをする」と言いますよね。</p>
+			<p>いちいち、朝の行動を一つ一つ言うのは面倒です。</p>
+			<p>プログラムも同じように、何度も使うプログラムやパターンを手順にしてまとめておくと、プログラムが見やすく整理しやすくなります。</p>
+			<p>ここでは、プログラムをまとめる手順という機能を説明します。<br>
+			TTSneoでは重要な機能の一つなので、ぜひマスターしてくださいね！</p>
+		</blockquote>
+		</td>
+		<td><img border="0" src="../img/ttschar7.png" width="124" height="116"></td>
+	</tr>
+</table>
+<p>　</p>
+<h2>手順（てじゅん）とは、</h2>
+<blockquote>
+	<p class="neo">ねお　「今回は、プログラムを一つにまとめる手順について紹介します。」</p>
+	<p class="tomo">とも　「一つにまとめる？？　手順？？」</p>
+	<p class="neo">ねお<b>　</b>「<b>手順</b>とは、プログラムを１つにまとめたものです。<br>
+	プログラムを手順にまとめると、それを１つの命令として実行することができます。」</p>
+	<p>手順の書き方は、下のようになります。</p>
+	<p class="format">手順は</span>　<span class="flag">○○</span><br>
+	　　<span class="flag">～～</span><br>
+	　　<span class="flag">～～</span><br>
+	終わり</span></p>
+</blockquote>
+<blockquote>
+	<p><b><span class="flag">○○</span></b>には、手順の名前を<br>
+	<b><span class="flag">～～</span></b>には、プログラムを指定します。</p>
+	<p class="neo">ねお　「手順を作ると、手順の名前が命令みたいになるので、手順名を命令すると手順に書かれているプログラムが実行されます。」</p>
+	<p class="tomo">とも　「ふーん。なるほどね」</p>
+	<p class="neo">ねお　「手順の名前には、TTSneoの関数や命令が使えないから、うっかり使わないように注意してね」</p>
+	<p class="tomo">とも　「うん。わかった」</p>
+	<p class="neo">ねお　「そうそう、手順の最後には、「終わり」を忘れずに入れてね」</p>
+	<p>　</p>
+	<p>「手順」を使うとプログラムのサイズが小さくなり、修正の手間が省け、プログラムが見やすくなります。<br>
+	手順は、作り方が分かれば難しいものでありませんのでどんどん活用しましょう。</p>
+</blockquote>
+<p>　</p>
+<h2>手順を作ってみる</h2>
+<blockquote>
+	<p class="neo">ねお　「では、実際に「手順」を作ってみましょう。」</p>
+	<p class="tomo">とも　「・・・　あっ　うん！」</p>
+	<p class="neo">
+	ねお　「ここでは、わかりやすいように、僕の２日間の生活を表示するプログラムを作ってみましたぁ。朝と夜の生活は同じなので、手順としてまとめました。」</p>
+	<p class="tomo">とも　「朝と夜の行動は同じだから、手順にまとめて、一言で命令できるんだ」</p>
+	<p class="neo">ねお　「そう　こんな感じで、手順を使うんだよ。<br>
+	命令が一言だからコピー＆ペーストが楽だし、見やすくなるでしょ。」</p>
+</blockquote>
+<p class="example"><span class="rem">ーープログラムのメイン</span><br>
+「３月２７日」を表示<br>
+<font color="#ff0000">いつもの朝<br>
+</font>「１０：３０　買い物」を表示<br>
+「１７：３０　テレビを見る」を表示<br>
+「１８：３０　夕飯」を表示<br>
+<font color="#ff0000">いつもの夜</font><br>
+<br>
+「３月２８日」を表示<br>
+<font color="#ff0000">いつもの朝</font><br>
+「１１：００　友達の家に行く」を表示<br>
+「１８：００　テレビを見る」を表示<br>
+「１９：００　夕飯」を表示<br>
+<font color="#ff0000">いつもの夜<br>
+<br>
+</font><br>
+<span class="rem"><font color="#008000">ーーここからは手順</font></span><font color="#008040"><br>
+</font>手順は　<font color="#ff0000">いつもの朝</font><br>
+　　「７：００　起きる」を表示<br>
+　　「７：１０　特製ジュースを飲む」を表示<br>
+　　「７：３０　朝食」を表示<br>
+終わり<br>
+<br>
+手順は　<font color="#ff0000">いつもの夜</font><br>
+　　「２０：００　風呂に入る」を表示<br>
+　　「２１：００　寝る」を表示<br>
+終わり</p>
+<blockquote>
+	<p>このように、同じパターンのプログラムを使う場合は、「手順」で小分けにすることで、プログラムを部品化することができ、とても見やすく便利になります。</p>
+	<p class="tomo">　</p>
+</blockquote>
+<h2>注意点　～手順を書く位置～</h2>
+<blockquote>
+	<p class="neo">ねお　「手順は、プログラムの最後の方に入力してね<br>
+	プログラムの先頭に手順を書くと正しく動作してくれないから注意してね」</p>
+	<p class="tomo">とも　「・・・・」</p>
+	<p class="neo">ねお　「もしもーし？　元気？」</p>
+	<p class="tomo">とも　「だってー　今日はなんだか眠くて眠くて・・・」</p>
+	<p class="neo">ねお　「じゃぁ　毎朝飲んでいる、ねお特製ジュースを飲んでごらん！眠気なんて一度に飛んでいくから。おいしいよっ！！」</p>
+	<p class="tomo">とも　「えっ！！　いいよ遠慮するよ！！」</p>
+	<p class="neo">ねお　「はい、持ってきたよ」</p>
+	<p class="tomo">とも　「早っ！」</p>
+	<p class="neo">ねお　「はいどうぞ」</p>
+	<p class="tomo">とも　「・・・・」</p>
+	<p class="neo">ねお　「ほらほらっ」</p>
+	<p class="tomo">とも　「ぎゃぁーーーっ」</p>
+</blockquote>
+<p>　</p>
+<h2>練習問題っ！</h2>
+<blockquote>
+	<p>では、練習問題です。<br>
+	今回は、簡単です。</p>
+	<p><b>問題１</b>　次のプログラムを手順を使って、まとめてみましょう。</p>
+</blockquote>
+<p class="example">「好きなことを３つ入力してください」を表示<br>
+内容は、改行<br>
+内容は、内容＆入力（「好きなことは？」）＆改行<br>
+内容は、内容＆入力（「好きなことは？」）＆改行<br>
+内容は、内容＆入力（「好きなことは？」）＆改行<br>
+「あなたの好きなことは、［内容］です。」を表示</p>
+<p>　</p>
+
+</body>
+
+</html>

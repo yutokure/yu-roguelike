@@ -1,0 +1,235 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>プログラムでオブジェクトを作る</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		２．プログラムでオブジェクトを作る</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">ソフト作り編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/06/03<!--webbot bot="Timestamp" endspan i-checksum="12688" -->更新</div>
+</div>
+<h2>「ウィンドウの設計」を使わずにオブジェクトを作る</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar9.png" width="116" height="115"></td>
+		<td>前のページでは、TTSneoデザイナを使って、楽チンにウィンドウの作成ができました。<p>
+		オブジェクト（部品）をウィンドウに貼り付けるときは、「ウィンドウの設計」を使うほうが簡単ですが、もちろん自分で、直接プログラムを入力することもできます。</p>
+		<p>これから３ページでは、オブジェクトの貼り付けや設定の変更、手順の作り方などを詳しく説明していきます。</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>「作れ」命令</h2>
+<blockquote>
+	<p class="neo">ねお　「今回は、「ウィンドウの設計」を使わずに、オブジェクトをウィンドウの貼り付ける、「作れ」命令の使い方を紹介するね」</p>
+	<p class="tomo">とも　「うん。」</p>
+	<p><b>書式</b></p>
+	<p class="format"><span class="flag">[オブジェクトの種類][番号]</span>を作れ<br>
+	<span class="flag">[オブジェクトの種類]</span>を<span class="flag">[オブジェクト名]</span>として作れ</p>
+	<p><b><span class="flag">[オブジェクトの種類]</span></b>には、貼り付ける部品の種類を指定します。<br>
+	指定できるのは、「オブジェクトの種類」にあるオブジェクトです。</p>
+	<p><b><span class="flag">[番号]</span></b>には、整理番号を指定します。整理番号は、オブジェクトの種類ごとに１番からつけることができます。</p>
+	<p><b><span class="flag">[オブジェクト名]</span></b>には、番号を必要としないオブジェクト名を指定することができます。<br>
+	この次で説明します。</p>
+	<p><font color="#FF0000"><b>注意！</b></font><br>
+	[オブジェクト名]で指定した名称によっては、うまく「作れ」命令が認識できないことがあります。<br>
+	このような場合、「～として<b>、</b>作れ」と言ったように句読点を指定することで正しく認識することができるようになります。</p>
+	<p>「～として」で、オブジェクトの種類は指定できませんので、注意してください。</p>
+	<p><b>例</b></p>
+	<p class="example">ボタン１　ボタン２　テキスト１</p>
+</blockquote>
+<div align="center">
+	<center>
+	<table border="1" cellpadding="2">
+		<caption><b>オブジェクトの種類</b></caption>
+		<tr>
+			<td class="items">ボタン</td>
+			<td><input type="button" value="ボタン"></td>
+		</tr>
+		<tr>
+			<td class="items">テキスト</td>
+			<td><input size="20"></td>
+		</tr>
+		<tr>
+			<td class="items">文章テキスト</td>
+			<td><textarea rows="1" cols="20"></textarea></td>
+		</tr>
+		<tr>
+			<td class="items">ピクチャー</td>
+			<td>絵を入れるボックス</td>
+		</tr>
+		<tr>
+			<td class="items">イメージ</td>
+			<td>これも絵を入れるボックス</td>
+		</tr>
+		<tr>
+			<td class="items">ラベル</td>
+			<td>文字を作成します これは、自由に移動ができます</td>
+		</tr>
+		<tr>
+			<td class="items">チェック</td>
+			<td><input type="checkbox" value="ON">チェック</td>
+		</tr>
+		<tr>
+			<td class="items">リスト</td>
+			<td>リストを作成します</td>
+		</tr>
+		<tr>
+			<td class="items">選択リスト</td>
+			<td><select size="1">
+			<option selected>選択リスト</option>
+			</select></td>
+		</tr>
+		<tr>
+			<td class="items">入力選択リスト</td>
+			<td><select size="1">
+			<option selected>入力選択リスト</option>
+			</select></td>
+		</tr>
+		<tr>
+			<td class="items">オプション</td>
+			<td><input type="radio" CHECKED value="V1">ラジオボタン</td>
+		</tr>
+		<tr>
+			<td class="items">縦スクロールバー</td>
+			<td>縦長のスクロールバーを作成します</td>
+		</tr>
+		<tr>
+			<td class="items">横スクロールバー</td>
+			<td>横長のスクロールバー</td>
+		</tr>
+		<tr>
+			<td class="items">拡張テキスト</td>
+			<td>好きな位置の色やフォントを変更できる文章テキスト</td>
+		</tr>
+		<tr>
+			<td class="items">表</td>
+			<td>エクセルなどと同じような表（グリッド）</td>
+		</tr>
+		<tr>
+			<td class="items">ブラウザ</td>
+			<td>IEと同機能のインターネットブラウザ</td>
+		</tr>
+		<tr>
+			<td class="items">フレーム</td>
+			<td>オブジェクトをグループに分けます（パネル）</td>
+		</tr>
+		<tr>
+			<td class="items">ツールバー</td>
+			<td>おなじみのWindowsのツールバー<br>
+			フラットタイプとボタンタイプとから選べます。</td>
+		</tr>
+		<tr>
+			<td class="items">ツリービュー</td>
+			<td>エクスプローラのフォルダの部分と同じツリー式の一覧</td>
+		</tr>
+		<tr>
+			<td class="items">リストビュー</td>
+			<td>マイコンピュータと同じようなアイコン表示の一覧</td>
+		</tr>
+		<tr>
+			<td class="items">ステータスバー</td>
+			<td>おなじみウィンドウの下の方にある状況表示<br>
+			時間や大文字ロックなども表示可能</td>
+		</tr>
+		<tr>
+			<td class="items">プログレスバー</td>
+			<td>インストールやファイルのコピーなどでおなじみの進行状況表示<br>
+			縦・横、枠・連続タイプが選べます。</td>
+		</tr>
+		<tr>
+			<td class="items">スライダ</td>
+			<td>ボリュームコントロールでおなじみのつまみ</td>
+		</tr>
+		<tr>
+			<td class="items">タブ</td>
+			<td>プロパティでおなじみの項目表示できるタブ</td>
+		</tr>
+	</table>
+	</center>
+</div>
+<blockquote>
+	<p class="tomo">とも　「TTSneoって、こんなに部品が用意されているんだぁ」</p>
+	<p class="neo">ねお　「そうだよ。ウィンドウにボタンを貼り付けるには、下のように命令します。」</p>
+</blockquote>
+<p><b>例</b></p>
+<p class="example">ウィンドウ１を表示<font color="#FF00FF"><b><br>
+ボタン１を作れ</b></font></p>
+<blockquote>
+	<p class="tomo">とも　「これでも、ちゃんと、ウィンドウにボタンが表示されるんだぁ」</p>
+</blockquote>
+<p>　</p>
+<h2>オブジェクトに名前を付ける</h2>
+<blockquote>
+	<p class="neo">とも　「ボタン１、ボタン２って名前を付けられているみたいだけど、他の名前に変えられないの？」</p>
+	<p class="neo">ねお　「もちろんできるよ。「～として」に名前を指定すれば、オブジェクトに好きな名前を付けることできます。」</p>
+	<p class="example">ボタンをOK</span>ボタンとして作れ</p>
+</blockquote>
+<p><b>例</b></p>
+<p class="example">ウィンドウ１を表示<br>
+ウィンドウ１の名前を「私のソフト」に変えろ<br>
+<br>
+ボタンをOKボタンとして作れ<br>
+OKボタンの位置を５０、５０に変えろ<br>
+OKボタンの大きさを１００、３０に変えろ<br>
+OKボタンの名前を「OK」に変えろ<br>
+待機<br>
+<br>
+手順は　ウィンドウ１のOKボタンをクリック<br>
+　　「OK!」を表示<br>
+終わり</p>
+<blockquote>
+	<p class="tomo">とも　「これなら、番号を付ける手間が省けるし、たくさん部品を貼り付けたときも、迷わずに済むね」</p>
+	<p class="neo">ねお　「そう。ただし、「ボタン○×」のように先頭に&quot;ボタン&quot;が付く名前は指定できないから周囲してね」</p>
+	<p class="tomo">とも　「ボタン[番号]と同じ形だからだね」</p>
+	<p class="neo">ねお　「その通り。<br>
+	「作れ」命令についての説明は、これくらいですね。<br>
+	TTSneoデザイナでも十分いいんだけど、作るプログラムによっては、ウィンドウの設計ではうまくいかないことがあるから、そのときは、これを読んでね」</p>
+</blockquote>
+<p>　</p>
+<h2>オブジェクト配列について (中級者以上向け)</h2>
+<blockquote>
+	<p>TTSneoでは、オブジェクトの数が実行時に変化するオブジェクト（オブジェクト配列）を扱うこともできます。<br>
+	オブジェクト名を指定するときに、[番号]に変数を指定します。 </p>
+	<p class="format">[オブジェクト名][変数]</p>
+</blockquote>
+<h4>オブジェクト配列の作成例</h4>
+<blockquote>
+	<p>番号を指定する変わりに、変数を指定することで、指定した番号のオブジェクトを作成できます。</p>
+	<p class="example">数字は　１<br>
+	ボタン（数字）を作れ </p>
+	<p>　</p>
+</blockquote>
+<h4>オブジェクト配列の手順の例</h4>
+<blockquote>
+	<p>オブジェクト配列の手順を作る場合は、手順名に[番号]を指定せずに下のようにしてください。<br>
+	クリックしたオブジェクトは、「この」オブジェクトで知ることができます。 </p>
+	<p class="example">手順は　ウィンドウ１のボタンをクリック<br>
+	　　このオブジェクト名を表示<br>
+	終わり</p>
+	<p>サンプルの「電卓.tts」にオブジェクト配列の例がありますので、ご覧ください。 
+	</div>
+	</p>
+</blockquote>
+<p>　</p>
+<h2>練習問題っ！</h2>
+<blockquote>
+	<p>では、練習してみましょう。</p>
+	<p><b>問題１</b>　ピクチャーオブジェクトを貼り付けてみましょう。</p>
+	<p><b>問題２</b>　同じようにして、文章テキストオブジェクトを貼り付けてみましょう。</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

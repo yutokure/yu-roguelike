@@ -1,0 +1,172 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>作成したソフトを公開する・配布する</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		１６．作成したソフトを公開する・配布する</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">ソフト作り編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/01/20<!--webbot bot="Timestamp" endspan i-checksum="12364" -->更新</div>
+</div>
+<h2>自信作は公開しよう！</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar4.png" width="127" height="124"></td>
+		<td>TTSneoを活用して自信作ができたら、友人やインターネットで公開してみましょう！<br>
+		画像や音楽と同様、自分をアピールできるものになります。<p>ここでは、TTSneoで作ったソフトの配布方法について説明します。<br>
+		公開しなくても、TTSneoがインストールされていないパソコンで使う場合の注意があるので、必ずご覧ください。</td>
+	</tr>
+</table>
+<blockquote>
+	<p class="neo">ねお　「ふぅ　ようやく、ソフト編も終わりです。もうだいぶソフトは作れるようになったみたいだね。」</p>
+	<p class="tomo">とも　「うん、何とか。でも、まだやりたいことがたくさんあるよ。」</p>
+	<p class="neo">ねお　「そうだね。今日は最後に、ソフトを友達に見せたり、インターネットで公開したりするときの注意を説明するね」</p>
+</blockquote>
+<p>　</p>
+<h2>公開するときの著作権と注意点</h2>
+<blockquote>
+	<p><b>著作権について</b></p>
+	<p>作成したプログラムの著作権は、プログラムを作成した方に属します。</p>
+	<p>TTSneoに収録されているプラグイン等は、作成したプログラムと一緒に同梱する場合に限り、配布することができます。<br>
+	TTScript.exe/dllやTTSExtra.dll等を単体で配布することはできません。</p>
+	<p><b>配布する際の注意</b></p>
+	<p>・TTSneoで作成されたプログラムには、Visual Basic 6.0ランタイムが必要ですので、<br>
+	ドキュメントには、「Visual Basic 6.0ランタイムが必要です」ということを書いてください。</p>
+	<p>・一部の機能は、VBMP3.dllやTransG32.dll、nMail.dll等、他のDLLファイルを利用しています。<br>
+	「必要なDLL」に書かれた注意事項を確認して、同梱してください。(DLLの著作権はDLL作者にあります)</p>
+	<p>・実行可能ファイルは、Windows95/98/Me/NT4.0/2000/XP/Vistaに対応しています。</p>
+</blockquote>
+<p>　</p>
+<h2>プログラムに必要なファイル</h2>
+<blockquote>
+	<p>TTSneoは、ランタイム(TTScript.exe)を軽量化して、拡張性を高めるため、機能によってはDLLなどのファイルが別途必要になります。</p>
+	<p>インターネットなどで公開するときは、これらが必要であるということを説明書などに記載してください。</p>
+</blockquote>
+<h4>プログラムの起動に必要なもの</h4>
+<blockquote>
+	<p><b>・Visual Basic 6.0ランタイム</b><br>
+	配布時には、Vectorなどにある汎用的なものでかまいませんが、下のアドレスのものであれば動作が保障されています。<br>
+	<a href="http://tts.utopiat.net/runtime/index.html">
+	http://tts.utopiat.net/runtime/index.html</a></p>
+	<p><b>・使用するオブジェクトによって必要なファイル</b><br>
+	使うオブジェクトによっては、別途次のファイルが必要です。<br>
+	（Visual Basic 6.0ランタイムに、含まれています）</p>
+	<table cellPadding="2" border="1">
+		<tr>
+			<td bgColor="#3a6ea5" nowrap>
+			<p align="center"><b><font color="#ffffff">他にファイルが必要なオブジェクト</font></b></td>
+			<td bgColor="#3a6ea5" nowrap>
+			<p align="center"><font color="#ffffff"><b>必要なファイル</b></font></td>
+		</tr>
+		<tr>
+			<td>ツールバー、タブ、スライダ、ステータスバー、リストビュー、ツリービュー、プログレスバー</td>
+			<td>mscomctl.ocx</td>
+		</tr>
+		<tr>
+			<td>表</td>
+			<td>msflxgrd.ocx</td>
+		</tr>
+		<tr>
+			<td>拡張テキスト</td>
+			<td>Richtx32.ocx<br>
+			Rchtxjp.dll</td>
+		</tr>
+	</table>
+	<p>以上のファイルは、WindowsフォルダのSystemフォルダに保存されています。<br>
+	（Windows 2000やWindows XP以降の場合は、System32フォルダにあります）</p>
+	<p><b>・使用する機能によって必要なファイル<br>
+	</b>MP3の再生や画像ファイルの取り扱い、メールやOffice関連機能などのプラグインは、別途DLLファイルなどを使っています。<br>
+	これらは、Visual Basic6.0ランタイムに含まれませんのでソフトに添付してください。</p>
+	<table cellPadding="2" border="1">
+		<tr>
+			<td bgColor="#3a6ea5" height="16">
+			<p align="center"><b><font color="#ffffff">TTSneoの機能</font></b></td>
+			<td bgColor="#3a6ea5" height="16">
+			<p align="center"><font color="#ffffff"><b>必要なファイル</b></font></td>
+		</tr>
+		<tr>
+			<td height="16">ＭＰ３関連機能</td>
+			<td height="16">VBMP3.dll</td>
+		</tr>
+		<tr>
+			<td height="16">PNGの読み書きとJPEGの保存</td>
+			<td height="16">TransG32.dll</td>
+		</tr>
+		<tr>
+			<td height="32">メール機能</td>
+			<td height="32">nMail.dll<br>
+			TTSExtra.dll</td>
+		</tr>
+		<tr>
+			<td height="16">TCP/IP通信機能<br>
+			Office連携機能<br>
+			画像エフェクト<br>
+			Susieプラグイン利用<br>
+			ファイル操作<br>
+			バイナリ操作</td>
+			<td height="16">TTSExtra.dll</td>
+		</tr>
+		<tr>
+			<td height="14">DirectX機能</td>
+			<td height="14">TTSDirectX.dll</td>
+		</tr>
+	</table>
+	<p>これらファイルは、TTSneoをインストールしたフォルダの「必要なDLL」フォルダにあります。</p>
+</blockquote>
+<p>　</p>
+<h2>TTSneoプラグインを一緒に配布する</h2>
+<blockquote>
+	<p>TTSneo対応プラグインを使うプログラムを配布するときは、プラグイン本体も添付してください。<br>
+	プラグインがインストールされていないときは、プラグインのコピーとレジストリへの登録作業をランタイムが自動的に行うので、ソフト本体と同じフォルダにおいてください。</p>
+</blockquote>
+<p>　</p>
+<h2>プログラムの配布方法</h2>
+<blockquote>
+	<p class="tomo">とも　「ソフトを公開するときは、実行可能ファイルをそのまま公開すればいいんだよね」</p>
+	<p class="neo">ねお　「ソフトを公開するときは、必要なプログラムやファイルは圧縮して１つのファイルにします。」</p>
+	<p class="tomo">とも　「圧縮するんだぁ。」</p>
+	<p class="neo">ねお　「圧縮するソフトは、Vectorなどで入手できます。<br>
+	圧縮形式は、「lzh」「zip」のどちらかが普通です。」</p>
+	<p>　</p>
+	<p>また、自己解凍機能を利用したセットアッププログラムを使って配布する方法もあります。</p>
+</blockquote>
+<p>　</p>
+<h2>Vectorへの公開方法</h2>
+<blockquote>
+	<p>完成度の高い作品の場合は、ぜひベクターなどにも公開してみましょう！！<br>
+	ベクターへの公開には、下の手順を踏みます。</p>
+	<p class="steps">１．作者登録を行う（登録フォームから登録）<br>
+	２．作者登録完了後、ソフト公開登録（掲載フォームを利用して、メールで）</p>
+	<p>手続きは、手作業のようですので、通常１～２週間ぐらいかかります。</p>
+	<p>詳細については、下のアドレスをご覧ください。<br>
+	<a href="http://www.vector.co.jp/info/for_auth/index.html">
+	http://www.vector.co.jp/info/for_auth/index.html</a></p>
+</blockquote>
+<p>　</p>
+<h2>お疲れ様でした！！</h2>
+<blockquote>
+	<p class="neo">ねお　「よし、ソフト作り編は、これで終わりです。」</p>
+	<p class="tomo">とも　「これで終わりかぁ」</p>
+	<p class="neo">
+	ねお　「これで、ソフトを作るための知識は、ほとんど説明したから、後は機能編やリファレンスを読んで自分でプログラムを作っていってね」</p>
+	<p class="tomo">とも　「わかった。がんばってみるよ」</p>
+</blockquote>
+<p>　</p>
+<p align="center">機能編については、自分の興味がある機能を、読んでいってください。</p>
+<p align="center">お疲れ様でした～<br>
+TTSneoを使って、すばらしいソフトを作ってくださいね</p>
+
+</body>
+
+</html>

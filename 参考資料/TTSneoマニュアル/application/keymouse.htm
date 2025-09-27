@@ -1,0 +1,200 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>キーボードやマウスカーソルを操作する</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		キーボードやマウスカーソルを操作する</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-data.htm">パソコンを操作する</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>プログラムでキーボードとマウスを操作する</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar3.png" width="132" height="134"></td>
+		<td>TTSneoを使えば、キーボードやマウスカーソルを操作することができます。<br>
+		これを使うと、他のソフトをコントロールすることもできます。</td>
+	</tr>
+</table>
+<blockquote>
+	<p class="tomo">とも　「処理を自動化するソフトを作ろうと思うんだけど、他のソフトをコントロールすることはできる？」</p>
+	<p class="neo">ねお　「できます。キーボードの入力をする「入力」命令を使います。」</p>
+</blockquote>
+<p>　</p>
+<h2>キーボードを操作する</h2>
+<blockquote>
+	<p>「入力」命令を使って、キーボードを操作することができます。</p>
+	<p class="format"><span class="flag">[入力する文字]</span>を入力</p>
+	<p>文字以外の特殊キーを入力するには、下のように{　}を使って指定します。</p>
+	<center>
+	<table border="1">
+		<tr>
+			<td class="items" align="middle" width="50%">エンター</td>
+			<td align="middle" width="50%">{Enter}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">スペース</td>
+			<td align="middle" width="50%">(半角スペース)</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">↑</td>
+			<td align="middle" width="50%">{UP}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">↓ </td>
+			<td align="middle" width="50%">{DOWN}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">←</td>
+			<td align="middle" width="50%">{LEFT}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">→</td>
+			<td align="middle" width="50%">{RIGHT}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">Esc</td>
+			<td align="middle" width="50%">{ESC}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">Tab</td>
+			<td align="middle" width="50%">{TAB}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">F1</td>
+			<td align="middle" width="50%">{F1}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%"><b>BackSpace</b></td>
+			<td align="middle" width="50%">{BS}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">Delete</td>
+			<td align="middle" width="50%">{DELETE}/{DEL}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">CapsLock</td>
+			<td align="middle" width="50%">{CAPSLOCK}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">NumLock</td>
+			<td align="middle" width="50%">{NUMLOCK}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">PageDown</td>
+			<td align="middle" width="50%">{PGDN}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">PageUp</td>
+			<td align="middle" width="50%">{PGUP}</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">Shift</td>
+			<td align="middle" width="50%">+</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">Ctrl</td>
+			<td align="middle" width="50%">^</td>
+		</tr>
+		<tr>
+			<td class="items" align="middle" width="50%">Alt</td>
+			<td align="middle" width="50%">%</td>
+		</tr>
+	</table>
+	</center>
+	<p class="tomo">とも　「あれれ、ちゃんと入力しているのにうまく動かない・・・なぜ？？」</p>
+	<p class="neo">ねお　「あっ！　特殊キーを表すときは、必ず半角で書いてください。」</p>
+	<p>　</p>
+	<p>また、同じキーをいくつも入力するときは、{[文字] [回数]}とすることでできます。</p>
+	<p><b>例</b>　<a href="javascript:add(prg2)" class="add"> </a>&nbsp;<a href="javascript:copy(prg2)" class="copy">
+	</a></p>
+	<p class="example" id="prg4"><b><font color="#FF00FF">「{あ 10}」を入力</font></b></p>
+	<p>「+」、「^」、「%」、「~」、「(」、「)」はそれぞれ 特別な意味を持っていますので文字を中かっこ ({ }) で囲んで指定してください。</p>
+	<p><b>例</b>　<a href="javascript:add(prg3)" class="add"> </a>&nbsp;<a href="javascript:copy(prg3)" class="copy">
+	</a><br>
+	メモ帳を起動して、こんにちは　と入力させます。</p>
+	<p class="example" id="prg3">「notepad.exe」を起動<br>
+	「こんにちは」<b><font color="#FF00FF">を入力</font></b></p>
+</blockquote>
+<p id="prg3">　</p>
+<h2 id="prg3">キー操作で別のソフトを操作する</h2>
+<p id="prg3">通常、TTSneoなどから関係の無い他のソフトを直接操作することはできません。</p>
+<p id="prg3">しかし、多くのソフトは、キーボードだけで大半の操作を行うことができるので、<br>
+「入力」命令を利用して、別のソフトを操作することができます。</p>
+<h4 id="prg3">別のソフトのボタンをクリックする</h4>
+<blockquote>
+	<p id="prg3">先ほどの例でも別のソフトであるメモ帳にメッセージを入力できるようにしました。<br>
+	今度は、ログイン画面のような複数のテキストやボタンが表示されているウィンドウの操作を方法を紹介します。</p>
+	<p id="prg3">たとえば、ユーザID・パスワード・[Ok]・[キャンセル]だけのシンプルなログイン画面があったとします。</p>
+	<p id="prg3">このようなウィンドウの場合は、下のように命令することで操作できます。</p>
+	<p id="prg3" class="example">「ソフト名」を起動<br>
+	待て　１０<br>
+	「ユーザID」を入力<br>
+	「{tab}」を入力<br>
+	「パスワード」を入力<br>
+	「{tab}」を入力<br>
+	「{Enter}」を入力</p>
+	<p id="prg3">Tabキーを押すことで、他のオブジェクトへカーソルを移動することができます。<br>
+	一度だけでは、パスワードの枠に移動できない場合は、実際に手動で[Tab]キーを押して、<br>
+	何回押す必要があるかなどを調べてください。</p>
+	<p id="prg3">「起動」命令の直後の「待て」命令は、読み込み中に「入力」命令が実行されないように調整するものです。<br>
+	待つ時間は、実際に試しながら設定してください。</p>
+	<p id="prg3">[OK]ボタンなどのボタンは、{enter}または半角スペースでクリックすることができます。<br>
+	[ログイン(<u>L</u>)]などのように対応するキーの名前が下線で表されている場合は、「^L」などとすることでクリックすることができます。</p>
+</blockquote>
+<p id="prg3">　</p>
+<h4 id="prg3">メニューを操作するには</h4>
+<blockquote>
+	<p id="prg3" class="neo">ねお　「実は、ウィンドウにあるメニューは、キーボードからでも操作できます。」</p>
+	<p id="prg3" class="tomo">とも　「そうなんだぁ！　それならメモ帳やエクスプローラなどの操作も自動化できるんだね！」</p>
+	<p id="prg3">たとえば、「ファイル(<u>F</u>)」なら、下のようにするとメニューを開くことができます。</p>
+	<p id="prg3" class="example">「%F」を入力</p>
+	<p id="prg3">メニュー名の次に書かれている「(<u>○</u>)」で表されているキーは、そのメニューをクリックしたときと同じ動作をしてくれます。<br>
+	このような文字がないメニュー項目は、{UP}{DOWN}を使って操作する必要があります。</p>
+</blockquote>
+<p id="prg3">　</p>
+<h4 id="prg5">すでに起動しているソフトに切り替える</h4>
+<blockquote>
+	<p id="prg6">すでに操作したいソフトが起動している場合は、「アクティブ」命令を使います。<br>
+	ソフトのタイトル（ウィンドウの名前）が分かっている場合は、「アクティブ」命令で指定することで、<br>
+	「入力」命令が操作できる状態にすることができます。</p>
+	<p id="prg6">現在Windowsで起動しているソフトは、「起動中プログラム一覧」関数で調べることができます。</p>
+	<p id="prg6">※一部のソフトやウィンドウ、最小化されたウィンドウではこの方法が使えないことがあります</p>
+</blockquote>
+<p id="prg3">　</p>
+<h2 id="prg3">マウスカーソルを操作する</h2>
+<blockquote>
+	<p align="left"><b><font color="#ff0000">注意</font></b></p>
+	<p>通常、カーソルの位置をプログラムで強制的に移動することは、ユーザの操作を制限することになりますので、使用には十分注意してください。<br>
+	多用したり、必要以上に使用したりすることは避けましょう。<br>
+	個人的なプログラムのみに使用することを強くお勧めします。</p>
+	<p>　</p>
+	<p class="tomo">とも　「マウスカーソルを動かしたり、ダブルクリックしたりすることはできないの？」</p>
+	<p class="neo">ねお　「できます。「マウスカーソル」オブジェクトを使います。」</p>
+	<p class="neo">　</p>
+</blockquote>
+<h4>マウスカーソルの位置を調べる</h4>
+<p class="example">マウスカーソルの位置を表示</p>
+<p>　</p>
+<h4>マウスカーソルを強制的に移動する</h4>
+<p class="example">マウスカーソルの位置を、300,300に変える</p>
+<p>　</p>
+<h4>指定した位置でクリック・ダブルクリックなどをする</h4>
+<p class="example">マウスカーソルの100,100をクリック<br>
+マウスカーソルの100,100をダブルクリック<br>
+マウスカーソルの100,100を右クリック</p>
+
+</body>
+
+</html>

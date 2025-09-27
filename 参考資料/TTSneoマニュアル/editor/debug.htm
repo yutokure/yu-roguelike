@@ -1,0 +1,98 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>プログラムの実行</title>
+<base target="_self">
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		プログラムの実行</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">TTSneoデザイナ</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/10/28<!--webbot bot="Timestamp" endspan i-checksum="12348" -->更新</div>
+</div>
+<h2>プログラムを実行する</h2>
+<blockquote>
+	<p>作成したプログラムは、TTSneoデザイナ上で実行することができます。</p>
+	<p>プログラムを実行するには、<br>
+	ツールバーにある[実行]ボタンをクリックするか、メニューの「実行」→「実行」を選びます。<br>
+	[F5]キーで実行することもできます。</p>
+<table border="1" cellpadding="5" cellspacing="0" id="table1">
+	<tr>
+		<td width="100%">
+		<img border="0" src="../basic/run.png" alt="TTSneoデザイナ" width="113" height="96"><br>
+		<b>[実行]ボタン</b></td>
+	</tr>
+</table>
+	<p>実行中のプログラムを停止するには、ツールバーの[停止]ボタンをクリックするか、メニューの「実行」→「停止」を選びます。</p>
+</blockquote>
+<h3>プログラムを一時停止する</h3>
+<blockquote>
+	<p>プログラムの実行中に、ツールバーの[一時停止]ボタンをクリックするか、<br>
+	メニューの「実行」→「一時停止」を選ぶと、<br>
+	その直前に実行するプログラムが黄色く変化し、一時停止します。</p>
+	<p>この状態で、「実行」メニュー→「一行ずつ実行」または[F8]キーを押すと、<br>
+	命令を一つずつ実行することができます。</p>
+	<p>再開するには、[実行]ボタンまたは「実行」メニューから「実行」を選びます。</p>
+</blockquote>
+<h3>別プロセスで実行する</h3>
+<blockquote>
+	<p>DLL呼び出しを利用したプログラムなど一部のプログラムの作成中などは、<br>
+	別プロセスで実行([Shift]+[F5]キー)することで、TTSneoデザイナとプログラムの実行が<br>
+	別々のプログラムとして実行させることができます。</p>
+</blockquote>
+<h3>指定した手順だけを実行する</h3>
+<blockquote>
+	<p>手順だけを実行する場合は、メニューの「実行」→「指定した手順を実行」を選びます。<br>
+	手順を選択する画面が表示されますので、実行する手順を選びます。</p>
+</blockquote>
+
+<p>　</p>
+<h2>調査ウィンドウ</h2>
+<blockquote>
+	<p>TTSneoデザイナには、実行中のプログラムの変数名や実行した手順を調べることができる<br>
+	「調査ウィンドウ」が用意されています。</p>
+	<p>調査ウィンドウは、メニューの「表示」→「調査ウィンドウ」を選ぶか、[Ctrl]+[G]で開くことができます。</p>
+	<p>使い方については、「<a href="../softdev/index.htm">ソフト作り編</a>」の「<a href="../softdev/debug.htm">９．プログラムのミスを探して直す　『デバッグ』</a>」でも紹介しています。</p>
+	<p>　</p>
+	<h3>「命令」タブ</h3>
+	<p>対話式に命令を実行されることができます。</p>
+	<p>?に続いて、変数・関数を指定して、エンターキーを押すと、<br>
+	その結果が、次の行に表れます。</p>
+	<p>また、「報告」命令で指定した結果も、この画面に表示されます。</p>
+	<h3>「変数」タブ</h3>
+	<p>現時点での変数の内容を調べることができます。<br>
+	「文字」または「配列」オプションを切り替えることで、<br>
+	変数の表示方法を、テキスト方式とリスト方式で切り替えることができます。</p>
+	<h3>「手順」タブ</h3>
+	<p>実行された手順名と時刻が、リストとして表示されます。<br>
+	手順名をクリックすると、「プログラムの編集」画面の該当する手順が表示されます。</p>
+</blockquote>
+
+<p>　</p>
+<h2>ストップ行の設定と解除</h2>
+<blockquote>
+	<p>ストップ行を設定することで、プログラムの実行中に、任意の位置で一時停止させることができます。</p>
+	<p>使い方については、「<a href="../softdev/index.htm">ソフト作り編</a>」の「<a href="../softdev/debug.htm">９．プログラムのミスを探して直す　『デバッグ』</a>」でも紹介しています。</p>
+	<p>　</p>
+	<h3>ストップ行を設定・解除する</h3>
+	<p class="steps">１．実行する前に一時停止したい行にカーソルを移動します。<br>
+	２．メニューの「実行」→「ストップ行の設定/解除」を選ぶか、[F9]キーを押します。</p>
+	<p>ストップ行を設定すると、その行が赤色に反転します。</p>
+	<p>実行中にストップ行に達すると、行が黄色に変わり、一時停止状態となります。<br>
+	一行ずつ実行（[F8]キー）で、さらに一命令ずつ動作を確認することができます。</p>
+	<p>　</p>
+</blockquote>
+
+</body>
+
+</html>

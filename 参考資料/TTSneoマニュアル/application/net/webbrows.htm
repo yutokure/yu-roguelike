@@ -1,0 +1,149 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+	<meta name="GENERATOR" content="Microsoft FrontPage 12.0">
+		<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>ブラウザを作る</title>
+	<style type="text/css">
+.style1 {
+	margin-left: 40px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		ブラウザを作る</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-net.htm">インターネット</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2011/03/30<!--webbot bot="Timestamp" endspan i-checksum="12449" -->更新</div>
+</div>
+<h2>「ブラウザ」オブジェクトとは</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../../img/ttschar.png" width="128" height="124"></td>
+		<td>TTSneoには、Internet Explorerと同様の機能を持つ、ブラウザオブジェクトが用意されています。<p>このオブジェクトを使えば、インターネットのホームページやHTML文章を表示させることが可能です。</p>
+		</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>ブラウザオブジェクトの作り方</h2>
+<blockquote>
+	<p class="neo">ねお　「「ブラウザ」オブジェクトを使えば、TTSneoでホームページの表示機能を持つブラウザを簡単に作ることができます。」</p>
+	<p class="tomo">とも　「TTSneoでブラウザが作れるんだぁ」</p>
+	<p class="neo">ねお　「下のように書いて実行すると、ブラウザをTTSneoのウィンドウに表示できます。」</p>
+</blockquote>
+<p class="example">ウィンドウ１を表示する<br>
+ブラウザ１を作れ<br>
+　　その大きさを３００，２００に変えろ<br>
+ブラウザ１のアドレスを「http://tts.utopiat.net/」に変えろ</p>
+<blockquote>
+	<p></p>
+	<p class="tomo">とも　「本当だ！TTSneoの公式サイトが表示された。」</p>
+	<p class="neo">ねお　「「中止」「更新」「戻る」「進む」など操作は、下のように書きます。」</p>
+</blockquote>
+<p class="example">ブラウザ１を戻す</p>
+<p class="example">ブラウザ１を進める</p>
+<p class="example">ブラウザ１を中止する</p>
+<p class="example">ブラウザ１を更新する</p>
+<blockquote>
+	<p class="neo">ねお　「サンプルにタブ型のブラウザを作るサンプルがあります。詳しくは、サンプルをご覧下さい。」</p>
+</blockquote>
+<p>　</p>
+<h2>表示されているアドレスを調べる</h2>
+<blockquote>
+	<p class="tomo">とも　「表示されているページのタイトルやアドレスは、どうやって取得するの？」</p>
+	<p class="neo">ねお　「「アドレス」設定項目と「タイトル」設定項目で、現在表示しているページのアドレスとタイトルが取得できます。」</p>
+	<p class="format">ブラウザ１のアドレス</p>
+	<p class="format">ブラウザ１のタイトル</p>
+	<p class="tomo">とも　「設定項目を使うんだね。リファレンスを調べると書いてあるね」</p>
+	<p class="neo">ねお　「そう。リファレンスに細かい情報が書かれているから、その機能を使うときは絶対に見てね」</p>
+</blockquote>
+<p>　</p>
+<h2>状況を表示したい</h2>
+<blockquote>
+	<p>ページを読み込み中の時などのブラウザの情報を取得することもできます。</p>
+</blockquote>
+<p class="example">手順は　ウィンドウ１の<span class="pink">ブラウザ１の状況が変わる</span><br>
+　　ステータスバー１の１番目の内容を、ブラウザ１の状況に変えろ<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１の<span class="pink">ブラウザ１のダウンロード完了</span><br>
+　　入力選択リスト１の内容を、ブラウザ１のアドレスに変えろ<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１の<span class="pink">ブラウザ１のタイトル変更</span><br>
+　　ウィンドウ１の名前を、ブラウザ１のタイトルに変えろ<br>
+終わり</p>
+<blockquote>
+	<p>ブラウザでは、上のようなイベント手順が実行されます。<br>
+	アドレスや状態などは、設定項目で調べることができます。<br>
+	実行される手順の一覧は、リファレンスをご覧下さい。</p>
+</blockquote>
+<p>　</p>
+<h2>表示されているページの内容を調べる</h2>
+<blockquote>
+	<p>表示されているページのHTMLソースと、文章だけの内容を取得することができます。</p>
+	<p>この設定項目を利用することで、現在ブラウザに表示されているページの内容を保存することもできます。</p>
+</blockquote>
+<p class="example">ウィンドウ１の作成<br>
+ウィンドウ１を表示する<br>
+待機する<br>
+<br>
+手順は　ウィンドウ１の作成<br>
+’&lt;ウィンドウ１&gt;<br>
+ウィンドウ１を使う<br>
+　　その中の大きさを（474，312）へ変える<br>
+　　その名前を「ウィンドウ１」へ変える<br>
+　　その背景を&amp;h8000000Fへ変える<br>
+拡張テキスト１を作る<br>
+　　その位置と大きさを（10，170，460，130）へ変える<br>
+ボタン１を作る<br>
+　　その位置と大きさを（10，140，65，25）へ変える<br>
+　　その名前を「HTML」へ変える<br>
+ボタン２を作る<br>
+　　その位置と大きさを（80，140，65，25）へ変える<br>
+　　その名前を「テキスト」へ変える<br>
+ブラウザをブラウザ１として作る<br>
+　　その位置と大きさを（10，10，460，120）へ変える<br>
+　　そのアドレスを「http://www.yahoo.co.jp/」へ変える<br>
+’&lt;/ウィンドウ１&gt;<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１のボタン１をクリック<br>
+　　拡張テキスト１の内容を<span class="pink">ブラウザ1のソース</span>に変える<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１のボタン２をクリック<br>
+　　拡張テキスト１の内容を<span class="pink">ブラウザ1の内容</span>に変える<br>
+終わり<br>
+</p>
+<p>　</p>
+<h2>ブラウザに表示するHTMLを指定する</h2>
+<p class="style1">「ソース」設定項目を使うことで、ブラウザに表示するHTMLソースを直接指定することができます。</p>
+<p class="example">ウィンドウ１の作成<br>
+ウィンドウ１を表示する<br>
+待機する<br>
+<br>
+手順は　ウィンドウ１の作成<br>
+’&lt;ウィンドウ１&gt;<br>
+ウィンドウ１を使う<br>
+　　その中の大きさを（304，252）へ変える<br>
+　　その名前を「ウィンドウ１」へ変える<br>
+　　その背景を&amp;h8000000Fへ変える<br>
+ブラウザをブラウザ１として作る<br>
+その位置と大きさを（10，10，280，230）へ変える<br>
+’&lt;/ウィンドウ１&gt;<br>
+　　<span class="pink">ブラウザ1のソースを「&lt;html&gt;&lt;body&gt;&lt;h1&gt;こんにちは&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;」に変える</span><br>
+終わり</p>
+
+</body>
+
+</html>

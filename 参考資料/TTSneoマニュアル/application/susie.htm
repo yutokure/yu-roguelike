@@ -1,0 +1,80 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>Susieプラグインを使う</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">Susieプラグインを使う</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-img.htm">画像</a> &gt;</div>
+</div>
+
+<h2>Susieプラグインとは</h2>
+<blockquote>
+	<p>Susie(すーじー)とは、たけちん氏が公開しているフリーソフトの画像ビューアです。<br>
+	このソフトには、多くの画像形式が取り扱えるようにSusieプラグインが用意されています。</p>
+	<p>TTSneoでは、このSusieプラグイン(.spi)の機能を利用して、TTSneo上でもMAC、PICといった画像形式を表示することができます。</p>
+</blockquote>
+<p class="steps"><b>▼Susie本体とSusieプラグインの公開元<br>
+</b><a href="http://www.digitalpad.co.jp/~takechin/">
+http://www.digitalpad.co.jp/~takechin/</a></p>
+<p>※Susieプラグインは上のアドレスからダウンロードしてください。</p>
+<blockquote>
+	<p>(Susieプラグインは、動的呼び出されているので、たけちん氏以外の方が開発されたSusieプラグインにも対応しています)</p>
+</blockquote>
+<p>　</p>
+<h2>Susieプラグインを使う</h2>
+<blockquote>
+	<p>Susieプラグインを使うには、「スージー」オブジェクトを使います。</p>
+	<p>ここでは概要を紹介します。詳しくは、リファレンスをご覧ください。</p>
+	<p>　</p>
+</blockquote>
+<h4>Susieプラグインのフォルダを指定する</h4>
+<blockquote>
+	<p>Susieプラグインが保存されているフォルダを指定します。<br>
+	Susie本体がインストールされている環境では、環境設定で設定されているフォルダを検索するので、指定する必要はありません。</p>
+	<p class="format">スージーのプラグインフォルダ名を、[プラグインの位置]に変える</p>
+</blockquote>
+<p>　</p>
+<h4>画像を開く</h4>
+<blockquote>
+	<p>Susieプラグインを利用して画像を開くには、まず「ファイル名」設定項目に開きたいファイル名を指定します。<br>
+	その後、「描画」命令を使って、画像を表示させます。</p>
+	<p class="format">スージーのファイル名を、[ファイル名]に変える<br>
+	スージーを[オブジェクト名]に描画</p>
+	<p>[オブジェクト名]には、ウィンドウとピクチャーオブジェクトが指定できます。</p>
+</blockquote>
+<p><b>例</b></p>
+<p class="example">スージーのファイル名を、「test.jpg」に変える<br>
+スージーをウィンドウ１に描画</p>
+<p>　</p>
+<h4>画像の状態を調べる</h4>
+<blockquote>
+	<p>画像の解像度やサイズを調べるには、下のように命令します。</p>
+	<p class="format">スージーの画像のサイズ<br>
+	スージーの画像の解像度</p>
+</blockquote>
+<p>　</p>
+<h4>読み込み状況を調べる</h4>
+<blockquote>
+	<p>画像を読み込み中に、読み込み率を取得することが可能です。</p>
+</blockquote>
+<p class="example">手順は　スージーの状況が変化<br>
+　　プログレスバー１の数字を、スージーの読み込み率に変えろ<br>
+　　休憩<br>
+終わり</p>
+
+</body>
+
+</html>

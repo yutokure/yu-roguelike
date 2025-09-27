@@ -1,0 +1,283 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+		<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../style.css">
+	<title>配列を使ったデータ処理</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		配列を使ったデータ処理</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-office.htm">お仕事や雑用で使う</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>配列を使ってデータを処理する</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar5.png" width="126" height="130"></td>
+		<td>基本編の「<a href="../basic/arrange.htm">一つの変数にたくさんの情報を入れる『配列』</a>」では、配列の基本操作について説明しました。<br>
+		配列は、ファイルやデータ、リストなど多くのデータを処理するときに便利な機能です。<br>
+		ここでは、配列を使った機能についてさらに詳しく説明します。</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>配列の数値を計算する</h2>
+<blockquote>
+	<p>数値が入っている配列の計算をすることができます。</p>
+	<p class="format">合計（[配列]、[列(省略可)]）<br>
+	平均（[配列]、[列(省略可)]）<br>
+	偏差値（[配列]、[列(省略可)]）</p>
+	<p>１次配列の場合<br>
+	　配列のすべての項目について計算します。</p>
+	<p>２次配列の場合<br>
+	　配列の指定した[列]について計算します。</p>
+</blockquote>
+<p><b>例</b></p>
+<p class="example"><span class="rem">ーー名前、国語、数学、英語</span><br>
+配列（１，０）は、「山田太郎、56、60、76」<br>
+配列（２，０）は、「高橋花子、80、72、92」<br>
+<br>
+「山田太郎の総得点は、［合計（配列（１，０））］点」を表示<br>
+「数学の平均点は、［平均（配列、３）］点」を表示<br>
+配列は、偏差値（配列、４）<br>
+「高橋花子の英語の偏差値は、［配列（２）］」を表示</p>
+<p>　</p>
+<h2>最大値・最小値を求める</h2>
+<blockquote>
+	<p>配列から、最大値または最小値を求めることができます。</p>
+	<p class="format">最大値（[配列]、[列(省略可)]）<br>
+	最小値（[配列]、[列(省略可)]）</p>
+	<p>１次配列の場合<br>
+	　配列の要素から、最大値または最小値を探します。</p>
+	<p>２次配列の場合<br>
+	　配列の指定した[列]について、最大値または最小値を探します。</p>
+</blockquote>
+<p><b>例</b></p>
+<p class="example">一覧は、「125,365,679,269,472,565」<br>
+<span class="pink">最大値（一覧）</span>を表示<br>
+<span class="pink">最小値（一覧）</span>を表示</p>
+<p>　</p>
+<h2>配列への挿入と、要素の削除、交換</h2>
+<blockquote>
+	<p>配列の項目の間に配列を挿入したり、指定した項目を削除したりすることが出来ます。</p>
+	<p class="format">配列挿入（[配列]、[場所]、[挿入配列]）<br>
+	配列削除（[配列]、[番号]）<br>
+	配列交換（[配列]、[交換元]、[交換先]）</p>
+	<p>[配列]の指定した場所へ項目を追加、またはその要素を削除します。<br>
+	配列交換の場合、[交換元]と[交換先]の要素を、交換します。</p>
+	<p>[場所]には、番号(１次配列の場合)または「○列目」、「○列目」（２次配列の場合）を指定します。</p>
+	<p>※列と行を同時に指定することはできません。</p>
+	<p><b>配列挿入の例</b></p>
+	<p class="example"><span class="rem">ーー配列挿入　：　２列目と２行目に配列を挿入します</span><br>
+	配列（１，０）は、「A1,A2,A3」<br>
+	配列（２，０）は、「B1,B2,B3」<br>
+	配列（３，０）は、「C1,C2,C3」<br>
+	結果は、<span class="pink">配列挿入（配列、2列目、「xx,yy,zz」）</span><br>
+	結果は、配列挿入（結果、2行目、「aa,bb,cc,dd」）<br>
+	「［配列］［改行］----［改行］［結果］」を表示</p>
+	<p><b>配列削除の例</b></p>
+	<p class="example"><span class="rem">ーー配列削除　：　２列目と２行目を削除します</span><br>
+	配列（１，０）は、「A1,A2,A3」<br>
+	配列（２，０）は、「B1,B2,B3」<br>
+	配列（３，０）は、「C1,C2,C3」<br>
+	結果は、<span class="pink">配列削除（配列、２列目）</span><br>
+	結果は、配列削除（配列、２行目）<br>
+	「［配列］［改行］----［改行］［結果］」を表示</p>
+	<p><b>配列交換の例</b></p>
+	<p class="example"><span class="rem">ーー配列交換　：　１列目と２列目を交換します</span><br>
+	配列（１，０）は、「A1,A2,A3」<br>
+	配列（２，０）は、「B1,B2,B3」<br>
+	配列（３，０）は、「C1,C2,C3」<br>
+	結果は、<span class="pink">配列交換（配列、２列目、１列目）</span><br>
+	「［配列］［改行］----［改行］［結果］」を表示</p>
+</blockquote>
+<p>　</p>
+<h2>配列の項目の検索</h2>
+<blockquote>
+	<p>配列の中から項目を検索することもできます。 </p>
+	<p>TTSneoでは、検索したいときに「繰り返せ」命令を使わなくても、たくさんの関数が用意されていますので、<br>
+	非常に簡単に検索処理を作ることができます。 
+	</div>
+	</p>
+	<p>　</p>
+</blockquote>
+<h3>該当する項目が何番目にあるか取得したい場合</h3>
+<blockquote>
+	<p class="format">配列検索（[配列]、[キーワード]、[列(省略可)]、[区別しない(省略可)]）</p>
+	<p>[配列]から[キーワード]に一致するものを検索して、番号で表します。</p>
+	<p>２次配列の場合、[列]に検索対象の列を指定します。（この場合、見つかった行番号を表します）<br>
+	すべての列を検索する場合は、「すべて」を指定します。</p>
+	<p><b>配列検索の例</b></p>
+	<p class="example"><span class="rem">ーーEが含まれるものを検索する</span><br>
+	内容は、「APPLE,HOME,PEN,BOOK」<br>
+	<br>
+	<span class="rem">ーー1,2,3を表します<br>
+	</span>結果は、<span class="pink">配列検索（内容、「E」）</span><br>
+	結果を表示</p>
+	<p>　</p>
+	<p><b>※大文字と小文字を区別しない</b></p>
+	<p>上記の例では、キーワード「E」を検索しますが、「e」は検索されません。<br>
+	内容に大文字と小文字、全角と半角を区別しないで検索する場合は、「区別しない」を指定してください。</p>
+	<p class="example">内容は、「Apple,Home,Pen,Book」<br>
+	結果は、配列検索（内容、「E」、、区別しない）<br>
+	結果を表示</p>
+	<p>　</p>
+</blockquote>
+<h4>該当する項目の内容を取得したい場合</h4>
+<blockquote>
+	<p class="format">配列取り出し（[配列]、[キーワード]、[列(省略可)]、[一致しない/区別しない(省略可)]）</p>
+	<p>[配列]から[キーワード]に一致するものを検索して、その要素の内容を表します。</p>
+	<p>２次配列の場合、指定した[列]を検索対象とします。<br>
+	すべての要素を検索する場合は、「すべて」を指定します。</p>
+	<p><b>配列取り出しの例</b></p>
+	<p class="example"><span class="rem">ーーEが含まれるものを探して、その内容を表します</span><br>
+	内容は、「APPLE,HOME,PEN,BOOK」<br>
+	<br>
+	<span class="rem">ーーAPPLE,HOME,PENを表します<br>
+	</span>結果は、<span class="pink">配列取り出し（内容、「E」、0）</span><br>
+	結果を表示</p>
+	<p><b>２次配列の例</b></p>
+	<p class="example"><span class="rem">ーーOが含まれるものを２列目から探して、その内容を表します</span><br>
+	内容は、「1,APPLE,りんご」<br>
+	内容は、「2,HOME,家」<br>
+	内容は、「3,PEN,ペン」<br>
+	内容は、「4,BOOK,本」<br>
+	<br>
+	<span class="rem">ーーHOME,BOOKを表します<br>
+	</span>結果は、<span class="pink">配列取り出し（内容、「O」、２）</span><br>
+	結果を表示</p>
+</blockquote>
+<p>　</p>
+<h4>検索結果を２次配列で取得したい場合</h4>
+<blockquote>
+	<p class="format">列検索（[２次配列]、[キーワード]、[列(省略可)]、[完全一致/区別しない(省略可)]）</p>
+	<p>[２次配列]から[キーワード]に一致するものを検索して、その要素を含む行、すべてを２次配列で表します。</p>
+	<p>指定した[列]を検索対象とします。<br>
+	省略すると、すべての要素から検索します。</p>
+	<p><b>列検索の例</b></p>
+	<p class="example"><span class="rem">ーー３列目から「P」が含まれる行を探して、その内容を表します</span><br>
+	内容は、「1,APPLE,りんご」<br>
+	内容は、「2,HOME,家」<br>
+	内容は、「3,PEN,ペン」<br>
+	内容は、「4,BOOK,本」<br>
+	<br>
+	<span class="rem">ーー「1,APPLE,りんご<br>
+	’3,PEN,ペン」<br>
+	’を表します<br>
+	</span>結果は、<span class="pink">列検索（内容、「P」、３）</span><br>
+	結果を表示</p>
+</blockquote>
+<p>　</p>
+<h2>配列にある項目について処理する</h2>
+<blockquote>
+	<p>配列にあるすべての項目について、処理させる場合には、「配列処理」・「配列判別」関数が便利です。</p>
+</blockquote>
+<h4>要素数だけ、繰り返す</h4>
+<blockquote>
+	<p class="format">[一次配列]をそれぞれ繰り返せ<br>
+	繰り返し終わり</p>
+</blockquote>
+<blockquote>
+	<p>「繰り返せ」命令とほとんど同じですが、指定した配列すべて処理できるまで繰り返します。<br>
+	要素は、「それ」で表します。</p>
+	<p>配列検索とよく似ていますが、関数などを使うことで、複雑な判断が必要な場合にも対応できます。</p>
+</blockquote>
+<p class="example"><span class="rem">ーー配列の中身を順番に表示します</span><br>
+内容は、「APPLE,HOME,PEN,NOTEBOOK」<br>
+<span class="pink">内容をそれぞれ繰り返せ</span><br>
+　　［それ］を表示<br>
+繰り返し終わり</p>
+<p>　</p>
+<h4>指定した条件に一致する要素を調べる</h4>
+<blockquote>
+	<p class="format">配列判別（[配列]、[条件式]、[列(省略可)]）</p>
+</blockquote>
+<blockquote>
+	<p>[配列]から[条件式]に一致する要素だけを表します。<br>
+	[条件式]には、「もし」命令と同じ書き方で指定することができます。<br>
+	各要素は、「それ」で表します。</p>
+	<p>配列検索とよく似ていますが、関数などを使うことで、複雑な判断が必要な場合にも対応できます。</p>
+</blockquote>
+<p class="example"><span class="rem">ーー5文字以上のものの要素の番号を表します</span><br>
+内容は、「APPLE,HOME,PEN,NOTEBOOK」<br>
+結果は、<span class="pink">配列判別（内容、［文字数（それ）は、５以上］）</span><br>
+結果を表示</p>
+<p>　</p>
+<h4>要素すべてを処理する</h4>
+<blockquote>
+	<p class="format">配列処理（[配列]、[場所]、[関数式]）</p>
+	<p>指定した配列に保存されている各要素について、指定した処理を行って、その結果を配列として表します。</p>
+	<p>通常は、「繰り返せ」命令を使う必要がありますが、すべての要素に対して、同じ計算をしたい場合などは、この関数が便利です。</p>
+</blockquote>
+<p class="example">配列（１，０）は、「abc,123,11」<br>
+配列（２，０）は、「def,456,21」<br>
+配列（３，０）は、「ghi,789,31」<br>
+配列を表示<br>
+<span class="rem">ーー１列目の項目をすべて大文字にします</span><br>
+配列は、<span class="pink">配列処理（配列、1列目、大文字（それ））</span><br>
+<span class="rem">ーー２列目の数字をすべて÷100します</span><br>
+配列は、<span class="pink">配列処理（配列、2列目、それ/100）</span><br>
+配列を表示</p>
+<blockquote>
+	<p>　</p>
+</blockquote>
+<p>　</p>
+<h2>その他、配列に関する機能</h2>
+<h3>配列の要素数を調べる</h3>
+<blockquote>
+	<p class="format">配列数（[配列]、[行(省略可)]）</p>
+	<p>指定した配列の項目数を表します。<br>
+	２次配列を指定するときは、「行」を指定してください。指定しないと、正しい値になりません。 </p>
+</blockquote>
+<p>　</p>
+<h3>指定した文字で区切って配列にする</h3>
+<blockquote>
+	<p class="format">区切れ（[文字]、[区切る文字]）</p>
+	<p>[文字]を[区切る文字]で区切り、配列にします。</p>
+</blockquote>
+<p>　</p>
+<h3>複数行の文字を行で区切って配列にする</h3>
+<blockquote>
+	<p class="format">行区切り（[文字]）</p>
+	<p>[文字]を一行ごとに区切った一次配列として表します。</p>
+	<p>通常の２次配列の操作を応用して、行だけを取り出すこともできますが、この関数を使うと便利です。</p>
+</blockquote>
+<p>　</p>
+<h3>配列を指定した文字でつなげて文字にする</h3>
+<blockquote>
+	<p class="format">繋げろ（[配列]、[区切る文字]）</p>
+	<p>[配列]を[区切る文字]で区切り、文字にします。</p>
+</blockquote>
+<p>　</p>
+<h2>CSV形式とバイナリ操作について</h2>
+<blockquote>
+	<p>TTSneoでは、CSVファイルやバイナリファイルを扱うときにも配列を利用します。</p>
+	<p class="steps"><b>▼参照<br>
+	</b>機能編<br>
+	　<a href="file/csv.htm">CSVファイルを操作する</a><br>
+	　<a href="file/binary.htm">バイナリファイルの操作</a></p>
+</blockquote>
+<p>　</p>
+<h2>正規表現について</h2>
+<blockquote>
+	<p>正規表現に関連の命令は、結果を配列形式で表します。<br>
+	指定したパターンに一致するものを配列に表しますので、高度な処理を行うのに使用できます。</p>
+	<p class="steps"><b>▼参照<br>
+	</b>　機能編→<a href="regexp.htm">正規表現</a><br>
+	リファレンス<br>
+	　正規表現の一覧<br>
+	　「パターン置き換え」関数<br>
+	　「パターン取り出し」関数　</div> </p>
+</blockquote>
+
+</body>
+
+</html>

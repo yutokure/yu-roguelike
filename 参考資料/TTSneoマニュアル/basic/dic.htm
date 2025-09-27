@@ -1,0 +1,147 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>キーワードで取り出す辞書機能</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		１１．キーワードで取り出す辞書機能</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">基本編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2005/08/07<!--webbot bot="Timestamp" endspan i-checksum="12808" -->更新</div>
+</div>
+<h2>辞書機能とは (連想配列)</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar3.png" width="132" height="134"></td>
+		<td>辞書機能とは、一つの変数に名前を使って複数の情報を保存する方法です。<br>
+		配列のように番号で情報を取り出すのではなく、名前で取り出すことができます。<p>このような機能を連想配列と言います。</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>辞書機能の利用方法</h2>
+<blockquote>
+	<p class="tomo">とも　「配列を使って、たくさんの情報を取り出したりできるけど、もっとたくさんの情報を保存することはできないの？」</p>
+	<p class="neo">ねお　「２次配列を使えば、できるよ」</p>
+	<p class="tomo">とも　「それよりもたくさん、情報を保存することはできないの？<br>
+	たくさんあると番号が分からなくなるし・・・」</p>
+	<p class="neo">ねお　「じゃあ　辞書を使ってみてください。」</p>
+	<p class="tomo">とも　「辞書？？？」</p>
+	<p class="neo">ねお　「うん。配列とよく似ているんだけど、情報を番号ではなく「文字」で指定できます」</p>
+	<p class="tomo">とも　「文字ということは、好きな名前で情報が出し入れできるの？」</p>
+	<p class="neo">ねお　「その通り。まあ、次のプログラムを見てみてください。」</p>
+	<p class="example">好きなもの（「ねお」）は、「とまと」<br>
+	好きなもの（「とも」）は、「なす」<br>
+	<br>
+	好きなもの（「とも」）を表示</p>
+	<p class="tomo">とも　「すごいね！　「とも」って入れたら、「なす」と表示されるんだね！」</p>
+	<p class="neo">ねお　「そうです。下のように命令することで、番号を使わずに名前で情報を保存したり、取り出したりできます。」</p>
+	<p><b>（　）を使った辞書の書式</b></p>
+	<p class="format"><span class="rem">ーー保存するとき</span><span class="flag"><br>
+	[変数名]</span>（<span class="flag">[項目名]</span>）は、<span class="flag">[保存する内容]<br>
+	</span><span class="rem">ーー取り出すとき</span><span class="flag"><br>
+	[変数名]</span>（<span class="flag">[項目名]</span>）</p>
+	<p>※辞書の情報が保存されている変数から[項目名]の内容について設定・取得します</p>
+	<p class="tomo">とも　「配列とよく似ているんだね。<br>
+	配列のときは（　）の中に番号を入れたけど、辞書として使うときは、文字を入れればいいんだね」</p>
+	<p class="neo">ねお　「その通り！　でも、同じ変数で、番号と項目名を両方使うことはできないから注意してね<br>
+	また、（　）を使わずに下のように書くこともできます。」</p>
+	<p><b>「～の～」を使った辞書の書式</b></p>
+	<p class="format"><span class="rem">ーー保存するとき</span><span class="flag"><br>
+	[変数名]</span>の<span class="flag">[項目名]</span>は、<span class="flag">[保存する内容]<br>
+	</span><span class="rem">ーー取り出すとき</span><span class="flag"><br>
+	[変数名]</span>の<span class="flag">[項目名]</span></p>
+	<p>[項目名]は、必ず「　」(文字)　または　［　］(変数・関数)で囲ってください。</p>
+	<p class="example">ともの「好きな昆虫」は、「てんとうむし」<br>
+	ともの「嫌いな昆虫」は、「ゴキブリ」<br>
+	<br>
+	ともの「好きな昆虫」を表示</p>
+	<p>　</p>
+</blockquote>
+<h4>変数の内容</h4>
+<blockquote>
+	<p>先ほどの例を実行すると、「ねお」変数には、下のような内容が保存されています。</p>
+	<p class="vb">ねお=とまと<br>
+	とも=なす</p>
+	<p>この変数には、</p>
+	<p>[項目名]=[内容]</p>
+	<p>という形で情報が保存されています。<br>
+	そのため、「保存」命令や「開け」関数で、辞書の情報をファイルへ保存することも可能です。</p>
+	<p>内容に、改行を入れることもできます。<br>
+	ただ、情報が保存されている変数を見ると、一時的に「{/n}」に置き換わりますが、<br>
+	キーワードを指定して呼び出すときには、正しく表示されます。</p>
+</blockquote>
+<p>　</p>
+<h2>辞書機能を使った例</h2>
+<blockquote>
+	<p>名前を見出しにできるので、ある名前に対応する内容を表示することが簡単にできます。</p>
+</blockquote>
+<p class="example">県庁所在地（「東京都」）は、「新宿区」<br>
+県庁所在地（「神奈川県」）は、「横浜市」<br>
+県庁所在地（「千葉県」）は、「千葉市」<br>
+県庁所在地（「埼玉県」）は、「さいたま市」<br>
+<br>
+県名は、入力（「県名を入力してください」）<br>
+「［県名］の県庁所在地は、［県庁所在地（県名）］です。」を表示</p>
+<p>　</p>
+<h2>辞書機能の応用した使い方 (中級者以上向け)</h2>
+<h4>配列と組み合わせて使う</h4>
+<blockquote>
+	<p>この辞書機能と１、２次配列を同時に使うこともできます。<br>
+	ただし、配列と組み合わせるときは、上のような書き方をすることができませんので、<br>
+	「辞書保存」命令を使ってください。</p>
+	<p class="format"><span class="flag">[保存する内容]</span>を<span class="flag">[辞書の情報がある変数名]</span>の<span class="flag">[項目名]</span>へ辞書保存</p>
+	<p>情報がたくさんあるデータを処理する場合や、2次配列を使うと複雑になってしまう場合には、とても有効な方法です。</p>
+	<p><b>例</b></p>
+	<p class="example">配列は、「」<br>
+	<br>
+	配列（１、１）の「X」へ「100」を辞書保存<br>
+	配列（１、１）の「Y」へ「100」を辞書保存<br>
+	<br>
+	配列（１、２）の「X」へ「200」を辞書保存<br>
+	配列（１、２）の「Y」へ「200」を辞書保存<br>
+	<br>
+	配列（２、１）の「Y」へ「150」を辞書保存<br>
+	配列（２、１）の「X」へ「300」を辞書保存</p>
+	<p>「辞書保存」命令を使わずに、下のように書くこともできます。</p>
+	<p class="example">内容（「X」）は、「100」<br>
+	内容（「Y」）は、「100」<br>
+	<br>
+	配列（１、１）は、内容</p>
+</blockquote>
+<p>　</p>
+<p><b>補足</b></p>
+<blockquote>
+	<p>TTSneoの辞書機能は、C言語の構造体に近い役割をします。<br>
+	変数に保存できるのは値のみで、メソッドの定義などは出来ません。</p>
+</blockquote>
+<blockquote>
+	<p>C言語などのプログラミング言語の構造体に相当して、使うこともできます。</p>
+</blockquote>
+<p class="example">配列は、「」<br>
+<br>
+配列（１）の「名前」へ「たろう」を辞書保存<br>
+配列（１）の「番号」へ「001」を辞書保存<br>
+<br>
+配列（２）の「名前」へ「はなこ」を辞書保存<br>
+配列（２）の「番号」へ「002」を辞書保存<br>
+<br>
+配列（３）の「名前」へ「じろう」を辞書保存<br>
+配列（３）の「番号」へ「003」を辞書保存<br>
+<br>
+番号は、入力（「1～3の番号を入力してください」）<br>
+「［辞書（配列（番号），「番号」）］:［辞書（配列（番号），「名前」）］」を表示</p>
+
+</body>
+
+</html>

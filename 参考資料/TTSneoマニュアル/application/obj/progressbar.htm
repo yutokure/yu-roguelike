@@ -1,0 +1,147 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>プログレスバーを使う</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		プログレスバーを使う</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-obj.htm">オブジェクト</a> &gt;</div>
+</div>
+<h2>プログレスバーとは</h2>
+<blockquote>
+	<p class="neo">ねお　「ここでは、作業の状態を表すプログレスバーという部品について説明します。」</p>
+	<p class="tomo">とも　「ファイルをコピーしているときや、ホームページを見ているときに表示されるものだね。」</p>
+	<p class="neo">ねお　「ここではプログレスバーの使い方を紹介します。」</p>
+	<p class="tomo">とも　「了解！！」</p>
+</blockquote>
+<p>　</p>
+<h2>プログレスバーを作成する</h2>
+<blockquote>
+	<p>プログレスバーを貼り付けるには、下のようにします。 </p>
+	<p>※TTSneoデザイナの「ウィンドウの編集」で貼り付けることができます。</p>
+	<p class="example">固定ウィンドウ１を表示<br>
+	　　その名前を「プログレスバーの例」に変えろ<br>
+	　　その大きさを２２０，１００に変えろ<br>
+	　　その背景を&amp;h8000000Fへ変えろ<br>
+	<b><font color="#ff00ff">プログレスバー１を作れ<br>
+	　　</font></b>その位置を２０，２０に変えろ<br>
+	　　その大きさを１８０，３０に変えろ<br>
+	<br>
+	１０回、繰り返せ<br>
+	　　待て　１<br>
+	　　数字は　数字＋１０<br>
+	　　<span class="pink">プログレスバー１の数字を数字に変えろ</span><br>
+	繰り返し終わり<br>
+	<br>
+	終了</p>
+</blockquote>
+<p>　</p>
+<h2>処理に状況に応じて、プログレスバーを変化させる</h2>
+<blockquote>
+	<p class="tomo">とも　「データを処理中に進み具合をプログレスバーを動かすにはどうするの？」</p>
+	<p class="neo">ねお　「処理するデータの総数と、処理が終わった数を調べて、「最大値」設定項目と「数字」設定項目にその数字を設定するだけです。」</p>
+	<p class="tomo">とも　「処理するデータの数と進み具合をチェックしておかないといけないんだね」</p>
+	<p class="neo">ねお　「例を作ってみたからよく動きを確認してね。ピンク色の部分がポイントです」</p>
+	<p><b>例文</b>　データを処理している間、処理の進み具合をプログレスバーに表す</p>
+	<p class="example">ウィンドウ１を表示<br>
+	　　その名前を「プログレスバーの例」に変えろ<br>
+	　　その大きさを２２０，１００に変えろ<br>
+	　　その背景を&amp;h8000000Fへ変えろ<br>
+	プログレスバー１を作れ<br>
+	　　その位置を２０，２０に変えろ<br>
+	　　その大きさを１８０，３０に変えろ<br>
+	<br>
+	データは、「apple,orange,pineapple,grapes,pear,melon,watermelon,persimmon」<br>
+	<br>
+	総数は、配列数（データ）<br>
+	<span class="pink">プログレスバー１の最大値は、総数</span><br>
+	<br>
+	（総数）回、数に1からカウントして繰り返せ<br>
+	　　データ（数）は、大文字（データ（数））<br>
+	　　ウィンドウ１の名前を、データ（数）に変えろ<br>
+	　　待て　１<br>
+	　　<span class="pink">プログレスバー１の数字は、数</span><br>
+	繰り返し終わり<br>
+	ウィンドウ１の名前を、「完了」に変えろ</p>
+</blockquote>
+<p>　</p>
+<blockquote>
+	<p>　</p>
+</blockquote>
+<h2>カウントできない処理の状況を表示する</h2>
+<blockquote>
+	<p class="tomo">とも　「ダウンロード」命令でファイルをダウンロードしている状況をプログレスバーに表示したいのだけと、どうすればいいかな・・・？</p>
+	<p class="neo">ねお　「そのときは、「処理状況は」命令を使います。<br>
+	この命令に、手順名を指定しておくことで、命令の処理状況が変化してときに、実行してくれます。」</p>
+	<p class="tomo">とも　「ボタンをクリックしたときの手順と同じようなもの？？」</p>
+	<p class="neo">ねお　「そうだね。でもちょっと使い方が違うから注意してね」</p>
+	<p class="example">処理状況は、状況<br>
+	<span class="rem">ーー時間のかかる処理</span><br>
+	<br>
+	手順は　状況（割合、数、全体）<br>
+	　　プログレスバー１の数字を、割合に変えろ<br>
+	　　ウィンドウ１の名前を、「［数］/［全体］」に変えろ<br>
+	終わり</p>
+	<p class="neo">ねお　「「処理状況は」命令で指定する手順には、決まりがあって、手順名の次に、「（割合、数、全体）」を指定する必要があります。</p>
+	<p class="tomo">とも　「なるほど。」</p>
+	<p class="neo">ねお　「ここで指定した３つは、変数で、ここに状況が保存されています」</p>
+	<p class="tomo">とも　「そっか、それをプログレスバーに設定しているんだね」</p>
+	<p>(待つこと数分)</p>
+	<p class="tomo">とも　「よし、できたぞ」</p>
+</blockquote>
+<p class="example">ウィンドウ１の表示<br>
+処理状況は、状況<br>
+「http://tts.utopiat.net/files/plugin/ttssdk.lzh」をデスクトップへダウンロード<br>
+<br>
+手順は　状況（割合、数、全体）<br>
+　　プログレスバー１の数字を、割合に変えろ<br>
+　　ウィンドウ１の名前を、「［数］/［全体］」に変えろ<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１の表示<br>
+ウィンドウ１を使う<br>
+’&lt;ウィンドウ１&gt;<br>
+ウィンドウ１の中の大きさを312，213へ変えろ<br>
+　　その名前を「ウィンドウ１」へ変えろ<br>
+　　その背景を&amp;h8000000Fへ変えろ<br>
+プログレスバー１を作れ<br>
+　　その位置と大きさを10，170，290，25へ変えろ<br>
+’&lt;/ウィンドウ１&gt;<br>
+ウィンドウ１を表示<br>
+終わり</p>
+<blockquote>
+	<p class="neo">ねお　「そうだね。ただ、この方法が使える命令は決まっているから、注意してね」</p>
+	<p>　</p>
+</blockquote>
+<h2>「処理状況は」命令の注意</h2>
+<blockquote>
+	<p>処理状況に対応している命令や関数は、限られています。<br>
+	対応しているのは、次の命令・関数です。<br>
+	それ以外には、対応していませんので、注意してください。</p>
+	<p class="steps"><b>対応している機能<br>
+	<br>
+	</b>「ダウンロード」命令<br>
+	「アップロード」命令<br>
+	「ＨＴＴＰでダウンロード」関数<br>
+	「配列検索」関数<br>
+	「配列処理」関数<br>
+	「配列判別」関数<br>
+	「バックアップ」命令<br>
+	「ブラウザ」オブジェクト</p>
+</blockquote>
+
+</body>
+
+</html>

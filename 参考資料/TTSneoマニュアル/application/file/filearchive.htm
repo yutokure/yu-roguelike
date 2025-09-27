@@ -1,0 +1,194 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../../style.css">
+<title>ファイルの圧縮・解凍</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		ファイルの圧縮・解凍</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-file.htm">ファイル</a> &gt;</div>
+</div>
+<h2>ファイルを圧縮・解凍する</h2>
+<blockquote>
+	<p class="neo">ねお　「TTSneoでは、ファイルの圧縮と解凍をすることができます。<br>
+	対応しているのは次の形式です。」</p>
+</blockquote>
+<h4>圧縮に対応している圧縮形式</h4>
+<blockquote>
+	<p>LZH、CAB、ZIP、TAR</p>
+</blockquote>
+<h4>解凍に対応している圧縮形式</h4>
+<blockquote>
+	<p>LZH、CAB、ZIP、TAR、GCA、RAR</p>
+	<p class="tomo">とも　「ファイルを圧縮するだけでもいろいろな方法があるんだね。<br>
+	聞いたことのない形式ばっかりだけど、何を使えばいいの？」</p>
+	<p class="neo">
+	ねお　「一般的には、LZHとZIPを使う人が多いから、よく分からない場合はLZHかZIPのどちらかが良いと思います。CABは、圧縮率が高いけど、圧縮後のファイルの差し替えができません。」</p>
+	<p>　</p>
+</blockquote>
+<h4>圧縮・解凍DLLを入手するには</h4>
+<blockquote>
+	<p class="neo">ねお　「ファイルの圧縮・解凍には、圧縮するためのDLLが必要です。<br>
+	このDLLはTTSneoには含まれていませんので、必要なファイルを次のサイトからダウンロードしてください。」</p>
+	<p class="tomo">とも　「了解！」</p>
+	<p><b>統合アーカイバプロジェクト</b><br>
+	<a href="http://www.csdinc.co.jp/archiver/" target="_top">
+	http://www.csdinc.co.jp/archiver/</a></p>
+	<p class="tomo">とも　「うわぁー　なんだか、たくさんあるね・・・」</p>
+	<p class="neo">ねお　「「個別ライブラリ」から次のファイルをダウンロードすればOKだよ」</p>
+</blockquote>
+<div align="center">
+	<center>
+	<table border="0" cellpadding="2">
+		<tr>
+			<td class="items" align="center">DLLファイル名</td>
+			<td class="items" align="center">対応拡張子</td>
+		</tr>
+		<tr>
+			<td>UNLHA32.DLL</td>
+			<td>LZH</td>
+		</tr>
+		<tr>
+			<td>UNZIP32.DLL<br>
+			ZIP32J.DLL</td>
+			<td>ZIP</td>
+		</tr>
+		<tr>
+			<td>CAB32.DLL</td>
+			<td>CAB</td>
+		</tr>
+		<tr>
+			<td>TAR32.DLL</td>
+			<td>TAR TAZ TGZ TB2 TBZ Z</td>
+		</tr>
+		<tr>
+			<td>UNRAR32.DLL</td>
+			<td>RAR</td>
+		</tr>
+		<tr>
+			<td>UNGCA32.DLL</td>
+			<td>GCA</td>
+		</tr>
+	</table>
+	</center>
+</div>
+<p>　</p>
+<h2>ファイルを圧縮する</h2>
+<blockquote>
+	<p class="neo">ねお　「では、ファイルの圧縮の方法を説明するね。<br>
+	ファイルを圧縮するには、「圧縮」命令を使います。」</p>
+	<p class="format"><span class="flag">[元のファイル]</span>を<span class="flag">[圧縮ファイル名]</span>へ<span class="flag">[基準フォルダ(省略可能)]</span>から<span class="flag">[オプション(省略可能)]</span>で圧縮</p>
+	<p>[元のファイル]には、圧縮するファイルまたはフォルダを指定します。</p>
+	<p class="tomo">とも　「複数のファイルを一度に圧縮することはできる？」</p>
+	<p class="neo">ねお　「複数のファイルを圧縮したい場合は、配列で指定してください。<br>
+	また、ワイルドカード(*.txtといった表現)を使うこともできます。」</p>
+	<p class="tomo">とも　「こんなところで配列を使うんだね」</p>
+</blockquote>
+<p>　</p>
+<p><b>例</b>　デスクトップにあるテキストファイルを圧縮する</p>
+<p>拡張子が一つの場合は、下のように*を使って指定できます。</p>
+<p class="example">「［デスクトップ］*.txt」を、「［デスクトップ］テキスト.lzh」へ圧縮</p>
+<p>　</p>
+<p><b>例</b>　「画像」フォルダにある、ビットマップ(bmp)とJPEG(jpg)ファイルをすべて圧縮する</p>
+<p>複数のファイルや種類を指定したい場合、「一覧」配列を作り、配列として指定してください。</p>
+<p class="example">一覧は、「［デスクトップ］画像\*.bmp、［デスクトップ］画像\*.jpg」<br>
+一覧を、「［デスクトップ］画像.lzh」へ圧縮</p>
+<blockquote>
+	<p>　</p>
+	<p class="neo">
+	ねお　「ここでは、LHA形式(LZH)について説明しましたが、他の圧縮ファイルについても、基本的に同じように命令できます。」</p>
+	<p class="tomo">とも　「すでに存在する圧縮ファイルにファイルを追加するにはどうするの？」</p>
+	<p class="neo">ねお　「圧縮ファイルに新たにファイルを追加する場合も、「圧縮」命令を使います。<br>
+	CAB形式は、一度作成したファイルに追加することはできません。<br>
+	一度、圧縮ファイルを削除して改めて圧縮しなおしてください。」</p>
+	<p class="tomo">とも　「了解！」</p>
+</blockquote>
+<p>　</p>
+<h2>ファイルを解凍する</h2>
+<blockquote>
+	<p class="tomo">とも　「圧縮したファイルの中身を取り出して復元するにはどうするの？」</p>
+	<p class="neo">ねお　「圧縮ファイルの中身を取り出すことを解凍といいます。<br>
+	圧縮ファイルの解凍には、「解凍」命令を使います。」</p>
+	<p class="format"><span class="flag">[圧縮ファイル名]</span>を<span class="flag">[解凍先]</span>へ<span class="flag">[オプション(省略可)]</span>で解凍</p>
+	<p></p>
+	<p class="neo">ねお　「オプションを設定したい場合は、「～で」を使います。 <br>
+	この機能は、詳しい知識を持っている人向けです。」</p>
+	<p class="tomo">とも　「オプションには何が指定できるの？」</p>
+	<p class="neo">ねお　「オプションは、圧縮・解凍するファイルの種類によってちょっと違います。<br>
+	統合アーカイバプロジェクトからダウンロードしたファイルに詳しい説明がある場合があります。」</p>
+</blockquote>
+<p>　</p>
+<h2>より詳細な設定をしたい</h2>
+<blockquote>
+	<p>圧縮するときにオプションを設定したい場合は、「～で」を使って下のようにします。 </p>
+	<p class="example">「program.exe」を「program.lzh」に「-jm4」で圧縮 </p>
+	<p></p>
+	<p>オプションとして設定できるのは、Unlha32.dllのcommand.txtにあるスイッチです。 <br>
+	設定できるスイッチの一覧と説明は、圧縮先の圧縮形式やDLLによって異なります。</p>
+	<p>TTSで文字として指定できるオプションは、次の通りです。<br>
+	LHA形式(lzh)の場合に対応しています。</p>
+	<p>ダイアログ非表示(-n0)<br>
+	属性維持(-a1)<br>
+	フォルダ有効(-x1)<br>
+	プログレスバー(-jp1)</p>
+</blockquote>
+<p>　</p>
+<h2>ファイルの一覧を調べたい</h2>
+<blockquote>
+	<p class="tomo">とも　「圧縮ファイルの一覧を調べることはできないの？」</p>
+	<p class="neo">ねお　「もちろんできるよ。「ファイル情報」オブジェクトにある関数を使えばできます。」</p>
+	<p class="tomo">とも　「「ファイル情報」オブジェクト・・・・？」</p>
+	<p class="neo">ねお　「まあ、とりあえず下のように関数を使ってください。」</p>
+</blockquote>
+<p class="format">ファイル情報の圧縮ファイル一覧（<span class="flag">[ファイル名]</span>）<br>
+ファイル情報の圧縮詳細ファイル一覧（<span class="flag">[ファイル名]</span>）</p>
+<p class="example">ウィンドウ１の表示<br>
+待機<br>
+<br>
+手順は　ウィンドウ１の表示<br>
+ウィンドウ１を使う<br>
+’&lt;ウィンドウ１&gt;<br>
+ウィンドウ１の中の大きさを422，176へ変えろ<br>
+　　その名前を「圧縮ファイルの一覧取得」へ変えろ<br>
+　　その背景を&amp;h8000000Fへ変えろ<br>
+ボタン１を作れ<br>
+　　その位置と大きさを180，140，65，25へ変えろ<br>
+　　その名前を「選択」へ変えろ<br>
+リストビュー１を作れ<br>
+　　その位置と大きさを0，0，420，130へ変えろ<br>
+　　その見た目を「詳細」へ変えろ<br>
+　　そのカラム一覧を「ファイル名,更新日,更新時刻,属性,圧縮率,フォルダ名,圧縮後,圧縮前,種類,CRC」へ変えろ<br>
+　　そのカラム幅一覧を96,96,96,96,96,96,96,96,96,96へ変えろ<br>
+’&lt;/ウィンドウ１&gt;<br>
+ウィンドウ１を表示<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１のボタン１をクリック<br>
+’// ファイル名を開く<br>
+　　選択ウィンドウのタイトルを「圧縮ファイルを開く」へ変えろ<br>
+　　選択ウィンドウのフィルタを「圧縮ファイル|*.lzh;*.zip;*.cab;*.rar;*.tar;*.gca|すべてのファイル|*.*|」へ変えろ<br>
+　　開くファイルを選択<br>
+　　もし　選択ウィンドウのキャンセルは、オン　なら　抜ける<br>
+　　内容は、ファイル情報の書庫詳細一覧（選択ウィンドウのファイル名）<br>
+　　リストビュー１の一覧を、内容に変えろ<br>
+終わり<br>
+<br>
+手順は　ウィンドウ１のリストビュー１にドラッグ＆ドロップ<br>
+　　内容は、ファイル情報の書庫詳細一覧（ドロップされたファイル）<br>
+　　リストビュー１の一覧を、内容に変えろ<br>
+終わり</p>
+
+</body>
+
+</html>

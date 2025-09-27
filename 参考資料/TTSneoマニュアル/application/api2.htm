@@ -1,0 +1,254 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../style.css">
+	<title>高度なDLL関数の利用</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		高度なDLL関数の利用</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-extra.htm">プラグインとDLL関数</a> &gt;</div>
+</div>
+<h2>より高度な方法で呼び出す</h2>
+<blockquote>
+	<p>前のページでは、数値や文字を渡すだけの単純なDLL関数を呼び出す例を紹介しましたが、<br>
+	Windows APIには、構造体やポインタ渡し、バイナリ操作などを必要とするDLL関数があります。</p>
+	<p>「宣言」命令や「辞書初期化」命令で指定する変数名の先頭に特殊な記号を付けることで、DLL関数に情報を渡す方法を変えることができます。</p>
+	<p>例　*ポインタ　@構造体</p>
+	<table border="1" cellpadding="2">
+		<tr>
+			<td class="items" align="center">記号</td>
+			<td class="items" align="center">役割</td>
+			<td class="items" align="center">説明</td>
+			<td class="items" align="center">宣言</td>
+			<td class="items" align="center">辞書初期化</td>
+		</tr>
+		<tr>
+			<td align="center">(なし)</td>
+			<td>整数・文字列　(構造体でない場合)<br>
+			整数　(構造体の場合)</td>
+			<td>整数として値を渡します<br>
+			「宣言」命令の場合は、内容に応じて文字列も利用できます。</td>
+			<td align="center">○</td>
+			<td align="center">○</td>
+		</tr>
+		<tr>
+			<td align="center">*</td>
+			<td>参照渡し(ポインタ渡し)</td>
+			<td>「宣言」命令でのみ使用できます<br>
+			指定した引数は、参照渡しされます</td>
+			<td align="center">○</td>
+			<td align="center">×</td>
+		</tr>
+		<tr>
+			<td align="center">?</td>
+			<td>Unicode文字列</td>
+			<td>Unicode文字列として値渡しします<br>
+			「Unicode文字」関数の文字を渡すことができます</td>
+			<td align="center">○</td>
+			<td align="center">×</td>
+		</tr>
+		<tr>
+			<td align="center">@</td>
+			<td>構造体</td>
+			<td>辞書機能を構造体と見立てて、構造体として渡します<br>
+			事前に「辞書初期化」した変数を指定します</td>
+			<td align="center">○</td>
+			<td align="center">○</td>
+		</tr>
+		<tr>
+			<td align="center">#</td>
+			<td>バイナリ配列</td>
+			<td>バイナリ形式で受け渡しします</td>
+			<td align="center">○</td>
+			<td align="center">○</td>
+		</tr>
+		<tr>
+			<td align="center">$</td>
+			<td>文字列</td>
+			<td>指定した引数を、文字列として取り扱います<br>
+			「宣言」命令の場合は、$を指定する必要はありません。</td>
+			<td align="center">○</td>
+			<td align="center">○</td>
+		</tr>
+		<tr>
+			<td align="center">!</td>
+			<td>単精度浮動小数点数型</td>
+			<td>小数(Single)で受け渡しします</td>
+			<td align="center">×</td>
+			<td align="center">○</td>
+		</tr>
+		<tr>
+			<td align="center">%</td>
+			<td>倍精度浮動小数点数型</td>
+			<td>小数(Double)で受け渡しします</td>
+			<td align="center">×</td>
+			<td align="center">○</td>
+		</tr>
+	</table>
+</blockquote>
+<p>　</p>
+<h2>参照渡し(ポインタ渡し)をする方法</h2>
+<blockquote>
+	<p>DLL関数の引数として、参照渡し（ポインタ渡し）をしたい場合は、「宣言」命令の変数名の前に、「*」を指定してください。<br>
+	「*」を指定することで、TTSneoが自動的に参照渡しで処理します。</p>
+	<p>Visual Basicの宣言文を参考にしている場合は、ByRefキーワードが付いているか、ByValの表記がない変数が参照渡しです。</p>
+	<p><b>Visual Basicでの宣言文字列</b></p>
+	<p class="vb">Declare Function GetUserName Lib &quot;ADVAPI32&quot; Alias &quot;GetUserNameA&quot; (ByVal lpBuffer$,<font color="#FF0000"><b>ByRef</b></font> nSize&amp;) As Long</p>
+	<p>場合によっては、「ByRef」が省略されている場合があります。ByValでない場合は、「*」をつける必要があります。</p>
+	<p><b>TTSneoでの利用例</b></p>
+	<p class="example"><span class="rem">ーーDLLの宣言</span><br>
+	advapi32.dllのGetUserNameAをGetUserName（文字、*サイズ）として宣言<br>
+	<br>
+	ユーザ名を表示<br>
+	<br>
+	手順は　ユーザ名<br>
+	<span class="rem">ーーユーザ名の取得</span><br>
+	　　ここだけの変数は、名前<br>
+	　　名前は　スペース（256）<br>
+	　　名前、256をGetUserName<br>
+	　　名前は　右のスペース削除（名前）<br>
+	　　名前で抜ける<br>
+	終わり</p>
+</blockquote>
+<p>　</p>
+<h2>バイナリ配列として操作する</h2>
+<blockquote>
+	<p>引数として、バイナリ配列を指定することができます。<br>
+	「宣言」命令で、バイナリ配列として扱う引数の変数名の先頭に「#」を付けてください。</p>
+	<p>文字列をバイナリ配列へ変換するには、「バイナリ配列」関数を使います。<br>
+	バイナリ配列を文字列などに戻すには、「復元」関数を使います。</p>
+	<p class="example">kernel32.dllのGetSystemDirectoryAをフォルダ取得（<font color="#FF0000"><b>#</b></font>内容1、数字1）と宣言<br>
+	<br>
+	<span class="rem">ーー文字を確認するためのスペースを作ります</span><br>
+	内容は　繰り返せ（２５５、「,」）<br>
+	<br>
+	<span class="rem">ーー情報の取得と表示</span><br>
+	内容、255をフォルダ取得<br>
+	内容を表示<br>
+	復元（内容、バイナリ）を表示</p>
+</blockquote>
+<p>　</p>
+<h2>構造体の利用方法(C言語/VB利用者向け)</h2>
+<blockquote>
+	<p>TTSneoでは、構造体(ユーザ定義型)の代わりに辞書を使って、構造体を表現します。<br>
+	構造体として辞書を利用するときは、必ず「辞書初期化」命令を実行してください。</p>
+	<p><b>構造体の宣言</b></p>
+	<p>TTSneoには、型という考え方がありませんので、型の関連付けを行うために構造体に必要な情報を辞書に保存しておきます。<br>
+	必要な情報を指定するには、「辞書初期化」命令を使います。</p>
+	<p class="format">[構造体名]を「[変数名]=[型/バイト数],・・・」で辞書初期化</p>
+	<p>[型/バイト数]には、次のような「Long」「Integer」などの型名、または確保するバイト数を指定できます。</p>
+	<table border="1" cellpadding="2">
+		<tr>
+			<th align="center" class="items">型名</td> </th>
+			<th align="center" class="items">役割</td> </th>
+			<th align="center" class="items">サイズ</th>
+		</tr>
+		<tr>
+			<td align="center">long/dword/lparam</td>
+			<td>数値</td>
+			<td>4バイト</td>
+		</tr>
+		<tr>
+			<td align="center">integer/int</td>
+			<td>整数</td>
+			<td>2バイト</td>
+		</tr>
+		<tr>
+			<td align="center">double</td>
+			<td>倍精度浮動小数点数型</td>
+			<td>8バイト</td>
+		</tr>
+		<tr>
+			<td align="center">float/single</td>
+			<td>単精度浮動小数点数型</td>
+			<td>4バイト</td>
+		</tr>
+	</table>
+	<p></p>
+	<p></p>
+	<p>たとえば、WinAPIにある「POINTAPI」構造体を作成するには下のように命令します。</p>
+	<p>★Visual Basicでの構造体(ユーザ定義型)の宣言</p>
+	<p class="vb">Public Type POINTAPI<br>
+&nbsp;&nbsp;&nbsp; X As Long<br>
+&nbsp;&nbsp;&nbsp; Y As Long<br>
+	End Type</p>
+	<p>★TTSneoでの構造体の宣言</p>
+	<p class="example">POINTAPIを「X=Long,Y=Long」で辞書初期化</p>
+	<p>　</p>
+	<p><b>構造体に値を設定する</b></p>
+	<p>宣言した構造体に値を指定するには、辞書機能の場合と同じです。<br>
+	下のように配列のような書き方をするか、「辞書保存」命令を使います。</p>
+	<p class="example">POINTAPIを「X=Long,Y=Long」で辞書初期化<br>
+	<br>
+	内容は、POINTAPI　　<span class="rem">ーー構造体の基本形をコピーする</span><br>
+	内容（「X」）は、10<br>
+	内容（「Y」）は、10</p>
+	<p>この例では、基本形となる「POINTAPI」変数に辞書を作成しておき、実際に利用するときは、「POINTAPI」変数にある内容を、「内容」変数にコピーしてから使っています。<br>
+	必ずもこの方法でなくてもかまいませんが、何度も利用する場合は、手間が省けるので便利です。</p>
+	<p>　</p>
+	<p><b>値を取得する</b></p>
+	<p>配列のような書き方をするか、「辞書」関数を利用します。</p>
+	<p class="example">内容（「X」）を表示</p>
+	<p class="steps"><b>参照</b><br>
+	「基本編」→「辞書機能（連想配列）」</p>
+	<p>　</p>
+	<p><b>DLL関数に構造体を引数として渡す</b></p>
+	<p>引数に、構造体を渡せるようにするには、「宣言」命令で、引数名の前に「@」をつけてください。</p>
+	<p class="example">user32のGetCursorPosをGetCursorPos（<font color="#FF0000"><b>@</b></font>POINTAPI）と宣言<br>
+	POINTAPIを「X=Long,Y=Long」で辞書初期化<br>
+	<br>
+	内容は、POINTAPI　　<span class="rem">ーー構造体の基本形をコピーする</span><br>
+	内容（「X」）は、10<br>
+	内容（「Y」）は、10<br>
+	<br>
+	20回繰り返せ<br>
+	　　待て　0.5<br>
+	　　<b><font color="#FF0000">内容</font></b>をGetCursorPos　　<span class="rem">ーー引数に構造体を指定する</span><br>
+	　　「［内容（「X」）］,［内容（「Y」）］」を報告<br>
+	繰り返し終わり</p>
+	<p>　</p>
+	<p><b>文字列を含む構造体</b></p>
+	<p>文字列を含む変数が含まれる場合は、変数名の前に「$」を付けて、確保する文字列のサイズを指定します。</p>
+	<p>★Visual Basicでの構造体の宣言</p>
+	<p class="vb">Type OSVERSIONINFO<br>
+&nbsp;&nbsp;&nbsp; dwOSVersionInfoSize As Long<br>
+&nbsp;&nbsp;&nbsp; dwMajorVersion As Long<br>
+&nbsp;&nbsp;&nbsp; dwMinorVersion As Long<br>
+&nbsp;&nbsp;&nbsp; dwBuildNumber As Long<br>
+&nbsp;&nbsp;&nbsp; dwPlatformId As Long<br>
+&nbsp;&nbsp;&nbsp; <font color="#FF0000"><b>szCSDVersion As String * 128</b></font><br>
+	End Type</p>
+	<p>★TTSneoでの使用例</p>
+	<p class="example">KERNEL32のGetVersionExAをGetVersionEx（@OSVERSIONINFO）と宣言<br>
+	OSVERSIONINFOを「dwOSVersionInfoSize=Long、<br>
+	dwMajorVersion=Long、<br>
+	dwMinorVersion=Long、<br>
+	dwBuildNumber=Long、<br>
+	dwPlatformId=Long、<br>
+	<font color="#FF0000"><b>$</b></font>szCSDVersion=<font color="#FF0000"><b>128</b></font>」で辞書初期化<br>
+	<br>
+	内容は、OSVERSIONINFO<br>
+	内容（「dwOSVersionInfoSize」）は、内容（「__Total」）<br>
+	内容をGetVersionEx</p>
+	<p>配列全体のバイト数を取得するには、「<b>内容（「__Total」）</b>」としてください。</p>
+	<p>　</p>
+	<p><b>構造体で構造体を指定する場合</b></p>
+	<p>構造体の中で構造体を指定する場合は、辞書で辞書を作成する必要があります。<br>
+	「辞書初期化」命令の変数名の前に「@」をつけてください。</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

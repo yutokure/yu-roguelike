@@ -1,0 +1,143 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>オブジェクトに変化が起こったときの処理</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">４．オブジェクトに変化が起こったときの処理</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">ソフト作り編</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/06/03<!--webbot bot="Timestamp" endspan i-checksum="12688" -->更新</div>
+</div>
+
+<h2>ボタンをクリックしたときは？</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td>前のページで、ボタンやテキストなどのオブジェクトの貼り付け方や名前や色の変え方は、分かりました。<p>
+		しかしこれだけでは、クリックしたりや入力したときに何もプログラムが実行されません。<br>
+		このようにオブジェクトに変化が起こることを「イベント」と言います。</p>
+		<p>ここでは、イベントが起こったときのプログラムの作り方を紹介します。</td>
+		<td><img border="0" src="../img/ttschar8.png" width="121" height="121"></td>
+	</tr>
+</table>
+<p>　</p>
+<h2>変化が起きたときの手順を作る</h2>
+<blockquote>
+	<p class="neo">ねお　「『ウィンドウをデザインする』でちょっと紹介したクリックしたときに実行するプログラムの作り方を詳しく説明するね」</p>
+	<p class="tomo">とも　「手順を使うんだよね」</p>
+	<p class="neo">ねお　「そう。TTSneoではイベントが起こったときのプログラムは、手順を使います。<br>
+	TTSneoデザイナの「ウィンドウの設計」を使えば、手順を作ることができますが、ここでは詳しく説明します。」</p>
+	<p><b>書式</b>　オブジェクトをクリックしたとき</p>
+	<p class="format">手順は　<span class="flag">[ウィンドウの名前]</span>の<span class="flag">[オブジェクトの名前]</span>をクリック<br>
+	<br>
+	終わり</p>
+	<p><b><span class="flag">[ウィンドウの名前]</span></b>には、オブジェクトがあるウィンドウを指定します。<b><span class="flag"><br>
+	[オブジェクトの名前]</span></b>には、対象のオブジェクトを指定します。</p>
+	<p class="neo">ねお　「このような変化がおきたときの手順は、手順名が決まっています。<br>
+	リファレンスの各オブジェクトの説明を見てくださいね」</p>
+	<p class="tomo">とも　「分かった・・・　　たしかにたくさんあるんだね」</p>
+	<p>　</p>
+	<p class="neo">ねお　「たとえば、オブジェクトをクリックした時の手順は、下のように命令します。」</p>
+	<p><b>例</b>　ウィンドウ１のボタン１をクリックした時</p>
+	<p class="example">手順は　<b><font color="#FF00FF">ウィンドウ１のボタン１をクリック<br>
+	</font></b><br>
+	終わり</p>
+	<p class="tomo">とも　「なるほどね。ウィンドウの設計で、作ってくれるから便利だね」</p>
+</blockquote>
+<p>　</p>
+<h4>「待機」命令を忘れずに！</h4>
+<blockquote>
+	<p class="tomo">とも　「あれっ　ウィンドウの設計を使わずに作ったんだけど、ボタンをクリックしても何も動かないよ。」</p>
+	<p class="neo">
+	ねお　「実は、今まで説明したプログラムは、ウィンドウやボタンを表示するとプログラムが終了してしまいます。プログラムが終了してしまうと、ボタンを押しても、手順は実行されません。」</p>
+	<p>そこで、ボタンをクリックしたときに手順が実行できるように「待機」命令を使います。</p>
+</blockquote>
+<p class="example">ウィンドウ１を表示<br>
+　　その大きさを４００、３００に変えろ<br>
+　　その名前を、「私のソフト」に変えろ<br>
+<br>
+テキスト１を作れ<br>
+　　その位置を１０、１０に変えろ<br>
+　　その大きさを１００、２０に変えろ<br>
+<br>
+ボタンをOKボタンとして作れ<br>
+　　その名前を「OK」に変えろ<br>
+　　その位置を１０、４５に変えろ<br>
+<br>
+<font color="#FF00FF"><b>待機</b></font><br>
+<br>
+<span class="rem">ーー手順は必ず、「待機」命令の後に書いてください</span><br>
+手順は　ウィンドウ１のOKボタンをクリック<br>
+　　テキスト１の内容を表示<br>
+終わり</p>
+<blockquote>
+	<p class="tomo">とも　「そっかぁ。そいれば、ウィンドウの設計だと、勝手に<b>待機</b>って作ってくれていたんだね」</p>
+</blockquote>
+<p>　</p>
+<h2>「アクティブ」「その」「この」オブジェクト </h2>
+<blockquote>
+	<p class="neo">ねお　「この前、「その」って言うのを紹介しましたが、他にも特別な機能をもったオブジェクトがあります。」</p>
+	<p class="tomo">とも　「特別な機能？？」</p>
+	<p>
+	TTSneoには、命令したときにカーソルがある（フォーカスがある）オブジェクトや、直前に指定したオブジェクトなどを表すオブジェクトが用意されています。<br>
+	このオブジェクトは、状況によって設定項目や内容が変化します。</p>
+	<table border="1" cellpadding="2">
+		<tr>
+			<td class="items">アクティブ</span></td>
+			<td>現在フォーカス（注目）があるオブジェクト </td>
+		</tr>
+		<tr>
+			<td class="items">その</td>
+			<td>最後に指定したオブジェクト</td>
+		</tr>
+		<tr>
+			<td class="items">この</td>
+			<td>クリックなど手順が実行されたオブジェクト<br>
+			または「～について」命令で指定したオブジェクト</td>
+		</tr>
+	</table>
+</blockquote>
+<p class="example">ウィンドウ１を表示<br>
+ボタン１を作る<br>
+　　その名前を「OK」に変えろ<br>
+「フォーカスがあるオブジェクトは［<b><font color="#FF00FF">アクティブ</font></b>のオブジェクト名］です。」を表示<br>
+<br>
+待機<br>
+<br>
+手順は　ウィンドウ１のボタン１をクリック<br>
+　　<b><font color="#FF00FF">この</font></b>オブジェクト名を表示<br>
+終わり</p>
+<blockquote>
+	<p class="neo">ねお　「また、「～について」命令を使うと、「この」オブジェクトが表すオブジェクトを変更することができます。」</p>
+	<p class="tomo">とも　「「その」オブジェクトは他のオブジェクトを使うと意味が変わっちゃうから、場合によっては「この」を使えば、便利だね」</p>
+</blockquote>
+<p class="example">ウィンドウ１を表示<br>
+ボタン１を作れ<br>
+ボタン１<b><font color="#FF00FF">について</font></b><br>
+　　この位置を３０，３０に変えろ<br>
+　　この大きさを１００，１００に変えろ<br>
+　　この名前を「ウィンドウ」に変えろ<br>
+<font color="#FF00FF"><b>これについて終わり</b></font></p>
+<p>　</p>
+<h2>練習問題っ！</h2>
+<blockquote>
+	<p>では、手順を使った練習問題に挑戦しましょう。<br>
+	基本編で勉強したことも思い出して作ってみましょう。</p>
+	<p>※この問題は、「ウィンドウの設計」を使ってください</p>
+	<p><b>問題１<br>
+	</b>パスワードを確認するプログラムを作ってください。</p>
+	<p><font color="#0000FF">ヒント</font>　ウィンドウ１にボタンとテキストを一つずつ貼り付けて、ボタンをクリックしたら、テキストの内容とパスワードが同じか確認します。</p>
+</blockquote>
+
+</body>
+
+</html>

@@ -1,0 +1,139 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<title>方法</title>
+<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<base target="_self">
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		方法</div>
+	<div class="sub">
+		TTSneoマニュアル よくある質問</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">よくある質問</a> &gt;</div>
+</div>
+<blockquote>
+	<p><font size="2"><a href="#1">TTSneoプログラムと同じフォルダにあるファイルを開くには？</a><br>
+	<a href="#2">ウィンドウを常に手前に表示させるには？</a><br>
+	<a href="#3">ドラッグ＆ドロップしたファイル名を取得するには？</a><br>
+	<a href="#4">メッセージなどを途中で改行するには？</a><br>
+	<a href="#5">Windows XP対応のスタイルにしたい</a><br>
+	<a href="#6">「表示」命令や「入力」「質問」関数のタイトルを変えるには？</a><br>
+	<a href="#7">実行可能ファイル(EXE)のアイコンを好きなアイコンに変えるには？</a><br>
+	<a href="#8">実行可能ファイル(EXE)のプロパティのバージョン情報を変えるには？</a><br>
+	<a href="#9">起動中の特定のプログラムを終了するには？</a><br>
+	<a href="#10">タスクバーにあるすべてのウィンドウ名を取得するには？</a><br>
+	</font><a href="#11"><font size="2">&quot;「&quot;や&quot;」&quot;、&quot;［&quot;、&quot;］&quot;を文字として表示するには？</font></a></p></blockquote>
+<p>　</p>
+<h2><a name="1">TTSneoプログラムと同じフォルダにあるファイルを開くには？</a></h2>
+<blockquote>
+	<p>「今の位置」関数で、実行しているTTSneoファイルがあるフォルダを表します。<br>
+	プログラムと同じフォルダのファイルを指定したいときは、下のようにプログラムしてください。 </p>
+	<p></p>
+	<p class="example">内容は　開け（「［今の位置］readme.txt」）<br>
+	「［今の位置］ヘルプ\index.html」を開け <br>
+	</p>
+</blockquote>
+<p>　</p>
+<h2><a name="2">ウィンドウを常に手前に表示させるには？</a></h2>
+<blockquote>
+	<p>ウィンドウの「最前面」設定項目を使います。</p>
+	<p class="example">ウィンドウ１の最前面をオンに変えろ</p>
+</blockquote>
+<p><br>
+</p>
+<h2><a name="3">ドラッグ＆ドロップしたファイル名を取得するには？</a></h2>
+<blockquote>
+	<p>「～にドラッグ＆ドロップ」手順が実行されると、「ドロップされたファイル」関数にファイル名の情報が保存されています。</p>
+	<p>ショートカットやプログラム本体のアイコンへドラッグ＆ドロップした場合は、「起動時設定」関数に保存されています。 </p>
+	<p class="steps"><b>▼参照</b><br>
+	サンプル→メモ帳.tts(一番最後の手順)<br>
+	</p>
+	<p></p>
+</blockquote>
+<p>　</p>
+<h2><a name="4">メッセージなどを表示するときに改行するには？</a></h2>
+<blockquote>
+	<p>改行を入力するには、「改行」関数を使います。 </p>
+</blockquote>
+<p></p>
+<blockquote>
+	<p class="example">「こんにちは［改行］さようなら」を表示</p>
+</blockquote>
+<p>　</p>
+<h2><a name="5">Windows XP対応のデザインにするには？</a></h2>
+<blockquote>
+	<p>TTSneoの実行可能ファイルの作成で作成したアプリケーションを<br>
+	Windows 
+	XP対応のテーマに対応させるには、マニフェストファイル（「○○.manifest」）を<br>
+	実行可能形式ファイルのある同じフォルダにコピーしてください。</p>
+	<p>マニフェストファイルは、TTSneoのインストールされているフォルダにある「TTScript.exe.manifest」をコピーして利用します。</p>
+	<p>例　memo.exeの場合　「TTScript.exe.manifest」ファイルをコピーして「memo.exe.manifest」に名前を変える</p>
+	<p>ツールバーやタブなど一部のオブジェクトは、開発環境の都合上、テーマにならない部品もあります。<br>
+	公式サイトで公開されている「追加プラグイン集」には、テーマに対応したツールバーやタブが用意されています。</p>
+</blockquote>
+<p>　</p>
+<h2><a name="6">「表示」命令や「入力」「質問」関数のタイトルを変えるには？</a></h2>
+<blockquote>
+	<p>「表示」命令で「TTSneo」と表示されている見出し（タイトル）を変えるには、どうすればよいですか？<br>
+	「入力」関数・「質問」関数でタイトルを変えるには、どうすればよいですか？</p>
+	<p>「タイトルは」命令を使います。</p>
+	<p class="example">タイトルは、「マイソフト」<br>
+	「こんにちは」を表示</p>
+	<p>また、「入力」関数・「質問」関数の場合は、必要な情報を指定することでタイトルを指定することができます。</p>
+	<p class="example">内容は　入力（「名前を入力してください」、「」、「マイソフト」）<br>
+	返事は　質問（「終了しますか？」、はいといいえ、「マイソフト」）</p>
+</blockquote>
+
+<p>　</p>
+<h2><a name="7">実行可能ファイルのアイコンを好きなアイコンに変えるには？</a></h2>
+<blockquote>
+	<p>TTSneo 1.6より、TTSneoデザイナ単体でアイコンの変更が可能になりました。</p>
+	<p>詳しくは、「ソフト作り編」の「<a href="../softdev/makeexe.htm">実行可能ファイルの作成</a>」をご覧ください。</p>
+</blockquote>
+<p><br>
+</p>
+<h2><a name="8">実行可能ファイルのプロパティのバージョン情報を変えるには？</a></h2>
+<blockquote>
+	<p>プロパティに表示されるTTSneoの開発環境でバージョン情報を設定することはできません。</p>
+	<p><a target="_top" href="http://www.users.on.net/johnson/resourcehacker/">
+	Resource Hacker</a>というフリーソフトを使うことでバージョン情報を変更することができるようです。<br>
+	ただし、予想外の動作を起こす可能性がありますので、お勧めしません。</p>
+	<p><font color="#FF0000">（この件に関する質問やサポートには応じかねます）</font></p>
+</blockquote>
+<p>　</p>
+<h2><a name="9">起動中の特定のプログラムを終了するには？</a></h2>
+<blockquote>
+	<p>Windowsで起動している他のアプリケーションを終了するには、「終了」命令を使います。<br>
+	「終了」命令には、終了するアプリケーションのウィンドウ名を指定します。</p>
+	<p class="example">メモ帳を起動<br>
+	待て　３<br>
+	「無題 - メモ帳」を終了</p>
+</blockquote>
+<p>　</p>
+<h2><a name="10">タスクバーにあるすべてのウィンドウ名を取得するには？</a></h2>
+<blockquote>
+	<p>Windowsで起動している他のアプリケーションの名前を取得するには、「起動中プログラム一覧」関数を使います。</p>
+	<p class="example">起動中プログラム一覧を表示</p>
+</blockquote>
+<p>　</p>
+<h2><a name="11">&quot;「&quot;や&quot;」&quot;、&quot;［&quot;、&quot;］&quot;を文字として表示するには？</a></h2>
+<blockquote>
+	<p>TTSneoでは、括弧記号（「　」や［　］）に特殊な意味があるため、これらの記号を文字列として表す場合、<br>
+	「キャラクタ」関数などを使用するか、<br>
+	次のように記述することで、これらの括弧記号を表現することができます。</p>
+	<p class="example">「　<span class="pink">［「］</span>　<span class="pink">［」］</span>　」を表示<br>
+	「　<span class="pink">［［］</span>　<span class="pink">［］］</span>　」を表示</p>
+</blockquote>
+<p>　</p>
+<p>　</p>
+
+</body>
+
+</html>

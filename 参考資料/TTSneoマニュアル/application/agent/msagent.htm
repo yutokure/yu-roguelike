@@ -1,0 +1,127 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=x-sjis">
+<link rel="stylesheet" type="text/css" href="../../style.css">
+<title>MSAgent</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		MSAgent</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="../menu-extra.htm">プラグインとDLL関数</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>アシスタントを呼び出す</h2>
+<blockquote>
+	<p>MS Agentを利用することで、TTSneoからOfficeアシスタントを呼び出すことができます。<br>
+	アシスタントは、変更することが可能で、好きなアニメーションを動かしたり、メッセージをバルーンに表示したりすることができます。</p>
+</blockquote>
+<p>　</p>
+<h2>使い方</h2>
+<p><b>プラグインを利用するための命令</b></p>
+<p class="example">「TTSSpeechN.TTSAgent」をエージェントとして利用する</p>
+<p><b>命令</b></p>
+<table border="0" id="table1" cellpadding="2" width="70%">
+	<tr>
+		<td class="items" align="center">命令</td>
+		<td class="items" align="center">説明</td>
+	</tr>
+	<tr>
+		<td class="items">～の[キャラクタ名]を使う</td>
+		<td>表示するキャラクタを指定します<br>
+		キャラクタ名は、英語です</td>
+	</tr>
+	<tr>
+		<td class="items">～を[横]、[縦]に表示</td>
+		<td>キャラクタを表示します</td>
+	</tr>
+	<tr>
+		<td class="items">～を[速度]で[横]、[縦]に移動</td>
+		<td>キャラクタを移動します<br>
+		[速度]は省略可能です。</td>
+	</tr>
+	<tr>
+		<td class="items">～を停止</td>
+		<td>動作を停止します</td>
+	</tr>
+	<tr>
+		<td class="items">～をすべて停止</td>
+		<td>すべての動作を停止します</td>
+	</tr>
+	<tr>
+		<td class="items">～を隠せ</td>
+		<td>キャラクタを隠します</td>
+	</tr>
+	<tr>
+		<td class="items">～の[アクション名]を動かせ</td>
+		<td>キャラクタのアクションを実行します</td>
+	</tr>
+</table>
+<p><b>設定項目</b></p>
+<p>◎＝設定・取得　○＝設定　□＝取得</p>
+<table border="0" id="AutoNumber1" cellpadding="2" width="70%">
+	<tr>
+		<td class="items" align="center">設定項目</td>
+		<td class="items" align="center" width="10">　</td>
+		<td class="items" align="center">説明</td>
+	</tr>
+	<tr>
+		<td class="items">キャラクタ</td>
+		<td class="items" width="10">□</td>
+		<td>キャラクタの名前を表します</td>
+	</tr>
+	<tr>
+		<td class="items">キャラクタ一覧</td>
+		<td class="items" width="10">□</td>
+		<td>現在利用できるキャラクタ一覧を配列で表します</td>
+	</tr>
+	<tr>
+		<td class="items">アクション一覧</td>
+		<td class="items" width="10">□</td>
+		<td>キャラクタが実行できるアクションの一覧を配列で表します</td>
+	</tr>
+	<tr>
+		<td class="items">表示</td>
+		<td class="items" width="10">◎</td>
+		<td>キャラクタを表示するかどうか</td>
+	</tr>
+	<tr>
+		<td class="items">結果</td>
+		<td class="items" width="10">□</td>
+		<td>質問の結果を表します</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>使用例</h2>
+<blockquote>
+	<p>アシスタントを表示する簡単な例を紹介します。<br>
+	サンプルの「MSAgent.tts」を参考にしてください。</p>
+	<p>※Microsoft Office(Office アシスタント)がインストールされていない環境では、エラーメッセージが表示されます。<br>
+	　その場合は、「DOLPHIN」を「merlin」に書き換えてください。</p>
+</blockquote>
+<p class="example">固定ウィンドウ１を使う<br>
+<br>
+「TTSSpeechN.TTSAgent」をエージェントとして利用する<br>
+エージェントの「DOLPHIN」を使う<br>
+エージェントを300,300に表示<br>
+エージェントの「こんにちは」を話せ<br>
+エージェントの「私は、［エージェントのキャラクタ］です。」を話せ<br>
+待て　５<br>
+エージェントの「好きなメッセージを表示することができます。」を話せ<br>
+エージェントの「GestureUp」を動かせ<br>
+待て　５<br>
+エージェントの「では、さようなら」を話せ<br>
+エージェントの「GoodBye」を動かせ<br>
+固定ウィンドウ１を閉じる</p>
+
+</body>
+
+</html>

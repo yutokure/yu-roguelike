@@ -1,0 +1,131 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="style.css">
+<title>インストールされるファイルについて</title>
+</head>
+
+<body>
+
+<div id="header">
+	<h1>インストールについて</h1>
+	<div class="sub">
+		TTSneoマニュアル</div>
+</div>
+<h2>インストールする</h2>
+<blockquote>
+	<p>TTSneoは、必要なファイルを一つのファイルにまとめて公開しています。<br>
+	ファイルを開くと、インストールが始まります。<br>
+	メッセージにしたがってインストールを行ってください。</p>
+	<p>※Windows 2000以降では、管理者権限(Administrator)でログインして行うことをおすすめします</p>
+	<p>また、TTSneoを使うには、<a href="http://tts.utopiat.net/runtime/index.html">Visual 
+	Basic 6.0ランタイム</a>が必要です。<br>
+	初回起動時に表示される画面からインストールするか、<br>
+	Visual 
+	Basic 6.0ランタイムをダウンロードしてください。</p>
+	<p>TTSneoデザイナが起動できない場合は、FAQの「<a href="trouble.htm">起動しないときは</a>」をご覧ください。</p>
+</blockquote>
+<p>　</p>
+<h2>フォルダ構成</h2>
+<blockquote>
+	<p>インストールすると下のようなフォルダが作成されます。</p>
+</blockquote>
+<h4>「サンプル」フォルダ</h4>
+<blockquote>
+	<p>TTSneoで作ったサンプル集です。<br>
+	プログラムを作るにあたってのきっかけになりますので、絶対に見てください。</p>
+</blockquote>
+<h4>「マニュアル」フォルダ</h4>
+<blockquote>
+	<p>今ご覧になっているマニュアルです。<br>
+	Wordで開くことができる命令・関数一覧表があります。印刷してご覧ください。</p>
+</blockquote>
+<h4>「ツール」フォルダ</h4>
+<blockquote>
+	<p>TTSneoデザイナから呼び出すツール（マクロ）があるフォルダです。<br>
+	ここにTTSneoのプログラムをコピーすると実行できます。</p>
+</blockquote>
+<h4>「Template」フォルダ</h4>
+<blockquote>
+	<p>TTSneoデザイナが使用するデータです。<br>
+	新規作成のヘッダやテンプレートなどが保存されています。</p>
+</blockquote>
+<h4>「必要なDLL」フォルダ</h4>
+<blockquote>
+	<p>
+	TTSneoの一部の機能を利用するのに必要なDLL（VBMP3.dll、TransG32.dll、nMail.dllなど）の著作権情報と注意書きです。<br>
+	作ったソフトを配布する際などには必ず読んで下さい。 </p>
+</blockquote>
+<h4>「runtime」フォルダ</h4>
+<blockquote>
+	<p>TTSneoをインストールしていないパソコンでもTTSneoで作ったプログラムを実行できるプログラム（ランタイム）です。<br>
+	ランタイムの種類は、TTSneoデザイナから複数選択できます。</p>
+</blockquote>
+<p>　</p>
+<h2>システムフォルダにコピーされるファイル</h2>
+<blockquote>
+	<p>インストールすると、WindowsのシステムフォルダへTTSneoが使用する次のファイルをコピーします。 </p>
+	<table border="1" cellpadding="2">
+		<tr>
+			<td class="items">ファイル名</td>
+			<td class="items">用途</td>
+			<td class="items">形態</td>
+		</tr>
+		<tr>
+			<td>TTScript.dll</td>
+			<td>TTSneoシステムDLL</td>
+			<td>TTSneo専用</td>
+		</tr>
+		<tr>
+			<td>TTSExtra.dll</td>
+			<td>TTSneo機能拡張</td>
+			<td>TTSneo専用</td>
+		</tr>
+		<tr>
+			<td>TransG32.dll</td>
+			<td>PNG・JPEG関連</td>
+			<td>汎用ライブラリ</td>
+		</tr>
+		<tr>
+			<td>Vbmp3.dll</td>
+			<td>MP3再生</td>
+			<td>汎用ライブラリ</td>
+		</tr>
+		<tr>
+			<td>nMail.dll</td>
+			<td>メール送受信</td>
+			<td>汎用ライブラリ</td>
+		</tr>
+		<tr>
+			<td>TTSDirectX.dll</td>
+			<td>DirectXプラグイン</td>
+			<td>TTSneo専用</td>
+		</tr>
+		<tr>
+			<td>TTSSpeech.dll</td>
+			<td>音声合成プラグイン</td>
+			<td>TTSneo専用</td>
+		</tr>
+	</table>
+	<p>「汎用ライブラリ」とは、フリーソフトとして提供されているライブラリで、他のソフトウェアで利用されている場合があります。</p>
+</blockquote>
+<p>　</p>
+<h2>アンインストールについて</h2>
+<blockquote>
+	<p>TTSneoは、「コントロールパネル」の「アプリケーションの追加と削除」から削除できます。 </p>
+	<p><b>１．レジストリ項目を削除する（アンインストール前に行ってください）</b></p>
+	<p>
+	設定情報などのレジストリに登録されているTTSneoに関連する情報をすべて削除したい場合は、インストールしたフォルダにある「Setup.exe」を起動してください。</p>
+	<p>「設定の削除」を選ぶと、設定がすべて削除されます。<br>
+	その後、TTSneoをアンインストールしてください。</p>
+	<p><b>２．TTSneo本体のアンインストール</b></p>
+	<p>「コントロールパネル」の「アプリケーションの追加と削除」を開き、「TTSneo」を選択して削除します。</p>
+	<p>※システムフォルダにあるTTSneoのみに関連するDLLは、削除されます<br>
+	　TTSneoのフォルダが完全に削除されないことがありますが、必要なファイルがないことを確認して、個別に削除してください。</p>
+</blockquote>
+
+</body>
+
+</html>

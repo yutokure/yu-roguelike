@@ -1,0 +1,113 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../../style.css">
+	<title>メールの受信</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		メールの受信</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../../index.html">マニュアル</a> &gt; <a target="_parent" href="../index.htm">機能編</a> &gt; <a target="contents" href="menu-net.htm">インターネット</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>メールを受信する</h2>
+<blockquote>
+	<p>TTSneoでは、POP3サーバを使ったメールの受信に対応しています。<br>
+	(HotmailなどのWebメールは使用できません)</p>
+</blockquote>
+<h4>メールを受信する手順</h4>
+<blockquote>
+	<p>１．メール機能を初期化する</p>
+	<p>２．メール受信サーバと、ユーザ情報（アカウント）を設定する</p>
+	<p>３．「受信」命令、または「受信メール一覧」設定項目を使って、POP3サーバからすべてメールを取得する<br>
+	　→この時点で、メールサーバへ接続します</p>
+	<p>４．各関数、設定項目を使って、メール情報を取得する</p>
+	<p>※「受信」命令を使うと、ヘッダ（件名や送信者など）とメール本文、添付ファイルをサーバから取得します<br>
+	　「受信メール一覧」設定項目を使った場合、ヘッダのみをサーバから取得します</p>
+	<p>※POP3サーバのポートを変更することが可能です　APOPにも対応しています<br>
+	　詳しい設定については、リファレンスをご覧ください</p>
+</blockquote>
+<p>　</p>
+<h4>サーバにあるメールの一覧を受信する例</h4>
+<blockquote>
+	<p class="example"><span class="rem">ーーメール機能の初期化</span><br>
+	メールを初期化<br>
+	<br>
+	<span class="rem">ーーメール受信の設定</span><br>
+	メールのPOP3サーバを、「mailtest.ne.jp」に変えろ<br>
+	メールのアカウントを、「yourname」に変えろ<br>
+	メールのパスワードを、「password」に変えろ<br>
+	メールのメールアドレスを、「yourname@mailtest.ne.jp」に変えろ<br>
+	<br>
+	<span class="rem">ーーサーバにあるすべてメールのヘッダのみを受信する</span><br>
+	一覧は、メールの受信メール一覧<br>
+	<br>
+	一覧を表示</p>
+</blockquote>
+<p>　</p>
+<h4>ヘッダ（件名、送信元など）を取得する</h4>
+<blockquote>
+	<p>「受信」命令、または「受信メール一覧」設定項目でサーバから受信した後に、次の関数で、メールの情報を取得できます。</p>
+	<p class="format">メールの件名（[番号]）<br>
+	メールの送信者（[番号]）<br>
+	メールの日付（[番号]）<br>
+	メールの本文（[番号]） 　<span class="rem">ーー「受信」命令を使った場合のみ</span><br>
+	メールのメールＩＤ（[番号]）<br>
+	メールのサイズ（[番号]）<br>
+	メールのヘッダ（[番号]）<br>
+	メールの受信添付ファイル一覧（[番号]）<br>
+	メールの添付ファイル（[番号]）</p>
+	<p>[番号]は、「メールの受信メール一覧」で得られた一覧の順番と同じです。</p>
+</blockquote>
+<p>　</p>
+<h4>本文を取得する</h4>
+<blockquote>
+	<p>「受信メール一覧」設定項目の後に、本文のみを取得するには、「取得」命令を使います。</p>
+	<p class="example">メールの[番号]を取得<br>
+	メールの本文を表示</p>
+	<p></p>
+	<p>[番号]は、「メールの受信メール一覧」で得られた一覧の順番と同じです。</p>
+</blockquote>
+<p>　</p>
+<h2>添付ファイルを展開する</h2>
+<blockquote>
+	<p>添付ファイルを指定したフォルダへ展開することができます。</p>
+</blockquote>
+<h4>展開する手順</h4>
+<blockquote>
+	<p>１．「受信添付ファイル保存先」設定項目で、展開先のフォルダを指定します</p>
+	<p>２．「受信」命令または「取得」命令を実行したときに、メールに添付ファイルがあれば、フォルダへ保存されます。</p>
+	<p>　</p>
+	<p>メールに添付されているファイル名は、「添付ファイル一覧」関数で、取得することができます。</p>
+	<p>「受信添付ファイル保存先」設定項目に、何も指定しないと、添付ファイルは展開されません。</p>
+</blockquote>
+<p>　</p>
+<h2>メールを保存する</h2>
+<blockquote>
+	<p>受信したメールをemlファイルとして保存することができます。</p>
+	<p class="format">メールの[番号]を、[ファイル名]へ保存</p>
+</blockquote>
+<p>　</p>
+<h2>メールを削除する</h2>
+<blockquote>
+	<p>メールを受信しても、メールサーバ上からはメールが削除されません。<br>
+	サーバにあるメールを削除するには、「削除」命令を使います。</p>
+	<p class="example">メールの[番号]を削除</p>
+	<p>[番号]は、「メールの受信メール一覧」で得られた一覧の順番と同じです。</p>
+	<p class="steps">ヒント　通常のメールソフトはメールを受信してハードディスクに保存した後、サーバにあるメールを削除します<br>
+	サーバにメールを残すと、受信に時間がかかり、また、容量が不足してメールが受信できなくなります</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

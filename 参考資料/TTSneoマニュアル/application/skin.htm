@@ -1,0 +1,83 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>変形したウィンドウを作る</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		変形したウィンドウを作る</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="obj/menu-obj.htm">オブジェクト</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>四角形でないウィンドウを作ろう</h2>
+<blockquote>
+	<p>TTSneoでは、四角ではなく変形したウィンドウを作ることができます。</p>
+</blockquote>
+<h4>変形ウィンドウの作り方</h4>
+<blockquote>
+	<p class="steps">１．変形したい形の画像を作る<br>
+	　（必ずBMP形式かPNG形式で保存してください。JPEG形式は利用できません）<br>
+	　（または、TTSneoの<a href="picdraw.htm">画像関連命令</a>や<a href="piclogo.htm">カメ</a>で描いた画像を利用できます）<br>
+	<br>
+	２．ウィンドウを作成する<br>
+	<br>
+	３．「絵」設定項目に画像を読み込んで、その後に「変形」設定項目を、オンに変更して、変形ウィンドウを有効にする</p>
+</blockquote>
+<p>　</p>
+<h4>変形したい形の画像の作り方</h4>
+<blockquote>
+	<p>変形ウィンドウは、ウィンドウに表示されている画像の形にそって変形します。<br>
+	ウィンドウの背景色と、変形画像の背景色を同じにしないと正しく表示できませんので、スキンの背景色とウィンドウの背景を同じにしてください。</p>
+</blockquote>
+<p>　</p>
+<h2>スキンを作ってみよう</h2>
+<blockquote>
+	<p>では、スキンにあるような変形ウィンドウを作成してみましょう。<br>
+	ここでは、WINAMPやWindows Media Playerのような変わった形のウィンドウの表示に挑戦してみます。<br>
+	手順は、下のとおりです。</p>
+	<p>　</p>
+</blockquote>
+<h4>１．ペイントなどで、スキン画像を作る</h4>
+<blockquote>
+	<p>スキンとなる画像を作ります。再生ボタンなども書いてください。<br>
+	一番左上の１ピクセルの色が、実行するときに透明になります。<br>
+	画像形式は、BMPかPNGにしてください。JPEG形式は無効です。</p>
+	<p>　</p>
+</blockquote>
+<h4>２．ウィンドウにその画像を表示する</h4>
+<blockquote>
+	<p>「縁無しウィンドウ１の絵を「画像ファイル名」に変えろ」としてスキン画像を<br>
+	縁無しウィンドウに表示します。</p>
+	<p class="example">縁無しウィンドウ１の絵を「変形.bmp」に変えろ</p>
+</blockquote>
+<p>　</p>
+<h4>３．背景色を指定する</h4>
+<blockquote>
+	<p>ウィンドウの背景色と、スキンの背景色を同じにしないと正しく表示できませんので、スキンの背景色とウィンドウの背景を同じにしてください。</p>
+	<p><b>スキン画像の背景がピンクの時</b></p>
+	<p class="example"><span class="rem">ーー自分でオブジェクトの設定を入れたい時はこの下に記述してください<br>
+	</span>縁無しウィンドウ１の背景をピンクに変えろ</p>
+</blockquote>
+<p>　</p>
+<h4>４．「変形」設定項目をオンにする</h4>
+<blockquote>
+	<p class="example">縁無しウィンドウ１の変形をオンに変えろ</p>
+	<p>として表示された画像をもとに変形したウィンドウを作成します。</p>
+	<p>これを実行してみてください。ほらっ、Windows Media Playerっぽくなったでしょ(^o^)<br>
+	通常ウィンドウは四角形なのですが、TTSneoにはこのように簡単に変形ウィンドウを作成する命令が用意されています。</p>
+	<p><a href="../softdev/setting.htm">INIファイルの読み書き</a>を応用することで、本当のスキン繰り替え機能をTTSneoで作ることができます。</p>
+</blockquote>
+
+</body>
+
+</html>

@@ -1,0 +1,294 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../style.css">
+	<title>正規表現</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		正規表現</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-office.htm">お仕事や雑用で使う</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2007/03/18<!--webbot bot="Timestamp" endspan i-checksum="12507" -->更新</div>
+</div>
+<h2>正規表現を使って楽に文字を取り出す</h2>
+<table border="0" cellpadding="10" cellspacing="0" width="100%">
+	<tr>
+		<td><img border="0" src="../img/ttschar4.png" width="127" height="124"></td>
+		<td>正規表現とは、文章の中から一定のパターン（条件式）に一致する文字だけを取り出したり判別する機能です。<p>TTSneoの文字の関数「探せ」「取り出せ」関数などとは違い、抽象的な条件で調べることができるので、便利です。</p>
+		</td>
+	</tr>
+</table>
+<p>　</p>
+<h2>正規表現を使う前に</h2>
+<blockquote>
+	<p>TTSneoの正規表現は、Microsoft Windows Scripting Hostで提供している正規表現機能を利用しています。<br>
+	この機能を利用するには、Internet Explorer 5.5(VBScript 5.0)以上が必要です。</p>
+	<p>正規表現は、VBScriptで利用されているものと同じです。Perlとは一部仕様が違いますのでご注意ください。<br>
+	また、正規表現を表す、前後の&quot;/&quot;記号は不要です。</p>
+	<p>※「パターン検索」命令と「パターンサブマッチ」命令は、廃止予定です。<br>
+	　「パターン取り出し」関数を利用してください。</p>
+</blockquote>
+<h3>正規表現に指定できるパターン</h3>
+<p>パターンには、次のような正規表現を利用することができます。</p>
+<div align="center">
+	<center>
+	<table width="95%" border="1">
+		<tr>
+			<th class="items">正規表現</th>
+			<th class="items">意味</th>
+		</tr>
+		<tr>
+			<th>ABC</th>
+			<td>ABCという文字列</td>
+		</tr>
+		<tr>
+			<th>[ABC]</th>
+			<td>A、B、Cのいずれか1文字</td>
+		</tr>
+		<tr>
+			<th>[A-C]</th>
+			<td>A～Cまでのいずれか1文字</td>
+		</tr>
+		<tr>
+			<th>[^ABC]</th>
+			<td>A、B、Cのいずれでもない任意の1文字</td>
+		</tr>
+		<tr>
+			<th>.</th>
+			<td>任意の1文字</td>
+		</tr>
+		<tr>
+			<th>A+</th>
+			<td>1文字以上のA</td>
+		</tr>
+		<tr>
+			<th>A*</th>
+			<td>0文字以上のA</td>
+		</tr>
+		<tr>
+			<th>A?</th>
+			<td>0文字または1文字のA</td>
+		</tr>
+		<tr>
+			<th>^A</th>
+			<td>Aで始まる文字列</td>
+		</tr>
+		<tr>
+			<th>A$</th>
+			<td>Aで終わる文字列</td>
+		</tr>
+		<tr>
+			<th>ABC|DEF|GHI</th>
+			<td>ABCまたはDEFまたはGHI</td>
+		</tr>
+		<tr>
+			<th>A{2}</th>
+			<td>2個のA（AA）</td>
+		</tr>
+		<tr>
+			<th>A{2,}</th>
+			<td>2個以上のA（AA、AAA、AAAA、...）</td>
+		</tr>
+		<tr>
+			<th>A{2,3}</th>
+			<td>2個～3個のA（AA、AAA）</td>
+		</tr>
+		<tr>
+			<th>[\b]</th>
+			<td>バックスペース</td>
+		</tr>
+	</table>
+	</center>
+</div>
+<p align="center">先頭に「\」を付けると特別な意味を表します。</p>
+<div align="center">
+	<center>
+	<table cellpadding="1" width="95%" border="1">
+		<tr>
+			<th class="items">正規表現</th>
+			<th class="items">意味</th>
+		</tr>
+		<tr>
+			<th>\b</th>
+			<td>スペースなどの単語の区切り</td>
+		</tr>
+		<tr>
+			<th>\B</th>
+			<td>\b以外の文字</td>
+		</tr>
+		<tr>
+			<th>\cA</th>
+			<td>Ctrl-A</td>
+		</tr>
+		<tr>
+			<th>\d</th>
+			<td>任意の数値（[0-9]と同じ）</td>
+		</tr>
+		<tr>
+			<th>\D</th>
+			<td>数値以外の文字（[^0-9]と同じ）</td>
+		</tr>
+		<tr>
+			<th>\f</th>
+			<td>フォームフィード文字</td>
+		</tr>
+		<tr>
+			<th>\n</th>
+			<td>改行文字</td>
+		</tr>
+		<tr>
+			<th>\r</th>
+			<td>復帰文字</td>
+		</tr>
+		<tr>
+			<th>\s</th>
+			<td>1文字の区切り文字（[ \f\n\r\t\v]）</td>
+		</tr>
+		<tr>
+			<th>\S</th>
+			<td>\s以外の1文字</td>
+		</tr>
+		<tr>
+			<th>\t</th>
+			<td>タブ文字</td>
+		</tr>
+		<tr>
+			<th>\v</th>
+			<td>垂直タブ文字</td>
+		</tr>
+		<tr>
+			<th>\w</th>
+			<td>英数文字（[A-Za-z0-9_]と同じ）</td>
+		</tr>
+		<tr>
+			<th>\W</th>
+			<td>\w以外の文字</td>
+		</tr>
+		<tr>
+			<th>\2</th>
+			<td>2番目の (...) にマッチした文字列</td>
+		</tr>
+		<tr>
+			<th>\o033</th>
+			<td>8進数で033にあたる文字</td>
+		</tr>
+		<tr>
+			<th>\x1b</th>
+			<td>16進数で1bにあたる文字</td>
+		</tr>
+		<tr>
+			<th>\その他</th>
+			<td>その他の文字自身</td>
+		</tr>
+	</table>
+	</center>
+</div>
+<p>　</p>
+<h2>正規表現に一致するパターンを取り出す</h2>
+<blockquote>
+	<p>文字から、パターンに一致する部分を取り出すには、「パターン取り出し」関数を使います。</p>
+	<p class="format">パターン取り出し（<font color="#ff8000">[文字]</font>、<font color="#ff8000">[正規表現のパターン]</font>、サブマッチ、区別する、先頭のみ）</p>
+	<p>「サブマッチ」を指定すると、一致したパターンのより細かな分解が可能です。<br>
+	「区別する」を指定すると、大文字・小文字を区別して検索します。<br>
+	「先頭のみ」を指定すると、パターンに最初に一致した部分のみを置換します。</p>
+	<p>正規表現のパターンは、リファレンスに詳しく書かれています。</p>
+	<p class="steps"><b>▼参照</b><br>
+	　リファレンス→正規表現の一覧</p>
+	<p>TTSneoでは、「パターン取り出し」関数を使うことで、正規表現を使った文字列の取得が可能です。<br>
+	さらに、「パターン取り出し」関数にて、「サブマッチ」を指定することで、取り出したパターンを細かく分解することができます。</p>
+</blockquote>
+<p>　</p>
+<h3>住所から郵便番号だけを取り出す</h3>
+<blockquote>
+	<p class="example"><span class="rem">ーー郵便番号のみを取り出します</span><br>
+	内容は、「〒123-4567　東○都○代田区9-99-9　山○太郎」<br>
+	パターン取り出し（内容、「\d{3}-\d{4}」）を表示</p>
+</blockquote>
+<p>　</p>
+<h2>サブマッチ「（　）」の使い方</h2>
+<blockquote>
+	<p>サブマッチは、正規表現で取り出した文字列からより細かく文字を取り出したいときに利用します。<br>
+	サブマッチを利用するときは、「パターン取り出し」関数で「サブマッチ」を指定してください。</p>
+	<p>パターンを「( )」で囲うことで、その部分だけをサブマッチとして配列に格納することができます。<br>
+	サブマッチは、パターン内で利用することもでき、例えば、「\1」は、１番目の「( )」の内容と同じことを表わします。</p>
+	<p>次の例は、電話番号を分解して、<font color="#ff0000">市外局番(03)</font>・<font color="#008000">市内局番(1234)</font>・<font color="#0000ff">番号(5678)</font>の順に配列に保存します。<br>
+	結果は、「<font color="#ff0000">03</font>,<font color="#008000">1234</font>,<font color="#0000ff">5678</font>」と表されます。</p>
+	<p class="example"><span class="rem">ーー電話番号を細かい分解する</span><br>
+	電話番号配列は、パターン取り出し（「03-1234-5678」、「<font color="#ff0000">([0-9]*)</font>-<font color="#008000">([0-9]*)</font>-<font color="#0000ff">([0-9]*)</font>」、サブマッチ）<br>
+	電話番号配列を表示</p>
+</blockquote>
+<p>　</p>
+<h4>HTMLからタグ名とその内容を取り出す</h4>
+<blockquote>
+	<p>対になるタグ(&lt;b&gt;&lt;/b&gt;や&lt;i&gt;&lt;/i&gt;)を探して、タグの名前とその内容を取り出します。<br>
+	対になるタグを探すために、「&lt;(.*&gt;～&lt;\/\1&gt;」というパターンを指定しています。</p>
+	<p class="example"><span class="rem">ーーHTMLからタグ名とその内容を取り出す</span><br>
+	タグは、パターン取り出し（「&lt;b&gt;abc&lt;/b&gt;&lt;i&gt;def&lt;/i&gt;」、「&lt;(.*)&gt;(.*)&lt;\/\1&gt;」、サブマッチ）<br>
+	タグを表示</p>
+	<p>この例では、「パターン取り出し」関数のサブマッチを利用しています。<br>
+	「内容」変数にあるHTMLから、「&lt;○○&gt;◇◇◇&lt;/○○&gt;」の形になる部分を取り出して、<br>
+	「○○」にあたる内容と「◇◇◇」にあたる内容を分解して、配列形式で表します。</p>
+</blockquote>
+<p>　</p>
+<h2>正規表現を使って判断する</h2>
+<blockquote>
+	<p>「もし」命令で、正規表現を使うことができます。<br>
+	[文字]が一定の書式を満たしているかどうかなど、入力内容のチェックが可能です。</p>
+	<p class="format">もし　<span class="flag">[文字]</span>は　&quot;<span class="flag">[正規表現]</span>&quot;　なら</p>
+	<p>正規表現に一致する場合は、正しいと判断します。</p>
+</blockquote>
+<p>　</p>
+<h4>メールアドレスか住所かを判断する</h4>
+<blockquote>
+	<p>入力された文字がメールアドレスか住所かを判断します。</p>
+	<p class="example"><span class="rem">ーーxxx@xxx.xxx　に当てはまる場合メールアドレスと判断します。</span><br>
+	<br>
+	内容は、入力（「メールアドレスまたは住所を入力してください」）<br>
+	もし　内容は　&quot;.+@.+\.&quot;　なら<br>
+	　　「メールアドレスです」を表示<br>
+	でないなら<br>
+	　　「住所です」を表示<br>
+	もし終わり</p>
+</blockquote>
+<p>　</p>
+<h2>正規表現を使って置き換える</h2>
+<blockquote>
+	<p>正規表現を使うことで、「置き換え」命令よりも複雑な置き換えをさせることができます。</p>
+	<p class="format">パターン置き換え（[文字]、[パターン]、[置換後のパターン]、区別する、先頭のみ）</p>
+	<p>「区別する」を指定すると、大文字・小文字を区別して検索します。<br>
+	「先頭のみ」を指定すると、パターンに最初に一致した部分のみを置換します。</p>
+</blockquote>
+<h4>文字の置き換え</h4>
+<blockquote>
+	<p>置換前の部分には、正規表現のパターンを指定します。<br>
+	置換後の部分には、文字のほかに、サブマッチで指定した文字($1など)も指定できます。</p>
+	<p class="example"><span class="rem">ーー数字をすべてXに置き換えます</span><br>
+	内容は、「電話番号は、1234-567-890。郵便番号は、987-6543です。」<br>
+	<span class="pink">パターン置き換え（内容、「\d」、「X」）</span>を表示</p>
+	<p>パターン置き換えでは、下記のような高度な置き換えも可能です。</p>
+	<p class="example"><span class="rem">ーー内容から数字を探し、前後を&quot; &quot;で囲みます</span><br>
+	結果は、パターン置き換え（「ABC123EDG456HIJ」、「\d+」、「&quot;$&amp;&quot;」）<br>
+	結果を表示</p>
+	<p>　</p>
+</blockquote>
+<h4>文字の並び替え</h4>
+<blockquote>
+	<p>サブマッチを利用することで、文字の並び替えなどのような操作も可能です。</p>
+	<p class="example"><span class="rem">ーーパターンを利用した単語の並び替え</span><br>
+	内容は、「私は、「猫」と「犬」を飼っています」<br>
+	<span class="pink">パターン置き換え（内容、「(「\S+」)と(「\S+」)」、「$2と$1」）</span>を表示</p>
+</blockquote>
+<p>　</p>
+
+</body>
+
+</html>

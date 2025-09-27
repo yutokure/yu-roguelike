@@ -1,0 +1,173 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="ja">
+			<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+	<link rel="stylesheet" type="text/css" href="../style.css">
+	<title>MCIを使う</title>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		MCIを使う</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2012/05/30<!--webbot bot="Timestamp" endspan i-checksum="12585" -->更新</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-mmedia.htm">マルチメディア</a> &gt;</div>
+</div>
+<h2>MCIとは</h2>
+<blockquote>
+	<p>MCI(Media Control Interface)とは、Windowsでメディアファイル(WAVEやMP3、CD、MIDIなど)を再生するための機能を提供している機能です。</p>
+	<p>通常、TTSneoではMCIコマンドを使用する必要はありませんが、思い通りに動かないときや細かな操作を行いたいときに、MCIコマンドを直接操作することができます。</p>
+	<p>　</p>
+</blockquote>
+<h2>ＭＣＩコマンド文字列</h2>
+<blockquote>
+	<p>MCIコマンド文字列は、対象となるファイルやデバイスによって、いろいろなものが用意されています。</p>
+</blockquote>
+<center>
+<table class="tablebase2" cellpadding="2" border="0">
+	<tr>
+		<th>MCI命令</th>
+		<th>説明</th>
+	</tr>
+	<tr>
+		<td>open [ファイル名] alias [エイリアス]</td>
+		<td>指定したデバイスでファイルを開く</td>
+	</tr>
+	<tr>
+		<td>close [エイリアス]</td>
+		<td>閉じる</td>
+	</tr>
+	<tr>
+		<td>play [エイリアス]</td>
+		<td>再生する</td>
+	</tr>
+	<tr>
+		<td>record [エイリアス]</td>
+		<td>録音する(WAVEのみ)</td>
+	</tr>
+	<tr>
+		<td>stop [エイリアス]</td>
+		<td>停止する</td>
+	</tr>
+	<tr>
+		<td>pause [エイリアス]</td>
+		<td>一時停止する</td>
+	</tr>
+	<tr>
+		<td>resume [エイリアス]</td>
+		<td>再開する</td>
+	</tr>
+	<tr>
+		<td>seek [エイリアス] to start</td>
+		<td>演奏位置を変更する<br>
+		「to start」で先頭<br>
+		「to end」で最後</td>
+	</tr>
+	<tr>
+		<td>set cdaudio door open</td>
+		<td>CDドライブを開ける</td>
+	</tr>
+	<tr>
+		<td>set cdaudio door closed</td>
+		<td>CDドライブを閉める</td>
+	</tr>
+	<tr>
+		<td>set [エイリアス] tempo [テンポ]</td>
+		<td>MIDIのテンポを変える</td>
+	</tr>
+	<tr>
+		<td>set [エイリアス] audio all [off/on]</td>
+		<td>ミュートするかどうか</td>
+	</tr>
+	<tr>
+		<td>set [エイリアス] audio left [off/on]</td>
+		<td>左の音をミュートするかどうか</td>
+	</tr>
+	<tr>
+		<td>set [エイリアス] audio right [off/on]</td>
+		<td>右の音をミュートするかどうか</td>
+	</tr>
+</table>
+</center>
+<blockquote>
+	<p>[エイリアス]とは、対象となるファイル・デバイスを表す仮の名前です。<br>
+	openコマンドを利用したときに、指定することができます。</p>
+	<p>再生するファイルや周辺機器によっては、サポートされていないものもあります。</p>
+</blockquote>
+<p>　</p>
+<h2>MCIコマンド文字列の利用例</h2>
+<h4>「再生」命令を使わずにWAVEファイルを再生する</h4>
+<blockquote>
+	<p>MCIコマンドを利用して、WAVEファイルを再生する例です。</p>
+	<p class="example"><span class="rem">ーーWAVEファイルを開く</span><br>
+	「open ［ウィンドウズフォルダ］media\chord.wav alias wave」をMCIへ命令<br>
+	<br>
+	<span class="rem">ーー再生する</span><br>
+	「play wave」をMCIへ命令<br>
+	<br>
+	待て 1<br>
+	<br>
+	<span class="rem">ーー停止する</span><br>
+	「stop wave」をMCIへ命令<br>
+	<br>
+	<span class="rem">ーー閉じる</span><br>
+	「close wave」をMCIへ命令</p>
+</blockquote>
+<p>　</p>
+<h4>WAVEファイルへ録音する</h4>
+<blockquote>
+	<p>MCIコマンドを利用して、WAVEファイルに録音する例です。</p>
+	<p>※Windows Media Playerで開くことができない場合は、サウンドレコーダで試してみてください。</p>
+	<p class="example"><span class="rem">ーーWAVE録音の準備<br>
+	</span>「open new type waveaudio alias WAVE」をＭＣＩへ命令<br>
+	<span class="rem">ーー録音開始<br>
+	</span>「record WAVE」をＭＣＩへ命令<br>
+	<font color="#008000"><br>
+	</font><span class="rem">ーー停止<br>
+	</span>「stop WAVE」をＭＣＩへ命令<br>
+	<span class="rem">ーー保存する<br>
+	</span>「save WAVE &quot;C:\Test.wav&quot;」をＭＣＩへ命令<br>
+	<span class="rem">ーーファイルを閉じる<br>
+	</span>「close WAVE」をＭＣＩへ命令</p>
+</blockquote>
+<p>　</p>
+<h4>CDドライブを開く</h4>
+<blockquote>
+	<p class="example">「set cdaudio door open」をＭＣＩへ命令</p>
+</blockquote>
+<p>　</p>
+<h2>TTSneoがMCIを使うときのエイリアス名</h2>
+<blockquote>
+	<p>「再生」命令などを利用したときに使うエイリアス名は、下のようになります。<br>
+	次のエイリアスをMCIコマンドで指定することで、TTSneoでは対応していない操作を行うことができます。</p>
+</blockquote>
+<center>
+<table class="tablebase2" cellpadding="2" border="0">
+	<tr>
+		<th>対象形式 </th>
+		<th>エイリアス </th>
+	</tr>
+	<tr>
+		<th>音楽CD </th>
+		<td>cdaudio</td>
+	</tr>
+	<tr>
+		<th>その他形式</th>
+		<td>ttsmedia</td>
+	</tr>
+</table>
+</center>
+<blockquote>
+	<p>※MP3は、通常 VBMP3.DLLを利用して再生しますので、MCIコマンドには対応していません<br>
+	　VBMP3.DLLがない場合は、MCI(エイリアス「ttsmedia」)を使います。</p>
+</blockquote>
+
+</body>
+
+</html>

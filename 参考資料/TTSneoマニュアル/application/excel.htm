@@ -1,0 +1,219 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="ja">
+<meta name="GENERATOR" content="Microsoft FrontPage 12.0">
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<link rel="stylesheet" type="text/css" href="../style.css">
+<title>Excelを操作する(基本編)</title>
+<style type="text/css"></style>
+</head>
+
+<body>
+
+<div id="header">
+	<div class="title">
+		Excelを操作する(基本編)</div>
+	<div class="sub">
+		TTSneoマニュアル</div>
+	<div class="navi">
+		<a target="_parent" href="../index.html">マニュアル</a> &gt; <a target="_parent" href="index.htm">機能編</a> &gt; <a target="contents" href="menu-office.htm">お仕事や雑用で使う</a> &gt;</div>
+	<div class="date">
+		<!--webbot bot="Timestamp" s-type="EDITED" s-format="%Y/%m/%d" startspan -->2008/07/01<!--webbot bot="Timestamp" endspan i-checksum="12756" -->更新</div>
+</div>
+<h2>TTSneoでExcelを操ろう</h2>
+<blockquote>
+	<p class="neo">ねお　「今回は、表計算ソフトMicrosoft ExcelとTTSneoを連係させる方法を紹介します。」</p>
+	<p class="tomo">とも　「Excelと連係して、どんなことができるの？」</p>
+	<p class="neo">ねお　「TTSneoからワークシートのセルに数値を代入したり、シートの追加と移動、ワークブックの保存・印刷などの操作ができます。」</p>
+	<p class="tomo">とも　「すごい。TTSneoからExcelを操ることができるんだ！」</p>
+	<p class="neo">ねお　「そのとおり！　では、Excel連係機能の基本操作を説明します。」</p>
+	<p>&nbsp;</p>
+	<p>エクセル連係機能を利用するためには、次のいずれかのバージョンのExcelとTTSExtra.dllが必要です。<br>
+	Microsoft Excel 97/2000/2002/2003/2007</p>
+	<p>この連係機能では、ExcelとTTSneoを組み合わせてデータを加工するための簡単な機能が用意されています。<br>
+	より高度な処理を行いたいときは、付属のVBAを活用してください。</p>
+	<p>エクセル連係機能についての詳しい説明は、リファレンスをご覧ください。</p>
+	<p class="steps"><b>▼参照<br>
+	</b>リファレンス→オブジェクト→Office→エクセル<br>
+	サンプル→お仕事支援→Office</p>
+	<p>　</p>
+</blockquote>
+<h2>Excelを起動する</h2>
+<blockquote>
+	<p>まず、TTSneoからエクセルを起動して、空のワークシートを作成します。</p>
+	<p class="example"><span class="rem">ーー★エクセルの起動</span><br>
+	エクセルを起動<br>
+	<span class="rem"><br>
+	ーー★新規ワークブックを作成する</span><br>
+	エクセルのワークブックを追加 </p>
+	<p><b>ワークブック(WorkBook)とは</b><br>
+	　Excelのファイルのことを表します。ワークブックには複数の表を入れておくことができます。</p>
+	<p>例　表計算.xls</p>
+	<p><b>ワークシート(WorkSheet)とは</b><br>
+	　Excelのファイルに含まれる複数のシートのことを表します。ワークシートは、画面の下のタブで切り替えることができ、自由に増やしたり消したりすることができます。</p>
+	<p>例　Sheet1、Sheet2</p>
+	<p>　</p>
+	<p><b>すでにエクセルが起動している場合</b></p>
+	<p>また、すでにファイルからエクセルを起動している場合は、下のように命令してください。<br>
+	TTSneoとExcelを接続して、TTSneoから操作できるようにします。</p>
+	<p class="example">エクセルをリンク</p>
+	<p>すでに開いているファイルに対して操作したいときなどは、こちらを利用してください。</p>
+	<p>※「Microsoft Excel」のショートカットから複数起動した場合、正しく動作しないことがあります</p>
+</blockquote>
+<p>　</p>
+<h2>セルへの入力と内容の取得</h2>
+<h4>セルに文字を入れる</h4>
+<blockquote>
+	<p>指定したセルに文字や数字を入力する場合は、下のようにします。 <br>
+	この場合、セルのA1に「こんにちは」と入力します。</p>
+	<p class="example">エクセルのセル（A1）を、「こんにちは」に変えろ</p>
+	<p>　</p>
+	<p><b>計算式を代入する場合</b></p>
+	<p>他のセルを参照する場合や、Excelの関数を指定する場合は、「計算式」設定項目を使います。</p>
+	<p class="example">エクセルのセル（A1）の計算式を、「=sum(A1:A6)」に変えろ</p>
+</blockquote>
+<p>　</p>
+<h4>セルの内容の取得</h4>
+<blockquote>
+	<p>セルの内容を表示する場合は、下のようにします。 </p>
+	<p class="example">「セルA3の内容は：　［エクセルのセル（A3）］」を表示 </p>
+	<p>セルA3の部分の内容を表します。 </p>
+	<p>R1C1方で指定するときは、下のようにします。 </p>
+	<p class="example">「セル(1,3)の内容は：　［エクセルのセル（1,3）］」を表示</p>
+</blockquote>
+<p>　</p>
+<h4>セルを選択する</h4>
+<blockquote>
+	<p>特定のセルを選択するには、「選択範囲」設定項目を使います。</p>
+	<p class="example">エクセルの選択範囲を「A1」に変えろ</p>
+	<p>連続する複数のセルを指定するには、「:」を使います。</p>
+	<p class="example"><span class="rem">ーーセルA1からB5までを選択</span><br>
+	エクセルの選択範囲を「A1:B5」に変えろ</p>
+	<p>　</p>
+</blockquote>
+<h2>見た目を変える</h2>
+<h4>セルの字体を変える</h4>
+<blockquote>
+	<p>フォント名や字体を変更することができます。 </p>
+	<p class="example">エクセルについて<br>
+	　　<span class="pink">この選択</span>の太字を、オンに変えろ<br>
+	　　この選択の斜体をオンに変えろ<br>
+	これについて終わり</p>
+</blockquote>
+<h4>幅や高さを変える</h4>
+<blockquote>
+	<p class="example">エクセルについて<br>
+	　　<span class="pink">このセル（B2）</span>の幅を、100に変えろ<br>
+	　　このセル（B2）の高さを、30に変えろ<br>
+	これについて終わり</p>
+</blockquote>
+<h4>色を変える</h4>
+<blockquote>
+	<p>色やフォント名を変更することができます。 </p>
+	<p class="example">エクセルについて<br>
+	　この選択の背景を、黄緑に変えろ<br>
+	　この選択の色を、白に変えろ<br>
+	これについて終わり</p>
+</blockquote>
+<p>　</p>
+<h2>セルのコピーと貼り付け</h2>
+<blockquote>
+	<p>セルを別の指定したセルへコピー、貼り付け、移動することができます。</p>
+	<p class="example"><span class="rem">ーー★指定したセルをコピーします</span><br>
+	エクセルのセル（「B2:F4」）をコピー<br>
+	<br>
+	<span class="rem">ーー★コピーしたセルを貼り付けます</span><br>
+	エクセルのセル（「B9」）を貼り付け</p>
+</blockquote>
+<p>　</p>
+<h2>ファイルの保存と読み込み</h2>
+<blockquote>
+	<p>作成したワークブックは、Excel形式で保存できます。</p>
+	<h4>ワークブックを保存する</h4>
+	<p class="example"><span class="rem">ーー★ワークシートの保存</span><br>
+	エクセルの現在ブックの「［今の位置］名簿.xls」を保存 <br>
+	<br>
+	<span class="rem">ーー★ワークシートの上書き保存</span><br>
+	エクセルの現在ブックを保存</p>
+	<h4>ワークブックを開く</h4>
+	<p class="example"><span class="rem">ーー★開く</span><br>
+	エクセルの「［今の位置］名簿.xls」を開く</p>
+</blockquote>
+<p>　　</p>
+<h2>プレビュー・印刷する</h2>
+<blockquote>
+	<p>プレビューの表示と印刷は、下のように命令します。</p>
+	<p class="example"><span class="rem">ーー★印刷</span><br>
+	エクセルのワークブックをプレビュー<br>
+	エクセルのワークブックを印刷</p>
+	<p>　</p>
+</blockquote>
+<h2>エクセルの終了</h2>
+<blockquote>
+	<p>編集中のワークブックを閉じたり、エクセルを終了したりするには、下のようにします。 </p>
+	<p>この命令を実行しないと、TTSneoが終了してもExcelは開かれた状態になってしまいます。</p>
+	<p class="example"><span class="rem">ーー★ワークシートを閉じる</span><br>
+	エクセルの現在ブックを閉じる<br>
+	<br>
+	<span class="rem">ーー★エクセルの終了</span><br>
+	エクセルを終了</p>
+</blockquote>
+<p>&nbsp;</p>
+<h2>シートの自動入力</h2>
+<blockquote>
+	<p class="neo">ねお　「じゃぁ、今説明した方法を使って、エクセルのシートに自動入力するプログラムを作ってみましょう。」</p>
+	<p class="tomo">とも　「了解！！　どんな風に動くか楽しみ！！」</p>
+	<p>&nbsp;</p>
+	<p>今回は、くだもの屋さんの果物が、いくつ売れたかとその売り上げを計算したシートを作るとします。<br>
+	まず、エクセルで元となるシートを作ります。<br>
+	売り上げは、TTSneoが自動的にしてくれるので、売り上げ個数のセルは空白にしておきます。<br>
+	売り上げ個数の合計を計算するセル(C10)の部分は、<br>
+	　=sum(C4:C9)<br>
+	と入力して、Excel側で計算するようにしておきます。</p>
+	<p>下の例文では、C4～C9のセルに、それぞれの商品の売り上げ個数が自動入力されます。<br>
+	その後、C10のセルにある売り上げ合計をTTSneoに出力します。<br>
+	計算した今日の売り上げは、別ワークシートとしてファイルに保存します。</p>
+	<p>売り上げに入力される数値は、「乱数」関数を使ってランダムに決めています。<br>
+	もちろん、乱数の変わりに、ウィンドウのテキストに入力した値などを使うこともできます。 </p>
+</blockquote>
+<p class="example"><span class="rem">ーー■データの設定<br>
+ーーCSVや入力命令、テキストオブジェクトなどに書き換えすることもできます</span><br>
+りんごは、乱数（３０）<br>
+みかんは、乱数（２０）<br>
+すいかは、乱数（５）<br>
+ぶどうは、乱数（２０）<br>
+なしは、乱数（２０）<br>
+ももは、乱数（１０）<br>
+<br>
+<span class="rem">ーー■エクセルの起動</span><br>
+エクセルを起動<br>
+エクセルの「［今の位置］エクセル(実用例).xls」を開く<br>
+<br>
+<span class="rem">ーー■内容の入力</span><br>
+エクセルのセル（C4）を、りんごに変えろ<br>
+エクセルのセル（C5）を、みかんに変えろ<br>
+エクセルのセル（C6）を、すいかに変えろ<br>
+エクセルのセル（C7）を、ぶどうに変えろ<br>
+エクセルのセル（C8）を、なしに変えろ<br>
+エクセルのセル（C9）を、ももに変えろ<br>
+<br>
+<span class="rem">ーー■内容の表示</span><br>
+「合計は：［エクセルのセル（C10）］です」を表示<br>
+<br>
+<span class="rem">ーー■ワークシートの保存</span><br>
+エクセルの現在ブックを「［今の位置］売上-［日付］.xls」に保存<br>
+<br>
+<span class="rem">ーー■エクセルの終了</span><br>
+エクセルを終了 </p>
+
+<p>&nbsp;</p>
+<p style="text-align: center"><a href="excel2.htm">
+			<img border="0" src="../img/ttschar.png" width="128" height="124"><br>
+<br>
+<strong>応用編に続きます</strong></a></p>
+<p style="text-align: center">&nbsp;</p>
+
+</body>
+
+</html>

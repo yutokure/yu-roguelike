@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20. MiniExp モジュール一覧</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+    <main>
+        <h1>20. MiniExp モジュール一覧</h1>
+        <section>
+            P.1 マニフェストの仕組み</h2>
+            <p>
+                MiniExp のモジュール情報は <code>games/manifest.json.js</code> を通じて提供されます。<code>main.js</code> は
+                <code>loadMiniManifestOnce()</code> 内で次の優先順位に従ってマニフェストを読み込みます。
+            </p>
+            <ol>
+                <li><code>window.MINIEXP_MANIFEST</code> が既に定義されていればそれを使用。</li>
+                <li><code>games/manifest.json.js</code> を <code>&lt;script&gt;</code> として読み込み（<code>file://</code> 環境対応）。</li>
+                <li>HTTP サーバー環境では <code>games/manifest.json</code> を <code>fetch</code> で取得。</li>
+                <li>上記がすべて失敗した場合は、ソースコードに内蔵されたフォールバック配列を利用。</li>
+            </ol>
+            <p class="small-note">
+                詳細な実装は <code>main.js</code> 6439–6491 行を参照してください。各モジュールは ID、名称、エントリファイル、バージョン、
+                カテゴリ、EXP の付与ルールなどを定義します。
+            </p>
+        </section>
+        <section>
+            P.2 カテゴリ別モジュール一覧</h2>
+            <p>
+                収録済み MiniExp MOD をカテゴリごとに整理しています。ID は <code>registerMiniGame()</code> に登録する値と一致し、
+                エントリ列のスクリプトを読み込むとモジュール本体が提供されます。
+            </p>
+        </section>
+<!-- CATEGORY:アクション -->
+<section>
+    <h3>アクション</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>topdown_race</code></td>
+                    <td>Aurora Circuit</td>
+                    <td>0.1.0</td>
+                    <td><code>games/topdown_race.js</code></td>
+                    <td>mod</td>
+                    <td>見下ろし型周回レース。ラップと順位でEXP獲得</td>
+                </tr>
+                <tr>
+                    <td><code>pinball_xp</code></td>
+                    <td>XPピンボール</td>
+                    <td>0.1.0</td>
+                    <td><code>games/pinball.js</code></td>
+                    <td>mod</td>
+                    <td>3Dピンボール風テーブル。バンパーやレーンでEXPを稼ごう</td>
+                </tr>
+                <tr>
+                    <td><code>steady_wire</code></td>
+                    <td>イライラ棒</td>
+                    <td>0.1.0</td>
+                    <td><code>games/steady_wire.js</code></td>
+                    <td>mod</td>
+                    <td>毎回生成されるコースを外れず進むワイヤーループ。操作方法を選んで挑戦</td>
+                </tr>
+                <tr>
+                    <td><code>snake</code></td>
+                    <td>スネーク</td>
+                    <td>0.1.0</td>
+                    <td><code>games/snake.js</code></td>
+                    <td>builtin</td>
+                    <td>餌を取ると+1EXP</td>
+                </tr>
+                <tr>
+                    <td><code>dino_runner</code></td>
+                    <td>ダイノランナー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/dino_runner.js</code></td>
+                    <td>mod</td>
+                    <td>恐竜で障害物ジャンプ／距離EXP</td>
+                </tr>
+                <tr>
+                    <td><code>pseudo3d_race</code></td>
+                    <td>ハイウェイチェイサー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/pseudo3d_race.js</code></td>
+                    <td>mod</td>
+                    <td>疑似3D高速道路で交通を追い抜け。距離+0.5/追い越し+4/セクション+25</td>
+                </tr>
+                <tr>
+                    <td><code>pacman</code></td>
+                    <td>パックマン風</td>
+                    <td>0.1.0</td>
+                    <td><code>games/pacman.js</code></td>
+                    <td>builtin</td>
+                    <td>餌+0.5 / 全取得+100</td>
+                </tr>
+                <tr>
+                    <td><code>pong</code></td>
+                    <td>ピンポン</td>
+                    <td>0.1.0</td>
+                    <td><code>games/pong.js</code></td>
+                    <td>builtin</td>
+                    <td>マッチ勝利で EASY+1 / NORMAL+5 / HARD+25</td>
+                </tr>
+                <tr>
+                    <td><code>flappy_bird</code></td>
+                    <td>フラッピーバード風</td>
+                    <td>0.1.0</td>
+                    <td><code>games/flappy_bird.js</code></td>
+                    <td>mod</td>
+                    <td>パイプ通過でEXP。連続成功でボーナス</td>
+                </tr>
+                <tr>
+                    <td><code>breakout</code></td>
+                    <td>ブロック崩し</td>
+                    <td>0.1.0</td>
+                    <td><code>games/breakout.js</code></td>
+                    <td>builtin</td>
+                    <td>ブロック破壊で+1EXP</td>
+                </tr>
+                <tr>
+                    <td><code>breakout_k</code></td>
+                    <td>ブロック崩しk</td>
+                    <td>0.1.0</td>
+                    <td><code>games/breakout_keyboard.js</code></td>
+                    <td>builtin</td>
+                    <td>バー操作はキーボード限定</td>
+                </tr>
+                <tr>
+                    <td><code>whack_a_mole</code></td>
+                    <td>モグラたたき</td>
+                    <td>0.1.0</td>
+                    <td><code>games/whack_a_mole.js</code></td>
+                    <td>builtin</td>
+                    <td>命中でEXP／連続命中ボーナス</td>
+                </tr>
+                <tr>
+                    <td><code>dodge_race</code></td>
+                    <td>回避レース</td>
+                    <td>0.1.0</td>
+                    <td><code>games/dodge_race.js</code></td>
+                    <td>builtin</td>
+                    <td>距離で微量EXP／CP+5</td>
+                </tr>
+                <tr>
+                    <td><code>river_crossing</code></td>
+                    <td>川渡り</td>
+                    <td>0.1.0</td>
+                    <td><code>games/river_crossing.js</code></td>
+                    <td>builtin</td>
+                    <td>1段前進+1／到達+50</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CATEGORY:ギャンブル -->
+<section>
+    <h3>ギャンブル</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>gamble_hall</code></td>
+                    <td>ギャンブルホール</td>
+                    <td>0.1.0</td>
+                    <td><code>games/gamble_hall.js</code></td>
+                    <td>mod</td>
+                    <td>EXPを賭けるルーレットとパチンコスロットの複合MOD</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CATEGORY:シューティング -->
+<section>
+    <h3>シューティング</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>invaders</code></td>
+                    <td>インベーダー風</td>
+                    <td>0.1.0</td>
+                    <td><code>games/invaders.js</code></td>
+                    <td>builtin</td>
+                    <td>撃破+1 / 全滅+50</td>
+                </tr>
+                <tr>
+                    <td><code>aim</code></td>
+                    <td>的あて（エイム）</td>
+                    <td>0.1.0</td>
+                    <td><code>games/aim.js</code></td>
+                    <td>builtin</td>
+                    <td>命中で1〜3EXP／連続命中ボーナス</td>
+                </tr>
+                <tr>
+                    <td><code>falling_shooter</code></td>
+                    <td>落下ブロック・シューター</td>
+                    <td>0.1.0</td>
+                    <td><code>games/falling_shooter.js</code></td>
+                    <td>builtin</td>
+                    <td>破壊で1〜数EXP（大きいほど高EXP）</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CATEGORY:スキル -->
+<section>
+    <h3>スキル</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>typing</code></td>
+                    <td>タイピングチャレンジ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/typing.js</code></td>
+                    <td>mod</td>
+                    <td>60秒タイプで正確さとスピードを競うタイピングチャレンジ</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CATEGORY:トイ -->
+<section>
+    <h3>トイ</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>graphics_tester</code></td>
+                    <td>3Dグラフィックテスター</td>
+                    <td>0.1.0</td>
+                    <td><code>games/graphics_tester.js</code></td>
+                    <td>mod</td>
+                    <td>3D技術デモとレイトレーシング風レンダリング・ベンチマーク搭載のトイ系テスター</td>
+                </tr>
+                <tr>
+                    <td><code>memo_studio</code></td>
+                    <td>暗記スタジオ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/memory_app.js</code></td>
+                    <td>mod</td>
+                    <td>フラッシュカードを登録し間隔反復で学習する暗記アプリ</td>
+                </tr>
+                <tr>
+                    <td><code>electro_instrument</code></td>
+                    <td>電子楽器スタジオ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/electro_instrument.js</code></td>
+                    <td>mod</td>
+                    <td>ピアノ鍵盤と多彩な音色で自由に演奏し音ごとにEXP獲得</td>
+                </tr>
+                <tr>
+                    <td><code>physics_sandbox</code></td>
+                    <td>物理遊び</td>
+                    <td>0.1.0</td>
+                    <td><code>games/physics_sandbox.js</code></td>
+                    <td>mod</td>
+                    <td>火・水・ツタ・雷・回路を組み合わせるトイ系物理サンドボックス</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CATEGORY:パズル -->
+<section>
+    <h3>パズル</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ten_ten</code></td>
+                    <td>1010パズル</td>
+                    <td>0.1.0</td>
+                    <td><code>games/ten_ten.js</code></td>
+                    <td>builtin</td>
+                    <td>ラインでEXP／クロス消しは倍増</td>
+                </tr>
+                <tr>
+                    <td><code>game2048</code></td>
+                    <td>2048</td>
+                    <td>0.1.0</td>
+                    <td><code>games/2048.js</code></td>
+                    <td>builtin</td>
+                    <td>合成log2 / 2048で+777</td>
+                </tr>
+                <tr>
+                    <td><code>sliding_puzzle</code></td>
+                    <td>スライドパズル</td>
+                    <td>0.1.0</td>
+                    <td><code>games/sliding_puzzle.js</code></td>
+                    <td>mod</td>
+                    <td>難易度で8/15/24のスライドパズル</td>
+                </tr>
+                <tr>
+                    <td><code>same</code></td>
+                    <td>セイムゲーム</td>
+                    <td>0.1.0</td>
+                    <td><code>games/same.js</code></td>
+                    <td>builtin</td>
+                    <td>同色まとめ消し×0.5EXP</td>
+                </tr>
+                <tr>
+                    <td><code>tetris</code></td>
+                    <td>テトリス風</td>
+                    <td>0.1.0</td>
+                    <td><code>games/tetris.js</code></td>
+                    <td>builtin</td>
+                    <td>REN×1.5^n / T-Spin</td>
+                </tr>
+                <tr>
+                    <td><code>triomino_columns</code></td>
+                    <td>トリオミノコラムス</td>
+                    <td>0.1.0</td>
+                    <td><code>games/triomino_columns.js</code></td>
+                    <td>mod</td>
+                    <td>トリオトスDX風！ラインスパーク＆ホールド対応</td>
+                </tr>
+                <tr>
+                    <td><code>sudoku</code></td>
+                    <td>ナンプレ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/sudoku.js</code></td>
+                    <td>mod</td>
+                    <td>正解入力でEXP / クリアボーナス</td>
+                </tr>
+                <tr>
+                    <td><code>bubble_shooter</code></td>
+                    <td>バブルシューター</td>
+                    <td>0.1.0</td>
+                    <td><code>games/bubble_shooter.js</code></td>
+                    <td>mod</td>
+                    <td>バブルを撃って3つ揃えで消去。浮いたバブルはまとめて落下</td>
+                </tr>
+                <tr>
+                    <td><code>falling_puyos</code></td>
+                    <td>ぷよぷよ風</td>
+                    <td>0.1.0</td>
+                    <td><code>games/puyo.js</code></td>
+                    <td>mod</td>
+                    <td>4つ同色で消去。連鎖で倍率UP</td>
+                </tr>
+                <tr>
+                    <td><code>minesweeper</code></td>
+                    <td>マインスイーパー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/minesweeper.js</code></td>
+                    <td>builtin</td>
+                    <td>開放×0.1 / クリア: 25/200/1600</td>
+                </tr>
+                <tr>
+                    <td><code>match3</code></td>
+                    <td>マッチ3</td>
+                    <td>0.1.0</td>
+                    <td><code>games/match3.js</code></td>
+                    <td>builtin</td>
+                    <td>3:+1 / 4:+3 / 5:+10、連鎖×1.5</td>
+                </tr>
+                <tr>
+                    <td><code>calc_combo</code></td>
+                    <td>計算コンボ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/calc_combo.js</code></td>
+                    <td>mod</td>
+                    <td>2桁までの四則演算をテンポ良く解いてコンボEXPを稼ぐ高速暗算ゲーム</td>
+                </tr>
+                <tr>
+                    <td><code>sichuan</code></td>
+                    <td>四川省パズル</td>
+                    <td>0.1.0</td>
+                    <td><code>games/sichuan.js</code></td>
+                    <td>mod</td>
+                    <td>麻雀牌のペアを線で繋いで消す四川省。連続消去でボーナスEXP</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CATEGORY:ボード -->
+<section>
+    <h3>ボード</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>othello</code></td>
+                    <td>オセロ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/othello.js</code></td>
+                    <td>builtin</td>
+                    <td>ひっくり返し×0.5EXP＋勝利ボーナス</td>
+                </tr>
+                <tr>
+                    <td><code>connect6</code></td>
+                    <td>コネクトシックス</td>
+                    <td>0.1.0</td>
+                    <td><code>games/stone_board_games.js</code></td>
+                    <td>mod</td>
+                    <td>六目並べ。配置+1/リーチ+10/勝利で高EXP</td>
+                </tr>
+                <tr>
+                    <td><code>xiangqi</code></td>
+                    <td>シャンチー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/xiangqi.js</code></td>
+                    <td>mod</td>
+                    <td>中国の将棋・象棋。駒取り・王手・詰みでEXPを稼ごう</td>
+                </tr>
+                <tr>
+                    <td><code>ultimate_ttt</code></td>
+                    <td>スーパー三目並べ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/ultimate_ttt.js</code></td>
+                    <td>mod</td>
+                    <td>小盤制覇+25/配置+1/リーチ+10/勝利ボーナス</td>
+                </tr>
+                <tr>
+                    <td><code>chess</code></td>
+                    <td>チェス</td>
+                    <td>0.1.0</td>
+                    <td><code>games/chess.js</code></td>
+                    <td>mod</td>
+                    <td>駒の組み合わせで王を詰ませる本格チェス。駒取りとチェックでEXPを獲得</td>
+                </tr>
+                <tr>
+                    <td><code>checkers</code></td>
+                    <td>チェッカー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/checkers.js</code></td>
+                    <td>mod</td>
+                    <td>ジャンプで駒取りしつつ王冠を目指すクラシックボードゲーム</td>
+                </tr>
+                <tr>
+                    <td><code>trump_games</code></td>
+                    <td>トランプセレクション</td>
+                    <td>0.1.0</td>
+                    <td><code>games/trump_games.js</code></td>
+                    <td>mod</td>
+                    <td>トランプゲームハブ（神経衰弱・ブラックジャック・ババ抜き収録）</td>
+                </tr>
+                <tr>
+                    <td><code>go</code></td>
+                    <td>囲碁</td>
+                    <td>0.1.0</td>
+                    <td><code>games/go.js</code></td>
+                    <td>mod</td>
+                    <td>配置+1/捕獲ボーナス/勝利EXP</td>
+                </tr>
+                <tr>
+                    <td><code>gomoku</code></td>
+                    <td>五目並べ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/stone_board_games.js</code></td>
+                    <td>mod</td>
+                    <td>配置+1/リーチ+10/勝利ボーナス</td>
+                </tr>
+                <tr>
+                    <td><code>tic_tac_toe</code></td>
+                    <td>三目並べ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/stone_board_games.js</code></td>
+                    <td>mod</td>
+                    <td>配置+1/リーチ+10/シンプル勝利EXP</td>
+                </tr>
+                <tr>
+                    <td><code>connect4</code></td>
+                    <td>四目並べ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/stone_board_games.js</code></td>
+                    <td>mod</td>
+                    <td>落下式四目。配置+1/リーチ+10</td>
+                </tr>
+                <tr>
+                    <td><code>shogi</code></td>
+                    <td>将棋</td>
+                    <td>0.1.0</td>
+                    <td><code>games/shogi.js</code></td>
+                    <td>mod</td>
+                    <td>持ち駒と成りを駆使する本格将棋。指し手/捕獲/王手でEXP</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CATEGORY:ユーティリティ -->
+<section>
+    <h3>ユーティリティ</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>tester</code></td>
+                    <td>JSテスター</td>
+                    <td>0.1.0</td>
+                    <td><code>games/tester.js</code></td>
+                    <td>mod</td>
+                    <td>JS機能テストとCPUベンチマーク、ブロック式アドベンチャー作成ツール</td>
+                </tr>
+                <tr>
+                    <td><code>todo_list</code></td>
+                    <td>ToDoリスト</td>
+                    <td>0.1.0</td>
+                    <td><code>games/todo_list.js</code></td>
+                    <td>mod</td>
+                    <td>タスク完了で設定EXP / 失敗は獲得なし</td>
+                </tr>
+                <tr>
+                    <td><code>wording</code></td>
+                    <td>Wording</td>
+                    <td>0.1.0</td>
+                    <td><code>games/wording.js</code></td>
+                    <td>mod</td>
+                    <td>編集+1 / 書式+2 / 保存+6 EXP のワープロ</td>
+                </tr>
+                <tr>
+                    <td><code>counter_pad</code></td>
+                    <td>カウンターパッド</td>
+                    <td>0.1.0</td>
+                    <td><code>games/counter.js</code></td>
+                    <td>mod</td>
+                    <td>数値を増減するだけのマルチカウンター。操作内容は自動保存</td>
+                </tr>
+                <tr>
+                    <td><code>system</code></td>
+                    <td>システム</td>
+                    <td>0.1.0</td>
+                    <td><code>games/system.js</code></td>
+                    <td>mod</td>
+                    <td>PC/OS/ブラウザ/IPを横断的に確認できるシステム情報ユーティリティ</td>
+                </tr>
+                <tr>
+                    <td><code>stopwatch</code></td>
+                    <td>ストップウォッチ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/stopwatch.js</code></td>
+                    <td>mod</td>
+                    <td>ラップ計測に対応したストップウォッチ。操作でEXPを獲得</td>
+                </tr>
+                <tr>
+                    <td><code>diagram_maker</code></td>
+                    <td>ダイアグラムメーカー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/diagram_maker.js</code></td>
+                    <td>mod</td>
+                    <td>draw.io XMLとPNG/JPG/BMP出力に対応した図表作成ユーティリティ</td>
+                </tr>
+                <tr>
+                    <td><code>timer</code></td>
+                    <td>タイマー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/timer.js</code></td>
+                    <td>mod</td>
+                    <td>カウントダウンとストップウォッチで時間管理</td>
+                </tr>
+                <tr>
+                    <td><code>blockcode</code></td>
+                    <td>ブロックコードラボ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/blockcode.js</code></td>
+                    <td>mod</td>
+                    <td>Scratch風のブロックでミニゲームAPIを安全に試せるビジュアルプログラミング環境</td>
+                </tr>
+                <tr>
+                    <td><code>paint</code></td>
+                    <td>ペイント</td>
+                    <td>0.1.0</td>
+                    <td><code>games/paint.js</code></td>
+                    <td>mod</td>
+                    <td>描画+1 / 塗りつぶし+3 / 保存+8 EXP</td>
+                </tr>
+                <tr>
+                    <td><code>pomodoro</code></td>
+                    <td>ポモドーロタイマー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/pomodoro.js</code></td>
+                    <td>mod</td>
+                    <td>集中と休憩のサイクル管理で完了ごとにEXPを得られるタイマー</td>
+                </tr>
+                <tr>
+                    <td><code>music_player</code></td>
+                    <td>ミュージックプレイヤー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/music_player.js</code></td>
+                    <td>mod</td>
+                    <td>ローカル音源再生・視覚化・EQ搭載。再生や取り込みでEXP獲得</td>
+                </tr>
+                <tr>
+                    <td><code>notepad</code></td>
+                    <td>メモ帳</td>
+                    <td>0.1.0</td>
+                    <td><code>games/notepad.js</code></td>
+                    <td>mod</td>
+                    <td>開く+5 / 編集+1 / 保存+5 EXP</td>
+                </tr>
+                <tr>
+                    <td><code>clock_hub</code></td>
+                    <td>時計ハブ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/clock_hub.js</code></td>
+                    <td>mod</td>
+                    <td>多彩な時計と時間情報、節目EXPを備えたユーティリティ</td>
+                </tr>
+                <tr>
+                    <td><code>math_lab</code></td>
+                    <td>数学ラボ</td>
+                    <td>0.1.0</td>
+                    <td><code>games/math_lab.js</code></td>
+                    <td>mod</td>
+                    <td>高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション</td>
+                </tr>
+                <tr>
+                    <td><code>calculator</code></td>
+                    <td>電卓</td>
+                    <td>0.1.0</td>
+                    <td><code>games/calculator.js</code></td>
+                    <td>mod</td>
+                    <td>ユーティリティ電卓。数字入力+1 / 計算確定+5EXP</td>
+                </tr>
+                <tr>
+                    <td><code>video_player</code></td>
+                    <td>動画プレイヤー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/video_player.js</code></td>
+                    <td>mod</td>
+                    <td>ローカル動画とYouTubeの視聴でEXPを獲得できるユーティリティ</td>
+                </tr>
+                <tr>
+                    <td><code>exceler</code></td>
+                    <td>表計算エクセラー</td>
+                    <td>0.1.0</td>
+                    <td><code>games/exceler.js</code></td>
+                    <td>mod</td>
+                    <td>XLSXの読み書きと主要関数・書式対応の軽量スプレッドシート</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CATEGORY:リズム -->
+<section>
+    <h3>リズム</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>バージョン</th>
+                    <th>エントリ</th>
+                    <th>作者</th>
+                    <th>主な特徴/EXP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>piano_tiles</code></td>
+                    <td>リズムタイル</td>
+                    <td>0.1.0</td>
+                    <td><code>games/piano_tiles.js</code></td>
+                    <td>mod</td>
+                    <td>ピアノタイル風の4レーン譜面。タップとホールドをタイミング良く決めてコンボを伸ばそう</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+    </main>
+</body>
+</html>

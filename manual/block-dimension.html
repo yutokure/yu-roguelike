@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8. ブロック次元とは</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+    <main>
+        <h1>8. ブロック次元とは</h1>
+        <section>
+            <h2>8.1 サブモード概要</h2>
+            <p>
+                ブロック次元は、通常のダンジョンとは異なるパズル寄りの探索モードです。
+                ブロックを配置して道を切り開き、フロアごとのクリア条件を満たすことで報酬を獲得します。
+                メイン冒険の合間に遊ぶことで、素材や特殊トークンを集められるサブコンテンツとして設計されています。
+            </p>
+            <div class="tip">
+                <strong>目的の違いを理解しよう</strong>
+                <p>通常ダンジョンが戦闘重視なのに対し、ブロック次元は <strong>空間パズル</strong> と <strong>資源管理</strong> が鍵となります。</p>
+            </div>
+        </section>
+        <section>
+            <h2>8.2 参加方法</h2>
+            <ol>
+                <li>タイトル画面から <strong>ブロック次元</strong> タブを選択。</li>
+                <li>挑戦したいセクターを選び、難易度と制限ターン数を確認します。</li>
+                <li>必要条件（推奨レベル・鍵となる素材）が満たされていることを確認して出発します。</li>
+                <li>開始時に支給されるブロックセットを確認し、配置プランを考えてからスタートしましょう。</li>
+            </ol>
+            <p class="small-note">セクターによっては事前に通常ダンジョンをクリアしておく必要があります。</p>
+        </section>
+        <section>
+            <h2>8.3 ブロックの種類と効果</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <th>主な効果</th>
+                            <th>使いどころ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>道ブロック</td>
+                            <td>通路を延長し、探索範囲を広げる</td>
+                            <td>ゴールへのルート確保、宝箱への経路作成</td>
+                        </tr>
+                        <tr>
+                            <td>ギミックブロック</td>
+                            <td>ジャンプ台やスイッチなど特殊効果を付与</td>
+                            <td>高低差の突破、時間制限ギミックの解除</td>
+                        </tr>
+                        <tr>
+                            <td>防衛ブロック</td>
+                            <td>敵の進行を遅らせたり、攻撃を遮断</td>
+                            <td>拠点防衛ステージで被害を抑える</td>
+                        </tr>
+                        <tr>
+                            <td>資源ブロック</td>
+                            <td>配置時に素材やトークンを生成</td>
+                            <td>長期戦でのリソース確保、目標ポイント稼ぎ</td>
+                        </tr>
+                        <tr>
+                            <td>イベントブロック</td>
+                            <td>設置するとクエストやNPCが出現</td>
+                            <td>隠し報酬や称号条件の達成</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>8.4 クリア条件と報酬</h2>
+            <ul>
+                <li><strong>ターン内クリア:</strong> 制限ターン以内にゴールへ到達すると評価が上昇し、追加報酬が解放されます。</li>
+                <li><strong>素材スコア:</strong> 集めた資源ポイントが閾値を超えると希少素材が手に入ります。</li>
+                <li><strong>ノーダメージ:</strong> 敵に攻撃されずにクリアすると称号進捗が加算されます。</li>
+            </ul>
+            <p>
+                獲得した素材は通常ダンジョンの装備強化だけでなく、ブロック次元専用の施設拡張にも使用できます。
+                拡張を進めると新しいブロックセットやセクターが解放され、攻略の幅が広がります。
+            </p>
+        </section>
+        <section>
+            <h2>8.5 攻略のヒント</h2>
+            <ol>
+                <li>開始前に支給ブロックを確認し、<strong>必要な最小ルート</strong>と<strong>寄り道ルート</strong>を分けて考えましょう。</li>
+                <li>防衛ブロックは敵のルート封鎖だけでなく、誘導して資源ブロックへアクセスさせる用途にも使えます。</li>
+                <li>配置に迷ったら <strong>一時停止</strong> で全体マップを確認し、次ターンの敵行動を先読みしましょう。</li>
+                <li>通常ダンジョンで得たスキルや装備効果が一部持ち込める場合があります。事前に相性の良いビルドを用意すると楽になります。</li>
+            </ol>
+            <div class="warning">
+                <strong>リトライのススメ</strong>
+                <p>ブロック次元は何度でも挑戦できます。配置がうまくいかなかったときは、失敗したポイントをメモして再挑戦しましょう。</p>
+            </div>
+        </section>
+        <section>
+            <h2>8.6 関連資料</h2>
+            <ul>
+                <li><a href="data-files.html" target="manual-content">10. データファイルの内容</a>：<code>blockdata.json</code> の構造を確認。</li>
+                <li><a href="customize.html" target="manual-content">11. コンテンツの追加・変更</a>：ブロックやセクターの追加手順。</li>
+                <li><a href="appendix.html" target="manual-content">17. 付録：参考情報</a>：関連設計書や外部資料へのリンク。</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

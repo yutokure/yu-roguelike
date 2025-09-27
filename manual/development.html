@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>9. JavaScript の仕組み</title>
+    <title>12. JavaScript の仕組み</title>
     <link rel="stylesheet" href="manual.css">
 </head>
 <body>
     <main>
-        <h1>9. JavaScript の仕組み</h1>
+        <h1>12. JavaScript の仕組み</h1>
         <section>
-            <h2>9.1 main.js の役割</h2>
+            <h2>12.1 main.js の役割</h2>
             <p>
                 <code>main.js</code> は、ページの読み込み後にタブやボタンを動かすためのスクリプトです。
                 DOM（HTML の部品）を取得し、クリックイベントに処理を割り当てます。
             </p>
         </section>
         <section>
-            <h2>9.2 データの読み込み</h2>
+            <h2>12.2 データの読み込み</h2>
             <p>
                 fetch API を使って JSON ファイルを読み込み、ダンジョンリストを作成します。Promise の仕組みが分からない場合は、
                 まずは <code>async/await</code> の基本を学んでから触ると理解しやすいです。
             </p>
         </section>
         <section>
-            <h2>9.3 よく使う関数</h2>
+            <h2>12.3 よく使う関数</h2>
             <ul>
                 <li><strong>renderWorldButtons()</strong>：世界のボタンを作成。</li>
                 <li><strong>renderDungeonDetails()</strong>：選択したダンジョンの情報をカードに表示。</li>
@@ -32,7 +32,7 @@
             </ul>
         </section>
         <section>
-            <h2>9.4 コードを読む順番</h2>
+            <h2>12.4 コードを読む順番</h2>
             <ol>
                 <li><code>main.js</code> の冒頭で定義されている定数を確認。</li>
                 <li>イベントリスナーの登録部分を読む。</li>
@@ -40,7 +40,7 @@
             </ol>
         </section>
         <section>
-            <h2>9.5 デバッグのヒント</h2>
+            <h2>12.5 デバッグのヒント</h2>
             <ul>
                 <li><code>console.log()</code> を使って変数の中身を確認する。</li>
                 <li>ブレークポイントを設定して処理の流れを追跡する。</li>

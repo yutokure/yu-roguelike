@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18. API リファレンス</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+    <main>
+        <h1>18. API リファレンス</h1>
+        <section>
+            <h2>18.1 グローバル公開 API 一覧</h2>
+            <p>
+                本編とミニゲーム/アドオンから利用できる公開 API を一覧にまとめています。UI から利用する場合は
+                <code>window</code> グローバルにエクスポートされている関数・オブジェクトを参照してください。
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>API</th>
+                            <th>概要</th>
+                            <th>主なプロパティ / 引数</th>
+                            <th>実装位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>window.SandboxBridge</code></td>
+                            <td>サンドボックス実行用ユーティリティ。最小/最大マップサイズや検証ヘルパーを提供します。</td>
+                            <td><code>minSize</code>, <code>maxSize</code>, <code>maxLevel</code>, <code>computePlayerStats()</code>, <code>sanitize()</code>, <code>validate()</code>, <code>start()</code>, <code>isActive()</code></td>
+                            <td><code>main.js</code> 400–419 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.registerMiniGame(def)</code></td>
+                            <td>MiniExp MOD が自身を登録するための関数。<code>id</code> と <code>create</code> 実装を含む定義を渡します。</td>
+                            <td><code>def.id</code>（必須）、<code>def.create(root, awardXp, options)</code> などのメタデータ</td>
+                            <td><code>main.js</code> 6669–6693 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.showTransientPopupAt(x, y, text, opts)</code></td>
+                            <td>MiniExp コンテナ上に一時的なフローティングポップアップを描画します。</td>
+                            <td><code>opts.variant</code>（<code>'info'</code> / <code>'warning'</code> / <code>'combo'</code> など）、<code>opts.duration</code></td>
+                            <td><code>main.js</code> 6761–6783 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.showMiniExpBadge(text, opts)</code></td>
+                            <td>MiniExp HUD に EXP バッジを表示します。<code>opts.tone</code> や <code>opts.variant</code> で演出を切り替えられます。</td>
+                            <td><code>opts.variant</code>（<code>'combo'</code> など）、<code>opts.level</code>、<code>opts.tone</code>（<code>'loss'</code>対応）</td>
+                            <td><code>main.js</code> 6735–6760 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.getMiniExpBalance()</code></td>
+                            <td>セッション中の累計 EXP（MiniExp タブ基準）を取得します。</td>
+                            <td>戻り値: 現在の EXP 残高（数値）</td>
+                            <td><code>main.js</code> 6824–6827 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.registerDungeonAddon(def)</code></td>
+                            <td>ダンジョン生成アドオンを登録し、生成器・構造・BlockDim テーブルを拡張します。</td>
+                            <td><code>def.id</code>（必須）、<code>def.generators</code>、<code>def.blocks</code>、<code>def.structures</code></td>
+                            <td><code>main.js</code> 7480–7512 行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>18.2 MiniExp モジュールのライフサイクル</h2>
+            <p>
+                MiniExp MOD は <code>registerMiniGame</code> で登録されると、プレイヤーが開始したタイミングで <code>create()</code> が
+                呼び出されます。<code>create()</code> は以下のシグネチャを満たし、制御用のランタイムオブジェクトを返します。
+            </p>
+            <pre><code>function create(rootElement, awardXp, options) {
+    // 必須: rootElement へ DOM を構築
+    // 必須: awardXp(delta) で EXP を授与
+    // options.difficulty, options.shortcuts を利用可能
+    return {
+        start(),   // ゲーム開始
+        stop(),    // 一時停止／終了時に呼ばれる
+        destroy(), // クリーンアップ
+        getScore() // 数値を返すとベストスコアに記録
+    };
+}</code></pre>
+            <p>
+                ゲーム終了時にはランタイムの <code>stop()</code> → <code>getScore()</code> → <code>destroy()</code> が順番に呼び出され、
+                記録情報が更新されます。これらの呼び出しは <code>startSelectedMiniGame()</code> および <code>quitMiniGame()</code>
+                から管理されます。
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>コンテキスト</th>
+                            <th>内容</th>
+                            <th>参照</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>options.difficulty</code></td>
+                            <td>UI の難易度セレクター値（<code>EASY</code>/<code>NORMAL</code>/<code>HARD</code> 等）。</td>
+                            <td><code>main.js</code> 6834–6856 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>options.shortcuts</code></td>
+                            <td>ショートカットの有効/無効を制御するコントローラー。<code>enableKey()</code>・<code>disableKey()</code> などを提供します。</td>
+                            <td><code>main.js</code> 161–188 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>awardXp(amount, meta)</code></td>
+                            <td>EXP を付与するコールバック。MiniExp HUD にバッジが表示され、内部残高が更新されます。</td>
+                            <td><code>main.js</code> 6831–6883 行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>18.3 ショートカットコントローラー API</h2>
+            <p>
+                <code>options.shortcuts</code> の実体は <code>createMiniShortcutController()</code> で生成され、ミニゲームごとに
+                キーボードショートカットの有効/無効化を制御できます。主要メソッドは次のとおりです。
+            </p>
+            <ul>
+                <li><code>setGlobal(enabled)</code> / <code>setAll(enabled)</code>: すべてのショートカットを一括で切り替え。</li>
+                <li><code>enableKey(key)</code> / <code>disableKey(key)</code>: 指定キーのみ個別に制御。</li>
+                <li><code>isKeyEnabled(key)</code>: 現在の有効状態を確認。</li>
+                <li><code>reset()</code>: すべての設定を初期状態に戻す。</li>
+            </ul>
+            <p class="small-note">
+                実装は <code>main.js</code> 132–188 行にあり、MiniExp タブのショートカット（P=一時停止、R=リスタート）とも連動します。
+            </p>
+        </section>
+        <section>
+            <h2>18.4 ダンジョン生成アドオン API</h2>
+            <p>
+                <code>registerDungeonAddon()</code> で登録されたアドオンは、生成器ごとに <code>makeGenContext()</code> から供給される
+                コンテキストオブジェクトを受け取ります。生成アルゴリズムは以下のヘルパーを利用できます。
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>メソッド</th>
+                            <th>説明</th>
+                            <th>参照</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ctx.set(x, y, solid)</code></td>
+                            <td>タイルを壁/床に切り替えます。周辺メタデータも自動で調整されます。</td>
+                            <td><code>main.js</code> 7514–7549 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.ensureConnectivity()</code></td>
+                            <td>孤立領域がないよう通路を自動整備します。</td>
+                            <td><code>main.js</code> 7534–7537 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.structures.place(id, x, y, options)</code></td>
+                            <td>登録済み構造物をマップに配置します。パターン ID またはインライン定義に対応。</td>
+                            <td><code>main.js</code> 7376–7416 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.fixedMaps.apply(floor)</code></td>
+                            <td>固定レイアウトを適用。アドオン側で提供した固定マップを読み込みます。</td>
+                            <td><code>main.js</code> 3203–3240 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.setFloorColor(x, y, cssColor)</code></td>
+                            <td>床の描画色を上書きします。同様に <code>setWallColor()</code> や <code>setFloorType()</code> も利用可能です。</td>
+                            <td><code>main.js</code> 7549–7576 行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>
+                <code>ctx.random</code> にはアドオン固有の乱数生成器が渡されるため、実装側で <code>Math.random()</code> を直接
+                呼ぶのではなく <code>ctx.random()</code> を使用すると再現性の高い生成が行えます。
+            </p>
+        </section>
+    </main>
+</body>
+</html>

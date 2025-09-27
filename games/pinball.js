@@ -177,7 +177,8 @@
       { x: table.left + 165, y: table.bottom - 42, r: 18, cooldown: 0, xp: 3 },
       { x: table.right - 165, y: table.bottom - 42, r: 18, cooldown: 0, xp: 3 },
       { x: table.left + 40, y: table.bottom - 150, r: 16, cooldown: 0, xp: 3 },
-      { x: table.right - 40, y: table.bottom - 150, r: 16, cooldown: 0, xp: 3 }
+      // 右下レーンを塞がないよう、ポストを左へ寄せて通路を確保する
+      { x: table.right - 75, y: table.bottom - 150, r: 16, cooldown: 0, xp: 3 }
     ];
 
     const sparks = [];

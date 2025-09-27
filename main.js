@@ -257,7 +257,7 @@ function sanitizeSandboxConfig(raw) {
         const result = {};
         if (isFloor) {
             const floorType = typeof meta.floorType === 'string' ? meta.floorType.toLowerCase() : '';
-            if (floorType === FLOOR_TYPE_ICE || floorType === FLOOR_TYPE_POISON) {
+            if (floorType === FLOOR_TYPE_ICE || floorType === FLOOR_TYPE_POISON || floorType === FLOOR_TYPE_BOMB) {
                 result.floorType = floorType;
             }
             const floorColor = sanitizeColor(meta.floorColor);
@@ -650,8 +650,10 @@ const DEFAULT_FLOOR_COLOR = '#ced6e0';
 const FLOOR_TYPE_NORMAL = 'normal';
 const FLOOR_TYPE_ICE = 'ice';
 const FLOOR_TYPE_POISON = 'poison';
+const FLOOR_TYPE_BOMB = 'bomb';
 const COLOR_HEX_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 let tileMeta = [];
+let currentRecommendedLevel = 1;
 
 function resetTileMetadata() {
     tileMeta = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
@@ -674,7 +676,7 @@ function getTileFloorType(x, y) {
     const meta = getTileMeta(x, y);
     if (!meta || !meta.floorType) return FLOOR_TYPE_NORMAL;
     const t = meta.floorType;
-    return (t === FLOOR_TYPE_ICE || t === FLOOR_TYPE_POISON) ? t : FLOOR_TYPE_NORMAL;
+    return (t === FLOOR_TYPE_ICE || t === FLOOR_TYPE_POISON || t === FLOOR_TYPE_BOMB) ? t : FLOOR_TYPE_NORMAL;
 }
 
 function getTileRenderColor(x, y, isWall) {
@@ -688,6 +690,7 @@ function getTileRenderColor(x, y, isWall) {
     const type = getTileFloorType(x, y);
     if (type === FLOOR_TYPE_ICE) return '#74c0fc';
     if (type === FLOOR_TYPE_POISON) return '#94d82d';
+    if (type === FLOOR_TYPE_BOMB) return '#ff8787';
     return DEFAULT_FLOOR_COLOR;
 }
 
@@ -3390,7 +3393,7 @@ function generateMap() {
                 const isFloor = cfg.grid?.[y]?.[x] === 0;
                 const entry = {};
                 if (isFloor) {
-                    if (meta.floorType === FLOOR_TYPE_ICE || meta.floorType === FLOOR_TYPE_POISON) {
+                    if (meta.floorType === FLOOR_TYPE_ICE || meta.floorType === FLOOR_TYPE_POISON || meta.floorType === FLOOR_TYPE_BOMB) {
                         entry.floorType = meta.floorType;
                     }
                     if (typeof meta.floorColor === 'string' && meta.floorColor) {
@@ -4902,6 +4905,7 @@ function generateEntities() {
 function generateLevel() {
     updateMapSize(); // Update map size based on current floor
     prepareFixedMapDimensionsIfNeeded();
+    currentRecommendedLevel = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
     // Reseed RNG for deterministic generation in BlockDim
     if (currentMode === 'blockdim') {
         reseedBlockDimForFloor();
@@ -5216,13 +5220,29 @@ function drawMap() {
         for (let x = startX; x < endX; x++) {
             const screenX = (x - startX) * cellW;
             const screenY = (y - startY) * cellH;
+            let isWall = true;
+            let meta = null;
             if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) {
                 ctx.fillStyle = DEFAULT_WALL_COLOR;
             } else {
-                const isWall = map[y][x] === 1;
+                isWall = map[y][x] === 1;
                 ctx.fillStyle = getTileRenderColor(x, y, isWall);
+                meta = getTileMeta(x, y);
             }
             ctx.fillRect(screenX, screenY, cellW, cellH);
+            if (!isWall && meta && meta.floorType === FLOOR_TYPE_BOMB) {
+                const radius = Math.min(cellW, cellH) * 0.28;
+                ctx.fillStyle = '#2d3436';
+                ctx.beginPath();
+                ctx.arc(screenX + cellW / 2, screenY + cellH / 2, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffd43b';
+                ctx.lineWidth = Math.max(1, Math.min(cellW, cellH) * 0.08);
+                ctx.beginPath();
+                ctx.moveTo(screenX + cellW / 2 + radius * 0.6, screenY + cellH / 2 - radius * 0.9);
+                ctx.lineTo(screenX + cellW / 2 + radius * 1.2, screenY + cellH / 2 - radius * 1.4);
+                ctx.stroke();
+            }
         }
     }
 
@@ -5890,15 +5910,25 @@ function playSfx(type) {
     const now = audioCtx.currentTime;
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    o.type = type === 'attack' ? 'square' : type === 'pickup' ? 'sine' : type === 'damage' ? 'sawtooth' : 'triangle';
-    const freq = type === 'attack' ? 300 : type === 'pickup' ? 880 : type === 'damage' ? 180 : type === 'stair' ? 520 : 440;
+    o.type = type === 'attack' ? 'square'
+        : type === 'pickup' ? 'sine'
+        : type === 'damage' ? 'sawtooth'
+        : type === 'bomb' ? 'sawtooth'
+        : 'triangle';
+    const freq = type === 'attack' ? 300
+        : type === 'pickup' ? 880
+        : type === 'damage' ? 180
+        : type === 'bomb' ? 140
+        : type === 'stair' ? 520
+        : 440;
     o.frequency.setValueAtTime(freq, now);
     g.gain.setValueAtTime(0.0001, now);
     g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    const release = type === 'bomb' ? 0.25 : 0.12;
+    g.gain.exponentialRampToValueAtTime(0.0001, now + release);
     o.connect(g).connect(audioCtx.destination);
     o.start(now);
-    o.stop(now + 0.15);
+    o.stop(now + Math.max(0.15, release));
 }
 
 function attackInDirection() {
@@ -6156,6 +6186,57 @@ function applyPostMoveEffects() {
 
     if (!isGameOver) {
         const floorType = getTileFloorType(player.x, player.y);
+        if (floorType === FLOOR_TYPE_BOMB) {
+            const levelDiff = player.level - currentRecommendedLevel;
+            let ratio;
+            if (levelDiff <= 0) ratio = 1;
+            else if (levelDiff === 1) ratio = 0.8;
+            else if (levelDiff === 2) ratio = 0.5;
+            else if (levelDiff === 3) ratio = 0.25;
+            else if (levelDiff === 4) ratio = 0.10;
+            else ratio = 0;
+
+            const meta = getTileMeta(player.x, player.y);
+            if (meta && meta.floorType === FLOOR_TYPE_BOMB) {
+                delete meta.floorType;
+                if (!meta.floorColor && !meta.wallColor) {
+                    const row = tileMeta[player.y];
+                    if (row) row[player.x] = null;
+                }
+            }
+
+            const percent = Math.round(ratio * 100);
+            if (ratio <= 0) {
+                addMessage('爆弾を踏んだがダメージは無効化された！');
+                playSfx('bomb');
+                continueSliding = false;
+            } else {
+                let damage;
+                if (ratio >= 1) {
+                    damage = player.hp;
+                } else {
+                    const rawDamage = Math.ceil(player.maxHp * ratio);
+                    damage = Math.min(player.hp, rawDamage);
+                }
+                player.hp = Math.max(0, player.hp - damage);
+                addMessage(`爆弾が爆発！HPが${percent}%(${damage})減少`);
+                addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+                playSfx('bomb');
+                updateUI();
+                if (player.hp <= 0) {
+                    handlePlayerDeath('爆弾に巻き込まれて倒れた…ゲームオーバー');
+                }
+                continueSliding = false;
+            }
+        } else if (floorType === FLOOR_TYPE_POISON) {
+            const damage = Math.max(1, Math.floor(player.maxHp * 0.1));
+            player.hp = Math.max(0, player.hp - damage);
+            addMessage(`毒床がダメージ！HPが${damage}減少`);
+            addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+            playSfx('damage');
+            updateUI();
+            if (player.hp <= 0) {
+                handlePlayerDeath('毒床で倒れた…ゲームオーバー');
         if (hazardState.suppressed) {
             if (floorType === FLOOR_TYPE_ICE) {
                 continueSliding = false;
@@ -7933,7 +8014,7 @@ function makeGenContext() {
             if (!meta) return;
             if (!type || type === FLOOR_TYPE_NORMAL) {
                 delete meta.floorType;
-            } else if (type === FLOOR_TYPE_ICE || type === FLOOR_TYPE_POISON) {
+            } else if (type === FLOOR_TYPE_ICE || type === FLOOR_TYPE_POISON || type === FLOOR_TYPE_BOMB) {
                 meta.floorType = type;
             }
         },

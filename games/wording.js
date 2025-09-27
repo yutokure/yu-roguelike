@@ -55,8 +55,10 @@
 
   const FONT_SIZE_OPTIONS = [8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72];
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts){
     if (!root) throw new Error('MiniExp Wording requires a container');
+
+    const shortcuts = opts?.shortcuts;
 
     const persisted = loadPersistentState();
     const state = {
@@ -86,6 +88,7 @@
     const xpCooldowns = new Map();
     let persistTimer = null;
     const skipFormatXpCommands = new Set(['insertText', 'insertHTML']);
+    let shortcutsDisabled = false;
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -1456,6 +1459,11 @@
     function start(){
       if (state.isRunning) return;
       state.isRunning = true;
+      if (!shortcutsDisabled) {
+        shortcuts?.disableKey('p');
+        shortcuts?.disableKey('r');
+        shortcutsDisabled = true;
+      }
       document.addEventListener('keydown', onKeydown);
       grantXp('launch', LAUNCH_BONUS, 0);
       renderRibbon();
@@ -1469,10 +1477,20 @@
       if (!state.isRunning) return;
       state.isRunning = false;
       document.removeEventListener('keydown', onKeydown);
+      if (shortcutsDisabled) {
+        shortcuts?.enableKey('p');
+        shortcuts?.enableKey('r');
+        shortcutsDisabled = false;
+      }
     }
 
     function destroy(){
       stop();
+      if (shortcutsDisabled) {
+        shortcuts?.enableKey('p');
+        shortcuts?.enableKey('r');
+        shortcutsDisabled = false;
+      }
       flushPersist();
       document.removeEventListener('selectionchange', handleSelectionChange);
       window.removeEventListener('resize', handleResize);

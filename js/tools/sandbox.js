@@ -16,11 +16,16 @@
     const MAX_SIZE_FALLBACK = 60;
     const MAX_LEVEL_FALLBACK = 999;
     const BRUSHES = ['floor', 'wall', 'start', 'stairs', 'enemy'];
+    const FLOOR_TYPES = ['normal', 'ice', 'poison'];
+    const DEFAULT_FLOOR_COLOR = '#ced6e0';
+    const DEFAULT_WALL_COLOR = '#2f3542';
+    const COLOR_HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
     let refs = {};
     let state = null;
     let enemySeq = 1;
     let pendingSerializedState = null;
+    const paintState = { active: false, pointerId: null, lastKey: null, blockClick: false };
 
     function captureActiveInput() {
         const active = document.activeElement;
@@ -57,8 +62,105 @@
         return Array.from({ length: height }, () => Array.from({ length: width }, () => fill));
     }
 
+    function createEmptyMeta(width, height) {
+        return Array.from({ length: height }, () => Array.from({ length: width }, () => null));
+    }
+
     function cloneGrid(grid) {
         return grid.map(row => row.slice());
+    }
+
+    function cloneMetaGrid(meta) {
+        if (!Array.isArray(meta)) return [];
+        return meta.map(row => Array.isArray(row) ? row.map(cell => (cell ? { ...cell } : null)) : []);
+    }
+
+    function sanitizeColorValue(value) {
+        if (typeof value !== 'string') return '';
+        const trimmed = value.trim();
+        if (!trimmed) return '';
+        return COLOR_HEX_PATTERN.test(trimmed) ? trimmed.toLowerCase() : '';
+    }
+
+    function normalizeMetaObject(meta, isFloor) {
+        if (!meta || typeof meta !== 'object') return null;
+        const result = {};
+        if (isFloor) {
+            const type = typeof meta.floorType === 'string' ? meta.floorType.trim().toLowerCase() : '';
+            if (FLOOR_TYPES.includes(type) && type !== 'normal') {
+                result.floorType = type;
+            }
+            const floorColor = sanitizeColorValue(meta.floorColor);
+            if (floorColor) {
+                result.floorColor = floorColor;
+            }
+        }
+        const wallColor = sanitizeColorValue(meta.wallColor);
+        if (!isFloor && wallColor) {
+            result.wallColor = wallColor;
+        }
+        return Object.keys(result).length ? result : null;
+    }
+
+    function metaEquals(a, b) {
+        if (!a && !b) return true;
+        if (!a || !b) return false;
+        const keys = ['floorType', 'floorColor', 'wallColor'];
+        for (const key of keys) {
+            if ((a[key] || null) !== (b[key] || null)) return false;
+        }
+        return true;
+    }
+
+    function ensureMetaRow(y) {
+        if (!state.meta) {
+            state.meta = createEmptyMeta(state.width, state.height);
+        }
+        if (!Array.isArray(state.meta[y])) {
+            state.meta[y] = Array.from({ length: state.width }, () => null);
+        }
+        return state.meta[y];
+    }
+
+    function computeFloorMetaFromSettings() {
+        const settings = state.brushSettings || {};
+        const type = typeof settings.floorType === 'string' ? settings.floorType : 'normal';
+        const result = {};
+        if (FLOOR_TYPES.includes(type) && type !== 'normal') {
+            result.floorType = type;
+        }
+        const floorColor = sanitizeColorValue(settings.floorColor);
+        if (floorColor) {
+            result.floorColor = floorColor;
+        }
+        return Object.keys(result).length ? result : null;
+    }
+
+    function computeWallMetaFromSettings() {
+        const settings = state.brushSettings || {};
+        const wallColor = sanitizeColorValue(settings.wallColor);
+        if (!wallColor) return null;
+        return { wallColor };
+    }
+
+    function applyFloorMetaToCell(x, y) {
+        const row = ensureMetaRow(y);
+        const previous = row[x] ? { ...row[x] } : null;
+        const prevNormalized = normalizeMetaObject(previous, true);
+        const desired = computeFloorMetaFromSettings();
+        const changed = !metaEquals(prevNormalized, desired) || (!!previous !== !!desired);
+        row[x] = desired;
+        return changed || (!!previous && !metaEquals(previous, desired));
+    }
+
+    function applyWallMetaToCell(x, y) {
+        const row = ensureMetaRow(y);
+        const previous = row[x] ? { ...row[x] } : null;
+        const prevNormalized = normalizeMetaObject(previous, false);
+        const desired = computeWallMetaFromSettings();
+        const changed = !metaEquals(prevNormalized, desired) || (!!previous !== !!desired);
+        row[x] = desired;
+        return changed || (!!previous && !metaEquals(previous, desired));
     }
 
     function defaultEnemyStats(level) {
@@ -88,7 +190,8 @@
                 boss: !!e.boss,
                 x: Number.isFinite(e.x) ? e.x : null,
                 y: Number.isFinite(e.y) ? e.y : null
-            }))
+            })),
+            tileMeta: cloneMetaGrid(state.meta)
         };
     }
 
@@ -114,6 +217,7 @@
                 x: Number.isFinite(enemy.x) ? enemy.x : null,
                 y: Number.isFinite(enemy.y) ? enemy.y : null
             })),
+            tileMeta: cloneMetaGrid(state.meta),
             selectedEnemyId: state.selectedEnemyId || null,
             brush: state.brush,
             lastCell: state.lastCell ? { ...state.lastCell } : null,
@@ -121,7 +225,8 @@
                 errors: Array.isArray(state.validation?.errors) ? state.validation.errors.slice() : [],
                 warnings: Array.isArray(state.validation?.warnings) ? state.validation.warnings.slice() : []
             },
-            tempMessage: state.tempMessage || ''
+            tempMessage: state.tempMessage || '',
+            brushSettings: state.brushSettings ? { ...state.brushSettings } : { floorType: 'normal', floorColor: '', wallColor: '' }
         };
     }
 
@@ -177,11 +282,27 @@
                 }
             }
         }
+        const metaSource = Array.isArray(serialized?.tileMeta) ? serialized.tileMeta : serialized?.meta;
+        const tileMeta = createEmptyMeta(width, height);
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const src = metaSource?.[y]?.[x];
+                tileMeta[y][x] = normalizeMetaObject(src, grid[y][x] === 0);
+            }
+        }
         const playerLevel = clamp(1, maxLevel, Math.floor(Number(serialized?.playerLevel) || DEFAULT_LEVEL));
+        const rawBrush = serialized?.brushSettings || {};
+        const rawFloorType = typeof rawBrush.floorType === 'string' ? rawBrush.floorType.toLowerCase() : '';
+        const brushSettings = {
+            floorType: FLOOR_TYPES.includes(rawFloorType) ? rawFloorType : 'normal',
+            floorColor: sanitizeColorValue(rawBrush.floorColor),
+            wallColor: sanitizeColorValue(rawBrush.wallColor)
+        };
         return {
             width,
             height,
             grid,
+            meta: tileMeta,
             playerStart: normalizePosition(serialized?.playerStart, width, height),
             stairs: normalizePosition(serialized?.stairs, width, height),
             lastCell: normalizePosition(serialized?.lastCell, width, height),
@@ -193,7 +314,8 @@
                 errors: Array.isArray(serialized?.validation?.errors) ? serialized.validation.errors.map(e => String(e)) : [],
                 warnings: Array.isArray(serialized?.validation?.warnings) ? serialized.validation.warnings.map(w => String(w)) : []
             },
-            tempMessage: typeof serialized?.tempMessage === 'string' ? serialized.tempMessage : ''
+            tempMessage: typeof serialized?.tempMessage === 'string' ? serialized.tempMessage : '',
+            brushSettings
         };
     }
 
@@ -206,8 +328,10 @@
         state.width = payload.width;
         state.height = payload.height;
         state.grid = cloneGrid(payload.grid);
+        state.meta = cloneMetaGrid(payload.meta);
         ensureStateGridSize(state.width, state.height);
         state.grid = cloneGrid(payload.grid);
+        state.meta = cloneMetaGrid(payload.meta);
         state.playerStart = payload.playerStart;
         state.stairs = payload.stairs;
         state.playerLevel = payload.playerLevel;
@@ -215,6 +339,7 @@
         state.selectedEnemyId = payload.selectedEnemyId;
         state.brush = payload.brush;
         state.lastCell = payload.lastCell;
+        state.brushSettings = { ...payload.brushSettings };
         state.validation = {
             errors: payload.validation.errors.slice(),
             warnings: payload.validation.warnings.slice()
@@ -236,12 +361,16 @@
 
     function ensureStateGridSize(width, height) {
         const newGrid = createEmptyGrid(width, height, 1);
+        const newMeta = createEmptyMeta(width, height);
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 newGrid[y][x] = state.grid?.[y]?.[x] === 0 ? 0 : 1;
+                const prevMeta = state.meta?.[y]?.[x];
+                newMeta[y][x] = normalizeMetaObject(prevMeta, newGrid[y][x] === 0);
             }
         }
         state.grid = newGrid;
+        state.meta = newMeta;
         const clampPos = (pos) => {
             if (!pos) return null;
             if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height) return null;
@@ -272,6 +401,88 @@
     function setSelectedCell(x, y) {
         state.lastCell = { x, y };
         updateSelectedCellLabel();
+        syncBrushControls();
+    }
+
+    function applyBrushToCell(x, y, options = {}) {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+        if (x < 0 || y < 0 || x >= state.width || y >= state.height) return false;
+        const { updateSelection = true } = options;
+        if (updateSelection) {
+            setSelectedCell(x, y);
+        }
+        let changed = false;
+        const brush = state.brush;
+        if (brush === 'floor') {
+            if (state.grid[y][x] !== 0) {
+                state.grid[y][x] = 0;
+                changed = true;
+            }
+            if (applyFloorMetaToCell(x, y)) changed = true;
+        } else if (brush === 'wall') {
+            if (state.grid[y][x] !== 1) {
+                state.grid[y][x] = 1;
+                changed = true;
+            }
+            if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
+                state.playerStart = null;
+                changed = true;
+            }
+            if (state.stairs && state.stairs.x === x && state.stairs.y === y) {
+                state.stairs = null;
+                changed = true;
+            }
+            let enemyChanged = false;
+            state.enemies = state.enemies.map(enemy => {
+                if (enemy.x === x && enemy.y === y) {
+                    enemyChanged = true;
+                    return { ...enemy, x: null, y: null };
+                }
+                return enemy;
+            });
+            if (enemyChanged) changed = true;
+            if (applyWallMetaToCell(x, y)) changed = true;
+        } else if (brush === 'start') {
+            if (state.grid[y][x] !== 0) {
+                state.grid[y][x] = 0;
+                changed = true;
+            }
+            if (!state.playerStart || state.playerStart.x !== x || state.playerStart.y !== y) {
+                state.playerStart = { x, y };
+                changed = true;
+            }
+            if (applyFloorMetaToCell(x, y)) changed = true;
+        } else if (brush === 'stairs') {
+            if (state.grid[y][x] !== 0) {
+                state.grid[y][x] = 0;
+                changed = true;
+            }
+            if (!state.stairs || state.stairs.x !== x || state.stairs.y !== y) {
+                state.stairs = { x, y };
+                changed = true;
+            }
+            if (applyFloorMetaToCell(x, y)) changed = true;
+        } else if (brush === 'enemy') {
+            if (!state.selectedEnemyId) {
+                state.tempMessage = '敵配置ブラシを使う前に敵を選択してください。';
+                renderValidation();
+                return false;
+            }
+            const enemy = state.enemies.find(e => e.id === state.selectedEnemyId);
+            if (enemy) {
+                if (state.grid[y][x] !== 0) {
+                    state.grid[y][x] = 0;
+                    changed = true;
+                }
+                if (enemy.x !== x || enemy.y !== y) {
+                    enemy.x = x;
+                    enemy.y = y;
+                    changed = true;
+                }
+                if (applyFloorMetaToCell(x, y)) changed = true;
+            }
+        }
+        return changed;
     }
 
     function renderGrid() {
@@ -289,6 +500,19 @@
                 btn.dataset.y = String(y);
                 const cell = state.grid[y][x];
                 btn.classList.add(cell === 0 ? 'floor' : 'wall');
+                btn.style.removeProperty('--sandbox-floor-color');
+                btn.style.removeProperty('--sandbox-wall-color');
+                const meta = state.meta?.[y]?.[x] || null;
+                if (cell === 0) {
+                    const floorType = meta?.floorType;
+                    if (floorType === 'ice') btn.classList.add('floor-ice');
+                    else if (floorType === 'poison') btn.classList.add('floor-poison');
+                    if (meta?.floorColor) {
+                        btn.style.setProperty('--sandbox-floor-color', meta.floorColor);
+                    }
+                } else if (meta?.wallColor) {
+                    btn.style.setProperty('--sandbox-wall-color', meta.wallColor);
+                }
                 let icon = '';
                 if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
                     icon = '★';
@@ -319,6 +543,18 @@
                 }
                 if (state.stairs && state.stairs.x === x && state.stairs.y === y) {
                     detailParts.push('階段');
+                }
+                if (cell === 0) {
+                    if (meta?.floorType === 'ice') {
+                        detailParts.push('床タイプ: 氷');
+                    } else if (meta?.floorType === 'poison') {
+                        detailParts.push('床タイプ: 毒');
+                    }
+                    if (meta?.floorColor) {
+                        detailParts.push(`床色: ${meta.floorColor}`);
+                    }
+                } else if (meta?.wallColor) {
+                    detailParts.push(`壁色: ${meta.wallColor}`);
                 }
                 if (enemiesHere.length) {
                     let enemyDetail = '';
@@ -376,6 +612,46 @@
         } else {
             refs.selectedCell.textContent = 'セルをクリックして編集します。';
         }
+    }
+
+    function updateColorInput(input, hintEl, color, fallback) {
+        if (!input) return;
+        const sanitized = sanitizeColorValue(color);
+        const hasCustom = !!sanitized;
+        const value = hasCustom ? sanitized : fallback;
+        if (input.value !== value) {
+            input.value = value;
+        }
+        input.dataset.hasCustom = hasCustom ? 'true' : 'false';
+        if (hintEl) {
+            hintEl.textContent = hasCustom ? sanitized : '自動';
+        }
+    }
+
+    function syncBrushControls() {
+        if (!refs.brushFloorType) return;
+        const settings = state.brushSettings || { floorType: 'normal', floorColor: '', wallColor: '' };
+        let floorType = settings.floorType;
+        let floorColor = settings.floorColor;
+        let wallColor = settings.wallColor;
+        if (state.lastCell) {
+            const { x, y } = state.lastCell;
+            const isFloor = state.grid?.[y]?.[x] === 0;
+            const meta = state.meta?.[y]?.[x] || null;
+            if (isFloor) {
+                floorType = meta?.floorType || 'normal';
+                floorColor = meta?.floorColor || '';
+            }
+            if (!isFloor) {
+                wallColor = meta?.wallColor || '';
+            }
+        }
+        if (!FLOOR_TYPES.includes(floorType)) {
+            floorType = 'normal';
+        }
+        refs.brushFloorType.value = floorType;
+        updateColorInput(refs.brushFloorColor, refs.floorColorHint, floorColor, DEFAULT_FLOOR_COLOR);
+        updateColorInput(refs.brushWallColor, refs.wallColorHint, wallColor, DEFAULT_WALL_COLOR);
     }
 
     function renderPlayerPreview() {
@@ -642,46 +918,67 @@
         renderGrid();
         updateBrushButtons();
         updateSelectedCellLabel();
+        syncBrushControls();
         renderPlayerPreview();
         renderEnemies();
         renderValidation();
         restoreActiveInput(focusSnapshot);
     }
 
-    function handleGridClick(event) {
+    function handleGridPointerDown(event) {
+        const target = event.target.closest('.sandbox-cell');
+        if (!target) return;
+        if (typeof event.button === 'number' && event.button !== 0) return;
+        const x = Number(target.dataset.x);
+        const y = Number(target.dataset.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        paintState.active = true;
+        paintState.pointerId = event.pointerId;
+        paintState.lastKey = `${x},${y}`;
+        paintState.blockClick = true;
+        event.preventDefault();
+        applyBrushToCell(x, y, { updateSelection: true });
+        render();
+    }
+
+    function handleGridPointerOver(event) {
+        if (!paintState.active || paintState.pointerId !== event.pointerId) return;
         const target = event.target.closest('.sandbox-cell');
         if (!target) return;
         const x = Number(target.dataset.x);
         const y = Number(target.dataset.y);
         if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-        setSelectedCell(x, y);
-        const brush = state.brush;
-        if (brush === 'floor') {
-            state.grid[y][x] = 0;
-        } else if (brush === 'wall') {
-            state.grid[y][x] = 1;
-            if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) state.playerStart = null;
-            if (state.stairs && state.stairs.x === x && state.stairs.y === y) state.stairs = null;
-            state.enemies = state.enemies.map(enemy => enemy.x === x && enemy.y === y ? { ...enemy, x: null, y: null } : enemy);
-        } else if (brush === 'start') {
-            state.grid[y][x] = 0;
-            state.playerStart = { x, y };
-        } else if (brush === 'stairs') {
-            state.grid[y][x] = 0;
-            state.stairs = { x, y };
-        } else if (brush === 'enemy') {
-            if (!state.selectedEnemyId) {
-                state.tempMessage = '敵配置ブラシを使う前に敵を選択してください。';
-                renderValidation();
-                return;
-            }
-            const enemy = state.enemies.find(e => e.id === state.selectedEnemyId);
-            if (enemy) {
-                state.grid[y][x] = 0;
-                enemy.x = x;
-                enemy.y = y;
-            }
+        const key = `${x},${y}`;
+        if (key === paintState.lastKey) return;
+        paintState.lastKey = key;
+        applyBrushToCell(x, y, { updateSelection: true });
+        render();
+    }
+
+    function endPointerPaint(pointerId) {
+        if (!paintState.active || paintState.pointerId !== pointerId) return;
+        paintState.active = false;
+        paintState.pointerId = null;
+        paintState.lastKey = null;
+        setTimeout(() => { paintState.blockClick = false; }, 0);
+    }
+
+    function handleGlobalPointerUp(event) {
+        endPointerPaint(event.pointerId);
+    }
+
+    function handleGridClick(event) {
+        if (paintState.blockClick) {
+            paintState.blockClick = false;
+            event.preventDefault();
+            return;
         }
+        const target = event.target.closest('.sandbox-cell');
+        if (!target) return;
+        const x = Number(target.dataset.x);
+        const y = Number(target.dataset.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        applyBrushToCell(x, y, { updateSelection: true });
         render();
     }
 
@@ -718,6 +1015,7 @@
 
     function fillGrid(value) {
         state.grid = createEmptyGrid(state.width, state.height, value);
+        state.meta = createEmptyMeta(state.width, state.height);
         if (value === 1) {
             state.playerStart = null;
             state.stairs = null;
@@ -756,6 +1054,13 @@
             fillFloorButton: panel.querySelector('#sandbox-fill-floor'),
             fillWallButton: panel.querySelector('#sandbox-fill-wall'),
             clearMarkersButton: panel.querySelector('#sandbox-clear-markers'),
+            brushFloorType: panel.querySelector('#sandbox-brush-floor-type'),
+            brushFloorColor: panel.querySelector('#sandbox-brush-floor-color'),
+            brushFloorColorClear: panel.querySelector('#sandbox-brush-floor-color-clear'),
+            brushWallColor: panel.querySelector('#sandbox-brush-wall-color'),
+            brushWallColorClear: panel.querySelector('#sandbox-brush-wall-color-clear'),
+            floorColorHint: panel.querySelector('#sandbox-floor-color-hint'),
+            wallColorHint: panel.querySelector('#sandbox-wall-color-hint'),
             validation: panel.querySelector('#sandbox-validation'),
             startButton: panel.querySelector('#sandbox-start-button')
         };
@@ -764,6 +1069,7 @@
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
             grid: createEmptyGrid(DEFAULT_WIDTH, DEFAULT_HEIGHT, 0),
+            meta: createEmptyMeta(DEFAULT_WIDTH, DEFAULT_HEIGHT),
             brush: 'floor',
             lastCell: null,
             playerStart: { x: 1, y: 1 },
@@ -773,12 +1079,17 @@
             selectedEnemyId: null,
             validation: { errors: [], warnings: [] },
             compiledConfig: null,
-            tempMessage: ''
+            tempMessage: '',
+            brushSettings: { floorType: 'normal', floorColor: '', wallColor: '' }
         };
 
         if (refs.grid) {
             refs.grid.addEventListener('click', handleGridClick);
+            refs.grid.addEventListener('pointerdown', handleGridPointerDown);
+            refs.grid.addEventListener('pointerover', handleGridPointerOver);
         }
+        window.addEventListener('pointerup', handleGlobalPointerUp);
+        window.addEventListener('pointercancel', handleGlobalPointerUp);
         if (refs.brushButtons?.length) {
             refs.brushButtons.forEach(btn => btn.addEventListener('click', handleBrushClick));
         }
@@ -822,6 +1133,54 @@
         }
         if (refs.clearMarkersButton) {
             refs.clearMarkersButton.addEventListener('click', clearMarkers);
+        }
+        if (refs.brushFloorType) {
+            refs.brushFloorType.addEventListener('change', (e) => {
+                const value = typeof e.target.value === 'string' ? e.target.value : 'normal';
+                state.brushSettings.floorType = FLOOR_TYPES.includes(value) ? value : 'normal';
+                if (state.lastCell && state.grid?.[state.lastCell.y]?.[state.lastCell.x] === 0) {
+                    applyFloorMetaToCell(state.lastCell.x, state.lastCell.y);
+                }
+                render();
+            });
+        }
+        if (refs.brushFloorColor) {
+            refs.brushFloorColor.addEventListener('input', (e) => {
+                const color = sanitizeColorValue(e.target.value);
+                state.brushSettings.floorColor = color;
+                if (state.lastCell && state.grid?.[state.lastCell.y]?.[state.lastCell.x] === 0) {
+                    applyFloorMetaToCell(state.lastCell.x, state.lastCell.y);
+                }
+                render();
+            });
+        }
+        if (refs.brushFloorColorClear) {
+            refs.brushFloorColorClear.addEventListener('click', () => {
+                state.brushSettings.floorColor = '';
+                if (state.lastCell && state.grid?.[state.lastCell.y]?.[state.lastCell.x] === 0) {
+                    applyFloorMetaToCell(state.lastCell.x, state.lastCell.y);
+                }
+                render();
+            });
+        }
+        if (refs.brushWallColor) {
+            refs.brushWallColor.addEventListener('input', (e) => {
+                const color = sanitizeColorValue(e.target.value);
+                state.brushSettings.wallColor = color;
+                if (state.lastCell && state.grid?.[state.lastCell.y]?.[state.lastCell.x] !== 0) {
+                    applyWallMetaToCell(state.lastCell.x, state.lastCell.y);
+                }
+                render();
+            });
+        }
+        if (refs.brushWallColorClear) {
+            refs.brushWallColorClear.addEventListener('click', () => {
+                state.brushSettings.wallColor = '';
+                if (state.lastCell && state.grid?.[state.lastCell.y]?.[state.lastCell.x] !== 0) {
+                    applyWallMetaToCell(state.lastCell.x, state.lastCell.y);
+                }
+                render();
+            });
         }
         if (refs.startButton) {
             refs.startButton.addEventListener('click', () => {

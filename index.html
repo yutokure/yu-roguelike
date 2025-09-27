@@ -450,6 +450,33 @@
                                             <button type="button" class="sandbox-brush" data-brush="enemy" aria-pressed="false">敵配置</button>
                                         </div>
                                         <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite">セルをクリックして編集します。</p>
+                                        <div class="sandbox-brush-options" aria-labelledby="sandbox-brush-options-title">
+                                            <h5 id="sandbox-brush-options-title">ブラシオプション</h5>
+                                            <div class="sandbox-brush-option-grid">
+                                                <label class="sandbox-field-group">床タイプ
+                                                    <select id="sandbox-brush-floor-type">
+                                                        <option value="normal">通常</option>
+                                                        <option value="ice">氷</option>
+                                                        <option value="poison">毒</option>
+                                                    </select>
+                                                </label>
+                                                <label class="sandbox-field-group">床の色
+                                                    <div class="sandbox-color-control">
+                                                        <input id="sandbox-brush-floor-color" type="color" value="#ced6e0" data-has-custom="false">
+                                                        <button type="button" id="sandbox-brush-floor-color-clear" class="sandbox-color-clear">自動</button>
+                                                    </div>
+                                                    <span class="sandbox-color-hint" id="sandbox-floor-color-hint">自動</span>
+                                                </label>
+                                                <label class="sandbox-field-group">壁の色
+                                                    <div class="sandbox-color-control">
+                                                        <input id="sandbox-brush-wall-color" type="color" value="#2f3542" data-has-custom="false">
+                                                        <button type="button" id="sandbox-brush-wall-color-clear" class="sandbox-color-clear">自動</button>
+                                                    </div>
+                                                    <span class="sandbox-color-hint" id="sandbox-wall-color-hint">自動</span>
+                                                </label>
+                                            </div>
+                                            <p class="sandbox-note small">選択セルや塗りつぶすマスに色・床タイプを適用できます。</p>
+                                        </div>
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-player-title">
                                         <div class="sandbox-section-header">
@@ -486,6 +513,8 @@
                                         <div><dt>★</dt><dd>開始位置</dd></div>
                                         <div><dt>⬆</dt><dd>階段</dd></div>
                                         <div><dt>✦</dt><dd>敵</dd></div>
+                                        <div><dt class="legend-ice">■</dt><dd>氷床</dd></div>
+                                        <div><dt class="legend-poison">■</dt><dd>毒床</dd></div>
                                     </dl>
                                 </div>
                             </div>

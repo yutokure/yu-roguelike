@@ -1419,7 +1419,8 @@ function setupTabs() {
                 }
                 __toolsTabInitialized = true;
             } else if (window.ToolsTab?.show) {
-                window.ToolsTab.show('mod-maker');
+                const currentTool = window.ToolsTab.getCurrentTool?.();
+                window.ToolsTab.show(currentTool || 'mod-maker');
             }
         });
     }

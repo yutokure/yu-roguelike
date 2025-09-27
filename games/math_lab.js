@@ -384,6 +384,15 @@
         ]
       },
       {
+        title: 'プログラマー・情報',
+        color: '#0ea5e9',
+        buttons: [
+          { label: 'baseDecode', text: 'baseDecode(', },
+          { label: 'baseEncode', text: 'baseEncode(', },
+          { label: 'baseConvert', text: 'baseConvert(', }
+        ]
+      },
+      {
         title: '定数・単位',
         color: '#facc15',
         buttons: [
@@ -400,6 +409,111 @@
         ]
       }
     ];
+
+    const RADIX_DIGITS = '0123456789ABCDEFGHIJKLMNOPQRST';
+
+    function ensureRadix(value){
+      const num = Number(ensureFiniteNumber(value));
+      if (!Number.isInteger(num) || num < 2 || num > 30) {
+        throw new Error('基数は 2 以上 30 以下の整数で指定してください。');
+      }
+      return num;
+    }
+
+    function clampRadixPrecision(value){
+      if (value === undefined || value === null) return 12;
+      const num = Number(value);
+      if (!Number.isFinite(num)) return 12;
+      return Math.max(0, Math.min(24, Math.floor(num)));
+    }
+
+    function parseRadixText(text, base){
+      if (typeof text !== 'string') return null;
+      let str = text.trim().toUpperCase();
+      if (!str) return null;
+      let sign = 1;
+      if (str.startsWith('+')) {
+        str = str.slice(1);
+      } else if (str.startsWith('-')) {
+        sign = -1;
+        str = str.slice(1);
+      }
+      if (!str) return null;
+      const parts = str.split('.');
+      if (parts.length > 2) return null;
+      const intPart = parts[0] || '';
+      const fracPart = parts[1] || '';
+      const pattern = new RegExp(`^[${RADIX_DIGITS.slice(0, base)}]*$`);
+      if (!pattern.test(intPart) || !pattern.test(fracPart)) return null;
+      let value = 0;
+      for (let i = 0; i < intPart.length; i++) {
+        const digit = RADIX_DIGITS.indexOf(intPart[i]);
+        if (digit < 0 || digit >= base) return null;
+        value = value * base + digit;
+      }
+      let fraction = 0;
+      let factor = 1 / base;
+      for (let i = 0; i < fracPart.length; i++) {
+        const digit = RADIX_DIGITS.indexOf(fracPart[i]);
+        if (digit < 0 || digit >= base) return null;
+        fraction += digit * factor;
+        factor /= base;
+      }
+      const result = sign * (value + fraction);
+      return Number.isFinite(result) ? result : null;
+    }
+
+    function decodeBaseValue(value, base){
+      if (typeof value === 'string') {
+        const parsed = parseRadixText(value, base);
+        if (parsed === null) {
+          throw new Error('指定した基数に対応しない文字が含まれています。');
+        }
+        return parsed;
+      }
+      if (value && typeof value.valueOf === 'function' && value.valueOf() !== value) {
+        return decodeBaseValue(value.valueOf(), base);
+      }
+      return ensureFiniteNumber(value);
+    }
+
+    function convertDecimalToRadix(num, base, precision = 12){
+      const numeric = ensureFiniteNumber(num);
+      if (!Number.isFinite(numeric)) return 'NaN';
+      if (base < 2) return String(numeric);
+      const negative = numeric < 0;
+      let absValue = Math.abs(numeric);
+      let intPart = Math.floor(absValue);
+      if (!Number.isFinite(intPart)) return 'NaN';
+      let intStr = '';
+      if (intPart === 0) {
+        intStr = '0';
+      } else {
+        while (intPart > 0) {
+          const digit = intPart % base;
+          intStr = RADIX_DIGITS[digit] + intStr;
+          intPart = Math.floor(intPart / base);
+        }
+      }
+      let fracStr = '';
+      const digitCount = Math.max(0, Math.min(precision, 24));
+      let fraction = absValue - Math.floor(absValue);
+      if (fraction > 0 && digitCount > 0) {
+        for (let i = 0; i < digitCount && fraction > 1e-12; i++) {
+          fraction *= base;
+          let digit = Math.floor(fraction + 1e-12);
+          if (digit >= base) {
+            digit = base - 1;
+            fraction = 0;
+          }
+          fracStr += RADIX_DIGITS[digit];
+          fraction -= digit;
+        }
+        fracStr = fracStr.replace(/0+$/, '');
+      }
+      const combined = fracStr ? `${intStr}.${fracStr}` : intStr;
+      return negative && combined !== '0' ? `-${combined}` : combined;
+    }
 
     function cloneScope(source = scope){
       const target = Object.create(null);
@@ -2712,6 +2826,22 @@
       const fromRadians = value => math.multiply(value, math.divide(180, math.pi));
 
       const overrides = {};
+      overrides.baseDecode = function(value, base){
+        const radix = ensureRadix(base);
+        return decodeBaseValue(value, radix);
+      };
+      overrides.baseEncode = function(value, base, precision){
+        const radix = ensureRadix(base);
+        const prec = clampRadixPrecision(precision);
+        return convertDecimalToRadix(value, radix, prec);
+      };
+      overrides.baseConvert = function(value, fromBase, toBase, precision){
+        const from = ensureRadix(fromBase);
+        const to = ensureRadix(toBase);
+        const prec = clampRadixPrecision(precision);
+        const decimal = decodeBaseValue(value, from);
+        return convertDecimalToRadix(decimal, to, prec);
+      };
       trigNames.forEach(([name, convertIn, convertOut]) => {
         const baseFn = math[name].bind(math);
         overrides[name] = function(...args){

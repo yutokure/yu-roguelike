@@ -16,8 +16,5 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'forest_pack',    name: 'Verdant Forest Pack', entry: 'dungeontypes/forest_caverns.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'shore_pack',     name: 'Sunlit Shore Pack', entry: 'dungeontypes/beach_shore.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'desert_pack',    name: 'Scorched Desert Pack', entry: 'dungeontypes/desert_field.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'bog_pack',       name: 'Toxic Boglands Pack', entry: 'dungeontypes/poison_bogs.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'dark_cave_pack', name: 'Lightless Caverns Pack', entry: 'dungeontypes/dark_cavern.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'sandstorm_pack', name: 'Sandstorm Expanse Pack', entry: 'dungeontypes/sandstorm_desert.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'radiation_pack', name: 'Radiation Plains Pack', entry: 'dungeontypes/radiation_plains.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'bog_pack',       name: 'Toxic Boglands Pack', entry: 'dungeontypes/poison_bogs.js', version: '1.0.0', author: 'builtin-sample' }
 ];

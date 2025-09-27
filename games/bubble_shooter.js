@@ -137,6 +137,85 @@
       return angle;
     }
 
+    function computeAimPreview(){
+      const angle = lineAngle();
+      const step = R * 0.55;
+      let x = SHOOTER_X;
+      let y = SHOOTER_Y;
+      let vx = Math.cos(angle);
+      let vy = Math.sin(angle);
+      const path = [];
+      let target = null;
+      const maxSteps = 900;
+
+      const pushTarget = (slot) => {
+        if (slot) {
+          target = slot.center;
+          path.push(slot.center);
+        }
+      };
+
+      for (let i = 0; i < maxSteps; i++) {
+        let nextX = x + vx * step;
+        let nextY = y + vy * step;
+
+        if (nextX <= LEFT_BOUND) {
+          nextX = LEFT_BOUND + (LEFT_BOUND - nextX);
+          vx *= -1;
+        } else if (nextX >= RIGHT_BOUND) {
+          nextX = RIGHT_BOUND - (nextX - RIGHT_BOUND);
+          vx *= -1;
+        }
+
+        x = nextX;
+        y = nextY;
+        path.push({ x, y });
+
+        if (y <= TOP_BOUND + R) {
+          let col = Math.round((x - (PAD + R)) / DX);
+          if (col < 0) col = 0;
+          if (col >= COLS) col = COLS - 1;
+          const slot = findAttachSlot(0, col, x, y);
+          if (slot) {
+            pushTarget(slot);
+          }
+          break;
+        }
+
+        let hitRow = null;
+        let hitCol = null;
+        let minDist = Infinity;
+        for (let r = 0; r < grid.length; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cell = grid[r][c];
+            if (!cell) continue;
+            const center = cellCenter(r, c);
+            const dx = center.x - x;
+            const dy = center.y - y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq <= (R * 2 - 2) ** 2) {
+              const dist = Math.sqrt(distSq);
+              if (dist < minDist) {
+                minDist = dist;
+                hitRow = r;
+                hitCol = c;
+              }
+            }
+          }
+        }
+
+        if (hitRow !== null) {
+          const slot = findAttachSlot(hitRow, hitCol, x, y);
+          if (slot) {
+            pushTarget(slot);
+          }
+          break;
+        }
+      }
+
+      return { path, target };
+    }
+
     function shoot(){
       if (!running || gameOver) return;
       if (current) return;
@@ -152,21 +231,24 @@
       refillQueue();
     }
 
-    function attachAt(row, col, color){
+    function findAttachSlot(row, col, px, py){
       ensureRow(row);
+      if (!isCellValid(row, col)) return null;
+      let targetRow = row;
+      let targetCol = col;
       if (grid[row][col] && grid[row][col].color !== undefined) {
-        // choose nearest empty neighbor
         const neigh = neighbors(row, col);
         let best = null;
         let bestDist = Infinity;
         for (const [nr, nc] of neigh) {
           if (grid[nr][nc]) continue;
           const { x, y } = cellCenter(nr, nc);
-          const d = (x - current.x) ** 2 + (y - current.y) ** 2;
+          const d = (x - px) ** 2 + (y - py) ** 2;
           if (d < bestDist) { bestDist = d; best = [nr, nc]; }
         }
         if (best) {
-          row = best[0]; col = best[1];
+          targetRow = best[0];
+          targetCol = best[1];
         } else {
           let fallback = null;
           let fallbackDist = Infinity;
@@ -174,7 +256,7 @@
             for (let c = 0; c < COLS; c++) {
               if (grid[r][c]) continue;
               const { x, y } = cellCenter(r, c);
-              const d = (x - current.x) ** 2 + (y - current.y) ** 2;
+              const d = (x - px) ** 2 + (y - py) ** 2;
               if (d < fallbackDist) {
                 fallbackDist = d;
                 fallback = [r, c];
@@ -182,21 +264,29 @@
             }
           }
           if (fallback) {
-            row = fallback[0];
-            col = fallback[1];
+            targetRow = fallback[0];
+            targetCol = fallback[1];
           } else {
-            current = null;
-            finishGame();
-            return;
+            return null;
           }
         }
       }
-      grid[row][col] = { color };
-      const { x, y } = cellCenter(row, col);
+      return { row: targetRow, col: targetCol, center: cellCenter(targetRow, targetCol) };
+    }
+
+    function attachAt(row, col, color){
+      const slot = findAttachSlot(row, col, current ? current.x : SHOOTER_X, current ? current.y : SHOOTER_Y);
+      if (!slot) {
+        current = null;
+        finishGame();
+        return;
+      }
+      grid[slot.row][slot.col] = { color };
+      const { x, y } = slot.center;
       popFx.push({ x, y, life: 0, type: 'place', color });
       current = null;
       shotsLeft--;
-      resolveAfterPlacement(row, col);
+      resolveAfterPlacement(slot.row, slot.col);
       if (shotsLeft <= 0) {
         pushNewRow();
         shotsLeft = cfg.shotsCycle;
@@ -469,19 +559,32 @@
 
       for (const f of floating) drawBubble(f.x, f.y, f.color, 0.95, Math.max(0, f.alpha));
 
-      // aim line
-      const angle = lineAngle();
-      const len = 420;
-      const ax = SHOOTER_X + Math.cos(angle) * len;
-      const ay = SHOOTER_Y + Math.sin(angle) * len;
-      ctx.save();
-      ctx.strokeStyle = 'rgba(148,163,184,0.5)';
-      ctx.setLineDash([10, 6]);
-      ctx.beginPath();
-      ctx.moveTo(SHOOTER_X, SHOOTER_Y);
-      ctx.lineTo(ax, ay);
-      ctx.stroke();
-      ctx.restore();
+      // aim line preview
+      const preview = computeAimPreview();
+      if (preview.path.length) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(148,163,184,0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 8]);
+        ctx.beginPath();
+        ctx.moveTo(SHOOTER_X, SHOOTER_Y);
+        for (const point of preview.path) {
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (preview.target) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(94,234,212,0.8)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 6]);
+        ctx.beginPath();
+        ctx.arc(preview.target.x, preview.target.y, R * 1.05, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       // shooter base
       ctx.fillStyle = '#1f2937';

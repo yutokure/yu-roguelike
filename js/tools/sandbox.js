@@ -15,7 +15,15 @@
     const MIN_SIZE_FALLBACK = 5;
     const MAX_SIZE_FALLBACK = 60;
     const MAX_LEVEL_FALLBACK = 999;
-    const BRUSHES = ['floor', 'wall', 'start', 'stairs', 'enemy'];
+    const BRUSHES = ['select', 'floor', 'wall', 'start', 'stairs', 'enemy'];
+    const BRUSH_CURSOR = {
+        select: 'default',
+        floor: 'pointer',
+        wall: 'pointer',
+        start: 'pointer',
+        stairs: 'pointer',
+        enemy: 'pointer'
+    };
     const FLOOR_TYPES = ['normal', 'ice', 'poison'];
     const DEFAULT_FLOOR_COLOR = '#ced6e0';
     const DEFAULT_WALL_COLOR = '#2f3542';
@@ -204,11 +212,12 @@
         return { wallColor };
     }
 
-    function applyFloorMetaToCell(x, y) {
+    function applyFloorMetaToCell(x, y, options = {}) {
+        const { useBrushSettings = true } = options;
         const row = ensureMetaRow(y);
         const previous = row[x] ? { ...row[x] } : null;
         const prevNormalized = normalizeMetaObject(previous, true);
-        const desired = computeFloorMetaFromSettings();
+        const desired = useBrushSettings ? computeFloorMetaFromSettings() : prevNormalized;
         const changed = !metaEquals(prevNormalized, desired) || (!!previous !== !!desired);
         row[x] = desired;
         return changed || (!!previous && !metaEquals(previous, desired));
@@ -457,6 +466,7 @@
         if (!BRUSHES.includes(brush)) return;
         state.brush = brush;
         updateBrushButtons();
+        updateGridCursor();
     }
 
     function setSelectedCell(x, y) {
@@ -474,6 +484,9 @@
         }
         let changed = false;
         const brush = state.brush;
+        if (brush === 'select') {
+            return false;
+        }
         if (brush === 'floor') {
             if (state.grid[y][x] !== 0) {
                 state.grid[y][x] = 0;
@@ -512,7 +525,7 @@
                 state.playerStart = { x, y };
                 changed = true;
             }
-            if (applyFloorMetaToCell(x, y)) changed = true;
+            if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
         } else if (brush === 'stairs') {
             if (state.grid[y][x] !== 0) {
                 state.grid[y][x] = 0;
@@ -522,7 +535,7 @@
                 state.stairs = { x, y };
                 changed = true;
             }
-            if (applyFloorMetaToCell(x, y)) changed = true;
+            if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
         } else if (brush === 'enemy') {
             if (!state.selectedEnemyId) {
                 state.tempMessage = '敵配置ブラシを使う前に敵を選択してください。';
@@ -540,7 +553,7 @@
                     enemy.y = y;
                     changed = true;
                 }
-                if (applyFloorMetaToCell(x, y)) changed = true;
+                if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
             }
         }
         return changed;
@@ -780,6 +793,14 @@
             btn.setAttribute('aria-pressed', active ? 'true' : 'false');
             btn.classList.toggle('active', active);
         });
+    }
+
+    function updateGridCursor() {
+        if (!refs.gridCanvas) return;
+        const cursor = BRUSH_CURSOR[state.brush] || 'pointer';
+        if (refs.gridCanvas.style.cursor !== cursor) {
+            refs.gridCanvas.style.cursor = cursor;
+        }
     }
 
     function updateSelectedCellLabel() {
@@ -1106,6 +1127,7 @@
 
         renderGrid();
         updateBrushButtons();
+        updateGridCursor();
         updateSelectedCellLabel();
         syncBrushControls();
         renderPlayerPreview();

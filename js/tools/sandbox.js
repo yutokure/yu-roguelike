@@ -20,6 +20,22 @@
     const DEFAULT_FLOOR_COLOR = '#ced6e0';
     const DEFAULT_WALL_COLOR = '#2f3542';
     const COLOR_HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+    const RENDER_CELL_SIZE = 28;
+    const RENDER_CELL_GAP = 4;
+    const RENDER_CELL_RADIUS = 6;
+    const GRID_BACKGROUND_COLOR = '#f8fafc';
+    const GRID_DEFAULT_FLOOR_COLOR = '#e5edff';
+    const GRID_DEFAULT_WALL_COLOR = '#1f2937';
+    const GRID_BORDER_FLOOR = '#cbd5f5';
+    const GRID_BORDER_WALL = '#0f172a';
+    const GRID_SELECTION_COLOR = '#38bdf8';
+    const GRID_START_COLOR = '#22d3ee';
+    const GRID_STAIRS_COLOR = '#f97316';
+    const GRID_SELECTED_ENEMY_COLOR = '#f97316';
+    const FLOOR_TYPE_COLORS = {
+        ice: '#74c0fc',
+        poison: '#94d82d'
+    };
 
     let refs = {};
     let state = null;
@@ -80,6 +96,51 @@
         const trimmed = value.trim();
         if (!trimmed) return '';
         return COLOR_HEX_PATTERN.test(trimmed) ? trimmed.toLowerCase() : '';
+    }
+
+    function parseHexColor(value) {
+        const hex = sanitizeColorValue(value);
+        if (!hex) return null;
+        let r;
+        let g;
+        let b;
+        if (hex.length === 4 || hex.length === 5) {
+            r = parseInt(hex[1] + hex[1], 16);
+            g = parseInt(hex[2] + hex[2], 16);
+            b = parseInt(hex[3] + hex[3], 16);
+        } else if (hex.length === 7 || hex.length === 9) {
+            r = parseInt(hex.slice(1, 3), 16);
+            g = parseInt(hex.slice(3, 5), 16);
+            b = parseInt(hex.slice(5, 7), 16);
+        } else {
+            return null;
+        }
+        if ([r, g, b].some(v => Number.isNaN(v))) return null;
+        return { r, g, b };
+    }
+
+    function getTextColorForBackground(color) {
+        const rgb = parseHexColor(color);
+        if (!rgb) return '#1f2937';
+        const sr = rgb.r / 255;
+        const sg = rgb.g / 255;
+        const sb = rgb.b / 255;
+        const toLinear = (value) => (value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4));
+        const luminance = 0.2126 * toLinear(sr) + 0.7152 * toLinear(sg) + 0.0722 * toLinear(sb);
+        return luminance > 0.45 ? '#1f2937' : '#f8fafc';
+    }
+
+    function getFloorFillColor(meta) {
+        if (meta?.floorColor) return meta.floorColor;
+        if (meta?.floorType && FLOOR_TYPE_COLORS[meta.floorType]) {
+            return FLOOR_TYPE_COLORS[meta.floorType];
+        }
+        return GRID_DEFAULT_FLOOR_COLOR;
+    }
+
+    function getWallFillColor(meta) {
+        if (meta?.wallColor) return meta.wallColor;
+        return GRID_DEFAULT_WALL_COLOR;
     }
 
     function normalizeMetaObject(meta, isFloor) {
@@ -485,115 +546,231 @@
         return changed;
     }
 
+    function drawRoundedRect(ctx, x, y, width, height, radius, fillStyle, strokeStyle, strokeWidth) {
+        const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + width - r, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+        ctx.lineTo(x + width, y + height - r);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        ctx.lineTo(x + r, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        if (fillStyle) {
+            ctx.fillStyle = fillStyle;
+            ctx.fill();
+        }
+        if (strokeStyle && strokeWidth > 0) {
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = strokeWidth;
+            ctx.stroke();
+        }
+    }
+
+    function describeCell(x, y) {
+        if (!state || !Array.isArray(state.grid) || !Array.isArray(state.grid[y]) || typeof state.grid[y][x] === 'undefined') {
+            return '';
+        }
+        const cell = state.grid[y][x];
+        const meta = state.meta?.[y]?.[x] || null;
+        const baseLabel = `${cell === 0 ? '床' : '壁'} (${x}, ${y})`;
+        const detailParts = [];
+        if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
+            detailParts.push('開始位置');
+        }
+        if (state.stairs && state.stairs.x === x && state.stairs.y === y) {
+            detailParts.push('階段');
+        }
+        if (cell === 0) {
+            if (meta?.floorType === 'ice') {
+                detailParts.push('床タイプ: 氷');
+            } else if (meta?.floorType === 'poison') {
+                detailParts.push('床タイプ: 毒');
+            }
+            if (meta?.floorColor) {
+                detailParts.push(`床色: ${meta.floorColor}`);
+            }
+        } else if (meta?.wallColor) {
+            detailParts.push(`壁色: ${meta.wallColor}`);
+        }
+        const enemiesHere = Array.isArray(state.enemies) ? state.enemies.filter(e => e.x === x && e.y === y) : [];
+        if (enemiesHere.length) {
+            let enemyDetail = '';
+            if (enemiesHere.length === 1) {
+                const enemy = enemiesHere[0];
+                const name = (enemy.name || '').trim();
+                if (name) {
+                    enemyDetail = `敵: ${name}${enemy.boss ? '（ボス）' : ''}`;
+                } else {
+                    enemyDetail = enemy.boss ? '敵: ボス1体' : '敵: 1体';
+                }
+            } else {
+                const nameParts = enemiesHere
+                    .map(e => {
+                        const nm = (e.name || '').trim();
+                        return nm ? `${nm}${e.boss ? '（ボス）' : ''}` : '';
+                    })
+                    .filter(Boolean);
+                if (nameParts.length === enemiesHere.length) {
+                    enemyDetail = `敵: ${nameParts.join('、')}`;
+                } else {
+                    const bossCount = enemiesHere.filter(e => e.boss).length;
+                    if (bossCount && bossCount === enemiesHere.length) {
+                        enemyDetail = `敵: ボス${enemiesHere.length}体`;
+                    } else if (bossCount) {
+                        enemyDetail = `敵: ${enemiesHere.length}体（ボス${bossCount}体含む）`;
+                    } else {
+                        enemyDetail = `敵: ${enemiesHere.length}体`;
+                    }
+                }
+            }
+            detailParts.push(enemyDetail);
+        }
+        return detailParts.length ? `${baseLabel} - ${detailParts.join(' / ')}` : baseLabel;
+    }
+
     function renderGrid() {
         const gridEl = refs.grid;
-        if (!gridEl) return;
-        gridEl.innerHTML = '';
-        gridEl.style.gridTemplateColumns = `repeat(${state.width}, var(--sandbox-cell-size))`;
-        const frag = document.createDocumentFragment();
+        const canvas = refs.gridCanvas;
+        if (!gridEl || !canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const cellSize = RENDER_CELL_SIZE;
+        const gap = RENDER_CELL_GAP;
+        const widthPx = state.width * cellSize + Math.max(0, state.width - 1) * gap;
+        const heightPx = state.height * cellSize + Math.max(0, state.height - 1) * gap;
+        const displayWidth = Math.max(1, Math.round(widthPx));
+        const displayHeight = Math.max(1, Math.round(heightPx));
+        const dpr = global.devicePixelRatio || 1;
+        const scaledWidth = Math.max(1, Math.round(displayWidth * dpr));
+        const scaledHeight = Math.max(1, Math.round(displayHeight * dpr));
+
+        if (canvas.width !== scaledWidth || canvas.height !== scaledHeight) {
+            canvas.width = scaledWidth;
+            canvas.height = scaledHeight;
+        }
+        if (canvas.style.width !== `${displayWidth}px`) {
+            canvas.style.width = `${displayWidth}px`;
+        }
+        if (canvas.style.height !== `${displayHeight}px`) {
+            canvas.style.height = `${displayHeight}px`;
+        }
+
+        if (typeof ctx.resetTransform === 'function') {
+            ctx.resetTransform();
+        } else {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (dpr !== 1) {
+            ctx.scale(dpr, dpr);
+        }
+
+        ctx.fillStyle = GRID_BACKGROUND_COLOR;
+        ctx.fillRect(0, 0, displayWidth, displayHeight);
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        state.renderMetrics = {
+            cellSize,
+            gap,
+            width: displayWidth,
+            height: displayHeight
+        };
+
+        gridEl.setAttribute('aria-rowcount', String(state.height));
+        gridEl.setAttribute('aria-colcount', String(state.width));
+
         for (let y = 0; y < state.height; y++) {
             for (let x = 0; x < state.width; x++) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'sandbox-cell';
-                btn.dataset.x = String(x);
-                btn.dataset.y = String(y);
-                const cell = state.grid[y][x];
-                btn.classList.add(cell === 0 ? 'floor' : 'wall');
-                btn.style.removeProperty('--sandbox-floor-color');
-                btn.style.removeProperty('--sandbox-wall-color');
+                const cellValue = state.grid?.[y]?.[x] ?? 0;
                 const meta = state.meta?.[y]?.[x] || null;
-                if (cell === 0) {
-                    const floorType = meta?.floorType;
-                    if (floorType === 'ice') btn.classList.add('floor-ice');
-                    else if (floorType === 'poison') btn.classList.add('floor-poison');
-                    if (meta?.floorColor) {
-                        btn.style.setProperty('--sandbox-floor-color', meta.floorColor);
-                    }
-                } else if (meta?.wallColor) {
-                    btn.style.setProperty('--sandbox-wall-color', meta.wallColor);
+                const isFloor = cellValue === 0;
+                const baseColor = isFloor ? getFloorFillColor(meta) : getWallFillColor(meta);
+                const baseStroke = isFloor ? GRID_BORDER_FLOOR : GRID_BORDER_WALL;
+                const originX = x * (cellSize + gap);
+                const originY = y * (cellSize + gap);
+                drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, baseColor, baseStroke, 1.2);
+
+                const isStart = state.playerStart && state.playerStart.x === x && state.playerStart.y === y;
+                const isStairs = state.stairs && state.stairs.x === x && state.stairs.y === y;
+                const enemiesHere = Array.isArray(state.enemies) ? state.enemies.filter(e => e.x === x && e.y === y) : [];
+                const hasSelectedEnemy = state.selectedEnemyId && enemiesHere.some(e => e.id === state.selectedEnemyId);
+
+                if (isStart) {
+                    drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_START_COLOR, 2.4);
                 }
-                let icon = '';
-                if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
-                    icon = '★';
-                    btn.classList.add('start');
+                if (isStairs) {
+                    drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_STAIRS_COLOR, 2.4);
                 }
-                if (state.stairs && state.stairs.x === x && state.stairs.y === y) {
-                    icon = '⬆';
-                    btn.classList.add('stairs');
-                }
-                const enemiesHere = state.enemies.filter(e => e.x === x && e.y === y);
-                if (enemiesHere.length) {
-                    btn.classList.add('enemy');
-                    if (!icon) {
-                        icon = enemiesHere.length > 1 ? `✦${enemiesHere.length}` : '✦';
-                    }
-                    if (state.selectedEnemyId && enemiesHere.some(e => e.id === state.selectedEnemyId)) {
-                        btn.classList.add('selected-enemy');
-                    }
+                if (hasSelectedEnemy) {
+                    drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_SELECTED_ENEMY_COLOR, 2.6);
                 }
                 if (state.lastCell && state.lastCell.x === x && state.lastCell.y === y) {
-                    btn.classList.add('selected');
+                    drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_SELECTION_COLOR, 2);
                 }
-                btn.textContent = icon;
-                const baseLabel = `${cell === 0 ? '床' : '壁'} (${x}, ${y})`;
-                const detailParts = [];
-                if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
-                    detailParts.push('開始位置');
+
+                let icon = '';
+                let iconColor = getTextColorForBackground(baseColor);
+                let fontSize = Math.floor(cellSize * 0.58);
+                if (isStart) {
+                    icon = '★';
+                    iconColor = '#ffffff';
+                    fontSize = Math.floor(cellSize * 0.65);
                 }
-                if (state.stairs && state.stairs.x === x && state.stairs.y === y) {
-                    detailParts.push('階段');
+                if (isStairs) {
+                    icon = '⬆';
+                    iconColor = '#1f2937';
+                    fontSize = Math.floor(cellSize * 0.6);
                 }
-                if (cell === 0) {
-                    if (meta?.floorType === 'ice') {
-                        detailParts.push('床タイプ: 氷');
-                    } else if (meta?.floorType === 'poison') {
-                        detailParts.push('床タイプ: 毒');
-                    }
-                    if (meta?.floorColor) {
-                        detailParts.push(`床色: ${meta.floorColor}`);
-                    }
-                } else if (meta?.wallColor) {
-                    detailParts.push(`壁色: ${meta.wallColor}`);
+                if (!icon && enemiesHere.length) {
+                    icon = enemiesHere.length > 1 ? `✦${enemiesHere.length}` : '✦';
+                    fontSize = enemiesHere.length > 1 ? Math.floor(cellSize * 0.5) : Math.floor(cellSize * 0.6);
+                    iconColor = getTextColorForBackground(baseColor);
                 }
-                if (enemiesHere.length) {
-                    let enemyDetail = '';
-                    if (enemiesHere.length === 1) {
-                        const enemy = enemiesHere[0];
-                        const name = (enemy.name || '').trim();
-                        if (name) {
-                            enemyDetail = `敵: ${name}${enemy.boss ? '（ボス）' : ''}`;
-                        } else {
-                            enemyDetail = enemy.boss ? '敵: ボス1体' : '敵: 1体';
-                        }
-                    } else {
-                        const nameParts = enemiesHere
-                            .map(e => {
-                                const nm = (e.name || '').trim();
-                                return nm ? `${nm}${e.boss ? '（ボス）' : ''}` : '';
-                            })
-                            .filter(Boolean);
-                        if (nameParts.length === enemiesHere.length) {
-                            enemyDetail = `敵: ${nameParts.join('、')}`;
-                        } else {
-                            const bossCount = enemiesHere.filter(e => e.boss).length;
-                            if (bossCount && bossCount === enemiesHere.length) {
-                                enemyDetail = `敵: ボス${enemiesHere.length}体`;
-                            } else if (bossCount) {
-                                enemyDetail = `敵: ${enemiesHere.length}体（ボス${bossCount}体含む）`;
-                            } else {
-                                enemyDetail = `敵: ${enemiesHere.length}体`;
-                            }
-                        }
-                    }
-                    detailParts.push(enemyDetail);
+
+                if (icon) {
+                    ctx.font = `700 ${fontSize}px 'Segoe UI', 'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Noto Sans JP', sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = iconColor;
+                    const textOffsetY = icon === '⬆' ? -cellSize * 0.05 : 0;
+                    ctx.fillText(icon, originX + cellSize / 2, originY + cellSize / 2 + textOffsetY);
                 }
-                const label = detailParts.length ? `${baseLabel} - ${detailParts.join(' / ')}` : baseLabel;
-                btn.setAttribute('aria-label', label);
-                frag.appendChild(btn);
             }
         }
-        gridEl.appendChild(frag);
+    }
+
+    function getCellFromOffset(offsetX, offsetY) {
+        const metrics = state?.renderMetrics || {};
+        const cellSize = metrics.cellSize || RENDER_CELL_SIZE;
+        const gap = typeof metrics.gap === 'number' ? metrics.gap : RENDER_CELL_GAP;
+        if (offsetX < 0 || offsetY < 0) return null;
+        const totalWidth = cellSize + gap;
+        const totalHeight = cellSize + gap;
+        const x = Math.floor(offsetX / totalWidth);
+        const y = Math.floor(offsetY / totalHeight);
+        if (x < 0 || y < 0 || x >= state.width || y >= state.height) return null;
+        const withinX = offsetX - x * totalWidth;
+        const withinY = offsetY - y * totalHeight;
+        if (withinX >= cellSize || withinY >= cellSize) return null;
+        return { x, y };
+    }
+
+    function getCellFromEvent(event) {
+        const canvas = refs.gridCanvas;
+        if (!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        const metrics = state?.renderMetrics || {};
+        const displayWidth = metrics.width || rect.width;
+        const displayHeight = metrics.height || rect.height;
+        const offsetX = ((event.clientX - rect.left) / rect.width) * displayWidth;
+        const offsetY = ((event.clientY - rect.top) / rect.height) * displayHeight;
+        return getCellFromOffset(offsetX, offsetY);
     }
 
     function updateBrushButtons() {
@@ -606,11 +783,23 @@
     }
 
     function updateSelectedCellLabel() {
-        if (!refs.selectedCell) return;
-        if (state.lastCell) {
-            refs.selectedCell.textContent = `選択セル: (${state.lastCell.x}, ${state.lastCell.y})`;
-        } else {
-            refs.selectedCell.textContent = 'セルをクリックして編集します。';
+        const fallbackText = 'セルをクリックして編集します。';
+        const description = state.lastCell ? describeCell(state.lastCell.x, state.lastCell.y) : '';
+        if (refs.selectedCell) {
+            if (state.lastCell && description) {
+                refs.selectedCell.textContent = `選択セル: ${description}`;
+            } else if (state.lastCell) {
+                refs.selectedCell.textContent = `選択セル: (${state.lastCell.x}, ${state.lastCell.y})`;
+            } else {
+                refs.selectedCell.textContent = fallbackText;
+            }
+        }
+        if (refs.gridAria) {
+            if (state.lastCell && description) {
+                refs.gridAria.textContent = description;
+            } else {
+                refs.gridAria.textContent = fallbackText;
+            }
         }
     }
 
@@ -926,37 +1115,45 @@
     }
 
     function handleGridPointerDown(event) {
-        const target = event.target.closest('.sandbox-cell');
-        if (!target) return;
         if (typeof event.button === 'number' && event.button !== 0) return;
-        const x = Number(target.dataset.x);
-        const y = Number(target.dataset.y);
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        const cell = getCellFromEvent(event);
+        if (!cell) return;
         paintState.active = true;
         paintState.pointerId = event.pointerId;
-        paintState.lastKey = `${x},${y}`;
+        paintState.lastKey = `${cell.x},${cell.y}`;
         paintState.blockClick = true;
+        if (refs.gridCanvas && typeof refs.gridCanvas.setPointerCapture === 'function') {
+            try {
+                refs.gridCanvas.setPointerCapture(event.pointerId);
+            } catch (err) {
+                // Ignore pointer capture errors (e.g. unsupported browsers).
+            }
+        }
         event.preventDefault();
-        applyBrushToCell(x, y, { updateSelection: true });
+        applyBrushToCell(cell.x, cell.y, { updateSelection: true });
         render();
     }
 
-    function handleGridPointerOver(event) {
+    function handleGridPointerMove(event) {
         if (!paintState.active || paintState.pointerId !== event.pointerId) return;
-        const target = event.target.closest('.sandbox-cell');
-        if (!target) return;
-        const x = Number(target.dataset.x);
-        const y = Number(target.dataset.y);
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-        const key = `${x},${y}`;
+        const cell = getCellFromEvent(event);
+        if (!cell) return;
+        const key = `${cell.x},${cell.y}`;
         if (key === paintState.lastKey) return;
         paintState.lastKey = key;
-        applyBrushToCell(x, y, { updateSelection: true });
+        applyBrushToCell(cell.x, cell.y, { updateSelection: true });
         render();
     }
 
     function endPointerPaint(pointerId) {
         if (!paintState.active || paintState.pointerId !== pointerId) return;
+        if (refs.gridCanvas && typeof refs.gridCanvas.releasePointerCapture === 'function') {
+            try {
+                refs.gridCanvas.releasePointerCapture(pointerId);
+            } catch (err) {
+                // Ignore release errors.
+            }
+        }
         paintState.active = false;
         paintState.pointerId = null;
         paintState.lastKey = null;
@@ -973,12 +1170,9 @@
             event.preventDefault();
             return;
         }
-        const target = event.target.closest('.sandbox-cell');
-        if (!target) return;
-        const x = Number(target.dataset.x);
-        const y = Number(target.dataset.y);
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-        applyBrushToCell(x, y, { updateSelection: true });
+        const cell = getCellFromEvent(event);
+        if (!cell) return;
+        applyBrushToCell(cell.x, cell.y, { updateSelection: true });
         render();
     }
 
@@ -1043,6 +1237,8 @@
         refs = {
             panel,
             grid: panel.querySelector('#sandbox-grid'),
+            gridCanvas: panel.querySelector('#sandbox-grid-canvas'),
+            gridAria: panel.querySelector('#sandbox-grid-aria'),
             brushButtons: Array.from(panel.querySelectorAll('.sandbox-brush')),
             selectedCell: panel.querySelector('#sandbox-selected-cell'),
             widthInput: panel.querySelector('#sandbox-width'),
@@ -1080,13 +1276,14 @@
             validation: { errors: [], warnings: [] },
             compiledConfig: null,
             tempMessage: '',
-            brushSettings: { floorType: 'normal', floorColor: '', wallColor: '' }
+            brushSettings: { floorType: 'normal', floorColor: '', wallColor: '' },
+            renderMetrics: { cellSize: RENDER_CELL_SIZE, gap: RENDER_CELL_GAP, width: 0, height: 0 }
         };
 
-        if (refs.grid) {
-            refs.grid.addEventListener('click', handleGridClick);
-            refs.grid.addEventListener('pointerdown', handleGridPointerDown);
-            refs.grid.addEventListener('pointerover', handleGridPointerOver);
+        if (refs.gridCanvas) {
+            refs.gridCanvas.addEventListener('click', handleGridClick);
+            refs.gridCanvas.addEventListener('pointerdown', handleGridPointerDown);
+            refs.gridCanvas.addEventListener('pointermove', handleGridPointerMove);
         }
         window.addEventListener('pointerup', handleGlobalPointerUp);
         window.addEventListener('pointercancel', handleGlobalPointerUp);

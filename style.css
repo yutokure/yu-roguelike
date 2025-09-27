@@ -9,6 +9,18 @@ body {
     padding: 20px;
 }
 
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* 探索画面レイアウト（全画面・スクロール抑止） */
 body.in-game {
     overflow: hidden; /* ページの縦横スクロールを無効化 */
@@ -1646,12 +1658,16 @@ h1 {
     border: 1px solid rgba(102,126,234,0.2);
     border-radius: 12px;
     padding: 12px;
-    display: grid;
-    gap: 4px;
     max-height: 480px;
     overflow: auto;
     user-select: none;
     touch-action: none;
+}
+
+.sandbox-grid canvas {
+    display: block;
+    cursor: pointer;
+    image-rendering: pixelated;
 }
 
 .sandbox-cell {

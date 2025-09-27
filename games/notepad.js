@@ -35,8 +35,10 @@
     } catch {}
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts){
     if (!root) throw new Error('MiniExp Notepad requires a container');
+
+    const shortcuts = opts?.shortcuts;
 
     const persisted = loadPersistentState();
     const state = {
@@ -58,6 +60,7 @@
     let settingsPanel = null;
     let settingsControls = null;
     let isRunning = false;
+    let shortcutsDisabled = false;
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -1049,6 +1052,10 @@
     function start(){
       if (isRunning) return;
       isRunning = true;
+      if (!shortcutsDisabled) {
+        shortcuts?.disableKey('p');
+        shortcutsDisabled = true;
+      }
       listeners.forEach(l => l.target.addEventListener(l.type, l.handler, l.capture || false));
       textarea.focus();
     }
@@ -1057,10 +1064,18 @@
       if (!isRunning) return;
       isRunning = false;
       listeners.forEach(l => l.target.removeEventListener(l.type, l.handler, l.capture || false));
+      if (shortcutsDisabled) {
+        shortcuts?.enableKey('p');
+        shortcutsDisabled = false;
+      }
     }
 
     function destroy(){
       stop();
+      if (shortcutsDisabled) {
+        shortcuts?.enableKey('p');
+        shortcutsDisabled = false;
+      }
       closeMenu();
       closeSettingsPanel();
       if (persistTimer) {

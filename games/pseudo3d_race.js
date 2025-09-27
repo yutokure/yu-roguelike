@@ -82,6 +82,20 @@
     const xpPass = 4 * (cfg.xpScale || 1);
     const xpDistanceUnit = 0.5 * (cfg.xpScale || 1);
     const xpPerfect = 100 * (cfg.xpScale || 1.1);
+    const shortcuts = opts?.shortcuts;
+    let shortcutsLocked = false;
+
+    function setShortcutsLocked(nextLocked){
+      if (!shortcuts || shortcutsLocked === nextLocked) return;
+      if (nextLocked){
+        shortcuts.disableKey?.('p');
+        shortcuts.disableKey?.('r');
+      } else {
+        shortcuts.enableKey?.('p');
+        shortcuts.enableKey?.('r');
+      }
+      shortcutsLocked = nextLocked;
+    }
 
     const canvas = document.createElement('canvas');
     const W = Math.max(560, Math.min(800, root.clientWidth||640));
@@ -476,6 +490,7 @@
       ended=true;
       enableHostRestart();
       running=false;
+      setShortcutsLocked(false);
       if (playerSpeed>0) playerSpeed=0;
       cancelAnimationFrame(raf);
       if (crashes === 0 && awardXp){
@@ -495,9 +510,9 @@
       }
     }
 
-    function start(){ if(running) return; running=true; ended=false; paused=false; disableHostRestart(); lastTs=0; raf=requestAnimationFrame(loop); }
-    function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
-    function destroy(){ try{ stop(); canvas.remove(); removeControls(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); }catch{} }
+    function start(){ if(running) return; running=true; ended=false; paused=false; lastTs=0; setShortcutsLocked(true); raf=requestAnimationFrame(loop); }
+    function stop(){ if(running){ running=false; cancelAnimationFrame(raf); } setShortcutsLocked(false); }
+    function destroy(){ try{ stop(); setShortcutsLocked(false); canvas.remove(); removeControls(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); }catch{} }
     function getScore(){ return Math.floor(totalDistance); }
 
     function reset(){
@@ -507,7 +522,7 @@
       ended=false; paused=false; draw();
     }
 
-    function togglePause(){ if(ended) return; paused=!paused; if(running && paused){ cancelAnimationFrame(raf); draw(); } else if(running){ lastTs=0; raf=requestAnimationFrame(loop); } }
+    function togglePause(){ if(ended) return; paused=!paused; if(running && paused){ cancelAnimationFrame(raf); draw(); } else if(running){ lastTs=0; setShortcutsLocked(true); raf=requestAnimationFrame(loop); } }
 
     function triggerNitro(){
       if (paused || ended) return;

@@ -5,7 +5,8 @@
     { id: 'overview', label: '概要' },
     { id: 'progress', label: '進捗率' },
     { id: 'remain', label: '残り時間' },
-    { id: 'stats', label: '情報一覧' }
+    { id: 'stats', label: '情報一覧' },
+    { id: 'calendar', label: 'カレンダー' }
   ];
   const ERA_DATA = [
     { name: '令和', start: new Date(2019, 4, 1) },
@@ -54,16 +55,36 @@
     millennium: 100000000
   };
 
+  const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+  function sanitizeDateKeys(list){
+    if (!Array.isArray(list)) return [];
+    const unique = new Set();
+    list.forEach(item => {
+      if (typeof item === 'string' && DATE_KEY_RE.test(item)){
+        unique.add(item);
+      }
+    });
+    return Array.from(unique).sort();
+  }
+
   function loadPrefs(){
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object') return null;
+      const calendarPref = parsed.calendar && typeof parsed.calendar === 'object' ? parsed.calendar : {};
+      const holidays = sanitizeDateKeys(calendarPref.holidays);
+      const workdays = sanitizeDateKeys(calendarPref.workdays);
       return {
         digitalFormat: parsed.digitalFormat === '12h' ? '12h' : '24h',
         analogType: parsed.analogType === '24h' ? '24h' : '12h',
-        detailTab: DETAIL_TABS.some(tab => tab.id === parsed.detailTab) ? parsed.detailTab : 'overview'
+        detailTab: DETAIL_TABS.some(tab => tab.id === parsed.detailTab) ? parsed.detailTab : 'overview',
+        calendar: {
+          holidays,
+          workdays
+        }
       };
     } catch {
       return null;
@@ -75,9 +96,49 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         digitalFormat: prefs.digitalFormat,
         analogType: prefs.analogType,
-        detailTab: prefs.detailTab
+        detailTab: prefs.detailTab,
+        calendar: {
+          holidays: sanitizeDateKeys(prefs.calendar && prefs.calendar.holidays ? prefs.calendar.holidays : []),
+          workdays: sanitizeDateKeys(prefs.calendar && prefs.calendar.workdays ? prefs.calendar.workdays : [])
+        }
       }));
     } catch {}
+  }
+
+  function formatDateKey(date){
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  function parseDateKey(key){
+    if (!DATE_KEY_RE.test(key)) return null;
+    const [year, month, day] = key.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  function getIsoWeek(date){
+    const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = tmp.getUTCDay() || 7;
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+    return Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
+  }
+
+  function getDayOfYear(date){
+    const start = new Date(date.getFullYear(), 0, 0);
+    return Math.floor((date - start) / 86400000);
+  }
+
+  function getWeekOfMonth(date){
+    const first = new Date(date.getFullYear(), date.getMonth(), 1);
+    return Math.floor((date.getDate() + first.getDay() - 1) / 7) + 1;
+  }
+
+  function getQuarter(monthIndex){
+    return Math.floor(monthIndex / 3) + 1;
+  }
+
+  function formatJapaneseDate(date){
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日（${WEEKDAY_JP[date.getDay()]}）`;
   }
 
   function pad(num){
@@ -298,14 +359,33 @@
 
   function create(root, awardXp){
     if (!root) throw new Error('Clock Hub requires a container');
-    const prefs = loadPrefs() || { digitalFormat: '24h', analogType: '12h', detailTab: 'overview' };
+    const prefs = loadPrefs() || {
+      digitalFormat: '24h',
+      analogType: '12h',
+      detailTab: 'overview',
+      calendar: { holidays: [], workdays: [] }
+    };
     const state = {
       running: false,
       sessionXp: 0,
       prefs
     };
+    if (!state.prefs.calendar){
+      state.prefs.calendar = { holidays: [], workdays: [] };
+    }
+    if (!Array.isArray(state.prefs.calendar.holidays)) state.prefs.calendar.holidays = [];
+    if (!Array.isArray(state.prefs.calendar.workdays)) state.prefs.calendar.workdays = [];
     let timer = null;
     let lastSegments = null;
+    const initialDate = new Date();
+    const calendarState = {
+      currentYear: initialDate.getFullYear(),
+      currentMonth: initialDate.getMonth(),
+      selectedKey: formatDateKey(initialDate)
+    };
+    let calendarCells = new Map();
+    let calendarSignature = '';
+    let calendarDetailKey = '';
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -667,6 +747,457 @@
       statsItems[key] = value;
     });
 
+    const calendarView = detailViews.calendar;
+    calendarView.style.display = 'flex';
+    calendarView.style.flexDirection = 'column';
+    calendarView.style.gap = '16px';
+
+    const calendarHeader = document.createElement('div');
+    calendarHeader.style.display = 'flex';
+    calendarHeader.style.justifyContent = 'space-between';
+    calendarHeader.style.alignItems = 'center';
+
+    const calendarTitle = document.createElement('div');
+    calendarTitle.style.display = 'flex';
+    calendarTitle.style.flexDirection = 'column';
+    calendarTitle.style.gap = '2px';
+    const calendarMonthLabel = document.createElement('div');
+    calendarMonthLabel.style.fontSize = '20px';
+    calendarMonthLabel.style.fontWeight = '600';
+    calendarMonthLabel.style.color = '#0f172a';
+    const calendarTodayLabel = document.createElement('div');
+    calendarTodayLabel.style.fontSize = '13px';
+    calendarTodayLabel.style.color = '#475569';
+    calendarTitle.appendChild(calendarMonthLabel);
+    calendarTitle.appendChild(calendarTodayLabel);
+
+    const calendarControls = document.createElement('div');
+    calendarControls.style.display = 'flex';
+    calendarControls.style.gap = '8px';
+
+    function createCalendarButton(label){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = label;
+      btn.style.padding = '6px 12px';
+      btn.style.borderRadius = '8px';
+      btn.style.border = '1px solid rgba(148,163,184,0.4)';
+      btn.style.background = 'rgba(255,255,255,0.9)';
+      btn.style.cursor = 'pointer';
+      btn.style.color = '#0f172a';
+      btn.style.fontWeight = '600';
+      return btn;
+    }
+
+    const prevMonthBtn = createCalendarButton('← 前月');
+    const nextMonthBtn = createCalendarButton('翌月 →');
+    const todayBtn = createCalendarButton('今日');
+
+    calendarControls.appendChild(prevMonthBtn);
+    calendarControls.appendChild(todayBtn);
+    calendarControls.appendChild(nextMonthBtn);
+
+    calendarHeader.appendChild(calendarTitle);
+    calendarHeader.appendChild(calendarControls);
+
+    const weekdayHeader = document.createElement('div');
+    weekdayHeader.style.display = 'grid';
+    weekdayHeader.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
+    weekdayHeader.style.gap = '6px';
+    WEEKDAY_JP.forEach((label, index) => {
+      const cell = document.createElement('div');
+      cell.textContent = label;
+      cell.style.textAlign = 'center';
+      cell.style.fontSize = '13px';
+      cell.style.fontWeight = '600';
+      cell.style.padding = '4px 0';
+      cell.style.borderRadius = '8px';
+      cell.style.background = 'rgba(226,232,240,0.6)';
+      cell.style.color = index === 0 ? '#ef4444' : index === 6 ? '#2563eb' : '#0f172a';
+      weekdayHeader.appendChild(cell);
+    });
+
+    const calendarGrid = document.createElement('div');
+    calendarGrid.style.display = 'grid';
+    calendarGrid.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
+    calendarGrid.style.gap = '6px';
+
+    const calendarInfoCard = document.createElement('div');
+    calendarInfoCard.style.background = 'rgba(248,250,252,0.9)';
+    calendarInfoCard.style.border = '1px solid rgba(148,163,184,0.25)';
+    calendarInfoCard.style.borderRadius = '12px';
+    calendarInfoCard.style.padding = '14px 16px';
+    calendarInfoCard.style.display = 'flex';
+    calendarInfoCard.style.flexDirection = 'column';
+    calendarInfoCard.style.gap = '6px';
+
+    const calendarInfoItems = {
+      summary: document.createElement('div'),
+      era: document.createElement('div'),
+      season: document.createElement('div'),
+      progress: document.createElement('div'),
+      status: document.createElement('div')
+    };
+    Object.values(calendarInfoItems).forEach(item => {
+      item.style.fontSize = '14px';
+      item.style.color = '#0f172a';
+      calendarInfoCard.appendChild(item);
+    });
+
+    const calendarSettingsCard = document.createElement('div');
+    calendarSettingsCard.style.background = '#ffffff';
+    calendarSettingsCard.style.border = '1px solid rgba(148,163,184,0.25)';
+    calendarSettingsCard.style.borderRadius = '12px';
+    calendarSettingsCard.style.padding = '16px';
+    calendarSettingsCard.style.display = 'flex';
+    calendarSettingsCard.style.flexDirection = 'column';
+    calendarSettingsCard.style.gap = '12px';
+
+    const calendarSettingsTitle = document.createElement('div');
+    calendarSettingsTitle.textContent = '休暇／出勤日のカスタム設定';
+    calendarSettingsTitle.style.fontSize = '15px';
+    calendarSettingsTitle.style.fontWeight = '600';
+    calendarSettingsTitle.style.color = '#0f172a';
+    calendarSettingsCard.appendChild(calendarSettingsTitle);
+
+    const calendarSettingsGrid = document.createElement('div');
+    calendarSettingsGrid.style.display = 'grid';
+    calendarSettingsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(220px, 1fr))';
+    calendarSettingsGrid.style.gap = '16px';
+
+    function createSettingsSection(titleText, buttonText){
+      const section = document.createElement('div');
+      section.style.display = 'flex';
+      section.style.flexDirection = 'column';
+      section.style.gap = '8px';
+
+      const title = document.createElement('div');
+      title.textContent = titleText;
+      title.style.fontSize = '14px';
+      title.style.fontWeight = '600';
+      title.style.color = '#0f172a';
+
+      const controlRow = document.createElement('div');
+      controlRow.style.display = 'flex';
+      controlRow.style.gap = '6px';
+
+      const dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.style.flex = '1';
+      dateInput.style.padding = '6px 8px';
+      dateInput.style.border = '1px solid rgba(148,163,184,0.4)';
+      dateInput.style.borderRadius = '8px';
+
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.textContent = buttonText;
+      addBtn.style.padding = '6px 10px';
+      addBtn.style.borderRadius = '8px';
+      addBtn.style.border = '1px solid rgba(37,99,235,0.4)';
+      addBtn.style.background = 'rgba(37,99,235,0.12)';
+      addBtn.style.color = '#1d4ed8';
+      addBtn.style.cursor = 'pointer';
+
+      controlRow.appendChild(dateInput);
+      controlRow.appendChild(addBtn);
+
+      const list = document.createElement('div');
+      list.style.display = 'flex';
+      list.style.flexDirection = 'column';
+      list.style.gap = '4px';
+      list.style.maxHeight = '150px';
+      list.style.overflowY = 'auto';
+      list.style.paddingRight = '4px';
+
+      section.appendChild(title);
+      section.appendChild(controlRow);
+      section.appendChild(list);
+
+      return { section, dateInput, addBtn, list };
+    }
+
+    const holidaySection = createSettingsSection('祝日・休暇として登録', '追加');
+    const workdaySection = createSettingsSection('出勤日として登録', '追加');
+
+    calendarSettingsGrid.appendChild(holidaySection.section);
+    calendarSettingsGrid.appendChild(workdaySection.section);
+    calendarSettingsCard.appendChild(calendarSettingsGrid);
+
+    calendarView.appendChild(calendarHeader);
+    calendarView.appendChild(weekdayHeader);
+    calendarView.appendChild(calendarGrid);
+    calendarView.appendChild(calendarInfoCard);
+    calendarView.appendChild(calendarSettingsCard);
+
+    function computeCalendarSignature(){
+      const holidays = (state.prefs.calendar.holidays || []).slice().sort().join('|');
+      const workdays = (state.prefs.calendar.workdays || []).slice().sort().join('|');
+      return `${calendarState.currentYear}-${calendarState.currentMonth}-${holidays}-${workdays}`;
+    }
+
+    function isCustomHoliday(key){
+      return (state.prefs.calendar.holidays || []).includes(key);
+    }
+
+    function isCustomWorkday(key){
+      return (state.prefs.calendar.workdays || []).includes(key);
+    }
+
+    function isRestDay(key, date){
+      if (!date) return false;
+      if (isCustomWorkday(key)) return false;
+      if (isCustomHoliday(key)) return true;
+      const weekday = date.getDay();
+      return weekday === 0 || weekday === 6;
+    }
+
+    function updateCalendarCellStyles(now){
+      const todayKey = formatDateKey(now);
+      calendarCells.forEach((cell, key) => {
+        const date = parseDateKey(key);
+        if (!date) return;
+        const inMonth = date.getFullYear() === calendarState.currentYear && date.getMonth() === calendarState.currentMonth;
+        cell.style.opacity = inMonth ? '1' : '0.55';
+        let textColor = inMonth ? '#0f172a' : '#64748b';
+        if (date.getDay() === 0) textColor = inMonth ? '#dc2626' : '#f87171';
+        if (date.getDay() === 6) textColor = inMonth ? '#2563eb' : '#60a5fa';
+        cell.style.color = textColor;
+        cell.style.border = key === calendarState.selectedKey ? '2px solid #f97316' : '1px solid rgba(148,163,184,0.35)';
+        cell.style.boxShadow = todayKey === key ? '0 0 0 2px rgba(37,99,235,0.35)' : 'none';
+        let background = inMonth ? 'rgba(255,255,255,0.92)' : 'rgba(241,245,249,0.6)';
+        if (isRestDay(key, date)) background = 'rgba(254,226,226,0.85)';
+        if (key === calendarState.selectedKey){
+          background = isRestDay(key, date) ? 'rgba(254,242,242,0.95)' : 'rgba(255,255,255,1)';
+        }
+        cell.style.background = background;
+      });
+    }
+
+    function updateCalendarDetail(now){
+      const selectedDate = parseDateKey(calendarState.selectedKey) || now;
+      const key = formatDateKey(selectedDate);
+      if (calendarDetailKey === key && calendarInfoItems.summary.textContent) return;
+      calendarDetailKey = key;
+      const holidayRegistered = isCustomHoliday(key);
+      const workdayRegistered = isCustomWorkday(key);
+      const rest = isRestDay(key, selectedDate);
+      calendarInfoItems.summary.textContent = `日付: ${formatJapaneseDate(selectedDate)}`;
+      calendarInfoItems.era.textContent = `和暦: ${getEra(selectedDate)}｜干支: ${getEto(selectedDate.getFullYear())}`;
+      calendarInfoItems.season.textContent = `季節: ${getSeason(selectedDate.getMonth())}｜四半期: 第${getQuarter(selectedDate.getMonth())}四半期`;
+      const dayOfYear = getDayOfYear(selectedDate);
+      calendarInfoItems.progress.textContent = `年内通算日: 第${dayOfYear}日｜ISO週番号: 第${getIsoWeek(selectedDate)}週｜月内第${getWeekOfMonth(selectedDate)}週`;
+      const statusParts = [];
+      if (rest) statusParts.push('休み'); else statusParts.push('出勤日想定');
+      if (holidayRegistered) statusParts.push('祝日登録あり');
+      if (workdayRegistered) statusParts.push('出勤登録あり');
+      calendarInfoItems.status.textContent = `区分: ${statusParts.join(' / ')}`;
+    }
+
+    function renderCalendar(force = false){
+      const signature = computeCalendarSignature();
+      if (!force && signature === calendarSignature) return;
+      calendarSignature = signature;
+      calendarMonthLabel.textContent = `${calendarState.currentYear}年${calendarState.currentMonth + 1}月`;
+      calendarGrid.innerHTML = '';
+      calendarCells = new Map();
+      const firstOfMonth = new Date(calendarState.currentYear, calendarState.currentMonth, 1);
+      const startDate = new Date(calendarState.currentYear, calendarState.currentMonth, 1 - firstOfMonth.getDay());
+      for (let i = 0; i < 42; i++){
+        const cellDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
+        const key = formatDateKey(cellDate);
+        const inMonth = cellDate.getFullYear() === calendarState.currentYear && cellDate.getMonth() === calendarState.currentMonth;
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.textContent = cellDate.getDate().toString();
+        cell.style.display = 'flex';
+        cell.style.alignItems = 'center';
+        cell.style.justifyContent = 'center';
+        cell.style.padding = '12px 0';
+        cell.style.borderRadius = '10px';
+        cell.style.border = '1px solid rgba(148,163,184,0.35)';
+        cell.style.background = inMonth ? 'rgba(255,255,255,0.92)' : 'rgba(241,245,249,0.6)';
+        cell.style.cursor = 'pointer';
+        cell.style.fontSize = '14px';
+        cell.style.fontWeight = '600';
+        cell.dataset.key = key;
+        cell.addEventListener('click', () => {
+          calendarState.selectedKey = key;
+          if (!inMonth){
+            setCalendarMonth(cellDate.getFullYear(), cellDate.getMonth());
+          } else {
+            updateCalendar(new Date());
+          }
+        });
+        calendarGrid.appendChild(cell);
+        calendarCells.set(key, cell);
+      }
+      renderCalendarSettingsLists();
+      calendarDetailKey = '';
+    }
+
+    function renderCalendarSettingsLists(){
+      renderSettingsList(holidaySection.list, state.prefs.calendar.holidays || [], 'holiday');
+      renderSettingsList(workdaySection.list, state.prefs.calendar.workdays || [], 'workday');
+    }
+
+    function renderSettingsList(container, items, type){
+      container.innerHTML = '';
+      const sorted = items.slice().sort();
+      if (!sorted.length){
+        const empty = document.createElement('div');
+        empty.textContent = '登録なし';
+        empty.style.fontSize = '13px';
+        empty.style.color = '#94a3b8';
+        container.appendChild(empty);
+        return;
+      }
+      sorted.forEach(key => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.alignItems = 'center';
+        row.style.fontSize = '13px';
+        row.style.color = '#0f172a';
+        row.style.background = 'rgba(248,250,252,0.8)';
+        row.style.border = '1px solid rgba(148,163,184,0.2)';
+        row.style.borderRadius = '8px';
+        row.style.padding = '4px 8px';
+        const label = document.createElement('span');
+        label.textContent = key;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = '削除';
+        remove.style.border = 'none';
+        remove.style.background = 'rgba(239,68,68,0.12)';
+        remove.style.color = '#ef4444';
+        remove.style.borderRadius = '6px';
+        remove.style.padding = '4px 8px';
+        remove.style.cursor = 'pointer';
+        remove.addEventListener('click', () => {
+          if (type === 'holiday'){
+            removeHoliday(key);
+          } else {
+            removeWorkday(key);
+          }
+        });
+        row.appendChild(label);
+        row.appendChild(remove);
+        container.appendChild(row);
+      });
+    }
+
+    function shiftCalendarMonth(delta){
+      let year = calendarState.currentYear;
+      let month = calendarState.currentMonth + delta;
+      while (month < 0){
+        month += 12;
+        year -= 1;
+      }
+      while (month > 11){
+        month -= 12;
+        year += 1;
+      }
+      const firstDayKey = formatDateKey(new Date(year, month, 1));
+      calendarState.currentYear = year;
+      calendarState.currentMonth = month;
+      calendarState.selectedKey = firstDayKey;
+      calendarSignature = '';
+      updateCalendar(new Date());
+    }
+
+    function setCalendarMonth(year, month){
+      calendarState.currentYear = year;
+      calendarState.currentMonth = month;
+      calendarSignature = '';
+      updateCalendar(new Date());
+    }
+
+    function addHoliday(key){
+      if (!key || !DATE_KEY_RE.test(key)) return;
+      const holidays = state.prefs.calendar.holidays || [];
+      if (!holidays.includes(key)) holidays.push(key);
+      const workdays = state.prefs.calendar.workdays || [];
+      const index = workdays.indexOf(key);
+      if (index >= 0) workdays.splice(index, 1);
+      savePrefs(state.prefs);
+      calendarSignature = '';
+      updateCalendar(new Date());
+    }
+
+    function addWorkday(key){
+      if (!key || !DATE_KEY_RE.test(key)) return;
+      const workdays = state.prefs.calendar.workdays || [];
+      if (!workdays.includes(key)) workdays.push(key);
+      const holidays = state.prefs.calendar.holidays || [];
+      const index = holidays.indexOf(key);
+      if (index >= 0) holidays.splice(index, 1);
+      savePrefs(state.prefs);
+      calendarSignature = '';
+      updateCalendar(new Date());
+    }
+
+    function removeHoliday(key){
+      const holidays = state.prefs.calendar.holidays || [];
+      const index = holidays.indexOf(key);
+      if (index >= 0){
+        holidays.splice(index, 1);
+        savePrefs(state.prefs);
+        calendarSignature = '';
+        updateCalendar(new Date());
+      }
+    }
+
+    function removeWorkday(key){
+      const workdays = state.prefs.calendar.workdays || [];
+      const index = workdays.indexOf(key);
+      if (index >= 0){
+        workdays.splice(index, 1);
+        savePrefs(state.prefs);
+        calendarSignature = '';
+        updateCalendar(new Date());
+      }
+    }
+
+    prevMonthBtn.addEventListener('click', () => shiftCalendarMonth(-1));
+    nextMonthBtn.addEventListener('click', () => shiftCalendarMonth(1));
+    todayBtn.addEventListener('click', () => {
+      const today = new Date();
+      calendarState.currentYear = today.getFullYear();
+      calendarState.currentMonth = today.getMonth();
+      calendarState.selectedKey = formatDateKey(today);
+      calendarSignature = '';
+      updateCalendar(today);
+    });
+
+    holidaySection.addBtn.addEventListener('click', () => {
+      addHoliday(holidaySection.dateInput.value);
+      holidaySection.dateInput.value = '';
+    });
+
+    holidaySection.dateInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter'){
+        event.preventDefault();
+        addHoliday(holidaySection.dateInput.value);
+        holidaySection.dateInput.value = '';
+      }
+    });
+
+    workdaySection.addBtn.addEventListener('click', () => {
+      addWorkday(workdaySection.dateInput.value);
+      workdaySection.dateInput.value = '';
+    });
+
+    workdaySection.dateInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter'){
+        event.preventDefault();
+        addWorkday(workdaySection.dateInput.value);
+        workdaySection.dateInput.value = '';
+      }
+    });
+
+    renderCalendar(true);
+    updateCalendar(initialDate);
+
     const xpNote = document.createElement('div');
     xpNote.style.fontSize = '13px';
     xpNote.style.color = '#475569';
@@ -716,6 +1247,7 @@
       updateProgress(now);
       updateRemaining(now);
       updateStats(now);
+      updateCalendar(now);
       updateXp(now);
     }
 
@@ -817,6 +1349,13 @@
       const seconds = ((now - startOfDay) / 1000).toFixed(0);
       statsItems.daySeconds.textContent = `${seconds}秒`;
       statsItems.timezone.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+    }
+
+    function updateCalendar(now){
+      calendarTodayLabel.textContent = `本日: ${formatJapaneseDate(now)}`;
+      renderCalendar();
+      updateCalendarCellStyles(now);
+      updateCalendarDetail(now);
     }
 
     function updateXp(now){

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11. 開発フローとヒント</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+    <main>
+        <h1>11. 開発フローとヒント</h1>
+        <section>
+            <h2>11.1 作業の基本サイクル</h2>
+            <ol>
+                <li>やりたいことをメモする。</li>
+                <li>対象のファイルをバックアップする。</li>
+                <li>小さく変更し、ブラウザで確認する。</li>
+                <li>動作が安定したら、変更内容をメモや Git に記録する。</li>
+            </ol>
+        </section>
+        <section>
+            <h2>11.2 Git の簡単な使い方</h2>
+            <ul>
+                <li><code>git status</code>：変更点を確認。</li>
+                <li><code>git add .</code>：変更をステージに載せる。</li>
+                <li><code>git commit -m "メモ"</code>：変更を記録する。</li>
+                <li><code>git log</code>：過去の履歴を見る。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>11.3 チーム開発するときのポイント</h2>
+            <ul>
+                <li>役割を分担し、作業中のファイルを共有する。</li>
+                <li>変更内容を README やマニュアルに追記しておく。</li>
+                <li>画面キャプチャを撮って変更点を視覚的に伝える。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>11.4 レビューのすすめ</h2>
+            <p>
+                チームで開発する場合は、Pull Request を使ってレビューを行うと品質を保ちやすくなります。コメント欄で気づいた点を共有し、
+                修正後に再確認する流れを整えておくとスムーズです。
+            </p>
+        </section>
+    </main>
+</body>
+</html>

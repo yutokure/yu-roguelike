@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuローグライク マニュアル</title>
+    <link rel="stylesheet" href="manual.css">
+    <style>
+        body {
+            background: #0f172a;
+            color: #fff;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(135deg, #274690, #576ca8);
+            padding: clamp(2.5rem, 6vw, 3.5rem) clamp(1rem, 4vw, 2.5rem);
+            text-align: center;
+            color: #fff;
+        }
+        header h1 {
+            border: none;
+            font-size: clamp(2.1rem, 4vw, 2.8rem);
+            margin: 0 0 0.5rem;
+        }
+        header p {
+            margin: 0 auto;
+            max-width: 720px;
+            font-size: clamp(1rem, 2.4vw, 1.1rem);
+            line-height: 1.8;
+        }
+        .manual-shell {
+            display: grid;
+            grid-template-columns: minmax(240px, 320px) 1fr;
+            gap: clamp(1rem, 3vw, 1.8rem);
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        nav {
+            background: rgba(255, 255, 255, 0.92);
+            color: #1b1f3b;
+            border-radius: 18px;
+            padding: clamp(1.25rem, 3vw, 1.8rem);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+        }
+        nav h2 {
+            margin-top: 0;
+            font-size: clamp(1.3rem, 2.6vw, 1.6rem);
+        }
+        nav ol {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 0.75rem;
+        }
+        nav a {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background: rgba(39, 70, 144, 0.08);
+            padding: 0.75rem 0.9rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        nav a:hover,
+        nav a:focus {
+            background: rgba(39, 70, 144, 0.18);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(39, 70, 144, 0.25);
+        }
+        .viewer {
+            background: rgba(248, 250, 252, 0.95);
+            border-radius: 24px;
+            padding: clamp(1rem, 2.5vw, 1.5rem);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.28);
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .viewer iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            background: #fff;
+            min-height: 60vh;
+        }
+        .viewer .fallback {
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 960px) {
+            .manual-shell {
+                grid-template-columns: 1fr;
+            }
+            nav {
+                position: sticky;
+                top: 0.75rem;
+                z-index: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Yuローグライク 総合マニュアル</h1>
+        <p>
+            目次から読みたい機能を選ぶと、詳細な解説ページが右側のビューアに表示されます。
+            すべての章は単独で読めるように構成されているので、必要なトピックから読み進めてください。
+        </p>
+    </header>
+    <div class="manual-shell">
+        <nav aria-label="マニュアル目次">
+            <h2>目次</h2>
+            <ol>
+                <li><a href="about.html" target="manual-content">1. マニュアルの読み方</a></li>
+                <li><a href="overview.html" target="manual-content">2. ゲーム全体の概要</a></li>
+                <li><a href="environment.html" target="manual-content">3. 必要な環境と準備</a></li>
+                <li><a href="structure.html" target="manual-content">4. フォルダーとファイル構成</a></li>
+                <li><a href="start.html" target="manual-content">5. はじめての起動</a></li>
+                <li><a href="ui.html" target="manual-content">6. 画面と操作の解説</a></li>
+                <li><a href="data-files.html" target="manual-content">7. データファイルの内容</a></li>
+                <li><a href="customize.html" target="manual-content">8. コンテンツの追加・変更</a></li>
+                <li><a href="development.html" target="manual-content">9. JavaScript の仕組み</a></li>
+                <li><a href="minigames.html" target="manual-content">10. ミニゲームとツールズ</a></li>
+                <li><a href="workflow.html" target="manual-content">11. 開発フローとヒント</a></li>
+                <li><a href="faq.html" target="manual-content">12. よくある質問</a></li>
+                <li><a href="glossary.html" target="manual-content">13. 用語集</a></li>
+                <li><a href="appendix.html" target="manual-content">14. 付録：参考情報</a></li>
+            </ol>
+        </nav>
+        <div class="viewer">
+            <p class="fallback">上の目次から章を選ぶと、この領域に詳細が表示されます。</p>
+            <iframe src="about.html" name="manual-content" title="Yuローグライク マニュアル本文"></iframe>
+        </div>
+    </div>
+</body>
+</html>

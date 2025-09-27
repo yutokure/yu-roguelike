@@ -779,6 +779,7 @@
         <button id="btn-back">戻る</button>
         <button id="btn-items">アイテム</button>
         <button id="btn-status">ステータス</button>
+        <button id="btn-skills">スキル</button>
         <button id="btn-import">インポート</button>
         <button id="btn-export">エクスポート</button>
         <input type="file" id="import-file" accept="application/json" style="display:none" />
@@ -801,6 +802,11 @@
                         <div class="bar-label">EXP <span id="stat-exp-text">0/1000</span></div>
                         <div class="bar-track"><div id="exp-bar" class="bar-fill"></div></div>
                     </div>
+                    <div class="bar sp">
+                        <div class="bar-label">SP <span id="stat-sp-text">0/0</span></div>
+                        <div class="bar-track"><div id="sp-bar" class="bar-fill"></div></div>
+                    </div>
+                    <div id="active-skill-status" class="skill-status-lines" aria-live="polite"></div>
                 </div>
             </div>
             <div id="message-log"></div>
@@ -838,6 +844,7 @@
                 <span>HP30%回復ポーション</span>
                 <span>x <span id="inv-potion30">0</span></span>
                 <button id="use-potion30">使用</button>
+                <button id="sacrifice-potion30" class="secondary">捧げる</button>
             </div>
             <div class="item-row">
                 <span>最大HP強化アイテム</span>
@@ -872,6 +879,10 @@
                     <div class="status-item">
                         <span class="status-label">経験値</span>
                         <span class="status-value" id="modal-exp">0 / 1000</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">SP</span>
+                        <span class="status-value sp" id="modal-sp">0 / 0</span>
                     </div>
                     <div class="status-item">
                         <span class="status-label">HP</span>
@@ -939,6 +950,17 @@
                 </div>
             </div>
             <button class="close-modal" data-target="status-modal">閉じる</button>
+        </div>
+    </div>
+
+    <!-- スキルモーダル -->
+    <div id="skills-modal" class="modal" style="display:none;">
+        <div class="modal-content skills-modal">
+            <h3>スキル</h3>
+            <div class="skills-sp-summary">現在のSP: <span id="skills-sp-summary">0 / 0</span></div>
+            <div id="skills-list" class="skills-list" aria-live="polite"></div>
+            <p class="skills-note">※ レベル100以上でSPが蓄積され、スキルが使用可能になります。</p>
+            <button class="close-modal" data-target="skills-modal">閉じる</button>
         </div>
     </div>
 

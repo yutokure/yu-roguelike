@@ -113,13 +113,13 @@
     .mini-trump-wrapper[data-card-back="modern"] .mini-trump-card.face-down{background:linear-gradient(135deg,#831843,#ef4444);color:#fecdd3;border-color:rgba(244,114,182,0.85);}
     .mini-trump-wrapper[data-card-back="forest"] .mini-trump-card.face-down{background:linear-gradient(135deg,#134e4a,#0f766e);color:#5eead4;border-color:rgba(45,212,191,0.85);}
     .mini-trump-card.interactive{cursor:pointer;}
-    .mini-trump-card.interactive:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(37,99,235,0.32);}
+    .mini-trump-card.interactive:not(.no-hover-raise):hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(37,99,235,0.32);}
     .mini-trump-card.selected{outline:2px solid #fbbf24;outline-offset:-3px;}
     .mini-trump-klondike{display:flex;flex-direction:column;gap:18px;align-items:center;justify-content:flex-start;padding-top:8px;}
-    .mini-trump-klondike-top{display:flex;gap:24px;justify-content:space-between;width:100%;max-width:820px;}
+    .mini-trump-klondike-top{display:flex;gap:24px;justify-content:space-between;width:100%;max-width:960px;}
     .mini-trump-klondike-stack{display:flex;flex-direction:column;align-items:center;gap:6px;}
-    .mini-trump-klondike-stock{display:flex;gap:16px;}
-    .mini-trump-klondike-tableau{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;width:100%;max-width:860px;}
+    .mini-trump-klondike-stock{display:flex;gap:12px;}
+    .mini-trump-klondike-tableau{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;width:100%;max-width:960px;}
     .mini-trump-pile{width:80px;height:112px;border-radius:10px;border:1px dashed rgba(148,163,184,0.45);position:relative;display:flex;align-items:flex-end;justify-content:center;padding:6px;box-sizing:border-box;transition:border .2s,box-shadow .2s,background .2s;}
     .mini-trump-pile.interactive{cursor:pointer;}
     .mini-trump-pile.empty{background:rgba(15,23,42,0.3);}
@@ -134,9 +134,9 @@
     .mini-trump-klondike-waste{position:absolute;inset:0;}
     .mini-trump-klondike-info{font-size:13px;color:#94a3b8;text-align:center;}
     .mini-trump-spider{display:flex;flex-direction:column;gap:18px;align-items:center;padding-top:8px;}
-    .mini-trump-spider-top{display:flex;gap:24px;align-items:flex-start;justify-content:space-between;width:100%;max-width:920px;}
-    .mini-trump-spider-stock{display:flex;gap:14px;align-items:flex-start;}
-    .mini-trump-spider-columns{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:10px;width:100%;max-width:920px;}
+    .mini-trump-spider-top{display:flex;gap:24px;align-items:flex-start;justify-content:space-between;width:100%;max-width:960px;}
+    .mini-trump-spider-stock{display:flex;gap:12px;align-items:flex-start;}
+    .mini-trump-spider-columns{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:12px;width:100%;max-width:960px;}
     .mini-trump-spider-column{position:relative;min-height:140px;padding:6px;border-radius:10px;border:1px dashed rgba(148,163,184,0.35);background:rgba(15,23,42,0.28);box-sizing:border-box;transition:border .2s,box-shadow .2s;}
     .mini-trump-spider-column.drop-target{border-color:rgba(74,222,128,0.85);box-shadow:0 0 0 2px rgba(74,222,128,0.35);}
     .mini-trump-spider-column.empty{background:rgba(15,23,42,0.18);}
@@ -301,6 +301,7 @@
     const el = document.createElement('div');
     el.className = `mini-trump-card${sizeClass ? ' ' + sizeClass : ''}`;
     if (opts.interactive) el.classList.add('interactive');
+    if (opts.hoverRaise === false) el.classList.add('no-hover-raise');
     updateCardFace(el, card, faceUp);
     return el;
   }
@@ -1511,13 +1512,13 @@
       const start = state.waste.length - maxDisplay;
       for (let i = start; i < state.waste.length; i++) {
         const entry = state.waste[i];
-        const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: true });
+        const isTop = i === state.waste.length - 1;
+        const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: true, interactive: isTop, hoverRaise: false });
         const offset = i - start;
         cardEl.style.position = 'absolute';
         cardEl.style.left = `${offset * 18}px`;
         cardEl.style.top = `${offset * 4}px`;
-        if (i === state.waste.length - 1) {
-          cardEl.classList.add('interactive');
+        if (isTop) {
           cardEl.addEventListener('click', (ev) => {
             ev.stopPropagation();
             handleWasteClick();
@@ -1588,10 +1589,10 @@
           colEl.classList.remove('drop-target');
         }
         column.forEach((entry, cardIndex) => {
-          const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: entry.faceUp });
+          const isFaceUp = entry.faceUp;
+          const cardEl = ctx.cardUtils.renderCard(entry.card, { faceUp: isFaceUp, interactive: isFaceUp, hoverRaise: isFaceUp ? false : undefined });
           cardEl.style.top = `${cardIndex * 26}px`;
-          if (entry.faceUp) {
-            cardEl.classList.add('interactive');
+          if (isFaceUp) {
             cardEl.addEventListener('click', (ev) => {
               ev.stopPropagation();
               handleTableauCardClick(idx, cardIndex);

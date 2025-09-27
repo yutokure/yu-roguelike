@@ -754,7 +754,10 @@ let chests = [];
 let bossAlive = false;
 
 // -------------------- BlockDim: data/state/helpers (UI only for now) --------------------
-let blockDimState = { enabled: false, dimKey: 'a', b1Key: null, b2Key: null, b3Key: null, spec: null };
+function createDefaultBlockDimState() {
+    return { enabled: false, dimKey: 'a', b1Key: null, b2Key: null, b3Key: null, spec: null, nested: 1, seed: null };
+}
+let blockDimState = createDefaultBlockDimState();
 let blockDimTables = { dimensions: [], blocks1: [], blocks2: [], blocks3: [] };
 let blockDimHistory = [];
 let blockDimBookmarks = [];
@@ -2079,6 +2082,27 @@ function renderStructureGrid(structure) {
     }
 }
 
+function getModMakerStateSnapshot() {
+    return deepClone(modMakerState);
+}
+
+function applyModMakerStateSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return;
+    const clone = deepClone(snapshot);
+    modMakerState.metadata = { ...modMakerState.metadata, ...(clone.metadata || {}) };
+    modMakerState.structures = Array.isArray(clone.structures) ? clone.structures : [];
+    modMakerState.generators = Array.isArray(clone.generators) ? clone.generators : [];
+    modMakerState.blocks = clone.blocks && typeof clone.blocks === 'object'
+        ? clone.blocks
+        : { blocks1: [], blocks2: [], blocks3: [] };
+    modMakerState.selectedStructure = Number.isFinite(clone.selectedStructure) ? clone.selectedStructure : 0;
+    modMakerState.selectedGenerator = Number.isFinite(clone.selectedGenerator) ? clone.selectedGenerator : 0;
+    modMakerState.allowEmptyStructures = !!clone.allowEmptyStructures;
+    ensureModMakerDefaults();
+    try { renderModMaker(); } catch {}
+    try { refreshModMakerPreview(); } catch {}
+}
+
 function resizeFixedFloor(floor, width, height) {
     if (!floor) return;
     const w = clampFixedMapSize(width, floor.width || MOD_MAKER_DEFAULT_FIXED_WIDTH);
@@ -2743,6 +2767,11 @@ function refreshModMakerPreview() {
     updateModMakerOutputView(buildModMakerOutput());
 }
 
+if (window.ModMakerTool) {
+    window.ModMakerTool.getState = () => getModMakerStateSnapshot();
+    window.ModMakerTool.setState = (snapshot) => applyModMakerStateSnapshot(snapshot);
+}
+
 function formatAlgorithmLines(code) {
     const normalized = (code || '').replace(/\r\n/g, '\n').trim();
     if (!normalized) {
@@ -2933,33 +2962,167 @@ function downloadModMakerOutput() {
 
 
 
+function deepClone(value) {
+    if (value === null || value === undefined) return value;
+    try { return JSON.parse(JSON.stringify(value)); } catch { return value; }
+}
+
+function cloneMiniShortcutOverrides(source) {
+    const overrides = Object.create(null);
+    if (!source || typeof source !== 'object') return overrides;
+    for (const [key, value] of Object.entries(source)) {
+        const normalized = normalizeMiniShortcutKey(key);
+        if (!normalized) continue;
+        overrides[normalized] = !!value;
+    }
+    return overrides;
+}
+
+function getGameStateSnapshot() {
+    const blockDimSnapshot = blockDimState?.enabled ? {
+        enabled: true,
+        nested: blockDimState.nested || 1,
+        dimKey: blockDimState.dimKey,
+        b1Key: blockDimState.b1Key,
+        b2Key: blockDimState.b2Key,
+        b3Key: blockDimState.b3Key,
+        spec: deepClone(blockDimState.spec),
+        seed: blockDimState.seed
+    } : { enabled: false };
+    return {
+        dungeonLevel,
+        player: deepClone(player),
+        selectedWorld,
+        selectedDungeonBase,
+        difficulty,
+        mode: currentMode,
+        selectionFooterCollapsed,
+        blockDim: blockDimSnapshot,
+        blockDimHistory: deepClone(blockDimHistory),
+        blockDimBookmarks: deepClone(blockDimBookmarks),
+        miniExp: deepClone(miniExpState),
+        miniShortcutState: {
+            global: !!miniShortcutState.global,
+            overrides: cloneMiniShortcutOverrides(miniShortcutState.overrides)
+        },
+        miniSessionExp: __miniSessionExp
+    };
+}
+
+function applyMiniShortcutStateSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') {
+        resetMiniShortcutState();
+        return;
+    }
+    miniShortcutState.global = typeof snapshot.global === 'boolean' ? snapshot.global : true;
+    miniShortcutState.overrides = Object.create(null);
+    if (snapshot.overrides && typeof snapshot.overrides === 'object') {
+        for (const [key, value] of Object.entries(snapshot.overrides)) {
+            const normalized = normalizeMiniShortcutKey(key);
+            if (!normalized) continue;
+            miniShortcutState.overrides[normalized] = !!value;
+        }
+    }
+}
+
+function applyGameStateSnapshot(snapshot, options = {}) {
+    if (!snapshot || typeof snapshot !== 'object') return;
+    const applyUI = options.applyUI !== false;
+
+    dungeonLevel = Math.max(1, Math.floor(Number(snapshot.dungeonLevel) || 1));
+
+    const playerSnap = deepClone(snapshot.player || {});
+    const invSnap = playerSnap.inventory || {};
+    player.level = Math.max(1, Math.floor(Number(playerSnap.level) || player.level || 1));
+    player.exp = Number(playerSnap.exp) || 0;
+    player.maxHp = Math.max(1, Math.floor(Number(playerSnap.maxHp) || player.maxHp || 100));
+    player.hp = Math.max(0, Math.min(player.maxHp, Math.floor(Number(playerSnap.hp) || player.maxHp)));
+    player.attack = Math.max(0, Math.floor(Number(playerSnap.attack) || player.attack || 0));
+    player.defense = Math.max(0, Math.floor(Number(playerSnap.defense) || player.defense || 0));
+    if (typeof playerSnap.facing === 'string') player.facing = playerSnap.facing;
+    if (Number.isFinite(playerSnap.x)) player.x = playerSnap.x;
+    if (Number.isFinite(playerSnap.y)) player.y = playerSnap.y;
+    player.inventory = {
+        potion30: Math.max(0, Math.floor(Number(invSnap.potion30) || 0)),
+        hpBoost: Math.max(0, Math.floor(Number(invSnap.hpBoost) || 0)),
+        atkBoost: Math.max(0, Math.floor(Number(invSnap.atkBoost) || 0)),
+        defBoost: Math.max(0, Math.floor(Number(invSnap.defBoost) || 0))
+    };
+
+    if (snapshot.selectedWorld) selectedWorld = snapshot.selectedWorld;
+    if (typeof snapshot.selectedDungeonBase !== 'undefined') selectedDungeonBase = snapshot.selectedDungeonBase;
+    if (snapshot.difficulty) difficulty = snapshot.difficulty;
+    if (snapshot.mode) currentMode = snapshot.mode;
+    if (typeof snapshot.selectionFooterCollapsed === 'boolean') selectionFooterCollapsed = snapshot.selectionFooterCollapsed;
+
+    const blockDimSnap = snapshot.blockDim;
+    blockDimState = createDefaultBlockDimState();
+    if (blockDimSnap && blockDimSnap.enabled) {
+        blockDimState.enabled = true;
+        blockDimState.nested = Math.max(1, Math.floor(Number(blockDimSnap.nested) || 1));
+        blockDimState.dimKey = blockDimSnap.dimKey || 'a';
+        blockDimState.b1Key = blockDimSnap.b1Key ?? null;
+        blockDimState.b2Key = blockDimSnap.b2Key ?? null;
+        blockDimState.b3Key = blockDimSnap.b3Key ?? null;
+        blockDimState.spec = deepClone(blockDimSnap.spec);
+        blockDimState.seed = blockDimSnap.seed ?? null;
+    }
+    blockDimHistory = Array.isArray(snapshot.blockDimHistory) ? deepClone(snapshot.blockDimHistory) : [];
+    blockDimBookmarks = Array.isArray(snapshot.blockDimBookmarks) ? deepClone(snapshot.blockDimBookmarks) : [];
+    __lastSavedBlockDimSelectionKey = snapshotBlockDimSelection(blockDimState);
+
+    if (snapshot.miniExp && typeof snapshot.miniExp === 'object') {
+        const miniSnap = deepClone(snapshot.miniExp);
+        miniExpState = {
+            selected: miniSnap.selected ?? null,
+            difficulty: typeof miniSnap.difficulty === 'string' ? miniSnap.difficulty : 'NORMAL',
+            records: miniSnap.records && typeof miniSnap.records === 'object' ? miniSnap.records : {},
+            category: typeof miniSnap.category === 'string' ? miniSnap.category : MINI_ALL_CATEGORY,
+            displayMode: normalizeMiniExpDisplayMode(miniSnap.displayMode) || 'detail'
+        };
+    } else {
+        miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail' };
+    }
+
+    if (snapshot.miniShortcutState) applyMiniShortcutStateSnapshot(snapshot.miniShortcutState);
+    else resetMiniShortcutState();
+
+    __miniSessionExp = Number.isFinite(snapshot.miniSessionExp) ? Number(snapshot.miniSessionExp) : 0;
+
+    prevHp = player.hp || player.maxHp || 100;
+    prevExp = player.exp || 0;
+
+    if (applyUI) {
+        if (difficultySelect) difficultySelect.value = difficulty;
+        buildSelection();
+        renderHistoryAndBookmarks();
+        updateUI();
+        renderMiniExpPlayerHud();
+        if (__miniExpInited && __miniManifest) {
+            renderMiniExpCategories(__miniManifest);
+            renderMiniExpDisplayModes(__miniManifest);
+            renderMiniExpList(__miniManifest);
+            renderMiniExpRecords();
+        }
+        refreshBdimListHeights();
+        measureSelectionFooterHeight();
+        try { updatePlayerSummaryCard(); } catch {}
+    }
+}
+
 // 一元的なセーブ
 function saveAll() {
     if (isSandboxActive()) return;
     try {
-        localStorage.setItem('roguelike_save_v1', JSON.stringify({
-            dungeonLevel,
-            player,
-            selectedWorld,
-            selectedDungeonBase,
-            difficulty,
-            mode: currentMode,
-            blockDim: blockDimState?.enabled ? {
-                enabled: true,
-                nested: blockDimState.nested || 1,
-                dimKey: blockDimState.dimKey,
-                b1Key: blockDimState.b1Key,
-                b2Key: blockDimState.b2Key,
-                b3Key: blockDimState.b3Key,
-                spec: blockDimState.spec,
-                seed: blockDimState.seed
-            } : { enabled: false },
-            blockDimHistory,
-            blockDimBookmarks,
-            miniExp: miniExpState
-        }));
+        const snapshot = getGameStateSnapshot();
+        localStorage.setItem('roguelike_save_v1', JSON.stringify(snapshot));
     } catch {}
 }
+
+window.getGameStateSnapshot = getGameStateSnapshot;
+window.applyGameStateSnapshot = applyGameStateSnapshot;
+window.getModMakerStateSnapshot = getModMakerStateSnapshot;
+window.applyModMakerStateSnapshot = applyModMakerStateSnapshot;
 
 // カメラ（プレイヤー中心に追従）
 const camera = { x: 0, y: 0 };
@@ -6028,25 +6191,7 @@ document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('c
     }
 }));
 btnExport && btnExport.addEventListener('click', () => {
-    const data = { 
-        dungeonLevel, 
-        player, 
-        selectedWorld, 
-        selectedDungeonBase, 
-        difficulty,
-        mode: currentMode,
-        blockDim: blockDimState?.enabled ? {
-            enabled: true,
-            dimKey: blockDimState.dimKey,
-            b1Key: blockDimState.b1Key,
-            b2Key: blockDimState.b2Key,
-            b3Key: blockDimState.b3Key,
-            spec: blockDimState.spec,
-            seed: blockDimState.seed
-        } : { enabled: false },
-        blockDimHistory,
-        blockDimBookmarks
-    };
+    const data = getGameStateSnapshot();
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -6062,27 +6207,7 @@ importFileInput && importFileInput.addEventListener('change', async (e) => {
     const text = await file.text();
     try {
         const data = JSON.parse(text);
-        dungeonLevel = data.dungeonLevel || 1;
-        Object.assign(player, data.player || {});
-        if (data.selectedWorld) selectedWorld = data.selectedWorld;
-        if (data.selectedDungeonBase) selectedDungeonBase = data.selectedDungeonBase;
-        if (data.difficulty) difficulty = data.difficulty;
-        if (data.mode) currentMode = data.mode;
-        if (data.blockDim && data.blockDim.enabled) {
-            blockDimState = { enabled: true, ...data.blockDim };
-        } else {
-            blockDimState = { enabled: false, dimKey: 'a', b1Key: null, b2Key: null, b3Key: null, spec: null };
-        }
-        __lastSavedBlockDimSelectionKey = snapshotBlockDimSelection(blockDimState);
-        if (Array.isArray(data.blockDimHistory)) blockDimHistory = data.blockDimHistory;
-        if (Array.isArray(data.blockDimBookmarks)) blockDimBookmarks = data.blockDimBookmarks;
-        if (data.miniExp) {
-            miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail', ...data.miniExp };
-            miniExpState.displayMode = normalizeMiniExpDisplayMode(miniExpState.displayMode);
-        }
-        buildSelection();
-        renderHistoryAndBookmarks();
-        // インポート後は選択画面に戻す（モードは保存値を尊重）
+        applyGameStateSnapshot(data, { applyUI: true });
         showSelectionScreen({ stopLoop: true, refillHp: false, resetModeToNormal: false, rebuildSelection: false });
         addMessage('データをインポートしました');
         saveAll();
@@ -6166,26 +6291,7 @@ try {
     const raw = localStorage.getItem('roguelike_save_v1');
     if (raw) {
         const data = JSON.parse(raw);
-        dungeonLevel = data.dungeonLevel || 1;
-        Object.assign(player, data.player || {});
-        if (data.selectedWorld) selectedWorld = data.selectedWorld;
-        if (data.selectedDungeonBase) selectedDungeonBase = data.selectedDungeonBase;
-        if (data.difficulty) difficulty = data.difficulty;
-        if (data.mode) currentMode = data.mode;
-        if (data.blockDim && data.blockDim.enabled) {
-            blockDimState = { enabled: true, nested: (data.blockDim.nested||1), ...data.blockDim };
-        }
-        __lastSavedBlockDimSelectionKey = snapshotBlockDimSelection(blockDimState);
-        if (Array.isArray(data.blockDimHistory)) blockDimHistory = data.blockDimHistory;
-        if (Array.isArray(data.blockDimBookmarks)) blockDimBookmarks = data.blockDimBookmarks;
-        if (data.miniExp) {
-            miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail', ...data.miniExp };
-            miniExpState.displayMode = normalizeMiniExpDisplayMode(miniExpState.displayMode);
-        }
-
-        // Initialize previous values to current values to prevent false change indicators
-        prevHp = player.hp || 100;
-        prevExp = player.exp || 0;
+        applyGameStateSnapshot(data, { applyUI: false });
     }
 } catch {}
 

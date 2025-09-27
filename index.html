@@ -194,6 +194,8 @@
                             <p class="tool-hint">BlockDim向けのブロック定義をGUIで確認・編集し、JSONをエクスポートできます。</p>
                             <button id="tool-button-image-viewer" class="tool-item" type="button" data-tool-target="image-viewer">画像ビューア</button>
                             <p class="tool-hint">スクリーンショットなどを拡大・回転・遠近表示しながらメタ情報を確認できます。</p>
+                            <button id="tool-button-state-manager" class="tool-item" type="button" data-tool-target="state-manager">状態管理</button>
+                            <p class="tool-hint">ゲームとツールの全データをまとめてエクスポート／インポートします。</p>
                         </aside>
                         <section id="tool-mod-maker" class="tool-panel active" data-tool-panel="mod-maker" aria-label="ダンジョンタイプMod作成ツール">
                             <header class="tool-panel-header">
@@ -399,6 +401,22 @@
                                     </div>
                                 </div>
                             </section>
+                        </section>
+                        <section id="tool-state-manager" class="tool-panel" data-tool-panel="state-manager" aria-label="状態管理ツール">
+                            <header class="tool-panel-header">
+                                <h3>状態管理</h3>
+                                <p>ダンジョン探索の進行状況やMiniExp、BlockDimの履歴、ツールズタブ各ツールのデータを一括でバックアップ／復元します。</p>
+                            </header>
+                            <div class="state-manager-body">
+                                <p class="state-manager-description">「全体エクスポート」で現在の状態を1つのJSONファイルとして保存し、「全体インポート」でそのファイルを読み込むと完全に復元できます。</p>
+                                <div class="state-manager-actions">
+                                    <button id="state-manager-export" type="button">全体エクスポート</button>
+                                    <button id="state-manager-import" type="button">全体インポート</button>
+                                    <input id="state-manager-import-file" type="file" accept="application/json" hidden>
+                                </div>
+                                <div id="state-manager-status" class="state-manager-status" role="status" aria-live="polite"></div>
+                                <pre id="state-manager-summary" class="state-manager-summary" aria-live="polite"></pre>
+                            </div>
                         </section>
                         <section id="tool-sandbox-editor" class="tool-panel" data-tool-panel="sandbox-editor" aria-label="サンドボックスダンジョンツール">
                             <header class="tool-panel-header">
@@ -931,5 +949,6 @@
     <script src="js/tools/sandbox.js"></script>
     <script src="js/tools/image-viewer.js"></script>
     <script src="main.js"></script>
+    <script src="js/tools/state-manager.js"></script>
 </body>
 </html>

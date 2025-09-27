@@ -19,6 +19,7 @@
     };
 
     const refs = {};
+    let pendingSerializedState = null;
 
     function createEmptyData() {
         return {
@@ -251,6 +252,13 @@
             })
             .finally(() => {
                 state.loading = false;
+                if (pendingSerializedState) {
+                    const payload = pendingSerializedState;
+                    pendingSerializedState = null;
+                    try { importSerializedState(payload); } catch (err) {
+                        console.warn('[BlockDataEditor] Failed to apply pending state:', err);
+                    }
+                }
             });
     }
 
@@ -741,8 +749,113 @@
         return ok;
     }
 
+    function exportSerializedState() {
+        const snapshot = {
+            data: state.data ? JSON.parse(JSON.stringify(state.data)) : createEmptyData(),
+            currentGroup: state.currentGroup,
+            selectedGroup: state.selectedGroup,
+            selectedIndex: state.selectedIndex,
+            form: state.form ? { ...state.form } : null,
+            formDirty: !!state.formDirty,
+            dirty: !!state.dirty
+        };
+        return snapshot;
+    }
+
+    function normalizeSerializedState(serialized) {
+        const payload = {
+            data: createEmptyData(),
+            currentGroup: 'blocks1',
+            selectedGroup: null,
+            selectedIndex: -1,
+            form: null,
+            formDirty: false,
+            dirty: false
+        };
+        if (!serialized || typeof serialized !== 'object') {
+            return payload;
+        }
+        if (serialized.data && typeof serialized.data === 'object') {
+            try {
+                payload.data = normalizeData(serialized.data);
+            } catch {
+                payload.data = createEmptyData();
+            }
+        }
+        if (GROUPS.includes(serialized.currentGroup)) {
+            payload.currentGroup = serialized.currentGroup;
+        }
+        if (GROUPS.includes(serialized.selectedGroup)) {
+            payload.selectedGroup = serialized.selectedGroup;
+        }
+        if (Number.isFinite(serialized.selectedIndex)) {
+            payload.selectedIndex = Math.floor(serialized.selectedIndex);
+        }
+        if (serialized.form && typeof serialized.form === 'object') {
+            payload.form = { ...serialized.form };
+        }
+        if (serialized.formDirty) payload.formDirty = true;
+        if (serialized.dirty) payload.dirty = true;
+        return payload;
+    }
+
+    function importSerializedState(serialized) {
+        const payload = normalizeSerializedState(serialized);
+        if (!state.initialized) {
+            pendingSerializedState = payload;
+            return true;
+        }
+        applyData(payload.data);
+        state.currentGroup = GROUPS.includes(payload.currentGroup) ? payload.currentGroup : 'blocks1';
+        renderList();
+        updateGroupButtons();
+        state.dirty = !!payload.dirty;
+        updateDirtyIndicator();
+        let handledSelection = false;
+        if (payload.selectedGroup && GROUPS.includes(payload.selectedGroup)) {
+            state.currentGroup = payload.selectedGroup;
+            renderList();
+            if (Array.isArray(state.data?.[payload.selectedGroup])) {
+                const list = state.data[payload.selectedGroup];
+                if (payload.selectedIndex >= 0 && payload.selectedIndex < list.length) {
+                    handledSelection = true;
+                    selectBlock(payload.selectedIndex);
+                    if (payload.form) {
+                        state.form = { ...payload.form };
+                        state.formDirty = !!payload.formDirty;
+                        fillForm();
+                        updateFormButtons();
+                    } else {
+                        state.formDirty = !!payload.formDirty;
+                        updateFormButtons();
+                    }
+                }
+            }
+        }
+        if (!handledSelection) {
+            state.selectedGroup = payload.selectedGroup && GROUPS.includes(payload.selectedGroup)
+                ? payload.selectedGroup
+                : null;
+            state.selectedIndex = -1;
+            if (payload.form) {
+                state.form = { ...payload.form };
+                state.formDirty = !!payload.formDirty;
+                fillForm();
+            } else {
+                state.form = null;
+                state.formDirty = false;
+                clearForm();
+            }
+            updateFormButtons();
+        }
+        renderPreview();
+        return true;
+    }
+
     global.BlockDataEditor = {
-        state
+        state,
+        getState: exportSerializedState,
+        setState: importSerializedState
     };
 
     if (global.ToolsTab?.registerTool) {

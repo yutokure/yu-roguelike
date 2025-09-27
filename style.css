@@ -1301,6 +1301,74 @@ h1 {
     line-height: 1.4;
 }
 
+.state-manager-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px 4px 4px;
+}
+
+.state-manager-description {
+    margin: 0;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.state-manager-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.state-manager-actions button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(129,140,248,0.35));
+    color: #1e1b4b;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.state-manager-actions button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99,102,241,0.25);
+}
+
+.state-manager-actions button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(79,70,229,0.2);
+}
+
+.state-manager-status {
+    min-height: 1.4em;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.state-manager-status.success {
+    color: #166534;
+}
+
+.state-manager-status.error {
+    color: #b91c1c;
+}
+
+.state-manager-summary {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(226,232,240,0.6);
+    border: 1px solid rgba(148,163,184,0.4);
+    color: #1f2937;
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre-wrap;
+}
+
 .tool-panel {
     background: rgba(255,255,255,0.92);
     border: 1px solid rgba(102,126,234,0.25);

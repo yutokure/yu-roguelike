@@ -123,6 +123,72 @@ const MINI_EXP_DISPLAY_MODES = [
     { id: 'wrap', label: '羅列' },
     { id: 'detail', label: '詳細' }
 ];
+
+const miniShortcutState = {
+    global: true,
+    overrides: Object.create(null)
+};
+
+function normalizeMiniShortcutKey(key) {
+    return typeof key === 'string' ? key.toLowerCase() : '';
+}
+
+function setMiniShortcutsGlobal(enabled) {
+    miniShortcutState.global = !!enabled;
+}
+
+function setMiniShortcutKeyEnabled(key, enabled) {
+    const normalized = normalizeMiniShortcutKey(key);
+    if (!normalized) return;
+    miniShortcutState.overrides[normalized] = !!enabled;
+}
+
+function isMiniShortcutKeyEnabled(key) {
+    if (!miniShortcutState.global) return false;
+    const normalized = normalizeMiniShortcutKey(key);
+    if (!normalized) return miniShortcutState.global;
+    if (Object.prototype.hasOwnProperty.call(miniShortcutState.overrides, normalized)) {
+        return !!miniShortcutState.overrides[normalized];
+    }
+    return true;
+}
+
+function resetMiniShortcutState() {
+    miniShortcutState.global = true;
+    miniShortcutState.overrides = Object.create(null);
+}
+
+function createMiniShortcutController() {
+    return {
+        setAll(enabled) {
+            setMiniShortcutsGlobal(enabled);
+        },
+        setGlobal(enabled) {
+            setMiniShortcutsGlobal(enabled);
+        },
+        enableAll() {
+            setMiniShortcutsGlobal(true);
+        },
+        disableAll() {
+            setMiniShortcutsGlobal(false);
+        },
+        setKeyEnabled(key, enabled) {
+            setMiniShortcutKeyEnabled(key, enabled);
+        },
+        enableKey(key) {
+            setMiniShortcutKeyEnabled(key, true);
+        },
+        disableKey(key) {
+            setMiniShortcutKeyEnabled(key, false);
+        },
+        isKeyEnabled(key) {
+            return isMiniShortcutKeyEnabled(key);
+        },
+        reset() {
+            resetMiniShortcutState();
+        }
+    };
+}
 let miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail' };
 let __miniExpInited = false;
 let __miniManifest = null; // [{id,name,entry,version,author,icon,description}]
@@ -6778,9 +6844,15 @@ async function startSelectedMiniGame() {
     if (miniexpContainer) miniexpContainer.innerHTML = '';
     __miniSessionExp = 0;
     __miniPaused = false;
+    resetMiniShortcutState();
+    const shortcutController = createMiniShortcutController();
     let runtime = null;
     try {
-        runtime = mod.create(miniexpContainer, (n, meta) => awardXpFromMini(n, def.id), { difficulty: (miniexpDifficulty?.value||'NORMAL') });
+        const createOptions = {
+            difficulty: (miniexpDifficulty?.value || 'NORMAL'),
+            shortcuts: shortcutController
+        };
+        runtime = mod.create(miniexpContainer, (n, meta) => awardXpFromMini(n, def.id), createOptions);
     } catch (err) {
         if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームの開始に失敗しました。';
         if (miniexpStartBtn) miniexpStartBtn.disabled = false;
@@ -6820,6 +6892,7 @@ function quitMiniGame() {
     if (miniexpPauseBtn) { miniexpPauseBtn.disabled = true; miniexpPauseBtn.textContent = '一時停止'; }
     if (miniexpRestartBtn) miniexpRestartBtn.disabled = true;
     if (miniexpQuitBtn) miniexpQuitBtn.disabled = true;
+    resetMiniShortcutState();
 }
 
 miniexpStartBtn && miniexpStartBtn.addEventListener('click', () => {
@@ -6843,8 +6916,10 @@ miniexpRestartBtn && miniexpRestartBtn.addEventListener('click', async () => {
 // keyboard shortcuts (P pause / R restart) when MiniExp tab active
 document.addEventListener('keydown', (e) => {
     if (!tabMiniExp || tabMiniExp.style.display === 'none') return;
-    if (e.key === 'p' || e.key === 'P') { e.preventDefault(); if (!miniexpPauseBtn?.disabled) miniexpPauseBtn.click(); }
-    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); if (!miniexpRestartBtn?.disabled) miniexpRestartBtn.click(); }
+    const key = (e.key || '').toLowerCase();
+    if (!isMiniShortcutKeyEnabled(key)) return;
+    if (key === 'p') { e.preventDefault(); if (!miniexpPauseBtn?.disabled) miniexpPauseBtn.click(); }
+    if (key === 'r') { e.preventDefault(); if (!miniexpRestartBtn?.disabled) miniexpRestartBtn.click(); }
 });
 
 function renderMiniExpRecords() {

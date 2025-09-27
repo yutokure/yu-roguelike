@@ -243,12 +243,43 @@ function sanitizeSandboxConfig(raw) {
     if (!raw || typeof raw !== 'object') return null;
     const width = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(raw.width) || SANDBOX_DEFAULT_WIDTH));
     const height = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(raw.height) || SANDBOX_DEFAULT_HEIGHT));
+    const sanitizeColor = (value) => {
+        if (typeof value !== 'string') return '';
+        const trimmed = value.trim();
+        if (!trimmed) return '';
+        return COLOR_HEX_PATTERN.test(trimmed) ? trimmed.toLowerCase() : '';
+    };
+    const sanitizeTileMeta = (meta, isFloor) => {
+        if (!meta || typeof meta !== 'object') return null;
+        const result = {};
+        if (isFloor) {
+            const floorType = typeof meta.floorType === 'string' ? meta.floorType.toLowerCase() : '';
+            if (floorType === FLOOR_TYPE_ICE || floorType === FLOOR_TYPE_POISON) {
+                result.floorType = floorType;
+            }
+            const floorColor = sanitizeColor(meta.floorColor);
+            if (floorColor) {
+                result.floorColor = floorColor;
+            }
+        }
+        const wallColor = sanitizeColor(meta.wallColor);
+        if (!isFloor && wallColor) {
+            result.wallColor = wallColor;
+        }
+        return Object.keys(result).length ? result : null;
+    };
     const grid = Array.from({ length: height }, (_, y) => {
         const row = Array.from({ length: width }, (_, x) => {
             const cell = raw.grid?.[y]?.[x];
             return cell === 0 ? 0 : 1;
         });
         return row;
+    });
+    const tileMeta = Array.from({ length: height }, (_, y) => {
+        return Array.from({ length: width }, (_, x) => {
+            const source = raw.tileMeta?.[y]?.[x] ?? raw.meta?.[y]?.[x];
+            return sanitizeTileMeta(source, grid[y][x] === 0);
+        });
     });
     const normalizePos = (pos) => {
         if (!pos) return null;
@@ -287,7 +318,7 @@ function sanitizeSandboxConfig(raw) {
         }
     }
     const playerLevel = computeSandboxStats(raw.playerLevel).level;
-    return { width, height, grid, playerStart, stairs, enemies, playerLevel };
+    return { width, height, grid, tileMeta, playerStart, stairs, enemies, playerLevel };
 }
 
 function validateSandboxConfig(config) {
@@ -614,6 +645,7 @@ const DEFAULT_FLOOR_COLOR = '#ced6e0';
 const FLOOR_TYPE_NORMAL = 'normal';
 const FLOOR_TYPE_ICE = 'ice';
 const FLOOR_TYPE_POISON = 'poison';
+const COLOR_HEX_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 let tileMeta = [];
 
 function resetTileMetadata() {
@@ -3222,7 +3254,26 @@ function generateMap() {
         map = Array.from({ length: MAP_HEIGHT }, (_, y) => {
             return Array.from({ length: MAP_WIDTH }, (_, x) => cfg.grid?.[y]?.[x] === 0 ? 0 : 1);
         });
-        tileMeta = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
+        tileMeta = Array.from({ length: MAP_HEIGHT }, (_, y) => {
+            return Array.from({ length: MAP_WIDTH }, (_, x) => {
+                const meta = cfg.tileMeta?.[y]?.[x];
+                if (!meta || typeof meta !== 'object') return null;
+                const isFloor = cfg.grid?.[y]?.[x] === 0;
+                const entry = {};
+                if (isFloor) {
+                    if (meta.floorType === FLOOR_TYPE_ICE || meta.floorType === FLOOR_TYPE_POISON) {
+                        entry.floorType = meta.floorType;
+                    }
+                    if (typeof meta.floorColor === 'string' && meta.floorColor) {
+                        entry.floorColor = meta.floorColor;
+                    }
+                }
+                if (!isFloor && typeof meta.wallColor === 'string' && meta.wallColor) {
+                    entry.wallColor = meta.wallColor;
+                }
+                return Object.keys(entry).length ? entry : null;
+            });
+        });
         lastGeneratedGenType = 'sandbox';
         return;
     }

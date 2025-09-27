@@ -32,7 +32,7 @@
     return mathLoader;
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts){
     let active = false;
     let destroyed = false;
     let mathRef = null;
@@ -40,6 +40,8 @@
     let scope = { ans: 0 };
     let totalComputations = 0;
     let totalGraphs = 0;
+    const shortcuts = opts?.shortcuts;
+    let shortcutsLocked = false;
 
     const container = document.createElement('div');
     container.className = 'math-lab-root';
@@ -104,6 +106,66 @@
     container.appendChild(panel);
 
     root.appendChild(container);
+
+    function setShortcutEnabled(key, enabled){
+      if (!shortcuts) return;
+      if (typeof shortcuts.setKeyEnabled === 'function') {
+        try { shortcuts.setKeyEnabled(key, enabled); } catch {}
+        return;
+      }
+      if (enabled) {
+        try { shortcuts.enableKey?.(key); } catch {}
+      } else {
+        try { shortcuts.disableKey?.(key); } catch {}
+      }
+    }
+
+    function lockShortcuts(){
+      if (shortcutsLocked) return;
+      setShortcutEnabled('p', false);
+      setShortcutEnabled('r', false);
+      shortcutsLocked = true;
+    }
+
+    function unlockShortcuts(){
+      if (!shortcutsLocked) return;
+      setShortcutEnabled('p', true);
+      setShortcutEnabled('r', true);
+      shortcutsLocked = false;
+    }
+
+    function isEditableElement(el){
+      if (!el || typeof el !== 'object' || el.nodeType !== 1) return false;
+      if (el.isContentEditable && el.contentEditable !== 'false') return true;
+      const tag = (el.tagName || '').toLowerCase();
+      if (tag === 'textarea') {
+        return !el.disabled && !el.readOnly;
+      }
+      if (tag === 'input') {
+        const type = (el.type || '').toLowerCase();
+        if (['button', 'submit', 'reset', 'checkbox', 'radio', 'range', 'color', 'file'].includes(type)) return false;
+        return !el.disabled && !el.readOnly;
+      }
+      return false;
+    }
+
+    function handleFocusIn(evt){
+      if (!container.contains(evt.target)) return;
+      if (isEditableElement(evt.target)) {
+        lockShortcuts();
+      }
+    }
+
+    function handleFocusOut(evt){
+      if (!container.contains(evt.target)) return;
+      if (!isEditableElement(evt.target)) return;
+      const next = evt.relatedTarget;
+      if (next && container.contains(next) && isEditableElement(next)) return;
+      unlockShortcuts();
+    }
+
+    container.addEventListener('focusin', handleFocusIn);
+    container.addEventListener('focusout', handleFocusOut);
 
     let expressionInput, expressionInputClassic, expressionInputPretty;
     let exactResultEl, approxResultEl, resultSubLabelExact, resultSubLabelApprox;
@@ -1990,22 +2052,36 @@
       try { awardXp && awardXp(8, { type: 'graph', expression: expr }); } catch {}
     }
 
+    function refreshShortcutState(){
+      const activeEl = document.activeElement;
+      if (container.contains(activeEl) && isEditableElement(activeEl)) {
+        lockShortcuts();
+      } else {
+        unlockShortcuts();
+      }
+    }
+
     function start(){
       if (active) return;
       active = true;
       expressionInput?.focus();
       notifyStatus('数学ラボの準備が整いました。');
+      refreshShortcutState();
     }
 
     function stop(){
       if (!active) return;
       active = false;
+      unlockShortcuts();
     }
 
     function destroy(){
       if (destroyed) return;
       destroyed = true;
       stop();
+      container.removeEventListener('focusin', handleFocusIn);
+      container.removeEventListener('focusout', handleFocusOut);
+      unlockShortcuts();
       try { root && root.contains(container) && root.removeChild(container); } catch {}
     }
 

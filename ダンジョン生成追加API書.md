@@ -173,7 +173,7 @@ interface GenContext {
   aStar(start:{x:number,y:number}, goal:{x:number,y:number}, opts?:AStarOpts): {x:number,y:number}[];
   setFloorColor(x:number,y:number,color:string): void; // 床カラー（CSSカラー文字列）
   setWallColor(x:number,y:number,color:string): void;  // 壁カラー（CSSカラー文字列）
-  setFloorType(x:number,y:number,type:'normal'|'ice'|'poison'): void; // 床の特性
+  setFloorType(x:number,y:number,type:'normal'|'ice'|'poison'|'bomb'): void; // 床の特性
   clearTileMeta(x:number,y:number): void; // カラー/特性の初期化
   getTileMeta(x:number,y:number): { floorColor?:string; wallColor?:string; floorType?:string } | null;
   structures: {

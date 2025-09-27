@@ -465,6 +465,7 @@
                                                         <option value="normal">通常</option>
                                                         <option value="ice">氷</option>
                                                         <option value="poison">毒</option>
+                                                        <option value="bomb">爆弾</option>
                                                     </select>
                                                 </label>
                                                 <label class="sandbox-field-group">床の色
@@ -525,6 +526,7 @@
                                         <div><dt>✦</dt><dd>敵</dd></div>
                                         <div><dt class="legend-ice">■</dt><dd>氷床</dd></div>
                                         <div><dt class="legend-poison">■</dt><dd>毒床</dd></div>
+                                        <div><dt class="legend-bomb">■</dt><dd>爆弾</dd></div>
                                     </dl>
                                 </div>
                             </div>
@@ -797,6 +799,10 @@
                         <div class="bar-label">HP <span id="stat-hp-text">100/100</span></div>
                         <div class="bar-track"><div id="hp-bar" class="bar-fill"></div></div>
                     </div>
+                    <div class="bar hunger" id="hunger-bar-container">
+                        <div class="bar-label">満腹度 <span id="stat-hunger-text">---</span></div>
+                        <div class="bar-track"><div id="hunger-bar" class="bar-fill"></div></div>
+                    </div>
                     <div class="bar exp">
                         <div class="bar-label">EXP <span id="stat-exp-text">0/1000</span></div>
                         <div class="bar-track"><div id="exp-bar" class="bar-fill"></div></div>
@@ -876,6 +882,10 @@
                     <div class="status-item">
                         <span class="status-label">HP</span>
                         <span class="status-value hp" id="modal-hp">100 / 100</span>
+                    </div>
+                    <div class="status-item hunger-status">
+                        <span class="status-label">満腹度</span>
+                        <span class="status-value hunger" id="modal-hunger">---</span>
                     </div>
                     <div class="status-item">
                         <span class="status-label">攻撃力</span>

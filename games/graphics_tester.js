@@ -699,6 +699,8 @@
       this.fps = 0;
       this.frameCount = 0;
       this.frameTimer = 0;
+      this._raf = null;
+      this._running = false;
       this.shared = sharedShaders;
       this.gl.enable(this.gl.DEPTH_TEST);
       this.demos = {
@@ -712,11 +714,11 @@
         this.resizeObserver = new ResizeObserver(()=>this.resize());
         this.resizeObserver.observe(canvas.parentElement || canvas);
       } else {
-        window.addEventListener('resize', ()=>this.resize());
+        this._resizeHandler = () => this.resize();
+        window.addEventListener('resize', this._resizeHandler);
       }
       this.resize();
       this.loop = this.loop.bind(this);
-      requestAnimationFrame(this.loop);
     }
     resize(){
       const rect = this.canvas.getBoundingClientRect();
@@ -739,6 +741,7 @@
       if(this.log) logLine(this.log, `デモ切り替え: ${name}`);
     }
     loop(time){
+      if(!this._running) return;
       const gl = this.gl;
       const dt = (time - this.lastTime) * 0.001 || 0.016;
       this.lastTime = time;
@@ -757,7 +760,33 @@
         this.active.update(dt, time*0.001);
         this.active.render(this.width, this.height);
       }
-      requestAnimationFrame(this.loop);
+      if(!this._running) return;
+      this._raf = requestAnimationFrame(this.loop);
+    }
+    start(){
+      if(this._running) return;
+      this._running = true;
+      this.lastTime = performance.now();
+      this._raf = requestAnimationFrame(this.loop);
+    }
+    stop(){
+      if(!this._running) return;
+      this._running = false;
+      if(this._raf !== null){
+        cancelAnimationFrame(this._raf);
+        this._raf = null;
+      }
+    }
+    dispose(){
+      this.stop();
+      if(this.resizeObserver){
+        try { this.resizeObserver.disconnect(); } catch {}
+        this.resizeObserver = null;
+      }
+      if(this._resizeHandler){
+        window.removeEventListener('resize', this._resizeHandler);
+        this._resizeHandler = null;
+      }
     }
   }
   function gatherGPUInfo(gl){
@@ -779,9 +808,11 @@
     };
   }
 
-  function setupUI(root){
+  function setupUI(root, awardXp){
     ensureStyle();
+    if(!root) return null;
     root.innerHTML = '';
+    root.classList.add('gfx3d-root');
     const header = createEl('div','gfx3d-header', root);
     const headingBox = createEl('div', '', header);
     const title = createEl('h2','', headingBox);
@@ -813,7 +844,14 @@
       const warn = createEl('div','gfx3d-note', controls);
       warn.textContent = 'このモジュールは WebGL2 対応デバイス／ブラウザが必要です。設定で WebGL2 を有効化するか、対応ブラウザで再度お試しください。';
       logLine(logPre, 'WebGL2 コンテキストの初期化に失敗しました。');
-      return;
+      return {
+        start(){},
+        stop(){},
+        destroy(){
+          try { root.innerHTML = ''; root.classList.remove('gfx3d-root'); } catch {}
+        },
+        getScore(){ return 0; }
+      };
     }
 
     const renderer = new GraphicsRenderer(canvas, logPre, gl);
@@ -924,10 +962,17 @@
       logLine(logPre, 'ベンチマークを開始します (高負荷)');
       renderer.demos.objectLab.startBenchmark((result)=>{
         logLine(logPre, `平均FPS: ${result.fps} / 描画オブジェクト: ${result.count}`);
+        if(typeof awardXp === 'function'){
+          const bonus = Math.min(200, Math.max(0, Math.round(result.fps)));
+          if(bonus > 0) awardXp(bonus);
+        }
       });
     });
 
-    function updateOverlay(){
+    let overlayRunning = false;
+    let overlayRaf = null;
+    const overlayFrame = () => {
+      if(!overlayRunning) return;
       fpsPill.textContent = `FPS: ${renderer.fps.toFixed(1)}`;
       if(renderer.activeName === 'objectLab'){
         const stats = renderer.demos.objectLab.getStats();
@@ -937,17 +982,78 @@
       } else {
         statPill.textContent = 'Gallery Demo';
       }
-      requestAnimationFrame(updateOverlay);
-    }
-    updateOverlay();
+      overlayRaf = requestAnimationFrame(overlayFrame);
+    };
+    const startOverlay = () => {
+      if(overlayRunning) return;
+      overlayRunning = true;
+      overlayFrame();
+    };
+    const stopOverlay = () => {
+      if(!overlayRunning) return;
+      overlayRunning = false;
+      if(overlayRaf !== null){
+        cancelAnimationFrame(overlayRaf);
+        overlayRaf = null;
+      }
+    };
+
+    return {
+      start(){
+        renderer.start();
+        startOverlay();
+      },
+      stop(){
+        stopOverlay();
+        renderer.stop();
+      },
+      destroy(){
+        stopOverlay();
+        renderer.dispose();
+        try { root.innerHTML = ''; root.classList.remove('gfx3d-root'); } catch {}
+      },
+      getScore(){
+        if(renderer.activeName === 'objectLab'){
+          const stats = renderer.demos.objectLab.getStats();
+          return Number(stats.objects) || 0;
+        }
+        return Math.round(Math.max(0, renderer.fps || 0));
+      }
+    };
   }
 
-  window.MiniExpMods = window.MiniExpMods || {};
-  window.MiniExpMods['graphics_tester'] = {
+  function create(root, awardXp){
+    const runtime = setupUI(root, awardXp) || {};
+    return {
+      start(){ try { runtime.start && runtime.start(); } catch {} },
+      stop(){ try { runtime.stop && runtime.stop(); } catch {} },
+      destroy(){ try { runtime.destroy && runtime.destroy(); } catch {} },
+      getScore(){
+        try { return runtime.getScore ? runtime.getScore() : 0; }
+        catch { return 0; }
+      }
+    };
+  }
+
+  const definition = {
     id: 'graphics_tester',
     name: '3Dグラフィックテスター',
-    mount(target){
-      setupUI(target);
-    }
+    description: '3D技術デモとレイトレーシング風レンダリング・ベンチマーク搭載のトイ系テスター',
+    create
   };
+
+  if (typeof window.registerMiniGame === 'function') {
+    window.registerMiniGame(definition);
+  } else {
+    window.MiniExpMods = window.MiniExpMods || {};
+    window.MiniExpMods['graphics_tester'] = {
+      id: definition.id,
+      name: definition.name,
+      mount(target){
+        const runtime = setupUI(target, null);
+        try { runtime && runtime.start && runtime.start(); } catch {}
+        return runtime;
+      }
+    };
+  }
 })();

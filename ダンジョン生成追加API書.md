@@ -151,10 +151,6 @@ interface DungeonGeneratorDef {
     blockDimMixed?: number; // BlockDim の 'mixed' へ（typePool 未指定時や許可時）
     tags?: string[];        // 例: ['maze','organic']。今後のフィルタ用
   };
-  effects?: {
-    dark?: boolean;         // true なら暗闇（視界半径5）
-    poisonMist?: boolean;   // true なら通常床が毒床扱い
-  };
 }
 
 interface GenContext {
@@ -198,14 +194,11 @@ interface GenContext {
   - `'normal'` : 従来の床
   - `'ice'`    : プレイヤーが進入すると同じ方向に滑走し、非氷床か障害物で停止
   - `'poison'` : 通過するたびにプレイヤーが最大HPの10%（最低1）ダメージ
-  - `'bomb'`   : 爆弾タイル。新しい爆弾システムにより、起動時に定義された爆発処理が実行されます
+  - `'bomb'`   : 接触時に爆発し、ダンジョン推奨レベルとの差に応じて最大HPの一定割合ダメージ（推奨≧自身で100%、-1差で80%、-2差で50%、-3差で25%、-4差で10%、-5差以下で0%）
 - `setFloorColor` / `setWallColor` を省略した場合はデフォルト色（床: `#ced6e0`, 壁: `#2f3542`）が使用されます。`floorType` が `ice`/`poison` の場合は未指定でも視認しやすい補助色が自動適用されます。
 - `floors` を指定したジェネレータは、`max` が `getMaxFloor()` の結果へ反映され、`bossFloors` は `isBossFloor()` 判定に利用されます。`maps` に登録したレイアウトは `ctx.fixedMaps.applyCurrent()` で適用可能です。
 - `ctx.fixedMaps` は固定マップの一覧取得 (`list()`)、特定階層のプレビュー (`get()`)、適用 (`apply()` / `applyCurrent()`) を提供します。固定マップが未定義の場合は `available:false` となり安全に無視できます。
 - `floors` のみを記述して `algorithm` を省略した場合、ホストは `ctx.fixedMaps.applyCurrent()` を内部で呼び出して指定レイアウトを適用し、追加のランダム生成を実施しません。
-- `effects.dark` を `true` にすると暗闇ダンジョンとなり、プレイヤー視界は半径5の円に制限されます。
-- `effects.poisonMist` を `true` にすると通常床も毒床として扱われ、歩くたびに毒ダメージを受けます。
-- どちらの効果も、その階の推奨レベルがプレイヤーレベルより5以上低い場合は自動的に無効化されます。
 
 ---
 

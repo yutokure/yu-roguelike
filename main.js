@@ -256,8 +256,8 @@ function sanitizeSandboxConfig(raw) {
         if (!meta || typeof meta !== 'object') return null;
         const result = {};
         if (isFloor) {
-            const floorType = normalizeFloorType(meta.floorType);
-            if (floorType !== FLOOR_TYPE_NORMAL) {
+            const floorType = typeof meta.floorType === 'string' ? meta.floorType.toLowerCase() : '';
+            if (floorType === FLOOR_TYPE_ICE || floorType === FLOOR_TYPE_POISON || floorType === FLOOR_TYPE_BOMB) {
                 result.floorType = floorType;
             }
             const floorColor = sanitizeColor(meta.floorColor);
@@ -647,39 +647,10 @@ let map = [];
 // タイルの表示・挙動拡張
 const DEFAULT_WALL_COLOR = '#2f3542';
 const DEFAULT_FLOOR_COLOR = '#ced6e0';
-const DEFAULT_DUNGEON_EFFECTS = Object.freeze({ dark: false, poisonMist: false });
-
-function createDefaultDungeonEffects() {
-    return { ...DEFAULT_DUNGEON_EFFECTS };
-}
-
-function mergeDungeonEffectFlags(target, source) {
-    if (!target || !source || typeof source !== 'object') return;
-    if (Object.prototype.hasOwnProperty.call(source, 'dark')) {
-        target.dark = !!source.dark;
-    }
-    if (Object.prototype.hasOwnProperty.call(source, 'poisonMist')) {
-        target.poisonMist = !!source.poisonMist;
-    }
-    if (Object.prototype.hasOwnProperty.call(source, 'poison_mist')) {
-        target.poisonMist = !!source.poison_mist;
-    }
-    for (const key of Object.keys(source)) {
-        if (key === 'dark' || key === 'poisonMist' || key === 'poison_mist') continue;
-        const value = source[key];
-        if (value === undefined) continue;
-        target[key] = value;
-    }
-}
-
 const FLOOR_TYPE_NORMAL = 'normal';
 const FLOOR_TYPE_ICE = 'ice';
 const FLOOR_TYPE_POISON = 'poison';
 const FLOOR_TYPE_BOMB = 'bomb';
-const FLOOR_TYPE_SET = new Set([FLOOR_TYPE_ICE, FLOOR_TYPE_POISON, FLOOR_TYPE_BOMB]);
-const DARK_VISION_RADIUS = 5;
-const DARK_VISION_RADIUS_SQ = DARK_VISION_RADIUS * DARK_VISION_RADIUS;
-let currentDungeonEffectSource = createDefaultDungeonEffects();
 const COLOR_HEX_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 let tileMeta = [];
 let currentRecommendedLevel = 1;
@@ -700,25 +671,12 @@ function getTileMeta(x, y) {
     return tileMeta[y] ? tileMeta[y][x] : null;
 }
 
-function normalizeFloorType(type) {
-    if (typeof type !== 'string') return FLOOR_TYPE_NORMAL;
-    const normalized = type.toLowerCase();
-    if (normalized === FLOOR_TYPE_NORMAL) return FLOOR_TYPE_NORMAL;
-    if (FLOOR_TYPE_SET.has(normalized)) return normalized;
-    return FLOOR_TYPE_NORMAL;
-}
-
 function getTileFloorType(x, y) {
     if (!map[y] || map[y][x] !== 0) return FLOOR_TYPE_NORMAL;
     const meta = getTileMeta(x, y);
-    let type = FLOOR_TYPE_NORMAL;
-    if (meta && meta.floorType) {
-        type = normalizeFloorType(meta.floorType);
-    }
-    if (type === FLOOR_TYPE_NORMAL && isDungeonEffectActive('poisonMist')) {
-        return FLOOR_TYPE_POISON;
-    }
-    return type;
+    if (!meta || !meta.floorType) return FLOOR_TYPE_NORMAL;
+    const t = meta.floorType;
+    return (t === FLOOR_TYPE_ICE || t === FLOOR_TYPE_POISON || t === FLOOR_TYPE_BOMB) ? t : FLOOR_TYPE_NORMAL;
 }
 
 function getTileRenderColor(x, y, isWall) {
@@ -732,7 +690,7 @@ function getTileRenderColor(x, y, isWall) {
     const type = getTileFloorType(x, y);
     if (type === FLOOR_TYPE_ICE) return '#74c0fc';
     if (type === FLOOR_TYPE_POISON) return '#94d82d';
-    if (type === FLOOR_TYPE_BOMB) return '#ffa94d';
+    if (type === FLOOR_TYPE_BOMB) return '#ff8787';
     return DEFAULT_FLOOR_COLOR;
 }
 
@@ -757,9 +715,35 @@ const player = {
     }
 };
 
-const builtinDungeonEffects = Object.create(null);
+const HUNGER_MAX = 100;
+const HUNGER_TURN_COST = 1;
+const HUNGER_ITEM_RECOVERY = 25;
+const HUNGER_DAMAGE_RATIO = 0.2;
+let hungerState = { active: false };
 
-function getCurrentDungeonRecommendedLevel() {
+function ensureHungerInitialized() {
+    const max = Number.isFinite(player.maxHunger) ? Math.max(1, Math.floor(player.maxHunger)) : HUNGER_MAX;
+    player.maxHunger = max;
+    if (!Number.isFinite(player.hunger)) {
+        player.hunger = max;
+    }
+    player.hunger = Math.max(0, Math.min(player.maxHunger, Math.floor(player.hunger)));
+}
+
+function resetHunger(fill = false) {
+    player.maxHunger = HUNGER_MAX;
+    ensureHungerInitialized();
+    if (fill || player.hunger > player.maxHunger) {
+        player.hunger = player.maxHunger;
+    }
+    hungerState.active = false;
+}
+
+function isHungerSystemActive() {
+    return !!hungerState.active;
+}
+
+function getCurrentRecommendedLevelForHunger() {
     try {
         return recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
     } catch {
@@ -767,46 +751,60 @@ function getCurrentDungeonRecommendedLevel() {
     }
 }
 
-function isDungeonEffectActive(effectName) {
-    if (!effectName || !currentDungeonEffectSource?.[effectName]) return false;
-    const recommended = getCurrentDungeonRecommendedLevel();
-    if (Number.isFinite(recommended)) {
-        const playerLevel = player?.level ?? 1;
-        if (playerLevel >= recommended + 5) return false;
-    }
-    return true;
-}
+function updateHungerState({ announce = true } = {}) {
+    ensureHungerInitialized();
+    const prevActive = !!hungerState.active;
+    let nextActive = false;
 
-function isWithinVisionRadius(x, y, radiusSq = DARK_VISION_RADIUS_SQ) {
-    const px = player?.x ?? 0;
-    const py = player?.y ?? 0;
-    const dx = x - px;
-    const dy = y - py;
-    return dx * dx + dy * dy <= radiusSq;
-}
-
-function getEffectsForGenerator(genType) {
-    const effects = createDefaultDungeonEffects();
-    if (!genType) return effects;
-    try {
-        if (DungeonGenRegistry && typeof DungeonGenRegistry.get === 'function') {
-            const def = DungeonGenRegistry.get(genType);
-            if (def) {
-                if (def.effects && def.effects !== effects) {
-                    mergeDungeonEffectFlags(effects, def.effects);
-                } else {
-                    mergeDungeonEffectFlags(effects, def);
-                }
+    if (!isSandboxActive()) {
+        const recommended = getCurrentRecommendedLevelForHunger();
+        if (Number.isFinite(recommended)) {
+            const playerLevel = Math.max(1, Math.floor(player.level || 1));
+            if (recommended >= 300 && recommended >= (playerLevel - 4)) {
+                nextActive = true;
             }
         }
-    } catch {}
-    const builtin = builtinDungeonEffects[genType];
-    if (builtin) mergeDungeonEffectFlags(effects, builtin);
-    return effects;
+        if (currentMode === 'blockdim' && (!blockDimState || !blockDimState.spec)) {
+            nextActive = false;
+        }
+    }
+
+    hungerState.active = nextActive;
+    if (announce && prevActive !== nextActive) {
+        if (nextActive) addMessage('満腹度システムが発動した！');
+        else addMessage('満腹度システムが解除された。');
+    }
+
+    return hungerState.active;
 }
 
-function updateCurrentDungeonEffects(genType) {
-    currentDungeonEffectSource = getEffectsForGenerator(genType);
+function applyHungerTurnCost() {
+    if (!isHungerSystemActive()) return false;
+    ensureHungerInitialized();
+    player.hunger = Math.max(0, player.hunger - HUNGER_TURN_COST);
+
+    if (player.hunger === 0) {
+        const damage = Math.max(1, Math.floor(player.maxHp * HUNGER_DAMAGE_RATIO));
+        if (damage > 0) {
+            player.hp = Math.max(0, player.hp - damage);
+            addMessage(`空腹でダメージ！HPが${damage}減少`);
+            addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+            playSfx('damage');
+            if (player.hp <= 0) {
+                handlePlayerDeath('空腹で力尽きた…ゲームオーバー');
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function finalizePlayerTurn() {
+    updateHungerState();
+    const died = applyHungerTurnCost();
+    updateUI();
+    saveAll();
+    return !died && !isGameOver;
 }
 
 // Track previous values for change indicators
@@ -3382,7 +3380,6 @@ function pickSpreadFloorPositions(count, minDist, exclude = []) {
 
 function generateMap() {
     if (isSandboxActive()) {
-        updateCurrentDungeonEffects('sandbox');
         const cfg = sandboxRuntime.config;
         MAP_WIDTH = cfg.width;
         MAP_HEIGHT = cfg.height;
@@ -3396,9 +3393,8 @@ function generateMap() {
                 const isFloor = cfg.grid?.[y]?.[x] === 0;
                 const entry = {};
                 if (isFloor) {
-                    const floorType = normalizeFloorType(meta.floorType);
-                    if (floorType !== FLOOR_TYPE_NORMAL) {
-                        entry.floorType = floorType;
+                    if (meta.floorType === FLOOR_TYPE_ICE || meta.floorType === FLOOR_TYPE_POISON || meta.floorType === FLOOR_TYPE_BOMB) {
+                        entry.floorType = meta.floorType;
                     }
                     if (typeof meta.floorColor === 'string' && meta.floorColor) {
                         entry.floorColor = meta.floorColor;
@@ -3425,7 +3421,6 @@ function generateMap() {
     
     // Choose generation type based on mode
     let genType = resolveCurrentGeneratorType() || 'field';
-    updateCurrentDungeonEffects(genType);
     // mixed以外はここで実タイプ記録
     lastGeneratedGenType = genType;
 
@@ -5220,16 +5215,14 @@ function drawMap() {
 
     const cellW = canvas.width / VIEWPORT_WIDTH;
     const cellH = canvas.height / VIEWPORT_HEIGHT;
-    const darkActive = isDungeonEffectActive('dark');
-    const visionSq = DARK_VISION_RADIUS_SQ;
 
     for (let y = startY; y < endY; y++) {
         for (let x = startX; x < endX; x++) {
             const screenX = (x - startX) * cellW;
             const screenY = (y - startY) * cellH;
-            if (darkActive && !isWithinVisionRadius(x, y, visionSq)) {
-                ctx.fillStyle = '#000000';
-            } else if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) {
+            let isWall = true;
+            let meta = null;
+            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) {
                 ctx.fillStyle = DEFAULT_WALL_COLOR;
             } else {
                 isWall = map[y][x] === 1;
@@ -5258,14 +5251,12 @@ function drawMap() {
         const sx = stairs.x - startX;
         const sy = stairs.y - startY;
         if (sx >= 0 && sy >= 0 && sx < VIEWPORT_WIDTH && sy < VIEWPORT_HEIGHT) {
-            if (!darkActive || isWithinVisionRadius(stairs.x, stairs.y, visionSq)) {
-                const cellW = canvas.width / VIEWPORT_WIDTH;
-                const cellH = canvas.height / VIEWPORT_HEIGHT;
-                const screenX = sx * cellW;
-                const screenY = sy * cellH;
-                ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(screenX + 4, screenY + 4, cellW - 8, cellH - 8);
-            }
+            const cellW = canvas.width / VIEWPORT_WIDTH;
+            const cellH = canvas.height / VIEWPORT_HEIGHT;
+            const screenX = sx * cellW;
+            const screenY = sy * cellH;
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(screenX + 4, screenY + 4, cellW - 8, cellH - 8);
         }
     }
 }
@@ -5335,13 +5326,10 @@ function drawTextWithBackground(ctx, text, x, y, textColor) {
 function drawEnemies() {
     const startX = camera.x;
     const startY = camera.y;
-    const darkActive = isDungeonEffectActive('dark');
-    const visionSq = DARK_VISION_RADIUS_SQ;
     enemies.forEach(enemy => {
         const ex = enemy.x - startX;
         const ey = enemy.y - startY;
         if (ex < 0 || ey < 0 || ex >= VIEWPORT_WIDTH || ey >= VIEWPORT_HEIGHT) return;
-        if (darkActive && !isWithinVisionRadius(enemy.x, enemy.y, visionSq)) return;
         const cellWe = canvas.width / VIEWPORT_WIDTH;
         const cellHe = canvas.height / VIEWPORT_HEIGHT;
         const cx = ex * cellWe + cellWe / 2;
@@ -5399,13 +5387,10 @@ function drawEnemies() {
 function drawItems() {
     const startX = camera.x;
     const startY = camera.y;
-    const darkActive = isDungeonEffectActive('dark');
-    const visionSq = DARK_VISION_RADIUS_SQ;
     items.forEach(item => {
         const ix = item.x - startX;
         const iy = item.y - startY;
         if (ix < 0 || iy < 0 || ix >= VIEWPORT_WIDTH || iy >= VIEWPORT_HEIGHT) return;
-        if (darkActive && !isWithinVisionRadius(item.x, item.y, visionSq)) return;
         const cellWi = canvas.width / VIEWPORT_WIDTH;
         const cellHi = canvas.height / VIEWPORT_HEIGHT;
         const cx = ix * cellWi + cellWi / 2;
@@ -5420,13 +5405,10 @@ function drawItems() {
 function drawChests() {
     const startX = camera.x;
     const startY = camera.y;
-    const darkActive = isDungeonEffectActive('dark');
-    const visionSq = DARK_VISION_RADIUS_SQ;
     chests.forEach(ch => {
         const ix = ch.x - startX;
         const iy = ch.y - startY;
         if (ix < 0 || iy < 0 || ix >= VIEWPORT_WIDTH || iy >= VIEWPORT_HEIGHT) return;
-        if (darkActive && !isWithinVisionRadius(ch.x, ch.y, visionSq)) return;
         const cellWc = canvas.width / VIEWPORT_WIDTH;
         const cellHc = canvas.height / VIEWPORT_HEIGHT;
         const sx = ix * cellWc + cellWc / 2;
@@ -6100,15 +6082,12 @@ function updateDefeatedEnemies() {
 function drawDefeatedEnemies() {
     const startX = camera.x;
     const startY = camera.y;
-    const darkActive = isDungeonEffectActive('dark');
-    const visionSq = DARK_VISION_RADIUS_SQ;
-
+    
     defeatedEnemies.forEach(def => {
         const ex = def.x - startX;
         const ey = def.y - startY;
         if (ex < 0 || ey < 0 || ex >= VIEWPORT_WIDTH || ey >= VIEWPORT_HEIGHT) return;
-        if (darkActive && !isWithinVisionRadius(def.x, def.y, visionSq)) return;
-
+        
         const cellWe = canvas.width / VIEWPORT_WIDTH;
         const cellHe = canvas.height / VIEWPORT_HEIGHT;
         const cx = ex * cellWe + cellWe / 2;
@@ -6142,8 +6121,6 @@ function drawPopups() {
     const startX = camera.x;
     const startY = camera.y;
     const baseCellH = canvas.height / VIEWPORT_HEIGHT;
-    const darkActive = isDungeonEffectActive('dark');
-    const visionSq = DARK_VISION_RADIUS_SQ;
     ctx.textAlign = 'center';
     for (let i = popups.length - 1; i >= 0; i--) {
         const p = popups[i];
@@ -6154,10 +6131,6 @@ function drawPopups() {
         const cellH2 = canvas.height / VIEWPORT_HEIGHT;
         const screenX = ex * cellW + cellW / 2;
         const screenY = ey * cellH2 + cellH2 / 2 - p.t * (cellH2 * 0.03);
-        if (darkActive && !isWithinVisionRadius(p.x, p.y, visionSq)) {
-            if (p.t > 60) popups.splice(i, 1);
-            continue;
-        }
         const fontSize = Math.max(18, Math.floor(baseCellH * 0.8 * (p.scale || 1)));
         ctx.font = `bold ${fontSize}px sans-serif`;
         
@@ -7807,18 +7780,6 @@ function normalizeGeneratorFloors(rawFloors, generatorId, addonId) {
     };
 }
 
-function normalizeGeneratorEffects(def) {
-    const normalized = createDefaultDungeonEffects();
-    if (!def || typeof def !== 'object') return normalized;
-    const sources = [];
-    if (def.effects && typeof def.effects === 'object') sources.push(def.effects);
-    if (def.params && typeof def.params === 'object') sources.push(def.params);
-    sources.push(def);
-    for (const src of sources) mergeDungeonEffectFlags(normalized, src);
-    def.effects = normalized;
-    return normalized;
-}
-
 function registerAddonGenerators(generators, addonId) {
     if (!Array.isArray(generators)) return;
     for (const raw of generators) {
@@ -7826,7 +7787,6 @@ function registerAddonGenerators(generators, addonId) {
         try {
             const def = Object.assign({}, raw);
             def.source = addonId;
-            normalizeGeneratorEffects(def);
             const floors = normalizeGeneratorFloors(def.floors, def.id, addonId);
             if (floors) {
                 FixedMapRegistry.set(def.id, floors);
@@ -8054,10 +8014,8 @@ function makeGenContext() {
             if (!meta) return;
             if (!type || type === FLOOR_TYPE_NORMAL) {
                 delete meta.floorType;
-            } else {
-                const floorType = normalizeFloorType(type);
-                if (floorType === FLOOR_TYPE_NORMAL) delete meta.floorType;
-                else meta.floorType = floorType;
+            } else if (type === FLOOR_TYPE_ICE || type === FLOOR_TYPE_POISON || type === FLOOR_TYPE_BOMB) {
+                meta.floorType = type;
             }
         },
         clearTileMeta: (x, y) => {
@@ -8079,10 +8037,6 @@ function runAddonGenerator(id) {
     const ctx = makeGenContext();
     ctx.generatorId = id;
     ctx.addonId = def.source || null;
-    ctx.effects = createDefaultDungeonEffects();
-    if (def?.effects && typeof def.effects === 'object') {
-        mergeDungeonEffectFlags(ctx.effects, def.effects);
-    }
     ctx.fixedMaps = makeFixedMapApi(id, ctx);
     const bundle = FixedMapRegistry.get(id);
     let applied = false;

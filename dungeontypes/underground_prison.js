@@ -61,8 +61,7 @@
     name: '地下牢',
     description: '広い回廊と規則正しい牢房が並ぶ地下監獄',
     algorithm,
-    mixin: { normalMixed: 0.4, blockDimMixed: 0.45, tags: ['structured','rooms'] },
-    effects: { dark: true }
+    mixin: { normalMixed: 0.4, blockDimMixed: 0.45, tags: ['structured','rooms'] }
   };
 
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }

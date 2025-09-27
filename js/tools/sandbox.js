@@ -43,7 +43,7 @@
     const FLOOR_TYPE_COLORS = {
         ice: '#74c0fc',
         poison: '#94d82d',
-        bomb: '#ffa94d'
+        bomb: '#ff8787'
     };
 
     let refs = {};

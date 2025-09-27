@@ -397,6 +397,20 @@
     if (!root) throw new Error('MiniExp Typing requires a container');
     ensureStyles();
 
+    const shortcutController = opts?.shortcuts;
+    if (shortcutController){
+      if (typeof shortcutController.disableKey === 'function'){
+        shortcutController.disableKey('r');
+        shortcutController.disableKey('p');
+      } else if (typeof shortcutController.setKeyEnabled === 'function'){
+        shortcutController.setKeyEnabled('r', false);
+        shortcutController.setKeyEnabled('p', false);
+      } else if (typeof shortcutController.setAll === 'function' || typeof shortcutController.setGlobal === 'function'){
+        const setter = shortcutController.setAll || shortcutController.setGlobal;
+        try { setter.call(shortcutController, false); } catch {}
+      }
+    }
+
     const initialDifficulty = pickDifficulty(opts?.difficulty);
     const state = {
       difficulty: initialDifficulty,

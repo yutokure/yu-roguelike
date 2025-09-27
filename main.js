@@ -8,6 +8,9 @@ const statHpText = document.getElementById('stat-hp-text');
 const statExpText = document.getElementById('stat-exp-text');
 const hpBar = document.getElementById('hp-bar');
 const expBar = document.getElementById('exp-bar');
+const statHungerText = document.getElementById('stat-hunger-text');
+const hungerBar = document.getElementById('hunger-bar');
+const hungerBarContainer = document.getElementById('hunger-bar-container');
 const messageLogDiv = document.getElementById('message-log');
 const MAX_LOG_LINES = 100;
 let logBuffer = [];
@@ -415,7 +418,8 @@ function startSandboxGame(rawConfig) {
     player.attack = stats.attack;
     player.defense = stats.defense;
     player.exp = 0;
-
+    resetHunger(true);
+    
     isGameOver = false;
     playerTurn = true;
 
@@ -589,6 +593,7 @@ function showSelectionScreen(opts = {}) {
 
     // 状態のリセット
     if (refillHp) player.hp = player.maxHp;
+    if (refillHp) resetHunger(true);
     isGameOver = false;
     if (resetModeToNormal) {
         currentMode = 'normal';
@@ -694,16 +699,110 @@ const player = {
     exp: 0,
     maxHp: 100,
     hp: 100,
+    maxHunger: 100,
+    hunger: 100,
     attack: 10,
     defense: 10,
     facing: 'down',
-    inventory: { 
+    inventory: {
         potion30: 0,
         hpBoost: 0,
         atkBoost: 0,
         defBoost: 0
     }
 };
+
+const HUNGER_MAX = 100;
+const HUNGER_TURN_COST = 1;
+const HUNGER_ITEM_RECOVERY = 25;
+const HUNGER_DAMAGE_RATIO = 0.2;
+let hungerState = { active: false };
+
+function ensureHungerInitialized() {
+    const max = Number.isFinite(player.maxHunger) ? Math.max(1, Math.floor(player.maxHunger)) : HUNGER_MAX;
+    player.maxHunger = max;
+    if (!Number.isFinite(player.hunger)) {
+        player.hunger = max;
+    }
+    player.hunger = Math.max(0, Math.min(player.maxHunger, Math.floor(player.hunger)));
+}
+
+function resetHunger(fill = false) {
+    player.maxHunger = HUNGER_MAX;
+    ensureHungerInitialized();
+    if (fill || player.hunger > player.maxHunger) {
+        player.hunger = player.maxHunger;
+    }
+    hungerState.active = false;
+}
+
+function isHungerSystemActive() {
+    return !!hungerState.active;
+}
+
+function getCurrentRecommendedLevelForHunger() {
+    try {
+        return recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    } catch {
+        return null;
+    }
+}
+
+function updateHungerState({ announce = true } = {}) {
+    ensureHungerInitialized();
+    const prevActive = !!hungerState.active;
+    let nextActive = false;
+
+    if (!isSandboxActive()) {
+        const recommended = getCurrentRecommendedLevelForHunger();
+        if (Number.isFinite(recommended)) {
+            const playerLevel = Math.max(1, Math.floor(player.level || 1));
+            if (recommended >= 300 && recommended >= (playerLevel - 4)) {
+                nextActive = true;
+            }
+        }
+        if (currentMode === 'blockdim' && (!blockDimState || !blockDimState.spec)) {
+            nextActive = false;
+        }
+    }
+
+    hungerState.active = nextActive;
+    if (announce && prevActive !== nextActive) {
+        if (nextActive) addMessage('満腹度システムが発動した！');
+        else addMessage('満腹度システムが解除された。');
+    }
+
+    return hungerState.active;
+}
+
+function applyHungerTurnCost() {
+    if (!isHungerSystemActive()) return false;
+    ensureHungerInitialized();
+    player.hunger = Math.max(0, player.hunger - HUNGER_TURN_COST);
+
+    if (player.hunger === 0) {
+        const damage = Math.max(1, Math.floor(player.maxHp * HUNGER_DAMAGE_RATIO));
+        if (damage > 0) {
+            player.hp = Math.max(0, player.hp - damage);
+            addMessage(`空腹でダメージ！HPが${damage}減少`);
+            addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+            playSfx('damage');
+            if (player.hp <= 0) {
+                handlePlayerDeath('空腹で力尽きた…ゲームオーバー');
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function finalizePlayerTurn() {
+    updateHungerState();
+    const died = applyHungerTurnCost();
+    updateUI();
+    saveAll();
+    return !died && !isGameOver;
+}
 
 // Track previous values for change indicators
 let prevHp = 100;
@@ -3069,6 +3168,13 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     player.exp = Number(playerSnap.exp) || 0;
     player.maxHp = Math.max(1, Math.floor(Number(playerSnap.maxHp) || player.maxHp || 100));
     player.hp = Math.max(0, Math.min(player.maxHp, Math.floor(Number(playerSnap.hp) || player.maxHp)));
+    player.maxHunger = Math.max(1, Math.floor(Number(playerSnap.maxHunger) || player.maxHunger || HUNGER_MAX));
+    if (Number.isFinite(Number(playerSnap.hunger))) {
+        player.hunger = Number(playerSnap.hunger);
+    } else {
+        player.hunger = player.maxHunger;
+    }
+    ensureHungerInitialized();
     player.attack = Math.max(0, Math.floor(Number(playerSnap.attack) || player.attack || 0));
     player.defense = Math.max(0, Math.floor(Number(playerSnap.defense) || player.defense || 0));
     if (typeof playerSnap.facing === 'string') player.facing = playerSnap.facing;
@@ -3120,6 +3226,8 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     else resetMiniShortcutState();
 
     __miniSessionExp = Number.isFinite(snapshot.miniSessionExp) ? Number(snapshot.miniSessionExp) : 0;
+
+    updateHungerState({ announce: false });
 
     prevHp = player.hp || player.maxHp || 100;
     prevExp = player.exp || 0;
@@ -4810,7 +4918,8 @@ function generateLevel() {
     if (isBossFloor(dungeonLevel)) {
         generateBossRoom();
     }
-    
+
+    updateHungerState();
     updateUI(); // Update UI after level generation
 }
 
@@ -5526,6 +5635,11 @@ function updateUI() {
     const currentHp = player.hp || 0;
     const hpPct = Math.max(0, Math.min(1, currentHp / (player.maxHp || 1)));
     const expPct = Math.max(0, Math.min(1, exp / expMax));
+    ensureHungerInitialized();
+    const hungerMax = player.maxHunger || HUNGER_MAX;
+    const hungerValue = Math.max(0, Math.min(hungerMax, player.hunger || 0));
+    const hungerPct = hungerMax ? Math.max(0, Math.min(1, hungerValue / hungerMax)) : 0;
+    const hungerActiveNow = isHungerSystemActive();
     
     // Show value change indicators
     if (currentHp !== prevHp) {
@@ -5563,8 +5677,11 @@ function updateUI() {
     if (statExpText) statExpText.textContent = `${expDisp}/${expMax}`;
     if (hpBar) hpBar.style.width = `${hpPct * 100}%`;
     if (expBar) expBar.style.width = `${expPct * 100}%`;
+    if (statHungerText) statHungerText.textContent = hungerActiveNow ? `${hungerValue}/${hungerMax}` : '---';
+    if (hungerBar) hungerBar.style.width = hungerActiveNow ? `${hungerPct * 100}%` : '0%';
+    if (hungerBarContainer) hungerBarContainer.classList.toggle('inactive', !hungerActiveNow);
 
-    updatePlayerSummaryCard({ level, currentHp, expDisp, expMax });
+    updatePlayerSummaryCard({ level, currentHp, expDisp, expMax, hungerValue, hungerMax, hungerActive: hungerActiveNow });
     
     // Update item modal - fix NaN issue
     const potion30Count = player.inventory?.potion30 || 0;
@@ -5588,6 +5705,8 @@ function updateUI() {
     const modalHpBoost = document.getElementById('modal-hp-boost');
     const modalAtkBoost = document.getElementById('modal-atk-boost');
     const modalDefBoost = document.getElementById('modal-def-boost');
+    const modalHunger = document.getElementById('modal-hunger');
+    const modalHungerRow = document.querySelector('.status-item.hunger-status');
     const modalWorld = document.getElementById('modal-world');
     const modalDifficulty = document.getElementById('modal-difficulty');
     const modalDungeonSummary = document.getElementById('modal-dungeon-summary');
@@ -5604,6 +5723,11 @@ function updateUI() {
     if (modalHpBoost) modalHpBoost.textContent = `x ${hpBoostCount}`;
     if (modalAtkBoost) modalAtkBoost.textContent = `x ${atkBoostCount}`;
     if (modalDefBoost) modalDefBoost.textContent = `x ${defBoostCount}`;
+    if (modalHunger) {
+        modalHunger.textContent = hungerActiveNow ? `${hungerValue} / ${hungerMax}` : '---';
+        modalHunger.classList.toggle('inactive', !hungerActiveNow);
+    }
+    if (modalHungerRow) modalHungerRow.classList.toggle('inactive', !hungerActiveNow);
     if (modalWorld) {
         if (currentMode === 'blockdim') {
             const nested = blockDimState?.nested || 1;
@@ -5647,7 +5771,7 @@ function updateUI() {
     
     if (statusDetails) {
         statusDetails.innerHTML = `階層: ${dungeonLevel}<br>` +
-            `Lv.${level} HP ${currentHp}/${player.maxHp || 0} 攻${player.attack || 0} 防${player.defense || 0}`;
+            `Lv.${level} HP ${currentHp}/${player.maxHp || 0} 攻${player.attack || 0} 防${player.defense || 0} 満腹${hungerActiveNow ? `${hungerValue}/${hungerMax}` : '---'}`;
     }
     const floorEl = document.getElementById('floor-indicator');
     if (floorEl) floorEl.textContent = `${dungeonLevel}F`;
@@ -5655,7 +5779,15 @@ function updateUI() {
     // メッセージログは addMessage で更新
 }
 
-function updatePlayerSummaryCard({ level = player.level || 1, currentHp = player.hp || 0, expDisp = Math.floor(player.exp || 0), expMax = 1000 } = {}) {
+function updatePlayerSummaryCard({
+    level = player.level || 1,
+    currentHp = player.hp || 0,
+    expDisp = Math.floor(player.exp || 0),
+    expMax = 1000,
+    hungerValue = Math.max(0, Math.floor(player.hunger ?? player.maxHunger ?? HUNGER_MAX)),
+    hungerMax = player.maxHunger || HUNGER_MAX,
+    hungerActive = isHungerSystemActive()
+} = {}) {
     if (!playerSummaryDiv) return;
     const card = playerSummaryDiv.querySelector('.player-status-card');
     if (!card) return;
@@ -5665,12 +5797,19 @@ function updatePlayerSummaryCard({ level = player.level || 1, currentHp = player
     const expEl = card.querySelector('.stat-value.exp');
     const atkEl = card.querySelector('.stat-value.attack');
     const defEl = card.querySelector('.stat-value.defense');
+    const hungerEl = card.querySelector('.stat-value.hunger');
+    const hungerItem = card.querySelector('.stat-item.hunger');
 
     if (levelEl) levelEl.textContent = level;
     if (hpEl) hpEl.textContent = `${currentHp}/${player.maxHp || 0}`;
     if (expEl) expEl.textContent = `${expDisp}/${expMax}`;
     if (atkEl) atkEl.textContent = player.attack || 0;
     if (defEl) defEl.textContent = player.defense || 0;
+    if (hungerEl) {
+        hungerEl.textContent = hungerActive ? `${hungerValue}/${hungerMax}` : '---';
+        hungerEl.classList.toggle('inactive', !hungerActive);
+    }
+    if (hungerItem) hungerItem.classList.toggle('inactive', !hungerActive);
 }
 
 function addMessage(message) {
@@ -5786,8 +5925,15 @@ function attackInDirection() {
     if (enemyAtTarget) {
         addSeparator();
         performAttack(enemyAtTarget);
-        playerTurn = false;
-        setTimeout(enemyTurn, 100);
+        const turnContinues = finalizePlayerTurn();
+        if (turnContinues) {
+            if (!isGameOver && gameLoopRunning) {
+                playerTurn = false;
+                setTimeout(enemyTurn, 100);
+            } else if (!isGameOver) {
+                playerTurn = true;
+            }
+        }
     } else {
         addMessage('その方向には敵がいない！');
     }
@@ -6185,11 +6331,14 @@ document.addEventListener('keydown', (event) => {
     }
 
     if (acted) {
-        if (!isGameOver && gameLoopRunning) {
-            playerTurn = false;
-            setTimeout(enemyTurn, 100);
-        } else if (!isGameOver) {
-            playerTurn = true;
+        const turnContinues = finalizePlayerTurn();
+        if (turnContinues) {
+            if (!isGameOver && gameLoopRunning) {
+                playerTurn = false;
+                setTimeout(enemyTurn, 100);
+            } else if (!isGameOver) {
+                playerTurn = true;
+            }
         }
     }
 });
@@ -6328,6 +6477,29 @@ importFileInput && importFileInput.addEventListener('change', async (e) => {
 });
 usePotion30Btn && usePotion30Btn.addEventListener('click', () => {
     if (player.inventory.potion30 > 0) {
+        ensureHungerInitialized();
+        const hungerActiveNow = isHungerSystemActive();
+        const hungerFull = player.hunger >= player.maxHunger;
+        let useForHunger = false;
+
+        if (hungerActiveNow && !hungerFull) {
+            if (player.hp >= player.maxHp) {
+                useForHunger = true;
+            } else {
+                useForHunger = window.confirm('満腹度を25回復しますか？（キャンセルでHP回復）');
+            }
+        }
+
+        if (useForHunger) {
+            player.hunger = Math.min(player.maxHunger, player.hunger + HUNGER_ITEM_RECOVERY);
+            player.inventory.potion30 -= 1;
+            addMessage(`ポーションを使用して満腹度が${HUNGER_ITEM_RECOVERY}回復！`);
+            playSfx('pickup');
+            updateUI();
+            saveAll();
+            return;
+        }
+
         const heal = Math.ceil(player.maxHp * 0.3);
         player.hp = Math.min(player.maxHp, player.hp + heal);
         player.inventory.potion30 -= 1;
@@ -6522,6 +6694,8 @@ function buildSelection() {
         saveAll(); 
     };
     const expMaxSelect = 1000;
+    const hungerMaxSelect = player.maxHunger || HUNGER_MAX;
+    const hungerValueSelect = Math.max(0, Math.floor(player.hunger ?? hungerMaxSelect));
     playerSummaryDiv.innerHTML = `
         <button id=\"player-summary-toggle\" class=\"summary-toggle\" aria-expanded=\"${!selectionFooterCollapsed}\" title=\"${selectionFooterCollapsed ? '展開' : '折りたたみ'}\">${selectionFooterCollapsed ? '∧' : '∨'}</button>
         <div class=\"player-status-card\">
@@ -6534,6 +6708,10 @@ function buildSelection() {
                 <div class=\"stat-item\">
                     <span class=\"stat-label\">HP</span>
                     <span class=\"stat-value hp\">${player.hp}/${player.maxHp}</span>
+                </div>
+                <div class=\"stat-item hunger\">
+                    <span class=\"stat-label\">満腹度</span>
+                    <span class=\"stat-value hunger\">${hungerValueSelect}/${hungerMaxSelect}</span>
                 </div>
                 <div class=\"stat-item\">
                     <span class=\"stat-label\">経験値</span>
@@ -6580,6 +6758,7 @@ function startGameFromSelection() {
     restoreRandom();
     dungeonLevel = 1;
     updateMapSize(); // Ensure proper map size for level 1
+    resetHunger(true);
     selectionScreen.style.display = 'none';
     document.getElementById('toolbar').style.display = 'flex';
     gameScreen.style.display = 'block';
@@ -6607,6 +6786,7 @@ function startGameFromBlockDim() {
     blockDimState.enabled = true;
     dungeonLevel = 1;
     updateMapSize();
+    resetHunger(true);
     reseedBlockDimForFloor();
     selectionScreen.style.display = 'none';
     document.getElementById('toolbar').style.display = 'flex';

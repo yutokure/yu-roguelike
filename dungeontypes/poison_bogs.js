@@ -45,7 +45,8 @@
     name: '毒沼空間',
     description: '広い空間に点在する毒沼が漂う湿地帯',
     algorithm,
-    mixin: { normalMixed: 0.35, blockDimMixed: 0.45, tags: ['open-space','poison'] }
+    mixin: { normalMixed: 0.35, blockDimMixed: 0.45, tags: ['open-space','poison'] },
+    effects: { poisonMist: true }
   };
 
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }

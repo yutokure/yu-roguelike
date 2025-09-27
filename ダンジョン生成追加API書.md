@@ -151,6 +151,10 @@ interface DungeonGeneratorDef {
     blockDimMixed?: number; // BlockDim の 'mixed' へ（typePool 未指定時や許可時）
     tags?: string[];        // 例: ['maze','organic']。今後のフィルタ用
   };
+  effects?: {
+    dark?: boolean;         // true なら暗闇（視界半径5）
+    poisonMist?: boolean;   // true なら通常床が毒床扱い
+  };
 }
 
 interface GenContext {
@@ -199,6 +203,9 @@ interface GenContext {
 - `floors` を指定したジェネレータは、`max` が `getMaxFloor()` の結果へ反映され、`bossFloors` は `isBossFloor()` 判定に利用されます。`maps` に登録したレイアウトは `ctx.fixedMaps.applyCurrent()` で適用可能です。
 - `ctx.fixedMaps` は固定マップの一覧取得 (`list()`)、特定階層のプレビュー (`get()`)、適用 (`apply()` / `applyCurrent()`) を提供します。固定マップが未定義の場合は `available:false` となり安全に無視できます。
 - `floors` のみを記述して `algorithm` を省略した場合、ホストは `ctx.fixedMaps.applyCurrent()` を内部で呼び出して指定レイアウトを適用し、追加のランダム生成を実施しません。
+- `effects.dark` を `true` にすると暗闇ダンジョンとなり、プレイヤー視界は半径5の円に制限されます。
+- `effects.poisonMist` を `true` にすると通常床も毒床として扱われ、歩くたびに毒ダメージを受けます。
+- どちらの効果も、その階の推奨レベルがプレイヤーレベルより5以上低い場合は自動的に無効化されます。
 
 ---
 

@@ -18,6 +18,37 @@
     let state = null;
     let enemySeq = 1;
 
+    function captureActiveInput() {
+        const active = document.activeElement;
+        if (!active || !refs.panel?.contains(active)) return null;
+        if (!(active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement)) return null;
+        const key = active.dataset.preserveKey;
+        if (!key) return null;
+        return {
+            key,
+            selectionStart: typeof active.selectionStart === 'number' ? active.selectionStart : null,
+            selectionEnd: typeof active.selectionEnd === 'number' ? active.selectionEnd : null
+        };
+    }
+
+    function restoreActiveInput(snapshot) {
+        if (!snapshot?.key) return;
+        const target = refs.panel?.querySelector(`[data-preserve-key="${snapshot.key}"]`);
+        if (!target || typeof target.focus !== 'function') return;
+        try {
+            target.focus({ preventScroll: true });
+        } catch (err) {
+            target.focus();
+        }
+        if (typeof snapshot.selectionStart === 'number' && typeof snapshot.selectionEnd === 'number' && typeof target.setSelectionRange === 'function') {
+            try {
+                target.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd);
+            } catch (err) {
+                // Ignore selection errors for input types that do not support setSelectionRange.
+            }
+        }
+    }
+
     function createEmptyGrid(width, height, fill = 0) {
         return Array.from({ length: height }, () => Array.from({ length: width }, () => fill));
     }
@@ -268,12 +299,14 @@
 
             const fields = [
                 {
+                    key: 'name',
                     label: '名前',
                     type: 'text',
                     value: enemy.name || '',
                     handler: (val) => { enemy.name = val; render(); }
                 },
                 {
+                    key: 'level',
                     label: 'レベル',
                     type: 'number',
                     value: enemy.level,
@@ -284,6 +317,7 @@
                     }
                 },
                 {
+                    key: 'hp',
                     label: 'HP',
                     type: 'number',
                     value: enemy.hp,
@@ -294,6 +328,7 @@
                     }
                 },
                 {
+                    key: 'attack',
                     label: '攻撃',
                     type: 'number',
                     value: enemy.attack,
@@ -304,6 +339,7 @@
                     }
                 },
                 {
+                    key: 'defense',
                     label: '防御',
                     type: 'number',
                     value: enemy.defense,
@@ -314,6 +350,7 @@
                     }
                 },
                 {
+                    key: 'x',
                     label: 'X座標',
                     type: 'number',
                     value: Number.isFinite(enemy.x) ? enemy.x : '',
@@ -330,6 +367,7 @@
                     }
                 },
                 {
+                    key: 'y',
                     label: 'Y座標',
                     type: 'number',
                     value: Number.isFinite(enemy.y) ? enemy.y : '',
@@ -353,6 +391,7 @@
                 const input = document.createElement('input');
                 input.type = field.type;
                 input.value = field.value;
+                input.dataset.preserveKey = `enemy-${enemy.id}-${field.key}`;
                 if (field.attrs) {
                     Object.keys(field.attrs).forEach(key => {
                         input.setAttribute(key, field.attrs[key]);
@@ -449,6 +488,7 @@
 
     function render() {
         if (!Bridge) return;
+        const focusSnapshot = captureActiveInput();
         const validation = Bridge.validate(buildConfigFromState()) || { errors: [], warnings: [], config: buildConfigFromState() };
         state.validation = { errors: validation.errors || [], warnings: validation.warnings || [] };
         state.compiledConfig = validation.config || buildConfigFromState();
@@ -459,6 +499,7 @@
         renderPlayerPreview();
         renderEnemies();
         renderValidation();
+        restoreActiveInput(focusSnapshot);
     }
 
     function handleGridClick(event) {

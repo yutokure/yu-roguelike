@@ -12,14 +12,19 @@
     .electro-meter { display:flex; flex-direction:column; gap:4px; font-size:12px; color:#1f2937; }
     .electro-meter .value { font-size:18px; font-weight:700; color:#0f172a; }
     .electro-keyboard { position:relative; width:100%; max-width:860px; align-self:center; padding:16px; border-radius:18px; background:linear-gradient(160deg,rgba(15,23,42,0.88),rgba(30,41,59,0.92)); box-shadow:0 20px 46px rgba(15,23,42,0.45); }
-    .electro-keyboard-inner { position:relative; margin:0 auto; }
-    .electro-key.white { position:relative; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; width:64px; height:220px; margin-right:2px; border-radius:0 0 12px 12px; background:linear-gradient(180deg,#f8fafc,#e2e8f0); border:1px solid rgba(148,163,184,0.6); box-shadow:inset 0 -6px 12px rgba(148,163,184,0.25); cursor:pointer; transition:transform 0.05s ease, background 0.1s ease; }
-    .electro-key.white:last-child { margin-right:0; }
+    .electro-keyboard-inner { position:relative; margin:0 auto; height:224px; }
+    .electro-white-keys { position:relative; display:flex; gap:2px; height:100%; align-items:flex-end; width:100%; }
+    .electro-black-keys { position:absolute; inset:0; height:100%; pointer-events:none; }
+    .electro-black-keys .electro-key.black { pointer-events:auto; }
+    .electro-key.white { position:relative; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; width:64px; height:220px; border-radius:0 0 12px 12px; background:linear-gradient(180deg,#f8fafc,#e2e8f0); border:1px solid rgba(148,163,184,0.6); box-shadow:inset 0 -6px 12px rgba(148,163,184,0.25); cursor:pointer; transition:transform 0.05s ease, background 0.1s ease, box-shadow 0.12s ease; }
     .electro-key.white.active { transform:translateY(2px); background:linear-gradient(180deg,#e2e8f0,#cbd5f5); box-shadow:inset 0 -8px 14px rgba(37,99,235,0.25); }
-    .electro-key.black { position:absolute; top:0; width:44px; height:140px; border-radius:0 0 9px 9px; background:linear-gradient(180deg,#0f172a,#1e293b); border:1px solid rgba(148,163,184,0.45); box-shadow:0 12px 22px rgba(15,23,42,0.5); cursor:pointer; transform:translateX(-22px); display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:12px; transition:transform 0.05s ease, background 0.1s ease; color:#cbd5f5; font-size:11px; font-weight:600; }
+    .electro-key.black { position:absolute; top:0; width:44px; height:140px; border-radius:0 0 9px 9px; background:linear-gradient(180deg,#0f172a,#1e293b); border:1px solid rgba(148,163,184,0.45); box-shadow:0 12px 22px rgba(15,23,42,0.5); cursor:pointer; transform:translateX(-22px); display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:12px; transition:transform 0.05s ease, background 0.1s ease, box-shadow 0.12s ease; color:#cbd5f5; font-size:11px; font-weight:600; }
     .electro-key.black::after { content:""; position:absolute; inset:0; border-radius:0 0 9px 9px; background:linear-gradient(180deg,rgba(226,232,240,0.12),rgba(14,116,144,0.18)); opacity:0; transition:opacity 0.1s ease; }
     .electro-key.black.active { transform:translate(-22px, 2px); background:linear-gradient(180deg,#1f2937,#334155); box-shadow:0 10px 18px rgba(37,99,235,0.45); }
     .electro-key.black.active::after { opacity:1; }
+    .electro-key.white:hover:not(.active), .electro-key.white:focus-visible:not(.active) { transform:translateY(0); box-shadow:0 0 18px rgba(59,130,246,0.35), inset 0 -6px 12px rgba(148,163,184,0.25); }
+    .electro-key.black:hover:not(.active), .electro-key.black:focus-visible:not(.active) { transform:translateX(-22px); box-shadow:0 16px 28px rgba(59,130,246,0.45); }
+    .electro-key.black:hover:not(.active)::after, .electro-key.black:focus-visible:not(.active)::after { opacity:1; }
     .electro-key.white span, .electro-key.black span { pointer-events:none; text-transform:uppercase; }
     .electro-key.white .note { font-size:13px; font-weight:700; color:#1f2937; margin-bottom:8px; }
     .electro-key.white .kbd { font-size:11px; font-weight:600; color:#475569; margin-bottom:6px; background:rgba(148,163,184,0.25); padding:2px 8px; border-radius:999px; }
@@ -46,8 +51,10 @@
     document.head.appendChild(style);
   }
 
-  const WHITE_KEY_WIDTH = 66;
-  const BLACK_KEY_OFFSET = WHITE_KEY_WIDTH / 2;
+  const WHITE_KEY_WIDTH = 64;
+  const WHITE_KEY_SPACING = 2;
+  const WHITE_KEY_STEP = WHITE_KEY_WIDTH + WHITE_KEY_SPACING;
+  const BLACK_KEY_WIDTH = 44;
 
   const KEY_LAYOUT = [
     { midi:60, note:'C4', type:'white', key:'a' },
@@ -202,6 +209,12 @@
 
     const keyboardInner = document.createElement('div');
     keyboardInner.className = 'electro-keyboard-inner';
+    const whiteLayer = document.createElement('div');
+    whiteLayer.className = 'electro-white-keys';
+    const blackLayer = document.createElement('div');
+    blackLayer.className = 'electro-black-keys';
+    keyboardInner.appendChild(whiteLayer);
+    keyboardInner.appendChild(blackLayer);
     keyboardFrame.appendChild(keyboardInner);
 
     wrapper.appendChild(keyboardFrame);
@@ -242,8 +255,11 @@
     const blackNotes = noteDefs.filter(n => n.type === 'black');
 
     const whiteCount = whiteNotes.length;
-    keyboardInner.style.width = `${whiteCount * WHITE_KEY_WIDTH}px`;
+    const keyboardWidth = (whiteCount * WHITE_KEY_WIDTH) + Math.max(0, (whiteCount - 1) * WHITE_KEY_SPACING);
+    keyboardInner.style.width = `${keyboardWidth}px`;
     keyboardInner.style.height = '224px';
+    whiteLayer.style.width = '100%';
+    blackLayer.style.width = '100%';
 
     const keyElements = new Map();
     const recentNotes = [];
@@ -449,19 +465,15 @@
       keyElements.set(noteDef.note, el);
 
       if (noteDef.type === 'white') {
-        const whiteIndex = whiteNotes.findIndex(n => n.note === noteDef.note);
-        el.style.position = 'relative';
-        el.style.left = `${whiteIndex * WHITE_KEY_WIDTH}px`;
-        keyboardInner.appendChild(el);
+        whiteLayer.appendChild(el);
       } else {
         const leftWhite = noteDef.between ? noteDef.between[0] : null;
-        const rightWhite = noteDef.between ? noteDef.between[1] : null;
-        const leftIndex = leftWhite ? whiteNotes.findIndex(n => n.note === leftWhite) : 0;
-        const rightIndex = rightWhite ? whiteNotes.findIndex(n => n.note === rightWhite) : leftIndex + 1;
-        const position = (leftIndex + 1) * WHITE_KEY_WIDTH - BLACK_KEY_OFFSET;
+        let leftIndex = leftWhite ? whiteNotes.findIndex(n => n.note === leftWhite) : 0;
+        if (leftIndex < 0) leftIndex = 0;
+        const position = (leftIndex * WHITE_KEY_STEP) + WHITE_KEY_WIDTH + (WHITE_KEY_SPACING / 2);
         el.style.left = `${position}px`;
         el.style.zIndex = '5';
-        keyboardInner.appendChild(el);
+        blackLayer.appendChild(el);
       }
 
       const pointerDown = ev => {

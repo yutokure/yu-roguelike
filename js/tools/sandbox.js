@@ -344,7 +344,21 @@
 
     function renderValidation() {
         if (!refs.validation) return;
-        const { errors, warnings } = state.validation;
+        const baseErrors = state.validation?.errors || [];
+        const baseWarnings = state.validation?.warnings || [];
+        const errors = baseErrors.slice();
+        const warnings = baseWarnings.slice();
+        const maxEnemies = Number.isFinite(Bridge?.maxEnemies) ? Bridge.maxEnemies : null;
+        if (maxEnemies !== null && state.enemies.length >= maxEnemies) {
+            const limitMsg = state.enemies.length > maxEnemies
+                ? `敵の上限（${maxEnemies}体）を超えています。敵を減らしてください。`
+                : `敵の上限（${maxEnemies}体）に達しています。新たに追加するには既存の敵を削除してください。`;
+            if (state.enemies.length > maxEnemies) {
+                errors.push(limitMsg);
+            } else {
+                warnings.push(limitMsg);
+            }
+        }
         const tempMsg = state.tempMessage;
         refs.validation.innerHTML = '';
         const list = document.createElement('ul');
@@ -450,6 +464,12 @@
     }
 
     function addEnemy() {
+        const maxEnemies = Number.isFinite(Bridge?.maxEnemies) ? Bridge.maxEnemies : null;
+        if (maxEnemies !== null && state.enemies.length >= maxEnemies) {
+            state.tempMessage = `敵の上限（${maxEnemies}体）に達しています。新たに追加するには既存の敵を削除してください。`;
+            renderValidation();
+            return;
+        }
         const id = `enemy-${enemySeq++}`;
         const stats = defaultEnemyStats(state.playerLevel);
         const enemy = {

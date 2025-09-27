@@ -50,6 +50,71 @@
     let enemySeq = 1;
     let pendingSerializedState = null;
     const paintState = { active: false, pointerId: null, lastKey: null, blockClick: false };
+    const EXPORT_FILE_PREFIX = 'sandbox-dungeon';
+
+    function formatTimestamp(date) {
+        const pad = (value) => String(value).padStart(2, '0');
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1);
+        const day = pad(date.getDate());
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const seconds = pad(date.getSeconds());
+        return `${year}${month}${day}-${hours}${minutes}${seconds}`;
+    }
+
+    function triggerDownload(content, filename) {
+        const blob = new Blob([content], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 0);
+    }
+
+    function renderIoStatus() {
+        if (!refs.ioStatus) return;
+        const status = state?.ioStatus || { type: 'idle', message: '' };
+        if (!status.message) {
+            refs.ioStatus.textContent = '';
+            refs.ioStatus.dataset.tone = '';
+            refs.ioStatus.style.display = 'none';
+            return;
+        }
+        refs.ioStatus.style.display = '';
+        refs.ioStatus.textContent = status.message;
+        refs.ioStatus.dataset.tone = status.type || 'info';
+    }
+
+    function updateIoStatus(type, message) {
+        if (!state) return;
+        state.ioStatus = { type, message };
+        renderIoStatus();
+    }
+
+    function extractSandboxPayload(raw) {
+        if (!raw || typeof raw !== 'object') return null;
+        const candidates = [];
+        if (raw.type === 'sandbox_dungeon' && raw.data) candidates.push(raw.data);
+        if (raw.sandbox) candidates.push(raw.sandbox);
+        if (raw.data && raw.type !== 'sandbox_dungeon') candidates.push(raw.data);
+        if (raw.sandboxState) candidates.push(raw.sandboxState);
+        if (raw.state && !Array.isArray(raw.state)) candidates.push(raw.state);
+        candidates.push(raw);
+        for (const candidate of candidates) {
+            if (!candidate || typeof candidate !== 'object') continue;
+            const width = Number(candidate.width);
+            const height = Number(candidate.height);
+            if (!Number.isFinite(width) || !Number.isFinite(height)) continue;
+            return { ...candidate, width, height };
+        }
+        return null;
+    }
 
     function captureActiveInput() {
         const active = document.activeElement;
@@ -416,6 +481,7 @@
         };
         state.compiledConfig = null;
         state.tempMessage = payload.tempMessage;
+        state.ioStatus = { type: 'idle', message: '' };
         if (refs.widthInput) refs.widthInput.value = state.width;
         if (refs.heightInput) refs.heightInput.value = state.height;
         if (refs.playerLevelInput) refs.playerLevelInput.value = state.playerLevel;
@@ -1133,6 +1199,7 @@
         renderPlayerPreview();
         renderEnemies();
         renderValidation();
+        renderIoStatus();
         restoreActiveInput(focusSnapshot);
     }
 
@@ -1280,7 +1347,11 @@
             floorColorHint: panel.querySelector('#sandbox-floor-color-hint'),
             wallColorHint: panel.querySelector('#sandbox-wall-color-hint'),
             validation: panel.querySelector('#sandbox-validation'),
-            startButton: panel.querySelector('#sandbox-start-button')
+            startButton: panel.querySelector('#sandbox-start-button'),
+            exportButton: panel.querySelector('#sandbox-export-button'),
+            importButton: panel.querySelector('#sandbox-import-button'),
+            importFile: panel.querySelector('#sandbox-import-file'),
+            ioStatus: panel.querySelector('#sandbox-io-status')
         };
 
         state = {
@@ -1299,7 +1370,8 @@
             compiledConfig: null,
             tempMessage: '',
             brushSettings: { floorType: 'normal', floorColor: '', wallColor: '' },
-            renderMetrics: { cellSize: RENDER_CELL_SIZE, gap: RENDER_CELL_GAP, width: 0, height: 0 }
+            renderMetrics: { cellSize: RENDER_CELL_SIZE, gap: RENDER_CELL_GAP, width: 0, height: 0 },
+            ioStatus: { type: 'idle', message: '' }
         };
 
         if (refs.gridCanvas) {
@@ -1412,6 +1484,69 @@
                     state.validation = { errors: result.errors, warnings: result.warnings || [] };
                     renderValidation();
                 }
+            });
+        }
+
+        if (refs.exportButton) {
+            refs.exportButton.addEventListener('click', () => {
+                if (!state) return;
+                try {
+                    const snapshot = exportSerializedState();
+                    const payload = {
+                        version: 1,
+                        type: 'sandbox_dungeon',
+                        data: snapshot
+                    };
+                    const filename = `${EXPORT_FILE_PREFIX}-${formatTimestamp(new Date())}.json`;
+                    triggerDownload(JSON.stringify(payload, null, 2), filename);
+                    updateIoStatus('success', '設定をエクスポートしました。');
+                } catch (err) {
+                    console.error('[SandboxTool] Failed to export sandbox configuration:', err);
+                    updateIoStatus('error', 'エクスポートに失敗しました。');
+                }
+            });
+        }
+
+        if (refs.importButton && refs.importFile) {
+            refs.importButton.addEventListener('click', () => {
+                refs.importFile.value = '';
+                refs.importFile.click();
+            });
+
+            refs.importFile.addEventListener('change', (event) => {
+                const file = event.target.files && event.target.files[0];
+                if (!file) {
+                    updateIoStatus('info', 'ファイルが選択されませんでした。');
+                    return;
+                }
+                updateIoStatus('info', '読み込み中...');
+                const reader = new FileReader();
+                reader.addEventListener('error', () => {
+                    console.error('[SandboxTool] Failed to read sandbox file:', reader.error);
+                    updateIoStatus('error', 'ファイルを読み込めませんでした。');
+                });
+                reader.addEventListener('load', () => {
+                    try {
+                        const text = typeof reader.result === 'string'
+                            ? reader.result
+                            : String(reader.result || '');
+                        const parsed = JSON.parse(text);
+                        const payload = extractSandboxPayload(parsed);
+                        if (!payload) {
+                            throw new Error('対応していないファイル形式です。');
+                        }
+                        const ok = importSerializedState(payload);
+                        if (!ok) {
+                            throw new Error('インポートに失敗しました。');
+                        }
+                        updateIoStatus('success', 'サンドボックス設定をインポートしました。');
+                    } catch (err) {
+                        console.error('[SandboxTool] Failed to import sandbox configuration:', err);
+                        const message = err && err.message ? err.message : '不明なエラーが発生しました。';
+                        updateIoStatus('error', `インポートに失敗しました: ${message}`);
+                    }
+                });
+                reader.readAsText(file);
             });
         }
 

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. フォルダーとファイル構成</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+    <main>
+        <h1>4. フォルダーとファイル構成</h1>
+        <p>
+            プロジェクトの中身を理解すると、どこを編集すればよいかがすぐわかります。下の表は代表的なファイルの場所と役割です。
+        </p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>場所</th>
+                        <th>内容</th>
+                        <th>初心者向けメモ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>index.html</code></td>
+                        <td>ゲーム画面の土台。HTML のレイアウトを定義しています。</td>
+                        <td>ボタンやカードの配置を変えたいときに使います。</td>
+                    </tr>
+                    <tr>
+                        <td><code>style.css</code></td>
+                        <td>見た目（色・フォント・余白など）をまとめています。</td>
+                        <td>色を変えたいときはこのファイルを編集します。</td>
+                    </tr>
+                    <tr>
+                        <td><code>main.js</code></td>
+                        <td>ゲームのメインロジック。タブ切り替えやボタン操作を制御します。</td>
+                        <td>挙動を変えるときは慎重に。小さく編集しながら試しましょう。</td>
+                    </tr>
+                    <tr>
+                        <td><code>js/</code></td>
+                        <td>機能ごとの JavaScript ファイルが入っています。</td>
+                        <td>処理を分けたいときに便利です。</td>
+                    </tr>
+                    <tr>
+                        <td><code>games/</code></td>
+                        <td>ミニゲームなどの追加コンテンツの情報が入ります。</td>
+                        <td>新しいゲームを入れたいときに使います。</td>
+                    </tr>
+                    <tr>
+                        <td><code>dungeontypes/</code></td>
+                        <td>ダンジョンの種類に関するデータファイル群です。</td>
+                        <td>敵の強さや報酬を調整できます。</td>
+                    </tr>
+                    <tr>
+                        <td><code>blockdata.js / blockdata.json</code></td>
+                        <td>ブロック次元モード用のデータ。複雑な設定が入っています。</td>
+                        <td>最初は <code>blockdata.json</code> を読み、形を把握しましょう。</td>
+                    </tr>
+                    <tr>
+                        <td><code>tools/</code></td>
+                        <td>制作者向けのツールやテンプレートがあります。</td>
+                        <td>自分用にアレンジして使えます。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <section>
+            <h2>4.1 推奨するフォルダー整理術</h2>
+            <ul>
+                <li><strong>バックアップフォルダーを作る:</strong> 変更前のファイルを複製しておくと、すぐに元へ戻せます。</li>
+                <li><strong>ドキュメント用フォルダーを用意:</strong> 設計資料やメモをまとめておくと、チーム共有がスムーズです。</li>
+                <li><strong>素材フォルダーを分類:</strong> 画像、音声、フォントなどをサブフォルダーで分けると管理しやすくなります。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>4.2 ファイルの命名規則</h2>
+            <p>
+                新しいファイルを追加するときは、英数字とハイフン（<code>-</code>）を使ったわかりやすい名前を付けましょう。
+                拡張子は <code>.html</code>、<code>.css</code>、<code>.js</code>、<code>.json</code> など目的に応じて選びます。
+            </p>
+        </section>
+    </main>
+</body>
+</html>

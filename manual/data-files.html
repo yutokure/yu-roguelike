@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7. データファイルの内容</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+    <main>
+        <h1>7. データファイルの内容</h1>
+        <section>
+            <h2>7.1 blockdata.json / blockdata.js</h2>
+            <p>
+                ブロック次元で利用する設定がまとまっています。JSON 形式で書かれているため、項目名と値のペアで管理します。
+                迷ったときは、<code>blockdata.json</code> をエディターで開き、どんな構造かを見てください。
+            </p>
+            <h3>主なフィールド</h3>
+            <ul>
+                <li><strong>name:</strong> ブロックの名前</li>
+                <li><strong>level:</strong> 推奨レベル</li>
+                <li><strong>type:</strong> カテゴリ（例：洞窟、塔など）</li>
+                <li><strong>size:</strong> 広さや階層の情報</li>
+                <li><strong>chest:</strong> 宝箱の数やレア度</li>
+            </ul>
+        </section>
+        <section>
+            <h2>7.2 dungeontypes フォルダー</h2>
+            <p>
+                世界やダンジョンを分類するファイルがあります。ゲーム内に出てくる説明文やアイコンなどもここで管理されます。
+                新しくダンジョンを追加したい場合は、既存ファイルを参考にして同じ形式で書きましょう。
+            </p>
+        </section>
+        <section>
+            <h2>7.3 games フォルダー</h2>
+            <p>
+                ミニゲームの設定やデータがまとまっています。ミニゲームを追加するときは、ここに新しいファイルを作ります。
+            </p>
+        </section>
+        <div class="warning">
+            <strong>バックアップ推奨:</strong> データファイルを編集する前に必ずコピーを作り、失敗しても戻せるようにしておきましょう。
+        </div>
+        <section>
+            <h2>7.4 JSON 編集のヒント</h2>
+            <ul>
+                <li>カンマの付け忘れや引用符の閉じ忘れに注意します。</li>
+                <li>配列やオブジェクトはインデントをそろえると読みやすくなります。</li>
+                <li>大きく変更する前に差分ツールで比較できるよう、バージョン管理を活用しましょう。</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

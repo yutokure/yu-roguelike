@@ -1,0 +1,108 @@
+:root {
+    color-scheme: light dark;
+}
+body {
+    font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+    line-height: 1.7;
+    margin: 0;
+    padding: 2rem clamp(1.25rem, 4vw, 3rem);
+    background: #f5f5f5;
+    color: #222;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    background: #fff;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+h1 {
+    font-size: clamp(1.9rem, 3.6vw, 2.4rem);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    border-bottom: 4px solid #274690;
+    padding-bottom: 0.35rem;
+}
+h2 {
+    font-size: clamp(1.4rem, 2.8vw, 1.9rem);
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+}
+h3 {
+    font-size: clamp(1.2rem, 2.4vw, 1.5rem);
+    margin-top: 1.8rem;
+    margin-bottom: 0.6rem;
+}
+h4 {
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    margin-top: 1.4rem;
+    margin-bottom: 0.4rem;
+}
+p {
+    margin: 0.6rem 0;
+}
+ul,
+ol {
+    margin: 0.6rem 0 1rem 1.4rem;
+}
+dt {
+    font-weight: 600;
+    margin-top: 1rem;
+}
+dd {
+    margin-left: 1.2rem;
+}
+code {
+    background: rgba(39, 70, 144, 0.1);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-family: "Fira Code", "Source Code Pro", monospace;
+}
+pre {
+    background: rgba(39, 70, 144, 0.1);
+    padding: 1rem;
+    border-radius: 12px;
+    overflow-x: auto;
+}
+pre code {
+    background: transparent;
+    padding: 0;
+}
+.tip,
+.warning {
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    margin: 1.5rem 0;
+}
+.tip {
+    background: #f4fbf4;
+    border-left: 4px solid #2b9348;
+}
+.warning {
+    background: #fff7e6;
+    border-left: 4px solid #f4a259;
+}
+.table-container {
+    overflow-x: auto;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+}
+th,
+td {
+    border: 1px solid #ccd6eb;
+    padding: 0.75rem;
+    text-align: left;
+}
+th {
+    background: #274690;
+    color: #fff;
+    font-weight: 600;
+}
+.small-note {
+    font-size: 0.9rem;
+    color: #555;
+}

@@ -93,6 +93,10 @@
         }
     }
 
+    function getCurrentTool() {
+        return moduleState.currentTool;
+    }
+
     function show(toolId) {
         if (!toolId || !moduleState.activateTool) return;
         moduleState.activateTool(toolId);
@@ -101,6 +105,7 @@
     global.ToolsTab = {
         init,
         registerTool,
-        show
+        show,
+        getCurrentTool
     };
 })(window);

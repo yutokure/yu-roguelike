@@ -1484,7 +1484,8 @@
           }
           case 'broadcast': {
             const channel = block.inputs?.channel ?? '';
-            send({ type: 'log', level: 'info', message: `ブロードキャスト: ${channel}` });
+            const message = 'ブロードキャスト: ' + String(channel ?? '');
+            send({ type: 'log', level: 'info', message });
             break;
           }
           case 'stopAll': {

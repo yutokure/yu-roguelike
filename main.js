@@ -642,8 +642,10 @@ let map = [];
 // タイルの表示・挙動拡張
 const DEFAULT_WALL_COLOR = '#2f3542';
 const DEFAULT_FLOOR_COLOR = '#ced6e0';
+const DEFAULT_DUNGEON_EFFECTS = Object.freeze({ dark: false, poisonMist: false });
+
 function createDefaultDungeonEffects() {
-    return { dark: false, poisonMist: false };
+    return { ...DEFAULT_DUNGEON_EFFECTS };
 }
 
 function mergeDungeonEffectFlags(target, source) {
@@ -656,6 +658,12 @@ function mergeDungeonEffectFlags(target, source) {
     }
     if (Object.prototype.hasOwnProperty.call(source, 'poison_mist')) {
         target.poisonMist = !!source.poison_mist;
+    }
+    for (const key of Object.keys(source)) {
+        if (key === 'dark' || key === 'poisonMist' || key === 'poison_mist') continue;
+        const value = source[key];
+        if (value === undefined) continue;
+        target[key] = value;
     }
 }
 
@@ -7851,7 +7859,10 @@ function runAddonGenerator(id) {
     const ctx = makeGenContext();
     ctx.generatorId = id;
     ctx.addonId = def.source || null;
-    ctx.effects = def?.effects ? Object.assign({}, def.effects) : createDefaultDungeonEffects();
+    ctx.effects = createDefaultDungeonEffects();
+    if (def?.effects && typeof def.effects === 'object') {
+        mergeDungeonEffectFlags(ctx.effects, def.effects);
+    }
     ctx.fixedMaps = makeFixedMapApi(id, ctx);
     const bundle = FixedMapRegistry.get(id);
     let applied = false;

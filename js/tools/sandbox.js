@@ -24,7 +24,7 @@
         stairs: 'pointer',
         enemy: 'pointer'
     };
-    const FLOOR_TYPES = ['normal', 'ice', 'poison'];
+    const FLOOR_TYPES = ['normal', 'ice', 'poison', 'bomb'];
     const DEFAULT_FLOOR_COLOR = '#ced6e0';
     const DEFAULT_WALL_COLOR = '#2f3542';
     const COLOR_HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
@@ -42,7 +42,8 @@
     const GRID_SELECTED_ENEMY_COLOR = '#f97316';
     const FLOOR_TYPE_COLORS = {
         ice: '#74c0fc',
-        poison: '#94d82d'
+        poison: '#94d82d',
+        bomb: '#ff8787'
     };
 
     let refs = {};

@@ -691,9 +691,6 @@
             updateHistory();
           }
         }
-        if (!approxHasMoreDigits && moreDigitsButton) {
-          moreDigitsButton.style.display = 'none';
-        }
       });
       resultCard.appendChild(moreDigitsButton);
 
@@ -1424,14 +1421,15 @@
       }
       const digits = Math.max(DEFAULT_DECIMAL_DIGITS, Math.min(MAX_DECIMAL_DIGITS, approxDigitsShown | 0));
       const { baseText, hasMore, hasDecimal } = computeApproxDisplay(approxRawValue, digits);
+      const canIncreaseDigits = digits < MAX_DECIMAL_DIGITS;
       if (hasMore) approxForceEllipsis = true;
       const showEllipsis = hasMore || (approxForceEllipsis && hasDecimal);
       const displayText = showEllipsis ? `${baseText}...` : baseText;
       approxResultEl.textContent = displayText;
       approxResultEl.dataset.rawValue = displayText;
-      approxHasMoreDigits = hasMore;
+      approxHasMoreDigits = hasMore || canIncreaseDigits;
       if (moreDigitsButton) {
-        if (resultMode === 'numeric' && hasMore) {
+        if (resultMode === 'numeric' && canIncreaseDigits) {
           moreDigitsButton.style.display = 'inline-flex';
           moreDigitsButton.disabled = false;
         } else {

@@ -310,6 +310,53 @@
     };
 
     const elements = {};
+    const STYLE_ID = 'exceler-style';
+    if (!document.getElementById(STYLE_ID)){
+      const style = document.createElement('style');
+      style.id = STYLE_ID;
+      style.textContent = `
+        .exceler-viewport{ position: relative; }
+        .exceler-cell{ transition: background-color 0.12s ease, box-shadow 0.12s ease; }
+        .exceler-cell.exceler-selected::after{
+          content:'';
+          position:absolute;
+          inset:2px;
+          border-radius:6px;
+          background:rgba(59,130,246,0.12);
+          border:1px solid rgba(96,165,250,0.35);
+          box-shadow:inset 0 0 0 1px rgba(14,116,144,0.2);
+          pointer-events:none;
+        }
+        .exceler-cell.exceler-anchor::after{
+          border-width:2px;
+          border-color:rgba(226,232,240,0.95);
+          box-shadow:inset 0 0 0 1px rgba(30,64,175,0.45);
+        }
+        .exceler-selection-overlay{
+          position:absolute;
+          pointer-events:none;
+          box-sizing:border-box;
+          border:2px solid rgba(96,165,250,0.88);
+          background:rgba(59,130,246,0.18);
+          border-radius:8px;
+          box-shadow:0 18px 32px rgba(30,64,175,0.22), 0 0 0 1px rgba(15,23,42,0.4);
+          display:none;
+          z-index:10;
+        }
+        .exceler-selection-handle{
+          position:absolute;
+          width:10px;
+          height:10px;
+          border-radius:3px;
+          background:#bfdbfe;
+          border:1px solid rgba(15,23,42,0.75);
+          box-shadow:0 2px 6px rgba(15,23,42,0.45);
+          right:-6px;
+          bottom:-6px;
+        }
+      `;
+      document.head.appendChild(style);
+    }
     const cellElements = new Map();
 
     function currentSheet(){
@@ -365,6 +412,7 @@
         elements.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
       }
       cellElements.forEach((_el, key) => updateCellElement(key));
+      updateSelectionOverlay();
     }
 
     function award(type, amount){
@@ -425,6 +473,9 @@
           }
         }
       }
+      if (elements.selectionOverlay){
+        elements.selectionOverlay.style.display = 'none';
+      }
     }
 
     function applySelection(sel){
@@ -442,7 +493,30 @@
           }
         }
       }
+      updateSelectionOverlay();
       updateNameAndFormula();
+    }
+
+    function updateSelectionOverlay(){
+      if (!elements.selectionOverlay || !elements.grid) return;
+      const { startRow, startCol, endRow, endCol } = state.selection;
+      const startEl = cellElements.get(cellKey(startCol, startRow));
+      const endEl = cellElements.get(cellKey(endCol, endRow));
+      if (!startEl || !endEl){
+        elements.selectionOverlay.style.display = 'none';
+        return;
+      }
+      const startLeft = startEl.offsetLeft;
+      const startTop = startEl.offsetTop;
+      const endRight = endEl.offsetLeft + endEl.offsetWidth;
+      const endBottom = endEl.offsetTop + endEl.offsetHeight;
+      const width = Math.max(0, endRight - startLeft);
+      const height = Math.max(0, endBottom - startTop);
+      elements.selectionOverlay.style.display = 'block';
+      elements.selectionOverlay.style.left = `${startLeft}px`;
+      elements.selectionOverlay.style.top = `${startTop}px`;
+      elements.selectionOverlay.style.width = `${width}px`;
+      elements.selectionOverlay.style.height = `${height}px`;
     }
 
     function updateNameAndFormula(){
@@ -947,6 +1021,7 @@
 
     function createGrid(){
       const viewport = document.createElement('div');
+      viewport.classList.add('exceler-viewport');
       viewport.style.flex = '1';
       viewport.style.overflow = 'auto';
       viewport.style.position = 'relative';
@@ -963,6 +1038,7 @@
       grid.style.gridTemplateColumns = `80px repeat(${COL_COUNT}, ${COL_WIDTH}px)`;
       grid.style.gridAutoRows = `${ROW_HEIGHT}px`;
       grid.style.width = `${80 + COL_COUNT * COL_WIDTH}px`;
+      grid.style.position = 'relative';
 
       for (let r = -1; r < ROW_COUNT; r++){
         for (let c = -1; c < COL_COUNT; c++){
@@ -989,6 +1065,7 @@
             cell.textContent = String(r + 1);
             cell.style.justifyContent = 'center';
           } else {
+            cell.classList.add('exceler-cell');
             const ref = cellKey(c, r);
             cell.dataset.ref = ref;
             cell.tabIndex = -1;
@@ -1012,6 +1089,16 @@
           grid.appendChild(cell);
         }
       }
+
+      const selectionOverlay = document.createElement('div');
+      selectionOverlay.className = 'exceler-selection-overlay';
+      const selectionHandle = document.createElement('div');
+      selectionHandle.className = 'exceler-selection-handle';
+      selectionOverlay.appendChild(selectionHandle);
+      grid.appendChild(selectionOverlay);
+
+      elements.selectionOverlay = selectionOverlay;
+      elements.selectionHandle = selectionHandle;
 
       viewport.addEventListener('mousedown', () => {
         state.isSelecting = true;

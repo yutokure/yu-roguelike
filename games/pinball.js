@@ -341,7 +341,7 @@
       ball.vy -= 2 * dot * ny;
     }
 
-    function collideCircle(target){
+    function collideCircle(target, dtStep){
       const dx = ball.x - target.x;
       const dy = ball.y - target.y;
       const dist = Math.hypot(dx, dy);
@@ -368,12 +368,12 @@
         return true;
       }
       if (target.cooldown !== undefined && target.cooldown > 0){
-        target.cooldown--;
+        target.cooldown = Math.max(0, target.cooldown - dtStep);
       }
       return false;
     }
 
-    function collidePost(target){
+    function collidePost(target, dtStep){
       const dx = ball.x - target.x;
       const dy = ball.y - target.y;
       const dist = Math.hypot(dx, dy);
@@ -397,10 +397,10 @@
           onMissionEvent('post');
         }
       }
-      target.cooldown = Math.max(0, (target.cooldown || 0) - 1);
+      target.cooldown = Math.max(0, (target.cooldown || 0) - dtStep);
     }
 
-    function collideSlingshot(s){
+    function collideSlingshot(s, dtStep){
       const ax = s.ax, ay = s.ay;
       const bx = s.bx, by = s.by;
       const dx = bx - ax;
@@ -431,11 +431,11 @@
         }
       }
       if (s.cooldown !== undefined && s.cooldown > 0){
-        s.cooldown--;
+        s.cooldown = Math.max(0, s.cooldown - dtStep);
       }
     }
 
-    function collideFlipper(f){
+    function collideFlipper(f, dtStep){
       const ax = f.pivotX;
       const ay = f.pivotY;
       const bx = ax + Math.cos(f.angle) * f.length;
@@ -468,7 +468,7 @@
           f.lastHit = 10;
         }
       }
-      f.lastHit = Math.max(0, f.lastHit - 1);
+      f.lastHit = Math.max(0, f.lastHit - dtStep);
     }
 
     function updateFlippers(dt){
@@ -711,58 +711,69 @@
         ball.y = Math.min(plunger.bottom - ball.r - 2, ball.y);
         return;
       }
-      ball.vy += gravity * dt;
-      ball.vx *= friction;
-      ball.vy *= friction;
 
-      ball.x += ball.vx * dt;
-      ball.y += ball.vy * dt;
+      let remaining = dt;
+      const maxStep = 0.5;
+      while (remaining > 0){
+        const step = Math.min(maxStep, remaining);
+        remaining -= step;
 
-      clampBallSpeed();
+        ball.vy += gravity * step;
+        const decay = Math.pow(friction, step);
+        ball.vx *= decay;
+        ball.vy *= decay;
 
-      // walls
-      if (ball.x < table.left + ball.r){
-        ball.x = table.left + ball.r;
-        ball.vx = Math.abs(ball.vx) * 0.9;
-      }
-      if (ball.x > table.right - ball.r - plunger.width){
-        if (ball.x > plunger.x - ball.r){
-          ball.x = plunger.x - ball.r;
-          ball.vx = -Math.abs(ball.vx) * 0.92;
-        } else {
-          ball.x = table.right - ball.r - plunger.width;
-          ball.vx = -Math.abs(ball.vx) * 0.9;
+        ball.x += ball.vx * step;
+        ball.y += ball.vy * step;
+
+        clampBallSpeed();
+
+        // walls
+        if (ball.x < table.left + ball.r){
+          ball.x = table.left + ball.r;
+          ball.vx = Math.abs(ball.vx) * 0.9;
         }
-      }
-      if (ball.y < table.top + ball.r){
-        ball.y = table.top + ball.r;
-        ball.vy = Math.abs(ball.vy) * 0.9;
-      }
-
-      // drain / bottom
-      const drainHalf = table.drainWidth/2;
-      if (ball.y > table.bottom - ball.r){
-        if (Math.abs(ball.x - W/2) < drainHalf){
-          drainBall();
-          return;
-        } else {
-          ball.y = table.bottom - ball.r;
-          ball.vy = -Math.abs(ball.vy) * 0.92;
+        if (ball.x > table.right - ball.r - plunger.width){
+          if (ball.x > plunger.x - ball.r){
+            ball.x = plunger.x - ball.r;
+            ball.vx = -Math.abs(ball.vx) * 0.92;
+          } else {
+            ball.x = table.right - ball.r - plunger.width;
+            ball.vx = -Math.abs(ball.vx) * 0.9;
+          }
         }
-      }
+        if (ball.y < table.top + ball.r){
+          ball.y = table.top + ball.r;
+          ball.vy = Math.abs(ball.vy) * 0.9;
+        }
 
-      // components
-      for (const b of bumpers){
-        collideCircle(b);
-      }
-      for (const p of posts){
-        collidePost(p);
-      }
-      for (const s of slingshots){
-        collideSlingshot(s);
-      }
-      for (const f of flippers){
-        collideFlipper(f);
+        // drain / bottom
+        const drainHalf = table.drainWidth/2;
+        if (ball.y > table.bottom - ball.r){
+          if (Math.abs(ball.x - W/2) < drainHalf){
+            drainBall();
+            return;
+          } else {
+            ball.y = table.bottom - ball.r;
+            ball.vy = -Math.abs(ball.vy) * 0.92;
+          }
+        }
+
+        // components
+        for (const b of bumpers){
+          collideCircle(b, step);
+        }
+        for (const p of posts){
+          collidePost(p, step);
+        }
+        for (const s of slingshots){
+          collideSlingshot(s, step);
+        }
+        for (const f of flippers){
+          collideFlipper(f, step);
+        }
+
+        clampBallSpeed();
       }
 
       updateRollovers();

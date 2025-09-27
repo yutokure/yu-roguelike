@@ -5041,30 +5041,6 @@ function recommendedLevelForSelection(world, baseLevel, floorIndex) {
     return baseLevel + worldOffset;
 }
 
-function getCurrentRecommendedLevel() {
-    const base = Number.isFinite(selectedDungeonBase) ? selectedDungeonBase : 1;
-    return recommendedLevelForSelection(selectedWorld, base, dungeonLevel);
-}
-
-function getFloorHazardState() {
-    const recommended = getCurrentRecommendedLevel();
-    const levelDiff = recommended - (player?.level || 1);
-    const suppressed = levelDiff <= -5;
-    let percentage = 0.1;
-
-    if (!suppressed) {
-        if (levelDiff > 0) {
-            percentage *= Math.pow(1.5, levelDiff);
-        } else if (levelDiff < 0) {
-            percentage /= Math.pow(1.5, Math.abs(levelDiff));
-        }
-    }
-
-    const damage = suppressed ? 0 : Math.max(0, Math.ceil((player?.maxHp || 0) * percentage));
-
-    return { recommended, levelDiff, suppressed, percentage, damage };
-}
-
 // レベル差によるダメージ倍率計算
 function damageMultiplierByLevelDiff(levelDiff) {
     const abs = Math.abs(levelDiff);
@@ -5999,7 +5975,6 @@ function handlePlayerDeath(message = 'ゲームオーバー') {
 
 function applyPostMoveEffects() {
     let continueSliding = true;
-    const hazardState = getFloorHazardState();
 
     const chestAtPlayer = chests.find(c => c.x === player.x && c.y === player.y);
     if (chestAtPlayer) {
@@ -6010,22 +5985,16 @@ function applyPostMoveEffects() {
 
     if (!isGameOver) {
         const floorType = getTileFloorType(player.x, player.y);
-        if (hazardState.suppressed) {
-            if (floorType === FLOOR_TYPE_ICE) {
+        if (floorType === FLOOR_TYPE_POISON) {
+            const damage = Math.max(1, Math.floor(player.maxHp * 0.1));
+            player.hp = Math.max(0, player.hp - damage);
+            addMessage(`毒床がダメージ！HPが${damage}減少`);
+            addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+            playSfx('damage');
+            updateUI();
+            if (player.hp <= 0) {
+                handlePlayerDeath('毒床で倒れた…ゲームオーバー');
                 continueSliding = false;
-            }
-        } else if (floorType === FLOOR_TYPE_POISON) {
-            const damage = hazardState.damage;
-            if (damage > 0) {
-                player.hp = Math.max(0, player.hp - damage);
-                addMessage(`毒床がダメージ！HPが${damage}減少`);
-                addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
-                playSfx('damage');
-                updateUI();
-                if (player.hp <= 0) {
-                    handlePlayerDeath('毒床で倒れた…ゲームオーバー');
-                    continueSliding = false;
-                }
             }
         }
     }

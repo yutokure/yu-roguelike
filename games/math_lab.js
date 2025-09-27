@@ -1,7 +1,7 @@
 (function(){
   /** MiniExp: Advanced Mathematics Lab */
-  const MATHJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.2/math.min.js';
-  const MATHJAX_URL = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+  const MATHJS_URL = 'libs/math.js';
+  const MATHJAX_URL = 'libs/MathJax-4.0.0/tex-mml-chtml.js';
   let mathLoader = null;
   let mathJaxLoader = null;
   let mathJaxInstance = null;

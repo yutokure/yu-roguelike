@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>19. 関数リファレンス</title>
+    <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+    <main>
+        <h1>19. 関数リファレンス</h1>
+        <p>
+            本節では <code>main.js</code> を中心とした主要関数の役割と定義位置を整理します。実際のコードを読み込む際の
+            ロードマップとして活用してください。
+        </p>
+        <section>
+            <h2>19.1 画面遷移・レイアウト制御</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>関数</th>
+                            <th>役割</th>
+                            <th>主な引数</th>
+                            <th>定義位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>updateMapSize()</code></td>
+                            <td>階層や BlockDim のサイズ倍率からマップ幅・高さを再計算します。</td>
+                            <td>-</td>
+                            <td><code>main.js</code> 456–474 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>resizeCanvasToStage()</code></td>
+                            <td>キャンバスをステージ要素に合わせてリサイズし、レスポンシブ表示を維持します。</td>
+                            <td>-</td>
+                            <td><code>main.js</code> 477–483 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>enterInGameLayout()</code> / <code>leaveInGameLayout()</code></td>
+                            <td>ゲーム画面に入る際のクラス付与やツールバー高さ調整、終了時のクリーンアップを行います。</td>
+                            <td>-</td>
+                            <td><code>main.js</code> 505–522 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>showSelectionScreen(opts)</code></td>
+                            <td>探索画面から選択画面へ戻す共通処理。HP 補充やモード復帰をまとめて実施します。</td>
+                            <td><code>opts.stopLoop</code>, <code>opts.refillHp</code> など</td>
+                            <td><code>main.js</code> 538–571 行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>19.2 BlockDim UI と選択管理</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>関数</th>
+                            <th>役割</th>
+                            <th>注目ポイント</th>
+                            <th>定義位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>initBlockDimUI()</code></td>
+                            <td>BlockDim タブの初期化。リスト生成とキーボード操作設定を行います。</td>
+                            <td>初期選択の復元と <code>renderHistoryAndBookmarks()</code> 呼び出し。</td>
+                            <td><code>main.js</code> 1095–1121 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>onBlockDimChanged()</code></td>
+                            <td>リスト選択や NESTED 値変更時にスペックを再構築し、プレビューを更新します。</td>
+                            <td><code>composeSpec()</code> / <code>seedFromSelection()</code> を連携。</td>
+                            <td><code>main.js</code> 1123–1148 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>randomizeBdimBlocks()</code></td>
+                            <td>1st/2nd/3rd ブロックを無作為に選び直し、即座にプレビューへ反映します。</td>
+                            <td>スクロール位置を維持する <code>preserveScroll</code> オプション。</td>
+                            <td><code>main.js</code> 1150–1168 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>weightedRandomizeBdimBlocks(target, type)</code></td>
+                            <td>レベル合計とタイプ優先度に基づいて重み付きランダム選択を行います。</td>
+                            <td>ガウス分布重み計算と 64 回の試行で最適解を探索。</td>
+                            <td><code>main.js</code> 1171–1233 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>renderHistoryAndBookmarks()</code></td>
+                            <td>履歴・ブックマーク一覧を DOM に描画し、削除や再適用イベントをバインドします。</td>
+                            <td><code>setScrollableList()</code> で最大行数を制限。</td>
+                            <td><code>main.js</code> 1250–1300 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>applyBdimSelection(entry)</code></td>
+                            <td>保存済みプリセットを UI に反映し、<code>onBlockDimChanged()</code> を起動します。</td>
+                            <td>履歴とブックマークの両方から利用。</td>
+                            <td><code>main.js</code> 1325–1333 行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>19.3 MiniExp UI とライフサイクル</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>関数</th>
+                            <th>役割</th>
+                            <th>補足</th>
+                            <th>定義位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>renderMiniExpCategories(manifest)</code></td>
+                            <td>カテゴリボタンを生成し、選択状態を管理します。</td>
+                            <td>選択中カテゴリに存在しないゲームは自動で未選択化。</td>
+                            <td><code>main.js</code> 6534–6562 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>renderMiniExpList(manifest)</code></td>
+                            <td>表示モードに応じてカード/リスト UI を切り替え、ゲーム選択イベントを設定します。</td>
+                            <td>カテゴリフィルタと連携し、<code>renderMiniExpRecords()</code> を呼び出します。</td>
+                            <td><code>main.js</code> 6571–6620 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>initMiniExpUI()</code></td>
+                            <td>マニフェスト読み込みからカテゴリ/リスト描画までをまとめて初期化。</td>
+                            <td>選択済みゲームがあればプレースホルダーを即時更新。</td>
+                            <td><code>main.js</code> 6622–6642 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>startSelectedMiniGame()</code></td>
+                            <td>現在選択されている MiniExp MOD をロードし、ランタイムを起動します。</td>
+                            <td><code>create()</code> の戻り値を検証し、ボタン状態とショートカットをリセット。</td>
+                            <td><code>main.js</code> 6829–6861 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>quitMiniGame()</code></td>
+                            <td>ミニゲームの終了処理。<code>stop()</code> → <code>getScore()</code> → <code>destroy()</code> を順に呼び、記録を更新します。</td>
+                            <td>UI 状態を初期化し、EXP バッジやレコード表示をリフレッシュ。</td>
+                            <td><code>main.js</code> 6863–6905 行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>19.4 Mod Maker 補助関数</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>関数</th>
+                            <th>役割</th>
+                            <th>関連処理</th>
+                            <th>定義位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>renderModMaker()</code></td>
+                            <td>モジュール全体の UI を再描画し、メタデータ・構造・生成器タブを同期します。</td>
+                            <td><code>ensureModMakerDefaults()</code>、<code>renderStructureGrid()</code>、<code>buildModMakerOutput()</code> を呼び出し。</td>
+                            <td><code>main.js</code> 2404–2529 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>buildModMakerOutput()</code></td>
+                            <td>現在の編集内容から <code>registerDungeonAddon()</code> に渡せる JSON を組み立て、バリデーションを行います。</td>
+                            <td>構造 ID 重複チェックやアンカー範囲検証を実施。</td>
+                            <td><code>main.js</code> 2532–2555 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>createBlockField(label, value, onChange, options)</code></td>
+                            <td>フォーム要素を生成し、変更時に自動で <code>renderModMaker()</code> を再実行します。</td>
+                            <td><code>options.multiline</code> や <code>options.deferRender</code> で挙動を調整。</td>
+                            <td><code>main.js</code> 2381–2402 行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

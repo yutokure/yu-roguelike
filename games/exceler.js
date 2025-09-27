@@ -169,15 +169,32 @@
     };
   }
 
-  function createSheetRecord(name){
+  function createSheetRecord(name, color = null){
     return {
       name,
+      color,
       cells: new Map(),
       selection: { startRow: 0, startCol: 0, endRow: 0, endCol: 0 },
       undoStack: [],
       redoStack: [],
       dirty: false
     };
+  }
+
+  function parseHexColor(hex){
+    if (typeof hex !== 'string') return null;
+    const normalized = hex.trim();
+    if (!/^#?[0-9A-Fa-f]{6}$/.test(normalized)) return null;
+    const value = normalized.startsWith('#') ? normalized.slice(1) : normalized;
+    const r = parseInt(value.slice(0, 2), 16);
+    const g = parseInt(value.slice(2, 4), 16);
+    const b = parseInt(value.slice(4, 6), 16);
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    return { r, g, b, luminance, hex: `#${value.toUpperCase()}` };
+  }
+
+  function rgbaString({ r, g, b }, alpha){
+    return `rgba(${r},${g},${b},${alpha})`;
   }
 
   function expandRange(range){
@@ -1121,10 +1138,75 @@
       bar.style.justifyContent = 'space-between';
       bar.style.padding = '10px 20px';
       bar.style.background = 'rgba(15,23,42,0.72)';
-      bar.style.borderBottom = '1px solid rgba(148,163,184,0.2)';
+      bar.style.borderTop = '1px solid rgba(148,163,184,0.2)';
       elements.sheetTabsBar = bar;
       renderSheetTabs();
       return bar;
+    }
+
+    function ensureSheetColorPicker(){
+      if (elements.sheetColorInput) return elements.sheetColorInput;
+      const input = document.createElement('input');
+      input.type = 'color';
+      input.style.position = 'absolute';
+      input.style.opacity = '0';
+      input.style.pointerEvents = 'none';
+      input.tabIndex = -1;
+      input.addEventListener('input', commitSheetColor);
+      input.addEventListener('change', commitSheetColor);
+      document.body.appendChild(input);
+      elements.sheetColorInput = input;
+      return input;
+    }
+
+    function commitSheetColor(){
+      const picker = elements.sheetColorInput;
+      if (!picker) return;
+      const index = Number(picker.dataset.index);
+      if (!Number.isFinite(index)) return;
+      const sheet = state.sheets[index];
+      if (!sheet) return;
+      const parsed = parseHexColor(picker.value);
+      sheet.color = parsed ? parsed.hex : null;
+      renderSheetTabs();
+      markDirty();
+      autoSaveLater();
+    }
+
+    function openSheetColorDialog(index){
+      const sheet = state.sheets[index];
+      if (!sheet) return;
+      const picker = ensureSheetColorPicker();
+      const parsed = parseHexColor(sheet.color);
+      picker.dataset.index = String(index);
+      picker.value = (parsed ? parsed.hex : '#3B82F6').toLowerCase();
+      picker.click();
+    }
+
+    function clearSheetColor(index){
+      const sheet = state.sheets[index];
+      if (!sheet || !sheet.color) return;
+      sheet.color = null;
+      renderSheetTabs();
+      markDirty();
+      autoSaveLater();
+    }
+
+    function styleSheetTab(tab, sheet, active){
+      const parsed = parseHexColor(sheet.color);
+      tab.style.fontWeight = active ? '700' : '500';
+      if (!parsed){
+        tab.style.background = active ? 'rgba(59,130,246,0.35)' : 'rgba(30,41,59,0.5)';
+        tab.style.borderColor = 'rgba(148,163,184,0.25)';
+        tab.style.color = active ? '#bfdbfe' : '#e2e8f0';
+        tab.style.boxShadow = active ? '0 0 0 1px rgba(191,219,254,0.25)' : 'none';
+        return;
+      }
+      const activeAlpha = active ? 0.85 : 0.45;
+      tab.style.background = rgbaString(parsed, activeAlpha);
+      tab.style.borderColor = rgbaString(parsed, 0.7);
+      tab.style.color = parsed.luminance > 0.6 ? '#0f172a' : '#f8fafc';
+      tab.style.boxShadow = active ? `0 0 0 2px ${rgbaString(parsed, 0.35)}` : 'none';
     }
 
     function renderSheetTabs(){
@@ -1134,20 +1216,45 @@
       tabsWrap.style.display = 'flex';
       tabsWrap.style.gap = '6px';
       tabsWrap.style.flexWrap = 'wrap';
+      tabsWrap.style.flex = '1 1 auto';
+      tabsWrap.style.alignItems = 'center';
       state.sheets.forEach((sheet, index) => {
         const tab = document.createElement('button');
         tab.type = 'button';
-        tab.textContent = sheet.name;
         tab.style.padding = '6px 14px';
         tab.style.borderRadius = '999px';
         tab.style.border = '1px solid rgba(148,163,184,0.25)';
-        const active = index === state.activeSheetIndex;
-        tab.style.background = active ? 'rgba(59,130,246,0.35)' : 'rgba(30,41,59,0.5)';
-        tab.style.color = active ? '#bfdbfe' : '#e2e8f0';
         tab.style.cursor = 'pointer';
-        tab.style.fontWeight = active ? '700' : '500';
+        tab.style.display = 'flex';
+        tab.style.alignItems = 'center';
+        tab.style.gap = '8px';
+        const active = index === state.activeSheetIndex;
+        const label = document.createElement('span');
+        label.textContent = sheet.name;
+        label.style.whiteSpace = 'nowrap';
+        const chip = document.createElement('span');
+        chip.style.width = '10px';
+        chip.style.height = '10px';
+        chip.style.borderRadius = '999px';
+        chip.style.boxShadow = '0 0 0 1px rgba(15,23,42,0.4)';
+        if (sheet.color){
+          const parsed = parseHexColor(sheet.color);
+          chip.style.background = parsed ? parsed.hex : sheet.color;
+          chip.style.opacity = '1';
+        } else {
+          chip.style.background = '#94a3b8';
+          chip.style.opacity = active ? '0.8' : '0.55';
+        }
+        tab.appendChild(chip);
+        tab.appendChild(label);
+        styleSheetTab(tab, sheet, active);
         tab.addEventListener('click', () => activateSheet(index));
         tab.addEventListener('dblclick', () => renameSheet(index));
+        tab.addEventListener('contextmenu', event => {
+          event.preventDefault();
+          openSheetColorDialog(index);
+        });
+        tab.title = 'クリックで切り替え、ダブルクリックで名前変更、右クリックでタブ色を変更';
         tabsWrap.appendChild(tab);
       });
       const addBtn = document.createElement('button');
@@ -1160,8 +1267,39 @@
       addBtn.style.color = '#e0f2fe';
       addBtn.style.cursor = 'pointer';
       addBtn.addEventListener('click', addSheet);
+      addBtn.title = '新しいシートを追加';
+
+      const toolsWrap = document.createElement('div');
+      toolsWrap.style.display = 'flex';
+      toolsWrap.style.gap = '6px';
+      toolsWrap.style.alignItems = 'center';
+      toolsWrap.appendChild(addBtn);
+
+      const colorBtn = document.createElement('button');
+      colorBtn.type = 'button';
+      colorBtn.textContent = '🎨';
+      colorBtn.style.padding = '6px 12px';
+      colorBtn.style.borderRadius = '8px';
+      colorBtn.style.border = '1px solid rgba(148,163,184,0.25)';
+      colorBtn.style.background = 'rgba(14,116,144,0.45)';
+      colorBtn.style.color = '#e0f2fe';
+      colorBtn.style.cursor = 'pointer';
+      colorBtn.title = '現在のシートタブの色を変更 (右クリックでクリア)';
+      colorBtn.disabled = state.sheets.length === 0;
+      colorBtn.style.opacity = colorBtn.disabled ? '0.4' : '1';
+      colorBtn.addEventListener('click', () => {
+        if (state.sheets.length === 0) return;
+        openSheetColorDialog(state.activeSheetIndex);
+      });
+      colorBtn.addEventListener('contextmenu', event => {
+        event.preventDefault();
+        if (state.sheets.length === 0) return;
+        clearSheetColor(state.activeSheetIndex);
+      });
+      toolsWrap.appendChild(colorBtn);
+
       elements.sheetTabsBar.appendChild(tabsWrap);
-      elements.sheetTabsBar.appendChild(addBtn);
+      elements.sheetTabsBar.appendChild(toolsWrap);
     }
 
     function addSheet(){
@@ -1253,8 +1391,8 @@
       wrapper.appendChild(createHeader());
       wrapper.appendChild(createRibbon());
       wrapper.appendChild(createFormulaBar());
-      wrapper.appendChild(createSheetTabs());
       wrapper.appendChild(createGrid());
+      wrapper.appendChild(createSheetTabs());
       wrapper.appendChild(createStatusBar());
 
       elements.wrapper = wrapper;
@@ -2494,7 +2632,7 @@
             loadWorkbook(new Uint8Array(reader.result));
             state.filename = file.name;
             updateSubtitle();
-            state.warning = '互換性注意: 図形・マクロ・複数シート (先頭シートのみ読み込み)・外部参照は読み込まれていません。';
+            state.warning = '互換性注意: 図形・マクロ・外部参照・一部の書式は読み込まれていません。';
             award('import', 10);
             alert('互換性注意: 未対応の機能は破棄されます。');
           } catch (err){
@@ -2524,70 +2662,159 @@
           );
         });
       }
-      let sheetXml = null;
-      Object.keys(files).forEach(name => {
-        if (name.startsWith('xl/worksheets/sheet')){
-          sheetXml = fflate.strFromU8(files[name]);
-          return;
-        }
-      });
-      if (!sheetXml) throw new Error('シートが見つかりません');
       const parser = new DOMParser();
-      const doc = parser.parseFromString(sheetXml, 'application/xml');
-      const rows = doc.getElementsByTagName('row');
-      const sheetRecord = createSheetRecord('Sheet1');
-      state.sheets = [sheetRecord];
-      state.activeSheetIndex = 0;
-      state.sheetCounter = 1;
-      for (let i = 0; i < rows.length; i++){
-        const row = rows[i];
-        const cells = row.getElementsByTagName('c');
-        for (let j = 0; j < cells.length; j++){
-          const c = cells[j];
-          const ref = c.getAttribute('r');
-          if (!ref) continue;
-          const cell = createEmptyCell();
-          const type = c.getAttribute('t');
-          const formula = c.getElementsByTagName('f')[0];
-          const valueEl = c.getElementsByTagName('v')[0];
-          if (formula){
-            cell.formula = formula.textContent || '';
-          }
-          if (type === 's'){
-            const idx = parseInt(valueEl?.textContent || '0', 10);
-            cell.value = sharedStrings[idx] || '';
-          } else if (type === 'b'){
-            cell.value = valueEl?.textContent === '1' ? 'TRUE' : 'FALSE';
-          } else if (type === 'str'){
-            cell.value = valueEl?.textContent || '';
-          } else if (type === 'inlineStr'){
-            const inline = c.getElementsByTagName('t')[0];
-            cell.value = inline?.textContent || '';
-          } else if (valueEl){
-            const raw = valueEl.textContent || '';
-            const num = Number(raw);
-            if (!Number.isNaN(num)){
-              cell.value = raw;
-            } else {
-              cell.value = raw;
-            }
-          }
-          sheetRecord.cells.set(ref, cell);
+      const workbookXml = files['xl/workbook.xml'] ? fflate.strFromU8(files['xl/workbook.xml']) : null;
+      const sheetDefs = [];
+      if (workbookXml){
+        const workbookDoc = parser.parseFromString(workbookXml, 'application/xml');
+        const sheets = workbookDoc.getElementsByTagName('sheet');
+        for (let i = 0; i < sheets.length; i++){
+          const node = sheets[i];
+          const name = node.getAttribute('name') || `Sheet${i + 1}`;
+          const relId = node.getAttribute('r:id') || node.getAttribute('rId');
+          sheetDefs.push({ name, relId, index: i });
         }
       }
+      const relTargets = {};
+      if (files['xl/_rels/workbook.xml.rels']){
+        const relXml = fflate.strFromU8(files['xl/_rels/workbook.xml.rels']);
+        const relDoc = parser.parseFromString(relXml, 'application/xml');
+        const relationships = relDoc.getElementsByTagName('Relationship');
+        for (let i = 0; i < relationships.length; i++){
+          const rel = relationships[i];
+          const id = rel.getAttribute('Id');
+          const target = rel.getAttribute('Target');
+          if (id && target){
+            relTargets[id] = target;
+          }
+        }
+      }
+      function resolveTarget(target, fallbackIndex){
+        if (!target){
+          return `worksheets/sheet${fallbackIndex + 1}.xml`;
+        }
+        let normalized = target.replace(/\\/g, '/');
+        normalized = normalized.replace(/^\.\//, '');
+        while (normalized.startsWith('../')){
+          normalized = normalized.slice(3);
+        }
+        if (normalized.startsWith('/')){
+          normalized = normalized.slice(1);
+        }
+        return normalized;
+      }
+      function extractTabColor(doc){
+        const pr = doc.getElementsByTagName('sheetPr')[0];
+        if (!pr) return null;
+        const tabColor = pr.getElementsByTagName('tabColor')[0];
+        if (!tabColor) return null;
+        const rgb = tabColor.getAttribute('rgb');
+        if (rgb){
+          const cleaned = rgb.trim();
+          if (/^[0-9A-Fa-f]{8}$/.test(cleaned)){
+            const parsed = parseHexColor(`#${cleaned.slice(2)}`);
+            return parsed ? parsed.hex : null;
+          }
+          if (/^[0-9A-Fa-f]{6}$/.test(cleaned)){
+            const parsed = parseHexColor(`#${cleaned}`);
+            return parsed ? parsed.hex : null;
+          }
+        }
+        return null;
+      }
+      const sheetEntries = [];
+      if (sheetDefs.length){
+        sheetDefs.forEach(def => {
+          const target = resolveTarget(relTargets[def.relId], def.index);
+          sheetEntries.push({ name: def.name, path: `xl/${target}` });
+        });
+      } else {
+        Object.keys(files)
+          .filter(name => name.startsWith('xl/worksheets/') && name.endsWith('.xml') && !name.includes('_rels/'))
+          .sort()
+          .forEach((name, index) => {
+            sheetEntries.push({ name: `Sheet${index + 1}`, path: name });
+          });
+      }
+      if (!sheetEntries.length) throw new Error('シートが見つかりません');
+      const sheetRecords = [];
+      sheetEntries.forEach(entry => {
+        const file = files[entry.path];
+        if (!file) return;
+        const xml = fflate.strFromU8(file);
+        const doc = parser.parseFromString(xml, 'application/xml');
+        const color = extractTabColor(doc);
+        const sheetRecord = createSheetRecord(entry.name, color);
+        const rows = doc.getElementsByTagName('row');
+        for (let i = 0; i < rows.length; i++){
+          const row = rows[i];
+          const cells = row.getElementsByTagName('c');
+          for (let j = 0; j < cells.length; j++){
+            const c = cells[j];
+            const ref = c.getAttribute('r');
+            if (!ref) continue;
+            const cell = createEmptyCell();
+            const type = c.getAttribute('t');
+            const formula = c.getElementsByTagName('f')[0];
+            const valueEl = c.getElementsByTagName('v')[0];
+            let hasValue = false;
+            if (formula){
+              cell.formula = formula.textContent || '';
+              hasValue = true;
+            }
+            if (type === 's'){
+              const idx = parseInt(valueEl?.textContent || '0', 10);
+              cell.value = sharedStrings[idx] || '';
+              if (cell.value !== '') hasValue = true;
+            } else if (type === 'b'){
+              const bool = valueEl?.textContent === '1';
+              cell.value = bool ? 'TRUE' : 'FALSE';
+              hasValue = true;
+            } else if (type === 'str'){
+              cell.value = valueEl?.textContent || '';
+              if (cell.value !== '') hasValue = true;
+            } else if (type === 'inlineStr'){
+              const inline = c.getElementsByTagName('t')[0];
+              cell.value = inline?.textContent || '';
+              if (cell.value !== '') hasValue = true;
+            } else if (valueEl){
+              const raw = valueEl.textContent || '';
+              cell.value = raw;
+              if (raw !== '') hasValue = true;
+            }
+            if (hasValue){
+              sheetRecord.cells.set(ref, cell);
+            }
+          }
+        }
+        sheetRecords.push(sheetRecord);
+      });
+      if (!sheetRecords.length){
+        sheetRecords.push(createSheetRecord('Sheet1'));
+      }
+      state.sheets = sheetRecords;
+      state.activeSheetIndex = 0;
+      let counter = state.sheets.length;
+      state.sheets.forEach(sheet => {
+        const match = /^Sheet(\d+)$/.exec(sheet.name);
+        if (match){
+          counter = Math.max(counter, parseInt(match[1], 10));
+        }
+        sheet.dirty = false;
+      });
+      state.sheetCounter = counter;
+      state.dirty = false;
+      state.formatOps = 0;
       renderSheetTabs();
       updateSubtitle();
       cellElements.forEach((_el, key) => updateCellElement(key));
       recalcAll();
-      applySelection(sheetRecord.selection);
-      state.dirty = false;
-      sheetRecord.dirty = false;
-      state.formatOps = 0;
+      applySelection(currentSheet().selection);
       autoSaveLater();
     }
 
     function handleExport(){
-      alert('互換性注意: 図形・マクロ・複数シート・書式の一部は保存されません (エクスポートされるのは表示中のシートのみ)。');
+      alert('互換性注意: 図形・マクロ・一部の書式や関数は保存されません。');
       try {
         const zip = buildWorkbook();
         const blob = new Blob([zip], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -2615,69 +2842,117 @@
         return idx;
       }
 
-      const sheetName = escapeXml(currentSheet().name || 'Sheet1');
-      let rowsXml = '';
-      for (let r = 0; r < state.rows; r++){
-        let rowXml = `<row r="${r+1}">`;
-        for (let c = 0; c < state.cols; c++){
-          const ref = cellKey(c, r);
-          const cell = state.cells.get(ref);
-          if (!cell) continue;
-          let cellXml = `<c r="${ref}"`;
-          let valueText = '';
-          if (cell.formula){
-            cellXml += '>';
-            cellXml += `<f>${escapeXml(cell.formula)}</f>`;
-            const computed = cell.computed?.raw;
-            if (typeof computed === 'number'){
-              cellXml += `<v>${computed}</v>`;
-            } else if (typeof computed === 'string' && !computed.startsWith('#')){
-              const idx = ensureShared(computed);
-              cellXml += `<v>${idx}</v>`;
-              cellXml = cellXml.replace('<c', '<c t="s"');
-            }
-            cellXml += '</c>';
+      function serializeCell(ref, cell){
+        if (!cell) return '';
+        if (cell.formula){
+          let attrs = `r="${ref}"`;
+          let body = `<f>${escapeXml(cell.formula)}</f>`;
+          const computed = cell.computed?.raw;
+          if (typeof computed === 'number'){
+            body += `<v>${computed}</v>`;
+          } else if (typeof computed === 'string' && !computed.startsWith('#')){
+            const idx = ensureShared(computed);
+            attrs += ' t="s"';
+            body += `<v>${idx}</v>`;
           } else if (cell.value != null && cell.value !== ''){
-            const lowered = String(cell.value).toUpperCase();
-            if (lowered === 'TRUE' || lowered === 'FALSE'){
-              cellXml += ' t="b">';
-              cellXml += `<v>${lowered === 'TRUE' ? '1' : '0'}</v>`;
-              cellXml += '</c>';
-            } else if (!Number.isNaN(Number(cell.value))){
-              cellXml += '>';
-              cellXml += `<v>${Number(cell.value)}</v>`;
-              cellXml += '</c>';
+            const numeric = Number(cell.value);
+            if (!Number.isNaN(numeric)){
+              body += `<v>${numeric}</v>`;
             } else {
               const idx = ensureShared(String(cell.value));
-              cellXml += ' t="s">';
-              cellXml += `<v>${idx}</v>`;
-              cellXml += '</c>';
+              attrs += ' t="s"';
+              body += `<v>${idx}</v>`;
             }
-          } else {
-            continue;
           }
-          rowXml += cellXml;
+          return `<c ${attrs}>${body}</c>`;
         }
-        rowXml += '</row>';
-        rowsXml += rowXml;
+        if (cell.value == null || cell.value === '') return '';
+        const lowered = String(cell.value).toUpperCase();
+        if (lowered === 'TRUE' || lowered === 'FALSE'){
+          return `<c r="${ref}" t="b"><v>${lowered === 'TRUE' ? '1' : '0'}</v></c>`;
+        }
+        const numeric = Number(cell.value);
+        if (!Number.isNaN(numeric)){
+          return `<c r="${ref}"><v>${numeric}</v></c>`;
+        }
+        const idx = ensureShared(String(cell.value));
+        return `<c r="${ref}" t="s"><v>${idx}</v></c>`;
       }
-      const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
-        `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`+
-        `<sheetData>${rowsXml}</sheetData></worksheet>`;
+
+      function buildSheetXml(sheet){
+        const rowsMap = new Map();
+        sheet.cells.forEach((cell, ref) => {
+          if (!cell) return;
+          if (!cell.formula && (cell.value == null || cell.value === '')) return;
+          const pos = parseCellRef(ref);
+          if (!pos) return;
+          if (!rowsMap.has(pos.row)) rowsMap.set(pos.row, []);
+          rowsMap.get(pos.row).push({ ref, cell, col: pos.col });
+        });
+        const sortedRows = Array.from(rowsMap.keys()).sort((a, b) => a - b);
+        let rowsXml = '';
+        sortedRows.forEach(rowIndex => {
+          const entries = rowsMap.get(rowIndex).sort((a, b) => a.col - b.col);
+          let rowXml = `<row r="${rowIndex + 1}">`;
+          entries.forEach(({ ref, cell }) => {
+            const cellXml = serializeCell(ref, cell);
+            if (cellXml) rowXml += cellXml;
+          });
+          rowXml += '</row>';
+          rowsXml += rowXml;
+        });
+        const parsedColor = parseHexColor(sheet.color);
+        const sheetPr = parsedColor ? `<sheetPr><tabColor rgb="FF${parsedColor.hex.slice(1)}"/></sheetPr>` : '';
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${sheetPr}<sheetData>${rowsXml}</sheetData></worksheet>`;
+      }
+
+      const sheets = state.sheets.length ? state.sheets : [createSheetRecord('Sheet1')];
+      const sheetOverrides = [];
+      const workbookSheets = [];
+      const workbookRelLines = [];
+      const sheetFiles = {};
+      sheets.forEach((sheet, index) => {
+        const sheetId = index + 1;
+        const xml = buildSheetXml(sheet);
+        sheetFiles[`xl/worksheets/sheet${sheetId}.xml`] = xml;
+        sheetOverrides.push(`  <Override PartName="/xl/worksheets/sheet${sheetId}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`);
+        workbookSheets.push(`    <sheet name="${escapeXml(sheet.name || `Sheet${sheetId}`)}" sheetId="${sheetId}" r:id="rId${sheetId}"/>`);
+        workbookRelLines.push(`  <Relationship Id="rId${sheetId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${sheetId}.xml"/>`);
+      });
 
       const sharedXml = sharedStrings.length ?
         `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${sharedStrings.length}" uniqueCount="${sharedStrings.length}">` +
         sharedStrings.map(str => `<si><t>${escapeXml(str)}</t></si>`).join('') + '</sst>' : null;
+      if (sharedXml){
+        workbookRelLines.push(`  <Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>`);
+      }
 
-      const files = {
-        '[Content_Types].xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n  <Default Extension="xml" ContentType="application/xml"/>\n  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>\n  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>\n  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>\n  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>${sharedXml ? '\n  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>' : ''}\n</Types>`,
+      const contentTypesParts = [
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">',
+        '  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>',
+        '  <Default Extension="xml" ContentType="application/xml"/>',
+        '  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>',
+        '  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>',
+        '  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>',
+        ...sheetOverrides,
+      ];
+      if (sharedXml){
+        contentTypesParts.push('  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>');
+      }
+      contentTypesParts.push('</Types>');
+
+      const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n  <sheets>\n${workbookSheets.join('\n')}\n  </sheets>\n</workbook>`;
+      const workbookRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n${workbookRelLines.join('\n')}\n</Relationships>`;
+
+      const files = Object.assign({
+        '[Content_Types].xml': contentTypesParts.join('\n'),
         '_rels/.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>\n</Relationships>`,
         'docProps/app.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">\n  <Application>MiniExp Exceler</Application>\n</Properties>`,
         'docProps/core.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/">\n  <dc:title>${escapeXml(state.filename)}</dc:title>\n  <dc:creator>MiniExp</dc:creator>\n  <cp:lastModifiedBy>MiniExp</cp:lastModifiedBy>\n  <dcterms:created xsi:type="dcterms:W3CDTF" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${new Date().toISOString()}</dcterms:created>\n</cp:coreProperties>`,
-        'xl/_rels/workbook.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>${sharedXml ? '\n  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>' : ''}\n</Relationships>`,
-        'xl/workbook.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n  <sheets>\n    <sheet name="${sheetName}" sheetId="1" r:id="rId1"/>\n  </sheets>\n</workbook>`,
-        'xl/worksheets/sheet1.xml': sheetXml
-      };
+        'xl/_rels/workbook.xml.rels': workbookRelsXml,
+        'xl/workbook.xml': workbookXml
+      }, sheetFiles);
       if (sharedXml){
         files['xl/sharedStrings.xml'] = sharedXml;
       }
@@ -2685,7 +2960,7 @@
     }
 
     function showCompatibilityModal(){
-      const message = '互換性について\n- 複数シートのエクスポートは先頭シートのみ対応\n- 図形・マクロ・ピボット・外部リンクは未対応\n- 条件付き書式・結合セルは保持されません';
+      const message = '互換性について\n- 複数シート/タブ色は簡易サポート (高度な設定は失われます)\n- 図形・マクロ・ピボット・外部リンクは未対応\n- 条件付き書式・結合セルは保持されません';
       alert(message);
     }
 
@@ -2702,6 +2977,7 @@
       try {
         const sheets = state.sheets.map(sheet => ({
           name: sheet.name,
+          color: sheet.color,
           cells: storableCells(sheet.cells),
           selection: sheet.selection
         }));
@@ -2727,7 +3003,9 @@
         const restoredSheets = Array.isArray(payload.sheets) && payload.sheets.length ? payload.sheets : null;
         if (restoredSheets){
           state.sheets = restoredSheets.map((sheet, index) => {
-            const record = createSheetRecord(typeof sheet.name === 'string' && sheet.name.trim() ? sheet.name.trim() : `Sheet${index + 1}`);
+            const name = typeof sheet.name === 'string' && sheet.name.trim() ? sheet.name.trim() : `Sheet${index + 1}`;
+            const color = typeof sheet.color === 'string' ? (parseHexColor(sheet.color)?.hex || null) : null;
+            const record = createSheetRecord(name, color);
             if (sheet.selection){
               record.selection = sanitizeSelection(sheet.selection);
             }

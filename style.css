@@ -1447,7 +1447,8 @@ h1 {
 
 .sandbox-map-actions button,
 #sandbox-add-enemy,
-.sandbox-start-button {
+.sandbox-start-button,
+.sandbox-secondary-button {
     appearance: none;
     border: none;
     border-radius: 8px;
@@ -1462,13 +1463,15 @@ h1 {
 
 .sandbox-map-actions button:hover,
 #sandbox-add-enemy:hover,
-.sandbox-start-button:hover {
+.sandbox-start-button:hover,
+.sandbox-secondary-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(102,126,234,0.35);
 }
 
 .sandbox-map-actions button:disabled,
-.sandbox-start-button:disabled {
+.sandbox-start-button:disabled,
+.sandbox-secondary-button:disabled {
     background: #cbd5f5;
     box-shadow: none;
     color: #475569;
@@ -1879,12 +1882,46 @@ h1 {
     flex-wrap: wrap;
 }
 
+.sandbox-primary-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sandbox-secondary-button {
+    background: linear-gradient(135deg,#1f2937,#334155);
+    box-shadow: 0 2px 8px rgba(51,65,85,0.35);
+}
+
+.sandbox-secondary-button:hover {
+    box-shadow: 0 4px 12px rgba(51,65,85,0.35);
+}
+
 .sandbox-warning {
     font-size: 12px;
     color: #b45309;
     background: rgba(251,191,36,0.2);
     padding: 6px 8px;
     border-radius: 6px;
+}
+
+.sandbox-io-status {
+    font-size: 13px;
+    margin-top: 8px;
+    min-height: 18px;
+}
+
+.sandbox-io-status[data-tone="success"] {
+    color: #15803d;
+}
+
+.sandbox-io-status[data-tone="error"] {
+    color: #b91c1c;
+}
+
+.sandbox-io-status[data-tone="info"] {
+    color: #1d4ed8;
 }
 
 @media (max-width: 980px) {

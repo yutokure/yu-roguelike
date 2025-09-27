@@ -534,9 +534,15 @@
                                 </div>
                                 <div id="sandbox-validation" class="sandbox-validation" aria-live="polite"></div>
                                 <div class="sandbox-start-actions">
-                                    <button type="button" id="sandbox-start-button" class="sandbox-start-button">サンドボックスを開始</button>
+                                    <div class="sandbox-primary-actions">
+                                        <button type="button" id="sandbox-start-button" class="sandbox-start-button">サンドボックスを開始</button>
+                                        <button type="button" id="sandbox-export-button" class="sandbox-secondary-button">設定をエクスポート</button>
+                                        <button type="button" id="sandbox-import-button" class="sandbox-secondary-button">設定をインポート</button>
+                                        <input type="file" id="sandbox-import-file" accept="application/json" hidden>
+                                    </div>
                                     <span class="sandbox-warning">※ サンドボックスでは経験値を獲得できません。</span>
                                 </div>
+                                <p id="sandbox-io-status" class="sandbox-io-status" role="status" aria-live="polite"></p>
                             </section>
                         </section>
                         <section id="tool-blockdata-editor" class="tool-panel" data-tool-panel="blockdata-editor" aria-label="ブロックデータ編集ツール">

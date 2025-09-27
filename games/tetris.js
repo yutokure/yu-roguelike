@@ -2,6 +2,7 @@
   /** MiniExp: Tetris-like (v0.1.0) */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const COLS=10, ROWS=20; const W = Math.max(320, Math.min(480, root.clientWidth||480)), H = Math.round(W + 40);
     const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H; canvas.style.display='block'; canvas.style.margin='0 auto'; canvas.style.borderRadius='6px'; root.appendChild(canvas); const ctx=canvas.getContext('2d');
 
@@ -31,11 +32,27 @@
     let totalLines=0, ren=-1; // -1 means not started
     let tspinFlag = null; // 'T' when last rotate successful on T piece
 
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
+
     function cloneMat(m){ return m.map(r=>r.slice()); }
     function rotate(mat, dir){ const h=mat.length,w=mat[0].length; const r=Array.from({length:w},()=>Array(h).fill(0)); for(let y=0;y<h;y++) for(let x=0;x<w;x++){ if(dir>0) r[x][h-1-y]=mat[y][x]; else r[w-1-x][y]=mat[y][x]; } return r; }
     function collides(px,py,mat){ const h=mat.length,w=mat[0].length; for(let y=0;y<h;y++) for(let x=0;x<w;x++){ if(!mat[y][x]) continue; const gx=px+x, gy=py+y; if(gx<0||gx>=COLS||gy>=ROWS) return true; if(gy>=0 && grid[gy][gx]) return true; } return false; }
     function merge(){ const h=cur.mat.length,w=cur.mat[0].length; for(let y=0;y<h;y++) for(let x=0;x<w;x++){ if(!cur.mat[y][x]) continue; const gx=cur.x+x, gy=cur.y+y; if(gy>=0) grid[gy][gx]={k:cur.k,c:colors[cur.k]}; } }
     function hardDropDist(){ let d=0; while(!collides(cur.x, cur.y+d+1, cur.mat)) d++; return d; }
+
+    function finishGame(){
+      if (!ended){
+        ended = true;
+        enableHostRestart();
+      }
+      running = false;
+    }
 
     function draw(){
       ctx.fillStyle='#0b1020'; ctx.fillRect(0,0,W,H);
@@ -110,7 +127,7 @@
       }
     }
 
-    function spawn(){ cur = nextQ.shift(); nextQ.push(newPiece()); holdUsed=false; if (collides(cur.x, cur.y, cur.mat)){ ended=true; running=false; }
+    function spawn(){ cur = nextQ.shift(); nextQ.push(newPiece()); holdUsed=false; if (collides(cur.x, cur.y, cur.mat)){ finishGame(); }
       fallAcc=0; lockAcc=0; tspinFlag=null; }
 
     function softDrop(){ if(!collides(cur.x, cur.y+1, cur.mat)) { cur.y++; cur.lastAction='drop'; lockAcc=0; } else { lockAcc += 1/60; } }
@@ -161,10 +178,10 @@
       }
     }
     function loop(t){ const now=t*0.001; const dt=Math.min(0.033, now-(last||now)); last=now; if(running){ step(dt); draw(); raf=requestAnimationFrame(loop); } }
-    function start(){ if(running) return; running=true; raf=requestAnimationFrame(loop); }
-    function stop(){ if(!running) return; running=false; cancelAnimationFrame(raf); }
+    function start(){ if(running) return; running=true; disableHostRestart(); raf=requestAnimationFrame(loop); }
+    function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
     function destroy(){ try{ stop(); canvas.remove(); document.removeEventListener('keydown', onKey); }catch{} }
-    function restart(){ grid=Array.from({length:ROWS},()=>Array(COLS).fill(null)); refillBag(); cur=newPiece(); nextQ=[newPiece(),newPiece(),newPiece()]; hold=null; holdUsed=false; totalLines=0; ren=-1; tspinFlag=null; ended=false; start(); }
+    function restart(){ stop({ keepShortcutsDisabled: true }); grid=Array.from({length:ROWS},()=>Array(COLS).fill(null)); refillBag(); cur=newPiece(); nextQ=[newPiece(),newPiece(),newPiece()]; hold=null; holdUsed=false; totalLines=0; ren=-1; tspinFlag=null; ended=false; start(); }
     function getScore(){ return totalLines; }
 
     document.addEventListener('keydown', onKey, { passive:false });

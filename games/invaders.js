@@ -2,6 +2,7 @@
   /** MiniExp: Invaders-like (v0.1.0) */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const cfg = (
       difficulty==='HARD' ? { rows:6, cols:11, enemyShot:0.02, speed:1.4, lives:2 } :
       difficulty==='EASY' ? { rows:4, cols:6,  enemyShot:0.00, speed:0.9, lives:3 } :
@@ -23,6 +24,14 @@
     let fleet = null;
     let fleetDir = 1; // 1 right, -1 left
     let fleetX = 60, fleetY = 60, fleetVX = 26 * cfg.speed, fleetStepY = 18;
+
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
 
     function mkFleet(){
       const a=[]; for(let r=0;r<cfg.rows;r++){ const row=[]; for(let c=0;c<cfg.cols;c++){ row.push({ alive:true }); } a.push(row); }
@@ -70,7 +79,7 @@
         if (right >= W-20 && fleetDir>0) { fleetDir=-1; fleetY += fleetStepY; }
         if (left <= 20 && fleetDir<0) { fleetDir=1; fleetY += fleetStepY; }
         if (fleetY + b.maxR*26 + 10 >= player.y-10) { // reached bottom
-          lives=0; ended=true; running=false; }
+          lives=0; finishGame(); }
       }
 
       // enemy fire
@@ -84,7 +93,7 @@
       bullets = bullets.filter(b=>b.y>-900);
 
       // collisions: enemy bullets vs player
-      for (const eb of ebullets){ if (Math.abs(eb.x - player.x) < (player.w/2) && Math.abs(eb.y - player.y) < (player.h/2)) { eb.y=H+999; lives--; if(lives<=0){ ended=true; running=false; } } }
+      for (const eb of ebullets){ if (Math.abs(eb.x - player.x) < (player.w/2) && Math.abs(eb.y - player.y) < (player.h/2)) { eb.y=H+999; lives--; if(lives<=0){ finishGame(); } } }
       ebullets = ebullets.filter(b=>b.y<H+800);
 
       // wave clear
@@ -94,9 +103,17 @@
       }
     }
 
+    function finishGame(){
+      if (!ended){
+        ended = true;
+        enableHostRestart();
+      }
+      running = false;
+    }
+
     function loop(t){ const now=t*0.001; const dt=Math.min(0.033, now-(last||now)); last=now; if(running){ step(dt); draw(); raf=requestAnimationFrame(loop); } }
-    function start(){ if(running) return; running=true; ended=false; last=0; raf=requestAnimationFrame(loop); }
-    function stop(){ if(!running) return; running=false; cancelAnimationFrame(raf); }
+    function start(){ if(running) return; running=true; ended=false; disableHostRestart(); last=0; raf=requestAnimationFrame(loop); }
+    function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
     function destroy(){ try{ stop(); canvas.remove(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); }catch{} }
     function onKeyDown(e){ if(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='Space'){ e.preventDefault(); } keys.add(e.code==='Space'?' ':e.code); if((e.key==='r'||e.key==='R') && !running) { // restart
         kills=0; waveClears=0; lives=cfg.lives; bullets.length=0; ebullets.length=0; mkFleet(); ended=false; start(); }

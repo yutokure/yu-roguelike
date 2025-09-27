@@ -2,6 +2,7 @@
   /** MiniExp: Falling Puyos (ぷよぷよ風) */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const config = {
       EASY:  { fall: 0.8, colors: 3 },
       NORMAL:{ fall: 0.6, colors: 4 },
@@ -40,6 +41,14 @@
     let totalCleared = 0;
     let maxChain = 0;
     let lastChainCleared = 0;
+
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
 
     function randColor(){ return Math.floor(Math.random() * config.colors); }
 
@@ -396,9 +405,11 @@
       running = false;
       cancelLoop();
       draw();
+      enableHostRestart();
     }
 
     function reset(){
+      disableHostRestart();
       grid = Array.from({length: ROWS}, () => Array(COLS).fill(null));
       nextQueue = [];
       current = null;
@@ -427,14 +438,18 @@
       if (running) return;
       running = true;
       ended = false;
+      disableHostRestart();
       lastTime = 0;
       raf = requestAnimationFrame(loop);
     }
 
-    function stop(){
+    function stop(opts = {}){
       if (!running) return;
       running = false;
       cancelLoop();
+      if (!opts.keepShortcutsDisabled){
+        enableHostRestart();
+      }
     }
 
     function cancelLoop(){

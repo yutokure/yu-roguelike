@@ -76,6 +76,7 @@
 
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const cfg = { ...(DIFFICULTY[difficulty] || DIFFICULTY.NORMAL) };
     const xpSection = 25 * (cfg.xpScale || 1);
     const xpPass = 4 * (cfg.xpScale || 1);
@@ -126,6 +127,14 @@
     let nextSection = trackLength/4;
     let lastDistanceXp = 0;
     let lastSectionCheck = nextSection;
+
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
 
     const keys = new Set();
 
@@ -479,6 +488,7 @@
     function endGame(){
       if (ended) return;
       ended=true;
+      enableHostRestart();
       running=false;
       setShortcutsLocked(false);
       if (playerSpeed>0) playerSpeed=0;

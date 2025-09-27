@@ -220,6 +220,7 @@
 
   function create(root, awardXp, opts){
     const difficulty = opts?.difficulty || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const xpWin = XP_WIN[difficulty] ?? XP_WIN.NORMAL;
 
     const canvas = document.createElement('canvas');
@@ -245,6 +246,14 @@
     let resultText = '';
     let lastMove = null;
     let hover = null; // { board, x, y }
+
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
 
     function draw(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -372,6 +381,7 @@
     }
 
     function reset(){
+      disableHostRestart();
       for (const b of boards){
         for (let y=0;y<SUB_SIZE;y++) b.cells[y].fill(EMPTY);
         b.winner = 0; b.filled = 0;
@@ -389,6 +399,7 @@
       ended = true;
       resultText = text;
       draw();
+      enableHostRestart();
     }
 
     function applyMove(move, color){
@@ -494,8 +505,8 @@
     function handleLeave(){ hover = null; draw(); }
     function handleKey(e){ if (e.key === 'r' || e.key === 'R') reset(); }
 
-    function start(){ if (running) return; running = true; canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); draw(); if (turn === AI) setTimeout(aiTurn, 200); }
-    function stop(){ if (!running) return; running = false; canvas.removeEventListener('click', handleClick); canvas.removeEventListener('mousemove', handleMove); canvas.removeEventListener('mouseleave', handleLeave); window.removeEventListener('keydown', handleKey); }
+    function start(){ if (running) return; running = true; disableHostRestart(); canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); draw(); if (turn === AI) setTimeout(aiTurn, 200); }
+    function stop(opts = {}){ if (!running) return; running = false; canvas.removeEventListener('click', handleClick); canvas.removeEventListener('mousemove', handleMove); canvas.removeEventListener('mouseleave', handleLeave); window.removeEventListener('keydown', handleKey); if (!opts.keepShortcutsDisabled){ enableHostRestart(); } }
     function destroy(){ try { stop(); root.removeChild(canvas); } catch {} }
     function getScore(){
       let playerBoards = 0, aiBoards = 0;

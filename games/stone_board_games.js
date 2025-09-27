@@ -574,6 +574,7 @@
   function createStoneGame(cfg){
     return function(root, awardXp, opts){
       const difficulty = opts?.difficulty || 'NORMAL';
+      const shortcuts = opts?.shortcuts;
       const xpWin = cfg.xpWin?.[difficulty] ?? cfg.xpWin?.NORMAL ?? 100;
 
       const canvas = document.createElement('canvas');
@@ -882,7 +883,16 @@
         }
       }
 
+      function disableHostRestart(){
+        shortcuts?.disableKey('r');
+      }
+
+      function enableHostRestart(){
+        shortcuts?.enableKey('r');
+      }
+
       function reset(){
+        disableHostRestart();
         cancelAiTimer();
         for (let y=0;y<cfg.rows;y++) board[y].fill(EMPTY);
         turn = PLAYER;
@@ -901,6 +911,7 @@
         resultText = text;
         clearThreats();
         draw();
+        enableHostRestart();
       }
 
       function processPlayerMove(x, y){
@@ -998,8 +1009,8 @@
       function cancelAiTimer(){ if (aiTimer){ clearTimeout(aiTimer); aiTimer = null; } }
       function scheduleAiTurn(delay){ cancelAiTimer(); aiTimer = setTimeout(aiTurn, delay); }
 
-      function start(){ if (running) return; running = true; canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); refreshThreats({ trigger: 'start' }); draw(); if (turn === AI) scheduleAiTurn(200); }
-      function stop(){ if (!running) return; running = false; cancelAiTimer(); canvas.removeEventListener('click', handleClick); canvas.removeEventListener('mousemove', handleMove); canvas.removeEventListener('mouseleave', handleLeave); window.removeEventListener('keydown', handleKey); }
+      function start(){ if (running) return; running = true; disableHostRestart(); canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); refreshThreats({ trigger: 'start' }); draw(); if (turn === AI) scheduleAiTurn(200); }
+      function stop(opts = {}){ if (!running) return; running = false; cancelAiTimer(); canvas.removeEventListener('click', handleClick); canvas.removeEventListener('mousemove', handleMove); canvas.removeEventListener('mouseleave', handleLeave); window.removeEventListener('keydown', handleKey); if (!opts.keepShortcutsDisabled){ enableHostRestart(); } }
       function destroy(){ try { stop(); clearThreats(); root.removeChild(canvas); } catch {} }
       function getScore(){ let player=0, ai=0; for (let y=0;y<cfg.rows;y++) for (let x=0;x<cfg.cols;x++){ if(board[y][x]===PLAYER) player++; else if(board[y][x]===AI) ai++; } return player - ai; }
 

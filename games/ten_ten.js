@@ -84,6 +84,7 @@
 
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const difficultyKey = DIFF_WEIGHTS[difficulty] ? difficulty : 'NORMAL';
     const baseWidth = Math.max(400, Math.min(640, root.clientWidth || 520));
     const cellPx = Math.floor(Math.max(28, Math.min(52, baseWidth / (BOARD_SIZE + 2))));
@@ -374,11 +375,20 @@
       return currentPieces.some(p => hasPlacement(p));
     }
 
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
+
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
     function endGame(reason){
       ended = true;
       endText = reason || '置ける場所がありません';
       updateHud();
       drawBoard();
+      enableHostRestart();
     }
 
     function createPiece(forcedShape){
@@ -582,6 +592,7 @@
     }
 
     function reset(){
+      disableHostRestart();
       board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null));
       totalLines = 0;
       totalXp = 0;
@@ -619,10 +630,16 @@
     updateHud();
     reset();
 
-    function start(){ drawBoard(); }
-    function stop(){
+    function start(){
+      disableHostRestart();
+      drawBoard();
+    }
+    function stop(opts = {}){
       if (dragging){
         onDragEnd({ pointerId: dragging.pointerId || 0, preventDefault(){} });
+      }
+      if (!opts.keepShortcutsDisabled){
+        enableHostRestart();
       }
     }
     function destroy(){
@@ -639,6 +656,7 @@
       dragging = null;
       resetHover();
       try { root.removeChild(container); } catch {}
+      enableHostRestart();
     }
     function getScore(){ return totalLines; }
 

@@ -4,6 +4,7 @@
    */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const shortcuts = opts?.shortcuts;
     const sizeMap = { EASY: 3, NORMAL: 4, HARD: 5 };
     const boardSize = sizeMap[difficulty] || sizeMap.NORMAL;
     const tileCount = boardSize * boardSize;
@@ -321,6 +322,7 @@
         if (bestTimeMs == null || elapsedMs < bestTimeMs){
           bestTimeMs = elapsedMs;
         }
+        enableHostRestart();
         updateInfo();
         statusBar.textContent = `クリア！ ${moves} 手 / ${formatTime(elapsedMs)} 取得EXP: ${total ?? solveXp}`;
         statusBar.style.color = '#facc15';
@@ -363,8 +365,16 @@
       updateInfo();
     }
 
+    function disableHostRestart(){
+      shortcuts?.disableKey('r');
+    }
+
+    function enableHostRestart(){
+      shortcuts?.enableKey('r');
+    }
+
     function resetAndStart(){
-      stop();
+      stop({ keepShortcutsDisabled: true });
       setupBoard();
       startedOnce = true;
       start();
@@ -378,17 +388,21 @@
       }
       solved = false;
       running = true;
+      disableHostRestart();
       startTimer();
       updateInfo();
       try { boardEl.focus({ preventScroll: true }); } catch {}
     }
 
-    function stop(){
+    function stop(opts = {}){
       if (!running) return;
       running = false;
       stopTimer();
       commitMoveXp(true, { reason: 'stop' });
       updateInfo();
+      if (!opts.keepShortcutsDisabled){
+        enableHostRestart();
+      }
     }
 
     function destroy(){

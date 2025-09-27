@@ -268,7 +268,10 @@
                                                 <button id="modmaker-fill-wall" type="button">全て壁</button>
                                             </div>
                                         </div>
-                                        <div id="modmaker-grid" class="modmaker-grid" role="grid" aria-label="構造パターン"></div>
+                                        <div id="modmaker-grid" class="modmaker-grid" role="application" aria-label="構造パターン">
+                                            <canvas id="modmaker-grid-canvas" aria-hidden="true"></canvas>
+                                            <div class="modmaker-grid-placeholder" data-placeholder></div>
+                                        </div>
                                         <label class="full">パターンプレビュー
                                             <textarea id="modmaker-pattern-preview" class="code" rows="4" readonly></textarea>
                                         </label>
@@ -312,7 +315,10 @@
                                                     <button id="modmaker-fixed-fill-void" type="button">全て空白</button>
                                                 </div>
                                             </div>
-                                            <div id="modmaker-fixed-grid" class="modmaker-grid" role="grid" aria-label="固定マップパターン"></div>
+                                            <div id="modmaker-fixed-grid" class="modmaker-grid" role="application" aria-label="固定マップパターン">
+                                                <canvas id="modmaker-fixed-grid-canvas" aria-hidden="true"></canvas>
+                                                <div class="modmaker-grid-placeholder" data-placeholder></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

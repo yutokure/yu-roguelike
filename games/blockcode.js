@@ -1960,6 +1960,6 @@
     id: 'blockcode',
     name: 'ブロックコードラボ',
     category: 'ユーティリティ',
-    create
+    create: create
   });
 })();

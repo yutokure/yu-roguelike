@@ -119,7 +119,17 @@
     let expressionMode = 'classic';
     let history = [];
     let numericMath = null;
+    let moreDigitsButton = null;
+    let approxRawValue = null;
+    let approxManualText = null;
+    let approxDigitsShown = 10;
+    let approxHasMoreDigits = false;
+    let approxForceEllipsis = false;
+    let latestHistoryEntry = null;
 
+    const DEFAULT_DECIMAL_DIGITS = 10;
+    const DECIMAL_DIGIT_STEP = 5;
+    const MAX_DECIMAL_DIGITS = 120;
     const buttonGroups = [
       {
         title: '標準関数',
@@ -594,6 +604,36 @@
       resultCard.appendChild(exactResultEl);
       resultCard.appendChild(resultSubLabelApprox);
       resultCard.appendChild(approxResultEl);
+      moreDigitsButton = document.createElement('button');
+      moreDigitsButton.textContent = 'More Digits';
+      moreDigitsButton.title = '小数表示を+5桁拡張';
+      Object.assign(moreDigitsButton.style, {
+        justifySelf: 'flex-end',
+        padding: '6px 14px',
+        borderRadius: '999px',
+        border: '1px solid rgba(59,130,246,0.35)',
+        background: 'rgba(15,23,42,0.6)',
+        color: '#bfdbfe',
+        cursor: 'pointer',
+        fontSize: '12px',
+        letterSpacing: '0.3px',
+        display: 'none'
+      });
+      moreDigitsButton.addEventListener('click', () => {
+        const nextDigits = Math.min(MAX_DECIMAL_DIGITS, approxDigitsShown + DECIMAL_DIGIT_STEP);
+        if (nextDigits !== approxDigitsShown) {
+          approxDigitsShown = nextDigits;
+          updateApproxDisplay();
+          if (latestHistoryEntry && approxResultEl?.dataset?.rawValue) {
+            latestHistoryEntry.approx = approxResultEl.dataset.rawValue;
+            updateHistory();
+          }
+        }
+        if (!approxHasMoreDigits && moreDigitsButton) {
+          moreDigitsButton.style.display = 'none';
+        }
+      });
+      resultCard.appendChild(moreDigitsButton);
 
       worksheet.appendChild(worksheetHeader);
       worksheet.appendChild(inputModeSwitch);
@@ -902,6 +942,7 @@
       if (resultSubLabelApprox) resultSubLabelApprox.style.display = showSymbolic ? 'none' : 'block';
       resultToggleSymbolic?.setActive(showSymbolic);
       resultToggleNumeric?.setActive(!showSymbolic);
+      updateApproxDisplay();
       updateHistory();
     }
 
@@ -1028,15 +1069,32 @@
         approxResultEl.textContent = '—';
         delete exactResultEl.dataset.rawValue;
         delete approxResultEl.dataset.rawValue;
+        approxRawValue = null;
+        approxManualText = null;
+        approxDigitsShown = DEFAULT_DECIMAL_DIGITS;
+        approxHasMoreDigits = false;
+        approxForceEllipsis = false;
+        latestHistoryEntry = null;
+        if (moreDigitsButton) moreDigitsButton.style.display = 'none';
         updateResultDisplay();
         return;
       }
       const symbolicText = exact ?? '—';
-      const approxText = approx ?? '—';
       exactResultEl.textContent = symbolicText;
-      approxResultEl.textContent = approxText;
       exactResultEl.dataset.rawValue = symbolicText;
-      approxResultEl.dataset.rawValue = approxText;
+      approxDigitsShown = DEFAULT_DECIMAL_DIGITS;
+      approxHasMoreDigits = false;
+      approxForceEllipsis = false;
+      if (typeof approx === 'string') {
+        approxManualText = approx ?? '—';
+        approxRawValue = null;
+      } else if (canUseDynamicDigits(approx)) {
+        approxManualText = null;
+        approxRawValue = approx;
+      } else {
+        approxManualText = formatApproxValue(approx);
+        approxRawValue = null;
+      }
       updateResultDisplay();
     }
 
@@ -1143,10 +1201,12 @@
       if (value == null) return value;
       if (!mathRef) return value;
       if (mathRef.isFraction && mathRef.isFraction(value)) {
-        return value.valueOf();
+        try { return numericMath?.bignumber ? numericMath.bignumber(value.valueOf()) : value.valueOf(); }
+        catch { return value.valueOf(); }
       }
       if (mathRef.isBigNumber && mathRef.isBigNumber(value)) {
-        return value.toNumber();
+        try { return numericMath?.bignumber ? numericMath.bignumber(value.toString()) : value.toNumber(); }
+        catch { return value.toNumber(); }
       }
       if (mathRef.isComplex && mathRef.isComplex(value)) {
         const re = convertForNumeric(value.re);
@@ -1165,6 +1225,9 @@
       }
       if (typeof value === 'object') {
         return value;
+      }
+      if (numericMath?.bignumber && typeof value === 'number' && Number.isFinite(value)) {
+        try { return numericMath.bignumber(value); } catch { return value; }
       }
       return value;
     }
@@ -1215,6 +1278,103 @@
         return numericMath.format(value, { precision: 14 });
       } catch {
         return beautifySymbols(String(value));
+      }
+    }
+
+    function canUseDynamicDigits(value){
+      if (value == null || !numericMath) return false;
+      if (typeof value === 'number') return Number.isFinite(value);
+      if (math?.isFraction?.(value)) return true;
+      if (math?.isBigNumber?.(value)) return true;
+      if (numericMath.isBigNumber?.(value)) return true;
+      return false;
+    }
+
+    function coerceToBigNumber(value){
+      if (!numericMath) return null;
+      if (numericMath.isBigNumber?.(value)) return value;
+      if (math?.isBigNumber?.(value)) {
+        try { return numericMath.bignumber(value.toNumber()); } catch { return null; }
+      }
+      if (math?.isFraction?.(value)) {
+        try { return numericMath.bignumber(value.valueOf()); } catch { return null; }
+      }
+      if (typeof value === 'number') {
+        if (!Number.isFinite(value)) return null;
+        try { return numericMath.bignumber(value); } catch { return null; }
+      }
+      return null;
+    }
+
+    function normalizeFixedDecimal(str){
+      if (typeof str !== 'string') return str;
+      if (!str.includes('.')) return str;
+      let cleaned = str.replace(/(\.\d*?[1-9])0+$/, '$1');
+      cleaned = cleaned.replace(/\.0+$/, '');
+      return cleaned;
+    }
+
+    function formatDecimalWithDigits(value, digits){
+      const bn = coerceToBigNumber(value);
+      if (!bn) return null;
+      const precision = Math.max(1, Math.min(MAX_DECIMAL_DIGITS, Math.max(digits | 0, 1)));
+      const options = { notation: 'fixed', precision, lowerExp: -200, upperExp: 200 };
+      try {
+        return normalizeFixedDecimal(numericMath.format(bn, options));
+      } catch (err) {
+        try {
+          return normalizeFixedDecimal(numericMath.format(bn, { precision }));
+        } catch {
+          return null;
+        }
+      }
+    }
+
+    function computeApproxDisplay(value, digits){
+      const base = formatDecimalWithDigits(value, digits);
+      if (!base) {
+        return { baseText: formatApproxValue(value), hasMore: false, hasDecimal: false, fractionLength: 0 };
+      }
+      let hasMore = false;
+      if (digits < MAX_DECIMAL_DIGITS) {
+        const extended = formatDecimalWithDigits(value, Math.min(MAX_DECIMAL_DIGITS, digits + DECIMAL_DIGIT_STEP));
+        hasMore = !!extended && extended !== base;
+      }
+      const hasDecimal = base.includes('.');
+      return { baseText: base, hasMore, hasDecimal };
+    }
+
+    function updateApproxDisplay(){
+      if (!approxResultEl) return;
+      if (approxManualText != null) {
+        approxResultEl.textContent = approxManualText;
+        approxResultEl.dataset.rawValue = approxManualText;
+        approxHasMoreDigits = false;
+        if (moreDigitsButton) moreDigitsButton.style.display = 'none';
+        return;
+      }
+      if (approxRawValue == null) {
+        approxResultEl.textContent = '—';
+        approxResultEl.dataset.rawValue = '—';
+        approxHasMoreDigits = false;
+        if (moreDigitsButton) moreDigitsButton.style.display = 'none';
+        return;
+      }
+      const digits = Math.max(DEFAULT_DECIMAL_DIGITS, Math.min(MAX_DECIMAL_DIGITS, approxDigitsShown | 0));
+      const { baseText, hasMore, hasDecimal } = computeApproxDisplay(approxRawValue, digits);
+      if (hasMore) approxForceEllipsis = true;
+      const showEllipsis = hasMore || (approxForceEllipsis && hasDecimal);
+      const displayText = showEllipsis ? `${baseText}...` : baseText;
+      approxResultEl.textContent = displayText;
+      approxResultEl.dataset.rawValue = displayText;
+      approxHasMoreDigits = hasMore;
+      if (moreDigitsButton) {
+        if (resultMode === 'numeric' && hasMore) {
+          moreDigitsButton.style.display = 'inline-flex';
+          moreDigitsButton.disabled = false;
+        } else {
+          moreDigitsButton.style.display = 'none';
+        }
       }
     }
 
@@ -1585,7 +1745,36 @@
       math = mathjs.create(mathjs.all);
       math.config({ number: 'Fraction', precision: 64, matrix: 'Matrix' });
       numericMath = mathjs.create(mathjs.all);
-      numericMath.config({ number: 'number', precision: 32, matrix: 'Matrix' });
+      numericMath.config({ number: 'BigNumber', precision: 128, matrix: 'Matrix' });
+
+      const fractionErrorPattern = /Cannot implicitly convert a number to a Fraction/;
+      const convertForFallback = (value) => {
+        if (math.isFraction?.(value)) return value.valueOf();
+        if (math.isBigNumber?.(value)) return value.toNumber();
+        if (math.isComplex?.(value)) {
+          const re = convertForFallback(value.re);
+          const im = convertForFallback(value.im);
+          return math.complex(re, im);
+        }
+        if (Array.isArray(value)) return value.map(convertForFallback);
+        if (math.isMatrix?.(value)) return value.map(convertForFallback);
+        return value;
+      };
+      ['add', 'subtract', 'multiply', 'divide', 'pow'].forEach(name => {
+        const original = math[name];
+        if (typeof original !== 'function') return;
+        math[name] = function(...args){
+          try {
+            return original.apply(math, args);
+          } catch (err) {
+            if (fractionErrorPattern.test(err?.message || '')) {
+              const converted = args.map(convertForFallback);
+              return original.apply(math, converted);
+            }
+            throw err;
+          }
+        };
+      });
 
       const trigNames = [
         ['sin', true, false], ['cos', true, false], ['tan', true, false],
@@ -1705,18 +1894,21 @@
         } catch {
           approxValue = result;
         }
-        const approx = formatApproxValue(approxValue);
-        setResults(symbolic, approx);
+        setResults(symbolic, approxValue);
         const historyExpr = expressionMode === 'pretty'
           ? (displayExpr || expr)
           : convertAsciiToPretty(displayExpr || expr);
-        history.push({ expr: historyExpr, symbolic, approx });
+        const approxDisplay = approxResultEl?.dataset?.rawValue ?? formatApproxValue(approxValue);
+        const entry = { expr: historyExpr, symbolic, approx: approxDisplay };
+        history.push(entry);
+        latestHistoryEntry = entry;
         updateHistory();
         updateVariables();
         totalComputations += 1;
         try { awardXp && awardXp(12, { type: 'compute', expression: expr }); } catch {}
         notifyStatus('計算が完了しました。');
       } catch (err) {
+        latestHistoryEntry = null;
         setResults('Error', err.message || String(err));
         notifyStatus('エラー: ' + (err.message || err));
       }

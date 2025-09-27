@@ -688,11 +688,10 @@
   };
   // --- Renderer --------------------------------------------------------------
   class GraphicsRenderer {
-    constructor(canvas, log){
+    constructor(canvas, log, existingGL){
       this.canvas = canvas;
-      this.gl = canvas.getContext('webgl2', { antialias:true, preserveDrawingBuffer:true })
-        || canvas.getContext('webgl', { antialias:true, preserveDrawingBuffer:true });
-      if(!this.gl) throw new Error('WebGL が利用できません');
+      this.gl = existingGL || canvas.getContext('webgl2', { antialias:true, preserveDrawingBuffer:true });
+      if(!this.gl) throw new Error('WebGL2 が利用できません');
       this.log = log;
       this.width = 640;
       this.height = 480;
@@ -761,8 +760,7 @@
       requestAnimationFrame(this.loop);
     }
   }
-  function gatherGPUInfo(canvas){
-    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+  function gatherGPUInfo(gl){
     if(!gl) return { info:'WebGL非対応', version:'', shading:'' };
     const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
     const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
@@ -806,11 +804,23 @@
     const logContainer = createEl('div','gfx3d-log', root);
     const logPre = createEl('pre','', logContainer);
 
-    const renderer = new GraphicsRenderer(canvas, logPre);
+    const gl = canvas.getContext('webgl2', { antialias:true, preserveDrawingBuffer:true });
+    if(!gl){
+      gpuInfoBox.innerHTML = `
+        <strong>GPU情報</strong>
+        <span>WebGL2非対応または無効化されています</span>
+      `;
+      const warn = createEl('div','gfx3d-note', controls);
+      warn.textContent = 'このモジュールは WebGL2 対応デバイス／ブラウザが必要です。設定で WebGL2 を有効化するか、対応ブラウザで再度お試しください。';
+      logLine(logPre, 'WebGL2 コンテキストの初期化に失敗しました。');
+      return;
+    }
+
+    const renderer = new GraphicsRenderer(canvas, logPre, gl);
     renderer.demos.objectLab.attachCanvas(canvas);
     renderer.demos.gallery.attachCanvas(canvas);
 
-    const gpu = gatherGPUInfo(canvas);
+    const gpu = gatherGPUInfo(gl);
     gpuInfoBox.innerHTML = `
       <strong>GPU情報</strong>
       <span>Vendor: ${gpu.vendor || 'Unknown'}</span>

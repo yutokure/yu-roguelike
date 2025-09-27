@@ -470,7 +470,7 @@
         const leftWhite = noteDef.between ? noteDef.between[0] : null;
         let leftIndex = leftWhite ? whiteNotes.findIndex(n => n.note === leftWhite) : 0;
         if (leftIndex < 0) leftIndex = 0;
-        const position = (leftIndex * WHITE_KEY_STEP) + (WHITE_KEY_STEP / 2) - (BLACK_KEY_WIDTH / 2);
+        const position = (leftIndex * WHITE_KEY_STEP) + WHITE_KEY_WIDTH + (WHITE_KEY_SPACING / 2);
         el.style.left = `${position}px`;
         el.style.zIndex = '5';
         blackLayer.appendChild(el);

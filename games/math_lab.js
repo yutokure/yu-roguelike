@@ -1,7 +1,10 @@
 (function(){
   /** MiniExp: Advanced Mathematics Lab */
   const MATHJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.2/math.min.js';
+  const MATHJAX_URL = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
   let mathLoader = null;
+  let mathJaxLoader = null;
+  let mathJaxInstance = null;
 
   function ensureMathJs(){
     if (window.math && window.math.create) {
@@ -30,6 +33,57 @@
       document.head.appendChild(script);
     });
     return mathLoader;
+  }
+
+  function ensureMathJax(){
+    if (mathJaxInstance && mathJaxInstance.tex2chtmlPromise) {
+      const ready = mathJaxInstance.startup?.promise;
+      return ready ? ready.then(() => mathJaxInstance) : Promise.resolve(mathJaxInstance);
+    }
+    if (window.MathJax && window.MathJax.tex2chtmlPromise) {
+      mathJaxInstance = window.MathJax;
+      const ready = mathJaxInstance.startup?.promise;
+      return ready ? ready.then(() => mathJaxInstance) : Promise.resolve(mathJaxInstance);
+    }
+    if (mathJaxLoader) return mathJaxLoader;
+    window.MathJax = window.MathJax || {};
+    window.MathJax.tex = window.MathJax.tex || { inlineMath: [['\\(', '\\)'], ['$', '$']] };
+    if (!window.MathJax.tex.inlineMath) {
+      window.MathJax.tex.inlineMath = [['\\(', '\\)'], ['$', '$']];
+    }
+    window.MathJax.chtml = Object.assign({ scale: 1.05 }, window.MathJax.chtml);
+    window.MathJax.svg = Object.assign({ fontCache: 'global' }, window.MathJax.svg);
+    mathJaxLoader = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-mathjax-loader="1"]');
+      if (existing) {
+        existing.addEventListener('load', () => {
+          const ready = window.MathJax?.startup?.promise;
+          (ready || Promise.resolve(window.MathJax)).then(mjx => {
+            mathJaxInstance = mjx;
+            resolve(mjx);
+          }).catch(reject);
+        });
+        existing.addEventListener('error', reject);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = MATHJAX_URL;
+      script.async = true;
+      script.setAttribute('data-mathjax-loader', '1');
+      script.onload = () => {
+        const ready = window.MathJax?.startup?.promise;
+        (ready || Promise.resolve(window.MathJax)).then(mjx => {
+          mathJaxInstance = mjx;
+          resolve(mjx);
+        }).catch(reject);
+      };
+      script.onerror = () => reject(new Error('MathJax failed to load'));
+      document.head.appendChild(script);
+    }).catch(err => {
+      mathJaxLoader = null;
+      throw err;
+    });
+    return mathJaxLoader;
   }
 
   function create(root, awardXp, opts){
@@ -89,6 +143,7 @@
       flexDirection: 'column',
       gap: '14px',
       overflowY: 'auto',
+      overflowX: 'hidden',
       paddingRight: '4px'
     });
 
@@ -168,6 +223,7 @@
     container.addEventListener('focusout', handleFocusOut);
 
     let expressionInput, expressionInputClassic, expressionInputPretty;
+    let expressionPreviewEl;
     let exactResultEl, approxResultEl, resultSubLabelExact, resultSubLabelApprox;
     let statusBar, variableList, historyBody;
     let angleToggleRad, angleToggleDeg;
@@ -188,6 +244,7 @@
     let approxHasMoreDigits = false;
     let approxForceEllipsis = false;
     let latestHistoryEntry = null;
+    let lastSymbolicRaw = null;
 
     const DEFAULT_DECIMAL_DIGITS = 10;
     const DECIMAL_DIGIT_STEP = 5;
@@ -258,6 +315,14 @@
           { label: 'beta', text: 'beta(', },
           { label: 'zeta', text: 'zeta(', },
           { label: 'harmonic', text: 'harmonic(', },
+          { label: 'erf', text: 'erf(', },
+          { label: 'erfc', text: 'erfc(', },
+          { label: 'LambertW', text: 'lambertW(', },
+          { label: 'logGamma', text: 'logGamma(', },
+          { label: 'BesselJ', text: 'besselj(', },
+          { label: 'BesselY', text: 'bessely(', },
+          { label: 'BesselI', text: 'besseli(', },
+          { label: 'BesselK', text: 'besselk(', },
           { label: 'comb', text: 'combinations(', },
           { label: 'perm', text: 'permutations(', },
           { label: 'sum', text: 'sum(', },
@@ -265,6 +330,21 @@
           { label: 'Fourier', text: 'fft(', },
           { label: 'tetra', text: 'tetra(', },
           { label: 'slog', text: 'slog(', }
+        ]
+      },
+      {
+        title: '確率・統計',
+        color: '#f472b6',
+        buttons: [
+          { label: 'normalPdf', text: 'normalPdf(', },
+          { label: 'normalCdf', text: 'normalCdf(', },
+          { label: 'normalInv', text: 'normalInv(', },
+          { label: 'poissonPmf', text: 'poissonPmf(', },
+          { label: 'poissonCdf', text: 'poissonCdf(', },
+          { label: 'binomPmf', text: 'binomialPmf(', },
+          { label: 'binomCdf', text: 'binomialCdf(', },
+          { label: 'logit', text: 'logit(', },
+          { label: 'sigmoid', text: 'sigmoid(', }
         ]
       },
       {
@@ -372,14 +452,34 @@
           gap: '10px'
         });
 
-        const header = document.createElement('div');
-        header.textContent = group.title;
-        Object.assign(header.style, {
+        const headerButton = document.createElement('button');
+        headerButton.type = 'button';
+        Object.assign(headerButton.style, {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          width: '100%',
           fontSize: '14px',
           fontWeight: '600',
           letterSpacing: '0.3px',
-          color: group.color
+          color: group.color,
+          background: 'transparent',
+          border: 'none',
+          padding: '0',
+          cursor: 'pointer'
         });
+
+        const headerText = document.createElement('span');
+        headerText.textContent = group.title;
+
+        const chevron = document.createElement('span');
+        chevron.textContent = '▾';
+        chevron.style.fontSize = '12px';
+        chevron.style.color = group.color;
+
+        headerButton.appendChild(headerText);
+        headerButton.appendChild(chevron);
 
         const grid = document.createElement('div');
         Object.assign(grid.style, {
@@ -415,8 +515,20 @@
           grid.appendChild(btn);
         });
 
-        section.appendChild(header);
+        section.appendChild(headerButton);
         section.appendChild(grid);
+
+        let collapsed = false;
+        const updateCollapsed = () => {
+          grid.style.display = collapsed ? 'none' : 'grid';
+          chevron.textContent = collapsed ? '▸' : '▾';
+          headerButton.setAttribute('aria-expanded', String(!collapsed));
+        };
+        headerButton.addEventListener('click', () => {
+          collapsed = !collapsed;
+          updateCollapsed();
+        });
+        updateCollapsed();
         keypadPanel.appendChild(section);
       });
 
@@ -586,6 +698,42 @@
 
       expressionInput = expressionInputClassic;
 
+      const previewCard = document.createElement('div');
+      Object.assign(previewCard.style, {
+        borderRadius: '14px',
+        border: '1px solid rgba(148,163,184,0.18)',
+        background: 'linear-gradient(135deg, rgba(59,130,246,0.12), rgba(15,23,42,0.4))',
+        padding: '14px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+      });
+
+      const previewTitle = document.createElement('div');
+      previewTitle.textContent = '数式プレビュー';
+      Object.assign(previewTitle.style, {
+        fontSize: '13px',
+        color: '#bae6fd',
+        letterSpacing: '0.3px'
+      });
+
+      expressionPreviewEl = document.createElement('div');
+      Object.assign(expressionPreviewEl.style, {
+        minHeight: '52px',
+        borderRadius: '12px',
+        background: 'rgba(15,23,42,0.55)',
+        padding: '12px',
+        fontSize: '15px',
+        lineHeight: '1.45',
+        color: '#f8fafc',
+        wordBreak: 'break-word'
+      });
+      expressionPreviewEl.textContent = '（入力中の式がここに可視化されます）';
+      expressionPreviewEl.style.opacity = '0.65';
+
+      previewCard.appendChild(previewTitle);
+      previewCard.appendChild(expressionPreviewEl);
+
       const worksheetButtons = document.createElement('div');
       Object.assign(worksheetButtons.style, {
         display: 'flex',
@@ -644,7 +792,6 @@
       approxResultEl = document.createElement('div');
       [exactResultEl, approxResultEl].forEach(el => {
         Object.assign(el.style, {
-          fontFamily: '"Fira Code", monospace',
           background: 'rgba(15,23,42,0.45)',
           borderRadius: '12px',
           padding: '12px',
@@ -652,6 +799,8 @@
         });
         el.textContent = '—';
       });
+      exactResultEl.style.fontFamily = '"Noto Sans Math", "Cambria Math", "Times New Roman", serif';
+      approxResultEl.style.fontFamily = '"Fira Code", monospace';
 
       resultSubLabelExact = document.createElement('div');
       resultSubLabelExact.textContent = 'Exact / Symbolic';
@@ -698,6 +847,7 @@
       worksheet.appendChild(inputModeSwitch);
       worksheet.appendChild(expressionInputClassic);
       worksheet.appendChild(expressionInputPretty);
+      worksheet.appendChild(previewCard);
       worksheet.appendChild(worksheetButtons);
       worksheet.appendChild(resultCard);
 
@@ -880,10 +1030,21 @@
 
       attachShiftEnterListener(expressionInputClassic);
       attachShiftEnterListener(expressionInputPretty);
-      expressionInputPretty.addEventListener('input', syncClassicFromPretty);
-      expressionInputPretty.addEventListener('change', syncClassicFromPretty);
+      expressionInputClassic.addEventListener('input', () => {
+        syncPrettyFromClassic();
+      });
+      expressionInputClassic.addEventListener('change', () => {
+        syncPrettyFromClassic();
+      });
+      expressionInputPretty.addEventListener('input', () => {
+        syncClassicFromPretty();
+      });
+      expressionInputPretty.addEventListener('change', () => {
+        syncClassicFromPretty();
+      });
       setExpressionMode('classic', true);
       setResultMode('symbolic', true);
+      updateExpressionPreview();
     }
 
     function buildPrimaryButton(label, accent){
@@ -948,11 +1109,13 @@
     function syncClassicFromPretty(){
       if (!expressionInputPretty || !expressionInputClassic) return;
       expressionInputClassic.value = convertPrettyToAscii(expressionInputPretty.value);
+      updateExpressionPreview();
     }
 
     function syncPrettyFromClassic(){
       if (!expressionInputPretty || !expressionInputClassic) return;
       expressionInputPretty.value = convertAsciiToPretty(expressionInputClassic.value);
+      updateExpressionPreview();
     }
 
     function setExpressionMode(mode, silent = false){
@@ -978,6 +1141,7 @@
       expressionModeToggleClassic?.setActive(mode === 'classic');
       expressionModeTogglePretty?.setActive(mode === 'pretty');
       try { expressionInput?.focus(); } catch {}
+      updateExpressionPreview();
     }
 
     function setResultMode(mode, silent = false){
@@ -1001,6 +1165,9 @@
       if (resultSubLabelApprox) resultSubLabelApprox.style.display = showSymbolic ? 'none' : 'block';
       resultToggleSymbolic?.setActive(showSymbolic);
       resultToggleNumeric?.setActive(!showSymbolic);
+      if (showSymbolic) {
+        renderSymbolicResult(lastSymbolicRaw);
+      }
       updateApproxDisplay();
       updateHistory();
     }
@@ -1075,6 +1242,117 @@
       statusBar.textContent = `${now.toLocaleTimeString()} — ${message}`;
     }
 
+    function setPlainMathContent(target, text){
+      if (!target) return;
+      target.innerHTML = '';
+      target.textContent = text ?? '';
+      if (target.dataset) {
+        delete target.dataset.tex;
+      }
+    }
+
+    function renderMathContent(target, tex, fallback){
+      if (!target) return;
+      if (!tex) {
+        setPlainMathContent(target, fallback ?? '');
+        return;
+      }
+      setPlainMathContent(target, fallback ?? '');
+      if (target.dataset) {
+        target.dataset.tex = tex;
+      }
+      ensureMathJax()
+        .then(mjx => {
+          if (!mjx || (target.dataset && target.dataset.tex !== tex)) return;
+          const renderPromise = mjx.tex2chtmlPromise
+            ? mjx.tex2chtmlPromise(tex, { display: false })
+            : mjx.tex2chtml
+              ? Promise.resolve(mjx.tex2chtml(tex, { display: false }))
+              : mjx.tex2svgPromise
+                ? mjx.tex2svgPromise(tex, { display: false })
+                : mjx.tex2svg
+                  ? Promise.resolve(mjx.tex2svg(tex, { display: false }))
+                  : null;
+          if (!renderPromise) return;
+          return renderPromise.then(node => {
+            if (target.dataset && target.dataset.tex !== tex) return;
+            if (!node) return;
+            target.innerHTML = '';
+            target.appendChild(node);
+            if (mjx.startup?.document) {
+              mjx.startup.document.clear();
+              mjx.startup.document.updateDocument();
+            }
+          });
+        })
+        .catch(() => {
+          if (target.dataset && target.dataset.tex === tex) {
+            setPlainMathContent(target, fallback ?? tex);
+            delete target.dataset.tex;
+          }
+        });
+    }
+
+    function tryGenerateTexFromExpression(text){
+      if (!text) return null;
+      if (!math || typeof math.parse !== 'function') return null;
+      const ascii = convertPrettyToAscii(text);
+      if (!ascii) return null;
+      try {
+        const node = math.parse(ascii);
+        return node.toTex({ parenthesis: 'auto', implicit: 'hide' });
+      } catch {
+        return null;
+      }
+    }
+
+    function renderSymbolicTextInto(target, text, placeholder = '—'){
+      if (!target) return;
+      if (text == null) {
+        setPlainMathContent(target, placeholder);
+        return;
+      }
+      const displayText = String(text);
+      const trimmed = displayText.trim();
+      if (!trimmed) {
+        setPlainMathContent(target, placeholder);
+        return;
+      }
+      const tex = tryGenerateTexFromExpression(displayText);
+      if (tex) {
+        renderMathContent(target, tex, displayText);
+      } else {
+        setPlainMathContent(target, displayText);
+      }
+    }
+
+    function updateExpressionPreview(){
+      if (!expressionPreviewEl) return;
+      const source = expressionMode === 'pretty'
+        ? (expressionInputPretty?.value || '')
+        : (expressionInputClassic?.value || '');
+      const trimmed = source.trim();
+      if (!trimmed) {
+        expressionPreviewEl.style.opacity = '0.65';
+        setPlainMathContent(expressionPreviewEl, '（入力中の式がここに可視化されます）');
+        return;
+      }
+      const displayText = expressionMode === 'pretty'
+        ? source
+        : convertAsciiToPretty(source);
+      expressionPreviewEl.style.opacity = '1';
+      renderSymbolicTextInto(expressionPreviewEl, displayText, displayText);
+    }
+
+    function renderSymbolicResult(text){
+      if (!exactResultEl) return;
+      if (!text) {
+        setPlainMathContent(exactResultEl, '—');
+        return;
+      }
+      renderSymbolicTextInto(exactResultEl, text, '—');
+    }
+
     function updateVariables(){
       if (!variableList) return;
       variableList.innerHTML = '';
@@ -1101,8 +1379,13 @@
         exprCell.textContent = item.expr;
         exprCell.style.opacity = '0.85';
         const resultCell = document.createElement('div');
-        resultCell.textContent = resultMode === 'numeric' ? item.approx : item.symbolic;
-        resultCell.style.fontFamily = '"Fira Code", monospace';
+        if (resultMode === 'numeric') {
+          setPlainMathContent(resultCell, item.approx ?? '—');
+          resultCell.style.fontFamily = '"Fira Code", monospace';
+        } else {
+          renderSymbolicTextInto(resultCell, item.symbolic ?? '—', '—');
+          resultCell.style.fontFamily = 'inherit';
+        }
         historyBody.appendChild(exprCell);
         historyBody.appendChild(resultCell);
       });
@@ -1118,14 +1401,15 @@
       if (expressionInputClassic) expressionInputClassic.value = '';
       if (expressionInputPretty) expressionInputPretty.value = '';
       setResults(null, null);
+      updateExpressionPreview();
       notifyStatus('ワークシートをクリアしました。');
     }
 
     function setResults(exact, approx){
       if (!exactResultEl || !approxResultEl) return;
       if (exact == null) {
-        exactResultEl.textContent = '—';
-        approxResultEl.textContent = '—';
+        setPlainMathContent(exactResultEl, '—');
+        setPlainMathContent(approxResultEl, '—');
         delete exactResultEl.dataset.rawValue;
         delete approxResultEl.dataset.rawValue;
         approxRawValue = null;
@@ -1134,13 +1418,15 @@
         approxHasMoreDigits = false;
         approxForceEllipsis = false;
         latestHistoryEntry = null;
+        lastSymbolicRaw = null;
         if (moreDigitsButton) moreDigitsButton.style.display = 'none';
         updateResultDisplay();
         return;
       }
       const symbolicText = exact ?? '—';
-      exactResultEl.textContent = symbolicText;
+      lastSymbolicRaw = symbolicText;
       exactResultEl.dataset.rawValue = symbolicText;
+      renderSymbolicResult(symbolicText);
       approxDigitsShown = DEFAULT_DECIMAL_DIGITS;
       approxHasMoreDigits = false;
       approxForceEllipsis = false;
@@ -1205,6 +1491,18 @@
       '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
       '⁺': '+', '⁻': '-'
     };
+
+    const LANCZOS_COEFFS = [
+      0.99999999999980993,
+      676.5203681218851,
+      -1259.1392167224028,
+      771.32342877765313,
+      -176.61502916214059,
+      12.507343278686905,
+      -0.13857109526572012,
+      9.9843695780195716e-6,
+      1.5056327351493116e-7
+    ];
 
     function convertPrettyToAscii(input){
       if (input == null) return '';
@@ -1800,6 +2098,254 @@
       return zeta;
     }
 
+    function logGammaReal(z){
+      const value = Number(z);
+      if (!Number.isFinite(value)) throw new Error('logGamma の引数は有限の実数で指定してください。');
+      if (value <= 0) throw new Error('logGamma は正の実数引数にのみ対応します。');
+      if (value < 0.5) {
+        return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * value)) - logGammaReal(1 - value);
+      }
+      let sum = LANCZOS_COEFFS[0];
+      const v = value - 1;
+      for (let i = 1; i < LANCZOS_COEFFS.length; i++) {
+        sum += LANCZOS_COEFFS[i] / (v + i);
+      }
+      const t = v + LANCZOS_COEFFS.length - 0.5;
+      return 0.5 * Math.log(2 * Math.PI) + (v + 0.5) * Math.log(t) - t + Math.log(sum);
+    }
+
+    function lambertWReal(x, branch = 0){
+      const value = Number(x);
+      if (!Number.isFinite(value)) throw new Error('lambertW の引数は有限の実数で指定してください。');
+      const branchIndex = Number(branch ?? 0);
+      if (!Number.isFinite(branchIndex) || Math.trunc(branchIndex) !== branchIndex) {
+        throw new Error('lambertW のブランチは整数で指定してください。');
+      }
+      if (branchIndex !== 0 && branchIndex !== -1) {
+        throw new Error('この実装では分枝 0 と -1 のみ対応しています。');
+      }
+      const minValue = -1 / Math.E;
+      if (branchIndex === 0 && value < minValue) {
+        throw new Error('lambertW の主枝は x ≥ -1/e の範囲でのみ定義されます。');
+      }
+      if (branchIndex === -1 && (value < minValue || value >= 0)) {
+        throw new Error('lambertW の分枝 -1 は -1/e ≤ x < 0 の範囲でのみ定義されます。');
+      }
+      if (value === 0) return 0;
+      if (value === minValue) return -1;
+      let w;
+      if (branchIndex === 0) {
+        if (value < 1) {
+          w = value < 0 ? Math.log1p(value) : value;
+        } else {
+          w = Math.log(value);
+          if (value > 3) {
+            w -= Math.log(w);
+          }
+        }
+      } else {
+        w = Math.log(-value);
+      }
+      const maxIter = 64;
+      for (let i = 0; i < maxIter; i++) {
+        const e = Math.exp(w);
+        const we = w * e;
+        const f = we - value;
+        const denomBase = e * (w + 1);
+        let denom = denomBase;
+        if (Math.abs(w + 1) > 1e-12) {
+          denom -= (w + 2) * f / (2 * (w + 1));
+        }
+        if (!Number.isFinite(denom) || denom === 0) {
+          denom = denomBase || (branchIndex === 0 ? 1 : -1);
+        }
+        const delta = f / denom;
+        w -= delta;
+        if (!Number.isFinite(w)) {
+          throw new Error('lambertW の計算が収束しませんでした。');
+        }
+        if (Math.abs(delta) <= 1e-14 * (1 + Math.abs(w))) {
+          return w;
+        }
+      }
+      return w;
+    }
+
+    function erfApprox(z){
+      const sign = z >= 0 ? 1 : -1;
+      const abs = Math.abs(z);
+      const t = 1 / (1 + 0.3275911 * abs);
+      const poly = (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t;
+      return sign * (1 - poly * Math.exp(-abs * abs));
+    }
+
+    function normalPdfReal(x, mu = 0, sigma = 1){
+      const mean = Number(mu ?? 0);
+      const stdev = Number(sigma ?? 1);
+      if (!Number.isFinite(mean)) throw new Error('normalPdf の平均には有限の実数を指定してください。');
+      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error('normalPdf の標準偏差は正の実数で指定してください。');
+      const value = Number(x ?? 0);
+      if (!Number.isFinite(value)) throw new Error('normalPdf の第1引数は有限の実数で指定してください。');
+      const z = (value - mean) / stdev;
+      const coeff = 1 / (Math.sqrt(2 * Math.PI) * stdev);
+      return coeff * Math.exp(-0.5 * z * z);
+    }
+
+    function normalCdfReal(x, mu = 0, sigma = 1){
+      const mean = Number(mu ?? 0);
+      const stdev = Number(sigma ?? 1);
+      if (!Number.isFinite(mean)) throw new Error('normalCdf の平均には有限の実数を指定してください。');
+      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error('normalCdf の標準偏差は正の実数で指定してください。');
+      const value = Number(x ?? 0);
+      if (!Number.isFinite(value)) throw new Error('normalCdf の第1引数は有限の実数で指定してください。');
+      const z = (value - mean) / (stdev * Math.SQRT2);
+      const erfValue = math && typeof math.erf === 'function' ? math.erf(z) : erfApprox(z);
+      return 0.5 * (1 + erfValue);
+    }
+
+    function normalInvReal(p, mu = 0, sigma = 1){
+      const probability = Number(p);
+      if (!Number.isFinite(probability)) throw new Error('normalInv の確率は有限の実数で指定してください。');
+      if (probability <= 0) {
+        if (probability === 0) return -Infinity;
+        throw new Error('normalInv の確率は 0 < p < 1 の範囲で指定してください。');
+      }
+      if (probability >= 1) {
+        if (probability === 1) return Infinity;
+        throw new Error('normalInv の確率は 0 < p < 1 の範囲で指定してください。');
+      }
+      const mean = Number(mu ?? 0);
+      const stdev = Number(sigma ?? 1);
+      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error('normalInv の標準偏差は正の実数で指定してください。');
+      const a = [
+        -3.969683028665376e+01,
+        2.209460984245205e+02,
+        -2.759285104469687e+02,
+        1.383577518672690e+02,
+        -3.066479806614716e+01,
+        2.506628277459239e+00
+      ];
+      const b = [
+        -5.447609879822406e+01,
+        1.615858368580409e+02,
+        -1.556989798598866e+02,
+        6.680131188771972e+01,
+        -1.328068155288572e+01
+      ];
+      const c = [
+        -7.784894002430293e-03,
+        -3.223964580411365e-01,
+        -2.400758277161838e+00,
+        -2.549732539343734e+00,
+        4.374664141464968e+00,
+        2.938163982698783e+00
+      ];
+      const d = [
+        7.784695709041462e-03,
+        3.224671290700398e-01,
+        2.445134137142996e+00,
+        3.754408661907416e+00
+      ];
+      const plow = 0.02425;
+      const phigh = 1 - plow;
+      let q;
+      if (probability < plow) {
+        q = Math.sqrt(-2 * Math.log(probability));
+        const num = (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]);
+        const den = ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+        return mean + stdev * (-num / den);
+      }
+      if (probability > phigh) {
+        q = Math.sqrt(-2 * Math.log(1 - probability));
+        const num = (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]);
+        const den = ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+        return mean + stdev * (num / den);
+      }
+      q = probability - 0.5;
+      const r = q * q;
+      const num = (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q;
+      const den = ((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1;
+      return mean + stdev * (num / den);
+    }
+
+    function poissonPmfReal(k, lambda){
+      const rate = Number(lambda);
+      if (!Number.isFinite(rate) || rate <= 0) throw new Error('poissonPmf の平均には正の実数を指定してください。');
+      const count = Math.floor(Number(k));
+      if (!Number.isFinite(count) || count < 0) throw new Error('poissonPmf の回数には 0 以上の整数を指定してください。');
+      const logProb = count * Math.log(rate) - rate - logGammaReal(count + 1);
+      return Math.exp(logProb);
+    }
+
+    function poissonCdfReal(k, lambda){
+      const rate = Number(lambda);
+      if (!Number.isFinite(rate) || rate <= 0) throw new Error('poissonCdf の平均には正の実数を指定してください。');
+      const count = Math.floor(Number(k));
+      if (!Number.isFinite(count) || count < 0) throw new Error('poissonCdf の回数には 0 以上の整数を指定してください。');
+      let term = Math.exp(-rate);
+      let sum = term;
+      for (let i = 1; i <= count; i++) {
+        term *= rate / i;
+        sum += term;
+        if (term < 1e-16) break;
+      }
+      return Math.min(1, sum);
+    }
+
+    function binomialPmfReal(k, n, p){
+      const trials = Math.floor(Number(n));
+      if (!Number.isFinite(trials) || trials < 0) throw new Error('binomialPmf の試行回数には 0 以上の整数を指定してください。');
+      const successes = Math.floor(Number(k));
+      if (!Number.isFinite(successes) || successes < 0) throw new Error('binomialPmf の成功回数には 0 以上の整数を指定してください。');
+      if (successes > trials) return 0;
+      const prob = Number(p);
+      if (!Number.isFinite(prob) || prob < 0 || prob > 1) throw new Error('binomialPmf の成功確率は 0〜1 の範囲で指定してください。');
+      if (prob === 0) return successes === 0 ? 1 : 0;
+      if (prob === 1) return successes === trials ? 1 : 0;
+      const logCoeff = logGammaReal(trials + 1) - logGammaReal(successes + 1) - logGammaReal(trials - successes + 1);
+      const logProb = logCoeff + successes * Math.log(prob) + (trials - successes) * Math.log(1 - prob);
+      return Math.exp(logProb);
+    }
+
+    function binomialCdfReal(k, n, p){
+      const trials = Math.floor(Number(n));
+      if (!Number.isFinite(trials) || trials < 0) throw new Error('binomialCdf の試行回数には 0 以上の整数を指定してください。');
+      const successes = Math.floor(Number(k));
+      if (!Number.isFinite(successes) || successes < 0) throw new Error('binomialCdf の成功回数には 0 以上の整数を指定してください。');
+      const prob = Number(p);
+      if (!Number.isFinite(prob) || prob < 0 || prob > 1) throw new Error('binomialCdf の成功確率は 0〜1 の範囲で指定してください。');
+      if (successes >= trials) return 1;
+      if (successes < 0) return 0;
+      let sum = 0;
+      for (let i = 0; i <= successes; i++) {
+        sum += binomialPmfReal(i, trials, prob);
+        if (sum >= 1 - 1e-12) return 1;
+      }
+      return Math.min(1, sum);
+    }
+
+    function logitReal(p){
+      const prob = Number(p);
+      if (!Number.isFinite(prob)) throw new Error('logit の引数は有限の実数で指定してください。');
+      if (prob <= 0 || prob >= 1) {
+        if (prob === 0) return -Infinity;
+        if (prob === 1) return Infinity;
+        throw new Error('logit は 0 と 1 の間の値で指定してください。');
+      }
+      return Math.log(prob / (1 - prob));
+    }
+
+    function sigmoidReal(x){
+      const value = Number(x);
+      if (!Number.isFinite(value)) throw new Error('sigmoid の引数は有限の実数で指定してください。');
+      if (value >= 0) {
+        const expNeg = Math.exp(-value);
+        return 1 / (1 + expNeg);
+      }
+      const expPos = Math.exp(value);
+      return expPos / (1 + expPos);
+    }
+
     function bindMath(mathjs){
       mathRef = mathjs;
       math = mathjs.create(mathjs.all);
@@ -1912,10 +2458,46 @@
       overrides.zeta = function(s, terms){
         return riemannZeta(s, terms);
       };
+      overrides.logGamma = function(x){
+        return logGammaReal(x);
+      };
+      overrides.lambertW = function(x, branch){
+        return lambertWReal(x, branch);
+      };
+      overrides.normalPdf = function(x, mu, sigma){
+        return normalPdfReal(x, mu, sigma);
+      };
+      overrides.normalCdf = function(x, mu, sigma){
+        return normalCdfReal(x, mu, sigma);
+      };
+      overrides.normalInv = function(p, mu, sigma){
+        return normalInvReal(p, mu, sigma);
+      };
+      overrides.poissonPmf = function(k, lambda){
+        return poissonPmfReal(k, lambda);
+      };
+      overrides.poissonCdf = function(k, lambda){
+        return poissonCdfReal(k, lambda);
+      };
+      overrides.binomialPmf = function(k, n, p){
+        return binomialPmfReal(k, n, p);
+      };
+      overrides.binomialCdf = function(k, n, p){
+        return binomialCdfReal(k, n, p);
+      };
+      overrides.logit = function(p){
+        return logitReal(p);
+      };
+      overrides.sigmoid = function(x){
+        return sigmoidReal(x);
+      };
 
       math.import(overrides, { override: true });
       numericMath.import(overrides, { override: true });
       updateVariables();
+      renderSymbolicResult(lastSymbolicRaw);
+      updateHistory();
+      updateExpressionPreview();
     }
 
     function evaluateExpression(){
@@ -2091,6 +2673,15 @@
     buildWorkspace();
     updateHistory();
     setResults(null, null);
+
+    ensureMathJax()
+      .then(() => {
+        if (destroyed) return;
+        renderSymbolicResult(lastSymbolicRaw);
+        updateExpressionPreview();
+        updateHistory();
+      })
+      .catch(() => {});
 
     ensureMathJs()
       .then(mathjs => {

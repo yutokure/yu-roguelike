@@ -2233,6 +2233,17 @@
       return 0.5 * Math.log(2 * Math.PI) + (v + 0.5) * Math.log(t) - t + Math.log(sum);
     }
 
+    function gammaReal(z){
+      const value = Number(z);
+      if (!Number.isFinite(value)) throw new Error('gamma の引数は有限の実数で指定してください。');
+      if (value <= 0) throw new Error('gamma は正の実数引数にのみ対応します。');
+      const result = Math.exp(logGammaReal(value));
+      if (!Number.isFinite(result)) {
+        return value > 170 ? Infinity : result;
+      }
+      return result;
+    }
+
     function lambertWReal(x, branch = 0){
       const value = Number(x);
       if (!Number.isFinite(value)) throw new Error('lambertW の引数は有限の実数で指定してください。');
@@ -2473,6 +2484,7 @@
       numericMath.config({ number: 'BigNumber', precision: 128, matrix: 'Matrix' });
 
       const fractionErrorPattern = /Cannot implicitly convert a number to a Fraction/;
+      const fractionBigNumberPattern = /Cannot implicitly convert .* to BigNumber or vice versa/;
       const convertForFallback = (value) => {
         if (math.isFraction?.(value)) return value.valueOf();
         if (math.isBigNumber?.(value)) return value.toNumber();
@@ -2500,6 +2512,192 @@
           }
         };
       });
+
+      function createIntegerParser(target, errorMessage){
+        const isFraction = typeof target.isFraction === 'function' ? target.isFraction.bind(target) : null;
+        const isBigNumber = typeof target.isBigNumber === 'function' ? target.isBigNumber.bind(target) : null;
+        return function parseInteger(value){
+          if (typeof value === 'bigint') {
+            if (value < 0n) throw new Error(errorMessage);
+            return value;
+          }
+          if (typeof value === 'number') {
+            if (!Number.isFinite(value) || value < 0 || Math.floor(value) !== value) {
+              throw new Error(errorMessage);
+            }
+            return BigInt(value);
+          }
+          if (typeof value === 'boolean') {
+            return value ? 1n : 0n;
+          }
+          if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (!trimmed || !/^[+-]?\d+$/.test(trimmed)) {
+              throw new Error(errorMessage);
+            }
+            const parsed = BigInt(trimmed);
+            if (parsed < 0n) throw new Error(errorMessage);
+            return parsed;
+          }
+          if (isFraction && isFraction(value)) {
+            if (value.s < 0 || value.d !== 1) {
+              throw new Error(errorMessage);
+            }
+            return BigInt(value.n);
+          }
+          if (isBigNumber && isBigNumber(value)) {
+            if (typeof value.isFinite === 'function' && !value.isFinite()) {
+              throw new Error(errorMessage);
+            }
+            if (typeof value.isInteger === 'function' && !value.isInteger()) {
+              throw new Error(errorMessage);
+            }
+            if (typeof value.isNegative === 'function' && value.isNegative()) {
+              throw new Error(errorMessage);
+            }
+            const raw = value.toString();
+            const normalized = /[eE\.]/.test(raw)
+              ? (typeof value.toFixed === 'function' ? value.toFixed(0) : raw)
+              : raw;
+            const trimmed = String(normalized).trim();
+            if (!trimmed || !/^[+-]?\d+$/.test(trimmed)) {
+              throw new Error(errorMessage);
+            }
+            const parsed = BigInt(trimmed);
+            if (parsed < 0n) throw new Error(errorMessage);
+            return parsed;
+          }
+          if (value && typeof value.valueOf === 'function' && value.valueOf() !== value) {
+            return parseInteger(value.valueOf());
+          }
+          throw new Error(errorMessage);
+        };
+      }
+
+      function convertBigIntToPreferred(target, value, preferFraction){
+        if (preferFraction && typeof target.fraction === 'function') {
+          try { return target.fraction(value.toString()); } catch {}
+        }
+        if (typeof target.bignumber === 'function') {
+          try { return target.bignumber(value.toString()); } catch {}
+        }
+        const asNumber = Number(value);
+        if (Number.isSafeInteger(asNumber)) {
+          return asNumber;
+        }
+        return value.toString();
+      }
+
+      function mapStructure(target, input, mapper){
+        if (Array.isArray(input)) {
+          return input.map(item => mapStructure(target, item, mapper));
+        }
+        if (typeof target.isMatrix === 'function' && target.isMatrix(input)) {
+          return input.map(item => mapStructure(target, item, mapper));
+        }
+        return mapper(input);
+      }
+
+      const factorialBigInt = (n) => {
+        if (n <= 1n) return 1n;
+        let result = 1n;
+        for (let i = 2n; i <= n; i++) {
+          result *= i;
+        }
+        return result;
+      };
+
+      const permutationsBigInt = (n, k) => {
+        if (k === 0n) return 1n;
+        let result = 1n;
+        for (let i = 0n; i < k; i++) {
+          result *= (n - i);
+        }
+        return result;
+      };
+
+      const combinationsBigInt = (n, k) => {
+        if (k === 0n) return 1n;
+        let result = 1n;
+        for (let i = 1n; i <= k; i++) {
+          result = (result * (n - k + i)) / i;
+        }
+        return result;
+      };
+
+      function installFactorialFallback(target, preferFraction){
+        if (!target || typeof target.factorial !== 'function') return;
+        const original = target.factorial;
+        const parseInteger = createIntegerParser(target, 'factorial の引数には 0 以上の整数を指定してください。');
+        const convertResult = (value) => convertBigIntToPreferred(target, value, preferFraction);
+        const compute = (value) => convertResult(factorialBigInt(parseInteger(value)));
+        target.factorial = function(value){
+          try {
+            return original.call(target, value);
+          } catch (err) {
+            if (!fractionBigNumberPattern.test(err?.message || '')) {
+              throw err;
+            }
+            return mapStructure(target, value, compute);
+          }
+        };
+      }
+
+      function installPermutationCombinationFallback(target, preferFraction){
+        if (!target) return;
+        if (typeof target.permutations === 'function') {
+          const originalPerm = target.permutations;
+          const parseInteger = createIntegerParser(target, 'permutations の引数には 0 以上の整数を指定してください。');
+          const convertResult = (value) => convertBigIntToPreferred(target, value, preferFraction);
+          const invalidRangeError = new Error('permutations の第2引数は第1引数以下の整数で指定してください。');
+          const computePerm = (nVal, kVal) => {
+            const nInt = parseInteger(nVal);
+            const kInt = kVal == null ? nInt : parseInteger(kVal);
+            if (kInt > nInt) throw invalidRangeError;
+            return convertResult(permutationsBigInt(nInt, kInt));
+          };
+          target.permutations = function(nVal, kVal){
+            try {
+              return originalPerm.call(target, nVal, kVal);
+            } catch (err) {
+              if (!fractionBigNumberPattern.test(err?.message || '')) {
+                throw err;
+              }
+              return mapStructure(target, nVal, item => computePerm(item, kVal));
+            }
+          };
+        }
+        if (typeof target.combinations === 'function') {
+          const originalComb = target.combinations;
+          const parseInteger = createIntegerParser(target, 'combinations の引数には 0 以上の整数を指定してください。');
+          const convertResult = (value) => convertBigIntToPreferred(target, value, preferFraction);
+          const invalidRangeError = new Error('combinations の第2引数は第1引数以下の整数で指定してください。');
+          const missingArgError = new Error('combinations の第2引数には 0 以上の整数を指定してください。');
+          const computeComb = (nVal, kVal) => {
+            if (kVal == null) throw missingArgError;
+            const nInt = parseInteger(nVal);
+            const kInt = parseInteger(kVal);
+            if (kInt > nInt) throw invalidRangeError;
+            const useK = kInt > nInt - kInt ? nInt - kInt : kInt;
+            return convertResult(combinationsBigInt(nInt, useK));
+          };
+          target.combinations = function(nVal, kVal){
+            try {
+              return originalComb.call(target, nVal, kVal);
+            } catch (err) {
+              if (!fractionBigNumberPattern.test(err?.message || '')) {
+                throw err;
+              }
+              return mapStructure(target, nVal, item => computeComb(item, kVal));
+            }
+          };
+        }
+      }
+
+      installFactorialFallback(math, true);
+      installFactorialFallback(numericMath, false);
+      installPermutationCombinationFallback(math, true);
+      installPermutationCombinationFallback(numericMath, false);
 
       const trigNames = [
         ['sin', true, false], ['cos', true, false], ['tan', true, false],
@@ -2543,6 +2741,9 @@
       };
       overrides.slog = function(base, value){
         return computeSlog(base, value);
+      };
+      overrides.gamma = function(x){
+        return gammaReal(x);
       };
       overrides.taylorSeries = function(expr, variable, order, center){
         return computeTaylorSeries(expr, variable, order, center);

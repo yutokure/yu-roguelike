@@ -82,7 +82,6 @@
     const xpPass = 4 * (cfg.xpScale || 1);
     const xpDistanceUnit = 0.5 * (cfg.xpScale || 1);
     const xpPerfect = 100 * (cfg.xpScale || 1.1);
-    const shortcuts = opts?.shortcuts;
     let shortcutsLocked = false;
 
     function setShortcutsLocked(nextLocked){

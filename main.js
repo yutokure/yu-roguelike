@@ -1014,13 +1014,15 @@ function buildList(listEl, data, selectedKey, labelFn) {
     });
 }
 
-function selectOption(listEl, key) {
+function selectOption(listEl, key, opts = {}) {
     if (!listEl) return;
     listEl.querySelectorAll('.bdim-option').forEach(el => el.classList.remove('selected'));
     const target = Array.from(listEl.querySelectorAll('.bdim-option')).find(el => el.dataset.key === key);
     if (target) {
         target.classList.add('selected');
-        target.scrollIntoView({ block: 'nearest' });
+        if (!opts.preserveScroll) {
+            target.scrollIntoView({ block: 'nearest' });
+        }
     }
 }
 
@@ -1158,9 +1160,10 @@ function randomizeBdimBlocks() {
     const k1 = pickRandomKeyFrom(bdim1List);
     const k2 = pickRandomKeyFrom(bdim2List);
     const k3 = pickRandomKeyFrom(bdim3List);
-    if (k1) selectOption(bdim1List, k1);
-    if (k2) selectOption(bdim2List, k2);
-    if (k3) selectOption(bdim3List, k3);
+    const preserveScroll = { preserveScroll: true };
+    if (k1) selectOption(bdim1List, k1, preserveScroll);
+    if (k2) selectOption(bdim2List, k2, preserveScroll);
+    if (k3) selectOption(bdim3List, k3, preserveScroll);
     onBlockDimChanged();
 }
 
@@ -1222,9 +1225,10 @@ function weightedRandomizeBdimBlocks(targetSumRaw, typePrefRaw) {
         if (diff === 0) break;
     }
 
-    if (best?.b1?.key) selectOption(bdim1List, best.b1.key);
-    if (best?.b2?.key) selectOption(bdim2List, best.b2.key);
-    if (best?.b3?.key) selectOption(bdim3List, best.b3.key);
+    const preserveScroll = { preserveScroll: true };
+    if (best?.b1?.key) selectOption(bdim1List, best.b1.key, preserveScroll);
+    if (best?.b2?.key) selectOption(bdim2List, best.b2.key, preserveScroll);
+    if (best?.b3?.key) selectOption(bdim3List, best.b3.key, preserveScroll);
     onBlockDimChanged();
 }
 

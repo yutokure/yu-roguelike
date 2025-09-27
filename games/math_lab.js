@@ -1,10 +1,22 @@
 (function(){
   /** MiniExp: Advanced Mathematics Lab */
-  const MATHJS_URL = 'libs/math.js';
-  const MATHJAX_URL = 'libs/MathJax-4.0.0/tex-mml-chtml.js';
+  const MATHJS_PATH = 'libs/math.js';
+  const MATHJAX_PATH = 'libs/MathJax-4.0.0/tex-mml-chtml.js';
   let mathLoader = null;
   let mathJaxLoader = null;
   let mathJaxInstance = null;
+
+  function resolveAssetUrl(path){
+    if (!path) return path;
+    try {
+      const base = (typeof document !== 'undefined' && document.baseURI)
+        ? document.baseURI
+        : (typeof location !== 'undefined' ? location.href : '');
+      return base ? new URL(path, base).href : path;
+    } catch {
+      return path;
+    }
+  }
 
   function ensureMathJs(){
     if (window.math && window.math.create) {
@@ -19,7 +31,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = MATHJS_URL;
+      script.src = resolveAssetUrl(MATHJS_PATH);
       script.async = true;
       script.setAttribute('data-mathjs', '1');
       script.onload = () => {
@@ -67,7 +79,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = MATHJAX_URL;
+      script.src = resolveAssetUrl(MATHJAX_PATH);
       script.async = true;
       script.setAttribute('data-mathjax-loader', '1');
       script.onload = () => {
@@ -1242,6 +1254,96 @@
       statusBar.textContent = `${now.toLocaleTimeString()} — ${message}`;
     }
 
+    function escapeLatexIdentifier(name){
+      return String(name ?? '').replace(/([_#%&{}$^\\])/g, '\\$1');
+    }
+
+    function joinArgsAsGroup(argsTex){
+      return argsTex.length ? `\\left(${argsTex.join(', ')}\\right)` : '';
+    }
+
+    const LATEX_FUNCTION_MAP = {
+      sin: '\\sin', cos: '\\cos', tan: '\\tan', sec: '\\sec', csc: '\\csc', cot: '\\cot',
+      asin: '\\arcsin', acos: '\\arccos', atan: '\\arctan', asec: '\\operatorname{arcsec}',
+      acsc: '\\operatorname{arccsc}', acot: '\\operatorname{arccot}',
+      sinh: '\\sinh', cosh: '\\cosh', tanh: '\\tanh', csch: '\\operatorname{csch}',
+      sech: '\\operatorname{sech}', coth: '\\operatorname{coth}',
+      asinh: '\\operatorname{arsinh}', acosh: '\\operatorname{arcosh}', atan2: '\\operatorname{atan2}',
+      atanh: '\\operatorname{artanh}', acsch: '\\operatorname{arccsch}', asech: '\\operatorname{arcsech}',
+      acoth: '\\operatorname{arcoth}',
+      log: '\\log', ln: '\\ln', exp: '\\exp',
+      det: '\\det', tr: '\\operatorname{tr}', trace: '\\operatorname{tr}',
+      sign: '\\operatorname{sgn}', abs: null,
+      floor: null, ceil: null, round: '\\operatorname{round}',
+      max: '\\max', min: '\\min', mean: '\\operatorname{mean}',
+      median: '\\operatorname{median}', mode: '\\operatorname{mode}',
+      variance: '\\operatorname{var}', std: '\\operatorname{std}', sum: '\\sum',
+      prod: '\\prod', gamma: '\\Gamma', Gamma: '\\Gamma',
+      Beta: '\\operatorname{B}', beta: '\\operatorname{beta}',
+      erf: '\\operatorname{erf}', erfc: '\\operatorname{erfc}',
+      erfi: '\\operatorname{erfi}', sinc: '\\operatorname{sinc}',
+      Ei: '\\operatorname{Ei}', Si: '\\operatorname{Si}', Ci: '\\operatorname{Ci}',
+      gcd: '\\gcd', lcm: '\\operatorname{lcm}',
+      Re: '\\Re', Im: '\\Im', arg: '\\arg'
+    };
+
+    const TEX_HANDLERS = {
+      'OperatorNode:divide': (node, options) => {
+        const [a, b] = node.args || [];
+        const left = a ? a.toTex(options) : '';
+        const right = b ? b.toTex(options) : '';
+        return `\\frac{${left}}{${right}}`;
+      },
+      FunctionNode: (node, options) => {
+        const name = node.name || node.fn?.name || '';
+        const args = node.args || [];
+        const argsTex = args.map(arg => arg.toTex(options));
+        if (name === 'sqrt') {
+          const radicand = argsTex[0] ?? '';
+          return `\\sqrt{${radicand}}`;
+        }
+        if (name === 'nthRoot') {
+          const radicand = argsTex[0] ?? '';
+          const degree = argsTex[1] ?? '';
+          return `\\sqrt[${degree}]{${radicand}}`;
+        }
+        if (name === 'cbrt') {
+          const radicand = argsTex[0] ?? '';
+          return `\\sqrt[3]{${radicand}}`;
+        }
+        if (name === 'abs') {
+          const value = argsTex[0] ?? '';
+          return `\\left|${value}\\right|`;
+        }
+        if (name === 'floor') {
+          const value = argsTex[0] ?? '';
+          return `\\left\\lfloor${value}\\right\\rfloor`;
+        }
+        if (name === 'ceil') {
+          const value = argsTex[0] ?? '';
+          return `\\left\\lceil${value}\\right\\rceil`;
+        }
+        if (name === 'log' && argsTex.length === 2) {
+          return `\\log_{${argsTex[1]}}\\left(${argsTex[0]}\\right)`;
+        }
+        if (name === 'log10' && argsTex.length >= 1) {
+          return `\\log_{10}\\left(${argsTex[0]}\\right)`;
+        }
+        if (name === 'log2' && argsTex.length >= 1) {
+          return `\\log_{2}\\left(${argsTex[0]}\\right)`;
+        }
+        const command = LATEX_FUNCTION_MAP[name];
+        if (command) {
+          if (command === '\\sum' || command === '\\prod') {
+            return `${command}${joinArgsAsGroup(argsTex)}`;
+          }
+          return `${command}${joinArgsAsGroup(argsTex)}`;
+        }
+        const escaped = escapeLatexIdentifier(name);
+        return `\\operatorname{${escaped}}${joinArgsAsGroup(argsTex)}`;
+      }
+    };
+
     function setPlainMathContent(target, text){
       if (!target) return;
       target.innerHTML = '';
@@ -1300,7 +1402,7 @@
       if (!ascii) return null;
       try {
         const node = math.parse(ascii);
-        return node.toTex({ parenthesis: 'auto', implicit: 'hide' });
+        return node.toTex({ parenthesis: 'auto', implicit: 'hide', handler: TEX_HANDLERS });
       } catch {
         return null;
       }

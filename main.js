@@ -3174,6 +3174,27 @@ function isFloor(x, y) {
     return map[y] && map[y][x] === 0;
 }
 
+function canPlayerBreakWalls() {
+    if (player.level < 500) return false;
+    const recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    if (!Number.isFinite(recommended)) return false;
+    return recommended <= player.level - 5;
+}
+
+function breakWallAt(x, y) {
+    if (!map[y] || map[y][x] !== 1) return false;
+    if (x <= 0 || x >= MAP_WIDTH - 1 || y <= 0 || y >= MAP_HEIGHT - 1) return false;
+
+    map[y][x] = 0;
+    if (tileMeta[y]) {
+        tileMeta[y][x] = null;
+    }
+
+    addMessage('壁を破壊した！');
+    addPopup(x, y, '破壊', '#ffa94d', 1.2);
+    return true;
+}
+
 function countFloorTiles() {
     let n = 0;
     for (let y = 0; y < MAP_HEIGHT; y++) {
@@ -6045,7 +6066,10 @@ function attemptPlayerStep(dx, dy) {
         return true;
     }
 
-    if (!isFloor(targetX, targetY)) return false;
+    if (!isFloor(targetX, targetY)) {
+        const canBreak = canPlayerBreakWalls() && breakWallAt(targetX, targetY);
+        if (!canBreak) return false;
+    }
 
     addSeparator();
     let moveSoundPlayed = false;

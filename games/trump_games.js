@@ -302,6 +302,11 @@
     el.className = `mini-trump-card${sizeClass ? ' ' + sizeClass : ''}`;
     if (opts.interactive) el.classList.add('interactive');
     if (opts.hoverRaise === false) el.classList.add('no-hover-raise');
+    if (card && card.id) {
+      el.dataset.cardId = card.id;
+    } else if (opts.key) {
+      el.dataset.cardId = opts.key;
+    }
     updateCardFace(el, card, faceUp);
     return el;
   }
@@ -395,6 +400,65 @@
         el.style.transform = `translate(${offset}px, ${Math.round(offset * 0.05)}px) rotate(${tilt}deg)`;
       }
     });
+  }
+
+  function createCardAnimator(root){
+    let lastRects = new Map();
+
+    function capture(){
+      if (!root || !root.isConnected) return;
+      const next = new Map();
+      const elements = root.querySelectorAll('[data-card-id]');
+      elements.forEach(el => {
+        const id = el.dataset.cardId;
+        if (!id) return;
+        const rect = el.getBoundingClientRect();
+        next.set(id, rect);
+      });
+      lastRects = next;
+    }
+
+    function animate(){
+      if (!root || !root.isConnected) {
+        lastRects = new Map();
+        return;
+      }
+      const elements = root.querySelectorAll('[data-card-id]');
+      const next = new Map();
+      elements.forEach(el => {
+        const id = el.dataset.cardId;
+        if (!id) return;
+        const rect = el.getBoundingClientRect();
+        const prev = lastRects.get(id);
+        if (prev) {
+          const dx = prev.left - rect.left;
+          const dy = prev.top - rect.top;
+          const scaleX = rect.width ? prev.width / rect.width : 1;
+          const scaleY = rect.height ? prev.height / rect.height : 1;
+          const distance = Math.hypot(dx, dy);
+          const scaleDiff = Math.abs(scaleX - 1) + Math.abs(scaleY - 1);
+          if (distance > 0.5 || scaleDiff > 0.02) {
+            el.animate([
+              { transform: `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`, opacity: 0.88 },
+              { transform: 'translate(0,0) scale(1,1)', opacity: 1 }
+            ], { duration: 320, easing: 'ease-out' });
+          }
+        } else {
+          el.animate([
+            { transform: 'scale(0.8)', opacity: 0 },
+            { transform: 'scale(1)', opacity: 1 }
+          ], { duration: 220, easing: 'ease-out' });
+        }
+        next.set(id, rect);
+      });
+      lastRects = next;
+    }
+
+    function reset(){
+      lastRects = new Map();
+    }
+
+    return { capture, animate, reset };
   }
 
   function getMultiplier(diff){
@@ -1078,6 +1142,7 @@
 
     container.innerHTML = '';
     container.appendChild(root);
+    const animator = createCardAnimator(root);
 
     function createStack(labelText, pileClass){
       const wrapper = document.createElement('div');
@@ -1467,12 +1532,14 @@
     }
 
     function render(){
+      animator.capture();
       renderStock();
       renderWaste();
       renderFoundations();
       renderTableaus();
       updateInfo();
       updateHud();
+      animator.animate();
     }
 
     function renderStock(){
@@ -1637,6 +1704,7 @@
     const root = document.createElement('div');
     root.className = 'mini-trump-spider';
     container.appendChild(root);
+    const animator = createCardAnimator(root);
 
     const top = document.createElement('div');
     top.className = 'mini-trump-spider-top';
@@ -1928,10 +1996,12 @@
     }
 
     function render(){
+      animator.capture();
       renderStock();
       renderColumns();
       updateHud();
       if (!state.finished) updateActions();
+      animator.animate();
     }
 
     function updateActions(){
@@ -1957,6 +2027,7 @@
     const root = document.createElement('div');
     root.className = 'mini-trump-freecell';
     container.appendChild(root);
+    const animator = createCardAnimator(root);
 
     const top = document.createElement('div');
     top.className = 'mini-trump-freecell-top';
@@ -2066,6 +2137,12 @@
     function handleColumnCardClick(colIdx, cardIdx){
       const column = state.columns[colIdx];
       if (!column.length) return;
+      if (state.selected && state.selected.type === 'column' && state.selected.column === colIdx && state.selected.index === cardIdx) {
+        state.selected = null;
+        ctx.playClick();
+        render();
+        return;
+      }
       const run = getMovableRun(column, cardIdx);
       if (!run.length) {
         ctx.showToast('交互色の連続したカードのみ移動できます。', { type: 'warn', duration: 1600 });
@@ -2104,6 +2181,12 @@
     }
 
     function handleCellClick(idx){
+      if (state.selected && state.selected.type === 'cell' && state.selected.index === idx) {
+        state.selected = null;
+        ctx.playClick();
+        render();
+        return;
+      }
       if (state.selected) {
         const moving = getSelectedCards();
         if (moving.length !== 1) {
@@ -2362,10 +2445,12 @@
     }
 
     function render(){
+      animator.capture();
       renderCells();
       renderFoundations();
       renderColumns();
       updateHud();
+      animator.animate();
     }
 
     restart();
@@ -3483,6 +3568,7 @@
     layout.appendChild(ring);
     container.innerHTML = '';
     container.appendChild(layout);
+    const animator = createCardAnimator(layout);
 
     ctx.setActions([
       { label: 'ヒント (H)', variant: 'secondary', hotkey: 'H', onClick: () => ctx.showToast('右隣のプレイヤーのカードをクリックして引きましょう。') },
@@ -3641,6 +3727,7 @@
     }
 
     function render(){
+      animator.capture();
       ring.innerHTML = '';
       const human = players[0];
       const humanTargetIndex = findNextActive((0 + 1) % players.length);
@@ -3668,6 +3755,10 @@
           for (let i = 0; i < player.hand.length; i++) {
             const btn = document.createElement('button');
             btn.dataset.targetCard = String(i);
+            const cardInfo = player.hand[i];
+            if (cardInfo && cardInfo.id) {
+              btn.dataset.cardId = cardInfo.id;
+            }
             btn.textContent = '?';
             if (players[state.current].human && player.id === humanTargetIndex) {
               btn.disabled = false;
@@ -3697,6 +3788,7 @@
         ring.appendChild(card);
       }
       updateHud();
+      animator.animate();
     }
 
     initGame();
@@ -4139,6 +4231,7 @@
     layout.appendChild(ring);
     container.innerHTML = '';
     container.appendChild(layout);
+    const animator = createCardAnimator(layout);
 
     swapButton.addEventListener('click', () => {
       if (state.finished) return;
@@ -4401,9 +4494,11 @@
     }
 
     function render(){
+      animator.capture();
       renderTable();
       renderPlayers();
       updateHud();
+      animator.animate();
     }
 
     function renderTable(){
@@ -4449,6 +4544,10 @@
           for (let i = 0; i < player.hand.length; i++) {
             const btn = document.createElement('button');
             btn.dataset.targetCard = String(i);
+            const cardInfo = player.hand[i];
+            if (cardInfo && cardInfo.id) {
+              btn.dataset.cardId = cardInfo.id;
+            }
             btn.textContent = '?';
             if (players[state.current].human && player.id === humanTargetIndex && !state.selectingSwap) {
               btn.disabled = false;

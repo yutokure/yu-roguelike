@@ -40,6 +40,25 @@ const MOD_MAKER_DEFAULT_FIXED_HEIGHT = 15;
 const MOD_MAKER_MIN_FIXED_SIZE = 5;
 const MOD_MAKER_MAX_FIXED_SIZE = 75;
 const MOD_MAKER_MAX_FLOOR_COUNT = 60;
+const MOD_MAKER_GRID_CELL_SIZE = 24;
+
+const STRUCTURE_CELL_COLORS = Object.freeze({
+    empty: '#e2e8f0',
+    floor: '#93c5fd',
+    wall: '#1e293b',
+    grid: 'rgba(148, 163, 184, 0.35)',
+    anchor: '#f97316'
+});
+
+const FIXED_CELL_COLORS = Object.freeze({
+    void: '#e2e8f0',
+    floor: '#bbf7d0',
+    wall: '#0f172a',
+    grid: 'rgba(148, 163, 184, 0.35)'
+});
+
+const structurePaintState = { active: false, pointerId: null, lastKey: null, targetValue: null };
+const fixedPaintState = { active: false, pointerId: null, lastKey: null, targetValue: null };
 
 function initModMakerTool() {
     if (modMakerRefs) return;
@@ -64,6 +83,8 @@ function initModMakerTool() {
         structureWidth: document.getElementById('modmaker-structure-width'),
         structureHeight: document.getElementById('modmaker-structure-height'),
         grid: document.getElementById('modmaker-grid'),
+        structureCanvas: document.getElementById('modmaker-grid-canvas'),
+        structurePlaceholder: document.querySelector('#modmaker-grid .modmaker-grid-placeholder'),
         patternPreview: document.getElementById('modmaker-pattern-preview'),
         fillEmpty: document.getElementById('modmaker-fill-empty'),
         fillFloor: document.getElementById('modmaker-fill-floor'),
@@ -80,6 +101,8 @@ function initModMakerTool() {
         fixedFillFloor: document.getElementById('modmaker-fixed-fill-floor'),
         fixedFillVoid: document.getElementById('modmaker-fixed-fill-void'),
         fixedGrid: document.getElementById('modmaker-fixed-grid'),
+        fixedCanvas: document.getElementById('modmaker-fixed-grid-canvas'),
+        fixedPlaceholder: document.querySelector('#modmaker-fixed-grid .modmaker-grid-placeholder'),
         generatorList: document.getElementById('modmaker-generator-list'),
         addGenerator: document.getElementById('modmaker-add-generator'),
         removeGenerator: document.getElementById('modmaker-remove-generator'),
@@ -218,6 +241,21 @@ function initModMakerTool() {
     if (modMakerRefs.fillWall) {
         modMakerRefs.fillWall.addEventListener('click', () => fillStructureCells(1));
     }
+
+    if (modMakerRefs.structureCanvas) {
+        modMakerRefs.structureCanvas.addEventListener('pointerdown', handleStructurePointerDown);
+        modMakerRefs.structureCanvas.addEventListener('pointermove', handleStructurePointerMove);
+        modMakerRefs.structureCanvas.addEventListener('pointerup', handleStructurePointerUp);
+        modMakerRefs.structureCanvas.addEventListener('pointercancel', handleStructurePointerUp);
+    }
+    if (modMakerRefs.fixedCanvas) {
+        modMakerRefs.fixedCanvas.addEventListener('pointerdown', handleFixedPointerDown);
+        modMakerRefs.fixedCanvas.addEventListener('pointermove', handleFixedPointerMove);
+        modMakerRefs.fixedCanvas.addEventListener('pointerup', handleFixedPointerUp);
+        modMakerRefs.fixedCanvas.addEventListener('pointercancel', handleFixedPointerUp);
+    }
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+    window.addEventListener('pointercancel', handleGlobalPointerUp);
 
     bindInput(modMakerRefs.fixedEnabled, () => {
         const fixed = getSelectedFixedState();
@@ -575,27 +613,115 @@ function fillStructureCells(fill) {
     renderModMaker();
 }
 
+function clearModMakerCanvas(canvas) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function setGridPlaceholder(container, placeholderEl, message, disabled) {
+    if (!container) return;
+    container.classList.toggle('placeholder', !!disabled);
+    container.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    if (placeholderEl) {
+        placeholderEl.textContent = message || '';
+    }
+}
+
+function prepareModMakerCanvas(canvas, width, height) {
+    if (!canvas) return null;
+    const cols = Math.max(1, Number(width) || 1);
+    const rows = Math.max(1, Number(height) || 1);
+    const dpr = window.devicePixelRatio || 1;
+    const displayWidth = cols * MOD_MAKER_GRID_CELL_SIZE;
+    const displayHeight = rows * MOD_MAKER_GRID_CELL_SIZE;
+    const pixelWidth = Math.round(displayWidth * dpr);
+    const pixelHeight = Math.round(displayHeight * dpr);
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+    }
+    if (canvas.style.width !== `${displayWidth}px`) {
+        canvas.style.width = `${displayWidth}px`;
+    }
+    if (canvas.style.height !== `${displayHeight}px`) {
+        canvas.style.height = `${displayHeight}px`;
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    return { ctx, cols, rows, cellSize: MOD_MAKER_GRID_CELL_SIZE, displayWidth, displayHeight };
+}
+
+function drawGridLines(ctx, cols, rows, cellSize, color) {
+    if (!ctx) return;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= cols; x++) {
+        const px = x * cellSize + 0.5;
+        ctx.moveTo(px, 0);
+        ctx.lineTo(px, rows * cellSize);
+    }
+    for (let y = 0; y <= rows; y++) {
+        const py = y * cellSize + 0.5;
+        ctx.moveTo(0, py);
+        ctx.lineTo(cols * cellSize, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+}
+
 function renderStructureGrid(structure) {
-    if (!modMakerRefs?.grid || !structure) return;
-    const grid = modMakerRefs.grid;
-    grid.innerHTML = '';
-    grid.style.gridTemplateColumns = `repeat(${structure.width}, minmax(22px, 22px))`;
-    for (let y = 0; y < structure.height; y++) {
-        for (let x = 0; x < structure.width; x++) {
-            const cell = structure.matrix?.[y]?.[x] ?? null;
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'modmaker-cell';
-            if (cell === 0) btn.classList.add('state-floor');
-            if (cell === 1) btn.classList.add('state-wall');
-            if (x === structure.anchorX && y === structure.anchorY) btn.classList.add('anchor');
-            btn.title = `(${x}, ${y})`;
-            btn.addEventListener('click', () => {
-                structure.matrix[y][x] = cycleStructureCell(structure.matrix[y][x]);
-                renderModMaker();
-            });
-            grid.appendChild(btn);
+    const container = modMakerRefs?.grid;
+    const canvas = modMakerRefs?.structureCanvas;
+    const placeholder = modMakerRefs?.structurePlaceholder;
+    if (!container || !canvas) return;
+    if (!structure) {
+        clearModMakerCanvas(canvas);
+        setGridPlaceholder(container, placeholder, '構造を追加するとここにプレビューが表示されます。', true);
+        return;
+    }
+    setGridPlaceholder(container, placeholder, '', false);
+    const prepared = prepareModMakerCanvas(canvas, structure.width, structure.height);
+    if (!prepared) return;
+    const { ctx, cols, rows, cellSize } = prepared;
+    ctx.clearRect(0, 0, cols * cellSize, rows * cellSize);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, cols * cellSize, rows * cellSize);
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+            const cell = structure.matrix?.[y]?.[x];
+            if (cell === 1) ctx.fillStyle = STRUCTURE_CELL_COLORS.wall;
+            else if (cell === 0) ctx.fillStyle = STRUCTURE_CELL_COLORS.floor;
+            else ctx.fillStyle = STRUCTURE_CELL_COLORS.empty;
+            ctx.fillRect(x * cellSize + 1, y * cellSize + 1, cellSize - 2, cellSize - 2);
         }
+    }
+    drawGridLines(ctx, cols, rows, cellSize, STRUCTURE_CELL_COLORS.grid);
+    const ax = structure.anchorX;
+    const ay = structure.anchorY;
+    if (Number.isFinite(ax) && Number.isFinite(ay) && ax >= 0 && ay >= 0 && ax < cols && ay < rows) {
+        const startX = ax * cellSize;
+        const startY = ay * cellSize;
+        ctx.save();
+        ctx.strokeStyle = STRUCTURE_CELL_COLORS.anchor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(startX + 2, startY + 2, cellSize - 4, cellSize - 4);
+        const cx = startX + cellSize / 2;
+        const cy = startY + cellSize / 2;
+        const mark = cellSize * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(cx - mark, cy);
+        ctx.lineTo(cx + mark, cy);
+        ctx.moveTo(cx, cy - mark);
+        ctx.lineTo(cx, cy + mark);
+        ctx.stroke();
+        ctx.restore();
     }
 }
 
@@ -652,46 +778,149 @@ function copyFixedFloorFromPrev() {
 }
 
 function renderFixedMapGrid(fixed) {
-    if (!modMakerRefs?.fixedGrid) return;
-    const grid = modMakerRefs.fixedGrid;
-    grid.setAttribute('aria-live', 'polite');
+    const container = modMakerRefs?.fixedGrid;
+    const canvas = modMakerRefs?.fixedCanvas;
+    const placeholder = modMakerRefs?.fixedPlaceholder;
+    if (!container || !canvas) return;
+    container.setAttribute('aria-live', 'polite');
     if (!fixed || !fixed.enabled) {
-        grid.classList.add('placeholder');
-        grid.setAttribute('aria-disabled', 'true');
-        grid.innerHTML = '<span role="note">固定マップを有効にすると編集できます。</span>';
-        grid.style.gridTemplateColumns = '';
+        clearModMakerCanvas(canvas);
+        setGridPlaceholder(container, placeholder, '固定マップを有効にすると編集できます。', true);
         return;
     }
     const floor = fixed.floors[fixed.selected];
     if (!floor) {
-        grid.classList.add('placeholder');
-        grid.setAttribute('aria-disabled', 'true');
-        grid.innerHTML = '<span role="note">階層を追加してください。</span>';
-        grid.style.gridTemplateColumns = '';
+        clearModMakerCanvas(canvas);
+        setGridPlaceholder(container, placeholder, '階層を追加してください。', true);
         return;
     }
-    grid.setAttribute('aria-disabled', 'false');
-    grid.classList.remove('placeholder');
-    grid.innerHTML = '';
-    grid.style.gridTemplateColumns = `repeat(${floor.width}, minmax(22px, 22px))`;
-    for (let y = 0; y < floor.height; y++) {
-        for (let x = 0; x < floor.width; x++) {
+    setGridPlaceholder(container, placeholder, '', false);
+    const prepared = prepareModMakerCanvas(canvas, floor.width, floor.height);
+    if (!prepared) return;
+    const { ctx, cols, rows, cellSize } = prepared;
+    ctx.clearRect(0, 0, cols * cellSize, rows * cellSize);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, cols * cellSize, rows * cellSize);
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
             const cell = floor.matrix?.[y]?.[x];
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'modmaker-cell';
-            if (cell === 0) btn.classList.add('state-floor');
-            else if (cell === 1) btn.classList.add('state-wall');
-            else btn.classList.add('state-void');
-            btn.title = `(${x}, ${y})`;
-            btn.addEventListener('click', () => {
-                if (!fixed.enabled) return;
-                floor.matrix[y][x] = cycleFixedCell(floor.matrix[y][x]);
-                renderModMaker();
-            });
-            grid.appendChild(btn);
+            if (cell === 1) ctx.fillStyle = FIXED_CELL_COLORS.wall;
+            else if (cell === 0) ctx.fillStyle = FIXED_CELL_COLORS.floor;
+            else ctx.fillStyle = FIXED_CELL_COLORS.void;
+            ctx.fillRect(x * cellSize + 1, y * cellSize + 1, cellSize - 2, cellSize - 2);
         }
     }
+    drawGridLines(ctx, cols, rows, cellSize, FIXED_CELL_COLORS.grid);
+}
+
+function locateCanvasCell(event, cols, rows) {
+    if (!event || cols <= 0 || rows <= 0) return null;
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const offsetX = event.clientX - rect.left;
+    const offsetY = event.clientY - rect.top;
+    if (offsetX < 0 || offsetY < 0 || offsetX > rect.width || offsetY > rect.height) return null;
+    const x = Math.floor((offsetX / rect.width) * cols);
+    const y = Math.floor((offsetY / rect.height) * rows);
+    if (x < 0 || y < 0 || x >= cols || y >= rows) return null;
+    return { x, y };
+}
+
+function endStructurePaint(pointerId) {
+    if (!structurePaintState.active || structurePaintState.pointerId !== pointerId) return;
+    structurePaintState.active = false;
+    structurePaintState.pointerId = null;
+    structurePaintState.lastKey = null;
+    structurePaintState.targetValue = null;
+    modMakerRefs?.structureCanvas?.releasePointerCapture?.(pointerId);
+}
+
+function handleStructurePointerDown(event) {
+    if (event.button !== 0) return;
+    const structure = getSelectedStructure();
+    if (!structure) return;
+    const cell = locateCanvasCell(event, structure.width, structure.height);
+    if (!cell) return;
+    event.preventDefault();
+    const current = structure.matrix?.[cell.y]?.[cell.x];
+    const next = cycleStructureCell(current);
+    structure.matrix[cell.y][cell.x] = next;
+    structurePaintState.active = true;
+    structurePaintState.pointerId = event.pointerId;
+    structurePaintState.lastKey = `${cell.x},${cell.y}`;
+    structurePaintState.targetValue = next;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    renderModMaker();
+}
+
+function handleStructurePointerMove(event) {
+    if (!structurePaintState.active || structurePaintState.pointerId !== event.pointerId) return;
+    const structure = getSelectedStructure();
+    if (!structure) return;
+    const cell = locateCanvasCell(event, structure.width, structure.height);
+    if (!cell) return;
+    const key = `${cell.x},${cell.y}`;
+    if (key === structurePaintState.lastKey) return;
+    structurePaintState.lastKey = key;
+    structure.matrix[cell.y][cell.x] = structurePaintState.targetValue;
+    renderModMaker();
+}
+
+function handleStructurePointerUp(event) {
+    endStructurePaint(event.pointerId);
+}
+
+function endFixedPaint(pointerId) {
+    if (!fixedPaintState.active || fixedPaintState.pointerId !== pointerId) return;
+    fixedPaintState.active = false;
+    fixedPaintState.pointerId = null;
+    fixedPaintState.lastKey = null;
+    fixedPaintState.targetValue = null;
+    modMakerRefs?.fixedCanvas?.releasePointerCapture?.(pointerId);
+}
+
+function handleFixedPointerDown(event) {
+    if (event.button !== 0) return;
+    const fixed = getSelectedFixedState();
+    if (!fixed || !fixed.enabled) return;
+    const floor = fixed.floors?.[fixed.selected];
+    if (!floor) return;
+    const cell = locateCanvasCell(event, floor.width, floor.height);
+    if (!cell) return;
+    event.preventDefault();
+    const current = floor.matrix?.[cell.y]?.[cell.x];
+    const next = cycleFixedCell(current);
+    floor.matrix[cell.y][cell.x] = next;
+    fixedPaintState.active = true;
+    fixedPaintState.pointerId = event.pointerId;
+    fixedPaintState.lastKey = `${cell.x},${cell.y}`;
+    fixedPaintState.targetValue = next;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    renderModMaker();
+}
+
+function handleFixedPointerMove(event) {
+    if (!fixedPaintState.active || fixedPaintState.pointerId !== event.pointerId) return;
+    const fixed = getSelectedFixedState();
+    if (!fixed || !fixed.enabled) return;
+    const floor = fixed.floors?.[fixed.selected];
+    if (!floor) return;
+    const cell = locateCanvasCell(event, floor.width, floor.height);
+    if (!cell) return;
+    const key = `${cell.x},${cell.y}`;
+    if (key === fixedPaintState.lastKey) return;
+    fixedPaintState.lastKey = key;
+    floor.matrix[cell.y][cell.x] = fixedPaintState.targetValue;
+    renderModMaker();
+}
+
+function handleFixedPointerUp(event) {
+    endFixedPaint(event.pointerId);
+}
+
+function handleGlobalPointerUp(event) {
+    endStructurePaint(event.pointerId);
+    endFixedPaint(event.pointerId);
 }
 
 function renderModMakerFixed(fixed) {

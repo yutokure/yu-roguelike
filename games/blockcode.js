@@ -1353,7 +1353,7 @@
         });
         try {
           // eslint-disable-next-line no-new-func
-          const fn = new Function('variables', `return (${replaced});`);
+          const fn = new Function('variables', 'return (' + replaced + ');');
           const result = fn(variables);
           if (typeof result === 'boolean') return result ? 1 : 0;
           if (typeof result === 'number') return Number.isFinite(result) ? result : 0;

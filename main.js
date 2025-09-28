@@ -189,6 +189,25 @@ const SKILL_DEFINITIONS = [
     { id: 'ruin-annihilation', name: '破滅全体攻撃', cost: 300, description: '全ての敵へ必中で威力3倍の攻撃＆壁やギミックを消し宝箱を獲得。（高Lv敵には無効）', action: useSkillRuinAnnihilation }
 ];
 
+const FLOAT_EPSILON = 1e-6;
+let skillsListNeedsRefresh = true;
+const lastSkillsSpDisplay = {
+    current: null,
+    max: null,
+    text: null,
+    ratio: null,
+};
+
+function nearlyEqual(a, b, epsilon = FLOAT_EPSILON) {
+    const left = Number.isFinite(a) ? a : 0;
+    const right = Number.isFinite(b) ? b : 0;
+    return Math.abs(left - right) <= epsilon;
+}
+
+function markSkillsListDirty() {
+    skillsListNeedsRefresh = true;
+}
+
 const SKILL_AREA_OFFSETS = [
     { dx: 0, dy: -1 },
     { dx: 0, dy: -2 },
@@ -1096,6 +1115,7 @@ function clearPlayerStatusEffect(effectId, { silent = false } = {}) {
         }
         if (message) addMessage(message);
     }
+    if (wasActive) markSkillsListDirty();
 }
 
 function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
@@ -1134,6 +1154,7 @@ function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
     if (effectId === 'abilityDown') {
         enforceEffectiveHpCap();
     }
+    markSkillsListDirty();
     updateUI();
     return true;
 }
@@ -1177,6 +1198,7 @@ function activateSkillEffect(effectId, turns, { silent = false } = {}) {
     } else if (!silent) {
         clearSkillEffect(effectId, { silent: true });
     }
+    markSkillsListDirty();
     return normalized;
 }
 
@@ -1189,6 +1211,7 @@ function clearSkillEffect(effectId, { silent = false } = {}) {
         const def = SKILL_EFFECT_DEFS[effectId];
         if (def?.expireMessage) addMessage(def.expireMessage);
     }
+    if (wasActive) markSkillsListDirty();
 }
 
 function getActiveSkillEffectList() {
@@ -1229,6 +1252,7 @@ function advanceSkillEffects() {
             if (def?.expireMessage) addMessage(def.expireMessage);
         }
     }
+    if (updated) markSkillsListDirty();
     return updated;
 }
 
@@ -1259,20 +1283,34 @@ function computePlayerMaxSp(level = player.level || 1) {
 
 function updatePlayerSpCap({ silent = false } = {}) {
     const previousMax = Math.max(0, Number(player.maxSp) || 0);
-    const newMax = computePlayerMaxSp(player.level || 1);
     if (!isSpUnlocked()) {
+        const hadSp = !nearlyEqual(previousMax, 0) || !nearlyEqual(player.sp, 0);
         player.maxSp = 0;
-        player.sp = 0;
+        if (!nearlyEqual(player.sp, 0)) {
+            player.sp = 0;
+        }
         prevSp = 0;
+        if (hadSp) markSkillsListDirty();
         return 0;
     }
+    const newMax = computePlayerMaxSp(player.level || 1);
+    const maxChanged = !nearlyEqual(previousMax, newMax);
     player.maxSp = newMax;
-    if (previousMax === 0 && newMax > 0 && !silent) {
-        addMessage('SPが解放された！');
-    } else if (newMax > previousMax && !silent) {
-        addMessage(`SP上限が${newMax}に上昇した！`);
+    if (maxChanged) {
+        if (previousMax === 0 && newMax > 0 && !silent) {
+            addMessage('SPが解放された！');
+        } else if (newMax > previousMax && !silent) {
+            addMessage(`SP上限が${newMax}に上昇した！`);
+        }
     }
-    player.sp = Math.max(0, Math.min(newMax, Number(player.sp) || 0));
+    const clamped = Math.max(0, Math.min(newMax, Number(player.sp) || 0));
+    if (!nearlyEqual(player.sp, clamped)) {
+        player.sp = clamped;
+        markSkillsListDirty();
+    } else {
+        player.sp = clamped;
+    }
+    if (maxChanged) markSkillsListDirty();
     return newMax;
 }
 
@@ -1288,6 +1326,7 @@ function gainSp(amount, { silent = true } = {}) {
     const gained = after - before;
     if (gained <= 0) return 0;
     player.sp = after;
+    markSkillsListDirty();
     if (!silent) {
         const display = gained >= 1 ? Math.floor(gained) : Math.round(gained * 10) / 10;
         addMessage(`SPを${display}${display % 1 === 0 ? '' : ''}獲得した。`);
@@ -1308,7 +1347,13 @@ function trySpendSp(cost, { silent = false } = {}) {
         if (!silent) addMessage('SPが足りない。');
         return false;
     }
-    player.sp = Math.max(0, current - required);
+    const remaining = Math.max(0, current - required);
+    if (!nearlyEqual(current, remaining)) {
+        player.sp = remaining;
+        markSkillsListDirty();
+    } else {
+        player.sp = remaining;
+    }
     if (!silent) {
         const display = required >= 1 ? Math.floor(required) : Math.round(required * 10) / 10;
         addMessage(`SPを${display}${display % 1 === 0 ? '' : ''}消費した。`);
@@ -2042,36 +2087,63 @@ function attemptUseSkill(def) {
     const success = !!def.action();
     if (!success) {
         gainSp(def.cost, { silent: true });
+        markSkillsListDirty();
         updateUI();
-        if (skillsModal && skillsModal.style.display === 'flex') renderSkillsList();
         return;
     }
+    markSkillsListDirty();
     updateUI();
-    if (skillsModal && skillsModal.style.display === 'flex') renderSkillsList();
     commitSkillAction();
+}
+
+function getCurrentSpInfo() {
+    updatePlayerSpCap({ silent: true });
+    const maxSp = Math.max(0, Number(player.maxSp) || 0);
+    const currentSp = Math.max(0, Math.min(maxSp, Number(player.sp) || 0));
+    return { currentSp, maxSp };
+}
+
+function formatSpDisplay(currentSp, maxSp) {
+    const formattedCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : Math.round(currentSp * 10) / 10;
+    const formattedMax = maxSp % 1 === 0 ? Math.floor(maxSp) : Math.round(maxSp * 10) / 10;
+    return maxSp > 0 ? `${formattedCurrent}/${formattedMax}` : '0/0';
+}
+
+function updateSkillsSpHeader(currentSp, maxSp, displayText = null) {
+    const normalizedCurrent = Math.max(0, Number(currentSp) || 0);
+    const normalizedMax = Math.max(0, Number(maxSp) || 0);
+    const spText = displayText != null ? displayText : formatSpDisplay(normalizedCurrent, normalizedMax);
+    if (skillsSpText) {
+        const liveText = `現在のSP: ${spText}`;
+        if (skillsSpValueText) {
+            if (lastSkillsSpDisplay.text !== spText) {
+                skillsSpValueText.textContent = spText;
+            }
+        } else if (lastSkillsSpDisplay.text !== spText) {
+            skillsSpText.textContent = liveText;
+        }
+        skillsSpText.setAttribute('aria-label', liveText);
+    } else if (skillsSpValueText && lastSkillsSpDisplay.text !== spText) {
+        skillsSpValueText.textContent = spText;
+    }
+    if (skillsSpBarFill) {
+        const ratio = normalizedMax > 0 ? Math.min(1, Math.max(0, normalizedCurrent / normalizedMax)) : 0;
+        if (lastSkillsSpDisplay.ratio === null || !nearlyEqual(lastSkillsSpDisplay.ratio, ratio)) {
+            skillsSpBarFill.style.width = `${Math.round(ratio * 10000) / 100}%`;
+        }
+        lastSkillsSpDisplay.ratio = ratio;
+    }
+    lastSkillsSpDisplay.text = spText;
+    lastSkillsSpDisplay.current = normalizedCurrent;
+    lastSkillsSpDisplay.max = normalizedMax;
 }
 
 function renderSkillsList() {
     if (!skillsList) return;
+    const { currentSp, maxSp } = getCurrentSpInfo();
+    const spText = formatSpDisplay(currentSp, maxSp);
+    updateSkillsSpHeader(currentSp, maxSp, spText);
     skillsList.innerHTML = '';
-    updatePlayerSpCap({ silent: true });
-    const currentSp = Math.max(0, Number(player.sp) || 0);
-    const maxSp = Math.max(0, Number(player.maxSp) || 0);
-    const formattedCurrentSp = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-    const spText = maxSp > 0 ? `${formattedCurrentSp}/${maxSp}` : '0/0';
-    if (skillsSpText) {
-        const liveText = `現在のSP: ${spText}`;
-        if (skillsSpValueText) {
-            skillsSpValueText.textContent = spText;
-        } else {
-            skillsSpText.textContent = liveText;
-        }
-        if (skillsSpBarFill) {
-            const spRatio = maxSp > 0 ? Math.min(1, Math.max(0, currentSp / maxSp)) : 0;
-            skillsSpBarFill.style.width = `${Math.round(spRatio * 10000) / 100}%`;
-        }
-        skillsSpText.setAttribute('aria-label', liveText);
-    }
     SKILL_DEFINITIONS.forEach(def => {
         const entry = document.createElement('div');
         entry.className = 'skill-entry';
@@ -2117,6 +2189,17 @@ function renderSkillsList() {
         entry.appendChild(button);
         skillsList.appendChild(entry);
     });
+    skillsListNeedsRefresh = false;
+}
+
+function refreshSkillsModal({ force = false } = {}) {
+    if (!skillsModal || skillsModal.style.display !== 'flex') return;
+    if (force || skillsListNeedsRefresh) {
+        renderSkillsList();
+        return;
+    }
+    const { currentSp, maxSp } = getCurrentSpInfo();
+    updateSkillsSpHeader(currentSp, maxSp);
 }
 
 function useSkillBreakWall() {
@@ -4400,6 +4483,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
 
     refreshGeneratorHazardSuppression();
     refreshSatietyActivation({ notify: false });
+    markSkillsListDirty();
 
     if (applyUI) {
         if (difficultySelect) difficultySelect.value = difficulty;
@@ -7156,9 +7240,7 @@ function updateUI() {
     const floorEl = document.getElementById('floor-indicator');
     if (floorEl) floorEl.textContent = `${dungeonLevel}F`;
 
-    if (skillsModal && skillsModal.style.display === 'flex') {
-        renderSkillsList();
-    }
+    refreshSkillsModal();
 
     // メッセージログは addMessage で更新
 }
@@ -8204,7 +8286,11 @@ restartButton.addEventListener('click', () => {
 // ゲームの開始
 // UI: モーダル/入出力
 btnItems && btnItems.addEventListener('click', () => { openModal(itemsModal); });
-btnSkills && btnSkills.addEventListener('click', () => { renderSkillsList(); openModal(skillsModal); });
+btnSkills && btnSkills.addEventListener('click', () => {
+    markSkillsListDirty();
+    openModal(skillsModal);
+    refreshSkillsModal({ force: true });
+});
 btnStatus && btnStatus.addEventListener('click', () => { openModal(statusModal); updateUI(); });
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => {
     const target = e.currentTarget.getAttribute('data-target');

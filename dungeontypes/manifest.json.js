@@ -29,5 +29,10 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'amber_marsh_pack', name: 'Amber Marsh Pack', entry: 'dungeontypes/amber_marsh.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'bamboo_hollows_pack', name: 'Bamboo Hollows Pack', entry: 'dungeontypes/bamboo_hollows.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'starlit_canopy_pack', name: 'Starlit Canopy Pack', entry: 'dungeontypes/starlit_canopy.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'prismatic_stalactites_pack', name: 'Prismatic Stalactites Pack', entry: 'dungeontypes/prismatic_stalactites.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'churning_karst_pack', name: 'Churning Karst Pack', entry: 'dungeontypes/churning_karst.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'echo_vaults_pack', name: 'Echo Vaults Pack', entry: 'dungeontypes/echo_vaults.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'emberglass_caverns_pack', name: 'Emberglass Caverns Pack', entry: 'dungeontypes/emberglass_caverns.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'abyssal_whorl_pack', name: 'Abyssal Whorl Pack', entry: 'dungeontypes/abyssal_whorl.js', version: '1.0.0', author: 'builtin-sample' }
   { id: 'ruined_labyrinth_pack', name: 'Ruined Labyrinth Pack', entry: 'dungeontypes/ruined_labyrinth.js', version: '1.0.0', author: 'builtin-sample' }
 ];

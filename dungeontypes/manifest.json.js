@@ -35,5 +35,6 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'echo_vaults_pack', name: 'Echo Vaults Pack', entry: 'dungeontypes/echo_vaults.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'emberglass_caverns_pack', name: 'Emberglass Caverns Pack', entry: 'dungeontypes/emberglass_caverns.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'abyssal_whorl_pack', name: 'Abyssal Whorl Pack', entry: 'dungeontypes/abyssal_whorl.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'ruined_labyrinth_pack', name: 'Ruined Labyrinth Pack', entry: 'dungeontypes/ruined_labyrinth.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'ruined_labyrinth_pack', name: 'Ruined Labyrinth Pack', entry: 'dungeontypes/ruined_labyrinth.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'sf_expansion_pack', name: 'SF Expansion Pack', entry: 'dungeontypes/sf_expansion.js', version: '1.0.0', author: 'builtin-sample' }
 ];

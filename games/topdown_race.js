@@ -103,6 +103,92 @@
     overlay.style.textShadow = '0 18px 32px rgba(15, 23, 42, 0.85)';
     container.appendChild(overlay);
 
+    const miniMapSize = 160;
+    const miniMapCanvas = document.createElement('canvas');
+    miniMapCanvas.width = miniMapSize;
+    miniMapCanvas.height = miniMapSize;
+    miniMapCanvas.style.position = 'absolute';
+    miniMapCanvas.style.left = '16px';
+    miniMapCanvas.style.top = '16px';
+    miniMapCanvas.style.background = 'rgba(15, 23, 42, 0.82)';
+    miniMapCanvas.style.border = '1px solid rgba(148, 163, 184, 0.4)';
+    miniMapCanvas.style.borderRadius = '12px';
+    miniMapCanvas.style.boxShadow = '0 12px 25px rgba(2, 6, 23, 0.45)';
+    miniMapCanvas.style.backdropFilter = 'blur(4px)';
+    container.appendChild(miniMapCanvas);
+    const miniMapCtx = miniMapCanvas.getContext('2d');
+
+    const telemetry = document.createElement('div');
+    telemetry.style.position = 'absolute';
+    telemetry.style.bottom = '20px';
+    telemetry.style.left = '50%';
+    telemetry.style.transform = 'translateX(-50%)';
+    telemetry.style.width = '320px';
+    telemetry.style.background = 'rgba(15, 23, 42, 0.82)';
+    telemetry.style.color = '#e2e8f0';
+    telemetry.style.padding = '14px 18px 16px';
+    telemetry.style.borderRadius = '14px';
+    telemetry.style.boxShadow = '0 18px 40px rgba(2, 6, 23, 0.55)';
+    telemetry.style.fontSize = '12px';
+    telemetry.style.letterSpacing = '0.04em';
+    telemetry.style.backdropFilter = 'blur(6px)';
+    container.appendChild(telemetry);
+
+    function createMeterRow(label){
+      const wrapper = document.createElement('div');
+      wrapper.style.marginTop = '8px';
+      const header = document.createElement('div');
+      header.style.display = 'flex';
+      header.style.justifyContent = 'space-between';
+      header.style.alignItems = 'baseline';
+      header.style.marginBottom = '4px';
+      const title = document.createElement('span');
+      title.textContent = label;
+      title.style.fontWeight = '600';
+      title.style.fontSize = '11px';
+      title.style.color = '#94a3b8';
+      const value = document.createElement('span');
+      value.textContent = '0';
+      value.style.fontWeight = '600';
+      value.style.fontSize = '12px';
+      value.style.color = '#f8fafc';
+      header.appendChild(title);
+      header.appendChild(value);
+      const bar = document.createElement('div');
+      bar.style.position = 'relative';
+      bar.style.height = '8px';
+      bar.style.borderRadius = '999px';
+      bar.style.background = 'rgba(148, 163, 184, 0.22)';
+      const fill = document.createElement('div');
+      fill.style.position = 'absolute';
+      fill.style.left = '0';
+      fill.style.top = '0';
+      fill.style.bottom = '0';
+      fill.style.width = '0%';
+      fill.style.borderRadius = '999px';
+      fill.style.background = 'linear-gradient(90deg, #38f9d7, #60a5fa)';
+      bar.appendChild(fill);
+      wrapper.appendChild(header);
+      wrapper.appendChild(bar);
+      telemetry.appendChild(wrapper);
+      return { wrapper, title, value, fill };
+    }
+
+    const telemetryHeader = document.createElement('div');
+    telemetryHeader.style.display = 'flex';
+    telemetryHeader.style.justifyContent = 'space-between';
+    telemetryHeader.style.alignItems = 'center';
+    telemetryHeader.style.fontSize = '12px';
+    telemetryHeader.style.fontWeight = '600';
+    telemetryHeader.style.color = '#cbd5f5';
+    telemetryHeader.style.marginBottom = '4px';
+    telemetryHeader.textContent = 'DRIVER TELEMETRY';
+    telemetry.appendChild(telemetryHeader);
+
+    const speedMeter = createMeterRow('SPEED');
+    const turboMeter = createMeterRow('TURBO');
+    const lapMeter = createMeterRow('LAP PROGRESS');
+
     const resultPanel = document.createElement('div');
     resultPanel.style.position = 'absolute';
     resultPanel.style.left = '50%';
@@ -150,6 +236,10 @@
       finishTime: null,
       lastProgress: 0
     };
+
+    const trackRadius = (innerR + outerR) / 2;
+    const metersPerPixel = 400 / (TAU * trackRadius);
+    const miniMapScale = (miniMapSize / 2 - 12) / outerR;
 
     const aiColors = ['#f97316', '#a855f7', '#38bdf8', '#facc15', '#f472b6'];
     const aiCars = [];
@@ -372,56 +462,90 @@
     }
 
     function buildFinishOrder(){
-      const order = [];
-      order.push({ id: 'player', name: 'You', time: player.finishTime });
+      const standings = getStandings();
+      return standings.map(entry => ({ id: entry.id, name: entry.name, time: entry.time }));
+    }
+
+    function getStandings(){
+      const list = [];
+      list.push({ id: 'player', name: 'You', lap: player.lap, progress: player.progress || 0, time: player.finishTime });
       for (const car of aiCars){
-        order.push({ id: car.name, name: car.name, time: car.finishTime });
+        list.push({ id: car.name, name: car.name, lap: car.lap, progress: car.progress || 0, time: car.finishTime });
       }
-      order.sort((a, b) => {
-        if (a.time == null && b.time == null) return 0;
-        if (a.time == null) return 1;
-        if (b.time == null) return -1;
-        return a.time - b.time;
+      list.sort((a, b) => {
+        const aFinished = a.time != null;
+        const bFinished = b.time != null;
+        if (aFinished && bFinished){
+          return a.time - b.time;
+        }
+        if (aFinished) return -1;
+        if (bFinished) return 1;
+        if (a.lap !== b.lap) return b.lap - a.lap;
+        return b.progress - a.progress;
       });
-      return order;
+      return list;
     }
 
     function updateHud(){
       const lapLabel = player.finished ? cfg.laps : Math.min(player.lap + 1, cfg.laps);
       const bestLabel = isFinite(player.bestLap) ? formatTime(player.bestLap) : '-';
       const turboPct = Math.round(player.turboGauge * 100);
+      const speedKmh = Math.round(Math.abs(player.speed) * metersPerPixel * 3.6);
+      speedMeter.value.textContent = `${speedKmh} km/h`;
+      const speedPct = clamp(Math.abs(player.speed) / surfaces.track.maxSpeed, 0, 1) * 100;
+      speedMeter.fill.style.width = `${speedPct.toFixed(1)}%`;
+      turboMeter.value.textContent = `${turboPct}%`;
+      turboMeter.fill.style.width = `${turboPct}%`;
+      const lapProgress = player.finished ? 1 : (player.progress || 0);
+      const lapPct = clamp(lapProgress, 0, 1) * 100;
+      lapMeter.value.textContent = `${Math.round(lapPct)}%`;
+      lapMeter.fill.style.width = `${lapPct.toFixed(1)}%`;
+
       const lines = [
         `<div style="font-size:15px;margin-bottom:4px;font-weight:600;">Aurora Circuit (${difficulty})</div>`,
         `<div>Lap: <strong>${Math.min(player.lap, cfg.laps)}/${cfg.laps}</strong> (Next ${lapLabel})</div>`,
         `<div>Lap Time: ${formatTime(player.lapTime || 0)}</div>`,
         `<div>Best Lap: ${bestLabel}</div>`,
-        `<div>Turbo: ${turboPct}% ${player.turboActive ? '(Active)' : ''}</div>`,
-        `<div style="margin-top:8px;font-weight:600;">ライバル</div>`
+        `<div>Turbo: ${turboPct}% ${player.turboActive ? '(Active)' : ''}</div>`
       ];
-      const order = buildFinishOrder();
-      for (const car of order){
-        if (car.id === 'player') continue;
-        const rival = aiCars.find(a => a.name === car.name);
+      const standings = getStandings();
+      const playerPos = standings.findIndex(entry => entry.id === 'player') + 1;
+      if (playerPos > 0){
+        lines.push(`<div>Position: <strong>${playerPos}/${standings.length}</strong></div>`);
+      }
+      lines.push(`<div style="margin-top:8px;font-weight:600;">ライバル</div>`);
+      for (const entry of standings){
+        if (entry.id === 'player') continue;
         let diff = '';
-        if (player.finishTime && car.time){
-          diff = formatDelta(car.time - player.finishTime);
-        } else if (!player.finishTime && rival && rival.progress != null){
-          const delta = computeTimeGap(rival);
-          diff = delta > 0 ? `+${delta.toFixed(1)}s` : `${delta.toFixed(1)}s`;
+        if (state === 'finished'){
+          if (player.finishTime && entry.time){
+            diff = formatDelta(entry.time - player.finishTime);
+          } else if (entry.time == null){
+            diff = 'DNF';
+          }
+        } else if (entry.time != null && !player.finishTime){
+          diff = 'FIN';
         } else {
+          const delta = computeTimeGap(entry);
+          diff = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}s`;
+        }
+        if (!diff){
           diff = '-';
         }
-        lines.push(`<div style="display:flex;justify-content:space-between;"><span>${car.name}</span><span>${diff}</span></div>`);
+        if (entry.time == null){
+          diff += ` · Lap ${Math.min(entry.lap, cfg.laps)}/${cfg.laps}`;
+        }
+        lines.push(`<div style="display:flex;justify-content:space-between;"><span>${entry.name}</span><span>${diff}</span></div>`);
       }
       hud.innerHTML = lines.join('');
     }
 
-    function computeTimeGap(rival){
-      if (!rival) return 0;
+    function computeTimeGap(entry){
+      if (!entry) return 0;
       const avgSpeed = (cfg.aiSpeedRange[0] + cfg.aiSpeedRange[1]) / 2;
       const estimatedLapTime = avgSpeed > 0 ? (1 / avgSpeed) : 0;
       const playerProgress = player.finishTime ? cfg.laps : (player.lap + (player.progress || 0));
-      const rivalProgress = rival.finishTime ? cfg.laps : (rival.lap + (rival.progress || 0));
+      const rivalProgress = entry.time != null ? cfg.laps : (entry.lap + (entry.progress || 0));
       const gapLaps = rivalProgress - playerProgress;
       return gapLaps * estimatedLapTime;
     }
@@ -435,6 +559,7 @@
       for (const car of aiCars){
         drawAICar(car);
       }
+      drawMiniMap();
       if (state === 'countdown'){
         overlay.style.display = 'flex';
         overlay.textContent = countdown > 0 ? Math.ceil(countdown) : 'GO!';
@@ -580,6 +705,68 @@
       const sign = delta >= 0 ? '+' : '-';
       const abs = Math.abs(delta);
       return `${sign}${abs.toFixed(3)}s`;
+    }
+
+    function drawMiniMap(){
+      miniMapCtx.clearRect(0, 0, miniMapSize, miniMapSize);
+      miniMapCtx.save();
+      miniMapCtx.translate(miniMapSize / 2, miniMapSize / 2);
+
+      miniMapCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      miniMapCtx.fillRect(-miniMapSize / 2, -miniMapSize / 2, miniMapSize, miniMapSize);
+
+      const outerRadius = outerR * miniMapScale + 6;
+      const innerRadius = Math.max(4, innerR * miniMapScale - 6);
+
+      miniMapCtx.fillStyle = '#1e293b';
+      miniMapCtx.beginPath();
+      miniMapCtx.arc(0, 0, outerRadius, 0, TAU);
+      miniMapCtx.fill();
+
+      miniMapCtx.fillStyle = '#020617';
+      miniMapCtx.beginPath();
+      miniMapCtx.arc(0, 0, innerRadius, 0, TAU);
+      miniMapCtx.fill();
+
+      miniMapCtx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+      miniMapCtx.lineWidth = 3;
+      miniMapCtx.setLineDash([6, 10]);
+      miniMapCtx.beginPath();
+      miniMapCtx.arc(0, 0, trackRadius * miniMapScale, 0, TAU);
+      miniMapCtx.stroke();
+      miniMapCtx.setLineDash([]);
+
+      miniMapCtx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+      miniMapCtx.lineWidth = 5;
+      miniMapCtx.lineCap = 'round';
+      for (const zone of boostZones){
+        miniMapCtx.beginPath();
+        miniMapCtx.arc(0, 0, trackRadius * miniMapScale, startAngle + zone.start * TAU, startAngle + zone.end * TAU);
+        miniMapCtx.stroke();
+      }
+
+      miniMapCtx.strokeStyle = '#f8fafc';
+      miniMapCtx.lineWidth = 4;
+      miniMapCtx.beginPath();
+      miniMapCtx.moveTo(Math.cos(startAngle) * innerR * miniMapScale, Math.sin(startAngle) * innerR * miniMapScale);
+      miniMapCtx.lineTo(Math.cos(startAngle) * outerR * miniMapScale, Math.sin(startAngle) * outerR * miniMapScale);
+      miniMapCtx.stroke();
+
+      const drawMarker = (x, y, color, size = 6, pulse = false) => {
+        miniMapCtx.fillStyle = color;
+        miniMapCtx.beginPath();
+        miniMapCtx.arc((x - cx) * miniMapScale, (y - cy) * miniMapScale, size * (pulse ? 1.25 : 1), 0, TAU);
+        miniMapCtx.fill();
+      };
+
+      for (const car of aiCars){
+        const pos = polarToXY(car.progress, car.lap, car.laneOffset);
+        drawMarker(pos.x, pos.y, car.color, 4);
+      }
+
+      drawMarker(player.x, player.y, player.turboActive ? '#38f9d7' : '#bef264', 6, player.turboActive);
+
+      miniMapCtx.restore();
     }
 
     function onKeyDown(e){

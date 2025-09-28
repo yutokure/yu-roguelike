@@ -25,4 +25,15 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'oneway_labyrinth_pack', name: 'One-Way Labyrinth Pack', entry: 'dungeontypes/oneway_labyrinth.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'axis_gallery_pack', name: 'Axis Gallery Pack', entry: 'dungeontypes/axis_gallery.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'fantasical-sci-fi-dream-pack', name: 'ファンタジカルと近未来をテーマにした夢の世界パック', entry: 'dungeontypes/FantasicalAndSci-fiAndDremerPack.js', version: '3.0.0', author: 'builtin-sample' }
+  { id: 'luminescent_glade_pack', name: 'Luminescent Glade Pack', entry: 'dungeontypes/luminescent_glade.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'coral_garden_pack', name: 'Coral Garden Pack', entry: 'dungeontypes/coral_garden.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'amber_marsh_pack', name: 'Amber Marsh Pack', entry: 'dungeontypes/amber_marsh.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'bamboo_hollows_pack', name: 'Bamboo Hollows Pack', entry: 'dungeontypes/bamboo_hollows.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'starlit_canopy_pack', name: 'Starlit Canopy Pack', entry: 'dungeontypes/starlit_canopy.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'prismatic_stalactites_pack', name: 'Prismatic Stalactites Pack', entry: 'dungeontypes/prismatic_stalactites.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'churning_karst_pack', name: 'Churning Karst Pack', entry: 'dungeontypes/churning_karst.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'echo_vaults_pack', name: 'Echo Vaults Pack', entry: 'dungeontypes/echo_vaults.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'emberglass_caverns_pack', name: 'Emberglass Caverns Pack', entry: 'dungeontypes/emberglass_caverns.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'abyssal_whorl_pack', name: 'Abyssal Whorl Pack', entry: 'dungeontypes/abyssal_whorl.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'ruined_labyrinth_pack', name: 'Ruined Labyrinth Pack', entry: 'dungeontypes/ruined_labyrinth.js', version: '1.0.0', author: 'builtin-sample' }
 ];

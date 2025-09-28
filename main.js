@@ -9,6 +9,9 @@ const statExpText = document.getElementById('stat-exp-text');
 const statStatusEffects = document.getElementById('stat-status-effects');
 const hpBar = document.getElementById('hp-bar');
 const expBar = document.getElementById('exp-bar');
+const statSpText = document.getElementById('stat-sp-text');
+const spBar = document.getElementById('sp-bar');
+const spBarContainer = document.getElementById('sp-bar-container');
 const statSatietyText = document.getElementById('stat-satiety-text');
 const satietyBar = document.getElementById('satiety-bar');
 const satietyBarContainer = document.getElementById('satiety-bar-container');
@@ -24,23 +27,30 @@ const restartButton = document.getElementById('restart-button');
 // Toolbar / Modals
 const btnBack = document.getElementById('btn-back');
 const btnItems = document.getElementById('btn-items');
+const btnSkills = document.getElementById('btn-skills');
 const btnStatus = document.getElementById('btn-status');
 const btnImport = document.getElementById('btn-import');
 const btnExport = document.getElementById('btn-export');
 const importFileInput = document.getElementById('import-file');
 const itemsModal = document.getElementById('items-modal');
 const statusModal = document.getElementById('status-modal');
+const skillsModal = document.getElementById('skills-modal');
+const skillsList = document.getElementById('skills-list');
 const invPotion30 = document.getElementById('inv-potion30');
 const invHpBoost = document.getElementById('inv-hp-boost');
 const invAtkBoost = document.getElementById('inv-atk-boost');
 const invDefBoost = document.getElementById('inv-def-boost');
 const usePotion30Btn = document.getElementById('use-potion30');
 const eatPotion30Btn = document.getElementById('eat-potion30');
+const offerPotion30Btn = document.getElementById('offer-potion30');
 const useHpBoostBtn = document.getElementById('use-hp-boost');
 const useAtkBoostBtn = document.getElementById('use-atk-boost');
 const useDefBoostBtn = document.getElementById('use-def-boost');
 const statusDetails = document.getElementById('status-details');
 const modalStatusEffects = document.getElementById('modal-status-effects');
+const modalSkillEffects = document.getElementById('modal-skill-effects');
+const modalSpRow = document.getElementById('modal-sp-row');
+const modalSpValue = document.getElementById('modal-sp');
 // Selection screen
 const selectionScreen = document.getElementById('selection-screen');
 const gameScreen = document.getElementById('game-screen');
@@ -78,6 +88,7 @@ const miniexpRestartBtn = document.getElementById('miniexp-restart');
 const miniexpDifficulty = document.getElementById('miniexp-difficulty');
 const miniexpContainer = document.getElementById('miniexp-container');
 const miniexpDisplayModes = document.getElementById('miniexp-display-modes');
+const miniexpHudSp = document.getElementById('miniexp-hud-sp');
 // BlockDim UI elements
 // BlockDim listbox UI elements
 const bdimDimList = document.getElementById('bdim-list-dimension');
@@ -138,6 +149,57 @@ const MINI_EXP_DISPLAY_MODES = [
 
 const ADVANCED_ENEMY_RECOMMENDED_LEVEL_THRESHOLD = 250;
 const ENEMY_EFFECT_SUPPRESSION_GAP = 5;
+const SP_UNLOCK_LEVEL = 100;
+const SP_HIGH_LEVEL_SUPPRESS_GAP = 8;
+const SP_SACRIFICE_VALUE = 2.5;
+
+const skillState = {
+    effects: {
+        gimmickNullify: 0,
+        statusGuard: 0,
+        enemyNullify: 0,
+        sureHit: 0,
+    },
+    pendingTickSkip: Object.create(null)
+};
+
+const SKILL_EFFECT_DEFS = {
+    gimmickNullify: { id: 'gimmickNullify', label: 'ギミック無効', badgeClass: 'status-badge--skill status-badge--skill-gimmick', expireMessage: 'ギミック無効化の効果が切れた。' },
+    statusGuard: { id: 'statusGuard', label: '状態異常無効', badgeClass: 'status-badge--skill status-badge--skill-status', expireMessage: '状態異常無効の効果が切れた。' },
+    enemyNullify: { id: 'enemyNullify', label: '特殊効果無効', badgeClass: 'status-badge--skill status-badge--skill-enemy', expireMessage: '特殊効果無効の効果が切れた。' },
+    sureHit: { id: 'sureHit', label: '必中攻撃', badgeClass: 'status-badge--skill status-badge--skill-surehit', expireMessage: '必中攻撃の効果が切れた。' }
+};
+
+const SKILL_DEFINITIONS = [
+    { id: 'break-wall', name: '壁破壊', cost: 25, description: '目の前の壁を1つ破壊する。', action: useSkillBreakWall },
+    { id: 'gimmick-nullify', name: 'ギミック無効化', cost: 25, description: '10ターンの間ダンジョンギミックを無効化する。（推奨Lvが8以上高い場合は無効）', action: useSkillGimmickNullify },
+    { id: 'status-guard', name: '状態異常無効', cost: 25, description: '10ターンすべての状態異常を防ぐ。', action: useSkillStatusGuard },
+    { id: 'enemy-nullify', name: '特殊効果封印', cost: 50, description: '10ターン特殊な敵の追加効果を無効化する。', action: useSkillEnemyNullify },
+    { id: 'sure-hit', name: '必中攻撃', cost: 50, description: '10ターン通常攻撃が必中になる。（Lv差8以上の敵には無効）', action: useSkillSureHitBuff },
+    { id: 'stair-warp', name: '階段前ワープ', cost: 50, description: '階段の隣へワープする。', action: useSkillStairWarp },
+    { id: 'strong-strike', name: '強攻撃', cost: 50, description: '目前の敵へ必中で威力3倍の攻撃。', action: useSkillStrongStrike },
+    { id: 'area-attack', name: '範囲攻撃', cost: 75, description: '周囲の敵へ通常の範囲攻撃。', action: useSkillAreaAttack },
+    { id: 'surehit-area', name: '必中範囲攻撃', cost: 100, description: '周囲の敵へ必中の範囲攻撃。', action: useSkillSureHitAreaAttack },
+    { id: 'strong-area', name: '強範囲攻撃', cost: 100, description: '周囲の敵へ威力3倍の範囲攻撃。', action: useSkillStrongAreaAttack },
+    { id: 'surehit-strong-area', name: '必中強範囲攻撃', cost: 150, description: '周囲の敵へ必中で威力3倍の範囲攻撃。', action: useSkillSureHitStrongAreaAttack },
+    { id: 'surehit-floor', name: '必中全体攻撃', cost: 200, description: 'フロア全体の敵へ必中の攻撃。', action: useSkillSureHitFloorAttack },
+    { id: 'ruin-annihilation', name: '破滅全体攻撃', cost: 300, description: '全ての敵へ必中で威力3倍の攻撃＆壁やギミックを消し宝箱を獲得。（高Lv敵には無効）', action: useSkillRuinAnnihilation }
+];
+
+const SKILL_AREA_OFFSETS = [
+    { dx: 0, dy: -1 },
+    { dx: 0, dy: -2 },
+    { dx: 0, dy: 1 },
+    { dx: 0, dy: 2 },
+    { dx: -1, dy: 0 },
+    { dx: -2, dy: 0 },
+    { dx: 1, dy: 0 },
+    { dx: 2, dy: 0 },
+    { dx: -1, dy: -1 },
+    { dx: 1, dy: -1 },
+    { dx: -1, dy: 1 },
+    { dx: 1, dy: 1 }
+];
 
 const PLAYER_STATUS_EFFECTS = {
     poison: { id: 'poison', label: '毒', defaultDuration: 4, damageRatio: 0.1, badgeClass: 'status-badge--poison' },
@@ -190,6 +252,7 @@ function determineEnemyType(recommendedLevel) {
 
 function isEnemyEffectSuppressed(enemy) {
     if (!enemy) return false;
+    if (isSkillEffectActive('enemyNullify')) return true;
     const enemyLevel = Math.max(1, Math.floor(Number(enemy.level) || 1));
     const playerBaseLevel = Math.max(1, Math.floor(player.level || 1));
     return enemyLevel <= playerBaseLevel - ENEMY_EFFECT_SUPPRESSION_GAP;
@@ -964,6 +1027,8 @@ const player = {
     maxHp: 100,
     hp: 100,
     satiety: SATIETY_MAX,
+    sp: 0,
+    maxSp: 0,
     attack: 10,
     defense: 10,
     facing: 'down',
@@ -1033,6 +1098,10 @@ function clearPlayerStatusEffect(effectId, { silent = false } = {}) {
 function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
     const def = PLAYER_STATUS_EFFECTS[effectId];
     if (!def) return false;
+    if (isSkillEffectActive('statusGuard')) {
+        if (!silent) addMessage('スキル効果により状態異常を無効化した！');
+        return false;
+    }
     const turns = Math.max(1, Math.floor(Number.isFinite(duration) ? Number(duration) : def.defaultDuration || 1));
     const status = getPlayerStatus(effectId);
     status.remaining = turns;
@@ -1063,6 +1132,184 @@ function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
         enforceEffectiveHpCap();
     }
     updateUI();
+    return true;
+}
+
+function ensureSkillEffectContainer() {
+    if (!skillState.effects || typeof skillState.effects !== 'object') {
+        skillState.effects = Object.create(null);
+    }
+    for (const key of Object.keys(SKILL_EFFECT_DEFS)) {
+        if (!Object.prototype.hasOwnProperty.call(skillState.effects, key)) {
+            skillState.effects[key] = 0;
+        }
+    }
+    if (!skillState.pendingTickSkip || typeof skillState.pendingTickSkip !== 'object') {
+        skillState.pendingTickSkip = Object.create(null);
+    }
+    return skillState.effects;
+}
+
+function getSkillEffectRemaining(effectId) {
+    const effects = ensureSkillEffectContainer();
+    return Math.max(0, Math.floor(Number(effects[effectId]) || 0));
+}
+
+function isSkillEffectActive(effectId) {
+    return getSkillEffectRemaining(effectId) > 0;
+}
+
+function activateSkillEffect(effectId, turns, { silent = false } = {}) {
+    const normalized = Math.max(0, Math.floor(Number(turns) || 0));
+    const effects = ensureSkillEffectContainer();
+    effects[effectId] = normalized;
+    if (normalized > 0) {
+        skillState.pendingTickSkip[effectId] = true;
+        if (!silent) {
+            const def = SKILL_EFFECT_DEFS[effectId];
+            if (def?.label) {
+                addMessage(`${def.label}の効果が発動！（${normalized}ターン）`);
+            }
+        }
+    } else if (!silent) {
+        clearSkillEffect(effectId, { silent: true });
+    }
+    return normalized;
+}
+
+function clearSkillEffect(effectId, { silent = false } = {}) {
+    const effects = ensureSkillEffectContainer();
+    const wasActive = effects[effectId] > 0;
+    effects[effectId] = 0;
+    delete skillState.pendingTickSkip?.[effectId];
+    if (wasActive && !silent) {
+        const def = SKILL_EFFECT_DEFS[effectId];
+        if (def?.expireMessage) addMessage(def.expireMessage);
+    }
+}
+
+function getActiveSkillEffectList() {
+    const list = [];
+    for (const key of Object.keys(SKILL_EFFECT_DEFS)) {
+        const remaining = getSkillEffectRemaining(key);
+        if (remaining > 0) {
+            const def = SKILL_EFFECT_DEFS[key];
+            list.push({
+                id: key,
+                label: def?.label || key,
+                remaining,
+                badgeClass: def?.badgeClass || 'status-badge--skill'
+            });
+        }
+    }
+    return list;
+}
+
+function advanceSkillEffects() {
+    const effects = ensureSkillEffectContainer();
+    let updated = false;
+    for (const key of Object.keys(effects)) {
+        const turns = Math.max(0, Number(effects[key]) || 0);
+        if (turns <= 0) {
+            delete skillState.pendingTickSkip?.[key];
+            continue;
+        }
+        if (skillState.pendingTickSkip && skillState.pendingTickSkip[key]) {
+            delete skillState.pendingTickSkip[key];
+            continue;
+        }
+        const next = Math.max(0, Math.floor(turns - 1));
+        effects[key] = next;
+        updated = true;
+        if (next === 0) {
+            const def = SKILL_EFFECT_DEFS[key];
+            if (def?.expireMessage) addMessage(def.expireMessage);
+        }
+    }
+    return updated;
+}
+
+function isGimmickNullificationActive() {
+    return isSkillEffectActive('gimmickNullify');
+}
+
+function isSureHitActiveForEnemy(enemyLevel) {
+    if (!isSkillEffectActive('sureHit')) return false;
+    const playerLevel = getEffectivePlayerLevel();
+    return enemyLevel - playerLevel < SP_HIGH_LEVEL_SUPPRESS_GAP;
+}
+
+function isSpUnlocked(level = player.level || 1) {
+    return Math.max(1, Math.floor(level)) >= SP_UNLOCK_LEVEL;
+}
+
+function computePlayerMaxSp(level = player.level || 1) {
+    const baseLevel = Math.max(1, Math.floor(level));
+    if (baseLevel < SP_UNLOCK_LEVEL) return 0;
+    if (baseLevel > 500) {
+        const extra = Math.floor((baseLevel - 500) / 500);
+        return 200 + (extra * 50);
+    }
+    if (baseLevel > 250) return 150;
+    return 100;
+}
+
+function updatePlayerSpCap({ silent = false } = {}) {
+    const previousMax = Math.max(0, Number(player.maxSp) || 0);
+    const newMax = computePlayerMaxSp(player.level || 1);
+    if (!isSpUnlocked()) {
+        player.maxSp = 0;
+        player.sp = 0;
+        prevSp = 0;
+        return 0;
+    }
+    player.maxSp = newMax;
+    if (previousMax === 0 && newMax > 0 && !silent) {
+        addMessage('SPが解放された！');
+    } else if (newMax > previousMax && !silent) {
+        addMessage(`SP上限が${newMax}に上昇した！`);
+    }
+    player.sp = Math.max(0, Math.min(newMax, Number(player.sp) || 0));
+    return newMax;
+}
+
+function gainSp(amount, { silent = true } = {}) {
+    if (!isSpUnlocked()) return 0;
+    updatePlayerSpCap({ silent: true });
+    const value = Number(amount) || 0;
+    if (value <= 0) return 0;
+    const maxSp = Math.max(0, Number(player.maxSp) || 0);
+    if (maxSp <= 0) return 0;
+    const before = Math.max(0, Number(player.sp) || 0);
+    const after = Math.min(maxSp, before + value);
+    const gained = after - before;
+    if (gained <= 0) return 0;
+    player.sp = after;
+    if (!silent) {
+        const display = gained >= 1 ? Math.floor(gained) : Math.round(gained * 10) / 10;
+        addMessage(`SPを${display}${display % 1 === 0 ? '' : ''}獲得した。`);
+    }
+    return gained;
+}
+
+function trySpendSp(cost, { silent = false } = {}) {
+    if (!isSpUnlocked()) {
+        if (!silent) addMessage('SPが解放されていない。');
+        return false;
+    }
+    updatePlayerSpCap({ silent: true });
+    const required = Math.max(0, Number(cost) || 0);
+    if (required <= 0) return true;
+    const current = Math.max(0, Number(player.sp) || 0);
+    if (current + 1e-6 < required) {
+        if (!silent) addMessage('SPが足りない。');
+        return false;
+    }
+    player.sp = Math.max(0, current - required);
+    if (!silent) {
+        const display = required >= 1 ? Math.floor(required) : Math.round(required * 10) / 10;
+        addMessage(`SPを${display}${display % 1 === 0 ? '' : ''}消費した。`);
+    }
     return true;
 }
 
@@ -1210,10 +1457,12 @@ function skipTurnDueToParalysis() {
 }
 
 function isDarknessActive() {
+    if (isGimmickNullificationActive()) return false;
     return !!currentGeneratorHazards.darkActive;
 }
 
 function isPoisonFogActive() {
+    if (isGimmickNullificationActive()) return false;
     return !!currentGeneratorHazards.poisonFogActive;
 }
 
@@ -1256,6 +1505,7 @@ function refreshGeneratorHazardSuppression() {
 // Track previous values for change indicators
 let prevHp = 100;
 let prevExp = 0;
+let prevSp = 0;
 let satietySystemActive = false;
 let activePopupGroup = [];
 let popupGroupTimer = null;
@@ -1608,6 +1858,424 @@ function selectOption(listEl, key, opts = {}) {
             target.scrollIntoView({ block: 'nearest' });
         }
     }
+}
+
+function applyDamageToEnemyFromSkill(enemy, damage, { crit = false, popupColor = '#ffffff', popupSuffix = '', killMessage = '敵を倒した！' } = {}) {
+    if (!enemy) return false;
+    const clamped = Math.max(0, Math.floor(Number(damage) || 0));
+    enemy.hp -= clamped;
+    const popupValue = `${crit ? '!' : ''}${Math.min(clamped, 999999999)}${clamped > 999999999 ? '+' : ''}${popupSuffix}`;
+    if (enemy.hp <= 0) {
+        if (killMessage) addMessage(killMessage);
+        addPopup(enemy.x, enemy.y, `${popupValue}☠`, popupColor, 1.3);
+        addDefeatedEnemy(enemy);
+        gainSp(1, { silent: true });
+        grantExpFromEnemy(enemy.level || 1, enemy.boss || false);
+        if (enemy.boss) bossAlive = false;
+        const idx = enemies.indexOf(enemy);
+        if (idx >= 0) enemies.splice(idx, 1);
+        return true;
+    }
+    addPopup(enemy.x, enemy.y, popupValue, popupColor, crit ? 1.15 : 1.1);
+    return false;
+}
+
+function computePlayerSkillDamage(enemy, { multiplier = 1, sureHit = false, allowHighLevel = false, sureHitLevelGap = SP_HIGH_LEVEL_SUPPRESS_GAP } = {}) {
+    if (!enemy) return { hit: false, damage: 0, crit: false, sureHitFailed: false };
+    const playerLevel = getEffectivePlayerLevel();
+    const playerAttack = getEffectivePlayerAttack();
+    const enemyLevel = Math.max(1, Math.floor(enemy.level || 1));
+    const highLevelDiff = enemyLevel - playerLevel;
+    const canForceHit = sureHit && (allowHighLevel || highLevelDiff < sureHitLevelGap);
+    const baseDef = enemy.defense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
+    if (!canForceHit && !hitCheck(playerLevel || 1, enemyLevel)) {
+        return { hit: false, damage: 0, crit: false, sureHitFailed: sureHit && !allowHighLevel && highLevelDiff >= sureHitLevelGap };
+    }
+    const attacker = { level: playerLevel, attack: playerAttack };
+    const defender = { level: enemyLevel, defense: baseDef };
+    const base = Math.max(1, attacker.attack - Math.floor(defender.defense / 2));
+    const levelDiff = attacker.level - defender.level;
+    let mult = damageMultiplierByLevelDiff(levelDiff);
+    if (!Number.isFinite(mult)) mult = levelDiff > 0 ? Infinity : 0;
+    const critFlag = isCritical(attacker.level, defender.level);
+    const rand = 0.7 + Math.random() * 0.5;
+    let dmg = Math.ceil(base * mult * rand * (critFlag ? 1.5 : 1) * (Number(multiplier) || 1));
+    if (dmg < 1 && dmg < 0.5) dmg = 0;
+    const applied = Math.ceil(applyDifficultyDamageMultipliers('deal', dmg));
+    return { hit: true, damage: applied, crit: critFlag, sureHitFailed: false };
+}
+
+function getFacingDelta() {
+    switch (player.facing) {
+        case 'up': return { dx: 0, dy: -1 };
+        case 'down': return { dx: 0, dy: 1 };
+        case 'left': return { dx: -1, dy: 0 };
+        case 'right': return { dx: 1, dy: 0 };
+        default: return { dx: 0, dy: 0 };
+    }
+}
+
+function getEnemyInFront() {
+    const { dx, dy } = getFacingDelta();
+    const targetX = player.x + dx;
+    const targetY = player.y + dy;
+    return enemies.find(e => e.x === targetX && e.y === targetY) || null;
+}
+
+function getEnemiesByOffsets(offsets) {
+    const result = [];
+    offsets.forEach(({ dx, dy }) => {
+        const x = player.x + dx;
+        const y = player.y + dy;
+        const enemy = enemies.find(e => e.x === x && e.y === y);
+        if (enemy && !result.includes(enemy)) result.push(enemy);
+    });
+    return result;
+}
+
+function isCurrentDungeonTooHardForSkill() {
+    const recommended = getCurrentRecommendedLevelForHazards();
+    const playerLevel = getEffectivePlayerLevel();
+    return Number.isFinite(recommended) && Number.isFinite(playerLevel) && (recommended - playerLevel) >= SP_HIGH_LEVEL_SUPPRESS_GAP;
+}
+
+function findWarpDestinationNearStairs() {
+    if (!stairs) return null;
+    const candidates = [];
+    const deltas = [{ dx: 0, dy: -1 }, { dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }];
+    for (const { dx, dy } of deltas) {
+        const x = stairs.x + dx;
+        const y = stairs.y + dy;
+        if (!isFloor(x, y)) continue;
+        if (!canActorEnterTile('player', x, y, dx, dy)) continue;
+        if (enemies.some(e => e.x === x && e.y === y)) continue;
+        const dist = Math.abs(player.x - x) + Math.abs(player.y - y);
+        candidates.push({ x, y, dist });
+    }
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => a.dist - b.dist);
+    return { x: candidates[0].x, y: candidates[0].y };
+}
+
+function commitSkillAction() {
+    const alive = onPlayerActionCommitted({ type: 'skill' });
+    if (!alive) return;
+    if (!isGameOver && gameLoopRunning) {
+        playerTurn = false;
+        setTimeout(enemyTurn, 100);
+    } else if (!isGameOver) {
+        playerTurn = true;
+    }
+}
+
+function canBreakWallInFront() {
+    const { dx, dy } = getFacingDelta();
+    if (!dx && !dy) return false;
+    const targetX = player.x + dx;
+    const targetY = player.y + dy;
+    return !!(map[targetY] && map[targetY][targetX] === 1);
+}
+
+function evaluateSkillAvailability(def) {
+    if (!isSpUnlocked()) {
+        return { available: false, reason: 'Lv100で解放' };
+    }
+    updatePlayerSpCap({ silent: true });
+    if (player.maxSp < def.cost) {
+        return { available: false, reason: 'SP上限不足' };
+    }
+    const currentSp = Math.max(0, Number(player.sp) || 0);
+    if (currentSp + 1e-6 < def.cost) {
+        return { available: false, reason: 'SPが足りない' };
+    }
+    switch (def.id) {
+        case 'gimmick-nullify':
+            if (isCurrentDungeonTooHardForSkill()) return { available: false, reason: '高難度で無効' };
+            break;
+        case 'break-wall':
+            if (!canBreakWallInFront()) return { available: false, reason: '前方に壁なし' };
+            break;
+        case 'strong-strike':
+            if (!getEnemyInFront()) return { available: false, reason: '目の前に敵なし' };
+            break;
+        case 'area-attack':
+        case 'surehit-area':
+        case 'strong-area':
+        case 'surehit-strong-area':
+            if (!getEnemiesByOffsets(SKILL_AREA_OFFSETS).length) return { available: false, reason: '範囲内に敵なし' };
+            break;
+        case 'surehit-floor':
+        case 'ruin-annihilation':
+            if (!enemies.length) return { available: false, reason: '敵がいない' };
+            break;
+        case 'stair-warp':
+            if (!findWarpDestinationNearStairs()) return { available: false, reason: 'ワープ先なし' };
+            break;
+        default:
+            break;
+    }
+    if (!playerTurn || isGameOver) {
+        return { available: false, reason: '自分のターンではない' };
+    }
+    if (isPlayerStatusActive('paralysis')) {
+        return { available: false, reason: '麻痺中' };
+    }
+    return { available: true, reason: '' };
+}
+
+function attemptUseSkill(def) {
+    if (!def) return;
+    const availability = evaluateSkillAvailability(def);
+    if (!availability.available) {
+        if (availability.reason) addMessage(`スキルを使えない：${availability.reason}`);
+        return;
+    }
+    ensureAudio();
+    const spent = trySpendSp(def.cost, { silent: true });
+    if (!spent) {
+        addMessage('SPが不足している。');
+        return;
+    }
+    const success = !!def.action();
+    if (!success) {
+        gainSp(def.cost, { silent: true });
+        updateUI();
+        if (skillsModal && skillsModal.style.display === 'flex') renderSkillsList();
+        return;
+    }
+    updateUI();
+    if (skillsModal && skillsModal.style.display === 'flex') renderSkillsList();
+    commitSkillAction();
+}
+
+function renderSkillsList() {
+    if (!skillsList) return;
+    skillsList.innerHTML = '';
+    updatePlayerSpCap({ silent: true });
+    const currentSp = Math.max(0, Number(player.sp) || 0);
+    const maxSp = Math.max(0, Number(player.maxSp) || 0);
+    SKILL_DEFINITIONS.forEach(def => {
+        const entry = document.createElement('div');
+        entry.className = 'skill-entry';
+        const info = document.createElement('div');
+        info.className = 'skill-info';
+        const nameEl = document.createElement('div');
+        nameEl.className = 'skill-name';
+        nameEl.textContent = def.name;
+        const metaEl = document.createElement('div');
+        metaEl.className = 'skill-meta';
+        const spText = maxSp > 0 ? `${currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1)}/${maxSp}` : '0/0';
+        metaEl.textContent = `消費SP: ${def.cost} / 所持: ${spText}`;
+        const availability = evaluateSkillAvailability(def);
+        if (!availability.available && availability.reason) {
+            metaEl.textContent += ` (${availability.reason})`;
+            entry.classList.add('locked');
+        }
+        const descEl = document.createElement('div');
+        descEl.className = 'skill-desc';
+        descEl.textContent = def.description;
+        if (def.id === 'gimmick-nullify') {
+            const remaining = getSkillEffectRemaining('gimmickNullify');
+            if (remaining > 0) descEl.textContent += ` 現在: 残り${remaining}ターン`;
+        } else if (def.id === 'status-guard') {
+            const remaining = getSkillEffectRemaining('statusGuard');
+            if (remaining > 0) descEl.textContent += ` 現在: 残り${remaining}ターン`;
+        } else if (def.id === 'enemy-nullify') {
+            const remaining = getSkillEffectRemaining('enemyNullify');
+            if (remaining > 0) descEl.textContent += ` 現在: 残り${remaining}ターン`;
+        } else if (def.id === 'sure-hit') {
+            const remaining = getSkillEffectRemaining('sureHit');
+            if (remaining > 0) descEl.textContent += ` 現在: 残り${remaining}ターン`;
+        }
+        info.appendChild(nameEl);
+        info.appendChild(metaEl);
+        info.appendChild(descEl);
+
+        const button = document.createElement('button');
+        button.textContent = '使用';
+        button.disabled = !availability.available;
+        button.addEventListener('click', () => attemptUseSkill(def));
+
+        entry.appendChild(info);
+        entry.appendChild(button);
+        skillsList.appendChild(entry);
+    });
+}
+
+function useSkillBreakWall() {
+    const { dx, dy } = getFacingDelta();
+    const targetX = player.x + dx;
+    const targetY = player.y + dy;
+    if (!dx && !dy) return false;
+    if (!map[targetY] || map[targetY][targetX] !== 1) {
+        addMessage('目の前に破壊できる壁がない。');
+        return false;
+    }
+    if (!breakWallAt(targetX, targetY)) {
+        addMessage('その壁は破壊できなかった。');
+        return false;
+    }
+    addMessage('SPスキル：壁を粉砕した！');
+    return true;
+}
+
+function useSkillGimmickNullify() {
+    if (isCurrentDungeonTooHardForSkill()) {
+        addMessage('このダンジョンではギミック無効化の効果が及ばない…');
+        return false;
+    }
+    activateSkillEffect('gimmickNullify', 10, { silent: false });
+    updateGeneratorHazardsForFloor(currentGeneratorHazards.generatorId);
+    return true;
+}
+
+function useSkillStatusGuard() {
+    activateSkillEffect('statusGuard', 10, { silent: false });
+    return true;
+}
+
+function useSkillEnemyNullify() {
+    activateSkillEffect('enemyNullify', 10, { silent: false });
+    return true;
+}
+
+function useSkillSureHitBuff() {
+    activateSkillEffect('sureHit', 10, { silent: false });
+    return true;
+}
+
+function useSkillStairWarp() {
+    const destination = findWarpDestinationNearStairs();
+    if (!destination) {
+        addMessage('階段の周囲に安全なワープ先がない。');
+        return false;
+    }
+    player.x = destination.x;
+    player.y = destination.y;
+    updateCamera();
+    addMessage('階段の前へ瞬間移動した！');
+    playSfx('stair');
+    applyPostMoveEffects();
+    return true;
+}
+
+function useSkillStrongStrike() {
+    const enemy = getEnemyInFront();
+    if (!enemy) {
+        addMessage('強攻撃を放つ敵がいない。');
+        return false;
+    }
+    const result = computePlayerSkillDamage(enemy, { multiplier: 3, sureHit: true });
+    if (!result.hit) {
+        if (result.sureHitFailed) addMessage('敵のレベルが高すぎて必中が効かなかった…');
+        addMessage('強攻撃は外れてしまった。');
+        addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
+        return true;
+    }
+    addMessage(`強攻撃で${result.damage}のダメージ！`);
+    applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffa94d', killMessage: '強攻撃で敵を倒した！' });
+    return true;
+}
+
+function executeAreaSkillAttack({ multiplier = 1, sureHit = false, allowHighLevel = false, sureHitLevelGap = SP_HIGH_LEVEL_SUPPRESS_GAP, name = '範囲攻撃' } = {}) {
+    const targets = getEnemiesByOffsets(SKILL_AREA_OFFSETS);
+    if (!targets.length) {
+        addMessage('範囲内に敵がいない。');
+        return false;
+    }
+    addMessage(`${name}を発動した！`);
+    let anyHit = false;
+    for (const enemy of targets) {
+        const result = computePlayerSkillDamage(enemy, { multiplier, sureHit, allowHighLevel, sureHitLevelGap });
+        if (!result.hit) {
+            if (result.sureHitFailed) addMessage('高レベルの敵には効果が薄かった…');
+            addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
+            continue;
+        }
+        anyHit = true;
+        applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffe066', killMessage: `${name}で敵を倒した！` });
+    }
+    if (!anyHit) addMessage('誰にも当たらなかった…');
+    return true;
+}
+
+function useSkillAreaAttack() {
+    return executeAreaSkillAttack({ name: '範囲攻撃' });
+}
+
+function useSkillSureHitAreaAttack() {
+    return executeAreaSkillAttack({ sureHit: true, name: '必中範囲攻撃' });
+}
+
+function useSkillStrongAreaAttack() {
+    return executeAreaSkillAttack({ multiplier: 3, name: '強範囲攻撃' });
+}
+
+function useSkillSureHitStrongAreaAttack() {
+    return executeAreaSkillAttack({ multiplier: 3, sureHit: true, name: '必中強範囲攻撃' });
+}
+
+function executeFloorSkillAttack({ multiplier = 1, sureHit = false, allowHighLevel = false, sureHitLevelGap = SP_HIGH_LEVEL_SUPPRESS_GAP, name = '全体攻撃' } = {}) {
+    if (!enemies.length) {
+        addMessage('攻撃対象となる敵がいない。');
+        return false;
+    }
+    addMessage(`${name}を放った！`);
+    let anyHit = false;
+    for (const enemy of [...enemies]) {
+        const result = computePlayerSkillDamage(enemy, { multiplier, sureHit, allowHighLevel, sureHitLevelGap });
+        if (!result.hit) {
+            if (result.sureHitFailed) addMessage('高レベルの敵には効果がなかった…');
+            addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
+            continue;
+        }
+        anyHit = true;
+        applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffe066', killMessage: `${name}で敵を倒した！` });
+    }
+    if (!anyHit) addMessage('誰にもダメージを与えられなかった。');
+    return true;
+}
+
+function useSkillSureHitFloorAttack() {
+    return executeFloorSkillAttack({ sureHit: true, name: '必中全体攻撃' });
+}
+
+function useSkillRuinAnnihilation() {
+    addMessage('破滅の力を解き放った！');
+    let resisted = false;
+    const snapshot = [...enemies];
+    for (const enemy of snapshot) {
+        const result = computePlayerSkillDamage(enemy, { multiplier: 3, sureHit: true, allowHighLevel: false });
+        if (!result.hit) {
+            if (result.sureHitFailed) resisted = true;
+            addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
+            continue;
+        }
+        applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffa94d', killMessage: '破滅の炎で敵を消し飛ばした！' });
+    }
+    if (resisted) addMessage('一部の高レベルの敵には破滅の力が届かなかった…');
+
+    for (let y = 0; y < MAP_HEIGHT; y++) {
+        if (!map[y]) continue;
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            map[y][x] = 0;
+            if (tileMeta[y]) tileMeta[y][x] = null;
+        }
+    }
+    currentGeneratorHazards.baseDark = false;
+    currentGeneratorHazards.basePoisonFog = false;
+    currentGeneratorHazards.darkActive = false;
+    currentGeneratorHazards.poisonFogActive = false;
+
+    if (Array.isArray(chests) && chests.length) {
+        const copy = chests.slice();
+        chests.length = 0;
+        copy.forEach(chest => openChest(chest));
+    }
+
+    addMessage('ダンジョンの壁とギミックが消え去った！');
+    refreshGeneratorHazardSuppression();
+    return true;
 }
 
 function getSelectedKey(listEl) {
@@ -3560,6 +4228,7 @@ function cloneMiniShortcutOverrides(source) {
 }
 
 function getGameStateSnapshot() {
+    ensureSkillEffectContainer();
     const blockDimSnapshot = blockDimState?.enabled ? {
         enabled: true,
         nested: blockDimState.nested || 1,
@@ -3586,7 +4255,11 @@ function getGameStateSnapshot() {
             global: !!miniShortcutState.global,
             overrides: cloneMiniShortcutOverrides(miniShortcutState.overrides)
         },
-        miniSessionExp: __miniSessionExp
+        miniSessionExp: __miniSessionExp,
+        skillState: {
+            effects: deepClone(skillState.effects),
+            pendingTickSkip: deepClone(skillState.pendingTickSkip)
+        }
     };
 }
 
@@ -3620,6 +4293,8 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     player.hp = Math.max(0, Math.min(player.maxHp, Math.floor(Number(playerSnap.hp) || player.maxHp)));
     const satietySnap = Number.isFinite(playerSnap.satiety) ? Number(playerSnap.satiety) : SATIETY_MAX;
     player.satiety = Math.max(0, Math.min(SATIETY_MAX, satietySnap));
+    player.sp = Math.max(0, Number(playerSnap.sp) || 0);
+    player.maxSp = Math.max(0, Number(playerSnap.maxSp) || 0);
     player.attack = Math.max(0, Math.floor(Number(playerSnap.attack) || player.attack || 0));
     player.defense = Math.max(0, Math.floor(Number(playerSnap.defense) || player.defense || 0));
     if (typeof playerSnap.facing === 'string') player.facing = playerSnap.facing;
@@ -3642,7 +4317,25 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     } else {
         resetPlayerStatusEffects();
     }
+    ensureSkillEffectContainer();
+    if (snapshot.skillState && typeof snapshot.skillState === 'object') {
+        if (snapshot.skillState.effects && typeof snapshot.skillState.effects === 'object') {
+            for (const key of Object.keys(SKILL_EFFECT_DEFS)) {
+                const value = snapshot.skillState.effects[key];
+                skillState.effects[key] = Math.max(0, Math.floor(Number(value) || 0));
+            }
+        }
+        if (snapshot.skillState.pendingTickSkip && typeof snapshot.skillState.pendingTickSkip === 'object') {
+            skillState.pendingTickSkip = Object.create(null);
+            for (const key of Object.keys(snapshot.skillState.pendingTickSkip)) {
+                if (snapshot.skillState.pendingTickSkip[key]) skillState.pendingTickSkip[key] = true;
+            }
+        } else {
+            skillState.pendingTickSkip = Object.create(null);
+        }
+    }
     enforceEffectiveHpCap();
+    updatePlayerSpCap({ silent: true });
 
     if (snapshot.selectedWorld) selectedWorld = snapshot.selectedWorld;
     if (typeof snapshot.selectedDungeonBase !== 'undefined') selectedDungeonBase = snapshot.selectedDungeonBase;
@@ -3686,6 +4379,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
 
     prevHp = Math.min(player.hp || 0, getEffectivePlayerMaxHp());
     prevExp = player.exp || 0;
+    prevSp = Math.max(0, Math.min(Number(player.sp) || 0, Number(player.maxSp) || 0));
 
     refreshGeneratorHazardSuppression();
     refreshSatietyActivation({ notify: false });
@@ -5652,6 +6346,7 @@ function isFloorHazardSuppressed() {
 }
 
 function areFloorEffectsActive() {
+    if (isGimmickNullificationActive()) return false;
     return !isFloorHazardSuppressed();
 }
 
@@ -6223,7 +6918,14 @@ function updateUI() {
     const hpPct = Math.max(0, Math.min(1, currentHp / (effectiveMaxHp || 1)));
     const expPct = Math.max(0, Math.min(1, exp / expMax));
     const abilityDownActive = isPlayerStatusActive('abilityDown');
+    updatePlayerSpCap({ silent: true });
+    const spUnlocked = isSpUnlocked();
+    const spMax = Math.max(0, Number(player.maxSp) || 0);
+    const currentSp = Math.max(0, Math.min(spMax, Number(player.sp) || 0));
+    const spPct = spMax > 0 ? Math.max(0, Math.min(1, currentSp / spMax)) : 0;
     const statusList = getPlayerStatusDisplayList();
+    const skillEffects = getActiveSkillEffectList();
+    const combinedStatusList = statusList.concat(skillEffects);
 
     // Show value change indicators
     if (currentHp !== prevHp) {
@@ -6254,6 +6956,20 @@ function updateUI() {
         prevExp = exp;
     }
 
+    if (currentSp !== prevSp) {
+        const delta = currentSp - prevSp;
+        if (delta !== 0 && spBarContainer && spBarContainer.style.display !== 'none') {
+            const popupData = {
+                element: spBarContainer,
+                change: Math.abs(delta),
+                isPositive: delta > 0,
+                type: 'sp'
+            };
+            addToPopupGroup(popupData);
+        }
+        prevSp = currentSp;
+    }
+
     if (statLevel) {
         statLevel.textContent = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
     }
@@ -6270,6 +6986,15 @@ function updateUI() {
     if (statExpText) statExpText.textContent = `${expDisp}/${expMax}`;
     if (hpBar) hpBar.style.width = `${hpPct * 100}%`;
     if (expBar) expBar.style.width = `${expPct * 100}%`;
+    if (spBarContainer) spBarContainer.style.display = spUnlocked && spMax > 0 ? '' : 'none';
+    if (statSpText) {
+        const spDisplayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
+        const spDisplayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
+        statSpText.textContent = spUnlocked && spMax > 0 ? `${spDisplayCurrent}/${spDisplayMax}` : '0/0';
+    }
+    if (spBar && spUnlocked && spMax > 0) {
+        spBar.style.width = `${spPct * 100}%`;
+    }
     if (satietyBarContainer) satietyBarContainer.style.display = satietySystemActive ? '' : 'none';
     if (satietySystemActive) {
         if (statSatietyText) statSatietyText.textContent = `${currentSatiety}/${SATIETY_MAX}`;
@@ -6290,10 +7015,10 @@ function updateUI() {
     });
 
     if (statStatusEffects) {
-        if (!statusList.length) {
+        if (!combinedStatusList.length) {
             statStatusEffects.textContent = '状態異常なし';
         } else {
-            statStatusEffects.innerHTML = statusList.map(status => {
+            statStatusEffects.innerHTML = combinedStatusList.map(status => {
                 const classes = ['status-badge'];
                 if (status.badgeClass) classes.push(status.badgeClass);
                 return `<span class="${classes.join(' ')}">${status.label} 残り${status.remaining}</span>`;
@@ -6342,9 +7067,18 @@ function updateUI() {
     if (modalDefense) modalDefense.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
     if (modalSatietyRow) modalSatietyRow.style.display = satietySystemActive ? '' : 'none';
     if (modalSatiety && satietySystemActive) modalSatiety.textContent = `${currentSatiety} / ${SATIETY_MAX}`;
+    if (modalSpRow) modalSpRow.style.display = spUnlocked && spMax > 0 ? '' : 'none';
+    if (modalSpValue && spUnlocked && spMax > 0) {
+        const spDisplayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
+        const spDisplayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
+        modalSpValue.textContent = `${spDisplayCurrent} / ${spDisplayMax}`;
+    }
     if (modalFloor) modalFloor.textContent = `${dungeonLevel}F`;
     if (modalStatusEffects) {
         modalStatusEffects.textContent = statusList.length ? statusList.map(s => `${s.label} 残り${s.remaining}ターン`).join('\n') : 'なし';
+    }
+    if (modalSkillEffects) {
+        modalSkillEffects.textContent = skillEffects.length ? skillEffects.map(s => `${s.label} 残り${s.remaining}ターン`).join('\n') : 'なし';
     }
     if (modalPotion30) modalPotion30.textContent = `x ${potion30Count}`;
     if (modalHpBoost) modalHpBoost.textContent = `x ${hpBoostCount}`;
@@ -6404,6 +7138,10 @@ function updateUI() {
     }
     const floorEl = document.getElementById('floor-indicator');
     if (floorEl) floorEl.textContent = `${dungeonLevel}F`;
+
+    if (skillsModal && skillsModal.style.display === 'flex') {
+        renderSkillsList();
+    }
 
     // メッセージログは addMessage で更新
 }
@@ -6479,6 +7217,10 @@ function handleSatietyTurnTick(actionType = 'move') {
 }
 
 function onPlayerActionCommitted({ type = 'move' } = {}) {
+    if (type === 'move') {
+        gainSp(0.1, { silent: true });
+    }
+    advanceSkillEffects();
     return handleSatietyTurnTick(type);
 }
 
@@ -6492,7 +7234,10 @@ function updatePlayerSummaryCard({
     baseDefense = player.defense || 0,
     effectiveDefense = getEffectivePlayerDefense(),
     expDisp = Math.floor(player.exp || 0),
-    expMax = 1000
+    expMax = 1000,
+    currentSp = Math.max(0, Math.min(Number(player.sp) || 0, Number(player.maxSp) || 0)),
+    spMax = Math.max(0, Number(player.maxSp) || 0),
+    spUnlocked = isSpUnlocked()
 } = {}) {
     if (!playerSummaryDiv) return;
     const card = playerSummaryDiv.querySelector('.player-status-card');
@@ -6505,6 +7250,8 @@ function updatePlayerSummaryCard({
     const defEl = card.querySelector('.stat-value.defense');
     const satietyValueEl = card.querySelector('.stat-value.satiety');
     const satietyItemEl = card.querySelector('.stat-item.satiety');
+    const spValueEl = card.querySelector('.stat-value.sp');
+    const spItemEl = card.querySelector('.stat-item.sp');
     const currentSatiety = Number.isFinite(player.satiety) ? Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety))) : SATIETY_MAX;
     const abilityDownActive = isPlayerStatusActive('abilityDown');
 
@@ -6518,6 +7265,12 @@ function updatePlayerSummaryCard({
     if (defEl) defEl.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
     if (satietyItemEl) satietyItemEl.style.display = satietySystemActive ? '' : 'none';
     if (satietyValueEl) satietyValueEl.textContent = `${currentSatiety}/${SATIETY_MAX}`;
+    if (spItemEl) spItemEl.style.display = spUnlocked && spMax > 0 ? '' : 'none';
+    if (spValueEl) {
+        const displayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
+        const displayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
+        spValueEl.textContent = spUnlocked && spMax > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
+    }
 }
 
 function addMessage(message) {
@@ -6654,13 +7407,18 @@ function attackInDirection() {
 function performAttack(enemyAtTarget) {
     const playerEffectiveLevel = getEffectivePlayerLevel();
     const playerEffectiveAttack = getEffectivePlayerAttack();
-    if (!hitCheck(playerEffectiveLevel || 1, enemyAtTarget.level || 1)) {
+    const enemyLevel = Math.max(1, Math.floor(enemyAtTarget.level || 1));
+    const forceHit = isSureHitActiveForEnemy(enemyLevel);
+    if (!forceHit && isSkillEffectActive('sureHit') && enemyLevel - playerEffectiveLevel >= SP_HIGH_LEVEL_SUPPRESS_GAP) {
+        addMessage('敵のレベルが高すぎて必中攻撃の効果が及ばない…');
+    }
+    if (!forceHit && !hitCheck(playerEffectiveLevel || 1, enemyLevel)) {
         addMessage('Miss');
         addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Miss', '#74c0fc');
     } else {
         const baseDef = enemyAtTarget.defense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
         const attacker = { level: playerEffectiveLevel, attack: playerEffectiveAttack };
-        const defender = { level: enemyAtTarget.level || 1, defense: baseDef };
+        const defender = { level: enemyLevel, defense: baseDef };
         const { dmg, crit } = (function(att, def){
             const base = Math.max(1, att.attack - Math.floor(def.defense / 2));
             const levelDiff = att.level - def.level;
@@ -6681,6 +7439,7 @@ function performAttack(enemyAtTarget) {
             addMessage("敵を倒した！");
             addPopup(enemyAtTarget.x, enemyAtTarget.y, `${dmgText}☠`, '#ffffff', 1.3);
             addDefeatedEnemy(enemyAtTarget); // Add defeat animation
+            gainSp(1, { silent: true });
             grantExpFromEnemy(enemyAtTarget.level || 1, enemyAtTarget.boss || false);
             if (enemyAtTarget.boss) bossAlive = false;
             enemies.splice(enemies.indexOf(enemyAtTarget), 1);
@@ -7428,6 +8187,7 @@ restartButton.addEventListener('click', () => {
 // ゲームの開始
 // UI: モーダル/入出力
 btnItems && btnItems.addEventListener('click', () => { openModal(itemsModal); });
+btnSkills && btnSkills.addEventListener('click', () => { renderSkillsList(); openModal(skillsModal); });
 btnStatus && btnStatus.addEventListener('click', () => { openModal(statusModal); updateUI(); });
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => {
     const target = e.currentTarget.getAttribute('data-target');
@@ -7494,6 +8254,24 @@ eatPotion30Btn && eatPotion30Btn.addEventListener('click', () => {
     player.inventory.potion30 -= 1;
     addMessage(`ポーションを食べた！満腹度が${recover}回復`);
     playSfx('pickup');
+    updateUI();
+    saveAll();
+});
+
+offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
+    if (!isSpUnlocked()) {
+        addMessage('SPシステムが解放されてから捧げられる。');
+        return;
+    }
+    if (player.inventory.potion30 <= 0) {
+        addMessage('捧げる回復アイテムがない。');
+        return;
+    }
+    player.inventory.potion30 -= 1;
+    const gained = gainSp(SP_SACRIFICE_VALUE, { silent: true });
+    playSfx('pickup');
+    const display = gained >= 1 ? Math.floor(gained) : Math.round(gained * 10) / 10;
+    addMessage(`回復アイテムを捧げ、SPを${display}獲得した。`);
     updateUI();
     saveAll();
 });
@@ -7608,6 +8386,7 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
         player.defense += 1;
         player.hp = player.maxHp;
         enforceEffectiveHpCap();
+        updatePlayerSpCap({ silent: false });
         leveled++;
         refreshGeneratorHazardSuppression();
         try { showLevelUpPopup(); } catch {}
@@ -7626,6 +8405,9 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     }
     if (opts.popup) {
         try { addMessage(`経験値を ${Math.floor(v)} 獲得！（${opts.source}${opts.reason ? ': ' + opts.reason : ''}）`); } catch {}
+    }
+    if (opts.source === 'mini' && v > 0) {
+        gainSp(v * 0.01, { silent: true });
     }
     refreshSatietyActivation({ notify: true });
     try { updateUI(); } catch {}
@@ -7706,6 +8488,10 @@ function buildSelection() {
                 <div class=\"stat-item\">
                     <span class=\"stat-label\">経験値</span>
                     <span class=\"stat-value exp\">${Math.floor(player.exp || 0)}/${expMaxSelect}</span>
+                </div>
+                <div class=\"stat-item sp\" data-stat=\"sp\">
+                    <span class=\"stat-label\">SP</span>
+                    <span class=\"stat-value sp\">${player.maxSp ? `${player.sp}/${player.maxSp}` : '0/0'}</span>
                 </div>
                 <div class=\"stat-item\">
                     <span class=\"stat-label\">攻撃力</span>
@@ -8177,6 +8963,14 @@ function renderMiniExpPlayerHud() {
     expText.textContent = `${Math.floor(exp)}/${expMax}`;
     const pct = Math.max(0, Math.min(1, exp/expMax));
     bar.style.width = `${Math.round(pct*100)}%`;
+    if (miniexpHudSp) {
+        updatePlayerSpCap({ silent: true });
+        const maxSp = Math.max(0, Number(player?.maxSp) || 0);
+        const currentSp = Math.max(0, Math.min(maxSp, Number(player?.sp) || 0));
+        const displayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
+        const displayMax = maxSp % 1 === 0 ? Math.floor(maxSp) : maxSp;
+        miniexpHudSp.textContent = maxSp > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
+    }
 }
 
 function awardXpFromMini(n, reason='') {

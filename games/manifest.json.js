@@ -73,7 +73,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'graphics_tester', name: '3Dグラフィックテスター', entry: 'games/graphics_tester.js', version: '0.1.0', author: 'mod', description: '3D技術デモとレイトレーシング風レンダリング・ベンチマーク搭載のトイ系テスター', category: 'トイ' },
   { id: 'physics_sandbox', name: '物理遊び', entry: 'games/physics_sandbox.js', version: '0.1.0', author: 'mod', description: '火・水・ツタ・雷・回路を組み合わせるトイ系物理サンドボックス', category: 'トイ' },
   { id: 'logic_circuit', name: '論理回路シミュレータ', entry: 'games/logic_circuit.js', version: '0.1.0', author: 'mod', description: '入力ソース・ゲート・出力を配置して論理回路をシミュレーション', category: 'トイ' },
-  { id: 'circuit_simulator', name: '電気回路シミュレータ', entry: 'games/circuit_simulator.js', version: '0.1.0', author: 'mod', description: '電源と抵抗、計器を繋いで電圧・電流・電力を可視化するトイ向け回路ラボ', category: 'トイ' },
+  { id: 'circuit_simulator', name: '電気回路シミュレータ', entry: 'games/circuit_simulator.js', version: '0.1.0', author: 'mod', description: 'DC/AC電源・受動素子・計器で回路を構成し計測するトイ向け回路ラボ', category: 'トイ' },
   { id: 'memo_studio', name: '暗記スタジオ', entry: 'games/memory_app.js', version: '0.1.0', author: 'mod', description: 'フラッシュカードを登録し間隔反復で学習する暗記アプリ', category: 'トイ' },
   { id: 'typing',      name: 'タイピングチャレンジ', entry: 'games/typing.js',      version: '0.1.0', author: 'mod', description: '60秒タイプで正確さとスピードを競うタイピングチャレンジ', category: 'スキル' },
 ];

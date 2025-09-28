@@ -48,31 +48,64 @@
   const STORAGE_KEY = 'MiniExpPhysicsLayouts';
   const MATERIALS = {
     wood:  { id:'wood',  label:'木材',    density:0.6, restitution:0.25, friction:0.5, color:'#c97a43', flammability:0.8, conductivity:0.1,
-             thermalConductivity:0.18, heatCapacity:1.9, ignitionPoint:320, meltingPoint:620, boilingPoint:900, freezePoint:-40, baseTemperature:20 },
+             thermalConductivity:0.18, heatCapacity:1.9, ignitionPoint:320, meltingPoint:620, boilingPoint:900, freezePoint:-40, baseTemperature:20,
+             formula:'C6H10O5', composition:{ C:6, H:10, O:5 }, hazards:['flammable'] },
     metal: { id:'metal', label:'金属',    density:1.8, restitution:0.15, friction:0.3, color:'#9aa0a6', flammability:0.0, conductivity:0.9,
-             thermalConductivity:0.72, heatCapacity:0.9, ignitionPoint:900, meltingPoint:1500, boilingPoint:2900, freezePoint:-80, baseTemperature:20 },
+             thermalConductivity:0.72, heatCapacity:0.9, ignitionPoint:900, meltingPoint:1500, boilingPoint:2900, freezePoint:-80, baseTemperature:20,
+             formula:'Fe', composition:{ Fe:1 }, hazards:['conductive'] },
     rubber:{ id:'rubber',label:'ゴム',    density:0.9, restitution:0.75, friction:0.9, color:'#22262b', flammability:0.2, conductivity:0.05,
-             thermalConductivity:0.16, heatCapacity:1.7, ignitionPoint:310, meltingPoint:520, boilingPoint:850, freezePoint:-60, baseTemperature:20 },
+             thermalConductivity:0.16, heatCapacity:1.7, ignitionPoint:310, meltingPoint:520, boilingPoint:850, freezePoint:-60, baseTemperature:20,
+             formula:'C5H8', composition:{ C:5, H:8 }, hazards:['elastic'] },
     stone: { id:'stone', label:'石材',    density:1.4, restitution:0.1, friction:0.7, color:'#6b7280', flammability:0.05, conductivity:0.2,
-             thermalConductivity:0.35, heatCapacity:0.85, ignitionPoint:800, meltingPoint:1200, boilingPoint:2600, freezePoint:-120, baseTemperature:20 },
+             thermalConductivity:0.35, heatCapacity:0.85, ignitionPoint:800, meltingPoint:1200, boilingPoint:2600, freezePoint:-120, baseTemperature:20,
+             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'] },
     gel:   { id:'gel',   label:'ゼラチン', density:0.4, restitution:0.55, friction:0.2, color:'#60a5fa', flammability:0.0, conductivity:0.3,
-             thermalConductivity:0.28, heatCapacity:3.2, ignitionPoint:260, meltingPoint:180, boilingPoint:260, freezePoint:-10, baseTemperature:15 },
+             thermalConductivity:0.28, heatCapacity:3.2, ignitionPoint:260, meltingPoint:180, boilingPoint:260, freezePoint:-10, baseTemperature:15,
+             formula:'H2O', composition:{ H:2, O:1 }, hazards:['aqueous'] },
     plasma:{ id:'plasma',label:'プラズマ', density:0.1, restitution:0.95, friction:0.05, color:'#f97316', flammability:1.0, conductivity:0.95,
-             thermalConductivity:0.95, heatCapacity:0.5, ignitionPoint:1800, meltingPoint:2400, boilingPoint:3200, freezePoint:400, baseTemperature:800 },
+             thermalConductivity:0.95, heatCapacity:0.5, ignitionPoint:1800, meltingPoint:2400, boilingPoint:3200, freezePoint:400, baseTemperature:800,
+             formula:'H+', composition:{ H:1 }, hazards:['superheated','ionized'] },
     ice:   { id:'ice',   label:'氷結',    density:0.92, restitution:0.05, friction:0.08, color:'#a5f3fc', flammability:0.0, conductivity:0.2,
-             thermalConductivity:0.42, heatCapacity:2.1, ignitionPoint:0, meltingPoint:0, boilingPoint:100, freezePoint:-40, baseTemperature:-10 },
+             thermalConductivity:0.42, heatCapacity:2.1, ignitionPoint:0, meltingPoint:0, boilingPoint:100, freezePoint:-40, baseTemperature:-10,
+             formula:'H2O(s)', composition:{ H:2, O:1 }, hazards:['aqueous'] },
     sand:  { id:'sand',  label:'砂',      density:1.1, restitution:0.18, friction:0.85, color:'#f5d0a9', flammability:0.05, conductivity:0.05,
-             thermalConductivity:0.25, heatCapacity:0.9, ignitionPoint:750, meltingPoint:1400, boilingPoint:2600, freezePoint:-120, baseTemperature:20 },
+             thermalConductivity:0.25, heatCapacity:0.9, ignitionPoint:750, meltingPoint:1400, boilingPoint:2600, freezePoint:-120, baseTemperature:20,
+             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'] },
     glass: { id:'glass', label:'ガラス',  density:0.7, restitution:0.4,  friction:0.2, color:'#bae6fd', flammability:0.0, conductivity:0.35,
-             thermalConductivity:0.5, heatCapacity:0.84, ignitionPoint:900, meltingPoint:1100, boilingPoint:2300, freezePoint:-90, baseTemperature:20 }
+             thermalConductivity:0.5, heatCapacity:0.84, ignitionPoint:900, meltingPoint:1100, boilingPoint:2300, freezePoint:-90, baseTemperature:20,
+             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'] },
+    sodium:{ id:'sodium',label:'ナトリウム', density:0.97, restitution:0.05, friction:0.2, color:'#f4f4f5', flammability:0.95, conductivity:0.8,
+             thermalConductivity:0.14, heatCapacity:1.23, ignitionPoint:90, meltingPoint:98, boilingPoint:883, freezePoint:0, baseTemperature:20,
+             formula:'Na', composition:{ Na:1 }, hazards:['alkali-metal','water-reactive','conductive'],
+             reactivity:{ water:{ type:'exothermic', energy:2200, heat:420, spawnSteam:true, spawnFire:true, spawnHydrogen:true, structural:0.45, consumeParticle:true, cooldown:0.35 } } }
+  };
+  const PERIODIC_TABLE = {
+    H:  { symbol:'H',  name:'水素',    atomicNumber:1,  atomicMass:1.008,  category:'非金属',        standardState:'gas' },
+    O:  { symbol:'O',  name:'酸素',    atomicNumber:8,  atomicMass:15.999, category:'非金属',        standardState:'gas' },
+    Na: { symbol:'Na', name:'ナトリウム', atomicNumber:11, atomicMass:22.99,  category:'アルカリ金属',  standardState:'solid' },
+    Fe: { symbol:'Fe', name:'鉄',      atomicNumber:26, atomicMass:55.845, category:'遷移金属',      standardState:'solid' },
+    Si: { symbol:'Si', name:'ケイ素',  atomicNumber:14, atomicMass:28.085, category:'半金属',        standardState:'solid' },
+    C:  { symbol:'C',  name:'炭素',    atomicNumber:6,  atomicMass:12.011, category:'非金属',        standardState:'solid' },
+    Cl: { symbol:'Cl', name:'塩素',    atomicNumber:17, atomicMass:35.45,  category:'ハロゲン',      standardState:'gas' }
+  };
+  const HAZARD_LABELS = {
+    flammable:'可燃性',
+    conductive:'導電性',
+    elastic:'弾性体',
+    insulator:'絶縁体',
+    aqueous:'水溶性',
+    superheated:'超高温',
+    ionized:'電離',
+    'alkali-metal':'アルカリ金属',
+    'water-reactive':'水と激しく反応'
   };
   const DEFAULT_MATERIAL = 'wood';
 
   const WALL_BODIES = {
-    left:  { id:'wall-left',  static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
-    right: { id:'wall-right', static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
-    top:   { id:'wall-top',   static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
-    bottom:{ id:'wall-bottom',static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.9,  absoluteWall:true }
+    left:  { id:'wall-left',  static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true, x:0, y:0 },
+    right: { id:'wall-right', static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true, x:0, y:0 },
+    top:   { id:'wall-top',   static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true, x:0, y:0 },
+    bottom:{ id:'wall-bottom',static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.9,  absoluteWall:true, x:0, y:0 }
   };
 
   const TOOLS = [
@@ -206,6 +239,12 @@
   }
 
   const FLUID_RADIUS = 5;
+  const FLUID_KERNEL_RADIUS = FLUID_RADIUS * 2.5;
+  const FLUID_KERNEL_RADIUS_SQ = FLUID_KERNEL_RADIUS * FLUID_KERNEL_RADIUS;
+  const FLUID_REST_DENSITY = 1.1;
+  const FLUID_PRESSURE_STIFFNESS = 180;
+  const FLUID_VISCOSITY = 0.25;
+  const FLUID_SURFACE_TENSION = 0.35;
   const LIQUID_TYPES = new Set(['water','acid']);
   const FIRE_BASE_TEMPERATURE = 900;
   const STEAM_CONDENSE_TEMP = 60;
@@ -283,6 +322,7 @@
       savedLayouts:loadLayouts(),
       initialSnapshot:null,
       bounds:{ width:900, height:560 },
+      boundaryMode:'wall',
       accumulator:0,
       lastTimestamp:0,
       loopHandle:null,
@@ -419,6 +459,7 @@
         vineGrip:0,
         chargeTimer:0,
         damage:0,
+        reactionCooldown:0,
         freezeTimer:0,
         corrosion:0,
         temperature: state.ambientTemperature,
@@ -430,7 +471,8 @@
         freezePoint: params?.freezePoint,
         baseTemperature: state.ambientTemperature,
         baseRestitution: params?.restitution ?? 0.3,
-        baseFriction: params?.friction ?? 0.4
+        baseFriction: params?.friction ?? 0.4,
+        chemical:null
       });
       if (kind === 'circle') body.radius = clamp(body.radius, 8, 160);
       else {
@@ -508,6 +550,34 @@
       if (typeof body.torque !== 'number' || !Number.isFinite(body.torque)) body.torque = 0;
     }
 
+    function createChemicalProfile(mat){
+      if (!mat) return null;
+      const components = [];
+      let molarMass = 0;
+      if (mat.composition) {
+        for (const [symbol, count] of Object.entries(mat.composition)){
+          const element = PERIODIC_TABLE[symbol];
+          if (element) molarMass += element.atomicMass * (count || 0);
+          components.push({
+            symbol,
+            count,
+            name: element?.name || symbol,
+            atomicNumber: element?.atomicNumber || null
+          });
+        }
+      }
+      return {
+        formula: mat.formula || null,
+        label: mat.label,
+        components,
+        composition: mat.composition ? Object.assign({}, mat.composition) : null,
+        molarMass: components.length ? molarMass : null,
+        hazards: Array.isArray(mat.hazards) ? [...mat.hazards] : [],
+        hazardLabels: Array.isArray(mat.hazards) ? mat.hazards.map(id => HAZARD_LABELS[id] || id) : [],
+        reactivity: mat.reactivity ? deepClone(mat.reactivity) : null
+      };
+    }
+
     function applyMaterial(body, materialId){
       const mat = MATERIALS[materialId] || MATERIALS[DEFAULT_MATERIAL];
       const hadTemp = typeof body.temperature === 'number' && Number.isFinite(body.temperature);
@@ -539,6 +609,7 @@
       }
       updateBodyMassProperties(body);
       body.temperature = body.absoluteWall ? state.ambientTemperature : (hadTemp ? prevTemp : body.baseTemperature);
+      body.chemical = createChemicalProfile(mat);
     }
 
     function selectObject(obj, kind){
@@ -810,6 +881,90 @@
       body.corrosion = clamp(body.corrosion + amount, 0, 40);
       adjustBodyTemperature(body, amount * 0.8);
       if (amount > 0.25 && body.corrosion > prev) gainXp(4, { reason:'corrode' });
+    }
+
+    function triggerChemicalExplosion(sourceBody, reaction, reagent){
+      if (!sourceBody || !reaction) return;
+      const energy = Math.max(200, reaction.energy || 0);
+      const heat = reaction.heat ?? 0;
+      const radius = clamp(Math.sqrt(energy) * 2.2, 60, 240);
+      const x = sourceBody.x;
+      const y = sourceBody.y;
+      state.bodies.forEach(body => {
+        if (!body || body.absoluteWall) return;
+        const dx = body.x - x;
+        const dy = body.y - y;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= radius && dist > 0.001) {
+          const falloff = 1 - dist / radius;
+          const impulse = energy * falloff * 0.004;
+          if (!body.static) {
+            const nx = dx / dist;
+            const ny = dy / dist;
+            body.vx += nx * impulse * (body.invMass || 0);
+            body.vy += ny * impulse * (body.invMass || 0);
+          }
+          adjustBodyTemperature(body, (body === sourceBody ? heat : heat * 0.4) * falloff);
+        }
+      });
+      const spawnCount = Math.min(24, Math.max(6, Math.round(energy / 180)));
+      if (reaction.spawnFire) {
+        for (let i=0;i<spawnCount;i++){
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.random() * (radius * 0.4);
+          spawnParticle('fire', x + Math.cos(angle) * r, y + Math.sin(angle) * r, {
+            power: 1.1 + Math.random() * 0.6,
+            temperature: Math.max(FIRE_BASE_TEMPERATURE, heat + 400)
+          });
+        }
+      }
+      if (reaction.spawnSteam) {
+        for (let i=0;i<spawnCount;i++){
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.random() * (radius * 0.5);
+          spawnParticle('steam', x + Math.cos(angle) * r, y + Math.sin(angle) * r, {
+            temperature: Math.max(120, heat + 120)
+          });
+        }
+      }
+      if (reaction.spawnHydrogen) {
+        for (let i=0;i<Math.ceil(spawnCount/2);i++){
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.random() * (radius * 0.35);
+          spawnParticle('spark', x + Math.cos(angle) * r, y + Math.sin(angle) * r, {
+            power: 1.2 + Math.random() * 0.8
+          });
+        }
+      }
+    }
+
+    function executeChemicalReaction(body, reaction, particle, reagent){
+      if (!reaction) return;
+      triggerChemicalExplosion(body, reaction, reagent);
+      body.reactionCooldown = Math.max(body.reactionCooldown || 0, reaction.cooldown ?? 0.25);
+      adjustBodyTemperature(body, reaction.heat ?? 0);
+      body.damage = Math.min(1.05, (body.damage || 0) + (reaction.structural ?? 0.25));
+      body.wetness = Math.max(0, body.wetness - 0.5);
+      if (particle) {
+        particle.type = 'steam';
+        particle.temperature = Math.max(particle.temperature || state.ambientTemperature, Math.max(120, (reaction.heat ?? 0) + 80));
+        particle.vx *= 0.4;
+        particle.vy = Math.min(particle.vy, -90);
+        particle.life = Math.max(particle.life, 1.2);
+        particle.maxLife = Math.max(particle.maxLife || 0, 18);
+      }
+      gainXp(9, { reason:'chemical-reaction', reagent, material: body.material });
+    }
+
+    function applyChemicalReactions(particle, body){
+      if (!particle || !body || body.absoluteWall) return false;
+      const chemical = body.chemical;
+      if (!chemical || body.reactionCooldown > 0) return false;
+      const reactionMap = chemical.reactivity || {};
+      const reaction = reactionMap ? reactionMap[particle.type] : null;
+      if (!reaction) return false;
+      executeChemicalReaction(body, reaction, particle, particle.type);
+      return true;
     }
 
     function pushBody(body, directionDeg, strength){
@@ -1183,34 +1338,83 @@
     }
 
     function resolveLiquidInteractions(liquids, dt){
-      const relax = clamp(dt * 25, 0, 0.6);
+      if (!liquids.length) return;
+      const cellSize = FLUID_KERNEL_RADIUS;
+      const grid = new Map();
+      const keyFor = (x, y) => `${x}:${y}`;
+      for (let i=0;i<liquids.length;i++){
+        const p = liquids[i];
+        const cellX = Math.floor(p.x / cellSize);
+        const cellY = Math.floor(p.y / cellSize);
+        const key = keyFor(cellX, cellY);
+        if (!grid.has(key)) grid.set(key, []);
+        grid.get(key).push(i);
+        p.density = 0;
+        p.pressure = 0;
+      }
       for (let i=0;i<liquids.length;i++){
         const a = liquids[i];
-        if (!isLiquidParticle(a)) continue;
-        for (let j=i+1;j<liquids.length;j++){
-          const b = liquids[j];
-          if (!isLiquidParticle(b)) continue;
-          const dx = b.x - a.x;
-          const dy = b.y - a.y;
-          const dist = Math.hypot(dx, dy) || 0.0001;
-          const desired = (a.radius || FLUID_RADIUS) + (b.radius || FLUID_RADIUS) - 1.5;
-          if (dist < desired) {
-            const nx = dx / dist;
-            const ny = dy / dist;
-            const overlap = desired - dist;
-            const push = overlap * 0.5;
-            a.x -= nx * push;
-            a.y -= ny * push;
-            b.x += nx * push;
-            b.y += ny * push;
-            const avgVx = (a.vx + b.vx) / 2;
-            const avgVy = (a.vy + b.vy) / 2;
-            a.vx = lerp(a.vx, avgVx, relax);
-            a.vy = lerp(a.vy, avgVy, relax);
-            b.vx = lerp(b.vx, avgVx, relax);
-            b.vy = lerp(b.vy, avgVy, relax);
-            if (dy > 0) a.supported = true;
-            if (dy < 0) b.supported = true;
+        const cellX = Math.floor(a.x / cellSize);
+        const cellY = Math.floor(a.y / cellSize);
+        for (let ox=-1;ox<=1;ox++){
+          for (let oy=-1;oy<=1;oy++){
+            const bucket = grid.get(keyFor(cellX + ox, cellY + oy));
+            if (!bucket) continue;
+            for (const idx of bucket){
+              const b = liquids[idx];
+              const dx = b.x - a.x;
+              const dy = b.y - a.y;
+              const distSq = dx*dx + dy*dy;
+              if (distSq > FLUID_KERNEL_RADIUS_SQ) continue;
+              const dist = Math.sqrt(distSq) || 0.0001;
+              const q = 1 - dist / FLUID_KERNEL_RADIUS;
+              a.density += q * q;
+            }
+          }
+        }
+        a.density = Math.max(a.density, FLUID_REST_DENSITY * 0.6);
+        a.pressure = Math.max(0, (a.density - FLUID_REST_DENSITY) * FLUID_PRESSURE_STIFFNESS);
+      }
+      for (let i=0;i<liquids.length;i++){
+        const a = liquids[i];
+        const cellX = Math.floor(a.x / cellSize);
+        const cellY = Math.floor(a.y / cellSize);
+        for (let ox=-1;ox<=1;ox++){
+          for (let oy=-1;oy<=1;oy++){
+            const bucket = grid.get(keyFor(cellX + ox, cellY + oy));
+            if (!bucket) continue;
+            for (const idx of bucket){
+              if (idx <= i) continue;
+              const b = liquids[idx];
+              const dx = b.x - a.x;
+              const dy = b.y - a.y;
+              const distSq = dx*dx + dy*dy;
+              if (distSq > FLUID_KERNEL_RADIUS_SQ || distSq === 0) continue;
+              const dist = Math.sqrt(distSq);
+              const nx = dx / dist;
+              const ny = dy / dist;
+              const q = 1 - dist / FLUID_KERNEL_RADIUS;
+              const pressure = (a.pressure + b.pressure) * 0.5;
+              const pressureForce = pressure * q * q * dt * 0.03;
+              a.vx -= nx * pressureForce;
+              a.vy -= ny * pressureForce;
+              b.vx += nx * pressureForce;
+              b.vy += ny * pressureForce;
+              const avgVx = (a.vx + b.vx) / 2;
+              const avgVy = (a.vy + b.vy) / 2;
+              const visc = clamp(FLUID_VISCOSITY * q * dt, 0, 0.6);
+              a.vx = lerp(a.vx, avgVx, visc);
+              a.vy = lerp(a.vy, avgVy, visc);
+              b.vx = lerp(b.vx, avgVx, visc);
+              b.vy = lerp(b.vy, avgVy, visc);
+              const separation = q * q * FLUID_SURFACE_TENSION * FLUID_KERNEL_RADIUS * dt * 6;
+              a.x -= nx * separation;
+              a.y -= ny * separation;
+              b.x += nx * separation;
+              b.y += ny * separation;
+              if (dy > 0) a.supported = true;
+              if (dy < 0) b.supported = true;
+            }
           }
         }
       }
@@ -1218,6 +1422,7 @@
 
     function handleParticleBodyContact(p, body, dt){
       if (body?.absoluteWall) return;
+      if (applyChemicalReactions(p, body)) return;
       switch(p.type){
         case 'fire': {
           igniteBody(body, 0.45 * (p.power || 1) * dt * 60);
@@ -1333,6 +1538,8 @@
         if (remain <= 0) state.collisionCooldown.delete(key);
         else state.collisionCooldown.set(key, remain);
       }
+      const bodiesToRemove = [];
+      const bounds = state.bounds;
       for (const body of state.bodies){
         body.torque = 0;
         if (state.godFinger && state.godFinger.id === body.id) {
@@ -1368,6 +1575,20 @@
               const torque = rx * forceY - ry * forceX;
               body.torque += torque;
             }
+          }
+        }
+        let removeBody = false;
+        if (!body.absoluteWall) {
+          body.reactionCooldown = Math.max(0, (body.reactionCooldown || 0) - dt);
+          if (body.damage >= 1) {
+            bodiesToRemove.push(body.id);
+            for (let k=0;k<8;k++){
+              const angle = Math.random() * Math.PI * 2;
+              const radius = (body.radius || Math.min(body.width, body.height) / 2 || 20) * Math.random();
+              spawnParticle('spark', body.x + Math.cos(angle) * radius, body.y + Math.sin(angle) * radius, { power: 1.1 + Math.random()*0.6 });
+            }
+            gainXp(6, { reason:'structure-fail', material: body.material });
+            continue;
           }
         }
         if (!body.static) {
@@ -1409,6 +1630,21 @@
           }
           body.x += body.vx * dt;
           body.y += body.vy * dt;
+          if (state.boundaryMode === 'void') {
+            const ext = orientedExtents(body);
+            const minX = body.x - ext.halfX;
+            const maxX = body.x + ext.halfX;
+            const minY = body.y - ext.halfY;
+            const maxY = body.y + ext.halfY;
+            const margin = 160;
+            if (maxX < -margin || minX > bounds.width + margin || maxY < -margin || minY > bounds.height + margin) {
+              removeBody = true;
+            }
+          }
+        }
+        if (removeBody) {
+          bodiesToRemove.push(body.id);
+          continue;
         }
         body.burnTimer = Math.max(0, body.burnTimer - dt * (0.5 + body.wetness*0.1));
         body.wetness = Math.max(0, body.wetness - dt * 0.3);
@@ -1416,7 +1652,7 @@
         body.chargeTimer = Math.max(0, body.chargeTimer - dt * 0.5);
         body.freezeTimer = Math.max(0, body.freezeTimer - dt * 0.6);
         body.corrosion = Math.max(0, body.corrosion - dt * 0.2);
-        if (!body.static) {
+        if (!body.static && state.boundaryMode === 'wall') {
           resolveBoundaryCollisions(body);
         }
         if (!body.static && body.burnTimer > 12) {
@@ -1438,6 +1674,13 @@
             }
             applyMaterial(body, body.material);
           }
+        }
+      }
+      if (bodiesToRemove.length) {
+        state.bodies = state.bodies.filter(b => !bodiesToRemove.includes(b.id));
+        if (state.selectionKind === 'body' && bodiesToRemove.includes(state.selection)) {
+          state.selection = null;
+          state.selectionKind = null;
         }
       }
       resolveCollisions(state.solverIterations);
@@ -1676,31 +1919,43 @@
     }
 
     function resolveBoundaryCollisions(body){
-      if (!body) return;
+      if (!body || state.boundaryMode !== 'wall') return;
       const bounds = state.bounds;
       const leftSupport = getBodySupportPoint(body, { x:-1, y:0 });
       if (leftSupport.x < 0) {
         const penetration = -leftSupport.x;
         const contact = { x: 0, y: clamp(leftSupport.y, 0, bounds.height) };
-        resolveContact(body, WALL_BODIES.left, { x:-1, y:0 }, penetration, contact);
+        const wall = WALL_BODIES.left;
+        wall.x = contact.x;
+        wall.y = contact.y;
+        resolveContact(body, wall, { x:-1, y:0 }, penetration, contact);
       }
       const rightSupport = getBodySupportPoint(body, { x:1, y:0 });
       if (rightSupport.x > bounds.width) {
         const penetration = rightSupport.x - bounds.width;
         const contact = { x: bounds.width, y: clamp(rightSupport.y, 0, bounds.height) };
-        resolveContact(body, WALL_BODIES.right, { x:1, y:0 }, penetration, contact);
+        const wall = WALL_BODIES.right;
+        wall.x = contact.x;
+        wall.y = contact.y;
+        resolveContact(body, wall, { x:1, y:0 }, penetration, contact);
       }
       const topSupport = getBodySupportPoint(body, { x:0, y:-1 });
       if (topSupport.y < 0) {
         const penetration = -topSupport.y;
         const contact = { x: clamp(topSupport.x, 0, bounds.width), y: 0 };
-        resolveContact(body, WALL_BODIES.top, { x:0, y:-1 }, penetration, contact);
+        const wall = WALL_BODIES.top;
+        wall.x = contact.x;
+        wall.y = contact.y;
+        resolveContact(body, wall, { x:0, y:-1 }, penetration, contact);
       }
       const bottomSupport = getBodySupportPoint(body, { x:0, y:1 });
       if (bottomSupport.y > bounds.height) {
         const penetration = bottomSupport.y - bounds.height;
         const contact = { x: clamp(bottomSupport.x, 0, bounds.width), y: bounds.height };
-        resolveContact(body, WALL_BODIES.bottom, { x:0, y:1 }, penetration, contact);
+        const wall = WALL_BODIES.bottom;
+        wall.x = contact.x;
+        wall.y = contact.y;
+        resolveContact(body, wall, { x:0, y:1 }, penetration, contact);
       }
     }
 
@@ -2035,7 +2290,31 @@
         state.ambientTemperature = Math.round(Number(ambientInput.value) || 0);
         ambientLabel.textContent = `周囲温度 (${state.ambientTemperature.toFixed(1)}°C)`;
       });
-      worldSection.append(gLabel, gInput, dragLabel, dragInput, iterLabel, iterInput, subLabel, subInput, ambientLabel, ambientInput);
+      const boundaryLabel = document.createElement('label');
+      boundaryLabel.textContent = '外周モード';
+      const boundarySelect = document.createElement('select');
+      [
+        { value:'wall', text:'壁 (外周で反射)' },
+        { value:'void', text:'奈落 (外に落下)' }
+      ].forEach(optDef => {
+        const opt = document.createElement('option');
+        opt.value = optDef.value;
+        opt.textContent = optDef.text;
+        if (state.boundaryMode === optDef.value) opt.selected = true;
+        boundarySelect.appendChild(opt);
+      });
+      boundarySelect.addEventListener('change', () => {
+        state.boundaryMode = boundarySelect.value === 'void' ? 'void' : 'wall';
+        renderInspector();
+      });
+      boundaryLabel.appendChild(boundarySelect);
+      worldSection.append(gLabel, gInput, dragLabel, dragInput, iterLabel, iterInput, subLabel, subInput, ambientLabel, ambientInput, boundaryLabel);
+      if (state.boundaryMode === 'void') {
+        const voidHint = document.createElement('p');
+        voidHint.className = 'phys-hint';
+        voidHint.textContent = '奈落: 図形が外に出ると一定距離で消滅します。';
+        worldSection.appendChild(voidHint);
+      }
       inspector.appendChild(worldSection);
 
       const selected = getSelected();
@@ -2091,6 +2370,42 @@
       const phaseInfo = document.createElement('p');
       phaseInfo.className = 'phys-hint';
       phaseInfo.textContent = `状態: ${phaseLabel(body.phase || 'solid')}`;
+      section.append(h, phaseInfo);
+      const chemical = body.chemical;
+      if (chemical) {
+        const formulaInfo = document.createElement('p');
+        formulaInfo.className = 'phys-hint';
+        formulaInfo.textContent = `化学式: ${chemical.formula || '不明'}`;
+        section.appendChild(formulaInfo);
+        if (chemical.components && chemical.components.length) {
+          const compInfo = document.createElement('p');
+          compInfo.className = 'phys-hint';
+          compInfo.textContent = '構成元素: ' + chemical.components.map(c => `${c.name}(${c.symbol})×${c.count}`).join(' / ');
+          section.appendChild(compInfo);
+        }
+        if (chemical.molarMass) {
+          const massInfo = document.createElement('p');
+          massInfo.className = 'phys-hint';
+          massInfo.textContent = `モル質量: ${chemical.molarMass.toFixed(2)} g/mol`;
+          section.appendChild(massInfo);
+        }
+        if (chemical.hazardLabels && chemical.hazardLabels.length) {
+          const hazardInfo = document.createElement('p');
+          hazardInfo.className = 'phys-hint';
+          hazardInfo.textContent = `性質: ${chemical.hazardLabels.join(' / ')}`;
+          section.appendChild(hazardInfo);
+        }
+      }
+      const damageInfo = document.createElement('p');
+      damageInfo.className = 'phys-hint';
+      damageInfo.textContent = `損耗度: ${(Math.min(body.damage || 0, 1) * 100).toFixed(0)}%`;
+      section.appendChild(damageInfo);
+      if ((body.reactionCooldown || 0) > 0) {
+        const cooldownInfo = document.createElement('p');
+        cooldownInfo.className = 'phys-hint';
+        cooldownInfo.textContent = `化学反応クールダウン: ${body.reactionCooldown.toFixed(2)}s`;
+        section.appendChild(cooldownInfo);
+      }
       const matLabel = document.createElement('label');
       matLabel.textContent = '素材プリセット';
       const matSelect = document.createElement('select');
@@ -2148,7 +2463,7 @@
         fricInput.disabled = true;
       }
 
-      section.append(h, phaseInfo, matLabel, matSelect, massLabel, angleInfo, staticToggle, restLabel, restInput, fricLabel, fricInput);
+      section.append(matLabel, matSelect, massLabel, angleInfo, staticToggle, restLabel, restInput, fricLabel, fricInput);
 
       if (body.absoluteWall) {
         const wallNote = document.createElement('p');
@@ -2317,6 +2632,7 @@
           if (body.freezeTimer > 0) fill = mixColor(fill, '#bfdbfe', clamp(body.freezeTimer/10, 0, 0.6));
           if (body.corrosion > 0) fill = mixColor(fill, '#bef264', clamp(body.corrosion/18, 0, 0.5));
           if (body.chargeTimer > 0) fill = mixColor(fill, '#facc15', clamp(body.chargeTimer/5, 0, 0.6));
+          if (body.damage > 0) fill = mixColor(fill, '#f87171', clamp(body.damage, 0, 0.65));
           if (body.phase === 'gas') fill = mixColor(fill, '#e2e8f0', 0.2);
           if (body.phase === 'liquid') fill = mixColor(fill, '#3b82f6', 0.2);
         }
@@ -2506,6 +2822,7 @@
         solverIterations: state.solverIterations,
         substeps: state.substeps,
         ambientTemperature: state.ambientTemperature,
+        boundaryMode: state.boundaryMode,
         bodies: state.bodies.map(b => deepClone(b)),
         emitters: state.emitters.map(e => deepClone(e)),
         vines: state.vines.map(v => deepClone(v))
@@ -2519,6 +2836,7 @@
       state.solverIterations = Math.max(1, Math.floor(snap.solverIterations || state.solverIterations || 1));
       state.substeps = Math.max(1, Math.floor(snap.substeps || state.substeps || 1));
       state.ambientTemperature = typeof snap.ambientTemperature === 'number' ? snap.ambientTemperature : state.ambientTemperature;
+      state.boundaryMode = snap.boundaryMode === 'void' ? 'void' : 'wall';
       state.bodies = (snap.bodies || []).map(b => {
         const copy = Object.assign({}, b);
         if (typeof copy.temperature !== 'number') {
@@ -2534,6 +2852,8 @@
         if (typeof copy.freezePoint !== 'number') copy.freezePoint = (MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL])?.freezePoint ?? Math.max(-120, (copy.meltingPoint ?? 800) - 200);
         copy.phase = copy.phase || 'solid';
         copy.absoluteWall = !!copy.absoluteWall;
+        copy.damage = Math.max(0, Math.min(1, copy.damage || 0));
+        copy.reactionCooldown = Math.max(0, copy.reactionCooldown || 0);
         if (typeof copy.baseRestitution !== 'number') {
           const mat = MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL];
           copy.baseRestitution = mat?.restitution ?? copy.restitution ?? 0.3;

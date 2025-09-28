@@ -816,9 +816,14 @@ body.in-game #player-summary { display: none; }
     box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
 }
 
-.bar.exp .bar-fill { 
+.bar.exp .bar-fill {
     background: linear-gradient(90deg, #74c0fc, #4dabf7);
     box-shadow: 0 0 10px rgba(116, 192, 252, 0.5);
+}
+
+.bar.sp .bar-fill {
+    background: linear-gradient(90deg, #e599f7, #be4bdb);
+    box-shadow: 0 0 10px rgba(190, 75, 219, 0.45);
 }
 
 .bar.satiety .bar-fill {
@@ -868,6 +873,36 @@ body.in-game #player-summary { display: none; }
     background: rgba(255, 107, 107, 0.3);
     border-color: rgba(255, 107, 107, 0.5);
     color: #ffe3e3;
+}
+
+.status-badge--skill {
+    background: rgba(190, 75, 219, 0.25);
+    border-color: rgba(190, 75, 219, 0.45);
+    color: #f8f0fc;
+}
+
+.status-badge--skill-gimmick {
+    background: rgba(96, 165, 250, 0.25);
+    border-color: rgba(96, 165, 250, 0.45);
+    color: #eff6ff;
+}
+
+.status-badge--skill-status {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #ecfdf5;
+}
+
+.status-badge--skill-enemy {
+    background: rgba(250, 204, 21, 0.25);
+    border-color: rgba(250, 204, 21, 0.45);
+    color: #fef3c7;
+}
+
+.status-badge--skill-surehit {
+    background: rgba(244, 114, 182, 0.25);
+    border-color: rgba(244, 114, 182, 0.45);
+    color: #fdf2f8;
 }
 
 .status-item.status-effects .status-value {
@@ -944,6 +979,60 @@ body.in-game #player-summary { display: none; }
     color: #2c3e50;
     max-height: 90vh;        /* 画面内に収める */
     overflow: auto;          /* モーダル内スクロール */
+}
+
+.modal-content.skills-modal {
+    width: min(560px, 92vw);
+}
+
+.skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.skills-list .skill-entry {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(102, 126, 234, 0.25);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+    color: #2c3e50;
+}
+
+.skills-list .skill-entry.locked {
+    opacity: 0.65;
+}
+
+.skills-list .skill-info {
+    flex: 1;
+}
+
+.skills-list .skill-name {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.skills-list .skill-meta {
+    font-size: 12px;
+    color: rgba(44, 62, 80, 0.7);
+    margin-bottom: 4px;
+}
+
+.skills-list .skill-desc {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.skills-list .skill-entry button {
+    align-self: center;
+    min-width: 96px;
 }
 
 .modal-content h3 {

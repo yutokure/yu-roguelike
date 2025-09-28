@@ -23,5 +23,6 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'irradiated_plains_pack', name: 'Irradiated Plains Pack', entry: 'dungeontypes/irradiated_plains.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'conveyor_foundry_pack', name: 'Conveyor Foundry Pack', entry: 'dungeontypes/conveyor_foundry.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'oneway_labyrinth_pack', name: 'One-Way Labyrinth Pack', entry: 'dungeontypes/oneway_labyrinth.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'axis_gallery_pack', name: 'Axis Gallery Pack', entry: 'dungeontypes/axis_gallery.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'axis_gallery_pack', name: 'Axis Gallery Pack', entry: 'dungeontypes/axis_gallery.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'fantasical-sci-fi-dream-pack', name: 'ファンタジカルと近未来をテーマにした夢の世界パック', entry: 'dungeontypes/FantasicalAndSci-fiAndDremerPack.js', version: '3.0.0', author: 'builtin-sample' }
 ];

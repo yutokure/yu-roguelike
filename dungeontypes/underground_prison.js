@@ -60,6 +60,7 @@
     id: 'underground-prison',
     name: '地下牢',
     description: '広い回廊と規則正しい牢房が並ぶ地下監獄',
+    dark: true,
     algorithm,
     mixin: { normalMixed: 0.4, blockDimMixed: 0.45, tags: ['structured','rooms'] }
   };

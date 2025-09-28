@@ -40,10 +40,11 @@
     ctx.ensureConnectivity();
   }
 
-    const gen = {
+  const gen = {
     id: 'toxic-boglands',
     name: '毒沼空間',
     description: '広い空間に点在する毒沼が漂う湿地帯',
+    poisonFog: true,
     algorithm,
     mixin: { normalMixed: 0.35, blockDimMixed: 0.45, tags: ['open-space','poison'] }
   };

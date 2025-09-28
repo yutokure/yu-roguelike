@@ -112,6 +112,8 @@ function initModMakerTool() {
         generatorNormalMix: document.getElementById('modmaker-generator-normal-mix'),
         generatorBlockdimMix: document.getElementById('modmaker-generator-blockdim-mix'),
         generatorTags: document.getElementById('modmaker-generator-tags'),
+        generatorDark: document.getElementById('modmaker-generator-dark'),
+        generatorPoison: document.getElementById('modmaker-generator-poison'),
         templateSelect: document.getElementById('modmaker-template-select'),
         templateApply: document.getElementById('modmaker-apply-template'),
         generatorCode: document.getElementById('modmaker-generator-code'),
@@ -370,6 +372,18 @@ function initModMakerTool() {
         generator.tagsText = modMakerRefs.generatorTags.value;
         renderModMaker();
     });
+    bindInput(modMakerRefs.generatorDark, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        generator.dark = !!modMakerRefs.generatorDark.checked;
+        renderModMaker();
+    }, 'change');
+    bindInput(modMakerRefs.generatorPoison, () => {
+        const generator = getSelectedGenerator();
+        if (!generator) return;
+        generator.poisonFog = !!modMakerRefs.generatorPoison.checked;
+        renderModMaker();
+    }, 'change');
 
     if (modMakerRefs.templateSelect) modMakerRefs.templateSelect.value = 'blank';
     if (modMakerRefs.templateApply) {
@@ -461,6 +475,8 @@ function createNewGenerator() {
         mixinNormal: 0,
         mixinBlockDim: 0,
         tagsText: '',
+        dark: false,
+        poisonFog: false,
         code: MOD_MAKER_TEMPLATES.blank,
         fixed: createDefaultFixedState()
     };
@@ -1214,6 +1230,14 @@ function renderModMaker() {
         modMakerRefs.generatorTags.disabled = !generator;
         modMakerRefs.generatorTags.value = generator?.tagsText || '';
     }
+    if (modMakerRefs.generatorDark) {
+        modMakerRefs.generatorDark.disabled = !generator;
+        modMakerRefs.generatorDark.checked = !!(generator && generator.dark);
+    }
+    if (modMakerRefs.generatorPoison) {
+        modMakerRefs.generatorPoison.disabled = !generator;
+        modMakerRefs.generatorPoison.checked = !!(generator && generator.poisonFog);
+    }
     if (modMakerRefs.generatorCode) {
         modMakerRefs.generatorCode.disabled = !generator;
         modMakerRefs.generatorCode.value = generator?.code || '';
@@ -1291,6 +1315,8 @@ function buildModMakerOutput() {
             mixinNormal: Number.isFinite(mixNormal) ? Math.max(0, Math.min(1, mixNormal)) : 0,
             mixinBlockDim: Number.isFinite(mixBlock) ? Math.max(0, Math.min(1, mixBlock)) : 0,
             tags: parseTags(generator.tagsText || ''),
+            dark: !!generator.dark,
+            poisonFog: !!generator.poisonFog,
             code,
             floors
         });
@@ -1472,6 +1498,8 @@ function buildGeneratorLines(generator) {
     props.push([`id: ${jsString(generator.id)}`]);
     if (generator.name) props.push([`name: ${jsString(generator.name)}`]);
     if (generator.description) props.push([`description: ${jsString(generator.description)}`]);
+    if (generator.dark) props.push([`dark: true`]);
+    if (generator.poisonFog) props.push([`poisonFog: true`]);
     const mixParts = [];
     if (generator.mixinNormal > 0) mixParts.push(`normalMixed: ${generator.mixinNormal}`);
     if (generator.mixinBlockDim > 0) mixParts.push(`blockDimMixed: ${generator.mixinBlockDim}`);

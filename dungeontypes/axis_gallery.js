@@ -1,0 +1,106 @@
+// Addon: Axis Gallery - directional halls that separate vertical and horizontal travel
+(function(){
+  function carveAxisGalleries(ctx){
+    const {
+      width: W,
+      height: H,
+      set,
+      setFloorType,
+      setFloorColor,
+      setWallColor,
+      getTileMeta,
+      ensureConnectivity,
+      random,
+      inBounds
+    } = ctx;
+
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        set(x, y, 0);
+        setFloorColor(x, y, '#f1f3f5');
+      }
+    }
+
+    const hubSpacing = 5;
+    const midX = Math.floor(W / 2);
+    const midY = Math.floor(H / 2);
+
+    for (let x = 2; x < W - 2; x += 4) {
+      for (let y = 1; y < H - 1; y++) {
+        if (x % hubSpacing === 0 || y % hubSpacing === 0 || x === midX || y === midY) continue;
+        setFloorType(x, y, { type: 'vertical' });
+        setFloorColor(x, y, '#63e6be');
+      }
+    }
+
+    for (let y = 2; y < H - 2; y += 4) {
+      for (let x = 1; x < W - 1; x++) {
+        if (x % hubSpacing === 0 || y % hubSpacing === 0 || x === midX || y === midY) continue;
+        const meta = getTileMeta(x, y);
+        if (meta && meta.floorType === 'vertical') {
+          setFloorType(x, y, 'normal');
+          setFloorColor(x, y, '#dee2ff');
+          continue;
+        }
+        setFloorType(x, y, { type: 'horizontal' });
+        setFloorColor(x, y, '#ffa94d');
+      }
+    }
+
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        if ((x % hubSpacing === 0 && y % hubSpacing === 0) || x === midX || y === midY) {
+          setFloorType(x, y, 'normal');
+          setFloorColor(x, y, '#e5dbff');
+        }
+      }
+    }
+
+    for (let y = 3; y < H - 3; y += hubSpacing) {
+      for (let x = 3; x < W - 3; x += hubSpacing) {
+        if (random() < 0.5) continue;
+        for (let dy = 0; dy < 2; dy++) {
+          for (let dx = 0; dx < 2; dx++) {
+            const tx = x + dx;
+            const ty = y + dy;
+            if (!inBounds(tx, ty)) continue;
+            set(tx, ty, 1);
+            setWallColor(tx, ty, '#868e96');
+          }
+        }
+      }
+    }
+
+    ensureConnectivity();
+  }
+
+  const generator = {
+    id: 'axis-gallery',
+    name: '軸路の回廊',
+    description: '縦横に分かたれた通路が交差する静寂の展示廊',
+    recommendedLevel: 48,
+    algorithm: carveAxisGalleries,
+    mixin: { normalMixed: 0.3, blockDimMixed: 0.5, tags: ['gallery', 'hazard'] }
+  };
+
+  const blocks = {
+    blocks1: [
+      { key: 'axis_gallery_a', name: '軸路の玄関', level: +10, size: 0, depth: +1, chest: 'normal', type: 'axis-gallery' },
+      { key: 'axis_gallery_b', name: '展示列柱', level: +18, size: +1, depth: +2, chest: 'more', type: 'axis-gallery' }
+    ],
+    blocks2: [
+      { key: 'axis_gallery_core', name: '軸交差中庭', level: +26, size: +1, depth: +2, chest: 'rich', type: 'axis-gallery' }
+    ],
+    blocks3: [
+      { key: 'axis_gallery_boss', name: '双軸の祭壇', level: +34, size: +2, depth: +3, chest: 'rich', type: 'axis-gallery', bossFloors: [7, 14] }
+    ]
+  };
+
+  window.registerDungeonAddon({
+    id: 'axis_gallery_pack',
+    name: 'Axis Gallery Pack',
+    version: '1.0.0',
+    generators: [generator],
+    blocks
+  });
+})();

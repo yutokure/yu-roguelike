@@ -172,11 +172,29 @@
                         <tr>
                             <td><code>ctx.setFloorColor(x, y, cssColor)</code></td>
                             <td>床の描画色を上書きします。同様に <code>setWallColor()</code> や <code>setFloorType()</code> も利用可能です。</td>
-                            <td><code>main.js</code> 7549–7576 行</td>
+                            <td><code>main.js</code> 8911–8922 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.setFloorType(x, y, type[, options])</code></td>
+                            <td>
+                                床の挙動を設定します。<code>type</code> には <code>'ice' | 'poison' | 'bomb' | 'conveyor' | 'one-way' | 'vertical' | 'horizontal'</code> を指定できます。
+                                コンベヤー床・一方通行床の進行方向は <code>options.direction</code> か <code>ctx.setFloorDirection()</code> で <code>'up'|'down'|'left'|'right'</code> を与えてください。
+                            </td>
+                            <td><code>main.js</code> 8924–8951 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.setFloorDirection(x, y, dir)</code></td>
+                            <td>コンベヤー床 / 一方通行床の進行方向を個別に設定します（<code>dir</code> は <code>'up'|'down'|'left'|'right'</code>）。</td>
+                            <td><code>main.js</code> 8952–8964 行</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            <p>
+                コンベヤー床と一方通行床は進行方向が未指定の場合、通常床として扱われます。縦通行／横通行のみ床は
+                それぞれ上下／左右方向にしか移動できないため、プレイヤーや敵の経路制御に利用できます。推奨レベルが
+                プレイヤーより 5 以上低いダンジョンでは、床ギミックは自動的に無効化されます。
+            </p>
             <p>
                 <code>ctx.random</code> にはアドオン固有の乱数生成器が渡されるため、実装側で <code>Math.random()</code> を直接
                 呼ぶのではなく <code>ctx.random()</code> を使用すると再現性の高い生成が行えます。

@@ -169,7 +169,7 @@ interface GenContext {
   aStar(start:{x:number,y:number}, goal:{x:number,y:number}, opts?:AStarOpts): {x:number,y:number}[];
   setFloorColor(x:number,y:number,color:string): void; // 床カラー（CSSカラー文字列）
   setWallColor(x:number,y:number,color:string): void;  // 壁カラー（CSSカラー文字列）
-  setFloorType(x:number,y:number,type:'normal'|'ice'|'poison'): void; // 床の特性
+  setFloorType(x:number,y:number,type:'normal'|'ice'|'poison'|'bomb'): void; // 床の特性
   clearTileMeta(x:number,y:number): void; // カラー/特性の初期化
   getTileMeta(x:number,y:number): { floorColor?:string; wallColor?:string; floorType?:string } | null;
   structures: {
@@ -192,8 +192,9 @@ interface GenContext {
 
 - `floorType` の意味
   - `'normal'` : 従来の床
-  - `'ice'`    : プレイヤーが進入すると同じ方向に滑走し、非氷床か障害物で停止
-  - `'poison'` : 通過するたびにプレイヤーが最大HPの10%（最低1）ダメージ
+- `'ice'`    : プレイヤーが進入すると同じ方向に滑走し、非氷床か障害物で停止（推奨レベルがプレイヤーより5以上低い場合は滑走しない）
+- `'poison'` : 通過するたびにプレイヤーが最大HPの10%を基準に、推奨レベルとの差1ごとに1.5倍ずつ増える割合（最低1）でダメージ。推奨レベルがプレイヤーより5以上低い場合はダメージ0
+- `'bomb'`   : 侵入時に爆発し、推奨レベルとの差に応じてプレイヤーの最大HPに割合ダメージ（推奨≧プレイヤーで100%、差1で80%、差2で50%、差3で25%、差4で10%、差5以上で0%）。爆発後は通常床に戻る
 - `setFloorColor` / `setWallColor` を省略した場合はデフォルト色（床: `#ced6e0`, 壁: `#2f3542`）が使用されます。`floorType` が `ice`/`poison` の場合は未指定でも視認しやすい補助色が自動適用されます。
 - `floors` を指定したジェネレータは、`max` が `getMaxFloor()` の結果へ反映され、`bossFloors` は `isBossFloor()` 判定に利用されます。`maps` に登録したレイアウトは `ctx.fixedMaps.applyCurrent()` で適用可能です。
 - `ctx.fixedMaps` は固定マップの一覧取得 (`list()`)、特定階層のプレビュー (`get()`)、適用 (`apply()` / `applyCurrent()`) を提供します。固定マップが未定義の場合は `available:false` となり安全に無視できます。

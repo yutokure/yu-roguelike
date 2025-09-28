@@ -36,6 +36,9 @@ const itemsModal = document.getElementById('items-modal');
 const statusModal = document.getElementById('status-modal');
 const skillsModal = document.getElementById('skills-modal');
 const skillsList = document.getElementById('skills-list');
+const skillsSpText = document.getElementById('skills-current-sp');
+const skillsSpValueText = skillsSpText ? skillsSpText.querySelector('.skills-sp-value') : null;
+const skillsSpBarFill = skillsSpText ? skillsSpText.querySelector('.skills-sp-bar-fill') : null;
 const invPotion30 = document.getElementById('inv-potion30');
 const invHpBoost = document.getElementById('inv-hp-boost');
 const invAtkBoost = document.getElementById('inv-atk-boost');
@@ -2054,6 +2057,21 @@ function renderSkillsList() {
     updatePlayerSpCap({ silent: true });
     const currentSp = Math.max(0, Number(player.sp) || 0);
     const maxSp = Math.max(0, Number(player.maxSp) || 0);
+    const formattedCurrentSp = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
+    const spText = maxSp > 0 ? `${formattedCurrentSp}/${maxSp}` : '0/0';
+    if (skillsSpText) {
+        const liveText = `現在のSP: ${spText}`;
+        if (skillsSpValueText) {
+            skillsSpValueText.textContent = spText;
+        } else {
+            skillsSpText.textContent = liveText;
+        }
+        if (skillsSpBarFill) {
+            const spRatio = maxSp > 0 ? Math.min(1, Math.max(0, currentSp / maxSp)) : 0;
+            skillsSpBarFill.style.width = `${Math.round(spRatio * 10000) / 100}%`;
+        }
+        skillsSpText.setAttribute('aria-label', liveText);
+    }
     SKILL_DEFINITIONS.forEach(def => {
         const entry = document.createElement('div');
         entry.className = 'skill-entry';
@@ -2064,7 +2082,6 @@ function renderSkillsList() {
         nameEl.textContent = def.name;
         const metaEl = document.createElement('div');
         metaEl.className = 'skill-meta';
-        const spText = maxSp > 0 ? `${currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1)}/${maxSp}` : '0/0';
         metaEl.textContent = `消費SP: ${def.cost} / 所持: ${spText}`;
         const availability = evaluateSkillAvailability(def);
         if (!availability.available && availability.reason) {

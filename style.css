@@ -821,6 +821,80 @@ body.in-game #player-summary { display: none; }
     box-shadow: 0 0 10px rgba(116, 192, 252, 0.5);
 }
 
+.bar.satiety .bar-fill {
+    background: linear-gradient(90deg, #ff922b, #f76707);
+    box-shadow: 0 0 10px rgba(255, 146, 43, 0.45);
+}
+
+.status-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    min-height: 20px;
+}
+
+.status-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #f8f9fa;
+    letter-spacing: 0.05em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.status-badge--poison {
+    background: rgba(148, 216, 45, 0.3);
+    border-color: rgba(148, 216, 45, 0.45);
+    color: #e9ffb3;
+}
+
+.status-badge--paralysis {
+    background: rgba(255, 200, 87, 0.3);
+    border-color: rgba(255, 200, 87, 0.5);
+    color: #fff4d1;
+}
+
+.status-badge--ability {
+    background: rgba(173, 216, 230, 0.3);
+    border-color: rgba(173, 216, 230, 0.45);
+    color: #e6f7ff;
+}
+
+.status-badge--level {
+    background: rgba(255, 107, 107, 0.3);
+    border-color: rgba(255, 107, 107, 0.5);
+    color: #ffe3e3;
+}
+
+.status-item.status-effects .status-value {
+    display: block;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+#modal-status-effects {
+    white-space: pre-line;
+}
+
+.enemy-type-description {
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: rgba(102, 126, 234, 0.12);
+    border-left: 4px solid rgba(102, 126, 234, 0.45);
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+.enemy-type-description strong {
+    color: #4c6ef5;
+}
+
 #game-over-screen {
     position: absolute;
     top: 50%;
@@ -893,6 +967,12 @@ body.in-game #player-summary { display: none; }
     background: rgba(255,255,255,0.6);
     border-radius: 10px;
     border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.item-row .item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .item-row button {
@@ -1567,6 +1647,20 @@ h1 {
     color: #1f2937;
 }
 
+.sandbox-field-group.disabled {
+    opacity: 0.6;
+}
+
+.sandbox-field-group.disabled select {
+    pointer-events: none;
+    background: #f1f5f9;
+}
+
+.sandbox-hint {
+    font-size: 11px;
+    color: #64748b;
+}
+
 .sandbox-color-control {
     display: flex;
     gap: 6px;
@@ -1765,6 +1859,26 @@ h1 {
 
 .sandbox-legend dt.legend-poison {
     color: #3f6212;
+}
+
+.sandbox-legend dt.legend-bomb {
+    color: #b91c1c;
+}
+
+.sandbox-legend dt.legend-conveyor {
+    color: #b7791f;
+}
+
+.sandbox-legend dt.legend-oneway {
+    color: #6b21a8;
+}
+
+.sandbox-legend dt.legend-vertical {
+    color: #0f766e;
+}
+
+.sandbox-legend dt.legend-horizontal {
+    color: #b45309;
 }
 
 .sandbox-legend dd {

@@ -353,6 +353,14 @@
                                             <label>タグ（カンマ区切り）
                                                 <input id="modmaker-generator-tags" type="text" placeholder="例: rooms,organic">
                                             </label>
+                                            <label class="checkbox-row">
+                                                <input id="modmaker-generator-dark" type="checkbox">
+                                                <span>暗い（視界半径5）</span>
+                                            </label>
+                                            <label class="checkbox-row">
+                                                <input id="modmaker-generator-poison" type="checkbox">
+                                                <span>毒霧（通常床が毒床扱い）</span>
+                                            </label>
                                         </div>
                                         <div class="modmaker-template-bar">
                                             <label for="modmaker-template-select">テンプレート</label>
@@ -465,7 +473,22 @@
                                                         <option value="normal">通常</option>
                                                         <option value="ice">氷</option>
                                                         <option value="poison">毒</option>
+                                                        <option value="bomb">爆弾</option>
+                                                        <option value="conveyor">コンベヤー</option>
+                                                        <option value="one-way">一方通行</option>
+                                                        <option value="vertical">縦通行のみ</option>
+                                                        <option value="horizontal">横通行のみ</option>
                                                     </select>
+                                                </label>
+                                                <label class="sandbox-field-group">進行方向
+                                                    <select id="sandbox-brush-floor-direction">
+                                                        <option value="">指定なし</option>
+                                                        <option value="up">↑ 上</option>
+                                                        <option value="right">→ 右</option>
+                                                        <option value="down">↓ 下</option>
+                                                        <option value="left">← 左</option>
+                                                    </select>
+                                                    <span class="sandbox-hint">※ コンベヤー / 一方通行床で使用</span>
                                                 </label>
                                                 <label class="sandbox-field-group">床の色
                                                     <div class="sandbox-color-control">
@@ -525,6 +548,11 @@
                                         <div><dt>✦</dt><dd>敵</dd></div>
                                         <div><dt class="legend-ice">■</dt><dd>氷床</dd></div>
                                         <div><dt class="legend-poison">■</dt><dd>毒床</dd></div>
+                                        <div><dt class="legend-bomb">■</dt><dd>爆弾床</dd></div>
+                                        <div><dt class="legend-conveyor">■</dt><dd>コンベヤー床</dd></div>
+                                        <div><dt class="legend-oneway">■</dt><dd>一方通行床</dd></div>
+                                        <div><dt class="legend-vertical">■</dt><dd>縦通行のみ床</dd></div>
+                                        <div><dt class="legend-horizontal">■</dt><dd>横通行のみ床</dd></div>
                                     </dl>
                                 </div>
                             </div>
@@ -797,10 +825,15 @@
                         <div class="bar-label">HP <span id="stat-hp-text">100/100</span></div>
                         <div class="bar-track"><div id="hp-bar" class="bar-fill"></div></div>
                     </div>
+                    <div id="satiety-bar-container" class="bar satiety" style="display:none;">
+                        <div class="bar-label">満腹度 <span id="stat-satiety-text">100/100</span></div>
+                        <div class="bar-track"><div id="satiety-bar" class="bar-fill"></div></div>
+                    </div>
                     <div class="bar exp">
                         <div class="bar-label">EXP <span id="stat-exp-text">0/1000</span></div>
                         <div class="bar-track"><div id="exp-bar" class="bar-fill"></div></div>
                     </div>
+                    <div class="status-badges" id="stat-status-effects" aria-live="polite"></div>
                 </div>
             </div>
             <div id="message-log"></div>
@@ -837,7 +870,10 @@
             <div class="item-row">
                 <span>HP30%回復ポーション</span>
                 <span>x <span id="inv-potion30">0</span></span>
-                <button id="use-potion30">使用</button>
+                <div class="item-actions">
+                    <button id="use-potion30">使用</button>
+                    <button id="eat-potion30" style="display:none;">食べる</button>
+                </div>
             </div>
             <div class="item-row">
                 <span>最大HP強化アイテム</span>
@@ -877,6 +913,10 @@
                         <span class="status-label">HP</span>
                         <span class="status-value hp" id="modal-hp">100 / 100</span>
                     </div>
+                    <div class="status-item satiety" id="modal-satiety-row" style="display:none;">
+                        <span class="status-label">満腹度</span>
+                        <span class="status-value satiety" id="modal-satiety">100 / 100</span>
+                    </div>
                     <div class="status-item">
                         <span class="status-label">攻撃力</span>
                         <span class="status-value attack" id="modal-attack">10</span>
@@ -884,6 +924,10 @@
                     <div class="status-item">
                         <span class="status-label">防御力</span>
                         <span class="status-value defense" id="modal-defense">10</span>
+                    </div>
+                    <div class="status-item status-effects">
+                        <span class="status-label">状態異常</span>
+                        <span class="status-value effects" id="modal-status-effects">なし</span>
                     </div>
                     <div class="status-item">
                         <span class="status-label">現在階層</span>
@@ -952,6 +996,10 @@
                     <span id="enemy-modal-level">1</span>
                 </div>
                 <div class="stat-row">
+                    <span class="label">種類:</span>
+                    <span id="enemy-modal-type">通常</span>
+                </div>
+                <div class="stat-row">
                     <span class="label">HP:</span>
                     <span id="enemy-modal-hp">50/50</span>
                 </div>
@@ -985,6 +1033,7 @@
                     </div>
                 </div>
             </div>
+            <div class="enemy-type-description" id="enemy-modal-type-desc"></div>
             <button class="close-modal" data-target="enemy-info-modal">閉じる</button>
         </div>
     </div>

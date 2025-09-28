@@ -6,10 +6,18 @@ const statAtk = document.getElementById('stat-atk');
 const statDef = document.getElementById('stat-def');
 const statHpText = document.getElementById('stat-hp-text');
 const statExpText = document.getElementById('stat-exp-text');
+const statStatusEffects = document.getElementById('stat-status-effects');
 const hpBar = document.getElementById('hp-bar');
 const expBar = document.getElementById('exp-bar');
+const statSatietyText = document.getElementById('stat-satiety-text');
+const satietyBar = document.getElementById('satiety-bar');
+const satietyBarContainer = document.getElementById('satiety-bar-container');
 const messageLogDiv = document.getElementById('message-log');
 const MAX_LOG_LINES = 100;
+const SATIETY_MAX = 100;
+const SATIETY_TICK_PER_TURN = 1;
+const SATIETY_DAMAGE_RATIO = 0.2;
+const SATIETY_RECOVERY_PER_POTION = 25;
 let logBuffer = [];
 const gameOverScreen = document.getElementById('game-over-screen');
 const restartButton = document.getElementById('restart-button');
@@ -27,10 +35,12 @@ const invHpBoost = document.getElementById('inv-hp-boost');
 const invAtkBoost = document.getElementById('inv-atk-boost');
 const invDefBoost = document.getElementById('inv-def-boost');
 const usePotion30Btn = document.getElementById('use-potion30');
+const eatPotion30Btn = document.getElementById('eat-potion30');
 const useHpBoostBtn = document.getElementById('use-hp-boost');
 const useAtkBoostBtn = document.getElementById('use-atk-boost');
 const useDefBoostBtn = document.getElementById('use-def-boost');
 const statusDetails = document.getElementById('status-details');
+const modalStatusEffects = document.getElementById('modal-status-effects');
 // Selection screen
 const selectionScreen = document.getElementById('selection-screen');
 const gameScreen = document.getElementById('game-screen');
@@ -96,6 +106,7 @@ const bdimCardSelection = document.getElementById('bdim-card-selection');
 const enemyInfoModal = document.getElementById('enemy-info-modal');
 const enemyModalTitle = document.getElementById('enemy-modal-title');
 const enemyModalLevel = document.getElementById('enemy-modal-level');
+const enemyModalType = document.getElementById('enemy-modal-type');
 const enemyModalHp = document.getElementById('enemy-modal-hp');
 const enemyModalAttack = document.getElementById('enemy-modal-attack');
 const enemyModalDefense = document.getElementById('enemy-modal-defense');
@@ -103,6 +114,7 @@ const damageDealRange = document.getElementById('damage-deal-range');
 const damageTakeRange = document.getElementById('damage-take-range');
 const hitRate = document.getElementById('hit-rate');
 const enemyHitRate = document.getElementById('enemy-hit-rate');
+const enemyModalTypeDesc = document.getElementById('enemy-modal-type-desc');
 
 // ゲームの定数
 const TILE_SIZE = 20;
@@ -123,6 +135,74 @@ const MINI_EXP_DISPLAY_MODES = [
     { id: 'wrap', label: '羅列' },
     { id: 'detail', label: '詳細' }
 ];
+
+const ADVANCED_ENEMY_RECOMMENDED_LEVEL_THRESHOLD = 250;
+const ENEMY_EFFECT_SUPPRESSION_GAP = 5;
+
+const PLAYER_STATUS_EFFECTS = {
+    poison: { id: 'poison', label: '毒', defaultDuration: 4, damageRatio: 0.1, badgeClass: 'status-badge--poison' },
+    paralysis: { id: 'paralysis', label: '麻痺', defaultDuration: 5, badgeClass: 'status-badge--paralysis' },
+    abilityDown: { id: 'abilityDown', label: '能力低下', defaultDuration: 5, statMultiplier: 0.8, badgeClass: 'status-badge--ability' },
+    levelDown: { id: 'levelDown', label: 'レベル低下', defaultDuration: 5, levelReduction: 3, badgeClass: 'status-badge--level' }
+};
+
+const ENEMY_TYPE_DEFS = {
+    normal: { id: 'normal', label: '通常', description: '特別な行動は行わない。', weight: 0, color: '#2d3436' },
+    'status-caster': { id: 'status-caster', label: '状態異常使い', description: '攻撃命中時に毒や麻痺などの状態異常を付与してくる。', weight: 3, color: '#be4bdb' },
+    warper: { id: 'warper', label: '転移者', description: '攻撃命中時にプレイヤーを別の位置へワープさせることがある。', weight: 2, color: '#228be6' },
+    executioner: { id: 'executioner', label: '死神', description: '低確率で即死攻撃を放つ危険な敵。', weight: 1, color: '#ff6b6b' },
+    knockback: { id: 'knockback', label: '突撃兵', description: '攻撃でプレイヤーを吹き飛ばし、壁に激突すると追加ダメージ。', weight: 2, color: '#ffa94d' },
+    swift: { id: 'swift', label: '迅速兵', description: '素早く、プレイヤー1ターン中に2回行動する。', weight: 2, color: '#40c057' }
+};
+
+const ADVANCED_ENEMY_TYPES = [
+    ENEMY_TYPE_DEFS['status-caster'],
+    ENEMY_TYPE_DEFS.warper,
+    ENEMY_TYPE_DEFS.executioner,
+    ENEMY_TYPE_DEFS.knockback,
+    ENEMY_TYPE_DEFS.swift
+];
+
+function getEnemyTypeDefinition(id) {
+    if (!id) return ENEMY_TYPE_DEFS.normal;
+    return ENEMY_TYPE_DEFS[id] || ENEMY_TYPE_DEFS.normal;
+}
+
+function shouldUseAdvancedEnemyTypes(recommendedLevel) {
+    return Number.isFinite(recommendedLevel) && recommendedLevel >= ADVANCED_ENEMY_RECOMMENDED_LEVEL_THRESHOLD;
+}
+
+function pickAdvancedEnemyTypeId() {
+    const weightSum = ADVANCED_ENEMY_TYPES.reduce((sum, type) => sum + (type.weight || 0), 0) || 1;
+    let roll = Math.random() * weightSum;
+    for (const type of ADVANCED_ENEMY_TYPES) {
+        roll -= (type.weight || 0);
+        if (roll <= 0) return type.id;
+    }
+    return ADVANCED_ENEMY_TYPES[ADVANCED_ENEMY_TYPES.length - 1].id;
+}
+
+function determineEnemyType(recommendedLevel) {
+    if (!shouldUseAdvancedEnemyTypes(recommendedLevel)) return ENEMY_TYPE_DEFS.normal.id;
+    if (Math.random() < 0.3) return ENEMY_TYPE_DEFS.normal.id;
+    return pickAdvancedEnemyTypeId();
+}
+
+function isEnemyEffectSuppressed(enemy) {
+    if (!enemy) return false;
+    const enemyLevel = Math.max(1, Math.floor(Number(enemy.level) || 1));
+    const playerBaseLevel = Math.max(1, Math.floor(player.level || 1));
+    return enemyLevel <= playerBaseLevel - ENEMY_EFFECT_SUPPRESSION_GAP;
+}
+
+function createInitialStatusEffects() {
+    return {
+        poison: { remaining: 0 },
+        paralysis: { remaining: 0 },
+        abilityDown: { remaining: 0 },
+        levelDown: { remaining: 0 }
+    };
+}
 
 const miniShortcutState = {
     global: true,
@@ -251,22 +331,22 @@ function sanitizeSandboxConfig(raw) {
     };
     const sanitizeTileMeta = (meta, isFloor) => {
         if (!meta || typeof meta !== 'object') return null;
-        const result = {};
-        if (isFloor) {
-            const floorType = typeof meta.floorType === 'string' ? meta.floorType.toLowerCase() : '';
-            if (floorType === FLOOR_TYPE_ICE || floorType === FLOOR_TYPE_POISON) {
-                result.floorType = floorType;
-            }
-            const floorColor = sanitizeColor(meta.floorColor);
-            if (floorColor) {
-                result.floorColor = floorColor;
-            }
+        const sanitized = sanitizeTileMetaEntry(meta, isFloor);
+        if (!sanitized) return null;
+        if (isFloor && sanitized.floorColor) {
+            const color = sanitizeColor(meta.floorColor);
+            if (color) sanitized.floorColor = color;
+            else delete sanitized.floorColor;
         }
-        const wallColor = sanitizeColor(meta.wallColor);
-        if (!isFloor && wallColor) {
-            result.wallColor = wallColor;
+        if (!isFloor && sanitized.wallColor) {
+            const color = sanitizeColor(meta.wallColor);
+            if (color) sanitized.wallColor = color;
+            else delete sanitized.wallColor;
         }
-        return Object.keys(result).length ? result : null;
+        if (isFloor && sanitized.floorDir && !floorTypeNeedsDirection(sanitized.floorType)) {
+            delete sanitized.floorDir;
+        }
+        return Object.keys(sanitized).length ? sanitized : null;
     };
     const grid = Array.from({ length: height }, (_, y) => {
         const row = Array.from({ length: width }, (_, x) => {
@@ -415,6 +495,8 @@ function startSandboxGame(rawConfig) {
     player.attack = stats.attack;
     player.defense = stats.defense;
     player.exp = 0;
+    resetPlayerStatusEffects();
+    enforceEffectiveHpCap();
 
     isGameOver = false;
     playerTurn = true;
@@ -588,8 +670,14 @@ function showSelectionScreen(opts = {}) {
     leaveInGameLayout();
 
     // 状態のリセット
-    if (refillHp) player.hp = player.maxHp;
+    if (refillHp) {
+        player.hp = player.maxHp;
+        enforceEffectiveHpCap();
+        player.satiety = SATIETY_MAX;
+        resetPlayerStatusEffects();
+    }
     isGameOver = false;
+    satietySystemActive = false;
     if (resetModeToNormal) {
         currentMode = 'normal';
         restoreRandom();
@@ -601,6 +689,7 @@ function showSelectionScreen(opts = {}) {
         try { updateUI(); } catch {}
     }
     // フッター高さを反映
+    refreshSatietyActivation({ notify: false });
     setTimeout(measureSelectionFooterHeight, 0);
 }
 
@@ -645,8 +734,155 @@ const DEFAULT_FLOOR_COLOR = '#ced6e0';
 const FLOOR_TYPE_NORMAL = 'normal';
 const FLOOR_TYPE_ICE = 'ice';
 const FLOOR_TYPE_POISON = 'poison';
+const FLOOR_TYPE_BOMB = 'bomb';
+const FLOOR_TYPE_CONVEYOR = 'conveyor';
+const FLOOR_TYPE_ONE_WAY = 'one-way';
+const FLOOR_TYPE_VERTICAL_ONLY = 'vertical';
+const FLOOR_TYPE_HORIZONTAL_ONLY = 'horizontal';
+const FLOOR_TYPE_SET = new Set([
+    FLOOR_TYPE_NORMAL,
+    FLOOR_TYPE_ICE,
+    FLOOR_TYPE_POISON,
+    FLOOR_TYPE_BOMB,
+    FLOOR_TYPE_CONVEYOR,
+    FLOOR_TYPE_ONE_WAY,
+    FLOOR_TYPE_VERTICAL_ONLY,
+    FLOOR_TYPE_HORIZONTAL_ONLY
+]);
+const FLOOR_DIRECTION_VALUES = ['up', 'down', 'left', 'right'];
+const FLOOR_DIRECTION_VECTORS = {
+    up: { dx: 0, dy: -1 },
+    down: { dx: 0, dy: 1 },
+    left: { dx: -1, dy: 0 },
+    right: { dx: 1, dy: 0 }
+};
+const FLOOR_TYPES_REQUIRING_DIRECTION = new Set([FLOOR_TYPE_CONVEYOR, FLOOR_TYPE_ONE_WAY]);
+const CONVEYOR_CHAIN_LIMIT = 20;
 const COLOR_HEX_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 let tileMeta = [];
+
+function normalizeFloorType(value) {
+    if (typeof value !== 'string') return FLOOR_TYPE_NORMAL;
+    const trimmed = value.trim().toLowerCase();
+    switch (trimmed) {
+        case 'ice':
+        case FLOOR_TYPE_ICE:
+            return FLOOR_TYPE_ICE;
+        case 'poison':
+        case FLOOR_TYPE_POISON:
+            return FLOOR_TYPE_POISON;
+        case 'bomb':
+        case FLOOR_TYPE_BOMB:
+            return FLOOR_TYPE_BOMB;
+        case 'conveyor':
+        case 'belt':
+        case 'belt-conveyor':
+        case 'belt_conveyor':
+        case FLOOR_TYPE_CONVEYOR:
+            return FLOOR_TYPE_CONVEYOR;
+        case 'oneway':
+        case 'one-way':
+        case 'one_way':
+        case FLOOR_TYPE_ONE_WAY:
+            return FLOOR_TYPE_ONE_WAY;
+        case 'vertical':
+        case 'vertical-only':
+        case 'vertical_only':
+        case FLOOR_TYPE_VERTICAL_ONLY:
+            return FLOOR_TYPE_VERTICAL_ONLY;
+        case 'horizontal':
+        case 'horizontal-only':
+        case 'horizontal_only':
+        case FLOOR_TYPE_HORIZONTAL_ONLY:
+            return FLOOR_TYPE_HORIZONTAL_ONLY;
+        default:
+            return FLOOR_TYPE_NORMAL;
+    }
+}
+
+function normalizeFloorDirection(value) {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim().toLowerCase();
+    if (FLOOR_DIRECTION_VALUES.includes(trimmed)) return trimmed;
+    switch (trimmed) {
+        case 'north':
+        case 'n':
+            return 'up';
+        case 'south':
+        case 's':
+            return 'down';
+        case 'west':
+        case 'w':
+            return 'left';
+        case 'east':
+        case 'e':
+            return 'right';
+        default:
+            return null;
+    }
+}
+
+function floorTypeNeedsDirection(type) {
+    return FLOOR_TYPES_REQUIRING_DIRECTION.has(type);
+}
+
+function sanitizeTileMetaEntry(meta, isFloor) {
+    if (!meta || typeof meta !== 'object') return null;
+    const result = {};
+    if (isFloor) {
+        const type = normalizeFloorType(meta.floorType);
+        if (type !== FLOOR_TYPE_NORMAL) {
+            result.floorType = type;
+        }
+        const dirSource = meta.floorDir || meta.direction || meta.floorDirection;
+        const dir = normalizeFloorDirection(dirSource);
+        if (dir && floorTypeNeedsDirection(result.floorType)) {
+            result.floorDir = dir;
+        }
+        if (typeof meta.floorColor === 'string' && meta.floorColor) {
+            result.floorColor = meta.floorColor;
+        }
+    }
+    if (!isFloor && typeof meta.wallColor === 'string' && meta.wallColor) {
+        result.wallColor = meta.wallColor;
+    }
+    return Object.keys(result).length ? result : null;
+}
+
+const DARK_VISION_RADIUS = 5;
+const DARK_VISION_RADIUS_SQUARED = DARK_VISION_RADIUS * DARK_VISION_RADIUS;
+const DARKNESS_FILL_COLOR = '#05070f';
+const generatorHazardFlags = new Map();
+const currentGeneratorHazards = {
+    generatorId: null,
+    baseDark: false,
+    basePoisonFog: false,
+    recommendedLevel: null,
+    darkActive: false,
+    poisonFogActive: false
+};
+
+function setGeneratorHazardFlags(id, flags) {
+    if (!id) return;
+    const next = {
+        dark: !!(flags && (flags.dark || flags.darkness)),
+        poisonFog: !!(flags && (flags.poisonFog || flags.poison || flags.poisonMist))
+    };
+    generatorHazardFlags.set(id, next);
+    if (currentGeneratorHazards.generatorId === id) {
+        currentGeneratorHazards.baseDark = next.dark;
+        currentGeneratorHazards.basePoisonFog = next.poisonFog;
+        refreshGeneratorHazardSuppression();
+    }
+}
+
+function getGeneratorHazardFlags(id) {
+    if (!id || !generatorHazardFlags.has(id)) {
+        return { dark: false, poisonFog: false };
+    }
+    const entry = generatorHazardFlags.get(id) || {};
+    return { dark: !!entry.dark, poisonFog: !!entry.poisonFog };
+}
 
 function resetTileMetadata() {
     tileMeta = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
@@ -667,9 +903,37 @@ function getTileMeta(x, y) {
 function getTileFloorType(x, y) {
     if (!map[y] || map[y][x] !== 0) return FLOOR_TYPE_NORMAL;
     const meta = getTileMeta(x, y);
-    if (!meta || !meta.floorType) return FLOOR_TYPE_NORMAL;
-    const t = meta.floorType;
-    return (t === FLOOR_TYPE_ICE || t === FLOOR_TYPE_POISON) ? t : FLOOR_TYPE_NORMAL;
+    let type = FLOOR_TYPE_NORMAL;
+    if (meta && meta.floorType) {
+        const t = normalizeFloorType(meta.floorType);
+        if (FLOOR_TYPE_SET.has(t)) {
+            type = t;
+        }
+    }
+    if (type === FLOOR_TYPE_NORMAL && isPoisonFogActive()) {
+        return FLOOR_TYPE_POISON;
+    }
+    return type;
+}
+
+function getTileFloorDirection(x, y) {
+    const type = getTileFloorType(x, y);
+    if (!floorTypeNeedsDirection(type)) return null;
+    const meta = getTileMeta(x, y);
+    if (!meta) return null;
+    const dir = normalizeFloorDirection(meta.floorDir || meta.direction || meta.floorDirection);
+    return dir && FLOOR_DIRECTION_VALUES.includes(dir) ? dir : null;
+}
+
+function clearFloorTypeAt(x, y) {
+    if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;
+    const meta = getTileMeta(x, y);
+    if (!meta) return;
+    delete meta.floorType;
+    delete meta.floorDir;
+    if (!meta.floorColor && !meta.wallColor && (!meta.floorType || meta.floorType === FLOOR_TYPE_NORMAL)) {
+        if (tileMeta[y]) tileMeta[y][x] = null;
+    }
 }
 
 function getTileRenderColor(x, y, isWall) {
@@ -683,6 +947,11 @@ function getTileRenderColor(x, y, isWall) {
     const type = getTileFloorType(x, y);
     if (type === FLOOR_TYPE_ICE) return '#74c0fc';
     if (type === FLOOR_TYPE_POISON) return '#94d82d';
+    if (type === FLOOR_TYPE_BOMB) return '#ff8787';
+    if (type === FLOOR_TYPE_CONVEYOR) return '#ffe066';
+    if (type === FLOOR_TYPE_ONE_WAY) return '#b197fc';
+    if (type === FLOOR_TYPE_VERTICAL_ONLY) return '#38d9a9';
+    if (type === FLOOR_TYPE_HORIZONTAL_ONLY) return '#ffa94d';
     return DEFAULT_FLOOR_COLOR;
 }
 
@@ -694,6 +963,7 @@ const player = {
     exp: 0,
     maxHp: 100,
     hp: 100,
+    satiety: SATIETY_MAX,
     attack: 10,
     defense: 10,
     facing: 'down',
@@ -702,12 +972,291 @@ const player = {
         hpBoost: 0,
         atkBoost: 0,
         defBoost: 0
-    }
+    },
+    statusEffects: createInitialStatusEffects()
 };
+
+function ensurePlayerStatusContainer() {
+    if (!player.statusEffects || typeof player.statusEffects !== 'object') {
+        player.statusEffects = createInitialStatusEffects();
+    }
+    return player.statusEffects;
+}
+
+function getPlayerStatus(effectId) {
+    const container = ensurePlayerStatusContainer();
+    if (!Object.prototype.hasOwnProperty.call(container, effectId)) {
+        container[effectId] = { remaining: 0 };
+    }
+    return container[effectId];
+}
+
+function getStatusLabel(effectId) {
+    return PLAYER_STATUS_EFFECTS[effectId]?.label || effectId;
+}
+
+function isPlayerStatusActive(effectId) {
+    const status = getPlayerStatus(effectId);
+    return Number.isFinite(status.remaining) && status.remaining > 0;
+}
+
+function getStatusRemaining(effectId) {
+    const status = getPlayerStatus(effectId);
+    return Math.max(0, Math.floor(Number(status.remaining) || 0));
+}
+
+function clearPlayerStatusEffect(effectId, { silent = false } = {}) {
+    const status = getPlayerStatus(effectId);
+    const wasActive = isPlayerStatusActive(effectId);
+    status.remaining = 0;
+    delete status.justApplied;
+    if (!silent && wasActive) {
+        let message = '';
+        switch (effectId) {
+            case 'poison':
+                message = '毒が治った。';
+                break;
+            case 'paralysis':
+                message = '体の痺れが解けた。';
+                break;
+            case 'abilityDown':
+                message = '能力低下から解放された。';
+                break;
+            case 'levelDown':
+                message = '一時的なレベル低下が解除された。';
+                break;
+        }
+        if (message) addMessage(message);
+    }
+}
+
+function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
+    const def = PLAYER_STATUS_EFFECTS[effectId];
+    if (!def) return false;
+    const turns = Math.max(1, Math.floor(Number.isFinite(duration) ? Number(duration) : def.defaultDuration || 1));
+    const status = getPlayerStatus(effectId);
+    status.remaining = turns;
+    if (effectId === 'paralysis') {
+        status.justApplied = true;
+    } else {
+        delete status.justApplied;
+    }
+    if (!silent) {
+        let message = '';
+        switch (effectId) {
+            case 'poison':
+                message = `毒に侵された！ (${turns}ターン)`;
+                break;
+            case 'paralysis':
+                message = `体が痺れて動けない！ (${turns}ターン)`;
+                break;
+            case 'abilityDown':
+                message = `能力が低下した…最大HP/攻撃/防御が下がる (${turns}ターン)`;
+                break;
+            case 'levelDown':
+                message = `レベルが一時的に低下した！ (${turns}ターン)`;
+                break;
+        }
+        if (message) addMessage(message);
+    }
+    if (effectId === 'abilityDown') {
+        enforceEffectiveHpCap();
+    }
+    updateUI();
+    return true;
+}
+
+function resetPlayerStatusEffects() {
+    player.statusEffects = createInitialStatusEffects();
+}
+
+function getAbilityDownMultiplier() {
+    if (!isPlayerStatusActive('abilityDown')) return 1;
+    const mult = PLAYER_STATUS_EFFECTS.abilityDown?.statMultiplier;
+    if (!Number.isFinite(mult) || mult <= 0) return 1;
+    return mult;
+}
+
+function getEffectivePlayerMaxHp() {
+    const base = Math.max(1, Math.floor(player.maxHp || 1));
+    return Math.max(1, Math.floor(base * getAbilityDownMultiplier()));
+}
+
+function getEffectivePlayerAttack() {
+    const base = Math.max(0, Math.floor(player.attack || 0));
+    return Math.max(0, Math.floor(base * getAbilityDownMultiplier()));
+}
+
+function getEffectivePlayerDefense() {
+    const base = Math.max(0, Math.floor(player.defense || 0));
+    return Math.max(0, Math.floor(base * getAbilityDownMultiplier()));
+}
+
+function getEffectivePlayerLevel() {
+    const baseLevel = Math.max(1, Math.floor(player.level || 1));
+    if (!isPlayerStatusActive('levelDown')) return baseLevel;
+    const reduction = PLAYER_STATUS_EFFECTS.levelDown?.levelReduction || 0;
+    return Math.max(1, baseLevel - reduction);
+}
+
+function enforceEffectiveHpCap() {
+    const effectiveMax = getEffectivePlayerMaxHp();
+    if (!Number.isFinite(effectiveMax)) return;
+    if (player.hp > effectiveMax) {
+        player.hp = effectiveMax;
+    }
+    if (player.hp < 0) player.hp = 0;
+}
+
+function getPlayerStatusDisplayList() {
+    const list = [];
+    for (const key of Object.keys(PLAYER_STATUS_EFFECTS)) {
+        const remaining = getStatusRemaining(key);
+        if (remaining > 0) {
+            const def = PLAYER_STATUS_EFFECTS[key];
+            list.push({
+                id: key,
+                label: def.label,
+                remaining,
+                badgeClass: def.badgeClass || null
+            });
+        }
+    }
+    return list;
+}
+
+function processPlayerStatusTurnStart() {
+    let alive = true;
+    const effects = ensurePlayerStatusContainer();
+
+    if (isPlayerStatusActive('poison')) {
+        const poisonDef = PLAYER_STATUS_EFFECTS.poison;
+        const ratio = Number.isFinite(poisonDef.damageRatio) ? poisonDef.damageRatio : 0.1;
+        const damage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
+        player.hp = Math.max(0, player.hp - damage);
+        addMessage(`毒で${damage}のダメージ！`);
+        addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#94d82d');
+        playSfx('damage');
+        if (player.hp <= 0) {
+            handlePlayerDeath('毒で倒れた…ゲームオーバー');
+            alive = false;
+        }
+        if (alive) {
+            if (effects.poison.remaining <= 1) {
+                clearPlayerStatusEffect('poison');
+            } else {
+                effects.poison.remaining -= 1;
+            }
+        }
+    }
+
+    if (!alive) {
+        updateUI();
+        return false;
+    }
+
+    if (isPlayerStatusActive('abilityDown')) {
+        if (effects.abilityDown.remaining <= 1) {
+            clearPlayerStatusEffect('abilityDown');
+        } else {
+            effects.abilityDown.remaining -= 1;
+        }
+    }
+
+    if (isPlayerStatusActive('levelDown')) {
+        if (effects.levelDown.remaining <= 1) {
+            clearPlayerStatusEffect('levelDown');
+        } else {
+            effects.levelDown.remaining -= 1;
+        }
+    }
+
+    enforceEffectiveHpCap();
+    updateUI();
+    return true;
+}
+
+function skipTurnDueToParalysis() {
+    if (!isPlayerStatusActive('paralysis')) return false;
+    const status = getPlayerStatus('paralysis');
+    const before = Math.max(0, Math.floor(status.remaining || 0));
+    const after = Math.max(0, before - 1);
+
+    if (status.justApplied) {
+        addMessage('体が痺れて動けない…');
+        delete status.justApplied;
+    } else {
+        addMessage(`体が痺れて動けない… (残り${after}ターン)`);
+    }
+
+    if (before <= 1) {
+        clearPlayerStatusEffect('paralysis');
+    } else {
+        status.remaining = after;
+    }
+
+    updateUI();
+    const alive = onPlayerActionCommitted({ type: 'paralysis' });
+    if (!alive || isGameOver) {
+        return true;
+    }
+    if (!isGameOver && gameLoopRunning) {
+        playerTurn = false;
+        setTimeout(enemyTurn, 100);
+    } else if (!isGameOver) {
+        playerTurn = true;
+    }
+    return true;
+}
+
+function isDarknessActive() {
+    return !!currentGeneratorHazards.darkActive;
+}
+
+function isPoisonFogActive() {
+    return !!currentGeneratorHazards.poisonFogActive;
+}
+
+function isTileVisible(x, y) {
+    if (!currentGeneratorHazards.darkActive) return true;
+    const dx = x - player.x;
+    const dy = y - player.y;
+    return (dx * dx + dy * dy) <= DARK_VISION_RADIUS_SQUARED;
+}
+
+function updateGeneratorHazardsForFloor(generatorId) {
+    const id = generatorId || null;
+    currentGeneratorHazards.generatorId = id;
+    const flags = getGeneratorHazardFlags(id);
+    currentGeneratorHazards.baseDark = !!flags.dark;
+    currentGeneratorHazards.basePoisonFog = !!flags.poisonFog;
+    let recommended = null;
+    if (isSandboxActive()) {
+        recommended = sandboxRuntime.config?.playerLevel ?? null;
+    } else {
+        try {
+            recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+        } catch {
+            recommended = null;
+        }
+    }
+    currentGeneratorHazards.recommendedLevel = Number.isFinite(recommended) ? recommended : null;
+    refreshGeneratorHazardSuppression();
+}
+
+function refreshGeneratorHazardSuppression() {
+    const playerLevel = Number.isFinite(player.level) ? player.level : null;
+    const recommended = currentGeneratorHazards.recommendedLevel;
+    const suppressed = (currentGeneratorHazards.baseDark || currentGeneratorHazards.basePoisonFog) &&
+        Number.isFinite(recommended) && Number.isFinite(playerLevel) && recommended <= playerLevel - 5;
+    currentGeneratorHazards.darkActive = currentGeneratorHazards.baseDark && !suppressed;
+    currentGeneratorHazards.poisonFogActive = currentGeneratorHazards.basePoisonFog && !suppressed;
+}
 
 // Track previous values for change indicators
 let prevHp = 100;
 let prevExp = 0;
+let satietySystemActive = false;
 let activePopupGroup = [];
 let popupGroupTimer = null;
 
@@ -3069,6 +3618,8 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     player.exp = Number(playerSnap.exp) || 0;
     player.maxHp = Math.max(1, Math.floor(Number(playerSnap.maxHp) || player.maxHp || 100));
     player.hp = Math.max(0, Math.min(player.maxHp, Math.floor(Number(playerSnap.hp) || player.maxHp)));
+    const satietySnap = Number.isFinite(playerSnap.satiety) ? Number(playerSnap.satiety) : SATIETY_MAX;
+    player.satiety = Math.max(0, Math.min(SATIETY_MAX, satietySnap));
     player.attack = Math.max(0, Math.floor(Number(playerSnap.attack) || player.attack || 0));
     player.defense = Math.max(0, Math.floor(Number(playerSnap.defense) || player.defense || 0));
     if (typeof playerSnap.facing === 'string') player.facing = playerSnap.facing;
@@ -3080,6 +3631,18 @@ function applyGameStateSnapshot(snapshot, options = {}) {
         atkBoost: Math.max(0, Math.floor(Number(invSnap.atkBoost) || 0)),
         defBoost: Math.max(0, Math.floor(Number(invSnap.defBoost) || 0))
     };
+    if (playerSnap.statusEffects && typeof playerSnap.statusEffects === 'object') {
+        const restored = createInitialStatusEffects();
+        for (const key of Object.keys(PLAYER_STATUS_EFFECTS)) {
+            const src = playerSnap.statusEffects[key];
+            const remaining = Math.max(0, Math.floor(Number(src?.remaining ?? src) || 0));
+            restored[key].remaining = remaining;
+        }
+        player.statusEffects = restored;
+    } else {
+        resetPlayerStatusEffects();
+    }
+    enforceEffectiveHpCap();
 
     if (snapshot.selectedWorld) selectedWorld = snapshot.selectedWorld;
     if (typeof snapshot.selectedDungeonBase !== 'undefined') selectedDungeonBase = snapshot.selectedDungeonBase;
@@ -3121,8 +3684,11 @@ function applyGameStateSnapshot(snapshot, options = {}) {
 
     __miniSessionExp = Number.isFinite(snapshot.miniSessionExp) ? Number(snapshot.miniSessionExp) : 0;
 
-    prevHp = player.hp || player.maxHp || 100;
+    prevHp = Math.min(player.hp || 0, getEffectivePlayerMaxHp());
     prevExp = player.exp || 0;
+
+    refreshGeneratorHazardSuppression();
+    refreshSatietyActivation({ notify: false });
 
     if (applyUI) {
         if (difficultySelect) difficultySelect.value = difficulty;
@@ -3280,19 +3846,8 @@ function generateMap() {
                 const meta = cfg.tileMeta?.[y]?.[x];
                 if (!meta || typeof meta !== 'object') return null;
                 const isFloor = cfg.grid?.[y]?.[x] === 0;
-                const entry = {};
-                if (isFloor) {
-                    if (meta.floorType === FLOOR_TYPE_ICE || meta.floorType === FLOOR_TYPE_POISON) {
-                        entry.floorType = meta.floorType;
-                    }
-                    if (typeof meta.floorColor === 'string' && meta.floorColor) {
-                        entry.floorColor = meta.floorColor;
-                    }
-                }
-                if (!isFloor && typeof meta.wallColor === 'string' && meta.wallColor) {
-                    entry.wallColor = meta.wallColor;
-                }
-                return Object.keys(entry).length ? entry : null;
+                const entry = sanitizeTileMetaEntry(meta, isFloor);
+                return entry;
             });
         });
         lastGeneratedGenType = 'sandbox';
@@ -4666,7 +5221,8 @@ function generateEntities() {
                 attack: enemy.attack,
                 defense: enemy.defense,
                 boss: !!enemy.boss,
-                name: enemy.name || undefined
+                name: enemy.name || undefined,
+                type: typeof enemy.type === 'string' ? enemy.type : ENEMY_TYPE_DEFS.normal.id
             });
         }
         stairs = cfg.stairs ? { x: cfg.stairs.x, y: cfg.stairs.y } : null;
@@ -4729,7 +5285,17 @@ function generateEntities() {
         const baseRec = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
         const lvl = Math.max(1, baseRec + (Math.floor(Math.random() * 9) - 4));
         const maxHp = 50 + 5 * (lvl - 1);
-        enemies.push({ x: pos.x, y: pos.y, level: lvl, maxHp: maxHp, hp: maxHp, attack: 8 + (lvl - 1), defense: 8 + (lvl - 1) });
+        const typeId = determineEnemyType(baseRec);
+        enemies.push({
+            x: pos.x,
+            y: pos.y,
+            level: lvl,
+            maxHp,
+            hp: maxHp,
+            attack: 8 + (lvl - 1),
+            defense: 8 + (lvl - 1),
+            type: typeId
+        });
     }
 
     // アイテムを配置 (緑の丸は削除、宝箱のみでアイテム入手)
@@ -4751,6 +5317,10 @@ function generateEntities() {
         [{ x: player.x, y: player.y }, ...enemies]
     );
     for (const cpos of chestPositions) chests.push({ x: cpos.x, y: cpos.y, type: 'chest' });
+
+    enemies.forEach(enemy => {
+        if (!enemy.type) enemy.type = ENEMY_TYPE_DEFS.normal.id;
+    });
 
     // 階段を配置
     if (genType === 'snake') {
@@ -4801,9 +5371,18 @@ function generateLevel() {
         restoreRandom();
     }
     generateMap();
+    const actualGenType = lastGeneratedGenType || resolveCurrentGeneratorType() || 'field';
+    updateGeneratorHazardsForFloor(actualGenType);
+    if (isDarknessActive()) {
+        addMessage('暗闇が視界を包み、見通しが悪い…');
+    }
+    if (isPoisonFogActive()) {
+        addMessage('毒霧が漂っている！通常の床も危険だ。');
+    }
     generateEntities();
     updateCamera();
     bossAlive = isSandboxActive() ? enemies.some(e => e.boss) : false;
+    refreshSatietyActivation({ notify: true });
 
     // Boss room generation based on mode/spec
     const maxFloor = getMaxFloor();
@@ -4858,6 +5437,7 @@ function generateBossRoom() {
         attack: 8 + (bossLevel - 1),
         defense: 8 + (bossLevel - 1),
         boss: true,
+        type: ENEMY_TYPE_DEFS.normal.id
     }];
     bossAlive = true;
     
@@ -4985,18 +5565,31 @@ function showEnemyInfo(enemy) {
     enemyModalHp.textContent = `${enemy.hp}/${enemy.maxHp}`;
     enemyModalAttack.textContent = enemy.attack;
     enemyModalDefense.textContent = enemy.defense;
-    
+    const typeDef = getEnemyTypeDefinition(enemy.type);
+    if (enemyModalType) enemyModalType.textContent = typeDef.label;
+    if (enemyModalTypeDesc) {
+        const suppressed = isEnemyEffectSuppressed(enemy);
+        const baseDesc = typeDef.description || '特別な行動は行わない。';
+        enemyModalTypeDesc.textContent = suppressed && typeDef.id !== ENEMY_TYPE_DEFS.normal.id
+            ? `${baseDesc}（レベル差により特殊効果は無効化中）`
+            : baseDesc;
+    }
+
     // ダメージシミュレーション
+    const playerEffectiveLevel = getEffectivePlayerLevel();
+    const playerEffectiveAttack = getEffectivePlayerAttack();
+    const playerEffectiveDefense = getEffectivePlayerDefense();
+
     // プレイヤーから敵へのダメージ
     const playerToEnemy = calculateDamageRange(
-        { level: player.level, attack: player.attack },
+        { level: playerEffectiveLevel, attack: playerEffectiveAttack },
         { level: enemy.level, defense: enemy.defense }
     );
     
     // 敵からプレイヤーへのダメージ
     const enemyToPlayer = calculateDamageRange(
         { level: enemy.level, attack: enemy.attack },
-        { level: player.level, defense: player.defense }
+        { level: playerEffectiveLevel, defense: playerEffectiveDefense }
     );
     
     // 難易度補正を適用
@@ -5015,8 +5608,8 @@ function showEnemyInfo(enemy) {
     damageTakeRange.textContent = `${takeMin}-${takeMax} (クリ: ${takeCritMin}-${takeCritMax})`;
     
     // 命中率表示
-    const playerHitRate = calculateHitRate(player.level, enemy.level);
-    const enemyHitRateValue = calculateHitRate(enemy.level, player.level);
+    const playerHitRate = calculateHitRate(playerEffectiveLevel, enemy.level);
+    const enemyHitRateValue = calculateHitRate(enemy.level, playerEffectiveLevel);
     
     hitRate.textContent = `${playerHitRate}%`;
     enemyHitRate.textContent = `${enemyHitRateValue}%`;
@@ -5039,6 +5632,115 @@ function recommendedLevelForSelection(world, baseLevel, floorIndex) {
     }
     const worldOffset = { A: 0, B: 100, C: 200, D: 300, E: 400, F: 500, G: 600, H: 700, I: 800, J: 900 }[world] || 0;
     return baseLevel + worldOffset;
+}
+
+function getCurrentRecommendedLevelForHazards() {
+    if (currentGeneratorHazards && Number.isFinite(currentGeneratorHazards.recommendedLevel)) {
+        return currentGeneratorHazards.recommendedLevel;
+    }
+    try {
+        return recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    } catch {
+        return null;
+    }
+}
+
+function isFloorHazardSuppressed() {
+    const playerLevel = Number.isFinite(player?.level) ? player.level : null;
+    const recommended = getCurrentRecommendedLevelForHazards();
+    return Number.isFinite(playerLevel) && Number.isFinite(recommended) && recommended <= playerLevel - 5;
+}
+
+function areFloorEffectsActive() {
+    return !isFloorHazardSuppressed();
+}
+
+function getDirectionVector(dir) {
+    if (!dir) return null;
+    return FLOOR_DIRECTION_VECTORS[dir] || null;
+}
+
+function canActorLeaveTile(actorType, fromX, fromY, dx, dy, options = {}) {
+    if (!dx && !dy) return true;
+    if (options.ignoreRestrictions) return true;
+    if (!areFloorEffectsActive()) return true;
+    const type = getTileFloorType(fromX, fromY);
+    switch (type) {
+        case FLOOR_TYPE_ONE_WAY: {
+            const dir = getDirectionVector(getTileFloorDirection(fromX, fromY));
+            if (dir && (dir.dx !== dx || dir.dy !== dy)) return false;
+            break;
+        }
+        case FLOOR_TYPE_VERTICAL_ONLY:
+            if (dx !== 0) return false;
+            break;
+        case FLOOR_TYPE_HORIZONTAL_ONLY:
+            if (dy !== 0) return false;
+            break;
+        default:
+            break;
+    }
+    return true;
+}
+
+function canActorEnterTile(actorType, toX, toY, dx, dy, options = {}) {
+    if (options.ignoreRestrictions) return true;
+    if (!isFloor(toX, toY)) return false;
+    if (!areFloorEffectsActive()) return true;
+    const type = getTileFloorType(toX, toY);
+    switch (type) {
+        case FLOOR_TYPE_ONE_WAY: {
+            const dir = getDirectionVector(getTileFloorDirection(toX, toY));
+            if (dir && (dir.dx !== dx || dir.dy !== dy)) return false;
+            break;
+        }
+        case FLOOR_TYPE_VERTICAL_ONLY:
+            if (dx !== 0) return false;
+            break;
+        case FLOOR_TYPE_HORIZONTAL_ONLY:
+            if (dy !== 0) return false;
+            break;
+        default:
+            break;
+    }
+    return true;
+}
+
+function canActorTraverse(actorType, fromX, fromY, toX, toY, options = {}) {
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    return canActorLeaveTile(actorType, fromX, fromY, dx, dy, options) && canActorEnterTile(actorType, toX, toY, dx, dy, options);
+}
+
+function calculatePoisonFloorDamageRatio() {
+    const playerLevel = Number.isFinite(player?.level) ? player.level : null;
+    const recommended = getCurrentRecommendedLevelForHazards();
+    if (!Number.isFinite(playerLevel) || !Number.isFinite(recommended)) {
+        return 0.1;
+    }
+    if (recommended <= playerLevel - 5) {
+        return 0;
+    }
+    const diff = recommended - playerLevel;
+    return 0.1 * Math.pow(1.5, diff);
+}
+
+function calculateBombFloorDamageRatio() {
+    const playerLevel = Number.isFinite(player?.level) ? player.level : null;
+    const recommended = getCurrentRecommendedLevelForHazards();
+    if (!Number.isFinite(playerLevel)) {
+        return 1;
+    }
+    const effectiveRecommended = Number.isFinite(recommended) ? recommended : playerLevel;
+    if (playerLevel <= effectiveRecommended) {
+        return 1;
+    }
+    const diff = playerLevel - effectiveRecommended;
+    if (diff === 1) return 0.8;
+    if (diff === 2) return 0.5;
+    if (diff === 3) return 0.25;
+    if (diff === 4) return 0.1;
+    return 0;
 }
 
 // レベル差によるダメージ倍率計算
@@ -5078,6 +5780,7 @@ function drawMap() {
 
     const cellW = canvas.width / VIEWPORT_WIDTH;
     const cellH = canvas.height / VIEWPORT_HEIGHT;
+    const darknessActive = isDarknessActive();
 
     for (let y = startY; y < endY; y++) {
         for (let x = startX; x < endX; x++) {
@@ -5087,7 +5790,8 @@ function drawMap() {
                 ctx.fillStyle = DEFAULT_WALL_COLOR;
             } else {
                 const isWall = map[y][x] === 1;
-                ctx.fillStyle = getTileRenderColor(x, y, isWall);
+                const visible = !darknessActive || isTileVisible(x, y);
+                ctx.fillStyle = visible ? getTileRenderColor(x, y, isWall) : DARKNESS_FILL_COLOR;
             }
             ctx.fillRect(screenX, screenY, cellW, cellH);
         }
@@ -5098,12 +5802,14 @@ function drawMap() {
         const sx = stairs.x - startX;
         const sy = stairs.y - startY;
         if (sx >= 0 && sy >= 0 && sx < VIEWPORT_WIDTH && sy < VIEWPORT_HEIGHT) {
-            const cellW = canvas.width / VIEWPORT_WIDTH;
-            const cellH = canvas.height / VIEWPORT_HEIGHT;
-            const screenX = sx * cellW;
-            const screenY = sy * cellH;
-            ctx.fillStyle = '#f1c40f';
-            ctx.fillRect(screenX + 4, screenY + 4, cellW - 8, cellH - 8);
+            if (!darknessActive || isTileVisible(stairs.x, stairs.y)) {
+                const cellW = canvas.width / VIEWPORT_WIDTH;
+                const cellH = canvas.height / VIEWPORT_HEIGHT;
+                const screenX = sx * cellW;
+                const screenY = sy * cellH;
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(screenX + 4, screenY + 4, cellW - 8, cellH - 8);
+            }
         }
     }
 }
@@ -5177,6 +5883,7 @@ function drawEnemies() {
         const ex = enemy.x - startX;
         const ey = enemy.y - startY;
         if (ex < 0 || ey < 0 || ex >= VIEWPORT_WIDTH || ey >= VIEWPORT_HEIGHT) return;
+        if (isDarknessActive() && !isTileVisible(enemy.x, enemy.y)) return;
         const cellWe = canvas.width / VIEWPORT_WIDTH;
         const cellHe = canvas.height / VIEWPORT_HEIGHT;
         const cx = ex * cellWe + cellWe / 2;
@@ -5195,7 +5902,8 @@ function drawEnemies() {
             ctx.arc(cx, cy, TILE_SIZE * 0.6, 0, Math.PI * 2);
             ctx.stroke();
         } else {
-            ctx.fillStyle = '#e74c3c';
+            const typeDef = getEnemyTypeDefinition(enemy.type);
+            ctx.fillStyle = typeDef.color || '#e74c3c';
             ctx.beginPath();
             const enemyRadius = Math.min(cellWe, cellHe) * 0.45; // 0.9 times cell size (0.45 is radius)
             ctx.arc(cx, cy, enemyRadius, 0, Math.PI * 2);
@@ -5238,6 +5946,7 @@ function drawItems() {
         const ix = item.x - startX;
         const iy = item.y - startY;
         if (ix < 0 || iy < 0 || ix >= VIEWPORT_WIDTH || iy >= VIEWPORT_HEIGHT) return;
+        if (isDarknessActive() && !isTileVisible(item.x, item.y)) return;
         const cellWi = canvas.width / VIEWPORT_WIDTH;
         const cellHi = canvas.height / VIEWPORT_HEIGHT;
         const cx = ix * cellWi + cellWi / 2;
@@ -5256,6 +5965,7 @@ function drawChests() {
         const ix = ch.x - startX;
         const iy = ch.y - startY;
         if (ix < 0 || iy < 0 || ix >= VIEWPORT_WIDTH || iy >= VIEWPORT_HEIGHT) return;
+        if (isDarknessActive() && !isTileVisible(ch.x, ch.y)) return;
         const cellWc = canvas.width / VIEWPORT_WIDTH;
         const cellHc = canvas.height / VIEWPORT_HEIGHT;
         const sx = ix * cellWc + cellWc / 2;
@@ -5495,14 +6205,26 @@ if (!document.getElementById('valueChangeCSS')) {
 }
 
 function updateUI() {
-    const level = player.level || 1;
+    refreshSatietyActivation({ notify: false });
+    enforceEffectiveHpCap();
+
+    const baseLevel = player.level || 1;
+    const effectiveLevel = getEffectivePlayerLevel();
     const exp = player.exp || 0;
     const expDisp = Math.floor(exp);
     const expMax = 1000;
-    const currentHp = player.hp || 0;
-    const hpPct = Math.max(0, Math.min(1, currentHp / (player.maxHp || 1)));
+    const baseAttack = player.attack || 0;
+    const baseDefense = player.defense || 0;
+    const effectiveAttack = getEffectivePlayerAttack();
+    const effectiveDefense = getEffectivePlayerDefense();
+    const effectiveMaxHp = getEffectivePlayerMaxHp();
+    const currentHp = Math.min(player.hp || 0, effectiveMaxHp);
+    const currentSatiety = Number.isFinite(player.satiety) ? Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety))) : SATIETY_MAX;
+    const hpPct = Math.max(0, Math.min(1, currentHp / (effectiveMaxHp || 1)));
     const expPct = Math.max(0, Math.min(1, exp / expMax));
-    
+    const abilityDownActive = isPlayerStatusActive('abilityDown');
+    const statusList = getPlayerStatusDisplayList();
+
     // Show value change indicators
     if (currentHp !== prevHp) {
         const hpChange = currentHp - prevHp;
@@ -5531,27 +6253,65 @@ function updateUI() {
         }
         prevExp = exp;
     }
-    
-    if (statLevel) statLevel.textContent = level;
-    if (statAtk) statAtk.textContent = player.attack || 0;
-    if (statDef) statDef.textContent = player.defense || 0;
-    if (statHpText) statHpText.textContent = `${currentHp}/${player.maxHp || 0}`;
+
+    if (statLevel) {
+        statLevel.textContent = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
+    }
+    if (statAtk) {
+        statAtk.textContent = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
+    }
+    if (statDef) {
+        statDef.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
+    }
+    if (statHpText) {
+        const baseMaxText = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
+        statHpText.textContent = `${currentHp}/${effectiveMaxHp}${baseMaxText}`;
+    }
     if (statExpText) statExpText.textContent = `${expDisp}/${expMax}`;
     if (hpBar) hpBar.style.width = `${hpPct * 100}%`;
     if (expBar) expBar.style.width = `${expPct * 100}%`;
+    if (satietyBarContainer) satietyBarContainer.style.display = satietySystemActive ? '' : 'none';
+    if (satietySystemActive) {
+        if (statSatietyText) statSatietyText.textContent = `${currentSatiety}/${SATIETY_MAX}`;
+        if (satietyBar) satietyBar.style.width = `${(currentSatiety / SATIETY_MAX) * 100}%`;
+    }
 
-    updatePlayerSummaryCard({ level, currentHp, expDisp, expMax });
-    
+    updatePlayerSummaryCard({
+        baseLevel,
+        effectiveLevel,
+        currentHp,
+        effectiveMaxHp,
+        baseAttack,
+        effectiveAttack,
+        baseDefense,
+        effectiveDefense,
+        expDisp,
+        expMax
+    });
+
+    if (statStatusEffects) {
+        if (!statusList.length) {
+            statStatusEffects.textContent = '状態異常なし';
+        } else {
+            statStatusEffects.innerHTML = statusList.map(status => {
+                const classes = ['status-badge'];
+                if (status.badgeClass) classes.push(status.badgeClass);
+                return `<span class="${classes.join(' ')}">${status.label} 残り${status.remaining}</span>`;
+            }).join('');
+        }
+    }
+
     // Update item modal - fix NaN issue
     const potion30Count = player.inventory?.potion30 || 0;
     const hpBoostCount = player.inventory?.hpBoost || 0;
     const atkBoostCount = player.inventory?.atkBoost || 0;
     const defBoostCount = player.inventory?.defBoost || 0;
-    
+
     if (invPotion30) invPotion30.textContent = potion30Count;
     if (invHpBoost) invHpBoost.textContent = hpBoostCount;
     if (invAtkBoost) invAtkBoost.textContent = atkBoostCount;
     if (invDefBoost) invDefBoost.textContent = defBoostCount;
+    if (eatPotion30Btn) eatPotion30Btn.style.display = satietySystemActive ? '' : 'none';
     
     // Update detailed status modal
     const modalLevel = document.getElementById('modal-level');
@@ -5559,6 +6319,8 @@ function updateUI() {
     const modalHp = document.getElementById('modal-hp');
     const modalAttack = document.getElementById('modal-attack');
     const modalDefense = document.getElementById('modal-defense');
+    const modalSatiety = document.getElementById('modal-satiety');
+    const modalSatietyRow = document.getElementById('modal-satiety-row');
     const modalFloor = document.getElementById('modal-floor');
     const modalPotion30 = document.getElementById('modal-potion30');
     const modalHpBoost = document.getElementById('modal-hp-boost');
@@ -5570,12 +6332,20 @@ function updateUI() {
     const modalDungeonType = document.getElementById('modal-dungeon-type');
     const modalDungeonTypeRow = document.getElementById('modal-dungeon-type-row');
     
-    if (modalLevel) modalLevel.textContent = level;
+    if (modalLevel) modalLevel.textContent = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
     if (modalExp) modalExp.textContent = `${expDisp} / ${expMax}`;
-    if (modalHp) modalHp.textContent = `${currentHp} / ${player.maxHp || 0}`;
-    if (modalAttack) modalAttack.textContent = player.attack || 0;
-    if (modalDefense) modalDefense.textContent = player.defense || 0;
+    if (modalHp) {
+        const baseSuffix = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
+        modalHp.textContent = `${currentHp} / ${effectiveMaxHp}${baseSuffix}`;
+    }
+    if (modalAttack) modalAttack.textContent = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
+    if (modalDefense) modalDefense.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
+    if (modalSatietyRow) modalSatietyRow.style.display = satietySystemActive ? '' : 'none';
+    if (modalSatiety && satietySystemActive) modalSatiety.textContent = `${currentSatiety} / ${SATIETY_MAX}`;
     if (modalFloor) modalFloor.textContent = `${dungeonLevel}F`;
+    if (modalStatusEffects) {
+        modalStatusEffects.textContent = statusList.length ? statusList.map(s => `${s.label} 残り${s.remaining}ターン`).join('\n') : 'なし';
+    }
     if (modalPotion30) modalPotion30.textContent = `x ${potion30Count}`;
     if (modalHpBoost) modalHpBoost.textContent = `x ${hpBoostCount}`;
     if (modalAtkBoost) modalAtkBoost.textContent = `x ${atkBoostCount}`;
@@ -5622,8 +6392,15 @@ function updateUI() {
     }
     
     if (statusDetails) {
-        statusDetails.innerHTML = `階層: ${dungeonLevel}<br>` +
-            `Lv.${level} HP ${currentHp}/${player.maxHp || 0} 攻${player.attack || 0} 防${player.defense || 0}`;
+        const levelText = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
+        const hpBaseSuffix = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
+        const atkText = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
+        const defText = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
+        let detailLine = `Lv.${levelText} HP ${currentHp}/${effectiveMaxHp}${hpBaseSuffix} 攻${atkText} 防${defText}`;
+        if (satietySystemActive) {
+            detailLine += ` 満${currentSatiety}/${SATIETY_MAX}`;
+        }
+        statusDetails.innerHTML = `階層: ${dungeonLevel}<br>` + detailLine;
     }
     const floorEl = document.getElementById('floor-indicator');
     if (floorEl) floorEl.textContent = `${dungeonLevel}F`;
@@ -5631,7 +6408,92 @@ function updateUI() {
     // メッセージログは addMessage で更新
 }
 
-function updatePlayerSummaryCard({ level = player.level || 1, currentHp = player.hp || 0, expDisp = Math.floor(player.exp || 0), expMax = 1000 } = {}) {
+function shouldActivateSatietySystem() {
+    if (isSandboxActive()) return false;
+    if (isGameOver) return false;
+    if (!gameScreen || gameScreen.style.display === 'none') return false;
+    const recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    if (!Number.isFinite(recommended)) return false;
+    if (recommended < 300) return false;
+    const playerLevel = Number.isFinite(player.level) ? player.level : 1;
+    if (recommended <= playerLevel - 5) return false;
+    return true;
+}
+
+function refreshSatietyActivation({ notify = false } = {}) {
+    const isActive = shouldActivateSatietySystem();
+    if (isActive && !satietySystemActive) {
+        if (!Number.isFinite(player.satiety) || player.satiety <= 0 || player.satiety > SATIETY_MAX) {
+            player.satiety = SATIETY_MAX;
+        } else {
+            player.satiety = Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+        }
+        if (notify) {
+            try { addMessage('満腹度システムが発動した！'); } catch {}
+        }
+    } else if (!isActive && satietySystemActive) {
+        if (notify) {
+            try { addMessage('満腹度システムが解除された。'); } catch {}
+        }
+    }
+    satietySystemActive = isActive;
+    return satietySystemActive;
+}
+
+function handleSatietyTurnTick(actionType = 'move') {
+    const active = refreshSatietyActivation({ notify: false });
+    if (!active) {
+        try { saveAll(); } catch {}
+        return !isGameOver;
+    }
+
+    if (!Number.isFinite(player.satiety)) {
+        player.satiety = SATIETY_MAX;
+    }
+    player.satiety = Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+
+    if (SATIETY_TICK_PER_TURN > 0) {
+        player.satiety = Math.max(0, player.satiety - SATIETY_TICK_PER_TURN);
+    }
+
+    let alive = true;
+    if (player.satiety <= 0) {
+        const damage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * SATIETY_DAMAGE_RATIO));
+        if (damage > 0) {
+            player.hp = Math.max(0, player.hp - damage);
+            try {
+                addMessage(`空腹で ${damage} のダメージを受けた！`);
+                addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#ff922b');
+                playSfx('damage');
+            } catch {}
+            if (player.hp <= 0) {
+                handlePlayerDeath('空腹で倒れた…ゲームオーバー');
+                alive = false;
+            }
+        }
+    }
+
+    try { updateUI(); } catch {}
+    try { saveAll(); } catch {}
+    return alive && !isGameOver;
+}
+
+function onPlayerActionCommitted({ type = 'move' } = {}) {
+    return handleSatietyTurnTick(type);
+}
+
+function updatePlayerSummaryCard({
+    baseLevel = player.level || 1,
+    effectiveLevel = getEffectivePlayerLevel(),
+    currentHp = Math.min(player.hp || 0, getEffectivePlayerMaxHp()),
+    effectiveMaxHp = getEffectivePlayerMaxHp(),
+    baseAttack = player.attack || 0,
+    effectiveAttack = getEffectivePlayerAttack(),
+    baseDefense = player.defense || 0,
+    effectiveDefense = getEffectivePlayerDefense(),
+    expDisp = Math.floor(player.exp || 0),
+    expMax = 1000
+} = {}) {
     if (!playerSummaryDiv) return;
     const card = playerSummaryDiv.querySelector('.player-status-card');
     if (!card) return;
@@ -5641,12 +6503,21 @@ function updatePlayerSummaryCard({ level = player.level || 1, currentHp = player
     const expEl = card.querySelector('.stat-value.exp');
     const atkEl = card.querySelector('.stat-value.attack');
     const defEl = card.querySelector('.stat-value.defense');
+    const satietyValueEl = card.querySelector('.stat-value.satiety');
+    const satietyItemEl = card.querySelector('.stat-item.satiety');
+    const currentSatiety = Number.isFinite(player.satiety) ? Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety))) : SATIETY_MAX;
+    const abilityDownActive = isPlayerStatusActive('abilityDown');
 
-    if (levelEl) levelEl.textContent = level;
-    if (hpEl) hpEl.textContent = `${currentHp}/${player.maxHp || 0}`;
+    if (levelEl) levelEl.textContent = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
+    if (hpEl) {
+        const baseSuffix = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
+        hpEl.textContent = `${currentHp}/${effectiveMaxHp}${baseSuffix}`;
+    }
     if (expEl) expEl.textContent = `${expDisp}/${expMax}`;
-    if (atkEl) atkEl.textContent = player.attack || 0;
-    if (defEl) defEl.textContent = player.defense || 0;
+    if (atkEl) atkEl.textContent = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
+    if (defEl) defEl.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
+    if (satietyItemEl) satietyItemEl.style.display = satietySystemActive ? '' : 'none';
+    if (satietyValueEl) satietyValueEl.textContent = `${currentSatiety}/${SATIETY_MAX}`;
 }
 
 function addMessage(message) {
@@ -5727,8 +6598,17 @@ function playSfx(type) {
     const now = audioCtx.currentTime;
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    o.type = type === 'attack' ? 'square' : type === 'pickup' ? 'sine' : type === 'damage' ? 'sawtooth' : 'triangle';
-    const freq = type === 'attack' ? 300 : type === 'pickup' ? 880 : type === 'damage' ? 180 : type === 'stair' ? 520 : 440;
+    o.type = type === 'attack' ? 'square'
+        : type === 'pickup' ? 'sine'
+        : type === 'damage' ? 'sawtooth'
+        : type === 'bomb' ? 'sawtooth'
+        : 'triangle';
+    const freq = type === 'attack' ? 300
+        : type === 'pickup' ? 880
+        : type === 'damage' ? 180
+        : type === 'bomb' ? 140
+        : type === 'stair' ? 520
+        : 440;
     o.frequency.setValueAtTime(freq, now);
     g.gain.setValueAtTime(0.0001, now);
     g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
@@ -5762,6 +6642,8 @@ function attackInDirection() {
     if (enemyAtTarget) {
         addSeparator();
         performAttack(enemyAtTarget);
+        const alive = onPlayerActionCommitted({ type: 'attack' });
+        if (!alive) return;
         playerTurn = false;
         setTimeout(enemyTurn, 100);
     } else {
@@ -5770,12 +6652,14 @@ function attackInDirection() {
 }
 
 function performAttack(enemyAtTarget) {
-    if (!hitCheck(player.level || 1, enemyAtTarget.level || 1)) {
+    const playerEffectiveLevel = getEffectivePlayerLevel();
+    const playerEffectiveAttack = getEffectivePlayerAttack();
+    if (!hitCheck(playerEffectiveLevel || 1, enemyAtTarget.level || 1)) {
         addMessage('Miss');
         addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Miss', '#74c0fc');
     } else {
         const baseDef = enemyAtTarget.defense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
-        const attacker = { level: player.level, attack: player.attack };
+        const attacker = { level: playerEffectiveLevel, attack: playerEffectiveAttack };
         const defender = { level: enemyAtTarget.level || 1, defense: baseDef };
         const { dmg, crit } = (function(att, def){
             const base = Math.max(1, att.attack - Math.floor(def.defense / 2));
@@ -5887,7 +6771,8 @@ function drawDefeatedEnemies() {
         const ex = def.x - startX;
         const ey = def.y - startY;
         if (ex < 0 || ey < 0 || ex >= VIEWPORT_WIDTH || ey >= VIEWPORT_HEIGHT) return;
-        
+        if (isDarknessActive() && !isTileVisible(def.x, def.y)) return;
+
         const cellWe = canvas.width / VIEWPORT_WIDTH;
         const cellHe = canvas.height / VIEWPORT_HEIGHT;
         const cx = ex * cellWe + cellWe / 2;
@@ -5925,6 +6810,9 @@ function drawPopups() {
     for (let i = popups.length - 1; i >= 0; i--) {
         const p = popups[i];
         p.t += 1;
+        if (isDarknessActive() && Number.isFinite(p.x) && Number.isFinite(p.y) && !isTileVisible(p.x, p.y)) {
+            continue;
+        }
         const ex = p.x - startX;
         const ey = p.y - startY;
         const cellW = canvas.width / VIEWPORT_WIDTH;
@@ -5973,58 +6861,156 @@ function handlePlayerDeath(message = 'ゲームオーバー') {
     stopGameLoop();
 }
 
+function tryAdvanceOnConveyor(options = {}) {
+    const playSound = !options.silent;
+    const showPopup = options.showPopup !== false;
+    if (!areFloorEffectsActive()) return false;
+    const type = getTileFloorType(player.x, player.y);
+    if (type !== FLOOR_TYPE_CONVEYOR) return false;
+    const dirKey = getTileFloorDirection(player.x, player.y);
+    const vector = getDirectionVector(dirKey);
+    if (!vector) return false;
+    const dx = vector.dx;
+    const dy = vector.dy;
+    if (!canActorLeaveTile('player', player.x, player.y, dx, dy)) return false;
+    const targetX = player.x + dx;
+    const targetY = player.y + dy;
+    if (!isFloor(targetX, targetY)) return false;
+    if (!canActorEnterTile('player', targetX, targetY, dx, dy)) return false;
+    const enemyAtTarget = enemies.find(e => e.x === targetX && e.y === targetY);
+    if (enemyAtTarget) {
+        addSeparator();
+        performAttack(enemyAtTarget);
+        return false;
+    }
+    player.x = targetX;
+    player.y = targetY;
+    updateCamera();
+    if (showPopup) {
+        const arrowMap = { up: '↑', down: '↓', left: '←', right: '→' };
+        addPopup(player.x, player.y, arrowMap[dirKey] || '→', '#ffe066', 0.9);
+    }
+    if (playSound) {
+        playSfx('move');
+    }
+    return true;
+}
+
+function applyConveyorToEnemy(enemy) {
+    if (!enemy || enemy.hp <= 0) return false;
+    if (!areFloorEffectsActive()) return false;
+    for (let i = 0; i < CONVEYOR_CHAIN_LIMIT; i++) {
+        const type = getTileFloorType(enemy.x, enemy.y);
+        if (type !== FLOOR_TYPE_CONVEYOR) return false;
+        const dirKey = getTileFloorDirection(enemy.x, enemy.y);
+        const vector = getDirectionVector(dirKey);
+        if (!vector) return false;
+        const { dx, dy } = vector;
+        if (!canActorLeaveTile('enemy', enemy.x, enemy.y, dx, dy)) return false;
+        const nextX = enemy.x + dx;
+        const nextY = enemy.y + dy;
+        if (!isFloor(nextX, nextY)) return false;
+        if (!canActorEnterTile('enemy', nextX, nextY, dx, dy)) return false;
+        if (!canEnemyOccupy(nextX, nextY, enemy)) return false;
+        if (nextX === player.x && nextY === player.y) {
+            executeEnemyAttack(enemy, dx, dy);
+            return true;
+        }
+        enemy.x = nextX;
+        enemy.y = nextY;
+    }
+    return false;
+}
+
 function applyPostMoveEffects() {
-    let continueSliding = true;
+    let iteration = 0;
+    while (iteration < CONVEYOR_CHAIN_LIMIT) {
+        iteration += 1;
+        const hazardsSuppressed = isFloorHazardSuppressed();
 
-    const chestAtPlayer = chests.find(c => c.x === player.x && c.y === player.y);
-    if (chestAtPlayer) {
-        openChest(chestAtPlayer);
-        const idx = chests.indexOf(chestAtPlayer);
-        if (idx >= 0) chests.splice(idx, 1);
-    }
+        const chestAtPlayer = chests.find(c => c.x === player.x && c.y === player.y);
+        if (chestAtPlayer) {
+            openChest(chestAtPlayer);
+            const idx = chests.indexOf(chestAtPlayer);
+            if (idx >= 0) chests.splice(idx, 1);
+        }
 
-    if (!isGameOver) {
-        const floorType = getTileFloorType(player.x, player.y);
-        if (floorType === FLOOR_TYPE_POISON) {
-            const damage = Math.max(1, Math.floor(player.maxHp * 0.1));
-            player.hp = Math.max(0, player.hp - damage);
-            addMessage(`毒床がダメージ！HPが${damage}減少`);
-            addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
-            playSfx('damage');
-            updateUI();
-            if (player.hp <= 0) {
-                handlePlayerDeath('毒床で倒れた…ゲームオーバー');
-                continueSliding = false;
+        if (!isGameOver) {
+            const floorType = getTileFloorType(player.x, player.y);
+            if (!hazardsSuppressed && floorType === FLOOR_TYPE_POISON) {
+                const ratio = calculatePoisonFloorDamageRatio();
+                if (ratio > 0) {
+                    const damage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
+                    player.hp = Math.max(0, player.hp - damage);
+                    addMessage(`毒床がダメージ！HPが${damage}減少`);
+                    addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+                    playSfx('damage');
+                    updateUI();
+                    if (player.hp <= 0) {
+                        handlePlayerDeath('毒床で倒れた…ゲームオーバー');
+                    }
+                }
+            } else if (!hazardsSuppressed && floorType === FLOOR_TYPE_BOMB) {
+                const ratio = calculateBombFloorDamageRatio();
+                clearFloorTypeAt(player.x, player.y);
+                playSfx('bomb');
+                if (ratio > 0) {
+                    const damage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * ratio));
+                    player.hp = Math.max(0, player.hp - damage);
+                    const popupValue = `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`;
+                    addMessage(`爆弾が爆発！HPが${damage}減少`);
+                    addPopup(player.x, player.y, popupValue, '#ff8787', 1.1);
+                    updateUI();
+                    if (player.hp <= 0) {
+                        handlePlayerDeath('爆弾に巻き込まれて倒れた…ゲームオーバー');
+                    }
+                } else {
+                    addMessage('爆弾が爆発したがダメージは受けなかった！');
+                }
             }
         }
-    }
 
-    if (isGameOver) return { continueSliding: false };
+        if (isGameOver) return { continueSliding: false };
 
-    if (stairs && player.x === stairs.x && player.y === stairs.y) {
-        const maxFloor = getMaxFloor();
-        if (isBossFloor(dungeonLevel) && bossAlive) {
-            addMessage('ボスを倒すまでは進めない！');
-        } else {
-            if (dungeonLevel === maxFloor) {
-                addMessage('ダンジョンを攻略した！');
-                player.hp = player.maxHp;
-                stopGameLoop();
-                showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
+        if (stairs && player.x === stairs.x && player.y === stairs.y) {
+            const maxFloor = getMaxFloor();
+            if (isBossFloor(dungeonLevel) && bossAlive) {
+                addMessage('ボスを倒すまでは進めない！');
             } else {
-                dungeonLevel += 1;
-                addMessage(`次の階層に進んだ！（${dungeonLevel}F）`);
-                playSfx('stair');
-                generateLevel();
+                if (dungeonLevel === maxFloor) {
+                    addMessage('ダンジョンを攻略した！');
+                    player.hp = player.maxHp;
+                    enforceEffectiveHpCap();
+                    stopGameLoop();
+                    showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
+                } else {
+                    dungeonLevel += 1;
+                    addMessage(`次の階層に進んだ！（${dungeonLevel}F）`);
+                    playSfx('stair');
+                    generateLevel();
+                }
+            }
+            return { continueSliding: false };
+        }
+
+        const shouldSlide = !hazardsSuppressed && getTileFloorType(player.x, player.y) === FLOOR_TYPE_ICE;
+
+        if (!hazardsSuppressed) {
+            const moved = tryAdvanceOnConveyor({ silent: true });
+            if (moved) {
+                continue;
             }
         }
-        continueSliding = false;
+
+        return { continueSliding: shouldSlide && !isGameOver };
     }
 
-    return { continueSliding: continueSliding && !isGameOver };
+    return { continueSliding: false };
 }
 
 function attemptPlayerStep(dx, dy) {
+    if (!dx && !dy) return false;
+    if (!canActorLeaveTile('player', player.x, player.y, dx, dy)) return false;
     const targetX = player.x + dx;
     const targetY = player.y + dy;
 
@@ -6039,6 +7025,9 @@ function attemptPlayerStep(dx, dy) {
         const canBreak = canPlayerBreakWalls() && breakWallAt(targetX, targetY);
         if (!canBreak) return false;
     }
+
+    if (!isFloor(targetX, targetY)) return false;
+    if (!canActorEnterTile('player', targetX, targetY, dx, dy)) return false;
 
     addSeparator();
     let moveSoundPlayed = false;
@@ -6058,10 +7047,15 @@ function attemptPlayerStep(dx, dy) {
     let nextY = targetY;
 
     while (true) {
+        const stepDx = nextX - player.x;
+        const stepDy = nextY - player.y;
+        if (!canActorLeaveTile('player', player.x, player.y, stepDx, stepDy)) break;
+        if (!canActorEnterTile('player', nextX, nextY, stepDx, stepDy)) break;
         const result = moveTo(nextX, nextY);
         if (!result.continueSliding) return true;
         if (getTileFloorType(player.x, player.y) !== FLOOR_TYPE_ICE) break;
 
+        if (!canActorLeaveTile('player', player.x, player.y, dx, dy)) break;
         const candidateX = player.x + dx;
         const candidateY = player.y + dy;
         const enemyAhead = enemies.find(e => e.x === candidateX && e.y === candidateY);
@@ -6070,6 +7064,7 @@ function attemptPlayerStep(dx, dy) {
             return true;
         }
         if (!isFloor(candidateX, candidateY)) break;
+        if (!canActorEnterTile('player', candidateX, candidateY, dx, dy)) break;
         nextX = candidateX;
         nextY = candidateY;
     }
@@ -6124,6 +7119,11 @@ document.addEventListener('keydown', (event) => {
         if (editableAncestor instanceof HTMLElement && editableAncestor.isContentEditable) return;
         if (target.isContentEditable) return;
     }
+    const actionableKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+    if (actionableKeys.includes(event.key) && isPlayerStatusActive('paralysis')) {
+        if (event.key === ' ') event.preventDefault();
+        if (skipTurnDueToParalysis()) return;
+    }
     ensureAudio(); // 初回入力でオーディオ解放
 
     let acted = false;
@@ -6154,6 +7154,8 @@ document.addEventListener('keydown', (event) => {
     }
 
     if (acted) {
+        const alive = onPlayerActionCommitted({ type: 'move' });
+        if (!alive) return;
         if (!isGameOver && gameLoopRunning) {
             playerTurn = false;
             setTimeout(enemyTurn, 100);
@@ -6181,64 +7183,225 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
-function enemyTurn() {
-    for (const enemy of enemies) {
-        if (isGameOver) break;
-        if (!enemy.level) enemy.level = Math.max(1, player.level + (Math.floor(Math.random() * 9) - 4));
-        const dx = player.x - enemy.x;
-        const dy = player.y - enemy.y;
+function getEnemyMovePreferences(dx, dy) {
+    const prefs = [];
+    const prioritizeHorizontal = Math.abs(dx) >= Math.abs(dy);
+    if (prioritizeHorizontal && dx !== 0) prefs.push({ dx: Math.sign(dx), dy: 0 });
+    if (!prioritizeHorizontal && dy !== 0) prefs.push({ dx: 0, dy: Math.sign(dy) });
+    if (prioritizeHorizontal && dy !== 0) prefs.push({ dx: 0, dy: Math.sign(dy) });
+    if (!prioritizeHorizontal && dx !== 0) prefs.push({ dx: Math.sign(dx), dy: 0 });
+    if (!prefs.length) prefs.push({ dx: 0, dy: 0 });
+    return prefs;
+}
 
-        let newX = enemy.x;
-        let newY = enemy.y;
+function canEnemyOccupy(x, y, enemy) {
+    if (!isFloor(x, y)) return false;
+    return !enemies.some(e => e !== enemy && e.x === x && e.y === y);
+}
 
-        if (Math.abs(dx) > Math.abs(dy)) {
-            newX += Math.sign(dx);
-        } else {
-            newY += Math.sign(dy);
+function performEnemyAction(enemy) {
+    if (!enemy || enemy.hp <= 0) return;
+    if (!Number.isFinite(enemy.level) || enemy.level <= 0) {
+        enemy.level = Math.max(1, player.level + (Math.floor(Math.random() * 9) - 4));
+    }
+    const dx = player.x - enemy.x;
+    const dy = player.y - enemy.y;
+    const directions = getEnemyMovePreferences(dx, dy);
+    for (const dir of directions) {
+        const stepX = dir.dx;
+        const stepY = dir.dy;
+        if (stepX === 0 && stepY === 0) continue;
+        if (!canActorLeaveTile('enemy', enemy.x, enemy.y, stepX, stepY)) continue;
+        const targetX = enemy.x + stepX;
+        const targetY = enemy.y + stepY;
+        if (targetX === player.x && targetY === player.y) {
+            if (!canActorEnterTile('enemy', targetX, targetY, stepX, stepY)) continue;
+            executeEnemyAttack(enemy, stepX, stepY);
+            return;
         }
+        if (!canActorEnterTile('enemy', targetX, targetY, stepX, stepY)) continue;
+        if (canEnemyOccupy(targetX, targetY, enemy)) {
+            enemy.x = targetX;
+            enemy.y = targetY;
+            if (applyConveyorToEnemy(enemy)) return;
+            return;
+        }
+    }
+}
 
-        if (newX === player.x && newY === player.y) {
-            if (!hitCheck(enemy.level, player.level)) {
-                addMessage('敵は外した！');
-                addPopup(player.x, player.y, 'Miss', '#74c0fc');
-            } else {
-                const attacker = { level: enemy.level, attack: enemy.attack };
-                const defender = { level: player.level, defense: player.defense };
-                const { dmg, crit } = (function(att, def){
-                    const base = Math.max(1, att.attack - Math.floor(def.defense / 2));
-                    const levelDiff = att.level - def.level;
-                    let mult = damageMultiplierByLevelDiff(levelDiff);
-                    if (!Number.isFinite(mult)) mult = (levelDiff > 0 ? Infinity : 0);
-                    const critFlag = isCritical(att.level, def.level);
-                    const rand = 0.7 + Math.random() * 0.5;
-                    let d = Math.ceil(base * mult * rand * (critFlag ? 1.5 : 1));
-                    if (d < 1 && d < 0.5) d = 0;
-                    return { dmg: d, crit: critFlag };
-                })(attacker, defender);
-                const applied = Math.ceil(applyDifficultyDamageMultipliers('take', dmg));
-                player.hp -= applied;
-                addMessage(`敵はプレイヤーに ${applied} のダメージを与えた！`);
-                const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied>999999999?'+':''}`;
-                addPopup(player.x, player.y, dmgText, crit ? '#ffa94d' : '#ff6b6b', crit ? 1.15 : 1);
-                playSfx('damage');
-            }
-            if (player.hp <= 0) {
-                handlePlayerDeath('ゲームオーバー');
+function executeEnemyAttack(enemy, stepX, stepY) {
+    const playerEffectiveLevel = getEffectivePlayerLevel();
+    const playerEffectiveDefense = getEffectivePlayerDefense();
+    if (!hitCheck(enemy.level || 1, playerEffectiveLevel || 1)) {
+        addMessage('敵は外した！');
+        addPopup(player.x, player.y, 'Miss', '#74c0fc');
+        return;
+    }
+
+    const attacker = { level: enemy.level || 1, attack: enemy.attack || 0 };
+    const defender = { level: playerEffectiveLevel, defense: playerEffectiveDefense };
+    const { dmg, crit } = (function(att, def){
+        const base = Math.max(1, att.attack - Math.floor(def.defense / 2));
+        const levelDiff = att.level - def.level;
+        let mult = damageMultiplierByLevelDiff(levelDiff);
+        if (!Number.isFinite(mult)) mult = (levelDiff > 0 ? Infinity : 0);
+        const critFlag = isCritical(att.level, def.level);
+        const rand = 0.7 + Math.random() * 0.5;
+        let d = Math.ceil(base * mult * rand * (critFlag ? 1.5 : 1));
+        if (d < 1 && d < 0.5) d = 0;
+        return { dmg: d, crit: critFlag };
+    })(attacker, defender);
+
+    const applied = Math.ceil(applyDifficultyDamageMultipliers('take', dmg));
+    if (applied > 0) {
+        player.hp = Math.max(0, player.hp - applied);
+        addMessage(`敵はプレイヤーに ${applied} のダメージを与えた！`);
+        const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied > 999999999 ? '+' : ''}`;
+        addPopup(player.x, player.y, dmgText, crit ? '#ffa94d' : '#ff6b6b', crit ? 1.15 : 1);
+        playSfx('damage');
+    } else {
+        addMessage('敵の攻撃は効果がなかった！');
+        addPopup(player.x, player.y, 'Guard', '#74c0fc');
+    }
+
+    if (player.hp <= 0) {
+        handlePlayerDeath('ゲームオーバー');
+        return;
+    }
+
+    applyEnemyOnHitEffects(enemy, { stepX, stepY, damage: applied });
+}
+
+function warpPlayerFromEnemy(enemy) {
+    const exclude = enemies
+        .filter(e => e)
+        .map(e => ({ x: e.x, y: e.y }));
+    exclude.push({ x: player.x, y: player.y });
+    const destination = randomFloorPosition(exclude);
+    if (!destination) return;
+    player.x = destination.x;
+    player.y = destination.y;
+    updateCamera();
+    addMessage('敵の転移攻撃でワープさせられた！');
+    addPopup(player.x, player.y, 'ワープ', '#4dabf7');
+    applyPostMoveEffects();
+}
+
+function applyKnockbackFromEnemy(enemy, stepX, stepY) {
+    if (stepX === 0 && stepY === 0) return;
+    const others = enemies.filter(e => e !== enemy);
+    let newX = player.x;
+    let newY = player.y;
+    let collided = false;
+    for (let i = 0; i < 2; i++) {
+        const nextX = newX + stepX;
+        const nextY = newY + stepY;
+        if (!isFloor(nextX, nextY) || others.some(e => e.x === nextX && e.y === nextY)) {
+            collided = true;
+            break;
+        }
+        newX = nextX;
+        newY = nextY;
+    }
+    player.x = newX;
+    player.y = newY;
+    updateCamera();
+    applyPostMoveEffects();
+    if (collided) {
+        const collisionDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * 0.15));
+        player.hp = Math.max(0, player.hp - collisionDamage);
+        addMessage(`壁に激突して${collisionDamage}のダメージ！`);
+        addPopup(player.x, player.y, `-${Math.min(collisionDamage, 999999999)}${collisionDamage > 999999999 ? '+' : ''}`, '#ffa94d');
+        playSfx('damage');
+        if (player.hp <= 0) {
+            handlePlayerDeath('壁への激突で倒れた…ゲームオーバー');
+        }
+    }
+    updateUI();
+}
+
+function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}) {
+    if (isGameOver) return;
+    const typeDef = getEnemyTypeDefinition(enemy.type);
+    if (!typeDef || typeDef.id === ENEMY_TYPE_DEFS.normal.id) return;
+    const suppressed = isEnemyEffectSuppressed(enemy);
+
+    switch (typeDef.id) {
+        case 'status-caster': {
+            const chance = 0.45;
+            if (Math.random() >= chance) break;
+            if (suppressed) {
+                addMessage('レベル差で状態異常を防いだ！');
                 break;
             }
-        } else {
-            const isWall = map[newY] && map[newY][newX] === 1;
-            const isOccupied = enemies.some(e => e !== enemy && e.x === newX && e.y === newY);
-
-            if (!isWall && !isOccupied) {
-                enemy.x = newX;
-                enemy.y = newY;
+            const statusOptions = ['poison', 'paralysis', 'abilityDown', 'levelDown'];
+            const inactive = statusOptions.filter(id => !isPlayerStatusActive(id));
+            const pool = inactive.length ? inactive : statusOptions;
+            const targetStatus = pool[Math.floor(Math.random() * pool.length)];
+            applyPlayerStatusEffect(targetStatus);
+            break;
+        }
+        case 'warper': {
+            const chance = 0.35;
+            if (Math.random() >= chance) break;
+            if (suppressed) {
+                addMessage('レベル差で転移攻撃を耐えた！');
+                break;
             }
+            warpPlayerFromEnemy(enemy);
+            break;
+        }
+        case 'executioner': {
+            const chance = 0.1;
+            if (Math.random() >= chance) break;
+            if (suppressed) {
+                addMessage('レベル差で即死攻撃を無効化した！');
+                break;
+            }
+            addMessage('敵の即死攻撃が命中した…！');
+            addPopup(player.x, player.y, '☠', '#ff6b6b', 1.4);
+            player.hp = 0;
+            handlePlayerDeath('敵の即死攻撃を受けた…ゲームオーバー');
+            break;
+        }
+        case 'knockback': {
+            if (suppressed) {
+                addMessage('レベル差で吹き飛ばしを踏ん張った！');
+                break;
+            }
+            applyKnockbackFromEnemy(enemy, stepX, stepY);
+            break;
+        }
+        case 'swift':
+        default:
+            break;
+    }
+}
+
+function enemyTurn() {
+    const enemyOrder = [...enemies];
+    for (const enemy of enemyOrder) {
+        if (isGameOver) break;
+        if (!enemy || enemy.hp <= 0) continue;
+        if (!enemies.includes(enemy)) continue;
+        if (!Number.isFinite(enemy.level) || enemy.level <= 0) {
+            enemy.level = Math.max(1, player.level + (Math.floor(Math.random() * 9) - 4));
+        }
+        const typeDef = getEnemyTypeDefinition(enemy.type);
+        const suppressed = isEnemyEffectSuppressed(enemy);
+        const actionCount = (!suppressed && typeDef.id === 'swift') ? 2 : 1;
+        for (let i = 0; i < actionCount; i++) {
+            if (isGameOver) break;
+            if (!enemies.includes(enemy)) break;
+            performEnemyAction(enemy);
         }
     }
 
     if (!isGameOver) {
-        playerTurn = true;
+        const alive = processPlayerStatusTurnStart();
+        if (alive && !isGameOver) {
+            playerTurn = true;
+        }
     }
     saveAll();
 }
@@ -6248,6 +7411,7 @@ restartButton.addEventListener('click', () => {
     stopGameLoop();
     dungeonLevel = 1;
     player.hp = player.maxHp; // Restore HP to full
+    enforceEffectiveHpCap();
     isGameOver = false;
     playerTurn = true;
     
@@ -6296,21 +7460,49 @@ importFileInput && importFileInput.addEventListener('change', async (e) => {
     } catch {}
 });
 usePotion30Btn && usePotion30Btn.addEventListener('click', () => {
-    if (player.inventory.potion30 > 0) {
-        const heal = Math.ceil(player.maxHp * 0.3);
-        player.hp = Math.min(player.maxHp, player.hp + heal);
-        player.inventory.potion30 -= 1;
-        addMessage(`ポーションを使用！HPが${heal}回復`);
-        playSfx('pickup');
-        updateUI();
-        saveAll();
+    if (player.inventory.potion30 <= 0) return;
+    const effectiveMax = getEffectivePlayerMaxHp();
+    const heal = Math.ceil(effectiveMax * 0.3);
+    const beforeHp = player.hp;
+    player.hp = Math.min(effectiveMax, player.hp + heal);
+    enforceEffectiveHpCap();
+    const healed = Math.max(0, player.hp - beforeHp);
+    player.inventory.potion30 -= 1;
+    addMessage(`ポーションを使用！HPが${healed}回復`);
+    playSfx('pickup');
+    updateUI();
+    saveAll();
+});
+
+eatPotion30Btn && eatPotion30Btn.addEventListener('click', () => {
+    if (!satietySystemActive) {
+        addMessage('満腹度システムが有効な時だけ食べられる。');
+        return;
     }
+    if (player.inventory.potion30 <= 0) {
+        addMessage('ポーションを持っていない。');
+        return;
+    }
+    const beforeSatiety = Math.max(0, Number.isFinite(player.satiety) ? Math.floor(player.satiety) : 0);
+    const recover = Math.min(SATIETY_RECOVERY_PER_POTION, SATIETY_MAX - beforeSatiety);
+    if (recover <= 0) {
+        addMessage('満腹度は既に最大値です。');
+        updateUI();
+        return;
+    }
+    player.satiety = Math.min(SATIETY_MAX, beforeSatiety + recover);
+    player.inventory.potion30 -= 1;
+    addMessage(`ポーションを食べた！満腹度が${recover}回復`);
+    playSfx('pickup');
+    updateUI();
+    saveAll();
 });
 
 useHpBoostBtn && useHpBoostBtn.addEventListener('click', () => {
     if (player.inventory.hpBoost > 0) {
         player.maxHp += 5;
         player.hp += 5; // 現在HPも同時に増加
+        enforceEffectiveHpCap();
         player.inventory.hpBoost -= 1;
         addMessage('最大HP強化アイテムを使用！最大HPが5増加！');
         playSfx('pickup');
@@ -6415,7 +7607,9 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
         player.attack += 1;
         player.defense += 1;
         player.hp = player.maxHp;
+        enforceEffectiveHpCap();
         leveled++;
+        refreshGeneratorHazardSuppression();
         try { showLevelUpPopup(); } catch {}
         try {
             const levelUpMsg = `レベルアップ！レベル：${player.level} (+${player.level - beforeLevel})|最大HP：${player.maxHp}(+${player.maxHp - beforeMaxHp})|攻撃力：${player.attack}(+${player.attack - beforeAttack})|防御力：${player.defense}(+${player.defense - beforeDefense})`;
@@ -6433,6 +7627,7 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     if (opts.popup) {
         try { addMessage(`経験値を ${Math.floor(v)} 獲得！（${opts.source}${opts.reason ? ': ' + opts.reason : ''}）`); } catch {}
     }
+    refreshSatietyActivation({ notify: true });
     try { updateUI(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}
     try { saveAll(); } catch {}
@@ -6504,6 +7699,10 @@ function buildSelection() {
                     <span class=\"stat-label\">HP</span>
                     <span class=\"stat-value hp\">${player.hp}/${player.maxHp}</span>
                 </div>
+                <div class=\"stat-item satiety\" data-stat=\"satiety\">
+                    <span class=\"stat-label\">満腹度</span>
+                    <span class=\"stat-value satiety\">${player.satiety ?? SATIETY_MAX}/${SATIETY_MAX}</span>
+                </div>
                 <div class=\"stat-item\">
                     <span class=\"stat-label\">経験値</span>
                     <span class=\"stat-value exp\">${Math.floor(player.exp || 0)}/${expMaxSelect}</span>
@@ -6549,6 +7748,7 @@ function startGameFromSelection() {
     restoreRandom();
     dungeonLevel = 1;
     updateMapSize(); // Ensure proper map size for level 1
+    resetPlayerStatusEffects();
     selectionScreen.style.display = 'none';
     document.getElementById('toolbar').style.display = 'flex';
     gameScreen.style.display = 'block';
@@ -6559,7 +7759,7 @@ function startGameFromSelection() {
         resizeCanvasToStage();
         generateLevel();
         updateUI();
-        
+
         // Start game loop
         startGameLoop();
     }, 100); // Increased timeout for better initialization
@@ -6577,6 +7777,7 @@ function startGameFromBlockDim() {
     dungeonLevel = 1;
     updateMapSize();
     reseedBlockDimForFloor();
+    resetPlayerStatusEffects();
     selectionScreen.style.display = 'none';
     document.getElementById('toolbar').style.display = 'flex';
     gameScreen.style.display = 'block';
@@ -7495,6 +8696,11 @@ function registerAddonGenerators(generators, addonId) {
         try {
             const def = Object.assign({}, raw);
             def.source = addonId;
+            const darkFlag = raw.dark === true || raw.dark === 'true' || raw.darkness === true || raw.darkness === 'true';
+            const poisonFlag = raw.poisonFog === true || raw.poisonFog === 'true' || raw.poison === true || raw.poison === 'true' || raw.poisonMist === true || raw.poisonMist === 'true';
+            def.dark = darkFlag;
+            def.poisonFog = poisonFlag;
+            setGeneratorHazardFlags(def.id, { dark: darkFlag, poisonFog: poisonFlag });
             const floors = normalizeGeneratorFloors(def.floors, def.id, addonId);
             if (floors) {
                 FixedMapRegistry.set(def.id, floors);
@@ -7695,6 +8901,7 @@ function makeGenContext() {
                 if (meta) {
                     delete meta.floorType;
                     delete meta.floorColor;
+                    delete meta.floorDir;
                     if (!meta.wallColor && !Object.keys(meta).length) tileMeta[y][x] = null;
                 }
             }
@@ -7716,15 +8923,46 @@ function makeGenContext() {
             const meta = ensureTileMeta(x, y);
             if (meta) meta.wallColor = color;
         },
-        setFloorType: (x, y, type) => {
+        setFloorType: (x, y, type, options) => {
+            if (!ctx.inBounds(x, y)) return;
+            let targetType = type;
+            let opts = options;
+            if (type && typeof type === 'object' && !options) {
+                opts = type;
+                targetType = type?.type;
+            }
+            const meta = ensureTileMeta(x, y);
+            if (!meta) return;
+            const normalized = normalizeFloorType(targetType);
+            if (!targetType || normalized === FLOOR_TYPE_NORMAL) {
+                delete meta.floorType;
+                delete meta.floorDir;
+                return;
+            }
+            if (!FLOOR_TYPE_SET.has(normalized) || normalized === FLOOR_TYPE_NORMAL) {
+                return;
+            }
+            meta.floorType = normalized;
+            const directionInput = opts?.direction ?? opts?.dir ?? opts?.floorDir;
+            const dir = normalizeFloorDirection(directionInput);
+            if (floorTypeNeedsDirection(normalized) && dir) {
+                meta.floorDir = dir;
+            } else if (!floorTypeNeedsDirection(normalized)) {
+                delete meta.floorDir;
+            }
+        },
+        setFloorDirection: (x, y, direction) => {
             if (!ctx.inBounds(x, y)) return;
             const meta = ensureTileMeta(x, y);
             if (!meta) return;
-            if (!type || type === FLOOR_TYPE_NORMAL) {
-                delete meta.floorType;
-            } else if (type === FLOOR_TYPE_ICE || type === FLOOR_TYPE_POISON) {
-                meta.floorType = type;
+            const currentType = normalizeFloorType(meta.floorType);
+            if (!floorTypeNeedsDirection(currentType)) {
+                delete meta.floorDir;
+                return;
             }
+            const dir = normalizeFloorDirection(direction);
+            if (dir) meta.floorDir = dir;
+            else delete meta.floorDir;
         },
         clearTileMeta: (x, y) => {
             if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;

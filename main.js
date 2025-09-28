@@ -6832,6 +6832,20 @@ function addToPopupGroup(popupData) {
     }, 50); // Slightly longer delay to ensure all simultaneous changes are captured
 }
 
+function formatPopupChange(value, decimals = 0) {
+    if (!Number.isFinite(value)) return '0';
+    const factor = 10 ** Math.max(0, decimals);
+    const rounded = Math.round(value * factor) / factor;
+    if (decimals <= 0) {
+        return Math.round(rounded).toString();
+    }
+    const fixed = rounded.toFixed(decimals);
+    return fixed
+        .replace(/(\.\d*?[1-9])0+$/, '$1')
+        .replace(/\.0+$/, '')
+        .replace(/\.$/, '');
+}
+
 function processPopupGroup() {
     if (activePopupGroup.length === 0) return;
     
@@ -6947,6 +6961,21 @@ function processPopupGroup() {
                     borderColor = '#3182ce';
                     popup.style.background = 'linear-gradient(135deg, #3182ce, #63b3ed)';
                     break;
+                case 'sp': {
+                    const roundedText = formatPopupChange(popupData.change, 2);
+                    const sign = popupData.isPositive ? '+' : '-';
+                    text = `${sign}${roundedText}`;
+                    if (popupData.isPositive) {
+                        color = '#ffffff';
+                        borderColor = '#7c3aed';
+                        popup.style.background = 'linear-gradient(135deg, #7c3aed, #a855f7)';
+                    } else {
+                        color = '#ffffff';
+                        borderColor = '#a21caf';
+                        popup.style.background = 'linear-gradient(135deg, #a21caf, #f472b6)';
+                    }
+                    break;
+                }
                 case 'stat':
                 default:
                     text = (popupData.change > 0 ? '+' : '') + popupData.change;

@@ -15,6 +15,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'go',          name: '囲碁',            entry: 'games/go.js',             version: '0.1.0', author: 'mod', description: '配置+1/捕獲ボーナス/勝利EXP', category: 'ボード' },
   { id: 'connect4',    name: '四目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '落下式四目。配置+1/リーチ+10', category: 'ボード' },
   { id: 'tic_tac_toe', name: '三目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '配置+1/リーチ+10/シンプル勝利EXP', category: 'ボード' },
+  { id: 'mancala',     name: 'マンカラ',        entry: 'games/mancala.js',      version: '0.1.0', author: 'mod', description: 'カラハ式マンカラ。種まきと捕獲を駆使してAIと勝負', category: 'ボード' },
   { id: 'breakout',    name: 'ブロック崩し',    entry: 'games/breakout.js',    version: '0.1.0', author: 'builtin', description: 'ブロック破壊で+1EXP', category: 'アクション' },
   { id: 'breakout_k',  name: 'ブロック崩しk',  entry: 'games/breakout_keyboard.js', version: '0.1.0', author: 'builtin', description: 'バー操作はキーボード限定', category: 'アクション' },
   { id: 'pinball_xp',  name: 'XPピンボール',    entry: 'games/pinball.js',     version: '0.1.0', author: 'mod', description: '3Dピンボール風テーブル。バンパーやレーンでEXPを稼ごう', category: 'アクション' },

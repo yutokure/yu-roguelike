@@ -17,7 +17,6 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'shore_pack',     name: 'Sunlit Shore Pack', entry: 'dungeontypes/beach_shore.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'desert_pack',    name: 'Scorched Desert Pack', entry: 'dungeontypes/desert_field.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'bog_pack',       name: 'Toxic Boglands Pack', entry: 'dungeontypes/poison_bogs.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'fantasical_sci_fi_dream_pack', name: 'ファンタジカルと近未来をテーマにした夢の世界パック', entry: 'dungeontypes/FantasicalAndSci-fiAndDremerPack.js', version: '4.5.0', author: 'AI Generator' }
   { id: 'aurora_canopy_pack', name: 'Aurora Canopy Pack', entry: 'dungeontypes/aurora_canopy.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'coral_sanctuary_pack', name: 'Coral Sanctuary Pack', entry: 'dungeontypes/coral_sanctuary.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'bamboo_highlands_pack', name: 'Bamboo Highlands Pack', entry: 'dungeontypes/bamboo_highlands.js', version: '1.0.0', author: 'builtin-sample' },

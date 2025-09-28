@@ -65,6 +65,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'steady_wire',   name: 'イライラ棒',           entry: 'games/steady_wire.js',      version: '0.1.0', author: 'mod', description: '毎回生成されるコースを外れず進むワイヤーループ。操作方法を選んで挑戦', category: 'アクション' },
   { id: 'flappy_bird',   name: 'フラッピーバード風',   entry: 'games/flappy_bird.js',      version: '0.1.0', author: 'mod', description: 'パイプ通過でEXP。連続成功でボーナス', category: 'アクション' },
   { id: 'dino_runner',   name: 'ダイノランナー',       entry: 'games/dino_runner.js',      version: '0.1.0', author: 'mod', description: '恐竜で障害物ジャンプ／距離EXP', category: 'アクション' },
+  { id: 'floor_descent', name: 'フロア降りサバイバル', entry: 'games/floor_descent.js', version: '0.1.0', author: 'mod', description: '迫る針天井から逃げながら下へ進む縦スクロールアクション。足場ギミックで差をつけよう', category: 'アクション' },
   { id: 'forced_scroll_jump', name: '強制スクロールジャンプ', entry: 'games/forced_scroll_jump.js', version: '0.1.0', author: 'mod', description: '強制横スクロールで穴や鉄球を避けつつCXマークを集めてランクを目指す', category: 'アクション' },
   { id: 'ten_ten',       name: '1010パズル',           entry: 'games/ten_ten.js',          version: '0.1.0', author: 'builtin', description: 'ラインでEXP／クロス消しは倍増', category: 'パズル' },
   { id: 'trump_games',   name: 'トランプセレクション', entry: 'games/trump_games.js',      version: '0.1.0', author: 'mod', description: 'トランプゲームハブ（神経衰弱・ブラックジャック・ババ抜き収録）', category: 'ボード' },

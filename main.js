@@ -1328,8 +1328,8 @@ function gainSp(amount, { silent = true } = {}) {
     player.sp = after;
     markSkillsListDirty();
     if (!silent) {
-        const display = gained >= 1 ? Math.floor(gained) : Math.round(gained * 10) / 10;
-        addMessage(`SPを${display}${display % 1 === 0 ? '' : ''}獲得した。`);
+        const display = floorSpValue(gained);
+        addMessage(`SPを${display}獲得した。`);
     }
     return gained;
 }
@@ -1355,8 +1355,8 @@ function trySpendSp(cost, { silent = false } = {}) {
         player.sp = remaining;
     }
     if (!silent) {
-        const display = required >= 1 ? Math.floor(required) : Math.round(required * 10) / 10;
-        addMessage(`SPを${display}${display % 1 === 0 ? '' : ''}消費した。`);
+        const display = floorSpValue(required);
+        addMessage(`SPを${display}消費した。`);
     }
     return true;
 }
@@ -2103,10 +2103,14 @@ function getCurrentSpInfo() {
     return { currentSp, maxSp };
 }
 
+function floorSpValue(value) {
+    return Math.max(0, Math.floor(Number.isFinite(value) ? value : 0));
+}
+
 function formatSpDisplay(currentSp, maxSp) {
-    const formattedCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : Math.round(currentSp * 10) / 10;
-    const formattedMax = maxSp % 1 === 0 ? Math.floor(maxSp) : Math.round(maxSp * 10) / 10;
-    return maxSp > 0 ? `${formattedCurrent}/${formattedMax}` : '0/0';
+    const formattedCurrent = floorSpValue(currentSp);
+    const formattedMax = floorSpValue(maxSp);
+    return formattedMax > 0 ? `${formattedCurrent}/${formattedMax}` : '0/0';
 }
 
 function updateSkillsSpHeader(currentSp, maxSp, displayText = null) {
@@ -7089,9 +7093,9 @@ function updateUI() {
     if (expBar) expBar.style.width = `${expPct * 100}%`;
     if (spBarContainer) spBarContainer.style.display = spUnlocked && spMax > 0 ? '' : 'none';
     if (statSpText) {
-        const spDisplayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-        const spDisplayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
-        statSpText.textContent = spUnlocked && spMax > 0 ? `${spDisplayCurrent}/${spDisplayMax}` : '0/0';
+        const spDisplayCurrent = floorSpValue(currentSp);
+        const spDisplayMax = floorSpValue(spMax);
+        statSpText.textContent = spUnlocked && spDisplayMax > 0 ? `${spDisplayCurrent}/${spDisplayMax}` : '0/0';
     }
     if (spBar && spUnlocked && spMax > 0) {
         spBar.style.width = `${spPct * 100}%`;
@@ -7170,8 +7174,8 @@ function updateUI() {
     if (modalSatiety && satietySystemActive) modalSatiety.textContent = `${currentSatiety} / ${SATIETY_MAX}`;
     if (modalSpRow) modalSpRow.style.display = spUnlocked && spMax > 0 ? '' : 'none';
     if (modalSpValue && spUnlocked && spMax > 0) {
-        const spDisplayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-        const spDisplayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
+        const spDisplayCurrent = floorSpValue(currentSp);
+        const spDisplayMax = floorSpValue(spMax);
         modalSpValue.textContent = `${spDisplayCurrent} / ${spDisplayMax}`;
     }
     if (modalFloor) modalFloor.textContent = `${dungeonLevel}F`;
@@ -7366,9 +7370,9 @@ function updatePlayerSummaryCard({
     if (satietyValueEl) satietyValueEl.textContent = `${currentSatiety}/${SATIETY_MAX}`;
     if (spItemEl) spItemEl.style.display = spUnlocked && spMax > 0 ? '' : 'none';
     if (spValueEl) {
-        const displayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-        const displayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
-        spValueEl.textContent = spUnlocked && spMax > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
+        const displayCurrent = floorSpValue(currentSp);
+        const displayMax = floorSpValue(spMax);
+        spValueEl.textContent = spUnlocked && displayMax > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
     }
 }
 
@@ -8373,7 +8377,7 @@ offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
     player.inventory.potion30 -= 1;
     const gained = gainSp(SP_SACRIFICE_VALUE, { silent: true });
     playSfx('pickup');
-    const display = gained >= 1 ? Math.floor(gained) : Math.round(gained * 10) / 10;
+    const display = floorSpValue(gained);
     addMessage(`回復アイテムを捧げ、SPを${display}獲得した。`);
     updateUI();
     saveAll();
@@ -9070,9 +9074,9 @@ function renderMiniExpPlayerHud() {
         updatePlayerSpCap({ silent: true });
         const maxSp = Math.max(0, Number(player?.maxSp) || 0);
         const currentSp = Math.max(0, Math.min(maxSp, Number(player?.sp) || 0));
-        const displayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-        const displayMax = maxSp % 1 === 0 ? Math.floor(maxSp) : maxSp;
-        miniexpHudSp.textContent = maxSp > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
+        const displayCurrent = floorSpValue(currentSp);
+        const displayMax = floorSpValue(maxSp);
+        miniexpHudSp.textContent = displayMax > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
     }
 }
 

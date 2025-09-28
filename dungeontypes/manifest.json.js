@@ -16,5 +16,10 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'forest_pack',    name: 'Verdant Forest Pack', entry: 'dungeontypes/forest_caverns.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'shore_pack',     name: 'Sunlit Shore Pack', entry: 'dungeontypes/beach_shore.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'desert_pack',    name: 'Scorched Desert Pack', entry: 'dungeontypes/desert_field.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'bog_pack',       name: 'Toxic Boglands Pack', entry: 'dungeontypes/poison_bogs.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'bog_pack',       name: 'Toxic Boglands Pack', entry: 'dungeontypes/poison_bogs.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'aurora_canopy_pack', name: 'Aurora Canopy Pack', entry: 'dungeontypes/aurora_canopy.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'coral_sanctuary_pack', name: 'Coral Sanctuary Pack', entry: 'dungeontypes/coral_sanctuary.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'bamboo_highlands_pack', name: 'Bamboo Highlands Pack', entry: 'dungeontypes/bamboo_highlands.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'sunstone_canyons_pack', name: 'Sunstone Canyons Pack', entry: 'dungeontypes/sunstone_canyons.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'lotus_archipelago_pack', name: 'Lotus Archipelago Pack', entry: 'dungeontypes/lotus_archipelago.js', version: '1.0.0', author: 'builtin-sample' }
 ];

@@ -24,7 +24,9 @@
         stairs: 'pointer',
         enemy: 'pointer'
     };
-    const FLOOR_TYPES = ['normal', 'ice', 'poison'];
+    const FLOOR_TYPES = ['normal', 'ice', 'poison', 'bomb', 'conveyor', 'one-way', 'vertical', 'horizontal'];
+    const FLOOR_TYPES_NEED_DIRECTION = new Set(['conveyor', 'one-way']);
+    const FLOOR_DIRECTION_OPTIONS = ['','up','down','left','right'];
     const DEFAULT_FLOOR_COLOR = '#ced6e0';
     const DEFAULT_WALL_COLOR = '#2f3542';
     const COLOR_HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
@@ -40,9 +42,29 @@
     const GRID_START_COLOR = '#22d3ee';
     const GRID_STAIRS_COLOR = '#f97316';
     const GRID_SELECTED_ENEMY_COLOR = '#f97316';
+    const FLOOR_TYPE_LABELS = {
+        ice: '氷',
+        poison: '毒',
+        bomb: '爆弾',
+        conveyor: 'コンベヤー',
+        'one-way': '一方通行',
+        vertical: '縦通行のみ',
+        horizontal: '横通行のみ'
+    };
     const FLOOR_TYPE_COLORS = {
         ice: '#74c0fc',
-        poison: '#94d82d'
+        poison: '#94d82d',
+        bomb: '#ff8787',
+        conveyor: '#ffe066',
+        'one-way': '#b197fc',
+        vertical: '#38d9a9',
+        horizontal: '#ffa94d'
+    };
+    const FLOOR_DIRECTION_ICONS = {
+        up: '↑',
+        down: '↓',
+        left: '←',
+        right: '→'
     };
 
     let refs = {};
@@ -228,6 +250,11 @@
             if (floorColor) {
                 result.floorColor = floorColor;
             }
+            const dirSource = typeof meta.floorDir === 'string' ? meta.floorDir : (typeof meta.direction === 'string' ? meta.direction : meta.floorDirection);
+            const direction = dirSource ? dirSource.trim().toLowerCase() : '';
+            if (result.floorType && FLOOR_TYPES_NEED_DIRECTION.has(result.floorType) && FLOOR_DIRECTION_OPTIONS.includes(direction)) {
+                result.floorDir = direction;
+            }
         }
         const wallColor = sanitizeColorValue(meta.wallColor);
         if (!isFloor && wallColor) {
@@ -239,7 +266,7 @@
     function metaEquals(a, b) {
         if (!a && !b) return true;
         if (!a || !b) return false;
-        const keys = ['floorType', 'floorColor', 'wallColor'];
+        const keys = ['floorType', 'floorColor', 'wallColor', 'floorDir'];
         for (const key of keys) {
             if ((a[key] || null) !== (b[key] || null)) return false;
         }
@@ -266,6 +293,12 @@
         const floorColor = sanitizeColorValue(settings.floorColor);
         if (floorColor) {
             result.floorColor = floorColor;
+        }
+        if (result.floorType && FLOOR_TYPES_NEED_DIRECTION.has(result.floorType)) {
+            const dir = typeof settings.floorDir === 'string' ? settings.floorDir : '';
+            if (dir && FLOOR_DIRECTION_OPTIONS.includes(dir)) {
+                result.floorDir = dir;
+            }
         }
         return Object.keys(result).length ? result : null;
     }
@@ -361,7 +394,7 @@
                 warnings: Array.isArray(state.validation?.warnings) ? state.validation.warnings.slice() : []
             },
             tempMessage: state.tempMessage || '',
-            brushSettings: state.brushSettings ? { ...state.brushSettings } : { floorType: 'normal', floorColor: '', wallColor: '' }
+            brushSettings: state.brushSettings ? { ...state.brushSettings } : { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' }
         };
     }
 
@@ -428,10 +461,12 @@
         const playerLevel = clamp(1, maxLevel, Math.floor(Number(serialized?.playerLevel) || DEFAULT_LEVEL));
         const rawBrush = serialized?.brushSettings || {};
         const rawFloorType = typeof rawBrush.floorType === 'string' ? rawBrush.floorType.toLowerCase() : '';
+        const rawFloorDir = typeof rawBrush.floorDir === 'string' ? rawBrush.floorDir.toLowerCase() : '';
         const brushSettings = {
             floorType: FLOOR_TYPES.includes(rawFloorType) ? rawFloorType : 'normal',
             floorColor: sanitizeColorValue(rawBrush.floorColor),
-            wallColor: sanitizeColorValue(rawBrush.wallColor)
+            wallColor: sanitizeColorValue(rawBrush.wallColor),
+            floorDir: FLOOR_DIRECTION_OPTIONS.includes(rawFloorDir) ? rawFloorDir : ''
         };
         return {
             width,
@@ -664,10 +699,21 @@
             detailParts.push('階段');
         }
         if (cell === 0) {
-            if (meta?.floorType === 'ice') {
-                detailParts.push('床タイプ: 氷');
-            } else if (meta?.floorType === 'poison') {
-                detailParts.push('床タイプ: 毒');
+            const floorType = meta?.floorType || '';
+            if (floorType && floorType !== 'normal') {
+                const label = FLOOR_TYPE_LABELS[floorType] || floorType;
+                let suffix = '';
+                if (FLOOR_TYPES_NEED_DIRECTION.has(floorType)) {
+                    const dir = meta?.floorDir || '';
+                    if (dir && FLOOR_DIRECTION_ICONS[dir]) {
+                        suffix = `（${FLOOR_DIRECTION_ICONS[dir]}）`;
+                    }
+                } else if (floorType === 'vertical') {
+                    suffix = '（↕）';
+                } else if (floorType === 'horizontal') {
+                    suffix = '（↔）';
+                }
+                detailParts.push(`床タイプ: ${label}${suffix}`);
             }
             if (meta?.floorColor) {
                 detailParts.push(`床色: ${meta.floorColor}`);
@@ -810,6 +856,27 @@
                     fontSize = enemiesHere.length > 1 ? Math.floor(cellSize * 0.5) : Math.floor(cellSize * 0.6);
                     iconColor = getTextColorForBackground(baseColor);
                 }
+                if (!icon && isFloor) {
+                    const floorType = meta?.floorType || '';
+                    if (floorType && floorType !== 'normal') {
+                        if (FLOOR_TYPES_NEED_DIRECTION.has(floorType)) {
+                            const dir = meta?.floorDir || '';
+                            if (dir && FLOOR_DIRECTION_ICONS[dir]) {
+                                icon = FLOOR_DIRECTION_ICONS[dir];
+                                fontSize = Math.floor(cellSize * 0.55);
+                                iconColor = '#1f2937';
+                            }
+                        } else if (floorType === 'vertical') {
+                            icon = '↕';
+                            fontSize = Math.floor(cellSize * 0.55);
+                            iconColor = '#1f2937';
+                        } else if (floorType === 'horizontal') {
+                            icon = '↔';
+                            fontSize = Math.floor(cellSize * 0.55);
+                            iconColor = '#1f2937';
+                        }
+                    }
+                }
 
                 if (icon) {
                     ctx.font = `700 ${fontSize}px 'Segoe UI', 'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Noto Sans JP', sans-serif`;
@@ -906,10 +973,11 @@
 
     function syncBrushControls() {
         if (!refs.brushFloorType) return;
-        const settings = state.brushSettings || { floorType: 'normal', floorColor: '', wallColor: '' };
+        const settings = state.brushSettings || { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' };
         let floorType = settings.floorType;
         let floorColor = settings.floorColor;
         let wallColor = settings.wallColor;
+        let floorDir = settings.floorDir || '';
         if (state.lastCell) {
             const { x, y } = state.lastCell;
             const isFloor = state.grid?.[y]?.[x] === 0;
@@ -917,6 +985,7 @@
             if (isFloor) {
                 floorType = meta?.floorType || 'normal';
                 floorColor = meta?.floorColor || '';
+                floorDir = meta?.floorDir || '';
             }
             if (!isFloor) {
                 wallColor = meta?.wallColor || '';
@@ -925,7 +994,20 @@
         if (!FLOOR_TYPES.includes(floorType)) {
             floorType = 'normal';
         }
+        if (!FLOOR_DIRECTION_OPTIONS.includes(floorDir)) {
+            floorDir = '';
+        }
+        if (!FLOOR_TYPES_NEED_DIRECTION.has(floorType)) {
+            floorDir = '';
+        }
         refs.brushFloorType.value = floorType;
+        if (refs.brushFloorDirection) {
+            refs.brushFloorDirection.value = floorDir;
+            refs.brushFloorDirection.disabled = !FLOOR_TYPES_NEED_DIRECTION.has(floorType);
+            if (refs.brushFloorDirection.closest('.sandbox-field-group')) {
+                refs.brushFloorDirection.closest('.sandbox-field-group').classList.toggle('disabled', refs.brushFloorDirection.disabled);
+            }
+        }
         updateColorInput(refs.brushFloorColor, refs.floorColorHint, floorColor, DEFAULT_FLOOR_COLOR);
         updateColorInput(refs.brushWallColor, refs.wallColorHint, wallColor, DEFAULT_WALL_COLOR);
     }
@@ -1340,6 +1422,7 @@
             fillWallButton: panel.querySelector('#sandbox-fill-wall'),
             clearMarkersButton: panel.querySelector('#sandbox-clear-markers'),
             brushFloorType: panel.querySelector('#sandbox-brush-floor-type'),
+            brushFloorDirection: panel.querySelector('#sandbox-brush-floor-direction'),
             brushFloorColor: panel.querySelector('#sandbox-brush-floor-color'),
             brushFloorColorClear: panel.querySelector('#sandbox-brush-floor-color-clear'),
             brushWallColor: panel.querySelector('#sandbox-brush-wall-color'),
@@ -1369,7 +1452,7 @@
             validation: { errors: [], warnings: [] },
             compiledConfig: null,
             tempMessage: '',
-            brushSettings: { floorType: 'normal', floorColor: '', wallColor: '' },
+            brushSettings: { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' },
             renderMetrics: { cellSize: RENDER_CELL_SIZE, gap: RENDER_CELL_GAP, width: 0, height: 0 },
             ioStatus: { type: 'idle', message: '' }
         };
@@ -1428,7 +1511,23 @@
         if (refs.brushFloorType) {
             refs.brushFloorType.addEventListener('change', (e) => {
                 const value = typeof e.target.value === 'string' ? e.target.value : 'normal';
-                state.brushSettings.floorType = FLOOR_TYPES.includes(value) ? value : 'normal';
+                const normalized = FLOOR_TYPES.includes(value) ? value : 'normal';
+                state.brushSettings.floorType = normalized;
+                if (!FLOOR_TYPES_NEED_DIRECTION.has(normalized)) {
+                    state.brushSettings.floorDir = '';
+                    if (refs.brushFloorDirection) refs.brushFloorDirection.value = '';
+                }
+                if (state.lastCell && state.grid?.[state.lastCell.y]?.[state.lastCell.x] === 0) {
+                    applyFloorMetaToCell(state.lastCell.x, state.lastCell.y);
+                }
+                render();
+            });
+        }
+        if (refs.brushFloorDirection) {
+            refs.brushFloorDirection.addEventListener('change', (e) => {
+                const value = typeof e.target.value === 'string' ? e.target.value : '';
+                const normalized = FLOOR_DIRECTION_OPTIONS.includes(value) ? value : '';
+                state.brushSettings.floorDir = normalized;
                 if (state.lastCell && state.grid?.[state.lastCell.y]?.[state.lastCell.x] === 0) {
                     applyFloorMetaToCell(state.lastCell.x, state.lastCell.y);
                 }

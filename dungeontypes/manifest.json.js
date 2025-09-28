@@ -16,5 +16,12 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'forest_pack',    name: 'Verdant Forest Pack', entry: 'dungeontypes/forest_caverns.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'shore_pack',     name: 'Sunlit Shore Pack', entry: 'dungeontypes/beach_shore.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'desert_pack',    name: 'Scorched Desert Pack', entry: 'dungeontypes/desert_field.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'bog_pack',       name: 'Toxic Boglands Pack', entry: 'dungeontypes/poison_bogs.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'bog_pack',       name: 'Toxic Boglands Pack', entry: 'dungeontypes/poison_bogs.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'bomb_pack',      name: 'Bomb Hazard Pack', entry: 'dungeontypes/bomb_fields.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'shadowed_caverns_pack', name: 'Shadowed Caverns Pack', entry: 'dungeontypes/dark_caverns.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'sandstorm_dunes_pack', name: 'Sandstorm Dunes Pack', entry: 'dungeontypes/sandstorm_desert.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'irradiated_plains_pack', name: 'Irradiated Plains Pack', entry: 'dungeontypes/irradiated_plains.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'conveyor_foundry_pack', name: 'Conveyor Foundry Pack', entry: 'dungeontypes/conveyor_foundry.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'oneway_labyrinth_pack', name: 'One-Way Labyrinth Pack', entry: 'dungeontypes/oneway_labyrinth.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'axis_gallery_pack', name: 'Axis Gallery Pack', entry: 'dungeontypes/axis_gallery.js', version: '1.0.0', author: 'builtin-sample' }
 ];

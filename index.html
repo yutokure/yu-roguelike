@@ -171,6 +171,7 @@
                             <div id="miniexp-hud" class="miniexp-hud" aria-live="polite"></div>
                             <div id="miniexp-player-hud" class="miniexp-player-hud" aria-live="polite">
                                 <div class="mini-stat-line"><span>Lv</span><span id="miniexp-hud-level">1</span></div>
+                                <div class="mini-stat-line"><span>SP</span><span id="miniexp-hud-sp">0/0</span></div>
                                 <div class="mini-bar exp">
                                     <div class="mini-bar-label">EXP <span id="miniexp-hud-exp-text">0/1000</span></div>
                                     <div class="mini-bar-track"><div id="miniexp-exp-bar" class="mini-bar-fill"></div></div>
@@ -806,6 +807,7 @@
     <div id="toolbar">
         <button id="btn-back">戻る</button>
         <button id="btn-items">アイテム</button>
+        <button id="btn-skills">スキル</button>
         <button id="btn-status">ステータス</button>
         <button id="btn-import">インポート</button>
         <button id="btn-export">エクスポート</button>
@@ -832,6 +834,10 @@
                     <div class="bar exp">
                         <div class="bar-label">EXP <span id="stat-exp-text">0/1000</span></div>
                         <div class="bar-track"><div id="exp-bar" class="bar-fill"></div></div>
+                    </div>
+                    <div id="sp-bar-container" class="bar sp" style="display:none;">
+                        <div class="bar-label">SP <span id="stat-sp-text">0/0</span></div>
+                        <div class="bar-track"><div id="sp-bar" class="bar-fill"></div></div>
                     </div>
                     <div class="status-badges" id="stat-status-effects" aria-live="polite"></div>
                 </div>
@@ -873,6 +879,7 @@
                 <div class="item-actions">
                     <button id="use-potion30">使用</button>
                     <button id="eat-potion30" style="display:none;">食べる</button>
+                    <button id="offer-potion30" style="display:none;">捧げる</button>
                 </div>
             </div>
             <div class="item-row">
@@ -917,6 +924,10 @@
                         <span class="status-label">満腹度</span>
                         <span class="status-value satiety" id="modal-satiety">100 / 100</span>
                     </div>
+                    <div class="status-item sp" id="modal-sp-row" style="display:none;">
+                        <span class="status-label">SP</span>
+                        <span class="status-value sp" id="modal-sp">0 / 0</span>
+                    </div>
                     <div class="status-item">
                         <span class="status-label">攻撃力</span>
                         <span class="status-value attack" id="modal-attack">10</span>
@@ -928,6 +939,10 @@
                     <div class="status-item status-effects">
                         <span class="status-label">状態異常</span>
                         <span class="status-value effects" id="modal-status-effects">なし</span>
+                    </div>
+                    <div class="status-item status-effects skill-effects">
+                        <span class="status-label">スキル効果</span>
+                        <span class="status-value effects" id="modal-skill-effects">なし</span>
                     </div>
                     <div class="status-item">
                         <span class="status-label">現在階層</span>
@@ -983,6 +998,15 @@
                 </div>
             </div>
             <button class="close-modal" data-target="status-modal">閉じる</button>
+        </div>
+    </div>
+
+    <!-- スキルモーダル -->
+    <div id="skills-modal" class="modal" style="display:none;">
+        <div class="modal-content skills-modal">
+            <h3>スキル</h3>
+            <div id="skills-list" class="skills-list" aria-live="polite"></div>
+            <button class="close-modal" data-target="skills-modal">閉じる</button>
         </div>
     </div>
 

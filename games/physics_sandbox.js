@@ -69,10 +69,10 @@
   const DEFAULT_MATERIAL = 'wood';
 
   const WALL_BODIES = {
-    left:  { id:'wall-left',  static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
-    right: { id:'wall-right', static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
-    top:   { id:'wall-top',   static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true },
-    bottom:{ id:'wall-bottom',static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.9,  absoluteWall:true }
+    left:  { id:'wall-left',  static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true, x:0, y:0 },
+    right: { id:'wall-right', static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true, x:0, y:0 },
+    top:   { id:'wall-top',   static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true, x:0, y:0 },
+    bottom:{ id:'wall-bottom',static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.9,  absoluteWall:true, x:0, y:0 }
   };
 
   const TOOLS = [
@@ -283,6 +283,7 @@
       savedLayouts:loadLayouts(),
       initialSnapshot:null,
       bounds:{ width:900, height:560 },
+      boundaryMode:'wall',
       accumulator:0,
       lastTimestamp:0,
       loopHandle:null,
@@ -1333,6 +1334,8 @@
         if (remain <= 0) state.collisionCooldown.delete(key);
         else state.collisionCooldown.set(key, remain);
       }
+      const bodiesToRemove = [];
+      const bounds = state.bounds;
       for (const body of state.bodies){
         body.torque = 0;
         if (state.godFinger && state.godFinger.id === body.id) {
@@ -1370,6 +1373,7 @@
             }
           }
         }
+        let removeBody = false;
         if (!body.static) {
           body.vx += state.gravity.x * dt;
           body.vy += state.gravity.y * dt;
@@ -1409,6 +1413,21 @@
           }
           body.x += body.vx * dt;
           body.y += body.vy * dt;
+          if (state.boundaryMode === 'void') {
+            const ext = orientedExtents(body);
+            const minX = body.x - ext.halfX;
+            const maxX = body.x + ext.halfX;
+            const minY = body.y - ext.halfY;
+            const maxY = body.y + ext.halfY;
+            const margin = 160;
+            if (maxX < -margin || minX > bounds.width + margin || maxY < -margin || minY > bounds.height + margin) {
+              removeBody = true;
+            }
+          }
+        }
+        if (removeBody) {
+          bodiesToRemove.push(body.id);
+          continue;
         }
         body.burnTimer = Math.max(0, body.burnTimer - dt * (0.5 + body.wetness*0.1));
         body.wetness = Math.max(0, body.wetness - dt * 0.3);
@@ -1416,7 +1435,7 @@
         body.chargeTimer = Math.max(0, body.chargeTimer - dt * 0.5);
         body.freezeTimer = Math.max(0, body.freezeTimer - dt * 0.6);
         body.corrosion = Math.max(0, body.corrosion - dt * 0.2);
-        if (!body.static) {
+        if (!body.static && state.boundaryMode === 'wall') {
           resolveBoundaryCollisions(body);
         }
         if (!body.static && body.burnTimer > 12) {
@@ -1438,6 +1457,13 @@
             }
             applyMaterial(body, body.material);
           }
+        }
+      }
+      if (bodiesToRemove.length) {
+        state.bodies = state.bodies.filter(b => !bodiesToRemove.includes(b.id));
+        if (state.selectionKind === 'body' && bodiesToRemove.includes(state.selection)) {
+          state.selection = null;
+          state.selectionKind = null;
         }
       }
       resolveCollisions(state.solverIterations);
@@ -1676,31 +1702,43 @@
     }
 
     function resolveBoundaryCollisions(body){
-      if (!body) return;
+      if (!body || state.boundaryMode !== 'wall') return;
       const bounds = state.bounds;
       const leftSupport = getBodySupportPoint(body, { x:-1, y:0 });
       if (leftSupport.x < 0) {
         const penetration = -leftSupport.x;
         const contact = { x: 0, y: clamp(leftSupport.y, 0, bounds.height) };
-        resolveContact(body, WALL_BODIES.left, { x:-1, y:0 }, penetration, contact);
+        const wall = WALL_BODIES.left;
+        wall.x = contact.x;
+        wall.y = contact.y;
+        resolveContact(body, wall, { x:-1, y:0 }, penetration, contact);
       }
       const rightSupport = getBodySupportPoint(body, { x:1, y:0 });
       if (rightSupport.x > bounds.width) {
         const penetration = rightSupport.x - bounds.width;
         const contact = { x: bounds.width, y: clamp(rightSupport.y, 0, bounds.height) };
-        resolveContact(body, WALL_BODIES.right, { x:1, y:0 }, penetration, contact);
+        const wall = WALL_BODIES.right;
+        wall.x = contact.x;
+        wall.y = contact.y;
+        resolveContact(body, wall, { x:1, y:0 }, penetration, contact);
       }
       const topSupport = getBodySupportPoint(body, { x:0, y:-1 });
       if (topSupport.y < 0) {
         const penetration = -topSupport.y;
         const contact = { x: clamp(topSupport.x, 0, bounds.width), y: 0 };
-        resolveContact(body, WALL_BODIES.top, { x:0, y:-1 }, penetration, contact);
+        const wall = WALL_BODIES.top;
+        wall.x = contact.x;
+        wall.y = contact.y;
+        resolveContact(body, wall, { x:0, y:-1 }, penetration, contact);
       }
       const bottomSupport = getBodySupportPoint(body, { x:0, y:1 });
       if (bottomSupport.y > bounds.height) {
         const penetration = bottomSupport.y - bounds.height;
         const contact = { x: clamp(bottomSupport.x, 0, bounds.width), y: bounds.height };
-        resolveContact(body, WALL_BODIES.bottom, { x:0, y:1 }, penetration, contact);
+        const wall = WALL_BODIES.bottom;
+        wall.x = contact.x;
+        wall.y = contact.y;
+        resolveContact(body, wall, { x:0, y:1 }, penetration, contact);
       }
     }
 
@@ -2035,7 +2073,31 @@
         state.ambientTemperature = Math.round(Number(ambientInput.value) || 0);
         ambientLabel.textContent = `周囲温度 (${state.ambientTemperature.toFixed(1)}°C)`;
       });
-      worldSection.append(gLabel, gInput, dragLabel, dragInput, iterLabel, iterInput, subLabel, subInput, ambientLabel, ambientInput);
+      const boundaryLabel = document.createElement('label');
+      boundaryLabel.textContent = '外周モード';
+      const boundarySelect = document.createElement('select');
+      [
+        { value:'wall', text:'壁 (外周で反射)' },
+        { value:'void', text:'奈落 (外に落下)' }
+      ].forEach(optDef => {
+        const opt = document.createElement('option');
+        opt.value = optDef.value;
+        opt.textContent = optDef.text;
+        if (state.boundaryMode === optDef.value) opt.selected = true;
+        boundarySelect.appendChild(opt);
+      });
+      boundarySelect.addEventListener('change', () => {
+        state.boundaryMode = boundarySelect.value === 'void' ? 'void' : 'wall';
+        renderInspector();
+      });
+      boundaryLabel.appendChild(boundarySelect);
+      worldSection.append(gLabel, gInput, dragLabel, dragInput, iterLabel, iterInput, subLabel, subInput, ambientLabel, ambientInput, boundaryLabel);
+      if (state.boundaryMode === 'void') {
+        const voidHint = document.createElement('p');
+        voidHint.className = 'phys-hint';
+        voidHint.textContent = '奈落: 図形が外に出ると一定距離で消滅します。';
+        worldSection.appendChild(voidHint);
+      }
       inspector.appendChild(worldSection);
 
       const selected = getSelected();
@@ -2506,6 +2568,7 @@
         solverIterations: state.solverIterations,
         substeps: state.substeps,
         ambientTemperature: state.ambientTemperature,
+        boundaryMode: state.boundaryMode,
         bodies: state.bodies.map(b => deepClone(b)),
         emitters: state.emitters.map(e => deepClone(e)),
         vines: state.vines.map(v => deepClone(v))
@@ -2519,6 +2582,7 @@
       state.solverIterations = Math.max(1, Math.floor(snap.solverIterations || state.solverIterations || 1));
       state.substeps = Math.max(1, Math.floor(snap.substeps || state.substeps || 1));
       state.ambientTemperature = typeof snap.ambientTemperature === 'number' ? snap.ambientTemperature : state.ambientTemperature;
+      state.boundaryMode = snap.boundaryMode === 'void' ? 'void' : 'wall';
       state.bodies = (snap.bodies || []).map(b => {
         const copy = Object.assign({}, b);
         if (typeof copy.temperature !== 'number') {

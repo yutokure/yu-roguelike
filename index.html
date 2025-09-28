@@ -1005,6 +1005,15 @@
     <div id="skills-modal" class="modal" style="display:none;">
         <div class="modal-content skills-modal">
             <h3>スキル</h3>
+            <div id="skills-current-sp" class="skills-current-sp" aria-live="polite">
+                <div class="skills-sp-header">
+                    <span class="skills-sp-label">現在のSP</span>
+                    <span class="skills-sp-value">0/0</span>
+                </div>
+                <div class="skills-sp-bar" aria-hidden="true">
+                    <div class="skills-sp-bar-fill"></div>
+                </div>
+            </div>
             <div id="skills-list" class="skills-list" aria-live="polite"></div>
             <button class="close-modal" data-target="skills-modal">閉じる</button>
         </div>

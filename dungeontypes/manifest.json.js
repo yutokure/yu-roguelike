@@ -28,5 +28,6 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'coral_garden_pack', name: 'Coral Garden Pack', entry: 'dungeontypes/coral_garden.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'amber_marsh_pack', name: 'Amber Marsh Pack', entry: 'dungeontypes/amber_marsh.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'bamboo_hollows_pack', name: 'Bamboo Hollows Pack', entry: 'dungeontypes/bamboo_hollows.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'starlit_canopy_pack', name: 'Starlit Canopy Pack', entry: 'dungeontypes/starlit_canopy.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'starlit_canopy_pack', name: 'Starlit Canopy Pack', entry: 'dungeontypes/starlit_canopy.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'ruined_labyrinth_pack', name: 'Ruined Labyrinth Pack', entry: 'dungeontypes/ruined_labyrinth.js', version: '1.0.0', author: 'builtin-sample' }
 ];

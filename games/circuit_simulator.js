@@ -6,6 +6,113 @@
   const NODE_RADIUS = 14;
   const GRID_SIZE = 32;
 
+  const COLOR_THEMES = {
+    light: {
+      wrapperBg: 'linear-gradient(130deg,#f8fafc,#e2e8f0)',
+      textPrimary: '#0f172a',
+      mutedText: '#475569',
+      leftPanelBg: 'rgba(15,23,42,0.92)',
+      leftPanelText: '#e2e8f0',
+      leftPanelShadow: '0 12px 32px rgba(15,23,42,0.35)',
+      toolButtonBg: 'rgba(30,64,175,0.25)',
+      toolButtonBorder: '1px solid rgba(148,163,184,0.35)',
+      toolButtonText: '#e0f2fe',
+      toolButtonActiveBg: 'linear-gradient(135deg,#38bdf8,#2563eb)',
+      toolButtonActiveText: '#0f172a',
+      toolButtonActiveBorder: '1px solid rgba(148,163,184,0.45)',
+      statusBg: 'rgba(148,163,184,0.18)',
+      statusBorder: '1px solid rgba(148,163,184,0.35)',
+      statusWarning: '#fcd34d',
+      summaryBg: 'rgba(14,165,233,0.18)',
+      summaryBorder: '1px solid rgba(56,189,248,0.5)',
+      workspaceBg: 'rgba(15,23,42,0.08)',
+      workspaceBorder: '1px solid rgba(148,163,184,0.35)',
+      workspaceShadow: '0 12px 36px rgba(15,23,42,0.2)',
+      gridLine: 'rgba(148,163,184,0.18)',
+      svgBg: '#f8fafc',
+      inspectorBg: 'rgba(255,255,255,0.9)',
+      inspectorBorder: '1px solid rgba(148,163,184,0.35)',
+      inspectorText: '#1f2937',
+      inspectorMuted: '#475569',
+      inputBg: '#ffffff',
+      inputBorder: '1px solid rgba(148,163,184,0.45)',
+      inputText: '#0f172a',
+      primaryButtonBg: '#0ea5e9',
+      primaryButtonBorder: '#0ea5e9',
+      primaryButtonText: '#0f172a',
+      dangerButtonBg: 'rgba(239,68,68,0.15)',
+      dangerButtonBorder: '#ef4444',
+      dangerButtonText: '#ef4444',
+      cardBg: 'rgba(248,250,252,0.85)',
+      cardBorder: 'rgba(148,163,184,0.5)',
+      nodeLabel: '#0f172a',
+      voltageLabel: '#1f2937',
+      groundFill: '#0f172a',
+      groundStroke: '#38bdf8'
+    },
+    dark: {
+      wrapperBg: 'radial-gradient(circle at top, rgba(15,23,42,0.9), rgba(2,6,23,0.95))',
+      textPrimary: '#e2e8f0',
+      mutedText: '#cbd5f5',
+      leftPanelBg: 'rgba(15,23,42,0.96)',
+      leftPanelText: '#e2e8f0',
+      leftPanelShadow: '0 20px 44px rgba(2,6,23,0.7)',
+      toolButtonBg: 'rgba(30,64,175,0.4)',
+      toolButtonBorder: '1px solid rgba(96,165,250,0.4)',
+      toolButtonText: '#e0f2fe',
+      toolButtonActiveBg: 'linear-gradient(135deg,#38bdf8,#1d4ed8)',
+      toolButtonActiveText: '#0f172a',
+      toolButtonActiveBorder: '1px solid rgba(125,211,252,0.75)',
+      statusBg: 'rgba(30,41,59,0.78)',
+      statusBorder: '1px solid rgba(148,163,184,0.45)',
+      statusWarning: '#facc15',
+      summaryBg: 'rgba(14,165,233,0.28)',
+      summaryBorder: '1px solid rgba(56,189,248,0.55)',
+      workspaceBg: 'rgba(15,23,42,0.55)',
+      workspaceBorder: '1px solid rgba(148,163,184,0.45)',
+      workspaceShadow: '0 18px 44px rgba(2,6,23,0.65)',
+      gridLine: 'rgba(94,234,212,0.25)',
+      svgBg: '#0f172a',
+      inspectorBg: 'rgba(15,23,42,0.92)',
+      inspectorBorder: '1px solid rgba(59,130,246,0.45)',
+      inspectorText: '#e2e8f0',
+      inspectorMuted: '#cbd5f5',
+      inputBg: 'rgba(15,23,42,0.85)',
+      inputBorder: '1px solid rgba(94,234,212,0.35)',
+      inputText: '#e2e8f0',
+      primaryButtonBg: '#0284c7',
+      primaryButtonBorder: '#0ea5e9',
+      primaryButtonText: '#e0f2fe',
+      dangerButtonBg: 'rgba(239,68,68,0.25)',
+      dangerButtonBorder: '#f87171',
+      dangerButtonText: '#fca5a5',
+      cardBg: 'rgba(15,23,42,0.85)',
+      cardBorder: 'rgba(148,163,184,0.5)',
+      nodeLabel: '#e2e8f0',
+      voltageLabel: '#bae6fd',
+      groundFill: '#0f172a',
+      groundStroke: '#38bdf8'
+    }
+  };
+
+  function detectColorScheme(){
+    const doc = document.documentElement;
+    const body = document.body;
+    const dataTheme = (doc?.dataset?.theme || body?.dataset?.theme || '').toLowerCase();
+    if (dataTheme === 'dark') return 'dark';
+    if (dataTheme === 'light') return 'light';
+    const classes = new Set([
+      ...(doc ? Array.from(doc.classList) : []),
+      ...(body ? Array.from(body.classList) : [])
+    ]);
+    for (const cls of classes){
+      if (cls && /dark/.test(cls)) return 'dark';
+      if (cls && /light/.test(cls)) return 'light';
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    return 'light';
+  }
+
   const COMPONENT_TYPES = {
     wire: {
       id: 'wire',
@@ -290,6 +397,38 @@
       sessionXp: 0
     };
 
+    const originalRootStyle = {
+      padding: root.style.padding || '',
+      margin: root.style.margin || '',
+      background: root.style.background || '',
+      border: root.style.border || '',
+      minHeight: root.style.minHeight || '',
+      display: root.style.display || '',
+      justifyContent: root.style.justifyContent || '',
+      alignItems: root.style.alignItems || '',
+      width: root.style.width || '',
+      maxWidth: root.style.maxWidth || ''
+    };
+
+    root.style.padding = '0';
+    root.style.margin = '0 auto';
+    root.style.background = 'transparent';
+    root.style.border = 'none';
+    root.style.minHeight = '0';
+    root.style.display = 'flex';
+    root.style.justifyContent = 'center';
+    root.style.alignItems = 'stretch';
+    root.style.width = 'min(96vw, 1400px)';
+    root.style.maxWidth = '1400px';
+
+    let currentTheme = detectColorScheme();
+    let applyTheme = () => {};
+    const listeners = [];
+
+    function getTheme(){
+      return COLOR_THEMES[currentTheme] || COLOR_THEMES.light;
+    }
+
     function award(code, value, detail){
       if (typeof awardXp === 'function'){
         awardXp(code, value, detail);
@@ -319,15 +458,16 @@
 
     addDefaultCircuit();
 
+    const toolButtons = [];
+
     const wrapper = document.createElement('div');
     wrapper.style.display = 'grid';
-    wrapper.style.gridTemplateColumns = '260px minmax(0, 1fr) 280px';
+    wrapper.style.gridTemplateColumns = 'minmax(280px, 320px) minmax(0, 1fr) minmax(300px, 360px)';
     wrapper.style.gap = '16px';
     wrapper.style.width = '100%';
     wrapper.style.height = '100%';
     wrapper.style.boxSizing = 'border-box';
-    wrapper.style.padding = '18px';
-    wrapper.style.background = 'linear-gradient(130deg,#f8fafc,#e2e8f0)';
+    wrapper.style.padding = '24px 32px';
     wrapper.style.fontFamily = '"Noto Sans JP", "Hiragino Sans", sans-serif';
 
     const leftPanel = document.createElement('div');
@@ -382,6 +522,7 @@
         state.pendingNodes = [];
         render();
       });
+      toolButtons.push(btn);
       return btn;
     }
 
@@ -481,6 +622,70 @@
 
     root.innerHTML = '';
     root.appendChild(wrapper);
+
+    applyTheme = (mode) => {
+      const theme = COLOR_THEMES[mode] || COLOR_THEMES.light;
+      wrapper.style.background = theme.wrapperBg;
+      wrapper.style.color = theme.textPrimary;
+      leftPanel.style.background = theme.leftPanelBg;
+      leftPanel.style.color = theme.leftPanelText;
+      leftPanel.style.boxShadow = theme.leftPanelShadow;
+      title.style.color = theme.leftPanelText;
+      subtitle.style.color = theme.leftPanelText;
+      toolHeader.style.color = theme.leftPanelText;
+      statusBox.style.background = theme.statusBg;
+      statusBox.style.border = theme.statusBorder;
+      statusBox.style.color = theme.leftPanelText;
+      summaryBox.style.background = theme.summaryBg;
+      summaryBox.style.border = theme.summaryBorder;
+      summaryBox.style.color = theme.leftPanelText;
+      workspaceWrap.style.background = theme.workspaceBg;
+      workspaceWrap.style.border = theme.workspaceBorder;
+      workspaceWrap.style.boxShadow = theme.workspaceShadow;
+      workspaceWrap.style.backgroundImage = `
+        linear-gradient(0deg, ${theme.gridLine} 1px, transparent 1px),
+        linear-gradient(90deg, ${theme.gridLine} 1px, transparent 1px)
+      `;
+      svg.style.background = theme.svgBg;
+      inspector.style.background = theme.inspectorBg;
+      inspector.style.border = theme.inspectorBorder;
+      inspector.style.color = theme.inspectorText;
+      inspector.style.boxShadow = mode === 'dark'
+        ? '0 18px 40px rgba(2,6,23,0.6)'
+        : '0 12px 24px rgba(15,23,42,0.15)';
+      inspectorTitle.style.color = theme.inspectorText;
+      inspectorBody.style.color = theme.inspectorText;
+      renderToolbarState();
+    };
+
+    applyTheme(currentTheme);
+
+    function syncTheme(){
+      const next = detectColorScheme();
+      if (next !== currentTheme){
+        currentTheme = next;
+        applyTheme(currentTheme);
+        render();
+      }
+    }
+
+    const schemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    if (schemeQuery){
+      const handleScheme = () => syncTheme();
+      if (typeof schemeQuery.addEventListener === 'function') schemeQuery.addEventListener('change', handleScheme);
+      else if (typeof schemeQuery.addListener === 'function') schemeQuery.addListener(handleScheme);
+      listeners.push(() => {
+        if (typeof schemeQuery.removeEventListener === 'function') schemeQuery.removeEventListener('change', handleScheme);
+        else if (typeof schemeQuery.removeListener === 'function') schemeQuery.removeListener(handleScheme);
+      });
+    }
+
+    const observerTargets = [document.documentElement, document.body].filter(Boolean);
+    if (observerTargets.length){
+      const observer = new MutationObserver(syncTheme);
+      observerTargets.forEach(target => observer.observe(target, { attributes: true, attributeFilter: ['class', 'data-theme'] }));
+      listeners.push(() => observer.disconnect());
+    }
 
     let dragging = null;
 
@@ -634,16 +839,13 @@
     }
 
     function renderToolbarState(){
-      const buttons = toolGrid.querySelectorAll('button');
-      buttons.forEach(btn => {
-        const toolId = btn.dataset.toolId;
-        if (toolId === state.pendingTool){
-          btn.style.background = 'linear-gradient(135deg,#38bdf8,#2563eb)';
-          btn.style.color = '#0f172a';
-        } else {
-          btn.style.background = 'rgba(30,64,175,0.25)';
-          btn.style.color = '#e0f2fe';
-        }
+      const theme = getTheme();
+      toolButtons.forEach(btn => {
+        const active = btn.dataset.toolId === state.pendingTool;
+        btn.style.border = active ? theme.toolButtonActiveBorder : theme.toolButtonBorder;
+        btn.style.background = active ? theme.toolButtonActiveBg : theme.toolButtonBg;
+        btn.style.color = active ? theme.toolButtonActiveText : theme.toolButtonText;
+        btn.style.boxShadow = active ? '0 0 0 1px rgba(59,130,246,0.45)' : 'none';
       });
     }
 
@@ -669,10 +871,11 @@
       statusBox.appendChild(groundLine);
 
       if (state.warnings && state.warnings.length){
+        const theme = getTheme();
         state.warnings.forEach(w => {
           const warn = document.createElement('div');
           warn.textContent = `⚠ ${w}`;
-          warn.style.color = '#fcd34d';
+          warn.style.color = theme.statusWarning;
           statusBox.appendChild(warn);
         });
       }
@@ -718,6 +921,7 @@
       const solution = state.solution;
       const voltages = solution ? solution.nodeVoltages : {};
       const stats = solution ? solution.elementStats : {};
+      const theme = getTheme();
 
       state.elements.forEach(el => {
         const nodeA = state.nodes.find(n => n.id === el.nodeA);
@@ -733,13 +937,12 @@
         line.setAttribute('x2', nodeB.x);
         line.setAttribute('y2', nodeB.y);
         line.setAttribute('stroke-width', el.type === 'wire' ? 6 : 4);
-        let color = '#0f172a';
+        let color = theme.textPrimary;
         if (el.type === 'resistor') color = '#f97316';
         else if (el.type === 'power') color = '#4f46e5';
         else if (el.type === 'ammeter') color = '#14b8a6';
         else if (el.type === 'voltmeter') color = '#0ea5e9';
         else if (el.type === 'wattmeter') color = '#ec4899';
-        else color = '#475569';
         if (state.selected && state.selected.type === 'element' && state.selected.id === el.id){
           line.setAttribute('stroke', '#22d3ee');
           line.setAttribute('stroke-width', 8);
@@ -757,8 +960,8 @@
         textBg.setAttribute('width', 140);
         textBg.setAttribute('height', 32);
         textBg.setAttribute('rx', 10);
-        textBg.setAttribute('fill', 'rgba(248,250,252,0.85)');
-        textBg.setAttribute('stroke', 'rgba(148,163,184,0.5)');
+        textBg.setAttribute('fill', theme.cardBg);
+        textBg.setAttribute('stroke', theme.cardBorder);
         textBg.setAttribute('stroke-width', '1');
 
         const label = document.createElementNS(SVG_NS, 'text');
@@ -767,7 +970,7 @@
         label.setAttribute('text-anchor', 'middle');
         label.setAttribute('font-size', '11');
         label.setAttribute('font-family', '"Noto Sans JP", sans-serif');
-        label.setAttribute('fill', '#0f172a');
+        label.setAttribute('fill', theme.nodeLabel);
         const stat = stats[el.id] || { voltage: 0, current: 0, power: 0 };
         let line1 = '';
         if (el.type === 'resistor' || el.type === 'wire' || el.type === 'ammeter'){
@@ -824,19 +1027,19 @@
         const pendingIndex = state.pendingNodes.indexOf(node.id);
         if (state.selected && state.selected.type === 'node' && state.selected.id === node.id){
           circle.setAttribute('fill', '#22d3ee');
-          circle.setAttribute('stroke', '#0f172a');
+          circle.setAttribute('stroke', theme.textPrimary);
           circle.setAttribute('stroke-width', '3');
         } else if (pendingIndex !== -1){
           circle.setAttribute('fill', '#fcd34d');
           circle.setAttribute('stroke', '#b45309');
           circle.setAttribute('stroke-width', '3');
         } else if (state.groundNodeId === node.id){
-          circle.setAttribute('fill', '#0f172a');
-          circle.setAttribute('stroke', '#38bdf8');
+          circle.setAttribute('fill', theme.groundFill);
+          circle.setAttribute('stroke', theme.groundStroke);
           circle.setAttribute('stroke-width', '3');
         } else {
           circle.setAttribute('fill', '#38bdf8');
-          circle.setAttribute('stroke', '#0f172a');
+          circle.setAttribute('stroke', theme.textPrimary);
           circle.setAttribute('stroke-width', '2');
         }
         group.appendChild(circle);
@@ -847,7 +1050,7 @@
         label.setAttribute('text-anchor', 'middle');
         label.setAttribute('font-size', '12');
         label.setAttribute('font-family', '"Noto Sans JP", sans-serif');
-        label.setAttribute('fill', '#0f172a');
+        label.setAttribute('fill', theme.nodeLabel);
         label.textContent = node.name || node.id;
         group.appendChild(label);
 
@@ -858,7 +1061,7 @@
           voltLabel.setAttribute('y', node.y + NODE_RADIUS + 16);
           voltLabel.setAttribute('text-anchor', 'middle');
           voltLabel.setAttribute('font-size', '11');
-          voltLabel.setAttribute('fill', '#1f2937');
+          voltLabel.setAttribute('fill', theme.voltageLabel);
           voltLabel.textContent = `${formatNumber(voltageValue, 2)} V`;
           group.appendChild(voltLabel);
         }
@@ -879,9 +1082,11 @@
 
     function renderInspector(){
       inspectorBody.innerHTML = '';
+      const theme = getTheme();
       if (!state.selected){
         const msg = document.createElement('div');
         msg.textContent = 'ノードまたはコンポーネントを選択してください。';
+        msg.style.color = theme.inspectorMuted;
         inspectorBody.appendChild(msg);
         return;
       }
@@ -895,16 +1100,23 @@
         const title = document.createElement('div');
         title.textContent = `ノード: ${node.name || node.id}`;
         title.style.fontWeight = '700';
+        title.style.color = theme.inspectorText;
         inspectorBody.appendChild(title);
 
         const nameLabel = document.createElement('label');
         nameLabel.textContent = '名称';
+        nameLabel.style.display = 'flex';
+        nameLabel.style.flexDirection = 'column';
+        nameLabel.style.gap = '6px';
+        nameLabel.style.color = theme.inspectorText;
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.value = node.name || '';
         nameInput.style.padding = '8px';
         nameInput.style.borderRadius = '8px';
-        nameInput.style.border = '1px solid rgba(148,163,184,0.45)';
+        nameInput.style.border = theme.inputBorder;
+        nameInput.style.background = theme.inputBg;
+        nameInput.style.color = theme.inputText;
         nameInput.addEventListener('change', () => {
           node.name = nameInput.value || '';
           render();
@@ -915,15 +1127,16 @@
         const voltageValue = state.solution?.nodeVoltages?.[node.id];
         const voltageLine = document.createElement('div');
         voltageLine.textContent = `電位: ${formatNumber(voltageValue, 2)} V`;
+        voltageLine.style.color = theme.inspectorMuted;
         inspectorBody.appendChild(voltageLine);
 
         const groundBtn = document.createElement('button');
         groundBtn.textContent = 'このノードをグラウンドに設定';
         groundBtn.style.padding = '8px';
         groundBtn.style.borderRadius = '8px';
-        groundBtn.style.border = '1px solid #0ea5e9';
-        groundBtn.style.background = '#0ea5e9';
-        groundBtn.style.color = '#0f172a';
+        groundBtn.style.border = `1px solid ${theme.primaryButtonBorder}`;
+        groundBtn.style.background = theme.primaryButtonBg;
+        groundBtn.style.color = theme.primaryButtonText;
         groundBtn.style.cursor = 'pointer';
         groundBtn.addEventListener('click', () => {
           state.groundNodeId = node.id;
@@ -936,9 +1149,9 @@
         deleteBtn.textContent = 'ノード削除';
         deleteBtn.style.padding = '8px';
         deleteBtn.style.borderRadius = '8px';
-        deleteBtn.style.border = '1px solid #ef4444';
-        deleteBtn.style.background = 'rgba(239,68,68,0.15)';
-        deleteBtn.style.color = '#ef4444';
+        deleteBtn.style.border = `1px solid ${theme.dangerButtonBorder}`;
+        deleteBtn.style.background = theme.dangerButtonBg;
+        deleteBtn.style.color = theme.dangerButtonText;
         deleteBtn.style.cursor = 'pointer';
         deleteBtn.addEventListener('click', () => {
           if (confirm('このノードと接続部品を削除しますか？')){
@@ -964,16 +1177,23 @@
         const header = document.createElement('div');
         header.textContent = `${COMPONENT_TYPES[element.type]?.label || element.type}`;
         header.style.fontWeight = '700';
+        header.style.color = theme.inspectorText;
         inspectorBody.appendChild(header);
 
         const nameLabel = document.createElement('label');
         nameLabel.textContent = '名称';
+        nameLabel.style.display = 'flex';
+        nameLabel.style.flexDirection = 'column';
+        nameLabel.style.gap = '6px';
+        nameLabel.style.color = theme.inspectorText;
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.value = element.name || '';
         nameInput.style.padding = '8px';
         nameInput.style.borderRadius = '8px';
-        nameInput.style.border = '1px solid rgba(148,163,184,0.45)';
+        nameInput.style.border = theme.inputBorder;
+        nameInput.style.background = theme.inputBg;
+        nameInput.style.color = theme.inputText;
         nameInput.addEventListener('change', () => {
           element.name = nameInput.value || '';
           render();
@@ -984,13 +1204,19 @@
         if (element.type === 'resistor' || element.type === 'wire' || element.type === 'ammeter'){
           const resLabel = document.createElement('label');
           resLabel.textContent = '抵抗 (Ω)';
+          resLabel.style.display = 'flex';
+          resLabel.style.flexDirection = 'column';
+          resLabel.style.gap = '6px';
+          resLabel.style.color = theme.inspectorText;
           const resInput = document.createElement('input');
           resInput.type = 'number';
           resInput.step = '0.001';
           resInput.value = element.resistance ?? 1;
           resInput.style.padding = '8px';
           resInput.style.borderRadius = '8px';
-          resInput.style.border = '1px solid rgba(148,163,184,0.45)';
+          resInput.style.border = theme.inputBorder;
+          resInput.style.background = theme.inputBg;
+          resInput.style.color = theme.inputText;
           resInput.addEventListener('change', () => {
             element.resistance = clampResistance(resInput.value, element.resistance ?? 1);
             updateSolution();
@@ -1003,13 +1229,19 @@
         if (element.type === 'power'){
           const voltLabel = document.createElement('label');
           voltLabel.textContent = '電圧 (V)';
+          voltLabel.style.display = 'flex';
+          voltLabel.style.flexDirection = 'column';
+          voltLabel.style.gap = '6px';
+          voltLabel.style.color = theme.inspectorText;
           const voltInput = document.createElement('input');
           voltInput.type = 'number';
           voltInput.step = '0.1';
           voltInput.value = element.voltage ?? 0;
           voltInput.style.padding = '8px';
           voltInput.style.borderRadius = '8px';
-          voltInput.style.border = '1px solid rgba(148,163,184,0.45)';
+          voltInput.style.border = theme.inputBorder;
+          voltInput.style.background = theme.inputBg;
+          voltInput.style.color = theme.inputText;
           voltInput.addEventListener('change', () => {
             element.voltage = clampVoltage(voltInput.value, element.voltage ?? 0);
             updateSolution();
@@ -1020,13 +1252,19 @@
 
           const resLabel = document.createElement('label');
           resLabel.textContent = '内部抵抗 (Ω)';
+          resLabel.style.display = 'flex';
+          resLabel.style.flexDirection = 'column';
+          resLabel.style.gap = '6px';
+          resLabel.style.color = theme.inspectorText;
           const resInput = document.createElement('input');
           resInput.type = 'number';
           resInput.step = '0.01';
           resInput.value = element.resistance ?? 0.5;
           resInput.style.padding = '8px';
           resInput.style.borderRadius = '8px';
-          resInput.style.border = '1px solid rgba(148,163,184,0.45)';
+          resInput.style.border = theme.inputBorder;
+          resInput.style.background = theme.inputBg;
+          resInput.style.color = theme.inputText;
           resInput.addEventListener('change', () => {
             element.resistance = clampResistance(resInput.value, element.resistance ?? 0.5);
             updateSolution();
@@ -1040,25 +1278,30 @@
           const note = document.createElement('div');
           note.textContent = '計器は回路には影響しません。ノード間の実測値を表示します。';
           note.style.fontSize = '12px';
-          note.style.color = '#334155';
+          note.style.color = theme.inspectorMuted;
           inspectorBody.appendChild(note);
         }
 
         const nodesLine = document.createElement('div');
         nodesLine.textContent = `接続: ${(nodeA?.name || element.nodeA)} ↔ ${(nodeB?.name || element.nodeB)}`;
+        nodesLine.style.color = theme.inspectorMuted;
         inspectorBody.appendChild(nodesLine);
 
         const statsList = document.createElement('div');
         statsList.innerHTML = `電圧: <strong>${formatNumber(stat.voltage, 3)} V</strong><br>電流: <strong>${formatNumber(stat.current, 3)} A</strong><br>電力: <strong>${formatNumber(stat.power, 3)} W</strong>`;
+        statsList.style.color = theme.inspectorText;
+        statsList.querySelectorAll('strong').forEach(strong => {
+          strong.style.color = theme.primaryButtonBorder;
+        });
         inspectorBody.appendChild(statsList);
 
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'コンポーネント削除';
         deleteBtn.style.padding = '8px';
         deleteBtn.style.borderRadius = '8px';
-        deleteBtn.style.border = '1px solid #ef4444';
-        deleteBtn.style.background = 'rgba(239,68,68,0.12)';
-        deleteBtn.style.color = '#b91c1c';
+        deleteBtn.style.border = `1px solid ${theme.dangerButtonBorder}`;
+        deleteBtn.style.background = theme.dangerButtonBg;
+        deleteBtn.style.color = theme.dangerButtonText;
         deleteBtn.style.cursor = 'pointer';
         deleteBtn.addEventListener('click', () => {
           if (confirm('このコンポーネントを削除しますか？')){
@@ -1081,15 +1324,30 @@
 
     updateSolution();
     render();
+    syncTheme();
 
     function start(){ /* noop */ }
     function stop(){ /* noop */ }
     function destroy(){
+      while (listeners.length){
+        const dispose = listeners.pop();
+        try { dispose(); } catch {}
+      }
       try {
         if (root.contains(wrapper)) root.removeChild(wrapper);
       } catch {}
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      root.style.padding = originalRootStyle.padding;
+      root.style.margin = originalRootStyle.margin;
+      root.style.background = originalRootStyle.background;
+      root.style.border = originalRootStyle.border;
+      root.style.minHeight = originalRootStyle.minHeight;
+      root.style.display = originalRootStyle.display;
+      root.style.justifyContent = originalRootStyle.justifyContent;
+      root.style.alignItems = originalRootStyle.alignItems;
+      root.style.width = originalRootStyle.width;
+      root.style.maxWidth = originalRootStyle.maxWidth;
     }
 
     return {

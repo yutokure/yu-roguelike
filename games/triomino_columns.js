@@ -507,8 +507,9 @@
         });
       });
 
-      const { grid: mergedGrid, topOut } = settleNewBlocks(baseGrid, newBlocks);
+      const { grid: mergedGrid, topOut, settled } = settleNewBlocks(baseGrid, newBlocks);
       boardState.grid = mergedGrid;
+      if (settled && settled.length) registerLandingEffects(boardState, settled);
       if (topOut) {
         boardState.alive = false;
         boardState.topOut = true;
@@ -532,8 +533,21 @@
       while (true) {
         const { toClear, groupInfo, sparks } = findMatches(boardState.grid);
         if (!toClear.size) break;
+        const effectCells = [];
+        toClear.forEach(key => {
+          const [cx, cy] = key.split(':').map(Number);
+          const cell = boardState.grid[cy]?.[cx];
+          effectCells.push({
+            x: cx,
+            y: cy,
+            color: cell?.color,
+            multi: !!cell?.multi,
+            garbage: !!cell?.garbage,
+          });
+        });
         combo += 1;
         const cleared = applyClear(boardState.grid, toClear);
+        if (effectCells.length) triggerBoardClearEffect(boardState, effectCells, { combo });
         totalCleared += cleared;
         if (sparks.length) {
           sparks.forEach(sp => {
@@ -551,6 +565,9 @@
           }
           if (g.size >= 3) attackMeter += Math.max(0, g.size - 2);
         });
+        if (cleared > 0){
+          boardState.boardPulse = Math.max(boardState.boardPulse, 0.28 + combo * 0.05);
+        }
         applyGravity(boardState.grid);
       }
 
@@ -564,6 +581,81 @@
         attackMeter,
         sparkMarks: Array.from(sparkMarks),
       };
+    }
+
+    function registerLandingEffects(boardState, settled){
+      const seen = new Set();
+      const effects = settled.filter(block => block.y >= HIDDEN_ROWS).map(block => {
+        const key = `${block.x}:${block.y}`;
+        if (seen.has(key)) return null;
+        seen.add(key);
+        return {
+          type: 'landing',
+          x: block.x,
+          y: block.y,
+          color: block.color || '#94a3b8',
+          time: 0,
+          duration: 0.28,
+        };
+      }).filter(Boolean);
+      boardState.effects.push(...effects);
+      if (effects.length) boardState.boardPulse = Math.max(boardState.boardPulse, 0.2);
+    }
+
+    function triggerBoardClearEffect(boardState, cells, meta = {}){
+      const valid = cells.filter(cell => cell.y >= HIDDEN_ROWS);
+      if (!valid.length) return;
+      const comboLevel = Math.max(1, meta.combo || 1);
+      boardState.effects.push({
+        type: 'burst',
+        cells: valid,
+        time: 0,
+        duration: 0.42,
+        combo: comboLevel,
+      });
+      const total = valid.length;
+      if (total){
+        const center = valid.reduce((acc, cell) => {
+          acc.x += cell.x;
+          acc.y += cell.y;
+          return acc;
+        }, { x: 0, y: 0 });
+        const color = meta.color || (comboLevel >= 4 ? 'rgba(250,204,21,0.95)' : comboLevel >= 2 ? 'rgba(96,165,250,0.85)' : 'rgba(148,163,184,0.65)');
+        boardState.effects.push({
+          type: 'shockwave',
+          x: center.x / total,
+          y: center.y / total,
+          time: 0,
+          duration: 0.52,
+          color,
+          strength: Math.min(1.4, 0.65 + comboLevel * 0.22 + Math.min(0.5, total * 0.04)),
+        });
+      }
+    }
+
+    function addBoardFloatingText(boardState, text, opts = {}){
+      const jitterX = opts.jitter ? (Math.random() * 0.6 - 0.3) : 0;
+      const jitterY = opts.jitter ? (Math.random() * 0.4 - 0.2) : 0;
+      boardState.floatTexts.push({
+        text,
+        x: (opts.x ?? COLS / 2 - 0.5) + jitterX,
+        y: (opts.y ?? VISIBLE_ROWS / 3) + jitterY,
+        color: opts.color || '#e2e8f0',
+        time: 0,
+        duration: opts.duration || 1.3,
+      });
+    }
+
+    function updateBoardVisuals(boardState, dt){
+      boardState.boardPulse = Math.max(0, boardState.boardPulse - dt * 1.6);
+      boardState.effects = boardState.effects.filter(effect => {
+        effect.time += dt;
+        return effect.time < effect.duration;
+      });
+      boardState.floatTexts = boardState.floatTexts.filter(text => {
+        text.time += dt;
+        return text.time < text.duration;
+      });
     }
 
     function findMatches(grid){
@@ -782,7 +874,14 @@
 
       if (!topOut && isOverTop(newGrid)) topOut = true;
 
-      return { grid: newGrid, topOut };
+      const settledBlocks = active.map(block => ({
+        x: block.x,
+        y: block.y,
+        color: block.cell.color,
+        multi: !!block.cell.multi,
+      }));
+
+      return { grid: newGrid, topOut, settled: settledBlocks };
     }
 
     function handleAfterClear(boardState, result){
@@ -790,15 +889,18 @@
       if (result.totalCleared > 0) {
         boardState.stats.lines += result.totalCleared;
         awardXp(result.totalCleared * 0.6, { type: 'clear', cells: result.totalCleared, mode: currentMode });
+        addBoardFloatingText(boardState, `${result.totalCleared} CLEAR`, { color: '#cbd5f5', jitter: true, duration: 1.1 });
       }
       if (result.combo >= 2) {
         boardState.stats.combos += 1;
         showInfo(`${boardState.name}: ${result.combo}連鎖!`);
         awardXp(result.combo * 2, { type: 'combo', combo: result.combo });
+        addBoardFloatingText(boardState, `${result.combo}連鎖!`, { color: '#fbbf24', jitter: true, duration: 1.4 });
       }
       if (result.totalSpark > 0) {
         boardState.stats.spark += result.totalSpark;
         showInfo('ラインスパーク!');
+        addBoardFloatingText(boardState, 'SPARK!', { color: '#38bdf8', jitter: true });
         if (boards.length > 1) {
           boards.forEach(other => {
             if (other !== boardState && other.alive) {
@@ -1013,6 +1115,9 @@
         lastAttackAt: 0,
         postSettleTimer: 0,
         pendingSpawn: false,
+        effects: [],
+        floatTexts: [],
+        boardPulse: 0,
       };
     }
 
@@ -1073,6 +1178,7 @@
       infoTimer = Math.max(0, infoTimer - dt);
       if (currentMode === 'VS_CPU') updateVsCpu(dt);
       boards.forEach((board, idx) => {
+        updateBoardVisuals(board, dt);
         if (!board.alive) return;
         if (board.postSettleTimer > 0) {
           board.postSettleTimer -= dt;
@@ -1385,6 +1491,17 @@
       ctx.clip();
       ctx.fillStyle = '#0b1120';
       ctx.fillRect(0,0,width,height);
+      if (board.boardPulse > 0){
+        const glow = Math.min(1, board.boardPulse * 2.1);
+        const grad = ctx.createRadialGradient(width/2, height/2, cellSize * 1.5, width/2, height/2, Math.max(width, height));
+        grad.addColorStop(0, `rgba(59,130,246,${0.18 * glow})`);
+        grad.addColorStop(1, 'rgba(59,130,246,0)');
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,width,height);
+        ctx.restore();
+      }
       // grid
       for (let y = 0; y < VISIBLE_ROWS; y++){
         for (let x = 0; x < COLS; x++){
@@ -1415,6 +1532,7 @@
           ctx.strokeRect(px + 2, py + 2, cellSize - 4, cellSize - 4);
         });
       }
+      drawBoardEffects(board, cellSize);
       ctx.restore();
       ctx.save();
       ctx.translate(left, top);
@@ -1433,6 +1551,76 @@
       ctx.fillStyle = board.alive ? '#e2e8f0' : 'rgba(226,232,240,0.4)';
       ctx.font = '16px "M PLUS Rounded 1c", system-ui';
       ctx.fillText(board.name, left, top - 8);
+    }
+
+    function drawBoardEffects(board, cellSize){
+      board.effects.forEach(effect => {
+        const progress = effect.time / effect.duration;
+        if (progress >= 1) return;
+        if (effect.type === 'burst'){
+          const alpha = 1 - progress;
+          const scale = 1 + progress * 0.4;
+          effect.cells.forEach(cell => {
+            const displayY = cell.y - HIDDEN_ROWS;
+            if (displayY < 0 || displayY >= VISIBLE_ROWS) return;
+            const px = cell.x * cellSize + cellSize / 2;
+            const py = displayY * cellSize + cellSize / 2;
+            const size = cellSize * scale - 4;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = cell.color || (cell.multi ? MULTI_COLOR : '#cbd5f5');
+            ctx.beginPath();
+            ctx.arc(px, py, Math.max(4, size / 2), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          });
+        } else if (effect.type === 'landing'){
+          const displayY = effect.y - HIDDEN_ROWS;
+          if (displayY < 0 || displayY >= VISIBLE_ROWS) return;
+          const px = effect.x * cellSize + cellSize / 2;
+          const py = displayY * cellSize + cellSize / 2;
+          const radius = cellSize * (0.4 + progress * 0.9);
+          ctx.save();
+          ctx.globalAlpha = 1 - progress;
+          ctx.strokeStyle = effect.color || 'rgba(148,197,255,0.85)';
+          ctx.lineWidth = Math.max(1.2, cellSize * 0.12);
+          ctx.beginPath();
+          ctx.arc(px, py, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        } else if (effect.type === 'shockwave'){
+          const displayY = effect.y - HIDDEN_ROWS + 0.5;
+          if (displayY < -0.5 || displayY > VISIBLE_ROWS + 0.5) return;
+          const px = effect.x * cellSize + cellSize / 2;
+          const py = displayY * cellSize;
+          const intensity = effect.strength || 1;
+          const radius = cellSize * (0.85 + progress * 3 * intensity);
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, 1 - progress) * 0.65;
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = effect.color || 'rgba(96,165,250,0.85)';
+          ctx.lineWidth = Math.max(1.4, cellSize * 0.16 * (1 - progress * 0.55));
+          ctx.beginPath();
+          ctx.arc(px, py, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      });
+      board.floatTexts.forEach(text => {
+        const progress = text.time / text.duration;
+        if (progress >= 1) return;
+        const alpha = 1 - progress;
+        const px = (text.x + 0.5) * cellSize;
+        const py = text.y * cellSize - progress * cellSize * 0.8;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.fillStyle = text.color || '#f1f5f9';
+        ctx.font = 'bold 18px "M PLUS Rounded 1c", system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(text.text, px, py);
+        ctx.textAlign = 'start';
+        ctx.restore();
+      });
     }
 
     function drawPanels(board, x, y, cellSize){

@@ -41,6 +41,9 @@
     let totalCleared = 0;
     let maxChain = 0;
     let lastChainCleared = 0;
+    let effects = [];
+    let floatingTexts = [];
+    let boardPulse = 0;
 
     function disableHostRestart(){
       shortcuts?.disableKey('r');
@@ -131,7 +134,10 @@
         current.y += 1;
         dist++;
       }
-      if (dist > 0 && awardXp) awardXp(dist * 0.1, { type:'harddrop' });
+      if (dist > 0){
+        boardPulse = Math.max(boardPulse, 0.22 + Math.min(0.2, dist * 0.02));
+        if (awardXp) awardXp(dist * 0.1, { type:'harddrop' });
+      }
       lockPiece();
     }
 
@@ -143,7 +149,10 @@
     }
 
     function lockPiece(){
+      const lockedCells = [];
+      forEachCurrent(cell => { if (cell.y >= 0) lockedCells.push(cell); });
       placeCurrent();
+      if (lockedCells.length) createLandingBurst(lockedCells);
       applyGravity();
       current = null;
       fallTimer = 0;
@@ -189,6 +198,9 @@
         if (!toClear.length) break;
         chain++;
         let removed = 0;
+        if (toClear.length){
+          triggerClearEffects(toClear, chain);
+        }
         toClear.forEach(group => {
           group.cells.forEach(([cx,cy]) => {
             if (grid[cy][cx] != null){
@@ -202,6 +214,14 @@
         const base = removed * 0.5;
         const mult = 1 + (chain - 1) * 0.5;
         if (awardXp) awardXp(base * mult, { type:'clear', chain, removed });
+        if (removed > 0){
+          boardPulse = Math.max(boardPulse, 0.35 + chain * 0.08);
+          if (chain === 1){
+            addFloatingText('CLEAR!', { color:'#f8fafc', jitter:true });
+          } else {
+            addFloatingText(`${chain}連鎖!`, { color:'#fbbf24', jitter:true });
+          }
+        }
         if (chain >= 2) showChainBadge(chain);
         if (chain > maxChain) maxChain = chain;
         applyGravity();
@@ -277,6 +297,25 @@
         ctx.fillRect(boardBgX, boardBgY, boardBgW, boardBgH);
       }
 
+      if (boardPulse > 0){
+        const glow = Math.min(1, boardPulse * 2.4);
+        const grad = ctx.createRadialGradient(
+          boardBgX + boardBgW / 2,
+          boardBgY + boardBgH / 2,
+          Math.max(32, cell * 1.5),
+          boardBgX + boardBgW / 2,
+          boardBgY + boardBgH / 2,
+          Math.max(boardBgW, boardBgH)
+        );
+        grad.addColorStop(0, `rgba(59,130,246,${0.18 * glow})`);
+        grad.addColorStop(1, 'rgba(59,130,246,0)');
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = grad;
+        ctx.fillRect(boardBgX, boardBgY, boardBgW, boardBgH);
+        ctx.restore();
+      }
+
       ctx.strokeStyle = 'rgba(148,163,184,0.18)';
       ctx.lineWidth = 1;
       for (let y=0;y<=ROWS;y++){
@@ -298,12 +337,14 @@
           drawBlob(ox + x*cell, oy + y*cell, cell, COLORS[color]);
         }
       }
+      drawEffects(ox, oy, cell);
       if (current){
         forEachCurrent(({x,y,color}) => {
           if (y < 0) return;
-          drawBlob(ox + x*cell, oy + y*cell, cell, COLORS[color]);
+          drawBlob(ox + x*cell, oy + y*cell, cell, COLORS[color], { outline:'#0f172a' });
         });
       }
+      drawFloatingTexts(ox, oy, cell);
       // info labels
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '600 16px "Segoe UI", system-ui, sans-serif';
@@ -374,13 +415,19 @@
       }
     }
 
-    function drawBlob(px, py, size, color){
+    function drawBlob(px, py, size, color, opts = {}){
       const r = Math.floor(size * 0.18);
+      const outline = opts.outline;
       ctx.fillStyle = color;
       if (ctx.roundRect){
         ctx.beginPath();
         ctx.roundRect(px + 2, py + 2, size - 4, size - 4, r);
         ctx.fill();
+        if (outline){
+          ctx.strokeStyle = outline;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
         ctx.fillStyle = 'rgba(255,255,255,0.18)';
         ctx.beginPath();
         ctx.roundRect(px + 4, py + 4, size * 0.4, size * 0.4, r);
@@ -390,6 +437,140 @@
         ctx.fillStyle = 'rgba(255,255,255,0.18)';
         ctx.fillRect(px + 4, py + 4, size * 0.4, size * 0.4);
       }
+    }
+
+    function drawEffects(ox, oy, cell){
+      effects.forEach(effect => {
+        const progress = effect.time / effect.duration;
+        if (progress >= 1) return;
+        ctx.save();
+        if (effect.type === 'burst'){
+          const alpha = 1 - progress;
+          const scale = 1 + progress * 0.5;
+          const size = cell * scale;
+          const px = ox + effect.x * cell + cell / 2 - size / 2;
+          const py = oy + effect.y * cell + cell / 2 - size / 2;
+          ctx.globalAlpha = alpha;
+          drawBlob(px, py, size, effect.color, { outline:'rgba(15,23,42,0.4)' });
+        } else if (effect.type === 'landing'){
+          const alpha = 1 - progress;
+          const radius = cell * (0.45 + progress * 0.8);
+          const cx = ox + effect.x * cell + cell / 2;
+          const cy = oy + effect.y * cell + cell / 2;
+          ctx.globalAlpha = alpha * 0.9;
+          ctx.strokeStyle = effect.color;
+          ctx.lineWidth = Math.max(1.5, cell * 0.08);
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (effect.type === 'shockwave'){
+          const alpha = Math.max(0, 1 - progress);
+          const cx = ox + (effect.x + 0.5) * cell;
+          const cy = oy + (effect.y + 0.5) * cell;
+          const intensity = effect.strength || 1;
+          const radius = cell * (0.9 + progress * 3.2 * intensity);
+          ctx.globalAlpha = alpha * 0.65;
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = effect.color || 'rgba(96,165,250,0.9)';
+          ctx.lineWidth = Math.max(1.4, cell * 0.16 * (1 + intensity * 0.5 - progress));
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+    }
+
+    function drawFloatingTexts(ox, oy, cell){
+      floatingTexts.forEach(text => {
+        const progress = text.time / text.duration;
+        if (progress >= 1) return;
+        const alpha = 1 - progress;
+        const px = ox + text.x * cell + cell / 2;
+        const py = oy + text.y * cell - progress * cell * 1.3;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.fillStyle = text.color || '#f1f5f9';
+        ctx.font = 'bold 18px "Segoe UI", system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(text.label, px, py);
+        ctx.textAlign = 'start';
+        ctx.restore();
+      });
+    }
+
+    function triggerClearEffects(groups, chain){
+      groups.forEach(group => {
+        group.cells.forEach(([x,y]) => {
+          effects.push({
+            type: 'burst',
+            x,
+            y,
+            color: COLORS[group.color],
+            time: 0,
+            duration: 0.42,
+          });
+        });
+        const comboLevel = Math.max(1, chain || 1);
+        if (comboLevel >= 2 || group.cells.length >= 6){
+          const count = group.cells.length;
+          const sum = group.cells.reduce((acc, cell) => {
+            acc.x += cell[0];
+            acc.y += cell[1];
+            return acc;
+          }, { x: 0, y: 0 });
+          const cx = sum.x / count;
+          const cy = sum.y / count;
+          effects.push({
+            type: 'shockwave',
+            x: cx,
+            y: cy,
+            color: COLORS[group.color],
+            time: 0,
+            duration: 0.5,
+            strength: Math.min(1.5, 0.7 + comboLevel * 0.25 + Math.min(0.6, count * 0.04)),
+          });
+        }
+      });
+    }
+
+    function createLandingBurst(cells){
+      cells.forEach(cell => {
+        effects.push({
+          type: 'landing',
+          x: cell.x,
+          y: cell.y,
+          color: 'rgba(148, 197, 255, 0.85)',
+          time: 0,
+          duration: 0.32,
+        });
+      });
+      boardPulse = Math.max(boardPulse, 0.18);
+    }
+
+    function addFloatingText(label, opts = {}){
+      const jitterX = opts.jitter ? (Math.random() * 0.8 - 0.4) : 0;
+      const jitterY = opts.jitter ? (Math.random() * 0.6 - 0.3) : 0;
+      floatingTexts.push({
+        label,
+        x: (opts.x ?? COLS / 2 - 0.5) + jitterX,
+        y: (opts.y ?? ROWS / 2) + jitterY,
+        color: opts.color || '#f8fafc',
+        duration: opts.duration || 1.2,
+        time: 0,
+      });
+    }
+
+    function updateEffects(dt){
+      boardPulse = Math.max(0, boardPulse - dt * 1.5);
+      effects = effects.filter(effect => {
+        effect.time += dt;
+        return effect.time < effect.duration;
+      });
+      floatingTexts = floatingTexts.filter(text => {
+        text.time += dt;
+        return text.time < text.duration;
+      });
     }
 
     function showChainBadge(chain){
@@ -418,6 +599,9 @@
       totalCleared = 0;
       maxChain = 0;
       lastChainCleared = 0;
+      effects = [];
+      floatingTexts = [];
+      boardPulse = 0;
       ended = false;
       refillQueue();
       spawn();
@@ -430,6 +614,7 @@
       const dt = Math.min(0.12, (ts - lastTime) / 1000);
       lastTime = ts;
       step(dt);
+      updateEffects(dt);
       draw();
       raf = requestAnimationFrame(loop);
     }

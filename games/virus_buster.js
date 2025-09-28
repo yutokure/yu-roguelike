@@ -54,6 +54,9 @@
     let chainFlashTimer = 0;
     let stageClearTimer = 0;
     let capsuleIdSeq = 1;
+    let effects = [];
+    let floatingTexts = [];
+    let boardPulse = 0;
 
     function disableHostRestart(){
       shortcuts?.disableKey('r');
@@ -106,6 +109,9 @@
       chainFlashTimer = 0;
       stageClearTimer = 0;
       capsuleIdSeq = 1;
+      effects = [];
+      floatingTexts = [];
+      boardPulse = 0;
       clearGrid();
       placeViruses(config.startViruses);
       nextQueue = [];
@@ -215,16 +221,23 @@
         current.y += 1;
         dist++;
       }
-      if (dist > 0 && awardXp) awardXp(dist * 0.2, { type: 'harddrop' });
+      if (dist > 0){
+        boardPulse = Math.max(boardPulse, 0.24 + Math.min(0.16, dist * 0.02));
+        if (awardXp) awardXp(dist * 0.2, { type: 'harddrop' });
+        addFloatingText('DROP!', { color: '#bae6fd', jitter: true, duration: 0.9, y: 1.5 });
+      }
       lockPiece();
     }
 
     function lockPiece(){
       if (!current) return;
       let hasVisible = false;
+      const landingCells = [];
       forEachCurrent(cell => {
         if (cell.y >= 0){
           hasVisible = true;
+          const palette = COLORS[cell.color % COLORS.length];
+          landingCells.push({ x: cell.x, y: cell.y, color: palette.fill });
         }
       });
       if (!hasVisible){
@@ -258,6 +271,7 @@
           grid[ny][nx].link = dirPartner;
         }
       });
+      if (landingCells.length) createLandingEffect(landingCells);
       current = null;
       fallTimer = 0;
       lockTimer = 0;
@@ -320,6 +334,7 @@
         const matches = findMatches();
         if (!matches.length) break;
         chain++;
+        triggerClearEffects(matches, { chain });
         let removedThis = 0;
         let virusRemovedThis = 0;
         matches.forEach(({ x, y }) => {
@@ -347,6 +362,8 @@
           const base = removedThis * 0.6 + virusRemovedThis * 3;
           const multiplier = 1 + (chain - 1) * 0.5;
           xpGain += base * multiplier;
+          boardPulse = Math.max(boardPulse, 0.26 + chain * 0.06);
+          if (chain >= 2) addFloatingText(`${chain} Chain!`, { color: '#fbbf24', jitter: true, y: 1.2, duration: 1.4 });
         }
       }
       if (xpGain > 0 && awardXp){
@@ -357,6 +374,7 @@
         totalVirusCleared += totalVirusRemoved;
         chainFlash = { chain, removed: totalVirusRemoved };
         chainFlashTimer = 2.0;
+        addFloatingText(`Virus x${totalVirusRemoved}`, { color: '#f97316', jitter: true, duration: 1.4, y: 2.0 });
       }
       if (remainingViruses <= 0 && !ended){
         stageClearTimer = 2.5;
@@ -483,6 +501,7 @@
       const newVirusCount = Math.min(COLS * ROWS - 4, config.startViruses + (level - 1) * config.virusStep);
       stageClearTimer = 2.5;
       if (awardXp) awardXp(25 + (level - 1) * 5, { type: 'stage' });
+      addFloatingText('STAGE CLEAR!', { color: '#34d399', jitter: true, duration: 2.0, y: 2.4 });
       clearGrid();
       placeViruses(newVirusCount);
       nextQueue = [];
@@ -523,6 +542,7 @@
       const dt = Math.min(0.1, (now - lastTime) / 1000);
       lastTime = now;
       update(dt);
+      updateEffects(dt);
       draw();
       raf = requestAnimationFrame(tick);
     }
@@ -583,6 +603,17 @@
       ctx.translate(ox, oy);
       ctx.fillStyle = 'rgba(15,23,42,0.85)';
       ctx.fillRect(-6, -6, gridW + 12, gridH + 12);
+      if (boardPulse > 0){
+        const glow = Math.min(1, boardPulse * 2.0);
+        const grad = ctx.createRadialGradient(gridW / 2, gridH / 2, cellSize * 1.2, gridW / 2, gridH / 2, Math.max(gridW, gridH));
+        grad.addColorStop(0, `rgba(56,189,248,${0.18 * glow})`);
+        grad.addColorStop(1, 'rgba(56,189,248,0)');
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = grad;
+        ctx.fillRect(-6, -6, gridW + 12, gridH + 12);
+        ctx.restore();
+      }
       for (let y = 0; y < ROWS; y++){
         for (let x = 0; x < COLS; x++){
           ctx.strokeStyle = 'rgba(148,163,184,0.12)';
@@ -611,6 +642,7 @@
           drawCell(x, y, cell, cellSize);
         }
       }
+      drawEffects(ox, oy, cellSize);
       // draw current
       if (current && !ended){
         const offsets = getOffsets(current.dir);
@@ -630,6 +662,7 @@
       ctx.restore();
 
       drawSidePanel(margin + gridW + 20, oy, W - (margin + gridW + 40));
+      drawFloatingTexts(ox, oy, cellSize);
 
       if (ended){
         ctx.fillStyle = 'rgba(8,11,19,0.75)';
@@ -741,6 +774,144 @@
       ctx.font = '11px "M PLUS Rounded 1c", system-ui';
       ctx.fillText('操作: ←→移動 / ↓ソフトドロップ / ↑orX回転 / Spaceハードドロップ / Rリセット', 16, H - y - 40);
       ctx.restore();
+    }
+
+    function createLandingEffect(cells){
+      cells.forEach(cell => {
+        effects.push({
+          type: 'landing',
+          x: cell.x,
+          y: cell.y,
+          color: cell.color || '#38bdf8',
+          time: 0,
+          duration: 0.28,
+        });
+      });
+    }
+
+    function triggerClearEffects(matches, meta = {}){
+      const burstCells = [];
+      matches.forEach(({ x, y }) => {
+        if (y < 0 || y >= ROWS) return;
+        const cell = grid[y]?.[x];
+        if (!cell) return;
+        const palette = COLORS[(cell.color ?? 0) % COLORS.length];
+        burstCells.push({ x, y, color: palette.fill });
+      });
+      if (!burstCells.length) return;
+      effects.push({ type: 'burst', cells: burstCells, time: 0, duration: 0.4 });
+      const count = burstCells.length;
+      if (count){
+        const center = burstCells.reduce((acc, cell) => {
+          acc.x += cell.x;
+          acc.y += cell.y;
+          return acc;
+        }, { x: 0, y: 0 });
+        const chainLevel = Math.max(1, meta.chain || 1);
+        const color = chainLevel >= 3 ? 'rgba(34,197,94,0.9)' : chainLevel === 2 ? 'rgba(96,165,250,0.85)' : 'rgba(248,250,252,0.75)';
+        effects.push({
+          type: 'shockwave',
+          x: center.x / count,
+          y: center.y / count,
+          time: 0,
+          duration: 0.48,
+          color,
+          strength: Math.min(1.4, 0.6 + chainLevel * 0.22 + Math.min(0.45, count * 0.035)),
+        });
+      }
+    }
+
+    function addFloatingText(text, opts = {}){
+      const jitterX = opts.jitter ? (Math.random() * 0.6 - 0.3) : 0;
+      const jitterY = opts.jitter ? (Math.random() * 0.4 - 0.2) : 0;
+      floatingTexts.push({
+        text,
+        x: (opts.x ?? COLS / 2 - 0.5) + jitterX,
+        y: (opts.y ?? 1.2) + jitterY,
+        color: opts.color || '#f8fafc',
+        duration: opts.duration || 1.2,
+        time: 0,
+      });
+    }
+
+    function drawEffects(ox, oy, cellSize){
+      effects.forEach(effect => {
+        const progress = effect.time / effect.duration;
+        if (progress >= 1) return;
+        if (effect.type === 'burst'){
+          const alpha = 1 - progress;
+          const scale = 1 + progress * 0.4;
+          effect.cells.forEach(cell => {
+            const px = ox + cell.x * cellSize + cellSize / 2;
+            const py = oy + cell.y * cellSize + cellSize / 2;
+            const radius = Math.max(4, (cellSize - 4) * scale / 2);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = cell.color || '#fde68a';
+            ctx.beginPath();
+            ctx.arc(px, py, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          });
+        } else if (effect.type === 'landing'){
+          const alpha = 1 - progress;
+          const px = ox + effect.x * cellSize + cellSize / 2;
+          const py = oy + effect.y * cellSize + cellSize / 2;
+          const radius = cellSize * (0.35 + progress * 0.7);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = effect.color || 'rgba(148,197,255,0.9)';
+          ctx.lineWidth = Math.max(1.2, cellSize * 0.12);
+          ctx.beginPath();
+          ctx.arc(px, py, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        } else if (effect.type === 'shockwave'){
+          const alpha = Math.max(0, 1 - progress);
+          const px = ox + (effect.x + 0.5) * cellSize;
+          const py = oy + (effect.y + 0.5) * cellSize;
+          const radius = cellSize * (0.9 + progress * 3 * (effect.strength || 1));
+          ctx.save();
+          ctx.globalAlpha = alpha * 0.6;
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = effect.color || 'rgba(96,165,250,0.8)';
+          ctx.lineWidth = Math.max(1.4, cellSize * 0.16 * (1 - progress * 0.5));
+          ctx.beginPath();
+          ctx.arc(px, py, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      });
+    }
+
+    function drawFloatingTexts(ox, oy, cellSize){
+      floatingTexts.forEach(text => {
+        const progress = text.time / text.duration;
+        if (progress >= 1) return;
+        const alpha = 1 - progress;
+        const px = ox + (text.x + 0.5) * cellSize;
+        const py = oy + text.y * cellSize - progress * cellSize * 0.9;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.fillStyle = text.color;
+        ctx.font = 'bold 18px "M PLUS Rounded 1c", system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(text.text, px, py);
+        ctx.textAlign = 'start';
+        ctx.restore();
+      });
+    }
+
+    function updateEffects(dt){
+      boardPulse = Math.max(0, boardPulse - dt * 1.6);
+      effects = effects.filter(effect => {
+        effect.time += dt;
+        return effect.time < effect.duration;
+      });
+      floatingTexts = floatingTexts.filter(text => {
+        text.time += dt;
+        return text.time < text.duration;
+      });
     }
 
     function keydown(e){

@@ -1,7 +1,7 @@
 (function(){
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const MIN_RESISTANCE = 1e-4;
-  const MAX_RESISTANCE = 1e9;
+  const MAX_RESISTANCE = 1e12;
   const DEFAULT_BOARD = { width: 760, height: 520 };
   const NODE_RADIUS = 14;
   const GRID_SIZE = 32;
@@ -126,11 +126,35 @@
       description: 'オーム抵抗',
       defaultProps: () => ({ resistance: 100 })
     },
+    capacitor: {
+      id: 'capacitor',
+      label: 'コンデンサ',
+      description: '容量性リアクタンス素子',
+      defaultProps: () => ({ capacitance: 1e-6 })
+    },
+    inductor: {
+      id: 'inductor',
+      label: 'インダクタ',
+      description: '誘導性リアクタンス素子',
+      defaultProps: () => ({ inductance: 1e-3 })
+    },
     power: {
       id: 'power',
       label: '電源',
       description: '理想電圧源＋内部抵抗',
       defaultProps: () => ({ voltage: 12, resistance: 0.5 })
+    },
+    ac_source: {
+      id: 'ac_source',
+      label: 'AC電源',
+      description: '正弦波電圧源（RMS設定）',
+      defaultProps: () => ({ amplitude: 5, phase: 0, resistance: 0.2 })
+    },
+    current_source: {
+      id: 'current_source',
+      label: '電流源',
+      description: '理想定電流源',
+      defaultProps: () => ({ current: 0.05, phase: 0 })
     },
     ammeter: {
       id: 'ammeter',
@@ -173,8 +197,140 @@
   function formatNumber(value, digits = 3){
     if (!Number.isFinite(value)) return '—';
     const abs = Math.abs(value);
-    if (abs >= 1000 || abs < 0.01) return value.toExponential(2);
+    if (abs >= 1000 || abs < 0.0001) return value.toExponential(2);
     return value.toFixed(digits);
+  }
+
+  function clampPhase(value, fallback = 0){
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    let phase = num % 360;
+    if (phase > 180) phase -= 360;
+    if (phase <= -180) phase += 360;
+    return phase;
+  }
+
+  function clampCapacitance(value, fallback = 1e-6){
+    const num = Number(value);
+    if (!Number.isFinite(num) || num === 0) return fallback;
+    const abs = Math.abs(num);
+    if (abs < 1e-12) return Math.sign(num) * 1e-12;
+    if (abs > 1) return Math.sign(num) * 1;
+    return num;
+  }
+
+  function clampInductance(value, fallback = 1e-3){
+    const num = Number(value);
+    if (!Number.isFinite(num) || num === 0) return fallback;
+    const abs = Math.abs(num);
+    if (abs < 1e-9) return Math.sign(num) * 1e-9;
+    if (abs > 10) return Math.sign(num) * 10;
+    return num;
+  }
+
+  function clampCurrent(value, fallback = 0.01){
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    if (num > 1000) return 1000;
+    if (num < -1000) return -1000;
+    return num;
+  }
+
+  function clampFrequency(value, fallback = 50){
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    if (num < 0) return 0;
+    if (num > 1e6) return 1e6;
+    return num;
+  }
+
+  function isComplex(value){
+    return value && typeof value === 'object' && Number.isFinite(value.re) && Number.isFinite(value.im);
+  }
+
+  function toComplex(value){
+    if (isComplex(value)) return { re: value.re, im: value.im };
+    const num = Number(value);
+    if (!Number.isFinite(num)) return { re: 0, im: 0 };
+    return { re: num, im: 0 };
+  }
+
+  function complexAdd(a, b){
+    const x = toComplex(a);
+    const y = toComplex(b);
+    return { re: x.re + y.re, im: x.im + y.im };
+  }
+
+  function complexSub(a, b){
+    const x = toComplex(a);
+    const y = toComplex(b);
+    return { re: x.re - y.re, im: x.im - y.im };
+  }
+
+  function complexMul(a, b){
+    const x = toComplex(a);
+    const y = toComplex(b);
+    return {
+      re: x.re * y.re - x.im * y.im,
+      im: x.re * y.im + x.im * y.re
+    };
+  }
+
+  function complexDiv(a, b){
+    const x = toComplex(a);
+    const y = toComplex(b);
+    const denom = y.re * y.re + y.im * y.im;
+    if (denom === 0) return { re: 0, im: 0 };
+    return {
+      re: (x.re * y.re + x.im * y.im) / denom,
+      im: (x.im * y.re - x.re * y.im) / denom
+    };
+  }
+
+  function complexConj(value){
+    const x = toComplex(value);
+    return { re: x.re, im: -x.im };
+  }
+
+  function complexAbs(value){
+    const x = toComplex(value);
+    return Math.hypot(x.re, x.im);
+  }
+
+  function complexArgDeg(value){
+    const x = toComplex(value);
+    return Math.atan2(x.im, x.re) * 180 / Math.PI;
+  }
+
+  function complexIsZero(value, epsilon = 1e-12){
+    return complexAbs(value) < epsilon;
+  }
+
+  function polarToComplex(magnitude, phaseDeg){
+    const mag = Number(magnitude) || 0;
+    const rad = (Number(phaseDeg) || 0) * Math.PI / 180;
+    return { re: mag * Math.cos(rad), im: mag * Math.sin(rad) };
+  }
+
+  function formatQuantity(value, unit, mode, digits = 3){
+    if (mode === 'ac' && isComplex(value)){
+      const mag = complexAbs(value);
+      const phase = complexArgDeg(value);
+      return `${formatNumber(mag, digits)} ${unit} ∠${formatNumber(phase, 1)}°`;
+    }
+    const real = isComplex(value) ? value.re : value;
+    return `${formatNumber(real, digits)} ${unit}`;
+  }
+
+  function formatPowerQuantity(value, mode, digits = 3){
+    if (mode === 'ac' && isComplex(value)){
+      const real = value.re;
+      const reactive = value.im;
+      const apparent = complexAbs(value);
+      return `${formatNumber(real, digits)} W / ${formatNumber(reactive, digits)} var (|S|=${formatNumber(apparent, digits)} VA)`;
+    }
+    const real = isComplex(value) ? value.re : value;
+    return `${formatNumber(real, digits)} W`;
   }
 
   function createId(prefix){
@@ -185,15 +341,20 @@
     return a < b ? { key: `${a}|${b}`, sign: 1 } : { key: `${b}|${a}`, sign: -1 };
   }
 
-  function solveCircuit(nodes, elements, groundId){
+  function solveCircuit(nodes, elements, groundId, options = {}){
+    const mode = options.mode === 'ac' ? 'ac' : 'dc';
+    const frequencyHz = clampFrequency(options.frequencyHz ?? 50, 50);
+    const omega = 2 * Math.PI * frequencyHz;
+    const isAC = mode === 'ac';
     const nodeIds = nodes.map(n => n.id);
     if (nodeIds.length === 0) {
       return {
         nodeVoltages: {},
         elementStats: {},
         branchCurrents: {},
-        totals: { delivered: 0, dissipated: 0 },
-        warnings: ['ノードがありません']
+        totals: { delivered: { re: 0, im: 0 }, dissipated: { re: 0, im: 0 } },
+        warnings: ['ノードがありません'],
+        diagnostics: []
       };
     }
 
@@ -206,92 +367,132 @@
     const indexMap = Object.create(null);
     activeNodes.forEach((id, idx) => { indexMap[id] = idx; });
 
-    const matrix = Array.from({ length: size }, () => Array(size).fill(0));
-    const vector = Array(size).fill(0);
+    const matrix = Array.from({ length: size }, () => Array.from({ length: size }, () => ({ re: 0, im: 0 })));
+    const vector = Array.from({ length: size }, () => ({ re: 0, im: 0 }));
 
     const warnings = [];
+    const diagnostics = [];
 
     function addConductance(nodeA, nodeB, conductance){
-      if (!Number.isFinite(conductance) || Math.abs(conductance) < 1e-12) return;
+      const g = toComplex(conductance);
+      if (complexIsZero(g)) return;
       const isGroundA = nodeA === groundId;
       const isGroundB = nodeB === groundId;
       if (!isGroundA){
         const i = indexMap[nodeA];
         if (i !== undefined) {
-          matrix[i][i] += conductance;
+          matrix[i][i] = complexAdd(matrix[i][i], g);
         }
       }
       if (!isGroundB){
         const j = indexMap[nodeB];
         if (j !== undefined) {
-          matrix[j][j] += conductance;
+          matrix[j][j] = complexAdd(matrix[j][j], g);
         }
       }
       if (!isGroundA && !isGroundB){
         const i = indexMap[nodeA];
         const j = indexMap[nodeB];
         if (i !== undefined && j !== undefined) {
-          matrix[i][j] -= conductance;
-          matrix[j][i] -= conductance;
+          matrix[i][j] = complexSub(matrix[i][j], g);
+          matrix[j][i] = complexSub(matrix[j][i], g);
         }
       }
     }
 
     function addCurrentSource(posNode, negNode, current){
-      if (!Number.isFinite(current) || Math.abs(current) < 1e-12) return;
+      const value = toComplex(current);
+      if (complexIsZero(value)) return;
       if (posNode !== groundId){
         const idx = indexMap[posNode];
-        if (idx !== undefined) vector[idx] += current;
+        if (idx !== undefined) vector[idx] = complexAdd(vector[idx], value);
       }
       if (negNode !== groundId){
         const idx = indexMap[negNode];
-        if (idx !== undefined) vector[idx] -= current;
+        if (idx !== undefined) vector[idx] = complexSub(vector[idx], value);
       }
     }
 
     const branchCurrents = Object.create(null);
 
     function accumulateBranch(nodeA, nodeB, currentFromAtoB){
-      if (!Number.isFinite(currentFromAtoB)) return;
+      const value = toComplex(currentFromAtoB);
+      if (complexIsZero(value)) return;
       const { key, sign } = canonicalPair(nodeA, nodeB);
-      branchCurrents[key] = (branchCurrents[key] || 0) + currentFromAtoB * sign;
+      const prev = branchCurrents[key] || { re: 0, im: 0 };
+      branchCurrents[key] = complexAdd(prev, complexMul(value, { re: sign, im: 0 }));
     }
 
     const conductiveElements = [];
+    const connectionCount = Object.create(null);
 
     elements.forEach(el => {
       if (!el || !el.nodeA || !el.nodeB) return;
       if (el.type === 'voltmeter' || el.type === 'wattmeter') return;
+      if (el.type === 'capacitor' && (!isAC || omega === 0)) return;
       conductiveElements.push(el);
+      connectionCount[el.nodeA] = (connectionCount[el.nodeA] || 0) + 1;
+      connectionCount[el.nodeB] = (connectionCount[el.nodeB] || 0) + 1;
     });
 
     conductiveElements.forEach(el => {
       const { nodeA, nodeB } = el;
       if (!nodeIds.includes(nodeA) || !nodeIds.includes(nodeB)) return;
-      if (el.type === 'power') {
-        const voltage = clampVoltage(el.voltage ?? 0, 0);
+      if (el.type === 'power' || el.type === 'ac_source') {
         const resistance = clampResistance(el.resistance ?? 0.5, 0.5);
-        const conductance = 1 / Math.abs(resistance);
+        const conductance = resistance === 0 ? 0 : 1 / Math.abs(resistance);
         addConductance(nodeA, nodeB, conductance);
-        const current = voltage / resistance;
+        let sourceVoltage = 0;
+        if (el.type === 'ac_source'){
+          const amplitude = Number(el.amplitude ?? 0);
+          const phase = clampPhase(el.phase ?? 0, 0);
+          sourceVoltage = polarToComplex(amplitude, phase);
+        } else {
+          sourceVoltage = toComplex(clampVoltage(el.voltage ?? 0, 0));
+        }
+        const current = resistance === 0 ? { re: 0, im: 0 } : complexDiv(sourceVoltage, resistance);
         addCurrentSource(nodeA, nodeB, current);
+      } else if (el.type === 'current_source'){
+        const currentAmp = clampCurrent(el.current ?? 0.01, 0.01);
+        const phase = clampPhase(el.phase ?? 0, 0);
+        const value = isAC ? polarToComplex(currentAmp, phase) : { re: currentAmp, im: 0 };
+        addCurrentSource(nodeA, nodeB, value);
       } else {
-        const res = clampResistance(el.resistance ?? 1, 1);
-        const conductance = 1 / Math.abs(res);
-        addConductance(nodeA, nodeB, conductance);
+        let admittance = null;
+        if (el.type === 'capacitor'){
+          const capacitance = clampCapacitance(el.capacitance ?? 1e-6, 1e-6);
+          if (isAC && omega > 0){
+            admittance = { re: 0, im: omega * capacitance };
+          } else {
+            admittance = { re: 0, im: 0 };
+          }
+        } else if (el.type === 'inductor'){
+          const inductance = clampInductance(el.inductance ?? 1e-3, 1e-3);
+          if (isAC && omega > 0){
+            admittance = { re: 0, im: -1 / (omega * inductance) };
+          } else {
+            const res = clampResistance(MIN_RESISTANCE, MIN_RESISTANCE);
+            admittance = { re: 1 / res, im: 0 };
+          }
+        } else {
+          const res = clampResistance(el.resistance ?? 1, 1);
+          const conductance = 1 / Math.abs(res);
+          admittance = { re: conductance, im: 0 };
+        }
+        if (admittance) addConductance(nodeA, nodeB, admittance);
       }
     });
 
-    let solution = Array(size).fill(0);
+    let solution = Array(size).fill({ re: 0, im: 0 });
     if (size > 0){
       try {
-        const A = matrix.map(row => row.slice());
-        const b = vector.slice();
+        const A = matrix.map(row => row.map(cell => ({ re: cell.re, im: cell.im })));
+        const b = vector.map(cell => ({ re: cell.re, im: cell.im }));
         for (let col = 0; col < size; col++){
           let pivot = col;
-          let maxAbs = Math.abs(A[pivot][col]);
+          let maxAbs = complexAbs(A[pivot][col]);
           for (let row = col + 1; row < size; row++){
-            const val = Math.abs(A[row][col]);
+            const val = complexAbs(A[row][col]);
             if (val > maxAbs){
               maxAbs = val;
               pivot = row;
@@ -306,17 +507,17 @@
           }
           const pivotVal = A[col][col];
           for (let j = col; j < size; j++){
-            A[col][j] /= pivotVal;
+            A[col][j] = complexDiv(A[col][j], pivotVal);
           }
-          b[col] /= pivotVal;
+          b[col] = complexDiv(b[col], pivotVal);
           for (let row = 0; row < size; row++){
             if (row === col) continue;
             const factor = A[row][col];
-            if (Math.abs(factor) < 1e-12) continue;
+            if (complexAbs(factor) < 1e-12) continue;
             for (let j = col; j < size; j++){
-              A[row][j] -= factor * A[col][j];
+              A[row][j] = complexSub(A[row][j], complexMul(factor, A[col][j]));
             }
-            b[row] -= factor * b[col];
+            b[row] = complexSub(b[row], complexMul(factor, b[col]));
           }
         }
         solution = b;
@@ -327,58 +528,106 @@
     }
 
     const nodeVoltages = Object.create(null);
-    nodeVoltages[groundId] = 0;
+    nodeVoltages[groundId] = { re: 0, im: 0 };
     activeNodes.forEach((id, idx) => {
       nodeVoltages[id] = solution[idx];
     });
 
     const elementStats = Object.create(null);
-    let totalDelivered = 0;
-    let totalDissipated = 0;
+    let totalDelivered = { re: 0, im: 0 };
+    let totalDissipated = { re: 0, im: 0 };
 
     elements.forEach(el => {
       if (!el || !el.nodeA || !el.nodeB) return;
-      const va = nodeVoltages[el.nodeA] ?? 0;
-      const vb = nodeVoltages[el.nodeB] ?? 0;
-      const voltage = va - vb;
-      let current = 0;
-      let power = 0;
-      if (el.type === 'power'){
-        const voltageRating = clampVoltage(el.voltage ?? 0, 0);
+      const va = nodeVoltages[el.nodeA] ?? { re: 0, im: 0 };
+      const vb = nodeVoltages[el.nodeB] ?? { re: 0, im: 0 };
+      const voltage = complexSub(va, vb);
+      let current = { re: 0, im: 0 };
+      let power = { re: 0, im: 0 };
+      if (el.type === 'power' || el.type === 'ac_source'){
         const resistance = clampResistance(el.resistance ?? 0.5, 0.5);
-        current = (voltageRating - voltage) / resistance;
-        power = voltageRating * current;
+        const rating = el.type === 'ac_source'
+          ? polarToComplex(Number(el.amplitude ?? 0), clampPhase(el.phase ?? 0, 0))
+          : toComplex(clampVoltage(el.voltage ?? 0, 0));
+        current = complexDiv(complexSub(rating, voltage), resistance);
+        power = complexMul(voltage, complexConj(current));
         accumulateBranch(el.nodeA, el.nodeB, current);
-        if (power > 0){
-          totalDelivered += power;
-        }
       } else if (el.type === 'resistor' || el.type === 'wire' || el.type === 'ammeter'){
         const resistance = clampResistance(el.resistance ?? 1, 1);
-        current = voltage / resistance;
-        power = voltage * current;
+        current = complexDiv(voltage, resistance);
+        power = complexMul(voltage, complexConj(current));
         accumulateBranch(el.nodeA, el.nodeB, current);
-        if (power > 0){
-          totalDissipated += power;
+      } else if (el.type === 'capacitor'){
+        const capacitance = clampCapacitance(el.capacitance ?? 1e-6, 1e-6);
+        if (isAC && omega > 0){
+          const admittance = { re: 0, im: omega * capacitance };
+          current = complexMul(voltage, admittance);
+          power = complexMul(voltage, complexConj(current));
         }
+        accumulateBranch(el.nodeA, el.nodeB, current);
+      } else if (el.type === 'inductor'){
+        const inductance = clampInductance(el.inductance ?? 1e-3, 1e-3);
+        if (isAC && omega > 0){
+          const admittance = { re: 0, im: -1 / (omega * inductance) };
+          current = complexMul(voltage, admittance);
+          power = complexMul(voltage, complexConj(current));
+        } else {
+          current = complexDiv(voltage, MIN_RESISTANCE);
+          power = complexMul(voltage, complexConj(current));
+        }
+        accumulateBranch(el.nodeA, el.nodeB, current);
+      } else if (el.type === 'current_source'){
+        const currentAmp = clampCurrent(el.current ?? 0.01, 0.01);
+        const phase = clampPhase(el.phase ?? 0, 0);
+        current = isAC ? polarToComplex(currentAmp, phase) : { re: currentAmp, im: 0 };
+        power = complexMul(voltage, complexConj(current));
+        accumulateBranch(el.nodeA, el.nodeB, current);
       } else if (el.type === 'voltmeter' || el.type === 'wattmeter'){
         const { key, sign } = canonicalPair(el.nodeA, el.nodeB);
-        const stored = branchCurrents[key] || 0;
-        current = stored * sign;
-        power = voltage * current;
+        const stored = branchCurrents[key] || { re: 0, im: 0 };
+        current = complexMul(stored, { re: sign, im: 0 });
+        power = complexMul(voltage, complexConj(current));
       }
       elementStats[el.id] = {
         voltage,
         current,
         power
       };
+
+      const realPower = power.re || 0;
+      if (realPower > 0){
+        totalDissipated = complexAdd(totalDissipated, power);
+      } else if (realPower < 0){
+        totalDelivered = complexAdd(totalDelivered, { re: -power.re, im: -power.im });
+      }
     });
+
+    nodeIds.forEach(id => {
+      if (id === groundId) return;
+      if (!connectionCount[id]){
+        const node = nodes.find(n => n.id === id);
+        diagnostics.push(`ノード「${node?.name || id}」は非導電要素により孤立しています`);
+      }
+    });
+
+    if (!isAC){
+      const hasCapacitor = elements.some(el => el?.type === 'capacitor');
+      const hasInductor = elements.some(el => el?.type === 'inductor');
+      if (hasCapacitor) diagnostics.push('DC解析ではコンデンサが開放状態として扱われます');
+      if (hasInductor) diagnostics.push('DC解析ではインダクタはほぼ短絡として扱われます');
+    } else if (frequencyHz === 0){
+      diagnostics.push('AC解析の周波数が0Hzのため、結果はDCと同一です');
+    }
 
     return {
       nodeVoltages,
       elementStats,
       branchCurrents,
       totals: { delivered: totalDelivered, dissipated: totalDissipated },
-      warnings
+      warnings,
+      diagnostics,
+      mode,
+      frequencyHz
     };
   }
 
@@ -394,6 +643,9 @@
       pendingNodes: [],
       solution: null,
       warnings: [],
+      diagnostics: [],
+      analysisMode: 'dc',
+      frequencyHz: 50,
       sessionXp: 0
     };
 
@@ -487,7 +739,7 @@
     title.style.letterSpacing = '0.03em';
 
     const subtitle = document.createElement('div');
-    subtitle.textContent = '電源・抵抗・計器をつないで直流回路を解析します。';
+    subtitle.textContent = '電源・受動素子・計器をつないでDC/AC回路をリアルタイム解析します。';
     subtitle.style.fontSize = '13px';
     subtitle.style.opacity = '0.85';
 
@@ -539,6 +791,116 @@
       toolGrid.appendChild(btn);
     });
 
+    const analysisBox = document.createElement('div');
+    analysisBox.style.background = 'rgba(148,163,184,0.18)';
+    analysisBox.style.border = '1px solid rgba(148,163,184,0.35)';
+    analysisBox.style.borderRadius = '12px';
+    analysisBox.style.padding = '12px';
+    analysisBox.style.fontSize = '12px';
+    analysisBox.style.display = 'flex';
+    analysisBox.style.flexDirection = 'column';
+    analysisBox.style.gap = '8px';
+
+    const analysisHeader = document.createElement('div');
+    analysisHeader.textContent = '解析モード';
+    analysisHeader.style.fontWeight = '700';
+    analysisHeader.style.fontSize = '13px';
+
+    const modeButtonWrap = document.createElement('div');
+    modeButtonWrap.style.display = 'grid';
+    modeButtonWrap.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+    modeButtonWrap.style.gap = '8px';
+
+    const modeButtons = [];
+
+    function makeModeButton(label, mode){
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.dataset.mode = mode;
+      btn.style.padding = '8px';
+      btn.style.borderRadius = '10px';
+      btn.style.border = '1px solid rgba(148,163,184,0.35)';
+      btn.style.background = 'rgba(30,64,175,0.25)';
+      btn.style.color = '#e0f2fe';
+      btn.style.cursor = 'pointer';
+      btn.style.fontWeight = '600';
+      btn.addEventListener('click', () => {
+        state.analysisMode = mode;
+        updateSolution();
+        render();
+      });
+      modeButtons.push(btn);
+      return btn;
+    }
+
+    const dcBtn = makeModeButton('DC解析', 'dc');
+    const acBtn = makeModeButton('AC解析', 'ac');
+    modeButtonWrap.appendChild(dcBtn);
+    modeButtonWrap.appendChild(acBtn);
+
+    const freqWrapper = document.createElement('div');
+    freqWrapper.style.display = 'flex';
+    freqWrapper.style.flexDirection = 'column';
+    freqWrapper.style.gap = '6px';
+
+    const freqLabel = document.createElement('div');
+    freqLabel.textContent = '解析周波数 (Hz)';
+
+    const freqInputs = document.createElement('div');
+    freqInputs.style.display = 'grid';
+    freqInputs.style.gridTemplateColumns = 'minmax(0, 1fr) 80px';
+    freqInputs.style.gap = '8px';
+    freqInputs.style.alignItems = 'center';
+
+    const freqSlider = document.createElement('input');
+    freqSlider.type = 'range';
+    freqSlider.min = '0';
+    freqSlider.max = '100000';
+    freqSlider.step = '1';
+
+    const freqNumber = document.createElement('input');
+    freqNumber.type = 'number';
+    freqNumber.min = '0';
+    freqNumber.max = '1000000';
+    freqNumber.step = '1';
+    freqNumber.style.padding = '6px';
+    freqNumber.style.borderRadius = '8px';
+    freqNumber.style.border = '1px solid rgba(148,163,184,0.45)';
+    freqNumber.style.background = 'rgba(15,23,42,0.05)';
+    freqNumber.style.color = '#0f172a';
+
+    function updateFrequency(value){
+      const clamped = clampFrequency(value, state.frequencyHz);
+      state.frequencyHz = clamped;
+      freqSlider.value = String(clamped);
+      freqNumber.value = String(clamped);
+      updateSolution();
+      render();
+    }
+
+    freqSlider.addEventListener('input', () => {
+      updateFrequency(Number(freqSlider.value));
+    });
+    freqNumber.addEventListener('change', () => {
+      updateFrequency(Number(freqNumber.value));
+    });
+
+    freqInputs.appendChild(freqSlider);
+    freqInputs.appendChild(freqNumber);
+
+    const freqHint = document.createElement('div');
+    freqHint.textContent = 'AC解析で有効。0Hz〜1MHzまで設定可能。';
+    freqHint.style.fontSize = '11px';
+    freqHint.style.opacity = '0.8';
+
+    freqWrapper.appendChild(freqLabel);
+    freqWrapper.appendChild(freqInputs);
+    freqWrapper.appendChild(freqHint);
+
+    analysisBox.appendChild(analysisHeader);
+    analysisBox.appendChild(modeButtonWrap);
+    analysisBox.appendChild(freqWrapper);
+
     const statusBox = document.createElement('div');
     statusBox.style.background = 'rgba(148,163,184,0.18)';
     statusBox.style.border = '1px solid rgba(148,163,184,0.35)';
@@ -565,6 +927,7 @@
     leftPanel.appendChild(title);
     leftPanel.appendChild(subtitle);
     leftPanel.appendChild(toolSection);
+    leftPanel.appendChild(analysisBox);
     leftPanel.appendChild(statusBox);
     leftPanel.appendChild(summaryBox);
 
@@ -633,12 +996,20 @@
       title.style.color = theme.leftPanelText;
       subtitle.style.color = theme.leftPanelText;
       toolHeader.style.color = theme.leftPanelText;
+      analysisBox.style.background = theme.statusBg;
+      analysisBox.style.border = theme.statusBorder;
+      analysisHeader.style.color = theme.leftPanelText;
+      freqLabel.style.color = theme.leftPanelText;
+      freqHint.style.color = theme.leftPanelText;
       statusBox.style.background = theme.statusBg;
       statusBox.style.border = theme.statusBorder;
       statusBox.style.color = theme.leftPanelText;
       summaryBox.style.background = theme.summaryBg;
       summaryBox.style.border = theme.summaryBorder;
       summaryBox.style.color = theme.leftPanelText;
+      freqNumber.style.border = theme.inputBorder;
+      freqNumber.style.background = theme.inputBg;
+      freqNumber.style.color = theme.inputText;
       workspaceWrap.style.background = theme.workspaceBg;
       workspaceWrap.style.border = theme.workspaceBorder;
       workspaceWrap.style.boxShadow = theme.workspaceShadow;
@@ -656,6 +1027,7 @@
       inspectorTitle.style.color = theme.inspectorText;
       inspectorBody.style.color = theme.inspectorText;
       renderToolbarState();
+      renderAnalysisControls();
     };
 
     applyTheme(currentTheme);
@@ -811,9 +1183,13 @@
     }
 
     function updateSolution(){
-      const result = solveCircuit(state.nodes, state.elements, state.groundNodeId);
+      const result = solveCircuit(state.nodes, state.elements, state.groundNodeId, {
+        mode: state.analysisMode,
+        frequencyHz: state.frequencyHz
+      });
       state.solution = result;
       state.warnings = result.warnings;
+      state.diagnostics = result.diagnostics || [];
     }
 
     function deleteElement(id){
@@ -849,11 +1225,51 @@
       });
     }
 
+    function renderAnalysisControls(){
+      const theme = getTheme();
+      modeButtons.forEach(btn => {
+        const active = btn.dataset.mode === state.analysisMode;
+        btn.style.border = active ? theme.toolButtonActiveBorder : theme.toolButtonBorder;
+        btn.style.background = active ? theme.toolButtonActiveBg : theme.toolButtonBg;
+        btn.style.color = active ? theme.toolButtonActiveText : theme.toolButtonText;
+        btn.style.boxShadow = active ? '0 0 0 1px rgba(59,130,246,0.45)' : 'none';
+      });
+      const isAC = state.analysisMode === 'ac';
+      freqWrapper.style.display = 'flex';
+      freqWrapper.style.opacity = isAC ? '1' : '0.45';
+      freqSlider.disabled = !isAC;
+      freqNumber.disabled = !isAC;
+      freqSlider.style.opacity = isAC ? '1' : '0.4';
+      freqNumber.style.opacity = isAC ? '1' : '0.6';
+      freqLabel.style.opacity = isAC ? '1' : '0.6';
+      freqHint.style.display = 'block';
+      freqHint.textContent = isAC
+        ? 'AC解析で有効。0Hz〜1MHzまで設定可能。'
+        : 'AC解析を有効化すると周波数を調整できます。';
+      freqSlider.value = String(state.frequencyHz);
+      freqNumber.value = String(state.frequencyHz);
+    }
+
     function renderStatus(){
       statusBox.innerHTML = '';
+
+      const analysisLine = document.createElement('div');
+      if (state.analysisMode === 'ac'){
+        analysisLine.textContent = `解析モード: AC (${formatNumber(state.frequencyHz, 2)} Hz)`;
+      } else {
+        analysisLine.textContent = '解析モード: DC';
+      }
+      statusBox.appendChild(analysisLine);
+
+      if (state.analysisMode === 'ac' && state.frequencyHz > 0){
+        const omegaLine = document.createElement('div');
+        omegaLine.textContent = `角周波数: ${formatNumber(state.frequencyHz * 2 * Math.PI, 2)} rad/s`;
+        statusBox.appendChild(omegaLine);
+      }
+
       const activeTool = state.pendingTool;
       const lineTool = document.createElement('div');
-      lineTool.textContent = `モード: ${activeTool === 'select' ? '選択' : activeTool === 'add-node' ? 'ノード追加' : (COMPONENT_TYPES[activeTool]?.label || activeTool)}`;
+      lineTool.textContent = `操作ツール: ${activeTool === 'select' ? '選択' : activeTool === 'add-node' ? 'ノード追加' : (COMPONENT_TYPES[activeTool]?.label || activeTool)}`;
       statusBox.appendChild(lineTool);
 
       if (state.pendingNodes.length === 1){
@@ -879,6 +1295,19 @@
           statusBox.appendChild(warn);
         });
       }
+
+      if (state.diagnostics && state.diagnostics.length){
+        const diagHeader = document.createElement('div');
+        diagHeader.textContent = '診断:';
+        diagHeader.style.marginTop = '4px';
+        diagHeader.style.fontWeight = '600';
+        statusBox.appendChild(diagHeader);
+        state.diagnostics.forEach(msg => {
+          const line = document.createElement('div');
+          line.textContent = `・${msg}`;
+          statusBox.appendChild(line);
+        });
+      }
     }
 
     function renderSummary(){
@@ -890,13 +1319,51 @@
         summaryBox.appendChild(msg);
         return;
       }
-      const { totals, nodeVoltages } = solution;
+      const { totals, nodeVoltages, branchCurrents } = solution;
       const deliveredLine = document.createElement('div');
-      deliveredLine.textContent = `供給電力: ${formatNumber(totals.delivered, 2)} W`;
+      deliveredLine.textContent = `供給電力: ${formatPowerQuantity(totals.delivered, state.analysisMode, 2)}`;
       summaryBox.appendChild(deliveredLine);
       const dissipatedLine = document.createElement('div');
-      dissipatedLine.textContent = `消費電力: ${formatNumber(totals.dissipated, 2)} W`;
+      dissipatedLine.textContent = `消費電力: ${formatPowerQuantity(totals.dissipated, state.analysisMode, 2)}`;
       summaryBox.appendChild(dissipatedLine);
+
+      if (state.analysisMode === 'ac'){
+        const deliveredApparent = complexAbs(totals.delivered || { re: 0, im: 0 });
+        const pf = deliveredApparent > 0 ? (totals.delivered.re || 0) / deliveredApparent : 1;
+        const pfLine = document.createElement('div');
+        pfLine.textContent = `力率: ${formatNumber(pf, 3)}`;
+        summaryBox.appendChild(pfLine);
+      }
+
+      let maxVoltage = 0;
+      let maxVoltageNode = null;
+      state.nodes.forEach(node => {
+        const value = nodeVoltages[node.id];
+        if (!value) return;
+        const mag = complexAbs(value);
+        if (mag > maxVoltage){
+          maxVoltage = mag;
+          maxVoltageNode = node;
+        }
+      });
+
+      if (maxVoltageNode){
+        const maxLine = document.createElement('div');
+        maxLine.textContent = `最大ノード電位: ${(maxVoltageNode.name || maxVoltageNode.id)} = ${formatQuantity(nodeVoltages[maxVoltageNode.id], state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3)}`;
+        summaryBox.appendChild(maxLine);
+      }
+
+      if (branchCurrents){
+        let peakCurrent = 0;
+        Object.values(branchCurrents).forEach(val => {
+          const mag = complexAbs(val);
+          if (mag > peakCurrent) peakCurrent = mag;
+        });
+        const currentLine = document.createElement('div');
+        currentLine.textContent = `最大枝電流: ${formatNumber(peakCurrent, 3)} ${state.analysisMode === 'ac' ? 'Arms' : 'A'}`;
+        summaryBox.appendChild(currentLine);
+      }
+
       const xpLine = document.createElement('div');
       xpLine.textContent = `セッションXP: ${state.sessionXp}`;
       summaryBox.appendChild(xpLine);
@@ -907,7 +1374,7 @@
         const value = nodeVoltages[node.id];
         if (value === undefined) return;
         const entry = document.createElement('div');
-        entry.textContent = `- ${(node.name || node.id)}: ${formatNumber(value, 2)} V`;
+        entry.textContent = `- ${(node.name || node.id)}: ${formatQuantity(value, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3)}`;
         entry.style.paddingLeft = '8px';
         summaryBox.appendChild(entry);
       });
@@ -940,9 +1407,13 @@
         let color = theme.textPrimary;
         if (el.type === 'resistor') color = '#f97316';
         else if (el.type === 'power') color = '#4f46e5';
+        else if (el.type === 'ac_source') color = '#c026d3';
         else if (el.type === 'ammeter') color = '#14b8a6';
         else if (el.type === 'voltmeter') color = '#0ea5e9';
         else if (el.type === 'wattmeter') color = '#ec4899';
+        else if (el.type === 'capacitor') color = '#22d3ee';
+        else if (el.type === 'inductor') color = '#8b5cf6';
+        else if (el.type === 'current_source') color = '#22c55e';
         if (state.selected && state.selected.type === 'element' && state.selected.id === el.id){
           line.setAttribute('stroke', '#22d3ee');
           line.setAttribute('stroke-width', 8);
@@ -976,14 +1447,36 @@
         if (el.type === 'resistor' || el.type === 'wire' || el.type === 'ammeter'){
           line1 = `${el.name || el.type}  ${formatNumber(el.resistance ?? 0, 2)}Ω`;
         } else if (el.type === 'power'){
-          line1 = `${el.name || '電源'}  ${formatNumber(el.voltage ?? 0, 2)}V`; 
+          line1 = `${el.name || '電源'}  ${formatNumber(el.voltage ?? 0, 2)}V`;
+        } else if (el.type === 'ac_source'){
+          const amplitude = formatNumber(el.amplitude ?? 0, 2);
+          const phase = formatNumber(clampPhase(el.phase ?? 0, 0), 1);
+          line1 = `${el.name || 'AC電源'}  ${amplitude}Vrms ∠${phase}°`;
+        } else if (el.type === 'capacitor'){
+          line1 = `${el.name || 'コンデンサ'}  ${formatNumber(el.capacitance ?? 0, 2)}F`;
+        } else if (el.type === 'inductor'){
+          line1 = `${el.name || 'インダクタ'}  ${formatNumber(el.inductance ?? 0, 2)}H`;
+        } else if (el.type === 'current_source'){
+          const amplitude = formatNumber(el.current ?? 0, 2);
+          let phaseText = '';
+          if (state.analysisMode === 'ac'){
+            phaseText = ` ∠${formatNumber(clampPhase(el.phase ?? 0, 0), 1)}°`;
+          }
+          line1 = `${el.name || '電流源'}  ${amplitude}A${phaseText}`;
         } else if (el.type === 'voltmeter'){
           line1 = `${el.name || '電圧計'}`;
         } else if (el.type === 'wattmeter'){
           line1 = `${el.name || '電力計'}`;
         }
-        const line2 = `V:${formatNumber(stat.voltage, 2)}V  I:${formatNumber(stat.current, 2)}A`;
-        const line3 = `P:${formatNumber(stat.power, 2)}W`;
+        const voltageUnit = state.analysisMode === 'ac' ? 'Vrms' : 'V';
+        const currentUnit = state.analysisMode === 'ac' ? 'Arms' : 'A';
+        const line2 = `V:${formatQuantity(stat.voltage, voltageUnit, state.analysisMode, 2)}  I:${formatQuantity(stat.current, currentUnit, state.analysisMode, 2)}`;
+        const realPower = isComplex(stat.power) ? stat.power.re : (stat.power ?? 0);
+        const reactivePower = isComplex(stat.power) ? stat.power.im : 0;
+        let line3 = `P:${formatNumber(realPower, 2)}W`;
+        if (state.analysisMode === 'ac'){
+          line3 = `P:${formatNumber(realPower, 2)}W  Q:${formatNumber(reactivePower, 2)}var`;
+        }
 
         const textLine1 = document.createElementNS(SVG_NS, 'tspan');
         textLine1.setAttribute('x', midX);
@@ -1055,14 +1548,14 @@
         group.appendChild(label);
 
         const voltageValue = voltages[node.id];
-        if (Number.isFinite(voltageValue)){
+        if (voltageValue !== undefined){
           const voltLabel = document.createElementNS(SVG_NS, 'text');
           voltLabel.setAttribute('x', node.x);
           voltLabel.setAttribute('y', node.y + NODE_RADIUS + 16);
           voltLabel.setAttribute('text-anchor', 'middle');
           voltLabel.setAttribute('font-size', '11');
           voltLabel.setAttribute('fill', theme.voltageLabel);
-          voltLabel.textContent = `${formatNumber(voltageValue, 2)} V`;
+          voltLabel.textContent = formatQuantity(voltageValue, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 2);
           group.appendChild(voltLabel);
         }
 
@@ -1126,7 +1619,7 @@
 
         const voltageValue = state.solution?.nodeVoltages?.[node.id];
         const voltageLine = document.createElement('div');
-        voltageLine.textContent = `電位: ${formatNumber(voltageValue, 2)} V`;
+        voltageLine.textContent = `電位: ${formatQuantity(voltageValue || { re: 0, im: 0 }, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3)}`;
         voltageLine.style.color = theme.inspectorMuted;
         inspectorBody.appendChild(voltageLine);
 
@@ -1274,6 +1767,204 @@
           inspectorBody.appendChild(resLabel);
         }
 
+        if (element.type === 'ac_source'){
+          const ampLabel = document.createElement('label');
+          ampLabel.textContent = '電圧（RMS, V）';
+          ampLabel.style.display = 'flex';
+          ampLabel.style.flexDirection = 'column';
+          ampLabel.style.gap = '6px';
+          ampLabel.style.color = theme.inspectorText;
+          const ampInput = document.createElement('input');
+          ampInput.type = 'number';
+          ampInput.step = '0.1';
+          ampInput.value = element.amplitude ?? 0;
+          ampInput.style.padding = '8px';
+          ampInput.style.borderRadius = '8px';
+          ampInput.style.border = theme.inputBorder;
+          ampInput.style.background = theme.inputBg;
+          ampInput.style.color = theme.inputText;
+          ampInput.addEventListener('change', () => {
+            const val = Number(ampInput.value);
+            element.amplitude = Number.isFinite(val) ? Math.max(0, val) : (element.amplitude ?? 0);
+            updateSolution();
+            render();
+          });
+          ampLabel.appendChild(ampInput);
+          inspectorBody.appendChild(ampLabel);
+
+          const phaseLabel = document.createElement('label');
+          phaseLabel.textContent = '位相 (°)';
+          phaseLabel.style.display = 'flex';
+          phaseLabel.style.flexDirection = 'column';
+          phaseLabel.style.gap = '6px';
+          phaseLabel.style.color = theme.inspectorText;
+          const phaseInput = document.createElement('input');
+          phaseInput.type = 'number';
+          phaseInput.step = '1';
+          phaseInput.value = clampPhase(element.phase ?? 0, 0);
+          phaseInput.style.padding = '8px';
+          phaseInput.style.borderRadius = '8px';
+          phaseInput.style.border = theme.inputBorder;
+          phaseInput.style.background = theme.inputBg;
+          phaseInput.style.color = theme.inputText;
+          phaseInput.addEventListener('change', () => {
+            element.phase = clampPhase(phaseInput.value, element.phase ?? 0);
+            updateSolution();
+            render();
+          });
+          phaseLabel.appendChild(phaseInput);
+          inspectorBody.appendChild(phaseLabel);
+
+          const resLabel = document.createElement('label');
+          resLabel.textContent = '内部抵抗 (Ω)';
+          resLabel.style.display = 'flex';
+          resLabel.style.flexDirection = 'column';
+          resLabel.style.gap = '6px';
+          resLabel.style.color = theme.inspectorText;
+          const resInput = document.createElement('input');
+          resInput.type = 'number';
+          resInput.step = '0.01';
+          resInput.value = element.resistance ?? 0.2;
+          resInput.style.padding = '8px';
+          resInput.style.borderRadius = '8px';
+          resInput.style.border = theme.inputBorder;
+          resInput.style.background = theme.inputBg;
+          resInput.style.color = theme.inputText;
+          resInput.addEventListener('change', () => {
+            element.resistance = clampResistance(resInput.value, element.resistance ?? 0.2);
+            updateSolution();
+            render();
+          });
+          resLabel.appendChild(resInput);
+          inspectorBody.appendChild(resLabel);
+        }
+
+        if (element.type === 'capacitor'){
+          const capLabel = document.createElement('label');
+          capLabel.textContent = '容量 (F)';
+          capLabel.style.display = 'flex';
+          capLabel.style.flexDirection = 'column';
+          capLabel.style.gap = '6px';
+          capLabel.style.color = theme.inspectorText;
+          const capInput = document.createElement('input');
+          capInput.type = 'number';
+          capInput.step = '1e-9';
+          capInput.value = element.capacitance ?? 1e-6;
+          capInput.style.padding = '8px';
+          capInput.style.borderRadius = '8px';
+          capInput.style.border = theme.inputBorder;
+          capInput.style.background = theme.inputBg;
+          capInput.style.color = theme.inputText;
+          capInput.addEventListener('change', () => {
+            element.capacitance = clampCapacitance(capInput.value, element.capacitance ?? 1e-6);
+            updateSolution();
+            render();
+          });
+          capLabel.appendChild(capInput);
+          inspectorBody.appendChild(capLabel);
+
+          const freq = state.solution?.frequencyHz ?? state.frequencyHz;
+          if (state.analysisMode === 'ac' && freq > 0){
+            const omega = 2 * Math.PI * freq;
+            const capacitance = clampCapacitance(element.capacitance ?? 1e-6, 1e-6);
+            const reactance = -1 / (omega * capacitance);
+            const reactLine = document.createElement('div');
+            reactLine.textContent = Number.isFinite(reactance)
+              ? `リアクタンス Xc: ${formatNumber(reactance, 3)} Ω`
+              : 'リアクタンス Xc: ∞ Ω';
+            reactLine.style.color = theme.inspectorMuted;
+            inspectorBody.appendChild(reactLine);
+          }
+        }
+
+        if (element.type === 'inductor'){
+          const indLabel = document.createElement('label');
+          indLabel.textContent = 'インダクタンス (H)';
+          indLabel.style.display = 'flex';
+          indLabel.style.flexDirection = 'column';
+          indLabel.style.gap = '6px';
+          indLabel.style.color = theme.inspectorText;
+          const indInput = document.createElement('input');
+          indInput.type = 'number';
+          indInput.step = '1e-6';
+          indInput.value = element.inductance ?? 1e-3;
+          indInput.style.padding = '8px';
+          indInput.style.borderRadius = '8px';
+          indInput.style.border = theme.inputBorder;
+          indInput.style.background = theme.inputBg;
+          indInput.style.color = theme.inputText;
+          indInput.addEventListener('change', () => {
+            element.inductance = clampInductance(indInput.value, element.inductance ?? 1e-3);
+            updateSolution();
+            render();
+          });
+          indLabel.appendChild(indInput);
+          inspectorBody.appendChild(indLabel);
+
+          const freq = state.solution?.frequencyHz ?? state.frequencyHz;
+          if (state.analysisMode === 'ac' && freq > 0){
+            const omega = 2 * Math.PI * freq;
+            const inductance = clampInductance(element.inductance ?? 1e-3, 1e-3);
+            const reactance = omega * inductance;
+            const reactLine = document.createElement('div');
+            reactLine.textContent = Number.isFinite(reactance)
+              ? `リアクタンス Xl: ${formatNumber(reactance, 3)} Ω`
+              : 'リアクタンス Xl: —';
+            reactLine.style.color = theme.inspectorMuted;
+            inspectorBody.appendChild(reactLine);
+          }
+        }
+
+        if (element.type === 'current_source'){
+          const curLabel = document.createElement('label');
+          curLabel.textContent = '電流 (A)';
+          curLabel.style.display = 'flex';
+          curLabel.style.flexDirection = 'column';
+          curLabel.style.gap = '6px';
+          curLabel.style.color = theme.inspectorText;
+          const curInput = document.createElement('input');
+          curInput.type = 'number';
+          curInput.step = '0.001';
+          curInput.value = element.current ?? 0.05;
+          curInput.style.padding = '8px';
+          curInput.style.borderRadius = '8px';
+          curInput.style.border = theme.inputBorder;
+          curInput.style.background = theme.inputBg;
+          curInput.style.color = theme.inputText;
+          curInput.addEventListener('change', () => {
+            element.current = clampCurrent(curInput.value, element.current ?? 0.05);
+            updateSolution();
+            render();
+          });
+          curLabel.appendChild(curInput);
+          inspectorBody.appendChild(curLabel);
+
+          if (state.analysisMode === 'ac'){
+            const phaseLabel = document.createElement('label');
+            phaseLabel.textContent = '位相 (°)';
+            phaseLabel.style.display = 'flex';
+            phaseLabel.style.flexDirection = 'column';
+            phaseLabel.style.gap = '6px';
+            phaseLabel.style.color = theme.inspectorText;
+            const phaseInput = document.createElement('input');
+            phaseInput.type = 'number';
+            phaseInput.step = '1';
+            phaseInput.value = clampPhase(element.phase ?? 0, 0);
+            phaseInput.style.padding = '8px';
+            phaseInput.style.borderRadius = '8px';
+            phaseInput.style.border = theme.inputBorder;
+            phaseInput.style.background = theme.inputBg;
+            phaseInput.style.color = theme.inputText;
+            phaseInput.addEventListener('change', () => {
+              element.phase = clampPhase(phaseInput.value, element.phase ?? 0);
+              updateSolution();
+              render();
+            });
+            phaseLabel.appendChild(phaseInput);
+            inspectorBody.appendChild(phaseLabel);
+          }
+        }
+
         if (element.type === 'voltmeter' || element.type === 'wattmeter'){
           const note = document.createElement('div');
           note.textContent = '計器は回路には影響しません。ノード間の実測値を表示します。';
@@ -1288,7 +1979,10 @@
         inspectorBody.appendChild(nodesLine);
 
         const statsList = document.createElement('div');
-        statsList.innerHTML = `電圧: <strong>${formatNumber(stat.voltage, 3)} V</strong><br>電流: <strong>${formatNumber(stat.current, 3)} A</strong><br>電力: <strong>${formatNumber(stat.power, 3)} W</strong>`;
+        const voltageText = formatQuantity(stat.voltage, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3);
+        const currentText = formatQuantity(stat.current, state.analysisMode === 'ac' ? 'Arms' : 'A', state.analysisMode, 3);
+        const powerText = formatPowerQuantity(stat.power, state.analysisMode, 3);
+        statsList.innerHTML = `電圧: <strong>${voltageText}</strong><br>電流: <strong>${currentText}</strong><br>電力: <strong>${powerText}</strong>`;
         statsList.style.color = theme.inspectorText;
         statsList.querySelectorAll('strong').forEach(strong => {
           strong.style.color = theme.primaryButtonBorder;
@@ -1316,6 +2010,7 @@
 
     function render(){
       renderToolbarState();
+      renderAnalysisControls();
       renderStatus();
       renderSummary();
       drawBoard();
@@ -1363,7 +2058,7 @@
   window.registerMiniGame({
     id: 'circuit_simulator',
     name: '電気回路シミュレータ',
-    description: 'DC回路を構成して電圧・電流・電力をリアルタイム計測するトイ系シミュレータ',
+    description: 'DC/AC回路を構成して電圧・電流・電力・力率をリアルタイム解析するトイ系シミュレータ',
     category: 'トイ',
     version: '0.1.0',
     author: 'mod',

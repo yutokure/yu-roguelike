@@ -29,8 +29,8 @@
     const rb=(pb>>16)&0xff, gb=(pb>>8)&0xff, bb=pb&0xff;
     const r=Math.round(ra+(rb-ra)*t);
     const g=Math.round(ga+(gb-ga)*t);
-    const b=Math.round(ba+(bb-ba)*t);
-    return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+    const blue=Math.round(ba+(bb-ba)*t);
+    return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${blue.toString(16).padStart(2,'0')}`;
   }
 
   function algorithm(ctx){

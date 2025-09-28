@@ -9,8 +9,8 @@
     const rb = (pb >> 16) & 0xff, gb = (pb >> 8) & 0xff, bb = pb & 0xff;
     const r = Math.round(lerp(ra, rb, t));
     const g = Math.round(lerp(ga, gb, t));
-    const b = Math.round(lerp(ba, bb, t));
-    return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+    const blue = Math.round(lerp(ba, bb, t));
+    return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${blue.toString(16).padStart(2,'0')}`;
   }
 
   function algorithm(ctx){

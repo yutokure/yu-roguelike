@@ -39,7 +39,97 @@
     fontFamily: '"Segoe UI", "Yu Gothic", sans-serif'
   };
 
+  const BASE_STROKE_COLOR = DEFAULT_STYLE.stroke;
+  const BASE_TEXT_COLOR = DEFAULT_STYLE.textColor;
+
   const pointerCaptureOptions = { passive: false };
+
+  const COLOR_THEMES = {
+    light: {
+      overlay: 'linear-gradient(135deg, rgba(148,163,184,0.12), rgba(15,23,42,0.4))',
+      shellBg: '#f8fafc',
+      shellBorder: '1px solid rgba(148,163,184,0.35)',
+      titleBg: '#ffffff',
+      titleBorder: '1px solid rgba(148,163,184,0.25)',
+      primaryText: '#0f172a',
+      secondaryText: '#475569',
+      actionButtonBg: '#e2e8f0',
+      actionButtonBorder: '1px solid rgba(148,163,184,0.4)',
+      actionButtonText: '#0f172a',
+      panelBg: '#f1f5f9',
+      panelDivider: '1px solid rgba(148,163,184,0.25)',
+      paletteButtonBg: '#ffffff',
+      paletteButtonText: '#0f172a',
+      paletteButtonBorder: '1px solid rgba(148,163,184,0.4)',
+      paletteButtonActiveBg: '#dbeafe',
+      paletteButtonActiveBorder: '1px solid rgba(59,130,246,0.6)',
+      paletteButtonActiveText: '#1e3a8a',
+      canvasWrapBg: '#e2e8f0',
+      canvasBg: '#f8fafc',
+      propertiesBg: '#f8fafc',
+      footerBg: '#ffffff',
+      footerBorder: '1px solid rgba(148,163,184,0.25)',
+      inputBg: '#ffffff',
+      inputBorder: '1px solid rgba(148,163,184,0.4)',
+      inputText: '#0f172a',
+      toggleText: '#0f172a',
+      exportBg: '#ffffff',
+      exportText: '#0f172a',
+      exportHoverBg: 'rgba(59,130,246,0.12)',
+      xpText: '#0f172a'
+    },
+    dark: {
+      overlay: 'radial-gradient(circle at top, rgba(30,41,59,0.85), rgba(15,23,42,0.95))',
+      shellBg: 'rgba(15,23,42,0.96)',
+      shellBorder: '1px solid rgba(148,163,184,0.3)',
+      titleBg: 'rgba(15,23,42,0.92)',
+      titleBorder: '1px solid rgba(71,85,105,0.7)',
+      primaryText: '#e2e8f0',
+      secondaryText: '#cbd5f5',
+      actionButtonBg: 'rgba(148,163,184,0.18)',
+      actionButtonBorder: '1px solid rgba(148,163,184,0.4)',
+      actionButtonText: '#f8fafc',
+      panelBg: 'rgba(15,23,42,0.82)',
+      panelDivider: '1px solid rgba(71,85,105,0.65)',
+      paletteButtonBg: 'rgba(30,41,59,0.75)',
+      paletteButtonText: '#e2e8f0',
+      paletteButtonBorder: '1px solid rgba(100,116,139,0.6)',
+      paletteButtonActiveBg: 'rgba(59,130,246,0.38)',
+      paletteButtonActiveBorder: '1px solid rgba(96,165,250,0.7)',
+      paletteButtonActiveText: '#e0f2fe',
+      canvasWrapBg: 'rgba(15,23,42,0.75)',
+      canvasBg: '#0f172a',
+      propertiesBg: 'rgba(15,23,42,0.82)',
+      footerBg: 'rgba(15,23,42,0.92)',
+      footerBorder: '1px solid rgba(71,85,105,0.8)',
+      inputBg: 'rgba(15,23,42,0.9)',
+      inputBorder: '1px solid rgba(100,116,139,0.6)',
+      inputText: '#e2e8f0',
+      toggleText: '#e2e8f0',
+      exportBg: 'rgba(15,23,42,0.96)',
+      exportText: '#e2e8f0',
+      exportHoverBg: 'rgba(59,130,246,0.32)',
+      xpText: '#e2e8f0'
+    }
+  };
+
+  function detectColorScheme(){
+    const doc = document.documentElement;
+    const body = document.body;
+    const dataTheme = (doc?.dataset?.theme || body?.dataset?.theme || '').toLowerCase();
+    if (dataTheme === 'dark') return 'dark';
+    if (dataTheme === 'light') return 'light';
+    const classList = new Set([
+      ...(doc ? Array.from(doc.classList) : []),
+      ...(body ? Array.from(body.classList) : [])
+    ]);
+    for (const cls of classList){
+      if (cls && /dark/.test(cls)) return 'dark';
+      if (cls && /light/.test(cls)) return 'light';
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    return 'light';
+  }
 
   function cloneDiagram(diagram){
     return JSON.parse(JSON.stringify(diagram));
@@ -476,12 +566,46 @@
     };
     ensureDiagramIds(state.diagram);
 
+    const originalRootStyle = {
+      padding: root.style.padding || '',
+      margin: root.style.margin || '',
+      background: root.style.background || '',
+      border: root.style.border || '',
+      minHeight: root.style.minHeight || '',
+      display: root.style.display || '',
+      justifyContent: root.style.justifyContent || '',
+      alignItems: root.style.alignItems || '',
+      width: root.style.width || '',
+      maxWidth: root.style.maxWidth || ''
+    };
+
+    root.style.padding = '0';
+    root.style.margin = '0 auto';
+    root.style.background = 'transparent';
+    root.style.border = 'none';
+    root.style.minHeight = '0';
+    root.style.display = 'flex';
+    root.style.alignItems = 'stretch';
+    root.style.justifyContent = 'center';
+    root.style.width = 'min(96vw, 1400px)';
+    root.style.maxWidth = '1400px';
+
+    let currentTheme = detectColorScheme();
+    let applyTheme = () => {};
+
     let svg = null;
     let selectionOutline = null;
     let connectorPreview = null;
     let pendingConnector = null;
     let pointerState = null;
     const paletteButtons = [];
+    const actionButtons = [];
+    const exportItems = [];
+    const propertyGroups = [];
+    const propertyFields = [];
+    const toggleLabels = [];
+    const toggleInputs = [];
+    const footerButtons = [];
     const propertyInputs = {};
     let xpLabel = null;
     let zoomSlider = null;
@@ -511,6 +635,7 @@
       paletteButtons.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tool === toolId);
       });
+      applyTheme(currentTheme);
       if (toolId !== 'connector') {
         pendingConnector = null;
         if (connectorPreview) {
@@ -627,6 +752,9 @@
 
     function renderDiagram(){
       if (!svg) return;
+      const theme = COLOR_THEMES[currentTheme] || COLOR_THEMES.light;
+      const gridStroke = currentTheme === 'dark' ? 'rgba(148,163,184,0.25)' : '#e2e8f0';
+      const markerColor = theme.primaryText;
       while (svg.firstChild) svg.removeChild(svg.firstChild);
       if (state.gridVisible) {
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -639,7 +767,7 @@
         rect.setAttribute('width', String(GRID_SIZE));
         rect.setAttribute('height', String(GRID_SIZE));
         rect.setAttribute('fill', 'none');
-        rect.setAttribute('stroke', '#e2e8f0');
+        rect.setAttribute('stroke', gridStroke);
         rect.setAttribute('stroke-width', '0.5');
         pattern.appendChild(rect);
         defs.appendChild(pattern);
@@ -657,7 +785,7 @@
         bg.setAttribute('y', '0');
         bg.setAttribute('width', String(SVG_WIDTH));
         bg.setAttribute('height', String(SVG_HEIGHT));
-        bg.setAttribute('fill', '#f8fafc');
+        bg.setAttribute('fill', theme.canvasBg);
         svg.appendChild(bg);
       }
       const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -670,7 +798,7 @@
       marker.setAttribute('orient', 'auto');
       const markerPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       markerPath.setAttribute('d', 'M0,0 L10,3.5 L0,7 Z');
-      markerPath.setAttribute('fill', '#0f172a');
+      markerPath.setAttribute('fill', markerColor);
       marker.appendChild(markerPath);
       defs.appendChild(marker);
       svg.appendChild(defs);
@@ -684,7 +812,9 @@
         line.setAttribute('y1', String(source.y + source.height / 2));
         line.setAttribute('x2', String(target.x + target.width / 2));
         line.setAttribute('y2', String(target.y + target.height / 2));
-        line.setAttribute('stroke', edge.stroke || DEFAULT_STYLE.stroke);
+        const baseStroke = edge.stroke || DEFAULT_STYLE.stroke;
+        const strokeColor = currentTheme === 'dark' && baseStroke === BASE_STROKE_COLOR ? theme.primaryText : baseStroke;
+        line.setAttribute('stroke', strokeColor);
         line.setAttribute('stroke-width', String(edge.strokeWidth ?? DEFAULT_STYLE.strokeWidth));
         line.setAttribute('marker-end', 'url(#diagram-arrow)');
         line.dataset.id = edge.id;
@@ -712,14 +842,16 @@
           shape.setAttribute('ry', node.type === 'rectangle' ? '6' : '0');
         }
         shape.setAttribute('fill', node.fill || DEFAULT_STYLE.fill);
-        shape.setAttribute('stroke', node.stroke || DEFAULT_STYLE.stroke);
+        const nodeStroke = node.stroke || DEFAULT_STYLE.stroke;
+        shape.setAttribute('stroke', currentTheme === 'dark' && nodeStroke === BASE_STROKE_COLOR ? theme.primaryText : nodeStroke);
         shape.setAttribute('stroke-width', String(node.strokeWidth ?? DEFAULT_STYLE.strokeWidth));
         group.appendChild(shape);
         if (node.text) {
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           text.setAttribute('x', String(node.x + node.width / 2));
           text.setAttribute('y', String(node.y + node.height / 2));
-          text.setAttribute('fill', node.textColor || DEFAULT_STYLE.textColor);
+          const textColor = node.textColor || DEFAULT_STYLE.textColor;
+          text.setAttribute('fill', currentTheme === 'dark' && textColor === BASE_TEXT_COLOR ? theme.primaryText : textColor);
           text.setAttribute('font-size', String(node.fontSize ?? DEFAULT_STYLE.fontSize));
           text.setAttribute('font-family', node.fontFamily || DEFAULT_STYLE.fontFamily);
           text.setAttribute('text-anchor', 'middle');
@@ -734,6 +866,9 @@
 
     function addNode(type, x, y){
       const id = `n${state.diagram.nextNodeId++}`;
+      const theme = COLOR_THEMES[currentTheme] || COLOR_THEMES.light;
+      const defaultStroke = currentTheme === 'dark' ? theme.primaryText : DEFAULT_STYLE.stroke;
+      const defaultText = currentTheme === 'dark' ? theme.primaryText : DEFAULT_STYLE.textColor;
       const node = {
         id,
         type,
@@ -745,9 +880,9 @@
         rotation: 0,
         text: type === 'text' ? 'テキスト' : '新しいノード',
         fill: DEFAULT_STYLE.fill,
-        stroke: DEFAULT_STYLE.stroke,
+        stroke: defaultStroke,
         strokeWidth: DEFAULT_STYLE.strokeWidth,
-        textColor: DEFAULT_STYLE.textColor,
+        textColor: defaultText,
         fontSize: DEFAULT_STYLE.fontSize,
         fontFamily: DEFAULT_STYLE.fontFamily
       };
@@ -761,13 +896,15 @@
 
     function addConnector(sourceId, targetId){
       const id = `e${state.diagram.nextEdgeId++}`;
+      const theme = COLOR_THEMES[currentTheme] || COLOR_THEMES.light;
+      const defaultStroke = currentTheme === 'dark' ? theme.primaryText : DEFAULT_STYLE.stroke;
       state.diagram.edges.push({
         id,
         layer: state.diagram.layerOrder[0],
         source: sourceId,
         target: targetId,
         points: [],
-        stroke: DEFAULT_STYLE.stroke,
+        stroke: defaultStroke,
         strokeWidth: DEFAULT_STYLE.strokeWidth,
         arrow: 'block'
       });
@@ -945,7 +1082,7 @@
       wrapper.style.display = 'flex';
       wrapper.style.alignItems = 'center';
       wrapper.style.justifyContent = 'center';
-      wrapper.style.background = 'linear-gradient(135deg, rgba(148,163,184,0.12), rgba(15,23,42,0.72))';
+      wrapper.style.padding = '24px 32px';
 
       const shell = document.createElement('div');
       shell.style.width = 'min(1280px, 96%)';
@@ -1001,6 +1138,7 @@
         btn.style.cursor = 'pointer';
         btn.style.fontSize = '14px';
         btn.addEventListener('click', onClick);
+        actionButtons.push(btn);
         return btn;
       }
 
@@ -1034,7 +1172,15 @@
           exportMenu.style.display = 'none';
           exportImage(fmt);
         });
+        item.addEventListener('mouseenter', () => {
+          const theme = COLOR_THEMES[currentTheme] || COLOR_THEMES.light;
+          item.style.background = theme.exportHoverBg;
+        });
+        item.addEventListener('mouseleave', () => {
+          item.style.background = 'transparent';
+        });
         exportMenu.appendChild(item);
+        exportItems.push(item);
       });
       exportBtn.appendChild(exportMenu);
 
@@ -1049,7 +1195,7 @@
       const body = document.createElement('div');
       body.style.flex = '1';
       body.style.display = 'grid';
-      body.style.gridTemplateColumns = '200px 1fr 260px';
+      body.style.gridTemplateColumns = 'minmax(240px, 280px) minmax(0, 1fr) minmax(280px, 340px)';
       body.style.gridTemplateRows = '1fr';
 
       const palette = document.createElement('div');
@@ -1103,6 +1249,7 @@
       propertyTitle.style.fontSize = '16px';
       propertyTitle.style.margin = '0';
       propertyTitle.style.color = '#0f172a';
+      propertyGroups.push(propertyTitle);
       properties.appendChild(propertyTitle);
 
       function createField(label, type){
@@ -1120,6 +1267,8 @@
         input.style.border = '1px solid rgba(148,163,184,0.4)';
         wrapper.appendChild(input);
         properties.appendChild(wrapper);
+        propertyGroups.push(wrapper);
+        propertyFields.push(input);
         return input;
       }
 
@@ -1147,6 +1296,8 @@
       propertyInputs.text = textArea;
       textLabel.appendChild(textArea);
       properties.appendChild(textLabel);
+      propertyGroups.push(textLabel);
+      propertyFields.push(textArea);
 
       textArea.addEventListener('input', () => {
         const nodes = state.diagram.nodes.filter(n => state.selection.includes(n.id));
@@ -1199,6 +1350,8 @@
       });
       gridToggle.appendChild(gridCheckbox);
       gridToggle.appendChild(document.createTextNode('グリッド'));
+      toggleLabels.push(gridToggle);
+      toggleInputs.push(gridCheckbox);
 
       snapToggle = document.createElement('label');
       snapToggle.style.display = 'flex';
@@ -1213,6 +1366,8 @@
       });
       snapToggle.appendChild(snapCheckbox);
       snapToggle.appendChild(document.createTextNode('スナップ'));
+      toggleLabels.push(snapToggle);
+      toggleInputs.push(snapCheckbox);
 
       left.appendChild(zoomSlider);
       left.appendChild(zoomLabel);
@@ -1229,12 +1384,14 @@
       undoBtn.textContent = 'Undo';
       undoBtn.style.marginRight = '8px';
       undoBtn.addEventListener('click', undo);
+      footerButtons.push(undoBtn);
 
       redoBtn = document.createElement('button');
       redoBtn.type = 'button';
       redoBtn.textContent = 'Redo';
       redoBtn.style.marginRight = '12px';
       redoBtn.addEventListener('click', redo);
+      footerButtons.push(redoBtn);
 
       const right = document.createElement('div');
       right.style.display = 'flex';
@@ -1262,6 +1419,84 @@
       hiddenFileInput.style.display = 'none';
       hiddenFileInput.addEventListener('change', onFileChange);
       wrapper.appendChild(hiddenFileInput);
+
+      applyTheme = (mode) => {
+        const theme = COLOR_THEMES[mode] || COLOR_THEMES.light;
+        wrapper.style.background = theme.overlay;
+        shell.style.background = theme.shellBg;
+        shell.style.border = theme.shellBorder;
+        shell.style.boxShadow = mode === 'dark'
+          ? '0 32px 80px rgba(2,6,23,0.75)'
+          : '0 24px 60px rgba(15,23,42,0.35)';
+        shell.style.color = theme.primaryText;
+        titleBar.style.background = theme.titleBg;
+        titleBar.style.borderBottom = theme.titleBorder;
+        titleBar.style.color = theme.primaryText;
+        fileNameLabel.style.color = theme.primaryText;
+        actionButtons.forEach(btn => {
+          btn.style.background = theme.actionButtonBg;
+          btn.style.border = theme.actionButtonBorder;
+          btn.style.color = theme.actionButtonText;
+        });
+        exportMenu.style.background = theme.exportBg;
+        exportMenu.style.border = theme.panelDivider;
+        exportItems.forEach(item => {
+          item.style.color = theme.exportText;
+        });
+        body.style.color = theme.primaryText;
+        palette.style.background = theme.panelBg;
+        palette.style.borderRight = theme.panelDivider;
+        palette.style.color = theme.primaryText;
+        paletteButtons.forEach(btn => {
+          const active = state.tool === btn.dataset.tool;
+          btn.style.background = active ? theme.paletteButtonActiveBg : theme.paletteButtonBg;
+          btn.style.border = active ? theme.paletteButtonActiveBorder : theme.paletteButtonBorder;
+          btn.style.color = active ? theme.paletteButtonActiveText : theme.paletteButtonText;
+          btn.style.boxShadow = active ? '0 0 0 1px rgba(59,130,246,0.4)' : 'none';
+        });
+        canvasWrap.style.background = theme.canvasWrapBg;
+        svg.style.background = theme.canvasBg;
+        properties.style.background = theme.propertiesBg;
+        properties.style.borderLeft = theme.panelDivider;
+        properties.style.color = theme.primaryText;
+        propertyGroups.forEach(group => {
+          group.style.color = theme.primaryText;
+        });
+        propertyFields.forEach(field => {
+          field.style.background = theme.inputBg;
+          field.style.border = theme.inputBorder;
+          field.style.color = theme.inputText;
+        });
+        footer.style.background = theme.footerBg;
+        footer.style.borderTop = theme.footerBorder;
+        footer.style.color = theme.primaryText;
+        toggleLabels.forEach(label => {
+          label.style.color = theme.toggleText;
+        });
+        const accent = mode === 'dark' ? '#38bdf8' : '#2563eb';
+        toggleInputs.forEach(input => {
+          try { input.style.accentColor = accent; } catch {}
+        });
+        if (zoomLabel) {
+          zoomLabel.style.color = theme.secondaryText;
+        }
+        if (zoomSlider) {
+          try { zoomSlider.style.accentColor = accent; } catch {}
+        }
+        if (xpLabel) {
+          xpLabel.style.color = theme.xpText;
+        }
+        footerButtons.forEach(btn => {
+          btn.style.background = theme.actionButtonBg;
+          btn.style.border = theme.actionButtonBorder;
+          btn.style.color = theme.actionButtonText;
+          btn.style.padding = '6px 12px';
+          btn.style.borderRadius = '8px';
+          btn.style.cursor = 'pointer';
+        });
+      };
+
+      applyTheme(currentTheme);
 
       root.appendChild(wrapper);
       return { wrapper };
@@ -1381,6 +1616,34 @@
     }
 
     const { wrapper } = buildLayout();
+
+    function syncTheme(){
+      const next = detectColorScheme();
+      if (next !== currentTheme){
+        currentTheme = next;
+        applyTheme(currentTheme);
+      }
+    }
+
+    const schemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    if (schemeQuery){
+      const handleScheme = () => syncTheme();
+      if (typeof schemeQuery.addEventListener === 'function') schemeQuery.addEventListener('change', handleScheme);
+      else if (typeof schemeQuery.addListener === 'function') schemeQuery.addListener(handleScheme);
+      listeners.push(() => {
+        if (typeof schemeQuery.removeEventListener === 'function') schemeQuery.removeEventListener('change', handleScheme);
+        else if (typeof schemeQuery.removeListener === 'function') schemeQuery.removeListener(handleScheme);
+      });
+    }
+
+    const observerTargets = [document.documentElement, document.body].filter(Boolean);
+    if (observerTargets.length){
+      const observer = new MutationObserver(syncTheme);
+      observerTargets.forEach(target => observer.observe(target, { attributes: true, attributeFilter: ['class', 'data-theme'] }));
+      listeners.push(() => observer.disconnect());
+    }
+
+    syncTheme();
     setTool('select');
     applyZoom();
     bindProperties();
@@ -1412,8 +1675,22 @@
         svg.removeEventListener('pointermove', pointerMoveConnector, pointerCaptureOptions);
       }
       if (autosaveTimer) clearTimeout(autosaveTimer);
+      while (listeners.length){
+        const dispose = listeners.pop();
+        try { dispose(); } catch {}
+      }
       writePersistentState(state);
       try { root.removeChild(wrapper); } catch {}
+      root.style.padding = originalRootStyle.padding;
+      root.style.margin = originalRootStyle.margin;
+      root.style.background = originalRootStyle.background;
+      root.style.border = originalRootStyle.border;
+      root.style.minHeight = originalRootStyle.minHeight;
+      root.style.display = originalRootStyle.display;
+      root.style.justifyContent = originalRootStyle.justifyContent;
+      root.style.alignItems = originalRootStyle.alignItems;
+      root.style.width = originalRootStyle.width;
+      root.style.maxWidth = originalRootStyle.maxWidth;
     }
 
     function stop(){

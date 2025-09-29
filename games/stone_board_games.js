@@ -32,6 +32,18 @@
       aiBias: { centerWeight: 3, reachWeight: 14, forkWeight: 8 }
     },
     {
+      id: 'renju',
+      name: '連珠',
+      description: '禁手ルール付きの五目並べ。配置+1EXP/リーチ+10、勝利で高EXP',
+      cols: 15,
+      rows: 15,
+      winLength: 5,
+      dropMode: false,
+      xpWin: { EASY: 32, NORMAL: 130, HARD: 300 },
+      aiBias: { centerWeight: 3.2, reachWeight: 16, forkWeight: 9 },
+      renju: { restrictedColor: PLAYER }
+    },
+    {
       id: 'connect4',
       name: '四目並べ',
       description: 'コマが落下する四目並べ。配置+1EXP/リーチ+10、勝利で難易度別EXP',
@@ -132,7 +144,8 @@
   }
 
   function immediateWinCount(board, cfg, color){
-    const moves = collectMoves(board, cfg);
+    let moves = collectMoves(board, cfg);
+    moves = filterRenjuLegalMoves(board, cfg, moves, color);
     let count = 0;
     for (const mv of moves){
       if (wouldWin(board, cfg.cols, cfg.rows, mv.x, mv.y, color, cfg.winLength)){
@@ -144,7 +157,8 @@
   }
 
   function prioritizeMovesForColor(board, cfg, color, limit){
-    const moves = collectMoves(board, cfg);
+    let moves = collectMoves(board, cfg);
+    moves = filterRenjuLegalMoves(board, cfg, moves, color);
     if (!limit || moves.length <= limit) return moves;
     const immediate = [];
     const scored = [];
@@ -254,6 +268,119 @@
       });
     }
     return sequences;
+  }
+
+  function dedupeCells(list){
+    const seen = new Set();
+    const result = [];
+    for (const cell of list){
+      if (!cell) continue;
+      const key = `${cell.x},${cell.y}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push({ x: cell.x, y: cell.y });
+    }
+    return result;
+  }
+
+  function collectRenjuPatternMatches(board, cfg, color, x, y){
+    const threeMap = new Map();
+    const fourMap = new Map();
+    const patterns = [
+      { pattern: '01110', len: 5, type: 'three' },
+      { pattern: '010110', len: 6, type: 'three' },
+      { pattern: '011010', len: 6, type: 'three' },
+      { pattern: '011110', len: 6, type: 'four' }
+    ];
+    for (const [dx, dy] of DIRS){
+      const backward = [];
+      let nx = x - dx, ny = y - dy;
+      while (inBounds(cfg.cols, cfg.rows, nx, ny)){
+        backward.unshift({ x: nx, y: ny });
+        nx -= dx; ny -= dy;
+      }
+      const forward = [];
+      nx = x; ny = y;
+      while (inBounds(cfg.cols, cfg.rows, nx, ny)){
+        forward.push({ x: nx, y: ny });
+        nx += dx; ny += dy;
+      }
+      const coords = backward.concat(forward);
+      if (!coords.length) continue;
+      const statuses = coords.map(pos => {
+        const val = board[pos.y][pos.x];
+        if (val === color) return '1';
+        if (val === EMPTY) return '0';
+        return '2';
+      });
+      const coordsWithSentinel = [null].concat(coords, [null]);
+      const statusesWithSentinel = ['2'].concat(statuses, ['2']);
+      const stoneIndex = backward.length + 1; // index inside sentinel arrays
+      for (const def of patterns){
+        for (let i = 0; i <= statusesWithSentinel.length - def.len; i++){
+          const sliceStr = statusesWithSentinel.slice(i, i + def.len).join('');
+          if (sliceStr !== def.pattern) continue;
+          if (!(i <= stoneIndex && stoneIndex < i + def.len)) continue;
+          const sliceCoords = coordsWithSentinel.slice(i, i + def.len).filter(Boolean);
+          if (!sliceCoords.length) continue;
+          const key = sliceCoords.map(c => `${c.x},${c.y}`).join('|');
+          const target = def.type === 'four' ? fourMap : threeMap;
+          if (!target.has(key)) target.set(key, sliceCoords);
+        }
+      }
+    }
+    return {
+      openThrees: Array.from(threeMap.values()),
+      openFours: Array.from(fourMap.values())
+    };
+  }
+
+  function detectRenjuFoul(board, cfg, x, y, color){
+    if (!cfg.renju) return null;
+    const restricted = cfg.renju.restrictedColor ?? PLAYER;
+    if (color !== restricted) return null;
+    if (!inBounds(cfg.cols, cfg.rows, x, y)) return null;
+    if (board[y][x] !== EMPTY) return null;
+
+    board[y][x] = color;
+    const sequences = gatherOpenSequencesAt(board, cfg, color, x, y);
+    let overlineSeq = null;
+    for (const seq of sequences){
+      if (seq.len > cfg.winLength){
+        overlineSeq = seq;
+        break;
+      }
+    }
+    const hasWin = checkWin(board, cfg.cols, cfg.rows, x, y, color, cfg.winLength);
+    const patterns = collectRenjuPatternMatches(board, cfg, color, x, y);
+    board[y][x] = EMPTY;
+
+    if (overlineSeq){
+      const cells = dedupeCells(overlineSeq.stones || []);
+      return { type: 'renju_overline', label: '禁手: 長連', cells };
+    }
+    if (!hasWin){
+      if (patterns.openFours.length >= 2){
+        const cells = dedupeCells(patterns.openFours.slice(0, 2).flat());
+        return { type: 'renju_double_four', label: '禁手: 四々', cells };
+      }
+      if (patterns.openThrees.length >= 2){
+        const cells = dedupeCells(patterns.openThrees.slice(0, 2).flat());
+        return { type: 'renju_double_three', label: '禁手: 三々', cells };
+      }
+    }
+    return null;
+  }
+
+  function filterRenjuLegalMoves(board, cfg, moves, color){
+    if (!cfg.renju) return moves;
+    const restricted = cfg.renju.restrictedColor ?? PLAYER;
+    if (color !== restricted) return moves;
+    const legal = [];
+    for (const mv of moves){
+      if (!detectRenjuFoul(board, cfg, mv.x, mv.y, color)) legal.push(mv);
+    }
+    return legal;
   }
 
   function addThreat(threats, seen, threat){
@@ -494,7 +621,8 @@
   }
 
   function chooseAiMove(board, cfg, difficulty){
-    const moves = collectMoves(board, cfg);
+    let moves = collectMoves(board, cfg);
+    moves = filterRenjuLegalMoves(board, cfg, moves, AI);
     if (moves.length === 0) return null;
     const { cols, rows, winLength } = cfg;
     // Immediate win
@@ -504,6 +632,7 @@
     if (difficulty !== 'EASY'){
       // Block imminent player win
       for (const mv of moves){
+        if (cfg.renju && detectRenjuFoul(board, cfg, mv.x, mv.y, PLAYER)) continue;
         if (wouldWin(board, cols, rows, mv.x, mv.y, PLAYER, winLength)) return mv;
       }
     }
@@ -597,6 +726,8 @@
       let threats = [];
       let blinkPhase = 0;
       let blinkRaf = 0;
+      let renjuFoulHint = null;
+      let renjuFoulTimeout = null;
       const PLAYER_POPUP_COLOR = '#38bdf8';
       const AI_POPUP_COLOR = '#ef4444';
 
@@ -688,6 +819,27 @@
       function cancelThreatAnimation(){ if (blinkRaf){ cancelAnimationFrame(blinkRaf); blinkRaf = 0; } }
 
       function clearThreats(){ threats = []; cancelThreatAnimation(); lastThreatSummary = emptySummary(); }
+
+      function clearRenjuFoulHint(){
+        if (renjuFoulTimeout){ clearTimeout(renjuFoulTimeout); renjuFoulTimeout = null; }
+        if (renjuFoulHint){
+          renjuFoulHint = null;
+          draw();
+        }
+      }
+
+      function flashRenjuFoulHint(hint){
+        if (renjuFoulTimeout){ clearTimeout(renjuFoulTimeout); renjuFoulTimeout = null; }
+        renjuFoulHint = hint;
+        draw();
+        if (hint){
+          renjuFoulTimeout = setTimeout(() => {
+            renjuFoulHint = null;
+            renjuFoulTimeout = null;
+            draw();
+          }, 1500);
+        }
+      }
 
       function ensureBlink(){
         if (blinkRaf) return;
@@ -822,6 +974,22 @@
           }
         }
 
+        if (renjuFoulHint && renjuFoulHint.cells && renjuFoulHint.cells.length){
+          ctx.save();
+          const accent = renjuFoulHint.type === 'renju_overline' ? [220,38,38] : [249,115,22];
+          ctx.strokeStyle = `rgba(${accent[0]},${accent[1]},${accent[2]},0.85)`;
+          ctx.lineWidth = 3;
+          ctx.setLineDash([4,4]);
+          for (const cellPos of renjuFoulHint.cells){
+            const cx = offsetX + (cellPos.x + 0.5) * cell;
+            const cy = offsetY + (cellPos.y + 0.5) * cell;
+            ctx.beginPath();
+            ctx.arc(cx, cy, cell * 0.46, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
         if (threats.length){
           const pulse = 0.45 + 0.35 * Math.sin((blinkPhase||0) / 200);
           for (const threat of threats){
@@ -901,6 +1069,7 @@
         lastMove = null;
         hover = null;
         clearThreats();
+        clearRenjuFoulHint();
         refreshThreats({ trigger: 'reset' });
         draw();
       }
@@ -910,6 +1079,7 @@
         ended = true;
         resultText = text;
         clearThreats();
+        clearRenjuFoulHint();
         draw();
         enableHostRestart();
       }
@@ -918,6 +1088,15 @@
         if (ended || turn !== PLAYER) return;
         if (!inBounds(cfg.cols, cfg.rows, x, y)) return;
         if (board[y][x] !== EMPTY) return;
+        if (cfg.renju){
+          const foul = detectRenjuFoul(board, cfg, x, y, PLAYER);
+          if (foul){
+            flashRenjuFoulHint(foul);
+            showPopupAtCell({ x, y }, foul.label || '禁手', '#f97316');
+            return;
+          }
+        }
+        clearRenjuFoulHint();
         board[y][x] = PLAYER;
         lastMove = { x, y, color: PLAYER };
         awardXp(1, { type: 'place', game: cfg.id });
@@ -1010,8 +1189,18 @@
       function scheduleAiTurn(delay){ cancelAiTimer(); aiTimer = setTimeout(aiTurn, delay); }
 
       function start(){ if (running) return; running = true; disableHostRestart(); canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); refreshThreats({ trigger: 'start' }); draw(); if (turn === AI) scheduleAiTurn(200); }
-      function stop(opts = {}){ if (!running) return; running = false; cancelAiTimer(); canvas.removeEventListener('click', handleClick); canvas.removeEventListener('mousemove', handleMove); canvas.removeEventListener('mouseleave', handleLeave); window.removeEventListener('keydown', handleKey); if (!opts.keepShortcutsDisabled){ enableHostRestart(); } }
-      function destroy(){ try { stop(); clearThreats(); root.removeChild(canvas); } catch {} }
+      function stop(opts = {}){
+        if (!running) return;
+        running = false;
+        cancelAiTimer();
+        canvas.removeEventListener('click', handleClick);
+        canvas.removeEventListener('mousemove', handleMove);
+        canvas.removeEventListener('mouseleave', handleLeave);
+        window.removeEventListener('keydown', handleKey);
+        clearRenjuFoulHint();
+        if (!opts.keepShortcutsDisabled){ enableHostRestart(); }
+      }
+      function destroy(){ try { stop(); clearThreats(); clearRenjuFoulHint(); root.removeChild(canvas); } catch {} }
       function getScore(){ let player=0, ai=0; for (let y=0;y<cfg.rows;y++) for (let x=0;x<cfg.cols;x++){ if(board[y][x]===PLAYER) player++; else if(board[y][x]===AI) ai++; } return player - ai; }
 
       return { start, stop, destroy, getScore };

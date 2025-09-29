@@ -12,6 +12,7 @@ window.MINIEXP_MANIFEST = [
 '持ち駒と成りを駆使する本格将棋。指し手/捕獲/王手でEXP', category: 'ボード' },
   { id: 'connect6',    name: 'コネクトシックス', entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '六目並べ。配置+1/リーチ+10/勝利で高EXP', category: 'ボード' },
   { id: 'gomoku',      name: '五目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '配置+1/リーチ+10/勝利ボーナス', category: 'ボード' },
+  { id: 'renju',       name: '連珠',            entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '禁手ルール付き五目並べ。配置+1/リーチ+10/勝利ボーナス', category: 'ボード' },
   { id: 'go',          name: '囲碁',            entry: 'games/go.js',             version: '0.1.0', author: 'mod', description: '配置+1/捕獲ボーナス/勝利EXP', category: 'ボード' },
   { id: 'backgammon',  name: 'バックギャモン',    entry: 'games/backgammon.js',   version: '0.1.0', author: 'mod', description: '24ポイントを駆け巡りベアリングオフを目指すバックギャモン。ヒットやベアオフでEXP獲得', category: 'ボード' },
   { id: 'connect4',    name: '四目並べ',        entry: 'games/stone_board_games.js', version: '0.1.0', author: 'mod', description: '落下式四目。配置+1/リーチ+10', category: 'ボード' },

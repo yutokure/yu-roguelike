@@ -27,6 +27,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'sliding_puzzle', name: 'スライドパズル', entry: 'games/sliding_puzzle.js', version: '0.1.0', author: 'mod', description: '難易度で8/15/24のスライドパズル', category: 'パズル' },
   { id: 'invaders',    name: 'インベーダー風',    entry: 'games/invaders.js',   version: '0.1.0', author: 'builtin', description: '撃破+1 / 全滅+50', category: 'シューティング' },
   { id: 'pacman',      name: 'パックマン風',      entry: 'games/pacman.js',     version: '0.1.0', author: 'builtin', description: '餌+0.5 / 全取得+100', category: 'アクション' },
+  { id: 'bomberman',   name: 'ボンバーマン風',    entry: 'games/bomberman.js', version: '0.1.0', author: 'mod', description: 'ソフトブロック破壊+3 / 敵撃破+12 / 全滅+75', category: 'アクション' },
   { id: 'tetris',      name: 'テトリス風',        entry: 'games/tetris.js',     version: '0.1.0', author: 'builtin', description: 'REN×1.5^n / T-Spin', category: 'パズル' },
   { id: 'falling_puyos', name: 'ぷよぷよ風',      entry: 'games/puyo.js',      version: '0.1.0', author: 'mod', description: '4つ同色で消去。連鎖で倍率UP', category: 'パズル' },
   { id: 'triomino_columns', name: 'トリオミノコラムス', entry: 'games/triomino_columns.js', version: '0.1.0', author: 'mod', description: 'トリオトスDX風！ラインスパーク＆ホールド対応', category: 'パズル' },

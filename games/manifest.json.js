@@ -55,6 +55,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'aim',           name: '的あて（エイム）',     entry: 'games/aim.js',             version: '0.1.0', author: 'builtin', description: '命中で1〜3EXP／連続命中ボーナス', category: 'シューティング' },
   { id: 'dodge_race',    name: '回避レース',           entry: 'games/dodge_race.js',       version: '0.1.0', author: 'builtin', description: '距離で微量EXP／CP+5', category: 'アクション' },
   { id: 'pseudo3d_race', name: 'ハイウェイチェイサー', entry: 'games/pseudo3d_race.js',    version: '0.1.0', author: 'mod', description: '疑似3D高速道路で交通を追い抜け。距離+0.5/追い越し+4/セクション+25', category: 'アクション' },
+  { id: 'bowling_duel',  name: 'ボウリング対決',     entry: 'games/bowling.js',         version: '0.1.0', author: 'mod', description: 'カーブ・狙い・パワーを調整してCPUと10フレーム勝負するボウリングMOD', category: 'アクション' },
   { id: 'topdown_race',  name: 'Aurora Circuit',       entry: 'games/topdown_race.js',     version: '0.1.0', author: 'mod', description: '見下ろし型周回レース。ラップと順位でEXP獲得', category: 'アクション' },
   { id: 'falling_shooter', name: '落下ブロック・シューター', entry: 'games/falling_shooter.js', version: '0.1.0', author: 'builtin', description: '破壊で1〜数EXP（大きいほど高EXP）', category: 'シューティング' },
   { id: 'bubble_shooter', name: 'バブルシューター', entry: 'games/bubble_shooter.js', version: '0.1.0', author: 'mod', description: 'バブルを撃って3つ揃えで消去。浮いたバブルはまとめて落下', category: 'パズル' },

@@ -68,6 +68,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'piano_tiles', name: 'リズムタイル', entry: 'games/piano_tiles.js', version: '0.1.0', author: 'mod', description: 'ピアノタイル風の4レーン譜面。タップとホールドをタイミング良く決めてコンボを伸ばそう', category: 'リズム' },
   { id: 'river_crossing', name: '川渡り',               entry: 'games/river_crossing.js',   version: '0.1.0', author: 'builtin', description: '1段前進+1／到達+50', category: 'アクション' },
   { id: 'whack_a_mole',  name: 'モグラたたき',         entry: 'games/whack_a_mole.js',     version: '0.1.0', author: 'builtin', description: '命中でEXP／連続命中ボーナス', category: 'アクション' },
+  { id: 'xp_crane',      name: 'XPクレーンキャッチャー', entry: 'games/xp_crane.js',        version: '0.1.0', author: 'mod', description: 'クレーンを操作して経験値カプセルを掬い上げるミニゲーム。連続成功と特殊カプセルでEXPを稼ごう', category: 'アクション' },
   { id: 'steady_wire',   name: 'イライラ棒',           entry: 'games/steady_wire.js',      version: '0.1.0', author: 'mod', description: '毎回生成されるコースを外れず進むワイヤーループ。操作方法を選んで挑戦', category: 'アクション' },
   { id: 'flappy_bird',   name: 'フラッピーバード風',   entry: 'games/flappy_bird.js',      version: '0.1.0', author: 'mod', description: 'パイプ通過でEXP。連続成功でボーナス', category: 'アクション' },
   { id: 'dino_runner',   name: 'ダイノランナー',       entry: 'games/dino_runner.js',      version: '0.1.0', author: 'mod', description: '恐竜で障害物ジャンプ／距離EXP', category: 'アクション' },

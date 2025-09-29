@@ -824,6 +824,12 @@ const FLOOR_TYPE_CONVEYOR = 'conveyor';
 const FLOOR_TYPE_ONE_WAY = 'one-way';
 const FLOOR_TYPE_VERTICAL_ONLY = 'vertical';
 const FLOOR_TYPE_HORIZONTAL_ONLY = 'horizontal';
+const FLOOR_DIRECTION_SYMBOLS = {
+    up: '↑',
+    down: '↓',
+    left: '←',
+    right: '→'
+};
 const FLOOR_TYPE_SET = new Set([
     FLOOR_TYPE_NORMAL,
     FLOOR_TYPE_ICE,
@@ -6588,12 +6594,18 @@ function drawMap() {
             const screenY = (y - startY) * cellH;
             if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) {
                 ctx.fillStyle = DEFAULT_WALL_COLOR;
-            } else {
-                const isWall = map[y][x] === 1;
-                const visible = !darknessActive || isTileVisible(x, y);
-                ctx.fillStyle = visible ? getTileRenderColor(x, y, isWall) : DARKNESS_FILL_COLOR;
+                ctx.fillRect(screenX, screenY, cellW, cellH);
+                continue;
             }
+
+            const isWall = map[y][x] === 1;
+            const visible = !darknessActive || isTileVisible(x, y);
+            ctx.fillStyle = visible ? getTileRenderColor(x, y, isWall) : DARKNESS_FILL_COLOR;
             ctx.fillRect(screenX, screenY, cellW, cellH);
+
+            if (!isWall && visible) {
+                drawFloorGimmickOverlay(x, y, screenX, screenY, cellW, cellH);
+            }
         }
     }
 
@@ -6612,6 +6624,91 @@ function drawMap() {
             }
         }
     }
+}
+
+function drawFloorGimmickOverlay(tileX, tileY, screenX, screenY, cellW, cellH) {
+    const type = getTileFloorType(tileX, tileY);
+    switch (type) {
+        case FLOOR_TYPE_BOMB:
+            drawBombFloorOverlay(screenX, screenY, cellW, cellH);
+            break;
+        case FLOOR_TYPE_ONE_WAY: {
+            const dir = getTileFloorDirection(tileX, tileY);
+            if (dir) drawOneWayFloorOverlay(dir, screenX, screenY, cellW, cellH);
+            break;
+        }
+        case FLOOR_TYPE_CONVEYOR: {
+            const dir = getTileFloorDirection(tileX, tileY);
+            if (dir) drawConveyorFloorOverlay(dir, screenX, screenY, cellW, cellH);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+function drawBombFloorOverlay(screenX, screenY, cellW, cellH) {
+    const lineWidth = Math.max(2, Math.min(cellW, cellH) * 0.12);
+    ctx.save();
+    ctx.strokeStyle = '#ff4d6d';
+    ctx.lineWidth = lineWidth;
+    ctx.lineJoin = 'round';
+    ctx.strokeRect(
+        screenX + lineWidth / 2,
+        screenY + lineWidth / 2,
+        cellW - lineWidth,
+        cellH - lineWidth
+    );
+    ctx.restore();
+}
+
+function drawOneWayFloorOverlay(direction, screenX, screenY, cellW, cellH) {
+    const symbol = FLOOR_DIRECTION_SYMBOLS[direction];
+    if (!symbol) return;
+    const fontSize = Math.max(12, Math.floor(Math.min(cellW, cellH) * 0.8));
+    ctx.save();
+    ctx.font = `${fontSize}px sans-serif`;
+    ctx.fillStyle = '#4c6ef5';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+    ctx.shadowBlur = Math.max(2, Math.min(cellW, cellH) * 0.15);
+    ctx.fillText(symbol, screenX + cellW / 2, screenY + cellH / 2);
+    ctx.restore();
+}
+
+const CONVEYOR_ANIMATION_PATTERN = {
+    left: '<<<   ',
+    right: '   >>>',
+    up: '▲▲▲   ',
+    down: '   ▼▼▼'
+};
+const CONVEYOR_ANIMATION_FRAME_MS = 120;
+
+function getAnimationTimestamp() {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+        return performance.now();
+    }
+    return Date.now();
+}
+
+function drawConveyorFloorOverlay(direction, screenX, screenY, cellW, cellH) {
+    const pattern = CONVEYOR_ANIMATION_PATTERN[direction];
+    if (!pattern) return;
+    const now = getAnimationTimestamp();
+    const totalFrames = pattern.length;
+    const frameIndex = Math.floor(now / CONVEYOR_ANIMATION_FRAME_MS) % totalFrames;
+    const sequence = (pattern + pattern).slice(frameIndex, frameIndex + 3);
+    const fontSize = Math.max(10, Math.floor(Math.min(cellW, cellH) * 0.6));
+    ctx.save();
+    ctx.font = `${fontSize}px monospace`;
+    ctx.fillStyle = '#f08c00';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+    ctx.shadowBlur = Math.max(1, Math.min(cellW, cellH) * 0.1);
+    ctx.fillText(sequence, screenX + cellW / 2, screenY + cellH / 2);
+    ctx.restore();
 }
 
 function drawPlayer() {

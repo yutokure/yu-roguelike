@@ -27,6 +27,7 @@
                 <button id="tab-button-blockdim" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-blockdim">ブロック次元</button>
                 <button id="tab-button-miniexp" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-miniexp">ミニゲー経験</button>
                 <button id="tab-button-tools" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-tools">ツールズ</button>
+                <button id="tab-button-achievements" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-achievements">実績・統計</button>
             </div>
             <div id="tab-normal" class="tab-content active" role="tabpanel" aria-labelledby="tab-button-normal">
             <div class="row">
@@ -913,6 +914,67 @@
                 <p class="sandbox-note small">現在向いている方向の1マス先を編集します。</p>
             </section>
         </div>
+            <div id="tab-achievements" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-achievements">
+                <div class="row">
+                    <div class="achievement-layout">
+                        <div class="achievement-subtabs" role="tablist" aria-label="実績と統計のサブタブ">
+                            <button id="achievements-subtab-button-achievements" class="subtab-button active" role="tab" aria-selected="true" aria-controls="achievements-subtab-achievements">実績</button>
+                            <button id="achievements-subtab-button-stats" class="subtab-button" role="tab" aria-selected="false" aria-controls="achievements-subtab-stats">統計</button>
+                        </div>
+                        <section id="achievements-subtab-achievements" class="achievement-subtab active" role="tabpanel" aria-labelledby="achievements-subtab-button-achievements">
+                            <header class="achievement-header">
+                                <h3>実績</h3>
+                                <p>冒険やツールの利用状況に応じて自動的に更新されます。カテゴリごとの進捗を確認しましょう。</p>
+                            </header>
+                            <div id="achievement-category-summary" class="achievement-category-summary" aria-live="polite"></div>
+                            <div id="achievement-list" class="achievement-list" aria-live="polite"></div>
+                            <section class="custom-achievement-section" aria-labelledby="custom-achievement-title">
+                                <div class="custom-achievement-header">
+                                    <h4 id="custom-achievement-title">カスタマイズ能動実績</h4>
+                                    <p>自分で目標や報酬を設定し、ToDoリストや周回目標として使える実績です。</p>
+                                </div>
+                                <div id="custom-achievement-list" class="custom-achievement-list" aria-live="polite"></div>
+                                <form id="custom-achievement-form" class="custom-achievement-form" autocomplete="off">
+                                    <fieldset>
+                                        <legend>新しいカスタム実績を追加</legend>
+                                        <div class="form-grid">
+                                            <label>タイトル
+                                                <input type="text" id="custom-achievement-title-input" required placeholder="例: 毎日ログイン">
+                                            </label>
+                                            <label>説明
+                                                <input type="text" id="custom-achievement-desc-input" placeholder="何を達成するのか">
+                                            </label>
+                                            <label>報酬メモ
+                                                <input type="text" id="custom-achievement-reward-input" placeholder="ご褒美や備考をメモ">
+                                            </label>
+                                            <label>タイプ
+                                                <select id="custom-achievement-type-input">
+                                                    <option value="todo">ToDo（1回の完了）</option>
+                                                    <option value="repeatable">繰り返し達成</option>
+                                                    <option value="counter">カウント管理</option>
+                                                </select>
+                                            </label>
+                                            <label class="target-field">目標回数（任意）
+                                                <input type="number" id="custom-achievement-target-input" min="1" step="1" placeholder="例: 10">
+                                            </label>
+                                        </div>
+                                        <button type="submit">実績を追加</button>
+                                    </fieldset>
+                                </form>
+                            </section>
+                        </section>
+                        <section id="achievements-subtab-stats" class="achievement-subtab" role="tabpanel" aria-labelledby="achievements-subtab-button-stats" hidden>
+                            <header class="achievement-header">
+                                <h3>統計</h3>
+                                <p>冒険やツール操作で蓄積された累積記録が一覧表示されます。</p>
+                            </header>
+                            <div id="statistics-summary" class="statistics-summary" aria-live="polite"></div>
+                            <div id="statistics-list" class="statistics-list" aria-live="polite"></div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div id="game-screen" style="display:none;">
         <div id="game-container">
@@ -1175,6 +1237,7 @@
     <script src="js/tools/blockdata-editor.js"></script>
     <script src="js/tools/sandbox.js"></script>
     <script src="js/tools/image-viewer.js"></script>
+    <script src="js/achievements.js"></script>
     <script src="main.js"></script>
     <script src="js/tools/state-manager.js"></script>
 </body>

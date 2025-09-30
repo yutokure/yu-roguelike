@@ -82,6 +82,26 @@ const worldButtonsDiv = document.getElementById('world-buttons');
 const dungeonButtonsDiv = document.getElementById('dungeon-buttons');
 const playerSummaryDiv = document.getElementById('player-summary');
 let selectionFooterCollapsed = false; // 選択画面フッターの折りたたみ状態
+let __achievementsTabInitialized = false;
+
+function recordAchievementEvent(type, payload) {
+    try {
+        if (window.AchievementSystem && typeof window.AchievementSystem.recordEvent === 'function') {
+            window.AchievementSystem.recordEvent(type, payload);
+        }
+    } catch (err) {
+        console.warn('Achievement event failed', err);
+    }
+}
+
+function sanitizeEnemySummary(enemy) {
+    if (!enemy || typeof enemy !== 'object') return null;
+    return {
+        type: enemy.type || '',
+        level: Number.isFinite(enemy.level) ? Math.floor(enemy.level) : null,
+        boss: !!enemy.boss
+    };
+}
 
 // ダンジョン詳細カード要素
 const dungeonDetailCard = document.getElementById('dungeon-detail-card');
@@ -96,10 +116,22 @@ const tabBtnNormal = document.getElementById('tab-button-normal');
 const tabBtnBlockDim = document.getElementById('tab-button-blockdim');
 const tabBtnMiniExp = document.getElementById('tab-button-miniexp');
 const tabBtnTools = document.getElementById('tab-button-tools');
+const tabBtnAchievements = document.getElementById('tab-button-achievements');
 const tabNormal = document.getElementById('tab-normal');
 const tabBlockDim = document.getElementById('tab-blockdim');
 const tabMiniExp = document.getElementById('tab-miniexp');
 const tabTools = document.getElementById('tab-tools');
+const tabAchievements = document.getElementById('tab-achievements');
+const achievementsList = document.getElementById('achievement-list');
+const achievementsCategorySummary = document.getElementById('achievement-category-summary');
+const customAchievementList = document.getElementById('custom-achievement-list');
+const customAchievementForm = document.getElementById('custom-achievement-form');
+const achievementsSubtabBtnAchievements = document.getElementById('achievements-subtab-button-achievements');
+const achievementsSubtabBtnStats = document.getElementById('achievements-subtab-button-stats');
+const achievementsSubtabPanelAchievements = document.getElementById('achievements-subtab-achievements');
+const achievementsSubtabPanelStats = document.getElementById('achievements-subtab-stats');
+const statisticsSummary = document.getElementById('statistics-summary');
+const statisticsList = document.getElementById('statistics-list');
 // MiniExp elements
 const miniexpList = document.getElementById('miniexp-list');
 const miniexpCatList = document.getElementById('miniexp-cat-list');
@@ -481,7 +513,11 @@ function updateSandboxMenuVisibility() {
 function setSandboxPanelOpen(open, { silent = false } = {}) {
     if (!isSandboxInteractiveEnabled()) open = false;
     const next = !!open;
+    const previous = !!sandboxInteractiveState.panelOpen;
     sandboxInteractiveState.panelOpen = next;
+    if (next && !previous) {
+        recordAchievementEvent('sandbox_session', { reason: 'panel-open' });
+    }
     if (sandboxMenuButton) sandboxMenuButton.setAttribute('aria-expanded', next ? 'true' : 'false');
     if (sandboxInteractivePanel) sandboxInteractivePanel.setAttribute('aria-hidden', next ? 'false' : 'true');
     if (next) {
@@ -3103,6 +3139,7 @@ function randomizeBdimBlocks() {
     if (k2) selectOption(bdim2List, k2, preserveScroll);
     if (k3) selectOption(bdim3List, k3, preserveScroll);
     onBlockDimChanged();
+    recordAchievementEvent('blockdim_random', { weighted: false });
 }
 
 // ------- 重み付きランダム（Lvターゲット＋タイプ優先） -------
@@ -3168,6 +3205,7 @@ function weightedRandomizeBdimBlocks(targetSumRaw, typePrefRaw) {
     if (best?.b2?.key) selectOption(bdim2List, best.b2.key, preserveScroll);
     if (best?.b3?.key) selectOption(bdim3List, best.b3.key, preserveScroll);
     onBlockDimChanged();
+    recordAchievementEvent('blockdim_random', { weighted: true });
 }
 
 // ------- BlockDim 履歴/ブックマーク -------
@@ -3291,6 +3329,7 @@ function addBookmarkFromCurrent() {
     if (blockDimBookmarks.length > 100) blockDimBookmarks.length = 100;
     renderHistoryAndBookmarks();
     saveAll();
+    recordAchievementEvent('blockdim_bookmark', { key: entry.key, level: entry.level, type: entry.type, nested: entry.nested });
 }
 
 function pushGateHistoryFromCurrent() {
@@ -3313,6 +3352,55 @@ function pushGateHistoryFromCurrent() {
     if (blockDimHistory.length > 200) blockDimHistory.length = 200;
     renderHistoryAndBookmarks();
     saveAll();
+    recordAchievementEvent('blockdim_gate', { key: entry.key, level: entry.level, type: entry.type, nested: entry.nested });
+}
+
+function initAchievementUiOnce() {
+    if (__achievementsTabInitialized) return;
+    if (!window.AchievementSystem) return;
+    window.AchievementSystem.initUI({
+        root: tabAchievements,
+        list: achievementsList,
+        customList: customAchievementList,
+        customForm: customAchievementForm,
+        statsList: statisticsList,
+        statsSummary: statisticsSummary,
+        categorySummary: achievementsCategorySummary
+    });
+    setupAchievementsSubtabs();
+    __achievementsTabInitialized = true;
+}
+
+function setupAchievementsSubtabs() {
+    const map = {
+        achievements: {
+            btn: achievementsSubtabBtnAchievements,
+            panel: achievementsSubtabPanelAchievements
+        },
+        stats: {
+            btn: achievementsSubtabBtnStats,
+            panel: achievementsSubtabPanelStats
+        }
+    };
+    function activate(which) {
+        for (const [key, entry] of Object.entries(map)) {
+            const on = key === which;
+            if (entry.btn) {
+                entry.btn.classList.toggle('active', on);
+                entry.btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            }
+            if (entry.panel) {
+                entry.panel.classList.toggle('active', on);
+                entry.panel.hidden = !on;
+            }
+        }
+        if (which === 'stats') {
+            try { window.AchievementSystem?.refresh?.(); } catch {}
+        }
+    }
+    achievementsSubtabBtnAchievements?.addEventListener('click', () => activate('achievements'));
+    achievementsSubtabBtnStats?.addEventListener('click', () => activate('stats'));
+    activate('achievements');
 }
 
 function setupTabs() {
@@ -3323,6 +3411,7 @@ function setupTabs() {
             blockdim: { btn: tabBtnBlockDim, panel: tabBlockDim },
             miniexp: { btn: tabBtnMiniExp, panel: tabMiniExp },
             tools: { btn: tabBtnTools, panel: tabTools },
+            achievements: { btn: tabBtnAchievements, panel: tabAchievements },
         };
         for (const k of Object.keys(map)) {
             const { btn, panel } = map[k];
@@ -3355,6 +3444,7 @@ function setupTabs() {
     if (tabBtnTools) {
         tabBtnTools.addEventListener('click', () => {
             activateTab('tools');
+            recordAchievementEvent('tools_tab_opened');
             if (!__toolsTabInitialized) {
                 if (window.ToolsTab?.init) {
                     window.ToolsTab.init(tabTools, { defaultTool: 'mod-maker' });
@@ -3364,6 +3454,13 @@ function setupTabs() {
                 const currentTool = window.ToolsTab.getCurrentTool?.();
                 window.ToolsTab.show(currentTool || 'mod-maker');
             }
+        });
+    }
+    if (tabBtnAchievements) {
+        tabBtnAchievements.addEventListener('click', () => {
+            activateTab('achievements');
+            initAchievementUiOnce();
+            try { window.AchievementSystem?.refresh?.(); } catch {}
         });
     }
     // Lists are click/keyboard driven（render側でバインド済み）
@@ -4893,6 +4990,7 @@ function downloadModMakerOutput() {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    recordAchievementEvent('tools_mod_export', { id: modMakerState?.metadata?.id || base });
 }
 
 
@@ -4945,7 +5043,8 @@ function getGameStateSnapshot() {
         skillState: {
             effects: deepClone(skillState.effects),
             pendingTickSkip: deepClone(skillState.pendingTickSkip)
-        }
+        },
+        achievements: window.AchievementSystem?.exportState?.() || null
     };
 }
 
@@ -4968,6 +5067,14 @@ function applyMiniShortcutStateSnapshot(snapshot) {
 function applyGameStateSnapshot(snapshot, options = {}) {
     if (!snapshot || typeof snapshot !== 'object') return;
     const applyUI = options.applyUI !== false;
+
+    try {
+        if (window.AchievementSystem && typeof window.AchievementSystem.importState === 'function') {
+            window.AchievementSystem.importState(snapshot.achievements || null);
+        }
+    } catch (err) {
+        console.warn('Failed to import achievement snapshot', err);
+    }
 
     dungeonLevel = Math.max(1, Math.floor(Number(snapshot.dungeonLevel) || 1));
 
@@ -8039,6 +8146,7 @@ function handleSatietyTurnTick(actionType = 'move') {
         const damage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * SATIETY_DAMAGE_RATIO));
         if (damage > 0) {
             player.hp = Math.max(0, player.hp - damage);
+            recordAchievementEvent('damage_taken', { amount: damage, source: 'hunger' });
             try {
                 addMessage(`空腹で ${damage} のダメージを受けた！`);
                 addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#ff922b');
@@ -8190,7 +8298,8 @@ function openChest(chest) {
             addMessage('宝箱を開けた！防御力強化アイテムを手に入れた！');
         }
     }
-    
+
+    recordAchievementEvent('chest_opened');
     updateUI();
     saveAll();
 }
@@ -8291,6 +8400,7 @@ function performAttack(enemyAtTarget) {
         })(attacker, defender);
         const applied = Math.ceil(applyDifficultyDamageMultipliers('deal', dmg));
         enemyAtTarget.hp -= applied;
+        recordAchievementEvent('damage_dealt', { amount: applied, enemy: sanitizeEnemySummary(enemyAtTarget) });
         addMessage(`プレイヤーは敵に ${applied} のダメージを与えた！`);
         const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied>999999999?'+':''}`;
         playSfx('attack');
@@ -8300,6 +8410,10 @@ function performAttack(enemyAtTarget) {
             addDefeatedEnemy(enemyAtTarget); // Add defeat animation
             gainSp(1, { silent: true });
             grantExpFromEnemy(enemyAtTarget.level || 1, enemyAtTarget.boss || false);
+            recordAchievementEvent('enemy_defeated', { boss: !!enemyAtTarget.boss, level: enemyAtTarget.level, enemy: sanitizeEnemySummary(enemyAtTarget) });
+            if (enemyAtTarget.boss) {
+                recordAchievementEvent('boss_defeated', { level: enemyAtTarget.level, enemy: sanitizeEnemySummary(enemyAtTarget) });
+            }
             if (enemyAtTarget.boss) bossAlive = false;
             enemies.splice(enemies.indexOf(enemyAtTarget), 1);
         } else {
@@ -8467,6 +8581,7 @@ function drawPopups() {
 
 function handlePlayerDeath(message = 'ゲームオーバー') {
     if (isGameOver) return;
+    recordAchievementEvent('death', { cause: message, mode: currentMode, floor: dungeonLevel, difficulty });
     addMessage(message);
     player.hp = Math.max(0, player.hp);
     const finalFloor = document.getElementById('final-floor');
@@ -8503,6 +8618,7 @@ function tryAdvanceOnConveyor(options = {}) {
     }
     player.x = targetX;
     player.y = targetY;
+    recordAchievementEvent('move', { steps: 1, method: 'conveyor' });
     updateCamera();
     if (showPopup) {
         const arrowMap = { up: '↑', down: '↓', left: '←', right: '→' };
@@ -8560,6 +8676,7 @@ function applyPostMoveEffects() {
                 if (ratio > 0) {
                     const damage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
                     player.hp = Math.max(0, player.hp - damage);
+                    recordAchievementEvent('damage_taken', { amount: damage, source: 'poison-floor' });
                     addMessage(`毒床がダメージ！HPが${damage}減少`);
                     addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
                     playSfx('damage');
@@ -8575,6 +8692,7 @@ function applyPostMoveEffects() {
                 if (ratio > 0) {
                     const damage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * ratio));
                     player.hp = Math.max(0, player.hp - damage);
+                    recordAchievementEvent('damage_taken', { amount: damage, source: 'bomb-floor' });
                     const popupValue = `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`;
                     addMessage(`爆弾が爆発！HPが${damage}減少`);
                     addPopup(player.x, player.y, popupValue, '#ff8787', 1.1);
@@ -8599,10 +8717,24 @@ function applyPostMoveEffects() {
                     addMessage('ダンジョンを攻略した！');
                     player.hp = player.maxHp;
                     enforceEffectiveHpCap();
+                    recordAchievementEvent('dungeon_cleared', {
+                        mode: currentMode,
+                        difficulty,
+                        world: selectedWorld,
+                        dungeonBase: selectedDungeonBase,
+                        nested: blockDimState?.nested || 1
+                    });
                     stopGameLoop();
                     showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
                 } else {
+                    const previousFloor = dungeonLevel;
                     dungeonLevel += 1;
+                    recordAchievementEvent('floor_advanced', {
+                        previousFloor,
+                        floor: dungeonLevel,
+                        mode: currentMode,
+                        difficulty
+                    });
                     addMessage(`次の階層に進んだ！（${dungeonLevel}F）`);
                     playSfx('stair');
                     generateLevel();
@@ -8636,9 +8768,11 @@ function attemptPlayerStep(dx, dy) {
     if (noClip) {
         const destX = Math.max(0, Math.min(MAP_WIDTH - 1, targetX));
         const destY = Math.max(0, Math.min(MAP_HEIGHT - 1, targetY));
+        const distance = Math.abs(destX - player.x) + Math.abs(destY - player.y);
         addSeparator();
         player.x = destX;
         player.y = destY;
+        recordAchievementEvent('move', { steps: Math.max(1, distance), method: 'noclip' });
         updateCamera();
         applyPostMoveEffects();
         return true;
@@ -8665,6 +8799,7 @@ function attemptPlayerStep(dx, dy) {
     function moveTo(x, y) {
         player.x = x;
         player.y = y;
+        recordAchievementEvent('move', { steps: 1, method: 'step' });
         if (!moveSoundPlayed) {
             playSfx('move');
             moveSoundPlayed = true;
@@ -8896,6 +9031,7 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     const applied = Math.ceil(applyDifficultyDamageMultipliers('take', dmg));
     if (applied > 0) {
         player.hp = Math.max(0, player.hp - applied);
+        recordAchievementEvent('damage_taken', { amount: applied, source: 'enemy', enemy: sanitizeEnemySummary(enemy) });
         addMessage(`敵はプレイヤーに ${applied} のダメージを与えた！`);
         const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied > 999999999 ? '+' : ''}`;
         addPopup(player.x, player.y, dmgText, crit ? '#ffa94d' : '#ff6b6b', crit ? 1.15 : 1);
@@ -8933,6 +9069,8 @@ function applyKnockbackFromEnemy(enemy, stepX, stepY) {
     if (isSandboxGodModeEnabled() || isSandboxNoClipEnabled()) return;
     if (stepX === 0 && stepY === 0) return;
     const others = enemies.filter(e => e !== enemy);
+    const originalX = player.x;
+    const originalY = player.y;
     let newX = player.x;
     let newY = player.y;
     let collided = false;
@@ -8948,11 +9086,16 @@ function applyKnockbackFromEnemy(enemy, stepX, stepY) {
     }
     player.x = newX;
     player.y = newY;
+    const displacement = Math.abs(newX - originalX) + Math.abs(newY - originalY);
+    if (displacement > 0) {
+        recordAchievementEvent('move', { steps: displacement, method: 'knockback' });
+    }
     updateCamera();
     applyPostMoveEffects();
     if (collided) {
         const collisionDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * 0.15));
         player.hp = Math.max(0, player.hp - collisionDamage);
+        recordAchievementEvent('damage_taken', { amount: collisionDamage, source: 'collision' });
         addMessage(`壁に激突して${collisionDamage}のダメージ！`);
         addPopup(player.x, player.y, `-${Math.min(collisionDamage, 999999999)}${collisionDamage > 999999999 ? '+' : ''}`, '#ffa94d');
         playSfx('damage');
@@ -9318,6 +9461,7 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     const v = Math.max(0, Number(amount) || 0);
     if (v <= 0) return 0;
     player.exp = (player.exp || 0) + v;
+    recordAchievementEvent('exp_earned', { amount: v, source: opts?.source, reason: opts?.reason });
     let leveled = 0;
     while (player.exp >= 1000) {
         player.exp -= 1000;

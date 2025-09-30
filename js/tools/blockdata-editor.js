@@ -631,6 +631,7 @@
         renderList();
         renderPreview();
         setStatus('ブロックを保存しました。', false, 'success');
+        global.AchievementSystem?.recordEvent('tools_blockdata_save');
     }
 
     function handleDelete() {
@@ -738,6 +739,7 @@
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 500);
         setStatus('JSONファイルをダウンロードしました。', false, 'success');
+        global.AchievementSystem?.recordEvent('tools_blockdata_download');
     }
 
     function maybeDiscardForm() {

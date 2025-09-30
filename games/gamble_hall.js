@@ -50,6 +50,9 @@
       .mini-gh-panels{flex:1;background:rgba(15,23,42,0.6);border-radius:20px;border:1px solid rgba(148,163,184,0.2);padding:20px;min-height:260px;position:relative;overflow:hidden;}
       .mini-gh-panel{display:none;gap:18px;}
       .mini-gh-panel.active{display:flex;flex-direction:column;}
+      .mini-gh-panel.mini-gh-roulette-layout{gap:20px;}
+      .mini-gh-panel.mini-gh-slot{gap:20px;align-items:center;}
+      .mini-gh-panel.mini-gh-dice{gap:20px;align-items:center;}
       .mini-gh-lower{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));align-items:stretch;}
       .mini-gh-status{padding:16px 18px;border-radius:18px;background:rgba(30,41,59,0.8);border:1px solid rgba(148,163,184,0.25);font-size:13px;color:#cbd5f5;box-shadow:0 12px 26px rgba(2,6,23,0.35);transition:transform 0.35s ease,box-shadow 0.35s ease;}
       .mini-gh-status.pulse-win{transform:translateY(-2px) scale(1.01);box-shadow:0 16px 34px rgba(74,222,128,0.35);}
@@ -67,7 +70,7 @@
       .mini-gh-history-list li.win{border-left-color:#4ade80;}
       .mini-gh-history-list li.loss{border-left-color:#f87171;}
       .mini-gh-history-list li .meta{color:#94a3b8;font-size:11px;}
-      .mini-gh-roulette-layout{display:flex;flex-direction:column;gap:20px;}
+      .mini-gh-roulette-layout{flex-direction:column;}
       .mini-gh-roulette-visual{display:flex;flex-direction:column;align-items:center;gap:14px;}
       .mini-gh-roulette-wheel{width:220px;height:220px;position:relative;border-radius:50%;background:radial-gradient(circle at center,#0b1220 0%,#0f172a 55%,#020617 100%);border:6px solid rgba(148,163,184,0.38);box-shadow:0 18px 42px rgba(2,6,23,0.65);display:flex;align-items:center;justify-content:center;overflow:hidden;}
       .mini-gh-roulette-wheel::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#e2e8f0;box-shadow:0 0 16px rgba(226,232,240,0.6),0 0 0 6px rgba(15,23,42,0.6);z-index:6;}
@@ -91,7 +94,7 @@
       .mini-gh-roulette-controls button{background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#0f172a;font-weight:700;box-shadow:0 12px 26px rgba(14,165,233,0.32);}
       .mini-gh-roulette-controls button:disabled{opacity:0.6;cursor:not-allowed;box-shadow:none;}
       .mini-gh-roulette-controls button:hover:not(:disabled){transform:translateY(-1px);}
-      .mini-gh-slot{display:flex;flex-direction:column;gap:20px;align-items:center;}
+      .mini-gh-slot{flex-direction:column;align-items:center;}
       .mini-gh-slot-reels{display:flex;gap:14px;justify-content:center;}
       .mini-gh-slot-reel{width:72px;height:72px;border-radius:16px;border:2px solid rgba(148,163,184,0.35);background:linear-gradient(160deg,rgba(30,41,59,0.9),rgba(15,23,42,0.9));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#f8fafc;box-shadow:0 8px 20px rgba(2,6,23,0.55);transition:transform 0.2s;}
       .mini-gh-slot.running .mini-gh-slot-reel{animation:mini-gh-slot-spin 0.4s linear infinite;}
@@ -99,7 +102,7 @@
       .mini-gh-slot button{padding:12px 22px;border-radius:16px;border:1px solid rgba(59,130,246,0.45);background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 12px 26px rgba(14,165,233,0.3);transition:transform 0.15s,box-shadow 0.15s;}
       .mini-gh-slot button:active{transform:translateY(1px);box-shadow:0 6px 18px rgba(14,165,233,0.26);}
       .mini-gh-small{font-size:11px;color:#94a3b8;text-align:center;}
-      .mini-gh-dice{display:flex;flex-direction:column;gap:20px;align-items:center;}
+      .mini-gh-dice{flex-direction:column;align-items:center;}
       .mini-gh-dice-rolling{display:flex;gap:16px;}
       .mini-gh-die{width:62px;height:62px;border-radius:18px;background:linear-gradient(145deg,rgba(30,41,59,0.92),rgba(15,23,42,0.92));border:2px solid rgba(148,163,184,0.35);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#f8fafc;box-shadow:0 10px 24px rgba(2,6,23,0.55);transition:transform 0.25s ease;}
       .mini-gh-die.roll{animation:mini-gh-die-roll 0.6s ease-in-out infinite;}

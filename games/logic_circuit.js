@@ -42,6 +42,8 @@
     .logic-comp-content { display:flex; flex-direction:column; gap:8px; justify-content:flex-start; align-items:flex-start; padding:4px 6px; }
     .logic-mini-button { padding:6px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.6); background:rgba(15,23,42,0.04); cursor:pointer; font-weight:600; font-size:13px; transition:all 0.2s ease; }
     .logic-mini-button:hover { background:rgba(37,99,235,0.15); border-color:rgba(37,99,235,0.5); }
+    .logic-step-input { width:84px; padding:6px 8px; border-radius:8px; border:1px solid rgba(148,163,184,0.6); background:#ffffff; font-size:12px; box-shadow:inset 0 1px 2px rgba(15,23,42,0.08); color:#0f172a; }
+    .logic-step-input:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,0.25); }
     .logic-range-row { display:flex; flex-direction:column; gap:4px; width:100%; font-size:12px; color:#334155; }
     .logic-range-row input[type="range"] { width:100%; }
     .logic-led-indicator { width:28px; height:28px; border-radius:50%; border:2px solid rgba(15,23,42,0.45); box-shadow:inset 0 4px 10px rgba(15,23,42,0.25); }
@@ -200,6 +202,7 @@
       icon: '➡️',
       category: 'ゲート',
       description: '入力をそのまま出力するバッファ',
+      propagationDelayNs: 1.0,
       inputs: 1,
       outputs: 1,
       compute(component, inputs){ return [Boolean(inputs[0])]; },
@@ -218,6 +221,7 @@
       icon: '⊝',
       category: 'ゲート',
       description: '入力を反転するNOTゲート',
+      propagationDelayNs: 1.4,
       inputs: 1,
       outputs: 1,
       compute(component, inputs){ return [!Boolean(inputs[0])]; },
@@ -236,6 +240,7 @@
       icon: '∧',
       category: 'ゲート',
       description: '全ての入力がHIGHでHIGH',
+      propagationDelayNs: 2.6,
       inputs: 2,
       outputs: 1,
       compute(component, inputs){ return [inputs.every(Boolean)]; },
@@ -254,6 +259,7 @@
       icon: '⊼',
       category: 'ゲート',
       description: 'ANDの反転',
+      propagationDelayNs: 3.0,
       inputs: 2,
       outputs: 1,
       compute(component, inputs){ return [!inputs.every(Boolean)]; },
@@ -272,6 +278,7 @@
       icon: '∨',
       category: 'ゲート',
       description: 'いずれかの入力がHIGHでHIGH',
+      propagationDelayNs: 2.4,
       inputs: 2,
       outputs: 1,
       compute(component, inputs){ return [inputs.some(Boolean)]; },
@@ -290,6 +297,7 @@
       icon: '⊽',
       category: 'ゲート',
       description: 'ORの反転',
+      propagationDelayNs: 2.8,
       inputs: 2,
       outputs: 1,
       compute(component, inputs){ return [!inputs.some(Boolean)]; },
@@ -308,6 +316,7 @@
       icon: '⊕',
       category: 'ゲート',
       description: '入力のHIGH数が奇数でHIGH',
+      propagationDelayNs: 3.8,
       inputs: 2,
       outputs: 1,
       compute(component, inputs){ return [xorCount(inputs)]; },
@@ -326,6 +335,7 @@
       icon: '⊙',
       category: 'ゲート',
       description: 'XORの反転',
+      propagationDelayNs: 3.9,
       inputs: 2,
       outputs: 1,
       compute(component, inputs){ return [!xorCount(inputs)]; },
@@ -344,6 +354,7 @@
       icon: '⇉',
       category: '配線',
       description: '1入力を複数の出力へ複製する',
+      propagationDelayNs: 0.6,
       inputs: 1,
       outputs: 2,
       compute(component, inputs){
@@ -360,11 +371,199 @@
       }
     },
     {
+      id: 'mux2',
+      label: '2:1 MUX',
+      icon: '⤴️',
+      category: '複合',
+      description: '選択信号で入力を切り替える2入力1出力の多重化器',
+      propagationDelayNs: 4.4,
+      inputs: 3,
+      outputs: 1,
+      compute(component, inputs){
+        const [in0, in1, sel] = [Boolean(inputs[0]), Boolean(inputs[1]), Boolean(inputs[2])];
+        return [sel ? in1 : in0];
+      },
+      updateVisual(component){
+        if (component.dom?.status) {
+          const out = Boolean(component.cachedOutputs?.[0]);
+          const sel = Boolean(component.lastInputs?.[2]);
+          component.dom.status.textContent = `OUT:${out ? '1' : '0'} (SEL=${sel ? '1' : '0'})`;
+          component.dom.status.className = `logic-chip ${out ? 'high' : 'low'}`;
+        }
+      },
+      truth(inputs){
+        return inputs[2] ? inputs[1] : inputs[0];
+      }
+    },
+    {
+      id: 'decoder2',
+      label: '2-4デコーダ',
+      icon: '🧮',
+      category: '複合',
+      description: '2ビット入力からワンホットの4出力を生成するデコーダ',
+      propagationDelayNs: 4.8,
+      inputs: 2,
+      outputs: 4,
+      compute(component, inputs){
+        const [a, b] = [Boolean(inputs[0]), Boolean(inputs[1])];
+        const index = (Number(a) << 1) | Number(b);
+        const out = [false, false, false, false];
+        out[index] = true;
+        return out;
+      },
+      updateVisual(component){
+        if (component.dom?.status) {
+          const outs = component.cachedOutputs || [];
+          component.dom.status.textContent = outs.map(v => (v ? '1' : '0')).join('');
+          component.dom.status.className = 'logic-chip neutral';
+        }
+      }
+    },
+    {
+      id: 'd_ff',
+      label: 'Dフリップフロップ',
+      icon: '⌛',
+      category: 'シーケンシャル',
+      description: '立ち上がりクロックでD入力をラッチしQ/Q̅を出力する同期フリップフロップ (非同期リセット付)',
+      propagationDelayNs: 6.2,
+      inputs: 3,
+      outputs: 2,
+      setup(component, dom){
+        component.state = Boolean(component.state);
+        component.prevClock = false;
+        const indicator = document.createElement('div');
+        indicator.className = 'logic-chip neutral';
+        indicator.textContent = 'Q=0 / Q̅=1';
+        dom.content.appendChild(indicator);
+        component.controls = Object.assign({}, component.controls, { indicator });
+      },
+      compute(component, inputs){
+        if (typeof component.state !== 'boolean') component.state = false;
+        const [d, clk, reset] = [Boolean(inputs[0]), Boolean(inputs[1]), Boolean(inputs[2])];
+        const prevClock = typeof component.prevClock === 'boolean' ? component.prevClock : Boolean(component.lastInputs?.[1]);
+        if (reset) {
+          component.state = false;
+        } else if (!prevClock && clk) {
+          component.state = d;
+        }
+        component.prevClock = clk;
+        return [component.state, !component.state];
+      },
+      updateVisual(component){
+        const q = Boolean(component.cachedOutputs?.[0]);
+        if (component.dom?.status) {
+          component.dom.status.textContent = `Q=${q ? '1' : '0'}`;
+          component.dom.status.className = `logic-chip ${q ? 'high' : 'low'}`;
+        }
+        if (component.controls?.indicator) {
+          component.controls.indicator.textContent = `Q=${q ? 1 : 0} / Q̅=${q ? 0 : 1}`;
+          component.controls.indicator.className = `logic-chip ${q ? 'high' : 'low'}`;
+        }
+      },
+      inspect(component){
+        return [
+          { label: 'ラッチ状態', value: component.state ? 'SET' : 'RESET' },
+          { label: '前回クロック', value: component.prevClock ? 'HIGH' : 'LOW' }
+        ];
+      }
+    },
+    {
+      id: 'sr_latch',
+      label: 'SRラッチ',
+      icon: '🔁',
+      category: 'シーケンシャル',
+      description: 'NOR構成の基本SRラッチ。Sでセット、Rでリセット。',
+      propagationDelayNs: 5.5,
+      inputs: 2,
+      outputs: 2,
+      setup(component, dom){
+        component.state = Boolean(component.state);
+        component.metaInvalid = false;
+        const indicator = document.createElement('div');
+        indicator.className = 'logic-chip neutral';
+        indicator.textContent = '安定';
+        dom.content.appendChild(indicator);
+        component.controls = Object.assign({}, component.controls, { indicator });
+      },
+      compute(component, inputs){
+        if (typeof component.state !== 'boolean') component.state = false;
+        const [set, reset] = [Boolean(inputs[0]), Boolean(inputs[1])];
+        component.metaInvalid = false;
+        if (set && reset) {
+          component.metaInvalid = true;
+        } else if (set) {
+          component.state = true;
+        } else if (reset) {
+          component.state = false;
+        }
+        return component.metaInvalid ? [false, false] : [component.state, !component.state];
+      },
+      updateVisual(component){
+        if (component.dom?.status) {
+          if (component.metaInvalid) {
+            component.dom.status.textContent = '不定状態';
+            component.dom.status.className = 'logic-chip low';
+          } else {
+            const q = Boolean(component.cachedOutputs?.[0]);
+            component.dom.status.textContent = `Q=${q ? '1' : '0'}`;
+            component.dom.status.className = `logic-chip ${q ? 'high' : 'low'}`;
+          }
+        }
+        if (component.controls?.indicator) {
+          component.controls.indicator.textContent = component.metaInvalid ? 'S=R=1 (不定)' : (component.state ? 'SET' : 'RESET');
+          component.controls.indicator.className = `logic-chip ${component.metaInvalid ? 'low' : (component.state ? 'high' : 'neutral')}`;
+        }
+      },
+      inspect(component){
+        return component.metaInvalid ? [{ label: '注意', value: 'SとRが同時に1です。安定しません。' }] : [];
+      }
+    },
+    {
+      id: 't_ff',
+      label: 'Tフリップフロップ',
+      icon: '⏲️',
+      category: 'シーケンシャル',
+      description: '立ち上がりクロック毎にT入力がHIGHなら出力を反転。リセット入力付き。',
+      propagationDelayNs: 6.0,
+      inputs: 3,
+      outputs: 2,
+      setup(component){
+        component.state = Boolean(component.state);
+        component.prevClock = false;
+      },
+      compute(component, inputs){
+        if (typeof component.state !== 'boolean') component.state = false;
+        const [toggle, clk, reset] = [Boolean(inputs[0]), Boolean(inputs[1]), Boolean(inputs[2])];
+        const prevClock = typeof component.prevClock === 'boolean' ? component.prevClock : Boolean(component.lastInputs?.[1]);
+        if (reset) {
+          component.state = false;
+        } else if (!prevClock && clk && toggle) {
+          component.state = !component.state;
+        }
+        component.prevClock = clk;
+        return [component.state, !component.state];
+      },
+      updateVisual(component){
+        const q = Boolean(component.cachedOutputs?.[0]);
+        if (component.dom?.status) {
+          component.dom.status.textContent = `Q=${q ? '1' : '0'}`;
+          component.dom.status.className = `logic-chip ${q ? 'high' : 'low'}`;
+        }
+      },
+      inspect(component){
+        return [
+          { label: 'トグル状態', value: component.state ? '1' : '0' },
+          { label: '前回クロック', value: component.prevClock ? 'HIGH' : 'LOW' }
+        ];
+      }
+    },
+    {
       id: 'probe',
       label: 'プローブ',
       icon: '🔍',
       category: '計測',
       description: '入力値を監視する計測ノード',
+      propagationDelayNs: 0.2,
       inputs: 1,
       outputs: 0,
       compute(){ return []; },
@@ -392,6 +591,7 @@
       icon: '💡',
       category: '出力',
       description: '入力がHIGHのとき点灯',
+      propagationDelayNs: 1.5,
       inputs: 1,
       outputs: 0,
       compute(){ return []; },
@@ -447,10 +647,11 @@
         sessionXp: 0,
         evaluationScheduled: false,
         activeToolId: null,
-        boardRect: null,
         rafId: null,
         lastTick: performance.now(),
-        isRunning: false
+        isRunning: false,
+        simTime: 0,
+        stepDuration: 100
       };
 
       const wrapper = document.createElement('div');
@@ -475,6 +676,9 @@
       const xpChip = document.createElement('div');
       xpChip.className = 'logic-chip';
       xpChip.textContent = 'セッションEXP: 0';
+      const timeChip = document.createElement('div');
+      timeChip.className = 'logic-chip neutral';
+      timeChip.textContent = '経過時間: 0.0ms';
 
       const clearButton = document.createElement('button');
       clearButton.className = 'logic-mini-button';
@@ -484,7 +688,9 @@
         for (const wire of [...state.wires]) removeWire(wire.id);
         for (const comp of [...state.components]) removeComponent(comp.id);
         state.selectedComponentId = null;
+        state.simTime = 0;
         updateInspector();
+        updateSimulationControls();
         scheduleEvaluation();
       });
 
@@ -493,7 +699,53 @@
       deselectButton.textContent = 'ツール解除 (Esc)';
       deselectButton.addEventListener('click', () => setActiveTool(null));
 
+      const runButton = document.createElement('button');
+      runButton.className = 'logic-mini-button';
+      runButton.textContent = '⏸ 停止';
+      runButton.addEventListener('click', () => {
+        if (state.isRunning) {
+          stop();
+        } else {
+          start();
+        }
+        updateSimulationControls();
+      });
+
+      const stepButton = document.createElement('button');
+      stepButton.className = 'logic-mini-button';
+      stepButton.textContent = '⏭ ステップ';
+      stepButton.addEventListener('click', () => {
+        stop();
+        advanceSimulation(state.stepDuration, { immediate: true });
+      });
+
+      const stepControl = document.createElement('label');
+      stepControl.style.display = 'flex';
+      stepControl.style.alignItems = 'center';
+      stepControl.style.gap = '6px';
+      stepControl.style.fontSize = '12px';
+      stepControl.textContent = 'ステップ(ms)';
+      const stepInput = document.createElement('input');
+      stepInput.type = 'number';
+      stepInput.min = '1';
+      stepInput.max = '10000';
+      stepInput.value = String(state.stepDuration);
+      stepInput.className = 'logic-step-input';
+      stepInput.addEventListener('change', () => {
+        const value = Number(stepInput.value);
+        if (Number.isFinite(value)) {
+          state.stepDuration = Math.max(1, Math.min(10000, Math.round(value)));
+        }
+        stepInput.value = String(state.stepDuration);
+        updateSimulationControls();
+      });
+      stepControl.appendChild(stepInput);
+
       headerActions.appendChild(xpChip);
+      headerActions.appendChild(timeChip);
+      headerActions.appendChild(runButton);
+      headerActions.appendChild(stepButton);
+      headerActions.appendChild(stepControl);
       headerActions.appendChild(clearButton);
       headerActions.appendChild(deselectButton);
 
@@ -625,7 +877,7 @@
 
       const footer = document.createElement('div');
       footer.className = 'logic-footer-note';
-      footer.textContent = 'ヒント: 入力をトグルして即座に出力を確認し、クロックでシーケンシャル動作も再現できます。';
+      footer.textContent = 'ヒント: 入力をトグルして即座に出力を確認。シミュレーション制御で一時停止やステップ実行を行いながらシーケンシャル動作を解析できます。';
 
       wrapper.appendChild(header);
       wrapper.appendChild(toolbar);
@@ -634,10 +886,15 @@
       root.appendChild(wrapper);
 
       const resizeObserver = new ResizeObserver(() => {
-        state.boardRect = null;
         updateAllWireGeometry();
       });
       resizeObserver.observe(boardWrapper);
+
+      const handleViewportChange = () => {
+        updateAllWireGeometry();
+      };
+      window.addEventListener('scroll', handleViewportChange, true);
+      window.addEventListener('resize', handleViewportChange);
 
       function updateXp(amount){
         state.sessionXp += amount;
@@ -652,6 +909,13 @@
         updateXp(amount);
       }
 
+      function updateSimulationControls(){
+        timeChip.textContent = `経過時間: ${state.simTime.toFixed(1)}ms`;
+        runButton.textContent = state.isRunning ? '⏸ 停止' : '▶ 再開';
+        stepButton.disabled = state.isRunning;
+        stepInput.value = String(state.stepDuration);
+      }
+
       function setActiveTool(toolId){
         state.activeToolId = toolId;
         for (const [id, btn] of toolButtons.entries()) {
@@ -660,10 +924,7 @@
       }
 
       function getBoardRect(){
-        if (!state.boardRect) {
-          state.boardRect = board.getBoundingClientRect();
-        }
-        return state.boardRect;
+        return board.getBoundingClientRect();
       }
 
       function boardPoint(event){
@@ -985,7 +1246,7 @@
       function renderTruthTable(component){
         const def = component.def;
         const inputsCount = def.inputs || 0;
-        if (inputsCount === 0 || inputsCount > 3 || typeof def.truth !== 'function' || def.outputs !== 1) {
+        if (inputsCount === 0 || inputsCount > 4 || typeof def.truth !== 'function' || def.outputs !== 1) {
           truthSection.style.display = 'none';
           truthTableWrap.innerHTML = '';
           return;
@@ -1070,6 +1331,22 @@
           const code = document.createElement('code');
           code.textContent = component.cachedOutputs.map(v => (v ? '1' : '0')).join(' ');
           addRow('最新出力', code);
+        }
+        const fanIn = state.wires.filter(w => w.to.componentId === component.id).length;
+        const fanOut = state.wires.filter(w => w.from.componentId === component.id).length;
+        addRow('入力接続', `${fanIn} 本`);
+        addRow('出力接続', `${fanOut} 本`);
+        if (typeof component.def.propagationDelayNs === 'number') {
+          addRow('伝播遅延(目安)', `${component.def.propagationDelayNs.toFixed(1)} ns`);
+        }
+        if (typeof component.def.inspect === 'function') {
+          try {
+            const extras = component.def.inspect(component) || [];
+            for (const info of extras) {
+              if (!info || !info.label) continue;
+              addRow(info.label, info.value ?? '');
+            }
+          } catch {}
         }
         if (component.def.description) addRow('説明', component.def.description);
         renderTruthTable(component);
@@ -1193,25 +1470,47 @@
         addComponent(def, offsetX, offsetY);
       }
 
-      function tick(now){
-        if (!state.isRunning) return;
-        const delta = now - state.lastTick;
-        state.lastTick = now;
+      function advanceSimulation(delta, options = {}){
+        const immediate = Boolean(options.immediate);
+        if (!Number.isFinite(delta) || delta < 0) delta = 0;
+        state.simTime += delta;
         let dirty = false;
         for (const component of state.components) {
           if (component.def.id === 'clock') {
             component.elapsed = (component.elapsed || 0) + delta;
             const period = Math.max(60, component.period || 500);
-            if (component.elapsed >= period) {
+            while (component.elapsed >= period) {
               component.elapsed -= period;
               component.state = !component.state;
               dirty = true;
             }
           }
+          if (typeof component.def.advance === 'function') {
+            try {
+              if (component.def.advance(component, delta, { scheduleEvaluation, state })) {
+                dirty = true;
+              }
+            } catch {}
+          }
         }
         if (dirty) {
-          scheduleEvaluation();
+          if (state.isRunning && !immediate) {
+            scheduleEvaluation();
+          } else {
+            evaluateCircuit();
+          }
+        } else if (immediate) {
+          evaluateCircuit();
         }
+        updateSimulationControls();
+        return dirty;
+      }
+
+      function tick(now){
+        if (!state.isRunning) return;
+        const delta = now - state.lastTick;
+        state.lastTick = now;
+        advanceSimulation(delta);
         state.rafId = requestAnimationFrame(tick);
       }
 
@@ -1245,6 +1544,7 @@
         state.lastTick = performance.now();
         state.rafId = requestAnimationFrame(tick);
         scheduleEvaluation();
+        updateSimulationControls();
       }
 
       function stop(){
@@ -1252,11 +1552,14 @@
         state.isRunning = false;
         if (state.rafId) cancelAnimationFrame(state.rafId);
         state.rafId = null;
+        updateSimulationControls();
       }
 
       function destroy(){
         stop();
         resizeObserver.disconnect();
+        window.removeEventListener('scroll', handleViewportChange, true);
+        window.removeEventListener('resize', handleViewportChange);
         clearPendingConnection();
         board.removeEventListener('mousedown', handleBoardClick);
         board.removeEventListener('pointermove', handleBoardPointerMove);

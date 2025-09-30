@@ -49,6 +49,26 @@ const offerPotion30Btn = document.getElementById('offer-potion30');
 const useHpBoostBtn = document.getElementById('use-hp-boost');
 const useAtkBoostBtn = document.getElementById('use-atk-boost');
 const useDefBoostBtn = document.getElementById('use-def-boost');
+const sandboxMenuButton = document.getElementById('btn-sandbox-menu');
+const sandboxInteractivePanel = document.getElementById('sandbox-interactive-panel');
+const sandboxInteractiveClose = document.getElementById('sandbox-interactive-close');
+const sandboxGodModeInput = document.getElementById('sandbox-god-mode');
+const sandboxNoClipInput = document.getElementById('sandbox-no-clip');
+const sandboxFullHealButton = document.getElementById('sandbox-full-heal');
+const sandboxResetStatsButton = document.getElementById('sandbox-reset-stats');
+const sandboxApplyStatsButton = document.getElementById('sandbox-apply-stats');
+const sandboxStatLevelInput = document.getElementById('sandbox-stat-level');
+const sandboxStatMaxHpInput = document.getElementById('sandbox-stat-maxhp');
+const sandboxStatHpInput = document.getElementById('sandbox-stat-hp');
+const sandboxStatAtkInput = document.getElementById('sandbox-stat-atk');
+const sandboxStatDefInput = document.getElementById('sandbox-stat-def');
+const sandboxStatMaxSpInput = document.getElementById('sandbox-stat-maxsp');
+const sandboxStatSpInput = document.getElementById('sandbox-stat-sp');
+const sandboxStatSatietyInput = document.getElementById('sandbox-stat-satiety');
+const sandboxToolSelect = document.getElementById('sandbox-tool-select');
+const sandboxToolFloorType = document.getElementById('sandbox-tool-floor-type');
+const sandboxToolFloorDir = document.getElementById('sandbox-tool-floor-dir');
+const sandboxToolApplyButton = document.getElementById('sandbox-tool-apply');
 const statusDetails = document.getElementById('status-details');
 const modalStatusEffects = document.getElementById('modal-status-effects');
 const modalSkillEffects = document.getElementById('modal-skill-effects');
@@ -188,6 +208,25 @@ const SKILL_DEFINITIONS = [
     { id: 'surehit-floor', name: '必中全体攻撃', cost: 200, description: 'フロア全体の敵へ必中の攻撃。', action: useSkillSureHitFloorAttack },
     { id: 'ruin-annihilation', name: '破滅全体攻撃', cost: 300, description: '全ての敵へ必中で威力3倍の攻撃＆壁やギミックを消し宝箱を獲得。（高Lv敵には無効）', action: useSkillRuinAnnihilation }
 ];
+
+const FLOAT_EPSILON = 1e-6;
+let skillsListNeedsRefresh = true;
+const lastSkillsSpDisplay = {
+    current: null,
+    max: null,
+    text: null,
+    ratio: null,
+};
+
+function nearlyEqual(a, b, epsilon = FLOAT_EPSILON) {
+    const left = Number.isFinite(a) ? a : 0;
+    const right = Number.isFinite(b) ? b : 0;
+    return Math.abs(left - right) <= epsilon;
+}
+
+function markSkillsListDirty() {
+    skillsListNeedsRefresh = true;
+}
 
 const SKILL_AREA_OFFSETS = [
     { dx: 0, dy: -1 },
@@ -362,6 +401,15 @@ const sandboxRuntime = {
     expNoticeShown: false
 };
 
+const sandboxInteractiveState = {
+    enabled: false,
+    panelOpen: false,
+    godMode: false,
+    noClip: false,
+    savedStats: null,
+    privilegeEnabled: false
+};
+
 function isSandboxActive() {
     return !!(sandboxRuntime.active && sandboxRuntime.config);
 }
@@ -383,6 +431,470 @@ function sandboxNotifyNoExp() {
     try {
         addMessage('サンドボックスでは経験値は獲得できません。');
     } catch {}
+}
+
+function sandboxLog(message) {
+    try { addMessage(message); } catch {}
+}
+
+function isSandboxInteractiveEnabled() {
+    if (sandboxRuntime.active && sandboxRuntime.config) {
+        return !!sandboxInteractiveState.enabled;
+    }
+    return !!(sandboxInteractiveState.enabled && sandboxInteractiveState.privilegeEnabled);
+}
+
+function isSandboxGodModeEnabled() {
+    return isSandboxInteractiveEnabled() && sandboxInteractiveState.godMode;
+}
+
+function isSandboxNoClipEnabled() {
+    return isSandboxInteractiveEnabled() && sandboxInteractiveState.noClip;
+}
+
+function isSandboxHazardImmune() {
+    return isSandboxGodModeEnabled() || isSandboxNoClipEnabled();
+}
+
+function updateSandboxToggleInputs() {
+    if (sandboxGodModeInput) sandboxGodModeInput.checked = sandboxInteractiveState.godMode;
+    if (sandboxNoClipInput) sandboxNoClipInput.checked = sandboxInteractiveState.noClip;
+}
+
+function updateSandboxMenuVisibility() {
+    if (!sandboxMenuButton) return;
+    if (isSandboxInteractiveEnabled()) {
+        sandboxMenuButton.style.display = '';
+    } else {
+        sandboxMenuButton.style.display = 'none';
+        sandboxMenuButton.setAttribute('aria-expanded', 'false');
+    }
+    if (!isSandboxInteractiveEnabled()) {
+        if (sandboxInteractivePanel) {
+            sandboxInteractivePanel.setAttribute('aria-hidden', 'true');
+        }
+        sandboxInteractiveState.panelOpen = false;
+    }
+    updateSandboxToggleInputs();
+}
+
+function setSandboxPanelOpen(open, { silent = false } = {}) {
+    if (!isSandboxInteractiveEnabled()) open = false;
+    const next = !!open;
+    sandboxInteractiveState.panelOpen = next;
+    if (sandboxMenuButton) sandboxMenuButton.setAttribute('aria-expanded', next ? 'true' : 'false');
+    if (sandboxInteractivePanel) sandboxInteractivePanel.setAttribute('aria-hidden', next ? 'false' : 'true');
+    if (next) {
+        syncSandboxStatInputs();
+        updateSandboxToolControls();
+    }
+    if (!silent && next && sandboxInteractivePanel) {
+        try { sandboxInteractivePanel.focus({ preventScroll: true }); } catch {}
+    }
+}
+
+function setSandboxInteractiveEnabled(enabled) {
+    sandboxInteractiveState.enabled = !!enabled;
+    if (!sandboxInteractiveState.enabled) {
+        sandboxInteractiveState.noClip = false;
+        sandboxInteractiveState.savedStats = null;
+        setSandboxPanelOpen(false, { silent: true });
+    } else {
+        syncSandboxStatInputs();
+        updateSandboxToolControls();
+    }
+    updateSandboxMenuVisibility();
+}
+
+function hasSandboxInteractivePrivilege() {
+    if (isSandboxActive()) return false;
+    if (!gameScreen || gameScreen.style.display === 'none') return false;
+    const playerLevel = Number.isFinite(player?.level) ? player.level : null;
+    if (!Number.isFinite(playerLevel) || playerLevel <= 1025) return false;
+    let recommended = null;
+    try {
+        recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    } catch {
+        recommended = null;
+    }
+    if (!Number.isFinite(recommended)) return false;
+    return playerLevel - recommended >= 100;
+}
+
+function updateSandboxInteractivePrivilege() {
+    if (isSandboxActive()) {
+        if (sandboxInteractiveState.privilegeEnabled) {
+            sandboxInteractiveState.privilegeEnabled = false;
+        }
+        return;
+    }
+
+    const inGame = !!(gameScreen && gameScreen.style.display !== 'none');
+    if (!inGame) {
+        if (sandboxInteractiveState.privilegeEnabled || sandboxInteractiveState.enabled) {
+            sandboxInteractiveState.privilegeEnabled = false;
+            resetSandboxInteractiveState();
+        }
+        return;
+    }
+
+    const eligible = hasSandboxInteractivePrivilege();
+    if (eligible) {
+        if (!sandboxInteractiveState.privilegeEnabled || !sandboxInteractiveState.enabled) {
+            sandboxInteractiveState.privilegeEnabled = true;
+            setSandboxInteractiveEnabled(true);
+        }
+    } else if (sandboxInteractiveState.privilegeEnabled || sandboxInteractiveState.enabled) {
+        sandboxInteractiveState.privilegeEnabled = false;
+        resetSandboxInteractiveState();
+    }
+}
+
+function resetSandboxInteractiveState() {
+    sandboxInteractiveState.enabled = false;
+    sandboxInteractiveState.privilegeEnabled = false;
+    if (sandboxInteractiveState.godMode) {
+        applySandboxGodMode(false, { silent: true });
+    }
+    sandboxInteractiveState.noClip = false;
+    sandboxInteractiveState.savedStats = null;
+    sandboxInteractiveState.panelOpen = false;
+    if (sandboxMenuButton) {
+        sandboxMenuButton.style.display = 'none';
+        sandboxMenuButton.setAttribute('aria-expanded', 'false');
+    }
+    if (sandboxInteractivePanel) {
+        sandboxInteractivePanel.setAttribute('aria-hidden', 'true');
+    }
+    updateSandboxToggleInputs();
+    updateSandboxMenuVisibility();
+}
+
+function setSandboxInputValue(input, value) {
+    if (!input) return;
+    if (!Number.isFinite(value)) {
+        input.value = '';
+        input.placeholder = '∞';
+        input.dataset.infinity = 'true';
+    } else {
+        input.value = Math.floor(value);
+        input.placeholder = '';
+        delete input.dataset.infinity;
+    }
+}
+
+function parseSandboxInputValue(input, { fallback, clampMin = null, clampMax = null } = {}) {
+    if (!input) return fallback;
+    const raw = typeof input.value === 'string' ? input.value.trim() : '';
+    if (!raw) {
+        if (input.dataset.infinity === 'true') return Infinity;
+        return fallback;
+    }
+    const lower = raw.toLowerCase();
+    if (lower === 'inf' || lower === 'infinity') return Infinity;
+    const num = Number(raw);
+    if (!Number.isFinite(num)) return fallback;
+    let value = num;
+    if (clampMin !== null) value = Math.max(clampMin, value);
+    if (clampMax !== null) value = Math.min(clampMax, value);
+    return value;
+}
+
+function syncSandboxStatInputs() {
+    if (!isSandboxInteractiveEnabled()) return;
+    setSandboxInputValue(sandboxStatLevelInput, player.level);
+    setSandboxInputValue(sandboxStatMaxHpInput, player.maxHp);
+    setSandboxInputValue(sandboxStatHpInput, player.hp);
+    setSandboxInputValue(sandboxStatAtkInput, player.attack);
+    setSandboxInputValue(sandboxStatDefInput, player.defense);
+    setSandboxInputValue(sandboxStatMaxSpInput, player.maxSp);
+    setSandboxInputValue(sandboxStatSpInput, player.sp);
+    setSandboxInputValue(sandboxStatSatietyInput, player.satiety);
+    updateSandboxToggleInputs();
+}
+
+function handleSandboxFullHeal() {
+    if (!isSandboxInteractiveEnabled()) return;
+    const effectiveMax = getEffectivePlayerMaxHp();
+    player.hp = Number.isFinite(player.maxHp) ? Math.min(player.maxHp, effectiveMax) : Infinity;
+    if (!Number.isFinite(player.hp)) player.hp = Infinity;
+    if (Number.isFinite(player.maxHp) && Number.isFinite(effectiveMax)) {
+        player.hp = Math.min(player.maxHp, effectiveMax);
+    }
+    if (isSandboxGodModeEnabled()) {
+        player.hp = Infinity;
+        player.satiety = Infinity;
+        player.sp = Infinity;
+    } else {
+        player.hp = Number.isFinite(player.maxHp) ? player.maxHp : effectiveMax;
+        if (satietySystemActive) {
+            player.satiety = SATIETY_MAX;
+        }
+        if (Number.isFinite(player.maxSp)) {
+            player.sp = player.maxSp;
+        }
+    }
+    enforceEffectiveHpCap();
+    if (!isSandboxGodModeEnabled()) {
+        updatePlayerSpCap({ silent: true });
+    }
+    updateUI();
+    syncSandboxStatInputs();
+    sandboxLog('HP/満腹度/SPを全回復しました。');
+}
+
+function resetSandboxStatsToDefaults() {
+    if (!isSandboxInteractiveEnabled()) return;
+    if (sandboxInteractiveState.godMode) {
+        applySandboxGodMode(false, { silent: true });
+    }
+    sandboxInteractiveState.noClip = false;
+    updateSandboxToggleInputs();
+    const level = sandboxRuntime.config?.playerLevel || 1;
+    const stats = computeSandboxStats(level);
+    player.level = stats.level;
+    player.maxHp = stats.maxHp;
+    player.hp = stats.maxHp;
+    player.attack = stats.attack;
+    player.defense = stats.defense;
+    player.maxSp = 0;
+    player.sp = 0;
+    player.satiety = SATIETY_MAX;
+    player.exp = 0;
+    enforceEffectiveHpCap();
+    if (!sandboxInteractiveState.godMode) {
+        updatePlayerSpCap({ silent: true });
+    }
+    resetPlayerStatusEffects();
+    updateUI();
+    syncSandboxStatInputs();
+    sandboxLog('プレイヤーパラメータを初期値に戻しました。');
+}
+
+function applySandboxStatChanges() {
+    if (!isSandboxInteractiveEnabled()) return;
+    if (sandboxInteractiveState.godMode) {
+        applySandboxGodMode(false, { silent: true });
+    }
+    const level = parseSandboxInputValue(sandboxStatLevelInput, { fallback: player.level, clampMin: 1, clampMax: SANDBOX_MAX_LEVEL });
+    const maxHp = parseSandboxInputValue(sandboxStatMaxHpInput, { fallback: player.maxHp, clampMin: 1 });
+    const hp = parseSandboxInputValue(sandboxStatHpInput, { fallback: player.hp, clampMin: 0 });
+    const atk = parseSandboxInputValue(sandboxStatAtkInput, { fallback: player.attack, clampMin: 0 });
+    const def = parseSandboxInputValue(sandboxStatDefInput, { fallback: player.defense, clampMin: 0 });
+    const maxSp = parseSandboxInputValue(sandboxStatMaxSpInput, { fallback: player.maxSp, clampMin: 0 });
+    const sp = parseSandboxInputValue(sandboxStatSpInput, { fallback: player.sp, clampMin: 0 });
+    const satiety = parseSandboxInputValue(sandboxStatSatietyInput, { fallback: player.satiety, clampMin: 0, clampMax: SATIETY_MAX });
+
+    player.level = level;
+    player.maxHp = maxHp;
+    player.hp = hp;
+    player.attack = atk;
+    player.defense = def;
+    player.maxSp = maxSp;
+    player.sp = sp;
+    player.satiety = satiety;
+    enforceEffectiveHpCap();
+    updatePlayerSpCap({ silent: true });
+    updateUI();
+    syncSandboxStatInputs();
+    sandboxLog('プレイヤーパラメータを更新しました。');
+}
+
+function updateSandboxToolControls() {
+    if (!sandboxToolFloorType || !sandboxToolFloorDir) return;
+    const type = sandboxToolFloorType.value || 'normal';
+    const needsDir = floorTypeNeedsDirection(type);
+    sandboxToolFloorDir.disabled = !needsDir;
+    if (!needsDir) {
+        sandboxToolFloorDir.value = '';
+    }
+}
+
+function applySandboxGodMode(enabled, { silent = false } = {}) {
+    if (!isSandboxInteractiveEnabled() && enabled) return;
+    const next = !!enabled;
+    if (next === sandboxInteractiveState.godMode) {
+        updateSandboxToggleInputs();
+        return;
+    }
+    if (next) {
+        sandboxInteractiveState.savedStats = {
+            level: player.level,
+            maxHp: player.maxHp,
+            hp: player.hp,
+            attack: player.attack,
+            defense: player.defense,
+            maxSp: player.maxSp,
+            sp: player.sp,
+            satiety: player.satiety,
+            exp: player.exp
+        };
+        sandboxInteractiveState.godMode = true;
+        player.level = Infinity;
+        player.maxHp = Infinity;
+        player.hp = Infinity;
+        player.attack = Infinity;
+        player.defense = Infinity;
+        player.maxSp = Infinity;
+        player.sp = Infinity;
+        player.satiety = Infinity;
+        player.exp = Infinity;
+        resetPlayerStatusEffects();
+        if (!silent) sandboxLog('ゴッドモードを有効化。すべてのダメージを無効化します。');
+    } else {
+        const saved = sandboxInteractiveState.savedStats || null;
+        sandboxInteractiveState.godMode = false;
+        sandboxInteractiveState.savedStats = null;
+        if (saved) {
+            player.level = saved.level;
+            player.maxHp = saved.maxHp;
+            player.hp = saved.hp;
+            player.attack = saved.attack;
+            player.defense = saved.defense;
+            player.maxSp = saved.maxSp;
+            player.sp = saved.sp;
+            player.satiety = saved.satiety;
+            player.exp = saved.exp;
+        }
+        if (!silent) sandboxLog('ゴッドモードを無効化しました。');
+    }
+    enforceEffectiveHpCap();
+    updatePlayerSpCap({ silent: true });
+    updateSandboxToggleInputs();
+    updateUI();
+    syncSandboxStatInputs();
+}
+
+function applySandboxNoClip(enabled) {
+    if (!isSandboxInteractiveEnabled() && enabled) return;
+    sandboxInteractiveState.noClip = !!enabled;
+    updateSandboxToggleInputs();
+    if (enabled) {
+        sandboxLog('ノークリップモードを有効化。壁や罠を無視して移動できます。');
+    } else {
+        sandboxLog('ノークリップモードを無効化しました。');
+    }
+}
+
+function applySandboxTool() {
+    if (!isSandboxInteractiveEnabled()) return;
+    const dir = getDirectionVector(player.facing || 'down') || { dx: 0, dy: 1 };
+    const targetX = player.x + dir.dx;
+    const targetY = player.y + dir.dy;
+    if (targetX < 0 || targetX >= MAP_WIDTH || targetY < 0 || targetY >= MAP_HEIGHT) {
+        sandboxLog('マップ範囲外は編集できません。');
+        return;
+    }
+    if (!map[targetY]) return;
+    const tool = sandboxToolSelect ? sandboxToolSelect.value : 'floor';
+    switch (tool) {
+        case 'floor': {
+            map[targetY][targetX] = 0;
+            const chosenType = sandboxToolFloorType ? sandboxToolFloorType.value : 'normal';
+            const normalized = normalizeFloorType(chosenType || 'normal');
+            if (normalized === FLOOR_TYPE_NORMAL) {
+                clearFloorTypeAt(targetX, targetY);
+            } else {
+                const meta = ensureTileMeta(targetX, targetY);
+                meta.floorType = normalized;
+                if (floorTypeNeedsDirection(normalized)) {
+                    const dirValue = sandboxToolFloorDir ? normalizeFloorDirection(sandboxToolFloorDir.value || '') : '';
+                    if (dirValue && FLOOR_DIRECTION_VALUES.includes(dirValue)) {
+                        meta.floorDir = dirValue;
+                    } else {
+                        delete meta.floorDir;
+                    }
+                } else {
+                    delete meta.floorDir;
+                }
+            }
+            const cfgGridRow = ensureSandboxConfigGridRow(targetY, targetX);
+            if (cfgGridRow) {
+                cfgGridRow[targetX] = 0;
+            }
+            const cfgMetaRow = ensureSandboxConfigTileMetaRow(targetY, targetX);
+            if (cfgMetaRow) {
+                if (normalized === FLOOR_TYPE_NORMAL) {
+                    cfgMetaRow[targetX] = null;
+                } else {
+                    const cfgMeta = cfgMetaRow[targetX] || {};
+                    cfgMeta.floorType = normalized;
+                    if (floorTypeNeedsDirection(normalized)) {
+                        const dirValue = sandboxToolFloorDir ? normalizeFloorDirection(sandboxToolFloorDir.value || '') : '';
+                        if (dirValue && FLOOR_DIRECTION_VALUES.includes(dirValue)) {
+                            cfgMeta.floorDir = dirValue;
+                        } else {
+                            delete cfgMeta.floorDir;
+                        }
+                    } else {
+                        delete cfgMeta.floorDir;
+                    }
+                    cfgMetaRow[targetX] = cfgMeta;
+                }
+            }
+            sandboxLog('床を編集しました。');
+            break;
+        }
+        case 'erase': {
+            map[targetY][targetX] = 0;
+            clearFloorTypeAt(targetX, targetY);
+            const cfgGridRow = ensureSandboxConfigGridRow(targetY, targetX);
+            if (cfgGridRow) {
+                cfgGridRow[targetX] = 0;
+            }
+            const cfgMetaRow = ensureSandboxConfigTileMetaRow(targetY, targetX);
+            if (cfgMetaRow) {
+                cfgMetaRow[targetX] = null;
+            }
+            sandboxLog('床を通常状態に戻しました。');
+            break;
+        }
+        case 'wall': {
+            map[targetY][targetX] = 1;
+            if (tileMeta[targetY]) tileMeta[targetY][targetX] = null;
+            const cfgGridRow = ensureSandboxConfigGridRow(targetY, targetX);
+            if (cfgGridRow) {
+                cfgGridRow[targetX] = 1;
+            }
+            const cfgMetaRow = ensureSandboxConfigTileMetaRow(targetY, targetX);
+            if (cfgMetaRow) {
+                cfgMetaRow[targetX] = null;
+            }
+            sandboxLog('壁を設置しました。');
+            break;
+        }
+        case 'stairs': {
+            map[targetY][targetX] = 0;
+            clearFloorTypeAt(targetX, targetY);
+            stairs = { x: targetX, y: targetY };
+            if (sandboxRuntime.config) {
+                sandboxRuntime.config.stairs = { x: targetX, y: targetY };
+                const cfgGridRow = ensureSandboxConfigGridRow(targetY, targetX);
+                if (cfgGridRow) {
+                    cfgGridRow[targetX] = 0;
+                }
+                const cfgMetaRow = ensureSandboxConfigTileMetaRow(targetY, targetX);
+                if (cfgMetaRow) {
+                    cfgMetaRow[targetX] = null;
+                }
+            }
+            sandboxLog('階段の位置を更新しました。');
+            break;
+        }
+        case 'start': {
+            player.x = targetX;
+            player.y = targetY;
+            updateCamera();
+            applyPostMoveEffects();
+            if (sandboxRuntime.config) {
+                sandboxRuntime.config.playerStart = { x: targetX, y: targetY };
+            }
+            sandboxLog('プレイヤー位置を移動しました。');
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 function sanitizeSandboxConfig(raw) {
@@ -464,7 +976,8 @@ function sanitizeSandboxConfig(raw) {
         }
     }
     const playerLevel = computeSandboxStats(raw.playerLevel).level;
-    return { width, height, grid, tileMeta, playerStart, stairs, enemies, playerLevel };
+    const interactiveMode = !!raw.interactiveMode;
+    return { width, height, grid, tileMeta, playerStart, stairs, enemies, playerLevel, interactiveMode };
 }
 
 function validateSandboxConfig(config) {
@@ -541,6 +1054,7 @@ function restoreSandboxSnapshotIfNeeded() {
     sandboxRuntime.config = null;
     sandboxRuntime.snapshot = null;
     sandboxRuntime.expNoticeShown = false;
+    resetSandboxInteractiveState();
 }
 
 function startSandboxGame(rawConfig) {
@@ -553,6 +1067,14 @@ function startSandboxGame(rawConfig) {
     sandboxRuntime.config = validation.config;
     sandboxRuntime.active = true;
     sandboxRuntime.expNoticeShown = false;
+
+    sandboxInteractiveState.godMode = false;
+    sandboxInteractiveState.noClip = false;
+    sandboxInteractiveState.savedStats = null;
+    sandboxInteractiveState.privilegeEnabled = false;
+    setSandboxInteractiveEnabled(!!validation.config.interactiveMode);
+    updateSandboxToggleInputs();
+    setSandboxPanelOpen(false, { silent: true });
 
     const stats = computeSandboxStats(validation.config.playerLevel);
     player.level = stats.level;
@@ -734,6 +1256,7 @@ function showSelectionScreen(opts = {}) {
     if (tb) tb.style.display = 'none';
     if (selectionScreen) selectionScreen.style.display = 'flex';
     leaveInGameLayout();
+    updateSandboxInteractivePrivilege();
 
     // 状態のリセット
     if (refillHp) {
@@ -805,6 +1328,12 @@ const FLOOR_TYPE_CONVEYOR = 'conveyor';
 const FLOOR_TYPE_ONE_WAY = 'one-way';
 const FLOOR_TYPE_VERTICAL_ONLY = 'vertical';
 const FLOOR_TYPE_HORIZONTAL_ONLY = 'horizontal';
+const FLOOR_DIRECTION_SYMBOLS = {
+    up: '↑',
+    down: '↓',
+    left: '←',
+    right: '→'
+};
 const FLOOR_TYPE_SET = new Set([
     FLOOR_TYPE_NORMAL,
     FLOOR_TYPE_ICE,
@@ -961,6 +1490,56 @@ function ensureTileMeta(x, y) {
     return tileMeta[y][x];
 }
 
+function ensureSandboxConfigGridRow(y, x) {
+    if (!sandboxRuntime.config) return null;
+    if (!Array.isArray(sandboxRuntime.config.grid)) {
+        sandboxRuntime.config.grid = [];
+    }
+    while (sandboxRuntime.config.grid.length <= y) {
+        sandboxRuntime.config.grid.push([]);
+    }
+    const targetWidth = Math.max(0, Number.isFinite(x) ? x + 1 : 0);
+    if (!Array.isArray(sandboxRuntime.config.grid[y])) {
+        sandboxRuntime.config.grid[y] = [];
+    }
+    const ensuredRow = sandboxRuntime.config.grid[y];
+    while (ensuredRow.length < targetWidth) {
+        ensuredRow.push(1);
+    }
+    if (Number.isFinite(sandboxRuntime.config.height) && sandboxRuntime.config.height <= y) {
+        sandboxRuntime.config.height = y + 1;
+    }
+    if (Number.isFinite(sandboxRuntime.config.width) && sandboxRuntime.config.width <= x) {
+        sandboxRuntime.config.width = x + 1;
+    }
+    return ensuredRow;
+}
+
+function ensureSandboxConfigTileMetaRow(y, x) {
+    if (!sandboxRuntime.config) return null;
+    if (!Array.isArray(sandboxRuntime.config.tileMeta)) {
+        sandboxRuntime.config.tileMeta = [];
+    }
+    while (sandboxRuntime.config.tileMeta.length <= y) {
+        sandboxRuntime.config.tileMeta.push([]);
+    }
+    const targetWidth = Math.max(0, Number.isFinite(x) ? x + 1 : 0);
+    if (!Array.isArray(sandboxRuntime.config.tileMeta[y])) {
+        sandboxRuntime.config.tileMeta[y] = [];
+    }
+    const ensuredRow = sandboxRuntime.config.tileMeta[y];
+    while (ensuredRow.length < targetWidth) {
+        ensuredRow.push(null);
+    }
+    if (Number.isFinite(sandboxRuntime.config.height) && sandboxRuntime.config.height <= y) {
+        sandboxRuntime.config.height = y + 1;
+    }
+    if (Number.isFinite(sandboxRuntime.config.width) && sandboxRuntime.config.width <= x) {
+        sandboxRuntime.config.width = x + 1;
+    }
+    return ensuredRow;
+}
+
 function getTileMeta(x, y) {
     if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return null;
     return tileMeta[y] ? tileMeta[y][x] : null;
@@ -1096,11 +1675,15 @@ function clearPlayerStatusEffect(effectId, { silent = false } = {}) {
         }
         if (message) addMessage(message);
     }
+    if (wasActive) markSkillsListDirty();
 }
 
 function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
     const def = PLAYER_STATUS_EFFECTS[effectId];
     if (!def) return false;
+    if (isSandboxGodModeEnabled()) {
+        return false;
+    }
     if (isSkillEffectActive('statusGuard')) {
         if (!silent) addMessage('スキル効果により状態異常を無効化した！');
         return false;
@@ -1134,6 +1717,7 @@ function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
     if (effectId === 'abilityDown') {
         enforceEffectiveHpCap();
     }
+    markSkillsListDirty();
     updateUI();
     return true;
 }
@@ -1177,6 +1761,7 @@ function activateSkillEffect(effectId, turns, { silent = false } = {}) {
     } else if (!silent) {
         clearSkillEffect(effectId, { silent: true });
     }
+    markSkillsListDirty();
     return normalized;
 }
 
@@ -1189,6 +1774,7 @@ function clearSkillEffect(effectId, { silent = false } = {}) {
         const def = SKILL_EFFECT_DEFS[effectId];
         if (def?.expireMessage) addMessage(def.expireMessage);
     }
+    if (wasActive) markSkillsListDirty();
 }
 
 function getActiveSkillEffectList() {
@@ -1229,6 +1815,7 @@ function advanceSkillEffects() {
             if (def?.expireMessage) addMessage(def.expireMessage);
         }
     }
+    if (updated) markSkillsListDirty();
     return updated;
 }
 
@@ -1258,25 +1845,50 @@ function computePlayerMaxSp(level = player.level || 1) {
 }
 
 function updatePlayerSpCap({ silent = false } = {}) {
+    if (isSandboxGodModeEnabled()) {
+        player.maxSp = Infinity;
+        player.sp = Infinity;
+        prevSp = Infinity;
+        return Infinity;
+    }
     const previousMax = Math.max(0, Number(player.maxSp) || 0);
-    const newMax = computePlayerMaxSp(player.level || 1);
     if (!isSpUnlocked()) {
+        const hadSp = !nearlyEqual(previousMax, 0) || !nearlyEqual(player.sp, 0);
         player.maxSp = 0;
-        player.sp = 0;
+        if (!nearlyEqual(player.sp, 0)) {
+            player.sp = 0;
+        }
         prevSp = 0;
+        if (hadSp) markSkillsListDirty();
         return 0;
     }
+    const newMax = computePlayerMaxSp(player.level || 1);
+    const maxChanged = !nearlyEqual(previousMax, newMax);
     player.maxSp = newMax;
-    if (previousMax === 0 && newMax > 0 && !silent) {
-        addMessage('SPが解放された！');
-    } else if (newMax > previousMax && !silent) {
-        addMessage(`SP上限が${newMax}に上昇した！`);
+    if (maxChanged) {
+        if (previousMax === 0 && newMax > 0 && !silent) {
+            addMessage('SPが解放された！');
+        } else if (newMax > previousMax && !silent) {
+            addMessage(`SP上限が${newMax}に上昇した！`);
+        }
     }
-    player.sp = Math.max(0, Math.min(newMax, Number(player.sp) || 0));
+    const clamped = Math.max(0, Math.min(newMax, Number(player.sp) || 0));
+    if (!nearlyEqual(player.sp, clamped)) {
+        player.sp = clamped;
+        markSkillsListDirty();
+    } else {
+        player.sp = clamped;
+    }
+    if (maxChanged) markSkillsListDirty();
     return newMax;
 }
 
 function gainSp(amount, { silent = true } = {}) {
+    if (isSandboxGodModeEnabled()) {
+        player.sp = Infinity;
+        const numeric = Number(amount) || 0;
+        return Number.isFinite(numeric) ? numeric : 0;
+    }
     if (!isSpUnlocked()) return 0;
     updatePlayerSpCap({ silent: true });
     const value = Number(amount) || 0;
@@ -1288,14 +1900,18 @@ function gainSp(amount, { silent = true } = {}) {
     const gained = after - before;
     if (gained <= 0) return 0;
     player.sp = after;
+    markSkillsListDirty();
     if (!silent) {
-        const display = gained >= 1 ? Math.floor(gained) : Math.round(gained * 10) / 10;
-        addMessage(`SPを${display}${display % 1 === 0 ? '' : ''}獲得した。`);
+        const display = floorSpValue(gained);
+        addMessage(`SPを${display}獲得した。`);
     }
     return gained;
 }
 
 function trySpendSp(cost, { silent = false } = {}) {
+    if (isSandboxGodModeEnabled()) {
+        return true;
+    }
     if (!isSpUnlocked()) {
         if (!silent) addMessage('SPが解放されていない。');
         return false;
@@ -1308,10 +1924,16 @@ function trySpendSp(cost, { silent = false } = {}) {
         if (!silent) addMessage('SPが足りない。');
         return false;
     }
-    player.sp = Math.max(0, current - required);
+    const remaining = Math.max(0, current - required);
+    if (!nearlyEqual(current, remaining)) {
+        player.sp = remaining;
+        markSkillsListDirty();
+    } else {
+        player.sp = remaining;
+    }
     if (!silent) {
-        const display = required >= 1 ? Math.floor(required) : Math.round(required * 10) / 10;
-        addMessage(`SPを${display}${display % 1 === 0 ? '' : ''}消費した。`);
+        const display = floorSpValue(required);
+        addMessage(`SPを${display}消費した。`);
     }
     return true;
 }
@@ -1378,6 +2000,11 @@ function getPlayerStatusDisplayList() {
 function processPlayerStatusTurnStart() {
     let alive = true;
     const effects = ensurePlayerStatusContainer();
+
+    if (isSandboxGodModeEnabled()) {
+        resetPlayerStatusEffects();
+        return true;
+    }
 
     if (isPlayerStatusActive('poison')) {
         const poisonDef = PLAYER_STATUS_EFFECTS.poison;
@@ -2042,36 +2669,67 @@ function attemptUseSkill(def) {
     const success = !!def.action();
     if (!success) {
         gainSp(def.cost, { silent: true });
+        markSkillsListDirty();
         updateUI();
-        if (skillsModal && skillsModal.style.display === 'flex') renderSkillsList();
         return;
     }
+    markSkillsListDirty();
     updateUI();
-    if (skillsModal && skillsModal.style.display === 'flex') renderSkillsList();
     commitSkillAction();
+}
+
+function getCurrentSpInfo() {
+    updatePlayerSpCap({ silent: true });
+    const maxSp = Math.max(0, Number(player.maxSp) || 0);
+    const currentSp = Math.max(0, Math.min(maxSp, Number(player.sp) || 0));
+    return { currentSp, maxSp };
+}
+
+function floorSpValue(value) {
+    return Math.max(0, Math.floor(Number.isFinite(value) ? value : 0));
+}
+
+function formatSpDisplay(currentSp, maxSp) {
+    const formattedCurrent = floorSpValue(currentSp);
+    const formattedMax = floorSpValue(maxSp);
+    return formattedMax > 0 ? `${formattedCurrent}/${formattedMax}` : '0/0';
+}
+
+function updateSkillsSpHeader(currentSp, maxSp, displayText = null) {
+    const normalizedCurrent = Math.max(0, Number(currentSp) || 0);
+    const normalizedMax = Math.max(0, Number(maxSp) || 0);
+    const spText = displayText != null ? displayText : formatSpDisplay(normalizedCurrent, normalizedMax);
+    if (skillsSpText) {
+        const liveText = `現在のSP: ${spText}`;
+        if (skillsSpValueText) {
+            if (lastSkillsSpDisplay.text !== spText) {
+                skillsSpValueText.textContent = spText;
+            }
+        } else if (lastSkillsSpDisplay.text !== spText) {
+            skillsSpText.textContent = liveText;
+        }
+        skillsSpText.setAttribute('aria-label', liveText);
+    } else if (skillsSpValueText && lastSkillsSpDisplay.text !== spText) {
+        skillsSpValueText.textContent = spText;
+    }
+    if (skillsSpBarFill) {
+        const ratio = normalizedMax > 0 ? Math.min(1, Math.max(0, normalizedCurrent / normalizedMax)) : 0;
+        if (lastSkillsSpDisplay.ratio === null || !nearlyEqual(lastSkillsSpDisplay.ratio, ratio)) {
+            skillsSpBarFill.style.width = `${Math.round(ratio * 10000) / 100}%`;
+        }
+        lastSkillsSpDisplay.ratio = ratio;
+    }
+    lastSkillsSpDisplay.text = spText;
+    lastSkillsSpDisplay.current = normalizedCurrent;
+    lastSkillsSpDisplay.max = normalizedMax;
 }
 
 function renderSkillsList() {
     if (!skillsList) return;
+    const { currentSp, maxSp } = getCurrentSpInfo();
+    const spText = formatSpDisplay(currentSp, maxSp);
+    updateSkillsSpHeader(currentSp, maxSp, spText);
     skillsList.innerHTML = '';
-    updatePlayerSpCap({ silent: true });
-    const currentSp = Math.max(0, Number(player.sp) || 0);
-    const maxSp = Math.max(0, Number(player.maxSp) || 0);
-    const formattedCurrentSp = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-    const spText = maxSp > 0 ? `${formattedCurrentSp}/${maxSp}` : '0/0';
-    if (skillsSpText) {
-        const liveText = `現在のSP: ${spText}`;
-        if (skillsSpValueText) {
-            skillsSpValueText.textContent = spText;
-        } else {
-            skillsSpText.textContent = liveText;
-        }
-        if (skillsSpBarFill) {
-            const spRatio = maxSp > 0 ? Math.min(1, Math.max(0, currentSp / maxSp)) : 0;
-            skillsSpBarFill.style.width = `${Math.round(spRatio * 10000) / 100}%`;
-        }
-        skillsSpText.setAttribute('aria-label', liveText);
-    }
     SKILL_DEFINITIONS.forEach(def => {
         const entry = document.createElement('div');
         entry.className = 'skill-entry';
@@ -2117,6 +2775,17 @@ function renderSkillsList() {
         entry.appendChild(button);
         skillsList.appendChild(entry);
     });
+    skillsListNeedsRefresh = false;
+}
+
+function refreshSkillsModal({ force = false } = {}) {
+    if (!skillsModal || skillsModal.style.display !== 'flex') return;
+    if (force || skillsListNeedsRefresh) {
+        renderSkillsList();
+        return;
+    }
+    const { currentSp, maxSp } = getCurrentSpInfo();
+    updateSkillsSpHeader(currentSp, maxSp);
 }
 
 function useSkillBreakWall() {
@@ -4400,6 +5069,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
 
     refreshGeneratorHazardSuppression();
     refreshSatietyActivation({ notify: false });
+    markSkillsListDirty();
 
     if (applyUI) {
         if (difficultySelect) difficultySelect.value = difficulty;
@@ -6357,12 +7027,14 @@ function getCurrentRecommendedLevelForHazards() {
 }
 
 function isFloorHazardSuppressed() {
+    if (isSandboxHazardImmune()) return true;
     const playerLevel = Number.isFinite(player?.level) ? player.level : null;
     const recommended = getCurrentRecommendedLevelForHazards();
     return Number.isFinite(playerLevel) && Number.isFinite(recommended) && recommended <= playerLevel - 5;
 }
 
 function areFloorEffectsActive() {
+    if (isSandboxHazardImmune()) return false;
     if (isGimmickNullificationActive()) return false;
     return !isFloorHazardSuppressed();
 }
@@ -6375,6 +7047,7 @@ function getDirectionVector(dir) {
 function canActorLeaveTile(actorType, fromX, fromY, dx, dy, options = {}) {
     if (!dx && !dy) return true;
     if (options.ignoreRestrictions) return true;
+    if (actorType === 'player' && isSandboxNoClipEnabled()) return true;
     if (!areFloorEffectsActive()) return true;
     const type = getTileFloorType(fromX, fromY);
     switch (type) {
@@ -6397,6 +7070,7 @@ function canActorLeaveTile(actorType, fromX, fromY, dx, dy, options = {}) {
 
 function canActorEnterTile(actorType, toX, toY, dx, dy, options = {}) {
     if (options.ignoreRestrictions) return true;
+    if (actorType === 'player' && isSandboxNoClipEnabled()) return true;
     if (!isFloor(toX, toY)) return false;
     if (!areFloorEffectsActive()) return true;
     const type = getTileFloorType(toX, toY);
@@ -6500,12 +7174,18 @@ function drawMap() {
             const screenY = (y - startY) * cellH;
             if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) {
                 ctx.fillStyle = DEFAULT_WALL_COLOR;
-            } else {
-                const isWall = map[y][x] === 1;
-                const visible = !darknessActive || isTileVisible(x, y);
-                ctx.fillStyle = visible ? getTileRenderColor(x, y, isWall) : DARKNESS_FILL_COLOR;
+                ctx.fillRect(screenX, screenY, cellW, cellH);
+                continue;
             }
+
+            const isWall = map[y][x] === 1;
+            const visible = !darknessActive || isTileVisible(x, y);
+            ctx.fillStyle = visible ? getTileRenderColor(x, y, isWall) : DARKNESS_FILL_COLOR;
             ctx.fillRect(screenX, screenY, cellW, cellH);
+
+            if (!isWall && visible) {
+                drawFloorGimmickOverlay(x, y, screenX, screenY, cellW, cellH);
+            }
         }
     }
 
@@ -6524,6 +7204,91 @@ function drawMap() {
             }
         }
     }
+}
+
+function drawFloorGimmickOverlay(tileX, tileY, screenX, screenY, cellW, cellH) {
+    const type = getTileFloorType(tileX, tileY);
+    switch (type) {
+        case FLOOR_TYPE_BOMB:
+            drawBombFloorOverlay(screenX, screenY, cellW, cellH);
+            break;
+        case FLOOR_TYPE_ONE_WAY: {
+            const dir = getTileFloorDirection(tileX, tileY);
+            if (dir) drawOneWayFloorOverlay(dir, screenX, screenY, cellW, cellH);
+            break;
+        }
+        case FLOOR_TYPE_CONVEYOR: {
+            const dir = getTileFloorDirection(tileX, tileY);
+            if (dir) drawConveyorFloorOverlay(dir, screenX, screenY, cellW, cellH);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+function drawBombFloorOverlay(screenX, screenY, cellW, cellH) {
+    const lineWidth = Math.max(2, Math.min(cellW, cellH) * 0.12);
+    ctx.save();
+    ctx.strokeStyle = '#ff4d6d';
+    ctx.lineWidth = lineWidth;
+    ctx.lineJoin = 'round';
+    ctx.strokeRect(
+        screenX + lineWidth / 2,
+        screenY + lineWidth / 2,
+        cellW - lineWidth,
+        cellH - lineWidth
+    );
+    ctx.restore();
+}
+
+function drawOneWayFloorOverlay(direction, screenX, screenY, cellW, cellH) {
+    const symbol = FLOOR_DIRECTION_SYMBOLS[direction];
+    if (!symbol) return;
+    const fontSize = Math.max(12, Math.floor(Math.min(cellW, cellH) * 0.8));
+    ctx.save();
+    ctx.font = `${fontSize}px sans-serif`;
+    ctx.fillStyle = '#4c6ef5';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+    ctx.shadowBlur = Math.max(2, Math.min(cellW, cellH) * 0.15);
+    ctx.fillText(symbol, screenX + cellW / 2, screenY + cellH / 2);
+    ctx.restore();
+}
+
+const CONVEYOR_ANIMATION_PATTERN = {
+    left: '<<<   ',
+    right: '   >>>',
+    up: '▲▲▲   ',
+    down: '   ▼▼▼'
+};
+const CONVEYOR_ANIMATION_FRAME_MS = 120;
+
+function getAnimationTimestamp() {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+        return performance.now();
+    }
+    return Date.now();
+}
+
+function drawConveyorFloorOverlay(direction, screenX, screenY, cellW, cellH) {
+    const pattern = CONVEYOR_ANIMATION_PATTERN[direction];
+    if (!pattern) return;
+    const now = getAnimationTimestamp();
+    const totalFrames = pattern.length;
+    const frameIndex = Math.floor(now / CONVEYOR_ANIMATION_FRAME_MS) % totalFrames;
+    const sequence = (pattern + pattern).slice(frameIndex, frameIndex + 3);
+    const fontSize = Math.max(10, Math.floor(Math.min(cellW, cellH) * 0.6));
+    ctx.save();
+    ctx.font = `${fontSize}px monospace`;
+    ctx.fillStyle = '#f08c00';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+    ctx.shadowBlur = Math.max(1, Math.min(cellW, cellH) * 0.1);
+    ctx.fillText(sequence, screenX + cellW / 2, screenY + cellH / 2);
+    ctx.restore();
 }
 
 function drawPlayer() {
@@ -6744,6 +7509,20 @@ function addToPopupGroup(popupData) {
     }, 50); // Slightly longer delay to ensure all simultaneous changes are captured
 }
 
+function formatPopupChange(value, decimals = 0) {
+    if (!Number.isFinite(value)) return '0';
+    const factor = 10 ** Math.max(0, decimals);
+    const rounded = Math.round(value * factor) / factor;
+    if (decimals <= 0) {
+        return Math.round(rounded).toString();
+    }
+    const fixed = rounded.toFixed(decimals);
+    return fixed
+        .replace(/(\.\d*?[1-9])0+$/, '$1')
+        .replace(/\.0+$/, '')
+        .replace(/\.$/, '');
+}
+
 function processPopupGroup() {
     if (activePopupGroup.length === 0) return;
     
@@ -6859,6 +7638,21 @@ function processPopupGroup() {
                     borderColor = '#3182ce';
                     popup.style.background = 'linear-gradient(135deg, #3182ce, #63b3ed)';
                     break;
+                case 'sp': {
+                    const roundedText = formatPopupChange(popupData.change, 2);
+                    const sign = popupData.isPositive ? '+' : '-';
+                    text = `${sign}${roundedText}`;
+                    if (popupData.isPositive) {
+                        color = '#ffffff';
+                        borderColor = '#7c3aed';
+                        popup.style.background = 'linear-gradient(135deg, #7c3aed, #a855f7)';
+                    } else {
+                        color = '#ffffff';
+                        borderColor = '#a21caf';
+                        popup.style.background = 'linear-gradient(135deg, #a21caf, #f472b6)';
+                    }
+                    break;
+                }
                 case 'stat':
                 default:
                     text = (popupData.change > 0 ? '+' : '') + popupData.change;
@@ -6923,29 +7717,39 @@ function updateUI() {
     const baseLevel = player.level || 1;
     const effectiveLevel = getEffectivePlayerLevel();
     const exp = player.exp || 0;
-    const expDisp = Math.floor(exp);
+    const expDisp = Math.floor(Number.isFinite(exp) ? exp : 0);
     const expMax = 1000;
     const baseAttack = player.attack || 0;
     const baseDefense = player.defense || 0;
     const effectiveAttack = getEffectivePlayerAttack();
     const effectiveDefense = getEffectivePlayerDefense();
     const effectiveMaxHp = getEffectivePlayerMaxHp();
-    const currentHp = Math.min(player.hp || 0, effectiveMaxHp);
-    const currentSatiety = Number.isFinite(player.satiety) ? Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety))) : SATIETY_MAX;
-    const hpPct = Math.max(0, Math.min(1, currentHp / (effectiveMaxHp || 1)));
-    const expPct = Math.max(0, Math.min(1, exp / expMax));
+    const rawHp = Number.isFinite(player.hp) ? player.hp : player.maxHp;
+    const currentHp = Number.isFinite(rawHp) && Number.isFinite(effectiveMaxHp)
+        ? Math.min(rawHp, effectiveMaxHp)
+        : (Number.isFinite(rawHp) ? rawHp : effectiveMaxHp);
+    const hpIsInfinite = !Number.isFinite(currentHp) || !Number.isFinite(effectiveMaxHp);
+    const hpPct = hpIsInfinite ? 1 : Math.max(0, Math.min(1, currentHp / Math.max(effectiveMaxHp, 1)));
+    const expPct = Math.max(0, Math.min(1, Number.isFinite(exp) ? exp / expMax : 1));
     const abilityDownActive = isPlayerStatusActive('abilityDown');
     updatePlayerSpCap({ silent: true });
     const spUnlocked = isSpUnlocked();
-    const spMax = Math.max(0, Number(player.maxSp) || 0);
-    const currentSp = Math.max(0, Math.min(spMax, Number(player.sp) || 0));
-    const spPct = spMax > 0 ? Math.max(0, Math.min(1, currentSp / spMax)) : 0;
+    const spMaxRaw = Number(player.maxSp);
+    const spMax = Number.isFinite(spMaxRaw) ? Math.max(0, spMaxRaw) : Infinity;
+    const spRaw = Number(player.sp);
+    const currentSp = Number.isFinite(spRaw) && Number.isFinite(spMax)
+        ? Math.max(0, Math.min(spMax, spRaw))
+        : (Number.isFinite(spRaw) ? spRaw : spMax);
+    const spIsInfinite = !Number.isFinite(spMax) || !Number.isFinite(currentSp);
+    const spPct = spIsInfinite ? 1 : (spMax > 0 ? Math.max(0, Math.min(1, currentSp / spMax)) : 0);
+    const satietyIsInfinite = !Number.isFinite(player.satiety);
+    const currentSatiety = satietyIsInfinite ? SATIETY_MAX : Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
     const statusList = getPlayerStatusDisplayList();
     const skillEffects = getActiveSkillEffectList();
     const combinedStatusList = statusList.concat(skillEffects);
 
     // Show value change indicators
-    if (currentHp !== prevHp) {
+    if (Number.isFinite(currentHp) && Number.isFinite(prevHp) && currentHp !== prevHp) {
         const hpChange = currentHp - prevHp;
         const changeType = hpChange > 0 ? 'healing' : 'damage_taken';
         const hpBarElement = document.querySelector('.bar.hp') || document.getElementById('stat-hp-text');
@@ -6956,9 +7760,9 @@ function updateUI() {
             type: changeType
         };
         addToPopupGroup(popupData);
-        prevHp = currentHp;
     }
-    if (exp !== prevExp) {
+    prevHp = currentHp;
+    if (Number.isFinite(exp) && exp !== prevExp) {
         const expChange = exp - prevExp;
         if (expChange > 0) {
             const expBarElement = document.querySelector('.bar.exp') || document.getElementById('stat-exp-text');
@@ -6973,7 +7777,7 @@ function updateUI() {
         prevExp = exp;
     }
 
-    if (currentSp !== prevSp) {
+    if (Number.isFinite(currentSp) && Number.isFinite(prevSp) && currentSp !== prevSp) {
         const delta = currentSp - prevSp;
         if (delta !== 0 && spBarContainer && spBarContainer.style.display !== 'none') {
             const popupData = {
@@ -6984,38 +7788,49 @@ function updateUI() {
             };
             addToPopupGroup(popupData);
         }
-        prevSp = currentSp;
     }
+    prevSp = currentSp;
+
+    const formatValue = (value) => Number.isFinite(value) ? Math.floor(value) : '∞';
+    const formatStatWithBase = (effective, base) => {
+        const effectiveText = formatValue(effective);
+        const baseText = formatValue(base);
+        return effective === base ? effectiveText : `${effectiveText} (基${baseText})`;
+    };
 
     if (statLevel) {
-        statLevel.textContent = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
+        statLevel.textContent = formatStatWithBase(effectiveLevel, baseLevel);
     }
     if (statAtk) {
-        statAtk.textContent = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
+        statAtk.textContent = formatStatWithBase(effectiveAttack, baseAttack);
     }
     if (statDef) {
-        statDef.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
+        statDef.textContent = formatStatWithBase(effectiveDefense, baseDefense);
     }
     if (statHpText) {
-        const baseMaxText = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
-        statHpText.textContent = `${currentHp}/${effectiveMaxHp}${baseMaxText}`;
+        const baseMaxText = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${formatValue(player.maxHp)})` : '';
+        statHpText.textContent = `${formatValue(currentHp)}/${formatValue(effectiveMaxHp)}${baseMaxText}`;
     }
-    if (statExpText) statExpText.textContent = `${expDisp}/${expMax}`;
-    if (hpBar) hpBar.style.width = `${hpPct * 100}%`;
+    if (statExpText) statExpText.textContent = Number.isFinite(exp) ? `${expDisp}/${expMax}` : '∞/∞';
+    if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(1, hpPct)) * 100}%`;
     if (expBar) expBar.style.width = `${expPct * 100}%`;
     if (spBarContainer) spBarContainer.style.display = spUnlocked && spMax > 0 ? '' : 'none';
     if (statSpText) {
-        const spDisplayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-        const spDisplayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
-        statSpText.textContent = spUnlocked && spMax > 0 ? `${spDisplayCurrent}/${spDisplayMax}` : '0/0';
+        if (spIsInfinite) {
+            statSpText.textContent = '∞/∞';
+        } else {
+            const spDisplayCurrent = floorSpValue(currentSp);
+            const spDisplayMax = floorSpValue(spMax);
+            statSpText.textContent = spUnlocked && spDisplayMax > 0 ? `${spDisplayCurrent}/${spDisplayMax}` : '0/0';
+        }
     }
     if (spBar && spUnlocked && spMax > 0) {
-        spBar.style.width = `${spPct * 100}%`;
+        spBar.style.width = `${Math.max(0, Math.min(1, spPct)) * 100}%`;
     }
     if (satietyBarContainer) satietyBarContainer.style.display = satietySystemActive ? '' : 'none';
     if (satietySystemActive) {
-        if (statSatietyText) statSatietyText.textContent = `${currentSatiety}/${SATIETY_MAX}`;
-        if (satietyBar) satietyBar.style.width = `${(currentSatiety / SATIETY_MAX) * 100}%`;
+        if (statSatietyText) statSatietyText.textContent = satietyIsInfinite ? `∞/${SATIETY_MAX}` : `${currentSatiety}/${SATIETY_MAX}`;
+        if (satietyBar) satietyBar.style.width = `${(satietyIsInfinite ? 1 : (currentSatiety / SATIETY_MAX)) * 100}%`;
     }
 
     updatePlayerSummaryCard({
@@ -7086,8 +7901,8 @@ function updateUI() {
     if (modalSatiety && satietySystemActive) modalSatiety.textContent = `${currentSatiety} / ${SATIETY_MAX}`;
     if (modalSpRow) modalSpRow.style.display = spUnlocked && spMax > 0 ? '' : 'none';
     if (modalSpValue && spUnlocked && spMax > 0) {
-        const spDisplayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-        const spDisplayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
+        const spDisplayCurrent = floorSpValue(currentSp);
+        const spDisplayMax = floorSpValue(spMax);
         modalSpValue.textContent = `${spDisplayCurrent} / ${spDisplayMax}`;
     }
     if (modalFloor) modalFloor.textContent = `${dungeonLevel}F`;
@@ -7156,9 +7971,8 @@ function updateUI() {
     const floorEl = document.getElementById('floor-indicator');
     if (floorEl) floorEl.textContent = `${dungeonLevel}F`;
 
-    if (skillsModal && skillsModal.style.display === 'flex') {
-        renderSkillsList();
-    }
+    refreshSkillsModal();
+    updateSandboxInteractivePrivilege();
 
     // メッセージログは addMessage で更新
 }
@@ -7178,10 +7992,12 @@ function shouldActivateSatietySystem() {
 function refreshSatietyActivation({ notify = false } = {}) {
     const isActive = shouldActivateSatietySystem();
     if (isActive && !satietySystemActive) {
-        if (!Number.isFinite(player.satiety) || player.satiety <= 0 || player.satiety > SATIETY_MAX) {
-            player.satiety = SATIETY_MAX;
-        } else {
-            player.satiety = Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+        if (!isSandboxGodModeEnabled()) {
+            if (!Number.isFinite(player.satiety) || player.satiety <= 0 || player.satiety > SATIETY_MAX) {
+                player.satiety = SATIETY_MAX;
+            } else {
+                player.satiety = Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+            }
         }
         if (notify) {
             try { addMessage('満腹度システムが発動した！'); } catch {}
@@ -7198,6 +8014,13 @@ function refreshSatietyActivation({ notify = false } = {}) {
 function handleSatietyTurnTick(actionType = 'move') {
     const active = refreshSatietyActivation({ notify: false });
     if (!active) {
+        try { saveAll(); } catch {}
+        return !isGameOver;
+    }
+
+    if (isSandboxGodModeEnabled()) {
+        player.satiety = Infinity;
+        try { updateUI(); } catch {}
         try { saveAll(); } catch {}
         return !isGameOver;
     }
@@ -7244,16 +8067,16 @@ function onPlayerActionCommitted({ type = 'move' } = {}) {
 function updatePlayerSummaryCard({
     baseLevel = player.level || 1,
     effectiveLevel = getEffectivePlayerLevel(),
-    currentHp = Math.min(player.hp || 0, getEffectivePlayerMaxHp()),
+    currentHp = Number.isFinite(player.hp) ? player.hp : player.maxHp,
     effectiveMaxHp = getEffectivePlayerMaxHp(),
     baseAttack = player.attack || 0,
     effectiveAttack = getEffectivePlayerAttack(),
     baseDefense = player.defense || 0,
     effectiveDefense = getEffectivePlayerDefense(),
-    expDisp = Math.floor(player.exp || 0),
+    expDisp = Math.floor(Number.isFinite(player.exp) ? player.exp : 0),
     expMax = 1000,
-    currentSp = Math.max(0, Math.min(Number(player.sp) || 0, Number(player.maxSp) || 0)),
-    spMax = Math.max(0, Number(player.maxSp) || 0),
+    currentSp = Number(player.sp),
+    spMax = Number(player.maxSp),
     spUnlocked = isSpUnlocked()
 } = {}) {
     if (!playerSummaryDiv) return;
@@ -7269,24 +8092,43 @@ function updatePlayerSummaryCard({
     const satietyItemEl = card.querySelector('.stat-item.satiety');
     const spValueEl = card.querySelector('.stat-value.sp');
     const spItemEl = card.querySelector('.stat-item.sp');
-    const currentSatiety = Number.isFinite(player.satiety) ? Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety))) : SATIETY_MAX;
+
+    const normalizedHp = Number.isFinite(currentHp) && Number.isFinite(effectiveMaxHp)
+        ? Math.min(currentHp, effectiveMaxHp)
+        : (Number.isFinite(currentHp) ? currentHp : effectiveMaxHp);
+    const normalizedSpMax = Number.isFinite(spMax) ? Math.max(0, spMax) : Infinity;
+    const normalizedSp = Number.isFinite(currentSp) && Number.isFinite(normalizedSpMax)
+        ? Math.max(0, Math.min(normalizedSpMax, currentSp))
+        : (Number.isFinite(currentSp) ? currentSp : normalizedSpMax);
+    const satietyIsInfinite = !Number.isFinite(player.satiety);
+    const currentSatiety = satietyIsInfinite ? SATIETY_MAX : Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+    const spIsInfinite = !Number.isFinite(normalizedSp) || !Number.isFinite(normalizedSpMax);
     const abilityDownActive = isPlayerStatusActive('abilityDown');
 
-    if (levelEl) levelEl.textContent = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
+    const formatValue = (value) => Number.isFinite(value) ? Math.floor(value) : '∞';
+    const formatStatWithBase = (effective, base) => {
+        const effectiveText = formatValue(effective);
+        const baseText = formatValue(base);
+        return effective === base ? effectiveText : `${effectiveText} (基${baseText})`;
+    };
+
+    if (levelEl) levelEl.textContent = formatStatWithBase(effectiveLevel, baseLevel);
     if (hpEl) {
-        const baseSuffix = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
-        hpEl.textContent = `${currentHp}/${effectiveMaxHp}${baseSuffix}`;
+        const baseSuffix = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${formatValue(player.maxHp)})` : '';
+        hpEl.textContent = `${formatValue(normalizedHp)}/${formatValue(effectiveMaxHp)}${baseSuffix}`;
     }
-    if (expEl) expEl.textContent = `${expDisp}/${expMax}`;
-    if (atkEl) atkEl.textContent = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
-    if (defEl) defEl.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
+    if (expEl) expEl.textContent = Number.isFinite(player.exp) ? `${expDisp}/${expMax}` : '∞/∞';
+    if (atkEl) atkEl.textContent = formatStatWithBase(effectiveAttack, baseAttack);
+    if (defEl) defEl.textContent = formatStatWithBase(effectiveDefense, baseDefense);
     if (satietyItemEl) satietyItemEl.style.display = satietySystemActive ? '' : 'none';
-    if (satietyValueEl) satietyValueEl.textContent = `${currentSatiety}/${SATIETY_MAX}`;
-    if (spItemEl) spItemEl.style.display = spUnlocked && spMax > 0 ? '' : 'none';
+    if (satietyValueEl) satietyValueEl.textContent = satietyIsInfinite ? `∞/${SATIETY_MAX}` : `${currentSatiety}/${SATIETY_MAX}`;
+    if (spItemEl) spItemEl.style.display = spUnlocked && normalizedSpMax > 0 ? '' : 'none';
     if (spValueEl) {
-        const displayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-        const displayMax = spMax % 1 === 0 ? Math.floor(spMax) : spMax;
-        spValueEl.textContent = spUnlocked && spMax > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
+        if (spUnlocked && normalizedSpMax > 0) {
+            spValueEl.textContent = spIsInfinite ? '∞/∞' : `${Math.floor(normalizedSp)}/${Math.floor(normalizedSpMax)}`;
+        } else {
+            spValueEl.textContent = '0/0';
+        }
     }
 }
 
@@ -7786,9 +8628,21 @@ function applyPostMoveEffects() {
 
 function attemptPlayerStep(dx, dy) {
     if (!dx && !dy) return false;
-    if (!canActorLeaveTile('player', player.x, player.y, dx, dy)) return false;
+    const noClip = isSandboxNoClipEnabled();
+    if (!noClip && !canActorLeaveTile('player', player.x, player.y, dx, dy)) return false;
     const targetX = player.x + dx;
     const targetY = player.y + dy;
+
+    if (noClip) {
+        const destX = Math.max(0, Math.min(MAP_WIDTH - 1, targetX));
+        const destY = Math.max(0, Math.min(MAP_HEIGHT - 1, targetY));
+        addSeparator();
+        player.x = destX;
+        player.y = destY;
+        updateCamera();
+        applyPostMoveEffects();
+        return true;
+    }
 
     const enemyAtTarget = enemies.find(e => e.x === targetX && e.y === targetY);
     if (enemyAtTarget) {
@@ -7888,6 +8742,13 @@ let playerTurn = true;
 document.addEventListener('keydown', (event) => {
     if (!playerTurn || isGameOver) return;
     if (isAnyModalOpen()) return; // モーダル中はゲーム入力を無効化
+    if (isSandboxInteractiveEnabled() && sandboxInteractiveState.panelOpen) {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            setSandboxPanelOpen(false);
+        }
+        return;
+    }
     const target = event.target;
     if (target instanceof HTMLElement) {
         if (target.closest('input, textarea, select')) return;
@@ -7977,6 +8838,7 @@ function canEnemyOccupy(x, y, enemy) {
 
 function performEnemyAction(enemy) {
     if (!enemy || enemy.hp <= 0) return;
+    if (isSandboxNoClipEnabled()) return;
     if (!Number.isFinite(enemy.level) || enemy.level <= 0) {
         enemy.level = Math.max(1, player.level + (Math.floor(Math.random() * 9) - 4));
     }
@@ -8006,6 +8868,9 @@ function performEnemyAction(enemy) {
 }
 
 function executeEnemyAttack(enemy, stepX, stepY) {
+    if (isSandboxGodModeEnabled() || isSandboxNoClipEnabled()) {
+        return;
+    }
     const playerEffectiveLevel = getEffectivePlayerLevel();
     const playerEffectiveDefense = getEffectivePlayerDefense();
     if (!hitCheck(enemy.level || 1, playerEffectiveLevel || 1)) {
@@ -8049,6 +8914,7 @@ function executeEnemyAttack(enemy, stepX, stepY) {
 }
 
 function warpPlayerFromEnemy(enemy) {
+    if (isSandboxGodModeEnabled() || isSandboxNoClipEnabled()) return;
     const exclude = enemies
         .filter(e => e)
         .map(e => ({ x: e.x, y: e.y }));
@@ -8064,6 +8930,7 @@ function warpPlayerFromEnemy(enemy) {
 }
 
 function applyKnockbackFromEnemy(enemy, stepX, stepY) {
+    if (isSandboxGodModeEnabled() || isSandboxNoClipEnabled()) return;
     if (stepX === 0 && stepY === 0) return;
     const others = enemies.filter(e => e !== enemy);
     let newX = player.x;
@@ -8097,6 +8964,7 @@ function applyKnockbackFromEnemy(enemy, stepX, stepY) {
 }
 
 function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}) {
+    if (isSandboxGodModeEnabled() || isSandboxNoClipEnabled()) return;
     if (isGameOver) return;
     const typeDef = getEnemyTypeDefinition(enemy.type);
     if (!typeDef || typeDef.id === ENEMY_TYPE_DEFS.normal.id) return;
@@ -8204,7 +9072,11 @@ restartButton.addEventListener('click', () => {
 // ゲームの開始
 // UI: モーダル/入出力
 btnItems && btnItems.addEventListener('click', () => { openModal(itemsModal); });
-btnSkills && btnSkills.addEventListener('click', () => { renderSkillsList(); openModal(skillsModal); });
+btnSkills && btnSkills.addEventListener('click', () => {
+    markSkillsListDirty();
+    openModal(skillsModal);
+    refreshSkillsModal({ force: true });
+});
 btnStatus && btnStatus.addEventListener('click', () => { openModal(statusModal); updateUI(); });
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => {
     const target = e.currentTarget.getAttribute('data-target');
@@ -8287,7 +9159,7 @@ offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
     player.inventory.potion30 -= 1;
     const gained = gainSp(SP_SACRIFICE_VALUE, { silent: true });
     playSfx('pickup');
-    const display = gained >= 1 ? Math.floor(gained) : Math.round(gained * 10) / 10;
+    const display = floorSpValue(gained);
     addMessage(`回復アイテムを捧げ、SPを${display}獲得した。`);
     updateUI();
     saveAll();
@@ -8326,6 +9198,62 @@ useDefBoostBtn && useDefBoostBtn.addEventListener('click', () => {
         updateUI();
         saveAll();
     }
+});
+
+if (sandboxMenuButton) {
+    sandboxMenuButton.addEventListener('click', () => {
+        if (!isSandboxInteractiveEnabled()) return;
+        setSandboxPanelOpen(!sandboxInteractiveState.panelOpen);
+    });
+}
+
+sandboxInteractiveClose && sandboxInteractiveClose.addEventListener('click', () => {
+    setSandboxPanelOpen(false);
+});
+
+sandboxGodModeInput && sandboxGodModeInput.addEventListener('change', (e) => {
+    applySandboxGodMode(!!e.target.checked);
+});
+
+sandboxNoClipInput && sandboxNoClipInput.addEventListener('change', (e) => {
+    applySandboxNoClip(!!e.target.checked);
+});
+
+sandboxFullHealButton && sandboxFullHealButton.addEventListener('click', () => {
+    handleSandboxFullHeal();
+});
+
+sandboxResetStatsButton && sandboxResetStatsButton.addEventListener('click', () => {
+    resetSandboxStatsToDefaults();
+});
+
+sandboxApplyStatsButton && sandboxApplyStatsButton.addEventListener('click', () => {
+    applySandboxStatChanges();
+});
+
+sandboxToolApplyButton && sandboxToolApplyButton.addEventListener('click', () => {
+    applySandboxTool();
+});
+
+sandboxToolFloorType && sandboxToolFloorType.addEventListener('change', () => {
+    updateSandboxToolControls();
+});
+
+updateSandboxMenuVisibility();
+
+document.addEventListener('keydown', (event) => {
+    if (!isGameScreenVisible()) return;
+    if (!isSandboxInteractiveEnabled()) return;
+    const key = event.key;
+    if (key !== 'm' && key !== 'M') return;
+    if (isAnyModalOpen()) return;
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+        if (target.closest('input, textarea, select')) return;
+        if (target.isContentEditable) return;
+    }
+    event.preventDefault();
+    setSandboxPanelOpen(!sandboxInteractiveState.panelOpen);
 });
 
 function grantExpFromEnemy(enemyLevel, isBoss = false) {
@@ -8984,9 +9912,9 @@ function renderMiniExpPlayerHud() {
         updatePlayerSpCap({ silent: true });
         const maxSp = Math.max(0, Number(player?.maxSp) || 0);
         const currentSp = Math.max(0, Math.min(maxSp, Number(player?.sp) || 0));
-        const displayCurrent = currentSp % 1 === 0 ? Math.floor(currentSp) : currentSp.toFixed(1);
-        const displayMax = maxSp % 1 === 0 ? Math.floor(maxSp) : maxSp;
-        miniexpHudSp.textContent = maxSp > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
+        const displayCurrent = floorSpValue(currentSp);
+        const displayMax = floorSpValue(maxSp);
+        miniexpHudSp.textContent = displayMax > 0 ? `${displayCurrent}/${displayMax}` : '0/0';
     }
 }
 

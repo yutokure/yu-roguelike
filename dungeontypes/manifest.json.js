@@ -3,6 +3,7 @@
 window.DUNGEONTYPE_MANIFEST = [
   { id: 'lava_pack',      name: 'Lava Pack',      entry: 'dungeontypes/lava_caves.js',      version: '1.0.0', author: 'builtin-sample' },
   { id: 'ring_city_pack', name: 'Ring City Pack', entry: 'dungeontypes/ring_city.js',       version: '1.0.0', author: 'builtin-sample' },
+  { id: 'grand_medieval_city_pack', name: 'Grand Medieval City Pack', entry: 'dungeontypes/grand_medieval_city.js', version: '1.1.0', author: 'builtin-sample' },
   { id: 'icy_caverns_pack', name: 'Icy Caverns Pack', entry: 'dungeontypes/icy_caverns.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'serpentine_pack', name: 'Serpentine River Pack', entry: 'dungeontypes/serpentine_river.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'ruins_pack',     name: 'Overgrown Ruins Pack', entry: 'dungeontypes/overgrown_ruins.js', version: '1.0.0', author: 'builtin-sample' },
@@ -20,6 +21,7 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'bomb_pack',      name: 'Bomb Hazard Pack', entry: 'dungeontypes/bomb_fields.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'shadowed_caverns_pack', name: 'Shadowed Caverns Pack', entry: 'dungeontypes/dark_caverns.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'sandstorm_dunes_pack', name: 'Sandstorm Dunes Pack', entry: 'dungeontypes/sandstorm_desert.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'sun_kings_necropolis_pack', name: 'Sun-Kings Necropolis Pack', entry: 'dungeontypes/egyptian_sun_kings.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'irradiated_plains_pack', name: 'Irradiated Plains Pack', entry: 'dungeontypes/irradiated_plains.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'conveyor_foundry_pack', name: 'Conveyor Foundry Pack', entry: 'dungeontypes/conveyor_foundry.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'oneway_labyrinth_pack', name: 'One-Way Labyrinth Pack', entry: 'dungeontypes/oneway_labyrinth.js', version: '1.0.0', author: 'builtin-sample' },
@@ -35,5 +37,7 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'echo_vaults_pack', name: 'Echo Vaults Pack', entry: 'dungeontypes/echo_vaults.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'emberglass_caverns_pack', name: 'Emberglass Caverns Pack', entry: 'dungeontypes/emberglass_caverns.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'abyssal_whorl_pack', name: 'Abyssal Whorl Pack', entry: 'dungeontypes/abyssal_whorl.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'ruined_labyrinth_pack', name: 'Ruined Labyrinth Pack', entry: 'dungeontypes/ruined_labyrinth.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'ruined_labyrinth_pack', name: 'Ruined Labyrinth Pack', entry: 'dungeontypes/ruined_labyrinth.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'ancient_enigma_pack', name: 'Ancient Enigma Excavation Pack', entry: 'dungeontypes/ancient_enigma.js', version: '1.1.0', author: 'builtin-sample' },
+  { id: 'sf_expansion_pack', name: 'SF Expansion Pack', entry: 'dungeontypes/sf_expansion.js', version: '1.0.0', author: 'builtin-sample' }
 ];

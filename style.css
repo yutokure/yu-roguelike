@@ -725,6 +725,151 @@ body.in-game #player-summary { display: none; }
     background: linear-gradient(135deg, #5a6fd8, #6a4190);
 }
 
+.sandbox-menu-button[aria-expanded="true"] {
+    background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    box-shadow: 0 4px 14px rgba(56,189,248,0.4);
+}
+
+.sandbox-interactive-panel {
+    position: fixed;
+    top: calc(var(--toolbar-height, 72px) + 16px);
+    right: 24px;
+    width: min(340px, 90vw);
+    max-height: calc(100vh - 120px);
+    display: none;
+    flex-direction: column;
+    background: rgba(15, 23, 42, 0.92);
+    color: #f8fafc;
+    border-radius: 18px;
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    z-index: 160;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+}
+
+.sandbox-interactive-panel[aria-hidden="false"] {
+    display: flex;
+}
+
+.sandbox-interactive-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.sandbox-interactive-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+#sandbox-interactive-close {
+    background: transparent;
+    border: none;
+    color: #f8fafc;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.sandbox-interactive-body {
+    padding: 16px 18px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.sandbox-interactive-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+
+.sandbox-interactive-section h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #bae6fd;
+}
+
+.sandbox-interactive-section .sandbox-toggle {
+    color: #e2e8f0;
+    font-weight: 500;
+    flex-direction: row;
+}
+
+.sandbox-interactive-section label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #cbd5f5;
+}
+
+.sandbox-interactive-section input,
+.sandbox-interactive-section select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(15, 23, 42, 0.8);
+    color: #f8fafc;
+}
+
+.sandbox-interactive-section input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #38bdf8;
+}
+
+.sandbox-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+}
+
+.sandbox-interactive-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sandbox-interactive-actions button {
+    flex: 1 1 auto;
+    min-width: 120px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    color: #0f172a;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sandbox-interactive-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(56, 189, 248, 0.35);
+}
+
+.sandbox-interactive-section .sandbox-note {
+    background: rgba(59, 130, 246, 0.15);
+    color: #e0f2fe;
+}
+
+@media (max-width: 1024px) {
+    .sandbox-interactive-panel {
+        right: 12px;
+        width: min(320px, 92vw);
+    }
+}
+
 #game-container {
     display: flex;
     gap: 24px;
@@ -1882,6 +2027,25 @@ h1 {
     background: rgba(102,126,234,0.12);
     border-radius: 8px;
     padding: 6px 8px;
+}
+
+.sandbox-interactive-toggle {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.sandbox-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.sandbox-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
 }
 
 .sandbox-map-wrapper {

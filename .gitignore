@@ -1,1 +1,3 @@
 .qoder/
+node_modules/
+libs/MathJax-4.0.0/node_modules/

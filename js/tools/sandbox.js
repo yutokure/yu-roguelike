@@ -359,6 +359,7 @@
                 x: Number.isFinite(e.x) ? e.x : null,
                 y: Number.isFinite(e.y) ? e.y : null
             })),
+            interactiveMode: !!state.interactiveMode,
             tileMeta: cloneMetaGrid(state.meta)
         };
     }
@@ -394,7 +395,8 @@
                 warnings: Array.isArray(state.validation?.warnings) ? state.validation.warnings.slice() : []
             },
             tempMessage: state.tempMessage || '',
-            brushSettings: state.brushSettings ? { ...state.brushSettings } : { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' }
+            brushSettings: state.brushSettings ? { ...state.brushSettings } : { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' },
+            interactiveMode: !!state.interactiveMode
         };
     }
 
@@ -485,7 +487,8 @@
                 warnings: Array.isArray(serialized?.validation?.warnings) ? serialized.validation.warnings.map(w => String(w)) : []
             },
             tempMessage: typeof serialized?.tempMessage === 'string' ? serialized.tempMessage : '',
-            brushSettings
+            brushSettings,
+            interactiveMode: !!serialized?.interactiveMode
         };
     }
 
@@ -517,9 +520,11 @@
         state.compiledConfig = null;
         state.tempMessage = payload.tempMessage;
         state.ioStatus = { type: 'idle', message: '' };
+        state.interactiveMode = !!payload.interactiveMode;
         if (refs.widthInput) refs.widthInput.value = state.width;
         if (refs.heightInput) refs.heightInput.value = state.height;
         if (refs.playerLevelInput) refs.playerLevelInput.value = state.playerLevel;
+        if (refs.interactiveModeInput) refs.interactiveModeInput.checked = !!state.interactiveMode;
         const maxEnemyId = state.enemies.reduce((max, enemy) => {
             const match = typeof enemy.id === 'string' ? enemy.id.match(/(\d+)$/) : null;
             const num = match ? Number(match[1]) : NaN;
@@ -1282,6 +1287,9 @@
         renderEnemies();
         renderValidation();
         renderIoStatus();
+        if (refs.interactiveModeInput) {
+            refs.interactiveModeInput.checked = !!state.interactiveMode;
+        }
         restoreActiveInput(focusSnapshot);
     }
 
@@ -1434,6 +1442,7 @@
             exportButton: panel.querySelector('#sandbox-export-button'),
             importButton: panel.querySelector('#sandbox-import-button'),
             importFile: panel.querySelector('#sandbox-import-file'),
+            interactiveModeInput: panel.querySelector('#sandbox-interactive-mode'),
             ioStatus: panel.querySelector('#sandbox-io-status')
         };
 
@@ -1454,7 +1463,8 @@
             tempMessage: '',
             brushSettings: { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' },
             renderMetrics: { cellSize: RENDER_CELL_SIZE, gap: RENDER_CELL_GAP, width: 0, height: 0 },
-            ioStatus: { type: 'idle', message: '' }
+            ioStatus: { type: 'idle', message: '' },
+            interactiveMode: false
         };
 
         if (refs.gridCanvas) {
@@ -1494,6 +1504,13 @@
                 state.playerLevel = value;
                 e.target.value = value;
                 render();
+            });
+        }
+        if (refs.interactiveModeInput) {
+            refs.interactiveModeInput.checked = !!state.interactiveMode;
+            refs.interactiveModeInput.addEventListener('change', (e) => {
+                state.interactiveMode = !!e.target.checked;
+                renderValidation();
             });
         }
         if (refs.addEnemyButton) {

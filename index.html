@@ -523,6 +523,13 @@
                                             </div>
                                         </div>
                                         <p class="sandbox-note">サンドボックス中は経験値が増えず、終了後に本来のレベルへ戻ります。</p>
+                                        <div class="sandbox-interactive-toggle">
+                                            <label class="sandbox-toggle">
+                                                <input id="sandbox-interactive-mode" type="checkbox">
+                                                <span>インタラクティブモードを有効にする</span>
+                                            </label>
+                                            <p class="sandbox-note small">探索中に専用メニューを開いてパラメータ調整や即時編集が行えます。</p>
+                                        </div>
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-enemy-title">
                                         <div class="sandbox-section-header">
@@ -811,8 +818,101 @@
         <button id="btn-status">ステータス</button>
         <button id="btn-import">インポート</button>
         <button id="btn-export">エクスポート</button>
+        <button id="btn-sandbox-menu" class="sandbox-menu-button" type="button" aria-expanded="false" aria-controls="sandbox-interactive-panel" style="display:none;">インタラクティブ</button>
         <input type="file" id="import-file" accept="application/json" style="display:none" />
         <div id="floor-indicator">1F</div>
+    </div>
+    <div id="sandbox-interactive-panel" class="sandbox-interactive-panel" role="dialog" aria-modal="false" aria-hidden="true" tabindex="-1">
+        <div class="sandbox-interactive-header">
+            <h3>サンドボックスインタラクティブ</h3>
+            <button id="sandbox-interactive-close" type="button" aria-label="閉じる">×</button>
+        </div>
+        <div class="sandbox-interactive-body">
+            <section class="sandbox-interactive-section" aria-labelledby="sandbox-interactive-modes">
+                <h4 id="sandbox-interactive-modes">モード</h4>
+                <label class="sandbox-toggle">
+                    <input id="sandbox-god-mode" type="checkbox">
+                    <span>ゴッドモード (無敵)</span>
+                </label>
+                <label class="sandbox-toggle">
+                    <input id="sandbox-no-clip" type="checkbox">
+                    <span>ノークリップ (壁抜け)</span>
+                </label>
+                <div class="sandbox-interactive-actions">
+                    <button id="sandbox-full-heal" type="button">全回復</button>
+                    <button id="sandbox-reset-stats" type="button">初期化</button>
+                </div>
+            </section>
+            <section class="sandbox-interactive-section" aria-labelledby="sandbox-interactive-stats">
+                <h4 id="sandbox-interactive-stats">プレイヤーパラメータ</h4>
+                <div class="sandbox-stat-grid">
+                    <label>レベル
+                        <input id="sandbox-stat-level" type="number" min="1" max="999" step="1">
+                    </label>
+                    <label>最大HP
+                        <input id="sandbox-stat-maxhp" type="number" min="1" step="1">
+                    </label>
+                    <label>現在HP
+                        <input id="sandbox-stat-hp" type="number" min="0" step="1">
+                    </label>
+                    <label>攻撃
+                        <input id="sandbox-stat-atk" type="number" min="0" step="1">
+                    </label>
+                    <label>防御
+                        <input id="sandbox-stat-def" type="number" min="0" step="1">
+                    </label>
+                    <label>SP最大値
+                        <input id="sandbox-stat-maxsp" type="number" min="0" step="1">
+                    </label>
+                    <label>現在SP
+                        <input id="sandbox-stat-sp" type="number" min="0" step="1">
+                    </label>
+                    <label>満腹度
+                        <input id="sandbox-stat-satiety" type="number" min="0" max="100" step="1">
+                    </label>
+                </div>
+                <div class="sandbox-interactive-actions">
+                    <button id="sandbox-apply-stats" type="button">パラメータを適用</button>
+                </div>
+            </section>
+            <section class="sandbox-interactive-section" aria-labelledby="sandbox-interactive-tools">
+                <h4 id="sandbox-interactive-tools">ツール</h4>
+                <label>ツール種類
+                    <select id="sandbox-tool-select">
+                        <option value="floor">床を敷く</option>
+                        <option value="wall">壁を作る</option>
+                        <option value="stairs">階段を設置</option>
+                        <option value="start">開始位置を移動</option>
+                        <option value="erase">床に戻す</option>
+                    </select>
+                </label>
+                <label>床タイプ
+                    <select id="sandbox-tool-floor-type">
+                        <option value="normal">通常</option>
+                        <option value="ice">氷</option>
+                        <option value="poison">毒</option>
+                        <option value="bomb">爆弾</option>
+                        <option value="conveyor">コンベヤー</option>
+                        <option value="one-way">一方通行</option>
+                        <option value="vertical">縦通行のみ</option>
+                        <option value="horizontal">横通行のみ</option>
+                    </select>
+                </label>
+                <label>進行方向
+                    <select id="sandbox-tool-floor-dir">
+                        <option value="">指定なし</option>
+                        <option value="up">↑ 上</option>
+                        <option value="right">→ 右</option>
+                        <option value="down">↓ 下</option>
+                        <option value="left">← 左</option>
+                    </select>
+                </label>
+                <div class="sandbox-interactive-actions">
+                    <button id="sandbox-tool-apply" type="button">使用</button>
+                </div>
+                <p class="sandbox-note small">現在向いている方向の1マス先を編集します。</p>
+            </section>
+        </div>
     </div>
     <div id="game-screen" style="display:none;">
         <div id="game-container">

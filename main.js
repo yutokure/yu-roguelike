@@ -406,7 +406,8 @@ const sandboxInteractiveState = {
     panelOpen: false,
     godMode: false,
     noClip: false,
-    savedStats: null
+    savedStats: null,
+    privilegeEnabled: false
 };
 
 function isSandboxActive() {
@@ -437,7 +438,10 @@ function sandboxLog(message) {
 }
 
 function isSandboxInteractiveEnabled() {
-    return !!(sandboxRuntime.active && sandboxInteractiveState.enabled);
+    if (sandboxRuntime.active && sandboxRuntime.config) {
+        return !!sandboxInteractiveState.enabled;
+    }
+    return !!(sandboxInteractiveState.enabled && sandboxInteractiveState.privilegeEnabled);
 }
 
 function isSandboxGodModeEnabled() {
@@ -502,14 +506,59 @@ function setSandboxInteractiveEnabled(enabled) {
     updateSandboxMenuVisibility();
 }
 
+function hasSandboxInteractivePrivilege() {
+    if (isSandboxActive()) return false;
+    if (!gameScreen || gameScreen.style.display === 'none') return false;
+    const playerLevel = Number.isFinite(player?.level) ? player.level : null;
+    if (!Number.isFinite(playerLevel) || playerLevel <= 1025) return false;
+    let recommended = null;
+    try {
+        recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    } catch {
+        recommended = null;
+    }
+    if (!Number.isFinite(recommended)) return false;
+    return playerLevel - recommended >= 100;
+}
+
+function updateSandboxInteractivePrivilege() {
+    if (isSandboxActive()) {
+        if (sandboxInteractiveState.privilegeEnabled) {
+            sandboxInteractiveState.privilegeEnabled = false;
+        }
+        return;
+    }
+
+    const inGame = !!(gameScreen && gameScreen.style.display !== 'none');
+    if (!inGame) {
+        if (sandboxInteractiveState.privilegeEnabled || sandboxInteractiveState.enabled) {
+            sandboxInteractiveState.privilegeEnabled = false;
+            resetSandboxInteractiveState();
+        }
+        return;
+    }
+
+    const eligible = hasSandboxInteractivePrivilege();
+    if (eligible) {
+        if (!sandboxInteractiveState.privilegeEnabled || !sandboxInteractiveState.enabled) {
+            sandboxInteractiveState.privilegeEnabled = true;
+            setSandboxInteractiveEnabled(true);
+        }
+    } else if (sandboxInteractiveState.privilegeEnabled || sandboxInteractiveState.enabled) {
+        sandboxInteractiveState.privilegeEnabled = false;
+        resetSandboxInteractiveState();
+    }
+}
+
 function resetSandboxInteractiveState() {
+    sandboxInteractiveState.enabled = false;
+    sandboxInteractiveState.privilegeEnabled = false;
     if (sandboxInteractiveState.godMode) {
         applySandboxGodMode(false, { silent: true });
     }
     sandboxInteractiveState.noClip = false;
     sandboxInteractiveState.savedStats = null;
     sandboxInteractiveState.panelOpen = false;
-    sandboxInteractiveState.enabled = false;
     if (sandboxMenuButton) {
         sandboxMenuButton.style.display = 'none';
         sandboxMenuButton.setAttribute('aria-expanded', 'false');
@@ -1022,6 +1071,7 @@ function startSandboxGame(rawConfig) {
     sandboxInteractiveState.godMode = false;
     sandboxInteractiveState.noClip = false;
     sandboxInteractiveState.savedStats = null;
+    sandboxInteractiveState.privilegeEnabled = false;
     setSandboxInteractiveEnabled(!!validation.config.interactiveMode);
     updateSandboxToggleInputs();
     setSandboxPanelOpen(false, { silent: true });
@@ -1206,6 +1256,7 @@ function showSelectionScreen(opts = {}) {
     if (tb) tb.style.display = 'none';
     if (selectionScreen) selectionScreen.style.display = 'flex';
     leaveInGameLayout();
+    updateSandboxInteractivePrivilege();
 
     // 状態のリセット
     if (refillHp) {
@@ -7921,6 +7972,7 @@ function updateUI() {
     if (floorEl) floorEl.textContent = `${dungeonLevel}F`;
 
     refreshSkillsModal();
+    updateSandboxInteractivePrivilege();
 
     // メッセージログは addMessage で更新
 }

@@ -2654,10 +2654,84 @@
             return parsed;
           }
           if (isFraction && isFraction(value)) {
-            if (value.s < 0 || value.d !== 1) {
+            const sign = value?.s;
+            if (typeof sign === 'bigint') {
+              if (sign < 0n) throw new Error(errorMessage);
+            } else if (typeof sign === 'number') {
+              if (sign < 0) throw new Error(errorMessage);
+            } else if (sign != null) {
+              const coercedSign = Number(sign);
+              if (!Number.isFinite(coercedSign) || coercedSign < 0) {
+                throw new Error(errorMessage);
+              }
+            }
+
+            const denominator = value?.d;
+            let denominatorIsOne = false;
+            if (typeof denominator === 'bigint') {
+              denominatorIsOne = denominator === 1n;
+            } else if (typeof denominator === 'number') {
+              denominatorIsOne = denominator === 1;
+            } else if (typeof denominator === 'string') {
+              try {
+                denominatorIsOne = BigInt(denominator.trim()) === 1n;
+              } catch {
+                denominatorIsOne = false;
+              }
+            } else if (denominator && typeof denominator.valueOf === 'function') {
+              const primitive = denominator.valueOf();
+              if (typeof primitive === 'bigint') {
+                denominatorIsOne = primitive === 1n;
+              } else if (typeof primitive === 'number') {
+                denominatorIsOne = primitive === 1;
+              } else if (typeof primitive === 'string') {
+                try {
+                  denominatorIsOne = BigInt(primitive.trim()) === 1n;
+                } catch {
+                  denominatorIsOne = false;
+                }
+              }
+            } else if (denominator == null) {
+              denominatorIsOne = true;
+            }
+
+            if (!denominatorIsOne) {
               throw new Error(errorMessage);
             }
-            return BigInt(value.n);
+
+            const numerator = value?.n;
+            if (typeof numerator === 'bigint') {
+              if (numerator < 0n) throw new Error(errorMessage);
+              return numerator;
+            }
+            if (typeof numerator === 'number') {
+              if (!Number.isFinite(numerator) || numerator < 0 || Math.floor(numerator) !== numerator) {
+                throw new Error(errorMessage);
+              }
+              return BigInt(numerator);
+            }
+            if (typeof numerator === 'string') {
+              const trimmed = numerator.trim();
+              if (!trimmed || !/^[+-]?\d+$/.test(trimmed)) {
+                throw new Error(errorMessage);
+              }
+              const parsed = BigInt(trimmed);
+              if (parsed < 0n) throw new Error(errorMessage);
+              return parsed;
+            }
+            if (numerator && typeof numerator.valueOf === 'function' && numerator.valueOf() !== numerator) {
+              return parseInteger(numerator.valueOf());
+            }
+            if (value && typeof value.valueOf === 'function' && value.valueOf() !== value) {
+              return parseInteger(value.valueOf());
+            }
+            const asString = typeof value.toString === 'function' ? value.toString().trim() : '';
+            if (!asString || !/^[+-]?\d+$/.test(asString)) {
+              throw new Error(errorMessage);
+            }
+            const parsed = BigInt(asString);
+            if (parsed < 0n) throw new Error(errorMessage);
+            return parsed;
           }
           if (isBigNumber && isBigNumber(value)) {
             if (typeof value.isFinite === 'function' && !value.isFinite()) {

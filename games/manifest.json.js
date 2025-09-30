@@ -29,6 +29,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'minesweeper', name: 'マインスイーパー', entry: 'games/minesweeper.js', version: '0.1.0', author: 'builtin', description: '開放×0.1 / クリア: 25/200/1600', category: 'パズル' },
   { id: 'sudoku',      name: 'ナンプレ',        entry: 'games/sudoku.js',     version: '0.1.0', author: 'mod', description: '正解入力でEXP / クリアボーナス', category: 'パズル' },
   { id: 'ultimate_ttt', name: 'スーパー三目並べ', entry: 'games/ultimate_ttt.js', version: '0.1.0', author: 'mod', description: '小盤制覇+25/配置+1/リーチ+10/勝利ボーナス', category: 'ボード' },
+  { id: 'nine_mens_morris', name: 'ナイン・メンズ・モリス', entry: 'games/nine_mens_morris.js', version: '0.1.0', author: 'mod', description: '配置+1 / ミル+15 / 勝利ボーナス', category: 'ボード' },
   { id: 'sugoroku_life', name: '人生すごろく', entry: 'games/sugoroku_life.js', version: '0.1.0', author: 'mod', description: 'キャリアイベントを乗り越えて資産とEXPを伸ばす人生風すごろく', category: 'ボード' },
   { id: 'sliding_puzzle', name: 'スライドパズル', entry: 'games/sliding_puzzle.js', version: '0.1.0', author: 'mod', description: '難易度で8/15/24のスライドパズル', category: 'パズル' },
   { id: 'invaders',    name: 'インベーダー風',    entry: 'games/invaders.js',   version: '0.1.0', author: 'builtin', description: '撃破+1 / 全滅+50', category: 'シューティング' },

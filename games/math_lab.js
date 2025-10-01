@@ -2614,7 +2614,7 @@
         if (ctx?.isComplex?.(value)) {
           const re = convertForFallback(value.re, ctx);
           const im = convertForFallback(value.im, ctx);
-          return ctx.complex(re, im);
+          return typeof ctx?.complex === 'function' ? ctx.complex(re, im) : { re, im };
         }
         if (ctx?.isMatrix?.(value)) {
           return value.map(item => convertForFallback(item, ctx));
@@ -2624,17 +2624,34 @@
         }
         return value;
       };
-      const wrapFunctionWithFractionFallback = (target, name) => {
+      const wrapFunctionWithFractionFallback = (target, name, numericTarget) => {
         if (!target || typeof name !== 'string' || fractionFallbackSkip.has(name)) return;
         const original = target[name];
         if (typeof original !== 'function' || original._fractionSafeWrapped) return;
         const wrapper = function fractionSafeWrapper(...args){
+          const context = this || target;
+          const detectionContext = (context && (
+            typeof context.isFraction === 'function' ||
+            typeof context.isBigNumber === 'function' ||
+            typeof context.isComplex === 'function' ||
+            typeof context.isMatrix === 'function'
+          )) ? context : target;
           try {
-            return original.apply(target, args);
+            return original.apply(context, args);
           } catch (err) {
             if (needsFractionFallback(err)) {
-              const converted = args.map(arg => convertForFallback(arg, target));
-              return original.apply(target, converted);
+              const converted = args.map(arg => convertForFallback(arg, detectionContext));
+              try {
+                return original.apply(context, converted);
+              } catch (innerErr) {
+                if (!needsFractionFallback(innerErr)) throw innerErr;
+                const numericCtx = numericTarget || null;
+                const numericFn = numericCtx && typeof numericCtx[name] === 'function' ? numericCtx[name] : null;
+                if (!numericFn) throw innerErr;
+                const numericArgs = converted.map(arg => convertForFallback(arg, numericCtx || detectionContext));
+                const numericResult = numericFn.apply(numericCtx, numericArgs);
+                return convertForFallback(numericResult, detectionContext);
+              }
             }
             throw err;
           }
@@ -2650,18 +2667,31 @@
         }
         target[name] = wrapper;
       };
+      const baseFractionFallbackNames = [
+        'sqrt', 'cbrt', 'nthRoot', 'pow',
+        'exp', 'expm1', 'log', 'log10', 'log2', 'log1p',
+        'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2',
+        'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
+        'sec', 'csc', 'cot', 'asec', 'acsc', 'acot',
+        'sech', 'csch', 'coth', 'asech', 'acsch', 'acoth'
+      ];
       const applyFractionFallbacks = (target, extraNames = []) => {
         if (!target) return;
+        const mathWithTransform = target.expression?.mathWithTransform;
+        const numericMathWithTransform = numericMath?.expression?.mathWithTransform;
         const names = new Set([
-          ...(Object.keys(target.expression?.mathWithTransform || {})),
+          ...baseFractionFallbackNames,
           ...extraNames
         ]);
         names.forEach(fnName => {
           if (!fnName || typeof fnName !== 'string') return;
-          wrapFunctionWithFractionFallback(target, fnName);
+          wrapFunctionWithFractionFallback(target, fnName, numericMath);
+          if (mathWithTransform) {
+            wrapFunctionWithFractionFallback(mathWithTransform, fnName, numericMathWithTransform);
+          }
         });
       };
-      applyFractionFallbacks(math, ['sqrt', 'cbrt', 'nthRoot', 'exp', 'log', 'log10', 'log2', 'log1p', 'expm1']);
+      applyFractionFallbacks(math);
 
       function createIntegerParser(target, errorMessage){
         const isFraction = typeof target.isFraction === 'function' ? target.isFraction.bind(target) : null;

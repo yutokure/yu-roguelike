@@ -4,6 +4,7 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'lava_pack',      name: 'Lava Pack',      entry: 'dungeontypes/lava_caves.js',      version: '1.0.0', author: 'builtin-sample' },
   { id: 'ring_city_pack', name: 'Ring City Pack', entry: 'dungeontypes/ring_city.js',       version: '1.0.0', author: 'builtin-sample' },
   { id: 'grand_medieval_city_pack', name: 'Grand Medieval City Pack', entry: 'dungeontypes/grand_medieval_city.js', version: '1.1.0', author: 'builtin-sample' },
+  { id: 'medieval_stronghold_pack', name: 'Medieval Stronghold Pack', entry: 'dungeontypes/medieval_stronghold.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'icy_caverns_pack', name: 'Icy Caverns Pack', entry: 'dungeontypes/icy_caverns.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'serpentine_pack', name: 'Serpentine River Pack', entry: 'dungeontypes/serpentine_river.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'ruins_pack',     name: 'Overgrown Ruins Pack', entry: 'dungeontypes/overgrown_ruins.js', version: '1.0.0', author: 'builtin-sample' },

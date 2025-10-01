@@ -578,6 +578,14 @@
       return num;
     }
 
+    function ensurePositiveFiniteNumber(value, message){
+      const num = ensureFiniteNumber(value);
+      if (num <= 0) {
+        throw new Error(message || '正の実数を指定してください。');
+      }
+      return num;
+    }
+
     function buildKeypad(){
       functionGroupContainer.innerHTML = '';
       const existingFavorites = keypadPanel.querySelector('[data-math-lab-favorites]');
@@ -2119,6 +2127,358 @@
       return recurse(a, b, eps, initial, maxDepth);
     }
 
+    function normalizeVariableName(variable){
+      if (variable == null) return 'x';
+      if (typeof variable === 'string') return variable;
+      if (mathRef?.isSymbolNode?.(variable) || math?.isSymbolNode?.(variable)) {
+        return variable.name;
+      }
+      if (variable && typeof variable.name === 'string') {
+        return variable.name;
+      }
+      if (variable && typeof variable.evaluate === 'function') {
+        try {
+          const evaluated = variable.evaluate(scope);
+          if (typeof evaluated === 'string') {
+            return evaluated;
+          }
+        } catch {}
+      }
+      return String(variable);
+    }
+
+    function evaluateMathArgument(arg){
+      if (arg == null) return arg;
+      if (mathRef?.isNode?.(arg) || math?.isNode?.(arg)) {
+        try { return arg.evaluate(scope); } catch {}
+      }
+      if (arg && typeof arg.evaluate === 'function') {
+        try { return arg.evaluate(scope); } catch {}
+      }
+      return arg;
+    }
+
+    function nodeToAscii(node){
+      if (!node) return '';
+      if (typeof node.toString === 'function') {
+        try { return node.toString({ parenthesis: 'auto' }); }
+        catch { return String(node); }
+      }
+      return String(node);
+    }
+
+    function nodeDependsOnVariable(node, variable){
+      if (!node) return false;
+      if (math?.isSymbolNode?.(node) || mathRef?.isSymbolNode?.(node)) {
+        return node.name === variable;
+      }
+      if (math?.isConstantNode?.(node) || mathRef?.isConstantNode?.(node)) {
+        return false;
+      }
+      if (math?.isParenthesisNode?.(node) || mathRef?.isParenthesisNode?.(node)) {
+        return nodeDependsOnVariable(node.content, variable);
+      }
+      if (Array.isArray(node.args)) {
+        return node.args.some(child => nodeDependsOnVariable(child, variable));
+      }
+      if (node.content) {
+        return nodeDependsOnVariable(node.content, variable);
+      }
+      return false;
+    }
+
+    function tryEvaluateNumericNode(node){
+      if (!node) return null;
+      try {
+        if (typeof node.evaluate === 'function') {
+          const value = node.evaluate(scope);
+          return ensureFiniteNumber(value);
+        }
+      } catch {}
+      try {
+        const text = nodeToAscii(node);
+        if (text) {
+          const value = math ? math.evaluate(text, scope) : null;
+          if (value != null) {
+            return ensureFiniteNumber(value);
+          }
+        }
+      } catch {}
+      return null;
+    }
+
+    function isApproximatelyValue(node, expected){
+      const num = tryEvaluateNumericNode(node);
+      if (num == null) return false;
+      return Math.abs(num - expected) < 1e-12;
+    }
+
+    function isZeroNode(node){
+      return isApproximatelyValue(node, 0);
+    }
+
+    function isOneNode(node){
+      return isApproximatelyValue(node, 1);
+    }
+
+    function isNegativeOneNode(node){
+      return isApproximatelyValue(node, -1);
+    }
+
+    function wrapTerm(expr){
+      if (expr == null) return '';
+      const text = String(expr).trim();
+      if (!text) return '';
+      if (/^[A-Za-z0-9_\.]+$/.test(text)) return text;
+      if (text.startsWith('(') && text.endsWith(')')) return text;
+      return `(${text})`;
+    }
+
+    function negateExpression(expr){
+      const text = String(expr).trim();
+      if (!text) return '0';
+      if (text.startsWith('-')) return text.slice(1);
+      return `-(${text})`;
+    }
+
+    function multiplyExpressions(a, b){
+      const left = String(a ?? '').trim();
+      const right = String(b ?? '').trim();
+      if (!left || left === '0' || left === '-0') return '0';
+      if (!right || right === '0' || right === '-0') return '0';
+      if (left === '1') return right;
+      if (right === '1') return left;
+      if (left === '-1') return negateExpression(right);
+      if (right === '-1') return negateExpression(left);
+      return `${wrapTerm(left)} * ${wrapTerm(right)}`;
+    }
+
+    function divideExpressions(numerator, denominator){
+      const top = String(numerator ?? '').trim();
+      const bottom = String(denominator ?? '').trim();
+      if (!bottom || bottom === '0' || bottom === '-0') {
+        throw new Error('0 で割ることはできません。');
+      }
+      if (!top || top === '0' || top === '-0') return '0';
+      if (bottom === '1') return top;
+      if (bottom === '-1') return negateExpression(top);
+      return `${wrapTerm(top)} / ${wrapTerm(bottom)}`;
+    }
+
+    function addExpressions(parts){
+      return parts.filter(part => part != null && String(part).trim() !== '')
+        .map(part => wrapTerm(part))
+        .join(' + ');
+    }
+
+    function subtractExpressions(first, rest){
+      const head = String(first ?? '').trim();
+      const tail = String(rest ?? '').trim();
+      if (!head && !tail) return '';
+      if (!tail) return head;
+      if (!head) return negateExpression(tail);
+      return `${wrapTerm(head)} - ${wrapTerm(tail)}`;
+    }
+
+    function splitProductArgs(args, variable){
+      const constants = [];
+      const dependents = [];
+      args.forEach(arg => {
+        if (nodeDependsOnVariable(arg, variable)) dependents.push(arg);
+        else constants.push(arg);
+      });
+      return { constants, dependents };
+    }
+
+    function nodesToProductExpression(nodes){
+      if (!nodes.length) return '1';
+      return nodes.map(node => wrapTerm(nodeToAscii(node))).join(' * ');
+    }
+
+    function simplifyExpressionString(expr){
+      if (!expr) return expr;
+      if (!math || typeof math.simplify !== 'function') return expr;
+      try {
+        const simplified = math.simplify(expr, scope);
+        return simplified.toString({ parenthesis: 'auto' });
+      } catch {
+        return expr;
+      }
+    }
+
+    function safeDerivative(node, variable){
+      if (!math || typeof math.derivative !== 'function') return null;
+      try {
+        return math.derivative(node, variable);
+      } catch {
+        return null;
+      }
+    }
+
+    function applyChainRule(baseExpr, innerDerivative){
+      if (!innerDerivative) return null;
+      if (isZeroNode(innerDerivative)) return null;
+      if (isOneNode(innerDerivative)) return baseExpr;
+      if (isNegativeOneNode(innerDerivative)) return negateExpression(baseExpr);
+      return divideExpressions(baseExpr, nodeToAscii(innerDerivative));
+    }
+
+    function integrateFunctionNode(node, variable){
+      if (!node || typeof node.name !== 'string' || !Array.isArray(node.args) || !node.args.length) {
+        return null;
+      }
+      const inner = node.args[0];
+      if (!nodeDependsOnVariable(inner, variable)) {
+        return null;
+      }
+      const derivative = safeDerivative(inner, variable);
+      if (!derivative) return null;
+      const innerStr = nodeToAscii(inner);
+      let base;
+      switch (node.name) {
+        case 'sin':
+          base = `-cos(${innerStr})`;
+          break;
+        case 'cos':
+          base = `sin(${innerStr})`;
+          break;
+        case 'tan':
+          base = `-log(abs(cos(${innerStr})))`;
+          break;
+        case 'cot':
+          base = `log(abs(sin(${innerStr})))`;
+          break;
+        case 'sinh':
+          base = `cosh(${innerStr})`;
+          break;
+        case 'cosh':
+          base = `sinh(${innerStr})`;
+          break;
+        case 'tanh':
+          base = `log(cosh(${innerStr}))`;
+          break;
+        case 'exp':
+          base = `exp(${innerStr})`;
+          break;
+        default:
+          return null;
+      }
+      const chained = applyChainRule(base, derivative);
+      return chained ? chained : null;
+    }
+
+    function integratePower(baseNode, exponentNode, variable){
+      if (!(math?.isSymbolNode?.(baseNode) || mathRef?.isSymbolNode?.(baseNode))) {
+        return null;
+      }
+      if (baseNode.name !== variable) return null;
+      if (nodeDependsOnVariable(exponentNode, variable)) return null;
+      if (isNegativeOneNode(exponentNode)) {
+        return `log(abs(${variable}))`;
+      }
+      const exponentStr = nodeToAscii(exponentNode);
+      const evaluated = tryEvaluateNumericNode(exponentNode);
+      if (evaluated != null && Math.abs(evaluated + 1) > 1e-12) {
+        const next = evaluated + 1;
+        const nextStr = math ? math.format(next, { precision: 12 }) : String(next);
+        const numerator = `${wrapTerm(variable)}^${nextStr}`;
+        return divideExpressions(numerator, nextStr);
+      }
+      return divideExpressions(`${wrapTerm(variable)}^(${exponentStr} + 1)`, `(${exponentStr} + 1)`);
+    }
+
+    function integrateNodeToString(node, variable){
+      if (!node) return null;
+      if (math?.isParenthesisNode?.(node) || mathRef?.isParenthesisNode?.(node)) {
+        return integrateNodeToString(node.content, variable);
+      }
+      if (!nodeDependsOnVariable(node, variable)) {
+        const constantExpr = nodeToAscii(node);
+        if (!constantExpr || constantExpr === '0' || constantExpr === '-0') {
+          return '0';
+        }
+        return multiplyExpressions(constantExpr, variable);
+      }
+      if ((math?.isSymbolNode?.(node) || mathRef?.isSymbolNode?.(node)) && node.name === variable) {
+        return divideExpressions(`${wrapTerm(variable)}^2`, '2');
+      }
+      if (math?.isOperatorNode?.(node) || mathRef?.isOperatorNode?.(node)) {
+        const fn = node.fn;
+        if (fn === 'add') {
+          const parts = node.args.map(arg => integrateNodeToString(arg, variable));
+          if (parts.some(part => part == null)) return null;
+          return addExpressions(parts);
+        }
+        if (fn === 'subtract') {
+          const [left, right] = node.args;
+          const leftExpr = integrateNodeToString(left, variable);
+          const rightExpr = integrateNodeToString(right, variable);
+          if (leftExpr == null || rightExpr == null) return null;
+          return subtractExpressions(leftExpr, rightExpr);
+        }
+        if (fn === 'unaryMinus') {
+          const inner = integrateNodeToString(node.args[0], variable);
+          return inner == null ? null : negateExpression(inner);
+        }
+        if (fn === 'unaryPlus') {
+          return integrateNodeToString(node.args[0], variable);
+        }
+        if (fn === 'multiply') {
+          const { constants, dependents } = splitProductArgs(node.args, variable);
+          if (!dependents.length) {
+            const constExpr = nodesToProductExpression(node.args);
+            return multiplyExpressions(constExpr, variable);
+          }
+          const constantExpr = nodesToProductExpression(constants);
+          if (dependents.length === 1) {
+            const dependentExpr = integrateNodeToString(dependents[0], variable);
+            if (dependentExpr == null) return null;
+            return multiplyExpressions(constantExpr, dependentExpr);
+          }
+          try {
+            const dependentProduct = nodesToProductExpression(dependents);
+            const dependentNode = math.parse(dependentProduct);
+            const integrated = integrateNodeToString(dependentNode, variable);
+            if (integrated == null) return null;
+            return multiplyExpressions(constantExpr, integrated);
+          } catch {
+            return null;
+          }
+        }
+        if (fn === 'divide') {
+          const [numerator, denominator] = node.args;
+          if (nodeDependsOnVariable(denominator, variable)) return null;
+          const numeratorExpr = integrateNodeToString(numerator, variable);
+          if (numeratorExpr == null) return null;
+          return divideExpressions(numeratorExpr, nodeToAscii(denominator));
+        }
+        if (fn === 'pow') {
+          const [baseNode, exponentNode] = node.args;
+          return integratePower(baseNode, exponentNode, variable);
+        }
+      }
+      if (math?.isFunctionNode?.(node) || mathRef?.isFunctionNode?.(node)) {
+        return integrateFunctionNode(node, variable);
+      }
+      return null;
+    }
+
+    function integrateExpressionSymbolic(expr, variable = 'x'){
+      if (!math) {
+        throw new Error('数学エンジンの初期化を待ってから積分を実行してください。');
+      }
+      const varName = normalizeVariableName(variable);
+      const expressionNode = compileExpression(expr);
+      const simplified = typeof math.simplify === 'function'
+        ? math.simplify(expressionNode, scope)
+        : expressionNode;
+      const result = integrateNodeToString(simplified, varName);
+      if (!result) {
+        throw new Error('指定した式の解析的積分を求められませんでした。numericIntegrate を利用してください。');
+      }
+      return simplifyExpressionString(result);
+    }
+
     function numericIntegrate(expr, variable, lower, upper, options = {}){
       const varName = variable ? String(variable) : 'x';
       const node = compileExpression(expr);
@@ -2356,6 +2716,13 @@
         return value > 170 ? Infinity : result;
       }
       return result;
+    }
+
+    function betaReal(x, y){
+      const a = ensurePositiveFiniteNumber(x, 'beta の第1引数には正の実数を指定してください。');
+      const b = ensurePositiveFiniteNumber(y, 'beta の第2引数には正の実数を指定してください。');
+      const sum = a + b;
+      return Math.exp(logGammaReal(a) + logGammaReal(b) - logGammaReal(sum));
     }
 
     function lambertWReal(x, branch = 0){
@@ -2669,7 +3036,7 @@
       };
       const baseFractionFallbackNames = [
         'sqrt', 'cbrt', 'nthRoot', 'pow',
-        'exp', 'expm1', 'log', 'log10', 'log2', 'log1p',
+        'exp', 'expm1', 'log', 'log10', 'log2', 'log1p', 'ln',
         'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2',
         'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
         'sec', 'csc', 'cot', 'asec', 'acsc', 'acot',
@@ -2982,6 +3349,29 @@
         const decimal = decodeBaseValue(value, from);
         return convertDecimalToRadix(decimal, to, prec);
       };
+      overrides.ln = function(value){
+        if (!math || typeof math.log !== 'function') {
+          throw new Error('自然対数関数 ln が利用できません。');
+        }
+        return math.log(value);
+      };
+      overrides.integral = function(expr, variable, lower, upper, options){
+        const varName = normalizeVariableName(variable);
+        const hasLower = lower != null;
+        const hasUpper = upper != null;
+        if (hasLower || hasUpper) {
+          if (!hasLower || !hasUpper) {
+            throw new Error('定積分を求める場合は下限と上限を両方指定してください。');
+          }
+          const lowerVal = evaluateMathArgument(lower);
+          const upperVal = evaluateMathArgument(upper);
+          const optionValue = options != null ? evaluateMathArgument(options) : options;
+          const normalizedOptions = optionValue && typeof optionValue === 'object' ? optionValue : {};
+          return numericIntegrate(expr, varName, lowerVal, upperVal, normalizedOptions);
+        }
+        return integrateExpressionSymbolic(expr, varName);
+      };
+      overrides.integral.rawArgs = true;
       trigNames.forEach(([name, convertIn, convertOut]) => {
         const baseFn = math[name].bind(math);
         overrides[name] = function(...args){
@@ -3014,6 +3404,9 @@
       };
       overrides.gamma = function(x){
         return gammaReal(x);
+      };
+      overrides.beta = function(a, b){
+        return mapStructure(math, a, left => mapStructure(math, b, right => betaReal(left, right)));
       };
       overrides.taylorSeries = function(expr, variable, order, center){
         return computeTaylorSeries(expr, variable, order, center);
@@ -3080,6 +3473,12 @@
       };
       overrides.sigmoid = function(x){
         return sigmoidReal(x);
+      };
+      overrides.erfc = function(x){
+        if (!math || typeof math.erf !== 'function' || typeof math.subtract !== 'function') {
+          throw new Error('erfc は現在利用できません。');
+        }
+        return math.subtract(1, math.erf(x));
       };
 
       math.import(overrides, { override: true });

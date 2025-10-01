@@ -69,6 +69,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'virus_buster',  name: 'ドクターマリオ風', entry: 'games/virus_buster.js', version: '0.1.0', author: 'mod', description: 'カプセルで4つ揃え！ウイルス退治でEXP獲得', category: 'パズル' },
   { id: 'sichuan', name: '四川省パズル', entry: 'games/sichuan.js', version: '0.1.0', author: 'mod', description: '麻雀牌のペアを線で繋いで消す四川省。連続消去でボーナスEXP', category: 'パズル' },
   { id: 'piano_tiles', name: 'リズムタイル', entry: 'games/piano_tiles.js', version: '0.1.0', author: 'mod', description: 'ピアノタイル風の4レーン譜面。タップとホールドをタイミング良く決めてコンボを伸ばそう', category: 'リズム' },
+  { id: 'taiko_drum', name: '太鼓リズム', entry: 'games/taiko_drum.js', version: '0.1.0', author: 'mod', description: '太鼓の達人風の2面譜面。良/可/普/不の判定とコンボEXPボーナスを搭載', category: 'リズム' },
   { id: 'river_crossing', name: '川渡り',               entry: 'games/river_crossing.js',   version: '0.1.0', author: 'builtin', description: '1段前進+1／到達+50', category: 'アクション' },
   { id: 'whack_a_mole',  name: 'モグラたたき',         entry: 'games/whack_a_mole.js',     version: '0.1.0', author: 'builtin', description: '命中でEXP／連続命中ボーナス', category: 'アクション' },
   { id: 'xp_crane',      name: 'XPクレーンキャッチャー', entry: 'games/xp_crane.js',        version: '0.1.0', author: 'mod', description: 'クレーンを操作して経験値カプセルを掬い上げるミニゲーム。連続成功と特殊カプセルでEXPを稼ごう', category: 'アクション' },

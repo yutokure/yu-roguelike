@@ -170,6 +170,7 @@ const achievementsList = document.getElementById('achievement-list');
 const achievementsCategorySummary = document.getElementById('achievement-category-summary');
 const customAchievementList = document.getElementById('custom-achievement-list');
 const customAchievementForm = document.getElementById('custom-achievement-form');
+const achievementsFallback = document.getElementById('achievements-fallback');
 const achievementsSubtabBtnAchievements = document.getElementById('achievements-subtab-button-achievements');
 const achievementsSubtabBtnStats = document.getElementById('achievements-subtab-button-stats');
 const achievementsSubtabPanelAchievements = document.getElementById('achievements-subtab-achievements');
@@ -4235,18 +4236,45 @@ function pushGateHistoryFromCurrent() {
 
 function initAchievementUiOnce() {
     if (__achievementsTabInitialized) return;
-    if (!window.AchievementSystem) return;
-    window.AchievementSystem.initUI({
-        root: tabAchievements,
-        list: achievementsList,
-        customList: customAchievementList,
-        customForm: customAchievementForm,
-        statsList: statisticsList,
-        statsSummary: statisticsSummary,
-        categorySummary: achievementsCategorySummary
-    });
-    setupAchievementsSubtabs();
-    __achievementsTabInitialized = true;
+    if (!tabAchievements || !achievementsList || !achievementsCategorySummary || !statisticsList || !statisticsSummary) {
+        showAchievementsFallback('実績タブのテンプレートが見つかりません。最新のHTMLを適用してください。', { variant: 'error' });
+        return;
+    }
+    if (!window.AchievementSystem || typeof window.AchievementSystem.initUI !== 'function') {
+        showAchievementsFallback('実績システムを読み込めませんでした。ページを再読み込みしてください。', { variant: 'error' });
+        return;
+    }
+    try {
+        window.AchievementSystem.initUI({
+            root: tabAchievements,
+            list: achievementsList,
+            customList: customAchievementList,
+            customForm: customAchievementForm,
+            statsList: statisticsList,
+            statsSummary: statisticsSummary,
+            categorySummary: achievementsCategorySummary
+        });
+        setupAchievementsSubtabs();
+        __achievementsTabInitialized = true;
+        hideAchievementsFallback();
+    } catch (err) {
+        console.warn('Failed to initialise achievement UI', err);
+        showAchievementsFallback('実績データの初期化に失敗しました。ページを再読み込みしてください。', { variant: 'error' });
+    }
+}
+
+function showAchievementsFallback(message, options = {}) {
+    if (!achievementsFallback) return;
+    const variant = options.variant === 'error' ? 'error' : 'info';
+    achievementsFallback.textContent = message;
+    achievementsFallback.hidden = false;
+    achievementsFallback.classList.toggle('achievements-fallback--error', variant === 'error');
+    achievementsFallback.classList.toggle('achievements-fallback--info', variant !== 'error');
+}
+
+function hideAchievementsFallback() {
+    if (!achievementsFallback) return;
+    achievementsFallback.hidden = true;
 }
 
 function setupAchievementsSubtabs() {
@@ -4301,9 +4329,15 @@ function setupTabs() {
         }
         if (which === 'achievements') {
             initAchievementUiOnce();
-            try {
-                window.AchievementSystem?.refresh?.();
-            } catch {}
+            if (__achievementsTabInitialized) {
+                hideAchievementsFallback();
+                try {
+                    window.AchievementSystem?.refresh?.();
+                } catch (err) {
+                    console.warn('Failed to refresh achievement UI', err);
+                    showAchievementsFallback('実績データの更新に失敗しました。ページを再読み込みしてください。', { variant: 'error' });
+                }
+            }
         }
     }
     tabBtnNormal.addEventListener('click', () => {

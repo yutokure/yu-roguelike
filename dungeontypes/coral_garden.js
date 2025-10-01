@@ -3,6 +3,27 @@
   function algorithm(ctx){
     const { width: W, height: H, map } = ctx;
 
+    const supportsTexture = typeof ctx.setFloorTexture === 'function';
+    const isFloor = (x,y) => map[y] && map[y][x] === 0;
+    const paintFloor = (x,y,color) => { if(isFloor(x,y)) ctx.setFloorColor(x,y,color); };
+
+    const applyTexture = (x,y,variant) => {
+      if(supportsTexture){
+        ctx.setFloorTexture(x,y,variant);
+        return;
+      }
+      const palette = variant === 'sea_anemone'
+        ? ['#ff8fb1', '#ffb3c6', '#ff7096', '#f85f73']
+        : ['#8bd6ff', '#6ac4ff', '#5aa7ff', '#7fd5ff'];
+      paintFloor(x,y, palette[Math.floor(ctx.random()*palette.length)]);
+      if(ctx.random() < 0.4){
+        const swirl = palette[Math.floor(ctx.random()*palette.length)];
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy]) => {
+          if(ctx.random() < 0.5) paintFloor(x+dx, y+dy, swirl);
+        });
+      }
+    };
+
     for(let y=0;y<H;y++){
       for(let x=0;x<W;x++){
         const edge = x===0 || y===0 || x===W-1 || y===H-1;
@@ -38,7 +59,7 @@
           const green = Math.floor(120 + depthFactor*60);
           ctx.setFloorColor(x,y,`rgb(${80 + Math.floor(depthFactor*40)}, ${green}, ${blue})`);
           if(ctx.random() < 0.06){
-            ctx.setFloorTexture(x,y, ctx.random() < 0.5 ? 'coral_branch' : 'sea_anemone');
+            applyTexture(x,y, ctx.random() < 0.5 ? 'coral_branch' : 'sea_anemone');
           }
         } else {
           const coralHue = 200 + Math.floor(Math.sin(x/2 + y/3)*20);

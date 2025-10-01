@@ -5,6 +5,42 @@
     const H = ctx.height;
     const map = ctx.map;
 
+    const supportsTexture = typeof ctx.setFloorTexture === 'function';
+    const supportsAmbient = typeof ctx.setAmbientEffect === 'function';
+    const isFloor = (x,y) => map[y] && map[y][x] === 0;
+    const paintFloor = (x,y,color) => { if(isFloor(x,y)) ctx.setFloorColor(x,y,color); };
+
+    const applyTexture = (x,y) => {
+      if(supportsTexture){
+        ctx.setFloorTexture(x,y,'starlight');
+        return;
+      }
+      const palette = ['#9fb5ff', '#c4d4ff', '#e7f0ff'];
+      paintFloor(x,y, palette[Math.floor(ctx.random()*palette.length)]);
+      if(ctx.random() < 0.45){
+        const halo = `rgba(${200 + Math.floor(ctx.random()*30)}, ${210 + Math.floor(ctx.random()*40)}, ${255}, 0.75)`;
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy]) => {
+          if(ctx.random() < 0.5) paintFloor(x+dx, y+dy, halo);
+        });
+      }
+    };
+
+    const applyFirefly = (x,y) => {
+      if(supportsAmbient){
+        ctx.setAmbientEffect(x,y,'firefly');
+        return;
+      }
+      const offsets = [[0,0],[1,0],[-1,0],[0,1],[0,-1]];
+      offsets.forEach(([dx,dy]) => {
+        const nx = x+dx;
+        const ny = y+dy;
+        if(!isFloor(nx, ny)) return;
+        const intensity = Math.max(0.35, 0.7 - 0.15*(Math.abs(dx)+Math.abs(dy)) + ctx.random()*0.1);
+        const gold = 220 + Math.floor(ctx.random()*25);
+        paintFloor(nx, ny, `rgba(${gold}, ${200 + Math.floor(ctx.random()*40)}, ${120 + Math.floor(ctx.random()*50)}, ${intensity.toFixed(2)})`);
+      });
+    };
+
     for(let y=0;y<H;y++){
       for(let x=0;x<W;x++){
         const edge = x===0 || y===0 || x===W-1 || y===H-1;
@@ -39,7 +75,7 @@
           const blue = Math.floor(150 + night*80);
           ctx.setFloorColor(x,y,`rgb(${60 + Math.floor(night*40)}, ${80 + Math.floor(night*60)}, ${blue})`);
           if(ctx.random() < 0.08){
-            ctx.setFloorTexture(x,y,'starlight');
+            applyTexture(x,y);
           }
         } else {
           const glow = 0.2 + 0.2*Math.sin(y/3);
@@ -51,7 +87,7 @@
     for(let i=0;i<Math.floor(W*H/50);i++){
       const rx = Math.floor(ctx.random()*W);
       const ry = Math.floor(ctx.random()*H);
-      ctx.setAmbientEffect(rx, ry, 'firefly');
+      if(isFloor(rx, ry)) applyFirefly(rx, ry);
     }
 
     ctx.ensureConnectivity();

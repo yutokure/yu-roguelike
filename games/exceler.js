@@ -323,7 +323,9 @@
       autoSaveTimer: null,
       isSelecting: false,
       showGridLines: true,
-      zoom: 1
+      zoom: 1,
+      selectionMode: null,
+      selectionAnchor: null
     };
 
     const elements = {};
@@ -1078,9 +1080,45 @@
           } else if (r === -1){
             cell.textContent = colToLetter(c);
             cell.style.justifyContent = 'center';
+            cell.style.cursor = 'pointer';
+            cell.addEventListener('mousedown', (event) => {
+              event.preventDefault();
+              state.selectionMode = 'column';
+              state.selectionAnchor = { row: 0, col: c };
+              selectEntireColumn(c);
+              state.isSelecting = true;
+            });
+            cell.addEventListener('mousemove', (event) => {
+              if (event.buttons === 1 && state.isSelecting && state.selectionMode === 'column' && state.selectionAnchor){
+                selectColumnRange(state.selectionAnchor.col, c);
+              }
+            });
+            cell.addEventListener('mouseup', () => {
+              state.isSelecting = false;
+              state.selectionMode = null;
+              state.selectionAnchor = null;
+            });
           } else if (c === -1){
             cell.textContent = String(r + 1);
             cell.style.justifyContent = 'center';
+            cell.style.cursor = 'pointer';
+            cell.addEventListener('mousedown', (event) => {
+              event.preventDefault();
+              state.selectionMode = 'row';
+              state.selectionAnchor = { row: r, col: 0 };
+              selectEntireRow(r);
+              state.isSelecting = true;
+            });
+            cell.addEventListener('mousemove', (event) => {
+              if (event.buttons === 1 && state.isSelecting && state.selectionMode === 'row' && state.selectionAnchor){
+                selectRowRange(state.selectionAnchor.row, r);
+              }
+            });
+            cell.addEventListener('mouseup', () => {
+              state.isSelecting = false;
+              state.selectionMode = null;
+              state.selectionAnchor = null;
+            });
           } else {
             cell.classList.add('exceler-cell');
             const ref = cellKey(c, r);
@@ -1122,6 +1160,8 @@
       });
       viewport.addEventListener('mouseup', () => {
         state.isSelecting = false;
+        state.selectionMode = null;
+        state.selectionAnchor = null;
       });
 
       elements.grid = grid;
@@ -1401,6 +1441,8 @@
 
     function startSelection(row, col){
       state.isSelecting = true;
+      state.selectionMode = 'cell';
+      state.selectionAnchor = { row, col };
       applySelection({ startRow: row, startCol: col, endRow: row, endCol: col });
       focusCell(cellKey(col, row));
     }
@@ -1409,6 +1451,28 @@
       const anchor = { row: state.selection.startRow, col: state.selection.startCol };
       const normalized = normalizeRange(anchor, { row, col });
       applySelection({ startRow: normalized.startRow, startCol: normalized.startCol, endRow: normalized.endRow, endCol: normalized.endCol });
+    }
+
+    function selectRowRange(anchorRow, row){
+      const startRow = clamp(Math.min(anchorRow, row), 0, state.rows - 1);
+      const endRow = clamp(Math.max(anchorRow, row), 0, state.rows - 1);
+      applySelection({ startRow, endRow, startCol: 0, endCol: state.cols - 1 });
+    }
+
+    function selectColumnRange(anchorCol, col){
+      const startCol = clamp(Math.min(anchorCol, col), 0, state.cols - 1);
+      const endCol = clamp(Math.max(anchorCol, col), 0, state.cols - 1);
+      applySelection({ startRow: 0, endRow: state.rows - 1, startCol, endCol });
+    }
+
+    function selectEntireRow(row){
+      selectRowRange(row, row);
+      focusCell(cellKey(state.selection.startCol, state.selection.startRow));
+    }
+
+    function selectEntireColumn(col){
+      selectColumnRange(col, col);
+      focusCell(cellKey(state.selection.startCol, state.selection.startRow));
     }
 
     function focusCell(ref){

@@ -72,6 +72,15 @@ const sandboxToolFloorType = document.getElementById('sandbox-tool-floor-type');
 const sandboxToolFloorDir = document.getElementById('sandbox-tool-floor-dir');
 const sandboxToolDomainSelect = document.getElementById('sandbox-tool-domain');
 const sandboxToolApplyButton = document.getElementById('sandbox-tool-apply');
+const godConsoleButton = document.getElementById('btn-god-console');
+const godConsolePanel = document.getElementById('god-console-panel');
+const godConsoleClose = document.getElementById('god-console-close');
+const godConsoleRunButton = document.getElementById('god-console-run');
+const godConsoleClearButton = document.getElementById('god-console-clear');
+const godConsoleInput = document.getElementById('god-console-input');
+const godConsoleStatus = document.getElementById('god-console-status');
+const godConsoleSandboxToggle = document.getElementById('god-console-toggle-sandbox');
+const godConsoleModeLabel = document.getElementById('god-console-mode-label');
 const statusDetails = document.getElementById('status-details');
 const modalStatusEffects = document.getElementById('modal-status-effects');
 const modalSkillEffects = document.getElementById('modal-skill-effects');
@@ -487,6 +496,18 @@ const sandboxInteractiveState = {
     privilegeEnabled: false
 };
 
+const godhoodState = {
+    unlocked: false,
+    unlockedAt: null,
+    nested: null,
+    summary: null
+};
+
+const godConsoleState = {
+    open: false,
+    defaultInjected: false
+};
+
 function isSandboxActive() {
     return !!(sandboxRuntime.active && sandboxRuntime.config);
 }
@@ -512,6 +533,113 @@ function sandboxNotifyNoExp() {
 
 function sandboxLog(message) {
     try { addMessage(message); } catch {}
+}
+
+function isAnosGodUnlocked() {
+    return !!godhoodState.unlocked;
+}
+
+function isGodConsoleAvailable() {
+    if (!isAnosGodUnlocked()) return false;
+    if (!gameScreen || gameScreen.style.display === 'none') return false;
+    return true;
+}
+
+function setGodConsoleStatus(message, tone = '') {
+    if (!godConsoleStatus) return;
+    if (!message) {
+        godConsoleStatus.textContent = '';
+        godConsoleStatus.removeAttribute('data-tone');
+        return;
+    }
+    godConsoleStatus.textContent = message;
+    godConsoleStatus.setAttribute('data-tone', tone || 'info');
+}
+
+function describeGodConsoleValue(value) {
+    if (value === null) return 'null';
+    if (typeof value === 'undefined') return 'undefined';
+    if (typeof value === 'function') {
+        return `[function ${value.name || 'anonymous'}]`;
+    }
+    if (typeof value === 'object') {
+        const ctor = value && value.constructor ? value.constructor.name : 'Object';
+        return `[object ${ctor || 'Object'}]`;
+    }
+    const text = String(value);
+    return text.length > 80 ? text.slice(0, 77) + '…' : text;
+}
+
+function getGodConsoleDefaultSnippet() {
+    return [
+        '// 例: プレイヤーの攻撃力を強化し、UIを更新します。',
+        'context.player.attack = 99999;',
+        'context.utils.enforceEffectiveHpCap();',
+        'context.utils.updateUI();'
+    ].join('\n');
+}
+
+function ensureGodConsoleDefaultSnippet() {
+    if (!godConsoleInput) return;
+    if (!godConsoleInput.value.trim()) {
+        godConsoleInput.value = getGodConsoleDefaultSnippet();
+        godConsoleState.defaultInjected = true;
+    }
+}
+
+function updateGodConsoleModeLabel() {
+    if (!godConsoleModeLabel && !godConsoleSandboxToggle) return;
+    const inSandbox = isSandboxInteractiveEnabled();
+    if (godConsoleModeLabel) {
+        godConsoleModeLabel.textContent = `現在: ${inSandbox ? 'サンドボックスモード' : '探索モード'}`;
+    }
+    if (godConsoleSandboxToggle) {
+        godConsoleSandboxToggle.textContent = inSandbox ? '探索モードに戻る' : 'サンドボックスモードに入る';
+    }
+}
+
+function setGodConsoleOpen(open, { silent = false } = {}) {
+    const available = isGodConsoleAvailable();
+    const next = !!open && available;
+    godConsoleState.open = next;
+    if (godConsoleButton) {
+        godConsoleButton.setAttribute('aria-expanded', next ? 'true' : 'false');
+    }
+    if (godConsolePanel) {
+        godConsolePanel.setAttribute('aria-hidden', next ? 'false' : 'true');
+    }
+    if (next) {
+        if (!godConsoleState.defaultInjected) ensureGodConsoleDefaultSnippet();
+        if (!silent) {
+            setGodConsoleStatus('コードを入力し、創造の力を解き放ちましょう。', 'info');
+            setTimeout(() => {
+                try { godConsoleInput && godConsoleInput.focus({ preventScroll: true }); } catch {}
+            }, 0);
+        }
+    } else if (!silent) {
+        setGodConsoleStatus('');
+    }
+    updateGodConsoleModeLabel();
+}
+
+function updateGodConsoleAvailability() {
+    const available = isGodConsoleAvailable();
+    if (godConsoleButton) {
+        godConsoleButton.style.display = available ? '' : 'none';
+        if (!available) {
+            godConsoleButton.setAttribute('aria-expanded', 'false');
+        }
+    }
+    if (!available) {
+        godConsoleState.open = false;
+        if (godConsolePanel) {
+            godConsolePanel.setAttribute('aria-hidden', 'true');
+        }
+        setGodConsoleStatus('');
+    } else if (godConsoleState.open) {
+        setGodConsoleOpen(true, { silent: true });
+    }
+    updateGodConsoleModeLabel();
 }
 
 function isSandboxInteractiveEnabled() {
@@ -540,23 +668,30 @@ function updateSandboxToggleInputs() {
 
 function updateSandboxMenuVisibility() {
     if (!sandboxMenuButton) return;
-    if (isSandboxInteractiveEnabled()) {
+    const accessible = isSandboxActive()
+        ? !!sandboxInteractiveState.enabled
+        : !!sandboxInteractiveState.privilegeEnabled;
+    if (accessible) {
         sandboxMenuButton.style.display = '';
     } else {
         sandboxMenuButton.style.display = 'none';
         sandboxMenuButton.setAttribute('aria-expanded', 'false');
     }
-    if (!isSandboxInteractiveEnabled()) {
+    if (!accessible) {
         if (sandboxInteractivePanel) {
             sandboxInteractivePanel.setAttribute('aria-hidden', 'true');
         }
         sandboxInteractiveState.panelOpen = false;
     }
     updateSandboxToggleInputs();
+    updateGodConsoleModeLabel();
 }
 
 function setSandboxPanelOpen(open, { silent = false } = {}) {
-    if (!isSandboxInteractiveEnabled()) open = false;
+    const accessible = isSandboxActive()
+        ? !!sandboxInteractiveState.enabled
+        : !!sandboxInteractiveState.privilegeEnabled;
+    if (!accessible) open = false;
     const next = !!open;
     const previous = !!sandboxInteractiveState.panelOpen;
     sandboxInteractiveState.panelOpen = next;
@@ -575,7 +710,11 @@ function setSandboxPanelOpen(open, { silent = false } = {}) {
 }
 
 function setSandboxInteractiveEnabled(enabled) {
-    sandboxInteractiveState.enabled = !!enabled;
+    const next = !!enabled;
+    sandboxInteractiveState.enabled = next;
+    if (next) {
+        sandboxInteractiveState.privilegeEnabled = true;
+    }
     if (!sandboxInteractiveState.enabled) {
         sandboxInteractiveState.noClip = false;
         sandboxInteractiveState.savedStats = null;
@@ -585,11 +724,14 @@ function setSandboxInteractiveEnabled(enabled) {
         updateSandboxToolControls();
     }
     updateSandboxMenuVisibility();
+    updateGodConsoleModeLabel();
 }
 
 function hasSandboxInteractivePrivilege() {
     if (isSandboxActive()) return false;
-    if (!gameScreen || gameScreen.style.display === 'none') return false;
+    const inGame = !!(gameScreen && gameScreen.style.display !== 'none');
+    if (!inGame) return false;
+    if (isAnosGodUnlocked()) return true;
     const playerLevel = Number.isFinite(player?.level) ? player.level : null;
     if (!Number.isFinite(playerLevel) || playerLevel <= 1025) return false;
     let recommended = null;
@@ -607,6 +749,9 @@ function updateSandboxInteractivePrivilege() {
         if (sandboxInteractiveState.privilegeEnabled) {
             sandboxInteractiveState.privilegeEnabled = false;
         }
+        updateSandboxMenuVisibility();
+        updateGodConsoleAvailability();
+        updateGodConsoleModeLabel();
         return;
     }
 
@@ -615,20 +760,32 @@ function updateSandboxInteractivePrivilege() {
         if (sandboxInteractiveState.privilegeEnabled || sandboxInteractiveState.enabled) {
             sandboxInteractiveState.privilegeEnabled = false;
             resetSandboxInteractiveState();
+        } else {
+            updateSandboxMenuVisibility();
         }
+        updateGodConsoleAvailability();
+        updateGodConsoleModeLabel();
         return;
     }
 
     const eligible = hasSandboxInteractivePrivilege();
     if (eligible) {
-        if (!sandboxInteractiveState.privilegeEnabled || !sandboxInteractiveState.enabled) {
+        if (!sandboxInteractiveState.privilegeEnabled) {
             sandboxInteractiveState.privilegeEnabled = true;
+        }
+        if (!isAnosGodUnlocked() && !sandboxInteractiveState.enabled) {
             setSandboxInteractiveEnabled(true);
+        } else {
+            updateSandboxMenuVisibility();
         }
     } else if (sandboxInteractiveState.privilegeEnabled || sandboxInteractiveState.enabled) {
         sandboxInteractiveState.privilegeEnabled = false;
         resetSandboxInteractiveState();
+    } else {
+        updateSandboxMenuVisibility();
     }
+    updateGodConsoleAvailability();
+    updateGodConsoleModeLabel();
 }
 
 function resetSandboxInteractiveState() {
@@ -649,6 +806,8 @@ function resetSandboxInteractiveState() {
     }
     updateSandboxToggleInputs();
     updateSandboxMenuVisibility();
+    updateGodConsoleModeLabel();
+    updateGodConsoleAvailability();
 }
 
 function setSandboxInputValue(input, value) {
@@ -1514,6 +1673,7 @@ function enterInGameLayout() {
         document.documentElement.style.setProperty('--toolbar-height', h + 'px');
         // 可視化時にキャンバスを再調整
         setTimeout(resizeCanvasToStage, 0);
+        updateGodConsoleAvailability();
     } catch {}
 }
 function leaveInGameLayout() {
@@ -1522,6 +1682,7 @@ function leaveInGameLayout() {
         document.body.classList.remove('modal-open');
         document.documentElement.style.removeProperty('--toolbar-height');
         setTimeout(resizeCanvasToStage, 0);
+        updateGodConsoleAvailability();
     } catch {}
 }
 
@@ -5916,6 +6077,154 @@ function deepClone(value) {
     try { return JSON.parse(JSON.stringify(value)); } catch { return value; }
 }
 
+function createGodConsoleContext() {
+    return {
+        window,
+        player,
+        map,
+        tileMeta,
+        chests,
+        enemies,
+        stairs,
+        domainCrystals,
+        runtime: {
+            difficulty,
+            selectedWorld,
+            selectedDungeonBase,
+            currentMode,
+            dungeonLevel,
+            blockDimState,
+            sandboxRuntime,
+            sandboxInteractiveState,
+            godhoodState
+        },
+        utils: {
+            updateUI,
+            generateLevel,
+            addMessage,
+            saveAll,
+            recordAchievementEvent,
+            setSandboxInteractiveEnabled,
+            setSandboxPanelOpen,
+            applySandboxGodMode,
+            applyGameStateSnapshot,
+            getGameStateSnapshot,
+            enforceEffectiveHpCap,
+            clamp,
+            deepClone,
+            unlockAnosGodhood,
+            showSelectionScreen,
+            startSandboxGame,
+            captureSandboxSnapshot,
+            restoreSandboxSnapshotIfNeeded,
+            reseedBlockDimForFloor
+        }
+    };
+}
+
+async function runGodConsoleCode() {
+    if (!isAnosGodUnlocked()) {
+        setGodConsoleStatus('創造神の力がまだ覚醒していません。', 'warning');
+        return;
+    }
+    if (!godConsoleInput) return;
+    const code = godConsoleInput.value;
+    if (!code.trim()) {
+        setGodConsoleStatus('コードを入力してください。', 'warning');
+        return;
+    }
+    try {
+        setGodConsoleStatus('コードを実行中…', 'info');
+        const fn = new Function('context', `'use strict';\n${code}`);
+        let result = fn(createGodConsoleContext());
+        if (result instanceof Promise) {
+            result = await result;
+        }
+        if (typeof result !== 'undefined') {
+            setGodConsoleStatus(`コードを実行しました（返値: ${describeGodConsoleValue(result)}）`, 'success');
+        } else {
+            setGodConsoleStatus('コードを実行しました。', 'success');
+        }
+        try { addMessage('創造神コンソールがコードを実行しました。'); } catch {}
+        updateUI();
+        try { saveAll(); } catch {}
+        return result;
+    } catch (err) {
+        console.error('God console execution failed', err);
+        const message = err && err.message ? err.message : String(err);
+        setGodConsoleStatus(`エラー: ${message}`, 'error');
+        try { addMessage(`創造神コンソール エラー: ${message}`); } catch {}
+        return undefined;
+    }
+}
+
+function toggleGodConsoleSandboxMode() {
+    if (!isAnosGodUnlocked()) {
+        setGodConsoleStatus('創造神の力が必要です。', 'warning');
+        return;
+    }
+    if (!isGameScreenVisible()) {
+        setGodConsoleStatus('ダンジョン探索中のみ切り替えできます。', 'warning');
+        return;
+    }
+    const next = !isSandboxInteractiveEnabled();
+    if (next && !isSandboxActive() && !sandboxInteractiveState.privilegeEnabled) {
+        sandboxInteractiveState.privilegeEnabled = true;
+    }
+    setSandboxInteractiveEnabled(next);
+    if (next) {
+        setSandboxPanelOpen(true);
+        setGodConsoleStatus('サンドボックスモードを有効化しました。', 'success');
+    } else {
+        setSandboxPanelOpen(false, { silent: true });
+        setGodConsoleStatus('探索モードに戻りました。', 'success');
+    }
+    updateGodConsoleModeLabel();
+    updateGodConsoleAvailability();
+    updateSandboxMenuVisibility();
+    try { recordAchievementEvent('god_console_toggle', { enabled: next }); } catch {}
+}
+
+function resetGodConsoleInput({ withSample = true } = {}) {
+    if (!godConsoleInput) return;
+    if (withSample) {
+        godConsoleInput.value = getGodConsoleDefaultSnippet();
+        godConsoleState.defaultInjected = true;
+        setGodConsoleStatus('サンプルコードを挿入しました。', 'info');
+    } else {
+        godConsoleInput.value = '';
+        godConsoleState.defaultInjected = false;
+        setGodConsoleStatus('入力をクリアしました。', 'info');
+    }
+}
+
+function unlockAnosGodhood(details = {}) {
+    if (godhoodState.unlocked) return false;
+    godhoodState.unlocked = true;
+    godhoodState.unlockedAt = Date.now();
+    godhoodState.nested = details.nested ?? 99999999;
+    godhoodState.summary = {
+        nested: godhoodState.nested,
+        dimKey: details.dimKey || null,
+        difficulty: details.difficulty || difficulty,
+        world: details.world || selectedWorld,
+        level: details.level ?? null
+    };
+    godConsoleState.defaultInjected = false;
+    sandboxInteractiveState.privilegeEnabled = true;
+    updateSandboxMenuVisibility();
+    updateSandboxInteractivePrivilege();
+    updateGodConsoleAvailability();
+    updateGodConsoleModeLabel();
+    try { addSeparator(); } catch {}
+    try { addMessage('NESTED 99999999 のダンジョンを攻略し、アノス級の神格を得た！'); } catch {}
+    try { addMessage('創造神コンソールとサンドボックス切替が常時利用可能になった。'); } catch {}
+    setGodConsoleOpen(true);
+    try { recordAchievementEvent('godhood_awakened', { nested: godhoodState.nested, dimKey: details.dimKey || null }); } catch {}
+    try { saveAll(); } catch {}
+    return true;
+}
+
 function cloneMiniShortcutOverrides(source) {
     const overrides = Object.create(null);
     if (!source || typeof source !== 'object') return overrides;
@@ -5947,6 +6256,12 @@ function getGameStateSnapshot() {
         difficulty,
         mode: currentMode,
         selectionFooterCollapsed,
+        godhood: {
+            unlocked: !!godhoodState.unlocked,
+            unlockedAt: godhoodState.unlockedAt ?? null,
+            nested: godhoodState.nested ?? null,
+            summary: deepClone(godhoodState.summary)
+        },
         blockDim: blockDimSnapshot,
         blockDimHistory: deepClone(blockDimHistory),
         blockDimBookmarks: deepClone(blockDimBookmarks),
@@ -6085,6 +6400,25 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     else resetMiniShortcutState();
 
     __miniSessionExp = Number.isFinite(snapshot.miniSessionExp) ? Number(snapshot.miniSessionExp) : 0;
+
+    if (snapshot.godhood && typeof snapshot.godhood === 'object') {
+        godhoodState.unlocked = !!snapshot.godhood.unlocked;
+        godhoodState.unlockedAt = Number.isFinite(snapshot.godhood.unlockedAt) ? Number(snapshot.godhood.unlockedAt) : null;
+        godhoodState.nested = Number.isFinite(snapshot.godhood.nested)
+            ? Number(snapshot.godhood.nested)
+            : (godhoodState.unlocked ? 99999999 : null);
+        godhoodState.summary = snapshot.godhood.summary && typeof snapshot.godhood.summary === 'object'
+            ? deepClone(snapshot.godhood.summary)
+            : null;
+    } else {
+        godhoodState.unlocked = false;
+        godhoodState.unlockedAt = null;
+        godhoodState.nested = null;
+        godhoodState.summary = null;
+    }
+    godConsoleState.defaultInjected = false;
+    updateGodConsoleAvailability();
+    updateGodConsoleModeLabel();
 
     prevHp = Math.min(player.hp || 0, getEffectivePlayerMaxHp());
     prevExp = player.exp || 0;
@@ -9907,6 +10241,15 @@ function applyPostMoveEffects() {
                         dungeonBase: selectedDungeonBase,
                         nested: blockDimState?.nested || 1
                     });
+                    if (currentMode === 'blockdim' && (blockDimState?.nested | 0) === 99999999) {
+                        unlockAnosGodhood({
+                            nested: blockDimState?.nested || 99999999,
+                            dimKey: blockDimState?.dimKey || null,
+                            level: blockDimState?.spec?.level,
+                            world: selectedWorld,
+                            difficulty
+                        });
+                    }
                     stopGameLoop();
                     showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
                 } else {
@@ -10700,7 +11043,44 @@ sandboxToolFloorType && sandboxToolFloorType.addEventListener('change', () => {
     updateSandboxToolControls();
 });
 
+godConsoleButton && godConsoleButton.addEventListener('click', () => {
+    setGodConsoleOpen(!godConsoleState.open);
+});
+
+godConsoleClose && godConsoleClose.addEventListener('click', () => {
+    setGodConsoleOpen(false);
+});
+
+godConsoleRunButton && godConsoleRunButton.addEventListener('click', () => {
+    runGodConsoleCode();
+});
+
+godConsoleClearButton && godConsoleClearButton.addEventListener('click', () => {
+    resetGodConsoleInput({ withSample: true });
+});
+
+godConsoleSandboxToggle && godConsoleSandboxToggle.addEventListener('click', () => {
+    toggleGodConsoleSandboxMode();
+});
+
+if (godConsoleInput) {
+    godConsoleInput.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+            runGodConsoleCode();
+        }
+    });
+}
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && godConsoleState.open) {
+        setGodConsoleOpen(false);
+    }
+});
+
 updateSandboxMenuVisibility();
+updateGodConsoleAvailability();
+updateGodConsoleModeLabel();
 
 document.addEventListener('keydown', (event) => {
     if (!isGameScreenVisible()) return;

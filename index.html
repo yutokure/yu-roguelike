@@ -892,6 +892,7 @@
         <button id="btn-import">インポート</button>
         <button id="btn-export">エクスポート</button>
         <button id="btn-sandbox-menu" class="sandbox-menu-button" type="button" aria-expanded="false" aria-controls="sandbox-interactive-panel" style="display:none;">インタラクティブ</button>
+        <button id="btn-god-console" class="god-console-button" type="button" aria-expanded="false" aria-controls="god-console-panel" style="display:none;">創造神コンソール</button>
         <input type="file" id="import-file" accept="application/json" style="display:none" />
         <div id="floor-indicator">1F</div>
     </div>
@@ -991,6 +992,27 @@
                 </div>
                 <p class="sandbox-note small">現在向いている方向の1マス先を編集します。</p>
             </section>
+        </div>
+    </div>
+
+    <div id="god-console-panel" class="god-console-panel" role="dialog" aria-modal="false" aria-hidden="true" tabindex="-1">
+        <div class="god-console-header">
+            <h3>創造神コンソール</h3>
+            <button id="god-console-close" type="button" aria-label="閉じる">×</button>
+        </div>
+        <div class="god-console-body">
+            <p class="god-console-hint">NESTED 99999999 を攻略した創造神だけがアクセスできます。提供される <code>context</code> を使ってゲームの状態やコードを書き換えましょう。</p>
+            <div class="god-console-mode">
+                <button id="god-console-toggle-sandbox" type="button">サンドボックスモードに入る</button>
+                <span id="god-console-mode-label">現在: 探索モード</span>
+            </div>
+            <label class="god-console-label" for="god-console-input">スクリプト</label>
+            <textarea id="god-console-input" spellcheck="false" placeholder="// context.player.attack = 99999;\n// context.utils.updateUI();"></textarea>
+            <div class="god-console-actions">
+                <button id="god-console-run" type="button">コードを適用</button>
+                <button id="god-console-clear" type="button">入力をリセット</button>
+            </div>
+            <div id="god-console-status" class="god-console-status" role="status" aria-live="polite"></div>
         </div>
     </div>
 

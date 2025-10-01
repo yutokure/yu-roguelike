@@ -1208,13 +1208,38 @@ function sanitizeSandboxConfig(raw) {
             if (!entry || typeof entry !== 'object') continue;
             const pos = normalizePos(entry);
             const radius = clamp(1, 50, Math.floor(Number(entry.radius) || 3));
-            let effects = Array.isArray(entry.effects) ? entry.effects.filter(id => DOMAIN_EFFECT_DEFINITIONS[id]) : [];
-            if (!effects.length) effects = [DEFAULT_DOMAIN_EFFECT_ID];
+            const rawEffects = Array.isArray(entry.effects) ? entry.effects : [];
+            const effects = [];
+            const rawParams = {};
+            rawEffects.forEach(effectEntry => {
+                let effectId = null;
+                let paramValue = null;
+                if (typeof effectEntry === 'string') {
+                    effectId = effectEntry;
+                } else if (effectEntry && typeof effectEntry === 'object') {
+                    if (typeof effectEntry.id === 'string') effectId = effectEntry.id;
+                    if (typeof effectEntry.param === 'string') paramValue = effectEntry.param;
+                }
+                if (!DOMAIN_EFFECT_DEFINITIONS[effectId]) return;
+                if (effects.includes(effectId)) return;
+                effects.push(effectId);
+                if (paramValue) rawParams[effectId] = paramValue;
+            });
+            if (entry.effectParams && typeof entry.effectParams === 'object') {
+                Object.keys(entry.effectParams).forEach(key => {
+                    if (effects.includes(key) && typeof entry.effectParams[key] === 'string') {
+                        rawParams[key] = entry.effectParams[key];
+                    }
+                });
+            }
+            if (!effects.length) effects.push(DEFAULT_DOMAIN_EFFECT_ID);
+            const effectParams = sanitizeDomainEffectParams(effects, rawParams);
             domainEffects.push({
                 id: typeof entry.id === 'string' ? entry.id : null,
                 name: typeof entry.name === 'string' ? entry.name : '',
                 radius,
                 effects,
+                effectParams,
                 x: Number.isFinite(pos?.x) ? pos.x : null,
                 y: Number.isFinite(pos?.y) ? pos.y : null
             });
@@ -1270,6 +1295,21 @@ function validateSandboxConfig(config) {
                 errors.push(`クリスタル${index + 1}の効果が設定されていません。`);
             } else if (effect.effects.some(id => !DOMAIN_EFFECT_DEFINITIONS[id])) {
                 warnings.push(`クリスタル${index + 1}に無効な効果が含まれているため、自動調整されます。`);
+            }
+            if (Array.isArray(effect.effects) && effect.effects.length) {
+                if (!effect.effectParams || typeof effect.effectParams !== 'object') {
+                    effect.effectParams = {};
+                }
+                effect.effects.forEach(effectId => {
+                    if (!domainEffectRequiresParam(effectId)) return;
+                    const param = sanitizeDomainEffectParam(effectId, effect.effectParams[effectId]);
+                    if (!param) {
+                        const label = DOMAIN_EFFECT_DEFINITIONS[effectId]?.label || effectId;
+                        errors.push(`クリスタル${index + 1}の効果「${label}」の対象パラメータが無効です。`);
+                    } else {
+                        effect.effectParams[effectId] = param;
+                    }
+                });
             }
             if (!Number.isFinite(effect.radius) || effect.radius < 1) {
                 errors.push(`クリスタル${index + 1}の半径が無効です。`);
@@ -1777,12 +1817,133 @@ const DOMAIN_EFFECT_ID_LIST = Object.keys(DOMAIN_EFFECT_DEFINITIONS);
 
 const DOMAIN_TARGET_TYPES = new Set(['player', 'enemy']);
 
+const DOMAIN_EFFECTS_REQUIRING_PARAM = new Set(['abilityUp', 'abilityDown', 'ailment']);
+const DOMAIN_ABILITY_PARAM_KEYS = ['attack', 'defense', 'maxHp', 'all'];
+const DOMAIN_STATUS_PARAM_RANDOM = 'random';
+const DOMAIN_STATUS_PARAM_KEYS = Object.keys(PLAYER_STATUS_EFFECTS);
+const DOMAIN_STATUS_PARAM_OPTIONS = DOMAIN_STATUS_PARAM_KEYS.concat([DOMAIN_STATUS_PARAM_RANDOM]);
+const DOMAIN_EFFECT_PARAM_DEFAULTS = {
+    abilityUp: 'all',
+    abilityDown: 'all',
+    ailment: DOMAIN_STATUS_PARAM_RANDOM
+};
+
+function domainEffectRequiresParam(effectId) {
+    return DOMAIN_EFFECTS_REQUIRING_PARAM.has(effectId);
+}
+
+function getDomainEffectParamDefault(effectId) {
+    if (Object.prototype.hasOwnProperty.call(DOMAIN_EFFECT_PARAM_DEFAULTS, effectId)) {
+        return DOMAIN_EFFECT_PARAM_DEFAULTS[effectId];
+    }
+    const options = getDomainEffectParamOptions(effectId);
+    return options.length ? options[0] : null;
+}
+
+function getDomainEffectParamOptions(effectId) {
+    if (effectId === 'abilityUp' || effectId === 'abilityDown') {
+        return DOMAIN_ABILITY_PARAM_KEYS;
+    }
+    if (effectId === 'ailment') {
+        return DOMAIN_STATUS_PARAM_OPTIONS;
+    }
+    return [];
+}
+
+function sanitizeDomainEffectParam(effectId, value) {
+    if (!domainEffectRequiresParam(effectId)) return null;
+    const normalized = typeof value === 'string' ? value : '';
+    const options = getDomainEffectParamOptions(effectId);
+    if (options.includes(normalized)) {
+        return normalized;
+    }
+    return getDomainEffectParamDefault(effectId);
+}
+
+function sanitizeDomainEffectParams(effectIds, rawParams) {
+    const params = {};
+    if (rawParams && typeof rawParams === 'object') {
+        effectIds.forEach(effectId => {
+            if (!domainEffectRequiresParam(effectId)) return;
+            const sanitized = sanitizeDomainEffectParam(effectId, rawParams[effectId]);
+            if (sanitized) {
+                params[effectId] = sanitized;
+            }
+        });
+    }
+    effectIds.forEach(effectId => {
+        if (!domainEffectRequiresParam(effectId)) return;
+        if (!params[effectId]) {
+            params[effectId] = getDomainEffectParamDefault(effectId);
+        }
+    });
+    return params;
+}
+
+function getDomainEffectParamFromConfig(crystal, effectId) {
+    if (!domainEffectRequiresParam(effectId)) return null;
+    const source = crystal?.configRef?.effectParams
+        || crystal?.effectParams
+        || crystal?.domainEffectParams;
+    const value = source && typeof source === 'object' ? source[effectId] : undefined;
+    return sanitizeDomainEffectParam(effectId, value);
+}
+
+function getDomainAbilityTargets(param) {
+    switch (param) {
+        case 'attack':
+            return ['attack'];
+        case 'defense':
+            return ['defense'];
+        case 'maxHp':
+            return ['maxHp'];
+        default:
+            return ['attack', 'defense', 'maxHp'];
+    }
+}
+
+function getDomainStatusPool(defaultPool, aggregate) {
+    if (!aggregate || !aggregate.statusAura) return defaultPool.slice();
+    const pool = [];
+    if (aggregate.statusAilmentRandom) {
+        pool.push(...defaultPool);
+    }
+    if (Array.isArray(aggregate.statusAilments)) {
+        aggregate.statusAilments.forEach(id => {
+            if (!pool.includes(id) && PLAYER_STATUS_EFFECTS[id]) {
+                pool.push(id);
+            }
+        });
+    }
+    return pool.length ? pool : defaultPool.slice();
+}
+
+function getDomainAbilityMultiplier(aggregate, key) {
+    if (!aggregate) return 1;
+    if (aggregate.abilityMultipliers && Number.isFinite(aggregate.abilityMultipliers[key])) {
+        const value = aggregate.abilityMultipliers[key];
+        if (value > 0) return value;
+    }
+    const fallback = Number.isFinite(aggregate.abilityMul) ? aggregate.abilityMul : 1;
+    return fallback > 0 ? fallback : 1;
+}
+
 function getDomainEffectIdsForCrystal(crystal) {
     if (!crystal) return [DEFAULT_DOMAIN_EFFECT_ID];
-    if (Array.isArray(crystal.effects) && crystal.effects.length) {
-        return crystal.effects.filter(id => DOMAIN_EFFECT_DEFINITIONS[id]);
-    }
-    return [DEFAULT_DOMAIN_EFFECT_ID];
+    const raw = Array.isArray(crystal.effects) ? crystal.effects : [];
+    const ids = [];
+    raw.forEach(entry => {
+        let id = null;
+        if (typeof entry === 'string') {
+            id = entry;
+        } else if (entry && typeof entry === 'object' && typeof entry.id === 'string') {
+            id = entry.id;
+        }
+        if (!id || ids.includes(id)) return;
+        if (DOMAIN_EFFECT_DEFINITIONS[id]) ids.push(id);
+    });
+    if (!ids.length) ids.push(DEFAULT_DOMAIN_EFFECT_ID);
+    return ids;
 }
 
 function hexToRgba(hex, alpha = 1) {
@@ -1814,6 +1975,7 @@ function getDomainEffectAggregate(targetType, x, y) {
         attackMul: 1,
         defenseMul: 1,
         abilityMul: 1,
+        abilityMultipliers: { attack: 1, defense: 1, maxHp: 1 },
         damageDealtMul: 1,
         damageTakenMul: 1,
         levelDelta: 0,
@@ -1821,6 +1983,8 @@ function getDomainEffectAggregate(targetType, x, y) {
         reverseDamage: false,
         allowPotionThrow: false,
         statusAura: false,
+        statusAilmentRandom: false,
+        statusAilments: [],
         definitions: [],
         crystals: [],
         tags: []
@@ -1836,6 +2000,7 @@ function getDomainEffectAggregate(targetType, x, y) {
     }
     const seen = new Set();
     const tagSet = new Set();
+    const statusSet = new Set();
     for (const crystal of domainCrystals) {
         const cx = Number(crystal?.x);
         const cy = Number(crystal?.y);
@@ -1845,27 +2010,42 @@ function getDomainEffectAggregate(targetType, x, y) {
         const dx = x - cx;
         const dy = y - cy;
         if (dx * dx + dy * dy > radius * radius) continue;
-        const effectIds = getDomainEffectIdsForCrystal(crystal);
-        const defs = effectIds
-            .map(id => DOMAIN_EFFECT_DEFINITIONS[id])
-            .filter(def => def && Array.isArray(def.targets) && def.targets.includes(targetType));
-        if (!defs.length) continue;
+        const entries = getDomainEffectIdsForCrystal(crystal)
+            .map(id => ({ id, def: DOMAIN_EFFECT_DEFINITIONS[id], param: getDomainEffectParamFromConfig(crystal, id) }))
+            .filter(entry => entry.def && Array.isArray(entry.def.targets) && entry.def.targets.includes(targetType));
+        if (!entries.length) continue;
         aggregate.crystals.push(crystal);
-        for (const def of defs) {
+        for (const { id: effectId, def, param } of entries) {
             if (!seen.has(def.id)) {
                 aggregate.definitions.push(def);
                 seen.add(def.id);
             }
             if (typeof def.attackMul === 'number') aggregate.attackMul *= def.attackMul;
             if (typeof def.defenseMul === 'number') aggregate.defenseMul *= def.defenseMul;
-            if (typeof def.abilityMul === 'number') aggregate.abilityMul *= def.abilityMul;
+            if (typeof def.abilityMul === 'number') {
+                const targets = getDomainAbilityTargets(param);
+                targets.forEach(key => {
+                    const current = Number.isFinite(aggregate.abilityMultipliers[key]) ? aggregate.abilityMultipliers[key] : 1;
+                    aggregate.abilityMultipliers[key] = current * def.abilityMul;
+                });
+                aggregate.abilityMul *= def.abilityMul;
+            }
             if (typeof def.damageDealtMul === 'number') aggregate.damageDealtMul *= def.damageDealtMul;
             if (typeof def.damageTakenMul === 'number') aggregate.damageTakenMul *= def.damageTakenMul;
             if (typeof def.levelDelta === 'number') aggregate.levelDelta += def.levelDelta;
             if (def.invincible) aggregate.invincible = true;
             if (def.reverseDamage) aggregate.reverseDamage = true;
             if (def.allowPotionThrow) aggregate.allowPotionThrow = true;
-            if (def.statusAura) aggregate.statusAura = true;
+            if (def.statusAura) {
+                aggregate.statusAura = true;
+                if (!param || param === DOMAIN_STATUS_PARAM_RANDOM) {
+                    aggregate.statusAilmentRandom = true;
+                } else if (PLAYER_STATUS_EFFECTS[param]) {
+                    statusSet.add(param);
+                } else {
+                    aggregate.statusAilmentRandom = true;
+                }
+            }
             if (Array.isArray(def.tags)) {
                 def.tags.forEach(tag => tagSet.add(tag));
             }
@@ -1874,10 +2054,14 @@ function getDomainEffectAggregate(targetType, x, y) {
     aggregate.attackMul = Math.max(0, aggregate.attackMul);
     aggregate.defenseMul = Math.max(0, aggregate.defenseMul);
     aggregate.abilityMul = Math.max(0, aggregate.abilityMul);
+    aggregate.abilityMultipliers.attack = Math.max(0, aggregate.abilityMultipliers.attack);
+    aggregate.abilityMultipliers.defense = Math.max(0, aggregate.abilityMultipliers.defense);
+    aggregate.abilityMultipliers.maxHp = Math.max(0, aggregate.abilityMultipliers.maxHp);
     aggregate.damageDealtMul = Math.max(0, aggregate.damageDealtMul);
     aggregate.damageTakenMul = Math.max(0, aggregate.damageTakenMul);
     aggregate.levelDelta = Math.floor(aggregate.levelDelta);
     aggregate.tags = Array.from(tagSet);
+    aggregate.statusAilments = Array.from(statusSet);
     return aggregate;
 }
 
@@ -1988,7 +2172,7 @@ function applyDomainStatusAuraToPlayer() {
     if (!aggregate.statusAura) return;
     const chance = 0.35;
     if (Math.random() >= chance) return;
-    const statusPool = ['poison', 'paralysis', 'abilityDown', 'levelDown'];
+    const statusPool = getDomainStatusPool(['poison', 'paralysis', 'abilityDown', 'levelDown'], aggregate);
     const available = statusPool.filter(id => !isPlayerStatusActive(id));
     const source = available.length ? available : statusPool;
     const target = source[Math.floor(Math.random() * source.length)];
@@ -2608,7 +2792,7 @@ function getEffectivePlayerMaxHp() {
     const base = Math.max(1, Math.floor(player.maxHp || 1));
     const domain = getPlayerDomainAggregate();
     const abilityMul = getAbilityDownMultiplier();
-    const domainAbilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const domainAbilityMul = getDomainAbilityMultiplier(domain, 'maxHp');
     return Math.max(1, Math.floor(base * abilityMul * domainAbilityMul));
 }
 
@@ -2616,7 +2800,7 @@ function getEffectivePlayerAttack() {
     const base = Math.max(0, Math.floor(player.attack || 0));
     const domain = getPlayerDomainAggregate();
     const abilityMul = getAbilityDownMultiplier();
-    const domainAbilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const domainAbilityMul = getDomainAbilityMultiplier(domain, 'attack');
     const domainAttackMul = Number.isFinite(domain.attackMul) ? domain.attackMul : 1;
     return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainAttackMul));
 }
@@ -2625,7 +2809,7 @@ function getEffectivePlayerDefense() {
     const base = Math.max(0, Math.floor(player.defense || 0));
     const domain = getPlayerDomainAggregate();
     const abilityMul = getAbilityDownMultiplier();
-    const domainAbilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const domainAbilityMul = getDomainAbilityMultiplier(domain, 'defense');
     const domainDefenseMul = Number.isFinite(domain.defenseMul) ? domain.defenseMul : 1;
     return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainDefenseMul));
 }
@@ -2656,7 +2840,7 @@ function getEffectiveEnemyAttack(enemy) {
     if (!enemy) return 0;
     const base = Math.max(0, Math.floor(Number(enemy.attack) || 0));
     const domain = getEnemyDomainAggregate(enemy);
-    const abilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const abilityMul = getDomainAbilityMultiplier(domain, 'attack');
     const attackMul = Number.isFinite(domain.attackMul) ? domain.attackMul : 1;
     return Math.max(0, Math.floor(base * abilityMul * attackMul));
 }
@@ -2665,7 +2849,7 @@ function getEffectiveEnemyDefense(enemy) {
     if (!enemy) return 0;
     const base = Math.max(0, Math.floor(Number(enemy.defense) || 0));
     const domain = getEnemyDomainAggregate(enemy);
-    const abilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const abilityMul = getDomainAbilityMultiplier(domain, 'defense');
     const defenseMul = Number.isFinite(domain.defenseMul) ? domain.defenseMul : 1;
     return Math.max(0, Math.floor(base * abilityMul * defenseMul));
 }

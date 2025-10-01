@@ -90,6 +90,104 @@
         { id: 'ailment', label: '状態異常化' }
     ];
 
+    const DOMAIN_EFFECT_PARAM_DEFAULTS = {
+        abilityUp: 'all',
+        abilityDown: 'all',
+        ailment: 'random'
+    };
+
+    const DOMAIN_ABILITY_PARAM_OPTIONS = [
+        { id: 'attack', label: '攻撃力' },
+        { id: 'defense', label: '防御力' },
+        { id: 'maxHp', label: '最大HP' },
+        { id: 'all', label: '全能力' }
+    ];
+
+    const DOMAIN_STATUS_PARAM_OPTIONS = [
+        { id: 'poison', label: '毒' },
+        { id: 'paralysis', label: '麻痺' },
+        { id: 'abilityDown', label: '能力低下' },
+        { id: 'levelDown', label: 'レベル低下' },
+        { id: 'random', label: 'ランダム' }
+    ];
+
+    const DOMAIN_EFFECTS_REQUIRING_PARAM = new Set(['abilityUp', 'abilityDown', 'ailment']);
+
+    function domainEffectRequiresParam(effectId) {
+        return DOMAIN_EFFECTS_REQUIRING_PARAM.has(effectId);
+    }
+
+    function getDomainEffectParamOptions(effectId) {
+        if (effectId === 'abilityUp' || effectId === 'abilityDown') {
+            return DOMAIN_ABILITY_PARAM_OPTIONS;
+        }
+        if (effectId === 'ailment') {
+            return DOMAIN_STATUS_PARAM_OPTIONS;
+        }
+        return [];
+    }
+
+    function sanitizeDomainEffectParam(effectId, value) {
+        if (!domainEffectRequiresParam(effectId)) return null;
+        const options = getDomainEffectParamOptions(effectId);
+        const normalized = typeof value === 'string' ? value : '';
+        if (options.some(opt => opt.id === normalized)) {
+            return normalized;
+        }
+        return DOMAIN_EFFECT_PARAM_DEFAULTS[effectId] || options[0]?.id || null;
+    }
+
+    function normalizeDomainEffectParams(rawParams, effectIds) {
+        const params = {};
+        if (rawParams && typeof rawParams === 'object') {
+            effectIds.forEach(effectId => {
+                if (!domainEffectRequiresParam(effectId)) return;
+                const rawValue = rawParams[effectId];
+                const sanitized = sanitizeDomainEffectParam(effectId, rawValue);
+                if (sanitized) {
+                    params[effectId] = sanitized;
+                }
+            });
+        }
+        effectIds.forEach(effectId => {
+            if (!domainEffectRequiresParam(effectId)) return;
+            if (!params[effectId]) {
+                params[effectId] = DOMAIN_EFFECT_PARAM_DEFAULTS[effectId];
+            }
+        });
+        return params;
+    }
+
+    function ensureDomainEffectParamDefaults(effect) {
+        if (!effect) return;
+        if (!effect.effectParams || typeof effect.effectParams !== 'object') {
+            effect.effectParams = {};
+        }
+        const params = effect.effectParams;
+        const list = Array.isArray(effect.effects) ? effect.effects : [];
+        Object.keys(params).forEach(key => {
+            if (!list.includes(key) || !domainEffectRequiresParam(key)) {
+                delete params[key];
+            }
+        });
+        list.forEach(effectId => {
+            if (!domainEffectRequiresParam(effectId)) return;
+            params[effectId] = sanitizeDomainEffectParam(effectId, params[effectId]);
+        });
+    }
+
+    function cloneDomainEffectParams(effect) {
+        if (!effect || typeof effect !== 'object') return {};
+        const list = Array.isArray(effect.effects) ? effect.effects : [];
+        const params = {};
+        list.forEach(effectId => {
+            if (!domainEffectRequiresParam(effectId)) return;
+            const value = sanitizeDomainEffectParam(effectId, effect.effectParams?.[effectId]);
+            if (value) params[effectId] = value;
+        });
+        return params;
+    }
+
     const DOMAIN_RADIUS_MIN = 1;
     const DOMAIN_RADIUS_MAX = 20;
 
@@ -381,9 +479,30 @@
             if (seen.has(id)) continue;
             seen.add(id);
             const rawEffects = Array.isArray(entry.effects) ? entry.effects : [];
-            const normalizedEffects = rawEffects
-                .map(effectId => DOMAIN_EFFECT_OPTIONS.find(opt => opt.id === effectId)?.id)
-                .filter((val, idx, arr) => typeof val === 'string' && arr.indexOf(val) === idx);
+            const normalizedEffects = [];
+            const rawParams = {};
+            rawEffects.forEach(effectEntry => {
+                let effectId = null;
+                let paramValue = null;
+                if (typeof effectEntry === 'string') {
+                    effectId = effectEntry;
+                } else if (effectEntry && typeof effectEntry === 'object') {
+                    if (typeof effectEntry.id === 'string') effectId = effectEntry.id;
+                    if (typeof effectEntry.param === 'string') paramValue = effectEntry.param;
+                }
+                const option = DOMAIN_EFFECT_OPTIONS.find(opt => opt.id === effectId);
+                if (!option) return;
+                if (normalizedEffects.includes(option.id)) return;
+                normalizedEffects.push(option.id);
+                if (paramValue) rawParams[option.id] = paramValue;
+            });
+            if (entry.effectParams && typeof entry.effectParams === 'object') {
+                Object.keys(entry.effectParams).forEach(key => {
+                    if (normalizedEffects.includes(key) && typeof entry.effectParams[key] === 'string') {
+                        rawParams[key] = entry.effectParams[key];
+                    }
+                });
+            }
             if (!normalizedEffects.length) {
                 normalizedEffects.push(DOMAIN_EFFECT_OPTIONS[0].id);
             }
@@ -394,6 +513,7 @@
                 name: typeof entry.name === 'string' ? entry.name : '',
                 radius,
                 effects: normalizedEffects,
+                effectParams: normalizeDomainEffectParams(rawParams, normalizedEffects),
                 x: pos ? pos.x : null,
                 y: pos ? pos.y : null
             });
@@ -425,6 +545,7 @@
                 name: effect.name,
                 radius: effect.radius,
                 effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
+                effectParams: cloneDomainEffectParams(effect),
                 x: Number.isFinite(effect.x) ? effect.x : null,
                 y: Number.isFinite(effect.y) ? effect.y : null
             })),
@@ -460,6 +581,7 @@
                 name: effect.name,
                 radius: effect.radius,
                 effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
+                effectParams: cloneDomainEffectParams(effect),
                 x: Number.isFinite(effect.x) ? effect.x : null,
                 y: Number.isFinite(effect.y) ? effect.y : null
             })),
@@ -590,14 +712,23 @@
         state.playerLevel = payload.playerLevel;
         state.enemies = payload.enemies.map(enemy => ({ ...enemy, id: enemy.id || `enemy-${enemySeq++}` }));
         state.selectedEnemyId = payload.selectedEnemyId;
-        state.domainEffects = payload.domainEffects.map(effect => ({
-            id: effect.id || `domain-${domainSeq++}`,
-            name: typeof effect.name === 'string' ? effect.name : '',
-            radius: clamp(DOMAIN_RADIUS_MIN, DOMAIN_RADIUS_MAX, Math.floor(Number(effect.radius) || 3)),
-            effects: Array.isArray(effect.effects) ? effect.effects.filter((id, idx, arr) => DOMAIN_EFFECT_OPTIONS.some(opt => opt.id === id) && arr.indexOf(id) === idx) : [DOMAIN_EFFECT_OPTIONS[0].id],
-            x: Number.isFinite(effect.x) ? effect.x : null,
-            y: Number.isFinite(effect.y) ? effect.y : null
-        }));
+        state.domainEffects = payload.domainEffects.map(effect => {
+            const effectList = Array.isArray(effect.effects)
+                ? effect.effects.filter((id, idx, arr) => DOMAIN_EFFECT_OPTIONS.some(opt => opt.id === id) && arr.indexOf(id) === idx)
+                : [DOMAIN_EFFECT_OPTIONS[0].id];
+            if (!effectList.length) effectList.push(DOMAIN_EFFECT_OPTIONS[0].id);
+            const normalized = {
+                id: effect.id || `domain-${domainSeq++}`,
+                name: typeof effect.name === 'string' ? effect.name : '',
+                radius: clamp(DOMAIN_RADIUS_MIN, DOMAIN_RADIUS_MAX, Math.floor(Number(effect.radius) || 3)),
+                effects: effectList,
+                effectParams: normalizeDomainEffectParams(effect.effectParams, effectList),
+                x: Number.isFinite(effect.x) ? effect.x : null,
+                y: Number.isFinite(effect.y) ? effect.y : null
+            };
+            ensureDomainEffectParamDefaults(normalized);
+            return normalized;
+        });
         state.selectedDomainId = payload.selectedDomainId;
         state.brush = payload.brush;
         state.lastCell = payload.lastCell;
@@ -1374,6 +1505,7 @@
             state.selectedDomainId = state.domainEffects[0].id;
         }
         state.domainEffects.forEach((effect, index) => {
+            ensureDomainEffectParamDefaults(effect);
             const card = document.createElement('div');
             card.className = 'sandbox-domain-card';
             if (effect.id === state.selectedDomainId) {
@@ -1509,10 +1641,45 @@
                     selected.push(DOMAIN_EFFECT_OPTIONS[0].id);
                 }
                 effect.effects = selected;
+                ensureDomainEffectParamDefaults(effect);
                 render();
             });
             effectsLabel.appendChild(effectSelect);
             grid.appendChild(effectsLabel);
+
+            const paramsContainer = document.createElement('div');
+            paramsContainer.className = 'sandbox-domain-params';
+            let hasParams = false;
+            effect.effects.forEach(effectId => {
+                if (!domainEffectRequiresParam(effectId)) return;
+                const paramLabel = document.createElement('label');
+                paramLabel.textContent = `${getDomainEffectLabel(effectId)}の対象`;
+                const paramSelect = document.createElement('select');
+                paramSelect.dataset.preserveKey = `domain-${effect.id}-param-${effectId}`;
+                const options = getDomainEffectParamOptions(effectId);
+                const currentValue = effect.effectParams?.[effectId] || DOMAIN_EFFECT_PARAM_DEFAULTS[effectId] || options[0]?.id || '';
+                options.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.id;
+                    opt.textContent = option.label;
+                    if (option.id === currentValue) opt.selected = true;
+                    paramSelect.appendChild(opt);
+                });
+                paramSelect.addEventListener('change', () => {
+                    if (!effect.effectParams || typeof effect.effectParams !== 'object') {
+                        effect.effectParams = {};
+                    }
+                    effect.effectParams[effectId] = sanitizeDomainEffectParam(effectId, paramSelect.value);
+                    ensureDomainEffectParamDefaults(effect);
+                    render();
+                });
+                paramLabel.appendChild(paramSelect);
+                paramsContainer.appendChild(paramLabel);
+                hasParams = true;
+            });
+            if (hasParams) {
+                grid.appendChild(paramsContainer);
+            }
 
             card.appendChild(grid);
             refs.domainList.appendChild(card);
@@ -1706,9 +1873,11 @@
             name: `領域${state.domainEffects.length + 1}`,
             radius: 3,
             effects: [DOMAIN_EFFECT_OPTIONS[0].id],
+            effectParams: {},
             x: state.lastCell?.x ?? null,
             y: state.lastCell?.y ?? null
         };
+        ensureDomainEffectParamDefaults(domain);
         state.domainEffects.push(domain);
         state.selectedDomainId = id;
         render();

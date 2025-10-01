@@ -11380,21 +11380,185 @@ function renderMiniExpPlayerHud() {
     }
 }
 
-function awardXpFromMini(n, reason='') {
+function getMiniGamePlayerSnapshot() {
+    try { updatePlayerSpCap({ silent: true }); } catch {}
+    const effectiveMaxHp = getEffectivePlayerMaxHp();
+    const normalizedHp = Number.isFinite(player.hp)
+        ? Math.max(0, Math.min(effectiveMaxHp, player.hp))
+        : effectiveMaxHp;
+    const normalizedSp = Number.isFinite(player.sp) ? Math.max(0, player.sp) : 0;
+    const normalizedMaxSp = Number.isFinite(player.maxSp) ? Math.max(0, player.maxSp) : 0;
+    const inventory = {};
+    if (player.inventory && typeof player.inventory === 'object') {
+        for (const [key, value] of Object.entries(player.inventory)) {
+            const amount = Math.trunc(Number(value) || 0);
+            inventory[key] = amount < 0 ? 0 : amount;
+        }
+    }
+    return {
+        level: Math.max(1, Math.floor(player.level || 1)),
+        exp: Math.floor(Number.isFinite(player.exp) ? player.exp : 0),
+        hp: normalizedHp,
+        maxHp: effectiveMaxHp,
+        sp: normalizedSp,
+        maxSp: normalizedMaxSp,
+        inventory
+    };
+}
+
+function applyMiniGameInventoryDelta(changes, opts = {}) {
+    if (!changes || typeof changes !== 'object') return {};
+    if (!player.inventory || typeof player.inventory !== 'object') {
+        player.inventory = {};
+    }
+    const applied = {};
+    let mutated = false;
+    for (const [key, rawDelta] of Object.entries(changes)) {
+        const numeric = Number(rawDelta);
+        if (!Number.isFinite(numeric) || Math.abs(numeric) < 1e-6) continue;
+        const delta = numeric > 0 ? Math.floor(numeric) : Math.ceil(numeric);
+        if (delta === 0) continue;
+        const currentRaw = Number(player.inventory[key]);
+        const current = Number.isFinite(currentRaw) ? Math.floor(currentRaw) : 0;
+        let next = current + delta;
+        if (!opts.allowNegative && next < 0) next = 0;
+        if (!Number.isFinite(next)) next = 0;
+        next = Math.floor(next);
+        const appliedDelta = next - current;
+        if (appliedDelta === 0) continue;
+        player.inventory[key] = next;
+        applied[key] = appliedDelta;
+        mutated = true;
+    }
+    if (mutated) {
+        try { updateUI(); } catch {}
+        try { renderMiniExpPlayerHud(); } catch {}
+        try { saveAll(); } catch {}
+    }
+    return applied;
+}
+
+function adjustPlayerSpFromMini(delta, opts = {}) {
+    const numeric = Number(delta);
+    if (!Number.isFinite(numeric) || Math.abs(numeric) < 1e-6) return 0;
+    if (isSandboxGodModeEnabled()) {
+        player.sp = Infinity;
+        return numeric;
+    }
+    try { updatePlayerSpCap({ silent: true }); } catch {}
+    if (!isSpUnlocked()) return 0;
+    const maxSp = Math.max(0, Number(player.maxSp) || 0);
+    const current = Math.max(0, Number(player.sp) || 0);
+    let target = current + numeric;
+    if (!opts.allowOvercap && Number.isFinite(maxSp) && maxSp > 0) {
+        target = Math.min(target, maxSp);
+    }
+    if (target < 0) target = 0;
+    if (!Number.isFinite(target)) target = 0;
+    const applied = target - current;
+    if (Math.abs(applied) < 1e-6) return 0;
+    player.sp = target;
+    markSkillsListDirty();
+    if (!opts.silent) {
+        const display = floorSpValue(Math.abs(applied));
+        const message = applied > 0
+            ? `SPが${display}回復した。`
+            : `SPを${display}消費した。`;
+        try { addMessage(message); } catch {}
+    }
+    try { updateUI(); } catch {}
+    try { renderMiniExpPlayerHud(); } catch {}
+    try { saveAll(); } catch {}
+    return applied;
+}
+
+function fillPlayerSpFromMini(opts = {}) {
+    if (isSandboxGodModeEnabled()) {
+        player.sp = Infinity;
+        try { updateUI(); } catch {}
+        try { renderMiniExpPlayerHud(); } catch {}
+        try { saveAll(); } catch {}
+        return Infinity;
+    }
+    try { updatePlayerSpCap({ silent: true }); } catch {}
+    if (!isSpUnlocked()) return 0;
+    const maxSp = Math.max(0, Number(player.maxSp) || 0);
+    if (maxSp <= 0 || !Number.isFinite(maxSp)) return 0;
+    const current = Math.max(0, Math.min(maxSp, Number(player.sp) || 0));
+    const gained = maxSp - current;
+    if (gained <= 0) return 0;
+    player.sp = maxSp;
+    markSkillsListDirty();
+    if (!opts.silent) {
+        const display = floorSpValue(gained);
+        try { addMessage(`SPが全快した。（+${display}）`); } catch {}
+    }
+    try { updateUI(); } catch {}
+    try { renderMiniExpPlayerHud(); } catch {}
+    try { saveAll(); } catch {}
+    return gained;
+}
+
+function adjustPlayerHpFromMini(delta, opts = {}) {
+    const numeric = Number(delta);
+    if (!Number.isFinite(numeric) || Math.abs(numeric) < 1e-6) return 0;
+    enforceEffectiveHpCap();
+    const effectiveMax = getEffectivePlayerMaxHp();
+    const currentRaw = Number.isFinite(player.hp) ? player.hp : effectiveMax;
+    const current = Math.max(0, Math.min(currentRaw, effectiveMax));
+    let target = current + numeric;
+    if (!opts.allowOverheal && Number.isFinite(effectiveMax)) {
+        target = Math.min(target, effectiveMax);
+    }
+    if (target < 0) target = 0;
+    if (!Number.isFinite(target)) target = current;
+    const applied = target - current;
+    if (Math.abs(applied) < 1e-6) return 0;
+    player.hp = target;
+    enforceEffectiveHpCap();
+    if (!opts.silent) {
+        const amount = Math.floor(Math.abs(applied));
+        const message = applied > 0
+            ? `HPが${amount}回復した。`
+            : `HPに${amount}のダメージを受けた。`;
+        try { addMessage(message); } catch {}
+    }
+    try { updateUI(); } catch {}
+    try { renderMiniExpPlayerHud(); } catch {}
+    try { saveAll(); } catch {}
+    return applied;
+}
+
+function healPlayerFromMini(amount, opts = {}) {
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return adjustPlayerHpFromMini(Math.abs(value), opts);
+}
+
+function damagePlayerFromMini(amount, opts = {}) {
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return adjustPlayerHpFromMini(-Math.abs(value), opts);
+}
+
+function awardXpFromMini(n, meta = null) {
     const amount = Number(n) || 0;
     if (!Number.isFinite(amount) || amount === 0) return 0;
     ensureAudio();
     const isGain = amount > 0;
     if (isGain) playSfx && playSfx('pickup');
     else playSfx && playSfx('damage');
+    const metaObj = (meta && typeof meta === 'object') ? meta : null;
+    const reasonText = metaObj?.reason || metaObj?.type || (typeof meta === 'string' ? meta : '');
+    const gameId = metaObj?.gameId || (typeof meta === 'string' ? meta : (miniExpState.selected || 'unknown'));
     let delta = 0;
     if (isGain) {
-        const gained = grantExp(amount, { source: 'mini', reason, popup: false });
+        const gained = grantExp(amount, { source: 'mini', reason: reasonText, popup: false });
         if (!gained) return 0;
         delta = Number(gained) || 0;
         showMiniExpBadge(`+${Math.floor(delta)} EXP`, { tone: 'gain' });
     } else {
-        const spent = spendExp(-amount, { source: 'mini', reason, popup: false });
+        const spent = spendExp(-amount, { source: 'mini', reason: reasonText, popup: false });
         if (!spent) return 0;
         delta = -Number(spent || 0);
         showMiniExpBadge(`-${Math.floor(spent)} EXP`, { tone: 'loss' });
@@ -11402,7 +11566,7 @@ function awardXpFromMini(n, reason='') {
     renderMiniExpPlayerHud();
     __miniSessionExp += delta;
     try {
-        const gid = miniExpState.selected || reason || 'unknown';
+        const gid = gameId || miniExpState.selected || 'unknown';
         const rec = (miniExpState.records[gid] ||= { id: gid, bestScore: 0, totalPlays: 0, totalExpEarned: 0, lastPlayedAt: 0 });
         rec.totalExpEarned = (rec.totalExpEarned||0) + delta;
         renderMiniExpRecords();
@@ -11443,11 +11607,32 @@ async function startSelectedMiniGame() {
     const shortcutController = createMiniShortcutController();
     let runtime = null;
     try {
+        const playerApi = {
+            getState: () => getMiniGamePlayerSnapshot(),
+            awardItems: (changes, opts) => applyMiniGameInventoryDelta(changes, opts || {}),
+            adjustItems: (changes, opts) => applyMiniGameInventoryDelta(changes, opts || {}),
+            adjustHp: (delta, opts) => adjustPlayerHpFromMini(delta, opts || {}),
+            healHp: (amount, opts) => healPlayerFromMini(amount, opts || {}),
+            damageHp: (amount, opts) => damagePlayerFromMini(amount, opts || {}),
+            adjustSp: (delta, opts) => adjustPlayerSpFromMini(delta, opts || {}),
+            fillSp: (opts) => fillPlayerSpFromMini(opts || {})
+        };
         const createOptions = {
             difficulty: (miniexpDifficulty?.value || 'NORMAL'),
-            shortcuts: shortcutController
+            shortcuts: shortcutController,
+            player: playerApi
         };
-        runtime = mod.create(miniexpContainer, (n, meta) => awardXpFromMini(n, def.id), createOptions);
+        runtime = mod.create(miniexpContainer, (n, meta) => {
+            let payload;
+            if (meta && typeof meta === 'object') {
+                payload = Object.assign({ gameId: def.id }, meta);
+            } else if (typeof meta === 'string') {
+                payload = { gameId: def.id, reason: meta };
+            } else {
+                payload = { gameId: def.id };
+            }
+            return awardXpFromMini(n, payload);
+        }, createOptions);
     } catch (err) {
         if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームの開始に失敗しました。';
         if (miniexpStartBtn) miniexpStartBtn.disabled = false;

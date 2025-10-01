@@ -101,7 +101,7 @@
                         <tr>
                             <td><code>options.difficulty</code></td>
                             <td>UI の難易度セレクター値（<code>EASY</code>/<code>NORMAL</code>/<code>HARD</code> 等）。</td>
-                            <td><code>main.js</code> 6834–6856 行</td>
+                            <td><code>main.js</code> 11620–11634 行</td>
                         </tr>
                         <tr>
                             <td><code>options.shortcuts</code></td>
@@ -109,16 +109,37 @@
                             <td><code>main.js</code> 161–188 行</td>
                         </tr>
                         <tr>
+                            <td><code>options.player</code></td>
+                            <td>プレイヤー操作 API（v0.3+）。HP/ SP / インベントリの更新や <code>getState()</code> によるスナップショット取得を提供します。</td>
+                            <td><code>main.js</code> 11610–11634 行</td>
+                        </tr>
+                        <tr>
                             <td><code>awardXp(amount, meta)</code></td>
                             <td>EXP を付与するコールバック。MiniExp HUD にバッジが表示され、内部残高が更新されます。</td>
-                            <td><code>main.js</code> 6831–6883 行</td>
+                            <td><code>main.js</code> 11544–11580 行</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
         <section>
-            <h2>18.3 ショートカットコントローラー API</h2>
+            <h2>18.3 プレイヤー操作 API</h2>
+            <p>
+                <code>options.player</code> は MiniExp MOD からプレイヤーの状態を安全に操作するためのヘルパーです。
+                ホストが v0.3 以前の場合は未定義のため、存在を確認してから使用してください。主なメソッドは次のとおりです。
+            </p>
+            <ul>
+                <li><code>getState()</code>: レベル/HP/SP/インベントリを含むスナップショットを返します。</li>
+                <li><code>awardItems()</code> / <code>adjustItems()</code>: アイテム ID と増減個数のマップを適用し、実際の変化量を返します。</li>
+                <li><code>adjustHp()</code>・<code>healHp()</code>・<code>damageHp()</code>: HP の増減（上限は自動で考慮）。</li>
+                <li><code>adjustSp()</code>・<code>fillSp()</code>: SP の増減および最大値までの回復。</li>
+            </ul>
+            <p class="small-note">
+                すべての操作はホスト側で UI 更新とセーブを自動的に行います。必要に応じて <code>opts.silent</code> や
+                <code>opts.allowNegative</code> などのオプションを利用できます。
+            </p>
+
+            <h2>18.4 ショートカットコントローラー API</h2>
             <p>
                 <code>options.shortcuts</code> の実体は <code>createMiniShortcutController()</code> で生成され、ミニゲームごとに
                 キーボードショートカットの有効/無効化を制御できます。主要メソッドは次のとおりです。
@@ -134,7 +155,7 @@
             </p>
         </section>
         <section>
-            <h2>18.4 ダンジョン生成アドオン API</h2>
+            <h2>18.5 ダンジョン生成アドオン API</h2>
             <p>
                 <code>registerDungeonAddon()</code> で登録されたアドオンは、生成器ごとに <code>makeGenContext()</code> から供給される
                 コンテキストオブジェクトを受け取ります。生成アルゴリズムは以下のヘルパーを利用できます。

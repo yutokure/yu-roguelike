@@ -7,6 +7,20 @@
     return value < min ? min : (value > max ? max : value);
   }
 
+  function ensurePositiveInt(value, fallback, options = {}) {
+    const min = options.min ?? 1;
+    const max = options.max ?? Number.POSITIVE_INFINITY;
+    const parsed = Number.isFinite(value) ? value : Number.parseInt(value, 10);
+    const normalized = Number.isFinite(parsed) ? Math.floor(parsed) : NaN;
+    if (!Number.isFinite(normalized)) return clamp(fallback, min, max);
+    return clamp(normalized, min, max);
+  }
+
+  function ensureRatio(value, fallback = 0.5) {
+    if (typeof value !== 'number' || Number.isNaN(value)) return clamp(fallback, 0, 1);
+    return clamp(value, 0, 1);
+  }
+
   function brighten(hex, ratio = 0.2) {
     if (!hex || typeof hex !== 'string') return hex;
     const normalized = hex.trim().replace(/^#/, '');
@@ -180,24 +194,28 @@
       const cx = Math.floor(ctx.width / 2);
       const cy = Math.floor(ctx.height / 2);
       const maxRadius = Math.min(ctx.width, ctx.height) / 2 - 3;
-      carveDisc(ctx, cx, cy, Math.max(3, coreRadius));
-      const spacing = Math.max(3, Math.floor((maxRadius - coreRadius) / Math.max(1, rings)));
-      for (let i = 1; i <= rings; i++) {
-        carveRing(ctx, cx, cy, coreRadius + spacing * i, armWidth);
+      const safeCoreRadius = ensurePositiveInt(coreRadius, 4, { min: 2, max: maxRadius });
+      const safeRings = ensurePositiveInt(rings, 3, { min: 1, max: 12 });
+      const safeArmWidth = ensurePositiveInt(armWidth, 2, { min: 1, max: 8 });
+      carveDisc(ctx, cx, cy, Math.max(3, safeCoreRadius));
+      const spacing = Math.max(3, Math.floor((maxRadius - safeCoreRadius) / Math.max(1, safeRings)));
+      for (let i = 1; i <= safeRings; i++) {
+        carveRing(ctx, cx, cy, safeCoreRadius + spacing * i, safeArmWidth);
       }
       const offset = (ctx.random ? ctx.random() : Math.random()) * Math.PI * 2;
-      for (let i = 0; i < arms; i++) {
-        const angle = offset + (Math.PI * 2 * i) / arms;
+      const safeArms = ensurePositiveInt(arms, 6, { min: 3, max: 16 });
+      for (let i = 0; i < safeArms; i++) {
+        const angle = offset + (Math.PI * 2 * i) / safeArms;
         const length = maxRadius + 2;
         const targetX = Math.round(cx + Math.cos(angle) * length);
         const targetY = Math.round(cy + Math.sin(angle) * length);
-        carveLine(ctx, cx, cy, targetX, targetY, armWidth);
-        carveDisc(ctx, Math.round(cx + Math.cos(angle) * (coreRadius + spacing)), Math.round(cy + Math.sin(angle) * (coreRadius + spacing)), Math.max(2, armWidth + 1));
+        carveLine(ctx, cx, cy, targetX, targetY, safeArmWidth);
+        carveDisc(ctx, Math.round(cx + Math.cos(angle) * (safeCoreRadius + spacing)), Math.round(cy + Math.sin(angle) * (safeCoreRadius + spacing)), Math.max(2, safeArmWidth + 1));
       }
-      for (let i = 0; i < arms; i++) {
-        const angle = offset + (Math.PI * 2 * i) / arms;
-        const next = offset + (Math.PI * 2 * (i + 1)) / arms;
-        const innerR = coreRadius + spacing * Math.max(1, Math.floor(rings / 2));
+      for (let i = 0; i < safeArms; i++) {
+        const angle = offset + (Math.PI * 2 * i) / safeArms;
+        const next = offset + (Math.PI * 2 * (i + 1)) / safeArms;
+        const innerR = safeCoreRadius + spacing * Math.max(1, Math.floor(safeRings / 2));
         const x1 = Math.round(cx + Math.cos(angle) * innerR);
         const y1 = Math.round(cy + Math.sin(angle) * innerR);
         const x2 = Math.round(cx + Math.cos(next) * innerR);
@@ -221,20 +239,25 @@
     } = options;
     return function(ctx) {
       fillSolid(ctx, 1);
-      for (let y = margin; y < ctx.height - margin; y += cellSize + corridorWidth) {
-        for (let x = margin; x < ctx.width - margin; x += cellSize + corridorWidth) {
-          carveRect(ctx, x, y, x + cellSize - 1, y + cellSize - 1);
+      const safeMargin = ensurePositiveInt(margin, 2, { min: 1, max: 6 });
+      const safeCell = ensurePositiveInt(cellSize, 4, { min: 2, max: 12 });
+      const safeCorridor = ensurePositiveInt(corridorWidth, 2, { min: 1, max: 6 });
+      const step = Math.max(1, safeCell + safeCorridor);
+      for (let y = safeMargin; y < ctx.height - safeMargin; y += step) {
+        for (let x = safeMargin; x < ctx.width - safeMargin; x += step) {
+          carveRect(ctx, x, y, x + safeCell - 1, y + safeCell - 1);
         }
       }
-      for (let y = margin + cellSize; y < ctx.height - margin; y += cellSize + corridorWidth) {
-        carveRect(ctx, margin, y, ctx.width - margin - 1, y + corridorWidth - 1);
+      for (let y = safeMargin + safeCell; y < ctx.height - safeMargin; y += step) {
+        carveRect(ctx, safeMargin, y, ctx.width - safeMargin - 1, y + safeCorridor - 1);
       }
-      for (let x = margin + cellSize; x < ctx.width - margin; x += cellSize + corridorWidth) {
-        carveRect(ctx, x, margin, x + corridorWidth - 1, ctx.height - margin - 1);
+      for (let x = safeMargin + safeCell; x < ctx.width - safeMargin; x += step) {
+        carveRect(ctx, x, safeMargin, x + safeCorridor - 1, ctx.height - safeMargin - 1);
       }
-      for (let i = 0; i < openings; i++) {
-        const rx = randomInt(ctx, margin, ctx.width - margin - 2);
-        const ry = randomInt(ctx, margin, ctx.height - margin - 2);
+      const safeOpenings = ensurePositiveInt(openings, 6, { min: 0, max: 32 });
+      for (let i = 0; i < safeOpenings; i++) {
+        const rx = randomInt(ctx, safeMargin, ctx.width - safeMargin - 2);
+        const ry = randomInt(ctx, safeMargin, ctx.height - safeMargin - 2);
         carveRect(ctx, rx, ry, rx + 1, ry + 1);
       }
       if (structureTags) sprinkleStructures(ctx, structureTags, 3);
@@ -255,13 +278,18 @@
     } = options;
     return function(ctx) {
       fillSolid(ctx, 1);
-      carveRect(ctx, margin, Math.floor(ctx.height / 2) - Math.floor(width / 2), ctx.width - margin - 1, Math.floor(ctx.height / 2) + Math.floor(width / 2));
-      carveRect(ctx, Math.floor(ctx.width / 2) - Math.floor(width / 2), margin, Math.floor(ctx.width / 2) + Math.floor(width / 2), ctx.height - margin - 1);
-      for (let s = 0; s < streams; s++) {
-        let x = randomInt(ctx, margin, ctx.width - margin - 1);
-        let y = randomInt(ctx, margin, ctx.height - margin - 1);
-        for (let step = 0; step < steps; step++) {
-          carveRect(ctx, x - Math.floor(width / 2), y - Math.floor(width / 2), x + Math.floor(width / 2), y + Math.floor(width / 2));
+      const safeMargin = ensurePositiveInt(margin, 2, { min: 1, max: 8 });
+      const safeWidth = ensurePositiveInt(width, 2, { min: 1, max: 6 });
+      const safeStreams = ensurePositiveInt(streams, 4, { min: 1, max: 16 });
+      const safeSteps = ensurePositiveInt(steps, 90, { min: 10, max: 500 });
+      const safeBranchInterval = ensurePositiveInt(branchInterval, 18, { min: 4, max: 60 });
+      carveRect(ctx, safeMargin, Math.floor(ctx.height / 2) - Math.floor(safeWidth / 2), ctx.width - safeMargin - 1, Math.floor(ctx.height / 2) + Math.floor(safeWidth / 2));
+      carveRect(ctx, Math.floor(ctx.width / 2) - Math.floor(safeWidth / 2), safeMargin, Math.floor(ctx.width / 2) + Math.floor(safeWidth / 2), ctx.height - safeMargin - 1);
+      for (let s = 0; s < safeStreams; s++) {
+        let x = randomInt(ctx, safeMargin, ctx.width - safeMargin - 1);
+        let y = randomInt(ctx, safeMargin, ctx.height - safeMargin - 1);
+        for (let step = 0; step < safeSteps; step++) {
+          carveRect(ctx, x - Math.floor(safeWidth / 2), y - Math.floor(safeWidth / 2), x + Math.floor(safeWidth / 2), y + Math.floor(safeWidth / 2));
           const dirBias = s % 2 === 0 ? 1 : -1;
           const optionsDir = [
             [1, 0],
@@ -273,24 +301,24 @@
           const jitter = optionsDir[randomInt(ctx, 0, optionsDir.length - 1)];
           x += choice[0] + (step % 5 === 0 ? dirBias : 0);
           y += choice[1] + (step % 7 === 0 ? -dirBias : 0);
-          if (step % branchInterval === 0) {
-            carveLine(ctx, x, y, Math.floor(ctx.width / 2), Math.floor(ctx.height / 2), width);
+          if (step % safeBranchInterval === 0) {
+            carveLine(ctx, x, y, Math.floor(ctx.width / 2), Math.floor(ctx.height / 2), safeWidth);
           }
-          x = clamp(x, margin, ctx.width - margin - 1);
-          y = clamp(y, margin, ctx.height - margin - 1);
+          x = clamp(x, safeMargin, ctx.width - safeMargin - 1);
+          y = clamp(y, safeMargin, ctx.height - safeMargin - 1);
           if (step % 11 === 0) {
             carveRect(ctx, x + jitter[0], y + jitter[1], x + jitter[0], y + jitter[1]);
           }
         }
       }
-      for (let i = 0; i < streams; i++) {
+      for (let i = 0; i < safeStreams; i++) {
         const edge = i % 4;
         let sx, sy;
-        if (edge === 0) { sx = randomInt(ctx, margin, ctx.width - margin - 1); sy = margin; }
-        else if (edge === 1) { sx = ctx.width - margin - 1; sy = randomInt(ctx, margin, ctx.height - margin - 1); }
-        else if (edge === 2) { sx = randomInt(ctx, margin, ctx.width - margin - 1); sy = ctx.height - margin - 1; }
-        else { sx = margin; sy = randomInt(ctx, margin, ctx.height - margin - 1); }
-        carveLine(ctx, sx, sy, Math.floor(ctx.width / 2), Math.floor(ctx.height / 2), width);
+        if (edge === 0) { sx = randomInt(ctx, safeMargin, ctx.width - safeMargin - 1); sy = safeMargin; }
+        else if (edge === 1) { sx = ctx.width - safeMargin - 1; sy = randomInt(ctx, safeMargin, ctx.height - safeMargin - 1); }
+        else if (edge === 2) { sx = randomInt(ctx, safeMargin, ctx.width - safeMargin - 1); sy = ctx.height - safeMargin - 1; }
+        else { sx = safeMargin; sy = randomInt(ctx, safeMargin, ctx.height - safeMargin - 1); }
+        carveLine(ctx, sx, sy, Math.floor(ctx.width / 2), Math.floor(ctx.height / 2), safeWidth);
       }
       if (structureTags) sprinkleStructures(ctx, structureTags, 2);
       ctx.ensureConnectivity();
@@ -309,19 +337,21 @@
       const w = ctx.width;
       const h = ctx.height;
       const data = [];
+      const safeFillChance = ensureRatio(fillChance, 0.45);
+      const safeSmoothSteps = ensurePositiveInt(smoothSteps, 3, { min: 0, max: 8 });
       for (let y = 0; y < h; y++) {
         const row = [];
         for (let x = 0; x < w; x++) {
           if (x === 0 || y === 0 || x === w - 1 || y === h - 1) {
             row.push(1);
           } else {
-            const chance = fillChance + (Math.sin(x * 0.2) + Math.cos(y * 0.17)) * 0.05;
+            const chance = safeFillChance + (Math.sin(x * 0.2) + Math.cos(y * 0.17)) * 0.05;
             row.push((ctx.random && ctx.random() < chance) ? 0 : 1);
           }
         }
         data.push(row);
       }
-      for (let step = 0; step < smoothSteps; step++) {
+      for (let step = 0; step < safeSmoothSteps; step++) {
         const next = [];
         for (let y = 0; y < h; y++) {
           const row = [];
@@ -370,16 +400,19 @@
       fillSolid(ctx, 1);
       const cx = Math.floor(ctx.width / 2);
       const cy = Math.floor(ctx.height / 2);
-      carveDisc(ctx, cx, cy, platformRadius + 2);
-      for (let i = 0; i < islands; i++) {
-        const angle = (Math.PI * 2 * i) / islands + (ctx.random ? ctx.random() * 0.6 : Math.random() * 0.6);
-        const radius = platformRadius + 4 + (ctx.random ? ctx.random() * 6 : Math.random() * 6);
+      const safeIslands = ensurePositiveInt(islands, 7, { min: 1, max: 24 });
+      const safeRadius = ensurePositiveInt(platformRadius, 3, { min: 1, max: 8 });
+      const safeBridgeWidth = ensurePositiveInt(bridgeWidth, 2, { min: 1, max: 6 });
+      carveDisc(ctx, cx, cy, safeRadius + 2);
+      for (let i = 0; i < safeIslands; i++) {
+        const angle = (Math.PI * 2 * i) / safeIslands + (ctx.random ? ctx.random() * 0.6 : Math.random() * 0.6);
+        const radius = safeRadius + 4 + (ctx.random ? ctx.random() * 6 : Math.random() * 6);
         const px = Math.round(cx + Math.cos(angle) * radius);
         const py = Math.round(cy + Math.sin(angle) * radius);
-        carveDisc(ctx, px, py, platformRadius);
-        carveLine(ctx, cx, cy, px, py, bridgeWidth);
+        carveDisc(ctx, px, py, safeRadius);
+        carveLine(ctx, cx, cy, px, py, safeBridgeWidth);
         if (i % 2 === 0) {
-          const nextAngle = angle + Math.PI / islands;
+          const nextAngle = angle + Math.PI / safeIslands;
           const nx = Math.round(cx + Math.cos(nextAngle) * (radius + 3));
           const ny = Math.round(cy + Math.sin(nextAngle) * (radius + 3));
           carveLine(ctx, px, py, nx, ny, 1);
@@ -401,16 +434,19 @@
     } = options;
     return function(ctx) {
       fillSolid(ctx, 1);
-      const margin = Math.max(2, spacing);
-      for (let i = 0; i < loops; i++) {
-        const inset = margin + i * spacing;
-        carveRectRing(ctx, inset, inset, ctx.width - inset - 1, ctx.height - inset - 1, corridorWidth);
+      const safeLoops = ensurePositiveInt(loops, 4, { min: 1, max: 12 });
+      const safeSpacing = ensurePositiveInt(spacing, 3, { min: 1, max: 8 });
+      const safeCorridor = ensurePositiveInt(corridorWidth, 2, { min: 1, max: 6 });
+      const margin = Math.max(2, safeSpacing);
+      for (let i = 0; i < safeLoops; i++) {
+        const inset = margin + i * safeSpacing;
+        carveRectRing(ctx, inset, inset, ctx.width - inset - 1, ctx.height - inset - 1, safeCorridor);
         if (i % 2 === 0) {
           carveDisc(ctx, Math.floor(ctx.width / 2), inset + 2, 2);
           carveDisc(ctx, Math.floor(ctx.width / 2), ctx.height - inset - 3, 2);
         }
       }
-      for (let i = 2; i < ctx.height - 2; i += Math.max(4, spacing + 1)) {
+      for (let i = 2; i < ctx.height - 2; i += Math.max(4, safeSpacing + 1)) {
         carveRect(ctx, Math.floor(ctx.width / 2) - 1, i, Math.floor(ctx.width / 2) + 1, i + 1);
       }
       if (structureTags) sprinkleStructures(ctx, structureTags, 2);
@@ -431,11 +467,14 @@
       fillSolid(ctx, 1);
       const cx = Math.floor(ctx.width / 2);
       const cy = Math.floor(ctx.height / 2);
-      carveRect(ctx, cx - crossWidth, Math.max(2, cy - armLength), cx + crossWidth, Math.min(ctx.height - 3, cy + armLength));
-      carveRect(ctx, Math.max(2, cx - armLength), cy - crossWidth, Math.min(ctx.width - 3, cx + armLength), cy + crossWidth);
-      carveDisc(ctx, cx, cy, crossWidth + 2);
-      carveRect(ctx, Math.max(2, cx - crossWidth - 4), Math.max(2, cy - crossWidth - 4), Math.min(ctx.width - 3, cx + crossWidth + 4), Math.min(ctx.height - 3, cy + crossWidth + 4));
-      if (includeDiagonals) {
+      const safeArmLength = ensurePositiveInt(armLength, 12, { min: 4, max: 32 });
+      const safeCrossWidth = ensurePositiveInt(crossWidth, 2, { min: 1, max: 6 });
+      const safeIncludeDiagonal = Boolean(includeDiagonals);
+      carveRect(ctx, cx - safeCrossWidth, Math.max(2, cy - safeArmLength), cx + safeCrossWidth, Math.min(ctx.height - 3, cy + safeArmLength));
+      carveRect(ctx, Math.max(2, cx - safeArmLength), cy - safeCrossWidth, Math.min(ctx.width - 3, cx + safeArmLength), cy + safeCrossWidth);
+      carveDisc(ctx, cx, cy, safeCrossWidth + 2);
+      carveRect(ctx, Math.max(2, cx - safeCrossWidth - 4), Math.max(2, cy - safeCrossWidth - 4), Math.min(ctx.width - 3, cx + safeCrossWidth + 4), Math.min(ctx.height - 3, cy + safeCrossWidth + 4));
+      if (safeIncludeDiagonal) {
         carveLine(ctx, 2, 2, ctx.width - 3, ctx.height - 3, 1);
         carveLine(ctx, ctx.width - 3, 2, 2, ctx.height - 3, 1);
       }
@@ -456,14 +495,16 @@
       fillSolid(ctx, 1);
       const cx = Math.floor(ctx.width / 2);
       const cy = Math.floor(ctx.height / 2);
-      carveDisc(ctx, cx, cy, radius);
-      carveRing(ctx, cx, cy, radius + 3, 2);
-      for (let i = 0; i < spokes; i++) {
-        const angle = (Math.PI * 2 * i) / spokes;
-        const tx = Math.round(cx + Math.cos(angle) * (radius + 6));
-        const ty = Math.round(cy + Math.sin(angle) * (radius + 6));
+      const safeRadius = ensurePositiveInt(radius, 8, { min: 3, max: 12 });
+      const safeSpokes = ensurePositiveInt(spokes, 6, { min: 3, max: 16 });
+      carveDisc(ctx, cx, cy, safeRadius);
+      carveRing(ctx, cx, cy, safeRadius + 3, 2);
+      for (let i = 0; i < safeSpokes; i++) {
+        const angle = (Math.PI * 2 * i) / safeSpokes;
+        const tx = Math.round(cx + Math.cos(angle) * (safeRadius + 6));
+        const ty = Math.round(cy + Math.sin(angle) * (safeRadius + 6));
         carveLine(ctx, cx, cy, tx, ty, 2);
-        carveDisc(ctx, Math.round(cx + Math.cos(angle) * (radius + 3)), Math.round(cy + Math.sin(angle) * (radius + 3)), 2);
+        carveDisc(ctx, Math.round(cx + Math.cos(angle) * (safeRadius + 3)), Math.round(cy + Math.sin(angle) * (safeRadius + 3)), 2);
       }
       if (structureTags) sprinkleStructures(ctx, structureTags, 4);
       ctx.ensureConnectivity();
@@ -486,19 +527,22 @@
       let x1 = ctx.width - 3;
       let y1 = ctx.height - 3;
       let toggle = 0;
+      const safeTurns = ensurePositiveInt(turns, 3, { min: 1, max: 12 });
+      const safeSpacing = ensurePositiveInt(spacing, 2, { min: 1, max: 6 });
+      const safeWidth = ensurePositiveInt(width, 2, { min: 1, max: 6 });
       while (x0 <= x1 && y0 <= y1) {
-        if (toggle % 4 === 0) carveRect(ctx, x0, y0, x1, y0 + width - 1);
-        if (toggle % 4 === 1) carveRect(ctx, x1 - width + 1, y0, x1, y1);
-        if (toggle % 4 === 2) carveRect(ctx, x0, y1 - width + 1, x1, y1);
-        if (toggle % 4 === 3) carveRect(ctx, x0, y0, x0 + width - 1, y1);
-        if (toggle >= turns * 4) break;
-        x0 += spacing;
-        y0 += spacing;
-        x1 -= spacing;
-        y1 -= spacing;
+        if (toggle % 4 === 0) carveRect(ctx, x0, y0, x1, y0 + safeWidth - 1);
+        if (toggle % 4 === 1) carveRect(ctx, x1 - safeWidth + 1, y0, x1, y1);
+        if (toggle % 4 === 2) carveRect(ctx, x0, y1 - safeWidth + 1, x1, y1);
+        if (toggle % 4 === 3) carveRect(ctx, x0, y0, x0 + safeWidth - 1, y1);
+        if (toggle >= safeTurns * 4) break;
+        x0 += safeSpacing;
+        y0 += safeSpacing;
+        x1 -= safeSpacing;
+        y1 -= safeSpacing;
         toggle++;
       }
-      carveDisc(ctx, Math.floor((x0 + x1) / 2), Math.floor((y0 + y1) / 2), width + 1);
+      carveDisc(ctx, Math.floor((x0 + x1) / 2), Math.floor((y0 + y1) / 2), safeWidth + 1);
       if (structureTags) sprinkleStructures(ctx, structureTags, 2);
       ctx.ensureConnectivity();
       applyPalette(ctx, palette, options.paletteOptions || {});
@@ -519,27 +563,32 @@
       const cx = Math.floor(ctx.width / 2);
       const cy = Math.floor(ctx.height / 2);
       const maxRadius = Math.min(cx, cy) - 2;
-      carveDisc(ctx, cx, cy, Math.max(2, coreRadius));
-      for (let r = coreRadius + ringSpacing; r < maxRadius; r += ringSpacing) {
+      const safeCoreRadius = ensurePositiveInt(coreRadius, 3, { min: 1, max: maxRadius });
+      const safeRingSpacing = ensurePositiveInt(ringSpacing, 3, { min: 1, max: 8 });
+      const safeCorridor = ensurePositiveInt(corridorWidth, 2, { min: 1, max: 6 });
+      const safeSectors = ensurePositiveInt(sectors, 6, { min: 3, max: 16 });
+      carveDisc(ctx, cx, cy, Math.max(2, safeCoreRadius));
+      for (let r = safeCoreRadius + safeRingSpacing; r < maxRadius; r += safeRingSpacing) {
         carveRing(ctx, cx, cy, r, 1);
       }
       const offset = (ctx.random ? ctx.random() : Math.random()) * Math.PI * 2;
-      for (let i = 0; i < sectors; i++) {
-        const angle = offset + (Math.PI * 2 * i) / sectors;
-        const next = offset + (Math.PI * 2 * (i + 1)) / sectors;
+      for (let i = 0; i < safeSectors; i++) {
+        const angle = offset + (Math.PI * 2 * i) / safeSectors;
+        const next = offset + (Math.PI * 2 * (i + 1)) / safeSectors;
         const mid = (angle + next) / 2;
-        for (let step = coreRadius + 1; step < maxRadius; step += Math.max(2, corridorWidth + 1)) {
+        const corridorStep = Math.max(2, safeCorridor + 1);
+        for (let step = safeCoreRadius + 1; step < maxRadius; step += corridorStep) {
           const x = Math.round(cx + Math.cos(angle) * step);
           const y = Math.round(cy + Math.sin(angle) * step);
-          carveRect(ctx, x - Math.floor(corridorWidth / 2), y - Math.floor(corridorWidth / 2), x + Math.floor(corridorWidth / 2), y + Math.floor(corridorWidth / 2));
-          if (step % (ringSpacing * 2) === 0) {
+          carveRect(ctx, x - Math.floor(safeCorridor / 2), y - Math.floor(safeCorridor / 2), x + Math.floor(safeCorridor / 2), y + Math.floor(safeCorridor / 2));
+          if (step % (safeRingSpacing * 2) === 0) {
             const mx = Math.round(cx + Math.cos(mid) * step);
             const my = Math.round(cy + Math.sin(mid) * step);
-            carveLine(ctx, x, y, mx, my, Math.max(1, corridorWidth - 1));
+            carveLine(ctx, x, y, mx, my, Math.max(1, safeCorridor - 1));
           }
         }
       }
-      carveRing(ctx, cx, cy, maxRadius - 1, corridorWidth);
+      carveRing(ctx, cx, cy, maxRadius - 1, safeCorridor);
       if (structureTags) sprinkleStructures(ctx, structureTags, 3);
       ctx.ensureConnectivity();
       applyPalette(ctx, palette, options.paletteOptions || {});
@@ -557,27 +606,29 @@
     } = options;
     return function(ctx) {
       fillSolid(ctx, 1);
+      const safeBandWidth = ensurePositiveInt(bandWidth, 2, { min: 1, max: 6 });
+      const safeGap = ensurePositiveInt(gap, 2, { min: 1, max: 8 });
       let toggle = 0;
-      for (let y = 2; y < ctx.height - 2; y += bandWidth + gap) {
-        for (let yy = 0; yy < bandWidth && y + yy < ctx.height - 2; yy++) {
+      for (let y = 2; y < ctx.height - 2; y += safeBandWidth + safeGap) {
+        for (let yy = 0; yy < safeBandWidth && y + yy < ctx.height - 2; yy++) {
           if (toggle % 2 === 0) {
             carveRect(ctx, 2, y + yy, ctx.width - 3, y + yy);
           } else {
-            for (let x = 2; x < ctx.width - 2; x += gap + bandWidth) {
-              carveRect(ctx, x, y + yy, Math.min(ctx.width - 3, x + bandWidth - 1), y + yy);
+            for (let x = 2; x < ctx.width - 2; x += safeGap + safeBandWidth) {
+              carveRect(ctx, x, y + yy, Math.min(ctx.width - 3, x + safeBandWidth - 1), y + yy);
             }
           }
         }
         toggle++;
       }
       toggle = 0;
-      for (let x = 2; x < ctx.width - 2; x += bandWidth + gap) {
-        for (let xx = 0; xx < bandWidth && x + xx < ctx.width - 2; xx++) {
+      for (let x = 2; x < ctx.width - 2; x += safeBandWidth + safeGap) {
+        for (let xx = 0; xx < safeBandWidth && x + xx < ctx.width - 2; xx++) {
           if (toggle % 2 === 0) {
             carveRect(ctx, x + xx, 2, x + xx, ctx.height - 3);
           } else {
-            for (let y = 2; y < ctx.height - 2; y += gap + bandWidth) {
-              carveRect(ctx, x + xx, y, x + xx, Math.min(ctx.height - 3, y + bandWidth - 1));
+            for (let y = 2; y < ctx.height - 2; y += safeGap + safeBandWidth) {
+              carveRect(ctx, x + xx, y, x + xx, Math.min(ctx.height - 3, y + safeBandWidth - 1));
             }
           }
         }
@@ -606,9 +657,13 @@
     } = options;
     return function(ctx) {
       fillSolid(ctx, 1);
+      const safeClusters = ensurePositiveInt(clusters, 8, { min: 1, max: 32 });
+      const safeMinRadius = ensurePositiveInt(minRadius, 2, { min: 1, max: 6 });
+      const safeMaxRadius = ensurePositiveInt(maxRadius, Math.max(safeMinRadius, 5), { min: safeMinRadius, max: 10 });
+      const safeConnectors = ensurePositiveInt(connectors, 6, { min: 0, max: 32 });
       const points = [];
-      for (let i = 0; i < clusters; i++) {
-        const radius = randomInt(ctx, minRadius, maxRadius);
+      for (let i = 0; i < safeClusters; i++) {
+        const radius = randomInt(ctx, safeMinRadius, safeMaxRadius);
         const px = randomInt(ctx, 4, ctx.width - 5);
         const py = randomInt(ctx, 4, ctx.height - 5);
         carveDisc(ctx, px, py, radius);
@@ -616,11 +671,11 @@
       }
       const cx = Math.floor(ctx.width / 2);
       const cy = Math.floor(ctx.height / 2);
-      carveDisc(ctx, cx, cy, Math.max(minRadius + 1, 3));
+      carveDisc(ctx, cx, cy, Math.max(safeMinRadius + 1, 3));
       points.forEach(p => {
         carveLine(ctx, cx, cy, p.x, p.y, 2);
       });
-      for (let i = 0; i < connectors && points.length > 1; i++) {
+      for (let i = 0; i < safeConnectors && points.length > 1; i++) {
         const a = points[randomInt(ctx, 0, points.length - 1)];
         const b = points[randomInt(ctx, 0, points.length - 1)];
         if (a !== b) carveLine(ctx, a.x, a.y, b.x, b.y, 2);

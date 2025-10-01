@@ -8070,6 +8070,8 @@ function drawDomainEffects() {
     if (!Array.isArray(domainCrystals) || !domainCrystals.length) return;
     const startX = camera.x;
     const startY = camera.y;
+    const endX = startX + VIEWPORT_WIDTH;
+    const endY = startY + VIEWPORT_HEIGHT;
     const cellW = canvas.width / VIEWPORT_WIDTH;
     const cellH = canvas.height / VIEWPORT_HEIGHT;
     const darknessActive = isDarknessActive();
@@ -8085,23 +8087,61 @@ function drawDomainEffects() {
         const screenX = (viewportX + 0.5) * cellW;
         const screenY = (viewportY + 0.5) * cellH;
         const radiusTiles = Math.max(0.5, Number(crystal.radius) || 0);
-        const radiusPx = Math.sqrt(cellW * cellW + cellH * cellH) * radiusTiles * 0.5;
+        if (radiusTiles <= 0) continue;
+        const radiusSq = radiusTiles * radiusTiles;
         const color = getDomainCrystalColor(crystal);
         const pulse = 0.55 + 0.35 * Math.sin((now / 320) + cx + cy);
 
+        const minTileX = Math.max(startX, Math.floor(cx - radiusTiles));
+        const maxTileX = Math.min(endX - 1, Math.floor(cx + radiusTiles));
+        const minTileY = Math.max(startY, Math.floor(cy - radiusTiles));
+        const maxTileY = Math.min(endY - 1, Math.floor(cy + radiusTiles));
+        const insetBase = Math.min(cellW, cellH) * 0.1;
+        const strokeWidth = Math.max(1.5, Math.min(cellW, cellH) * 0.12);
+        const inset = Math.max(insetBase, strokeWidth * 0.5);
+
         ctx.save();
-        ctx.fillStyle = hexToRgba(color, 0.15 + 0.2 * pulse);
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, radiusPx, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = hexToRgba(color, 0.45 + 0.25 * pulse);
-        ctx.lineWidth = Math.max(1.5, Math.min(cellW, cellH) * 0.1);
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, radiusPx, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        for (let ty = minTileY; ty <= maxTileY; ty++) {
+            if (ty < 0 || ty >= MAP_HEIGHT) continue;
+            for (let tx = minTileX; tx <= maxTileX; tx++) {
+                if (tx < 0 || tx >= MAP_WIDTH) continue;
+                const dx = tx - cx;
+                const dy = ty - cy;
+                if (dx * dx + dy * dy > radiusSq) continue;
+                if (darknessActive && !isTileVisible(tx, ty)) continue;
+                const tileViewportX = tx - startX;
+                const tileViewportY = ty - startY;
+                if (tileViewportX < 0 || tileViewportY < 0 || tileViewportX >= VIEWPORT_WIDTH || tileViewportY >= VIEWPORT_HEIGHT) continue;
+                const tileScreenX = tileViewportX * cellW;
+                const tileScreenY = tileViewportY * cellH;
+                const blink = 0.5 + 0.5 * Math.sin((now / 240) + tx * 0.8 + ty * 0.8);
+                const fillAlpha = 0.08 + 0.14 * blink;
+                const strokeAlpha = 0.3 + 0.45 * blink;
+
+                ctx.fillStyle = hexToRgba(color, fillAlpha);
+                ctx.fillRect(
+                    tileScreenX + inset,
+                    tileScreenY + inset,
+                    cellW - inset * 2,
+                    cellH - inset * 2
+                );
+                ctx.lineWidth = strokeWidth;
+                ctx.strokeStyle = hexToRgba(color, strokeAlpha);
+                ctx.strokeRect(
+                    tileScreenX + inset * 0.5,
+                    tileScreenY + inset * 0.5,
+                    cellW - inset,
+                    cellH - inset
+                );
+            }
+        }
+        ctx.restore();
 
         const diamondSize = Math.min(cellW, cellH) * 0.32;
-        ctx.fillStyle = hexToRgba(color, 0.85);
+        ctx.save();
+        ctx.fillStyle = hexToRgba(color, 0.65 + 0.2 * pulse);
         ctx.beginPath();
         ctx.moveTo(screenX, screenY - diamondSize);
         ctx.lineTo(screenX + diamondSize, screenY);

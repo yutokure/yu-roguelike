@@ -1795,6 +1795,150 @@
       return beautifySymbols(input);
     }
 
+    function cloneExpressionNode(node){
+      if (!node) return node;
+      if (typeof node.cloneDeep === 'function') {
+        return node.cloneDeep();
+      }
+      if (typeof node.clone === 'function') {
+        return node.clone();
+      }
+      return node;
+    }
+
+    function unwrapParenthesisNode(node){
+      let current = node;
+      while (current && (math?.isParenthesisNode?.(current) || mathRef?.isParenthesisNode?.(current)) && current.content) {
+        current = current.content;
+      }
+      return current;
+    }
+
+    function nodeToCompactString(node){
+      if (!node) return '';
+      try {
+        const text = node.toString({ parenthesis: 'auto' });
+        return typeof text === 'string' ? text.replace(/\s+/g, '') : '';
+      } catch {
+        try {
+          return String(node).replace(/\s+/g, '');
+        } catch {
+          return '';
+        }
+      }
+    }
+
+    function extractPositiveInteger(node){
+      const cleaned = nodeToCompactString(unwrapParenthesisNode(node));
+      if (/^[+]?[0-9]+$/.test(cleaned)) {
+        const parsed = Number(cleaned);
+        if (Number.isFinite(parsed) && parsed >= 0) {
+          return parsed;
+        }
+      }
+      return null;
+    }
+
+    function isConstantOneNode(node){
+      const cleaned = nodeToCompactString(unwrapParenthesisNode(node));
+      return cleaned === '1' || cleaned === '+1';
+    }
+
+    function detectNthRootDegree(exponentNode){
+      if (!exponentNode) return null;
+      const exponent = unwrapParenthesisNode(exponentNode);
+      if (!exponent) return null;
+      const cleaned = nodeToCompactString(exponent);
+      if (!cleaned) return null;
+      if (cleaned === '1/2' || cleaned === '0.5') {
+        return 2;
+      }
+      const fractionMatch = cleaned.match(/^1\/\(?(-?\d+)\)?$/);
+      if (fractionMatch) {
+        const denom = Number(fractionMatch[1]);
+        if (Number.isFinite(denom) && denom > 0) {
+          return denom;
+        }
+      }
+      if ((math?.isOperatorNode?.(exponent) || mathRef?.isOperatorNode?.(exponent)) && exponent.op === '/' && Array.isArray(exponent.args) && exponent.args.length === 2) {
+        const [numerator, denominator] = exponent.args;
+        if (isConstantOneNode(numerator)) {
+          const denom = extractPositiveInteger(denominator);
+          if (denom) return denom;
+        }
+      }
+      return null;
+    }
+
+    function asLogFunctionNode(node){
+      const inner = unwrapParenthesisNode(node);
+      if (!inner) return null;
+      if ((math?.isFunctionNode?.(inner) || mathRef?.isFunctionNode?.(inner)) && inner.name === 'log' && Array.isArray(inner.args) && inner.args.length === 1) {
+        return inner;
+      }
+      return null;
+    }
+
+    function isEulerConstantNode(node){
+      const inner = unwrapParenthesisNode(node);
+      if (!inner) return false;
+      if ((math?.isSymbolNode?.(inner) || mathRef?.isSymbolNode?.(inner)) && inner.name === 'e') {
+        return true;
+      }
+      const cleaned = nodeToCompactString(inner);
+      return cleaned === 'e' || cleaned === 'ℯ';
+    }
+
+    function restoreSpecialFunctionNodes(node){
+      if (!node || typeof node.transform !== 'function') return node;
+      const FunctionNodeCtor = mathRef?.FunctionNode || math?.FunctionNode;
+      const ConstantNodeCtor = mathRef?.ConstantNode || math?.ConstantNode;
+      if (!FunctionNodeCtor || !ConstantNodeCtor) return node;
+      const isOperatorNode = (value) => math?.isOperatorNode?.(value) || mathRef?.isOperatorNode?.(value);
+      const isFunctionNode = (value) => math?.isFunctionNode?.(value) || mathRef?.isFunctionNode?.(value);
+      return node.transform(child => {
+        if (!child) return child;
+        if (isOperatorNode(child) && child.op === '^' && Array.isArray(child.args) && child.args.length === 2) {
+          const [baseNode, exponentNode] = child.args;
+          const degree = detectNthRootDegree(exponentNode);
+          if (degree === 2) {
+            return new FunctionNodeCtor('sqrt', [cloneExpressionNode(baseNode)]);
+          }
+          if (degree != null) {
+            return new FunctionNodeCtor('nthRoot', [cloneExpressionNode(baseNode), new ConstantNodeCtor(degree)]);
+          }
+        }
+        if (isFunctionNode(child) && child.name === 'pow' && Array.isArray(child.args) && child.args.length === 2) {
+          const [baseNode, exponentNode] = child.args;
+          const degree = detectNthRootDegree(exponentNode);
+          if (degree === 2) {
+            return new FunctionNodeCtor('sqrt', [cloneExpressionNode(baseNode)]);
+          }
+          if (degree != null) {
+            return new FunctionNodeCtor('nthRoot', [cloneExpressionNode(baseNode), new ConstantNodeCtor(degree)]);
+          }
+        }
+        if (isOperatorNode(child) && child.op === '/' && Array.isArray(child.args) && child.args.length === 2) {
+          const numeratorLog = asLogFunctionNode(child.args[0]);
+          const denominatorLog = asLogFunctionNode(child.args[1]);
+          if (numeratorLog && denominatorLog) {
+            const argNode = cloneExpressionNode(numeratorLog.args[0]);
+            const baseNode = cloneExpressionNode(denominatorLog.args[0]);
+            if (isEulerConstantNode(baseNode)) {
+              return new FunctionNodeCtor('ln', [argNode]);
+            }
+            return new FunctionNodeCtor('log', [argNode, baseNode]);
+          }
+        }
+        if (isFunctionNode(child) && child.name === 'log' && Array.isArray(child.args) && child.args.length === 2) {
+          if (isEulerConstantNode(child.args[1])) {
+            return new FunctionNodeCtor('ln', [cloneExpressionNode(child.args[0])]);
+          }
+        }
+        return child;
+      });
+    }
+
     function convertForNumeric(value){
       if (value == null) return value;
       if (!mathRef) return value;
@@ -2300,7 +2444,8 @@
       if (!math || typeof math.simplify !== 'function') return expr;
       try {
         const simplified = math.simplify(expr, scope);
-        return simplified.toString({ parenthesis: 'auto' });
+        const restored = restoreSpecialFunctionNodes(simplified);
+        return restored.toString({ parenthesis: 'auto' });
       } catch {
         return expr;
       }
@@ -2472,7 +2617,8 @@
       const simplified = typeof math.simplify === 'function'
         ? math.simplify(expressionNode, scope)
         : expressionNode;
-      const result = integrateNodeToString(simplified, varName);
+      const restored = restoreSpecialFunctionNodes(simplified);
+      const result = integrateNodeToString(restored, varName);
       if (!result) {
         throw new Error('指定した式の解析的積分を求められませんでした。numericIntegrate を利用してください。');
       }
@@ -3246,19 +3392,92 @@
         return result;
       };
 
+      function convertFactorialInputToNumber(value, target){
+        if (value == null) {
+          throw new Error('factorial の引数には数値を指定してください。');
+        }
+        if (typeof value === 'number') {
+          return value;
+        }
+        if (typeof value === 'bigint') {
+          const numeric = Number(value);
+          if (!Number.isFinite(numeric)) {
+            throw new Error('factorial の引数には有限の実数を指定してください。');
+          }
+          return numeric;
+        }
+        if (typeof value === 'boolean') {
+          return value ? 1 : 0;
+        }
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          if (!trimmed) {
+            throw new Error('factorial の引数には数値を指定してください。');
+          }
+          const parsed = Number(trimmed);
+          if (!Number.isFinite(parsed)) {
+            throw new Error('factorial の引数には有限の実数を指定してください。');
+          }
+          return parsed;
+        }
+        if (target?.isFraction?.(value)) {
+          return value.valueOf();
+        }
+        if (target?.isBigNumber?.(value)) {
+          return value.toNumber();
+        }
+        if (target?.isComplex?.(value)) {
+          throw new Error('factorial の引数には実数を指定してください。');
+        }
+        if (value && typeof value.valueOf === 'function' && value.valueOf() !== value) {
+          return convertFactorialInputToNumber(value.valueOf(), target);
+        }
+        throw new Error('factorial の引数には数値を指定してください。');
+      }
+
       function installFactorialFallback(target, preferFraction){
         if (!target || typeof target.factorial !== 'function') return;
         const original = target.factorial;
         const parseInteger = createIntegerParser(target, 'factorial の引数には 0 以上の整数を指定してください。');
         const convertResult = (value) => convertBigIntToPreferred(target, value, preferFraction);
-        const compute = (value) => convertResult(factorialBigInt(parseInteger(value)));
+        const compute = (value) => {
+          let parsedInt = null;
+          try {
+            parsedInt = parseInteger(value);
+          } catch {
+            parsedInt = null;
+          }
+          if (parsedInt != null) {
+            return convertResult(factorialBigInt(parsedInt));
+          }
+          const numericValue = convertFactorialInputToNumber(value, target);
+          if (!Number.isFinite(numericValue)) {
+            throw new Error('factorial の引数には有限の実数を指定してください。');
+          }
+          if (numericValue < -1) {
+            throw new Error('factorial の引数は -1 より大きい実数を指定してください。');
+          }
+          const rounded = Math.round(numericValue);
+          if (Math.abs(numericValue - rounded) < 1e-12) {
+            if (rounded < 0) {
+              throw new Error('factorial は負の整数では定義されません。');
+            }
+            return convertResult(factorialBigInt(BigInt(rounded)));
+          }
+          const gammaInput = numericValue + 1;
+          if (gammaInput <= 0) {
+            throw new Error('factorial の引数は -1 より大きい実数を指定してください。');
+          }
+          const gammaValue = gammaReal(gammaInput);
+          if (!Number.isFinite(gammaValue)) {
+            return gammaValue;
+          }
+          return gammaValue;
+        };
         target.factorial = function(value){
           try {
             return original.call(target, value);
-          } catch (err) {
-            if (!fractionBigNumberPattern.test(err?.message || '')) {
-              throw err;
-            }
+          } catch {
             return mapStructure(target, value, compute);
           }
         };
@@ -3514,7 +3733,8 @@
         let symbolic = formatValue(result);
         try {
           const simplified = math.simplify(node, scope, { exactFractions: true });
-          const simplifiedText = beautifySymbols(simplified.toString({ parenthesis: 'auto' }));
+          const restored = restoreSpecialFunctionNodes(simplified);
+          const simplifiedText = beautifySymbols(restored.toString({ parenthesis: 'auto' }));
           if (simplifiedText) {
             symbolic = simplifiedText;
           }

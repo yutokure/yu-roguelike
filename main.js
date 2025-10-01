@@ -7,6 +7,7 @@ const statDef = document.getElementById('stat-def');
 const statHpText = document.getElementById('stat-hp-text');
 const statExpText = document.getElementById('stat-exp-text');
 const statStatusEffects = document.getElementById('stat-status-effects');
+const statDomainEffects = document.getElementById('stat-domain-effects');
 const hpBar = document.getElementById('hp-bar');
 const expBar = document.getElementById('exp-bar');
 const statSpText = document.getElementById('stat-sp-text');
@@ -49,6 +50,7 @@ const offerPotion30Btn = document.getElementById('offer-potion30');
 const useHpBoostBtn = document.getElementById('use-hp-boost');
 const useAtkBoostBtn = document.getElementById('use-atk-boost');
 const useDefBoostBtn = document.getElementById('use-def-boost');
+const throwPotion30Btn = document.getElementById('throw-potion30');
 const sandboxMenuButton = document.getElementById('btn-sandbox-menu');
 const sandboxInteractivePanel = document.getElementById('sandbox-interactive-panel');
 const sandboxInteractiveClose = document.getElementById('sandbox-interactive-close');
@@ -68,6 +70,7 @@ const sandboxStatSatietyInput = document.getElementById('sandbox-stat-satiety');
 const sandboxToolSelect = document.getElementById('sandbox-tool-select');
 const sandboxToolFloorType = document.getElementById('sandbox-tool-floor-type');
 const sandboxToolFloorDir = document.getElementById('sandbox-tool-floor-dir');
+const sandboxToolDomainSelect = document.getElementById('sandbox-tool-domain');
 const sandboxToolApplyButton = document.getElementById('sandbox-tool-apply');
 const statusDetails = document.getElementById('status-details');
 const modalStatusEffects = document.getElementById('modal-status-effects');
@@ -91,6 +94,47 @@ function recordAchievementEvent(type, payload) {
         }
     } catch (err) {
         console.warn('Achievement event failed', err);
+    }
+}
+
+function generateDomainCrystalsForFloor(recommendedLevel) {
+    if (isSandboxActive()) return;
+    if (!Number.isFinite(recommendedLevel) || recommendedLevel < 1000) return;
+    const playerLevel = Number.isFinite(player?.level) ? player.level : 1;
+    if (recommendedLevel <= playerLevel - 5) return;
+
+    const bonusSteps = Math.max(0, Math.floor((recommendedLevel - 1000) / 200));
+    const spawnChance = Math.min(1, 0.5 + bonusSteps * 0.1);
+    if (Math.random() >= spawnChance) return;
+
+    let count = 1;
+    if (recommendedLevel >= 2000 && Math.random() < 0.5) {
+        count = 2 + Math.floor(Math.random() * 2); // 2 or 3 crystals
+    }
+
+    const exclude = [{ x: player.x, y: player.y }];
+    if (stairs) exclude.push(stairs);
+    exclude.push(...enemies.map(e => ({ x: e.x, y: e.y })));
+    exclude.push(...chests.map(c => ({ x: c.x, y: c.y })));
+
+    const minDist = Math.max(4, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) * 0.08));
+    const positions = pickSpreadFloorPositions(count, minDist, exclude);
+
+    domainCrystals = positions.map((pos, index) => {
+        const effectId = DOMAIN_EFFECT_ID_LIST[Math.floor(Math.random() * DOMAIN_EFFECT_ID_LIST.length)];
+        const radius = Math.max(2, Math.floor(3 + Math.random() * 4));
+        return {
+            id: null,
+            name: `領域${index + 1}`,
+            x: pos.x,
+            y: pos.y,
+            radius,
+            effects: [effectId]
+        };
+    });
+
+    if (domainCrystals.length) {
+        addMessage('謎めいた領域クリスタルがこの階に出現した…！');
     }
 }
 
@@ -327,9 +371,9 @@ function determineEnemyType(recommendedLevel) {
 function isEnemyEffectSuppressed(enemy) {
     if (!enemy) return false;
     if (isSkillEffectActive('enemyNullify')) return true;
-    const enemyLevel = Math.max(1, Math.floor(Number(enemy.level) || 1));
-    const playerBaseLevel = Math.max(1, Math.floor(player.level || 1));
-    return enemyLevel <= playerBaseLevel - ENEMY_EFFECT_SUPPRESSION_GAP;
+    const enemyLevel = getEffectiveEnemyLevel(enemy);
+    const playerLevel = getEffectivePlayerLevel();
+    return enemyLevel <= playerLevel - ENEMY_EFFECT_SUPPRESSION_GAP;
 }
 
 function createInitialStatusEffects() {
@@ -736,13 +780,73 @@ function applySandboxStatChanges() {
     sandboxLog('プレイヤーパラメータを更新しました。');
 }
 
+function formatSandboxDomainLabel(effect, index) {
+    if (!effect) return `クリスタル${index + 1}`;
+    if (typeof effect.name === 'string' && effect.name.trim()) {
+        return effect.name.trim();
+    }
+    let definitions = null;
+    try {
+        definitions = DOMAIN_EFFECT_DEFINITIONS;
+    } catch (err) {
+        definitions = null;
+    }
+    if (definitions && Array.isArray(effect.effects) && effect.effects.length) {
+        const primary = effect.effects[0];
+        const def = definitions[primary];
+        if (def && def.label) {
+            return def.label;
+        }
+    }
+    if (Array.isArray(effect.effects) && effect.effects.length) {
+        return `効果:${effect.effects[0]}`;
+    }
+    return `クリスタル${index + 1}`;
+}
+
 function updateSandboxToolControls() {
-    if (!sandboxToolFloorType || !sandboxToolFloorDir) return;
-    const type = sandboxToolFloorType.value || 'normal';
-    const needsDir = floorTypeNeedsDirection(type);
-    sandboxToolFloorDir.disabled = !needsDir;
-    if (!needsDir) {
-        sandboxToolFloorDir.value = '';
+    const tool = sandboxToolSelect ? sandboxToolSelect.value : 'floor';
+
+    if (sandboxToolFloorType && sandboxToolFloorDir) {
+        const type = sandboxToolFloorType.value || 'normal';
+        const needsDir = floorTypeNeedsDirection(type);
+        sandboxToolFloorDir.disabled = !needsDir;
+        if (!needsDir) {
+            sandboxToolFloorDir.value = '';
+        }
+    }
+
+    if (sandboxToolDomainSelect) {
+        const list = Array.isArray(sandboxRuntime.config?.domainEffects)
+            ? sandboxRuntime.config.domainEffects
+            : [];
+        const previousValue = sandboxToolDomainSelect.value;
+        sandboxToolDomainSelect.innerHTML = '';
+
+        if (!list.length) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = '配置可能なクリスタルなし';
+            sandboxToolDomainSelect.appendChild(option);
+        } else {
+            const fragment = document.createDocumentFragment();
+            list.forEach((effect, index) => {
+                const option = document.createElement('option');
+                option.value = String(index);
+                option.textContent = formatSandboxDomainLabel(effect, index);
+                fragment.appendChild(option);
+            });
+            sandboxToolDomainSelect.appendChild(fragment);
+            const parsedPrev = Number.parseInt(previousValue, 10);
+            if (Number.isInteger(parsedPrev) && parsedPrev >= 0 && parsedPrev < list.length) {
+                sandboxToolDomainSelect.value = String(parsedPrev);
+            } else {
+                sandboxToolDomainSelect.value = '0';
+            }
+        }
+
+        const hasDomains = list.length > 0;
+        sandboxToolDomainSelect.disabled = tool !== 'domain' || !hasDomains;
     }
 }
 
@@ -928,6 +1032,93 @@ function applySandboxTool() {
             sandboxLog('プレイヤー位置を移動しました。');
             break;
         }
+        case 'domain': {
+            if (!sandboxRuntime.config) {
+                sandboxLog('サンドボックス設定が読み込まれていません。');
+                return;
+            }
+            const domains = Array.isArray(sandboxRuntime.config.domainEffects)
+                ? sandboxRuntime.config.domainEffects
+                : [];
+            if (!domains.length) {
+                sandboxLog('配置できる領域クリスタルがありません。');
+                return;
+            }
+            const selectedIndex = sandboxToolDomainSelect
+                ? Number.parseInt(sandboxToolDomainSelect.value, 10)
+                : NaN;
+            if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= domains.length) {
+                sandboxLog('配置するクリスタルを選択してください。');
+                return;
+            }
+
+            const effect = domains[selectedIndex];
+            const wasFloor = map[targetY][targetX] === 0;
+            map[targetY][targetX] = 0;
+            if (!wasFloor) {
+                if (tileMeta[targetY]) {
+                    tileMeta[targetY][targetX] = null;
+                }
+            }
+            const cfgGridRow = ensureSandboxConfigGridRow(targetY, targetX);
+            if (cfgGridRow) {
+                cfgGridRow[targetX] = 0;
+            }
+            const cfgMetaRow = ensureSandboxConfigTileMetaRow(targetY, targetX);
+            if (cfgMetaRow && !wasFloor) {
+                cfgMetaRow[targetX] = null;
+            }
+
+            effect.x = targetX;
+            effect.y = targetY;
+
+            let runtimeCrystal = null;
+            for (const crystal of domainCrystals) {
+                if (crystal.configRef === effect) {
+                    runtimeCrystal = crystal;
+                    break;
+                }
+                if (!runtimeCrystal && effect.id && crystal.id === effect.id) {
+                    runtimeCrystal = crystal;
+                }
+            }
+            const radius = Math.max(1, Math.floor(Number(effect.radius) || 1));
+            const effects = getDomainEffectIdsForCrystal(effect);
+            const name = typeof effect.name === 'string' ? effect.name : '';
+            if (!runtimeCrystal) {
+                runtimeCrystal = {
+                    id: effect.id || null,
+                    name,
+                    x: targetX,
+                    y: targetY,
+                    radius,
+                    effects,
+                    configRef: effect,
+                    configIndex: selectedIndex
+                };
+                domainCrystals.push(runtimeCrystal);
+            } else {
+                runtimeCrystal.id = effect.id || runtimeCrystal.id || null;
+                runtimeCrystal.name = name;
+                runtimeCrystal.x = targetX;
+                runtimeCrystal.y = targetY;
+                runtimeCrystal.radius = radius;
+                runtimeCrystal.effects = effects;
+                runtimeCrystal.configRef = effect;
+                runtimeCrystal.configIndex = selectedIndex;
+            }
+
+            domainCrystals.sort((a, b) => {
+                const ai = Number.isFinite(a.configIndex) ? a.configIndex : Number.POSITIVE_INFINITY;
+                const bi = Number.isFinite(b.configIndex) ? b.configIndex : Number.POSITIVE_INFINITY;
+                if (ai === bi) return 0;
+                return ai - bi;
+            });
+
+            updateUI();
+            sandboxLog(`${formatSandboxDomainLabel(effect, selectedIndex)}を配置しました。`);
+            break;
+        }
         default:
             break;
     }
@@ -1011,9 +1202,27 @@ function sanitizeSandboxConfig(raw) {
             });
         }
     }
+    const domainEffects = [];
+    if (Array.isArray(raw.domainEffects)) {
+        for (const entry of raw.domainEffects) {
+            if (!entry || typeof entry !== 'object') continue;
+            const pos = normalizePos(entry);
+            const radius = clamp(1, 50, Math.floor(Number(entry.radius) || 3));
+            let effects = Array.isArray(entry.effects) ? entry.effects.filter(id => DOMAIN_EFFECT_DEFINITIONS[id]) : [];
+            if (!effects.length) effects = [DEFAULT_DOMAIN_EFFECT_ID];
+            domainEffects.push({
+                id: typeof entry.id === 'string' ? entry.id : null,
+                name: typeof entry.name === 'string' ? entry.name : '',
+                radius,
+                effects,
+                x: Number.isFinite(pos?.x) ? pos.x : null,
+                y: Number.isFinite(pos?.y) ? pos.y : null
+            });
+        }
+    }
     const playerLevel = computeSandboxStats(raw.playerLevel).level;
     const interactiveMode = !!raw.interactiveMode;
-    return { width, height, grid, tileMeta, playerStart, stairs, enemies, playerLevel, interactiveMode };
+    return { width, height, grid, tileMeta, playerStart, stairs, enemies, domainEffects, playerLevel, interactiveMode };
 }
 
 function validateSandboxConfig(config) {
@@ -1050,6 +1259,23 @@ function validateSandboxConfig(config) {
             errors.push(`敵${index + 1}のHPが無効です。`);
         }
     });
+    if (Array.isArray(config.domainEffects)) {
+        config.domainEffects.forEach((effect, index) => {
+            if (effect.x !== null && effect.y !== null) {
+                if (config.grid?.[effect.y]?.[effect.x] !== 0) {
+                    errors.push(`クリスタル${index + 1}の配置は床マスに設定してください。`);
+                }
+            }
+            if (!Array.isArray(effect.effects) || !effect.effects.length) {
+                errors.push(`クリスタル${index + 1}の効果が設定されていません。`);
+            } else if (effect.effects.some(id => !DOMAIN_EFFECT_DEFINITIONS[id])) {
+                warnings.push(`クリスタル${index + 1}に無効な効果が含まれているため、自動調整されます。`);
+            }
+            if (!Number.isFinite(effect.radius) || effect.radius < 1) {
+                errors.push(`クリスタル${index + 1}の半径が無効です。`);
+            }
+        });
+    }
     return { errors, warnings, config };
 }
 
@@ -1391,6 +1617,399 @@ const FLOOR_TYPES_REQUIRING_DIRECTION = new Set([FLOOR_TYPE_CONVEYOR, FLOOR_TYPE
 const CONVEYOR_CHAIN_LIMIT = 20;
 const COLOR_HEX_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 let tileMeta = [];
+
+const DOMAIN_EFFECT_DEFINITIONS = {
+    attackUp: {
+        id: 'attackUp',
+        label: '攻撃力アップ',
+        icon: '攻↑',
+        color: '#ff6b6b',
+        targets: ['player', 'enemy'],
+        attackMul: 1.25,
+        damageDealtMul: 1.15
+    },
+    defenseUp: {
+        id: 'defenseUp',
+        label: '防御力アップ',
+        icon: '防↑',
+        color: '#4dabf7',
+        targets: ['player', 'enemy'],
+        defenseMul: 1.25,
+        damageTakenMul: 0.85
+    },
+    attackDown: {
+        id: 'attackDown',
+        label: '攻撃力ダウン',
+        icon: '攻↓',
+        color: '#ffa94d',
+        targets: ['player', 'enemy'],
+        attackMul: 0.75,
+        damageDealtMul: 0.85
+    },
+    defenseDown: {
+        id: 'defenseDown',
+        label: '防御力ダウン',
+        icon: '防↓',
+        color: '#ff8787',
+        targets: ['player', 'enemy'],
+        defenseMul: 0.75,
+        damageTakenMul: 1.15
+    },
+    allyBoost: {
+        id: 'allyBoost',
+        label: '味方強化',
+        icon: '友↑',
+        color: '#51cf66',
+        targets: ['player'],
+        attackMul: 1.2,
+        defenseMul: 1.2,
+        damageDealtMul: 1.1
+    },
+    enemyBoost: {
+        id: 'enemyBoost',
+        label: '敵強化',
+        icon: '敵↑',
+        color: '#ffa94d',
+        targets: ['enemy'],
+        attackMul: 1.2,
+        defenseMul: 1.2,
+        damageDealtMul: 1.1
+    },
+    enemyOverpower: {
+        id: 'enemyOverpower',
+        label: '超敵強化',
+        icon: '敵!!',
+        color: '#fd7e14',
+        targets: ['enemy'],
+        attackMul: 1.4,
+        defenseMul: 1.25,
+        damageDealtMul: 1.25,
+        damageTakenMul: 0.9
+    },
+    levelUp: {
+        id: 'levelUp',
+        label: '高レベル化',
+        icon: 'Lv↑',
+        color: '#845ef7',
+        targets: ['player', 'enemy'],
+        levelDelta: 5
+    },
+    levelDown: {
+        id: 'levelDown',
+        label: '低レベル化',
+        icon: 'Lv↓',
+        color: '#fcc419',
+        targets: ['player', 'enemy'],
+        levelDelta: -5
+    },
+    abilityUp: {
+        id: 'abilityUp',
+        label: '能力アップ',
+        icon: '能↑',
+        color: '#20c997',
+        targets: ['player', 'enemy'],
+        abilityMul: 1.15
+    },
+    abilityDown: {
+        id: 'abilityDown',
+        label: '能力ダウン',
+        icon: '能↓',
+        color: '#f06595',
+        targets: ['player', 'enemy'],
+        abilityMul: 0.85
+    },
+    enemyInvincible: {
+        id: 'enemyInvincible',
+        label: '敵無敵',
+        icon: '敵盾',
+        color: '#adb5bd',
+        targets: ['enemy'],
+        invincible: true
+    },
+    allInvincible: {
+        id: 'allInvincible',
+        label: '無敵',
+        icon: '盾',
+        color: '#868e96',
+        targets: ['player', 'enemy'],
+        invincible: true
+    },
+    damageReverse: {
+        id: 'damageReverse',
+        label: 'ダメージ反転',
+        icon: '⇆',
+        color: '#51cf66',
+        targets: ['player', 'enemy'],
+        reverseDamage: true,
+        allowPotionThrow: true
+    },
+    slow: {
+        id: 'slow',
+        label: '遅い',
+        icon: '遅',
+        color: '#74c0fc',
+        targets: ['player', 'enemy'],
+        damageDealtMul: 0.9,
+        tags: ['slow']
+    },
+    fast: {
+        id: 'fast',
+        label: '速い',
+        icon: '速',
+        color: '#63e6be',
+        targets: ['player', 'enemy'],
+        damageDealtMul: 1.1,
+        tags: ['fast']
+    },
+    ailment: {
+        id: 'ailment',
+        label: '状態異常化',
+        icon: '異',
+        color: '#f783ac',
+        targets: ['player', 'enemy'],
+        statusAura: true
+    }
+};
+
+const DEFAULT_DOMAIN_EFFECT_ID = 'attackUp';
+
+const DOMAIN_EFFECT_ID_LIST = Object.keys(DOMAIN_EFFECT_DEFINITIONS);
+
+const DOMAIN_TARGET_TYPES = new Set(['player', 'enemy']);
+
+function getDomainEffectIdsForCrystal(crystal) {
+    if (!crystal) return [DEFAULT_DOMAIN_EFFECT_ID];
+    if (Array.isArray(crystal.effects) && crystal.effects.length) {
+        return crystal.effects.filter(id => DOMAIN_EFFECT_DEFINITIONS[id]);
+    }
+    return [DEFAULT_DOMAIN_EFFECT_ID];
+}
+
+function hexToRgba(hex, alpha = 1) {
+    if (typeof hex !== 'string') return `rgba(148, 84, 237, ${alpha})`;
+    const value = hex.replace('#', '').trim();
+    if (value.length === 3 || value.length === 4) {
+        const r = parseInt(value[0] + value[0], 16) || 148;
+        const g = parseInt(value[1] + value[1], 16) || 84;
+        const b = parseInt(value[2] + value[2], 16) || 237;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    if (value.length === 6 || value.length === 8) {
+        const r = parseInt(value.slice(0, 2), 16) || 148;
+        const g = parseInt(value.slice(2, 4), 16) || 84;
+        const b = parseInt(value.slice(4, 6), 16) || 237;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    return `rgba(148, 84, 237, ${alpha})`;
+}
+
+function getDomainCrystalColor(crystal) {
+    const primaryId = getDomainEffectIdsForCrystal(crystal)[0];
+    const def = DOMAIN_EFFECT_DEFINITIONS[primaryId];
+    return def?.color || '#845ef7';
+}
+
+function getDomainEffectAggregate(targetType, x, y) {
+    const aggregate = {
+        attackMul: 1,
+        defenseMul: 1,
+        abilityMul: 1,
+        damageDealtMul: 1,
+        damageTakenMul: 1,
+        levelDelta: 0,
+        invincible: false,
+        reverseDamage: false,
+        allowPotionThrow: false,
+        statusAura: false,
+        definitions: [],
+        crystals: [],
+        tags: []
+    };
+    if (!DOMAIN_TARGET_TYPES.has(targetType)) {
+        return aggregate;
+    }
+    if (!Array.isArray(domainCrystals) || !domainCrystals.length) {
+        return aggregate;
+    }
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return aggregate;
+    }
+    const seen = new Set();
+    const tagSet = new Set();
+    for (const crystal of domainCrystals) {
+        const cx = Number(crystal?.x);
+        const cy = Number(crystal?.y);
+        if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+        const radius = Math.max(0, Number(crystal.radius) || 0);
+        if (radius <= 0) continue;
+        const dx = x - cx;
+        const dy = y - cy;
+        if (dx * dx + dy * dy > radius * radius) continue;
+        const effectIds = getDomainEffectIdsForCrystal(crystal);
+        const defs = effectIds
+            .map(id => DOMAIN_EFFECT_DEFINITIONS[id])
+            .filter(def => def && Array.isArray(def.targets) && def.targets.includes(targetType));
+        if (!defs.length) continue;
+        aggregate.crystals.push(crystal);
+        for (const def of defs) {
+            if (!seen.has(def.id)) {
+                aggregate.definitions.push(def);
+                seen.add(def.id);
+            }
+            if (typeof def.attackMul === 'number') aggregate.attackMul *= def.attackMul;
+            if (typeof def.defenseMul === 'number') aggregate.defenseMul *= def.defenseMul;
+            if (typeof def.abilityMul === 'number') aggregate.abilityMul *= def.abilityMul;
+            if (typeof def.damageDealtMul === 'number') aggregate.damageDealtMul *= def.damageDealtMul;
+            if (typeof def.damageTakenMul === 'number') aggregate.damageTakenMul *= def.damageTakenMul;
+            if (typeof def.levelDelta === 'number') aggregate.levelDelta += def.levelDelta;
+            if (def.invincible) aggregate.invincible = true;
+            if (def.reverseDamage) aggregate.reverseDamage = true;
+            if (def.allowPotionThrow) aggregate.allowPotionThrow = true;
+            if (def.statusAura) aggregate.statusAura = true;
+            if (Array.isArray(def.tags)) {
+                def.tags.forEach(tag => tagSet.add(tag));
+            }
+        }
+    }
+    aggregate.attackMul = Math.max(0, aggregate.attackMul);
+    aggregate.defenseMul = Math.max(0, aggregate.defenseMul);
+    aggregate.abilityMul = Math.max(0, aggregate.abilityMul);
+    aggregate.damageDealtMul = Math.max(0, aggregate.damageDealtMul);
+    aggregate.damageTakenMul = Math.max(0, aggregate.damageTakenMul);
+    aggregate.levelDelta = Math.floor(aggregate.levelDelta);
+    aggregate.tags = Array.from(tagSet);
+    return aggregate;
+}
+
+function getDomainSignatureFromAggregate(aggregate) {
+    if (!aggregate || !Array.isArray(aggregate.definitions)) return '';
+    return aggregate.definitions.map(def => def.id).sort().join('|');
+}
+
+function resolveDomainInteraction({
+    amount,
+    baseEffect = 'damage',
+    attackerType = null,
+    defenderType = null,
+    attackerPos = null,
+    defenderPos = null,
+    applyInvincibility = true
+} = {}) {
+    const attackerMods = DOMAIN_TARGET_TYPES.has(attackerType)
+        ? getDomainEffectAggregate(attackerType, attackerPos?.x, attackerPos?.y)
+        : {
+            attackMul: 1,
+            defenseMul: 1,
+            abilityMul: 1,
+            damageDealtMul: 1,
+            damageTakenMul: 1,
+            levelDelta: 0,
+            invincible: false,
+            reverseDamage: false,
+            allowPotionThrow: false,
+            statusAura: false,
+            definitions: [],
+            crystals: [],
+            tags: []
+        };
+    const defenderMods = DOMAIN_TARGET_TYPES.has(defenderType)
+        ? getDomainEffectAggregate(defenderType, defenderPos?.x, defenderPos?.y)
+        : {
+            attackMul: 1,
+            defenseMul: 1,
+            abilityMul: 1,
+            damageDealtMul: 1,
+            damageTakenMul: 1,
+            levelDelta: 0,
+            invincible: false,
+            reverseDamage: false,
+            allowPotionThrow: false,
+            statusAura: false,
+            definitions: [],
+            crystals: [],
+            tags: []
+        };
+
+    let effectType = baseEffect === 'healing' ? 'healing' : 'damage';
+    let value = Math.max(0, Math.floor(Number(amount) || 0));
+    const reversed = !!defenderMods.reverseDamage;
+    if (reversed) {
+        effectType = effectType === 'damage' ? 'healing' : 'damage';
+    }
+    if (effectType === 'damage') {
+        value = Math.ceil(value * attackerMods.damageDealtMul);
+        value = Math.ceil(value * defenderMods.damageTakenMul);
+        if (applyInvincibility && defenderMods.invincible && value > 0 && !reversed) {
+            return {
+                amount: 0,
+                effectType: 'damage',
+                prevented: true,
+                reversed,
+                attackerMods,
+                defenderMods
+            };
+        }
+    }
+
+    return {
+        amount: Math.max(0, value),
+        effectType,
+        prevented: false,
+        reversed,
+        attackerMods,
+        defenderMods
+    };
+}
+
+function getPlayerDomainAggregate() {
+    return getDomainEffectAggregate('player', player?.x, player?.y);
+}
+
+function getEnemyDomainAggregate(enemy) {
+    if (!enemy) return getDomainEffectAggregate('enemy', NaN, NaN);
+    return getDomainEffectAggregate('enemy', enemy.x, enemy.y);
+}
+
+function notifyPlayerDomainChange() {
+    const aggregate = getPlayerDomainAggregate();
+    const signature = getDomainSignatureFromAggregate(aggregate);
+    if (signature === lastPlayerDomainSignature) return;
+    if (aggregate.definitions.length) {
+        const label = aggregate.definitions.map(def => def.label).join(' + ');
+        addMessage(`領域効果「${label}」の影響下に入った！`);
+    } else if (lastPlayerDomainSignature) {
+        addMessage('領域効果の影響から解放された。');
+    }
+    lastPlayerDomainSignature = signature;
+}
+
+function applyDomainStatusAuraToPlayer() {
+    const aggregate = getPlayerDomainAggregate();
+    if (!aggregate.statusAura) return;
+    const chance = 0.35;
+    if (Math.random() >= chance) return;
+    const statusPool = ['poison', 'paralysis', 'abilityDown', 'levelDown'];
+    const available = statusPool.filter(id => !isPlayerStatusActive(id));
+    const source = available.length ? available : statusPool;
+    const target = source[Math.floor(Math.random() * source.length)];
+    applyPlayerStatusEffect(target);
+}
+
+function getPotionThrowTargets() {
+    if (!Array.isArray(enemies) || !enemies.length) return [];
+    const playerDomain = getPlayerDomainAggregate();
+    if (!playerDomain.allowPotionThrow) return [];
+    const offsets = [
+        { dx: 1, dy: 0 },
+        { dx: -1, dy: 0 },
+        { dx: 0, dy: 1 },
+        { dx: 0, dy: -1 }
+    ];
+    return enemies.filter(enemy => {
+        return offsets.some(({ dx, dy }) => enemy.x === player.x + dx && enemy.y === player.y + dy)
+            && getEnemyDomainAggregate(enemy).allowPotionThrow;
+    });
+}
 
 function normalizeFloorType(value) {
     if (typeof value !== 'string') return FLOOR_TYPE_NORMAL;
@@ -1987,24 +2606,68 @@ function getAbilityDownMultiplier() {
 
 function getEffectivePlayerMaxHp() {
     const base = Math.max(1, Math.floor(player.maxHp || 1));
-    return Math.max(1, Math.floor(base * getAbilityDownMultiplier()));
+    const domain = getPlayerDomainAggregate();
+    const abilityMul = getAbilityDownMultiplier();
+    const domainAbilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    return Math.max(1, Math.floor(base * abilityMul * domainAbilityMul));
 }
 
 function getEffectivePlayerAttack() {
     const base = Math.max(0, Math.floor(player.attack || 0));
-    return Math.max(0, Math.floor(base * getAbilityDownMultiplier()));
+    const domain = getPlayerDomainAggregate();
+    const abilityMul = getAbilityDownMultiplier();
+    const domainAbilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const domainAttackMul = Number.isFinite(domain.attackMul) ? domain.attackMul : 1;
+    return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainAttackMul));
 }
 
 function getEffectivePlayerDefense() {
     const base = Math.max(0, Math.floor(player.defense || 0));
-    return Math.max(0, Math.floor(base * getAbilityDownMultiplier()));
+    const domain = getPlayerDomainAggregate();
+    const abilityMul = getAbilityDownMultiplier();
+    const domainAbilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const domainDefenseMul = Number.isFinite(domain.defenseMul) ? domain.defenseMul : 1;
+    return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainDefenseMul));
 }
 
 function getEffectivePlayerLevel() {
     const baseLevel = Math.max(1, Math.floor(player.level || 1));
-    if (!isPlayerStatusActive('levelDown')) return baseLevel;
-    const reduction = PLAYER_STATUS_EFFECTS.levelDown?.levelReduction || 0;
-    return Math.max(1, baseLevel - reduction);
+    let effective = baseLevel;
+    if (isPlayerStatusActive('levelDown')) {
+        const reduction = PLAYER_STATUS_EFFECTS.levelDown?.levelReduction || 0;
+        effective = Math.max(1, effective - reduction);
+    }
+    const domain = getPlayerDomainAggregate();
+    if (Number.isFinite(domain.levelDelta) && domain.levelDelta !== 0) {
+        effective += domain.levelDelta;
+    }
+    return Math.max(1, Math.floor(effective));
+}
+
+function getEffectiveEnemyLevel(enemy) {
+    if (!enemy) return 1;
+    const baseLevel = Math.max(1, Math.floor(Number(enemy.level) || 1));
+    const domain = getEnemyDomainAggregate(enemy);
+    const delta = Number.isFinite(domain.levelDelta) ? domain.levelDelta : 0;
+    return Math.max(1, Math.floor(baseLevel + delta));
+}
+
+function getEffectiveEnemyAttack(enemy) {
+    if (!enemy) return 0;
+    const base = Math.max(0, Math.floor(Number(enemy.attack) || 0));
+    const domain = getEnemyDomainAggregate(enemy);
+    const abilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const attackMul = Number.isFinite(domain.attackMul) ? domain.attackMul : 1;
+    return Math.max(0, Math.floor(base * abilityMul * attackMul));
+}
+
+function getEffectiveEnemyDefense(enemy) {
+    if (!enemy) return 0;
+    const base = Math.max(0, Math.floor(Number(enemy.defense) || 0));
+    const domain = getEnemyDomainAggregate(enemy);
+    const abilityMul = Number.isFinite(domain.abilityMul) ? domain.abilityMul : 1;
+    const defenseMul = Number.isFinite(domain.defenseMul) ? domain.defenseMul : 1;
+    return Math.max(0, Math.floor(base * abilityMul * defenseMul));
 }
 
 function enforceEffectiveHpCap() {
@@ -2045,14 +2708,41 @@ function processPlayerStatusTurnStart() {
     if (isPlayerStatusActive('poison')) {
         const poisonDef = PLAYER_STATUS_EFFECTS.poison;
         const ratio = Number.isFinite(poisonDef.damageRatio) ? poisonDef.damageRatio : 0.1;
-        const damage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
-        player.hp = Math.max(0, player.hp - damage);
-        addMessage(`毒で${damage}のダメージ！`);
-        addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#94d82d');
-        playSfx('damage');
-        if (player.hp <= 0) {
-            handlePlayerDeath('毒で倒れた…ゲームオーバー');
-            alive = false;
+        const baseDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
+        const statusResult = resolveDomainInteraction({
+            amount: baseDamage,
+            baseEffect: 'damage',
+            attackerType: 'enemy',
+            defenderType: 'player',
+            attackerPos: { x: player.x, y: player.y },
+            defenderPos: { x: player.x, y: player.y }
+        });
+        if (statusResult.prevented || statusResult.amount <= 0) {
+            addMessage('領域効果により毒のダメージを無効化した！');
+            addPopup(player.x, player.y, 'Guard', '#74c0fc');
+        } else if (statusResult.effectType === 'healing') {
+            const beforeHp = player.hp;
+            const effectiveMax = getEffectivePlayerMaxHp();
+            player.hp = Math.min(effectiveMax, player.hp + statusResult.amount);
+            enforceEffectiveHpCap();
+            const healed = Math.max(0, player.hp - beforeHp);
+            if (healed > 0) {
+                addMessage(`毒の痛みが反転し、HPが${healed}回復した！`);
+                addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
+                playSfx('pickup');
+            } else {
+                addPopup(player.x, player.y, 'Guard', '#74c0fc');
+            }
+        } else {
+            const damage = statusResult.amount;
+            player.hp = Math.max(0, player.hp - damage);
+            addMessage(`毒で${damage}のダメージ！`);
+            addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#94d82d');
+            playSfx('damage');
+            if (player.hp <= 0) {
+                handlePlayerDeath('毒で倒れた…ゲームオーバー');
+                alive = false;
+            }
         }
         if (alive) {
             if (effects.poison.remaining <= 1) {
@@ -2175,12 +2865,16 @@ let prevSp = 0;
 let satietySystemActive = false;
 let activePopupGroup = [];
 let popupGroupTimer = null;
+let lastPlayerDomainSignature = '';
 
 // 敵
 let enemies = [];
 let ENEMY_COUNT = 8;
 
 // アイテム
+
+// 領域効果クリスタル
+let domainCrystals = [];
 
 // -------------------- Modal helpers --------------------
 let __openModalCount = 0;
@@ -6688,6 +7382,7 @@ function generateEntities() {
     enemies = [];
     items = [];
     chests = [];
+    domainCrystals = [];
 
     if (isSandboxActive()) {
         const cfg = sandboxRuntime.config;
@@ -6714,6 +7409,21 @@ function generateEntities() {
             });
         }
         stairs = cfg.stairs ? { x: cfg.stairs.x, y: cfg.stairs.y } : null;
+        if (Array.isArray(cfg.domainEffects)) {
+            domainCrystals = cfg.domainEffects
+                .map((effect, index) => ({ effect, index }))
+                .filter(({ effect }) => Number.isFinite(effect?.x) && Number.isFinite(effect?.y))
+                .map(({ effect, index }) => ({
+                    id: effect.id || null,
+                    name: typeof effect.name === 'string' ? effect.name : '',
+                    x: effect.x,
+                    y: effect.y,
+                    radius: Math.max(1, Math.floor(Number(effect.radius) || 1)),
+                    effects: getDomainEffectIdsForCrystal(effect),
+                    configRef: effect,
+                    configIndex: index
+                }));
+        }
         bossAlive = enemies.some(e => e.boss);
         updateCamera();
         return;
@@ -6810,6 +7520,8 @@ function generateEntities() {
         if (!enemy.type) enemy.type = ENEMY_TYPE_DEFS.normal.id;
     });
 
+    generateDomainCrystalsForFloor(rec);
+
     // 階段を配置
     if (genType === 'snake') {
         // Snake type: place stairs at bottom-right corner on floor
@@ -6859,6 +7571,7 @@ function generateLevel() {
         restoreRandom();
     }
     generateMap();
+    lastPlayerDomainSignature = '';
     const actualGenType = lastGeneratedGenType || resolveCurrentGeneratorType() || 'field';
     updateGeneratorHazardsForFloor(actualGenType);
     if (isDarknessActive()) {
@@ -7050,9 +7763,12 @@ function showEnemyInfo(enemy) {
     // 基本ステータス表示
     enemyModalTitle.textContent = enemy.boss ? 'ボスの情報' : '敵の情報';
     enemyModalLevel.textContent = `Lv.${enemy.level}`;
+    const enemyEffectiveAttack = getEffectiveEnemyAttack(enemy);
+    const enemyEffectiveDefense = getEffectiveEnemyDefense(enemy);
+    const enemyEffectiveLevel = getEffectiveEnemyLevel(enemy);
     enemyModalHp.textContent = `${enemy.hp}/${enemy.maxHp}`;
-    enemyModalAttack.textContent = enemy.attack;
-    enemyModalDefense.textContent = enemy.defense;
+    enemyModalAttack.textContent = enemyEffectiveAttack;
+    enemyModalDefense.textContent = enemyEffectiveDefense;
     const typeDef = getEnemyTypeDefinition(enemy.type);
     if (enemyModalType) enemyModalType.textContent = typeDef.label;
     if (enemyModalTypeDesc) {
@@ -7071,33 +7787,70 @@ function showEnemyInfo(enemy) {
     // プレイヤーから敵へのダメージ
     const playerToEnemy = calculateDamageRange(
         { level: playerEffectiveLevel, attack: playerEffectiveAttack },
-        { level: enemy.level, defense: enemy.defense }
+        { level: enemyEffectiveLevel, defense: enemyEffectiveDefense }
     );
-    
+
     // 敵からプレイヤーへのダメージ
     const enemyToPlayer = calculateDamageRange(
-        { level: enemy.level, attack: enemy.attack },
+        { level: enemyEffectiveLevel, attack: enemyEffectiveAttack },
         { level: playerEffectiveLevel, defense: playerEffectiveDefense }
     );
-    
+
     // 難易度補正を適用
-    const dealMin = Math.ceil(applyDifficultyDamageMultipliers('deal', playerToEnemy.minDamage));
-    const dealMax = Math.ceil(applyDifficultyDamageMultipliers('deal', playerToEnemy.maxDamage));
-    const dealCritMin = Math.ceil(applyDifficultyDamageMultipliers('deal', playerToEnemy.minCrit));
-    const dealCritMax = Math.ceil(applyDifficultyDamageMultipliers('deal', playerToEnemy.maxCrit));
-    
-    const takeMin = Math.ceil(applyDifficultyDamageMultipliers('take', enemyToPlayer.minDamage));
-    const takeMax = Math.ceil(applyDifficultyDamageMultipliers('take', enemyToPlayer.maxDamage));
-    const takeCritMin = Math.ceil(applyDifficultyDamageMultipliers('take', enemyToPlayer.minCrit));
-    const takeCritMax = Math.ceil(applyDifficultyDamageMultipliers('take', enemyToPlayer.maxCrit));
-    
-    // 表示用テキスト作成
-    damageDealRange.textContent = `${dealMin}-${dealMax} (クリ: ${dealCritMin}-${dealCritMax})`;
-    damageTakeRange.textContent = `${takeMin}-${takeMax} (クリ: ${takeCritMin}-${takeCritMax})`;
-    
+    const playerDomain = getPlayerDomainAggregate();
+    const enemyDomain = getEnemyDomainAggregate(enemy);
+
+    const baseDealMin = Math.ceil(applyDifficultyDamageMultipliers('deal', playerToEnemy.minDamage));
+    const baseDealMax = Math.ceil(applyDifficultyDamageMultipliers('deal', playerToEnemy.maxDamage));
+    const baseDealCritMin = Math.ceil(applyDifficultyDamageMultipliers('deal', playerToEnemy.minCrit));
+    const baseDealCritMax = Math.ceil(applyDifficultyDamageMultipliers('deal', playerToEnemy.maxCrit));
+
+    const baseTakeMin = Math.ceil(applyDifficultyDamageMultipliers('take', enemyToPlayer.minDamage));
+    const baseTakeMax = Math.ceil(applyDifficultyDamageMultipliers('take', enemyToPlayer.maxDamage));
+    const baseTakeCritMin = Math.ceil(applyDifficultyDamageMultipliers('take', enemyToPlayer.minCrit));
+    const baseTakeCritMax = Math.ceil(applyDifficultyDamageMultipliers('take', enemyToPlayer.maxCrit));
+
+    const dealMultiplier = Math.max(0,
+        (Number.isFinite(playerDomain.damageDealtMul) ? playerDomain.damageDealtMul : 1) *
+        (Number.isFinite(enemyDomain.damageTakenMul) ? enemyDomain.damageTakenMul : 1)
+    );
+    const takeMultiplier = Math.max(0,
+        (Number.isFinite(enemyDomain.damageDealtMul) ? enemyDomain.damageDealtMul : 1) *
+        (Number.isFinite(playerDomain.damageTakenMul) ? playerDomain.damageTakenMul : 1)
+    );
+
+    let dealText;
+    if (enemyDomain.invincible && !enemyDomain.reverseDamage) {
+        dealText = '0 (領域無敵)';
+    } else if (enemyDomain.reverseDamage) {
+        dealText = `回復 ${baseDealMin}-${baseDealMax} (クリ: ${baseDealCritMin}-${baseDealCritMax})`;
+    } else {
+        const dealMin = Math.ceil(baseDealMin * dealMultiplier);
+        const dealMax = Math.ceil(baseDealMax * dealMultiplier);
+        const dealCritMin = Math.ceil(baseDealCritMin * dealMultiplier);
+        const dealCritMax = Math.ceil(baseDealCritMax * dealMultiplier);
+        dealText = `${dealMin}-${dealMax} (クリ: ${dealCritMin}-${dealCritMax})`;
+    }
+
+    let takeText;
+    if (playerDomain.invincible && !playerDomain.reverseDamage) {
+        takeText = '0 (領域無敵)';
+    } else if (playerDomain.reverseDamage) {
+        takeText = `回復 ${baseTakeMin}-${baseTakeMax} (クリ: ${baseTakeCritMin}-${baseTakeCritMax})`;
+    } else {
+        const takeMin = Math.ceil(baseTakeMin * takeMultiplier);
+        const takeMax = Math.ceil(baseTakeMax * takeMultiplier);
+        const takeCritMin = Math.ceil(baseTakeCritMin * takeMultiplier);
+        const takeCritMax = Math.ceil(baseTakeCritMax * takeMultiplier);
+        takeText = `${takeMin}-${takeMax} (クリ: ${takeCritMin}-${takeCritMax})`;
+    }
+
+    damageDealRange.textContent = dealText;
+    damageTakeRange.textContent = takeText;
+
     // 命中率表示
-    const playerHitRate = calculateHitRate(playerEffectiveLevel, enemy.level);
-    const enemyHitRateValue = calculateHitRate(enemy.level, playerEffectiveLevel);
+    const playerHitRate = calculateHitRate(playerEffectiveLevel, enemyEffectiveLevel);
+    const enemyHitRateValue = calculateHitRate(enemyEffectiveLevel, playerEffectiveLevel);
     
     hitRate.textContent = `${playerHitRate}%`;
     enemyHitRate.textContent = `${enemyHitRateValue}%`;
@@ -7310,6 +8063,66 @@ function drawMap() {
                 ctx.fillRect(screenX + 4, screenY + 4, cellW - 8, cellH - 8);
             }
         }
+    }
+}
+
+function drawDomainEffects() {
+    if (!Array.isArray(domainCrystals) || !domainCrystals.length) return;
+    const startX = camera.x;
+    const startY = camera.y;
+    const cellW = canvas.width / VIEWPORT_WIDTH;
+    const cellH = canvas.height / VIEWPORT_HEIGHT;
+    const darknessActive = isDarknessActive();
+    const now = getAnimationTimestamp();
+    for (const crystal of domainCrystals) {
+        const cx = Number(crystal?.x);
+        const cy = Number(crystal?.y);
+        if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
+        const viewportX = cx - startX;
+        const viewportY = cy - startY;
+        if (viewportX < -2 || viewportY < -2 || viewportX > VIEWPORT_WIDTH + 2 || viewportY > VIEWPORT_HEIGHT + 2) continue;
+        if (darknessActive && !isTileVisible(cx, cy)) continue;
+        const screenX = (viewportX + 0.5) * cellW;
+        const screenY = (viewportY + 0.5) * cellH;
+        const radiusTiles = Math.max(0.5, Number(crystal.radius) || 0);
+        const radiusPx = Math.sqrt(cellW * cellW + cellH * cellH) * radiusTiles * 0.5;
+        const color = getDomainCrystalColor(crystal);
+        const pulse = 0.55 + 0.35 * Math.sin((now / 320) + cx + cy);
+
+        ctx.save();
+        ctx.fillStyle = hexToRgba(color, 0.15 + 0.2 * pulse);
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, radiusPx, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = hexToRgba(color, 0.45 + 0.25 * pulse);
+        ctx.lineWidth = Math.max(1.5, Math.min(cellW, cellH) * 0.1);
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, radiusPx, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const diamondSize = Math.min(cellW, cellH) * 0.32;
+        ctx.fillStyle = hexToRgba(color, 0.85);
+        ctx.beginPath();
+        ctx.moveTo(screenX, screenY - diamondSize);
+        ctx.lineTo(screenX + diamondSize, screenY);
+        ctx.lineTo(screenX, screenY + diamondSize);
+        ctx.lineTo(screenX - diamondSize, screenY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = Math.max(1, Math.min(cellW, cellH) * 0.08);
+        ctx.stroke();
+
+        const effectIds = getDomainEffectIdsForCrystal(crystal);
+        const primaryId = effectIds[0];
+        const def = DOMAIN_EFFECT_DEFINITIONS[primaryId];
+        const iconText = effectIds.length > 1 ? `×${effectIds.length}` : (def?.icon || '◇');
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `${Math.max(10, Math.floor(Math.min(cellW, cellH) * 0.55))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(iconText, screenX, screenY);
+        ctx.restore();
     }
 }
 
@@ -7854,6 +8667,7 @@ function updateUI() {
     const statusList = getPlayerStatusDisplayList();
     const skillEffects = getActiveSkillEffectList();
     const combinedStatusList = statusList.concat(skillEffects);
+    const playerDomain = getPlayerDomainAggregate();
 
     // Show value change indicators
     if (Number.isFinite(currentHp) && Number.isFinite(prevHp) && currentHp !== prevHp) {
@@ -7965,6 +8779,20 @@ function updateUI() {
         }
     }
 
+    if (statDomainEffects) {
+        if (!playerDomain.definitions.length) {
+            statDomainEffects.innerHTML = '';
+            statDomainEffects.style.display = 'none';
+        } else {
+            statDomainEffects.style.display = '';
+            statDomainEffects.innerHTML = playerDomain.definitions.map(def => {
+                const color = def.color || '#845ef7';
+                const icon = def.icon || '◇';
+                return `<span class="status-badge" style="background-color:${color};">${icon} ${def.label}</span>`;
+            }).join('');
+        }
+    }
+
     // Update item modal - fix NaN issue
     const potion30Count = player.inventory?.potion30 || 0;
     const hpBoostCount = player.inventory?.hpBoost || 0;
@@ -7976,6 +8804,16 @@ function updateUI() {
     if (invAtkBoost) invAtkBoost.textContent = atkBoostCount;
     if (invDefBoost) invDefBoost.textContent = defBoostCount;
     if (eatPotion30Btn) eatPotion30Btn.style.display = satietySystemActive ? '' : 'none';
+    if (throwPotion30Btn) {
+        const throwTargets = getPotionThrowTargets();
+        const canThrow = playerDomain.allowPotionThrow && throwTargets.length > 0;
+        if (canThrow) {
+            throwPotion30Btn.style.display = '';
+            throwPotion30Btn.disabled = player.inventory?.potion30 <= 0;
+        } else {
+            throwPotion30Btn.style.display = 'none';
+        }
+    }
     
     // Update detailed status modal
     const modalLevel = document.getElementById('modal-level');
@@ -8375,7 +9213,8 @@ function attackInDirection() {
 function performAttack(enemyAtTarget) {
     const playerEffectiveLevel = getEffectivePlayerLevel();
     const playerEffectiveAttack = getEffectivePlayerAttack();
-    const enemyLevel = Math.max(1, Math.floor(enemyAtTarget.level || 1));
+    const enemyLevel = getEffectiveEnemyLevel(enemyAtTarget);
+    const enemyEffectiveDefense = getEffectiveEnemyDefense(enemyAtTarget);
     const forceHit = isSureHitActiveForEnemy(enemyLevel);
     if (!forceHit && isSkillEffectActive('sureHit') && enemyLevel - playerEffectiveLevel >= SP_HIGH_LEVEL_SUPPRESS_GAP) {
         addMessage('敵のレベルが高すぎて必中攻撃の効果が及ばない…');
@@ -8384,7 +9223,7 @@ function performAttack(enemyAtTarget) {
         addMessage('Miss');
         addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Miss', '#74c0fc');
     } else {
-        const baseDef = enemyAtTarget.defense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
+        const baseDef = enemyEffectiveDefense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
         const attacker = { level: playerEffectiveLevel, attack: playerEffectiveAttack };
         const defender = { level: enemyLevel, defense: baseDef };
         const { dmg, crit } = (function(att, def){
@@ -8398,12 +9237,40 @@ function performAttack(enemyAtTarget) {
             if (d < 1 && d < 0.5) d = 0;
             return { dmg: d, crit: critFlag };
         })(attacker, defender);
-        const applied = Math.ceil(applyDifficultyDamageMultipliers('deal', dmg));
+        const difficultyAdjusted = Math.ceil(applyDifficultyDamageMultipliers('deal', dmg));
+        const domainResult = resolveDomainInteraction({
+            amount: difficultyAdjusted,
+            baseEffect: 'damage',
+            attackerType: 'player',
+            defenderType: 'enemy',
+            attackerPos: { x: player.x, y: player.y },
+            defenderPos: { x: enemyAtTarget.x, y: enemyAtTarget.y }
+        });
+        playSfx('attack');
+        if (domainResult.prevented || domainResult.amount <= 0) {
+            addMessage('領域効果に阻まれてダメージを与えられなかった…');
+            addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Guard', '#74c0fc');
+            return;
+        }
+        if (domainResult.effectType === 'healing') {
+            const beforeHp = enemyAtTarget.hp;
+            const healCap = Number.isFinite(enemyAtTarget.maxHp) ? enemyAtTarget.maxHp : Infinity;
+            enemyAtTarget.hp = Math.min(healCap, (enemyAtTarget.hp || 0) + domainResult.amount);
+            const healed = Math.max(0, enemyAtTarget.hp - beforeHp);
+            if (healed > 0) {
+                addMessage(`領域効果で敵が${healed}回復してしまった！`);
+                addPopup(enemyAtTarget.x, enemyAtTarget.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#74c0fc');
+            } else {
+                addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Guard', '#74c0fc');
+            }
+            return;
+        }
+
+        const applied = domainResult.amount;
         enemyAtTarget.hp -= applied;
         recordAchievementEvent('damage_dealt', { amount: applied, enemy: sanitizeEnemySummary(enemyAtTarget) });
         addMessage(`プレイヤーは敵に ${applied} のダメージを与えた！`);
         const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied>999999999?'+':''}`;
-        playSfx('attack');
         if (enemyAtTarget.hp <= 0) {
             addMessage("敵を倒した！");
             addPopup(enemyAtTarget.x, enemyAtTarget.y, `${dmgText}☠`, '#ffffff', 1.3);
@@ -8674,15 +9541,42 @@ function applyPostMoveEffects() {
             if (!hazardsSuppressed && floorType === FLOOR_TYPE_POISON) {
                 const ratio = calculatePoisonFloorDamageRatio();
                 if (ratio > 0) {
-                    const damage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
-                    player.hp = Math.max(0, player.hp - damage);
-                    recordAchievementEvent('damage_taken', { amount: damage, source: 'poison-floor' });
-                    addMessage(`毒床がダメージ！HPが${damage}減少`);
-                    addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
-                    playSfx('damage');
-                    updateUI();
-                    if (player.hp <= 0) {
-                        handlePlayerDeath('毒床で倒れた…ゲームオーバー');
+                    const baseDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
+                    const hazardResult = resolveDomainInteraction({
+                        amount: baseDamage,
+                        baseEffect: 'damage',
+                        attackerType: 'enemy',
+                        defenderType: 'player',
+                        attackerPos: { x: player.x, y: player.y },
+                        defenderPos: { x: player.x, y: player.y }
+                    });
+                    if (hazardResult.prevented || hazardResult.amount <= 0) {
+                        addMessage('領域効果で毒床のダメージを無効化した！');
+                        addPopup(player.x, player.y, 'Guard', '#74c0fc');
+                    } else if (hazardResult.effectType === 'healing') {
+                        const beforeHp = player.hp;
+                        const effectiveMax = getEffectivePlayerMaxHp();
+                        player.hp = Math.min(effectiveMax, player.hp + hazardResult.amount);
+                        enforceEffectiveHpCap();
+                        const healed = Math.max(0, player.hp - beforeHp);
+                        if (healed > 0) {
+                            addMessage(`毒床のエネルギーが反転し、HPが${healed}回復した！`);
+                            addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
+                            updateUI();
+                        } else {
+                            addPopup(player.x, player.y, 'Guard', '#74c0fc');
+                        }
+                    } else {
+                        const damage = hazardResult.amount;
+                        player.hp = Math.max(0, player.hp - damage);
+                        recordAchievementEvent('damage_taken', { amount: damage, source: 'poison-floor' });
+                        addMessage(`毒床がダメージ！HPが${damage}減少`);
+                        addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+                        playSfx('damage');
+                        updateUI();
+                        if (player.hp <= 0) {
+                            handlePlayerDeath('毒床で倒れた…ゲームオーバー');
+                        }
                     }
                 }
             } else if (!hazardsSuppressed && floorType === FLOOR_TYPE_BOMB) {
@@ -8690,15 +9584,42 @@ function applyPostMoveEffects() {
                 clearFloorTypeAt(player.x, player.y);
                 playSfx('bomb');
                 if (ratio > 0) {
-                    const damage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * ratio));
-                    player.hp = Math.max(0, player.hp - damage);
-                    recordAchievementEvent('damage_taken', { amount: damage, source: 'bomb-floor' });
-                    const popupValue = `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`;
-                    addMessage(`爆弾が爆発！HPが${damage}減少`);
-                    addPopup(player.x, player.y, popupValue, '#ff8787', 1.1);
-                    updateUI();
-                    if (player.hp <= 0) {
-                        handlePlayerDeath('爆弾に巻き込まれて倒れた…ゲームオーバー');
+                    const baseDamage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * ratio));
+                    const hazardResult = resolveDomainInteraction({
+                        amount: baseDamage,
+                        baseEffect: 'damage',
+                        attackerType: 'enemy',
+                        defenderType: 'player',
+                        attackerPos: { x: player.x, y: player.y },
+                        defenderPos: { x: player.x, y: player.y }
+                    });
+                    if (hazardResult.prevented || hazardResult.amount <= 0) {
+                        addMessage('領域効果で爆風を防いだ！');
+                        addPopup(player.x, player.y, 'Guard', '#74c0fc');
+                    } else if (hazardResult.effectType === 'healing') {
+                        const beforeHp = player.hp;
+                        const effectiveMax = getEffectivePlayerMaxHp();
+                        player.hp = Math.min(effectiveMax, player.hp + hazardResult.amount);
+                        enforceEffectiveHpCap();
+                        const healed = Math.max(0, player.hp - beforeHp);
+                        if (healed > 0) {
+                            addMessage(`爆風の力が反転し、HPが${healed}回復した！`);
+                            addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
+                            updateUI();
+                        } else {
+                            addPopup(player.x, player.y, 'Guard', '#74c0fc');
+                        }
+                    } else {
+                        const damage = hazardResult.amount;
+                        player.hp = Math.max(0, player.hp - damage);
+                        recordAchievementEvent('damage_taken', { amount: damage, source: 'bomb-floor' });
+                        const popupValue = `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`;
+                        addMessage(`爆弾が爆発！HPが${damage}減少`);
+                        addPopup(player.x, player.y, popupValue, '#ff8787', 1.1);
+                        updateUI();
+                        if (player.hp <= 0) {
+                            handlePlayerDeath('爆弾に巻き込まれて倒れた…ゲームオーバー');
+                        }
                     }
                 } else {
                     addMessage('爆弾が爆発したがダメージは受けなかった！');
@@ -8750,6 +9671,11 @@ function applyPostMoveEffects() {
             if (moved) {
                 continue;
             }
+        }
+
+        if (!isGameOver) {
+            notifyPlayerDomainChange();
+            applyDomainStatusAuraToPlayer();
         }
 
         return { continueSliding: shouldSlide && !isGameOver };
@@ -8847,6 +9773,7 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawMap();
+    drawDomainEffects();
     drawPlayer();
     drawEnemies();
     drawDefeatedEnemies(); // Draw defeat animations
@@ -9008,13 +9935,14 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     }
     const playerEffectiveLevel = getEffectivePlayerLevel();
     const playerEffectiveDefense = getEffectivePlayerDefense();
-    if (!hitCheck(enemy.level || 1, playerEffectiveLevel || 1)) {
+    const enemyEffectiveLevel = getEffectiveEnemyLevel(enemy);
+    if (!hitCheck(enemyEffectiveLevel || 1, playerEffectiveLevel || 1)) {
         addMessage('敵は外した！');
         addPopup(player.x, player.y, 'Miss', '#74c0fc');
         return;
     }
 
-    const attacker = { level: enemy.level || 1, attack: enemy.attack || 0 };
+    const attacker = { level: enemyEffectiveLevel, attack: getEffectiveEnemyAttack(enemy) };
     const defender = { level: playerEffectiveLevel, defense: playerEffectiveDefense };
     const { dmg, crit } = (function(att, def){
         const base = Math.max(1, att.attack - Math.floor(def.defense / 2));
@@ -9028,18 +9956,45 @@ function executeEnemyAttack(enemy, stepX, stepY) {
         return { dmg: d, crit: critFlag };
     })(attacker, defender);
 
-    const applied = Math.ceil(applyDifficultyDamageMultipliers('take', dmg));
-    if (applied > 0) {
-        player.hp = Math.max(0, player.hp - applied);
-        recordAchievementEvent('damage_taken', { amount: applied, source: 'enemy', enemy: sanitizeEnemySummary(enemy) });
-        addMessage(`敵はプレイヤーに ${applied} のダメージを与えた！`);
-        const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied > 999999999 ? '+' : ''}`;
-        addPopup(player.x, player.y, dmgText, crit ? '#ffa94d' : '#ff6b6b', crit ? 1.15 : 1);
-        playSfx('damage');
-    } else {
-        addMessage('敵の攻撃は効果がなかった！');
+    const difficultyAdjusted = Math.ceil(applyDifficultyDamageMultipliers('take', dmg));
+    const domainResult = resolveDomainInteraction({
+        amount: difficultyAdjusted,
+        baseEffect: 'damage',
+        attackerType: 'enemy',
+        defenderType: 'player',
+        attackerPos: { x: enemy.x, y: enemy.y },
+        defenderPos: { x: player.x, y: player.y }
+    });
+
+    if (domainResult.prevented || domainResult.amount <= 0) {
+        addMessage('領域効果に守られ、ダメージを受けなかった！');
         addPopup(player.x, player.y, 'Guard', '#74c0fc');
+        return;
     }
+
+    if (domainResult.effectType === 'healing') {
+        const beforeHp = player.hp;
+        const effectiveMax = getEffectivePlayerMaxHp();
+        player.hp = Math.min(effectiveMax, player.hp + domainResult.amount);
+        enforceEffectiveHpCap();
+        const healed = Math.max(0, player.hp - beforeHp);
+        if (healed > 0) {
+            addMessage(`領域効果で敵の攻撃が回復に変わった！HPが${healed}回復`);
+            addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
+        } else {
+            addPopup(player.x, player.y, 'Guard', '#74c0fc');
+        }
+        updateUI();
+        return;
+    }
+
+    const applied = domainResult.amount;
+    player.hp = Math.max(0, player.hp - applied);
+    recordAchievementEvent('damage_taken', { amount: applied, source: 'enemy', enemy: sanitizeEnemySummary(enemy) });
+    addMessage(`敵はプレイヤーに ${applied} のダメージを与えた！`);
+    const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied > 999999999 ? '+' : ''}`;
+    addPopup(player.x, player.y, dmgText, crit ? '#ffa94d' : '#ff6b6b', crit ? 1.15 : 1);
+    playSfx('damage');
 
     if (player.hp <= 0) {
         handlePlayerDeath('ゲームオーバー');
@@ -9254,14 +10209,40 @@ importFileInput && importFileInput.addEventListener('change', async (e) => {
 usePotion30Btn && usePotion30Btn.addEventListener('click', () => {
     if (player.inventory.potion30 <= 0) return;
     const effectiveMax = getEffectivePlayerMaxHp();
-    const heal = Math.ceil(effectiveMax * 0.3);
-    const beforeHp = player.hp;
-    player.hp = Math.min(effectiveMax, player.hp + heal);
-    enforceEffectiveHpCap();
-    const healed = Math.max(0, player.hp - beforeHp);
+    const baseHeal = Math.ceil(effectiveMax * 0.3);
+    const result = resolveDomainInteraction({
+        amount: baseHeal,
+        baseEffect: 'healing',
+        attackerType: 'player',
+        defenderType: 'player',
+        attackerPos: { x: player.x, y: player.y },
+        defenderPos: { x: player.x, y: player.y },
+        applyInvincibility: false
+    });
     player.inventory.potion30 -= 1;
-    addMessage(`ポーションを使用！HPが${healed}回復`);
-    playSfx('pickup');
+    if (result.effectType === 'damage' && result.amount > 0) {
+        const damage = result.amount;
+        player.hp = Math.max(0, player.hp - damage);
+        recordAchievementEvent('damage_taken', { amount: damage, source: 'reverse-potion' });
+        addMessage(`ポーションが反転し、${damage}のダメージを受けた！`);
+        addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+        playSfx('damage');
+        if (player.hp <= 0) {
+            handlePlayerDeath('反転した回復薬で倒れてしまった…ゲームオーバー');
+        }
+    } else {
+        const beforeHp = player.hp;
+        player.hp = Math.min(effectiveMax, player.hp + result.amount);
+        enforceEffectiveHpCap();
+        const healed = Math.max(0, player.hp - beforeHp);
+        if (healed > 0) {
+            addMessage(`ポーションを使用！HPが${healed}回復`);
+            addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
+        } else {
+            addMessage('ポーションを使用したが体調に変化はなかった。');
+        }
+        playSfx('pickup');
+    }
     updateUI();
     saveAll();
 });
@@ -9304,6 +10285,77 @@ offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
     playSfx('pickup');
     const display = floorSpValue(gained);
     addMessage(`回復アイテムを捧げ、SPを${display}獲得した。`);
+    updateUI();
+    saveAll();
+});
+
+throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {
+    const targets = getPotionThrowTargets();
+    if (!targets.length) {
+        addMessage('投げつける範囲に敵がいない。');
+        return;
+    }
+    if (player.inventory?.potion30 <= 0) {
+        addMessage('投げつける回復アイテムがない。');
+        return;
+    }
+    const target = targets.reduce((best, enemy) => {
+        if (!best) return enemy;
+        return enemy.level > best.level ? enemy : best;
+    }, null);
+    if (!target) {
+        addMessage('投げつける相手が見つからなかった。');
+        return;
+    }
+    const enemyLevel = getEffectiveEnemyLevel(target);
+    const playerLevel = getEffectivePlayerLevel();
+    if (enemyLevel >= playerLevel + 8) {
+        addMessage('敵のレベルが高すぎて投げつけても効果がなかった…');
+        addPopup(target.x, target.y, 'Miss', '#74c0fc');
+        playSfx('attack');
+        return;
+    }
+    player.inventory.potion30 -= 1;
+    const baseDamage = Math.max(1, Math.floor((Number(target.maxHp) || 1) * 0.3));
+    const result = resolveDomainInteraction({
+        amount: baseDamage,
+        baseEffect: 'healing',
+        attackerType: 'player',
+        defenderType: 'enemy',
+        attackerPos: { x: player.x, y: player.y },
+        defenderPos: { x: target.x, y: target.y },
+        applyInvincibility: true
+    });
+    playSfx('attack');
+    if (result.prevented || result.effectType !== 'damage' || result.amount <= 0) {
+        addMessage('回復アイテムを投げつけたが効果がなかった。');
+        addPopup(target.x, target.y, 'Guard', '#74c0fc');
+        updateUI();
+        saveAll();
+        return;
+    }
+
+    const damage = result.amount;
+    target.hp -= damage;
+    recordAchievementEvent('damage_dealt', { amount: damage, enemy: sanitizeEnemySummary(target), method: 'potion_throw' });
+    addMessage(`回復アイテムを投げつけ、敵に${damage}のダメージを与えた！`);
+    addPopup(target.x, target.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ffa94d', 1.1);
+
+    if (target.hp <= 0) {
+        addMessage('敵を撃破した！');
+        addPopup(target.x, target.y, '☠', '#ffffff', 1.2);
+        addDefeatedEnemy(target);
+        gainSp(1, { silent: true });
+        grantExpFromEnemy(target.level || 1, target.boss || false);
+        recordAchievementEvent('enemy_defeated', { boss: !!target.boss, level: target.level, enemy: sanitizeEnemySummary(target) });
+        if (target.boss) {
+            recordAchievementEvent('boss_defeated', { level: target.level, enemy: sanitizeEnemySummary(target) });
+            bossAlive = false;
+        }
+        const idx = enemies.indexOf(target);
+        if (idx >= 0) enemies.splice(idx, 1);
+    }
+
     updateUI();
     saveAll();
 });
@@ -9376,6 +10428,10 @@ sandboxApplyStatsButton && sandboxApplyStatsButton.addEventListener('click', () 
 
 sandboxToolApplyButton && sandboxToolApplyButton.addEventListener('click', () => {
     applySandboxTool();
+});
+
+sandboxToolSelect && sandboxToolSelect.addEventListener('change', () => {
+    updateSandboxToolControls();
 });
 
 sandboxToolFloorType && sandboxToolFloorType.addEventListener('change', () => {

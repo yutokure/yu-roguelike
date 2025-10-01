@@ -465,6 +465,7 @@
                                             <button type="button" class="sandbox-brush" data-brush="start" aria-pressed="false">開始位置</button>
                                             <button type="button" class="sandbox-brush" data-brush="stairs" aria-pressed="false">階段</button>
                                             <button type="button" class="sandbox-brush" data-brush="enemy" aria-pressed="false">敵配置</button>
+                                            <button type="button" class="sandbox-brush" data-brush="domain" aria-pressed="false">領域</button>
                                         </div>
                                         <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite">セルをクリックして編集します。</p>
                                         <div class="sandbox-brush-options" aria-labelledby="sandbox-brush-options-title">
@@ -539,6 +540,14 @@
                                         </div>
                                         <div id="sandbox-enemy-list" class="sandbox-enemy-list" aria-live="polite"></div>
                                         <p class="sandbox-note">敵を選択し「敵配置」ブラシでマップ上の位置を更新できます。</p>
+                                    </section>
+                                    <section class="sandbox-section" aria-labelledby="sandbox-domain-title">
+                                        <div class="sandbox-section-header">
+                                            <h4 id="sandbox-domain-title">領域効果クリスタル</h4>
+                                            <button type="button" id="sandbox-add-domain">+ クリスタルを追加</button>
+                                        </div>
+                                        <div id="sandbox-domain-list" class="sandbox-domain-list" aria-live="polite"></div>
+                                        <p class="sandbox-note">クリスタルを選択し「領域」ブラシでマップ上の位置と効果範囲を設定します。</p>
                                     </section>
                                 </div>
                                 <div class="sandbox-map-wrapper">
@@ -885,6 +894,7 @@
                         <option value="stairs">階段を設置</option>
                         <option value="start">開始位置を移動</option>
                         <option value="erase">床に戻す</option>
+                        <option value="domain">領域クリスタルを配置</option>
                     </select>
                 </label>
                 <label>床タイプ
@@ -906,6 +916,11 @@
                         <option value="right">→ 右</option>
                         <option value="down">↓ 下</option>
                         <option value="left">← 左</option>
+                    </select>
+                </label>
+                <label>領域クリスタル
+                    <select id="sandbox-tool-domain">
+                        <option value="">配置可能なクリスタルなし</option>
                     </select>
                 </label>
                 <div class="sandbox-interactive-actions">
@@ -1001,9 +1016,10 @@
                         <div class="bar-label">SP <span id="stat-sp-text">0/0</span></div>
                         <div class="bar-track"><div id="sp-bar" class="bar-fill"></div></div>
                     </div>
-                    <div class="status-badges" id="stat-status-effects" aria-live="polite"></div>
-                </div>
+                <div class="status-badges" id="stat-status-effects" aria-live="polite"></div>
+                <div class="status-badges status-badges--domain" id="stat-domain-effects" aria-live="polite"></div>
             </div>
+        </div>
             <div id="message-log"></div>
         </div>
         <!-- 右側ポップアップ用の常時空白スペース -->
@@ -1038,12 +1054,13 @@
             <div class="item-row">
                 <span>HP30%回復ポーション</span>
                 <span>x <span id="inv-potion30">0</span></span>
-                <div class="item-actions">
-                    <button id="use-potion30">使用</button>
-                    <button id="eat-potion30" style="display:none;">食べる</button>
-                    <button id="offer-potion30" style="display:none;">捧げる</button>
+                    <div class="item-actions">
+                        <button id="use-potion30">使用</button>
+                        <button id="eat-potion30" style="display:none;">食べる</button>
+                        <button id="offer-potion30" style="display:none;">捧げる</button>
+                        <button id="throw-potion30" style="display:none;">投げつける</button>
+                    </div>
                 </div>
-            </div>
             <div class="item-row">
                 <span>最大HP強化アイテム</span>
                 <span>x <span id="inv-hp-boost">0</span></span>

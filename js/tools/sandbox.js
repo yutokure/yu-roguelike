@@ -15,14 +15,15 @@
     const MIN_SIZE_FALLBACK = 5;
     const MAX_SIZE_FALLBACK = 60;
     const MAX_LEVEL_FALLBACK = 999;
-    const BRUSHES = ['select', 'floor', 'wall', 'start', 'stairs', 'enemy'];
+    const BRUSHES = ['select', 'floor', 'wall', 'start', 'stairs', 'enemy', 'domain'];
     const BRUSH_CURSOR = {
         select: 'default',
         floor: 'pointer',
         wall: 'pointer',
         start: 'pointer',
         stairs: 'pointer',
-        enemy: 'pointer'
+        enemy: 'pointer',
+        domain: 'pointer'
     };
     const FLOOR_TYPES = ['normal', 'ice', 'poison', 'bomb', 'conveyor', 'one-way', 'vertical', 'horizontal'];
     const FLOOR_TYPES_NEED_DIRECTION = new Set(['conveyor', 'one-way']);
@@ -42,6 +43,7 @@
     const GRID_START_COLOR = '#22d3ee';
     const GRID_STAIRS_COLOR = '#f97316';
     const GRID_SELECTED_ENEMY_COLOR = '#f97316';
+    const GRID_DOMAIN_COLOR = '#7c3aed';
     const FLOOR_TYPE_LABELS = {
         ice: '氷',
         poison: '毒',
@@ -68,8 +70,32 @@
     };
 
     let refs = {};
+    const DOMAIN_EFFECT_OPTIONS = [
+        { id: 'attackUp', label: '攻撃力アップ' },
+        { id: 'defenseUp', label: '防御力アップ' },
+        { id: 'attackDown', label: '攻撃力ダウン' },
+        { id: 'defenseDown', label: '防御力ダウン' },
+        { id: 'allyBoost', label: '味方強化' },
+        { id: 'enemyBoost', label: '敵強化' },
+        { id: 'enemyOverpower', label: '超敵強化' },
+        { id: 'levelUp', label: '高レベル化' },
+        { id: 'levelDown', label: '低レベル化' },
+        { id: 'abilityUp', label: '能力アップ' },
+        { id: 'abilityDown', label: '能力ダウン' },
+        { id: 'enemyInvincible', label: '敵無敵' },
+        { id: 'allInvincible', label: '無敵' },
+        { id: 'damageReverse', label: 'ダメージ反転' },
+        { id: 'slow', label: '遅い' },
+        { id: 'fast', label: '速い' },
+        { id: 'ailment', label: '状態異常化' }
+    ];
+
+    const DOMAIN_RADIUS_MIN = 1;
+    const DOMAIN_RADIUS_MAX = 20;
+
     let state = null;
     let enemySeq = 1;
+    let domainSeq = 1;
     let pendingSerializedState = null;
     const paintState = { active: false, pointerId: null, lastKey: null, blockClick: false };
     const EXPORT_FILE_PREFIX = 'sandbox-dungeon';
@@ -340,6 +366,41 @@
         };
     }
 
+    function getDomainEffectLabel(effectId) {
+        const option = DOMAIN_EFFECT_OPTIONS.find(opt => opt.id === effectId);
+        return option ? option.label : effectId;
+    }
+
+    function normalizeDomainEffects(list, width, height) {
+        if (!Array.isArray(list)) return [];
+        const seen = new Set();
+        const effects = [];
+        for (const entry of list) {
+            if (!entry || typeof entry !== 'object') continue;
+            const id = typeof entry.id === 'string' ? entry.id : `domain-${domainSeq++}`;
+            if (seen.has(id)) continue;
+            seen.add(id);
+            const rawEffects = Array.isArray(entry.effects) ? entry.effects : [];
+            const normalizedEffects = rawEffects
+                .map(effectId => DOMAIN_EFFECT_OPTIONS.find(opt => opt.id === effectId)?.id)
+                .filter((val, idx, arr) => typeof val === 'string' && arr.indexOf(val) === idx);
+            if (!normalizedEffects.length) {
+                normalizedEffects.push(DOMAIN_EFFECT_OPTIONS[0].id);
+            }
+            const radius = clamp(DOMAIN_RADIUS_MIN, DOMAIN_RADIUS_MAX, Math.floor(Number(entry.radius) || 3));
+            const pos = normalizePosition(entry, width, height);
+            effects.push({
+                id,
+                name: typeof entry.name === 'string' ? entry.name : '',
+                radius,
+                effects: normalizedEffects,
+                x: pos ? pos.x : null,
+                y: pos ? pos.y : null
+            });
+        }
+        return effects;
+    }
+
     function buildConfigFromState() {
         return {
             width: state.width,
@@ -358,6 +419,14 @@
                 boss: !!e.boss,
                 x: Number.isFinite(e.x) ? e.x : null,
                 y: Number.isFinite(e.y) ? e.y : null
+            })),
+            domainEffects: state.domainEffects.map(effect => ({
+                id: effect.id,
+                name: effect.name,
+                radius: effect.radius,
+                effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
+                x: Number.isFinite(effect.x) ? effect.x : null,
+                y: Number.isFinite(effect.y) ? effect.y : null
             })),
             interactiveMode: !!state.interactiveMode,
             tileMeta: cloneMetaGrid(state.meta)
@@ -386,8 +455,17 @@
                 x: Number.isFinite(enemy.x) ? enemy.x : null,
                 y: Number.isFinite(enemy.y) ? enemy.y : null
             })),
+            domainEffects: state.domainEffects.map(effect => ({
+                id: effect.id,
+                name: effect.name,
+                radius: effect.radius,
+                effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
+                x: Number.isFinite(effect.x) ? effect.x : null,
+                y: Number.isFinite(effect.y) ? effect.y : null
+            })),
             tileMeta: cloneMetaGrid(state.meta),
             selectedEnemyId: state.selectedEnemyId || null,
+            selectedDomainId: state.selectedDomainId || null,
             brush: state.brush,
             lastCell: state.lastCell ? { ...state.lastCell } : null,
             validation: {
@@ -481,6 +559,8 @@
             playerLevel,
             enemies: normalizeEnemies(serialized?.enemies, width, height, maxLevel),
             selectedEnemyId: typeof serialized?.selectedEnemyId === 'string' ? serialized.selectedEnemyId : null,
+            domainEffects: normalizeDomainEffects(serialized?.domainEffects, width, height),
+            selectedDomainId: typeof serialized?.selectedDomainId === 'string' ? serialized.selectedDomainId : null,
             brush: BRUSHES.includes(serialized?.brush) ? serialized.brush : 'floor',
             validation: {
                 errors: Array.isArray(serialized?.validation?.errors) ? serialized.validation.errors.map(e => String(e)) : [],
@@ -510,6 +590,15 @@
         state.playerLevel = payload.playerLevel;
         state.enemies = payload.enemies.map(enemy => ({ ...enemy, id: enemy.id || `enemy-${enemySeq++}` }));
         state.selectedEnemyId = payload.selectedEnemyId;
+        state.domainEffects = payload.domainEffects.map(effect => ({
+            id: effect.id || `domain-${domainSeq++}`,
+            name: typeof effect.name === 'string' ? effect.name : '',
+            radius: clamp(DOMAIN_RADIUS_MIN, DOMAIN_RADIUS_MAX, Math.floor(Number(effect.radius) || 3)),
+            effects: Array.isArray(effect.effects) ? effect.effects.filter((id, idx, arr) => DOMAIN_EFFECT_OPTIONS.some(opt => opt.id === id) && arr.indexOf(id) === idx) : [DOMAIN_EFFECT_OPTIONS[0].id],
+            x: Number.isFinite(effect.x) ? effect.x : null,
+            y: Number.isFinite(effect.y) ? effect.y : null
+        }));
+        state.selectedDomainId = payload.selectedDomainId;
         state.brush = payload.brush;
         state.lastCell = payload.lastCell;
         state.brushSettings = { ...payload.brushSettings };
@@ -531,6 +620,12 @@
             return Number.isFinite(num) ? Math.max(max, num) : max;
         }, 0);
         enemySeq = Math.max(enemySeq, maxEnemyId + 1);
+        const maxDomainId = state.domainEffects.reduce((max, effect) => {
+            const match = typeof effect.id === 'string' ? effect.id.match(/(\d+)$/) : null;
+            const num = match ? Number(match[1]) : NaN;
+            return Number.isFinite(num) ? Math.max(max, num) : max;
+        }, 0);
+        domainSeq = Math.max(domainSeq, maxDomainId + 1);
         render();
         return true;
     }
@@ -565,6 +660,15 @@
                 return { ...enemy, x: null, y: null };
             }
             return enemy;
+        });
+        state.domainEffects = state.domainEffects.map(effect => {
+            if (!Number.isFinite(effect.x) || !Number.isFinite(effect.y)) {
+                return { ...effect, x: null, y: null };
+            }
+            if (effect.x < 0 || effect.x >= width || effect.y < 0 || effect.y >= height) {
+                return { ...effect, x: null, y: null };
+            }
+            return effect;
         });
     }
 
@@ -621,6 +725,15 @@
                 return enemy;
             });
             if (enemyChanged) changed = true;
+            let domainChanged = false;
+            state.domainEffects = state.domainEffects.map(effect => {
+                if (effect.x === x && effect.y === y) {
+                    domainChanged = true;
+                    return { ...effect, x: null, y: null };
+                }
+                return effect;
+            });
+            if (domainChanged) changed = true;
             if (applyWallMetaToCell(x, y)) changed = true;
         } else if (brush === 'start') {
             if (state.grid[y][x] !== 0) {
@@ -657,6 +770,25 @@
                 if (enemy.x !== x || enemy.y !== y) {
                     enemy.x = x;
                     enemy.y = y;
+                    changed = true;
+                }
+                if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
+            }
+        } else if (brush === 'domain') {
+            if (!state.selectedDomainId) {
+                state.tempMessage = '領域ブラシを使う前にクリスタルを選択してください。';
+                renderValidation();
+                return false;
+            }
+            const effect = state.domainEffects.find(d => d.id === state.selectedDomainId);
+            if (effect) {
+                if (state.grid[y][x] !== 0) {
+                    state.grid[y][x] = 0;
+                    changed = true;
+                }
+                if (effect.x !== x || effect.y !== y) {
+                    effect.x = x;
+                    effect.y = y;
                     changed = true;
                 }
                 if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
@@ -759,6 +891,16 @@
             }
             detailParts.push(enemyDetail);
         }
+        const domainsHere = Array.isArray(state.domainEffects) ? state.domainEffects.filter(e => e.x === x && e.y === y) : [];
+        if (domainsHere.length) {
+            const labels = domainsHere.map(effect => {
+                const name = (effect.name || '').trim();
+                const effects = Array.isArray(effect.effects) ? effect.effects.map(getDomainEffectLabel) : [];
+                const effectLabel = effects.length ? effects.join('・') : '効果なし';
+                return name ? `${name}: ${effectLabel}` : effectLabel;
+            });
+            detailParts.push(`領域: ${labels.join(' / ')}`);
+        }
         return detailParts.length ? `${baseLabel} - ${detailParts.join(' / ')}` : baseLabel;
     }
 
@@ -860,6 +1002,16 @@
                     icon = enemiesHere.length > 1 ? `✦${enemiesHere.length}` : '✦';
                     fontSize = enemiesHere.length > 1 ? Math.floor(cellSize * 0.5) : Math.floor(cellSize * 0.6);
                     iconColor = getTextColorForBackground(baseColor);
+                }
+                if (!icon) {
+                    const domainHere = Array.isArray(state.domainEffects)
+                        ? state.domainEffects.filter(effect => effect.x === x && effect.y === y)
+                        : [];
+                    if (domainHere.length) {
+                        icon = domainHere.length > 1 ? `◇${domainHere.length}` : '◇';
+                        fontSize = domainHere.length > 1 ? Math.floor(cellSize * 0.5) : Math.floor(cellSize * 0.58);
+                        iconColor = GRID_DOMAIN_COLOR;
+                    }
                 }
                 if (!icon && isFloor) {
                     const floorType = meta?.floorType || '';
@@ -1207,6 +1359,166 @@
         });
     }
 
+    function renderDomains() {
+        if (!refs.domainList) return;
+        refs.domainList.innerHTML = '';
+        if (!state.domainEffects.length) {
+            const empty = document.createElement('p');
+            empty.textContent = 'クリスタルは未配置です。「クリスタルを追加」ボタンから追加してください。';
+            empty.className = 'sandbox-note';
+            refs.domainList.appendChild(empty);
+            state.selectedDomainId = null;
+            return;
+        }
+        if (!state.selectedDomainId || !state.domainEffects.some(e => e.id === state.selectedDomainId)) {
+            state.selectedDomainId = state.domainEffects[0].id;
+        }
+        state.domainEffects.forEach((effect, index) => {
+            const card = document.createElement('div');
+            card.className = 'sandbox-domain-card';
+            if (effect.id === state.selectedDomainId) {
+                card.classList.add('selected');
+            }
+
+            const header = document.createElement('div');
+            header.className = 'sandbox-domain-header';
+            const title = document.createElement('h5');
+            title.textContent = (effect.name || '').trim() || `クリスタル${index + 1}`;
+            header.appendChild(title);
+
+            const actions = document.createElement('div');
+            actions.className = 'sandbox-domain-actions';
+
+            const selectBtn = document.createElement('button');
+            selectBtn.type = 'button';
+            selectBtn.className = 'select';
+            selectBtn.textContent = '選択';
+            selectBtn.addEventListener('click', () => {
+                state.selectedDomainId = effect.id;
+                render();
+            });
+            actions.appendChild(selectBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'delete';
+            deleteBtn.textContent = '削除';
+            deleteBtn.addEventListener('click', () => {
+                state.domainEffects = state.domainEffects.filter(d => d.id !== effect.id);
+                if (state.selectedDomainId === effect.id) {
+                    state.selectedDomainId = state.domainEffects[0]?.id || null;
+                }
+                render();
+            });
+            actions.appendChild(deleteBtn);
+
+            header.appendChild(actions);
+            card.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'sandbox-domain-grid';
+
+            const nameLabel = document.createElement('label');
+            nameLabel.textContent = '名前';
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = effect.name || '';
+            nameInput.dataset.preserveKey = `domain-${effect.id}-name`;
+            nameInput.addEventListener('input', (e) => {
+                effect.name = e.target.value.slice(0, 40);
+                render();
+            });
+            nameLabel.appendChild(nameInput);
+            grid.appendChild(nameLabel);
+
+            const radiusLabel = document.createElement('label');
+            radiusLabel.textContent = '半径';
+            const radiusInput = document.createElement('input');
+            radiusInput.type = 'number';
+            radiusInput.min = String(DOMAIN_RADIUS_MIN);
+            radiusInput.max = String(DOMAIN_RADIUS_MAX);
+            radiusInput.value = effect.radius || 3;
+            radiusInput.dataset.preserveKey = `domain-${effect.id}-radius`;
+            radiusInput.addEventListener('change', (e) => {
+                const value = clamp(DOMAIN_RADIUS_MIN, DOMAIN_RADIUS_MAX, Math.floor(Number(e.target.value) || effect.radius || 3));
+                effect.radius = value;
+                radiusInput.value = value;
+            });
+            radiusLabel.appendChild(radiusInput);
+            grid.appendChild(radiusLabel);
+
+            const xLabel = document.createElement('label');
+            xLabel.textContent = 'X';
+            const xInput = document.createElement('input');
+            xInput.type = 'number';
+            xInput.min = '0';
+            xInput.max = String(state.width - 1);
+            xInput.value = Number.isFinite(effect.x) ? effect.x : '';
+            xInput.dataset.preserveKey = `domain-${effect.id}-x`;
+            xInput.addEventListener('change', (e) => {
+                const value = Math.floor(Number(e.target.value));
+                if (!Number.isFinite(value)) {
+                    effect.x = null;
+                    e.target.value = '';
+                    return;
+                }
+                effect.x = clamp(0, state.width - 1, value);
+                e.target.value = effect.x;
+            });
+            xLabel.appendChild(xInput);
+            grid.appendChild(xLabel);
+
+            const yLabel = document.createElement('label');
+            yLabel.textContent = 'Y';
+            const yInput = document.createElement('input');
+            yInput.type = 'number';
+            yInput.min = '0';
+            yInput.max = String(state.height - 1);
+            yInput.value = Number.isFinite(effect.y) ? effect.y : '';
+            yInput.dataset.preserveKey = `domain-${effect.id}-y`;
+            yInput.addEventListener('change', (e) => {
+                const value = Math.floor(Number(e.target.value));
+                if (!Number.isFinite(value)) {
+                    effect.y = null;
+                    e.target.value = '';
+                    return;
+                }
+                effect.y = clamp(0, state.height - 1, value);
+                e.target.value = effect.y;
+            });
+            yLabel.appendChild(yInput);
+            grid.appendChild(yLabel);
+
+            const effectsLabel = document.createElement('label');
+            effectsLabel.textContent = '効果';
+            const effectSelect = document.createElement('select');
+            effectSelect.multiple = true;
+            effectSelect.size = Math.min(6, DOMAIN_EFFECT_OPTIONS.length);
+            DOMAIN_EFFECT_OPTIONS.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.id;
+                opt.textContent = option.label;
+                if (Array.isArray(effect.effects) && effect.effects.includes(option.id)) {
+                    opt.selected = true;
+                }
+                effectSelect.appendChild(opt);
+            });
+            effectSelect.addEventListener('change', () => {
+                const selected = Array.from(effectSelect.selectedOptions).map(opt => opt.value);
+                if (!selected.length) {
+                    selected.push(DOMAIN_EFFECT_OPTIONS[0].id);
+                }
+                effect.effects = selected;
+                render();
+            });
+            effectsLabel.appendChild(effectSelect);
+            grid.appendChild(effectsLabel);
+
+            card.appendChild(grid);
+            refs.domainList.appendChild(card);
+        });
+    }
+
     function renderValidation() {
         if (!refs.validation) return;
         const baseErrors = state.validation?.errors || [];
@@ -1285,6 +1597,7 @@
         syncBrushControls();
         renderPlayerPreview();
         renderEnemies();
+        renderDomains();
         renderValidation();
         renderIoStatus();
         if (refs.interactiveModeInput) {
@@ -1386,6 +1699,21 @@
         render();
     }
 
+    function addDomain() {
+        const id = `domain-${domainSeq++}`;
+        const domain = {
+            id,
+            name: `領域${state.domainEffects.length + 1}`,
+            radius: 3,
+            effects: [DOMAIN_EFFECT_OPTIONS[0].id],
+            x: state.lastCell?.x ?? null,
+            y: state.lastCell?.y ?? null
+        };
+        state.domainEffects.push(domain);
+        state.selectedDomainId = id;
+        render();
+    }
+
     function fillGrid(value) {
         state.grid = createEmptyGrid(state.width, state.height, value);
         state.meta = createEmptyMeta(state.width, state.height);
@@ -1393,6 +1721,7 @@
             state.playerStart = null;
             state.stairs = null;
             state.enemies = state.enemies.map(enemy => ({ ...enemy, x: null, y: null }));
+            state.domainEffects = state.domainEffects.map(effect => ({ ...effect, x: null, y: null }));
         }
         render();
     }
@@ -1426,6 +1755,8 @@
             playerPreview: panel.querySelector('#sandbox-player-preview'),
             enemyList: panel.querySelector('#sandbox-enemy-list'),
             addEnemyButton: panel.querySelector('#sandbox-add-enemy'),
+            domainList: panel.querySelector('#sandbox-domain-list'),
+            addDomainButton: panel.querySelector('#sandbox-add-domain'),
             fillFloorButton: panel.querySelector('#sandbox-fill-floor'),
             fillWallButton: panel.querySelector('#sandbox-fill-wall'),
             clearMarkersButton: panel.querySelector('#sandbox-clear-markers'),
@@ -1458,6 +1789,8 @@
             playerLevel: DEFAULT_LEVEL,
             enemies: [],
             selectedEnemyId: null,
+            domainEffects: [],
+            selectedDomainId: null,
             validation: { errors: [], warnings: [] },
             compiledConfig: null,
             tempMessage: '',
@@ -1515,6 +1848,9 @@
         }
         if (refs.addEnemyButton) {
             refs.addEnemyButton.addEventListener('click', addEnemy);
+        }
+        if (refs.addDomainButton) {
+            refs.addDomainButton.addEventListener('click', addDomain);
         }
         if (refs.fillFloorButton) {
             refs.fillFloorButton.addEventListener('click', () => fillGrid(0));

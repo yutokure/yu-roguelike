@@ -41,6 +41,7 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'ruined_labyrinth_pack', name: 'Ruined Labyrinth Pack', entry: 'dungeontypes/ruined_labyrinth.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'ancient_enigma_pack', name: 'Ancient Enigma Excavation Pack', entry: 'dungeontypes/ancient_enigma.js', version: '1.1.0', author: 'builtin-sample' },
   { id: 'sf_expansion_pack', name: 'SF Expansion Pack', entry: 'dungeontypes/sf_expansion.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'celestial_dynasty_pack', name: '華夏王朝拡張パック', entry: 'dungeontypes/celestial_dynasty.js', version: '1.2.0', author: 'builtin-sample' },
   { id: 'neo_research_arcology_pack', name: 'Neo Research Arcology Pack', entry: 'dungeontypes/neo_research_arcology.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'skyrim_nordic_legends_pack', name: 'Skyrim Nordic Legends Pack', entry: 'dungeontypes/skyrim_nordic_legends.js', version: '3.0.0', author: 'modder-sample' },
   { id: 'horror_expansion_pack', name: 'Haunted Horror Expansion Pack', entry: 'dungeontypes/horror_expansion.js', version: '1.0.0', author: 'builtin-sample' },

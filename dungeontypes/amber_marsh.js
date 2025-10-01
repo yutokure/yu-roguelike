@@ -5,6 +5,45 @@
     const H = ctx.height;
     const map = ctx.map;
 
+    const supportsTexture = typeof ctx.setFloorTexture === 'function';
+    const supportsAmbient = typeof ctx.setAmbientEffect === 'function';
+    const isFloor = (x,y) => map[y] && map[y][x] === 0;
+    const paintFloor = (x,y,color) => { if(isFloor(x,y)) ctx.setFloorColor(x,y,color); };
+
+    const applyTexture = (x,y,variant) => {
+      if(supportsTexture){
+        ctx.setFloorTexture(x,y,variant);
+        return;
+      }
+      const palette = variant === 'reed_clump'
+        ? ['#4f6f3a', '#5f7f45', '#6f8f52', '#7c9c59']
+        : ['#c87b30', '#a66424', '#8f4e19', '#b26b28'];
+      paintFloor(x,y, palette[Math.floor(ctx.random()*palette.length)]);
+      const neighbors = [[1,0],[-1,0],[0,1],[0,-1]];
+      neighbors.forEach(([dx,dy]) => {
+        if(ctx.random() < 0.35){
+          const nx = x+dx, ny = y+dy;
+          paintFloor(nx, ny, palette[Math.floor(ctx.random()*palette.length)]);
+        }
+      });
+    };
+
+    const applyMist = (x,y) => {
+      if(supportsAmbient){
+        ctx.setAmbientEffect(x,y,'mist');
+        return;
+      }
+      const offsets = [[0,0],[1,0],[-1,0],[0,1],[0,-1]];
+      offsets.forEach(([dx,dy]) => {
+        const nx = x+dx;
+        const ny = y+dy;
+        if(!isFloor(nx, ny)) return;
+        const density = Math.max(0.35, 0.6 - 0.12*(Math.abs(dx)+Math.abs(dy)) + ctx.random()*0.1);
+        const fogTone = 190 + Math.floor(ctx.random()*25);
+        paintFloor(nx, ny, `rgba(${fogTone}, ${fogTone+15}, ${fogTone+25}, ${density.toFixed(2)})`);
+      });
+    };
+
     for(let y=0;y<H;y++){
       for(let x=0;x<W;x++){
         const edge = x===0 || y===0 || x===W-1 || y===H-1;
@@ -38,10 +77,10 @@
           const fog = 0.2 + 0.3*Math.sin((x+y)/5);
           ctx.setFloorColor(x,y,`rgba(${180 + Math.floor(Math.sin(y/3)*40)}, ${120 + Math.floor(Math.cos(x/3)*30)}, 80, 0.95)`);
           if(ctx.random() < 0.05){
-            ctx.setFloorTexture(x,y, ctx.random() < 0.5 ? 'fallen_leaves' : 'reed_clump');
+            applyTexture(x,y, ctx.random() < 0.5 ? 'fallen_leaves' : 'reed_clump');
           }
           if(ctx.random() < fog){
-            ctx.setAmbientEffect(x,y,'mist');
+            applyMist(x,y);
           }
         } else {
           const hue = 90 + Math.floor(Math.sin(y/2)*20);

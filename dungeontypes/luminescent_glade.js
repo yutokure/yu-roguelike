@@ -5,6 +5,27 @@
     const H = ctx.height;
     const map = ctx.map;
 
+    const supportsTexture = typeof ctx.setFloorTexture === 'function';
+    const isFloor = (x,y) => map[y] && map[y][x] === 0;
+    const paintFloor = (x,y,color) => { if(isFloor(x,y)) ctx.setFloorColor(x,y,color); };
+
+    const applyGlowPool = (x,y) => {
+      if(supportsTexture){
+        ctx.setFloorTexture(x,y,'glow_pool');
+        return;
+      }
+      const center = `rgba(${120 + Math.floor(ctx.random()*20)}, ${240 + Math.floor(ctx.random()*15)}, ${230 + Math.floor(ctx.random()*20)}, 0.95)`;
+      paintFloor(x,y, center);
+      const ring = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
+      ring.forEach(([dx,dy]) => {
+        if(ctx.random() < 0.7){
+          const nx = x+dx, ny = y+dy;
+          const glow = `rgba(${90 + Math.floor(ctx.random()*30)}, ${210 + Math.floor(ctx.random()*25)}, ${200 + Math.floor(ctx.random()*30)}, 0.8)`;
+          paintFloor(nx, ny, glow);
+        }
+      });
+    };
+
     for(let y=0;y<H;y++){
       for(let x=0;x<W;x++){
         const edge = x===0 || y===0 || x===W-1 || y===H-1;
@@ -48,7 +69,7 @@
     for(let i=0;i<Math.floor((W*H)/60);i++){
       const rx = Math.floor(ctx.random()*W);
       const ry = Math.floor(ctx.random()*H);
-      ctx.setFloorTexture(rx, ry, 'glow_pool');
+      if(isFloor(rx, ry)) applyGlowPool(rx, ry);
     }
 
     ctx.ensureConnectivity();

@@ -49,10 +49,10 @@
   const MATERIALS = {
     wood:  { id:'wood',  label:'木材',    density:0.6, restitution:0.25, friction:0.5, color:'#c97a43', flammability:0.8, conductivity:0.1,
              thermalConductivity:0.18, heatCapacity:1.9, ignitionPoint:320, meltingPoint:620, boilingPoint:900, freezePoint:-40, baseTemperature:20,
-             formula:'C6H10O5', composition:{ C:6, H:10, O:5 }, hazards:['flammable'] },
+             formula:'C6H10O5', composition:{ C:6, H:10, O:5 }, hazards:['flammable'], fractureToughness:1.65, crushResistance:1.35 },
     metal: { id:'metal', label:'金属',    density:1.8, restitution:0.15, friction:0.3, color:'#9aa0a6', flammability:0.0, conductivity:0.9,
              thermalConductivity:0.72, heatCapacity:0.9, ignitionPoint:900, meltingPoint:1500, boilingPoint:2900, freezePoint:-80, baseTemperature:20,
-             formula:'Fe', composition:{ Fe:1 }, hazards:['conductive'],
+             formula:'Fe', composition:{ Fe:1 }, hazards:['conductive'], fractureToughness:2.5, crushResistance:2.7,
              reactivity:{
                acid:{ type:'acid-dissolution', energy:900, heat:90, spawnSteam:true, spawnIons:true, spawnDebris:true, structural:0.28, corrosion:0.8, cooldown:0.45 },
                spark:{ type:'thermite', energy:720, heat:360, spawnFire:true, spawnDebris:true, spawnIons:true, structural:0.4, cooldown:0.5 },
@@ -60,46 +60,46 @@
              } },
     rubber:{ id:'rubber',label:'ゴム',    density:0.9, restitution:0.75, friction:0.9, color:'#22262b', flammability:0.2, conductivity:0.05,
              thermalConductivity:0.16, heatCapacity:1.7, ignitionPoint:310, meltingPoint:520, boilingPoint:850, freezePoint:-60, baseTemperature:20,
-             formula:'C5H8', composition:{ C:5, H:8 }, hazards:['elastic'] },
+             formula:'C5H8', composition:{ C:5, H:8 }, hazards:['elastic'], fractureToughness:2.05, crushResistance:1.7 },
     stone: { id:'stone', label:'石材',    density:1.4, restitution:0.1, friction:0.7, color:'#6b7280', flammability:0.05, conductivity:0.2,
              thermalConductivity:0.35, heatCapacity:0.85, ignitionPoint:800, meltingPoint:1200, boilingPoint:2600, freezePoint:-120, baseTemperature:20,
-             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'] },
+             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'], fractureToughness:1.1, crushResistance:2.15 },
     gel:   { id:'gel',   label:'ゼラチン', density:0.4, restitution:0.55, friction:0.2, color:'#60a5fa', flammability:0.0, conductivity:0.3,
              thermalConductivity:0.28, heatCapacity:3.2, ignitionPoint:260, meltingPoint:180, boilingPoint:260, freezePoint:-10, baseTemperature:15,
-             formula:'H2O', composition:{ H:2, O:1 }, hazards:['aqueous'] },
+             formula:'H2O', composition:{ H:2, O:1 }, hazards:['aqueous'], fractureToughness:0.45, crushResistance:0.35 },
     plasma:{ id:'plasma',label:'プラズマ', density:0.1, restitution:0.95, friction:0.05, color:'#f97316', flammability:1.0, conductivity:0.95,
              thermalConductivity:0.95, heatCapacity:0.5, ignitionPoint:1800, meltingPoint:2400, boilingPoint:3200, freezePoint:400, baseTemperature:800,
-             formula:'H+', composition:{ H:1 }, hazards:['superheated','ionized'] },
+             formula:'H+', composition:{ H:1 }, hazards:['superheated','ionized'], fractureToughness:0.25, crushResistance:0.25 },
     ice:   { id:'ice',   label:'氷結',    density:0.92, restitution:0.05, friction:0.08, color:'#a5f3fc', flammability:0.0, conductivity:0.2,
              thermalConductivity:0.42, heatCapacity:2.1, ignitionPoint:0, meltingPoint:0, boilingPoint:100, freezePoint:-40, baseTemperature:-10,
-             formula:'H2O(s)', composition:{ H:2, O:1 }, hazards:['aqueous'] },
+             formula:'H2O(s)', composition:{ H:2, O:1 }, hazards:['aqueous'], fractureToughness:0.65, crushResistance:0.9 },
     sand:  { id:'sand',  label:'砂',      density:1.1, restitution:0.18, friction:0.85, color:'#f5d0a9', flammability:0.05, conductivity:0.05,
              thermalConductivity:0.25, heatCapacity:0.9, ignitionPoint:750, meltingPoint:1400, boilingPoint:2600, freezePoint:-120, baseTemperature:20,
-             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'] },
+             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'], fractureToughness:0.55, crushResistance:1.15 },
     glass: { id:'glass', label:'ガラス',  density:0.7, restitution:0.4,  friction:0.2, color:'#bae6fd', flammability:0.0, conductivity:0.35,
              thermalConductivity:0.5, heatCapacity:0.84, ignitionPoint:900, meltingPoint:1100, boilingPoint:2300, freezePoint:-90, baseTemperature:20,
-             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'] },
+             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'], fractureToughness:0.35, crushResistance:0.55 },
     sodium:{ id:'sodium',label:'ナトリウム', density:0.97, restitution:0.05, friction:0.2, color:'#f4f4f5', flammability:0.95, conductivity:0.8,
              thermalConductivity:0.14, heatCapacity:1.23, ignitionPoint:90, meltingPoint:98, boilingPoint:883, freezePoint:0, baseTemperature:20,
-             formula:'Na', composition:{ Na:1 }, hazards:['alkali-metal','water-reactive','conductive'],
+             formula:'Na', composition:{ Na:1 }, hazards:['alkali-metal','water-reactive','conductive'], fractureToughness:0.55, crushResistance:0.75,
              reactivity:{ water:{ type:'exothermic', energy:2200, heat:420, spawnSteam:true, spawnFire:true, spawnHydrogen:true, structural:0.45, consumeParticle:true, cooldown:0.35 } } },
     copper:{ id:'copper',label:'銅',      density:2.3, restitution:0.22, friction:0.45, color:'#b87333', flammability:0.0, conductivity:0.96,
              thermalConductivity:0.92, heatCapacity:0.39, ignitionPoint:1085, meltingPoint:1085, boilingPoint:2562, freezePoint:-120, baseTemperature:20,
-             formula:'Cu', composition:{ Cu:1 }, hazards:['conductive'],
+             formula:'Cu', composition:{ Cu:1 }, hazards:['conductive'], fractureToughness:2.1, crushResistance:2.35,
              reactivity:{
                acid:{ type:'acid-dissolution', energy:520, heat:70, spawnSteam:true, spawnIons:true, structural:0.18, corrosion:0.5, cooldown:0.6 },
                spark:{ type:'arc-splash', energy:460, heat:220, spawnFire:true, spawnDebris:true, spawnIons:true, structural:0.22, cooldown:0.55 }
              } },
     aluminum:{ id:'aluminum', label:'アルミ', density:1.4, restitution:0.3, friction:0.35, color:'#d4d4d8', flammability:0.0, conductivity:0.6,
                thermalConductivity:0.91, heatCapacity:0.9, ignitionPoint:660, meltingPoint:660, boilingPoint:2470, freezePoint:-120, baseTemperature:20,
-               formula:'Al', composition:{ Al:1 }, hazards:['conductive'],
+               formula:'Al', composition:{ Al:1 }, hazards:['conductive'], fractureToughness:1.85, crushResistance:1.95,
                reactivity:{
                  acid:{ type:'acid-dissolution', energy:780, heat:130, spawnSteam:true, spawnIons:true, structural:0.32, corrosion:0.7, cooldown:0.5 },
                  spark:{ type:'thermite', energy:980, heat:520, spawnFire:true, spawnDebris:true, spawnIons:true, structural:0.48, cooldown:0.65 }
                } },
     titanium:{ id:'titanium', label:'チタン', density:2.1, restitution:0.28, friction:0.42, color:'#9ba6b2', flammability:0.05, conductivity:0.35,
                thermalConductivity:0.22, heatCapacity:0.52, ignitionPoint:1668, meltingPoint:1668, boilingPoint:3287, freezePoint:-150, baseTemperature:20,
-               formula:'Ti', composition:{ Ti:1 }, hazards:['conductive'],
+               formula:'Ti', composition:{ Ti:1 }, hazards:['conductive'], fractureToughness:2.7, crushResistance:2.85,
                reactivity:{
                  acid:{ type:'acid-dissolution', energy:640, heat:120, spawnSteam:true, spawnIons:true, structural:0.32, corrosion:0.6, cooldown:0.65 },
                  fire:{ type:'surface-oxidation', energy:1400, heat:520, spawnFire:true, spawnDebris:true, spawnIons:true, structural:0.58, cooldown:0.7 },
@@ -107,29 +107,29 @@
                } },
     carbon:{ id:'carbon', label:'炭素素材', density:1.6, restitution:0.32, friction:0.55, color:'#334155', flammability:0.45, conductivity:0.4,
              thermalConductivity:0.6, heatCapacity:0.71, ignitionPoint:670, meltingPoint:3500, boilingPoint:4827, freezePoint:-180, baseTemperature:20,
-             formula:'C', composition:{ C:1 }, hazards:['flammable'],
+             formula:'C', composition:{ C:1 }, hazards:['flammable'], fractureToughness:1.9, crushResistance:2.1,
              reactivity:{
                fire:{ type:'combustion', energy:1100, heat:500, spawnFire:true, spawnDebris:true, spawnEmbers:true, structural:0.55, cooldown:0.6 },
                lightning:{ type:'plasma-arc', energy:820, heat:450, spawnFire:true, spawnIons:true, structural:0.45, cooldown:0.75 }
              } },
     quartz:{ id:'quartz', label:'石英',   density:1.3, restitution:0.22, friction:0.58, color:'#d1d5db', flammability:0.0, conductivity:0.08,
              thermalConductivity:0.35, heatCapacity:0.75, ignitionPoint:900, meltingPoint:1650, boilingPoint:2950, freezePoint:-150, baseTemperature:20,
-             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'] },
+             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'], fractureToughness:0.9, crushResistance:1.65 },
     salt:  { id:'salt',  label:'岩塩',    density:1.15, restitution:0.18, friction:0.65, color:'#f1f5f9', flammability:0.0, conductivity:0.35,
              thermalConductivity:0.6, heatCapacity:0.86, ignitionPoint:801, meltingPoint:801, boilingPoint:1413, freezePoint:-120, baseTemperature:20,
-             formula:'NaCl', composition:{ Na:1, Cl:1 }, hazards:['conductive'],
+             formula:'NaCl', composition:{ Na:1, Cl:1 }, hazards:['conductive'], fractureToughness:0.6, crushResistance:1.25,
              reactivity:{
                water:{ type:'dissolution', energy:240, heat:15, spawnSteam:false, spawnIons:true, soak:0.6, structural:0.12, consumeParticle:false, cooldown:0.35 }
              } },
     acid:  { id:'acid',  label:'硫酸',    density:1.45, restitution:0.12, friction:0.4, color:'#fde68a', flammability:0.0, conductivity:0.55,
              thermalConductivity:0.39, heatCapacity:1.4, ignitionPoint:340, meltingPoint:10, boilingPoint:337, freezePoint:-30, baseTemperature:20,
-             formula:'H2SO4', composition:{ H:2, S:1, O:4 }, hazards:['acidic','corrosive','aqueous'] },
+             formula:'H2SO4', composition:{ H:2, S:1, O:4 }, hazards:['acidic','corrosive','aqueous'], fractureToughness:0.4, crushResistance:0.5 },
     polymer:{ id:'polymer', label:'高分子', density:0.95, restitution:0.6, friction:0.55, color:'#0ea5e9', flammability:0.35, conductivity:0.08,
               thermalConductivity:0.24, heatCapacity:1.6, ignitionPoint:420, meltingPoint:260, boilingPoint:540, freezePoint:-60, baseTemperature:20,
-              formula:'C2H4', composition:{ C:2, H:4 }, hazards:['elastic','flammable'] },
+              formula:'C2H4', composition:{ C:2, H:4 }, hazards:['elastic','flammable'], fractureToughness:1.6, crushResistance:1.45 },
     graphene:{ id:'graphene', label:'グラフェン', density:0.22, restitution:0.65, friction:0.35, color:'#1e293b', flammability:0.6, conductivity:0.85,
                thermalConductivity:4.5, heatCapacity:0.72, ignitionPoint:480, meltingPoint:3650, boilingPoint:4200, freezePoint:-200, baseTemperature:20,
-               formula:'C', composition:{ C:1 }, hazards:['conductive','flammable'],
+               formula:'C', composition:{ C:1 }, hazards:['conductive','flammable'], fractureToughness:3.2, crushResistance:2.3,
                reactivity:{
                  fire:{ type:'rapid-combustion', energy:1350, heat:680, spawnFire:true, spawnDebris:true, spawnEmbers:true, spawnIons:true, structural:0.62, cooldown:0.7 },
                  acid:{ type:'oxidative-etch', energy:520, heat:110, spawnSteam:true, spawnIons:true, structural:0.3, corrosion:0.85, cooldown:0.6 },
@@ -137,21 +137,21 @@
                } },
     ceramic:{ id:'ceramic', label:'耐火セラミック', density:1.8, restitution:0.16, friction:0.72, color:'#e2e8f0', flammability:0.0, conductivity:0.04,
               thermalConductivity:0.19, heatCapacity:0.88, ignitionPoint:1500, meltingPoint:1800, boilingPoint:3200, freezePoint:-160, baseTemperature:20,
-              formula:'Al2O3', composition:{ Al:2, O:3 }, hazards:['refractory','insulator'],
+              formula:'Al2O3', composition:{ Al:2, O:3 }, hazards:['refractory','insulator'], fractureToughness:1.05, crushResistance:2.4,
               reactivity:{
                 acid:{ type:'etching', energy:380, heat:40, spawnSteam:true, spawnIons:true, structural:0.18, corrosion:0.55, cooldown:0.6 },
                 fire:{ type:'heat-soak', energy:280, heat:220, spawnFire:false, spawnDebris:false, structural:0.08, cooldown:0.4 }
               } },
     'liquid-nitrogen':{ id:'liquid-nitrogen', label:'液体窒素', density:0.8, restitution:0.02, friction:0.05, color:'#67e8f9', flammability:0.0, conductivity:0.12,
                         thermalConductivity:0.1, heatCapacity:1.04, ignitionPoint:-196, meltingPoint:-210, boilingPoint:-196, freezePoint:-210, baseTemperature:-196,
-                        formula:'N2(l)', composition:{ N:2 }, hazards:['cryogenic','inert'],
+                        formula:'N2(l)', composition:{ N:2 }, hazards:['cryogenic','inert'], fractureToughness:0.3, crushResistance:0.4,
                         reactivity:{
                           fire:{ type:'cryogenic-quench', energy:420, heat:-260, spawnSteam:true, spawnFrost:true, freeze:0.6, soak:0.3, structural:0.18, cooldown:0.5 },
                           lightning:{ type:'ion-quench', energy:520, heat:-180, spawnFrost:true, spawnIons:true, structural:0.22, cooldown:0.6 }
                         } },
     nitroglycerin:{ id:'nitroglycerin', label:'ニトログリセリン', density:1.6, restitution:0.05, friction:0.4, color:'#f87171', flammability:1.0, conductivity:0.02,
                     thermalConductivity:0.18, heatCapacity:1.2, ignitionPoint:210, meltingPoint:13, boilingPoint:200, freezePoint:-10, baseTemperature:18,
-                    formula:'C3H5N3O9', composition:{ C:3, H:5, N:3, O:9 }, hazards:['explosive','flammable'],
+                    formula:'C3H5N3O9', composition:{ C:3, H:5, N:3, O:9 }, hazards:['explosive','flammable'], fractureToughness:0.25, crushResistance:0.3,
                     reactivity:{
                       fire:{ type:'detonation', energy:6800, heat:1600, spawnFire:true, spawnShockwave:true, spawnDebris:true, spawnIons:true, structural:1.3, cooldown:1.2 },
                       spark:{ type:'detonation', energy:6200, heat:1400, spawnFire:true, spawnShockwave:true, spawnDebris:true, spawnIons:true, structural:1.25, cooldown:1.0 },
@@ -1317,7 +1317,11 @@
       body.chemical = createChemicalProfile(mat);
       const densityFactor = mat?.density ?? 1;
       const elasticityFactor = 1.5 - (mat?.restitution ?? body.restitution ?? 0.3);
-      body.fractureThreshold = Math.max(60, (120 + densityFactor * 180) * elasticityFactor);
+      const fractureToughness = clamp(typeof mat?.fractureToughness === 'number' ? mat.fractureToughness : (body.fractureToughness ?? 1), 0.2, 4);
+      const crushResistance = clamp(typeof mat?.crushResistance === 'number' ? mat.crushResistance : (body.crushResistance ?? 1), 0.2, 4);
+      body.fractureToughness = fractureToughness;
+      body.crushResistance = crushResistance;
+      body.fractureThreshold = Math.max(60, (120 + densityFactor * 180) * elasticityFactor * fractureToughness);
     }
 
     function selectObject(obj, kind){
@@ -3392,12 +3396,29 @@
     function applyImpactDamage(body, impulse, contactPoint, normal){
       if (!body || body.static || body.absoluteWall) return;
       const threshold = Math.max(40, body.fractureThreshold || 140);
-      const severity = clamp(impulse / threshold, 0, 2);
-      if (severity <= 0.001) return;
+      const toughness = clamp(body.fractureToughness ?? 1, 0.2, 4);
+      const crushResistance = clamp(body.crushResistance ?? 1, 0.2, 4);
+      const normalized = threshold > 0 ? (impulse / threshold) : 0;
+      const mildCutoff = clamp(0.35 + (crushResistance - 1) * 0.1, 0.2, 0.7);
+      let severity;
+      if (normalized < mildCutoff) {
+        const ratio = normalized / Math.max(0.001, mildCutoff);
+        const softened = Math.pow(ratio, 2.5) * 0.28;
+        if (softened < 0.005) return;
+        severity = softened / Math.max(0.6, toughness);
+      } else {
+        severity = normalized / Math.max(0.6, toughness * 1.05);
+        const heavyOver = Math.max(0, normalized - 1.15);
+        if (heavyOver > 0) {
+          const crushBoost = 0.5 + 0.3 * Math.min(crushResistance, 2.5);
+          severity += heavyOver * crushBoost;
+        }
+      }
+      severity = clamp(severity, 0, 2.2);
       const corrosionPenalty = 1 + (body.corrosion || 0) * 0.03;
       const heatPenalty = body.temperature > (body.meltingPoint || 600) ? 1.4 : 1;
       const wetnessRelief = 1 - clamp(body.wetness * 0.05, 0, 0.5);
-      const integrityLoss = severity * corrosionPenalty * heatPenalty * wetnessRelief * 0.4;
+      const integrityLoss = severity * corrosionPenalty * heatPenalty * wetnessRelief * 0.36;
       body.integrity = clamp((body.integrity ?? 1) - integrityLoss, 0, 1);
       body.damage = clamp((body.damage || 0) + integrityLoss * 0.5, 0, 1.5);
       body.deformTimer = Math.min((body.deformTimer || 0) + 0.2 + severity * 0.4, 2);

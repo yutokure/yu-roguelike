@@ -42,5 +42,10 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'ancient_enigma_pack', name: 'Ancient Enigma Excavation Pack', entry: 'dungeontypes/ancient_enigma.js', version: '1.1.0', author: 'builtin-sample' },
   { id: 'sf_expansion_pack', name: 'SF Expansion Pack', entry: 'dungeontypes/sf_expansion.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'horror_expansion_pack', name: 'Haunted Horror Expansion Pack', entry: 'dungeontypes/horror_expansion.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'multicolor_plains_pack', name: 'Multicolor Plains Pack', entry: 'dungeontypes/plains_variations_pack.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'classic_jrpg_legends_pack', name: '王道ファンタジーJRPGレジェンズパック', entry: 'dungeontypes/classic_jrpg_legends_pack.js', version: '3.0.0', author: 'builtin-sample' },
+  { id: 'traditional_japan_expansion_pack', name: 'Traditional Japan Expansion Pack', entry: 'dungeontypes/traditional_japan_expansion.js', version: '1.2.0', author: 'community-mod' },
+  { id: 'arabian_legends_pack', name: 'Arabian Legends Pack', entry: 'dungeontypes/arabian_legends_pack.js', version: '1.2.0', author: 'builtin-sample' },
+  { id: 'nature_expansion_pack', name: 'Nature Biome Expansion Pack', entry: 'dungeontypes/nature_expansion.js', version: '2.1.0', author: 'builtin-sample' },
+  { id: 'multicolor_plains_pack', name: 'Multicolor Plains Pack', entry: 'dungeontypes/plains_variations_pack.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'western_frontier_pack', name: 'Western Frontier Mega Pack', entry: 'dungeontypes/western_frontier.js', version: '1.0.0', author: 'builtin-sample' }
 ];

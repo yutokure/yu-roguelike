@@ -35,9 +35,15 @@
         if(map[y][x] === 0){
           const sway = Math.sin(x/3) * 0.1 + Math.cos(y/4) * 0.1;
           const g = Math.floor(180 + sway*40);
-          ctx.setFloorColor(x,y,`rgb(${120 + Math.floor(sway*60)}, ${g}, ${120})`);
-          if(ctx.random() < 0.04) ctx.setFloorTexture(x,y,'bamboo_leaf');
-          if(ctx.random() < 0.03) ctx.setFloorTexture(x,y,'stone_path');
+          const baseColor = `rgb(${120 + Math.floor(sway*60)}, ${g}, ${120})`;
+          let chosenColor = baseColor;
+          if(ctx.random() < 0.04) {
+            chosenColor = 'rgb(142, 196, 130)';
+          }
+          if(ctx.random() < 0.03) {
+            chosenColor = 'rgb(170, 160, 140)';
+          }
+          ctx.setFloorColor(x,y,chosenColor);
         } else {
           const hue = 100 + Math.floor(Math.sin((x+y)/4)*30);
           ctx.setWallColor(x,y,`rgb(${60 + hue/2}, ${150 + hue/3}, ${80 + hue/4})`);
@@ -49,7 +55,7 @@
       const ry = Math.floor(ctx.random()*H);
       for(let x=0;x<W;x++){
         if(ctx.random()<0.03){
-          ctx.setFloorTexture(x,ry,'stream');
+          ctx.setFloorColor(x,ry,'rgb(112, 184, 204)');
         }
       }
     }

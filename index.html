@@ -1155,7 +1155,44 @@
                 <span>x <span id="inv-def-boost">0</span></span>
                 <button id="use-def-boost">使用</button>
             </div>
+            <div class="item-row">
+                <span>最大HP特大強化アイテム (+25)</span>
+                <span>x <span id="inv-hp-boost-major">0</span></span>
+                <button id="use-hp-boost-major">使用</button>
+            </div>
+            <div class="item-row">
+                <span>攻撃力特大強化アイテム (+10)</span>
+                <span>x <span id="inv-atk-boost-major">0</span></span>
+                <button id="use-atk-boost-major">使用</button>
+            </div>
+            <div class="item-row">
+                <span>防御力特大強化アイテム (+10)</span>
+                <span>x <span id="inv-def-boost-major">0</span></span>
+                <button id="use-def-boost-major">使用</button>
+            </div>
+            <div class="item-row">
+                <span>SPエリクサー</span>
+                <span>x <span id="inv-sp-elixir">0</span></span>
+                <button id="use-sp-elixir">使用</button>
+            </div>
+            <div class="item-section">
+                <div class="item-section__header">スキル護符（各10ターン）</div>
+                <div id="skill-charm-list" class="skill-charm-list"></div>
+            </div>
             <button class="close-modal" data-target="items-modal">閉じる</button>
+        </div>
+    </div>
+
+    <div id="rare-chest-modal" class="modal modal--rare-chest" style="display:none;">
+        <div class="modal-content rare-chest-modal__content">
+            <h3>黄金の宝箱</h3>
+            <p id="rare-chest-status" class="rare-chest-status">タイミングバーを中央で止めよう！（Space/Enter）</p>
+            <div class="rare-chest-bar">
+                <div class="rare-chest-bar__target"></div>
+                <div id="rare-chest-pointer" class="rare-chest-bar__pointer"></div>
+            </div>
+            <button id="rare-chest-stop" class="rare-chest-stop-btn">ストップ</button>
+            <p class="rare-chest-hint">Space / Enter キーでも止められます。</p>
         </div>
     </div>
 
@@ -1226,6 +1263,26 @@
                     <div class="inventory-item">
                         <span class="item-name">防御力強化アイテム</span>
                         <span class="item-count" id="modal-def-boost">x 0</span>
+                    </div>
+                    <div class="inventory-item">
+                        <span class="item-name">最大HP特大強化</span>
+                        <span class="item-count" id="modal-hp-boost-major">x 0</span>
+                    </div>
+                    <div class="inventory-item">
+                        <span class="item-name">攻撃力特大強化</span>
+                        <span class="item-count" id="modal-atk-boost-major">x 0</span>
+                    </div>
+                    <div class="inventory-item">
+                        <span class="item-name">防御力特大強化</span>
+                        <span class="item-count" id="modal-def-boost-major">x 0</span>
+                    </div>
+                    <div class="inventory-item">
+                        <span class="item-name">SPエリクサー</span>
+                        <span class="item-count" id="modal-sp-elixir">x 0</span>
+                    </div>
+                    <div class="inventory-item inventory-item--wide">
+                        <span class="item-name">スキル護符</span>
+                        <span class="item-count" id="modal-skill-charms">なし</span>
                     </div>
                 </div>
             </div>

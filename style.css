@@ -1729,6 +1729,83 @@ body.in-game #player-summary { display: none; }
     overflow: auto;          /* モーダル内スクロール */
 }
 
+.modal--rare-chest .rare-chest-modal__content {
+    width: min(420px, 92vw);
+    text-align: center;
+    background: radial-gradient(circle at top, rgba(255, 236, 179, 0.95), rgba(255, 215, 128, 0.92));
+    border: 2px solid rgba(255, 200, 0, 0.6);
+    box-shadow: 0 18px 48px rgba(255, 180, 0, 0.35);
+    color: #4d2d00;
+}
+
+.rare-chest-status {
+    margin: 8px 0 20px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.rare-chest-bar {
+    position: relative;
+    width: min(320px, 80vw);
+    height: 24px;
+    margin: 0 auto 18px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 232, 166, 0.75));
+    border: 1px solid rgba(255, 214, 102, 0.8);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12), 0 12px 22px rgba(255, 193, 7, 0.25);
+    overflow: hidden;
+}
+
+.rare-chest-bar__target {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 18%;
+    height: 100%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, rgba(255, 245, 157, 0.8), rgba(255, 213, 79, 0.6));
+    border: 1px solid rgba(255, 213, 79, 0.9);
+    box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+}
+
+.rare-chest-bar__pointer {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 6%;
+    min-width: 14px;
+    height: 100%;
+    transform: translateX(-50%);
+    border-radius: 6px;
+    background: linear-gradient(180deg, #ffd43b, #f08c00);
+    box-shadow: 0 0 10px rgba(255, 196, 0, 0.8), 0 0 18px rgba(255, 140, 0, 0.6);
+    pointer-events: none;
+}
+
+.rare-chest-stop-btn {
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #ff922b, #ffc078);
+    color: #4d2d00;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rare-chest-stop-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(255, 153, 0, 0.32);
+}
+
+.rare-chest-hint {
+    margin-top: 10px;
+    font-size: 13px;
+    color: rgba(77, 45, 0, 0.7);
+}
+
 .modal-content.skills-modal {
     width: min(560px, 92vw);
 }
@@ -1887,6 +1964,81 @@ body.in-game #player-summary { display: none; }
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
+.item-section {
+    margin: 12px 0 0;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.65);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.item-section__header {
+    font-weight: 700;
+    font-size: 15px;
+    color: #2c3e50;
+}
+
+.skill-charm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.skill-charm-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    gap: 12px;
+}
+
+.skill-charm-item__info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.skill-charm-name {
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.skill-charm-count {
+    font-size: 13px;
+    color: #667eea;
+}
+
+.skill-charm-use {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #51cf66, #2f9e44);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 3px 10px rgba(47, 158, 68, 0.3);
+}
+
+.skill-charm-use:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(47, 158, 68, 0.35);
+}
+
+.skill-charm-empty {
+    text-align: center;
+    color: rgba(44, 62, 80, 0.6);
+    font-size: 13px;
+    font-style: italic;
+}
+
 .close-modal { 
     margin-top: 16px;
     width: 100%;
@@ -2002,6 +2154,16 @@ h1 {
     background: rgba(255,255,255,0.8);
     border-radius: 8px;
     border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.inventory-item--wide {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.inventory-item--wide .item-count {
+    align-self: flex-end;
 }
 
 .item-name {

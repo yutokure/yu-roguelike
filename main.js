@@ -22,6 +22,22 @@ const SATIETY_MAX = 100;
 const SATIETY_TICK_PER_TURN = 1;
 const SATIETY_DAMAGE_RATIO = 0.2;
 const SATIETY_RECOVERY_PER_POTION = 25;
+const RARE_CHEST_CHANCE = 0.08;
+
+const RARE_CHEST_CONFIG = Object.freeze({
+    successWindow: 0.1,
+    pointerSpeed: 1.35,
+    damageBaseRatio: 0.5,
+    minDamageMultiplier: 0.25,
+    levelGapBonus: 0.1,
+    levelGapRelief: 0.08,
+});
+const MAJOR_HP_BOOST_VALUE = 25;
+const MAJOR_ATK_BOOST_VALUE = 10;
+const MAJOR_DEF_BOOST_VALUE = 10;
+const SKILL_CHARM_DURATION_TURNS = 10;
+const SP_ELIXIR_RECOVERY_RATIO = 0.75;
+const SP_ELIXIR_RECOVERY_FLAT = 50;
 let logBuffer = [];
 const gameOverScreen = document.getElementById('game-over-screen');
 const restartButton = document.getElementById('restart-button');
@@ -44,12 +60,21 @@ const invPotion30 = document.getElementById('inv-potion30');
 const invHpBoost = document.getElementById('inv-hp-boost');
 const invAtkBoost = document.getElementById('inv-atk-boost');
 const invDefBoost = document.getElementById('inv-def-boost');
+const invHpBoostMajor = document.getElementById('inv-hp-boost-major');
+const invAtkBoostMajor = document.getElementById('inv-atk-boost-major');
+const invDefBoostMajor = document.getElementById('inv-def-boost-major');
+const invSpElixir = document.getElementById('inv-sp-elixir');
+const skillCharmList = document.getElementById('skill-charm-list');
 const usePotion30Btn = document.getElementById('use-potion30');
 const eatPotion30Btn = document.getElementById('eat-potion30');
 const offerPotion30Btn = document.getElementById('offer-potion30');
 const useHpBoostBtn = document.getElementById('use-hp-boost');
 const useAtkBoostBtn = document.getElementById('use-atk-boost');
 const useDefBoostBtn = document.getElementById('use-def-boost');
+const useHpBoostMajorBtn = document.getElementById('use-hp-boost-major');
+const useAtkBoostMajorBtn = document.getElementById('use-atk-boost-major');
+const useDefBoostMajorBtn = document.getElementById('use-def-boost-major');
+const useSpElixirBtn = document.getElementById('use-sp-elixir');
 const throwPotion30Btn = document.getElementById('throw-potion30');
 const sandboxMenuButton = document.getElementById('btn-sandbox-menu');
 const sandboxInteractivePanel = document.getElementById('sandbox-interactive-panel');
@@ -86,6 +111,10 @@ const modalStatusEffects = document.getElementById('modal-status-effects');
 const modalSkillEffects = document.getElementById('modal-skill-effects');
 const modalSpRow = document.getElementById('modal-sp-row');
 const modalSpValue = document.getElementById('modal-sp');
+const rareChestModal = document.getElementById('rare-chest-modal');
+const rareChestPointer = document.getElementById('rare-chest-pointer');
+const rareChestStopButton = document.getElementById('rare-chest-stop');
+const rareChestStatus = document.getElementById('rare-chest-status');
 // Selection screen
 const selectionScreen = document.getElementById('selection-screen');
 const gameScreen = document.getElementById('game-screen');
@@ -3022,10 +3051,44 @@ const player = {
         potion30: 0,
         hpBoost: 0,
         atkBoost: 0,
-        defBoost: 0
+        defBoost: 0,
+        hpBoostMajor: 0,
+        atkBoostMajor: 0,
+        defBoostMajor: 0,
+        spElixir: 0,
+        skillCharms: {}
     },
     statusEffects: createInitialStatusEffects()
 };
+
+function ensureInventoryContainer() {
+    if (!player.inventory || typeof player.inventory !== 'object') {
+        player.inventory = {};
+    }
+    return player.inventory;
+}
+
+function incrementInventoryCounter(key, amount = 1) {
+    const inv = ensureInventoryContainer();
+    const base = Number(inv[key]) || 0;
+    inv[key] = Math.max(0, Math.floor(base + amount));
+    return inv[key];
+}
+
+function ensureSkillCharmInventory() {
+    const inv = ensureInventoryContainer();
+    if (!inv.skillCharms || typeof inv.skillCharms !== 'object') {
+        inv.skillCharms = {};
+    }
+    return inv.skillCharms;
+}
+
+function incrementSkillCharm(effectId, amount = 1) {
+    const charms = ensureSkillCharmInventory();
+    const base = Number(charms[effectId]) || 0;
+    charms[effectId] = Math.max(0, Math.floor(base + amount));
+    return charms[effectId];
+}
 
 function ensurePlayerStatusContainer() {
     if (!player.statusEffects || typeof player.statusEffects !== 'object') {
@@ -3691,6 +3754,15 @@ let selectedDungeonBase = 1; // 1,11,...,91
 let difficulty = 'Normal';
 let isGameOver = false;
 let chests = [];
+const rareChestState = {
+    active: false,
+    chest: null,
+    pointerPos: 0.5,
+    direction: 1,
+    rafId: null,
+    lastTimestamp: null,
+    pendingEnemyTurn: false,
+};
 let bossAlive = false;
 
 // -------------------- BlockDim: data/state/helpers (UI only for now) --------------------
@@ -6727,11 +6799,25 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     if (typeof playerSnap.facing === 'string') player.facing = playerSnap.facing;
     if (Number.isFinite(playerSnap.x)) player.x = playerSnap.x;
     if (Number.isFinite(playerSnap.y)) player.y = playerSnap.y;
+    const skillCharmSnap = invSnap.skillCharms && typeof invSnap.skillCharms === 'object' ? invSnap.skillCharms : null;
+    const skillCharmStore = {};
+    if (skillCharmSnap) {
+        for (const effectId of Object.keys(SKILL_EFFECT_DEFS)) {
+            const raw = Number(skillCharmSnap[effectId]);
+            const count = Math.max(0, Math.floor(Number.isFinite(raw) ? raw : 0));
+            if (count > 0) skillCharmStore[effectId] = count;
+        }
+    }
     player.inventory = {
         potion30: Math.max(0, Math.floor(Number(invSnap.potion30) || 0)),
         hpBoost: Math.max(0, Math.floor(Number(invSnap.hpBoost) || 0)),
         atkBoost: Math.max(0, Math.floor(Number(invSnap.atkBoost) || 0)),
-        defBoost: Math.max(0, Math.floor(Number(invSnap.defBoost) || 0))
+        defBoost: Math.max(0, Math.floor(Number(invSnap.defBoost) || 0)),
+        hpBoostMajor: Math.max(0, Math.floor(Number(invSnap.hpBoostMajor) || 0)),
+        atkBoostMajor: Math.max(0, Math.floor(Number(invSnap.atkBoostMajor) || 0)),
+        defBoostMajor: Math.max(0, Math.floor(Number(invSnap.defBoostMajor) || 0)),
+        spElixir: Math.max(0, Math.floor(Number(invSnap.spElixir) || 0)),
+        skillCharms: skillCharmStore
     };
     if (playerSnap.statusEffects && typeof playerSnap.statusEffects === 'object') {
         const restored = createInitialStatusEffects();
@@ -8490,7 +8576,10 @@ function generateEntities() {
         chestMinDist,
         [{ x: player.x, y: player.y }, ...enemies]
     );
-    for (const cpos of chestPositions) chests.push({ x: cpos.x, y: cpos.y, type: 'chest' });
+    for (const cpos of chestPositions) {
+        const rarity = Math.random() < RARE_CHEST_CHANCE ? 'rare' : 'normal';
+        chests.push({ x: cpos.x, y: cpos.y, type: 'chest', rarity });
+    }
 
     enemies.forEach(enemy => {
         if (!enemy.type) enemy.type = ENEMY_TYPE_DEFS.normal.id;
@@ -8632,7 +8721,8 @@ function generateBossRoom() {
         ];
         
         chestPositions.forEach(pos => {
-            chests.push({ x: pos.x, y: pos.y, type: 'chest' });
+            const rarity = Math.random() < RARE_CHEST_CHANCE ? 'rare' : 'normal';
+            chests.push({ x: pos.x, y: pos.y, type: 'chest', rarity });
         });
     }
     
@@ -9383,12 +9473,27 @@ function drawChests() {
         const cellHc = canvas.height / VIEWPORT_HEIGHT;
         const sx = ix * cellWc + cellWc / 2;
         const sy = iy * cellHc + cellHc / 2;
-        ctx.fillStyle = '#d4a373';
+        const isRare = ch.rarity === 'rare';
         const w = Math.min(cellWc, cellHc) * 0.6;
         const h = Math.min(cellWc, cellHc) * 0.4;
+        if (isRare) {
+            const gradient = ctx.createLinearGradient(sx - w / 2, sy - h / 2, sx + w / 2, sy + h / 2);
+            gradient.addColorStop(0, '#ffe066');
+            gradient.addColorStop(0.5, '#ffd43b');
+            gradient.addColorStop(1, '#f08c00');
+            ctx.fillStyle = gradient;
+        } else {
+            ctx.fillStyle = '#d4a373';
+        }
         ctx.fillRect(sx - w/2, sy - h/2, w, h);
-        ctx.fillStyle = '#8d5524';
+        ctx.fillStyle = isRare ? '#c77d0a' : '#8d5524';
         ctx.fillRect(sx - w/2, sy - h/2 - h*0.125, w, h*0.25);
+        if (isRare) {
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
+            ctx.lineWidth = Math.max(1.5, Math.min(cellWc, cellHc) * 0.05);
+            ctx.strokeRect(sx - w/2, sy - h/2, w, h);
+            ctx.lineWidth = 1;
+        }
     });
 }
 
@@ -9810,15 +9915,25 @@ function updateUI() {
     }
 
     // Update item modal - fix NaN issue
+    const skillCharmCounts = ensureSkillCharmInventory();
     const potion30Count = player.inventory?.potion30 || 0;
     const hpBoostCount = player.inventory?.hpBoost || 0;
     const atkBoostCount = player.inventory?.atkBoost || 0;
     const defBoostCount = player.inventory?.defBoost || 0;
+    const hpBoostMajorCount = player.inventory?.hpBoostMajor || 0;
+    const atkBoostMajorCount = player.inventory?.atkBoostMajor || 0;
+    const defBoostMajorCount = player.inventory?.defBoostMajor || 0;
+    const spElixirCount = player.inventory?.spElixir || 0;
 
     if (invPotion30) invPotion30.textContent = potion30Count;
     if (invHpBoost) invHpBoost.textContent = hpBoostCount;
     if (invAtkBoost) invAtkBoost.textContent = atkBoostCount;
     if (invDefBoost) invDefBoost.textContent = defBoostCount;
+    if (invHpBoostMajor) invHpBoostMajor.textContent = hpBoostMajorCount;
+    if (invAtkBoostMajor) invAtkBoostMajor.textContent = atkBoostMajorCount;
+    if (invDefBoostMajor) invDefBoostMajor.textContent = defBoostMajorCount;
+    if (invSpElixir) invSpElixir.textContent = spElixirCount;
+    if (skillCharmList) renderSkillCharmInventory(skillCharmCounts);
     if (eatPotion30Btn) eatPotion30Btn.style.display = satietySystemActive ? '' : 'none';
     if (throwPotion30Btn) {
         const throwTargets = getPotionThrowTargets();
@@ -9844,6 +9959,11 @@ function updateUI() {
     const modalHpBoost = document.getElementById('modal-hp-boost');
     const modalAtkBoost = document.getElementById('modal-atk-boost');
     const modalDefBoost = document.getElementById('modal-def-boost');
+    const modalHpBoostMajor = document.getElementById('modal-hp-boost-major');
+    const modalAtkBoostMajor = document.getElementById('modal-atk-boost-major');
+    const modalDefBoostMajor = document.getElementById('modal-def-boost-major');
+    const modalSpElixir = document.getElementById('modal-sp-elixir');
+    const modalSkillCharms = document.getElementById('modal-skill-charms');
     const modalWorld = document.getElementById('modal-world');
     const modalDifficulty = document.getElementById('modal-difficulty');
     const modalDungeonSummary = document.getElementById('modal-dungeon-summary');
@@ -9877,6 +9997,22 @@ function updateUI() {
     if (modalHpBoost) modalHpBoost.textContent = `x ${hpBoostCount}`;
     if (modalAtkBoost) modalAtkBoost.textContent = `x ${atkBoostCount}`;
     if (modalDefBoost) modalDefBoost.textContent = `x ${defBoostCount}`;
+    if (modalHpBoostMajor) modalHpBoostMajor.textContent = `x ${hpBoostMajorCount}`;
+    if (modalAtkBoostMajor) modalAtkBoostMajor.textContent = `x ${atkBoostMajorCount}`;
+    if (modalDefBoostMajor) modalDefBoostMajor.textContent = `x ${defBoostMajorCount}`;
+    if (modalSpElixir) modalSpElixir.textContent = `x ${spElixirCount}`;
+    if (modalSkillCharms) {
+        const summary = Object.keys(SKILL_EFFECT_DEFS)
+            .map(effectId => {
+                const count = Math.max(0, Math.floor(Number(skillCharmCounts[effectId]) || 0));
+                if (count <= 0) return null;
+                const label = SKILL_EFFECT_DEFS[effectId]?.label || effectId;
+                return `${label} x${count}`;
+            })
+            .filter(Boolean)
+            .join(' / ');
+        modalSkillCharms.textContent = summary || 'なし';
+    }
     if (modalWorld) {
         if (currentMode === 'blockdim') {
             const nested = blockDimState?.nested || 1;
@@ -9936,6 +10072,64 @@ function updateUI() {
     updateSandboxInteractivePrivilege();
 
     // メッセージログは addMessage で更新
+}
+
+function renderSkillCharmInventory(charmCounts = {}) {
+    if (!skillCharmList) return;
+    const effectIds = Object.keys(SKILL_EFFECT_DEFS);
+    const escapeHtml = (value) => String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    const entries = effectIds.map(effectId => {
+        const count = Math.max(0, Math.floor(Number(charmCounts?.[effectId]) || 0));
+        return {
+            effectId,
+            label: SKILL_EFFECT_DEFS[effectId]?.label || effectId,
+            count
+        };
+    }).filter(entry => entry.count > 0);
+    if (!entries.length) {
+        skillCharmList.innerHTML = '<div class="skill-charm-empty">所持していません。</div>';
+        return;
+    }
+    skillCharmList.innerHTML = entries.map(entry => {
+        const label = escapeHtml(entry.label);
+        const count = escapeHtml(entry.count);
+        const effect = escapeHtml(entry.effectId);
+        return `
+            <div class="skill-charm-item">
+                <div class="skill-charm-item__info">
+                    <span class="skill-charm-name">${label}</span>
+                    <span class="skill-charm-count">x${count}</span>
+                </div>
+                <button type="button" class="skill-charm-use" data-effect="${effect}">使用</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function useSkillCharm(effectId) {
+    if (!effectId || !Object.prototype.hasOwnProperty.call(SKILL_EFFECT_DEFS, effectId)) {
+        addMessage('未知の護符は使用できない。');
+        return false;
+    }
+    const charms = ensureSkillCharmInventory();
+    const current = Math.max(0, Math.floor(Number(charms[effectId]) || 0));
+    if (current <= 0) {
+        addMessage('その護符は所持していない。');
+        return false;
+    }
+    incrementSkillCharm(effectId, -1);
+    activateSkillEffect(effectId, SKILL_CHARM_DURATION_TURNS, { silent: true });
+    const label = SKILL_EFFECT_DEFS[effectId]?.label || effectId;
+    addMessage(`${label}の護符が発動！効果は${SKILL_CHARM_DURATION_TURNS}ターン持続する。`);
+    playSfx('pickup');
+    updateUI();
+    saveAll();
+    return true;
 }
 
 function shouldActivateSatietySystem() {
@@ -10126,36 +10320,272 @@ function renderLog() {
     messageLogDiv.scrollTop = messageLogDiv.scrollHeight;
 }
 
-function openChest(chest) {
-    playSfx('pickup');
-    const roll = Math.random();
-    
-    if (roll < 0.9) {
-        // 90% chance for HP30% recovery potion
-        player.inventory.potion30 += 1;
-        addMessage('宝箱を開けた！HP30%回復ポーションを手に入れた！');
-    } else {
-        // 10% chance for parameter boost items
-        const boostType = Math.floor(Math.random() * 3);
-        
-        if (boostType === 0) {
-            // Max HP boost
-            player.inventory.hpBoost += 1;
-            addMessage('宝箱を開けた！最大HP強化アイテムを手に入れた！');
-        } else if (boostType === 1) {
-            // Attack boost
-            player.inventory.atkBoost += 1;
-            addMessage('宝箱を開けた！攻撃力強化アイテムを手に入れた！');
-        } else {
-            // Defense boost
-            player.inventory.defBoost += 1;
-            addMessage('宝箱を開けた！防御力強化アイテムを手に入れた！');
+function removeChestInstance(chest) {
+    if (!chest) return false;
+    const idx = chests.indexOf(chest);
+    if (idx >= 0) {
+        chests.splice(idx, 1);
+        return true;
+    }
+    return false;
+}
+
+function updateRareChestPointerVisual() {
+    if (!rareChestPointer) return;
+    const pct = Math.max(0, Math.min(1, rareChestState.pointerPos || 0));
+    rareChestPointer.style.left = `${pct * 100}%`;
+}
+
+function setRareChestStatus(text) {
+    if (rareChestStatus) rareChestStatus.textContent = text;
+}
+
+function stopRareChestAnimation() {
+    if (rareChestState.rafId) {
+        cancelAnimationFrame(rareChestState.rafId);
+        rareChestState.rafId = null;
+    }
+    rareChestState.lastTimestamp = null;
+}
+
+function rareChestAnimationStep(timestamp) {
+    if (!rareChestState.active) return;
+    if (!Number.isFinite(rareChestState.lastTimestamp)) {
+        rareChestState.lastTimestamp = timestamp;
+    }
+    const delta = Math.max(0, (timestamp - rareChestState.lastTimestamp) / 1000);
+    rareChestState.lastTimestamp = timestamp;
+    let pos = rareChestState.pointerPos + rareChestState.direction * delta * RARE_CHEST_CONFIG.pointerSpeed;
+    while (pos > 1 || pos < 0) {
+        if (pos > 1) {
+            pos = 2 - pos;
+            rareChestState.direction = -1;
+        } else if (pos < 0) {
+            pos = -pos;
+            rareChestState.direction = 1;
         }
     }
+    rareChestState.pointerPos = Math.max(0, Math.min(1, pos));
+    updateRareChestPointerVisual();
+    rareChestState.rafId = requestAnimationFrame(rareChestAnimationStep);
+}
 
-    recordAchievementEvent('chest_opened');
+function startRareChestMinigame(chest) {
+    if (!rareChestModal || !rareChestPointer) {
+        return false;
+    }
+    rareChestState.active = true;
+    rareChestState.chest = chest;
+    rareChestState.pointerPos = Math.random();
+    rareChestState.direction = Math.random() < 0.5 ? -1 : 1;
+    rareChestState.pendingEnemyTurn = true;
+    updateRareChestPointerVisual();
+    setRareChestStatus('タイミングバーを中央で止めよう！（Space/Enter）');
+    openModal(rareChestModal);
+    stopRareChestAnimation();
+    rareChestState.rafId = requestAnimationFrame(rareChestAnimationStep);
+    return true;
+}
+
+function calculateRareChestExplosionDamage() {
+    const effectiveMax = Math.max(1, getEffectivePlayerMaxHp());
+    const base = Math.max(1, Math.ceil(effectiveMax * RARE_CHEST_CONFIG.damageBaseRatio));
+    const playerLevel = Number.isFinite(player?.level) ? player.level : null;
+    const recommended = getCurrentRecommendedLevelForHazards();
+    if (!Number.isFinite(playerLevel) || !Number.isFinite(recommended)) return base;
+    const gap = recommended - playerLevel;
+    if (gap > 0) {
+        const multiplier = 1 + gap * RARE_CHEST_CONFIG.levelGapBonus;
+        return Math.max(1, Math.floor(base * multiplier));
+    }
+    if (gap < 0) {
+        const multiplier = Math.max(RARE_CHEST_CONFIG.minDamageMultiplier, 1 + gap * RARE_CHEST_CONFIG.levelGapRelief);
+        return Math.max(1, Math.floor(base * multiplier));
+    }
+    return base;
+}
+
+function handleRareChestExplosion(diff) {
+    playSfx('bomb');
+    const baseDamage = calculateRareChestExplosionDamage();
+    const hazardResult = resolveDomainInteraction({
+        amount: baseDamage,
+        baseEffect: 'damage',
+        attackerType: 'enemy',
+        defenderType: 'player',
+        attackerPos: { x: player.x, y: player.y },
+        defenderPos: { x: player.x, y: player.y }
+    });
+    if (hazardResult.prevented || hazardResult.amount <= 0) {
+        addMessage('黄金の宝箱が爆発したが領域効果で守られた！');
+        addPopup(player.x, player.y, 'Guard', '#74c0fc');
+        return { outcome: 'guarded', damage: 0 };
+    }
+    if (hazardResult.effectType === 'healing') {
+        const before = player.hp;
+        const effectiveMax = getEffectivePlayerMaxHp();
+        player.hp = Math.min(effectiveMax, player.hp + hazardResult.amount);
+        enforceEffectiveHpCap();
+        const healed = Math.max(0, player.hp - before);
+        if (healed > 0) {
+            addMessage(`黄金の宝箱の爆発が反転し、HPが${healed}回復した！`);
+            addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
+            updateUI();
+        }
+        return { outcome: 'healed', damage: -hazardResult.amount };
+    }
+    const damage = Math.max(1, hazardResult.amount);
+    player.hp = Math.max(0, player.hp - damage);
+    recordAchievementEvent('damage_taken', { amount: damage, source: 'rare_chest_explosion' });
+    addMessage(`黄金の宝箱が爆発！HPが${damage}減少（タイミングずれ ${Math.round(diff * 100)}%）`);
+    addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff8787', 1.15);
+    playSfx('damage');
+    updateUI();
+    if (player.hp <= 0) {
+        handlePlayerDeath('黄金の宝箱の爆発に巻き込まれた…ゲームオーバー');
+    }
+    return { outcome: 'damage', damage };
+}
+
+function grantNormalChestReward({ rarity = 'normal' } = {}) {
+    const prefix = rarity === 'rare' ? '黄金の宝箱を開けた！' : '宝箱を開けた！';
+    playSfx('pickup');
+    const roll = Math.random();
+    if (roll < 0.9) {
+        incrementInventoryCounter('potion30', 1);
+        addMessage(`${prefix}HP30%回復ポーションを手に入れた！`);
+        return { rewardType: 'potion30', category: 'potion' };
+    }
+    const boostType = Math.floor(Math.random() * 3);
+    if (boostType === 0) {
+        incrementInventoryCounter('hpBoost', 1);
+        addMessage(`${prefix}最大HP強化アイテムを手に入れた！`);
+        return { rewardType: 'hpBoost', category: 'boost' };
+    }
+    if (boostType === 1) {
+        incrementInventoryCounter('atkBoost', 1);
+        addMessage(`${prefix}攻撃力強化アイテムを手に入れた！`);
+        return { rewardType: 'atkBoost', category: 'boost' };
+    }
+    incrementInventoryCounter('defBoost', 1);
+    addMessage(`${prefix}防御力強化アイテムを手に入れた！`);
+    return { rewardType: 'defBoost', category: 'boost' };
+}
+
+function grantRareChestSpecialReward() {
+    playSfx('pickup');
+    const roll = Math.random();
+    if (roll < 0.4) {
+        const options = ['hpBoostMajor', 'atkBoostMajor', 'defBoostMajor'];
+        const key = options[Math.floor(Math.random() * options.length)];
+        incrementInventoryCounter(key, 1);
+        let message;
+        if (key === 'hpBoostMajor') {
+            message = `最大HP+${MAJOR_HP_BOOST_VALUE}の秘薬を手に入れた！`;
+        } else if (key === 'atkBoostMajor') {
+            message = `攻撃力+${MAJOR_ATK_BOOST_VALUE}の戦術オーブを手に入れた！`;
+        } else {
+            message = `防御力+${MAJOR_DEF_BOOST_VALUE}の護りの盾札を手に入れた！`;
+        }
+        addMessage(`黄金の宝箱から${message}`);
+        return { rewardType: key, category: 'majorBoost' };
+    }
+    if (roll < 0.75) {
+        const effects = Object.keys(SKILL_EFFECT_DEFS);
+        const effectId = effects[Math.floor(Math.random() * effects.length)];
+        incrementSkillCharm(effectId, 1);
+        const effectName = SKILL_EFFECT_DEFS[effectId]?.label || effectId;
+        addMessage(`黄金の宝箱からスキル効果「${effectName}」の護符を手に入れた！（${SKILL_CHARM_DURATION_TURNS}ターン）`);
+        return { rewardType: `skillCharm:${effectId}`, category: 'skillCharm' };
+    }
+    incrementInventoryCounter('spElixir', 1);
+    addMessage('黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。');
+    return { rewardType: 'spElixir', category: 'spItem' };
+}
+
+function completeRareChestSuccess(diff) {
+    addMessage('黄金の宝箱を安全に開けた！');
+    const roll = Math.random();
+    let rewardInfo;
+    if (roll < 0.5) {
+        rewardInfo = grantNormalChestReward({ rarity: 'rare' });
+    } else {
+        rewardInfo = grantRareChestSpecialReward();
+    }
+    recordAchievementEvent('chest_opened', { rarity: 'rare', outcome: 'success', reward: rewardInfo?.rewardType || null });
     updateUI();
     saveAll();
+}
+
+function finalizeRareChestAttempt({ manual = false } = {}) {
+    if (!rareChestState.active) return;
+    stopRareChestAnimation();
+    closeModal(rareChestModal);
+    const chest = rareChestState.chest;
+    rareChestState.active = false;
+    rareChestState.chest = null;
+    const diff = Math.abs((rareChestState.pointerPos || 0.5) - 0.5);
+    const success = diff <= RARE_CHEST_CONFIG.successWindow;
+    removeChestInstance(chest);
+    if (!isGameOver) {
+        try {
+            applyPostMoveEffects();
+        } catch (err) {
+            console.warn('Failed to reapply post-move effects after rare chest', err);
+        }
+    }
+    if (success) {
+        completeRareChestSuccess(diff);
+    } else {
+        const result = handleRareChestExplosion(diff);
+        recordAchievementEvent('chest_opened', { rarity: 'rare', outcome: 'exploded', result: result?.outcome || null, damage: result?.damage || 0 });
+    }
+    rareChestState.pointerPos = 0.5;
+    rareChestState.direction = 1;
+    updateRareChestPointerVisual();
+    resumeEnemyTurnAfterRareChest();
+}
+
+function resumeEnemyTurnAfterRareChest() {
+    const pending = rareChestState.pendingEnemyTurn;
+    rareChestState.pendingEnemyTurn = false;
+    if (!pending) {
+        if (!isGameOver) playerTurn = true;
+        return;
+    }
+    if (isGameOver) {
+        playerTurn = false;
+        return;
+    }
+    if (gameLoopRunning) {
+        playerTurn = false;
+        setTimeout(enemyTurn, 100);
+    } else {
+        playerTurn = true;
+    }
+}
+
+function openChest(chest) {
+    if (!chest) return true;
+    const rarity = chest.rarity === 'rare' ? 'rare' : 'normal';
+    if (rarity === 'rare') {
+        addMessage('黄金の宝箱だ！タイミングバーを狙おう。');
+        const started = startRareChestMinigame(chest);
+        if (!started) {
+            const rewardInfo = grantNormalChestReward({ rarity: 'rare' });
+            recordAchievementEvent('chest_opened', { rarity: 'rare', outcome: 'fallback', reward: rewardInfo?.rewardType || null });
+            updateUI();
+            saveAll();
+            return true;
+        }
+        return false;
+    }
+
+    const rewardInfo = grantNormalChestReward({ rarity: 'normal' });
+    recordAchievementEvent('chest_opened', { rarity: 'normal', reward: rewardInfo?.rewardType || null });
+    updateUI();
+    saveAll();
+    return true;
 }
 let audioCtx;
 function ensureAudio() {
@@ -10547,9 +10977,12 @@ function applyPostMoveEffects() {
 
         const chestAtPlayer = chests.find(c => c.x === player.x && c.y === player.y);
         if (chestAtPlayer) {
-            openChest(chestAtPlayer);
-            const idx = chests.indexOf(chestAtPlayer);
-            if (idx >= 0) chests.splice(idx, 1);
+            const consumed = openChest(chestAtPlayer);
+            if (consumed) {
+                removeChestInstance(chestAtPlayer);
+            } else {
+                return { continueSliding: false };
+            }
         }
 
         if (!isGameOver) {
@@ -10888,12 +11321,24 @@ document.addEventListener('keydown', (event) => {
     if (acted) {
         const alive = onPlayerActionCommitted({ type: 'move' });
         if (!alive) return;
+        if (rareChestState.active || rareChestState.pendingEnemyTurn) {
+            playerTurn = false;
+            return;
+        }
         if (!isGameOver && gameLoopRunning) {
             playerTurn = false;
             setTimeout(enemyTurn, 100);
         } else if (!isGameOver) {
             playerTurn = true;
         }
+    }
+});
+
+document.addEventListener('keydown', (event) => {
+    if (!rareChestState.active) return;
+    if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault();
+        finalizeRareChestAttempt({ manual: true });
     }
 });
 
@@ -11426,6 +11871,93 @@ useDefBoostBtn && useDefBoostBtn.addEventListener('click', () => {
         updateUI();
         saveAll();
     }
+});
+
+useHpBoostMajorBtn && useHpBoostMajorBtn.addEventListener('click', () => {
+    if (player.inventory.hpBoostMajor > 0) {
+        player.inventory.hpBoostMajor -= 1;
+        player.maxHp += MAJOR_HP_BOOST_VALUE;
+        player.hp += MAJOR_HP_BOOST_VALUE;
+        enforceEffectiveHpCap();
+        addMessage(`最大HP特大強化アイテムを使用！最大HPが${MAJOR_HP_BOOST_VALUE}増加！`);
+        playSfx('pickup');
+        updateUI();
+        saveAll();
+    } else {
+        addMessage('そのアイテムは所持していない。');
+    }
+});
+
+useAtkBoostMajorBtn && useAtkBoostMajorBtn.addEventListener('click', () => {
+    if (player.inventory.atkBoostMajor > 0) {
+        player.inventory.atkBoostMajor -= 1;
+        player.attack += MAJOR_ATK_BOOST_VALUE;
+        addMessage(`攻撃力特大強化アイテムを使用！攻撃力が${MAJOR_ATK_BOOST_VALUE}増加！`);
+        playSfx('pickup');
+        updateUI();
+        saveAll();
+    } else {
+        addMessage('そのアイテムは所持していない。');
+    }
+});
+
+useDefBoostMajorBtn && useDefBoostMajorBtn.addEventListener('click', () => {
+    if (player.inventory.defBoostMajor > 0) {
+        player.inventory.defBoostMajor -= 1;
+        player.defense += MAJOR_DEF_BOOST_VALUE;
+        addMessage(`防御力特大強化アイテムを使用！防御力が${MAJOR_DEF_BOOST_VALUE}増加！`);
+        playSfx('pickup');
+        updateUI();
+        saveAll();
+    } else {
+        addMessage('そのアイテムは所持していない。');
+    }
+});
+
+useSpElixirBtn && useSpElixirBtn.addEventListener('click', () => {
+    if (player.inventory.spElixir <= 0) {
+        addMessage('SPエリクサーを所持していない。');
+        return;
+    }
+    if (!isSpUnlocked()) {
+        addMessage('SPが解放されていないため使用できない。');
+        return;
+    }
+    updatePlayerSpCap({ silent: true });
+    const maxSp = Math.max(0, Number(player.maxSp) || 0);
+    if (maxSp <= 0) {
+        addMessage('SP上限が0のため効果がない。');
+        return;
+    }
+    const currentSp = Math.max(0, Number(player.sp) || 0);
+    if (currentSp >= maxSp - 1e-6) {
+        addMessage('SPはすでに最大だ。');
+        return;
+    }
+    const recover = Math.max(SP_ELIXIR_RECOVERY_FLAT, Math.ceil(maxSp * SP_ELIXIR_RECOVERY_RATIO));
+    const gained = gainSp(recover, { silent: true });
+    if (gained <= 0) {
+        addMessage('SPはすでに最大だ。');
+        return;
+    }
+    player.inventory.spElixir = Math.max(0, player.inventory.spElixir - 1);
+    addMessage(`SPエリクサーを使用！SPが${floorSpValue(gained)}回復した。`);
+    playSfx('pickup');
+    updateUI();
+    saveAll();
+});
+
+skillCharmList && skillCharmList.addEventListener('click', (event) => {
+    const target = event.target instanceof HTMLElement ? event.target.closest('.skill-charm-use') : null;
+    if (!target) return;
+    const effectId = target.dataset.effect;
+    if (effectId) {
+        useSkillCharm(effectId);
+    }
+});
+
+rareChestStopButton && rareChestStopButton.addEventListener('click', () => {
+    finalizeRareChestAttempt({ manual: true });
 });
 
 if (sandboxMenuButton) {
@@ -12199,8 +12731,13 @@ function getMiniGamePlayerSnapshot() {
     const inventory = {};
     if (player.inventory && typeof player.inventory === 'object') {
         for (const [key, value] of Object.entries(player.inventory)) {
-            const amount = Math.trunc(Number(value) || 0);
-            inventory[key] = amount < 0 ? 0 : amount;
+            const numeric = Number(value);
+            if (Number.isFinite(numeric)) {
+                const amount = Math.trunc(numeric);
+                inventory[key] = amount < 0 ? 0 : amount;
+            } else if (value && typeof value === 'object') {
+                inventory[key] = deepClone(value);
+            }
         }
     }
     return {
@@ -12222,6 +12759,7 @@ function applyMiniGameInventoryDelta(changes, opts = {}) {
     const applied = {};
     let mutated = false;
     for (const [key, rawDelta] of Object.entries(changes)) {
+        if (key === 'skillCharms') continue;
         const numeric = Number(rawDelta);
         if (!Number.isFinite(numeric) || Math.abs(numeric) < 1e-6) continue;
         const delta = numeric > 0 ? Math.floor(numeric) : Math.ceil(numeric);

@@ -52,7 +52,12 @@
              formula:'C6H10O5', composition:{ C:6, H:10, O:5 }, hazards:['flammable'] },
     metal: { id:'metal', label:'金属',    density:1.8, restitution:0.15, friction:0.3, color:'#9aa0a6', flammability:0.0, conductivity:0.9,
              thermalConductivity:0.72, heatCapacity:0.9, ignitionPoint:900, meltingPoint:1500, boilingPoint:2900, freezePoint:-80, baseTemperature:20,
-             formula:'Fe', composition:{ Fe:1 }, hazards:['conductive'] },
+             formula:'Fe', composition:{ Fe:1 }, hazards:['conductive'],
+             reactivity:{
+               acid:{ type:'acid-dissolution', energy:900, heat:90, spawnSteam:true, spawnIons:true, spawnDebris:true, structural:0.28, corrosion:0.8, cooldown:0.45 },
+               spark:{ type:'thermite', energy:720, heat:360, spawnFire:true, spawnDebris:true, spawnIons:true, structural:0.4, cooldown:0.5 },
+               lightning:{ type:'arc-melt', energy:1120, heat:640, spawnFire:true, spawnIons:true, spawnShockwave:true, structural:0.55, cooldown:0.8 }
+             } },
     rubber:{ id:'rubber',label:'ゴム',    density:0.9, restitution:0.75, friction:0.9, color:'#22262b', flammability:0.2, conductivity:0.05,
              thermalConductivity:0.16, heatCapacity:1.7, ignitionPoint:310, meltingPoint:520, boilingPoint:850, freezePoint:-60, baseTemperature:20,
              formula:'C5H8', composition:{ C:5, H:8 }, hazards:['elastic'] },
@@ -77,16 +82,105 @@
     sodium:{ id:'sodium',label:'ナトリウム', density:0.97, restitution:0.05, friction:0.2, color:'#f4f4f5', flammability:0.95, conductivity:0.8,
              thermalConductivity:0.14, heatCapacity:1.23, ignitionPoint:90, meltingPoint:98, boilingPoint:883, freezePoint:0, baseTemperature:20,
              formula:'Na', composition:{ Na:1 }, hazards:['alkali-metal','water-reactive','conductive'],
-             reactivity:{ water:{ type:'exothermic', energy:2200, heat:420, spawnSteam:true, spawnFire:true, spawnHydrogen:true, structural:0.45, consumeParticle:true, cooldown:0.35 } } }
+             reactivity:{ water:{ type:'exothermic', energy:2200, heat:420, spawnSteam:true, spawnFire:true, spawnHydrogen:true, structural:0.45, consumeParticle:true, cooldown:0.35 } } },
+    copper:{ id:'copper',label:'銅',      density:2.3, restitution:0.22, friction:0.45, color:'#b87333', flammability:0.0, conductivity:0.96,
+             thermalConductivity:0.92, heatCapacity:0.39, ignitionPoint:1085, meltingPoint:1085, boilingPoint:2562, freezePoint:-120, baseTemperature:20,
+             formula:'Cu', composition:{ Cu:1 }, hazards:['conductive'],
+             reactivity:{
+               acid:{ type:'acid-dissolution', energy:520, heat:70, spawnSteam:true, spawnIons:true, structural:0.18, corrosion:0.5, cooldown:0.6 },
+               spark:{ type:'arc-splash', energy:460, heat:220, spawnFire:true, spawnDebris:true, spawnIons:true, structural:0.22, cooldown:0.55 }
+             } },
+    aluminum:{ id:'aluminum', label:'アルミ', density:1.4, restitution:0.3, friction:0.35, color:'#d4d4d8', flammability:0.0, conductivity:0.6,
+               thermalConductivity:0.91, heatCapacity:0.9, ignitionPoint:660, meltingPoint:660, boilingPoint:2470, freezePoint:-120, baseTemperature:20,
+               formula:'Al', composition:{ Al:1 }, hazards:['conductive'],
+               reactivity:{
+                 acid:{ type:'acid-dissolution', energy:780, heat:130, spawnSteam:true, spawnIons:true, structural:0.32, corrosion:0.7, cooldown:0.5 },
+                 spark:{ type:'thermite', energy:980, heat:520, spawnFire:true, spawnDebris:true, spawnIons:true, structural:0.48, cooldown:0.65 }
+               } },
+    titanium:{ id:'titanium', label:'チタン', density:2.1, restitution:0.28, friction:0.42, color:'#9ba6b2', flammability:0.05, conductivity:0.35,
+               thermalConductivity:0.22, heatCapacity:0.52, ignitionPoint:1668, meltingPoint:1668, boilingPoint:3287, freezePoint:-150, baseTemperature:20,
+               formula:'Ti', composition:{ Ti:1 }, hazards:['conductive'],
+               reactivity:{
+                 acid:{ type:'acid-dissolution', energy:640, heat:120, spawnSteam:true, spawnIons:true, structural:0.32, corrosion:0.6, cooldown:0.65 },
+                 fire:{ type:'surface-oxidation', energy:1400, heat:520, spawnFire:true, spawnDebris:true, spawnIons:true, structural:0.58, cooldown:0.7 },
+                 lightning:{ type:'arc-melt', energy:1680, heat:700, spawnFire:true, spawnIons:true, spawnShockwave:true, structural:0.7, cooldown:0.9 }
+               } },
+    carbon:{ id:'carbon', label:'炭素素材', density:1.6, restitution:0.32, friction:0.55, color:'#334155', flammability:0.45, conductivity:0.4,
+             thermalConductivity:0.6, heatCapacity:0.71, ignitionPoint:670, meltingPoint:3500, boilingPoint:4827, freezePoint:-180, baseTemperature:20,
+             formula:'C', composition:{ C:1 }, hazards:['flammable'],
+             reactivity:{
+               fire:{ type:'combustion', energy:1100, heat:500, spawnFire:true, spawnDebris:true, spawnEmbers:true, structural:0.55, cooldown:0.6 },
+               lightning:{ type:'plasma-arc', energy:820, heat:450, spawnFire:true, spawnIons:true, structural:0.45, cooldown:0.75 }
+             } },
+    quartz:{ id:'quartz', label:'石英',   density:1.3, restitution:0.22, friction:0.58, color:'#d1d5db', flammability:0.0, conductivity:0.08,
+             thermalConductivity:0.35, heatCapacity:0.75, ignitionPoint:900, meltingPoint:1650, boilingPoint:2950, freezePoint:-150, baseTemperature:20,
+             formula:'SiO2', composition:{ Si:1, O:2 }, hazards:['insulator'] },
+    salt:  { id:'salt',  label:'岩塩',    density:1.15, restitution:0.18, friction:0.65, color:'#f1f5f9', flammability:0.0, conductivity:0.35,
+             thermalConductivity:0.6, heatCapacity:0.86, ignitionPoint:801, meltingPoint:801, boilingPoint:1413, freezePoint:-120, baseTemperature:20,
+             formula:'NaCl', composition:{ Na:1, Cl:1 }, hazards:['conductive'],
+             reactivity:{
+               water:{ type:'dissolution', energy:240, heat:15, spawnSteam:false, spawnIons:true, soak:0.6, structural:0.12, consumeParticle:false, cooldown:0.35 }
+             } },
+    acid:  { id:'acid',  label:'硫酸',    density:1.45, restitution:0.12, friction:0.4, color:'#fde68a', flammability:0.0, conductivity:0.55,
+             thermalConductivity:0.39, heatCapacity:1.4, ignitionPoint:340, meltingPoint:10, boilingPoint:337, freezePoint:-30, baseTemperature:20,
+             formula:'H2SO4', composition:{ H:2, S:1, O:4 }, hazards:['acidic','corrosive','aqueous'] },
+    polymer:{ id:'polymer', label:'高分子', density:0.95, restitution:0.6, friction:0.55, color:'#0ea5e9', flammability:0.35, conductivity:0.08,
+              thermalConductivity:0.24, heatCapacity:1.6, ignitionPoint:420, meltingPoint:260, boilingPoint:540, freezePoint:-60, baseTemperature:20,
+              formula:'C2H4', composition:{ C:2, H:4 }, hazards:['elastic','flammable'] },
+    graphene:{ id:'graphene', label:'グラフェン', density:0.22, restitution:0.65, friction:0.35, color:'#1e293b', flammability:0.6, conductivity:0.85,
+               thermalConductivity:4.5, heatCapacity:0.72, ignitionPoint:480, meltingPoint:3650, boilingPoint:4200, freezePoint:-200, baseTemperature:20,
+               formula:'C', composition:{ C:1 }, hazards:['conductive','flammable'],
+               reactivity:{
+                 fire:{ type:'rapid-combustion', energy:1350, heat:680, spawnFire:true, spawnDebris:true, spawnEmbers:true, spawnIons:true, structural:0.62, cooldown:0.7 },
+                 acid:{ type:'oxidative-etch', energy:520, heat:110, spawnSteam:true, spawnIons:true, structural:0.3, corrosion:0.85, cooldown:0.6 },
+                 lightning:{ type:'graphitic-arc', energy:940, heat:580, spawnFire:true, spawnIons:true, spawnShockwave:true, structural:0.68, cooldown:0.85 }
+               } },
+    ceramic:{ id:'ceramic', label:'耐火セラミック', density:1.8, restitution:0.16, friction:0.72, color:'#e2e8f0', flammability:0.0, conductivity:0.04,
+              thermalConductivity:0.19, heatCapacity:0.88, ignitionPoint:1500, meltingPoint:1800, boilingPoint:3200, freezePoint:-160, baseTemperature:20,
+              formula:'Al2O3', composition:{ Al:2, O:3 }, hazards:['refractory','insulator'],
+              reactivity:{
+                acid:{ type:'etching', energy:380, heat:40, spawnSteam:true, spawnIons:true, structural:0.18, corrosion:0.55, cooldown:0.6 },
+                fire:{ type:'heat-soak', energy:280, heat:220, spawnFire:false, spawnDebris:false, structural:0.08, cooldown:0.4 }
+              } },
+    'liquid-nitrogen':{ id:'liquid-nitrogen', label:'液体窒素', density:0.8, restitution:0.02, friction:0.05, color:'#67e8f9', flammability:0.0, conductivity:0.12,
+                        thermalConductivity:0.1, heatCapacity:1.04, ignitionPoint:-196, meltingPoint:-210, boilingPoint:-196, freezePoint:-210, baseTemperature:-196,
+                        formula:'N2(l)', composition:{ N:2 }, hazards:['cryogenic','inert'],
+                        reactivity:{
+                          fire:{ type:'cryogenic-quench', energy:420, heat:-260, spawnSteam:true, spawnFrost:true, freeze:0.6, soak:0.3, structural:0.18, cooldown:0.5 },
+                          lightning:{ type:'ion-quench', energy:520, heat:-180, spawnFrost:true, spawnIons:true, structural:0.22, cooldown:0.6 }
+                        } },
+    nitroglycerin:{ id:'nitroglycerin', label:'ニトログリセリン', density:1.6, restitution:0.05, friction:0.4, color:'#f87171', flammability:1.0, conductivity:0.02,
+                    thermalConductivity:0.18, heatCapacity:1.2, ignitionPoint:210, meltingPoint:13, boilingPoint:200, freezePoint:-10, baseTemperature:18,
+                    formula:'C3H5N3O9', composition:{ C:3, H:5, N:3, O:9 }, hazards:['explosive','flammable'],
+                    reactivity:{
+                      fire:{ type:'detonation', energy:6800, heat:1600, spawnFire:true, spawnShockwave:true, spawnDebris:true, spawnIons:true, structural:1.3, cooldown:1.2 },
+                      spark:{ type:'detonation', energy:6200, heat:1400, spawnFire:true, spawnShockwave:true, spawnDebris:true, spawnIons:true, structural:1.25, cooldown:1.0 },
+                      lightning:{ type:'detonation', energy:7500, heat:1800, spawnFire:true, spawnShockwave:true, spawnDebris:true, spawnIons:true, structural:1.4, cooldown:1.4 }
+                    } },
   };
   const PERIODIC_TABLE = {
-    H:  { symbol:'H',  name:'水素',    atomicNumber:1,  atomicMass:1.008,  category:'非金属',        standardState:'gas' },
-    O:  { symbol:'O',  name:'酸素',    atomicNumber:8,  atomicMass:15.999, category:'非金属',        standardState:'gas' },
-    Na: { symbol:'Na', name:'ナトリウム', atomicNumber:11, atomicMass:22.99,  category:'アルカリ金属',  standardState:'solid' },
-    Fe: { symbol:'Fe', name:'鉄',      atomicNumber:26, atomicMass:55.845, category:'遷移金属',      standardState:'solid' },
-    Si: { symbol:'Si', name:'ケイ素',  atomicNumber:14, atomicMass:28.085, category:'半金属',        standardState:'solid' },
-    C:  { symbol:'C',  name:'炭素',    atomicNumber:6,  atomicMass:12.011, category:'非金属',        standardState:'solid' },
-    Cl: { symbol:'Cl', name:'塩素',    atomicNumber:17, atomicMass:35.45,  category:'ハロゲン',      standardState:'gas' }
+    H:  { symbol:'H',  name:'水素',    atomicNumber:1,  atomicMass:1.008,  category:'非金属',        standardState:'gas',   density:0.000089, color:'#facc15', flammability:1.0, electricalConductivity:0.0, thermalConductivity:0.18, heatCapacity:14.3, meltingPoint:-259, boilingPoint:-253, freezePoint:-259, ignitionPoint:500, hazards:['flammable'] },
+    He: { symbol:'He', name:'ヘリウム', atomicNumber:2,  atomicMass:4.0026, category:'希ガス',        standardState:'gas',   density:0.00018, color:'#a5b4fc', flammability:0, electricalConductivity:0, thermalConductivity:0.15, heatCapacity:5.19, meltingPoint:-272, boilingPoint:-269, freezePoint:-272, ignitionPoint:Infinity, hazards:['inert'] },
+    C:  { symbol:'C',  name:'炭素',    atomicNumber:6,  atomicMass:12.011, category:'非金属',        standardState:'solid', density:2.2,     color:'#1f2937', flammability:0.4, electricalConductivity:0.4, thermalConductivity:1.2, heatCapacity:0.71, meltingPoint:3550, boilingPoint:4827, freezePoint:-190, ignitionPoint:670, hazards:['flammable'] },
+    N:  { symbol:'N',  name:'窒素',    atomicNumber:7,  atomicMass:14.007, category:'非金属',        standardState:'gas',   density:0.00125, color:'#60a5fa', flammability:0, electricalConductivity:0, thermalConductivity:0.026, heatCapacity:1.04, meltingPoint:-210, boilingPoint:-196, freezePoint:-210, ignitionPoint:Infinity, hazards:['inert'] },
+    O:  { symbol:'O',  name:'酸素',    atomicNumber:8,  atomicMass:15.999, category:'非金属',        standardState:'gas',   density:0.00143, color:'#93c5fd', flammability:0, electricalConductivity:0, thermalConductivity:0.026, heatCapacity:0.92, meltingPoint:-219, boilingPoint:-183, freezePoint:-219, ignitionPoint:Infinity, hazards:['oxidizer'] },
+    F:  { symbol:'F',  name:'フッ素',  atomicNumber:9,  atomicMass:18.998, category:'ハロゲン',      standardState:'gas',   density:0.0017,  color:'#bef264', flammability:0, electricalConductivity:0, thermalConductivity:0.027, heatCapacity:0.824, meltingPoint:-220, boilingPoint:-188, freezePoint:-220, ignitionPoint:0, hazards:['toxic','corrosive'] },
+    Na: { symbol:'Na', name:'ナトリウム', atomicNumber:11, atomicMass:22.99,  category:'アルカリ金属',  standardState:'solid', density:0.97,    color:'#f4f4f5', flammability:0.95, electricalConductivity:0.8, thermalConductivity:1.4, heatCapacity:1.23, meltingPoint:98, boilingPoint:883, freezePoint:0, ignitionPoint:90, hazards:['alkali-metal','water-reactive','conductive'] },
+    Mg: { symbol:'Mg', name:'マグネシウム', atomicNumber:12, atomicMass:24.305, category:'アルカリ土類', standardState:'solid', density:1.74, color:'#cbd5f5', flammability:0.9, electricalConductivity:0.39, thermalConductivity:1.56, heatCapacity:1.02, meltingPoint:650, boilingPoint:1091, freezePoint:-120, ignitionPoint:473, hazards:['flammable','conductive'] },
+    Al: { symbol:'Al', name:'アルミニウム', atomicNumber:13, atomicMass:26.982, category:'遷移前金属',    standardState:'solid', density:2.7,  color:'#d4d4d8', flammability:0.1, electricalConductivity:0.61, thermalConductivity:2.37, heatCapacity:0.9, meltingPoint:660, boilingPoint:2470, freezePoint:-120, ignitionPoint:600, hazards:['conductive'] },
+    Si: { symbol:'Si', name:'ケイ素',  atomicNumber:14, atomicMass:28.085, category:'半金属',        standardState:'solid', density:2.33, color:'#cbd5f5', flammability:0, electricalConductivity:0.02, thermalConductivity:1.48, heatCapacity:0.71, meltingPoint:1414, boilingPoint:3265, freezePoint:-160, ignitionPoint:900, hazards:['insulator'] },
+    P:  { symbol:'P',  name:'リン',    atomicNumber:15, atomicMass:30.974, category:'非金属',        standardState:'solid', density:1.82, color:'#fef08a', flammability:0.9, electricalConductivity:0, thermalConductivity:0.235, heatCapacity:0.77, meltingPoint:44, boilingPoint:280, freezePoint:-20, ignitionPoint:30, hazards:['flammable','toxic'] },
+    S:  { symbol:'S',  name:'硫黄',    atomicNumber:16, atomicMass:32.06,  category:'非金属',        standardState:'solid', density:2.07, color:'#facc15', flammability:0.6, electricalConductivity:0, thermalConductivity:0.205, heatCapacity:0.71, meltingPoint:115, boilingPoint:445, freezePoint:-30, ignitionPoint:232, hazards:['flammable'] },
+    Cl: { symbol:'Cl', name:'塩素',    atomicNumber:17, atomicMass:35.45,  category:'ハロゲン',      standardState:'gas',   density:0.0032, color:'#fcd34d', flammability:0, electricalConductivity:0, thermalConductivity:0.009, heatCapacity:0.48, meltingPoint:-101, boilingPoint:-34, freezePoint:-101, ignitionPoint:0, hazards:['toxic','corrosive','oxidizer'] },
+    K:  { symbol:'K',  name:'カリウム', atomicNumber:19, atomicMass:39.098, category:'アルカリ金属',  standardState:'solid', density:0.86, color:'#fbbf24', flammability:0.95, electricalConductivity:0.72, thermalConductivity:1.02, heatCapacity:0.75, meltingPoint:64, boilingPoint:759, freezePoint:-20, ignitionPoint:60, hazards:['alkali-metal','water-reactive','conductive'] },
+    Ca: { symbol:'Ca', name:'カルシウム', atomicNumber:20, atomicMass:40.078, category:'アルカリ土類', standardState:'solid', density:1.55, color:'#e2e8f0', flammability:0.4, electricalConductivity:0.29, thermalConductivity:2.01, heatCapacity:0.65, meltingPoint:842, boilingPoint:1484, freezePoint:-40, ignitionPoint:550, hazards:['water-reactive','conductive'] },
+    Ti: { symbol:'Ti', name:'チタン',  atomicNumber:22, atomicMass:47.867, category:'遷移金属',      standardState:'solid', density:4.51, color:'#9ba6b2', flammability:0.05, electricalConductivity:0.33, thermalConductivity:0.22, heatCapacity:0.52, meltingPoint:1668, boilingPoint:3287, freezePoint:-150, ignitionPoint:760, hazards:['conductive'] },
+    Fe: { symbol:'Fe', name:'鉄',      atomicNumber:26, atomicMass:55.845, category:'遷移金属',      standardState:'solid', density:7.87, color:'#9aa0a6', flammability:0.05, electricalConductivity:1.0, thermalConductivity:0.8, heatCapacity:0.45, meltingPoint:1538, boilingPoint:2861, freezePoint:-120, ignitionPoint:700, hazards:['conductive'] },
+    Cu: { symbol:'Cu', name:'銅',      atomicNumber:29, atomicMass:63.546, category:'遷移金属',      standardState:'solid', density:8.96, color:'#b87333', flammability:0, electricalConductivity:1.0, thermalConductivity:4.01, heatCapacity:0.38, meltingPoint:1085, boilingPoint:2562, freezePoint:-180, ignitionPoint:1085, hazards:['conductive'] },
+    Zn: { symbol:'Zn', name:'亜鉛',    atomicNumber:30, atomicMass:65.38,  category:'遷移金属',      standardState:'solid', density:7.14, color:'#d1d5db', flammability:0.05, electricalConductivity:0.29, thermalConductivity:1.16, heatCapacity:0.39, meltingPoint:420, boilingPoint:907, freezePoint:-120, ignitionPoint:450, hazards:['conductive'] },
+    Ag: { symbol:'Ag', name:'銀',      atomicNumber:47, atomicMass:107.868, category:'遷移金属',     standardState:'solid', density:10.49, color:'#f8fafc', flammability:0, electricalConductivity:1.0, thermalConductivity:4.29, heatCapacity:0.24, meltingPoint:962, boilingPoint:2162, freezePoint:-200, ignitionPoint:962, hazards:['conductive'] },
+    Au: { symbol:'Au', name:'金',      atomicNumber:79, atomicMass:196.967, category:'遷移金属',     standardState:'solid', density:19.3, color:'#fbbf24', flammability:0, electricalConductivity:0.73, thermalConductivity:3.17, heatCapacity:0.13, meltingPoint:1064, boilingPoint:2700, freezePoint:-200, ignitionPoint:1064, hazards:['conductive'] },
+    Pb: { symbol:'Pb', name:'鉛',      atomicNumber:82, atomicMass:207.2,  category:'後遷移金属',    standardState:'solid', density:11.34, color:'#9ca3af', flammability:0, electricalConductivity:0.48, thermalConductivity:0.35, heatCapacity:0.13, meltingPoint:327, boilingPoint:1749, freezePoint:-120, ignitionPoint:600, hazards:['toxic','conductive'] }
   };
   const HAZARD_LABELS = {
     flammable:'可燃性',
@@ -97,9 +191,30 @@
     superheated:'超高温',
     ionized:'電離',
     'alkali-metal':'アルカリ金属',
-    'water-reactive':'水と激しく反応'
+    'water-reactive':'水と激しく反応',
+    acidic:'酸性',
+    corrosive:'腐食性',
+    toxic:'有毒',
+    inert:'不活性',
+    oxidizer:'助燃性',
+    explosive:'爆発性',
+    cryogenic:'超低温',
+    refractory:'耐火性',
+    catalytic:'触媒性'
   };
   const DEFAULT_MATERIAL = 'wood';
+  const WIND_FIELD_RANGE = 320;
+  const WIND_FIELD_DECAY = 0.0028;
+  const CLOTH_SOLVER_ITERATIONS = 4;
+  const CLOTH_NODE_MASS = 0.4;
+  const CLOTH_DEFAULT_SPACING = 18;
+  const DAMAGE_RECOVERY_RATE = 3.5;
+  const WIND_GUST_INTERVAL = { min:0.9, max:2.6 };
+  const WIND_GUST_BASE_STRENGTH = 180;
+  const WIND_GUST_TURBULENCE = 0.32;
+  const STRESS_RELAX_RATE = 42;
+  const STRAIN_RELAX_RATE = 0.22;
+  const HEAT_FLUX_RELAX_RATE = 18;
 
   const WALL_BODIES = {
     left:  { id:'wall-left',  static:true, invMass:0, invInertia:0, vx:0, vy:0, angularVelocity:0, angle:0, restitution:0.08, friction:0.85, absoluteWall:true, x:0, y:0 },
@@ -113,6 +228,7 @@
     { id:'god-finger', label:'神の指', title:'シミュレーション中の物体を直接つかんで動かす' },
     { id:'add-circle', label:'円', title:'円形の剛体を追加' },
     { id:'add-box', label:'箱', title:'箱型の剛体を追加' },
+    { id:'add-cloth', label:'布', title:'布のソフトボディを追加' },
     { id:'add-wall', label:'絶対壁', title:'壊れない壁を描画' },
     { id:'add-fire', label:'火', title:'炎エミッタを追加' },
     { id:'add-water', label:'水', title:'水エミッタを追加' },
@@ -142,6 +258,99 @@
     };
     const a = parse(color); const b = parse(overlay);
     return `#${toHex(lerp(a[0],b[0],amt))}${toHex(lerp(a[1],b[1],amt))}${toHex(lerp(a[2],b[2],amt))}`;
+  }
+
+  function seededRandom(seed, step){
+    const x = Math.sin((seed + step * 9973.9281) * 43758.5453);
+    return x - Math.floor(x);
+  }
+
+  function tintToRgba(hex, alpha){
+    if (!hex) return `rgba(103,232,249,${clamp(alpha,0,1)})`;
+    const h = hex.replace('#','');
+    const r = parseInt(h.substring(0,2),16);
+    const g = parseInt(h.substring(2,4),16);
+    const b = parseInt(h.substring(4,6),16);
+    return `rgba(${r},${g},${b},${clamp(alpha,0,1)})`;
+  }
+
+  function sortedPeriodicElements(){
+    return Object.values(PERIODIC_TABLE).slice().sort((a, b) => {
+      if (a.atomicNumber === b.atomicNumber) return a.symbol.localeCompare(b.symbol);
+      return a.atomicNumber - b.atomicNumber;
+    });
+  }
+
+  function sanitizeComponentList(list){
+    if (!Array.isArray(list)) return [];
+    return list
+      .map(entry => ({
+        symbol: entry.symbol,
+        count: clamp(Math.round(entry.count || 0), 1, 256)
+      }))
+      .filter(entry => !!PERIODIC_TABLE[entry.symbol])
+      .map(entry => Object.assign({ atomicNumber: PERIODIC_TABLE[entry.symbol]?.atomicNumber || 999 }, entry))
+      .sort((a, b) => {
+        if (a.atomicNumber === b.atomicNumber) return a.symbol.localeCompare(b.symbol);
+        return a.atomicNumber - b.atomicNumber;
+      });
+  }
+
+  function compositionFromComponents(components){
+    const composition = {};
+    for (const comp of components){
+      composition[comp.symbol] = (composition[comp.symbol] || 0) + comp.count;
+    }
+    return composition;
+  }
+
+  function chemicalFormulaFromComponents(components){
+    if (!components || !components.length) return '';
+    return components.map(comp => `${comp.symbol}${comp.count > 1 ? comp.count : ''}`).join('');
+  }
+
+  function molarMassFromComponents(components){
+    let total = 0;
+    for (const comp of components){
+      const element = PERIODIC_TABLE[comp.symbol];
+      if (!element) continue;
+      total += element.atomicMass * (comp.count || 0);
+    }
+    return total;
+  }
+
+  function averageElementProperty(components, key, fallback){
+    let total = 0;
+    let weight = 0;
+    for (const comp of components){
+      const element = PERIODIC_TABLE[comp.symbol];
+      if (!element) continue;
+      const value = element[key];
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        total += value * (comp.count || 0);
+        weight += (comp.count || 0);
+      }
+    }
+    if (weight <= 0) return fallback;
+    return total / weight;
+  }
+
+  function inferHazardsFromComponents(components){
+    const result = new Set();
+    for (const comp of components){
+      const element = PERIODIC_TABLE[comp.symbol];
+      if (!element) continue;
+      if (Array.isArray(element.hazards)) {
+        element.hazards.forEach(id => result.add(id));
+      }
+      if (typeof element.flammability === 'number' && element.flammability > 0.6) result.add('flammable');
+      if ((element.electricalConductivity || 0) > 0.4) result.add('conductive');
+    }
+    return result;
+  }
+
+  function finiteOr(value, fallback){
+    return Number.isFinite(value) ? value : fallback;
   }
 
   function normalizeAngle(angle){
@@ -288,8 +497,12 @@
       body.temperature = state.ambientTemperature;
       return;
     }
+    const prevTemp = body.temperature ?? state.ambientTemperature;
     const maxTemp = (body.meltingPoint ?? 1200) + 600;
-    body.temperature = clamp((body.temperature ?? state.ambientTemperature) + delta, -200, maxTemp);
+    const nextTemp = clamp(prevTemp + delta, -200, maxTemp);
+    body.temperature = nextTemp;
+    const applied = nextTemp - prevTemp;
+    body.heatFlux = Math.max(Math.abs(applied) * 8, body.heatFlux || 0);
   }
 
   function adjustParticleTemperature(particle, delta){
@@ -312,9 +525,16 @@
       bodies:[],
       emitters:[],
       particles:[],
+      windGusts:[],
+      windGustTimer:0,
+      cloths:[],
       vines:[],
+      fractureQueue:[],
+      customMaterials:new Map(),
+      chemicalDrafts:new Map(),
       selection:null,
       selectionKind:null,
+      selectionNodeIndex:null,
       collisionCooldown:new Map(),
       sessionExp:0,
       pendingConnection:null,
@@ -459,6 +679,7 @@
         vineGrip:0,
         chargeTimer:0,
         damage:0,
+        integrity:1,
         reactionCooldown:0,
         freezeTimer:0,
         corrosion:0,
@@ -472,18 +693,112 @@
         baseTemperature: state.ambientTemperature,
         baseRestitution: params?.restitution ?? 0.3,
         baseFriction: params?.friction ?? 0.4,
-        chemical:null
+        chemical:null,
+        customMaterial:null,
+        baseWidth: params?.width ?? 80,
+        baseHeight: params?.height ?? 80,
+        baseRadius: params?.radius ?? 40,
+        deformScaleX:1,
+        deformScaleY:1,
+        deformScaleR:1,
+        deformTimer:0,
+        fractureThreshold: params?.fractureThreshold ?? 140,
+        fragmentCount:0,
+        stress:0,
+        strain:0,
+        heatFlux:0,
+        crackSeed: Math.random()
       });
-      if (kind === 'circle') body.radius = clamp(body.radius, 8, 160);
-      else {
+      if (kind === 'circle') {
+        body.radius = clamp(body.radius, 8, 160);
+        body.baseRadius = body.radius;
+      } else {
         body.width = clamp(body.width, 20, 240);
         body.height = clamp(body.height, 20, 240);
+        body.baseWidth = body.width;
+        body.baseHeight = body.height;
       }
+      const matForThreshold = MATERIALS[body.material] || MATERIALS[DEFAULT_MATERIAL];
+      const densityFactor = matForThreshold?.density ?? 1;
+      const elasticityFactor = 1.5 - (matForThreshold?.restitution ?? 0.3);
+      body.fractureThreshold = Math.max(60, (120 + densityFactor * 180) * elasticityFactor);
       applyMaterial(body, body.material);
       state.bodies.push(body);
       selectObject(body, 'body');
       renderInspector();
       gainXp(10, { reason:'add-body' });
+      return body;
+    }
+
+    function createFragmentBody(shape, params, source){
+      const id = `f${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
+      const body = {
+        id,
+        kind:'body',
+        shape,
+        x: params?.x ?? source?.x ?? state.bounds.width/2,
+        y: params?.y ?? source?.y ?? state.bounds.height/2,
+        vx: params?.vx ?? source?.vx ?? 0,
+        vy: params?.vy ?? source?.vy ?? 0,
+        width: shape === 'box' ? clamp(params?.width ?? (source?.width ?? 80), 12, 220) : undefined,
+        height: shape === 'box' ? clamp(params?.height ?? (source?.height ?? 80), 12, 220) : undefined,
+        radius: shape === 'circle' ? clamp(params?.radius ?? (source?.radius ?? 40), 8, 160) : undefined,
+        static:false,
+        absoluteWall:false,
+        phase: source?.phase || 'solid',
+        material: params?.material || source?.material || DEFAULT_MATERIAL,
+        mass:1,
+        invMass:1,
+        inertia:1,
+        invInertia:1,
+        boundingRadius: params?.radius ?? source?.boundingRadius ?? 40,
+        angle: params?.angle ?? (source?.angle || 0),
+        angularVelocity: params?.angularVelocity ?? (source?.angularVelocity || 0),
+        torque:0,
+        restitution: clamp(params?.restitution ?? source?.restitution ?? 0.3, 0, 1),
+        friction: clamp(params?.friction ?? source?.friction ?? 0.4, 0, 1),
+        color: params?.color || source?.color || '#94a3b8',
+        burnTimer: Math.max(0, (source?.burnTimer || 0) * 0.6),
+        wetness: Math.max(0, (source?.wetness || 0) * 0.6),
+        vineGrip:0,
+        chargeTimer:0,
+        damage: clamp((source?.damage || 0) * 0.4, 0, 1),
+        integrity: clamp((source?.integrity ?? 1) + 0.25, 0, 1),
+        reactionCooldown:0,
+        freezeTimer: Math.max(0, (source?.freezeTimer || 0) * 0.5),
+        corrosion: Math.max(0, (source?.corrosion || 0) * 0.4),
+        temperature: source?.temperature ?? state.ambientTemperature,
+        heatCapacity: source?.heatCapacity ?? 1,
+        thermalConductivity: source?.thermalConductivity ?? 0.2,
+        ignitionPoint: source?.ignitionPoint ?? 320,
+        meltingPoint: source?.meltingPoint ?? 800,
+        boilingPoint: source?.boilingPoint,
+        freezePoint: source?.freezePoint,
+        baseTemperature: source?.baseTemperature ?? state.ambientTemperature,
+        baseRestitution: clamp(params?.restitution ?? source?.baseRestitution ?? 0.3, 0, 1),
+        baseFriction: clamp(params?.friction ?? source?.baseFriction ?? 0.4, 0, 1),
+        chemical:null,
+        customMaterial: source?.customMaterial ? deepClone(source.customMaterial) : null,
+        baseWidth: shape === 'box' ? clamp(params?.width ?? (source?.width ?? 80), 12, 220) : undefined,
+        baseHeight: shape === 'box' ? clamp(params?.height ?? (source?.height ?? 80), 12, 220) : undefined,
+        baseRadius: shape === 'circle' ? clamp(params?.radius ?? (source?.radius ?? 40), 8, 160) : undefined,
+        deformScaleX:1,
+        deformScaleY:1,
+        deformScaleR:1,
+        deformTimer:0,
+        fractureThreshold: source?.fractureThreshold ?? 140,
+        fragmentCount: Math.min((source?.fragmentCount || 0) + 1, 6),
+        pendingFracture:false,
+        stress: Math.max(0, (source?.stress || 0) * 0.6),
+        strain: Math.max(0, (source?.strain || 0) * 0.5),
+        heatFlux: Math.max(0, (source?.heatFlux || 0) * 0.6),
+        crackSeed: Math.random()
+      };
+      applyMaterial(body, body.material);
+      body.baseRestitution = body.restitution;
+      body.baseFriction = body.friction;
+      commitBodyDimensions(body);
+      state.bodies.push(body);
       return body;
     }
 
@@ -512,9 +827,377 @@
       return emitter;
     }
 
+    function createClothConstraint(a, b, restLength, stiffness, type){
+      return { a, b, restLength, stiffness, type, broken:false };
+    }
+
+    function spawnCloth(params){
+      const id = `c${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`;
+      const cols = clamp(Math.round(params?.cols ?? 14), 3, 40);
+      const rows = clamp(Math.round(params?.rows ?? 10), 3, 40);
+      const spacing = clamp(params?.spacing ?? CLOTH_DEFAULT_SPACING, 10, 48);
+      const baseX = (params?.x ?? state.bounds.width/2) - (cols - 1) * spacing / 2;
+      const baseY = params?.y ?? Math.max(40, state.bounds.height * 0.15);
+      const structuralStiffness = clamp(params?.structuralStiffness ?? 0.72, 0.2, 1.5);
+      const shearStiffness = clamp(params?.shearStiffness ?? 0.65, 0.1, 1.2);
+      const bendStiffness = clamp(params?.bendStiffness ?? 0.4, 0.05, 1);
+      const damping = clamp(params?.damping ?? 0.92, 0.6, 0.999);
+      const tearFactor = clamp(params?.tearFactor ?? 1.8, 1.05, 3.5);
+      const windInfluence = clamp(params?.windInfluence ?? 0.85, 0, 3);
+      const color = params?.color || '#cbd5f5';
+
+      const cloth = {
+        id,
+        cols,
+        rows,
+        spacing,
+        structuralStiffness,
+        shearStiffness,
+        bendStiffness,
+        damping,
+        tearFactor,
+        windInfluence,
+        color,
+        nodes:[],
+        constraints:[],
+        integrity:1,
+        heat:0,
+        fatigue:0,
+        avgStrain:0,
+        maxStrain:0,
+        pinned:'top'
+      };
+
+      for (let r=0;r<rows;r++){
+        for (let c=0;c<cols;c++){
+          const x = baseX + c * spacing;
+          const y = baseY + r * spacing;
+          cloth.nodes.push({
+            x,
+            y,
+            prevX:x,
+            prevY:y,
+            vx:0,
+            vy:0,
+            mass:CLOTH_NODE_MASS,
+            pinned: r === 0,
+            temperature: state.ambientTemperature,
+            damage:0
+          });
+        }
+      }
+
+      buildClothConstraints(cloth);
+
+      state.cloths.push(cloth);
+      selectObject(cloth, 'cloth');
+      renderInspector();
+      gainXp(12, { reason:'add-cloth' });
+      return cloth;
+    }
+
+    function buildClothConstraints(cloth){
+      cloth.constraints = cloth.constraints || [];
+      cloth.constraints.length = 0;
+      const index = (c,r) => r * cloth.cols + c;
+      for (let r=0;r<cloth.rows;r++){
+        for (let c=0;c<cloth.cols;c++){
+          if (c < cloth.cols-1) cloth.constraints.push(createClothConstraint(index(c,r), index(c+1,r), cloth.spacing, cloth.structuralStiffness, 'structural'));
+          if (r < cloth.rows-1) cloth.constraints.push(createClothConstraint(index(c,r), index(c,r+1), cloth.spacing, cloth.structuralStiffness, 'structural'));
+          if (c < cloth.cols-1 && r < cloth.rows-1) {
+            const diag = Math.sqrt(2) * cloth.spacing;
+            cloth.constraints.push(createClothConstraint(index(c,r), index(c+1,r+1), diag, cloth.shearStiffness, 'shear'));
+            cloth.constraints.push(createClothConstraint(index(c+1,r), index(c,r+1), diag, cloth.shearStiffness, 'shear'));
+          }
+          if (c < cloth.cols-2) cloth.constraints.push(createClothConstraint(index(c,r), index(c+2,r), cloth.spacing*2, cloth.bendStiffness, 'bend'));
+          if (r < cloth.rows-2) cloth.constraints.push(createClothConstraint(index(c,r), index(c,r+2), cloth.spacing*2, cloth.bendStiffness, 'bend'));
+        }
+      }
+    }
+
+    function hydrateCloth(data){
+      if (!data) return null;
+      const cols = clamp(Math.round(data.cols || 10), 3, 40);
+      const rows = clamp(Math.round(data.rows || 8), 3, 40);
+      const spacing = clamp(data.spacing ?? CLOTH_DEFAULT_SPACING, 10, 48);
+      const cloth = {
+        id: data.id || `c${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`,
+        cols,
+        rows,
+        spacing,
+        structuralStiffness: clamp(data.structuralStiffness ?? 0.72, 0.2, 1.8),
+        shearStiffness: clamp(data.shearStiffness ?? 0.65, 0.1, 1.5),
+        bendStiffness: clamp(data.bendStiffness ?? 0.4, 0.05, 1.2),
+        damping: clamp(data.damping ?? 0.92, 0.6, 0.999),
+        tearFactor: clamp(data.tearFactor ?? 1.8, 1.05, 4),
+        windInfluence: clamp(data.windInfluence ?? 0.85, 0, 3),
+        color: data.color || '#cbd5f5',
+        nodes:[],
+        constraints:[],
+        integrity: clamp(data.integrity ?? 1, 0, 1),
+        heat: data.heat ?? 0,
+        fatigue: clamp(data.fatigue ?? 0, 0, 12),
+        avgStrain: clamp(data.avgStrain ?? 0, 0, 4),
+        maxStrain: clamp(data.maxStrain ?? 0, 0, 4),
+        pinned:data.pinned || 'custom'
+      };
+      const nodeCount = cols * rows;
+      const savedNodes = Array.isArray(data.nodes) && data.nodes.length === nodeCount ? data.nodes : null;
+      if (savedNodes) {
+        savedNodes.forEach(n => {
+          const x = Number(n.x) || state.bounds.width/2;
+          const y = Number(n.y) || state.bounds.height/3;
+          cloth.nodes.push({
+            x,
+            y,
+            prevX: Number.isFinite(n.prevX) ? n.prevX : x,
+            prevY: Number.isFinite(n.prevY) ? n.prevY : y,
+            vx: Number(n.vx) || 0,
+            vy: Number(n.vy) || 0,
+            mass: CLOTH_NODE_MASS,
+            pinned: !!n.pinned,
+            temperature: typeof n.temperature === 'number' ? n.temperature : state.ambientTemperature,
+            damage: clamp(n.damage ?? 0, 0, 1)
+          });
+        });
+      } else {
+        const baseX = (data.origin?.x ?? state.bounds.width/2) - (cols - 1) * spacing / 2;
+        const baseY = data.origin?.y ?? Math.max(40, state.bounds.height * 0.2);
+        for (let r=0;r<rows;r++){
+          for (let c=0;c<cols;c++){
+            const x = baseX + c * spacing;
+            const y = baseY + r * spacing;
+            cloth.nodes.push({
+              x,
+              y,
+              prevX:x,
+              prevY:y,
+              vx:0,
+              vy:0,
+              mass:CLOTH_NODE_MASS,
+              pinned: r === 0,
+              temperature: state.ambientTemperature,
+              damage:0
+            });
+          }
+        }
+      }
+      buildClothConstraints(cloth);
+      if (Array.isArray(data.constraints) && data.constraints.length === cloth.constraints.length) {
+        cloth.constraints.forEach((c, idx) => {
+          const src = data.constraints[idx];
+          if (!src) return;
+          c.restLength = Number(src.restLength) || c.restLength;
+          c.stiffness = Number(src.stiffness) || c.stiffness;
+          c.type = src.type || c.type;
+          c.broken = !!src.broken;
+        });
+      }
+      return cloth;
+    }
+
+    function commitBodyDimensions(body){
+      if (!body) return;
+      if (body.shape === 'circle') {
+        body.baseRadius = Math.max(6, body.radius || body.baseRadius || 20);
+      } else {
+        body.baseWidth = Math.max(12, body.width || body.baseWidth || 20);
+        body.baseHeight = Math.max(12, body.height || body.baseHeight || 20);
+      }
+      updateBodyMassProperties(body);
+    }
+
+    function spawnWindGust(options){
+      const gust = {
+        id: `w${Math.random().toString(36).slice(2,7)}`,
+        x: clamp(options?.x ?? (state.bounds.width * (0.2 + Math.random() * 0.6)), 0, state.bounds.width),
+        y: clamp(options?.y ?? (state.bounds.height * (0.2 + Math.random() * 0.6)), 0, state.bounds.height),
+        direction: options?.direction ?? 270,
+        strength: options?.strength ?? (WIND_GUST_BASE_STRENGTH * (0.6 + Math.random() * 0.9)),
+        radius: clamp(options?.radius ?? (140 + Math.random() * 160), 80, 420),
+        life: options?.life ?? (1.2 + Math.random() * 1.4),
+        maxLife: options?.life ?? (1.2 + Math.random() * 1.4),
+        turbulence: options?.turbulence ?? (0.18 + Math.random() * WIND_GUST_TURBULENCE),
+        phase: Math.random() * Math.PI * 2,
+        age:0,
+        trailTimer:0
+      };
+      state.windGusts.push(gust);
+      return gust;
+    }
+
+    function updateWindGusts(dt){
+      for (let i=state.windGusts.length-1;i>=0;i--){
+        const gust = state.windGusts[i];
+        gust.age += dt;
+        gust.life -= dt;
+        const dirRad = (gust.direction * Math.PI) / 180;
+        const drift = gust.strength * 0.04;
+        gust.x += Math.cos(dirRad) * drift * dt;
+        gust.y += Math.sin(dirRad) * drift * dt;
+        gust.radius = clamp(gust.radius * (1 + 0.12 * dt), 60, 480);
+        gust.trailTimer = (gust.trailTimer || 0) - dt;
+        if (gust.trailTimer <= 0) {
+          spawnParticle('wind', gust.x, gust.y, {
+            power: clamp(gust.strength / WIND_GUST_BASE_STRENGTH, 0.4, 1.8),
+            direction: gust.direction + Math.sin(gust.phase + gust.age * 6) * 16,
+            life: 0.7
+          });
+          gust.trailTimer = 0.18 + Math.random() * 0.12;
+        }
+        if (gust.life <= 0 || gust.x < -120 || gust.x > state.bounds.width + 120 || gust.y < -120 || gust.y > state.bounds.height + 120) {
+          state.windGusts.splice(i,1);
+        }
+      }
+      const windEmitters = state.emitters.filter(e => e.kind === 'wind' && e.enabled);
+      const hasWindParticles = state.particles.some(p => p.type === 'wind');
+      if (windEmitters.length || hasWindParticles) {
+        state.windGustTimer -= dt;
+        if (state.windGustTimer <= 0) {
+          const source = windEmitters.length ? windEmitters[Math.floor(Math.random() * windEmitters.length)] : null;
+          spawnWindGust({
+            x: source ? source.x + (Math.random()-0.5) * 60 : undefined,
+            y: source ? source.y + (Math.random()-0.5) * 40 : undefined,
+            direction: source ? (source.direction ?? 270) : (hasWindParticles ? 270 : Math.random()*360),
+            strength: (source ? (source.power || 1) : 1) * WIND_GUST_BASE_STRENGTH * (0.7 + Math.random() * 0.9),
+            radius: 150 + Math.random() * 160,
+            life: 1.1 + Math.random() * 1.4
+          });
+          state.windGustTimer = WIND_GUST_INTERVAL.min + Math.random() * (WIND_GUST_INTERVAL.max - WIND_GUST_INTERVAL.min);
+        }
+      } else {
+        state.windGustTimer = Math.max(state.windGustTimer, WIND_GUST_INTERVAL.min * 0.5);
+      }
+    }
+
+    function sampleWindField(x, y){
+      let vx = 0;
+      let vy = 0;
+      for (const emitter of state.emitters){
+        if (emitter.kind !== 'wind' || !emitter.enabled) continue;
+        const dx = x - emitter.x;
+        const dy = y - emitter.y;
+        const range = WIND_FIELD_RANGE * (0.6 + (emitter.power || 1) * 0.4);
+        const distSq = dx*dx + dy*dy;
+        if (distSq > range * range) continue;
+        const dist = Math.sqrt(distSq) || 1;
+        const falloff = Math.exp(-dist * WIND_FIELD_DECAY);
+        const ang = ((emitter.direction ?? 0) * Math.PI) / 180;
+        vx += Math.cos(ang) * 220 * (emitter.power || 1) * falloff;
+        vy += Math.sin(ang) * 220 * (emitter.power || 1) * falloff;
+      }
+      for (const gust of state.windGusts){
+        const dx = x - gust.x;
+        const dy = y - gust.y;
+        const distSq = dx*dx + dy*dy;
+        const radius = gust.radius || 160;
+        if (distSq > radius * radius) continue;
+        const dist = Math.sqrt(distSq) || 1;
+        const falloff = Math.max(0, 1 - dist / radius);
+        const dirRad = (gust.direction * Math.PI) / 180;
+        const base = gust.strength * falloff;
+        const swirl = Math.sin(gust.phase + gust.age * 6 + dist * 0.08) * gust.turbulence;
+        vx += Math.cos(dirRad) * base;
+        vy += Math.sin(dirRad) * base;
+        vx += -Math.sin(dirRad) * base * swirl;
+        vy += Math.cos(dirRad) * base * swirl;
+      }
+      for (const p of state.particles){
+        if (p.type !== 'wind') continue;
+        const dx = x - p.x;
+        const dy = y - p.y;
+        const distSq = dx*dx + dy*dy;
+        if (distSq > (WIND_FIELD_RANGE * 0.35) ** 2) continue;
+        const dist = Math.sqrt(distSq) || 1;
+        const falloff = Math.exp(-dist * (WIND_FIELD_DECAY * 4));
+        vx += p.vx * falloff;
+        vy += p.vy * falloff;
+      }
+      return { vx, vy };
+    }
+
+    function clothNodeBodyCollision(node, body, dt){
+      if (!body || body.absoluteWall) return false;
+      let collided = false;
+      const padding = 6;
+      if (body.shape === 'circle') {
+        const dx = node.x - body.x;
+        const dy = node.y - body.y;
+        const dist = Math.hypot(dx, dy);
+        const radius = (body.radius || 0) + padding;
+        if (dist < radius && dist > 1e-4) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const target = radius + 0.5;
+          node.x = body.x + nx * target;
+          node.y = body.y + ny * target;
+          const relVx = node.vx - (body.vx || 0);
+          const relVy = node.vy - (body.vy || 0);
+          const vn = relVx * nx + relVy * ny;
+          const bounce = clamp((body.restitution || 0.2) + 0.2, 0.05, 0.9);
+          if (vn < 0) {
+            node.vx -= (1 + bounce) * vn * nx;
+            node.vy -= (1 + bounce) * vn * ny;
+          }
+          node.vx += (body.vx || 0) * 0.1;
+          node.vy += (body.vy || 0) * 0.1;
+          applyImpactDamage(body, Math.abs(vn) * (body.mass === Infinity ? 0.5 : 1), { x: node.x, y: node.y }, { x: nx, y: ny });
+          collided = true;
+        }
+      } else {
+        const local = worldToLocal(body, node.x, node.y);
+        const halfW = (body.width || 0) / 2 + padding;
+        const halfH = (body.height || 0) / 2 + padding;
+        if (Math.abs(local.x) <= halfW && Math.abs(local.y) <= halfH) {
+          const penX = halfW - Math.abs(local.x);
+          const penY = halfH - Math.abs(local.y);
+          let nx = 0;
+          let ny = 0;
+          if (penX < penY) {
+            nx = local.x > 0 ? 1 : -1;
+            ny = 0;
+          } else {
+            nx = 0;
+            ny = local.y > 0 ? 1 : -1;
+          }
+          const worldNormal = localToWorld(body, nx, ny);
+          const len = Math.hypot(worldNormal.x - body.x, worldNormal.y - body.y) || 1;
+          const normal = { x: (worldNormal.x - body.x) / len, y: (worldNormal.y - body.y) / len };
+          node.x += normal.x * (penX < penY ? penX : 0);
+          node.y += normal.y * (penX < penY ? 0 : penY);
+          const relVx = node.vx - (body.vx || 0);
+          const relVy = node.vy - (body.vy || 0);
+          const vn = relVx * normal.x + relVy * normal.y;
+          const bounce = clamp((body.restitution || 0.2) + 0.2, 0.05, 0.9);
+          if (vn < 0) {
+            node.vx -= (1 + bounce) * vn * normal.x;
+            node.vy -= (1 + bounce) * vn * normal.y;
+          }
+          node.vx += (body.vx || 0) * 0.1;
+          node.vy += (body.vy || 0) * 0.1;
+          applyImpactDamage(body, Math.abs(vn), { x: node.x, y: node.y }, normal);
+          collided = true;
+        }
+      }
+      if (collided) {
+        node.x = clamp(node.x, padding, state.bounds.width - padding);
+        node.y = clamp(node.y, padding, state.bounds.height - padding);
+      }
+      return collided;
+    }
+
+    function resolveMaterialDefinition(body, materialId){
+      const id = materialId || body?.material;
+      if (!id) return MATERIALS[DEFAULT_MATERIAL];
+      if (MATERIALS[id]) return MATERIALS[id];
+      if (state.customMaterials && state.customMaterials.has(id)) return state.customMaterials.get(id);
+      if (body?.customMaterial && body.customMaterial.id === id) return body.customMaterial;
+      return MATERIALS[DEFAULT_MATERIAL];
+    }
+
     function updateBodyMassProperties(body){
       if (!body) return;
-      const mat = MATERIALS[body.material] || MATERIALS[DEFAULT_MATERIAL];
+      const mat = resolveMaterialDefinition(body, body.material) || MATERIALS[DEFAULT_MATERIAL];
       const area = body.shape === 'circle'
         ? Math.PI * (body.radius || 0) * (body.radius || 0)
         : (body.width || 0) * (body.height || 0);
@@ -579,10 +1262,32 @@
     }
 
     function applyMaterial(body, materialId){
-      const mat = MATERIALS[materialId] || MATERIALS[DEFAULT_MATERIAL];
+      if (!body) return;
+      let mat = resolveMaterialDefinition(body, materialId);
+      if (!mat) mat = MATERIALS[DEFAULT_MATERIAL];
+      const matId = mat?.id || materialId || DEFAULT_MATERIAL;
+      const isCustom = matId && !MATERIALS[matId];
+      if (isCustom) {
+        body.customMaterial = deepClone(mat);
+        if (state.customMaterials) {
+          state.customMaterials.set(matId, deepClone(mat));
+        }
+        body.material = matId;
+      } else {
+        body.customMaterial = null;
+        body.material = matId || DEFAULT_MATERIAL;
+      }
+      if (!MATERIALS[body.material] && !state.customMaterials.has(body.material)) {
+        body.material = DEFAULT_MATERIAL;
+        body.customMaterial = null;
+        mat = MATERIALS[DEFAULT_MATERIAL];
+      } else if (!MATERIALS[body.material]) {
+        mat = resolveMaterialDefinition(body, body.material) || mat;
+      }
+      const resolvedId = mat?.id || body.material || DEFAULT_MATERIAL;
       const hadTemp = typeof body.temperature === 'number' && Number.isFinite(body.temperature);
       const prevTemp = hadTemp ? body.temperature : (mat.baseTemperature ?? state.ambientTemperature);
-      body.material = mat.id;
+      body.material = resolvedId;
       body.baseRestitution = mat.restitution;
       body.baseFriction = mat.friction;
       if (!body.absoluteWall) {
@@ -610,11 +1315,15 @@
       updateBodyMassProperties(body);
       body.temperature = body.absoluteWall ? state.ambientTemperature : (hadTemp ? prevTemp : body.baseTemperature);
       body.chemical = createChemicalProfile(mat);
+      const densityFactor = mat?.density ?? 1;
+      const elasticityFactor = 1.5 - (mat?.restitution ?? body.restitution ?? 0.3);
+      body.fractureThreshold = Math.max(60, (120 + densityFactor * 180) * elasticityFactor);
     }
 
     function selectObject(obj, kind){
       state.selection = obj ? obj.id : null;
       state.selectionKind = obj ? kind : null;
+      if (kind !== 'cloth') state.selectionNodeIndex = null;
       renderInspector();
     }
 
@@ -623,6 +1332,7 @@
       if (state.selectionKind === 'body') return state.bodies.find(b => b.id === state.selection) || null;
       if (state.selectionKind === 'emitter') return state.emitters.find(e => e.id === state.selection) || null;
       if (state.selectionKind === 'vine') return state.vines.find(v => v.id === state.selection) || null;
+      if (state.selectionKind === 'cloth') return state.cloths.find(c => c.id === state.selection) || null;
       return null;
     }
 
@@ -630,17 +1340,34 @@
       if (!state.selection) return;
       if (state.selectionKind === 'body') {
         const idx = state.bodies.findIndex(b => b.id === state.selection);
-        if (idx >= 0) { state.bodies.splice(idx,1); gainXp(5, { reason:'remove-body' }); }
+        if (idx >= 0) {
+          const removed = state.bodies.splice(idx,1)[0];
+          cleanupCustomMaterialReference(removed);
+          gainXp(5, { reason:'remove-body' });
+        }
       } else if (state.selectionKind === 'emitter') {
         const idx = state.emitters.findIndex(e => e.id === state.selection);
         if (idx >= 0) { state.emitters.splice(idx,1); gainXp(4, { reason:'remove-emitter' }); }
-      } else if (state.selectionKind === 'vine') {
-        const idx = state.vines.findIndex(v => v.id === state.selection);
-        if (idx >= 0) state.vines.splice(idx,1);
-      }
+    } else if (state.selectionKind === 'vine') {
+      const idx = state.vines.findIndex(v => v.id === state.selection);
+      if (idx >= 0) state.vines.splice(idx,1);
+    } else if (state.selectionKind === 'cloth') {
+      const idx = state.cloths.findIndex(c => c.id === state.selection);
+      if (idx >= 0) state.cloths.splice(idx,1);
+    }
       state.selection = null;
       state.selectionKind = null;
+      state.selectionNodeIndex = null;
       renderInspector();
+    }
+
+    function cleanupCustomMaterialReference(body){
+      if (!body) return;
+      if (state.chemicalDrafts) state.chemicalDrafts.delete(body.id);
+      const id = body.material;
+      if (!id || MATERIALS[id]) return;
+      const stillUsed = state.bodies.some(b => b.material === id);
+      if (!stillUsed) state.customMaterials.delete(id);
     }
 
     function resizeCanvas(){
@@ -680,6 +1407,16 @@
           }
         }
       }
+      for (let i = state.cloths.length - 1; i >= 0; i--) {
+        const cloth = state.cloths[i];
+        for (let n = 0; n < cloth.nodes.length; n++){
+          const node = cloth.nodes[n];
+          const dist = Math.hypot(x - node.x, y - node.y);
+          if (dist <= Math.max(12, cloth.spacing * 0.45)) {
+            return { obj: cloth, kind:'cloth', nodeIndex:n };
+          }
+        }
+      }
       return null;
     }
 
@@ -690,10 +1427,13 @@
         const hit = findObjectAt(pos.x, pos.y);
         if (hit) {
           selectObject(hit.obj, hit.kind);
+          state.selectionNodeIndex = hit.kind === 'cloth' ? hit.nodeIndex : null;
           if (hit.kind === 'body') {
             dragInfo = { id: hit.obj.id, kind:'body', mode:'select', offsetX: pos.x - hit.obj.x, offsetY: pos.y - hit.obj.y };
           } else if (hit.kind === 'emitter') {
             dragInfo = { id: hit.obj.id, kind:'emitter', mode:'select', offsetX: pos.x - hit.obj.x, offsetY: pos.y - hit.obj.y };
+          } else if (hit.kind === 'cloth') {
+            dragInfo = { id: hit.obj.id, kind:'cloth', mode:'node', nodeIndex: hit.nodeIndex };
           }
         } else {
           selectObject(null, null);
@@ -733,6 +1473,8 @@
       } else if (state.tool === 'add-wall') {
         const body = spawnBody('box', { x: pos.x, y: pos.y, static:true, material:'stone', color:'#1f2937', absoluteWall:true });
         drawPreview = { id: body.id, shape:'box', origin:pos };
+      } else if (state.tool === 'add-cloth') {
+        spawnCloth({ x: pos.x, y: pos.y });
       } else {
         const emitter = spawnEmitter(toolToKind(state.tool), { x: pos.x, y: pos.y });
         if (state.tool === 'add-circuit' && state.pendingConnection) {
@@ -794,6 +1536,19 @@
           if (emitter) {
             emitter.x = clamp(pos.x - dragInfo.offsetX, 16, state.bounds.width - 16);
             emitter.y = clamp(pos.y - dragInfo.offsetY, 16, state.bounds.height - 16);
+          }
+        } else if (dragInfo.kind === 'cloth') {
+          const cloth = state.cloths.find(c => c.id === dragInfo.id);
+          if (cloth) {
+            const node = cloth.nodes[dragInfo.nodeIndex];
+            if (node) {
+              node.x = pos.x;
+              node.y = pos.y;
+              node.vx = 0;
+              node.vy = 0;
+              node.pinned = true;
+              state.selectionNodeIndex = dragInfo.nodeIndex;
+            }
           }
         }
       }
@@ -945,15 +1700,96 @@
       adjustBodyTemperature(body, reaction.heat ?? 0);
       body.damage = Math.min(1.05, (body.damage || 0) + (reaction.structural ?? 0.25));
       body.wetness = Math.max(0, body.wetness - 0.5);
-      if (particle) {
+      if (reaction.corrosion) corrodeBody(body, reaction.corrosion);
+      if (reaction.freeze) freezeBody(body, reaction.freeze);
+      if (reaction.soak) soakBody(body, reaction.soak);
+      if (reaction.structural) body.strain = clamp((body.strain || 0) + reaction.structural * 0.6, 0, 3);
+      body.stress = Math.min((body.stress || 0) + (reaction.energy || 0) * 0.05, 900);
+      body.heatFlux = Math.max(body.heatFlux || 0, Math.abs(reaction.heat || 0) * 6);
+      spawnReactionEffect(body, reaction, reagent, particle);
+      if (particle && reaction.consumeParticle !== false) {
         particle.type = 'steam';
         particle.temperature = Math.max(particle.temperature || state.ambientTemperature, Math.max(120, (reaction.heat ?? 0) + 80));
         particle.vx *= 0.4;
         particle.vy = Math.min(particle.vy, -90);
         particle.life = Math.max(particle.life, 1.2);
         particle.maxLife = Math.max(particle.maxLife || 0, 18);
+      } else if (particle && reaction.consumeParticle === false) {
+        particle.temperature = Math.max(particle.temperature || state.ambientTemperature, state.ambientTemperature + (reaction.heat ?? 0) * 0.2);
       }
       gainXp(9, { reason:'chemical-reaction', reagent, material: body.material });
+    }
+
+    function spawnReactionEffect(body, reaction, reagent, sourceParticle){
+      if (!body || !reaction) return;
+      const x = sourceParticle?.x ?? body.x;
+      const y = sourceParticle?.y ?? body.y;
+      const baseRadius = body.boundingRadius || body.radius || Math.max(body.width || 0, body.height || 0) / 2 || 20;
+      const intensity = clamp((reaction.energy || 300) / 600, 0.3, 6);
+      const reagentColors = {
+        fire:'#f97316',
+        water:'#38bdf8',
+        ice:'#a5f3fc',
+        acid:'#facc15',
+        lightning:'#fef08a',
+        spark:'#fde047',
+        wind:'#67e8f9'
+      };
+      const tint = reagentColors[reagent] || body.color || '#f8fafc';
+      if (reaction.spawnShockwave) {
+        spawnParticle('shockwave', x, y, {
+          radius: baseRadius * 0.6,
+          maxRadius: baseRadius * (1.8 + intensity * 0.4),
+          life: 0.45 + intensity * 0.08,
+          tint
+        });
+      }
+      if (reaction.spawnDebris) {
+        const debrisCount = Math.min(14, Math.ceil(6 * intensity));
+        for (let i=0;i<debrisCount;i++){
+          const ang = Math.random() * Math.PI * 2;
+          const speed = 80 + Math.random() * 120;
+          spawnParticle('debris', x + Math.cos(ang) * (baseRadius * 0.2), y + Math.sin(ang) * (baseRadius * 0.2), {
+            vx: Math.cos(ang) * speed,
+            vy: Math.sin(ang) * speed,
+            tint: body.color,
+            life: 1 + Math.random() * 0.6
+          });
+        }
+      }
+      if (reaction.spawnIons) {
+        const ionCount = Math.min(18, Math.ceil(5 * intensity));
+        for (let i=0;i<ionCount;i++){
+          const ang = Math.random() * Math.PI * 2;
+          const dist = baseRadius * (0.2 + Math.random() * 0.6);
+          spawnParticle('ion', x + Math.cos(ang) * dist, y + Math.sin(ang) * dist, {
+            tint,
+            life: 0.8 + Math.random() * 0.6
+          });
+        }
+      }
+      if (reaction.spawnEmbers) {
+        const emberCount = Math.min(18, Math.ceil(7 * intensity));
+        for (let i=0;i<emberCount;i++){
+          const ang = Math.random() * Math.PI * 2;
+          const dist = baseRadius * (0.2 + Math.random() * 0.5);
+          spawnParticle('ember', x + Math.cos(ang) * dist, y + Math.sin(ang) * dist, {
+            tint,
+            life: 1.2 + Math.random() * 0.9
+          });
+        }
+      }
+      if (reaction.spawnFrost) {
+        const frostCount = Math.min(16, Math.ceil(5 * intensity));
+        for (let i=0;i<frostCount;i++){
+          const ang = Math.random() * Math.PI * 2;
+          const dist = baseRadius * (0.1 + Math.random() * 0.5);
+          spawnParticle('frost', x + Math.cos(ang) * dist, y + Math.sin(ang) * dist, {
+            tint:'#bae6fd',
+            life: 1.4 + Math.random() * 0.6
+          });
+        }
+      }
     }
 
     function applyChemicalReactions(particle, body){
@@ -1041,7 +1877,9 @@
         seed: Math.random(),
         maxLife: 0,
         supported:false,
-        age:0
+        age:0,
+        tint:null,
+        maxRadius:null
       }, extras || {});
       switch(type){
         case 'fire':
@@ -1102,6 +1940,41 @@
           particle.vy = -80 - Math.random()*40;
           particle.life = 1.4;
           particle.temperature = Math.max(100, state.ambientTemperature + 20);
+          break;
+        case 'ember':
+          particle.vx = (Math.random()-0.5)*80;
+          particle.vy = -70 - Math.random()*40;
+          particle.life = 1.2 + Math.random()*0.8;
+          particle.maxLife = particle.life;
+          particle.radius = 3 + Math.random()*1.2;
+          break;
+        case 'ion':
+          particle.vx = (Math.random()-0.5)*60;
+          particle.vy = -120 - Math.random()*60;
+          particle.life = 1 + Math.random()*0.5;
+          particle.maxLife = particle.life;
+          particle.radius = 3;
+          break;
+        case 'frost':
+          particle.vx = (Math.random()-0.5)*40;
+          particle.vy = -40 - Math.random()*30;
+          particle.life = 1.2 + Math.random()*0.8;
+          particle.maxLife = particle.life;
+          particle.radius = 3 + Math.random()*1;
+          break;
+        case 'debris':
+          particle.vx = (Math.random()-0.5)*160;
+          particle.vy = -20 - Math.random()*40;
+          particle.life = 1 + Math.random()*0.8;
+          particle.radius = 2.5 + Math.random()*1.5;
+          break;
+        case 'shockwave':
+          particle.vx = 0;
+          particle.vy = 0;
+          particle.life = particle.life || (0.4 + Math.random()*0.2);
+          particle.maxLife = particle.life;
+          particle.radius = particle.radius || (extras?.radius ?? 60);
+          particle.maxRadius = extras?.maxRadius || particle.maxRadius || particle.radius * 1.8;
           break;
       }
       state.particles.push(particle);
@@ -1198,6 +2071,18 @@
             p.vx *= (1 - 0.6*dt);
             p.vy *= (1 - 0.6*dt);
             break;
+          case 'ember':
+            p.vx *= (1 - clamp(0.8 * dt, 0, 0.4));
+            p.vy -= 50 * dt;
+            break;
+          case 'ion':
+            p.vy -= 90 * dt;
+            p.vx += Math.sin((p.seed || 0) * 12 + p.age * 20) * 40 * dt;
+            break;
+          case 'frost':
+            p.vy -= 35 * dt;
+            p.vx *= (1 - clamp(0.6 * dt, 0, 0.3));
+            break;
           case 'acid':
             p.vy += state.gravity.y * 0.95 * dt;
             p.vx *= (1 - clamp(1.2 * dt, 0, 0.65));
@@ -1217,6 +2102,26 @@
               p.vy = Math.min(p.vy, 0);
             }
             break;
+          case 'debris':
+            p.vy += state.gravity.y * 0.9 * dt;
+            p.vx *= (1 - clamp(1.2 * dt, 0, 0.6));
+            break;
+          case 'shockwave':
+            p.vx = 0;
+            p.vy = 0;
+            if (p.maxRadius) {
+              const target = p.maxRadius;
+              p.radius = lerp(p.radius || target, target, clamp(4*dt, 0, 1));
+            }
+            break;
+        }
+        if (p.type === 'shockwave') {
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          if (p.x < -32 || p.x > state.bounds.width + 32 || p.y < -64 || p.y > state.bounds.height + 64) {
+            remove.push(i);
+          }
+          continue;
         }
         if (p.type === 'water') {
           const temp = p.temperature ?? state.ambientTemperature;
@@ -1270,10 +2175,10 @@
           if (!intersectsParticleBody(p, body)) continue;
           handleParticleBodyContact(p, body, dt);
         }
-        if (p.type === 'lightning' || p.type === 'spark') {
-          const radius = p.type === 'lightning' ? 40 : 28;
+        if (p.type === 'lightning' || p.type === 'spark' || p.type === 'ion') {
+          const radius = p.type === 'lightning' ? 40 : p.type === 'ion' ? 32 : 28;
           const node = nearestCircuitNode(p.x, p.y, radius);
-          if (node) powerCircuitNode(node, p.type === 'lightning' ? 3 : 2.5);
+          if (node) powerCircuitNode(node, p.type === 'lightning' ? 3 : p.type === 'ion' ? 2.8 : 2.5);
         }
       }
       if (liquids.length > 1) resolveLiquidInteractions(liquids, dt);
@@ -1422,6 +2327,7 @@
 
     function handleParticleBodyContact(p, body, dt){
       if (body?.absoluteWall) return;
+      if (p.type === 'shockwave') return;
       if (applyChemicalReactions(p, body)) return;
       switch(p.type){
         case 'fire': {
@@ -1484,6 +2390,17 @@
           soakBody(body, 0.05 * (p.power || 1));
           adjustBodyTemperature(body, (p.temperature - (body.temperature || state.ambientTemperature)) * 0.01);
           break;
+        case 'ember':
+          igniteBody(body, 0.2 * dt * 60);
+          adjustBodyTemperature(body, 40 * dt);
+          break;
+        case 'ion':
+          chargeBody(body, 0.35 * (p.power || 1));
+          break;
+        case 'frost':
+          freezeBody(body, 0.25 * (p.power || 1));
+          adjustBodyTemperature(body, -80 * dt);
+          break;
       }
       if (p.type === 'lightning') {
         const node = nearestCircuitNode(p.x, p.y, 40);
@@ -1527,6 +2444,155 @@
         if (body) {
           node.x = lerp(node.x, body.x, 0.05);
           node.y = lerp(node.y, body.y + (body.height||body.radius) * 0.5, 0.05);
+        }
+      }
+    }
+
+    function updateCloths(dt){
+      if (!state.cloths.length) return;
+      const gravity = state.gravity;
+      const bodies = state.bodies;
+      const particles = state.particles;
+      const removal = [];
+      const removalIds = [];
+      state.cloths.forEach((cloth, clothIndex) => {
+        const damping = Math.pow(cloth.damping, clamp(dt * 60, 0, 6));
+        const tearFactor = cloth.tearFactor || 1.8;
+        cloth.fatigue = Math.max(0, (cloth.fatigue || 0) - dt * 0.4);
+        let totalStrain = 0;
+        let maxStrain = 0;
+        let constraintCount = 0;
+        for (let i=0;i<cloth.nodes.length;i++){
+          const node = cloth.nodes[i];
+          node.prevX = node.x;
+          node.prevY = node.y;
+          if (!node.pinned) {
+            node.vx += gravity.x * dt;
+            node.vy += gravity.y * dt;
+            const wind = sampleWindField(node.x, node.y);
+            node.vx += wind.vx * dt * cloth.windInfluence;
+            node.vy += wind.vy * dt * cloth.windInfluence;
+            node.vx *= damping;
+            node.vy *= damping;
+            node.x += node.vx * dt;
+            node.y += node.vy * dt;
+          }
+          node.x = clamp(node.x, 4, state.bounds.width - 4);
+          node.y = clamp(node.y, 4, state.bounds.height - 4);
+        }
+
+        for (let iter=0; iter<CLOTH_SOLVER_ITERATIONS; iter++){
+          for (const constraint of cloth.constraints){
+            if (constraint.broken) continue;
+            const a = cloth.nodes[constraint.a];
+            const b = cloth.nodes[constraint.b];
+            if (!a || !b) { constraint.broken = true; continue; }
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            let dist = Math.hypot(dx, dy);
+            const rest = constraint.restLength || cloth.spacing;
+            if (dist <= 1e-5) continue;
+            const strain = Math.abs(dist - rest) / rest;
+            if (Number.isFinite(strain)) {
+              totalStrain += strain;
+              if (strain > maxStrain) maxStrain = strain;
+              constraintCount++;
+              cloth.fatigue = clamp((cloth.fatigue || 0) + strain * 0.045, 0, 12);
+            }
+            if (dist > rest * tearFactor) {
+              constraint.broken = true;
+              cloth.integrity = clamp(cloth.integrity - 0.02, 0, 1);
+              continue;
+            }
+            const diff = (dist - rest) / dist;
+            const stiffness = (constraint.stiffness ?? cloth.structuralStiffness) * (constraint.type === 'bend' ? 0.6 : 1);
+            const scalar = diff * stiffness * 0.5;
+            if (!a.pinned) {
+              a.x += dx * scalar;
+              a.y += dy * scalar;
+            }
+            if (!b.pinned) {
+              b.x -= dx * scalar;
+              b.y -= dy * scalar;
+            }
+          }
+        }
+
+        cloth.avgStrain = constraintCount ? totalStrain / constraintCount : 0;
+        cloth.maxStrain = maxStrain;
+        if (Number.isNaN(cloth.avgStrain)) cloth.avgStrain = 0;
+        if (Number.isNaN(cloth.maxStrain)) cloth.maxStrain = 0;
+        if (cloth.avgStrain > 0.015) cloth.integrity = clamp(cloth.integrity - cloth.avgStrain * dt * 0.6, 0, 1);
+        if (cloth.fatigue > 8 && Math.random() < dt * cloth.fatigue * 0.05) {
+          const candidates = cloth.constraints.filter(c => !c.broken && c.type !== 'bend');
+          if (candidates.length) {
+            const pick = candidates[Math.floor(Math.random() * candidates.length)];
+            pick.broken = true;
+            cloth.integrity = clamp(cloth.integrity - 0.01, 0, 1);
+          }
+        }
+
+        let tempIntegrity = 0;
+        for (const node of cloth.nodes){
+          for (const body of bodies){
+            clothNodeBodyCollision(node, body, dt);
+          }
+          for (const p of particles){
+            const dist = Math.hypot(node.x - p.x, node.y - p.y);
+            if (dist > cloth.spacing * 2) continue;
+            const influence = clamp(1 - dist / (cloth.spacing * 2), 0, 1);
+            switch(p.type){
+              case 'fire':
+                node.temperature += (p.temperature || FIRE_BASE_TEMPERATURE) * 0.002 * influence * dt * 60;
+                cloth.integrity = clamp(cloth.integrity - 0.003 * influence * dt * 60, 0, 1);
+                break;
+              case 'water':
+                node.temperature -= 40 * influence * dt;
+                break;
+              case 'ice':
+                node.temperature -= 65 * influence * dt;
+                break;
+              case 'acid':
+                cloth.integrity = clamp(cloth.integrity - 0.004 * influence * dt * 60, 0, 1);
+                break;
+            }
+          }
+          node.temperature = clamp(node.temperature + ((state.ambientTemperature - node.temperature) * 0.08 * dt), -120, 620);
+          if (!node.pinned) {
+            node.vx = (node.x - node.prevX) / dt;
+            node.vy = (node.y - node.prevY) / dt;
+          } else {
+            node.vx = 0;
+            node.vy = 0;
+          }
+          tempIntegrity += clamp(1 - Math.abs(node.temperature - state.ambientTemperature) / 420, 0.2, 1);
+        }
+        const constraintHealth = cloth.constraints.length ? cloth.constraints.filter(c => !c.broken).length / cloth.constraints.length : 0;
+        const thermalHealth = tempIntegrity / Math.max(1, cloth.nodes.length);
+        cloth.integrity = clamp((cloth.integrity * 0.4) + (constraintHealth * 0.35) + (thermalHealth * 0.25), 0, 1);
+
+        if (cloth.integrity < 0.08 || !cloth.constraints.some(c => !c.broken)) {
+          removal.push(clothIndex);
+        }
+      });
+      if (removal.length) {
+        removal.sort((a,b) => b - a);
+        for (const idx of removal){
+          const cloth = state.cloths[idx];
+          if (cloth) {
+            cloth.nodes.forEach(node => {
+              if (Math.random() < 0.4) {
+                spawnParticle('spark', node.x, node.y, { power:0.5 });
+              }
+            });
+            removalIds.push(cloth.id);
+            state.cloths.splice(idx,1);
+          }
+        }
+        if (state.selectionKind === 'cloth' && removalIds.includes(state.selection)) {
+          state.selection = null;
+          state.selectionKind = null;
+          state.selectionNodeIndex = null;
         }
       }
     }
@@ -1652,6 +2718,32 @@
         body.chargeTimer = Math.max(0, body.chargeTimer - dt * 0.5);
         body.freezeTimer = Math.max(0, body.freezeTimer - dt * 0.6);
         body.corrosion = Math.max(0, body.corrosion - dt * 0.2);
+        body.deformTimer = Math.max(0, (body.deformTimer || 0) - dt);
+        const relaxRate = body.deformTimer > 0 ? clamp(dt * 1.2, 0, 0.35) : clamp(DAMAGE_RECOVERY_RATE * dt, 0, 0.6);
+        body.stress = Math.max(0, (body.stress || 0) - STRESS_RELAX_RATE * dt);
+        body.strain = Math.max(0, (body.strain || 0) - STRAIN_RELAX_RATE * dt);
+        body.heatFlux = Math.max(0, (body.heatFlux || 0) - HEAT_FLUX_RELAX_RATE * dt);
+        if (!body.absoluteWall && body.stress > 0 && body.integrity != null) {
+          body.integrity = clamp(body.integrity - body.stress * 0.00012 * dt, 0, 1);
+        }
+        if (body.shape === 'circle') {
+          body.deformScaleR = lerp(body.deformScaleR, 1, relaxRate);
+          const targetRadius = clamp((body.baseRadius || body.radius || 20) * body.deformScaleR, 6, 280);
+          if (Math.abs(targetRadius - body.radius) > 0.01) {
+            body.radius = targetRadius;
+            updateBodyMassProperties(body);
+          }
+        } else {
+          body.deformScaleX = lerp(body.deformScaleX, 1, relaxRate);
+          body.deformScaleY = lerp(body.deformScaleY, 1, relaxRate);
+          const targetWidth = clamp((body.baseWidth || body.width || 40) * body.deformScaleX, 12, 320);
+          const targetHeight = clamp((body.baseHeight || body.height || 40) * body.deformScaleY, 12, 320);
+          if (Math.abs(targetWidth - body.width) > 0.01 || Math.abs(targetHeight - body.height) > 0.01) {
+            body.width = targetWidth;
+            body.height = targetHeight;
+            updateBodyMassProperties(body);
+          }
+        }
         if (!body.static && state.boundaryMode === 'wall') {
           resolveBoundaryCollisions(body);
         }
@@ -1663,6 +2755,7 @@
             body.height = Math.max(12, body.height * shrink);
           }
           applyMaterial(body, body.material);
+          commitBodyDimensions(body);
         }
         if (!body.static && body.corrosion > 0.4) {
           const erosion = clamp(body.corrosion / 40, 0, 0.6) * 0.002 * dt * 60;
@@ -1673,6 +2766,7 @@
               body.height = Math.max(12, body.height * (1 - erosion));
             }
             applyMaterial(body, body.material);
+            commitBodyDimensions(body);
           }
         }
       }
@@ -1684,6 +2778,7 @@
         }
       }
       resolveCollisions(state.solverIterations);
+      processFractureQueue();
     }
 
     function bodiesThermallyTouching(a, b){
@@ -1972,6 +3067,123 @@
       }
     }
 
+    function processFractureQueue(){
+      if (!state.fractureQueue.length) return;
+      const queue = state.fractureQueue.splice(0);
+      for (const entry of queue){
+        const index = state.bodies.findIndex(b => b.id === entry.id);
+        if (index < 0) continue;
+        const body = state.bodies[index];
+        const prevSelection = state.selection;
+        const prevKind = state.selectionKind;
+        const fragments = [];
+        const normal = entry.normal || { x:0, y:-1 };
+        const magnitude = Math.hypot(normal.x, normal.y) || 1;
+        const dir = { x: normal.x / magnitude, y: normal.y / magnitude };
+        if (body.shape === 'circle') {
+          const baseRadius = Math.max(6, (body.radius || 30) * 0.6);
+          const offset = (body.radius || baseRadius) * 0.5;
+          fragments.push(createFragmentBody('circle', {
+            x: body.x + dir.x * offset,
+            y: body.y + dir.y * offset,
+            radius: baseRadius,
+            vx: body.vx + dir.x * 40,
+            vy: body.vy + dir.y * 40,
+            material: body.material
+          }, body));
+          fragments.push(createFragmentBody('circle', {
+            x: body.x - dir.x * offset,
+            y: body.y - dir.y * offset,
+            radius: Math.max(6, baseRadius * 0.85),
+            vx: body.vx - dir.x * 36,
+            vy: body.vy - dir.y * 36,
+            material: body.material
+          }, body));
+        } else {
+          const width = body.width || 60;
+          const height = body.height || 60;
+          if (Math.abs(dir.x) > Math.abs(dir.y)) {
+            const newW = Math.max(12, width * 0.55);
+            fragments.push(createFragmentBody('box', {
+              x: body.x + dir.x * (newW * 0.5),
+              y: body.y,
+              width: newW,
+              height,
+              vx: body.vx + dir.x * 30,
+              vy: body.vy,
+              angle: body.angle,
+              material: body.material
+            }, body));
+            fragments.push(createFragmentBody('box', {
+              x: body.x - dir.x * (newW * 0.5),
+              y: body.y,
+              width: Math.max(12, width * 0.45),
+              height,
+              vx: body.vx - dir.x * 30,
+              vy: body.vy,
+              angle: body.angle,
+              material: body.material
+            }, body));
+          } else {
+            const newH = Math.max(12, height * 0.55);
+            fragments.push(createFragmentBody('box', {
+              x: body.x,
+              y: body.y + dir.y * (newH * 0.5),
+              width,
+              height: newH,
+              vx: body.vx,
+              vy: body.vy + dir.y * 30,
+              angle: body.angle,
+              material: body.material
+            }, body));
+            fragments.push(createFragmentBody('box', {
+              x: body.x,
+              y: body.y - dir.y * (newH * 0.5),
+              width,
+              height: Math.max(12, height * 0.45),
+              vx: body.vx,
+              vy: body.vy - dir.y * 30,
+              angle: body.angle,
+              material: body.material
+            }, body));
+          }
+        }
+        for (let i=0;i<4;i++){
+          const angle = Math.random() * Math.PI * 2;
+          spawnParticle('spark', entry.x + Math.cos(angle) * 8, entry.y + Math.sin(angle) * 8, { power:0.6 });
+        }
+        const baseRadius = body.boundingRadius || body.radius || Math.max(body.width || 0, body.height || 0) * 0.5 || 30;
+        spawnParticle('shockwave', entry.x, entry.y, {
+          radius: baseRadius * 0.8,
+          maxRadius: baseRadius * 1.8,
+          life: 0.55,
+          tint: body.color
+        });
+        for (let i=0;i<6;i++){
+          const ang = Math.random() * Math.PI * 2;
+          const dist = baseRadius * (0.3 + Math.random() * 0.6);
+          spawnParticle('debris', entry.x + Math.cos(ang) * dist, entry.y + Math.sin(ang) * dist, {
+            vx: body.vx + Math.cos(ang) * (80 + Math.random()*80),
+            vy: body.vy + Math.sin(ang) * (80 + Math.random()*80),
+            tint: body.color,
+            life: 1 + Math.random()
+          });
+        }
+        state.bodies.splice(index,1);
+        if (prevSelection === body.id) {
+          const first = fragments[0] || null;
+          if (first) selectObject(first, 'body');
+          else {
+            state.selection = null;
+            state.selectionKind = null;
+          }
+        } else {
+          state.selection = prevSelection;
+          state.selectionKind = prevKind;
+        }
+      }
+    }
+
     function handleCollisionPair(a,b){
       if (a.static && b.static) return;
       if (a.shape === 'circle' && b.shape === 'circle') resolveCircleCircle(a,b);
@@ -2173,6 +3385,48 @@
       }
 
       registerCollisionXp(a, b, Math.abs(j));
+      if (a && !a.static) applyImpactDamage(a, Math.abs(j), contactPoint, { x: normal.x, y: normal.y });
+      if (b && !b.static) applyImpactDamage(b, Math.abs(j), contactPoint, { x: -normal.x, y: -normal.y });
+    }
+
+    function applyImpactDamage(body, impulse, contactPoint, normal){
+      if (!body || body.static || body.absoluteWall) return;
+      const threshold = Math.max(40, body.fractureThreshold || 140);
+      const severity = clamp(impulse / threshold, 0, 2);
+      if (severity <= 0.001) return;
+      const corrosionPenalty = 1 + (body.corrosion || 0) * 0.03;
+      const heatPenalty = body.temperature > (body.meltingPoint || 600) ? 1.4 : 1;
+      const wetnessRelief = 1 - clamp(body.wetness * 0.05, 0, 0.5);
+      const integrityLoss = severity * corrosionPenalty * heatPenalty * wetnessRelief * 0.4;
+      body.integrity = clamp((body.integrity ?? 1) - integrityLoss, 0, 1);
+      body.damage = clamp((body.damage || 0) + integrityLoss * 0.5, 0, 1.5);
+      body.deformTimer = Math.min((body.deformTimer || 0) + 0.2 + severity * 0.4, 2);
+      body.stress = Math.min((body.stress || 0) + impulse * 0.4, 900);
+      body.strain = clamp((body.strain || 0) + integrityLoss, 0, 3);
+      body.heatFlux = Math.max(body.heatFlux || 0, severity * 260);
+      if (body.shape === 'circle') {
+        body.deformScaleR = clamp(body.deformScaleR - integrityLoss * 0.3, 0.55, 1.2);
+      } else {
+        const axisImpact = Math.abs(normal?.x || 0) > Math.abs(normal?.y || 0) ? 'x' : 'y';
+        const amount = integrityLoss * 0.4;
+        if (axisImpact === 'x') body.deformScaleX = clamp(body.deformScaleX - amount, 0.55, 1.25);
+        else body.deformScaleY = clamp(body.deformScaleY - amount, 0.55, 1.25);
+      }
+      if ((body.integrity ?? 1) <= 0.22) {
+        fractureBody(body, contactPoint, normal);
+      }
+    }
+
+    function fractureBody(body, contactPoint, normal){
+      if (!body || body.absoluteWall || body.pendingFracture) return;
+      if ((body.fragmentCount || 0) >= 5) return;
+      body.pendingFracture = true;
+      state.fractureQueue.push({
+        id: body.id,
+        x: contactPoint?.x ?? body.x,
+        y: contactPoint?.y ?? body.y,
+        normal: normal ? { x: normal.x, y: normal.y } : { x:0, y:-1 }
+      });
     }
 
     function effectiveFriction(body){
@@ -2198,7 +3452,7 @@
       hud.innerHTML = '';
       const info = document.createElement('div');
       info.className = 'phys-hud-line';
-      info.textContent = `図形 ${state.bodies.length} / エミッタ ${state.emitters.length} / 粒子 ${state.particles.length}`;
+      info.textContent = `図形 ${state.bodies.length} / エミッタ ${state.emitters.length} / 布 ${state.cloths.length} / 粒子 ${state.particles.length}`;
       const info2 = document.createElement('div');
       info2.className = 'phys-hud-line';
       const powered = state.emitters.filter(e => e.kind === 'circuit' && e.poweredTicks > 0).length;
@@ -2220,7 +3474,11 @@
       const info5 = document.createElement('div');
       info5.className = 'phys-hud-line';
       info5.textContent = `状態 固体${phaseCounts.solid || 0} / 液体${phaseCounts.liquid || 0} / 気体${phaseCounts.gas || 0}`;
-      hud.append(info, info2, info3, info4, info5);
+      const windEmitters = state.emitters.filter(e => e.kind === 'wind').length;
+      const info6 = document.createElement('div');
+      info6.className = 'phys-hud-line';
+      info6.textContent = `風ガスト ${state.windGusts.length} / 風エミッタ ${windEmitters}`;
+      hud.append(info, info2, info3, info4, info5, info6);
     }
 
     function renderInspector(){
@@ -2327,6 +3585,8 @@
         renderBodyInspector(selected);
       } else if (state.selectionKind === 'emitter') {
         renderEmitterInspector(selected);
+      } else if (state.selectionKind === 'cloth') {
+        renderClothInspector(selected);
       }
 
       const saveSection = document.createElement('div');
@@ -2360,6 +3620,119 @@
       });
       saveSection.append(saveTitle, saveSelect, loadBtn2, deleteBtn2);
       inspector.appendChild(saveSection);
+    }
+
+    function getChemicalDraft(body){
+      if (!body) return null;
+      if (!state.chemicalDrafts.has(body.id)) {
+        const mat = resolveMaterialDefinition(body, body.material);
+        const components = sanitizeComponentList(
+          body.customMaterial?.components ||
+          body.chemical?.components ||
+          (mat?.composition ? Object.entries(mat.composition).map(([symbol, count]) => ({ symbol, count })) : [])
+        );
+        const hazards = new Set(body.customMaterial?.hazards || body.chemical?.hazards || inferHazardsFromComponents(components));
+        const draft = {
+          label: body.customMaterial?.label || body.chemical?.label || mat?.label || 'カスタム素材',
+          components,
+          density: finiteOr(body.customMaterial?.density ?? mat?.density, 1),
+          color: body.customMaterial?.color || body.color || mat?.color || '#94a3b8',
+          restitution: finiteOr(body.customMaterial?.restitution ?? body.restitution ?? mat?.restitution, 0.3),
+          friction: finiteOr(body.customMaterial?.friction ?? body.friction ?? mat?.friction, 0.4),
+          thermalConductivity: finiteOr(body.customMaterial?.thermalConductivity ?? body.thermalConductivity ?? mat?.thermalConductivity, 0.2),
+          heatCapacity: finiteOr(body.customMaterial?.heatCapacity ?? body.heatCapacity ?? mat?.heatCapacity, 1),
+          baseTemperature: finiteOr(body.customMaterial?.baseTemperature ?? body.baseTemperature ?? state.ambientTemperature, state.ambientTemperature),
+          meltingPoint: finiteOr(body.customMaterial?.meltingPoint ?? body.meltingPoint ?? mat?.meltingPoint, 800),
+          boilingPoint: finiteOr(body.customMaterial?.boilingPoint ?? body.boilingPoint ?? mat?.boilingPoint, 1200),
+          ignitionPoint: finiteOr(body.customMaterial?.ignitionPoint ?? body.ignitionPoint ?? mat?.ignitionPoint, 320),
+          freezePoint: finiteOr(body.customMaterial?.freezePoint ?? body.freezePoint ?? mat?.freezePoint, Math.max(-120, (body.meltingPoint ?? 800) - 200)),
+          hazards
+        };
+        state.chemicalDrafts.set(body.id, draft);
+      }
+      const draft = state.chemicalDrafts.get(body.id);
+      draft.components = sanitizeComponentList(draft.components);
+      if (!(draft.hazards instanceof Set)) draft.hazards = new Set(draft.hazards || []);
+      return draft;
+    }
+
+    function buildCustomMaterialFromDraft(body, draft){
+      if (!body || !draft) return null;
+      draft.components = sanitizeComponentList(draft.components);
+      if (!draft.components.length) return null;
+      const composition = compositionFromComponents(draft.components);
+      const formula = chemicalFormulaFromComponents(draft.components);
+      const molarMass = molarMassFromComponents(draft.components);
+      const avgDensity = averageElementProperty(draft.components, 'density', draft.density);
+      const density = Math.max(0.05, Number.isFinite(Number(draft.density)) ? Number(draft.density) : avgDensity || 1);
+      const baseTemperature = Number.isFinite(Number(draft.baseTemperature)) ? Number(draft.baseTemperature) : state.ambientTemperature;
+      const meltingPoint = Number.isFinite(Number(draft.meltingPoint)) ? Number(draft.meltingPoint) : averageElementProperty(draft.components, 'meltingPoint', body.meltingPoint);
+      const boilingPoint = Number.isFinite(Number(draft.boilingPoint)) ? Number(draft.boilingPoint) : averageElementProperty(draft.components, 'boilingPoint', body.boilingPoint);
+      const freezePoint = Number.isFinite(Number(draft.freezePoint)) ? Number(draft.freezePoint) : averageElementProperty(draft.components, 'freezePoint', body.freezePoint);
+      const ignitionPoint = Number.isFinite(Number(draft.ignitionPoint)) ? Number(draft.ignitionPoint) : averageElementProperty(draft.components, 'ignitionPoint', body.ignitionPoint);
+      const thermalConductivity = Number.isFinite(Number(draft.thermalConductivity)) ? Number(draft.thermalConductivity) : averageElementProperty(draft.components, 'thermalConductivity', body.thermalConductivity);
+      const heatCapacity = Number.isFinite(Number(draft.heatCapacity)) ? Number(draft.heatCapacity) : averageElementProperty(draft.components, 'heatCapacity', body.heatCapacity);
+      const restitution = clamp(Number.isFinite(Number(draft.restitution)) ? Number(draft.restitution) : body.restitution, 0, 1);
+      const friction = clamp(Number.isFinite(Number(draft.friction)) ? Number(draft.friction) : body.friction, 0, 1);
+      const hazardSet = inferHazardsFromComponents(draft.components);
+      if (draft.hazards instanceof Set) {
+        draft.hazards.forEach(id => hazardSet.add(id));
+      }
+      const hazards = Array.from(hazardSet).filter(id => HAZARD_LABELS[id]);
+      const customId = (!MATERIALS[body.material] && body.material) ? body.material : `custom-${Date.now().toString(36)}${Math.random().toString(36).slice(2,7)}`;
+      const label = (draft.label || '').trim() || formula || 'カスタム素材';
+      draft.hazards = new Set(hazards);
+      return {
+        id: customId,
+        label,
+        density,
+        restitution,
+        friction,
+        color: draft.color || body.color,
+        baseTemperature,
+        thermalConductivity,
+        heatCapacity,
+        ignitionPoint,
+        meltingPoint,
+        boilingPoint,
+        freezePoint,
+        formula,
+        composition,
+        components: draft.components.map(comp => ({
+          symbol: comp.symbol,
+          count: comp.count,
+          name: PERIODIC_TABLE[comp.symbol]?.name || comp.symbol,
+          atomicNumber: PERIODIC_TABLE[comp.symbol]?.atomicNumber || null
+        })),
+        molarMass,
+        hazards,
+        hazardLabels: hazards.map(id => HAZARD_LABELS[id] || id)
+      };
+    }
+
+    function applyCustomMaterialFromDraft(body, draft){
+      const material = buildCustomMaterialFromDraft(body, draft);
+      if (!material) {
+        window.alert('元素を1種類以上追加してください。');
+        return;
+      }
+      state.customMaterials.set(material.id, deepClone(material));
+      body.customMaterial = deepClone(material);
+      applyMaterial(body, material.id);
+      body.baseRestitution = body.restitution;
+      body.baseFriction = body.friction;
+      renderInspector();
+    }
+
+    function syncCustomMaterialFromBody(body){
+      if (!body || MATERIALS[body.material]) return;
+      const custom = state.customMaterials.get(body.material);
+      if (!custom) return;
+      custom.restitution = body.baseRestitution;
+      custom.friction = body.baseFriction;
+      custom.color = body.color;
+      state.customMaterials.set(body.material, custom);
+      body.customMaterial = deepClone(custom);
     }
 
     function renderBodyInspector(body){
@@ -2398,8 +3771,43 @@
       }
       const damageInfo = document.createElement('p');
       damageInfo.className = 'phys-hint';
+      damageInfo.dataset.role = 'body-damage';
       damageInfo.textContent = `損耗度: ${(Math.min(body.damage || 0, 1) * 100).toFixed(0)}%`;
       section.appendChild(damageInfo);
+
+      if (!body.absoluteWall) {
+        const integrityInfo = document.createElement('p');
+        integrityInfo.className = 'phys-hint';
+        integrityInfo.dataset.role = 'body-integrity';
+        integrityInfo.textContent = `健全度: ${((body.integrity ?? (1 - (body.damage || 0))) * 100).toFixed(1)}%`;
+        section.appendChild(integrityInfo);
+
+        const stressInfo = document.createElement('p');
+        stressInfo.className = 'phys-hint';
+        stressInfo.dataset.role = 'body-stress';
+        stressInfo.textContent = `応力指標: ${(body.stress || 0).toFixed(0)} kPa相当`;
+        section.appendChild(stressInfo);
+
+        const strainInfo = document.createElement('p');
+        strainInfo.className = 'phys-hint';
+        strainInfo.dataset.role = 'body-strain';
+        strainInfo.textContent = `ひずみ: ${((body.strain || 0) * 100).toFixed(1)}%`;
+        section.appendChild(strainInfo);
+
+        const heatFluxInfo = document.createElement('p');
+        heatFluxInfo.className = 'phys-hint';
+        heatFluxInfo.dataset.role = 'body-heatflux';
+        heatFluxInfo.textContent = `熱流指標: ${(body.heatFlux || 0).toFixed(1)}`;
+        section.appendChild(heatFluxInfo);
+
+        const fractureInfo = document.createElement('p');
+        fractureInfo.className = 'phys-hint';
+        fractureInfo.dataset.role = 'body-fracture';
+        const threshold = body.fractureThreshold ? body.fractureThreshold.toFixed(0) : '---';
+        const fragments = body.fragmentCount || 0;
+        fractureInfo.textContent = `破断閾値: ${threshold} / 破片生成 ${fragments}回`;
+        section.appendChild(fractureInfo);
+      }
       if ((body.reactionCooldown || 0) > 0) {
         const cooldownInfo = document.createElement('p');
         cooldownInfo.className = 'phys-hint';
@@ -2417,9 +3825,15 @@
         matSelect.appendChild(opt);
       });
       matSelect.addEventListener('change', () => {
+        const previousMaterial = body.material;
         applyMaterial(body, matSelect.value);
         body.baseRestitution = body.restitution;
         body.baseFriction = body.friction;
+        if (previousMaterial && !MATERIALS[previousMaterial] && previousMaterial !== body.material) {
+          const stillUsed = state.bodies.some(b => b.material === previousMaterial);
+          if (!stillUsed) state.customMaterials.delete(previousMaterial);
+        }
+        state.chemicalDrafts.delete(body.id);
         renderInspector();
       });
 
@@ -2446,6 +3860,9 @@
         body.restitution = Number(restInput.value);
         restLabel.textContent = `反発 (${body.restitution.toFixed(2)})`;
         body.baseRestitution = body.restitution;
+        const draft = getChemicalDraft(body);
+        if (draft) draft.restitution = body.restitution;
+        syncCustomMaterialFromBody(body);
       });
       const fricLabel = document.createElement('label'); fricLabel.textContent = `摩擦 (${body.friction.toFixed(2)})`;
       const fricInput = document.createElement('input');
@@ -2454,6 +3871,9 @@
         body.friction = Number(fricInput.value);
         fricLabel.textContent = `摩擦 (${body.friction.toFixed(2)})`;
         body.baseFriction = body.friction;
+        const draft = getChemicalDraft(body);
+        if (draft) draft.friction = body.friction;
+        syncCustomMaterialFromBody(body);
       });
 
       if (body.absoluteWall) {
@@ -2502,9 +3922,233 @@
 
       const colorLabel = document.createElement('label'); colorLabel.textContent = '色';
       const colorInput = document.createElement('input'); colorInput.type = 'color'; colorInput.value = body.color;
-      colorInput.addEventListener('input', () => { body.color = colorInput.value; });
+      colorInput.addEventListener('input', () => {
+        body.color = colorInput.value;
+        const draft = getChemicalDraft(body);
+        if (draft) draft.color = colorInput.value;
+        syncCustomMaterialFromBody(body);
+      });
       section.append(colorLabel, colorInput);
       inspector.appendChild(section);
+
+      const chemDraft = getChemicalDraft(body);
+      if (chemDraft) {
+        const chemSection = document.createElement('div');
+        chemSection.className = 'phys-section';
+        const chemTitle = document.createElement('h4');
+        chemTitle.textContent = '化学式カスタマイザ';
+        chemSection.appendChild(chemTitle);
+
+        const formula = chemicalFormulaFromComponents(chemDraft.components);
+        const compInfo = document.createElement('p');
+        compInfo.className = 'phys-hint';
+        compInfo.textContent = chemDraft.components.length
+          ? '構成: ' + chemDraft.components.map(c => `${c.symbol}×${c.count}`).join(' / ')
+          : '構成: 追加された元素はありません';
+        chemSection.appendChild(compInfo);
+
+        const formulaInfo = document.createElement('p');
+        formulaInfo.className = 'phys-hint';
+        formulaInfo.textContent = `化学式プレビュー: ${formula || '---'}`;
+        chemSection.appendChild(formulaInfo);
+
+        const molarMass = molarMassFromComponents(chemDraft.components);
+        const molarInfo = document.createElement('p');
+        molarInfo.className = 'phys-hint';
+        molarInfo.textContent = `推定モル質量: ${molarMass ? molarMass.toFixed(2) : '---'} g/mol`;
+        chemSection.appendChild(molarInfo);
+
+        const suggestedDensity = averageElementProperty(chemDraft.components, 'density');
+        if (typeof suggestedDensity === 'number') {
+          const densityHint = document.createElement('p');
+          densityHint.className = 'phys-hint';
+          densityHint.textContent = `元素平均密度: ${suggestedDensity.toFixed(2)} (現在 ${chemDraft.density.toFixed(2)})`;
+          chemSection.appendChild(densityHint);
+        }
+
+        const compList = document.createElement('ul');
+        compList.className = 'phys-conn-list';
+        chemDraft.components.forEach((comp, index) => {
+          const li = document.createElement('li');
+          const label = document.createElement('span');
+          label.textContent = `${comp.symbol} × ${comp.count}`;
+          const controls = document.createElement('div');
+          controls.className = 'phys-tool-group';
+          const incBtn = document.createElement('button'); incBtn.type = 'button'; incBtn.textContent = '＋';
+          incBtn.addEventListener('click', () => {
+            chemDraft.components[index].count = clamp(comp.count + 1, 1, 256);
+            renderInspector();
+          });
+          const decBtn = document.createElement('button'); decBtn.type = 'button'; decBtn.textContent = '－';
+          decBtn.addEventListener('click', () => {
+            if (chemDraft.components[index].count <= 1) {
+              chemDraft.components.splice(index,1);
+            } else {
+              chemDraft.components[index].count = clamp(comp.count - 1, 1, 256);
+            }
+            renderInspector();
+          });
+          const removeBtn = document.createElement('button'); removeBtn.type = 'button'; removeBtn.textContent = '削除';
+          removeBtn.addEventListener('click', () => {
+            chemDraft.components.splice(index,1);
+            renderInspector();
+          });
+          controls.append(incBtn, decBtn, removeBtn);
+          li.append(label, controls);
+          compList.appendChild(li);
+        });
+        if (chemDraft.components.length) chemSection.appendChild(compList);
+
+        const addRow = document.createElement('div');
+        addRow.className = 'phys-tool-group';
+        const elementSelect = document.createElement('select');
+        sortedPeriodicElements().forEach(el => {
+          const opt = document.createElement('option');
+          opt.value = el.symbol;
+          opt.textContent = `${el.symbol} (${el.name})`;
+          elementSelect.appendChild(opt);
+        });
+        const countInput = document.createElement('input');
+        countInput.type = 'number';
+        countInput.min = '1';
+        countInput.max = '256';
+        countInput.step = '1';
+        countInput.value = '1';
+        const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.textContent = '元素追加';
+        addBtn.addEventListener('click', () => {
+          const symbol = elementSelect.value;
+          const count = clamp(Math.round(Number(countInput.value) || 1), 1, 256);
+          const existing = chemDraft.components.find(c => c.symbol === symbol);
+          if (existing) existing.count = clamp(existing.count + count, 1, 256);
+          else chemDraft.components.push({ symbol, count });
+          renderInspector();
+        });
+        addRow.append(elementSelect, countInput, addBtn);
+        chemSection.appendChild(addRow);
+
+        const labelWrap = document.createElement('label');
+        labelWrap.textContent = '素材名';
+        const labelInput = document.createElement('input');
+        labelInput.type = 'text';
+        labelInput.value = chemDraft.label || '';
+        labelInput.placeholder = 'カスタム素材名';
+        labelInput.addEventListener('input', () => {
+          chemDraft.label = labelInput.value.slice(0, 40);
+        });
+        labelWrap.appendChild(labelInput);
+        chemSection.appendChild(labelWrap);
+
+        const densityLabel = document.createElement('label');
+        densityLabel.textContent = `密度 (${chemDraft.density.toFixed(2)})`;
+        const densityInput = document.createElement('input');
+        densityInput.type = 'number';
+        densityInput.min = '0.05';
+        densityInput.max = '25';
+        densityInput.step = '0.05';
+        densityInput.value = String(chemDraft.density);
+        densityInput.addEventListener('input', () => {
+          chemDraft.density = clamp(Number(densityInput.value) || chemDraft.density, 0.05, 25);
+          densityLabel.textContent = `密度 (${chemDraft.density.toFixed(2)})`;
+        });
+        densityLabel.appendChild(densityInput);
+        chemSection.appendChild(densityLabel);
+
+        const tempLabel = document.createElement('label');
+        tempLabel.textContent = `基準温度 (${chemDraft.baseTemperature.toFixed(1)}°C)`;
+        const tempInput = document.createElement('input');
+        tempInput.type = 'number';
+        tempInput.step = '1';
+        tempInput.value = String(Math.round(chemDraft.baseTemperature));
+        tempInput.addEventListener('input', () => {
+          chemDraft.baseTemperature = clamp(Number(tempInput.value) || chemDraft.baseTemperature, -200, 800);
+          tempLabel.textContent = `基準温度 (${chemDraft.baseTemperature.toFixed(1)}°C)`;
+        });
+        tempLabel.appendChild(tempInput);
+        chemSection.appendChild(tempLabel);
+
+        const meltLabel = document.createElement('label');
+        meltLabel.textContent = `融点 (${chemDraft.meltingPoint.toFixed(0)}°C)`;
+        const meltInput = document.createElement('input');
+        meltInput.type = 'number';
+        meltInput.step = '10';
+        meltInput.value = String(Math.round(chemDraft.meltingPoint));
+        meltInput.addEventListener('input', () => {
+          chemDraft.meltingPoint = Number(meltInput.value) || chemDraft.meltingPoint;
+          meltLabel.textContent = `融点 (${chemDraft.meltingPoint.toFixed(0)}°C)`;
+        });
+        meltLabel.appendChild(meltInput);
+        chemSection.appendChild(meltLabel);
+
+        const boilLabel = document.createElement('label');
+        boilLabel.textContent = `沸点 (${chemDraft.boilingPoint.toFixed(0)}°C)`;
+        const boilInput = document.createElement('input');
+        boilInput.type = 'number';
+        boilInput.step = '10';
+        boilInput.value = String(Math.round(chemDraft.boilingPoint));
+        boilInput.addEventListener('input', () => {
+          chemDraft.boilingPoint = Number(boilInput.value) || chemDraft.boilingPoint;
+          boilLabel.textContent = `沸点 (${chemDraft.boilingPoint.toFixed(0)}°C)`;
+        });
+        boilLabel.appendChild(boilInput);
+        chemSection.appendChild(boilLabel);
+
+        const ignitionLabel = document.createElement('label');
+        ignitionLabel.textContent = `発火点 (${chemDraft.ignitionPoint.toFixed(0)}°C)`;
+        const ignitionInput = document.createElement('input');
+        ignitionInput.type = 'number';
+        ignitionInput.step = '10';
+        ignitionInput.value = String(Math.round(chemDraft.ignitionPoint));
+        ignitionInput.addEventListener('input', () => {
+          chemDraft.ignitionPoint = Number(ignitionInput.value) || chemDraft.ignitionPoint;
+          ignitionLabel.textContent = `発火点 (${chemDraft.ignitionPoint.toFixed(0)}°C)`;
+        });
+        ignitionLabel.appendChild(ignitionInput);
+        chemSection.appendChild(ignitionLabel);
+
+        const hazardTitle = document.createElement('h5');
+        hazardTitle.textContent = '性質タグ';
+        chemSection.appendChild(hazardTitle);
+
+        const hazardWrap = document.createElement('div');
+        hazardWrap.className = 'phys-tool-group';
+        Object.entries(HAZARD_LABELS).forEach(([id, label]) => {
+          const hazardLabel = document.createElement('label');
+          hazardLabel.className = 'phys-checkbox';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = chemDraft.hazards.has(id);
+          checkbox.addEventListener('change', () => {
+            if (checkbox.checked) chemDraft.hazards.add(id);
+            else chemDraft.hazards.delete(id);
+            renderInspector();
+          });
+          hazardLabel.append(checkbox, document.createTextNode(label));
+          hazardWrap.appendChild(hazardLabel);
+        });
+        chemSection.appendChild(hazardWrap);
+
+        if (chemDraft.hazards.size) {
+          const hazardInfo = document.createElement('p');
+          hazardInfo.className = 'phys-hint';
+          hazardInfo.textContent = '適用タグ: ' + Array.from(chemDraft.hazards).map(id => HAZARD_LABELS[id] || id).join(' / ');
+          chemSection.appendChild(hazardInfo);
+        }
+
+        const buttonRow = document.createElement('div');
+        buttonRow.className = 'phys-tool-group';
+        const applyBtn = document.createElement('button'); applyBtn.type = 'button'; applyBtn.textContent = 'カスタム素材を適用';
+        applyBtn.addEventListener('click', () => applyCustomMaterialFromDraft(body, chemDraft));
+        const resetBtn = document.createElement('button'); resetBtn.type = 'button'; resetBtn.textContent = '構成クリア';
+        resetBtn.addEventListener('click', () => {
+          chemDraft.components = [];
+          chemDraft.hazards = new Set();
+          renderInspector();
+        });
+        buttonRow.append(applyBtn, resetBtn);
+        chemSection.appendChild(buttonRow);
+
+        inspector.appendChild(chemSection);
+      }
     }
 
     function renderEmitterInspector(emitter){
@@ -2574,8 +4218,164 @@
       inspector.appendChild(section);
     }
 
+    function renderClothInspector(cloth){
+      const section = document.createElement('div');
+      section.className = 'phys-section';
+      const h = document.createElement('h4'); h.textContent = '布プロパティ';
+      section.appendChild(h);
+      const integrity = document.createElement('p');
+      integrity.className = 'phys-hint';
+      integrity.dataset.role = 'cloth-integrity';
+      integrity.textContent = `健全度 ${(cloth.integrity * 100).toFixed(1)}%`;
+      section.appendChild(integrity);
+      const info = document.createElement('p');
+      info.className = 'phys-hint';
+      info.dataset.role = 'cloth-links';
+      const intact = cloth.constraints.filter(c => !c.broken).length;
+      info.textContent = `節点 ${cloth.cols}×${cloth.rows} / 結合 ${intact}/${cloth.constraints.length}`;
+      section.appendChild(info);
+
+      const strainInfo = document.createElement('p');
+      strainInfo.className = 'phys-hint';
+      strainInfo.dataset.role = 'cloth-strain';
+      strainInfo.textContent = `平均伸長 ${(cloth.avgStrain * 100).toFixed(2)}% / 最大 ${(cloth.maxStrain * 100).toFixed(2)}%`;
+      section.appendChild(strainInfo);
+
+      const fatigueInfo = document.createElement('p');
+      fatigueInfo.className = 'phys-hint';
+      fatigueInfo.dataset.role = 'cloth-fatigue';
+      fatigueInfo.textContent = `疲労蓄積 ${ (cloth.fatigue || 0).toFixed(2) }`;
+      section.appendChild(fatigueInfo);
+
+      const stiffLabel = document.createElement('label'); stiffLabel.textContent = `張力 (${cloth.structuralStiffness.toFixed(2)})`;
+      const stiffInput = document.createElement('input');
+      stiffInput.type = 'range'; stiffInput.min = '0.2'; stiffInput.max = '1.5'; stiffInput.step = '0.01';
+      stiffInput.value = String(cloth.structuralStiffness);
+      stiffInput.addEventListener('input', () => {
+        cloth.structuralStiffness = Number(stiffInput.value);
+        stiffLabel.textContent = `張力 (${cloth.structuralStiffness.toFixed(2)})`;
+        cloth.constraints.forEach(c => { if (c.type === 'structural') c.stiffness = cloth.structuralStiffness; });
+      });
+
+      const shearLabel = document.createElement('label'); shearLabel.textContent = `せん断 (${cloth.shearStiffness.toFixed(2)})`;
+      const shearInput = document.createElement('input');
+      shearInput.type = 'range'; shearInput.min = '0.1'; shearInput.max = '1.2'; shearInput.step = '0.01';
+      shearInput.value = String(cloth.shearStiffness);
+      shearInput.addEventListener('input', () => {
+        cloth.shearStiffness = Number(shearInput.value);
+        shearLabel.textContent = `せん断 (${cloth.shearStiffness.toFixed(2)})`;
+        cloth.constraints.forEach(c => { if (c.type === 'shear') c.stiffness = cloth.shearStiffness; });
+      });
+
+      const bendLabel = document.createElement('label'); bendLabel.textContent = `しなり (${cloth.bendStiffness.toFixed(2)})`;
+      const bendInput = document.createElement('input');
+      bendInput.type = 'range'; bendInput.min = '0.05'; bendInput.max = '1'; bendInput.step = '0.01';
+      bendInput.value = String(cloth.bendStiffness);
+      bendInput.addEventListener('input', () => {
+        cloth.bendStiffness = Number(bendInput.value);
+        bendLabel.textContent = `しなり (${cloth.bendStiffness.toFixed(2)})`;
+        cloth.constraints.forEach(c => { if (c.type === 'bend') c.stiffness = cloth.bendStiffness; });
+      });
+
+      const dampLabel = document.createElement('label'); dampLabel.textContent = `減衰 (${cloth.damping.toFixed(3)})`;
+      const dampInput = document.createElement('input');
+      dampInput.type = 'range'; dampInput.min = '0.6'; dampInput.max = '0.999'; dampInput.step = '0.001';
+      dampInput.value = String(cloth.damping);
+      dampInput.addEventListener('input', () => {
+        cloth.damping = Number(dampInput.value);
+        dampLabel.textContent = `減衰 (${cloth.damping.toFixed(3)})`;
+      });
+
+      const tearLabel = document.createElement('label'); tearLabel.textContent = `破断倍率 (${cloth.tearFactor.toFixed(2)})`;
+      const tearInput = document.createElement('input');
+      tearInput.type = 'range'; tearInput.min = '1.1'; tearInput.max = '3.5'; tearInput.step = '0.05';
+      tearInput.value = String(cloth.tearFactor);
+      tearInput.addEventListener('input', () => {
+        cloth.tearFactor = Number(tearInput.value);
+        tearLabel.textContent = `破断倍率 (${cloth.tearFactor.toFixed(2)})`;
+      });
+
+      const windLabel = document.createElement('label'); windLabel.textContent = `風反応 (${cloth.windInfluence.toFixed(2)})`;
+      const windInput = document.createElement('input');
+      windInput.type = 'range'; windInput.min = '0'; windInput.max = '2.5'; windInput.step = '0.05';
+      windInput.value = String(cloth.windInfluence);
+      windInput.addEventListener('input', () => {
+        cloth.windInfluence = Number(windInput.value);
+        windLabel.textContent = `風反応 (${cloth.windInfluence.toFixed(2)})`;
+      });
+
+      const colorLabel = document.createElement('label'); colorLabel.textContent = '色';
+      const colorInput = document.createElement('input'); colorInput.type = 'color'; colorInput.value = cloth.color || '#cbd5f5';
+      colorInput.addEventListener('input', () => { cloth.color = colorInput.value; });
+
+      const pinButtons = document.createElement('div');
+      pinButtons.className = 'phys-tool-group';
+      const repinTop = document.createElement('button'); repinTop.textContent = '上辺を固定';
+      repinTop.type = 'button';
+      repinTop.addEventListener('click', () => {
+        for (let c=0;c<cloth.cols;c++){
+          const node = cloth.nodes[c];
+          if (node) node.pinned = true;
+        }
+      });
+      const unpinAll = document.createElement('button'); unpinAll.textContent = '固定解除';
+      unpinAll.type = 'button';
+      unpinAll.addEventListener('click', () => {
+        cloth.nodes.forEach(node => { node.pinned = false; });
+      });
+      pinButtons.append(repinTop, unpinAll);
+
+      section.append(
+        stiffLabel, stiffInput,
+        shearLabel, shearInput,
+        bendLabel, bendInput,
+        dampLabel, dampInput,
+        tearLabel, tearInput,
+        windLabel, windInput,
+        colorLabel, colorInput,
+        pinButtons
+      );
+      inspector.appendChild(section);
+    }
+
     function updateHudInspector(){
       updateHud();
+      if (state.selectionKind === 'cloth') {
+        const cloth = getSelected();
+        if (cloth) {
+          const integrityEl = inspector.querySelector('[data-role="cloth-integrity"]');
+          const linksEl = inspector.querySelector('[data-role="cloth-links"]');
+          if (integrityEl) integrityEl.textContent = `健全度 ${(cloth.integrity * 100).toFixed(1)}%`;
+          if (linksEl) {
+            const intact = cloth.constraints.filter(c => !c.broken).length;
+            linksEl.textContent = `節点 ${cloth.cols}×${cloth.rows} / 結合 ${intact}/${cloth.constraints.length}`;
+          }
+          const strainEl = inspector.querySelector('[data-role="cloth-strain"]');
+          if (strainEl) strainEl.textContent = `平均伸長 ${(cloth.avgStrain * 100).toFixed(2)}% / 最大 ${(cloth.maxStrain * 100).toFixed(2)}%`;
+          const fatigueEl = inspector.querySelector('[data-role="cloth-fatigue"]');
+          if (fatigueEl) fatigueEl.textContent = `疲労蓄積 ${(cloth.fatigue || 0).toFixed(2)}`;
+        }
+      } else if (state.selectionKind === 'body') {
+        const body = getSelected();
+        if (body) {
+          const damageEl = inspector.querySelector('[data-role="body-damage"]');
+          if (damageEl) damageEl.textContent = `損耗度: ${(Math.min(body.damage || 0, 1) * 100).toFixed(0)}%`;
+          const integrityEl = inspector.querySelector('[data-role="body-integrity"]');
+          if (integrityEl) integrityEl.textContent = `健全度: ${((body.integrity ?? (1 - (body.damage || 0))) * 100).toFixed(1)}%`;
+          const fractureEl = inspector.querySelector('[data-role="body-fracture"]');
+          if (fractureEl) {
+            const threshold = body.fractureThreshold ? body.fractureThreshold.toFixed(0) : '---';
+            const fragments = body.fragmentCount || 0;
+            fractureEl.textContent = `破断閾値: ${threshold} / 破片生成 ${fragments}回`;
+          }
+          const stressEl = inspector.querySelector('[data-role="body-stress"]');
+          if (stressEl) stressEl.textContent = `応力指標: ${(body.stress || 0).toFixed(0)} kPa相当`;
+          const strainEl = inspector.querySelector('[data-role="body-strain"]');
+          if (strainEl) strainEl.textContent = `ひずみ: ${((body.strain || 0) * 100).toFixed(1)}%`;
+          const heatFluxEl = inspector.querySelector('[data-role="body-heatflux"]');
+          if (heatFluxEl) heatFluxEl.textContent = `熱流指標: ${(body.heatFlux || 0).toFixed(1)}`;
+        }
+      }
     }
 
     function updateWorld(dt){
@@ -2585,6 +4385,8 @@
         updateBodies(stepDt);
         updateEmitters(stepDt);
         updateParticles(stepDt);
+        updateWindGusts(stepDt);
+        updateCloths(stepDt);
         updateThermodynamics(stepDt);
         updateChemistry(stepDt);
         updateVines(stepDt);
@@ -2592,7 +4394,60 @@
       }
     }
 
-    function renderWorld(){
+  function renderBodyCracks(ctx, body, severity){
+    if (!body) return;
+    const radiusX = body.shape === 'circle' ? (body.radius || 0) : (body.width || 0) / 2;
+    const radiusY = body.shape === 'circle' ? (body.radius || 0) : (body.height || 0) / 2;
+    const maxRadius = Math.max(radiusX, radiusY);
+    if (!maxRadius) return;
+    const branchCount = Math.max(2, Math.round(2 + severity * 6));
+    const segments = Math.max(3, Math.round(3 + severity * 4));
+    const baseSeed = typeof body.crackSeed === 'number' ? body.crackSeed : Math.random();
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = `rgba(15,23,42,${clamp(0.35 + severity * 0.45, 0.25, 0.82)})`;
+    ctx.globalAlpha = clamp(0.28 + severity * 0.45, 0.2, 0.85);
+    ctx.lineWidth = clamp(0.7 + severity * 1.5, 0.7, 2.8);
+    for (let i=0;i<branchCount;i++){
+      const seed = baseSeed + i * 19.173;
+      let px = (seededRandom(seed, 0) - 0.5) * radiusX * 1.1;
+      let py = (seededRandom(seed, 1) - 0.5) * radiusY * 1.1;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      for (let s=0;s<segments;s++){
+        const jitter = (seededRandom(seed, 2 + s) - 0.5) * Math.PI * 1.4;
+        const span = 0.5 + seededRandom(seed, 20 + s) * 0.9;
+        px += Math.cos(jitter) * radiusX * span / segments;
+        py += Math.sin(jitter) * radiusY * span / segments;
+        if (body.shape === 'circle') {
+          const limit = maxRadius * 0.92;
+          const dist = Math.hypot(px, py) || 0.0001;
+          if (dist > limit) {
+            const t = limit / dist;
+            px *= t;
+            py *= t;
+          }
+        } else {
+          px = clamp(px, -radiusX * 0.95, radiusX * 0.95);
+          py = clamp(py, -radiusY * 0.95, radiusY * 0.95);
+        }
+        ctx.lineTo(px, py);
+        if (severity > 0.55 && seededRandom(seed, 120 + s) > 0.68) {
+          const branchAngle = jitter + (seededRandom(seed, 200 + s) - 0.5) * Math.PI * 0.6;
+          const branchLen = maxRadius * 0.22 * severity;
+          const bx = px + Math.cos(branchAngle) * branchLen;
+          const by = py + Math.sin(branchAngle) * branchLen;
+          ctx.lineTo(bx, by);
+          ctx.moveTo(px, py);
+        }
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function renderWorld(){
       ctx.clearRect(0,0,canvas.width, canvas.height);
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0,0,canvas.width, canvas.height);
@@ -2618,9 +4473,35 @@
         }
       });
 
+      ctx.save();
+      ctx.lineWidth = 2;
+      state.windGusts.forEach(gust => {
+        const remaining = gust.maxLife ? clamp(gust.life / gust.maxLife, 0, 1) : 0.5;
+        const alpha = clamp(0.15 + remaining * 0.35, 0.1, 0.45);
+        const radius = gust.radius * (0.9 + Math.sin(gust.phase + gust.age * 5) * 0.05);
+        ctx.strokeStyle = `rgba(56,189,248,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(gust.x, gust.y, radius, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.beginPath();
+        const dirRad = (gust.direction * Math.PI) / 180;
+        ctx.moveTo(gust.x, gust.y);
+        ctx.lineTo(gust.x + Math.cos(dirRad) * radius * 0.6, gust.y + Math.sin(dirRad) * radius * 0.6);
+        ctx.stroke();
+      });
+      ctx.restore();
+
       // bodies
       state.bodies.forEach(body => {
         let fill = body.color;
+        const crackSeverity = body.absoluteWall ? 0 : clamp(
+          (body.damage || 0) * 0.65 +
+          (body.strain || 0) * 0.6 +
+          Math.max((body.stress || 0) - 40, 0) / 360 +
+          (body.corrosion || 0) / 28,
+          0,
+          1
+        );
         if (body.absoluteWall) {
           fill = '#111827';
         } else {
@@ -2633,6 +4514,8 @@
           if (body.corrosion > 0) fill = mixColor(fill, '#bef264', clamp(body.corrosion/18, 0, 0.5));
           if (body.chargeTimer > 0) fill = mixColor(fill, '#facc15', clamp(body.chargeTimer/5, 0, 0.6));
           if (body.damage > 0) fill = mixColor(fill, '#f87171', clamp(body.damage, 0, 0.65));
+          if ((body.strain || 0) > 0) fill = mixColor(fill, '#fbbf24', clamp((body.strain || 0) / 1.2, 0, 0.45));
+          if ((body.stress || 0) > 30) fill = mixColor(fill, '#ef4444', clamp((body.stress || 0) / 400, 0, 0.55));
           if (body.phase === 'gas') fill = mixColor(fill, '#e2e8f0', 0.2);
           if (body.phase === 'liquid') fill = mixColor(fill, '#3b82f6', 0.2);
         }
@@ -2654,6 +4537,9 @@
           ctx.stroke();
         }
         if (!body.absoluteWall) {
+          if (crackSeverity > 0.05) {
+            renderBodyCracks(ctx, body, crackSeverity);
+          }
           ctx.save();
           ctx.strokeStyle = 'rgba(15,23,42,0.35)';
           ctx.lineWidth = 2;
@@ -2694,6 +4580,75 @@
             ctx.textBaseline = prevBaseline;
           }
         }
+      });
+
+      // cloths
+      state.cloths.forEach(cloth => {
+        const integrity = clamp(cloth.integrity ?? 1, 0, 1);
+        const base = cloth.color || '#cbd5f5';
+        const strainFactor = clamp((cloth.avgStrain || 0) * 18, 0, 1);
+        const peakStrain = clamp((cloth.maxStrain || 0) * 10, 0, 1);
+        const fatigueFactor = clamp((cloth.fatigue || 0) / 12, 0, 1);
+        const heat = cloth.heat || 0;
+        let strokeBase = mixColor(base, '#ef4444', clamp(1 - integrity, 0, 0.8));
+        strokeBase = mixColor(strokeBase, '#f97316', peakStrain * 0.6);
+        strokeBase = mixColor(strokeBase, '#dc2626', fatigueFactor * 0.55);
+        if (heat > 12) strokeBase = mixColor(strokeBase, '#fb923c', clamp((heat - 12) / 180, 0, 0.5));
+        if (heat < -8) strokeBase = mixColor(strokeBase, '#38bdf8', clamp(Math.abs(heat + 8) / 160, 0, 0.45));
+        const strokeColor = state.selection === cloth.id && state.selectionKind === 'cloth'
+          ? '#facc15'
+          : strokeBase;
+        ctx.lineWidth = state.selection === cloth.id ? 2.2 : 1.2;
+        ctx.strokeStyle = strokeColor;
+        let fillColor = mixColor(base, '#94a3b8', 0.3);
+        fillColor = mixColor(fillColor, '#fde68a', strainFactor * 0.5);
+        fillColor = mixColor(fillColor, '#f87171', fatigueFactor * 0.4);
+        if (heat > 12) fillColor = mixColor(fillColor, '#f97316', clamp((heat - 12) / 180, 0, 0.5));
+        if (heat < -8) fillColor = mixColor(fillColor, '#93c5fd', clamp(Math.abs(heat + 8) / 140, 0, 0.45));
+        ctx.fillStyle = fillColor;
+        ctx.globalAlpha = clamp(0.55 + integrity * 0.35, 0.4, 0.95);
+        for (let r=0;r<cloth.rows;r++){
+          ctx.beginPath();
+          for (let c=0;c<cloth.cols;c++){
+            const node = cloth.nodes[r * cloth.cols + c];
+            if (!node) continue;
+            if (c === 0) ctx.moveTo(node.x, node.y);
+            else ctx.lineTo(node.x, node.y);
+          }
+          ctx.stroke();
+        }
+        for (let c=0;c<cloth.cols;c++){
+          ctx.beginPath();
+          for (let r=0;r<cloth.rows;r++){
+            const node = cloth.nodes[r * cloth.cols + c];
+            if (!node) continue;
+            if (r === 0) ctx.moveTo(node.x, node.y);
+            else ctx.lineTo(node.x, node.y);
+          }
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        const selectedNode = state.selection === cloth.id && state.selectionKind === 'cloth' ? state.selectionNodeIndex : null;
+        cloth.nodes.forEach((node, idx) => {
+          const radius = Math.max(2.5, cloth.spacing * 0.08);
+          ctx.beginPath();
+          if (node.pinned) {
+            ctx.fillStyle = 'rgba(248,250,252,0.85)';
+          } else {
+            const nodeDamage = clamp(node.damage || 0, 0, 1);
+            const stressMix = clamp(nodeDamage * 0.7 + fatigueFactor * 0.4 + strainFactor * 0.3, 0, 1);
+            let nodeColor = mixColor(base, '#0f172a', clamp(0.45 + stressMix * 0.4, 0, 0.9));
+            nodeColor = mixColor(nodeColor, '#f97316', stressMix * 0.35);
+            ctx.fillStyle = nodeColor;
+          }
+          ctx.arc(node.x, node.y, radius, 0, Math.PI*2);
+          ctx.fill();
+          if (selectedNode === idx) {
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        });
       });
 
       if (state.godFinger && state.godFinger.pointerX != null) {
@@ -2740,7 +4695,11 @@
 
       // particles
       state.particles.forEach(p => {
+        ctx.save();
         let radius = p.radius || 4;
+        let strokeOnly = false;
+        let strokeWidth = 1.4;
+        const lifeRatio = p.maxLife > 0 ? clamp(p.life / p.maxLife, 0, 1) : 1;
         switch(p.type){
           case 'fire':
             ctx.fillStyle = flameColor(p.temperature ?? FIRE_BASE_TEMPERATURE);
@@ -2755,9 +4714,13 @@
             break;
           case 'lightning':
             ctx.fillStyle = 'rgba(234,179,8,0.8)';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(250,204,21,0.6)';
             break;
           case 'spark':
             ctx.fillStyle = 'rgba(103,232,249,0.8)';
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = 'rgba(103,232,249,0.6)';
             break;
           case 'ice':
             ctx.fillStyle = 'rgba(191,219,254,0.7)';
@@ -2775,10 +4738,58 @@
             ctx.fillStyle = `rgba(226,232,240,${alpha})`;
             break;
           }
+          case 'ember': {
+            const alpha = clamp(0.35 + lifeRatio * 0.5, 0.25, 0.85);
+            ctx.fillStyle = p.tint ? tintToRgba(p.tint, alpha) : `rgba(249,115,22,${alpha})`;
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = p.tint ? tintToRgba(p.tint, alpha) : 'rgba(249,115,22,0.7)';
+            radius = Math.max(2.2, p.radius || 3);
+            break;
+          }
+          case 'ion': {
+            const alpha = clamp(0.3 + lifeRatio * 0.45, 0.22, 0.78);
+            ctx.fillStyle = p.tint ? tintToRgba(p.tint, alpha) : `rgba(165,243,252,${alpha})`;
+            ctx.shadowBlur = 14;
+            ctx.shadowColor = p.tint ? tintToRgba(p.tint, alpha * 0.9) : 'rgba(103,232,249,0.8)';
+            radius = Math.max(2.6, p.radius || 3);
+            break;
+          }
+          case 'frost': {
+            const alpha = clamp(0.35 + lifeRatio * 0.4, 0.25, 0.75);
+            ctx.fillStyle = p.tint ? tintToRgba(p.tint, alpha) : `rgba(191,219,254,${alpha})`;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(191,219,254,0.6)';
+            radius = Math.max(2.4, p.radius || 3);
+            break;
+          }
+          case 'debris': {
+            const alpha = clamp(0.4 + lifeRatio * 0.3, 0.3, 0.7);
+            ctx.fillStyle = p.tint ? tintToRgba(p.tint, alpha) : `rgba(148,163,184,${alpha})`;
+            radius = Math.max(2.2, p.radius || 3);
+            break;
+          }
+          case 'shockwave': {
+            const alpha = clamp(0.15 + lifeRatio * 0.35, 0.12, 0.6);
+            ctx.strokeStyle = tintToRgba(p.tint || '#f1f5f9', alpha);
+            ctx.shadowBlur = 18 * lifeRatio;
+            ctx.shadowColor = tintToRgba(p.tint || '#f1f5f9', alpha * 0.8);
+            strokeOnly = true;
+            strokeWidth = clamp((p.radius || radius) * 0.12, 1.5, 6);
+            radius = Math.max(p.radius || radius, 6);
+            break;
+          }
           default:
             ctx.fillStyle = 'rgba(226,232,240,0.6)';
         }
-        ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI*2);
+        if (strokeOnly) {
+          ctx.lineWidth = strokeWidth;
+          ctx.stroke();
+        } else {
+          ctx.fill();
+        }
+        ctx.restore();
       });
     }
 
@@ -2825,7 +4836,44 @@
         boundaryMode: state.boundaryMode,
         bodies: state.bodies.map(b => deepClone(b)),
         emitters: state.emitters.map(e => deepClone(e)),
-        vines: state.vines.map(v => deepClone(v))
+        vines: state.vines.map(v => deepClone(v)),
+        cloths: state.cloths.map(cloth => ({
+          id: cloth.id,
+          cols: cloth.cols,
+          rows: cloth.rows,
+          spacing: cloth.spacing,
+          structuralStiffness: cloth.structuralStiffness,
+          shearStiffness: cloth.shearStiffness,
+          bendStiffness: cloth.bendStiffness,
+          damping: cloth.damping,
+          tearFactor: cloth.tearFactor,
+          windInfluence: cloth.windInfluence,
+          color: cloth.color,
+          integrity: cloth.integrity,
+          heat: cloth.heat,
+          fatigue: cloth.fatigue,
+          avgStrain: cloth.avgStrain,
+          maxStrain: cloth.maxStrain,
+          nodes: cloth.nodes.map(n => ({
+            x: n.x,
+            y: n.y,
+            prevX: n.prevX,
+            prevY: n.prevY,
+            vx: n.vx,
+            vy: n.vy,
+            pinned: n.pinned,
+            temperature: n.temperature,
+            damage: n.damage
+          })),
+          constraints: cloth.constraints.map(c => ({
+            a: c.a,
+            b: c.b,
+            restLength: c.restLength,
+            stiffness: c.stiffness,
+            type: c.type,
+            broken: c.broken
+          }))
+        }))
       };
     }
 
@@ -2837,8 +4885,16 @@
       state.substeps = Math.max(1, Math.floor(snap.substeps || state.substeps || 1));
       state.ambientTemperature = typeof snap.ambientTemperature === 'number' ? snap.ambientTemperature : state.ambientTemperature;
       state.boundaryMode = snap.boundaryMode === 'void' ? 'void' : 'wall';
+      state.customMaterials = new Map();
+      state.chemicalDrafts = new Map();
       state.bodies = (snap.bodies || []).map(b => {
         const copy = Object.assign({}, b);
+        if (copy.customMaterial) {
+          const customId = copy.customMaterial.id || `custom-${copy.id || Math.random().toString(36).slice(2,8)}`;
+          copy.customMaterial.id = customId;
+          state.customMaterials.set(customId, deepClone(copy.customMaterial));
+          copy.material = customId;
+        }
         if (typeof copy.temperature !== 'number') {
           const mat = MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL];
           copy.temperature = mat?.baseTemperature ?? state.ambientTemperature;
@@ -2854,6 +4910,17 @@
         copy.absoluteWall = !!copy.absoluteWall;
         copy.damage = Math.max(0, Math.min(1, copy.damage || 0));
         copy.reactionCooldown = Math.max(0, copy.reactionCooldown || 0);
+        copy.integrity = clamp(copy.integrity ?? (1 - copy.damage), 0, 1);
+        copy.deformScaleX = typeof copy.deformScaleX === 'number' ? copy.deformScaleX : 1;
+        copy.deformScaleY = typeof copy.deformScaleY === 'number' ? copy.deformScaleY : 1;
+        copy.deformScaleR = typeof copy.deformScaleR === 'number' ? copy.deformScaleR : 1;
+        copy.deformTimer = Math.max(0, copy.deformTimer || 0);
+        copy.fragmentCount = copy.fragmentCount || 0;
+        copy.pendingFracture = false;
+        copy.stress = Math.max(0, Number(copy.stress) || 0);
+        copy.strain = Math.max(0, Number(copy.strain) || 0);
+        copy.heatFlux = Math.max(0, Number(copy.heatFlux) || 0);
+        copy.crackSeed = typeof copy.crackSeed === 'number' && Number.isFinite(copy.crackSeed) ? copy.crackSeed : Math.random();
         if (typeof copy.baseRestitution !== 'number') {
           const mat = MATERIALS[copy.material] || MATERIALS[DEFAULT_MATERIAL];
           copy.baseRestitution = mat?.restitution ?? copy.restitution ?? 0.3;
@@ -2873,9 +4940,20 @@
         return copy;
       });
       state.vines = (snap.vines || []).map(v => Object.assign({}, v));
+      state.cloths = (snap.cloths || []).map(data => hydrateCloth(data)).filter(Boolean);
+      state.cloths.forEach(cloth => {
+        cloth.nodes.forEach(node => {
+          node.prevX = node.prevX ?? node.x;
+          node.prevY = node.prevY ?? node.y;
+        });
+      });
       state.particles = [];
+      state.windGusts = [];
+      state.windGustTimer = 0;
       state.selection = null;
       state.selectionKind = null;
+      state.selectionNodeIndex = null;
+      state.fractureQueue = [];
       renderInspector();
     }
 

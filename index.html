@@ -929,6 +929,8 @@
                 <p class="sandbox-note small">現在向いている方向の1マス先を編集します。</p>
             </section>
         </div>
+    </div>
+
             <div id="tab-achievements" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-achievements">
                 <div class="row">
                     <div class="achievement-layout">
@@ -941,6 +943,9 @@
                                 <h3>実績</h3>
                                 <p>冒険やツールの利用状況に応じて自動的に更新されます。カテゴリごとの進捗を確認しましょう。</p>
                             </header>
+                            <div id="achievements-fallback" class="achievements-fallback achievements-fallback--info" role="status" aria-live="polite">
+                                実績システムを読み込み中です… この表示が続く場合は再読み込みしてください。
+                            </div>
                             <div id="achievement-category-summary" class="achievement-category-summary" aria-live="polite"></div>
                             <div id="achievement-list" class="achievement-list" aria-live="polite"></div>
                             <section class="custom-achievement-section" aria-labelledby="custom-achievement-title">

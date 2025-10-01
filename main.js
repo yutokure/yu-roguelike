@@ -4299,6 +4299,12 @@ function setupTabs() {
             btn.setAttribute('aria-selected', on ? 'true' : 'false');
             panel.style.display = on ? '' : 'none';
         }
+        if (which === 'achievements') {
+            initAchievementUiOnce();
+            try {
+                window.AchievementSystem?.refresh?.();
+            } catch {}
+        }
     }
     tabBtnNormal.addEventListener('click', () => {
         activateTab('normal');
@@ -4337,8 +4343,6 @@ function setupTabs() {
     if (tabBtnAchievements) {
         tabBtnAchievements.addEventListener('click', () => {
             activateTab('achievements');
-            initAchievementUiOnce();
-            try { window.AchievementSystem?.refresh?.(); } catch {}
         });
     }
     // Lists are click/keyboard driven（render側でバインド済み）

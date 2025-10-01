@@ -1054,11 +1054,16 @@
 
   function bossFloorsFor(depth) {
     const floors = [];
-    if (depth >= 4) floors.push(4);
-    if (depth >= 8) floors.push(8);
-    if (depth >= 12) floors.push(12);
-    if (depth >= 16) floors.push(16);
-    if (depth >= 20) floors.push(20);
+    const maxDepth = Math.max(0, Math.floor(depth));
+    for (let floor = 4; floor <= maxDepth; floor += 4) {
+      floors.push(floor);
+    }
+    if (maxDepth > 0) {
+      const last = floors[floors.length - 1];
+      if (last !== maxDepth && maxDepth - (last ?? 0) >= 2) {
+        floors.push(maxDepth);
+      }
+    }
     return floors;
   }
 

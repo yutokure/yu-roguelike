@@ -1,4 +1,4 @@
-# ミニゲームAPI書（MiniExp MOD API v0.2）
+# ミニゲームAPI書（MiniExp MOD API v0.3）
 
 本書は「ミニゲー経験」タブに統合されるミニゲーム（以下、MOD）の作成・導入・実行に関するAPI仕様です。最小の手順で作れること、リアルタイムにプレイヤーEXPへ反映されること、既存のUI/保存と矛盾しないことを目的とします。
 
@@ -12,7 +12,7 @@
 1) `games/manifest.json.js`（`window.MINIEXP_MANIFEST` を公開するJS）を読み込み、一覧とカテゴリを構築（失敗時は内蔵定義を使用）。
 2) ユーザーが選択→「開始」でエントリJS（`entry`）を `<script>` として読み込み。
 3) 読み込み済みスクリプトは `window.registerMiniGame(def)` を呼び、ホストへ登録。
-4) ホストが `def.create(root, awardXp, { difficulty })` を呼び、返ってきた `runtime.start()` を実行。
+4) ホストが `def.create(root, awardXp, { difficulty, shortcuts, player })` を呼び、返ってきた `runtime.start()` を実行。
 5) `awardXp(n)` を呼ぶたびにEXPが加算され、HUD/ポップが更新されます（戻り値は実際に加算された数値）。
 6) 「終了」で `runtime.stop()`→`runtime.destroy()`→コンテナを解放。
 
@@ -47,13 +47,19 @@
 
 MiniGameDef:
 ```ts
+interface MiniGameOptions {
+  difficulty: 'EASY'|'NORMAL'|'HARD';
+  shortcuts: MiniShortcutController;
+  player?: MiniPlayerApi; // v0.3 以降で提供。古いホストでは undefined
+}
+
 interface MiniGameDef {
   id: string;                 // マニフェストの id と一致させる
   name: string;               // 表示名（任意、マニフェスト優先で良い）
   description?: string;       // 概要
   create: (root: HTMLElement,
            awardXp: (n: number, meta?: any) => number|void,
-           opts: { difficulty: 'EASY'|'NORMAL'|'HARD' }) => MiniGameRuntime;
+           opts: MiniGameOptions) => MiniGameRuntime;
 }
 
 interface MiniGameRuntime {
@@ -67,6 +73,8 @@ interface MiniGameRuntime {
 備考:
 - `awardXp(n, meta)` は EXP を即時加算し、HUD/ポップを更新します。戻り値として実際に加算された数値（number）を返します。
 - `opts.difficulty` はタブのUIから選択された値（`EASY|NORMAL|HARD`）。ゲームロジックやスピードに反映してください。
+- `opts.shortcuts` はミニEXP共通のショートカットコントローラー。`enableKey/disableKey/reset` などでタブ側ショートカットと連動します。
+- `opts.player` は v0.3 で追加されたプレイヤー操作API。存在チェックのうえで HP/SP/インベントリ操作を行えます（後述）。
 - MODは `create()` 内で自前のイベントリスナーを追加し、`destroy()` で必ず除去してください。
 - `start()` はホストの一時停止解除でも呼ばれるため、停止→再開で複数回呼ばれても安全な実装（idempotent）にしてください。
 
@@ -78,6 +86,18 @@ interface MiniGameRuntime {
 - HUDポップ: `awardXp` が呼ばれるたびにホストが `+N EXP` のバッジを表示します。必要に応じて `window.showTransientPopupAt(x,y,text,opts)` でカスタムポップを追加可能（存在チェック推奨）。
 - セーブ: 現状、各ミニゲーム固有のスコアはホストが自動保存しません。必要なら内部でlocalStorageを使うか、今後の `miniExpState.records` 連携を待ってください。
  - 記録: ホストが `totalExpEarned/totalPlays/bestScore/lastPlayedAt` を自動保存（`miniExpState.records`）。`getScore()` を実装すると `bestScore` が更新されます。
+
+## プレイヤー操作API（v0.3以降）
+`options.player` はプレイヤーのステータスを安全に操作するためのヘルパーを提供します。古いホストでは `undefined` の場合があるため、存在チェックを行ってから使用してください。
+
+- `getState(): MiniPlayerSnapshot` — レベル/EXP/HP/SP/インベントリの読み取り専用スナップショットを取得。
+- `awardItems(changes, opts?)` / `adjustItems(changes, opts?)` — `{ itemId: 追加個数 }` 形式のマップを適用。戻り値として実際に増減したマップを返します。`opts.allowNegative` で消費を許可、`opts.silent` でログ抑制。
+- `adjustHp(delta, opts?)` — HPを増減。戻り値は実際に変動した値。`opts.allowOverheal` や `opts.silent` を指定可能。
+- `healHp(amount, opts?)` / `damageHp(amount, opts?)` — 正/負方向のショートカット。
+- `adjustSp(delta, opts?)` — SPを増減。`opts.allowOvercap` で上限超過を許可。戻り値は実際に変化したSP量。
+- `fillSp(opts?)` — SPを最大値まで回復し、獲得量を返します。
+
+全ての操作はホスト側でUI更新とセーブを自動で行います。アイテムIDは `potion30` `hpBoost` などメインゲームと同じIDを使用してください。
 
 ## エラーとガード
 - `entry` のロード失敗時: 一覧パネルにエラーメッセージを表示し、開始は行われません。
@@ -115,7 +135,7 @@ interface MiniGameRuntime {
 - 外部アセットは `games/` 配下に相対パスで配置してください。
 
 ## バージョン
-- API: MiniExp MOD API v0.1
+- API: MiniExp MOD API v0.3
 - 後方互換方針: `create`/`start`/`stop`/`destroy`/`registerMiniGame`/`awardXp`/`difficulty` の基本形は維持予定。
 
 ---
@@ -151,17 +171,53 @@ interface MiniGameRuntime {
  * @property {()=>number=} getScore
  */
 /**
+ * @typedef MiniPlayerSnapshot
+ * @property {number} level
+ * @property {number} exp
+ * @property {number} hp
+ * @property {number} maxHp
+ * @property {number} sp
+ * @property {number} maxSp
+ * @property {Record<string,number>} inventory
+ */
+/**
+ * @typedef MiniPlayerApi
+ * @property {()=>MiniPlayerSnapshot} getState
+ * @property {(changes:Record<string,number>, opts?:{allowNegative?:boolean,silent?:boolean})=>Record<string,number>|null=} awardItems
+ * @property {(changes:Record<string,number>, opts?:{allowNegative?:boolean,silent?:boolean})=>Record<string,number>|null=} adjustItems
+ * @property {(delta:number, opts?:{allowOverheal?:boolean,silent?:boolean})=>number=} adjustHp
+ * @property {(amount:number, opts?:{allowOverheal?:boolean,silent?:boolean})=>number=} healHp
+ * @property {(amount:number, opts?:{silent?:boolean})=>number=} damageHp
+ * @property {(delta:number, opts?:{allowOvercap?:boolean,silent?:boolean})=>number=} adjustSp
+ * @property {(opts?:{silent?:boolean})=>number=} fillSp
+ */
+/**
+ * @typedef MiniShortcutController
+ * @property {(enabled:boolean)=>void=} setGlobal
+ * @property {(enabled:boolean)=>void=} setAll
+ * @property {(key:string)=>void=} enableKey
+ * @property {(key:string)=>void=} disableKey
+ * @property {(key:string)=>boolean=} isKeyEnabled
+ * @property {()=>void=} reset
+ */
+/**
+ * @typedef MiniGameOptions
+ * @property {MiniDifficulty} difficulty
+ * @property {MiniShortcutController} shortcuts
+ * @property {MiniPlayerApi=} player
+ */
+/**
  * @typedef MiniGameDef
  * @property {string} id
  * @property {string} name
  * @property {string=} description
- * @property {(root:HTMLElement, awardXp:AwardXp, opts:{difficulty:MiniDifficulty})=>MiniGameRuntime} create
+ * @property {(root:HTMLElement, awardXp:AwardXp, opts:MiniGameOptions)=>MiniGameRuntime} create
  */
 ```
 
 ## 付録E: 実装チェックリスト
 - [ ] 末尾で `window.registerMiniGame({ id, name, create })` を呼んだ
-- [ ] `create(root, awardXp, { difficulty })` を実装
+ - [ ] `create(root, awardXp, { difficulty, shortcuts, player })` を実装（`player` は v0.3 以降）
 - [ ] DOMは `root` 配下のみ変更
 - [ ] `start/stop/destroy` でタイマー・イベントを適切に管理
 - [ ] `awardXp` の呼び出し頻度は視認性に配慮（必要なら合算）

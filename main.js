@@ -258,6 +258,9 @@ const bdimCardChest = document.getElementById('bdim-card-chest');
 const bdimCardBoss = document.getElementById('bdim-card-boss');
 const bdimCardSelection = document.getElementById('bdim-card-selection');
 
+const DungeonGenRegistry = new Map(); // id -> DungeonGeneratorDef
+const FixedMapRegistry = new Map();   // generatorId -> { max, bossFloors, maps, mapByFloor }
+
 // 敵情報モーダル要素
 const enemyInfoModal = document.getElementById('enemy-info-modal');
 const enemyModalTitle = document.getElementById('enemy-modal-title');
@@ -4583,6 +4586,7 @@ function formatSpecType(spec) {
 
 async function initBlockDimUI() {
     await loadBlockDataOnce();
+    populateBdimRandomTypeSelect();
     // Build listboxes
     const selDim = blockDimState.dimKey || (blockDimTables.dimensions[0]?.key);
     const sel1 = blockDimState.b1Key || (blockDimTables.blocks1[0]?.key);
@@ -4684,6 +4688,91 @@ function pickWeighted(arr, desiredLevel, typePref, sigma=3.5, typeBoost=2.0) {
     let r = Math.random() * total;
     for (let i=0;i<arr.length;i++) { r -= weights[i]; if (r <= 0) return arr[i]; }
     return arr[arr.length-1];
+}
+
+const BUILTIN_GENERATOR_TYPE_IDS = [
+    'field',
+    'cave',
+    'grid',
+    'open-space',
+    'maze',
+    'rooms',
+    'single-room',
+    'circle',
+    'narrow-maze',
+    'wide-maze',
+    'snake',
+    'circle-rooms'
+];
+
+function populateBdimRandomTypeSelect() {
+    if (!bdimRandomTypeSelect) return;
+    const previous = bdimRandomTypeSelect.value;
+    const placeholderOption = Array.from(bdimRandomTypeSelect.options || []).find(opt => opt.value === '');
+    const placeholderLabel = placeholderOption ? placeholderOption.textContent : '指定なし';
+    const typeMap = new Map();
+    const addType = (id) => {
+        const key = (id || '').trim();
+        if (!key) return;
+        if (!typeMap.has(key)) typeMap.set(key, key);
+    };
+    BUILTIN_GENERATOR_TYPE_IDS.forEach(addType);
+    try {
+        if (blockDimTables && Array.isArray(blockDimTables.blocks1)) {
+            for (const block of blockDimTables.blocks1) {
+                if (!block) continue;
+                addType(block.type);
+                if (Array.isArray(block.typePool)) block.typePool.forEach(addType);
+            }
+        }
+        if (blockDimTables && Array.isArray(blockDimTables.blocks2)) {
+            for (const block of blockDimTables.blocks2) {
+                if (!block) continue;
+                addType(block.type);
+                if (Array.isArray(block.typePool)) block.typePool.forEach(addType);
+            }
+        }
+        if (blockDimTables && Array.isArray(blockDimTables.blocks3)) {
+            for (const block of blockDimTables.blocks3) {
+                if (!block) continue;
+                addType(block.type);
+                if (Array.isArray(block.typePool)) block.typePool.forEach(addType);
+            }
+        }
+    } catch {}
+    try {
+        if (typeof DungeonGenRegistry !== 'undefined' && DungeonGenRegistry && typeof DungeonGenRegistry.entries === 'function') {
+            for (const [id] of DungeonGenRegistry.entries()) addType(id);
+        }
+    } catch {}
+    const sorted = Array.from(typeMap.keys())
+        .filter(Boolean)
+        .sort((a, b) => {
+            const labelA = (getDungeonTypeName(a) || a).toLocaleLowerCase('ja');
+            const labelB = (getDungeonTypeName(b) || b).toLocaleLowerCase('ja');
+            return labelA.localeCompare(labelB, 'ja');
+        })
+        .map(id => ({
+            id,
+            label: (() => {
+                const name = getDungeonTypeName(id) || id;
+                return name !== id ? `${name} (${id})` : id;
+            })()
+        }));
+    bdimRandomTypeSelect.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = placeholderLabel || '指定なし';
+    bdimRandomTypeSelect.appendChild(placeholder);
+    for (const { id, label } of sorted) {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = label;
+        bdimRandomTypeSelect.appendChild(opt);
+    }
+    if (previous && typeMap.has(previous)) {
+        bdimRandomTypeSelect.value = previous;
+    }
 }
 
 function weightedRandomizeBdimBlocks(targetSumRaw, typePrefRaw) {
@@ -4946,6 +5035,7 @@ function setupAchievementsSubtabs() {
 }
 
 function setupTabs() {
+    populateBdimRandomTypeSelect();
     if (!tabBtnNormal || !tabBtnBlockDim) return;
     function activateTab(which) {
         const map = {
@@ -13075,9 +13165,7 @@ function renderMiniExpRecords() {
 
 // -------------- Dungeon Addons (生成MOD) --------------
 // 生成タイプのレジストリ
-const DungeonGenRegistry = new Map(); // id -> DungeonGeneratorDef
 const StructureRegistry = new Map();  // id -> normalized structure definition
-const FixedMapRegistry = new Map();   // generatorId -> { max, bossFloors, maps, mapByFloor }
 const __pendingDungeonBlocks = [];    // blockdata.json 読込前に来た追加ブロック
 
 function structureMatrixToStrings(matrix) {
@@ -13450,6 +13538,7 @@ function registerAddonGenerators(generators, addonId) {
             console.warn('register generator failed', addonId, raw?.id, e);
         }
     }
+    populateBdimRandomTypeSelect();
 }
 
 function registerAddonStructures(structures, addonId) {
@@ -13576,6 +13665,7 @@ function mergeBlocksIntoTables(blocks) {
     } catch (e) {
         console.warn('mergeBlocksIntoTables failed', e);
     }
+    populateBdimRandomTypeSelect();
 }
 
 function flushPendingDungeonBlocks() {

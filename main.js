@@ -123,6 +123,13 @@ function generateDomainCrystalsForFloor(recommendedLevel) {
 
     const exclude = [{ x: player.x, y: player.y }];
     if (stairs) exclude.push(stairs);
+    if (isSandboxActive() && Array.isArray(sandboxRuntime.activePortals)) {
+        sandboxRuntime.activePortals.forEach(portal => {
+            if (portal && Number.isFinite(portal.x) && Number.isFinite(portal.y)) {
+                exclude.push({ x: portal.x, y: portal.y });
+            }
+        });
+    }
     exclude.push(...enemies.map(e => ({ x: e.x, y: e.y })));
     exclude.push(...chests.map(c => ({ x: c.x, y: c.y })));
 
@@ -479,13 +486,129 @@ const SANDBOX_MIN_SIZE = 5;
 const SANDBOX_MAX_SIZE = 60;
 const SANDBOX_MAX_ENEMIES = 30;
 const SANDBOX_MAX_LEVEL = 999;
+const SANDBOX_CONFIG_VERSION = 2;
+const SANDBOX_PORTAL_TYPES = new Set(['stairs', 'gate']);
+const SANDBOX_PORTAL_DIRECTIONS = new Set(['up', 'down', 'side']);
 
 const sandboxRuntime = {
     active: false,
     config: null,
     snapshot: null,
-    expNoticeShown: false
+    expNoticeShown: false,
+    mapById: new Map(),
+    currentMapId: null,
+    spawnOverride: null,
+    activePortals: [],
+    pendingPortalMessage: null
 };
+
+function getSandboxMapById(id) {
+    if (!sandboxRuntime.config || !id) return null;
+    if (!sandboxRuntime.mapById.has(id) && Array.isArray(sandboxRuntime.config.maps)) {
+        const found = sandboxRuntime.config.maps.find(map => map && map.id === id);
+        if (found) sandboxRuntime.mapById.set(id, found);
+    }
+    return sandboxRuntime.mapById.get(id) || null;
+}
+
+function getCurrentSandboxMap() {
+    if (!sandboxRuntime.currentMapId) return ensureSandboxCurrentMap();
+    return getSandboxMapById(sandboxRuntime.currentMapId);
+}
+
+function ensureSandboxCurrentMap() {
+    if (!sandboxRuntime.config) return null;
+    if (sandboxRuntime.currentMapId) {
+        const existing = getSandboxMapById(sandboxRuntime.currentMapId);
+        if (existing) return existing;
+    }
+    const fallback = sandboxRuntime.config.entryMapId
+        ? getSandboxMapById(sandboxRuntime.config.entryMapId)
+        : (Array.isArray(sandboxRuntime.config.maps) ? sandboxRuntime.config.maps[0] : null);
+    if (fallback) {
+        sandboxRuntime.currentMapId = fallback.id;
+        sandboxRuntime.mapById.set(fallback.id, fallback);
+    }
+    return fallback || null;
+}
+
+function setSandboxCurrentMap(mapId, { spawn } = {}) {
+    const map = getSandboxMapById(mapId);
+    if (!map) return false;
+    sandboxRuntime.currentMapId = map.id;
+    if (spawn && Number.isFinite(spawn.x) && Number.isFinite(spawn.y)) {
+        sandboxRuntime.spawnOverride = { x: Math.floor(spawn.x), y: Math.floor(spawn.y) };
+    } else {
+        sandboxRuntime.spawnOverride = null;
+    }
+    return true;
+}
+
+function getSandboxPortalsForMap(map) {
+    if (!map || !Array.isArray(map.portals)) return [];
+    return map.portals.filter(portal => Number.isFinite(portal?.x) && Number.isFinite(portal?.y));
+}
+
+function getSandboxPortalAt(x, y) {
+    if (!isSandboxActive()) return null;
+    const portals = Array.isArray(sandboxRuntime.activePortals) ? sandboxRuntime.activePortals : [];
+    for (const portal of portals) {
+        if (!portal) continue;
+        if (portal.x === x && portal.y === y) return portal;
+    }
+    return null;
+}
+
+function rebuildSandboxActivePortals() {
+    const map = ensureSandboxCurrentMap();
+    if (!map) {
+        sandboxRuntime.activePortals = [];
+        stairs = null;
+        return;
+    }
+    sandboxRuntime.activePortals = getSandboxPortalsForMap(map).map(portal => ({
+        id: portal.id || null,
+        type: SANDBOX_PORTAL_TYPES.has(portal.type) ? portal.type : 'stairs',
+        label: typeof portal.label === 'string' ? portal.label : '',
+        direction: SANDBOX_PORTAL_DIRECTIONS.has(portal.direction) ? portal.direction : (portal.type === 'stairs' ? 'up' : 'side'),
+        x: portal.x,
+        y: portal.y,
+        targetMapId: portal.targetMapId || map.id,
+        targetX: portal.targetX,
+        targetY: portal.targetY
+    }));
+    const firstStairs = sandboxRuntime.activePortals.find(portal => portal.type === 'stairs');
+    stairs = firstStairs ? { x: firstStairs.x, y: firstStairs.y } : null;
+}
+
+function handleSandboxPortalEntry(portal) {
+    if (!portal) return;
+    const currentMap = ensureSandboxCurrentMap();
+    const targetMapId = portal.targetMapId || currentMap?.id;
+    if (!targetMapId) return;
+    const targetMap = getSandboxMapById(targetMapId) || currentMap;
+    if (!targetMap) return;
+    const spawn = {
+        x: clamp(0, Math.max(0, targetMap.width - 1), Number.isFinite(portal.targetX) ? Math.floor(portal.targetX) : (targetMap.playerStart?.x ?? 0)),
+        y: clamp(0, Math.max(0, targetMap.height - 1), Number.isFinite(portal.targetY) ? Math.floor(portal.targetY) : (targetMap.playerStart?.y ?? 0))
+    };
+    setSandboxCurrentMap(targetMap.id, { spawn });
+    dungeonLevel = targetMap.floor || dungeonLevel;
+    rebuildSandboxActivePortals();
+    generateLevel();
+    const label = portal.label && portal.label.trim();
+    let message = '';
+    if (portal.type === 'stairs') {
+        message = portal.direction === 'down' ? '階段を降りた。' : '階段を上った。';
+    } else {
+        message = label ? `${label}を通り抜けた。` : 'ゲートを通り抜けた。';
+    }
+    if (label && portal.type !== 'stairs') {
+        try { addMessage(message); } catch {}
+    } else {
+        try { addMessage(message); } catch {}
+    }
+}
 
 const sandboxInteractiveState = {
     enabled: false,
@@ -977,8 +1100,9 @@ function updateSandboxToolControls() {
     }
 
     if (sandboxToolDomainSelect) {
-        const list = Array.isArray(sandboxRuntime.config?.domainEffects)
-            ? sandboxRuntime.config.domainEffects
+        const mapConfig = ensureSandboxCurrentMap();
+        const list = Array.isArray(mapConfig?.domainEffects)
+            ? mapConfig.domainEffects
             : [];
         const previousValue = sandboxToolDomainSelect.value;
         sandboxToolDomainSelect.innerHTML = '';
@@ -1160,15 +1284,53 @@ function applySandboxTool() {
             if (cfgMetaRow) {
                 cfgMetaRow[targetX] = null;
             }
+            const mapConfig = ensureSandboxCurrentMap();
+            if (mapConfig && Array.isArray(mapConfig.portals)) {
+                const prevLength = mapConfig.portals.length;
+                mapConfig.portals = mapConfig.portals.filter(portal => !(portal && portal.x === targetX && portal.y === targetY));
+                if (mapConfig.portals.length !== prevLength) {
+                    rebuildSandboxActivePortals();
+                }
+            }
             sandboxLog('壁を設置しました。');
             break;
         }
         case 'stairs': {
             map[targetY][targetX] = 0;
             clearFloorTypeAt(targetX, targetY);
-            stairs = { x: targetX, y: targetY };
-            if (sandboxRuntime.config) {
-                sandboxRuntime.config.stairs = { x: targetX, y: targetY };
+            const mapConfig = ensureSandboxCurrentMap();
+            if (mapConfig) {
+                if (!Array.isArray(mapConfig.portals)) mapConfig.portals = [];
+                let portal = mapConfig.portals.find(p => p && p.type === 'stairs');
+                if (!portal) {
+                    const existingIds = new Set(mapConfig.portals.filter(Boolean).map(p => p.id).filter(Boolean));
+                    let newId = 'portal-stairs';
+                    let seq = 1;
+                    while (existingIds.has(newId)) {
+                        newId = `portal-stairs-${seq++}`;
+                    }
+                    portal = {
+                        id: newId,
+                        type: 'stairs',
+                        label: '階段',
+                        direction: 'up',
+                        x: targetX,
+                        y: targetY,
+                        targetMapId: mapConfig.id,
+                        targetX: mapConfig.playerStart?.x ?? targetX,
+                        targetY: mapConfig.playerStart?.y ?? targetY
+                    };
+                    mapConfig.portals.push(portal);
+                }
+                portal.x = targetX;
+                portal.y = targetY;
+                if (!portal.targetMapId) portal.targetMapId = mapConfig.id;
+                if (!Number.isFinite(portal.targetX) || portal.targetX < 0 || portal.targetX >= mapConfig.width) {
+                    portal.targetX = mapConfig.playerStart?.x ?? targetX;
+                }
+                if (!Number.isFinite(portal.targetY) || portal.targetY < 0 || portal.targetY >= mapConfig.height) {
+                    portal.targetY = mapConfig.playerStart?.y ?? targetY;
+                }
                 const cfgGridRow = ensureSandboxConfigGridRow(targetY, targetX);
                 if (cfgGridRow) {
                     cfgGridRow[targetX] = 0;
@@ -1177,6 +1339,7 @@ function applySandboxTool() {
                 if (cfgMetaRow) {
                     cfgMetaRow[targetX] = null;
                 }
+                rebuildSandboxActivePortals();
             }
             sandboxLog('階段の位置を更新しました。');
             break;
@@ -1186,20 +1349,24 @@ function applySandboxTool() {
             player.y = targetY;
             updateCamera();
             applyPostMoveEffects();
-            if (sandboxRuntime.config) {
-                sandboxRuntime.config.playerStart = { x: targetX, y: targetY };
+            const mapConfig = ensureSandboxCurrentMap();
+            if (mapConfig) {
+                mapConfig.playerStart = { x: targetX, y: targetY };
+                rebuildSandboxActivePortals();
             }
             sandboxLog('プレイヤー位置を移動しました。');
             break;
         }
         case 'domain': {
-            if (!sandboxRuntime.config) {
+            const mapConfig = ensureSandboxCurrentMap();
+            if (!mapConfig) {
                 sandboxLog('サンドボックス設定が読み込まれていません。');
                 return;
             }
-            const domains = Array.isArray(sandboxRuntime.config.domainEffects)
-                ? sandboxRuntime.config.domainEffects
-                : [];
+            if (!Array.isArray(mapConfig.domainEffects)) {
+                mapConfig.domainEffects = [];
+            }
+            const domains = mapConfig.domainEffects;
             if (!domains.length) {
                 sandboxLog('配置できる領域クリスタルがありません。');
                 return;
@@ -1286,14 +1453,14 @@ function applySandboxTool() {
 
 function sanitizeSandboxConfig(raw) {
     if (!raw || typeof raw !== 'object') return null;
-    const width = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(raw.width) || SANDBOX_DEFAULT_WIDTH));
-    const height = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(raw.height) || SANDBOX_DEFAULT_HEIGHT));
+
     const sanitizeColor = (value) => {
         if (typeof value !== 'string') return '';
         const trimmed = value.trim();
         if (!trimmed) return '';
         return COLOR_HEX_PATTERN.test(trimmed) ? trimmed.toLowerCase() : '';
     };
+
     const sanitizeTileMeta = (meta, isFloor) => {
         if (!meta || typeof meta !== 'object') return null;
         const sanitized = sanitizeTileMetaEntry(meta, isFloor);
@@ -1313,44 +1480,50 @@ function sanitizeSandboxConfig(raw) {
         }
         return Object.keys(sanitized).length ? sanitized : null;
     };
-    const grid = Array.from({ length: height }, (_, y) => {
-        const row = Array.from({ length: width }, (_, x) => {
-            const cell = raw.grid?.[y]?.[x];
-            return cell === 0 ? 0 : 1;
-        });
-        return row;
-    });
-    const tileMeta = Array.from({ length: height }, (_, y) => {
-        return Array.from({ length: width }, (_, x) => {
-            const source = raw.tileMeta?.[y]?.[x] ?? raw.meta?.[y]?.[x];
-            return sanitizeTileMeta(source, grid[y][x] === 0);
-        });
-    });
-    const normalizePos = (pos) => {
-        if (!pos) return null;
+
+    const normalizePosFactory = (width, height) => (pos) => {
+        if (!pos || typeof pos !== 'object') return null;
         const x = Math.floor(Number(pos.x));
         const y = Math.floor(Number(pos.y));
         if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
         if (x < 0 || x >= width || y < 0 || y >= height) return null;
         return { x, y };
     };
-    let playerStart = normalizePos(raw.playerStart);
-    if (playerStart && grid[playerStart.y][playerStart.x] !== 0) playerStart = null;
-    let stairs = normalizePos(raw.stairs);
-    if (stairs && grid[stairs.y][stairs.x] !== 0) stairs = null;
-    const enemies = [];
-    if (Array.isArray(raw.enemies)) {
-        for (let i = 0; i < Math.min(raw.enemies.length, SANDBOX_MAX_ENEMIES); i++) {
-            const enemy = raw.enemies[i];
-            if (!enemy) continue;
-            const pos = normalizePos(enemy);
+
+    const mapSources = Array.isArray(raw.maps) && raw.maps.length ? raw.maps.slice() : [raw];
+    const sanitizedMaps = [];
+    const mapIdSet = new Set();
+    let mapSeq = 1;
+    let portalSeq = 1;
+
+    const nextMapId = () => {
+        let id = `map-${mapSeq++}`;
+        while (mapIdSet.has(id)) id = `map-${mapSeq++}`;
+        mapIdSet.add(id);
+        return id;
+    };
+
+    const nextPortalId = (used) => {
+        let id = `portal-${portalSeq++}`;
+        while (used.has(id)) id = `portal-${portalSeq++}`;
+        used.add(id);
+        return id;
+    };
+
+    const sanitizeEnemyList = (list, normalizePos, width, height) => {
+        const enemies = [];
+        if (!Array.isArray(list)) return enemies;
+        for (let i = 0; i < Math.min(list.length, SANDBOX_MAX_ENEMIES); i++) {
+            const enemy = list[i];
+            if (!enemy || typeof enemy !== 'object') continue;
             const level = clamp(1, SANDBOX_MAX_LEVEL, Math.floor(Number(enemy.level) || 1));
             const hp = Math.max(1, Math.floor(Number(enemy.hp) || 1));
             const attack = Math.max(0, Math.floor(Number(enemy.attack) || 0));
             const defense = Math.max(0, Math.floor(Number(enemy.defense) || 0));
             const name = typeof enemy.name === 'string' ? enemy.name.trim() : '';
+            const pos = normalizePos(enemy);
             enemies.push({
-                id: enemy.id || null,
+                id: typeof enemy.id === 'string' ? enemy.id : null,
                 name,
                 level,
                 hp,
@@ -1361,10 +1534,13 @@ function sanitizeSandboxConfig(raw) {
                 y: Number.isFinite(pos?.y) ? pos.y : null
             });
         }
-    }
-    const domainEffects = [];
-    if (Array.isArray(raw.domainEffects)) {
-        for (const entry of raw.domainEffects) {
+        return enemies;
+    };
+
+    const sanitizeDomainList = (list, normalizePos) => {
+        const domainEffects = [];
+        if (!Array.isArray(list)) return domainEffects;
+        for (const entry of list) {
             if (!entry || typeof entry !== 'object') continue;
             const pos = normalizePos(entry);
             const radius = clamp(1, 50, Math.floor(Number(entry.radius) || 3));
@@ -1404,78 +1580,286 @@ function sanitizeSandboxConfig(raw) {
                 y: Number.isFinite(pos?.y) ? pos.y : null
             });
         }
+        return domainEffects;
+    };
+
+    const sanitizePortalList = (source, mapId, normalizePos, fallbackSpawn) => {
+        const portals = [];
+        const usedIds = new Set();
+        const rawPortals = Array.isArray(source.portals) && source.portals.length
+            ? source.portals.slice()
+            : [];
+
+        if (!rawPortals.length && source.stairs) {
+            rawPortals.push({ ...source.stairs, type: 'stairs' });
+        }
+
+        if (!rawPortals.length && raw.stairs && raw.stairs !== source.stairs) {
+            rawPortals.push({ ...raw.stairs, type: 'stairs' });
+        }
+
+        for (const entry of rawPortals) {
+            if (!entry || typeof entry !== 'object') continue;
+            const typeRaw = typeof entry.type === 'string' ? entry.type.trim().toLowerCase() : 'stairs';
+            const type = SANDBOX_PORTAL_TYPES.has(typeRaw) ? typeRaw : 'stairs';
+            const position = normalizePos(entry);
+            if (!position) continue;
+            const id = typeof entry.id === 'string' && entry.id.trim() && !usedIds.has(entry.id.trim())
+                ? (usedIds.add(entry.id.trim()), entry.id.trim())
+                : nextPortalId(usedIds);
+            const label = typeof entry.label === 'string'
+                ? entry.label.trim()
+                : (typeof entry.name === 'string' ? entry.name.trim() : '');
+            let direction = typeof entry.direction === 'string' ? entry.direction.trim().toLowerCase() : '';
+            if (!SANDBOX_PORTAL_DIRECTIONS.has(direction)) {
+                direction = type === 'stairs' ? (direction === 'down' ? 'down' : 'up') : 'side';
+            }
+            const targetMapId = typeof entry.target?.mapId === 'string'
+                ? entry.target.mapId.trim()
+                : (typeof entry.targetMapId === 'string' ? entry.targetMapId.trim() : null);
+            const targetX = Number.isFinite(entry.target?.x) ? Math.floor(entry.target.x) : Number.isFinite(entry.targetX) ? Math.floor(entry.targetX) : null;
+            const targetY = Number.isFinite(entry.target?.y) ? Math.floor(entry.target.y) : Number.isFinite(entry.targetY) ? Math.floor(entry.targetY) : null;
+            portals.push({
+                id,
+                type,
+                label,
+                direction,
+                x: position.x,
+                y: position.y,
+                targetMapId: targetMapId || null,
+                targetX,
+                targetY,
+                sourceMapId: mapId
+            });
+        }
+        return portals;
+    };
+
+    for (let index = 0; index < mapSources.length; index++) {
+        const mapSource = mapSources[index];
+        if (!mapSource || typeof mapSource !== 'object') continue;
+
+        const width = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(mapSource.width) || SANDBOX_DEFAULT_WIDTH));
+        const height = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(mapSource.height) || SANDBOX_DEFAULT_HEIGHT));
+        const normalizePos = normalizePosFactory(width, height);
+
+        const grid = Array.from({ length: height }, (_, y) => {
+            return Array.from({ length: width }, (_, x) => {
+                const cell = mapSource.grid?.[y]?.[x];
+                return cell === 0 ? 0 : 1;
+            });
+        });
+
+        const tileMeta = Array.from({ length: height }, (_, y) => {
+            return Array.from({ length: width }, (_, x) => {
+                const sourceMeta = mapSource.tileMeta?.[y]?.[x] ?? mapSource.meta?.[y]?.[x];
+                return sanitizeTileMeta(sourceMeta, grid[y][x] === 0);
+            });
+        });
+
+        const floor = Math.max(1, Math.floor(Number(mapSource.floor) || (index + 1)));
+        const branchKey = typeof mapSource.branchKey === 'string' ? mapSource.branchKey.trim().slice(0, 20) : '';
+        let mapId = typeof mapSource.id === 'string' ? mapSource.id.trim() : '';
+        if (!mapId || mapIdSet.has(mapId)) {
+            mapId = nextMapId();
+        } else {
+            mapIdSet.add(mapId);
+        }
+
+        const labelCandidates = [
+            typeof mapSource.label === 'string' ? mapSource.label.trim() : '',
+            typeof mapSource.name === 'string' ? mapSource.name.trim() : '',
+            typeof mapSource.title === 'string' ? mapSource.title.trim() : ''
+        ];
+        let label = labelCandidates.find(Boolean);
+        if (!label) {
+            label = `${floor}F${branchKey ? `-${branchKey}` : ''}`;
+        }
+
+        let playerStart = normalizePos(mapSource.playerStart);
+        if (playerStart && grid[playerStart.y][playerStart.x] !== 0) playerStart = null;
+
+        const enemies = sanitizeEnemyList(mapSource.enemies, normalizePos, width, height);
+        const domainEffects = sanitizeDomainList(mapSource.domainEffects, normalizePos);
+        const portals = sanitizePortalList(mapSource, mapId, normalizePos, () => playerStart || null);
+
+        sanitizedMaps.push({
+            id: mapId,
+            label,
+            floor,
+            branchKey,
+            width,
+            height,
+            grid,
+            tileMeta,
+            playerStart,
+            enemies,
+            domainEffects,
+            portals
+        });
     }
+
+    if (!sanitizedMaps.length) return null;
+
+    const mapLookup = new Map();
+    sanitizedMaps.forEach(map => {
+        mapLookup.set(map.id, map);
+        if (!map.playerStart) {
+            outer: for (let y = 0; y < map.height; y++) {
+                for (let x = 0; x < map.width; x++) {
+                    if (map.grid?.[y]?.[x] === 0) {
+                        map.playerStart = { x, y };
+                        break outer;
+                    }
+                }
+            }
+            if (!map.playerStart) {
+                map.playerStart = { x: 0, y: 0 };
+            }
+        }
+    });
+
+    sanitizedMaps.forEach(map => {
+        if (!Array.isArray(map.portals)) map.portals = [];
+        map.portals.forEach(portal => {
+            if (!portal) return;
+            if (!SANDBOX_PORTAL_TYPES.has(portal.type)) {
+                portal.type = 'stairs';
+            }
+            if (!portal.targetMapId || !mapLookup.has(portal.targetMapId)) {
+                portal.targetMapId = map.id;
+            }
+            const targetMap = mapLookup.get(portal.targetMapId) || map;
+            if (!Number.isFinite(portal.targetX) || portal.targetX < 0 || portal.targetX >= targetMap.width) {
+                portal.targetX = targetMap.playerStart ? targetMap.playerStart.x : 0;
+            } else {
+                portal.targetX = clamp(0, targetMap.width - 1, Math.floor(portal.targetX));
+            }
+            if (!Number.isFinite(portal.targetY) || portal.targetY < 0 || portal.targetY >= targetMap.height) {
+                portal.targetY = targetMap.playerStart ? targetMap.playerStart.y : 0;
+            } else {
+                portal.targetY = clamp(0, targetMap.height - 1, Math.floor(portal.targetY));
+            }
+        });
+    });
+
     const playerLevel = computeSandboxStats(raw.playerLevel).level;
-    const interactiveMode = !!raw.interactiveMode;
-    return { width, height, grid, tileMeta, playerStart, stairs, enemies, domainEffects, playerLevel, interactiveMode };
+    const entryMapId = typeof raw.entryMapId === 'string' && mapLookup.has(raw.entryMapId)
+        ? raw.entryMapId
+        : sanitizedMaps[0].id;
+
+    return {
+        version: SANDBOX_CONFIG_VERSION,
+        interactiveMode: !!raw.interactiveMode,
+        playerLevel,
+        entryMapId,
+        maps: sanitizedMaps
+    };
 }
 
 function validateSandboxConfig(config) {
     const errors = [];
     const warnings = [];
-    if (!config) {
-        errors.push('設定が読み取れませんでした。');
+    if (!config || !Array.isArray(config.maps) || !config.maps.length) {
+        errors.push('サンドボックスマップが1つ以上必要です。');
         return { errors, warnings, config: null };
     }
-    let floorCount = 0;
-    for (let y = 0; y < config.height; y++) {
-        for (let x = 0; x < config.width; x++) {
-            if (config.grid?.[y]?.[x] === 0) floorCount++;
+
+    const mapLookup = new Map();
+    config.maps.forEach(map => {
+        if (map && map.id) mapLookup.set(map.id, map);
+    });
+
+    config.maps.forEach((map, index) => {
+        if (!map) return;
+        const prefix = `マップ${index + 1}`;
+        const width = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(map.width) || SANDBOX_DEFAULT_WIDTH));
+        const height = clamp(SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE, Math.floor(Number(map.height) || SANDBOX_DEFAULT_HEIGHT));
+        let floorCount = 0;
+        for (let y = 0; y < height; y++) {
+            const row = map.grid?.[y];
+            if (!Array.isArray(row)) {
+                errors.push(`${prefix}: マップデータが破損しています。`);
+                break;
+            }
+            for (let x = 0; x < width; x++) {
+                if (row[x] === 0) floorCount++;
+            }
         }
-    }
-    if (floorCount === 0) {
-        errors.push('床マスが1つ以上必要です。');
-    }
-    if (!config.playerStart) {
-        errors.push('開始位置が設定されていません。');
-    } else if (config.grid?.[config.playerStart.y]?.[config.playerStart.x] !== 0) {
-        errors.push('開始位置は床マスに設定してください。');
-    }
-    if (config.stairs && config.grid?.[config.stairs.y]?.[config.stairs.x] !== 0) {
-        errors.push('階段は床マスにのみ設置できます。');
-    }
-    config.enemies.forEach((enemy, index) => {
-        if (enemy.x === null || enemy.y === null) {
-            errors.push(`敵${index + 1}の配置座標が未設定です。`);
-        } else if (config.grid?.[enemy.y]?.[enemy.x] !== 0) {
-            errors.push(`敵${index + 1}の配置は床マスに設定してください。`);
+        if (floorCount === 0) {
+            errors.push(`${prefix}: 床マスが1つ以上必要です。`);
         }
-        if (enemy.hp <= 0) {
-            errors.push(`敵${index + 1}のHPが無効です。`);
+        if (!map.playerStart || map.grid?.[map.playerStart.y]?.[map.playerStart.x] !== 0) {
+            errors.push(`${prefix}: 開始位置は床マスに設定してください。`);
+        }
+        if (Array.isArray(map.enemies)) {
+            map.enemies.forEach((enemy, enemyIndex) => {
+                if (!enemy) return;
+                if (enemy.x === null || enemy.y === null) {
+                    errors.push(`${prefix}: 敵${enemyIndex + 1}の配置座標が未設定です。`);
+                } else if (map.grid?.[enemy.y]?.[enemy.x] !== 0) {
+                    errors.push(`${prefix}: 敵${enemyIndex + 1}の配置は床マスに設定してください。`);
+                }
+                if (!Number.isFinite(enemy.hp) || enemy.hp <= 0) {
+                    errors.push(`${prefix}: 敵${enemyIndex + 1}のHPが無効です。`);
+                }
+            });
+        }
+        if (Array.isArray(map.domainEffects)) {
+            map.domainEffects.forEach((effect, effectIndex) => {
+                if (!effect) return;
+                if (effect.x !== null && effect.y !== null) {
+                    if (map.grid?.[effect.y]?.[effect.x] !== 0) {
+                        errors.push(`${prefix}: クリスタル${effectIndex + 1}の配置は床マスに設定してください。`);
+                    }
+                }
+                if (!Array.isArray(effect.effects) || !effect.effects.length) {
+                    errors.push(`${prefix}: クリスタル${effectIndex + 1}の効果が設定されていません。`);
+                } else if (effect.effects.some(id => !DOMAIN_EFFECT_DEFINITIONS[id])) {
+                    warnings.push(`${prefix}: クリスタル${effectIndex + 1}に無効な効果が含まれているため、自動調整されます。`);
+                }
+                if (Array.isArray(effect.effects) && effect.effects.length) {
+                    if (!effect.effectParams || typeof effect.effectParams !== 'object') {
+                        effect.effectParams = {};
+                    }
+                    effect.effects.forEach(effectId => {
+                        if (!domainEffectRequiresParam(effectId)) return;
+                        const param = sanitizeDomainEffectParam(effectId, effect.effectParams[effectId]);
+                        if (!param) {
+                            const label = DOMAIN_EFFECT_DEFINITIONS[effectId]?.label || effectId;
+                            errors.push(`${prefix}: クリスタル${effectIndex + 1}の効果「${label}」の対象パラメータが無効です。`);
+                        } else {
+                            effect.effectParams[effectId] = param;
+                        }
+                    });
+                }
+                if (!Number.isFinite(effect.radius) || effect.radius < 1) {
+                    errors.push(`${prefix}: クリスタル${effectIndex + 1}の半径が無効です。`);
+                }
+            });
+        }
+        if (Array.isArray(map.portals)) {
+            map.portals.forEach((portal, portalIndex) => {
+                if (!portal) return;
+                if (map.grid?.[portal.y]?.[portal.x] !== 0) {
+                    errors.push(`${prefix}: ポータル${portalIndex + 1}は床マスにのみ設置できます。`);
+                }
+                if (!portal.targetMapId || !mapLookup.has(portal.targetMapId)) {
+                    warnings.push(`${prefix}: ポータル${portalIndex + 1}の遷移先マップが見つからないため、同一マップに接続されます。`);
+                }
+                const targetMap = mapLookup.get(portal.targetMapId) || map;
+                if (!Number.isFinite(portal.targetX) || portal.targetX < 0 || portal.targetX >= targetMap.width ||
+                    !Number.isFinite(portal.targetY) || portal.targetY < 0 || portal.targetY >= targetMap.height) {
+                    warnings.push(`${prefix}: ポータル${portalIndex + 1}の遷移先座標が無効なため、開始位置に補正されます。`);
+                }
+            });
         }
     });
-    if (Array.isArray(config.domainEffects)) {
-        config.domainEffects.forEach((effect, index) => {
-            if (effect.x !== null && effect.y !== null) {
-                if (config.grid?.[effect.y]?.[effect.x] !== 0) {
-                    errors.push(`クリスタル${index + 1}の配置は床マスに設定してください。`);
-                }
-            }
-            if (!Array.isArray(effect.effects) || !effect.effects.length) {
-                errors.push(`クリスタル${index + 1}の効果が設定されていません。`);
-            } else if (effect.effects.some(id => !DOMAIN_EFFECT_DEFINITIONS[id])) {
-                warnings.push(`クリスタル${index + 1}に無効な効果が含まれているため、自動調整されます。`);
-            }
-            if (Array.isArray(effect.effects) && effect.effects.length) {
-                if (!effect.effectParams || typeof effect.effectParams !== 'object') {
-                    effect.effectParams = {};
-                }
-                effect.effects.forEach(effectId => {
-                    if (!domainEffectRequiresParam(effectId)) return;
-                    const param = sanitizeDomainEffectParam(effectId, effect.effectParams[effectId]);
-                    if (!param) {
-                        const label = DOMAIN_EFFECT_DEFINITIONS[effectId]?.label || effectId;
-                        errors.push(`クリスタル${index + 1}の効果「${label}」の対象パラメータが無効です。`);
-                    } else {
-                        effect.effectParams[effectId] = param;
-                    }
-                });
-            }
-            if (!Number.isFinite(effect.radius) || effect.radius < 1) {
-                errors.push(`クリスタル${index + 1}の半径が無効です。`);
-            }
-        });
+
+    if (!mapLookup.has(config.entryMapId)) {
+        errors.push('エントリーマップが存在しません。');
     }
+
     return { errors, warnings, config };
 }
 
@@ -1529,6 +1913,18 @@ function startSandboxGame(rawConfig) {
     sandboxRuntime.config = validation.config;
     sandboxRuntime.active = true;
     sandboxRuntime.expNoticeShown = false;
+    sandboxRuntime.mapById = new Map();
+    if (Array.isArray(validation.config.maps)) {
+        validation.config.maps.forEach(map => {
+            if (map && map.id) sandboxRuntime.mapById.set(map.id, map);
+        });
+    }
+    sandboxRuntime.currentMapId = sandboxRuntime.mapById.has(validation.config.entryMapId)
+        ? validation.config.entryMapId
+        : (validation.config.maps?.[0]?.id || null);
+    sandboxRuntime.spawnOverride = null;
+    sandboxRuntime.activePortals = [];
+    sandboxRuntime.pendingPortalMessage = null;
 
     sandboxInteractiveState.godMode = false;
     sandboxInteractiveState.noClip = false;
@@ -1553,7 +1949,8 @@ function startSandboxGame(rawConfig) {
 
     currentMode = 'sandbox';
     restoreRandom();
-    dungeonLevel = 1;
+    const initialMap = ensureSandboxCurrentMap();
+    dungeonLevel = initialMap?.floor || 1;
     updateMapSize();
 
     if (selectionScreen) selectionScreen.style.display = 'none';
@@ -1578,6 +1975,7 @@ window.SandboxBridge = {
     maxSize: SANDBOX_MAX_SIZE,
     maxLevel: SANDBOX_MAX_LEVEL,
     maxEnemies: SANDBOX_MAX_ENEMIES,
+    configVersion: SANDBOX_CONFIG_VERSION,
     computePlayerStats: computeSandboxStats,
     sanitize: sanitizeSandboxConfig,
     validate: (raw) => validateSandboxConfig(sanitizeSandboxConfig(raw)),
@@ -1619,8 +2017,11 @@ let modMakerCopyLabel = 'クリップボードにコピー';
 // マップサイズを階層に応じて更新（BlockDim の sizeFactor を反映）
 function updateMapSize() {
     if (isSandboxActive()) {
-        MAP_WIDTH = sandboxRuntime.config.width;
-        MAP_HEIGHT = sandboxRuntime.config.height;
+        const map = ensureSandboxCurrentMap();
+        if (map) {
+            MAP_WIDTH = map.width;
+            MAP_HEIGHT = map.height;
+        }
         return;
     }
     const baseSize = 15 + dungeonLevel * 5;
@@ -2492,51 +2893,53 @@ function ensureTileMeta(x, y) {
 }
 
 function ensureSandboxConfigGridRow(y, x) {
-    if (!sandboxRuntime.config) return null;
-    if (!Array.isArray(sandboxRuntime.config.grid)) {
-        sandboxRuntime.config.grid = [];
+    const mapConfig = ensureSandboxCurrentMap();
+    if (!mapConfig) return null;
+    if (!Array.isArray(mapConfig.grid)) {
+        mapConfig.grid = [];
     }
-    while (sandboxRuntime.config.grid.length <= y) {
-        sandboxRuntime.config.grid.push([]);
+    while (mapConfig.grid.length <= y) {
+        mapConfig.grid.push(Array.from({ length: mapConfig.width }, () => 1));
     }
     const targetWidth = Math.max(0, Number.isFinite(x) ? x + 1 : 0);
-    if (!Array.isArray(sandboxRuntime.config.grid[y])) {
-        sandboxRuntime.config.grid[y] = [];
+    if (!Array.isArray(mapConfig.grid[y])) {
+        mapConfig.grid[y] = Array.from({ length: mapConfig.width }, () => 1);
     }
-    const ensuredRow = sandboxRuntime.config.grid[y];
+    const ensuredRow = mapConfig.grid[y];
     while (ensuredRow.length < targetWidth) {
         ensuredRow.push(1);
     }
-    if (Number.isFinite(sandboxRuntime.config.height) && sandboxRuntime.config.height <= y) {
-        sandboxRuntime.config.height = y + 1;
+    if (Number.isFinite(mapConfig.height) && mapConfig.height <= y) {
+        mapConfig.height = y + 1;
     }
-    if (Number.isFinite(sandboxRuntime.config.width) && sandboxRuntime.config.width <= x) {
-        sandboxRuntime.config.width = x + 1;
+    if (Number.isFinite(mapConfig.width) && mapConfig.width <= x) {
+        mapConfig.width = x + 1;
     }
     return ensuredRow;
 }
 
 function ensureSandboxConfigTileMetaRow(y, x) {
-    if (!sandboxRuntime.config) return null;
-    if (!Array.isArray(sandboxRuntime.config.tileMeta)) {
-        sandboxRuntime.config.tileMeta = [];
+    const mapConfig = ensureSandboxCurrentMap();
+    if (!mapConfig) return null;
+    if (!Array.isArray(mapConfig.tileMeta)) {
+        mapConfig.tileMeta = [];
     }
-    while (sandboxRuntime.config.tileMeta.length <= y) {
-        sandboxRuntime.config.tileMeta.push([]);
+    while (mapConfig.tileMeta.length <= y) {
+        mapConfig.tileMeta.push([]);
     }
     const targetWidth = Math.max(0, Number.isFinite(x) ? x + 1 : 0);
-    if (!Array.isArray(sandboxRuntime.config.tileMeta[y])) {
-        sandboxRuntime.config.tileMeta[y] = [];
+    if (!Array.isArray(mapConfig.tileMeta[y])) {
+        mapConfig.tileMeta[y] = [];
     }
-    const ensuredRow = sandboxRuntime.config.tileMeta[y];
+    const ensuredRow = mapConfig.tileMeta[y];
     while (ensuredRow.length < targetWidth) {
         ensuredRow.push(null);
     }
-    if (Number.isFinite(sandboxRuntime.config.height) && sandboxRuntime.config.height <= y) {
-        sandboxRuntime.config.height = y + 1;
+    if (Number.isFinite(mapConfig.height) && mapConfig.height <= y) {
+        mapConfig.height = y + 1;
     }
-    if (Number.isFinite(sandboxRuntime.config.width) && sandboxRuntime.config.width <= x) {
-        sandboxRuntime.config.width = x + 1;
+    if (Number.isFinite(mapConfig.width) && mapConfig.width <= x) {
+        mapConfig.width = x + 1;
     }
     return ensuredRow;
 }
@@ -6573,7 +6976,8 @@ function pickSpreadFloorPositions(count, minDist, exclude = []) {
 
 function generateMap() {
     if (isSandboxActive()) {
-        const cfg = sandboxRuntime.config;
+        const cfg = ensureSandboxCurrentMap();
+        if (!cfg) return;
         MAP_WIDTH = cfg.width;
         MAP_HEIGHT = cfg.height;
         map = Array.from({ length: MAP_HEIGHT }, (_, y) => {
@@ -7941,15 +8345,30 @@ function generateEntities() {
     domainCrystals = [];
 
     if (isSandboxActive()) {
-        const cfg = sandboxRuntime.config;
-        let startPos = cfg.playerStart;
-        if (!startPos || map[startPos.y]?.[startPos.x] !== 0) {
+        const cfg = ensureSandboxCurrentMap();
+        if (!cfg) return;
+
+        let startPos = null;
+        if (sandboxRuntime.spawnOverride) {
+            const sx = sandboxRuntime.spawnOverride.x;
+            const sy = sandboxRuntime.spawnOverride.y;
+            if (map[sy]?.[sx] === 0) {
+                startPos = { x: sx, y: sy };
+            }
+        }
+        if (!startPos) {
+            startPos = cfg.playerStart && map[cfg.playerStart.y]?.[cfg.playerStart.x] === 0
+                ? { x: cfg.playerStart.x, y: cfg.playerStart.y }
+                : null;
+        }
+        if (!startPos) {
             startPos = randomFloorPosition();
         }
+        sandboxRuntime.spawnOverride = null;
         player.x = startPos.x;
         player.y = startPos.y;
 
-        for (const enemy of cfg.enemies) {
+        for (const enemy of cfg.enemies || []) {
             if (enemy.x === null || enemy.y === null) continue;
             enemies.push({
                 x: enemy.x,
@@ -7964,7 +8383,8 @@ function generateEntities() {
                 type: typeof enemy.type === 'string' ? enemy.type : ENEMY_TYPE_DEFS.normal.id
             });
         }
-        stairs = cfg.stairs ? { x: cfg.stairs.x, y: cfg.stairs.y } : null;
+        rebuildSandboxActivePortals();
+
         if (Array.isArray(cfg.domainEffects)) {
             domainCrystals = cfg.domainEffects
                 .map((effect, index) => ({ effect, index }))
@@ -10224,6 +10644,14 @@ function applyPostMoveEffects() {
         }
 
         if (isGameOver) return { continueSliding: false };
+
+        if (isSandboxActive()) {
+            const portal = getSandboxPortalAt(player.x, player.y);
+            if (portal) {
+                handleSandboxPortalEntry(portal);
+                return { continueSliding: false };
+            }
+        }
 
         if (stairs && player.x === stairs.x && player.y === stairs.y) {
             const maxFloor = getMaxFloor();

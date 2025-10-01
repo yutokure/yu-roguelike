@@ -464,10 +464,35 @@
                                             <button type="button" class="sandbox-brush" data-brush="wall" aria-pressed="false">壁</button>
                                             <button type="button" class="sandbox-brush" data-brush="start" aria-pressed="false">開始位置</button>
                                             <button type="button" class="sandbox-brush" data-brush="stairs" aria-pressed="false">階段</button>
+                                            <button type="button" class="sandbox-brush" data-brush="gate" aria-pressed="false">ゲート</button>
                                             <button type="button" class="sandbox-brush" data-brush="enemy" aria-pressed="false">敵配置</button>
                                             <button type="button" class="sandbox-brush" data-brush="domain" aria-pressed="false">領域</button>
                                         </div>
                                         <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite">セルをクリックして編集します。</p>
+                                        <section class="sandbox-subsection" aria-labelledby="sandbox-maplist-title">
+                                            <div class="sandbox-subsection-header">
+                                                <h5 id="sandbox-maplist-title">マップ一覧</h5>
+                                                <div class="sandbox-maplist-actions">
+                                                    <button type="button" id="sandbox-add-map">+ マップ追加</button>
+                                                    <button type="button" id="sandbox-node-map-button">ノードマップ</button>
+                                                </div>
+                                            </div>
+                                            <div class="sandbox-maplist">
+                                                <div id="sandbox-map-list" class="sandbox-map-list" role="listbox" aria-label="マップ一覧"></div>
+                                                <div class="sandbox-map-detail">
+                                                    <label>名前
+                                                        <input id="sandbox-map-name" type="text" maxlength="40" data-preserve-key="map-name">
+                                                    </label>
+                                                    <label>階層
+                                                        <input id="sandbox-map-floor" type="number" min="1" max="999" data-preserve-key="map-floor">
+                                                    </label>
+                                                    <label>ブランチキー
+                                                        <input id="sandbox-map-branch" type="text" maxlength="12" data-preserve-key="map-branch">
+                                                    </label>
+                                                    <button type="button" id="sandbox-set-entry-map" class="sandbox-secondary-button">開始マップに設定</button>
+                                                </div>
+                                            </div>
+                                        </section>
                                         <div class="sandbox-brush-options" aria-labelledby="sandbox-brush-options-title">
                                             <h5 id="sandbox-brush-options-title">ブラシオプション</h5>
                                             <div class="sandbox-brush-option-grid">
@@ -507,6 +532,16 @@
                                                     </div>
                                                     <span class="sandbox-color-hint" id="sandbox-wall-color-hint">自動</span>
                                                 </label>
+                                                <div class="sandbox-field-group sandbox-palette-group">
+                                                    <span>カラーパレット</span>
+                                                    <div id="sandbox-color-palette" class="sandbox-color-palette" role="listbox" aria-label="保存済みカラー"></div>
+                                                    <div class="sandbox-palette-actions">
+                                                        <button type="button" id="sandbox-save-floor-color">床色を保存</button>
+                                                        <button type="button" id="sandbox-save-wall-color">壁色を保存</button>
+                                                        <button type="button" id="sandbox-clear-palette" class="sandbox-secondary-button">パレットをクリア</button>
+                                                        <button type="button" id="sandbox-eyedropper-button" class="sandbox-secondary-button">スポイト</button>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <p class="sandbox-note small">選択セルや塗りつぶすマスに色・床タイプを適用できます。</p>
                                         </div>
@@ -549,6 +584,14 @@
                                         <div id="sandbox-domain-list" class="sandbox-domain-list" aria-live="polite"></div>
                                         <p class="sandbox-note">クリスタルを選択し「領域」ブラシでマップ上の位置と効果範囲を設定します。</p>
                                     </section>
+                                    <section class="sandbox-section" aria-labelledby="sandbox-portal-title">
+                                        <div class="sandbox-section-header">
+                                            <h4 id="sandbox-portal-title">ポータル / ゲート</h4>
+                                            <button type="button" id="sandbox-add-portal">+ ポータルを追加</button>
+                                        </div>
+                                        <div id="sandbox-portal-list" class="sandbox-portal-list" aria-live="polite"></div>
+                                        <p class="sandbox-note">ポータルを選択し「階段」または「ゲート」ブラシでマップ上の位置を設定します。</p>
+                                    </section>
                                 </div>
                                 <div class="sandbox-map-wrapper">
                                     <div class="sandbox-map-header">
@@ -590,6 +633,15 @@
                                 </div>
                                 <p id="sandbox-io-status" class="sandbox-io-status" role="status" aria-live="polite"></p>
                             </section>
+                            <div id="sandbox-node-map-dialog" class="sandbox-node-map-dialog" aria-hidden="true">
+                                <div class="sandbox-node-map-content" role="dialog" aria-modal="true" aria-labelledby="sandbox-node-map-title">
+                                    <div class="sandbox-node-map-header">
+                                        <h4 id="sandbox-node-map-title">ノードマップ</h4>
+                                        <button type="button" id="sandbox-node-map-close" class="sandbox-modal-close" aria-label="閉じる">✕</button>
+                                    </div>
+                                    <div id="sandbox-node-map-canvas" class="sandbox-node-map-canvas" aria-live="polite"></div>
+                                </div>
+                            </div>
                         </section>
                         <section id="tool-blockdata-editor" class="tool-panel" data-tool-panel="blockdata-editor" aria-label="ブロックデータ編集ツール">
                             <header class="tool-panel-header">

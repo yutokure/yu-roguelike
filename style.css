@@ -2534,6 +2534,386 @@ h1 {
     color: #1f2937;
 }
 
+.sandbox-subsection {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(226,232,240,0.45);
+    border-radius: 12px;
+}
+
+.sandbox-subsection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.sandbox-maplist {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.sandbox-map-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    min-width: 180px;
+}
+
+.sandbox-map-item {
+    appearance: none;
+    border: 1px solid rgba(99,102,241,0.25);
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 13px;
+    color: #1f2937;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.sandbox-map-item.entry::before {
+    content: '★';
+    color: #f59f00;
+    margin-right: 6px;
+}
+
+.sandbox-map-item:hover {
+    box-shadow: 0 6px 12px rgba(99,102,241,0.2);
+}
+
+.sandbox-map-item.active {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 8px 16px rgba(118,75,162,0.25);
+}
+
+.sandbox-map-detail {
+    flex: 1;
+    display: grid;
+    gap: 10px 14px;
+    grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+    align-items: end;
+}
+
+.sandbox-map-detail input {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(148,163,184,0.6);
+    background: #fff;
+}
+
+.sandbox-maplist-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.sandbox-maplist-actions button {
+    appearance: none;
+    border: none;
+    background: rgba(102,126,234,0.16);
+    color: #4338ca;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.sandbox-maplist-actions button:hover {
+    background: rgba(102,126,234,0.26);
+}
+
+.sandbox-palette-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sandbox-color-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 32px;
+}
+
+.sandbox-palette-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(248,250,252,0.8);
+    border: 1px solid rgba(148,163,184,0.45);
+    border-radius: 10px;
+    padding: 4px 6px;
+}
+
+.sandbox-palette-apply {
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+}
+
+.sandbox-palette-swatch {
+    display: block;
+    width: 40px;
+    height: 24px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(148,163,184,0.5);
+}
+
+.sandbox-palette-remove {
+    border: none;
+    background: transparent;
+    color: #ef4444;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.sandbox-palette-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.sandbox-palette-actions button {
+    appearance: none;
+    border: none;
+    background: rgba(102,126,234,0.16);
+    color: #4338ca;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.sandbox-palette-actions button:hover {
+    background: rgba(102,126,234,0.26);
+}
+
+.sandbox-palette-actions .sandbox-secondary-button {
+    background: rgba(148,163,184,0.18);
+    color: #334155;
+}
+
+.sandbox-palette-actions .sandbox-secondary-button:hover {
+    background: rgba(148,163,184,0.28);
+}
+
+.sandbox-portal-card {
+    background: rgba(236,233,252,0.6);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid transparent;
+    box-shadow: 0 4px 12px rgba(102,126,234,0.14);
+}
+
+.sandbox-portal-card.selected {
+    border-color: rgba(102,126,234,0.55);
+    box-shadow: 0 6px 18px rgba(102,126,234,0.22);
+}
+
+.sandbox-portal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.sandbox-portal-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.sandbox-portal-actions button {
+    appearance: none;
+    border: none;
+    background: rgba(76,110,245,0.16);
+    color: #3b5bdb;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.sandbox-portal-actions button.delete {
+    background: rgba(248,113,113,0.18);
+    color: #e03131;
+}
+
+.sandbox-portal-actions button:hover {
+    background: rgba(76,110,245,0.28);
+}
+
+.sandbox-portal-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+}
+
+.sandbox-portal-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: #1f2937;
+}
+
+.sandbox-portal-grid input,
+.sandbox-portal-grid select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(148,163,184,0.5);
+    background: #fff;
+    font-size: 13px;
+}
+
+.sandbox-node-map-dialog {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 80;
+    padding: 20px;
+}
+
+.sandbox-node-map-dialog.open {
+    display: flex;
+}
+
+.sandbox-node-map-content {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15,23,42,0.35);
+    padding: 20px;
+    width: min(720px, 100%);
+    max-height: min(520px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sandbox-node-map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sandbox-modal-close {
+    appearance: none;
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    cursor: pointer;
+    color: #4c51bf;
+}
+
+.sandbox-node-map-canvas {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    overflow: auto;
+    min-height: 260px;
+}
+
+.node-map-svg {
+    width: 100%;
+    height: auto;
+}
+
+.node-map-edge {
+    stroke-width: 2.5;
+    stroke: rgba(99,102,241,0.5);
+}
+
+.node-map-edge.gate {
+    stroke-dasharray: 6 4;
+    stroke: rgba(248,148,31,0.65);
+}
+
+.node-map-node {
+    cursor: pointer;
+}
+
+.node-map-node circle {
+    fill: #ffffff;
+    stroke: rgba(99,102,241,0.35);
+    stroke-width: 3;
+}
+
+.node-map-node.active circle {
+    fill: #667eea;
+    stroke: #4338ca;
+    stroke-width: 3.5;
+}
+
+.node-map-node.entry circle {
+    stroke: #f59f00;
+    stroke-width: 3.5;
+}
+
+.node-map-node text {
+    font-size: 15px;
+    fill: #1f2937;
+    font-weight: 600;
+}
+
+.node-map-label {
+    font-size: 12px;
+    fill: #475569;
+}
+
+.sandbox-portal-list .sandbox-note,
+.sandbox-map-list .sandbox-note,
+.sandbox-color-palette .sandbox-note {
+    background: rgba(241,245,249,0.85);
+    color: #475569;
+    border-radius: 8px;
+    padding: 6px 8px;
+}
+
+.sandbox-portal-actions .select {
+    background: rgba(102,126,234,0.18);
+    color: #3b5bdb;
+}
+
+.sandbox-portal-actions .select:hover {
+    background: rgba(102,126,234,0.28);
+}
+
+.sandbox-portal-actions .delete:hover {
+    background: rgba(248,113,113,0.28);
+}
+
+.sandbox-subsection button:disabled,
+.sandbox-map-detail input:disabled,
+.sandbox-map-detail select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.sandbox-palette-actions button:hover {
+    transform: translateY(-1px);
+}
+
+.sandbox-brush.sandbox-eyedropper-active,
+#sandbox-eyedropper-button.active {
+    background: linear-gradient(135deg,#22d3ee,#3b82f6);
+    color: #fff;
+}
+
 .sandbox-field-group select {
     padding: 6px 8px;
     border-radius: 6px;

@@ -15,13 +15,14 @@
     const MIN_SIZE_FALLBACK = 5;
     const MAX_SIZE_FALLBACK = 60;
     const MAX_LEVEL_FALLBACK = 999;
-    const BRUSHES = ['select', 'floor', 'wall', 'start', 'stairs', 'enemy', 'domain'];
+    const BRUSHES = ['select', 'floor', 'wall', 'start', 'stairs', 'gate', 'enemy', 'domain'];
     const BRUSH_CURSOR = {
         select: 'default',
         floor: 'pointer',
         wall: 'pointer',
         start: 'pointer',
         stairs: 'pointer',
+        gate: 'pointer',
         enemy: 'pointer',
         domain: 'pointer'
     };
@@ -30,6 +31,8 @@
     const FLOOR_DIRECTION_OPTIONS = ['','up','down','left','right'];
     const DEFAULT_FLOOR_COLOR = '#ced6e0';
     const DEFAULT_WALL_COLOR = '#2f3542';
+    const PORTAL_TYPES = ['stairs', 'gate'];
+    const PORTAL_DIRECTIONS = ['up', 'down', 'side'];
     const COLOR_HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
     const RENDER_CELL_SIZE = 28;
     const RENDER_CELL_GAP = 4;
@@ -44,6 +47,7 @@
     const GRID_STAIRS_COLOR = '#f97316';
     const GRID_SELECTED_ENEMY_COLOR = '#f97316';
     const GRID_DOMAIN_COLOR = '#7c3aed';
+    const GRID_GATE_COLOR = '#f59f00';
     const FLOOR_TYPE_LABELS = {
         ice: '氷',
         poison: '毒',
@@ -192,6 +196,8 @@
     const DOMAIN_RADIUS_MAX = 20;
 
     let state = null;
+    let mapSeq = 1;
+    let portalSeq = 1;
     let enemySeq = 1;
     let domainSeq = 1;
     let pendingSerializedState = null;
@@ -308,6 +314,104 @@
     function cloneMetaGrid(meta) {
         if (!Array.isArray(meta)) return [];
         return meta.map(row => Array.isArray(row) ? row.map(cell => (cell ? { ...cell } : null)) : []);
+    }
+
+    function createMapRecord(options = {}) {
+        const {
+            id,
+            floor = 1,
+            branchKey = '',
+            width = DEFAULT_WIDTH,
+            height = DEFAULT_HEIGHT,
+            label = null
+        } = options;
+        const mapId = typeof id === 'string' && id.trim() ? id.trim() : `map-${mapSeq++}`;
+        const resolvedWidth = clamp(MIN_SIZE_FALLBACK, MAX_SIZE_FALLBACK, Math.floor(width) || DEFAULT_WIDTH);
+        const resolvedHeight = clamp(MIN_SIZE_FALLBACK, MAX_SIZE_FALLBACK, Math.floor(height) || DEFAULT_HEIGHT);
+        const grid = createEmptyGrid(resolvedWidth, resolvedHeight, 1);
+        const meta = createEmptyMeta(resolvedWidth, resolvedHeight);
+        const startX = Math.min(resolvedWidth - 1, 1);
+        const startY = Math.min(resolvedHeight - 1, 1);
+        grid[startY][startX] = 0;
+        const stairsX = Math.max(0, resolvedWidth - 2);
+        const stairsY = Math.max(0, resolvedHeight - 2);
+        grid[stairsY][stairsX] = 0;
+        const portalId = `portal-${portalSeq++}`;
+        const portal = {
+            id: portalId,
+            type: 'stairs',
+            label: '階段',
+            direction: 'up',
+            x: stairsX,
+            y: stairsY,
+            targetMapId: mapId,
+            targetX: startX,
+            targetY: startY
+        };
+        const resolvedLabel = typeof label === 'string' && label.trim()
+            ? label.trim()
+            : `${floor}F${branchKey ? `-${branchKey}` : ''}`;
+        return {
+            id: mapId,
+            label: resolvedLabel,
+            floor: Math.max(1, Math.floor(floor) || 1),
+            branchKey: typeof branchKey === 'string' ? branchKey.trim() : '',
+            width: resolvedWidth,
+            height: resolvedHeight,
+            grid,
+            meta,
+            playerStart: { x: startX, y: startY },
+            portals: [portal],
+            enemies: [],
+            domainEffects: []
+        };
+    }
+
+    function findMapIndexById(id) {
+        if (!state || !Array.isArray(state.maps)) return -1;
+        return state.maps.findIndex(map => map && map.id === id);
+    }
+
+    function getActiveMapRecord() {
+        if (!state) return null;
+        if (!state.activeMapId) return null;
+        const index = findMapIndexById(state.activeMapId);
+        return index >= 0 ? state.maps[index] : null;
+    }
+
+    function activateMap(mapId, { preserveSelection = true } = {}) {
+        if (!state || !Array.isArray(state.maps)) return false;
+        const index = findMapIndexById(mapId);
+        if (index < 0) return false;
+        const map = state.maps[index];
+        state.activeMapId = map.id;
+        state.activeMapIndex = index;
+        state.width = map.width;
+        state.height = map.height;
+        state.grid = map.grid;
+        state.meta = map.meta;
+        state.playerStart = map.playerStart;
+        if (!Array.isArray(map.portals)) map.portals = [];
+        state.portals = map.portals;
+        state.enemies = map.enemies;
+        state.domainEffects = map.domainEffects;
+        if (!preserveSelection) {
+            state.selectedEnemyId = map.enemies[0]?.id || null;
+            state.selectedDomainId = map.domainEffects[0]?.id || null;
+            state.selectedPortalId = map.portals && map.portals.length ? map.portals[0].id : null;
+        }
+        ensureStateGridSize(state.width, state.height);
+        return true;
+    }
+
+    function ensureActiveMapRecord() {
+        const map = getActiveMapRecord();
+        if (map) return map;
+        if (state && Array.isArray(state.maps) && state.maps.length) {
+            activateMap(state.maps[0].id, { preserveSelection: false });
+            return getActiveMapRecord();
+        }
+        return null;
     }
 
     function sanitizeColorValue(value) {
@@ -522,35 +626,63 @@
     }
 
     function buildConfigFromState() {
+        const maps = Array.isArray(state.maps) ? state.maps.map(map => {
+            const mapGrid = cloneGrid(map.grid || []);
+            const mapMeta = cloneMetaGrid(map.meta || []);
+            const sanitizePortals = Array.isArray(map.portals) ? map.portals.map(portal => ({
+                id: portal.id,
+                type: PORTAL_TYPES.includes(portal.type) ? portal.type : 'stairs',
+                label: typeof portal.label === 'string' ? portal.label : '',
+                direction: PORTAL_DIRECTIONS.includes(portal.direction) ? portal.direction : (portal.type === 'stairs' ? 'up' : 'side'),
+                x: Number.isFinite(portal.x) ? portal.x : null,
+                y: Number.isFinite(portal.y) ? portal.y : null,
+                targetMapId: typeof portal.targetMapId === 'string' ? portal.targetMapId : null,
+                targetX: Number.isFinite(portal.targetX) ? portal.targetX : null,
+                targetY: Number.isFinite(portal.targetY) ? portal.targetY : null
+            })) : [];
+            return {
+                id: map.id,
+                label: map.label,
+                floor: map.floor,
+                branchKey: map.branchKey,
+                width: map.width,
+                height: map.height,
+                grid: mapGrid,
+                tileMeta: mapMeta,
+                playerStart: map.playerStart ? { ...map.playerStart } : null,
+                portals: sanitizePortals,
+                enemies: (map.enemies || []).map(enemy => ({
+                    id: enemy.id,
+                    name: enemy.name,
+                    level: enemy.level,
+                    hp: enemy.hp,
+                    attack: enemy.attack,
+                    defense: enemy.defense,
+                    boss: !!enemy.boss,
+                    x: Number.isFinite(enemy.x) ? enemy.x : null,
+                    y: Number.isFinite(enemy.y) ? enemy.y : null
+                })),
+                domainEffects: (map.domainEffects || []).map(effect => ({
+                    id: effect.id,
+                    name: effect.name,
+                    radius: effect.radius,
+                    effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
+                    effectParams: cloneDomainEffectParams(effect),
+                    x: Number.isFinite(effect.x) ? effect.x : null,
+                    y: Number.isFinite(effect.y) ? effect.y : null
+                }))
+            };
+        }) : [];
+
+        const entryMapId = state.entryMapId && maps.some(map => map.id === state.entryMapId)
+            ? state.entryMapId
+            : (maps[0]?.id || null);
         return {
-            width: state.width,
-            height: state.height,
-            grid: cloneGrid(state.grid),
-            playerStart: state.playerStart ? { ...state.playerStart } : null,
-            stairs: state.stairs ? { ...state.stairs } : null,
+            version: Bridge?.configVersion || SANDBOX_CONFIG_VERSION,
             playerLevel: state.playerLevel,
-            enemies: state.enemies.map(e => ({
-                id: e.id,
-                name: e.name,
-                level: e.level,
-                hp: e.hp,
-                attack: e.attack,
-                defense: e.defense,
-                boss: !!e.boss,
-                x: Number.isFinite(e.x) ? e.x : null,
-                y: Number.isFinite(e.y) ? e.y : null
-            })),
-            domainEffects: state.domainEffects.map(effect => ({
-                id: effect.id,
-                name: effect.name,
-                radius: effect.radius,
-                effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
-                effectParams: cloneDomainEffectParams(effect),
-                x: Number.isFinite(effect.x) ? effect.x : null,
-                y: Number.isFinite(effect.y) ? effect.y : null
-            })),
             interactiveMode: !!state.interactiveMode,
-            tileMeta: cloneMetaGrid(state.meta)
+            entryMapId,
+            maps
         };
     }
 
@@ -559,35 +691,56 @@
             return pendingSerializedState ? { ...pendingSerializedState } : null;
         }
         return {
-            width: state.width,
-            height: state.height,
-            grid: cloneGrid(state.grid || []),
-            playerStart: state.playerStart ? { ...state.playerStart } : null,
-            stairs: state.stairs ? { ...state.stairs } : null,
+            version: Bridge?.configVersion || SANDBOX_CONFIG_VERSION,
+            maps: Array.isArray(state.maps) ? state.maps.map(map => ({
+                id: map.id,
+                label: map.label,
+                floor: map.floor,
+                branchKey: map.branchKey,
+                width: map.width,
+                height: map.height,
+                grid: cloneGrid(map.grid || []),
+                tileMeta: cloneMetaGrid(map.meta || []),
+                playerStart: map.playerStart ? { ...map.playerStart } : null,
+                portals: Array.isArray(map.portals) ? map.portals.map(portal => ({
+                    id: portal.id,
+                    type: portal.type,
+                    label: portal.label,
+                    direction: portal.direction,
+                    x: Number.isFinite(portal.x) ? portal.x : null,
+                    y: Number.isFinite(portal.y) ? portal.y : null,
+                    targetMapId: typeof portal.targetMapId === 'string' ? portal.targetMapId : null,
+                    targetX: Number.isFinite(portal.targetX) ? portal.targetX : null,
+                    targetY: Number.isFinite(portal.targetY) ? portal.targetY : null
+                })) : [],
+                enemies: (map.enemies || []).map(enemy => ({
+                    id: enemy.id,
+                    name: enemy.name,
+                    level: enemy.level,
+                    hp: enemy.hp,
+                    attack: enemy.attack,
+                    defense: enemy.defense,
+                    boss: !!enemy.boss,
+                    x: Number.isFinite(enemy.x) ? enemy.x : null,
+                    y: Number.isFinite(enemy.y) ? enemy.y : null
+                })),
+                domainEffects: (map.domainEffects || []).map(effect => ({
+                    id: effect.id,
+                    name: effect.name,
+                    radius: effect.radius,
+                    effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
+                    effectParams: cloneDomainEffectParams(effect),
+                    x: Number.isFinite(effect.x) ? effect.x : null,
+                    y: Number.isFinite(effect.y) ? effect.y : null
+                }))
+            })) : [],
+            activeMapId: state.activeMapId,
+            entryMapId: state.entryMapId,
             playerLevel: state.playerLevel,
-            enemies: state.enemies.map(enemy => ({
-                id: enemy.id,
-                name: enemy.name,
-                level: enemy.level,
-                hp: enemy.hp,
-                attack: enemy.attack,
-                defense: enemy.defense,
-                boss: !!enemy.boss,
-                x: Number.isFinite(enemy.x) ? enemy.x : null,
-                y: Number.isFinite(enemy.y) ? enemy.y : null
-            })),
-            domainEffects: state.domainEffects.map(effect => ({
-                id: effect.id,
-                name: effect.name,
-                radius: effect.radius,
-                effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
-                effectParams: cloneDomainEffectParams(effect),
-                x: Number.isFinite(effect.x) ? effect.x : null,
-                y: Number.isFinite(effect.y) ? effect.y : null
-            })),
-            tileMeta: cloneMetaGrid(state.meta),
+            interactiveMode: !!state.interactiveMode,
             selectedEnemyId: state.selectedEnemyId || null,
             selectedDomainId: state.selectedDomainId || null,
+            selectedPortalId: state.selectedPortalId || null,
             brush: state.brush,
             lastCell: state.lastCell ? { ...state.lastCell } : null,
             validation: {
@@ -596,7 +749,8 @@
             },
             tempMessage: state.tempMessage || '',
             brushSettings: state.brushSettings ? { ...state.brushSettings } : { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' },
-            interactiveMode: !!state.interactiveMode
+            colorPalette: Array.isArray(state.colorPalette) ? state.colorPalette.slice() : [],
+            eyedropper: state.eyedropper ? { ...state.eyedropper } : { active: false }
         };
     }
 
@@ -638,59 +792,143 @@
     }
 
     function normalizeSerializedState(serialized) {
-        const minSize = Bridge?.minSize || MIN_SIZE_FALLBACK;
-        const maxSize = Bridge?.maxSize || MAX_SIZE_FALLBACK;
         const maxLevel = Bridge?.maxLevel || MAX_LEVEL_FALLBACK;
-        const width = clamp(minSize, maxSize, Math.floor(Number(serialized?.width) || DEFAULT_WIDTH));
-        const height = clamp(minSize, maxSize, Math.floor(Number(serialized?.height) || DEFAULT_HEIGHT));
-        const grid = createEmptyGrid(width, height, 1);
-        if (Array.isArray(serialized?.grid)) {
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const cell = serialized.grid?.[y]?.[x];
-                    grid[y][x] = cell === 0 ? 0 : 1;
-                }
-            }
+        let rawConfig;
+
+        if (Array.isArray(serialized?.maps) && serialized.maps.length) {
+            rawConfig = {
+                version: serialized.version,
+                playerLevel: serialized.playerLevel,
+                interactiveMode: serialized.interactiveMode,
+                entryMapId: serialized.activeMapId,
+                maps: serialized.maps
+            };
+        } else {
+            rawConfig = {
+                playerLevel: serialized?.playerLevel,
+                interactiveMode: serialized?.interactiveMode,
+                maps: [{
+                    id: serialized?.id,
+                    label: serialized?.label,
+                    floor: serialized?.floor,
+                    branchKey: serialized?.branchKey,
+                    width: serialized?.width,
+                    height: serialized?.height,
+                    grid: serialized?.grid,
+                    tileMeta: serialized?.tileMeta || serialized?.meta,
+                    playerStart: serialized?.playerStart,
+                    portals: serialized?.stairs ? [{
+                        id: serialized?.stairs?.id || 'portal-stairs-legacy',
+                        type: 'stairs',
+                        label: '階段',
+                        direction: 'up',
+                        x: serialized.stairs.x,
+                        y: serialized.stairs.y,
+                        targetMapId: serialized?.stairs?.targetMapId || null,
+                        targetX: serialized?.stairs?.targetX ?? serialized?.playerStart?.x ?? 0,
+                        targetY: serialized?.stairs?.targetY ?? serialized?.playerStart?.y ?? 0
+                    }] : [],
+                    enemies: serialized?.enemies,
+                    domainEffects: serialized?.domainEffects
+                }]
+            };
         }
-        const metaSource = Array.isArray(serialized?.tileMeta) ? serialized.tileMeta : serialized?.meta;
-        const tileMeta = createEmptyMeta(width, height);
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const src = metaSource?.[y]?.[x];
-                tileMeta[y][x] = normalizeMetaObject(src, grid[y][x] === 0);
-            }
-        }
-        const playerLevel = clamp(1, maxLevel, Math.floor(Number(serialized?.playerLevel) || DEFAULT_LEVEL));
-        const rawBrush = serialized?.brushSettings || {};
-        const rawFloorType = typeof rawBrush.floorType === 'string' ? rawBrush.floorType.toLowerCase() : '';
-        const rawFloorDir = typeof rawBrush.floorDir === 'string' ? rawBrush.floorDir.toLowerCase() : '';
+
+        const sanitizedConfig = Bridge?.sanitize ? Bridge.sanitize(rawConfig) : rawConfig;
+        const maps = Array.isArray(sanitizedConfig?.maps) ? sanitizedConfig.maps.map(map => {
+            const width = clamp(Bridge?.minSize || MIN_SIZE_FALLBACK, Bridge?.maxSize || MAX_SIZE_FALLBACK, Math.floor(Number(map.width) || DEFAULT_WIDTH));
+            const height = clamp(Bridge?.minSize || MIN_SIZE_FALLBACK, Bridge?.maxSize || MAX_SIZE_FALLBACK, Math.floor(Number(map.height) || DEFAULT_HEIGHT));
+            return {
+                id: typeof map.id === 'string' ? map.id : `map-${mapSeq++}`,
+                label: typeof map.label === 'string' ? map.label : `${map.floor || 1}F`,
+                floor: Math.max(1, Math.floor(Number(map.floor) || 1)),
+                branchKey: typeof map.branchKey === 'string' ? map.branchKey : '',
+                width,
+                height,
+                grid: cloneGrid(map.grid || []),
+                meta: cloneMetaGrid(map.tileMeta || []),
+                playerStart: map.playerStart ? { x: clamp(0, width - 1, Math.floor(Number(map.playerStart.x) || 0)), y: clamp(0, height - 1, Math.floor(Number(map.playerStart.y) || 0)) } : null,
+                portals: Array.isArray(map.portals) ? map.portals.map(portal => ({
+                    id: typeof portal.id === 'string' ? portal.id : `portal-${portalSeq++}`,
+                    type: PORTAL_TYPES.includes(portal.type) ? portal.type : 'stairs',
+                    label: typeof portal.label === 'string' ? portal.label : '',
+                    direction: PORTAL_DIRECTIONS.includes(portal.direction) ? portal.direction : (portal.type === 'stairs' ? 'up' : 'side'),
+                    x: Number.isFinite(portal.x) ? clamp(0, width - 1, Math.floor(portal.x)) : null,
+                    y: Number.isFinite(portal.y) ? clamp(0, height - 1, Math.floor(portal.y)) : null,
+                    targetMapId: typeof portal.targetMapId === 'string' ? portal.targetMapId : null,
+                    targetX: Number.isFinite(portal.targetX) ? Math.floor(portal.targetX) : null,
+                    targetY: Number.isFinite(portal.targetY) ? Math.floor(portal.targetY) : null
+                })) : [],
+                enemies: Array.isArray(map.enemies) ? map.enemies.map(enemy => ({
+                    id: typeof enemy.id === 'string' ? enemy.id : null,
+                    name: typeof enemy.name === 'string' ? enemy.name : '',
+                    level: clamp(1, maxLevel, Math.floor(Number(enemy.level) || DEFAULT_LEVEL)),
+                    hp: Math.max(1, Math.floor(Number(enemy.hp) || 1)),
+                    attack: Math.max(0, Math.floor(Number(enemy.attack) || 0)),
+                    defense: Math.max(0, Math.floor(Number(enemy.defense) || 0)),
+                    boss: !!enemy.boss,
+                    x: Number.isFinite(enemy.x) ? clamp(0, width - 1, Math.floor(enemy.x)) : null,
+                    y: Number.isFinite(enemy.y) ? clamp(0, height - 1, Math.floor(enemy.y)) : null
+                })) : [],
+                domainEffects: Array.isArray(map.domainEffects) ? map.domainEffects.map(effect => ({
+                    id: typeof effect.id === 'string' ? effect.id : null,
+                    name: typeof effect.name === 'string' ? effect.name : '',
+                    radius: clamp(1, 50, Math.floor(Number(effect.radius) || 3)),
+                    effects: Array.isArray(effect.effects) ? effect.effects.slice() : [],
+                    effectParams: cloneDomainEffectParams(effect),
+                    x: Number.isFinite(effect.x) ? clamp(0, width - 1, Math.floor(effect.x)) : null,
+                    y: Number.isFinite(effect.y) ? clamp(0, height - 1, Math.floor(effect.y)) : null
+                })) : []
+            };
+        }) : [];
+
+        const brushSettingsRaw = serialized?.brushSettings || {};
         const brushSettings = {
-            floorType: FLOOR_TYPES.includes(rawFloorType) ? rawFloorType : 'normal',
-            floorColor: sanitizeColorValue(rawBrush.floorColor),
-            wallColor: sanitizeColorValue(rawBrush.wallColor),
-            floorDir: FLOOR_DIRECTION_OPTIONS.includes(rawFloorDir) ? rawFloorDir : ''
+            floorType: FLOOR_TYPES.includes(brushSettingsRaw.floorType) ? brushSettingsRaw.floorType : 'normal',
+            floorColor: sanitizeColorValue(brushSettingsRaw.floorColor),
+            wallColor: sanitizeColorValue(brushSettingsRaw.wallColor),
+            floorDir: FLOOR_DIRECTION_OPTIONS.includes(brushSettingsRaw.floorDir) ? brushSettingsRaw.floorDir : ''
         };
+
+        const computedEntryMapId = sanitizedConfig?.entryMapId && maps.some(map => map.id === sanitizedConfig.entryMapId)
+            ? sanitizedConfig.entryMapId
+            : (maps[0]?.id || null);
         return {
-            width,
-            height,
-            grid,
-            meta: tileMeta,
-            playerStart: normalizePosition(serialized?.playerStart, width, height),
-            stairs: normalizePosition(serialized?.stairs, width, height),
-            lastCell: normalizePosition(serialized?.lastCell, width, height),
-            playerLevel,
-            enemies: normalizeEnemies(serialized?.enemies, width, height, maxLevel),
+            maps,
+            activeMapId: maps.some(map => map.id === serialized?.activeMapId) ? serialized.activeMapId : (maps[0]?.id || null),
+            entryMapId: computedEntryMapId,
+            playerLevel: clamp(1, maxLevel, Math.floor(Number(sanitizedConfig?.playerLevel) || DEFAULT_LEVEL)),
+            interactiveMode: !!sanitizedConfig?.interactiveMode,
             selectedEnemyId: typeof serialized?.selectedEnemyId === 'string' ? serialized.selectedEnemyId : null,
-            domainEffects: normalizeDomainEffects(serialized?.domainEffects, width, height),
             selectedDomainId: typeof serialized?.selectedDomainId === 'string' ? serialized.selectedDomainId : null,
+            selectedPortalId: typeof serialized?.selectedPortalId === 'string' ? serialized.selectedPortalId : null,
             brush: BRUSHES.includes(serialized?.brush) ? serialized.brush : 'floor',
+            lastCell: serialized?.lastCell && Number.isFinite(serialized.lastCell.x) && Number.isFinite(serialized.lastCell.y)
+                ? { x: Math.floor(serialized.lastCell.x), y: Math.floor(serialized.lastCell.y) }
+                : null,
             validation: {
                 errors: Array.isArray(serialized?.validation?.errors) ? serialized.validation.errors.map(e => String(e)) : [],
                 warnings: Array.isArray(serialized?.validation?.warnings) ? serialized.validation.warnings.map(w => String(w)) : []
             },
             tempMessage: typeof serialized?.tempMessage === 'string' ? serialized.tempMessage : '',
             brushSettings,
-            interactiveMode: !!serialized?.interactiveMode
+            colorPalette: Array.isArray(serialized?.colorPalette) ? serialized.colorPalette.reduce((acc, entry) => {
+                if (entry && typeof entry === 'object') {
+                    acc.push({
+                        kind: entry.kind === 'wall' ? 'wall' : 'floor',
+                        floorColor: entry.floorColor || '',
+                        wallColor: entry.wallColor || '',
+                        floorType: entry.floorType || 'normal',
+                        floorDir: entry.floorDir || ''
+                    });
+                } else if (typeof entry === 'string') {
+                    acc.push({ kind: 'floor', floorColor: entry, wallColor: '', floorType: 'normal', floorDir: '' });
+                }
+                return acc;
+            }, []) : [],
+            eyedropper: serialized?.eyedropper && typeof serialized.eyedropper === 'object'
+                ? { active: !!serialized.eyedropper.active }
+                : { active: false }
         };
     }
 
@@ -700,36 +938,99 @@
             pendingSerializedState = payload;
             return true;
         }
-        state.width = payload.width;
-        state.height = payload.height;
-        state.grid = cloneGrid(payload.grid);
-        state.meta = cloneMetaGrid(payload.meta);
-        ensureStateGridSize(state.width, state.height);
-        state.grid = cloneGrid(payload.grid);
-        state.meta = cloneMetaGrid(payload.meta);
-        state.playerStart = payload.playerStart;
-        state.stairs = payload.stairs;
-        state.playerLevel = payload.playerLevel;
-        state.enemies = payload.enemies.map(enemy => ({ ...enemy, id: enemy.id || `enemy-${enemySeq++}` }));
-        state.selectedEnemyId = payload.selectedEnemyId;
-        state.domainEffects = payload.domainEffects.map(effect => {
-            const effectList = Array.isArray(effect.effects)
-                ? effect.effects.filter((id, idx, arr) => DOMAIN_EFFECT_OPTIONS.some(opt => opt.id === id) && arr.indexOf(id) === idx)
-                : [DOMAIN_EFFECT_OPTIONS[0].id];
-            if (!effectList.length) effectList.push(DOMAIN_EFFECT_OPTIONS[0].id);
-            const normalized = {
-                id: effect.id || `domain-${domainSeq++}`,
-                name: typeof effect.name === 'string' ? effect.name : '',
-                radius: clamp(DOMAIN_RADIUS_MIN, DOMAIN_RADIUS_MAX, Math.floor(Number(effect.radius) || 3)),
-                effects: effectList,
-                effectParams: normalizeDomainEffectParams(effect.effectParams, effectList),
-                x: Number.isFinite(effect.x) ? effect.x : null,
-                y: Number.isFinite(effect.y) ? effect.y : null
+        state.maps = Array.isArray(payload.maps) ? payload.maps.map(map => {
+            const record = {
+                id: map.id || `map-${mapSeq++}`,
+                label: map.label || `${map.floor || 1}F`,
+                floor: map.floor || 1,
+                branchKey: map.branchKey || '',
+                width: map.width,
+                height: map.height,
+                grid: cloneGrid(map.grid || []),
+                meta: cloneMetaGrid(map.meta || []),
+                playerStart: map.playerStart ? { ...map.playerStart } : null,
+                portals: Array.isArray(map.portals) ? map.portals.map(portal => ({
+                    id: typeof portal.id === 'string' ? portal.id : `portal-${portalSeq++}`,
+                    type: PORTAL_TYPES.includes(portal.type) ? portal.type : 'stairs',
+                    label: typeof portal.label === 'string' ? portal.label : '',
+                    direction: PORTAL_DIRECTIONS.includes(portal.direction) ? portal.direction : (portal.type === 'stairs' ? 'up' : 'side'),
+                    x: Number.isFinite(portal.x) ? portal.x : null,
+                    y: Number.isFinite(portal.y) ? portal.y : null,
+                    targetMapId: typeof portal.targetMapId === 'string' ? portal.targetMapId : null,
+                    targetX: Number.isFinite(portal.targetX) ? portal.targetX : null,
+                    targetY: Number.isFinite(portal.targetY) ? portal.targetY : null
+                })) : [],
+                enemies: Array.isArray(map.enemies) ? map.enemies.map(enemy => ({
+                    id: enemy.id || `enemy-${enemySeq++}`,
+                    name: typeof enemy.name === 'string' ? enemy.name : '',
+                    level: clamp(1, maxLevel, Math.floor(Number(enemy.level) || DEFAULT_LEVEL)),
+                    hp: Math.max(1, Math.floor(Number(enemy.hp) || 1)),
+                    attack: Math.max(0, Math.floor(Number(enemy.attack) || 0)),
+                    defense: Math.max(0, Math.floor(Number(enemy.defense) || 0)),
+                    boss: !!enemy.boss,
+                    x: Number.isFinite(enemy.x) ? enemy.x : null,
+                    y: Number.isFinite(enemy.y) ? enemy.y : null
+                })) : [],
+                domainEffects: Array.isArray(map.domainEffects) ? map.domainEffects.map(effect => {
+                    const effectList = Array.isArray(effect.effects)
+                        ? effect.effects.filter((id, idx, arr) => DOMAIN_EFFECT_OPTIONS.some(opt => opt.id === id) && arr.indexOf(id) === idx)
+                        : [DOMAIN_EFFECT_OPTIONS[0].id];
+                    if (!effectList.length) effectList.push(DOMAIN_EFFECT_OPTIONS[0].id);
+                    const normalized = {
+                        id: effect.id || `domain-${domainSeq++}`,
+                        name: typeof effect.name === 'string' ? effect.name : '',
+                        radius: clamp(DOMAIN_RADIUS_MIN, DOMAIN_RADIUS_MAX, Math.floor(Number(effect.radius) || 3)),
+                        effects: effectList,
+                        effectParams: normalizeDomainEffectParams(effect.effectParams, effectList),
+                        x: Number.isFinite(effect.x) ? effect.x : null,
+                        y: Number.isFinite(effect.y) ? effect.y : null
+                    };
+                    ensureDomainEffectParamDefaults(normalized);
+                    return normalized;
+                }) : []
             };
-            ensureDomainEffectParamDefaults(normalized);
-            return normalized;
-        });
-        state.selectedDomainId = payload.selectedDomainId;
+            return record;
+        }) : [];
+
+        const extractNumericSuffix = (value) => {
+            if (typeof value !== 'string') return NaN;
+            const match = value.match(/(\d+)$/);
+            return match ? Number(match[1]) : NaN;
+        };
+        const maxMapSeq = state.maps.reduce((max, map) => {
+            const num = extractNumericSuffix(map.id);
+            return Number.isFinite(num) ? Math.max(max, num) : max;
+        }, 0);
+        mapSeq = Math.max(mapSeq, Number.isFinite(maxMapSeq) ? maxMapSeq + 1 : mapSeq);
+        const maxPortalSeq = state.maps.reduce((max, map) => {
+            if (!Array.isArray(map.portals)) return max;
+            const localMax = map.portals.reduce((pMax, portal) => {
+                const num = extractNumericSuffix(portal.id);
+                return Number.isFinite(num) ? Math.max(pMax, num) : pMax;
+            }, 0);
+            return Math.max(max, localMax);
+        }, 0);
+        portalSeq = Math.max(portalSeq, Number.isFinite(maxPortalSeq) ? maxPortalSeq + 1 : portalSeq);
+        const maxEnemySeq = state.maps.reduce((max, map) => {
+            const localMax = map.enemies.reduce((eMax, enemy) => {
+                const num = extractNumericSuffix(enemy.id);
+                return Number.isFinite(num) ? Math.max(eMax, num) : eMax;
+            }, 0);
+            return Math.max(max, localMax);
+        }, 0);
+        enemySeq = Math.max(enemySeq, Number.isFinite(maxEnemySeq) ? maxEnemySeq + 1 : enemySeq);
+        const maxDomainSeq = state.maps.reduce((max, map) => {
+            const localMax = map.domainEffects.reduce((dMax, effect) => {
+                const num = extractNumericSuffix(effect.id);
+                return Number.isFinite(num) ? Math.max(dMax, num) : dMax;
+            }, 0);
+            return Math.max(max, localMax);
+        }, 0);
+        domainSeq = Math.max(domainSeq, Number.isFinite(maxDomainSeq) ? maxDomainSeq + 1 : domainSeq);
+
+        state.entryMapId = payload.entryMapId || state.maps[0]?.id || null;
+        state.playerLevel = payload.playerLevel;
+        state.interactiveMode = !!payload.interactiveMode;
         state.brush = payload.brush;
         state.lastCell = payload.lastCell;
         state.brushSettings = { ...payload.brushSettings };
@@ -740,23 +1041,29 @@
         state.compiledConfig = null;
         state.tempMessage = payload.tempMessage;
         state.ioStatus = { type: 'idle', message: '' };
-        state.interactiveMode = !!payload.interactiveMode;
+        state.colorPalette = Array.isArray(payload.colorPalette) ? payload.colorPalette.map(entry => ({ ...entry })) : [];
+        state.eyedropper = payload.eyedropper ? { ...payload.eyedropper } : { active: false };
+
+        const activated = activateMap(payload.activeMapId, { preserveSelection: false });
+        if (!activated && state.maps.length) {
+            activateMap(state.maps[0].id, { preserveSelection: false });
+        }
+
+        state.selectedEnemyId = state.enemies.some(enemy => enemy.id === payload.selectedEnemyId)
+            ? payload.selectedEnemyId
+            : (state.enemies[0]?.id || null);
+        state.selectedDomainId = state.domainEffects.some(effect => effect.id === payload.selectedDomainId)
+            ? payload.selectedDomainId
+            : (state.domainEffects[0]?.id || null);
+        state.selectedPortalId = state.portals.some(portal => portal.id === payload.selectedPortalId)
+            ? payload.selectedPortalId
+            : (state.portals[0]?.id || null);
+
         if (refs.widthInput) refs.widthInput.value = state.width;
         if (refs.heightInput) refs.heightInput.value = state.height;
         if (refs.playerLevelInput) refs.playerLevelInput.value = state.playerLevel;
         if (refs.interactiveModeInput) refs.interactiveModeInput.checked = !!state.interactiveMode;
-        const maxEnemyId = state.enemies.reduce((max, enemy) => {
-            const match = typeof enemy.id === 'string' ? enemy.id.match(/(\d+)$/) : null;
-            const num = match ? Number(match[1]) : NaN;
-            return Number.isFinite(num) ? Math.max(max, num) : max;
-        }, 0);
-        enemySeq = Math.max(enemySeq, maxEnemyId + 1);
-        const maxDomainId = state.domainEffects.reduce((max, effect) => {
-            const match = typeof effect.id === 'string' ? effect.id.match(/(\d+)$/) : null;
-            const num = match ? Number(match[1]) : NaN;
-            return Number.isFinite(num) ? Math.max(max, num) : max;
-        }, 0);
-        domainSeq = Math.max(domainSeq, maxDomainId + 1);
+
         render();
         return true;
     }
@@ -773,13 +1080,35 @@
         }
         state.grid = newGrid;
         state.meta = newMeta;
+        const map = getActiveMapRecord();
+        if (map) {
+            map.width = width;
+            map.height = height;
+            map.grid = newGrid;
+            map.meta = newMeta;
+        }
         const clampPos = (pos) => {
             if (!pos) return null;
             if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height) return null;
             return pos;
         };
         state.playerStart = clampPos(state.playerStart);
-        state.stairs = clampPos(state.stairs);
+        if (map) {
+            map.playerStart = state.playerStart ? { ...state.playerStart } : null;
+        }
+        if (Array.isArray(state.portals)) {
+            state.portals = state.portals.map(portal => {
+                if (!portal) return null;
+                if (!Number.isFinite(portal.x) || !Number.isFinite(portal.y)) return { ...portal, x: null, y: null };
+                if (portal.x < 0 || portal.x >= width || portal.y < 0 || portal.y >= height) {
+                    return { ...portal, x: null, y: null };
+                }
+                return portal;
+            }).filter(Boolean);
+            if (map) {
+                map.portals = state.portals;
+            }
+        }
         if (state.lastCell && (state.lastCell.x < 0 || state.lastCell.x >= width || state.lastCell.y < 0 || state.lastCell.y >= height)) {
             state.lastCell = null;
         }
@@ -792,6 +1121,9 @@
             }
             return enemy;
         });
+        if (map) {
+            map.enemies = state.enemies;
+        }
         state.domainEffects = state.domainEffects.map(effect => {
             if (!Number.isFinite(effect.x) || !Number.isFinite(effect.y)) {
                 return { ...effect, x: null, y: null };
@@ -801,6 +1133,9 @@
             }
             return effect;
         });
+        if (map) {
+            map.domainEffects = state.domainEffects;
+        }
     }
 
     function setBrush(brush) {
@@ -823,6 +1158,58 @@
         if (updateSelection) {
             setSelectedCell(x, y);
         }
+
+        const mapConfig = getActiveMapRecord();
+        const portals = Array.isArray(state.portals)
+            ? state.portals
+            : (mapConfig ? (mapConfig.portals = mapConfig.portals || []) : []);
+        if (mapConfig && state.portals !== mapConfig.portals) {
+            state.portals = mapConfig.portals;
+        }
+
+        const ensurePortalReference = (type) => {
+            let portal = portals.find(p => p && p.id === state.selectedPortalId && p.type === type);
+            if (!portal) {
+                portal = portals.find(p => p.type === type);
+            }
+            if (!portal) {
+                portal = {
+                    id: `portal-${portalSeq++}`,
+                    type,
+                    label: type === 'stairs' ? '階段' : 'ゲート',
+                    direction: type === 'stairs' ? 'up' : 'side',
+                    x: null,
+                    y: null,
+                    targetMapId: mapConfig?.id || state.activeMapId || null,
+                    targetX: state.playerStart?.x ?? null,
+                    targetY: state.playerStart?.y ?? null
+                };
+                portals.push(portal);
+                if (mapConfig) mapConfig.portals = portals;
+                state.selectedPortalId = portal.id;
+            }
+            return portal;
+        };
+
+        const removePortalsAt = (px, py) => {
+            if (!Array.isArray(portals) || !portals.length) return false;
+            let removed = false;
+            for (let i = portals.length - 1; i >= 0; i--) {
+                const portal = portals[i];
+                if (portal && portal.x === px && portal.y === py) {
+                    portals.splice(i, 1);
+                    removed = true;
+                }
+            }
+            if (removed) {
+                if (mapConfig) mapConfig.portals = portals;
+                if (state.selectedPortalId && !portals.some(portal => portal.id === state.selectedPortalId)) {
+                    state.selectedPortalId = portals[0]?.id || null;
+                }
+            }
+            return removed;
+        };
+
         let changed = false;
         const brush = state.brush;
         if (brush === 'select') {
@@ -841,10 +1228,10 @@
             }
             if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
                 state.playerStart = null;
+                if (mapConfig) mapConfig.playerStart = null;
                 changed = true;
             }
-            if (state.stairs && state.stairs.x === x && state.stairs.y === y) {
-                state.stairs = null;
+            if (removePortalsAt(x, y)) {
                 changed = true;
             }
             let enemyChanged = false;
@@ -873,18 +1260,26 @@
             }
             if (!state.playerStart || state.playerStart.x !== x || state.playerStart.y !== y) {
                 state.playerStart = { x, y };
+                if (mapConfig) mapConfig.playerStart = { x, y };
                 changed = true;
             }
             if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
-        } else if (brush === 'stairs') {
+        } else if (brush === 'stairs' || brush === 'gate') {
             if (state.grid[y][x] !== 0) {
                 state.grid[y][x] = 0;
                 changed = true;
             }
-            if (!state.stairs || state.stairs.x !== x || state.stairs.y !== y) {
-                state.stairs = { x, y };
+            const desiredType = brush === 'stairs' ? 'stairs' : 'gate';
+            const portal = ensurePortalReference(desiredType);
+            if (!portal) return false;
+            if (portal.x !== x || portal.y !== y) {
+                portal.x = x;
+                portal.y = y;
                 changed = true;
             }
+            if (!Number.isFinite(portal.targetX)) portal.targetX = state.playerStart?.x ?? x;
+            if (!Number.isFinite(portal.targetY)) portal.targetY = state.playerStart?.y ?? y;
+            if (mapConfig) mapConfig.portals = portals;
             if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
         } else if (brush === 'enemy') {
             if (!state.selectedEnemyId) {
@@ -963,8 +1358,16 @@
         if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
             detailParts.push('開始位置');
         }
-        if (state.stairs && state.stairs.x === x && state.stairs.y === y) {
-            detailParts.push('階段');
+        const portalHere = Array.isArray(state.portals)
+            ? state.portals.find(portal => portal && portal.x === x && portal.y === y)
+            : null;
+        if (portalHere) {
+            if (portalHere.type === 'stairs') {
+                detailParts.push('階段');
+            } else {
+                const label = (portalHere.label || '').trim();
+                detailParts.push(label ? `ゲート: ${label}` : 'ゲート');
+            }
         }
         if (cell === 0) {
             const floorType = meta?.floorType || '';
@@ -1099,18 +1502,29 @@
                 drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, baseColor, baseStroke, 1.2);
 
                 const isStart = state.playerStart && state.playerStart.x === x && state.playerStart.y === y;
-                const isStairs = state.stairs && state.stairs.x === x && state.stairs.y === y;
+                const portalsHere = Array.isArray(state.portals)
+                    ? state.portals.filter(portal => portal && portal.x === x && portal.y === y)
+                    : [];
+                const stairsPortal = portalsHere.find(portal => portal.type === 'stairs');
+                const gatePortal = portalsHere.find(portal => portal.type !== 'stairs');
+                const hasSelectedPortal = state.selectedPortalId && portalsHere.some(portal => portal.id === state.selectedPortalId);
                 const enemiesHere = Array.isArray(state.enemies) ? state.enemies.filter(e => e.x === x && e.y === y) : [];
                 const hasSelectedEnemy = state.selectedEnemyId && enemiesHere.some(e => e.id === state.selectedEnemyId);
 
                 if (isStart) {
                     drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_START_COLOR, 2.4);
                 }
-                if (isStairs) {
+                if (stairsPortal) {
                     drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_STAIRS_COLOR, 2.4);
+                }
+                if (gatePortal) {
+                    drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_GATE_COLOR, 2.4);
                 }
                 if (hasSelectedEnemy) {
                     drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_SELECTED_ENEMY_COLOR, 2.6);
+                }
+                if (hasSelectedPortal) {
+                    drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, '#1c7ed6', 2.2);
                 }
                 if (state.lastCell && state.lastCell.x === x && state.lastCell.y === y) {
                     drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_SELECTION_COLOR, 2);
@@ -1124,10 +1538,15 @@
                     iconColor = '#ffffff';
                     fontSize = Math.floor(cellSize * 0.65);
                 }
-                if (isStairs) {
+                if (stairsPortal) {
                     icon = '⬆';
                     iconColor = '#1f2937';
                     fontSize = Math.floor(cellSize * 0.6);
+                }
+                if (!icon && gatePortal) {
+                    icon = '⛩';
+                    iconColor = '#1f2937';
+                    fontSize = Math.floor(cellSize * 0.62);
                 }
                 if (!icon && enemiesHere.length) {
                     icon = enemiesHere.length > 1 ? `✦${enemiesHere.length}` : '✦';
@@ -1686,6 +2105,514 @@
         });
     }
 
+    function renderPortals() {
+        if (!refs.portalList) return;
+        const mapConfig = getActiveMapRecord();
+        const portals = Array.isArray(state.portals) ? state.portals : [];
+        refs.portalList.innerHTML = '';
+        if (!mapConfig) {
+            const note = document.createElement('p');
+            note.className = 'sandbox-note';
+            note.textContent = 'マップを選択してください。';
+            refs.portalList.appendChild(note);
+            if (refs.addPortalButton) refs.addPortalButton.disabled = true;
+            return;
+        }
+        if (refs.addPortalButton) refs.addPortalButton.disabled = false;
+        portals.forEach(portal => {
+            if (portal && !portal.targetMapId) {
+                portal.targetMapId = mapConfig.id;
+            }
+        });
+        if (!portals.length) {
+            const empty = document.createElement('p');
+            empty.className = 'sandbox-note';
+            empty.textContent = 'ポータルは未配置です。「ポータルを追加」ボタンから追加してください。';
+            refs.portalList.appendChild(empty);
+            state.selectedPortalId = null;
+            return;
+        }
+        if (!state.selectedPortalId || !portals.some(portal => portal.id === state.selectedPortalId)) {
+            state.selectedPortalId = portals[0]?.id || null;
+        }
+        portals.forEach((portal, index) => {
+            const card = document.createElement('div');
+            card.className = 'sandbox-portal-card';
+            if (portal.id === state.selectedPortalId) {
+                card.classList.add('selected');
+            }
+
+            const header = document.createElement('div');
+            header.className = 'sandbox-portal-header';
+            const title = document.createElement('h5');
+            title.textContent = (portal.label || '').trim() || `ポータル${index + 1}`;
+            header.appendChild(title);
+
+            const actions = document.createElement('div');
+            actions.className = 'sandbox-portal-actions';
+
+            const selectBtn = document.createElement('button');
+            selectBtn.type = 'button';
+            selectBtn.className = 'select';
+            selectBtn.textContent = '選択';
+            selectBtn.addEventListener('click', () => {
+                state.selectedPortalId = portal.id;
+                state.brush = portal.type === 'stairs' ? 'stairs' : 'gate';
+                render();
+            });
+            actions.appendChild(selectBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'delete';
+            deleteBtn.textContent = '削除';
+            deleteBtn.addEventListener('click', () => {
+                const idx = portals.indexOf(portal);
+                if (idx >= 0) portals.splice(idx, 1);
+                if (state.selectedPortalId === portal.id) {
+                    state.selectedPortalId = portals[0]?.id || null;
+                }
+                render();
+            });
+            actions.appendChild(deleteBtn);
+
+            header.appendChild(actions);
+            card.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'sandbox-portal-grid';
+
+            const nameLabel = document.createElement('label');
+            nameLabel.textContent = '名前';
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = portal.label || '';
+            nameInput.maxLength = 40;
+            nameInput.dataset.preserveKey = `portal-${portal.id}-name`;
+            nameInput.addEventListener('input', (e) => {
+                portal.label = e.target.value.slice(0, 40);
+                renderMapList();
+                renderPortals();
+            });
+            nameLabel.appendChild(nameInput);
+            grid.appendChild(nameLabel);
+
+            const typeLabel = document.createElement('label');
+            typeLabel.textContent = '種類';
+            const typeSelect = document.createElement('select');
+            ['stairs', 'gate'].forEach(type => {
+                const opt = document.createElement('option');
+                opt.value = type;
+                opt.textContent = type === 'stairs' ? '階段' : 'ゲート';
+                if (portal.type === type) opt.selected = true;
+                typeSelect.appendChild(opt);
+            });
+            typeSelect.addEventListener('change', (e) => {
+                portal.type = e.target.value === 'gate' ? 'gate' : 'stairs';
+                if (portal.type === 'stairs' && (!portal.label || portal.label === 'ゲート')) {
+                    portal.label = '階段';
+                }
+                if (portal.type === 'gate' && (!portal.label || portal.label === '階段')) {
+                    portal.label = 'ゲート';
+                }
+                state.brush = portal.type === 'stairs' ? 'stairs' : 'gate';
+                renderPortals();
+                renderMapList();
+            });
+            typeLabel.appendChild(typeSelect);
+            grid.appendChild(typeLabel);
+
+            const targetLabel = document.createElement('label');
+            targetLabel.textContent = '接続先マップ';
+            const targetSelect = document.createElement('select');
+            state.maps.forEach(map => {
+                const opt = document.createElement('option');
+                opt.value = map.id;
+                const branchText = map.branchKey ? ` (${map.branchKey})` : '';
+                opt.textContent = `${map.floor}F ${map.label || ''}${branchText}`;
+                if (map.id === portal.targetMapId) opt.selected = true;
+                targetSelect.appendChild(opt);
+            });
+            targetSelect.addEventListener('change', (e) => {
+                portal.targetMapId = e.target.value;
+            });
+            targetLabel.appendChild(targetSelect);
+            grid.appendChild(targetLabel);
+
+            const targetXLabel = document.createElement('label');
+            targetXLabel.textContent = '接続X';
+            const targetXInput = document.createElement('input');
+            targetXInput.type = 'number';
+            targetXInput.min = '0';
+            targetXInput.value = Number.isFinite(portal.targetX) ? portal.targetX : '';
+            targetXInput.dataset.preserveKey = `portal-${portal.id}-targetx`;
+            targetXInput.addEventListener('change', (e) => {
+                const value = Math.floor(Number(e.target.value));
+                if (Number.isFinite(value)) {
+                    const targetMap = state.maps.find(map => map.id === portal.targetMapId);
+                    if (targetMap) {
+                        const maxX = Math.max(0, (targetMap.width || state.width) - 1);
+                        portal.targetX = clamp(0, maxX, value);
+                        e.target.value = portal.targetX;
+                    } else {
+                        portal.targetX = value;
+                    }
+                } else {
+                    portal.targetX = null;
+                }
+                renderPortals();
+            });
+            targetXLabel.appendChild(targetXInput);
+            grid.appendChild(targetXLabel);
+
+            const targetYLabel = document.createElement('label');
+            targetYLabel.textContent = '接続Y';
+            const targetYInput = document.createElement('input');
+            targetYInput.type = 'number';
+            targetYInput.min = '0';
+            targetYInput.value = Number.isFinite(portal.targetY) ? portal.targetY : '';
+            targetYInput.dataset.preserveKey = `portal-${portal.id}-targety`;
+            targetYInput.addEventListener('change', (e) => {
+                const value = Math.floor(Number(e.target.value));
+                if (Number.isFinite(value)) {
+                    const targetMap = state.maps.find(map => map.id === portal.targetMapId);
+                    if (targetMap) {
+                        const maxY = Math.max(0, (targetMap.height || state.height) - 1);
+                        portal.targetY = clamp(0, maxY, value);
+                        e.target.value = portal.targetY;
+                    } else {
+                        portal.targetY = value;
+                    }
+                } else {
+                    portal.targetY = null;
+                }
+                renderPortals();
+            });
+            targetYLabel.appendChild(targetYInput);
+            grid.appendChild(targetYLabel);
+
+            card.appendChild(grid);
+            refs.portalList.appendChild(card);
+        });
+
+        if (refs.nodeMapDialog && refs.nodeMapDialog.classList.contains('open')) {
+            renderNodeMap();
+        }
+    }
+
+    function renderColorPalette() {
+        if (!refs.colorPalette) return;
+        const paletteEl = refs.colorPalette;
+        paletteEl.innerHTML = '';
+        if (!Array.isArray(state.colorPalette) || !state.colorPalette.length) {
+            const note = document.createElement('p');
+            note.className = 'sandbox-note';
+            note.textContent = '保存したカラーがありません。';
+            paletteEl.appendChild(note);
+            return;
+        }
+        state.colorPalette.forEach((entry, index) => {
+            const item = document.createElement('div');
+            item.className = 'sandbox-palette-item';
+            const applyBtn = document.createElement('button');
+            applyBtn.type = 'button';
+            applyBtn.className = 'sandbox-palette-apply';
+            applyBtn.setAttribute('aria-label', 'カラーを適用');
+            const swatch = document.createElement('span');
+            swatch.className = 'sandbox-palette-swatch';
+            if (entry.kind === 'wall') {
+                swatch.style.background = entry.wallColor || '#2f3542';
+            } else {
+                const floorColor = entry.floorColor || '#ced6e0';
+                const secondary = entry.wallColor || '#2f3542';
+                swatch.style.background = `linear-gradient(135deg, ${floorColor} 50%, ${secondary} 50%)`;
+            }
+            applyBtn.appendChild(swatch);
+            applyBtn.addEventListener('click', () => {
+                if (entry.kind === 'wall') {
+                    state.brushSettings.wallColor = entry.wallColor || '';
+                    state.brush = 'wall';
+                } else {
+                    if (entry.floorType) state.brushSettings.floorType = entry.floorType;
+                    if (entry.floorDir) state.brushSettings.floorDir = entry.floorDir;
+                    state.brushSettings.floorColor = entry.floorColor || '';
+                    if (entry.wallColor) state.brushSettings.wallColor = entry.wallColor;
+                    state.brush = 'floor';
+                }
+                syncBrushControls();
+                render();
+            });
+            item.appendChild(applyBtn);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'sandbox-palette-remove';
+            removeBtn.setAttribute('aria-label', 'カラーを削除');
+            removeBtn.textContent = '✕';
+            removeBtn.addEventListener('click', () => {
+                state.colorPalette.splice(index, 1);
+                renderColorPalette();
+            });
+            item.appendChild(removeBtn);
+            paletteEl.appendChild(item);
+        });
+    }
+
+    function applyEyedropper(x, y) {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        const mapRow = state.grid?.[y];
+        if (!Array.isArray(mapRow)) return;
+        const cell = mapRow[x];
+        const meta = state.meta?.[y]?.[x] || null;
+        const portalsHere = Array.isArray(state.portals)
+            ? state.portals.filter(portal => portal && portal.x === x && portal.y === y)
+            : [];
+
+        setSelectedCell(x, y);
+
+        if (cell === 0) {
+            state.brush = 'floor';
+            if (meta?.floorType) state.brushSettings.floorType = meta.floorType;
+            if (meta?.floorDir) state.brushSettings.floorDir = meta.floorDir;
+            state.brushSettings.floorColor = meta?.floorColor || '';
+        } else {
+            state.brush = 'wall';
+            state.brushSettings.wallColor = meta?.wallColor || '';
+        }
+
+        if (portalsHere.length) {
+            const portal = portalsHere[0];
+            state.selectedPortalId = portal.id;
+            state.brush = portal.type === 'stairs' ? 'stairs' : 'gate';
+        }
+
+        syncBrushControls();
+    }
+
+    function handleAddMap() {
+        const nextFloor = state.maps.length ? Math.max(...state.maps.map(map => map.floor || 1)) + 1 : 1;
+        const newMap = createMapRecord({ floor: nextFloor });
+        state.maps.push(newMap);
+        activateMap(newMap.id, { preserveSelection: false });
+        if (!state.entryMapId) state.entryMapId = newMap.id;
+        render();
+    }
+
+    function handleAddPortal() {
+        const mapConfig = getActiveMapRecord();
+        if (!mapConfig) return;
+        if (!Array.isArray(mapConfig.portals)) mapConfig.portals = [];
+        const portal = {
+            id: `portal-${portalSeq++}`,
+            type: 'gate',
+            label: 'ゲート',
+            direction: 'side',
+            x: null,
+            y: null,
+            targetMapId: mapConfig.id,
+            targetX: mapConfig.playerStart?.x ?? 0,
+            targetY: mapConfig.playerStart?.y ?? 0
+        };
+        mapConfig.portals.push(portal);
+        state.portals = mapConfig.portals;
+        state.selectedPortalId = portal.id;
+        state.brush = 'gate';
+        renderPortals();
+    }
+
+    function openNodeMap() {
+        if (!refs.nodeMapDialog) return;
+        refs.nodeMapDialog.setAttribute('aria-hidden', 'false');
+        refs.nodeMapDialog.classList.add('open');
+        renderNodeMap();
+        document.addEventListener('keydown', handleNodeMapKeydown);
+    }
+
+    function closeNodeMap() {
+        if (!refs.nodeMapDialog) return;
+        refs.nodeMapDialog.setAttribute('aria-hidden', 'true');
+        refs.nodeMapDialog.classList.remove('open');
+        document.removeEventListener('keydown', handleNodeMapKeydown);
+    }
+
+    function renderNodeMap() {
+        if (!refs.nodeMapCanvas) return;
+        const container = refs.nodeMapCanvas;
+        container.innerHTML = '';
+        const maps = Array.isArray(state.maps) ? state.maps : [];
+        if (!maps.length) {
+            const note = document.createElement('p');
+            note.className = 'sandbox-note';
+            note.textContent = 'マップがありません。';
+            container.appendChild(note);
+            return;
+        }
+
+        const floors = Array.from(new Set(maps.map(map => map.floor))).sort((a, b) => b - a);
+        const floorMap = new Map();
+        floors.forEach(floor => {
+            const group = maps.filter(map => map.floor === floor).sort((a, b) => {
+                if (a.branchKey && b.branchKey) return a.branchKey.localeCompare(b.branchKey);
+                if (a.branchKey) return -1;
+                if (b.branchKey) return 1;
+                return a.label.localeCompare(b.label);
+            });
+            floorMap.set(floor, group);
+        });
+
+        const rowHeight = 140;
+        const columnWidth = 160;
+        const margin = 60;
+        const maxColumns = Math.max(...Array.from(floorMap.values()).map(group => group.length));
+        const width = Math.max(320, margin * 2 + (maxColumns - 1) * columnWidth);
+        const height = Math.max(240, margin * 2 + (floors.length - 1) * rowHeight);
+
+        const svgNS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.classList.add('node-map-svg');
+
+        const positions = new Map();
+        floors.forEach((floor, rowIndex) => {
+            const group = floorMap.get(floor) || [];
+            group.forEach((map, colIndex) => {
+                const x = margin + colIndex * columnWidth;
+                const y = margin + rowIndex * rowHeight;
+                positions.set(map.id, { x, y, map });
+            });
+        });
+
+        // Draw connections
+        maps.forEach(map => {
+            const source = positions.get(map.id);
+            if (!source) return;
+            (map.portals || []).forEach(portal => {
+                if (!portal || !portal.targetMapId) return;
+                if (portal.targetMapId === map.id) return;
+                const target = positions.get(portal.targetMapId);
+                if (!target) return;
+                const line = document.createElementNS(svgNS, 'line');
+                line.setAttribute('x1', source.x + 40);
+                line.setAttribute('y1', source.y + 40);
+                line.setAttribute('x2', target.x + 40);
+                line.setAttribute('y2', target.y + 40);
+                line.setAttribute('class', portal.type === 'stairs' ? 'node-map-edge stairs' : 'node-map-edge gate');
+                svg.appendChild(line);
+            });
+        });
+
+        // Draw nodes
+        Array.from(positions.values()).forEach(({ x, y, map }) => {
+            const nodeGroup = document.createElementNS(svgNS, 'g');
+            nodeGroup.setAttribute('transform', `translate(${x}, ${y})`);
+            nodeGroup.setAttribute('role', 'button');
+            nodeGroup.setAttribute('tabindex', '0');
+            nodeGroup.classList.add('node-map-node');
+            if (map.id === state.activeMapId) nodeGroup.classList.add('active');
+            if (map.id === state.entryMapId) nodeGroup.classList.add('entry');
+
+            const circle = document.createElementNS(svgNS, 'circle');
+            circle.setAttribute('cx', '40');
+            circle.setAttribute('cy', '40');
+            circle.setAttribute('r', '32');
+            nodeGroup.appendChild(circle);
+
+            const text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('x', '40');
+            text.setAttribute('y', '40');
+            text.setAttribute('dy', '0.35em');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = `${map.floor}F`;
+            nodeGroup.appendChild(text);
+
+            const label = document.createElementNS(svgNS, 'text');
+            label.setAttribute('x', '40');
+            label.setAttribute('y', '84');
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('class', 'node-map-label');
+            label.textContent = map.label || '';
+            nodeGroup.appendChild(label);
+
+            nodeGroup.addEventListener('click', () => {
+                if (map.id !== state.activeMapId) {
+                    activateMap(map.id);
+                    render();
+                }
+                closeNodeMap();
+            });
+            nodeGroup.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    nodeGroup.click();
+                }
+            });
+
+            svg.appendChild(nodeGroup);
+        });
+
+        container.appendChild(svg);
+    }
+
+    function handleNodeMapKeydown(event) {
+        if (event.key === 'Escape') {
+            closeNodeMap();
+        }
+    }
+
+    function renderMapList() {
+        if (!refs.mapList) return;
+        const listEl = refs.mapList;
+        listEl.innerHTML = '';
+        if (!Array.isArray(state.maps) || !state.maps.length) {
+            const empty = document.createElement('p');
+            empty.textContent = 'マップがありません。「マップ追加」で新規作成してください。';
+            empty.className = 'sandbox-note';
+            listEl.appendChild(empty);
+            return;
+        }
+        const activeId = state.activeMapId;
+        const entryId = state.entryMapId;
+        state.maps.forEach(map => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'sandbox-map-item';
+            if (map.id === activeId) button.classList.add('active');
+            if (map.id === entryId) button.classList.add('entry');
+            const branchLabel = map.branchKey ? ` (${map.branchKey})` : '';
+            button.textContent = `${map.floor}F ${map.label || ''}${branchLabel}`;
+            button.addEventListener('click', () => {
+                if (map.id !== state.activeMapId) {
+                    activateMap(map.id, { preserveSelection: false });
+                    render();
+                }
+            });
+            listEl.appendChild(button);
+        });
+
+        const activeMap = getActiveMapRecord();
+        if (refs.mapNameInput) {
+            refs.mapNameInput.value = activeMap?.label || '';
+            refs.mapNameInput.disabled = !activeMap;
+        }
+        if (refs.mapFloorInput) {
+            refs.mapFloorInput.value = activeMap?.floor || 1;
+            refs.mapFloorInput.disabled = !activeMap;
+        }
+        if (refs.mapBranchInput) {
+            refs.mapBranchInput.value = activeMap?.branchKey || '';
+            refs.mapBranchInput.disabled = !activeMap;
+        }
+        if (refs.setEntryMapButton) {
+            refs.setEntryMapButton.disabled = !activeMap;
+        }
+        if (refs.nodeMapButton) {
+            refs.nodeMapButton.disabled = !(Array.isArray(state.maps) && state.maps.length > 0);
+        }
+        if (refs.nodeMapDialog && refs.nodeMapDialog.classList.contains('open')) {
+            renderNodeMap();
+        }
+    }
+
     function renderValidation() {
         if (!refs.validation) return;
         const baseErrors = state.validation?.errors || [];
@@ -1762,9 +2689,12 @@
         updateGridCursor();
         updateSelectedCellLabel();
         syncBrushControls();
+        renderMapList();
         renderPlayerPreview();
         renderEnemies();
         renderDomains();
+        renderPortals();
+        renderColorPalette();
         renderValidation();
         renderIoStatus();
         if (refs.interactiveModeInput) {
@@ -1777,6 +2707,14 @@
         if (typeof event.button === 'number' && event.button !== 0) return;
         const cell = getCellFromEvent(event);
         if (!cell) return;
+        if (state.eyedropper?.active) {
+            event.preventDefault();
+            applyEyedropper(cell.x, cell.y);
+            state.eyedropper.active = false;
+            if (refs.eyedropperButton) refs.eyedropperButton.classList.remove('active');
+            render();
+            return;
+        }
         paintState.active = true;
         paintState.pointerId = event.pointerId;
         paintState.lastKey = `${cell.x},${cell.y}`;
@@ -1831,6 +2769,16 @@
         }
         const cell = getCellFromEvent(event);
         if (!cell) return;
+        const portalsHere = Array.isArray(state.portals)
+            ? state.portals.filter(portal => portal && portal.x === cell.x && portal.y === cell.y)
+            : [];
+        if (portalsHere.length) {
+            const portal = portalsHere[0];
+            state.selectedPortalId = portal.id;
+            state.brush = portal.type === 'stairs' ? 'stairs' : 'gate';
+            render();
+            return;
+        }
         applyBrushToCell(cell.x, cell.y, { updateSelection: true });
         render();
     }
@@ -1886,18 +2834,34 @@
     function fillGrid(value) {
         state.grid = createEmptyGrid(state.width, state.height, value);
         state.meta = createEmptyMeta(state.width, state.height);
+        const map = getActiveMapRecord();
+        if (map) {
+            map.grid = state.grid;
+            map.meta = state.meta;
+        }
         if (value === 1) {
             state.playerStart = null;
-            state.stairs = null;
+            state.portals = [];
             state.enemies = state.enemies.map(enemy => ({ ...enemy, x: null, y: null }));
             state.domainEffects = state.domainEffects.map(effect => ({ ...effect, x: null, y: null }));
+            if (map) {
+                map.playerStart = null;
+                map.portals = state.portals;
+                map.enemies = state.enemies;
+                map.domainEffects = state.domainEffects;
+            }
         }
         render();
     }
 
     function clearMarkers() {
         state.playerStart = null;
-        state.stairs = null;
+        state.portals = [];
+        const map = getActiveMapRecord();
+        if (map) {
+            map.playerStart = null;
+            map.portals = state.portals;
+        }
         render();
     }
 
@@ -1937,13 +2901,30 @@
             brushWallColorClear: panel.querySelector('#sandbox-brush-wall-color-clear'),
             floorColorHint: panel.querySelector('#sandbox-floor-color-hint'),
             wallColorHint: panel.querySelector('#sandbox-wall-color-hint'),
+            colorPalette: panel.querySelector('#sandbox-color-palette'),
+            saveFloorColorButton: panel.querySelector('#sandbox-save-floor-color'),
+            saveWallColorButton: panel.querySelector('#sandbox-save-wall-color'),
+            clearPaletteButton: panel.querySelector('#sandbox-clear-palette'),
+            eyedropperButton: panel.querySelector('#sandbox-eyedropper-button'),
+            mapList: panel.querySelector('#sandbox-map-list'),
+            addMapButton: panel.querySelector('#sandbox-add-map'),
+            mapNameInput: panel.querySelector('#sandbox-map-name'),
+            mapFloorInput: panel.querySelector('#sandbox-map-floor'),
+            mapBranchInput: panel.querySelector('#sandbox-map-branch'),
+            setEntryMapButton: panel.querySelector('#sandbox-set-entry-map'),
+            nodeMapButton: panel.querySelector('#sandbox-node-map-button'),
+            portalList: panel.querySelector('#sandbox-portal-list'),
+            addPortalButton: panel.querySelector('#sandbox-add-portal'),
             validation: panel.querySelector('#sandbox-validation'),
             startButton: panel.querySelector('#sandbox-start-button'),
             exportButton: panel.querySelector('#sandbox-export-button'),
             importButton: panel.querySelector('#sandbox-import-button'),
             importFile: panel.querySelector('#sandbox-import-file'),
             interactiveModeInput: panel.querySelector('#sandbox-interactive-mode'),
-            ioStatus: panel.querySelector('#sandbox-io-status')
+            ioStatus: panel.querySelector('#sandbox-io-status'),
+            nodeMapDialog: document.getElementById('sandbox-node-map-dialog'),
+            nodeMapCanvas: document.getElementById('sandbox-node-map-canvas'),
+            nodeMapClose: document.getElementById('sandbox-node-map-close')
         };
 
         state = {
@@ -1954,20 +2935,31 @@
             brush: 'floor',
             lastCell: null,
             playerStart: { x: 1, y: 1 },
-            stairs: { x: DEFAULT_WIDTH - 2, y: DEFAULT_HEIGHT - 2 },
             playerLevel: DEFAULT_LEVEL,
             enemies: [],
             selectedEnemyId: null,
             domainEffects: [],
             selectedDomainId: null,
+            portals: [],
+            selectedPortalId: null,
             validation: { errors: [], warnings: [] },
             compiledConfig: null,
             tempMessage: '',
             brushSettings: { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' },
             renderMetrics: { cellSize: RENDER_CELL_SIZE, gap: RENDER_CELL_GAP, width: 0, height: 0 },
             ioStatus: { type: 'idle', message: '' },
-            interactiveMode: false
+            interactiveMode: false,
+            maps: [],
+            activeMapId: null,
+            colorPalette: [],
+            eyedropper: { active: false },
+            entryMapId: null
         };
+
+        const defaultMap = createMapRecord();
+        state.maps.push(defaultMap);
+        activateMap(defaultMap.id, { preserveSelection: false });
+        state.entryMapId = defaultMap.id;
 
         if (refs.gridCanvas) {
             refs.gridCanvas.addEventListener('click', handleGridClick);
@@ -2092,6 +3084,107 @@
                     applyWallMetaToCell(state.lastCell.x, state.lastCell.y);
                 }
                 render();
+            });
+        }
+        if (refs.saveFloorColorButton) {
+            refs.saveFloorColorButton.addEventListener('click', () => {
+                state.colorPalette.push({
+                    kind: 'floor',
+                    floorColor: state.brushSettings.floorColor || '',
+                    wallColor: state.brushSettings.wallColor || '',
+                    floorType: state.brushSettings.floorType || 'normal',
+                    floorDir: state.brushSettings.floorDir || ''
+                });
+                renderColorPalette();
+            });
+        }
+        if (refs.saveWallColorButton) {
+            refs.saveWallColorButton.addEventListener('click', () => {
+                state.colorPalette.push({ kind: 'wall', wallColor: state.brushSettings.wallColor || '' });
+                renderColorPalette();
+            });
+        }
+        if (refs.clearPaletteButton) {
+            refs.clearPaletteButton.addEventListener('click', () => {
+                state.colorPalette = [];
+                renderColorPalette();
+            });
+        }
+        if (refs.eyedropperButton) {
+            refs.eyedropperButton.addEventListener('click', () => {
+                const next = !state.eyedropper?.active;
+                state.eyedropper = { active: next };
+                if (next) refs.eyedropperButton.classList.add('active');
+                else refs.eyedropperButton.classList.remove('active');
+            });
+        }
+        if (refs.addMapButton) {
+            refs.addMapButton.addEventListener('click', () => {
+                handleAddMap();
+            });
+        }
+        if (refs.mapNameInput) {
+            refs.mapNameInput.addEventListener('input', (e) => {
+                const map = getActiveMapRecord();
+                if (!map) return;
+                map.label = e.target.value.slice(0, 40);
+                renderMapList();
+                renderPortals();
+            });
+        }
+        if (refs.mapFloorInput) {
+            refs.mapFloorInput.addEventListener('change', (e) => {
+                const map = getActiveMapRecord();
+                if (!map) return;
+                const value = Math.max(1, Math.floor(Number(e.target.value) || map.floor || 1));
+                map.floor = value;
+                e.target.value = value;
+                renderMapList();
+                renderNodeMap();
+                renderPortals();
+            });
+        }
+        if (refs.mapBranchInput) {
+            refs.mapBranchInput.addEventListener('input', (e) => {
+                const map = getActiveMapRecord();
+                if (!map) return;
+                map.branchKey = e.target.value.slice(0, 12);
+                renderMapList();
+                renderNodeMap();
+                renderPortals();
+            });
+        }
+        if (refs.setEntryMapButton) {
+            refs.setEntryMapButton.addEventListener('click', () => {
+                const map = getActiveMapRecord();
+                if (!map) return;
+                state.entryMapId = map.id;
+                renderMapList();
+                if (refs.nodeMapDialog && refs.nodeMapDialog.classList.contains('open')) {
+                    renderNodeMap();
+                }
+            });
+        }
+        if (refs.nodeMapButton) {
+            refs.nodeMapButton.addEventListener('click', () => {
+                openNodeMap();
+            });
+        }
+        if (refs.nodeMapClose) {
+            refs.nodeMapClose.addEventListener('click', () => {
+                closeNodeMap();
+            });
+        }
+        if (refs.nodeMapDialog) {
+            refs.nodeMapDialog.addEventListener('click', (event) => {
+                if (event.target === refs.nodeMapDialog) {
+                    closeNodeMap();
+                }
+            });
+        }
+        if (refs.addPortalButton) {
+            refs.addPortalButton.addEventListener('click', () => {
+                handleAddPortal();
             });
         }
         if (refs.startButton) {

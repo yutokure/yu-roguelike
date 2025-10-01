@@ -548,7 +548,8 @@
     const { iterations = 80, branching = 4, floorType } = opts || {};
     seeds.forEach(seed => {
       let tips = [{ x: seed.x, y: seed.y }];
-      for(let i = 0; i < iterations; i++){
+      const visited = new Set([`${seed.x},${seed.y}`]);
+      for(let i = 0; i < iterations && tips.length > 0; i++){
         const nextTips = [];
         for(const tip of tips){
           for(let j = 0; j < branching; j++){
@@ -556,15 +557,28 @@
             const length = 2 + Math.floor(rnd() * 4);
             let x = tip.x;
             let y = tip.y;
+            let lastValid = null;
             for(let step = 0; step < length; step++){
-              x += Math.round(Math.cos(angle + step * 0.1));
-              y += Math.round(Math.sin(angle + step * 0.1));
-              if(!ctx.inBounds(x, y)) break;
+              const dx = Math.sign(Math.cos(angle + step * 0.1));
+              const dy = Math.sign(Math.sin(angle + step * 0.1));
+              if(dx === 0 && dy === 0) continue;
+              const nx = x + dx;
+              const ny = y + dy;
+              if(!ctx.inBounds(nx, ny)) break;
+              x = nx;
+              y = ny;
+              lastValid = { x, y };
               ctx.set(x, y, 0);
               ctx.setFloorColor(x, y, choose(palette, rnd));
               if(floorType) ctx.setFloorType(x, y, floorType);
             }
-            nextTips.push({ x, y });
+            if(lastValid){
+              const key = `${lastValid.x},${lastValid.y}`;
+              if(!visited.has(key)){
+                visited.add(key);
+                nextTips.push(lastValid);
+              }
+            }
           }
         }
         tips = nextTips;

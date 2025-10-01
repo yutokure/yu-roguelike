@@ -35,6 +35,7 @@
         .bowling-mod .slider-block { display:flex; flex-direction:column; gap:6px; }
         .bowling-mod .slider-block label { font-size:14px; font-weight:600; color:#e0f2fe; display:flex; justify-content:space-between; }
         .bowling-mod .slider-block input[type="range"] { width:100%; accent-color:#38bdf8; }
+        .bowling-mod .slider-block input.auto-gauge { pointer-events:none; cursor:default; }
         .bowling-mod .controls button { padding:10px 14px; border:none; border-radius:8px; font-weight:600; background:linear-gradient(135deg,#38bdf8,#2563eb); color:#0f172a; cursor:pointer; transition:transform .1s ease, box-shadow .1s ease; }
         .bowling-mod .controls button:disabled { background:#334155; color:#94a3b8; cursor:not-allowed; box-shadow:none; transform:none; }
         .bowling-mod .controls button:not(:disabled):hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(37,99,235,0.45); }
@@ -51,7 +52,7 @@
     title.textContent = 'ボウリング対決 MOD';
     const statusLine = document.createElement('div');
     statusLine.className = 'status-line';
-    statusLine.textContent = '3つのパラメータを調整してストライクを狙おう！';
+    statusLine.textContent = 'ゲージをタイミング良く止めてストライクを狙おう！';
 
     const table = document.createElement('table');
     table.className = 'bowling-scoreboard';
@@ -110,19 +111,45 @@
       const spanName = document.createElement('span');
       spanName.textContent = label;
       const spanValue = document.createElement('span');
-      spanValue.textContent = formatter(value);
+      const clampToStep = v => {
+        const base = Math.round(v / step) * step;
+        return clamp(base, min, max);
+      };
       const input = document.createElement('input');
       input.type = 'range';
       input.min = String(min);
       input.max = String(max);
       input.step = String(step);
       input.value = String(value);
-      input.addEventListener('input', ()=>{ spanValue.textContent = formatter(Number(input.value)); });
+      input.tabIndex = -1;
+      input.style.pointerEvents = 'none';
+      input.classList.add('auto-gauge');
+      spanValue.textContent = formatter(clampToStep(value));
+      const updateDisplay = ()=>{ spanValue.textContent = formatter(Number(input.value)); };
+      updateDisplay();
       labelEl.appendChild(spanName);
       labelEl.appendChild(spanValue);
       block.appendChild(labelEl);
       block.appendChild(input);
-      return { block, input, valueEl: spanValue };
+      return {
+        block,
+        input,
+        valueEl: spanValue,
+        formatter,
+        min,
+        max,
+        step,
+        setValue(v){
+          const val = clampToStep(v);
+          input.value = String(val);
+          spanValue.textContent = formatter(val);
+        },
+        getValue(){ return Number(input.value); },
+        refresh(){
+          const val = clampToStep(Number(input.value));
+          spanValue.textContent = formatter(val);
+        }
+      };
     }
 
     const aimSlider = makeSlider('狙い位置', -100, 100, 1, 0, v=> v===0 ? '中央' : (v>0 ? `右 ${v}` : `左 ${Math.abs(v)}`));
@@ -149,7 +176,7 @@
 
     const legend = document.createElement('div');
     legend.className = 'legend';
-    legend.textContent = '各フレームであなた→CPUの順に投球します。10フレーム終了時のスコアで勝負！';
+    legend.textContent = 'ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！';
 
     const historyLog = document.createElement('div');
     historyLog.className = 'history-log';
@@ -170,6 +197,62 @@
     let running = false;
     let ended = false;
     let cpuTimeout = 0;
+    let selectionStage = null;
+    const pendingParams = { aim: 0, curve: 0, power: 0 };
+
+    function makeOscillator(slider, unitsPerSecond){
+      let animationId = 0;
+      let direction = 1;
+      let lastTime = 0;
+      function step(now){
+        if(!slider._animating) return;
+        if(!lastTime) lastTime = now;
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+        let value = Number(slider.input.value);
+        value += direction * unitsPerSecond * dt;
+        if(value >= slider.max){ value = slider.max; direction = -1; }
+        if(value <= slider.min){ value = slider.min; direction = 1; }
+        slider.input.value = String(value);
+        slider.refresh();
+        animationId = requestAnimationFrame(step);
+      }
+      return {
+        start(){
+          this.stop(false);
+          slider._animating = true;
+          direction = 1;
+          lastTime = 0;
+          slider.input.value = String(slider.min);
+          slider.refresh();
+          animationId = requestAnimationFrame(step);
+        },
+        stop(quantize = true){
+          if(animationId){ cancelAnimationFrame(animationId); animationId = 0; }
+          slider._animating = false;
+          lastTime = 0;
+          if(!quantize){ slider.refresh(); return undefined; }
+          const stepped = clamp(Math.round(Number(slider.input.value) / slider.step) * slider.step, slider.min, slider.max);
+          slider.input.value = String(stepped);
+          slider.refresh();
+          return stepped;
+        }
+      };
+    }
+
+    const oscillators = {
+      aim: makeOscillator(aimSlider, 160),
+      curve: makeOscillator(curveSlider, 180),
+      power: makeOscillator(powerSlider, 120)
+    };
+
+    function cancelSelection(){
+      selectionStage = null;
+      oscillators.aim.stop(false);
+      oscillators.curve.stop(false);
+      oscillators.power.stop(false);
+      throwBtn.textContent = '🎳 ボールを投げる';
+    }
 
     function resetState(){
       if(cpuTimeout){ clearTimeout(cpuTimeout); cpuTimeout = 0; }
@@ -182,6 +265,10 @@
       ended = false;
       statusLine.textContent = '第1フレーム あなたの番です。';
       throwBtn.disabled = false;
+      cancelSelection();
+      aimSlider.setValue(0);
+      curveSlider.setValue(20);
+      powerSlider.setValue(72);
     }
 
     function updateCell(cell, rolls, cumulative){
@@ -369,6 +456,7 @@
       if(cpuTimeout){ clearTimeout(cpuTimeout); cpuTimeout = 0; }
       shortcuts?.enableKey?.('r');
       throwBtn.disabled = true;
+      cancelSelection();
       const totals = updateTotals();
       if(totals.player > totals.cpu){
         statusLine.textContent = `勝利！ スコア ${totals.player} - ${totals.cpu}`;
@@ -403,6 +491,7 @@
             turn = 'player';
             statusLine.textContent = `第${frameIndex+1}フレーム あなたの番です。`;
             throwBtn.disabled = false;
+            throwBtn.textContent = '🎳 ボールを投げる';
           }
         }
       } else {
@@ -410,6 +499,7 @@
           const remaining = pinsStandingFor(playerFrames, frameIndex);
           statusLine.textContent = `残りピン: ${remaining} 本。もう一投！`;
           throwBtn.disabled = false;
+          throwBtn.textContent = '🎳 ボールを投げる';
         }
       }
     }
@@ -429,13 +519,10 @@
       nextTurn();
     }
 
-    function playerThrow(){
+    function playerThrow(aim, curve, power){
       if(ended || frameIndex >= 10 || turn !== 'player') return;
       ensureRunning();
       throwBtn.disabled = true;
-      const aim = Number(aimSlider.input.value);
-      const curve = Number(curveSlider.input.value);
-      const power = Number(powerSlider.input.value);
       const pinsLeft = pinsStandingFor(playerFrames, frameIndex);
       const knocked = evaluateShot(aim, curve, power, pinsLeft, cfg.variance);
       recordRoll(playerFrames, knocked, 'player');
@@ -448,12 +535,67 @@
     function stop(){
       running = false;
       if(cpuTimeout){ clearTimeout(cpuTimeout); cpuTimeout = 0; }
+      cancelSelection();
       shortcuts?.enableKey?.('r');
     }
     function destroy(){ stop(); container.remove(); }
     function getScore(){ const totals = updateTotals(); return totals.player; }
 
-    throwBtn.addEventListener('click', playerThrow);
+    const stageOrder = ['aim', 'curve', 'power'];
+    const stageInfo = {
+      aim: {
+        prompt: '狙いゲージが往復中…止めるタイミングでボタン！',
+        button: '🛑 狙いを止める',
+        confirm: v => `狙い位置を ${aimSlider.formatter(v)} にセット！`
+      },
+      curve: {
+        prompt: 'カーブゲージ調整中…ボタンでストップ！',
+        button: '🛑 カーブを止める',
+        confirm: v => `カーブ量は ${curveSlider.formatter(v)} に決定！`
+      },
+      power: {
+        prompt: 'パワーゲージを注視…ボタンで投球！',
+        button: '🛑 パワーを止める',
+        confirm: v => `パワー ${powerSlider.formatter(v)} で投球！`
+      }
+    };
+
+    function beginStage(stage){
+      selectionStage = stage;
+      const info = stageInfo[stage];
+      statusLine.textContent = info.prompt;
+      throwBtn.disabled = false;
+      throwBtn.textContent = info.button;
+      oscillators[stage].start();
+    }
+
+    function completeStage(){
+      if(!selectionStage) return;
+      const stage = selectionStage;
+      const info = stageInfo[stage];
+      const value = oscillators[stage].stop();
+      pendingParams[stage] = value;
+      statusLine.textContent = info.confirm(value);
+      const idx = stageOrder.indexOf(stage);
+      if(idx < stageOrder.length - 1){
+        beginStage(stageOrder[idx + 1]);
+      } else {
+        selectionStage = null;
+        throwBtn.textContent = '🎳 投球中…';
+        playerThrow(pendingParams.aim, pendingParams.curve, pendingParams.power);
+      }
+    }
+
+    throwBtn.addEventListener('click', ()=>{
+      if(ended || frameIndex >= 10 || turn !== 'player') return;
+      if(selectionStage){
+        completeStage();
+      } else {
+        ensureRunning();
+        pendingParams.aim = pendingParams.curve = pendingParams.power = 0;
+        beginStage('aim');
+      }
+    });
     resetBtn.addEventListener('click', ()=>{ resetState(); shortcuts?.disableKey?.('r'); });
 
     resetState();
@@ -464,7 +606,7 @@
   window.registerMiniGame({
     id: 'bowling_duel',
     name: 'ボウリング対決',
-    description: 'カーブ・狙い・パワーを調整してCPUと10フレーム勝負するボウリングMOD',
+    description: '動くゲージを止めて狙い・カーブ・パワーを決めるCPU対決ボウリングMOD',
     create
   });
 })();

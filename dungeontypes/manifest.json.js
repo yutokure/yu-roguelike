@@ -53,4 +53,5 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'western_frontier_pack', name: 'Western Frontier Mega Pack', entry: 'dungeontypes/western_frontier.js', version: '1.0.0', author: 'builtin-sample' },
   { id: 'paddy_azemichi_pack', name: 'Paddy Terrace Paths Pack', entry: 'dungeontypes/paddy_field_paths.js', version: '1.0.0', author: 'modder-sample' },
   { id: 'natural_roadways_pack', name: 'Natural Roadways Pack', entry: 'dungeontypes/natural_roadways_pack.js', version: '1.0.0', author: 'community-mod' }
+  ,{ id: 'biome_convergence_megapack', name: 'Biome Convergence Mega Pack', entry: 'dungeontypes/biome_convergence_megapack.js', version: '1.0.0', author: 'community-mod' }
 ];

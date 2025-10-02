@@ -50,6 +50,7 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'arabian_legends_pack', name: 'Arabian Legends Pack', entry: 'dungeontypes/arabian_legends_pack.js', version: '1.2.0', author: 'builtin-sample' },
   { id: 'nature_expansion_pack', name: 'Nature Biome Expansion Pack', entry: 'dungeontypes/nature_expansion.js', version: '2.1.0', author: 'builtin-sample' },
   { id: 'multicolor_plains_pack', name: 'Multicolor Plains Pack', entry: 'dungeontypes/plains_variations_pack.js', version: '1.0.0', author: 'builtin-sample' },
-  { id: 'natural_roadways_pack', name: 'Natural Roadways Pack', entry: 'dungeontypes/natural_roadways_pack.js', version: '1.0.0', author: 'community-mod' },
-  { id: 'western_frontier_pack', name: 'Western Frontier Mega Pack', entry: 'dungeontypes/western_frontier.js', version: '1.0.0', author: 'builtin-sample' }
+  { id: 'western_frontier_pack', name: 'Western Frontier Mega Pack', entry: 'dungeontypes/western_frontier.js', version: '1.0.0', author: 'builtin-sample' },
+  { id: 'paddy_azemichi_pack', name: 'Paddy Terrace Paths Pack', entry: 'dungeontypes/paddy_field_paths.js', version: '1.0.0', author: 'modder-sample' },
+  { id: 'natural_roadways_pack', name: 'Natural Roadways Pack', entry: 'dungeontypes/natural_roadways_pack.js', version: '1.0.0', author: 'community-mod' }
 ];

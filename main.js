@@ -27,6 +27,14 @@ const autoItemToggle = document.getElementById('auto-item-toggle');
 let dungeonOverlayHoverState = false;
 let dungeonOverlayPlayerZoneState = false;
 let dungeonOverlayLastPointer = null;
+const NOISE_GLITCH_GLYPHS = '=~`#"=$%$#${}<>!?@%^&*/\\|-_+';
+const noiseUiState = {
+    active: false,
+    overlayInterval: null,
+    glitchTimeout: null,
+    overlayOriginals: new Map(),
+    canvasCleanup: null
+};
 let autoItemCheckScheduled = false;
 let currentRunContext = null;
 let lastRunResultSummary = null;
@@ -94,6 +102,7 @@ function updateDungeonOverlayVisibility() {
         refreshDungeonOverlayPlayerDimState();
         evaluateDungeonOverlayHoverFromPoint(dungeonOverlayLastPointer);
     }
+    updateNoiseUiEffects();
 }
 
 function evaluateDungeonOverlayHoverFromPoint(point) {
@@ -109,6 +118,149 @@ function evaluateDungeonOverlayHoverFromPoint(point) {
     const hovered = point.x >= rect.left && point.x <= rect.right
         && point.y >= rect.top && point.y <= rect.bottom;
     setDungeonOverlayHoverState(hovered);
+}
+
+function getNoiseOverlayElements() {
+    const elements = [];
+    if (dungeonTypeOverlayName) elements.push(dungeonTypeOverlayName);
+    if (dungeonTypeOverlayDescription && dungeonTypeOverlayDescription.style.display !== 'none') {
+        elements.push(dungeonTypeOverlayDescription);
+    }
+    if (dungeonTypeOverlayFeatures) {
+        const badges = dungeonTypeOverlayFeatures.querySelectorAll('.dungeon-overlay__badge');
+        badges.forEach(badge => elements.push(badge));
+    }
+    return elements;
+}
+
+function captureNoiseOverlayOriginals() {
+    noiseUiState.overlayOriginals.clear();
+    const nodes = getNoiseOverlayElements();
+    nodes.forEach(node => {
+        noiseUiState.overlayOriginals.set(node, node.textContent || '');
+    });
+}
+
+function restoreNoiseOverlayText() {
+    for (const [node, text] of noiseUiState.overlayOriginals.entries()) {
+        if (node) node.textContent = text;
+    }
+}
+
+function noiseRandom() {
+    const cryptoObj = typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function' ? crypto : null;
+    if (cryptoObj) {
+        const buffer = new Uint32Array(1);
+        cryptoObj.getRandomValues(buffer);
+        return buffer[0] / 4294967296;
+    }
+    return Math.random();
+}
+
+function randomGlyphString(length) {
+    const chars = NOISE_GLITCH_GLYPHS;
+    const max = chars.length;
+    const targetLength = Math.max(1, length);
+    let result = '';
+    const cryptoObj = typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function' ? crypto : null;
+    if (cryptoObj) {
+        const buffer = new Uint32Array(targetLength);
+        cryptoObj.getRandomValues(buffer);
+        for (let i = 0; i < targetLength; i++) {
+            result += chars[buffer[i] % max];
+        }
+        return result;
+    }
+    for (let i = 0; i < targetLength; i++) {
+        const idx = Math.floor(noiseRandom() * max);
+        result += chars[idx];
+    }
+    return result;
+}
+
+function scrambleNoiseOverlayText() {
+    for (const [node, original] of noiseUiState.overlayOriginals.entries()) {
+        if (!node) continue;
+        const len = typeof original === 'string' ? original.length : 4;
+        node.textContent = randomGlyphString(len || 4);
+    }
+}
+
+function clearNoiseUiEffects() {
+    if (noiseUiState.overlayInterval) {
+        clearInterval(noiseUiState.overlayInterval);
+        noiseUiState.overlayInterval = null;
+    }
+    if (noiseUiState.glitchTimeout) {
+        clearTimeout(noiseUiState.glitchTimeout);
+        noiseUiState.glitchTimeout = null;
+    }
+    if (typeof noiseUiState.canvasCleanup === 'function') {
+        noiseUiState.canvasCleanup();
+        noiseUiState.canvasCleanup = null;
+    }
+    if (dungeonTypeOverlay) {
+        dungeonTypeOverlay.classList.remove('noise-glitch-card');
+    }
+    if (canvas) {
+        canvas.classList.remove('noise-glitch-canvas');
+    }
+}
+
+function scheduleNoisePulse() {
+    if (!noiseUiState.active) return;
+    const delay = 100 + noiseRandom() * 1100;
+    noiseUiState.glitchTimeout = setTimeout(() => {
+        if (!noiseUiState.active) return;
+        if (dungeonTypeOverlay) {
+            dungeonTypeOverlay.classList.add('noise-glitch-card');
+            setTimeout(() => dungeonTypeOverlay && dungeonTypeOverlay.classList.remove('noise-glitch-card'), 140);
+        }
+        if (canvas) {
+            canvas.classList.add('noise-glitch-canvas');
+            const clearCanvas = () => canvas && canvas.classList.remove('noise-glitch-canvas');
+            setTimeout(clearCanvas, 140);
+            noiseUiState.canvasCleanup = clearCanvas;
+        }
+        scheduleNoisePulse();
+    }, delay);
+}
+
+function startNoiseUiEffects() {
+    if (noiseUiState.active) return;
+    noiseUiState.active = true;
+    captureNoiseOverlayOriginals();
+    scrambleNoiseOverlayText();
+    noiseUiState.overlayInterval = setInterval(() => {
+        if (!noiseUiState.active) return;
+        scrambleNoiseOverlayText();
+    }, 100);
+    scheduleNoisePulse();
+}
+
+function stopNoiseUiEffects() {
+    if (!noiseUiState.active) return;
+    noiseUiState.active = false;
+    clearNoiseUiEffects();
+    restoreNoiseOverlayText();
+}
+
+function updateNoiseUiEffects() {
+    const shouldEnable = isNoiseActive();
+    if (shouldEnable) {
+        if (!noiseUiState.active) {
+            startNoiseUiEffects();
+        }
+    } else if (noiseUiState.active) {
+        stopNoiseUiEffects();
+    }
+}
+
+function handleNoiseOverlayContentChanged() {
+    captureNoiseOverlayOriginals();
+    if (noiseUiState.active) {
+        scrambleNoiseOverlayText();
+    }
 }
 
 function shouldAutoUsePotion(effectiveMaxHp, currentHp) {
@@ -4914,31 +5066,35 @@ const currentGeneratorHazards = {
     generatorId: null,
     baseDark: false,
     basePoisonFog: false,
+    baseNoise: false,
     recommendedLevel: null,
     darkActive: false,
-    poisonFogActive: false
+    poisonFogActive: false,
+    noiseActive: false
 };
 
 function setGeneratorHazardFlags(id, flags) {
     if (!id) return;
     const next = {
         dark: !!(flags && (flags.dark || flags.darkness)),
-        poisonFog: !!(flags && (flags.poisonFog || flags.poison || flags.poisonMist))
+        poisonFog: !!(flags && (flags.poisonFog || flags.poison || flags.poisonMist)),
+        noise: !!(flags && (flags.noise || flags.signalNoise || flags.interference))
     };
     generatorHazardFlags.set(id, next);
     if (currentGeneratorHazards.generatorId === id) {
         currentGeneratorHazards.baseDark = next.dark;
         currentGeneratorHazards.basePoisonFog = next.poisonFog;
+        currentGeneratorHazards.baseNoise = next.noise;
         refreshGeneratorHazardSuppression();
     }
 }
 
 function getGeneratorHazardFlags(id) {
     if (!id || !generatorHazardFlags.has(id)) {
-        return { dark: false, poisonFog: false };
+        return { dark: false, poisonFog: false, noise: false };
     }
     const entry = generatorHazardFlags.get(id) || {};
-    return { dark: !!entry.dark, poisonFog: !!entry.poisonFog };
+    return { dark: !!entry.dark, poisonFog: !!entry.poisonFog, noise: !!entry.noise };
 }
 
 function resetTileMetadata() {
@@ -5700,6 +5856,11 @@ function isPoisonFogActive() {
     return !!currentGeneratorHazards.poisonFogActive;
 }
 
+function isNoiseActive() {
+    if (isGimmickNullificationActive()) return false;
+    return !!currentGeneratorHazards.noiseActive;
+}
+
 function isTileVisible(x, y) {
     if (!currentGeneratorHazards.darkActive) return true;
     const dx = x - player.x;
@@ -5713,6 +5874,7 @@ function updateGeneratorHazardsForFloor(generatorId) {
     const flags = getGeneratorHazardFlags(id);
     currentGeneratorHazards.baseDark = !!flags.dark;
     currentGeneratorHazards.basePoisonFog = !!flags.poisonFog;
+    currentGeneratorHazards.baseNoise = !!flags.noise;
     let recommended = null;
     if (isSandboxActive()) {
         recommended = sandboxRuntime.config?.playerLevel ?? null;
@@ -5730,11 +5892,13 @@ function updateGeneratorHazardsForFloor(generatorId) {
 function refreshGeneratorHazardSuppression() {
     const playerLevel = Number.isFinite(player.level) ? player.level : null;
     const recommended = currentGeneratorHazards.recommendedLevel;
-    const suppressed = (currentGeneratorHazards.baseDark || currentGeneratorHazards.basePoisonFog) &&
+    const suppressed = (currentGeneratorHazards.baseDark || currentGeneratorHazards.basePoisonFog || currentGeneratorHazards.baseNoise) &&
         Number.isFinite(recommended) && Number.isFinite(playerLevel) && recommended <= playerLevel - 5;
     currentGeneratorHazards.darkActive = currentGeneratorHazards.baseDark && !suppressed;
     currentGeneratorHazards.poisonFogActive = currentGeneratorHazards.basePoisonFog && !suppressed;
+    currentGeneratorHazards.noiseActive = currentGeneratorHazards.baseNoise && !suppressed;
     updateDungeonTypeOverlay();
+    updateNoiseUiEffects();
 }
 
 // Track previous values for change indicators
@@ -5942,6 +6106,15 @@ function updateDungeonTypeOverlay() {
         });
     }
 
+    const baseNoise = !!currentGeneratorHazards.baseNoise;
+    const noiseActive = !!currentGeneratorHazards.noiseActive;
+    if (baseNoise) {
+        badges.push({
+            label: noiseActive ? 'ノイズ' : 'ノイズ(抑制中)',
+            className: `dungeon-overlay__badge--hazard-noise${noiseActive ? '' : ' dungeon-overlay__badge--suppressed'}`
+        });
+    }
+
     if (currentMode === 'blockdim' && blockDimState && blockDimState.spec) {
         const nested = Math.max(1, blockDimState.nested || 1);
         if (nested > 1) {
@@ -5956,6 +6129,7 @@ function updateDungeonTypeOverlay() {
     dungeonTypeOverlayFeatures.innerHTML = badges
         .map(badge => `<span class="dungeon-overlay__badge ${badge.className}">${escapeHtml(badge.label)}</span>`)
         .join('');
+    handleNoiseOverlayContentChanged();
 }
 
 function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
@@ -6798,8 +6972,10 @@ function useSkillRuinAnnihilation() {
     }
     currentGeneratorHazards.baseDark = false;
     currentGeneratorHazards.basePoisonFog = false;
+    currentGeneratorHazards.baseNoise = false;
     currentGeneratorHazards.darkActive = false;
     currentGeneratorHazards.poisonFogActive = false;
+    currentGeneratorHazards.noiseActive = false;
 
     if (Array.isArray(chests) && chests.length) {
         const copy = chests.slice();
@@ -7160,9 +7336,11 @@ function applyBlockDimTestEnvironment(snapshot) {
         currentGeneratorHazards.generatorId = h.generatorId ?? null;
         currentGeneratorHazards.baseDark = !!h.baseDark;
         currentGeneratorHazards.basePoisonFog = !!h.basePoisonFog;
+        currentGeneratorHazards.baseNoise = !!h.baseNoise;
         currentGeneratorHazards.recommendedLevel = Number.isFinite(h.recommendedLevel) ? h.recommendedLevel : null;
         currentGeneratorHazards.darkActive = !!h.darkActive;
         currentGeneratorHazards.poisonFogActive = !!h.poisonFogActive;
+        currentGeneratorHazards.noiseActive = !!h.noiseActive;
     }
     __seededActive = !!snapshot.seededActive;
     if (typeof snapshot.mathRandom === 'function') {
@@ -7277,9 +7455,11 @@ function runSingleBlockDimDungeonTest(genType, seed, mixedPool) {
     currentGeneratorHazards.generatorId = null;
     currentGeneratorHazards.baseDark = false;
     currentGeneratorHazards.basePoisonFog = false;
+    currentGeneratorHazards.baseNoise = false;
     currentGeneratorHazards.recommendedLevel = null;
     currentGeneratorHazards.darkActive = false;
     currentGeneratorHazards.poisonFogActive = false;
+    currentGeneratorHazards.noiseActive = false;
     updateMapSize();
     prepareFixedMapDimensionsIfNeeded();
     reseedBlockDimForFloor();
@@ -11493,7 +11673,11 @@ function calculateHitRate(attackerLevel, defenderLevel) {
 
 function showEnemyInfo(enemy) {
     if (!enemy) return;
-    
+    if (isNoiseActive()) {
+        addMessage('ノイズがひどくて敵の情報を読み取れない…');
+        return;
+    }
+
     // 基本ステータス表示
     enemyModalTitle.textContent = enemy.boss ? 'ボスの情報' : '敵の情報';
     enemyModalLevel.textContent = `Lv.${enemy.level}`;
@@ -12196,6 +12380,7 @@ function drawTextWithBackground(ctx, text, x, y, textColor) {
 function drawEnemies() {
     const startX = camera.x;
     const startY = camera.y;
+    const noiseActive = isNoiseActive();
     enemies.forEach(enemy => {
         const ex = enemy.x - startX;
         const ey = enemy.y - startY;
@@ -12242,14 +12427,18 @@ function drawEnemies() {
         // レベル/HPテキスト with background
         ctx.font = `${Math.max(10, Math.floor(cellHe * 0.35))}px sans-serif`;
         ctx.textAlign = 'center';
-        
-        const levelText = enemy.boss ? `BOSS Lv.${enemy.level ?? '?'}` : `Lv.${enemy.level ?? '?'}`;
-        const hpText = `HP ${enemy.hp ?? '?'} / ${enemy.maxHp ?? '?'}`;
-        
+
+        const levelText = noiseActive
+            ? (enemy.boss ? 'BOSS Lv.??' : 'Lv.??')
+            : (enemy.boss ? `BOSS Lv.${enemy.level ?? '?'}` : `Lv.${enemy.level ?? '?'}`);
+        const hpText = noiseActive
+            ? 'HP ?? / ??'
+            : `HP ${enemy.hp ?? '?'} / ${enemy.maxHp ?? '?'}`;
+
         // Draw level text with background
         const levelY = ey * cellHe + Math.max(10, Math.floor(cellHe * 0.3));
         drawTextWithBackground(ctx, levelText, cx, levelY, enemy.boss ? '#ffd700' : (enemy.level >= player.level + 5 ? '#ffa94d' : (enemy.level <= player.level - 5 ? '#74c0fc' : '#ffffff')));
-        
+
         // Draw HP text with background  
         const hpY = ey * cellHe + Math.max(20, Math.floor(cellHe * 0.6));
         drawTextWithBackground(ctx, hpText, cx, hpY, enemy.boss ? '#ffd700' : '#ffffff');
@@ -17048,9 +17237,11 @@ function registerAddonGenerators(generators, addonId) {
             def.source = addonId;
             const darkFlag = raw.dark === true || raw.dark === 'true' || raw.darkness === true || raw.darkness === 'true';
             const poisonFlag = raw.poisonFog === true || raw.poisonFog === 'true' || raw.poison === true || raw.poison === 'true' || raw.poisonMist === true || raw.poisonMist === 'true';
+            const noiseFlag = raw.noise === true || raw.noise === 'true' || raw.signalNoise === true || raw.signalNoise === 'true' || raw.interference === true || raw.interference === 'true';
             def.dark = darkFlag;
             def.poisonFog = poisonFlag;
-            setGeneratorHazardFlags(def.id, { dark: darkFlag, poisonFog: poisonFlag });
+            def.noise = noiseFlag;
+            setGeneratorHazardFlags(def.id, { dark: darkFlag, poisonFog: poisonFlag, noise: noiseFlag });
             const floors = normalizeGeneratorFloors(def.floors, def.id, addonId);
             if (floors) {
                 FixedMapRegistry.set(def.id, floors);

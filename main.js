@@ -17,6 +17,14 @@ const statSatietyText = document.getElementById('stat-satiety-text');
 const satietyBar = document.getElementById('satiety-bar');
 const satietyBarContainer = document.getElementById('satiety-bar-container');
 const messageLogDiv = document.getElementById('message-log');
+const floorIndicatorValue = document.getElementById('floor-indicator-value');
+const dungeonTypeOverlay = document.getElementById('dungeon-type-overlay');
+const dungeonTypeOverlayName = document.getElementById('dungeon-type-overlay-type');
+const dungeonTypeOverlayFeatures = document.getElementById('dungeon-type-overlay-features');
+const dungeonTypeOverlayDescription = document.getElementById('dungeon-type-overlay-description');
+let dungeonOverlayHoverState = false;
+let dungeonOverlayPlayerZoneState = false;
+let dungeonOverlayLastPointer = null;
 const MAX_LOG_LINES = 100;
 const SATIETY_MAX = 100;
 const SATIETY_TICK_PER_TURN = 1;
@@ -32,6 +40,70 @@ const RARE_CHEST_CONFIG = Object.freeze({
     levelGapBonus: 0.1,
     levelGapRelief: 0.08,
 });
+
+function applyDungeonOverlayDimState() {
+    if (!dungeonTypeOverlay) return;
+    const shouldDim = dungeonOverlayHoverState || dungeonOverlayPlayerZoneState;
+    dungeonTypeOverlay.classList.toggle('dungeon-overlay--dimmed', shouldDim);
+}
+
+function setDungeonOverlayHoverState(state) {
+    const next = !!state;
+    if (next === dungeonOverlayHoverState) return;
+    dungeonOverlayHoverState = next;
+    applyDungeonOverlayDimState();
+}
+
+function setDungeonOverlayPlayerZoneState(state) {
+    const next = !!state;
+    if (next === dungeonOverlayPlayerZoneState) return;
+    dungeonOverlayPlayerZoneState = next;
+    applyDungeonOverlayDimState();
+}
+
+function refreshDungeonOverlayPlayerDimState() {
+    const inTopLeft = Number.isFinite(player?.x) && Number.isFinite(player?.y)
+        ? player.x <= 7 && player.y <= 7
+        : false;
+    setDungeonOverlayPlayerZoneState(inTopLeft);
+}
+
+function evaluateDungeonOverlayHoverFromPoint(point) {
+    if (!dungeonTypeOverlay || !point) {
+        setDungeonOverlayHoverState(false);
+        return;
+    }
+    const rect = dungeonTypeOverlay.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) {
+        setDungeonOverlayHoverState(false);
+        return;
+    }
+    const hovered = point.x >= rect.left && point.x <= rect.right
+        && point.y >= rect.top && point.y <= rect.bottom;
+    setDungeonOverlayHoverState(hovered);
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('mousemove', (event) => {
+        dungeonOverlayLastPointer = { x: event.clientX, y: event.clientY };
+        evaluateDungeonOverlayHoverFromPoint(dungeonOverlayLastPointer);
+    }, { passive: true });
+    const reassessOverlayHover = () => {
+        evaluateDungeonOverlayHoverFromPoint(dungeonOverlayLastPointer);
+    };
+    window.addEventListener('scroll', reassessOverlayHover, { passive: true });
+    window.addEventListener('resize', reassessOverlayHover);
+    applyDungeonOverlayDimState();
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 const MAJOR_HP_BOOST_VALUE = 25;
 const MAJOR_ATK_BOOST_VALUE = 10;
 const MAJOR_DEF_BOOST_VALUE = 10;
@@ -4833,6 +4905,7 @@ function refreshGeneratorHazardSuppression() {
         Number.isFinite(recommended) && Number.isFinite(playerLevel) && recommended <= playerLevel - 5;
     currentGeneratorHazards.darkActive = currentGeneratorHazards.baseDark && !suppressed;
     currentGeneratorHazards.poisonFogActive = currentGeneratorHazards.basePoisonFog && !suppressed;
+    updateDungeonTypeOverlay();
 }
 
 // Track previous values for change indicators
@@ -4944,6 +5017,108 @@ let __lastSavedBlockDimSelectionKey = null;
 const BDIM_TEST_LOG_LIMIT = 400;
 let bdimTestLogLines = [];
 let bdimTestRunning = false;
+
+function updateDungeonTypeOverlay() {
+    if (!dungeonTypeOverlay) return;
+
+    let generatorId = null;
+    try {
+        generatorId = resolveCurrentGeneratorType();
+    } catch {
+        generatorId = null;
+    }
+
+    let title = 'ダンジョン';
+    if (generatorId) {
+        try {
+            title = getDungeonTypeName(generatorId);
+        } catch {
+            title = generatorId;
+        }
+    }
+
+    let description = '';
+    let def = null;
+    try {
+        if (generatorId && typeof DungeonGenRegistry !== 'undefined' && DungeonGenRegistry && typeof DungeonGenRegistry.get === 'function') {
+            def = DungeonGenRegistry.get(generatorId) || null;
+        }
+    } catch {
+        def = null;
+    }
+    if (def) {
+        if (def.name) title = def.name;
+        if (def.description) description = def.description;
+    } else {
+        try {
+            const baseData = (selectedWorld === 'X') ? dungeonInfo['X'] : dungeonInfo[selectedDungeonBase];
+            if (baseData && baseData.description) description = baseData.description;
+        } catch {}
+    }
+
+    if (dungeonTypeOverlayName) {
+        dungeonTypeOverlayName.textContent = title || 'ダンジョン';
+    }
+
+    if (dungeonTypeOverlayDescription) {
+        if (description) {
+            dungeonTypeOverlayDescription.textContent = description;
+            dungeonTypeOverlayDescription.style.display = '';
+        } else {
+            dungeonTypeOverlayDescription.textContent = '';
+            dungeonTypeOverlayDescription.style.display = 'none';
+        }
+    }
+
+    if (!dungeonTypeOverlayFeatures) return;
+
+    const badges = [];
+    const baseDark = !!currentGeneratorHazards.baseDark;
+    const darkActive = !!currentGeneratorHazards.darkActive;
+    if (baseDark) {
+        badges.push({
+            label: darkActive ? '暗い' : '暗い(抑制中)',
+            className: `dungeon-overlay__badge--hazard-dark${darkActive ? '' : ' dungeon-overlay__badge--suppressed'}`
+        });
+    }
+
+    const basePoison = !!currentGeneratorHazards.basePoisonFog;
+    const poisonActive = !!currentGeneratorHazards.poisonFogActive;
+    if (basePoison) {
+        badges.push({
+            label: poisonActive ? '毒霧' : '毒霧(抑制中)',
+            className: `dungeon-overlay__badge--hazard-poison${poisonActive ? '' : ' dungeon-overlay__badge--suppressed'}`
+        });
+    }
+
+    if (currentMode === 'blockdim' && blockDimState && blockDimState.spec) {
+        const nested = Math.max(1, blockDimState.nested || 1);
+        if (nested > 1) {
+            badges.push({ label: `NESTED x${nested}`, className: 'dungeon-overlay__badge--neutral' });
+        }
+        const pool = Array.isArray(blockDimState.spec.typePool) ? blockDimState.spec.typePool : [];
+        const unique = [];
+        for (const typeId of pool) {
+            if (!typeId || unique.includes(typeId)) continue;
+            unique.push(typeId);
+        }
+        unique.forEach(typeId => {
+            let label = typeId;
+            try {
+                label = getDungeonTypeName(typeId);
+            } catch {}
+            badges.push({ label, className: 'dungeon-overlay__badge--type' });
+        });
+    }
+
+    if (!badges.length) {
+        badges.push({ label: '特記事項なし', className: 'dungeon-overlay__badge--neutral' });
+    }
+
+    dungeonTypeOverlayFeatures.innerHTML = badges
+        .map(badge => `<span class="dungeon-overlay__badge ${badge.className}">${escapeHtml(badge.label)}</span>`)
+        .join('');
+}
 
 function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
 function majority(arr) {
@@ -11387,6 +11562,8 @@ function updateUI() {
     const combinedStatusList = statusList.concat(skillEffects);
     const playerDomain = getPlayerDomainAggregate();
 
+    refreshDungeonOverlayPlayerDimState();
+
     // Show value change indicators
     if (Number.isFinite(currentHp) && Number.isFinite(prevHp) && currentHp !== prevHp) {
         const hpChange = currentHp - prevHp;
@@ -11662,8 +11839,8 @@ function updateUI() {
         }
         statusDetails.innerHTML = `階層: ${dungeonLevel}<br>` + detailLine;
     }
-    const floorEl = document.getElementById('floor-indicator');
-    if (floorEl) floorEl.textContent = `${dungeonLevel}F`;
+    if (floorIndicatorValue) floorIndicatorValue.textContent = `${dungeonLevel}F`;
+    updateDungeonTypeOverlay();
 
     refreshSkillsModal();
     updateSandboxInteractivePrivilege();

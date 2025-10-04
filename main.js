@@ -15767,6 +15767,404 @@ function renderMiniExpPlayerHud() {
     }
 }
 
+const MINI_GAME_BUILTIN_GENERATOR_TYPES = Object.freeze([
+    'field',
+    'cave',
+    'grid',
+    'open-space',
+    'maze',
+    'rooms',
+    'single-room',
+    'circle',
+    'narrow-maze',
+    'wide-maze',
+    'snake',
+    'mixed',
+    'circle-rooms'
+]);
+
+function createMiniGameDungeonApi() {
+    const ensureAddonsReady = () => {
+        try {
+            if (typeof __addonLoadPromise !== 'undefined' && __addonLoadPromise && typeof __addonLoadPromise.then === 'function') {
+                return __addonLoadPromise.catch(() => {});
+            }
+        } catch {}
+        return Promise.resolve();
+    };
+
+    const listAvailableTypes = () => {
+        const types = new Set(MINI_GAME_BUILTIN_GENERATOR_TYPES);
+        try {
+            if (DungeonGenRegistry && typeof DungeonGenRegistry.keys === 'function') {
+                for (const key of DungeonGenRegistry.keys()) {
+                    if (key) types.add(String(key));
+                }
+            }
+        } catch {}
+        return Array.from(types);
+    };
+
+    const normalizeTypeInput = (value) => {
+        if (typeof value !== 'string') return '';
+        return value.trim();
+    };
+
+    const findMatchingType = (rawType, available) => {
+        if (!rawType) return '';
+        if (available.includes(rawType)) return rawType;
+        const lower = rawType.toLowerCase();
+        for (const type of available) {
+            if (String(type).toLowerCase() === lower) return type;
+        }
+        return '';
+    };
+
+    const clampDimension = (value, fallback) => {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return fallback;
+        return Math.max(8, Math.min(180, Math.floor(n)));
+    };
+
+    const cloneTiles = (tiles) => tiles.map(row => row.slice());
+
+    const cloneTileMetaGrid = (metaGrid) => metaGrid.map(row => row.map(entry => (entry && typeof entry === 'object') ? Object.assign({}, entry) : null));
+
+    const computeFloorCells = (tiles) => {
+        const cells = [];
+        for (let y = 0; y < tiles.length; y++) {
+            const row = tiles[y] || [];
+            for (let x = 0; x < row.length; x++) {
+                if (row[x] === 0) cells.push({ x, y });
+            }
+        }
+        return cells;
+    };
+
+    const pickRandomFrom = (list) => {
+        if (!Array.isArray(list) || list.length === 0) return null;
+        const idx = Math.floor(Math.random() * list.length);
+        return list[Math.max(0, Math.min(list.length - 1, idx))];
+    };
+
+    const runBuiltinGenerator = (type) => {
+        switch (type) {
+            case 'field':
+                generateFieldType();
+                break;
+            case 'cave':
+                generateCaveType();
+                break;
+            case 'grid':
+                generateGridType();
+                break;
+            case 'open-space':
+                generateOpenSpaceType();
+                break;
+            case 'maze':
+                generateMazeType();
+                break;
+            case 'rooms':
+                generateRoomsType();
+                break;
+            case 'single-room':
+                generateSingleRoomType();
+                break;
+            case 'circle':
+                generateCircleType();
+                break;
+            case 'narrow-maze':
+                generateNarrowMazeType();
+                break;
+            case 'wide-maze':
+                generateWideMazeType();
+                break;
+            case 'snake':
+                generateSnakeType();
+                break;
+            case 'circle-rooms':
+                generateCircleRoomsType();
+                break;
+            case 'mixed':
+                generateMixedType();
+                break;
+            default:
+                generateFieldType();
+                break;
+        }
+    };
+
+    const makeFloorSampler = (tiles) => {
+        const allFloors = computeFloorCells(tiles);
+        const keyed = () => new Set();
+        const keyOf = (pos) => `${pos.x},${pos.y}`;
+        const withinBounds = (pos) => pos && Number.isFinite(pos.x) && Number.isFinite(pos.y);
+
+        function pickSingle(excludeSet, minDistSq) {
+            if (!allFloors.length) return null;
+            const maxTries = Math.max(200, allFloors.length * 3);
+            let attempt = 0;
+            const isAcceptable = (candidate) => {
+                const key = keyOf(candidate);
+                if (excludeSet.has(key)) return false;
+                if (minDistSq <= 0) return true;
+                for (const itemKey of excludeSet) {
+                    const [sx, sy] = itemKey.split(',').map(Number);
+                    if (!Number.isFinite(sx) || !Number.isFinite(sy)) continue;
+                    const dx = candidate.x - sx;
+                    const dy = candidate.y - sy;
+                    if (dx * dx + dy * dy < minDistSq) return false;
+                }
+                return true;
+            };
+            while (attempt++ < maxTries) {
+                const candidate = pickRandomFrom(allFloors);
+                if (!candidate) break;
+                if (!withinBounds(candidate)) continue;
+                if (isAcceptable(candidate)) return { x: candidate.x, y: candidate.y };
+            }
+            for (const candidate of allFloors) {
+                if (!withinBounds(candidate)) continue;
+                if (isAcceptable(candidate)) return { x: candidate.x, y: candidate.y };
+            }
+            return { x: allFloors[0].x, y: allFloors[0].y };
+        }
+
+        return {
+            list: () => allFloors.map(cell => ({ x: cell.x, y: cell.y })),
+            pick(count = 1, options = {}) {
+                const results = [];
+                if (!allFloors.length || count <= 0) return results;
+                const excludeSet = keyed();
+                const exclude = Array.isArray(options.exclude) ? options.exclude : (options.exclude ? [options.exclude] : []);
+                for (const pos of exclude) {
+                    if (!withinBounds(pos)) continue;
+                    excludeSet.add(keyOf({ x: Math.floor(pos.x), y: Math.floor(pos.y) }));
+                }
+                const minDist = Math.max(0, Number(options.minDistance) || 0);
+                const minDistSq = minDist * minDist;
+                for (let i = 0; i < count; i++) {
+                    const picked = pickSingle(excludeSet, minDistSq);
+                    if (!picked) break;
+                    results.push(picked);
+                    excludeSet.add(keyOf(picked));
+                }
+                return results;
+            },
+            pickOne(options = {}) {
+                const [position] = this.pick(1, options);
+                return position || null;
+            }
+        };
+    };
+
+    const renderStage = (stage, options = {}) => {
+        if (!stage || typeof stage !== 'object') return null;
+        const tileSize = Math.max(2, Math.floor(Number(options.tileSize) || stage.tileSize || TILE_SIZE || 16));
+        let canvas = options.canvas || null;
+        let context = options.context || null;
+        if (!context) {
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+            }
+            canvas.width = stage.width * tileSize;
+            canvas.height = stage.height * tileSize;
+            context = canvas.getContext('2d');
+        } else if (!canvas) {
+            canvas = context.canvas || null;
+            if (canvas) {
+                canvas.width = stage.width * tileSize;
+                canvas.height = stage.height * tileSize;
+            }
+        }
+        if (!context) return null;
+        const floorColorDefault = options.floorColor || DEFAULT_FLOOR_COLOR || '#ced6e0';
+        const wallColorDefault = options.wallColor || DEFAULT_WALL_COLOR || '#2f3542';
+        context.fillStyle = options.background || '#020617';
+        context.fillRect(0, 0, stage.width * tileSize, stage.height * tileSize);
+        for (let y = 0; y < stage.height; y++) {
+            for (let x = 0; x < stage.width; x++) {
+                const cell = stage.tiles[y]?.[x];
+                const meta = stage.tileMeta[y]?.[x] || null;
+                const px = x * tileSize;
+                const py = y * tileSize;
+                if (cell === 0) {
+                    const color = meta?.floorColor || floorColorDefault;
+                    context.fillStyle = color;
+                    context.fillRect(px, py, tileSize, tileSize);
+                    if (meta?.floorType && options.showFloorTypes) {
+                        context.fillStyle = 'rgba(0,0,0,0.2)';
+                        context.fillRect(px, py, tileSize, tileSize);
+                    }
+                } else {
+                    const wallColor = meta?.wallColor || wallColorDefault;
+                    context.fillStyle = wallColor;
+                    context.fillRect(px, py, tileSize, tileSize);
+                }
+            }
+        }
+        if (options.showGrid) {
+            context.strokeStyle = typeof options.gridColor === 'string' ? options.gridColor : 'rgba(15,23,42,0.25)';
+            context.lineWidth = 1;
+            context.beginPath();
+            for (let x = 0; x <= stage.width; x++) {
+                const px = x * tileSize + 0.5;
+                context.moveTo(px, 0);
+                context.lineTo(px, stage.height * tileSize);
+            }
+            for (let y = 0; y <= stage.height; y++) {
+                const py = y * tileSize + 0.5;
+                context.moveTo(0, py);
+                context.lineTo(stage.width * tileSize, py);
+            }
+            context.stroke();
+        }
+        return { canvas, context, tileSize };
+    };
+
+    const generateStage = async (options = {}) => {
+        await ensureAddonsReady();
+        const availableTypes = listAvailableTypes();
+        const normalizedInput = normalizeTypeInput(options.type);
+        let targetType = findMatchingType(normalizedInput, availableTypes);
+        if (!targetType) targetType = pickRandomFrom(availableTypes) || 'field';
+        const width = clampDimension(options.tilesX ?? options.width ?? options.cols ?? options.columns, MAP_WIDTH || 60);
+        const height = clampDimension(options.tilesY ?? options.height ?? options.rows ?? options.lines, MAP_HEIGHT || 45);
+        const floorNumber = Number.isFinite(options.floor) ? Math.max(1, Math.floor(options.floor)) : 1;
+        const prevState = {
+            map,
+            tileMeta,
+            MAP_WIDTH,
+            MAP_HEIGHT,
+            dungeonLevel,
+            lastGeneratedGenType
+        };
+        let tilesSnapshot = [];
+        let metaSnapshot = [];
+        let actualType = targetType;
+        let generationError = null;
+        try {
+            MAP_WIDTH = width;
+            MAP_HEIGHT = height;
+            map = Array.from({ length: height }, () => Array(width).fill(1));
+            tileMeta = Array.from({ length: height }, () => Array(width).fill(null));
+            dungeonLevel = floorNumber;
+            lastGeneratedGenType = targetType;
+            if (DungeonGenRegistry && DungeonGenRegistry.has(targetType)) {
+                try {
+                    runAddonGenerator(targetType);
+                } catch (err) {
+                    generationError = err;
+                    console.warn('MiniGame dungeon addon generation failed, fallback to field', err);
+                    targetType = 'field';
+                    lastGeneratedGenType = 'field';
+                    runBuiltinGenerator('field');
+                }
+            } else {
+                runBuiltinGenerator(targetType);
+            }
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                map[0][x] = 1;
+                map[MAP_HEIGHT - 1][x] = 1;
+            }
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                map[y][0] = 1;
+                map[y][MAP_WIDTH - 1] = 1;
+            }
+            ensureMinimumFloors(10);
+            tilesSnapshot = cloneTiles(map);
+            metaSnapshot = cloneTileMetaGrid(tileMeta);
+            actualType = lastGeneratedGenType || targetType;
+        } catch (err) {
+            generationError = err;
+            tilesSnapshot = Array.from({ length: height }, (_, y) => Array.from({ length: width }, (_, x) => (x === 0 || y === 0 || x === width - 1 || y === height - 1) ? 1 : 0));
+            metaSnapshot = Array.from({ length: height }, () => Array(width).fill(null));
+            actualType = 'field';
+            console.error('MiniGame dungeon stage generation failed', err);
+        } finally {
+            map = prevState.map;
+            tileMeta = prevState.tileMeta;
+            MAP_WIDTH = prevState.MAP_WIDTH;
+            MAP_HEIGHT = prevState.MAP_HEIGHT;
+            dungeonLevel = prevState.dungeonLevel;
+            lastGeneratedGenType = prevState.lastGeneratedGenType;
+        }
+
+        const floorSampler = makeFloorSampler(tilesSnapshot);
+        const hazards = getGeneratorHazardFlags(actualType);
+        const tileSize = Math.max(4, Math.floor(Number(options.tileSize) || TILE_SIZE || 20));
+        const renderWidth = Math.max(tileSize, Math.floor(Number(options.renderWidth) || tileSize * width));
+        const renderHeight = Math.max(tileSize, Math.floor(Number(options.renderHeight) || tileSize * height));
+        const stageId = `dungeon-stage-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+        const stage = {
+            id: stageId,
+            requestedType: normalizedInput || null,
+            type: actualType,
+            width,
+            height,
+            tiles: tilesSnapshot,
+            tileMeta: metaSnapshot,
+            hazards,
+            tileSize,
+            renderWidth,
+            renderHeight,
+            floor: floorNumber,
+            error: generationError,
+            floorSampler,
+            listFloorCells() {
+                return floorSampler.list();
+            },
+            pickFloorPositions(count = 1, options = {}) {
+                return floorSampler.pick(count, options);
+            },
+            pickFloorPosition(options = {}) {
+                return floorSampler.pickOne(options);
+            },
+            isWall(x, y) {
+                const ix = Math.floor(x);
+                const iy = Math.floor(y);
+                if (iy < 0 || iy >= this.height || ix < 0 || ix >= this.width) return true;
+                return this.tiles[iy]?.[ix] !== 0;
+            },
+            isFloor(x, y) {
+                return !this.isWall(x, y);
+            },
+            getMeta(x, y) {
+                const ix = Math.floor(x);
+                const iy = Math.floor(y);
+                if (iy < 0 || iy >= this.height || ix < 0 || ix >= this.width) return null;
+                return this.tileMeta[iy]?.[ix] || null;
+            },
+            toPixel(x, y, overrideTileSize) {
+                const ts = Math.max(1, Math.floor(overrideTileSize || this.tileSize));
+                return { x: x * ts, y: y * ts };
+            }
+        };
+        return stage;
+    };
+
+    const getTypeInfo = (id) => {
+        const types = listAvailableTypes();
+        const match = findMatchingType(normalizeTypeInput(id), types);
+        if (!match) return null;
+        const hazards = getGeneratorHazardFlags(match);
+        return {
+            id: match,
+            name: getDungeonTypeName ? getDungeonTypeName(match) : match,
+            hazards
+        };
+    };
+
+    return {
+        listTypes: () => listAvailableTypes(),
+        pickRandomType: () => pickRandomFrom(listAvailableTypes()) || 'field',
+        getTypeInfo,
+        generateStage,
+        renderStage
+    };
+}
+
 function getMiniGamePlayerSnapshot() {
     try { updatePlayerSpCap({ silent: true }); } catch {}
     const effectiveMaxHp = getEffectivePlayerMaxHp();
@@ -16013,7 +16411,8 @@ async function startSelectedMiniGame() {
         const createOptions = {
             difficulty: (miniexpDifficulty?.value || 'NORMAL'),
             shortcuts: shortcutController,
-            player: playerApi
+            player: playerApi,
+            dungeon: createMiniGameDungeonApi()
         };
         runtime = mod.create(miniexpContainer, (n, meta) => {
             let payload;

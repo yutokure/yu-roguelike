@@ -79,6 +79,7 @@ window.MINIEXP_MANIFEST = [
   { id: 'dino_runner',   name: 'ダイノランナー',       entry: 'games/dino_runner.js',      version: '0.1.0', author: 'mod', description: '恐竜で障害物ジャンプ／距離EXP', category: 'アクション' },
   { id: 'floor_descent', name: 'フロア降りサバイバル', entry: 'games/floor_descent.js', version: '0.1.0', author: 'mod', description: '迫る針天井から逃げながら下へ進む縦スクロールアクション。足場ギミックで差をつけよう', category: 'アクション' },
   { id: 'forced_scroll_jump', name: '強制スクロールジャンプ', entry: 'games/forced_scroll_jump.js', version: '0.1.0', author: 'mod', description: '強制横スクロールで穴や鉄球を避けつつCXマークを集めてランクを目指す', category: 'アクション' },
+  { id: 'tosochu', name: '逃走中', entry: 'games/tosochu.js', version: '0.1.0', author: 'mod', description: '逃走者 VS ハンターの番組風アクション。逃げ切れば+10000EXP、自首で蓄積EXP', category: 'アクション' },
   { id: 'ten_ten',       name: '1010パズル',           entry: 'games/ten_ten.js',          version: '0.1.0', author: 'builtin', description: 'ラインでEXP／クロス消しは倍増', category: 'パズル' },
   { id: 'trump_games',   name: 'トランプセレクション', entry: 'games/trump_games.js',      version: '0.1.0', author: 'mod', description: 'トランプゲームハブ（神経衰弱・ブラックジャック・ババ抜き収録）', category: 'ボード' },
   { id: 'gamble_hall',  name: 'ギャンブルホール',     entry: 'games/gamble_hall.js',  version: '0.1.0', author: 'mod', description: 'EXPを賭けるルーレットとパチンコスロットの複合MOD', category: 'ギャンブル' },
@@ -88,5 +89,9 @@ window.MINIEXP_MANIFEST = [
   { id: 'logic_circuit', name: '論理回路シミュレータ', entry: 'games/logic_circuit.js', version: '0.1.0', author: 'mod', description: '入力ソース・ゲート・出力を配置して論理回路をシミュレーション', category: 'トイ' },
   { id: 'circuit_simulator', name: '電気回路シミュレータ', entry: 'games/circuit_simulator.js', version: '0.1.0', author: 'mod', description: 'DC/AC電源・受動素子・計器で回路を構成し計測するトイ向け回路ラボ', category: 'トイ' },
   { id: 'memo_studio', name: '暗記スタジオ', entry: 'games/memory_app.js', version: '0.1.0', author: 'mod', description: 'フラッシュカードを登録し間隔反復で学習する暗記アプリ', category: 'トイ' },
+  { id: 'onigokko', name: '鬼ごっこ', entry: 'games/onigokko.js', version: '0.1.0', author: 'mod', description: '混合型ダンジョンを舞台に鬼から逃げるトイアクション', category: 'トイ' },
+  { id: 'darumasan', name: 'だるまさんがころんだ', entry: 'games/darumasan.js', version: '0.1.0', author: 'mod', description: '見られずにゴールすれば50EXPの緊張感ミニゲーム', category: 'トイ' },
+  { id: 'acchimuitehoi', name: 'あっち向いてホイ', entry: 'games/acchimuitehoi.js', version: '0.1.0', author: 'mod', description: '攻め成功で15EXP、防御成功で5EXPを狙う反射ゲーム', category: 'トイ' },
+  { id: 'janken', name: 'じゃんけん', entry: 'games/janken.js', version: '0.1.0', author: 'mod', description: 'クラシックじゃんけん。勝利すると10EXP', category: 'トイ' },
   { id: 'typing',      name: 'タイピングチャレンジ', entry: 'games/typing.js',      version: '0.1.0', author: 'mod', description: '60秒タイプで正確さとスピードを競うタイピングチャレンジ', category: 'スキル' },
 ];

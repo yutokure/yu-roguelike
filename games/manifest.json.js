@@ -94,4 +94,5 @@ window.MINIEXP_MANIFEST = [
   { id: 'acchimuitehoi', name: 'あっち向いてホイ', entry: 'games/acchimuitehoi.js', version: '0.1.0', author: 'mod', description: '攻め成功で15EXP、防御成功で5EXPを狙う反射ゲーム', category: 'トイ' },
   { id: 'janken', name: 'じゃんけん', entry: 'games/janken.js', version: '0.1.0', author: 'mod', description: 'クラシックじゃんけん。勝利すると10EXP', category: 'トイ' },
   { id: 'typing',      name: 'タイピングチャレンジ', entry: 'games/typing.js',      version: '0.1.0', author: 'mod', description: '60秒タイプで正確さとスピードを競うタイピングチャレンジ', category: 'スキル' },
+  { id: 'imperial_realm', name: 'インペリアル・レルム', entry: 'games/imperial_realm.js', version: '0.1.0', author: 'mod', description: '村人と軍勢を指揮してウェーブ攻撃を凌ぎ敵本陣を撃破するAoE2風リアルタイムストラテジー', category: 'シミュレーション' },
 ];

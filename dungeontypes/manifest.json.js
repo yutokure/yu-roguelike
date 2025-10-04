@@ -55,5 +55,6 @@ window.DUNGEONTYPE_MANIFEST = [
   { id: 'natural_roadways_pack', name: 'Natural Roadways Pack', entry: 'dungeontypes/natural_roadways_pack.js', version: '1.0.0', author: 'community-mod' },
   { id: 'biome_convergence_megapack', name: 'Biome Convergence Mega Pack', entry: 'dungeontypes/biome_convergence_megapack.js', version: '1.0.0', author: 'community-mod' },
   { id: 'retro_overworld_pack', name: 'Retro Overworld Pack', entry: 'dungeontypes/retro_overworld_pack.js', version: '1.0.0', author: 'community-mod' },
-  { id: 'abstract_spectrum_pack', name: '抽象スペクトラム生成パック', entry: 'dungeontypes/abstract_spectrum_pack.js', version: '1.0.0', author: 'community-mod' }
+  { id: 'abstract_spectrum_pack', name: '抽象スペクトラム生成パック', entry: 'dungeontypes/abstract_spectrum_pack.js', version: '1.0.0', author: 'community-mod' },
+  { id: 'visceral_crimescene_pack', name: 'Visceral Crime Scene Pack', entry: 'dungeontypes/visceral_crimescene_pack.js', version: '1.0.0', author: 'community-mod' }
 ];

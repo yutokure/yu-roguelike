@@ -134,7 +134,6 @@ if (typeof window !== 'undefined') {
 
 if (dungeonNameToggle) {
     dungeonNameToggle.addEventListener('change', updateDungeonOverlayVisibility);
-    updateDungeonOverlayVisibility();
 }
 
 if (autoItemToggle) {
@@ -4346,6 +4345,10 @@ const player = {
     },
     statusEffects: createInitialStatusEffects()
 };
+
+if (dungeonNameToggle) {
+    updateDungeonOverlayVisibility();
+}
 
 function ensureInventoryContainer() {
     if (!player.inventory || typeof player.inventory !== 'object') {

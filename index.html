@@ -1037,7 +1037,11 @@
         <button id="btn-sandbox-menu" class="sandbox-menu-button" type="button" aria-expanded="false" aria-controls="sandbox-interactive-panel" style="display:none;">インタラクティブ</button>
         <button id="btn-god-console" class="god-console-button" type="button" aria-expanded="false" aria-controls="god-console-panel" style="display:none;">創造神コンソール</button>
         <input type="file" id="import-file" accept="application/json" style="display:none" />
-        <div id="floor-indicator">1F</div>
+        <div id="floor-indicator" aria-live="polite">
+            <span class="floor-indicator__heading">現在のフロア</span>
+            <span id="floor-indicator-value" class="floor-indicator__value">1F</span>
+            <span class="floor-indicator__label">FLOOR</span>
+        </div>
     </div>
     <div id="sandbox-interactive-panel" class="sandbox-interactive-panel" role="dialog" aria-modal="false" aria-hidden="true" tabindex="-1">
         <div class="sandbox-interactive-header">
@@ -1163,7 +1167,18 @@
     </div>
     <div id="game-screen" style="display:none;">
         <div id="game-container">
-        <div id="game-stage"><canvas id="game-canvas"></canvas></div>
+        <div id="game-stage">
+            <div id="dungeon-type-overlay" aria-live="polite">
+                <span class="dungeon-overlay__label">ダンジョン特徴</span>
+                <div id="dungeon-type-overlay-type" class="dungeon-overlay__type">フィールド型</div>
+                <div class="dungeon-overlay__divider" aria-hidden="true"></div>
+                <div id="dungeon-type-overlay-features" class="dungeon-overlay__features">
+                    <span class="dungeon-overlay__badge dungeon-overlay__badge--neutral">特記事項なし</span>
+                </div>
+                <p id="dungeon-type-overlay-description" class="dungeon-overlay__description">ダンジョンの特徴がここに表示されます。</p>
+            </div>
+            <canvas id="game-canvas"></canvas>
+        </div>
         <div id="ui-container">
             <div id="player-stats">
                 <div class="card">

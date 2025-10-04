@@ -3548,161 +3548,185 @@
         ['acsc', false, true], ['asec', false, true], ['acot', false, true]
       ];
 
-      const toRadians = value => math.multiply(value, math.divide(math.pi, 180));
-      const fromRadians = value => math.multiply(value, math.divide(180, math.pi));
+      function createMathOverrides(targetMath, numericPeer){
+        if (!targetMath) return {};
 
-      const overrides = {};
-      overrides.baseDecode = function(value, base){
-        const radix = ensureRadix(base);
-        return decodeBaseValue(value, radix);
-      };
-      overrides.baseEncode = function(value, base, precision){
-        const radix = ensureRadix(base);
-        const prec = clampRadixPrecision(precision);
-        return convertDecimalToRadix(value, radix, prec);
-      };
-      overrides.baseConvert = function(value, fromBase, toBase, precision){
-        const from = ensureRadix(fromBase);
-        const to = ensureRadix(toBase);
-        const prec = clampRadixPrecision(precision);
-        const decimal = decodeBaseValue(value, from);
-        return convertDecimalToRadix(decimal, to, prec);
-      };
-      overrides.ln = function(value){
-        if (!math || typeof math.log !== 'function') {
-          throw new Error('自然対数関数 ln が利用できません。');
-        }
-        return math.log(value);
-      };
-      overrides.integral = function(expr, variable, lower, upper, options){
-        const varName = normalizeVariableName(variable);
-        const hasLower = lower != null;
-        const hasUpper = upper != null;
-        if (hasLower || hasUpper) {
-          if (!hasLower || !hasUpper) {
-            throw new Error('定積分を求める場合は下限と上限を両方指定してください。');
+        const radianContext = targetMath || numericPeer;
+        const toRadians = value => radianContext.multiply(value, radianContext.divide(radianContext.pi, 180));
+        const fromRadians = value => radianContext.multiply(value, radianContext.divide(180, radianContext.pi));
+
+        const overrides = {};
+        overrides.baseDecode = function(value, base){
+          const radix = ensureRadix(base);
+          return decodeBaseValue(value, radix);
+        };
+        overrides.baseEncode = function(value, base, precision){
+          const radix = ensureRadix(base);
+          const prec = clampRadixPrecision(precision);
+          return convertDecimalToRadix(value, radix, prec);
+        };
+        overrides.baseConvert = function(value, fromBase, toBase, precision){
+          const from = ensureRadix(fromBase);
+          const to = ensureRadix(toBase);
+          const prec = clampRadixPrecision(precision);
+          const decimal = decodeBaseValue(value, from);
+          return convertDecimalToRadix(decimal, to, prec);
+        };
+        overrides.ln = function(value){
+          const logContext = (targetMath && typeof targetMath.log === 'function')
+            ? targetMath
+            : numericPeer;
+          if (!logContext || typeof logContext.log !== 'function') {
+            throw new Error('自然対数関数 ln が利用できません。');
           }
-          const lowerVal = evaluateMathArgument(lower);
-          const upperVal = evaluateMathArgument(upper);
-          const optionValue = options != null ? evaluateMathArgument(options) : options;
-          const normalizedOptions = optionValue && typeof optionValue === 'object' ? optionValue : {};
-          return numericIntegrate(expr, varName, lowerVal, upperVal, normalizedOptions);
-        }
-        return integrateExpressionSymbolic(expr, varName);
-      };
-      overrides.integral.rawArgs = true;
-      trigNames.forEach(([name, convertIn, convertOut]) => {
-        const baseFn = math[name].bind(math);
-        overrides[name] = function(...args){
-          let processed = args;
-          if (!radianMode && convertIn) {
-            processed = args.map(arg => {
-              if (math.typeOf(arg) === 'Matrix' || Array.isArray(arg)) {
-                return math.map(arg, item => toRadians(item));
-              }
-              return toRadians(arg);
-            });
-          }
-          let result = baseFn(...processed);
-          if (!radianMode && convertOut) {
-            if (math.typeOf(result) === 'Matrix' || Array.isArray(result)) {
-              return math.map(result, item => fromRadians(item));
+          return logContext.log(value);
+        };
+        overrides.integral = function(expr, variable, lower, upper, options){
+          const varName = normalizeVariableName(variable);
+          const hasLower = lower != null;
+          const hasUpper = upper != null;
+          if (hasLower || hasUpper) {
+            if (!hasLower || !hasUpper) {
+              throw new Error('定積分を求める場合は下限と上限を両方指定してください。');
             }
-            result = fromRadians(result);
+            const lowerVal = evaluateMathArgument(lower);
+            const upperVal = evaluateMathArgument(upper);
+            const optionValue = options != null ? evaluateMathArgument(options) : options;
+            const normalizedOptions = optionValue && typeof optionValue === 'object' ? optionValue : {};
+            return numericIntegrate(expr, varName, lowerVal, upperVal, normalizedOptions);
           }
+          return integrateExpressionSymbolic(expr, varName);
+        };
+        overrides.integral.rawArgs = true;
+        trigNames.forEach(([name, convertIn, convertOut]) => {
+          const baseFn = targetMath[name]?.bind(targetMath);
+          if (typeof baseFn !== 'function') return;
+          overrides[name] = function(...args){
+            let processed = args;
+            if (!radianMode && convertIn) {
+              processed = args.map(arg => {
+                if (targetMath.typeOf?.(arg) === 'Matrix' || Array.isArray(arg)) {
+                  return targetMath.map(arg, item => toRadians(item));
+                }
+                return toRadians(arg);
+              });
+            }
+            let result = baseFn(...processed);
+            if (!radianMode && convertOut) {
+              if (targetMath.typeOf?.(result) === 'Matrix' || Array.isArray(result)) {
+                return targetMath.map(result, item => fromRadians(item));
+              }
+              result = fromRadians(result);
+            }
+            return result;
+          };
+        });
+
+        overrides.tetra = function(base, height){
+          const result = computeTetration(base, height);
           return result;
         };
-      });
+        overrides.slog = function(base, value){
+          return computeSlog(base, value);
+        };
+        overrides.gamma = function(x){
+          return gammaReal(x);
+        };
+        overrides.beta = function(a, b){
+          return mapStructure(targetMath, a, left => mapStructure(targetMath, b, right => betaReal(left, right)));
+        };
+        overrides.taylorSeries = function(expr, variable, order, center){
+          return computeTaylorSeries(expr, variable, order, center);
+        };
+        overrides.numericIntegrate = function(expr, variable, lower, upper, options){
+          return numericIntegrate(expr, variable, lower, upper, options);
+        };
+        overrides.solveEq = function(expr, variable, guess, options){
+          return newtonSolve(expr, variable, guess, options);
+        };
+        overrides.solveSystem = function(equations, variables, initialGuess, options){
+          return newtonSystem(equations, variables, initialGuess, options);
+        };
+        overrides.solveLinear = function(matrix, vector){
+          return solveLinearSystem(matrix, vector);
+        };
+        overrides.minimize = function(expr, variable, guess, options){
+          return optimize(expr, variable, guess, options, false);
+        };
+        overrides.maximize = function(expr, variable, guess, options){
+          return optimize(expr, variable, guess, options, true);
+        };
+        overrides.digamma = function(x){
+          return digammaReal(x);
+        };
+        overrides.polygamma = function(order, x){
+          return polygammaReal(order, x);
+        };
+        overrides.harmonic = function(n, r){
+          return harmonicNumber(n, r);
+        };
+        overrides.zeta = function(s, terms){
+          return riemannZeta(s, terms);
+        };
+        overrides.logGamma = function(x){
+          return logGammaReal(x);
+        };
+        overrides.lambertW = function(x, branch){
+          return lambertWReal(x, branch);
+        };
+        overrides.normalPdf = function(x, mu, sigma){
+          return normalPdfReal(x, mu, sigma);
+        };
+        overrides.normalCdf = function(x, mu, sigma){
+          return normalCdfReal(x, mu, sigma);
+        };
+        overrides.normalInv = function(p, mu, sigma){
+          return normalInvReal(p, mu, sigma);
+        };
+        overrides.poissonPmf = function(k, lambda){
+          return poissonPmfReal(k, lambda);
+        };
+        overrides.poissonCdf = function(k, lambda){
+          return poissonCdfReal(k, lambda);
+        };
+        overrides.binomialPmf = function(k, n, p){
+          return binomialPmfReal(k, n, p);
+        };
+        overrides.binomialCdf = function(k, n, p){
+          return binomialCdfReal(k, n, p);
+        };
+        overrides.logit = function(p){
+          return logitReal(p);
+        };
+        overrides.sigmoid = function(x){
+          return sigmoidReal(x);
+        };
+        overrides.erfc = function(x){
+          const subtractContext = (targetMath && typeof targetMath.subtract === 'function')
+            ? targetMath
+            : numericPeer;
+          const erfContext = (targetMath && typeof targetMath.erf === 'function')
+            ? targetMath
+            : numericPeer;
+          if (!subtractContext || !erfContext) {
+            throw new Error('erfc は現在利用できません。');
+          }
+          const one = typeof subtractContext.bignumber === 'function'
+            ? subtractContext.bignumber(1)
+            : 1;
+          const erfValue = erfContext.erf(x);
+          return subtractContext.subtract(one, erfValue);
+        };
 
-      overrides.tetra = function(base, height){
-        const result = computeTetration(base, height);
-        return result;
-      };
-      overrides.slog = function(base, value){
-        return computeSlog(base, value);
-      };
-      overrides.gamma = function(x){
-        return gammaReal(x);
-      };
-      overrides.beta = function(a, b){
-        return mapStructure(math, a, left => mapStructure(math, b, right => betaReal(left, right)));
-      };
-      overrides.taylorSeries = function(expr, variable, order, center){
-        return computeTaylorSeries(expr, variable, order, center);
-      };
-      overrides.numericIntegrate = function(expr, variable, lower, upper, options){
-        return numericIntegrate(expr, variable, lower, upper, options);
-      };
-      overrides.solveEq = function(expr, variable, guess, options){
-        return newtonSolve(expr, variable, guess, options);
-      };
-      overrides.solveSystem = function(equations, variables, initialGuess, options){
-        return newtonSystem(equations, variables, initialGuess, options);
-      };
-      overrides.solveLinear = function(matrix, vector){
-        return solveLinearSystem(matrix, vector);
-      };
-      overrides.minimize = function(expr, variable, guess, options){
-        return optimize(expr, variable, guess, options, false);
-      };
-      overrides.maximize = function(expr, variable, guess, options){
-        return optimize(expr, variable, guess, options, true);
-      };
-      overrides.digamma = function(x){
-        return digammaReal(x);
-      };
-      overrides.polygamma = function(order, x){
-        return polygammaReal(order, x);
-      };
-      overrides.harmonic = function(n, r){
-        return harmonicNumber(n, r);
-      };
-      overrides.zeta = function(s, terms){
-        return riemannZeta(s, terms);
-      };
-      overrides.logGamma = function(x){
-        return logGammaReal(x);
-      };
-      overrides.lambertW = function(x, branch){
-        return lambertWReal(x, branch);
-      };
-      overrides.normalPdf = function(x, mu, sigma){
-        return normalPdfReal(x, mu, sigma);
-      };
-      overrides.normalCdf = function(x, mu, sigma){
-        return normalCdfReal(x, mu, sigma);
-      };
-      overrides.normalInv = function(p, mu, sigma){
-        return normalInvReal(p, mu, sigma);
-      };
-      overrides.poissonPmf = function(k, lambda){
-        return poissonPmfReal(k, lambda);
-      };
-      overrides.poissonCdf = function(k, lambda){
-        return poissonCdfReal(k, lambda);
-      };
-      overrides.binomialPmf = function(k, n, p){
-        return binomialPmfReal(k, n, p);
-      };
-      overrides.binomialCdf = function(k, n, p){
-        return binomialCdfReal(k, n, p);
-      };
-      overrides.logit = function(p){
-        return logitReal(p);
-      };
-      overrides.sigmoid = function(x){
-        return sigmoidReal(x);
-      };
-      overrides.erfc = function(x){
-        if (!math || typeof math.erf !== 'function' || typeof math.subtract !== 'function') {
-          throw new Error('erfc は現在利用できません。');
-        }
-        return math.subtract(1, math.erf(x));
-      };
+        return overrides;
+      }
 
-      math.import(overrides, { override: true });
-      applyFractionFallbacks(math, Object.keys(overrides));
-      numericMath.import(overrides, { override: true });
+      const mathOverrides = createMathOverrides(math, numericMath);
+      math.import(mathOverrides, { override: true });
+      applyFractionFallbacks(math, Object.keys(mathOverrides));
+
+      const numericOverrides = createMathOverrides(numericMath, math);
+      numericMath.import(numericOverrides, { override: true });
       updateVariables();
       renderSymbolicResult(lastSymbolicRaw);
       updateHistory();

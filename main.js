@@ -444,6 +444,7 @@ const SKILL_EFFECT_DEFS = {
 
 const SKILL_DEFINITIONS = [
     { id: 'break-wall', name: '壁破壊', cost: 25, description: '目の前の壁を1つ破壊する。', action: useSkillBreakWall },
+    { id: 'ranged-attack', name: '遠隔攻撃', cost: 20, description: '前方一直線上の敵に通常攻撃の1/3ダメージを必中で与える。壁で遮られる。', action: useSkillRangedAttack },
     { id: 'gimmick-nullify', name: 'ギミック無効化', cost: 25, description: '10ターンの間ダンジョンギミックを無効化する。（推奨Lvが8以上高い場合は無効）', action: useSkillGimmickNullify },
     { id: 'status-guard', name: '状態異常無効', cost: 25, description: '10ターンすべての状態異常を防ぐ。', action: useSkillStatusGuard },
     { id: 'enemy-nullify', name: '特殊効果封印', cost: 50, description: '10ターン特殊な敵の追加効果を無効化する。', action: useSkillEnemyNullify },
@@ -5512,6 +5513,27 @@ function getEnemyInFront() {
     return enemies.find(e => e.x === targetX && e.y === targetY) || null;
 }
 
+function findEnemyAlongFacingLine() {
+    const { dx, dy } = getFacingDelta();
+    if (!dx && !dy) return null;
+    let x = player.x + dx;
+    let y = player.y + dy;
+    let steps = 0;
+    while (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
+        steps += 1;
+        const enemy = enemies.find(e => e.x === x && e.y === y);
+        if (enemy) {
+            return { enemy, x, y, steps };
+        }
+        if (!isFloor(x, y)) {
+            return null;
+        }
+        x += dx;
+        y += dy;
+    }
+    return null;
+}
+
 function getEnemiesByOffsets(offsets) {
     const result = [];
     offsets.forEach(({ dx, dy }) => {
@@ -5584,6 +5606,9 @@ function evaluateSkillAvailability(def) {
             break;
         case 'break-wall':
             if (!canBreakWallInFront()) return { available: false, reason: '前方に壁なし' };
+            break;
+        case 'ranged-attack':
+            if (!findEnemyAlongFacingLine()) return { available: false, reason: '届く敵なし' };
             break;
         case 'strong-strike':
             if (!getEnemyInFront()) return { available: false, reason: '目の前に敵なし' };
@@ -5840,6 +5865,36 @@ function useSkillStrongStrike() {
     }
     addMessage(`強攻撃で${result.damage}のダメージ！`);
     applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffa94d', killMessage: '強攻撃で敵を倒した！' });
+    return true;
+}
+
+function useSkillRangedAttack() {
+    const info = findEnemyAlongFacingLine();
+    if (!info) {
+        addMessage('前方に遠隔攻撃が届く敵がいない。');
+        return false;
+    }
+    const { enemy, x, y, steps } = info;
+    const result = computePlayerSkillDamage(enemy, { multiplier: 1 / 3, sureHit: true, allowHighLevel: true });
+    if (!result.hit) {
+        addMessage('遠隔攻撃は外れてしまった…。');
+        addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
+        return true;
+    }
+    addMessage(`遠隔攻撃で${result.damage}のダメージ！`);
+    playSfx('attack');
+    const startOffset = getFacingDelta();
+    spawnLinearProjectile({
+        startX: player.x + 0.5 + (startOffset.dx || 0) * 0.1,
+        startY: player.y + 0.5 + (startOffset.dy || 0) * 0.1,
+        endX: x + 0.5,
+        endY: y + 0.5,
+        duration: Math.max(8, steps * 5),
+        color: '#74c0fc',
+        radius: 0.18,
+        holdFrames: 1,
+    });
+    applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#74c0fc', killMessage: '遠隔攻撃で敵を倒した！' });
     return true;
 }
 
@@ -12644,6 +12699,53 @@ function isCritical(attackerLevel, defenderLevel) {
 
 // Enemy defeat animations
 const defeatedEnemies = [];
+const projectiles = [];
+
+function spawnLinearProjectile({ startX, startY, endX, endY, duration = 12, color = '#ffd43b', radius = 0.2, holdFrames = 1 } = {}) {
+    const steps = Math.max(1, Math.floor(Number.isFinite(duration) ? duration : 1));
+    const sxRaw = Number(startX);
+    const syRaw = Number(startY);
+    const exRaw = Number(endX);
+    const eyRaw = Number(endY);
+    const sx = Number.isFinite(sxRaw) ? sxRaw : 0;
+    const sy = Number.isFinite(syRaw) ? syRaw : 0;
+    const ex = Number.isFinite(exRaw) ? exRaw : 0;
+    const ey = Number.isFinite(eyRaw) ? eyRaw : 0;
+    const hold = Math.max(0, Math.floor(Number.isFinite(holdFrames) ? holdFrames : 0));
+    projectiles.push({
+        x: sx,
+        y: sy,
+        endX: ex,
+        endY: ey,
+        vx: (ex - sx) / steps,
+        vy: (ey - sy) / steps,
+        steps,
+        progress: 0,
+        color,
+        radius,
+        holdFrames: hold,
+        holdCounter: 0,
+    });
+}
+
+function updateProjectiles() {
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const proj = projectiles[i];
+        if (!proj) continue;
+        proj.progress += 1;
+        if (proj.progress >= proj.steps) {
+            proj.x = proj.endX;
+            proj.y = proj.endY;
+            proj.holdCounter += 1;
+            if (proj.holdCounter > proj.holdFrames) {
+                projectiles.splice(i, 1);
+            }
+            continue;
+        }
+        proj.x += proj.vx;
+        proj.y += proj.vy;
+    }
+}
 
 function addDefeatedEnemy(enemy) {
     defeatedEnemies.push({
@@ -12672,7 +12774,7 @@ function updateDefeatedEnemies() {
 function drawDefeatedEnemies() {
     const startX = camera.x;
     const startY = camera.y;
-    
+
     defeatedEnemies.forEach(def => {
         const ex = def.x - startX;
         const ey = def.y - startY;
@@ -12699,6 +12801,35 @@ function drawDefeatedEnemies() {
             ctx.fill();
         }
         
+        ctx.restore();
+    });
+}
+
+function drawProjectiles() {
+    if (!projectiles.length) return;
+    const startX = camera.x;
+    const startY = camera.y;
+    const cellW = canvas.width / VIEWPORT_WIDTH;
+    const cellH = canvas.height / VIEWPORT_HEIGHT;
+
+    projectiles.forEach(proj => {
+        if (!proj) return;
+        const ex = proj.x - startX;
+        const ey = proj.y - startY;
+        if (ex < 0 || ey < 0 || ex > VIEWPORT_WIDTH || ey > VIEWPORT_HEIGHT) return;
+        if (isDarknessActive()) {
+            const tileX = Math.floor(proj.x);
+            const tileY = Math.floor(proj.y);
+            if (!isTileVisible(tileX, tileY)) return;
+        }
+        const px = ex * cellW;
+        const py = ey * cellH;
+        const radius = Math.min(cellW, cellH) * (Number.isFinite(proj.radius) ? proj.radius : 0.2);
+        ctx.save();
+        ctx.fillStyle = proj.color || '#ffd43b';
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
     });
 }
@@ -13126,11 +13257,13 @@ function gameLoop() {
     drawPlayer();
     drawEnemies();
     drawDefeatedEnemies(); // Draw defeat animations
+    drawProjectiles();
     // drawItems(); // Removed - no more standalone items
     drawChests();
     drawPopups();
 
     updateUI();
+    updateProjectiles();
     updateDefeatedEnemies(); // Update defeat animations
 
     requestAnimationFrame(gameLoop);

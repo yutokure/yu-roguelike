@@ -5018,15 +5018,24 @@ const BDIM_TEST_LOG_LIMIT = 400;
 let bdimTestLogLines = [];
 let bdimTestRunning = false;
 
+function getCurrentFloorGeneratorId() {
+    if (currentGeneratorHazards && currentGeneratorHazards.generatorId) {
+        return currentGeneratorHazards.generatorId;
+    }
+    if (lastGeneratedGenType) {
+        return lastGeneratedGenType;
+    }
+    try {
+        return resolveCurrentGeneratorType();
+    } catch {
+        return null;
+    }
+}
+
 function updateDungeonTypeOverlay() {
     if (!dungeonTypeOverlay) return;
 
-    let generatorId = null;
-    try {
-        generatorId = resolveCurrentGeneratorType();
-    } catch {
-        generatorId = null;
-    }
+    const generatorId = getCurrentFloorGeneratorId();
 
     let title = 'ダンジョン';
     if (generatorId) {
@@ -5073,6 +5082,19 @@ function updateDungeonTypeOverlay() {
     if (!dungeonTypeOverlayFeatures) return;
 
     const badges = [];
+    let baseGeneratorId = null;
+    try {
+        baseGeneratorId = resolveCurrentGeneratorType();
+    } catch {
+        baseGeneratorId = null;
+    }
+    if (generatorId && (!baseGeneratorId || generatorId !== baseGeneratorId)) {
+        let label = generatorId;
+        try {
+            label = getDungeonTypeName(generatorId);
+        } catch {}
+        badges.push({ label, className: 'dungeon-overlay__badge--type' });
+    }
     const baseDark = !!currentGeneratorHazards.baseDark;
     const darkActive = !!currentGeneratorHazards.darkActive;
     if (baseDark) {
@@ -5096,19 +5118,6 @@ function updateDungeonTypeOverlay() {
         if (nested > 1) {
             badges.push({ label: `NESTED x${nested}`, className: 'dungeon-overlay__badge--neutral' });
         }
-        const pool = Array.isArray(blockDimState.spec.typePool) ? blockDimState.spec.typePool : [];
-        const unique = [];
-        for (const typeId of pool) {
-            if (!typeId || unique.includes(typeId)) continue;
-            unique.push(typeId);
-        }
-        unique.forEach(typeId => {
-            let label = typeId;
-            try {
-                label = getDungeonTypeName(typeId);
-            } catch {}
-            badges.push({ label, className: 'dungeon-overlay__badge--type' });
-        });
     }
 
     if (!badges.length) {

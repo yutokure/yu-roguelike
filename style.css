@@ -1833,7 +1833,7 @@ body.in-game #player-summary { display: none; }
 }
 
 #dungeon-type-overlay.dungeon-overlay--dimmed {
-    opacity: 0.8;
+    opacity: 0.5;
 }
 
 .dungeon-overlay__label {
@@ -1910,12 +1910,6 @@ body.in-game #player-summary { display: none; }
     font-size: 13px;
     line-height: 1.6;
     color: rgba(226, 232, 240, 0.82);
-}
-    padding: 20px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    text-align: center;
-    border-radius: 10px;
 }
 
 .modal {

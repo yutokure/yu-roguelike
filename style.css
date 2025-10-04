@@ -1146,6 +1146,8 @@ body.in-game #player-summary { display: none; }
     position: sticky;
     top: 0;
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 12px;
     background: rgba(255,255,255,0.95);
     backdrop-filter: blur(10px);
@@ -1730,18 +1732,178 @@ body.in-game #player-summary { display: none; }
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-.popup-text { position: absolute; pointer-events: none; }
+}
 
-#floor-indicator { 
-    margin-left: auto; 
-    font-weight: bold; 
-    font-size: clamp(16px, 2vw, 20px);
-    padding: 10px 16px;
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-    color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.3);
+.popup-text {
+    position: absolute;
+    pointer-events: none;
+}
+
+#floor-indicator {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 24px;
+    min-width: clamp(200px, 28vw, 260px);
+    border-radius: 22px;
+    background: linear-gradient(160deg, rgba(248, 250, 252, 0.92), rgba(226, 232, 240, 0.85));
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.18);
+    position: relative;
+    overflow: hidden;
+    color: #0f172a;
+    isolation: isolate;
+}
+
+#floor-indicator::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.25), transparent 55%);
+    opacity: 0.9;
+    pointer-events: none;
+    z-index: -1;
+}
+
+#floor-indicator::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), transparent 60%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.floor-indicator__heading {
+    font-size: 13px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(15, 23, 42, 0.6);
+}
+
+.floor-indicator__value {
+    font-size: clamp(36px, 6vw, 48px);
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #0f172a;
+    text-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+}
+
+.floor-indicator__label {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.45);
+    font-weight: 600;
+}
+
+#dungeon-type-overlay {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 22px 24px;
+    max-width: min(360px, 45vw);
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.62);
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+    color: #e2e8f0;
+    backdrop-filter: blur(20px);
+    pointer-events: none;
+    isolation: isolate;
+}
+
+#dungeon-type-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(140deg, rgba(59, 130, 246, 0.25), rgba(14, 116, 144, 0.15) 45%, transparent 75%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.dungeon-overlay__label {
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(226, 232, 240, 0.7);
+}
+
+.dungeon-overlay__type {
+    font-size: clamp(22px, 3.1vw, 30px);
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-shadow: 0 4px 20px rgba(59, 130, 246, 0.55);
+}
+
+.dungeon-overlay__divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(226, 232, 240, 0.5), rgba(148, 163, 184, 0));
+}
+
+.dungeon-overlay__features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.dungeon-overlay__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    background: rgba(226, 232, 240, 0.18);
+    border: 1px solid rgba(226, 232, 240, 0.35);
+    color: #f8fafc;
+    text-shadow: none;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
+}
+
+.dungeon-overlay__badge--hazard-dark {
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.55), rgba(17, 24, 39, 0.7));
+    border-color: rgba(99, 102, 241, 0.5);
+}
+
+.dungeon-overlay__badge--hazard-poison {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.55), rgba(22, 101, 52, 0.65));
+    border-color: rgba(74, 222, 128, 0.45);
+}
+
+.dungeon-overlay__badge--type {
+    background: linear-gradient(135deg, rgba(14, 116, 144, 0.55), rgba(8, 47, 73, 0.65));
+    border-color: rgba(125, 211, 252, 0.45);
+}
+
+.dungeon-overlay__badge--neutral {
+    background: rgba(226, 232, 240, 0.18);
+    color: #f1f5f9;
+    border-color: rgba(226, 232, 240, 0.35);
+}
+
+.dungeon-overlay__badge--suppressed {
+    opacity: 0.6;
+    filter: saturate(0.65);
+}
+
+.dungeon-overlay__description {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(226, 232, 240, 0.82);
 }
     padding: 20px;
     background-color: rgba(0, 0, 0, 0.7);

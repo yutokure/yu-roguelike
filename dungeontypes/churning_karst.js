@@ -1,5 +1,6 @@
 // Addon: Churning Karst - cascading subterranean rivers eroding limestone chambers
 (function(){
+
   function carveCircle(ctx, cx, cy, r, color){
     for(let y=cy-r; y<=cy+r; y++){
       for(let x=cx-r; x<=cx+r; x++){
@@ -13,7 +14,7 @@
   }
 
   function floodPath(ctx, start, flowLength, palette){
-    const { random, inBounds, set, setFloorColor, setFloorType } = ctx;
+    const { random, inBounds, set, setFloorColor } = ctx;
     let [x,y] = start;
     let dir = [0,1];
     for(let i=0;i<flowLength;i++){
@@ -22,7 +23,6 @@
       const mix = i/Math.max(1,flowLength-1);
       const color = palette[Math.min(palette.length-1, Math.floor(mix*(palette.length)))];
       setFloorColor(x,y,color);
-      setFloorType(x,y,'karst_stream');
       if(random()<0.35){
         const turn = random()<0.5 ? [dir[1], -dir[0]] : [-dir[1], dir[0]];
         dir = turn;
@@ -109,7 +109,6 @@
           carvePath(path,1);
           path.forEach(p => {
             setFloorColor(p.x,p.y,'#93c5fd');
-            setFloorType(p.x,p.y,'stream_channel');
           });
         } else {
           const steps = Math.max(Math.abs(a.x-b.x), Math.abs(a.y-b.y));
@@ -119,7 +118,6 @@
             if(inBounds(x,y)){
               set(x,y,0);
               setFloorColor(x,y,'#93c5fd');
-              setFloorType(x,y,'stream_channel');
             }
           }
         }
@@ -130,7 +128,6 @@
       const x = Math.floor(random()*W);
       const y = Math.floor(random()*H);
       if(inBounds(x,y)){
-        setFloorType(x,y,'karst_bubble');
         if(random()<0.5) setFloorColor(x,y,'#bae6fd');
       }
     }

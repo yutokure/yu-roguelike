@@ -168,8 +168,16 @@
     const W=ctx.width,H=ctx.height; const cx=W>>1, cy=H>>1; const R=Math.min(W,H)/2-3|0; circle(ctx,cx,cy,R,1,true);
     const parts=4+Math.floor(ctx.random()*4);
     for(let i=0;i<parts;i++){
-      const a=ctx.random()*Math.PI*2; const x1=cx+Math.cos(a)*(R-2)|0, y1=cy+Math.sin(a)*(R-2)|0; const x2=cx-Math.cos(a)*(R-2)|0, y2=cy-Math.sin(a)*(R-2)|0; // wall chord
+      const angle = ctx.random()*Math.PI*2;
+      const startX = cx+Math.cos(angle)*(R-2)|0;
+      const startY = cy+Math.sin(angle)*(R-2)|0;
+      const endX = cx-Math.cos(angle)*(R-2)|0;
+      const endY = cy-Math.sin(angle)*(R-2)|0; // wall chord
       // draw wall (set 1) but punch doors later
+      let x1 = startX;
+      let y1 = startY;
+      const x2 = endX;
+      const y2 = endY;
       let dx=Math.abs(x2-x1),sx=x1<x2?1:-1; let dy=-Math.abs(y2-y1),sy=y1<y2?1:-1; let err=dx+dy, e2;
       for(;;){ if(inC(ctx,x1,y1)) setW(ctx,x1,y1); if(x1===x2&&y1===y2) break; e2=2*err; if(e2>=dy){err+=dy;x1+=sx;} if(e2<=dx){err+=dx;y1+=sy;} }
     }

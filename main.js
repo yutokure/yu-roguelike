@@ -22,6 +22,9 @@ const dungeonTypeOverlay = document.getElementById('dungeon-type-overlay');
 const dungeonTypeOverlayName = document.getElementById('dungeon-type-overlay-type');
 const dungeonTypeOverlayFeatures = document.getElementById('dungeon-type-overlay-features');
 const dungeonTypeOverlayDescription = document.getElementById('dungeon-type-overlay-description');
+let dungeonOverlayHoverState = false;
+let dungeonOverlayPlayerZoneState = false;
+let dungeonOverlayLastPointer = null;
 const MAX_LOG_LINES = 100;
 const SATIETY_MAX = 100;
 const SATIETY_TICK_PER_TURN = 1;
@@ -37,6 +40,61 @@ const RARE_CHEST_CONFIG = Object.freeze({
     levelGapBonus: 0.1,
     levelGapRelief: 0.08,
 });
+
+function applyDungeonOverlayDimState() {
+    if (!dungeonTypeOverlay) return;
+    const shouldDim = dungeonOverlayHoverState || dungeonOverlayPlayerZoneState;
+    dungeonTypeOverlay.classList.toggle('dungeon-overlay--dimmed', shouldDim);
+}
+
+function setDungeonOverlayHoverState(state) {
+    const next = !!state;
+    if (next === dungeonOverlayHoverState) return;
+    dungeonOverlayHoverState = next;
+    applyDungeonOverlayDimState();
+}
+
+function setDungeonOverlayPlayerZoneState(state) {
+    const next = !!state;
+    if (next === dungeonOverlayPlayerZoneState) return;
+    dungeonOverlayPlayerZoneState = next;
+    applyDungeonOverlayDimState();
+}
+
+function refreshDungeonOverlayPlayerDimState() {
+    const inTopLeft = Number.isFinite(player?.x) && Number.isFinite(player?.y)
+        ? player.x <= 7 && player.y <= 7
+        : false;
+    setDungeonOverlayPlayerZoneState(inTopLeft);
+}
+
+function evaluateDungeonOverlayHoverFromPoint(point) {
+    if (!dungeonTypeOverlay || !point) {
+        setDungeonOverlayHoverState(false);
+        return;
+    }
+    const rect = dungeonTypeOverlay.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) {
+        setDungeonOverlayHoverState(false);
+        return;
+    }
+    const hovered = point.x >= rect.left && point.x <= rect.right
+        && point.y >= rect.top && point.y <= rect.bottom;
+    setDungeonOverlayHoverState(hovered);
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('mousemove', (event) => {
+        dungeonOverlayLastPointer = { x: event.clientX, y: event.clientY };
+        evaluateDungeonOverlayHoverFromPoint(dungeonOverlayLastPointer);
+    }, { passive: true });
+    const reassessOverlayHover = () => {
+        evaluateDungeonOverlayHoverFromPoint(dungeonOverlayLastPointer);
+    };
+    window.addEventListener('scroll', reassessOverlayHover, { passive: true });
+    window.addEventListener('resize', reassessOverlayHover);
+    applyDungeonOverlayDimState();
+}
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -11503,6 +11561,8 @@ function updateUI() {
     const skillEffects = getActiveSkillEffectList();
     const combinedStatusList = statusList.concat(skillEffects);
     const playerDomain = getPlayerDomainAggregate();
+
+    refreshDungeonOverlayPlayerDimState();
 
     // Show value change indicators
     if (Number.isFinite(currentHp) && Number.isFinite(prevHp) && currentHp !== prevHp) {

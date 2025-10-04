@@ -1819,6 +1819,8 @@ body.in-game #player-summary { display: none; }
     backdrop-filter: blur(20px);
     pointer-events: none;
     isolation: isolate;
+    opacity: 1;
+    transition: opacity 160ms ease-in-out;
 }
 
 #dungeon-type-overlay::before {
@@ -1828,6 +1830,10 @@ body.in-game #player-summary { display: none; }
     background: linear-gradient(140deg, rgba(59, 130, 246, 0.25), rgba(14, 116, 144, 0.15) 45%, transparent 75%);
     pointer-events: none;
     z-index: -1;
+}
+
+#dungeon-type-overlay.dungeon-overlay--dimmed {
+    opacity: 0.8;
 }
 
 .dungeon-overlay__label {

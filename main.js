@@ -28,6 +28,17 @@ let dungeonOverlayHoverState = false;
 let dungeonOverlayPlayerZoneState = false;
 let dungeonOverlayLastPointer = null;
 let autoItemCheckScheduled = false;
+let currentRunContext = null;
+let lastRunResultSummary = null;
+const runResultNumberFormatter = new Intl.NumberFormat('ja-JP');
+let runResultOverlayState = null;
+
+const RUN_RESULT_REASON_LABELS = Object.freeze({
+    gameOver: 'ゲームオーバー',
+    clear: 'ダンジョンクリア',
+    retreat: 'ダンジョン帰還',
+    return: '冒険結果'
+});
 const MAX_LOG_LINES = 100;
 const SATIETY_MAX = 100;
 const SATIETY_TICK_PER_TURN = 1;
@@ -129,6 +140,12 @@ if (typeof window !== 'undefined') {
     };
     window.addEventListener('scroll', reassessOverlayHover, { passive: true });
     window.addEventListener('resize', reassessOverlayHover);
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && runResultOverlayState) {
+            event.preventDefault();
+            handleRunResultPrimaryAction();
+        }
+    });
     applyDungeonOverlayDimState();
 }
 
@@ -261,6 +278,21 @@ const rareChestModal = document.getElementById('rare-chest-modal');
 const rareChestPointer = document.getElementById('rare-chest-pointer');
 const rareChestStopButton = document.getElementById('rare-chest-stop');
 const rareChestStatus = document.getElementById('rare-chest-status');
+const runResultOverlay = document.getElementById('run-result-overlay');
+const runResultBadge = document.getElementById('run-result-badge');
+const runResultLevelValue = document.getElementById('run-result-level');
+const runResultExpValue = document.getElementById('run-result-exp');
+const runResultDamageValue = document.getElementById('run-result-damage');
+const runResultHealingValue = document.getElementById('run-result-healing');
+const runResultCauseText = document.getElementById('run-result-cause');
+const runResultPrimaryButton = document.getElementById('run-result-primary');
+const runResultRetryButton = document.getElementById('run-result-retry');
+if (runResultPrimaryButton) {
+    runResultPrimaryButton.addEventListener('click', handleRunResultPrimaryAction);
+}
+if (runResultRetryButton) {
+    runResultRetryButton.addEventListener('click', handleRunResultRetryAction);
+}
 // Selection screen
 const selectionScreen = document.getElementById('selection-screen');
 const gameScreen = document.getElementById('game-screen');
@@ -273,12 +305,220 @@ let __achievementsTabInitialized = false;
 
 function recordAchievementEvent(type, payload) {
     try {
+        trackRunEvent(type, payload);
         if (window.AchievementSystem && typeof window.AchievementSystem.recordEvent === 'function') {
             window.AchievementSystem.recordEvent(type, payload);
         }
     } catch (err) {
         console.warn('Achievement event failed', err);
     }
+}
+
+function computeTotalExpForState(level, expRemainder) {
+    const safeLevel = Number.isFinite(level) ? Math.max(1, Math.floor(level)) : 1;
+    const safeRemainder = Number.isFinite(expRemainder) ? Math.max(0, Math.floor(expRemainder)) : 0;
+    return (safeLevel - 1) * 1000 + safeRemainder;
+}
+
+function beginDungeonRunContext(meta = {}) {
+    const baseLevel = Number.isFinite(player?.level) ? Math.max(1, Math.floor(player.level)) : 1;
+    const baseExp = Number.isFinite(player?.exp) ? Math.max(0, Math.floor(player.exp)) : 0;
+    const baseHp = Number.isFinite(player?.hp) ? player.hp : player?.maxHp;
+    const baseMaxHp = Number.isFinite(player?.maxHp) ? player.maxHp : PLAYER_BASE_MAX_HP;
+    currentRunContext = {
+        startedAt: Date.now(),
+        startLevel: baseLevel,
+        startExp: baseExp,
+        startTotalExp: computeTotalExpForState(baseLevel, baseExp),
+        startHp: Number.isFinite(baseHp) ? baseHp : baseMaxHp,
+        startMaxHp: baseMaxHp,
+        metrics: {
+            damageTaken: 0,
+            healingItemsUsed: 0,
+            healingBreakdown: Object.create(null)
+        },
+        meta: {
+            mode: currentMode,
+            difficulty,
+            world: selectedWorld,
+            dungeonBase: selectedDungeonBase,
+            ...meta
+        }
+    };
+}
+
+function resetDungeonRunContext() {
+    currentRunContext = null;
+}
+
+function isDungeonRunActive() {
+    return !!currentRunContext;
+}
+
+function trackRunEvent(type, payload) {
+    if (!currentRunContext) return;
+    switch (type) {
+        case 'damage_taken': {
+            const amount = Number(payload?.amount);
+            if (Number.isFinite(amount) && amount > 0) {
+                currentRunContext.metrics.damageTaken += Math.max(0, Math.floor(amount));
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+function registerRunHealingItemUse(itemId) {
+    if (currentRunContext) {
+        currentRunContext.metrics.healingItemsUsed += 1;
+        if (!currentRunContext.metrics.healingBreakdown[itemId]) {
+            currentRunContext.metrics.healingBreakdown[itemId] = 0;
+        }
+        currentRunContext.metrics.healingBreakdown[itemId] += 1;
+    }
+    recordAchievementEvent('healing_item_used', { item: itemId || 'unknown' });
+}
+
+function formatRunResultSigned(value, { zeroPrefix = '+' } = {}) {
+    const numeric = Number.isFinite(value) ? Math.trunc(value) : 0;
+    if (numeric > 0) {
+        return `+${runResultNumberFormatter.format(numeric)}`;
+    }
+    if (numeric < 0) {
+        return `-${runResultNumberFormatter.format(Math.abs(numeric))}`;
+    }
+    return `${zeroPrefix}${runResultNumberFormatter.format(0)}`;
+}
+
+function buildRunResultSummary(reason = 'return', { cause = '' } = {}) {
+    if (!currentRunContext) return null;
+    const endLevel = Number.isFinite(player?.level) ? Math.max(1, Math.floor(player.level)) : currentRunContext.startLevel;
+    const endExp = Number.isFinite(player?.exp) ? Math.max(0, Math.floor(player.exp)) : 0;
+    const endTotalExp = computeTotalExpForState(endLevel, endExp);
+    const totalDelta = endTotalExp - currentRunContext.startTotalExp;
+    const levelDiff = endLevel - currentRunContext.startLevel;
+    const damageTaken = Math.max(0, Math.floor(currentRunContext.metrics?.damageTaken || 0));
+    const healingUsed = Math.max(0, Math.floor(currentRunContext.metrics?.healingItemsUsed || 0));
+    const reasonLabel = RUN_RESULT_REASON_LABELS[reason] || RUN_RESULT_REASON_LABELS.return;
+    const now = Date.now();
+    return {
+        reason,
+        reasonLabel,
+        title: 'リザルト',
+        level: {
+            start: currentRunContext.startLevel,
+            end: endLevel,
+            diff: levelDiff,
+            display: `${currentRunContext.startLevel}→${endLevel} (${formatRunResultSigned(levelDiff)})`
+        },
+        exp: {
+            delta: totalDelta,
+            display: formatRunResultSigned(totalDelta)
+        },
+        damageTaken,
+        damageDisplay: runResultNumberFormatter.format(damageTaken),
+        healingItemsUsed: healingUsed,
+        healingDisplay: runResultNumberFormatter.format(healingUsed),
+        healingBreakdown: { ...(currentRunContext.metrics?.healingBreakdown || {}) },
+        startedAt: currentRunContext.startedAt,
+        endedAt: now,
+        durationMs: Math.max(0, now - (currentRunContext.startedAt || now)),
+        meta: { ...(currentRunContext.meta || {}) },
+        floor: dungeonLevel,
+        cause: cause || ''
+    };
+}
+
+function finalizeDungeonRunResult(reason = 'return', options = {}) {
+    if (!currentRunContext) return null;
+    const summary = buildRunResultSummary(reason, options);
+    lastRunResultSummary = summary;
+    resetDungeonRunContext();
+    return summary;
+}
+
+function showRunResultOverlay(summary, { onReturn, onRetry } = {}) {
+    if (!summary || !runResultOverlay) {
+        if (typeof onReturn === 'function') onReturn();
+        return;
+    }
+    runResultOverlayState = {
+        summary,
+        onReturn: typeof onReturn === 'function' ? onReturn : null,
+        onRetry: typeof onRetry === 'function' ? onRetry : null
+    };
+    if (runResultBadge) {
+        runResultBadge.textContent = summary.reasonLabel || RUN_RESULT_REASON_LABELS.return;
+    }
+    if (runResultLevelValue) {
+        runResultLevelValue.textContent = summary.level?.display || '';
+    }
+    if (runResultExpValue) {
+        runResultExpValue.textContent = summary.exp?.display || formatRunResultSigned(0);
+    }
+    if (runResultDamageValue) {
+        runResultDamageValue.textContent = summary.damageDisplay ?? runResultNumberFormatter.format(0);
+    }
+    if (runResultHealingValue) {
+        runResultHealingValue.textContent = summary.healingDisplay ?? runResultNumberFormatter.format(0);
+    }
+    if (runResultCauseText) {
+        if (summary.cause) {
+            runResultCauseText.textContent = summary.cause;
+            runResultCauseText.style.display = '';
+        } else {
+            runResultCauseText.textContent = '';
+            runResultCauseText.style.display = 'none';
+        }
+    }
+    if (runResultRetryButton) {
+        const showRetry = !!runResultOverlayState.onRetry;
+        runResultRetryButton.style.display = showRetry ? '' : 'none';
+    }
+    runResultOverlay.style.display = 'flex';
+    runResultOverlay.classList.add('run-result--visible');
+    if (runResultPrimaryButton) {
+        setTimeout(() => {
+            try { runResultPrimaryButton.focus(); } catch (err) {}
+        }, 0);
+    }
+}
+
+function hideRunResultOverlay() {
+    if (!runResultOverlay) return;
+    runResultOverlay.classList.remove('run-result--visible');
+    runResultOverlay.style.display = 'none';
+}
+
+function handleRunResultPrimaryAction() {
+    const state = runResultOverlayState;
+    hideRunResultOverlay();
+    runResultOverlayState = null;
+    if (state?.onReturn) {
+        state.onReturn();
+    }
+}
+
+function handleRunResultRetryAction() {
+    const state = runResultOverlayState;
+    hideRunResultOverlay();
+    runResultOverlayState = null;
+    if (state?.onRetry) {
+        state.onRetry();
+    } else if (state?.onReturn) {
+        state.onReturn();
+    }
+}
+
+function exitDungeonWithResult(reason, { onReturn, onRetry, cause } = {}) {
+    const summary = finalizeDungeonRunResult(reason, { cause });
+    if (!summary) {
+        if (typeof onReturn === 'function') onReturn();
+        return;
+    }
+    showRunResultOverlay(summary, { onReturn, onRetry });
 }
 
 function generateDomainCrystalsForFloor(recommendedLevel) {
@@ -13562,6 +13802,39 @@ function cancelGameOverSequence() {
     gameOverSequence.startedAt = 0;
 }
 
+function returnToSelectionAfterGameOver() {
+    cancelGameOverSequence();
+    playerBurstEffect = null;
+    if (gameOverMessageElement) {
+        gameOverMessageElement.innerHTML = '冒険はここで終わりです...';
+    }
+    stopGameLoop();
+    dungeonLevel = 1;
+    player.hp = player.maxHp;
+    enforceEffectiveHpCap();
+    isGameOver = false;
+    playerTurn = true;
+    if (gameOverScreen) {
+        gameOverScreen.style.display = 'none';
+    }
+    showSelectionScreen({ stopLoop: false, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
+    try { saveAll(); } catch (err) {}
+}
+
+function presentGameOverResult(cause) {
+    if (gameOverScreen) {
+        gameOverScreen.style.display = 'none';
+    }
+    if (!currentRunContext) {
+        returnToSelectionAfterGameOver();
+        return;
+    }
+    exitDungeonWithResult('gameOver', {
+        cause,
+        onReturn: returnToSelectionAfterGameOver
+    });
+}
+
 function showGameOverOverlay() {
     const cause = getLastMeaningfulLogLine() || gameOverSequence.causeMessage || 'ゲームオーバー';
     if (gameOverMessageElement) {
@@ -13574,6 +13847,9 @@ function showGameOverOverlay() {
     playerBurstEffect = null;
     stopGameLoop();
     cancelGameOverSequence();
+    setTimeout(() => {
+        presentGameOverResult(cause);
+    }, 350);
 }
 
 function startPlayerBurstEffect() {
@@ -13824,7 +14100,12 @@ function applyPostMoveEffects() {
                         });
                     }
                     stopGameLoop();
-                    showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
+                    exitDungeonWithResult('clear', {
+                        cause: 'ダンジョンを攻略した！',
+                        onReturn: () => {
+                            showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
+                        }
+                    });
                 } else {
                     const previousFloor = dungeonLevel;
                     dungeonLevel += 1;
@@ -14369,27 +14650,11 @@ function enemyTurn() {
 }
 
 restartButton.addEventListener('click', () => {
-    cancelGameOverSequence();
-    playerBurstEffect = null;
-    if (gameOverMessageElement) {
-        gameOverMessageElement.innerHTML = '冒険はここで終わりです...';
+    if (runResultOverlayState) {
+        hideRunResultOverlay();
+        runResultOverlayState = null;
     }
-    // Reset game state
-    stopGameLoop();
-    dungeonLevel = 1;
-    player.hp = player.maxHp; // Restore HP to full
-    enforceEffectiveHpCap();
-    isGameOver = false;
-    playerTurn = true;
-    
-    // Hide game over screen
-    gameOverScreen.style.display = 'none';
-    
-    // Return to selection screen (common)
-    showSelectionScreen({ stopLoop: false, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
-    
-    // Save the restored state
-    saveAll();
+    returnToSelectionAfterGameOver();
 });
 
 function consumePotion30({ reason = 'manual' } = {}) {
@@ -14406,7 +14671,10 @@ function consumePotion30({ reason = 'manual' } = {}) {
         applyInvincibility: false
     });
     player.inventory.potion30 -= 1;
+    registerRunHealingItemUse('potion30');
     const isAuto = reason === 'auto';
+    let autoTriggerOutcome = 'healed';
+    let autoTriggerValue = 0;
     if (result.effectType === 'damage' && result.amount > 0) {
         const damage = result.amount;
         player.hp = Math.max(0, player.hp - damage);
@@ -14414,6 +14682,8 @@ function consumePotion30({ reason = 'manual' } = {}) {
         addMessage(isAuto ? `オートアイテムが暴発し、${damage}のダメージを受けた！` : `ポーションが反転し、${damage}のダメージを受けた！`);
         addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
         playSfx('damage');
+        autoTriggerOutcome = 'reversed';
+        autoTriggerValue = damage;
         if (player.hp <= 0) {
             const deathMessage = isAuto ? 'オートアイテムの暴発で倒れてしまった…ゲームオーバー' : '反転した回復薬で倒れてしまった…ゲームオーバー';
             handlePlayerDeath(deathMessage);
@@ -14430,6 +14700,15 @@ function consumePotion30({ reason = 'manual' } = {}) {
             addMessage(isAuto ? 'オートアイテムが発動したが体調に変化はなかった。' : 'ポーションを使用したが体調に変化はなかった。');
         }
         playSfx('pickup');
+        autoTriggerOutcome = healed > 0 ? 'healed' : 'no_effect';
+        autoTriggerValue = healed;
+    }
+    if (isAuto) {
+        recordAchievementEvent('auto_item_triggered', {
+            item: 'potion30',
+            outcome: autoTriggerOutcome,
+            amount: autoTriggerValue
+        });
     }
     updateUI();
     saveAll();
@@ -14497,6 +14776,7 @@ eatPotion30Btn && eatPotion30Btn.addEventListener('click', () => {
     }
     player.satiety = Math.min(SATIETY_MAX, beforeSatiety + recover);
     player.inventory.potion30 -= 1;
+    registerRunHealingItemUse('potion30');
     addMessage(`ポーションを食べた！満腹度が${recover}回復`);
     playSfx('pickup');
     updateUI();
@@ -14598,6 +14878,7 @@ useHpBoostBtn && useHpBoostBtn.addEventListener('click', () => {
         player.hp += 5; // 現在HPも同時に増加
         enforceEffectiveHpCap();
         player.inventory.hpBoost -= 1;
+        registerRunHealingItemUse('hpBoost');
         addMessage('最大HP強化アイテムを使用！最大HPが5増加！');
         playSfx('pickup');
         updateUI();
@@ -14630,6 +14911,7 @@ useDefBoostBtn && useDefBoostBtn.addEventListener('click', () => {
 useHpBoostMajorBtn && useHpBoostMajorBtn.addEventListener('click', () => {
     if (player.inventory.hpBoostMajor > 0) {
         player.inventory.hpBoostMajor -= 1;
+        registerRunHealingItemUse('hpBoostMajor');
         player.maxHp += MAJOR_HP_BOOST_VALUE;
         player.hp += MAJOR_HP_BOOST_VALUE;
         enforceEffectiveHpCap();
@@ -15036,6 +15318,7 @@ function startGameFromSelection() {
     dungeonLevel = 1;
     updateMapSize(); // Ensure proper map size for level 1
     resetPlayerStatusEffects();
+    beginDungeonRunContext({ source: 'selection' });
     selectionScreen.style.display = 'none';
     document.getElementById('toolbar').style.display = 'flex';
     gameScreen.style.display = 'block';
@@ -15065,6 +15348,7 @@ function startGameFromBlockDim() {
     updateMapSize();
     reseedBlockDimForFloor();
     resetPlayerStatusEffects();
+    beginDungeonRunContext({ source: 'blockdim' });
     selectionScreen.style.display = 'none';
     document.getElementById('toolbar').style.display = 'flex';
     gameScreen.style.display = 'block';
@@ -15082,7 +15366,16 @@ function startGameFromBlockDim() {
 
 // 戻るボタンで選択に戻る（共通関数経由）
 btnBack && btnBack.addEventListener('click', () => {
-    showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
+    if (isDungeonRunActive()) {
+        stopGameLoop();
+        exitDungeonWithResult('retreat', {
+            onReturn: () => {
+                showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
+            }
+        });
+    } else {
+        showSelectionScreen({ stopLoop: true, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
+    }
 });
 
 // 初期表示は選択画面

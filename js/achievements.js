@@ -85,6 +85,96 @@
             }
         },
         {
+            id: 'dungeon_floor_master',
+            category: 'dungeon',
+            title: '深淵踏破者',
+            description: '最高到達階層を 30F 以上にする。',
+            reward: '称号「深淵踏破者」',
+            condition: (stats) => stats.core.highestFloorReached >= 30,
+            progress: (stats) => {
+                const current = stats.core.highestFloorReached || 1;
+                const target = 30;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)}F / ${formatNumber(target)}F`
+                };
+            }
+        },
+        {
+            id: 'dungeon_healing_specialist',
+            category: 'dungeon',
+            title: '応急の達人',
+            description: '回復アイテムを 25 回使用する。',
+            reward: '回復の心得',
+            condition: (stats) => stats.core.healingItemsUsed >= 25,
+            progress: (stats) => {
+                const current = stats.core.healingItemsUsed || 0;
+                const target = 25;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                };
+            }
+        },
+        {
+            id: 'dungeon_auto_guardian',
+            category: 'dungeon',
+            title: '自動防衛システム',
+            description: 'オートアイテムを 10 回発動させる。',
+            reward: '自動回復コア',
+            condition: (stats) => stats.core.autoItemsTriggered >= 10,
+            progress: (stats) => {
+                const current = stats.core.autoItemsTriggered || 0;
+                const target = 10;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: current >= target ? '達成！' : `あと ${formatNumber(target - current)} 回`
+                };
+            }
+        },
+        {
+            id: 'dungeon_rare_collector',
+            category: 'dungeon',
+            title: 'レアコレクター',
+            description: 'レア宝箱を 10 個開ける。',
+            reward: '希少鍵の欠片',
+            condition: (stats) => stats.core.rareChestsOpened >= 10,
+            progress: (stats) => {
+                const current = stats.core.rareChestsOpened || 0;
+                const target = 10;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                };
+            }
+        },
+        {
+            id: 'dungeon_iron_wall',
+            category: 'dungeon',
+            title: '鉄壁の生還者',
+            description: '累計被ダメージ 10,000 を経験する。',
+            reward: '鉄壁の盾',
+            condition: (stats) => stats.core.damageTaken >= 10000,
+            progress: (stats) => {
+                const current = stats.core.damageTaken || 0;
+                const target = 10000;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                };
+            }
+        },
+        {
             id: 'blockdim_first_gate',
             category: 'blockdim',
             title: 'ゲート起動',
@@ -174,6 +264,7 @@
             entries: [
                 { path: 'core.totalSteps', label: '総移動距離', description: 'これまでに歩いたマスの合計。', formatter: (value) => `${formatNumber(value)} マス` },
                 { path: 'core.floorsAdvanced', label: '踏破した階層数', description: '階段で進んだ累積階層。', formatter: formatNumber },
+                { path: 'core.highestFloorReached', label: '最高到達階層', description: 'これまでに到達した最も深い階層。', formatter: (value) => `${formatNumber(value)}F` },
                 { path: 'core.dungeonsCleared', label: '攻略したダンジョン数', description: '通常・ブロック次元を含む攻略回数。', formatter: formatNumber },
                 { path: 'core.enemiesDefeated', label: '撃破した敵', description: '倒した敵の合計数。', formatter: formatNumber },
                 { path: 'core.bossesDefeated', label: 'ボス撃破数', description: '撃破したボスの数。', formatter: formatNumber },
@@ -181,6 +272,10 @@
                 { path: 'core.damageDealt', label: '累計与ダメージ', description: '敵に与えたダメージ総量。', formatter: formatNumber },
                 { path: 'core.damageTaken', label: '累計被ダメージ', description: '敵やギミックから受けたダメージ総量。', formatter: formatNumber },
                 { path: 'core.chestsOpened', label: '開けた宝箱', description: '探索中に開封した宝箱の数。', formatter: formatNumber },
+                { path: 'core.rareChestsOpened', label: '開けたレア宝箱', description: '開封したレア宝箱の数。', formatter: formatNumber },
+                { path: 'core.normalChestsOpened', label: '開けた通常宝箱', description: '通常宝箱を開封した回数。', formatter: formatNumber },
+                { path: 'core.healingItemsUsed', label: '使用した回復アイテム', description: 'ポーションやHP強化などを使用した回数。', formatter: formatNumber },
+                { path: 'core.autoItemsTriggered', label: 'オートアイテム発動回数', description: 'HPが減ったとき自動で発動した回復アイテムの回数。', formatter: formatNumber },
                 { path: 'core.deaths', label: '戦闘不能回数', description: 'ゲームオーバーになった回数。', formatter: formatNumber },
                 { path: 'core.highestDifficultyIndex', label: '最高攻略難易度', description: 'これまで攻略した最も高い難易度。', formatter: formatDifficultyLabel }
             ]
@@ -254,6 +349,11 @@
                 damageTaken: 0,
                 chestsOpened: 0,
                 deaths: 0,
+                highestFloorReached: 1,
+                healingItemsUsed: 0,
+                autoItemsTriggered: 0,
+                rareChestsOpened: 0,
+                normalChestsOpened: 0,
                 highestDifficultyIndex: -1,
                 lastClearedDifficulty: '',
                 lastClearedMode: '',
@@ -877,6 +977,11 @@
             }
             case 'floor_advanced': {
                 mutated = incrementStat('core.floorsAdvanced', 1) || mutated;
+                const floor = Number(payload?.floor);
+                if (Number.isFinite(floor) && floor > state.stats.core.highestFloorReached) {
+                    state.stats.core.highestFloorReached = floor;
+                    mutated = true;
+                }
                 break;
             }
             case 'dungeon_cleared': {
@@ -933,12 +1038,25 @@
             }
             case 'chest_opened': {
                 mutated = incrementStat('core.chestsOpened', 1) || mutated;
+                if (payload && payload.rarity === 'rare') {
+                    mutated = incrementStat('core.rareChestsOpened', 1) || mutated;
+                } else {
+                    mutated = incrementStat('core.normalChestsOpened', 1) || mutated;
+                }
                 break;
             }
             case 'death': {
                 mutated = incrementStat('core.deaths', 1) || mutated;
                 state.stats.core.lastDeathAt = Date.now();
                 mutated = true;
+                break;
+            }
+            case 'healing_item_used': {
+                mutated = incrementStat('core.healingItemsUsed', 1) || mutated;
+                break;
+            }
+            case 'auto_item_triggered': {
+                mutated = incrementStat('core.autoItemsTriggered', 1) || mutated;
                 break;
             }
             case 'blockdim_gate': {

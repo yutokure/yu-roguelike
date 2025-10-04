@@ -1236,6 +1236,36 @@
         </div>
     </div>
 
+    <div id="run-result-overlay" class="run-result" role="dialog" aria-modal="true" aria-labelledby="run-result-title" style="display:none;">
+        <div class="run-result__card">
+            <span class="run-result__badge" id="run-result-badge">冒険結果</span>
+            <h2 class="run-result__title" id="run-result-title">リザルト</h2>
+            <p class="run-result__cause" id="run-result-cause" style="display:none;"></p>
+            <dl class="run-result__list">
+                <div class="run-result__row run-result__row--level">
+                    <dt>レベル</dt>
+                    <dd id="run-result-level">1→1 (+0)</dd>
+                </div>
+                <div class="run-result__row">
+                    <dt>合計獲得経験値</dt>
+                    <dd id="run-result-exp">+0</dd>
+                </div>
+                <div class="run-result__row">
+                    <dt>合計被ダメージ</dt>
+                    <dd id="run-result-damage">0</dd>
+                </div>
+                <div class="run-result__row">
+                    <dt>回復アイテム使用数</dt>
+                    <dd id="run-result-healing">0</dd>
+                </div>
+            </dl>
+            <div class="run-result__actions">
+                <button type="button" class="run-result__btn run-result__btn--primary" id="run-result-primary">拠点に戻る</button>
+                <button type="button" class="run-result__btn run-result__btn--retry" id="run-result-retry" style="display:none;">再挑戦</button>
+            </div>
+        </div>
+    </div>
+
     <!-- アイテムモーダル -->
     <div id="items-modal" class="modal" style="display:none;">
         <div class="modal-content">

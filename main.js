@@ -518,9 +518,984 @@ const SANDBOX_MIN_SIZE = 5;
 const SANDBOX_MAX_SIZE = 60;
 const SANDBOX_MAX_ENEMIES = 30;
 const SANDBOX_MAX_LEVEL = 999;
-const SANDBOX_CONFIG_VERSION = 2;
+const SANDBOX_CONFIG_VERSION = 3;
 const SANDBOX_PORTAL_TYPES = new Set(['stairs', 'gate']);
 const SANDBOX_PORTAL_DIRECTIONS = new Set(['up', 'down', 'side']);
+const SANDBOX_GIMMICK_TYPES = new Set(['pushableCrate', 'floorSwitch', 'door', 'sensor', 'logic', 'script', 'io', 'alert']);
+const SANDBOX_LOGIC_OPERATORS = new Set(['and', 'or', 'xor', 'nand', 'nor', 'xnor', 'not']);
+const SANDBOX_WIRE_SIGNAL_TYPES = new Set(['binary', 'pulse', 'value']);
+const SANDBOX_MAX_GIMMICKS_PER_MAP = 128;
+const SANDBOX_MAX_WIRES_PER_MAP = 256;
+const SANDBOX_SWITCH_MODES = new Set(['momentary', 'toggle', 'sticky']);
+const SANDBOX_SENSOR_TARGETS = new Set(['player', 'enemy', 'ally', 'any']);
+const SANDBOX_SCRIPT_LANGUAGES = new Set(['js', 'lua']);
+const SANDBOX_IO_MODES = new Set(['read', 'write', 'append']);
+const SANDBOX_IO_FORMATS = new Set(['json', 'text', 'binary']);
+const SANDBOX_ALERT_LEVELS = new Set(['info', 'warning', 'error']);
+
+const SANDBOX_GIMMICK_DEFINITIONS = Object.freeze({
+    pushableCrate: {
+        label: '木箱',
+        icon: '📦',
+        defaultConfig: { mass: 1, snapToGrid: true, sticky: false },
+        inputs: [],
+        outputs: [
+            { id: 'pressed', signal: 'binary' },
+            { id: 'released', signal: 'pulse' },
+            { id: 'moved', signal: 'pulse' }
+        ]
+    },
+    floorSwitch: {
+        label: 'スイッチ',
+        icon: '🔘',
+        defaultConfig: { mode: 'momentary', defaultOn: false, resettable: true },
+        inputs: [
+            { id: 'set', signal: 'binary' },
+            { id: 'reset', signal: 'binary' }
+        ],
+        outputs: [
+            { id: 'activated', signal: 'binary' },
+            { id: 'deactivated', signal: 'pulse' },
+            { id: 'state', signal: 'value' }
+        ]
+    },
+    door: {
+        label: '扉',
+        icon: '🚪',
+        defaultConfig: { initialState: 'closed', autoClose: false, autoCloseDelay: 5 },
+        inputs: [
+            { id: 'open', signal: 'pulse' },
+            { id: 'close', signal: 'pulse' },
+            { id: 'toggle', signal: 'pulse' }
+        ],
+        outputs: [
+            { id: 'opened', signal: 'binary' },
+            { id: 'closed', signal: 'binary' },
+            { id: 'state', signal: 'value' }
+        ]
+    },
+    sensor: {
+        label: 'センサー',
+        icon: '📡',
+        defaultConfig: { target: 'player', radius: 3, los: false },
+        inputs: [
+            { id: 'enable', signal: 'binary' },
+            { id: 'disable', signal: 'binary' }
+        ],
+        outputs: [
+            { id: 'detected', signal: 'binary' },
+            { id: 'lost', signal: 'pulse' },
+            { id: 'count', signal: 'value' }
+        ]
+    },
+    logic: {
+        label: '論理ノード',
+        icon: '⚙️',
+        defaultConfig: { operator: 'and', inputCount: 2, inverted: false },
+        inputs: [],
+        outputs: [
+            { id: 'true', signal: 'binary' },
+            { id: 'false', signal: 'binary' },
+            { id: 'state', signal: 'value' }
+        ]
+    },
+    script: {
+        label: 'コードノード',
+        icon: '🧠',
+        defaultConfig: { language: 'js', code: '', autoRun: false },
+        inputs: [
+            { id: 'run', signal: 'pulse' },
+            { id: 'param', signal: 'value' }
+        ],
+        outputs: [
+            { id: 'done', signal: 'pulse' },
+            { id: 'result', signal: 'value' },
+            { id: 'error', signal: 'value' }
+        ]
+    },
+    io: {
+        label: 'I/Oノード',
+        icon: '🗃️',
+        defaultConfig: { mode: 'read', path: 'data.json', format: 'json', throttle: 0 },
+        inputs: [
+            { id: 'execute', signal: 'pulse' },
+            { id: 'payload', signal: 'value' }
+        ],
+        outputs: [
+            { id: 'success', signal: 'pulse' },
+            { id: 'data', signal: 'value' },
+            { id: 'failure', signal: 'value' }
+        ]
+    },
+    alert: {
+        label: 'アラート',
+        icon: '⚠️',
+        defaultConfig: { message: 'Alert!', level: 'info', cooldown: 0 },
+        inputs: [
+            { id: 'trigger', signal: 'pulse' },
+            { id: 'setMessage', signal: 'value' }
+        ],
+        outputs: [
+            { id: 'shown', signal: 'pulse' }
+        ]
+    }
+});
+
+function getSandboxGimmickDefinition(type) {
+    return SANDBOX_GIMMICK_DEFINITIONS[type] || SANDBOX_GIMMICK_DEFINITIONS.floorSwitch;
+}
+
+function getSandboxGimmickIcon(type) {
+    const def = getSandboxGimmickDefinition(type);
+    return def?.icon || '⚙️';
+}
+
+function getSandboxGimmickLabel(type) {
+    const def = getSandboxGimmickDefinition(type);
+    return def?.label || 'ギミック';
+}
+
+function getSandboxGimmickDisplayName(gimmick) {
+    if (!gimmick || typeof gimmick !== 'object') return getSandboxGimmickLabel(gimmick?.type);
+    const name = typeof gimmick.name === 'string' ? gimmick.name.trim() : '';
+    if (name) return name;
+    return getSandboxGimmickLabel(gimmick.type);
+}
+
+function ensureSandboxGimmickRuntime(map) {
+    if (!isSandboxActive()) {
+        sandboxGimmickRuntime = null;
+        sandboxGimmicks = [];
+        return null;
+    }
+    if (sandboxGimmickRuntime && sandboxGimmickRuntime.mapId === map?.id) {
+        return sandboxGimmickRuntime;
+    }
+    sandboxGimmickRuntime = map ? buildSandboxGimmickRuntime(map) : null;
+    return sandboxGimmickRuntime;
+}
+
+function getSandboxGimmickRuntime() {
+    return sandboxGimmickRuntime;
+}
+
+function buildSandboxGimmickRuntime(map) {
+    const runtime = {
+        mapId: map?.id || null,
+        nodes: new Map(),
+        outgoing: new Map(),
+        incoming: new Map(),
+        crates: [],
+        switches: [],
+        doors: [],
+        sensors: [],
+        logic: [],
+        scripts: [],
+        io: [],
+        alerts: [],
+        signalQueue: [],
+        lastTick: 0,
+        tickCounter: 0
+    };
+
+    if (!map) {
+        sandboxGimmicks = [];
+        return runtime;
+    }
+
+    const addNode = (node) => {
+        runtime.nodes.set(node.id, node);
+        switch (node.type) {
+            case 'pushableCrate':
+                runtime.crates.push(node);
+                break;
+            case 'floorSwitch':
+                runtime.switches.push(node);
+                break;
+            case 'door':
+                runtime.doors.push(node);
+                break;
+            case 'sensor':
+                runtime.sensors.push(node);
+                break;
+            case 'logic':
+                runtime.logic.push(node);
+                break;
+            case 'script':
+                runtime.scripts.push(node);
+                break;
+            case 'io':
+                runtime.io.push(node);
+                break;
+            case 'alert':
+                runtime.alerts.push(node);
+                break;
+            default:
+                break;
+        }
+    };
+
+    if (Array.isArray(map.gimmicks)) {
+        map.gimmicks.forEach((gimmick) => {
+            if (!gimmick || typeof gimmick !== 'object') return;
+            const id = typeof gimmick.id === 'string' ? gimmick.id : null;
+            if (!id || runtime.nodes.has(id)) return;
+            const type = SANDBOX_GIMMICK_TYPES.has(gimmick.type) ? gimmick.type : 'floorSwitch';
+            const tileX = Number.isFinite(gimmick.tile?.x) ? Math.floor(gimmick.tile.x) : null;
+            const tileY = Number.isFinite(gimmick.tile?.y) ? Math.floor(gimmick.tile.y) : null;
+            const config = sanitizeSandboxGimmickConfig(type, gimmick.config || {});
+            const node = {
+                id,
+                type,
+                config,
+                x: tileX,
+                y: tileY,
+                name: getSandboxGimmickDisplayName(gimmick),
+                icon: getSandboxGimmickIcon(type),
+                inputs: new Map(),
+                pulseInputs: new Set(),
+                valueInputs: new Map(),
+                outputs: new Map(),
+                state: {}
+            };
+
+            initializeSandboxNodeState(node);
+            addNode(node);
+        });
+    }
+
+    if (Array.isArray(map.wires)) {
+        map.wires.forEach((wire) => {
+            if (!wire || typeof wire !== 'object') return;
+            const sourceId = wire.source?.gimmickId;
+            const targetId = wire.target?.gimmickId;
+            if (!runtime.nodes.has(sourceId) || !runtime.nodes.has(targetId)) return;
+            const normalized = {
+                id: typeof wire.id === 'string' ? wire.id : `wire-${Math.random().toString(36).slice(2, 8)}`,
+                source: {
+                    nodeId: sourceId,
+                    portId: wire.source.portId
+                },
+                target: {
+                    nodeId: targetId,
+                    portId: wire.target.portId
+                },
+                signal: SANDBOX_WIRE_SIGNAL_TYPES.has(wire.signal) ? wire.signal : 'binary'
+            };
+            if (!normalized.source.portId || !normalized.target.portId) return;
+            if (!runtime.outgoing.has(sourceId)) runtime.outgoing.set(sourceId, []);
+            runtime.outgoing.get(sourceId).push(normalized);
+            if (!runtime.incoming.has(targetId)) runtime.incoming.set(targetId, []);
+            runtime.incoming.get(targetId).push(normalized);
+        });
+    }
+
+    refreshSandboxOverlayGimmicksFromRuntime(runtime);
+    return runtime;
+}
+
+function initializeSandboxNodeState(node) {
+    switch (node.type) {
+        case 'pushableCrate': {
+            node.state = {
+                sticky: !!node.config.sticky,
+                snap: !!node.config.snapToGrid,
+                mass: Number(node.config.mass) || 1,
+                lastPressed: false
+            };
+            break;
+        }
+        case 'floorSwitch': {
+            node.state = {
+                mode: node.config.mode || 'momentary',
+                defaultOn: !!node.config.defaultOn,
+                resettable: node.config.resettable !== false,
+                active: !!node.config.defaultOn,
+                pressed: false
+            };
+            node.outputs.set('activated', node.state.active);
+            node.outputs.set('state', node.state.active);
+            break;
+        }
+        case 'door': {
+            node.state = {
+                open: node.config.initialState === 'open',
+                autoClose: !!node.config.autoClose,
+                autoCloseDelay: Math.max(0, Number(node.config.autoCloseDelay) || 0),
+                autoCloseTimer: 0
+            };
+            node.outputs.set('opened', node.state.open);
+            node.outputs.set('closed', !node.state.open);
+            node.outputs.set('state', node.state.open);
+            break;
+        }
+        case 'sensor': {
+            node.state = {
+                enabled: true,
+                active: false,
+                count: 0
+            };
+            node.outputs.set('detected', false);
+            node.outputs.set('state', false);
+            node.outputs.set('count', 0);
+            break;
+        }
+        case 'logic': {
+            const inputCount = clamp(1, 8, Math.floor(Number(node.config.inputCount) || 2));
+            node.state = {
+                operator: node.config.operator || 'and',
+                inputCount,
+                inputs: Array.from({ length: inputCount }, () => false),
+                output: false
+            };
+            node.outputs.set('true', false);
+            node.outputs.set('false', true);
+            node.outputs.set('state', false);
+            break;
+        }
+        case 'script': {
+            node.state = {
+                lastResult: null,
+                lastError: null
+            };
+            node.outputs.set('done', false);
+            node.outputs.set('error', null);
+            node.outputs.set('result', null);
+            break;
+        }
+        case 'io': {
+            node.state = {
+                busy: false,
+                lastError: null
+            };
+            node.outputs.set('success', false);
+            node.outputs.set('failure', null);
+            node.outputs.set('data', null);
+            break;
+        }
+        case 'alert': {
+            node.state = {
+                cooldown: Math.max(0, Number(node.config.cooldown) || 0),
+                cooldownTimer: 0
+            };
+            node.outputs.set('shown', false);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+function refreshSandboxOverlayGimmicksFromRuntime(runtime = sandboxGimmickRuntime) {
+    if (!runtime) {
+        sandboxGimmicks = [];
+        return;
+    }
+    const aggregated = new Map();
+    for (const node of runtime.nodes.values()) {
+        if (!Number.isFinite(node.x) || !Number.isFinite(node.y)) continue;
+        const key = `${node.x},${node.y}`;
+        const entry = aggregated.get(key) || { x: node.x, y: node.y, nodes: [] };
+        entry.nodes.push(node);
+        aggregated.set(key, entry);
+    }
+    sandboxGimmicks = Array.from(aggregated.values()).map(entry => {
+        const primary = entry.nodes[0];
+        const icon = primary?.icon || getSandboxGimmickIcon(primary?.type);
+        let baseLabel = primary?.name || getSandboxGimmickLabel(primary?.type);
+        if (primary?.type === 'door') {
+            baseLabel = `${baseLabel}${primary.state.open ? '（開）' : '（閉）'}`;
+        }
+        const label = entry.nodes.length > 1
+            ? `${baseLabel}×${entry.nodes.length}`
+            : baseLabel;
+        return {
+            icon,
+            label: typeof label === 'string' ? label.slice(0, 8) : '',
+            x: entry.x,
+            y: entry.y
+        };
+    });
+}
+
+function queueSandboxSignal(runtime, sourceNodeId, portId, value, signalType = 'binary') {
+    if (!runtime || !runtime.outgoing.has(sourceNodeId)) return;
+    const wires = runtime.outgoing.get(sourceNodeId);
+    wires.forEach((wire) => {
+        if (wire.source.portId !== portId) return;
+        runtime.signalQueue.push({ wire, value, signalType });
+    });
+}
+
+function processSandboxSignalQueue(runtime, depthGuard = 0) {
+    const MAX_DEPTH = 128;
+    let iterations = 0;
+    while (runtime.signalQueue.length && iterations < MAX_DEPTH) {
+        iterations += 1;
+        const event = runtime.signalQueue.shift();
+        deliverSandboxSignal(runtime, event.wire, event.value, event.signalType);
+    }
+    if (runtime.signalQueue.length > 0) {
+        runtime.signalQueue.length = 0;
+        console.warn('[Sandbox] Signal queue overflow prevented. Check for cyclical wiring.');
+    }
+}
+
+function deliverSandboxSignal(runtime, wire, value, signalType) {
+    const targetNode = runtime.nodes.get(wire.target.nodeId);
+    if (!targetNode) return;
+    applySandboxNodeInput(targetNode, wire.target.portId, value, signalType || wire.signal || 'binary');
+}
+
+function applySandboxNodeInput(node, portId, value, signalType = 'binary') {
+    switch (node.type) {
+        case 'floorSwitch': {
+            if (portId === 'set') {
+                if (signalType === 'pulse') {
+                    node.state.forceSet = node.state.forceSet || !!value;
+                } else {
+                    node.state.remoteSet = !!value;
+                }
+            } else if (portId === 'reset') {
+                if (signalType === 'pulse') {
+                    node.state.forceReset = node.state.forceReset || !!value;
+                } else {
+                    node.state.remoteReset = !!value;
+                }
+            }
+            break;
+        }
+        case 'door': {
+            if (portId === 'open') {
+                if (signalType === 'pulse') {
+                    node.state.pendingCommand = 'open';
+                } else if (value) {
+                    node.state.pendingCommand = 'open';
+                }
+            } else if (portId === 'close') {
+                if (signalType === 'pulse') {
+                    node.state.pendingCommand = 'close';
+                } else if (value) {
+                    node.state.pendingCommand = 'close';
+                }
+            } else if (portId === 'toggle') {
+                if (signalType === 'pulse') {
+                    node.state.pendingCommand = 'toggle';
+                } else if (value) {
+                    node.state.pendingCommand = 'toggle';
+                }
+            }
+            break;
+        }
+        case 'sensor': {
+            if (portId === 'enable') {
+                if (signalType === 'pulse') {
+                    if (value) node.state.pendingEnable = true;
+                } else {
+                    node.state.pendingEnable = !!value;
+                }
+            } else if (portId === 'disable') {
+                if (signalType === 'pulse') {
+                    if (value) node.state.pendingDisable = true;
+                } else {
+                    node.state.pendingDisable = !!value;
+                }
+            }
+            break;
+        }
+        case 'logic': {
+            if (portId.startsWith('in')) {
+                const index = parseInt(portId.slice(2), 10) - 1;
+                if (Number.isInteger(index) && index >= 0 && index < node.state.inputCount) {
+                    node.state.inputs[index] = !!value;
+                    node.state.inputsChanged = true;
+                }
+            }
+            break;
+        }
+        case 'script': {
+            if (portId === 'run') {
+                if (signalType === 'pulse') {
+                    if (value) node.state.pendingRun = true;
+                } else if (value) {
+                    node.state.pendingRun = true;
+                }
+            } else if (portId === 'param') {
+                node.state.pendingParam = value;
+            }
+            break;
+        }
+        case 'io': {
+            if (portId === 'execute') {
+                if (signalType === 'pulse') {
+                    if (value) node.state.pendingExecute = true;
+                } else if (value) {
+                    node.state.pendingExecute = true;
+                }
+            } else if (portId === 'payload') {
+                node.state.pendingPayload = value;
+            }
+            break;
+        }
+        case 'alert': {
+            if (portId === 'trigger') {
+                if (signalType === 'pulse') {
+                    if (value) node.state.pendingTrigger = true;
+                } else if (value) {
+                    node.state.pendingTrigger = true;
+                }
+            } else if (portId === 'setMessage' && typeof value === 'string') {
+                node.state.overrideMessage = value;
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+function setSandboxNodeOutput(runtime, node, portId, value, signalType = 'binary') {
+    const previous = node.outputs.get(portId);
+    if (signalType === 'pulse') {
+        queueSandboxSignal(runtime, node.id, portId, value, signalType);
+        return;
+    }
+    if (previous === value) return;
+    node.outputs.set(portId, value);
+    queueSandboxSignal(runtime, node.id, portId, value, signalType);
+}
+
+function isSandboxCrateAt(runtime, x, y) {
+    if (!runtime) return false;
+    return runtime.crates.some(crate => crate.x === x && crate.y === y);
+}
+
+function getSandboxCrateAt(runtime, x, y) {
+    if (!runtime) return null;
+    return runtime.crates.find(crate => crate.x === x && crate.y === y) || null;
+}
+
+function moveSandboxCrate(runtime, crate, toX, toY) {
+    if (!runtime || !crate) return false;
+    crate.x = toX;
+    crate.y = toY;
+    const node = runtime.nodes.get(crate.id);
+    if (node) {
+        node.x = toX;
+        node.y = toY;
+        node.state.lastMovedAt = runtime.tickCounter;
+    }
+    refreshSandboxOverlayGimmicksFromRuntime(runtime);
+    setSandboxNodeOutput(runtime, crate, 'moved', true, 'pulse');
+    return true;
+}
+
+function isSandboxDoorClosedAt(runtime, x, y) {
+    if (!runtime) return false;
+    return runtime.doors.some(door => door.x === x && door.y === y && !door.state.open);
+}
+
+function updateSandboxGimmickState(context = {}) {
+    const runtime = ensureSandboxGimmickRuntime(ensureSandboxCurrentMap());
+    if (!runtime) return;
+    runtime.tickCounter += 1;
+
+    const cratePositions = new Set(runtime.crates.map(crate => `${crate.x},${crate.y}`));
+
+    // Floor switches
+    runtime.switches.forEach((node) => {
+        const pressedByPlayer = node.x === player.x && node.y === player.y;
+        const pressedByCrate = cratePositions.has(`${node.x},${node.y}`);
+        const wasPressed = node.state.pressed;
+        const pressedNow = pressedByPlayer || pressedByCrate;
+        node.state.pressed = pressedNow;
+
+        const mode = node.state.mode || 'momentary';
+        let active = node.state.active;
+
+        if (node.state.forceSet || node.state.remoteSet) {
+            active = true;
+        }
+        if (node.state.forceReset || node.state.remoteReset) {
+            if (node.state.resettable) {
+                active = false;
+            }
+        }
+
+        if (mode === 'momentary') {
+            active = pressedNow || node.state.remoteSet || node.state.forceSet || false;
+        } else if (mode === 'toggle') {
+            if (pressedNow && !wasPressed) {
+                active = !active;
+            }
+        } else if (mode === 'sticky') {
+            if (pressedNow || node.state.forceSet || node.state.remoteSet) {
+                active = true;
+            }
+            if ((node.state.forceReset || node.state.remoteReset) && node.state.resettable) {
+                active = false;
+            }
+        }
+
+        const prevActive = node.state.active;
+        node.state.active = !!active;
+        node.state.forceSet = false;
+        node.state.forceReset = false;
+        node.state.remoteSet = false;
+        node.state.remoteReset = false;
+
+        if (node.state.active !== prevActive) {
+            setSandboxNodeOutput(runtime, node, 'activated', node.state.active);
+            setSandboxNodeOutput(runtime, node, 'state', node.state.active);
+            if (!node.state.active && prevActive) {
+                setSandboxNodeOutput(runtime, node, 'deactivated', true, 'pulse');
+            }
+        } else {
+            // keep state output up to date for downstream value wires
+            setSandboxNodeOutput(runtime, node, 'state', node.state.active);
+        }
+
+        if (pressedNow && !wasPressed) {
+            setSandboxNodeOutput(runtime, node, 'pressed', true, 'pulse');
+        }
+        if (!pressedNow && wasPressed) {
+            setSandboxNodeOutput(runtime, node, 'released', true, 'pulse');
+        }
+    });
+
+    // Sensors
+    runtime.sensors.forEach((node) => {
+        if (node.state.pendingEnable === true) {
+            node.state.enabled = true;
+        } else if (node.state.pendingDisable === true) {
+            node.state.enabled = false;
+        }
+        node.state.pendingEnable = false;
+        node.state.pendingDisable = false;
+
+        const enabled = node.state.enabled;
+        let detectedCount = 0;
+        if (enabled) {
+            const radius = clamp(0, 50, Math.floor(Number(node.config.radius) || 3));
+            const target = node.config.target || 'player';
+            const los = !!node.config.los;
+            const checkTarget = (tx, ty) => {
+                if (!Number.isFinite(tx) || !Number.isFinite(ty)) return false;
+                const dist = Math.abs(node.x - tx) + Math.abs(node.y - ty);
+                if (dist > radius) return false;
+                if (los && !hasLineOfSight(node.x, node.y, tx, ty)) return false;
+                return true;
+            };
+
+            if (target === 'player' || target === 'any') {
+                if (checkTarget(player.x, player.y)) detectedCount += 1;
+            }
+            if (target === 'enemy' || target === 'any') {
+                enemies.forEach(enemy => {
+                    if (checkTarget(enemy.x, enemy.y)) detectedCount += 1;
+                });
+            }
+            if (target === 'ally') {
+                // no allies implemented yet
+            }
+        }
+
+        const wasActive = node.state.active;
+        const isActive = detectedCount > 0 && node.state.enabled;
+        node.state.active = isActive;
+        node.state.count = detectedCount;
+
+        if (isActive !== wasActive) {
+            setSandboxNodeOutput(runtime, node, 'detected', isActive);
+            setSandboxNodeOutput(runtime, node, 'state', isActive);
+            if (!isActive && wasActive) {
+                setSandboxNodeOutput(runtime, node, 'lost', true, 'pulse');
+            }
+        } else {
+            setSandboxNodeOutput(runtime, node, 'state', isActive);
+        }
+        setSandboxNodeOutput(runtime, node, 'count', detectedCount, 'value');
+    });
+
+    let iterations = 0;
+    const MAX_ITERATIONS = 24;
+    let pendingWork = true;
+    while (pendingWork && iterations < MAX_ITERATIONS) {
+        iterations += 1;
+        pendingWork = false;
+
+        runtime.logic.forEach((node) => {
+            if (!node.state.inputsChanged) return;
+            node.state.inputsChanged = false;
+            const operator = (node.state.operator || 'and').toLowerCase();
+            const inputs = node.state.inputs;
+            let value = false;
+            switch (operator) {
+                case 'and':
+                    value = inputs.every(Boolean);
+                    break;
+                case 'or':
+                    value = inputs.some(Boolean);
+                    break;
+                case 'xor':
+                    value = inputs.filter(Boolean).length % 2 === 1;
+                    break;
+                case 'nand':
+                    value = !inputs.every(Boolean);
+                    break;
+                case 'nor':
+                    value = !inputs.some(Boolean);
+                    break;
+                case 'xnor':
+                    value = inputs.filter(Boolean).length % 2 === 0;
+                    break;
+                case 'not':
+                    value = !inputs[0];
+                    break;
+                default:
+                    value = inputs.some(Boolean);
+                    break;
+            }
+            const prev = node.state.output;
+            node.state.output = value;
+            if (prev !== value) {
+                pendingWork = true;
+                setSandboxNodeOutput(runtime, node, 'true', value);
+                setSandboxNodeOutput(runtime, node, 'false', !value);
+                setSandboxNodeOutput(runtime, node, 'state', value);
+            } else {
+                setSandboxNodeOutput(runtime, node, 'state', value);
+            }
+        });
+
+        runtime.doors.forEach((node) => {
+            let command = node.state.pendingCommand;
+            node.state.pendingCommand = null;
+            if (command === 'toggle') {
+                node.state.open = !node.state.open;
+                pendingWork = true;
+            } else if (command === 'open') {
+                if (!node.state.open) pendingWork = true;
+                node.state.open = true;
+            } else if (command === 'close') {
+                if (node.state.open) pendingWork = true;
+                node.state.open = false;
+            }
+
+            if (node.state.open && node.state.autoClose) {
+                node.state.autoCloseTimer = Math.max(node.state.autoCloseTimer, Math.floor(node.state.autoCloseDelay));
+            }
+            if (node.state.autoCloseTimer > 0) {
+                node.state.autoCloseTimer -= 1;
+                if (node.state.autoCloseTimer <= 0 && node.state.autoClose) {
+                    if (node.state.open) pendingWork = true;
+                    node.state.open = false;
+                }
+            }
+
+            setSandboxNodeOutput(runtime, node, 'opened', node.state.open);
+            setSandboxNodeOutput(runtime, node, 'closed', !node.state.open);
+            setSandboxNodeOutput(runtime, node, 'state', node.state.open);
+        });
+
+        runtime.scripts.forEach((node) => {
+            if (!node.state.pendingRun) return;
+            node.state.pendingRun = false;
+            pendingWork = true;
+            try {
+                const code = typeof node.config.code === 'string' ? node.config.code : '';
+                if (!code.trim()) {
+                    node.state.lastResult = null;
+                    setSandboxNodeOutput(runtime, node, 'error', 'コードが未設定です', 'value');
+                    return;
+                }
+                const api = {
+                    emit: (portId, val, signal = 'binary') => setSandboxNodeOutput(runtime, node, portId, val, signal),
+                    message: (msg) => { try { addMessage(String(msg)); } catch {} }
+                };
+                const fn = new Function('api', 'config', 'state', 'param', code);
+                const result = fn(api, node.config, node.state, node.state.pendingParam);
+                node.state.lastResult = result;
+                setSandboxNodeOutput(runtime, node, 'result', result, 'value');
+                setSandboxNodeOutput(runtime, node, 'done', true, 'pulse');
+                setSandboxNodeOutput(runtime, node, 'error', null, 'value');
+            } catch (err) {
+                node.state.lastError = err;
+                setSandboxNodeOutput(runtime, node, 'error', String(err?.message || err), 'value');
+            }
+            node.state.pendingParam = undefined;
+        });
+
+        runtime.io.forEach((node) => {
+            if (!node.state.pendingExecute) return;
+            node.state.pendingExecute = false;
+            pendingWork = true;
+            const mode = node.config.mode || 'read';
+            const path = typeof node.config.path === 'string' ? node.config.path : '';
+            if (!path) {
+                setSandboxNodeOutput(runtime, node, 'failure', 'パスが未設定です', 'value');
+                return;
+            }
+            setSandboxNodeOutput(runtime, node, 'success', true, 'pulse');
+            if (mode === 'read') {
+                setSandboxNodeOutput(runtime, node, 'data', null, 'value');
+            } else {
+                setSandboxNodeOutput(runtime, node, 'data', node.state.pendingPayload ?? null, 'value');
+            }
+            node.state.pendingPayload = undefined;
+        });
+
+        runtime.alerts.forEach((node) => {
+            if (node.state.cooldownTimer > 0) {
+                node.state.cooldownTimer -= 1;
+            }
+            if (node.state.pendingTrigger) {
+                node.state.pendingTrigger = false;
+                if (node.state.cooldownTimer <= 0) {
+                    pendingWork = true;
+                    const message = node.state.overrideMessage || node.config.message || 'Alert';
+                    let displayed = false;
+                    if (typeof alert === 'function') {
+                        try { alert(message); displayed = true; } catch {}
+                    }
+                    if (!displayed) {
+                        try { addMessage(message); displayed = true; } catch {}
+                    }
+                    setSandboxNodeOutput(runtime, node, 'shown', true, 'pulse');
+                    node.state.cooldownTimer = Math.max(0, Math.floor(Number(node.config.cooldown) || 0));
+                }
+                node.state.overrideMessage = undefined;
+            }
+        });
+
+        processSandboxSignalQueue(runtime);
+        if (runtime.signalQueue.length > 0) {
+            pendingWork = true;
+        }
+    }
+
+    refreshSandboxOverlayGimmicksFromRuntime(runtime);
+}
+
+function hasLineOfSight(fromX, fromY, toX, toY) {
+    let x0 = fromX;
+    let y0 = fromY;
+    const x1 = toX;
+    const y1 = toY;
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
+    while (true) {
+        if (!(x0 === fromX && y0 === fromY)) {
+            if (!isFloor(x0, y0)) return false;
+            const runtime = getSandboxGimmickRuntime();
+            if (runtime && isSandboxDoorClosedAt(runtime, x0, y0)) return false;
+        }
+        if (x0 === x1 && y0 === y1) break;
+        const e2 = err * 2;
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+    return true;
+}
+
+function sanitizeSandboxGimmickConfig(type, rawConfig) {
+    const definition = getSandboxGimmickDefinition(type);
+    const config = { ...(definition.defaultConfig || {}) };
+    const raw = rawConfig && typeof rawConfig === 'object' ? rawConfig : {};
+    switch (type) {
+        case 'pushableCrate':
+            config.mass = clamp(0.1, 50, Number(raw.mass) || config.mass || 1);
+            config.snapToGrid = !!raw.snapToGrid;
+            config.sticky = !!raw.sticky;
+            break;
+        case 'floorSwitch':
+            config.mode = SANDBOX_SWITCH_MODES.has(raw.mode) ? raw.mode : config.mode;
+            config.defaultOn = !!raw.defaultOn;
+            config.resettable = !!raw.resettable;
+            break;
+        case 'door':
+            config.initialState = raw.initialState === 'open' ? 'open' : 'closed';
+            config.autoClose = !!raw.autoClose;
+            config.autoCloseDelay = clamp(0, 600, Number(raw.autoCloseDelay) || (config.autoClose ? config.autoCloseDelay : 0));
+            break;
+        case 'sensor':
+            config.target = SANDBOX_SENSOR_TARGETS.has(raw.target) ? raw.target : config.target;
+            config.radius = clamp(1, 50, Number(raw.radius) || config.radius || 3);
+            config.los = !!raw.los;
+            break;
+        case 'logic': {
+            const operator = SANDBOX_LOGIC_OPERATORS.has(raw.operator) ? raw.operator : config.operator;
+            let inputCount = clamp(1, 8, Number(raw.inputCount) || config.inputCount || 2);
+            if (operator === 'not') inputCount = 1;
+            config.operator = operator;
+            config.inputCount = inputCount;
+            config.inverted = !!raw.inverted;
+            break;
+        }
+        case 'script':
+            config.language = SANDBOX_SCRIPT_LANGUAGES.has(raw.language) ? raw.language : config.language;
+            config.autoRun = !!raw.autoRun;
+            config.code = typeof raw.code === 'string' ? raw.code.slice(0, 5000) : (config.code || '');
+            break;
+        case 'io':
+            config.mode = SANDBOX_IO_MODES.has(raw.mode) ? raw.mode : config.mode;
+            config.format = SANDBOX_IO_FORMATS.has(raw.format) ? raw.format : config.format;
+            config.path = typeof raw.path === 'string' ? raw.path.trim().slice(0, 120) : config.path;
+            config.throttle = clamp(0, 600, Number(raw.throttle) || config.throttle || 0);
+            break;
+        case 'alert':
+            config.message = typeof raw.message === 'string' ? raw.message.slice(0, 280) : config.message;
+            config.level = SANDBOX_ALERT_LEVELS.has(raw.level) ? raw.level : config.level;
+            config.cooldown = clamp(0, 600, Number(raw.cooldown) || config.cooldown || 0);
+            break;
+        default:
+            Object.assign(config, raw);
+            break;
+    }
+    Object.keys(raw).forEach(key => {
+        if (typeof config[key] === 'undefined') {
+            config[key] = raw[key];
+        }
+    });
+    return config;
+}
+
+function computeSandboxLogicInputPorts(config) {
+    const count = clamp(1, 8, Number(config?.inputCount) || 2);
+    const ports = [];
+    for (let i = 0; i < count; i++) {
+        ports.push({ id: `in${i + 1}`, signal: 'binary' });
+    }
+    return ports;
+}
+
+function getSandboxGimmickInputPorts(gimmick) {
+    if (!gimmick) return [];
+    if (gimmick.type === 'logic') {
+        return computeSandboxLogicInputPorts(gimmick.config);
+    }
+    const definition = getSandboxGimmickDefinition(gimmick.type);
+    return Array.isArray(definition.inputs) ? definition.inputs.map(port => ({ ...port })) : [];
+}
+
+function getSandboxGimmickOutputPorts(gimmick) {
+    if (!gimmick) return [];
+    const definition = getSandboxGimmickDefinition(gimmick.type);
+    const outputs = Array.isArray(definition.outputs) ? definition.outputs.map(port => ({ ...port })) : [];
+    if (gimmick.type === 'logic' && gimmick.config?.inverted) {
+        return outputs.map(port => ({ ...port, inverted: true }));
+    }
+    return outputs;
+}
 
 const sandboxRuntime = {
     active: false,
@@ -1525,8 +2500,12 @@ function sanitizeSandboxConfig(raw) {
     const mapSources = Array.isArray(raw.maps) && raw.maps.length ? raw.maps.slice() : [raw];
     const sanitizedMaps = [];
     const mapIdSet = new Set();
+    const gimmickIdSet = new Set();
+    const wireIdSet = new Set();
     let mapSeq = 1;
     let portalSeq = 1;
+    let gimmickSeq = 1;
+    let wireSeq = 1;
 
     const nextMapId = () => {
         let id = `map-${mapSeq++}`;
@@ -1539,6 +2518,20 @@ function sanitizeSandboxConfig(raw) {
         let id = `portal-${portalSeq++}`;
         while (used.has(id)) id = `portal-${portalSeq++}`;
         used.add(id);
+        return id;
+    };
+
+    const nextGimmickId = () => {
+        let id = `gimmick-${gimmickSeq++}`;
+        while (gimmickIdSet.has(id)) id = `gimmick-${gimmickSeq++}`;
+        gimmickIdSet.add(id);
+        return id;
+    };
+
+    const nextWireId = () => {
+        let id = `wire-${wireSeq++}`;
+        while (wireIdSet.has(id)) id = `wire-${wireSeq++}`;
+        wireIdSet.add(id);
         return id;
     };
 
@@ -1613,6 +2606,86 @@ function sanitizeSandboxConfig(raw) {
             });
         }
         return domainEffects;
+    };
+
+    const sanitizeGimmickList = (list, normalizePos, width, height) => {
+        const gimmicks = [];
+        if (!Array.isArray(list)) return gimmicks;
+        for (const entry of list) {
+            if (!entry || typeof entry !== 'object') continue;
+            if (gimmicks.length >= SANDBOX_MAX_GIMMICKS_PER_MAP) break;
+            const type = SANDBOX_GIMMICK_TYPES.has(entry.type) ? entry.type : 'floorSwitch';
+            let id = typeof entry.id === 'string' ? entry.id.trim() : '';
+            if (!id || gimmickIdSet.has(id)) {
+                id = nextGimmickId();
+            } else {
+                gimmickIdSet.add(id);
+            }
+            const name = typeof entry.name === 'string' ? entry.name.trim().slice(0, 40) : '';
+            const notes = typeof entry.notes === 'string' ? entry.notes.slice(0, 400) : '';
+            const tags = Array.isArray(entry.tags)
+                ? entry.tags.filter(tag => typeof tag === 'string' && tag.trim()).map(tag => tag.trim().slice(0, 24)).slice(0, 8)
+                : [];
+            const tile = normalizePos(entry.tile) || normalizePos(entry.position) || null;
+            const layoutX = clamp(0, 1, Number.isFinite(Number(entry.layout?.x)) ? Number(entry.layout.x) : 0.5);
+            const layoutY = clamp(0, 1, Number.isFinite(Number(entry.layout?.y)) ? Number(entry.layout.y) : 0.5);
+            const color = sanitizeColor(entry.color);
+            const config = sanitizeSandboxGimmickConfig(type, entry.config);
+            gimmicks.push({
+                id,
+                type,
+                name,
+                notes,
+                tags,
+                locked: !!entry.locked,
+                tile,
+                layout: { x: layoutX, y: layoutY },
+                color,
+                config
+            });
+        }
+        return gimmicks;
+    };
+
+    const sanitizeWireList = (list, gimmicks) => {
+        const wires = [];
+        if (!Array.isArray(list) || !gimmicks.length) return wires;
+        const gimmickMap = new Map();
+        const outputIndex = new Set();
+        const inputIndex = new Set();
+        gimmicks.forEach(gimmick => {
+            gimmickMap.set(gimmick.id, gimmick);
+            getSandboxGimmickOutputPorts(gimmick).forEach(port => outputIndex.add(`${gimmick.id}:${port.id}`));
+            getSandboxGimmickInputPorts(gimmick).forEach(port => inputIndex.add(`${gimmick.id}:${port.id}`));
+        });
+        for (const entry of list) {
+            if (!entry || typeof entry !== 'object') continue;
+            if (wires.length >= SANDBOX_MAX_WIRES_PER_MAP) break;
+            const sourceId = typeof entry.source?.gimmickId === 'string' ? entry.source.gimmickId : null;
+            const targetId = typeof entry.target?.gimmickId === 'string' ? entry.target.gimmickId : null;
+            const sourcePort = typeof entry.source?.portId === 'string' ? entry.source.portId : null;
+            const targetPort = typeof entry.target?.portId === 'string' ? entry.target.portId : null;
+            if (!sourceId || !targetId || !sourcePort || !targetPort) continue;
+            if (!gimmickMap.has(sourceId) || !gimmickMap.has(targetId)) continue;
+            if (!outputIndex.has(`${sourceId}:${sourcePort}`)) continue;
+            if (!inputIndex.has(`${targetId}:${targetPort}`)) continue;
+            let id = typeof entry.id === 'string' ? entry.id.trim() : '';
+            if (!id || wireIdSet.has(id)) {
+                id = nextWireId();
+            } else {
+                wireIdSet.add(id);
+            }
+            const signal = SANDBOX_WIRE_SIGNAL_TYPES.has(entry.signal) ? entry.signal : 'binary';
+            const label = typeof entry.label === 'string' ? entry.label.slice(0, 40) : '';
+            wires.push({
+                id,
+                source: { gimmickId: sourceId, portId: sourcePort },
+                target: { gimmickId: targetId, portId: targetPort },
+                signal,
+                label
+            });
+        }
+        return wires;
     };
 
     const sanitizePortalList = (source, mapId, normalizePos, fallbackSpawn) => {
@@ -1714,6 +2787,8 @@ function sanitizeSandboxConfig(raw) {
         const enemies = sanitizeEnemyList(mapSource.enemies, normalizePos, width, height);
         const domainEffects = sanitizeDomainList(mapSource.domainEffects, normalizePos);
         const portals = sanitizePortalList(mapSource, mapId, normalizePos, () => playerStart || null);
+        const gimmicks = sanitizeGimmickList(mapSource.gimmicks, normalizePos, width, height);
+        const wires = sanitizeWireList(mapSource.wires, gimmicks);
 
         sanitizedMaps.push({
             id: mapId,
@@ -1727,7 +2802,9 @@ function sanitizeSandboxConfig(raw) {
             playerStart,
             enemies,
             domainEffects,
-            portals
+            portals,
+            gimmicks,
+            wires
         });
     }
 
@@ -1870,6 +2947,87 @@ function validateSandboxConfig(config) {
                 }
             });
         }
+        const gimmickMap = new Map();
+        const availableOutputPorts = new Set();
+        const availableInputPorts = new Set();
+        if (Array.isArray(map.gimmicks)) {
+            if (map.gimmicks.length > SANDBOX_MAX_GIMMICKS_PER_MAP) {
+                warnings.push(`${prefix}: ギミック数が上限(${SANDBOX_MAX_GIMMICKS_PER_MAP})を超えています。余分なギミックは無視されます。`);
+            }
+            map.gimmicks.forEach((gimmick, gimmickIndex) => {
+                if (!gimmick || typeof gimmick !== 'object') return;
+                const label = `${prefix}: ギミック${gimmickIndex + 1}`;
+                if (typeof gimmick.id !== 'string' || !gimmick.id.trim()) {
+                    errors.push(`${label}のIDが無効です。`);
+                    return;
+                }
+                if (gimmickMap.has(gimmick.id)) {
+                    errors.push(`${label}のID「${gimmick.id}」が重複しています。`);
+                    return;
+                }
+                if (!SANDBOX_GIMMICK_TYPES.has(gimmick.type)) {
+                    errors.push(`${label}の種類「${gimmick.type}」は未対応です。`);
+                    return;
+                }
+                if (gimmick.tile && map.grid?.[gimmick.tile.y]?.[gimmick.tile.x] !== 0) {
+                    errors.push(`${label}のタイル配置は床マスに設定してください。`);
+                }
+                if (gimmick.layout) {
+                    const lx = Number(gimmick.layout.x);
+                    const ly = Number(gimmick.layout.y);
+                    if (!Number.isFinite(lx) || lx < 0 || lx > 1 || !Number.isFinite(ly) || ly < 0 || ly > 1) {
+                        warnings.push(`${label}のレイアウトが無効なため中央に補正されます。`);
+                    }
+                }
+                if (gimmick.type === 'logic') {
+                    const op = gimmick.config?.operator;
+                    if (!SANDBOX_LOGIC_OPERATORS.has(op)) {
+                        warnings.push(`${label}の論理演算が無効なため AND に変更されます。`);
+                    }
+                    const count = Number(gimmick.config?.inputCount);
+                    if (!Number.isFinite(count) || count < 1) {
+                        warnings.push(`${label}の入力数が無効なため 2 に補正されます。`);
+                    }
+                }
+                gimmickMap.set(gimmick.id, gimmick);
+                getSandboxGimmickOutputPorts(gimmick).forEach(port => availableOutputPorts.add(`${gimmick.id}:${port.id}`));
+                getSandboxGimmickInputPorts(gimmick).forEach(port => availableInputPorts.add(`${gimmick.id}:${port.id}`));
+            });
+        }
+        if (Array.isArray(map.wires)) {
+            if (map.wires.length > SANDBOX_MAX_WIRES_PER_MAP) {
+                warnings.push(`${prefix}: ワイヤー数が上限(${SANDBOX_MAX_WIRES_PER_MAP})を超えています。余分なワイヤーは無視されます。`);
+            }
+            map.wires.forEach((wire, wireIndex) => {
+                if (!wire || typeof wire !== 'object') return;
+                const label = `${prefix}: ワイヤー${wireIndex + 1}`;
+                const sourceId = wire.source?.gimmickId;
+                const targetId = wire.target?.gimmickId;
+                const sourcePort = wire.source?.portId;
+                const targetPort = wire.target?.portId;
+                if (!sourceId || !targetId || !sourcePort || !targetPort) {
+                    errors.push(`${label}の接続情報が不足しています。`);
+                    return;
+                }
+                if (!gimmickMap.has(sourceId)) {
+                    errors.push(`${label}: 出力元ギミック「${sourceId}」が見つかりません。`);
+                    return;
+                }
+                if (!gimmickMap.has(targetId)) {
+                    errors.push(`${label}: 入力先ギミック「${targetId}」が見つかりません。`);
+                    return;
+                }
+                if (!availableOutputPorts.has(`${sourceId}:${sourcePort}`)) {
+                    errors.push(`${label}: 出力ポート「${sourcePort}」がギミック「${sourceId}」に存在しません。`);
+                }
+                if (!availableInputPorts.has(`${targetId}:${targetPort}`)) {
+                    errors.push(`${label}: 入力ポート「${targetPort}」がギミック「${targetId}」に存在しません。`);
+                }
+                if (!SANDBOX_WIRE_SIGNAL_TYPES.has(wire.signal)) {
+                    warnings.push(`${label}: 信号種別が無効なため binary に補正されます。`);
+                }
+            });
+        }
         if (Array.isArray(map.portals)) {
             map.portals.forEach((portal, portalIndex) => {
                 if (!portal) return;
@@ -1933,6 +3091,7 @@ function restoreSandboxSnapshotIfNeeded() {
     sandboxRuntime.snapshot = null;
     sandboxRuntime.expNoticeShown = false;
     resetSandboxInteractiveState();
+    sandboxGimmicks = [];
 }
 
 function startSandboxGame(rawConfig) {
@@ -3690,6 +4849,8 @@ let ENEMY_COUNT = 8;
 
 // 領域効果クリスタル
 let domainCrystals = [];
+let sandboxGimmicks = [];
+let sandboxGimmickRuntime = null;
 
 // -------------------- Modal helpers --------------------
 let __openModalCount = 0;
@@ -6652,6 +7813,7 @@ function createGodConsoleContext() {
         enemies,
         stairs,
         domainCrystals,
+        sandboxGimmicks,
         runtime: {
             difficulty,
             selectedWorld,
@@ -8519,6 +9681,8 @@ function generateEntities() {
     items = [];
     chests = [];
     domainCrystals = [];
+    sandboxGimmicks = [];
+    sandboxGimmickRuntime = null;
 
     if (isSandboxActive()) {
         const cfg = ensureSandboxCurrentMap();
@@ -8575,6 +9739,11 @@ function generateEntities() {
                     configRef: effect,
                     configIndex: index
                 }));
+        }
+
+        sandboxGimmickRuntime = buildSandboxGimmickRuntime(cfg);
+        if (sandboxGimmickRuntime) {
+            updateSandboxGimmickState({ reason: 'initialize' });
         }
         bossAlive = enemies.some(e => e.boss);
         updateCamera();
@@ -9088,6 +10257,11 @@ function canActorEnterTile(actorType, toX, toY, dx, dy, options = {}) {
     if (options.ignoreRestrictions) return true;
     if (actorType === 'player' && isSandboxNoClipEnabled()) return true;
     if (!isFloor(toX, toY)) return false;
+    const runtime = getSandboxGimmickRuntime();
+    if (runtime) {
+        if (isSandboxDoorClosedAt(runtime, toX, toY)) return false;
+        if (actorType !== 'player' && isSandboxCrateAt(runtime, toX, toY)) return false;
+    }
     if (!areFloorEffectsActive()) return true;
     const type = getTileFloorType(toX, toY);
     switch (type) {
@@ -9320,6 +10494,60 @@ function drawDomainEffects() {
         ctx.fillText(iconText, screenX, screenY);
         ctx.restore();
     }
+}
+
+function drawSandboxGimmicks(showLabels = false) {
+    if (!Array.isArray(sandboxGimmicks) || !sandboxGimmicks.length) return;
+    const startX = camera.x;
+    const startY = camera.y;
+    const endX = startX + VIEWPORT_WIDTH;
+    const endY = startY + VIEWPORT_HEIGHT;
+    const cellW = canvas.width / VIEWPORT_WIDTH;
+    const cellH = canvas.height / VIEWPORT_HEIGHT;
+    const darknessActive = isDarknessActive();
+    const fontBase = Math.min(cellW, cellH);
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const gimmick of sandboxGimmicks) {
+        const gx = Number(gimmick?.x);
+        const gy = Number(gimmick?.y);
+        if (!Number.isFinite(gx) || !Number.isFinite(gy)) continue;
+        if (gx < startX - 1 || gx > endX || gy < startY - 1 || gy > endY) continue;
+        if (darknessActive && !isTileVisible(gx, gy)) continue;
+        const viewportX = gx - startX;
+        const viewportY = gy - startY;
+        if (viewportX < -1 || viewportY < -1 || viewportX > VIEWPORT_WIDTH || viewportY > VIEWPORT_HEIGHT) continue;
+        const centerX = (viewportX + 0.5) * cellW;
+        const centerY = (viewportY + 0.5) * cellH;
+        const iconText = gimmick.icon || getSandboxGimmickIcon(gimmick.type);
+        const iconFont = Math.max(12, Math.floor(fontBase * 0.55));
+        ctx.font = `700 ${iconFont}px 'Segoe UI', 'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Noto Sans JP', sans-serif`;
+        const iconY = showLabels ? centerY - fontBase * 0.22 : centerY;
+        ctx.lineWidth = Math.max(1, fontBase * 0.08);
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.strokeText(iconText, centerX, iconY);
+        ctx.fillStyle = 'rgba(15,23,42,0.95)';
+        ctx.fillText(iconText, centerX, iconY);
+
+        if (showLabels) {
+            const label = typeof gimmick.label === 'string' ? gimmick.label : '';
+                if (label) {
+                    const labelFont = Math.max(9, Math.floor(fontBase * 0.28));
+                    ctx.font = `600 ${labelFont}px 'Segoe UI', 'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Noto Sans JP', sans-serif`;
+                    const textY = centerY + fontBase * 0.34;
+                    const paddingX = fontBase * 0.4;
+                    const paddingY = fontBase * 0.18;
+                    const metrics = ctx.measureText(label);
+                    const textWidth = metrics.width;
+                    ctx.fillStyle = 'rgba(15,23,42,0.7)';
+                    ctx.fillRect(centerX - textWidth / 2 - paddingX, textY - labelFont / 2 - paddingY, textWidth + paddingX * 2, labelFont + paddingY * 2);
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillText(label, centerX, textY);
+                }
+            }
+    }
+    ctx.restore();
 }
 
 function drawFloorGimmickOverlay(tileX, tileY, screenX, screenY, cellW, cellH) {
@@ -11075,6 +12303,10 @@ function applyPostMoveEffects() {
             }
         }
 
+        if (isSandboxActive()) {
+            updateSandboxGimmickState({ reason: 'playerMove' });
+        }
+
         if (!isGameOver) {
             const floorType = getTileFloorType(player.x, player.y);
             if (!hazardsSuppressed && floorType === FLOOR_TYPE_POISON) {
@@ -11267,6 +12499,23 @@ function attemptPlayerStep(dx, dy) {
         return true;
     }
 
+    const runtime = getSandboxGimmickRuntime();
+    const crateAtTarget = runtime ? getSandboxCrateAt(runtime, targetX, targetY) : null;
+    if (crateAtTarget) {
+        const crateDestX = targetX + dx;
+        const crateDestY = targetY + dy;
+        if (!isFloor(crateDestX, crateDestY)) return false;
+        if (isSandboxDoorClosedAt(runtime, crateDestX, crateDestY)) return false;
+        if (getSandboxCrateAt(runtime, crateDestX, crateDestY)) return false;
+        const enemyBlockingCrate = enemies.find(e => e.x === crateDestX && e.y === crateDestY);
+        if (enemyBlockingCrate) return false;
+        if (!canActorEnterTile('player', crateDestX, crateDestY, dx, dy)) return false;
+        const moved = moveSandboxCrate(runtime, crateAtTarget, crateDestX, crateDestY);
+        if (!moved) return false;
+        updateSandboxGimmickState({ reason: 'crateMoved' });
+        processSandboxSignalQueue(runtime);
+    }
+
     if (!isFloor(targetX, targetY)) {
         const canBreak = canPlayerBreakWalls() && breakWallAt(targetX, targetY);
         if (!canBreak) return false;
@@ -11330,6 +12579,7 @@ function gameLoop() {
 
     drawMap();
     drawDomainEffects();
+    drawSandboxGimmicks(isSandboxActive());
     drawPlayer();
     drawEnemies();
     drawDefeatedEnemies(); // Draw defeat animations
@@ -11463,6 +12713,11 @@ function getEnemyMovePreferences(dx, dy) {
 
 function canEnemyOccupy(x, y, enemy) {
     if (!isFloor(x, y)) return false;
+    const runtime = getSandboxGimmickRuntime();
+    if (runtime) {
+        if (isSandboxDoorClosedAt(runtime, x, y)) return false;
+        if (isSandboxCrateAt(runtime, x, y)) return false;
+    }
     return !enemies.some(e => e !== enemy && e.x === x && e.y === y);
 }
 
@@ -11705,6 +12960,10 @@ function enemyTurn() {
             if (!enemies.includes(enemy)) break;
             performEnemyAction(enemy);
         }
+    }
+
+    if (isSandboxActive()) {
+        updateSandboxGimmickState({ reason: 'enemyTurn' });
     }
 
     if (!isGameOver) {

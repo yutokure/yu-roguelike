@@ -73,6 +73,258 @@
         right: '→'
     };
 
+    const WIRE_SIGNAL_TYPES = ['binary', 'pulse', 'value'];
+    const DEFAULT_WIRE_SIGNAL_TYPE = 'binary';
+
+    const GIMMICK_TYPE_DEFINITIONS = {
+        pushableCrate: {
+            id: 'pushableCrate',
+            label: '木箱',
+            icon: '📦',
+            defaultName: '木箱',
+            defaultConfig: { mass: 1, snapToGrid: true, sticky: false },
+            configFields: [
+                { id: 'mass', type: 'number', min: 0.1, max: 20, step: 0.1, label: '重さ' },
+                { id: 'snapToGrid', type: 'boolean', label: '床グリッドに合わせる' },
+                { id: 'sticky', type: 'boolean', label: 'スイッチに載ると固定' }
+            ],
+            inputs: [],
+            outputs: [
+                { id: 'pressed', label: '荷重ON', signal: 'binary' },
+                { id: 'released', label: '荷重OFF', signal: 'pulse' },
+                { id: 'moved', label: '移動', signal: 'pulse' }
+            ]
+        },
+        floorSwitch: {
+            id: 'floorSwitch',
+            label: 'スイッチ',
+            icon: '🔘',
+            defaultName: 'スイッチ',
+            defaultConfig: { mode: 'momentary', defaultOn: false, resettable: true },
+            configFields: [
+                {
+                    id: 'mode',
+                    type: 'select',
+                    label: 'モード',
+                    options: [
+                        { value: 'momentary', label: '踏んでいる間だけ' },
+                        { value: 'toggle', label: '踏む度に切替' },
+                        { value: 'sticky', label: '一度踏むと維持' }
+                    ]
+                },
+                { id: 'defaultOn', type: 'boolean', label: '初期状態ON' },
+                { id: 'resettable', type: 'boolean', label: 'リセット信号を許可' }
+            ],
+            inputs: [
+                { id: 'set', label: '強制ON', signal: 'binary' },
+                { id: 'reset', label: '強制OFF', signal: 'binary' }
+            ],
+            outputs: [
+                { id: 'activated', label: 'ON', signal: 'binary' },
+                { id: 'deactivated', label: 'OFF', signal: 'pulse' },
+                { id: 'state', label: '状態', signal: 'value' }
+            ]
+        },
+        door: {
+            id: 'door',
+            label: '扉',
+            icon: '🚪',
+            defaultName: '扉',
+            defaultConfig: { initialState: 'closed', autoClose: false, autoCloseDelay: 5 },
+            configFields: [
+                {
+                    id: 'initialState',
+                    type: 'select',
+                    label: '初期状態',
+                    options: [
+                        { value: 'open', label: '開' },
+                        { value: 'closed', label: '閉' }
+                    ]
+                },
+                { id: 'autoClose', type: 'boolean', label: '自動で閉じる' },
+                { id: 'autoCloseDelay', type: 'number', label: '自動クローズ秒', min: 0, max: 120, step: 0.5 }
+            ],
+            inputs: [
+                { id: 'open', label: '開く', signal: 'pulse' },
+                { id: 'close', label: '閉じる', signal: 'pulse' },
+                { id: 'toggle', label: '切り替え', signal: 'pulse' }
+            ],
+            outputs: [
+                { id: 'opened', label: '開状態', signal: 'binary' },
+                { id: 'closed', label: '閉状態', signal: 'binary' },
+                { id: 'state', label: '状態', signal: 'value' }
+            ]
+        },
+        sensor: {
+            id: 'sensor',
+            label: 'センサー',
+            icon: '📡',
+            defaultName: 'センサー',
+            defaultConfig: { target: 'player', radius: 3, los: false },
+            configFields: [
+                {
+                    id: 'target',
+                    type: 'select',
+                    label: '対象',
+                    options: [
+                        { value: 'player', label: 'プレイヤー' },
+                        { value: 'enemy', label: '敵' },
+                        { value: 'ally', label: '味方' },
+                        { value: 'any', label: 'すべて' }
+                    ]
+                },
+                { id: 'radius', type: 'number', label: '感知半径', min: 1, max: 20, step: 1 },
+                { id: 'los', type: 'boolean', label: '視線判定あり' }
+            ],
+            inputs: [
+                { id: 'enable', label: '有効化', signal: 'binary' },
+                { id: 'disable', label: '無効化', signal: 'binary' }
+            ],
+            outputs: [
+                { id: 'detected', label: '検知', signal: 'binary' },
+                { id: 'lost', label: '喪失', signal: 'pulse' },
+                { id: 'count', label: '検知数', signal: 'value' }
+            ]
+        },
+        logic: {
+            id: 'logic',
+            label: '論理ノード',
+            icon: '⚙️',
+            defaultName: 'ロジック',
+            defaultConfig: { operator: 'and', inputCount: 2, inverted: false },
+            configFields: [
+                {
+                    id: 'operator',
+                    type: 'select',
+                    label: '演算',
+                    options: [
+                        { value: 'and', label: 'AND' },
+                        { value: 'or', label: 'OR' },
+                        { value: 'xor', label: 'XOR' },
+                        { value: 'nand', label: 'NAND' },
+                        { value: 'nor', label: 'NOR' },
+                        { value: 'xnor', label: 'XNOR' },
+                        { value: 'not', label: 'NOT' }
+                    ]
+                },
+                { id: 'inputCount', type: 'number', label: '入力数', min: 1, max: 6, step: 1 },
+                { id: 'inverted', type: 'boolean', label: '出力を反転' }
+            ],
+            inputs: [
+                { id: 'in1', label: '入力1', signal: 'binary' },
+                { id: 'in2', label: '入力2', signal: 'binary' }
+            ],
+            outputs: [
+                { id: 'true', label: '真', signal: 'binary' },
+                { id: 'false', label: '偽', signal: 'binary' },
+                { id: 'state', label: '状態', signal: 'value' }
+            ]
+        },
+        script: {
+            id: 'script',
+            label: 'コードノード',
+            icon: '🧠',
+            defaultName: 'スクリプト',
+            defaultConfig: { language: 'js', code: '', autoRun: false },
+            configFields: [
+                {
+                    id: 'language',
+                    type: 'select',
+                    label: '言語',
+                    options: [
+                        { value: 'js', label: 'JavaScript' },
+                        { value: 'lua', label: 'Lua' }
+                    ]
+                },
+                { id: 'autoRun', type: 'boolean', label: '信号無しで毎Tick実行' },
+                { id: 'code', type: 'textarea', label: 'コード', maxLength: 5000 }
+            ],
+            inputs: [
+                { id: 'run', label: '実行', signal: 'pulse' },
+                { id: 'param', label: '引数', signal: 'value' }
+            ],
+            outputs: [
+                { id: 'done', label: '完了', signal: 'pulse' },
+                { id: 'result', label: '結果', signal: 'value' },
+                { id: 'error', label: 'エラー', signal: 'value' }
+            ]
+        },
+        io: {
+            id: 'io',
+            label: 'I/Oノード',
+            icon: '🗃️',
+            defaultName: 'I/O',
+            defaultConfig: { mode: 'read', path: 'data.json', format: 'json', throttle: 0 },
+            configFields: [
+                {
+                    id: 'mode',
+                    type: 'select',
+                    label: '動作',
+                    options: [
+                        { value: 'read', label: '読み込み' },
+                        { value: 'write', label: '書き込み' },
+                        { value: 'append', label: '追記' }
+                    ]
+                },
+                { id: 'path', type: 'text', label: 'パス', maxLength: 120 },
+                {
+                    id: 'format',
+                    type: 'select',
+                    label: '形式',
+                    options: [
+                        { value: 'json', label: 'JSON' },
+                        { value: 'text', label: 'テキスト' },
+                        { value: 'binary', label: 'バイナリ' }
+                    ]
+                },
+                { id: 'throttle', type: 'number', label: 'クールタイム(s)', min: 0, max: 120, step: 0.5 }
+            ],
+            inputs: [
+                { id: 'execute', label: '実行', signal: 'pulse' },
+                { id: 'payload', label: 'データ', signal: 'value' }
+            ],
+            outputs: [
+                { id: 'success', label: '成功', signal: 'pulse' },
+                { id: 'data', label: '結果', signal: 'value' },
+                { id: 'failure', label: '失敗', signal: 'value' }
+            ]
+        },
+        alert: {
+            id: 'alert',
+            label: 'アラート',
+            icon: '⚠️',
+            defaultName: 'アラート',
+            defaultConfig: { message: 'Alert!', level: 'info', cooldown: 0 },
+            configFields: [
+                { id: 'message', type: 'textarea', label: 'メッセージ', maxLength: 280 },
+                {
+                    id: 'level',
+                    type: 'select',
+                    label: 'レベル',
+                    options: [
+                        { value: 'info', label: '情報' },
+                        { value: 'warning', label: '警告' },
+                        { value: 'error', label: '重大' }
+                    ]
+                },
+                { id: 'cooldown', type: 'number', label: 'クールタイム(s)', min: 0, max: 60, step: 0.5 }
+            ],
+            inputs: [
+                { id: 'trigger', label: '表示', signal: 'pulse' },
+                { id: 'setMessage', label: 'メッセージ設定', signal: 'value' }
+            ],
+            outputs: [
+                { id: 'shown', label: '表示完了', signal: 'pulse' }
+            ]
+        }
+    };
+
+    const GIMMICK_TYPES = Object.keys(GIMMICK_TYPE_DEFINITIONS);
+
+    const LOGIC_OPERATORS = new Set(['and', 'or', 'xor', 'nand', 'nor', 'xnor', 'not']);
+    const MAX_GIMMICKS_PER_MAP = 128;
+    const MAX_WIRES_PER_MAP = 256;
+
     let refs = {};
     const DOMAIN_EFFECT_OPTIONS = [
         { id: 'attackUp', label: '攻撃力アップ' },
@@ -200,6 +452,8 @@
     let portalSeq = 1;
     let enemySeq = 1;
     let domainSeq = 1;
+    let gimmickSeq = 1;
+    let wireSeq = 1;
     let pendingSerializedState = null;
     const paintState = { active: false, pointerId: null, lastKey: null, blockClick: false };
     const EXPORT_FILE_PREFIX = 'sandbox-dungeon';
@@ -316,6 +570,342 @@
         return meta.map(row => Array.isArray(row) ? row.map(cell => (cell ? { ...cell } : null)) : []);
     }
 
+    function sanitizeGimmickType(type) {
+        if (typeof type !== 'string') return 'floorSwitch';
+        const normalized = type.trim();
+        return GIMMICK_TYPES.includes(normalized) ? normalized : 'floorSwitch';
+    }
+
+    function getGimmickDefinition(type) {
+        return GIMMICK_TYPE_DEFINITIONS[sanitizeGimmickType(type)] || GIMMICK_TYPE_DEFINITIONS.floorSwitch;
+    }
+
+    function defaultGimmickName(type) {
+        const def = getGimmickDefinition(type);
+        return def?.defaultName || def?.label || 'ギミック';
+    }
+
+    function getGimmickIcon(type) {
+        const def = getGimmickDefinition(type);
+        return def?.icon || '⚙️';
+    }
+
+    function getGimmickDisplayLabel(gimmick) {
+        if (!gimmick || typeof gimmick !== 'object') return '';
+        const name = typeof gimmick.name === 'string' ? gimmick.name.trim() : '';
+        if (name) return name;
+        const def = getGimmickDefinition(gimmick.type);
+        return def?.label || defaultGimmickName(gimmick.type);
+    }
+
+    function computeDefaultLayout(index = 0) {
+        const col = index % 4;
+        const row = Math.floor(index / 4);
+        const x = 0.15 + col * 0.2;
+        const y = 0.18 + row * 0.22;
+        return {
+            x: clamp(0.05, 0.95, Number.isFinite(x) ? x : 0.5),
+            y: clamp(0.05, 0.95, Number.isFinite(y) ? y : 0.5)
+        };
+    }
+
+    function normalizeLayout(layout, index = 0) {
+        if (!layout || typeof layout !== 'object') {
+            return computeDefaultLayout(index);
+        }
+        const lx = Number(layout.x);
+        const ly = Number(layout.y);
+        if (Number.isFinite(lx) && Number.isFinite(ly)) {
+            return {
+                x: clamp(0, 1, lx),
+                y: clamp(0, 1, ly)
+            };
+        }
+        return computeDefaultLayout(index);
+    }
+
+    function sanitizeGimmickFieldValue(field, raw) {
+        if (!field) return raw;
+        switch (field.type) {
+            case 'number': {
+                const value = Number(raw);
+                if (!Number.isFinite(value)) return field.min ?? 0;
+                const step = Number(field.step);
+                const withClamp = clamp(field.min ?? Number.MIN_SAFE_INTEGER, field.max ?? Number.MAX_SAFE_INTEGER, value);
+                if (Number.isFinite(step) && step > 0) {
+                    return Math.round(withClamp / step) * step;
+                }
+                return withClamp;
+            }
+            case 'boolean':
+                return !!raw;
+            case 'textarea':
+            case 'text': {
+                const str = typeof raw === 'string' ? raw : (raw == null ? '' : String(raw));
+                if (Number.isInteger(field.maxLength) && field.maxLength > 0) {
+                    return str.slice(0, field.maxLength);
+                }
+                return str;
+            }
+            case 'select': {
+                const value = typeof raw === 'string' ? raw : (raw == null ? '' : String(raw));
+                const options = Array.isArray(field.options) ? field.options : [];
+                if (options.some(opt => opt.value === value)) {
+                    return value;
+                }
+                return options[0]?.value ?? '';
+            }
+            default:
+                return raw;
+        }
+    }
+
+    function mergeGimmickConfig(definition, rawConfig) {
+        const def = definition || GIMMICK_TYPE_DEFINITIONS.floorSwitch;
+        const config = { ...(def.defaultConfig || {}) };
+        const fields = Array.isArray(def.configFields) ? def.configFields : [];
+        fields.forEach(field => {
+            const value = rawConfig?.[field.id];
+            if (typeof value !== 'undefined') {
+                config[field.id] = sanitizeGimmickFieldValue(field, value);
+            }
+        });
+        if (rawConfig && typeof rawConfig === 'object') {
+            Object.keys(rawConfig).forEach(key => {
+                if (typeof config[key] === 'undefined') {
+                    config[key] = rawConfig[key];
+                }
+            });
+        }
+        return config;
+    }
+
+    function createGimmickRecord(options = {}, layoutIndex = 0) {
+        const type = sanitizeGimmickType(options.type || 'floorSwitch');
+        const def = getGimmickDefinition(type);
+        const id = typeof options.id === 'string' && options.id.trim() ? options.id.trim() : `gimmick-${gimmickSeq++}`;
+        const layout = normalizeLayout(options.layout, layoutIndex);
+        const tile = options.tile && Number.isFinite(options.tile.x) && Number.isFinite(options.tile.y)
+            ? { x: Math.floor(options.tile.x), y: Math.floor(options.tile.y) }
+            : null;
+        const config = mergeGimmickConfig(def, options.config);
+        return {
+            id,
+            type,
+            name: typeof options.name === 'string' && options.name.trim() ? options.name.trim() : `${def.defaultName || def.label} ${layoutIndex + 1}`,
+            notes: typeof options.notes === 'string' ? options.notes : '',
+            tags: Array.isArray(options.tags) ? options.tags.filter(tag => typeof tag === 'string').slice(0, 8) : [],
+            locked: !!options.locked,
+            layout,
+            tile,
+            color: typeof options.color === 'string' ? options.color : null,
+            config
+        };
+    }
+
+    function cloneGimmickRecord(record) {
+        if (!record || typeof record !== 'object') return null;
+        return {
+            id: record.id,
+            type: sanitizeGimmickType(record.type),
+            name: typeof record.name === 'string' ? record.name : defaultGimmickName(record.type),
+            notes: typeof record.notes === 'string' ? record.notes : '',
+            tags: Array.isArray(record.tags) ? record.tags.filter(tag => typeof tag === 'string').map(tag => tag.slice(0, 32)).slice(0, 8) : [],
+            locked: !!record.locked,
+            layout: normalizeLayout(record.layout),
+            tile: record.tile && Number.isFinite(record.tile.x) && Number.isFinite(record.tile.y)
+                ? { x: Math.floor(record.tile.x), y: Math.floor(record.tile.y) }
+                : null,
+            color: typeof record.color === 'string' ? record.color : null,
+            config: mergeGimmickConfig(getGimmickDefinition(record.type), record.config)
+        };
+    }
+
+    function cloneGimmickList(list) {
+        if (!Array.isArray(list)) return [];
+        return list.map((entry, index) => cloneGimmickRecord({ ...entry, layout: entry?.layout ?? computeDefaultLayout(index) })).filter(Boolean);
+    }
+
+    function createWireRecord(options = {}) {
+        const id = typeof options.id === 'string' && options.id.trim() ? options.id.trim() : `wire-${wireSeq++}`;
+        const signal = WIRE_SIGNAL_TYPES.includes(options.signal) ? options.signal : DEFAULT_WIRE_SIGNAL_TYPE;
+        return {
+            id,
+            source: {
+                gimmickId: typeof options.source?.gimmickId === 'string' ? options.source.gimmickId : null,
+                portId: typeof options.source?.portId === 'string' ? options.source.portId : null
+            },
+            target: {
+                gimmickId: typeof options.target?.gimmickId === 'string' ? options.target.gimmickId : null,
+                portId: typeof options.target?.portId === 'string' ? options.target.portId : null
+            },
+            signal,
+            label: typeof options.label === 'string' ? options.label : ''
+        };
+    }
+
+    function cloneWireList(list, gimmicks = []) {
+        if (!Array.isArray(list)) return [];
+        const outputIndex = new Set();
+        const inputIndex = new Set();
+        if (Array.isArray(gimmicks)) {
+            gimmicks.forEach(gimmick => {
+                const outputs = resolveGimmickOutputPorts(gimmick);
+                const inputs = resolveGimmickInputPorts(gimmick);
+                outputs.forEach(port => outputIndex.add(`${gimmick.id}:${port.id}`));
+                inputs.forEach(port => inputIndex.add(`${gimmick.id}:${port.id}`));
+            });
+        }
+        return list.map(entry => ({
+            id: entry?.id || `wire-${wireSeq++}`,
+            source: {
+                gimmickId: typeof entry?.source?.gimmickId === 'string' ? entry.source.gimmickId : null,
+                portId: typeof entry?.source?.portId === 'string' ? entry.source.portId : null
+            },
+            target: {
+                gimmickId: typeof entry?.target?.gimmickId === 'string' ? entry.target.gimmickId : null,
+                portId: typeof entry?.target?.portId === 'string' ? entry.target.portId : null
+            },
+            signal: WIRE_SIGNAL_TYPES.includes(entry?.signal) ? entry.signal : DEFAULT_WIRE_SIGNAL_TYPE,
+            label: typeof entry?.label === 'string' ? entry.label : ''
+        })).filter(wire => {
+            if (!wire.source.gimmickId || !wire.source.portId || !wire.target.gimmickId || !wire.target.portId) return false;
+            if (outputIndex.size && !outputIndex.has(`${wire.source.gimmickId}:${wire.source.portId}`)) return false;
+            if (inputIndex.size && !inputIndex.has(`${wire.target.gimmickId}:${wire.target.portId}`)) return false;
+            return true;
+        });
+    }
+
+    function resolveLogicInputPorts(config) {
+        const count = clamp(1, 8, Math.floor(Number(config?.inputCount) || 2));
+        const ports = [];
+        for (let i = 0; i < count; i++) {
+            ports.push({
+                id: `in${i + 1}`,
+                label: `入力${i + 1}`,
+                signal: 'binary'
+            });
+        }
+        return ports;
+    }
+
+    function resolveGimmickInputPorts(gimmick) {
+        const def = getGimmickDefinition(gimmick?.type);
+        if (gimmick?.type === 'logic') {
+            return resolveLogicInputPorts(gimmick?.config);
+        }
+        return Array.isArray(def.inputs)
+            ? def.inputs.map(port => ({ id: port.id, label: port.label, signal: port.signal || DEFAULT_WIRE_SIGNAL_TYPE }))
+            : [];
+    }
+
+    function resolveGimmickOutputPorts(gimmick) {
+        const def = getGimmickDefinition(gimmick?.type);
+        if (gimmick?.type === 'logic') {
+            const defaultOutputs = Array.isArray(def.outputs)
+                ? def.outputs.map(port => ({ id: port.id, label: port.label, signal: port.signal || DEFAULT_WIRE_SIGNAL_TYPE }))
+                : [];
+            if (gimmick?.config?.inverted) {
+                return defaultOutputs.map(port => ({ ...port, label: `${port.label}(INV)` }));
+            }
+            return defaultOutputs;
+        }
+        return Array.isArray(def.outputs)
+            ? def.outputs.map(port => ({ id: port.id, label: port.label, signal: port.signal || DEFAULT_WIRE_SIGNAL_TYPE }))
+            : [];
+    }
+
+    function getGimmickById(id) {
+        if (!id) return null;
+        return Array.isArray(state.gimmicks) ? state.gimmicks.find(gimmick => gimmick && gimmick.id === id) : null;
+    }
+
+    function getOutputPortLabel(gimmick, portId) {
+        if (!gimmick || !portId) return portId || '';
+        const ports = resolveGimmickOutputPorts(gimmick);
+        const port = ports.find(entry => entry.id === portId);
+        return port ? port.label : portId;
+    }
+
+    function getInputPortLabel(gimmick, portId) {
+        if (!gimmick || !portId) return portId || '';
+        const ports = resolveGimmickInputPorts(gimmick);
+        const port = ports.find(entry => entry.id === portId);
+        return port ? port.label : portId;
+    }
+
+    function ensureGimmickCollections() {
+        const map = getActiveMapRecord();
+        if (!map) return;
+        if (!Array.isArray(map.gimmicks)) map.gimmicks = [];
+        if (!Array.isArray(map.wires)) map.wires = [];
+        state.gimmicks = map.gimmicks;
+        state.wires = map.wires;
+    }
+
+    function normalizeGimmickList(list) {
+        if (!Array.isArray(list)) return [];
+        const seen = new Set();
+        const result = [];
+        list.forEach((entry, index) => {
+            if (!entry || typeof entry !== 'object') return;
+            let id = typeof entry.id === 'string' && entry.id.trim() ? entry.id.trim() : `gimmick-${gimmickSeq++}`;
+            while (seen.has(id)) {
+                id = `gimmick-${gimmickSeq++}`;
+            }
+            const record = createGimmickRecord({
+                id,
+                type: entry.type,
+                name: entry.name,
+                notes: entry.notes,
+                tags: entry.tags,
+                locked: entry.locked,
+                layout: entry.layout,
+                tile: entry.tile || entry.position,
+                color: entry.color,
+                config: entry.config
+            }, index);
+            seen.add(record.id);
+            result.push(record);
+        });
+        return result;
+    }
+
+    function normalizeWireConnections(list, gimmicks) {
+        if (!Array.isArray(list) || !Array.isArray(gimmicks) || !gimmicks.length) return [];
+        const gimmickMap = new Map();
+        gimmicks.forEach(gimmick => gimmickMap.set(gimmick.id, gimmick));
+        const seen = new Set();
+        const wires = [];
+        list.forEach(entry => {
+            if (!entry || typeof entry !== 'object') return;
+            let sourceId = typeof entry.source?.gimmickId === 'string' ? entry.source.gimmickId : null;
+            let targetId = typeof entry.target?.gimmickId === 'string' ? entry.target.gimmickId : null;
+            if (!gimmickMap.has(sourceId) || !gimmickMap.has(targetId)) return;
+            const sourcePortId = typeof entry.source?.portId === 'string' ? entry.source.portId : null;
+            const targetPortId = typeof entry.target?.portId === 'string' ? entry.target.portId : null;
+            if (!sourcePortId || !targetPortId) return;
+            const sourcePorts = resolveGimmickOutputPorts(gimmickMap.get(sourceId));
+            const targetPorts = resolveGimmickInputPorts(gimmickMap.get(targetId));
+            if (!sourcePorts.some(port => port.id === sourcePortId)) return;
+            if (!targetPorts.some(port => port.id === targetPortId)) return;
+            let id = typeof entry.id === 'string' && entry.id.trim() ? entry.id.trim() : `wire-${wireSeq++}`;
+            while (seen.has(id)) {
+                id = `wire-${wireSeq++}`;
+            }
+            const signal = WIRE_SIGNAL_TYPES.includes(entry.signal) ? entry.signal : DEFAULT_WIRE_SIGNAL_TYPE;
+            wires.push({
+                id,
+                source: { gimmickId: sourceId, portId: sourcePortId },
+                target: { gimmickId: targetId, portId: targetPortId },
+                signal,
+                label: typeof entry.label === 'string' ? entry.label : ''
+            });
+            seen.add(id);
+        });
+        return wires;
+    }
+
     function createMapRecord(options = {}) {
         const {
             id,
@@ -363,7 +953,9 @@
             playerStart: { x: startX, y: startY },
             portals: [portal],
             enemies: [],
-            domainEffects: []
+            domainEffects: [],
+            gimmicks: [],
+            wires: []
         };
     }
 
@@ -395,10 +987,17 @@
         state.portals = map.portals;
         state.enemies = map.enemies;
         state.domainEffects = map.domainEffects;
+        if (!Array.isArray(map.gimmicks)) map.gimmicks = [];
+        if (!Array.isArray(map.wires)) map.wires = [];
+        state.gimmicks = map.gimmicks;
+        state.wires = map.wires;
         if (!preserveSelection) {
             state.selectedEnemyId = map.enemies[0]?.id || null;
             state.selectedDomainId = map.domainEffects[0]?.id || null;
             state.selectedPortalId = map.portals && map.portals.length ? map.portals[0].id : null;
+            state.selectedGimmickId = map.gimmicks && map.gimmicks.length ? map.gimmicks[0].id : null;
+            state.selectedWireId = map.wires && map.wires.length ? map.wires[0].id : null;
+            state.pendingWire = null;
         }
         ensureStateGridSize(state.width, state.height);
         return true;
@@ -670,7 +1269,9 @@
                     effectParams: cloneDomainEffectParams(effect),
                     x: Number.isFinite(effect.x) ? effect.x : null,
                     y: Number.isFinite(effect.y) ? effect.y : null
-                }))
+                })),
+                gimmicks: cloneGimmickList(map.gimmicks || []),
+                wires: cloneWireList(map.wires || [], map.gimmicks || [])
             };
         }) : [];
 
@@ -732,7 +1333,9 @@
                     effectParams: cloneDomainEffectParams(effect),
                     x: Number.isFinite(effect.x) ? effect.x : null,
                     y: Number.isFinite(effect.y) ? effect.y : null
-                }))
+                })),
+                gimmicks: cloneGimmickList(map.gimmicks || []),
+                wires: cloneWireList(map.wires || [], map.gimmicks || [])
             })) : [],
             activeMapId: state.activeMapId,
             entryMapId: state.entryMapId,
@@ -741,6 +1344,8 @@
             selectedEnemyId: state.selectedEnemyId || null,
             selectedDomainId: state.selectedDomainId || null,
             selectedPortalId: state.selectedPortalId || null,
+             selectedGimmickId: state.selectedGimmickId || null,
+             selectedWireId: state.selectedWireId || null,
             brush: state.brush,
             lastCell: state.lastCell ? { ...state.lastCell } : null,
             validation: {
@@ -838,6 +1443,8 @@
         const maps = Array.isArray(sanitizedConfig?.maps) ? sanitizedConfig.maps.map(map => {
             const width = clamp(Bridge?.minSize || MIN_SIZE_FALLBACK, Bridge?.maxSize || MAX_SIZE_FALLBACK, Math.floor(Number(map.width) || DEFAULT_WIDTH));
             const height = clamp(Bridge?.minSize || MIN_SIZE_FALLBACK, Bridge?.maxSize || MAX_SIZE_FALLBACK, Math.floor(Number(map.height) || DEFAULT_HEIGHT));
+            const gimmicks = normalizeGimmickList(map.gimmicks || []);
+            const wires = normalizeWireConnections(map.wires || [], gimmicks);
             return {
                 id: typeof map.id === 'string' ? map.id : `map-${mapSeq++}`,
                 label: typeof map.label === 'string' ? map.label : `${map.floor || 1}F`,
@@ -878,7 +1485,9 @@
                     effectParams: cloneDomainEffectParams(effect),
                     x: Number.isFinite(effect.x) ? clamp(0, width - 1, Math.floor(effect.x)) : null,
                     y: Number.isFinite(effect.y) ? clamp(0, height - 1, Math.floor(effect.y)) : null
-                })) : []
+                })) : [],
+                gimmicks,
+                wires
             };
         }) : [];
 
@@ -902,6 +1511,8 @@
             selectedEnemyId: typeof serialized?.selectedEnemyId === 'string' ? serialized.selectedEnemyId : null,
             selectedDomainId: typeof serialized?.selectedDomainId === 'string' ? serialized.selectedDomainId : null,
             selectedPortalId: typeof serialized?.selectedPortalId === 'string' ? serialized.selectedPortalId : null,
+            selectedGimmickId: typeof serialized?.selectedGimmickId === 'string' ? serialized.selectedGimmickId : null,
+            selectedWireId: typeof serialized?.selectedWireId === 'string' ? serialized.selectedWireId : null,
             brush: BRUSHES.includes(serialized?.brush) ? serialized.brush : 'floor',
             lastCell: serialized?.lastCell && Number.isFinite(serialized.lastCell.x) && Number.isFinite(serialized.lastCell.y)
                 ? { x: Math.floor(serialized.lastCell.x), y: Math.floor(serialized.lastCell.y) }
@@ -939,6 +1550,8 @@
             return true;
         }
         state.maps = Array.isArray(payload.maps) ? payload.maps.map(map => {
+            const gimmicks = cloneGimmickList(map.gimmicks || []);
+            const wires = cloneWireList(map.wires || [], gimmicks);
             const record = {
                 id: map.id || `map-${mapSeq++}`,
                 label: map.label || `${map.floor || 1}F`,
@@ -987,7 +1600,9 @@
                     };
                     ensureDomainEffectParamDefaults(normalized);
                     return normalized;
-                }) : []
+                }) : [],
+                gimmicks,
+                wires
             };
             return record;
         }) : [];
@@ -1027,6 +1642,22 @@
             return Math.max(max, localMax);
         }, 0);
         domainSeq = Math.max(domainSeq, Number.isFinite(maxDomainSeq) ? maxDomainSeq + 1 : domainSeq);
+        const maxGimmickSeq = state.maps.reduce((max, map) => {
+            const localMax = Array.isArray(map.gimmicks) ? map.gimmicks.reduce((gMax, gimmick) => {
+                const num = extractNumericSuffix(gimmick.id);
+                return Number.isFinite(num) ? Math.max(gMax, num) : gMax;
+            }, 0) : 0;
+            return Math.max(max, localMax);
+        }, 0);
+        gimmickSeq = Math.max(gimmickSeq, Number.isFinite(maxGimmickSeq) ? maxGimmickSeq + 1 : gimmickSeq);
+        const maxWireSeq = state.maps.reduce((max, map) => {
+            const localMax = Array.isArray(map.wires) ? map.wires.reduce((wMax, wire) => {
+                const num = extractNumericSuffix(wire.id);
+                return Number.isFinite(num) ? Math.max(wMax, num) : wMax;
+            }, 0) : 0;
+            return Math.max(max, localMax);
+        }, 0);
+        wireSeq = Math.max(wireSeq, Number.isFinite(maxWireSeq) ? maxWireSeq + 1 : wireSeq);
 
         state.entryMapId = payload.entryMapId || state.maps[0]?.id || null;
         state.playerLevel = payload.playerLevel;
@@ -1058,6 +1689,13 @@
         state.selectedPortalId = state.portals.some(portal => portal.id === payload.selectedPortalId)
             ? payload.selectedPortalId
             : (state.portals[0]?.id || null);
+        state.selectedGimmickId = state.gimmicks.some(gimmick => gimmick.id === payload.selectedGimmickId)
+            ? payload.selectedGimmickId
+            : (state.gimmicks[0]?.id || null);
+        state.selectedWireId = state.wires.some(wire => wire.id === payload.selectedWireId)
+            ? payload.selectedWireId
+            : (state.wires[0]?.id || null);
+        state.pendingWire = null;
 
         if (refs.widthInput) refs.widthInput.value = state.width;
         if (refs.heightInput) refs.heightInput.value = state.height;
@@ -1135,6 +1773,19 @@
         });
         if (map) {
             map.domainEffects = state.domainEffects;
+        }
+        state.gimmicks = state.gimmicks.filter(Boolean).map(gimmick => {
+            if (!gimmick.tile) return gimmick;
+            if (!Number.isFinite(gimmick.tile.x) || !Number.isFinite(gimmick.tile.y)) {
+                return { ...gimmick, tile: null };
+            }
+            if (gimmick.tile.x < 0 || gimmick.tile.x >= width || gimmick.tile.y < 0 || gimmick.tile.y >= height) {
+                return { ...gimmick, tile: null };
+            }
+            return { ...gimmick, tile: { x: Math.floor(gimmick.tile.x), y: Math.floor(gimmick.tile.y) } };
+        });
+        if (map) {
+            map.gimmicks = state.gimmicks;
         }
     }
 
@@ -1592,6 +2243,40 @@
                     ctx.fillStyle = iconColor;
                     const textOffsetY = icon === '⬆' ? -cellSize * 0.05 : 0;
                     ctx.fillText(icon, originX + cellSize / 2, originY + cellSize / 2 + textOffsetY);
+                }
+
+                const gimmicksHere = Array.isArray(state.gimmicks)
+                    ? state.gimmicks.filter(g => g && g.tile && g.tile.x === x && g.tile.y === y)
+                    : [];
+                if (gimmicksHere.length) {
+                    const primary = gimmicksHere[0];
+                    const iconGlyph = getGimmickIcon(primary.type);
+                    const labelSource = getGimmickDisplayLabel(primary);
+                    const labelSuffix = gimmicksHere.length > 1 ? `×${gimmicksHere.length}` : '';
+                    const labelTextRaw = labelSuffix ? `${labelSource}${labelSuffix}` : labelSource;
+                    const labelText = labelTextRaw ? labelTextRaw.slice(0, 8) : '';
+                    const textColor = '#0f172a';
+                    const iconFont = Math.max(12, Math.floor(cellSize * 0.44));
+                    ctx.font = `700 ${iconFont}px 'Segoe UI', 'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Noto Sans JP', sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = textColor;
+                    const iconY = originY + cellSize * (labelText ? 0.38 : 0.5);
+                    ctx.fillText(iconGlyph, originX + cellSize / 2, iconY);
+
+                    if (labelText) {
+                        const labelFont = Math.max(9, Math.floor(cellSize * 0.28));
+                        ctx.font = `600 ${labelFont}px 'Segoe UI', 'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Noto Sans JP', sans-serif`;
+                        ctx.fillText(labelText, originX + cellSize / 2, originY + cellSize * 0.78);
+                    }
+
+                    if (state.selectedGimmickId && gimmicksHere.some(g => g.id === state.selectedGimmickId)) {
+                        ctx.save();
+                        ctx.strokeStyle = '#2563eb';
+                        ctx.lineWidth = 1.4;
+                        ctx.strokeRect(originX + 2.5, originY + 2.5, cellSize - 5, cellSize - 5);
+                        ctx.restore();
+                    }
                 }
             }
         }
@@ -2300,6 +2985,623 @@
         }
     }
 
+    function parseTagString(value) {
+        if (typeof value !== 'string' || !value.trim()) return [];
+        return value.split(',')
+            .map(tag => tag.trim())
+            .filter(Boolean)
+            .map(tag => tag.slice(0, 24))
+            .slice(0, 8);
+    }
+
+    function formatTagString(tags) {
+        if (!Array.isArray(tags) || !tags.length) return '';
+        return tags.join(', ');
+    }
+
+    function setSelectedGimmickId(gimmickId) {
+        ensureGimmickCollections();
+        if (!Array.isArray(state.gimmicks) || !state.gimmicks.length) {
+            state.selectedGimmickId = null;
+            return;
+        }
+        if (!gimmickId || !state.gimmicks.some(gimmick => gimmick.id === gimmickId)) {
+            state.selectedGimmickId = state.gimmicks[0].id;
+        } else {
+            state.selectedGimmickId = gimmickId;
+        }
+    }
+
+    function setSelectedWireId(wireId) {
+        ensureGimmickCollections();
+        if (!Array.isArray(state.wires) || !state.wires.length) {
+            state.selectedWireId = null;
+            return;
+        }
+        if (!wireId || !state.wires.some(wire => wire.id === wireId)) {
+            state.selectedWireId = state.wires[0].id;
+        } else {
+            state.selectedWireId = wireId;
+        }
+    }
+
+    function renderGimmickPanel() {
+        setSelectedGimmickId(state.selectedGimmickId);
+        setSelectedWireId(state.selectedWireId);
+        renderGimmickList();
+        renderGimmickDetail();
+        renderWireList();
+        renderWireEditor();
+    }
+
+    function renderGimmickList() {
+        if (!refs.gimmickList) return;
+        ensureGimmickCollections();
+        refs.gimmickList.innerHTML = '';
+        if (!state.gimmicks.length) {
+            const empty = document.createElement('p');
+            empty.className = 'sandbox-wire-empty';
+            empty.textContent = 'ギミックがありません。右上のボタンから追加してください。';
+            refs.gimmickList.appendChild(empty);
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        state.gimmicks.forEach(gimmick => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'sandbox-gimmick-item';
+            if (state.selectedGimmickId === gimmick.id) {
+                button.classList.add('selected');
+            }
+            button.dataset.gimmickId = gimmick.id;
+
+            const titleRow = document.createElement('div');
+            titleRow.className = 'sandbox-gimmick-item-title';
+            const mainSpan = document.createElement('span');
+            mainSpan.className = 'sandbox-gimmick-item-main';
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'sandbox-gimmick-item-icon';
+            iconSpan.textContent = getGimmickIcon(gimmick.type);
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'sandbox-gimmick-item-name';
+            nameSpan.textContent = getGimmickDisplayLabel(gimmick);
+            mainSpan.appendChild(iconSpan);
+            mainSpan.appendChild(nameSpan);
+            const typeSpan = document.createElement('span');
+            typeSpan.className = 'sandbox-gimmick-item-type';
+            typeSpan.textContent = GIMMICK_TYPE_DEFINITIONS[gimmick.type]?.label || gimmick.type;
+            titleRow.appendChild(mainSpan);
+            titleRow.appendChild(typeSpan);
+            button.appendChild(titleRow);
+
+            if (gimmick.tags?.length) {
+                const tags = document.createElement('div');
+                tags.className = 'sandbox-gimmick-item-tags';
+                tags.textContent = gimmick.tags.join(', ');
+                button.appendChild(tags);
+            }
+
+            button.addEventListener('click', () => {
+                setSelectedGimmickId(gimmick.id);
+                state.pendingWire = null;
+                render();
+            });
+
+            fragment.appendChild(button);
+        });
+        refs.gimmickList.appendChild(fragment);
+    }
+
+    function renderGimmickDetail() {
+        if (!refs.gimmickForm) return;
+        ensureGimmickCollections();
+        const gimmick = getGimmickById(state.selectedGimmickId);
+        const inputs = [
+            refs.gimmickNameInput,
+            refs.gimmickTagsInput,
+            refs.gimmickLockedInput,
+            refs.gimmickTileXInput,
+            refs.gimmickTileYInput,
+            refs.gimmickUseSelectedButton,
+            refs.gimmickClearTileButton,
+            refs.gimmickNotesInput,
+            refs.gimmickDuplicateButton,
+            refs.gimmickDeleteButton
+        ];
+        const disabled = !gimmick;
+        inputs.forEach(input => {
+            if (!input) return;
+            if ('disabled' in input) {
+                input.disabled = disabled;
+            }
+        });
+        if (refs.gimmickTypeDisplay) {
+            if (gimmick) {
+                const typeLabel = GIMMICK_TYPE_DEFINITIONS[gimmick.type]?.label || gimmick.type;
+                refs.gimmickTypeDisplay.value = `${getGimmickIcon(gimmick.type)} ${typeLabel}`.trim();
+            } else {
+                refs.gimmickTypeDisplay.value = '';
+            }
+        }
+        if (!gimmick) {
+            if (refs.gimmickNameInput) refs.gimmickNameInput.value = '';
+            if (refs.gimmickTagsInput) refs.gimmickTagsInput.value = '';
+            if (refs.gimmickLockedInput) refs.gimmickLockedInput.checked = false;
+            if (refs.gimmickTileXInput) refs.gimmickTileXInput.value = '';
+            if (refs.gimmickTileYInput) refs.gimmickTileYInput.value = '';
+            if (refs.gimmickNotesInput) refs.gimmickNotesInput.value = '';
+            if (refs.gimmickConfigFields) refs.gimmickConfigFields.innerHTML = '';
+            return;
+        }
+
+        if (refs.gimmickNameInput) refs.gimmickNameInput.value = gimmick.name || '';
+        if (refs.gimmickTagsInput) refs.gimmickTagsInput.value = formatTagString(gimmick.tags);
+        if (refs.gimmickLockedInput) refs.gimmickLockedInput.checked = !!gimmick.locked;
+        if (refs.gimmickTileXInput) refs.gimmickTileXInput.value = Number.isFinite(gimmick.tile?.x) ? gimmick.tile.x : '';
+        if (refs.gimmickTileYInput) refs.gimmickTileYInput.value = Number.isFinite(gimmick.tile?.y) ? gimmick.tile.y : '';
+        if (refs.gimmickNotesInput) refs.gimmickNotesInput.value = gimmick.notes || '';
+        renderGimmickConfigFields(gimmick);
+    }
+
+    function renderGimmickConfigFields(gimmick) {
+        if (!refs.gimmickConfigFields) return;
+        refs.gimmickConfigFields.innerHTML = '';
+        if (!gimmick) return;
+        const definition = getGimmickDefinition(gimmick.type);
+        const fields = Array.isArray(definition.configFields) ? definition.configFields : [];
+        if (!fields.length) {
+            const placeholder = document.createElement('p');
+            placeholder.className = 'sandbox-wire-empty';
+            placeholder.textContent = '追加設定はありません。';
+            refs.gimmickConfigFields.appendChild(placeholder);
+            return;
+        }
+        const fragment = document.createDocumentFragment();
+        fields.forEach(field => {
+            const wrapper = document.createElement('label');
+            wrapper.className = 'sandbox-config-field';
+            wrapper.dataset.fieldId = field.id;
+            const title = document.createElement('span');
+            title.textContent = field.label || field.id;
+            wrapper.appendChild(title);
+            let control;
+            const currentValue = gimmick.config?.[field.id];
+            switch (field.type) {
+                case 'number': {
+                    control = document.createElement('input');
+                    control.type = 'number';
+                    if (Number.isFinite(field.min)) control.min = String(field.min);
+                    if (Number.isFinite(field.max)) control.max = String(field.max);
+                    if (Number.isFinite(field.step)) control.step = String(field.step);
+                    control.value = Number.isFinite(currentValue) ? currentValue : (field.min ?? 0);
+                    control.addEventListener('change', () => {
+                        const value = sanitizeGimmickFieldValue(field, control.value);
+                        gimmick.config[field.id] = value;
+                        cleanupInvalidWires();
+                        render();
+                    });
+                    break;
+                }
+                case 'boolean': {
+                    control = document.createElement('input');
+                    control.type = 'checkbox';
+                    control.checked = !!currentValue;
+                    control.addEventListener('change', () => {
+                        gimmick.config[field.id] = control.checked;
+                        cleanupInvalidWires();
+                        render();
+                    });
+                    break;
+                }
+                case 'select': {
+                    control = document.createElement('select');
+                    const options = Array.isArray(field.options) ? field.options : [];
+                    options.forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option.value;
+                        opt.textContent = option.label || option.value;
+                        control.appendChild(opt);
+                    });
+                    control.value = typeof currentValue === 'string' && options.some(opt => opt.value === currentValue)
+                        ? currentValue
+                        : (options[0]?.value || '');
+                    control.addEventListener('change', () => {
+                        gimmick.config[field.id] = control.value;
+                        cleanupInvalidWires();
+                        render();
+                    });
+                    break;
+                }
+                case 'textarea': {
+                    control = document.createElement('textarea');
+                    control.rows = field.rows || 6;
+                    if (Number.isFinite(field.maxLength)) control.maxLength = field.maxLength;
+                    control.value = typeof currentValue === 'string' ? currentValue : '';
+                    control.addEventListener('input', () => {
+                        gimmick.config[field.id] = control.value;
+                    });
+                    control.addEventListener('blur', () => {
+                        cleanupInvalidWires();
+                        render();
+                    });
+                    break;
+                }
+                default: {
+                    control = document.createElement('input');
+                    control.type = 'text';
+                    if (Number.isFinite(field.maxLength)) control.maxLength = field.maxLength;
+                    control.value = typeof currentValue === 'string' ? currentValue : '';
+                    control.addEventListener('input', () => {
+                        gimmick.config[field.id] = control.value;
+                    });
+                    control.addEventListener('blur', () => {
+                        cleanupInvalidWires();
+                        render();
+                    });
+                }
+            }
+            control.classList.add('sandbox-config-control');
+            wrapper.appendChild(control);
+            fragment.appendChild(wrapper);
+        });
+        refs.gimmickConfigFields.appendChild(fragment);
+    }
+
+    function renderWireList() {
+        if (!refs.wireList) return;
+        ensureGimmickCollections();
+        refs.wireList.innerHTML = '';
+        if (!state.wires.length) {
+            const empty = document.createElement('p');
+            empty.className = 'sandbox-wire-empty';
+            empty.textContent = '接続はありません。出力ポートをクリックして接続を作成してください。';
+            refs.wireList.appendChild(empty);
+            return;
+        }
+        state.wires.forEach(wire => {
+            const item = document.createElement('div');
+            item.className = 'sandbox-wire-item';
+            if (state.selectedWireId === wire.id) {
+                item.classList.add('selected');
+            }
+            item.dataset.wireId = wire.id;
+            const source = getGimmickById(wire.source?.gimmickId);
+            const target = getGimmickById(wire.target?.gimmickId);
+            const sourceLabel = source
+                ? `${getGimmickDisplayLabel(source)}.${getOutputPortLabel(source, wire.source.portId)}`
+                : `${wire.source?.gimmickId || '?'}:${wire.source?.portId || '?'}`;
+            const targetLabel = target
+                ? `${getGimmickDisplayLabel(target)}.${getInputPortLabel(target, wire.target.portId)}`
+                : `${wire.target?.gimmickId || '?'}:${wire.target?.portId || '?'}`;
+            const signalLabel = wire.signal === 'pulse' ? 'Pulse' : (wire.signal === 'value' ? 'Value' : 'Binary');
+            const sourceIcon = source ? getGimmickIcon(source.type) : '⚙️';
+            const targetIcon = target ? getGimmickIcon(target.type) : '⚙️';
+            const text = document.createElement('span');
+            text.textContent = `${sourceIcon} ${sourceLabel} → ${targetIcon} ${targetLabel} (${signalLabel})`;
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.textContent = '削除';
+            remove.addEventListener('click', (event) => {
+                event.stopPropagation();
+                removeWire(wire.id);
+                render();
+            });
+            item.appendChild(text);
+            item.appendChild(remove);
+            item.addEventListener('click', () => {
+                setSelectedWireId(wire.id);
+                state.pendingWire = null;
+                render();
+            });
+            refs.wireList.appendChild(item);
+        });
+    }
+
+    function getWireEditorMetrics() {
+        if (!refs.wireEditor) return null;
+        const rect = refs.wireEditor.getBoundingClientRect();
+        const margin = 40;
+        const statusHeight = refs.wireStatusbar?.offsetHeight || 48;
+        const width = rect.width;
+        const height = rect.height;
+        const usableWidth = Math.max(10, width - margin * 2);
+        const usableHeight = Math.max(10, height - statusHeight - margin * 2);
+        return { rect, width, height, margin, statusHeight, usableWidth, usableHeight };
+    }
+
+    function applyNodePosition(nodeEl, layout, metrics) {
+        if (!nodeEl || !metrics) return;
+        const normX = clamp(0, 1, Number(layout?.x) || 0.5);
+        const normY = clamp(0, 1, Number(layout?.y) || 0.5);
+        const centerX = metrics.margin + normX * metrics.usableWidth;
+        const centerY = metrics.margin + normY * metrics.usableHeight;
+        nodeEl.style.left = `${centerX}px`;
+        nodeEl.style.top = `${centerY}px`;
+        nodeEl.style.transform = 'translate(-50%, -50%)';
+    }
+
+    function renderWireEditor() {
+        if (!refs.wireEditor || !refs.wireNodes || !refs.wireCanvas) return;
+        ensureGimmickCollections();
+        cleanupInvalidWires();
+        refs.wireNodes.innerHTML = '';
+        refs.wireCanvas.innerHTML = '';
+
+        if (!state.gimmicks.length) {
+            updateWireStatus();
+            return;
+        }
+
+        const metrics = getWireEditorMetrics();
+        if (!metrics) return;
+        const fragment = document.createDocumentFragment();
+        state.gimmicks.forEach(gimmick => {
+            fragment.appendChild(createWireNode(gimmick, metrics));
+        });
+        refs.wireNodes.appendChild(fragment);
+        renderWireLines(metrics);
+        updateWireStatus();
+    }
+
+    function createWireNode(gimmick, metrics) {
+        const node = document.createElement('div');
+        node.className = 'sandbox-wire-node';
+        node.dataset.gimmickId = gimmick.id;
+        if (state.selectedGimmickId === gimmick.id) {
+            node.classList.add('selected');
+        }
+        const headerRow = document.createElement('div');
+        headerRow.className = 'sandbox-wire-node-header';
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'sandbox-wire-node-icon';
+        iconSpan.textContent = getGimmickIcon(gimmick.type);
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'sandbox-wire-node-name';
+        nameSpan.textContent = getGimmickDisplayLabel(gimmick);
+        headerRow.appendChild(iconSpan);
+        headerRow.appendChild(nameSpan);
+        node.appendChild(headerRow);
+        const typeLabel = document.createElement('span');
+        typeLabel.className = 'sandbox-wire-node-type';
+        typeLabel.textContent = GIMMICK_TYPE_DEFINITIONS[gimmick.type]?.label || gimmick.type;
+        node.appendChild(typeLabel);
+
+        const portsWrapper = document.createElement('div');
+        portsWrapper.className = 'sandbox-wire-ports-wrapper';
+
+        const inputsContainer = document.createElement('div');
+        inputsContainer.className = 'sandbox-wire-ports inputs';
+        resolveGimmickInputPorts(gimmick).forEach(port => {
+            const portEl = document.createElement('div');
+            portEl.className = 'sandbox-wire-port input';
+            portEl.dataset.portKey = `${gimmick.id}:${port.id}:input`;
+            portEl.dataset.gimmickId = gimmick.id;
+            portEl.dataset.portId = port.id;
+            portEl.dataset.direction = 'input';
+            const button = document.createElement('span');
+            button.className = 'sandbox-wire-port-button input';
+            const label = document.createElement('span');
+            label.textContent = port.label;
+            portEl.appendChild(button);
+            portEl.appendChild(label);
+            portEl.addEventListener('click', (event) => {
+                event.stopPropagation();
+                handleWirePortClick(gimmick.id, port.id, 'input');
+            });
+            inputsContainer.appendChild(portEl);
+        });
+
+        const outputsContainer = document.createElement('div');
+        outputsContainer.className = 'sandbox-wire-ports outputs';
+        resolveGimmickOutputPorts(gimmick).forEach(port => {
+            const portEl = document.createElement('div');
+            portEl.className = 'sandbox-wire-port output';
+            portEl.dataset.portKey = `${gimmick.id}:${port.id}:output`;
+            portEl.dataset.gimmickId = gimmick.id;
+            portEl.dataset.portId = port.id;
+            portEl.dataset.direction = 'output';
+            const button = document.createElement('span');
+            button.className = 'sandbox-wire-port-button output';
+            if (state.pendingWire?.source?.gimmickId === gimmick.id && state.pendingWire?.source?.portId === port.id) {
+                button.classList.add('pending');
+            }
+            const label = document.createElement('span');
+            label.textContent = port.label;
+            portEl.appendChild(button);
+            portEl.appendChild(label);
+            portEl.addEventListener('click', (event) => {
+                event.stopPropagation();
+                handleWirePortClick(gimmick.id, port.id, 'output');
+            });
+            outputsContainer.appendChild(portEl);
+        });
+
+        portsWrapper.appendChild(inputsContainer);
+        portsWrapper.appendChild(outputsContainer);
+        node.appendChild(portsWrapper);
+
+        node.addEventListener('pointerdown', (event) => {
+            if (event.button !== 0) return;
+            if (event.target.closest('.sandbox-wire-port')) return;
+            handleWireNodeDragStart(event, gimmick.id, node);
+        });
+
+        node.addEventListener('click', (event) => {
+            if (event.target.closest('.sandbox-wire-port')) return;
+            if (node.dataset.dragged === '1') {
+                node.dataset.dragged = '0';
+                return;
+            }
+            state.pendingWire = null;
+            setSelectedGimmickId(gimmick.id);
+            render();
+        });
+
+        applyNodePosition(node, gimmick.layout, metrics);
+        return node;
+    }
+
+    function renderWireLines(metrics) {
+        if (!metrics) return;
+        const svg = refs.wireCanvas;
+        svg.setAttribute('width', String(metrics.width));
+        svg.setAttribute('height', String(metrics.height));
+        svg.innerHTML = '';
+        state.wires.forEach(wire => {
+            const sourceKey = `${wire.source?.gimmickId}:${wire.source?.portId}:output`;
+            const targetKey = `${wire.target?.gimmickId}:${wire.target?.portId}:input`;
+            const sourceEl = refs.wireNodes.querySelector(`[data-port-key="${sourceKey}"]`);
+            const targetEl = refs.wireNodes.querySelector(`[data-port-key="${targetKey}"]`);
+            if (!sourceEl || !targetEl) return;
+            const sourceRect = sourceEl.getBoundingClientRect();
+            const targetRect = targetEl.getBoundingClientRect();
+            const editorRect = metrics.rect;
+            const x1 = sourceRect.left + sourceRect.width / 2 - editorRect.left;
+            const y1 = sourceRect.top + sourceRect.height / 2 - editorRect.top;
+            const x2 = targetRect.left + targetRect.width / 2 - editorRect.left;
+            const y2 = targetRect.top + targetRect.height / 2 - editorRect.top;
+            const delta = Math.abs(x2 - x1);
+            const c1x = x1 + Math.max(60, delta * 0.35);
+            const c2x = x2 - Math.max(60, delta * 0.35);
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`);
+            path.classList.add('sandbox-wire-path');
+            if (wire.signal === 'pulse') path.classList.add('signal-pulse');
+            if (wire.signal === 'value') path.classList.add('signal-value');
+            if (wire.id === state.selectedWireId) path.classList.add('selected');
+            path.dataset.wireId = wire.id;
+            path.addEventListener('click', (event) => {
+                event.stopPropagation();
+                setSelectedWireId(wire.id);
+                state.pendingWire = null;
+                render();
+            });
+            svg.appendChild(path);
+        });
+    }
+
+    function updateWireStatus(message) {
+        if (!refs.wireStatus) return;
+        if (typeof message === 'string') {
+            refs.wireStatus.textContent = message;
+            return;
+        }
+        if (state.pendingWire?.source) {
+            const source = getGimmickById(state.pendingWire.source.gimmickId);
+                const label = source
+                    ? `${getGimmickDisplayLabel(source)}.${getOutputPortLabel(source, state.pendingWire.source.portId)}`
+                : '出力ポート';
+            refs.wireStatus.textContent = `${label} の接続先をクリックしてください。`;
+            return;
+        }
+        if (state.selectedWireId) {
+            const wire = getWireById(state.selectedWireId);
+            if (wire) {
+                const src = getGimmickById(wire.source?.gimmickId);
+                const tgt = getGimmickById(wire.target?.gimmickId);
+                const srcLabel = src
+                    ? `${getGimmickDisplayLabel(src)}.${getOutputPortLabel(src, wire.source.portId)}`
+                    : `${wire.source?.gimmickId || '?'}:${wire.source?.portId || '?'}`;
+                const tgtLabel = tgt
+                    ? `${getGimmickDisplayLabel(tgt)}.${getInputPortLabel(tgt, wire.target.portId)}`
+                    : `${wire.target?.gimmickId || '?'}:${wire.target?.portId || '?'}`;
+                refs.wireStatus.textContent = `${srcLabel} → ${tgtLabel}`;
+                return;
+            }
+        }
+        if (!state.gimmicks.length) {
+            refs.wireStatus.textContent = 'ギミックを追加すると接続を設定できます。';
+        } else {
+            refs.wireStatus.textContent = '出力ポートをクリックして新しい接続を作成できます。';
+        }
+    }
+
+    function handleWirePortClick(gimmickId, portId, direction) {
+        if (direction === 'output') {
+            if (state.pendingWire?.source?.gimmickId === gimmickId && state.pendingWire?.source?.portId === portId) {
+                state.pendingWire = null;
+            } else {
+                state.pendingWire = { source: { gimmickId, portId } };
+                state.selectedWireId = null;
+            }
+            updateWireStatus();
+            renderWireEditor();
+            return;
+        }
+        if (!state.pendingWire?.source) {
+            state.selectedWireId = null;
+            state.pendingWire = null;
+            updateWireStatus('先に出力ポートを選択してください。');
+            return;
+        }
+        if (state.pendingWire.source.gimmickId === gimmickId && state.pendingWire.source.portId === portId) {
+            updateWireStatus('同じポート同士は接続できません。');
+            return;
+        }
+        addWireConnection(state.pendingWire.source.gimmickId, state.pendingWire.source.portId, gimmickId, portId);
+        state.pendingWire = null;
+        render();
+    }
+
+    function handleWireNodeDragStart(event, gimmickId, nodeEl) {
+        const metrics = getWireEditorMetrics();
+        if (!metrics) return;
+        const dragState = {
+            pointerId: event.pointerId,
+            gimmickId,
+            metrics,
+            moved: false
+        };
+        state.wireEditor.drag = dragState;
+        nodeEl.classList.add('sandbox-wire-node-dragging');
+        nodeEl.dataset.dragged = '0';
+        const handleMove = (moveEvent) => {
+            if (moveEvent.pointerId !== dragState.pointerId) return;
+            dragState.moved = true;
+            const layout = computeLayoutFromPointer(moveEvent, dragState.metrics);
+            const gimmick = getGimmickById(gimmickId);
+            if (!gimmick) return;
+            gimmick.layout = layout;
+            applyNodePosition(nodeEl, layout, dragState.metrics);
+            renderWireLines(dragState.metrics);
+            moveEvent.preventDefault();
+        };
+        const handleUp = (upEvent) => {
+            if (upEvent.pointerId !== dragState.pointerId) return;
+            nodeEl.classList.remove('sandbox-wire-node-dragging');
+            nodeEl.releasePointerCapture(dragState.pointerId);
+            nodeEl.removeEventListener('pointermove', handleMove);
+            nodeEl.removeEventListener('pointerup', handleUp);
+            nodeEl.removeEventListener('pointercancel', handleUp);
+            state.wireEditor.drag = null;
+             nodeEl.dataset.dragged = dragState.moved ? '1' : '0';
+            renderWireLines(dragState.metrics);
+        };
+        nodeEl.addEventListener('pointermove', handleMove);
+        nodeEl.addEventListener('pointerup', handleUp);
+        nodeEl.addEventListener('pointercancel', handleUp);
+        nodeEl.setPointerCapture(event.pointerId);
+    }
+
+    function computeLayoutFromPointer(event, metrics) {
+        const x = clamp(metrics.margin, metrics.margin + metrics.usableWidth, event.clientX - metrics.rect.left);
+        const y = clamp(metrics.margin, metrics.margin + metrics.usableHeight, event.clientY - metrics.rect.top);
+        const layoutX = metrics.usableWidth > 0 ? (x - metrics.margin) / metrics.usableWidth : 0.5;
+        const layoutY = metrics.usableHeight > 0 ? (y - metrics.margin) / metrics.usableHeight : 0.5;
+        return { x: clamp(0, 1, layoutX), y: clamp(0, 1, layoutY) };
+    }
+
+    function handleWireEditorBackgroundClick(event) {
+        if (!refs.wireEditor) return;
+        if (event.target.closest('.sandbox-wire-node') || event.target.closest('.sandbox-wire-port') || event.target.closest('.sandbox-wire-path')) return;
+        state.selectedWireId = null;
+        state.pendingWire = null;
+        updateWireStatus();
+        renderWireEditor();
+        renderWireList();
+    }
+
     function renderColorPalette() {
         if (!refs.colorPalette) return;
         const paletteEl = refs.colorPalette;
@@ -2694,6 +3996,7 @@
         renderEnemies();
         renderDomains();
         renderPortals();
+        renderGimmickPanel();
         renderColorPalette();
         renderValidation();
         renderIoStatus();
@@ -2831,6 +4134,178 @@
         render();
     }
 
+    function addGimmick(type, options = {}) {
+        ensureGimmickCollections();
+        const map = getActiveMapRecord();
+        if (!map) return null;
+        if (state.gimmicks.length >= MAX_GIMMICKS_PER_MAP) {
+            state.tempMessage = `ギミックの上限（${MAX_GIMMICKS_PER_MAP}）に達しています。既存のギミックを削除してください。`;
+            renderValidation();
+            return null;
+        }
+        const baseOptions = {
+            type: type || options.type || refs.gimmickTypeSelect?.value || 'floorSwitch',
+            name: options.name,
+            config: options.config,
+            tile: options.tile,
+            layout: options.layout,
+            notes: options.notes,
+            tags: options.tags,
+            color: options.color
+        };
+        if (!baseOptions.tile && state.lastCell) {
+            baseOptions.tile = { ...state.lastCell };
+        }
+        const gimmick = createGimmickRecord(baseOptions, state.gimmicks.length);
+        map.gimmicks.push(gimmick);
+        state.gimmicks = map.gimmicks;
+        state.selectedGimmickId = gimmick.id;
+        state.pendingWire = null;
+        state.selectedWireId = null;
+        return gimmick;
+    }
+
+    function duplicateGimmick(gimmickId) {
+        ensureGimmickCollections();
+        const map = getActiveMapRecord();
+        if (!map) return false;
+        const source = getGimmickById(gimmickId);
+        if (!source) return false;
+        if (state.gimmicks.length >= MAX_GIMMICKS_PER_MAP) {
+            state.tempMessage = `ギミックの上限（${MAX_GIMMICKS_PER_MAP}）に達しています。既存のギミックを削除してください。`;
+            renderValidation();
+            return false;
+        }
+        const offset = 0.08;
+        const layout = {
+            x: clamp(0, 1, (source.layout?.x ?? 0.5) + offset),
+            y: clamp(0, 1, (source.layout?.y ?? 0.5) + offset)
+        };
+        const duplicate = createGimmickRecord({
+            type: source.type,
+            name: `${source.name || defaultGimmickName(source.type)} copy`,
+            config: { ...(source.config || {}) },
+            tile: source.tile ? { ...source.tile } : null,
+            layout,
+            notes: source.notes,
+            tags: Array.isArray(source.tags) ? source.tags.slice() : [],
+            color: source.color
+        }, state.gimmicks.length);
+        map.gimmicks.push(duplicate);
+        state.gimmicks = map.gimmicks;
+        state.selectedGimmickId = duplicate.id;
+        state.pendingWire = null;
+        state.selectedWireId = null;
+        return true;
+    }
+
+    function removeGimmick(gimmickId) {
+        ensureGimmickCollections();
+        const map = getActiveMapRecord();
+        if (!map) return;
+        map.gimmicks = map.gimmicks.filter(gimmick => gimmick && gimmick.id !== gimmickId);
+        map.wires = map.wires.filter(wire => wire && wire.source?.gimmickId !== gimmickId && wire.target?.gimmickId !== gimmickId);
+        state.gimmicks = map.gimmicks;
+        state.wires = map.wires;
+        if (state.selectedGimmickId === gimmickId) {
+            state.selectedGimmickId = state.gimmicks[0]?.id || null;
+        }
+        if (state.selectedWireId && !state.wires.some(wire => wire.id === state.selectedWireId)) {
+            state.selectedWireId = null;
+        }
+        if (state.pendingWire?.source?.gimmickId === gimmickId) {
+            state.pendingWire = null;
+        }
+    }
+
+    function getWireById(wireId) {
+        if (!wireId) return null;
+        return Array.isArray(state.wires) ? state.wires.find(wire => wire && wire.id === wireId) : null;
+    }
+
+    function removeWire(wireId) {
+        ensureGimmickCollections();
+        const map = getActiveMapRecord();
+        if (!map) return;
+        map.wires = map.wires.filter(wire => wire && wire.id !== wireId);
+        state.wires = map.wires;
+        if (state.selectedWireId === wireId) {
+            state.selectedWireId = state.wires[0]?.id || null;
+        }
+    }
+
+    function addWireConnection(sourceId, sourcePortId, targetId, targetPortId, options = {}) {
+        ensureGimmickCollections();
+        const map = getActiveMapRecord();
+        if (!map) return null;
+        if (!sourceId || !targetId || !sourcePortId || !targetPortId) return null;
+        if (state.wires.length >= MAX_WIRES_PER_MAP) {
+            state.tempMessage = `ワイヤーの上限（${MAX_WIRES_PER_MAP}）に達しています。既存の接続を削除してください。`;
+            renderValidation();
+            return null;
+        }
+        const existing = state.wires.find(wire =>
+            wire.source?.gimmickId === sourceId &&
+            wire.source?.portId === sourcePortId &&
+            wire.target?.gimmickId === targetId &&
+            wire.target?.portId === targetPortId
+        );
+        if (existing) {
+            state.selectedWireId = existing.id;
+            return existing;
+        }
+        const wire = createWireRecord({
+            source: { gimmickId: sourceId, portId: sourcePortId },
+            target: { gimmickId: targetId, portId: targetPortId },
+            signal: WIRE_SIGNAL_TYPES.includes(options.signal) ? options.signal : DEFAULT_WIRE_SIGNAL_TYPE,
+            label: typeof options.label === 'string' ? options.label : ''
+        });
+        map.wires.push(wire);
+        state.wires = map.wires;
+        state.selectedWireId = wire.id;
+        return wire;
+    }
+
+    function autoLayoutGimmicks() {
+        ensureGimmickCollections();
+        if (!state.gimmicks.length) return;
+        const count = state.gimmicks.length;
+        const columns = Math.ceil(Math.sqrt(count));
+        const rows = Math.ceil(count / columns);
+        state.gimmicks.forEach((gimmick, index) => {
+            const col = index % columns;
+            const row = Math.floor(index / columns);
+            gimmick.layout = {
+                x: columns > 1 ? col / (columns - 1 || 1) : 0.5,
+                y: rows > 1 ? row / (rows - 1 || 1) : 0.5
+            };
+        });
+    }
+
+    function cleanupInvalidWires() {
+        ensureGimmickCollections();
+        const map = getActiveMapRecord();
+        if (!map) return;
+        const validOutputs = new Set();
+        const validInputs = new Set();
+        state.gimmicks.forEach(gimmick => {
+            resolveGimmickOutputPorts(gimmick).forEach(port => validOutputs.add(`${gimmick.id}:${port.id}`));
+            resolveGimmickInputPorts(gimmick).forEach(port => validInputs.add(`${gimmick.id}:${port.id}`));
+        });
+        const filtered = state.wires.filter(wire =>
+            wire &&
+            validOutputs.has(`${wire.source?.gimmickId}:${wire.source?.portId}`) &&
+            validInputs.has(`${wire.target?.gimmickId}:${wire.target?.portId}`)
+        );
+        if (filtered.length !== state.wires.length) {
+            state.wires = filtered;
+            map.wires = filtered;
+            if (state.selectedWireId && !filtered.some(wire => wire.id === state.selectedWireId)) {
+                state.selectedWireId = filtered[0]?.id || null;
+            }
+        }
+    }
+
     function fillGrid(value) {
         state.grid = createEmptyGrid(state.width, state.height, value);
         state.meta = createEmptyMeta(state.width, state.height);
@@ -2924,7 +4399,31 @@
             ioStatus: panel.querySelector('#sandbox-io-status'),
             nodeMapDialog: document.getElementById('sandbox-node-map-dialog'),
             nodeMapCanvas: document.getElementById('sandbox-node-map-canvas'),
-            nodeMapClose: document.getElementById('sandbox-node-map-close')
+            nodeMapClose: document.getElementById('sandbox-node-map-close'),
+            gimmickList: panel.querySelector('#sandbox-gimmick-list'),
+            addGimmickButton: panel.querySelector('#sandbox-add-gimmick'),
+            autoLayoutButton: panel.querySelector('#sandbox-auto-layout'),
+            gimmickTypeSelect: panel.querySelector('#sandbox-gimmick-type'),
+            gimmickForm: panel.querySelector('#sandbox-gimmick-form'),
+            gimmickNameInput: panel.querySelector('#sandbox-gimmick-name'),
+            gimmickTypeDisplay: panel.querySelector('#sandbox-gimmick-type-display'),
+            gimmickTagsInput: panel.querySelector('#sandbox-gimmick-tags'),
+            gimmickLockedInput: panel.querySelector('#sandbox-gimmick-locked'),
+            gimmickTileXInput: panel.querySelector('#sandbox-gimmick-tile-x'),
+            gimmickTileYInput: panel.querySelector('#sandbox-gimmick-tile-y'),
+            gimmickUseSelectedButton: panel.querySelector('#sandbox-gimmick-use-selected'),
+            gimmickClearTileButton: panel.querySelector('#sandbox-gimmick-clear-tile'),
+            gimmickNotesInput: panel.querySelector('#sandbox-gimmick-notes'),
+            gimmickConfigFields: panel.querySelector('#sandbox-gimmick-config-fields'),
+            gimmickDuplicateButton: panel.querySelector('#sandbox-gimmick-duplicate'),
+            gimmickDeleteButton: panel.querySelector('#sandbox-gimmick-delete'),
+            wireList: panel.querySelector('#sandbox-wire-list'),
+            wireEditor: panel.querySelector('#sandbox-wire-editor'),
+            wireCanvas: panel.querySelector('#sandbox-wire-canvas'),
+            wireNodes: panel.querySelector('#sandbox-wire-nodes'),
+            wireStatus: panel.querySelector('#sandbox-wire-status'),
+            wireClearSelection: panel.querySelector('#sandbox-wire-clear-selection'),
+            wireStatusbar: panel.querySelector('#sandbox-wire-editor .sandbox-wire-statusbar')
         };
 
         state = {
@@ -2942,6 +4441,12 @@
             selectedDomainId: null,
             portals: [],
             selectedPortalId: null,
+            gimmicks: [],
+            wires: [],
+            selectedGimmickId: null,
+            selectedWireId: null,
+            pendingWire: null,
+            wireEditor: { hoveredPort: null },
             validation: { errors: [], warnings: [] },
             compiledConfig: null,
             tempMessage: '',
@@ -3187,6 +4692,115 @@
                 handleAddPortal();
             });
         }
+        if (refs.addGimmickButton) {
+            refs.addGimmickButton.addEventListener('click', () => {
+                const type = refs.gimmickTypeSelect?.value || 'floorSwitch';
+                const added = addGimmick(type);
+                if (added) render();
+            });
+        }
+        if (refs.autoLayoutButton) {
+            refs.autoLayoutButton.addEventListener('click', () => {
+                autoLayoutGimmicks();
+                renderWireEditor();
+                renderWireList();
+                updateWireStatus();
+            });
+        }
+        if (refs.gimmickNameInput) {
+            refs.gimmickNameInput.addEventListener('input', (event) => {
+                const gimmick = getGimmickById(state.selectedGimmickId);
+                if (!gimmick) return;
+                const value = event.target.value.slice(0, 40);
+                gimmick.name = value;
+                renderGimmickList();
+                renderWireEditor();
+            });
+        }
+        if (refs.gimmickTagsInput) {
+            refs.gimmickTagsInput.addEventListener('blur', (event) => {
+                const gimmick = getGimmickById(state.selectedGimmickId);
+                if (!gimmick) return;
+                gimmick.tags = parseTagString(event.target.value);
+                event.target.value = formatTagString(gimmick.tags);
+                renderGimmickList();
+            });
+        }
+        if (refs.gimmickLockedInput) {
+            refs.gimmickLockedInput.addEventListener('change', (event) => {
+                const gimmick = getGimmickById(state.selectedGimmickId);
+                if (!gimmick) return;
+                gimmick.locked = !!event.target.checked;
+            });
+        }
+        const handleTileChange = () => {
+            const gimmick = getGimmickById(state.selectedGimmickId);
+            if (!gimmick) return;
+            const x = Number(refs.gimmickTileXInput?.value);
+            const y = Number(refs.gimmickTileYInput?.value);
+            if (Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 && x < state.width && y < state.height) {
+                gimmick.tile = { x: Math.floor(x), y: Math.floor(y) };
+            } else {
+                gimmick.tile = null;
+            }
+            renderGimmickDetail();
+        };
+        if (refs.gimmickTileXInput) refs.gimmickTileXInput.addEventListener('change', handleTileChange);
+        if (refs.gimmickTileYInput) refs.gimmickTileYInput.addEventListener('change', handleTileChange);
+        if (refs.gimmickUseSelectedButton) {
+            refs.gimmickUseSelectedButton.addEventListener('click', () => {
+                const gimmick = getGimmickById(state.selectedGimmickId);
+                if (!gimmick || !state.lastCell) return;
+                gimmick.tile = { ...state.lastCell };
+                renderGimmickDetail();
+            });
+        }
+        if (refs.gimmickClearTileButton) {
+            refs.gimmickClearTileButton.addEventListener('click', () => {
+                const gimmick = getGimmickById(state.selectedGimmickId);
+                if (!gimmick) return;
+                gimmick.tile = null;
+                renderGimmickDetail();
+            });
+        }
+        if (refs.gimmickNotesInput) {
+            refs.gimmickNotesInput.addEventListener('input', (event) => {
+                const gimmick = getGimmickById(state.selectedGimmickId);
+                if (!gimmick) return;
+                gimmick.notes = event.target.value.slice(0, 400);
+            });
+        }
+        if (refs.gimmickDuplicateButton) {
+            refs.gimmickDuplicateButton.addEventListener('click', () => {
+                if (!state.selectedGimmickId) return;
+                duplicateGimmick(state.selectedGimmickId);
+                render();
+            });
+        }
+        if (refs.gimmickDeleteButton) {
+            refs.gimmickDeleteButton.addEventListener('click', () => {
+                if (!state.selectedGimmickId) return;
+                removeGimmick(state.selectedGimmickId);
+                render();
+            });
+        }
+        if (refs.wireClearSelection) {
+            refs.wireClearSelection.addEventListener('click', () => {
+                state.pendingWire = null;
+                state.selectedWireId = null;
+                updateWireStatus();
+                renderWireEditor();
+                renderWireList();
+            });
+        }
+        if (refs.wireEditor) {
+            refs.wireEditor.addEventListener('click', handleWireEditorBackgroundClick);
+        }
+        window.addEventListener('resize', () => {
+            if (refs.wireEditor && state) {
+                renderWireEditor();
+            }
+        });
         if (refs.startButton) {
             refs.startButton.addEventListener('click', () => {
                 if (state.validation.errors.length) {

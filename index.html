@@ -617,6 +617,86 @@
                                     </dl>
                                 </div>
                             </div>
+                            <section class="sandbox-section sandbox-gimmick-suite" aria-labelledby="sandbox-gimmick-title">
+                                <div class="sandbox-section-header">
+                                    <h4 id="sandbox-gimmick-title">ギミック / ワイヤー</h4>
+                                    <div class="sandbox-gimmick-toolbar" role="group" aria-label="ギミック操作">
+                                        <label for="sandbox-gimmick-type" class="sandbox-inline-field">追加タイプ
+                                            <select id="sandbox-gimmick-type">
+                                                <option value="floorSwitch">スイッチ</option>
+                                                <option value="pushableCrate">木箱</option>
+                                                <option value="door">扉</option>
+                                                <option value="sensor">センサー</option>
+                                                <option value="logic">論理ノード</option>
+                                                <option value="script">プログラム</option>
+                                                <option value="io">I/O</option>
+                                                <option value="alert">アラート</option>
+                                            </select>
+                                        </label>
+                                        <button type="button" id="sandbox-add-gimmick">+ ギミックを追加</button>
+                                        <button type="button" id="sandbox-auto-layout" class="sandbox-secondary-button">自動整列</button>
+                                    </div>
+                                </div>
+                                <div class="sandbox-gimmick-layout">
+                                    <aside id="sandbox-gimmick-list" class="sandbox-gimmick-list" role="listbox" aria-label="ギミック一覧"></aside>
+                                    <div id="sandbox-gimmick-detail" class="sandbox-gimmick-detail" aria-live="polite">
+                                        <form id="sandbox-gimmick-form" autocomplete="off">
+                                            <div class="sandbox-form-grid">
+                                                <label>名前
+                                                    <input id="sandbox-gimmick-name" type="text" maxlength="40" placeholder="ギミック名">
+                                                </label>
+                                                <label>種類
+                                                    <input id="sandbox-gimmick-type-display" type="text" readonly>
+                                                </label>
+                                            </div>
+                                            <div class="sandbox-form-grid">
+                                                <label>タグ (カンマ区切り)
+                                                    <input id="sandbox-gimmick-tags" type="text" maxlength="120" placeholder="例: puzzle,door">
+                                                </label>
+                                                <label class="sandbox-checkbox">
+                                                    <input id="sandbox-gimmick-locked" type="checkbox">
+                                                    <span>ビジュアル上で固定</span>
+                                                </label>
+                                            </div>
+                                            <div class="sandbox-form-grid sandbox-gimmick-tile">
+                                                <label>タイルX
+                                                    <input id="sandbox-gimmick-tile-x" type="number" min="0" step="1" placeholder="X">
+                                                </label>
+                                                <label>タイルY
+                                                    <input id="sandbox-gimmick-tile-y" type="number" min="0" step="1" placeholder="Y">
+                                                </label>
+                                                <div class="sandbox-gimmick-tile-actions">
+                                                    <button type="button" id="sandbox-gimmick-use-selected">選択セルを使用</button>
+                                                    <button type="button" id="sandbox-gimmick-clear-tile" class="sandbox-secondary-button">解除</button>
+                                                </div>
+                                            </div>
+                                            <label>メモ
+                                                <textarea id="sandbox-gimmick-notes" rows="3" maxlength="400" placeholder="メモや注意事項"></textarea>
+                                            </label>
+                                            <div class="sandbox-gimmick-config">
+                                                <h5 class="sandbox-subheader">設定</h5>
+                                                <div id="sandbox-gimmick-config-fields" class="sandbox-gimmick-config-fields"></div>
+                                            </div>
+                                            <div class="sandbox-gimmick-actions">
+                                                <button type="button" id="sandbox-gimmick-duplicate" class="sandbox-secondary-button">複製</button>
+                                                <button type="button" id="sandbox-gimmick-delete" class="sandbox-danger-button">削除</button>
+                                            </div>
+                                        </form>
+                                        <div class="sandbox-wire-list-wrapper">
+                                            <h5 class="sandbox-subheader">接続一覧</h5>
+                                            <div id="sandbox-wire-list" class="sandbox-wire-list" aria-live="polite"></div>
+                                        </div>
+                                    </div>
+                                    <div id="sandbox-wire-editor" class="sandbox-wire-editor" role="application" aria-label="ワイヤー編集エリア">
+                                        <svg id="sandbox-wire-canvas" class="sandbox-wire-canvas" aria-hidden="true"></svg>
+                                        <div id="sandbox-wire-nodes" class="sandbox-wire-nodes"></div>
+                                        <div class="sandbox-wire-statusbar">
+                                            <span id="sandbox-wire-status" role="status" aria-live="polite"></span>
+                                            <button type="button" id="sandbox-wire-clear-selection" class="sandbox-secondary-button">選択解除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
                             <section class="sandbox-section sandbox-start" aria-labelledby="sandbox-start-title">
                                 <div class="sandbox-section-header">
                                     <h4 id="sandbox-start-title">起動</h4>

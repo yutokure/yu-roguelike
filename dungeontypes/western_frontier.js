@@ -107,27 +107,34 @@
   }
 
   function tintLine(ctx, x0, y0, x1, y1, thickness = 1, color){
+    if(!Number.isFinite(x0) || !Number.isFinite(y0) || !Number.isFinite(x1) || !Number.isFinite(y1)){
+      return;
+    }
+    let cx = Math.round(x0);
+    let cy = Math.round(y0);
+    const ex = Math.round(x1);
+    const ey = Math.round(y1);
     const { map, width: W, height: H } = ctx;
-    let dx = Math.abs(x1 - x0);
-    let sx = x0 < x1 ? 1 : -1;
-    let dy = -Math.abs(y1 - y0);
-    let sy = y0 < y1 ? 1 : -1;
+    let dx = Math.abs(ex - cx);
+    let sx = cx < ex ? 1 : -1;
+    let dy = -Math.abs(ey - cy);
+    let sy = cy < ey ? 1 : -1;
     let err = dx + dy;
     const half = Math.max(0, Math.floor(thickness / 2));
     while(true){
       for(let yy = -half; yy <= half; yy++){
         for(let xx = -half; xx <= half; xx++){
-          const tx = x0 + xx;
-          const ty = y0 + yy;
+          const tx = cx + xx;
+          const ty = cy + yy;
           if(tx >= 1 && tx < W - 1 && ty >= 1 && ty < H - 1 && map[ty][tx] === 0){
             ctx.setFloorColor(tx, ty, color);
           }
         }
       }
-      if(x0 === x1 && y0 === y1) break;
+      if(cx === ex && cy === ey) break;
       const e2 = 2 * err;
-      if(e2 >= dy){ err += dy; x0 += sx; }
-      if(e2 <= dx){ err += dx; y0 += sy; }
+      if(e2 >= dy){ err += dy; cx += sx; }
+      if(e2 <= dx){ err += dx; cy += sy; }
     }
   }
 

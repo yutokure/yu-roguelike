@@ -148,6 +148,17 @@
                         <div id="bdim-bookmarks" aria-live="polite"></div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="bdim-card bdim-test-card">
+                        <h3>ダンジョンテスト</h3>
+                        <p class="bdim-test-desc">ランダムなシードで全ての登録ダンジョンタイプを生成し、安全にブロック次元を遊べるか検証します。エラーが発生してもログに記録され、無限ループが起きた場合は完了しません。</p>
+                        <div class="bdim-test-actions">
+                            <button id="bdim-test-button" type="button">🧪 ダンジョンテスト</button>
+                            <span id="bdim-test-status" class="bdim-test-status" role="status" aria-live="polite">待機中</span>
+                        </div>
+                        <pre id="bdim-test-log" class="bdim-test-log" aria-live="polite" aria-atomic="false"></pre>
+                    </div>
+                </div>
             </div>
             <div id="tab-miniexp" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-miniexp">
                 <div class="row">

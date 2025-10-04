@@ -257,6 +257,9 @@ const bdimCardSize = document.getElementById('bdim-card-size');
 const bdimCardChest = document.getElementById('bdim-card-chest');
 const bdimCardBoss = document.getElementById('bdim-card-boss');
 const bdimCardSelection = document.getElementById('bdim-card-selection');
+const bdimTestButton = document.getElementById('bdim-test-button');
+const bdimTestStatus = document.getElementById('bdim-test-status');
+const bdimTestLog = document.getElementById('bdim-test-log');
 
 const DungeonGenRegistry = new Map(); // id -> DungeonGeneratorDef
 const FixedMapRegistry = new Map();   // generatorId -> { max, bossFloors, maps, mapByFloor }
@@ -4938,6 +4941,9 @@ let blockDimTables = { dimensions: [], blocks1: [], blocks2: [], blocks3: [] };
 let blockDimHistory = [];
 let blockDimBookmarks = [];
 let __lastSavedBlockDimSelectionKey = null;
+const BDIM_TEST_LOG_LIMIT = 400;
+let bdimTestLogLines = [];
+let bdimTestRunning = false;
 
 function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
 function majority(arr) {
@@ -5973,6 +5979,272 @@ function weightedRandomizeBdimBlocks(targetSumRaw, typePrefRaw) {
     recordAchievementEvent('blockdim_random', { weighted: true });
 }
 
+function cloneTestMapData(source) {
+    if (!Array.isArray(source)) return [];
+    return source.map(row => Array.isArray(row) ? row.slice() : []);
+}
+
+function cloneTestTileMeta(source) {
+    if (!Array.isArray(source)) return [];
+    return source.map(row => {
+        if (!Array.isArray(row)) return [];
+        return row.map(cell => {
+            if (cell && typeof cell === 'object') {
+                return Object.assign({}, cell);
+            }
+            return cell ?? null;
+        });
+    });
+}
+
+function captureBlockDimTestEnvironment() {
+    return {
+        map: cloneTestMapData(map),
+        tileMeta: cloneTestTileMeta(tileMeta),
+        width: MAP_WIDTH,
+        height: MAP_HEIGHT,
+        currentMode,
+        blockDimState: deepClone(blockDimState),
+        dungeonLevel,
+        selectedWorld,
+        selectedDungeonBase,
+        lastGeneratedGenType,
+        currentGeneratorHazards: Object.assign({}, currentGeneratorHazards),
+        seededActive: __seededActive,
+        mathRandom: Math.random,
+        lastSelectionKey: __lastSavedBlockDimSelectionKey
+    };
+}
+
+function applyBlockDimTestEnvironment(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return;
+    MAP_WIDTH = snapshot.width ?? MAP_WIDTH;
+    MAP_HEIGHT = snapshot.height ?? MAP_HEIGHT;
+    map = cloneTestMapData(snapshot.map);
+    tileMeta = cloneTestTileMeta(snapshot.tileMeta);
+    currentMode = snapshot.currentMode ?? currentMode;
+    blockDimState = snapshot.blockDimState ? deepClone(snapshot.blockDimState) : createDefaultBlockDimState();
+    dungeonLevel = snapshot.dungeonLevel ?? dungeonLevel;
+    selectedWorld = snapshot.selectedWorld ?? selectedWorld;
+    selectedDungeonBase = snapshot.selectedDungeonBase ?? selectedDungeonBase;
+    lastGeneratedGenType = snapshot.lastGeneratedGenType ?? lastGeneratedGenType;
+    if (snapshot.currentGeneratorHazards && typeof snapshot.currentGeneratorHazards === 'object') {
+        const h = snapshot.currentGeneratorHazards;
+        currentGeneratorHazards.generatorId = h.generatorId ?? null;
+        currentGeneratorHazards.baseDark = !!h.baseDark;
+        currentGeneratorHazards.basePoisonFog = !!h.basePoisonFog;
+        currentGeneratorHazards.recommendedLevel = Number.isFinite(h.recommendedLevel) ? h.recommendedLevel : null;
+        currentGeneratorHazards.darkActive = !!h.darkActive;
+        currentGeneratorHazards.poisonFogActive = !!h.poisonFogActive;
+    }
+    __seededActive = !!snapshot.seededActive;
+    if (typeof snapshot.mathRandom === 'function') {
+        Math.random = snapshot.mathRandom;
+    } else if (!__seededActive) {
+        restoreRandom();
+    }
+    if (snapshot.lastSelectionKey !== undefined) {
+        __lastSavedBlockDimSelectionKey = snapshot.lastSelectionKey;
+    }
+}
+
+function gatherAllGeneratorTypeIdsForTest() {
+    const set = new Set();
+    BUILTIN_GENERATOR_TYPE_IDS.forEach(id => set.add(id));
+    set.add('mixed');
+    try {
+        if (typeof DungeonGenRegistry !== 'undefined' && DungeonGenRegistry && typeof DungeonGenRegistry.entries === 'function') {
+            for (const [id] of DungeonGenRegistry.entries()) {
+                if (id) set.add(String(id));
+            }
+        }
+    } catch {}
+    return Array.from(set);
+}
+
+function randomTestSeed() {
+    try {
+        if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+            const buf = new Uint32Array(1);
+            globalThis.crypto.getRandomValues(buf);
+            return buf[0] >>> 0;
+        }
+    } catch {}
+    return Math.floor(Math.random() * 0xffffffff) >>> 0;
+}
+
+function formatSeed(seed) {
+    const value = Number.isFinite(seed) ? seed >>> 0 : 0;
+    return `0x${value.toString(16).padStart(8, '0')}`;
+}
+
+function formatTestError(err) {
+    if (!err) return '不明なエラー';
+    if (err.stack) return err.stack;
+    if (err.message) return err.message;
+    return String(err);
+}
+
+function appendBdimTestLog(message) {
+    if (!bdimTestLogLines) bdimTestLogLines = [];
+    const now = new Date();
+    const prefix = `[${now.toLocaleTimeString('ja-JP', { hour12: false })}]`;
+    const text = message == null ? '' : String(message);
+    const lines = text.split(/\r?\n/);
+    lines.forEach((line, idx) => {
+        const entry = idx === 0 ? `${prefix} ${line}` : `    ${line}`;
+        bdimTestLogLines.push(entry);
+    });
+    if (bdimTestLogLines.length > BDIM_TEST_LOG_LIMIT) {
+        bdimTestLogLines = bdimTestLogLines.slice(-BDIM_TEST_LOG_LIMIT);
+    }
+    updateBdimTestLogOutput();
+}
+
+function updateBdimTestLogOutput() {
+    if (!bdimTestLog) return;
+    bdimTestLog.textContent = bdimTestLogLines.join('\n');
+    bdimTestLog.scrollTop = bdimTestLog.scrollHeight;
+}
+
+function clearBdimTestLog() {
+    bdimTestLogLines = [];
+    updateBdimTestLogOutput();
+}
+
+function setBdimTestStatus(text, variant = 'info') {
+    if (!bdimTestStatus) return;
+    bdimTestStatus.textContent = text;
+    bdimTestStatus.className = 'bdim-test-status';
+    if (variant) bdimTestStatus.classList.add(variant);
+}
+
+function runSingleBlockDimDungeonTest(genType, seed, mixedPool) {
+    const normalizedSeed = Number.isFinite(seed) ? seed >>> 0 : randomTestSeed();
+    const pool = Array.isArray(mixedPool) ? mixedPool.filter(id => id && id !== 'mixed') : [];
+    const typePool = pool.length ? Array.from(new Set(pool)) : [
+        'field', 'cave', 'maze', 'rooms', 'single-room', 'circle', 'circle-rooms', 'narrow-maze', 'wide-maze', 'snake', 'grid', 'open-space'
+    ];
+    const spec = {
+        level: 1,
+        sizeFactor: 0,
+        depth: 5,
+        chestBias: 'normal',
+        type: genType,
+        bossFloors: [],
+        typePool: genType === 'mixed' ? typePool : [genType]
+    };
+    blockDimState = {
+        enabled: true,
+        nested: 1,
+        dimKey: `test-${genType}`,
+        b1Key: `test-${genType}-1`,
+        b2Key: `test-${genType}-2`,
+        b3Key: `test-${genType}-3`,
+        spec,
+        seed: normalizedSeed
+    };
+    currentMode = 'blockdim';
+    dungeonLevel = 1;
+    lastGeneratedGenType = null;
+    currentGeneratorHazards.generatorId = null;
+    currentGeneratorHazards.baseDark = false;
+    currentGeneratorHazards.basePoisonFog = false;
+    currentGeneratorHazards.recommendedLevel = null;
+    currentGeneratorHazards.darkActive = false;
+    currentGeneratorHazards.poisonFogActive = false;
+    updateMapSize();
+    prepareFixedMapDimensionsIfNeeded();
+    reseedBlockDimForFloor();
+    try {
+        generateMap();
+    } finally {
+        restoreRandom();
+    }
+    const width = MAP_WIDTH;
+    const height = MAP_HEIGHT;
+    let floorCount = 0;
+    if (Array.isArray(map)) {
+        for (const row of map) {
+            if (!Array.isArray(row)) continue;
+            for (const cell of row) {
+                if (cell === 0) floorCount++;
+            }
+        }
+    }
+    return {
+        width,
+        height,
+        floorCount,
+        actualGenerator: lastGeneratedGenType || genType
+    };
+}
+
+async function runBlockDimDungeonTestSuite() {
+    if (bdimTestRunning) return;
+    if (!bdimTestButton || !bdimTestLog || !bdimTestStatus) return;
+    bdimTestRunning = true;
+    bdimTestButton.disabled = true;
+    clearBdimTestLog();
+    setBdimTestStatus('初期化中…', 'info');
+    const originalSnapshot = captureBlockDimTestEnvironment();
+    const baselineSnapshot = captureBlockDimTestEnvironment();
+    try {
+        if (!blockDimTables.__loaded) {
+            await initBlockDimUI();
+        }
+        if (typeof window !== 'undefined' && window.__addonLoadPromise && typeof window.__addonLoadPromise.then === 'function') {
+            try { await window.__addonLoadPromise; } catch (addonErr) { appendBdimTestLog(`アドオン読込エラー: ${formatTestError(addonErr)}`); }
+        }
+        const ids = gatherAllGeneratorTypeIdsForTest();
+        if (ids.length === 0) {
+            appendBdimTestLog('テスト対象のダンジョンタイプが見つかりません。');
+            setBdimTestStatus('対象なし', 'warning');
+            return;
+        }
+        appendBdimTestLog(`テスト対象: ${ids.length} タイプ`);
+        const mixedPool = ids.filter(id => id !== 'mixed');
+        let success = 0;
+        let failure = 0;
+        const start = typeof performance !== 'undefined' && typeof performance.now === 'function' ? performance.now() : Date.now();
+        for (let i = 0; i < ids.length; i++) {
+            const genType = ids[i];
+            const displayName = getDungeonTypeName(genType);
+            setBdimTestStatus(`実行中 (${i + 1}/${ids.length})`, 'info');
+            appendBdimTestLog(`▶ ${displayName} (${genType}) の生成テストを開始`);
+            applyBlockDimTestEnvironment(baselineSnapshot);
+            await new Promise(resolve => setTimeout(resolve, 0));
+            const seed = randomTestSeed();
+            try {
+                const result = runSingleBlockDimDungeonTest(genType, seed, mixedPool);
+                success++;
+                const actualName = getDungeonTypeName(result.actualGenerator || genType);
+                appendBdimTestLog(`✅ 成功: ${displayName} (${genType}) seed=${formatSeed(seed)} サイズ=${result.width}×${result.height} 床数=${result.floorCount} 実タイプ=${actualName}`);
+            } catch (err) {
+                failure++;
+                appendBdimTestLog(`❌ 失敗: ${displayName} (${genType}) seed=${formatSeed(seed)}`);
+                appendBdimTestLog(formatTestError(err));
+            }
+        }
+        const end = typeof performance !== 'undefined' && typeof performance.now === 'function' ? performance.now() : Date.now();
+        const duration = Math.max(0, Math.round(end - start));
+        appendBdimTestLog(`完了: 成功 ${success} 件 / 失敗 ${failure} 件 / 所要時間 ${duration}ms`);
+        if (failure > 0) {
+            setBdimTestStatus(`完了（失敗 ${failure} 件）`, 'warning');
+        } else {
+            setBdimTestStatus('完了（全て成功）', 'success');
+        }
+    } catch (err) {
+        appendBdimTestLog(`重大なエラー: ${formatTestError(err)}`);
+        setBdimTestStatus('エラーが発生しました', 'error');
+    } finally {
+        applyBlockDimTestEnvironment(originalSnapshot);
+        try { renderBdimPreview(blockDimState?.spec || null); } catch {}
+        bdimTestButton.disabled = false;
+        bdimTestRunning = false;
+    }
+}
+
 // ------- BlockDim 履歴/ブックマーク -------
 function bdimKey(nested, dimKey, b1, b2, b3) {
     return `${nested}|${dimKey}|${b1}|${b2}|${b3}`;
@@ -6293,6 +6565,13 @@ function setupTabs() {
                 initBlockDimUI().then(() => weightedRandomizeBdimBlocks(target, typePref));
             } else {
                 weightedRandomizeBdimBlocks(target, typePref);
+            }
+        });
+    }
+    if (bdimTestButton) {
+        bdimTestButton.addEventListener('click', () => {
+            if (!bdimTestRunning) {
+                runBlockDimDungeonTestSuite();
             }
         });
     }
@@ -15080,9 +15359,12 @@ function runAddonGenerator(id) {
 }
 
 // 起動時にアドオンを試し読み込み
-loadDungeonAddons()
+const __addonLoadPromise = loadDungeonAddons()
   .then(() => {
       flushPendingDungeonBlocks();
       try { if (blockDimState?.spec) renderBdimPreview(blockDimState.spec); } catch {}
   })
   .catch(() => {});
+if (typeof window !== 'undefined') {
+    window.__addonLoadPromise = __addonLoadPromise;
+}

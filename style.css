@@ -581,7 +581,7 @@ body.in-game #game-container {
 .bdim-option:hover { background: #eef2ff; }
 .bdim-option.selected { background: #c7d2fe; font-weight: 700; }
 .bdim-tag { font-size: 11px; color: #4b5563; background: #e5e7eb; padding: 2px 6px; border-radius: 999px; }
-.bdim-card {
+.bdim-card { 
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 15px;
     padding: 16px;
@@ -595,6 +595,53 @@ body.in-game #game-container {
 .bdim-card-row:last-of-type { border-bottom: none; }
 .bdim-card-row .label { font-weight: bold; opacity: 0.9; }
 .bdim-note { display: block; margin-top: 8px; opacity: 0.9; }
+
+.bdim-test-card {
+    background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.bdim-test-desc {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.bdim-test-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.bdim-test-status {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.bdim-test-status.info { color: #a5d8ff; }
+.bdim-test-status.success { color: #b2f2bb; }
+.bdim-test-status.error { color: #ffa8a8; }
+.bdim-test-status.warning { color: #ffe066; }
+
+.bdim-test-log {
+    margin-top: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    color: #e0eaff;
+    font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
 
 .selection-card h2 {
     text-align: center;

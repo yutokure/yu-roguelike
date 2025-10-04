@@ -22,9 +22,11 @@ const dungeonTypeOverlay = document.getElementById('dungeon-type-overlay');
 const dungeonTypeOverlayName = document.getElementById('dungeon-type-overlay-type');
 const dungeonTypeOverlayFeatures = document.getElementById('dungeon-type-overlay-features');
 const dungeonTypeOverlayDescription = document.getElementById('dungeon-type-overlay-description');
+const dungeonNameToggle = document.getElementById('toggle-dungeon-name');
 let dungeonOverlayHoverState = false;
 let dungeonOverlayPlayerZoneState = false;
 let dungeonOverlayLastPointer = null;
+let autoItemCheckScheduled = false;
 const MAX_LOG_LINES = 100;
 const SATIETY_MAX = 100;
 const SATIETY_TICK_PER_TURN = 1;
@@ -68,6 +70,19 @@ function refreshDungeonOverlayPlayerDimState() {
     setDungeonOverlayPlayerZoneState(inTopLeft);
 }
 
+function updateDungeonOverlayVisibility() {
+    if (!dungeonTypeOverlay) return;
+    const visible = !dungeonNameToggle || !!dungeonNameToggle.checked;
+    dungeonTypeOverlay.style.display = visible ? '' : 'none';
+    if (!visible) {
+        setDungeonOverlayHoverState(false);
+        setDungeonOverlayPlayerZoneState(false);
+    } else {
+        refreshDungeonOverlayPlayerDimState();
+        evaluateDungeonOverlayHoverFromPoint(dungeonOverlayLastPointer);
+    }
+}
+
 function evaluateDungeonOverlayHoverFromPoint(point) {
     if (!dungeonTypeOverlay || !point) {
         setDungeonOverlayHoverState(false);
@@ -83,6 +98,26 @@ function evaluateDungeonOverlayHoverFromPoint(point) {
     setDungeonOverlayHoverState(hovered);
 }
 
+function shouldAutoUsePotion(effectiveMaxHp, currentHp) {
+    if (!autoItemToggle || !autoItemToggle.checked) return false;
+    if (!player || !player.inventory || player.inventory.potion30 <= 0) return false;
+    if (!Number.isFinite(effectiveMaxHp) || effectiveMaxHp <= 0) return false;
+    if (!Number.isFinite(currentHp)) return false;
+    return currentHp <= effectiveMaxHp * 0.3;
+}
+
+function requestAutoItemCheck() {
+    if (!autoItemToggle || autoItemCheckScheduled) return;
+    autoItemCheckScheduled = true;
+    setTimeout(() => {
+        autoItemCheckScheduled = false;
+        const effectiveMaxHp = getEffectivePlayerMaxHp();
+        const rawHp = Number.isFinite(player?.hp) ? Math.max(0, player.hp) : effectiveMaxHp;
+        if (!shouldAutoUsePotion(effectiveMaxHp, rawHp)) return;
+        consumePotion30({ reason: 'auto' });
+    }, 0);
+}
+
 if (typeof window !== 'undefined') {
     window.addEventListener('mousemove', (event) => {
         dungeonOverlayLastPointer = { x: event.clientX, y: event.clientY };
@@ -94,6 +129,19 @@ if (typeof window !== 'undefined') {
     window.addEventListener('scroll', reassessOverlayHover, { passive: true });
     window.addEventListener('resize', reassessOverlayHover);
     applyDungeonOverlayDimState();
+}
+
+if (dungeonNameToggle) {
+    dungeonNameToggle.addEventListener('change', updateDungeonOverlayVisibility);
+    setTimeout(updateDungeonOverlayVisibility, 0);
+}
+
+if (autoItemToggle) {
+    autoItemToggle.addEventListener('change', () => {
+        if (autoItemToggle.checked) {
+            requestAutoItemCheck();
+        }
+    });
 }
 
 function escapeHtml(value) {
@@ -122,6 +170,7 @@ const btnImport = document.getElementById('btn-import');
 const btnExport = document.getElementById('btn-export');
 const importFileInput = document.getElementById('import-file');
 const itemsModal = document.getElementById('items-modal');
+const autoItemToggle = document.getElementById('auto-item-toggle');
 const statusModal = document.getElementById('status-modal');
 const skillsModal = document.getElementById('skills-modal');
 const skillsList = document.getElementById('skills-list');
@@ -11552,6 +11601,9 @@ function updateUI() {
         : (Number.isFinite(rawHp) ? rawHp : effectiveMaxHp);
     const hpIsInfinite = !Number.isFinite(currentHp) || !Number.isFinite(effectiveMaxHp);
     const hpPct = hpIsInfinite ? 1 : Math.max(0, Math.min(1, currentHp / Math.max(effectiveMaxHp, 1)));
+    if (!hpIsInfinite && shouldAutoUsePotion(effectiveMaxHp, currentHp)) {
+        requestAutoItemCheck();
+    }
     const expPct = Math.max(0, Math.min(1, Number.isFinite(exp) ? exp / expMax : 1));
     const abilityDownActive = isPlayerStatusActive('abilityDown');
     updatePlayerSpCap({ silent: true });
@@ -13459,6 +13511,50 @@ restartButton.addEventListener('click', () => {
     saveAll();
 });
 
+function consumePotion30({ reason = 'manual' } = {}) {
+    if (!player || !player.inventory || player.inventory.potion30 <= 0) return false;
+    const effectiveMax = getEffectivePlayerMaxHp();
+    const baseHeal = Math.ceil(effectiveMax * 0.3);
+    const result = resolveDomainInteraction({
+        amount: baseHeal,
+        baseEffect: 'healing',
+        attackerType: 'player',
+        defenderType: 'player',
+        attackerPos: { x: player.x, y: player.y },
+        defenderPos: { x: player.x, y: player.y },
+        applyInvincibility: false
+    });
+    player.inventory.potion30 -= 1;
+    const isAuto = reason === 'auto';
+    if (result.effectType === 'damage' && result.amount > 0) {
+        const damage = result.amount;
+        player.hp = Math.max(0, player.hp - damage);
+        recordAchievementEvent('damage_taken', { amount: damage, source: 'reverse-potion' });
+        addMessage(isAuto ? `オートアイテムが暴発し、${damage}のダメージを受けた！` : `ポーションが反転し、${damage}のダメージを受けた！`);
+        addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+        playSfx('damage');
+        if (player.hp <= 0) {
+            const deathMessage = isAuto ? 'オートアイテムの暴発で倒れてしまった…ゲームオーバー' : '反転した回復薬で倒れてしまった…ゲームオーバー';
+            handlePlayerDeath(deathMessage);
+        }
+    } else {
+        const beforeHp = player.hp;
+        player.hp = Math.min(effectiveMax, player.hp + result.amount);
+        enforceEffectiveHpCap();
+        const healed = Math.max(0, player.hp - beforeHp);
+        if (healed > 0) {
+            addMessage(isAuto ? `オートアイテムが発動！HPが${healed}回復` : `ポーションを使用！HPが${healed}回復`);
+            addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
+        } else {
+            addMessage(isAuto ? 'オートアイテムが発動したが体調に変化はなかった。' : 'ポーションを使用したが体調に変化はなかった。');
+        }
+        playSfx('pickup');
+    }
+    updateUI();
+    saveAll();
+    return true;
+}
+
 // ゲームの開始
 // UI: モーダル/入出力
 btnItems && btnItems.addEventListener('click', () => { openModal(itemsModal); });
@@ -13499,44 +13595,7 @@ importFileInput && importFileInput.addEventListener('change', async (e) => {
     } catch {}
 });
 usePotion30Btn && usePotion30Btn.addEventListener('click', () => {
-    if (player.inventory.potion30 <= 0) return;
-    const effectiveMax = getEffectivePlayerMaxHp();
-    const baseHeal = Math.ceil(effectiveMax * 0.3);
-    const result = resolveDomainInteraction({
-        amount: baseHeal,
-        baseEffect: 'healing',
-        attackerType: 'player',
-        defenderType: 'player',
-        attackerPos: { x: player.x, y: player.y },
-        defenderPos: { x: player.x, y: player.y },
-        applyInvincibility: false
-    });
-    player.inventory.potion30 -= 1;
-    if (result.effectType === 'damage' && result.amount > 0) {
-        const damage = result.amount;
-        player.hp = Math.max(0, player.hp - damage);
-        recordAchievementEvent('damage_taken', { amount: damage, source: 'reverse-potion' });
-        addMessage(`ポーションが反転し、${damage}のダメージを受けた！`);
-        addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
-        playSfx('damage');
-        if (player.hp <= 0) {
-            handlePlayerDeath('反転した回復薬で倒れてしまった…ゲームオーバー');
-        }
-    } else {
-        const beforeHp = player.hp;
-        player.hp = Math.min(effectiveMax, player.hp + result.amount);
-        enforceEffectiveHpCap();
-        const healed = Math.max(0, player.hp - beforeHp);
-        if (healed > 0) {
-            addMessage(`ポーションを使用！HPが${healed}回復`);
-            addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
-        } else {
-            addMessage('ポーションを使用したが体調に変化はなかった。');
-        }
-        playSfx('pickup');
-    }
-    updateUI();
-    saveAll();
+    consumePotion30({ reason: 'manual' });
 });
 
 eatPotion30Btn && eatPotion30Btn.addEventListener('click', () => {

@@ -158,6 +158,7 @@ const MAJOR_DEF_BOOST_VALUE = 10;
 const SKILL_CHARM_DURATION_TURNS = 10;
 const SP_ELIXIR_RECOVERY_RATIO = 0.75;
 const SP_ELIXIR_RECOVERY_FLAT = 50;
+const SKILL_EXECUTION_DELAY_MS = 500;
 let logBuffer = [];
 const gameOverScreen = document.getElementById('game-over-screen');
 const restartButton = document.getElementById('restart-button');
@@ -465,6 +466,8 @@ const lastSkillsSpDisplay = {
     text: null,
     ratio: null,
 };
+
+let pendingSkillTimeout = null;
 
 function nearlyEqual(a, b, epsilon = FLOAT_EPSILON) {
     const left = Number.isFinite(a) ? a : 0;
@@ -5623,16 +5626,36 @@ function attemptUseSkill(def) {
         addMessage('SPが不足している。');
         return;
     }
-    const success = !!def.action();
-    if (!success) {
-        gainSp(def.cost, { silent: true });
-        markSkillsListDirty();
-        updateUI();
-        return;
+    if (pendingSkillTimeout) {
+        clearTimeout(pendingSkillTimeout);
+        pendingSkillTimeout = null;
     }
+    if (skillsModal) {
+        closeModal(skillsModal);
+    }
+    playerTurn = false;
     markSkillsListDirty();
     updateUI();
-    commitSkillAction();
+    pendingSkillTimeout = setTimeout(() => {
+        pendingSkillTimeout = null;
+        let success = false;
+        try {
+            success = !!def.action();
+        } catch (err) {
+            console.error('Skill execution failed', err);
+            success = false;
+        }
+        if (!success) {
+            gainSp(def.cost, { silent: true });
+            markSkillsListDirty();
+            updateUI();
+            playerTurn = true;
+            return;
+        }
+        markSkillsListDirty();
+        updateUI();
+        commitSkillAction();
+    }, SKILL_EXECUTION_DELAY_MS);
 }
 
 function getCurrentSpInfo() {

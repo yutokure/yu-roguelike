@@ -4,6 +4,37 @@
     return min + Math.floor(random() * (max - min + 1));
   }
 
+  function clamp01(value){
+    if(value < 0) return 0;
+    if(value > 1) return 1;
+    return value;
+  }
+
+  function tintColor(hex, amount){
+    if(typeof hex !== 'string' || !/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)){
+      return hex;
+    }
+    const normalized = hex.length === 4
+      ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+      : hex;
+    const intVal = parseInt(normalized.slice(1), 16);
+    let r = (intVal >> 16) & 0xff;
+    let g = (intVal >> 8) & 0xff;
+    let b = intVal & 0xff;
+    const adjust = (channel) => {
+      if(amount >= 0){
+        const delta = (255 - channel) * clamp01(amount);
+        return Math.round(channel + delta);
+      }
+      const delta = channel * clamp01(-amount);
+      return Math.round(channel - delta);
+    };
+    r = Math.max(0, Math.min(255, adjust(r)));
+    g = Math.max(0, Math.min(255, adjust(g)));
+    b = Math.max(0, Math.min(255, adjust(b)));
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  }
+
   function buildAxisArray(total, random){
     const arr = new Array(total);
     let pos = 0;
@@ -66,15 +97,15 @@
         if(isField){
           map[y][x] = 1;
           const tint = 0.06 * (random() - 0.5);
-          ctx.setWallColor(x, y, ctx.tintColor(fieldColorBase, tint));
+          ctx.setWallColor(x, y, tintColor(fieldColorBase, tint));
         } else if(isWater){
           map[y][x] = 1;
           const tint = 0.08 * (random() - 0.5);
-          ctx.setWallColor(x, y, ctx.tintColor(waterColor, tint));
+          ctx.setWallColor(x, y, tintColor(waterColor, tint));
         } else {
           map[y][x] = 0;
           const tint = 0.07 * (random() - 0.5);
-          ctx.setFloorColor(x, y, ctx.tintColor(pathColor, tint));
+          ctx.setFloorColor(x, y, tintColor(pathColor, tint));
         }
       }
     }
@@ -84,7 +115,7 @@
       const x = randInt(random, 1, W-2);
       const y = randInt(random, 1, H-2);
       if(map[y][x] === 0 && random() < 0.4){
-        ctx.setFloorColor(x, y, ctx.tintColor('#a0723d', 0.05 * (random() - 0.5)));
+        ctx.setFloorColor(x, y, tintColor('#a0723d', 0.05 * (random() - 0.5)));
       }
     }
 

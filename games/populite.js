@@ -873,8 +873,10 @@
       if (state.paused) return;
       if (e.buttons !== 1) return;
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
-      const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+      const scaleX = rect.width ? canvas.width / rect.width : 1;
+      const scaleY = rect.height ? canvas.height / rect.height : 1;
+      const x = Math.floor(((e.clientX - rect.left) * scaleX) / TILE_SIZE);
+      const y = Math.floor(((e.clientY - rect.top) * scaleY) / TILE_SIZE);
       if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE) return;
       const delta = e.shiftKey ? -1 : 1;
       if (adjustTile(x, y, delta)){

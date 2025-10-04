@@ -16097,6 +16097,74 @@ function createMiniGameDungeonApi() {
         const renderHeight = Math.max(tileSize, Math.floor(Number(options.renderHeight) || tileSize * height));
         const stageId = `dungeon-stage-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
+        const pixelWidth = width * tileSize;
+        const pixelHeight = height * tileSize;
+
+        const toTileCoords = (px, py) => {
+            const tx = Math.floor(px / tileSize);
+            const ty = Math.floor(py / tileSize);
+            return { x: tx, y: ty };
+        };
+
+        const isWallTile = (tx, ty) => {
+            if (!Number.isFinite(tx) || !Number.isFinite(ty)) return true;
+            if (ty < 0 || ty >= height || tx < 0 || tx >= width) return true;
+            return tilesSnapshot[ty]?.[tx] !== 0;
+        };
+
+        const isOutOfPixelBounds = (px, py) => (
+            !Number.isFinite(px) || !Number.isFinite(py) || px < 0 || py < 0 || px > pixelWidth || py > pixelHeight
+        );
+
+        const rectHitsWalls = (left, top, widthPx, heightPx) => {
+            const wPx = Math.max(0, Number(widthPx) || 0);
+            const hPx = Math.max(0, Number(heightPx) || 0);
+            if (!Number.isFinite(left) || !Number.isFinite(top)) return true;
+            const right = left + wPx;
+            const bottom = top + hPx;
+            if (left < 0 || top < 0 || right > pixelWidth || bottom > pixelHeight) return true;
+            const minTileX = Math.max(0, Math.floor(left / tileSize));
+            const maxTileX = Math.min(width - 1, Math.floor((right - 1e-6) / tileSize));
+            const minTileY = Math.max(0, Math.floor(top / tileSize));
+            const maxTileY = Math.min(height - 1, Math.floor((bottom - 1e-6) / tileSize));
+            for (let ty = minTileY; ty <= maxTileY; ty++) {
+                for (let tx = minTileX; tx <= maxTileX; tx++) {
+                    if (isWallTile(tx, ty)) return true;
+                }
+            }
+            return false;
+        };
+
+        const circleHitsWalls = (cx, cy, radius = tileSize * 0.4) => {
+            const r = Math.max(0, Number(radius) || 0);
+            if (!Number.isFinite(cx) || !Number.isFinite(cy)) return true;
+            if (cx - r < 0 || cy - r < 0 || cx + r > pixelWidth || cy + r > pixelHeight) return true;
+            const minTileX = Math.max(0, Math.floor((cx - r) / tileSize));
+            const maxTileX = Math.min(width - 1, Math.floor((cx + r) / tileSize));
+            const minTileY = Math.max(0, Math.floor((cy - r) / tileSize));
+            const maxTileY = Math.min(height - 1, Math.floor((cy + r) / tileSize));
+            for (let ty = minTileY; ty <= maxTileY; ty++) {
+                for (let tx = minTileX; tx <= maxTileX; tx++) {
+                    if (isWallTile(tx, ty)) return true;
+                }
+            }
+            return false;
+        };
+
+        const clampPositionWithin = (px, py, radius = 0) => {
+            const r = Math.max(0, Number(radius) || 0);
+            const minX = r;
+            const minY = r;
+            const maxX = pixelWidth - r;
+            const maxY = pixelHeight - r;
+            return {
+                x: Math.min(maxX, Math.max(minX, Number.isFinite(px) ? px : minX)),
+                y: Math.min(maxY, Math.max(minY, Number.isFinite(py) ? py : minY))
+            };
+        };
+
+        const toPixelCenter = (tx, ty) => ({ x: (tx + 0.5) * tileSize, y: (ty + 0.5) * tileSize });
+
         const stage = {
             id: stageId,
             requestedType: normalizedInput || null,
@@ -16107,11 +16175,12 @@ function createMiniGameDungeonApi() {
             tileMeta: metaSnapshot,
             hazards,
             tileSize,
+             pixelWidth,
+             pixelHeight,
             renderWidth,
             renderHeight,
             floor: floorNumber,
             error: generationError,
-            floorSampler,
             listFloorCells() {
                 return floorSampler.list();
             },
@@ -16120,6 +16189,22 @@ function createMiniGameDungeonApi() {
             },
             pickFloorPosition(options = {}) {
                 return floorSampler.pickOne(options);
+            },
+            pickFloorPositionsPixel(count = 1, options = {}) {
+                return floorSampler.pick(count, options).map(cell => ({
+                    tile: { x: cell.x, y: cell.y },
+                    x: (cell.x + 0.5) * this.tileSize,
+                    y: (cell.y + 0.5) * this.tileSize
+                }));
+            },
+            pickFloorPositionPixel(options = {}) {
+                const picked = floorSampler.pickOne(options);
+                if (!picked) return null;
+                return {
+                    tile: { x: picked.x, y: picked.y },
+                    x: (picked.x + 0.5) * this.tileSize,
+                    y: (picked.y + 0.5) * this.tileSize
+                };
             },
             isWall(x, y) {
                 const ix = Math.floor(x);
@@ -16139,6 +16224,29 @@ function createMiniGameDungeonApi() {
             toPixel(x, y, overrideTileSize) {
                 const ts = Math.max(1, Math.floor(overrideTileSize || this.tileSize));
                 return { x: x * ts, y: y * ts };
+            },
+            toTile(px, py) {
+                return toTileCoords(px, py);
+            },
+            tileCenter(x, y) {
+                return toPixelCenter(x, y);
+            },
+            isWallPixel(px, py) {
+                if (isOutOfPixelBounds(px, py)) return true;
+                const tile = toTileCoords(px, py);
+                return isWallTile(tile.x, tile.y);
+            },
+            isFloorPixel(px, py) {
+                return !this.isWallPixel(px, py);
+            },
+            collidesRect(left, top, widthPx, heightPx) {
+                return rectHitsWalls(left, top, widthPx, heightPx);
+            },
+            collidesCircle(cx, cy, radius) {
+                return circleHitsWalls(cx, cy, radius);
+            },
+            clampPosition(px, py, radius = 0) {
+                return clampPositionWithin(px, py, radius);
             }
         };
         return stage;

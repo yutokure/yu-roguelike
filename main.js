@@ -152,12 +152,24 @@ function escapeHtml(value) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 }
+
+function randomIntInclusive(min, max) {
+    const lower = Math.ceil(Math.min(min, max));
+    const upper = Math.floor(Math.max(min, max));
+    return Math.floor(Math.random() * (upper - lower + 1)) + lower;
+}
 const MAJOR_HP_BOOST_VALUE = 25;
 const MAJOR_ATK_BOOST_VALUE = 10;
 const MAJOR_DEF_BOOST_VALUE = 10;
 const SKILL_CHARM_DURATION_TURNS = 10;
 const SP_ELIXIR_RECOVERY_RATIO = 0.75;
 const SP_ELIXIR_RECOVERY_FLAT = 50;
+const PLAYER_BASE_MAX_HP = 100;
+const PLAYER_BASE_ATTACK = 10;
+const PLAYER_BASE_DEFENSE = 10;
+const PLAYER_LEVEL_HP_GAIN = 5;
+const PLAYER_LEVEL_ATTACK_GAIN = 1;
+const PLAYER_LEVEL_DEFENSE_GAIN = 1;
 const SKILL_EXECUTION_DELAY_MS = 500;
 let logBuffer = [];
 const gameOverScreen = document.getElementById('game-over-screen');
@@ -304,6 +316,409 @@ function generateDomainCrystalsForFloor(recommendedLevel) {
     }
 }
 
+const HATENA_BLOCK_EFFECTS = Object.freeze([
+    'levelUp',
+    'levelDown',
+    'expGain',
+    'expLoss',
+    'enemyAmbush',
+    'bomb',
+    'poison',
+    'statusAilment',
+    'abilityUp',
+    'abilityDown',
+    'item',
+    'rareChest',
+    'chest',
+    'chestRing'
+]);
+
+function getHatenaBlockAt(x, y) {
+    if (!Array.isArray(hatenaBlocks) || !hatenaBlocks.length) return null;
+    return hatenaBlocks.find(block => block && block.x === x && block.y === y) || null;
+}
+
+function removeHatenaBlockAt(x, y) {
+    if (!Array.isArray(hatenaBlocks) || !hatenaBlocks.length) return;
+    const index = hatenaBlocks.findIndex(block => block && block.x === x && block.y === y);
+    if (index >= 0) {
+        hatenaBlocks.splice(index, 1);
+    }
+}
+
+function spawnHatenaBlocks(recommendedLevel) {
+    if (isSandboxActive()) return;
+    if (isBossFloor(dungeonLevel)) return;
+    const playerLevel = Number.isFinite(player?.level) ? player.level : 1;
+    if (!Number.isFinite(recommendedLevel) || recommendedLevel < playerLevel - 3) return;
+
+    const roll = Math.random();
+    let count = 0;
+    if (roll < 0.05) count = 3;
+    else if (roll < 0.15) count = 2;
+    else if (roll < 0.40) count = 1;
+    if (count <= 0) return;
+
+    const exclude = [{ x: player.x, y: player.y }];
+    if (stairs && Number.isFinite(stairs.x) && Number.isFinite(stairs.y)) {
+        exclude.push({ x: stairs.x, y: stairs.y });
+    }
+    enemies.forEach(enemy => exclude.push({ x: enemy.x, y: enemy.y }));
+    chests.forEach(chest => exclude.push({ x: chest.x, y: chest.y }));
+    domainCrystals.forEach(crystal => exclude.push({ x: crystal.x, y: crystal.y }));
+
+    const minDist = Math.max(2, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) * 0.05));
+    const positions = pickSpreadFloorPositions(count, minDist, exclude);
+
+    const placed = [];
+    for (const pos of positions) {
+        if (!map[pos.y] || map[pos.y][pos.x] !== 0) continue;
+        const meta = ensureTileMeta(pos.x, pos.y);
+        if (!meta) continue;
+        meta.floorType = FLOOR_TYPE_HATENA;
+        delete meta.floorDir;
+        placed.push({ x: pos.x, y: pos.y });
+    }
+
+    if (!placed.length) return;
+    hatenaBlocks = placed;
+
+    if (hatenaBlocks.length === 1) {
+        addMessage('怪しげなハテナブロックが現れた…！');
+    } else {
+        addMessage(`怪しげなハテナブロックが${hatenaBlocks.length}個出現した…！`);
+    }
+}
+
+function adjustPlayerLevel(delta) {
+    if (!Number.isFinite(delta) || delta === 0) return 0;
+    let changed = 0;
+    if (delta > 0) {
+        for (let i = 0; i < delta; i++) {
+            player.level += 1;
+            player.maxHp += PLAYER_LEVEL_HP_GAIN;
+            player.attack += PLAYER_LEVEL_ATTACK_GAIN;
+            player.defense += PLAYER_LEVEL_DEFENSE_GAIN;
+            changed += 1;
+        }
+        player.hp = player.maxHp;
+    } else {
+        const steps = Math.abs(delta);
+        for (let i = 0; i < steps; i++) {
+            if (player.level <= 1) break;
+            player.level -= 1;
+            player.maxHp = Math.max(PLAYER_BASE_MAX_HP, player.maxHp - PLAYER_LEVEL_HP_GAIN);
+            player.attack = Math.max(PLAYER_BASE_ATTACK, player.attack - PLAYER_LEVEL_ATTACK_GAIN);
+            player.defense = Math.max(PLAYER_BASE_DEFENSE, player.defense - PLAYER_LEVEL_DEFENSE_GAIN);
+            changed -= 1;
+        }
+        player.hp = Math.min(player.hp, player.maxHp);
+    }
+    if (changed !== 0) {
+        enforceEffectiveHpCap();
+        updatePlayerSpCap({ silent: false });
+        refreshGeneratorHazardSuppression();
+        updateUI();
+    }
+    return changed;
+}
+
+function hatenaPlaceChestAt(x, y, rarity = 'normal') {
+    if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return false;
+    if (!map[y] || map[y][x] !== 0) return false;
+    if (x === player.x && y === player.y) return false;
+    if (stairs && stairs.x === x && stairs.y === y) return false;
+    if (enemies.some(enemy => enemy.x === x && enemy.y === y)) return false;
+    if (chests.some(chest => chest.x === x && chest.y === y)) return false;
+    if (getHatenaBlockAt(x, y)) return false;
+    chests.push({ x, y, type: 'chest', rarity: rarity === 'rare' ? 'rare' : 'normal' });
+    return true;
+}
+
+function hatenaSpawnChestNearPlayer(rarity = 'normal') {
+    const directions = [
+        { dx: 0, dy: -1 },
+        { dx: 1, dy: 0 },
+        { dx: 0, dy: 1 },
+        { dx: -1, dy: 0 },
+        { dx: -1, dy: -1 },
+        { dx: 1, dy: -1 },
+        { dx: 1, dy: 1 },
+        { dx: -1, dy: 1 }
+    ];
+    for (const { dx, dy } of directions) {
+        const x = player.x + dx;
+        const y = player.y + dy;
+        if (hatenaPlaceChestAt(x, y, rarity)) {
+            return { x, y };
+        }
+    }
+    const fallback = randomFloorPosition([
+        { x: player.x, y: player.y },
+        ...(stairs ? [{ x: stairs.x, y: stairs.y }] : []),
+        ...enemies,
+        ...chests,
+        ...hatenaBlocks
+    ]);
+    if (fallback && hatenaPlaceChestAt(fallback.x, fallback.y, rarity)) {
+        return fallback;
+    }
+    return null;
+}
+
+function hatenaSpawnChestRing(rarity = 'normal') {
+    const offsets = [
+        { dx: -1, dy: -1 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 },
+        { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+        { dx: -1, dy: 1 }, { dx: 0, dy: 1 }, { dx: 1, dy: 1 }
+    ];
+    let placed = 0;
+    for (const { dx, dy } of offsets) {
+        if (hatenaPlaceChestAt(player.x + dx, player.y + dy, rarity)) {
+            placed += 1;
+        }
+    }
+    return placed;
+}
+
+function hatenaSummonEnemiesAroundPlayer(recommendedLevel) {
+    const offsets = [
+        { dx: -1, dy: -1 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 },
+        { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+        { dx: -1, dy: 1 }, { dx: 0, dy: 1 }, { dx: 1, dy: 1 }
+    ];
+    const baseRec = Number.isFinite(recommendedLevel) ? recommendedLevel : player.level;
+    let spawned = 0;
+    for (const { dx, dy } of offsets) {
+        const x = player.x + dx;
+        const y = player.y + dy;
+        if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) continue;
+        if (!map[y] || map[y][x] !== 0) continue;
+        if (stairs && stairs.x === x && stairs.y === y) continue;
+        if (enemies.some(enemy => enemy.x === x && enemy.y === y)) continue;
+        if (chests.some(chest => chest.x === x && chest.y === y)) continue;
+        if (getHatenaBlockAt(x, y)) continue;
+        const lvl = Math.max(1, baseRec + randomIntInclusive(-4, 4));
+        const maxHp = 50 + 5 * (lvl - 1);
+        const typeId = determineEnemyType(baseRec);
+        enemies.push({
+            x,
+            y,
+            level: lvl,
+            maxHp,
+            hp: maxHp,
+            attack: 8 + (lvl - 1),
+            defense: 8 + (lvl - 1),
+            type: typeId
+        });
+        spawned += 1;
+    }
+    return spawned;
+}
+
+function hatenaApplyBombDamage(ratio = 0.8) {
+    const clampRatio = Math.max(0, Number(ratio) || 0);
+    if (clampRatio <= 0) return { outcome: 'none', amount: 0 };
+    const baseDamage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * clampRatio));
+    const hazardResult = resolveDomainInteraction({
+        amount: baseDamage,
+        baseEffect: 'damage',
+        attackerType: 'enemy',
+        defenderType: 'player',
+        attackerPos: { x: player.x, y: player.y },
+        defenderPos: { x: player.x, y: player.y }
+    });
+    if (hazardResult.prevented || hazardResult.amount <= 0) {
+        addMessage('爆発の衝撃を無効化した！');
+        addPopup(player.x, player.y, 'Guard', '#74c0fc');
+        return { outcome: 'guard', amount: 0 };
+    }
+    if (hazardResult.effectType === 'healing') {
+        const beforeHp = player.hp;
+        const effectiveMax = getEffectivePlayerMaxHp();
+        player.hp = Math.min(effectiveMax, player.hp + hazardResult.amount);
+        enforceEffectiveHpCap();
+        const healed = Math.max(0, player.hp - beforeHp);
+        if (healed > 0) {
+            addMessage(`爆発のエネルギーが反転し、HPが${healed}回復した！`);
+            addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed > 999999999 ? '+' : ''}`, '#4dabf7');
+            playSfx('pickup');
+        }
+        return { outcome: 'healed', amount: healed };
+    }
+    const damage = hazardResult.amount;
+    player.hp = Math.max(0, player.hp - damage);
+    addMessage(`爆発で${damage}のダメージ！`);
+    addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#ff6b6b');
+    playSfx('bomb');
+    if (player.hp <= 0) {
+        handlePlayerDeath('爆発に巻き込まれて倒れた…ゲームオーバー');
+    }
+    return { outcome: 'damage', amount: damage };
+}
+
+function hatenaApplyRandomStatus() {
+    const statusPool = ['poison', 'paralysis', 'abilityDown', 'levelDown'];
+    const shuffled = statusPool.sort(() => Math.random() - 0.5);
+    for (const status of shuffled) {
+        if (applyPlayerStatusEffect(status, { silent: false })) {
+            return status;
+        }
+    }
+    return null;
+}
+
+function hatenaGrantRandomItem() {
+    const options = [
+        { key: 'potion30', label: '回復薬30' },
+        { key: 'hpBoost', label: 'HP強化アイテム' },
+        { key: 'atkBoost', label: '攻撃強化アイテム' },
+        { key: 'defBoost', label: '防御強化アイテム' },
+        { key: 'spElixir', label: 'SPエリクサー' }
+    ];
+    const pick = options[randomIntInclusive(0, options.length - 1)];
+    incrementInventoryCounter(pick.key, 1);
+    addMessage(`${pick.label}を1つ手に入れた！`);
+    return pick;
+}
+
+function triggerHatenaBlock(block) {
+    if (!block) return;
+    removeHatenaBlockAt(block.x, block.y);
+    clearFloorTypeAt(block.x, block.y);
+    addMessage('ハテナブロックを踏んだ！');
+    playSfx('pickup');
+
+    let recommended = null;
+    try {
+        recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    } catch {
+        recommended = null;
+    }
+
+    const effectId = HATENA_BLOCK_EFFECTS[randomIntInclusive(0, HATENA_BLOCK_EFFECTS.length - 1)];
+
+    switch (effectId) {
+        case 'levelUp': {
+            const gain = randomIntInclusive(1, 3);
+            const applied = adjustPlayerLevel(gain);
+            if (applied > 0) {
+                addMessage(`レベルが${applied}上昇した！`);
+            } else {
+                addMessage('しかしレベルは変わらなかった。');
+            }
+            break;
+        }
+        case 'levelDown': {
+            const applied = adjustPlayerLevel(-1);
+            if (applied < 0) {
+                addMessage('レベルが1下がってしまった…');
+            } else {
+                addMessage('これ以上レベルは下がらなかった。');
+            }
+            break;
+        }
+        case 'expGain': {
+            const amount = randomIntInclusive(100, 1200);
+            const gained = grantExp(amount, { source: 'hatena-block', reason: 'expGain', popup: false });
+            if (gained > 0) {
+                addMessage(`経験値を${gained}獲得した！`);
+            } else {
+                addMessage('経験値は増えなかった。');
+            }
+            break;
+        }
+        case 'expLoss': {
+            const amount = randomIntInclusive(1, 300);
+            const lost = spendExp(amount, { source: 'hatena-block', reason: 'expLoss', popup: false });
+            if (lost > 0) {
+                addMessage(`経験値を${lost}失った…`);
+            } else {
+                addMessage('失う経験値はなかった。');
+            }
+            break;
+        }
+        case 'enemyAmbush': {
+            const spawned = hatenaSummonEnemiesAroundPlayer(recommended);
+            if (spawned > 0) {
+                addMessage('周囲に敵が現れた！');
+            } else {
+                addMessage('しかし敵は現れなかった。');
+            }
+            break;
+        }
+        case 'bomb': {
+            hatenaApplyBombDamage(0.8);
+            break;
+        }
+        case 'poison': {
+            const applied = applyPlayerStatusEffect('poison', { duration: 5 });
+            if (!applied) {
+                addMessage('毒は無効化された。');
+            }
+            break;
+        }
+        case 'statusAilment': {
+            const status = hatenaApplyRandomStatus();
+            if (!status) {
+                addMessage('状態異常は発生しなかった。');
+            }
+            break;
+        }
+        case 'abilityUp': {
+            const applied = applyPlayerStatusEffect('abilityUp', { duration: 5 });
+            if (!applied) {
+                addMessage('能力強化の効果は発揮されなかった。');
+            }
+            break;
+        }
+        case 'abilityDown': {
+            const applied = applyPlayerStatusEffect('abilityDown', { duration: 5 });
+            if (!applied) {
+                addMessage('能力低下は発生しなかった。');
+            }
+            break;
+        }
+        case 'item': {
+            hatenaGrantRandomItem();
+            break;
+        }
+        case 'rareChest': {
+            const chest = hatenaSpawnChestNearPlayer('rare');
+            if (chest) {
+                addMessage('煌びやかなレア宝箱が出現した！');
+            } else {
+                addMessage('宝箱を置く場所が見つからなかった。');
+            }
+            break;
+        }
+        case 'chest': {
+            const chest = hatenaSpawnChestNearPlayer('normal');
+            if (chest) {
+                addMessage('宝箱が出現した！');
+            } else {
+                addMessage('宝箱は現れなかった。');
+            }
+            break;
+        }
+        case 'chestRing': {
+            const placed = hatenaSpawnChestRing('normal');
+            if (placed > 0) {
+                addMessage('宝箱に囲まれた！');
+            } else {
+                addMessage('宝箱は現れなかった。');
+            }
+            break;
+        }
+        default:
+            addMessage('しかし何も起きなかった。');
+            break;
+    }
+
+    updateUI();
+    if (!isSandboxActive()) saveAll();
+}
+
 function sanitizeEnemySummary(enemy) {
     if (!enemy || typeof enemy !== 'object') return null;
     return {
@@ -444,6 +859,7 @@ const SKILL_EFFECT_DEFS = {
 
 const SKILL_DEFINITIONS = [
     { id: 'break-wall', name: '壁破壊', cost: 25, description: '目の前の壁を1つ破壊する。', action: useSkillBreakWall },
+    { id: 'build-wall', name: '壁生成', cost: 25, description: '目の前の床を壁に変える。', action: useSkillBuildWall },
     { id: 'ranged-attack', name: '遠隔攻撃', cost: 20, description: '前方一直線上の敵に通常攻撃の1/3ダメージを必中で与える。壁で遮られる。', action: useSkillRangedAttack },
     { id: 'gimmick-nullify', name: 'ギミック無効化', cost: 25, description: '10ターンの間ダンジョンギミックを無効化する。（推奨Lvが8以上高い場合は無効）', action: useSkillGimmickNullify },
     { id: 'status-guard', name: '状態異常無効', cost: 25, description: '10ターンすべての状態異常を防ぐ。', action: useSkillStatusGuard },
@@ -498,6 +914,7 @@ const SKILL_AREA_OFFSETS = [
 const PLAYER_STATUS_EFFECTS = {
     poison: { id: 'poison', label: '毒', defaultDuration: 4, damageRatio: 0.1, badgeClass: 'status-badge--poison' },
     paralysis: { id: 'paralysis', label: '麻痺', defaultDuration: 5, badgeClass: 'status-badge--paralysis' },
+    abilityUp: { id: 'abilityUp', label: '能力強化', defaultDuration: 5, statMultiplier: 1.2, badgeClass: 'status-badge--ability' },
     abilityDown: { id: 'abilityDown', label: '能力低下', defaultDuration: 5, statMultiplier: 0.8, badgeClass: 'status-badge--ability' },
     levelDown: { id: 'levelDown', label: 'レベル低下', defaultDuration: 5, levelReduction: 3, badgeClass: 'status-badge--level' }
 };
@@ -556,6 +973,7 @@ function createInitialStatusEffects() {
     return {
         poison: { remaining: 0 },
         paralysis: { remaining: 0 },
+        abilityUp: { remaining: 0 },
         abilityDown: { remaining: 0 },
         levelDown: { remaining: 0 }
     };
@@ -3511,6 +3929,7 @@ const FLOOR_TYPE_CONVEYOR = 'conveyor';
 const FLOOR_TYPE_ONE_WAY = 'one-way';
 const FLOOR_TYPE_VERTICAL_ONLY = 'vertical';
 const FLOOR_TYPE_HORIZONTAL_ONLY = 'horizontal';
+const FLOOR_TYPE_HATENA = 'hatena';
 const FLOOR_DIRECTION_SYMBOLS = {
     up: '↑',
     down: '↓',
@@ -3525,7 +3944,8 @@ const FLOOR_TYPE_SET = new Set([
     FLOOR_TYPE_CONVEYOR,
     FLOOR_TYPE_ONE_WAY,
     FLOOR_TYPE_VERTICAL_ONLY,
-    FLOOR_TYPE_HORIZONTAL_ONLY
+    FLOOR_TYPE_HORIZONTAL_ONLY,
+    FLOOR_TYPE_HATENA
 ]);
 const FLOOR_DIRECTION_VALUES = ['up', 'down', 'left', 'right'];
 const FLOOR_DIRECTION_VECTORS = {
@@ -4110,6 +4530,8 @@ function normalizeFloorType(value) {
         case 'horizontal_only':
         case FLOOR_TYPE_HORIZONTAL_ONLY:
             return FLOOR_TYPE_HORIZONTAL_ONLY;
+        case FLOOR_TYPE_HATENA:
+            return FLOOR_TYPE_HATENA;
         default:
             return FLOOR_TYPE_NORMAL;
     }
@@ -4301,6 +4723,12 @@ function clearFloorTypeAt(x, y) {
     if (!meta.floorColor && !meta.wallColor && (!meta.floorType || meta.floorType === FLOOR_TYPE_NORMAL)) {
         if (tileMeta[y]) tileMeta[y][x] = null;
     }
+    if (hatenaBlocks && hatenaBlocks.length) {
+        const index = hatenaBlocks.findIndex(block => block && block.x === x && block.y === y);
+        if (index >= 0) {
+            hatenaBlocks.splice(index, 1);
+        }
+    }
 }
 
 function getTileRenderColor(x, y, isWall) {
@@ -4319,6 +4747,7 @@ function getTileRenderColor(x, y, isWall) {
     if (type === FLOOR_TYPE_ONE_WAY) return '#b197fc';
     if (type === FLOOR_TYPE_VERTICAL_ONLY) return '#38d9a9';
     if (type === FLOOR_TYPE_HORIZONTAL_ONLY) return '#ffa94d';
+    if (type === FLOOR_TYPE_HATENA) return '#4dabf7';
     return DEFAULT_FLOOR_COLOR;
 }
 
@@ -4426,6 +4855,9 @@ function clearPlayerStatusEffect(effectId, { silent = false } = {}) {
             case 'paralysis':
                 message = '体の痺れが解けた。';
                 break;
+            case 'abilityUp':
+                message = '能力強化の効果が切れた。';
+                break;
             case 'abilityDown':
                 message = '能力低下から解放された。';
                 break;
@@ -4464,6 +4896,9 @@ function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
                 break;
             case 'paralysis':
                 message = `体が痺れて動けない！ (${turns}ターン)`;
+                break;
+            case 'abilityUp':
+                message = `能力が高まった！最大HP/攻撃/防御が上昇 (${turns}ターン)`;
                 break;
             case 'abilityDown':
                 message = `能力が低下した…最大HP/攻撃/防御が下がる (${turns}ターン)`;
@@ -4702,17 +5137,27 @@ function resetPlayerStatusEffects() {
     player.statusEffects = createInitialStatusEffects();
 }
 
-function getAbilityDownMultiplier() {
-    if (!isPlayerStatusActive('abilityDown')) return 1;
-    const mult = PLAYER_STATUS_EFFECTS.abilityDown?.statMultiplier;
-    if (!Number.isFinite(mult) || mult <= 0) return 1;
-    return mult;
+function getAbilityStatusMultiplier() {
+    let multiplier = 1;
+    if (isPlayerStatusActive('abilityUp')) {
+        const up = PLAYER_STATUS_EFFECTS.abilityUp?.statMultiplier;
+        if (Number.isFinite(up) && up > 0) {
+            multiplier *= up;
+        }
+    }
+    if (isPlayerStatusActive('abilityDown')) {
+        const down = PLAYER_STATUS_EFFECTS.abilityDown?.statMultiplier;
+        if (Number.isFinite(down) && down > 0) {
+            multiplier *= down;
+        }
+    }
+    return multiplier > 0 ? multiplier : 0;
 }
 
 function getEffectivePlayerMaxHp() {
     const base = Math.max(1, Math.floor(player.maxHp || 1));
     const domain = getPlayerDomainAggregate();
-    const abilityMul = getAbilityDownMultiplier();
+    const abilityMul = getAbilityStatusMultiplier();
     const domainAbilityMul = getDomainAbilityMultiplier(domain, 'maxHp');
     return Math.max(1, Math.floor(base * abilityMul * domainAbilityMul));
 }
@@ -4720,7 +5165,7 @@ function getEffectivePlayerMaxHp() {
 function getEffectivePlayerAttack() {
     const base = Math.max(0, Math.floor(player.attack || 0));
     const domain = getPlayerDomainAggregate();
-    const abilityMul = getAbilityDownMultiplier();
+    const abilityMul = getAbilityStatusMultiplier();
     const domainAbilityMul = getDomainAbilityMultiplier(domain, 'attack');
     const domainAttackMul = Number.isFinite(domain.attackMul) ? domain.attackMul : 1;
     return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainAttackMul));
@@ -4729,7 +5174,7 @@ function getEffectivePlayerAttack() {
 function getEffectivePlayerDefense() {
     const base = Math.max(0, Math.floor(player.defense || 0));
     const domain = getPlayerDomainAggregate();
-    const abilityMul = getAbilityDownMultiplier();
+    const abilityMul = getAbilityStatusMultiplier();
     const domainAbilityMul = getDomainAbilityMultiplier(domain, 'defense');
     const domainDefenseMul = Number.isFinite(domain.defenseMul) ? domain.defenseMul : 1;
     return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainDefenseMul));
@@ -4863,6 +5308,14 @@ function processPlayerStatusTurnStart() {
         return false;
     }
 
+    if (isPlayerStatusActive('abilityUp')) {
+        if (effects.abilityUp.remaining <= 1) {
+            clearPlayerStatusEffect('abilityUp');
+        } else {
+            effects.abilityUp.remaining -= 1;
+        }
+    }
+
     if (isPlayerStatusActive('abilityDown')) {
         if (effects.abilityDown.remaining <= 1) {
             clearPlayerStatusEffect('abilityDown');
@@ -4981,6 +5434,7 @@ let ENEMY_COUNT = 8;
 
 // 領域効果クリスタル
 let domainCrystals = [];
+let hatenaBlocks = [];
 let sandboxGimmicks = [];
 let sandboxGimmickRuntime = null;
 
@@ -5588,6 +6042,20 @@ function canBreakWallInFront() {
     return !!(map[targetY] && map[targetY][targetX] === 1);
 }
 
+function canBuildWallInFront() {
+    const { dx, dy } = getFacingDelta();
+    if (!dx && !dy) return false;
+    const targetX = player.x + dx;
+    const targetY = player.y + dy;
+    if (!map[targetY] || map[targetY][targetX] !== 0) return false;
+    if (targetX < 0 || targetX >= MAP_WIDTH || targetY < 0 || targetY >= MAP_HEIGHT) return false;
+    if (stairs && stairs.x === targetX && stairs.y === targetY) return false;
+    if (enemies.some(enemy => enemy.x === targetX && enemy.y === targetY)) return false;
+    if (chests.some(chest => chest.x === targetX && chest.y === targetY)) return false;
+    if (domainCrystals.some(crystal => crystal.x === targetX && crystal.y === targetY)) return false;
+    return true;
+}
+
 function evaluateSkillAvailability(def) {
     if (!isSpUnlocked()) {
         return { available: false, reason: 'Lv100で解放' };
@@ -5606,6 +6074,9 @@ function evaluateSkillAvailability(def) {
             break;
         case 'break-wall':
             if (!canBreakWallInFront()) return { available: false, reason: '前方に壁なし' };
+            break;
+        case 'build-wall':
+            if (!canBuildWallInFront()) return { available: false, reason: '前方に床なし' };
             break;
         case 'ranged-attack':
             if (!findEnemyAlongFacingLine()) return { available: false, reason: '届く敵なし' };
@@ -5807,6 +6278,29 @@ function useSkillBreakWall() {
         return false;
     }
     addMessage('SPスキル：壁を粉砕した！');
+    return true;
+}
+
+function useSkillBuildWall() {
+    const { dx, dy } = getFacingDelta();
+    const targetX = player.x + dx;
+    const targetY = player.y + dy;
+    if (!dx && !dy) return false;
+    if (!map[targetY] || map[targetY][targetX] !== 0) {
+        addMessage('目の前に壁へ変換できる床がない。');
+        return false;
+    }
+    if (!canBuildWallInFront()) {
+        addMessage('そこには壁を生成できない。');
+        return false;
+    }
+    clearFloorTypeAt(targetX, targetY);
+    map[targetY][targetX] = 1;
+    if (tileMeta[targetY]) {
+        tileMeta[targetY][targetX] = null;
+    }
+    addMessage('SPスキル：壁を生成した！');
+    playSfx('bomb');
     return true;
 }
 
@@ -10274,6 +10768,7 @@ function generateEntities() {
     items = [];
     chests = [];
     domainCrystals = [];
+    hatenaBlocks = [];
     sandboxGimmicks = [];
     sandboxGimmickRuntime = null;
 
@@ -10476,6 +10971,8 @@ function generateEntities() {
         if (!found) found = randomFloorPosition([{ x: player.x, y: player.y }, ...enemies, ...items, ...chests]);
         stairs = { x: found.x, y: found.y };
     }
+
+    spawnHatenaBlocks(rec);
 }
 
 function generateLevel() {
@@ -11159,6 +11656,9 @@ function drawFloorGimmickOverlay(tileX, tileY, screenX, screenY, cellW, cellH) {
             if (dir) drawConveyorFloorOverlay(dir, screenX, screenY, cellW, cellH);
             break;
         }
+        case FLOOR_TYPE_HATENA:
+            drawHatenaBlockOverlay(screenX, screenY, cellW, cellH);
+            break;
         default:
             break;
     }
@@ -11225,6 +11725,28 @@ function drawConveyorFloorOverlay(direction, screenX, screenY, cellW, cellH) {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
     ctx.shadowBlur = Math.max(1, Math.min(cellW, cellH) * 0.1);
     ctx.fillText(sequence, screenX + cellW / 2, screenY + cellH / 2);
+    ctx.restore();
+}
+
+function drawHatenaBlockOverlay(screenX, screenY, cellW, cellH) {
+    const inset = Math.min(cellW, cellH) * 0.12;
+    const borderWidth = Math.max(1.5, Math.min(cellW, cellH) * 0.08);
+    ctx.save();
+    const gradient = ctx.createLinearGradient(screenX, screenY, screenX + cellW, screenY + cellH);
+    gradient.addColorStop(0, '#1c64f2');
+    gradient.addColorStop(1, '#60a5fa');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(screenX + inset, screenY + inset, cellW - inset * 2, cellH - inset * 2);
+    ctx.lineWidth = borderWidth;
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.strokeRect(screenX + inset, screenY + inset, cellW - inset * 2, cellH - inset * 2);
+    ctx.font = `${Math.max(12, Math.floor(Math.min(cellW, cellH) * 0.7))}px sans-serif`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(15,23,42,0.4)';
+    ctx.shadowBlur = Math.max(2, Math.min(cellW, cellH) * 0.1);
+    ctx.fillText('?', screenX + cellW / 2, screenY + cellH / 2);
     ctx.restore();
 }
 
@@ -11686,7 +12208,8 @@ function updateUI() {
         requestAutoItemCheck();
     }
     const expPct = Math.max(0, Math.min(1, Number.isFinite(exp) ? exp / expMax : 1));
-    const abilityDownActive = isPlayerStatusActive('abilityDown');
+    const abilityStatusMul = getAbilityStatusMultiplier();
+    const abilityStatusActive = !nearlyEqual(abilityStatusMul, 1);
     updatePlayerSpCap({ silent: true });
     const spUnlocked = isSpUnlocked();
     const spMaxRaw = Number(player.maxSp);
@@ -11766,7 +12289,7 @@ function updateUI() {
         statDef.textContent = formatStatWithBase(effectiveDefense, baseDefense);
     }
     if (statHpText) {
-        const baseMaxText = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${formatValue(player.maxHp)})` : '';
+        const baseMaxText = abilityStatusActive && player.maxHp !== effectiveMaxHp ? ` (基${formatValue(player.maxHp)})` : '';
         statHpText.textContent = `${formatValue(currentHp)}/${formatValue(effectiveMaxHp)}${baseMaxText}`;
     }
     if (statExpText) statExpText.textContent = Number.isFinite(exp) ? `${expDisp}/${expMax}` : '∞/∞';
@@ -11889,7 +12412,7 @@ function updateUI() {
     if (modalLevel) modalLevel.textContent = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
     if (modalExp) modalExp.textContent = `${expDisp} / ${expMax}`;
     if (modalHp) {
-        const baseSuffix = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
+        const baseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
         modalHp.textContent = `${currentHp} / ${effectiveMaxHp}${baseSuffix}`;
     }
     if (modalAttack) modalAttack.textContent = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
@@ -11972,7 +12495,7 @@ function updateUI() {
     
     if (statusDetails) {
         const levelText = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
-        const hpBaseSuffix = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
+        const hpBaseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
         const atkText = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
         const defText = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
         let detailLine = `Lv.${levelText} HP ${currentHp}/${effectiveMaxHp}${hpBaseSuffix} 攻${atkText} 防${defText}`;
@@ -12175,7 +12698,8 @@ function updatePlayerSummaryCard({
     const satietyIsInfinite = !Number.isFinite(player.satiety);
     const currentSatiety = satietyIsInfinite ? SATIETY_MAX : Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
     const spIsInfinite = !Number.isFinite(normalizedSp) || !Number.isFinite(normalizedSpMax);
-    const abilityDownActive = isPlayerStatusActive('abilityDown');
+    const abilityStatusMulCard = getAbilityStatusMultiplier();
+    const abilityStatusActiveCard = !nearlyEqual(abilityStatusMulCard, 1);
 
     const formatValue = (value) => Number.isFinite(value) ? Math.floor(value) : '∞';
     const formatStatWithBase = (effective, base) => {
@@ -12186,7 +12710,7 @@ function updatePlayerSummaryCard({
 
     if (levelEl) levelEl.textContent = formatStatWithBase(effectiveLevel, baseLevel);
     if (hpEl) {
-        const baseSuffix = abilityDownActive && player.maxHp !== effectiveMaxHp ? ` (基${formatValue(player.maxHp)})` : '';
+        const baseSuffix = abilityStatusActiveCard && player.maxHp !== effectiveMaxHp ? ` (基${formatValue(player.maxHp)})` : '';
         hpEl.textContent = `${formatValue(normalizedHp)}/${formatValue(effectiveMaxHp)}${baseSuffix}`;
     }
     if (expEl) expEl.textContent = Number.isFinite(player.exp) ? `${expDisp}/${expMax}` : '∞/∞';
@@ -12979,6 +13503,16 @@ function applyPostMoveEffects() {
 
         if (isSandboxActive()) {
             updateSandboxGimmickState({ reason: 'playerMove' });
+        }
+
+        if (!isGameOver) {
+            const hatenaBlock = getHatenaBlockAt(player.x, player.y);
+            if (hatenaBlock) {
+                triggerHatenaBlock(hatenaBlock);
+                if (isGameOver) {
+                    return { continueSliding: false };
+                }
+            }
         }
 
         if (!isGameOver) {

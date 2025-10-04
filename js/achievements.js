@@ -2,13 +2,14 @@
 (function (global) {
     'use strict';
 
-    const VERSION = 1;
+    const VERSION = 2;
     const DIFFICULTY_ORDER = ['Very Easy', 'Easy', 'Normal', 'Second', 'Hard', 'Very Hard'];
     const numberFormatter = new Intl.NumberFormat('ja-JP');
 
     const CATEGORY_DEFINITIONS = [
         { id: 'dungeon', name: 'ダンジョン関連' },
         { id: 'blockdim', name: 'ブロック次元関連' },
+        { id: 'hatena', name: 'ハテナブロック関連' },
         { id: 'tools', name: 'ツールズ関連' },
         { id: 'mini', name: 'ミニゲーム関連', comingSoon: true }
     ];
@@ -209,6 +210,101 @@
             condition: (stats) => stats.blockdim.weightedSelections >= 1
         },
         {
+            id: 'hatena_first_trigger',
+            category: 'hatena',
+            title: '謎との遭遇',
+            description: 'ハテナブロックを初めて発動させる。',
+            reward: '調査記録「？」',
+            condition: (stats) => (stats.hatena?.blocksTriggered || 0) >= 1,
+            progress: (stats) => {
+                const hatena = stats.hatena || {};
+                const current = hatena.blocksTriggered || 0;
+                const target = 1;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                };
+            }
+        },
+        {
+            id: 'hatena_block_researcher',
+            category: 'hatena',
+            title: 'ハテナ観測隊',
+            description: 'ハテナブロックを 25 回発動させる。',
+            reward: '観測ログシート',
+            condition: (stats) => (stats.hatena?.blocksTriggered || 0) >= 25,
+            progress: (stats) => {
+                const hatena = stats.hatena || {};
+                const current = hatena.blocksTriggered || 0;
+                const target = 25;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                };
+            }
+        },
+        {
+            id: 'hatena_lucky_chain',
+            category: 'hatena',
+            title: '幸運を掴む者',
+            description: 'ハテナブロックから好影響を 15 回得る。',
+            reward: '幸運のお守り',
+            condition: (stats) => (stats.hatena?.positiveEffects || 0) >= 15,
+            progress: (stats) => {
+                const hatena = stats.hatena || {};
+                const current = hatena.positiveEffects || 0;
+                const target = 15;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                };
+            }
+        },
+        {
+            id: 'hatena_unlucky_survivor',
+            category: 'hatena',
+            title: '不運をも超えて',
+            description: 'ハテナブロックの悪影響を 10 回経験しても生き延びる。',
+            reward: '耐久メダル',
+            condition: (stats) => (stats.hatena?.negativeEffects || 0) >= 10,
+            progress: (stats) => {
+                const hatena = stats.hatena || {};
+                const current = hatena.negativeEffects || 0;
+                const target = 10;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                };
+            }
+        },
+        {
+            id: 'hatena_rare_hunter',
+            category: 'hatena',
+            title: '輝く幸運',
+            description: 'ハテナブロックからレア宝箱を 3 個出現させる。',
+            reward: '宝箱鑑定レンズ',
+            condition: (stats) => (stats.hatena?.rareChestsSpawned || 0) >= 3,
+            progress: (stats) => {
+                const hatena = stats.hatena || {};
+                const current = hatena.rareChestsSpawned || 0;
+                const target = 3;
+                return {
+                    current,
+                    target,
+                    percent: Math.min(1, current / target),
+                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                };
+            }
+        },
+        {
             id: 'tools_first_visit',
             category: 'tools',
             title: '工房デビュー',
@@ -291,6 +387,24 @@
             ]
         },
         {
+            id: 'hatena',
+            title: 'ハテナブロックの記録',
+            entries: [
+                { path: 'hatena.blocksAppeared', label: '出現したブロック', description: '探索中に見つけたハテナブロックの総数。', formatter: (value) => `${formatNumber(value)} 個` },
+                { path: 'hatena.blocksTriggered', label: '発動したブロック', description: '踏んで発動させたハテナブロックの回数。', formatter: (value) => `${formatNumber(value)} 回` },
+                { path: 'hatena.positiveEffects', label: '好影響の回数', description: '好影響（レベルアップ、報酬など）になった回数。', formatter: (value) => `${formatNumber(value)} 回` },
+                { path: 'hatena.negativeEffects', label: '悪影響の回数', description: '悪影響（被弾や弱体化など）になった回数。', formatter: (value) => `${formatNumber(value)} 回` },
+                { path: 'hatena.expGained', label: '累計獲得EXP', description: 'ハテナブロックから得た経験値の合計。', formatter: (value) => `${formatNumber(Math.floor(value || 0))} EXP` },
+                { path: 'hatena.expLost', label: '累計消失EXP', description: 'ハテナブロックで失った経験値の合計。', formatter: (value) => `${formatNumber(Math.floor(value || 0))} EXP` },
+                { path: 'hatena.normalChestsSpawned', label: '通常宝箱生成数', description: '通常宝箱を生成した回数。', formatter: (value) => `${formatNumber(value)} 個` },
+                { path: 'hatena.rareChestsSpawned', label: 'レア宝箱生成数', description: 'レア宝箱を生成した回数。', formatter: (value) => `${formatNumber(value)} 個` },
+                { path: 'hatena.itemsGranted', label: '獲得アイテム数', description: '報酬として受け取ったアイテムの数。', formatter: (value) => `${formatNumber(value)} 個` },
+                { path: 'hatena.enemyAmbushes', label: '奇襲された敵数', description: '奇襲イベントで出現した敵の総数。', formatter: (value) => `${formatNumber(value)} 体` },
+                { path: 'hatena.bombsTriggered', label: '爆発イベント回数', description: '爆発の効果を引いた回数。', formatter: (value) => `${formatNumber(value)} 回` },
+                { path: 'hatena.statusesResisted', label: '状態異常無効化', description: 'ハテナブロックの状態異常を打ち消した回数。', formatter: (value) => `${formatNumber(value)} 回` }
+            ]
+        },
+        {
             id: 'tools',
             title: 'ツール利用状況',
             entries: [
@@ -365,6 +479,31 @@
                 bookmarksAdded: 0,
                 randomSelections: 0,
                 weightedSelections: 0
+            },
+            hatena: {
+                blocksAppeared: 0,
+                blocksTriggered: 0,
+                positiveEffects: 0,
+                negativeEffects: 0,
+                neutralEffects: 0,
+                expGained: 0,
+                expLost: 0,
+                rareChestsSpawned: 0,
+                normalChestsSpawned: 0,
+                itemsGranted: 0,
+                enemyAmbushes: 0,
+                bombsTriggered: 0,
+                bombDamageTaken: 0,
+                bombHealed: 0,
+                bombGuards: 0,
+                levelUps: 0,
+                levelUpLevels: 0,
+                levelDowns: 0,
+                levelDownLevels: 0,
+                statusesApplied: 0,
+                statusesResisted: 0,
+                abilityUps: 0,
+                abilityDowns: 0
             },
             tools: {
                 tabVisits: 0,
@@ -714,12 +853,20 @@
 
     function renderStatisticsSummary() {
         if (!ui.statsSummary) return;
-        const stats = state.stats.core;
+        const defaults = createDefaultStats();
+        const stats = state.stats?.core || defaults.core;
+        const hatenaStats = state.stats?.hatena || defaults.hatena;
         const highlights = [
             { label: '攻略ダンジョン', value: formatNumber(stats.dungeonsCleared) },
             { label: '最高難易度', value: formatDifficultyLabel(stats.highestDifficultyIndex) },
             { label: '累計EXP', value: `${formatNumber(Math.floor(stats.totalExpEarned || 0))} EXP` }
         ];
+        const hatenaTriggered = hatenaStats.blocksTriggered || 0;
+        if (hatenaTriggered > 0) {
+            highlights.push({ label: 'ハテナ発動回数', value: `${formatNumber(hatenaTriggered)} 回` });
+            const positiveRate = hatenaStats.positiveEffects ? Math.min(100, Math.max(0, (hatenaStats.positiveEffects / hatenaTriggered) * 100)) : 0;
+            highlights.push({ label: 'ハテナ好影響率', value: `${positiveRate.toFixed(1)}%` });
+        }
         const list = document.createElement('ul');
         list.className = 'statistics-summary__list';
         for (const item of highlights) {
@@ -1072,6 +1219,94 @@
                     mutated = incrementStat('blockdim.weightedSelections', 1) || mutated;
                 } else {
                     mutated = incrementStat('blockdim.randomSelections', 1) || mutated;
+                }
+                break;
+            }
+            case 'hatena_block_spawned': {
+                const count = Math.max(0, Math.floor(Number(payload?.count) || 0));
+                if (count > 0) {
+                    mutated = incrementStat('hatena.blocksAppeared', count) || mutated;
+                }
+                break;
+            }
+            case 'hatena_block_triggered': {
+                mutated = incrementStat('hatena.blocksTriggered', 1) || mutated;
+                const details = payload || {};
+                const classification = details.classification || 'neutral';
+                if (classification === 'positive') {
+                    mutated = incrementStat('hatena.positiveEffects', 1) || mutated;
+                } else if (classification === 'negative') {
+                    mutated = incrementStat('hatena.negativeEffects', 1) || mutated;
+                } else {
+                    mutated = incrementStat('hatena.neutralEffects', 1) || mutated;
+                }
+
+                const levelDelta = Number(details.levelDelta) || 0;
+                if (levelDelta > 0) {
+                    mutated = incrementStat('hatena.levelUps', 1) || mutated;
+                    mutated = incrementStat('hatena.levelUpLevels', levelDelta) || mutated;
+                } else if (levelDelta < 0) {
+                    mutated = incrementStat('hatena.levelDowns', 1) || mutated;
+                    mutated = incrementStat('hatena.levelDownLevels', Math.abs(levelDelta)) || mutated;
+                }
+
+                const expDelta = Number(details.expDelta);
+                if (Number.isFinite(expDelta)) {
+                    if (expDelta > 0) {
+                        mutated = incrementStat('hatena.expGained', expDelta) || mutated;
+                    } else if (expDelta < 0) {
+                        mutated = incrementStat('hatena.expLost', Math.abs(expDelta)) || mutated;
+                    }
+                }
+
+                const itemCount = Math.max(0, Math.floor(Number(details.itemsGranted) || 0));
+                if (itemCount > 0) {
+                    mutated = incrementStat('hatena.itemsGranted', itemCount) || mutated;
+                }
+
+                const normalChests = Math.max(0, Math.floor(Number(details.normalChestsSpawned) || 0));
+                if (normalChests > 0) {
+                    mutated = incrementStat('hatena.normalChestsSpawned', normalChests) || mutated;
+                }
+
+                const rareChests = Math.max(0, Math.floor(Number(details.rareChestsSpawned) || 0));
+                if (rareChests > 0) {
+                    mutated = incrementStat('hatena.rareChestsSpawned', rareChests) || mutated;
+                }
+
+                const enemies = Math.max(0, Math.floor(Number(details.enemyCount) || 0));
+                if (enemies > 0) {
+                    mutated = incrementStat('hatena.enemyAmbushes', enemies) || mutated;
+                }
+
+                if (details.bombOutcome) {
+                    mutated = incrementStat('hatena.bombsTriggered', 1) || mutated;
+                    const bombAmount = Math.max(0, Math.floor(Number(details.bombAmount) || 0));
+                    if (details.bombOutcome === 'damage') {
+                        if (bombAmount > 0) {
+                            mutated = incrementStat('hatena.bombDamageTaken', bombAmount) || mutated;
+                        }
+                    } else if (details.bombOutcome === 'healed') {
+                        if (bombAmount > 0) {
+                            mutated = incrementStat('hatena.bombHealed', bombAmount) || mutated;
+                        }
+                    } else if (details.bombOutcome === 'guard') {
+                        mutated = incrementStat('hatena.bombGuards', 1) || mutated;
+                    }
+                }
+
+                if (details.statusAttempted) {
+                    if (details.statusApplied) {
+                        mutated = incrementStat('hatena.statusesApplied', 1) || mutated;
+                    } else {
+                        mutated = incrementStat('hatena.statusesResisted', 1) || mutated;
+                    }
+                }
+
+                if (details.abilityApplied === 'up') {
+                    mutated = incrementStat('hatena.abilityUps', 1) || mutated;
+                } else if (details.abilityApplied === 'down') {
+                    mutated = incrementStat('hatena.abilityDowns', 1) || mutated;
                 }
                 break;
             }

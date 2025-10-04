@@ -32,6 +32,7 @@ let currentRunContext = null;
 let lastRunResultSummary = null;
 const runResultNumberFormatter = new Intl.NumberFormat('ja-JP');
 let runResultOverlayState = null;
+let isGameOver = false;
 
 const RUN_RESULT_REASON_LABELS = Object.freeze({
     gameOver: 'ゲームオーバー',
@@ -113,8 +114,10 @@ function evaluateDungeonOverlayHoverFromPoint(point) {
 function shouldAutoUsePotion(effectiveMaxHp, currentHp) {
     if (!autoItemToggle || !autoItemToggle.checked) return false;
     if (!player || !player.inventory || player.inventory.potion30 <= 0) return false;
+    if (isGameOver) return false;
     if (!Number.isFinite(effectiveMaxHp) || effectiveMaxHp <= 0) return false;
     if (!Number.isFinite(currentHp)) return false;
+    if (currentHp <= 0) return false;
     return currentHp <= effectiveMaxHp * 0.3;
 }
 
@@ -123,6 +126,7 @@ function requestAutoItemCheck() {
     autoItemCheckScheduled = true;
     setTimeout(() => {
         autoItemCheckScheduled = false;
+        if (!player || isGameOver) return;
         const effectiveMaxHp = getEffectivePlayerMaxHp();
         const rawHp = Number.isFinite(player?.hp) ? Math.max(0, player.hp) : effectiveMaxHp;
         if (!shouldAutoUsePotion(effectiveMaxHp, rawHp)) return;
@@ -635,6 +639,11 @@ function spawnHatenaBlocks(recommendedLevel) {
 
     if (!placed.length) return;
     hatenaBlocks = placed;
+    try {
+        recordAchievementEvent('hatena_block_spawned', { count: hatenaBlocks.length });
+    } catch (err) {
+        console.warn('Failed to record hatena spawn event', err);
+    }
 
     if (hatenaBlocks.length === 1) {
         addMessage('怪しげなハテナブロックが現れた…！');
@@ -850,12 +859,18 @@ function triggerHatenaBlock(block) {
     }
 
     const effectId = HATENA_BLOCK_EFFECTS[randomIntInclusive(0, HATENA_BLOCK_EFFECTS.length - 1)];
+    const hatenaEvent = {
+        effect: effectId,
+        classification: 'neutral'
+    };
 
     switch (effectId) {
         case 'levelUp': {
             const gain = randomIntInclusive(1, 3);
             const applied = adjustPlayerLevel(gain);
+            hatenaEvent.levelDelta = applied;
             if (applied > 0) {
+                hatenaEvent.classification = 'positive';
                 addMessage(`レベルが${applied}上昇した！`);
             } else {
                 addMessage('しかしレベルは変わらなかった。');
@@ -864,7 +879,9 @@ function triggerHatenaBlock(block) {
         }
         case 'levelDown': {
             const applied = adjustPlayerLevel(-1);
+            hatenaEvent.levelDelta = applied;
             if (applied < 0) {
+                hatenaEvent.classification = 'negative';
                 addMessage('レベルが1下がってしまった…');
             } else {
                 addMessage('これ以上レベルは下がらなかった。');
@@ -874,7 +891,9 @@ function triggerHatenaBlock(block) {
         case 'expGain': {
             const amount = randomIntInclusive(100, 1200);
             const gained = grantExp(amount, { source: 'hatena-block', reason: 'expGain', popup: false });
+            hatenaEvent.expDelta = gained;
             if (gained > 0) {
+                hatenaEvent.classification = 'positive';
                 addMessage(`経験値を${gained}獲得した！`);
             } else {
                 addMessage('経験値は増えなかった。');
@@ -884,7 +903,9 @@ function triggerHatenaBlock(block) {
         case 'expLoss': {
             const amount = randomIntInclusive(1, 300);
             const lost = spendExp(amount, { source: 'hatena-block', reason: 'expLoss', popup: false });
+            hatenaEvent.expDelta = lost > 0 ? -lost : 0;
             if (lost > 0) {
+                hatenaEvent.classification = 'negative';
                 addMessage(`経験値を${lost}失った…`);
             } else {
                 addMessage('失う経験値はなかった。');
@@ -893,7 +914,9 @@ function triggerHatenaBlock(block) {
         }
         case 'enemyAmbush': {
             const spawned = hatenaSummonEnemiesAroundPlayer(recommended);
+            hatenaEvent.enemyCount = spawned;
             if (spawned > 0) {
+                hatenaEvent.classification = 'negative';
                 addMessage('周囲に敵が現れた！');
             } else {
                 addMessage('しかし敵は現れなかった。');
@@ -901,44 +924,78 @@ function triggerHatenaBlock(block) {
             break;
         }
         case 'bomb': {
-            hatenaApplyBombDamage(0.8);
+            const bombResult = hatenaApplyBombDamage(0.8) || { outcome: 'none', amount: 0 };
+            hatenaEvent.bombOutcome = bombResult.outcome || 'none';
+            hatenaEvent.bombAmount = bombResult.amount || 0;
+            if (bombResult.outcome === 'damage' && bombResult.amount > 0) {
+                hatenaEvent.classification = 'negative';
+            } else if (bombResult.outcome === 'healed' && bombResult.amount > 0) {
+                hatenaEvent.classification = 'positive';
+            } else if (bombResult.outcome === 'guard') {
+                hatenaEvent.classification = 'positive';
+            }
             break;
         }
         case 'poison': {
             const applied = applyPlayerStatusEffect('poison', { duration: 5 });
+            hatenaEvent.statusAttempted = true;
+            hatenaEvent.statusApplied = !!applied;
+            hatenaEvent.statusId = 'poison';
             if (!applied) {
+                hatenaEvent.classification = 'positive';
                 addMessage('毒は無効化された。');
+            } else {
+                hatenaEvent.classification = 'negative';
             }
             break;
         }
         case 'statusAilment': {
             const status = hatenaApplyRandomStatus();
+            hatenaEvent.statusAttempted = true;
+            hatenaEvent.statusApplied = !!status;
+            hatenaEvent.statusId = status || 'random';
             if (!status) {
+                hatenaEvent.classification = 'positive';
                 addMessage('状態異常は発生しなかった。');
+            } else {
+                hatenaEvent.classification = 'negative';
             }
             break;
         }
         case 'abilityUp': {
             const applied = applyPlayerStatusEffect('abilityUp', { duration: 5 });
-            if (!applied) {
+            if (applied) {
+                hatenaEvent.abilityApplied = 'up';
+                hatenaEvent.classification = 'positive';
+            } else {
                 addMessage('能力強化の効果は発揮されなかった。');
             }
             break;
         }
         case 'abilityDown': {
             const applied = applyPlayerStatusEffect('abilityDown', { duration: 5 });
-            if (!applied) {
+            if (applied) {
+                hatenaEvent.abilityApplied = 'down';
+                hatenaEvent.classification = 'negative';
+            } else {
+                hatenaEvent.classification = 'positive';
                 addMessage('能力低下は発生しなかった。');
             }
             break;
         }
         case 'item': {
-            hatenaGrantRandomItem();
+            const item = hatenaGrantRandomItem();
+            if (item) {
+                hatenaEvent.itemsGranted = 1;
+                hatenaEvent.classification = 'positive';
+            }
             break;
         }
         case 'rareChest': {
             const chest = hatenaSpawnChestNearPlayer('rare');
             if (chest) {
+                hatenaEvent.rareChestsSpawned = 1;
+                hatenaEvent.classification = 'positive';
                 addMessage('煌びやかなレア宝箱が出現した！');
             } else {
                 addMessage('宝箱を置く場所が見つからなかった。');
@@ -948,6 +1005,8 @@ function triggerHatenaBlock(block) {
         case 'chest': {
             const chest = hatenaSpawnChestNearPlayer('normal');
             if (chest) {
+                hatenaEvent.normalChestsSpawned = 1;
+                hatenaEvent.classification = 'positive';
                 addMessage('宝箱が出現した！');
             } else {
                 addMessage('宝箱は現れなかった。');
@@ -956,7 +1015,9 @@ function triggerHatenaBlock(block) {
         }
         case 'chestRing': {
             const placed = hatenaSpawnChestRing('normal');
+            hatenaEvent.normalChestsSpawned = placed;
             if (placed > 0) {
+                hatenaEvent.classification = 'positive';
                 addMessage('宝箱に囲まれた！');
             } else {
                 addMessage('宝箱は現れなかった。');
@@ -966,6 +1027,12 @@ function triggerHatenaBlock(block) {
         default:
             addMessage('しかし何も起きなかった。');
             break;
+    }
+
+    try {
+        recordAchievementEvent('hatena_block_triggered', hatenaEvent);
+    } catch (err) {
+        console.warn('Failed to record hatena trigger event', err);
     }
 
     updateUI();
@@ -4114,10 +4181,10 @@ function showSelectionScreen(opts = {}) {
 
     // 状態のリセット
     if (refillHp) {
-        player.hp = player.maxHp;
-        enforceEffectiveHpCap();
-        player.satiety = SATIETY_MAX;
         resetPlayerStatusEffects();
+        player.hp = player.maxHp;
+        player.satiety = SATIETY_MAX;
+        enforceEffectiveHpCap(); // Apply cap after clearing debuffs so full heal sticks
     }
     isGameOver = false;
     satietySystemActive = false;
@@ -5755,7 +5822,6 @@ let dungeonLevel = 1;
 let selectedWorld = 'A'; // A..J or X
 let selectedDungeonBase = 1; // 1,11,...,91
 let difficulty = 'Normal';
-let isGameOver = false;
 let chests = [];
 const rareChestState = {
     active: false,

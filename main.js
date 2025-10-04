@@ -133,7 +133,7 @@ if (typeof window !== 'undefined') {
 
 if (dungeonNameToggle) {
     dungeonNameToggle.addEventListener('change', updateDungeonOverlayVisibility);
-    setTimeout(updateDungeonOverlayVisibility, 0);
+    updateDungeonOverlayVisibility();
 }
 
 if (autoItemToggle) {

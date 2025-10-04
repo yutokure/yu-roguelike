@@ -106,6 +106,14 @@
     }
   }
 
+  function ensureForwardProgress(current, desired, cap, exitValue){
+    const bounded = Math.min(desired, cap);
+    if(bounded <= current){
+      return exitValue;
+    }
+    return bounded;
+  }
+
   function tintLine(ctx, x0, y0, x1, y1, thickness = 1, color){
     if(!Number.isFinite(x0) || !Number.isFinite(y0) || !Number.isFinite(x1) || !Number.isFinite(y1)){
       return;
@@ -730,7 +738,7 @@
     let x = 2;
     let y = Math.floor(H * 0.32);
     while(x < W - 2){
-      const nx = Math.min(W - 3, x + 5);
+      const nx = ensureForwardProgress(x, x + 5, W - 3, W - 2);
       const ny = clamp(y + jitter(random, 0, 4) - 2, 2, H - 3);
       tintLine(ctx, x, y, nx, ny, 3, '#4f98a7');
       x = nx;
@@ -740,7 +748,7 @@
     x = 2;
     y = Math.floor(H * 0.62);
     while(x < W - 2){
-      const nx = Math.min(W - 3, x + 5);
+      const nx = ensureForwardProgress(x, x + 5, W - 3, W - 2);
       const ny = clamp(y + jitter(random, 0, 4) - 2, 2, H - 3);
       tintLine(ctx, x, y, nx, ny, 4, '#377b8d');
       x = nx;

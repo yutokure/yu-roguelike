@@ -1905,6 +1905,12 @@ body.in-game #player-summary { display: none; }
     border-color: rgba(74, 222, 128, 0.45);
 }
 
+.dungeon-overlay__badge--hazard-noise {
+    background: linear-gradient(135deg, rgba(125, 211, 252, 0.55), rgba(99, 102, 241, 0.6));
+    border-color: rgba(129, 140, 248, 0.55);
+    box-shadow: 0 0 18px rgba(96, 165, 250, 0.35);
+}
+
 .dungeon-overlay__badge--type {
     background: linear-gradient(135deg, rgba(14, 116, 144, 0.55), rgba(8, 47, 73, 0.65));
     border-color: rgba(125, 211, 252, 0.45);
@@ -1926,6 +1932,95 @@ body.in-game #player-summary { display: none; }
     font-size: 13px;
     line-height: 1.6;
     color: rgba(226, 232, 240, 0.82);
+}
+
+#dungeon-type-overlay.noise-glitch-card {
+    animation: noise-glitch-card 0.18s steps(2) 1;
+    filter: hue-rotate(-6deg) saturate(1.25);
+}
+
+#dungeon-type-overlay.noise-glitch-card::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(59, 130, 246, 0.12) 0px,
+        rgba(59, 130, 246, 0.12) 2px,
+        rgba(15, 23, 42, 0) 4px,
+        rgba(15, 23, 42, 0) 6px
+    );
+    mix-blend-mode: screen;
+    opacity: 0.55;
+    border-radius: inherit;
+    animation: noise-glitch-scan 0.18s steps(3) 1;
+}
+
+#game-canvas.noise-glitch-canvas {
+    animation: noise-glitch-canvas 0.18s steps(2) 1;
+    filter: contrast(1.2) saturate(1.25);
+}
+
+@keyframes noise-glitch-card {
+    0% {
+        transform: translate3d(0, 0, 0) skewX(0deg);
+        clip-path: inset(0% 0 0 0);
+    }
+    25% {
+        transform: translate3d(-3px, 1px, 0) skewX(-4deg);
+        clip-path: inset(4% 0 55% 0);
+    }
+    50% {
+        transform: translate3d(3px, -1px, 0) skewX(3deg);
+        clip-path: inset(45% 0 8% 0);
+    }
+    75% {
+        transform: translate3d(-2px, -1px, 0) skewX(2deg);
+        clip-path: inset(12% 0 28% 0);
+    }
+    100% {
+        transform: translate3d(0, 0, 0) skewX(0deg);
+        clip-path: inset(0% 0 0 0);
+    }
+}
+
+@keyframes noise-glitch-scan {
+    0% {
+        opacity: 0.7;
+        transform: translate3d(0, -6px, 0);
+    }
+    50% {
+        opacity: 0.4;
+        transform: translate3d(0, 4px, 0);
+    }
+    100% {
+        opacity: 0.6;
+        transform: translate3d(0, -2px, 0);
+    }
+}
+
+@keyframes noise-glitch-canvas {
+    0% {
+        clip-path: inset(0 0 0 0);
+        transform: translate3d(0, 0, 0);
+    }
+    30% {
+        clip-path: inset(0 0 68% 0);
+        transform: translate3d(-2px, 1px, 0);
+    }
+    60% {
+        clip-path: inset(60% 0 0 0);
+        transform: translate3d(3px, -1px, 0);
+    }
+    80% {
+        clip-path: inset(10% 0 36% 0);
+        transform: translate3d(-1px, 0, 0);
+    }
+    100% {
+        clip-path: inset(0 0 0 0);
+        transform: translate3d(0, 0, 0);
+    }
 }
 
 .modal {

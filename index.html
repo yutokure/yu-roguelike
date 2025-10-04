@@ -1034,6 +1034,10 @@
         <button id="btn-status">ステータス</button>
         <button id="btn-import">インポート</button>
         <button id="btn-export">エクスポート</button>
+        <label for="toggle-dungeon-name" class="toolbar-toggle">
+            <input type="checkbox" id="toggle-dungeon-name" checked>
+            <span>ダンジョン名を表示する</span>
+        </label>
         <button id="btn-sandbox-menu" class="sandbox-menu-button" type="button" aria-expanded="false" aria-controls="sandbox-interactive-panel" style="display:none;">インタラクティブ</button>
         <button id="btn-god-console" class="god-console-button" type="button" aria-expanded="false" aria-controls="god-console-panel" style="display:none;">創造神コンソール</button>
         <input type="file" id="import-file" accept="application/json" style="display:none" />
@@ -1246,6 +1250,16 @@
                         <button id="throw-potion30" style="display:none;">投げつける</button>
                     </div>
                 </div>
+            <div class="item-row item-row--toggle">
+                <div class="item-row__info">
+                    <span>オートアイテム</span>
+                    <small>HPが30%以下になったとき自動で回復します</small>
+                </div>
+                <label class="item-row__toggle" for="auto-item-toggle">
+                    <input type="checkbox" id="auto-item-toggle">
+                    <span>有効にする</span>
+                </label>
+            </div>
             <div class="item-row">
                 <span>最大HP強化アイテム</span>
                 <span>x <span id="inv-hp-boost">0</span></span>

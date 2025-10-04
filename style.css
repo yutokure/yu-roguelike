@@ -1158,6 +1158,22 @@ body.in-game #player-summary { display: none; }
     border: 1px solid rgba(255,255,255,0.2);
 }
 
+.toolbar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #1f2937;
+    font-weight: 600;
+    user-select: none;
+}
+
+.toolbar-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6366f1;
+}
+
 #toolbar button {
     padding: 10px 16px;
     border: none;
@@ -2171,6 +2187,42 @@ body.in-game #player-summary { display: none; }
 .item-row button:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.item-row--toggle {
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.item-row__info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #1f2937;
+    font-weight: 600;
+    flex: 1 1 auto;
+}
+
+.item-row__info small {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.item-row__toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #4338ca;
+    user-select: none;
+}
+
+.item-row__toggle input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #6366f1;
 }
 
 .item-section {

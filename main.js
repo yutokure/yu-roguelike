@@ -174,6 +174,19 @@ const SKILL_EXECUTION_DELAY_MS = 500;
 let logBuffer = [];
 const gameOverScreen = document.getElementById('game-over-screen');
 const restartButton = document.getElementById('restart-button');
+const gameOverMessageElement = document.querySelector('.game-over-message');
+const GAME_OVER_BURST_DELAY_MS = 500;
+const GAME_OVER_OVERLAY_DELAY_MS = 1000;
+const PLAYER_BURST_EFFECT_DURATION_MS = 500;
+let gameOverSequence = {
+    active: false,
+    burstTimeoutId: null,
+    overlayTimeoutId: null,
+    causeMessage: '',
+    origin: null,
+    startedAt: 0,
+};
+let playerBurstEffect = null;
 // Toolbar / Modals
 const btnBack = document.getElementById('btn-back');
 const btnItems = document.getElementById('btn-items');
@@ -11751,6 +11764,7 @@ function drawHatenaBlockOverlay(screenX, screenY, cellW, cellH) {
 }
 
 function drawPlayer() {
+    if (playerBurstEffect && playerBurstEffect.hidePlayer) return;
     const startX = camera.x;
     const startY = camera.y;
     const px = player.x - startX;
@@ -11784,6 +11798,67 @@ function drawPlayer() {
     }
     ctx.closePath();
     ctx.fill();
+}
+
+function drawPlayerBurstEffect() {
+    if (!playerBurstEffect) return;
+    const now = (typeof performance !== 'undefined' && typeof performance.now === 'function')
+        ? performance.now()
+        : Date.now();
+    const elapsed = now - playerBurstEffect.startTime;
+    if (elapsed < 0) return;
+
+    const duration = playerBurstEffect.duration || PLAYER_BURST_EFFECT_DURATION_MS;
+    const clamped = duration > 0 ? Math.min(1, elapsed / duration) : 1;
+    const fade = Math.max(0, 1 - clamped);
+    const originX = Number.isFinite(playerBurstEffect.origin?.x)
+        ? playerBurstEffect.origin.x
+        : Number.isFinite(player?.x) ? player.x : 0;
+    const originY = Number.isFinite(playerBurstEffect.origin?.y)
+        ? playerBurstEffect.origin.y
+        : Number.isFinite(player?.y) ? player.y : 0;
+
+    if (isDarknessActive() && !isTileVisible(originX, originY)) {
+        if (elapsed >= duration) {
+            playerBurstEffect = null;
+        }
+        return;
+    }
+
+    const cellW = canvas.width / VIEWPORT_WIDTH;
+    const cellH = canvas.height / VIEWPORT_HEIGHT;
+    const startX = camera.x;
+    const startY = camera.y;
+    const relativeX = originX - startX;
+    const relativeY = originY - startY;
+    const screenX = relativeX * cellW + cellW / 2;
+    const screenY = relativeY * cellH + cellH / 2;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const flashRadius = Math.min(cellW, cellH) * (0.4 + clamped * 1.2);
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.55 * fade})`;
+    ctx.beginPath();
+    ctx.arc(screenX, screenY, flashRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    playerBurstEffect.particles.forEach((particle) => {
+        const distance = Math.min(cellW, cellH) * (0.3 + particle.speed * clamped * 1.7);
+        const px = screenX + Math.cos(particle.angle) * distance;
+        const py = screenY + Math.sin(particle.angle) * distance;
+        const size = Math.max(2, Math.min(cellW, cellH) * 0.12 * (0.7 + fade));
+        const color = `hsla(${particle.colorHue}, 90%, 65%, ${0.85 * fade})`;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    ctx.restore();
+
+    if (elapsed >= duration) {
+        playerBurstEffect = null;
+    }
 }
 
 // Helper function to draw text with background
@@ -12760,6 +12835,15 @@ function renderLog() {
     messageLogDiv.scrollTop = messageLogDiv.scrollHeight;
 }
 
+function getLastMeaningfulLogLine() {
+    for (let i = logBuffer.length - 1; i >= 0; i--) {
+        const line = logBuffer[i];
+        if (!line || line === '--------') continue;
+        return line;
+    }
+    return '';
+}
+
 function removeChestInstance(chest) {
     if (!chest) return false;
     const idx = chests.indexOf(chest);
@@ -13412,15 +13496,113 @@ function handlePlayerDeath(message = 'ゲームオーバー') {
     if (isGameOver) return;
     recordAchievementEvent('death', { cause: message, mode: currentMode, floor: dungeonLevel, difficulty });
     addMessage(message);
-    player.hp = Math.max(0, player.hp);
+
+    if (player) {
+        const normalizedHp = Number.isFinite(player.hp) ? player.hp : 0;
+        player.hp = normalizedHp <= 0 ? Math.max(0, normalizedHp) : 0;
+    }
+    updateUI();
+
     const finalFloor = document.getElementById('final-floor');
     const finalLevel = document.getElementById('final-level');
     if (finalFloor) finalFloor.textContent = `${dungeonLevel}F`;
     if (finalLevel) finalLevel.textContent = player.level;
-    gameOverScreen.style.display = 'block';
+
+    if (gameOverSequence.burstTimeoutId) {
+        clearTimeout(gameOverSequence.burstTimeoutId);
+    }
+    if (gameOverSequence.overlayTimeoutId) {
+        clearTimeout(gameOverSequence.overlayTimeoutId);
+    }
+
+    playerBurstEffect = null;
+
+    const origin = {
+        x: Number.isFinite(player?.x) ? player.x : (gameOverSequence.origin?.x ?? 0),
+        y: Number.isFinite(player?.y) ? player.y : (gameOverSequence.origin?.y ?? 0),
+    };
+    const now = (typeof performance !== 'undefined' && typeof performance.now === 'function')
+        ? performance.now()
+        : Date.now();
+    const causeMessage = getLastMeaningfulLogLine() || message;
+
+    gameOverSequence = {
+        active: true,
+        burstTimeoutId: null,
+        overlayTimeoutId: null,
+        causeMessage,
+        origin,
+        startedAt: now,
+    };
+
+    gameOverSequence.burstTimeoutId = setTimeout(() => {
+        startPlayerBurstEffect();
+    }, GAME_OVER_BURST_DELAY_MS);
+
+    gameOverSequence.overlayTimeoutId = setTimeout(() => {
+        showGameOverOverlay();
+    }, GAME_OVER_OVERLAY_DELAY_MS);
+
     playerTurn = false;
     isGameOver = true;
+}
+
+function cancelGameOverSequence() {
+    if (gameOverSequence.burstTimeoutId) {
+        clearTimeout(gameOverSequence.burstTimeoutId);
+    }
+    if (gameOverSequence.overlayTimeoutId) {
+        clearTimeout(gameOverSequence.overlayTimeoutId);
+    }
+    gameOverSequence.burstTimeoutId = null;
+    gameOverSequence.overlayTimeoutId = null;
+    gameOverSequence.active = false;
+    gameOverSequence.causeMessage = '';
+    gameOverSequence.origin = null;
+    gameOverSequence.startedAt = 0;
+}
+
+function showGameOverOverlay() {
+    const cause = getLastMeaningfulLogLine() || gameOverSequence.causeMessage || 'ゲームオーバー';
+    if (gameOverMessageElement) {
+        const escapedCause = escapeHtml(cause);
+        gameOverMessageElement.innerHTML = `冒険はここで終わりです..<br>${escapedCause}`;
+    }
+    if (gameOverScreen) {
+        gameOverScreen.style.display = 'block';
+    }
+    playerBurstEffect = null;
     stopGameLoop();
+    cancelGameOverSequence();
+}
+
+function startPlayerBurstEffect() {
+    if (!gameOverSequence.active) return;
+    const origin = gameOverSequence.origin || {
+        x: Number.isFinite(player?.x) ? player.x : 0,
+        y: Number.isFinite(player?.y) ? player.y : 0,
+    };
+    const now = (typeof performance !== 'undefined' && typeof performance.now === 'function')
+        ? performance.now()
+        : Date.now();
+    const particleCount = 16;
+    const particles = [];
+    for (let i = 0; i < particleCount; i++) {
+        const baseAngle = (Math.PI * 2 * i) / particleCount;
+        const angle = baseAngle + (Math.random() - 0.5) * 0.4;
+        particles.push({
+            angle,
+            speed: 0.6 + Math.random() * 0.7,
+            colorHue: 200 + Math.random() * 40,
+        });
+    }
+    playerBurstEffect = {
+        startTime: now,
+        duration: PLAYER_BURST_EFFECT_DURATION_MS,
+        origin,
+        particles,
+        hidePlayer: true,
+    };
 }
 
 function tryAdvanceOnConveyor(options = {}) {
@@ -13791,6 +13973,7 @@ function gameLoop() {
     drawPlayer();
     drawEnemies();
     drawDefeatedEnemies(); // Draw defeat animations
+    drawPlayerBurstEffect();
     drawProjectiles();
     // drawItems(); // Removed - no more standalone items
     drawChests();
@@ -14186,6 +14369,11 @@ function enemyTurn() {
 }
 
 restartButton.addEventListener('click', () => {
+    cancelGameOverSequence();
+    playerBurstEffect = null;
+    if (gameOverMessageElement) {
+        gameOverMessageElement.innerHTML = '冒険はここで終わりです...';
+    }
     // Reset game state
     stopGameLoop();
     dungeonLevel = 1;

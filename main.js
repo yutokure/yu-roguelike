@@ -935,8 +935,10 @@ function hatenaApplyBombDamage(ratio = 0.8) {
     const clampRatio = Math.max(0, Number(ratio) || 0);
     if (clampRatio <= 0) return { outcome: 'none', amount: 0 };
     const baseDamage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * clampRatio));
+    const passiveMods = getPassiveOrbModifiers();
+    const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
     const hazardResult = resolveDomainInteraction({
-        amount: baseDamage,
+        amount: scaledDamage,
         baseEffect: 'damage',
         attackerType: 'enemy',
         defenderType: 'player',
@@ -5348,6 +5350,83 @@ function incrementPassiveOrb(orbId, amount = 1) {
     return next;
 }
 
+let cachedPassiveOrbSignature = null;
+let cachedPassiveOrbModifiers = null;
+
+function getPassiveOrbModifiers() {
+    const store = ensurePassiveOrbInventory();
+    let signature = '';
+    const stackCounts = {};
+    for (const id of PASSIVE_ORB_IDS) {
+        const value = Number(store[id]);
+        const count = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+        stackCounts[id] = count;
+        signature += `${id}:${count}|`;
+    }
+
+    if (cachedPassiveOrbModifiers && cachedPassiveOrbSignature === signature) {
+        return cachedPassiveOrbModifiers;
+    }
+
+    const baseModifiers = {
+        attackMul: 1,
+        defenseMul: 1,
+        maxHpMul: 1,
+        damageDealtMul: 1,
+        damageTakenMul: 1,
+        critDamageMul: 1,
+        skillPowerMul: 1,
+        accuracyMul: 1,
+        evasionMul: 1,
+    };
+
+    for (const id of PASSIVE_ORB_IDS) {
+        const stacks = stackCounts[id];
+        if (!stacks) continue;
+        const def = PASSIVE_ORB_DEFS[id];
+        const perStack = Number.isFinite(def?.perStackMultiplier) ? def.perStackMultiplier : 1;
+        if (!(perStack > 0)) continue;
+        const multiplier = Math.pow(perStack, stacks);
+        switch (id) {
+            case 'vitality':
+                baseModifiers.maxHpMul *= multiplier;
+                break;
+            case 'fury':
+                baseModifiers.attackMul *= multiplier;
+                baseModifiers.damageDealtMul *= multiplier;
+                break;
+            case 'aegis':
+                baseModifiers.defenseMul *= multiplier;
+                baseModifiers.damageTakenMul *= 1 / multiplier;
+                break;
+            case 'focus':
+                baseModifiers.skillPowerMul *= multiplier;
+                baseModifiers.accuracyMul *= multiplier;
+                break;
+            case 'fortune':
+                baseModifiers.critDamageMul *= multiplier;
+                baseModifiers.evasionMul *= multiplier;
+                break;
+            default:
+                break;
+        }
+    }
+
+    baseModifiers.attackMul = Number.isFinite(baseModifiers.attackMul) && baseModifiers.attackMul > 0 ? baseModifiers.attackMul : 1;
+    baseModifiers.defenseMul = Number.isFinite(baseModifiers.defenseMul) && baseModifiers.defenseMul > 0 ? baseModifiers.defenseMul : 1;
+    baseModifiers.maxHpMul = Number.isFinite(baseModifiers.maxHpMul) && baseModifiers.maxHpMul > 0 ? baseModifiers.maxHpMul : 1;
+    baseModifiers.damageDealtMul = Number.isFinite(baseModifiers.damageDealtMul) && baseModifiers.damageDealtMul > 0 ? baseModifiers.damageDealtMul : 1;
+    baseModifiers.damageTakenMul = Number.isFinite(baseModifiers.damageTakenMul) && baseModifiers.damageTakenMul > 0 ? baseModifiers.damageTakenMul : 1;
+    baseModifiers.critDamageMul = Number.isFinite(baseModifiers.critDamageMul) && baseModifiers.critDamageMul > 0 ? baseModifiers.critDamageMul : 1;
+    baseModifiers.skillPowerMul = Number.isFinite(baseModifiers.skillPowerMul) && baseModifiers.skillPowerMul > 0 ? baseModifiers.skillPowerMul : 1;
+    baseModifiers.accuracyMul = Number.isFinite(baseModifiers.accuracyMul) && baseModifiers.accuracyMul > 0 ? baseModifiers.accuracyMul : 1;
+    baseModifiers.evasionMul = Number.isFinite(baseModifiers.evasionMul) && baseModifiers.evasionMul > 0 ? baseModifiers.evasionMul : 1;
+
+    cachedPassiveOrbSignature = signature;
+    cachedPassiveOrbModifiers = Object.freeze(baseModifiers);
+    return cachedPassiveOrbModifiers;
+}
+
 function ensureSkillCharmInventory() {
     const inv = ensureInventoryContainer();
     if (!inv.skillCharms || typeof inv.skillCharms !== 'object') {
@@ -5710,7 +5789,9 @@ function getEffectivePlayerMaxHp() {
     const domain = getPlayerDomainAggregate();
     const abilityMul = getAbilityStatusMultiplier();
     const domainAbilityMul = getDomainAbilityMultiplier(domain, 'maxHp');
-    return Math.max(1, Math.floor(base * abilityMul * domainAbilityMul));
+    const passive = getPassiveOrbModifiers();
+    const passiveMul = Number.isFinite(passive?.maxHpMul) && passive.maxHpMul > 0 ? passive.maxHpMul : 1;
+    return Math.max(1, Math.floor(base * abilityMul * domainAbilityMul * passiveMul));
 }
 
 function getEffectivePlayerAttack() {
@@ -5719,7 +5800,9 @@ function getEffectivePlayerAttack() {
     const abilityMul = getAbilityStatusMultiplier();
     const domainAbilityMul = getDomainAbilityMultiplier(domain, 'attack');
     const domainAttackMul = Number.isFinite(domain.attackMul) ? domain.attackMul : 1;
-    return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainAttackMul));
+    const passive = getPassiveOrbModifiers();
+    const passiveMul = Number.isFinite(passive?.attackMul) && passive.attackMul > 0 ? passive.attackMul : 1;
+    return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainAttackMul * passiveMul));
 }
 
 function getEffectivePlayerDefense() {
@@ -5728,7 +5811,9 @@ function getEffectivePlayerDefense() {
     const abilityMul = getAbilityStatusMultiplier();
     const domainAbilityMul = getDomainAbilityMultiplier(domain, 'defense');
     const domainDefenseMul = Number.isFinite(domain.defenseMul) ? domain.defenseMul : 1;
-    return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainDefenseMul));
+    const passive = getPassiveOrbModifiers();
+    const passiveMul = Number.isFinite(passive?.defenseMul) && passive.defenseMul > 0 ? passive.defenseMul : 1;
+    return Math.max(0, Math.floor(base * abilityMul * domainAbilityMul * domainDefenseMul * passiveMul));
 }
 
 function getEffectivePlayerLevel() {
@@ -5810,8 +5895,10 @@ function processPlayerStatusTurnStart() {
         const poisonDef = PLAYER_STATUS_EFFECTS.poison;
         const ratio = Number.isFinite(poisonDef.damageRatio) ? poisonDef.damageRatio : 0.1;
         const baseDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
+        const passiveMods = getPassiveOrbModifiers();
+        const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
         const statusResult = resolveDomainInteraction({
-            amount: baseDamage,
+            amount: scaledDamage,
             baseEffect: 'damage',
             attackerType: 'enemy',
             defenderType: 'player',
@@ -6495,13 +6582,15 @@ function applyDamageToEnemyFromSkill(enemy, damage, { crit = false, popupColor =
 
 function computePlayerSkillDamage(enemy, { multiplier = 1, sureHit = false, allowHighLevel = false, sureHitLevelGap = SP_HIGH_LEVEL_SUPPRESS_GAP } = {}) {
     if (!enemy) return { hit: false, damage: 0, crit: false, sureHitFailed: false };
+    const passiveMods = getPassiveOrbModifiers();
     const playerLevel = getEffectivePlayerLevel();
     const playerAttack = getEffectivePlayerAttack();
     const enemyLevel = Math.max(1, Math.floor(enemy.level || 1));
     const highLevelDiff = enemyLevel - playerLevel;
     const canForceHit = sureHit && (allowHighLevel || highLevelDiff < sureHitLevelGap);
     const baseDef = enemy.defense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
-    if (!canForceHit && !hitCheck(playerLevel || 1, enemyLevel)) {
+    const accuracyMul = Number.isFinite(passiveMods?.accuracyMul) ? passiveMods.accuracyMul : 1;
+    if (!canForceHit && !hitCheck(playerLevel || 1, enemyLevel, { attackerType: 'player', accuracyMul })) {
         return { hit: false, damage: 0, crit: false, sureHitFailed: sureHit && !allowHighLevel && highLevelDiff >= sureHitLevelGap };
     }
     const attacker = { level: playerLevel, attack: playerAttack };
@@ -6512,7 +6601,11 @@ function computePlayerSkillDamage(enemy, { multiplier = 1, sureHit = false, allo
     if (!Number.isFinite(mult)) mult = levelDiff > 0 ? Infinity : 0;
     const critFlag = isCritical(attacker.level, defender.level);
     const rand = 0.7 + Math.random() * 0.5;
-    let dmg = Math.ceil(base * mult * rand * (critFlag ? 1.5 : 1) * (Number(multiplier) || 1));
+    const damageMul = Number.isFinite(passiveMods?.damageDealtMul) && passiveMods.damageDealtMul > 0 ? passiveMods.damageDealtMul : 1;
+    const skillMul = Number.isFinite(passiveMods?.skillPowerMul) && passiveMods.skillPowerMul > 0 ? passiveMods.skillPowerMul : 1;
+    const critBonus = Number.isFinite(passiveMods?.critDamageMul) && passiveMods.critDamageMul > 0 ? passiveMods.critDamageMul : 1;
+    const critMul = critFlag ? 1.5 * critBonus : 1;
+    let dmg = Math.ceil(base * mult * damageMul * skillMul * rand * critMul * (Number(multiplier) || 1));
     if (dmg < 1 && dmg < 0.5) dmg = 0;
     const applied = Math.ceil(applyDifficultyDamageMultipliers('deal', dmg));
     return { hit: true, damage: applied, crit: critFlag, sureHitFailed: false };
@@ -13297,12 +13390,14 @@ function handleSatietyTurnTick(actionType = 'move') {
     let alive = true;
     if (player.satiety <= 0) {
         const damage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * SATIETY_DAMAGE_RATIO));
-        if (damage > 0) {
-            player.hp = Math.max(0, player.hp - damage);
-            recordAchievementEvent('damage_taken', { amount: damage, source: 'hunger' });
+        const passiveMods = getPassiveOrbModifiers();
+        const scaledDamage = Math.max(0, Math.floor(damage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1)));
+        if (scaledDamage > 0) {
+            player.hp = Math.max(0, player.hp - scaledDamage);
+            recordAchievementEvent('damage_taken', { amount: scaledDamage, source: 'hunger' });
             try {
-                addMessage(`空腹で ${damage} のダメージを受けた！`);
-                addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#ff922b');
+                addMessage(`空腹で ${scaledDamage} のダメージを受けた！`);
+                addPopup(player.x, player.y, `-${Math.min(scaledDamage, 999999999)}${scaledDamage > 999999999 ? '+' : ''}`, '#ff922b');
                 playSfx('damage');
             } catch {}
             if (player.hp <= 0) {
@@ -13523,8 +13618,10 @@ function calculateRareChestExplosionDamage() {
 function handleRareChestExplosion(diff) {
     playSfx('bomb');
     const baseDamage = calculateRareChestExplosionDamage();
+    const passiveMods = getPassiveOrbModifiers();
+    const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
     const hazardResult = resolveDomainInteraction({
-        amount: baseDamage,
+        amount: scaledDamage,
         baseEffect: 'damage',
         attackerType: 'enemy',
         defenderType: 'player',
@@ -13772,6 +13869,7 @@ function attackInDirection() {
 }
 
 function performAttack(enemyAtTarget) {
+    const passiveMods = getPassiveOrbModifiers();
     const playerEffectiveLevel = getEffectivePlayerLevel();
     const playerEffectiveAttack = getEffectivePlayerAttack();
     const enemyLevel = getEffectiveEnemyLevel(enemyAtTarget);
@@ -13780,24 +13878,28 @@ function performAttack(enemyAtTarget) {
     if (!forceHit && isSkillEffectActive('sureHit') && enemyLevel - playerEffectiveLevel >= SP_HIGH_LEVEL_SUPPRESS_GAP) {
         addMessage('敵のレベルが高すぎて必中攻撃の効果が及ばない…');
     }
-    if (!forceHit && !hitCheck(playerEffectiveLevel || 1, enemyLevel)) {
+    const accuracyMul = Number.isFinite(passiveMods?.accuracyMul) ? passiveMods.accuracyMul : 1;
+    if (!forceHit && !hitCheck(playerEffectiveLevel || 1, enemyLevel, { attackerType: 'player', accuracyMul })) {
         addMessage('Miss');
         addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Miss', '#74c0fc');
     } else {
         const baseDef = enemyEffectiveDefense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
         const attacker = { level: playerEffectiveLevel, attack: playerEffectiveAttack };
         const defender = { level: enemyLevel, defense: baseDef };
-        const { dmg, crit } = (function(att, def){
+        const { dmg, crit } = (function(att, def, passive){
             const base = Math.max(1, att.attack - Math.floor(def.defense / 2));
             const levelDiff = att.level - def.level;
             let mult = damageMultiplierByLevelDiff(levelDiff);
             if (!Number.isFinite(mult)) mult = (levelDiff > 0 ? Infinity : 0);
             const critFlag = isCritical(att.level, def.level);
             const rand = 0.7 + Math.random() * 0.5;
-            let d = Math.ceil(base * mult * rand * (critFlag ? 1.5 : 1));
+            const damageMul = Number.isFinite(passive?.damageDealtMul) && passive.damageDealtMul > 0 ? passive.damageDealtMul : 1;
+            const critBonus = Number.isFinite(passive?.critDamageMul) && passive.critDamageMul > 0 ? passive.critDamageMul : 1;
+            const critMul = critFlag ? 1.5 * critBonus : 1;
+            let d = Math.ceil(base * mult * damageMul * rand * critMul);
             if (d < 1 && d < 0.5) d = 0;
             return { dmg: d, crit: critFlag };
-        })(attacker, defender);
+        })(attacker, defender, passiveMods);
         const difficultyAdjusted = Math.ceil(applyDifficultyDamageMultipliers('deal', dmg));
         const domainResult = resolveDomainInteraction({
             amount: difficultyAdjusted,
@@ -13880,14 +13982,29 @@ function damageMultiplierByLevelDiff_v2_disabled(levelDiff) {
     return levelDiff > 0 ? multiplier : 1 / multiplier;
 }
 
-function hitCheck(attackerLevel, defenderLevel) {
-    const diff = attackerLevel - defenderLevel;
+function hitCheck(attackerLevel, defenderLevel, { accuracyMul = 1, evasionMul = 1 } = {}) {
+    const atkLevel = Number.isFinite(attackerLevel) ? attackerLevel : 1;
+    const defLevel = Number.isFinite(defenderLevel) ? defenderLevel : 1;
+    const diff = atkLevel - defLevel;
     const abs = Math.abs(diff);
-    if (abs <= 2) return Math.random() < 0.8;
-    if (abs >= 7 && diff < 0) return false;
-    if (abs >= 3 && diff > 0) return true;
-    if (abs >= 5 && diff < 0) return Math.random() >= 0.5;
-    return true;
+    let chance;
+    if (abs >= 7 && diff < 0) {
+        chance = 0;
+    } else if (abs >= 3 && diff > 0) {
+        chance = 1;
+    } else if (abs >= 5 && diff < 0) {
+        chance = 0.5;
+    } else if (abs <= 2) {
+        chance = 0.8;
+    } else {
+        chance = 1;
+    }
+    const accuracy = Number.isFinite(accuracyMul) && accuracyMul > 0 ? accuracyMul : 1;
+    const evasion = Number.isFinite(evasionMul) && evasionMul > 0 ? evasionMul : 1;
+    const adjusted = Math.max(0, Math.min(1, chance * accuracy / evasion));
+    if (adjusted >= 1) return true;
+    if (adjusted <= 0) return false;
+    return Math.random() < adjusted;
 }
 
 function isCritical(attackerLevel, defenderLevel) {
@@ -14330,8 +14447,10 @@ function applyPostMoveEffects() {
                 const ratio = calculatePoisonFloorDamageRatio();
                 if (ratio > 0) {
                     const baseDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
+                    const passiveMods = getPassiveOrbModifiers();
+                    const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
                     const hazardResult = resolveDomainInteraction({
-                        amount: baseDamage,
+                        amount: scaledDamage,
                         baseEffect: 'damage',
                         attackerType: 'enemy',
                         defenderType: 'player',
@@ -14373,8 +14492,10 @@ function applyPostMoveEffects() {
                 playSfx('bomb');
                 if (ratio > 0) {
                     const baseDamage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * ratio));
+                    const passiveMods = getPassiveOrbModifiers();
+                    const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
                     const hazardResult = resolveDomainInteraction({
-                        amount: baseDamage,
+                        amount: scaledDamage,
                         baseEffect: 'damage',
                         attackerType: 'enemy',
                         defenderType: 'player',
@@ -14781,10 +14902,12 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     if (isSandboxGodModeEnabled() || isSandboxNoClipEnabled()) {
         return;
     }
+    const passiveMods = getPassiveOrbModifiers();
     const playerEffectiveLevel = getEffectivePlayerLevel();
     const playerEffectiveDefense = getEffectivePlayerDefense();
     const enemyEffectiveLevel = getEffectiveEnemyLevel(enemy);
-    if (!hitCheck(enemyEffectiveLevel || 1, playerEffectiveLevel || 1)) {
+    const evasionMul = Number.isFinite(passiveMods?.evasionMul) && passiveMods.evasionMul > 0 ? passiveMods.evasionMul : 1;
+    if (!hitCheck(enemyEffectiveLevel || 1, playerEffectiveLevel || 1, { attackerType: 'enemy', defenderType: 'player', evasionMul })) {
         addMessage('敵は外した！');
         addPopup(player.x, player.y, 'Miss', '#74c0fc');
         return;
@@ -14805,8 +14928,10 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     })(attacker, defender);
 
     const difficultyAdjusted = Math.ceil(applyDifficultyDamageMultipliers('take', dmg));
+    const damageTakenMul = Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1;
+    const preDomainAmount = difficultyAdjusted * damageTakenMul;
     const domainResult = resolveDomainInteraction({
-        amount: difficultyAdjusted,
+        amount: preDomainAmount,
         baseEffect: 'damage',
         attackerType: 'enemy',
         defenderType: 'player',
@@ -14897,10 +15022,12 @@ function applyKnockbackFromEnemy(enemy, stepX, stepY) {
     applyPostMoveEffects();
     if (collided) {
         const collisionDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * 0.15));
-        player.hp = Math.max(0, player.hp - collisionDamage);
-        recordAchievementEvent('damage_taken', { amount: collisionDamage, source: 'collision' });
-        addMessage(`壁に激突して${collisionDamage}のダメージ！`);
-        addPopup(player.x, player.y, `-${Math.min(collisionDamage, 999999999)}${collisionDamage > 999999999 ? '+' : ''}`, '#ffa94d');
+        const passiveMods = getPassiveOrbModifiers();
+        const scaledDamage = Math.max(0, Math.floor(collisionDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1)));
+        player.hp = Math.max(0, player.hp - scaledDamage);
+        recordAchievementEvent('damage_taken', { amount: scaledDamage, source: 'collision' });
+        addMessage(`壁に激突して${scaledDamage}のダメージ！`);
+        addPopup(player.x, player.y, `-${Math.min(scaledDamage, 999999999)}${scaledDamage > 999999999 ? '+' : ''}`, '#ffa94d');
         playSfx('damage');
         if (player.hp <= 0) {
             handlePlayerDeath('壁への激突で倒れた…ゲームオーバー');
@@ -15028,13 +15155,15 @@ function consumePotion30({ reason = 'manual' } = {}) {
     let autoTriggerValue = 0;
     if (result.effectType === 'damage' && result.amount > 0) {
         const damage = result.amount;
-        player.hp = Math.max(0, player.hp - damage);
-        recordAchievementEvent('damage_taken', { amount: damage, source: 'reverse-potion' });
-        addMessage(isAuto ? `オートアイテムが暴発し、${damage}のダメージを受けた！` : `ポーションが反転し、${damage}のダメージを受けた！`);
-        addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
+        const passiveMods = getPassiveOrbModifiers();
+        const scaledDamage = Math.max(0, Math.floor(damage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1)));
+        player.hp = Math.max(0, player.hp - scaledDamage);
+        recordAchievementEvent('damage_taken', { amount: scaledDamage, source: 'reverse-potion' });
+        addMessage(isAuto ? `オートアイテムが暴発し、${scaledDamage}のダメージを受けた！` : `ポーションが反転し、${scaledDamage}のダメージを受けた！`);
+        addPopup(player.x, player.y, `-${Math.min(scaledDamage, 999999999)}${scaledDamage>999999999?'+':''}`, '#ff6b6b');
         playSfx('damage');
         autoTriggerOutcome = 'reversed';
-        autoTriggerValue = damage;
+        autoTriggerValue = scaledDamage;
         if (player.hp <= 0) {
             const deathMessage = isAuto ? 'オートアイテムの暴発で倒れてしまった…ゲームオーバー' : '反転した回復薬で倒れてしまった…ゲームオーバー';
             handlePlayerDeath(deathMessage);

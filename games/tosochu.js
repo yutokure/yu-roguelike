@@ -72,14 +72,17 @@
     let stage = null;
     let background = null;
     let stageReady = false;
+    let camera = null;
 
-    const player = { x: 0, y: 0 };
+    const player = { px: 0, py: 0, speed: 0, radius: 0 };
     const hunters = [];
-    const hunterTimers = [];
     const pressed = new Set();
 
     const missions = [];
     const hunterBoxes = [];
+
+    let surrenderZone = null;
+    let surrenderCountdown = null;
 
     let running = false;
     let pendingStart = false;
@@ -96,10 +99,14 @@
     const PER_SECOND_EXP = 10;
     const ESCAPE_BONUS = 10000;
 
-    const PLAYER_STEP_INTERVAL = 0.16;
-    const HUNTER_STEP_INTERVAL = difficulty === 'HARD' ? 0.24 : 0.3;
-
-    const moveCooldown = { player: 0, hunter: 0 };
+    const CAMERA_TILES_X = 19;
+    const CAMERA_TILES_Y = 15;
+    const PLAYER_SPEED_TPS = difficulty === 'HARD' ? 3.6 : difficulty === 'EASY' ? 2.8 : 3.2;
+    const HUNTER_IDLE_SPEED = PLAYER_SPEED_TPS * 0.55;
+    const HUNTER_CHASE_SPEED = PLAYER_SPEED_TPS * (difficulty === 'HARD' ? 1.22 : 1.12);
+    const HUNTER_ALERT_DURATION = 5;
+    const HUNTER_WANDER_COOLDOWN = 3.5;
+    const SURRENDER_DURATION = 5;
 
     function disableHost(){ shortcuts?.disableKey?.('r'); shortcuts?.disableKey?.('p'); }
     function enableHost(){ shortcuts?.enableKey?.('r'); shortcuts?.enableKey?.('p'); }
@@ -126,20 +133,35 @@
     }
 
     function pickDirection(){
-      if (pressed.has('arrowup') || pressed.has('w')) return { dx: 0, dy: -1 };
-      if (pressed.has('arrowdown') || pressed.has('s')) return { dx: 0, dy: 1 };
-      if (pressed.has('arrowleft') || pressed.has('a')) return { dx: -1, dy: 0 };
-      if (pressed.has('arrowright') || pressed.has('d')) return { dx: 1, dy: 0 };
-      return null;
+      let dx = 0;
+      let dy = 0;
+      if (pressed.has('arrowup') || pressed.has('w')) dy -= 1;
+      if (pressed.has('arrowdown') || pressed.has('s')) dy += 1;
+      if (pressed.has('arrowleft') || pressed.has('a')) dx -= 1;
+      if (pressed.has('arrowright') || pressed.has('d')) dx += 1;
+      if (dx === 0 && dy === 0) return null;
+      const length = Math.hypot(dx, dy) || 1;
+      return { dx: dx / length, dy: dy / length };
     }
 
-    function attemptMove(entity, dir){
-      if (!dir || !stage) return false;
-      const nx = entity.x + dir.dx;
-      const ny = entity.y + dir.dy;
-      if (nx < 0 || ny < 0 || nx >= stage.width || ny >= stage.height) return false;
-      if (stage.tiles[ny]?.[nx] !== 0) return false;
-      entity.x = nx; entity.y = ny; return true;
+    function moveEntity(entity, dir, speed, dt){
+      if (!dir || !stage || speed <= 0 || dt <= 0) return;
+      const tileSize = stage.tileSize;
+      const step = speed * tileSize * dt;
+      const radius = entity.radius ?? tileSize * 0.3;
+      const moveX = dir.dx * step;
+      const moveY = dir.dy * step;
+      const nextX = entity.px + moveX;
+      if (!stage.collidesCircle(nextX, entity.py, radius)){
+        entity.px = nextX;
+      }
+      const nextY = entity.py + moveY;
+      if (!stage.collidesCircle(entity.px, nextY, radius)){
+        entity.py = nextY;
+      }
+      const clamped = stage.clampPosition(entity.px, entity.py, radius);
+      entity.px = clamped.x;
+      entity.py = clamped.y;
     }
 
     function bfsNext(start, goal){
@@ -181,14 +203,76 @@
       return cur;
     }
 
+    function toTileFromPixel(px, py){
+      if (!stage) return { x: 0, y: 0 };
+      const tileSize = stage.tileSize || 1;
+      const tx = Math.max(0, Math.min(stage.width - 1, Math.floor(px / tileSize)));
+      const ty = Math.max(0, Math.min(stage.height - 1, Math.floor(py / tileSize)));
+      return { x: tx, y: ty };
+    }
+
+    function entityTile(entity){
+      return toTileFromPixel(entity.px, entity.py);
+    }
+
+    function randomUnitDirection(){
+      const angle = Math.random() * Math.PI * 2;
+      return { dx: Math.cos(angle), dy: Math.sin(angle) };
+    }
+
+    function createHunter(px, py){
+      const radius = stage ? stage.tileSize * 0.28 : 6;
+      return {
+        px,
+        py,
+        radius,
+        state: 'idle',
+        dir: randomUnitDirection(),
+        speed: HUNTER_IDLE_SPEED,
+        alertTimer: 0,
+        wanderTimer: Math.random() * HUNTER_WANDER_COOLDOWN,
+        chaseTarget: null
+      };
+    }
+
+    function distancePx(a, b){
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function hasLineOfSight(from, to){
+      if (!stage) return false;
+      const start = entityTile(from);
+      const goal = entityTile(to);
+      let x0 = start.x;
+      let y0 = start.y;
+      const x1 = goal.x;
+      const y1 = goal.y;
+      const dx = Math.abs(x1 - x0);
+      const dy = Math.abs(y1 - y0);
+      const sx = x0 < x1 ? 1 : -1;
+      const sy = y0 < y1 ? 1 : -1;
+      let err = dx - dy;
+      while (true){
+        if (stage.tiles[y0]?.[x0] !== 0 && !(x0 === start.x && y0 === start.y)) return false;
+        if (x0 === x1 && y0 === y1) break;
+        const e2 = err * 2;
+        if (e2 > -dy){ err -= dy; x0 += sx; }
+        if (e2 < dx){ err += dx; y0 += sy; }
+      }
+      return true;
+    }
+
     function checkCaught(){
-      return hunters.some(h => h.x === player.x && h.y === player.y);
+      if (!stage) return false;
+      const captureRadius = (player.radius || stage.tileSize * 0.32) + stage.tileSize * 0.1;
+      return hunters.some(h => distancePx({ x: h.px, y: h.py }, { x: player.px, y: player.py }) <= captureRadius);
     }
 
     function spawnHunter(pos){
-      if (!pos) return;
-      hunters.push({ x: pos.x, y: pos.y });
-      hunterTimers.push(0);
+      if (!pos || !stage) return;
+      const tile = pos.tile ? pos.tile : pos;
+      const center = stage.tileCenter(tile.x, tile.y);
+      hunters.push(createHunter(center.x, center.y));
       statusLabel.textContent = 'ハンターが追加投入された！';
     }
 
@@ -198,11 +282,10 @@
       let bestDist = Infinity;
       for (let i = 0; i < hunters.length; i++){
         const h = hunters[i];
-        const d = Math.abs(h.x - player.x) + Math.abs(h.y - player.y);
+        const d = distancePx({ x: h.px, y: h.py }, { x: player.px, y: player.py });
         if (d < bestDist){ bestDist = d; bestIdx = i; }
       }
       hunters.splice(bestIdx, 1);
-      hunterTimers.splice(bestIdx, 1);
       statusLabel.textContent = 'ミッション成功！ハンター1体が撤退';
     }
 
@@ -211,12 +294,14 @@
         if (mission.state === 'pending' && elapsed >= mission.triggerAt){
           mission.state = 'active';
           mission.timeLeft = mission.timeLimit;
-          mission.target = stage.pickFloorPosition({ minDistance: 6, exclude: [player] }) || { x: Math.floor(stage.width / 2), y: Math.floor(stage.height / 2) };
+          const targetTile = stage.pickFloorPosition({ minDistance: 6 }) || { x: Math.floor(stage.width / 2), y: Math.floor(stage.height / 2) };
+          const center = stage.tileCenter(targetTile.x, targetTile.y);
+          mission.target = { tile: targetTile, x: center.x, y: center.y };
           statusLabel.textContent = `ミッション発動：${mission.label}`;
         }
         if (mission.state === 'active'){
           mission.timeLeft -= dt;
-          if (player.x === mission.target.x && player.y === mission.target.y){
+          if (distancePx({ x: player.px, y: player.py }, mission.target) <= stage.tileSize * 0.5){
             mission.state = 'success';
             missionPanel.textContent = `${mission.label}：成功！`;
             mission.onSuccess();
@@ -232,7 +317,9 @@
       }
       const active = missions.find(m => m.state === 'active');
       if (active){
-        missionPanel.textContent = `${active.label}：残り${Math.ceil(active.timeLeft)}s (地点: ${active.target.x},${active.target.y})`;
+        const coords = `${active.target.tile.x},${active.target.tile.y}`;
+        const optionalSuffix = active.optional ? '（任意）' : '';
+        missionPanel.textContent = `${active.label}${optionalSuffix}：残り${Math.ceil(active.timeLeft)}s (地点: ${coords})`;
       } else if (!missions.some(m => m.state === 'pending')){
         const successCount = missions.filter(m => m.state === 'success').length;
         missionPanel.textContent = `ミッション完了：成功${successCount}/${missions.length}`;
@@ -249,40 +336,136 @@
       }
     }
 
+    function playerInSurrenderZone(){
+      if (!surrenderZone) return false;
+      const dist = distancePx({ x: player.px, y: player.py }, surrenderZone);
+      return dist <= Math.max(0, surrenderZone.radius - player.radius * 0.1);
+    }
+
+    function cancelSurrender(message){
+      if (!surrenderCountdown) return;
+      surrenderCountdown = null;
+      surrenderBtn.disabled = false;
+      surrenderBtn.textContent = '自首する';
+      if (message) statusLabel.textContent = message;
+    }
+
+    function updateSurrender(dt){
+      if (!surrenderCountdown) return;
+      if (!playerInSurrenderZone()){
+        cancelSurrender('自首を中断しました');
+        return;
+      }
+      surrenderCountdown.timeLeft -= dt;
+      const remainingTime = Math.max(0, surrenderCountdown.timeLeft);
+      surrenderBtn.textContent = `自首中...${remainingTime.toFixed(1)}s`;
+      if (surrenderCountdown.timeLeft <= 0){
+        endGame('surrender');
+      }
+    }
+
+    function updateHunterState(hunter, dt){
+      if (!stage) return;
+      const inView = camera ? camera.contains(hunter.px, hunter.py, stage.tileSize) : false;
+      const seesPlayer = inView && hasLineOfSight(hunter, player);
+      if (seesPlayer){
+        hunter.alertTimer = HUNTER_ALERT_DURATION;
+      } else if (hunter.alertTimer > 0){
+        hunter.alertTimer = Math.max(0, hunter.alertTimer - dt);
+      }
+
+      const shouldChase = hunter.alertTimer > 0;
+      if (shouldChase){
+        hunter.state = 'chase';
+        const startTile = entityTile(hunter);
+        const goalTile = entityTile(player);
+        const targetTile = bfsNext(startTile, goalTile);
+        if (!targetTile){
+          hunter.dir = randomUnitDirection();
+          moveEntity(hunter, hunter.dir, HUNTER_IDLE_SPEED, dt);
+          return;
+        }
+        const targetCenter = stage.tileCenter(targetTile.x, targetTile.y);
+        const dir = { dx: targetCenter.x - hunter.px, dy: targetCenter.y - hunter.py };
+        const len = Math.hypot(dir.dx, dir.dy) || 1;
+        dir.dx /= len;
+        dir.dy /= len;
+        moveEntity(hunter, dir, HUNTER_CHASE_SPEED, dt);
+      } else {
+        hunter.state = 'idle';
+        hunter.wanderTimer -= dt;
+        if (hunter.wanderTimer <= 0){
+          hunter.dir = randomUnitDirection();
+          hunter.wanderTimer = HUNTER_WANDER_COOLDOWN + Math.random() * 2.5;
+        }
+        moveEntity(hunter, hunter.dir, HUNTER_IDLE_SPEED, dt);
+      }
+    }
+
+    function updateHunters(dt){
+      for (const hunter of hunters){
+        updateHunterState(hunter, dt);
+      }
+    }
+
     function draw(){
-      if (!stage || !background) return;
+      if (!stage || !background || !camera) return;
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(background.canvas, 0, 0);
+      const bounds = camera.getBounds();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(background.canvas, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, canvas.width, canvas.height);
       const tile = stage.tileSize;
+
+      // Draw surrender zone
+      if (surrenderZone && camera.contains(surrenderZone.x, surrenderZone.y, surrenderZone.radius)){
+        const center = camera.project(surrenderZone.x, surrenderZone.y);
+        ctx.fillStyle = 'rgba(250,204,21,0.18)';
+        ctx.strokeStyle = 'rgba(250,204,21,0.6)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, surrenderZone.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
 
       // Draw mission targets
       for (const mission of missions){
         if (mission.state === 'active' && mission.target){
-          ctx.fillStyle = 'rgba(56,189,248,0.5)';
-          ctx.fillRect(mission.target.x * tile, mission.target.y * tile, tile, tile);
+          if (camera.contains(mission.target.x, mission.target.y, tile)){
+            const topLeft = camera.project(mission.target.x - tile / 2, mission.target.y - tile / 2);
+            ctx.fillStyle = 'rgba(56,189,248,0.5)';
+            ctx.fillRect(topLeft.x, topLeft.y, tile, tile);
+          }
         }
       }
 
       // Draw hunter boxes
-      ctx.strokeStyle = 'rgba(248,113,113,0.6)';
       ctx.lineWidth = 2;
       for (const box of hunterBoxes){
         const alpha = box.opened ? 0.2 : 0.6;
+        const worldCenter = stage.tileCenter(box.position.x, box.position.y);
+        if (!camera.contains(worldCenter.x, worldCenter.y, tile)) continue;
+        const screen = camera.project(worldCenter.x, worldCenter.y);
+        const px = screen.x - tile / 2;
+        const py = screen.y - tile / 2;
         ctx.strokeStyle = `rgba(248,113,113,${alpha})`;
-        ctx.strokeRect(box.position.x * tile + 2, box.position.y * tile + 2, tile - 4, tile - 4);
+        ctx.strokeRect(px + 2, py + 2, tile - 4, tile - 4);
       }
 
       // Player
+      const playerScreen = camera.project(player.px, player.py);
       ctx.fillStyle = '#22d3ee';
       ctx.beginPath();
-      ctx.arc(player.x * tile + tile / 2, player.y * tile + tile / 2, tile * 0.35, 0, Math.PI * 2);
+      ctx.arc(playerScreen.x, playerScreen.y, player.radius, 0, Math.PI * 2);
       ctx.fill();
 
       // Hunters
-      ctx.fillStyle = '#ef4444';
       for (const h of hunters){
+        if (!camera.contains(h.px, h.py, h.radius * 1.5)) continue;
+        const screen = camera.project(h.px, h.py);
+        ctx.fillStyle = h.state === 'alert' || h.state === 'chase' ? '#f87171' : '#ef4444';
         ctx.beginPath();
-        ctx.arc(h.x * tile + tile / 2, h.y * tile + tile / 2, tile * 0.32, 0, Math.PI * 2);
+        ctx.arc(screen.x, screen.y, h.radius, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -294,7 +477,9 @@
       cancelAnimationFrame(raf);
       enableHost();
       pressed.clear();
+      cancelSurrender();
       surrenderBtn.disabled = true;
+      surrenderBtn.textContent = '自首する';
       if (result === 'escape'){
         const total = pendingExp + ESCAPE_BONUS;
         awardXp(total, { reason: 'escape', gameId: 'tosochu' });
@@ -316,25 +501,17 @@
         accumulator -= 1;
         pendingExp += PER_SECOND_EXP;
       }
-      moveCooldown.player = Math.max(0, moveCooldown.player - dt);
-      moveCooldown.hunter = Math.max(0, moveCooldown.hunter - dt);
 
-      if (moveCooldown.player <= 0){
-        const dir = pickDirection();
-        if (dir && attemptMove(player, dir)) moveCooldown.player = PLAYER_STEP_INTERVAL;
+      const dir = pickDirection();
+      if (dir){
+        moveEntity(player, dir, player.speed, dt);
       }
 
-      if (moveCooldown.hunter <= 0){
-        for (let i = 0; i < hunters.length; i++){
-          const hunter = hunters[i];
-          const next = bfsNext({ x: hunter.x, y: hunter.y }, player);
-          if (next) { hunter.x = next.x; hunter.y = next.y; }
-        }
-        moveCooldown.hunter = HUNTER_STEP_INTERVAL;
-      }
-
+      updateHunters(dt);
+      updateSurrender(dt);
       processMissions(dt);
       processBoxes();
+      if (camera) camera.setCenter(player.px, player.py);
       updateLabels();
       draw();
 
@@ -362,17 +539,18 @@
       accumulator = 0;
       elapsed = 0;
       remaining = TOTAL_DURATION;
-      moveCooldown.player = 0;
-      moveCooldown.hunter = 0;
       hunters.length = 0;
-      hunterTimers.length = 0;
       missions.length = 0;
       hunterBoxes.length = 0;
       finished = false;
+      surrenderCountdown = null;
+      surrenderZone = null;
       surrenderBtn.disabled = false;
+      surrenderBtn.textContent = '自首する';
       statusLabel.textContent = '逃走中スタンバイ';
       missionPanel.textContent = 'ミッション: まだ発動していません';
       runInitialized = false;
+      pressed.clear();
     }
 
     function setupRun(){
@@ -380,32 +558,54 @@
       reset();
       const spawns = stage.pickFloorPositions(4, { minDistance: 6 });
       const [playerSpawn, ...hunterSpawns] = spawns;
-      player.x = playerSpawn?.x ?? 2;
-      player.y = playerSpawn?.y ?? 2;
+      const playerTile = playerSpawn || { x: 2, y: 2 };
+      const playerCenter = stage.tileCenter(playerTile.x, playerTile.y);
+      player.px = playerCenter.x;
+      player.py = playerCenter.y;
+      player.speed = PLAYER_SPEED_TPS;
+      player.radius = stage.tileSize * 0.33;
+      const takenTiles = [playerTile];
       const hunterCount = difficulty === 'HARD' ? 4 : difficulty === 'EASY' ? 2 : 3;
       for (let i = 0; i < hunterCount; i++){
-        const spawn = hunterSpawns[i] || stage.pickFloorPosition({ minDistance: 6, exclude: [player] }) || { x: stage.width - 2, y: stage.height - 2 };
-        hunters.push({ x: spawn.x, y: spawn.y });
-        hunterTimers.push(0);
+        const spawnTile = hunterSpawns[i] || stage.pickFloorPosition({ minDistance: 6, exclude: takenTiles }) || { x: stage.width - 2, y: stage.height - 2 };
+        takenTiles.push(spawnTile);
+        const center = stage.tileCenter(spawnTile.x, spawnTile.y);
+        hunters.push(createHunter(center.x, center.y));
       }
 
       missions.push(
         {
           id: 'beacon', label: 'ビーコンに接触せよ', triggerAt: 30, timeLimit: 35, state: 'pending',
-          onSuccess(){ removeNearestHunter(); },
-          onFail(){ spawnHunter(stage.pickFloorPosition({ minDistance: 4, exclude: [player] })); }
+          onSuccess(){ removeNearestHunter(); pendingExp += 200; statusLabel.textContent = 'ビーコン成功！電波妨害を強化'; },
+          onFail(){ statusLabel.textContent = 'ビーコン失敗…ハンターが警戒強化'; spawnHunter(stage.pickFloorPosition({ minDistance: 4, exclude: takenTiles })); }
+        },
+        {
+          id: 'data', label: '情報端末をハック', triggerAt: 55, timeLimit: 25, state: 'pending',
+          onSuccess(){ pendingExp += 800; statusLabel.textContent = '極秘情報を確保！報酬が増加'; },
+          onFail(){ statusLabel.textContent = '警報が鳴った！高速ハンターが出現'; spawnHunter(stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles })); }
         },
         {
           id: 'box', label: 'ハンターボックスを解除', triggerAt: 80, timeLimit: 30, state: 'pending',
           onSuccess(){ statusLabel.textContent = '解除成功！ハンターボックスの発動が遅延'; hunterBoxes.forEach(b => b.triggerAt += 20); },
-          onFail(){ statusLabel.textContent = '解除失敗…ハンターが追加投入'; spawnHunter(stage.pickFloorPosition({ minDistance: 5 })); }
+          onFail(){ statusLabel.textContent = '解除失敗…ハンターが追加投入'; spawnHunter(stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles })); }
+        },
+        {
+          id: 'vault', label: 'ハイリスク金庫を解錠', triggerAt: 120, timeLimit: 30, state: 'pending', optional: true,
+          onSuccess(){ pendingExp += 2000; statusLabel.textContent = '大金獲得！しかし狙われやすくなった'; },
+          onFail(){ statusLabel.textContent = '金庫防衛が発動…ハンターが二体解放'; spawnHunter(stage.pickFloorPosition({ minDistance: 6, exclude: takenTiles })); spawnHunter(stage.pickFloorPosition({ minDistance: 6, exclude: takenTiles })); }
         }
       );
 
       hunterBoxes.push(
-        { position: stage.pickFloorPosition({ minDistance: 5 }) || { x: 3, y: 3 }, triggerAt: 90, opened: false },
-        { position: stage.pickFloorPosition({ minDistance: 5, exclude: [player] }) || { x: stage.width - 4, y: stage.height - 4 }, triggerAt: 130, opened: false }
+        { position: stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles }) || { x: 3, y: 3 }, triggerAt: 90, opened: false },
+        { position: stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles }) || { x: stage.width - 4, y: stage.height - 4 }, triggerAt: 130, opened: false }
       );
+
+      const surrenderTile = stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles }) || { x: playerTile.x + 2, y: playerTile.y + 2 };
+      const surrenderCenter = stage.tileCenter(surrenderTile.x, surrenderTile.y);
+      surrenderZone = { x: surrenderCenter.x, y: surrenderCenter.y, radius: stage.tileSize };
+
+      if (camera) camera.setCenter(player.px, player.py);
 
       draw();
       updateLabels();
@@ -419,9 +619,19 @@
       }
       dungeonApi.generateStage({ type: 'mixed', tilesX: 48, tilesY: 36, tileSize: 17 }).then((generated) => {
         stage = generated;
+        camera = stage.createCamera({ viewTilesX: CAMERA_TILES_X, viewTilesY: CAMERA_TILES_Y });
         background = dungeonApi.renderStage(stage, { tileSize: stage.tileSize, showGrid: false });
-        canvas.width = background.canvas.width;
-        canvas.height = background.canvas.height;
+        if (camera){
+          canvas.width = camera.width;
+          canvas.height = camera.height;
+          canvas.style.width = `${camera.width}px`;
+          canvas.style.height = `${camera.height}px`;
+        } else {
+          canvas.width = background.canvas.width;
+          canvas.height = background.canvas.height;
+          canvas.style.width = `${background.canvas.width}px`;
+          canvas.style.height = `${background.canvas.height}px`;
+        }
         stageReady = true;
         setupRun();
         if (pendingStart) startLoop();
@@ -435,6 +645,7 @@
       running = true;
       disableHost();
       lastTs = 0;
+      if (camera) camera.setCenter(player.px, player.py);
       updateLabels();
       raf = requestAnimationFrame(loop);
       statusLabel.textContent = '逃走開始！';
@@ -466,6 +677,7 @@
     function destroy(){
       cancelAnimationFrame(raf);
       enableHost();
+      cancelSurrender();
       document.removeEventListener('keydown', keyDown);
       document.removeEventListener('keyup', keyUp);
       surrenderBtn.removeEventListener('click', onSurrender);
@@ -475,8 +687,15 @@
     function getScore(){ return pendingExp + (finished && remaining <= 0 ? ESCAPE_BONUS : 0); }
 
     function onSurrender(){
-      if (!stageReady || finished) return;
-      endGame('surrender');
+      if (!stageReady || finished || surrenderCountdown) return;
+      if (!playerInSurrenderZone()){
+        statusLabel.textContent = '自首ゾーンに入ってからボタンを押してください';
+        return;
+      }
+      surrenderCountdown = { timeLeft: SURRENDER_DURATION };
+      surrenderBtn.disabled = true;
+      surrenderBtn.textContent = `自首中...${SURRENDER_DURATION.toFixed(1)}s`;
+      statusLabel.textContent = '自首を試みています…5秒耐え抜け！';
     }
 
     surrenderBtn.addEventListener('click', onSurrender);

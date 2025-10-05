@@ -1207,6 +1207,7 @@
                     </div>
                 <div class="status-badges" id="stat-status-effects" aria-live="polite"></div>
                 <div class="status-badges status-badges--domain" id="stat-domain-effects" aria-live="polite"></div>
+                <div id="auto-item-status" class="auto-item-status" aria-live="polite" style="display:none;"></div>
             </div>
         </div>
             <div id="message-log"></div>
@@ -1270,16 +1271,19 @@
     <div id="items-modal" class="modal" style="display:none;" aria-hidden="true">
         <div class="modal-content">
             <h3>アイテム</h3>
-            <div class="item-row">
-                <span>HP30%回復ポーション</span>
-                <span>x <span id="inv-potion30">0</span></span>
-                    <div class="item-actions">
-                        <button id="use-potion30">使用</button>
-                        <button id="eat-potion30" style="display:none;">食べる</button>
-                        <button id="offer-potion30" style="display:none;">捧げる</button>
-                        <button id="throw-potion30" style="display:none;">投げつける</button>
-                    </div>
+            <div class="item-row item-row--potion">
+                <div class="item-row__header">
+                    <span class="item-row__label">HP30%回復ポーション</span>
+                    <span class="item-row__count">x <span id="inv-potion30">0</span></span>
                 </div>
+                <div class="item-actions item-row__actions">
+                    <button id="use-potion30">使用</button>
+                    <button id="eat-potion30" style="display:none;">食べる</button>
+                    <button id="offer-potion30" style="display:none;">捧げる</button>
+                    <button id="cleanse-potion30">状態異常を一つ治す</button>
+                    <button id="throw-potion30" style="display:none;">投げつける</button>
+                </div>
+            </div>
             <div class="item-row item-row--toggle">
                 <div class="item-row__info">
                     <span>オートアイテム</span>

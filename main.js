@@ -16,6 +16,7 @@ const spBarContainer = document.getElementById('sp-bar-container');
 const statSatietyText = document.getElementById('stat-satiety-text');
 const satietyBar = document.getElementById('satiety-bar');
 const satietyBarContainer = document.getElementById('satiety-bar-container');
+const autoItemStatusText = document.getElementById('auto-item-status');
 const messageLogDiv = document.getElementById('message-log');
 const floorIndicatorValue = document.getElementById('floor-indicator-value');
 const dungeonTypeOverlay = document.getElementById('dungeon-type-overlay');
@@ -53,6 +54,7 @@ const SATIETY_MAX = 100;
 const SATIETY_TICK_PER_TURN = 1;
 const SATIETY_DAMAGE_RATIO = 0.2;
 const SATIETY_RECOVERY_PER_POTION = 25;
+const AUTO_ITEM_SATIETY_THRESHOLD = 25;
 const RARE_CHEST_CHANCE = 0.08;
 
 const RARE_CHEST_CONFIG = Object.freeze({
@@ -263,14 +265,28 @@ function handleNoiseOverlayContentChanged() {
     }
 }
 
-function shouldAutoUsePotion(effectiveMaxHp, currentHp) {
-    if (!autoItemToggle || !autoItemToggle.checked) return false;
-    if (!player || !player.inventory || player.inventory.potion30 <= 0) return false;
-    if (isGameOver) return false;
-    if (!Number.isFinite(effectiveMaxHp) || effectiveMaxHp <= 0) return false;
-    if (!Number.isFinite(currentHp)) return false;
-    if (currentHp <= 0) return false;
-    return currentHp <= effectiveMaxHp * 0.3;
+function getAutoItemIntent({ effectiveMaxHp, currentHp, currentSatiety }) {
+    if (!autoItemToggle || !autoItemToggle.checked) return null;
+    if (!player || !player.inventory || player.inventory.potion30 <= 0) return null;
+    if (isGameOver) return null;
+
+    const hpCheckValid = Number.isFinite(effectiveMaxHp) && effectiveMaxHp > 0
+        && Number.isFinite(currentHp) && currentHp > 0;
+    if (hpCheckValid && currentHp <= effectiveMaxHp * 0.3) {
+        return 'heal';
+    }
+
+    if (satietySystemActive && Number.isFinite(currentSatiety)) {
+        if (currentSatiety < AUTO_ITEM_SATIETY_THRESHOLD) {
+            const beforeSatiety = Math.max(0, Math.floor(Number.isFinite(player?.satiety) ? player.satiety : 0));
+            const recover = Math.min(SATIETY_RECOVERY_PER_POTION, SATIETY_MAX - beforeSatiety);
+            if (recover > 0) {
+                return 'eat';
+            }
+        }
+    }
+
+    return null;
 }
 
 function requestAutoItemCheck() {
@@ -281,8 +297,19 @@ function requestAutoItemCheck() {
         if (!player || isGameOver) return;
         const effectiveMaxHp = getEffectivePlayerMaxHp();
         const rawHp = Number.isFinite(player?.hp) ? Math.max(0, player.hp) : effectiveMaxHp;
-        if (!shouldAutoUsePotion(effectiveMaxHp, rawHp)) return;
-        consumePotion30({ reason: 'auto' });
+        const satietyValue = satietySystemActive
+            ? (Number.isFinite(player?.satiety) ? Math.max(0, Math.floor(player.satiety)) : SATIETY_MAX)
+            : null;
+        const intent = getAutoItemIntent({
+            effectiveMaxHp,
+            currentHp: rawHp,
+            currentSatiety: satietyValue
+        });
+        if (intent === 'heal') {
+            consumePotion30({ reason: 'auto' });
+        } else if (intent === 'eat') {
+            eatPotion30({ reason: 'auto' });
+        }
     }, 0);
 }
 
@@ -311,6 +338,7 @@ if (dungeonNameToggle) {
 
 if (autoItemToggle) {
     autoItemToggle.addEventListener('change', () => {
+        updateUI();
         if (autoItemToggle.checked) {
             requestAutoItemCheck();
         }
@@ -391,6 +419,7 @@ let lastSkillCharmMarkup = '';
 const usePotion30Btn = document.getElementById('use-potion30');
 const eatPotion30Btn = document.getElementById('eat-potion30');
 const offerPotion30Btn = document.getElementById('offer-potion30');
+const cleansePotion30Btn = document.getElementById('cleanse-potion30');
 const useHpBoostBtn = document.getElementById('use-hp-boost');
 const useAtkBoostBtn = document.getElementById('use-atk-boost');
 const useDefBoostBtn = document.getElementById('use-def-boost');
@@ -1415,6 +1444,8 @@ const PLAYER_STATUS_EFFECTS = {
     abilityDown: { id: 'abilityDown', label: '能力低下', defaultDuration: 5, statMultiplier: 0.8, badgeClass: 'status-badge--ability' },
     levelDown: { id: 'levelDown', label: 'レベル低下', defaultDuration: 5, levelReduction: 3, badgeClass: 'status-badge--level' }
 };
+
+const NEGATIVE_STATUS_EFFECT_IDS = Object.freeze(['poison', 'paralysis', 'abilityDown', 'levelDown']);
 
 const PASSIVE_ORB_DEFS = Object.freeze({
     attackBoost: Object.freeze({
@@ -6075,6 +6106,10 @@ function getStatusLabel(effectId) {
 function isPlayerStatusActive(effectId) {
     const status = getPlayerStatus(effectId);
     return Number.isFinite(status.remaining) && status.remaining > 0;
+}
+
+function getActiveNegativeStatusIds() {
+    return NEGATIVE_STATUS_EFFECT_IDS.filter(id => isPlayerStatusActive(id));
 }
 
 function getStatusRemaining(effectId) {
@@ -13596,9 +13631,6 @@ function updateUI() {
         : (Number.isFinite(rawHp) ? rawHp : effectiveMaxHp);
     const hpIsInfinite = !Number.isFinite(currentHp) || !Number.isFinite(effectiveMaxHp);
     const hpPct = hpIsInfinite ? 1 : Math.max(0, Math.min(1, currentHp / Math.max(effectiveMaxHp, 1)));
-    if (!hpIsInfinite && shouldAutoUsePotion(effectiveMaxHp, currentHp)) {
-        requestAutoItemCheck();
-    }
     const expPct = Math.max(0, Math.min(1, Number.isFinite(exp) ? exp / expMax : 1));
     const abilityStatusMul = getAbilityStatusMultiplier();
     const abilityStatusActive = !nearlyEqual(abilityStatusMul, 1);
@@ -13614,6 +13646,14 @@ function updateUI() {
     const spPct = spIsInfinite ? 1 : (spMax > 0 ? Math.max(0, Math.min(1, currentSp / spMax)) : 0);
     const satietyIsInfinite = !Number.isFinite(player.satiety);
     const currentSatiety = satietyIsInfinite ? SATIETY_MAX : Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+    const autoItemIntent = getAutoItemIntent({
+        effectiveMaxHp,
+        currentHp,
+        currentSatiety: satietySystemActive && !satietyIsInfinite ? currentSatiety : null
+    });
+    if (autoItemIntent) {
+        requestAutoItemCheck();
+    }
     const statusList = getPlayerStatusDisplayList();
     const skillEffects = getActiveSkillEffectList();
     const combinedStatusList = statusList.concat(skillEffects);
@@ -13773,6 +13813,17 @@ function updateUI() {
     const passiveOrbModifiers = getPassiveOrbModifiers() || {};
     const passiveOrbAggregateEntries = buildPassiveOrbAggregateEntries(passiveOrbModifiers);
 
+    if (autoItemStatusText) {
+        if (autoItemToggle && autoItemToggle.checked) {
+            const potionDisplayCount = Math.max(0, Math.floor(Number(potion30Count) || 0));
+            autoItemStatusText.style.display = '';
+            autoItemStatusText.textContent = `オートアイテムON：回復アイテム x ${potionDisplayCount}`;
+        } else {
+            autoItemStatusText.textContent = '';
+            autoItemStatusText.style.display = 'none';
+        }
+    }
+
     if (invPotion30) invPotion30.textContent = potion30Count;
     if (invHpBoost) invHpBoost.textContent = hpBoostCount;
     if (invAtkBoost) invAtkBoost.textContent = atkBoostCount;
@@ -13822,6 +13873,18 @@ function updateUI() {
     }
     if (skillCharmList) renderSkillCharmInventory(skillCharmCounts);
     if (eatPotion30Btn) eatPotion30Btn.style.display = satietySystemActive ? '' : 'none';
+    const hasNegativeStatusAilment = NEGATIVE_STATUS_EFFECT_IDS.some(id => isPlayerStatusActive(id));
+    if (cleansePotion30Btn) {
+        const lacksPotion = !player.inventory || player.inventory.potion30 <= 0;
+        cleansePotion30Btn.disabled = lacksPotion || !hasNegativeStatusAilment;
+        if (lacksPotion) {
+            cleansePotion30Btn.title = '回復アイテムを持っていない。';
+        } else if (!hasNegativeStatusAilment) {
+            cleansePotion30Btn.title = '治療できる状態異常がない。';
+        } else {
+            cleansePotion30Btn.removeAttribute('title');
+        }
+    }
     if (throwPotion30Btn) {
         const throwTargets = getPotionThrowTargets();
         const canThrow = playerDomain.allowPotionThrow && throwTargets.length > 0;
@@ -15923,6 +15986,38 @@ restartButton.addEventListener('click', () => {
     returnToSelectionAfterGameOver();
 });
 
+function eatPotion30({ reason = 'manual' } = {}) {
+    const isAuto = reason === 'auto';
+    if (!player) return false;
+    if (!satietySystemActive) {
+        if (!isAuto) addMessage('満腹度システムが有効な時だけ食べられる。');
+        return false;
+    }
+    if (!player.inventory || player.inventory.potion30 <= 0) {
+        if (!isAuto) addMessage('ポーションを持っていない。');
+        return false;
+    }
+    const beforeSatietyRaw = Number.isFinite(player.satiety) ? player.satiety : 0;
+    const beforeSatiety = Math.max(0, Math.floor(beforeSatietyRaw));
+    const recover = Math.min(SATIETY_RECOVERY_PER_POTION, SATIETY_MAX - beforeSatiety);
+    if (recover <= 0) {
+        if (!isAuto) {
+            addMessage('満腹度は既に最大値です。');
+            updateUI();
+        }
+        return false;
+    }
+
+    player.satiety = Math.min(SATIETY_MAX, beforeSatiety + recover);
+    player.inventory.potion30 -= 1;
+    registerRunHealingItemUse('potion30');
+    addMessage(isAuto ? `オートアイテムが発動！満腹度が${recover}回復` : `ポーションを食べた！満腹度が${recover}回復`);
+    playSfx('pickup');
+    updateUI();
+    saveAll();
+    return true;
+}
+
 function consumePotion30({ reason = 'manual' } = {}) {
     if (!player || !player.inventory || player.inventory.potion30 <= 0) return false;
     const effectiveMax = getEffectivePlayerMaxHp();
@@ -15983,6 +16078,45 @@ function consumePotion30({ reason = 'manual' } = {}) {
     return true;
 }
 
+function cleanseNegativeStatusWithPotion() {
+    if (!player || !player.inventory) return false;
+    if (player.inventory.potion30 <= 0) {
+        addMessage('回復アイテムを持っていない。');
+        return false;
+    }
+    const activeNegative = getActiveNegativeStatusIds();
+    if (!activeNegative.length) {
+        addMessage('治療できる状態異常がない。');
+        return false;
+    }
+    const targetStatusId = activeNegative.reduce((best, candidate) => {
+        if (!best) return candidate;
+        const bestRemaining = getStatusRemaining(best);
+        const candidateRemaining = getStatusRemaining(candidate);
+        if (candidateRemaining > bestRemaining) return candidate;
+        if (candidateRemaining === bestRemaining) {
+            const bestIndex = NEGATIVE_STATUS_EFFECT_IDS.indexOf(best);
+            const candidateIndex = NEGATIVE_STATUS_EFFECT_IDS.indexOf(candidate);
+            if (candidateIndex >= 0 && (bestIndex < 0 || candidateIndex < bestIndex)) return candidate;
+        }
+        return best;
+    }, null);
+    if (!targetStatusId) {
+        addMessage('治療できる状態異常がない。');
+        return false;
+    }
+
+    player.inventory.potion30 -= 1;
+    registerRunHealingItemUse('potion30');
+    clearPlayerStatusEffect(targetStatusId, { silent: true });
+    const label = getStatusLabel(targetStatusId);
+    addMessage(`回復アイテムを消費し、${label}の状態異常を治した。`);
+    playSfx('pickup');
+    updateUI();
+    saveAll();
+    return true;
+}
+
 // ゲームの開始
 // UI: モーダル/入出力
 btnItems && btnItems.addEventListener('click', () => { openModal(itemsModal); });
@@ -16027,28 +16161,7 @@ usePotion30Btn && usePotion30Btn.addEventListener('click', () => {
 });
 
 eatPotion30Btn && eatPotion30Btn.addEventListener('click', () => {
-    if (!satietySystemActive) {
-        addMessage('満腹度システムが有効な時だけ食べられる。');
-        return;
-    }
-    if (player.inventory.potion30 <= 0) {
-        addMessage('ポーションを持っていない。');
-        return;
-    }
-    const beforeSatiety = Math.max(0, Number.isFinite(player.satiety) ? Math.floor(player.satiety) : 0);
-    const recover = Math.min(SATIETY_RECOVERY_PER_POTION, SATIETY_MAX - beforeSatiety);
-    if (recover <= 0) {
-        addMessage('満腹度は既に最大値です。');
-        updateUI();
-        return;
-    }
-    player.satiety = Math.min(SATIETY_MAX, beforeSatiety + recover);
-    player.inventory.potion30 -= 1;
-    registerRunHealingItemUse('potion30');
-    addMessage(`ポーションを食べた！満腹度が${recover}回復`);
-    playSfx('pickup');
-    updateUI();
-    saveAll();
+    eatPotion30({ reason: 'manual' });
 });
 
 offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
@@ -16067,6 +16180,10 @@ offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
     addMessage(`回復アイテムを捧げ、SPを${display}獲得した。`);
     updateUI();
     saveAll();
+});
+
+cleansePotion30Btn && cleansePotion30Btn.addEventListener('click', () => {
+    cleanseNegativeStatusWithPotion();
 });
 
 throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {

@@ -1613,6 +1613,18 @@ body.in-game #player-summary { display: none; }
     border-radius: 7px;
 }
 
+.auto-item-status {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffe066;
+    border: 1px solid rgba(255,255,255,0.25);
+    text-align: center;
+}
+
 .bar.hp .bar-fill { 
     background: linear-gradient(90deg, #ff6b6b, #fa5252);
     box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
@@ -2253,10 +2265,10 @@ body.in-game #player-summary { display: none; }
     background-clip: text;
 }
 
-.item-row { 
-    display: flex; 
-    align-items: center; 
-    gap: 12px; 
+.item-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     justify-content: space-between;
     padding: 12px;
     margin: 8px 0;
@@ -2265,10 +2277,38 @@ body.in-game #player-summary { display: none; }
     border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
+.item-row--potion {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.item-row__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.item-row__label {
+    font-weight: 600;
+}
+
+.item-row__count {
+    font-weight: 600;
+    color: #364fc7;
+}
+
 .item-row .item-actions {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.item-row__actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
 }
 
 .item-row button {

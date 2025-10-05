@@ -1417,11 +1417,187 @@ const PLAYER_STATUS_EFFECTS = {
 };
 
 const PASSIVE_ORB_DEFS = Object.freeze({
-    vitality: Object.freeze({ id: 'vitality', label: '生命のオーブ', perStackMultiplier: 1.05, dropWeight: 6 }),
-    fury: Object.freeze({ id: 'fury', label: '猛攻のオーブ', perStackMultiplier: 1.07, dropWeight: 4 }),
-    aegis: Object.freeze({ id: 'aegis', label: '守護のオーブ', perStackMultiplier: 1.07, dropWeight: 4 }),
-    focus: Object.freeze({ id: 'focus', label: '集中のオーブ', perStackMultiplier: 1.05, dropWeight: 3 }),
-    fortune: Object.freeze({ id: 'fortune', label: '幸運のオーブ', perStackMultiplier: 1.04, dropWeight: 2 })
+    attackBoost: Object.freeze({
+        id: 'attackBoost',
+        label: '攻撃力+1%の玉',
+        dropWeight: 1,
+        effects: Object.freeze({ attackMul: 1.01 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'attackMul', label: '攻撃力', format: 'percent', decimals: 2 })
+        ])
+    }),
+    defenseBoost: Object.freeze({
+        id: 'defenseBoost',
+        label: '防御力+1%の玉',
+        dropWeight: 1,
+        effects: Object.freeze({ defenseMul: 1.01 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'defenseMul', label: '防御力', format: 'percent', decimals: 2 })
+        ])
+    }),
+    abilityBoost: Object.freeze({
+        id: 'abilityBoost',
+        label: '能力+1%の玉',
+        dropWeight: 0.5,
+        effects: Object.freeze({ attackMul: 1.01, defenseMul: 1.01 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'attackMul', label: '攻撃力', format: 'percent', decimals: 2 }),
+            Object.freeze({ source: 'effects', key: 'defenseMul', label: '防御力', format: 'percent', decimals: 2 })
+        ])
+    }),
+    maxHpBoost: Object.freeze({
+        id: 'maxHpBoost',
+        label: '最大HP+10%の玉',
+        dropWeight: 1,
+        effects: Object.freeze({ maxHpMul: 1.1 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'maxHpMul', label: '最大HP', format: 'percent', decimals: 1 })
+        ])
+    }),
+    statusGuard: Object.freeze({
+        id: 'statusGuard',
+        label: '状態異常耐性の玉',
+        dropWeight: 0.7,
+        chanceMultipliers: Object.freeze({ status: 0.99 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'chance', key: 'status', label: '状態異常確率', format: 'percent', decimals: 2 })
+        ])
+    }),
+    enemySpecialGuard: Object.freeze({
+        id: 'enemySpecialGuard',
+        label: '敵特殊行動耐性の玉',
+        dropWeight: 0.5,
+        chanceMultipliers: Object.freeze({ enemySpecial: 0.99 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'chance', key: 'enemySpecial', label: '敵特殊行動確率', format: 'percent', decimals: 2 })
+        ])
+    }),
+    poisonResist: Object.freeze({
+        id: 'poisonResist',
+        label: '毒耐性の玉',
+        dropWeight: 1,
+        chanceMultipliers: Object.freeze({ 'status:poison': 0.97 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'chance', key: 'status:poison', label: '毒付与確率', format: 'percent', decimals: 2 })
+        ])
+    }),
+    paralysisResist: Object.freeze({
+        id: 'paralysisResist',
+        label: '麻痺耐性の玉',
+        dropWeight: 1,
+        chanceMultipliers: Object.freeze({ 'status:paralysis': 0.97 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'chance', key: 'status:paralysis', label: '麻痺付与確率', format: 'percent', decimals: 2 })
+        ])
+    }),
+    abilityDownResist: Object.freeze({
+        id: 'abilityDownResist',
+        label: '能力低下耐性の玉',
+        dropWeight: 1,
+        abilityDownPenaltyMul: 0.95,
+        summary: Object.freeze([
+            Object.freeze({ source: 'abilityDownPenalty', label: '能力低下幅', format: 'product', decimals: 2 })
+        ])
+    }),
+    levelDownResist: Object.freeze({
+        id: 'levelDownResist',
+        label: 'レベル低下耐性の玉',
+        dropWeight: 1,
+        chanceMultipliers: Object.freeze({ 'status:levelDown': 0.97 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'chance', key: 'status:levelDown', label: 'レベルダウン確率', format: 'percent', decimals: 2 })
+        ])
+    }),
+    instantDeathResist: Object.freeze({
+        id: 'instantDeathResist',
+        label: '即死耐性の玉',
+        dropWeight: 1,
+        chanceMultipliers: Object.freeze({ instantDeath: 0.75 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'chance', key: 'instantDeath', label: '即死確率', format: 'percent', decimals: 1 })
+        ])
+    }),
+    knockbackResist: Object.freeze({
+        id: 'knockbackResist',
+        label: '吹き飛び耐性の玉',
+        dropWeight: 1,
+        chanceMultipliers: Object.freeze({ 'enemySpecial:knockback': 0.97 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'chance', key: 'enemySpecial:knockback', label: '吹き飛ばし確率', format: 'percent', decimals: 2 })
+        ])
+    }),
+    poisonDamageGuard: Object.freeze({
+        id: 'poisonDamageGuard',
+        label: '毒ダメージ軽減の玉',
+        dropWeight: 1,
+        damageReductionMultipliers: Object.freeze({ poison: 0.99 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'damageReduction', key: 'poison', label: '毒ダメージ', format: 'product', decimals: 2 })
+        ])
+    }),
+    bombDamageGuard: Object.freeze({
+        id: 'bombDamageGuard',
+        label: '爆弾ダメージ軽減の玉',
+        dropWeight: 1,
+        damageReductionMultipliers: Object.freeze({ bomb: 0.99 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'damageReduction', key: 'bomb', label: '爆弾ダメージ', format: 'product', decimals: 2 })
+        ])
+    }),
+    skillPowerBoost: Object.freeze({
+        id: 'skillPowerBoost',
+        label: 'スキル威力+10%の玉',
+        dropWeight: 1,
+        effects: Object.freeze({ skillPowerMul: 1.1 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'skillPowerMul', label: 'スキル威力', format: 'percent', decimals: 1 })
+        ])
+    }),
+    damageDealtBoost: Object.freeze({
+        id: 'damageDealtBoost',
+        label: '与ダメージ+10%の玉',
+        dropWeight: 0.3,
+        effects: Object.freeze({ damageDealtMul: 1.1 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'damageDealtMul', label: '与ダメージ', format: 'percent', decimals: 1 })
+        ])
+    }),
+    damageTakenGuard: Object.freeze({
+        id: 'damageTakenGuard',
+        label: '被ダメージ-10%の玉',
+        dropWeight: 0.3,
+        effects: Object.freeze({ damageTakenMul: 0.9 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'damageTakenMul', label: '被ダメージ', format: 'product', decimals: 2 })
+        ])
+    }),
+    evasionBoost: Object.freeze({
+        id: 'evasionBoost',
+        label: '回避率+1%の玉',
+        dropWeight: 0.4,
+        effects: Object.freeze({ evasionMul: 1.01 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'evasionMul', label: '回避率', format: 'percent', decimals: 2 })
+        ])
+    }),
+    accuracyBoost: Object.freeze({
+        id: 'accuracyBoost',
+        label: '命中率+1%の玉',
+        dropWeight: 0.4,
+        effects: Object.freeze({ accuracyMul: 1.01 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'accuracyMul', label: '命中率', format: 'percent', decimals: 2 })
+        ])
+    }),
+    critDamageBoost: Object.freeze({
+        id: 'critDamageBoost',
+        label: 'クリティカルダメージ+10%の玉',
+        dropWeight: 1,
+        effects: Object.freeze({ critDamageMul: 1.1 }),
+        summary: Object.freeze([
+            Object.freeze({ source: 'effects', key: 'critDamageMul', label: 'クリティカルダメージ', format: 'percent', decimals: 1 })
+        ])
+    })
 });
 
 const PASSIVE_ORB_IDS = Object.freeze(Object.keys(PASSIVE_ORB_DEFS));
@@ -1440,15 +1616,24 @@ const PASSIVE_ORB_PRODUCT_FORMATTERS = Object.freeze({
 
 const PASSIVE_ORB_AGGREGATE_CONFIG = Object.freeze([
     { key: 'maxHpMul', label: '最大HP', format: 'percent', decimals: 1 },
-    { key: 'attackMul', label: '攻撃力', format: 'percent', decimals: 1 },
-    { key: 'defenseMul', label: '防御力', format: 'percent', decimals: 1 },
+    { key: 'attackMul', label: '攻撃力', format: 'percent', decimals: 2 },
+    { key: 'defenseMul', label: '防御力', format: 'percent', decimals: 2 },
     { key: 'damageDealtMul', label: '与ダメージ', format: 'percent', decimals: 1 },
     { key: 'damageTakenMul', label: '被ダメージ', format: 'product', decimals: 2 },
-    { key: 'critDamageMul', label: '会心ダメージ', format: 'percent', decimals: 1 },
     { key: 'skillPowerMul', label: 'スキル威力', format: 'percent', decimals: 1 },
-    { key: 'accuracyMul', label: '命中率', format: 'percent', decimals: 1 },
-    { key: 'evasionMul', label: '回避率', format: 'percent', decimals: 1 },
-    { key: 'abilityDownPenaltyMul', label: '能力低下耐性', format: 'product', decimals: 2 },
+    { key: 'accuracyMul', label: '命中率', format: 'percent', decimals: 2 },
+    { key: 'evasionMul', label: '回避率', format: 'percent', decimals: 2 },
+    { key: 'critDamageMul', label: 'クリティカルダメージ', format: 'percent', decimals: 1 },
+    { key: 'statusChanceMul', label: '状態異常確率', format: 'percent', decimals: 2 },
+    { key: 'enemySpecialChanceMul', label: '敵特殊行動確率', format: 'percent', decimals: 2 },
+    { key: 'poisonStatusChanceMul', label: '毒付与確率', format: 'percent', decimals: 2 },
+    { key: 'paralysisStatusChanceMul', label: '麻痺付与確率', format: 'percent', decimals: 2 },
+    { key: 'levelDownStatusChanceMul', label: 'レベルダウン確率', format: 'percent', decimals: 2 },
+    { key: 'instantDeathChanceMul', label: '即死確率', format: 'percent', decimals: 1 },
+    { key: 'knockbackChanceMul', label: '吹き飛ばし確率', format: 'percent', decimals: 2 },
+    { key: 'poisonDamageMul', label: '毒ダメージ', format: 'product', decimals: 2 },
+    { key: 'bombDamageMul', label: '爆弾ダメージ', format: 'product', decimals: 2 },
+    { key: 'abilityDownPenaltyMul', label: '能力低下幅', format: 'product', decimals: 2 },
 ]);
 
 function clampPassiveOrbDecimals(decimals = 1) {
@@ -1510,24 +1695,60 @@ function describePassiveOrbEffect(orbId, count = 0) {
     const stacks = Math.max(0, Math.floor(Number(count) || 0));
     if (!stacks) return '';
     const def = PASSIVE_ORB_DEFS[orbId];
-    if (!def || !(def.perStackMultiplier > 0)) return '';
-    const totalMultiplier = Math.pow(def.perStackMultiplier, stacks);
-    switch (orbId) {
-        case 'vitality':
-            return `最大HP ${formatPassiveOrbPercent(totalMultiplier)}`;
-        case 'fury':
-            return `攻撃力 ${formatPassiveOrbPercent(totalMultiplier)}・与ダメージ ${formatPassiveOrbPercent(totalMultiplier)}`;
-        case 'aegis': {
-            const damageTakenMul = totalMultiplier > 0 ? 1 / totalMultiplier : 1;
-            return `防御力 ${formatPassiveOrbPercent(totalMultiplier)}・被ダメージ ${formatPassiveOrbProduct(damageTakenMul)}`;
+    if (!def) return '';
+    const summaryEntries = Array.isArray(def.summary) ? def.summary : null;
+    if (!summaryEntries || !summaryEntries.length) return '';
+
+    const parts = [];
+    for (const entry of summaryEntries) {
+        if (!entry || typeof entry !== 'object') continue;
+        const format = entry.format === 'product' ? 'product' : 'percent';
+        const decimals = Number.isFinite(entry.decimals) ? entry.decimals : format === 'product' ? 2 : 1;
+        const label = typeof entry.label === 'string' && entry.label ? entry.label : '';
+        let perStack = null;
+        switch (entry.source) {
+            case 'effects':
+                if (entry.key && def.effects && typeof def.effects === 'object') {
+                    perStack = def.effects[entry.key];
+                }
+                break;
+            case 'chance':
+                if (entry.key && def.chanceMultipliers && typeof def.chanceMultipliers === 'object') {
+                    perStack = def.chanceMultipliers[entry.key];
+                }
+                break;
+            case 'damageReduction':
+                if (entry.key && def.damageReductionMultipliers && typeof def.damageReductionMultipliers === 'object') {
+                    perStack = def.damageReductionMultipliers[entry.key];
+                }
+                break;
+            case 'abilityDownPenalty':
+                perStack = def.abilityDownPenaltyMul;
+                break;
+            default:
+                break;
         }
-        case 'focus':
-            return `スキル威力 ${formatPassiveOrbPercent(totalMultiplier)}・命中率 ${formatPassiveOrbPercent(totalMultiplier)}`;
-        case 'fortune':
-            return `会心ダメージ ${formatPassiveOrbPercent(totalMultiplier)}・回避率 ${formatPassiveOrbPercent(totalMultiplier)}`;
-        default:
-            return '';
+        if (!Number.isFinite(perStack)) continue;
+        if (perStack < 0) continue;
+        let total;
+        if (perStack === 0) {
+            total = 0;
+        } else {
+            total = Math.pow(perStack, stacks);
+        }
+        if (!Number.isFinite(total)) continue;
+        if (Math.abs(total - 1) < 1e-4) continue;
+        const formatted = format === 'product'
+            ? formatPassiveOrbProduct(total, decimals)
+            : formatPassiveOrbPercent(total, decimals);
+        if (label) {
+            parts.push(`${label} ${formatted}`);
+        } else {
+            parts.push(formatted);
+        }
     }
+
+    return parts.join('・');
 }
 
 const ENEMY_TYPE_DEFS = {
@@ -5543,7 +5764,7 @@ function tryGrantBossPassiveOrbReward() {
     const playerLevel = Number.isFinite(player?.level) ? player.level : null;
     if (!Number.isFinite(recommended) || !Number.isFinite(playerLevel)) return null;
     const gap = recommended - playerLevel;
-    if (gap < -4) return null;
+    if (gap < 0) return null;
     return maybeGrantPassiveOrb('bossDefeat', 0.5);
 }
 
@@ -5588,35 +5809,55 @@ function getPassiveOrbModifiers() {
         const stacks = stackCounts[id];
         if (!stacks) continue;
         const def = PASSIVE_ORB_DEFS[id];
-        const perStack = Number.isFinite(def?.perStackMultiplier) ? def.perStackMultiplier : 1;
-        if (!(perStack > 0)) continue;
-        const multiplier = Math.pow(perStack, stacks);
-        switch (id) {
-            case 'vitality':
-                baseModifiers.maxHpMul *= multiplier;
-                break;
-            case 'fury':
-                baseModifiers.attackMul *= multiplier;
-                baseModifiers.damageDealtMul *= multiplier;
-                break;
-            case 'aegis':
-                baseModifiers.defenseMul *= multiplier;
-                baseModifiers.damageTakenMul *= 1 / multiplier;
-                break;
-            case 'focus':
-                baseModifiers.skillPowerMul *= multiplier;
-                baseModifiers.accuracyMul *= multiplier;
-                break;
-            case 'fortune':
-                baseModifiers.critDamageMul *= multiplier;
-                baseModifiers.evasionMul *= multiplier;
-                break;
-            default:
-                break;
+        if (!def) continue;
+
+        if (def.effects && typeof def.effects === 'object') {
+            for (const [effectKey, raw] of Object.entries(def.effects)) {
+                const value = Number(raw);
+                if (!Number.isFinite(value)) continue;
+                if (value < 0) continue;
+                const multiplier = Math.pow(value, stacks);
+                if (!Number.isFinite(multiplier)) continue;
+                if (multiplier === 0) {
+                    switch (effectKey) {
+                        case 'attackMul':
+                        case 'defenseMul':
+                        case 'maxHpMul':
+                        case 'damageDealtMul':
+                        case 'damageTakenMul':
+                        case 'critDamageMul':
+                        case 'skillPowerMul':
+                        case 'accuracyMul':
+                        case 'evasionMul':
+                            baseModifiers[effectKey] = 0;
+                            break;
+                        default:
+                            break;
+                    }
+                    continue;
+                }
+                switch (effectKey) {
+                    case 'attackMul':
+                    case 'defenseMul':
+                    case 'maxHpMul':
+                    case 'damageDealtMul':
+                    case 'critDamageMul':
+                    case 'skillPowerMul':
+                    case 'accuracyMul':
+                    case 'evasionMul':
+                        baseModifiers[effectKey] *= multiplier;
+                        break;
+                    case 'damageTakenMul':
+                        baseModifiers.damageTakenMul *= multiplier;
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
-        if (def && typeof def.perStackChanceMultipliers === 'object' && def.perStackChanceMultipliers) {
-            for (const [key, raw] of Object.entries(def.perStackChanceMultipliers)) {
+        if (def.chanceMultipliers && typeof def.chanceMultipliers === 'object') {
+            for (const [key, raw] of Object.entries(def.chanceMultipliers)) {
                 if (typeof key !== 'string' || !key) continue;
                 const value = Number(raw);
                 if (!Number.isFinite(value)) continue;
@@ -5632,8 +5873,8 @@ function getPassiveOrbModifiers() {
             }
         }
 
-        if (def && typeof def.perStackDamageReductionMultipliers === 'object' && def.perStackDamageReductionMultipliers) {
-            for (const [key, raw] of Object.entries(def.perStackDamageReductionMultipliers)) {
+        if (def.damageReductionMultipliers && typeof def.damageReductionMultipliers === 'object') {
+            for (const [key, raw] of Object.entries(def.damageReductionMultipliers)) {
                 if (typeof key !== 'string' || !key) continue;
                 const value = Number(raw);
                 if (!Number.isFinite(value)) continue;
@@ -5649,8 +5890,8 @@ function getPassiveOrbModifiers() {
             }
         }
 
-        if (Number.isFinite(def?.perStackAbilityDownPenaltyMul)) {
-            const value = def.perStackAbilityDownPenaltyMul;
+        if (Number.isFinite(def?.abilityDownPenaltyMul)) {
+            const value = def.abilityDownPenaltyMul;
             if (value <= 0) {
                 abilityDownPenaltyMul = 0;
             } else if (abilityDownPenaltyMul !== 0) {
@@ -5666,7 +5907,7 @@ function getPassiveOrbModifiers() {
     baseModifiers.defenseMul = Number.isFinite(baseModifiers.defenseMul) && baseModifiers.defenseMul > 0 ? baseModifiers.defenseMul : 1;
     baseModifiers.maxHpMul = Number.isFinite(baseModifiers.maxHpMul) && baseModifiers.maxHpMul > 0 ? baseModifiers.maxHpMul : 1;
     baseModifiers.damageDealtMul = Number.isFinite(baseModifiers.damageDealtMul) && baseModifiers.damageDealtMul > 0 ? baseModifiers.damageDealtMul : 1;
-    baseModifiers.damageTakenMul = Number.isFinite(baseModifiers.damageTakenMul) && baseModifiers.damageTakenMul > 0 ? baseModifiers.damageTakenMul : 1;
+    baseModifiers.damageTakenMul = Number.isFinite(baseModifiers.damageTakenMul) && baseModifiers.damageTakenMul >= 0 ? baseModifiers.damageTakenMul : 1;
     baseModifiers.critDamageMul = Number.isFinite(baseModifiers.critDamageMul) && baseModifiers.critDamageMul > 0 ? baseModifiers.critDamageMul : 1;
     baseModifiers.skillPowerMul = Number.isFinite(baseModifiers.skillPowerMul) && baseModifiers.skillPowerMul > 0 ? baseModifiers.skillPowerMul : 1;
     baseModifiers.accuracyMul = Number.isFinite(baseModifiers.accuracyMul) && baseModifiers.accuracyMul > 0 ? baseModifiers.accuracyMul : 1;
@@ -5686,11 +5927,44 @@ function getPassiveOrbModifiers() {
         sanitizedDamageReductionMultipliers[key] = value <= 0 ? 0 : value;
     }
 
+    const normalizeAggregate = (value) => {
+        if (!Number.isFinite(value)) return 1;
+        if (value < 0) return 0;
+        return value;
+    };
+
     baseModifiers.chanceMultipliers = Object.freeze(sanitizedChanceMultipliers);
     baseModifiers.damageReductionMultipliers = Object.freeze(sanitizedDamageReductionMultipliers);
     baseModifiers.abilityDownPenaltyMul = Number.isFinite(abilityDownPenaltyMul) && abilityDownPenaltyMul >= 0
         ? abilityDownPenaltyMul
         : 1;
+
+    const statusChanceMul = accumulatePassiveMultipliers(sanitizedChanceMultipliers, 'status');
+    const enemySpecialChanceMul = accumulatePassiveMultipliers(sanitizedChanceMultipliers, 'enemySpecial');
+    const poisonStatusChanceMul = accumulatePassiveMultipliers(sanitizedChanceMultipliers, 'status:poison');
+    const paralysisStatusChanceMul = accumulatePassiveMultipliers(sanitizedChanceMultipliers, 'status:paralysis');
+    const levelDownStatusChanceMul = accumulatePassiveMultipliers(sanitizedChanceMultipliers, 'status:levelDown');
+    const instantDeathChanceMul = accumulatePassiveMultipliers(sanitizedChanceMultipliers, 'instantDeath');
+    const knockbackChanceMul = accumulatePassiveMultipliers(sanitizedChanceMultipliers, 'enemySpecial:knockback');
+
+    const poisonDamageExtra = accumulatePassiveMultipliers(sanitizedDamageReductionMultipliers, 'poison');
+    const bombDamageExtra = accumulatePassiveMultipliers(sanitizedDamageReductionMultipliers, 'bomb');
+    const baseDamageTakenMul = Number.isFinite(baseModifiers.damageTakenMul) && baseModifiers.damageTakenMul >= 0
+        ? baseModifiers.damageTakenMul
+        : 1;
+
+    baseModifiers.statusChanceMul = normalizeAggregate(statusChanceMul);
+    baseModifiers.enemySpecialChanceMul = normalizeAggregate(enemySpecialChanceMul);
+    baseModifiers.poisonStatusChanceMul = normalizeAggregate(poisonStatusChanceMul);
+    baseModifiers.paralysisStatusChanceMul = normalizeAggregate(paralysisStatusChanceMul);
+    baseModifiers.levelDownStatusChanceMul = normalizeAggregate(levelDownStatusChanceMul);
+    baseModifiers.instantDeathChanceMul = normalizeAggregate(instantDeathChanceMul);
+    baseModifiers.knockbackChanceMul = normalizeAggregate(knockbackChanceMul);
+
+    const poisonCombined = normalizeAggregate(poisonDamageExtra);
+    const bombCombined = normalizeAggregate(bombDamageExtra);
+    baseModifiers.poisonDamageMul = normalizeAggregate(baseDamageTakenMul * poisonCombined);
+    baseModifiers.bombDamageMul = normalizeAggregate(baseDamageTakenMul * bombCombined);
 
     cachedPassiveOrbSignature = signature;
     cachedPassiveOrbModifiers = Object.freeze(baseModifiers);

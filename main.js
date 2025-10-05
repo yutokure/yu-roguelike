@@ -50,11 +50,20 @@ const RUN_RESULT_REASON_LABELS = Object.freeze({
     return: '冒険結果'
 });
 const MAX_LOG_LINES = 100;
-const SATIETY_MAX = 100;
-const SATIETY_TICK_PER_TURN = 1;
+let SATIETY_MAX = 100;
+const SATIETY_BASE_MAX = 100;
+const SATIETY_BASE_TICK_PER_TURN = 1;
 const SATIETY_DAMAGE_RATIO = 0.2;
-const SATIETY_RECOVERY_PER_POTION = 25;
+const SATIETY_RECOVERY_PERCENT = 0.25;
 const AUTO_ITEM_SATIETY_THRESHOLD = 25;
+const DIFFICULTY_DAMAGE_PROFILE = Object.freeze({
+    'Very Easy': Object.freeze({ deal: 4.0, take: 0.25 }),
+    'Easy': Object.freeze({ deal: 2.0, take: 0.35 }),
+    'Normal': Object.freeze({ deal: 1.6, take: 0.5 }),
+    'Second': Object.freeze({ deal: 1.4, take: 0.7 }),
+    'Hard': Object.freeze({ deal: 1.2, take: 0.85 }),
+    'Very Hard': Object.freeze({ deal: 1.0, take: 1.0 }),
+});
 const RARE_CHEST_CHANCE = 0.08;
 
 const RARE_CHEST_CONFIG = Object.freeze({
@@ -278,9 +287,11 @@ function getAutoItemIntent({ effectiveMaxHp, currentHp, currentSatiety }) {
 
     if (satietySystemActive && Number.isFinite(currentSatiety)) {
         if (currentSatiety < AUTO_ITEM_SATIETY_THRESHOLD) {
-            const beforeSatiety = Math.max(0, Math.floor(Number.isFinite(player?.satiety) ? player.satiety : 0));
-            const recover = Math.min(SATIETY_RECOVERY_PER_POTION, SATIETY_MAX - beforeSatiety);
-            if (recover > 0) {
+            const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+            const beforeSatiety = Number.isFinite(player?.satiety) ? Number(player.satiety) : 0;
+            const recoverCandidate = Math.ceil(satietyCap * SATIETY_RECOVERY_PERCENT);
+            const potential = Math.min(recoverCandidate, Math.max(0, satietyCap - beforeSatiety));
+            if (potential > 0.0001) {
                 return 'eat';
             }
         }
@@ -297,8 +308,9 @@ function requestAutoItemCheck() {
         if (!player || isGameOver) return;
         const effectiveMaxHp = getEffectivePlayerMaxHp();
         const rawHp = Number.isFinite(player?.hp) ? Math.max(0, player.hp) : effectiveMaxHp;
+        const satietyCap = recalculateSatietyMax({ clampCurrent: false });
         const satietyValue = satietySystemActive
-            ? (Number.isFinite(player?.satiety) ? Math.max(0, Math.floor(player.satiety)) : SATIETY_MAX)
+            ? (Number.isFinite(player?.satiety) ? Math.max(0, Math.floor(player.satiety)) : satietyCap)
             : null;
         const intent = getAutoItemIntent({
             effectiveMaxHp,
@@ -851,6 +863,7 @@ function adjustPlayerLevel(delta) {
             changed += 1;
         }
         player.hp = player.maxHp;
+        restoreSatietyToMax();
     } else {
         const steps = Math.abs(delta);
         for (let i = 0; i < steps; i++) {
@@ -862,6 +875,7 @@ function adjustPlayerLevel(delta) {
             changed -= 1;
         }
         player.hp = Math.min(player.hp, player.maxHp);
+        recalculateSatietyMax({ clampCurrent: true });
     }
     if (changed !== 0) {
         enforceEffectiveHpCap();
@@ -3406,7 +3420,7 @@ function handleSandboxFullHeal() {
     } else {
         player.hp = Number.isFinite(player.maxHp) ? player.maxHp : effectiveMax;
         if (satietySystemActive) {
-            player.satiety = SATIETY_MAX;
+            restoreSatietyToMax();
         }
         if (Number.isFinite(player.maxSp)) {
             player.sp = player.maxSp;
@@ -3437,7 +3451,8 @@ function resetSandboxStatsToDefaults() {
     player.defense = stats.defense;
     player.maxSp = 0;
     player.sp = 0;
-    player.satiety = SATIETY_MAX;
+    player.satietySystemStartLevel = null;
+    restoreSatietyToMax();
     player.exp = 0;
     enforceEffectiveHpCap();
     if (!sandboxInteractiveState.godMode) {
@@ -3461,7 +3476,8 @@ function applySandboxStatChanges() {
     const def = parseSandboxInputValue(sandboxStatDefInput, { fallback: player.defense, clampMin: 0 });
     const maxSp = parseSandboxInputValue(sandboxStatMaxSpInput, { fallback: player.maxSp, clampMin: 0 });
     const sp = parseSandboxInputValue(sandboxStatSpInput, { fallback: player.sp, clampMin: 0 });
-    const satiety = parseSandboxInputValue(sandboxStatSatietyInput, { fallback: player.satiety, clampMin: 0, clampMax: SATIETY_MAX });
+    const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+    const satiety = parseSandboxInputValue(sandboxStatSatietyInput, { fallback: player.satiety, clampMin: 0, clampMax: satietyCap });
 
     player.level = level;
     player.maxHp = maxHp;
@@ -3471,6 +3487,7 @@ function applySandboxStatChanges() {
     player.maxSp = maxSp;
     player.sp = sp;
     player.satiety = satiety;
+    recalculateSatietyMax({ clampCurrent: true });
     enforceEffectiveHpCap();
     updatePlayerSpCap({ silent: true });
     updateUI();
@@ -4735,7 +4752,7 @@ function showSelectionScreen(opts = {}) {
     if (refillHp) {
         resetPlayerStatusEffects();
         player.hp = player.maxHp;
-        player.satiety = SATIETY_MAX;
+        restoreSatietyToMax();
         enforceEffectiveHpCap(); // Apply cap after clearing debuffs so full heal sticks
     }
     isGameOver = false;
@@ -5636,6 +5653,7 @@ const player = {
     maxHp: 100,
     hp: 100,
     satiety: SATIETY_MAX,
+    satietySystemStartLevel: null,
     sp: 0,
     maxSp: 0,
     attack: 10,
@@ -5655,6 +5673,50 @@ const player = {
     },
     statusEffects: createInitialStatusEffects()
 };
+
+function resolveSatietySystemStartLevel() {
+    if (player && Number.isFinite(player.satietySystemStartLevel) && player.satietySystemStartLevel > 0) {
+        return Math.max(1, Math.floor(player.satietySystemStartLevel));
+    }
+    const fallbackLevel = Number.isFinite(player?.level) ? Math.max(1, Math.floor(player.level)) : 1;
+    return fallbackLevel;
+}
+
+function setSatietySystemStartLevel(level) {
+    if (!player) return;
+    const normalized = Math.max(1, Math.floor(Number(level) || 0));
+    player.satietySystemStartLevel = normalized;
+}
+
+function recalculateSatietyMax({ clampCurrent = true } = {}) {
+    const startLevel = resolveSatietySystemStartLevel();
+    const playerLevel = Number.isFinite(player?.level) ? Math.max(1, Number(player.level)) : 1;
+    const extra = Math.max(0, (playerLevel - startLevel) * 0.1);
+    const rawMax = SATIETY_BASE_MAX + extra;
+    const normalizedMax = Math.max(SATIETY_BASE_MAX, Math.round(rawMax * 1000) / 1000);
+    SATIETY_MAX = normalizedMax;
+    if (clampCurrent && player && Number.isFinite(player.satiety)) {
+        player.satiety = Math.max(0, Math.min(SATIETY_MAX, Number(player.satiety)));
+    }
+    return SATIETY_MAX;
+}
+
+function restoreSatietyToMax() {
+    const cap = recalculateSatietyMax({ clampCurrent: false });
+    if (player) {
+        player.satiety = cap;
+    }
+    return cap;
+}
+
+function formatSatietyDisplay(value) {
+    if (!Number.isFinite(value)) return '∞';
+    const rounded = Math.round(value * 100) / 100;
+    if (Number.isInteger(rounded)) return String(rounded);
+    return rounded.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+}
+
+recalculateSatietyMax({ clampCurrent: true });
 
 if (dungeonNameToggle) {
     updateDungeonOverlayVisibility();
@@ -6732,6 +6794,15 @@ let lastPlayerDomainSignature = '';
 
 // 敵
 let enemies = [];
+
+function areAllEnemiesCleared() {
+    if (!Array.isArray(enemies) || enemies.length === 0) return true;
+    return !enemies.some(enemy => {
+        if (!enemy) return false;
+        if (!Number.isFinite(enemy.hp)) return true;
+        return enemy.hp > 0;
+    });
+}
 let ENEMY_COUNT = 8;
 
 // アイテム
@@ -10483,8 +10554,13 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     player.exp = Number(playerSnap.exp) || 0;
     player.maxHp = Math.max(1, Math.floor(Number(playerSnap.maxHp) || player.maxHp || 100));
     player.hp = Math.max(0, Math.min(player.maxHp, Math.floor(Number(playerSnap.hp) || player.maxHp)));
-    const satietySnap = Number.isFinite(playerSnap.satiety) ? Number(playerSnap.satiety) : SATIETY_MAX;
-    player.satiety = Math.max(0, Math.min(SATIETY_MAX, satietySnap));
+    if (Number.isFinite(playerSnap.satietySystemStartLevel)) {
+        player.satietySystemStartLevel = Math.max(1, Math.floor(Number(playerSnap.satietySystemStartLevel)));
+    } else {
+        player.satietySystemStartLevel = null;
+    }
+    const satietySnap = Number.isFinite(playerSnap.satiety) ? Number(playerSnap.satiety) : SATIETY_BASE_MAX;
+    player.satiety = Number.isFinite(satietySnap) ? satietySnap : SATIETY_BASE_MAX;
     player.sp = Math.max(0, Number(playerSnap.sp) || 0);
     player.maxSp = Math.max(0, Number(playerSnap.maxSp) || 0);
     player.attack = Math.max(0, Math.floor(Number(playerSnap.attack) || player.attack || 0));
@@ -10542,6 +10618,9 @@ function applyGameStateSnapshot(snapshot, options = {}) {
             skillState.pendingTickSkip = Object.create(null);
         }
     }
+    const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+    player.satiety = Math.max(0, Math.min(satietyCap, Number(player.satiety)));
+
     enforceEffectiveHpCap();
     updatePlayerSpCap({ silent: true });
 
@@ -12784,18 +12863,18 @@ function damageMultiplierByLevelDiff(levelDiff) {
     return levelDiff > 0 ? 100.0 * Math.pow(10, groups) : 0.01 * Math.pow(0.1, groups);
 }
 
+function getDifficultyDamageMultipliers() {
+    return DIFFICULTY_DAMAGE_PROFILE[difficulty] || DIFFICULTY_DAMAGE_PROFILE['Normal'];
+}
+
+function getDifficultyDamageMultiplier(type) {
+    const profile = getDifficultyDamageMultipliers();
+    if (!profile) return 1;
+    return type === 'deal' ? profile.deal : profile.take;
+}
+
 function applyDifficultyDamageMultipliers(type, value) {
-    // type: 'deal' or 'take'
-    const map = {
-        'Very Easy': { deal: 4.0, take: 0.25 },
-        'Easy': { deal: 2.0, take: 0.35 },
-        'Normal': { deal: 1.6, take: 0.5 },
-        'Second': { deal: 1.4, take: 0.7 },
-        'Hard': { deal: 1.2, take: 0.85 },
-        'Very Hard': { deal: 1.0, take: 1.0 },
-    };
-    const m = map[difficulty] || map['Normal'];
-    return value * (type === 'deal' ? m.deal : m.take);
+    return value * getDifficultyDamageMultiplier(type);
 }
 
 function drawMap() {
@@ -13645,11 +13724,15 @@ function updateUI() {
     const spIsInfinite = !Number.isFinite(spMax) || !Number.isFinite(currentSp);
     const spPct = spIsInfinite ? 1 : (spMax > 0 ? Math.max(0, Math.min(1, currentSp / spMax)) : 0);
     const satietyIsInfinite = !Number.isFinite(player.satiety);
-    const currentSatiety = satietyIsInfinite ? SATIETY_MAX : Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+    const satietyRaw = satietyIsInfinite ? SATIETY_MAX : Math.max(0, Math.min(SATIETY_MAX, Number(player.satiety)));
+    const satietyForLogic = satietyIsInfinite ? SATIETY_MAX : Math.floor(satietyRaw);
+    const satietyDisplayValue = satietyIsInfinite ? SATIETY_MAX : Math.round(satietyRaw * 100) / 100;
+    const satietyDisplayText = satietyIsInfinite ? '∞' : formatSatietyDisplay(satietyDisplayValue);
+    const satietyCapText = formatSatietyDisplay(SATIETY_MAX);
     const autoItemIntent = getAutoItemIntent({
         effectiveMaxHp,
         currentHp,
-        currentSatiety: satietySystemActive && !satietyIsInfinite ? currentSatiety : null
+        currentSatiety: satietySystemActive && !satietyIsInfinite ? satietyForLogic : null
     });
     if (autoItemIntent) {
         requestAutoItemCheck();
@@ -13742,8 +13825,8 @@ function updateUI() {
     }
     if (satietyBarContainer) satietyBarContainer.style.display = satietySystemActive ? '' : 'none';
     if (satietySystemActive) {
-        if (statSatietyText) statSatietyText.textContent = satietyIsInfinite ? `∞/${SATIETY_MAX}` : `${currentSatiety}/${SATIETY_MAX}`;
-        if (satietyBar) satietyBar.style.width = `${(satietyIsInfinite ? 1 : (currentSatiety / SATIETY_MAX)) * 100}%`;
+    if (statSatietyText) statSatietyText.textContent = satietyIsInfinite ? `∞/${satietyCapText}` : `${satietyDisplayText}/${satietyCapText}`;
+    if (satietyBar) satietyBar.style.width = `${(satietyIsInfinite ? 1 : (satietyRaw / SATIETY_MAX)) * 100}%`;
     }
 
     updatePlayerSummaryCard({
@@ -13929,7 +14012,7 @@ function updateUI() {
     if (modalAttack) modalAttack.textContent = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
     if (modalDefense) modalDefense.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
     if (modalSatietyRow) modalSatietyRow.style.display = satietySystemActive ? '' : 'none';
-    if (modalSatiety && satietySystemActive) modalSatiety.textContent = `${currentSatiety} / ${SATIETY_MAX}`;
+    if (modalSatiety && satietySystemActive) modalSatiety.textContent = satietyIsInfinite ? `∞ / ${satietyCapText}` : `${satietyDisplayText} / ${satietyCapText}`;
     if (modalSpRow) modalSpRow.style.display = spUnlocked && spMax > 0 ? '' : 'none';
     if (modalSpValue && spUnlocked && spMax > 0) {
         const spDisplayCurrent = floorSpValue(currentSp);
@@ -14034,7 +14117,7 @@ function updateUI() {
         const defText = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
         let detailLine = `Lv.${levelText} HP ${currentHp}/${effectiveMaxHp}${hpBaseSuffix} 攻${atkText} 防${defText}`;
         if (satietySystemActive) {
-            detailLine += ` 満${currentSatiety}/${SATIETY_MAX}`;
+            detailLine += ` 満${satietyDisplayText}/${satietyCapText}`;
         }
         statusDetails.innerHTML = `階層: ${dungeonLevel}<br>` + detailLine;
     }
@@ -14134,10 +14217,14 @@ function refreshSatietyActivation({ notify = false } = {}) {
     const isActive = shouldActivateSatietySystem();
     if (isActive && !satietySystemActive) {
         if (!isSandboxGodModeEnabled()) {
-            if (!Number.isFinite(player.satiety) || player.satiety <= 0 || player.satiety > SATIETY_MAX) {
-                player.satiety = SATIETY_MAX;
+            if (!Number.isFinite(player?.satietySystemStartLevel) || player.satietySystemStartLevel <= 0) {
+                setSatietySystemStartLevel(player?.level || 1);
+            }
+            const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+            if (!Number.isFinite(player.satiety) || player.satiety <= 0 || player.satiety > satietyCap) {
+                player.satiety = satietyCap;
             } else {
-                player.satiety = Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+                player.satiety = Math.max(0, Math.min(satietyCap, Number(player.satiety)));
             }
         }
         if (notify) {
@@ -14149,6 +14236,9 @@ function refreshSatietyActivation({ notify = false } = {}) {
         }
     }
     satietySystemActive = isActive;
+    if (!isSandboxGodModeEnabled()) {
+        recalculateSatietyMax({ clampCurrent: true });
+    }
     return satietySystemActive;
 }
 
@@ -14166,13 +14256,23 @@ function handleSatietyTurnTick(actionType = 'move') {
         return !isGameOver;
     }
 
+    const satietyCap = recalculateSatietyMax({ clampCurrent: true });
     if (!Number.isFinite(player.satiety)) {
-        player.satiety = SATIETY_MAX;
+        player.satiety = satietyCap;
     }
-    player.satiety = Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+    player.satiety = Math.max(0, Math.min(satietyCap, Number(player.satiety)));
 
-    if (SATIETY_TICK_PER_TURN > 0) {
-        player.satiety = Math.max(0, player.satiety - SATIETY_TICK_PER_TURN);
+    if (areAllEnemiesCleared()) {
+        try { updateUI(); } catch {}
+        try { saveAll(); } catch {}
+        return !isGameOver;
+    }
+
+    const difficultyDrainMul = getDifficultyDamageMultiplier('take');
+    const drainPerTurn = SATIETY_BASE_TICK_PER_TURN * difficultyDrainMul;
+    if (drainPerTurn > 0) {
+        const nextSatiety = Math.max(0, player.satiety - drainPerTurn);
+        player.satiety = Math.max(0, Math.round(nextSatiety * 1000) / 1000);
     }
 
     let alive = true;
@@ -14245,7 +14345,11 @@ function updatePlayerSummaryCard({
         ? Math.max(0, Math.min(normalizedSpMax, currentSp))
         : (Number.isFinite(currentSp) ? currentSp : normalizedSpMax);
     const satietyIsInfinite = !Number.isFinite(player.satiety);
-    const currentSatiety = satietyIsInfinite ? SATIETY_MAX : Math.max(0, Math.min(SATIETY_MAX, Math.floor(player.satiety)));
+    const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+    const satietyRaw = satietyIsInfinite ? satietyCap : Math.max(0, Math.min(satietyCap, Number(player.satiety)));
+    const satietyDisplayValue = satietyIsInfinite ? satietyCap : Math.round(satietyRaw * 100) / 100;
+    const satietyDisplayText = satietyIsInfinite ? '∞' : formatSatietyDisplay(satietyDisplayValue);
+    const satietyCapText = formatSatietyDisplay(satietyCap);
     const spIsInfinite = !Number.isFinite(normalizedSp) || !Number.isFinite(normalizedSpMax);
     const abilityStatusMulCard = getAbilityStatusMultiplier();
     const abilityStatusActiveCard = !nearlyEqual(abilityStatusMulCard, 1);
@@ -14266,7 +14370,7 @@ function updatePlayerSummaryCard({
     if (atkEl) atkEl.textContent = formatStatWithBase(effectiveAttack, baseAttack);
     if (defEl) defEl.textContent = formatStatWithBase(effectiveDefense, baseDefense);
     if (satietyItemEl) satietyItemEl.style.display = satietySystemActive ? '' : 'none';
-    if (satietyValueEl) satietyValueEl.textContent = satietyIsInfinite ? `∞/${SATIETY_MAX}` : `${currentSatiety}/${SATIETY_MAX}`;
+    if (satietyValueEl) satietyValueEl.textContent = satietyIsInfinite ? `∞/${satietyCapText}` : `${satietyDisplayText}/${satietyCapText}`;
     if (spItemEl) spItemEl.style.display = spUnlocked && normalizedSpMax > 0 ? '' : 'none';
     if (spValueEl) {
         if (spUnlocked && normalizedSpMax > 0) {
@@ -15370,6 +15474,7 @@ function applyPostMoveEffects() {
                     addMessage('ダンジョンを攻略した！');
                     player.hp = player.maxHp;
                     enforceEffectiveHpCap();
+                    restoreSatietyToMax();
                     recordAchievementEvent('dungeon_cleared', {
                         mode: currentMode,
                         difficulty,
@@ -15997,10 +16102,11 @@ function eatPotion30({ reason = 'manual' } = {}) {
         if (!isAuto) addMessage('ポーションを持っていない。');
         return false;
     }
-    const beforeSatietyRaw = Number.isFinite(player.satiety) ? player.satiety : 0;
-    const beforeSatiety = Math.max(0, Math.floor(beforeSatietyRaw));
-    const recover = Math.min(SATIETY_RECOVERY_PER_POTION, SATIETY_MAX - beforeSatiety);
-    if (recover <= 0) {
+    const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+    const beforeSatiety = Number.isFinite(player.satiety) ? Number(player.satiety) : 0;
+    const recoverCandidate = Math.ceil(satietyCap * SATIETY_RECOVERY_PERCENT);
+    const actualRecovered = Math.min(recoverCandidate, Math.max(0, satietyCap - beforeSatiety));
+    if (actualRecovered <= 0) {
         if (!isAuto) {
             addMessage('満腹度は既に最大値です。');
             updateUI();
@@ -16008,10 +16114,13 @@ function eatPotion30({ reason = 'manual' } = {}) {
         return false;
     }
 
-    player.satiety = Math.min(SATIETY_MAX, beforeSatiety + recover);
+    player.satiety = Math.min(satietyCap, beforeSatiety + actualRecovered);
     player.inventory.potion30 -= 1;
     registerRunHealingItemUse('potion30');
-    addMessage(isAuto ? `オートアイテムが発動！満腹度が${recover}回復` : `ポーションを食べた！満腹度が${recover}回復`);
+    const displayRecovered = Math.abs(actualRecovered - Math.round(actualRecovered)) < 1e-6
+        ? Math.round(actualRecovered)
+        : Math.round(actualRecovered * 100) / 100;
+    addMessage(isAuto ? `オートアイテムが発動！満腹度が${displayRecovered}回復` : `ポーションを食べた！満腹度が${displayRecovered}回復`);
     playSfx('pickup');
     updateUI();
     saveAll();
@@ -16556,6 +16665,7 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
         player.attack += 1;
         player.defense += 1;
         player.hp = player.maxHp;
+        restoreSatietyToMax();
         enforceEffectiveHpCap();
         updatePlayerSpCap({ silent: false });
         leveled++;

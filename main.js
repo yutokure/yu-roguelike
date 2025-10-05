@@ -384,6 +384,9 @@ const invAtkBoostMajor = document.getElementById('inv-atk-boost-major');
 const invDefBoostMajor = document.getElementById('inv-def-boost-major');
 const invSpElixir = document.getElementById('inv-sp-elixir');
 const skillCharmList = document.getElementById('skill-charm-list');
+const passiveOrbSummaryEl = document.getElementById('passive-orb-summary');
+const passiveOrbAggregateEl = document.getElementById('passive-orb-aggregate');
+const passiveOrbListEl = document.getElementById('passive-orb-list');
 let lastSkillCharmMarkup = '';
 const usePotion30Btn = document.getElementById('use-potion30');
 const eatPotion30Btn = document.getElementById('eat-potion30');
@@ -431,6 +434,8 @@ const modalStatusEffects = document.getElementById('modal-status-effects');
 const modalSkillEffects = document.getElementById('modal-skill-effects');
 const modalSpRow = document.getElementById('modal-sp-row');
 const modalSpValue = document.getElementById('modal-sp');
+const modalPassiveOrbSummary = document.getElementById('modal-passive-orb-summary');
+const modalPassiveOrbAggregate = document.getElementById('modal-passive-orb-aggregate');
 const rareChestModal = document.getElementById('rare-chest-modal');
 const rareChestPointer = document.getElementById('rare-chest-pointer');
 const rareChestStopButton = document.getElementById('rare-chest-stop');
@@ -1420,6 +1425,110 @@ const PASSIVE_ORB_DEFS = Object.freeze({
 });
 
 const PASSIVE_ORB_IDS = Object.freeze(Object.keys(PASSIVE_ORB_DEFS));
+
+const PASSIVE_ORB_PERCENT_FORMATTERS = Object.freeze({
+    0: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 0, minimumFractionDigits: 0 }),
+    1: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 1, minimumFractionDigits: 0 }),
+    2: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 2, minimumFractionDigits: 0 }),
+});
+
+const PASSIVE_ORB_PRODUCT_FORMATTERS = Object.freeze({
+    0: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 0, minimumFractionDigits: 0 }),
+    1: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 1, minimumFractionDigits: 0 }),
+    2: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 2, minimumFractionDigits: 0 }),
+});
+
+const PASSIVE_ORB_AGGREGATE_CONFIG = Object.freeze([
+    { key: 'maxHpMul', label: '最大HP', format: 'percent', decimals: 1 },
+    { key: 'attackMul', label: '攻撃力', format: 'percent', decimals: 1 },
+    { key: 'defenseMul', label: '防御力', format: 'percent', decimals: 1 },
+    { key: 'damageDealtMul', label: '与ダメージ', format: 'percent', decimals: 1 },
+    { key: 'damageTakenMul', label: '被ダメージ', format: 'product', decimals: 2 },
+    { key: 'critDamageMul', label: '会心ダメージ', format: 'percent', decimals: 1 },
+    { key: 'skillPowerMul', label: 'スキル威力', format: 'percent', decimals: 1 },
+    { key: 'accuracyMul', label: '命中率', format: 'percent', decimals: 1 },
+    { key: 'evasionMul', label: '回避率', format: 'percent', decimals: 1 },
+    { key: 'abilityDownPenaltyMul', label: '能力低下耐性', format: 'product', decimals: 2 },
+]);
+
+function clampPassiveOrbDecimals(decimals = 1) {
+    const numeric = Number(decimals);
+    if (!Number.isFinite(numeric)) return 1;
+    const clamped = Math.max(0, Math.min(2, Math.floor(numeric)));
+    return clamped;
+}
+
+function formatPassiveOrbPercent(multiplier, decimals = 1) {
+    const numeric = Number(multiplier);
+    if (!Number.isFinite(numeric)) {
+        return '+0%';
+    }
+    const safeDecimals = clampPassiveOrbDecimals(decimals);
+    const delta = (numeric - 1) * 100;
+    const factor = Math.pow(10, safeDecimals);
+    const rounded = Math.round(delta * factor) / factor;
+    const formatter = PASSIVE_ORB_PERCENT_FORMATTERS[safeDecimals] || PASSIVE_ORB_PERCENT_FORMATTERS[1];
+    const display = formatter.format(Math.abs(rounded));
+    const sign = rounded >= 0 ? '+' : '-';
+    return `${sign}${display}%`;
+}
+
+function formatPassiveOrbProduct(multiplier, decimals = 2) {
+    const numeric = Number(multiplier);
+    if (!Number.isFinite(numeric)) {
+        return '×1';
+    }
+    const safeDecimals = clampPassiveOrbDecimals(decimals);
+    const safeValue = Math.max(0, numeric);
+    const factor = Math.pow(10, safeDecimals);
+    const rounded = Math.round(safeValue * factor) / factor;
+    const formatter = PASSIVE_ORB_PRODUCT_FORMATTERS[safeDecimals] || PASSIVE_ORB_PRODUCT_FORMATTERS[2];
+    return `×${formatter.format(rounded)}`;
+}
+
+function buildPassiveOrbAggregateEntries(modifiers) {
+    if (!modifiers || typeof modifiers !== 'object') {
+        return [];
+    }
+    const entries = [];
+    for (const config of PASSIVE_ORB_AGGREGATE_CONFIG) {
+        const value = Number(modifiers[config.key]);
+        if (!Number.isFinite(value)) continue;
+        if (Math.abs(value - 1) < 1e-4) continue;
+        const formatted = config.format === 'product'
+            ? formatPassiveOrbProduct(value, config.decimals)
+            : formatPassiveOrbPercent(value, config.decimals);
+        entries.push({
+            label: config.label,
+            value: formatted,
+        });
+    }
+    return entries;
+}
+
+function describePassiveOrbEffect(orbId, count = 0) {
+    const stacks = Math.max(0, Math.floor(Number(count) || 0));
+    if (!stacks) return '';
+    const def = PASSIVE_ORB_DEFS[orbId];
+    if (!def || !(def.perStackMultiplier > 0)) return '';
+    const totalMultiplier = Math.pow(def.perStackMultiplier, stacks);
+    switch (orbId) {
+        case 'vitality':
+            return `最大HP ${formatPassiveOrbPercent(totalMultiplier)}`;
+        case 'fury':
+            return `攻撃力 ${formatPassiveOrbPercent(totalMultiplier)}・与ダメージ ${formatPassiveOrbPercent(totalMultiplier)}`;
+        case 'aegis': {
+            const damageTakenMul = totalMultiplier > 0 ? 1 / totalMultiplier : 1;
+            return `防御力 ${formatPassiveOrbPercent(totalMultiplier)}・被ダメージ ${formatPassiveOrbProduct(damageTakenMul)}`;
+        }
+        case 'focus':
+            return `スキル威力 ${formatPassiveOrbPercent(totalMultiplier)}・命中率 ${formatPassiveOrbPercent(totalMultiplier)}`;
+        case 'fortune':
+            return `会心ダメージ ${formatPassiveOrbPercent(totalMultiplier)}・回避率 ${formatPassiveOrbPercent(totalMultiplier)}`;
+        default:
+            return '';
+    }
+}
 
 const ENEMY_TYPE_DEFS = {
     normal: { id: 'normal', label: '通常', description: '特別な行動は行わない。', weight: 0, color: '#2d3436' },
@@ -4355,6 +4464,13 @@ function showSelectionScreen(opts = {}) {
 
     restoreSandboxSnapshotIfNeeded();
 
+    // 選択画面に戻る前にモーダルを確実に閉じる
+    closeModal(itemsModal);
+    closeModal(skillsModal);
+    closeModal(statusModal);
+    closeModal(enemyInfoModal);
+    closeModal(rareChestModal);
+
     // 画面表示切り替え
     if (gameScreen) gameScreen.style.display = 'none';
     const tb = document.getElementById('toolbar');
@@ -6274,19 +6390,39 @@ function updateModalBodyState() {
 }
 function openModal(el) {
     if (!el) return;
+    const alreadyOpen = el.classList ? el.classList.contains('modal--open') : (el.style.display === 'flex');
+    if (el.classList && !alreadyOpen) {
+        el.classList.add('modal--open');
+    }
     if (el.style.display !== 'flex') {
         el.style.display = 'flex';
-        __openModalCount++;
-        updateModalBodyState();
     }
+    if (typeof el.setAttribute === 'function') {
+        el.setAttribute('aria-hidden', 'false');
+    }
+    if (!alreadyOpen) {
+        __openModalCount++;
+    }
+    updateModalBodyState();
 }
 function closeModal(el) {
     if (!el) return;
-    if (el.style.display !== 'none') {
-        el.style.display = 'none';
-        __openModalCount = Math.max(0, __openModalCount - 1);
-        updateModalBodyState();
+    const hadClass = el.classList ? el.classList.contains('modal--open') : false;
+    const displayed = el.style.display !== 'none';
+    if (!hadClass && !displayed) return;
+    if (el.classList) {
+        el.classList.remove('modal--open');
     }
+    if (displayed) {
+        el.style.display = 'none';
+    }
+    if (typeof el.setAttribute === 'function') {
+        el.setAttribute('aria-hidden', 'true');
+    }
+    if (hadClass || displayed) {
+        __openModalCount = Math.max(0, __openModalCount - 1);
+    }
+    updateModalBodyState();
 }
 let items = [];
 let POTION_COUNT = 5;
@@ -13270,6 +13406,7 @@ function updateUI() {
 
     // Update item modal - fix NaN issue
     const skillCharmCounts = ensureSkillCharmInventory();
+    const passiveOrbStore = ensurePassiveOrbInventory();
     const potion30Count = player.inventory?.potion30 || 0;
     const hpBoostCount = player.inventory?.hpBoost || 0;
     const atkBoostCount = player.inventory?.atkBoost || 0;
@@ -13278,6 +13415,22 @@ function updateUI() {
     const atkBoostMajorCount = player.inventory?.atkBoostMajor || 0;
     const defBoostMajorCount = player.inventory?.defBoostMajor || 0;
     const spElixirCount = player.inventory?.spElixir || 0;
+    const passiveOrbEntries = PASSIVE_ORB_IDS.map(id => {
+        const def = PASSIVE_ORB_DEFS[id];
+        const raw = Number(passiveOrbStore?.[id]);
+        const count = Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : 0;
+        return {
+            id,
+            label: def?.label || id,
+            count,
+            effectText: count > 0 ? describePassiveOrbEffect(id, count) : '',
+        };
+    });
+    const ownedPassiveOrbs = passiveOrbEntries.filter(entry => entry.count > 0);
+    const totalPassiveOrbCount = ownedPassiveOrbs.reduce((sum, entry) => sum + entry.count, 0);
+    const uniquePassiveOrbCount = ownedPassiveOrbs.length;
+    const passiveOrbModifiers = getPassiveOrbModifiers() || {};
+    const passiveOrbAggregateEntries = buildPassiveOrbAggregateEntries(passiveOrbModifiers);
 
     if (invPotion30) invPotion30.textContent = potion30Count;
     if (invHpBoost) invHpBoost.textContent = hpBoostCount;
@@ -13287,6 +13440,45 @@ function updateUI() {
     if (invAtkBoostMajor) invAtkBoostMajor.textContent = atkBoostMajorCount;
     if (invDefBoostMajor) invDefBoostMajor.textContent = defBoostMajorCount;
     if (invSpElixir) invSpElixir.textContent = spElixirCount;
+    if (passiveOrbSummaryEl) {
+        passiveOrbSummaryEl.textContent = totalPassiveOrbCount > 0
+            ? `合計 ${totalPassiveOrbCount}個（${uniquePassiveOrbCount}種）`
+            : 'パッシブオーブを所持していません。';
+    }
+    if (passiveOrbAggregateEl) {
+        passiveOrbAggregateEl.innerHTML = passiveOrbAggregateEntries.length
+            ? passiveOrbAggregateEntries.map(entry => {
+                const label = escapeHtml(entry.label);
+                const value = escapeHtml(entry.value);
+                return `
+                <div class="passive-orb-aggregate__item">
+                    <span class="passive-orb-aggregate__label">${label}</span>
+                    <span class="passive-orb-aggregate__value">${value}</span>
+                </div>
+                `.trim();
+            }).join('')
+            : '<div class="passive-orb-empty">効果はありません。</div>';
+    }
+    if (passiveOrbListEl) {
+        passiveOrbListEl.innerHTML = ownedPassiveOrbs.length
+            ? ownedPassiveOrbs.map(entry => {
+                const label = escapeHtml(entry.label);
+                const countText = escapeHtml(entry.count);
+                const effectMarkup = entry.effectText
+                    ? `<span class="passive-orb-effect">${escapeHtml(entry.effectText)}</span>`
+                    : '';
+                return `
+                <div class="item-row passive-orb-row">
+                    <div class="passive-orb-row__info">
+                        <span class="passive-orb-name">${label}</span>
+                        ${effectMarkup}
+                    </div>
+                    <span class="passive-orb-count">x${countText}</span>
+                </div>
+                `.trim();
+            }).join('')
+            : '<div class="passive-orb-empty">パッシブオーブを所持していません。</div>';
+    }
     if (skillCharmList) renderSkillCharmInventory(skillCharmCounts);
     if (eatPotion30Btn) eatPotion30Btn.style.display = satietySystemActive ? '' : 'none';
     if (throwPotion30Btn) {
@@ -13366,6 +13558,29 @@ function updateUI() {
             .filter(Boolean)
             .join(' / ');
         modalSkillCharms.textContent = summary || 'なし';
+    }
+    if (modalPassiveOrbSummary) {
+        modalPassiveOrbSummary.textContent = totalPassiveOrbCount > 0
+            ? `合計 ${totalPassiveOrbCount}個（${uniquePassiveOrbCount}種）`
+            : 'なし';
+    }
+    if (modalPassiveOrbAggregate) {
+        if (passiveOrbAggregateEntries.length) {
+            modalPassiveOrbAggregate.innerHTML = passiveOrbAggregateEntries.map(entry => {
+                const label = escapeHtml(entry.label);
+                const value = escapeHtml(entry.value);
+                return `
+                <div class="passive-orb-aggregate__item passive-orb-aggregate__item--compact">
+                    <span class="passive-orb-aggregate__label">${label}</span>
+                    <span class="passive-orb-aggregate__value">${value}</span>
+                </div>
+                `.trim();
+            }).join('');
+            modalPassiveOrbAggregate.style.display = '';
+        } else {
+            modalPassiveOrbAggregate.innerHTML = '';
+            modalPassiveOrbAggregate.style.display = 'none';
+        }
     }
     if (modalWorld) {
         if (currentMode === 'blockdim') {

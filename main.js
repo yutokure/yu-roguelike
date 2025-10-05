@@ -384,6 +384,7 @@ const invAtkBoostMajor = document.getElementById('inv-atk-boost-major');
 const invDefBoostMajor = document.getElementById('inv-def-boost-major');
 const invSpElixir = document.getElementById('inv-sp-elixir');
 const skillCharmList = document.getElementById('skill-charm-list');
+let lastSkillCharmMarkup = '';
 const usePotion30Btn = document.getElementById('use-potion30');
 const eatPotion30Btn = document.getElementById('eat-potion30');
 const offerPotion30Btn = document.getElementById('offer-potion30');
@@ -13084,7 +13085,10 @@ function updateUI() {
 }
 
 function renderSkillCharmInventory(charmCounts = {}) {
-    if (!skillCharmList) return;
+    if (!skillCharmList) {
+        lastSkillCharmMarkup = '';
+        return;
+    }
     const effectIds = Object.keys(SKILL_EFFECT_DEFS);
     const escapeHtml = (value) => String(value)
         .replace(/&/g, '&amp;')
@@ -13100,15 +13104,12 @@ function renderSkillCharmInventory(charmCounts = {}) {
             count
         };
     }).filter(entry => entry.count > 0);
-    if (!entries.length) {
-        skillCharmList.innerHTML = '<div class="skill-charm-empty">所持していません。</div>';
-        return;
-    }
-    skillCharmList.innerHTML = entries.map(entry => {
-        const label = escapeHtml(entry.label);
-        const count = escapeHtml(entry.count);
-        const effect = escapeHtml(entry.effectId);
-        return `
+    const markup = entries.length
+        ? entries.map(entry => {
+            const label = escapeHtml(entry.label);
+            const count = escapeHtml(entry.count);
+            const effect = escapeHtml(entry.effectId);
+            return `
             <div class="skill-charm-item">
                 <div class="skill-charm-item__info">
                     <span class="skill-charm-name">${label}</span>
@@ -13117,7 +13118,13 @@ function renderSkillCharmInventory(charmCounts = {}) {
                 <button type="button" class="skill-charm-use" data-effect="${effect}">使用</button>
             </div>
         `;
-    }).join('');
+        }).join('')
+        : '<div class="skill-charm-empty">所持していません。</div>';
+
+    if (markup === lastSkillCharmMarkup) return;
+
+    skillCharmList.innerHTML = markup;
+    lastSkillCharmMarkup = markup;
 }
 
 function useSkillCharm(effectId) {

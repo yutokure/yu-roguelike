@@ -13139,12 +13139,19 @@ function useSkillCharm(effectId) {
         return false;
     }
     incrementSkillCharm(effectId, -1);
-    activateSkillEffect(effectId, SKILL_CHARM_DURATION_TURNS, { silent: true });
     const label = SKILL_EFFECT_DEFS[effectId]?.label || effectId;
-    addMessage(`${label}の護符が発動！効果は${SKILL_CHARM_DURATION_TURNS}ターン持続する。`);
-    playSfx('pickup');
     updateUI();
     saveAll();
+    closeModal(itemsModal);
+    closeModal(skillsModal);
+    const delay = Math.max(0, Number(SKILL_EXECUTION_DELAY_MS) || 0);
+    setTimeout(() => {
+        activateSkillEffect(effectId, SKILL_CHARM_DURATION_TURNS, { silent: true });
+        addMessage(`${label}の護符が発動！効果は${SKILL_CHARM_DURATION_TURNS}ターン持続する。`);
+        playSfx('pickup');
+        updateUI();
+        saveAll();
+    }, delay);
     return true;
 }
 

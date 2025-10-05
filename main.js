@@ -935,8 +935,7 @@ function hatenaApplyBombDamage(ratio = 0.8) {
     const clampRatio = Math.max(0, Number(ratio) || 0);
     if (clampRatio <= 0) return { outcome: 'none', amount: 0 };
     const baseDamage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * clampRatio));
-    const passiveMods = getPassiveOrbModifiers();
-    const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
+    const scaledDamage = applyPassiveDamageReduction('bomb:hatena', baseDamage);
     const hazardResult = resolveDomainInteraction({
         amount: scaledDamage,
         baseEffect: 'damage',
@@ -978,6 +977,13 @@ function hatenaApplyRandomStatus() {
     const statusPool = ['poison', 'paralysis', 'abilityDown', 'levelDown'];
     const shuffled = statusPool.sort(() => Math.random() - 0.5);
     for (const status of shuffled) {
+        const chance = computeStatusInflictionChance(status, 1);
+        if (chance <= 0) {
+            continue;
+        }
+        if (Math.random() >= chance) {
+            continue;
+        }
         if (applyPlayerStatusEffect(status, { silent: false })) {
             return status;
         }
@@ -1092,10 +1098,14 @@ function triggerHatenaBlock(block) {
             break;
         }
         case 'poison': {
-            const applied = applyPlayerStatusEffect('poison', { duration: 5 });
+            const chance = computeStatusInflictionChance('poison', 1);
+            let applied = false;
+            if (chance > 0 && Math.random() < chance) {
+                applied = applyPlayerStatusEffect('poison', { duration: 5 });
+            }
             hatenaEvent.statusAttempted = true;
-            hatenaEvent.statusApplied = !!applied;
             hatenaEvent.statusId = 'poison';
+            hatenaEvent.statusApplied = !!applied;
             if (!applied) {
                 hatenaEvent.classification = 'positive';
                 addMessage('毒は無効化された。');
@@ -1128,7 +1138,14 @@ function triggerHatenaBlock(block) {
             break;
         }
         case 'abilityDown': {
-            const applied = applyPlayerStatusEffect('abilityDown', { duration: 5 });
+            const chance = computeStatusInflictionChance('abilityDown', 1);
+            let applied = false;
+            if (chance > 0 && Math.random() < chance) {
+                applied = applyPlayerStatusEffect('abilityDown', { duration: 5 });
+            }
+            hatenaEvent.statusAttempted = true;
+            hatenaEvent.statusId = 'abilityDown';
+            hatenaEvent.statusApplied = !!applied;
             if (applied) {
                 hatenaEvent.abilityApplied = 'down';
                 hatenaEvent.classification = 'negative';
@@ -4958,12 +4975,12 @@ function notifyPlayerDomainChange() {
 function applyDomainStatusAuraToPlayer() {
     const aggregate = getPlayerDomainAggregate();
     if (!aggregate.statusAura) return;
-    const chance = 0.35;
-    if (Math.random() >= chance) return;
     const statusPool = getDomainStatusPool(['poison', 'paralysis', 'abilityDown', 'levelDown'], aggregate);
     const available = statusPool.filter(id => !isPlayerStatusActive(id));
     const source = available.length ? available : statusPool;
     const target = source[Math.floor(Math.random() * source.length)];
+    const chance = computeStatusInflictionChance(target, 0.35);
+    if (chance <= 0 || Math.random() >= chance) return;
     applyPlayerStatusEffect(target);
 }
 
@@ -5368,6 +5385,10 @@ function getPassiveOrbModifiers() {
         return cachedPassiveOrbModifiers;
     }
 
+    const chanceMultipliers = Object.create(null);
+    const damageReductionMultipliers = Object.create(null);
+    let abilityDownPenaltyMul = 1;
+
     const baseModifiers = {
         attackMul: 1,
         defenseMul: 1,
@@ -5378,6 +5399,9 @@ function getPassiveOrbModifiers() {
         skillPowerMul: 1,
         accuracyMul: 1,
         evasionMul: 1,
+        chanceMultipliers,
+        damageReductionMultipliers,
+        abilityDownPenaltyMul,
     };
 
     for (const id of PASSIVE_ORB_IDS) {
@@ -5410,6 +5434,52 @@ function getPassiveOrbModifiers() {
             default:
                 break;
         }
+
+        if (def && typeof def.perStackChanceMultipliers === 'object' && def.perStackChanceMultipliers) {
+            for (const [key, raw] of Object.entries(def.perStackChanceMultipliers)) {
+                if (typeof key !== 'string' || !key) continue;
+                const value = Number(raw);
+                if (!Number.isFinite(value)) continue;
+                if (value <= 0) {
+                    chanceMultipliers[key] = 0;
+                    continue;
+                }
+                const perStackValue = Math.pow(value, stacks);
+                if (!Number.isFinite(perStackValue)) continue;
+                if (chanceMultipliers[key] === 0) continue;
+                const current = Number.isFinite(chanceMultipliers[key]) ? chanceMultipliers[key] : 1;
+                chanceMultipliers[key] = current * perStackValue;
+            }
+        }
+
+        if (def && typeof def.perStackDamageReductionMultipliers === 'object' && def.perStackDamageReductionMultipliers) {
+            for (const [key, raw] of Object.entries(def.perStackDamageReductionMultipliers)) {
+                if (typeof key !== 'string' || !key) continue;
+                const value = Number(raw);
+                if (!Number.isFinite(value)) continue;
+                if (value <= 0) {
+                    damageReductionMultipliers[key] = 0;
+                    continue;
+                }
+                const perStackValue = Math.pow(value, stacks);
+                if (!Number.isFinite(perStackValue)) continue;
+                if (damageReductionMultipliers[key] === 0) continue;
+                const current = Number.isFinite(damageReductionMultipliers[key]) ? damageReductionMultipliers[key] : 1;
+                damageReductionMultipliers[key] = current * perStackValue;
+            }
+        }
+
+        if (Number.isFinite(def?.perStackAbilityDownPenaltyMul)) {
+            const value = def.perStackAbilityDownPenaltyMul;
+            if (value <= 0) {
+                abilityDownPenaltyMul = 0;
+            } else if (abilityDownPenaltyMul !== 0) {
+                const perStackValue = Math.pow(value, stacks);
+                if (Number.isFinite(perStackValue)) {
+                    abilityDownPenaltyMul *= perStackValue;
+                }
+            }
+        }
     }
 
     baseModifiers.attackMul = Number.isFinite(baseModifiers.attackMul) && baseModifiers.attackMul > 0 ? baseModifiers.attackMul : 1;
@@ -5422,9 +5492,96 @@ function getPassiveOrbModifiers() {
     baseModifiers.accuracyMul = Number.isFinite(baseModifiers.accuracyMul) && baseModifiers.accuracyMul > 0 ? baseModifiers.accuracyMul : 1;
     baseModifiers.evasionMul = Number.isFinite(baseModifiers.evasionMul) && baseModifiers.evasionMul > 0 ? baseModifiers.evasionMul : 1;
 
+    const sanitizedChanceMultipliers = Object.create(null);
+    for (const key of Object.keys(chanceMultipliers)) {
+        const value = Number(chanceMultipliers[key]);
+        if (!Number.isFinite(value)) continue;
+        sanitizedChanceMultipliers[key] = value <= 0 ? 0 : value;
+    }
+
+    const sanitizedDamageReductionMultipliers = Object.create(null);
+    for (const key of Object.keys(damageReductionMultipliers)) {
+        const value = Number(damageReductionMultipliers[key]);
+        if (!Number.isFinite(value)) continue;
+        sanitizedDamageReductionMultipliers[key] = value <= 0 ? 0 : value;
+    }
+
+    baseModifiers.chanceMultipliers = Object.freeze(sanitizedChanceMultipliers);
+    baseModifiers.damageReductionMultipliers = Object.freeze(sanitizedDamageReductionMultipliers);
+    baseModifiers.abilityDownPenaltyMul = Number.isFinite(abilityDownPenaltyMul) && abilityDownPenaltyMul >= 0
+        ? abilityDownPenaltyMul
+        : 1;
+
     cachedPassiveOrbSignature = signature;
     cachedPassiveOrbModifiers = Object.freeze(baseModifiers);
     return cachedPassiveOrbModifiers;
+}
+
+function accumulatePassiveMultipliers(map, type) {
+    if (!map || typeof map !== 'object') return 1;
+    if (typeof type !== 'string') return 1;
+    const trimmed = type.trim();
+    if (!trimmed) return 1;
+    const segments = trimmed.split(':').map(part => part.trim()).filter(Boolean);
+    if (!segments.length) {
+        const raw = map[trimmed];
+        if (!Number.isFinite(raw)) return 1;
+        if (raw <= 0) return 0;
+        return raw;
+    }
+    let multiplier = 1;
+    let prefix = '';
+    for (const segment of segments) {
+        prefix = prefix ? `${prefix}:${segment}` : segment;
+        const raw = map[prefix];
+        if (!Number.isFinite(raw)) continue;
+        if (raw <= 0) {
+            return 0;
+        }
+        multiplier *= raw;
+    }
+    return multiplier;
+}
+
+function applyPassiveChanceMultiplier(type, baseChance) {
+    const chance = Math.max(0, Number(baseChance) || 0);
+    if (chance <= 0) return 0;
+    const passive = getPassiveOrbModifiers() || {};
+    const map = passive.chanceMultipliers || null;
+    const multiplier = accumulatePassiveMultipliers(map, type);
+    if (multiplier === 0) return 0;
+    let adjusted = chance;
+    if (Number.isFinite(multiplier)) {
+        adjusted *= multiplier;
+    }
+    if (!Number.isFinite(adjusted) || adjusted <= 0) return 0;
+    return adjusted >= 1 ? 1 : adjusted;
+}
+
+function applyPassiveDamageReduction(type, baseValue) {
+    const value = Math.max(0, Number(baseValue) || 0);
+    if (value <= 0) return 0;
+    const passive = getPassiveOrbModifiers() || {};
+    let multiplier = Number.isFinite(passive.damageTakenMul) && passive.damageTakenMul >= 0
+        ? passive.damageTakenMul
+        : 1;
+    if (multiplier <= 0) return 0;
+    const extra = accumulatePassiveMultipliers(passive.damageReductionMultipliers || null, type);
+    if (extra === 0) return 0;
+    if (Number.isFinite(extra)) {
+        multiplier *= extra;
+    }
+    if (!Number.isFinite(multiplier)) return 0;
+    const adjusted = value * multiplier;
+    if (!Number.isFinite(adjusted) || adjusted <= 0) return 0;
+    return adjusted;
+}
+
+function computeStatusInflictionChance(effectId, baseChance = 1) {
+    if (typeof effectId === 'string' && effectId) {
+        return applyPassiveChanceMultiplier(`status:${effectId}`, baseChance);
+    }
+    return applyPassiveChanceMultiplier('status', baseChance);
 }
 
 function ensureSkillCharmInventory() {
@@ -5778,7 +5935,20 @@ function getAbilityStatusMultiplier() {
     if (isPlayerStatusActive('abilityDown')) {
         const down = PLAYER_STATUS_EFFECTS.abilityDown?.statMultiplier;
         if (Number.isFinite(down) && down > 0) {
-            multiplier *= down;
+            const penaltyWidth = 1 - down;
+            const passive = getPassiveOrbModifiers();
+            const penaltyMul = Number.isFinite(passive?.abilityDownPenaltyMul) && passive.abilityDownPenaltyMul >= 0
+                ? passive.abilityDownPenaltyMul
+                : 1;
+            const adjustedPenalty = penaltyMul === 0 ? 0 : penaltyWidth * penaltyMul;
+            let applied = 1 - adjustedPenalty;
+            if (!Number.isFinite(applied)) {
+                applied = down;
+            }
+            if (applied < 0) {
+                applied = 0;
+            }
+            multiplier *= applied;
         }
     }
     return multiplier > 0 ? multiplier : 0;
@@ -5895,8 +6065,7 @@ function processPlayerStatusTurnStart() {
         const poisonDef = PLAYER_STATUS_EFFECTS.poison;
         const ratio = Number.isFinite(poisonDef.damageRatio) ? poisonDef.damageRatio : 0.1;
         const baseDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
-        const passiveMods = getPassiveOrbModifiers();
-        const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
+        const scaledDamage = applyPassiveDamageReduction('poison:status', baseDamage);
         const statusResult = resolveDomainInteraction({
             amount: scaledDamage,
             baseEffect: 'damage',
@@ -13618,8 +13787,7 @@ function calculateRareChestExplosionDamage() {
 function handleRareChestExplosion(diff) {
     playSfx('bomb');
     const baseDamage = calculateRareChestExplosionDamage();
-    const passiveMods = getPassiveOrbModifiers();
-    const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
+    const scaledDamage = applyPassiveDamageReduction('bomb:rareChest', baseDamage);
     const hazardResult = resolveDomainInteraction({
         amount: scaledDamage,
         baseEffect: 'damage',
@@ -14447,8 +14615,7 @@ function applyPostMoveEffects() {
                 const ratio = calculatePoisonFloorDamageRatio();
                 if (ratio > 0) {
                     const baseDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
-                    const passiveMods = getPassiveOrbModifiers();
-                    const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
+                    const scaledDamage = applyPassiveDamageReduction('poison:floor', baseDamage);
                     const hazardResult = resolveDomainInteraction({
                         amount: scaledDamage,
                         baseEffect: 'damage',
@@ -14492,8 +14659,7 @@ function applyPostMoveEffects() {
                 playSfx('bomb');
                 if (ratio > 0) {
                     const baseDamage = Math.max(1, Math.ceil(getEffectivePlayerMaxHp() * ratio));
-                    const passiveMods = getPassiveOrbModifiers();
-                    const scaledDamage = baseDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1);
+                    const scaledDamage = applyPassiveDamageReduction('bomb:floor', baseDamage);
                     const hazardResult = resolveDomainInteraction({
                         amount: scaledDamage,
                         baseEffect: 'damage',
@@ -15045,8 +15211,15 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
 
     switch (typeDef.id) {
         case 'status-caster': {
-            const chance = 0.45;
-            if (Math.random() >= chance) break;
+            let triggerChance = applyPassiveChanceMultiplier('enemySpecial:status-caster', 0.45);
+            if (triggerChance <= 0) {
+                addMessage('オーブの加護で状態異常攻撃を無効化した！');
+                break;
+            }
+            if (Math.random() >= triggerChance) {
+                addMessage('オーブの加護で状態異常攻撃を防いだ！');
+                break;
+            }
             if (suppressed) {
                 addMessage('レベル差で状態異常を防いだ！');
                 break;
@@ -15055,12 +15228,24 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
             const inactive = statusOptions.filter(id => !isPlayerStatusActive(id));
             const pool = inactive.length ? inactive : statusOptions;
             const targetStatus = pool[Math.floor(Math.random() * pool.length)];
+            const statusChance = computeStatusInflictionChance(targetStatus, 1);
+            if (statusChance <= 0 || Math.random() >= statusChance) {
+                addMessage('オーブの加護で状態異常を防いだ！');
+                break;
+            }
             applyPlayerStatusEffect(targetStatus);
             break;
         }
         case 'warper': {
-            const chance = 0.35;
-            if (Math.random() >= chance) break;
+            let warpChance = applyPassiveChanceMultiplier('enemySpecial:warper', 0.35);
+            if (warpChance <= 0) {
+                addMessage('オーブの加護で転移攻撃を無効化した！');
+                break;
+            }
+            if (Math.random() >= warpChance) {
+                addMessage('オーブの加護で転移攻撃を防いだ！');
+                break;
+            }
             if (suppressed) {
                 addMessage('レベル差で転移攻撃を耐えた！');
                 break;
@@ -15069,8 +15254,16 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
             break;
         }
         case 'executioner': {
-            const chance = 0.1;
-            if (Math.random() >= chance) break;
+            let lethalChance = applyPassiveChanceMultiplier('enemySpecial:executioner:instantDeath', 0.1);
+            lethalChance = applyPassiveChanceMultiplier('instantDeath', lethalChance);
+            if (lethalChance <= 0) {
+                addMessage('オーブの加護で即死攻撃を無効化した！');
+                break;
+            }
+            if (Math.random() >= lethalChance) {
+                addMessage('オーブの加護で即死攻撃を耐えた！');
+                break;
+            }
             if (suppressed) {
                 addMessage('レベル差で即死攻撃を無効化した！');
                 break;
@@ -15084,6 +15277,15 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
         case 'knockback': {
             if (suppressed) {
                 addMessage('レベル差で吹き飛ばしを踏ん張った！');
+                break;
+            }
+            let knockbackChance = applyPassiveChanceMultiplier('enemySpecial:knockback', 1);
+            if (knockbackChance <= 0) {
+                addMessage('オーブの加護で吹き飛ばしを無効化した！');
+                break;
+            }
+            if (Math.random() >= knockbackChance) {
+                addMessage('オーブの加護で吹き飛ばしを防いだ！');
                 break;
             }
             applyKnockbackFromEnemy(enemy, stepX, stepY);

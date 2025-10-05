@@ -15239,7 +15239,10 @@ useSpElixirBtn && useSpElixirBtn.addEventListener('click', () => {
 });
 
 skillCharmList && skillCharmList.addEventListener('click', (event) => {
-    const target = event.target instanceof HTMLElement ? event.target.closest('.skill-charm-use') : null;
+    let origin = event.target instanceof Element
+        ? event.target
+        : (event.target && 'parentElement' in event.target ? event.target.parentElement : null);
+    const target = origin && 'closest' in origin ? origin.closest('.skill-charm-use') : null;
     if (!target) return;
     const effectId = target.dataset.effect;
     if (effectId) {

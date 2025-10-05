@@ -5483,6 +5483,70 @@ function incrementPassiveOrb(orbId, amount = 1) {
     return next;
 }
 
+function pickRandomPassiveOrbIdByWeight() {
+    const weighted = [];
+    let totalWeight = 0;
+    for (const id of PASSIVE_ORB_IDS) {
+        const def = PASSIVE_ORB_DEFS[id];
+        const weight = Number.isFinite(def?.dropWeight) && def.dropWeight > 0 ? def.dropWeight : 0;
+        if (weight <= 0) continue;
+        totalWeight += weight;
+        weighted.push({ id, weight });
+    }
+    if (!weighted.length || totalWeight <= 0) {
+        return PASSIVE_ORB_IDS[0] || null;
+    }
+    let roll = Math.random() * totalWeight;
+    for (const entry of weighted) {
+        roll -= entry.weight;
+        if (roll <= 0) return entry.id;
+    }
+    return weighted[weighted.length - 1].id;
+}
+
+function grantPassiveOrb(source = 'unknown') {
+    const orbId = pickRandomPassiveOrbIdByWeight();
+    if (!orbId) return null;
+    const nextCount = incrementPassiveOrb(orbId, 1);
+    const def = PASSIVE_ORB_DEFS[orbId];
+    const label = def?.label || orbId;
+    const effectText = describePassiveOrbEffect(orbId, nextCount);
+    const detailParts = [];
+    if (effectText) detailParts.push(effectText);
+    detailParts.push(`所持数 ${nextCount}`);
+    const detail = detailParts.length ? `（${detailParts.join(' / ')}）` : '';
+    addMessage(`パッシブオーブ「${label}」を手に入れた！${detail}`);
+    recordAchievementEvent('passive_orb_obtained', {
+        source: source || 'unknown',
+        orbId,
+        count: nextCount
+    });
+    updateUI();
+    saveAll();
+    return { orbId, count: nextCount };
+}
+
+function maybeGrantPassiveOrb(source, chance = 1) {
+    const numericChance = Number(chance);
+    if (!Number.isFinite(numericChance) || numericChance <= 0) {
+        return null;
+    }
+    const clampedChance = Math.min(1, Math.max(0, numericChance));
+    if (Math.random() < clampedChance) {
+        return grantPassiveOrb(source);
+    }
+    return null;
+}
+
+function tryGrantBossPassiveOrbReward() {
+    const recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    const playerLevel = Number.isFinite(player?.level) ? player.level : null;
+    if (!Number.isFinite(recommended) || !Number.isFinite(playerLevel)) return null;
+    const gap = recommended - playerLevel;
+    if (gap < -4) return null;
+    return maybeGrantPassiveOrb('bossDefeat', 0.5);
+}
+
 let cachedPassiveOrbSignature = null;
 let cachedPassiveOrbModifiers = null;
 
@@ -6876,6 +6940,9 @@ function applyDamageToEnemyFromSkill(enemy, damage, { crit = false, popupColor =
         addDefeatedEnemy(enemy);
         gainSp(1, { silent: true });
         grantExpFromEnemy(enemy.level || 1, enemy.boss || false);
+        if (enemy.boss) {
+            tryGrantBossPassiveOrbReward();
+        }
         if (enemy.boss) bossAlive = false;
         const idx = enemies.indexOf(enemy);
         if (idx >= 0) enemies.splice(idx, 1);
@@ -14046,30 +14113,40 @@ function grantNormalChestReward({ rarity = 'normal' } = {}) {
     const prefix = rarity === 'rare' ? '黄金の宝箱を開けた！' : '宝箱を開けた！';
     playSfx('pickup');
     const roll = Math.random();
+    let rewardInfo = null;
     if (roll < 0.9) {
         incrementInventoryCounter('potion30', 1);
         addMessage(`${prefix}HP30%回復ポーションを手に入れた！`);
-        return { rewardType: 'potion30', category: 'potion' };
+        rewardInfo = { rewardType: 'potion30', category: 'potion' };
+    } else {
+        const boostType = Math.floor(Math.random() * 3);
+        if (boostType === 0) {
+            incrementInventoryCounter('hpBoost', 1);
+            addMessage(`${prefix}最大HP強化アイテムを手に入れた！`);
+            rewardInfo = { rewardType: 'hpBoost', category: 'boost' };
+        } else if (boostType === 1) {
+            incrementInventoryCounter('atkBoost', 1);
+            addMessage(`${prefix}攻撃力強化アイテムを手に入れた！`);
+            rewardInfo = { rewardType: 'atkBoost', category: 'boost' };
+        } else {
+            incrementInventoryCounter('defBoost', 1);
+            addMessage(`${prefix}防御力強化アイテムを手に入れた！`);
+            rewardInfo = { rewardType: 'defBoost', category: 'boost' };
+        }
     }
-    const boostType = Math.floor(Math.random() * 3);
-    if (boostType === 0) {
-        incrementInventoryCounter('hpBoost', 1);
-        addMessage(`${prefix}最大HP強化アイテムを手に入れた！`);
-        return { rewardType: 'hpBoost', category: 'boost' };
+    if (rarity === 'rare') {
+        const passiveOrbReward = maybeGrantPassiveOrb('rareChest', 0.1);
+        if (passiveOrbReward) {
+            rewardInfo = { ...(rewardInfo || {}), bonusPassiveOrb: passiveOrbReward };
+        }
     }
-    if (boostType === 1) {
-        incrementInventoryCounter('atkBoost', 1);
-        addMessage(`${prefix}攻撃力強化アイテムを手に入れた！`);
-        return { rewardType: 'atkBoost', category: 'boost' };
-    }
-    incrementInventoryCounter('defBoost', 1);
-    addMessage(`${prefix}防御力強化アイテムを手に入れた！`);
-    return { rewardType: 'defBoost', category: 'boost' };
+    return rewardInfo;
 }
 
 function grantRareChestSpecialReward() {
     playSfx('pickup');
     const roll = Math.random();
+    let rewardInfo = null;
     if (roll < 0.4) {
         const options = ['hpBoostMajor', 'atkBoostMajor', 'defBoostMajor'];
         const key = options[Math.floor(Math.random() * options.length)];
@@ -14083,19 +14160,24 @@ function grantRareChestSpecialReward() {
             message = `防御力+${MAJOR_DEF_BOOST_VALUE}の護りの盾札を手に入れた！`;
         }
         addMessage(`黄金の宝箱から${message}`);
-        return { rewardType: key, category: 'majorBoost' };
-    }
-    if (roll < 0.75) {
+        rewardInfo = { rewardType: key, category: 'majorBoost' };
+    } else if (roll < 0.75) {
         const effects = Object.keys(SKILL_EFFECT_DEFS);
         const effectId = effects[Math.floor(Math.random() * effects.length)];
         incrementSkillCharm(effectId, 1);
         const effectName = SKILL_EFFECT_DEFS[effectId]?.label || effectId;
         addMessage(`黄金の宝箱からスキル効果「${effectName}」の護符を手に入れた！（${SKILL_CHARM_DURATION_TURNS}ターン）`);
-        return { rewardType: `skillCharm:${effectId}`, category: 'skillCharm' };
+        rewardInfo = { rewardType: `skillCharm:${effectId}`, category: 'skillCharm' };
+    } else {
+        incrementInventoryCounter('spElixir', 1);
+        addMessage('黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。');
+        rewardInfo = { rewardType: 'spElixir', category: 'spItem' };
     }
-    incrementInventoryCounter('spElixir', 1);
-    addMessage('黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。');
-    return { rewardType: 'spElixir', category: 'spItem' };
+    const passiveOrbReward = maybeGrantPassiveOrb('rareChest', 0.1);
+    if (passiveOrbReward) {
+        rewardInfo = { ...(rewardInfo || {}), bonusPassiveOrb: passiveOrbReward };
+    }
+    return rewardInfo;
 }
 
 function completeRareChestSuccess(diff) {
@@ -14107,7 +14189,12 @@ function completeRareChestSuccess(diff) {
     } else {
         rewardInfo = grantRareChestSpecialReward();
     }
-    recordAchievementEvent('chest_opened', { rarity: 'rare', outcome: 'success', reward: rewardInfo?.rewardType || null });
+    recordAchievementEvent('chest_opened', {
+        rarity: 'rare',
+        outcome: 'success',
+        reward: rewardInfo?.rewardType || null,
+        passiveOrb: rewardInfo?.bonusPassiveOrb?.orbId || null
+    });
     updateUI();
     saveAll();
 }
@@ -14168,7 +14255,12 @@ function openChest(chest) {
         const started = startRareChestMinigame(chest);
         if (!started) {
             const rewardInfo = grantNormalChestReward({ rarity: 'rare' });
-            recordAchievementEvent('chest_opened', { rarity: 'rare', outcome: 'fallback', reward: rewardInfo?.rewardType || null });
+            recordAchievementEvent('chest_opened', {
+                rarity: 'rare',
+                outcome: 'fallback',
+                reward: rewardInfo?.rewardType || null,
+                passiveOrb: rewardInfo?.bonusPassiveOrb?.orbId || null
+            });
             updateUI();
             saveAll();
             return true;
@@ -14177,7 +14269,11 @@ function openChest(chest) {
     }
 
     const rewardInfo = grantNormalChestReward({ rarity: 'normal' });
-    recordAchievementEvent('chest_opened', { rarity: 'normal', reward: rewardInfo?.rewardType || null });
+    recordAchievementEvent('chest_opened', {
+        rarity: 'normal',
+        reward: rewardInfo?.rewardType || null,
+        passiveOrb: rewardInfo?.bonusPassiveOrb?.orbId || null
+    });
     updateUI();
     saveAll();
     return true;
@@ -14326,6 +14422,7 @@ function performAttack(enemyAtTarget) {
             recordAchievementEvent('enemy_defeated', { boss: !!enemyAtTarget.boss, level: enemyAtTarget.level, enemy: sanitizeEnemySummary(enemyAtTarget) });
             if (enemyAtTarget.boss) {
                 recordAchievementEvent('boss_defeated', { level: enemyAtTarget.level, enemy: sanitizeEnemySummary(enemyAtTarget) });
+                tryGrantBossPassiveOrbReward();
             }
             if (enemyAtTarget.boss) bossAlive = false;
             enemies.splice(enemies.indexOf(enemyAtTarget), 1);

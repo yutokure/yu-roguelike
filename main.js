@@ -17518,6 +17518,75 @@ function createMiniGameDungeonApi() {
             },
             clampPosition(px, py, radius = 0) {
                 return clampPositionWithin(px, py, radius);
+            },
+            createCamera(options = {}) {
+                const viewTilesX = Math.max(3, Math.floor(Number(options.viewTilesX) || Math.floor(width / 2) || 15));
+                const viewTilesY = Math.max(3, Math.floor(Number(options.viewTilesY) || Math.floor(height / 2) || 11));
+                const desiredWidth = Math.floor(Number(options.viewWidth) || viewTilesX * tileSize);
+                const desiredHeight = Math.floor(Number(options.viewHeight) || viewTilesY * tileSize);
+                const viewWidth = Math.min(pixelWidth, Math.max(tileSize, desiredWidth));
+                const viewHeight = Math.min(pixelHeight, Math.max(tileSize, desiredHeight));
+                const camera = {
+                    x: 0,
+                    y: 0,
+                    width: viewWidth,
+                    height: viewHeight,
+                    setPosition(nx, ny) {
+                        const maxX = Math.max(0, pixelWidth - this.width);
+                        const maxY = Math.max(0, pixelHeight - this.height);
+                        const clampedX = Math.min(maxX, Math.max(0, Number.isFinite(nx) ? nx : this.x));
+                        const clampedY = Math.min(maxY, Math.max(0, Number.isFinite(ny) ? ny : this.y));
+                        this.x = clampedX;
+                        this.y = clampedY;
+                        return this;
+                    },
+                    setCenter(px, py) {
+                        const cx = Number.isFinite(px) ? px : this.x + this.width / 2;
+                        const cy = Number.isFinite(py) ? py : this.y + this.height / 2;
+                        return this.setPosition(cx - this.width / 2, cy - this.height / 2);
+                    },
+                    move(dx, dy) {
+                        const nx = this.x + (Number(dx) || 0);
+                        const ny = this.y + (Number(dy) || 0);
+                        return this.setPosition(nx, ny);
+                    },
+                    follow(target) {
+                        if (target && typeof target === 'object') {
+                            if (typeof target.getPosition === 'function') {
+                                const pos = target.getPosition();
+                                if (pos && typeof pos === 'object') {
+                                    return this.setCenter(pos.x, pos.y);
+                                }
+                            }
+                            if (Number.isFinite(target.x) && Number.isFinite(target.y)) {
+                                return this.setCenter(target.x, target.y);
+                            }
+                        }
+                        return this;
+                    },
+                    clamp() {
+                        return this.setPosition(this.x, this.y);
+                    },
+                    contains(px, py, margin = 0) {
+                        const m = Math.max(0, Number(margin) || 0);
+                        return px >= this.x - m && px <= this.x + this.width + m && py >= this.y - m && py <= this.y + this.height + m;
+                    },
+                    containsTile(tx, ty) {
+                        const center = toPixelCenter(tx, ty);
+                        return this.contains(center.x, center.y, tileSize * 0.5);
+                    },
+                    project(px, py) {
+                        return { x: px - this.x, y: py - this.y };
+                    },
+                    tileToScreen(tx, ty) {
+                        const center = toPixelCenter(tx, ty);
+                        return { x: center.x - this.x, y: center.y - this.y };
+                    },
+                    getBounds() {
+                        return { x: this.x, y: this.y, width: this.width, height: this.height };
+                    }
+                };
+                return camera;
             }
         };
         return stage;

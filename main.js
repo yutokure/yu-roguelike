@@ -1392,6 +1392,16 @@ const PLAYER_STATUS_EFFECTS = {
     levelDown: { id: 'levelDown', label: 'レベル低下', defaultDuration: 5, levelReduction: 3, badgeClass: 'status-badge--level' }
 };
 
+const PASSIVE_ORB_DEFS = Object.freeze({
+    vitality: Object.freeze({ id: 'vitality', label: '生命のオーブ', perStackMultiplier: 1.05, dropWeight: 6 }),
+    fury: Object.freeze({ id: 'fury', label: '猛攻のオーブ', perStackMultiplier: 1.07, dropWeight: 4 }),
+    aegis: Object.freeze({ id: 'aegis', label: '守護のオーブ', perStackMultiplier: 1.07, dropWeight: 4 }),
+    focus: Object.freeze({ id: 'focus', label: '集中のオーブ', perStackMultiplier: 1.05, dropWeight: 3 }),
+    fortune: Object.freeze({ id: 'fortune', label: '幸運のオーブ', perStackMultiplier: 1.04, dropWeight: 2 })
+});
+
+const PASSIVE_ORB_IDS = Object.freeze(Object.keys(PASSIVE_ORB_DEFS));
+
 const ENEMY_TYPE_DEFS = {
     normal: { id: 'normal', label: '通常', description: '特別な行動は行わない。', weight: 0, color: '#2d3436' },
     'status-caster': { id: 'status-caster', label: '状態異常使い', description: '攻撃命中時に毒や麻痺などの状態異常を付与してくる。', weight: 3, color: '#be4bdb' },
@@ -4072,6 +4082,7 @@ function validateSandboxConfig(config) {
 }
 
 function captureSandboxSnapshot() {
+    ensurePassiveOrbInventory();
     sandboxRuntime.snapshot = {
         player: JSON.parse(JSON.stringify(player)),
         difficulty,
@@ -4096,6 +4107,7 @@ function restoreSandboxSnapshotIfNeeded() {
         });
         if (savedPlayer.inventory) {
             player.inventory = JSON.parse(JSON.stringify(savedPlayer.inventory));
+            ensurePassiveOrbInventory();
         }
     }
     if (typeof snap?.difficulty !== 'undefined') difficulty = snap.difficulty;
@@ -5251,7 +5263,8 @@ const player = {
         atkBoostMajor: 0,
         defBoostMajor: 0,
         spElixir: 0,
-        skillCharms: {}
+        skillCharms: {},
+        passiveOrbs: createEmptyPassiveOrbInventory()
     },
     statusEffects: createInitialStatusEffects()
 };
@@ -5264,6 +5277,9 @@ function ensureInventoryContainer() {
     if (!player.inventory || typeof player.inventory !== 'object') {
         player.inventory = {};
     }
+    if (!player.inventory.passiveOrbs || typeof player.inventory.passiveOrbs !== 'object') {
+        player.inventory.passiveOrbs = createEmptyPassiveOrbInventory();
+    }
     return player.inventory;
 }
 
@@ -5272,6 +5288,64 @@ function incrementInventoryCounter(key, amount = 1) {
     const base = Number(inv[key]) || 0;
     inv[key] = Math.max(0, Math.floor(base + amount));
     return inv[key];
+}
+
+function createEmptyPassiveOrbInventory() {
+    const orbs = {};
+    for (const id of PASSIVE_ORB_IDS) {
+        orbs[id] = 0;
+    }
+    return orbs;
+}
+
+function normalizePassiveOrbInventory(source) {
+    const normalized = createEmptyPassiveOrbInventory();
+    if (!source || typeof source !== 'object') return normalized;
+    for (const id of PASSIVE_ORB_IDS) {
+        const value = Number(source[id]);
+        if (Number.isFinite(value)) {
+            const rounded = value >= 0 ? Math.floor(value) : Math.ceil(value);
+            normalized[id] = rounded < 0 ? 0 : rounded;
+        }
+    }
+    return normalized;
+}
+
+function ensurePassiveOrbInventory() {
+    const inv = ensureInventoryContainer();
+    if (!inv.passiveOrbs || typeof inv.passiveOrbs !== 'object') {
+        inv.passiveOrbs = createEmptyPassiveOrbInventory();
+        return inv.passiveOrbs;
+    }
+    const store = inv.passiveOrbs;
+    for (const id of PASSIVE_ORB_IDS) {
+        const raw = Number(store[id]);
+        if (Number.isFinite(raw)) {
+            const rounded = raw >= 0 ? Math.floor(raw) : Math.ceil(raw);
+            store[id] = rounded < 0 ? 0 : rounded;
+        } else {
+            store[id] = 0;
+        }
+    }
+    for (const key of Object.keys(store)) {
+        if (!PASSIVE_ORB_DEFS[key]) delete store[key];
+    }
+    return store;
+}
+
+function incrementPassiveOrb(orbId, amount = 1) {
+    if (!PASSIVE_ORB_DEFS[orbId]) return 0;
+    const store = ensurePassiveOrbInventory();
+    const current = Number.isFinite(Number(store[orbId])) ? Math.floor(Number(store[orbId])) : 0;
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || Math.abs(numericAmount) < 1e-6) {
+        return current;
+    }
+    const delta = numericAmount > 0 ? Math.floor(numericAmount) : Math.ceil(numericAmount);
+    let next = current + delta;
+    if (next < 0) next = 0;
+    store[orbId] = next;
+    return next;
 }
 
 function ensureSkillCharmInventory() {
@@ -9552,6 +9626,7 @@ function cloneMiniShortcutOverrides(source) {
 
 function getGameStateSnapshot() {
     ensureSkillEffectContainer();
+    ensurePassiveOrbInventory();
     const blockDimSnapshot = blockDimState?.enabled ? {
         enabled: true,
         nested: blockDimState.nested || 1,
@@ -9562,9 +9637,14 @@ function getGameStateSnapshot() {
         spec: deepClone(blockDimState.spec),
         seed: blockDimState.seed
     } : { enabled: false };
+    const playerSnapshot = deepClone(player);
+    if (!playerSnapshot.inventory || typeof playerSnapshot.inventory !== 'object') {
+        playerSnapshot.inventory = {};
+    }
+    playerSnapshot.inventory.passiveOrbs = normalizePassiveOrbInventory(playerSnapshot.inventory.passiveOrbs);
     return {
         dungeonLevel,
-        player: deepClone(player),
+        player: playerSnapshot,
         selectedWorld,
         selectedDungeonBase,
         difficulty,
@@ -9656,8 +9736,10 @@ function applyGameStateSnapshot(snapshot, options = {}) {
         atkBoostMajor: Math.max(0, Math.floor(Number(invSnap.atkBoostMajor) || 0)),
         defBoostMajor: Math.max(0, Math.floor(Number(invSnap.defBoostMajor) || 0)),
         spElixir: Math.max(0, Math.floor(Number(invSnap.spElixir) || 0)),
-        skillCharms: skillCharmStore
+        skillCharms: skillCharmStore,
+        passiveOrbs: normalizePassiveOrbInventory(invSnap.passiveOrbs)
     };
+    ensurePassiveOrbInventory();
     if (playerSnap.statusEffects && typeof playerSnap.statusEffects === 'object') {
         const restored = createInitialStatusEffects();
         for (const key of Object.keys(PLAYER_STATUS_EFFECTS)) {
@@ -16581,10 +16663,11 @@ function applyMiniGameInventoryDelta(changes, opts = {}) {
     if (!player.inventory || typeof player.inventory !== 'object') {
         player.inventory = {};
     }
+    ensurePassiveOrbInventory();
     const applied = {};
     let mutated = false;
     for (const [key, rawDelta] of Object.entries(changes)) {
-        if (key === 'skillCharms') continue;
+        if (key === 'skillCharms' || key === 'passiveOrbs') continue;
         const numeric = Number(rawDelta);
         if (!Number.isFinite(numeric) || Math.abs(numeric) < 1e-6) continue;
         const delta = numeric > 0 ? Math.floor(numeric) : Math.ceil(numeric);

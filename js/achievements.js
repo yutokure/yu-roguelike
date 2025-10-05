@@ -5,6 +5,7 @@
     const VERSION = 2;
     const DIFFICULTY_ORDER = ['Very Easy', 'Easy', 'Normal', 'Second', 'Hard', 'Very Hard'];
     const numberFormatter = new Intl.NumberFormat('ja-JP');
+    const PLAYTIME_TRACKING_INTERVAL_MS = 1000;
 
     const CATEGORY_DEFINITIONS = [
         { id: 'dungeon', name: 'ダンジョン関連' },
@@ -138,6 +139,33 @@
                     text: current >= target ? '達成！' : `あと ${formatNumber(target - current)} 回`
                 };
             }
+        },
+        {
+            id: 'dungeon_playtime_30min',
+            category: 'dungeon',
+            title: '冒険の始まり',
+            description: '累計プレイ時間を 30 分に到達させる。',
+            reward: '携帯砂時計',
+            condition: (stats) => stats.core.playTimeSeconds >= 1800,
+            progress: (stats) => createDurationProgress(stats.core.playTimeSeconds, 1800)
+        },
+        {
+            id: 'dungeon_playtime_3hour',
+            category: 'dungeon',
+            title: '時間を忘れて',
+            description: '累計プレイ時間を 3 時間に到達させる。',
+            reward: '熟練冒険者の時計',
+            condition: (stats) => stats.core.playTimeSeconds >= 10800,
+            progress: (stats) => createDurationProgress(stats.core.playTimeSeconds, 10800)
+        },
+        {
+            id: 'dungeon_playtime_12hour',
+            category: 'dungeon',
+            title: '止まらない探索心',
+            description: '累計プレイ時間を 12 時間に到達させる。',
+            reward: '時空の羅針盤',
+            condition: (stats) => stats.core.playTimeSeconds >= 43200,
+            progress: (stats) => createDurationProgress(stats.core.playTimeSeconds, 43200)
         },
         {
             id: 'dungeon_rare_collector',
@@ -358,6 +386,7 @@
             id: 'core',
             title: 'ダンジョンの記録',
             entries: [
+                { path: 'core.playTimeSeconds', label: '総プレイ時間', description: 'ゲームを起動していた累計時間。', formatter: formatDuration },
                 { path: 'core.totalSteps', label: '総移動距離', description: 'これまでに歩いたマスの合計。', formatter: (value) => `${formatNumber(value)} マス` },
                 { path: 'core.floorsAdvanced', label: '踏破した階層数', description: '階段で進んだ累積階層。', formatter: formatNumber },
                 { path: 'core.highestFloorReached', label: '最高到達階層', description: 'これまでに到達した最も深い階層。', formatter: (value) => `${formatNumber(value)}F` },
@@ -438,6 +467,8 @@
 
     let renderScheduled = false;
     let saveScheduled = false;
+    let playtimeTimerId = null;
+    let lastPlaytimeTimestamp = 0;
 
     function formatNumber(value) {
         if (!Number.isFinite(value)) return '0';
@@ -450,10 +481,36 @@
         return DIFFICULTY_ORDER[idx] || '未攻略';
     }
 
+    function formatDuration(seconds) {
+        const total = Math.max(0, Math.floor(Number(seconds) || 0));
+        const hours = Math.floor(total / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const secs = total % 60;
+        if (hours > 0) {
+            return `${formatNumber(hours)}時間 ${minutes.toString().padStart(2, '0')}分 ${secs.toString().padStart(2, '0')}秒`;
+        }
+        if (minutes > 0) {
+            return `${formatNumber(minutes)}分 ${secs.toString().padStart(2, '0')}秒`;
+        }
+        return `${secs}秒`;
+    }
+
+    function createDurationProgress(currentSeconds, targetSeconds) {
+        const current = Math.max(0, Math.floor(Number(currentSeconds) || 0));
+        const target = Math.max(1, Math.floor(Number(targetSeconds) || 0));
+        return {
+            current,
+            target,
+            percent: Math.min(1, current / target),
+            text: `${formatDuration(current)} / ${formatDuration(target)}`
+        };
+    }
+
     function createDefaultStats() {
         return {
             core: {
                 totalSteps: 0,
+                playTimeSeconds: 0,
                 floorsAdvanced: 0,
                 dungeonsCleared: 0,
                 enemiesDefeated: 0,
@@ -645,6 +702,56 @@
         } else {
             setTimeout(flush, 250);
         }
+    }
+
+    function applyPlaytimeDelta(seconds) {
+        if (!Number.isFinite(seconds) || seconds <= 0) return;
+        if (!incrementStat('core.playTimeSeconds', seconds)) return;
+        const achievementsChanged = evaluateAutoAchievements();
+        if (achievementsChanged) {
+            notifyChange();
+            return;
+        }
+        if (ui.initialized) {
+            renderStatisticsSummary();
+            renderStats();
+        }
+        scheduleSave();
+    }
+
+    function tickPlaytime() {
+        const now = Date.now();
+        if (!Number.isFinite(now)) return;
+        if (global.document && typeof global.document.hidden === 'boolean' && global.document.hidden) {
+            lastPlaytimeTimestamp = now;
+            return;
+        }
+        if (!lastPlaytimeTimestamp) {
+            lastPlaytimeTimestamp = now;
+            return;
+        }
+        const elapsedSeconds = Math.floor((now - lastPlaytimeTimestamp) / 1000);
+        if (elapsedSeconds <= 0) return;
+        lastPlaytimeTimestamp += elapsedSeconds * 1000;
+        applyPlaytimeDelta(elapsedSeconds);
+    }
+
+    function resetPlaytimeClock() {
+        lastPlaytimeTimestamp = Date.now();
+    }
+
+    function startPlaytimeTracker() {
+        if (playtimeTimerId || typeof global.setInterval !== 'function') return;
+        resetPlaytimeClock();
+        playtimeTimerId = global.setInterval(tickPlaytime, PLAYTIME_TRACKING_INTERVAL_MS);
+    }
+
+    function stopPlaytimeTracker() {
+        if (!playtimeTimerId) return;
+        if (typeof global.clearInterval === 'function') {
+            global.clearInterval(playtimeTimerId);
+        }
+        playtimeTimerId = null;
     }
 
     function evaluateAutoAchievements() {
@@ -857,6 +964,7 @@
         const stats = state.stats?.core || defaults.core;
         const hatenaStats = state.stats?.hatena || defaults.hatena;
         const highlights = [
+            { label: '総プレイ時間', value: formatDuration(stats.playTimeSeconds) },
             { label: '攻略ダンジョン', value: formatNumber(stats.dungeonsCleared) },
             { label: '最高難易度', value: formatDifficultyLabel(stats.highestDifficultyIndex) },
             { label: '累計EXP', value: `${formatNumber(Math.floor(stats.totalExpEarned || 0))} EXP` }
@@ -1472,6 +1580,16 @@
         if (!ui.initialized) return;
         renderAll();
     }
+
+    if (typeof global.document?.addEventListener === 'function') {
+        global.document.addEventListener('visibilitychange', resetPlaytimeClock, { passive: true });
+    }
+    if (typeof global.addEventListener === 'function') {
+        global.addEventListener('focus', resetPlaytimeClock, { passive: true });
+        global.addEventListener('blur', resetPlaytimeClock, { passive: true });
+        global.addEventListener('beforeunload', stopPlaytimeTracker, { passive: true });
+    }
+    startPlaytimeTracker();
 
     global.AchievementSystem = {
         initUI,

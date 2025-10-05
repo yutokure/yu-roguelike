@@ -189,6 +189,47 @@
                 </table>
             </div>
         </section>
+        <section>
+            <h2 id="domain-and-badge-hooks">19.5 領域効果とバッジ表示の制御</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>対象</th>
+                            <th>役割</th>
+                            <th>調整ポイント</th>
+                            <th>定義位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>DOMAIN_EFFECT_DEFINITIONS</code></td>
+                            <td>領域クリスタルの効果アイコン・色・与被ダメ補正・状態付与設定をまとめた定数。</td>
+                            <td>各効果の倍率や <code>reverseDamage</code>・<code>allowPotionThrow</code> フラグを変更すると、対応する領域の挙動をカスタマイズできます。</td>
+                            <td><code>main.js</code> 4851–5004 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>getDomainEffectAggregate(targetType, x, y)</code></td>
+                            <td>指定座標に重なる領域クリスタルを走査し、攻撃/防御倍率や状態異常オーラを合成します。</td>
+                            <td>半径や効果リストの計算ロジックを変更したいときに参照。返り値に <code>allowPotionThrow</code> や <code>statusAilments</code> が含まれます。</td>
+                            <td><code>main.js</code> 5179–5287 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>refreshGeneratorHazardSuppression()</code></td>
+                            <td>暗闇・毒霧・ノイズの推奨レベルによる抑制条件を判定し、UI の有効/無効状態を更新します。</td>
+                            <td>レベル差の閾値や抑制時の挙動を変更する場合に利用。更新後は <code>updateDungeonTypeOverlay()</code> を再呼び出します。</td>
+                            <td><code>main.js</code> 6764–6788 行</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateDungeonTypeOverlay()</code></td>
+                            <td>探索画面右上のダンジョン名オーバーレイを描画し、領域ハザードやジェネレータ名のバッジを生成します。</td>
+                            <td>バッジのラベルや CSS クラスを調整したい場合はこの処理を編集してください。抑制状態は <code>dungeon-overlay__badge--suppressed</code> クラスで制御されます。</td>
+                            <td><code>main.js</code> 6940–7042 行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </body>
 </html>

@@ -3,27 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>15. Frequently Asked Questions (Translation in Progress)</title>
+    <title>15. Frequently Asked Questions</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>15. Frequently Asked Questions</h1>
-        <p>
-            The FAQ chapter is being translated. Until then, the Japanese FAQ contains the latest troubleshooting steps and
-            support contacts:
-        </p>
-        <ul>
-            <li><a href="../faq.html" target="_blank" rel="noopener">Japanese chapter: FAQ</a></li>
-        </ul>
-        <p>
-            The English version will include:
-        </p>
-        <ol>
-            <li>Quick answers for common setup problems.</li>
-            <li>Guidance for reporting bugs or requesting features.</li>
-            <li>Links to community resources and support tools.</li>
-        </ol>
+        <section>
+            <h2>Q1. The screen looks wrong. What should I do?</h2>
+            <p>Cached assets may be interfering. Reload the page (Windows: <code>Ctrl + F5</code>, Mac: <code>Cmd + Shift + R</code>).</p>
+        </section>
+        <section>
+            <h2>Q2. I edited data and now the game throws errors.</h2>
+            <p>Most issues come from missing commas or closing quotes in JSON. Use your editor’s syntax checker to catch them.</p>
+        </section>
+        <section>
+            <h2>Q3. Can I play on mobile?</h2>
+            <p>Yes. The UI is responsive, though rotating the device to landscape mode improves usability on smaller screens.</p>
+        </section>
+        <section>
+            <h2>Q4. My file changes do not appear.</h2>
+            <p>Make sure you saved the file and cleared the cache. After saving, refresh the browser. If nothing changes, open the
+                developer tools to check for errors.</p>
+        </section>
+        <section>
+            <h2>Q5. SP and skills are unavailable.</h2>
+            <p>SP unlocks at player level 100. After that, movement, enemy defeats, MiniExp rewards, and offering recovery items all
+                add SP. Some skills are disabled in dungeons that exceed your level by 8 or more—read the descriptions in the skill
+                modal before activating them.</p>
+        </section>
+        <section>
+            <h2>Q6. I keep dying to hunger damage.</h2>
+            <p>In dungeons with a recommended level of 300 or more, satiety drops every turn. At 0 you take hunger damage based on max
+                HP. When the gauge falls below 30%, either head back early or enable auto-use in the status modal so potions switch
+                to the “Eat” action at 40% or less. If you plan to continue exploring, return to the selection screen to refill
+                satiety once damage starts ticking.</p>
+        </section>
+        <section>
+            <h2>Q7. Where can I review passive orbs?</h2>
+            <p>Passive orbs drop from high-score MiniExp rewards or challenging bosses. They equip automatically, stacking up to three
+                per type for bonuses such as damage reduction and ailment resistance. Review their effects at the bottom of the
+                status modal (“Passive Effects”) or via the icons below the status card during exploration.</p>
+        </section>
     </main>
 </body>
 </html>

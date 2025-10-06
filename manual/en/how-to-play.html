@@ -3,27 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7. How to Play (Translation in Progress)</title>
+    <title>7. How to Play</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>7. How to Play</h1>
-        <p>
-            We are preparing the full play guide in English. While the translation is underway, please review the
-            Japanese source chapter for detailed mechanics and strategy tips:
-        </p>
-        <ul>
-            <li><a href="../how-to-play.html" target="_blank" rel="noopener">Japanese chapter: How to Play</a></li>
-        </ul>
-        <p>
-            Upcoming sections for the English chapter will include:
-        </p>
-        <ol>
-            <li>Core loop overview from dungeon selection to victory.</li>
-            <li>Combat basics, damage calculation, and recovery options.</li>
-            <li>Progression systems such as levels, skills, and unlocks.</li>
-        </ol>
+        <section>
+            <h2>7.1 Core Play Cycle</h2>
+            <p>
+                Yu Roguelike is a turn-based dungeon crawler. Choose your destination from the selection screen, challenge
+                the dungeon, and aim for the staircase on the lowest floor. The map layout and enemy placement change every
+                run, so each attempt offers a fresh route and encounter table.
+            </p>
+            <p>
+                When you enter a dungeon with a recommended level of 300 or higher the <strong>Satiety system</strong>
+                activates. The gauge decreases each time you act. While satiety is at least 1, automatic recovery at the start
+                of a turn only triggers when your HP is below 70% <em>and</em> your satiety is 20 or higher. The gauge is
+                consumed before HP is healed. At 0 satiety you take <strong>hunger damage</strong> every turn, based on your
+                maximum HP. Prepare food or switch potions to the “Eat” action to stay safe.
+            </p>
+            <ol>
+                <li>Select a <strong>difficulty</strong>, <strong>world</strong>, and <strong>dungeon</strong> on the selection
+                    screen, then review the recommended level and features on the detail card.</li>
+                <li>Press <strong>Enter Dungeon</strong> to begin. You move one tile at a time and attack adjacent enemies.</li>
+                <li>Open treasure chests and watch out for hazards such as poison and ice tiles while heading for the stairs.</li>
+                <li>Advance to the next floor at the staircase. Reaching the final floor automatically returns you to the
+                    selection screen with fully restored HP.</li>
+                <li>All stats and items are saved automatically and carry over to your next run.</li>
+            </ol>
+        </section>
+        <section>
+            <h2>7.2 Control Cheat Sheet</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>PC</th>
+                            <th>Mobile / Tablet</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Navigate menus</td>
+                            <td>Mouse click / Enter / Space / Arrow keys</td>
+                            <td>Tap / Swipe</td>
+                            <td>Used on the title screen, status panel, and other menus</td>
+                        </tr>
+                        <tr>
+                            <td>Move</td>
+                            <td>Arrow keys</td>
+                            <td>Virtual pad / Flick</td>
+                            <td>Walk forward, backward, left, or right inside dungeons</td>
+                        </tr>
+                        <tr>
+                            <td>Attack</td>
+                            <td>Space key</td>
+                            <td>Tap the attack button</td>
+                            <td>Attack in the facing direction; stepping onto an enemy tile also attacks</td>
+                        </tr>
+                        <tr>
+                            <td>Inspect enemy</td>
+                            <td>Click the enemy</td>
+                            <td>Tap the enemy</td>
+                            <td>Displays predicted damage and opens the enemy status modal</td>
+                        </tr>
+                        <tr>
+                            <td>Use item</td>
+                            <td>Click <em>Items</em> on the toolbar → Use button in the modal</td>
+                            <td>Tap the toolbar icon → Use button in the modal</td>
+                            <td>Consumes one item and triggers the effect immediately</td>
+                        </tr>
+                        <tr>
+                            <td>Check status / Leave run</td>
+                            <td>Click <em>Status</em> / <em>Return</em> on the toolbar</td>
+                            <td>Tap the matching toolbar icon</td>
+                            <td><em>Return</em> brings you back to the selection screen and pauses the run</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small-note">Esc and number-key shortcuts are not implemented in the current version. Close modals with the
+                “×” button in the corner.</p>
+            <p class="small-note">See <a href="ui.html" target="manual-content">Chapter 6: Screen Layout &amp; Controls</a> for a
+                full UI map.</p>
+        </section>
+        <section>
+            <h2>7.3 Dungeon Progression</h2>
+            <h3>Preparation</h3>
+            <ul>
+                <li>Use the status card at the bottom of the selection screen to check your current level, HP, attack, defence,
+                    and stored experience.</li>
+                <li>The dungeon detail card lists the recommended level and damage multiplier. When visiting a new area, start
+                    with dungeons close to your level.</li>
+                <li>Your game is saved automatically, so any items or upgrades earned in previous runs remain available.</li>
+            </ul>
+            <h3>Exploration</h3>
+            <ol>
+                <li>Players and enemies act in turns. Move one tile at a time—stepping into an enemy’s tile automatically
+                    attacks it.</li>
+                <li>If you challenge a dungeon that is at least five levels below your own, environmental hazards do not trigger:
+                    poison, ice, bomb, conveyor, one-way, vertical-only, and horizontal-only tiles all behave like safe tiles.
+                    Within four levels, hazards become active: poison inflicts damage over time, ice makes you slide, and bomb
+                    tiles explode for a percentage of max HP (100% / 80% / 50% / 25% / 10% depending on the level gap, with 0%
+                    when you exceed the recommendation by five levels).</li>
+                <li>Treasure chests contain recovery items or permanent stat boosters. All loot is logged in the message history.</li>
+                <li>Click or tap an enemy to see detailed information, including estimated damage dealt and taken.</li>
+                <li>In dungeons with a recommended level of 300 or higher, satiety drops by 1 per turn. At 0 you take hunger
+                    damage equal to 10% of your max HP each turn, so replenish your gauge once it falls below 30%.</li>
+            </ol>
+            <h4>Treasure Events and Golden Chests</h4>
+            <p>
+                Standard chests spawn randomly on each floor but stop appearing once you are five levels above the
+                recommendation, ensuring runs do not become overly safe. Eight percent of chests are promoted to
+                <strong>Golden Chests</strong>, which trigger a timing mini-game when opened. The four chests around the boss
+                room use the same promotion rate.
+            </p>
+            <p>
+                When a Golden Chest appears, the log announces “It’s a Golden Chest! Time your stop bar.” Opening the chest
+                launches a dedicated modal.
+            </p>
+            <p>
+                The timing bar sends a pointer back and forth across the lane—roughly 1.35 lane widths per second. Stopping the
+                pointer within ±10% of the centre counts as a success. The closer you are to the edges when you fail, the
+                higher the explosion damage shown in the preview.
+            </p>
+            <ul>
+                <li><strong>PC:</strong> Click the Stop button or press Space / Enter to freeze the pointer.</li>
+                <li><strong>Mobile / Tablet:</strong> Tap the Stop button or tap the bar itself.</li>
+                <li>The enemy turn pauses during the mini-game and resumes after the result.</li>
+            </ul>
+            <p>
+                Success opens the chest safely. You either receive a rare reward (50% chance) or an enhanced version of the
+                normal chest loot (50%). Failure causes an explosion dealing damage based on <strong>effective max HP × 0.5</strong>.
+                If the dungeon’s recommended level exceeds your own, the damage increases by 10% per level gap. If you are
+                higher, it decreases by 8% per level (to a minimum of 25%). Raising your level therefore reduces the risk.
+                Domain crystal effects such as shields or damage inversion can nullify the blast or convert it into healing.
+            </p>
+            <div class="table-container">
+                <table>
+                    <caption>Golden Chest Reward Categories</caption>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Contents</th>
+                            <th>Main Benefit / Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Major Enhancers</td>
+                            <td>One permanent boost: Max HP +25, Attack +10, or Defence +10.</td>
+                            <td>40% chance. Consumed immediately for a permanent upgrade—ideal before boss fights.</td>
+                        </tr>
+                        <tr>
+                            <td>Skill Amulets</td>
+                            <td>Gain one amulet that auto-activates a chosen skill for 10 turns.</td>
+                            <td>35% chance. Added to the <em>Special</em> tab in the item modal and can be saved for later runs.</td>
+                        </tr>
+                        <tr>
+                            <td>SP Elixir</td>
+                            <td>Receive one custom SP elixir that greatly restores SP.</td>
+                            <td>25% chance. A powerful option when SP is low; offering it boosts MiniExp rewards.</td>
+                        </tr>
+                        <tr>
+                            <td>Passive Orb Roll</td>
+                            <td>10% chance to roll in addition to any of the above rewards.</td>
+                            <td>Provides permanent bonuses such as damage reduction or status resistances. Effects stack when duplicated.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tip">
+                <strong>Tips for Golden Chests</strong>
+                <ul>
+                    <li>A subtle highlight marks the centre of the bar—prepare to press or tap just before the pointer reaches it.</li>
+                    <li>Explosions scale with max HP, so refill satiety and recovery options before attempting the mini-game.</li>
+                    <li>If domain crystal badges such as <code>Shield</code> or <code>⇆</code> are active, the blast can be nullified
+                        or inverted into healing. Open the chest while these protections are up.</li>
+                </ul>
+                <p class="small-note">You can rehearse the timing by opening the in-game “Golden Chest” help popup and cancelling
+                    before committing.</p>
+            </div>
+            <p class="small-note">Poison tiles deal 10% of your max HP when the dungeon matches your level and scale by ×1.5 per
+                level gap in the enemy’s favour (e.g., 15% at a one-level deficit, 22.5% at two levels). Conveyor tiles move you
+                one tile in the arrow direction. One-way tiles block movement against the arrow, while vertical-only /
+                horizontal-only tiles restrict movement to that axis. All of these hazards are disabled when you exceed the
+                recommendation by five levels.</p>
+            <h3>Return</h3>
+            <ul>
+                <li>Reaching the final floor shows the message “Dungeon cleared!” and returns you to the selection screen with
+                    fully restored HP.</li>
+                <li>At the end of a run, a <strong>result overlay</strong> summarises your <em>Level (Start → End ±Δ)</em>,
+                    <em>Total EXP Gained</em>, <em>Total Damage Taken</em>, and <em>Items Used</em>. If you were defeated, the
+                    cause is displayed at the top.</li>
+                <li>Use <strong>Return to Base</strong> to go back to the selection screen. When the requirements are met, a
+                    <strong>Retry</strong> button appears so you can jump back into the same dungeon. The Esc key performs the
+                    same action as Return to Base. You can also press Enter / Space while the button is focused.</li>
+                <li>Pressing <strong>Return</strong> on the toolbar ends the expedition early and takes you back to the selection
+                    screen with restored HP.</li>
+                <li>If satiety drops below 20%, consider heading back before repeated hunger damage puts you at risk. Switching
+                    potions to the Eat action ahead of time is another safe option.</li>
+                <li>On defeat you can restart immediately with the same stats using the Retry button.</li>
+            </ul>
+            <p class="small-note">All values shown on the result overlay are auto-saved and exported under
+                <code>achievements.stats.core</code> (e.g., total damage taken, total items used). See
+                <a href="ui.html#result-overlay" target="manual-content">Section 6.9</a> for a detailed UI breakdown.</p>
+        </section>
+        <section>
+            <h2>7.4 Combat &amp; Growth Tips</h2>
+            <h3>Understanding Your Stats</h3>
+            <p>
+                The status card and modal list your level, HP, attack, defence, and experience. HP at 0 results in a game over,
+                so heal promptly after taking large hits. Attack determines your outgoing damage; defence reduces incoming
+                damage.
+            </p>
+            <h3>Making the Most of Items</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Main Effect</th>
+                            <th>Action Options</th>
+                            <th>Auto-Use Condition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>HP 30% Potion</td>
+                            <td>Restores 30% of max HP. Satiety +15.</td>
+                            <td>
+                                <ul>
+                                    <li><strong>Drink:</strong> Recovers HP immediately.</li>
+                                    <li><strong>Offer:</strong> Converts the potion into SP and MiniExp multipliers.</li>
+                                    <li><strong>Eat:</strong> Restores HP and satiety simultaneously. Unlocked from recommended level 300.</li>
+                                </ul>
+                            </td>
+                            <td>Default: Drink when HP ≤ 50%. Eat when HP ≤ 70% &amp; Satiety ≤ 30% (after unlocking).</td>
+                        </tr>
+                        <tr>
+                            <td>Full Recovery Potion</td>
+                            <td>Restores HP to 100%. Satiety +30.</td>
+                            <td>
+                                <ul>
+                                    <li><strong>Drink:</strong> Emergency heal.</li>
+                                    <li><strong>Offer:</strong> Large SP boost and MiniExp bonus.</li>
+                                    <li><strong>Eat:</strong> Full recovery plus satiety refill. Available from recommended level 300.</li>
+                                </ul>
+                            </td>
+                            <td>Drink at HP ≤ 25%. Eat at HP ≤ 50% &amp; Satiety ≤ 20% (after unlocking).</td>
+                        </tr>
+                        <tr>
+                            <td>Stat Seeds</td>
+                            <td>Permanently boost Max HP / Attack / Defence by a small amount.</td>
+                            <td>
+                                <ul>
+                                    <li><strong>Use:</strong> Apply the permanent upgrade.</li>
+                                    <li><strong>Offer:</strong> Convert to SP and MiniExp multipliers.</li>
+                                </ul>
+                            </td>
+                            <td>No auto-use. Manage them manually before boss fights.</td>
+                        </tr>
+                        <tr>
+                            <td>MiniExp Tickets</td>
+                            <td>Instantly grant MiniExp rewards such as skill unlocks.</td>
+                            <td>
+                                <ul>
+                                    <li><strong>Use:</strong> Claim the reward immediately.</li>
+                                    <li><strong>Offer:</strong> Bonus SP and higher MiniExp multiplier.</li>
+                                </ul>
+                            </td>
+                            <td>Never auto-used. Suitable for planned growth between floors.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>
+                Auto-use thresholds can be edited from the status modal. Adjust them to match your risk tolerance—setting a
+                higher HP threshold keeps you topped up, while lower values conserve items for emergencies.
+            </p>
+            <h3>Levelling &amp; SP Management</h3>
+            <ul>
+                <li>Experience is earned from defeating enemies, clearing floors, and offering items. Levelling increases HP,
+                    attack, and defence automatically.</li>
+                <li>SP powers your skills. Move regularly, finish encounters efficiently, and donate surplus potions to keep the
+                    gauge charged.</li>
+                <li>Unlock new skills through MiniExp rewards and achievements. Review unlocked skills in the MiniExp tab on the
+                    title screen.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>7.5 Managing Satiety</h2>
+            <ul>
+                <li>Satiety drains faster when you spend multiple turns in place. Keep moving to balance your consumption.</li>
+                <li>Offering food items grants SP and boosts the MiniExp multiplier, but it does not refill satiety—ensure you
+                    keep a spare potion for emergencies.</li>
+                <li>When satiety falls below 20%, switch your recovery items to the Eat action or plan an early return.</li>
+                <li>Satiety values carry over between floors. Use downtime after clearing enemies to refill the gauge.</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

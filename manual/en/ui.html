@@ -3,27 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6. Screen Layout & Controls (Translation in Progress)</title>
+    <title>6. Screen Layout &amp; Controls</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
-        <h1>6. Screen Layout & Controls</h1>
-        <p>
-            The full English translation for this chapter is currently in progress. You can consult the original Japanese
-            version for complete details:
-        </p>
-        <ul>
-            <li><a href="../ui.html" target="_blank" rel="noopener">Open Japanese chapter in a new tab</a></li>
-        </ul>
-        <p>
-            Planned coverage for the English edition:
-        </p>
-        <ol>
-            <li>Breakdown of each interface section and tooltip.</li>
-            <li>Keyboard, mouse, and touch input reference tables.</li>
-            <li>Accessibility tips and layout customisation pointers.</li>
-        </ol>
+        <h1>6. Screen Layout &amp; Controls</h1>
+        <section>
+            <h2>6.1 Title Screen</h2>
+            <p>
+                The top of the title screen shows the game logo and a large selection card. Use the card to choose the
+                <strong>difficulty</strong>, <strong>world</strong>, and <strong>dungeon</strong> in that order before you begin your
+                run.
+            </p>
+        </section>
+        <section>
+            <h2>6.2 Tab Overview</h2>
+            <ul>
+                <li><strong>Standard:</strong> Pick from the regular catalogue of dungeons.</li>
+                <li><strong>Block Dimension:</strong> Assemble dungeons from multiple block presets.</li>
+                <li><strong>MiniExp:</strong> Review the elements you have unlocked through mini-games.</li>
+                <li><strong>Tools:</strong> Open supporting utilities for developers and testers.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>6.3 Dungeon Detail Card</h2>
+            <p>
+                After you select a world and dungeon, a detail card appears on the right. It lists the damage multiplier,
+                recommended level, and a short description. When you are ready, press <strong>Enter Dungeon</strong> to start
+                exploring.
+            </p>
+        </section>
+        <section>
+            <h2>6.4 Block Dimension Screen</h2>
+            <p>
+                The Block Dimension tab lets you type a <strong>NESTED</strong> value and choose blocks from several lists.
+                Your selections appear in the preview panel at the bottom. When you are unsure which layout to try, use the
+                randomise button to shuffle the candidates.
+            </p>
+        </section>
+        <section>
+            <h2>6.5 Exploration Toolbar</h2>
+            <p>
+                The exploration screen displays a toolbar across the top. From left to right the buttons are
+                <em>Return</em>, <em>Items</em>, <em>Skills</em>, <em>Status</em>, <em>Import</em>, and <em>Export</em>.
+                Once the SP system is unlocked, the <strong>Skills</strong> button lights up and opens a panel where you can
+                check your current SP and skill list. On mobile the toolbar supports horizontal scrolling—swipe left or right
+                if you cannot see a button you need.
+            </p>
+            <ul>
+                <li><strong>Skills button:</strong> Opens and closes the skill modal. Use it to review available skills, the
+                    remaining SP, and active durations.</li>
+                <li><strong>Items button:</strong> Opens the item modal for consuming or offering healing and enhancement items.
+                    The auto-item toggle in the top-right corner of the modal enables automatic use of the configured
+                    potion or food whenever the conditions are met.</li>
+                <li><strong>Status button:</strong> Shows your current attributes, status ailments, and active skill effects.
+                    The card overlay indicates whether auto-use is on or off so that you can confirm the configuration during
+                    a run.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>6.6 Status Card and SP / Satiety Bars</h2>
+            <p>
+                The card on the left-hand side of the exploration screen displays your core stats—HP, experience, attack, and
+                defence—alongside the SP gauge unlocked at level 100 and the satiety gauge that appears in dungeons with a
+                recommended level of 300 or higher. The SP bar is purple, the satiety bar is yellow, and both shrink as the
+                value decreases. Their numerical values are shown at the bottom of the card.
+            </p>
+            <p>
+                You gain SP by moving, defeating enemies, earning MiniExp rewards, or offering recovery items. The maximum SP
+                is 100 at level 100, 150 at level 250, 200 at level 500, and increases by 50 every additional 500 levels. The
+                satiety gauge decreases by 1 each turn. When it reaches 0 you take hunger damage based on your maximum HP. If
+                you enable auto-use from the status modal, configured potions automatically switch to the “Eat” action and
+                keep you topped up once the gauge falls below the threshold.
+            </p>
+            <p>
+                Both the status card and the status modal display <strong>status badges</strong> for domain crystals, skill
+                effects, and ailments. The badge colour and icon are consistent—for example, <code>ATK↑</code> indicates an
+                attack buff and <code>⇆</code> denotes damage inversion. Multiple badges are shown in the order the effects
+                were applied, making it easier to decide which one to cleanse first.
+            </p>
+            <p>
+                The <strong>Dungeon Overlay</strong> in the top-right corner shows hazard badges. When darkness, poison mist,
+                or noise are active the overlay lights up with a dedicated label. If you tackle a dungeon at least five levels
+                above the recommendation, the label adds “(Suppressed)” and the badge becomes semi-transparent. Visual glitch
+                effects only occur while the noise hazard is active and end immediately once suppression succeeds.
+            </p>
+        </section>
+        <section>
+            <h2>6.7 Keyboard Shortcuts</h2>
+            <ul>
+                <li><strong>Tab:</strong> Move between input fields.</li>
+                <li><strong>Enter:</strong> Activate the focused button.</li>
+                <li><strong>Esc:</strong> Close the current dialog if it supports keyboard dismissal.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>6.8 Accessibility Notes</h2>
+            <p>
+                All buttons and lists are fully keyboard-accessible and include ARIA attributes for screen-reader support.
+                When customising the style, make sure the contrast ratio and focus outlines remain easy to distinguish.
+            </p>
+        </section>
+        <section id="result-overlay">
+            <h2>6.9 Result Overlay</h2>
+            <p>
+                When a run ends, the centre of the screen shows a translucent backdrop with a result card. The top of the card
+                displays a badge for the outcome (clear, defeated, and so on), the title, and—when applicable—the cause of
+                failure so you can review what happened at a glance.
+            </p>
+            <ul>
+                <li><strong>Level:</strong> Shows the level at the start and end of the run as <code>Start → End (+/-Δ)</code>.</li>
+                <li><strong>Total EXP Gained:</strong> Lists the net experience earned during the expedition.</li>
+                <li><strong>Total Damage Taken / Items Used:</strong> Summarises all damage received and how many recovery items
+                    you consumed.</li>
+            </ul>
+            <p>
+                The bottom of the card offers the primary actions. <strong>Return to Base</strong> sends you back to the
+                selection screen. When conditions are met, a <strong>Retry</strong> button appears to the right so you can jump
+                straight into the same dungeon. Keyboard focus defaults to Return to Base. Press Enter or Space to confirm, or
+                Esc to trigger the same behaviour. On touch devices, simply tap the buttons.
+            </p>
+            <p class="small-note">All statistics displayed in the result overlay are added to the Achievements &amp; Statistics
+                tracker and can be reviewed in exported saves under <code>achievements.stats.core</code>. For the gameplay
+                flow, refer to <a href="how-to-play.html" target="manual-content">7. How to Play</a>.</p>
+        </section>
     </main>
 </body>
 </html>

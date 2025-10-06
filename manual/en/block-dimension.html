@@ -3,27 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8. Understanding Block Dimensions (Translation in Progress)</title>
+    <title>8. Understanding Block Dimensions</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>8. Understanding Block Dimensions</h1>
-        <p>
-            The English explanation for the Block Dimension mode is in preparation. In the meantime, you can reference
-            the original Japanese material for configuration examples and gameplay rules:
-        </p>
-        <ul>
-            <li><a href="../block-dimension.html" target="_blank" rel="noopener">Japanese chapter: Block Dimensions</a></li>
-        </ul>
-        <p>
-            Planned topics include:
-        </p>
-        <ol>
-            <li>Concept overview and how the grid system differs from standard dungeons.</li>
-            <li>Structure of <code>blockdata.json</code> and key properties.</li>
-            <li>Tips for creating original puzzle layouts.</li>
-        </ol>
+        <section>
+            <h2>8.1 Mode Overview</h2>
+            <p>
+                Block Dimension mode fuses a <strong>Dimension</strong> with three types of <strong>Blocks (1st / 2nd / 3rd)</strong>
+                to generate dungeon parameters. Dimensions cover the letters a–z (automatically padded if data is missing) and
+                each dimension provides a base level in steps of 100. Blocks are loaded from <code>blockdata.json</code> or
+                <code>blockdata.js</code> and supply level modifiers, map sizes, depth, chest bias, and more.
+            </p>
+            <div class="tip">
+                <strong>Focus on combinations</strong>
+                <p>Block Dimension revolves around combining presets, not placing tiles manually. The same selection always
+                    generates the same dungeon, which makes it ideal for repeatable farming routes.</p>
+            </div>
+        </section>
+        <section>
+            <h2>8.2 How to Use the Mode</h2>
+            <ol>
+                <li>Select the <strong>BlockDim</strong> tab on the title screen.</li>
+                <li>Enter a <strong>NESTED</strong> value if needed (1–99,999,999). Every increment raises the recommended level
+                    by 2,600.</li>
+                <li>Pick a dimension and choose entries from the 1st/2nd/3rd block lists. You can change selections with the
+                    mouse or keyboard.</li>
+                <li>Review the level, type, depth, size modifier, chest bias, and boss floors on the preview card to the right.</li>
+                <li>When you are satisfied, press <strong>Launch Gate</strong> to begin the run.</li>
+            </ol>
+            <p class="small-note">History (up to 200 entries) and bookmarks (up to 100) are saved automatically. Click an entry to
+                reapply the configuration. The Random and Weighted Random buttons select blocks automatically.</p>
+        </section>
+        <section>
+            <h2>8.3 Data Sources &amp; Block Properties</h2>
+            <p>
+                On initialisation, the mode tries <code>fetch('blockdata.json')</code>. If that fails it loads
+                <code>blockdata.js</code> as a script. When neither file is available the game generates fallback data (dimension
+                a and dummy blocks).
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Element</th>
+                            <th>Source</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Dimensions</td>
+                            <td><code>baseLevel</code></td>
+                            <td>Base value for the recommended level (defaults: a = Lv1, b = Lv101, and so on).</td>
+                        </tr>
+                        <tr>
+                            <td>Blocks (blocks1/2/3)</td>
+                            <td><code>level</code>, <code>size</code>, <code>depth</code>, <code>chest</code>, <code>type</code></td>
+                            <td>Provide level modifiers, size multipliers, floor depth, chest bias, and generation type. The
+                                <code>bossFloors</code> array lists candidate boss floors.</td>
+                        </tr>
+                        <tr>
+                            <td>History / Bookmarks</td>
+                            <td>Local storage</td>
+                            <td>Store the seed, level, type, and other details so you can restore a configuration later.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>8.4 Composition Logic</h2>
+            <p>The resulting <strong>ComposedSpec</strong> follows these rules:</p>
+            <ul>
+                <li><strong>Level:</strong> Sum the block <code>level</code> values with the dimension’s <code>baseLevel</code>,
+                    then add 2,600 per NESTED step. Clamp the final result to a minimum of 1.</li>
+                <li><strong>Size factor:</strong> Add all <code>size</code> modifiers and clamp the total to −2 … +2.</li>
+                <li><strong>Depth:</strong> Add the <code>depth</code> values from each block and limit the result to 1–15. The
+                    baseline depth is 1.</li>
+                <li><strong>Chest bias:</strong> Determine the majority of <code>less / normal / more</code>. Ties resolve in the
+                    order normal &gt; more &gt; less.</li>
+                <li><strong>Generation type:</strong> If all blocks share the same <code>type</code>, use it. Otherwise mark the
+                    dungeon as <code>mixed</code> and store the available types in <code>typePool</code>.</li>
+                <li><strong>Boss floors:</strong> Merge the <code>bossFloors</code> arrays and keep only the values within the
+                    final depth.</li>
+            </ul>
+            <p>
+                The selected dimension and blocks produce a deterministic 32-bit seed via <code>seedFromSelection</code>. Each
+                floor derives additional random values with <code>mixSeed</code>, ensuring that identical combinations always
+                recreate the same dungeon layout.
+            </p>
+        </section>
+        <section>
+            <h2>8.5 Random Selection &amp; Management</h2>
+            <p>
+                The <strong>Random</strong> button selects blocks with equal probability. <strong>Weighted Random</strong> applies a
+                Gaussian weight around the target level and type before picking candidates. Completed runs are added to the
+                history automatically. Bookmark an entry to recall it at any time. Each record includes the NESTED value and seed,
+                making it easy to catalogue your favourite builds.
+            </p>
+        </section>
+        <section>
+            <h2>8.6 Related Chapters</h2>
+            <ul>
+                <li><a href="data-files.html" target="manual-content">Chapter 10: Data File Breakdown</a> — structure of
+                    <code>blockdata.json</code> / <code>blockdata.js</code>.</li>
+                <li><a href="customize.html" target="manual-content">Chapter 11: Adding or Modifying Content</a> — how to add
+                    new blocks and dimensions.</li>
+                <li><a href="appendix.html" target="manual-content">Chapter 17: Appendix</a> — links to design documents and
+                    related specs.</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

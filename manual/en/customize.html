@@ -3,27 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>11. Adding or Modifying Content (Translation in Progress)</title>
+    <title>11. Adding or Modifying Content</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>11. Adding or Modifying Content</h1>
-        <p>
-            The English rewrite of this chapter is underway. Until it is ready, the Japanese document remains the most
-            detailed guide for changing dungeons, enemies, and UI elements:
-        </p>
-        <ul>
-            <li><a href="../customize.html" target="_blank" rel="noopener">Japanese chapter: Customisation</a></li>
-        </ul>
-        <p>
-            The translation will cover:
-        </p>
-        <ol>
-            <li>Step-by-step walkthrough for duplicating and editing content packs.</li>
-            <li>Guidelines for balancing new encounters.</li>
-            <li>Checklists for testing customised builds.</li>
-        </ol>
+        <section>
+            <h2>11.1 Adding a Dungeon</h2>
+            <ol>
+                <li>Create a new JSON file inside the <code>dungeontypes</code> directory.</li>
+                <li>Follow an existing file and populate fields such as <code>name</code>, <code>description</code>, and
+                    <code>level</code>.</li>
+                <li>Update the loading routine in <code>main.js</code> so it reads the new file.</li>
+                <li>Reload the browser and confirm that the dungeon appears in the list.</li>
+            </ol>
+        </section>
+        <section>
+            <h2>11.2 Tuning Difficulty</h2>
+            <p>
+                Difficulty affects damage multipliers and enemy strength. Adjust the relevant dungeon data and test the result in
+                game to ensure it feels right.
+            </p>
+        </section>
+        <section>
+            <h2>11.3 Customising the Look</h2>
+            <ul>
+                <li>Edit colours or fonts in <code>style.css</code>.</li>
+                <li>Add background images via the <code>background-image</code> property.</li>
+                <li>Change button shapes by tweaking <code>border-radius</code> and <code>box-shadow</code>.</li>
+            </ul>
+            <p class="small-note">
+                To modify exploration badges or domain crystal behaviour, consult
+                <a href="reference-functions.html#domain-and-badge-hooks" target="manual-content">Section 19.5: Domain Effects &amp;
+                    Badge Controls</a> for the relevant hooks and definitions.
+            </p>
+        </section>
+        <div class="tip">
+            <strong>Iterate gradually:</strong> Large changes make debugging harder. Adjust one element at a time, save, and check
+            the result in the browser.
+        </div>
+        <section>
+            <h2>11.4 Embrace Version Control</h2>
+            <p>
+                Use Git or another version-control system when adding content. Record clear commit messages so you can revert to a
+                previous state whenever necessary.
+            </p>
+        </section>
     </main>
 </body>
 </html>

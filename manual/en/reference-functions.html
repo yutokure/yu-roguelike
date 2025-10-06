@@ -3,26 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>19. Function Reference (Translation in Progress)</title>
+    <title>19. Function Reference</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>19. Function Reference</h1>
         <p>
-            We are preparing an English mapping of important functions. Please refer to the Japanese list for now:
+            This chapter summarises the main functions—primarily from <code>main.js</code>—to serve as a reading roadmap when you
+            dive into the source.
         </p>
-        <ul>
-            <li><a href="../reference-functions.html" target="_blank" rel="noopener">Japanese chapter: Function Reference</a></li>
-        </ul>
-        <p>
-            The upcoming translation will include:
-        </p>
-        <ol>
-            <li>Function signatures and return values.</li>
-            <li>Dependencies between modules.</li>
-            <li>Examples for extending or overriding behaviour.</li>
-        </ol>
+        <section>
+            <h2>19.1 Screen Flow &amp; Layout</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Function</th>
+                            <th>Role</th>
+                            <th>Key Arguments</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>updateMapSize()</code></td>
+                            <td>Recomputes map width/height from depth and BlockDim size modifiers.</td>
+                            <td>—</td>
+                            <td><code>main.js</code> lines 456–474</td>
+                        </tr>
+                        <tr>
+                            <td><code>resizeCanvasToStage()</code></td>
+                            <td>Resizes the canvas to match the stage element for responsive rendering.</td>
+                            <td>—</td>
+                            <td><code>main.js</code> lines 477–483</td>
+                        </tr>
+                        <tr>
+                            <td><code>enterInGameLayout()</code> / <code>leaveInGameLayout()</code></td>
+                            <td>Applies layout classes when entering the game view, adjusts toolbar height, and cleans up afterward.</td>
+                            <td>—</td>
+                            <td><code>main.js</code> lines 505–522</td>
+                        </tr>
+                        <tr>
+                            <td><code>showSelectionScreen(opts)</code></td>
+                            <td>Common handler for returning from exploration to the selection screen. Refills HP and restores modes.</td>
+                            <td><code>opts.stopLoop</code>, <code>opts.refillHp</code>, etc.</td>
+                            <td><code>main.js</code> lines 538–571</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>19.2 BlockDim UI &amp; Selection</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Function</th>
+                            <th>Role</th>
+                            <th>Notes</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>initBlockDimUI()</code></td>
+                            <td>Initialises the BlockDim tab—renders lists and sets up keyboard handling.</td>
+                            <td>Restores the previous selection and calls <code>renderHistoryAndBookmarks()</code>.</td>
+                            <td><code>main.js</code> lines 1095–1121</td>
+                        </tr>
+                        <tr>
+                            <td><code>onBlockDimChanged()</code></td>
+                            <td>Rebuilds the spec and refreshes the preview when lists or the NESTED value change.</td>
+                            <td>Works with <code>composeSpec()</code> and <code>seedFromSelection()</code>.</td>
+                            <td><code>main.js</code> lines 1123–1148</td>
+                        </tr>
+                        <tr>
+                            <td><code>randomizeBdimBlocks()</code></td>
+                            <td>Randomly picks 1st/2nd/3rd blocks and updates the preview immediately.</td>
+                            <td>Supports the <code>preserveScroll</code> option to keep list position.</td>
+                            <td><code>main.js</code> lines 1150–1168</td>
+                        </tr>
+                        <tr>
+                            <td><code>weightedRandomizeBdimBlocks(target, type)</code></td>
+                            <td>Performs weighted random selection based on total level and preferred type.</td>
+                            <td>Uses Gaussian weighting and up to 64 trials to find a candidate.</td>
+                            <td><code>main.js</code> lines 1171–1233</td>
+                        </tr>
+                        <tr>
+                            <td><code>renderHistoryAndBookmarks()</code></td>
+                            <td>Draws the history/bookmark lists, binding events for reuse and deletion.</td>
+                            <td>Limits visible rows via <code>setScrollableList()</code>.</td>
+                            <td><code>main.js</code> lines 1250–1300</td>
+                        </tr>
+                        <tr>
+                            <td><code>applyBdimSelection(entry)</code></td>
+                            <td>Applies a saved preset to the UI and triggers <code>onBlockDimChanged()</code>.</td>
+                            <td>Shared by both history and bookmarks.</td>
+                            <td><code>main.js</code> lines 1325–1333</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>19.3 MiniExp UI &amp; Lifecycle</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Function</th>
+                            <th>Role</th>
+                            <th>Notes</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>renderMiniExpCategories(manifest)</code></td>
+                            <td>Generates category buttons and manages selection state.</td>
+                            <td>Automatically deselects games not in the active category.</td>
+                            <td><code>main.js</code> lines 6534–6562</td>
+                        </tr>
+                        <tr>
+                            <td><code>renderMiniExpList(manifest)</code></td>
+                            <td>Switches between card/list layouts based on the view mode and wires up selection.</td>
+                            <td>Works with category filters and invokes <code>renderMiniExpRecords()</code>.</td>
+                            <td><code>main.js</code> lines 6571–6620</td>
+                        </tr>
+                        <tr>
+                            <td><code>initMiniExpUI()</code></td>
+                            <td>Initialises the manifest and renders categories, lists, and placeholders.</td>
+                            <td>Updates the placeholder instantly when a game is preselected.</td>
+                            <td><code>main.js</code> lines 6622–6642</td>
+                        </tr>
+                        <tr>
+                            <td><code>startSelectedMiniGame()</code></td>
+                            <td>Loads the selected MiniExp module and starts its runtime.</td>
+                            <td>Validates the <code>create()</code> return value, resets buttons and shortcuts.</td>
+                            <td><code>main.js</code> lines 6829–6861</td>
+                        </tr>
+                        <tr>
+                            <td><code>quitMiniGame()</code></td>
+                            <td>Handles shutdown (<code>stop()</code> → <code>getScore()</code> → <code>destroy()</code>) and updates records.</td>
+                            <td>Resets UI state and refreshes EXP badges and records.</td>
+                            <td><code>main.js</code> lines 6863–6905</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>19.4 Mod Maker Helpers</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Function</th>
+                            <th>Role</th>
+                            <th>Related Work</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>renderModMaker()</code></td>
+                            <td>Renders the entire module UI and syncs metadata, structures, and generators.</td>
+                            <td>Calls <code>ensureModMakerDefaults()</code>, <code>renderStructureGrid()</code>,
+                                <code>buildModMakerOutput()</code>.</td>
+                            <td><code>main.js</code> lines 2404–2529</td>
+                        </tr>
+                        <tr>
+                            <td><code>buildModMakerOutput()</code></td>
+                            <td>Builds JSON compatible with <code>registerDungeonAddon()</code> and validates it.</td>
+                            <td>Checks for duplicate structure IDs and anchor ranges.</td>
+                            <td><code>main.js</code> lines 2532–2555</td>
+                        </tr>
+                        <tr>
+                            <td><code>createBlockField(label, value, onChange, options)</code></td>
+                            <td>Generates form elements that re-render the UI automatically on change.</td>
+                            <td>Supports <code>options.multiline</code> and <code>options.deferRender</code>.</td>
+                            <td><code>main.js</code> lines 2381–2402</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section id="domain-and-badge-hooks">
+            <h2>19.5 Domain Effects &amp; Badge Hooks</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Target</th>
+                            <th>Role</th>
+                            <th>Adjustment Tips</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>DOMAIN_EFFECT_DEFINITIONS</code></td>
+                            <td>Configuration for domain crystal icons, colours, damage modifiers, and status effects.</td>
+                            <td>Edit multipliers or flags such as <code>reverseDamage</code> and <code>allowPotionThrow</code> to customise behaviour.</td>
+                            <td><code>main.js</code> lines 4851–5004</td>
+                        </tr>
+                        <tr>
+                            <td><code>getDomainEffectAggregate(targetType, x, y)</code></td>
+                            <td>Combines overlapping domain crystals to calculate attack/defence modifiers and status auras.</td>
+                            <td>Modify radius or aggregation logic as needed. Returns values including <code>allowPotionThrow</code>
+                                and <code>statusAilments</code>.</td>
+                            <td><code>main.js</code> lines 5179–5287</td>
+                        </tr>
+                        <tr>
+                            <td><code>refreshGeneratorHazardSuppression()</code></td>
+                            <td>Evaluates suppression thresholds for darkness, poison mist, and noise, updating UI state.</td>
+                            <td>Adjust level thresholds or behaviour; call <code>updateDungeonTypeOverlay()</code> afterward.</td>
+                            <td><code>main.js</code> lines 6764–6788</td>
+                        </tr>
+                        <tr>
+                            <td><code>updateDungeonTypeOverlay()</code></td>
+                            <td>Renders the top-right dungeon overlay with hazard and generator badges.</td>
+                            <td>Edit labels or CSS classes here. Suppression uses the <code>dungeon-overlay__badge--suppressed</code> class.</td>
+                            <td><code>main.js</code> lines 6940–7042</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </body>
 </html>

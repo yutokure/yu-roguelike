@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Yuローグライク | 冒険が始まるランディングページ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Yuローグライクの魅力を紹介するランディングページ。ブラウザだけで遊べるターン制ダンジョン探索と豊富なカスタマイズ、ミニゲーム、ドキュメントを一目でチェック。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="hero" id="top">
+        <nav class="global-nav" aria-label="主要ナビゲーション">
+            <a class="nav-logo" href="#top">Yu Roguelike</a>
+            <button class="nav-toggle" aria-controls="nav-links" aria-expanded="false">
+                <span class="sr-only">メニューを開く</span>
+                <span class="nav-toggle-line"></span>
+                <span class="nav-toggle-line"></span>
+                <span class="nav-toggle-line"></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#feature">特徴</a></li>
+                <li><a href="#flow">冒険の流れ</a></li>
+                <li><a href="#create">カスタマイズ</a></li>
+                <li><a href="#minigames">ミニゲーム</a></li>
+                <li><a href="#manual">マニュアル</a></li>
+            </ul>
+        </nav>
+
+        <div class="hero-content">
+            <div class="hero-text">
+                <p class="hero-eyebrow">ブラウザだけで遊べるターン制ダンジョン探索</p>
+                <h1>Yuローグライクで、あなたの冒険をデザインしよう</h1>
+                <p class="hero-lead">
+                    奥深い探索、レベル100から解放されるSPとスキル、黄金の宝箱に挑戦するミニゲームまで。
+                    一つのページで遊びも開発も学習も叶います。
+                </p>
+                <div class="hero-actions">
+                    <a class="btn primary" href="../index.html" target="_blank" rel="noopener">デモを開く</a>
+                    <a class="btn ghost" href="#feature">特徴を見る</a>
+                </div>
+                <dl class="hero-meta">
+                    <div>
+                        <dt>対応</dt>
+                        <dd>HTML / CSS / JavaScript</dd>
+                    </div>
+                    <div>
+                        <dt>保存</dt>
+                        <dd>ブラウザ自動セーブ</dd>
+                    </div>
+                    <div>
+                        <dt>難易度</dt>
+                        <dd>選択自由 &amp; カスタマイズ可</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="hero-visual" aria-hidden="true">
+                <div class="orb orb-one"></div>
+                <div class="orb orb-two"></div>
+                <div class="floating-card card-dungeon">
+                    <h3>Procedural Dungeon</h3>
+                    <p>毎回変わるレイアウトと敵配置</p>
+                </div>
+                <div class="floating-card card-skill">
+                    <h3>SP &amp; Skills</h3>
+                    <p>レベル100で解放される成長戦略</p>
+                </div>
+                <div class="floating-card card-minigame">
+                    <h3>MiniExp</h3>
+                    <p>黄金の宝箱タイミングを掴め</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="feature" class="section feature-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker">Feature Highlights</span>
+                <h2>ゲームの魅力</h2>
+                <p>
+                    ダンジョン選択から冒険までの流れ、豊富なカスタマイズ性、充実のドキュメントにより、
+                    プレイヤーも開発者も幅広く楽しめます。
+                </p>
+            </div>
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <h3>ブラウザですぐに冒険開始</h3>
+                    <p>HTML / CSS / JavaScript だけで完結。インストール不要で PC でもモバイルでも遊べます。</p>
+                </article>
+                <article class="feature-card">
+                    <h3>選べる世界と難易度</h3>
+                    <p>タイトル画面で難易度とダンジョンを選び、推奨レベルを確かめてから潜入。毎回変わる自動生成のマップに挑戦しましょう。</p>
+                </article>
+                <article class="feature-card">
+                    <h3>冒険者を育てるスキルツリー</h3>
+                    <p>レベル100から開放されるSPとスキルシステムで、高難度ダンジョン攻略に備えたビルドが組めます。</p>
+                </article>
+                <article class="feature-card">
+                    <h3>豊富なミニゲームとツール</h3>
+                    <p>探索の合間に遊べるミニゲームや、制作を支援するユーティリティが数多く同梱されています。</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="flow" class="section flow-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker">Gameplay</span>
+                <h2>冒険の流れ</h2>
+                <p>遊び方のマニュアルから、ステップごとの魅力をピックアップしました。</p>
+            </div>
+            <ol class="flow-timeline">
+                <li>
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h3>1. ダンジョンと難易度を選択</h3>
+                        <p>推奨レベルや報酬を確認しながら、挑むダンジョンを決めます。</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h3>2. 自動生成の階層を探索</h3>
+                        <p>ターン制で1マスずつ進み、敵との距離を測りながら戦略的に行動。</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h3>3. 宝箱イベントでリワード獲得</h3>
+                        <p>黄金の宝箱ではタイミングゲームに挑戦し、レアな強化アイテムを狙えます。</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h3>4. 成果を持ち帰り再挑戦</h3>
+                        <p>自動保存されたステータスをもとに、次の冒険へすぐアクセス。</p>
+                    </div>
+                </li>
+            </ol>
+        </section>
+
+        <section id="create" class="section persona-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker">For Creators</span>
+                <h2>作る・学ぶ人へ</h2>
+                <p>Yuローグライクはプレイヤーだけでなく、制作者や教育用途でも活用しやすい構造です。</p>
+            </div>
+            <div class="persona-grid">
+                <article class="persona-card">
+                    <h3>カスタマイズ派の制作者に</h3>
+                    <p>JSONファイルでダンジョンや難易度を調整、CSSでテーマを刷新、JavaScriptでタブやUIを追加できます。</p>
+                    <ul>
+                        <li>games / dungeontypes データの即時編集</li>
+                        <li>UIレイアウトとスタイリングの自由度</li>
+                        <li>拡張用 API の豊富なリファレンス</li>
+                    </ul>
+                </article>
+                <article class="persona-card">
+                    <h3>学習教材として</h3>
+                    <p>コメントや設計書が揃っているので、JavaScriptの学習や授業の題材にも最適。</p>
+                    <ul>
+                        <li>構造を理解しやすいフォルダ構成</li>
+                        <li>手順を追えるマニュアルとチュートリアル</li>
+                        <li>演習しやすいミニゲームのサンプル</li>
+                    </ul>
+                </article>
+                <article class="persona-card">
+                    <h3>コミュニティでの共有</h3>
+                    <p>ツールズタブで開発を効率化し、ミニゲームの結果を本編に連携させるヒントも提供。</p>
+                    <ul>
+                        <li>ブロックデータ編集などのユーティリティ</li>
+                        <li>共通データ管理のベストプラクティス</li>
+                        <li>UI統一に役立つスタイルガイド</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section id="minigames" class="section minigame-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker">MiniExp Gallery</span>
+                <h2>収録ミニゲーム&ツール</h2>
+                <p>制作の合間も飽きさせない、多彩なサイドコンテンツをスライドでチェック。</p>
+            </div>
+            <div class="carousel" role="region" aria-live="polite">
+                <button class="carousel-control prev" aria-label="前へ">
+                    <span>&larr;</span>
+                </button>
+                <div class="carousel-window">
+                    <article class="carousel-card">
+                        <h3 class="carousel-title"></h3>
+                        <p class="carousel-tagline"></p>
+                        <ul class="carousel-points"></ul>
+                    </article>
+                </div>
+                <button class="carousel-control next" aria-label="次へ">
+                    <span>&rarr;</span>
+                </button>
+            </div>
+            <div class="carousel-indicators" role="tablist"></div>
+        </section>
+
+        <section id="manual" class="section manual-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker">Documentation</span>
+                <h2>マニュアルで深掘り</h2>
+                <p>オンラインマニュアルのトピックをショートカットで確認。開発から遊び方まで丁寧に網羅されています。</p>
+            </div>
+            <div class="manual-grid">
+                <article class="manual-card" data-url="../manual/overview.html" tabindex="0">
+                    <h3>ゲーム全体の概要</h3>
+                    <p>ゲームの特徴や想定ユーザー、進行の流れを把握して冒険の全体像を掴みましょう。</p>
+                </article>
+                <article class="manual-card" data-url="../manual/how-to-play.html" tabindex="0">
+                    <h3>遊び方と攻略</h3>
+                    <p>ターン制探索の流れや黄金の宝箱の仕組みなど、攻略のコツを詳しく解説。</p>
+                </article>
+                <article class="manual-card" data-url="../manual/structure.html" tabindex="0">
+                    <h3>フォルダ構成ガイド</h3>
+                    <p>どのファイルを編集すれば良いか迷わないよう、プロジェクト構造を紹介。</p>
+                </article>
+                <article class="manual-card" data-url="../manual/minigames.html" tabindex="0">
+                    <h3>ミニゲーム&ツール一覧</h3>
+                    <p>制作のヒントが詰まったミニゲームとユーティリティのハイライトをチェック。</p>
+                </article>
+            </div>
+            <div class="manual-action">
+                <a class="btn primary" href="../manual/index.html" target="_blank" rel="noopener">オンラインマニュアルを開く</a>
+            </div>
+        </section>
+
+        <section id="cta" class="section cta-section reveal">
+            <div class="cta-inner">
+                <h2>新しいダンジョンを、今すぐ設計しよう</h2>
+                <p>好きなデータを書き換えて自分だけの冒険を作成。探索と開発の世界が一体になったブラウザRPGです。</p>
+                <div class="cta-actions">
+                    <a class="btn primary" href="../index.html" target="_blank" rel="noopener">ゲームを起動</a>
+                    <a class="btn ghost" href="../manual/start.html" target="_blank" rel="noopener">導入ガイドを見る</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <small>© 2024 Yuローグライク Project. All rights reserved.</small>
+    </footer>
+
+    <div class="scroll-top">
+        <button class="scroll-top-button" aria-label="ページ上部に戻る">▲</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

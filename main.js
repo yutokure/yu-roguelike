@@ -80,6 +80,9 @@ function refreshLanguageSwitcher(locale) {
 document.addEventListener('i18n:locale-changed', (event) => {
     const locale = event?.detail?.locale || i18n.getLocale();
     refreshLanguageSwitcher(locale);
+    if (typeof i18n.applyTranslations === 'function') {
+        i18n.applyTranslations(document.body);
+    }
     const rerenderEvent = new CustomEvent('app:rerender', { detail: { locale } });
     document.dispatchEvent(rerenderEvent);
 });
@@ -89,6 +92,9 @@ refreshLanguageSwitcher(i18n.getLocale());
 const storedLocalePreference = typeof i18n.getStoredLocale === 'function' ? i18n.getStoredLocale() : null;
 const initialLocale = storedLocalePreference || (typeof i18n.getDefaultLocale === 'function' ? i18n.getDefaultLocale() : 'ja');
 await i18n.setLocale(initialLocale);
+if (typeof i18n.applyTranslations === 'function') {
+    i18n.applyTranslations(document.body);
+}
 
 if (languageSelect) {
     languageSelect.addEventListener('change', async (event) => {

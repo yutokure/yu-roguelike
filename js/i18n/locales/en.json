@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "title": "Yu Roguelike"
+  },
+  "header": {
+    "title": "Yu Roguelike"
+  },
+  "ui": {
+    "language": {
+      "label": "Language",
+      "ariaLabel": "Language selector",
+      "option": {
+        "ja": "Japanese",
+        "en": "English"
+      }
+    }
+  },
+  "selection": {
+    "title": "Dungeon Selection",
+    "difficulty": {
+      "label": "Difficulty",
+      "option": {
+        "veryEasy": "Very Easy",
+        "easy": "Easy",
+        "normal": "Normal",
+        "second": "Second",
+        "hard": "Hard",
+        "veryHard": "Very Hard"
+      }
+    },
+    "tabs": {
+      "ariaLabel": "Dungeon selection tabs",
+      "normal": "Normal",
+      "blockdim": "Block Dimension",
+      "miniexp": "Mini-Game Experience",
+      "tools": "Tools",
+      "achievements": "Achievements & Stats"
+    },
+    "normal": {
+      "worlds": "Worlds",
+      "dungeons": "Dungeons",
+      "detail": {
+        "name": "Dungeon Name",
+        "typeLabel": "Type:",
+        "typeValue": "Field",
+        "recommendedLabel": "Recommended Level:",
+        "damageLabel": "Damage Multipliers:",
+        "damageValue": "Deal: 1.6x / Take: 0.5x",
+        "descriptionLabel": "Description:",
+        "description": "Dungeon description",
+        "start": "Enter Dungeon"
+      }
+    },
+    "blockdim": {
+      "nested": {
+        "label": "NESTED Dimension",
+        "title": "NESTED dimension: recommended level increases by 2600*(N-1)"
+      },
+      "dimension": {
+        "label": "Dimension",
+        "listLabel": "Dimension",
+        "first": "1st",
+        "second": "2nd",
+        "third": "3rd"
+      },
+      "card": {
+        "title": "Synthesis Preview",
+        "selection": "Selection",
+        "level": "Recommended Lv",
+        "type": "Type",
+        "depth": "Depth",
+        "size": "Size",
+        "chest": "Chest",
+        "boss": "Boss Floor",
+        "note": "Identical selections produce identical generation (fixed seed).",
+        "gate": "Gate",
+        "addBookmark": "★ Add Bookmark",
+        "addBookmarkTitle": "Bookmark current combination",
+        "clearHistory": "Clear History",
+        "clearHistoryTitle": "Clear all Gate history",
+        "random": "🎲 Random Select (1st/2nd/3rd)",
+        "randomTitle": "Pick 1st/2nd/3rd randomly",
+        "randomTarget": "Target Lv (block total)",
+        "randomTargetTitle": "Ignore base dimension level; only sum the three block levels.",
+        "randomType": "Type Priority",
+        "randomTypeTitle": "Prefer matching type",
+        "randomTypeNone": "No preference",
+        "weightedRandom": "🎯 Weighted Random",
+        "weightedRandomTitle": "Random selection weighted by target level and type priority"
+      },
+      "history": {
+        "title": "Gate History"
+      },
+      "bookmarks": {
+        "title": "Block Bookmarks"
+      },
+      "test": {
+        "title": "Dungeon Test",
+        "description": "Generates every registered dungeon type with random seeds to verify BlockDim is safe. Errors are logged and the run never finishes if an infinite loop occurs.",
+        "run": "🧪 Run Dungeon Test",
+        "idle": "Idle"
+      }
+    },
+    "miniexp": {
+      "categories": "Category list",
+      "displayModes": "Display modes",
+      "list": "Mini-game list",
+      "difficulty": {
+        "label": "Difficulty",
+        "easy": "EASY",
+        "normal": "NORMAL",
+        "hard": "HARD"
+      },
+      "start": "Start",
+      "pause": "Pause",
+      "restart": "Resume/Restart",
+      "quit": "Quit",
+      "hud": {
+        "level": "Lv",
+        "sp": "SP",
+        "expLabel": "EXP "
+      },
+      "placeholder": "Select a mini-game from the list on the left."
+    }
+  }
+}

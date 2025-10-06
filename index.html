@@ -3,131 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuローグライク</title>
+    <title data-i18n="meta.title"></title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="site-header">
-        <h1>Yuローグライク</h1>
+        <h1 data-i18n="header.title"></h1>
         <div class="language-switcher">
-            <label for="language-select">Language</label>
-            <select id="language-select" aria-label="Language selector">
-                <option value="ja">日本語</option>
-                <option value="en">English</option>
+            <label for="language-select" data-i18n="ui.language.label"></label>
+            <select id="language-select" aria-label="" data-i18n-attr="aria-label:ui.language.ariaLabel">
+                <option value="ja" data-i18n="ui.language.option.ja"></option>
+                <option value="en" data-i18n="ui.language.option.en"></option>
             </select>
         </div>
     </header>
     <div id="selection-screen">
         <div class="selection-card">
-            <h2>ダンジョン選択</h2>
+            <h2 data-i18n="selection.title"></h2>
             <div class="row">
-                <label for="difficulty-select">難易度</label>
+                <label for="difficulty-select" data-i18n="selection.difficulty.label"></label>
                 <select id="difficulty-select">
-                    <option value="Very Easy">Very Easy</option>
-                    <option value="Easy">Easy</option>
-                    <option value="Normal" selected>Normal</option>
-                    <option value="Second">Second</option>
-                    <option value="Hard">Hard</option>
-                    <option value="Very Hard">Very Hard</option>
+                    <option value="Very Easy" data-i18n="selection.difficulty.option.veryEasy"></option>
+                    <option value="Easy" data-i18n="selection.difficulty.option.easy"></option>
+                    <option value="Normal" selected data-i18n="selection.difficulty.option.normal"></option>
+                    <option value="Second" data-i18n="selection.difficulty.option.second"></option>
+                    <option value="Hard" data-i18n="selection.difficulty.option.hard"></option>
+                    <option value="Very Hard" data-i18n="selection.difficulty.option.veryHard"></option>
                 </select>
             </div>
-            <div class="tabs" role="tablist" aria-label="ダンジョン選択タブ">
-                <button id="tab-button-normal" class="tab-button active" role="tab" aria-selected="true" aria-controls="tab-normal">通常</button>
-                <button id="tab-button-blockdim" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-blockdim">ブロック次元</button>
-                <button id="tab-button-miniexp" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-miniexp">ミニゲー経験</button>
-                <button id="tab-button-tools" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-tools">ツールズ</button>
-                <button id="tab-button-achievements" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-achievements">実績・統計</button>
+            <div class="tabs" role="tablist" aria-label="" data-i18n-attr="aria-label:selection.tabs.ariaLabel">
+                <button id="tab-button-normal" class="tab-button active" role="tab" aria-selected="true" aria-controls="tab-normal" data-i18n="selection.tabs.normal"></button>
+                <button id="tab-button-blockdim" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-blockdim" data-i18n="selection.tabs.blockdim"></button>
+                <button id="tab-button-miniexp" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-miniexp" data-i18n="selection.tabs.miniexp"></button>
+                <button id="tab-button-tools" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-tools" data-i18n="selection.tabs.tools"></button>
+                <button id="tab-button-achievements" class="tab-button" role="tab" aria-selected="false" aria-controls="tab-achievements" data-i18n="selection.tabs.achievements"></button>
             </div>
             <div id="tab-normal" class="tab-content active" role="tabpanel" aria-labelledby="tab-button-normal">
             <div class="row">
                 <div class="worlds">
-                    <span>世界</span>
+                    <span data-i18n="selection.normal.worlds"></span>
                     <div id="world-buttons"></div>
                 </div>
             </div>
             <div class="row">
                 <div class="dungeons">
-                    <span>ダンジョン</span>
+                    <span data-i18n="selection.normal.dungeons"></span>
                     <div id="dungeon-buttons"></div>
                 </div>
             </div>
             <div class="row">
                 <div id="dungeon-detail-card" class="dungeon-detail-card" style="display: none;">
-                    <h3 id="dungeon-name">ダンジョン名</h3>
+                    <h3 id="dungeon-name" data-i18n="selection.normal.detail.name"></h3>
                     <div class="detail-row">
-                        <span class="label">種類:</span>
-                        <span id="dungeon-type">フィールド</span>
+                        <span class="label" data-i18n="selection.normal.detail.typeLabel"></span>
+                        <span id="dungeon-type" data-i18n="selection.normal.detail.typeValue"></span>
                     </div>
                     <div class="detail-row">
-                        <span class="label">推奨レベル:</span>
+                        <span class="label" data-i18n="selection.normal.detail.recommendedLabel"></span>
                         <span id="dungeon-recommended-level">1</span>
                     </div>
                     <div class="detail-row">
-                        <span class="label">ダメージ倍率:</span>
-                        <span id="dungeon-damage-multiplier">与: 1.6x / 被: 0.5x</span>
+                        <span class="label" data-i18n="selection.normal.detail.damageLabel"></span>
+                        <span id="dungeon-damage-multiplier" data-i18n="selection.normal.detail.damageValue"></span>
                     </div>
                     <div class="detail-row">
-                        <span class="label">説明:</span>
-                        <span id="dungeon-description">ダンジョンの説明</span>
+                        <span class="label" data-i18n="selection.normal.detail.descriptionLabel"></span>
+                        <span id="dungeon-description" data-i18n="selection.normal.detail.description"></span>
                     </div>
-                    <button id="start-dungeon-btn" class="start-btn">ダンジョンに入る</button>
+                    <button id="start-dungeon-btn" class="start-btn" data-i18n="selection.normal.detail.start"></button>
                 </div>
             </div>
             </div>
             <div id="tab-blockdim" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-blockdim">
                 <div class="row">
                     <div class="bdim-field">
-                        <label for="bdim-nested">NESTED次元</label>
-                        <input id="bdim-nested" type="number" min="1" max="99999999" step="1" value="1" title="NESTED次元: 推奨Lvが2600*(N-1)増加します" />
+                        <label for="bdim-nested" data-i18n="selection.blockdim.nested.label"></label>
+                        <input id="bdim-nested" type="number" min="1" max="99999999" step="1" value="1" data-i18n-attr="title:selection.blockdim.nested.title" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="bdim-grid">
                         <div class="bdim-field">
-                            <label>次元</label>
-                            <div id="bdim-list-dimension" class="bdim-list" role="listbox" tabindex="0" aria-label="次元"></div>
+                            <label data-i18n="selection.blockdim.dimension.label"></label>
+                            <div id="bdim-list-dimension" class="bdim-list" role="listbox" tabindex="0" aria-label="" data-i18n-attr="aria-label:selection.blockdim.dimension.listLabel"></div>
                         </div>
                         <div class="bdim-field">
-                            <label>1st</label>
-                            <div id="bdim-list-1st" class="bdim-list" role="listbox" tabindex="0" aria-label="1st"></div>
+                            <label data-i18n="selection.blockdim.dimension.first"></label>
+                            <div id="bdim-list-1st" class="bdim-list" role="listbox" tabindex="0" aria-label="" data-i18n-attr="aria-label:selection.blockdim.dimension.first"></div>
                         </div>
                         <div class="bdim-field">
-                            <label>2nd</label>
-                            <div id="bdim-list-2nd" class="bdim-list" role="listbox" tabindex="0" aria-label="2nd"></div>
+                            <label data-i18n="selection.blockdim.dimension.second"></label>
+                            <div id="bdim-list-2nd" class="bdim-list" role="listbox" tabindex="0" aria-label="" data-i18n-attr="aria-label:selection.blockdim.dimension.second"></div>
                         </div>
                         <div class="bdim-field">
-                            <label>3rd</label>
-                            <div id="bdim-list-3rd" class="bdim-list" role="listbox" tabindex="0" aria-label="3rd"></div>
+                            <label data-i18n="selection.blockdim.dimension.third"></label>
+                            <div id="bdim-list-3rd" class="bdim-list" role="listbox" tabindex="0" aria-label="" data-i18n-attr="aria-label:selection.blockdim.dimension.third"></div>
                         </div>
                     </div>
                 </div>
                 <div class="row">
                     <div id="bdim-card" class="bdim-card">
-                        <h3>合成プレビュー</h3>
-                        <div class="bdim-card-row"><span class="label">選択</span><span id="bdim-card-selection">-</span></div>
-                        <div class="bdim-card-row"><span class="label">推奨Lv</span><span id="bdim-card-level">-</span></div>
-                        <div class="bdim-card-row"><span class="label">タイプ</span><span id="bdim-card-type">-</span></div>
-                        <div class="bdim-card-row"><span class="label">深さ</span><span id="bdim-card-depth">-</span></div>
-                        <div class="bdim-card-row"><span class="label">サイズ</span><span id="bdim-card-size">-</span></div>
-                        <div class="bdim-card-row"><span class="label">宝箱</span><span id="bdim-card-chest">-</span></div>
-                        <div class="bdim-card-row"><span class="label">ボス階</span><span id="bdim-card-boss">-</span></div>
-                        <small class="bdim-note">同一選択は同一生成（固定シード）</small>
+                        <h3 data-i18n="selection.blockdim.card.title"></h3>
+                        <div class="bdim-card-row"><span class="label" data-i18n="selection.blockdim.card.selection"></span><span id="bdim-card-selection">-</span></div>
+                        <div class="bdim-card-row"><span class="label" data-i18n="selection.blockdim.card.level"></span><span id="bdim-card-level">-</span></div>
+                        <div class="bdim-card-row"><span class="label" data-i18n="selection.blockdim.card.type"></span><span id="bdim-card-type">-</span></div>
+                        <div class="bdim-card-row"><span class="label" data-i18n="selection.blockdim.card.depth"></span><span id="bdim-card-depth">-</span></div>
+                        <div class="bdim-card-row"><span class="label" data-i18n="selection.blockdim.card.size"></span><span id="bdim-card-size">-</span></div>
+                        <div class="bdim-card-row"><span class="label" data-i18n="selection.blockdim.card.chest"></span><span id="bdim-card-chest">-</span></div>
+                        <div class="bdim-card-row"><span class="label" data-i18n="selection.blockdim.card.boss"></span><span id="bdim-card-boss">-</span></div>
+                        <small class="bdim-note" data-i18n="selection.blockdim.card.note"></small>
                         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-                            <button id="bdim-start-button" class="start-btn" disabled>Gate</button>
-                            <button id="bdim-add-bookmark" title="現在の組み合わせをブックマーク">★ ブックマーク追加</button>
-                            <button id="bdim-clear-history" title="Gate履歴を全消去">履歴クリア</button>
+                            <button id="bdim-start-button" class="start-btn" disabled data-i18n="selection.blockdim.card.gate"></button>
+                            <button id="bdim-add-bookmark" data-i18n="selection.blockdim.card.addBookmark" data-i18n-attr="title:selection.blockdim.card.addBookmarkTitle"></button>
+                            <button id="bdim-clear-history" data-i18n="selection.blockdim.card.clearHistory" data-i18n-attr="title:selection.blockdim.card.clearHistoryTitle"></button>
                         </div>
                         <!-- ランダム選択（等確率）ボタン（Gateボタンの下） -->
                         <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                            <button id="bdim-random-button" title="1st/2nd/3rd をランダムに選択">🎲 ランダム選択（1st/2nd/3rd）</button>
+                            <button id="bdim-random-button" data-i18n="selection.blockdim.card.random" data-i18n-attr="title:selection.blockdim.card.randomTitle"></button>
                         </div>
                         <!-- 重み付きランダム設定 -->
                         <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                            <label for="bdim-random-target">目標Lv(ブロック合計)</label>
-                            <input id="bdim-random-target" type="number" min="-10" max="102" step="1" value="0" style="width:96px" title="次元の基準Lvは無視し、ブロック3つのLv合計のみ" />
-                            <label for="bdim-random-type">タイプ優先</label>
-                            <select id="bdim-random-type" title="一致タイプを優先的に選びます">
-                                <option value="">指定なし</option>
+                            <label for="bdim-random-target" data-i18n="selection.blockdim.card.randomTarget"></label>
+                            <input id="bdim-random-target" type="number" min="-10" max="102" step="1" value="0" style="width:96px" data-i18n-attr="title:selection.blockdim.card.randomTargetTitle" />
+                            <label for="bdim-random-type" data-i18n="selection.blockdim.card.randomType"></label>
+                            <select id="bdim-random-type" data-i18n-attr="title:selection.blockdim.card.randomTypeTitle">
+                                <option value="" data-i18n="selection.blockdim.card.randomTypeNone"></option>
                                 <option value="field">field</option>
                                 <option value="cave">cave</option>
                                 <option value="grid">grid</option>
@@ -141,29 +141,29 @@
                                 <option value="snake">snake</option>
                                 <option value="circle-rooms">circle-rooms</option>
                             </select>
-                            <button id="bdim-weighted-random-button" title="目標Lvとタイプ優先でランダム選択">🎯 重み付きランダム</button>
+                            <button id="bdim-weighted-random-button" data-i18n="selection.blockdim.card.weightedRandom" data-i18n-attr="title:selection.blockdim.card.weightedRandomTitle"></button>
                         </div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="bdim-card" style="background:linear-gradient(135deg,#764ba2,#667eea);">
-                        <h3>Gate履歴</h3>
+                        <h3 data-i18n="selection.blockdim.history.title"></h3>
                         <div id="bdim-history" aria-live="polite"></div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="bdim-card" style="background:linear-gradient(135deg,#764ba2,#667eea);">
-                        <h3>ブロックブックマーク</h3>
+                        <h3 data-i18n="selection.blockdim.bookmarks.title"></h3>
                         <div id="bdim-bookmarks" aria-live="polite"></div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="bdim-card bdim-test-card">
-                        <h3>ダンジョンテスト</h3>
-                        <p class="bdim-test-desc">ランダムなシードで全ての登録ダンジョンタイプを生成し、安全にブロック次元を遊べるか検証します。エラーが発生してもログに記録され、無限ループが起きた場合は完了しません。</p>
+                        <h3 data-i18n="selection.blockdim.test.title"></h3>
+                        <p class="bdim-test-desc" data-i18n="selection.blockdim.test.description"></p>
                         <div class="bdim-test-actions">
-                            <button id="bdim-test-button" type="button">🧪 ダンジョンテスト</button>
-                            <span id="bdim-test-status" class="bdim-test-status" role="status" aria-live="polite">待機中</span>
+                            <button id="bdim-test-button" type="button" data-i18n="selection.blockdim.test.run"></button>
+                            <span id="bdim-test-status" class="bdim-test-status" role="status" aria-live="polite" data-i18n="selection.blockdim.test.idle"></span>
                         </div>
                         <pre id="bdim-test-log" class="bdim-test-log" aria-live="polite" aria-atomic="false"></pre>
                     </div>
@@ -172,33 +172,33 @@
             <div id="tab-miniexp" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-miniexp">
                 <div class="row">
                     <div class="miniexp-layout">
-                        <div id="miniexp-cat-list" class="miniexp-cat-list" role="listbox" aria-label="カテゴリ一覧" tabindex="0"></div>
-                        <div id="miniexp-display-modes" class="miniexp-display-toolbar" role="group" aria-label="表示形式"></div>
-                        <div id="miniexp-list" class="miniexp-list" role="listbox" aria-label="ミニゲーム一覧" tabindex="0"></div>
+                        <div id="miniexp-cat-list" class="miniexp-cat-list" role="listbox" aria-label="" tabindex="0" data-i18n-attr="aria-label:selection.miniexp.categories"></div>
+                        <div id="miniexp-display-modes" class="miniexp-display-toolbar" role="group" aria-label="" data-i18n-attr="aria-label:selection.miniexp.displayModes"></div>
+                        <div id="miniexp-list" class="miniexp-list" role="listbox" aria-label="" tabindex="0" data-i18n-attr="aria-label:selection.miniexp.list"></div>
                         <div class="miniexp-panel">
                             <div class="miniexp-toolbar">
-                                <label for="miniexp-difficulty">難易度</label>
+                                <label for="miniexp-difficulty" data-i18n="selection.miniexp.difficulty"></label>
                                 <select id="miniexp-difficulty">
-                                    <option value="EASY">EASY</option>
-                                    <option value="NORMAL" selected>NORMAL</option>
-                                    <option value="HARD">HARD</option>
+                                    <option value="EASY" data-i18n="selection.miniexp.difficulty.easy"></option>
+                                    <option value="NORMAL" selected data-i18n="selection.miniexp.difficulty.normal"></option>
+                                    <option value="HARD" data-i18n="selection.miniexp.difficulty.hard"></option>
                                 </select>
-                                <button id="miniexp-start">開始</button>
-                                <button id="miniexp-pause" disabled>一時停止</button>
-                                <button id="miniexp-restart" disabled>再開/再起動</button>
-                                <button id="miniexp-quit" disabled>終了</button>
+                                <button id="miniexp-start" data-i18n="selection.miniexp.start"></button>
+                                <button id="miniexp-pause" disabled data-i18n="selection.miniexp.pause"></button>
+                                <button id="miniexp-restart" disabled data-i18n="selection.miniexp.restart"></button>
+                                <button id="miniexp-quit" disabled data-i18n="selection.miniexp.quit"></button>
                             </div>
                             <div id="miniexp-container" class="miniexp-container" aria-live="polite"></div>
                             <div id="miniexp-hud" class="miniexp-hud" aria-live="polite"></div>
                             <div id="miniexp-player-hud" class="miniexp-player-hud" aria-live="polite">
-                                <div class="mini-stat-line"><span>Lv</span><span id="miniexp-hud-level">1</span></div>
-                                <div class="mini-stat-line"><span>SP</span><span id="miniexp-hud-sp">0/0</span></div>
+                                <div class="mini-stat-line"><span data-i18n="selection.miniexp.hud.level"></span><span id="miniexp-hud-level">1</span></div>
+                                <div class="mini-stat-line"><span data-i18n="selection.miniexp.hud.sp"></span><span id="miniexp-hud-sp">0/0</span></div>
                                 <div class="mini-bar exp">
-                                    <div class="mini-bar-label">EXP <span id="miniexp-hud-exp-text">0/1000</span></div>
+                                    <div class="mini-bar-label" data-i18n="selection.miniexp.hud.expLabel"><span id="miniexp-hud-exp-text">0/1000</span></div>
                                     <div class="mini-bar-track"><div id="miniexp-exp-bar" class="mini-bar-fill"></div></div>
                                 </div>
                             </div>
-                            <div id="miniexp-placeholder" class="miniexp-placeholder">左の一覧からミニゲームを選択してください。</div>
+                            <div id="miniexp-placeholder" class="miniexp-placeholder" data-i18n="selection.miniexp.placeholder"></div>
                             <div id="miniexp-records" class="miniexp-records" aria-live="polite"></div>
                         </div>
                     </div>

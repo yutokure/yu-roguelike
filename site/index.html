@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Yuローグライク | 無限生成ローグライクのランディングページ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="376種類のダンジョン生成アルゴリズムと70種類の高品質ミニゲームを内包したYuローグライクの紹介サイト。ミニゲームの結果が経験値に繋がり、サンドボックスモードとパッシブの玉で自分だけの成長を楽しめます。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="hero" id="top">
+        <nav class="global-nav" aria-label="主要ナビゲーション" data-i18n-attr="aria-label:nav.ariaLabel">
+            <a class="nav-logo" href="#top">Yu Roguelike</a>
+            <div class="nav-controls">
+                <button class="lang-toggle" type="button" aria-label="言語をEnglishに切り替える" data-i18n-attr="aria-label:lang.toggleAria" data-i18n="lang.toggleLabel">English</button>
+                <button class="nav-toggle" aria-controls="nav-links" aria-expanded="false">
+                    <span class="sr-only" data-i18n="nav.toggle">メニューを開く</span>
+                    <span class="nav-toggle-line"></span>
+                    <span class="nav-toggle-line"></span>
+                    <span class="nav-toggle-line"></span>
+                </button>
+            </div>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#feature" data-i18n="nav.feature">特徴</a></li>
+                <li><a href="#flow" data-i18n="nav.flow">冒険の流れ</a></li>
+                <li><a href="#create" data-i18n="nav.create">カスタマイズ</a></li>
+                <li><a href="#minigames" data-i18n="nav.minigames">ミニゲーム</a></li>
+                <li><a href="#manual" data-i18n="nav.manual">マニュアル</a></li>
+            </ul>
+        </nav>
+
+        <div class="hero-content">
+            <div class="hero-text">
+                <p class="hero-eyebrow" data-i18n="hero.eyebrow">376の生成アルゴリズム × 70種のミニゲーム</p>
+                <h1 data-i18n="hero.title">Yuローグライクで、無限の冒険をデザインしよう</h1>
+                <p class="hero-lead" data-i18n="hero.lead">
+                    376種類のダンジョン生成アルゴリズムと、経験値に直結する70種類の高品質ミニゲーム。サンドボックスモードとパッシブの玉システムで、あなたのビルドを自由に磨き上げましょう。
+                </p>
+                <div class="hero-actions">
+                    <a class="btn primary" href="../index.html" target="_blank" rel="noopener" data-i18n="hero.primaryCta">デモを起動</a>
+                    <a class="btn ghost" href="#feature" data-i18n="hero.secondaryCta">特徴を見る</a>
+                </div>
+                <dl class="hero-meta">
+                    <div>
+                        <dt data-i18n="hero.meta.platform">対応</dt>
+                        <dd data-i18n="hero.meta.platformValue">HTML / CSS / JavaScript</dd>
+                    </div>
+                    <div>
+                        <dt data-i18n="hero.meta.save">保存</dt>
+                        <dd data-i18n="hero.meta.saveValue">ブラウザ自動セーブ</dd>
+                    </div>
+                    <div>
+                        <dt data-i18n="hero.meta.mode">モード</dt>
+                        <dd data-i18n="hero.meta.modeValue">難易度選択 &amp; サンドボックス</dd>
+                    </div>
+                    <div>
+                        <dt data-i18n="hero.meta.license">ライセンス</dt>
+                        <dd data-i18n="hero.meta.licenseValue">MIT（GitHub公開予定）</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="hero-visual" aria-hidden="true">
+                <div class="orb orb-one"></div>
+                <div class="orb orb-two"></div>
+                <div class="floating-card card-dungeon">
+                    <h3 data-i18n="hero.cardDungeon.title">Procedural Mastery</h3>
+                    <p data-i18n="hero.cardDungeon.body">376通りに広がるフロアと遭遇。</p>
+                </div>
+                <div class="floating-card card-skill">
+                    <h3 data-i18n="hero.cardSkill.title">Passive Orbs</h3>
+                    <p data-i18n="hero.cardSkill.body">集めるほどビルドが加速。</p>
+                </div>
+                <div class="floating-card card-minigame">
+                    <h3 data-i18n="hero.cardMinigame.title">MiniExp Link</h3>
+                    <p data-i18n="hero.cardMinigame.body">ミニゲーム結果が経験値に。</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="feature" class="section feature-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker" data-i18n="feature.kicker">Feature Highlights</span>
+                <h2 data-i18n="feature.heading">ゲームの魅力</h2>
+                <p data-i18n="feature.body">
+                    自動生成のダンジョン、多層的な育成システム、経験値と連動する高品質なミニゲームライブラリが、プレイヤーと制作者双方の創造力を刺激します。
+                </p>
+            </div>
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <h3 data-i18n="feature.card1.title">376種のダンジョン生成</h3>
+                    <p data-i18n="feature.card1.body">生成アルゴリズムを切り替えて、毎回違うレイアウト・敵・ギミックに挑戦。研究者も満足のバラエティです。</p>
+                </article>
+                <article class="feature-card">
+                    <h3 data-i18n="feature.card2.title">70種の高品質ミニゲーム</h3>
+                    <p data-i18n="feature.card2.body">ジャンル横断のMiniExpはすべて経験値に換算。腕試しがそのまま冒険者の成長へ繋がります。</p>
+                </article>
+                <article class="feature-card">
+                    <h3 data-i18n="feature.card3.title">サンドボックスモード</h3>
+                    <p data-i18n="feature.card3.body">オープンなサンドボックスで自分だけのローグライクをシミュレート。敵配置も報酬も自由にチューニングできます。</p>
+                </article>
+                <article class="feature-card">
+                    <h3 data-i18n="feature.card4.title">パッシブの玉システム</h3>
+                    <p data-i18n="feature.card4.body">冒険で集めた玉が常時効果を発揮。ビルドを重ねるたびに戦略が深まる新感覚の育成サイクルです。</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="flow" class="section flow-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker" data-i18n="flow.kicker">Gameplay</span>
+                <h2 data-i18n="flow.heading">冒険の流れ</h2>
+                <p data-i18n="flow.body">ゲーム内マニュアルをベースに、Yuローグライクならではの進行サイクルを4つのステップで紹介します。</p>
+            </div>
+            <ol class="flow-timeline">
+                <li>
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h3 data-i18n="flow.step1.title">1. ダンジョンと難易度を選択</h3>
+                        <p data-i18n="flow.step1.body">376種類の生成アルゴリズムと推奨レベルを比較し、挑む世界と報酬テーブルを決定します。</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h3 data-i18n="flow.step2.title">2. ターン制で探索と戦略構築</h3>
+                        <p data-i18n="flow.step2.body">1マス単位の移動とスキル管理でリスクを制御。パッシブの玉を意識したビルド調整が鍵です。</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h3 data-i18n="flow.step3.title">3. MiniExpで経験値をブースト</h3>
+                        <p data-i18n="flow.step3.body">70種の高品質ミニゲームに挑戦し、スコアをそのまま冒険者の経験値や資源に変換します。</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <h3 data-i18n="flow.step4.title">4. サンドボックスで再構築</h3>
+                        <p data-i18n="flow.step4.body">サンドボックスモードでデータを検証。MITライセンス準拠のコードをベースに新たな挑戦を共有できます。</p>
+                    </div>
+                </li>
+            </ol>
+        </section>
+
+        <section id="create" class="section persona-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker" data-i18n="persona.kicker">For Creators</span>
+                <h2 data-i18n="persona.heading">作る・学ぶ人へ</h2>
+                <p data-i18n="persona.body">オープンライセンスで公開予定のプロジェクトだからこそ、ゲーム制作・学習・コミュニティ共有に幅広く活用できます。</p>
+            </div>
+            <div class="persona-grid">
+                <article class="persona-card">
+                    <h3 data-i18n="persona.card1.title">カスタマイズ志向の開発者に</h3>
+                    <p data-i18n="persona.card1.body">JSONやCSS、JavaScriptを編集して、独自のダンジョン、UI、イベントを組み込めます。</p>
+                    <ul>
+                        <li data-i18n="persona.card1.point1">dungeontypesで生成アルゴリズムを差し替え</li>
+                        <li data-i18n="persona.card1.point2">toolsタブでデータ連携を効率化</li>
+                        <li data-i18n="persona.card1.point3">MITライセンスで派生作品も公開しやすい</li>
+                    </ul>
+                </article>
+                <article class="persona-card">
+                    <h3 data-i18n="persona.card2.title">教育・研修の教材として</h3>
+                    <p data-i18n="persona.card2.body">豊富な設計資料とコメント付きコードで、アルゴリズムやゲームデザインの教材に最適です。</p>
+                    <ul>
+                        <li data-i18n="persona.card2.point1">376種アルゴリズムの比較・分析に最適</li>
+                        <li data-i18n="persona.card2.point2">ミニゲームで反復練習と成果測定が可能</li>
+                        <li data-i18n="persona.card2.point3">マニュアルで授業用シナリオを構築</li>
+                    </ul>
+                </article>
+                <article class="persona-card">
+                    <h3 data-i18n="persona.card3.title">コミュニティとのシェアに</h3>
+                    <p data-i18n="persona.card3.body">サンドボックスとMiniExpを組み合わせ、ビルドやスコアを共有する新しい遊び方を提案できます。</p>
+                    <ul>
+                        <li data-i18n="persona.card3.point1">ランキングや協力イベントのベースに</li>
+                        <li data-i18n="persona.card3.point2">Passive Orbsのビルド解説を共有</li>
+                        <li data-i18n="persona.card3.point3">GitHubで拡張MODをコラボ開発</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section id="minigames" class="section minigame-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker" data-i18n="minigame.kicker">MiniExp Gallery</span>
+                <h2 data-i18n="minigame.heading">収録ミニゲーム&ツール</h2>
+                <p data-i18n="minigame.body">70種類の高品質ミニゲームと制作ユーティリティから、代表的なコンテンツをピックアップしました。</p>
+            </div>
+            <div class="carousel" role="region" aria-live="polite">
+                <button class="carousel-control prev" type="button" aria-label="前へ" data-i18n-attr="aria-label:carousel.prev" data-i18n="carousel.prev">前へ</button>
+                <div class="carousel-window">
+                    <article class="carousel-card">
+                        <h3 class="carousel-title"></h3>
+                        <p class="carousel-tagline"></p>
+                        <ul class="carousel-points"></ul>
+                    </article>
+                </div>
+                <button class="carousel-control next" type="button" aria-label="次へ" data-i18n-attr="aria-label:carousel.next" data-i18n="carousel.next">次へ</button>
+            </div>
+            <div class="carousel-indicators" role="tablist"></div>
+        </section>
+
+        <section id="manual" class="section manual-section reveal">
+            <div class="section-heading">
+                <span class="section-kicker" data-i18n="manual.kicker">Documentation</span>
+                <h2 data-i18n="manual.heading">マニュアルで深掘り</h2>
+                <p data-i18n="manual.body">オンラインマニュアルへのショートカットで、開発・攻略・MiniExpの連携方法を素早く確認できます。</p>
+            </div>
+            <div class="manual-grid">
+                <article class="manual-card" data-url="../manual/overview.html" tabindex="0">
+                    <h3 data-i18n="manual.card1.title">ゲーム全体の概要</h3>
+                    <p data-i18n="manual.card1.body">想定ユーザーやゲーム全体の進行を把握し、冒険の全体像を掴みましょう。</p>
+                </article>
+                <article class="manual-card" data-url="../manual/how-to-play.html" tabindex="0">
+                    <h3 data-i18n="manual.card2.title">遊び方と攻略</h3>
+                    <p data-i18n="manual.card2.body">ターン制探索やMiniExp連携のコツを押さえて効率良く成長。</p>
+                </article>
+                <article class="manual-card" data-url="../manual/structure.html" tabindex="0">
+                    <h3 data-i18n="manual.card3.title">フォルダ構成ガイド</h3>
+                    <p data-i18n="manual.card3.body">カスタマイズに必要なファイル位置とデータ連携を整理します。</p>
+                </article>
+                <article class="manual-card" data-url="../manual/minigames.html" tabindex="0">
+                    <h3 data-i18n="manual.card4.title">ミニゲーム&ツール一覧</h3>
+                    <p data-i18n="manual.card4.body">70種類のMiniExpラインナップと制作ツールの特徴をチェック。</p>
+                </article>
+            </div>
+            <div class="manual-action">
+                <a class="btn primary" href="../manual/index.html" target="_blank" rel="noopener" data-i18n="manual.cta">オンラインマニュアルを開く</a>
+            </div>
+        </section>
+
+        <section id="cta" class="section cta-section reveal">
+            <div class="cta-inner">
+                <h2 data-i18n="cta.heading">オープンな冒険を、今すぐ設計しよう</h2>
+                <p data-i18n="cta.body">MITライセンスでGitHub公開予定。ダンジョン生成・MiniExp・サンドボックスを組み合わせて、自分だけのローグライクを世界にシェアできます。</p>
+                <div class="cta-actions">
+                    <a class="btn primary" href="../index.html" target="_blank" rel="noopener" data-i18n="cta.primary">ゲームを起動</a>
+                    <a class="btn ghost" href="../manual/start.html" target="_blank" rel="noopener" data-i18n="cta.secondary">導入ガイドを見る</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <small data-i18n="footer.copy">© 2024 Yuローグライク Project. MIT License under preparation.</small>
+    </footer>
+
+    <div class="scroll-top">
+        <button class="scroll-top-button" aria-label="ページ上部に戻る" data-i18n-attr="aria-label:scrollTop.label">▲</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -19162,7 +19162,7 @@ function makeGenContext() {
         random: Math.random,
         inBounds(x,y){ return x>=1 && x<MAP_WIDTH-1 && y>=1 && y<MAP_HEIGHT-1; },
         set(x,y,v){
-            if (!this.inBounds(x,y)) return;
+            if (!ctx.inBounds(x,y)) return;
             map[y][x] = v ? 1 : 0;
             if (v) {
                 const meta = getTileMeta(x, y);

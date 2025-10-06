@@ -22,6 +22,18 @@
     box-sizing: border-box;
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 html {
     scroll-behavior: smooth;
 }
@@ -132,10 +144,39 @@ ul {
     letter-spacing: 0.08em;
 }
 
+
+.nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-left: auto;
+}
+
+.lang-toggle {
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: transform 0.2s ease, border 0.2s ease, color 0.2s ease;
+}
+
+.lang-toggle:hover,
+.lang-toggle:focus-visible {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .nav-links {
     display: flex;
     gap: 24px;
     font-size: 0.95rem;
+    margin-left: 32px;
 }
 
 .nav-links a {
@@ -493,22 +534,36 @@ ul {
 }
 
 .carousel-control {
-    width: 48px;
+    min-width: 52px;
     height: 48px;
-    border-radius: 50%;
+    padding: 0 18px;
+    border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     background: rgba(255, 255, 255, 0.08);
     color: var(--text);
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.2s ease;
+    transition: background 0.2s ease, transform 0.2s ease, border 0.2s ease;
 }
 
 .carousel-control:hover,
 .carousel-control:focus-visible {
     background: rgba(139, 92, 246, 0.4);
     transform: translateY(-2px);
+    border-color: rgba(139, 92, 246, 0.7);
+}
+
+.carousel-control.prev::before {
+    content: "←";
+    font-size: 1rem;
+}
+
+.carousel-control.next::after {
+    content: "→";
+    font-size: 1rem;
 }
 
 .carousel-indicators {
@@ -715,6 +770,7 @@ ul {
         border-radius: var(--radius-md);
         box-shadow: var(--shadow);
         display: none;
+        margin-left: 0;
     }
 
     .nav-links.is-open {

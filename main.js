@@ -55,6 +55,16 @@ function translateOrFallback(key, fallbackText, params) {
     return computeFallback();
 }
 
+function resolveLocalizedText(key, fallbackText, params) {
+    if (key) {
+        return translateOrFallback(key, fallbackText, params);
+    }
+    if (typeof fallbackText === 'function') {
+        return fallbackText();
+    }
+    return fallbackText ?? '';
+}
+
 function updateLanguageDisplayFormatter(locale) {
     if (typeof Intl === 'undefined' || typeof Intl.DisplayNames !== 'function') {
         languageDisplayNames = null;
@@ -7042,19 +7052,124 @@ let lastGeneratedGenType = null;
 
 // ダンジョン情報
 const dungeonInfo = {
-    1: { name: "初心者の森", type: "field", description: "広い草原に点在する障害物" },
-    11: { name: "暗闇の洞窟", type: "cave", description: "曲がりくねった洞窟システム" },
-    21: { name: "迷宮の遺跡", type: "narrow-maze", description: "細かく複雑な迷路構造の古代遺跡" },
-    31: { name: "地下神殿", type: "rooms", description: "部屋と通路で構成された神殿" },
-    41: { name: "魔法の庭園", type: "circle", description: "魔力に満ちた円形の庭園" },
-    51: { name: "水晶の洞窟", type: "snake", description: "蛇行する水晶の洞窟" },
-    61: { name: "古代の迷宮", type: "wide-maze", description: "時を超えた巨大迷宮" },
-    71: { name: "竜の巣窟", type: "circle-rooms", description: "円形の部屋が連なる竜の巣穴" },
-    81: { name: "星の平原", type: "single-room", description: "星空が美しい一つの大きな部屋" },
-    91: { name: "終焉の塔", type: "mixed", description: "様々な構造が混在する世界の終わりの塔" },
+    1: {
+        name: "初心者の森",
+        nameKey: 'dungeons.base.1.name',
+        type: "field",
+        description: "広い草原に点在する障害物",
+        descriptionKey: 'dungeons.base.1.description'
+    },
+    11: {
+        name: "暗闇の洞窟",
+        nameKey: 'dungeons.base.11.name',
+        type: "cave",
+        description: "曲がりくねった洞窟システム",
+        descriptionKey: 'dungeons.base.11.description'
+    },
+    21: {
+        name: "迷宮の遺跡",
+        nameKey: 'dungeons.base.21.name',
+        type: "narrow-maze",
+        description: "細かく複雑な迷路構造の古代遺跡",
+        descriptionKey: 'dungeons.base.21.description'
+    },
+    31: {
+        name: "地下神殿",
+        nameKey: 'dungeons.base.31.name',
+        type: "rooms",
+        description: "部屋と通路で構成された神殿",
+        descriptionKey: 'dungeons.base.31.description'
+    },
+    41: {
+        name: "魔法の庭園",
+        nameKey: 'dungeons.base.41.name',
+        type: "circle",
+        description: "魔力に満ちた円形の庭園",
+        descriptionKey: 'dungeons.base.41.description'
+    },
+    51: {
+        name: "水晶の洞窟",
+        nameKey: 'dungeons.base.51.name',
+        type: "snake",
+        description: "蛇行する水晶の洞窟",
+        descriptionKey: 'dungeons.base.51.description'
+    },
+    61: {
+        name: "古代の迷宮",
+        nameKey: 'dungeons.base.61.name',
+        type: "wide-maze",
+        description: "時を超えた巨大迷宮",
+        descriptionKey: 'dungeons.base.61.description'
+    },
+    71: {
+        name: "竜の巣窟",
+        nameKey: 'dungeons.base.71.name',
+        type: "circle-rooms",
+        description: "円形の部屋が連なる竜の巣穴",
+        descriptionKey: 'dungeons.base.71.description'
+    },
+    81: {
+        name: "星の平原",
+        nameKey: 'dungeons.base.81.name',
+        type: "single-room",
+        description: "星空が美しい一つの大きな部屋",
+        descriptionKey: 'dungeons.base.81.description'
+    },
+    91: {
+        name: "終焉の塔",
+        nameKey: 'dungeons.base.91.name',
+        type: "mixed",
+        description: "様々な構造が混在する世界の終わりの塔",
+        descriptionKey: 'dungeons.base.91.description'
+    },
     // X世界用
-    'X': { name: "極限の地", type: "mixed", description: "25階層の終極ダンジョン" }
+    'X': {
+        name: "極限の地",
+        nameKey: 'dungeons.base.X.name',
+        type: "mixed",
+        description: "25階層の終極ダンジョン",
+        descriptionKey: 'dungeons.base.X.description'
+    }
 };
+
+const DUNGEON_TYPE_NAME_FALLBACKS = Object.freeze({
+    'field': 'フィールド型',
+    'cave': '洞窟型',
+    'maze': '迷路型',
+    'rooms': '部屋＆通路型',
+    'single-room': '単部屋型',
+    'circle': '円型',
+    'narrow-maze': '狭い迷路型',
+    'wide-maze': '幅広迷路型',
+    'snake': 'スネーク型',
+    'mixed': '混合型',
+    'circle-rooms': '円型部屋＆通路型',
+    'grid': '格子型',
+    'open-space': '空間型'
+});
+
+const DUNGEON_OVERLAY_BADGE_KEYS = Object.freeze({
+    dark: {
+        active: 'ui.dungeonOverlay.badge.dark.active',
+        suppressed: 'ui.dungeonOverlay.badge.dark.suppressed'
+    },
+    poison: {
+        active: 'ui.dungeonOverlay.badge.poison.active',
+        suppressed: 'ui.dungeonOverlay.badge.poison.suppressed'
+    },
+    noise: {
+        active: 'ui.dungeonOverlay.badge.noise.active',
+        suppressed: 'ui.dungeonOverlay.badge.noise.suppressed'
+    },
+    none: 'ui.dungeonOverlay.badge.none'
+});
+
+function getDungeonBaseData(world, baseId) {
+    if (world === 'X') {
+        return dungeonInfo['X'];
+    }
+    return dungeonInfo[baseId];
+}
 
 // ダンジョンレベル
 let dungeonLevel = 1;
@@ -7086,6 +7201,54 @@ const BDIM_TEST_LOG_LIMIT = 400;
 let bdimTestLogLines = [];
 let bdimTestRunning = false;
 
+function findBlockDimEntry(list, key) {
+    if (!Array.isArray(list)) return null;
+    return list.find(entry => entry && entry.key === key) || null;
+}
+
+function resolveDimensionDisplayName(dimension) {
+    if (!dimension) return '';
+    const fallback = () => {
+        if (typeof dimension.name === 'string' && dimension.name.trim()) return dimension.name;
+        if (dimension.key) return String(dimension.key).toUpperCase();
+        return '';
+    };
+    return resolveLocalizedText(dimension.nameKey, fallback) || fallback();
+}
+
+function resolveDimensionNameByKey(key) {
+    const entry = findBlockDimEntry(blockDimTables.dimensions, key);
+    if (entry) return resolveDimensionDisplayName(entry);
+    if (key == null) return '';
+    return String(key).toUpperCase();
+}
+
+function resolveBlockDisplayName(block) {
+    if (!block) return '';
+    const fallback = () => {
+        if (typeof block.name === 'string' && block.name.trim()) return block.name;
+        if (block.key) return String(block.key);
+        return '';
+    };
+    return resolveLocalizedText(block.nameKey, fallback) || fallback();
+}
+
+function resolveBlockNameByKey(list, key) {
+    const entry = findBlockDimEntry(list, key);
+    if (entry) return resolveBlockDisplayName(entry);
+    if (key == null) return '';
+    return String(key);
+}
+
+function getHistoryEntryTypeLabel(entry) {
+    if (!entry) return '';
+    if (entry.typeId) {
+        const pool = Array.isArray(entry.typePool) ? entry.typePool : [];
+        return formatSpecType({ type: entry.typeId, typePool: pool });
+    }
+    return entry.type || '';
+}
+
 function getCurrentFloorGeneratorId() {
     if (currentGeneratorHazards && currentGeneratorHazards.generatorId) {
         return currentGeneratorHazards.generatorId;
@@ -7104,17 +7267,10 @@ function updateDungeonTypeOverlay() {
     if (!dungeonTypeOverlay) return;
 
     const generatorId = getCurrentFloorGeneratorId();
+    const baseData = getDungeonBaseData(selectedWorld, selectedDungeonBase) || null;
 
-    let title = 'ダンジョン';
-    if (generatorId) {
-        try {
-            title = getDungeonTypeName(generatorId);
-        } catch {
-            title = generatorId;
-        }
-    }
-
-    let description = '';
+    let title = resolveLocalizedText(baseData?.nameKey, () => baseData?.name || 'ダンジョン') || 'ダンジョン';
+    let description = resolveLocalizedText(baseData?.descriptionKey, () => baseData?.description || '') || '';
     let def = null;
     try {
         if (generatorId && typeof DungeonGenRegistry !== 'undefined' && DungeonGenRegistry && typeof DungeonGenRegistry.get === 'function') {
@@ -7124,13 +7280,19 @@ function updateDungeonTypeOverlay() {
         def = null;
     }
     if (def) {
-        if (def.name) title = def.name;
-        if (def.description) description = def.description;
-    } else {
+        const defTitle = resolveLocalizedText(def.nameKey, () => def.name || DUNGEON_TYPE_NAME_FALLBACKS[generatorId] || generatorId);
+        if (defTitle) title = defTitle;
+        const defDescription = resolveLocalizedText(def.descriptionKey, () => def.description || '');
+        if (defDescription) description = defDescription;
+    } else if (generatorId) {
         try {
-            const baseData = (selectedWorld === 'X') ? dungeonInfo['X'] : dungeonInfo[selectedDungeonBase];
-            if (baseData && baseData.description) description = baseData.description;
-        } catch {}
+            const typeName = getDungeonTypeName(generatorId);
+            if (typeName) title = typeName;
+        } catch {
+            title = generatorId;
+        }
+    } else {
+        description = resolveLocalizedText(baseData?.descriptionKey, () => baseData?.description || '') || description;
     }
 
     if (dungeonTypeOverlayName) {
@@ -7166,8 +7328,10 @@ function updateDungeonTypeOverlay() {
     const baseDark = !!currentGeneratorHazards.baseDark;
     const darkActive = !!currentGeneratorHazards.darkActive;
     if (baseDark) {
+        const darkLabelKey = darkActive ? DUNGEON_OVERLAY_BADGE_KEYS.dark.active : DUNGEON_OVERLAY_BADGE_KEYS.dark.suppressed;
+        const darkLabel = resolveLocalizedText(darkLabelKey, () => darkActive ? '暗い' : '暗い(抑制中)');
         badges.push({
-            label: darkActive ? '暗い' : '暗い(抑制中)',
+            label: darkLabel,
             className: `dungeon-overlay__badge--hazard-dark${darkActive ? '' : ' dungeon-overlay__badge--suppressed'}`
         });
     }
@@ -7175,8 +7339,10 @@ function updateDungeonTypeOverlay() {
     const basePoison = !!currentGeneratorHazards.basePoisonFog;
     const poisonActive = !!currentGeneratorHazards.poisonFogActive;
     if (basePoison) {
+        const poisonLabelKey = poisonActive ? DUNGEON_OVERLAY_BADGE_KEYS.poison.active : DUNGEON_OVERLAY_BADGE_KEYS.poison.suppressed;
+        const poisonLabel = resolveLocalizedText(poisonLabelKey, () => poisonActive ? '毒霧' : '毒霧(抑制中)');
         badges.push({
-            label: poisonActive ? '毒霧' : '毒霧(抑制中)',
+            label: poisonLabel,
             className: `dungeon-overlay__badge--hazard-poison${poisonActive ? '' : ' dungeon-overlay__badge--suppressed'}`
         });
     }
@@ -7184,8 +7350,10 @@ function updateDungeonTypeOverlay() {
     const baseNoise = !!currentGeneratorHazards.baseNoise;
     const noiseActive = !!currentGeneratorHazards.noiseActive;
     if (baseNoise) {
+        const noiseLabelKey = noiseActive ? DUNGEON_OVERLAY_BADGE_KEYS.noise.active : DUNGEON_OVERLAY_BADGE_KEYS.noise.suppressed;
+        const noiseLabel = resolveLocalizedText(noiseLabelKey, () => noiseActive ? 'ノイズ' : 'ノイズ(抑制中)');
         badges.push({
-            label: noiseActive ? 'ノイズ' : 'ノイズ(抑制中)',
+            label: noiseLabel,
             className: `dungeon-overlay__badge--hazard-noise${noiseActive ? '' : ' dungeon-overlay__badge--suppressed'}`
         });
     }
@@ -7198,7 +7366,8 @@ function updateDungeonTypeOverlay() {
     }
 
     if (!badges.length) {
-        badges.push({ label: '特記事項なし', className: 'dungeon-overlay__badge--neutral' });
+        const noneLabel = resolveLocalizedText(DUNGEON_OVERLAY_BADGE_KEYS.none, '特記事項なし');
+        badges.push({ label: noneLabel || '特記事項なし', className: 'dungeon-overlay__badge--neutral' });
     }
 
     dungeonTypeOverlayFeatures.innerHTML = badges
@@ -7442,14 +7611,26 @@ function buildList(listEl, data, selectedKey, labelFn) {
         opt.setAttribute('role','option');
         opt.dataset.key = entry.key;
         const name = document.createElement('span');
-        name.textContent = labelFn ? labelFn(entry, idx) : (entry.name || entry.key);
+        const labelValue = labelFn
+            ? labelFn(entry, idx)
+            : resolveLocalizedText(entry?.nameKey, () => entry?.name || entry?.key || '') || (entry?.key || '');
+        name.textContent = `${labelValue ?? ''}`;
         opt.appendChild(name);
         if (typeof entry.level === 'number' || entry.type) {
             const tag = document.createElement('span');
             tag.className = 'bdim-tag';
             const parts = [];
             if (typeof entry.level === 'number') parts.push(`Lv${entry.level>=0?'+':''}${entry.level}`);
-            if (entry.type) parts.push(entry.type);
+            if (entry.type) {
+                const typeName = getDungeonTypeName(entry.type);
+                if (typeName && typeName !== entry.type) {
+                    parts.push(`${typeName} (${entry.type})`);
+                } else if (typeName) {
+                    parts.push(typeName);
+                } else {
+                    parts.push(entry.type);
+                }
+            }
             tag.textContent = parts.join(' / ');
             opt.appendChild(tag);
         }
@@ -8114,10 +8295,11 @@ function renderBdimPreview(spec) {
         const b2Key = blockDimState?.b2Key || '';
         const b3Key = blockDimState?.b3Key || '';
         const nested = blockDimState?.nested || 1;
-        const b1 = (blockDimTables.blocks1.find(b=>b.key===b1Key)||{}).name || b1Key;
-        const b2 = (blockDimTables.blocks2.find(b=>b.key===b2Key)||{}).name || b2Key;
-        const b3 = (blockDimTables.blocks3.find(b=>b.key===b3Key)||{}).name || b3Key;
-        bdimCardSelection.textContent = `NESTED ${nested} ／ 次元 ${String(dimKey).toUpperCase()}：${b1}・${b2}・${b3}`;
+        const dimensionName = resolveDimensionNameByKey(dimKey);
+        const b1 = resolveBlockNameByKey(blockDimTables.blocks1, b1Key) || b1Key;
+        const b2 = resolveBlockNameByKey(blockDimTables.blocks2, b2Key) || b2Key;
+        const b3 = resolveBlockNameByKey(blockDimTables.blocks3, b3Key) || b3Key;
+        bdimCardSelection.textContent = `NESTED ${nested} ／ 次元 ${dimensionName || String(dimKey).toUpperCase()}：${b1}・${b2}・${b3}`;
     }
     bdimCardLevel.textContent = String(spec.level);
     bdimCardType.textContent = formatSpecType(spec);
@@ -8146,10 +8328,14 @@ async function initBlockDimUI() {
     const sel1 = blockDimState.b1Key || (blockDimTables.blocks1[0]?.key);
     const sel2 = blockDimState.b2Key || (blockDimTables.blocks2[0]?.key);
     const sel3 = blockDimState.b3Key || (blockDimTables.blocks3[0]?.key);
-    buildList(bdimDimList, blockDimTables.dimensions, selDim, (d)=> `${d.name} (Lv${d.baseLevel})`);
-    buildList(bdim1List, blockDimTables.blocks1, sel1, (b)=> b.name);
-    buildList(bdim2List, blockDimTables.blocks2, sel2, (b)=> b.name);
-    buildList(bdim3List, blockDimTables.blocks3, sel3, (b)=> b.name);
+    buildList(bdimDimList, blockDimTables.dimensions, selDim, (d)=> {
+        const name = resolveDimensionDisplayName(d);
+        const level = Number.isFinite(d?.baseLevel) ? ` (Lv${d.baseLevel})` : '';
+        return `${name}${level}`;
+    });
+    buildList(bdim1List, blockDimTables.blocks1, sel1, (b)=> resolveBlockDisplayName(b));
+    buildList(bdim2List, blockDimTables.blocks2, sel2, (b)=> resolveBlockDisplayName(b));
+    buildList(bdim3List, blockDimTables.blocks3, sel3, (b)=> resolveBlockDisplayName(b));
     enableListKeyboardNavigation(bdimDimList);
     enableListKeyboardNavigation(bdim1List);
     enableListKeyboardNavigation(bdim2List);
@@ -8164,6 +8350,25 @@ async function initBlockDimUI() {
     // First render
     onBlockDimChanged();
     if (bdimStartBtn) { bdimStartBtn.disabled = false; bdimStartBtn.title = ''; }
+    renderHistoryAndBookmarks();
+}
+
+function refreshBlockDimLocaleSensitiveUi() {
+    if (!blockDimTables.__loaded) return;
+    populateBdimRandomTypeSelect();
+    const dimKey = blockDimState?.dimKey || getSelectedKey(bdimDimList) || (blockDimTables.dimensions[0]?.key);
+    const b1Key = blockDimState?.b1Key || getSelectedKey(bdim1List) || (blockDimTables.blocks1[0]?.key);
+    const b2Key = blockDimState?.b2Key || getSelectedKey(bdim2List) || (blockDimTables.blocks2[0]?.key);
+    const b3Key = blockDimState?.b3Key || getSelectedKey(bdim3List) || (blockDimTables.blocks3[0]?.key);
+    buildList(bdimDimList, blockDimTables.dimensions, dimKey, (d)=> {
+        const name = resolveDimensionDisplayName(d);
+        const level = Number.isFinite(d?.baseLevel) ? ` (Lv${d.baseLevel})` : '';
+        return `${name}${level}`;
+    });
+    buildList(bdim1List, blockDimTables.blocks1, b1Key, (b)=> resolveBlockDisplayName(b));
+    buildList(bdim2List, blockDimTables.blocks2, b2Key, (b)=> resolveBlockDisplayName(b));
+    buildList(bdim3List, blockDimTables.blocks3, b3Key, (b)=> resolveBlockDisplayName(b));
+    renderBdimPreview(blockDimState?.spec || null);
     renderHistoryAndBookmarks();
 }
 
@@ -8644,10 +8849,10 @@ function bdimKey(nested, dimKey, b1, b2, b3) {
 
 function labelForEntry(entry) {
     // Human readable short label
-    const dim = (blockDimTables.dimensions.find(d=>d.key===entry.dim)||{name:entry.dim}).name;
-    const b1 = (blockDimTables.blocks1.find(b=>b.key===entry.b1)||{name:entry.b1}).name;
-    const b2 = (blockDimTables.blocks2.find(b=>b.key===entry.b2)||{name:entry.b2}).name;
-    const b3 = (blockDimTables.blocks3.find(b=>b.key===entry.b3)||{name:entry.b3}).name;
+    const dim = resolveDimensionNameByKey(entry.dim);
+    const b1 = resolveBlockNameByKey(blockDimTables.blocks1, entry.b1);
+    const b2 = resolveBlockNameByKey(blockDimTables.blocks2, entry.b2);
+    const b3 = resolveBlockNameByKey(blockDimTables.blocks3, entry.b3);
     const nested = entry.nested || 1;
     return `NESTED ${nested}｜${dim}｜${b1}・${b2}・${b3}`;
 }
@@ -8666,7 +8871,8 @@ function renderHistoryAndBookmarks() {
                 row.style.display='flex'; row.style.gap='8px'; row.style.alignItems='center'; row.style.margin='6px 0';
                 const btn = document.createElement('button');
                 btn.textContent = labelForEntry(e);
-                btn.title = `Lv${e.level} / ${e.type} / 深さ${e.depth} / seed ${e.seed}`;
+                const typeLabel = getHistoryEntryTypeLabel(e) || e.type || '-';
+                btn.title = `Lv${e.level} / ${typeLabel} / 深さ${e.depth} / seed ${e.seed}`;
                 btn.addEventListener('click', () => applyBdimSelection(e));
                 const del = document.createElement('button');
                 del.textContent = '×';
@@ -8691,7 +8897,8 @@ function renderHistoryAndBookmarks() {
                 row.style.display='flex'; row.style.gap='8px'; row.style.alignItems='center'; row.style.margin='6px 0';
                 const btn = document.createElement('button');
                 btn.textContent = labelForEntry(e);
-                btn.title = `Lv${e.level} / ${e.type} / 深さ${e.depth} / seed ${e.seed}`;
+                const typeLabel = getHistoryEntryTypeLabel(e) || e.type || '-';
+                btn.title = `Lv${e.level} / ${typeLabel} / 深さ${e.depth} / seed ${e.seed}`;
                 btn.addEventListener('click', () => applyBdimSelection(e));
                 const del = document.createElement('button');
                 del.textContent = '×';
@@ -8748,6 +8955,8 @@ function addBookmarkFromCurrent() {
         key: bdimKey(blockDimState.nested || 1, blockDimState.dimKey, blockDimState.b1Key, blockDimState.b2Key, blockDimState.b3Key),
         level: blockDimState.spec.level,
         type: formatSpecType(blockDimState.spec),
+        typeId: blockDimState.spec.type,
+        typePool: Array.isArray(blockDimState.spec.typePool) ? blockDimState.spec.typePool.slice() : null,
         depth: blockDimState.spec.depth,
         seed: blockDimState.seed || seedFromSelection(blockDimState.dimKey, blockDimState.b1Key, blockDimState.b2Key, blockDimState.b3Key),
         at: Date.now()
@@ -8772,6 +8981,8 @@ function pushGateHistoryFromCurrent() {
         key: bdimKey(blockDimState.nested || 1, blockDimState.dimKey, blockDimState.b1Key, blockDimState.b2Key, blockDimState.b3Key),
         level: blockDimState.spec.level,
         type: formatSpecType(blockDimState.spec),
+        typeId: blockDimState.spec.type,
+        typePool: Array.isArray(blockDimState.spec.typePool) ? blockDimState.spec.typePool.slice() : null,
         depth: blockDimState.spec.depth,
         seed: blockDimState.seed || seedFromSelection(blockDimState.dimKey, blockDimState.b1Key, blockDimState.b2Key, blockDimState.b3Key),
         at: Date.now()
@@ -11100,12 +11311,9 @@ function resolveCurrentGeneratorType() {
     if (currentMode === 'blockdim' && blockDimState?.spec) {
         return blockDimState.spec.type || 'mixed';
     }
-    if (selectedWorld === 'X') {
-        const data = dungeonInfo['X'];
-        return data ? data.type : 'mixed';
-    }
-    const dungeonData = dungeonInfo[selectedDungeonBase];
-    return dungeonData ? dungeonData.type : 'field';
+    const dungeonData = getDungeonBaseData(selectedWorld, selectedDungeonBase);
+    if (!dungeonData) return selectedWorld === 'X' ? 'mixed' : 'field';
+    return dungeonData.type || (selectedWorld === 'X' ? 'mixed' : 'field');
 }
 
 function getFixedMapRecord(bundle, floor) {
@@ -12680,41 +12888,30 @@ function generateBossRoom() {
 }
 
 function getDungeonTypeName(type) {
-    const typeNames = {
-        'field': 'フィールド型',
-        'cave': '洞窟型',
-        'maze': '迷路型',
-        'rooms': '部屋＆通路型',
-        'single-room': '単部屋型',
-        'circle': '円型',
-        'narrow-maze': '狭い迷路型',
-        'wide-maze': '幅広迷路型',
-        'snake': 'スネーク型',
-        'mixed': '混合型',
-        'circle-rooms': '円型部屋＆通路型',
-        'grid': '格子型',
-        'open-space': '空間型'
+    if (!type) return '不明';
+    const fallback = () => {
+        try {
+            if (typeof DungeonGenRegistry !== 'undefined' && DungeonGenRegistry && typeof DungeonGenRegistry.get === 'function') {
+                const def = DungeonGenRegistry.get(type);
+                if (def) {
+                    const localized = resolveLocalizedText(def.nameKey, () => def.name || null);
+                    if (localized) return localized;
+                    if (def.name) return def.name;
+                }
+            }
+        } catch {}
+        const known = DUNGEON_TYPE_NAME_FALLBACKS[type];
+        if (known) return known;
+        return type || '不明';
     };
-    // アドオンタイプ（DungeonGenRegistry）優先で名前を解決
-    try {
-        if (typeof DungeonGenRegistry !== 'undefined' && DungeonGenRegistry && typeof DungeonGenRegistry.get === 'function') {
-            const def = DungeonGenRegistry.get(type);
-            if (def && (def.name || def.id)) return def.name || def.id;
-        }
-    } catch {}
-    return typeNames[type] || type || '不明';
+    const translationKey = `dungeon.types.${type}`;
+    const translated = resolveLocalizedText(translationKey, fallback);
+    return translated || fallback();
 }
 
 function showDungeonDetail(dungeonBase) {
-    let dungeonData;
-    
-    // X世界の場合は特別なデータを使用
-    if (selectedWorld === 'X') {
-        dungeonData = dungeonInfo['X'];
-    } else {
-        dungeonData = dungeonInfo[dungeonBase];
-    }
-    
+    const dungeonData = getDungeonBaseData(selectedWorld, dungeonBase);
+
     if (!dungeonData) {
         dungeonDetailCard.style.display = 'none';
         return;
@@ -12731,12 +12928,14 @@ function showDungeonDetail(dungeonBase) {
     };
     const multiplier = difficultyData[difficulty] || difficultyData['Normal'];
     
-    dungeonNameEl.textContent = dungeonData.name;
+    const dungeonName = resolveLocalizedText(dungeonData.nameKey, () => dungeonData.name || `${dungeonBase}`);
+    dungeonNameEl.textContent = dungeonName || '';
     dungeonTypeEl.textContent = getDungeonTypeName(dungeonData.type);
     dungeonRecommendedLevelEl.textContent = recommendedLevel;
     dungeonDamageMultiplierEl.textContent = `与: ${multiplier.deal}x / 被: ${multiplier.take}x`;
-    dungeonDescriptionEl.textContent = dungeonData.description;
-    
+    const descriptionText = resolveLocalizedText(dungeonData.descriptionKey, () => dungeonData.description || '');
+    dungeonDescriptionEl.textContent = descriptionText;
+
     dungeonDetailCard.style.display = 'block';
 }
 
@@ -14253,27 +14452,19 @@ function updateUI() {
     // ダンジョン情報（BlockDim ではブロック構成を表示）
     if (modalDungeonSummary) {
         if (currentMode === 'blockdim' && blockDimState?.spec) {
-            const dimKey = (blockDimState.dimKey || 'a').toUpperCase();
-            // 名前解決（未ロード時はキーをそのまま表示）
-            let b1 = blockDimState.b1Key || '';
-            let b2 = blockDimState.b2Key || '';
-            let b3 = blockDimState.b3Key || '';
-            try {
-                if (typeof blockDimTables === 'object' && blockDimTables.__loaded) {
-                    b1 = (blockDimTables.blocks1.find(b=>b.key===blockDimState.b1Key)||{}).name || b1;
-                    b2 = (blockDimTables.blocks2.find(b=>b.key===blockDimState.b2Key)||{}).name || b2;
-                    b3 = (blockDimTables.blocks3.find(b=>b.key===blockDimState.b3Key)||{}).name || b3;
-                }
-            } catch {}
+            const dimName = resolveDimensionNameByKey(blockDimState.dimKey || 'a');
+            const b1 = resolveBlockNameByKey(blockDimTables.blocks1, blockDimState.b1Key) || (blockDimState.b1Key || '');
+            const b2 = resolveBlockNameByKey(blockDimTables.blocks2, blockDimState.b2Key) || (blockDimState.b2Key || '');
+            const b3 = resolveBlockNameByKey(blockDimTables.blocks3, blockDimState.b3Key) || (blockDimState.b3Key || '');
             const nested = blockDimState?.nested || 1;
-            modalDungeonSummary.textContent = `NESTED ${nested} ／ 次元 ${dimKey}：${b1}・${b2}・${b3}`;
+            modalDungeonSummary.textContent = `NESTED ${nested} ／ 次元 ${dimName || (blockDimState.dimKey || '').toUpperCase()}：${b1}・${b2}・${b3}`;
             if (modalDungeonTypeRow && modalDungeonType) {
                 modalDungeonTypeRow.style.display = '';
                 modalDungeonType.textContent = formatSpecType(blockDimState.spec);
             }
         } else {
-            const dData = dungeonInfo[selectedDungeonBase];
-            const name = dData ? dData.name : '-';
+            const dData = getDungeonBaseData(selectedWorld, selectedDungeonBase);
+            const name = dData ? resolveLocalizedText(dData.nameKey, () => dData.name || '-') : '-';
             modalDungeonSummary.textContent = `${selectedWorld}世界：${name}`;
             if (modalDungeonTypeRow && modalDungeonType) {
                 modalDungeonTypeRow.style.display = '';
@@ -16899,13 +17090,11 @@ function buildSelection() {
     dungeonButtonsDiv.innerHTML = '';
     bases.forEach(base => {
         const b = document.createElement('button');
-        let dungeonData;
-        if (selectedWorld === 'X') {
-            dungeonData = dungeonInfo['X'];
-        } else {
-            dungeonData = dungeonInfo[base];
-        }
-        b.textContent = dungeonData ? dungeonData.name : `${base}`;
+        const dungeonData = getDungeonBaseData(selectedWorld, base);
+        const label = dungeonData
+            ? resolveLocalizedText(dungeonData.nameKey, () => dungeonData.name || `${base}`)
+            : `${base}`;
+        b.textContent = label || `${base}`;
         if (base === selectedDungeonBase) b.classList.add('selected');
         // Normalプレビューは常に normal 基準で
         const prevMode = currentMode;
@@ -17468,6 +17657,28 @@ document.addEventListener('app:rerender', () => {
         renderMiniExpList(__miniManifest);
     }
     applyMiniExpPlaceholderState(__miniManifest);
+    try {
+        if (typeof buildSelection === 'function') {
+            buildSelection();
+        }
+        if (typeof showDungeonDetail === 'function' && selectedDungeonBase) {
+            showDungeonDetail(selectedDungeonBase);
+        }
+    } catch (err) {
+        console.warn('[app] Failed to rebuild selection on rerender', err);
+    }
+    try {
+        updateDungeonTypeOverlay();
+    } catch (err) {
+        console.warn('[app] Failed to refresh dungeon overlay on rerender', err);
+    }
+    try {
+        if (typeof refreshBlockDimLocaleSensitiveUi === 'function') {
+            refreshBlockDimLocaleSensitiveUi();
+        }
+    } catch (err) {
+        console.warn('[app] Failed to refresh BlockDim UI on rerender', err);
+    }
 });
 
 async function initMiniExpUI() {
@@ -19112,7 +19323,7 @@ function mergeBlocksIntoTables(blocks) {
     } catch (e) {
         console.warn('mergeBlocksIntoTables failed', e);
     }
-    populateBdimRandomTypeSelect();
+    try { refreshBlockDimLocaleSensitiveUi(); } catch {}
 }
 
 function flushPendingDungeonBlocks() {
@@ -19148,6 +19359,8 @@ window.registerDungeonAddon = function(def) {
     try { mergeBlocksIntoTables(def.blocks); } catch {}
     // 構造パターンを登録
     try { registerAddonStructures(def.structures, def.id); } catch {}
+    try { updateDungeonTypeOverlay(); } catch {}
+    try { refreshBlockDimLocaleSensitiveUi(); } catch {}
     console.log('[addon registered]', def.id);
 };
 

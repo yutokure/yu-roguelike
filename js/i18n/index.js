@@ -3,8 +3,30 @@
     const DEFAULT_LOCALE = 'ja';
     const FALLBACK_LOCALE = 'ja';
     const SUPPORTED_LOCALES = Object.freeze(['ja', 'en']);
-    const LOCALE_PATH = './js/i18n/locales';
+    const LOCALE_PATH = 'js/i18n/locales';
     const LOCALE_EXTENSION = '.json.js';
+
+    const localeBaseUrl = (() => {
+        if (typeof document === 'undefined') return null;
+        try {
+            const scripts = document.getElementsByTagName('script');
+            for (let i = scripts.length - 1; i >= 0; i -= 1) {
+                const script = scripts[i];
+                const srcAttr = script?.getAttribute?.('src');
+                if (!srcAttr) continue;
+                const resolved = new URL(srcAttr, document.baseURI);
+                if (resolved.pathname.endsWith('/js/i18n/index.js') || resolved.pathname.endsWith('js/i18n/index.js')) {
+                    const directory = new URL('./', resolved);
+                    return new URL('locales/', directory);
+                }
+            }
+            const sanitizedPath = LOCALE_PATH.replace(/^\.\//, '').replace(/\/+$, '');
+            return new URL(`${sanitizedPath}/`, document.baseURI);
+        } catch (error) {
+            console.warn('[i18n] Failed to resolve locale base URL:', error);
+            return null;
+        }
+    })();
 
     const dictionaryCache = new Map();
     const loadingCache = new Map();
@@ -159,13 +181,21 @@
                 const script = document.createElement('script');
                 script.type = 'text/javascript';
                 script.async = true;
-                script.defer = true;
                 script.onload = () => resolve(true);
                 script.onerror = (error) => {
                     console.warn(`[i18n] Failed to load locale "${locale}" script:`, error);
                     resolve(false);
                 };
-                script.src = `${LOCALE_PATH}/${locale}${LOCALE_EXTENSION}`;
+                if (localeBaseUrl) {
+                    try {
+                        script.src = new URL(`${locale}${LOCALE_EXTENSION}`, localeBaseUrl).href;
+                    } catch (error) {
+                        console.warn('[i18n] Failed to build locale URL from base:', error);
+                        script.src = `${LOCALE_PATH}/${locale}${LOCALE_EXTENSION}`;
+                    }
+                } else {
+                    script.src = `${LOCALE_PATH}/${locale}${LOCALE_EXTENSION}`;
+                }
                 target.appendChild(script);
             });
 

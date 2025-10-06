@@ -1,5 +1,4 @@
-import './js/i18n/index.js';
-
+(async function () {
 const i18n = window.I18n;
 if (!i18n) {
     throw new Error('I18n module failed to load');
@@ -19277,3 +19276,6 @@ const __addonLoadPromise = loadDungeonAddons()
 if (typeof window !== 'undefined') {
     window.__addonLoadPromise = __addonLoadPromise;
 }
+})().catch((error) => {
+    console.error('[app] Failed to initialize application', error);
+});

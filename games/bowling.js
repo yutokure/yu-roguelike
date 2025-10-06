@@ -605,8 +605,8 @@
 
   window.registerMiniGame({
     id: 'bowling_duel',
-    name: 'ボウリング対決',
-    description: '動くゲージを止めて狙い・カーブ・パワーを決めるCPU対決ボウリングMOD',
+    name: 'ボウリング対決', nameKey: 'selection.miniexp.games.bowling_duel.name',
+    description: '動くゲージを止めて狙い・カーブ・パワーを決めるCPU対決ボウリングMOD', descriptionKey: 'selection.miniexp.games.bowling_duel.description', categoryIds: ['action'],
     create
   });
 })();

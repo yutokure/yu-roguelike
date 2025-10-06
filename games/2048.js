@@ -72,5 +72,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'game2048', name:'2048', description:'合成log2 / 4x4で2048:+777', create });
+  window.registerMiniGame({ id:'game2048', name:'2048', nameKey: 'selection.miniexp.games.game2048.name', description:'合成log2 / 4x4で2048:+777', descriptionKey: 'selection.miniexp.games.game2048.description', categoryIds: ['puzzle'], create });
 })();

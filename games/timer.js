@@ -688,8 +688,8 @@
 
   window.registerMiniGame({
     id: 'timer',
-    name: 'タイマー',
-    description: 'シンプルなカウントダウンとストップウォッチで時間管理',
+    name: 'タイマー', nameKey: 'selection.miniexp.games.timer.name',
+    description: 'シンプルなカウントダウンとストップウォッチで時間管理', descriptionKey: 'selection.miniexp.games.timer.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

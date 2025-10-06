@@ -561,8 +561,8 @@
 
   window.registerMiniGame({
     id: 'counter_pad',
-    name: 'カウンターパッド',
-    description: '増減操作だけの多機能カウンター。全て自動保存されます',
+    name: 'カウンターパッド', nameKey: 'selection.miniexp.games.counter_pad.name',
+    description: '増減操作だけの多機能カウンター。全て自動保存されます', descriptionKey: 'selection.miniexp.games.counter_pad.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

@@ -1105,8 +1105,8 @@
 
   window.registerMiniGame({
     id: 'notepad',
-    name: 'メモ帳',
-    description: '開く+5 / 編集+1 / 保存+5 EXP、Windows風メモ帳',
+    name: 'メモ帳', nameKey: 'selection.miniexp.games.notepad.name',
+    description: '開く+5 / 編集+1 / 保存+5 EXP、Windows風メモ帳', descriptionKey: 'selection.miniexp.games.notepad.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

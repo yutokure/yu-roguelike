@@ -3934,8 +3934,8 @@
 
   window.registerMiniGame({
     id: 'math_lab',
-    name: '数学ラボ',
-    description: 'Mathematica風ワークシートで関数・単位・グラフ・テトレーションまで扱える超高機能電卓',
+    name: '数学ラボ', nameKey: 'selection.miniexp.games.math_lab.name',
+    description: 'Mathematica風ワークシートで関数・単位・グラフ・テトレーションまで扱える超高機能電卓', descriptionKey: 'selection.miniexp.games.math_lab.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     create
   });

@@ -1083,8 +1083,8 @@
 
   window.registerMiniGame({
     id: 'video_player',
-    name: '動画プレイヤー',
-    description: 'ローカル動画とYouTubeを再生し、視聴操作でEXPを獲得できるユーティリティ',
+    name: '動画プレイヤー', nameKey: 'selection.miniexp.games.video_player.name',
+    description: 'ローカル動画とYouTubeを再生し、視聴操作でEXPを獲得できるユーティリティ', descriptionKey: 'selection.miniexp.games.video_player.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

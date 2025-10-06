@@ -216,8 +216,8 @@
 
   window.registerMiniGame({
     id:'breakout_k',
-    name:'ブロック崩しk',
-    description:'バー操作はキーボード限定のブロック崩し',
+    name:'ブロック崩しk', nameKey: 'selection.miniexp.games.breakout_k.name',
+    description:'バー操作はキーボード限定のブロック崩し', descriptionKey: 'selection.miniexp.games.breakout_k.description', categoryIds: ['action'],
     create
   });
 })();

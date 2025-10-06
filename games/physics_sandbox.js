@@ -5061,8 +5061,8 @@
 
   window.registerMiniGame({
     id:'physics_sandbox',
-    name:'物理遊び',
-    description:'粉遊び×剛体シミュレーション。図形に素材を設定して火・水・ツタ・雷・回路で遊ぼう',
+    name:'物理遊び', nameKey: 'selection.miniexp.games.physics_sandbox.name',
+    description:'粉遊び×剛体シミュレーション。図形に素材を設定して火・水・ツタ・雷・回路で遊ぼう', descriptionKey: 'selection.miniexp.games.physics_sandbox.description', categoryIds: ['toy'],
     create
   });
 })();

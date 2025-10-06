@@ -88,6 +88,6 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'whack_a_mole', name:'モグラたたき', description:'命中で1〜EXP／連続命中でボーナス', create });
+  window.registerMiniGame({ id:'whack_a_mole', name:'モグラたたき', nameKey: 'selection.miniexp.games.whack_a_mole.name', description:'命中で1〜EXP／連続命中でボーナス', descriptionKey: 'selection.miniexp.games.whack_a_mole.description', categoryIds: ['action'], create });
 })();
 

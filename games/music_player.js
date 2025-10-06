@@ -1534,8 +1534,8 @@
 
   window.registerMiniGame({
     id: 'music_player',
-    name: 'ミュージックプレイヤー',
-    description: 'ローカル音源再生・視覚化・EQ搭載。再生や取り込みでEXP獲得',
+    name: 'ミュージックプレイヤー', nameKey: 'selection.miniexp.games.music_player.name',
+    description: 'ローカル音源再生・視覚化・EQ搭載。再生や取り込みでEXP獲得', descriptionKey: 'selection.miniexp.games.music_player.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

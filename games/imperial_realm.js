@@ -1419,8 +1419,8 @@
   if (typeof window !== 'undefined' && window.registerMiniGame) {
     window.registerMiniGame({
       id: 'imperial_realm',
-      name: 'インペリアル・レルム',
-      description: '村人を指揮して町を築き、襲撃ウェーブから防衛しつつ敵本陣を破壊するAoE2風RTS',
+      name: 'インペリアル・レルム', nameKey: 'selection.miniexp.games.imperial_realm.name',
+      description: '村人を指揮して町を築き、襲撃ウェーブから防衛しつつ敵本陣を破壊するAoE2風RTS', descriptionKey: 'selection.miniexp.games.imperial_realm.description', categoryIds: ['simulation'],
       create
     });
   }

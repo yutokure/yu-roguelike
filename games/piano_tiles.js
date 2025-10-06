@@ -460,8 +460,8 @@
   if (window.registerMiniGame){
     window.registerMiniGame({
       id: 'piano_tiles',
-      name: 'リズムタイル',
-      description: '4レーンのタップ＆ホールド譜面をタイミング良く刻むリズムゲーム',
+      name: 'リズムタイル', nameKey: 'selection.miniexp.games.piano_tiles.name',
+      description: '4レーンのタップ＆ホールド譜面をタイミング良く刻むリズムゲーム', descriptionKey: 'selection.miniexp.games.piano_tiles.description', categoryIds: ['rhythm'],
       create
     });
   }

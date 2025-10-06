@@ -1244,8 +1244,8 @@
 
   window.registerMiniGame({
     id: 'system',
-    name: 'システム',
-    description: 'PCやOS、ブラウザ、IP情報を一括確認できるシステムモニターユーティリティ',
+    name: 'システム', nameKey: 'selection.miniexp.games.system.name',
+    description: 'PCやOS、ブラウザ、IP情報を一括確認できるシステムモニターユーティリティ', descriptionKey: 'selection.miniexp.games.system.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

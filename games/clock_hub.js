@@ -1421,8 +1421,8 @@
 
   window.registerMiniGame({
     id: 'clock_hub',
-    name: '時計ハブ',
-    description: 'デジタル・アナログ・詳細情報を備えた時計ユーティリティ。時の節目でEXP獲得',
+    name: '時計ハブ', nameKey: 'selection.miniexp.games.clock_hub.name',
+    description: 'デジタル・アナログ・詳細情報を備えた時計ユーティリティ。時の節目でEXP獲得', descriptionKey: 'selection.miniexp.games.clock_hub.description', categoryIds: ['utility'],
     create
   });
 })();

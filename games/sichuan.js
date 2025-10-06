@@ -359,8 +359,8 @@
 
   window.registerMiniGame({
     id: 'sichuan',
-    name: '四川省パズル',
-    description: '麻雀牌のペアを繋いで消す四川省。連続消去でボーナスEXP',
+    name: '四川省パズル', nameKey: 'selection.miniexp.games.sichuan.name',
+    description: '麻雀牌のペアを繋いで消す四川省。連続消去でボーナスEXP', descriptionKey: 'selection.miniexp.games.sichuan.description', categoryIds: ['puzzle'],
     create
   });
 })();

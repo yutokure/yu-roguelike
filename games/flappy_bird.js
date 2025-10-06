@@ -279,5 +279,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'flappy_bird', name:'フラッピーバード風', description:'パイプを抜けるたびにEXP。連続成功でボーナス', create });
+  window.registerMiniGame({ id:'flappy_bird', name:'フラッピーバード風', nameKey: 'selection.miniexp.games.flappy_bird.name', description:'パイプを抜けるたびにEXP。連続成功でボーナス', descriptionKey: 'selection.miniexp.games.flappy_bird.description', categoryIds: ['action'], create });
 })();

@@ -949,8 +949,8 @@
 
   window.registerMiniGame({
     id: 'sugoroku_life',
-    name: '人生すごろく',
-    description: '疑似人生ゲーム形式のすごろく。サイコロで進み、資産とEXPを伸ばそう。',
+    name: '人生すごろく', nameKey: 'selection.miniexp.games.sugoroku_life.name',
+    description: '疑似人生ゲーム形式のすごろく。サイコロで進み、資産とEXPを伸ばそう。', descriptionKey: 'selection.miniexp.games.sugoroku_life.description', categoryIds: ['board'],
     create
   });
 })();

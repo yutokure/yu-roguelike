@@ -831,8 +831,8 @@
 
   window.registerMiniGame({
     id: 'nine_mens_morris',
-    name: 'ナイン・メンズ・モリス',
-    description: '配置+1 / ミル+15 / 勝利ボーナス',
+    name: 'ナイン・メンズ・モリス', nameKey: 'selection.miniexp.games.nine_mens_morris.name',
+    description: '配置+1 / ミル+15 / 勝利ボーナス', descriptionKey: 'selection.miniexp.games.nine_mens_morris.description', categoryIds: ['board'],
     create
   });
 })();

@@ -1064,8 +1064,8 @@
 
   window.registerMiniGame({
     id:'pseudo3d_race',
-    name:'ハイウェイチェイサー',
-    description:'疑似3D高速道路で交通を追い抜け。距離+0.5/追い越し+4/セクション+25',
+    name:'ハイウェイチェイサー', nameKey: 'selection.miniexp.games.pseudo3d_race.name',
+    description:'疑似3D高速道路で交通を追い抜け。距離+0.5/追い越し+4/セクション+25', descriptionKey: 'selection.miniexp.games.pseudo3d_race.description', categoryIds: ['action'],
     create
   });
 })();

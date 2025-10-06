@@ -5204,8 +5204,8 @@
 
   window.registerMiniGame({
     id: 'trump_games',
-    name: 'トランプセレクション',
-    description: 'トランプゲームハブ（神経衰弱・ブラックジャック・ババ抜き収録）',
+    name: 'トランプセレクション', nameKey: 'selection.miniexp.games.trump_games.name',
+    description: 'トランプゲームハブ（神経衰弱・ブラックジャック・ババ抜き収録）', descriptionKey: 'selection.miniexp.games.trump_games.description', categoryIds: ['board'],
     create
   });
 })();

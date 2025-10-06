@@ -503,8 +503,8 @@
 
   window.registerMiniGame({
     id: 'stopwatch',
-    name: 'ストップウォッチ',
-    description: 'ラップ対応の高機能ストップウォッチ。操作でEXPを獲得',
+    name: 'ストップウォッチ', nameKey: 'selection.miniexp.games.stopwatch.name',
+    description: 'ラップ対応の高機能ストップウォッチ。操作でEXPを獲得', descriptionKey: 'selection.miniexp.games.stopwatch.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

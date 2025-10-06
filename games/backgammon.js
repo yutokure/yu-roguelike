@@ -965,8 +965,8 @@
 
   window.registerMiniGame({
     id: 'backgammon',
-    name: 'バックギャモン',
-    description: '本格的なバー＆ポイント制ボードゲーム。ヒットやベアオフでEXPを稼ぎ、ベアリングオフで勝利を目指そう。',
+    name: 'バックギャモン', nameKey: 'selection.miniexp.games.backgammon.name',
+    description: '本格的なバー＆ポイント制ボードゲーム。ヒットやベアオフでEXPを稼ぎ、ベアリングオフで勝利を目指そう。', descriptionKey: 'selection.miniexp.games.backgammon.description', categoryIds: ['board'],
     create
   });
 })();

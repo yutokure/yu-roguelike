@@ -935,8 +935,8 @@
 
   window.registerMiniGame({
     id: 'shogi',
-    name: '将棋',
-    description: '本格将棋。成りと持ち駒を駆使して詰みを狙おう',
+    name: '将棋', nameKey: 'selection.miniexp.games.shogi.name',
+    description: '本格将棋。成りと持ち駒を駆使して詰みを狙おう', descriptionKey: 'selection.miniexp.games.shogi.description', categoryIds: ['board'],
     create
   });
 })();

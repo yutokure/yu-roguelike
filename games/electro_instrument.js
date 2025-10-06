@@ -567,8 +567,8 @@
 
   window.registerMiniGame({
     id: 'electro_instrument',
-    name: '電子楽器スタジオ',
-    description: '電子鍵盤で自由に演奏し音色チェンジ毎音EXP',
+    name: '電子楽器スタジオ', nameKey: 'selection.miniexp.games.electro_instrument.name',
+    description: '電子鍵盤で自由に演奏し音色チェンジ毎音EXP', descriptionKey: 'selection.miniexp.games.electro_instrument.description', categoryIds: ['toy'],
     category: 'トイ',
     version: '0.1.0',
     author: 'mod',

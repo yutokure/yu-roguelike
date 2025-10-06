@@ -598,8 +598,8 @@
 
   window.registerMiniGame({
     id: 'steady_wire',
-    name: 'イライラ棒',
-    description: '狭いコースを進むワイヤーループ。難易度で幅が変化＆操作方法選択',
+    name: 'イライラ棒', nameKey: 'selection.miniexp.games.steady_wire.name',
+    description: '狭いコースを進むワイヤーループ。難易度で幅が変化＆操作方法選択', descriptionKey: 'selection.miniexp.games.steady_wire.description', categoryIds: ['action'],
     category: 'アクション',
     create
   });

@@ -2057,8 +2057,8 @@
 
   window.registerMiniGame({
     id: 'circuit_simulator',
-    name: '電気回路シミュレータ',
-    description: 'DC/AC回路を構成して電圧・電流・電力・力率をリアルタイム解析するトイ系シミュレータ',
+    name: '電気回路シミュレータ', nameKey: 'selection.miniexp.games.circuit_simulator.name',
+    description: 'DC/AC回路を構成して電圧・電流・電力・力率をリアルタイム解析するトイ系シミュレータ', descriptionKey: 'selection.miniexp.games.circuit_simulator.description', categoryIds: ['toy'],
     category: 'トイ',
     version: '0.1.0',
     author: 'mod',

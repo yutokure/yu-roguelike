@@ -409,10 +409,13 @@
       name: 'Intlフォーマット',
       description: 'Intl.DateTimeFormatとNumberFormatを検証します。',
       async run() {
-        const dateFmt = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'full', timeStyle: 'medium', timeZone: 'Asia/Tokyo' });
-        const numFmt = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' });
+        const i18n = window.I18n;
+        const locale = (i18n?.getLocale?.() || i18n?.getDefaultLocale?.() || 'ja').toString();
+        const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: 'full', timeStyle: 'medium', timeZone: 'Asia/Tokyo' });
+        const formattedNumber = (typeof i18n?.formatNumber === 'function')
+          ? i18n.formatNumber(123456.789, { style: 'currency', currency: 'JPY' })
+          : new Intl.NumberFormat(locale, { style: 'currency', currency: 'JPY' }).format(123456.789);
         const formattedDate = dateFmt.format(new Date('2023-05-01T12:34:56Z'));
-        const formattedNumber = numFmt.format(123456.789);
         if (!formattedDate.includes('5月')) throw new Error('日付フォーマットが想定外です');
         if (!formattedNumber.includes('￥')) throw new Error('通貨フォーマットが想定外です');
         return `${formattedDate} / ${formattedNumber}`;

@@ -199,6 +199,24 @@
         }
     }
 
+    function localeCompare(a, b, options) {
+        const primary = activeLocale || DEFAULT_LOCALE;
+        const left = a ?? '';
+        const right = b ?? '';
+        try {
+            if (typeof left.localeCompare === 'function') {
+                return left.localeCompare(right, primary, options);
+            }
+        } catch (error) {
+            // Ignore and fall back below.
+        }
+        try {
+            return String(left).localeCompare(String(right), FALLBACK_LOCALE, options);
+        } catch (error) {
+            return 0;
+        }
+    }
+
     function resolveTranslationRoot(root) {
         if (!root || root === document) {
             return document;
@@ -336,6 +354,7 @@
         formatNumber,
         formatDate,
         formatRelativeTime,
+        localeCompare,
         getLocale,
         getDefaultLocale,
         getSupportedLocales,

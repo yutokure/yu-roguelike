@@ -626,8 +626,8 @@
 
   window.registerMiniGame({
     id: 'logic_circuit',
-    name: '論理回路シミュレータ',
-    description: '入力・ゲート・出力を組んで論理回路をリアルタイム検証',
+    name: '論理回路シミュレータ', nameKey: 'selection.miniexp.games.logic_circuit.name',
+    description: '入力・ゲート・出力を組んで論理回路をリアルタイム検証', descriptionKey: 'selection.miniexp.games.logic_circuit.description', categoryIds: ['toy'],
     category: 'トイ',
     version: '0.1.0',
     author: 'mod',

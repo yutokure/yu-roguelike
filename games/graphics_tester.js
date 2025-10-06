@@ -1038,7 +1038,12 @@
   const definition = {
     id: 'graphics_tester',
     name: '3Dグラフィックテスター',
+    nameKey: 'selection.miniexp.games.graphics_tester.name',
     description: '3D技術デモとレイトレーシング風レンダリング・ベンチマーク搭載のトイ系テスター',
+    descriptionKey: 'selection.miniexp.games.graphics_tester.description',
+    category: 'トイ',
+    categories: ['トイ'],
+    categoryIds: ['toy'],
     create
   };
 

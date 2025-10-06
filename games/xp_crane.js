@@ -690,8 +690,8 @@
 
   window.registerMiniGame({
     id: 'xp_crane',
-    name: 'XPクレーンキャッチャー',
-    description: 'クレーンで経験値カプセルを掬い上げてEXP獲得',
+    name: 'XPクレーンキャッチャー', nameKey: 'selection.miniexp.games.xp_crane.name',
+    description: 'クレーンで経験値カプセルを掬い上げてEXP獲得', descriptionKey: 'selection.miniexp.games.xp_crane.description', categoryIds: ['action'],
     create,
   });
 })();

@@ -1732,8 +1732,8 @@
 
   window.registerMiniGame({
     id: 'triomino_columns',
-    name: 'トリオミノコラムス',
-    description: 'トリオトスDX風の5列落ち物パズル。ラインスパーク＆マルチブロック搭載。',
+    name: 'トリオミノコラムス', nameKey: 'selection.miniexp.games.triomino_columns.name',
+    description: 'トリオトスDX風の5列落ち物パズル。ラインスパーク＆マルチブロック搭載。', descriptionKey: 'selection.miniexp.games.triomino_columns.description', categoryIds: ['puzzle'],
     create
   });
 })();

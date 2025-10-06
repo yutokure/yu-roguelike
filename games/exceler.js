@@ -3159,10 +3159,14 @@
   window.registerMiniGame?.({
     id: 'exceler',
     name: '表計算エクセラー',
+    nameKey: 'selection.miniexp.games.exceler.name',
     entry: 'games/exceler.js',
     version: '0.1.0',
     category: 'ユーティリティ',
+    categories: ['ユーティリティ'],
+    categoryIds: ['utility'],
     description: 'XLSX 読み書き対応の軽量スプレッドシート。簡易関数と書式設定をサポート',
+    descriptionKey: 'selection.miniexp.games.exceler.description',
     create
   });
 })();

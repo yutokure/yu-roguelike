@@ -355,5 +355,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'dino_runner', name:'ダイノランナー', description:'恐竜で障害物をジャンプ回避。距離と連続回避でEXP', create });
+  window.registerMiniGame({ id:'dino_runner', name:'ダイノランナー', nameKey: 'selection.miniexp.games.dino_runner.name', description:'恐竜で障害物をジャンプ回避。距離と連続回避でEXP', descriptionKey: 'selection.miniexp.games.dino_runner.description', categoryIds: ['action'], create });
 })();

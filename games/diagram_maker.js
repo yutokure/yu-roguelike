@@ -1713,8 +1713,8 @@
 
   window.registerMiniGame({
     id: 'diagram_maker',
-    name: 'ダイアグラムメーカー',
-    description: 'draw.io互換XMLと画像書き出し対応の図表作成ツール',
+    name: 'ダイアグラムメーカー', nameKey: 'selection.miniexp.games.diagram_maker.name',
+    description: 'draw.io互換XMLと画像書き出し対応の図表作成ツール', descriptionKey: 'selection.miniexp.games.diagram_maker.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

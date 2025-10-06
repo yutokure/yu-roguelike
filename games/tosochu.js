@@ -708,5 +708,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id: 'tosochu', name: '逃走中', description: '逃げ切れば+10000EXP、1秒ごとに10EXP蓄積', create });
+  window.registerMiniGame({ id: 'tosochu', name: '逃走中', nameKey: 'selection.miniexp.games.tosochu.name', description: '逃げ切れば+10000EXP、1秒ごとに10EXP蓄積', descriptionKey: 'selection.miniexp.games.tosochu.description', categoryIds: ['action'], create });
 })();

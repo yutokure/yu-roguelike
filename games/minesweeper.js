@@ -149,5 +149,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'minesweeper', name:'マインスイーパー', description:'開放×0.1 / クリア: 25/200/1600', create });
+  window.registerMiniGame({ id:'minesweeper', name:'マインスイーパー', nameKey: 'selection.miniexp.games.minesweeper.name', description:'開放×0.1 / クリア: 25/200/1600', descriptionKey: 'selection.miniexp.games.minesweeper.description', categoryIds: ['puzzle'], create });
 })();

@@ -727,8 +727,8 @@
   if (window.registerMiniGame) {
     window.registerMiniGame({
       id: 'bubble_shooter',
-      name: 'バブルシューター',
-      description: 'バブルを撃って3つ揃えで消すカジュアルパズル。浮いたバブルはまとめて落下！',
+      name: 'バブルシューター', nameKey: 'selection.miniexp.games.bubble_shooter.name',
+      description: 'バブルを撃って3つ揃えで消すカジュアルパズル。浮いたバブルはまとめて落下！', descriptionKey: 'selection.miniexp.games.bubble_shooter.description', categoryIds: ['puzzle'],
       create
     });
   }

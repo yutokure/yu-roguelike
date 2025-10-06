@@ -725,8 +725,8 @@
 
   window.registerMiniGame({
     id: 'login_bonus',
-    name: 'ログインボーナス',
-    description: '日々のログインで経験値やアイテムを受け取れるユーティリティカレンダー',
+    name: 'ログインボーナス', nameKey: 'selection.miniexp.games.login_bonus.name',
+    description: '日々のログインで経験値やアイテムを受け取れるユーティリティカレンダー', descriptionKey: 'selection.miniexp.games.login_bonus.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

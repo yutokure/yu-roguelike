@@ -984,8 +984,8 @@
 
   window.registerMiniGame({
     id: 'pinball_xp',
-    name: 'XPピンボール',
-    description: '3Dピンボール風テーブル。バンパーやレーンでEXPを稼ごう',
+    name: 'XPピンボール', nameKey: 'selection.miniexp.games.pinball_xp.name',
+    description: '3Dピンボール風テーブル。バンパーやレーンでEXPを稼ごう', descriptionKey: 'selection.miniexp.games.pinball_xp.description', categoryIds: ['action'],
     create
   });
 })();

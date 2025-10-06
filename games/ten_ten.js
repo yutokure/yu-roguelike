@@ -663,5 +663,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'ten_ten', name:'1010パズル', description:'ライン消去でEXP / クロス消しは倍増', create });
+  window.registerMiniGame({ id:'ten_ten', name:'1010パズル', nameKey: 'selection.miniexp.games.ten_ten.name', description:'ライン消去でEXP / クロス消しは倍増', descriptionKey: 'selection.miniexp.games.ten_ten.description', categoryIds: ['puzzle'], create });
 })();

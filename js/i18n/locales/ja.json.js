@@ -148,6 +148,387 @@
         "categories": "カテゴリ一覧",
         "displayModes": "表示形式",
         "list": "ミニゲーム一覧",
+        "category": {
+          "all": "すべて",
+          "action": "アクション",
+          "board": "ボード",
+          "shooting": "シューティング",
+          "puzzle": "パズル",
+          "utility": "ユーティリティ",
+          "rhythm": "リズム",
+          "gambling": "ギャンブル",
+          "toy": "トイ",
+          "simulation": "シミュレーション",
+          "skill": "スキル",
+          "misc": "その他"
+        },
+        "games": {
+          "snake": {
+            "name": "スネーク",
+            "description": "餌を取ると+1EXP"
+          },
+          "othello": {
+            "name": "オセロ",
+            "description": "ひっくり返し×0.5EXP＋勝利ボーナス"
+          },
+          "checkers": {
+            "name": "チェッカー",
+            "description": "ジャンプで駒取りしつつ王冠を目指すクラシックボードゲーム"
+          },
+          "chess": {
+            "name": "チェス",
+            "description": "駒の組み合わせで王を詰ませる本格チェス。駒取りとチェックでEXPを獲得"
+          },
+          "xiangqi": {
+            "name": "シャンチー",
+            "description": "中国の将棋・象棋。駒取り・王手・詰みでEXPを稼ごう"
+          },
+          "shogi": {
+            "name": "将棋",
+            "description": "持ち駒と成りを駆使する本格将棋。指し手/捕獲/王手でEXP"
+          },
+          "riichi_mahjong": {
+            "name": "リーチ麻雀ライト",
+            "description": "AI3人と東風1局を戦う簡易リーチ麻雀。リーチ/ツモ/ロンと点棒精算に対応"
+          },
+          "connect6": {
+            "name": "コネクトシックス",
+            "description": "六目並べ。配置+1/リーチ+10/勝利で高EXP"
+          },
+          "gomoku": {
+            "name": "五目並べ",
+            "description": "配置+1/リーチ+10/勝利ボーナス"
+          },
+          "renju": {
+            "name": "連珠",
+            "description": "禁手ルール付き五目並べ。配置+1/リーチ+10/勝利ボーナス"
+          },
+          "go": {
+            "name": "囲碁",
+            "description": "配置+1/捕獲ボーナス/勝利EXP"
+          },
+          "backgammon": {
+            "name": "バックギャモン",
+            "description": "24ポイントを駆け巡りベアリングオフを目指すバックギャモン。ヒットやベアオフでEXP獲得"
+          },
+          "connect4": {
+            "name": "四目並べ",
+            "description": "落下式四目。配置+1/リーチ+10"
+          },
+          "tic_tac_toe": {
+            "name": "三目並べ",
+            "description": "配置+1/リーチ+10/シンプル勝利EXP"
+          },
+          "mancala": {
+            "name": "マンカラ",
+            "description": "カラハ式マンカラ。種まきと捕獲を駆使してAIと勝負"
+          },
+          "breakout": {
+            "name": "ブロック崩し",
+            "description": "ブロック破壊で+1EXP"
+          },
+          "breakout_k": {
+            "name": "ブロック崩しk",
+            "description": "バー操作はキーボード限定"
+          },
+          "pinball_xp": {
+            "name": "XPピンボール",
+            "description": "3Dピンボール風テーブル。バンパーやレーンでEXPを稼ごう"
+          },
+          "dungeon_td": {
+            "name": "ダンジョンタワーディフェンス",
+            "description": "混合型ダンジョンで砲塔を設置し迫る敵波を迎撃するタワーディフェンス"
+          },
+          "pong": {
+            "name": "ピンポン",
+            "description": "マッチ勝利で EASY+1 / NORMAL+5 / HARD+25"
+          },
+          "same": {
+            "name": "セイムゲーム",
+            "description": "同色まとめ消し×0.5EXP"
+          },
+          "match3": {
+            "name": "マッチ3",
+            "description": "3:+1 / 4:+3 / 5:+10、連鎖×1.5"
+          },
+          "minesweeper": {
+            "name": "マインスイーパー",
+            "description": "開放×0.1 / クリア: 25/200/1600"
+          },
+          "sudoku": {
+            "name": "ナンプレ",
+            "description": "正解入力でEXP / クリアボーナス"
+          },
+          "ultimate_ttt": {
+            "name": "スーパー三目並べ",
+            "description": "小盤制覇+25/配置+1/リーチ+10/勝利ボーナス"
+          },
+          "nine_mens_morris": {
+            "name": "ナイン・メンズ・モリス",
+            "description": "配置+1 / ミル+15 / 勝利ボーナス"
+          },
+          "sugoroku_life": {
+            "name": "人生すごろく",
+            "description": "キャリアイベントを乗り越えて資産とEXPを伸ばす人生風すごろく"
+          },
+          "sliding_puzzle": {
+            "name": "スライドパズル",
+            "description": "難易度で8/15/24のスライドパズル"
+          },
+          "invaders": {
+            "name": "インベーダー風",
+            "description": "撃破+1 / 全滅+50"
+          },
+          "pacman": {
+            "name": "パックマン風",
+            "description": "餌+0.5 / 全取得+100"
+          },
+          "bomberman": {
+            "name": "ボンバーマン風",
+            "description": "ソフトブロック破壊+3 / 敵撃破+12 / 全滅+75"
+          },
+          "tetris": {
+            "name": "テトリス風",
+            "description": "REN×1.5^n / T-Spin"
+          },
+          "falling_puyos": {
+            "name": "ぷよぷよ風",
+            "description": "4つ同色で消去。連鎖で倍率UP"
+          },
+          "triomino_columns": {
+            "name": "トリオミノコラムス",
+            "description": "トリオトスDX風！ラインスパーク＆ホールド対応"
+          },
+          "game2048": {
+            "name": "2048",
+            "description": "合成log2 / 2048で+777"
+          },
+          "todo_list": {
+            "name": "ToDoリスト",
+            "description": "タスク完了で設定EXP / 失敗は獲得なし"
+          },
+          "counter_pad": {
+            "name": "カウンターパッド",
+            "description": "数値を増減するだけのマルチカウンター。操作内容は自動保存"
+          },
+          "notepad": {
+            "name": "メモ帳",
+            "description": "開く+5 / 編集+1 / 保存+5 EXP"
+          },
+          "exceler": {
+            "name": "表計算エクセラー",
+            "description": "XLSXの読み書きと主要関数・書式対応の軽量スプレッドシート"
+          },
+          "paint": {
+            "name": "ペイント",
+            "description": "描画+1 / 塗りつぶし+3 / 保存+8 EXP"
+          },
+          "diagram_maker": {
+            "name": "ダイアグラムメーカー",
+            "description": "draw.io XMLとPNG/JPG/BMP出力に対応した図表作成ユーティリティ"
+          },
+          "clock_hub": {
+            "name": "時計ハブ",
+            "description": "多彩な時計と時間情報、節目EXPを備えたユーティリティ"
+          },
+          "login_bonus": {
+            "name": "ログインボーナス",
+            "description": "カレンダーで毎日のログインボーナスを受け取り記録できます"
+          },
+          "stopwatch": {
+            "name": "ストップウォッチ",
+            "description": "ラップ計測に対応したストップウォッチ。操作でEXPを獲得"
+          },
+          "calculator": {
+            "name": "電卓",
+            "description": "ユーティリティ電卓。数字入力+1 / 計算確定+5EXP"
+          },
+          "timer": {
+            "name": "タイマー",
+            "description": "カウントダウンとストップウォッチで時間管理"
+          },
+          "math_lab": {
+            "name": "数学ラボ",
+            "description": "高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション"
+          },
+          "calc_combo": {
+            "name": "計算コンボ",
+            "description": "2桁までの四則演算をテンポ良く解いてコンボEXPを稼ぐ高速暗算ゲーム"
+          },
+          "blockcode": {
+            "name": "ブロックコードラボ",
+            "description": "Scratch風のブロックでミニゲームAPIを安全に試せるビジュアルプログラミング環境"
+          },
+          "wording": {
+            "name": "Wording",
+            "description": "編集+1 / 書式+2 / 保存+6 EXP のワープロ"
+          },
+          "video_player": {
+            "name": "動画プレイヤー",
+            "description": "ローカル動画とYouTubeの視聴でEXPを獲得できるユーティリティ"
+          },
+          "pomodoro": {
+            "name": "ポモドーロタイマー",
+            "description": "集中と休憩のサイクル管理で完了ごとにEXPを得られるタイマー"
+          },
+          "music_player": {
+            "name": "ミュージックプレイヤー",
+            "description": "ローカル音源再生・視覚化・EQ搭載。再生や取り込みでEXP獲得"
+          },
+          "tester": {
+            "name": "JSテスター",
+            "description": "JS機能テストとCPUベンチマーク、ブロック式アドベンチャー作成ツール"
+          },
+          "system": {
+            "name": "システム",
+            "description": "PC/OS/ブラウザ/IPを横断的に確認できるシステム情報ユーティリティ"
+          },
+          "aim": {
+            "name": "的あて（エイム）",
+            "description": "命中で1〜3EXP／連続命中ボーナス"
+          },
+          "dodge_race": {
+            "name": "回避レース",
+            "description": "距離で微量EXP／CP+5"
+          },
+          "pseudo3d_race": {
+            "name": "ハイウェイチェイサー",
+            "description": "疑似3D高速道路で交通を追い抜け。距離+0.5/追い越し+4/セクション+25"
+          },
+          "bowling_duel": {
+            "name": "ボウリング対決",
+            "description": "カーブ・狙い・パワーを調整してCPUと10フレーム勝負するボウリングMOD"
+          },
+          "topdown_race": {
+            "name": "Aurora Circuit",
+            "description": "見下ろし型周回レース。ラップと順位でEXP獲得"
+          },
+          "falling_shooter": {
+            "name": "落下ブロック・シューター",
+            "description": "破壊で1〜数EXP（大きいほど高EXP）"
+          },
+          "bubble_shooter": {
+            "name": "バブルシューター",
+            "description": "バブルを撃って3つ揃えで消去。浮いたバブルはまとめて落下"
+          },
+          "virus_buster": {
+            "name": "ドクターマリオ風",
+            "description": "カプセルで4つ揃え！ウイルス退治でEXP獲得"
+          },
+          "sichuan": {
+            "name": "四川省パズル",
+            "description": "麻雀牌のペアを線で繋いで消す四川省。連続消去でボーナスEXP"
+          },
+          "piano_tiles": {
+            "name": "リズムタイル",
+            "description": "ピアノタイル風の4レーン譜面。タップとホールドをタイミング良く決めてコンボを伸ばそう"
+          },
+          "taiko_drum": {
+            "name": "太鼓リズム",
+            "description": "太鼓の達人風の2面譜面。良/可/普/不の判定とコンボEXPボーナスを搭載"
+          },
+          "river_crossing": {
+            "name": "川渡り",
+            "description": "1段前進+1／到達+50"
+          },
+          "whack_a_mole": {
+            "name": "モグラたたき",
+            "description": "命中でEXP／連続命中ボーナス"
+          },
+          "xp_crane": {
+            "name": "XPクレーンキャッチャー",
+            "description": "クレーンを操作して経験値カプセルを掬い上げるミニゲーム。連続成功と特殊カプセルでEXPを稼ごう"
+          },
+          "steady_wire": {
+            "name": "イライラ棒",
+            "description": "毎回生成されるコースを外れず進むワイヤーループ。操作方法を選んで挑戦"
+          },
+          "flappy_bird": {
+            "name": "フラッピーバード風",
+            "description": "パイプ通過でEXP。連続成功でボーナス"
+          },
+          "dino_runner": {
+            "name": "ダイノランナー",
+            "description": "恐竜で障害物ジャンプ／距離EXP"
+          },
+          "floor_descent": {
+            "name": "フロア降りサバイバル",
+            "description": "迫る針天井から逃げながら下へ進む縦スクロールアクション。足場ギミックで差をつけよう"
+          },
+          "forced_scroll_jump": {
+            "name": "強制スクロールジャンプ",
+            "description": "強制横スクロールで穴や鉄球を避けつつCXマークを集めてランクを目指す"
+          },
+          "tosochu": {
+            "name": "逃走中",
+            "description": "逃走者 VS ハンターの番組風アクション。逃げ切れば+10000EXP、自首で蓄積EXP"
+          },
+          "ten_ten": {
+            "name": "1010パズル",
+            "description": "ラインでEXP／クロス消しは倍増"
+          },
+          "trump_games": {
+            "name": "トランプセレクション",
+            "description": "トランプゲームハブ（神経衰弱・ブラックジャック・ババ抜き収録）"
+          },
+          "gamble_hall": {
+            "name": "ギャンブルホール",
+            "description": "EXPを賭けるルーレットとパチンコスロットの複合MOD"
+          },
+          "electro_instrument": {
+            "name": "電子楽器スタジオ",
+            "description": "ピアノ鍵盤と多彩な音色で自由に演奏し音ごとにEXP獲得"
+          },
+          "graphics_tester": {
+            "name": "3Dグラフィックテスター",
+            "description": "3D技術デモとレイトレーシング風レンダリング・ベンチマーク搭載のトイ系テスター"
+          },
+          "physics_sandbox": {
+            "name": "物理遊び",
+            "description": "火・水・ツタ・雷・回路を組み合わせるトイ系物理サンドボックス"
+          },
+          "populite": {
+            "name": "ポピュラス風",
+            "description": "地形整備と信仰力で人口目標を達成するリアルタイム神シミュレーション"
+          },
+          "logic_circuit": {
+            "name": "論理回路シミュレータ",
+            "description": "入力ソース・ゲート・出力を配置して論理回路をシミュレーション"
+          },
+          "circuit_simulator": {
+            "name": "電気回路シミュレータ",
+            "description": "DC/AC電源・受動素子・計器で回路を構成し計測するトイ向け回路ラボ"
+          },
+          "memo_studio": {
+            "name": "暗記スタジオ",
+            "description": "フラッシュカードを登録し間隔反復で学習する暗記アプリ"
+          },
+          "onigokko": {
+            "name": "鬼ごっこ",
+            "description": "混合型ダンジョンを舞台に鬼から逃げるトイアクション"
+          },
+          "darumasan": {
+            "name": "だるまさんがころんだ",
+            "description": "見られずにゴールすれば50EXPの緊張感ミニゲーム"
+          },
+          "acchimuitehoi": {
+            "name": "あっち向いてホイ",
+            "description": "攻め成功で15EXP、防御成功で5EXPを狙う反射ゲーム"
+          },
+          "janken": {
+            "name": "じゃんけん",
+            "description": "クラシックじゃんけん。勝利すると10EXP"
+          },
+          "typing": {
+            "name": "タイピングチャレンジ",
+            "description": "60秒タイプで正確さとスピードを競うタイピングチャレンジ"
+          },
+          "imperial_realm": {
+            "name": "インペリアル・レルム",
+            "description": "村人と軍勢を指揮してウェーブ攻撃を凌ぎ敵本陣を撃破するAoE2風リアルタイムストラテジー"
+          }
+        },
+
         "difficulty": {
           "label": "難易度",
           "easy": "EASY",

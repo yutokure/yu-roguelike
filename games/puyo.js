@@ -685,8 +685,8 @@
 
   window.registerMiniGame({
     id: 'falling_puyos',
-    name: 'ぷよぷよ風',
-    description: '4つ以上で消去＆連鎖でボーナス',
+    name: 'ぷよぷよ風', nameKey: 'selection.miniexp.games.falling_puyos.name',
+    description: '4つ以上で消去＆連鎖でボーナス', descriptionKey: 'selection.miniexp.games.falling_puyos.description', categoryIds: ['puzzle'],
     version: '0.1.0',
     category: 'パズル',
     create

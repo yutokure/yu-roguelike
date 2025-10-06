@@ -1324,8 +1324,8 @@
 
   window.registerMiniGame({
     id: 'calculator',
-    name: '電卓',
-    description: '数字入力で+1 / 「=」で+5EXPのユーティリティ電卓',
+    name: '電卓', nameKey: 'selection.miniexp.games.calculator.name',
+    description: '数字入力で+1 / 「=」で+5EXPのユーティリティ電卓', descriptionKey: 'selection.miniexp.games.calculator.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     create
   });

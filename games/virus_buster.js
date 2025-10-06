@@ -958,8 +958,8 @@
 
   window.registerMiniGame({
     id: 'virus_buster',
-    name: 'ドクターマリオ風',
-    description: 'カプセルで4つ揃え！ウイルス退治でEXP獲得',
+    name: 'ドクターマリオ風', nameKey: 'selection.miniexp.games.virus_buster.name',
+    description: 'カプセルで4つ揃え！ウイルス退治でEXP獲得', descriptionKey: 'selection.miniexp.games.virus_buster.description', categoryIds: ['puzzle'],
     version: '0.1.0',
     category: 'パズル',
     create,

@@ -538,5 +538,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'tetris', name:'テトリス風', description:'REN/T-Spin対応', create });
+  window.registerMiniGame({ id:'tetris', name:'テトリス風', nameKey: 'selection.miniexp.games.tetris.name', description:'REN/T-Spin対応', descriptionKey: 'selection.miniexp.games.tetris.description', categoryIds: ['puzzle'], create });
 })();

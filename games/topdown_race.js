@@ -905,8 +905,8 @@
 
   window.registerMiniGame({
     id: 'topdown_race',
-    name: 'Aurora Circuit',
-    description: '見下ろし型周回レース。ラップと順位でEXP獲得',
+    name: 'Aurora Circuit', nameKey: 'selection.miniexp.games.topdown_race.name',
+    description: '見下ろし型周回レース。ラップと順位でEXP獲得', descriptionKey: 'selection.miniexp.games.topdown_race.description', categoryIds: ['action'],
     create
   });
 })();

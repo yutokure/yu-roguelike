@@ -27,12 +27,16 @@
 - 要素スキーマ:
   - `id` string: 一意なID（英数・ハイフン推奨）
   - `name` string: 一覧表示名
+  - `nameKey` string: 表示名のローカライズキー（例: `selection.miniexp.games.snake.name`）
   - `entry` string: エントリJSの相対パス（例: `games/snake.js`）
   - `version` string: 任意。`vX.Y.Z` 推奨
   - `author` string: 任意
   - `icon` string: 任意（相対パス）
   - `description` string: 任意（一覧の説明文）
-  - `category` string | string[]: カテゴリ（例: "パズル" / "アクション" / "シューティング" など）。複数所属も可。ホストはカテゴリごとのフィルターボタンを自動生成します。
+  - `descriptionKey` string: 説明文のローカライズキー（例: `selection.miniexp.games.snake.description`）
+  - `category` string | string[]: カテゴリ表示名（例: "パズル" / "アクション" / "シューティング" など）。複数所属も可。ホストはカテゴリごとのフィルターボタンを自動生成します。
+  - `categories` string[]: 表示名を複数指定したい場合に使用
+ - `categoryIds` string[]: カテゴリの安定ID。英小文字スラッグ（例: `['action']`）で指定し、ローカライズは `selection.miniexp.category.<id>` を利用します。現在の公式スラッグは `action` / `board` / `shooting` / `puzzle` / `utility` / `rhythm` / `gambling` / `toy` / `simulation` / `skill` / `misc`
 
 例:
 ```json
@@ -40,6 +44,11 @@
   { "id": "snake", "name": "スネーク", "entry": "games/snake.js", "version": "0.1.0", "author": "builtin", "description": "餌を取ると+1EXP", "category": "アクション" }
 ]
 ```
+
+### ローカライズと命名規約
+- ゲームIDはマニフェスト・スクリプト・ローカライズキー（`selection.miniexp.games.<id>.name/description`）で同じ値を共有します。
+- カテゴリIDは英小文字スラッグを使用し、ローカライズキーは `selection.miniexp.category.<slug>` で定義します。
+- `window.registerMiniGame` でも `nameKey`/`descriptionKey`/`categoryIds` を渡すとホストが即時ローカライズを適用します。
 
 ## 登録API（グローバル）
 - シグネチャ: `window.registerMiniGame(def: MiniGameDef): void`
@@ -56,7 +65,12 @@ interface MiniGameOptions {
 interface MiniGameDef {
   id: string;                 // マニフェストの id と一致させる
   name: string;               // 表示名（任意、マニフェスト優先で良い）
+  nameKey?: string;           // selection.miniexp.games.<id>.name
   description?: string;       // 概要
+  descriptionKey?: string;    // selection.miniexp.games.<id>.description
+  category?: string|string[]; // 後方互換のカテゴリ表示名
+  categories?: string[];      // 表示名を複数指定したい場合
+  categoryIds?: string[];     // 安定カテゴリID（英小文字スラッグ）
   create: (root: HTMLElement,
            awardXp: (n: number, meta?: any) => number|void,
            opts: MiniGameOptions) => MiniGameRuntime;

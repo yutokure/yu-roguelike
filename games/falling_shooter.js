@@ -189,5 +189,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'falling_shooter', name:'落下ブロック・シューター', description:'グリッド落下ブロックを射撃してEXP', create });
+  window.registerMiniGame({ id:'falling_shooter', name:'落下ブロック・シューター', nameKey: 'selection.miniexp.games.falling_shooter.name', description:'グリッド落下ブロックを射撃してEXP', descriptionKey: 'selection.miniexp.games.falling_shooter.description', categoryIds: ['shooting'], create });
 })();

@@ -941,5 +941,5 @@
     return { start, stop, destroy, getScore: () => Math.round(Math.max(0, state.biggestWin)) };
   }
 
-  window.registerMiniGame({ id: 'gamble_hall', name: 'ギャンブルホール', description: 'EXPを賭けるルーレットとパチンコスロットの複合MOD', create });
+  window.registerMiniGame({ id: 'gamble_hall', name: 'ギャンブルホール', nameKey: 'selection.miniexp.games.gamble_hall.name', description: 'EXPを賭けるルーレットとパチンコスロットの複合MOD', descriptionKey: 'selection.miniexp.games.gamble_hall.description', categoryIds: ['gambling'], create });
 })();

@@ -393,5 +393,5 @@
     };
   }
 
-  window.registerMiniGame({ id:'bomberman', name:'ボンバーマン風', description:'ソフトブロック破壊+3 / 敵撃破+12 / 全滅+75', create });
+  window.registerMiniGame({ id:'bomberman', name:'ボンバーマン風', nameKey: 'selection.miniexp.games.bomberman.name', description:'ソフトブロック破壊+3 / 敵撃破+12 / 全滅+75', descriptionKey: 'selection.miniexp.games.bomberman.description', categoryIds: ['action'], create });
 })();

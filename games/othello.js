@@ -299,5 +299,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'othello', name:'オセロ', description:'反転×0.5 + 勝利ボーナス', create });
+  window.registerMiniGame({ id:'othello', name:'オセロ', nameKey: 'selection.miniexp.games.othello.name', description:'反転×0.5 + 勝利ボーナス', descriptionKey: 'selection.miniexp.games.othello.description', categoryIds: ['board'], create });
 })();

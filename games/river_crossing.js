@@ -140,5 +140,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'river_crossing', name:'川渡り', description:'上段到達+50／1段前進ごとに+1', create });
+  window.registerMiniGame({ id:'river_crossing', name:'川渡り', nameKey: 'selection.miniexp.games.river_crossing.name', description:'上段到達+50／1段前進ごとに+1', descriptionKey: 'selection.miniexp.games.river_crossing.description', categoryIds: ['action'], create });
 })();

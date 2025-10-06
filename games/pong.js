@@ -110,5 +110,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'pong', name:'ピンポン', description:'マッチ勝利で難易度別EXP', create });
+  window.registerMiniGame({ id:'pong', name:'ピンポン', nameKey: 'selection.miniexp.games.pong.name', description:'マッチ勝利で難易度別EXP', descriptionKey: 'selection.miniexp.games.pong.description', categoryIds: ['action'], create });
 })();

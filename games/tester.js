@@ -1905,8 +1905,8 @@
 
   window.registerMiniGame({
     id: 'tester',
-    name: 'JSテスター',
-    description: '機能テストとCPUベンチマーク、カスタムalert対応のブロック式アドベンチャー作成ツール。',
+    name: 'JSテスター', nameKey: 'selection.miniexp.games.tester.name',
+    description: '機能テストとCPUベンチマーク、カスタムalert対応のブロック式アドベンチャー作成ツール。', descriptionKey: 'selection.miniexp.games.tester.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

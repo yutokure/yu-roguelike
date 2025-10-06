@@ -439,5 +439,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id: 'acchimuitehoi', name: 'あっち向いてホイ', description: '攻め勝利で15EXP、防御成功で5EXP', create });
+  window.registerMiniGame({ id: 'acchimuitehoi', name: 'あっち向いてホイ', nameKey: 'selection.miniexp.games.acchimuitehoi.name', description: '攻め勝利で15EXP、防御成功で5EXP', descriptionKey: 'selection.miniexp.games.acchimuitehoi.description', categoryIds: ['toy'], create });
 })();

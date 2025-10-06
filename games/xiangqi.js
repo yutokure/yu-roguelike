@@ -659,8 +659,8 @@
 
   window.registerMiniGame({
     id: 'xiangqi',
-    name: 'シャンチー',
-    description: '中国の将棋・象棋。駒取り・王手・詰みでEXPを獲得',
+    name: 'シャンチー', nameKey: 'selection.miniexp.games.xiangqi.name',
+    description: '中国の将棋・象棋。駒取り・王手・詰みでEXPを獲得', descriptionKey: 'selection.miniexp.games.xiangqi.description', categoryIds: ['board'],
     create
   });
 })();

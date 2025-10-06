@@ -214,5 +214,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'match3', name:'マッチ3', description:'3:+1 / 4:+3 / 5:+10、連鎖×1.5', create });
+  window.registerMiniGame({ id:'match3', name:'マッチ3', nameKey: 'selection.miniexp.games.match3.name', description:'3:+1 / 4:+3 / 5:+10、連鎖×1.5', descriptionKey: 'selection.miniexp.games.match3.description', categoryIds: ['puzzle'], create });
 })();

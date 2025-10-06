@@ -1068,8 +1068,12 @@
   window.registerMiniGame({
     id: GAME_ID,
     name: DISPLAY_NAME,
+    nameKey: 'selection.miniexp.games.typing.name',
     description: '60秒で精度とスピードに挑むリアルタイムタイピング',
+    descriptionKey: 'selection.miniexp.games.typing.description',
     category: 'スキル',
+    categories: ['スキル'],
+    categoryIds: ['skill'],
     version: '0.1.0',
     author: 'mod',
     create

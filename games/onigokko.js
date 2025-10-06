@@ -401,5 +401,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id: 'onigokko', name: '鬼ごっこ', description: '混合型ダンジョンで鬼から逃げ切ろう！', create });
+  window.registerMiniGame({ id: 'onigokko', name: '鬼ごっこ', nameKey: 'selection.miniexp.games.onigokko.name', description: '混合型ダンジョンで鬼から逃げ切ろう！', descriptionKey: 'selection.miniexp.games.onigokko.description', categoryIds: ['toy'], create });
 })();

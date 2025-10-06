@@ -517,5 +517,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'ultimate_ttt', name:'スーパー三目並べ', description:'Ultimate三目並べ。配置+1/リーチ+10、小盤制覇+25、勝利は50/100/250EXP', create });
+  window.registerMiniGame({ id:'ultimate_ttt', name:'スーパー三目並べ', nameKey: 'selection.miniexp.games.ultimate_ttt.name', description:'Ultimate三目並べ。配置+1/リーチ+10、小盤制覇+25、勝利は50/100/250EXP', descriptionKey: 'selection.miniexp.games.ultimate_ttt.description', categoryIds: ['board'], create });
 })();

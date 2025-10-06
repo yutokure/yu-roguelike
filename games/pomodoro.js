@@ -784,8 +784,8 @@
 
   window.registerMiniGame({
     id: 'pomodoro',
-    name: 'ポモドーロタイマー',
-    description: '25分集中＋休憩サイクルを管理し、完了ごとにEXPを獲得できるユーティリティ',
+    name: 'ポモドーロタイマー', nameKey: 'selection.miniexp.games.pomodoro.name',
+    description: '25分集中＋休憩サイクルを管理し、完了ごとにEXPを獲得できるユーティリティ', descriptionKey: 'selection.miniexp.games.pomodoro.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

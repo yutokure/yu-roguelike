@@ -294,5 +294,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id: 'janken', name: 'じゃんけん', description: '勝利で10EXP', create });
+  window.registerMiniGame({ id: 'janken', name: 'じゃんけん', nameKey: 'selection.miniexp.games.janken.name', description: '勝利で10EXP', descriptionKey: 'selection.miniexp.games.janken.description', categoryIds: ['toy'], create });
 })();

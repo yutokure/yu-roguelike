@@ -531,7 +531,10 @@
   window.registerMiniGame({
     id: GAME_ID,
     name: GAME_NAME,
+    nameKey: 'selection.miniexp.games.calc_combo.name',
     description: '暗算を連続で決めてコンボEXPを稼ぐ高速計算チャレンジ',
+    descriptionKey: 'selection.miniexp.games.calc_combo.description',
+    categoryIds: ['puzzle'],
     create
   });
 })();

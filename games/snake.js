@@ -101,5 +101,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'snake', name:'スネーク', description:'餌でEXP', create });
+  window.registerMiniGame({ id:'snake', name:'スネーク', nameKey: 'selection.miniexp.games.snake.name', description:'餌でEXP', descriptionKey: 'selection.miniexp.games.snake.description', categoryIds: ['action'], create });
 })();

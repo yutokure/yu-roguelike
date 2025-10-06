@@ -684,8 +684,8 @@
 
   window.registerMiniGame({
     id: 'todo_list',
-    name: 'ToDoリスト',
-    description: '完了で設定EXPを獲得 / 失敗は獲得なし',
+    name: 'ToDoリスト', nameKey: 'selection.miniexp.games.todo_list.name',
+    description: '完了で設定EXPを獲得 / 失敗は獲得なし', descriptionKey: 'selection.miniexp.games.todo_list.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

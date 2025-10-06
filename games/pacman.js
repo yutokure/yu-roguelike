@@ -122,6 +122,6 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'pacman', name:'パックマン風', description:'餌+0.5 / 全取得+100', create });
+  window.registerMiniGame({ id:'pacman', name:'パックマン風', nameKey: 'selection.miniexp.games.pacman.name', description:'餌+0.5 / 全取得+100', descriptionKey: 'selection.miniexp.games.pacman.description', categoryIds: ['action'], create });
 })();
 

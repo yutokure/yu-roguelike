@@ -952,10 +952,10 @@
 
   window.registerMiniGame({
     id: 'populite',
-    name: 'ポピュラス風',
+    name: 'ポピュラス風', nameKey: 'selection.miniexp.games.populite.name',
     version: '0.1.0',
     category: 'シミュレーション',
-    description: '地形を整えて信者を守り、人口目標を目指す神ゲーム',
+    description: '地形を整えて信者を守り、人口目標を目指す神ゲーム', descriptionKey: 'selection.miniexp.games.populite.description', categoryIds: ['simulation'],
     create
   });
 })();

@@ -65,7 +65,13 @@
       xpWin: { EASY: 12, NORMAL: 48, HARD: 120 },
       aiBias: { centerWeight: 2, reachWeight: 20, forkWeight: 12 }
     }
-  ];
+  ].map(cfg => Object.assign({
+    category: 'ボード',
+    categories: ['ボード'],
+    categoryIds: ['board'],
+    nameKey: `selection.miniexp.games.${cfg.id}.name`,
+    descriptionKey: `selection.miniexp.games.${cfg.id}.description`
+  }, cfg));
 
   function inBounds(cols, rows, x, y){
     return x >= 0 && x < cols && y >= 0 && y < rows;
@@ -1209,6 +1215,16 @@
 
   for (const cfg of GAME_CONFIGS){
     const create = createStoneGame(cfg);
-    window.registerMiniGame({ id: cfg.id, name: cfg.name, description: cfg.description, create });
+    window.registerMiniGame({
+      id: cfg.id,
+      name: cfg.name,
+      nameKey: cfg.nameKey,
+      description: cfg.description,
+      descriptionKey: cfg.descriptionKey,
+      category: cfg.category,
+      categories: cfg.categories,
+      categoryIds: cfg.categoryIds,
+      create
+    });
   }
 })();

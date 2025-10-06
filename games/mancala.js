@@ -746,8 +746,8 @@
 
   window.registerMiniGame({
     id: 'mancala',
-    name: 'マンカラ',
-    description: 'カラハ式マンカラ。種まきや捕獲でEXPを稼ぎ、AIとの勝負に挑もう',
+    name: 'マンカラ', nameKey: 'selection.miniexp.games.mancala.name',
+    description: 'カラハ式マンカラ。種まきや捕獲でEXPを稼ぎ、AIとの勝負に挑もう', descriptionKey: 'selection.miniexp.games.mancala.description', categoryIds: ['board'],
     create
   });
 })();

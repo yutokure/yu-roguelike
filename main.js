@@ -17154,11 +17154,12 @@ function buildCategoryMap(manifest) {
 }
 
 function resolveMiniExpCategoryLabel(categoryId, fallbackText) {
-    if (categoryId === MINI_ALL_CATEGORY) {
-        return translateOrFallback('selection.miniexp.categories.all', fallbackText ?? 'すべて');
+    const baseKey = 'selection.miniexp.category';
+    if (!categoryId || categoryId === MINI_ALL_CATEGORY) {
+        return translateOrFallback(`${baseKey}.all`, fallbackText ?? 'すべて');
     }
     const fallback = fallbackText ?? (categoryId || MINI_FALLBACK_CATEGORY_ID);
-    return translateOrFallback(`selection.miniexp.categories.${categoryId}`, fallback);
+    return translateOrFallback(`${baseKey}.${categoryId}`, fallback);
 }
 
 function findMiniGameDefinitionById(id, manifest = __miniManifest) {

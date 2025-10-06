@@ -849,8 +849,8 @@
 
   window.registerMiniGame({
     id: 'chess',
-    name: 'チェス',
-    description: '本格チェス。駒取りとチェックでEXPを得て、詰ませて勝利しよう',
+    name: 'チェス', nameKey: 'selection.miniexp.games.chess.name',
+    description: '本格チェス。駒取りとチェックでEXPを得て、詰ませて勝利しよう', descriptionKey: 'selection.miniexp.games.chess.description', categoryIds: ['board'],
     create
   });
 })();

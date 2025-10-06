@@ -775,8 +775,8 @@
 
   window.registerMiniGame({
     id: 'dungeon_td',
-    name: 'ダンジョンタワーディフェンス',
-    description: '混合型ダンジョンを舞台に砲塔を設置してコアを防衛するタワーディフェンス',
+    name: 'ダンジョンタワーディフェンス', nameKey: 'selection.miniexp.games.dungeon_td.name',
+    description: '混合型ダンジョンを舞台に砲塔を設置してコアを防衛するタワーディフェンス', descriptionKey: 'selection.miniexp.games.dungeon_td.description', categoryIds: ['action'],
     create
   });
 })();

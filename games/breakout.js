@@ -141,5 +141,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'breakout', name:'ブロック崩し', description:'ブロック破壊で+1EXP', create });
+  window.registerMiniGame({ id:'breakout', name:'ブロック崩し', nameKey: 'selection.miniexp.games.breakout.name', description:'ブロック破壊で+1EXP', descriptionKey: 'selection.miniexp.games.breakout.description', categoryIds: ['action'], create });
 })();

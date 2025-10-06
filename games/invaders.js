@@ -128,6 +128,6 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'invaders', name:'インベーダー風', description:'撃破+1/全滅+50', create });
+  window.registerMiniGame({ id:'invaders', name:'インベーダー風', nameKey: 'selection.miniexp.games.invaders.name', description:'撃破+1/全滅+50', descriptionKey: 'selection.miniexp.games.invaders.description', categoryIds: ['shooting'], create });
 })();
 

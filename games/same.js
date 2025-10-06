@@ -123,5 +123,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'same', name:'セイムゲーム', description:'同色まとめ消し×0.5EXP', create });
+  window.registerMiniGame({ id:'same', name:'セイムゲーム', nameKey: 'selection.miniexp.games.same.name', description:'同色まとめ消し×0.5EXP', descriptionKey: 'selection.miniexp.games.same.description', categoryIds: ['puzzle'], create });
 })();

@@ -330,5 +330,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id: 'darumasan', name: 'だるまさんがころんだ', description: '引っかからずにゴールできれば50EXP', create });
+  window.registerMiniGame({ id: 'darumasan', name: 'だるまさんがころんだ', nameKey: 'selection.miniexp.games.darumasan.name', description: '引っかからずにゴールできれば50EXP', descriptionKey: 'selection.miniexp.games.darumasan.description', categoryIds: ['toy'], create });
 })();

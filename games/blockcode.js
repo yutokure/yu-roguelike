@@ -1958,7 +1958,7 @@
 
   window.registerMiniGame({
     id: 'blockcode',
-    name: 'ブロックコードラボ',
+    name: 'ブロックコードラボ', nameKey: 'selection.miniexp.games.blockcode.name', description: '', descriptionKey: 'selection.miniexp.games.blockcode.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     create: create
   });

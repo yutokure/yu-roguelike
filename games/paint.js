@@ -1305,8 +1305,8 @@
 
   window.registerMiniGame({
     id: 'paint',
-    name: 'ペイント',
-    description: '描画+1 / 塗りつぶし+3 / 保存+8 EXP、Windows風ペイント',
+    name: 'ペイント', nameKey: 'selection.miniexp.games.paint.name',
+    description: '描画+1 / 塗りつぶし+3 / 保存+8 EXP、Windows風ペイント', descriptionKey: 'selection.miniexp.games.paint.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     version: '0.1.0',
     author: 'mod',

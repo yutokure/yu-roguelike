@@ -580,8 +580,8 @@
 
   window.registerMiniGame({
     id: 'sudoku',
-    name: 'ナンプレ',
-    description: '1〜9の数字で行・列・ブロックを揃える定番ロジックパズル。正解入力とクリアでEXP獲得。',
+    name: 'ナンプレ', nameKey: 'selection.miniexp.games.sudoku.name',
+    description: '1〜9の数字で行・列・ブロックを揃える定番ロジックパズル。正解入力とクリアでEXP獲得。', descriptionKey: 'selection.miniexp.games.sudoku.description', categoryIds: ['puzzle'],
     category: 'パズル',
     create
   });

@@ -125,5 +125,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'dodge_race', name:'回避レース', description:'グリッドで障害回避。距離でEXP', create });
+  window.registerMiniGame({ id:'dodge_race', name:'回避レース', nameKey: 'selection.miniexp.games.dodge_race.name', description:'グリッドで障害回避。距離でEXP', descriptionKey: 'selection.miniexp.games.dodge_race.description', categoryIds: ['action'], create });
 })();

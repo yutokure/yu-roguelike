@@ -578,8 +578,8 @@
 
   window.registerMiniGame({
     id: 'checkers',
-    name: 'チェッカー',
-    description: 'ジャンプで駒取りして勝利を目指すボードゲーム',
+    name: 'チェッカー', nameKey: 'selection.miniexp.games.checkers.name',
+    description: 'ジャンプで駒取りして勝利を目指すボードゲーム', descriptionKey: 'selection.miniexp.games.checkers.description', categoryIds: ['board'],
     create
   });
 })();

@@ -646,5 +646,5 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id: 'floor_descent', name: 'フロア降りサバイバル', description: '迫る針天井から逃げながら下へ進むアクション', create });
+  window.registerMiniGame({ id: 'floor_descent', name: 'フロア降りサバイバル', nameKey: 'selection.miniexp.games.floor_descent.name', description: '迫る針天井から逃げながら下へ進むアクション', descriptionKey: 'selection.miniexp.games.floor_descent.description', categoryIds: ['action'], create });
 })();

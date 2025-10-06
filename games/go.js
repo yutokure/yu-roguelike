@@ -595,8 +595,8 @@
 
   window.registerMiniGame({
     id: 'go',
-    name: '囲碁',
-    description: '配置+1 / 捕獲ボーナス / 勝利EXP',
+    name: '囲碁', nameKey: 'selection.miniexp.games.go.name',
+    description: '配置+1 / 捕獲ボーナス / 勝利EXP', descriptionKey: 'selection.miniexp.games.go.description', categoryIds: ['board'],
     create
   });
 })();

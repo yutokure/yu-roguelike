@@ -421,8 +421,8 @@
 
   window.registerMiniGame({
     id: 'sliding_puzzle',
-    name: 'スライドパズル',
-    description: 'EASY=8 / NORMAL=15 / HARD=24のスライドパズル',
+    name: 'スライドパズル', nameKey: 'selection.miniexp.games.sliding_puzzle.name',
+    description: 'EASY=8 / NORMAL=15 / HARD=24のスライドパズル', descriptionKey: 'selection.miniexp.games.sliding_puzzle.description', categoryIds: ['puzzle'],
     create
   });
 })();

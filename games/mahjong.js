@@ -1140,8 +1140,8 @@
 
   window.registerMiniGame({
     id: 'riichi_mahjong',
-    name: 'リーチ麻雀ライト',
-    description: 'リーチとツモ/ロンを備えた簡易東風戦。AI 3人と1局勝負で点棒を競う本格寄り麻雀MOD。',
+    name: 'リーチ麻雀ライト', nameKey: 'selection.miniexp.games.riichi_mahjong.name',
+    description: 'リーチとツモ/ロンを備えた簡易東風戦。AI 3人と1局勝負で点棒を競う本格寄り麻雀MOD。', descriptionKey: 'selection.miniexp.games.riichi_mahjong.description', categoryIds: ['board'],
     category: 'ボード',
     create
   });

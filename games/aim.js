@@ -145,6 +145,6 @@
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'aim', name:'的あて（エイム）', description:'命中で1〜3EXP／連続命中でボーナス', create });
+  window.registerMiniGame({ id:'aim', name:'的あて（エイム）', nameKey: 'selection.miniexp.games.aim.name', description:'命中で1〜3EXP／連続命中でボーナス', descriptionKey: 'selection.miniexp.games.aim.description', categoryIds: ['shooting'], create });
 })();
 

@@ -948,8 +948,8 @@
 
   window.registerMiniGame({
     id: 'memo_studio',
-    name: '暗記スタジオ',
-    description: 'フラッシュカードを登録して間隔反復で学習。操作でEXPを獲得',
+    name: '暗記スタジオ', nameKey: 'selection.miniexp.games.memo_studio.name',
+    description: 'フラッシュカードを登録して間隔反復で学習。操作でEXPを獲得', descriptionKey: 'selection.miniexp.games.memo_studio.description', categoryIds: ['toy'],
     category: 'トイ',
     version: '0.1.0',
     author: 'mod',

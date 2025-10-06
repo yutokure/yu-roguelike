@@ -1542,8 +1542,8 @@
 
   window.registerMiniGame({
     id: 'wording',
-    name: 'Wording',
-    description: '編集+1 / 書式+2 / 保存+6 EXP のワープロ',
+    name: 'Wording', nameKey: 'selection.miniexp.games.wording.name',
+    description: '編集+1 / 書式+2 / 保存+6 EXP のワープロ', descriptionKey: 'selection.miniexp.games.wording.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
     create
   });

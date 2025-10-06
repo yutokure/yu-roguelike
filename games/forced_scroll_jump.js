@@ -761,8 +761,8 @@
 
   window.registerMiniGame({
     id: 'forced_scroll_jump',
-    name: '強制スクロールジャンプ',
-    description: '強制横スクロールで穴や鉄球を回避しつつCXマークを集める3ライフゲーム',
+    name: '強制スクロールジャンプ', nameKey: 'selection.miniexp.games.forced_scroll_jump.name',
+    description: '強制横スクロールで穴や鉄球を回避しつつCXマークを集める3ライフゲーム', descriptionKey: 'selection.miniexp.games.forced_scroll_jump.description', categoryIds: ['action'],
     create
   });
 })();

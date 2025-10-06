@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. Project Structure</title>
+    <link rel="stylesheet" href="../manual.css">
+</head>
+<body>
+    <main>
+        <h1>4. Project Structure</h1>
+        <p>
+            Understanding the layout of the project makes it easy to find the files you need to edit. The table below
+            summarises the most important locations and their roles.
+        </p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Path</th>
+                        <th>Description</th>
+                        <th>Beginner’s Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>index.html</code></td>
+                        <td>The base layout for the main game screen.</td>
+                        <td>Edit this file to rearrange buttons or cards.</td>
+                    </tr>
+                    <tr>
+                        <td><code>style.css</code></td>
+                        <td>Global look-and-feel including colours, fonts, and spacing.</td>
+                        <td>Change colours or typography here.</td>
+                    </tr>
+                    <tr>
+                        <td><code>main.js</code></td>
+                        <td>The core game logic controlling tabs and button behaviour.</td>
+                        <td>Modify carefully. Test small changes frequently.</td>
+                    </tr>
+                    <tr>
+                        <td><code>js/</code></td>
+                        <td>Feature-specific JavaScript files.</td>
+                        <td>Use this folder to split complex logic into modules.</td>
+                    </tr>
+                    <tr>
+                        <td><code>games/</code></td>
+                        <td>Data for optional mini-games and extra content.</td>
+                        <td>Add new mini-games here.</td>
+                    </tr>
+                    <tr>
+                        <td><code>dungeontypes/</code></td>
+                        <td>Data files describing each dungeon type.</td>
+                        <td>Adjust enemy strength or rewards in these JSON files.</td>
+                    </tr>
+                    <tr>
+                        <td><code>blockdata.js / blockdata.json</code></td>
+                        <td>Configuration for the Block Dimension mode.</td>
+                        <td>Start with <code>blockdata.json</code> to learn the structure.</td>
+                    </tr>
+                    <tr>
+                        <td><code>tools/</code></td>
+                        <td>Creator-focused utilities and templates.</td>
+                        <td>Customise these tools for your own workflow.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <section>
+            <h2>4.1 Recommended Organisation</h2>
+            <ul>
+                <li><strong>Create a backup folder:</strong> Keep copies of original files so you can restore them quickly.</li>
+                <li><strong>Maintain a docs area:</strong> Collect design notes and meeting minutes for easy sharing.</li>
+                <li><strong>Sort assets:</strong> Separate images, audio, and fonts into subfolders for clarity.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>4.2 Naming Conventions</h2>
+            <p>
+                When adding new files, use readable names with letters, numbers, and hyphens (<code>-</code>).
+                Choose file extensions such as <code>.html</code>, <code>.css</code>, <code>.js</code>, or <code>.json</code> depending on their purpose.
+            </p>
+        </section>
+    </main>
+</body>
+</html>

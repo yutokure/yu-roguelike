@@ -13,6 +13,46 @@
         "ja": "日本語",
         "en": "English"
       }
+    },
+    "runResult": {
+      "title": "リザルト",
+      "reason": {
+        "gameOver": "ゲームオーバー",
+        "clear": "ダンジョンクリア",
+        "retreat": "ダンジョン帰還",
+        "return": "冒険結果"
+      }
+    }
+  },
+  "messages": {
+    "domainCrystal": {
+      "spawn": "謎めいた領域クリスタルがこの階に出現した…！"
+    },
+    "domainEffect": {
+      "enter": "領域効果「{label}」の影響下に入った！",
+      "exit": "領域効果の影響から解放された。"
+    },
+    "domain": {
+      "poisonNegated": "領域効果により毒のダメージを無効化した！",
+      "poisonReversed": "毒の痛みが反転し、HPが{amount}回復した！",
+      "poisonDamage": "毒で{amount}のダメージ！",
+      "rareChestGuarded": "黄金の宝箱が爆発したが領域効果で守られた！",
+      "rareChestReversed": "黄金の宝箱の爆発が反転し、HPが{amount}回復した！",
+      "rareChestDamage": "黄金の宝箱が爆発！HPが{damage}減少（タイミングずれ {timing}%）",
+      "rareChestDeath": "黄金の宝箱の爆発に巻き込まれた…ゲームオーバー",
+      "damageBlocked": "領域効果に阻まれてダメージを与えられなかった…",
+      "enemyHealed": "領域効果で敵が{amount}回復してしまった！",
+      "poisonFloorNegated": "領域効果で毒床のダメージを無効化した！",
+      "poisonFloorReversed": "毒床のエネルギーが反転し、HPが{amount}回復した！",
+      "poisonFloorDamage": "毒床がダメージ！HPが{amount}減少",
+      "poisonFloorDeath": "毒床で倒れた…ゲームオーバー",
+      "bombGuarded": "領域効果で爆風を防いだ！",
+      "bombReversed": "爆風の力が反転し、HPが{amount}回復した！",
+      "bombDamage": "爆弾が爆発！HPが{amount}減少",
+      "bombDeath": "爆弾に巻き込まれて倒れた…ゲームオーバー",
+      "bombSafe": "爆弾が爆発したがダメージは受けなかった！",
+      "enemyAttackGuarded": "領域効果に守られ、ダメージを受けなかった！",
+      "enemyAttackReversed": "領域効果で敵の攻撃が回復に変わった！HPが{amount}回復"
     }
   },
   "selection": {

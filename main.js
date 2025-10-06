@@ -5,13 +5,35 @@ if (!i18n) {
     throw new Error('I18n module failed to load');
 }
 
+const translate = (key, params) => i18n.t(key, params);
+const formatNumberLocalized = (value, options) => {
+    if (typeof i18n?.formatNumber === 'function') {
+        return i18n.formatNumber(value, options);
+    }
+    try {
+        return new Intl.NumberFormat(i18n?.getLocale?.() || undefined, options).format(value);
+    } catch (error) {
+        return String(value ?? '');
+    }
+};
+const localeCompareLocalized = (a, b, options) => {
+    if (typeof i18n?.localeCompare === 'function') {
+        return i18n.localeCompare(a, b, options);
+    }
+    try {
+        return String(a ?? '').localeCompare(String(b ?? ''), i18n?.getLocale?.() || undefined, options);
+    } catch (error) {
+        return 0;
+    }
+};
+
 const languageSelect = document.getElementById('language-select');
 const languageSelectLabel = document.querySelector('label[for="language-select"]');
 let languageDisplayNames = null;
 
 function translateOrFallback(key, fallbackText) {
     if (!i18n || typeof i18n.t !== 'function') return fallbackText;
-    const translated = i18n.t(key);
+    const translated = translate(key);
     if (typeof translated === 'string' && translated !== key) {
         return translated;
     }
@@ -149,15 +171,14 @@ const noiseUiState = {
 let autoItemCheckScheduled = false;
 let currentRunContext = null;
 let lastRunResultSummary = null;
-const runResultNumberFormatter = new Intl.NumberFormat('ja-JP');
 let runResultOverlayState = null;
 let isGameOver = false;
 
-const RUN_RESULT_REASON_LABELS = Object.freeze({
-    gameOver: 'ゲームオーバー',
-    clear: 'ダンジョンクリア',
-    retreat: 'ダンジョン帰還',
-    return: '冒険結果'
+const RUN_RESULT_REASON_KEYS = Object.freeze({
+    gameOver: 'ui.runResult.reason.gameOver',
+    clear: 'ui.runResult.reason.clear',
+    retreat: 'ui.runResult.reason.retreat',
+    return: 'ui.runResult.reason.return'
 });
 const MAX_LOG_LINES = 100;
 let SATIETY_MAX = 100;
@@ -694,15 +715,24 @@ function registerRunHealingItemUse(itemId) {
     recordAchievementEvent('healing_item_used', { item: itemId || 'unknown' });
 }
 
+function getRunResultReasonLabel(reason) {
+    const key = RUN_RESULT_REASON_KEYS[reason] || RUN_RESULT_REASON_KEYS.return;
+    return translate(key);
+}
+
+function formatRunResultNumber(value) {
+    return formatNumberLocalized(Number.isFinite(value) ? value : 0);
+}
+
 function formatRunResultSigned(value, { zeroPrefix = '+' } = {}) {
     const numeric = Number.isFinite(value) ? Math.trunc(value) : 0;
     if (numeric > 0) {
-        return `+${runResultNumberFormatter.format(numeric)}`;
+        return `+${formatRunResultNumber(numeric)}`;
     }
     if (numeric < 0) {
-        return `-${runResultNumberFormatter.format(Math.abs(numeric))}`;
+        return `-${formatRunResultNumber(Math.abs(numeric))}`;
     }
-    return `${zeroPrefix}${runResultNumberFormatter.format(0)}`;
+    return `${zeroPrefix}${formatRunResultNumber(0)}`;
 }
 
 function buildRunResultSummary(reason = 'return', { cause = '' } = {}) {
@@ -714,12 +744,12 @@ function buildRunResultSummary(reason = 'return', { cause = '' } = {}) {
     const levelDiff = endLevel - currentRunContext.startLevel;
     const damageTaken = Math.max(0, Math.floor(currentRunContext.metrics?.damageTaken || 0));
     const healingUsed = Math.max(0, Math.floor(currentRunContext.metrics?.healingItemsUsed || 0));
-    const reasonLabel = RUN_RESULT_REASON_LABELS[reason] || RUN_RESULT_REASON_LABELS.return;
+    const reasonLabel = getRunResultReasonLabel(reason);
     const now = Date.now();
     return {
         reason,
         reasonLabel,
-        title: 'リザルト',
+        title: translate('ui.runResult.title'),
         level: {
             start: currentRunContext.startLevel,
             end: endLevel,
@@ -731,9 +761,9 @@ function buildRunResultSummary(reason = 'return', { cause = '' } = {}) {
             display: formatRunResultSigned(totalDelta)
         },
         damageTaken,
-        damageDisplay: runResultNumberFormatter.format(damageTaken),
+        damageDisplay: formatRunResultNumber(damageTaken),
         healingItemsUsed: healingUsed,
-        healingDisplay: runResultNumberFormatter.format(healingUsed),
+        healingDisplay: formatRunResultNumber(healingUsed),
         healingBreakdown: { ...(currentRunContext.metrics?.healingBreakdown || {}) },
         startedAt: currentRunContext.startedAt,
         endedAt: now,
@@ -763,7 +793,7 @@ function showRunResultOverlay(summary, { onReturn, onRetry } = {}) {
         onRetry: typeof onRetry === 'function' ? onRetry : null
     };
     if (runResultBadge) {
-        runResultBadge.textContent = summary.reasonLabel || RUN_RESULT_REASON_LABELS.return;
+        runResultBadge.textContent = summary.reasonLabel || getRunResultReasonLabel('return');
     }
     if (runResultLevelValue) {
         runResultLevelValue.textContent = summary.level?.display || '';
@@ -772,10 +802,10 @@ function showRunResultOverlay(summary, { onReturn, onRetry } = {}) {
         runResultExpValue.textContent = summary.exp?.display || formatRunResultSigned(0);
     }
     if (runResultDamageValue) {
-        runResultDamageValue.textContent = summary.damageDisplay ?? runResultNumberFormatter.format(0);
+        runResultDamageValue.textContent = summary.damageDisplay ?? formatRunResultNumber(0);
     }
     if (runResultHealingValue) {
-        runResultHealingValue.textContent = summary.healingDisplay ?? runResultNumberFormatter.format(0);
+        runResultHealingValue.textContent = summary.healingDisplay ?? formatRunResultNumber(0);
     }
     if (runResultCauseText) {
         if (summary.cause) {
@@ -878,7 +908,7 @@ function generateDomainCrystalsForFloor(recommendedLevel) {
     });
 
     if (domainCrystals.length) {
-        addMessage('謎めいた領域クリスタルがこの階に出現した…！');
+        addMessage(translate('messages.domainCrystal.spawn'));
     }
 }
 
@@ -1757,16 +1787,16 @@ const PASSIVE_ORB_DEFS = Object.freeze({
 
 const PASSIVE_ORB_IDS = Object.freeze(Object.keys(PASSIVE_ORB_DEFS));
 
-const PASSIVE_ORB_PERCENT_FORMATTERS = Object.freeze({
-    0: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 0, minimumFractionDigits: 0 }),
-    1: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 1, minimumFractionDigits: 0 }),
-    2: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 2, minimumFractionDigits: 0 }),
+const PASSIVE_ORB_PERCENT_FORMAT_OPTIONS = Object.freeze({
+    0: Object.freeze({ maximumFractionDigits: 0, minimumFractionDigits: 0 }),
+    1: Object.freeze({ maximumFractionDigits: 1, minimumFractionDigits: 0 }),
+    2: Object.freeze({ maximumFractionDigits: 2, minimumFractionDigits: 0 }),
 });
 
-const PASSIVE_ORB_PRODUCT_FORMATTERS = Object.freeze({
-    0: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 0, minimumFractionDigits: 0 }),
-    1: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 1, minimumFractionDigits: 0 }),
-    2: new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 2, minimumFractionDigits: 0 }),
+const PASSIVE_ORB_PRODUCT_FORMAT_OPTIONS = Object.freeze({
+    0: Object.freeze({ maximumFractionDigits: 0, minimumFractionDigits: 0 }),
+    1: Object.freeze({ maximumFractionDigits: 1, minimumFractionDigits: 0 }),
+    2: Object.freeze({ maximumFractionDigits: 2, minimumFractionDigits: 0 }),
 });
 
 const PASSIVE_ORB_AGGREGATE_CONFIG = Object.freeze([
@@ -1807,8 +1837,8 @@ function formatPassiveOrbPercent(multiplier, decimals = 1) {
     const delta = (numeric - 1) * 100;
     const factor = Math.pow(10, safeDecimals);
     const rounded = Math.round(delta * factor) / factor;
-    const formatter = PASSIVE_ORB_PERCENT_FORMATTERS[safeDecimals] || PASSIVE_ORB_PERCENT_FORMATTERS[1];
-    const display = formatter.format(Math.abs(rounded));
+    const options = PASSIVE_ORB_PERCENT_FORMAT_OPTIONS[safeDecimals] || PASSIVE_ORB_PERCENT_FORMAT_OPTIONS[1];
+    const display = formatNumberLocalized(Math.abs(rounded), options);
     const sign = rounded >= 0 ? '+' : '-';
     return `${sign}${display}%`;
 }
@@ -1822,8 +1852,9 @@ function formatPassiveOrbProduct(multiplier, decimals = 2) {
     const safeValue = Math.max(0, numeric);
     const factor = Math.pow(10, safeDecimals);
     const rounded = Math.round(safeValue * factor) / factor;
-    const formatter = PASSIVE_ORB_PRODUCT_FORMATTERS[safeDecimals] || PASSIVE_ORB_PRODUCT_FORMATTERS[2];
-    return `×${formatter.format(rounded)}`;
+    const options = PASSIVE_ORB_PRODUCT_FORMAT_OPTIONS[safeDecimals] || PASSIVE_ORB_PRODUCT_FORMAT_OPTIONS[2];
+    const display = formatNumberLocalized(rounded, options);
+    return `×${display}`;
 }
 
 function buildPassiveOrbAggregateEntries(modifiers) {
@@ -5460,9 +5491,9 @@ function notifyPlayerDomainChange() {
     if (signature === lastPlayerDomainSignature) return;
     if (aggregate.definitions.length) {
         const label = aggregate.definitions.map(def => def.label).join(' + ');
-        addMessage(`領域効果「${label}」の影響下に入った！`);
+        addMessage(translate('messages.domainEffect.enter', { label }));
     } else if (lastPlayerDomainSignature) {
-        addMessage('領域効果の影響から解放された。');
+        addMessage(translate('messages.domainEffect.exit'));
     }
     lastPlayerDomainSignature = signature;
 }
@@ -6736,7 +6767,7 @@ function processPlayerStatusTurnStart() {
             defenderPos: { x: player.x, y: player.y }
         });
         if (statusResult.prevented || statusResult.amount <= 0) {
-            addMessage('領域効果により毒のダメージを無効化した！');
+            addMessage(translate('messages.domain.poisonNegated'));
             addPopup(player.x, player.y, 'Guard', '#74c0fc');
         } else if (statusResult.effectType === 'healing') {
             const beforeHp = player.hp;
@@ -6745,7 +6776,8 @@ function processPlayerStatusTurnStart() {
             enforceEffectiveHpCap();
             const healed = Math.max(0, player.hp - beforeHp);
             if (healed > 0) {
-                addMessage(`毒の痛みが反転し、HPが${healed}回復した！`);
+                const healedDisplay = formatNumberLocalized(healed);
+                addMessage(translate('messages.domain.poisonReversed', { amount: healedDisplay }));
                 addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
                 playSfx('pickup');
             } else {
@@ -6754,7 +6786,8 @@ function processPlayerStatusTurnStart() {
         } else {
             const damage = statusResult.amount;
             player.hp = Math.max(0, player.hp - damage);
-            addMessage(`毒で${damage}のダメージ！`);
+            const damageDisplay = formatNumberLocalized(damage);
+            addMessage(translate('messages.domain.poisonDamage', { amount: damageDisplay }));
             addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#94d82d');
             playSfx('damage');
             if (player.hp <= 0) {
@@ -8245,12 +8278,13 @@ function populateBdimRandomTypeSelect() {
             for (const [id] of DungeonGenRegistry.entries()) addType(id);
         }
     } catch {}
+    const locale = i18n.getLocale?.() || i18n.getDefaultLocale?.() || 'ja';
     const sorted = Array.from(typeMap.keys())
         .filter(Boolean)
         .sort((a, b) => {
-            const labelA = (getDungeonTypeName(a) || a).toLocaleLowerCase('ja');
-            const labelB = (getDungeonTypeName(b) || b).toLocaleLowerCase('ja');
-            return labelA.localeCompare(labelB, 'ja');
+            const labelA = (getDungeonTypeName(a) || a).toLocaleLowerCase(locale);
+            const labelB = (getDungeonTypeName(b) || b).toLocaleLowerCase(locale);
+            return localeCompareLocalized(labelA, labelB);
         })
         .map(id => ({
             id,
@@ -13175,12 +13209,19 @@ function drawSandboxGimmicks(showLabels = false) {
                     const labelFont = Math.max(9, Math.floor(fontBase * 0.28));
                     ctx.font = `600 ${labelFont}px 'Segoe UI', 'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Noto Sans JP', sans-serif`;
                     const textY = centerY + fontBase * 0.34;
-                    const paddingX = fontBase * 0.4;
-                    const paddingY = fontBase * 0.18;
                     const metrics = ctx.measureText(label);
-                    const textWidth = metrics.width;
+                    const ascent = metrics.actualBoundingBoxAscent ?? labelFont * 0.8;
+                    const descent = metrics.actualBoundingBoxDescent ?? labelFont * 0.2;
+                    const textHeight = ascent + descent;
+                    const paddingX = Math.max(fontBase * 0.25, 6);
+                    const paddingY = Math.max(fontBase * 0.14, 4);
                     ctx.fillStyle = 'rgba(15,23,42,0.7)';
-                    ctx.fillRect(centerX - textWidth / 2 - paddingX, textY - labelFont / 2 - paddingY, textWidth + paddingX * 2, labelFont + paddingY * 2);
+                    ctx.fillRect(
+                        centerX - metrics.width / 2 - paddingX,
+                        textY - ascent - paddingY,
+                        metrics.width + paddingX * 2,
+                        textHeight + paddingY * 2
+                    );
                     ctx.fillStyle = '#f8fafc';
                     ctx.fillText(label, centerX, textY);
                 }
@@ -13399,26 +13440,25 @@ function drawPlayerBurstEffect() {
 
 // Helper function to draw text with background
 function drawTextWithBackground(ctx, text, x, y, textColor) {
-    // Measure text
     const metrics = ctx.measureText(text);
-    const textWidth = metrics.width;
-    const textHeight = parseInt(ctx.font.match(/\d+/)[0]);
-    
-    // Background padding
-    const padding = 4;
-    const bgWidth = textWidth + padding * 2;
-    const bgHeight = textHeight + padding;
-    
-    // Draw background (semi-transparent black with white border)
+    const fontSizeMatch = ctx.font.match(/(\d+(?:\.\d+)?)px/i);
+    const fallbackSize = fontSizeMatch ? Number(fontSizeMatch[1]) : 16;
+    const ascent = metrics.actualBoundingBoxAscent ?? fallbackSize * 0.8;
+    const descent = metrics.actualBoundingBoxDescent ?? fallbackSize * 0.2;
+    const textHeight = ascent + descent;
+    const paddingX = Math.max(4, fallbackSize * 0.25);
+    const paddingY = Math.max(3, fallbackSize * 0.2);
+    const bgWidth = metrics.width + paddingX * 2;
+    const bgHeight = textHeight + paddingY * 2;
+    const top = y - ascent - paddingY;
+
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(x - bgWidth/2, y - textHeight + padding/2, bgWidth, bgHeight);
-    
-    // Draw white border
+    ctx.fillRect(x - bgWidth / 2, top, bgWidth, bgHeight);
+
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x - bgWidth/2, y - textHeight + padding/2, bgWidth, bgHeight);
-    
-    // Draw text
+    ctx.lineWidth = Math.max(1, fallbackSize * 0.05);
+    ctx.strokeRect(x - bgWidth / 2, top, bgWidth, bgHeight);
+
     ctx.fillStyle = textColor;
     ctx.fillText(text, x, y);
 }
@@ -14630,7 +14670,7 @@ function handleRareChestExplosion(diff) {
         defenderPos: { x: player.x, y: player.y }
     });
     if (hazardResult.prevented || hazardResult.amount <= 0) {
-        addMessage('黄金の宝箱が爆発したが領域効果で守られた！');
+        addMessage(translate('messages.domain.rareChestGuarded'));
         addPopup(player.x, player.y, 'Guard', '#74c0fc');
         return { outcome: 'guarded', damage: 0 };
     }
@@ -14641,7 +14681,8 @@ function handleRareChestExplosion(diff) {
         enforceEffectiveHpCap();
         const healed = Math.max(0, player.hp - before);
         if (healed > 0) {
-            addMessage(`黄金の宝箱の爆発が反転し、HPが${healed}回復した！`);
+            const healedDisplay = formatNumberLocalized(healed);
+            addMessage(translate('messages.domain.rareChestReversed', { amount: healedDisplay }));
             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
             updateUI();
         }
@@ -14650,12 +14691,14 @@ function handleRareChestExplosion(diff) {
     const damage = Math.max(1, hazardResult.amount);
     player.hp = Math.max(0, player.hp - damage);
     recordAchievementEvent('damage_taken', { amount: damage, source: 'rare_chest_explosion' });
-    addMessage(`黄金の宝箱が爆発！HPが${damage}減少（タイミングずれ ${Math.round(diff * 100)}%）`);
+    const damageDisplay = formatNumberLocalized(damage);
+    const timingOffset = formatNumberLocalized(Math.round(diff * 100));
+    addMessage(translate('messages.domain.rareChestDamage', { damage: damageDisplay, timing: timingOffset }));
     addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff8787', 1.15);
     playSfx('damage');
     updateUI();
     if (player.hp <= 0) {
-        handlePlayerDeath('黄金の宝箱の爆発に巻き込まれた…ゲームオーバー');
+        handlePlayerDeath(translate('messages.domain.rareChestDeath'));
     }
     return { outcome: 'damage', damage };
 }
@@ -14941,7 +14984,7 @@ function performAttack(enemyAtTarget) {
         });
         playSfx('attack');
         if (domainResult.prevented || domainResult.amount <= 0) {
-            addMessage('領域効果に阻まれてダメージを与えられなかった…');
+            addMessage(translate('messages.domain.damageBlocked'));
             addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Guard', '#74c0fc');
             return;
         }
@@ -14951,7 +14994,8 @@ function performAttack(enemyAtTarget) {
             enemyAtTarget.hp = Math.min(healCap, (enemyAtTarget.hp || 0) + domainResult.amount);
             const healed = Math.max(0, enemyAtTarget.hp - beforeHp);
             if (healed > 0) {
-                addMessage(`領域効果で敵が${healed}回復してしまった！`);
+                const healedDisplay = formatNumberLocalized(healed);
+                addMessage(translate('messages.domain.enemyHealed', { amount: healedDisplay }));
                 addPopup(enemyAtTarget.x, enemyAtTarget.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#74c0fc');
             } else {
                 addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Guard', '#74c0fc');
@@ -15191,6 +15235,7 @@ function drawPopups() {
     const startY = camera.y;
     const baseCellH = canvas.height / VIEWPORT_HEIGHT;
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
     for (let i = popups.length - 1; i >= 0; i--) {
         const p = popups[i];
         p.t += 1;
@@ -15205,25 +15250,24 @@ function drawPopups() {
         const screenY = ey * cellH2 + cellH2 / 2 - p.t * (cellH2 * 0.03);
         const fontSize = Math.max(18, Math.floor(baseCellH * 0.8 * (p.scale || 1)));
         ctx.font = `bold ${fontSize}px sans-serif`;
-        
-        // Draw popup with background and border
+
         const metrics = ctx.measureText(p.text);
-        const textWidth = metrics.width;
-        const textHeight = fontSize;
-        const padding = 6;
-        const bgWidth = textWidth + padding * 2;
-        const bgHeight = textHeight + padding;
-        
-        // Draw background
+        const ascent = metrics.actualBoundingBoxAscent ?? fontSize * 0.78;
+        const descent = metrics.actualBoundingBoxDescent ?? fontSize * 0.22;
+        const textHeight = ascent + descent;
+        const paddingX = Math.max(6, fontSize * 0.25);
+        const paddingY = Math.max(4, fontSize * 0.2);
+        const bgWidth = metrics.width + paddingX * 2;
+        const bgHeight = textHeight + paddingY * 2;
+        const top = screenY - ascent - paddingY;
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.fillRect(screenX - bgWidth/2, screenY - textHeight + padding/2, bgWidth, bgHeight);
-        
-        // Draw border
+        ctx.fillRect(screenX - bgWidth / 2, top, bgWidth, bgHeight);
+
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(screenX - bgWidth/2, screenY - textHeight + padding/2, bgWidth, bgHeight);
-        
-        // Draw text
+        ctx.lineWidth = Math.max(1.5, fontSize * 0.08);
+        ctx.strokeRect(screenX - bgWidth / 2, top, bgWidth, bgHeight);
+
         ctx.fillStyle = p.color;
         ctx.fillText(p.text, screenX, screenY);
         
@@ -15488,7 +15532,7 @@ function applyPostMoveEffects() {
                         defenderPos: { x: player.x, y: player.y }
                     });
                     if (hazardResult.prevented || hazardResult.amount <= 0) {
-                        addMessage('領域効果で毒床のダメージを無効化した！');
+                        addMessage(translate('messages.domain.poisonFloorNegated'));
                         addPopup(player.x, player.y, 'Guard', '#74c0fc');
                     } else if (hazardResult.effectType === 'healing') {
                         const beforeHp = player.hp;
@@ -15497,7 +15541,8 @@ function applyPostMoveEffects() {
                         enforceEffectiveHpCap();
                         const healed = Math.max(0, player.hp - beforeHp);
                         if (healed > 0) {
-                            addMessage(`毒床のエネルギーが反転し、HPが${healed}回復した！`);
+                            const healedDisplay = formatNumberLocalized(healed);
+                            addMessage(translate('messages.domain.poisonFloorReversed', { amount: healedDisplay }));
                             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
                             updateUI();
                         } else {
@@ -15507,12 +15552,13 @@ function applyPostMoveEffects() {
                         const damage = hazardResult.amount;
                         player.hp = Math.max(0, player.hp - damage);
                         recordAchievementEvent('damage_taken', { amount: damage, source: 'poison-floor' });
-                        addMessage(`毒床がダメージ！HPが${damage}減少`);
+                        const damageDisplay = formatNumberLocalized(damage);
+                        addMessage(translate('messages.domain.poisonFloorDamage', { amount: damageDisplay }));
                         addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
                         playSfx('damage');
                         updateUI();
                         if (player.hp <= 0) {
-                            handlePlayerDeath('毒床で倒れた…ゲームオーバー');
+                            handlePlayerDeath(translate('messages.domain.poisonFloorDeath'));
                         }
                     }
                 }
@@ -15532,7 +15578,7 @@ function applyPostMoveEffects() {
                         defenderPos: { x: player.x, y: player.y }
                     });
                     if (hazardResult.prevented || hazardResult.amount <= 0) {
-                        addMessage('領域効果で爆風を防いだ！');
+                        addMessage(translate('messages.domain.bombGuarded'));
                         addPopup(player.x, player.y, 'Guard', '#74c0fc');
                     } else if (hazardResult.effectType === 'healing') {
                         const beforeHp = player.hp;
@@ -15541,7 +15587,8 @@ function applyPostMoveEffects() {
                         enforceEffectiveHpCap();
                         const healed = Math.max(0, player.hp - beforeHp);
                         if (healed > 0) {
-                            addMessage(`爆風の力が反転し、HPが${healed}回復した！`);
+                            const healedDisplay = formatNumberLocalized(healed);
+                            addMessage(translate('messages.domain.bombReversed', { amount: healedDisplay }));
                             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
                             updateUI();
                         } else {
@@ -15552,15 +15599,16 @@ function applyPostMoveEffects() {
                         player.hp = Math.max(0, player.hp - damage);
                         recordAchievementEvent('damage_taken', { amount: damage, source: 'bomb-floor' });
                         const popupValue = `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`;
-                        addMessage(`爆弾が爆発！HPが${damage}減少`);
+                        const damageDisplay = formatNumberLocalized(damage);
+                        addMessage(translate('messages.domain.bombDamage', { amount: damageDisplay }));
                         addPopup(player.x, player.y, popupValue, '#ff8787', 1.1);
                         updateUI();
                         if (player.hp <= 0) {
-                            handlePlayerDeath('爆弾に巻き込まれて倒れた…ゲームオーバー');
+                            handlePlayerDeath(translate('messages.domain.bombDeath'));
                         }
                     }
                 } else {
-                    addMessage('爆弾が爆発したがダメージは受けなかった！');
+                    addMessage(translate('messages.domain.bombSafe'));
                 }
             }
         }
@@ -15970,7 +16018,7 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     });
 
     if (domainResult.prevented || domainResult.amount <= 0) {
-        addMessage('領域効果に守られ、ダメージを受けなかった！');
+        addMessage(translate('messages.domain.enemyAttackGuarded'));
         addPopup(player.x, player.y, 'Guard', '#74c0fc');
         return;
     }
@@ -15982,7 +16030,8 @@ function executeEnemyAttack(enemy, stepX, stepY) {
         enforceEffectiveHpCap();
         const healed = Math.max(0, player.hp - beforeHp);
         if (healed > 0) {
-            addMessage(`領域効果で敵の攻撃が回復に変わった！HPが${healed}回復`);
+            const healedDisplay = formatNumberLocalized(healed);
+            addMessage(translate('messages.domain.enemyAttackReversed', { amount: healedDisplay }));
             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
         } else {
             addPopup(player.x, player.y, 'Guard', '#74c0fc');
@@ -17113,7 +17162,7 @@ function renderMiniExpCategories(manifest) {
     miniexpCatList.innerHTML = '';
     const catMap = buildCategoryMap(manifest);
     // 先頭に「すべて」
-    const cats = ['すべて', ...Array.from(catMap.keys()).sort((a,b)=>a.localeCompare(b,'ja'))];
+    const cats = ['すべて', ...Array.from(catMap.keys()).sort((a, b) => localeCompareLocalized(a, b))];
     const sel = miniExpState.category || MINI_ALL_CATEGORY;
     const toKey = (label) => label === 'すべて' ? MINI_ALL_CATEGORY : label;
     for (const label of cats) {

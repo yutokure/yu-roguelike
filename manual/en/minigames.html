@@ -3,27 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>13. Mini-games & Tools (Translation in Progress)</title>
+    <title>13. Mini-games &amp; Tools</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
-        <h1>13. Mini-games & Tools</h1>
-        <p>
-            We are compiling an English guide for creator utilities and optional modes. Refer to the Japanese chapter for
-            the complete catalogue until the translation is published:
-        </p>
-        <ul>
-            <li><a href="../minigames.html" target="_blank" rel="noopener">Japanese chapter: Mini-games & Tools</a></li>
-        </ul>
-        <p>
-            The English chapter will cover:
-        </p>
-        <ol>
-            <li>Descriptions of each utility and how they interact with dungeon data.</li>
-            <li>Integration tips for bundling custom tools.</li>
-            <li>Maintenance checklist for keeping optional content up to date.</li>
-        </ol>
+        <h1>13. Mini-games &amp; Tools</h1>
+        <section>
+            <h2>13.1 Managing Mini-games</h2>
+            <p>
+                The project ships with numerous mini-games and idea notebooks. Browse the samples in the <code>games</code>
+                directory when adding your own creations—they serve as templates for structure and assets.
+            </p>
+            <p class="small-note">
+                Detailed specs, difficulty settings, and entry points for each bundled module are listed in
+                <a href="reference-minigames.html" target="manual-content">Chapter 20: MiniExp Module Catalog</a>.
+            </p>
+        </section>
+        <section>
+            <h2>13.2 The Tools Tab</h2>
+            <p>
+                The Tools tab provides utilities useful during development, such as block-data editors. Some tools are still in
+                progress, so check the changelog to follow updates.
+            </p>
+            <p class="small-note">
+                To customise domain hazards and status badges on the dungeon overlay, see
+                <a href="reference-functions.html#domain-and-badge-hooks" target="manual-content">Section 19.5</a> for the
+                relevant hooks.
+            </p>
+        </section>
+        <section>
+            <h2>13.3 Integration Tips</h2>
+            <ul>
+                <li>Create a shared data-management module if you want mini-game results to influence the main game.</li>
+                <li>Provide common CSS classes to keep UI styling consistent.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>13.4 Mini-game &amp; Tool Directory</h2>
+            <p class="small-note">Every mini-game and utility listed below runs entirely in the browser. Use this section as a quick
+                reference for controls and best practices.</p>
+            <h3 id="game-electro-instrument">Electro Instrument</h3>
+            <ul>
+                <li><strong>Goal:</strong> Play notes on a virtual keyboard.</li>
+                <li><strong>Controls:</strong> Use the mouse or keyboard keys to trigger pitches.</li>
+                <li><strong>Tip:</strong> Ideal for chord checks and testing sound effects during development.</li>
+            </ul>
+            <h3 id="game-exceler">Spreadsheet Exceller</h3>
+            <ul>
+                <li><strong>Goal:</strong> Organise and calculate values in a lightweight spreadsheet.</li>
+                <li><strong>Controls:</strong> Click cells to enter data or formulas.</li>
+                <li><strong>Tip:</strong> Record dungeon-balance adjustments so you can track your changes.</li>
+            </ul>
+            <h3 id="game-falling-shooter">Falling Shooter</h3>
+            <ul>
+                <li><strong>Goal:</strong> Shoot descending enemies to earn points.</li>
+                <li><strong>Controls:</strong> Move with the arrow keys and fire with Space.</li>
+                <li><strong>Tip:</strong> Observe the descent speed and weave movement with attacks.</li>
+            </ul>
+            <h3 id="game-flappy-bird">Flappy-style Flight</h3>
+            <ul>
+                <li><strong>Goal:</strong> Fly through pipe gaps to extend your distance.</li>
+                <li><strong>Controls:</strong> Tap Space or click to flap.</li>
+                <li><strong>Tip:</strong> Use short taps instead of holding the key to fine-tune altitude.</li>
+            </ul>
+            <h3 id="game-gamble-hall">Gamble Hall</h3>
+            <ul>
+                <li><strong>Goal:</strong> A collection of simple wagering games that increase your points.</li>
+                <li><strong>Controls:</strong> Choose bet amounts and outcomes via mouse clicks.</li>
+                <li><strong>Tip:</strong> Start with small wagers to avoid running out of points.</li>
+            </ul>
+            <h3 id="game-go">Go Lite</h3>
+            <ul>
+                <li><strong>Goal:</strong> Capture territory in a streamlined version of Go.</li>
+                <li><strong>Controls:</strong> Click intersections to place stones.</li>
+                <li><strong>Tip:</strong> Watch for liberties and surround opposing stones.</li>
+            </ul>
+            <h3 id="game-invaders">Invader-style Shooter</h3>
+            <ul>
+                <li><strong>Goal:</strong> Defeat each wave of descending aliens.</li>
+                <li><strong>Controls:</strong> Move left/right with the arrow keys and fire with Space.</li>
+                <li><strong>Tip:</strong> Hide behind barriers and clear columns one at a time.</li>
+            </ul>
+            <h3 id="game-math-lab">Math Lab</h3>
+            <ul>
+                <li><strong>Goal:</strong> Solve arithmetic drills to build fundamentals.</li>
+                <li><strong>Controls:</strong> Enter answers and submit them for grading.</li>
+                <li><strong>Tip:</strong> Combine mental math with quick notes when a timer is active.</li>
+            </ul>
+            <h3 id="game-match3">Match-3 Puzzle</h3>
+            <ul>
+                <li><strong>Goal:</strong> Align three or more identical icons to clear them and reach the target score.</li>
+                <li><strong>Controls:</strong> Swap adjacent tiles by dragging or clicking.</li>
+                <li><strong>Tip:</strong> Prioritise moves that can cascade into combos.</li>
+            </ul>
+            <h3 id="game-minesweeper">Minesweeper</h3>
+            <ul>
+                <li><strong>Goal:</strong> Reveal all safe tiles without triggering mines.</li>
+                <li><strong>Controls:</strong> Left-click to open, right-click to flag.</li>
+                <li><strong>Tip:</strong> Use the numbers to deduce where mines are located.</li>
+            </ul>
+            <h3 id="game-music-player">Music Player</h3>
+            <ul>
+                <li><strong>Goal:</strong> Preview BGM and sound effects.</li>
+                <li><strong>Controls:</strong> Choose a track from the playlist and scrub with the seek bar.</li>
+                <li><strong>Tip:</strong> Loop tracks while fine-tuning volume levels.</li>
+            </ul>
+            <h3 id="game-notepad">Notepad Utility</h3>
+            <ul>
+                <li><strong>Goal:</strong> Save quick text notes.</li>
+                <li><strong>Controls:</strong> Type in the editor area and click Save to store locally.</li>
+                <li><strong>Tip:</strong> Keep it open to jot down tasks or test results instantly.</li>
+            </ul>
+            <h3 id="game-othello">Othello</h3>
+            <ul>
+                <li><strong>Goal:</strong> Flip discs by enclosing your opponent and finish with the majority.</li>
+                <li><strong>Controls:</strong> Click a square to place a disc.</li>
+                <li><strong>Tip:</strong> Prioritise corner control to stabilise the board.</li>
+            </ul>
+            <h3 id="game-pacman">Pac-Man Homage</h3>
+            <ul>
+                <li><strong>Goal:</strong> Eat every dot in the maze while evading ghosts.</li>
+                <li><strong>Controls:</strong> Move with the arrow keys.</li>
+                <li><strong>Tip:</strong> Grab power pellets at the right time to reverse the chase.</li>
+            </ul>
+            <h3 id="game-paint">Paint Tool</h3>
+            <ul>
+                <li><strong>Goal:</strong> Draw quick pixel art or diagrams.</li>
+                <li><strong>Controls:</strong> Drag on the canvas and pick colours or brush sizes.</li>
+                <li><strong>Tip:</strong> Save frequently—layers are not available.</li>
+            </ul>
+            <h3 id="game-physics-sandbox">Physics Sandbox</h3>
+            <ul>
+                <li><strong>Goal:</strong> Experiment with physics simulations.</li>
+                <li><strong>Controls:</strong> Spawn objects and tweak gravity or collision settings.</li>
+                <li><strong>Tip:</strong> Prototype gameplay ideas and record the values that feel best.</li>
+            </ul>
+            <h3 id="game-pong">Pong</h3>
+            <ul>
+                <li><strong>Goal:</strong> Rally the ball into your opponent’s goal.</li>
+                <li><strong>Controls:</strong> Move the paddle with the arrow keys or W/S.</li>
+                <li><strong>Tip:</strong> Aim for different paddle positions to vary the rebound angle.</li>
+            </ul>
+            <h3 id="game-pomodoro">Pomodoro Timer</h3>
+            <ul>
+                <li><strong>Goal:</strong> Maintain focus with 25-minute work sessions and 5-minute breaks.</li>
+                <li><strong>Controls:</strong> Start the timer and follow the alerts.</li>
+                <li><strong>Tip:</strong> Great for scheduling reading or implementation sprints.</li>
+            </ul>
+            <h3 id="game-puyo">Puyo-style Puzzle</h3>
+            <ul>
+                <li><strong>Goal:</strong> Connect four blobs of the same colour to clear them and chain combos.</li>
+                <li><strong>Controls:</strong> Move and rotate with the arrow keys; press Down to drop faster.</li>
+                <li><strong>Tip:</strong> Practise staircase or key stacking to build reliable chains.</li>
+            </ul>
+            <h3 id="game-river-crossing">River Crossing Puzzle</h3>
+            <ul>
+                <li><strong>Goal:</strong> Ferry everyone across safely while respecting restrictions.</li>
+                <li><strong>Controls:</strong> Choose passengers and press the move button.</li>
+                <li><strong>Tip:</strong> Double-check forbidden combinations before each trip.</li>
+            </ul>
+            <h3 id="game-same">SameGame</h3>
+            <ul>
+                <li><strong>Goal:</strong> Clear connected groups of the same colour for high scores.</li>
+                <li><strong>Controls:</strong> Click a group to remove it.</li>
+                <li><strong>Tip:</strong> Wait for large clusters and finish with chain reactions.</li>
+            </ul>
+            <h3 id="game-sliding-puzzle">Sliding Puzzle</h3>
+            <ul>
+                <li><strong>Goal:</strong> Arrange shuffled tiles into the correct order.</li>
+                <li><strong>Controls:</strong> Click tiles adjacent to the blank space.</li>
+                <li><strong>Tip:</strong> Solve rows and columns sequentially, leaving the final 2×2 for last.</li>
+            </ul>
+            <h3 id="game-snake">Snake</h3>
+            <ul>
+                <li><strong>Goal:</strong> Eat food, extend your body, and avoid collisions.</li>
+                <li><strong>Controls:</strong> Change direction with the arrow keys.</li>
+                <li><strong>Tip:</strong> Plan wide turns and weave to create safe corridors as you grow.</li>
+            </ul>
+            <h3 id="game-steady-wire">Steady Wire</h3>
+            <ul>
+                <li><strong>Goal:</strong> Guide the cursor along a wire without touching the edges.</li>
+                <li><strong>Controls:</strong> Move the mouse carefully along the path.</li>
+                <li><strong>Tip:</strong> Lower mouse sensitivity for finer control.</li>
+            </ul>
+            <h3 id="game-stone-board-games">Stone Board Game Pack</h3>
+            <ul>
+                <li><strong>Goal:</strong> Samples of stone-based board games such as Go and Gomoku.</li>
+                <li><strong>Controls:</strong> Click squares according to each rule set.</li>
+                <li><strong>Tip:</strong> Keep the rule notes open to avoid mixing up mechanics.</li>
+            </ul>
+            <h3 id="game-stopwatch">Stopwatch</h3>
+            <ul>
+                <li><strong>Goal:</strong> Measure elapsed time.</li>
+                <li><strong>Controls:</strong> Use the start, stop, and reset buttons.</li>
+                <li><strong>Tip:</strong> Track speedrun attempts to spot improvement opportunities.</li>
+            </ul>
+            <h3 id="game-sudoku">Sudoku</h3>
+            <ul>
+                <li><strong>Goal:</strong> Fill a 9×9 grid with digits 1–9 without repetition.</li>
+                <li><strong>Controls:</strong> Click a cell and enter a number.</li>
+                <li><strong>Tip:</strong> Pencil in candidates per row, column, and box to find certainties.</li>
+            </ul>
+            <h3 id="game-ten-ten">Ten-Ten Puzzle</h3>
+            <ul>
+                <li><strong>Goal:</strong> Combine numbers to make 10 and tidy the board.</li>
+                <li><strong>Controls:</strong> Place numbered blocks; completed lines vanish.</li>
+                <li><strong>Tip:</strong> Check block shapes beforehand to avoid stray remainders.</li>
+            </ul>
+            <h3 id="game-tester">Tester Tool</h3>
+            <ul>
+                <li><strong>Goal:</strong> Rapidly verify mini-game behaviour.</li>
+                <li><strong>Controls:</strong> Choose a test case and run it.</li>
+                <li><strong>Tip:</strong> Execute these checks after adding new features to catch regressions early.</li>
+            </ul>
+            <h3 id="game-tetris">Tetris-style</h3>
+            <ul>
+                <li><strong>Goal:</strong> Prevent the stack from reaching the top by clearing lines.</li>
+                <li><strong>Controls:</strong> Move/rotate with the arrows, press Down to soft drop, Space to hard drop.</li>
+                <li><strong>Tip:</strong> Decide when to use Hold and practise techniques such as T-Spins.</li>
+            </ul>
+            <h3 id="game-timer">Timer</h3>
+            <ul>
+                <li><strong>Goal:</strong> Run a simple countdown.</li>
+                <li><strong>Controls:</strong> Set minutes and seconds, then start.</li>
+                <li><strong>Tip:</strong> Useful for tracking breaks or event countdowns.</li>
+            </ul>
+            <h3 id="game-todo-list">To-do List</h3>
+            <ul>
+                <li><strong>Goal:</strong> Organise tasks and progress.</li>
+                <li><strong>Controls:</strong> Enter tasks, add them, and tick them off when done.</li>
+                <li><strong>Tip:</strong> Break large goals into smaller tasks for more frequent wins.</li>
+            </ul>
+            <h3 id="game-triomino-columns">Triomino Columns</h3>
+            <ul>
+                <li><strong>Goal:</strong> Drop triomino blocks to complete columns.</li>
+                <li><strong>Controls:</strong> Move and rotate with the arrow keys.</li>
+                <li><strong>Tip:</strong> Reorder colours mid-air to set up monochrome columns.</li>
+            </ul>
+            <h3 id="game-trump-games">Card Game Collection</h3>
+            <ul>
+                <li><strong>Goal:</strong> Play assorted card games such as solitaire.</li>
+                <li><strong>Controls:</strong> Drag and drop cards according to each rule set.</li>
+                <li><strong>Tip:</strong> Read the in-game help to memorise each mode’s sequence.</li>
+            </ul>
+            <h3 id="game-ultimate-ttt">Ultimate Tic-Tac-Toe</h3>
+            <ul>
+                <li><strong>Goal:</strong> Win on a large board made of nine mini tic-tac-toe grids.</li>
+                <li><strong>Controls:</strong> Place a mark in the instructed sub-board.</li>
+                <li><strong>Tip:</strong> Anticipate the opponent’s destination and prioritise lines on the main board.</li>
+            </ul>
+            <h3 id="game-video-player">Video Player</h3>
+            <ul>
+                <li><strong>Goal:</strong> Review tutorial or reference videos.</li>
+                <li><strong>Controls:</strong> Select a video and use playback controls.</li>
+                <li><strong>Tip:</strong> Speed up playback to learn more efficiently.</li>
+            </ul>
+            <h3 id="game-whack-a-mole">Whack-a-Mole</h3>
+            <ul>
+                <li><strong>Goal:</strong> Hit moles as they pop out to score points.</li>
+                <li><strong>Controls:</strong> Click moles the moment they appear.</li>
+                <li><strong>Tip:</strong> Learn spawn patterns and limit unnecessary eye movement.</li>
+            </ul>
+            <h3 id="game-wording">Wording Tool</h3>
+            <ul>
+                <li><strong>Goal:</strong> Assist with phrasing and vocabulary gathering.</li>
+                <li><strong>Controls:</strong> Enter text to receive suggestions or replacements.</li>
+                <li><strong>Tip:</strong> Use it while drafting descriptions or event dialogue.</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

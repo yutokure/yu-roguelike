@@ -3,27 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>12. JavaScript Architecture (Translation in Progress)</title>
+    <title>12. JavaScript Architecture</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>12. JavaScript Architecture</h1>
-        <p>
-            The English-language walkthrough of the codebase is under construction. For the latest diagrams and
-            explanations, please refer to the Japanese version:
-        </p>
-        <ul>
-            <li><a href="../development.html" target="_blank" rel="noopener">Japanese chapter: JavaScript Overview</a></li>
-        </ul>
-        <p>
-            Planned highlights for the English release include:
-        </p>
-        <ol>
-            <li>Module-by-module tour of the JavaScript files.</li>
-            <li>Event flow diagrams for battles, menus, and save data.</li>
-            <li>Recommended patterns for extending the core systems safely.</li>
-        </ol>
+        <section>
+            <h2>12.1 Role of main.js</h2>
+            <p>
+                <code>main.js</code> powers the interactive elements after the page loads. It queries DOM nodes and attaches the
+                click handlers for tabs, buttons, and other UI widgets.
+            </p>
+        </section>
+        <section>
+            <h2>12.2 Loading Data</h2>
+            <p>
+                The script uses the Fetch API to load JSON files and build the dungeon list. If you are new to Promises, review
+                the basics of <code>async/await</code> first—it makes the code easier to follow.
+            </p>
+        </section>
+        <section>
+            <h2>12.3 Frequently Used Functions</h2>
+            <ul>
+                <li><strong>renderWorldButtons()</strong>: Creates the world buttons.</li>
+                <li><strong>renderDungeonDetails()</strong>: Populates the detail card for the selected dungeon.</li>
+                <li><strong>setupTabs()</strong>: Initialises tab switching behaviour.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>12.4 Suggested Reading Order</h2>
+            <ol>
+                <li>Start with the constants defined at the top of <code>main.js</code>.</li>
+                <li>Review where event listeners are registered.</li>
+                <li>Step into the functions that those listeners call.</li>
+            </ol>
+        </section>
+        <section>
+            <h2>12.5 Debugging Tips</h2>
+            <ul>
+                <li>Use <code>console.log()</code> to inspect variable values.</li>
+                <li>Set breakpoints to trace execution flow.</li>
+                <li>Adopt a linter to catch issues early.</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

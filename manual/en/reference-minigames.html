@@ -3,27 +3,756 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>20. MiniExp Module Catalog (Translation in Progress)</title>
+    <title>20. MiniExp Module Catalog</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>20. MiniExp Module Catalog</h1>
-        <p>
-            The English catalogue of MiniExp modules and data entries is under development. For complete schema
-            definitions, consult the Japanese documentation:
-        </p>
-        <ul>
-            <li><a href="../reference-minigames.html" target="_blank" rel="noopener">Japanese chapter: MiniExp Modules</a></li>
-        </ul>
-        <p>
-            The translated edition will provide:
-        </p>
-        <ol>
-            <li>Module summaries and dependencies.</li>
-            <li>Configuration examples and default parameter values.</li>
-            <li>Advice on creating original MiniExp integrations.</li>
-        </ol>
+        <section>
+            <h2>20.1 Manifest Overview</h2>
+            <p>
+                MiniExp module metadata is supplied through <code>games/manifest.json.js</code>. Inside
+                <code>loadMiniManifestOnce()</code>, <code>main.js</code> loads the manifest using the following priority:
+            </p>
+            <ol>
+                <li>If <code>window.MINIEXP_MANIFEST</code> already exists, use it.</li>
+                <li>Load <code>games/manifest.json.js</code> as a script (works for <code>file://</code> environments).</li>
+                <li>On HTTP servers, fetch <code>games/manifest.json</code>.</li>
+                <li>If all methods fail, fall back to the built-in array bundled with the source.</li>
+            </ol>
+            <p class="small-note">See <code>main.js</code> lines 6439–6491 for the implementation. Each module defines its ID,
+                name, entry file, version, category, and EXP rules.</p>
+        </section>
+        <section>
+            <h2>20.2 Modules by Category</h2>
+            <p>All bundled MiniExp mods are grouped below. IDs match the values passed to <code>registerMiniGame()</code>; load the
+                script listed in the Entry column to mount the module.</p>
+        </section>
+        <!-- CATEGORY: Action -->
+        <section>
+            <h3>Action</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>topdown_race</code></td>
+                            <td>Aurora Circuit</td>
+                            <td>0.1.0</td>
+                            <td><code>games/topdown_race.js</code></td>
+                            <td>mod</td>
+                            <td>Top-down circuit racer. Earn EXP from lap times and placement.</td>
+                        </tr>
+                        <tr>
+                            <td><code>pinball_xp</code></td>
+                            <td>XP Pinball</td>
+                            <td>0.1.0</td>
+                            <td><code>games/pinball.js</code></td>
+                            <td>mod</td>
+                            <td>3D-inspired pinball table—bumpers and lanes grant EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>steady_wire</code></td>
+                            <td>Steady Wire</td>
+                            <td>0.1.0</td>
+                            <td><code>games/steady_wire.js</code></td>
+                            <td>mod</td>
+                            <td>A new course every run. Reach the goal without leaving the wire loop.</td>
+                        </tr>
+                        <tr>
+                            <td><code>snake</code></td>
+                            <td>Snake</td>
+                            <td>0.1.0</td>
+                            <td><code>games/snake.js</code></td>
+                            <td>builtin</td>
+                            <td>Gain +1 EXP for each piece of food.</td>
+                        </tr>
+                        <tr>
+                            <td><code>dino_runner</code></td>
+                            <td>Dino Runner</td>
+                            <td>0.1.0</td>
+                            <td><code>games/dino_runner.js</code></td>
+                            <td>mod</td>
+                            <td>Jump obstacles as a dinosaur—distance grants EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>pseudo3d_race</code></td>
+                            <td>Highway Chaser</td>
+                            <td>0.1.0</td>
+                            <td><code>games/pseudo3d_race.js</code></td>
+                            <td>mod</td>
+                            <td>Pass traffic on a pseudo-3D highway. Distance +0.5, overtakes +4, section clears +25.</td>
+                        </tr>
+                        <tr>
+                            <td><code>pacman</code></td>
+                            <td>Pac-Man Tribute</td>
+                            <td>0.1.0</td>
+                            <td><code>games/pacman.js</code></td>
+                            <td>builtin</td>
+                            <td>Pellets +0.5 EXP; clear the board for +100.</td>
+                        </tr>
+                        <tr>
+                            <td><code>pong</code></td>
+                            <td>Pong</td>
+                            <td>0.1.0</td>
+                            <td><code>games/pong.js</code></td>
+                            <td>builtin</td>
+                            <td>Match win EXP: EASY +1 / NORMAL +5 / HARD +25.</td>
+                        </tr>
+                        <tr>
+                            <td><code>flappy_bird</code></td>
+                            <td>Flappy-style</td>
+                            <td>0.1.0</td>
+                            <td><code>games/flappy_bird.js</code></td>
+                            <td>mod</td>
+                            <td>Earn EXP for each pipe; streaks add bonuses.</td>
+                        </tr>
+                        <tr>
+                            <td><code>breakout</code></td>
+                            <td>Breakout</td>
+                            <td>0.1.0</td>
+                            <td><code>games/breakout.js</code></td>
+                            <td>builtin</td>
+                            <td>+1 EXP per brick destroyed.</td>
+                        </tr>
+                        <tr>
+                            <td><code>breakout_k</code></td>
+                            <td>Breakout (Keyboard)</td>
+                            <td>0.1.0</td>
+                            <td><code>games/breakout_keyboard.js</code></td>
+                            <td>builtin</td>
+                            <td>Keyboard-only paddle controls.</td>
+                        </tr>
+                        <tr>
+                            <td><code>whack_a_mole</code></td>
+                            <td>Whack-a-Mole</td>
+                            <td>0.1.0</td>
+                            <td><code>games/whack_a_mole.js</code></td>
+                            <td>builtin</td>
+                            <td>Hits award EXP; streaks add bonuses.</td>
+                        </tr>
+                        <tr>
+                            <td><code>dodge_race</code></td>
+                            <td>Dodge Race</td>
+                            <td>0.1.0</td>
+                            <td><code>games/dodge_race.js</code></td>
+                            <td>builtin</td>
+                            <td>Gain small EXP from distance, +5 per checkpoint.</td>
+                        </tr>
+                        <tr>
+                            <td><code>river_crossing</code></td>
+                            <td>River Crossing</td>
+                            <td>0.1.0</td>
+                            <td><code>games/river_crossing.js</code></td>
+                            <td>builtin</td>
+                            <td>+1 per step, +50 on arrival.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CATEGORY: Gambling -->
+        <section>
+            <h3>Gambling</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>gamble_hall</code></td>
+                            <td>Gamble Hall</td>
+                            <td>0.1.0</td>
+                            <td><code>games/gamble_hall.js</code></td>
+                            <td>mod</td>
+                            <td>Combo of EXP roulette and pachinko slot mini-games.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CATEGORY: Shooting -->
+        <section>
+            <h3>Shooting</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>invaders</code></td>
+                            <td>Invader-style</td>
+                            <td>0.1.0</td>
+                            <td><code>games/invaders.js</code></td>
+                            <td>builtin</td>
+                            <td>+1 per enemy, +50 for clearing the wave.</td>
+                        </tr>
+                        <tr>
+                            <td><code>aim</code></td>
+                            <td>Target Practice</td>
+                            <td>0.1.0</td>
+                            <td><code>games/aim.js</code></td>
+                            <td>builtin</td>
+                            <td>1–3 EXP per hit plus streak bonuses.</td>
+                        </tr>
+                        <tr>
+                            <td><code>falling_shooter</code></td>
+                            <td>Falling Shooter</td>
+                            <td>0.1.0</td>
+                            <td><code>games/falling_shooter.js</code></td>
+                            <td>builtin</td>
+                            <td>Larger blocks grant more EXP when destroyed.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CATEGORY: Skill -->
+        <section>
+            <h3>Skill</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>typing</code></td>
+                            <td>Typing Challenge</td>
+                            <td>0.1.0</td>
+                            <td><code>games/typing.js</code></td>
+                            <td>mod</td>
+                            <td>60-second typing test scored on accuracy and speed.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CATEGORY: Toy -->
+        <section>
+            <h3>Toy</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>graphics_tester</code></td>
+                            <td>3D Graphics Tester</td>
+                            <td>0.1.0</td>
+                            <td><code>games/graphics_tester.js</code></td>
+                            <td>mod</td>
+                            <td>Tech demo with ray-tracing-style rendering benchmarks.</td>
+                        </tr>
+                        <tr>
+                            <td><code>memo_studio</code></td>
+                            <td>Memory Studio</td>
+                            <td>0.1.0</td>
+                            <td><code>games/memory_app.js</code></td>
+                            <td>mod</td>
+                            <td>Flashcard trainer with spaced repetition.</td>
+                        </tr>
+                        <tr>
+                            <td><code>electro_instrument</code></td>
+                            <td>Electro Instrument Studio</td>
+                            <td>0.1.0</td>
+                            <td><code>games/electro_instrument.js</code></td>
+                            <td>mod</td>
+                            <td>Play a piano keyboard with multiple timbres—notes award EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>physics_sandbox</code></td>
+                            <td>Physics Sandbox</td>
+                            <td>0.1.0</td>
+                            <td><code>games/physics_sandbox.js</code></td>
+                            <td>mod</td>
+                            <td>Combine fire, water, vines, lightning, and circuits in a toy sandbox.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CATEGORY: Puzzle -->
+        <section>
+            <h3>Puzzle</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ten_ten</code></td>
+                            <td>1010 Puzzle</td>
+                            <td>0.1.0</td>
+                            <td><code>games/ten_ten.js</code></td>
+                            <td>builtin</td>
+                            <td>EXP per line; cross clears double the reward.</td>
+                        </tr>
+                        <tr>
+                            <td><code>game2048</code></td>
+                            <td>2048</td>
+                            <td>0.1.0</td>
+                            <td><code>games/2048.js</code></td>
+                            <td>builtin</td>
+                            <td>EXP equals the log2 of merges; reaching 2048 grants +777.</td>
+                        </tr>
+                        <tr>
+                            <td><code>sliding_puzzle</code></td>
+                            <td>Sliding Puzzle</td>
+                            <td>0.1.0</td>
+                            <td><code>games/sliding_puzzle.js</code></td>
+                            <td>mod</td>
+                            <td>Supports 8/15/24-tile boards based on difficulty.</td>
+                        </tr>
+                        <tr>
+                            <td><code>same</code></td>
+                            <td>SameGame</td>
+                            <td>0.1.0</td>
+                            <td><code>games/same.js</code></td>
+                            <td>builtin</td>
+                            <td>Group clears ×0.5 EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>tetris</code></td>
+                            <td>Tetris-style</td>
+                            <td>0.1.0</td>
+                            <td><code>games/tetris.js</code></td>
+                            <td>builtin</td>
+                            <td>REN × 1.5ⁿ and T-Spin bonuses.</td>
+                        </tr>
+                        <tr>
+                            <td><code>triomino_columns</code></td>
+                            <td>Triomino Columns</td>
+                            <td>0.1.0</td>
+                            <td><code>games/triomino_columns.js</code></td>
+                            <td>mod</td>
+                            <td>Inspired by Trio Toss DX—line sparks and hold support.</td>
+                        </tr>
+                        <tr>
+                            <td><code>sudoku</code></td>
+                            <td>Sudoku</td>
+                            <td>0.1.0</td>
+                            <td><code>games/sudoku.js</code></td>
+                            <td>mod</td>
+                            <td>Earn EXP per correct entry plus a clear bonus.</td>
+                        </tr>
+                        <tr>
+                            <td><code>bubble_shooter</code></td>
+                            <td>Bubble Shooter</td>
+                            <td>0.1.0</td>
+                            <td><code>games/bubble_shooter.js</code></td>
+                            <td>mod</td>
+                            <td>Shoot bubbles to match three; floating bubbles drop as a group.</td>
+                        </tr>
+                        <tr>
+                            <td><code>falling_puyos</code></td>
+                            <td>Puyo-style</td>
+                            <td>0.1.0</td>
+                            <td><code>games/puyo.js</code></td>
+                            <td>mod</td>
+                            <td>Match four of the same colour; chains multiply the payout.</td>
+                        </tr>
+                        <tr>
+                            <td><code>minesweeper</code></td>
+                            <td>Minesweeper</td>
+                            <td>0.1.0</td>
+                            <td><code>games/minesweeper.js</code></td>
+                            <td>builtin</td>
+                            <td>Tiles opened ×0.1; clear bonus 25/200/1600 depending on size.</td>
+                        </tr>
+                        <tr>
+                            <td><code>match3</code></td>
+                            <td>Match-3</td>
+                            <td>0.1.0</td>
+                            <td><code>games/match3.js</code></td>
+                            <td>builtin</td>
+                            <td>Three: +1, four: +3, five: +10; combos ×1.5.</td>
+                        </tr>
+                        <tr>
+                            <td><code>calc_combo</code></td>
+                            <td>Calc Combo</td>
+                            <td>0.1.0</td>
+                            <td><code>games/calc_combo.js</code></td>
+                            <td>mod</td>
+                            <td>Rapid-fire arithmetic up to two digits—maintain combos for EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>sichuan</code></td>
+                            <td>Sichuan Puzzle</td>
+                            <td>0.1.0</td>
+                            <td><code>games/sichuan.js</code></td>
+                            <td>mod</td>
+                            <td>Connect matching mahjong tiles; chain clears add bonus EXP.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CATEGORY: Board -->
+        <section>
+            <h3>Board</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>othello</code></td>
+                            <td>Othello</td>
+                            <td>0.1.0</td>
+                            <td><code>games/othello.js</code></td>
+                            <td>builtin</td>
+                            <td>Flips ×0.5 plus a win bonus.</td>
+                        </tr>
+                        <tr>
+                            <td><code>connect6</code></td>
+                            <td>Connect Six</td>
+                            <td>0.1.0</td>
+                            <td><code>games/stone_board_games.js</code></td>
+                            <td>mod</td>
+                            <td>Place +1, threat +10, victory grants high EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>xiangqi</code></td>
+                            <td>Xiangqi</td>
+                            <td>0.1.0</td>
+                            <td><code>games/xiangqi.js</code></td>
+                            <td>mod</td>
+                            <td>Capture pieces, deliver checks, and mate for rewards.</td>
+                        </tr>
+                        <tr>
+                            <td><code>ultimate_ttt</code></td>
+                            <td>Ultimate Tic-Tac-Toe</td>
+                            <td>0.1.0</td>
+                            <td><code>games/ultimate_ttt.js</code></td>
+                            <td>mod</td>
+                            <td>Small-board wins +25; placements +1; threats +10; big-board victory bonus.</td>
+                        </tr>
+                        <tr>
+                            <td><code>chess</code></td>
+                            <td>Chess</td>
+                            <td>0.1.0</td>
+                            <td><code>games/chess.js</code></td>
+                            <td>mod</td>
+                            <td>Classic chess with EXP for captures and checks.</td>
+                        </tr>
+                        <tr>
+                            <td><code>checkers</code></td>
+                            <td>Checkers</td>
+                            <td>0.1.0</td>
+                            <td><code>games/checkers.js</code></td>
+                            <td>mod</td>
+                            <td>Jump captures and crown promotions award EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>trump_games</code></td>
+                            <td>Card Selection</td>
+                            <td>0.1.0</td>
+                            <td><code>games/trump_games.js</code></td>
+                            <td>mod</td>
+                            <td>Hub for memory, blackjack, and old maid.</td>
+                        </tr>
+                        <tr>
+                            <td><code>go</code></td>
+                            <td>Go</td>
+                            <td>0.1.0</td>
+                            <td><code>games/go.js</code></td>
+                            <td>mod</td>
+                            <td>Placement +1, capture bonuses, victory EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>gomoku</code></td>
+                            <td>Gomoku</td>
+                            <td>0.1.0</td>
+                            <td><code>games/stone_board_games.js</code></td>
+                            <td>mod</td>
+                            <td>Placement +1, threat +10, win bonus.</td>
+                        </tr>
+                        <tr>
+                            <td><code>tic_tac_toe</code></td>
+                            <td>Tic-Tac-Toe</td>
+                            <td>0.1.0</td>
+                            <td><code>games/stone_board_games.js</code></td>
+                            <td>mod</td>
+                            <td>Placement +1, threat +10, simple win bonus.</td>
+                        </tr>
+                        <tr>
+                            <td><code>mancala</code></td>
+                            <td>Mancala</td>
+                            <td>0.1.0</td>
+                            <td><code>games/mancala.js</code></td>
+                            <td>mod</td>
+                            <td>Kalah-style mancala with sowing, captures, and margin-based EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>connect4</code></td>
+                            <td>Connect Four</td>
+                            <td>0.1.0</td>
+                            <td><code>games/stone_board_games.js</code></td>
+                            <td>mod</td>
+                            <td>Drop +1, threat +10.</td>
+                        </tr>
+                        <tr>
+                            <td><code>shogi</code></td>
+                            <td>Shogi</td>
+                            <td>0.1.0</td>
+                            <td><code>games/shogi.js</code></td>
+                            <td>mod</td>
+                            <td>Traditional shogi—captures, promotions, and checks provide EXP.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CATEGORY: Utility -->
+        <section>
+            <h3>Utility</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>tester</code></td>
+                            <td>JS Tester</td>
+                            <td>0.1.0</td>
+                            <td><code>games/tester.js</code></td>
+                            <td>mod</td>
+                            <td>CPU benchmarks and block-adventure prototyping tools.</td>
+                        </tr>
+                        <tr>
+                            <td><code>todo_list</code></td>
+                            <td>To-do List</td>
+                            <td>0.1.0</td>
+                            <td><code>games/todo_list.js</code></td>
+                            <td>mod</td>
+                            <td>Earn configured EXP by completing tasks.</td>
+                        </tr>
+                        <tr>
+                            <td><code>wording</code></td>
+                            <td>Wording</td>
+                            <td>0.1.0</td>
+                            <td><code>games/wording.js</code></td>
+                            <td>mod</td>
+                            <td>Word processor: edit +1, format +2, save +6 EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>counter_pad</code></td>
+                            <td>Counter Pad</td>
+                            <td>0.1.0</td>
+                            <td><code>games/counter.js</code></td>
+                            <td>mod</td>
+                            <td>Multi-counter that auto-saves adjustments.</td>
+                        </tr>
+                        <tr>
+                            <td><code>system</code></td>
+                            <td>System Info</td>
+                            <td>0.1.0</td>
+                            <td><code>games/system.js</code></td>
+                            <td>mod</td>
+                            <td>Inspect PC, OS, browser, and IP data.</td>
+                        </tr>
+                        <tr>
+                            <td><code>stopwatch</code></td>
+                            <td>Stopwatch</td>
+                            <td>0.1.0</td>
+                            <td><code>games/stopwatch.js</code></td>
+                            <td>mod</td>
+                            <td>Lap tracking with EXP for operations.</td>
+                        </tr>
+                        <tr>
+                            <td><code>diagram_maker</code></td>
+                            <td>Diagram Maker</td>
+                            <td>0.1.0</td>
+                            <td><code>games/diagram_maker.js</code></td>
+                            <td>mod</td>
+                            <td>Exports draw.io XML and PNG/JPG/BMP diagrams.</td>
+                        </tr>
+                        <tr>
+                            <td><code>timer</code></td>
+                            <td>Timer</td>
+                            <td>0.1.0</td>
+                            <td><code>games/timer.js</code></td>
+                            <td>mod</td>
+                            <td>Countdown and stopwatch modes for time management.</td>
+                        </tr>
+                        <tr>
+                            <td><code>blockcode</code></td>
+                            <td>Blockcode Lab</td>
+                            <td>0.1.0</td>
+                            <td><code>games/blockcode.js</code></td>
+                            <td>mod</td>
+                            <td>Scratch-like visual programming environment for MiniExp APIs.</td>
+                        </tr>
+                        <tr>
+                            <td><code>paint</code></td>
+                            <td>Paint</td>
+                            <td>0.1.0</td>
+                            <td><code>games/paint.js</code></td>
+                            <td>mod</td>
+                            <td>Draw +1, fill +3, save +8 EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>pomodoro</code></td>
+                            <td>Pomodoro Timer</td>
+                            <td>0.1.0</td>
+                            <td><code>games/pomodoro.js</code></td>
+                            <td>mod</td>
+                            <td>Gain EXP each time you complete a focus/break cycle.</td>
+                        </tr>
+                        <tr>
+                            <td><code>music_player</code></td>
+                            <td>Music Player</td>
+                            <td>0.1.0</td>
+                            <td><code>games/music_player.js</code></td>
+                            <td>mod</td>
+                            <td>Play local audio with visualisers and EQ; playback/import grant EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>notepad</code></td>
+                            <td>Notepad</td>
+                            <td>0.1.0</td>
+                            <td><code>games/notepad.js</code></td>
+                            <td>mod</td>
+                            <td>Open +5, edit +1, save +5 EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>clock_hub</code></td>
+                            <td>Clock Hub</td>
+                            <td>0.1.0</td>
+                            <td><code>games/clock_hub.js</code></td>
+                            <td>mod</td>
+                            <td>Multiple clocks and time info with milestone EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>math_lab</code></td>
+                            <td>Math Lab</td>
+                            <td>0.1.0</td>
+                            <td><code>games/math_lab.js</code></td>
+                            <td>mod</td>
+                            <td>Advanced functions, conversions, graphs, and tetration tools.</td>
+                        </tr>
+                        <tr>
+                            <td><code>calculator</code></td>
+                            <td>Calculator</td>
+                            <td>0.1.0</td>
+                            <td><code>games/calculator.js</code></td>
+                            <td>mod</td>
+                            <td>Utility calculator: number entry +1, confirmed calculation +5 EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>video_player</code></td>
+                            <td>Video Player</td>
+                            <td>0.1.0</td>
+                            <td><code>games/video_player.js</code></td>
+                            <td>mod</td>
+                            <td>Watch local files and YouTube videos to earn EXP.</td>
+                        </tr>
+                        <tr>
+                            <td><code>exceler</code></td>
+                            <td>Exceler Spreadsheet</td>
+                            <td>0.1.0</td>
+                            <td><code>games/exceler.js</code></td>
+                            <td>mod</td>
+                            <td>Lightweight spreadsheet with XLSX import/export and core functions.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CATEGORY: Rhythm -->
+        <section>
+            <h3>Rhythm</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Entry</th>
+                            <th>Author</th>
+                            <th>Highlights / EXP Rules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>piano_tiles</code></td>
+                            <td>Rhythm Tiles</td>
+                            <td>0.1.0</td>
+                            <td><code>games/piano_tiles.js</code></td>
+                            <td>mod</td>
+                            <td>Four-lane piano tile charts with taps and holds—build combos for more EXP.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </body>
 </html>

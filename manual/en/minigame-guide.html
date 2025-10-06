@@ -3,27 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>9. Mini-game Tour (Translation in Progress)</title>
+    <title>9. Mini-game Tour</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>9. Mini-game Tour</h1>
-        <p>
-            An English introduction to every built-in mini-game is being drafted. For full rules and reward tables right
-            now, please read the Japanese documentation:
-        </p>
-        <ul>
-            <li><a href="../minigame-guide.html" target="_blank" rel="noopener">Japanese chapter: Mini-game Guide</a></li>
-        </ul>
-        <p>
-            The upcoming English sections will highlight:
-        </p>
-        <ol>
-            <li>Available mini-games and their unlock conditions.</li>
-            <li>Reward types and how they support dungeon runs.</li>
-            <li>Recommended practice routines before high-difficulty expeditions.</li>
-        </ol>
+        <section>
+            <h2>9.1 Where to Play</h2>
+            <p>
+                Mini-games are available from the <strong>MiniExp</strong> tab on the title screen or the <strong>Arcade</strong>
+                inside the hub. Each game is designed for short sessions and awards materials, currency, and experience bonuses
+                based on your score.
+            </p>
+            <ol>
+                <li>The MiniExp tab displays game cards grouped by category.</li>
+                <li>Select a card to read the overview, rules, and recommended control scheme.</li>
+                <li>Press <strong>Play</strong> to load the game in a separate iframe window.</li>
+            </ol>
+            <p class="small-note">High scores are stored in your browser’s local storage. Switching devices resets them.</p>
+        </section>
+        <section>
+            <h2>9.2 Recommendations by Goal</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Goal</th>
+                            <th>Recommended Titles</th>
+                            <th>Why It Works</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Earn money quickly</td>
+                            <td>Gamble Hall / SameGame</td>
+                            <td>Bonus multipliers stack during streaks, letting you multiply your starting funds within 10 minutes.</td>
+                        </tr>
+                        <tr>
+                            <td>Sharpen reflexes</td>
+                            <td>Invader-style Shooter / Falling Shooter</td>
+                            <td>Enemy patterns escalate step by step, training evasion and shooting simultaneously.</td>
+                        </tr>
+                        <tr>
+                            <td>Boost logic skills</td>
+                            <td>Sudoku / River Crossing Puzzle</td>
+                            <td>Deliberate play yields high bonus EXP and doubles as practice for Block Dimension planning.</td>
+                        </tr>
+                        <tr>
+                            <td>Creative break</td>
+                            <td>Paint Tool / Music Player</td>
+                            <td>Creative utilities help you reset and jot down ideas between development sessions.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>9.3 Category Highlights</h2>
+            <h3>Action &amp; Shooting</h3>
+            <ul>
+                <li><strong>Invader-style Shooter:</strong> Enemies change with each wave—master lateral movement and bullet dodging.</li>
+                <li><strong>Snake:</strong> Classic growth management. Zig-zag routes create safe pockets for future turns.</li>
+                <li><strong>Top-down Racing:</strong> Optimise racing lines and boost timing. Rankings are based on lap times.</li>
+            </ul>
+            <div class="tip">
+                <strong>If the pace feels overwhelming</strong>
+                <p>Lower the game speed to 80% in the options menu to learn enemy layouts and track routes.</p>
+            </div>
+            <h3>Puzzle &amp; Logic</h3>
+            <ul>
+                <li><strong>Sudoku:</strong> Apply basic candidate elimination (line and box strategies).</li>
+                <li><strong>SameGame:</strong> Save large clusters for the end to maximise points. Plan ahead to preserve colours.</li>
+                <li><strong>Sliding Puzzle:</strong> Clearing edges from the outside in keeps the solution stable.</li>
+            </ul>
+            <h3>Utilities &amp; Support</h3>
+            <ul>
+                <li><strong>Spreadsheet Exceller:</strong> Great for tracking drop rates and EXP tables.</li>
+                <li><strong>Pomodoro Timer:</strong> Maintain focus during development or dungeon grinding. Alert sounds are customisable.</li>
+                <li><strong>Notepad Utility:</strong> Record your progress in a lightweight to-do list.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>9.4 Making the Most of MiniExp Rewards</h2>
+            <p>
+                MiniExp scores convert not only to in-game currency but also to special materials and title points. Increasing the
+                difficulty raises the reward multiplier, yet failing midway reduces the bonus. Work up from a level you can clear
+                consistently.
+            </p>
+            <p>
+                From level 100 onward, 1% of the experience earned via MiniExp automatically converts into SP, helping you charge
+                skill gauges for dungeon runs. The score screen and dungeon HUD display your SP total, making it easy to grind
+                until you reach the desired amount. High-score rewards also include passive orbs that grant damage reduction or
+                status resistances, up to three per category.
+            </p>
+            <ul>
+                <li><strong>EXP Boost:</strong> Consecutive plays build combo multipliers that add EXP to the main game.</li>
+                <li><strong>Material Tickets:</strong> Earn random crafting materials at specific score thresholds—useful for Block
+                    Dimension builds and gear upgrades.</li>
+                <li><strong>Title Tasks:</strong> Complete game-specific challenges to unlock title panels and permanent bonuses.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>9.5 Learn More</h2>
+            <p>
+                Detailed specifications, entry points, and data structures for each mini-game are documented in
+                <a href="reference-minigames.html" target="manual-content">Chapter 20: MiniExp Module Catalog</a>. For authoring
+                tips, see <a href="minigames.html" target="manual-content">Chapter 13: Mini-games &amp; Tools</a>.
+            </p>
+        </section>
     </main>
 </body>
 </html>

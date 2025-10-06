@@ -3,27 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>10. Data File Breakdown (Translation in Progress)</title>
+    <title>10. Data File Breakdown</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>10. Data File Breakdown</h1>
-        <p>
-            The data-file reference is being translated into English. Use the Japanese chapter for authoritative property
-            names and field descriptions until the translation is complete:
-        </p>
-        <ul>
-            <li><a href="../data-files.html" target="_blank" rel="noopener">Japanese chapter: Data Files</a></li>
-        </ul>
-        <p>
-            Planned English coverage:
-        </p>
-        <ol>
-            <li>Overview of each JSON file and its purpose.</li>
-            <li>Key fields for dungeons, enemies, and loot tables.</li>
-            <li>Version control tips for tracking gameplay adjustments.</li>
-        </ol>
+        <section>
+            <h2>10.1 blockdata.json / blockdata.js</h2>
+            <p>
+                These files bundle the configuration used by Block Dimension mode. The data is stored as JSON key–value pairs.
+                When in doubt, open <code>blockdata.json</code> in your editor to review the structure.
+            </p>
+            <h3>Key fields</h3>
+            <ul>
+                <li><strong>name:</strong> Display name of the block.</li>
+                <li><strong>level:</strong> Recommended level modifier.</li>
+                <li><strong>type:</strong> Category such as cave or tower.</li>
+                <li><strong>size:</strong> Size and floor-count information.</li>
+                <li><strong>chest:</strong> Chest quantity and rarity bias.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>10.2 dungeontypes directory</h2>
+            <p>
+                Contains the files that classify worlds and dungeons. In-game descriptions and icons are also stored here. When
+                adding a new dungeon, copy the format from an existing file.
+            </p>
+        </section>
+        <section>
+            <h2>10.3 games directory</h2>
+            <p>
+                Houses the configuration and data for mini-games. Create new files here when adding additional mini-games.
+            </p>
+        </section>
+        <div class="warning">
+            <strong>Always back up your data.</strong> Make a copy before editing to ensure you can revert if something goes wrong.
+        </div>
+        <section>
+            <h2>10.4 JSON Editing Tips</h2>
+            <ul>
+                <li>Check for missing commas or quotation marks.</li>
+                <li>Keep arrays and objects indented consistently to improve readability.</li>
+                <li>Use version control or a diff tool before large changes so that you can compare revisions easily.</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

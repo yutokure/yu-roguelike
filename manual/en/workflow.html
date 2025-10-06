@@ -3,27 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>14. Development Workflow (Translation in Progress)</title>
+    <title>14. Development Workflow</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>14. Development Workflow</h1>
-        <p>
-            The full workflow guide is being localised. For sprint templates, review schedules, and collaboration tips,
-            please see the Japanese source chapter:
-        </p>
-        <ul>
-            <li><a href="../workflow.html" target="_blank" rel="noopener">Japanese chapter: Development Workflow</a></li>
-        </ul>
-        <p>
-            The English edition will provide:
-        </p>
-        <ol>
-            <li>Phase breakdowns for translation, review, and QA cycles.</li>
-            <li>Suggested roles and communication routines for team projects.</li>
-            <li>Checklists for preparing releases and follow-up updates.</li>
-        </ol>
+        <section>
+            <h2>14.1 Basic Cycle</h2>
+            <ol>
+                <li>Write down the task you want to tackle.</li>
+                <li>Back up the files you plan to edit.</li>
+                <li>Make small changes and test them in the browser.</li>
+                <li>When the behaviour stabilises, document the changes in your notes or Git history.</li>
+            </ol>
+        </section>
+        <section>
+            <h2>14.2 Git Quick Reference</h2>
+            <ul>
+                <li><code>git status</code>: Review modified files.</li>
+                <li><code>git add .</code>: Stage the changes.</li>
+                <li><code>git commit -m "message"</code>: Record a snapshot.</li>
+                <li><code>git log</code>: Inspect past commits.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>14.3 Tips for Team Collaboration</h2>
+            <ul>
+                <li>Divide responsibilities and share which files are being edited.</li>
+                <li>Update the README or manual with notable changes.</li>
+                <li>Capture screenshots to communicate visual updates.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>14.4 Encourage Reviews</h2>
+            <p>
+                For team projects, use pull requests to conduct reviews and maintain quality. Share feedback in the comments and
+                verify the fixes after revisions to keep the process smooth.
+            </p>
+        </section>
     </main>
 </body>
 </html>

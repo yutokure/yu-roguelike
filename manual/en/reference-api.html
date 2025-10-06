@@ -3,27 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>18. API Reference (Translation in Progress)</title>
+    <title>18. API Reference</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
         <h1>18. API Reference</h1>
-        <p>
-            An English API reference is being prepared. For now, the Japanese documentation lists every available method
-            and parameter:
-        </p>
-        <ul>
-            <li><a href="../reference-api.html" target="_blank" rel="noopener">Japanese chapter: API Reference</a></li>
-        </ul>
-        <p>
-            The English version will provide:
-        </p>
-        <ol>
-            <li>Detailed signatures and usage examples.</li>
-            <li>Notes on asynchronous behaviour and event hooks.</li>
-            <li>Migration guides for future API updates.</li>
-        </ol>
+        <section>
+            <h2>18.1 Global Public APIs</h2>
+            <p>
+                The following APIs are exposed to the main game, MiniExp modules, and add-ons. When calling them from the UI,
+                reference the functions and objects exported to the <code>window</code> global.
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>API</th>
+                            <th>Description</th>
+                            <th>Key Properties / Args</th>
+                            <th>Defined In</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>window.SandboxBridge</code></td>
+                            <td>Utility for sandboxed execution. Provides min/max map sizes and validation helpers.</td>
+                            <td><code>minSize</code>, <code>maxSize</code>, <code>maxLevel</code>, <code>computePlayerStats()</code>,
+                                <code>sanitize()</code>, <code>validate()</code>, <code>start()</code>, <code>isActive()</code></td>
+                            <td><code>main.js</code> lines 400–419</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.registerMiniGame(def)</code></td>
+                            <td>Registers a MiniExp mod. Pass a definition with <code>id</code> and a <code>create</code> implementation.</td>
+                            <td><code>def.id</code> (required), <code>def.create(root, awardXp, options)</code>, optional metadata</td>
+                            <td><code>main.js</code> lines 6669–6693</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.showTransientPopupAt(x, y, text, opts)</code></td>
+                            <td>Draws a floating popup over the MiniExp container.</td>
+                            <td><code>opts.variant</code> (<code>'info'</code> / <code>'warning'</code> / <code>'combo'</code>, etc.),
+                                <code>opts.duration</code></td>
+                            <td><code>main.js</code> lines 6761–6783</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.showMiniExpBadge(text, opts)</code></td>
+                            <td>Displays an EXP badge on the MiniExp HUD. Use <code>opts.tone</code> and <code>opts.variant</code> to adjust the
+                                styling.</td>
+                            <td><code>opts.variant</code> (e.g., <code>'combo'</code>), <code>opts.level</code>, <code>opts.tone</code> (supports
+                                <code>'loss'</code>)</td>
+                            <td><code>main.js</code> lines 6735–6760</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.getMiniExpBalance()</code></td>
+                            <td>Returns the cumulative EXP gained during the current session (MiniExp tab).</td>
+                            <td>Return value: number</td>
+                            <td><code>main.js</code> lines 6824–6827</td>
+                        </tr>
+                        <tr>
+                            <td><code>window.registerDungeonAddon(def)</code></td>
+                            <td>Registers dungeon-generation add-ons, extending generators, structures, and BlockDim tables.</td>
+                            <td><code>def.id</code> (required), <code>def.generators</code>, <code>def.blocks</code>, <code>def.structures</code></td>
+                            <td><code>main.js</code> lines 7480–7512</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>18.2 MiniExp Module Lifecycle</h2>
+            <p>
+                After a module calls <code>registerMiniGame</code>, the player’s launch action invokes its <code>create()</code>
+                function. Implement the following signature and return a runtime controller:
+            </p>
+<pre><code>function create(rootElement, awardXp, options) {
+    // Required: build DOM under rootElement
+    // Required: call awardXp(delta) to grant EXP
+    // options.difficulty and options.shortcuts are provided
+    return {
+        start(),   // Begin the game
+        stop(),    // Pause or handle shutdown
+        destroy(), // Clean up resources
+        getScore() // Return a number for best-score tracking
+    };
+}</code></pre>
+            <p>
+                When the game ends, the runtime is called in order: <code>stop()</code> → <code>getScore()</code> →
+                <code>destroy()</code>. Records update through <code>startSelectedMiniGame()</code> and
+                <code>quitMiniGame()</code>.
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Context</th>
+                            <th>Details</th>
+                            <th>Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>options.difficulty</code></td>
+                            <td>Value from the UI difficulty selector (<code>EASY</code> / <code>NORMAL</code> / <code>HARD</code>, etc.).</td>
+                            <td><code>main.js</code> lines 11620–11634</td>
+                        </tr>
+                        <tr>
+                            <td><code>options.shortcuts</code></td>
+                            <td>Shortcut controller that toggles key bindings. Provides <code>enableKey()</code>, <code>disableKey()</code>, and more.</td>
+                            <td><code>main.js</code> lines 161–188</td>
+                        </tr>
+                        <tr>
+                            <td><code>options.player</code></td>
+                            <td>Player-control API (v0.3+). Offers HP/SP/inventory updates and <code>getState()</code> snapshots.</td>
+                            <td><code>main.js</code> lines 11610–11634</td>
+                        </tr>
+                        <tr>
+                            <td><code>awardXp(amount, meta)</code></td>
+                            <td>Callback for granting EXP. Updates the MiniExp HUD and internal balance.</td>
+                            <td><code>main.js</code> lines 11544–11580</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <h2>18.3 Player Control API</h2>
+            <p>
+                <code>options.player</code> lets MiniExp modules interact with the player state safely. It is undefined on host
+                versions prior to v0.3, so check for availability before use. Major methods include:</p>
+            <ul>
+                <li><code>getState()</code>: Returns a snapshot containing level, HP, SP, and inventory.</li>
+                <li><code>awardItems()</code> / <code>adjustItems()</code>: Apply an item-id map and return the actual delta.</li>
+                <li><code>adjustHp()</code> / <code>healHp()</code> / <code>damageHp()</code>: Modify HP with caps handled automatically.</li>
+                <li><code>adjustSp()</code> / <code>fillSp()</code>: Change SP or refill to the maximum.</li>
+            </ul>
+            <p class="small-note">All operations trigger UI updates and saving on the host side. Use options such as
+                <code>opts.silent</code> or <code>opts.allowNegative</code> when provided.</p>
+            <h2>18.4 Shortcut Controller API</h2>
+            <p>
+                <code>options.shortcuts</code> is created by <code>createMiniShortcutController()</code>. It enables each mini-game
+                to manage keyboard shortcuts independently.
+            </p>
+            <ul>
+                <li><code>setGlobal(enabled)</code> / <code>setAll(enabled)</code>: Toggle all shortcuts at once.</li>
+                <li><code>enableKey(key)</code> / <code>disableKey(key)</code>: Control individual keys.</li>
+                <li><code>isKeyEnabled(key)</code>: Check the current state.</li>
+                <li><code>reset()</code>: Restore the defaults.</li>
+            </ul>
+            <p class="small-note">Implementation lives in <code>main.js</code> lines 132–188 and integrates with MiniExp shortcuts
+                (P = pause, R = restart).</p>
+        </section>
+        <section>
+            <h2>18.5 Dungeon Add-on API</h2>
+            <p>
+                Add-ons registered via <code>registerDungeonAddon()</code> receive a context object from
+                <code>makeGenContext()</code>. Generation helpers include:
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Description</th>
+                            <th>Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ctx.set(x, y, solid)</code></td>
+                            <td>Toggle tiles between wall and floor. Neighbour metadata adjusts automatically.</td>
+                            <td><code>main.js</code> lines 7514–7549</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.ensureConnectivity()</code></td>
+                            <td>Creates corridors to eliminate isolated regions.</td>
+                            <td><code>main.js</code> lines 7534–7537</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.structures.place(id, x, y, options)</code></td>
+                            <td>Places registered structures by pattern ID or inline definition.</td>
+                            <td><code>main.js</code> lines 7376–7416</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.fixedMaps.apply(floor)</code></td>
+                            <td>Applies fixed layouts supplied by the add-on.</td>
+                            <td><code>main.js</code> lines 3203–3240</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.setFloorColor(x, y, cssColor)</code></td>
+                            <td>Overrides floor colour. <code>setWallColor()</code> and <code>setFloorType()</code> are also available.</td>
+                            <td><code>main.js</code> lines 8911–8922</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.setFloorType(x, y, type[, options])</code></td>
+                            <td>Configures floor behaviour. Valid <code>type</code> values:
+                                <code>'ice' | 'poison' | 'bomb' | 'conveyor' | 'one-way' | 'vertical' | 'horizontal'</code>. For conveyor and
+                                one-way floors, supply <code>options.direction</code> or call <code>ctx.setFloorDirection()</code> with
+                                <code>'up'|'down'|'left'|'right'</code>.</td>
+                            <td><code>main.js</code> lines 8924–8951</td>
+                        </tr>
+                        <tr>
+                            <td><code>ctx.setFloorDirection(x, y, dir)</code></td>
+                            <td>Sets the direction for conveyor or one-way floors (<code>dir</code> = <code>'up'|'down'|'left'|'right'</code>).</td>
+                            <td><code>main.js</code> lines 8952–8964</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>
+                Conveyor and one-way floors act as normal tiles if no direction is assigned. Vertical-only and horizontal-only floors
+                restrict movement to the specified axis, making them useful for directing players and enemies. When a dungeon’s
+                recommended level is five or more below the player, floor hazards are disabled automatically.
+            </p>
+            <p>
+                Each context provides <code>ctx.random</code>, a deterministic RNG. Use it instead of <code>Math.random()</code> to
+                keep generation reproducible.
+            </p>
+        </section>
     </main>
 </body>
 </html>

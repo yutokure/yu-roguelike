@@ -20,7 +20,7 @@
                     return new URL('locales/', directory);
                 }
             }
-            const sanitizedPath = LOCALE_PATH.replace(/^\.\//, '').replace(/\/+$, '');
+            const sanitizedPath = LOCALE_PATH.replace(/^\.\//, '').replace(/\/+$/, '');
             return new URL(`${sanitizedPath}/`, document.baseURI);
         } catch (error) {
             console.warn('[i18n] Failed to resolve locale base URL:', error);

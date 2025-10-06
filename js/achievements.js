@@ -4,7 +4,7 @@
 
     const VERSION = 2;
     const DIFFICULTY_ORDER = ['Very Easy', 'Easy', 'Normal', 'Second', 'Hard', 'Very Hard'];
-    const numberFormatter = new Intl.NumberFormat('ja-JP');
+    const i18n = global.I18n || null;
     const PLAYTIME_TRACKING_INTERVAL_MS = 1000;
 
     const CATEGORY_DEFINITIONS = [
@@ -472,7 +472,15 @@
 
     function formatNumber(value) {
         if (!Number.isFinite(value)) return '0';
-        return numberFormatter.format(Math.floor(value));
+        const numeric = Math.floor(value);
+        if (i18n && typeof i18n.formatNumber === 'function') {
+            return i18n.formatNumber(numeric);
+        }
+        try {
+            return new Intl.NumberFormat(undefined).format(numeric);
+        } catch (error) {
+            return String(numeric);
+        }
     }
 
     function formatDifficultyLabel(index) {

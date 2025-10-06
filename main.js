@@ -1,3 +1,107 @@
+import './js/i18n/index.js';
+
+const i18n = window.I18n;
+if (!i18n) {
+    throw new Error('I18n module failed to load');
+}
+
+const languageSelect = document.getElementById('language-select');
+const languageSelectLabel = document.querySelector('label[for="language-select"]');
+let languageDisplayNames = null;
+
+function translateOrFallback(key, fallbackText) {
+    if (!i18n || typeof i18n.t !== 'function') return fallbackText;
+    const translated = i18n.t(key);
+    if (typeof translated === 'string' && translated !== key) {
+        return translated;
+    }
+    return fallbackText;
+}
+
+function updateLanguageDisplayFormatter(locale) {
+    if (typeof Intl === 'undefined' || typeof Intl.DisplayNames !== 'function') {
+        languageDisplayNames = null;
+        return;
+    }
+    try {
+        languageDisplayNames = new Intl.DisplayNames([locale], { type: 'language' });
+    } catch (error) {
+        console.warn('[i18n] Failed to create language display formatter:', error);
+        languageDisplayNames = null;
+    }
+}
+
+function getLocaleDisplayName(locale) {
+    if (languageDisplayNames) {
+        try {
+            const name = languageDisplayNames.of(locale);
+            if (name) return name;
+        } catch (error) {
+            console.warn('[i18n] Failed to resolve locale display name:', error);
+        }
+    }
+    switch (locale) {
+        case 'ja':
+            return '日本語';
+        case 'en':
+            return 'English';
+        default:
+            return locale;
+    }
+}
+
+function refreshLanguageSwitcher(locale) {
+    if (!languageSelect) return;
+    const supported = i18n.getSupportedLocales?.() || [];
+    updateLanguageDisplayFormatter(locale);
+    const seen = new Set();
+    supported.forEach((localeCode) => {
+        seen.add(localeCode);
+        let option = Array.from(languageSelect.options).find((opt) => opt.value === localeCode);
+        if (!option) {
+            option = document.createElement('option');
+            option.value = localeCode;
+            languageSelect.appendChild(option);
+        }
+        option.textContent = getLocaleDisplayName(localeCode);
+    });
+    Array.from(languageSelect.options).forEach((option) => {
+        if (!seen.has(option.value)) {
+            option.remove();
+        }
+    });
+    languageSelect.value = locale;
+    if (languageSelectLabel) {
+        const labelText = translateOrFallback('ui.language.label', 'Language');
+        languageSelectLabel.textContent = labelText;
+    }
+}
+
+document.addEventListener('i18n:locale-changed', (event) => {
+    const locale = event?.detail?.locale || i18n.getLocale();
+    refreshLanguageSwitcher(locale);
+    const rerenderEvent = new CustomEvent('app:rerender', { detail: { locale } });
+    document.dispatchEvent(rerenderEvent);
+});
+
+refreshLanguageSwitcher(i18n.getLocale());
+
+const storedLocalePreference = typeof i18n.getStoredLocale === 'function' ? i18n.getStoredLocale() : null;
+const initialLocale = storedLocalePreference || (typeof i18n.getDefaultLocale === 'function' ? i18n.getDefaultLocale() : 'ja');
+await i18n.setLocale(initialLocale);
+
+if (languageSelect) {
+    languageSelect.addEventListener('change', async (event) => {
+        const nextLocale = event.target?.value;
+        if (!nextLocale || nextLocale === i18n.getLocale()) return;
+        try {
+            await i18n.setLocale(nextLocale);
+        } catch (error) {
+            console.error('[i18n] Failed to switch language:', error);
+        }
+    });
+}
+
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const playerStatsDiv = document.getElementById('player-stats');

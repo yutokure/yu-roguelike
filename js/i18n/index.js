@@ -8,6 +8,10 @@
     const dictionaryCache = new Map();
     const loadingCache = new Map();
     const listeners = new Set();
+    const TEXT_NODE = typeof Node !== 'undefined' ? Node.TEXT_NODE : 3;
+    const ELEMENT_CTOR = typeof Element !== 'undefined' ? Element : null;
+    const DOCUMENT_CTOR = typeof Document !== 'undefined' ? Document : null;
+    const DOCUMENT_FRAGMENT_CTOR = typeof DocumentFragment !== 'undefined' ? DocumentFragment : null;
 
     let activeLocale = DEFAULT_LOCALE;
     let activeDictionary = {};
@@ -195,6 +199,97 @@
         }
     }
 
+    function resolveTranslationRoot(root) {
+        if (!root || root === document) {
+            return document;
+        }
+        const isElement = ELEMENT_CTOR && root instanceof ELEMENT_CTOR;
+        const isDocument = DOCUMENT_CTOR && root instanceof DOCUMENT_CTOR;
+        const isFragment = DOCUMENT_FRAGMENT_CTOR && root instanceof DOCUMENT_FRAGMENT_CTOR;
+        if (isElement || isDocument || isFragment) {
+            return root;
+        }
+        return document;
+    }
+
+    function ensureTextNode(element) {
+        if (!element || typeof element.insertBefore !== 'function') return null;
+        for (let i = 0; i < element.childNodes.length; i += 1) {
+            const node = element.childNodes[i];
+            if (node?.nodeType === TEXT_NODE) {
+                return node;
+            }
+        }
+        const textNode = document.createTextNode('');
+        element.insertBefore(textNode, element.firstChild || null);
+        return textNode;
+    }
+
+    function applyElementTranslation(element) {
+        if (!ELEMENT_CTOR || !(element instanceof ELEMENT_CTOR)) return;
+        const key = element.getAttribute('data-i18n');
+        const attrSpec = element.getAttribute('data-i18n-attr');
+        if (key) {
+            const value = t(key);
+            if (value !== undefined && value !== null) {
+                if (element.hasAttribute('data-i18n-html')) {
+                    element.innerHTML = value;
+                } else if (element.childElementCount === 0) {
+                    element.textContent = value;
+                } else {
+                    const textNode = ensureTextNode(element);
+                    if (textNode) {
+                        textNode.textContent = value;
+                    }
+                }
+            }
+        }
+        if (attrSpec) {
+            const segments = attrSpec.split(/[;,]/);
+            segments.forEach((segment) => {
+                const pair = segment.split(':');
+                if (pair.length < 2) return;
+                const attrName = pair[0].trim();
+                const attrKey = pair.slice(1).join(':').trim();
+                if (!attrName || !attrKey) return;
+                const attrValue = t(attrKey);
+                if (attrValue !== undefined && attrValue !== null) {
+                    element.setAttribute(attrName, attrValue);
+                }
+            });
+        }
+    }
+
+    function applyTranslations(root) {
+        if (typeof document === 'undefined') return;
+        const scope = resolveTranslationRoot(root);
+        const elements = [];
+        const scopeIsElement = ELEMENT_CTOR && scope instanceof ELEMENT_CTOR;
+        const scopeIsFragment = DOCUMENT_FRAGMENT_CTOR && scope instanceof DOCUMENT_FRAGMENT_CTOR;
+        const scopeIsDocument = DOCUMENT_CTOR && scope instanceof DOCUMENT_CTOR;
+        if (scopeIsElement || scopeIsFragment) {
+            if (scope.hasAttribute?.('data-i18n') || scope.hasAttribute?.('data-i18n-attr')) {
+                elements.push(scope);
+            }
+        } else if (scopeIsDocument && scope.documentElement) {
+            const el = scope.documentElement;
+            if (el.hasAttribute('data-i18n') || el.hasAttribute('data-i18n-attr')) {
+                elements.push(el);
+            }
+        }
+        if (typeof scope.querySelectorAll === 'function') {
+            scope.querySelectorAll('[data-i18n],[data-i18n-attr]').forEach((element) => {
+                elements.push(element);
+            });
+        }
+        const processed = new Set();
+        elements.forEach((element) => {
+            if (processed.has(element)) return;
+            processed.add(element);
+            applyElementTranslation(element);
+        });
+    }
+
     function onLocaleChanged(listener) {
         if (typeof listener !== 'function') return () => {};
         listeners.add(listener);
@@ -250,6 +345,7 @@
         onLocaleChanged,
         resolveLocale,
         loadLocale: fetchDictionary,
+        applyTranslations,
     };
 
     global.I18n = api;

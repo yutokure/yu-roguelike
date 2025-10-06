@@ -4,6 +4,7 @@
     const FALLBACK_LOCALE = 'ja';
     const SUPPORTED_LOCALES = Object.freeze(['ja', 'en']);
     const LOCALE_PATH = './js/i18n/locales';
+    const LOCALE_EXTENSION = '.json.js';
 
     const dictionaryCache = new Map();
     const loadingCache = new Map();
@@ -89,6 +90,36 @@
         return undefined;
     }
 
+    function getGlobalLocaleStore() {
+        const root = typeof globalThis !== 'undefined'
+            ? globalThis
+            : typeof global !== 'undefined'
+                ? global
+                : typeof window !== 'undefined'
+                    ? window
+                    : typeof self !== 'undefined'
+                        ? self
+                        : null;
+        if (!root) return null;
+        if (!root.__i18nLocales) {
+            Object.defineProperty(root, '__i18nLocales', {
+                value: {},
+                enumerable: false,
+                configurable: true,
+                writable: true,
+            });
+        }
+        return root.__i18nLocales;
+    }
+
+    function getDictionaryFromGlobal(locale) {
+        const store = getGlobalLocaleStore();
+        if (store && store[locale] && typeof store[locale] === 'object') {
+            return store[locale];
+        }
+        return null;
+    }
+
     async function fetchDictionary(locale) {
         if (dictionaryCache.has(locale)) {
             return dictionaryCache.get(locale);
@@ -97,23 +128,50 @@
             return loadingCache.get(locale);
         }
         const promise = (async () => {
-            const url = `${LOCALE_PATH}/${locale}.json`;
-            let payload = {};
-            try {
-                const response = await fetch(url, { cache: 'no-store' });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data && typeof data === 'object') {
-                        payload = data;
-                    }
-                } else if (response.status !== 404) {
-                    console.warn(`[i18n] Failed to load locale "${locale}": ${response.status}`);
-                }
-            } catch (error) {
-                console.warn(`[i18n] Error loading locale "${locale}":`, error);
+            const existing = getDictionaryFromGlobal(locale);
+            if (existing) {
+                dictionaryCache.set(locale, existing);
+                return existing;
             }
-            dictionaryCache.set(locale, payload || {});
-            return dictionaryCache.get(locale);
+
+            if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+                if (typeof require === 'function') {
+                    try {
+                        require(`./locales/${locale}${LOCALE_EXTENSION}`);
+                        const dictionary = getDictionaryFromGlobal(locale) || {};
+                        dictionaryCache.set(locale, dictionary);
+                        return dictionary;
+                    } catch (error) {
+                        console.warn(`[i18n] Error loading locale "${locale}" via require:`, error);
+                    }
+                }
+                dictionaryCache.set(locale, {});
+                return {};
+            }
+
+            const target = document.head || document.getElementsByTagName?.('head')?.[0] || document.body || document.documentElement;
+            if (!target) {
+                dictionaryCache.set(locale, {});
+                return {};
+            }
+
+            await new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.async = true;
+                script.defer = true;
+                script.onload = () => resolve(true);
+                script.onerror = (error) => {
+                    console.warn(`[i18n] Failed to load locale "${locale}" script:`, error);
+                    resolve(false);
+                };
+                script.src = `${LOCALE_PATH}/${locale}${LOCALE_EXTENSION}`;
+                target.appendChild(script);
+            });
+
+            const dictionary = getDictionaryFromGlobal(locale) || {};
+            dictionaryCache.set(locale, dictionary);
+            return dictionary;
         })();
         loadingCache.set(locale, promise);
         try {

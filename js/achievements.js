@@ -8,35 +8,44 @@
     const PLAYTIME_TRACKING_INTERVAL_MS = 1000;
 
     const CATEGORY_DEFINITIONS = [
-        { id: 'dungeon', name: 'ダンジョン関連' },
-        { id: 'blockdim', name: 'ブロック次元関連' },
-        { id: 'hatena', name: 'ハテナブロック関連' },
-        { id: 'tools', name: 'ツールズ関連' },
-        { id: 'mini', name: 'ミニゲーム関連', comingSoon: true }
+        { id: 'dungeon', name: 'ダンジョン関連', nameKey: 'achievements.categories.dungeon' },
+        { id: 'blockdim', name: 'ブロック次元関連', nameKey: 'achievements.categories.blockdim' },
+        { id: 'hatena', name: 'ハテナブロック関連', nameKey: 'achievements.categories.hatena' },
+        { id: 'tools', name: 'ツールズ関連', nameKey: 'achievements.categories.tools' },
+        { id: 'mini', name: 'ミニゲーム関連', nameKey: 'achievements.categories.mini', comingSoon: true }
     ];
 
     const AUTO_ACHIEVEMENTS = [
         {
             id: 'dungeon_first_clear',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_first_clear.title',
             title: '初陣の証',
+            descriptionKey: 'achievements.auto.dungeon_first_clear.description',
             description: 'いずれかのダンジョンを攻略する。',
+            rewardKey: 'achievements.auto.dungeon_first_clear.reward',
             reward: '称号「新人冒険者」',
             condition: (stats) => stats.core.dungeonsCleared >= 1
         },
         {
             id: 'dungeon_hard_clear',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_hard_clear.title',
             title: '高難度征服者',
+            descriptionKey: 'achievements.auto.dungeon_hard_clear.description',
             description: 'Hard 以上の難易度でダンジョンを攻略する。',
+            rewardKey: 'achievements.auto.dungeon_hard_clear.reward',
             reward: '高難易度攻略の記念メダル',
             condition: (stats) => stats.core.highestDifficultyIndex >= DIFFICULTY_ORDER.indexOf('Hard')
         },
         {
             id: 'dungeon_step_1000',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_step_1000.title',
             title: '千里の旅も一歩から',
+            descriptionKey: 'achievements.auto.dungeon_step_1000.description',
             description: '累計移動距離を 1000 マスに到達させる。',
+            rewardKey: 'achievements.auto.dungeon_step_1000.reward',
             reward: '移動ノウハウのメモ',
             condition: (stats) => stats.core.totalSteps >= 1000,
             progress: (stats) => {
@@ -46,15 +55,21 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'dungeon_boss_hunter',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_boss_hunter.title',
             title: 'ボスハンター',
+            descriptionKey: 'achievements.auto.dungeon_boss_hunter.description',
             description: 'ボス撃破数がそのまま実績カウントになります。',
+            rewardKey: 'achievements.auto.dungeon_boss_hunter.reward',
             reward: '称号「狩人」',
             type: 'counter',
             counter: (stats) => stats.core.bossesDefeated || 0,
@@ -62,15 +77,20 @@
                 const defeated = stats.core.bossesDefeated || 0;
                 return {
                     current: defeated,
-                    text: `${formatNumber(defeated)} 体撃破`
+                    text: translate('achievements.progress.bossDefeated', {
+                        count: formatNumber(defeated)
+                    }, `${formatNumber(defeated)} 体撃破`)
                 };
             }
         },
         {
             id: 'dungeon_loop_runner',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_loop_runner.title',
             title: '周回の達人',
+            descriptionKey: 'achievements.auto.dungeon_loop_runner.description',
             description: 'ダンジョンを 5 回攻略するごとにカウントが増える実績。',
+            rewardKey: 'achievements.auto.dungeon_loop_runner.reward',
             reward: '周回ログカード',
             type: 'repeatable',
             counter: (stats) => Math.floor((stats.core.dungeonsCleared || 0) / 5),
@@ -78,19 +98,27 @@
                 const total = stats.core.dungeonsCleared || 0;
                 const step = 5;
                 const remainder = total % step;
+                const remaining = remainder === 0 ? step : step - remainder;
                 return {
                     current: remainder,
                     target: step,
                     percent: Math.min(1, remainder / step),
-                    text: remainder === 0 ? '次の達成まで 5 回' : `次の達成まで ${formatNumber(step - remainder)} 回`
+                    text: translate('achievements.progress.nextRuns', {
+                        count: formatNumber(remaining)
+                    }, remainder === 0
+                        ? '次の達成まで 5 回'
+                        : `次の達成まで ${formatNumber(remaining)} 回`)
                 };
             }
         },
         {
             id: 'dungeon_floor_master',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_floor_master.title',
             title: '深淵踏破者',
+            descriptionKey: 'achievements.auto.dungeon_floor_master.description',
             description: '最高到達階層を 30F 以上にする。',
+            rewardKey: 'achievements.auto.dungeon_floor_master.reward',
             reward: '称号「深淵踏破者」',
             condition: (stats) => stats.core.highestFloorReached >= 30,
             progress: (stats) => {
@@ -100,15 +128,21 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)}F / ${formatNumber(target)}F`
+                    text: translate('achievements.progress.floorRatio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)}F / ${formatNumber(target)}F`)
                 };
             }
         },
         {
             id: 'dungeon_healing_specialist',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_healing_specialist.title',
             title: '応急の達人',
+            descriptionKey: 'achievements.auto.dungeon_healing_specialist.description',
             description: '回復アイテムを 25 回使用する。',
+            rewardKey: 'achievements.auto.dungeon_healing_specialist.reward',
             reward: '回復の心得',
             condition: (stats) => stats.core.healingItemsUsed >= 25,
             progress: (stats) => {
@@ -118,15 +152,21 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'dungeon_auto_guardian',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_auto_guardian.title',
             title: '自動防衛システム',
+            descriptionKey: 'achievements.auto.dungeon_auto_guardian.description',
             description: 'オートアイテムを 10 回発動させる。',
+            rewardKey: 'achievements.auto.dungeon_auto_guardian.reward',
             reward: '自動回復コア',
             condition: (stats) => stats.core.autoItemsTriggered >= 10,
             progress: (stats) => {
@@ -136,15 +176,22 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: current >= target ? '達成！' : `あと ${formatNumber(target - current)} 回`
+                    text: current >= target
+                        ? translate('achievements.progress.completed', null, '達成！')
+                        : translate('achievements.progress.remaining', {
+                            count: formatNumber(target - current)
+                        }, `あと ${formatNumber(target - current)} 回`)
                 };
             }
         },
         {
             id: 'dungeon_playtime_30min',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_playtime_30min.title',
             title: '冒険の始まり',
+            descriptionKey: 'achievements.auto.dungeon_playtime_30min.description',
             description: '累計プレイ時間を 30 分に到達させる。',
+            rewardKey: 'achievements.auto.dungeon_playtime_30min.reward',
             reward: '携帯砂時計',
             condition: (stats) => stats.core.playTimeSeconds >= 1800,
             progress: (stats) => createDurationProgress(stats.core.playTimeSeconds, 1800)
@@ -152,8 +199,11 @@
         {
             id: 'dungeon_playtime_3hour',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_playtime_3hour.title',
             title: '時間を忘れて',
+            descriptionKey: 'achievements.auto.dungeon_playtime_3hour.description',
             description: '累計プレイ時間を 3 時間に到達させる。',
+            rewardKey: 'achievements.auto.dungeon_playtime_3hour.reward',
             reward: '熟練冒険者の時計',
             condition: (stats) => stats.core.playTimeSeconds >= 10800,
             progress: (stats) => createDurationProgress(stats.core.playTimeSeconds, 10800)
@@ -161,8 +211,11 @@
         {
             id: 'dungeon_playtime_12hour',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_playtime_12hour.title',
             title: '止まらない探索心',
+            descriptionKey: 'achievements.auto.dungeon_playtime_12hour.description',
             description: '累計プレイ時間を 12 時間に到達させる。',
+            rewardKey: 'achievements.auto.dungeon_playtime_12hour.reward',
             reward: '時空の羅針盤',
             condition: (stats) => stats.core.playTimeSeconds >= 43200,
             progress: (stats) => createDurationProgress(stats.core.playTimeSeconds, 43200)
@@ -170,8 +223,11 @@
         {
             id: 'dungeon_rare_collector',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_rare_collector.title',
             title: 'レアコレクター',
+            descriptionKey: 'achievements.auto.dungeon_rare_collector.description',
             description: 'レア宝箱を 10 個開ける。',
+            rewardKey: 'achievements.auto.dungeon_rare_collector.reward',
             reward: '希少鍵の欠片',
             condition: (stats) => stats.core.rareChestsOpened >= 10,
             progress: (stats) => {
@@ -181,15 +237,21 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'dungeon_iron_wall',
             category: 'dungeon',
+            titleKey: 'achievements.auto.dungeon_iron_wall.title',
             title: '鉄壁の生還者',
+            descriptionKey: 'achievements.auto.dungeon_iron_wall.description',
             description: '累計被ダメージ 10,000 を経験する。',
+            rewardKey: 'achievements.auto.dungeon_iron_wall.reward',
             reward: '鉄壁の盾',
             condition: (stats) => stats.core.damageTaken >= 10000,
             progress: (stats) => {
@@ -199,23 +261,32 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'blockdim_first_gate',
             category: 'blockdim',
+            titleKey: 'achievements.auto.blockdim_first_gate.title',
             title: 'ゲート起動',
+            descriptionKey: 'achievements.auto.blockdim_first_gate.description',
             description: '初めて Gate からブロック次元に突入する。',
+            rewardKey: 'achievements.auto.blockdim_first_gate.reward',
             reward: 'ゲート起動ログ',
             condition: (stats) => stats.blockdim.gatesOpened >= 1
         },
         {
             id: 'blockdim_bookmark_collector',
             category: 'blockdim',
+            titleKey: 'achievements.auto.blockdim_bookmark_collector.title',
             title: 'ブックマークコレクター',
+            descriptionKey: 'achievements.auto.blockdim_bookmark_collector.description',
             description: 'ブロック次元のブックマークを 5 件登録する。',
+            rewardKey: 'achievements.auto.blockdim_bookmark_collector.reward',
             reward: '組み合わせ研究ノート',
             condition: (stats) => stats.blockdim.bookmarksAdded >= 5,
             progress: (stats) => {
@@ -225,23 +296,32 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'blockdim_weighted_explorer',
             category: 'blockdim',
+            titleKey: 'achievements.auto.blockdim_weighted_explorer.title',
             title: '狙い撃ち合成者',
+            descriptionKey: 'achievements.auto.blockdim_weighted_explorer.description',
             description: '重み付きランダム選択を使用する。',
+            rewardKey: 'achievements.auto.blockdim_weighted_explorer.reward',
             reward: '狙い撃ち計算式',
             condition: (stats) => stats.blockdim.weightedSelections >= 1
         },
         {
             id: 'hatena_first_trigger',
             category: 'hatena',
+            titleKey: 'achievements.auto.hatena_first_trigger.title',
             title: '謎との遭遇',
+            descriptionKey: 'achievements.auto.hatena_first_trigger.description',
             description: 'ハテナブロックを初めて発動させる。',
+            rewardKey: 'achievements.auto.hatena_first_trigger.reward',
             reward: '調査記録「？」',
             condition: (stats) => (stats.hatena?.blocksTriggered || 0) >= 1,
             progress: (stats) => {
@@ -252,15 +332,21 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'hatena_block_researcher',
             category: 'hatena',
+            titleKey: 'achievements.auto.hatena_block_researcher.title',
             title: 'ハテナ観測隊',
+            descriptionKey: 'achievements.auto.hatena_block_researcher.description',
             description: 'ハテナブロックを 25 回発動させる。',
+            rewardKey: 'achievements.auto.hatena_block_researcher.reward',
             reward: '観測ログシート',
             condition: (stats) => (stats.hatena?.blocksTriggered || 0) >= 25,
             progress: (stats) => {
@@ -271,15 +357,21 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'hatena_lucky_chain',
             category: 'hatena',
+            titleKey: 'achievements.auto.hatena_lucky_chain.title',
             title: '幸運を掴む者',
+            descriptionKey: 'achievements.auto.hatena_lucky_chain.description',
             description: 'ハテナブロックから好影響を 15 回得る。',
+            rewardKey: 'achievements.auto.hatena_lucky_chain.reward',
             reward: '幸運のお守り',
             condition: (stats) => (stats.hatena?.positiveEffects || 0) >= 15,
             progress: (stats) => {
@@ -290,15 +382,21 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'hatena_unlucky_survivor',
             category: 'hatena',
+            titleKey: 'achievements.auto.hatena_unlucky_survivor.title',
             title: '不運をも超えて',
+            descriptionKey: 'achievements.auto.hatena_unlucky_survivor.description',
             description: 'ハテナブロックの悪影響を 10 回経験しても生き延びる。',
+            rewardKey: 'achievements.auto.hatena_unlucky_survivor.reward',
             reward: '耐久メダル',
             condition: (stats) => (stats.hatena?.negativeEffects || 0) >= 10,
             progress: (stats) => {
@@ -309,15 +407,21 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'hatena_rare_hunter',
             category: 'hatena',
+            titleKey: 'achievements.auto.hatena_rare_hunter.title',
             title: '輝く幸運',
+            descriptionKey: 'achievements.auto.hatena_rare_hunter.description',
             description: 'ハテナブロックからレア宝箱を 3 個出現させる。',
+            rewardKey: 'achievements.auto.hatena_rare_hunter.reward',
             reward: '宝箱鑑定レンズ',
             condition: (stats) => (stats.hatena?.rareChestsSpawned || 0) >= 3,
             progress: (stats) => {
@@ -328,54 +432,74 @@
                     current,
                     target,
                     percent: Math.min(1, current / target),
-                    text: `${formatNumber(current)} / ${formatNumber(target)}`
+                    text: translate('achievements.progress.ratio', {
+                        current: formatNumber(current),
+                        target: formatNumber(target)
+                    }, `${formatNumber(current)} / ${formatNumber(target)}`)
                 };
             }
         },
         {
             id: 'tools_first_visit',
             category: 'tools',
+            titleKey: 'achievements.auto.tools_first_visit.title',
             title: '工房デビュー',
+            descriptionKey: 'achievements.auto.tools_first_visit.description',
             description: 'ツールズタブを開く。',
+            rewardKey: 'achievements.auto.tools_first_visit.reward',
             reward: '作業手帳',
             condition: (stats) => stats.tools.tabVisits >= 1
         },
         {
             id: 'tools_mod_export',
             category: 'tools',
+            titleKey: 'achievements.auto.tools_mod_export.title',
             title: 'アドオンビルダー',
+            descriptionKey: 'achievements.auto.tools_mod_export.description',
             description: 'Mod 作成ツールでコードを書き出す。',
+            rewardKey: 'achievements.auto.tools_mod_export.reward',
             reward: 'Mod 署名スタンプ',
             condition: (stats) => stats.tools.modExports >= 1
         },
         {
             id: 'tools_blockdata_saver',
             category: 'tools',
+            titleKey: 'achievements.auto.tools_blockdata_saver.title',
             title: 'データ整備士',
+            descriptionKey: 'achievements.auto.tools_blockdata_saver.description',
             description: 'BlockData エディタでデータを保存またはダウンロードする。',
+            rewardKey: 'achievements.auto.tools_blockdata_saver.reward',
             reward: '整備員バッジ',
             condition: (stats) => (stats.tools.blockdataSaves + stats.tools.blockdataDownloads) >= 1,
             progress: (stats) => {
                 const total = (stats.tools.blockdataSaves || 0) + (stats.tools.blockdataDownloads || 0);
                 return {
                     current: total,
-                    text: `${formatNumber(total)} 回操作`
+                    text: translate('achievements.progress.actions', {
+                        count: formatNumber(total)
+                    }, `${formatNumber(total)} 回操作`)
                 };
             }
         },
         {
             id: 'tools_sandbox_session',
             category: 'tools',
+            titleKey: 'achievements.auto.tools_sandbox_session.title',
             title: 'シミュレーション好き',
+            descriptionKey: 'achievements.auto.tools_sandbox_session.description',
             description: 'サンドボックスインターフェースを開いて編集する。',
+            rewardKey: 'achievements.auto.tools_sandbox_session.reward',
             reward: 'テストパス',
             condition: (stats) => stats.tools.sandboxSessions >= 1
         },
         {
             id: 'minigame_coming_soon',
             category: 'mini',
+            titleKey: 'achievements.auto.minigame_coming_soon.title',
             title: 'ミニゲーム実績',
+            descriptionKey: 'achievements.auto.minigame_coming_soon.description',
             description: 'COMING SOON - ミニゲーム用実績は近日追加予定です。',
+            rewardKey: 'achievements.auto.minigame_coming_soon.reward',
             reward: '',
             comingSoon: true
         }
@@ -470,6 +594,25 @@
     let playtimeTimerId = null;
     let lastPlaytimeTimestamp = 0;
 
+    function translate(key, params, fallback) {
+        if (key && i18n && typeof i18n.t === 'function') {
+            const value = i18n.t(key, params);
+            if (value !== undefined && value !== null && value !== key) {
+                return value;
+            }
+        }
+        if (typeof fallback === 'function') {
+            return fallback();
+        }
+        if (fallback !== undefined && fallback !== null) {
+            return fallback;
+        }
+        if (typeof key === 'string') {
+            return key;
+        }
+        return '';
+    }
+
     function formatNumber(value) {
         if (!Number.isFinite(value)) return '0';
         const numeric = Math.floor(value);
@@ -495,22 +638,39 @@
         const minutes = Math.floor((total % 3600) / 60);
         const secs = total % 60;
         if (hours > 0) {
-            return `${formatNumber(hours)}時間 ${minutes.toString().padStart(2, '0')}分 ${secs.toString().padStart(2, '0')}秒`;
+            return translate('achievements.progress.duration.full', {
+                hours: formatNumber(hours),
+                minutes: minutes.toString().padStart(2, '0'),
+                minutesValue: formatNumber(minutes),
+                seconds: secs.toString().padStart(2, '0'),
+                secondsValue: formatNumber(secs)
+            }, `${formatNumber(hours)}時間 ${minutes.toString().padStart(2, '0')}分 ${secs.toString().padStart(2, '0')}秒`);
         }
         if (minutes > 0) {
-            return `${formatNumber(minutes)}分 ${secs.toString().padStart(2, '0')}秒`;
+            return translate('achievements.progress.duration.minutes', {
+                minutes: formatNumber(minutes),
+                seconds: secs.toString().padStart(2, '0'),
+                secondsValue: formatNumber(secs)
+            }, `${formatNumber(minutes)}分 ${secs.toString().padStart(2, '0')}秒`);
         }
-        return `${secs}秒`;
+        return translate('achievements.progress.duration.seconds', {
+            seconds: formatNumber(secs)
+        }, `${secs}秒`);
     }
 
     function createDurationProgress(currentSeconds, targetSeconds) {
         const current = Math.max(0, Math.floor(Number(currentSeconds) || 0));
         const target = Math.max(1, Math.floor(Number(targetSeconds) || 0));
+        const currentText = formatDuration(current);
+        const targetText = formatDuration(target);
         return {
             current,
             target,
             percent: Math.min(1, current / target),
-            text: `${formatDuration(current)} / ${formatDuration(target)}`
+            text: translate('achievements.progress.duration.ratio', {
+                current: currentText,
+                target: targetText
+            }, `${currentText} / ${targetText}`)
         };
     }
 
@@ -827,7 +987,7 @@
             const header = document.createElement('header');
             header.className = 'achievement-category__header';
             const title = document.createElement('h4');
-            title.textContent = category.name;
+            title.textContent = translate(category.nameKey, null, category.name);
             header.appendChild(title);
             section.appendChild(header);
 
@@ -835,7 +995,7 @@
             if (category.comingSoon) {
                 const coming = document.createElement('p');
                 coming.className = 'achievement-coming-soon';
-                coming.textContent = '実績は近日追加予定です。';
+                coming.textContent = translate('achievements.messages.categoryComingSoon', null, '実績は近日追加予定です。');
                 section.appendChild(coming);
                 fragment.appendChild(section);
                 continue;
@@ -844,7 +1004,7 @@
             if (defs.length === 0) {
                 const empty = document.createElement('p');
                 empty.className = 'achievement-empty';
-                empty.textContent = '登録されている実績はまだありません。';
+                empty.textContent = translate('achievements.messages.emptyCategory', null, '登録されている実績はまだありません。');
                 section.appendChild(empty);
                 fragment.appendChild(section);
                 continue;
@@ -866,25 +1026,31 @@
                 const headerRow = document.createElement('div');
                 headerRow.className = 'achievement-card__header';
                 const heading = document.createElement('h5');
-                heading.textContent = def.title;
+                heading.textContent = translate(def.titleKey, null, def.title);
                 headerRow.appendChild(heading);
                 const status = document.createElement('span');
                 status.className = 'achievement-card__status';
-                status.textContent = def.comingSoon ? 'COMING SOON' : (unlocked ? '達成済み' : '未達成');
+                status.textContent = def.comingSoon
+                    ? translate('achievements.status.comingSoon', null, 'COMING SOON')
+                    : (unlocked
+                        ? translate('achievements.status.unlocked', null, '達成済み')
+                        : translate('achievements.status.locked', null, '未達成'));
                 headerRow.appendChild(status);
                 card.appendChild(headerRow);
 
-                if (def.description) {
+                const descriptionText = translate(def.descriptionKey, null, def.description);
+                if (descriptionText) {
                     const desc = document.createElement('p');
                     desc.className = 'achievement-card__description';
-                    desc.textContent = def.description;
+                    desc.textContent = descriptionText;
                     card.appendChild(desc);
                 }
 
-                if (def.reward) {
+                const rewardText = translate(def.rewardKey, null, def.reward);
+                if (rewardText) {
                     const reward = document.createElement('p');
                     reward.className = 'achievement-card__reward';
-                    reward.textContent = `報酬メモ: ${def.reward}`;
+                    reward.textContent = translate('achievements.rewardMemo', { reward: rewardText }, `報酬メモ: ${rewardText}`);
                     card.appendChild(reward);
                 }
 
@@ -913,8 +1079,13 @@
                 if ((def.type === 'repeatable' || def.type === 'counter') && counterValue >= 0) {
                     const meta = document.createElement('div');
                     meta.className = 'achievement-card__meta';
-                    const label = def.type === 'repeatable' ? '累計達成回数' : '達成数';
-                    meta.textContent = `${label}: ${formatNumber(counterValue)}`;
+                    const labelKey = def.type === 'repeatable'
+                        ? 'achievements.meta.repeatableCount'
+                        : 'achievements.meta.counterCount';
+                    const fallback = def.type === 'repeatable'
+                        ? `累計達成回数: ${formatNumber(counterValue)}`
+                        : `達成数: ${formatNumber(counterValue)}`;
+                    meta.textContent = translate(labelKey, { count: formatNumber(counterValue) }, fallback);
                     card.appendChild(meta);
                 }
 
@@ -937,11 +1108,11 @@
             item.className = 'achievement-category-summary__item';
             const name = document.createElement('span');
             name.className = 'category-name';
-            name.textContent = category.name;
+            name.textContent = translate(category.nameKey, null, category.name);
             const value = document.createElement('span');
             value.className = 'category-progress';
             if (category.comingSoon) {
-                value.textContent = 'Coming Soon';
+                value.textContent = translate('achievements.summary.comingSoon', null, 'Coming Soon');
             } else {
                 const defs = AUTO_ACHIEVEMENTS.filter(def => def.category === category.id && !def.comingSoon);
                 if (defs.length === 0) {

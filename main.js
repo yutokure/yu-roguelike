@@ -31,13 +31,29 @@ const languageSelect = document.getElementById('language-select');
 const languageSelectLabel = document.querySelector('label[for="language-select"]');
 let languageDisplayNames = null;
 
-function translateOrFallback(key, fallbackText) {
-    if (!i18n || typeof i18n.t !== 'function') return fallbackText;
-    const translated = translate(key);
-    if (typeof translated === 'string' && translated !== key) {
-        return translated;
+function translateOrFallback(key, fallbackText, params) {
+    const computeFallback = () => {
+        if (typeof fallbackText === 'function') {
+            try {
+                const result = fallbackText();
+                return typeof result === 'string' ? result : (result ?? '');
+            } catch (error) {
+                console.warn('[i18n] Failed to evaluate fallback text:', error);
+                return '';
+            }
+        }
+        return fallbackText ?? '';
+    };
+    if (!i18n || typeof i18n.t !== 'function') return computeFallback();
+    try {
+        const translated = translate(key, params);
+        if (typeof translated === 'string' && translated !== key) {
+            return translated;
+        }
+    } catch (error) {
+        console.warn('[i18n] Failed to translate key:', key, error);
     }
-    return fallbackText;
+    return computeFallback();
 }
 
 function updateLanguageDisplayFormatter(locale) {
@@ -1507,12 +1523,18 @@ const VIEWPORT_HEIGHT = 15;
 let currentMode = 'normal';
 // MiniExp state (mods)
 const MINI_ALL_CATEGORY = '__ALL__';
-const MINI_EXP_DISPLAY_MODES = [
-    { id: 'tile', label: 'タイル' },
-    { id: 'list', label: 'リスト' },
-    { id: 'wrap', label: '羅列' },
-    { id: 'detail', label: '詳細' }
-];
+const MINI_EXP_DISPLAY_MODES = Object.freeze([
+    { id: 'tile' },
+    { id: 'list' },
+    { id: 'wrap' },
+    { id: 'detail' }
+]);
+const MINI_EXP_DISPLAY_MODE_FALLBACK_LABELS = Object.freeze({
+    tile: 'タイル',
+    list: 'リスト',
+    wrap: '羅列',
+    detail: '詳細'
+});
 
 const ADVANCED_ENEMY_RECOMMENDED_LEVEL_THRESHOLD = 250;
 const ENEMY_EFFECT_SUPPRESSION_GAP = 5;
@@ -10846,6 +10868,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
             renderMiniExpDisplayModes(__miniManifest);
             renderMiniExpList(__miniManifest);
             renderMiniExpRecords();
+            applyMiniExpPlaceholderState(__miniManifest);
         }
         refreshBdimListHeights();
         measureSelectionFooterHeight();
@@ -17063,6 +17086,136 @@ startDungeonBtn && startDungeonBtn.addEventListener('click', () => {
 });
 
 // -------------- MiniExp (MOD) --------------
+const MINI_FALLBACK_CATEGORY_ID = 'その他';
+const miniExpPlaceholderState = { mode: 'default', data: null };
+
+function resolveMiniGameText(def, key) {
+    if (!def || !key) return '';
+    const fallback = def?.[key];
+    const fallbackValue = typeof fallback === 'string' ? fallback : (fallback == null ? '' : String(fallback));
+    const translationKey = def?.[`${key}Key`];
+    const params = def?.[`${key}Params`];
+    if (translationKey) {
+        return translateOrFallback(translationKey, fallbackValue, params);
+    }
+    return fallbackValue;
+}
+
+function getMiniGameCategoryEntries(def) {
+    try {
+        if (!def || typeof def !== 'object') {
+            return [{ id: MINI_FALLBACK_CATEGORY_ID, fallback: MINI_FALLBACK_CATEGORY_ID }];
+        }
+        const rawIds = Array.isArray(def.categoryIds) ? def.categoryIds : null;
+        const rawFallback = def.categories ?? def.category;
+        const fallbackList = Array.isArray(rawFallback)
+            ? rawFallback.map((value) => (value == null ? '' : String(value)))
+            : (rawFallback != null ? [String(rawFallback)] : []);
+        if (rawIds && rawIds.length) {
+            return rawIds.map((value, index) => {
+                const id = String(value || '');
+                const fallback = fallbackList[index] || fallbackList[0] || id || MINI_FALLBACK_CATEGORY_ID;
+                return { id: id || MINI_FALLBACK_CATEGORY_ID, fallback: fallback || MINI_FALLBACK_CATEGORY_ID };
+            });
+        }
+        if (fallbackList.length) {
+            return fallbackList.map((label) => {
+                const normalized = label || MINI_FALLBACK_CATEGORY_ID;
+                return { id: normalized, fallback: normalized };
+            });
+        }
+    } catch (error) {
+        console.warn('[MiniExp] Failed to normalize categories:', error);
+    }
+    return [{ id: MINI_FALLBACK_CATEGORY_ID, fallback: MINI_FALLBACK_CATEGORY_ID }];
+}
+
+function getMiniGameCategoryIds(def) {
+    return getMiniGameCategoryEntries(def).map((entry) => entry.id).filter((id) => !!id);
+}
+
+function buildCategoryMap(manifest) {
+    const map = new Map();
+    for (const def of manifest || []) {
+        const entries = getMiniGameCategoryEntries(def);
+        for (const entry of entries) {
+            const id = entry.id || MINI_FALLBACK_CATEGORY_ID;
+            const fallback = entry.fallback || id || MINI_FALLBACK_CATEGORY_ID;
+            if (!map.has(id)) {
+                map.set(id, { defs: [], fallback });
+            }
+            const info = map.get(id);
+            if (info && !info.fallback && fallback) {
+                info.fallback = fallback;
+            }
+            info.defs.push(def);
+        }
+    }
+    return map;
+}
+
+function resolveMiniExpCategoryLabel(categoryId, fallbackText) {
+    if (categoryId === MINI_ALL_CATEGORY) {
+        return translateOrFallback('selection.miniexp.categories.all', fallbackText ?? 'すべて');
+    }
+    const fallback = fallbackText ?? (categoryId || MINI_FALLBACK_CATEGORY_ID);
+    return translateOrFallback(`selection.miniexp.categories.${categoryId}`, fallback);
+}
+
+function findMiniGameDefinitionById(id, manifest = __miniManifest) {
+    if (!id) return null;
+    const list = Array.isArray(manifest) ? manifest : [];
+    const found = list.find((entry) => entry && entry.id === id);
+    if (found) return found;
+    if (__miniGameRegistry && Object.prototype.hasOwnProperty.call(__miniGameRegistry, id)) {
+        return __miniGameRegistry[id];
+    }
+    return null;
+}
+
+function resolveMiniExpPlaceholderText(state, manifest = __miniManifest) {
+    const mode = state?.mode || 'default';
+    switch (mode) {
+        case 'loading':
+            return translateOrFallback('selection.miniexp.placeholder.loading', '読み込み中...');
+        case 'load-error':
+            return translateOrFallback('selection.miniexp.placeholder.loadFailed', '読み込みに失敗しました。');
+        case 'prompt-category':
+            return translateOrFallback('selection.miniexp.placeholder.chooseFromCategory', 'カテゴリからゲームを選んでください。');
+        case 'game-loading':
+            return translateOrFallback('selection.miniexp.placeholder.gameLoading', 'ミニゲームを読み込んでいます…');
+        case 'game-load-error':
+            return translateOrFallback('selection.miniexp.placeholder.gameLoadFailed', 'ミニゲームのロードに失敗しました。');
+        case 'game-start-error':
+            return translateOrFallback('selection.miniexp.placeholder.gameStartFailed', 'ミニゲームの開始に失敗しました。');
+        case 'selected': {
+            const targetId = state?.data?.id || miniExpState.selected;
+            const manifestRef = manifest || __miniManifest;
+            const def = findMiniGameDefinitionById(targetId, manifestRef);
+            const resolvedName = resolveMiniGameText(def, 'name') || state?.data?.fallbackName || (targetId ? String(targetId) : '');
+            const fallbackFn = () => {
+                const base = resolvedName || state?.data?.fallbackName || (targetId ? String(targetId) : '');
+                if (!base) return 'ミニゲームを選択しました。';
+                return `${base} を選択しました。`;
+            };
+            return translateOrFallback('selection.miniexp.placeholder.selected', fallbackFn, { name: resolvedName });
+        }
+        default:
+            return translateOrFallback('selection.miniexp.placeholder.chooseSequence', 'カテゴリ→ゲームの順に選んでください。');
+    }
+}
+
+function applyMiniExpPlaceholderState(manifest = __miniManifest) {
+    if (!miniexpPlaceholder) return;
+    miniexpPlaceholder.textContent = resolveMiniExpPlaceholderText(miniExpPlaceholderState, manifest);
+}
+
+function setMiniExpPlaceholderState(mode, data = null, manifest = __miniManifest) {
+    miniExpPlaceholderState.mode = mode || 'default';
+    miniExpPlaceholderState.data = data || null;
+    applyMiniExpPlaceholderState(manifest);
+}
+
 async function loadMiniManifestOnce() {
     if (__miniManifest) return __miniManifest;
     // 1) すでに JS マニフェストが読み込まれていればそれを採用
@@ -17094,36 +17247,75 @@ async function loadMiniManifestOnce() {
     } catch {}
     // 4) フォールバック（内蔵サンプル）
     __miniManifest = [
-        { id: 'othello',   name: 'オセロ',       description: '石をひっくり返してEXP', version: '0.1.0', category: 'ボード' },
-        { id: 'snake',     name: 'スネーク',     description: '餌でEXP',             version: '0.1.0', category: 'アクション' },
-        { id: 'breakout',  name: 'ブロック崩し', description: 'ブロック破壊でEXP',     version: '0.1.0', category: 'アクション' },
-        { id: 'pong',      name: 'ピンポン',     description: '勝利でEXP',           version: '0.1.0', category: 'アクション' },
-        { id: 'same',      name: 'セイムゲーム', description: 'まとめ消しでEXP',       version: '0.1.0', category: 'パズル' },
-        { id: 'match3',    name: 'マッチ3',       description: 'マッチ/連鎖でEXP',     version: '0.1.0', category: 'パズル' },
+        {
+            id: 'othello',
+            name: 'オセロ',
+            nameKey: 'selection.miniexp.games.othello.name',
+            description: '石をひっくり返してEXP',
+            descriptionKey: 'selection.miniexp.games.othello.description',
+            version: '0.1.0',
+            category: 'ボード',
+            categories: ['ボード'],
+            categoryIds: ['board']
+        },
+        {
+            id: 'snake',
+            name: 'スネーク',
+            nameKey: 'selection.miniexp.games.snake.name',
+            description: '餌でEXP',
+            descriptionKey: 'selection.miniexp.games.snake.description',
+            version: '0.1.0',
+            category: 'アクション',
+            categories: ['アクション'],
+            categoryIds: ['action']
+        },
+        {
+            id: 'breakout',
+            name: 'ブロック崩し',
+            nameKey: 'selection.miniexp.games.breakout.name',
+            description: 'ブロック破壊でEXP',
+            descriptionKey: 'selection.miniexp.games.breakout.description',
+            version: '0.1.0',
+            category: 'アクション',
+            categories: ['アクション'],
+            categoryIds: ['action']
+        },
+        {
+            id: 'pong',
+            name: 'ピンポン',
+            nameKey: 'selection.miniexp.games.pong.name',
+            description: '勝利でEXP',
+            descriptionKey: 'selection.miniexp.games.pong.description',
+            version: '0.1.0',
+            category: 'アクション',
+            categories: ['アクション'],
+            categoryIds: ['action']
+        },
+        {
+            id: 'same',
+            name: 'セイムゲーム',
+            nameKey: 'selection.miniexp.games.same.name',
+            description: 'まとめ消しでEXP',
+            descriptionKey: 'selection.miniexp.games.same.description',
+            version: '0.1.0',
+            category: 'パズル',
+            categories: ['パズル'],
+            categoryIds: ['puzzle']
+        },
+        {
+            id: 'match3',
+            name: 'マッチ3',
+            nameKey: 'selection.miniexp.games.match3.name',
+            description: 'マッチ/連鎖でEXP',
+            descriptionKey: 'selection.miniexp.games.match3.description',
+            version: '0.1.0',
+            category: 'パズル',
+            categories: ['パズル'],
+            categoryIds: ['puzzle']
+        },
     ];
     return __miniManifest;
 }
-function normalizeCategories(def) {
-    try {
-        const c = def?.categories ?? def?.category;
-        if (!c) return ['その他'];
-        if (Array.isArray(c)) return c.length ? c.map(x=>String(x)) : ['その他'];
-        return [String(c)];
-    } catch { return ['その他']; }
-}
-
-function buildCategoryMap(manifest) {
-    const map = new Map();
-    for (const def of manifest || []) {
-        for (const cat of normalizeCategories(def)) {
-            const key = cat || 'その他';
-            if (!map.has(key)) map.set(key, []);
-            map.get(key).push(def);
-        }
-    }
-    return map;
-}
-
 function normalizeMiniExpDisplayMode(mode) {
     const fallback = 'detail';
     if (!mode) return fallback;
@@ -17145,7 +17337,8 @@ function renderMiniExpDisplayModes(manifest) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'display-btn' + (current === opt.id ? ' active' : '');
-        btn.textContent = opt.label;
+        const fallbackLabel = MINI_EXP_DISPLAY_MODE_FALLBACK_LABELS[opt.id] || opt.id;
+        btn.textContent = translateOrFallback(`selection.miniexp.displayModes.${opt.id}`, fallbackLabel);
         btn.addEventListener('click', () => {
             if (miniExpState.displayMode === opt.id) return;
             miniExpState.displayMode = opt.id;
@@ -17159,39 +17352,57 @@ function renderMiniExpDisplayModes(manifest) {
 
 function renderMiniExpCategories(manifest) {
     if (!miniexpCatList) return;
+    const list = manifest || __miniManifest || [];
+    const catMap = buildCategoryMap(list);
+    const categories = Array.from(catMap.entries()).map(([id, info]) => ({
+        id,
+        fallback: info?.fallback || id
+    }));
+    const availableIds = new Set(categories.map((cat) => cat.id));
+    const current = miniExpState.category || MINI_ALL_CATEGORY;
+    if (current !== MINI_ALL_CATEGORY && !availableIds.has(current)) {
+        miniExpState.category = MINI_ALL_CATEGORY;
+    }
+    categories.sort((a, b) => {
+        const labelA = resolveMiniExpCategoryLabel(a.id, a.fallback);
+        const labelB = resolveMiniExpCategoryLabel(b.id, b.fallback);
+        return localeCompareLocalized(labelA, labelB);
+    });
     miniexpCatList.innerHTML = '';
-    const catMap = buildCategoryMap(manifest);
-    // 先頭に「すべて」
-    const cats = ['すべて', ...Array.from(catMap.keys()).sort((a, b) => localeCompareLocalized(a, b))];
-    const sel = miniExpState.category || MINI_ALL_CATEGORY;
-    const toKey = (label) => label === 'すべて' ? MINI_ALL_CATEGORY : label;
-    for (const label of cats) {
+    const renderButton = (category) => {
+        const id = category.id;
+        const fallbackLabel = category.fallback || (id === MINI_ALL_CATEGORY ? 'すべて' : id);
+        const label = resolveMiniExpCategoryLabel(id, fallbackLabel);
         const btn = document.createElement('button');
-        btn.className = 'cat-btn' + ((sel === toKey(label)) ? ' active' : '');
+        btn.className = 'cat-btn' + ((miniExpState.category || MINI_ALL_CATEGORY) === id ? ' active' : '');
         btn.textContent = label;
         btn.addEventListener('click', () => {
-            miniExpState.category = toKey(label);
-            renderMiniExpCategories(manifest);
-            renderMiniExpList(manifest);
-            // カテゴリ変更時、選択中ゲームがカテゴリ外なら未選択化
+            if (miniExpState.category === id) return;
+            miniExpState.category = id;
+            renderMiniExpCategories(list);
+            renderMiniExpList(list);
             if (miniExpState.selected) {
-                const list = getFilteredManifest(manifest);
-                if (!list.find(x=>x.id===miniExpState.selected)) {
+                const filtered = getFilteredManifest(list);
+                if (!filtered.find((entry) => entry.id === miniExpState.selected)) {
                     miniExpState.selected = null;
-                    if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'カテゴリからゲームを選んでください。';
+                    setMiniExpPlaceholderState('prompt-category', null, list);
                     renderMiniExpRecords();
+                } else {
+                    applyMiniExpPlaceholderState(list);
                 }
             }
             saveAll();
         });
         miniexpCatList.appendChild(btn);
-    }
+    };
+    renderButton({ id: MINI_ALL_CATEGORY, fallback: 'すべて' });
+    categories.forEach(renderButton);
 }
 
 function getFilteredManifest(manifest) {
     const sel = miniExpState.category || MINI_ALL_CATEGORY;
     if (sel === MINI_ALL_CATEGORY) return manifest || [];
-    return (manifest || []).filter(def => normalizeCategories(def).includes(sel));
+    return (manifest || []).filter(def => getMiniGameCategoryIds(def).includes(sel));
 }
 
 function renderMiniExpList(manifest) {
@@ -17204,17 +17415,22 @@ function renderMiniExpList(manifest) {
     const filtered = getFilteredManifest(list);
     if (!filtered || filtered.length === 0) {
         const p = document.createElement('div');
-        p.textContent = '該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。';
+        p.textContent = translateOrFallback('selection.miniexp.list.empty', '該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。');
         miniexpList.appendChild(p);
         return;
     }
+    const selectLabel = translateOrFallback('selection.miniexp.actions.select', '選択');
+    const selectedLabel = translateOrFallback('selection.miniexp.actions.selected', '選択中');
     filtered.forEach(def => {
         const isSelected = miniExpState.selected === def.id;
-        const name = def.name || def.id;
+        const name = resolveMiniGameText(def, 'name') || def.id;
+        const description = resolveMiniGameText(def, 'description');
         const selectGame = () => {
             miniExpState.selected = def.id;
             renderMiniExpList(list);
-            if (miniexpPlaceholder) miniexpPlaceholder.textContent = `${name} を選択しました。`;
+            const selectedDef = findMiniGameDefinitionById(def.id, list) || def;
+            const resolvedName = resolveMiniGameText(selectedDef, 'name') || def.id;
+            setMiniExpPlaceholderState('selected', { id: def.id, fallbackName: resolvedName }, list);
             renderMiniExpRecords();
             saveAll();
         };
@@ -17222,11 +17438,11 @@ function renderMiniExpList(manifest) {
             const card = document.createElement('div');
             card.className = 'miniexp-card' + (isSelected ? ' selected' : '');
             const h = document.createElement('h4'); h.textContent = name;
-            const d = document.createElement('div'); d.className = 'desc'; d.textContent = def.description || '';
+            const d = document.createElement('div'); d.className = 'desc'; d.textContent = description || '';
             const m = document.createElement('div'); m.className = 'meta'; m.textContent = `v${def.version||'0.0.0'} ${def.author?(' / '+def.author):''}`;
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.textContent = isSelected ? '選択中' : '選択';
+            btn.textContent = isSelected ? selectedLabel : selectLabel;
             btn.addEventListener('click', selectGame);
             card.appendChild(h);
             card.appendChild(d);
@@ -17238,32 +17454,54 @@ function renderMiniExpList(manifest) {
             btn.type = 'button';
             btn.className = 'miniexp-entry' + (isSelected ? ' selected' : '');
             btn.textContent = name;
-            if (def.description) btn.title = def.description;
+            if (description) btn.title = description;
             btn.addEventListener('click', selectGame);
             miniexpList.appendChild(btn);
         }
     });
 }
 
+document.addEventListener('app:rerender', () => {
+    if (__miniExpInited) {
+        renderMiniExpCategories(__miniManifest);
+        renderMiniExpDisplayModes(__miniManifest);
+        renderMiniExpList(__miniManifest);
+    }
+    applyMiniExpPlaceholderState(__miniManifest);
+});
+
 async function initMiniExpUI() {
     try {
-        if (miniexpPlaceholder) miniexpPlaceholder.textContent = '読み込み中...';
+        setMiniExpPlaceholderState('loading');
         const list = await loadMiniManifestOnce();
         // 初回表示時にカテゴリ→ゲームの順で描画
         renderMiniExpCategories(list);
         miniExpState.displayMode = normalizeMiniExpDisplayMode(miniExpState.displayMode);
         renderMiniExpDisplayModes(list);
         renderMiniExpList(list);
-        if (miniexpPlaceholder && miniExpState.selected) {
+        if (miniExpState.selected) {
             const sel = list.find(x=>x.id===miniExpState.selected);
-            if (sel) miniexpPlaceholder.textContent = `${sel.name||sel.id} を選択しました。`;
-            else miniexpPlaceholder.textContent = '左からミニゲームを選んでください。';
+            if (sel) {
+                const fallbackName = resolveMiniGameText(sel, 'name') || sel.id;
+                setMiniExpPlaceholderState('selected', { id: sel.id, fallbackName }, list);
+            } else {
+                miniExpState.selected = null;
+                if (miniExpState.category && miniExpState.category !== MINI_ALL_CATEGORY) {
+                    setMiniExpPlaceholderState('prompt-category', null, list);
+                } else {
+                    setMiniExpPlaceholderState('default', null, list);
+                }
+            }
             renderMiniExpRecords();
-        } else if (miniexpPlaceholder) {
-            miniexpPlaceholder.textContent = 'カテゴリ→ゲームの順に選んでください。';
+        } else {
+            if (miniExpState.category && miniExpState.category !== MINI_ALL_CATEGORY) {
+                setMiniExpPlaceholderState('prompt-category', null, list);
+            } else {
+                setMiniExpPlaceholderState('default', null, list);
+            }
         }
     } catch (e) {
-        if (miniexpPlaceholder) miniexpPlaceholder.textContent = '読み込みに失敗しました。';
+        setMiniExpPlaceholderState('load-error');
     }
 }
 
@@ -17294,16 +17532,30 @@ function rejectMiniGameWaiters(id, error) {
 
 window.registerMiniGame = function(def) {
     if (!def || !def.id) return;
-    __miniGameRegistry[def.id] = def;
+    const existing = __miniGameRegistry[def.id] || {};
+    const merged = Object.assign({}, existing, def);
+    __miniGameRegistry[def.id] = merged;
+    if (Array.isArray(__miniManifest)) {
+        const idx = __miniManifest.findIndex(entry => entry && entry.id === def.id);
+        if (idx >= 0) {
+            __miniManifest[idx] = Object.assign({}, __miniManifest[idx], merged);
+        }
+    }
+    if (__miniExpInited) {
+        renderMiniExpCategories(__miniManifest);
+        renderMiniExpDisplayModes(__miniManifest);
+        renderMiniExpList(__miniManifest);
+        applyMiniExpPlaceholderState(__miniManifest);
+    }
     const list = __miniGameWaiters[def.id];
     if (!list) return;
     list.forEach(entry => {
         try {
             if (entry && typeof entry === 'object') {
                 if (entry.timer) clearTimeout(entry.timer);
-                entry.resolve && entry.resolve(def);
+                entry.resolve && entry.resolve(merged);
             } else if (typeof entry === 'function') {
-                entry(def);
+                entry(merged);
             }
         } catch {}
     });
@@ -18212,17 +18464,17 @@ async function startSelectedMiniGame() {
     const def = list.find(x => x.id === miniExpState.selected);
     if (!def) return;
     if (miniexpStartBtn) miniexpStartBtn.disabled = true;
-    if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームを読み込んでいます…';
+    setMiniExpPlaceholderState('game-loading');
     let mod = null;
     try {
         mod = await loadMiniGameScript(def);
     } catch (err) {
-        if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームのロードに失敗しました。';
+        setMiniExpPlaceholderState('game-load-error');
         if (miniexpStartBtn) miniexpStartBtn.disabled = false;
         return;
     }
     if (!mod || typeof mod.create !== 'function') {
-        if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームのロードに失敗しました。';
+        setMiniExpPlaceholderState('game-load-error');
         if (miniexpStartBtn) miniexpStartBtn.disabled = false;
         return;
     }
@@ -18261,13 +18513,15 @@ async function startSelectedMiniGame() {
             return awardXpFromMini(n, payload);
         }, createOptions);
     } catch (err) {
-        if (miniexpPlaceholder) miniexpPlaceholder.textContent = 'ミニゲームの開始に失敗しました。';
+        setMiniExpPlaceholderState('game-start-error');
         if (miniexpStartBtn) miniexpStartBtn.disabled = false;
         return;
     }
     try { runtime.start(); } catch {}
     __currentMini = runtime;
     __miniPaused = false;
+    const fallbackName = resolveMiniGameText(def, 'name') || def.id;
+    setMiniExpPlaceholderState('selected', { id: def.id, fallbackName }, list);
     if (miniexpPauseBtn) { miniexpPauseBtn.disabled = false; miniexpPauseBtn.textContent = '一時停止'; }
     if (miniexpRestartBtn) miniexpRestartBtn.disabled = false;
     if (miniexpQuitBtn) miniexpQuitBtn.disabled = false;

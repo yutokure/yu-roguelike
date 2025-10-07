@@ -46,22 +46,59 @@
         <section>
             <h2>6.5 Exploration Toolbar</h2>
             <p>
-                The exploration screen displays a toolbar across the top. From left to right the buttons are
-                <em>Return</em>, <em>Items</em>, <em>Skills</em>, <em>Status</em>, <em>Import</em>, and <em>Export</em>.
-                Once the SP system is unlocked, the <strong>Skills</strong> button lights up and opens a panel where you can
-                check your current SP and skill list. On mobile the toolbar supports horizontal scrolling—swipe left or right
-                if you cannot see a button you need.
+                A toolbar spans the top of the exploration screen. From left to right you will see the
+                <em>Return</em>, <em>Items</em>, <em>Skills</em>, <em>Status</em>, <em>Import</em>, and <em>Export</em> buttons,
+                the dungeon-name visibility toggle, the <em>Interactive</em> sandbox button, the <em>God Console</em> button,
+                and the floor indicator. Once the SP system is unlocked the <strong>Skills</strong> button highlights so you
+                can open the modal and review your abilities. The toolbar supports horizontal scrolling on mobile devices—
+                swipe left or right if any control is hidden off-screen.
             </p>
+            <figure class="toolbar-diagram">
+                <figcaption>Toolbar layout with Godhood unlocked</figcaption>
+                <ol>
+                    <li>Return</li>
+                    <li>Items</li>
+                    <li>Skills</li>
+                    <li>Status</li>
+                    <li>Import</li>
+                    <li>Export</li>
+                    <li>Dungeon-name toggle</li>
+                    <li>Interactive</li>
+                    <li>God Console</li>
+                    <li>Floor indicator</li>
+                </ol>
+            </figure>
             <ul>
-                <li><strong>Skills button:</strong> Opens and closes the skill modal. Use it to review available skills, the
-                    remaining SP, and active durations.</li>
+                <li><strong>Skills button:</strong> Opens and closes the skill modal to review available skills, remaining SP,
+                    and active durations.</li>
                 <li><strong>Items button:</strong> Opens the item modal for consuming or offering healing and enhancement items.
-                    The auto-item toggle in the top-right corner of the modal enables automatic use of the configured
-                    potion or food whenever the conditions are met.</li>
+                    The auto-item toggle in the top-right corner of the modal enables automatic use of the configured potion
+                    or food whenever the conditions are met.</li>
                 <li><strong>Status button:</strong> Shows your current attributes, status ailments, and active skill effects.
-                    The card overlay indicates whether auto-use is on or off so that you can confirm the configuration during
-                    a run.</li>
+                    The card overlay indicates whether auto-use is on or off so you can confirm the configuration during a
+                    run.</li>
+                <li><strong>Interactive button:</strong> Opens the sandbox interactive panel, where you can toggle
+                    <em>God Mode</em> (invulnerability) and <em>No Clip</em> (walk through walls), fully heal HP/SP/satiety,
+                    restore default stats, edit parameters via numeric inputs, and place tiles or domain crystals instantly.
+                    It mirrors the God Console toggle and remains visible whenever sandbox mode is active.</li>
+                <li><strong>God Console button:</strong> Toggles a developer-oriented panel for running scripts against the game
+                    state. The panel offers close controls, <em>Apply Code</em>, <em>Reset Input</em>, and <em>Enter Sandbox
+                    Mode</em> actions, and exposes a <code>context</code> object for updating UI or player values programmatically.</li>
             </ul>
+            <p>
+                The <em>Interactive</em> button appears while you explore a sandbox run or whenever your player level is 1026+
+                and at least 100 levels above the dungeon recommendation. Meeting those criteria automatically enables the
+                toggle and logs the panel usage in the statistics tracker. Clearing the NESTED 99999999 dungeon to attain
+                Anos-level godhood makes the button permanently available during expeditions and lets you flip it directly from
+                the God Console.
+            </p>
+            <p>
+                The God Console itself activates after you unlock godhood and only appears on the toolbar while the game view is
+                visible. The log announces “The God Console and sandbox toggle are now always available.” when this happens, and
+                subsequent openings inject a sample snippet to help you start scripting. The console’s <em>Enter Sandbox Mode</em>
+                control drives the same interactive toggle, so you can test difficult encounters and apply code tweaks without
+                leaving the modal.
+            </p>
         </section>
         <section>
             <h2>6.6 Status Card and SP / Satiety Bars</h2>

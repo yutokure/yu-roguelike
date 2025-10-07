@@ -121,6 +121,27 @@
                 <li>In dungeons with a recommended level of 300 or higher, satiety drops by 1 per turn. At 0 you take hunger
                     damage equal to 10% of your max HP each turn, so replenish your gauge once it falls below 30%.</li>
             </ol>
+            <h3>Interactive Tools &amp; the God Console</h3>
+            <p>
+                The <em>Interactive</em> and <em>God Console</em> buttons on the toolbar only appear under specific circumstances.
+                You can review their placement in <a href="ui.html" target="manual-content">Section 6.5: Exploration Toolbar</a>;
+                the notes below focus on when to expect them and how to use them effectively.
+            </p>
+            <ul>
+                <li><strong>Interactive:</strong> Always visible during sandbox runs. In standard dungeons it unlocks when your
+                    player level is 1026 or higher <em>and</em> at least 100 levels above the recommendation. Opening the panel
+                    records an extra entry in the sandbox session statistics.</li>
+                <li><strong>God Console:</strong> Appears after you clear the NESTED 99999999 dungeon and awaken Anos-level
+                    godhood. It is only shown while the game view is active, and the log confirms the permanent unlock the
+                    first time it becomes available.</li>
+            </ul>
+            <p>
+                The interactive panel lets you toggle God Mode (invulnerability) and No Clip (phase through walls), fully heal
+                HP/SP/satiety, edit stats directly, and place tiles, stairs, or domain crystals instantly. The God Console
+                executes scripts against the supplied <code>context</code> object so you can modify the player or UI, and its
+                <em>Enter Sandbox Mode</em> control flips the same interactive toggle. Combine both tools when testing high-level
+                content or building mods—you can safely stage scenarios and adjust data without leaving the run.
+            </p>
             <h4>Treasure Events and Golden Chests</h4>
             <p>
                 Standard chests spawn randomly on each floor but stop appearing once you are five levels above the

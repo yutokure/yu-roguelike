@@ -8062,6 +8062,137 @@
       }
     },
 
+    "minigame": {
+      "othello": {
+        "hud": {
+          "status": {
+            "ended": "Game Over",
+            "playerTurn": "Your turn (click to place)",
+            "aiTurn": "AI turn"
+          }
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to restart",
+          "result": {
+            "win": "You win!",
+            "loss": "You lose…",
+            "draw": "Draw"
+          }
+        },
+        "popup": {
+          "movePreview": "{flips} flips / approx +{xp} EXP"
+        }
+      },
+      "riichi_mahjong": {
+        "title": "Riichi Mahjong Lite",
+        "subtitle": "Play a single-hand riichi mahjong round against three AI opponents with riichi/tsumo/ron.",
+        "info": {
+          "roundLabel": "Round",
+          "dealerLabel": "Dealer",
+          "doraLabel": "Dora",
+          "remainingLabel": "Tiles left",
+          "riichiSticksLabel": "Riichi sticks",
+          "roundValue": "{seat} {round}",
+          "none": "None",
+          "doraLine": "Dora: {tiles}",
+          "potLine": "Sticks: {sticks} / Tiles left: {tiles}"
+        },
+        "buttons": {
+          "tsumo": "Tsumo",
+          "ron": "Ron",
+          "riichi": "Riichi",
+          "cancel": "Cancel"
+        },
+        "players": {
+          "youWithSeat": "You ({seat})",
+          "aiWithSeat": "AI {seat}"
+        },
+        "seats": {
+          "E": "East",
+          "S": "South",
+          "W": "West",
+          "N": "North"
+        },
+        "tiles": {
+          "suits": {
+            "m": "{rank} Man",
+            "p": "{rank} Pin",
+            "s": "{rank} Sou"
+          },
+          "honors": {
+            "E": "East",
+            "S": "South",
+            "W": "West",
+            "N": "North",
+            "P": "White",
+            "F": "Green",
+            "C": "Red"
+          }
+        },
+        "hud": {
+          "scoreValue": "{value} pts",
+          "tags": {
+            "dealer": "Dealer",
+            "riichi": "Riichi"
+          },
+          "waits": "Waits: {tiles}"
+        },
+        "yaku": {
+          "chiitoitsu": "Chiitoitsu",
+          "riichi": "Riichi",
+          "menzenTsumo": "Menzen Tsumo",
+          "tanyao": "Tanyao",
+          "dora": "Dora",
+          "yakuhai": "Yakuhai",
+          "pinfu": "Pinfu"
+        },
+        "fuReasons": {
+          "closedRon": "Closed ron +10",
+          "selfDraw": "Tsumo +2",
+          "seatWindPair": "Seat wind pair +2",
+          "roundWindPair": "Round wind pair +2",
+          "dragonPair": "Dragon pair +2",
+          "terminalKan": "Terminal triplet +8",
+          "middleTriplet": "Simple triplet +4",
+          "honorTriplet": "Honor triplet +8"
+        },
+        "result": {
+          "tsumoDealer": "Tsumo {value} all",
+          "tsumoNonDealer": "Tsumo dealer {dealer} / non-dealer {other}",
+          "ron": "Ron {value}"
+        },
+        "log": {
+          "roundStart": "--- {seat} {round} Dealer: {dealer} ---",
+          "doraIndicator": "Dora indicator: {indicator} → Dora {dora}",
+          "draw": "Draw: {tile}",
+          "riichiInsufficient": "Not enough points to declare riichi",
+          "riichiDeclaration": "Riichi declared! Placed a 1000-point stick.",
+          "discardPlayer": "Discard: {tile}",
+          "ronWin": "{player} won by ron with {tile}!",
+          "handWin": "{player} wins! {han} han {fu} fu {description}",
+          "yaku": "Yaku: {list}",
+          "riichiBonus": "Collected {sticks} riichi sticks (+{bonus})",
+          "drawRound": "Draw ({reason})",
+          "tenpaiList": "Tenpai: {list}",
+          "allNoten": "All players in noten",
+          "tenpaiSplit": "Distributed noten payments",
+          "finalResult": "Final result: {list}",
+          "tsumoWin": "{player} won by tsumo!",
+          "aiRiichi": "{player} declared riichi!",
+          "discardOther": "{player} discarded {tile}",
+          "drawReason": {
+            "exhaustive": "Exhaustive draw"
+          }
+        },
+        "rewards": {
+          "riichiDeclaration": "Riichi declaration",
+          "ronWin": "Ron win",
+          "tsumoWin": "Tsumo win",
+          "matchComplete": "Match complete"
+        }
+      }
+    },
     "achievements": {
       "categories": {
         "dungeon": "Dungeon",

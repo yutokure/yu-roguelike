@@ -59,6 +59,159 @@
         "bombSafe": "The bomb exploded but you took no damage!",
         "enemyAttackGuarded": "The domain effect protected you from damage!",
         "enemyAttackReversed": "The domain effect turned the enemy attack into healing! Restored {amount} HP."
+      },
+      "skills": {
+        "cannotUse": "Cannot use skill: {reason}",
+        "notEnoughSp": "Not enough SP.",
+        "genericKill": "Defeated the enemy!",
+        "effects": {
+          "applied": "{label} activated! ({turns} turns)",
+          "gimmickNullifyExpired": "The gimmick nullifier wore off.",
+          "statusGuardExpired": "The status barrier faded.",
+          "enemyNullifyExpired": "The effect seal wore off.",
+          "sureHitExpired": "The sure-hit effect ended."
+        },
+        "breakWall": {
+          "noWall": "There is no breakable wall ahead.",
+          "notBreakable": "That wall could not be destroyed.",
+          "success": "SP Skill: The wall was shattered!"
+        },
+        "buildWall": {
+          "noFloor": "There is no floor ahead to transform into a wall.",
+          "cannotBuild": "You cannot create a wall there.",
+          "success": "SP Skill: A wall was created!"
+        },
+        "gimmickNullify": {
+          "tooHard": "This dungeon is too difficult—the gimmick nullifier has no effect..."
+        },
+        "stairWarp": {
+          "noDestination": "There is no safe warp destination near the stairs.",
+          "success": "Warped next to the stairs!"
+        },
+        "strongStrike": {
+          "noTarget": "No enemy to unleash the power strike on.",
+          "sureHitFailed": "The enemy's level was too high—the sure hit failed...",
+          "miss": "The power strike missed.",
+          "damage": "Power strike dealt {damage} damage!",
+          "kill": "Defeated the enemy with a power strike!"
+        },
+        "rangedAttack": {
+          "noTarget": "No enemy in range for the ranged attack.",
+          "miss": "The ranged attack missed...",
+          "damage": "Ranged attack dealt {damage} damage!",
+          "kill": "Defeated the enemy with a ranged attack!"
+        },
+        "areaSkill": {
+          "noTargets": "No enemies in range.",
+          "activated": "Used {skillName}!",
+          "sureHitFailed": "High-level enemies resisted the effect...",
+          "kill": "Defeated an enemy with {skillName}!",
+          "noneHit": "It hit no one..."
+        },
+        "floorSkill": {
+          "noTargets": "No enemies to target.",
+          "activated": "Unleashed {skillName}!",
+          "sureHitFailed": "High-level enemies were unaffected...",
+          "kill": "Defeated an enemy with {skillName}!",
+          "noneHit": "It dealt damage to no one."
+        },
+        "ruinAnnihilation": {
+          "start": "Unleashed the power of ruin!",
+          "kill": "Obliterated the enemy with ruinous flames!",
+          "resisted": "Some high-level enemies resisted the power of ruin...",
+          "cleared": "The dungeon's walls and gimmicks vanished!"
+        }
+      }
+    },
+
+    "skills": {
+      "meta": {
+        "currentSp": "Current SP: {value}",
+        "costAndCurrent": "SP Cost: {cost} / Current: {current}",
+        "reasonSuffix": " ({reason})",
+        "remainingTurns": "Active: {turns} turns left",
+        "use": "Use"
+      },
+      "availability": {
+        "unlockLevel": "Unlocks at Lv100",
+        "maxSpShortage": "SP cap too low",
+        "notEnoughSp": "Not enough SP",
+        "tooHard": "Ineffective at this difficulty",
+        "noWallAhead": "No wall ahead",
+        "noFloorAhead": "No floor ahead",
+        "noRangedTarget": "No reachable target",
+        "noFrontEnemy": "No enemy in front",
+        "noAreaTargets": "No enemies in range",
+        "noEnemies": "No enemies present",
+        "noWarpDestination": "No warp destination",
+        "notYourTurn": "Not your turn",
+        "paralyzed": "Paralyzed"
+      },
+      "effects": {
+        "gimmickNullify": { "label": "Gimmick Nullify" },
+        "statusGuard": { "label": "Status Barrier" },
+        "enemyNullify": { "label": "Effect Seal" },
+        "sureHit": { "label": "Sure Hit" }
+      },
+      "breakWall": {
+        "name": "Break Wall",
+        "description": "Destroy the wall directly in front of you."
+      },
+      "buildWall": {
+        "name": "Create Wall",
+        "description": "Convert the floor in front of you into a wall."
+      },
+      "rangedAttack": {
+        "name": "Ranged Attack",
+        "description": "Strike enemies in a straight line ahead with a sure-hit attack dealing one-third normal damage. Blocked by walls."
+      },
+      "gimmickNullify": {
+        "name": "Gimmick Nullifier",
+        "description": "Nullify dungeon gimmicks for 10 turns. Ineffective if the recommended level exceeds yours by 8 or more."
+      },
+      "statusGuard": {
+        "name": "Status Barrier",
+        "description": "Block all status ailments for 10 turns."
+      },
+      "enemyNullify": {
+        "name": "Effect Seal",
+        "description": "Nullify special enemy effects for 10 turns."
+      },
+      "sureHit": {
+        "name": "Sure Hit",
+        "description": "Guarantee normal attacks hit for 10 turns. Ineffective against enemies 8+ levels above you."
+      },
+      "stairWarp": {
+        "name": "Stair Warp",
+        "description": "Warp to a tile adjacent to the stairs."
+      },
+      "strongStrike": {
+        "name": "Power Strike",
+        "description": "Deliver a sure-hit attack dealing 3× damage to the enemy in front."
+      },
+      "areaAttack": {
+        "name": "Area Attack",
+        "description": "Deal normal area damage to nearby enemies."
+      },
+      "surehitArea": {
+        "name": "Sure-Hit Area Attack",
+        "description": "Deal sure-hit area damage to nearby enemies."
+      },
+      "strongArea": {
+        "name": "Power Area Attack",
+        "description": "Deal 3× area damage to nearby enemies."
+      },
+      "surehitStrongArea": {
+        "name": "Sure-Hit Power Area",
+        "description": "Deal sure-hit, 3× area damage to nearby enemies."
+      },
+      "surehitFloor": {
+        "name": "Sure-Hit Floor Attack",
+        "description": "Strike every enemy on the floor with a sure-hit attack."
+      },
+      "ruinAnnihilation": {
+        "name": "Ruin Annihilation",
+        "description": "Unleash 3× sure-hit damage to all enemies, erase walls and gimmicks, and claim any chests. Ineffective on high-level foes."
       }
     },
 
@@ -151,6 +304,12 @@
       "miniexp": {
         "categories": "Category list",
         "displayModes": "Display modes",
+        "displayMode": {
+          "tile": "Tile",
+          "list": "List",
+          "wrap": "Wrap",
+          "detail": "Detail"
+        },
         "list": "Mini-game list",
         "category": {
           "all": "All",

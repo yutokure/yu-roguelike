@@ -59,6 +59,159 @@
         "bombSafe": "爆弾が爆発したがダメージは受けなかった！",
         "enemyAttackGuarded": "領域効果に守られ、ダメージを受けなかった！",
         "enemyAttackReversed": "領域効果で敵の攻撃が回復に変わった！HPが{amount}回復"
+      },
+      "skills": {
+        "cannotUse": "スキルを使えない：{reason}",
+        "notEnoughSp": "SPが不足している。",
+        "genericKill": "敵を倒した！",
+        "effects": {
+          "applied": "{label}の効果が発動！（{turns}ターン）",
+          "gimmickNullifyExpired": "ギミック無効化の効果が切れた。",
+          "statusGuardExpired": "状態異常無効の効果が切れた。",
+          "enemyNullifyExpired": "特殊効果無効の効果が切れた。",
+          "sureHitExpired": "必中攻撃の効果が切れた。"
+        },
+        "breakWall": {
+          "noWall": "目の前に破壊できる壁がない。",
+          "notBreakable": "その壁は破壊できなかった。",
+          "success": "SPスキル：壁を粉砕した！"
+        },
+        "buildWall": {
+          "noFloor": "目の前に壁へ変換できる床がない。",
+          "cannotBuild": "そこには壁を生成できない。",
+          "success": "SPスキル：壁を生成した！"
+        },
+        "gimmickNullify": {
+          "tooHard": "このダンジョンではギミック無効化の効果が及ばない…"
+        },
+        "stairWarp": {
+          "noDestination": "階段の周囲に安全なワープ先がない。",
+          "success": "階段の前へ瞬間移動した！"
+        },
+        "strongStrike": {
+          "noTarget": "強攻撃を放つ敵がいない。",
+          "sureHitFailed": "敵のレベルが高すぎて必中が効かなかった…",
+          "miss": "強攻撃は外れてしまった。",
+          "damage": "強攻撃で{damage}のダメージ！",
+          "kill": "強攻撃で敵を倒した！"
+        },
+        "rangedAttack": {
+          "noTarget": "前方に遠隔攻撃が届く敵がいない。",
+          "miss": "遠隔攻撃は外れてしまった…。",
+          "damage": "遠隔攻撃で{damage}のダメージ！",
+          "kill": "遠隔攻撃で敵を倒した！"
+        },
+        "areaSkill": {
+          "noTargets": "範囲内に敵がいない。",
+          "activated": "{skillName}を発動した！",
+          "sureHitFailed": "高レベルの敵には効果が薄かった…",
+          "kill": "{skillName}で敵を倒した！",
+          "noneHit": "誰にも当たらなかった…"
+        },
+        "floorSkill": {
+          "noTargets": "攻撃対象となる敵がいない。",
+          "activated": "{skillName}を放った！",
+          "sureHitFailed": "高レベルの敵には効果がなかった…",
+          "kill": "{skillName}で敵を倒した！",
+          "noneHit": "誰にもダメージを与えられなかった。"
+        },
+        "ruinAnnihilation": {
+          "start": "破滅の力を解き放った！",
+          "kill": "破滅の炎で敵を消し飛ばした！",
+          "resisted": "一部の高レベルの敵には破滅の力が届かなかった…",
+          "cleared": "ダンジョンの壁とギミックが消え去った！"
+        }
+      }
+    },
+
+    "skills": {
+      "meta": {
+        "currentSp": "現在のSP: {value}",
+        "costAndCurrent": "消費SP: {cost} / 所持: {current}",
+        "reasonSuffix": " ({reason})",
+        "remainingTurns": "現在: 残り{turns}ターン",
+        "use": "使用"
+      },
+      "availability": {
+        "unlockLevel": "Lv100で解放",
+        "maxSpShortage": "SP上限不足",
+        "notEnoughSp": "SPが足りない",
+        "tooHard": "高難度で無効",
+        "noWallAhead": "前方に壁なし",
+        "noFloorAhead": "前方に床なし",
+        "noRangedTarget": "届く敵なし",
+        "noFrontEnemy": "目の前に敵なし",
+        "noAreaTargets": "範囲内に敵なし",
+        "noEnemies": "敵がいない",
+        "noWarpDestination": "ワープ先なし",
+        "notYourTurn": "自分のターンではない",
+        "paralyzed": "麻痺中"
+      },
+      "effects": {
+        "gimmickNullify": { "label": "ギミック無効" },
+        "statusGuard": { "label": "状態異常無効" },
+        "enemyNullify": { "label": "特殊効果無効" },
+        "sureHit": { "label": "必中攻撃" }
+      },
+      "breakWall": {
+        "name": "壁破壊",
+        "description": "目の前の壁を1つ破壊する。"
+      },
+      "buildWall": {
+        "name": "壁生成",
+        "description": "目の前の床を壁に変える。"
+      },
+      "rangedAttack": {
+        "name": "遠隔攻撃",
+        "description": "前方一直線上の敵に通常攻撃の1/3ダメージを必中で与える。壁で遮られる。"
+      },
+      "gimmickNullify": {
+        "name": "ギミック無効化",
+        "description": "10ターンの間ダンジョンギミックを無効化する。（推奨Lvが8以上高い場合は無効）"
+      },
+      "statusGuard": {
+        "name": "状態異常無効",
+        "description": "10ターンすべての状態異常を防ぐ。"
+      },
+      "enemyNullify": {
+        "name": "特殊効果封印",
+        "description": "10ターン特殊な敵の追加効果を無効化する。"
+      },
+      "sureHit": {
+        "name": "必中攻撃",
+        "description": "10ターン通常攻撃が必中になる。（Lv差8以上の敵には無効）"
+      },
+      "stairWarp": {
+        "name": "階段前ワープ",
+        "description": "階段の隣へワープする。"
+      },
+      "strongStrike": {
+        "name": "強攻撃",
+        "description": "目前の敵へ必中で威力3倍の攻撃。"
+      },
+      "areaAttack": {
+        "name": "範囲攻撃",
+        "description": "周囲の敵へ通常の範囲攻撃。"
+      },
+      "surehitArea": {
+        "name": "必中範囲攻撃",
+        "description": "周囲の敵へ必中の範囲攻撃。"
+      },
+      "strongArea": {
+        "name": "強範囲攻撃",
+        "description": "周囲の敵へ威力3倍の範囲攻撃。"
+      },
+      "surehitStrongArea": {
+        "name": "必中強範囲攻撃",
+        "description": "周囲の敵へ必中で威力3倍の範囲攻撃。"
+      },
+      "surehitFloor": {
+        "name": "必中全体攻撃",
+        "description": "フロア全体の敵へ必中の攻撃。"
+      },
+      "ruinAnnihilation": {
+        "name": "破滅全体攻撃",
+        "description": "全ての敵へ必中で威力3倍の攻撃＆壁やギミックを消し宝箱を獲得。（高Lv敵には無効）"
       }
     },
 
@@ -151,6 +304,12 @@
       "miniexp": {
         "categories": "カテゴリ一覧",
         "displayModes": "表示形式",
+        "displayMode": {
+          "tile": "タイル",
+          "list": "リスト",
+          "wrap": "羅列",
+          "detail": "詳細"
+        },
         "list": "ミニゲーム一覧",
         "category": {
           "all": "すべて",

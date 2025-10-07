@@ -1538,12 +1538,16 @@ const MINI_EXP_DISPLAY_MODES = Object.freeze([
     { id: 'wrap' },
     { id: 'detail' }
 ]);
-const MINI_EXP_DISPLAY_MODE_FALLBACK_LABELS = Object.freeze({
-    tile: 'タイル',
-    list: 'リスト',
-    wrap: '羅列',
-    detail: '詳細'
-});
+function resolveMiniExpDisplayModeLabel(modeId) {
+    const fallbackMap = {
+        tile: 'タイル',
+        list: 'リスト',
+        wrap: '羅列',
+        detail: '詳細'
+    };
+    const fallback = fallbackMap[modeId] || modeId;
+    return translateOrFallback(`selection.miniexp.displayMode.${modeId}`, fallback);
+}
 
 const ADVANCED_ENEMY_RECOMMENDED_LEVEL_THRESHOLD = 250;
 const ENEMY_EFFECT_SUPPRESSION_GAP = 5;
@@ -1562,29 +1566,73 @@ const skillState = {
 };
 
 const SKILL_EFFECT_DEFS = {
-    gimmickNullify: { id: 'gimmickNullify', label: 'ギミック無効', badgeClass: 'status-badge--skill status-badge--skill-gimmick', expireMessage: 'ギミック無効化の効果が切れた。' },
-    statusGuard: { id: 'statusGuard', label: '状態異常無効', badgeClass: 'status-badge--skill status-badge--skill-status', expireMessage: '状態異常無効の効果が切れた。' },
-    enemyNullify: { id: 'enemyNullify', label: '特殊効果無効', badgeClass: 'status-badge--skill status-badge--skill-enemy', expireMessage: '特殊効果無効の効果が切れた。' },
-    sureHit: { id: 'sureHit', label: '必中攻撃', badgeClass: 'status-badge--skill status-badge--skill-surehit', expireMessage: '必中攻撃の効果が切れた。' }
+    gimmickNullify: {
+        id: 'gimmickNullify',
+        labelKey: 'skills.effects.gimmickNullify.label',
+        label: 'ギミック無効',
+        badgeClass: 'status-badge--skill status-badge--skill-gimmick',
+        expireKey: 'messages.skills.effects.gimmickNullifyExpired',
+        expireMessage: 'ギミック無効化の効果が切れた。'
+    },
+    statusGuard: {
+        id: 'statusGuard',
+        labelKey: 'skills.effects.statusGuard.label',
+        label: '状態異常無効',
+        badgeClass: 'status-badge--skill status-badge--skill-status',
+        expireKey: 'messages.skills.effects.statusGuardExpired',
+        expireMessage: '状態異常無効の効果が切れた。'
+    },
+    enemyNullify: {
+        id: 'enemyNullify',
+        labelKey: 'skills.effects.enemyNullify.label',
+        label: '特殊効果無効',
+        badgeClass: 'status-badge--skill status-badge--skill-enemy',
+        expireKey: 'messages.skills.effects.enemyNullifyExpired',
+        expireMessage: '特殊効果無効の効果が切れた。'
+    },
+    sureHit: {
+        id: 'sureHit',
+        labelKey: 'skills.effects.sureHit.label',
+        label: '必中攻撃',
+        badgeClass: 'status-badge--skill status-badge--skill-surehit',
+        expireKey: 'messages.skills.effects.sureHitExpired',
+        expireMessage: '必中攻撃の効果が切れた。'
+    }
 };
 
 const SKILL_DEFINITIONS = [
-    { id: 'break-wall', name: '壁破壊', cost: 25, description: '目の前の壁を1つ破壊する。', action: useSkillBreakWall },
-    { id: 'build-wall', name: '壁生成', cost: 25, description: '目の前の床を壁に変える。', action: useSkillBuildWall },
-    { id: 'ranged-attack', name: '遠隔攻撃', cost: 20, description: '前方一直線上の敵に通常攻撃の1/3ダメージを必中で与える。壁で遮られる。', action: useSkillRangedAttack },
-    { id: 'gimmick-nullify', name: 'ギミック無効化', cost: 25, description: '10ターンの間ダンジョンギミックを無効化する。（推奨Lvが8以上高い場合は無効）', action: useSkillGimmickNullify },
-    { id: 'status-guard', name: '状態異常無効', cost: 25, description: '10ターンすべての状態異常を防ぐ。', action: useSkillStatusGuard },
-    { id: 'enemy-nullify', name: '特殊効果封印', cost: 50, description: '10ターン特殊な敵の追加効果を無効化する。', action: useSkillEnemyNullify },
-    { id: 'sure-hit', name: '必中攻撃', cost: 50, description: '10ターン通常攻撃が必中になる。（Lv差8以上の敵には無効）', action: useSkillSureHitBuff },
-    { id: 'stair-warp', name: '階段前ワープ', cost: 50, description: '階段の隣へワープする。', action: useSkillStairWarp },
-    { id: 'strong-strike', name: '強攻撃', cost: 50, description: '目前の敵へ必中で威力3倍の攻撃。', action: useSkillStrongStrike },
-    { id: 'area-attack', name: '範囲攻撃', cost: 75, description: '周囲の敵へ通常の範囲攻撃。', action: useSkillAreaAttack },
-    { id: 'surehit-area', name: '必中範囲攻撃', cost: 100, description: '周囲の敵へ必中の範囲攻撃。', action: useSkillSureHitAreaAttack },
-    { id: 'strong-area', name: '強範囲攻撃', cost: 100, description: '周囲の敵へ威力3倍の範囲攻撃。', action: useSkillStrongAreaAttack },
-    { id: 'surehit-strong-area', name: '必中強範囲攻撃', cost: 150, description: '周囲の敵へ必中で威力3倍の範囲攻撃。', action: useSkillSureHitStrongAreaAttack },
-    { id: 'surehit-floor', name: '必中全体攻撃', cost: 200, description: 'フロア全体の敵へ必中の攻撃。', action: useSkillSureHitFloorAttack },
-    { id: 'ruin-annihilation', name: '破滅全体攻撃', cost: 300, description: '全ての敵へ必中で威力3倍の攻撃＆壁やギミックを消し宝箱を獲得。（高Lv敵には無効）', action: useSkillRuinAnnihilation }
+    { id: 'break-wall', nameKey: 'skills.breakWall.name', nameFallback: '壁破壊', cost: 25, descriptionKey: 'skills.breakWall.description', descriptionFallback: '目の前の壁を1つ破壊する。', action: useSkillBreakWall },
+    { id: 'build-wall', nameKey: 'skills.buildWall.name', nameFallback: '壁生成', cost: 25, descriptionKey: 'skills.buildWall.description', descriptionFallback: '目の前の床を壁に変える。', action: useSkillBuildWall },
+    { id: 'ranged-attack', nameKey: 'skills.rangedAttack.name', nameFallback: '遠隔攻撃', cost: 20, descriptionKey: 'skills.rangedAttack.description', descriptionFallback: '前方一直線上の敵に通常攻撃の1/3ダメージを必中で与える。壁で遮られる。', action: useSkillRangedAttack },
+    { id: 'gimmick-nullify', nameKey: 'skills.gimmickNullify.name', nameFallback: 'ギミック無効化', cost: 25, descriptionKey: 'skills.gimmickNullify.description', descriptionFallback: '10ターンの間ダンジョンギミックを無効化する。（推奨Lvが8以上高い場合は無効）', action: useSkillGimmickNullify },
+    { id: 'status-guard', nameKey: 'skills.statusGuard.name', nameFallback: '状態異常無効', cost: 25, descriptionKey: 'skills.statusGuard.description', descriptionFallback: '10ターンすべての状態異常を防ぐ。', action: useSkillStatusGuard },
+    { id: 'enemy-nullify', nameKey: 'skills.enemyNullify.name', nameFallback: '特殊効果封印', cost: 50, descriptionKey: 'skills.enemyNullify.description', descriptionFallback: '10ターン特殊な敵の追加効果を無効化する。', action: useSkillEnemyNullify },
+    { id: 'sure-hit', nameKey: 'skills.sureHit.name', nameFallback: '必中攻撃', cost: 50, descriptionKey: 'skills.sureHit.description', descriptionFallback: '10ターン通常攻撃が必中になる。（Lv差8以上の敵には無効）', action: useSkillSureHitBuff },
+    { id: 'stair-warp', nameKey: 'skills.stairWarp.name', nameFallback: '階段前ワープ', cost: 50, descriptionKey: 'skills.stairWarp.description', descriptionFallback: '階段の隣へワープする。', action: useSkillStairWarp },
+    { id: 'strong-strike', nameKey: 'skills.strongStrike.name', nameFallback: '強攻撃', cost: 50, descriptionKey: 'skills.strongStrike.description', descriptionFallback: '目前の敵へ必中で威力3倍の攻撃。', action: useSkillStrongStrike },
+    { id: 'area-attack', nameKey: 'skills.areaAttack.name', nameFallback: '範囲攻撃', cost: 75, descriptionKey: 'skills.areaAttack.description', descriptionFallback: '周囲の敵へ通常の範囲攻撃。', action: useSkillAreaAttack },
+    { id: 'surehit-area', nameKey: 'skills.surehitArea.name', nameFallback: '必中範囲攻撃', cost: 100, descriptionKey: 'skills.surehitArea.description', descriptionFallback: '周囲の敵へ必中の範囲攻撃。', action: useSkillSureHitAreaAttack },
+    { id: 'strong-area', nameKey: 'skills.strongArea.name', nameFallback: '強範囲攻撃', cost: 100, descriptionKey: 'skills.strongArea.description', descriptionFallback: '周囲の敵へ威力3倍の範囲攻撃。', action: useSkillStrongAreaAttack },
+    { id: 'surehit-strong-area', nameKey: 'skills.surehitStrongArea.name', nameFallback: '必中強範囲攻撃', cost: 150, descriptionKey: 'skills.surehitStrongArea.description', descriptionFallback: '周囲の敵へ必中で威力3倍の範囲攻撃。', action: useSkillSureHitStrongAreaAttack },
+    { id: 'surehit-floor', nameKey: 'skills.surehitFloor.name', nameFallback: '必中全体攻撃', cost: 200, descriptionKey: 'skills.surehitFloor.description', descriptionFallback: 'フロア全体の敵へ必中の攻撃。', action: useSkillSureHitFloorAttack },
+    { id: 'ruin-annihilation', nameKey: 'skills.ruinAnnihilation.name', nameFallback: '破滅全体攻撃', cost: 300, descriptionKey: 'skills.ruinAnnihilation.description', descriptionFallback: '全ての敵へ必中で威力3倍の攻撃＆壁やギミックを消し宝箱を獲得。（高Lv敵には無効）', action: useSkillRuinAnnihilation }
 ];
+
+const SKILL_DEFINITION_MAP = new Map(SKILL_DEFINITIONS.map((def) => [def.id, def]));
+
+function translateSkillName(defOrId) {
+    const def = typeof defOrId === 'string' ? SKILL_DEFINITION_MAP.get(defOrId) : defOrId;
+    if (!def) return String(defOrId || '');
+    const fallback = def.nameFallback || def.name || def.id;
+    return translateOrFallback(def.nameKey, fallback);
+}
+
+function translateSkillDescription(defOrId) {
+    const def = typeof defOrId === 'string' ? SKILL_DEFINITION_MAP.get(defOrId) : defOrId;
+    if (!def) return '';
+    const fallback = def.descriptionFallback || def.description || '';
+    return translateOrFallback(def.descriptionKey, fallback);
+}
 
 const FLOAT_EPSILON = 1e-6;
 let skillsListNeedsRefresh = true;
@@ -6459,8 +6507,9 @@ function activateSkillEffect(effectId, turns, { silent = false } = {}) {
         skillState.pendingTickSkip[effectId] = true;
         if (!silent) {
             const def = SKILL_EFFECT_DEFS[effectId];
-            if (def?.label) {
-                addMessage(`${def.label}の効果が発動！（${normalized}ターン）`);
+            const label = def ? translateOrFallback(def.labelKey, def.label || effectId) : effectId;
+            if (label) {
+                addMessage({ key: 'messages.skills.effects.applied', fallback: '{label}の効果が発動！（{turns}ターン）', params: { label, turns: normalized } });
             }
         }
     } else if (!silent) {
@@ -6477,7 +6526,9 @@ function clearSkillEffect(effectId, { silent = false } = {}) {
     delete skillState.pendingTickSkip?.[effectId];
     if (wasActive && !silent) {
         const def = SKILL_EFFECT_DEFS[effectId];
-        if (def?.expireMessage) addMessage(def.expireMessage);
+        if (def?.expireKey || def?.expireMessage) {
+            addMessage({ key: def?.expireKey, fallback: def?.expireMessage });
+        }
     }
     if (wasActive) markSkillsListDirty();
 }
@@ -6490,7 +6541,7 @@ function getActiveSkillEffectList() {
             const def = SKILL_EFFECT_DEFS[key];
             list.push({
                 id: key,
-                label: def?.label || key,
+                label: def ? translateOrFallback(def.labelKey, def.label || key) : key,
                 remaining,
                 badgeClass: def?.badgeClass || 'status-badge--skill'
             });
@@ -7654,7 +7705,7 @@ function selectOption(listEl, key, opts = {}) {
     }
 }
 
-function applyDamageToEnemyFromSkill(enemy, damage, { crit = false, popupColor = '#ffffff', popupSuffix = '', killMessage = '敵を倒した！' } = {}) {
+function applyDamageToEnemyFromSkill(enemy, damage, { crit = false, popupColor = '#ffffff', popupSuffix = '', killMessage = { key: 'messages.skills.genericKill', fallback: '敵を倒した！' } } = {}) {
     if (!enemy) return false;
     const clamped = Math.max(0, Math.floor(Number(damage) || 0));
     enemy.hp -= clamped;
@@ -7816,68 +7867,71 @@ function canBuildWallInFront() {
 
 function evaluateSkillAvailability(def) {
     if (!isSpUnlocked()) {
-        return { available: false, reason: 'Lv100で解放' };
+        return { available: false, reasonKey: 'skills.availability.unlockLevel', reasonFallback: 'Lv100で解放', reason: 'Lv100で解放' };
     }
     updatePlayerSpCap({ silent: true });
     if (player.maxSp < def.cost) {
-        return { available: false, reason: 'SP上限不足' };
+        return { available: false, reasonKey: 'skills.availability.maxSpShortage', reasonFallback: 'SP上限不足', reason: 'SP上限不足' };
     }
     const currentSp = Math.max(0, Number(player.sp) || 0);
     if (currentSp + 1e-6 < def.cost) {
-        return { available: false, reason: 'SPが足りない' };
+        return { available: false, reasonKey: 'skills.availability.notEnoughSp', reasonFallback: 'SPが足りない', reason: 'SPが足りない' };
     }
     switch (def.id) {
         case 'gimmick-nullify':
-            if (isCurrentDungeonTooHardForSkill()) return { available: false, reason: '高難度で無効' };
+            if (isCurrentDungeonTooHardForSkill()) return { available: false, reasonKey: 'skills.availability.tooHard', reasonFallback: '高難度で無効', reason: '高難度で無効' };
             break;
         case 'break-wall':
-            if (!canBreakWallInFront()) return { available: false, reason: '前方に壁なし' };
+            if (!canBreakWallInFront()) return { available: false, reasonKey: 'skills.availability.noWallAhead', reasonFallback: '前方に壁なし', reason: '前方に壁なし' };
             break;
         case 'build-wall':
-            if (!canBuildWallInFront()) return { available: false, reason: '前方に床なし' };
+            if (!canBuildWallInFront()) return { available: false, reasonKey: 'skills.availability.noFloorAhead', reasonFallback: '前方に床なし', reason: '前方に床なし' };
             break;
         case 'ranged-attack':
-            if (!findEnemyAlongFacingLine()) return { available: false, reason: '届く敵なし' };
+            if (!findEnemyAlongFacingLine()) return { available: false, reasonKey: 'skills.availability.noRangedTarget', reasonFallback: '届く敵なし', reason: '届く敵なし' };
             break;
         case 'strong-strike':
-            if (!getEnemyInFront()) return { available: false, reason: '目の前に敵なし' };
+            if (!getEnemyInFront()) return { available: false, reasonKey: 'skills.availability.noFrontEnemy', reasonFallback: '目の前に敵なし', reason: '目の前に敵なし' };
             break;
         case 'area-attack':
         case 'surehit-area':
         case 'strong-area':
         case 'surehit-strong-area':
-            if (!getEnemiesByOffsets(SKILL_AREA_OFFSETS).length) return { available: false, reason: '範囲内に敵なし' };
+            if (!getEnemiesByOffsets(SKILL_AREA_OFFSETS).length) return { available: false, reasonKey: 'skills.availability.noAreaTargets', reasonFallback: '範囲内に敵なし', reason: '範囲内に敵なし' };
             break;
         case 'surehit-floor':
         case 'ruin-annihilation':
-            if (!enemies.length) return { available: false, reason: '敵がいない' };
+            if (!enemies.length) return { available: false, reasonKey: 'skills.availability.noEnemies', reasonFallback: '敵がいない', reason: '敵がいない' };
             break;
         case 'stair-warp':
-            if (!findWarpDestinationNearStairs()) return { available: false, reason: 'ワープ先なし' };
+            if (!findWarpDestinationNearStairs()) return { available: false, reasonKey: 'skills.availability.noWarpDestination', reasonFallback: 'ワープ先なし', reason: 'ワープ先なし' };
             break;
         default:
             break;
     }
     if (!playerTurn || isGameOver) {
-        return { available: false, reason: '自分のターンではない' };
+        return { available: false, reasonKey: 'skills.availability.notYourTurn', reasonFallback: '自分のターンではない', reason: '自分のターンではない' };
     }
     if (isPlayerStatusActive('paralysis')) {
-        return { available: false, reason: '麻痺中' };
+        return { available: false, reasonKey: 'skills.availability.paralyzed', reasonFallback: '麻痺中', reason: '麻痺中' };
     }
-    return { available: true, reason: '' };
+    return { available: true, reason: '', reasonKey: '', reasonFallback: '', reasonParams: null };
 }
 
 function attemptUseSkill(def) {
     if (!def) return;
     const availability = evaluateSkillAvailability(def);
     if (!availability.available) {
-        if (availability.reason) addMessage(`スキルを使えない：${availability.reason}`);
+        if (availability.reasonKey || availability.reason || availability.reasonFallback) {
+            const reasonText = translateOrFallback(availability.reasonKey, availability.reasonFallback || availability.reason || '', availability.reasonParams);
+            addMessage({ key: 'messages.skills.cannotUse', fallback: 'スキルを使えない：{reason}', params: { reason: reasonText } });
+        }
         return;
     }
     ensureAudio();
     const spent = trySpendSp(def.cost, { silent: true });
     if (!spent) {
-        addMessage('SPが不足している。');
+        addMessage({ key: 'messages.skills.notEnoughSp', fallback: 'SPが不足している。' });
         return;
     }
     if (pendingSkillTimeout) {
@@ -7933,16 +7987,16 @@ function updateSkillsSpHeader(currentSp, maxSp, displayText = null) {
     const normalizedCurrent = Math.max(0, Number(currentSp) || 0);
     const normalizedMax = Math.max(0, Number(maxSp) || 0);
     const spText = displayText != null ? displayText : formatSpDisplay(normalizedCurrent, normalizedMax);
+    const labelText = translateOrFallback('skills.meta.currentSp', '現在のSP: {value}', { value: spText });
     if (skillsSpText) {
-        const liveText = `現在のSP: ${spText}`;
         if (skillsSpValueText) {
             if (lastSkillsSpDisplay.text !== spText) {
                 skillsSpValueText.textContent = spText;
             }
         } else if (lastSkillsSpDisplay.text !== spText) {
-            skillsSpText.textContent = liveText;
+            skillsSpText.textContent = labelText;
         }
-        skillsSpText.setAttribute('aria-label', liveText);
+        skillsSpText.setAttribute('aria-label', labelText);
     } else if (skillsSpValueText && lastSkillsSpDisplay.text !== spText) {
         skillsSpValueText.textContent = spText;
     }
@@ -7971,37 +8025,44 @@ function renderSkillsList() {
         info.className = 'skill-info';
         const nameEl = document.createElement('div');
         nameEl.className = 'skill-name';
-        nameEl.textContent = def.name;
+        const nameText = translateSkillName(def);
+        nameEl.textContent = nameText;
         const metaEl = document.createElement('div');
         metaEl.className = 'skill-meta';
-        metaEl.textContent = `消費SP: ${def.cost} / 所持: ${spText}`;
+        metaEl.textContent = translateOrFallback('skills.meta.costAndCurrent', '消費SP: {cost} / 所持: {current}', { cost: def.cost, current: spText });
         const availability = evaluateSkillAvailability(def);
-        if (!availability.available && availability.reason) {
-            metaEl.textContent += ` (${availability.reason})`;
+        const reasonText = availability.reasonKey || availability.reasonFallback || availability.reason
+            ? translateOrFallback(availability.reasonKey, availability.reasonFallback || availability.reason || '', availability.reasonParams)
+            : '';
+        if (!availability.available && reasonText) {
+            metaEl.textContent += translateOrFallback('skills.meta.reasonSuffix', ' ({reason})', { reason: reasonText });
             entry.classList.add('locked');
         }
         const descEl = document.createElement('div');
         descEl.className = 'skill-desc';
-        descEl.textContent = def.description;
+        descEl.textContent = translateSkillDescription(def);
+        const appendRemainingTurns = (effectId) => {
+            const remaining = getSkillEffectRemaining(effectId);
+            if (remaining > 0) {
+                const text = translateOrFallback('skills.meta.remainingTurns', '現在: 残り{turns}ターン', { turns: remaining });
+                descEl.textContent = descEl.textContent ? `${descEl.textContent} ${text}` : text;
+            }
+        };
         if (def.id === 'gimmick-nullify') {
-            const remaining = getSkillEffectRemaining('gimmickNullify');
-            if (remaining > 0) descEl.textContent += ` 現在: 残り${remaining}ターン`;
+            appendRemainingTurns('gimmickNullify');
         } else if (def.id === 'status-guard') {
-            const remaining = getSkillEffectRemaining('statusGuard');
-            if (remaining > 0) descEl.textContent += ` 現在: 残り${remaining}ターン`;
+            appendRemainingTurns('statusGuard');
         } else if (def.id === 'enemy-nullify') {
-            const remaining = getSkillEffectRemaining('enemyNullify');
-            if (remaining > 0) descEl.textContent += ` 現在: 残り${remaining}ターン`;
+            appendRemainingTurns('enemyNullify');
         } else if (def.id === 'sure-hit') {
-            const remaining = getSkillEffectRemaining('sureHit');
-            if (remaining > 0) descEl.textContent += ` 現在: 残り${remaining}ターン`;
+            appendRemainingTurns('sureHit');
         }
         info.appendChild(nameEl);
         info.appendChild(metaEl);
         info.appendChild(descEl);
 
         const button = document.createElement('button');
-        button.textContent = '使用';
+        button.textContent = translateOrFallback('skills.meta.use', '使用');
         button.disabled = !availability.available;
         button.addEventListener('click', () => attemptUseSkill(def));
 
@@ -8023,33 +8084,37 @@ function refreshSkillsModal({ force = false } = {}) {
 }
 
 function useSkillBreakWall() {
+    const skillId = 'break-wall';
+    const skillName = translateSkillName(skillId);
     const { dx, dy } = getFacingDelta();
     const targetX = player.x + dx;
     const targetY = player.y + dy;
     if (!dx && !dy) return false;
     if (!map[targetY] || map[targetY][targetX] !== 1) {
-        addMessage('目の前に破壊できる壁がない。');
+        addMessage({ key: 'messages.skills.breakWall.noWall', fallback: '目の前に破壊できる壁がない。', params: { skillName } });
         return false;
     }
     if (!breakWallAt(targetX, targetY)) {
-        addMessage('その壁は破壊できなかった。');
+        addMessage({ key: 'messages.skills.breakWall.notBreakable', fallback: 'その壁は破壊できなかった。', params: { skillName } });
         return false;
     }
-    addMessage('SPスキル：壁を粉砕した！');
+    addMessage({ key: 'messages.skills.breakWall.success', fallback: 'SPスキル：壁を粉砕した！', params: { skillName } });
     return true;
 }
 
 function useSkillBuildWall() {
+    const skillId = 'build-wall';
+    const skillName = translateSkillName(skillId);
     const { dx, dy } = getFacingDelta();
     const targetX = player.x + dx;
     const targetY = player.y + dy;
     if (!dx && !dy) return false;
     if (!map[targetY] || map[targetY][targetX] !== 0) {
-        addMessage('目の前に壁へ変換できる床がない。');
+        addMessage({ key: 'messages.skills.buildWall.noFloor', fallback: '目の前に壁へ変換できる床がない。', params: { skillName } });
         return false;
     }
     if (!canBuildWallInFront()) {
-        addMessage('そこには壁を生成できない。');
+        addMessage({ key: 'messages.skills.buildWall.cannotBuild', fallback: 'そこには壁を生成できない。', params: { skillName } });
         return false;
     }
     clearFloorTypeAt(targetX, targetY);
@@ -8057,14 +8122,15 @@ function useSkillBuildWall() {
     if (tileMeta[targetY]) {
         tileMeta[targetY][targetX] = null;
     }
-    addMessage('SPスキル：壁を生成した！');
+    addMessage({ key: 'messages.skills.buildWall.success', fallback: 'SPスキル：壁を生成した！', params: { skillName } });
     playSfx('bomb');
     return true;
 }
 
 function useSkillGimmickNullify() {
+    const skillName = translateSkillName('gimmick-nullify');
     if (isCurrentDungeonTooHardForSkill()) {
-        addMessage('このダンジョンではギミック無効化の効果が及ばない…');
+        addMessage({ key: 'messages.skills.gimmickNullify.tooHard', fallback: 'このダンジョンではギミック無効化の効果が及ばない…', params: { skillName } });
         return false;
     }
     activateSkillEffect('gimmickNullify', 10, { silent: false });
@@ -8088,52 +8154,59 @@ function useSkillSureHitBuff() {
 }
 
 function useSkillStairWarp() {
+    const skillName = translateSkillName('stair-warp');
     const destination = findWarpDestinationNearStairs();
     if (!destination) {
-        addMessage('階段の周囲に安全なワープ先がない。');
+        addMessage({ key: 'messages.skills.stairWarp.noDestination', fallback: '階段の周囲に安全なワープ先がない。', params: { skillName } });
         return false;
     }
     player.x = destination.x;
     player.y = destination.y;
     updateCamera();
-    addMessage('階段の前へ瞬間移動した！');
+    addMessage({ key: 'messages.skills.stairWarp.success', fallback: '階段の前へ瞬間移動した！', params: { skillName } });
     playSfx('stair');
     applyPostMoveEffects();
     return true;
 }
 
 function useSkillStrongStrike() {
+    const skillName = translateSkillName('strong-strike');
     const enemy = getEnemyInFront();
     if (!enemy) {
-        addMessage('強攻撃を放つ敵がいない。');
+        addMessage({ key: 'messages.skills.strongStrike.noTarget', fallback: '強攻撃を放つ敵がいない。', params: { skillName } });
         return false;
     }
     const result = computePlayerSkillDamage(enemy, { multiplier: 3, sureHit: true });
     if (!result.hit) {
-        if (result.sureHitFailed) addMessage('敵のレベルが高すぎて必中が効かなかった…');
-        addMessage('強攻撃は外れてしまった。');
+        if (result.sureHitFailed) addMessage({ key: 'messages.skills.strongStrike.sureHitFailed', fallback: '敵のレベルが高すぎて必中が効かなかった…', params: { skillName } });
+        addMessage({ key: 'messages.skills.strongStrike.miss', fallback: '強攻撃は外れてしまった。', params: { skillName } });
         addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
         return true;
     }
-    addMessage(`強攻撃で${result.damage}のダメージ！`);
-    applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffa94d', killMessage: '強攻撃で敵を倒した！' });
+    addMessage({ key: 'messages.skills.strongStrike.damage', fallback: '強攻撃で{damage}のダメージ！', params: { damage: result.damage, skillName } });
+    applyDamageToEnemyFromSkill(enemy, result.damage, {
+        crit: result.crit,
+        popupColor: '#ffa94d',
+        killMessage: { key: 'messages.skills.strongStrike.kill', fallback: '強攻撃で敵を倒した！', params: { skillName } }
+    });
     return true;
 }
 
 function useSkillRangedAttack() {
+    const skillName = translateSkillName('ranged-attack');
     const info = findEnemyAlongFacingLine();
     if (!info) {
-        addMessage('前方に遠隔攻撃が届く敵がいない。');
+        addMessage({ key: 'messages.skills.rangedAttack.noTarget', fallback: '前方に遠隔攻撃が届く敵がいない。', params: { skillName } });
         return false;
     }
     const { enemy, x, y, steps } = info;
     const result = computePlayerSkillDamage(enemy, { multiplier: 1 / 3, sureHit: true, allowHighLevel: true });
     if (!result.hit) {
-        addMessage('遠隔攻撃は外れてしまった…。');
+        addMessage({ key: 'messages.skills.rangedAttack.miss', fallback: '遠隔攻撃は外れてしまった…。', params: { skillName } });
         addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
         return true;
     }
-    addMessage(`遠隔攻撃で${result.damage}のダメージ！`);
+    addMessage({ key: 'messages.skills.rangedAttack.damage', fallback: '遠隔攻撃で{damage}のダメージ！', params: { damage: result.damage, skillName } });
     playSfx('attack');
     const startOffset = getFacingDelta();
     spawnLinearProjectile({
@@ -8146,75 +8219,90 @@ function useSkillRangedAttack() {
         radius: 0.18,
         holdFrames: 1,
     });
-    applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#74c0fc', killMessage: '遠隔攻撃で敵を倒した！' });
+    applyDamageToEnemyFromSkill(enemy, result.damage, {
+        crit: result.crit,
+        popupColor: '#74c0fc',
+        killMessage: { key: 'messages.skills.rangedAttack.kill', fallback: '遠隔攻撃で敵を倒した！', params: { skillName } }
+    });
     return true;
 }
 
-function executeAreaSkillAttack({ multiplier = 1, sureHit = false, allowHighLevel = false, sureHitLevelGap = SP_HIGH_LEVEL_SUPPRESS_GAP, name = '範囲攻撃' } = {}) {
+function executeAreaSkillAttack({ multiplier = 1, sureHit = false, allowHighLevel = false, sureHitLevelGap = SP_HIGH_LEVEL_SUPPRESS_GAP, skillId = null, nameFallback = '範囲攻撃' } = {}) {
     const targets = getEnemiesByOffsets(SKILL_AREA_OFFSETS);
     if (!targets.length) {
-        addMessage('範囲内に敵がいない。');
+        addMessage({ key: 'messages.skills.areaSkill.noTargets', fallback: '範囲内に敵がいない。', params: { skillName: skillId ? translateSkillName(skillId) : nameFallback } });
         return false;
     }
-    addMessage(`${name}を発動した！`);
+    const skillName = skillId ? translateSkillName(skillId) : nameFallback;
+    addMessage({ key: 'messages.skills.areaSkill.activated', fallback: '{skillName}を発動した！', params: { skillName } });
     let anyHit = false;
     for (const enemy of targets) {
         const result = computePlayerSkillDamage(enemy, { multiplier, sureHit, allowHighLevel, sureHitLevelGap });
         if (!result.hit) {
-            if (result.sureHitFailed) addMessage('高レベルの敵には効果が薄かった…');
+            if (result.sureHitFailed) addMessage({ key: 'messages.skills.areaSkill.sureHitFailed', fallback: '高レベルの敵には効果が薄かった…', params: { skillName } });
             addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
             continue;
         }
         anyHit = true;
-        applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffe066', killMessage: `${name}で敵を倒した！` });
+        applyDamageToEnemyFromSkill(enemy, result.damage, {
+            crit: result.crit,
+            popupColor: '#ffe066',
+            killMessage: { key: 'messages.skills.areaSkill.kill', fallback: '{skillName}で敵を倒した！', params: { skillName } }
+        });
     }
-    if (!anyHit) addMessage('誰にも当たらなかった…');
+    if (!anyHit) addMessage({ key: 'messages.skills.areaSkill.noneHit', fallback: '誰にも当たらなかった…', params: { skillName } });
     return true;
 }
 
 function useSkillAreaAttack() {
-    return executeAreaSkillAttack({ name: '範囲攻撃' });
+    return executeAreaSkillAttack({ skillId: 'area-attack', nameFallback: '範囲攻撃' });
 }
 
 function useSkillSureHitAreaAttack() {
-    return executeAreaSkillAttack({ sureHit: true, name: '必中範囲攻撃' });
+    return executeAreaSkillAttack({ sureHit: true, skillId: 'surehit-area', nameFallback: '必中範囲攻撃' });
 }
 
 function useSkillStrongAreaAttack() {
-    return executeAreaSkillAttack({ multiplier: 3, name: '強範囲攻撃' });
+    return executeAreaSkillAttack({ multiplier: 3, skillId: 'strong-area', nameFallback: '強範囲攻撃' });
 }
 
 function useSkillSureHitStrongAreaAttack() {
-    return executeAreaSkillAttack({ multiplier: 3, sureHit: true, name: '必中強範囲攻撃' });
+    return executeAreaSkillAttack({ multiplier: 3, sureHit: true, skillId: 'surehit-strong-area', nameFallback: '必中強範囲攻撃' });
 }
 
-function executeFloorSkillAttack({ multiplier = 1, sureHit = false, allowHighLevel = false, sureHitLevelGap = SP_HIGH_LEVEL_SUPPRESS_GAP, name = '全体攻撃' } = {}) {
+function executeFloorSkillAttack({ multiplier = 1, sureHit = false, allowHighLevel = false, sureHitLevelGap = SP_HIGH_LEVEL_SUPPRESS_GAP, skillId = null, nameFallback = '全体攻撃' } = {}) {
     if (!enemies.length) {
-        addMessage('攻撃対象となる敵がいない。');
+        addMessage({ key: 'messages.skills.floorSkill.noTargets', fallback: '攻撃対象となる敵がいない。', params: { skillName: skillId ? translateSkillName(skillId) : nameFallback } });
         return false;
     }
-    addMessage(`${name}を放った！`);
+    const skillName = skillId ? translateSkillName(skillId) : nameFallback;
+    addMessage({ key: 'messages.skills.floorSkill.activated', fallback: '{skillName}を放った！', params: { skillName } });
     let anyHit = false;
     for (const enemy of [...enemies]) {
         const result = computePlayerSkillDamage(enemy, { multiplier, sureHit, allowHighLevel, sureHitLevelGap });
         if (!result.hit) {
-            if (result.sureHitFailed) addMessage('高レベルの敵には効果がなかった…');
+            if (result.sureHitFailed) addMessage({ key: 'messages.skills.floorSkill.sureHitFailed', fallback: '高レベルの敵には効果がなかった…', params: { skillName } });
             addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
             continue;
         }
         anyHit = true;
-        applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffe066', killMessage: `${name}で敵を倒した！` });
+        applyDamageToEnemyFromSkill(enemy, result.damage, {
+            crit: result.crit,
+            popupColor: '#ffe066',
+            killMessage: { key: 'messages.skills.floorSkill.kill', fallback: '{skillName}で敵を倒した！', params: { skillName } }
+        });
     }
-    if (!anyHit) addMessage('誰にもダメージを与えられなかった。');
+    if (!anyHit) addMessage({ key: 'messages.skills.floorSkill.noneHit', fallback: '誰にもダメージを与えられなかった。', params: { skillName } });
     return true;
 }
 
 function useSkillSureHitFloorAttack() {
-    return executeFloorSkillAttack({ sureHit: true, name: '必中全体攻撃' });
+    return executeFloorSkillAttack({ sureHit: true, skillId: 'surehit-floor', nameFallback: '必中全体攻撃' });
 }
 
 function useSkillRuinAnnihilation() {
-    addMessage('破滅の力を解き放った！');
+    const skillName = translateSkillName('ruin-annihilation');
+    addMessage({ key: 'messages.skills.ruinAnnihilation.start', fallback: '破滅の力を解き放った！', params: { skillName } });
     let resisted = false;
     const snapshot = [...enemies];
     for (const enemy of snapshot) {
@@ -8224,9 +8312,13 @@ function useSkillRuinAnnihilation() {
             addPopup(enemy.x, enemy.y, 'Miss', '#74c0fc');
             continue;
         }
-        applyDamageToEnemyFromSkill(enemy, result.damage, { crit: result.crit, popupColor: '#ffa94d', killMessage: '破滅の炎で敵を消し飛ばした！' });
+        applyDamageToEnemyFromSkill(enemy, result.damage, {
+            crit: result.crit,
+            popupColor: '#ffa94d',
+            killMessage: { key: 'messages.skills.ruinAnnihilation.kill', fallback: '破滅の炎で敵を消し飛ばした！', params: { skillName } }
+        });
     }
-    if (resisted) addMessage('一部の高レベルの敵には破滅の力が届かなかった…');
+    if (resisted) addMessage({ key: 'messages.skills.ruinAnnihilation.resisted', fallback: '一部の高レベルの敵には破滅の力が届かなかった…', params: { skillName } });
 
     for (let y = 0; y < MAP_HEIGHT; y++) {
         if (!map[y]) continue;
@@ -8248,7 +8340,7 @@ function useSkillRuinAnnihilation() {
         copy.forEach(chest => openChest(chest));
     }
 
-    addMessage('ダンジョンの壁とギミックが消え去った！');
+    addMessage({ key: 'messages.skills.ruinAnnihilation.cleared', fallback: 'ダンジョンの壁とギミックが消え去った！', params: { skillName } });
     refreshGeneratorHazardSuppression();
     return true;
 }
@@ -14744,8 +14836,41 @@ function updatePlayerSummaryCard({
     }
 }
 
-function addMessage(message) {
-    logBuffer.push(String(message));
+function resolveLogMessage(message, fallback, params) {
+    if (message && typeof message === 'object' && !Array.isArray(message)) {
+        const key = Object.prototype.hasOwnProperty.call(message, 'key') ? message.key : undefined;
+        const fallbackText = Object.prototype.hasOwnProperty.call(message, 'fallback') ? message.fallback : fallback;
+        const paramMap = Object.prototype.hasOwnProperty.call(message, 'params') && message.params != null ? message.params : params;
+        if (key || fallbackText != null) {
+            return translateOrFallback(key, fallbackText, paramMap);
+        }
+    }
+    if (fallback && typeof fallback === 'object' && !Array.isArray(fallback)) {
+        const nextFallback = Object.prototype.hasOwnProperty.call(fallback, 'fallback') ? fallback.fallback : undefined;
+        const nextParams = Object.prototype.hasOwnProperty.call(fallback, 'params') ? fallback.params : params;
+        return resolveLogMessage({ key: message, fallback: nextFallback, params: nextParams }, undefined, params);
+    }
+    if (typeof message === 'string' && (fallback !== undefined || params !== undefined)) {
+        return translateOrFallback(message, fallback, params);
+    }
+    if (typeof message === 'function') {
+        try {
+            const result = message();
+            if (typeof result === 'string') return result;
+            if (result == null) return '';
+            return String(result);
+        } catch (error) {
+            console.warn('[log] Failed to evaluate log message function:', error);
+            return '';
+        }
+    }
+    if (message == null) return '';
+    return String(message);
+}
+
+function addMessage(message, fallback, params) {
+    const text = resolveLogMessage(message, fallback, params);
+    logBuffer.push(String(text));
     if (logBuffer.length > MAX_LOG_LINES) {
         logBuffer.splice(0, logBuffer.length - MAX_LOG_LINES);
     }
@@ -17583,8 +17708,7 @@ function renderMiniExpDisplayModes(manifest) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'display-btn' + (current === opt.id ? ' active' : '');
-        const fallbackLabel = MINI_EXP_DISPLAY_MODE_FALLBACK_LABELS[opt.id] || opt.id;
-        btn.textContent = translateOrFallback(`selection.miniexp.displayModes.${opt.id}`, fallbackLabel);
+        btn.textContent = resolveMiniExpDisplayModeLabel(opt.id);
         btn.addEventListener('click', () => {
             if (miniExpState.displayMode === opt.id) return;
             miniExpState.displayMode = opt.id;
@@ -17708,6 +17832,13 @@ function renderMiniExpList(manifest) {
 }
 
 document.addEventListener('app:rerender', () => {
+    try {
+        markSkillsListDirty();
+        renderSkillsList();
+        refreshSkillsModal({ force: true });
+    } catch (err) {
+        console.warn('[app] Failed to refresh skills UI on rerender', err);
+    }
     if (__miniExpInited) {
         renderMiniExpCategories(__miniManifest);
         renderMiniExpDisplayModes(__miniManifest);

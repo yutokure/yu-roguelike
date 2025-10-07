@@ -25,7 +25,8 @@
             </p>
             <p>
                 When you enter a dungeon with a recommended level of 300 or higher the <strong>Satiety system</strong>
-                activates. The gauge decreases each time you act. While satiety is at least 1, automatic recovery at the start
+                activates. The gauge decreases each time you act. Entering at least five levels above the recommendation keeps
+                the system suppressed, so the gauge stays hidden and does not drain. While satiety is at least 1, automatic recovery at the start
                 of a turn only triggers when your HP is below 70% <em>and</em> your satiety is 20 or higher. The gauge is
                 consumed before HP is healed. At 0 satiety you take <strong>hunger damage</strong> every turn, based on your
                 maximum HP. Prepare food or switch potions to the “Eat” action to stay safe.
@@ -119,7 +120,9 @@
                 <li>Treasure chests contain recovery items or permanent stat boosters. All loot is logged in the message history.</li>
                 <li>Click or tap an enemy to see detailed information, including estimated damage dealt and taken.</li>
                 <li>In dungeons with a recommended level of 300 or higher, satiety drops by 1 per turn. At 0 you take hunger
-                    damage equal to 10% of your max HP each turn, so replenish your gauge once it falls below 30%.</li>
+                    damage equal to 10% of your max HP each turn, so replenish your gauge once it falls below 30%. If you
+                    exceed the recommendation by five or more levels, the satiety system is suppressed and neither drain nor
+                    hunger damage occurs.</li>
             </ol>
             <h3>Interactive Tools &amp; the God Console</h3>
             <p>
@@ -233,7 +236,8 @@
                 <li>Pressing <strong>Return</strong> on the toolbar ends the expedition early and takes you back to the selection
                     screen with restored HP.</li>
                 <li>If satiety drops below 20%, consider heading back before repeated hunger damage puts you at risk. Switching
-                    potions to the Eat action ahead of time is another safe option.</li>
+                    potions to the Eat action ahead of time is another safe option. When you exceed the recommendation by five or
+                    more levels, the system is suppressed so you can explore without hunger pressure.</li>
                 <li>On defeat you can restart immediately with the same stats using the Retry button.</li>
             </ul>
             <p class="small-note">All values shown on the result overlay are auto-saved and exported under
@@ -326,6 +330,8 @@
         <section>
             <h2>7.5 Managing Satiety</h2>
             <ul>
+                <li>The satiety system stays dormant when you exceed the recommended level by five or more. Plan your route
+                    around that threshold if you want to explore without hunger pressure.</li>
                 <li>Satiety drains faster when you spend multiple turns in place. Keep moving to balance your consumption.</li>
                 <li>Offering food items grants SP and boosts the MiniExp multiplier, but it does not refill satiety—ensure you
                     keep a spare potion for emergencies.</li>

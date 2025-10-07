@@ -11,33 +11,58 @@
     const difficulties = ['EASY','NORMAL','HARD'];
     const diffIdx = Math.max(0, difficulties.indexOf(difficulty));
 
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'riichi_mahjong' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        return localization.formatNumber(value, options);
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function') {
+        try {
+          return new Intl.NumberFormat(undefined, options).format(value);
+        } catch {}
+      }
+      if (value && typeof value.toLocaleString === 'function') {
+        return value.toLocaleString();
+      }
+      return String(value ?? '');
+    };
+    let detachLocale = null;
+
     // --- Tile definitions ---------------------------------------------------
     const SUITS = ['m','p','s']; // manzu, pinzu, souzu
     const HONORS = ['E','S','W','N','P','F','C']; // East, South, West, North, Haku, Hatsu, Chun
     const TILE_ORDER = [];
-    const TILE_LABEL = {};
     const TILE_TO_INDEX = {};
 
-    function pushTile(base, label){
+    const SUIT_LABELS = { m: 'Man', p: 'Pin', s: 'Sou' };
+    const HONOR_LABELS = { E: 'East', S: 'South', W: 'West', N: 'North', P: 'White', F: 'Green', C: 'Red' };
+
+    const pushYaku = (list, key, fallback) => { list.push(text(`yaku.${key}`, fallback)); };
+    const pushFuReason = (list, key, fallback) => { list.push(text(`fuReasons.${key}`, fallback)); };
+
+    function pushTile(base){
       const idx = TILE_ORDER.length;
       TILE_ORDER.push(base);
-      TILE_LABEL[base] = label;
       TILE_TO_INDEX[base] = idx;
     }
 
     SUITS.forEach((suit, suitIdx)=>{
       for(let num=1; num<=9; num++){
         const base = suit + num;
-        const kanjiSuit = suit === 'm' ? '萬' : suit === 'p' ? '筒' : '索';
-        pushTile(base, `${num}${kanjiSuit}`);
+        pushTile(base);
       }
     });
     HONORS.forEach((honor, idx)=>{
-      const names = {
-        E: '東', S: '南', W: '西', N: '北',
-        P: '白', F: '發', C: '中'
-      };
-      pushTile('z' + (idx+1), names[honor]);
+      pushTile('z' + (idx+1));
     });
 
     function baseOf(tileCode){
@@ -238,13 +263,13 @@
 
       if (analysis.type === 'chiitoitsu'){
         han += 2;
-        yaku.push('七対子');
-        if (riichi){ han += 1; yaku.push('立直'); }
-        if (tsumo){ han += 1; yaku.push('門前清自摸和'); }
-        if (isTanyao(indices)) { han += 1; yaku.push('断么九'); }
+        pushYaku(yaku, 'chiitoitsu', 'Chiitoitsu');
+        if (riichi){ han += 1; pushYaku(yaku, 'riichi', 'Riichi'); }
+        if (tsumo){ han += 1; pushYaku(yaku, 'menzenTsumo', 'Menzen Tsumo'); }
+        if (isTanyao(indices)) { han += 1; pushYaku(yaku, 'tanyao', 'Tanyao'); }
         // Dora count
         const doraCount = countDora(indices, doraTiles);
-        for(let i=0;i<doraCount;i++){ han += 1; yaku.push('ドラ'); }
+        for(let i=0;i<doraCount;i++){ han += 1; pushYaku(yaku, 'dora', 'Dora'); }
         const fu = 25; // chiitoitsu fixed
         const points = calculatePoints(han, fu, optsEval.isDealer);
         return { han, fu, yaku, points, type: analysis.type };
@@ -255,33 +280,33 @@
       const yakuhaiCount = countYakuhai(melds, seatWindIdx, roundWindIdx);
       if (yakuhaiCount > 0){
         han += yakuhaiCount;
-        for(let i=0;i<yakuhaiCount;i++){ yaku.push('役牌'); }
+        for(let i=0;i<yakuhaiCount;i++){ pushYaku(yaku, 'yakuhai', 'Yakuhai'); }
       }
-      if (riichi){ han += 1; yaku.push('立直'); }
-      if (tsumo){ han += 1; yaku.push('門前清自摸和'); }
-      if (isTanyao(indices)) { han += 1; yaku.push('断么九'); }
+      if (riichi){ han += 1; pushYaku(yaku, 'riichi', 'Riichi'); }
+      if (tsumo){ han += 1; pushYaku(yaku, 'menzenTsumo', 'Menzen Tsumo'); }
+      if (isTanyao(indices)) { han += 1; pushYaku(yaku, 'tanyao', 'Tanyao'); }
       if (isPinfu(analysis, pairIdx, seatWindIdx, roundWindIdx)){
-        han += 1; yaku.push('平和');
+        han += 1; pushYaku(yaku, 'pinfu', 'Pinfu');
       }
       const doraCount = countDora(indices, doraTiles);
       if (doraCount > 0){
-        for(let i=0;i<doraCount;i++){ han += 1; yaku.push('ドラ'); }
+        for(let i=0;i<doraCount;i++){ han += 1; pushYaku(yaku, 'dora', 'Dora'); }
       }
       if (han === 0) return null; // no yaku => cannot win
 
       let fu = 20;
       let fuReason = [];
       if (!tsumo){
-        fu += 10; fuReason.push('門前ロン+10');
+        fu += 10; pushFuReason(fuReason, 'closedRon', 'Closed ron +10');
       }
-      if (tsumo && !yaku.includes('平和')){
-        fu += 2; fuReason.push('ツモ+2');
+      if (tsumo && !yaku.includes(text('yaku.pinfu', 'Pinfu'))){
+        fu += 2; pushFuReason(fuReason, 'selfDraw', 'Tsumo +2');
       }
       if (!isSuitTileIndex(pairIdx)){
         const honor = pairIdx - 27;
-        if (honor === seatWindIdx){ fu += 2; fuReason.push('自風雀頭+2'); }
-        if (honor === roundWindIdx){ fu += 2; fuReason.push('場風雀頭+2'); }
-        if (honor >= 4){ fu += 2; fuReason.push('三元牌雀頭+2'); }
+        if (honor === seatWindIdx){ fu += 2; pushFuReason(fuReason, 'seatWindPair', 'Seat wind pair +2'); }
+        if (honor === roundWindIdx){ fu += 2; pushFuReason(fuReason, 'roundWindPair', 'Round wind pair +2'); }
+        if (honor >= 4){ fu += 2; pushFuReason(fuReason, 'dragonPair', 'Dragon pair +2'); }
       }
       melds.forEach(m => {
         const idx = m.index;
@@ -291,14 +316,14 @@
             const num = tileNumber(idx);
             if (num === 1 || num === 9){
               fu += closed ? 8 : 4;
-              fuReason.push('槓子扱い端牌刻子+8');
+              pushFuReason(fuReason, 'terminalKan', 'Terminal/edge triplet +8');
             } else {
               fu += closed ? 4 : 2;
-              fuReason.push('中張刻子+4');
+              pushFuReason(fuReason, 'middleTriplet', 'Simple triplet +4');
             }
           } else {
             fu += closed ? 8 : 4;
-            fuReason.push('字牌刻子+8');
+            pushFuReason(fuReason, 'honorTriplet', 'Honor triplet +8');
           }
         }
       });
@@ -357,11 +382,14 @@
       const points = result.points;
       if (tsumo){
         if (isDealer){
-          return `ツモ ${points.tsumoDealer}点オール`;
+          return text('result.tsumoDealer', () => `Tsumo ${formatNumber(points.tsumoDealer)} all`, { value: formatNumber(points.tsumoDealer) });
         }
-        return `ツモ 親${points.tsumoNonDealer.dealer} / 子${points.tsumoNonDealer.other}`;
+        return text('result.tsumoNonDealer', () => `Tsumo dealer ${formatNumber(points.tsumoNonDealer.dealer)} / non-dealer ${formatNumber(points.tsumoNonDealer.other)}`, {
+          dealer: formatNumber(points.tsumoNonDealer.dealer),
+          other: formatNumber(points.tsumoNonDealer.other)
+        });
       }
-      return `ロン ${points.ron}点`;
+      return text('result.ron', () => `Ron ${formatNumber(points.ron)}`, { value: formatNumber(points.ron) });
     }
 
     // --- Game state ---------------------------------------------------------
@@ -383,11 +411,11 @@
     header.style.flexDirection = 'column';
     header.style.gap = '6px';
     const title = document.createElement('div');
-    title.textContent = 'リーチ麻雀ライト';
+    title.textContent = 'Riichi Mahjong Lite';
     title.style.fontSize = '24px';
     title.style.fontWeight = '700';
     const subtitle = document.createElement('div');
-    subtitle.textContent = 'シンプルな東風戦（1局）を3人のAIと対局。リーチ/ツモ/ロン対応。';
+    subtitle.textContent = 'Play a single-hand riichi mahjong round with riichi/tsumo/ron scoring.';
     subtitle.style.opacity = '0.8';
     subtitle.style.fontSize = '14px';
     header.appendChild(title);
@@ -400,7 +428,8 @@
     infoBar.style.gap = '8px';
     container.appendChild(infoBar);
 
-    function createInfo(label){
+    const infoLabels = [];
+    function createInfo(labelKey, fallback){
       const wrap = document.createElement('div');
       wrap.style.background = 'rgba(15,23,42,0.7)';
       wrap.style.border = '1px solid rgba(148,163,184,0.3)';
@@ -410,7 +439,7 @@
       wrap.style.flexDirection = 'column';
       wrap.style.gap = '4px';
       const lbl = document.createElement('div');
-      lbl.textContent = label;
+      lbl.textContent = text(labelKey, fallback);
       lbl.style.fontSize = '12px';
       lbl.style.opacity = '0.65';
       const value = document.createElement('div');
@@ -420,14 +449,15 @@
       wrap.appendChild(lbl);
       wrap.appendChild(value);
       infoBar.appendChild(wrap);
+      infoLabels.push({ el: lbl, key: labelKey, fallback });
       return value;
     }
 
-    const infoRound = createInfo('局情報');
-    const infoDealer = createInfo('親');
-    const infoDora = createInfo('ドラ');
-    const infoRemaining = createInfo('山残り');
-    const infoRiichiSticks = createInfo('リーチ棒');
+    const infoRound = createInfo('info.roundLabel', 'Round');
+    const infoDealer = createInfo('info.dealerLabel', 'Dealer');
+    const infoDora = createInfo('info.doraLabel', 'Dora');
+    const infoRemaining = createInfo('info.remainingLabel', 'Tiles left');
+    const infoRiichiSticks = createInfo('info.riichiSticksLabel', 'Riichi sticks');
 
     const scoreBoard = document.createElement('div');
     scoreBoard.style.display = 'grid';
@@ -436,7 +466,7 @@
     container.appendChild(scoreBoard);
 
     const playerPanels = [];
-    function createPlayerPanel(name){
+    function createPlayerPanel(){
       const panel = document.createElement('div');
       panel.style.background = 'rgba(15,23,42,0.6)';
       panel.style.border = '1px solid rgba(148,163,184,0.25)';
@@ -446,7 +476,9 @@
       panel.style.flexDirection = 'column';
       panel.style.gap = '4px';
       const nameEl = document.createElement('div');
-      nameEl.textContent = name;
+      const nameLabel = document.createElement('span');
+      nameLabel.textContent = '';
+      nameEl.appendChild(nameLabel);
       nameEl.style.fontWeight = '600';
       nameEl.style.display = 'flex';
       nameEl.style.alignItems = 'center';
@@ -472,13 +504,12 @@
       panel.appendChild(waitsEl);
       panel.appendChild(discardsEl);
       scoreBoard.appendChild(panel);
-      playerPanels.push({ panel, nameEl, statusEl, scoreEl, discardsEl, waitsEl });
+      playerPanels.push({ panel, nameEl, nameLabel, statusEl, scoreEl, discardsEl, waitsEl });
     }
 
-    createPlayerPanel('あなた (東)');
-    createPlayerPanel('AI南');
-    createPlayerPanel('AI西');
-    createPlayerPanel('AI北');
+    for (let i = 0; i < 4; i++) {
+      createPlayerPanel();
+    }
 
     const tableArea = document.createElement('div');
     tableArea.style.background = 'radial-gradient(circle at center, rgba(30,64,175,0.35), rgba(15,23,42,0.85))';
@@ -497,7 +528,9 @@
     tableArea.appendChild(opponentRow);
 
     const opponentHands = [];
-    for(let i=1;i<4;i++){
+    const opponentHeaders = [];
+    const opponentWinds = ['S','W','N'];
+    opponentWinds.forEach((wind) => {
       const opp = document.createElement('div');
       opp.style.flex = '1';
       opp.style.background = 'rgba(15,23,42,0.6)';
@@ -506,9 +539,11 @@
       opp.style.display = 'flex';
       opp.style.flexDirection = 'column';
       opp.style.gap = '6px';
-      const name = ['南','西','北'][i-1];
       const headerOpp = document.createElement('div');
-      headerOpp.textContent = `AI${name}の手牌`; headerOpp.style.fontSize = '13px'; headerOpp.style.opacity = '0.75';
+      headerOpp.style.fontSize = '13px';
+      headerOpp.style.opacity = '0.75';
+      const seat = seatName(wind);
+      headerOpp.textContent = text('panels.aiHand', `AI ${seat} Hand`, { seat });
       const tileRow = document.createElement('div');
       tileRow.style.display = 'flex';
       tileRow.style.gap = '6px';
@@ -516,8 +551,9 @@
       opp.appendChild(headerOpp);
       opp.appendChild(tileRow);
       opponentRow.appendChild(opp);
+      opponentHeaders.push({ el: headerOpp, wind });
       opponentHands.push(tileRow);
-    }
+    });
 
     const centerInfo = document.createElement('div');
     centerInfo.style.alignSelf = 'center';
@@ -558,9 +594,10 @@
     actionRow.style.justifyContent = 'center';
     playerHandSection.appendChild(actionRow);
 
-    function createButton(label){
+    const actionButtons = [];
+    function createButton(labelKey, fallback){
       const btn = document.createElement('button');
-      btn.textContent = label;
+      btn.textContent = text(labelKey, fallback);
       btn.style.padding = '8px 14px';
       btn.style.borderRadius = '999px';
       btn.style.border = '1px solid rgba(96,165,250,0.5)';
@@ -571,13 +608,14 @@
       btn.style.transition = 'all 0.15s ease';
       btn.addEventListener('mouseenter', ()=>{ btn.style.background = 'rgba(59,130,246,0.3)'; });
       btn.addEventListener('mouseleave', ()=>{ btn.style.background = 'rgba(37,99,235,0.15)'; });
+      actionButtons.push({ el: btn, key: labelKey, fallback });
       return btn;
     }
 
-    const btnTsumo = createButton('ツモ');
-    const btnRon = createButton('ロン');
-    const btnRiichi = createButton('リーチ');
-    const btnCancel = createButton('キャンセル');
+    const btnTsumo = createButton('buttons.tsumo', 'Tsumo');
+    const btnRon = createButton('buttons.ron', 'Ron');
+    const btnRiichi = createButton('buttons.riichi', 'Riichi');
+    const btnCancel = createButton('buttons.cancel', 'Cancel');
     actionRow.append(btnTsumo, btnRon, btnRiichi, btnCancel);
 
     const logArea = document.createElement('div');
@@ -602,6 +640,10 @@
 
     const logBuffer = [];
 
+    function logLocalized(key, fallback, params){
+      log(text(key, fallback, params));
+    }
+
     // --- Players ------------------------------------------------------------
     const seatWinds = ['E','S','W','N'];
     function seatWindIndex(playerIdx){
@@ -610,12 +652,27 @@
     }
     const roundWindIdx = 0; // East round only
 
-    const players = [
-      { name: 'あなた', seat: 'E', hand: [], discards: [], score: 25000, riichi: false, furiten: false, waitCache: [], lastDraw: null, autoRiichi: false },
-      { name: 'AI南', seat: 'S', hand: [], discards: [], score: 25000, riichi: false, furiten: false, waitCache: [], lastDraw: null, autoRiichi: false },
-      { name: 'AI西', seat: 'W', hand: [], discards: [], score: 25000, riichi: false, furiten: false, waitCache: [], lastDraw: null, autoRiichi: false },
-      { name: 'AI北', seat: 'N', hand: [], discards: [], score: 25000, riichi: false, furiten: false, waitCache: [], lastDraw: null, autoRiichi: false }
+    const playerConfigs = [
+      { id: 'player', seat: 'E', nameKey: 'players.youWithSeat', nameFallback: 'You ({seat})' },
+      { id: 'ai_s', seat: 'S', nameKey: 'players.aiWithSeat', nameFallback: 'AI {seat}' },
+      { id: 'ai_w', seat: 'W', nameKey: 'players.aiWithSeat', nameFallback: 'AI {seat}' },
+      { id: 'ai_n', seat: 'N', nameKey: 'players.aiWithSeat', nameFallback: 'AI {seat}' }
     ];
+    const players = playerConfigs.map((cfg) => ({
+      id: cfg.id,
+      seat: cfg.seat,
+      nameKey: cfg.nameKey,
+      nameFallback: cfg.nameFallback,
+      name: '',
+      hand: [],
+      discards: [],
+      score: 25000,
+      riichi: false,
+      furiten: false,
+      waitCache: [],
+      lastDraw: null,
+      autoRiichi: false
+    }));
     let dealerIndex = 0;
 
     let wall = [];
@@ -629,8 +686,22 @@
     let roundEnded = false;
     let forcedDiscardIndex = null;
 
+    function seatName(wind){
+      return text(`seats.${wind}`, HONOR_LABELS[wind] || wind);
+    }
+
     function tileDisplay(base){
-      return TILE_LABEL[base] || base;
+      if (!base) return '';
+      if (base.startsWith('z')){
+        const idx = Math.max(0, Math.min(HONORS.length - 1, Number(base.slice(1)) - 1));
+        const honor = HONORS[idx] || '';
+        return text(`tiles.honors.${honor}`, HONOR_LABELS[honor] || honor || base);
+      }
+      const suit = base[0];
+      const rank = Number(base.slice(1));
+      const fallbackSuit = SUIT_LABELS[suit] || suit;
+      const fallback = `${rank} ${fallbackSuit}`;
+      return text(`tiles.suits.${suit}`, fallback, { rank });
     }
 
     function renderOpponentHands(){
@@ -664,7 +735,8 @@
         if (idx === 0){
           const waits = player.waitCache;
           if (waits && waits.length){
-            panel.waitsEl.textContent = '待ち: ' + waits.map(idx => TILE_LABEL[TILE_ORDER[idx]]).join(' ');
+            const tilesText = waits.map(wIdx => tileDisplay(TILE_ORDER[wIdx])).join(' ');
+            panel.waitsEl.textContent = text('hud.waits', () => `Waits: ${tilesText}`, { tiles: tilesText });
           } else {
             panel.waitsEl.textContent = '';
           }
@@ -677,19 +749,26 @@
     function renderScores(){
       players.forEach((player, idx)=>{
         const panel = playerPanels[idx];
-        panel.scoreEl.textContent = `${player.score.toLocaleString()} 点`;
+        panel.scoreEl.textContent = text('hud.scoreValue', () => `${formatNumber(player.score)} pts`, { value: formatNumber(player.score) });
         const tags = [];
-        if (idx === dealerIndex) tags.push('親');
-        if (player.riichi) tags.push('立直');
+        if (idx === dealerIndex) tags.push(text('hud.tags.dealer', 'Dealer'));
+        if (player.riichi) tags.push(text('hud.tags.riichi', 'Riichi'));
         panel.statusEl.textContent = tags.join(' / ');
       });
-      infoRound.textContent = `東${roundNumber}局`;
+      const roundSeat = seatName('E');
+      infoRound.textContent = text('info.roundValue', () => `${roundSeat} ${roundNumber}`, { seat: roundSeat, round: roundNumber });
       infoDealer.textContent = `${players[dealerIndex].name}`;
-      infoDora.textContent = doraTiles.map(idx => TILE_LABEL[TILE_ORDER[idx]]).join(' ');
-      infoRemaining.textContent = `${wall.length}`;
-      infoRiichiSticks.textContent = `${riichiSticks}`;
-      doraDisplay.textContent = `ドラ: ${doraTiles.map(idx => TILE_LABEL[TILE_ORDER[idx]]).join(' ') || 'なし'}`;
-      potDisplay.textContent = `供託:${riichiSticks * 1000}点 / 残り:${wall.length}`;
+      const doraText = doraTiles.map(idx => tileDisplay(TILE_ORDER[idx])).join(' ');
+      infoDora.textContent = doraText;
+      infoRemaining.textContent = formatNumber(wall.length);
+      infoRiichiSticks.textContent = formatNumber(riichiSticks);
+      const doraLine = doraText || text('info.none', 'None');
+      doraDisplay.textContent = text('info.doraLine', () => `Dora: ${doraLine}`, { tiles: doraLine });
+      const sticksPoints = riichiSticks * 1000;
+      potDisplay.textContent = text('info.potLine', () => `Sticks: ${formatNumber(sticksPoints)} / Tiles left: ${formatNumber(wall.length)}`, {
+        sticks: formatNumber(sticksPoints),
+        tiles: formatNumber(wall.length)
+      });
     }
 
     function renderPlayerHand(){
@@ -723,11 +802,48 @@
       });
     }
 
+    function updatePlayerNames(){
+      players.forEach((player, idx) => {
+        const seat = seatName(player.seat);
+        const nameText = text(player.nameKey, player.nameFallback, { seat });
+        player.name = nameText;
+        const panel = playerPanels[idx];
+        if (panel && panel.nameLabel) {
+          panel.nameLabel.textContent = nameText;
+        }
+      });
+    }
+
+    function applyLocalization(){
+      title.textContent = text('title', 'Riichi Mahjong Lite');
+      subtitle.textContent = text('subtitle', 'Play a single-hand riichi mahjong round against three AI opponents with riichi/tsumo/ron support.');
+      infoLabels.forEach(({ el, key, fallback }) => {
+        el.textContent = text(key, fallback);
+      });
+      actionButtons.forEach(({ el, key, fallback }) => {
+        el.textContent = text(key, fallback);
+      });
+      opponentHeaders.forEach(({ el, wind }) => {
+        const seat = seatName(wind);
+        el.textContent = text('panels.aiHand', `AI ${seat} Hand`, { seat });
+      });
+      updatePlayerNames();
+    }
+
     function updateUI(){
       renderOpponentHands();
       renderPlayerHand();
       renderScores();
       renderDiscards();
+    }
+
+    if (localization && typeof localization.onChange === 'function') {
+      detachLocale = localization.onChange(() => {
+        try {
+          applyLocalization();
+          updateUI();
+        } catch {}
+      });
     }
 
     function resetRound(){
@@ -748,8 +864,18 @@
       currentTurn = dealerIndex;
       phase = 'draw';
       roundEnded = false;
-      log(`--- 東${roundNumber}局開始 親: ${players[dealerIndex].name} ---`);
-      log(`ドラ表示牌: ${tileDisplay(baseOf(doraIndicators[0]))} → ドラ ${TILE_LABEL[TILE_ORDER[doraTiles[0]]]}`);
+      const roundSeat = seatName('E');
+      logLocalized('log.roundStart', () => `--- ${roundSeat} ${roundNumber} Dealer: ${players[dealerIndex].name} ---`, {
+        seat: roundSeat,
+        round: roundNumber,
+        dealer: players[dealerIndex].name
+      });
+      const indicatorTile = tileDisplay(baseOf(doraIndicators[0]));
+      const doraTile = tileDisplay(TILE_ORDER[doraTiles[0]]);
+      logLocalized('log.doraIndicator', () => `Dora indicator: ${indicatorTile} → Dora ${doraTile}`, {
+        indicator: indicatorTile,
+        dora: doraTile
+      });
       updateUI();
       if (currentTurn === 0){
         schedulePlayerDraw();
@@ -796,16 +922,17 @@
 
     function drawTileFor(idx){
       if (wall.length === 0){
-        endInDraw('荒牌流局');
+        endInDraw('exhaustive');
         return;
       }
       const tile = wall.pop();
       players[idx].hand.push(tile);
       players[idx].lastDraw = tile;
       sortHand(players[idx].hand);
-      infoRemaining.textContent = `${wall.length}`;
+      infoRemaining.textContent = formatNumber(wall.length);
       if (idx === 0){
-        log(`自摸: ${tileDisplay(baseOf(tile))}`);
+        const drawnTile = tileDisplay(baseOf(tile));
+        logLocalized('log.draw', () => `Draw: ${drawnTile}`, { tile: drawnTile });
       }
       return tile;
     }
@@ -844,7 +971,7 @@
         if (player.riichi) return;
         if (waits.length === 0) return;
         if (player.score < 1000){
-          log('持ち点不足でリーチ不可');
+          logLocalized('log.riichiInsufficient', 'Not enough points to declare riichi');
           return;
         }
         player.riichi = true;
@@ -852,8 +979,8 @@
         player.score -= 1000;
         riichiSticks += 1;
         forcedDiscardIndex = baseOf(player.lastDraw);
-        log('リーチ宣言！場に1000点棒を供託');
-        awardXp(25, 'リーチ宣言');
+        logLocalized('log.riichiDeclaration', 'Riichi declared! Placed a 1000-point stick.');
+        awardXp(25, { type: 'riichi', reason: text('rewards.riichiDeclaration', 'Riichi declaration') });
         updateUI();
         phase = 'player_discard';
       };
@@ -871,7 +998,8 @@
       if (idx === -1) return;
       const [removed] = player.hand.splice(idx,1);
       player.discards.push(removed);
-      log(`捨牌: ${tileDisplay(baseOf(removed))}`);
+      const discarded = tileDisplay(baseOf(removed));
+      logLocalized('log.discardPlayer', () => `Discard: ${discarded}`, { tile: discarded });
       renderPlayerHand();
       renderDiscards();
       phase = 'after_player_discard';
@@ -909,8 +1037,12 @@
           claimed = true;
           winnerIdx = idx;
           winResult = result;
-          log(`${player.name} が ${tileDisplay(base)} でロン！`);
-          awardXp(idx === 0 ? 200 : 100, 'ロン和了');
+          const tileName = tileDisplay(base);
+          logLocalized('log.ronWin', () => `${player.name} won by ron with ${tileName}!`, {
+            player: player.name,
+            tile: tileName
+          });
+          awardXp(idx === 0 ? 200 : 100, { type: 'ron', reason: text('rewards.ronWin', 'Ron win') });
           handleWin(idx, discarderIdx, result, false);
         } else {
           processNext();
@@ -928,8 +1060,14 @@
       phase = 'round_end';
       const winner = players[winnerIdx];
       const description = describePoints(result, winnerIdx === dealerIndex, tsumo);
-      log(`${winner.name} の和了！ ${result.han}翻 ${result.fu}符 ${description}`);
-      log(`役: ${result.yaku.join(' / ')}`);
+      logLocalized('log.handWin', () => `${winner.name} wins! ${result.han} han ${result.fu} fu ${description}`, {
+        player: winner.name,
+        han: result.han,
+        fu: result.fu,
+        description
+      });
+      const yakuLine = result.yaku.join(' / ');
+      logLocalized('log.yaku', () => `Yaku: ${yakuLine}`, { list: yakuLine });
       const basePoints = result.points;
       if (tsumo){
         if (winnerIdx === dealerIndex){
@@ -962,11 +1100,16 @@
       if (riichiSticks > 0){
         const bonus = riichiSticks * 1000;
         winner.score += bonus;
-        log(`リーチ棒 ${riichiSticks}本を獲得 (+${bonus}点)`);
+        logLocalized('log.riichiBonus', () => `Collected ${riichiSticks} riichi sticks (+${formatNumber(bonus)})`, {
+          sticks: formatNumber(riichiSticks),
+          bonus: formatNumber(bonus)
+        });
         riichiSticks = 0;
       }
       renderScores();
-      awardXp(winnerIdx === 0 ? 400 : 150, tsumo ? '自摸和了' : 'ロン和了');
+      awardXp(winnerIdx === 0 ? 400 : 150, tsumo
+        ? { type: 'tsumo', reason: text('rewards.tsumoWin', 'Tsumo win') }
+        : { type: 'ron', reason: text('rewards.ronWin', 'Ron win') });
       setTimeout(()=>{
         endGame();
       }, 2000);
@@ -974,7 +1117,8 @@
 
     function endInDraw(reason){
       if (roundEnded) return;
-      log(`流局 (${reason})`);
+      const reasonText = text(`log.drawReason.${reason}`, reason === 'exhaustive' ? 'Exhaustive draw' : reason);
+      logLocalized('log.drawRound', () => `Draw (${reasonText})`, { reason: reasonText });
       phase = 'round_end';
       roundEnded = true;
       const tenpaiPlayers = players.filter((p, idx)=>{
@@ -986,9 +1130,10 @@
         return false;
       });
       if (tenpaiPlayers.length > 0){
-        log(`テンパイ者: ${tenpaiPlayers.map(p=>p.name).join(', ')}`);
+        const list = tenpaiPlayers.map(p=>p.name).join(', ');
+        logLocalized('log.tenpaiList', () => `Tenpai: ${list}`, { list });
       } else {
-        log('全員ノーテン');
+        logLocalized('log.allNoten', 'All players in noten');
       }
       const tenpaiCount = tenpaiPlayers.length;
       const notenCount = 4 - tenpaiCount;
@@ -1002,7 +1147,7 @@
             p.score -= notenPenalty;
           }
         });
-        log('テンパイ料を分配');
+        logLocalized('log.tenpaiSplit', 'Distributed noten payments');
       }
       renderScores();
       setTimeout(()=>{
@@ -1014,8 +1159,9 @@
       running = false;
       phase = 'idle';
       const standings = players.map(p=>({ name: p.name, score: p.score })).sort((a,b)=>b.score-a.score);
-      log(`最終結果: ${standings.map(s=>`${s.name} ${s.score}`).join(' / ')}`);
-      awardXp(Math.max(50, Math.floor(players[0].score / 120)), '対局終了');
+      const summary = standings.map(s=>`${s.name} ${formatNumber(s.score)}`).join(' / ');
+      logLocalized('log.finalResult', () => `Final result: ${summary}`, { list: summary });
+      awardXp(Math.max(50, Math.floor(players[0].score / 120)), { type: 'end', reason: text('rewards.matchComplete', 'Match complete') });
     }
 
     function advanceTurn(){
@@ -1041,7 +1187,7 @@
         isDealer: dealerIndex === currentTurn
       });
       if (result){
-        log(`${player.name} が自摸上がり！`);
+        logLocalized('log.tsumoWin', () => `${player.name} won by tsumo!`, { player: player.name });
         handleWin(currentTurn, null, result, true);
         return;
       }
@@ -1054,7 +1200,7 @@
             player.autoRiichi = true;
             player.score -= 1000;
             riichiSticks += 1;
-            log(`${player.name} がリーチ！`);
+            logLocalized('log.aiRiichi', () => `${player.name} declared riichi!`, { player: player.name });
           }
         }
       }
@@ -1067,7 +1213,8 @@
       const idx = player.hand.indexOf(discard);
       player.hand.splice(idx,1);
       player.discards.push(discard);
-      log(`${player.name} の捨牌: ${tileDisplay(baseOf(discard))}`);
+      const discarded = tileDisplay(baseOf(discard));
+      logLocalized('log.discardOther', () => `${player.name} discarded ${discarded}`, { player: player.name, tile: discarded });
       renderDiscards();
       checkRonOnDiscard(currentTurn, discard, ()=>{
         advanceTurn();
@@ -1127,12 +1274,14 @@
     function destroy(){
       stop();
       try { root.removeChild(container); } catch{}
+      try { detachLocale && detachLocale(); } catch{}
     }
 
     function getScore(){
       return Math.max(0, players[0].score - 25000);
     }
 
+    applyLocalization();
     updateUI();
 
     return { start, stop, destroy, getScore };
@@ -1140,9 +1289,9 @@
 
   window.registerMiniGame({
     id: 'riichi_mahjong',
-    name: 'リーチ麻雀ライト', nameKey: 'selection.miniexp.games.riichi_mahjong.name',
-    description: 'リーチとツモ/ロンを備えた簡易東風戦。AI 3人と1局勝負で点棒を競う本格寄り麻雀MOD。', descriptionKey: 'selection.miniexp.games.riichi_mahjong.description', categoryIds: ['board'],
-    category: 'ボード',
+    name: 'Riichi Mahjong Lite', nameKey: 'selection.miniexp.games.riichi_mahjong.name',
+    description: 'Streamlined one-hand riichi mahjong against three AI opponents with riichi/tsumo/ron scoring.', descriptionKey: 'selection.miniexp.games.riichi_mahjong.description', categoryIds: ['board'],
+    category: 'Board',
     create
   });
 })();

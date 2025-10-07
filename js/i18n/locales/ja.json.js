@@ -8062,6 +8062,137 @@
       }
     },
 
+    "minigame": {
+      "othello": {
+        "hud": {
+          "status": {
+            "ended": "ゲーム終了",
+            "playerTurn": "あなたの番（クリックで配置）",
+            "aiTurn": "AIの番"
+          }
+        },
+        "overlay": {
+          "title": "ゲーム終了",
+          "restartHint": "Rで再開 / 再起動できます",
+          "result": {
+            "win": "あなたの勝ち！",
+            "loss": "あなたの負け…",
+            "draw": "引き分け"
+          }
+        },
+        "popup": {
+          "movePreview": "{flips}枚 / 予想+{xp}EXP"
+        }
+      },
+      "riichi_mahjong": {
+        "title": "リーチ麻雀ライト",
+        "subtitle": "シンプルな東風戦（1局）を3人のAIと対局。リーチ/ツモ/ロン対応。",
+        "info": {
+          "roundLabel": "局情報",
+          "dealerLabel": "親",
+          "doraLabel": "ドラ",
+          "remainingLabel": "山残り",
+          "riichiSticksLabel": "リーチ棒",
+          "roundValue": "{seat}{round}局",
+          "none": "なし",
+          "doraLine": "ドラ: {tiles}",
+          "potLine": "供託:{sticks}点 / 残り:{tiles}"
+        },
+        "buttons": {
+          "tsumo": "ツモ",
+          "ron": "ロン",
+          "riichi": "リーチ",
+          "cancel": "キャンセル"
+        },
+        "players": {
+          "youWithSeat": "あなた ({seat})",
+          "aiWithSeat": "AI{seat}"
+        },
+        "seats": {
+          "E": "東",
+          "S": "南",
+          "W": "西",
+          "N": "北"
+        },
+        "tiles": {
+          "suits": {
+            "m": "{rank}萬",
+            "p": "{rank}筒",
+            "s": "{rank}索"
+          },
+          "honors": {
+            "E": "東",
+            "S": "南",
+            "W": "西",
+            "N": "北",
+            "P": "白",
+            "F": "發",
+            "C": "中"
+          }
+        },
+        "hud": {
+          "scoreValue": "{value}点",
+          "tags": {
+            "dealer": "親",
+            "riichi": "立直"
+          },
+          "waits": "待ち: {tiles}"
+        },
+        "yaku": {
+          "chiitoitsu": "七対子",
+          "riichi": "立直",
+          "menzenTsumo": "門前清自摸和",
+          "tanyao": "断么九",
+          "dora": "ドラ",
+          "yakuhai": "役牌",
+          "pinfu": "平和"
+        },
+        "fuReasons": {
+          "closedRon": "門前ロン+10",
+          "selfDraw": "ツモ+2",
+          "seatWindPair": "自風雀頭+2",
+          "roundWindPair": "場風雀頭+2",
+          "dragonPair": "三元牌雀頭+2",
+          "terminalKan": "槓子扱い端牌刻子+8",
+          "middleTriplet": "中張刻子+4",
+          "honorTriplet": "字牌刻子+8"
+        },
+        "result": {
+          "tsumoDealer": "ツモ {value}点オール",
+          "tsumoNonDealer": "ツモ 親{dealer} / 子{other}",
+          "ron": "ロン {value}点"
+        },
+        "log": {
+          "roundStart": "--- {seat}{round}局開始 親: {dealer} ---",
+          "doraIndicator": "ドラ表示牌: {indicator} → ドラ {dora}",
+          "draw": "自摸: {tile}",
+          "riichiInsufficient": "持ち点不足でリーチ不可",
+          "riichiDeclaration": "リーチ宣言！場に1000点棒を供託。",
+          "discardPlayer": "捨牌: {tile}",
+          "ronWin": "{player} が {tile} でロン！",
+          "handWin": "{player} の和了！ {han}翻 {fu}符 {description}",
+          "yaku": "役: {list}",
+          "riichiBonus": "リーチ棒 {sticks}本を獲得 (+{bonus})",
+          "drawRound": "流局 ({reason})",
+          "tenpaiList": "テンパイ者: {list}",
+          "allNoten": "全員ノーテン",
+          "tenpaiSplit": "テンパイ料を分配",
+          "finalResult": "最終結果: {list}",
+          "tsumoWin": "{player} が自摸上がり！",
+          "aiRiichi": "{player} がリーチ！",
+          "discardOther": "{player} の捨牌: {tile}",
+          "drawReason": {
+            "exhaustive": "荒牌流局"
+          }
+        },
+        "rewards": {
+          "riichiDeclaration": "リーチ宣言",
+          "ronWin": "ロン和了",
+          "tsumoWin": "自摸和了",
+          "matchComplete": "対局終了"
+        }
+      }
+    },
     "achievements": {
       "categories": {
         "dungeon": "ダンジョン関連",

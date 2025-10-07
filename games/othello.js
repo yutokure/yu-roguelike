@@ -20,6 +20,20 @@
     const difficulty = (opts && opts.difficulty)||'NORMAL';
     const bonus = difficulty==='HARD'?600 : difficulty==='NORMAL'?150 : 10;
 
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'othello' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => { try { draw(); } catch {} })
+      : null;
+
     const canvas = document.createElement('canvas');
     canvas.width = 480; canvas.height = 480;
     canvas.style.display='block'; canvas.style.margin='0 auto';
@@ -31,7 +45,7 @@
     let turn = BLACK;
     let running = false;
     let ended = false;
-    let resultText = '';
+    let resultState = { key: null, fallback: '' };
     let lastMove = null; // {x,y,color}
     let hover = null;    // {x,y}
     let anims = [];      // flip animations {x,y,t:0..1,color}
@@ -157,8 +171,10 @@
       }
       // turn indicator text
       ctx.fillStyle = '#f8fafc'; ctx.font='16px sans-serif';
-      const t = ended? 'ゲーム終了' : (turn===BLACK? 'あなたの番 (クリックで配置)' : 'AIの番');
-      ctx.fillText(t, 8, 20);
+      const statusKey = ended ? 'hud.status.ended' : (turn===BLACK ? 'hud.status.playerTurn' : 'hud.status.aiTurn');
+      const statusFallback = ended ? 'Game Over' : (turn===BLACK ? 'Your turn (click to place)' : 'AI turn');
+      const statusText = text(statusKey, statusFallback);
+      ctx.fillText(statusText, 8, 20);
       if (lastMove){ ctx.strokeStyle='rgba(253,224,71,0.9)'; ctx.lineWidth=2; ctx.strokeRect(lastMove.x*cs+3,lastMove.y*cs+3, cs-6, cs-6); }
       // legal move hints
       const hints = legalMoves(turn);
@@ -178,8 +194,10 @@
       if (ended) {
         ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0,0,w,h);
         ctx.fillStyle = '#f8fafc'; ctx.font='bold 28px system-ui,sans-serif'; ctx.textAlign='center';
-        ctx.fillText(resultText || 'ゲーム終了', w/2, h/2 - 6);
-        ctx.font='12px system-ui,sans-serif'; ctx.fillText('Rで再開 / 再起動できます', w/2, h/2 + 18);
+        const overlayText = text(resultState.key || 'overlay.title', resultState.fallback || 'Game Over');
+        ctx.fillText(overlayText, w/2, h/2 - 6);
+        ctx.font='12px system-ui,sans-serif';
+        ctx.fillText(text('overlay.restartHint', 'Press R to restart'), w/2, h/2 + 18);
         ctx.textAlign='start';
       }
     }
@@ -199,7 +217,7 @@
 
     function endIfNoMoves(){
       const currentMoves = legalMoves(turn);
-      if (currentMoves.length>0) return 'turn_has_moves';
+      if (currentMoves.length>0) { resultState = { key: null, fallback: '' }; return 'turn_has_moves'; }
       const passedColor = turn;
       turn = -turn;
       const nextMoves = legalMoves(turn);
@@ -208,9 +226,16 @@
       }
       ended = true; running=false;
       const s = score();
-      if (s.b > s.w){ resultText = 'あなたの勝ち！'; awardXp(bonus, { type:'win' }); }
-      else if (s.b < s.w){ resultText = 'あなたの負け…'; }
-      else { resultText = '引き分け'; }
+      if (s.b > s.w){
+        resultState = { key: 'overlay.result.win', fallback: 'You win!' };
+        awardXp(bonus, { type:'win' });
+      }
+      else if (s.b < s.w){
+        resultState = { key: 'overlay.result.loss', fallback: 'You lose…' };
+      }
+      else {
+        resultState = { key: 'overlay.result.draw', fallback: 'Draw' };
+      }
       draw();
       return 'ended';
     }
@@ -269,7 +294,12 @@
           const key = `${x},${y},${n}`;
           if (key !== lastHoverKey) {
             lastHoverKey = key;
-            try { if (window.showTransientPopupAt) window.showTransientPopupAt(cx, cy, `${n}枚 / 予想+${exp}EXP`); } catch {}
+            try {
+              if (window.showTransientPopupAt) {
+                const previewText = text('popup.movePreview', () => `${n} flips / approx +${exp} EXP`, { flips: n, xp: exp });
+                window.showTransientPopupAt(cx, cy, previewText);
+              }
+            } catch {}
           }
         }
       }
@@ -293,11 +323,11 @@
       }
     }
     function stop(){ if (running){ running=false; canvas.removeEventListener('click', click); canvas.removeEventListener('mousemove', mousemove); cancelAnimationFrame(rafId); } }
-    function destroy(){ try{ stop(); root && root.removeChild(canvas); }catch{} }
+    function destroy(){ try{ stop(); root && root.removeChild(canvas); }catch{} finally { try { detachLocale && detachLocale(); } catch {} } }
     function getScore(){ const s=score(); return s.b - s.w; }
 
     return { start, stop, destroy, getScore };
   }
 
-  window.registerMiniGame({ id:'othello', name:'オセロ', nameKey: 'selection.miniexp.games.othello.name', description:'反転×0.5 + 勝利ボーナス', descriptionKey: 'selection.miniexp.games.othello.description', categoryIds: ['board'], create });
+  window.registerMiniGame({ id:'othello', name:'Othello', nameKey: 'selection.miniexp.games.othello.name', description:'Gain XP from flips with a victory bonus', descriptionKey: 'selection.miniexp.games.othello.description', categoryIds: ['board'], create });
 })();

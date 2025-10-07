@@ -17289,6 +17289,63 @@ function resolveMiniGameText(def, key) {
     return fallbackValue;
 }
 
+function createMiniGameLocalization(def) {
+    const prefix = (() => {
+        if (!def) return 'minigame';
+        if (def.localizationKey) return def.localizationKey;
+        if (def.textKeyPrefix) return def.textKeyPrefix;
+        if (def.id) return `minigame.${def.id}`;
+        return 'minigame';
+    })();
+
+    const normalizeKey = (key) => {
+        if (!key) return prefix;
+        if (key.startsWith(prefix) || key.startsWith('minigame.')) return key;
+        if (key.startsWith('.')) return `${prefix}${key}`;
+        return `${prefix}.${key}`;
+    };
+
+    const translateText = (key, fallbackText, params) => {
+        const normalized = normalizeKey(key);
+        return translateOrFallback(normalized, fallbackText, params);
+    };
+
+    const handleLocaleChange = (listener) => {
+        if (typeof listener !== 'function') return () => {};
+        let unsubscribe = null;
+        try {
+            if (i18n && typeof i18n.onLocaleChanged === 'function') {
+                unsubscribe = i18n.onLocaleChanged(listener);
+            }
+        } catch {}
+        const rerenderListener = (event) => {
+            try {
+                listener(event?.detail?.locale || (i18n?.getLocale?.() || null));
+            } catch (error) {
+                console.warn('[MiniExp] Mini game localization listener error:', error);
+            }
+        };
+        document.addEventListener('app:rerender', rerenderListener);
+        return () => {
+            try { unsubscribe && unsubscribe(); } catch {}
+            document.removeEventListener('app:rerender', rerenderListener);
+        };
+    };
+
+    const formatNumber = (value, options) => formatNumberLocalized(value, options);
+    const localeCompare = (a, b, options) => localeCompareLocalized(a, b, options);
+
+    return {
+        prefix,
+        t: (key, fallbackText, params) => translateText(key, fallbackText, params),
+        formatNumber,
+        localeCompare,
+        getLocale: () => (i18n?.getLocale?.() || i18n?.getDefaultLocale?.() || 'ja'),
+        onChange: handleLocaleChange,
+    };
+}
+window.createMiniGameLocalization = createMiniGameLocalization;
+
 function getMiniGameCategoryEntries(def) {
     try {
         if (!def || typeof def !== 'object') {
@@ -17745,6 +17802,13 @@ window.registerMiniGame = function(def) {
     if (!def || !def.id) return;
     const existing = __miniGameRegistry[def.id] || {};
     const merged = Object.assign({}, existing, def);
+    try {
+        const prefix = def.localizationKey || def.textKeyPrefix || (def.id ? `minigame.${def.id}` : null);
+        if (prefix) {
+            if (!merged.localizationKey) merged.localizationKey = prefix;
+            if (!merged.textKeyPrefix) merged.textKeyPrefix = prefix;
+        }
+    } catch {}
     __miniGameRegistry[def.id] = merged;
     if (Array.isArray(__miniManifest)) {
         const idx = __miniManifest.findIndex(entry => entry && entry.id === def.id);
@@ -18706,11 +18770,13 @@ async function startSelectedMiniGame() {
             adjustSp: (delta, opts) => adjustPlayerSpFromMini(delta, opts || {}),
             fillSp: (opts) => fillPlayerSpFromMini(opts || {})
         };
+        const localization = createMiniGameLocalization(def);
         const createOptions = {
             difficulty: (miniexpDifficulty?.value || 'NORMAL'),
             shortcuts: shortcutController,
             player: playerApi,
-            dungeon: createMiniGameDungeonApi()
+            dungeon: createMiniGameDungeonApi(),
+            localization
         };
         runtime = mod.create(miniexpContainer, (n, meta) => {
             let payload;

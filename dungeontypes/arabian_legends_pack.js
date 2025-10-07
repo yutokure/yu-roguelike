@@ -612,14 +612,18 @@
       {
         id: 'mirage-caravan',
         name: '蜃気楼の隊商路',
+        nameKey: "dungeon.types.mirage_caravan.name",
         description: '砂漠の商隊跡とオアシスが点在するゆらめく回廊。',
+        descriptionKey: "dungeon.types.mirage_caravan.description",
         algorithm: mirageCaravan,
         mixin: { normalMixed: 0.5, blockDimMixed: 0.4, tags: ['desert', 'field', 'maze'] }
       },
       {
         id: 'moonlit-oasis',
         name: '月影のオアシス',
+        nameKey: "dungeon.types.moonlit_oasis.name",
         description: '月光が照らす泉と運河が広がる静かな夜の砂漠。',
+        descriptionKey: "dungeon.types.moonlit_oasis.description",
         dark: true,
         algorithm: moonlitOasis,
         mixin: { normalMixed: 0.35, blockDimMixed: 0.55, tags: ['water', 'desert', 'ritual'] }
@@ -627,49 +631,63 @@
       {
         id: 'saffron-citadel',
         name: 'サフランの城砦',
+        nameKey: "dungeon.types.saffron_citadel.name",
         description: '金砂の層が重なる階段状の防衛拠点。',
+        descriptionKey: "dungeon.types.saffron_citadel.description",
         algorithm: saffronCitadel,
         mixin: { normalMixed: 0.6, blockDimMixed: 0.35, tags: ['fortress', 'desert'] }
       },
       {
         id: 'labyrinthine-souk',
         name: '迷宮のスーク',
+        nameKey: "dungeon.types.labyrinthine_souk.name",
         description: '露店がひしめく複雑な市場の路地裏。',
+        descriptionKey: "dungeon.types.labyrinthine_souk.description",
         algorithm: labyrinthineSouk,
         mixin: { normalMixed: 0.45, blockDimMixed: 0.45, tags: ['maze', 'urban', 'market'] }
       },
       {
         id: 'windspire-minarets',
         name: '風塔ミナレット',
+        nameKey: "dungeon.types.windspire_minarets.name",
         description: '高くそびえるミナレットと気流の回廊。',
+        descriptionKey: "dungeon.types.windspire_minarets.description",
         algorithm: windspireMinarets,
         mixin: { normalMixed: 0.4, blockDimMixed: 0.5, tags: ['vertical', 'sky', 'desert'] }
       },
       {
         id: 'sunken-qanat',
         name: '地底カナート',
+        nameKey: "dungeon.types.sunken_qanat.name",
         description: '地下水路が結ぶオアシス群と涼しい風穴。',
+        descriptionKey: "dungeon.types.sunken_qanat.description",
         algorithm: sunkenQanat,
         mixin: { normalMixed: 0.5, blockDimMixed: 0.45, tags: ['water', 'underground'] }
       },
       {
         id: 'star-sand-garden',
         name: '星砂の庭園',
+        nameKey: "dungeon.types.star_sand_garden.name",
         description: '星型の回廊と幾何学紋様が広がる砂庭。',
+        descriptionKey: "dungeon.types.star_sand_garden.description",
         algorithm: starSandGarden,
         mixin: { normalMixed: 0.55, blockDimMixed: 0.35, tags: ['ritual', 'desert'] }
       },
       {
         id: 'gilded-tombs',
         name: '黄金の墳墓街',
+        nameKey: "dungeon.types.gilded_tombs.name",
         description: '砂の下に眠る王族の墓室群。',
+        descriptionKey: "dungeon.types.gilded_tombs.description",
         algorithm: gildedTombs,
         mixin: { normalMixed: 0.4, blockDimMixed: 0.5, tags: ['crypt', 'desert'] }
       },
       {
         id: 'storm-djinn-forge',
         name: '嵐精の炉',
+        nameKey: "dungeon.types.storm_djinn_forge.name",
         description: 'ジンが鍛造した嵐の導線が渦巻く魔鍛冶場。',
+        descriptionKey: "dungeon.types.storm_djinn_forge.description",
         dark: true,
         algorithm: stormDjinnForge,
         mixin: { normalMixed: 0.3, blockDimMixed: 0.55, tags: ['forge', 'arcane', 'storm'] }
@@ -677,42 +695,54 @@
       {
         id: 'celestial-astrolabe',
         name: '天球アストロラーベ',
+        nameKey: "dungeon.types.celestial_astrolabe.name",
         description: '星の軌跡を刻む円環と星図の聖堂。',
+        descriptionKey: "dungeon.types.celestial_astrolabe.description",
         algorithm: celestialAstrolabe,
         mixin: { normalMixed: 0.35, blockDimMixed: 0.55, tags: ['ritual', 'astral'] }
       },
       {
         id: 'aurora-dune-sea',
         name: '黎明の砂海',
+        nameKey: "dungeon.types.aurora_dune_sea.name",
         description: 'オーロラが揺らめく砂丘が幾重にも波打つ幻彩の海。',
+        descriptionKey: "dungeon.types.aurora_dune_sea.description",
         algorithm: auroraDuneSea,
         mixin: { normalMixed: 0.5, blockDimMixed: 0.4, tags: ['desert', 'mirage', 'open-space'] }
       },
       {
         id: 'sapphire-madrasa',
         name: '蒼瑠璃のマドラサ',
+        nameKey: "dungeon.types.sapphire_madrasa.name",
         description: '幾何学タイルが輝く左右対称の学術庭園。',
+        descriptionKey: "dungeon.types.sapphire_madrasa.description",
         algorithm: sapphireMadrasa,
         mixin: { normalMixed: 0.45, blockDimMixed: 0.45, tags: ['ritual', 'urban', 'sacred'] }
       },
       {
         id: 'prismatic-carpet-gallery',
         name: '虹織の絨毯回廊',
+        nameKey: "dungeon.types.prismatic_carpet_gallery.name",
         description: '織機のように色帯が交差する華やかな展示街路。',
+        descriptionKey: "dungeon.types.prismatic_carpet_gallery.description",
         algorithm: prismaticCarpetGallery,
         mixin: { normalMixed: 0.55, blockDimMixed: 0.35, tags: ['market', 'maze', 'festival'] }
       },
       {
         id: 'hanging-garden-terraces',
         name: '宙庭の段丘',
+        nameKey: "dungeon.types.hanging_garden_terraces.name",
         description: '空に浮かぶ庭園が段状に連なる翠の聖域。',
+        descriptionKey: "dungeon.types.hanging_garden_terraces.description",
         algorithm: hangingGardenTerraces,
         mixin: { normalMixed: 0.6, blockDimMixed: 0.3, tags: ['garden', 'fortress'] }
       },
       {
         id: 'emberglass-sanctum',
         name: '熾砂の聖室',
+        nameKey: "dungeon.types.emberglass_sanctum.name",
         description: '赤熱するガラス円環が連なる魔術の炉心。',
+        descriptionKey: "dungeon.types.emberglass_sanctum.description",
         dark: true,
         algorithm: emberglassSanctum,
         mixin: { normalMixed: 0.3, blockDimMixed: 0.6, tags: ['forge', 'ritual', 'heat'] }
@@ -720,7 +750,9 @@
       {
         id: 'astral-mirage-archive',
         name: '星幻の書架',
+        nameKey: "dungeon.types.astral_mirage_archive.name",
         description: '星砂を編んだ螺旋回廊に記憶の書が漂う資料庫。',
+        descriptionKey: "dungeon.types.astral_mirage_archive.description",
         algorithm: astralMirageArchive,
         mixin: { normalMixed: 0.35, blockDimMixed: 0.6, tags: ['astral', 'library', 'ritual'] }
       }
@@ -729,62 +761,546 @@
 
   function createBlocks() {
     const blocks1 = [
-      { key: 'arabia-mirage-path', name: 'طريق السراب', level: +1, size: 0, depth: +1, chest: 'normal', type: 'mirage-caravan' },
-      { key: 'arabia-caravan-camp', name: 'معسكر القافلة', level: +2, size: +1, depth: +1, chest: 'more', type: 'mirage-caravan' },
-      { key: 'arabia-oasis-heart', name: 'قلب الواحة', level: +1, size: 0, depth: +1, chest: 'normal', type: 'moonlit-oasis' },
-      { key: 'arabia-saffron-terrace', name: 'شرفة الزعفران', level: +2, size: +1, depth: +1, chest: 'normal', type: 'saffron-citadel' },
-      { key: 'arabia-souk-arcade', name: 'أروقة السوق', level: +1, size: 0, depth: 0, chest: 'normal', type: 'labyrinthine-souk' },
-      { key: 'arabia-minaret-walk', name: 'ممر المئذنة', level: +2, size: 0, depth: +1, chest: 'less', type: 'windspire-minarets' },
-      { key: 'arabia-qanat-channel', name: 'قناة القنوات', level: +1, size: 0, depth: +1, chest: 'less', type: 'sunken-qanat' },
-      { key: 'arabia-star-garden', name: 'حديقة النجوم', level: +2, size: +1, depth: +1, chest: 'normal', type: 'star-sand-garden' },
-      { key: 'arabia-golden-crypt', name: 'سرداب الذهب', level: +3, size: 0, depth: +1, chest: 'more', type: 'gilded-tombs' },
-      { key: 'arabia-djinn-furnace', name: 'فرن الجن', level: +3, size: 0, depth: +2, chest: 'less', type: 'storm-djinn-forge', meta: { hazard: 'ember-gust' } },
-      { key: 'arabia-astrolabe-ring', name: 'حلقة النجوم', level: +2, size: +1, depth: +1, chest: 'normal', type: 'celestial-astrolabe' },
-      { key: 'arabia-aurora-dune', name: 'كثبان الفجر', level: +2, size: 0, depth: +1, chest: 'normal', type: 'aurora-dune-sea' },
-      { key: 'arabia-madrasa-court', name: 'فناء المدرسة', level: +1, size: 0, depth: 0, chest: 'normal', type: 'sapphire-madrasa' },
-      { key: 'arabia-carpet-corridor', name: 'ممر السجاد', level: +2, size: 0, depth: +1, chest: 'normal', type: 'prismatic-carpet-gallery' },
-      { key: 'arabia-garden-ledge', name: 'شرفة الحدائق', level: +2, size: +1, depth: +1, chest: 'more', type: 'hanging-garden-terraces' },
-      { key: 'arabia-ember-hall', name: 'قاعة الجمرة', level: +3, size: 0, depth: +2, chest: 'less', type: 'emberglass-sanctum', meta: { hazard: 'pyre-surge' } },
-      { key: 'arabia-astral-script', name: 'مخطوط النجوم', level: +2, size: 0, depth: +1, chest: 'normal', type: 'astral-mirage-archive' },
-      { key: 'arabia-sandalwood-vault', name: 'خزينة العود', level: +3, size: 0, depth: +1, chest: 'more', type: 'labyrinthine-souk', bossFloors: [8, 12] }
+      {
+        key: 'arabia-mirage-path',
+        name: 'طريق السراب',
+        nameKey: "dungeon.types.mirage_caravan.blocks.arabia-mirage-path.name",
+        level: +1,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'mirage-caravan'
+      },
+      {
+        key: 'arabia-caravan-camp',
+        name: 'معسكر القافلة',
+        nameKey: "dungeon.types.mirage_caravan.blocks.arabia-caravan-camp.name",
+        level: +2,
+        size: +1,
+        depth: +1,
+        chest: 'more',
+        type: 'mirage-caravan'
+      },
+      {
+        key: 'arabia-oasis-heart',
+        name: 'قلب الواحة',
+        nameKey: "dungeon.types.moonlit_oasis.blocks.arabia-oasis-heart.name",
+        level: +1,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'moonlit-oasis'
+      },
+      {
+        key: 'arabia-saffron-terrace',
+        name: 'شرفة الزعفران',
+        nameKey: "dungeon.types.saffron_citadel.blocks.arabia-saffron-terrace.name",
+        level: +2,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'saffron-citadel'
+      },
+      {
+        key: 'arabia-souk-arcade',
+        name: 'أروقة السوق',
+        nameKey: "dungeon.types.labyrinthine_souk.blocks.arabia-souk-arcade.name",
+        level: +1,
+        size: 0,
+        depth: 0,
+        chest: 'normal',
+        type: 'labyrinthine-souk'
+      },
+      {
+        key: 'arabia-minaret-walk',
+        name: 'ممر المئذنة',
+        nameKey: "dungeon.types.windspire_minarets.blocks.arabia-minaret-walk.name",
+        level: +2,
+        size: 0,
+        depth: +1,
+        chest: 'less',
+        type: 'windspire-minarets'
+      },
+      {
+        key: 'arabia-qanat-channel',
+        name: 'قناة القنوات',
+        nameKey: "dungeon.types.sunken_qanat.blocks.arabia-qanat-channel.name",
+        level: +1,
+        size: 0,
+        depth: +1,
+        chest: 'less',
+        type: 'sunken-qanat'
+      },
+      {
+        key: 'arabia-star-garden',
+        name: 'حديقة النجوم',
+        nameKey: "dungeon.types.star_sand_garden.blocks.arabia-star-garden.name",
+        level: +2,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'star-sand-garden'
+      },
+      {
+        key: 'arabia-golden-crypt',
+        name: 'سرداب الذهب',
+        nameKey: "dungeon.types.gilded_tombs.blocks.arabia-golden-crypt.name",
+        level: +3,
+        size: 0,
+        depth: +1,
+        chest: 'more',
+        type: 'gilded-tombs'
+      },
+      {
+        key: 'arabia-djinn-furnace',
+        name: 'فرن الجن',
+        nameKey: "dungeon.types.storm_djinn_forge.blocks.arabia-djinn-furnace.name",
+        level: +3,
+        size: 0,
+        depth: +2,
+        chest: 'less',
+        type: 'storm-djinn-forge',
+        meta: { hazard: 'ember-gust' }
+      },
+      {
+        key: 'arabia-astrolabe-ring',
+        name: 'حلقة النجوم',
+        nameKey: "dungeon.types.celestial_astrolabe.blocks.arabia-astrolabe-ring.name",
+        level: +2,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'celestial-astrolabe'
+      },
+      {
+        key: 'arabia-aurora-dune',
+        name: 'كثبان الفجر',
+        nameKey: "dungeon.types.aurora_dune_sea.blocks.arabia-aurora-dune.name",
+        level: +2,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'aurora-dune-sea'
+      },
+      {
+        key: 'arabia-madrasa-court',
+        name: 'فناء المدرسة',
+        nameKey: "dungeon.types.sapphire_madrasa.blocks.arabia-madrasa-court.name",
+        level: +1,
+        size: 0,
+        depth: 0,
+        chest: 'normal',
+        type: 'sapphire-madrasa'
+      },
+      {
+        key: 'arabia-carpet-corridor',
+        name: 'ممر السجاد',
+        nameKey: "dungeon.types.prismatic_carpet_gallery.blocks.arabia-carpet-corridor.name",
+        level: +2,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'prismatic-carpet-gallery'
+      },
+      {
+        key: 'arabia-garden-ledge',
+        name: 'شرفة الحدائق',
+        nameKey: "dungeon.types.hanging_garden_terraces.blocks.arabia-garden-ledge.name",
+        level: +2,
+        size: +1,
+        depth: +1,
+        chest: 'more',
+        type: 'hanging-garden-terraces'
+      },
+      {
+        key: 'arabia-ember-hall',
+        name: 'قاعة الجمرة',
+        nameKey: "dungeon.types.emberglass_sanctum.blocks.arabia-ember-hall.name",
+        level: +3,
+        size: 0,
+        depth: +2,
+        chest: 'less',
+        type: 'emberglass-sanctum',
+        meta: { hazard: 'pyre-surge' }
+      },
+      {
+        key: 'arabia-astral-script',
+        name: 'مخطوط النجوم',
+        nameKey: "dungeon.types.astral_mirage_archive.blocks.arabia-astral-script.name",
+        level: +2,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'astral-mirage-archive'
+      },
+      {
+        key: 'arabia-sandalwood-vault',
+        name: 'خزينة العود',
+        nameKey: "dungeon.types.labyrinthine_souk.blocks.arabia-sandalwood-vault.name",
+        level: +3,
+        size: 0,
+        depth: +1,
+        chest: 'more',
+        type: 'labyrinthine-souk',
+        bossFloors: [8, 12]
+      }
     ];
 
     const blocks2 = [
-      { key: 'arabia-mirage-gate', name: 'بوابة السراب', level: +4, size: +1, depth: +2, chest: 'normal', type: 'mirage-caravan', bossFloors: [10, 15] },
-      { key: 'arabia-oasis-sanctum', name: 'محراب الواحة', level: +4, size: +1, depth: +2, chest: 'more', type: 'moonlit-oasis', bossFloors: [12], meta: { blessing: 'lunar-tide' } },
-      { key: 'arabia-citadel-throne', name: 'عرش القلعة', level: +5, size: +1, depth: +2, chest: 'more', type: 'saffron-citadel', bossFloors: [14, 18] },
-      { key: 'arabia-souk-maze-core', name: 'متاهة السوق', level: +4, size: 0, depth: +2, chest: 'normal', type: 'labyrinthine-souk', meta: { hazard: 'thief-ambush' } },
-      { key: 'arabia-minaret-summit', name: 'قمة المئذنة', level: +4, size: 0, depth: +2, chest: 'less', type: 'windspire-minarets', bossFloors: [11] },
-      { key: 'arabia-qanat-reservoir', name: 'خزان القنوات', level: +4, size: +1, depth: +2, chest: 'more', type: 'sunken-qanat' },
-      { key: 'arabia-star-sigil', name: 'ختم النجمة', level: +4, size: 0, depth: +2, chest: 'normal', type: 'star-sand-garden', meta: { hazard: 'sand-ward' } },
-      { key: 'arabia-gilded-sarcophagus', name: 'تابوت مرصع', level: +5, size: +1, depth: +2, chest: 'more', type: 'gilded-tombs', bossFloors: [13] },
-      { key: 'arabia-djinn-reactor', name: 'مفاعل العاصفة', level: +5, size: +1, depth: +3, chest: 'less', type: 'storm-djinn-forge', meta: { hazard: 'ion-tempest' } },
-      { key: 'arabia-astral-dome', name: 'قبة فلكية', level: +4, size: +1, depth: +2, chest: 'normal', type: 'celestial-astrolabe', bossFloors: [12, 17] },
-      { key: 'arabia-aurora-amphitheatre', name: 'مدرج الشفق', level: +4, size: +1, depth: +2, chest: 'more', type: 'aurora-dune-sea', bossFloors: [14] },
-      { key: 'arabia-madrasa-vault', name: 'خزينة المعارف', level: +4, size: 0, depth: +2, chest: 'normal', type: 'sapphire-madrasa', meta: { blessing: 'scholar-light' } },
-      { key: 'arabia-carpet-loom', name: 'منسج الألوان', level: +4, size: +1, depth: +2, chest: 'more', type: 'prismatic-carpet-gallery' },
-      { key: 'arabia-garden-aerial', name: 'حديقة المعلّقات', level: +4, size: +1, depth: +2, chest: 'normal', type: 'hanging-garden-terraces', bossFloors: [16] },
-      { key: 'arabia-ember-altar', name: 'مذبح الجمرة', level: +5, size: 0, depth: +3, chest: 'less', type: 'emberglass-sanctum', meta: { hazard: 'glass-scorch' } },
-      { key: 'arabia-astral-orrery', name: 'مدار المخطوط', level: +5, size: +1, depth: +3, chest: 'normal', type: 'astral-mirage-archive', bossFloors: [18] }
+      {
+        key: 'arabia-mirage-gate',
+        name: 'بوابة السراب',
+        nameKey: "dungeon.types.mirage_caravan.blocks.arabia-mirage-gate.name",
+        level: +4,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'mirage-caravan',
+        bossFloors: [10, 15]
+      },
+      {
+        key: 'arabia-oasis-sanctum',
+        name: 'محراب الواحة',
+        nameKey: "dungeon.types.moonlit_oasis.blocks.arabia-oasis-sanctum.name",
+        level: +4,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'moonlit-oasis',
+        bossFloors: [12],
+        meta: { blessing: 'lunar-tide' }
+      },
+      {
+        key: 'arabia-citadel-throne',
+        name: 'عرش القلعة',
+        nameKey: "dungeon.types.saffron_citadel.blocks.arabia-citadel-throne.name",
+        level: +5,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'saffron-citadel',
+        bossFloors: [14, 18]
+      },
+      {
+        key: 'arabia-souk-maze-core',
+        name: 'متاهة السوق',
+        nameKey: "dungeon.types.labyrinthine_souk.blocks.arabia-souk-maze-core.name",
+        level: +4,
+        size: 0,
+        depth: +2,
+        chest: 'normal',
+        type: 'labyrinthine-souk',
+        meta: { hazard: 'thief-ambush' }
+      },
+      {
+        key: 'arabia-minaret-summit',
+        name: 'قمة المئذنة',
+        nameKey: "dungeon.types.windspire_minarets.blocks.arabia-minaret-summit.name",
+        level: +4,
+        size: 0,
+        depth: +2,
+        chest: 'less',
+        type: 'windspire-minarets',
+        bossFloors: [11]
+      },
+      {
+        key: 'arabia-qanat-reservoir',
+        name: 'خزان القنوات',
+        nameKey: "dungeon.types.sunken_qanat.blocks.arabia-qanat-reservoir.name",
+        level: +4,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'sunken-qanat'
+      },
+      {
+        key: 'arabia-star-sigil',
+        name: 'ختم النجمة',
+        nameKey: "dungeon.types.star_sand_garden.blocks.arabia-star-sigil.name",
+        level: +4,
+        size: 0,
+        depth: +2,
+        chest: 'normal',
+        type: 'star-sand-garden',
+        meta: { hazard: 'sand-ward' }
+      },
+      {
+        key: 'arabia-gilded-sarcophagus',
+        name: 'تابوت مرصع',
+        nameKey: "dungeon.types.gilded_tombs.blocks.arabia-gilded-sarcophagus.name",
+        level: +5,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'gilded-tombs',
+        bossFloors: [13]
+      },
+      {
+        key: 'arabia-djinn-reactor',
+        name: 'مفاعل العاصفة',
+        nameKey: "dungeon.types.storm_djinn_forge.blocks.arabia-djinn-reactor.name",
+        level: +5,
+        size: +1,
+        depth: +3,
+        chest: 'less',
+        type: 'storm-djinn-forge',
+        meta: { hazard: 'ion-tempest' }
+      },
+      {
+        key: 'arabia-astral-dome',
+        name: 'قبة فلكية',
+        nameKey: "dungeon.types.celestial_astrolabe.blocks.arabia-astral-dome.name",
+        level: +4,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'celestial-astrolabe',
+        bossFloors: [12, 17]
+      },
+      {
+        key: 'arabia-aurora-amphitheatre',
+        name: 'مدرج الشفق',
+        nameKey: "dungeon.types.aurora_dune_sea.blocks.arabia-aurora-amphitheatre.name",
+        level: +4,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'aurora-dune-sea',
+        bossFloors: [14]
+      },
+      {
+        key: 'arabia-madrasa-vault',
+        name: 'خزينة المعارف',
+        nameKey: "dungeon.types.sapphire_madrasa.blocks.arabia-madrasa-vault.name",
+        level: +4,
+        size: 0,
+        depth: +2,
+        chest: 'normal',
+        type: 'sapphire-madrasa',
+        meta: { blessing: 'scholar-light' }
+      },
+      {
+        key: 'arabia-carpet-loom',
+        name: 'منسج الألوان',
+        nameKey: "dungeon.types.prismatic_carpet_gallery.blocks.arabia-carpet-loom.name",
+        level: +4,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'prismatic-carpet-gallery'
+      },
+      {
+        key: 'arabia-garden-aerial',
+        name: 'حديقة المعلّقات',
+        nameKey: "dungeon.types.hanging_garden_terraces.blocks.arabia-garden-aerial.name",
+        level: +4,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'hanging-garden-terraces',
+        bossFloors: [16]
+      },
+      {
+        key: 'arabia-ember-altar',
+        name: 'مذبح الجمرة',
+        nameKey: "dungeon.types.emberglass_sanctum.blocks.arabia-ember-altar.name",
+        level: +5,
+        size: 0,
+        depth: +3,
+        chest: 'less',
+        type: 'emberglass-sanctum',
+        meta: { hazard: 'glass-scorch' }
+      },
+      {
+        key: 'arabia-astral-orrery',
+        name: 'مدار المخطوط',
+        nameKey: "dungeon.types.astral_mirage_archive.blocks.arabia-astral-orrery.name",
+        level: +5,
+        size: +1,
+        depth: +3,
+        chest: 'normal',
+        type: 'astral-mirage-archive',
+        bossFloors: [18]
+      }
     ];
 
     const blocks3 = [
-      { key: 'arabia-mirage-lord', name: 'سيد السراب', level: +6, size: +2, depth: +3, chest: 'more', type: 'mirage-caravan', bossFloors: [18, 24] },
-      { key: 'arabia-oasis-oracle', name: 'عرّافة الواحة', level: +6, size: +1, depth: +3, chest: 'more', type: 'moonlit-oasis', bossFloors: [20] },
-      { key: 'arabia-saffron-emperor', name: 'إمبراطور الزعفران', level: +6, size: +2, depth: +3, chest: 'less', type: 'saffron-citadel', bossFloors: [22] },
-      { key: 'arabia-souk-sultana', name: 'سلطانة السوق', level: +6, size: +1, depth: +3, chest: 'more', type: 'labyrinthine-souk', bossFloors: [19] },
-      { key: 'arabia-minaret-windlord', name: 'سيد الرياح', level: +6, size: +1, depth: +3, chest: 'less', type: 'windspire-minarets', bossFloors: [21] },
-      { key: 'arabia-qanat-guardian', name: 'حارس القنوات', level: +6, size: +2, depth: +3, chest: 'normal', type: 'sunken-qanat', bossFloors: [20] },
-      { key: 'arabia-star-astromancer', name: 'عراف النجوم', level: +6, size: +2, depth: +3, chest: 'more', type: 'star-sand-garden', bossFloors: [23] },
-      { key: 'arabia-gilded-pharaoh', name: 'فرعون مذهب', level: +6, size: +2, depth: +3, chest: 'more', type: 'gilded-tombs', bossFloors: [24] },
-      { key: 'arabia-djinn-king', name: 'ملك الجن', level: +7, size: +2, depth: +4, chest: 'less', type: 'storm-djinn-forge', bossFloors: [25] },
-      { key: 'arabia-astral-caliph', name: 'خليفة النجوم', level: +7, size: +2, depth: +4, chest: 'normal', type: 'celestial-astrolabe', bossFloors: [26] },
-      { key: 'arabia-aurora-sovereign', name: 'سيّد الشفق', level: +7, size: +2, depth: +4, chest: 'more', type: 'aurora-dune-sea', bossFloors: [27] },
-      { key: 'arabia-madrasa-archsage', name: 'حكيم اللازوردي', level: +7, size: +2, depth: +4, chest: 'more', type: 'sapphire-madrasa', bossFloors: [28] },
-      { key: 'arabia-carpet-paragon', name: 'معلّم النسيج', level: +7, size: +2, depth: +4, chest: 'more', type: 'prismatic-carpet-gallery', bossFloors: [29] },
-      { key: 'arabia-garden-seraph', name: 'حارس المعلقات', level: +7, size: +2, depth: +4, chest: 'normal', type: 'hanging-garden-terraces', bossFloors: [30] },
-      { key: 'arabia-ember-avatar', name: 'تجسيد الجمرة', level: +8, size: +2, depth: +4, chest: 'less', type: 'emberglass-sanctum', bossFloors: [31] },
-      { key: 'arabia-astral-archivist', name: 'أمين السجلات النجمية', level: +8, size: +2, depth: +4, chest: 'normal', type: 'astral-mirage-archive', bossFloors: [32] }
+      {
+        key: 'arabia-mirage-lord',
+        name: 'سيد السراب',
+        nameKey: "dungeon.types.mirage_caravan.blocks.arabia-mirage-lord.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'more',
+        type: 'mirage-caravan',
+        bossFloors: [18, 24]
+      },
+      {
+        key: 'arabia-oasis-oracle',
+        name: 'عرّافة الواحة',
+        nameKey: "dungeon.types.moonlit_oasis.blocks.arabia-oasis-oracle.name",
+        level: +6,
+        size: +1,
+        depth: +3,
+        chest: 'more',
+        type: 'moonlit-oasis',
+        bossFloors: [20]
+      },
+      {
+        key: 'arabia-saffron-emperor',
+        name: 'إمبراطور الزعفران',
+        nameKey: "dungeon.types.saffron_citadel.blocks.arabia-saffron-emperor.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'less',
+        type: 'saffron-citadel',
+        bossFloors: [22]
+      },
+      {
+        key: 'arabia-souk-sultana',
+        name: 'سلطانة السوق',
+        nameKey: "dungeon.types.labyrinthine_souk.blocks.arabia-souk-sultana.name",
+        level: +6,
+        size: +1,
+        depth: +3,
+        chest: 'more',
+        type: 'labyrinthine-souk',
+        bossFloors: [19]
+      },
+      {
+        key: 'arabia-minaret-windlord',
+        name: 'سيد الرياح',
+        nameKey: "dungeon.types.windspire_minarets.blocks.arabia-minaret-windlord.name",
+        level: +6,
+        size: +1,
+        depth: +3,
+        chest: 'less',
+        type: 'windspire-minarets',
+        bossFloors: [21]
+      },
+      {
+        key: 'arabia-qanat-guardian',
+        name: 'حارس القنوات',
+        nameKey: "dungeon.types.sunken_qanat.blocks.arabia-qanat-guardian.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'normal',
+        type: 'sunken-qanat',
+        bossFloors: [20]
+      },
+      {
+        key: 'arabia-star-astromancer',
+        name: 'عراف النجوم',
+        nameKey: "dungeon.types.star_sand_garden.blocks.arabia-star-astromancer.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'more',
+        type: 'star-sand-garden',
+        bossFloors: [23]
+      },
+      {
+        key: 'arabia-gilded-pharaoh',
+        name: 'فرعون مذهب',
+        nameKey: "dungeon.types.gilded_tombs.blocks.arabia-gilded-pharaoh.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'more',
+        type: 'gilded-tombs',
+        bossFloors: [24]
+      },
+      {
+        key: 'arabia-djinn-king',
+        name: 'ملك الجن',
+        nameKey: "dungeon.types.storm_djinn_forge.blocks.arabia-djinn-king.name",
+        level: +7,
+        size: +2,
+        depth: +4,
+        chest: 'less',
+        type: 'storm-djinn-forge',
+        bossFloors: [25]
+      },
+      {
+        key: 'arabia-astral-caliph',
+        name: 'خليفة النجوم',
+        nameKey: "dungeon.types.celestial_astrolabe.blocks.arabia-astral-caliph.name",
+        level: +7,
+        size: +2,
+        depth: +4,
+        chest: 'normal',
+        type: 'celestial-astrolabe',
+        bossFloors: [26]
+      },
+      {
+        key: 'arabia-aurora-sovereign',
+        name: 'سيّد الشفق',
+        nameKey: "dungeon.types.aurora_dune_sea.blocks.arabia-aurora-sovereign.name",
+        level: +7,
+        size: +2,
+        depth: +4,
+        chest: 'more',
+        type: 'aurora-dune-sea',
+        bossFloors: [27]
+      },
+      {
+        key: 'arabia-madrasa-archsage',
+        name: 'حكيم اللازوردي',
+        nameKey: "dungeon.types.sapphire_madrasa.blocks.arabia-madrasa-archsage.name",
+        level: +7,
+        size: +2,
+        depth: +4,
+        chest: 'more',
+        type: 'sapphire-madrasa',
+        bossFloors: [28]
+      },
+      {
+        key: 'arabia-carpet-paragon',
+        name: 'معلّم النسيج',
+        nameKey: "dungeon.types.prismatic_carpet_gallery.blocks.arabia-carpet-paragon.name",
+        level: +7,
+        size: +2,
+        depth: +4,
+        chest: 'more',
+        type: 'prismatic-carpet-gallery',
+        bossFloors: [29]
+      },
+      {
+        key: 'arabia-garden-seraph',
+        name: 'حارس المعلقات',
+        nameKey: "dungeon.types.hanging_garden_terraces.blocks.arabia-garden-seraph.name",
+        level: +7,
+        size: +2,
+        depth: +4,
+        chest: 'normal',
+        type: 'hanging-garden-terraces',
+        bossFloors: [30]
+      },
+      {
+        key: 'arabia-ember-avatar',
+        name: 'تجسيد الجمرة',
+        nameKey: "dungeon.types.emberglass_sanctum.blocks.arabia-ember-avatar.name",
+        level: +8,
+        size: +2,
+        depth: +4,
+        chest: 'less',
+        type: 'emberglass-sanctum',
+        bossFloors: [31]
+      },
+      {
+        key: 'arabia-astral-archivist',
+        name: 'أمين السجلات النجمية',
+        nameKey: "dungeon.types.astral_mirage_archive.blocks.arabia-astral-archivist.name",
+        level: +8,
+        size: +2,
+        depth: +4,
+        chest: 'normal',
+        type: 'astral-mirage-archive',
+        bossFloors: [32]
+      }
     ];
 
     return { blocks1, blocks2, blocks3 };

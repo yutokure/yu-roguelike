@@ -1422,6 +1422,7 @@
   window.registerDungeonAddon({
     id: 'traditional_japan_expansion_pack',
     name: 'Traditional Japan Expansion Pack',
+    nameKey: "dungeon.packs.traditional_japan_expansion_pack.name",
     version: '1.2.0',
     blocks,
     generators

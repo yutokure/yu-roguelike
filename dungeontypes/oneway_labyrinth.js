@@ -91,7 +91,9 @@
   const generator = {
     id: 'oneway-labyrinth',
     name: '矢印迷宮',
+    nameKey: "dungeon.types.oneway_labyrinth.name",
     description: '一方通行の回廊が重なり合う複雑な迷宮',
+    descriptionKey: "dungeon.types.oneway_labyrinth.description",
     recommendedLevel: 52,
     algorithm: carveArrowMaze,
     mixin: { normalMixed: 0.25, blockDimMixed: 0.5, tags: ['labyrinth', 'hazard'] }
@@ -99,20 +101,58 @@
 
   const blocks = {
     blocks1: [
-      { key: 'oneway_labyrinth_a', name: '矢印回廊', level: +12, size: 0, depth: +1, chest: 'normal', type: 'oneway-labyrinth' },
-      { key: 'oneway_labyrinth_b', name: '交差広間', level: +20, size: +1, depth: +2, chest: 'more', type: 'oneway-labyrinth' }
+      {
+        key: 'oneway_labyrinth_a',
+        name: '矢印回廊',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_a.name",
+        level: +12,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'oneway-labyrinth'
+      },
+      {
+        key: 'oneway_labyrinth_b',
+        name: '交差広間',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_b.name",
+        level: +20,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'oneway-labyrinth'
+      }
     ],
     blocks2: [
-      { key: 'oneway_labyrinth_core', name: '迷いの核', level: +28, size: +1, depth: +2, chest: 'rich', type: 'oneway-labyrinth' }
+      {
+        key: 'oneway_labyrinth_core',
+        name: '迷いの核',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_core.name",
+        level: +28,
+        size: +1,
+        depth: +2,
+        chest: 'rich',
+        type: 'oneway-labyrinth'
+      }
     ],
     blocks3: [
-      { key: 'oneway_labyrinth_boss', name: '終端円環', level: +36, size: +2, depth: +3, chest: 'rich', type: 'oneway-labyrinth', bossFloors: [8, 16] }
+      {
+        key: 'oneway_labyrinth_boss',
+        name: '終端円環',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_boss.name",
+        level: +36,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'oneway-labyrinth',
+        bossFloors: [8, 16]
+      }
     ]
   };
 
   window.registerDungeonAddon({
     id: 'oneway_labyrinth_pack',
     name: 'One-Way Labyrinth Pack',
+    nameKey: "dungeon.packs.oneway_labyrinth_pack.name",
     version: '1.0.0',
     generators: [generator],
     blocks

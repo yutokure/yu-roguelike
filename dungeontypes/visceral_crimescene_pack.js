@@ -598,70 +598,90 @@
     {
       id: 'visceral-chambers',
       name: '臓腑血溜り回廊',
+      nameKey: "dungeon.types.visceral_chambers.name",
       description: '鼓動する肉腔が連結する血の池。拍動する管が冒険者を包囲する。',
+      descriptionKey: "dungeon.types.visceral_chambers.description",
       algorithm: visceralChambersAlgorithm,
       mixin: { normalMixed: 0.32, blockDimMixed: 0.45, tags: ['organic','horror','pulse'] }
     },
     {
       id: 'arterial-sprawl',
       name: '動脈樹の腫瘍巣',
+      nameKey: "dungeon.types.arterial_sprawl.name",
       description: '奔流する血管が網状に広がり、血栓の巣が点在する粘性ダンジョン。',
+      descriptionKey: "dungeon.types.arterial_sprawl.description",
       algorithm: arterialSprawlAlgorithm,
       mixin: { normalMixed: 0.28, blockDimMixed: 0.4, tags: ['organic','network','hazard'] }
     },
     {
       id: 'necrotic-warrens',
       name: '壊死した蠢動坑',
+      nameKey: "dungeon.types.necrotic_warrens.name",
       description: '壊死した肉塊が崩落し続ける洞穴。腐臭の靄が立ち込める。',
+      descriptionKey: "dungeon.types.necrotic_warrens.description",
       algorithm: necroticWarrensAlgorithm,
       mixin: { normalMixed: 0.36, blockDimMixed: 0.42, tags: ['cavern','decay','maze'] }
     },
     {
       id: 'clotted-catacombs',
       name: '凝血の地下納骨堂',
+      nameKey: "dungeon.types.clotted_catacombs.name",
       description: '凝り固まった血塊で形成された部屋と廊下が重層に交わる。',
+      descriptionKey: "dungeon.types.clotted_catacombs.description",
       algorithm: clottedCatacombsAlgorithm,
       mixin: { normalMixed: 0.27, blockDimMixed: 0.36, tags: ['catacomb','grid','hazard'] }
     },
     {
       id: 'cadaverous-labyrinth',
       name: '屍迷の検死迷宮',
+      nameKey: "dungeon.types.cadaverous_labyrinth.name",
       description: '収容された遺体の袋が通路を侵食し、恐怖の血路が迷走する。',
+      descriptionKey: "dungeon.types.cadaverous_labyrinth.description",
       algorithm: cadaverousLabyrinthAlgorithm,
       mixin: { normalMixed: 0.33, blockDimMixed: 0.38, tags: ['maze','organic','ambient'] }
     },
     {
       id: 'surgical-theatre',
       name: '血濡れ手術劇場',
+      nameKey: "dungeon.types.surgical_theatre.name",
       description: '円形の観覧席が血の舞台を囲い、焦げた鉄の匂いが漂う。',
+      descriptionKey: "dungeon.types.surgical_theatre.description",
       algorithm: surgicalTheatreAlgorithm,
       mixin: { normalMixed: 0.24, blockDimMixed: 0.34, tags: ['arena','ritual','hazard'] }
     },
     {
       id: 'forensic-gallery',
       name: '検死標本ギャラリー',
+      nameKey: "dungeon.types.forensic_gallery.name",
       description: '血で封じられた展示室が連なる。標本棚には凍った証拠が煌めく。',
+      descriptionKey: "dungeon.types.forensic_gallery.description",
       algorithm: forensicGalleryAlgorithm,
       mixin: { normalMixed: 0.29, blockDimMixed: 0.37, tags: ['gallery','puzzle','organic'] }
     },
     {
       id: 'coagulated-pits',
       name: '血餅の落とし穴群',
+      nameKey: "dungeon.types.coagulated_pits.name",
       description: '血餅だまりが底無しの落とし穴となり、噛み締めるように獲物を沈める。',
+      descriptionKey: "dungeon.types.coagulated_pits.description",
       algorithm: coagulatedPitsAlgorithm,
       mixin: { normalMixed: 0.31, blockDimMixed: 0.41, tags: ['pit','hazard','organic'] }
     },
     {
       id: 'morgue-silos',
       name: '屍庫垂直筒',
+      nameKey: "dungeon.types.morgue_silos.name",
       description: '垂直に伸びる収容筒と搬送路が格子状に組み合わさる冷たい死庫。',
+      descriptionKey: "dungeon.types.morgue_silos.description",
       algorithm: morgueSilosAlgorithm,
       mixin: { normalMixed: 0.25, blockDimMixed: 0.33, tags: ['industrial','vertical','horror'] }
     },
     {
       id: 'thanatology-sanctum',
       name: '死生学の聖域',
+      nameKey: "dungeon.types.thanatology_sanctum.name",
       description: '死を解析する祭壇が幾重にも広がる幾何学的な血の聖堂。',
+      descriptionKey: "dungeon.types.thanatology_sanctum.description",
       algorithm: thanatologySanctumAlgorithm,
       mixin: { normalMixed: 0.22, blockDimMixed: 0.35, tags: ['ritual','sacred','labyrinth'] }
     }

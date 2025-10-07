@@ -118,7 +118,9 @@
   const gen = {
     id: 'fungal-bloom',
     name: '菌糸繁茂洞',
+    nameKey: "dungeon.types.fungal_bloom.name",
     description: '胞子嚢と菌糸の網目が広がる有機的な洞窟',
+    descriptionKey: "dungeon.types.fungal_bloom.description",
     algorithm,
     mixin: { normalMixed: 0.45, blockDimMixed: 0.5, tags: ['organic','poison','cave'] }
   };
@@ -126,27 +128,179 @@
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'fungal_theme_01', name:'Fungal Theme I', level:+0,  size:0,  depth:+1, chest:'less',   type:'fungal-bloom', bossFloors:mkBoss(6) },
-      { key:'fungal_theme_02', name:'Fungal Theme II',level:+7,  size:+1, depth:+1, chest:'normal', type:'fungal-bloom', bossFloors:mkBoss(8) },
-      { key:'fungal_theme_03', name:'Fungal Theme III',level:+14, size:+1, depth:+2, chest:'more',  type:'fungal-bloom', bossFloors:mkBoss(10) },
-      { key:'fungal_theme_04', name:'Fungal Theme IV', level:+21, size:+2, depth:+2, chest:'normal',type:'fungal-bloom', bossFloors:mkBoss(12) },
-      { key:'fungal_theme_05', name:'Fungal Theme V',  level:+28, size:+2, depth:+3, chest:'less',  type:'fungal-bloom', bossFloors:mkBoss(15) },
+      {
+        key:'fungal_theme_01',
+        name:'Fungal Theme I',
+        nameKey: "dungeon.types.fungal_bloom.blocks.fungal_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'less',
+        type:'fungal-bloom',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'fungal_theme_02',
+        name:'Fungal Theme II',
+        nameKey: "dungeon.types.fungal_bloom.blocks.fungal_theme_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'normal',
+        type:'fungal-bloom',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'fungal_theme_03',
+        name:'Fungal Theme III',
+        nameKey: "dungeon.types.fungal_bloom.blocks.fungal_theme_03.name",
+        level:+14,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'fungal-bloom',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'fungal_theme_04',
+        name:'Fungal Theme IV',
+        nameKey: "dungeon.types.fungal_bloom.blocks.fungal_theme_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'fungal-bloom',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'fungal_theme_05',
+        name:'Fungal Theme V',
+        nameKey: "dungeon.types.fungal_bloom.blocks.fungal_theme_05.name",
+        level:+28,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'fungal-bloom',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'mycel_core_01', name:'Mycel Core I', level:+0,  size:+1, depth:0, chest:'normal', type:'fungal-bloom' },
-      { key:'mycel_core_02', name:'Mycel Core II',level:+6,  size:+1, depth:+1, chest:'more',  type:'fungal-bloom' },
-      { key:'mycel_core_03', name:'Mycel Core III',level:+12, size:+2, depth:+1, chest:'less', type:'fungal-bloom' },
-      { key:'mycel_core_04', name:'Mycel Core IV',level:+18, size:+2, depth:+2, chest:'normal',type:'fungal-bloom' },
-      { key:'mycel_core_05', name:'Mycel Core V', level:+24, size:+3, depth:+2, chest:'more',  type:'fungal-bloom' },
+      {
+        key:'mycel_core_01',
+        name:'Mycel Core I',
+        nameKey: "dungeon.types.fungal_bloom.blocks.mycel_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'fungal-bloom'
+      },
+      {
+        key:'mycel_core_02',
+        name:'Mycel Core II',
+        nameKey: "dungeon.types.fungal_bloom.blocks.mycel_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'fungal-bloom'
+      },
+      {
+        key:'mycel_core_03',
+        name:'Mycel Core III',
+        nameKey: "dungeon.types.fungal_bloom.blocks.mycel_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'fungal-bloom'
+      },
+      {
+        key:'mycel_core_04',
+        name:'Mycel Core IV',
+        nameKey: "dungeon.types.fungal_bloom.blocks.mycel_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'fungal-bloom'
+      },
+      {
+        key:'mycel_core_05',
+        name:'Mycel Core V',
+        nameKey: "dungeon.types.fungal_bloom.blocks.mycel_core_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'fungal-bloom'
+      },
     ],
     blocks3:[
-      { key:'spore_relic_01', name:'Spore Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'fungal-bloom', bossFloors:[5] },
-      { key:'spore_relic_02', name:'Spore Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:'fungal-bloom', bossFloors:[10] },
-      { key:'spore_relic_03', name:'Spore Relic III',level:+18, size:+1, depth:+3, chest:'less', type:'fungal-bloom', bossFloors:[15] },
-      { key:'spore_relic_04', name:'Spore Relic IV', level:+24, size:+2, depth:+3, chest:'more', type:'fungal-bloom', bossFloors:[10,15] },
-      { key:'spore_relic_05', name:'Spore Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:'fungal-bloom', bossFloors:[5,10,15] },
+      {
+        key:'spore_relic_01',
+        name:'Spore Relic I',
+        nameKey: "dungeon.types.fungal_bloom.blocks.spore_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'fungal-bloom',
+        bossFloors:[5]
+      },
+      {
+        key:'spore_relic_02',
+        name:'Spore Relic II',
+        nameKey: "dungeon.types.fungal_bloom.blocks.spore_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'fungal-bloom',
+        bossFloors:[10]
+      },
+      {
+        key:'spore_relic_03',
+        name:'Spore Relic III',
+        nameKey: "dungeon.types.fungal_bloom.blocks.spore_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'fungal-bloom',
+        bossFloors:[15]
+      },
+      {
+        key:'spore_relic_04',
+        name:'Spore Relic IV',
+        nameKey: "dungeon.types.fungal_bloom.blocks.spore_relic_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'fungal-bloom',
+        bossFloors:[10,15]
+      },
+      {
+        key:'spore_relic_05',
+        name:'Spore Relic V',
+        nameKey: "dungeon.types.fungal_bloom.blocks.spore_relic_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'fungal-bloom',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'fungal_pack', name:'Fungal Bloom Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'fungal_pack',
+    name:'Fungal Bloom Pack',
+    nameKey: "dungeon.packs.fungal_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

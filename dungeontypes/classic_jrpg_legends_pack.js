@@ -654,119 +654,153 @@
     {
       id: 'royal-keep',
       name: '王都城郭',
+      nameKey: "dungeon.types.royal_keep.name",
       description: '王城の大広間と城郭塔が広がるシンメトリなダンジョン',
+      descriptionKey: "dungeon.types.royal_keep.description",
       algorithm: royalKeepAlgorithm,
       mixin: { normalMixed: 0.6, blockDimMixed: 0.55, tags: ['castle','symmetry','royal'] }
     },
     {
       id: 'mystic-wood',
       name: '精霊の森回廊',
+      nameKey: "dungeon.types.mystic_wood.name",
       description: '複数の聖なる林と小道がつながる自然派ダンジョン',
+      descriptionKey: "dungeon.types.mystic_wood.description",
       algorithm: mysticWoodAlgorithm,
       mixin: { normalMixed: 0.45, blockDimMixed: 0.5, tags: ['forest','organic','nature'] }
     },
     {
       id: 'crystal-depths',
       name: '星晶洞窟',
+      nameKey: "dungeon.types.crystal_depths.name",
       description: '光る星晶の迷路を彷徨う王道ファンタジーの地下洞窟',
+      descriptionKey: "dungeon.types.crystal_depths.description",
       algorithm: crystalDepthsAlgorithm,
       mixin: { normalMixed: 0.4, blockDimMixed: 0.55, tags: ['cave','crystal','mystic'] }
     },
     {
       id: 'sacred-sanctum',
       name: '聖堂回廊',
+      nameKey: "dungeon.types.sacred_sanctum.name",
       description: '聖印が幾重にも刻まれた礼拝堂型迷宮',
+      descriptionKey: "dungeon.types.sacred_sanctum.description",
       algorithm: sanctumAlgorithm,
       mixin: { normalMixed: 0.5, blockDimMixed: 0.6, tags: ['temple','holy','structured'] }
     },
     {
       id: 'dragon-forge',
       name: '竜骨熔鉱炉',
+      nameKey: "dungeon.types.dragon_forge.name",
       description: '竜の息吹で灼けた熔鉱炉と溶岩の河が交差する灼熱ダンジョン',
+      descriptionKey: "dungeon.types.dragon_forge.description",
       algorithm: dragonForgeAlgorithm,
       mixin: { normalMixed: 0.35, blockDimMixed: 0.5, tags: ['lava','forge','dragon'] }
     },
     {
       id: 'celestial-observatory',
       name: '天空観測塔',
+      nameKey: "dungeon.types.celestial_observatory.name",
       description: '天体観測儀が巡る星環と星図の腕が伸びる天空迷宮',
+      descriptionKey: "dungeon.types.celestial_observatory.description",
       algorithm: celestialObservatoryAlgorithm,
       mixin: { normalMixed: 0.55, blockDimMixed: 0.6, tags: ['sky','ritual','symmetry'] }
     },
     {
       id: 'ancient-aqueduct',
       name: '古代水路迷宮',
+      nameKey: "dungeon.types.ancient_aqueduct.name",
       description: '水脈が幾重にも流れるアクアダクトを辿る迷宮都市',
+      descriptionKey: "dungeon.types.ancient_aqueduct.description",
       algorithm: ancientAqueductAlgorithm,
       mixin: { normalMixed: 0.45, blockDimMixed: 0.5, tags: ['water','engineered','city'] }
     },
     {
       id: 'mirror-catacomb',
       name: '鏡写しの地下墓所',
+      nameKey: "dungeon.types.mirror_catacomb.name",
       description: '鏡合わせの回廊が交差し霊廟が整然と並ぶ地下墓所',
+      descriptionKey: "dungeon.types.mirror_catacomb.description",
       algorithm: mirrorCatacombAlgorithm,
       mixin: { normalMixed: 0.5, blockDimMixed: 0.55, tags: ['crypt','symmetry','labyrinth'] }
     },
     {
       id: 'floating-archipelago',
       name: '浮遊諸島遺跡',
+      nameKey: "dungeon.types.floating_archipelago.name",
       description: '浮かぶ島々と雲橋を渡る空中遺跡の多島海ダンジョン',
+      descriptionKey: "dungeon.types.floating_archipelago.description",
       algorithm: floatingArchipelagoAlgorithm,
       mixin: { normalMixed: 0.4, blockDimMixed: 0.45, tags: ['floating','bridge','open'] }
     },
     {
       id: 'arcane-library',
       name: '封印図書迷宮',
+      nameKey: "dungeon.types.arcane_library.name",
       description: '無数の書庫と閲覧回廊が格子状に連なる魔導図書館',
+      descriptionKey: "dungeon.types.arcane_library.description",
       algorithm: arcaneLibraryAlgorithm,
       mixin: { normalMixed: 0.6, blockDimMixed: 0.65, tags: ['library','grid','mystic'] }
     },
     {
       id: 'ember-chasm',
       name: '焔裂の深淵',
+      nameKey: "dungeon.types.ember_chasm.name",
       description: '熾火の裂け目と火橋が放射状に伸びる火口迷宮',
+      descriptionKey: "dungeon.types.ember_chasm.description",
       algorithm: emberChasmAlgorithm,
       mixin: { normalMixed: 0.35, blockDimMixed: 0.45, tags: ['lava','abyss','bridge'] }
     },
     {
       id: 'glacial-bastion',
       name: '氷晶の要塞',
+      nameKey: "dungeon.types.glacial_bastion.name",
       description: '氷晶の輪郭が幾層にも重なる極寒の星型砦ダンジョン',
+      descriptionKey: "dungeon.types.glacial_bastion.description",
       algorithm: glacialBastionAlgorithm,
       mixin: { normalMixed: 0.42, blockDimMixed: 0.5, tags: ['ice','fortress','radial'] }
     },
     {
       id: 'radiant-citadel',
       name: '光輝王城環',
+      nameKey: "dungeon.types.radiant_citadel.name",
       description: '黄金の星環と光条が幾層に放たれる聖なる王城ダンジョン',
+      descriptionKey: "dungeon.types.radiant_citadel.description",
       algorithm: radiantCitadelAlgorithm,
       mixin: { normalMixed: 0.55, blockDimMixed: 0.6, tags: ['holy','castle','radial'] }
     },
     {
       id: 'moonlit-cloister',
       name: '月影の回廊院',
+      nameKey: "dungeon.types.moonlit_cloister.name",
       description: '月光が射す十字回廊と水鏡庭園が静かに連なる修道院迷宮',
+      descriptionKey: "dungeon.types.moonlit_cloister.description",
       algorithm: moonlitCloisterAlgorithm,
       mixin: { normalMixed: 0.52, blockDimMixed: 0.58, tags: ['cloister','symmetric','water'] }
     },
     {
       id: 'verdant-terraces',
       name: '翠嶺段丘',
+      nameKey: "dungeon.types.verdant_terraces.name",
       description: '段丘庭園と水路が縦横に巡る大地のテラス迷宮',
+      descriptionKey: "dungeon.types.verdant_terraces.description",
       algorithm: verdantTerracesAlgorithm,
       mixin: { normalMixed: 0.48, blockDimMixed: 0.52, tags: ['garden','layered','nature'] }
     },
     {
       id: 'tempest-bastion',
       name: '嵐輪の城塞',
+      nameKey: "dungeon.types.tempest_bastion.name",
       description: '旋風が描く螺旋導路と雷柱が交わる暴風城塞ダンジョン',
+      descriptionKey: "dungeon.types.tempest_bastion.description",
       algorithm: tempestBastionAlgorithm,
       mixin: { normalMixed: 0.4, blockDimMixed: 0.48, tags: ['storm','spiral','fortress'] }
     },
     {
       id: 'sunken-arcadia',
       name: '沈瑠璃の古都',
+      nameKey: "dungeon.types.sunken_arcadia.name",
       description: '水没した回廊都市と碧い水庭が格子状に広がる幻想水都',
+      descriptionKey: "dungeon.types.sunken_arcadia.description",
       algorithm: sunkenArcadiaAlgorithm,
       mixin: { normalMixed: 0.47, blockDimMixed: 0.53, tags: ['water','city','ritual'] }
     }
@@ -783,75 +817,641 @@
 
   const blocks = {
     blocks1: [
-      { key:'jrpg_legends_story_01',  name:'Legends Story I',    level:+0,  size:0,  depth:+1, chest:'normal', type:'royal-keep',            bossFloors:mkBoss(6) },
-      { key:'jrpg_legends_story_02',  name:'Legends Story II',   level:+6,  size:+1, depth:+1, chest:'less',   type:'mystic-wood',           bossFloors:mkBoss(8) },
-      { key:'jrpg_legends_story_03',  name:'Legends Story III',  level:+12, size:+1, depth:+2, chest:'more',  type:'crystal-depths',        bossFloors:mkBoss(10) },
-      { key:'jrpg_legends_story_04',  name:'Legends Story IV',   level:+18, size:+2, depth:+2, chest:'normal',type:'sacred-sanctum',        bossFloors:mkBoss(12) },
-      { key:'jrpg_legends_story_05',  name:'Legends Story V',    level:+24, size:+2, depth:+3, chest:'less',  type:'dragon-forge',          bossFloors:mkBoss(15) },
-      { key:'jrpg_legends_story_06',  name:'Legends Story VI',   level:+30, size:+2, depth:+3, chest:'more',  type:'celestial-observatory', bossFloors:mkBoss(18) },
-      { key:'jrpg_legends_story_07',  name:'Legends Story VII',  level:+36, size:+3, depth:+3, chest:'normal',type:'ancient-aqueduct',      bossFloors:mkBoss(18) },
-      { key:'jrpg_legends_story_08',  name:'Legends Story VIII', level:+42, size:+3, depth:+4, chest:'more',  type:'mirror-catacomb',       bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_story_09',  name:'Legends Story IX',   level:+48, size:+3, depth:+4, chest:'less',  type:'floating-archipelago',  bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_story_10',  name:'Legends Story X',    level:+54, size:+4, depth:+5, chest:'legend',type:'arcane-library',        bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_story_11',  name:'Legends Story XI',   level:+60, size:+4, depth:+5, chest:'legend',type:'radiant-citadel',       bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_story_12',  name:'Legends Story XII',  level:+66, size:+4, depth:+5, chest:'more',  type:'moonlit-cloister',      bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_story_13',  name:'Legends Story XIII', level:+72, size:+5, depth:+6, chest:'legend',type:'verdant-terraces',      bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_story_14',  name:'Legends Story XIV',  level:+78, size:+5, depth:+6, chest:'legend',type:'tempest-bastion',       bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_story_15',  name:'Legends Story XV',   level:+84, size:+5, depth:+6, chest:'legend',type:'sunken-arcadia',        bossFloors:mkBoss(20) }
+      {
+        key:'jrpg_legends_story_01',
+        name:'Legends Story I',
+        nameKey: "dungeon.types.royal_keep.blocks.jrpg_legends_story_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'royal-keep',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'jrpg_legends_story_02',
+        name:'Legends Story II',
+        nameKey: "dungeon.types.mystic_wood.blocks.jrpg_legends_story_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'mystic-wood',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'jrpg_legends_story_03',
+        name:'Legends Story III',
+        nameKey: "dungeon.types.crystal_depths.blocks.jrpg_legends_story_03.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'crystal-depths',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'jrpg_legends_story_04',
+        name:'Legends Story IV',
+        nameKey: "dungeon.types.sacred_sanctum.blocks.jrpg_legends_story_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'sacred-sanctum',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'jrpg_legends_story_05',
+        name:'Legends Story V',
+        nameKey: "dungeon.types.dragon_forge.blocks.jrpg_legends_story_05.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'dragon-forge',
+        bossFloors:mkBoss(15)
+      },
+      {
+        key:'jrpg_legends_story_06',
+        name:'Legends Story VI',
+        nameKey: "dungeon.types.celestial_observatory.blocks.jrpg_legends_story_06.name",
+        level:+30,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'celestial-observatory',
+        bossFloors:mkBoss(18)
+      },
+      {
+        key:'jrpg_legends_story_07',
+        name:'Legends Story VII',
+        nameKey: "dungeon.types.ancient_aqueduct.blocks.jrpg_legends_story_07.name",
+        level:+36,
+        size:+3,
+        depth:+3,
+        chest:'normal',
+        type:'ancient-aqueduct',
+        bossFloors:mkBoss(18)
+      },
+      {
+        key:'jrpg_legends_story_08',
+        name:'Legends Story VIII',
+        nameKey: "dungeon.types.mirror_catacomb.blocks.jrpg_legends_story_08.name",
+        level:+42,
+        size:+3,
+        depth:+4,
+        chest:'more',
+        type:'mirror-catacomb',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_story_09',
+        name:'Legends Story IX',
+        nameKey: "dungeon.types.floating_archipelago.blocks.jrpg_legends_story_09.name",
+        level:+48,
+        size:+3,
+        depth:+4,
+        chest:'less',
+        type:'floating-archipelago',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_story_10',
+        name:'Legends Story X',
+        nameKey: "dungeon.types.arcane_library.blocks.jrpg_legends_story_10.name",
+        level:+54,
+        size:+4,
+        depth:+5,
+        chest:'legend',
+        type:'arcane-library',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_story_11',
+        name:'Legends Story XI',
+        nameKey: "dungeon.types.radiant_citadel.blocks.jrpg_legends_story_11.name",
+        level:+60,
+        size:+4,
+        depth:+5,
+        chest:'legend',
+        type:'radiant-citadel',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_story_12',
+        name:'Legends Story XII',
+        nameKey: "dungeon.types.moonlit_cloister.blocks.jrpg_legends_story_12.name",
+        level:+66,
+        size:+4,
+        depth:+5,
+        chest:'more',
+        type:'moonlit-cloister',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_story_13',
+        name:'Legends Story XIII',
+        nameKey: "dungeon.types.verdant_terraces.blocks.jrpg_legends_story_13.name",
+        level:+72,
+        size:+5,
+        depth:+6,
+        chest:'legend',
+        type:'verdant-terraces',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_story_14',
+        name:'Legends Story XIV',
+        nameKey: "dungeon.types.tempest_bastion.blocks.jrpg_legends_story_14.name",
+        level:+78,
+        size:+5,
+        depth:+6,
+        chest:'legend',
+        type:'tempest-bastion',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_story_15',
+        name:'Legends Story XV',
+        nameKey: "dungeon.types.sunken_arcadia.blocks.jrpg_legends_story_15.name",
+        level:+84,
+        size:+5,
+        depth:+6,
+        chest:'legend',
+        type:'sunken-arcadia',
+        bossFloors:mkBoss(20)
+      }
     ],
     blocks2: [
-      { key:'jrpg_legends_adventure_01', name:'Adventure I',    level:+0,  size:+1, depth:0,   chest:'normal', type:'royal-keep' },
-      { key:'jrpg_legends_adventure_02', name:'Adventure II',   level:+6,  size:+1, depth:+1, chest:'more',   type:'mystic-wood' },
-      { key:'jrpg_legends_adventure_03', name:'Adventure III',  level:+12, size:+2, depth:+1, chest:'less',   type:'crystal-depths' },
-      { key:'jrpg_legends_adventure_04', name:'Adventure IV',   level:+18, size:+2, depth:+2, chest:'normal', type:'sacred-sanctum' },
-      { key:'jrpg_legends_adventure_05', name:'Adventure V',    level:+24, size:+3, depth:+2, chest:'more',   type:'dragon-forge' },
-      { key:'jrpg_legends_adventure_06', name:'Adventure VI',   level:+30, size:+3, depth:+3, chest:'normal', type:'celestial-observatory' },
-      { key:'jrpg_legends_adventure_07', name:'Adventure VII',  level:+36, size:+3, depth:+3, chest:'more',   type:'ancient-aqueduct' },
-      { key:'jrpg_legends_adventure_08', name:'Adventure VIII', level:+42, size:+3, depth:+3, chest:'less',   type:'mirror-catacomb' },
-      { key:'jrpg_legends_adventure_09', name:'Adventure IX',   level:+48, size:+4, depth:+4, chest:'normal', type:'floating-archipelago' },
-      { key:'jrpg_legends_adventure_10',name:'Adventure X',     level:+54, size:+4, depth:+4, chest:'more',   type:'arcane-library' },
-      { key:'jrpg_legends_adventure_11',name:'Adventure XI',    level:+60, size:+4, depth:+4, chest:'legend', type:'radiant-citadel' },
-      { key:'jrpg_legends_adventure_12',name:'Adventure XII',   level:+66, size:+4, depth:+5, chest:'normal', type:'moonlit-cloister' },
-      { key:'jrpg_legends_adventure_13',name:'Adventure XIII',  level:+72, size:+5, depth:+5, chest:'more',   type:'verdant-terraces' },
-      { key:'jrpg_legends_adventure_14',name:'Adventure XIV',   level:+78, size:+5, depth:+5, chest:'legend', type:'tempest-bastion' },
-      { key:'jrpg_legends_adventure_15',name:'Adventure XV',    level:+84, size:+5, depth:+6, chest:'legend', type:'sunken-arcadia' }
+      {
+        key:'jrpg_legends_adventure_01',
+        name:'Adventure I',
+        nameKey: "dungeon.types.royal_keep.blocks.jrpg_legends_adventure_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'royal-keep'
+      },
+      {
+        key:'jrpg_legends_adventure_02',
+        name:'Adventure II',
+        nameKey: "dungeon.types.mystic_wood.blocks.jrpg_legends_adventure_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'mystic-wood'
+      },
+      {
+        key:'jrpg_legends_adventure_03',
+        name:'Adventure III',
+        nameKey: "dungeon.types.crystal_depths.blocks.jrpg_legends_adventure_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'crystal-depths'
+      },
+      {
+        key:'jrpg_legends_adventure_04',
+        name:'Adventure IV',
+        nameKey: "dungeon.types.sacred_sanctum.blocks.jrpg_legends_adventure_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'sacred-sanctum'
+      },
+      {
+        key:'jrpg_legends_adventure_05',
+        name:'Adventure V',
+        nameKey: "dungeon.types.dragon_forge.blocks.jrpg_legends_adventure_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'dragon-forge'
+      },
+      {
+        key:'jrpg_legends_adventure_06',
+        name:'Adventure VI',
+        nameKey: "dungeon.types.celestial_observatory.blocks.jrpg_legends_adventure_06.name",
+        level:+30,
+        size:+3,
+        depth:+3,
+        chest:'normal',
+        type:'celestial-observatory'
+      },
+      {
+        key:'jrpg_legends_adventure_07',
+        name:'Adventure VII',
+        nameKey: "dungeon.types.ancient_aqueduct.blocks.jrpg_legends_adventure_07.name",
+        level:+36,
+        size:+3,
+        depth:+3,
+        chest:'more',
+        type:'ancient-aqueduct'
+      },
+      {
+        key:'jrpg_legends_adventure_08',
+        name:'Adventure VIII',
+        nameKey: "dungeon.types.mirror_catacomb.blocks.jrpg_legends_adventure_08.name",
+        level:+42,
+        size:+3,
+        depth:+3,
+        chest:'less',
+        type:'mirror-catacomb'
+      },
+      {
+        key:'jrpg_legends_adventure_09',
+        name:'Adventure IX',
+        nameKey: "dungeon.types.floating_archipelago.blocks.jrpg_legends_adventure_09.name",
+        level:+48,
+        size:+4,
+        depth:+4,
+        chest:'normal',
+        type:'floating-archipelago'
+      },
+      {
+        key:'jrpg_legends_adventure_10',
+        name:'Adventure X',
+        nameKey: "dungeon.types.arcane_library.blocks.jrpg_legends_adventure_10.name",
+        level:+54,
+        size:+4,
+        depth:+4,
+        chest:'more',
+        type:'arcane-library'
+      },
+      {
+        key:'jrpg_legends_adventure_11',
+        name:'Adventure XI',
+        nameKey: "dungeon.types.radiant_citadel.blocks.jrpg_legends_adventure_11.name",
+        level:+60,
+        size:+4,
+        depth:+4,
+        chest:'legend',
+        type:'radiant-citadel'
+      },
+      {
+        key:'jrpg_legends_adventure_12',
+        name:'Adventure XII',
+        nameKey: "dungeon.types.moonlit_cloister.blocks.jrpg_legends_adventure_12.name",
+        level:+66,
+        size:+4,
+        depth:+5,
+        chest:'normal',
+        type:'moonlit-cloister'
+      },
+      {
+        key:'jrpg_legends_adventure_13',
+        name:'Adventure XIII',
+        nameKey: "dungeon.types.verdant_terraces.blocks.jrpg_legends_adventure_13.name",
+        level:+72,
+        size:+5,
+        depth:+5,
+        chest:'more',
+        type:'verdant-terraces'
+      },
+      {
+        key:'jrpg_legends_adventure_14',
+        name:'Adventure XIV',
+        nameKey: "dungeon.types.tempest_bastion.blocks.jrpg_legends_adventure_14.name",
+        level:+78,
+        size:+5,
+        depth:+5,
+        chest:'legend',
+        type:'tempest-bastion'
+      },
+      {
+        key:'jrpg_legends_adventure_15',
+        name:'Adventure XV',
+        nameKey: "dungeon.types.sunken_arcadia.blocks.jrpg_legends_adventure_15.name",
+        level:+84,
+        size:+5,
+        depth:+6,
+        chest:'legend',
+        type:'sunken-arcadia'
+      }
     ],
     blocks3: [
-      { key:'jrpg_legends_trial_01',  name:'Trial I',   level:+0,  size:0,  depth:+2, chest:'more',   type:'royal-keep',   bossFloors:[5] },
-      { key:'jrpg_legends_trial_02',  name:'Trial II',  level:+9,  size:+1, depth:+2, chest:'normal', type:'mystic-wood',   bossFloors:[10] },
-      { key:'jrpg_legends_trial_03',  name:'Trial III', level:+18, size:+1, depth:+3, chest:'less',   type:'crystal-depths', bossFloors:[15] },
-      { key:'jrpg_legends_trial_04',  name:'Trial IV',  level:+24, size:+2, depth:+3, chest:'more',   type:'sacred-sanctum',  bossFloors:[10,15] },
-      { key:'jrpg_legends_trial_05',  name:'Trial V',   level:+30, size:+2, depth:+4, chest:'normal', type:'dragon-forge',   bossFloors:[5,10,15] },
-      { key:'jrpg_legends_trial_06',  name:'Trial VI',  level:+36, size:+3, depth:+4, chest:'more',   type:'celestial-observatory',bossFloors:[10,15,20] },
-      { key:'jrpg_legends_trial_07',  name:'Trial VII', level:+42, size:+3, depth:+4, chest:'normal', type:'ancient-aqueduct', bossFloors:[10,15,20] },
-      { key:'jrpg_legends_trial_08',  name:'Trial VIII',level:+48, size:+3, depth:+5, chest:'more',   type:'mirror-catacomb', bossFloors:[15,20] },
-      { key:'jrpg_legends_trial_09',  name:'Trial IX',  level:+54, size:+4, depth:+5, chest:'legend', type:'floating-archipelago', bossFloors:[15,20] },
-      { key:'jrpg_legends_trial_10',  name:'Trial X',   level:+60, size:+4, depth:+6, chest:'legend', type:'ember-chasm',   bossFloors:[10,15,20] },
-      { key:'jrpg_legends_trial_11',  name:'Trial XI',  level:+66, size:+4, depth:+6, chest:'legend', type:'radiant-citadel',bossFloors:[10,15,20] },
-      { key:'jrpg_legends_trial_12',  name:'Trial XII', level:+72, size:+4, depth:+6, chest:'legend', type:'moonlit-cloister',bossFloors:[10,15,20] },
-      { key:'jrpg_legends_trial_13',  name:'Trial XIII',level:+78, size:+5, depth:+7, chest:'legend', type:'verdant-terraces',bossFloors:[10,15,20] },
-      { key:'jrpg_legends_trial_14',  name:'Trial XIV', level:+84, size:+5, depth:+7, chest:'legend', type:'tempest-bastion', bossFloors:[15,20] },
-      { key:'jrpg_legends_trial_15',  name:'Trial XV',  level:+90, size:+5, depth:+7, chest:'legend', type:'sunken-arcadia',  bossFloors:[15,20] }
+      {
+        key:'jrpg_legends_trial_01',
+        name:'Trial I',
+        nameKey: "dungeon.types.royal_keep.blocks.jrpg_legends_trial_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'royal-keep',
+        bossFloors:[5]
+      },
+      {
+        key:'jrpg_legends_trial_02',
+        name:'Trial II',
+        nameKey: "dungeon.types.mystic_wood.blocks.jrpg_legends_trial_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'mystic-wood',
+        bossFloors:[10]
+      },
+      {
+        key:'jrpg_legends_trial_03',
+        name:'Trial III',
+        nameKey: "dungeon.types.crystal_depths.blocks.jrpg_legends_trial_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'crystal-depths',
+        bossFloors:[15]
+      },
+      {
+        key:'jrpg_legends_trial_04',
+        name:'Trial IV',
+        nameKey: "dungeon.types.sacred_sanctum.blocks.jrpg_legends_trial_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'sacred-sanctum',
+        bossFloors:[10,15]
+      },
+      {
+        key:'jrpg_legends_trial_05',
+        name:'Trial V',
+        nameKey: "dungeon.types.dragon_forge.blocks.jrpg_legends_trial_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'dragon-forge',
+        bossFloors:[5,10,15]
+      },
+      {
+        key:'jrpg_legends_trial_06',
+        name:'Trial VI',
+        nameKey: "dungeon.types.celestial_observatory.blocks.jrpg_legends_trial_06.name",
+        level:+36,
+        size:+3,
+        depth:+4,
+        chest:'more',
+        type:'celestial-observatory',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_trial_07',
+        name:'Trial VII',
+        nameKey: "dungeon.types.ancient_aqueduct.blocks.jrpg_legends_trial_07.name",
+        level:+42,
+        size:+3,
+        depth:+4,
+        chest:'normal',
+        type:'ancient-aqueduct',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_trial_08',
+        name:'Trial VIII',
+        nameKey: "dungeon.types.mirror_catacomb.blocks.jrpg_legends_trial_08.name",
+        level:+48,
+        size:+3,
+        depth:+5,
+        chest:'more',
+        type:'mirror-catacomb',
+        bossFloors:[15,20]
+      },
+      {
+        key:'jrpg_legends_trial_09',
+        name:'Trial IX',
+        nameKey: "dungeon.types.floating_archipelago.blocks.jrpg_legends_trial_09.name",
+        level:+54,
+        size:+4,
+        depth:+5,
+        chest:'legend',
+        type:'floating-archipelago',
+        bossFloors:[15,20]
+      },
+      {
+        key:'jrpg_legends_trial_10',
+        name:'Trial X',
+        nameKey: "dungeon.types.ember_chasm.blocks.jrpg_legends_trial_10.name",
+        level:+60,
+        size:+4,
+        depth:+6,
+        chest:'legend',
+        type:'ember-chasm',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_trial_11',
+        name:'Trial XI',
+        nameKey: "dungeon.types.radiant_citadel.blocks.jrpg_legends_trial_11.name",
+        level:+66,
+        size:+4,
+        depth:+6,
+        chest:'legend',
+        type:'radiant-citadel',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_trial_12',
+        name:'Trial XII',
+        nameKey: "dungeon.types.moonlit_cloister.blocks.jrpg_legends_trial_12.name",
+        level:+72,
+        size:+4,
+        depth:+6,
+        chest:'legend',
+        type:'moonlit-cloister',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_trial_13',
+        name:'Trial XIII',
+        nameKey: "dungeon.types.verdant_terraces.blocks.jrpg_legends_trial_13.name",
+        level:+78,
+        size:+5,
+        depth:+7,
+        chest:'legend',
+        type:'verdant-terraces',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_trial_14',
+        name:'Trial XIV',
+        nameKey: "dungeon.types.tempest_bastion.blocks.jrpg_legends_trial_14.name",
+        level:+84,
+        size:+5,
+        depth:+7,
+        chest:'legend',
+        type:'tempest-bastion',
+        bossFloors:[15,20]
+      },
+      {
+        key:'jrpg_legends_trial_15',
+        name:'Trial XV',
+        nameKey: "dungeon.types.sunken_arcadia.blocks.jrpg_legends_trial_15.name",
+        level:+90,
+        size:+5,
+        depth:+7,
+        chest:'legend',
+        type:'sunken-arcadia',
+        bossFloors:[15,20]
+      }
     ],
     blocks4: [
-      { key:'jrpg_legends_raid_01', name:'Raid I',    level:+45, size:+4, depth:+5, chest:'more',   type:'ember-chasm',   bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_raid_02', name:'Raid II',   level:+48, size:+4, depth:+5, chest:'normal', type:'glacial-bastion',bossFloors:mkBoss(20) },
-      { key:'jrpg_legends_raid_03', name:'Raid III',  level:+51, size:+4, depth:+6, chest:'legend', type:'celestial-observatory',bossFloors:[10,15,20] },
-      { key:'jrpg_legends_raid_04', name:'Raid IV',   level:+54, size:+5, depth:+6, chest:'legend', type:'floating-archipelago', bossFloors:[15,20] },
-      { key:'jrpg_legends_raid_05', name:'Raid V',    level:+57, size:+5, depth:+6, chest:'more',   type:'arcane-library', bossFloors:[10,15,20] },
-      { key:'jrpg_legends_raid_06', name:'Raid VI',   level:+60, size:+5, depth:+7, chest:'legend', type:'glacial-bastion',bossFloors:[15,20] },
-      { key:'jrpg_legends_raid_07', name:'Raid VII',  level:+63, size:+5, depth:+7, chest:'legend', type:'mirror-catacomb',bossFloors:[10,15,20] },
-      { key:'jrpg_legends_raid_08', name:'Raid VIII', level:+66, size:+6, depth:+8, chest:'legend', type:'ember-chasm',   bossFloors:[10,15,20] },
-      { key:'jrpg_legends_raid_09', name:'Raid IX',   level:+69, size:+6, depth:+8, chest:'legend', type:'radiant-citadel', bossFloors:[10,15,20] },
-      { key:'jrpg_legends_raid_10', name:'Raid X',    level:+72, size:+6, depth:+8, chest:'legend', type:'moonlit-cloister',bossFloors:[15,20] },
-      { key:'jrpg_legends_raid_11', name:'Raid XI',   level:+75, size:+6, depth:+9, chest:'legend', type:'verdant-terraces', bossFloors:[10,15,20] },
-      { key:'jrpg_legends_raid_12', name:'Raid XII',  level:+78, size:+6, depth:+9, chest:'legend', type:'tempest-bastion', bossFloors:[10,15,20] },
-      { key:'jrpg_legends_raid_13', name:'Raid XIII', level:+81, size:+6, depth:+9, chest:'legend', type:'sunken-arcadia',  bossFloors:[15,20] }
+      {
+        key:'jrpg_legends_raid_01',
+        name:'Raid I',
+        nameKey: "dungeon.types.ember_chasm.blocks.jrpg_legends_raid_01.name",
+        level:+45,
+        size:+4,
+        depth:+5,
+        chest:'more',
+        type:'ember-chasm',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_raid_02',
+        name:'Raid II',
+        nameKey: "dungeon.types.glacial_bastion.blocks.jrpg_legends_raid_02.name",
+        level:+48,
+        size:+4,
+        depth:+5,
+        chest:'normal',
+        type:'glacial-bastion',
+        bossFloors:mkBoss(20)
+      },
+      {
+        key:'jrpg_legends_raid_03',
+        name:'Raid III',
+        nameKey: "dungeon.types.celestial_observatory.blocks.jrpg_legends_raid_03.name",
+        level:+51,
+        size:+4,
+        depth:+6,
+        chest:'legend',
+        type:'celestial-observatory',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_raid_04',
+        name:'Raid IV',
+        nameKey: "dungeon.types.floating_archipelago.blocks.jrpg_legends_raid_04.name",
+        level:+54,
+        size:+5,
+        depth:+6,
+        chest:'legend',
+        type:'floating-archipelago',
+        bossFloors:[15,20]
+      },
+      {
+        key:'jrpg_legends_raid_05',
+        name:'Raid V',
+        nameKey: "dungeon.types.arcane_library.blocks.jrpg_legends_raid_05.name",
+        level:+57,
+        size:+5,
+        depth:+6,
+        chest:'more',
+        type:'arcane-library',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_raid_06',
+        name:'Raid VI',
+        nameKey: "dungeon.types.glacial_bastion.blocks.jrpg_legends_raid_06.name",
+        level:+60,
+        size:+5,
+        depth:+7,
+        chest:'legend',
+        type:'glacial-bastion',
+        bossFloors:[15,20]
+      },
+      {
+        key:'jrpg_legends_raid_07',
+        name:'Raid VII',
+        nameKey: "dungeon.types.mirror_catacomb.blocks.jrpg_legends_raid_07.name",
+        level:+63,
+        size:+5,
+        depth:+7,
+        chest:'legend',
+        type:'mirror-catacomb',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_raid_08',
+        name:'Raid VIII',
+        nameKey: "dungeon.types.ember_chasm.blocks.jrpg_legends_raid_08.name",
+        level:+66,
+        size:+6,
+        depth:+8,
+        chest:'legend',
+        type:'ember-chasm',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_raid_09',
+        name:'Raid IX',
+        nameKey: "dungeon.types.radiant_citadel.blocks.jrpg_legends_raid_09.name",
+        level:+69,
+        size:+6,
+        depth:+8,
+        chest:'legend',
+        type:'radiant-citadel',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_raid_10',
+        name:'Raid X',
+        nameKey: "dungeon.types.moonlit_cloister.blocks.jrpg_legends_raid_10.name",
+        level:+72,
+        size:+6,
+        depth:+8,
+        chest:'legend',
+        type:'moonlit-cloister',
+        bossFloors:[15,20]
+      },
+      {
+        key:'jrpg_legends_raid_11',
+        name:'Raid XI',
+        nameKey: "dungeon.types.verdant_terraces.blocks.jrpg_legends_raid_11.name",
+        level:+75,
+        size:+6,
+        depth:+9,
+        chest:'legend',
+        type:'verdant-terraces',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_raid_12',
+        name:'Raid XII',
+        nameKey: "dungeon.types.tempest_bastion.blocks.jrpg_legends_raid_12.name",
+        level:+78,
+        size:+6,
+        depth:+9,
+        chest:'legend',
+        type:'tempest-bastion',
+        bossFloors:[10,15,20]
+      },
+      {
+        key:'jrpg_legends_raid_13',
+        name:'Raid XIII',
+        nameKey: "dungeon.types.sunken_arcadia.blocks.jrpg_legends_raid_13.name",
+        level:+81,
+        size:+6,
+        depth:+9,
+        chest:'legend',
+        type:'sunken-arcadia',
+        bossFloors:[15,20]
+      }
     ],
   };
   window.registerDungeonAddon({
     id:'classic_jrpg_legends_pack',
     name:'王道ファンタジーJRPGレジェンズパック',
+    nameKey: "dungeon.packs.classic_jrpg_legends_pack.name",
     version:'3.0.0',
     blocks,
     generators

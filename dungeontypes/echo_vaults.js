@@ -116,7 +116,9 @@
   const gen = {
     id: 'echo-vaults',
     name: '残響聖窟',
+    nameKey: "dungeon.types.echo_vaults.name",
     description: '音が共鳴して形作られた聖堂のような洞窟。音の波紋が床面を彩る。',
+    descriptionKey: "dungeon.types.echo_vaults.description",
     algorithm,
     mixin: { normalMixed: 0.48, blockDimMixed: 0.5, tags: ['cave','resonance','structure'] }
   };
@@ -125,21 +127,115 @@
 
   const blocks = {
     blocks1:[
-      { key:'echo_vault_theme_01', name:'Echo Vault I', level:+0,  size:0,  depth:+1, chest:'normal', type:'echo-vaults', bossFloors:mkBoss(8) },
-      { key:'echo_vault_theme_02', name:'Echo Vault II', level:+8,  size:+1, depth:+1, chest:'less',   type:'echo-vaults', bossFloors:mkBoss(12) },
-      { key:'echo_vault_theme_03', name:'Echo Vault III',level:+16, size:+1, depth:+2, chest:'more',   type:'echo-vaults', bossFloors:mkBoss(16) }
+      {
+        key:'echo_vault_theme_01',
+        name:'Echo Vault I',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_vault_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'echo-vaults',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'echo_vault_theme_02',
+        name:'Echo Vault II',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_vault_theme_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'echo-vaults',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'echo_vault_theme_03',
+        name:'Echo Vault III',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_vault_theme_03.name",
+        level:+16,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'echo-vaults',
+        bossFloors:mkBoss(16)
+      }
     ],
     blocks2:[
-      { key:'echo_core_01', name:'Echo Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'echo-vaults' },
-      { key:'echo_core_02', name:'Echo Core II',level:+7,  size:+1, depth:+1, chest:'more',   type:'echo-vaults' },
-      { key:'echo_core_03', name:'Echo Core III',level:+14, size:+2, depth:+1, chest:'less',   type:'echo-vaults' }
+      {
+        key:'echo_core_01',
+        name:'Echo Core I',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'echo-vaults'
+      },
+      {
+        key:'echo_core_02',
+        name:'Echo Core II',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_core_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'echo-vaults'
+      },
+      {
+        key:'echo_core_03',
+        name:'Echo Core III',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_core_03.name",
+        level:+14,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'echo-vaults'
+      }
     ],
     blocks3:[
-      { key:'echo_relic_01', name:'Echo Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'echo-vaults', bossFloors:[6] },
-      { key:'echo_relic_02', name:'Echo Relic II',level:+11, size:+1, depth:+3, chest:'normal', type:'echo-vaults', bossFloors:[12] },
-      { key:'echo_relic_03', name:'Echo Relic III',level:+19, size:+1, depth:+4, chest:'less',   type:'echo-vaults', bossFloors:[18] }
+      {
+        key:'echo_relic_01',
+        name:'Echo Relic I',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'echo-vaults',
+        bossFloors:[6]
+      },
+      {
+        key:'echo_relic_02',
+        name:'Echo Relic II',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_relic_02.name",
+        level:+11,
+        size:+1,
+        depth:+3,
+        chest:'normal',
+        type:'echo-vaults',
+        bossFloors:[12]
+      },
+      {
+        key:'echo_relic_03',
+        name:'Echo Relic III',
+        nameKey: "dungeon.types.echo_vaults.blocks.echo_relic_03.name",
+        level:+19,
+        size:+1,
+        depth:+4,
+        chest:'less',
+        type:'echo-vaults',
+        bossFloors:[18]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'echo_vaults_pack', name:'Echo Vaults Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'echo_vaults_pack',
+    name:'Echo Vaults Pack',
+    nameKey: "dungeon.packs.echo_vaults_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

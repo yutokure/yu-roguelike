@@ -9,7 +9,8 @@
       "depth": -1,
       "chest": "less",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1004.name"
     },
     {
       "key": "b1044",
@@ -19,7 +20,8 @@
       "depth": 0,
       "chest": "less",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1044.name"
     },
     {
       "key": "b1051",
@@ -29,7 +31,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1051.name"
     },
     {
       "key": "b1058",
@@ -39,7 +42,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1058.name"
     },
     {
       "key": "b1045",
@@ -49,7 +53,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1045.name"
     },
     {
       "key": "b1052",
@@ -59,7 +64,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1052.name"
     },
     {
       "key": "b1059",
@@ -69,7 +75,8 @@
       "depth": 0,
       "chest": "less",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1059.name"
     },
     {
       "key": "b1005",
@@ -79,7 +86,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1005.name"
     },
     {
       "key": "b1046",
@@ -89,7 +97,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1046.name"
     },
     {
       "key": "b1053",
@@ -99,7 +108,8 @@
       "depth": 0,
       "chest": "less",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1053.name"
     },
     {
       "key": "b1060",
@@ -109,7 +119,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1060.name"
     },
     {
       "key": "b1047",
@@ -119,7 +130,8 @@
       "depth": 0,
       "chest": "less",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1047.name"
     },
     {
       "key": "b1054",
@@ -129,7 +141,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1054.name"
     },
     {
       "key": "b1061",
@@ -139,7 +152,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1061.name"
     },
     {
       "key": "b1048",
@@ -149,7 +163,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1048.name"
     },
     {
       "key": "b1055",
@@ -159,7 +174,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1055.name"
     },
     {
       "key": "b1062",
@@ -169,7 +185,8 @@
       "depth": 0,
       "chest": "less",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1062.name"
     },
     {
       "key": "b1049",
@@ -179,7 +196,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1049.name"
     },
     {
       "key": "b1056",
@@ -189,7 +207,8 @@
       "depth": 0,
       "chest": "less",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1056.name"
     },
     {
       "key": "b1063",
@@ -199,7 +218,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1063.name"
     },
     {
       "key": "b1024",
@@ -211,7 +231,8 @@
       "type": "open-space",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1024.name"
     },
     {
       "key": "b1029",
@@ -221,7 +242,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1029.name"
     },
     {
       "key": "b1034",
@@ -233,7 +255,8 @@
       "type": "wide-maze",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1034.name"
     },
     {
       "key": "b1039",
@@ -243,7 +266,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1039.name"
     },
     {
       "key": "b1050",
@@ -253,7 +277,8 @@
       "depth": 0,
       "chest": "less",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1050.name"
     },
     {
       "key": "b1057",
@@ -263,7 +288,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1057.name"
     },
     {
       "key": "b1006",
@@ -273,7 +299,8 @@
       "depth": 0,
       "chest": "more",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1006.name"
     },
     {
       "key": "b1019",
@@ -283,7 +310,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1019.name"
     },
     {
       "key": "b1025",
@@ -293,7 +321,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1025.name"
     },
     {
       "key": "b1030",
@@ -303,7 +332,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1030.name"
     },
     {
       "key": "b1035",
@@ -313,7 +343,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1035.name"
     },
     {
       "key": "b1040",
@@ -323,7 +354,8 @@
       "depth": 0,
       "chest": "more",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1040.name"
     },
     {
       "key": "b1016",
@@ -333,7 +365,8 @@
       "depth": 0,
       "chest": "more",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1016.name"
     },
     {
       "key": "b1022",
@@ -343,7 +376,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1022.name"
     },
     {
       "key": "b1026",
@@ -353,7 +387,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1026.name"
     },
     {
       "key": "b1031",
@@ -363,7 +398,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1031.name"
     },
     {
       "key": "b1036",
@@ -373,7 +409,8 @@
       "depth": 1,
       "chest": "more",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1036.name"
     },
     {
       "key": "b1041",
@@ -383,7 +420,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1041.name"
     },
     {
       "key": "b1084",
@@ -393,7 +431,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1084.name"
     },
     {
       "key": "b1089",
@@ -403,7 +442,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1089.name"
     },
     {
       "key": "b1094",
@@ -413,7 +453,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1094.name"
     },
     {
       "key": "b1099",
@@ -423,7 +464,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1099.name"
     },
     {
       "key": "b1018",
@@ -433,7 +475,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1018.name"
     },
     {
       "key": "b1027",
@@ -443,7 +486,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1027.name"
     },
     {
       "key": "b1032",
@@ -453,7 +497,8 @@
       "depth": 0,
       "chest": "more",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1032.name"
     },
     {
       "key": "b1037",
@@ -463,7 +508,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1037.name"
     },
     {
       "key": "b1042",
@@ -473,7 +519,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1042.name"
     },
     {
       "key": "b1085",
@@ -483,7 +530,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1085.name"
     },
     {
       "key": "b1090",
@@ -493,7 +541,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1090.name"
     },
     {
       "key": "b1095",
@@ -503,7 +552,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1095.name"
     },
     {
       "key": "b1100",
@@ -513,7 +563,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1100.name"
     },
     {
       "key": "b1002",
@@ -523,7 +574,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1002.name"
     },
     {
       "key": "b1009",
@@ -533,7 +585,8 @@
       "depth": 1,
       "chest": "less",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1009.name"
     },
     {
       "key": "b1017",
@@ -543,7 +596,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1017.name"
     },
     {
       "key": "b1028",
@@ -553,7 +607,8 @@
       "depth": 0,
       "chest": "more",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1028.name"
     },
     {
       "key": "b1033",
@@ -563,7 +618,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1033.name"
     },
     {
       "key": "b1038",
@@ -573,7 +629,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1038.name"
     },
     {
       "key": "b1043",
@@ -583,7 +640,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1043.name"
     },
     {
       "key": "b1086",
@@ -593,7 +651,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1086.name"
     },
     {
       "key": "b1091",
@@ -603,7 +662,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1091.name"
     },
     {
       "key": "b1096",
@@ -613,7 +673,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1096.name"
     },
     {
       "key": "b1012",
@@ -623,7 +684,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1012.name"
     },
     {
       "key": "b1087",
@@ -633,7 +695,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1087.name"
     },
     {
       "key": "b1092",
@@ -643,7 +706,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1092.name"
     },
     {
       "key": "b1097",
@@ -653,7 +717,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1097.name"
     },
     {
       "key": "b1001",
@@ -663,7 +728,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1001.name"
     },
     {
       "key": "b1008",
@@ -673,7 +739,8 @@
       "depth": 0,
       "chest": "more",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1008.name"
     },
     {
       "key": "b1064",
@@ -685,7 +752,8 @@
       "type": "maze",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1064.name"
     },
     {
       "key": "b1073",
@@ -695,7 +763,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1073.name"
     },
     {
       "key": "b1082",
@@ -705,7 +774,8 @@
       "depth": 1,
       "chest": "more",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1082.name"
     },
     {
       "key": "b1088",
@@ -715,7 +785,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1088.name"
     },
     {
       "key": "b1093",
@@ -725,7 +796,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1093.name"
     },
     {
       "key": "b1098",
@@ -735,7 +807,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1098.name"
     },
     {
       "key": "b1023",
@@ -745,7 +818,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1023.name"
     },
     {
       "key": "b1065",
@@ -755,7 +829,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1065.name"
     },
     {
       "key": "b1074",
@@ -767,7 +842,8 @@
       "type": "circle",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1074.name"
     },
     {
       "key": "b1083",
@@ -777,7 +853,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1083.name"
     },
     {
       "key": "b1003",
@@ -787,7 +864,8 @@
       "depth": 0,
       "chest": "less",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1003.name"
     },
     {
       "key": "b1010",
@@ -797,7 +875,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1010.name"
     },
     {
       "key": "b1020",
@@ -809,7 +888,8 @@
       "type": "cave",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1020.name"
     },
     {
       "key": "b1066",
@@ -819,7 +899,8 @@
       "depth": 1,
       "chest": "more",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1066.name"
     },
     {
       "key": "b1075",
@@ -829,7 +910,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1075.name"
     },
     {
       "key": "b1021",
@@ -842,7 +924,8 @@
       "bossFloors": [
         5,
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1021.name"
     },
     {
       "key": "b1067",
@@ -852,7 +935,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1067.name"
     },
     {
       "key": "b1076",
@@ -862,7 +946,8 @@
       "depth": 1,
       "chest": "more",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1076.name"
     },
     {
       "key": "b1014",
@@ -872,7 +957,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1014.name"
     },
     {
       "key": "b1068",
@@ -882,7 +968,8 @@
       "depth": 1,
       "chest": "more",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1068.name"
     },
     {
       "key": "b1077",
@@ -892,7 +979,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1077.name"
     },
     {
       "key": "b1007",
@@ -902,7 +990,8 @@
       "depth": 1,
       "chest": "less",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1007.name"
     },
     {
       "key": "b1069",
@@ -914,7 +1003,8 @@
       "type": "wide-maze",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1069.name"
     },
     {
       "key": "b1078",
@@ -924,7 +1014,8 @@
       "depth": 1,
       "chest": "more",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1078.name"
     },
     {
       "key": "b1013",
@@ -934,7 +1025,8 @@
       "depth": 0,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1013.name"
     },
     {
       "key": "b1070",
@@ -944,7 +1036,8 @@
       "depth": 1,
       "chest": "more",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1070.name"
     },
     {
       "key": "b1079",
@@ -956,7 +1049,8 @@
       "type": "grid",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1079.name"
     },
     {
       "key": "b1071",
@@ -966,7 +1060,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1071.name"
     },
     {
       "key": "b1080",
@@ -976,7 +1071,8 @@
       "depth": 1,
       "chest": "more",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1080.name"
     },
     {
       "key": "b1011",
@@ -988,7 +1084,8 @@
       "type": "grid",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1011.name"
     },
     {
       "key": "b1072",
@@ -998,7 +1095,8 @@
       "depth": 1,
       "chest": "more",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1072.name"
     },
     {
       "key": "b1081",
@@ -1008,7 +1106,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1081.name"
     },
     {
       "key": "b1015",
@@ -1022,7 +1121,8 @@
         5,
         10,
         15
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b1015.name"
     },
     {
       "key": "b1g001",
@@ -1032,7 +1132,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1g001.name"
     },
     {
       "key": "b1o001",
@@ -1042,7 +1143,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b1o001.name"
     }
   ],
   "blocks2": [
@@ -1054,7 +1156,8 @@
       "depth": 0,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2002.name"
     },
     {
       "key": "b2012",
@@ -1064,7 +1167,8 @@
       "depth": 0,
       "chest": "less",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2012.name"
     },
     {
       "key": "b2009",
@@ -1074,7 +1178,8 @@
       "depth": 0,
       "chest": "more",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2009.name"
     },
     {
       "key": "b2044",
@@ -1084,7 +1189,8 @@
       "depth": 0,
       "chest": "less",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2044.name"
     },
     {
       "key": "b2049",
@@ -1094,7 +1200,8 @@
       "depth": 0,
       "chest": "less",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2049.name"
     },
     {
       "key": "b2054",
@@ -1104,7 +1211,8 @@
       "depth": 0,
       "chest": "less",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2054.name"
     },
     {
       "key": "b2059",
@@ -1114,7 +1222,8 @@
       "depth": 0,
       "chest": "less",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2059.name"
     },
     {
       "key": "b2024",
@@ -1126,7 +1235,8 @@
       "type": "open-space",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b2024.name"
     },
     {
       "key": "b2030",
@@ -1136,7 +1246,8 @@
       "depth": 1,
       "chest": "more",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2030.name"
     },
     {
       "key": "b2036",
@@ -1146,7 +1257,8 @@
       "depth": 1,
       "chest": "more",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2036.name"
     },
     {
       "key": "b2042",
@@ -1156,7 +1268,8 @@
       "depth": 1,
       "chest": "more",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2042.name"
     },
     {
       "key": "b2045",
@@ -1166,7 +1279,8 @@
       "depth": 0,
       "chest": "less",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2045.name"
     },
     {
       "key": "b2050",
@@ -1176,7 +1290,8 @@
       "depth": 0,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2050.name"
     },
     {
       "key": "b2055",
@@ -1186,7 +1301,8 @@
       "depth": 0,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2055.name"
     },
     {
       "key": "b2060",
@@ -1196,7 +1312,8 @@
       "depth": 0,
       "chest": "less",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2060.name"
     },
     {
       "key": "b2013",
@@ -1206,7 +1323,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2013.name"
     },
     {
       "key": "b2022",
@@ -1216,7 +1334,8 @@
       "depth": 0,
       "chest": "more",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2022.name"
     },
     {
       "key": "b2025",
@@ -1226,7 +1345,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2025.name"
     },
     {
       "key": "b2031",
@@ -1236,7 +1356,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2031.name"
     },
     {
       "key": "b2037",
@@ -1246,7 +1367,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2037.name"
     },
     {
       "key": "b2043",
@@ -1256,7 +1378,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2043.name"
     },
     {
       "key": "b2046",
@@ -1266,7 +1389,8 @@
       "depth": 0,
       "chest": "less",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2046.name"
     },
     {
       "key": "b2051",
@@ -1276,7 +1400,8 @@
       "depth": 0,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2051.name"
     },
     {
       "key": "b2056",
@@ -1286,7 +1411,8 @@
       "depth": 0,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2056.name"
     },
     {
       "key": "b2061",
@@ -1296,7 +1422,8 @@
       "depth": 0,
       "chest": "less",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2061.name"
     },
     {
       "key": "b2005",
@@ -1306,7 +1433,8 @@
       "depth": 0,
       "chest": "more",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2005.name"
     },
     {
       "key": "b2017",
@@ -1316,7 +1444,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2017.name"
     },
     {
       "key": "b2026",
@@ -1326,7 +1455,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2026.name"
     },
     {
       "key": "b2032",
@@ -1336,7 +1466,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2032.name"
     },
     {
       "key": "b2038",
@@ -1346,7 +1477,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2038.name"
     },
     {
       "key": "b2047",
@@ -1356,7 +1488,8 @@
       "depth": 0,
       "chest": "less",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2047.name"
     },
     {
       "key": "b2052",
@@ -1366,7 +1499,8 @@
       "depth": 0,
       "chest": "less",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2052.name"
     },
     {
       "key": "b2057",
@@ -1376,7 +1510,8 @@
       "depth": 0,
       "chest": "less",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2057.name"
     },
     {
       "key": "b2062",
@@ -1386,7 +1521,8 @@
       "depth": 0,
       "chest": "less",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2062.name"
     },
     {
       "key": "b2064",
@@ -1396,7 +1532,8 @@
       "depth": 0,
       "chest": "less",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2064.name"
     },
     {
       "key": "b2069",
@@ -1406,7 +1543,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2069.name"
     },
     {
       "key": "b2074",
@@ -1416,7 +1554,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2074.name"
     },
     {
       "key": "b2079",
@@ -1426,7 +1565,8 @@
       "depth": 0,
       "chest": "less",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2079.name"
     },
     {
       "key": "b2003",
@@ -1436,7 +1576,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2003.name"
     },
     {
       "key": "b2014",
@@ -1446,7 +1587,8 @@
       "depth": 1,
       "chest": "more",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2014.name"
     },
     {
       "key": "b2020",
@@ -1456,7 +1598,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2020.name"
     },
     {
       "key": "b2027",
@@ -1466,7 +1609,8 @@
       "depth": 1,
       "chest": "more",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2027.name"
     },
     {
       "key": "b2033",
@@ -1476,7 +1620,8 @@
       "depth": 1,
       "chest": "more",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2033.name"
     },
     {
       "key": "b2039",
@@ -1486,7 +1631,8 @@
       "depth": 1,
       "chest": "more",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2039.name"
     },
     {
       "key": "b2048",
@@ -1496,7 +1642,8 @@
       "depth": 0,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2048.name"
     },
     {
       "key": "b2053",
@@ -1506,7 +1653,8 @@
       "depth": 0,
       "chest": "less",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2053.name"
     },
     {
       "key": "b2058",
@@ -1516,7 +1664,8 @@
       "depth": 0,
       "chest": "less",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2058.name"
     },
     {
       "key": "b2063",
@@ -1526,7 +1675,8 @@
       "depth": 0,
       "chest": "less",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2063.name"
     },
     {
       "key": "b2065",
@@ -1536,7 +1686,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2065.name"
     },
     {
       "key": "b2070",
@@ -1546,7 +1697,8 @@
       "depth": 0,
       "chest": "less",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2070.name"
     },
     {
       "key": "b2075",
@@ -1556,7 +1708,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2075.name"
     },
     {
       "key": "b2080",
@@ -1566,7 +1719,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2080.name"
     },
     {
       "key": "b2084",
@@ -1576,7 +1730,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2084.name"
     },
     {
       "key": "b2089",
@@ -1588,7 +1743,8 @@
       "type": "field",
       "bossFloors": [
         5
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b2089.name"
     },
     {
       "key": "b2094",
@@ -1598,7 +1754,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2094.name"
     },
     {
       "key": "b2099",
@@ -1610,7 +1767,8 @@
       "type": "rooms",
       "bossFloors": [
         5
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b2099.name"
     },
     {
       "key": "b2001",
@@ -1620,7 +1778,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2001.name"
     },
     {
       "key": "b2010",
@@ -1630,7 +1789,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2010.name"
     },
     {
       "key": "b2018",
@@ -1640,7 +1800,8 @@
       "depth": 1,
       "chest": "less",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2018.name"
     },
     {
       "key": "b2028",
@@ -1650,7 +1811,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2028.name"
     },
     {
       "key": "b2034",
@@ -1662,7 +1824,8 @@
       "type": "maze",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b2034.name"
     },
     {
       "key": "b2040",
@@ -1672,7 +1835,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2040.name"
     },
     {
       "key": "b2066",
@@ -1682,7 +1846,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2066.name"
     },
     {
       "key": "b2071",
@@ -1692,7 +1857,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2071.name"
     },
     {
       "key": "b2076",
@@ -1702,7 +1868,8 @@
       "depth": 0,
       "chest": "less",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2076.name"
     },
     {
       "key": "b2081",
@@ -1712,7 +1879,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2081.name"
     },
     {
       "key": "b2085",
@@ -1722,7 +1890,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2085.name"
     },
     {
       "key": "b2090",
@@ -1732,7 +1901,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2090.name"
     },
     {
       "key": "b2095",
@@ -1742,7 +1912,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2095.name"
     },
     {
       "key": "b2100",
@@ -1752,7 +1923,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2100.name"
     },
     {
       "key": "b2008",
@@ -1762,7 +1934,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2008.name"
     },
     {
       "key": "b2011",
@@ -1772,7 +1945,8 @@
       "depth": 1,
       "chest": "less",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2011.name"
     },
     {
       "key": "b2016",
@@ -1782,7 +1956,8 @@
       "depth": 0,
       "chest": "less",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2016.name"
     },
     {
       "key": "b2019",
@@ -1792,7 +1967,8 @@
       "depth": 0,
       "chest": "more",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2019.name"
     },
     {
       "key": "b2029",
@@ -1802,7 +1978,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2029.name"
     },
     {
       "key": "b2035",
@@ -1812,7 +1989,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2035.name"
     },
     {
       "key": "b2041",
@@ -1822,7 +2000,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2041.name"
     },
     {
       "key": "b2067",
@@ -1832,7 +2011,8 @@
       "depth": 0,
       "chest": "less",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2067.name"
     },
     {
       "key": "b2072",
@@ -1842,7 +2022,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2072.name"
     },
     {
       "key": "b2077",
@@ -1852,7 +2033,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2077.name"
     },
     {
       "key": "b2082",
@@ -1862,7 +2044,8 @@
       "depth": 0,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2082.name"
     },
     {
       "key": "b2086",
@@ -1872,7 +2055,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2086.name"
     },
     {
       "key": "b2091",
@@ -1882,7 +2066,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2091.name"
     },
     {
       "key": "b2096",
@@ -1892,7 +2077,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2096.name"
     },
     {
       "key": "b2006",
@@ -1902,7 +2088,8 @@
       "depth": 1,
       "chest": "less",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2006.name"
     },
     {
       "key": "b2015",
@@ -1912,7 +2099,8 @@
       "depth": 1,
       "chest": "less",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2015.name"
     },
     {
       "key": "b2023",
@@ -1922,7 +2110,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2023.name"
     },
     {
       "key": "b2068",
@@ -1932,7 +2121,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2068.name"
     },
     {
       "key": "b2073",
@@ -1942,7 +2132,8 @@
       "depth": 0,
       "chest": "less",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2073.name"
     },
     {
       "key": "b2078",
@@ -1952,7 +2143,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2078.name"
     },
     {
       "key": "b2083",
@@ -1962,7 +2154,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2083.name"
     },
     {
       "key": "b2087",
@@ -1972,7 +2165,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2087.name"
     },
     {
       "key": "b2092",
@@ -1982,7 +2176,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2092.name"
     },
     {
       "key": "b2097",
@@ -1992,7 +2187,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2097.name"
     },
     {
       "key": "b2004",
@@ -2002,7 +2198,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2004.name"
     },
     {
       "key": "b2021",
@@ -2012,7 +2209,8 @@
       "depth": 1,
       "chest": "less",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2021.name"
     },
     {
       "key": "b2088",
@@ -2022,7 +2220,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2088.name"
     },
     {
       "key": "b2093",
@@ -2032,7 +2231,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2093.name"
     },
     {
       "key": "b2098",
@@ -2042,7 +2242,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2098.name"
     },
     {
       "key": "b2007",
@@ -2052,7 +2253,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2007.name"
     },
     {
       "key": "b2g001",
@@ -2062,7 +2264,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2g001.name"
     },
     {
       "key": "b2o001",
@@ -2072,7 +2275,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b2o001.name"
     }
   ],
   "blocks3": [
@@ -2086,7 +2290,8 @@
       "type": "circle-rooms",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3001.name"
     },
     {
       "key": "b3003",
@@ -2100,7 +2305,8 @@
         5,
         10,
         15
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3003.name"
     },
     {
       "key": "b3004",
@@ -2110,7 +2316,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3004.name"
     },
     {
       "key": "b3005",
@@ -2120,7 +2327,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3005.name"
     },
     {
       "key": "b3011",
@@ -2130,7 +2338,8 @@
       "depth": 1,
       "chest": "more",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3011.name"
     },
     {
       "key": "b3009",
@@ -2140,7 +2349,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3009.name"
     },
     {
       "key": "b3010",
@@ -2150,7 +2360,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3010.name"
     },
     {
       "key": "b3022",
@@ -2160,7 +2371,8 @@
       "depth": 0,
       "chest": "more",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3022.name"
     },
     {
       "key": "b3085",
@@ -2170,7 +2382,8 @@
       "depth": 2,
       "chest": "less",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3085.name"
     },
     {
       "key": "b3090",
@@ -2180,7 +2393,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3090.name"
     },
     {
       "key": "b3095",
@@ -2190,7 +2404,8 @@
       "depth": 2,
       "chest": "less",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3095.name"
     },
     {
       "key": "b3100",
@@ -2200,7 +2415,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3100.name"
     },
     {
       "key": "b3015",
@@ -2210,7 +2426,8 @@
       "depth": 1,
       "chest": "less",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3015.name"
     },
     {
       "key": "b3065",
@@ -2224,7 +2441,8 @@
         5,
         10,
         15
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3065.name"
     },
     {
       "key": "b3070",
@@ -2234,7 +2452,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3070.name"
     },
     {
       "key": "b3075",
@@ -2248,7 +2467,8 @@
         5,
         10,
         15
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3075.name"
     },
     {
       "key": "b3080",
@@ -2258,7 +2478,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3080.name"
     },
     {
       "key": "b3086",
@@ -2268,7 +2489,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3086.name"
     },
     {
       "key": "b3091",
@@ -2278,7 +2500,8 @@
       "depth": 2,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3091.name"
     },
     {
       "key": "b3096",
@@ -2288,7 +2511,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3096.name"
     },
     {
       "key": "b3002",
@@ -2300,7 +2524,8 @@
       "type": "maze",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3002.name"
     },
     {
       "key": "b3008",
@@ -2310,7 +2535,8 @@
       "depth": 1,
       "chest": "less",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3008.name"
     },
     {
       "key": "b3013",
@@ -2322,7 +2548,8 @@
       "type": "maze",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3013.name"
     },
     {
       "key": "b3021",
@@ -2332,7 +2559,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3021.name"
     },
     {
       "key": "b3045",
@@ -2342,7 +2570,8 @@
       "depth": 2,
       "chest": "less",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3045.name"
     },
     {
       "key": "b3050",
@@ -2352,7 +2581,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3050.name"
     },
     {
       "key": "b3055",
@@ -2362,7 +2592,8 @@
       "depth": 2,
       "chest": "less",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3055.name"
     },
     {
       "key": "b3060",
@@ -2372,7 +2603,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3060.name"
     },
     {
       "key": "b3066",
@@ -2382,7 +2614,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3066.name"
     },
     {
       "key": "b3071",
@@ -2392,7 +2625,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3071.name"
     },
     {
       "key": "b3076",
@@ -2402,7 +2636,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3076.name"
     },
     {
       "key": "b3081",
@@ -2412,7 +2647,8 @@
       "depth": 2,
       "chest": "more",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3081.name"
     },
     {
       "key": "b3087",
@@ -2422,7 +2658,8 @@
       "depth": 2,
       "chest": "less",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3087.name"
     },
     {
       "key": "b3092",
@@ -2432,7 +2669,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3092.name"
     },
     {
       "key": "b3097",
@@ -2442,7 +2680,8 @@
       "depth": 2,
       "chest": "less",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3097.name"
     },
     {
       "key": "b3012",
@@ -2455,7 +2694,8 @@
       "bossFloors": [
         5,
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3012.name"
     },
     {
       "key": "b3018",
@@ -2465,7 +2705,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3018.name"
     },
     {
       "key": "b3025",
@@ -2477,7 +2718,8 @@
       "type": "maze",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3025.name"
     },
     {
       "key": "b3032",
@@ -2487,7 +2729,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3032.name"
     },
     {
       "key": "b3039",
@@ -2497,7 +2740,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3039.name"
     },
     {
       "key": "b3046",
@@ -2507,7 +2751,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3046.name"
     },
     {
       "key": "b3051",
@@ -2517,7 +2762,8 @@
       "depth": 2,
       "chest": "less",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3051.name"
     },
     {
       "key": "b3056",
@@ -2527,7 +2773,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3056.name"
     },
     {
       "key": "b3061",
@@ -2537,7 +2784,8 @@
       "depth": 2,
       "chest": "less",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3061.name"
     },
     {
       "key": "b3067",
@@ -2547,7 +2795,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3067.name"
     },
     {
       "key": "b3072",
@@ -2557,7 +2806,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3072.name"
     },
     {
       "key": "b3077",
@@ -2567,7 +2817,8 @@
       "depth": 2,
       "chest": "more",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3077.name"
     },
     {
       "key": "b3082",
@@ -2577,7 +2828,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3082.name"
     },
     {
       "key": "b3088",
@@ -2587,7 +2839,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3088.name"
     },
     {
       "key": "b3093",
@@ -2597,7 +2850,8 @@
       "depth": 2,
       "chest": "less",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3093.name"
     },
     {
       "key": "b3098",
@@ -2607,7 +2861,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3098.name"
     },
     {
       "key": "b3006",
@@ -2619,7 +2874,8 @@
       "type": "wide-maze",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3006.name"
     },
     {
       "key": "b3014",
@@ -2631,7 +2887,8 @@
       "type": "single-room",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3014.name"
     },
     {
       "key": "b3020",
@@ -2645,7 +2902,8 @@
         5,
         10,
         15
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3020.name"
     },
     {
       "key": "b3026",
@@ -2655,7 +2913,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3026.name"
     },
     {
       "key": "b3033",
@@ -2665,7 +2924,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3033.name"
     },
     {
       "key": "b3040",
@@ -2677,7 +2937,8 @@
       "type": "circle",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3040.name"
     },
     {
       "key": "b3047",
@@ -2687,7 +2948,8 @@
       "depth": 2,
       "chest": "less",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3047.name"
     },
     {
       "key": "b3052",
@@ -2697,7 +2959,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "wide-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3052.name"
     },
     {
       "key": "b3057",
@@ -2707,7 +2970,8 @@
       "depth": 2,
       "chest": "less",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3057.name"
     },
     {
       "key": "b3062",
@@ -2717,7 +2981,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3062.name"
     },
     {
       "key": "b3068",
@@ -2727,7 +2992,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "cave",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3068.name"
     },
     {
       "key": "b3073",
@@ -2737,7 +3003,8 @@
       "depth": 2,
       "chest": "more",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3073.name"
     },
     {
       "key": "b3078",
@@ -2747,7 +3014,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3078.name"
     },
     {
       "key": "b3083",
@@ -2757,7 +3025,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3083.name"
     },
     {
       "key": "b3089",
@@ -2767,7 +3036,8 @@
       "depth": 2,
       "chest": "less",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3089.name"
     },
     {
       "key": "b3094",
@@ -2777,7 +3047,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3094.name"
     },
     {
       "key": "b3099",
@@ -2787,7 +3058,8 @@
       "depth": 2,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3099.name"
     },
     {
       "key": "b3016",
@@ -2799,7 +3071,8 @@
       "type": "circle",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3016.name"
     },
     {
       "key": "b3027",
@@ -2809,7 +3082,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3027.name"
     },
     {
       "key": "b3034",
@@ -2819,7 +3093,8 @@
       "depth": 1,
       "chest": "more",
       "type": "circle-rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3034.name"
     },
     {
       "key": "b3041",
@@ -2829,7 +3104,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3041.name"
     },
     {
       "key": "b3048",
@@ -2839,7 +3115,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3048.name"
     },
     {
       "key": "b3053",
@@ -2849,7 +3126,8 @@
       "depth": 2,
       "chest": "less",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3053.name"
     },
     {
       "key": "b3058",
@@ -2859,7 +3137,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "snake",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3058.name"
     },
     {
       "key": "b3063",
@@ -2869,7 +3148,8 @@
       "depth": 2,
       "chest": "less",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3063.name"
     },
     {
       "key": "b3069",
@@ -2879,7 +3159,8 @@
       "depth": 2,
       "chest": "more",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3069.name"
     },
     {
       "key": "b3074",
@@ -2889,7 +3170,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3074.name"
     },
     {
       "key": "b3079",
@@ -2899,7 +3181,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "field",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3079.name"
     },
     {
       "key": "b3084",
@@ -2909,7 +3192,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3084.name"
     },
     {
       "key": "b3007",
@@ -2919,7 +3203,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3007.name"
     },
     {
       "key": "b3017",
@@ -2931,7 +3216,8 @@
       "type": "field",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3017.name"
     },
     {
       "key": "b3023",
@@ -2943,7 +3229,8 @@
       "type": "cave",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3023.name"
     },
     {
       "key": "b3028",
@@ -2953,7 +3240,8 @@
       "depth": 1,
       "chest": "more",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3028.name"
     },
     {
       "key": "b3035",
@@ -2965,7 +3253,8 @@
       "type": "circle-rooms",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3035.name"
     },
     {
       "key": "b3042",
@@ -2975,7 +3264,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "single-room",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3042.name"
     },
     {
       "key": "b3049",
@@ -2985,7 +3275,8 @@
       "depth": 2,
       "chest": "less",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3049.name"
     },
     {
       "key": "b3054",
@@ -2995,7 +3286,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3054.name"
     },
     {
       "key": "b3059",
@@ -3005,7 +3297,8 @@
       "depth": 2,
       "chest": "less",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3059.name"
     },
     {
       "key": "b3064",
@@ -3015,7 +3308,8 @@
       "depth": 2,
       "chest": "normal",
       "type": "circle",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3064.name"
     },
     {
       "key": "b3019",
@@ -3025,7 +3319,8 @@
       "depth": 1,
       "chest": "less",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3019.name"
     },
     {
       "key": "b3029",
@@ -3035,7 +3330,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3029.name"
     },
     {
       "key": "b3036",
@@ -3045,7 +3341,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3036.name"
     },
     {
       "key": "b3043",
@@ -3055,7 +3352,8 @@
       "depth": 1,
       "chest": "more",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3043.name"
     },
     {
       "key": "b3030",
@@ -3067,7 +3365,8 @@
       "type": "circle-rooms",
       "bossFloors": [
         10
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3030.name"
     },
     {
       "key": "b3037",
@@ -3077,7 +3376,8 @@
       "depth": 1,
       "chest": "more",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3037.name"
     },
     {
       "key": "b3044",
@@ -3087,7 +3387,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3044.name"
     },
     {
       "key": "b3024",
@@ -3099,7 +3400,8 @@
       "type": "circle",
       "bossFloors": [
         15
-      ]
+      ],
+      "nameKey": "dungeon.blockdim.blocks.b3024.name"
     },
     {
       "key": "b3031",
@@ -3109,7 +3411,8 @@
       "depth": 1,
       "chest": "more",
       "type": "grid",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3031.name"
     },
     {
       "key": "b3038",
@@ -3119,7 +3422,8 @@
       "depth": 1,
       "chest": "normal",
       "type": "open-space",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3038.name"
     },
     {
       "key": "b3g001",
@@ -3129,7 +3433,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "narrow-maze",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3g001.name"
     },
     {
       "key": "b3o001",
@@ -3139,7 +3444,8 @@
       "depth": 0,
       "chest": "normal",
       "type": "rooms",
-      "bossFloors": []
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3o001.name"
     }
   ]
 }

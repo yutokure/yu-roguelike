@@ -43,7 +43,9 @@
   const gen = {
     id: 'toxic-boglands',
     name: '毒沼空間',
+    nameKey: "dungeon.types.toxic_boglands.name",
     description: '広い空間に点在する毒沼が漂う湿地帯',
+    descriptionKey: "dungeon.types.toxic_boglands.description",
     poisonFog: true,
     algorithm,
     mixin: { normalMixed: 0.35, blockDimMixed: 0.45, tags: ['open-space','poison'] }
@@ -52,27 +54,179 @@
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'bog_theme_01', name:'Bog Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'toxic-boglands', bossFloors:mkBoss(6) },
-      { key:'bog_theme_02', name:'Bog Theme II',level:+7,  size:+1, depth:+1, chest:'less',   type:'toxic-boglands', bossFloors:mkBoss(8) },
-      { key:'bog_theme_03', name:'Bog Theme III',level:+14, size:+1, depth:+2, chest:'more',  type:'toxic-boglands', bossFloors:mkBoss(10) },
-      { key:'bog_theme_04', name:'Bog Theme IV', level:+21, size:+2, depth:+2, chest:'normal',type:'toxic-boglands', bossFloors:mkBoss(12) },
-      { key:'bog_theme_05', name:'Bog Theme V',  level:+28, size:+2, depth:+3, chest:'less',  type:'toxic-boglands', bossFloors:mkBoss(15) },
+      {
+        key:'bog_theme_01',
+        name:'Bog Theme I',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'toxic-boglands',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'bog_theme_02',
+        name:'Bog Theme II',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_theme_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'toxic-boglands',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'bog_theme_03',
+        name:'Bog Theme III',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_theme_03.name",
+        level:+14,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'toxic-boglands',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'bog_theme_04',
+        name:'Bog Theme IV',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_theme_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'toxic-boglands',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'bog_theme_05',
+        name:'Bog Theme V',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_theme_05.name",
+        level:+28,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'toxic-boglands',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'bog_core_01', name:'Bog Core I', level:+0,  size:+1, depth:0, chest:'normal', type:'toxic-boglands' },
-      { key:'bog_core_02', name:'Bog Core II',level:+6,  size:+1, depth:+1, chest:'more',  type:'toxic-boglands' },
-      { key:'bog_core_03', name:'Bog Core III',level:+12, size:+2, depth:+1, chest:'less', type:'toxic-boglands' },
-      { key:'bog_core_04', name:'Bog Core IV',level:+18, size:+2, depth:+2, chest:'normal',type:'toxic-boglands' },
-      { key:'bog_core_05', name:'Bog Core V', level:+24, size:+3, depth:+2, chest:'more',  type:'toxic-boglands' },
+      {
+        key:'bog_core_01',
+        name:'Bog Core I',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'toxic-boglands'
+      },
+      {
+        key:'bog_core_02',
+        name:'Bog Core II',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'toxic-boglands'
+      },
+      {
+        key:'bog_core_03',
+        name:'Bog Core III',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'toxic-boglands'
+      },
+      {
+        key:'bog_core_04',
+        name:'Bog Core IV',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'toxic-boglands'
+      },
+      {
+        key:'bog_core_05',
+        name:'Bog Core V',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_core_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'toxic-boglands'
+      },
     ],
     blocks3:[
-      { key:'bog_relic_01', name:'Bog Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'toxic-boglands', bossFloors:[5] },
-      { key:'bog_relic_02', name:'Bog Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:'toxic-boglands', bossFloors:[10] },
-      { key:'bog_relic_03', name:'Bog Relic III',level:+18, size:+1, depth:+3, chest:'less', type:'toxic-boglands', bossFloors:[15] },
-      { key:'bog_relic_04', name:'Bog Relic IV', level:+24, size:+2, depth:+3, chest:'more', type:'toxic-boglands', bossFloors:[10,15] },
-      { key:'bog_relic_05', name:'Bog Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:'toxic-boglands', bossFloors:[5,10,15] },
+      {
+        key:'bog_relic_01',
+        name:'Bog Relic I',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'toxic-boglands',
+        bossFloors:[5]
+      },
+      {
+        key:'bog_relic_02',
+        name:'Bog Relic II',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'toxic-boglands',
+        bossFloors:[10]
+      },
+      {
+        key:'bog_relic_03',
+        name:'Bog Relic III',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'toxic-boglands',
+        bossFloors:[15]
+      },
+      {
+        key:'bog_relic_04',
+        name:'Bog Relic IV',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_relic_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'toxic-boglands',
+        bossFloors:[10,15]
+      },
+      {
+        key:'bog_relic_05',
+        name:'Bog Relic V',
+        nameKey: "dungeon.types.toxic_boglands.blocks.bog_relic_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'toxic-boglands',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'bog_pack', name:'Toxic Boglands Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'bog_pack',
+    name:'Toxic Boglands Pack',
+    nameKey: "dungeon.packs.bog_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

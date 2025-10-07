@@ -1064,7 +1064,10 @@
   const prismaticCities = {
     id: 'prismatic-cities',
     name: 'プリズマティック都市層',
+    nameKey: "dungeon.types.prismatic_cities.name",
     description: '光の輪と浮遊都市が折り重なる幻想の大通り。虹色の軌道が多層構造を描く',
+    descriptionKey: "dungeon.types.prismatic_cities.description",
+
     algorithm(ctx){
       const rnd = ctx.random;
       const center = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
@@ -1079,13 +1082,17 @@
       sprinklePortals(ctx, ['#b7f9ff','#ffb9f4','#ffecce']);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.6, blockDimMixed: 0.75, tags: ['city','ring','ice','light','portal'] }
   };
 
   const neonOrbitarium = {
     id: 'neon-orbitarium',
     name: 'ネオン軌道庭園',
+    nameKey: "dungeon.types.neon_orbitarium.name",
     description: '重力がねじれた軌道庭園。プラズマの水路とホログラムが交差し惑星庭園が浮遊する',
+    descriptionKey: "dungeon.types.neon_orbitarium.description",
+
     algorithm(ctx){
       const rnd = ctx.random;
       const palette = sharedPalettes.neon;
@@ -1101,13 +1108,17 @@
       setDiagonalStrips(ctx, ['#fffbce','#b0fffd','#ffd7ff'], 6);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.58, blockDimMixed: 0.8, tags: ['garden','orbit','gravity','plasma'] }
   };
 
   const lucidReef = {
     id: 'lucid-reef',
     name: 'ルシッドリーフ',
+    nameKey: "dungeon.types.lucid_reef.name",
     description: '夢見のリーフ海底。睡蓮のようなプラズマが揺らぎ、潮流は極光に染まる',
+    descriptionKey: "dungeon.types.lucid_reef.description",
+
     algorithm(ctx){
       const center = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
       floodChannel(ctx, center, sharedPalettes.reef, { maxDepth: 720, width: 3, floorType: (x, y, depth) => depth % 5 === 0 ? 'water' : 'normal' });
@@ -1117,13 +1128,17 @@
       applyFog(ctx, '#d8fff9', 9);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.5, blockDimMixed: 0.6, tags: ['reef','water','dream','wave'] }
   };
 
   const chronoForge = {
     id: 'chrono-forge',
     name: 'クロノフォージ',
+    nameKey: "dungeon.types.chrono_forge.name",
     description: '時間を鍛える時計仕掛けの工廠。時限炉心と回転式の路線が絡み合う',
+    descriptionKey: "dungeon.types.chrono_forge.description",
+
     algorithm(ctx){
       carveHexGrid(ctx, sharedPalettes.chrono, { radius: 4, floorType: 'normal' });
       const nodes = scatterNodes(ctx, 18, 7, 4);
@@ -1133,13 +1148,17 @@
       applyVerticalBands(ctx, ['#ffe9cc','#ffdede','#dff0ff'], 3);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.52, blockDimMixed: 0.68, tags: ['factory','time','fire','clockwork'] }
   };
 
   const dreamwaySpirals = {
     id: 'dreamway-spirals',
     name: 'ドリームウェイスパイラル',
+    nameKey: "dungeon.types.dreamway_spirals.name",
     description: '多層の螺旋がどこまでも降りていく幻夢の通路。螺旋は別世界の入り口へ連結する',
+    descriptionKey: "dungeon.types.dreamway_spirals.description",
+
     algorithm(ctx){
       const center = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
       carveLayeredSpirals(ctx, center, 14, sharedPalettes.dream, { floorType: (x, y, layer) => layer % 3 === 0 ? 'portal' : 'normal' });
@@ -1149,13 +1168,17 @@
       paintWarpedGradient(ctx, '#f7d1ff', '#d1fff9', { turbulence: 0.6, rotation: Math.PI / 5 });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.52, blockDimMixed: 0.66, tags: ['spiral','dream','portal','maze'] }
   };
 
   const astralSymbiosis = {
     id: 'astral-symbiosis',
     name: 'アストラル共鳴苑',
+    nameKey: "dungeon.types.astral_symbiosis.name",
     description: '星屑樹とサイバーロータスが共存する庭園。軌跡と根が交互に織り込まれる',
+    descriptionKey: "dungeon.types.astral_symbiosis.description",
+
     algorithm(ctx){
       const nodes = scatterNodes(ctx, 22, 5, 3);
       carveVoronoi(ctx, nodes.map((n, idx) => ({ ...n, paletteIndex: idx % sharedPalettes.astral.length })), sharedPalettes.astral, { floorType: (x, y, seed) => seed.paletteIndex % 2 === 0 ? 'normal' : 'ice' });
@@ -1164,13 +1187,17 @@
       applyFog(ctx, '#1e142d', 8);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.55, blockDimMixed: 0.7, tags: ['garden','astral','cyber','growth'] }
   };
 
   const mirroredCitadel = {
     id: 'mirrored-citadel',
     name: '鏡映城郭界',
+    nameKey: "dungeon.types.mirrored_citadel.name",
     description: '上下反転の城郭が重なり、鏡面軸が光る。重力に逆らう城壁が伸びる',
+    descriptionKey: "dungeon.types.mirrored_citadel.description",
+
     algorithm(ctx){
       const rnd = ctx.random;
       carveNestedRectangles(ctx, ['#f8d6ff','#d0e4ff','#ffefd7'], { padding: 3, step: 3, floorType: 'normal' });
@@ -1181,13 +1208,17 @@
       portalCross(ctx, { x: midX, y: midY }, ['#f4faff','#ffdff5','#fff2d9']);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.5, blockDimMixed: 0.65, tags: ['castle','mirror','gravity','ice'] }
   };
 
   const biotechSanctum = {
     id: 'biotech-sanctum',
     name: 'バイオテックの聖環',
+    nameKey: "dungeon.types.biotech_sanctum.name",
     description: '有機機械と発光植物が共鳴する螺旋聖堂。生命と回路が絡み合う',
+    descriptionKey: "dungeon.types.biotech_sanctum.description",
+
     algorithm(ctx){
       const seeds = scatterNodes(ctx, 24, 4, 3);
       carveVoronoi(ctx, seeds.map((s, idx) => ({ ...s, paletteIndex: idx })), sharedPalettes.verdant, { floorType: (x, y, seed) => seed.paletteIndex % 3 === 0 ? 'poison' : 'normal', inset: 1 });
@@ -1196,12 +1227,16 @@
       quantumGrid(ctx, ['#e6ffe4','#c9ffe9','#f4fff2'], { spacing: 4, jitter: 2 });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.58, blockDimMixed: 0.72, tags: ['bio','circuit','garden','poison'] }
   };
   const vaporwaveTransit = {
     id: 'vaporwave-transit',
     name: 'ヴェイパートランジット',
+    nameKey: "dungeon.types.vaporwave_transit.name",
     description: '幻想都市を結ぶ浮遊鉄道。モジュラーな駅とチューブが滑らかに曲線を描く',
+    descriptionKey: "dungeon.types.vaporwave_transit.description",
+
     algorithm(ctx){
       const stations = scatterNodes(ctx, 18, 6, 4);
       stations.forEach(station => {
@@ -1229,13 +1264,17 @@
       applyRunwayLights(ctx, ['#fbd6ff','#d9f9ff','#fff6cc'], 6);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.54, blockDimMixed: 0.74, tags: ['rail','tube','city','wave'] }
   };
 
   const abyssalAurora = {
     id: 'abyssal-aurora',
     name: 'アビサルオーロラ海淵',
+    nameKey: "dungeon.types.abyssal_aurora.name",
     description: '深海と星霊が交わる海淵。極光が渦巻き、暗黒の柱が立ち上る',
+    descriptionKey: "dungeon.types.abyssal_aurora.description",
+
     algorithm(ctx){
       floodChannel(ctx, { x: Math.floor(ctx.width / 2), y: 1 }, ['#0f172a','#111f3b','#152a55'], { maxDepth: 860, width: 3, floorType: 'water' });
       carveRadialStars(ctx, { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) }, 22, ['#70f0ff','#b3e8ff','#ffedf8'], { floorType: 'ice' });
@@ -1244,13 +1283,17 @@
       applyFog(ctx, '#0f1321', 11);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.48, blockDimMixed: 0.66, tags: ['deepsea','aurora','dark','ice'] }
   };
 
   const quantumDunes = {
     id: 'quantum-dunes',
     name: '量子砂海',
+    nameKey: "dungeon.types.quantum_dunes.name",
     description: '砂漠と量子回路が重なり合う砂海。砂粒が量子化され波打つ',
+    descriptionKey: "dungeon.types.quantum_dunes.description",
+
     algorithm(ctx){
       carveVoronoi(ctx, scatterNodes(ctx, 20, 7, 4).map((n, idx) => ({ ...n, paletteIndex: idx })), sharedPalettes.sand, { floorType: 'normal' });
       fractalWaves(ctx, ['#f9d6aa','#fcebd2','#fff9ed'], { frequency: 0.09, amplitude: 6, floorType: 'normal' });
@@ -1259,13 +1302,17 @@
       applyFog(ctx, '#f1d1aa', 6);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.57, blockDimMixed: 0.7, tags: ['desert','quantum','circuit'] }
   };
 
   const chronoMirage = {
     id: 'chrono-mirage',
     name: 'クロノミラージュ回廊',
+    nameKey: "dungeon.types.chrono_mirage.name",
     description: '時の蜃気楼が階層化した回廊を生む。時間差で異なる路線が交差する',
+    descriptionKey: "dungeon.types.chrono_mirage.description",
+
     algorithm(ctx){
       const seeds = scatterNodes(ctx, 18, 8, 5);
       carveVoronoi(ctx, seeds.map((s, idx) => ({ ...s, paletteIndex: idx })), sharedPalettes.chrono, { floorType: 'normal', inset: 1 });
@@ -1275,13 +1322,17 @@
       anchorSpiral(ctx, { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) }, ['#ffeecf','#ffd0f0','#cbe5ff'], { turns: 6, floorType: (x, y, t) => t > 0.7 ? 'portal' : 'normal' });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.53, blockDimMixed: 0.67, tags: ['time','mirage','fire','loop'] }
   };
 
   const spectralArchive = {
     id: 'spectral-archive',
     name: 'スペクトラルアーカイブ',
+    nameKey: "dungeon.types.spectral_archive.name",
     description: '霊光図書の回廊。資料を守るアーカイブサーバが星霊の階段と融合する',
+    descriptionKey: "dungeon.types.spectral_archive.description",
+
     algorithm(ctx){
       carveHexGrid(ctx, sharedPalettes.astral, { radius: 5, floorType: 'normal' });
       const nodes = scatterNodes(ctx, 16, 7, 4);
@@ -1290,13 +1341,17 @@
       gradientFromSeeds(ctx, nodes.map((n, idx) => ({ ...n, paletteIndex: idx })), ['#fff7ff','#dce4ff','#ffeecf']);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.49, blockDimMixed: 0.64, tags: ['library','spirit','stairs','ice'] }
   };
 
   const dreamMesa = {
     id: 'dream-mesa',
     name: '夢幻メサ浮島',
+    nameKey: "dungeon.types.dream_mesa.name",
     description: '浮遊メサが光の橋で繋がり、夢幻の砂が空に舞う',
+    descriptionKey: "dungeon.types.dream_mesa.description",
+
     algorithm(ctx){
       scatterPlanetoids(ctx, 28, ['#ffece0','#ffd0f5','#d1f6ff'], { radiusRange: [3, 7], floorType: 'normal' });
       const clusters = scatterNodes(ctx, 16, 8, 5);
@@ -1305,13 +1360,17 @@
       fillNebula(ctx, ['#fff4e2','#ffe3f1','#d6f8ff'], { scale: 12, layers: 2 });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.6, blockDimMixed: 0.74, tags: ['floating','mesa','bridge','sand'] }
   };
 
   const starlitWorkshop = {
     id: 'starlit-workshop',
     name: '星灯りの工房軌道',
+    nameKey: "dungeon.types.starlit_workshop.name",
     description: '星灯りが指す軌道工房。カラフルなラインが工作機械へ繋がる',
+    descriptionKey: "dungeon.types.starlit_workshop.description",
+
     algorithm(ctx){
       const seeds = scatterNodes(ctx, 18, 6, 3);
       carveVoronoi(ctx, seeds.map((s, idx) => ({ ...s, paletteIndex: idx })), sharedPalettes.neon, { floorType: (x, y, seed) => seed.paletteIndex % 4 === 0 ? 'fire' : 'normal', inset: 2 });
@@ -1320,13 +1379,17 @@
       scatterPylons(ctx, ['#ffe4cf','#ffd0ec','#c8f4ff'], { amount: 34, floorType: 'normal' });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.55, blockDimMixed: 0.73, tags: ['forge','orbit','workshop','fire'] }
   };
 
   const orbitalRainforest = {
     id: 'orbital-rainforest',
     name: '軌道熱帯林居住層',
+    nameKey: "dungeon.types.orbital_rainforest.name",
     description: '軌道上に建つ熱帯林居住区。水路と空中庭園が層を成す',
+    descriptionKey: "dungeon.types.orbital_rainforest.description",
+
     algorithm(ctx){
       floodChannel(ctx, { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) }, ['#76ffc8','#abffd7','#d6ffe8'], { maxDepth: 520, width: 3, floorType: 'water' });
       const nodes = scatterNodes(ctx, 24, 5, 3);
@@ -1335,13 +1398,17 @@
       fillNebula(ctx, ['#d1ffd8','#afffed','#fff7dd'], { scale: 14, layers: 3 });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.59, blockDimMixed: 0.71, tags: ['forest','water','orbit','bio'] }
   };
 
   const hypercubeAgora = {
     id: 'hypercube-agora',
     name: '超立方公共回廊',
+    nameKey: "dungeon.types.hypercube_agora.name",
     description: '高次元の市場通り。超立方体のアーチが多次元路地を織る',
+    descriptionKey: "dungeon.types.hypercube_agora.description",
+
     algorithm(ctx){
       carveNestedRectangles(ctx, ['#f2d9ff','#c9eaff','#fff2da'], { padding: 2, step: 2, floorType: 'normal' });
       const nodes = scatterNodes(ctx, 22, 4, 3);
@@ -1350,13 +1417,17 @@
       quantumGrid(ctx, ['#f6e2ff','#dee8ff','#ffe7d5'], { spacing: 3, jitter: 1 });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.52, blockDimMixed: 0.69, tags: ['market','geometry','portal'] }
   };
 
   const chronoTideForge = {
     id: 'chrono-tide-forge',
     name: '潮汐クロノ鍛冶湾',
+    nameKey: "dungeon.types.chrono_tide_forge.name",
     description: '潮汐エネルギーを利用した時間鍛冶湾。潮汐炉と時間射線が絡み合う',
+    descriptionKey: "dungeon.types.chrono_tide_forge.description",
+
     algorithm(ctx){
       floodChannel(ctx, { x: 1, y: Math.floor(ctx.height / 2) }, ['#233a5e','#285d8c','#2d7ab2'], { maxDepth: 640, width: 2, floorType: 'water' });
       carveCircuit(ctx, scatterNodes(ctx, 16, 6, 4), 2, ['#ffd2aa','#ffb3c6','#ffe9c0'], { floorType: (tile, idx) => idx % 2 === 0 ? 'fire' : 'normal' });
@@ -1364,12 +1435,16 @@
       applyFog(ctx, '#142a3f', 9);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.5, blockDimMixed: 0.68, tags: ['tide','forge','time','water'] }
   };
   const stellarBloom = {
     id: 'stellar-bloom',
     name: '星蓮の花苑軌道',
+    nameKey: "dungeon.types.stellar_bloom.name",
     description: '星光が咲き広がる花苑軌道。フラクタル花弁が星籠を包み込む',
+    descriptionKey: "dungeon.types.stellar_bloom.description",
+
     algorithm(ctx){
       const seeds = scatterNodes(ctx, 26, 5, 3);
       carveVoronoi(ctx, seeds.map((s, idx) => ({ ...s, paletteIndex: idx })), sharedPalettes.astral, { floorType: (x, y, seed) => seed.paletteIndex % 4 === 0 ? 'ice' : 'normal', inset: 1 });
@@ -1378,13 +1453,17 @@
       applyFog(ctx, '#160f24', 10);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.5, blockDimMixed: 0.7, tags: ['garden','fractal','portal','ice'] }
   };
 
   const cosmicLabyrinth = {
     id: 'cosmic-labyrinth',
     name: 'コズミックラビリンス',
+    nameKey: "dungeon.types.cosmic_labyrinth.name",
     description: '宇宙航路が多層迷宮として折り畳まれる。星体通路が複数次元に絡まる',
+    descriptionKey: "dungeon.types.cosmic_labyrinth.description",
+
     algorithm(ctx){
       const nodes = scatterNodes(ctx, 30, 5, 3);
       connectNodes(ctx, nodes, sharedPalettes.obsidian, { thickness: 1, floorType: (tile, a, b) => (tile.x + tile.y) % 5 === 0 ? 'portal' : 'normal' });
@@ -1393,13 +1472,17 @@
       paintWarpedGradient(ctx, '#1d1635', '#2e2f5f', { turbulence: 0.5, rotation: Math.PI / 6 });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.45, blockDimMixed: 0.6, tags: ['labyrinth','cosmic','dark','portal'] }
   };
 
   const luminalCascade = {
     id: 'luminal-cascade',
     name: 'ルミナルカスケード塔',
+    nameKey: "dungeon.types.luminal_cascade.name",
     description: '光子の滝が垂直層を照らす塔。滝と光子梯子が多段レイヤーを形成',
+    descriptionKey: "dungeon.types.luminal_cascade.description",
+
     algorithm(ctx){
       const center = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
       floodChannel(ctx, center, ['#d7f4ff','#b7ddff','#f8faff'], { maxDepth: 540, width: 2, floorType: 'water' });
@@ -1408,13 +1491,17 @@
       applyRunwayLights(ctx, ['#f3e7ff','#d7f0ff','#fff2de'], 5);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.56, blockDimMixed: 0.7, tags: ['tower','water','light','portal'] }
   };
 
   const mythicOverpass = {
     id: 'mythic-overpass',
     name: '神話浮橋交差層',
+    nameKey: "dungeon.types.mythic_overpass.name",
     description: '神話橋が空に重なる多層交差層。橋梁と神殿区画が相互に絡み合う',
+    descriptionKey: "dungeon.types.mythic_overpass.description",
+
     algorithm(ctx){
       const bridges = scatterNodes(ctx, 20, 7, 4);
       linkClustersWithBridges(ctx, bridges, ['#f7e6d7','#ffe2f0','#d4f2ff'], { floorType: 'normal' });
@@ -1422,13 +1509,17 @@
       carveRadialStars(ctx, { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) }, 16, ['#ffe8d7','#dce8ff','#ffeefa'], { floorType: 'ice' });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.61, blockDimMixed: 0.76, tags: ['bridge','temple','sky','ice'] }
   };
 
   const etherealForge = {
     id: 'ethereal-forge',
     name: 'エーテルフォージ連星',
+    nameKey: "dungeon.types.ethereal_forge.name",
     description: 'エーテル粒子を鍛える連星炉。エネルギー網と霊火が交互に脈動する',
+    descriptionKey: "dungeon.types.ethereal_forge.description",
+
     algorithm(ctx){
       const nodes = scatterNodes(ctx, 24, 6, 3);
       carveCircuit(ctx, nodes, 2, ['#ffd0c0','#ffc4f2','#d7f3ff'], { floorType: (tile, idx) => idx % 4 === 0 ? 'fire' : 'normal' });
@@ -1437,13 +1528,17 @@
       gradientFromSeeds(ctx, nodes.map((n, idx) => ({ ...n, paletteIndex: idx })), ['#fff2e1','#ffd9f7','#c9f6ff']);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.53, blockDimMixed: 0.7, tags: ['forge','ether','fire','network'] }
   };
 
   const holoMarsh = {
     id: 'holo-marsh',
     name: 'ホロ幻湿原',
+    nameKey: "dungeon.types.holo_marsh.name",
     description: 'ホログラムが漂う湿原層。幻光の藻が地形を変化させる',
+    descriptionKey: "dungeon.types.holo_marsh.description",
+
     algorithm(ctx){
       floodChannel(ctx, { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) }, ['#96ffe6','#c9fff2','#e4fffd'], { maxDepth: 500, width: 3, floorType: 'water' });
       carveVoronoi(ctx, scatterNodes(ctx, 18, 6, 4).map((s, idx) => ({ ...s, paletteIndex: idx })), sharedPalettes.cyber, { floorType: (x, y, seed) => seed.paletteIndex % 2 === 0 ? 'water' : 'normal' });
@@ -1451,13 +1546,17 @@
       setDiagonalStrips(ctx, ['#c7fff2','#fff4f0','#d8f8ff'], 5);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.58, blockDimMixed: 0.69, tags: ['marsh','hologram','water','bio'] }
   };
 
   const dreamParliament = {
     id: 'dream-parliament',
     name: '夢議会星殿',
+    nameKey: "dungeon.types.dream_parliament.name",
     description: '星夢議会の議場。同心円と座席アーチが幾層にも重なり合う',
+    descriptionKey: "dungeon.types.dream_parliament.description",
+
     algorithm(ctx){
       const center = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
       ringCarve(ctx, center.x, center.y, 2, Math.floor(Math.min(ctx.width, ctx.height) / 3), { floorColor: '#fff0ff', floorType: 'normal' });
@@ -1466,13 +1565,17 @@
       sprinklePortals(ctx, ['#ffe1ff','#c8f3ff','#fff2d7']);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.55, blockDimMixed: 0.72, tags: ['council','spiral','portal'] }
   };
 
   const warpGondola = {
     id: 'warp-gondola',
     name: 'ワープゴンドラ環道',
+    nameKey: "dungeon.types.warp_gondola.name",
     description: 'ワープゴンドラが行き交う環状道。浮遊桟橋とゲートが連結する',
+    descriptionKey: "dungeon.types.warp_gondola.description",
+
     algorithm(ctx){
       const ringCenter = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
       ringCarve(ctx, ringCenter.x, ringCenter.y, 3, Math.min(ctx.width, ctx.height) / 2 - 3, { floorColor: '#f2e5ff', floorType: (x, y) => (x + y) % 4 === 0 ? 'portal' : 'normal' });
@@ -1481,13 +1584,17 @@
       sprinklePortals(ctx, ['#ffe8ff','#d0f6ff','#fff6d5']);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.62, blockDimMixed: 0.78, tags: ['transport','ring','portal'] }
   };
 
   const chronoSanctuary = {
     id: 'chrono-sanctuary',
     name: 'クロノサンクチュアリ',
+    nameKey: "dungeon.types.chrono_sanctuary.name",
     description: '時間を祀る聖域。多層時刻盤と鐘楼が共鳴する',
+    descriptionKey: "dungeon.types.chrono_sanctuary.description",
+
     algorithm(ctx){
       carveNestedRectangles(ctx, ['#ffe1d6','#ffd4f2','#d7f6ff'], { padding: 3, step: 4, floorType: 'normal' });
       const nodes = scatterNodes(ctx, 18, 6, 4);
@@ -1495,13 +1602,17 @@
       radiateSpears(ctx, { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) }, 40, Math.max(ctx.width, ctx.height), ['#ffe8d8','#ffd5f5','#d8f4ff'], { floorType: 'normal', typeInterval: 10 });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.51, blockDimMixed: 0.68, tags: ['temple','time','fire'] }
   };
 
   const nebulaDucts = {
     id: 'nebula-ducts',
     name: 'ネビュラ導管街',
+    nameKey: "dungeon.types.nebula_ducts.name",
     description: '星雲導管が都市を巡る層。導管と噴出口が交差する霧街',
+    descriptionKey: "dungeon.types.nebula_ducts.description",
+
     algorithm(ctx){
       const nodes = scatterNodes(ctx, 26, 5, 3);
       followFlowField(ctx, createFlowField(ctx.width, ctx.height), 220, ['#9bd9ff','#c5f1ff','#ffe8f8'], { thickness: 1, floorType: 'normal' });
@@ -1509,13 +1620,17 @@
       applyFog(ctx, '#122032', 6);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.58, blockDimMixed: 0.73, tags: ['city','conduit','fog'] }
   };
 
   const singularityCanopy = {
     id: 'singularity-canopy',
     name: 'シンギュラリティ樹冠',
+    nameKey: "dungeon.types.singularity_canopy.name",
     description: '重力が反転する樹冠都市。量子樹液が光路をつくり、樹冠に都市が編み込まれる',
+    descriptionKey: "dungeon.types.singularity_canopy.description",
+
     algorithm(ctx){
       const seed = Math.floor(ctx.random() * 9000);
       const heightMap = createHeightMap(ctx.width, ctx.height, { frequency: 0.07 + ctx.random() * 0.05, octaves: 4, seed });
@@ -1531,13 +1646,17 @@
       markPerimeter(ctx, 1, '#1c0f2d');
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.59, blockDimMixed: 0.83, tags: ['forest','singularity','portal','arcane'] }
   };
 
   const chronoPulseTransit = {
     id: 'chrono-pulse-transit',
     name: 'クロノパルス輸送環',
+    nameKey: "dungeon.types.chrono_pulse_transit.name",
     description: '時間脈を滑るトラムと多層リング。脈動するホログラムが路線を導く',
+    descriptionKey: "dungeon.types.chrono_pulse_transit.description",
+
     algorithm(ctx){
       const nodes = scatterNodes(ctx, 22, 5, 3);
       const field = createFlowField(ctx.width, ctx.height);
@@ -1548,13 +1667,17 @@
       markPerimeter(ctx, 2, '#372d4f');
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.61, blockDimMixed: 0.79, tags: ['transport','time','rail','pulse'] }
   };
 
   const auroraManufactorum = {
     id: 'aurora-manufactorum',
     name: 'オーロラ製造都市',
+    nameKey: "dungeon.types.aurora_manufactorum.name",
     description: '極光炉と浮遊クレーンが交差する製造層。彩光のラインが機構を結ぶ',
+    descriptionKey: "dungeon.types.aurora_manufactorum.description",
+
     algorithm(ctx){
       const hubs = scatterNodes(ctx, 16, 6, 4);
       carveHexGrid(ctx, sharedPalettes.forge, { radius: 4, floorType: 'normal' });
@@ -1566,13 +1689,17 @@
       applyVerticalBands(ctx, ['#ffe9d6','#ffe1ff','#c9f9ff'], 6);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.64, blockDimMixed: 0.82, tags: ['factory','aurora','mechanical','fire'] }
   };
 
   const dreamTurbineGardens = {
     id: 'dream-turbine-gardens',
     name: '夢風タービン庭苑',
+    nameKey: "dungeon.types.dream_turbine_gardens.name",
     description: '風夢タービンが浮遊花園を撹拌する。睡蓮の光と風洞が重なる庭苑層',
+    descriptionKey: "dungeon.types.dream_turbine_gardens.description",
+
     algorithm(ctx){
       const map = createHeightMap(ctx.width, ctx.height, { frequency: 0.06 + ctx.random() * 0.03, octaves: 5, seed: Math.floor(ctx.random() * 1000) });
       applyHeightMapLayers(ctx, map, sharedPalettes.reef, {
@@ -1585,13 +1712,17 @@
       applyFog(ctx, '#dff9ff', 8);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.52, blockDimMixed: 0.74, tags: ['garden','wind','dream','portal'] }
   };
 
   const prismOracleVault = {
     id: 'prism-oracle-vault',
     name: 'プリズム神託庫',
+    nameKey: "dungeon.types.prism_oracle_vault.name",
     description: '光の神託を格納した聖蔵。屈折回廊と光の井戸が交差する',
+    descriptionKey: "dungeon.types.prism_oracle_vault.description",
+
     algorithm(ctx){
       const center = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
       carveNestedRectangles(ctx, ['#f0e8ff','#ffe8f2','#fff7d6'], { padding: 3, step: 3, floorType: 'normal' });
@@ -1602,13 +1733,17 @@
       applyCheckerHighlights(ctx, ['#fff1ff','#dceaff','#fff9d6'], 6);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.56, blockDimMixed: 0.77, tags: ['vault','prism','oracle','portal'] }
   };
 
   const nebularCascadePlaza = {
     id: 'nebular-cascade-plaza',
     name: '星雲カスケード広場',
+    nameKey: "dungeon.types.nebular_cascade_plaza.name",
     description: '星雲の滝と浮遊層が交差する広場都市。霧と水脈が多層に重なる',
+    descriptionKey: "dungeon.types.nebular_cascade_plaza.description",
+
     algorithm(ctx){
       const map = createHeightMap(ctx.width, ctx.height, { frequency: 0.05 + ctx.random() * 0.03, octaves: 5, seed: Math.floor(ctx.random() * 500) });
       applyHeightMapLayers(ctx, map, sharedPalettes.nova, {
@@ -1622,13 +1757,17 @@
       applyFog(ctx, '#1d233a', 7);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.54, blockDimMixed: 0.7, tags: ['city','cascade','water','nebula'] }
   };
 
   const astralChorusWells = {
     id: 'astral-chorus-wells',
     name: '星界合唱井戸',
+    nameKey: "dungeon.types.astral_chorus_wells.name",
     description: '星界の歌声が反響する井戸群。波紋と共鳴が交差する聖域',
+    descriptionKey: "dungeon.types.astral_chorus_wells.description",
+
     algorithm(ctx){
       const center = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
       carveRadialStars(ctx, center, 48, sharedPalettes.astral, { floorType: (x, y, step) => step % 10 === 0 ? 'portal' : 'normal' });
@@ -1638,13 +1777,17 @@
       rippleIntersections(ctx, sharedPalettes.aurora, { rings: 8, spacing: 4 });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.6, blockDimMixed: 0.76, tags: ['temple','astral','sound','portal'] }
   };
 
   const mirroredSpireSanctum = {
     id: 'mirrored-spire-sanctum',
     name: '鏡晶尖塔聖堂',
+    nameKey: "dungeon.types.mirrored_spire_sanctum.name",
     description: '鏡面尖塔が層をなす聖堂。光の回廊が反射し続ける',
+    descriptionKey: "dungeon.types.mirrored_spire_sanctum.description",
+
     algorithm(ctx){
       const heightMap = createHeightMap(ctx.width, ctx.height, { frequency: 0.08, octaves: 4, seed: Math.floor(ctx.random() * 1200) });
       applyHeightMapLayers(ctx, heightMap, sharedPalettes.glacial, {
@@ -1656,13 +1799,17 @@
       applyCheckerHighlights(ctx, ['#e2f1ff','#fff0ff','#fdfbe7'], 4);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.57, blockDimMixed: 0.8, tags: ['temple','mirror','ice','portal'] }
   };
 
   const technoSylvanHelix = {
     id: 'techno-sylvan-helix',
     name: 'テクノ森螺旋',
+    nameKey: "dungeon.types.techno_sylvan_helix.name",
     description: 'バイオルミナスの森と量子回路が螺旋を描く居住層',
+    descriptionKey: "dungeon.types.techno_sylvan_helix.description",
+
     algorithm(ctx){
       const nodes = scatterNodes(ctx, 24, 5, 3);
       carveLayeredSpirals(ctx, { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) }, 9, sharedPalettes.verdant, { floorType: (x, y, layer) => layer % 3 === 0 ? 'poison' : 'normal' });
@@ -1671,13 +1818,17 @@
       propagateWavefront(ctx, nodes.slice(0, 10), sharedPalettes.verdant, { waveStep: 4, iterations: 520, floorType: (x, y, dist) => dist % 11 === 0 ? 'poison' : 'normal' });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.58, blockDimMixed: 0.78, tags: ['forest','tech','spiral','poison'] }
   };
 
   const chronoRiftTramway = {
     id: 'chrono-rift-tramway',
     name: 'クロノリフト路線',
+    nameKey: "dungeon.types.chrono_rift_tramway.name",
     description: '時間裂け目を縫う昇降トラム。リング状のゲートが上下階層を束ねる',
+    descriptionKey: "dungeon.types.chrono_rift_tramway.description",
+
     algorithm(ctx){
       const rnd = ctx.random;
       const center = { x: Math.floor(ctx.width / 2), y: Math.floor(ctx.height / 2) };
@@ -1690,13 +1841,17 @@
       embedGlyphSequence(ctx, glyphAtlas.harmonic, nodes.slice(0, 5), { floorColor: '#fff3f3', floorType: 'portal' });
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.6, blockDimMixed: 0.78, tags: ['transport','ring','time','portal'] }
   };
 
   const voidglassEstuary = {
     id: 'voidglass-estuary',
     name: '虚玻の河口',
+    nameKey: "dungeon.types.voidglass_estuary.name",
     description: '虚無と光の河口都市。透徹した水脈と浮遊堤が交わる',
+    descriptionKey: "dungeon.types.voidglass_estuary.description",
+
     algorithm(ctx){
       const map = createHeightMap(ctx.width, ctx.height, { frequency: 0.05, octaves: 5, seed: Math.floor(ctx.random() * 3000) });
       applyHeightMapLayers(ctx, map, sharedPalettes.glacial, {
@@ -1709,13 +1864,17 @@
       applyFog(ctx, '#0c182b', 10);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.53, blockDimMixed: 0.71, tags: ['water','void','city','portal'] }
   };
 
   const harmonicDreamArtery = {
     id: 'harmonic-dream-artery',
     name: '調律夢動脈',
+    nameKey: "dungeon.types.harmonic_dream_artery.name",
     description: '夢動脈が共鳴し、音律が光と交差する調律回廊',
+    descriptionKey: "dungeon.types.harmonic_dream_artery.description",
+
     algorithm(ctx){
       const splinePoints = [
         { x: 2, y: Math.floor(ctx.height / 2) },
@@ -1731,6 +1890,7 @@
       applyCheckerHighlights(ctx, ['#fdf2ff','#d8f7ff','#fff6d9'], 7);
       ctx.ensureConnectivity();
     },
+
     mixin: { normalMixed: 0.62, blockDimMixed: 0.8, tags: ['music','dream','artery','portal'] }
   };
   const addonId = 'fantasical-sci-fi-dream-pack';

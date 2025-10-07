@@ -349,49 +349,63 @@
       {
         id: 'neo_research_atrium',
         name: 'シンセ研究アトリウム',
+        nameKey: "dungeon.types.neo_research_atrium.name",
         description: '多層リングと研究ポッドが広がる中枢アトリウム区画。',
+        descriptionKey: "dungeon.types.neo_research_atrium.description",
         algorithm: researchAtriumAlgorithm,
         mixin: { normalMixed: 0.55, blockDimMixed: 0.65, tags: ['futuristic', 'research', 'circular'] }
       },
       {
         id: 'neo_circuit_grid',
         name: '量子回路グリッド',
+        nameKey: "dungeon.types.neo_circuit_grid.name",
         description: '幾何学的な配線と交差ノードを持つ都市制御層。',
+        descriptionKey: "dungeon.types.neo_circuit_grid.description",
         algorithm: circuitGridAlgorithm,
         mixin: { normalMixed: 0.6, blockDimMixed: 0.7, tags: ['urban', 'lab', 'grid'] }
       },
       {
         id: 'neo_skyrail_tiered',
         name: '階層スカイレール',
+        nameKey: "dungeon.types.neo_skyrail_tiered.name",
         description: '空中回廊と垂直連絡路が縦横に走る都市交通層。',
+        descriptionKey: "dungeon.types.neo_skyrail_tiered.description",
         algorithm: skyrailTierAlgorithm,
         mixin: { normalMixed: 0.62, blockDimMixed: 0.68, tags: ['transport', 'future', 'open'] }
       },
       {
         id: 'neo_quantum_helix',
         name: '量子螺旋試験場',
+        nameKey: "dungeon.types.neo_quantum_helix.name",
         description: '螺旋加速路と収束ノードが絡み合う実験施設。',
+        descriptionKey: "dungeon.types.neo_quantum_helix.description",
         algorithm: quantumHelixAlgorithm,
         mixin: { normalMixed: 0.5, blockDimMixed: 0.72, tags: ['research', 'quantum', 'dynamic'] }
       },
       {
         id: 'neo_biodome_cascade',
         name: 'バイオドームカスケード',
+        nameKey: "dungeon.types.neo_biodome_cascade.name",
         description: 'バイオ球体と生態廊が連なる多段アトリウム。',
+        descriptionKey: "dungeon.types.neo_biodome_cascade.description",
         algorithm: biodomeCascadeAlgorithm,
         mixin: { normalMixed: 0.58, blockDimMixed: 0.66, tags: ['bio', 'garden', 'future'] }
       },
       {
         id: 'neo_coolant_vault',
         name: '冷却コア金庫',
+        nameKey: "dungeon.types.neo_coolant_vault.name",
         description: '複合制御層と冷却プールを備えた地下保守区画。',
+        descriptionKey: "dungeon.types.neo_coolant_vault.description",
         algorithm: coolantVaultAlgorithm,
         mixin: { normalMixed: 0.52, blockDimMixed: 0.74, tags: ['industrial', 'maintenance', 'lab'] }
       },
       {
         id: 'neo_holo_district',
         name: 'ホロシティ中枢',
+        nameKey: "dungeon.types.neo_holo_district.name",
         description: 'ホログラム広場と多角コアが点在する都市核。',
+        descriptionKey: "dungeon.types.neo_holo_district.description",
         algorithm: holoDistrictAlgorithm,
         mixin: { normalMixed: 0.57, blockDimMixed: 0.7, tags: ['urban', 'hologram', 'future'] }
       }
@@ -407,48 +421,384 @@
     ];
 
     const blocks1 = [
-      { key: 'neo-atrium-01', name: '実験アトリウム基層', level: +1, size: 0, depth: 0, chest: 'normal', type: 'neo_research_atrium' },
-      { key: 'neo-atrium-02', name: 'ポッドラボ回廊', level: +2, size: +1, depth: 0, chest: 'more', type: 'neo_research_atrium' },
-      { key: 'neo-grid-01', name: '都市基板グリッド', level: +1, size: 0, depth: 0, chest: 'normal', type: 'neo_circuit_grid' },
-      { key: 'neo-grid-02', name: '監視ノード街区', level: +2, size: 0, depth: 0, chest: 'less', type: 'neo_circuit_grid' },
-      { key: 'neo-skyrail-01', name: 'スカイレール回廊', level: +1, size: +1, depth: 0, chest: 'normal', type: 'neo_skyrail_tiered' },
-      { key: 'neo-skyrail-02', name: '昇降連絡棟', level: +2, size: 0, depth: 0, chest: 'less', type: 'neo_skyrail_tiered' },
-      { key: 'neo-helix-01', name: '螺旋試験フロア', level: +2, size: +1, depth: 0, chest: 'normal', type: 'neo_quantum_helix' },
-      { key: 'neo-biodome-01', name: 'バイオアトリウム層', level: +1, size: 0, depth: 0, chest: 'more', type: 'neo_biodome_cascade' },
-      { key: 'neo-biodome-02', name: '生態観測廊', level: +2, size: 0, depth: 0, chest: 'normal', type: 'neo_biodome_cascade' },
-      { key: 'neo-coolant-01', name: '冷却整備区画', level: +1, size: 0, depth: 0, chest: 'normal', type: 'neo_coolant_vault' },
-      { key: 'neo-holo-01', name: 'ホロシティ遊歩', level: +1, size: 0, depth: 0, chest: 'more', type: 'neo_holo_district' },
-      { key: 'neo-holo-02', name: '投影交差コンコース', level: +2, size: 0, depth: 0, chest: 'normal', type: 'neo_holo_district' }
+      {
+        key: 'neo-atrium-01',
+        name: '実験アトリウム基層',
+        nameKey: "dungeon.types.neo_research_atrium.blocks.neo-atrium-01.name",
+        level: +1,
+        size: 0,
+        depth: 0,
+        chest: 'normal',
+        type: 'neo_research_atrium'
+      },
+      {
+        key: 'neo-atrium-02',
+        name: 'ポッドラボ回廊',
+        nameKey: "dungeon.types.neo_research_atrium.blocks.neo-atrium-02.name",
+        level: +2,
+        size: +1,
+        depth: 0,
+        chest: 'more',
+        type: 'neo_research_atrium'
+      },
+      {
+        key: 'neo-grid-01',
+        name: '都市基板グリッド',
+        nameKey: "dungeon.types.neo_circuit_grid.blocks.neo-grid-01.name",
+        level: +1,
+        size: 0,
+        depth: 0,
+        chest: 'normal',
+        type: 'neo_circuit_grid'
+      },
+      {
+        key: 'neo-grid-02',
+        name: '監視ノード街区',
+        nameKey: "dungeon.types.neo_circuit_grid.blocks.neo-grid-02.name",
+        level: +2,
+        size: 0,
+        depth: 0,
+        chest: 'less',
+        type: 'neo_circuit_grid'
+      },
+      {
+        key: 'neo-skyrail-01',
+        name: 'スカイレール回廊',
+        nameKey: "dungeon.types.neo_skyrail_tiered.blocks.neo-skyrail-01.name",
+        level: +1,
+        size: +1,
+        depth: 0,
+        chest: 'normal',
+        type: 'neo_skyrail_tiered'
+      },
+      {
+        key: 'neo-skyrail-02',
+        name: '昇降連絡棟',
+        nameKey: "dungeon.types.neo_skyrail_tiered.blocks.neo-skyrail-02.name",
+        level: +2,
+        size: 0,
+        depth: 0,
+        chest: 'less',
+        type: 'neo_skyrail_tiered'
+      },
+      {
+        key: 'neo-helix-01',
+        name: '螺旋試験フロア',
+        nameKey: "dungeon.types.neo_quantum_helix.blocks.neo-helix-01.name",
+        level: +2,
+        size: +1,
+        depth: 0,
+        chest: 'normal',
+        type: 'neo_quantum_helix'
+      },
+      {
+        key: 'neo-biodome-01',
+        name: 'バイオアトリウム層',
+        nameKey: "dungeon.types.neo_biodome_cascade.blocks.neo-biodome-01.name",
+        level: +1,
+        size: 0,
+        depth: 0,
+        chest: 'more',
+        type: 'neo_biodome_cascade'
+      },
+      {
+        key: 'neo-biodome-02',
+        name: '生態観測廊',
+        nameKey: "dungeon.types.neo_biodome_cascade.blocks.neo-biodome-02.name",
+        level: +2,
+        size: 0,
+        depth: 0,
+        chest: 'normal',
+        type: 'neo_biodome_cascade'
+      },
+      {
+        key: 'neo-coolant-01',
+        name: '冷却整備区画',
+        nameKey: "dungeon.types.neo_coolant_vault.blocks.neo-coolant-01.name",
+        level: +1,
+        size: 0,
+        depth: 0,
+        chest: 'normal',
+        type: 'neo_coolant_vault'
+      },
+      {
+        key: 'neo-holo-01',
+        name: 'ホロシティ遊歩',
+        nameKey: "dungeon.types.neo_holo_district.blocks.neo-holo-01.name",
+        level: +1,
+        size: 0,
+        depth: 0,
+        chest: 'more',
+        type: 'neo_holo_district'
+      },
+      {
+        key: 'neo-holo-02',
+        name: '投影交差コンコース',
+        nameKey: "dungeon.types.neo_holo_district.blocks.neo-holo-02.name",
+        level: +2,
+        size: 0,
+        depth: 0,
+        chest: 'normal',
+        type: 'neo_holo_district'
+      }
     ];
 
     const blocks2 = [
-      { key: 'neo-atrium-advanced-01', name: '研究ドーム外郭', level: +3, size: +1, depth: +1, chest: 'normal', type: 'neo_research_atrium' },
-      { key: 'neo-atrium-advanced-02', name: 'シンセ循環路', level: +4, size: +1, depth: +1, chest: 'less', type: 'neo_research_atrium' },
-      { key: 'neo-grid-advanced-01', name: '統合制御街区', level: +3, size: +1, depth: +1, chest: 'normal', type: 'neo_circuit_grid' },
-      { key: 'neo-grid-advanced-02', name: 'データセンタープラザ', level: +4, size: 0, depth: +1, chest: 'more', type: 'neo_circuit_grid' },
-      { key: 'neo-skyrail-advanced-01', name: '上層トランジット網', level: +3, size: +1, depth: +1, chest: 'normal', type: 'neo_skyrail_tiered' },
-      { key: 'neo-skyrail-advanced-02', name: 'ヘリックス連絡橋', level: +4, size: 0, depth: +1, chest: 'less', type: 'neo_skyrail_tiered' },
-      { key: 'neo-helix-advanced-01', name: '量子束縛回廊', level: +4, size: +1, depth: +1, chest: 'normal', type: 'neo_quantum_helix' },
-      { key: 'neo-helix-advanced-02', name: '収束パルサーハブ', level: +5, size: 0, depth: +1, chest: 'less', type: 'neo_quantum_helix' },
-      { key: 'neo-biodome-advanced-01', name: '生態連結庭園', level: +3, size: +1, depth: +1, chest: 'more', type: 'neo_biodome_cascade' },
-      { key: 'neo-coolant-advanced-01', name: '冷却配管制御層', level: +4, size: +1, depth: +1, chest: 'normal', type: 'neo_coolant_vault' },
-      { key: 'neo-holo-advanced-01', name: 'ホログラム展望区', level: +3, size: 0, depth: +1, chest: 'more', type: 'neo_holo_district' },
-      { key: 'neo-holo-advanced-02', name: '多角プラザ制御核', level: +4, size: +1, depth: +1, chest: 'less', type: 'neo_holo_district' }
+      {
+        key: 'neo-atrium-advanced-01',
+        name: '研究ドーム外郭',
+        nameKey: "dungeon.types.neo_research_atrium.blocks.neo-atrium-advanced-01.name",
+        level: +3,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'neo_research_atrium'
+      },
+      {
+        key: 'neo-atrium-advanced-02',
+        name: 'シンセ循環路',
+        nameKey: "dungeon.types.neo_research_atrium.blocks.neo-atrium-advanced-02.name",
+        level: +4,
+        size: +1,
+        depth: +1,
+        chest: 'less',
+        type: 'neo_research_atrium'
+      },
+      {
+        key: 'neo-grid-advanced-01',
+        name: '統合制御街区',
+        nameKey: "dungeon.types.neo_circuit_grid.blocks.neo-grid-advanced-01.name",
+        level: +3,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'neo_circuit_grid'
+      },
+      {
+        key: 'neo-grid-advanced-02',
+        name: 'データセンタープラザ',
+        nameKey: "dungeon.types.neo_circuit_grid.blocks.neo-grid-advanced-02.name",
+        level: +4,
+        size: 0,
+        depth: +1,
+        chest: 'more',
+        type: 'neo_circuit_grid'
+      },
+      {
+        key: 'neo-skyrail-advanced-01',
+        name: '上層トランジット網',
+        nameKey: "dungeon.types.neo_skyrail_tiered.blocks.neo-skyrail-advanced-01.name",
+        level: +3,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'neo_skyrail_tiered'
+      },
+      {
+        key: 'neo-skyrail-advanced-02',
+        name: 'ヘリックス連絡橋',
+        nameKey: "dungeon.types.neo_skyrail_tiered.blocks.neo-skyrail-advanced-02.name",
+        level: +4,
+        size: 0,
+        depth: +1,
+        chest: 'less',
+        type: 'neo_skyrail_tiered'
+      },
+      {
+        key: 'neo-helix-advanced-01',
+        name: '量子束縛回廊',
+        nameKey: "dungeon.types.neo_quantum_helix.blocks.neo-helix-advanced-01.name",
+        level: +4,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'neo_quantum_helix'
+      },
+      {
+        key: 'neo-helix-advanced-02',
+        name: '収束パルサーハブ',
+        nameKey: "dungeon.types.neo_quantum_helix.blocks.neo-helix-advanced-02.name",
+        level: +5,
+        size: 0,
+        depth: +1,
+        chest: 'less',
+        type: 'neo_quantum_helix'
+      },
+      {
+        key: 'neo-biodome-advanced-01',
+        name: '生態連結庭園',
+        nameKey: "dungeon.types.neo_biodome_cascade.blocks.neo-biodome-advanced-01.name",
+        level: +3,
+        size: +1,
+        depth: +1,
+        chest: 'more',
+        type: 'neo_biodome_cascade'
+      },
+      {
+        key: 'neo-coolant-advanced-01',
+        name: '冷却配管制御層',
+        nameKey: "dungeon.types.neo_coolant_vault.blocks.neo-coolant-advanced-01.name",
+        level: +4,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'neo_coolant_vault'
+      },
+      {
+        key: 'neo-holo-advanced-01',
+        name: 'ホログラム展望区',
+        nameKey: "dungeon.types.neo_holo_district.blocks.neo-holo-advanced-01.name",
+        level: +3,
+        size: 0,
+        depth: +1,
+        chest: 'more',
+        type: 'neo_holo_district'
+      },
+      {
+        key: 'neo-holo-advanced-02',
+        name: '多角プラザ制御核',
+        nameKey: "dungeon.types.neo_holo_district.blocks.neo-holo-advanced-02.name",
+        level: +4,
+        size: +1,
+        depth: +1,
+        chest: 'less',
+        type: 'neo_holo_district'
+      }
     ];
 
     const blocks3 = [
-      { key: 'neo-atrium-core', name: 'アトリウム主制御核', level: +5, size: +2, depth: +2, chest: 'normal', type: 'neo_research_atrium', bossFloors: [15, 25] },
-      { key: 'neo-grid-core', name: '都市管制メッシュ核', level: +5, size: +1, depth: +2, chest: 'less', type: 'neo_circuit_grid', bossFloors: [18] },
-      { key: 'neo-skyrail-core', name: 'スカイレール統括塔', level: +5, size: +2, depth: +2, chest: 'normal', type: 'neo_skyrail_tiered', bossFloors: [16, 22] },
-      { key: 'neo-helix-core', name: '量子螺旋炉心', level: +6, size: +2, depth: +3, chest: 'less', type: 'neo_quantum_helix', bossFloors: [20] },
-      { key: 'neo-biodome-core', name: 'バイオドーム母艦', level: +5, size: +2, depth: +2, chest: 'more', type: 'neo_biodome_cascade', bossFloors: [17, 23] },
-      { key: 'neo-coolant-core', name: '冷却封鎖コア', level: +5, size: +1, depth: +3, chest: 'less', type: 'neo_coolant_vault', bossFloors: [19] },
-      { key: 'neo-holo-core', name: 'ホロシティ統合核', level: +6, size: +1, depth: +2, chest: 'normal', type: 'neo_holo_district', bossFloors: [18, 26] },
-      { key: 'neo-helix-singularity', name: 'シンギュラリティ観測室', level: +6, size: +2, depth: +3, chest: 'less', type: 'neo_quantum_helix', bossFloors: [24] },
-      { key: 'neo-grid-overseer', name: 'オーバーシア制御床', level: +5, size: +1, depth: +2, chest: 'normal', type: 'neo_circuit_grid', bossFloors: [21] },
-      { key: 'neo-biodome-warden', name: '遺伝子監視核', level: +5, size: +1, depth: +3, chest: 'less', type: 'neo_biodome_cascade', bossFloors: [22] },
-      { key: 'neo-coolant-reactor', name: '冷却炉心制御座', level: +6, size: +2, depth: +3, chest: 'normal', type: 'neo_coolant_vault', bossFloors: [25] },
-      { key: 'neo-holo-prism', name: 'ホロプリズム神殿', level: +6, size: +2, depth: +3, chest: 'more', type: 'neo_holo_district', bossFloors: [20, 28] }
+      {
+        key: 'neo-atrium-core',
+        name: 'アトリウム主制御核',
+        nameKey: "dungeon.types.neo_research_atrium.blocks.neo-atrium-core.name",
+        level: +5,
+        size: +2,
+        depth: +2,
+        chest: 'normal',
+        type: 'neo_research_atrium',
+        bossFloors: [15, 25]
+      },
+      {
+        key: 'neo-grid-core',
+        name: '都市管制メッシュ核',
+        nameKey: "dungeon.types.neo_circuit_grid.blocks.neo-grid-core.name",
+        level: +5,
+        size: +1,
+        depth: +2,
+        chest: 'less',
+        type: 'neo_circuit_grid',
+        bossFloors: [18]
+      },
+      {
+        key: 'neo-skyrail-core',
+        name: 'スカイレール統括塔',
+        nameKey: "dungeon.types.neo_skyrail_tiered.blocks.neo-skyrail-core.name",
+        level: +5,
+        size: +2,
+        depth: +2,
+        chest: 'normal',
+        type: 'neo_skyrail_tiered',
+        bossFloors: [16, 22]
+      },
+      {
+        key: 'neo-helix-core',
+        name: '量子螺旋炉心',
+        nameKey: "dungeon.types.neo_quantum_helix.blocks.neo-helix-core.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'less',
+        type: 'neo_quantum_helix',
+        bossFloors: [20]
+      },
+      {
+        key: 'neo-biodome-core',
+        name: 'バイオドーム母艦',
+        nameKey: "dungeon.types.neo_biodome_cascade.blocks.neo-biodome-core.name",
+        level: +5,
+        size: +2,
+        depth: +2,
+        chest: 'more',
+        type: 'neo_biodome_cascade',
+        bossFloors: [17, 23]
+      },
+      {
+        key: 'neo-coolant-core',
+        name: '冷却封鎖コア',
+        nameKey: "dungeon.types.neo_coolant_vault.blocks.neo-coolant-core.name",
+        level: +5,
+        size: +1,
+        depth: +3,
+        chest: 'less',
+        type: 'neo_coolant_vault',
+        bossFloors: [19]
+      },
+      {
+        key: 'neo-holo-core',
+        name: 'ホロシティ統合核',
+        nameKey: "dungeon.types.neo_holo_district.blocks.neo-holo-core.name",
+        level: +6,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'neo_holo_district',
+        bossFloors: [18, 26]
+      },
+      {
+        key: 'neo-helix-singularity',
+        name: 'シンギュラリティ観測室',
+        nameKey: "dungeon.types.neo_quantum_helix.blocks.neo-helix-singularity.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'less',
+        type: 'neo_quantum_helix',
+        bossFloors: [24]
+      },
+      {
+        key: 'neo-grid-overseer',
+        name: 'オーバーシア制御床',
+        nameKey: "dungeon.types.neo_circuit_grid.blocks.neo-grid-overseer.name",
+        level: +5,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'neo_circuit_grid',
+        bossFloors: [21]
+      },
+      {
+        key: 'neo-biodome-warden',
+        name: '遺伝子監視核',
+        nameKey: "dungeon.types.neo_biodome_cascade.blocks.neo-biodome-warden.name",
+        level: +5,
+        size: +1,
+        depth: +3,
+        chest: 'less',
+        type: 'neo_biodome_cascade',
+        bossFloors: [22]
+      },
+      {
+        key: 'neo-coolant-reactor',
+        name: '冷却炉心制御座',
+        nameKey: "dungeon.types.neo_coolant_vault.blocks.neo-coolant-reactor.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'normal',
+        type: 'neo_coolant_vault',
+        bossFloors: [25]
+      },
+      {
+        key: 'neo-holo-prism',
+        name: 'ホロプリズム神殿',
+        nameKey: "dungeon.types.neo_holo_district.blocks.neo-holo-prism.name",
+        level: +6,
+        size: +2,
+        depth: +3,
+        chest: 'more',
+        type: 'neo_holo_district',
+        bossFloors: [20, 28]
+      }
     ];
 
     return { dimensions, blocks1, blocks2, blocks3 };

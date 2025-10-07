@@ -67,7 +67,9 @@
   const generator = {
     id: 'conveyor-foundry',
     name: 'コンベヤー鋳造所',
+    nameKey: "dungeon.types.conveyor_foundry.name",
     description: '流れるベルトと狭い作業路が入り組む機械工場跡',
+    descriptionKey: "dungeon.types.conveyor_foundry.description",
     recommendedLevel: 45,
     algorithm: carveFactory,
     mixin: { normalMixed: 0.35, blockDimMixed: 0.45, tags: ['mechanical', 'hazard'] }
@@ -75,20 +77,58 @@
 
   const blocks = {
     blocks1: [
-      { key: 'conveyor_foundry_a', name: '鋳造ライン', level: +8, size: 0, depth: +1, chest: 'normal', type: 'conveyor-foundry' },
-      { key: 'conveyor_foundry_b', name: '搬入区画', level: +16, size: +1, depth: +2, chest: 'less', type: 'conveyor-foundry' }
+      {
+        key: 'conveyor_foundry_a',
+        name: '鋳造ライン',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_a.name",
+        level: +8,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'conveyor-foundry'
+      },
+      {
+        key: 'conveyor_foundry_b',
+        name: '搬入区画',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_b.name",
+        level: +16,
+        size: +1,
+        depth: +2,
+        chest: 'less',
+        type: 'conveyor-foundry'
+      }
     ],
     blocks2: [
-      { key: 'conveyor_foundry_core', name: '中枢制御室', level: +24, size: +1, depth: +2, chest: 'more', type: 'conveyor-foundry' }
+      {
+        key: 'conveyor_foundry_core',
+        name: '中枢制御室',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_core.name",
+        level: +24,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'conveyor-foundry'
+      }
     ],
     blocks3: [
-      { key: 'conveyor_foundry_boss', name: '炉心プラットフォーム', level: +32, size: +2, depth: +3, chest: 'rich', type: 'conveyor-foundry', bossFloors: [6, 12] }
+      {
+        key: 'conveyor_foundry_boss',
+        name: '炉心プラットフォーム',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_boss.name",
+        level: +32,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'conveyor-foundry',
+        bossFloors: [6, 12]
+      }
     ]
   };
 
   window.registerDungeonAddon({
     id: 'conveyor_foundry_pack',
     name: 'Conveyor Foundry Pack',
+    nameKey: "dungeon.packs.conveyor_foundry_pack.name",
     version: '1.0.0',
     generators: [generator],
     blocks

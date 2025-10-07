@@ -125,7 +125,9 @@
   const gen = {
     id: 'paddy-field-paths',
     name: '田園あぜ道',
+    nameKey: "dungeon.types.paddy_field_paths.name",
     description: '黄緑の田んぼと茶色のあぜ道、水色の水路が格子状に広がる農村の景観',
+    descriptionKey: "dungeon.types.paddy_field_paths.description",
     algorithm,
     mixin: { normalMixed: 0.4, blockDimMixed: 0.4, tags: ['field','agriculture','rural'] }
   };
@@ -140,31 +142,177 @@
 
   const blocks = {
     blocks1: [
-      { key:'paddy_paths_theme_01', name:'Paddy Paths Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'paddy-field-paths', bossFloors:mkBoss(5) },
-      { key:'paddy_paths_theme_02', name:'Paddy Paths Theme II', level:+6,  size:+1, depth:+1, chest:'less',   type:'paddy-field-paths', bossFloors:mkBoss(7) },
-      { key:'paddy_paths_theme_03', name:'Paddy Paths Theme III',level:+12, size:+1, depth:+1, chest:'more',  type:'paddy-field-paths', bossFloors:mkBoss(9) },
-      { key:'paddy_paths_theme_04', name:'Paddy Paths Theme IV', level:+18, size:+2, depth:+2, chest:'normal',type:'paddy-field-paths', bossFloors:mkBoss(11) },
-      { key:'paddy_paths_theme_05', name:'Paddy Paths Theme V',  level:+24, size:+2, depth:+2, chest:'less',  type:'paddy-field-paths', bossFloors:mkBoss(13) }
+      {
+        key:'paddy_paths_theme_01',
+        name:'Paddy Paths Theme I',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'paddy-field-paths',
+        bossFloors:mkBoss(5)
+      },
+      {
+        key:'paddy_paths_theme_02',
+        name:'Paddy Paths Theme II',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_theme_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'paddy-field-paths',
+        bossFloors:mkBoss(7)
+      },
+      {
+        key:'paddy_paths_theme_03',
+        name:'Paddy Paths Theme III',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_theme_03.name",
+        level:+12,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'paddy-field-paths',
+        bossFloors:mkBoss(9)
+      },
+      {
+        key:'paddy_paths_theme_04',
+        name:'Paddy Paths Theme IV',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_theme_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'paddy-field-paths',
+        bossFloors:mkBoss(11)
+      },
+      {
+        key:'paddy_paths_theme_05',
+        name:'Paddy Paths Theme V',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_theme_05.name",
+        level:+24,
+        size:+2,
+        depth:+2,
+        chest:'less',
+        type:'paddy-field-paths',
+        bossFloors:mkBoss(13)
+      }
     ],
     blocks2: [
-      { key:'paddy_paths_core_01', name:'Paddy Paths Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'paddy-field-paths' },
-      { key:'paddy_paths_core_02', name:'Paddy Paths Core II',level:+5,  size:+1, depth:+1, chest:'more',   type:'paddy-field-paths' },
-      { key:'paddy_paths_core_03', name:'Paddy Paths Core III',level:+10, size:+2, depth:+1, chest:'less',  type:'paddy-field-paths' },
-      { key:'paddy_paths_core_04', name:'Paddy Paths Core IV', level:+16, size:+2, depth:+2, chest:'normal',type:'paddy-field-paths' },
-      { key:'paddy_paths_core_05', name:'Paddy Paths Core V',  level:+22, size:+3, depth:+2, chest:'more',  type:'paddy-field-paths' }
+      {
+        key:'paddy_paths_core_01',
+        name:'Paddy Paths Core I',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'paddy-field-paths'
+      },
+      {
+        key:'paddy_paths_core_02',
+        name:'Paddy Paths Core II',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_core_02.name",
+        level:+5,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'paddy-field-paths'
+      },
+      {
+        key:'paddy_paths_core_03',
+        name:'Paddy Paths Core III',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_core_03.name",
+        level:+10,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'paddy-field-paths'
+      },
+      {
+        key:'paddy_paths_core_04',
+        name:'Paddy Paths Core IV',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_core_04.name",
+        level:+16,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'paddy-field-paths'
+      },
+      {
+        key:'paddy_paths_core_05',
+        name:'Paddy Paths Core V',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_core_05.name",
+        level:+22,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'paddy-field-paths'
+      }
     ],
     blocks3: [
-      { key:'paddy_paths_relic_01', name:'Paddy Paths Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'paddy-field-paths', bossFloors:[5] },
-      { key:'paddy_paths_relic_02', name:'Paddy Paths Relic II',level:+8,  size:+1, depth:+2, chest:'normal', type:'paddy-field-paths', bossFloors:[10] },
-      { key:'paddy_paths_relic_03', name:'Paddy Paths Relic III',level:+16, size:+1, depth:+3, chest:'less',  type:'paddy-field-paths', bossFloors:[15] },
-      { key:'paddy_paths_relic_04', name:'Paddy Paths Relic IV', level:+22, size:+2, depth:+3, chest:'more',  type:'paddy-field-paths', bossFloors:[10,15] },
-      { key:'paddy_paths_relic_05', name:'Paddy Paths Relic V',  level:+28, size:+2, depth:+4, chest:'normal',type:'paddy-field-paths', bossFloors:[5,10,15] }
+      {
+        key:'paddy_paths_relic_01',
+        name:'Paddy Paths Relic I',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'paddy-field-paths',
+        bossFloors:[5]
+      },
+      {
+        key:'paddy_paths_relic_02',
+        name:'Paddy Paths Relic II',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_relic_02.name",
+        level:+8,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'paddy-field-paths',
+        bossFloors:[10]
+      },
+      {
+        key:'paddy_paths_relic_03',
+        name:'Paddy Paths Relic III',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_relic_03.name",
+        level:+16,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'paddy-field-paths',
+        bossFloors:[15]
+      },
+      {
+        key:'paddy_paths_relic_04',
+        name:'Paddy Paths Relic IV',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_relic_04.name",
+        level:+22,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'paddy-field-paths',
+        bossFloors:[10,15]
+      },
+      {
+        key:'paddy_paths_relic_05',
+        name:'Paddy Paths Relic V',
+        nameKey: "dungeon.types.paddy_field_paths.blocks.paddy_paths_relic_05.name",
+        level:+28,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'paddy-field-paths',
+        bossFloors:[5,10,15]
+      }
     ]
   };
 
   window.registerDungeonAddon({
     id:'paddy_azemichi_pack',
     name:'Paddy Terrace Paths Pack',
+    nameKey: "dungeon.packs.paddy_azemichi_pack.name",
     version:'1.0.0',
     author:'modder-sample',
     blocks,

@@ -34,32 +34,192 @@
     ctx.ensureConnectivity();
   }
 
-  const gen = { id:'ring-city', name:'環都市', description:'同心円の街路と放射状の道', algorithm, mixin:{ normalMixed:0.5, blockDimMixed:0.5, tags:['structured','rooms'] } };
+  const gen = {
+    id:'ring-city',
+    name:'環都市',
+    nameKey: "dungeon.types.ring_city.name",
+    description:'同心円の街路と放射状の道',
+    descriptionKey: "dungeon.types.ring_city.description",
+    algorithm,
+    mixin:{ normalMixed:0.5, blockDimMixed:0.5, tags:['structured','rooms'] }
+  };
 
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'ring_theme_01', name:'Ring Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'ring-city', bossFloors:mkBoss(6) },
-      { key:'ring_theme_02', name:'Ring Theme II',level:+8,  size:+1, depth:+1, chest:'less',   type:'ring-city', bossFloors:mkBoss(8) },
-      { key:'ring_theme_03', name:'Ring Theme III',level:+16, size:+1, depth:+2, chest:'more',   type:'ring-city', bossFloors:mkBoss(10) },
-      { key:'ring_theme_04', name:'Ring Theme IV',level:+24, size:+2, depth:+2, chest:'normal', type:'ring-city', bossFloors:mkBoss(12) },
-      { key:'ring_theme_05', name:'Ring Theme V', level:+32, size:+2, depth:+3, chest:'less',   type:'ring-city', bossFloors:mkBoss(15) },
+      {
+        key:'ring_theme_01',
+        name:'Ring Theme I',
+        nameKey: "dungeon.types.ring_city.blocks.ring_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'ring-city',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'ring_theme_02',
+        name:'Ring Theme II',
+        nameKey: "dungeon.types.ring_city.blocks.ring_theme_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'ring-city',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'ring_theme_03',
+        name:'Ring Theme III',
+        nameKey: "dungeon.types.ring_city.blocks.ring_theme_03.name",
+        level:+16,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'ring-city',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'ring_theme_04',
+        name:'Ring Theme IV',
+        nameKey: "dungeon.types.ring_city.blocks.ring_theme_04.name",
+        level:+24,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'ring-city',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'ring_theme_05',
+        name:'Ring Theme V',
+        nameKey: "dungeon.types.ring_city.blocks.ring_theme_05.name",
+        level:+32,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'ring-city',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'spokes_01', name:'Spokes I', level:+0,  size:+1, depth:0, chest:'normal', type:'ring-city' },
-      { key:'spokes_02', name:'Spokes II',level:+6,  size:+1, depth:+1, chest:'more',  type:'ring-city' },
-      { key:'spokes_03', name:'Spokes III',level:+12, size:+2, depth:+1, chest:'less', type:'ring-city' },
-      { key:'spokes_04', name:'Spokes IV',level:+18, size:+2, depth:+2, chest:'normal',type:'ring-city' },
-      { key:'spokes_05', name:'Spokes V', level:+24, size:+3, depth:+2, chest:'more',  type:'ring-city' },
+      {
+        key:'spokes_01',
+        name:'Spokes I',
+        nameKey: "dungeon.types.ring_city.blocks.spokes_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'ring-city'
+      },
+      {
+        key:'spokes_02',
+        name:'Spokes II',
+        nameKey: "dungeon.types.ring_city.blocks.spokes_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'ring-city'
+      },
+      {
+        key:'spokes_03',
+        name:'Spokes III',
+        nameKey: "dungeon.types.ring_city.blocks.spokes_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'ring-city'
+      },
+      {
+        key:'spokes_04',
+        name:'Spokes IV',
+        nameKey: "dungeon.types.ring_city.blocks.spokes_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'ring-city'
+      },
+      {
+        key:'spokes_05',
+        name:'Spokes V',
+        nameKey: "dungeon.types.ring_city.blocks.spokes_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'ring-city'
+      },
     ],
     blocks3:[
-      { key:'citadel_01', name:'Citadel I', level:+0,  size:0, depth:+2, chest:'more',   type:'ring-city', bossFloors:[5] },
-      { key:'citadel_02', name:'Citadel II',level:+7,  size:+1, depth:+2, chest:'normal', type:'ring-city', bossFloors:[10] },
-      { key:'citadel_03', name:'Citadel III',level:+14, size:+1, depth:+3, chest:'less', type:'ring-city', bossFloors:[15] },
-      { key:'citadel_04', name:'Citadel IV', level:+21, size:+2, depth:+3, chest:'more', type:'ring-city', bossFloors:[10,15] },
-      { key:'citadel_05', name:'Citadel V',  level:+28, size:+2, depth:+4, chest:'normal',type:'ring-city', bossFloors:[5,10,15] },
+      {
+        key:'citadel_01',
+        name:'Citadel I',
+        nameKey: "dungeon.types.ring_city.blocks.citadel_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'ring-city',
+        bossFloors:[5]
+      },
+      {
+        key:'citadel_02',
+        name:'Citadel II',
+        nameKey: "dungeon.types.ring_city.blocks.citadel_02.name",
+        level:+7,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'ring-city',
+        bossFloors:[10]
+      },
+      {
+        key:'citadel_03',
+        name:'Citadel III',
+        nameKey: "dungeon.types.ring_city.blocks.citadel_03.name",
+        level:+14,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'ring-city',
+        bossFloors:[15]
+      },
+      {
+        key:'citadel_04',
+        name:'Citadel IV',
+        nameKey: "dungeon.types.ring_city.blocks.citadel_04.name",
+        level:+21,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'ring-city',
+        bossFloors:[10,15]
+      },
+      {
+        key:'citadel_05',
+        name:'Citadel V',
+        nameKey: "dungeon.types.ring_city.blocks.citadel_05.name",
+        level:+28,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'ring-city',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'ring_city_pack', name:'Ring City Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'ring_city_pack',
+    name:'Ring City Pack',
+    nameKey: "dungeon.packs.ring_city_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

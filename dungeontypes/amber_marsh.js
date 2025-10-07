@@ -95,7 +95,9 @@
   const gen = {
     id: 'amber-marsh',
     name: '琥珀湿地',
+    nameKey: "dungeon.types.amber_marsh.name",
     description: '秋色の湿原に漂う靄と泥の迷路',
+    descriptionKey: "dungeon.types.amber_marsh.description",
     algorithm,
     mixin: { normalMixed: 0.55, blockDimMixed: 0.5, tags: ['swamp','autumn','mist'] }
   };
@@ -111,32 +113,232 @@
 
   const blocks = {
     blocks1:[
-      { key:'amber_theme_01', name:'Marsh Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'amber-marsh', bossFloors:boss(3) },
-      { key:'amber_theme_02', name:'Marsh Theme II', level:+4,  size:+1, depth:+1, chest:'less',   type:'amber-marsh', bossFloors:boss(5) },
-      { key:'amber_theme_03', name:'Marsh Theme III',level:+8,  size:+1, depth:+1, chest:'more',   type:'amber-marsh', bossFloors:boss(7) },
-      { key:'amber_theme_04', name:'Marsh Theme IV', level:+12, size:+1, depth:+2, chest:'normal', type:'amber-marsh', bossFloors:boss(9) },
-      { key:'amber_theme_05', name:'Marsh Theme V',  level:+16, size:+2, depth:+2, chest:'less',   type:'amber-marsh', bossFloors:boss(11) },
-      { key:'amber_theme_06', name:'Marsh Theme VI', level:+20, size:+2, depth:+2, chest:'normal', type:'amber-marsh', bossFloors:boss(13) },
-      { key:'amber_theme_07', name:'Marsh Theme VII',level:+24, size:+2, depth:+3, chest:'more',   type:'amber-marsh', bossFloors:boss(15) }
+      {
+        key:'amber_theme_01',
+        name:'Marsh Theme I',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'amber-marsh',
+        bossFloors:boss(3)
+      },
+      {
+        key:'amber_theme_02',
+        name:'Marsh Theme II',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_theme_02.name",
+        level:+4,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'amber-marsh',
+        bossFloors:boss(5)
+      },
+      {
+        key:'amber_theme_03',
+        name:'Marsh Theme III',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_theme_03.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'amber-marsh',
+        bossFloors:boss(7)
+      },
+      {
+        key:'amber_theme_04',
+        name:'Marsh Theme IV',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_theme_04.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'amber-marsh',
+        bossFloors:boss(9)
+      },
+      {
+        key:'amber_theme_05',
+        name:'Marsh Theme V',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_theme_05.name",
+        level:+16,
+        size:+2,
+        depth:+2,
+        chest:'less',
+        type:'amber-marsh',
+        bossFloors:boss(11)
+      },
+      {
+        key:'amber_theme_06',
+        name:'Marsh Theme VI',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_theme_06.name",
+        level:+20,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'amber-marsh',
+        bossFloors:boss(13)
+      },
+      {
+        key:'amber_theme_07',
+        name:'Marsh Theme VII',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_theme_07.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'amber-marsh',
+        bossFloors:boss(15)
+      }
     ],
     blocks2:[
-      { key:'amber_core_01', name:'Marsh Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'amber-marsh' },
-      { key:'amber_core_02', name:'Marsh Core II',level:+5,  size:+1, depth:+1, chest:'more',   type:'amber-marsh' },
-      { key:'amber_core_03', name:'Marsh Core III',level:+9,  size:+1, depth:+1, chest:'less',   type:'amber-marsh' },
-      { key:'amber_core_04', name:'Marsh Core IV', level:+13, size:+2, depth:+2, chest:'normal', type:'amber-marsh' },
-      { key:'amber_core_05', name:'Marsh Core V',  level:+17, size:+2, depth:+2, chest:'more',   type:'amber-marsh' },
-      { key:'amber_core_06', name:'Marsh Core VI', level:+21, size:+2, depth:+3, chest:'less',   type:'amber-marsh' },
-      { key:'amber_core_07', name:'Marsh Core VII',level:+25, size:+3, depth:+3, chest:'normal', type:'amber-marsh' }
+      {
+        key:'amber_core_01',
+        name:'Marsh Core I',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'amber-marsh'
+      },
+      {
+        key:'amber_core_02',
+        name:'Marsh Core II',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_core_02.name",
+        level:+5,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'amber-marsh'
+      },
+      {
+        key:'amber_core_03',
+        name:'Marsh Core III',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_core_03.name",
+        level:+9,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'amber-marsh'
+      },
+      {
+        key:'amber_core_04',
+        name:'Marsh Core IV',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_core_04.name",
+        level:+13,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'amber-marsh'
+      },
+      {
+        key:'amber_core_05',
+        name:'Marsh Core V',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_core_05.name",
+        level:+17,
+        size:+2,
+        depth:+2,
+        chest:'more',
+        type:'amber-marsh'
+      },
+      {
+        key:'amber_core_06',
+        name:'Marsh Core VI',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_core_06.name",
+        level:+21,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'amber-marsh'
+      },
+      {
+        key:'amber_core_07',
+        name:'Marsh Core VII',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_core_07.name",
+        level:+25,
+        size:+3,
+        depth:+3,
+        chest:'normal',
+        type:'amber-marsh'
+      }
     ],
     blocks3:[
-      { key:'amber_relic_01', name:'Marsh Relic I', level:+0,  size:0,  depth:+2, chest:'more',    type:'amber-marsh', bossFloors:[3] },
-      { key:'amber_relic_02', name:'Marsh Relic II',level:+6,  size:+1, depth:+2, chest:'normal',  type:'amber-marsh', bossFloors:[7] },
-      { key:'amber_relic_03', name:'Marsh Relic III',level:+12, size:+1, depth:+3, chest:'less',   type:'amber-marsh', bossFloors:[11] },
-      { key:'amber_relic_04', name:'Marsh Relic IV', level:+18, size:+2, depth:+3, chest:'normal', type:'amber-marsh', bossFloors:[15] },
-      { key:'amber_relic_05', name:'Marsh Relic V',  level:+24, size:+2, depth:+4, chest:'more',   type:'amber-marsh', bossFloors:[15] },
-      { key:'amber_relic_06', name:'Marsh Relic VI', level:+30, size:+2, depth:+4, chest:'less',   type:'amber-marsh', bossFloors:[15] }
+      {
+        key:'amber_relic_01',
+        name:'Marsh Relic I',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'amber-marsh',
+        bossFloors:[3]
+      },
+      {
+        key:'amber_relic_02',
+        name:'Marsh Relic II',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_relic_02.name",
+        level:+6,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'amber-marsh',
+        bossFloors:[7]
+      },
+      {
+        key:'amber_relic_03',
+        name:'Marsh Relic III',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_relic_03.name",
+        level:+12,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'amber-marsh',
+        bossFloors:[11]
+      },
+      {
+        key:'amber_relic_04',
+        name:'Marsh Relic IV',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_relic_04.name",
+        level:+18,
+        size:+2,
+        depth:+3,
+        chest:'normal',
+        type:'amber-marsh',
+        bossFloors:[15]
+      },
+      {
+        key:'amber_relic_05',
+        name:'Marsh Relic V',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_relic_05.name",
+        level:+24,
+        size:+2,
+        depth:+4,
+        chest:'more',
+        type:'amber-marsh',
+        bossFloors:[15]
+      },
+      {
+        key:'amber_relic_06',
+        name:'Marsh Relic VI',
+        nameKey: "dungeon.types.amber_marsh.blocks.amber_relic_06.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'less',
+        type:'amber-marsh',
+        bossFloors:[15]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'amber_marsh_pack', name:'Amber Marsh Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'amber_marsh_pack',
+    name:'Amber Marsh Pack',
+    nameKey: "dungeon.packs.amber_marsh_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

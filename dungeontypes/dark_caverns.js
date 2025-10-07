@@ -59,7 +59,9 @@
   const gen = {
     id: 'shadowed-caverns',
     name: '暗い洞窟',
+    nameKey: "dungeon.types.shadowed_caverns.name",
     description: '視界の効かない湿った洞窟網',
+    descriptionKey: "dungeon.types.shadowed_caverns.description",
     dark: true,
     algorithm,
     mixin: { normalMixed: 0.45, blockDimMixed: 0.55, tags: ['cave','dark'] }
@@ -75,18 +77,83 @@
 
   const blocks = {
     blocks1: [
-      { key:'shadow_cave_theme_01', name:'Shadow Caverns I', level:+0,  size:0,  depth:+1, chest:'normal', type:'shadowed-caverns', bossFloors:mkBoss(8) },
-      { key:'shadow_cave_theme_02', name:'Shadow Caverns II', level:+8,  size:+1, depth:+1, chest:'less',   type:'shadowed-caverns', bossFloors:mkBoss(10) },
-      { key:'shadow_cave_theme_03', name:'Shadow Caverns III', level:+16, size:+1, depth:+2, chest:'more',  type:'shadowed-caverns', bossFloors:mkBoss(12) }
+      {
+        key:'shadow_cave_theme_01',
+        name:'Shadow Caverns I',
+        nameKey: "dungeon.types.shadowed_caverns.blocks.shadow_cave_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'shadowed-caverns',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'shadow_cave_theme_02',
+        name:'Shadow Caverns II',
+        nameKey: "dungeon.types.shadowed_caverns.blocks.shadow_cave_theme_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'shadowed-caverns',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'shadow_cave_theme_03',
+        name:'Shadow Caverns III',
+        nameKey: "dungeon.types.shadowed_caverns.blocks.shadow_cave_theme_03.name",
+        level:+16,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'shadowed-caverns',
+        bossFloors:mkBoss(12)
+      }
     ],
     blocks2: [
-      { key:'shadow_cave_core_01', name:'Gloom Core I', level:+0, size:+1, depth:0, chest:'normal', type:'shadowed-caverns' },
-      { key:'shadow_cave_core_02', name:'Gloom Core II', level:+10, size:+1, depth:+1, chest:'more', type:'shadowed-caverns' }
+      {
+        key:'shadow_cave_core_01',
+        name:'Gloom Core I',
+        nameKey: "dungeon.types.shadowed_caverns.blocks.shadow_cave_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'shadowed-caverns'
+      },
+      {
+        key:'shadow_cave_core_02',
+        name:'Gloom Core II',
+        nameKey: "dungeon.types.shadowed_caverns.blocks.shadow_cave_core_02.name",
+        level:+10,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'shadowed-caverns'
+      }
     ],
     blocks3: [
-      { key:'shadow_cave_relic_01', name:'Luminous Relic', level:+0, size:0, depth:+2, chest:'more', type:'shadowed-caverns', bossFloors:[5,10] }
+      {
+        key:'shadow_cave_relic_01',
+        name:'Luminous Relic',
+        nameKey: "dungeon.types.shadowed_caverns.blocks.shadow_cave_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'shadowed-caverns',
+        bossFloors:[5,10]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'shadowed_caverns_pack', name:'Shadowed Caverns Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'shadowed_caverns_pack',
+    name:'Shadowed Caverns Pack',
+    nameKey: "dungeon.packs.shadowed_caverns_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

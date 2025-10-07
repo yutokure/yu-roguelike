@@ -57,7 +57,9 @@
   const gen = {
     id: 'irradiated-plains',
     name: '放射線の平原',
+    nameKey: "dungeon.types.irradiated_plains.name",
     description: '毒霧に侵された危険な平原地帯',
+    descriptionKey: "dungeon.types.irradiated_plains.description",
     poisonFog: true,
     algorithm,
     mixin: { normalMixed: 0.5, blockDimMixed: 0.6, tags: ['field','poison'] }
@@ -72,16 +74,62 @@
 
   const blocks = {
     blocks1: [
-      { key:'irradiated_theme_01', name:'Fallout Plains I', level:+0,  size:0,  depth:+1, chest:'normal', type:'irradiated-plains', bossFloors:mkBoss(8) },
-      { key:'irradiated_theme_02', name:'Fallout Plains II', level:+14, size:+1, depth:+2, chest:'less',   type:'irradiated-plains', bossFloors:mkBoss(12) }
+      {
+        key:'irradiated_theme_01',
+        name:'Fallout Plains I',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'irradiated-plains',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'irradiated_theme_02',
+        name:'Fallout Plains II',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_theme_02.name",
+        level:+14,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'irradiated-plains',
+        bossFloors:mkBoss(12)
+      }
     ],
     blocks2: [
-      { key:'irradiated_core_01', name:'Core Fallout', level:+8, size:+1, depth:+1, chest:'normal', type:'irradiated-plains' }
+      {
+        key:'irradiated_core_01',
+        name:'Core Fallout',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_core_01.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'normal',
+        type:'irradiated-plains'
+      }
     ],
     blocks3: [
-      { key:'irradiated_relic_01', name:'Radiant Relic', level:+18, size:+2, depth:+3, chest:'more', type:'irradiated-plains', bossFloors:[6,12] }
+      {
+        key:'irradiated_relic_01',
+        name:'Radiant Relic',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_relic_01.name",
+        level:+18,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'irradiated-plains',
+        bossFloors:[6,12]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'irradiated_plains_pack', name:'Irradiated Plains Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'irradiated_plains_pack',
+    name:'Irradiated Plains Pack',
+    nameKey: "dungeon.packs.irradiated_plains_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

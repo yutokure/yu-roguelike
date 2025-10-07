@@ -96,7 +96,9 @@
   const gen = {
     id: 'starlit-canopy',
     name: '星影樹海',
+    nameKey: "dungeon.types.starlit_canopy.name",
     description: '夜空の星々が照らす高木の樹海',
+    descriptionKey: "dungeon.types.starlit_canopy.description",
     algorithm,
     mixin: { normalMixed: 0.42, blockDimMixed: 0.55, tags: ['forest','night','celestial'] }
   };
@@ -112,32 +114,232 @@
 
   const blocks = {
     blocks1:[
-      { key:'starlit_theme_01', name:'Canopy Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'starlit-canopy', bossFloors:boss(5) },
-      { key:'starlit_theme_02', name:'Canopy Theme II', level:+4,  size:+1, depth:+1, chest:'less',   type:'starlit-canopy', bossFloors:boss(7) },
-      { key:'starlit_theme_03', name:'Canopy Theme III',level:+8,  size:+1, depth:+1, chest:'more',   type:'starlit-canopy', bossFloors:boss(9) },
-      { key:'starlit_theme_04', name:'Canopy Theme IV', level:+12, size:+1, depth:+2, chest:'normal', type:'starlit-canopy', bossFloors:boss(11) },
-      { key:'starlit_theme_05', name:'Canopy Theme V',  level:+16, size:+2, depth:+2, chest:'less',   type:'starlit-canopy', bossFloors:boss(13) },
-      { key:'starlit_theme_06', name:'Canopy Theme VI', level:+20, size:+2, depth:+2, chest:'normal', type:'starlit-canopy', bossFloors:boss(15) },
-      { key:'starlit_theme_07', name:'Canopy Theme VII',level:+24, size:+2, depth:+3, chest:'more',   type:'starlit-canopy', bossFloors:boss(17) }
+      {
+        key:'starlit_theme_01',
+        name:'Canopy Theme I',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'starlit-canopy',
+        bossFloors:boss(5)
+      },
+      {
+        key:'starlit_theme_02',
+        name:'Canopy Theme II',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_theme_02.name",
+        level:+4,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'starlit-canopy',
+        bossFloors:boss(7)
+      },
+      {
+        key:'starlit_theme_03',
+        name:'Canopy Theme III',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_theme_03.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'starlit-canopy',
+        bossFloors:boss(9)
+      },
+      {
+        key:'starlit_theme_04',
+        name:'Canopy Theme IV',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_theme_04.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'starlit-canopy',
+        bossFloors:boss(11)
+      },
+      {
+        key:'starlit_theme_05',
+        name:'Canopy Theme V',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_theme_05.name",
+        level:+16,
+        size:+2,
+        depth:+2,
+        chest:'less',
+        type:'starlit-canopy',
+        bossFloors:boss(13)
+      },
+      {
+        key:'starlit_theme_06',
+        name:'Canopy Theme VI',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_theme_06.name",
+        level:+20,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'starlit-canopy',
+        bossFloors:boss(15)
+      },
+      {
+        key:'starlit_theme_07',
+        name:'Canopy Theme VII',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_theme_07.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'starlit-canopy',
+        bossFloors:boss(17)
+      }
     ],
     blocks2:[
-      { key:'starlit_core_01', name:'Canopy Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'starlit-canopy' },
-      { key:'starlit_core_02', name:'Canopy Core II',level:+5,  size:+1, depth:+1, chest:'more',   type:'starlit-canopy' },
-      { key:'starlit_core_03', name:'Canopy Core III',level:+9,  size:+1, depth:+1, chest:'less',   type:'starlit-canopy' },
-      { key:'starlit_core_04', name:'Canopy Core IV', level:+13, size:+1, depth:+2, chest:'normal', type:'starlit-canopy' },
-      { key:'starlit_core_05', name:'Canopy Core V',  level:+17, size:+2, depth:+2, chest:'more',   type:'starlit-canopy' },
-      { key:'starlit_core_06', name:'Canopy Core VI', level:+21, size:+2, depth:+3, chest:'less',   type:'starlit-canopy' },
-      { key:'starlit_core_07', name:'Canopy Core VII',level:+25, size:+3, depth:+3, chest:'normal', type:'starlit-canopy' }
+      {
+        key:'starlit_core_01',
+        name:'Canopy Core I',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'starlit-canopy'
+      },
+      {
+        key:'starlit_core_02',
+        name:'Canopy Core II',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_core_02.name",
+        level:+5,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'starlit-canopy'
+      },
+      {
+        key:'starlit_core_03',
+        name:'Canopy Core III',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_core_03.name",
+        level:+9,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'starlit-canopy'
+      },
+      {
+        key:'starlit_core_04',
+        name:'Canopy Core IV',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_core_04.name",
+        level:+13,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'starlit-canopy'
+      },
+      {
+        key:'starlit_core_05',
+        name:'Canopy Core V',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_core_05.name",
+        level:+17,
+        size:+2,
+        depth:+2,
+        chest:'more',
+        type:'starlit-canopy'
+      },
+      {
+        key:'starlit_core_06',
+        name:'Canopy Core VI',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_core_06.name",
+        level:+21,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'starlit-canopy'
+      },
+      {
+        key:'starlit_core_07',
+        name:'Canopy Core VII',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_core_07.name",
+        level:+25,
+        size:+3,
+        depth:+3,
+        chest:'normal',
+        type:'starlit-canopy'
+      }
     ],
     blocks3:[
-      { key:'starlit_relic_01', name:'Canopy Relic I', level:+0,  size:0,  depth:+2, chest:'more',    type:'starlit-canopy', bossFloors:[5] },
-      { key:'starlit_relic_02', name:'Canopy Relic II',level:+6,  size:+1, depth:+2, chest:'normal',  type:'starlit-canopy', bossFloors:[10] },
-      { key:'starlit_relic_03', name:'Canopy Relic III',level:+12, size:+1, depth:+3, chest:'less',   type:'starlit-canopy', bossFloors:[15] },
-      { key:'starlit_relic_04', name:'Canopy Relic IV', level:+18, size:+2, depth:+3, chest:'normal', type:'starlit-canopy', bossFloors:[20] },
-      { key:'starlit_relic_05', name:'Canopy Relic V',  level:+24, size:+2, depth:+4, chest:'more',   type:'starlit-canopy', bossFloors:[20] },
-      { key:'starlit_relic_06', name:'Canopy Relic VI', level:+30, size:+2, depth:+4, chest:'less',   type:'starlit-canopy', bossFloors:[20] }
+      {
+        key:'starlit_relic_01',
+        name:'Canopy Relic I',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'starlit-canopy',
+        bossFloors:[5]
+      },
+      {
+        key:'starlit_relic_02',
+        name:'Canopy Relic II',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_relic_02.name",
+        level:+6,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'starlit-canopy',
+        bossFloors:[10]
+      },
+      {
+        key:'starlit_relic_03',
+        name:'Canopy Relic III',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_relic_03.name",
+        level:+12,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'starlit-canopy',
+        bossFloors:[15]
+      },
+      {
+        key:'starlit_relic_04',
+        name:'Canopy Relic IV',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_relic_04.name",
+        level:+18,
+        size:+2,
+        depth:+3,
+        chest:'normal',
+        type:'starlit-canopy',
+        bossFloors:[20]
+      },
+      {
+        key:'starlit_relic_05',
+        name:'Canopy Relic V',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_relic_05.name",
+        level:+24,
+        size:+2,
+        depth:+4,
+        chest:'more',
+        type:'starlit-canopy',
+        bossFloors:[20]
+      },
+      {
+        key:'starlit_relic_06',
+        name:'Canopy Relic VI',
+        nameKey: "dungeon.types.starlit_canopy.blocks.starlit_relic_06.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'less',
+        type:'starlit-canopy',
+        bossFloors:[20]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'starlit_canopy_pack', name:'Starlit Canopy Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'starlit_canopy_pack',
+    name:'Starlit Canopy Pack',
+    nameKey: "dungeon.packs.starlit_canopy_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

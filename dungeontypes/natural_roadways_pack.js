@@ -379,7 +379,9 @@
     {
       id: 'winding-country-road',
       name: '街道',
+      nameKey: "dungeon.types.winding_country_road.name",
       description: '草原を横断する素朴な街道。黄緑の草原に茶色い土の道と花が点在する',
+      descriptionKey: "dungeon.types.winding_country_road.description",
       baseFill: 0,
       roadRadius: 1.6,
       startRatio: [0.42, 0.58],
@@ -411,7 +413,9 @@
     {
       id: 'deep-forest-road',
       name: '森の街道',
+      nameKey: "dungeon.types.deep_forest_road.name",
       description: '深い森を縫う街道。濃い緑の樹木と花が自然に生成される',
+      descriptionKey: "dungeon.types.deep_forest_road.description",
       baseFill: 1,
       roadRadius: 1.5,
       startRatio: [0.45, 0.55],
@@ -424,6 +428,7 @@
       branchTurnChance: 0.55,
       branchShoulderChance: 0.3,
       shoulderChance: 0.35,
+
       verticalRoad: {
         startRatio: [0.35, 0.65],
         wave: { frequency: 0.09, amplitudeRatio: 0.18 },
@@ -431,6 +436,7 @@
         radius: 1.25,
         shoulderChance: 0.25
       },
+
       clearingCount: 8,
       clearingRadius: [2.4, 4.0],
       edgeClearingRadius: 2.4,
@@ -468,22 +474,81 @@
 
   const blocks = {
     blocks1: [
-      { key: 'roadways_country_path', name: '街道探訪', level: +0,  size: 0,  depth: +1, chest: 'normal', type: 'winding-country-road', bossFloors: mkBoss(6) },
-      { key: 'roadways_forest_patrol', name: '森の街道探訪', level: +5,  size: +1, depth: +1, chest: 'less',   type: 'deep-forest-road', bossFloors: mkBoss(9) }
+      {
+        key: 'roadways_country_path',
+        name: '街道探訪',
+        nameKey: "dungeon.types.winding_country_road.blocks.roadways_country_path.name",
+        level: +0,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'winding-country-road',
+        bossFloors: mkBoss(6)
+      },
+      {
+        key: 'roadways_forest_patrol',
+        name: '森の街道探訪',
+        nameKey: "dungeon.types.deep_forest_road.blocks.roadways_forest_patrol.name",
+        level: +5,
+        size: +1,
+        depth: +1,
+        chest: 'less',
+        type: 'deep-forest-road',
+        bossFloors: mkBoss(9)
+      }
     ],
     blocks2: [
-      { key: 'roadways_country_route', name: '街道縦走', level: +6,  size: +1, depth: +1, chest: 'more',   type: 'winding-country-road' },
-      { key: 'roadways_forest_route',  name: '森の街道縦走', level: +12, size: +1, depth: +2, chest: 'normal', type: 'deep-forest-road' }
+      {
+        key: 'roadways_country_route',
+        name: '街道縦走',
+        nameKey: "dungeon.types.winding_country_road.blocks.roadways_country_route.name",
+        level: +6,
+        size: +1,
+        depth: +1,
+        chest: 'more',
+        type: 'winding-country-road'
+      },
+      {
+        key: 'roadways_forest_route',
+        name: '森の街道縦走',
+        nameKey: "dungeon.types.deep_forest_road.blocks.roadways_forest_route.name",
+        level: +12,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'deep-forest-road'
+      }
     ],
     blocks3: [
-      { key: 'roadways_country_relic', name: '街道遺構', level: +10, size: +1, depth: +2, chest: 'normal', type: 'winding-country-road', bossFloors: mkBoss(10) },
-      { key: 'roadways_forest_relic',  name: '森の街道遺構', level: +16, size: +2, depth: +3, chest: 'more',   type: 'deep-forest-road', bossFloors: mkBoss(14) }
+      {
+        key: 'roadways_country_relic',
+        name: '街道遺構',
+        nameKey: "dungeon.types.winding_country_road.blocks.roadways_country_relic.name",
+        level: +10,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'winding-country-road',
+        bossFloors: mkBoss(10)
+      },
+      {
+        key: 'roadways_forest_relic',
+        name: '森の街道遺構',
+        nameKey: "dungeon.types.deep_forest_road.blocks.roadways_forest_relic.name",
+        level: +16,
+        size: +2,
+        depth: +3,
+        chest: 'more',
+        type: 'deep-forest-road',
+        bossFloors: mkBoss(14)
+      }
     ]
   };
 
   window.registerDungeonAddon({
     id: 'natural_roadways_pack',
     name: 'Natural Roadways Pack',
+    nameKey: "dungeon.packs.natural_roadways_pack.name",
     version: '1.0.0',
     blocks,
     generators

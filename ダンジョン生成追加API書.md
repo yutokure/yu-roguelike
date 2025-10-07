@@ -117,6 +117,7 @@ interface StructurePlacementOptions {
 interface BlockSpec {
   key: string;              // 一意キー（英数・ハイフン）
   name?: string;            // 表示名（任意）
+  nameKey?: string;         // I18nキー（例: dungeon.blocks.<id>.name）
   level?: number;           // 推奨Lv補正（±）
   size?: number;            // マップサイズ係数（-2..+2）
   depth?: number;           // 深さ補正（±）
@@ -127,13 +128,15 @@ interface BlockSpec {
   weight?: number;          // Weightedランダム用（UIの「重み付きランダム」向け）
 }
 
-interface Dimension { key:string; name?:string; baseLevel:number }
+interface Dimension { key:string; name?:string; nameKey?: string; baseLevel:number }
 
 /** ダンジョン生成アルゴリズム */
 interface DungeonGeneratorDef {
   id: string;               // 例: 'lava-caves'
   name?: string;            // 表示名
+  nameKey?: string;         // I18nキー（例: dungeon.types.lava-caves.name）
   description?: string;
+  descriptionKey?: string;  // I18nキー（例: dungeon.types.lava-caves.description）
   floors?: {                // 固定マップを指定する場合（任意）
     max?: number;           // 階層数（未指定なら maps の最大 floor）
     bossFloors?: number[];  // ボス階層。未指定なら max を最終階として扱う
@@ -199,6 +202,14 @@ interface GenContext {
 - `floors` を指定したジェネレータは、`max` が `getMaxFloor()` の結果へ反映され、`bossFloors` は `isBossFloor()` 判定に利用されます。`maps` に登録したレイアウトは `ctx.fixedMaps.applyCurrent()` で適用可能です。
 - `ctx.fixedMaps` は固定マップの一覧取得 (`list()`)、特定階層のプレビュー (`get()`)、適用 (`apply()` / `applyCurrent()`) を提供します。固定マップが未定義の場合は `available:false` となり安全に無視できます。
 - `floors` のみを記述して `algorithm` を省略した場合、ホストは `ctx.fixedMaps.applyCurrent()` を内部で呼び出して指定レイアウトを適用し、追加のランダム生成を実施しません。
+
+### 4.1 ローカライズガイドライン
+
+- ホストは `window.I18n.t(key)` を通じてローカライズを行います。`nameKey` / `descriptionKey` / `blocks[].nameKey` / `dimensions[].nameKey` などにキーを指定すると、可能な限り翻訳されたテキストが UI に反映されます。
+- 互換性のため、**必ず** `name` や `description` など従来の文字列プロパティも併記してください。翻訳キーが未定義の場合や独自 I18n を使わない環境では従来文字列がフォールバックとして使用されます。
+- 生成タイプの表示名は `dungeon.types.<id>` というキーを自動で参照します。`nameKey` を渡すとこの自動解決よりも優先され、`descriptionKey` を渡すとダンジョンタイプオーバーレイや詳細表示で説明文がローカライズされます。
+- BlockDim の次元・ブロックリストでも `nameKey` が利用されます。例: `dungeon.blockdim.dimensions.alpha.name` や `dungeon.blockdim.blocks.rust_factory.name` など、アドオン内で一貫した命名を推奨します。
+- ロケールが変わるとホストから `document` に `app:rerender` イベントが発火し、登録済みのアドオン定義も含め UI が再描画されます。I18nファイルを更新した場合は `nameKey` などのキーを変更せず内容のみ差し替えると継続的に反映されます。
 
 ---
 

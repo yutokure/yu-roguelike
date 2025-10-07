@@ -99,33 +99,187 @@
   const gen = {
     id: 'ruined-labyrinth',
     name: '遺跡迷宮',
+    nameKey: "dungeon.types.ruined_labyrinth.name",
     description: '迷路の壁が崩れ、所々で大きく開いた遺跡の迷宮',
+    descriptionKey: "dungeon.types.ruined_labyrinth.description",
     algorithm,
     mixin: { normalMixed: 0.5, blockDimMixed: 0.45, tags: ['maze','ruins'] }
   };
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'ruined_lab_theme_01', name:'Ruined Labyrinth I', level:+0,  size:0,  depth:+1, chest:'normal', type:'ruined-labyrinth', bossFloors:mkBoss(6) },
-      { key:'ruined_lab_theme_02', name:'Ruined Labyrinth II',level:+6,  size:0,  depth:+1, chest:'more',   type:'ruined-labyrinth', bossFloors:mkBoss(8) },
-      { key:'ruined_lab_theme_03', name:'Ruined Labyrinth III',level:+12, size:+1, depth:+2, chest:'less',   type:'ruined-labyrinth', bossFloors:mkBoss(10) },
-      { key:'ruined_lab_theme_04', name:'Ruined Labyrinth IV',level:+18, size:+1, depth:+2, chest:'normal', type:'ruined-labyrinth', bossFloors:mkBoss(12) },
-      { key:'ruined_lab_theme_05', name:'Ruined Labyrinth V', level:+24, size:+2, depth:+3, chest:'more',   type:'ruined-labyrinth', bossFloors:mkBoss(15) },
+      {
+        key:'ruined_lab_theme_01',
+        name:'Ruined Labyrinth I',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'ruined-labyrinth',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'ruined_lab_theme_02',
+        name:'Ruined Labyrinth II',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_theme_02.name",
+        level:+6,
+        size:0,
+        depth:+1,
+        chest:'more',
+        type:'ruined-labyrinth',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'ruined_lab_theme_03',
+        name:'Ruined Labyrinth III',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_theme_03.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'ruined-labyrinth',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'ruined_lab_theme_04',
+        name:'Ruined Labyrinth IV',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_theme_04.name",
+        level:+18,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'ruined-labyrinth',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'ruined_lab_theme_05',
+        name:'Ruined Labyrinth V',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_theme_05.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'ruined-labyrinth',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'ruined_lab_core_01', name:'Ruined Core I', level:+0,  size:+1, depth:0, chest:'normal', type:'ruined-labyrinth' },
-      { key:'ruined_lab_core_02', name:'Ruined Core II',level:+7,  size:+1, depth:+1, chest:'more',  type:'ruined-labyrinth' },
-      { key:'ruined_lab_core_03', name:'Ruined Core III',level:+14, size:+2, depth:+1, chest:'less', type:'ruined-labyrinth' },
-      { key:'ruined_lab_core_04', name:'Ruined Core IV',level:+21, size:+2, depth:+2, chest:'normal',type:'ruined-labyrinth' },
-      { key:'ruined_lab_core_05', name:'Ruined Core V', level:+28, size:+3, depth:+2, chest:'more',  type:'ruined-labyrinth' },
+      {
+        key:'ruined_lab_core_01',
+        name:'Ruined Core I',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'ruined-labyrinth'
+      },
+      {
+        key:'ruined_lab_core_02',
+        name:'Ruined Core II',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_core_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'ruined-labyrinth'
+      },
+      {
+        key:'ruined_lab_core_03',
+        name:'Ruined Core III',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_core_03.name",
+        level:+14,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'ruined-labyrinth'
+      },
+      {
+        key:'ruined_lab_core_04',
+        name:'Ruined Core IV',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_core_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'ruined-labyrinth'
+      },
+      {
+        key:'ruined_lab_core_05',
+        name:'Ruined Core V',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_core_05.name",
+        level:+28,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'ruined-labyrinth'
+      },
     ],
     blocks3:[
-      { key:'ruined_lab_relic_01', name:'Ancient Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'ruined-labyrinth', bossFloors:[5] },
-      { key:'ruined_lab_relic_02', name:'Ancient Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:'ruined-labyrinth', bossFloors:[10] },
-      { key:'ruined_lab_relic_03', name:'Ancient Relic III',level:+18, size:+1, depth:+3, chest:'less', type:'ruined-labyrinth', bossFloors:[15] },
-      { key:'ruined_lab_relic_04', name:'Ancient Relic IV', level:+24, size:+2, depth:+3, chest:'more', type:'ruined-labyrinth', bossFloors:[10,15] },
-      { key:'ruined_lab_relic_05', name:'Ancient Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:'ruined-labyrinth', bossFloors:[5,10,15] },
+      {
+        key:'ruined_lab_relic_01',
+        name:'Ancient Relic I',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'ruined-labyrinth',
+        bossFloors:[5]
+      },
+      {
+        key:'ruined_lab_relic_02',
+        name:'Ancient Relic II',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'ruined-labyrinth',
+        bossFloors:[10]
+      },
+      {
+        key:'ruined_lab_relic_03',
+        name:'Ancient Relic III',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'ruined-labyrinth',
+        bossFloors:[15]
+      },
+      {
+        key:'ruined_lab_relic_04',
+        name:'Ancient Relic IV',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_relic_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'ruined-labyrinth',
+        bossFloors:[10,15]
+      },
+      {
+        key:'ruined_lab_relic_05',
+        name:'Ancient Relic V',
+        nameKey: "dungeon.types.ruined_labyrinth.blocks.ruined_lab_relic_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'ruined-labyrinth',
+        bossFloors:[5,10,15]
+      },
     ]
   };
-  window.registerDungeonAddon({ id:'ruined_labyrinth_pack', name:'Ruined Labyrinth Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'ruined_labyrinth_pack',
+    name:'Ruined Labyrinth Pack',
+    nameKey: "dungeon.packs.ruined_labyrinth_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

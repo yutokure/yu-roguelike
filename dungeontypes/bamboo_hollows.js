@@ -66,7 +66,9 @@
   const gen = {
     id: 'bamboo-hollows',
     name: '竹のホロウ',
+    nameKey: "dungeon.types.bamboo_hollows.name",
     description: '竹林の小道とせせらぎが続く静かな迷路',
+    descriptionKey: "dungeon.types.bamboo_hollows.description",
     algorithm,
     mixin: { normalMixed: 0.48, blockDimMixed: 0.52, tags: ['forest','bamboo','stream'] }
   };
@@ -82,32 +84,232 @@
 
   const blocks = {
     blocks1:[
-      { key:'bamboo_theme_01', name:'Bamboo Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'bamboo-hollows', bossFloors:boss(4) },
-      { key:'bamboo_theme_02', name:'Bamboo Theme II', level:+4,  size:+1, depth:+1, chest:'less',   type:'bamboo-hollows', bossFloors:boss(6) },
-      { key:'bamboo_theme_03', name:'Bamboo Theme III',level:+8,  size:+1, depth:+1, chest:'normal', type:'bamboo-hollows', bossFloors:boss(8) },
-      { key:'bamboo_theme_04', name:'Bamboo Theme IV', level:+12, size:+1, depth:+2, chest:'more',   type:'bamboo-hollows', bossFloors:boss(10) },
-      { key:'bamboo_theme_05', name:'Bamboo Theme V',  level:+16, size:+2, depth:+2, chest:'less',   type:'bamboo-hollows', bossFloors:boss(12) },
-      { key:'bamboo_theme_06', name:'Bamboo Theme VI', level:+20, size:+2, depth:+2, chest:'normal', type:'bamboo-hollows', bossFloors:boss(14) },
-      { key:'bamboo_theme_07', name:'Bamboo Theme VII',level:+24, size:+2, depth:+3, chest:'more',   type:'bamboo-hollows', bossFloors:boss(16) }
+      {
+        key:'bamboo_theme_01',
+        name:'Bamboo Theme I',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'bamboo-hollows',
+        bossFloors:boss(4)
+      },
+      {
+        key:'bamboo_theme_02',
+        name:'Bamboo Theme II',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_theme_02.name",
+        level:+4,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'bamboo-hollows',
+        bossFloors:boss(6)
+      },
+      {
+        key:'bamboo_theme_03',
+        name:'Bamboo Theme III',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_theme_03.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'normal',
+        type:'bamboo-hollows',
+        bossFloors:boss(8)
+      },
+      {
+        key:'bamboo_theme_04',
+        name:'Bamboo Theme IV',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_theme_04.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'bamboo-hollows',
+        bossFloors:boss(10)
+      },
+      {
+        key:'bamboo_theme_05',
+        name:'Bamboo Theme V',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_theme_05.name",
+        level:+16,
+        size:+2,
+        depth:+2,
+        chest:'less',
+        type:'bamboo-hollows',
+        bossFloors:boss(12)
+      },
+      {
+        key:'bamboo_theme_06',
+        name:'Bamboo Theme VI',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_theme_06.name",
+        level:+20,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'bamboo-hollows',
+        bossFloors:boss(14)
+      },
+      {
+        key:'bamboo_theme_07',
+        name:'Bamboo Theme VII',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_theme_07.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'bamboo-hollows',
+        bossFloors:boss(16)
+      }
     ],
     blocks2:[
-      { key:'bamboo_core_01', name:'Bamboo Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'bamboo-hollows' },
-      { key:'bamboo_core_02', name:'Bamboo Core II',level:+4,  size:+1, depth:+1, chest:'more',   type:'bamboo-hollows' },
-      { key:'bamboo_core_03', name:'Bamboo Core III',level:+8,  size:+1, depth:+1, chest:'less',   type:'bamboo-hollows' },
-      { key:'bamboo_core_04', name:'Bamboo Core IV', level:+12, size:+1, depth:+2, chest:'normal', type:'bamboo-hollows' },
-      { key:'bamboo_core_05', name:'Bamboo Core V',  level:+16, size:+2, depth:+2, chest:'more',   type:'bamboo-hollows' },
-      { key:'bamboo_core_06', name:'Bamboo Core VI', level:+20, size:+2, depth:+3, chest:'less',   type:'bamboo-hollows' },
-      { key:'bamboo_core_07', name:'Bamboo Core VII',level:+24, size:+3, depth:+3, chest:'normal', type:'bamboo-hollows' }
+      {
+        key:'bamboo_core_01',
+        name:'Bamboo Core I',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'bamboo-hollows'
+      },
+      {
+        key:'bamboo_core_02',
+        name:'Bamboo Core II',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_core_02.name",
+        level:+4,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'bamboo-hollows'
+      },
+      {
+        key:'bamboo_core_03',
+        name:'Bamboo Core III',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_core_03.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'bamboo-hollows'
+      },
+      {
+        key:'bamboo_core_04',
+        name:'Bamboo Core IV',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_core_04.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'bamboo-hollows'
+      },
+      {
+        key:'bamboo_core_05',
+        name:'Bamboo Core V',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_core_05.name",
+        level:+16,
+        size:+2,
+        depth:+2,
+        chest:'more',
+        type:'bamboo-hollows'
+      },
+      {
+        key:'bamboo_core_06',
+        name:'Bamboo Core VI',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_core_06.name",
+        level:+20,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'bamboo-hollows'
+      },
+      {
+        key:'bamboo_core_07',
+        name:'Bamboo Core VII',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_core_07.name",
+        level:+24,
+        size:+3,
+        depth:+3,
+        chest:'normal',
+        type:'bamboo-hollows'
+      }
     ],
     blocks3:[
-      { key:'bamboo_relic_01', name:'Bamboo Relic I', level:+0,  size:0,  depth:+2, chest:'more',    type:'bamboo-hollows', bossFloors:[4] },
-      { key:'bamboo_relic_02', name:'Bamboo Relic II',level:+6,  size:+1, depth:+2, chest:'normal',  type:'bamboo-hollows', bossFloors:[9] },
-      { key:'bamboo_relic_03', name:'Bamboo Relic III',level:+12, size:+1, depth:+3, chest:'less',   type:'bamboo-hollows', bossFloors:[13] },
-      { key:'bamboo_relic_04', name:'Bamboo Relic IV', level:+18, size:+2, depth:+3, chest:'normal', type:'bamboo-hollows', bossFloors:[18] },
-      { key:'bamboo_relic_05', name:'Bamboo Relic V',  level:+24, size:+2, depth:+4, chest:'more',   type:'bamboo-hollows', bossFloors:[18] },
-      { key:'bamboo_relic_06', name:'Bamboo Relic VI', level:+30, size:+2, depth:+4, chest:'less',   type:'bamboo-hollows', bossFloors:[18] }
+      {
+        key:'bamboo_relic_01',
+        name:'Bamboo Relic I',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'bamboo-hollows',
+        bossFloors:[4]
+      },
+      {
+        key:'bamboo_relic_02',
+        name:'Bamboo Relic II',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_relic_02.name",
+        level:+6,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'bamboo-hollows',
+        bossFloors:[9]
+      },
+      {
+        key:'bamboo_relic_03',
+        name:'Bamboo Relic III',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_relic_03.name",
+        level:+12,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'bamboo-hollows',
+        bossFloors:[13]
+      },
+      {
+        key:'bamboo_relic_04',
+        name:'Bamboo Relic IV',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_relic_04.name",
+        level:+18,
+        size:+2,
+        depth:+3,
+        chest:'normal',
+        type:'bamboo-hollows',
+        bossFloors:[18]
+      },
+      {
+        key:'bamboo_relic_05',
+        name:'Bamboo Relic V',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_relic_05.name",
+        level:+24,
+        size:+2,
+        depth:+4,
+        chest:'more',
+        type:'bamboo-hollows',
+        bossFloors:[18]
+      },
+      {
+        key:'bamboo_relic_06',
+        name:'Bamboo Relic VI',
+        nameKey: "dungeon.types.bamboo_hollows.blocks.bamboo_relic_06.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'less',
+        type:'bamboo-hollows',
+        bossFloors:[18]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'bamboo_hollows_pack', name:'Bamboo Hollows Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'bamboo_hollows_pack',
+    name:'Bamboo Hollows Pack',
+    nameKey: "dungeon.packs.bamboo_hollows_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

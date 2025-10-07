@@ -705,7 +705,9 @@
     {
       id: 'blood-vein-catacombs',
       name: '血脈の地下納骨堂',
+      nameKey: "dungeon.types.blood_vein_catacombs.name",
       description: '脈打つ血管のような通路が絡み合う、鉄錆と瘴気の迷宮。',
+      descriptionKey: "dungeon.types.blood_vein_catacombs.description",
       dark: true,
       algorithm: bloodVeinCatacombs,
       mixin: { normalMixed: 0.62, blockDimMixed: 0.75, tags: ['horror','organic','maze'] }
@@ -713,7 +715,9 @@
     {
       id: 'shattered-manor',
       name: '砕けたゴーストマナー',
+      nameKey: "dungeon.types.shattered_manor.name",
       description: '崩壊した邸宅の残響が漂う、冷たい空間と鋭角な廊下。',
+      descriptionKey: "dungeon.types.shattered_manor.description",
       dark: true,
       algorithm: shatteredManor,
       mixin: { normalMixed: 0.48, blockDimMixed: 0.66, tags: ['horror','rooms','trap'] }
@@ -721,7 +725,9 @@
     {
       id: 'midnight-carnival',
       name: '真夜中カーニバル跡地',
+      nameKey: "dungeon.types.midnight_carnival.name",
       description: '歪んだ観覧輪と仮面の笑い声が残る霧の会場。',
+      descriptionKey: "dungeon.types.midnight_carnival.description",
       dark: true,
       algorithm: midnightCarnival,
       mixin: { normalMixed: 0.51, blockDimMixed: 0.7, tags: ['horror','festival','ring'] }
@@ -729,7 +735,9 @@
     {
       id: 'ashen-asylum',
       name: '灰羽の収容院',
+      nameKey: "dungeon.types.ashen_asylum.name",
       description: '冷ややかな病棟と格子の廊下が交差する無機質な隔離施設。',
+      descriptionKey: "dungeon.types.ashen_asylum.description",
       dark: true,
       algorithm: ashenAsylum,
       mixin: { normalMixed: 0.45, blockDimMixed: 0.63, tags: ['horror','rooms','grid'] }
@@ -737,7 +745,9 @@
     {
       id: 'phantom-haunted-house',
       name: '亡霊の大屋敷',
+      nameKey: "dungeon.types.phantom_haunted_house.name",
       description: '薄暗い紫の廊下と秘密部屋が連なるお化け屋敷。',
+      descriptionKey: "dungeon.types.phantom_haunted_house.description",
       dark: true,
       algorithm: phantomHauntedHouse,
       mixin: { normalMixed: 0.49, blockDimMixed: 0.65, tags: ['horror','rooms','haunted'] }
@@ -745,7 +755,9 @@
     {
       id: 'dusk-graveyard',
       name: '薄暮の墓苑',
+      nameKey: "dungeon.types.dusk_graveyard.name",
       description: '朽ちた墓標と霧の小径が絡む呪われた墓地。',
+      descriptionKey: "dungeon.types.dusk_graveyard.description",
       dark: true,
       algorithm: duskGraveyard,
       mixin: { normalMixed: 0.53, blockDimMixed: 0.69, tags: ['horror','outdoor','graveyard'] }
@@ -753,7 +765,9 @@
     {
       id: 'wailing-mire',
       name: '慟哭の泥溜り',
+      nameKey: "dungeon.types.wailing_mire.name",
       description: '水気を帯びた赤い霧が漂う、底無しの沼地迷宮。',
+      descriptionKey: "dungeon.types.wailing_mire.description",
       dark: true,
       algorithm: wailingMire,
       mixin: { normalMixed: 0.58, blockDimMixed: 0.7, tags: ['horror','organic','swamp'] }
@@ -761,7 +775,9 @@
     {
       id: 'bell-foundry',
       name: '無鳴鐘の鋳造所',
+      nameKey: "dungeon.types.bell_foundry.name",
       description: '血錆に染まった鐘楼と螺旋の足場が続く火葬工房。',
+      descriptionKey: "dungeon.types.bell_foundry.description",
       dark: true,
       algorithm: bellFoundry,
       mixin: { normalMixed: 0.5, blockDimMixed: 0.68, tags: ['horror','industrial','radial'] }
@@ -769,7 +785,9 @@
     {
       id: 'gallows-spiral',
       name: '吊環の大回廊',
+      nameKey: "dungeon.types.gallows_spiral.name",
       description: '吊るされた影と螺旋通路が絡む無限回廊。',
+      descriptionKey: "dungeon.types.gallows_spiral.description",
       dark: true,
       algorithm: gallowsSpiral,
       mixin: { normalMixed: 0.55, blockDimMixed: 0.72, tags: ['horror','spiral','vertical'] }
@@ -791,51 +809,433 @@
       { key: 'scarlet_moon', name: '猩紅の月影界', baseLevel: 44 }
     ],
     blocks1: [
-      { key: 'horror_theme_entrance', name: '血霧の門前', level: +6, size: 0, depth: +1, chest: 'less', type: 'blood-vein-catacombs', bossFloors: mkBossFloors(9), weight: 1.3 },
-      { key: 'horror_theme_suture', name: '縫合回廊', level: +9, size: -1, depth: +2, chest: 'normal', type: 'blood-vein-catacombs', bossFloors: mkBossFloors(11), weight: 1.1 },
-      { key: 'horror_theme_bloodlake', name: '赤沼バシリカ', level: +12, size: +1, depth: +2, chest: 'more', type: 'blood-vein-catacombs', bossFloors: mkBossFloors(14), weight: 1.4 },
-      { key: 'horror_theme_manor', name: '幽霊館の奥庭', level: +15, size: 0, depth: +1, chest: 'normal', type: 'shattered-manor', bossFloors: mkBossFloors(12), weight: 1.2 },
-      { key: 'horror_theme_chapel', name: '破戒礼拝堂', level: +18, size: +1, depth: +2, chest: 'more', type: 'shattered-manor', bossFloors: mkBossFloors(16), weight: 1.3 },
-      { key: 'horror_theme_carnival', name: '月下カーニバル', level: +20, size: +2, depth: +2, chest: 'more', type: 'midnight-carnival', bossFloors: mkBossFloors(18), weight: 1.5 },
-      { key: 'horror_theme_voidwheel', name: '虚空観覧輪', level: +24, size: +2, depth: +3, chest: 'less', type: 'midnight-carnival', bossFloors: mkBossFloors(20), weight: 0.9 },
-      { key: 'horror_theme_asylum', name: '灰羽の隔離棟', level: +11, size: 0, depth: +1, chest: 'normal', type: 'ashen-asylum', bossFloors: mkBossFloors(12), weight: 1.0 },
-      { key: 'horror_theme_haunt', name: '怨霊の回廊館', level: +17, size: +1, depth: +1, chest: 'normal', type: 'phantom-haunted-house', bossFloors: mkBossFloors(15), weight: 1.25 },
-      { key: 'horror_theme_mire', name: '泣き淵の沼道', level: +13, size: +1, depth: +2, chest: 'less', type: 'wailing-mire', bossFloors: mkBossFloors(15), weight: 1.2 },
-      { key: 'horror_theme_foundry', name: '血錆の鋳場', level: +19, size: +1, depth: +2, chest: 'normal', type: 'bell-foundry', bossFloors: mkBossFloors(18), weight: 1.1 },
-      { key: 'horror_theme_graveyard', name: '朽ち墓の夜園', level: +14, size: 0, depth: +2, chest: 'less', type: 'dusk-graveyard', bossFloors: mkBossFloors(13), weight: 1.15 },
-      { key: 'horror_theme_gallows', name: '連吊り大回廊', level: +22, size: +2, depth: +3, chest: 'more', type: 'gallows-spiral', bossFloors: mkBossFloors(21), weight: 1.0 }
+      {
+        key: 'horror_theme_entrance',
+        name: '血霧の門前',
+        nameKey: "dungeon.types.blood_vein_catacombs.blocks.horror_theme_entrance.name",
+        level: +6,
+        size: 0,
+        depth: +1,
+        chest: 'less',
+        type: 'blood-vein-catacombs',
+        bossFloors: mkBossFloors(9),
+        weight: 1.3
+      },
+      {
+        key: 'horror_theme_suture',
+        name: '縫合回廊',
+        nameKey: "dungeon.types.blood_vein_catacombs.blocks.horror_theme_suture.name",
+        level: +9,
+        size: -1,
+        depth: +2,
+        chest: 'normal',
+        type: 'blood-vein-catacombs',
+        bossFloors: mkBossFloors(11),
+        weight: 1.1
+      },
+      {
+        key: 'horror_theme_bloodlake',
+        name: '赤沼バシリカ',
+        nameKey: "dungeon.types.blood_vein_catacombs.blocks.horror_theme_bloodlake.name",
+        level: +12,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'blood-vein-catacombs',
+        bossFloors: mkBossFloors(14),
+        weight: 1.4
+      },
+      {
+        key: 'horror_theme_manor',
+        name: '幽霊館の奥庭',
+        nameKey: "dungeon.types.shattered_manor.blocks.horror_theme_manor.name",
+        level: +15,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'shattered-manor',
+        bossFloors: mkBossFloors(12),
+        weight: 1.2
+      },
+      {
+        key: 'horror_theme_chapel',
+        name: '破戒礼拝堂',
+        nameKey: "dungeon.types.shattered_manor.blocks.horror_theme_chapel.name",
+        level: +18,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'shattered-manor',
+        bossFloors: mkBossFloors(16),
+        weight: 1.3
+      },
+      {
+        key: 'horror_theme_carnival',
+        name: '月下カーニバル',
+        nameKey: "dungeon.types.midnight_carnival.blocks.horror_theme_carnival.name",
+        level: +20,
+        size: +2,
+        depth: +2,
+        chest: 'more',
+        type: 'midnight-carnival',
+        bossFloors: mkBossFloors(18),
+        weight: 1.5
+      },
+      {
+        key: 'horror_theme_voidwheel',
+        name: '虚空観覧輪',
+        nameKey: "dungeon.types.midnight_carnival.blocks.horror_theme_voidwheel.name",
+        level: +24,
+        size: +2,
+        depth: +3,
+        chest: 'less',
+        type: 'midnight-carnival',
+        bossFloors: mkBossFloors(20),
+        weight: 0.9
+      },
+      {
+        key: 'horror_theme_asylum',
+        name: '灰羽の隔離棟',
+        nameKey: "dungeon.types.ashen_asylum.blocks.horror_theme_asylum.name",
+        level: +11,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'ashen-asylum',
+        bossFloors: mkBossFloors(12),
+        weight: 1.0
+      },
+      {
+        key: 'horror_theme_haunt',
+        name: '怨霊の回廊館',
+        nameKey: "dungeon.types.phantom_haunted_house.blocks.horror_theme_haunt.name",
+        level: +17,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'phantom-haunted-house',
+        bossFloors: mkBossFloors(15),
+        weight: 1.25
+      },
+      {
+        key: 'horror_theme_mire',
+        name: '泣き淵の沼道',
+        nameKey: "dungeon.types.wailing_mire.blocks.horror_theme_mire.name",
+        level: +13,
+        size: +1,
+        depth: +2,
+        chest: 'less',
+        type: 'wailing-mire',
+        bossFloors: mkBossFloors(15),
+        weight: 1.2
+      },
+      {
+        key: 'horror_theme_foundry',
+        name: '血錆の鋳場',
+        nameKey: "dungeon.types.bell_foundry.blocks.horror_theme_foundry.name",
+        level: +19,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'bell-foundry',
+        bossFloors: mkBossFloors(18),
+        weight: 1.1
+      },
+      {
+        key: 'horror_theme_graveyard',
+        name: '朽ち墓の夜園',
+        nameKey: "dungeon.types.dusk_graveyard.blocks.horror_theme_graveyard.name",
+        level: +14,
+        size: 0,
+        depth: +2,
+        chest: 'less',
+        type: 'dusk-graveyard',
+        bossFloors: mkBossFloors(13),
+        weight: 1.15
+      },
+      {
+        key: 'horror_theme_gallows',
+        name: '連吊り大回廊',
+        nameKey: "dungeon.types.gallows_spiral.blocks.horror_theme_gallows.name",
+        level: +22,
+        size: +2,
+        depth: +3,
+        chest: 'more',
+        type: 'gallows-spiral',
+        bossFloors: mkBossFloors(21),
+        weight: 1.0
+      }
     ],
     blocks2: [
-      { key: 'horror_core_vein', name: '血脈中枢', level: +8, size: +1, depth: +1, chest: 'normal', type: 'blood-vein-catacombs', weight: 1.1 },
-      { key: 'horror_core_crypt', name: '骨の心室', level: +11, size: 0, depth: +2, chest: 'less', type: 'blood-vein-catacombs', bossFloors: [9, 13], weight: 1.0 },
-      { key: 'horror_core_gallery', name: '歪額の回廊', level: +14, size: +1, depth: +1, chest: 'normal', type: 'shattered-manor', weight: 1.3 },
-      { key: 'horror_core_stage', name: '幻影ステージ', level: +17, size: +1, depth: +1, chest: 'more', type: 'midnight-carnival', bossFloors: [10, 15], weight: 1.4 },
-      { key: 'horror_core_orbit', name: '月輪の心核', level: +22, size: +2, depth: +2, chest: 'more', type: 'midnight-carnival', weight: 1.2 },
-      { key: 'horror_core_asylum', name: '隔離病棟核', level: +16, size: 0, depth: +1, chest: 'less', type: 'ashen-asylum', bossFloors: [12, 16], weight: 0.9 },
-      { key: 'horror_core_mire', name: '慟哭沼の眼', level: +18, size: +1, depth: +2, chest: 'normal', type: 'wailing-mire', bossFloors: [13, 17], weight: 1.1 },
-      { key: 'horror_core_foundry', name: '沈鐘炉心', level: +23, size: +2, depth: +2, chest: 'more', type: 'bell-foundry', bossFloors: [15, 19], weight: 1.2 },
-      { key: 'horror_core_haunt', name: '怨影の心臓', level: +20, size: +1, depth: +1, chest: 'normal', type: 'phantom-haunted-house', bossFloors: [11, 15], weight: 1.05 },
-      { key: 'horror_core_graveyard', name: '黄昏墓標核', level: +18, size: 0, depth: +2, chest: 'less', type: 'dusk-graveyard', bossFloors: [10, 14], weight: 1.1 },
-      { key: 'horror_core_gallows', name: '吊環螺旋核', level: +26, size: +2, depth: +3, chest: 'less', type: 'gallows-spiral', bossFloors: [17, 21], weight: 0.85 }
+      {
+        key: 'horror_core_vein',
+        name: '血脈中枢',
+        nameKey: "dungeon.types.blood_vein_catacombs.blocks.horror_core_vein.name",
+        level: +8,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'blood-vein-catacombs',
+        weight: 1.1
+      },
+      {
+        key: 'horror_core_crypt',
+        name: '骨の心室',
+        nameKey: "dungeon.types.blood_vein_catacombs.blocks.horror_core_crypt.name",
+        level: +11,
+        size: 0,
+        depth: +2,
+        chest: 'less',
+        type: 'blood-vein-catacombs',
+        bossFloors: [9, 13],
+        weight: 1.0
+      },
+      {
+        key: 'horror_core_gallery',
+        name: '歪額の回廊',
+        nameKey: "dungeon.types.shattered_manor.blocks.horror_core_gallery.name",
+        level: +14,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'shattered-manor',
+        weight: 1.3
+      },
+      {
+        key: 'horror_core_stage',
+        name: '幻影ステージ',
+        nameKey: "dungeon.types.midnight_carnival.blocks.horror_core_stage.name",
+        level: +17,
+        size: +1,
+        depth: +1,
+        chest: 'more',
+        type: 'midnight-carnival',
+        bossFloors: [10, 15],
+        weight: 1.4
+      },
+      {
+        key: 'horror_core_orbit',
+        name: '月輪の心核',
+        nameKey: "dungeon.types.midnight_carnival.blocks.horror_core_orbit.name",
+        level: +22,
+        size: +2,
+        depth: +2,
+        chest: 'more',
+        type: 'midnight-carnival',
+        weight: 1.2
+      },
+      {
+        key: 'horror_core_asylum',
+        name: '隔離病棟核',
+        nameKey: "dungeon.types.ashen_asylum.blocks.horror_core_asylum.name",
+        level: +16,
+        size: 0,
+        depth: +1,
+        chest: 'less',
+        type: 'ashen-asylum',
+        bossFloors: [12, 16],
+        weight: 0.9
+      },
+      {
+        key: 'horror_core_mire',
+        name: '慟哭沼の眼',
+        nameKey: "dungeon.types.wailing_mire.blocks.horror_core_mire.name",
+        level: +18,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'wailing-mire',
+        bossFloors: [13, 17],
+        weight: 1.1
+      },
+      {
+        key: 'horror_core_foundry',
+        name: '沈鐘炉心',
+        nameKey: "dungeon.types.bell_foundry.blocks.horror_core_foundry.name",
+        level: +23,
+        size: +2,
+        depth: +2,
+        chest: 'more',
+        type: 'bell-foundry',
+        bossFloors: [15, 19],
+        weight: 1.2
+      },
+      {
+        key: 'horror_core_haunt',
+        name: '怨影の心臓',
+        nameKey: "dungeon.types.phantom_haunted_house.blocks.horror_core_haunt.name",
+        level: +20,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'phantom-haunted-house',
+        bossFloors: [11, 15],
+        weight: 1.05
+      },
+      {
+        key: 'horror_core_graveyard',
+        name: '黄昏墓標核',
+        nameKey: "dungeon.types.dusk_graveyard.blocks.horror_core_graveyard.name",
+        level: +18,
+        size: 0,
+        depth: +2,
+        chest: 'less',
+        type: 'dusk-graveyard',
+        bossFloors: [10, 14],
+        weight: 1.1
+      },
+      {
+        key: 'horror_core_gallows',
+        name: '吊環螺旋核',
+        nameKey: "dungeon.types.gallows_spiral.blocks.horror_core_gallows.name",
+        level: +26,
+        size: +2,
+        depth: +3,
+        chest: 'less',
+        type: 'gallows-spiral',
+        bossFloors: [17, 21],
+        weight: 0.85
+      }
     ],
     blocks3: [
-      { key: 'horror_relic_fetish', name: '血誓の護符', level: +10, size: 0, depth: +3, chest: 'more', type: 'blood-vein-catacombs', bossFloors: [5, 11], weight: 1.5 },
-      { key: 'horror_relic_lantern', name: '嘆きの提灯', level: +15, size: 0, depth: +2, chest: 'normal', type: 'shattered-manor', bossFloors: [9, 13], weight: 1.2 },
-      { key: 'horror_relic_mask', name: '笑い哭く仮面', level: +18, size: +1, depth: +3, chest: 'more', type: 'midnight-carnival', bossFloors: [13, 17], weight: 1.4 },
-      { key: 'horror_relic_redmoon', name: '赤月の彗核', level: +24, size: +1, depth: +4, chest: 'less', type: 'midnight-carnival', bossFloors: [17, 21], weight: 0.8 },
-      { key: 'horror_relic_attic', name: '歪んだ屋根裏箱', level: +12, size: -1, depth: +1, chest: 'normal', type: 'shattered-manor', weight: 1.1 },
-      { key: 'horror_relic_feather', name: '灰羽の束縛枷', level: +16, size: 0, depth: +2, chest: 'less', type: 'ashen-asylum', bossFloors: [9, 14], weight: 1.0 },
-      { key: 'horror_relic_tear', name: '慟哭の滴瓶', level: +20, size: +1, depth: +3, chest: 'more', type: 'wailing-mire', bossFloors: [11, 16], weight: 1.3 },
-      { key: 'horror_relic_bell', name: '静哀の鐘', level: +22, size: 0, depth: +3, chest: 'normal', type: 'bell-foundry', bossFloors: [13, 18], weight: 1.1 },
-      { key: 'horror_relic_curtain', name: '幽紫の緞帳', level: +18, size: 0, depth: +3, chest: 'normal', type: 'phantom-haunted-house', bossFloors: [11, 15], weight: 1.2 },
-      { key: 'horror_relic_urn', name: '薄暮の葬灰壺', level: +21, size: +1, depth: +3, chest: 'less', type: 'dusk-graveyard', bossFloors: [12, 17], weight: 1.1 },
-      { key: 'horror_relic_spiral', name: '螺吊の指輪', level: +26, size: +1, depth: +4, chest: 'less', type: 'gallows-spiral', bossFloors: [15, 21], weight: 0.9 }
+      {
+        key: 'horror_relic_fetish',
+        name: '血誓の護符',
+        nameKey: "dungeon.types.blood_vein_catacombs.blocks.horror_relic_fetish.name",
+        level: +10,
+        size: 0,
+        depth: +3,
+        chest: 'more',
+        type: 'blood-vein-catacombs',
+        bossFloors: [5, 11],
+        weight: 1.5
+      },
+      {
+        key: 'horror_relic_lantern',
+        name: '嘆きの提灯',
+        nameKey: "dungeon.types.shattered_manor.blocks.horror_relic_lantern.name",
+        level: +15,
+        size: 0,
+        depth: +2,
+        chest: 'normal',
+        type: 'shattered-manor',
+        bossFloors: [9, 13],
+        weight: 1.2
+      },
+      {
+        key: 'horror_relic_mask',
+        name: '笑い哭く仮面',
+        nameKey: "dungeon.types.midnight_carnival.blocks.horror_relic_mask.name",
+        level: +18,
+        size: +1,
+        depth: +3,
+        chest: 'more',
+        type: 'midnight-carnival',
+        bossFloors: [13, 17],
+        weight: 1.4
+      },
+      {
+        key: 'horror_relic_redmoon',
+        name: '赤月の彗核',
+        nameKey: "dungeon.types.midnight_carnival.blocks.horror_relic_redmoon.name",
+        level: +24,
+        size: +1,
+        depth: +4,
+        chest: 'less',
+        type: 'midnight-carnival',
+        bossFloors: [17, 21],
+        weight: 0.8
+      },
+      {
+        key: 'horror_relic_attic',
+        name: '歪んだ屋根裏箱',
+        nameKey: "dungeon.types.shattered_manor.blocks.horror_relic_attic.name",
+        level: +12,
+        size: -1,
+        depth: +1,
+        chest: 'normal',
+        type: 'shattered-manor',
+        weight: 1.1
+      },
+      {
+        key: 'horror_relic_feather',
+        name: '灰羽の束縛枷',
+        nameKey: "dungeon.types.ashen_asylum.blocks.horror_relic_feather.name",
+        level: +16,
+        size: 0,
+        depth: +2,
+        chest: 'less',
+        type: 'ashen-asylum',
+        bossFloors: [9, 14],
+        weight: 1.0
+      },
+      {
+        key: 'horror_relic_tear',
+        name: '慟哭の滴瓶',
+        nameKey: "dungeon.types.wailing_mire.blocks.horror_relic_tear.name",
+        level: +20,
+        size: +1,
+        depth: +3,
+        chest: 'more',
+        type: 'wailing-mire',
+        bossFloors: [11, 16],
+        weight: 1.3
+      },
+      {
+        key: 'horror_relic_bell',
+        name: '静哀の鐘',
+        nameKey: "dungeon.types.bell_foundry.blocks.horror_relic_bell.name",
+        level: +22,
+        size: 0,
+        depth: +3,
+        chest: 'normal',
+        type: 'bell-foundry',
+        bossFloors: [13, 18],
+        weight: 1.1
+      },
+      {
+        key: 'horror_relic_curtain',
+        name: '幽紫の緞帳',
+        nameKey: "dungeon.types.phantom_haunted_house.blocks.horror_relic_curtain.name",
+        level: +18,
+        size: 0,
+        depth: +3,
+        chest: 'normal',
+        type: 'phantom-haunted-house',
+        bossFloors: [11, 15],
+        weight: 1.2
+      },
+      {
+        key: 'horror_relic_urn',
+        name: '薄暮の葬灰壺',
+        nameKey: "dungeon.types.dusk_graveyard.blocks.horror_relic_urn.name",
+        level: +21,
+        size: +1,
+        depth: +3,
+        chest: 'less',
+        type: 'dusk-graveyard',
+        bossFloors: [12, 17],
+        weight: 1.1
+      },
+      {
+        key: 'horror_relic_spiral',
+        name: '螺吊の指輪',
+        nameKey: "dungeon.types.gallows_spiral.blocks.horror_relic_spiral.name",
+        level: +26,
+        size: +1,
+        depth: +4,
+        chest: 'less',
+        type: 'gallows-spiral',
+        bossFloors: [15, 21],
+        weight: 0.9
+      }
     ]
   };
 
   window.registerDungeonAddon({
     id: 'horror_expansion_pack',
     name: 'Haunted Horror Expansion Pack',
+    nameKey: "dungeon.packs.horror_expansion_pack.name",
     version: '1.0.0',
     blocks,
     generators

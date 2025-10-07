@@ -46,32 +46,192 @@
     ctx.ensureConnectivity();
   }
 
-  const gen = { id:'serpentine-river', name:'蛇行河', description:'蛇行する本流と分流の回廊', algorithm, mixin:{ normalMixed:0.5, blockDimMixed:0.4, tags:['snake','corridor'] } };
+  const gen = {
+    id:'serpentine-river',
+    name:'蛇行河',
+    nameKey: "dungeon.types.serpentine_river.name",
+    description:'蛇行する本流と分流の回廊',
+    descriptionKey: "dungeon.types.serpentine_river.description",
+    algorithm,
+    mixin:{ normalMixed:0.5, blockDimMixed:0.4, tags:['snake','corridor'] }
+  };
 
   function mkBoss(d){ const r=[]; if(d>=5) r.push(5); if(d>=10) r.push(10); if(d>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'river_theme_01', name:'River Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'serpentine-river', bossFloors:mkBoss(6) },
-      { key:'river_theme_02', name:'River Theme II',level:+6,  size:0,  depth:+1, chest:'less',   type:'serpentine-river', bossFloors:mkBoss(8) },
-      { key:'river_theme_03', name:'River Theme III',level:+12, size:+1, depth:+2, chest:'more',   type:'serpentine-river', bossFloors:mkBoss(10) },
-      { key:'river_theme_04', name:'River Theme IV',level:+18, size:+1, depth:+2, chest:'normal', type:'serpentine-river', bossFloors:mkBoss(12) },
-      { key:'river_theme_05', name:'River Theme V', level:+24, size:+2, depth:+3, chest:'less',   type:'serpentine-river', bossFloors:mkBoss(15) },
+      {
+        key:'river_theme_01',
+        name:'River Theme I',
+        nameKey: "dungeon.types.serpentine_river.blocks.river_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'serpentine-river',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'river_theme_02',
+        name:'River Theme II',
+        nameKey: "dungeon.types.serpentine_river.blocks.river_theme_02.name",
+        level:+6,
+        size:0,
+        depth:+1,
+        chest:'less',
+        type:'serpentine-river',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'river_theme_03',
+        name:'River Theme III',
+        nameKey: "dungeon.types.serpentine_river.blocks.river_theme_03.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'serpentine-river',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'river_theme_04',
+        name:'River Theme IV',
+        nameKey: "dungeon.types.serpentine_river.blocks.river_theme_04.name",
+        level:+18,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'serpentine-river',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'river_theme_05',
+        name:'River Theme V',
+        nameKey: "dungeon.types.serpentine_river.blocks.river_theme_05.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'serpentine-river',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'delta_01', name:'Delta I', level:+0,  size:+1, depth:0, chest:'normal', type:'serpentine-river' },
-      { key:'delta_02', name:'Delta II',level:+7,  size:+1, depth:+1, chest:'more',  type:'serpentine-river' },
-      { key:'delta_03', name:'Delta III',level:+14, size:+2, depth:+1, chest:'less',type:'serpentine-river' },
-      { key:'delta_04', name:'Delta IV',level:+21, size:+2, depth:+2, chest:'normal',type:'serpentine-river' },
-      { key:'delta_05', name:'Delta V', level:+28, size:+3, depth:+2, chest:'more', type:'serpentine-river' },
+      {
+        key:'delta_01',
+        name:'Delta I',
+        nameKey: "dungeon.types.serpentine_river.blocks.delta_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'serpentine-river'
+      },
+      {
+        key:'delta_02',
+        name:'Delta II',
+        nameKey: "dungeon.types.serpentine_river.blocks.delta_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'serpentine-river'
+      },
+      {
+        key:'delta_03',
+        name:'Delta III',
+        nameKey: "dungeon.types.serpentine_river.blocks.delta_03.name",
+        level:+14,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'serpentine-river'
+      },
+      {
+        key:'delta_04',
+        name:'Delta IV',
+        nameKey: "dungeon.types.serpentine_river.blocks.delta_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'serpentine-river'
+      },
+      {
+        key:'delta_05',
+        name:'Delta V',
+        nameKey: "dungeon.types.serpentine_river.blocks.delta_05.name",
+        level:+28,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'serpentine-river'
+      },
     ],
     blocks3:[
-      { key:'serpent_01', name:'Serpent I', level:+0,  size:0,  depth:+2, chest:'more',   type:'serpentine-river', bossFloors:[5] },
-      { key:'serpent_02', name:'Serpent II',level:+8,  size:+1, depth:+2, chest:'normal', type:'serpentine-river', bossFloors:[10] },
-      { key:'serpent_03', name:'Serpent III',level:+16, size:+1, depth:+3, chest:'less', type:'serpentine-river', bossFloors:[15] },
-      { key:'serpent_04', name:'Serpent IV', level:+24, size:+2, depth:+3, chest:'more', type:'serpentine-river', bossFloors:[10,15] },
-      { key:'serpent_05', name:'Serpent V',  level:+32, size:+2, depth:+4, chest:'normal',type:'serpentine-river', bossFloors:[5,10,15] },
+      {
+        key:'serpent_01',
+        name:'Serpent I',
+        nameKey: "dungeon.types.serpentine_river.blocks.serpent_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'serpentine-river',
+        bossFloors:[5]
+      },
+      {
+        key:'serpent_02',
+        name:'Serpent II',
+        nameKey: "dungeon.types.serpentine_river.blocks.serpent_02.name",
+        level:+8,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'serpentine-river',
+        bossFloors:[10]
+      },
+      {
+        key:'serpent_03',
+        name:'Serpent III',
+        nameKey: "dungeon.types.serpentine_river.blocks.serpent_03.name",
+        level:+16,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'serpentine-river',
+        bossFloors:[15]
+      },
+      {
+        key:'serpent_04',
+        name:'Serpent IV',
+        nameKey: "dungeon.types.serpentine_river.blocks.serpent_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'serpentine-river',
+        bossFloors:[10,15]
+      },
+      {
+        key:'serpent_05',
+        name:'Serpent V',
+        nameKey: "dungeon.types.serpentine_river.blocks.serpent_05.name",
+        level:+32,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'serpentine-river',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'serpentine_pack', name:'Serpentine River Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'serpentine_pack',
+    name:'Serpentine River Pack',
+    nameKey: "dungeon.packs.serpentine_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

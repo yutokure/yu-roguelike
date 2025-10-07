@@ -57,7 +57,15 @@
     ensureConnectivity();
   }
 
-  const gen = { id:'lava-caves', name:'Lava Caves', description:'溶岩地形', algorithm:algo, mixin:{ normalMixed:0.6, blockDimMixed:0.7, tags:['cave'] } };
+  const gen = {
+    id:'lava-caves',
+    name:'Lava Caves',
+    nameKey: "dungeon.types.lava_caves.name",
+    description:'溶岩地形',
+    descriptionKey: "dungeon.types.lava_caves.description",
+    algorithm:algo,
+    mixin:{ normalMixed:0.6, blockDimMixed:0.7, tags:['cave'] }
+  };
 
   // いろんなレベル帯向けに 1st/2nd/3rd を各10種ずつ
   const mkBoss = (depth) => {
@@ -72,44 +80,341 @@
   const blocks = {
     // 1st: Theme（サイズ控えめ、深さや宝箱バイアスで特徴付け）
     blocks1:[
-      { key:'lava_theme_01', name:'Lava Theme I',   level:+0,  size:0,  depth:+1, chest:'normal', type:'lava-caves', bossFloors:mkBoss(6) },
-      { key:'lava_theme_02', name:'Lava Theme II',  level:+5,  size:0,  depth:+1, chest:'less',   type:'lava-caves', bossFloors:mkBoss(7) },
-      { key:'lava_theme_03', name:'Lava Theme III', level:+10, size:+1, depth:+1, chest:'more',   type:'lava-caves', bossFloors:mkBoss(8) },
-      { key:'lava_theme_04', name:'Lava Theme IV',  level:+15, size:+1, depth:+2, chest:'normal', type:'lava-caves', bossFloors:mkBoss(9) },
-      { key:'lava_theme_05', name:'Lava Theme V',   level:+20, size:+1, depth:+2, chest:'less',   type:'lava-caves', bossFloors:mkBoss(10) },
-      { key:'lava_theme_06', name:'Lava Theme VI',  level:+25, size:+2, depth:+2, chest:'more',   type:'lava-caves', bossFloors:mkBoss(12) },
-      { key:'lava_theme_07', name:'Lava Theme VII', level:+30, size:+2, depth:+3, chest:'normal', type:'lava-caves', bossFloors:mkBoss(13) },
-      { key:'lava_theme_08', name:'Lava Theme VIII',level:+35, size:+2, depth:+3, chest:'less',   type:'lava-caves', bossFloors:mkBoss(14) },
-      { key:'lava_theme_09', name:'Lava Theme IX',  level:+40, size:+2, depth:+3, chest:'more',   type:'lava-caves', bossFloors:mkBoss(15) },
-      { key:'lava_theme_10',name:'Lava Theme X',   level:+50, size:+2, depth:+4, chest:'normal', type:'lava-caves', bossFloors:mkBoss(15) },
+      {
+        key:'lava_theme_01',
+        name:'Lava Theme I',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'lava-caves',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'lava_theme_02',
+        name:'Lava Theme II',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_02.name",
+        level:+5,
+        size:0,
+        depth:+1,
+        chest:'less',
+        type:'lava-caves',
+        bossFloors:mkBoss(7)
+      },
+      {
+        key:'lava_theme_03',
+        name:'Lava Theme III',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_03.name",
+        level:+10,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'lava-caves',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'lava_theme_04',
+        name:'Lava Theme IV',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_04.name",
+        level:+15,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'lava-caves',
+        bossFloors:mkBoss(9)
+      },
+      {
+        key:'lava_theme_05',
+        name:'Lava Theme V',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_05.name",
+        level:+20,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'lava-caves',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'lava_theme_06',
+        name:'Lava Theme VI',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_06.name",
+        level:+25,
+        size:+2,
+        depth:+2,
+        chest:'more',
+        type:'lava-caves',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'lava_theme_07',
+        name:'Lava Theme VII',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_07.name",
+        level:+30,
+        size:+2,
+        depth:+3,
+        chest:'normal',
+        type:'lava-caves',
+        bossFloors:mkBoss(13)
+      },
+      {
+        key:'lava_theme_08',
+        name:'Lava Theme VIII',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_08.name",
+        level:+35,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'lava-caves',
+        bossFloors:mkBoss(14)
+      },
+      {
+        key:'lava_theme_09',
+        name:'Lava Theme IX',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_09.name",
+        level:+40,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'lava-caves',
+        bossFloors:mkBoss(15)
+      },
+      {
+        key:'lava_theme_10',
+        name:'Lava Theme X',
+        nameKey: "dungeon.types.lava_caves.blocks.lava_theme_10.name",
+        level:+50,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'lava-caves',
+        bossFloors:mkBoss(15)
+      },
     ],
     // 2nd: Basalt（サイズやレベル寄与が大きめ）
     blocks2:[
-      { key:'basalt_01', name:'Basalt I',   level:+0,  size:0,  depth:0, chest:'normal', type:'lava-caves' },
-      { key:'basalt_02', name:'Basalt II',  level:+5,  size:+1, depth:0, chest:'less',   type:'lava-caves' },
-      { key:'basalt_03', name:'Basalt III', level:+10, size:+1, depth:+1, chest:'more',  type:'lava-caves' },
-      { key:'basalt_04', name:'Basalt IV',  level:+15, size:+1, depth:+1, chest:'normal',type:'lava-caves' },
-      { key:'basalt_05', name:'Basalt V',   level:+20, size:+2, depth:+1, chest:'less',  type:'lava-caves' },
-      { key:'basalt_06', name:'Basalt VI',  level:+25, size:+2, depth:+1, chest:'more',  type:'lava-caves' },
-      { key:'basalt_07', name:'Basalt VII', level:+30, size:+2, depth:+2, chest:'normal',type:'lava-caves' },
-      { key:'basalt_08', name:'Basalt VIII',level:+35, size:+2, depth:+2, chest:'less',  type:'lava-caves' },
-      { key:'basalt_09', name:'Basalt IX',  level:+40, size:+3, depth:+2, chest:'more',  type:'lava-caves' },
-      { key:'basalt_10', name:'Basalt X',   level:+50, size:+3, depth:+2, chest:'normal',type:'lava-caves' },
+      {
+        key:'basalt_01',
+        name:'Basalt I',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_01.name",
+        level:+0,
+        size:0,
+        depth:0,
+        chest:'normal',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_02',
+        name:'Basalt II',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_02.name",
+        level:+5,
+        size:+1,
+        depth:0,
+        chest:'less',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_03',
+        name:'Basalt III',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_03.name",
+        level:+10,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_04',
+        name:'Basalt IV',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_04.name",
+        level:+15,
+        size:+1,
+        depth:+1,
+        chest:'normal',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_05',
+        name:'Basalt V',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_05.name",
+        level:+20,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_06',
+        name:'Basalt VI',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_06.name",
+        level:+25,
+        size:+2,
+        depth:+1,
+        chest:'more',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_07',
+        name:'Basalt VII',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_07.name",
+        level:+30,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_08',
+        name:'Basalt VIII',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_08.name",
+        level:+35,
+        size:+2,
+        depth:+2,
+        chest:'less',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_09',
+        name:'Basalt IX',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_09.name",
+        level:+40,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'lava-caves'
+      },
+      {
+        key:'basalt_10',
+        name:'Basalt X',
+        nameKey: "dungeon.types.lava_caves.blocks.basalt_10.name",
+        level:+50,
+        size:+3,
+        depth:+2,
+        chest:'normal',
+        type:'lava-caves'
+      },
     ],
     // 3rd: Magma（深さ・ボス階寄与が大きめ）
     blocks3:[
-      { key:'magma_01', name:'Magma I',   level:+0,  size:0, depth:+2, chest:'more',   type:'lava-caves', bossFloors:[5] },
-      { key:'magma_02', name:'Magma II',  level:+5,  size:0, depth:+2, chest:'normal', type:'lava-caves', bossFloors:[5,10] },
-      { key:'magma_03', name:'Magma III', level:+10, size:0, depth:+3, chest:'less',   type:'lava-caves', bossFloors:[10] },
-      { key:'magma_04', name:'Magma IV',  level:+15, size:+1,depth:+3, chest:'more',   type:'lava-caves', bossFloors:[10,15] },
-      { key:'magma_05', name:'Magma V',   level:+20, size:+1,depth:+3, chest:'normal', type:'lava-caves', bossFloors:[15] },
-      { key:'magma_06', name:'Magma VI',  level:+25, size:+1,depth:+3, chest:'less',   type:'lava-caves', bossFloors:[5,15] },
-      { key:'magma_07', name:'Magma VII', level:+30, size:+1,depth:+4, chest:'more',   type:'lava-caves', bossFloors:[5,10,15] },
-      { key:'magma_08', name:'Magma VIII',level:+35, size:+2,depth:+4, chest:'normal', type:'lava-caves', bossFloors:[10,15] },
-      { key:'magma_09', name:'Magma IX',  level:+40, size:+2,depth:+4, chest:'less',   type:'lava-caves', bossFloors:[15] },
-      { key:'magma_10', name:'Magma X',   level:+50, size:+2,depth:+4, chest:'more',   type:'lava-caves', bossFloors:[5,10,15] },
+      {
+        key:'magma_01',
+        name:'Magma I',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'lava-caves',
+        bossFloors:[5]
+      },
+      {
+        key:'magma_02',
+        name:'Magma II',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_02.name",
+        level:+5,
+        size:0,
+        depth:+2,
+        chest:'normal',
+        type:'lava-caves',
+        bossFloors:[5,10]
+      },
+      {
+        key:'magma_03',
+        name:'Magma III',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_03.name",
+        level:+10,
+        size:0,
+        depth:+3,
+        chest:'less',
+        type:'lava-caves',
+        bossFloors:[10]
+      },
+      {
+        key:'magma_04',
+        name:'Magma IV',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_04.name",
+        level:+15,
+        size:+1,
+        depth:+3,
+        chest:'more',
+        type:'lava-caves',
+        bossFloors:[10,15]
+      },
+      {
+        key:'magma_05',
+        name:'Magma V',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_05.name",
+        level:+20,
+        size:+1,
+        depth:+3,
+        chest:'normal',
+        type:'lava-caves',
+        bossFloors:[15]
+      },
+      {
+        key:'magma_06',
+        name:'Magma VI',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_06.name",
+        level:+25,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'lava-caves',
+        bossFloors:[5,15]
+      },
+      {
+        key:'magma_07',
+        name:'Magma VII',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_07.name",
+        level:+30,
+        size:+1,
+        depth:+4,
+        chest:'more',
+        type:'lava-caves',
+        bossFloors:[5,10,15]
+      },
+      {
+        key:'magma_08',
+        name:'Magma VIII',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_08.name",
+        level:+35,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'lava-caves',
+        bossFloors:[10,15]
+      },
+      {
+        key:'magma_09',
+        name:'Magma IX',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_09.name",
+        level:+40,
+        size:+2,
+        depth:+4,
+        chest:'less',
+        type:'lava-caves',
+        bossFloors:[15]
+      },
+      {
+        key:'magma_10',
+        name:'Magma X',
+        nameKey: "dungeon.types.lava_caves.blocks.magma_10.name",
+        level:+50,
+        size:+2,
+        depth:+4,
+        chest:'more',
+        type:'lava-caves',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'lava_pack', name:'Lava Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'lava_pack',
+    name:'Lava Pack',
+    nameKey: "dungeon.packs.lava_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

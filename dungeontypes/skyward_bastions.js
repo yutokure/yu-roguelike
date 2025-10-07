@@ -83,7 +83,9 @@
   const gen = {
     id: 'skyward-bastions',
     name: '天空の砦',
+    nameKey: "dungeon.types.skyward_bastions.name",
     description: '浮遊島と氷の橋で構成された空中要塞',
+    descriptionKey: "dungeon.types.skyward_bastions.description",
     algorithm,
     mixin: { normalMixed: 0.35, blockDimMixed: 0.4, tags: ['void','bridge','ice'] }
   };
@@ -91,27 +93,179 @@
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'skyward_theme_01', name:'Skyward Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'skyward-bastions', bossFloors:mkBoss(6) },
-      { key:'skyward_theme_02', name:'Skyward Theme II',level:+8,  size:+1, depth:+1, chest:'less',   type:'skyward-bastions', bossFloors:mkBoss(8) },
-      { key:'skyward_theme_03', name:'Skyward Theme III',level:+16, size:+1, depth:+2, chest:'more',   type:'skyward-bastions', bossFloors:mkBoss(10) },
-      { key:'skyward_theme_04', name:'Skyward Theme IV',level:+24, size:+2, depth:+2, chest:'normal', type:'skyward-bastions', bossFloors:mkBoss(12) },
-      { key:'skyward_theme_05', name:'Skyward Theme V', level:+32, size:+2, depth:+3, chest:'less',   type:'skyward-bastions', bossFloors:mkBoss(15) },
+      {
+        key:'skyward_theme_01',
+        name:'Skyward Theme I',
+        nameKey: "dungeon.types.skyward_bastions.blocks.skyward_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'skyward-bastions',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'skyward_theme_02',
+        name:'Skyward Theme II',
+        nameKey: "dungeon.types.skyward_bastions.blocks.skyward_theme_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'skyward-bastions',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'skyward_theme_03',
+        name:'Skyward Theme III',
+        nameKey: "dungeon.types.skyward_bastions.blocks.skyward_theme_03.name",
+        level:+16,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'skyward-bastions',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'skyward_theme_04',
+        name:'Skyward Theme IV',
+        nameKey: "dungeon.types.skyward_bastions.blocks.skyward_theme_04.name",
+        level:+24,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'skyward-bastions',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'skyward_theme_05',
+        name:'Skyward Theme V',
+        nameKey: "dungeon.types.skyward_bastions.blocks.skyward_theme_05.name",
+        level:+32,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'skyward-bastions',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'bastion_core_01', name:'Bastion Core I', level:+0,  size:+1, depth:0, chest:'normal', type:'skyward-bastions' },
-      { key:'bastion_core_02', name:'Bastion Core II',level:+6,  size:+1, depth:+1, chest:'more',  type:'skyward-bastions' },
-      { key:'bastion_core_03', name:'Bastion Core III',level:+12, size:+2, depth:+1, chest:'less', type:'skyward-bastions' },
-      { key:'bastion_core_04', name:'Bastion Core IV',level:+18, size:+2, depth:+2, chest:'normal',type:'skyward-bastions' },
-      { key:'bastion_core_05', name:'Bastion Core V', level:+24, size:+3, depth:+2, chest:'more',  type:'skyward-bastions' },
+      {
+        key:'bastion_core_01',
+        name:'Bastion Core I',
+        nameKey: "dungeon.types.skyward_bastions.blocks.bastion_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'skyward-bastions'
+      },
+      {
+        key:'bastion_core_02',
+        name:'Bastion Core II',
+        nameKey: "dungeon.types.skyward_bastions.blocks.bastion_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'skyward-bastions'
+      },
+      {
+        key:'bastion_core_03',
+        name:'Bastion Core III',
+        nameKey: "dungeon.types.skyward_bastions.blocks.bastion_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'skyward-bastions'
+      },
+      {
+        key:'bastion_core_04',
+        name:'Bastion Core IV',
+        nameKey: "dungeon.types.skyward_bastions.blocks.bastion_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'skyward-bastions'
+      },
+      {
+        key:'bastion_core_05',
+        name:'Bastion Core V',
+        nameKey: "dungeon.types.skyward_bastions.blocks.bastion_core_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'skyward-bastions'
+      },
     ],
     blocks3:[
-      { key:'airy_relic_01', name:'Airy Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'skyward-bastions', bossFloors:[5] },
-      { key:'airy_relic_02', name:'Airy Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:'skyward-bastions', bossFloors:[10] },
-      { key:'airy_relic_03', name:'Airy Relic III',level:+18, size:+1, depth:+3, chest:'less', type:'skyward-bastions', bossFloors:[15] },
-      { key:'airy_relic_04', name:'Airy Relic IV', level:+24, size:+2, depth:+3, chest:'more', type:'skyward-bastions', bossFloors:[10,15] },
-      { key:'airy_relic_05', name:'Airy Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:'skyward-bastions', bossFloors:[5,10,15] },
+      {
+        key:'airy_relic_01',
+        name:'Airy Relic I',
+        nameKey: "dungeon.types.skyward_bastions.blocks.airy_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'skyward-bastions',
+        bossFloors:[5]
+      },
+      {
+        key:'airy_relic_02',
+        name:'Airy Relic II',
+        nameKey: "dungeon.types.skyward_bastions.blocks.airy_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'skyward-bastions',
+        bossFloors:[10]
+      },
+      {
+        key:'airy_relic_03',
+        name:'Airy Relic III',
+        nameKey: "dungeon.types.skyward_bastions.blocks.airy_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'skyward-bastions',
+        bossFloors:[15]
+      },
+      {
+        key:'airy_relic_04',
+        name:'Airy Relic IV',
+        nameKey: "dungeon.types.skyward_bastions.blocks.airy_relic_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'skyward-bastions',
+        bossFloors:[10,15]
+      },
+      {
+        key:'airy_relic_05',
+        name:'Airy Relic V',
+        nameKey: "dungeon.types.skyward_bastions.blocks.airy_relic_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'skyward-bastions',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'skyward_pack', name:'Skyward Bastions Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'skyward_pack',
+    name:'Skyward Bastions Pack',
+    nameKey: "dungeon.packs.skyward_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

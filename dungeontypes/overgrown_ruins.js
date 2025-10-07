@@ -50,32 +50,192 @@
     ctx.ensureConnectivity();
   }
 
-  const gen = { id:'overgrown-ruins', name:'蔦覆遺跡', description:'部屋主体＋蔦のような追加回廊でループが多い遺跡', algorithm, mixin:{ normalMixed:0.6, blockDimMixed:0.5, tags:['rooms'] } };
+  const gen = {
+    id:'overgrown-ruins',
+    name:'蔦覆遺跡',
+    nameKey: "dungeon.types.overgrown_ruins.name",
+    description:'部屋主体＋蔦のような追加回廊でループが多い遺跡',
+    descriptionKey: "dungeon.types.overgrown_ruins.description",
+    algorithm,
+    mixin:{ normalMixed:0.6, blockDimMixed:0.5, tags:['rooms'] }
+  };
 
   function mkBoss(d){ const r=[]; if(d>=5) r.push(5); if(d>=10) r.push(10); if(d>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'ruin_theme_01', name:'Ruin Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'overgrown-ruins', bossFloors:mkBoss(6) },
-      { key:'ruin_theme_02', name:'Ruin Theme II',level:+6,  size:0,  depth:+1, chest:'more',   type:'overgrown-ruins', bossFloors:mkBoss(8) },
-      { key:'ruin_theme_03', name:'Ruin Theme III',level:+12, size:+1, depth:+2, chest:'less',   type:'overgrown-ruins', bossFloors:mkBoss(10) },
-      { key:'ruin_theme_04', name:'Ruin Theme IV',level:+18, size:+1, depth:+2, chest:'normal', type:'overgrown-ruins', bossFloors:mkBoss(12) },
-      { key:'ruin_theme_05', name:'Ruin Theme V', level:+24, size:+2, depth:+3, chest:'more',   type:'overgrown-ruins', bossFloors:mkBoss(15) },
+      {
+        key:'ruin_theme_01',
+        name:'Ruin Theme I',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ruin_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'overgrown-ruins',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'ruin_theme_02',
+        name:'Ruin Theme II',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ruin_theme_02.name",
+        level:+6,
+        size:0,
+        depth:+1,
+        chest:'more',
+        type:'overgrown-ruins',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'ruin_theme_03',
+        name:'Ruin Theme III',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ruin_theme_03.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'overgrown-ruins',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'ruin_theme_04',
+        name:'Ruin Theme IV',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ruin_theme_04.name",
+        level:+18,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'overgrown-ruins',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'ruin_theme_05',
+        name:'Ruin Theme V',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ruin_theme_05.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'overgrown-ruins',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'ivy_01', name:'Ivy I', level:+0,  size:+1, depth:0, chest:'normal', type:'overgrown-ruins' },
-      { key:'ivy_02', name:'Ivy II',level:+7,  size:+1, depth:+1, chest:'more',  type:'overgrown-ruins' },
-      { key:'ivy_03', name:'Ivy III',level:+14, size:+2, depth:+1, chest:'less', type:'overgrown-ruins' },
-      { key:'ivy_04', name:'Ivy IV',level:+21, size:+2, depth:+2, chest:'normal',type:'overgrown-ruins' },
-      { key:'ivy_05', name:'Ivy V', level:+28, size:+3, depth:+2, chest:'more',  type:'overgrown-ruins' },
+      {
+        key:'ivy_01',
+        name:'Ivy I',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ivy_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'overgrown-ruins'
+      },
+      {
+        key:'ivy_02',
+        name:'Ivy II',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ivy_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'overgrown-ruins'
+      },
+      {
+        key:'ivy_03',
+        name:'Ivy III',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ivy_03.name",
+        level:+14,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'overgrown-ruins'
+      },
+      {
+        key:'ivy_04',
+        name:'Ivy IV',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ivy_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'overgrown-ruins'
+      },
+      {
+        key:'ivy_05',
+        name:'Ivy V',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.ivy_05.name",
+        level:+28,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'overgrown-ruins'
+      },
     ],
     blocks3:[
-      { key:'idol_01', name:'Idol I', level:+0,  size:0,  depth:+2, chest:'more',   type:'overgrown-ruins', bossFloors:[5] },
-      { key:'idol_02', name:'Idol II',level:+8,  size:+1, depth:+2, chest:'normal', type:'overgrown-ruins', bossFloors:[10] },
-      { key:'idol_03', name:'Idol III',level:+16, size:+1, depth:+3, chest:'less', type:'overgrown-ruins', bossFloors:[15] },
-      { key:'idol_04', name:'Idol IV', level:+24, size:+2, depth:+3, chest:'more', type:'overgrown-ruins', bossFloors:[10,15] },
-      { key:'idol_05', name:'Idol V',  level:+32, size:+2, depth:+4, chest:'normal',type:'overgrown-ruins', bossFloors:[5,10,15] },
+      {
+        key:'idol_01',
+        name:'Idol I',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.idol_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'overgrown-ruins',
+        bossFloors:[5]
+      },
+      {
+        key:'idol_02',
+        name:'Idol II',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.idol_02.name",
+        level:+8,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'overgrown-ruins',
+        bossFloors:[10]
+      },
+      {
+        key:'idol_03',
+        name:'Idol III',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.idol_03.name",
+        level:+16,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'overgrown-ruins',
+        bossFloors:[15]
+      },
+      {
+        key:'idol_04',
+        name:'Idol IV',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.idol_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'overgrown-ruins',
+        bossFloors:[10,15]
+      },
+      {
+        key:'idol_05',
+        name:'Idol V',
+        nameKey: "dungeon.types.overgrown_ruins.blocks.idol_05.name",
+        level:+32,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'overgrown-ruins',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'ruins_pack', name:'Overgrown Ruins Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'ruins_pack',
+    name:'Overgrown Ruins Pack',
+    nameKey: "dungeon.packs.ruins_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

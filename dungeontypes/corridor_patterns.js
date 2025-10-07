@@ -39,13 +39,55 @@
       ctx.ensureConnectivity(); } }
 
   const gens = [
-    { id:'crossroads-3wide', name:'交差点部屋', algorithm:genCrossroads, mixin:{ normalMixed:0.45, blockDimMixed:0.45, tags:['grid'] } },
-    { id:'horizontal-stripes', name:'一本道横部屋', algorithm:genHorizontalStripes, mixin:{ normalMixed:0.4, blockDimMixed:0.35, tags:['corridor'] } },
-    { id:'vertical-stripes',   name:'一本道縦部屋', algorithm:genVerticalStripes,   mixin:{ normalMixed:0.4, blockDimMixed:0.35, tags:['corridor'] } },
-    { id:'perforated-grid',    name:'格子壁穴あき部屋', algorithm:genPerforatedGrid, mixin:{ normalMixed:0.4, blockDimMixed:0.4, tags:['grid'] } },
-    { id:'ladder-room',        name:'梯子のような部屋', algorithm:genLadder, mixin:{ normalMixed:0.35, blockDimMixed:0.35, tags:['corridor'] } },
-    { id:'branching-corridors-narrow', name:'通路が枝分かれ（狭い）', algorithm:genBranching(1), mixin:{ normalMixed:0.45, blockDimMixed:0.45, tags:['maze'] } },
-    { id:'branching-corridors-thick',  name:'通路が枝分かれ（太い）', algorithm:genBranching(3), mixin:{ normalMixed:0.4, blockDimMixed:0.4, tags:['maze'] } },
+    {
+      id:'crossroads-3wide',
+      name:'交差点部屋',
+      nameKey: "dungeon.types.crossroads_3wide.name",
+      algorithm:genCrossroads,
+      mixin:{ normalMixed:0.45, blockDimMixed:0.45, tags:['grid'] }
+    },
+    {
+      id:'horizontal-stripes',
+      name:'一本道横部屋',
+      nameKey: "dungeon.types.horizontal_stripes.name",
+      algorithm:genHorizontalStripes,
+      mixin:{ normalMixed:0.4, blockDimMixed:0.35, tags:['corridor'] }
+    },
+    {
+      id:'vertical-stripes',
+      name:'一本道縦部屋',
+      nameKey: "dungeon.types.vertical_stripes.name",
+      algorithm:genVerticalStripes,
+      mixin:{ normalMixed:0.4, blockDimMixed:0.35, tags:['corridor'] }
+    },
+    {
+      id:'perforated-grid',
+      name:'格子壁穴あき部屋',
+      nameKey: "dungeon.types.perforated_grid.name",
+      algorithm:genPerforatedGrid,
+      mixin:{ normalMixed:0.4, blockDimMixed:0.4, tags:['grid'] }
+    },
+    {
+      id:'ladder-room',
+      name:'梯子のような部屋',
+      nameKey: "dungeon.types.ladder_room.name",
+      algorithm:genLadder,
+      mixin:{ normalMixed:0.35, blockDimMixed:0.35, tags:['corridor'] }
+    },
+    {
+      id:'branching-corridors-narrow',
+      name:'通路が枝分かれ（狭い）',
+      nameKey: "dungeon.types.branching_corridors_narrow.name",
+      algorithm:genBranching(1),
+      mixin:{ normalMixed:0.45, blockDimMixed:0.45, tags:['maze'] }
+    },
+    {
+      id:'branching-corridors-thick',
+      name:'通路が枝分かれ（太い）',
+      nameKey: "dungeon.types.branching_corridors_thick.name",
+      algorithm:genBranching(3),
+      mixin:{ normalMixed:0.4, blockDimMixed:0.4, tags:['maze'] }
+    },
   ];
 
   function mkBoss(d){ const r=[]; if(d>=5) r.push(5); if(d>=10) r.push(10); if(d>=15) r.push(15); return r; }
@@ -74,5 +116,12 @@
     ]
   };
 
-  window.registerDungeonAddon({ id:'corridor_pack', name:'Corridor Patterns Pack', version:'1.0.0', blocks, generators:gens });
+  window.registerDungeonAddon({
+    id:'corridor_pack',
+    name:'Corridor Patterns Pack',
+    nameKey: "dungeon.packs.corridor_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:gens
+  });
 })();

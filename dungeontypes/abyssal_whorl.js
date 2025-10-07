@@ -102,7 +102,9 @@
   const gen = {
     id: 'abyssal-whorl',
     name: '渦穿深淵洞',
+    nameKey: "dungeon.types.abyssal_whorl.name",
     description: '地下噴流が掘り抜いた渦巻状の深淵。螺旋の底で青白い光が揺れる。',
+    descriptionKey: "dungeon.types.abyssal_whorl.description",
     algorithm,
     mixin: { normalMixed: 0.43, blockDimMixed: 0.52, tags: ['cave','abyss','wind'] }
   };
@@ -111,21 +113,115 @@
 
   const blocks = {
     blocks1:[
-      { key:'whorl_theme_01', name:'Abyssal Whorl I', level:+0,  size:0,  depth:+1, chest:'normal', type:'abyssal-whorl', bossFloors:mkBoss(7) },
-      { key:'whorl_theme_02', name:'Abyssal Whorl II', level:+7,  size:+1, depth:+1, chest:'more',   type:'abyssal-whorl', bossFloors:mkBoss(11) },
-      { key:'whorl_theme_03', name:'Abyssal Whorl III',level:+15, size:+1, depth:+2, chest:'less',   type:'abyssal-whorl', bossFloors:mkBoss(15) }
+      {
+        key:'whorl_theme_01',
+        name:'Abyssal Whorl I',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'abyssal-whorl',
+        bossFloors:mkBoss(7)
+      },
+      {
+        key:'whorl_theme_02',
+        name:'Abyssal Whorl II',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_theme_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'abyssal-whorl',
+        bossFloors:mkBoss(11)
+      },
+      {
+        key:'whorl_theme_03',
+        name:'Abyssal Whorl III',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_theme_03.name",
+        level:+15,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'abyssal-whorl',
+        bossFloors:mkBoss(15)
+      }
     ],
     blocks2:[
-      { key:'whorl_core_01', name:'Whorl Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'abyssal-whorl' },
-      { key:'whorl_core_02', name:'Whorl Core II',level:+6,  size:+1, depth:+1, chest:'more',   type:'abyssal-whorl' },
-      { key:'whorl_core_03', name:'Whorl Core III',level:+12, size:+2, depth:+1, chest:'less',   type:'abyssal-whorl' }
+      {
+        key:'whorl_core_01',
+        name:'Whorl Core I',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'abyssal-whorl'
+      },
+      {
+        key:'whorl_core_02',
+        name:'Whorl Core II',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'abyssal-whorl'
+      },
+      {
+        key:'whorl_core_03',
+        name:'Whorl Core III',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'abyssal-whorl'
+      }
     ],
     blocks3:[
-      { key:'whorl_relic_01', name:'Whorl Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'abyssal-whorl', bossFloors:[6] },
-      { key:'whorl_relic_02', name:'Whorl Relic II',level:+10, size:+1, depth:+3, chest:'normal', type:'abyssal-whorl', bossFloors:[11] },
-      { key:'whorl_relic_03', name:'Whorl Relic III',level:+18, size:+1, depth:+4, chest:'less',   type:'abyssal-whorl', bossFloors:[17] }
+      {
+        key:'whorl_relic_01',
+        name:'Whorl Relic I',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'abyssal-whorl',
+        bossFloors:[6]
+      },
+      {
+        key:'whorl_relic_02',
+        name:'Whorl Relic II',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_relic_02.name",
+        level:+10,
+        size:+1,
+        depth:+3,
+        chest:'normal',
+        type:'abyssal-whorl',
+        bossFloors:[11]
+      },
+      {
+        key:'whorl_relic_03',
+        name:'Whorl Relic III',
+        nameKey: "dungeon.types.abyssal_whorl.blocks.whorl_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+4,
+        chest:'less',
+        type:'abyssal-whorl',
+        bossFloors:[17]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'abyssal_whorl_pack', name:'Abyssal Whorl Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'abyssal_whorl_pack',
+    name:'Abyssal Whorl Pack',
+    nameKey: "dungeon.packs.abyssal_whorl_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

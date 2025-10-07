@@ -77,7 +77,9 @@
   const generator = {
     id: 'axis-gallery',
     name: '軸路の回廊',
+    nameKey: "dungeon.types.axis_gallery.name",
     description: '縦横に分かたれた通路が交差する静寂の展示廊',
+    descriptionKey: "dungeon.types.axis_gallery.description",
     recommendedLevel: 48,
     algorithm: carveAxisGalleries,
     mixin: { normalMixed: 0.3, blockDimMixed: 0.5, tags: ['gallery', 'hazard'] }
@@ -85,20 +87,58 @@
 
   const blocks = {
     blocks1: [
-      { key: 'axis_gallery_a', name: '軸路の玄関', level: +10, size: 0, depth: +1, chest: 'normal', type: 'axis-gallery' },
-      { key: 'axis_gallery_b', name: '展示列柱', level: +18, size: +1, depth: +2, chest: 'more', type: 'axis-gallery' }
+      {
+        key: 'axis_gallery_a',
+        name: '軸路の玄関',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_a.name",
+        level: +10,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'axis-gallery'
+      },
+      {
+        key: 'axis_gallery_b',
+        name: '展示列柱',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_b.name",
+        level: +18,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'axis-gallery'
+      }
     ],
     blocks2: [
-      { key: 'axis_gallery_core', name: '軸交差中庭', level: +26, size: +1, depth: +2, chest: 'rich', type: 'axis-gallery' }
+      {
+        key: 'axis_gallery_core',
+        name: '軸交差中庭',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_core.name",
+        level: +26,
+        size: +1,
+        depth: +2,
+        chest: 'rich',
+        type: 'axis-gallery'
+      }
     ],
     blocks3: [
-      { key: 'axis_gallery_boss', name: '双軸の祭壇', level: +34, size: +2, depth: +3, chest: 'rich', type: 'axis-gallery', bossFloors: [7, 14] }
+      {
+        key: 'axis_gallery_boss',
+        name: '双軸の祭壇',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_boss.name",
+        level: +34,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'axis-gallery',
+        bossFloors: [7, 14]
+      }
     ]
   };
 
   window.registerDungeonAddon({
     id: 'axis_gallery_pack',
     name: 'Axis Gallery Pack',
+    nameKey: "dungeon.packs.axis_gallery_pack.name",
     version: '1.0.0',
     generators: [generator],
     blocks

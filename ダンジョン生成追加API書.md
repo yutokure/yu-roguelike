@@ -209,6 +209,16 @@ interface GenContext {
 - 互換性のため、**必ず** `name` や `description` など従来の文字列プロパティも併記してください。翻訳キーが未定義の場合や独自 I18n を使わない環境では従来文字列がフォールバックとして使用されます。
 - 生成タイプの表示名は `dungeon.types.<id>` というキーを自動で参照します。`nameKey` を渡すとこの自動解決よりも優先され、`descriptionKey` を渡すとダンジョンタイプオーバーレイや詳細表示で説明文がローカライズされます。
 - BlockDim の次元・ブロックリストでも `nameKey` が利用されます。例: `dungeon.blockdim.dimensions.alpha.name` や `dungeon.blockdim.blocks.rust_factory.name` など、アドオン内で一貫した命名を推奨します。
+- 推奨する命名規則（すべて英小文字・非英数字はアンダースコア `_` に統一）:
+  - `<packId>` … `registerDungeonAddon` / manifest の `id`
+  - `<typeId>` … `DungeonGeneratorDef.id`
+  - `<blockKey>` … 各ブロックの `key`
+  - `<tag>` … `mixin.tags` の要素
+  - ダンジョンパック名／説明: `dungeon.packs.<packId>.name` / `dungeon.packs.<packId>.description`
+  - 生成タイプ名／説明: `dungeon.types.<typeId>.name` / `dungeon.types.<typeId>.description`
+  - 生成タイプ内ブロック: `dungeon.types.<typeId>.blocks.<blockKey>.name` （説明があれば `.description`）
+  - BlockDim 静的ブロック: `dungeon.blockdim.blocks.<blockKey>.name` （説明があれば `.description`）
+  - タグバッジ表示名: `dungeon.badges.<tag>`
 - ロケールが変わるとホストから `document` に `app:rerender` イベントが発火し、登録済みのアドオン定義も含め UI が再描画されます。I18nファイルを更新した場合は `nameKey` などのキーを変更せず内容のみ差し替えると継続的に反映されます。
 
 ---

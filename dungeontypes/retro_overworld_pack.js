@@ -280,7 +280,9 @@
   const generator = {
     id: 'retro-overworld',
     name: 'レトロ風フィールドマップ',
+    nameKey: "dungeon.types.retro_overworld.name",
     description: '大陸や島々、橋や街道が広がる往年のJRPGフィールド風地形',
+    descriptionKey: "dungeon.types.retro_overworld.description",
     algorithm,
     mixin: { normalMixed: 0.45, blockDimMixed: 0.5, tags: ['field','overworld','retro','biome'] }
   };
@@ -295,27 +297,179 @@
 
   const blocks = {
     blocks1: [
-      { key:'retro_overworld_01', name:'Retro Overworld I', level:+0,  size:+0, depth:+1, chest:'normal', type:'retro-overworld', bossFloors:bossFloors(6) },
-      { key:'retro_overworld_02', name:'Retro Overworld II', level:+6,  size:+1, depth:+1, chest:'less',   type:'retro-overworld', bossFloors:bossFloors(8) },
-      { key:'retro_overworld_03', name:'Retro Overworld III', level:+12, size:+1, depth:+2, chest:'more',  type:'retro-overworld', bossFloors:bossFloors(10) },
-      { key:'retro_overworld_04', name:'Retro Overworld IV', level:+18, size:+2, depth:+2, chest:'normal',type:'retro-overworld', bossFloors:bossFloors(12) },
-      { key:'retro_overworld_05', name:'Retro Overworld V', level:+26, size:+2, depth:+3, chest:'more',   type:'retro-overworld', bossFloors:bossFloors(15) }
+      {
+        key:'retro_overworld_01',
+        name:'Retro Overworld I',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_01.name",
+        level:+0,
+        size:+0,
+        depth:+1,
+        chest:'normal',
+        type:'retro-overworld',
+        bossFloors:bossFloors(6)
+      },
+      {
+        key:'retro_overworld_02',
+        name:'Retro Overworld II',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'retro-overworld',
+        bossFloors:bossFloors(8)
+      },
+      {
+        key:'retro_overworld_03',
+        name:'Retro Overworld III',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_03.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'retro-overworld',
+        bossFloors:bossFloors(10)
+      },
+      {
+        key:'retro_overworld_04',
+        name:'Retro Overworld IV',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'retro-overworld',
+        bossFloors:bossFloors(12)
+      },
+      {
+        key:'retro_overworld_05',
+        name:'Retro Overworld V',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_05.name",
+        level:+26,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'retro-overworld',
+        bossFloors:bossFloors(15)
+      }
     ],
     blocks2: [
-      { key:'retro_overworld_core_01', name:'Retro Overworld Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'retro-overworld' },
-      { key:'retro_overworld_core_02', name:'Retro Overworld Core II', level:+8,  size:+1, depth:+1, chest:'more',   type:'retro-overworld' },
-      { key:'retro_overworld_core_03', name:'Retro Overworld Core III', level:+16, size:+2, depth:+1, chest:'less',  type:'retro-overworld' },
-      { key:'retro_overworld_core_04', name:'Retro Overworld Core IV', level:+22, size:+2, depth:+2, chest:'normal',type:'retro-overworld' },
-      { key:'retro_overworld_core_05', name:'Retro Overworld Core V', level:+30, size:+3, depth:+2, chest:'more',   type:'retro-overworld' }
+      {
+        key:'retro_overworld_core_01',
+        name:'Retro Overworld Core I',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'retro-overworld'
+      },
+      {
+        key:'retro_overworld_core_02',
+        name:'Retro Overworld Core II',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_core_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'retro-overworld'
+      },
+      {
+        key:'retro_overworld_core_03',
+        name:'Retro Overworld Core III',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_core_03.name",
+        level:+16,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'retro-overworld'
+      },
+      {
+        key:'retro_overworld_core_04',
+        name:'Retro Overworld Core IV',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_core_04.name",
+        level:+22,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'retro-overworld'
+      },
+      {
+        key:'retro_overworld_core_05',
+        name:'Retro Overworld Core V',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_core_05.name",
+        level:+30,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'retro-overworld'
+      }
     ],
     blocks3: [
-      { key:'retro_overworld_relic_01', name:'Retro Overworld Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'retro-overworld', bossFloors:[5] },
-      { key:'retro_overworld_relic_02', name:'Retro Overworld Relic II', level:+10, size:+1, depth:+2, chest:'normal', type:'retro-overworld', bossFloors:[10] },
-      { key:'retro_overworld_relic_03', name:'Retro Overworld Relic III', level:+18, size:+1, depth:+3, chest:'less',  type:'retro-overworld', bossFloors:[15] },
-      { key:'retro_overworld_relic_04', name:'Retro Overworld Relic IV', level:+26, size:+2, depth:+3, chest:'more',   type:'retro-overworld', bossFloors:[10,15] },
-      { key:'retro_overworld_relic_05', name:'Retro Overworld Relic V', level:+32, size:+2, depth:+4, chest:'normal', type:'retro-overworld', bossFloors:[5,10,15] }
+      {
+        key:'retro_overworld_relic_01',
+        name:'Retro Overworld Relic I',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'retro-overworld',
+        bossFloors:[5]
+      },
+      {
+        key:'retro_overworld_relic_02',
+        name:'Retro Overworld Relic II',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_relic_02.name",
+        level:+10,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'retro-overworld',
+        bossFloors:[10]
+      },
+      {
+        key:'retro_overworld_relic_03',
+        name:'Retro Overworld Relic III',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'retro-overworld',
+        bossFloors:[15]
+      },
+      {
+        key:'retro_overworld_relic_04',
+        name:'Retro Overworld Relic IV',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_relic_04.name",
+        level:+26,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'retro-overworld',
+        bossFloors:[10,15]
+      },
+      {
+        key:'retro_overworld_relic_05',
+        name:'Retro Overworld Relic V',
+        nameKey: "dungeon.types.retro_overworld.blocks.retro_overworld_relic_05.name",
+        level:+32,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'retro-overworld',
+        bossFloors:[5,10,15]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'retro_overworld_pack', name:'Retro Overworld Pack', version:'1.0.0', blocks, generators:[generator] });
+  window.registerDungeonAddon({
+    id:'retro_overworld_pack',
+    name:'Retro Overworld Pack',
+    nameKey: "dungeon.packs.retro_overworld_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[generator]
+  });
 })();

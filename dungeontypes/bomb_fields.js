@@ -209,21 +209,27 @@
     {
       id: 'minefield-expanse',
       name: '地雷原の荒野',
+      nameKey: "dungeon.types.minefield_expanse.name",
       description: '縦横に走る塹壕と爆弾ポケットが散在する危険な平原',
+      descriptionKey: "dungeon.types.minefield_expanse.description",
       algorithm: carveMinefield,
       mixin: { normalMixed: 0.45, blockDimMixed: 0.55, tags: ['open-space', 'bomb'] }
     },
     {
       id: 'shrapnel-barracks',
       name: '破片兵舎',
+      nameKey: "dungeon.types.shrapnel_barracks.name",
       description: '部屋と廊下が連なる廃兵舎。扉周りには起爆装置が待ち構える',
+      descriptionKey: "dungeon.types.shrapnel_barracks.description",
       algorithm: carveShrapnelRooms,
       mixin: { normalMixed: 0.35, blockDimMixed: 0.5, tags: ['rooms', 'bomb'] }
     },
     {
       id: 'fuse-labyrinth',
       name: '導火線迷宮',
+      nameKey: "dungeon.types.fuse_labyrinth.name",
       description: '導火線のように複雑な迷路。交差点に爆弾が仕掛けられている',
+      descriptionKey: "dungeon.types.fuse_labyrinth.description",
       algorithm: carveFuseMaze,
       mixin: { normalMixed: 0.3, blockDimMixed: 0.45, tags: ['maze', 'bomb'] }
     }
@@ -231,19 +237,108 @@
 
   function mkBlocks(){
     const blocks1 = [
-      { key:'minefield_theme_01', name:'Minefield Theme I', level:+0, size:0, depth:+1, chest:'less', type:'minefield-expanse', bossFloors:[5] },
-      { key:'minefield_theme_02', name:'Minefield Theme II', level:+6, size:+1, depth:+1, chest:'normal', type:'minefield-expanse', bossFloors:[10] },
-      { key:'minefield_theme_03', name:'Minefield Theme III', level:+12, size:+1, depth:+2, chest:'more', type:'minefield-expanse', bossFloors:[15] }
+      {
+        key:'minefield_theme_01',
+        name:'Minefield Theme I',
+        nameKey: "dungeon.types.minefield_expanse.blocks.minefield_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'less',
+        type:'minefield-expanse',
+        bossFloors:[5]
+      },
+      {
+        key:'minefield_theme_02',
+        name:'Minefield Theme II',
+        nameKey: "dungeon.types.minefield_expanse.blocks.minefield_theme_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'normal',
+        type:'minefield-expanse',
+        bossFloors:[10]
+      },
+      {
+        key:'minefield_theme_03',
+        name:'Minefield Theme III',
+        nameKey: "dungeon.types.minefield_expanse.blocks.minefield_theme_03.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'minefield-expanse',
+        bossFloors:[15]
+      }
     ];
     const blocks2 = [
-      { key:'barracks_core_01', name:'Barracks Core I', level:+0, size:0, depth:0, chest:'normal', type:'shrapnel-barracks' },
-      { key:'barracks_core_02', name:'Barracks Core II', level:+8, size:+1, depth:+1, chest:'more', type:'shrapnel-barracks', bossFloors:[5] },
-      { key:'barracks_core_03', name:'Barracks Core III', level:+16, size:+1, depth:+2, chest:'less', type:'shrapnel-barracks', bossFloors:[10] }
+      {
+        key:'barracks_core_01',
+        name:'Barracks Core I',
+        nameKey: "dungeon.types.shrapnel_barracks.blocks.barracks_core_01.name",
+        level:+0,
+        size:0,
+        depth:0,
+        chest:'normal',
+        type:'shrapnel-barracks'
+      },
+      {
+        key:'barracks_core_02',
+        name:'Barracks Core II',
+        nameKey: "dungeon.types.shrapnel_barracks.blocks.barracks_core_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'shrapnel-barracks',
+        bossFloors:[5]
+      },
+      {
+        key:'barracks_core_03',
+        name:'Barracks Core III',
+        nameKey: "dungeon.types.shrapnel_barracks.blocks.barracks_core_03.name",
+        level:+16,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'shrapnel-barracks',
+        bossFloors:[10]
+      }
     ];
     const blocks3 = [
-      { key:'fuse_relic_01', name:'Fuse Relic I', level:+0, size:0, depth:+2, chest:'more', type:'fuse-labyrinth', bossFloors:[5] },
-      { key:'fuse_relic_02', name:'Fuse Relic II', level:+10, size:+1, depth:+3, chest:'normal', type:'fuse-labyrinth', bossFloors:[10] },
-      { key:'fuse_relic_03', name:'Fuse Relic III', level:+20, size:+1, depth:+4, chest:'less', type:'fuse-labyrinth', bossFloors:[15] }
+      {
+        key:'fuse_relic_01',
+        name:'Fuse Relic I',
+        nameKey: "dungeon.types.fuse_labyrinth.blocks.fuse_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'fuse-labyrinth',
+        bossFloors:[5]
+      },
+      {
+        key:'fuse_relic_02',
+        name:'Fuse Relic II',
+        nameKey: "dungeon.types.fuse_labyrinth.blocks.fuse_relic_02.name",
+        level:+10,
+        size:+1,
+        depth:+3,
+        chest:'normal',
+        type:'fuse-labyrinth',
+        bossFloors:[10]
+      },
+      {
+        key:'fuse_relic_03',
+        name:'Fuse Relic III',
+        nameKey: "dungeon.types.fuse_labyrinth.blocks.fuse_relic_03.name",
+        level:+20,
+        size:+1,
+        depth:+4,
+        chest:'less',
+        type:'fuse-labyrinth',
+        bossFloors:[15]
+      }
     ];
     return { blocks1, blocks2, blocks3 };
   }
@@ -251,8 +346,10 @@
   window.registerDungeonAddon({
     id: 'bomb_pack',
     name: 'Bomb Hazard Pack',
+    nameKey: "dungeon.packs.bomb_pack.name",
     version: '1.0.0',
     description: '爆弾ギミックに特化した生成タイプを追加するMOD。地雷原・兵舎・迷宮の3種類を収録。',
+    descriptionKey: "dungeon.packs.bomb_pack.description",
     generators,
     blocks: mkBlocks()
   });

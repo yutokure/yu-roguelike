@@ -228,19 +228,76 @@
   }
 
   const gens = [
-    { id:'ring-linked-rooms', name:'リング連結部屋', algorithm:genRingLinked, mixin:{ normalMixed:0.45, blockDimMixed:0.45, tags:['rooms'] } },
-    { id:'hex-lattice-rooms', name:'六角格子部屋', algorithm:genHexLattice, mixin:{ normalMixed:0.4, blockDimMixed:0.5, tags:['sf','grid'] } },
-    { id:'bubble-rooms',      name:'バブル部屋', algorithm:genBubbleRooms, mixin:{ normalMixed:0.5, blockDimMixed:0.6, tags:['organic','rooms'] } },
-    { id:'spiral-room',       name:'螺旋部屋', algorithm:genSpiral, mixin:{ normalMixed:0.4, blockDimMixed:0.4, tags:['maze'] } },
-    { id:'circular-tower',    name:'円の塔', algorithm:genCircularTower, mixin:{ normalMixed:0.35, blockDimMixed:0.45, tags:['rooms'] } },
-    { id:'square-tower',      name:'四角の塔', algorithm:genSquareTower, mixin:{ normalMixed:0.35, blockDimMixed:0.45, tags:['rooms'] } },
-    { id:'diamond-room',      name:'ダイヤの部屋', algorithm:genDiamond, mixin:{ normalMixed:0.3, blockDimMixed:0.3, tags:['single'] } },
-    { id:'triangle-room',     name:'三角の部屋', algorithm:genTriangle, mixin:{ normalMixed:0.3, blockDimMixed:0.3, tags:['single'] } },
-    { id:'structure-mosaic',  name:'構造モザイク', algorithm:genStructureMosaic, mixin:{ normalMixed:0.3, blockDimMixed:0.35, tags:['rooms','modular'] } },
+    {
+      id:'ring-linked-rooms',
+      name:'リング連結部屋',
+      nameKey: "dungeon.types.ring_linked_rooms.name",
+      algorithm:genRingLinked,
+      mixin:{ normalMixed:0.45, blockDimMixed:0.45, tags:['rooms'] }
+    },
+    {
+      id:'hex-lattice-rooms',
+      name:'六角格子部屋',
+      nameKey: "dungeon.types.hex_lattice_rooms.name",
+      algorithm:genHexLattice,
+      mixin:{ normalMixed:0.4, blockDimMixed:0.5, tags:['sf','grid'] }
+    },
+    {
+      id:'bubble-rooms',
+      name:'バブル部屋',
+      nameKey: "dungeon.types.bubble_rooms.name",
+      algorithm:genBubbleRooms,
+      mixin:{ normalMixed:0.5, blockDimMixed:0.6, tags:['organic','rooms'] }
+    },
+    {
+      id:'spiral-room',
+      name:'螺旋部屋',
+      nameKey: "dungeon.types.spiral_room.name",
+      algorithm:genSpiral,
+      mixin:{ normalMixed:0.4, blockDimMixed:0.4, tags:['maze'] }
+    },
+    {
+      id:'circular-tower',
+      name:'円の塔',
+      nameKey: "dungeon.types.circular_tower.name",
+      algorithm:genCircularTower,
+      mixin:{ normalMixed:0.35, blockDimMixed:0.45, tags:['rooms'] }
+    },
+    {
+      id:'square-tower',
+      name:'四角の塔',
+      nameKey: "dungeon.types.square_tower.name",
+      algorithm:genSquareTower,
+      mixin:{ normalMixed:0.35, blockDimMixed:0.45, tags:['rooms'] }
+    },
+    {
+      id:'diamond-room',
+      name:'ダイヤの部屋',
+      nameKey: "dungeon.types.diamond_room.name",
+      algorithm:genDiamond,
+      mixin:{ normalMixed:0.3, blockDimMixed:0.3, tags:['single'] }
+    },
+    {
+      id:'triangle-room',
+      name:'三角の部屋',
+      nameKey: "dungeon.types.triangle_room.name",
+      algorithm:genTriangle,
+      mixin:{ normalMixed:0.3, blockDimMixed:0.3, tags:['single'] }
+    },
+    {
+      id:'structure-mosaic',
+      name:'構造モザイク',
+      nameKey: "dungeon.types.structure_mosaic.name",
+      algorithm:genStructureMosaic,
+      mixin:{ normalMixed:0.3, blockDimMixed:0.35, tags:['rooms','modular'] }
+    },
     {
       id:'geo-fixed-labyrinth',
       name:'固定幾何ラビリンス',
+      nameKey: "dungeon.types.geo_fixed_labyrinth.name",
       description:'固定マップを用いた幾何学迷宮。各階層のレイアウトを固定しつつ構造APIのテンプレートとして利用できます。',
+      descriptionKey: "dungeon.types.geo_fixed_labyrinth.description",
+
       floors:{
         max:3,
         bossFloors:[3],
@@ -307,11 +364,13 @@
           }
         ]
       },
+
       algorithm:function algorithm(ctx){
         if (!ctx.fixedMaps?.applyCurrent?.()) {
           genRingLinked(ctx);
         }
       },
+
       mixin:{ normalMixed:0.25, blockDimMixed:0.25, tags:['fixed','rooms'] }
     }
   ];
@@ -325,7 +384,17 @@
       { key:'geo_theme_03', name:'Geo Theme III',level:+16, size:+1, depth:+2, chest:'more',  type:types[2], bossFloors:mkBoss(12) },
       { key:'geo_theme_04', name:'Geo Theme IV',level:+22, size:+2, depth:+2, chest:'normal', type:types[3], bossFloors:mkBoss(14) },
       { key:'geo_theme_05', name:'Geo Theme V', level:+28, size:+2, depth:+3, chest:'less',   type:types[4], bossFloors:mkBoss(15) },
-      { key:'geo_fixed_trial', name:'Geo Fixed Trial', level:+12, size:0, depth:+1, chest:'normal', type:'geo-fixed-labyrinth', bossFloors:[3] }
+      {
+        key:'geo_fixed_trial',
+        name:'Geo Fixed Trial',
+        nameKey: "dungeon.types.geo_fixed_labyrinth.blocks.geo_fixed_trial.name",
+        level:+12,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'geo-fixed-labyrinth',
+        bossFloors:[3]
+      }
     ],
     blocks2:[
       { key:'geo_core_01', name:'Geo Core I', level:+0,  size:+1, depth:0, chest:'normal', type:types[5] },
@@ -343,5 +412,13 @@
     ]
   };
 
-  window.registerDungeonAddon({ id:'geometric_pack', name:'Geometric Structures Pack', version:'1.0.0', blocks, generators:gens, structures });
+  window.registerDungeonAddon({
+    id:'geometric_pack',
+    name:'Geometric Structures Pack',
+    nameKey: "dungeon.packs.geometric_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:gens,
+    structures
+  });
 })();

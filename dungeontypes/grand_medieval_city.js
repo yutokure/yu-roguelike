@@ -359,7 +359,10 @@
     {
       id:'grand-medieval-city',
       name:'荘厳なる中世都市',
+      nameKey: "dungeon.types.grand_medieval_city.name",
       description:'巨大な城壁と大通りが張り巡らされた中世ヨーロッパ風の街区',
+      descriptionKey: "dungeon.types.grand_medieval_city.description",
+
       algorithm:createCityAlgorithm({
         ringCount:2,
         plazas:[
@@ -372,12 +375,16 @@
         estateCourts:{ count:8, sizeRange:[2,4], margin:3 },
         randomAlleys:{ count:6, width:2, segments:1, wiggle:1 }
       }),
+
       mixin:baseMixin
     },
     {
       id:'grand-medieval-city-canals',
       name:'荘厳なる中世都市：水路と港湾',
+      nameKey: "dungeon.types.grand_medieval_city_canals.name",
       description:'運河と港湾地区が交差する水辺の中世都市区画',
+      descriptionKey: "dungeon.types.grand_medieval_city_canals.description",
+
       algorithm:createCityAlgorithm({
         ringCount:2,
         diagonalStyle:'wavy',
@@ -413,12 +420,16 @@
         estateCourts:{ count:6, sizeRange:[2,3], margin:4 },
         randomAlleys:{ count:8, width:2, style:'wavy', segments:2, wiggle:2 }
       }),
+
       mixin:Object.assign({},baseMixin,{ tags:['structured','rooms','city','waterway'] })
     },
     {
       id:'grand-medieval-city-hill',
       name:'荘厳なる中世都市：城塞丘陵',
+      nameKey: "dungeon.types.grand_medieval_city_hill.name",
       description:'段丘状に城塞がそびえる丘陵の王城地区',
+      descriptionKey: "dungeon.types.grand_medieval_city_hill.description",
+
       algorithm:createCityAlgorithm({
         ringCount:3,
         centralShape:'circle',
@@ -447,12 +458,16 @@
         estateCourts:{ count:5, sizeRange:[2,3], margin:4 },
         randomAlleys:{ count:5, width:2, segments:2 }
       }),
+
       mixin:Object.assign({},baseMixin,{ tags:['structured','rooms','city','fortress'] })
     },
     {
       id:'grand-medieval-city-markets',
       name:'荘厳なる中世都市：商人ギルド街',
+      nameKey: "dungeon.types.grand_medieval_city_markets.name",
       description:'ギルド街と市場が格子状に連なる商業区画',
+      descriptionKey: "dungeon.types.grand_medieval_city_markets.description",
+
       algorithm:createCityAlgorithm({
         ringCount:1,
         crossWidth:4,
@@ -472,6 +487,7 @@
         randomAlleys:{ count:10, width:2, segments:1 },
         estateCourts:{ count:7, sizeRange:[2,3], margin:3 }
       }),
+
       mixin:Object.assign({},baseMixin,{ tags:['structured','rooms','city','market'] })
     }
   ];
@@ -487,59 +503,432 @@
 
   const blocks={
     blocks1:[
-      { key:'grand_city_theme_01', name:'Grand City Theme I', level:+0,  size:+1, depth:+1, chest:'normal', type:'grand-medieval-city', bossFloors:mkBoss(6) },
-      { key:'grand_city_theme_02', name:'Grand City Theme II',level:+8,  size:+1, depth:+1, chest:'more',   type:'grand-medieval-city', bossFloors:mkBoss(8) },
-      { key:'grand_city_theme_03', name:'Grand City Theme III',level:+16, size:+2, depth:+2, chest:'less',   type:'grand-medieval-city', bossFloors:mkBoss(10) },
-      { key:'grand_city_theme_04', name:'Grand City Theme IV',level:+24, size:+2, depth:+2, chest:'normal', type:'grand-medieval-city', bossFloors:mkBoss(12) },
-      { key:'grand_city_theme_05', name:'Grand City Theme V', level:+32, size:+3, depth:+3, chest:'more',   type:'grand-medieval-city', bossFloors:mkBoss(15) },
-      { key:'grand_city_theme_06', name:'Grand City Theme VI',level:+40, size:+3, depth:+3, chest:'normal', type:'grand-medieval-city', bossFloors:mkBoss(18) },
-      { key:'grand_city_theme_07', name:'Grand City Theme VII',level:+48, size:+4, depth:+4, chest:'more', type:'grand-medieval-city', bossFloors:mkBoss(20) }
+      {
+        key:'grand_city_theme_01',
+        name:'Grand City Theme I',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.grand_city_theme_01.name",
+        level:+0,
+        size:+1,
+        depth:+1,
+        chest:'normal',
+        type:'grand-medieval-city',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'grand_city_theme_02',
+        name:'Grand City Theme II',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.grand_city_theme_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'grand-medieval-city',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'grand_city_theme_03',
+        name:'Grand City Theme III',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.grand_city_theme_03.name",
+        level:+16,
+        size:+2,
+        depth:+2,
+        chest:'less',
+        type:'grand-medieval-city',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'grand_city_theme_04',
+        name:'Grand City Theme IV',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.grand_city_theme_04.name",
+        level:+24,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'grand-medieval-city',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'grand_city_theme_05',
+        name:'Grand City Theme V',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.grand_city_theme_05.name",
+        level:+32,
+        size:+3,
+        depth:+3,
+        chest:'more',
+        type:'grand-medieval-city',
+        bossFloors:mkBoss(15)
+      },
+      {
+        key:'grand_city_theme_06',
+        name:'Grand City Theme VI',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.grand_city_theme_06.name",
+        level:+40,
+        size:+3,
+        depth:+3,
+        chest:'normal',
+        type:'grand-medieval-city',
+        bossFloors:mkBoss(18)
+      },
+      {
+        key:'grand_city_theme_07',
+        name:'Grand City Theme VII',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.grand_city_theme_07.name",
+        level:+48,
+        size:+4,
+        depth:+4,
+        chest:'more',
+        type:'grand-medieval-city',
+        bossFloors:mkBoss(20)
+      }
     ],
     blocks2:[
-      { key:'guild_row_01', name:'Guild Row I', level:+0,  size:+1, depth:0, chest:'normal', type:'grand-medieval-city' },
-      { key:'guild_row_02', name:'Guild Row II',level:+7,  size:+1, depth:+1, chest:'more',  type:'grand-medieval-city' },
-      { key:'guild_row_03', name:'Guild Row III',level:+14, size:+2, depth:+1, chest:'less', type:'grand-medieval-city' },
-      { key:'guild_row_04', name:'Guild Row IV',level:+21, size:+2, depth:+2, chest:'normal',type:'grand-medieval-city' },
-      { key:'guild_row_05', name:'Guild Row V', level:+28, size:+3, depth:+2, chest:'more',  type:'grand-medieval-city' },
-      { key:'guild_row_06', name:'Guild Row VI',level:+35, size:+3, depth:+3, chest:'normal',type:'grand-medieval-city' },
-      { key:'guild_row_07', name:'Guild Row VII',level:+42, size:+3, depth:+3, chest:'more', type:'grand-medieval-city' }
+      {
+        key:'guild_row_01',
+        name:'Guild Row I',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.guild_row_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'guild_row_02',
+        name:'Guild Row II',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.guild_row_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'guild_row_03',
+        name:'Guild Row III',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.guild_row_03.name",
+        level:+14,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'guild_row_04',
+        name:'Guild Row IV',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.guild_row_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'guild_row_05',
+        name:'Guild Row V',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.guild_row_05.name",
+        level:+28,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'guild_row_06',
+        name:'Guild Row VI',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.guild_row_06.name",
+        level:+35,
+        size:+3,
+        depth:+3,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'guild_row_07',
+        name:'Guild Row VII',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.guild_row_07.name",
+        level:+42,
+        size:+3,
+        depth:+3,
+        chest:'more',
+        type:'grand-medieval-city'
+      }
     ],
     blocks3:[
-      { key:'cathedral_01', name:'Cathedral I', level:+0,  size:+1, depth:+2, chest:'more',   type:'grand-medieval-city', bossFloors:[5] },
-      { key:'cathedral_02', name:'Cathedral II',level:+8,  size:+1, depth:+2, chest:'normal', type:'grand-medieval-city', bossFloors:[10] },
-      { key:'cathedral_03', name:'Cathedral III',level:+16, size:+2, depth:+3, chest:'less', type:'grand-medieval-city', bossFloors:[15] },
-      { key:'cathedral_04', name:'Cathedral IV', level:+24, size:+2, depth:+3, chest:'more', type:'grand-medieval-city', bossFloors:[10,15] },
-      { key:'cathedral_05', name:'Cathedral V',  level:+32, size:+3, depth:+4, chest:'normal',type:'grand-medieval-city', bossFloors:[5,10,15] },
-      { key:'cathedral_06', name:'Cathedral VI', level:+40, size:+3, depth:+4, chest:'more', type:'grand-medieval-city', bossFloors:[15,20] }
+      {
+        key:'cathedral_01',
+        name:'Cathedral I',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.cathedral_01.name",
+        level:+0,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'grand-medieval-city',
+        bossFloors:[5]
+      },
+      {
+        key:'cathedral_02',
+        name:'Cathedral II',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.cathedral_02.name",
+        level:+8,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'grand-medieval-city',
+        bossFloors:[10]
+      },
+      {
+        key:'cathedral_03',
+        name:'Cathedral III',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.cathedral_03.name",
+        level:+16,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'grand-medieval-city',
+        bossFloors:[15]
+      },
+      {
+        key:'cathedral_04',
+        name:'Cathedral IV',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.cathedral_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'grand-medieval-city',
+        bossFloors:[10,15]
+      },
+      {
+        key:'cathedral_05',
+        name:'Cathedral V',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.cathedral_05.name",
+        level:+32,
+        size:+3,
+        depth:+4,
+        chest:'normal',
+        type:'grand-medieval-city',
+        bossFloors:[5,10,15]
+      },
+      {
+        key:'cathedral_06',
+        name:'Cathedral VI',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.cathedral_06.name",
+        level:+40,
+        size:+3,
+        depth:+4,
+        chest:'more',
+        type:'grand-medieval-city',
+        bossFloors:[15,20]
+      }
     ],
     blocks4:[
-      { key:'harbor_quarter_01', name:'Harbor Quarter I', level:+0,  size:+1, depth:+1, chest:'normal', type:'grand-medieval-city' },
-      { key:'harbor_quarter_02', name:'Harbor Quarter II',level:+9,  size:+1, depth:+1, chest:'more',   type:'grand-medieval-city' },
-      { key:'harbor_quarter_03', name:'Harbor Quarter III',level:+18, size:+2, depth:+2, chest:'normal', type:'grand-medieval-city' },
-      { key:'harbor_quarter_04', name:'Harbor Quarter IV', level:+27, size:+2, depth:+2, chest:'more',  type:'grand-medieval-city', bossFloors:[10] },
-      { key:'harbor_quarter_05', name:'Harbor Quarter V',  level:+36, size:+3, depth:+3, chest:'more',  type:'grand-medieval-city', bossFloors:[15] }
+      {
+        key:'harbor_quarter_01',
+        name:'Harbor Quarter I',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.harbor_quarter_01.name",
+        level:+0,
+        size:+1,
+        depth:+1,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'harbor_quarter_02',
+        name:'Harbor Quarter II',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.harbor_quarter_02.name",
+        level:+9,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'harbor_quarter_03',
+        name:'Harbor Quarter III',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.harbor_quarter_03.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'harbor_quarter_04',
+        name:'Harbor Quarter IV',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.harbor_quarter_04.name",
+        level:+27,
+        size:+2,
+        depth:+2,
+        chest:'more',
+        type:'grand-medieval-city',
+        bossFloors:[10]
+      },
+      {
+        key:'harbor_quarter_05',
+        name:'Harbor Quarter V',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.harbor_quarter_05.name",
+        level:+36,
+        size:+3,
+        depth:+3,
+        chest:'more',
+        type:'grand-medieval-city',
+        bossFloors:[15]
+      }
     ],
     blocks5:[
-      { key:'artisan_quarter_01', name:'Artisan Quarter I', level:+0,  size:+1, depth:0, chest:'normal', type:'grand-medieval-city' },
-      { key:'artisan_quarter_02', name:'Artisan Quarter II',level:+6,  size:+1, depth:+1, chest:'more',  type:'grand-medieval-city' },
-      { key:'artisan_quarter_03', name:'Artisan Quarter III',level:+12, size:+2, depth:+1, chest:'normal',type:'grand-medieval-city' },
-      { key:'artisan_quarter_04', name:'Artisan Quarter IV', level:+18, size:+2, depth:+2, chest:'more', type:'grand-medieval-city' },
-      { key:'artisan_quarter_05', name:'Artisan Quarter V',  level:+24, size:+2, depth:+2, chest:'less', type:'grand-medieval-city' }
+      {
+        key:'artisan_quarter_01',
+        name:'Artisan Quarter I',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.artisan_quarter_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'artisan_quarter_02',
+        name:'Artisan Quarter II',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.artisan_quarter_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'artisan_quarter_03',
+        name:'Artisan Quarter III',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.artisan_quarter_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'artisan_quarter_04',
+        name:'Artisan Quarter IV',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.artisan_quarter_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'more',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'artisan_quarter_05',
+        name:'Artisan Quarter V',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.artisan_quarter_05.name",
+        level:+24,
+        size:+2,
+        depth:+2,
+        chest:'less',
+        type:'grand-medieval-city'
+      }
     ],
     blocks6:[
-      { key:'commons_plaza_01', name:'Commons Plaza I', level:+0,  size:+1, depth:0, chest:'normal', type:'grand-medieval-city' },
-      { key:'commons_plaza_02', name:'Commons Plaza II',level:+5,  size:+1, depth:+1, chest:'more',   type:'grand-medieval-city' },
-      { key:'commons_plaza_03', name:'Commons Plaza III',level:+10, size:+2, depth:+1, chest:'normal', type:'grand-medieval-city' },
-      { key:'commons_plaza_04', name:'Commons Plaza IV', level:+15, size:+2, depth:+2, chest:'more',  type:'grand-medieval-city' },
-      { key:'commons_plaza_05', name:'Commons Plaza V',  level:+20, size:+3, depth:+2, chest:'normal',type:'grand-medieval-city' }
+      {
+        key:'commons_plaza_01',
+        name:'Commons Plaza I',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.commons_plaza_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'commons_plaza_02',
+        name:'Commons Plaza II',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.commons_plaza_02.name",
+        level:+5,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'commons_plaza_03',
+        name:'Commons Plaza III',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.commons_plaza_03.name",
+        level:+10,
+        size:+2,
+        depth:+1,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'commons_plaza_04',
+        name:'Commons Plaza IV',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.commons_plaza_04.name",
+        level:+15,
+        size:+2,
+        depth:+2,
+        chest:'more',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'commons_plaza_05',
+        name:'Commons Plaza V',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.commons_plaza_05.name",
+        level:+20,
+        size:+3,
+        depth:+2,
+        chest:'normal',
+        type:'grand-medieval-city'
+      }
     ],
     blocks7:[
-      { key:'garden_court_01', name:'Garden Court I', level:+0,  size:+1, depth:0, chest:'normal', type:'grand-medieval-city' },
-      { key:'garden_court_02', name:'Garden Court II',level:+8,  size:+1, depth:+1, chest:'less',   type:'grand-medieval-city' },
-      { key:'garden_court_03', name:'Garden Court III',level:+16, size:+2, depth:+1, chest:'normal', type:'grand-medieval-city' },
-      { key:'garden_court_04', name:'Garden Court IV', level:+24, size:+2, depth:+2, chest:'more',  type:'grand-medieval-city' }
+      {
+        key:'garden_court_01',
+        name:'Garden Court I',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.garden_court_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'garden_court_02',
+        name:'Garden Court II',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.garden_court_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'garden_court_03',
+        name:'Garden Court III',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.garden_court_03.name",
+        level:+16,
+        size:+2,
+        depth:+1,
+        chest:'normal',
+        type:'grand-medieval-city'
+      },
+      {
+        key:'garden_court_04',
+        name:'Garden Court IV',
+        nameKey: "dungeon.types.grand_medieval_city.blocks.garden_court_04.name",
+        level:+24,
+        size:+2,
+        depth:+2,
+        chest:'more',
+        type:'grand-medieval-city'
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'grand_medieval_city_pack', name:'Grand Medieval City Pack', version:'1.1.0', blocks, generators });
+  window.registerDungeonAddon({
+    id:'grand_medieval_city_pack',
+    name:'Grand Medieval City Pack',
+    nameKey: "dungeon.packs.grand_medieval_city_pack.name",
+    version:'1.1.0',
+    blocks,
+    generators
+  });
 })();

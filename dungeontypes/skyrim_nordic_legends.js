@@ -302,8 +302,11 @@
     {
       id: 'skyrim-legends',
       name: 'スカイリム伝承巡り',
+      nameKey: "dungeon.types.skyrim_legends.name",
       description: 'ノルドの大広間から氷河の裂け目、ドワーフ遺跡まで巡る極寒の旅路',
+      descriptionKey: "dungeon.types.skyrim_legends.description",
       mixin: { normalMixed: 0.62, blockDimMixed: 0.58, tags: ['skyrim', 'nordic', 'snow', 'dragon'] },
+
       config: {
         hall: { widthFactor: 0.68, heightFactor: 0.24, topOffset: 0.16, daisRadius: 0.12 },
         hallColumns: 4,
@@ -331,8 +334,11 @@
     {
       id: 'skyrim-legends-gauntlet',
       name: 'スカイリム鉄壁の試練',
+      nameKey: "dungeon.types.skyrim_legends_gauntlet.name",
       description: 'ドワーフ機構と熔岩の罠が連なる苛烈な突撃路',
+      descriptionKey: "dungeon.types.skyrim_legends_gauntlet.description",
       mixin: { normalMixed: 0.52, blockDimMixed: 0.64, tags: ['skyrim', 'gauntlet', 'dwemer', 'lava'] },
+
       config: {
         hall: { widthFactor: 0.56, heightFactor: 0.18, topOffset: 0.12, daisRadius: 0.1 },
         hallColumns: 6,
@@ -358,8 +364,11 @@
     {
       id: 'skyrim-legends-pilgrimage',
       name: 'スカイリム巡礼の旅路',
+      nameKey: "dungeon.types.skyrim_legends_pilgrimage.name",
       description: '峡谷沿いの祠と霊樹を巡る瞑想的な回廊',
+      descriptionKey: "dungeon.types.skyrim_legends_pilgrimage.description",
       mixin: { normalMixed: 0.7, blockDimMixed: 0.48, tags: ['skyrim', 'pilgrimage', 'grove', 'ritual'] },
+
       config: {
         hall: { widthFactor: 0.62, heightFactor: 0.2, topOffset: 0.18, daisRadius: 0.1 },
         hallColumns: 3,
@@ -385,8 +394,11 @@
     {
       id: 'skyrim-legends-siege',
       name: 'スカイリム攻城最前線',
+      nameKey: "dungeon.types.skyrim_legends_siege.name",
       description: '氷原の砦と断崖の防衛線を縫う戦場型迷宮',
+      descriptionKey: "dungeon.types.skyrim_legends_siege.description",
       mixin: { normalMixed: 0.48, blockDimMixed: 0.66, tags: ['skyrim', 'battle', 'storm', 'fortress'] },
+
       config: {
         hall: { widthFactor: 0.58, heightFactor: 0.22, topOffset: 0.14, daisRadius: 0.11 },
         hallColumns: 5,
@@ -415,13 +427,17 @@
     {
       id: 'skyrim-legends-aurora',
       name: 'スカイリム極光幻想',
+      nameKey: "dungeon.types.skyrim_legends_aurora.name",
       description: '極光が降り注ぐ天空回廊と霊泉を巡る光彩の迷宮',
+      descriptionKey: "dungeon.types.skyrim_legends_aurora.description",
       mixin: { normalMixed: 0.74, blockDimMixed: 0.42, tags: ['skyrim', 'aurora', 'mythic', 'sky'] },
+
       paletteOverrides: {
         aurora_chamber: { floor: '#2d2a74', alt: '#97a7ff', wall: '#17184b', accent: '#dff5ff', texture: 'aurora_glass', effect: 'aurora_ribbon' },
         aurora_colonnade: { floor: '#262a73', alt: '#8eb7ff', wall: '#181b49', accent: '#dcecff', texture: 'aurora_tile', effect: 'aurora_ripple' },
         midnight_summit: { floor: '#142a3a', alt: '#4b7fa6', wall: '#0f1e29', accent: '#8ff9ff', texture: 'snow_ridge', effect: 'aurora_spindrift' }
       },
+
       config: {
         hall: { widthFactor: 0.64, heightFactor: 0.18, topOffset: 0.14, daisRadius: 0.12 },
         hallColumns: 3,
@@ -453,13 +469,17 @@
     {
       id: 'skyrim-legends-deepdelve',
       name: 'スカイリム鍛冶の深淵',
+      nameKey: "dungeon.types.skyrim_legends_deepdelve.name",
       description: '熔鉱炉と蒸気管が迷宮状に絡み合うドワーフ地底帝都',
+      descriptionKey: "dungeon.types.skyrim_legends_deepdelve.description",
       mixin: { normalMixed: 0.46, blockDimMixed: 0.7, tags: ['skyrim', 'dwemer', 'forge', 'depth'] },
+
       paletteOverrides: {
         dwemer_underworks: { floor: '#302a26', alt: '#9a7d56', wall: '#181411', accent: '#dfb176', texture: 'copper_grate', effect: 'gear_whir' },
         steam_vein: { floor: '#3f2b1b', alt: '#c08a43', wall: '#1f130b', accent: '#f6bd68', texture: 'steam_grate', effect: 'steam_vent' },
         volcanic_ruin: { floor: '#43231f', alt: '#df6e43', wall: '#1f0f0f', accent: '#ff9a63', texture: 'basalt_scoria', effect: 'ember_fall' }
       },
+
       config: {
         hall: { widthFactor: 0.52, heightFactor: 0.2, topOffset: 0.12, daisRadius: 0.09 },
         hallColumns: 6,
@@ -489,12 +509,16 @@
     {
       id: 'skyrim-legends-barrowmarch',
       name: 'スカイリム古墳の夜行',
+      nameKey: "dungeon.types.skyrim_legends_barrowmarch.name",
       description: '山野を横断する層積古墳と幽霊火の参道を進む葬送巡礼',
+      descriptionKey: "dungeon.types.skyrim_legends_barrowmarch.description",
       mixin: { normalMixed: 0.62, blockDimMixed: 0.5, tags: ['skyrim', 'barrow', 'ancient', 'ritual'] },
+
       paletteOverrides: {
         wyrmrest_tomb: { floor: '#332b3f', alt: '#82619a', wall: '#1f1827', accent: '#d5b5ea', texture: 'obsidian_sigil', effect: 'soul_glow' },
         nordic_barrow: { floor: '#3c3b46', alt: '#8f8b9c', wall: '#282732', accent: '#d8d3df', texture: 'carved_sarcophagus', effect: 'ancestral_whisper' }
       },
+
       config: {
         hall: { widthFactor: 0.66, heightFactor: 0.22, topOffset: 0.18, daisRadius: 0.13 },
         hallColumns: 4,
@@ -526,13 +550,17 @@
     {
       id: 'skyrim-legends-blizzardwatch',
       name: 'スカイリム吹雪の監視線',
+      nameKey: "dungeon.types.skyrim_legends_blizzardwatch.name",
       description: '吹雪渦巻く砦と氷崖の警備線を突破する攻防戦迷宮',
+      descriptionKey: "dungeon.types.skyrim_legends_blizzardwatch.description",
       mixin: { normalMixed: 0.5, blockDimMixed: 0.68, tags: ['skyrim', 'storm', 'fortress', 'blizzard'] },
+
       paletteOverrides: {
         storm_battlements: { floor: '#1a273b', alt: '#4d6c9b', wall: '#0f1827', accent: '#a6c3f0', texture: 'windcarved_flagstone', effect: 'storm_gale' },
         blizzard_wall: { floor: '#1a2c45', alt: '#6aa0d6', wall: '#0c1726', accent: '#cde9ff', texture: 'frosted_battlement', effect: 'blizzard_surge' },
         midnight_summit: { floor: '#152a38', alt: '#4c7c9b', wall: '#0c1c25', accent: '#a8e3ff', texture: 'snow_ridge', effect: 'aurora_spindrift' }
       },
+
       config: {
         hall: { widthFactor: 0.6, heightFactor: 0.2, topOffset: 0.16, daisRadius: 0.1 },
         hallColumns: 5,
@@ -694,96 +722,786 @@
 
   const blocks = {
     saga: [
-      { key: 'skyrim_saga_01', name: 'ノルドの伝承 I', level: -4, size: -1, depth: 0, chest: 'less', type: 'skyrim-legends', bossFloors: bossFloors(3) },
-      { key: 'skyrim_saga_02', name: 'ノルドの伝承 II', level: -1, size: -1, depth: 0, chest: 'normal', type: 'skyrim-legends', bossFloors: bossFloors(5) },
-      { key: 'skyrim_saga_03', name: 'ノルドの伝承 III', level: 3, size: 0, depth: 1, chest: 'normal', type: 'skyrim-legends', bossFloors: bossFloors(7) },
-      { key: 'skyrim_saga_04', name: 'ノルドの伝承 IV', level: 7, size: 0, depth: 1, chest: 'more', type: 'skyrim-legends', bossFloors: bossFloors(9) },
-      { key: 'skyrim_saga_05', name: 'ノルドの伝承 V', level: 12, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends', bossFloors: bossFloors(12) },
-      { key: 'skyrim_saga_06', name: 'ノルドの伝承 VI', level: 16, size: +1, depth: 2, chest: 'less', type: 'skyrim-legends', bossFloors: bossFloors(15) },
-      { key: 'skyrim_saga_07', name: 'ノルドの伝承 VII', level: 20, size: +1, depth: 2, chest: 'more', type: 'skyrim-legends', bossFloors: bossFloors(18) },
-      { key: 'skyrim_saga_08', name: 'ノルドの伝承 VIII', level: 24, size: +2, depth: 3, chest: 'normal', type: 'skyrim-legends', bossFloors: bossFloors(21) },
-      { key: 'skyrim_saga_09', name: 'ノルドの伝承 IX', level: 28, size: +2, depth: 3, chest: 'more', type: 'skyrim-legends', bossFloors: bossFloors(24) },
-      { key: 'skyrim_saga_10', name: 'ノルドの伝承 X', level: 32, size: +3, depth: 3, chest: 'normal', type: 'skyrim-legends', bossFloors: bossFloors(24) },
-      { key: 'skyrim_saga_11', name: 'ノルドの伝承 XI', level: 36, size: +3, depth: 4, chest: 'more', type: 'skyrim-legends', bossFloors: bossFloors(24) },
-      { key: 'skyrim_saga_12', name: 'ノルドの伝承 XII', level: 40, size: +4, depth: 4, chest: 'abundant', type: 'skyrim-legends', bossFloors: bossFloors(24) }
+      {
+        key: 'skyrim_saga_01',
+        name: 'ノルドの伝承 I',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_01.name",
+        level: -4,
+        size: -1,
+        depth: 0,
+        chest: 'less',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(3)
+      },
+      {
+        key: 'skyrim_saga_02',
+        name: 'ノルドの伝承 II',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_02.name",
+        level: -1,
+        size: -1,
+        depth: 0,
+        chest: 'normal',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(5)
+      },
+      {
+        key: 'skyrim_saga_03',
+        name: 'ノルドの伝承 III',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_03.name",
+        level: 3,
+        size: 0,
+        depth: 1,
+        chest: 'normal',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(7)
+      },
+      {
+        key: 'skyrim_saga_04',
+        name: 'ノルドの伝承 IV',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_04.name",
+        level: 7,
+        size: 0,
+        depth: 1,
+        chest: 'more',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(9)
+      },
+      {
+        key: 'skyrim_saga_05',
+        name: 'ノルドの伝承 V',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_05.name",
+        level: 12,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(12)
+      },
+      {
+        key: 'skyrim_saga_06',
+        name: 'ノルドの伝承 VI',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_06.name",
+        level: 16,
+        size: +1,
+        depth: 2,
+        chest: 'less',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(15)
+      },
+      {
+        key: 'skyrim_saga_07',
+        name: 'ノルドの伝承 VII',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_07.name",
+        level: 20,
+        size: +1,
+        depth: 2,
+        chest: 'more',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(18)
+      },
+      {
+        key: 'skyrim_saga_08',
+        name: 'ノルドの伝承 VIII',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_08.name",
+        level: 24,
+        size: +2,
+        depth: 3,
+        chest: 'normal',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(21)
+      },
+      {
+        key: 'skyrim_saga_09',
+        name: 'ノルドの伝承 IX',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_09.name",
+        level: 28,
+        size: +2,
+        depth: 3,
+        chest: 'more',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(24)
+      },
+      {
+        key: 'skyrim_saga_10',
+        name: 'ノルドの伝承 X',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_10.name",
+        level: 32,
+        size: +3,
+        depth: 3,
+        chest: 'normal',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(24)
+      },
+      {
+        key: 'skyrim_saga_11',
+        name: 'ノルドの伝承 XI',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_11.name",
+        level: 36,
+        size: +3,
+        depth: 4,
+        chest: 'more',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(24)
+      },
+      {
+        key: 'skyrim_saga_12',
+        name: 'ノルドの伝承 XII',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_saga_12.name",
+        level: 40,
+        size: +4,
+        depth: 4,
+        chest: 'abundant',
+        type: 'skyrim-legends',
+        bossFloors: bossFloors(24)
+      }
     ],
     trials: [
-      { key: 'skyrim_trial_01', name: '氷刃の試練 I', level: 0, size: 0, depth: 1, chest: 'less', type: 'skyrim-legends' },
-      { key: 'skyrim_trial_02', name: '氷刃の試練 II', level: 5, size: 0, depth: 1, chest: 'normal', type: 'skyrim-legends' },
-      { key: 'skyrim_trial_03', name: '氷刃の試練 III', level: 9, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends' },
-      { key: 'skyrim_trial_04', name: '氷刃の試練 IV', level: 13, size: +1, depth: 2, chest: 'more', type: 'skyrim-legends' },
-      { key: 'skyrim_trial_05', name: '氷刃の試練 V', level: 17, size: +1, depth: 3, chest: 'less', type: 'skyrim-legends' },
-      { key: 'skyrim_trial_06', name: '氷刃の試練 VI', level: 21, size: +2, depth: 3, chest: 'normal', type: 'skyrim-legends' },
-      { key: 'skyrim_trial_07', name: '氷刃の試練 VII', level: 25, size: +2, depth: 3, chest: 'more', type: 'skyrim-legends' },
-      { key: 'skyrim_trial_08', name: '氷刃の試練 VIII', level: 29, size: +3, depth: 4, chest: 'normal', type: 'skyrim-legends' },
-      { key: 'skyrim_trial_09', name: '氷刃の試練 IX', level: 33, size: +3, depth: 4, chest: 'more', type: 'skyrim-legends' }
+      {
+        key: 'skyrim_trial_01',
+        name: '氷刃の試練 I',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_01.name",
+        level: 0,
+        size: 0,
+        depth: 1,
+        chest: 'less',
+        type: 'skyrim-legends'
+      },
+      {
+        key: 'skyrim_trial_02',
+        name: '氷刃の試練 II',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_02.name",
+        level: 5,
+        size: 0,
+        depth: 1,
+        chest: 'normal',
+        type: 'skyrim-legends'
+      },
+      {
+        key: 'skyrim_trial_03',
+        name: '氷刃の試練 III',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_03.name",
+        level: 9,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends'
+      },
+      {
+        key: 'skyrim_trial_04',
+        name: '氷刃の試練 IV',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_04.name",
+        level: 13,
+        size: +1,
+        depth: 2,
+        chest: 'more',
+        type: 'skyrim-legends'
+      },
+      {
+        key: 'skyrim_trial_05',
+        name: '氷刃の試練 V',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_05.name",
+        level: 17,
+        size: +1,
+        depth: 3,
+        chest: 'less',
+        type: 'skyrim-legends'
+      },
+      {
+        key: 'skyrim_trial_06',
+        name: '氷刃の試練 VI',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_06.name",
+        level: 21,
+        size: +2,
+        depth: 3,
+        chest: 'normal',
+        type: 'skyrim-legends'
+      },
+      {
+        key: 'skyrim_trial_07',
+        name: '氷刃の試練 VII',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_07.name",
+        level: 25,
+        size: +2,
+        depth: 3,
+        chest: 'more',
+        type: 'skyrim-legends'
+      },
+      {
+        key: 'skyrim_trial_08',
+        name: '氷刃の試練 VIII',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_08.name",
+        level: 29,
+        size: +3,
+        depth: 4,
+        chest: 'normal',
+        type: 'skyrim-legends'
+      },
+      {
+        key: 'skyrim_trial_09',
+        name: '氷刃の試練 IX',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_trial_09.name",
+        level: 33,
+        size: +3,
+        depth: 4,
+        chest: 'more',
+        type: 'skyrim-legends'
+      }
     ],
     relics: [
-      { key: 'skyrim_relic_01', name: '古代ノルドの遺宝 I', level: 2, size: 0, depth: 2, chest: 'more', type: 'skyrim-legends', bossFloors: [3] },
-      { key: 'skyrim_relic_02', name: '古代ノルドの遺宝 II', level: 8, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends', bossFloors: [6] },
-      { key: 'skyrim_relic_03', name: '古代ノルドの遺宝 III', level: 14, size: +1, depth: 3, chest: 'more', type: 'skyrim-legends', bossFloors: [9] },
-      { key: 'skyrim_relic_04', name: '古代ノルドの遺宝 IV', level: 18, size: +1, depth: 3, chest: 'normal', type: 'skyrim-legends', bossFloors: [12] },
-      { key: 'skyrim_relic_05', name: '古代ノルドの遺宝 V', level: 22, size: +2, depth: 3, chest: 'less', type: 'skyrim-legends', bossFloors: [15] },
-      { key: 'skyrim_relic_06', name: '古代ノルドの遺宝 VI', level: 26, size: +2, depth: 4, chest: 'normal', type: 'skyrim-legends', bossFloors: [18] },
-      { key: 'skyrim_relic_07', name: '古代ノルドの遺宝 VII', level: 30, size: +2, depth: 4, chest: 'more', type: 'skyrim-legends', bossFloors: [21] },
-      { key: 'skyrim_relic_08', name: '古代ノルドの遺宝 VIII', level: 34, size: +3, depth: 4, chest: 'more', type: 'skyrim-legends', bossFloors: [24] },
-      { key: 'skyrim_relic_09', name: '古代ノルドの遺宝 IX', level: 38, size: +3, depth: 4, chest: 'abundant', type: 'skyrim-legends', bossFloors: [24] }
+      {
+        key: 'skyrim_relic_01',
+        name: '古代ノルドの遺宝 I',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_01.name",
+        level: 2,
+        size: 0,
+        depth: 2,
+        chest: 'more',
+        type: 'skyrim-legends',
+        bossFloors: [3]
+      },
+      {
+        key: 'skyrim_relic_02',
+        name: '古代ノルドの遺宝 II',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_02.name",
+        level: 8,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends',
+        bossFloors: [6]
+      },
+      {
+        key: 'skyrim_relic_03',
+        name: '古代ノルドの遺宝 III',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_03.name",
+        level: 14,
+        size: +1,
+        depth: 3,
+        chest: 'more',
+        type: 'skyrim-legends',
+        bossFloors: [9]
+      },
+      {
+        key: 'skyrim_relic_04',
+        name: '古代ノルドの遺宝 IV',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_04.name",
+        level: 18,
+        size: +1,
+        depth: 3,
+        chest: 'normal',
+        type: 'skyrim-legends',
+        bossFloors: [12]
+      },
+      {
+        key: 'skyrim_relic_05',
+        name: '古代ノルドの遺宝 V',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_05.name",
+        level: 22,
+        size: +2,
+        depth: 3,
+        chest: 'less',
+        type: 'skyrim-legends',
+        bossFloors: [15]
+      },
+      {
+        key: 'skyrim_relic_06',
+        name: '古代ノルドの遺宝 VI',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_06.name",
+        level: 26,
+        size: +2,
+        depth: 4,
+        chest: 'normal',
+        type: 'skyrim-legends',
+        bossFloors: [18]
+      },
+      {
+        key: 'skyrim_relic_07',
+        name: '古代ノルドの遺宝 VII',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_07.name",
+        level: 30,
+        size: +2,
+        depth: 4,
+        chest: 'more',
+        type: 'skyrim-legends',
+        bossFloors: [21]
+      },
+      {
+        key: 'skyrim_relic_08',
+        name: '古代ノルドの遺宝 VIII',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_08.name",
+        level: 34,
+        size: +3,
+        depth: 4,
+        chest: 'more',
+        type: 'skyrim-legends',
+        bossFloors: [24]
+      },
+      {
+        key: 'skyrim_relic_09',
+        name: '古代ノルドの遺宝 IX',
+        nameKey: "dungeon.types.skyrim_legends.blocks.skyrim_relic_09.name",
+        level: 38,
+        size: +3,
+        depth: 4,
+        chest: 'abundant',
+        type: 'skyrim-legends',
+        bossFloors: [24]
+      }
     ],
     gauntlet: [
-      { key: 'skyrim_gauntlet_01', name: '熔鋼の防衛線 I', level: 6, size: 0, depth: 2, chest: 'less', type: 'skyrim-legends-gauntlet' },
-      { key: 'skyrim_gauntlet_02', name: '熔鋼の防衛線 II', level: 12, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends-gauntlet' },
-      { key: 'skyrim_gauntlet_03', name: '熔鋼の防衛線 III', level: 18, size: +1, depth: 3, chest: 'more', type: 'skyrim-legends-gauntlet' },
-      { key: 'skyrim_gauntlet_04', name: '熔鋼の防衛線 IV', level: 24, size: +2, depth: 3, chest: 'normal', type: 'skyrim-legends-gauntlet', bossFloors: [12, 18] },
-      { key: 'skyrim_gauntlet_05', name: '熔鋼の防衛線 V', level: 30, size: +2, depth: 4, chest: 'more', type: 'skyrim-legends-gauntlet', bossFloors: [21] },
-      { key: 'skyrim_gauntlet_06', name: '熔鋼の防衛線 VI', level: 36, size: +3, depth: 4, chest: 'abundant', type: 'skyrim-legends-gauntlet', bossFloors: [24] }
+      {
+        key: 'skyrim_gauntlet_01',
+        name: '熔鋼の防衛線 I',
+        nameKey: "dungeon.types.skyrim_legends_gauntlet.blocks.skyrim_gauntlet_01.name",
+        level: 6,
+        size: 0,
+        depth: 2,
+        chest: 'less',
+        type: 'skyrim-legends-gauntlet'
+      },
+      {
+        key: 'skyrim_gauntlet_02',
+        name: '熔鋼の防衛線 II',
+        nameKey: "dungeon.types.skyrim_legends_gauntlet.blocks.skyrim_gauntlet_02.name",
+        level: 12,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends-gauntlet'
+      },
+      {
+        key: 'skyrim_gauntlet_03',
+        name: '熔鋼の防衛線 III',
+        nameKey: "dungeon.types.skyrim_legends_gauntlet.blocks.skyrim_gauntlet_03.name",
+        level: 18,
+        size: +1,
+        depth: 3,
+        chest: 'more',
+        type: 'skyrim-legends-gauntlet'
+      },
+      {
+        key: 'skyrim_gauntlet_04',
+        name: '熔鋼の防衛線 IV',
+        nameKey: "dungeon.types.skyrim_legends_gauntlet.blocks.skyrim_gauntlet_04.name",
+        level: 24,
+        size: +2,
+        depth: 3,
+        chest: 'normal',
+        type: 'skyrim-legends-gauntlet',
+        bossFloors: [12, 18]
+      },
+      {
+        key: 'skyrim_gauntlet_05',
+        name: '熔鋼の防衛線 V',
+        nameKey: "dungeon.types.skyrim_legends_gauntlet.blocks.skyrim_gauntlet_05.name",
+        level: 30,
+        size: +2,
+        depth: 4,
+        chest: 'more',
+        type: 'skyrim-legends-gauntlet',
+        bossFloors: [21]
+      },
+      {
+        key: 'skyrim_gauntlet_06',
+        name: '熔鋼の防衛線 VI',
+        nameKey: "dungeon.types.skyrim_legends_gauntlet.blocks.skyrim_gauntlet_06.name",
+        level: 36,
+        size: +3,
+        depth: 4,
+        chest: 'abundant',
+        type: 'skyrim-legends-gauntlet',
+        bossFloors: [24]
+      }
     ],
     pilgrimage: [
-      { key: 'skyrim_pilgrimage_01', name: '霜露の巡礼 I', level: -2, size: -1, depth: 0, chest: 'less', type: 'skyrim-legends-pilgrimage' },
-      { key: 'skyrim_pilgrimage_02', name: '霜露の巡礼 II', level: 4, size: 0, depth: 1, chest: 'normal', type: 'skyrim-legends-pilgrimage' },
-      { key: 'skyrim_pilgrimage_03', name: '霜露の巡礼 III', level: 10, size: 0, depth: 1, chest: 'more', type: 'skyrim-legends-pilgrimage' },
-      { key: 'skyrim_pilgrimage_04', name: '霜露の巡礼 IV', level: 16, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends-pilgrimage', bossFloors: [6] },
-      { key: 'skyrim_pilgrimage_05', name: '霜露の巡礼 V', level: 22, size: +1, depth: 2, chest: 'more', type: 'skyrim-legends-pilgrimage', bossFloors: [9] },
-      { key: 'skyrim_pilgrimage_06', name: '霜露の巡礼 VI', level: 28, size: +2, depth: 3, chest: 'abundant', type: 'skyrim-legends-pilgrimage', bossFloors: [12] }
+      {
+        key: 'skyrim_pilgrimage_01',
+        name: '霜露の巡礼 I',
+        nameKey: "dungeon.types.skyrim_legends_pilgrimage.blocks.skyrim_pilgrimage_01.name",
+        level: -2,
+        size: -1,
+        depth: 0,
+        chest: 'less',
+        type: 'skyrim-legends-pilgrimage'
+      },
+      {
+        key: 'skyrim_pilgrimage_02',
+        name: '霜露の巡礼 II',
+        nameKey: "dungeon.types.skyrim_legends_pilgrimage.blocks.skyrim_pilgrimage_02.name",
+        level: 4,
+        size: 0,
+        depth: 1,
+        chest: 'normal',
+        type: 'skyrim-legends-pilgrimage'
+      },
+      {
+        key: 'skyrim_pilgrimage_03',
+        name: '霜露の巡礼 III',
+        nameKey: "dungeon.types.skyrim_legends_pilgrimage.blocks.skyrim_pilgrimage_03.name",
+        level: 10,
+        size: 0,
+        depth: 1,
+        chest: 'more',
+        type: 'skyrim-legends-pilgrimage'
+      },
+      {
+        key: 'skyrim_pilgrimage_04',
+        name: '霜露の巡礼 IV',
+        nameKey: "dungeon.types.skyrim_legends_pilgrimage.blocks.skyrim_pilgrimage_04.name",
+        level: 16,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends-pilgrimage',
+        bossFloors: [6]
+      },
+      {
+        key: 'skyrim_pilgrimage_05',
+        name: '霜露の巡礼 V',
+        nameKey: "dungeon.types.skyrim_legends_pilgrimage.blocks.skyrim_pilgrimage_05.name",
+        level: 22,
+        size: +1,
+        depth: 2,
+        chest: 'more',
+        type: 'skyrim-legends-pilgrimage',
+        bossFloors: [9]
+      },
+      {
+        key: 'skyrim_pilgrimage_06',
+        name: '霜露の巡礼 VI',
+        nameKey: "dungeon.types.skyrim_legends_pilgrimage.blocks.skyrim_pilgrimage_06.name",
+        level: 28,
+        size: +2,
+        depth: 3,
+        chest: 'abundant',
+        type: 'skyrim-legends-pilgrimage',
+        bossFloors: [12]
+      }
     ],
     siege: [
-      { key: 'skyrim_siege_01', name: '氷砦の攻城 I', level: 8, size: 0, depth: 2, chest: 'less', type: 'skyrim-legends-siege' },
-      { key: 'skyrim_siege_02', name: '氷砦の攻城 II', level: 14, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends-siege' },
-      { key: 'skyrim_siege_03', name: '氷砦の攻城 III', level: 20, size: +1, depth: 3, chest: 'more', type: 'skyrim-legends-siege' },
-      { key: 'skyrim_siege_04', name: '氷砦の攻城 IV', level: 26, size: +2, depth: 3, chest: 'normal', type: 'skyrim-legends-siege', bossFloors: [12, 18] },
-      { key: 'skyrim_siege_05', name: '氷砦の攻城 V', level: 32, size: +2, depth: 4, chest: 'more', type: 'skyrim-legends-siege', bossFloors: [21] },
-      { key: 'skyrim_siege_06', name: '氷砦の攻城 VI', level: 38, size: +3, depth: 4, chest: 'abundant', type: 'skyrim-legends-siege', bossFloors: [24] }
+      {
+        key: 'skyrim_siege_01',
+        name: '氷砦の攻城 I',
+        nameKey: "dungeon.types.skyrim_legends_siege.blocks.skyrim_siege_01.name",
+        level: 8,
+        size: 0,
+        depth: 2,
+        chest: 'less',
+        type: 'skyrim-legends-siege'
+      },
+      {
+        key: 'skyrim_siege_02',
+        name: '氷砦の攻城 II',
+        nameKey: "dungeon.types.skyrim_legends_siege.blocks.skyrim_siege_02.name",
+        level: 14,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends-siege'
+      },
+      {
+        key: 'skyrim_siege_03',
+        name: '氷砦の攻城 III',
+        nameKey: "dungeon.types.skyrim_legends_siege.blocks.skyrim_siege_03.name",
+        level: 20,
+        size: +1,
+        depth: 3,
+        chest: 'more',
+        type: 'skyrim-legends-siege'
+      },
+      {
+        key: 'skyrim_siege_04',
+        name: '氷砦の攻城 IV',
+        nameKey: "dungeon.types.skyrim_legends_siege.blocks.skyrim_siege_04.name",
+        level: 26,
+        size: +2,
+        depth: 3,
+        chest: 'normal',
+        type: 'skyrim-legends-siege',
+        bossFloors: [12, 18]
+      },
+      {
+        key: 'skyrim_siege_05',
+        name: '氷砦の攻城 V',
+        nameKey: "dungeon.types.skyrim_legends_siege.blocks.skyrim_siege_05.name",
+        level: 32,
+        size: +2,
+        depth: 4,
+        chest: 'more',
+        type: 'skyrim-legends-siege',
+        bossFloors: [21]
+      },
+      {
+        key: 'skyrim_siege_06',
+        name: '氷砦の攻城 VI',
+        nameKey: "dungeon.types.skyrim_legends_siege.blocks.skyrim_siege_06.name",
+        level: 38,
+        size: +3,
+        depth: 4,
+        chest: 'abundant',
+        type: 'skyrim-legends-siege',
+        bossFloors: [24]
+      }
     ],
     aurora: [
-      { key: 'skyrim_aurora_01', name: '極光幻想 I', level: -1, size: -1, depth: 0, chest: 'less', type: 'skyrim-legends-aurora' },
-      { key: 'skyrim_aurora_02', name: '極光幻想 II', level: 3, size: 0, depth: 1, chest: 'normal', type: 'skyrim-legends-aurora' },
-      { key: 'skyrim_aurora_03', name: '極光幻想 III', level: 7, size: 0, depth: 1, chest: 'more', type: 'skyrim-legends-aurora' },
-      { key: 'skyrim_aurora_04', name: '極光幻想 IV', level: 12, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends-aurora', bossFloors: [6] },
-      { key: 'skyrim_aurora_05', name: '極光幻想 V', level: 18, size: +1, depth: 2, chest: 'more', type: 'skyrim-legends-aurora', bossFloors: [9] },
-      { key: 'skyrim_aurora_06', name: '極光幻想 VI', level: 24, size: +2, depth: 3, chest: 'abundant', type: 'skyrim-legends-aurora', bossFloors: [12] }
+      {
+        key: 'skyrim_aurora_01',
+        name: '極光幻想 I',
+        nameKey: "dungeon.types.skyrim_legends_aurora.blocks.skyrim_aurora_01.name",
+        level: -1,
+        size: -1,
+        depth: 0,
+        chest: 'less',
+        type: 'skyrim-legends-aurora'
+      },
+      {
+        key: 'skyrim_aurora_02',
+        name: '極光幻想 II',
+        nameKey: "dungeon.types.skyrim_legends_aurora.blocks.skyrim_aurora_02.name",
+        level: 3,
+        size: 0,
+        depth: 1,
+        chest: 'normal',
+        type: 'skyrim-legends-aurora'
+      },
+      {
+        key: 'skyrim_aurora_03',
+        name: '極光幻想 III',
+        nameKey: "dungeon.types.skyrim_legends_aurora.blocks.skyrim_aurora_03.name",
+        level: 7,
+        size: 0,
+        depth: 1,
+        chest: 'more',
+        type: 'skyrim-legends-aurora'
+      },
+      {
+        key: 'skyrim_aurora_04',
+        name: '極光幻想 IV',
+        nameKey: "dungeon.types.skyrim_legends_aurora.blocks.skyrim_aurora_04.name",
+        level: 12,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends-aurora',
+        bossFloors: [6]
+      },
+      {
+        key: 'skyrim_aurora_05',
+        name: '極光幻想 V',
+        nameKey: "dungeon.types.skyrim_legends_aurora.blocks.skyrim_aurora_05.name",
+        level: 18,
+        size: +1,
+        depth: 2,
+        chest: 'more',
+        type: 'skyrim-legends-aurora',
+        bossFloors: [9]
+      },
+      {
+        key: 'skyrim_aurora_06',
+        name: '極光幻想 VI',
+        nameKey: "dungeon.types.skyrim_legends_aurora.blocks.skyrim_aurora_06.name",
+        level: 24,
+        size: +2,
+        depth: 3,
+        chest: 'abundant',
+        type: 'skyrim-legends-aurora',
+        bossFloors: [12]
+      }
     ],
     deepdelve: [
-      { key: 'skyrim_deepdelve_01', name: '鍛冶の深淵 I', level: 6, size: 0, depth: 2, chest: 'less', type: 'skyrim-legends-deepdelve' },
-      { key: 'skyrim_deepdelve_02', name: '鍛冶の深淵 II', level: 11, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends-deepdelve' },
-      { key: 'skyrim_deepdelve_03', name: '鍛冶の深淵 III', level: 17, size: +1, depth: 3, chest: 'more', type: 'skyrim-legends-deepdelve' },
-      { key: 'skyrim_deepdelve_04', name: '鍛冶の深淵 IV', level: 23, size: +2, depth: 3, chest: 'normal', type: 'skyrim-legends-deepdelve', bossFloors: [12, 18] },
-      { key: 'skyrim_deepdelve_05', name: '鍛冶の深淵 V', level: 29, size: +2, depth: 4, chest: 'more', type: 'skyrim-legends-deepdelve', bossFloors: [21] },
-      { key: 'skyrim_deepdelve_06', name: '鍛冶の深淵 VI', level: 35, size: +3, depth: 4, chest: 'abundant', type: 'skyrim-legends-deepdelve', bossFloors: [24] }
+      {
+        key: 'skyrim_deepdelve_01',
+        name: '鍛冶の深淵 I',
+        nameKey: "dungeon.types.skyrim_legends_deepdelve.blocks.skyrim_deepdelve_01.name",
+        level: 6,
+        size: 0,
+        depth: 2,
+        chest: 'less',
+        type: 'skyrim-legends-deepdelve'
+      },
+      {
+        key: 'skyrim_deepdelve_02',
+        name: '鍛冶の深淵 II',
+        nameKey: "dungeon.types.skyrim_legends_deepdelve.blocks.skyrim_deepdelve_02.name",
+        level: 11,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends-deepdelve'
+      },
+      {
+        key: 'skyrim_deepdelve_03',
+        name: '鍛冶の深淵 III',
+        nameKey: "dungeon.types.skyrim_legends_deepdelve.blocks.skyrim_deepdelve_03.name",
+        level: 17,
+        size: +1,
+        depth: 3,
+        chest: 'more',
+        type: 'skyrim-legends-deepdelve'
+      },
+      {
+        key: 'skyrim_deepdelve_04',
+        name: '鍛冶の深淵 IV',
+        nameKey: "dungeon.types.skyrim_legends_deepdelve.blocks.skyrim_deepdelve_04.name",
+        level: 23,
+        size: +2,
+        depth: 3,
+        chest: 'normal',
+        type: 'skyrim-legends-deepdelve',
+        bossFloors: [12, 18]
+      },
+      {
+        key: 'skyrim_deepdelve_05',
+        name: '鍛冶の深淵 V',
+        nameKey: "dungeon.types.skyrim_legends_deepdelve.blocks.skyrim_deepdelve_05.name",
+        level: 29,
+        size: +2,
+        depth: 4,
+        chest: 'more',
+        type: 'skyrim-legends-deepdelve',
+        bossFloors: [21]
+      },
+      {
+        key: 'skyrim_deepdelve_06',
+        name: '鍛冶の深淵 VI',
+        nameKey: "dungeon.types.skyrim_legends_deepdelve.blocks.skyrim_deepdelve_06.name",
+        level: 35,
+        size: +3,
+        depth: 4,
+        chest: 'abundant',
+        type: 'skyrim-legends-deepdelve',
+        bossFloors: [24]
+      }
     ],
     barrowmarch: [
-      { key: 'skyrim_barrow_01', name: '古墳の夜行 I', level: 2, size: 0, depth: 1, chest: 'less', type: 'skyrim-legends-barrowmarch' },
-      { key: 'skyrim_barrow_02', name: '古墳の夜行 II', level: 8, size: 0, depth: 1, chest: 'normal', type: 'skyrim-legends-barrowmarch' },
-      { key: 'skyrim_barrow_03', name: '古墳の夜行 III', level: 14, size: +1, depth: 2, chest: 'more', type: 'skyrim-legends-barrowmarch' },
-      { key: 'skyrim_barrow_04', name: '古墳の夜行 IV', level: 20, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends-barrowmarch', bossFloors: [9] },
-      { key: 'skyrim_barrow_05', name: '古墳の夜行 V', level: 26, size: +2, depth: 3, chest: 'more', type: 'skyrim-legends-barrowmarch', bossFloors: [12, 18] },
-      { key: 'skyrim_barrow_06', name: '古墳の夜行 VI', level: 32, size: +2, depth: 3, chest: 'abundant', type: 'skyrim-legends-barrowmarch', bossFloors: [21] }
+      {
+        key: 'skyrim_barrow_01',
+        name: '古墳の夜行 I',
+        nameKey: "dungeon.types.skyrim_legends_barrowmarch.blocks.skyrim_barrow_01.name",
+        level: 2,
+        size: 0,
+        depth: 1,
+        chest: 'less',
+        type: 'skyrim-legends-barrowmarch'
+      },
+      {
+        key: 'skyrim_barrow_02',
+        name: '古墳の夜行 II',
+        nameKey: "dungeon.types.skyrim_legends_barrowmarch.blocks.skyrim_barrow_02.name",
+        level: 8,
+        size: 0,
+        depth: 1,
+        chest: 'normal',
+        type: 'skyrim-legends-barrowmarch'
+      },
+      {
+        key: 'skyrim_barrow_03',
+        name: '古墳の夜行 III',
+        nameKey: "dungeon.types.skyrim_legends_barrowmarch.blocks.skyrim_barrow_03.name",
+        level: 14,
+        size: +1,
+        depth: 2,
+        chest: 'more',
+        type: 'skyrim-legends-barrowmarch'
+      },
+      {
+        key: 'skyrim_barrow_04',
+        name: '古墳の夜行 IV',
+        nameKey: "dungeon.types.skyrim_legends_barrowmarch.blocks.skyrim_barrow_04.name",
+        level: 20,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends-barrowmarch',
+        bossFloors: [9]
+      },
+      {
+        key: 'skyrim_barrow_05',
+        name: '古墳の夜行 V',
+        nameKey: "dungeon.types.skyrim_legends_barrowmarch.blocks.skyrim_barrow_05.name",
+        level: 26,
+        size: +2,
+        depth: 3,
+        chest: 'more',
+        type: 'skyrim-legends-barrowmarch',
+        bossFloors: [12, 18]
+      },
+      {
+        key: 'skyrim_barrow_06',
+        name: '古墳の夜行 VI',
+        nameKey: "dungeon.types.skyrim_legends_barrowmarch.blocks.skyrim_barrow_06.name",
+        level: 32,
+        size: +2,
+        depth: 3,
+        chest: 'abundant',
+        type: 'skyrim-legends-barrowmarch',
+        bossFloors: [21]
+      }
     ],
     blizzardwatch: [
-      { key: 'skyrim_blizzard_01', name: '吹雪の監視線 I', level: 10, size: 0, depth: 2, chest: 'less', type: 'skyrim-legends-blizzardwatch' },
-      { key: 'skyrim_blizzard_02', name: '吹雪の監視線 II', level: 16, size: +1, depth: 2, chest: 'normal', type: 'skyrim-legends-blizzardwatch' },
-      { key: 'skyrim_blizzard_03', name: '吹雪の監視線 III', level: 22, size: +1, depth: 3, chest: 'more', type: 'skyrim-legends-blizzardwatch' },
-      { key: 'skyrim_blizzard_04', name: '吹雪の監視線 IV', level: 28, size: +2, depth: 3, chest: 'normal', type: 'skyrim-legends-blizzardwatch', bossFloors: [12, 18] },
-      { key: 'skyrim_blizzard_05', name: '吹雪の監視線 V', level: 34, size: +2, depth: 4, chest: 'more', type: 'skyrim-legends-blizzardwatch', bossFloors: [21] },
-      { key: 'skyrim_blizzard_06', name: '吹雪の監視線 VI', level: 40, size: +3, depth: 4, chest: 'abundant', type: 'skyrim-legends-blizzardwatch', bossFloors: [24] }
+      {
+        key: 'skyrim_blizzard_01',
+        name: '吹雪の監視線 I',
+        nameKey: "dungeon.types.skyrim_legends_blizzardwatch.blocks.skyrim_blizzard_01.name",
+        level: 10,
+        size: 0,
+        depth: 2,
+        chest: 'less',
+        type: 'skyrim-legends-blizzardwatch'
+      },
+      {
+        key: 'skyrim_blizzard_02',
+        name: '吹雪の監視線 II',
+        nameKey: "dungeon.types.skyrim_legends_blizzardwatch.blocks.skyrim_blizzard_02.name",
+        level: 16,
+        size: +1,
+        depth: 2,
+        chest: 'normal',
+        type: 'skyrim-legends-blizzardwatch'
+      },
+      {
+        key: 'skyrim_blizzard_03',
+        name: '吹雪の監視線 III',
+        nameKey: "dungeon.types.skyrim_legends_blizzardwatch.blocks.skyrim_blizzard_03.name",
+        level: 22,
+        size: +1,
+        depth: 3,
+        chest: 'more',
+        type: 'skyrim-legends-blizzardwatch'
+      },
+      {
+        key: 'skyrim_blizzard_04',
+        name: '吹雪の監視線 IV',
+        nameKey: "dungeon.types.skyrim_legends_blizzardwatch.blocks.skyrim_blizzard_04.name",
+        level: 28,
+        size: +2,
+        depth: 3,
+        chest: 'normal',
+        type: 'skyrim-legends-blizzardwatch',
+        bossFloors: [12, 18]
+      },
+      {
+        key: 'skyrim_blizzard_05',
+        name: '吹雪の監視線 V',
+        nameKey: "dungeon.types.skyrim_legends_blizzardwatch.blocks.skyrim_blizzard_05.name",
+        level: 34,
+        size: +2,
+        depth: 4,
+        chest: 'more',
+        type: 'skyrim-legends-blizzardwatch',
+        bossFloors: [21]
+      },
+      {
+        key: 'skyrim_blizzard_06',
+        name: '吹雪の監視線 VI',
+        nameKey: "dungeon.types.skyrim_legends_blizzardwatch.blocks.skyrim_blizzard_06.name",
+        level: 40,
+        size: +3,
+        depth: 4,
+        chest: 'abundant',
+        type: 'skyrim-legends-blizzardwatch',
+        bossFloors: [24]
+      }
     ]
   };
 

@@ -311,21 +311,27 @@
     {
       id: 'ancient-enigma-strata',
       name: '古代謎跡複合遺跡：層状記録庫',
+      nameKey: "dungeon.types.ancient_enigma_strata.name",
       description: '黄金比螺旋で接続された発掘層が交わる儀式性の高い記録庫',
+      descriptionKey: "dungeon.types.ancient_enigma_strata.description",
       algorithm: goldenArchiveAlgorithm,
       mixin: { normalMixed: 0.55, blockDimMixed: 0.5, tags: ['puzzle', 'ancient', 'archaeology'] }
     },
     {
       id: 'ancient-enigma-crypt',
       name: '古代謎跡複合遺跡：墳墓回廊',
+      nameKey: "dungeon.types.ancient_enigma_crypt.name",
       description: '石棺回廊と矩形環状路が幾重にも連なる考古学的地下廟',
+      descriptionKey: "dungeon.types.ancient_enigma_crypt.description",
       algorithm: cryptGalleryAlgorithm,
       mixin: { normalMixed: 0.5, blockDimMixed: 0.6, tags: ['labyrinth', 'ancient', 'ritual'] }
     },
     {
       id: 'ancient-enigma-aquifer',
       name: '古代謎跡複合遺跡：水聖書庫',
+      nameKey: "dungeon.types.ancient_enigma_aquifer.name",
       description: '蛇行する地下水脈と遺物庫を行き来する水文考古学的書庫',
+      descriptionKey: "dungeon.types.ancient_enigma_aquifer.description",
       algorithm: aquiferArchiveAlgorithm,
       mixin: { normalMixed: 0.6, blockDimMixed: 0.45, tags: ['water', 'ancient', 'mystery'] }
     }
@@ -334,54 +340,338 @@
   const blocks = {
     // Strata expedition tiers
     blocks1: [
-      { key: 'enigma_strata_01', name: 'Strata Expedition I', level: +0, size: 0, depth: +1, chest: 'normal', type: 'ancient-enigma-strata', bossFloors: [4, 8] },
-      { key: 'enigma_strata_02', name: 'Strata Expedition II', level: +6, size: +1, depth: +1, chest: 'more', type: 'ancient-enigma-strata', bossFloors: [8, 12] },
-      { key: 'enigma_strata_03', name: 'Strata Expedition III', level: +12, size: +1, depth: +2, chest: 'less', type: 'ancient-enigma-strata', bossFloors: [12] },
-      { key: 'enigma_strata_04', name: 'Strata Expedition IV', level: +18, size: +2, depth: +2, chest: 'normal', type: 'ancient-enigma-strata', bossFloors: [16] },
-      { key: 'enigma_strata_05', name: 'Strata Expedition V', level: +24, size: +2, depth: +3, chest: 'more', type: 'ancient-enigma-strata', bossFloors: [20] },
-      { key: 'enigma_strata_06', name: 'Strata Expedition VI', level: +30, size: +3, depth: +3, chest: 'normal', type: 'ancient-enigma-strata', bossFloors: [24] },
-      { key: 'enigma_strata_07', name: 'Strata Expedition VII', level: +36, size: +3, depth: +4, chest: 'less', type: 'ancient-enigma-strata', bossFloors: [28] }
+      {
+        key: 'enigma_strata_01',
+        name: 'Strata Expedition I',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.enigma_strata_01.name",
+        level: +0,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'ancient-enigma-strata',
+        bossFloors: [4, 8]
+      },
+      {
+        key: 'enigma_strata_02',
+        name: 'Strata Expedition II',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.enigma_strata_02.name",
+        level: +6,
+        size: +1,
+        depth: +1,
+        chest: 'more',
+        type: 'ancient-enigma-strata',
+        bossFloors: [8, 12]
+      },
+      {
+        key: 'enigma_strata_03',
+        name: 'Strata Expedition III',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.enigma_strata_03.name",
+        level: +12,
+        size: +1,
+        depth: +2,
+        chest: 'less',
+        type: 'ancient-enigma-strata',
+        bossFloors: [12]
+      },
+      {
+        key: 'enigma_strata_04',
+        name: 'Strata Expedition IV',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.enigma_strata_04.name",
+        level: +18,
+        size: +2,
+        depth: +2,
+        chest: 'normal',
+        type: 'ancient-enigma-strata',
+        bossFloors: [16]
+      },
+      {
+        key: 'enigma_strata_05',
+        name: 'Strata Expedition V',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.enigma_strata_05.name",
+        level: +24,
+        size: +2,
+        depth: +3,
+        chest: 'more',
+        type: 'ancient-enigma-strata',
+        bossFloors: [20]
+      },
+      {
+        key: 'enigma_strata_06',
+        name: 'Strata Expedition VI',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.enigma_strata_06.name",
+        level: +30,
+        size: +3,
+        depth: +3,
+        chest: 'normal',
+        type: 'ancient-enigma-strata',
+        bossFloors: [24]
+      },
+      {
+        key: 'enigma_strata_07',
+        name: 'Strata Expedition VII',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.enigma_strata_07.name",
+        level: +36,
+        size: +3,
+        depth: +4,
+        chest: 'less',
+        type: 'ancient-enigma-strata',
+        bossFloors: [28]
+      }
     ],
     // Strata glyph wards and puzzle locks
     blocks2: [
-      { key: 'glyph_ward_01', name: 'Glyph Ward I', level: +0, size: +1, depth: 0, chest: 'normal', type: 'ancient-enigma-strata' },
-      { key: 'glyph_ward_02', name: 'Glyph Ward II', level: +8, size: +1, depth: +1, chest: 'more', type: 'ancient-enigma-strata' },
-      { key: 'glyph_ward_03', name: 'Glyph Ward III', level: +16, size: +2, depth: +1, chest: 'less', type: 'ancient-enigma-strata' },
-      { key: 'glyph_ward_04', name: 'Glyph Ward IV', level: +24, size: +2, depth: +2, chest: 'normal', type: 'ancient-enigma-strata' },
-      { key: 'glyph_ward_05', name: 'Glyph Ward V', level: +30, size: +3, depth: +2, chest: 'more', type: 'ancient-enigma-strata' },
-      { key: 'glyph_ward_06', name: 'Glyph Ward VI', level: +36, size: +3, depth: +3, chest: 'less', type: 'ancient-enigma-strata' }
+      {
+        key: 'glyph_ward_01',
+        name: 'Glyph Ward I',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.glyph_ward_01.name",
+        level: +0,
+        size: +1,
+        depth: 0,
+        chest: 'normal',
+        type: 'ancient-enigma-strata'
+      },
+      {
+        key: 'glyph_ward_02',
+        name: 'Glyph Ward II',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.glyph_ward_02.name",
+        level: +8,
+        size: +1,
+        depth: +1,
+        chest: 'more',
+        type: 'ancient-enigma-strata'
+      },
+      {
+        key: 'glyph_ward_03',
+        name: 'Glyph Ward III',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.glyph_ward_03.name",
+        level: +16,
+        size: +2,
+        depth: +1,
+        chest: 'less',
+        type: 'ancient-enigma-strata'
+      },
+      {
+        key: 'glyph_ward_04',
+        name: 'Glyph Ward IV',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.glyph_ward_04.name",
+        level: +24,
+        size: +2,
+        depth: +2,
+        chest: 'normal',
+        type: 'ancient-enigma-strata'
+      },
+      {
+        key: 'glyph_ward_05',
+        name: 'Glyph Ward V',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.glyph_ward_05.name",
+        level: +30,
+        size: +3,
+        depth: +2,
+        chest: 'more',
+        type: 'ancient-enigma-strata'
+      },
+      {
+        key: 'glyph_ward_06',
+        name: 'Glyph Ward VI',
+        nameKey: "dungeon.types.ancient_enigma_strata.blocks.glyph_ward_06.name",
+        level: +36,
+        size: +3,
+        depth: +3,
+        chest: 'less',
+        type: 'ancient-enigma-strata'
+      }
     ],
     // Crypt reliquary networks
     blocks3: [
-      { key: 'crypt_reliquary_01', name: 'Reliquary Vault I', level: +0, size: 0, depth: +2, chest: 'more', type: 'ancient-enigma-crypt', bossFloors: [4] },
-      { key: 'crypt_reliquary_02', name: 'Reliquary Vault II', level: +10, size: +1, depth: +2, chest: 'normal', type: 'ancient-enigma-crypt', bossFloors: [8] },
-      { key: 'crypt_reliquary_03', name: 'Reliquary Vault III', level: +18, size: +1, depth: +3, chest: 'less', type: 'ancient-enigma-crypt', bossFloors: [12, 16] },
-      { key: 'crypt_reliquary_04', name: 'Reliquary Vault IV', level: +26, size: +2, depth: +4, chest: 'more', type: 'ancient-enigma-crypt', bossFloors: [20] },
-      { key: 'crypt_reliquary_05', name: 'Reliquary Vault V', level: +32, size: +2, depth: +4, chest: 'normal', type: 'ancient-enigma-crypt', bossFloors: [24] },
-      { key: 'crypt_reliquary_06', name: 'Reliquary Vault VI', level: +38, size: +3, depth: +5, chest: 'more', type: 'ancient-enigma-crypt', bossFloors: [28] }
+      {
+        key: 'crypt_reliquary_01',
+        name: 'Reliquary Vault I',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.crypt_reliquary_01.name",
+        level: +0,
+        size: 0,
+        depth: +2,
+        chest: 'more',
+        type: 'ancient-enigma-crypt',
+        bossFloors: [4]
+      },
+      {
+        key: 'crypt_reliquary_02',
+        name: 'Reliquary Vault II',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.crypt_reliquary_02.name",
+        level: +10,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'ancient-enigma-crypt',
+        bossFloors: [8]
+      },
+      {
+        key: 'crypt_reliquary_03',
+        name: 'Reliquary Vault III',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.crypt_reliquary_03.name",
+        level: +18,
+        size: +1,
+        depth: +3,
+        chest: 'less',
+        type: 'ancient-enigma-crypt',
+        bossFloors: [12, 16]
+      },
+      {
+        key: 'crypt_reliquary_04',
+        name: 'Reliquary Vault IV',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.crypt_reliquary_04.name",
+        level: +26,
+        size: +2,
+        depth: +4,
+        chest: 'more',
+        type: 'ancient-enigma-crypt',
+        bossFloors: [20]
+      },
+      {
+        key: 'crypt_reliquary_05',
+        name: 'Reliquary Vault V',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.crypt_reliquary_05.name",
+        level: +32,
+        size: +2,
+        depth: +4,
+        chest: 'normal',
+        type: 'ancient-enigma-crypt',
+        bossFloors: [24]
+      },
+      {
+        key: 'crypt_reliquary_06',
+        name: 'Reliquary Vault VI',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.crypt_reliquary_06.name",
+        level: +38,
+        size: +3,
+        depth: +5,
+        chest: 'more',
+        type: 'ancient-enigma-crypt',
+        bossFloors: [28]
+      }
     ],
     // Ossuary corridors and catacomb studies
     blocks4: [
-      { key: 'ossuary_route_01', name: 'Ossuary Route I', level: +2, size: 0, depth: +1, chest: 'normal', type: 'ancient-enigma-crypt' },
-      { key: 'ossuary_route_02', name: 'Ossuary Route II', level: +12, size: +1, depth: +1, chest: 'more', type: 'ancient-enigma-crypt' },
-      { key: 'ossuary_route_03', name: 'Ossuary Route III', level: +20, size: +1, depth: +2, chest: 'less', type: 'ancient-enigma-crypt' },
-      { key: 'ossuary_route_04', name: 'Ossuary Route IV', level: +28, size: +2, depth: +2, chest: 'normal', type: 'ancient-enigma-crypt' },
-      { key: 'ossuary_route_05', name: 'Ossuary Route V', level: +34, size: +3, depth: +3, chest: 'more', type: 'ancient-enigma-crypt' }
+      {
+        key: 'ossuary_route_01',
+        name: 'Ossuary Route I',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.ossuary_route_01.name",
+        level: +2,
+        size: 0,
+        depth: +1,
+        chest: 'normal',
+        type: 'ancient-enigma-crypt'
+      },
+      {
+        key: 'ossuary_route_02',
+        name: 'Ossuary Route II',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.ossuary_route_02.name",
+        level: +12,
+        size: +1,
+        depth: +1,
+        chest: 'more',
+        type: 'ancient-enigma-crypt'
+      },
+      {
+        key: 'ossuary_route_03',
+        name: 'Ossuary Route III',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.ossuary_route_03.name",
+        level: +20,
+        size: +1,
+        depth: +2,
+        chest: 'less',
+        type: 'ancient-enigma-crypt'
+      },
+      {
+        key: 'ossuary_route_04',
+        name: 'Ossuary Route IV',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.ossuary_route_04.name",
+        level: +28,
+        size: +2,
+        depth: +2,
+        chest: 'normal',
+        type: 'ancient-enigma-crypt'
+      },
+      {
+        key: 'ossuary_route_05',
+        name: 'Ossuary Route V',
+        nameKey: "dungeon.types.ancient_enigma_crypt.blocks.ossuary_route_05.name",
+        level: +34,
+        size: +3,
+        depth: +3,
+        chest: 'more',
+        type: 'ancient-enigma-crypt'
+      }
     ],
     // Aquifer caches and waterlogged dig sites
     blocks5: [
-      { key: 'aquifer_cache_01', name: 'Aquifer Cache I', level: +0, size: 0, depth: +1, chest: 'more', type: 'ancient-enigma-aquifer' },
-      { key: 'aquifer_cache_02', name: 'Aquifer Cache II', level: +8, size: +1, depth: +1, chest: 'normal', type: 'ancient-enigma-aquifer' },
-      { key: 'aquifer_cache_03', name: 'Aquifer Cache III', level: +16, size: +1, depth: +2, chest: 'less', type: 'ancient-enigma-aquifer' },
-      { key: 'aquifer_cache_04', name: 'Aquifer Cache IV', level: +24, size: +2, depth: +2, chest: 'more', type: 'ancient-enigma-aquifer' },
-      { key: 'aquifer_cache_05', name: 'Aquifer Cache V', level: +32, size: +2, depth: +3, chest: 'normal', type: 'ancient-enigma-aquifer' },
-      { key: 'aquifer_cache_06', name: 'Aquifer Cache VI', level: +38, size: +3, depth: +3, chest: 'more', type: 'ancient-enigma-aquifer' }
+      {
+        key: 'aquifer_cache_01',
+        name: 'Aquifer Cache I',
+        nameKey: "dungeon.types.ancient_enigma_aquifer.blocks.aquifer_cache_01.name",
+        level: +0,
+        size: 0,
+        depth: +1,
+        chest: 'more',
+        type: 'ancient-enigma-aquifer'
+      },
+      {
+        key: 'aquifer_cache_02',
+        name: 'Aquifer Cache II',
+        nameKey: "dungeon.types.ancient_enigma_aquifer.blocks.aquifer_cache_02.name",
+        level: +8,
+        size: +1,
+        depth: +1,
+        chest: 'normal',
+        type: 'ancient-enigma-aquifer'
+      },
+      {
+        key: 'aquifer_cache_03',
+        name: 'Aquifer Cache III',
+        nameKey: "dungeon.types.ancient_enigma_aquifer.blocks.aquifer_cache_03.name",
+        level: +16,
+        size: +1,
+        depth: +2,
+        chest: 'less',
+        type: 'ancient-enigma-aquifer'
+      },
+      {
+        key: 'aquifer_cache_04',
+        name: 'Aquifer Cache IV',
+        nameKey: "dungeon.types.ancient_enigma_aquifer.blocks.aquifer_cache_04.name",
+        level: +24,
+        size: +2,
+        depth: +2,
+        chest: 'more',
+        type: 'ancient-enigma-aquifer'
+      },
+      {
+        key: 'aquifer_cache_05',
+        name: 'Aquifer Cache V',
+        nameKey: "dungeon.types.ancient_enigma_aquifer.blocks.aquifer_cache_05.name",
+        level: +32,
+        size: +2,
+        depth: +3,
+        chest: 'normal',
+        type: 'ancient-enigma-aquifer'
+      },
+      {
+        key: 'aquifer_cache_06',
+        name: 'Aquifer Cache VI',
+        nameKey: "dungeon.types.ancient_enigma_aquifer.blocks.aquifer_cache_06.name",
+        level: +38,
+        size: +3,
+        depth: +3,
+        chest: 'more',
+        type: 'ancient-enigma-aquifer'
+      }
     ]
   };
 
   window.registerDungeonAddon({
     id: 'ancient_enigma_pack',
     name: 'Ancient Enigma Excavation Pack',
+    nameKey: "dungeon.packs.ancient_enigma_pack.name",
     version: '1.1.0',
     blocks,
     generators

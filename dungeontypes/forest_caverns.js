@@ -48,7 +48,9 @@
   const gen = {
     id: 'verdant-forest',
     name: '森林洞窟',
+    nameKey: "dungeon.types.verdant_forest.name",
     description: '苔むした森林の洞窟。緑濃い壁と黄緑の床が続く',
+    descriptionKey: "dungeon.types.verdant_forest.description",
     algorithm,
     mixin: { normalMixed: 0.5, blockDimMixed: 0.55, tags: ['cave','forest'] }
   };
@@ -56,27 +58,179 @@
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'forest_theme_01', name:'Forest Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'verdant-forest', bossFloors:mkBoss(6) },
-      { key:'forest_theme_02', name:'Forest Theme II',level:+7,  size:+1, depth:+1, chest:'less',   type:'verdant-forest', bossFloors:mkBoss(8) },
-      { key:'forest_theme_03', name:'Forest Theme III',level:+14, size:+1, depth:+2, chest:'more',  type:'verdant-forest', bossFloors:mkBoss(10) },
-      { key:'forest_theme_04', name:'Forest Theme IV', level:+21, size:+2, depth:+2, chest:'normal',type:'verdant-forest', bossFloors:mkBoss(12) },
-      { key:'forest_theme_05', name:'Forest Theme V',  level:+28, size:+2, depth:+3, chest:'less',  type:'verdant-forest', bossFloors:mkBoss(15) },
+      {
+        key:'forest_theme_01',
+        name:'Forest Theme I',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'verdant-forest',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'forest_theme_02',
+        name:'Forest Theme II',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_theme_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'verdant-forest',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'forest_theme_03',
+        name:'Forest Theme III',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_theme_03.name",
+        level:+14,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'verdant-forest',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'forest_theme_04',
+        name:'Forest Theme IV',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_theme_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'verdant-forest',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'forest_theme_05',
+        name:'Forest Theme V',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_theme_05.name",
+        level:+28,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'verdant-forest',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'forest_core_01', name:'Forest Core I', level:+0,  size:+1, depth:0, chest:'normal', type:'verdant-forest' },
-      { key:'forest_core_02', name:'Forest Core II',level:+6,  size:+1, depth:+1, chest:'more',  type:'verdant-forest' },
-      { key:'forest_core_03', name:'Forest Core III',level:+12, size:+2, depth:+1, chest:'less', type:'verdant-forest' },
-      { key:'forest_core_04', name:'Forest Core IV',level:+18, size:+2, depth:+2, chest:'normal',type:'verdant-forest' },
-      { key:'forest_core_05', name:'Forest Core V', level:+24, size:+3, depth:+2, chest:'more',  type:'verdant-forest' },
+      {
+        key:'forest_core_01',
+        name:'Forest Core I',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'verdant-forest'
+      },
+      {
+        key:'forest_core_02',
+        name:'Forest Core II',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'verdant-forest'
+      },
+      {
+        key:'forest_core_03',
+        name:'Forest Core III',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'verdant-forest'
+      },
+      {
+        key:'forest_core_04',
+        name:'Forest Core IV',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'verdant-forest'
+      },
+      {
+        key:'forest_core_05',
+        name:'Forest Core V',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_core_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'verdant-forest'
+      },
     ],
     blocks3:[
-      { key:'forest_relic_01', name:'Forest Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'verdant-forest', bossFloors:[5] },
-      { key:'forest_relic_02', name:'Forest Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:'verdant-forest', bossFloors:[10] },
-      { key:'forest_relic_03', name:'Forest Relic III',level:+18, size:+1, depth:+3, chest:'less', type:'verdant-forest', bossFloors:[15] },
-      { key:'forest_relic_04', name:'Forest Relic IV', level:+24, size:+2, depth:+3, chest:'more', type:'verdant-forest', bossFloors:[10,15] },
-      { key:'forest_relic_05', name:'Forest Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:'verdant-forest', bossFloors:[5,10,15] },
+      {
+        key:'forest_relic_01',
+        name:'Forest Relic I',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'verdant-forest',
+        bossFloors:[5]
+      },
+      {
+        key:'forest_relic_02',
+        name:'Forest Relic II',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'verdant-forest',
+        bossFloors:[10]
+      },
+      {
+        key:'forest_relic_03',
+        name:'Forest Relic III',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'verdant-forest',
+        bossFloors:[15]
+      },
+      {
+        key:'forest_relic_04',
+        name:'Forest Relic IV',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_relic_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'verdant-forest',
+        bossFloors:[10,15]
+      },
+      {
+        key:'forest_relic_05',
+        name:'Forest Relic V',
+        nameKey: "dungeon.types.verdant_forest.blocks.forest_relic_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'verdant-forest',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'forest_pack', name:'Verdant Forest Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'forest_pack',
+    name:'Verdant Forest Pack',
+    nameKey: "dungeon.packs.forest_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

@@ -77,7 +77,9 @@
   const gen = {
     id: 'tidal-catacombs',
     name: '潮汐墓所',
+    nameKey: "dungeon.types.tidal_catacombs.name",
     description: '潮の干満で削れた階段状の洞窟と潮溜まり',
+    descriptionKey: "dungeon.types.tidal_catacombs.description",
     algorithm,
     mixin: { normalMixed: 0.4, blockDimMixed: 0.45, tags: ['water','tiered'] }
   };
@@ -85,27 +87,179 @@
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'tidal_theme_01', name:'Tidal Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'tidal-catacombs', bossFloors:mkBoss(6) },
-      { key:'tidal_theme_02', name:'Tidal Theme II',level:+7,  size:+1, depth:+1, chest:'less',   type:'tidal-catacombs', bossFloors:mkBoss(8) },
-      { key:'tidal_theme_03', name:'Tidal Theme III',level:+14, size:+1, depth:+2, chest:'more',  type:'tidal-catacombs', bossFloors:mkBoss(10) },
-      { key:'tidal_theme_04', name:'Tidal Theme IV', level:+21, size:+2, depth:+2, chest:'normal',type:'tidal-catacombs', bossFloors:mkBoss(12) },
-      { key:'tidal_theme_05', name:'Tidal Theme V',  level:+28, size:+2, depth:+3, chest:'less',  type:'tidal-catacombs', bossFloors:mkBoss(15) },
+      {
+        key:'tidal_theme_01',
+        name:'Tidal Theme I',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'tidal-catacombs',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'tidal_theme_02',
+        name:'Tidal Theme II',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_theme_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'tidal-catacombs',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'tidal_theme_03',
+        name:'Tidal Theme III',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_theme_03.name",
+        level:+14,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'tidal-catacombs',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'tidal_theme_04',
+        name:'Tidal Theme IV',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_theme_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'tidal-catacombs',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'tidal_theme_05',
+        name:'Tidal Theme V',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_theme_05.name",
+        level:+28,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'tidal-catacombs',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'tidal_core_01', name:'Tidal Core I', level:+0,  size:+1, depth:0, chest:'normal', type:'tidal-catacombs' },
-      { key:'tidal_core_02', name:'Tidal Core II',level:+6,  size:+1, depth:+1, chest:'more',  type:'tidal-catacombs' },
-      { key:'tidal_core_03', name:'Tidal Core III',level:+12, size:+2, depth:+1, chest:'less', type:'tidal-catacombs' },
-      { key:'tidal_core_04', name:'Tidal Core IV',level:+18, size:+2, depth:+2, chest:'normal',type:'tidal-catacombs' },
-      { key:'tidal_core_05', name:'Tidal Core V', level:+24, size:+3, depth:+2, chest:'more',  type:'tidal-catacombs' },
+      {
+        key:'tidal_core_01',
+        name:'Tidal Core I',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'tidal-catacombs'
+      },
+      {
+        key:'tidal_core_02',
+        name:'Tidal Core II',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'tidal-catacombs'
+      },
+      {
+        key:'tidal_core_03',
+        name:'Tidal Core III',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'tidal-catacombs'
+      },
+      {
+        key:'tidal_core_04',
+        name:'Tidal Core IV',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'tidal-catacombs'
+      },
+      {
+        key:'tidal_core_05',
+        name:'Tidal Core V',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_core_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'tidal-catacombs'
+      },
     ],
     blocks3:[
-      { key:'tidal_relic_01', name:'Tidal Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'tidal-catacombs', bossFloors:[5] },
-      { key:'tidal_relic_02', name:'Tidal Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:'tidal-catacombs', bossFloors:[10] },
-      { key:'tidal_relic_03', name:'Tidal Relic III',level:+18, size:+1, depth:+3, chest:'less', type:'tidal-catacombs', bossFloors:[15] },
-      { key:'tidal_relic_04', name:'Tidal Relic IV', level:+24, size:+2, depth:+3, chest:'more', type:'tidal-catacombs', bossFloors:[10,15] },
-      { key:'tidal_relic_05', name:'Tidal Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:'tidal-catacombs', bossFloors:[5,10,15] },
+      {
+        key:'tidal_relic_01',
+        name:'Tidal Relic I',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'tidal-catacombs',
+        bossFloors:[5]
+      },
+      {
+        key:'tidal_relic_02',
+        name:'Tidal Relic II',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'tidal-catacombs',
+        bossFloors:[10]
+      },
+      {
+        key:'tidal_relic_03',
+        name:'Tidal Relic III',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'tidal-catacombs',
+        bossFloors:[15]
+      },
+      {
+        key:'tidal_relic_04',
+        name:'Tidal Relic IV',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_relic_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'tidal-catacombs',
+        bossFloors:[10,15]
+      },
+      {
+        key:'tidal_relic_05',
+        name:'Tidal Relic V',
+        nameKey: "dungeon.types.tidal_catacombs.blocks.tidal_relic_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'tidal-catacombs',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'tidal_pack', name:'Tidal Catacombs Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'tidal_pack',
+    name:'Tidal Catacombs Pack',
+    nameKey: "dungeon.packs.tidal_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

@@ -280,7 +280,9 @@
     {
       id: 'sun-kings-processional',
       name: '太陽王の葬祭道',
+      nameKey: "dungeon.types.sun_kings_processional.name",
       description: '中央の葬祭道が続く荘厳な地下墓所のレイアウト',
+      descriptionKey: "dungeon.types.sun_kings_processional.description",
       dark: false,
       algorithm: processionalNecropolis,
       mixin: { normalMixed: 0.25, blockDimMixed: 0.35, tags: ['ruins', 'desert', 'ceremonial'] }
@@ -288,7 +290,9 @@
     {
       id: 'sun-kings-terraced-courts',
       name: '階段式太陽庭園',
+      nameKey: "dungeon.types.sun_kings_terraced_courts.name",
       description: '階段状の聖域と水鏡の庭を備えた視覚重視の複合寺院',
+      descriptionKey: "dungeon.types.sun_kings_terraced_courts.description",
       dark: false,
       algorithm: terracedSolarCourt,
       mixin: { normalMixed: 0.28, blockDimMixed: 0.32, tags: ['ruins', 'desert', 'symmetry'] }
@@ -296,7 +300,9 @@
     {
       id: 'sun-kings-sunken-sanctum',
       name: '沈みゆく聖域回廊',
+      nameKey: "dungeon.types.sun_kings_sunken_sanctum.name",
       description: '青い沈殿池と放射状の回廊が広がる地下聖域',
+      descriptionKey: "dungeon.types.sun_kings_sunken_sanctum.description",
       dark: false,
       algorithm: sunkenSanctumGalleries,
       mixin: { normalMixed: 0.3, blockDimMixed: 0.3, tags: ['ruins', 'desert', 'grand'] }
@@ -328,5 +334,12 @@
     ]
   };
 
-  window.registerDungeonAddon({ id: 'sun_kings_necropolis_pack', name: 'Sun-Kings Necropolis Pack', version: '1.1.0', blocks, generators });
+  window.registerDungeonAddon({
+    id: 'sun_kings_necropolis_pack',
+    name: 'Sun-Kings Necropolis Pack',
+    nameKey: "dungeon.packs.sun_kings_necropolis_pack.name",
+    version: '1.1.0',
+    blocks,
+    generators
+  });
 })();

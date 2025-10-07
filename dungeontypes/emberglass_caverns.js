@@ -117,7 +117,9 @@
   const gen = {
     id: 'emberglass-caverns',
     name: '灼輝硝洞',
+    nameKey: "dungeon.types.emberglass_caverns.name",
     description: '灼熱の溶岩流が固まり硝子となった螺旋洞。余熱が揺らめく。',
+    descriptionKey: "dungeon.types.emberglass_caverns.description",
     algorithm,
     mixin: { normalMixed: 0.42, blockDimMixed: 0.55, tags: ['cave','lava','crystal'] }
   };
@@ -126,21 +128,115 @@
 
   const blocks = {
     blocks1:[
-      { key:'emberglass_theme_01', name:'Emberglass I', level:+0,  size:0,  depth:+1, chest:'normal', type:'emberglass-caverns', bossFloors:mkBoss(9) },
-      { key:'emberglass_theme_02', name:'Emberglass II', level:+9,  size:+1, depth:+1, chest:'more',   type:'emberglass-caverns', bossFloors:mkBoss(13) },
-      { key:'emberglass_theme_03', name:'Emberglass III',level:+18, size:+1, depth:+2, chest:'less',   type:'emberglass-caverns', bossFloors:mkBoss(17) }
+      {
+        key:'emberglass_theme_01',
+        name:'Emberglass I',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.emberglass_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'emberglass-caverns',
+        bossFloors:mkBoss(9)
+      },
+      {
+        key:'emberglass_theme_02',
+        name:'Emberglass II',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.emberglass_theme_02.name",
+        level:+9,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'emberglass-caverns',
+        bossFloors:mkBoss(13)
+      },
+      {
+        key:'emberglass_theme_03',
+        name:'Emberglass III',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.emberglass_theme_03.name",
+        level:+18,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'emberglass-caverns',
+        bossFloors:mkBoss(17)
+      }
     ],
     blocks2:[
-      { key:'ember_core_01', name:'Ember Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'emberglass-caverns' },
-      { key:'ember_core_02', name:'Ember Core II',level:+8,  size:+1, depth:+1, chest:'more',   type:'emberglass-caverns' },
-      { key:'ember_core_03', name:'Ember Core III',level:+16, size:+2, depth:+1, chest:'less',   type:'emberglass-caverns' }
+      {
+        key:'ember_core_01',
+        name:'Ember Core I',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.ember_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'emberglass-caverns'
+      },
+      {
+        key:'ember_core_02',
+        name:'Ember Core II',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.ember_core_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'emberglass-caverns'
+      },
+      {
+        key:'ember_core_03',
+        name:'Ember Core III',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.ember_core_03.name",
+        level:+16,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'emberglass-caverns'
+      }
     ],
     blocks3:[
-      { key:'ember_relic_01', name:'Ember Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'emberglass-caverns', bossFloors:[7] },
-      { key:'ember_relic_02', name:'Ember Relic II',level:+12, size:+1, depth:+3, chest:'normal', type:'emberglass-caverns', bossFloors:[13] },
-      { key:'ember_relic_03', name:'Ember Relic III',level:+20, size:+1, depth:+4, chest:'less',   type:'emberglass-caverns', bossFloors:[19] }
+      {
+        key:'ember_relic_01',
+        name:'Ember Relic I',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.ember_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'emberglass-caverns',
+        bossFloors:[7]
+      },
+      {
+        key:'ember_relic_02',
+        name:'Ember Relic II',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.ember_relic_02.name",
+        level:+12,
+        size:+1,
+        depth:+3,
+        chest:'normal',
+        type:'emberglass-caverns',
+        bossFloors:[13]
+      },
+      {
+        key:'ember_relic_03',
+        name:'Ember Relic III',
+        nameKey: "dungeon.types.emberglass_caverns.blocks.ember_relic_03.name",
+        level:+20,
+        size:+1,
+        depth:+4,
+        chest:'less',
+        type:'emberglass-caverns',
+        bossFloors:[19]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'emberglass_caverns_pack', name:'Emberglass Caverns Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'emberglass_caverns_pack',
+    name:'Emberglass Caverns Pack',
+    nameKey: "dungeon.packs.emberglass_caverns_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

@@ -184,7 +184,9 @@
   const gen={
     id:'medieval-stronghold',
     name:'中世要塞都市',
+    nameKey: "dungeon.types.medieval_stronghold.name",
     description:'城郭、礼拝堂、市場が彩る中世の要塞都市を生成する。彩り豊かな床や壁で雰囲気を強調。',
+    descriptionKey: "dungeon.types.medieval_stronghold.description",
     algorithm,
     mixin:{ normalMixed:0.6, blockDimMixed:0.5, tags:['castle','city','medieval'] }
   };
@@ -199,27 +201,179 @@
 
   const blocks={
     blocks1:[
-      { key:'medieval_story_01', name:'Stronghold Frontier', level:+0, size:0, depth:+1, chest:'normal', type:'medieval-stronghold', bossFloors:mkBoss(6) },
-      { key:'medieval_story_02', name:'Stronghold Artery', level:+7, size:+1, depth:+1, chest:'more', type:'medieval-stronghold', bossFloors:mkBoss(9) },
-      { key:'medieval_story_03', name:'Stronghold Citadel', level:+14, size:+1, depth:+2, chest:'less', type:'medieval-stronghold', bossFloors:mkBoss(12) },
-      { key:'medieval_story_04', name:'Stronghold Crown', level:+21, size:+2, depth:+2, chest:'normal', type:'medieval-stronghold', bossFloors:mkBoss(15) },
-      { key:'medieval_story_05', name:'Stronghold Heart', level:+28, size:+2, depth:+3, chest:'more', type:'medieval-stronghold', bossFloors:[15] }
+      {
+        key:'medieval_story_01',
+        name:'Stronghold Frontier',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_story_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'medieval-stronghold',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'medieval_story_02',
+        name:'Stronghold Artery',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_story_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'medieval-stronghold',
+        bossFloors:mkBoss(9)
+      },
+      {
+        key:'medieval_story_03',
+        name:'Stronghold Citadel',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_story_03.name",
+        level:+14,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'medieval-stronghold',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'medieval_story_04',
+        name:'Stronghold Crown',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_story_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'medieval-stronghold',
+        bossFloors:mkBoss(15)
+      },
+      {
+        key:'medieval_story_05',
+        name:'Stronghold Heart',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_story_05.name",
+        level:+28,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'medieval-stronghold',
+        bossFloors:[15]
+      }
     ],
     blocks2:[
-      { key:'medieval_core_01', name:'Keep Quarter', level:+0, size:+1, depth:0, chest:'normal', type:'medieval-stronghold' },
-      { key:'medieval_core_02', name:'Noble Quarter', level:+6, size:+1, depth:+1, chest:'more', type:'medieval-stronghold' },
-      { key:'medieval_core_03', name:'Sacred Quarter', level:+12, size:+2, depth:+1, chest:'less', type:'medieval-stronghold' },
-      { key:'medieval_core_04', name:'Guild Quarter', level:+18, size:+2, depth:+2, chest:'normal', type:'medieval-stronghold' },
-      { key:'medieval_core_05', name:'Royal Quarter', level:+24, size:+3, depth:+2, chest:'more', type:'medieval-stronghold' }
+      {
+        key:'medieval_core_01',
+        name:'Keep Quarter',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'medieval-stronghold'
+      },
+      {
+        key:'medieval_core_02',
+        name:'Noble Quarter',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'medieval-stronghold'
+      },
+      {
+        key:'medieval_core_03',
+        name:'Sacred Quarter',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'medieval-stronghold'
+      },
+      {
+        key:'medieval_core_04',
+        name:'Guild Quarter',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'medieval-stronghold'
+      },
+      {
+        key:'medieval_core_05',
+        name:'Royal Quarter',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_core_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'medieval-stronghold'
+      }
     ],
     blocks3:[
-      { key:'medieval_relic_01', name:'Relic Ward', level:+0, size:0, depth:+2, chest:'more', type:'medieval-stronghold', bossFloors:[5] },
-      { key:'medieval_relic_02', name:'Banner Ward', level:+9, size:+1, depth:+2, chest:'normal', type:'medieval-stronghold', bossFloors:[10] },
-      { key:'medieval_relic_03', name:'Sanctum Ward', level:+18, size:+1, depth:+3, chest:'less', type:'medieval-stronghold', bossFloors:[15] },
-      { key:'medieval_relic_04', name:'Knightly Ward', level:+24, size:+2, depth:+3, chest:'more', type:'medieval-stronghold', bossFloors:[10,15] },
-      { key:'medieval_relic_05', name:'Dynasty Ward', level:+30, size:+2, depth:+4, chest:'normal', type:'medieval-stronghold', bossFloors:[5,10,15] }
+      {
+        key:'medieval_relic_01',
+        name:'Relic Ward',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'medieval-stronghold',
+        bossFloors:[5]
+      },
+      {
+        key:'medieval_relic_02',
+        name:'Banner Ward',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'medieval-stronghold',
+        bossFloors:[10]
+      },
+      {
+        key:'medieval_relic_03',
+        name:'Sanctum Ward',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'medieval-stronghold',
+        bossFloors:[15]
+      },
+      {
+        key:'medieval_relic_04',
+        name:'Knightly Ward',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_relic_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'medieval-stronghold',
+        bossFloors:[10,15]
+      },
+      {
+        key:'medieval_relic_05',
+        name:'Dynasty Ward',
+        nameKey: "dungeon.types.medieval_stronghold.blocks.medieval_relic_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'medieval-stronghold',
+        bossFloors:[5,10,15]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'medieval_stronghold_pack', name:'Medieval Stronghold Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'medieval_stronghold_pack',
+    name:'Medieval Stronghold Pack',
+    nameKey: "dungeon.packs.medieval_stronghold_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

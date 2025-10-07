@@ -59,7 +59,9 @@
   const gen = {
     id: 'underground-prison',
     name: '地下牢',
+    nameKey: "dungeon.types.underground_prison.name",
     description: '広い回廊と規則正しい牢房が並ぶ地下監獄',
+    descriptionKey: "dungeon.types.underground_prison.description",
     dark: true,
     algorithm,
     mixin: { normalMixed: 0.4, blockDimMixed: 0.45, tags: ['structured','rooms'] }
@@ -68,27 +70,179 @@
   function mkBoss(depth){ const r=[]; if(depth>=5) r.push(5); if(depth>=10) r.push(10); if(depth>=15) r.push(15); return r; }
   const blocks = {
     blocks1:[
-      { key:'prison_theme_01', name:'Prison Theme I', level:+0,  size:0,  depth:+1, chest:'normal', type:'underground-prison', bossFloors:mkBoss(6) },
-      { key:'prison_theme_02', name:'Prison Theme II',level:+7,  size:+1, depth:+1, chest:'less',   type:'underground-prison', bossFloors:mkBoss(8) },
-      { key:'prison_theme_03', name:'Prison Theme III',level:+14, size:+1, depth:+2, chest:'more',  type:'underground-prison', bossFloors:mkBoss(10) },
-      { key:'prison_theme_04', name:'Prison Theme IV', level:+21, size:+2, depth:+2, chest:'normal',type:'underground-prison', bossFloors:mkBoss(12) },
-      { key:'prison_theme_05', name:'Prison Theme V',  level:+28, size:+2, depth:+3, chest:'less',  type:'underground-prison', bossFloors:mkBoss(15) },
+      {
+        key:'prison_theme_01',
+        name:'Prison Theme I',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'underground-prison',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'prison_theme_02',
+        name:'Prison Theme II',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_theme_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'less',
+        type:'underground-prison',
+        bossFloors:mkBoss(8)
+      },
+      {
+        key:'prison_theme_03',
+        name:'Prison Theme III',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_theme_03.name",
+        level:+14,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'underground-prison',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'prison_theme_04',
+        name:'Prison Theme IV',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_theme_04.name",
+        level:+21,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'underground-prison',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'prison_theme_05',
+        name:'Prison Theme V',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_theme_05.name",
+        level:+28,
+        size:+2,
+        depth:+3,
+        chest:'less',
+        type:'underground-prison',
+        bossFloors:mkBoss(15)
+      },
     ],
     blocks2:[
-      { key:'prison_core_01', name:'Prison Core I', level:+0,  size:+1, depth:0, chest:'normal', type:'underground-prison' },
-      { key:'prison_core_02', name:'Prison Core II',level:+6,  size:+1, depth:+1, chest:'more',  type:'underground-prison' },
-      { key:'prison_core_03', name:'Prison Core III',level:+12, size:+2, depth:+1, chest:'less', type:'underground-prison' },
-      { key:'prison_core_04', name:'Prison Core IV',level:+18, size:+2, depth:+2, chest:'normal',type:'underground-prison' },
-      { key:'prison_core_05', name:'Prison Core V', level:+24, size:+3, depth:+2, chest:'more',  type:'underground-prison' },
+      {
+        key:'prison_core_01',
+        name:'Prison Core I',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'underground-prison'
+      },
+      {
+        key:'prison_core_02',
+        name:'Prison Core II',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'underground-prison'
+      },
+      {
+        key:'prison_core_03',
+        name:'Prison Core III',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'underground-prison'
+      },
+      {
+        key:'prison_core_04',
+        name:'Prison Core IV',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'underground-prison'
+      },
+      {
+        key:'prison_core_05',
+        name:'Prison Core V',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_core_05.name",
+        level:+24,
+        size:+3,
+        depth:+2,
+        chest:'more',
+        type:'underground-prison'
+      },
     ],
     blocks3:[
-      { key:'prison_relic_01', name:'Prison Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'underground-prison', bossFloors:[5] },
-      { key:'prison_relic_02', name:'Prison Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:'underground-prison', bossFloors:[10] },
-      { key:'prison_relic_03', name:'Prison Relic III',level:+18, size:+1, depth:+3, chest:'less', type:'underground-prison', bossFloors:[15] },
-      { key:'prison_relic_04', name:'Prison Relic IV', level:+24, size:+2, depth:+3, chest:'more', type:'underground-prison', bossFloors:[10,15] },
-      { key:'prison_relic_05', name:'Prison Relic V',  level:+30, size:+2, depth:+4, chest:'normal',type:'underground-prison', bossFloors:[5,10,15] },
+      {
+        key:'prison_relic_01',
+        name:'Prison Relic I',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'underground-prison',
+        bossFloors:[5]
+      },
+      {
+        key:'prison_relic_02',
+        name:'Prison Relic II',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'underground-prison',
+        bossFloors:[10]
+      },
+      {
+        key:'prison_relic_03',
+        name:'Prison Relic III',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'underground-prison',
+        bossFloors:[15]
+      },
+      {
+        key:'prison_relic_04',
+        name:'Prison Relic IV',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_relic_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'underground-prison',
+        bossFloors:[10,15]
+      },
+      {
+        key:'prison_relic_05',
+        name:'Prison Relic V',
+        nameKey: "dungeon.types.underground_prison.blocks.prison_relic_05.name",
+        level:+30,
+        size:+2,
+        depth:+4,
+        chest:'normal',
+        type:'underground-prison',
+        bossFloors:[5,10,15]
+      },
     ]
   };
 
-  window.registerDungeonAddon({ id:'prison_pack', name:'Underground Prison Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'prison_pack',
+    name:'Underground Prison Pack',
+    nameKey: "dungeon.packs.prison_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

@@ -140,7 +140,9 @@
   const gen = {
     id: 'churning-karst',
     name: '奔流石灰洞',
+    nameKey: "dungeon.types.churning_karst.name",
     description: '石灰質が侵食された水流迷宮。複層の地下水脈が洞窟を削り続ける。',
+    descriptionKey: "dungeon.types.churning_karst.description",
     algorithm,
     mixin: { normalMixed: 0.5, blockDimMixed: 0.55, tags: ['cave','water','erosion'] }
   };
@@ -149,23 +151,136 @@
 
   const blocks = {
     blocks1:[
-      { key:'karst_theme_01', name:'Karst Rapids I', level:+0,  size:0,  depth:+1, chest:'normal', type:'churning-karst', bossFloors:mkBoss(7) },
-      { key:'karst_theme_02', name:'Karst Rapids II', level:+6,  size:+1, depth:+1, chest:'more',   type:'churning-karst', bossFloors:mkBoss(10) },
-      { key:'karst_theme_03', name:'Karst Rapids III',level:+12, size:+1, depth:+2, chest:'less',   type:'churning-karst', bossFloors:mkBoss(13) },
-      { key:'karst_theme_04', name:'Karst Rapids IV', level:+18, size:+2, depth:+2, chest:'normal', type:'churning-karst', bossFloors:mkBoss(16) }
+      {
+        key:'karst_theme_01',
+        name:'Karst Rapids I',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'churning-karst',
+        bossFloors:mkBoss(7)
+      },
+      {
+        key:'karst_theme_02',
+        name:'Karst Rapids II',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_theme_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'churning-karst',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'karst_theme_03',
+        name:'Karst Rapids III',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_theme_03.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'churning-karst',
+        bossFloors:mkBoss(13)
+      },
+      {
+        key:'karst_theme_04',
+        name:'Karst Rapids IV',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_theme_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'churning-karst',
+        bossFloors:mkBoss(16)
+      }
     ],
     blocks2:[
-      { key:'karst_core_01', name:'Karst Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'churning-karst' },
-      { key:'karst_core_02', name:'Karst Core II',level:+5,  size:+1, depth:+1, chest:'more',   type:'churning-karst' },
-      { key:'karst_core_03', name:'Karst Core III',level:+11, size:+2, depth:+1, chest:'less',   type:'churning-karst' },
-      { key:'karst_core_04', name:'Karst Core IV', level:+17, size:+2, depth:+2, chest:'normal', type:'churning-karst' }
+      {
+        key:'karst_core_01',
+        name:'Karst Core I',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'churning-karst'
+      },
+      {
+        key:'karst_core_02',
+        name:'Karst Core II',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_core_02.name",
+        level:+5,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'churning-karst'
+      },
+      {
+        key:'karst_core_03',
+        name:'Karst Core III',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_core_03.name",
+        level:+11,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'churning-karst'
+      },
+      {
+        key:'karst_core_04',
+        name:'Karst Core IV',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_core_04.name",
+        level:+17,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'churning-karst'
+      }
     ],
     blocks3:[
-      { key:'karst_relic_01', name:'Karst Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'churning-karst', bossFloors:[5] },
-      { key:'karst_relic_02', name:'Karst Relic II',level:+9,  size:+1, depth:+2, chest:'normal', type:'churning-karst', bossFloors:[9] },
-      { key:'karst_relic_03', name:'Karst Relic III',level:+15, size:+1, depth:+3, chest:'less',   type:'churning-karst', bossFloors:[14] }
+      {
+        key:'karst_relic_01',
+        name:'Karst Relic I',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'churning-karst',
+        bossFloors:[5]
+      },
+      {
+        key:'karst_relic_02',
+        name:'Karst Relic II',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_relic_02.name",
+        level:+9,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'churning-karst',
+        bossFloors:[9]
+      },
+      {
+        key:'karst_relic_03',
+        name:'Karst Relic III',
+        nameKey: "dungeon.types.churning_karst.blocks.karst_relic_03.name",
+        level:+15,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'churning-karst',
+        bossFloors:[14]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'churning_karst_pack', name:'Churning Karst Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'churning_karst_pack',
+    name:'Churning Karst Pack',
+    nameKey: "dungeon.packs.churning_karst_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

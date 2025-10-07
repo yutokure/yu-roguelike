@@ -90,7 +90,9 @@
   const gen = {
     id: 'prismatic-stalactites',
     name: '虹晶鍾乳洞',
+    nameKey: "dungeon.types.prismatic_stalactites.name",
     description: '虹彩の鍾乳石が連なる光屈折の洞窟',
+    descriptionKey: "dungeon.types.prismatic_stalactites.description",
     algorithm,
     mixin: { normalMixed: 0.4, blockDimMixed: 0.55, tags: ['cave','crystal','light'] }
   };
@@ -99,23 +101,136 @@
 
   const blocks = {
     blocks1:[
-      { key:'prism_stal_theme_01', name:'Prism Stalactites I', level:+0,  size:0,  depth:+1, chest:'normal', type:'prismatic-stalactites', bossFloors:mkBoss(7) },
-      { key:'prism_stal_theme_02', name:'Prism Stalactites II', level:+7,  size:+1, depth:+1, chest:'more',   type:'prismatic-stalactites', bossFloors:mkBoss(10) },
-      { key:'prism_stal_theme_03', name:'Prism Stalactites III',level:+14, size:+1, depth:+2, chest:'less',   type:'prismatic-stalactites', bossFloors:mkBoss(13) },
-      { key:'prism_stal_theme_04', name:'Prism Stalactites IV', level:+20, size:+2, depth:+2, chest:'normal', type:'prismatic-stalactites', bossFloors:mkBoss(16) }
+      {
+        key:'prism_stal_theme_01',
+        name:'Prism Stalactites I',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_stal_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'normal',
+        type:'prismatic-stalactites',
+        bossFloors:mkBoss(7)
+      },
+      {
+        key:'prism_stal_theme_02',
+        name:'Prism Stalactites II',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_stal_theme_02.name",
+        level:+7,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'prismatic-stalactites',
+        bossFloors:mkBoss(10)
+      },
+      {
+        key:'prism_stal_theme_03',
+        name:'Prism Stalactites III',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_stal_theme_03.name",
+        level:+14,
+        size:+1,
+        depth:+2,
+        chest:'less',
+        type:'prismatic-stalactites',
+        bossFloors:mkBoss(13)
+      },
+      {
+        key:'prism_stal_theme_04',
+        name:'Prism Stalactites IV',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_stal_theme_04.name",
+        level:+20,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'prismatic-stalactites',
+        bossFloors:mkBoss(16)
+      }
     ],
     blocks2:[
-      { key:'prism_core_01', name:'Prism Core I', level:+0,  size:+1, depth:0,  chest:'normal', type:'prismatic-stalactites' },
-      { key:'prism_core_02', name:'Prism Core II',level:+6,  size:+1, depth:+1, chest:'more',   type:'prismatic-stalactites' },
-      { key:'prism_core_03', name:'Prism Core III',level:+12, size:+2, depth:+1, chest:'less',   type:'prismatic-stalactites' },
-      { key:'prism_core_04', name:'Prism Core IV', level:+18, size:+2, depth:+2, chest:'normal', type:'prismatic-stalactites' }
+      {
+        key:'prism_core_01',
+        name:'Prism Core I',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'prismatic-stalactites'
+      },
+      {
+        key:'prism_core_02',
+        name:'Prism Core II',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_core_02.name",
+        level:+6,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'prismatic-stalactites'
+      },
+      {
+        key:'prism_core_03',
+        name:'Prism Core III',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_core_03.name",
+        level:+12,
+        size:+2,
+        depth:+1,
+        chest:'less',
+        type:'prismatic-stalactites'
+      },
+      {
+        key:'prism_core_04',
+        name:'Prism Core IV',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+2,
+        chest:'normal',
+        type:'prismatic-stalactites'
+      }
     ],
     blocks3:[
-      { key:'prism_relic_01', name:'Prism Relic I', level:+0,  size:0,  depth:+2, chest:'more',   type:'prismatic-stalactites', bossFloors:[6] },
-      { key:'prism_relic_02', name:'Prism Relic II',level:+10, size:+1, depth:+2, chest:'normal', type:'prismatic-stalactites', bossFloors:[11] },
-      { key:'prism_relic_03', name:'Prism Relic III',level:+18, size:+1, depth:+3, chest:'less',   type:'prismatic-stalactites', bossFloors:[16] }
+      {
+        key:'prism_relic_01',
+        name:'Prism Relic I',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_relic_01.name",
+        level:+0,
+        size:0,
+        depth:+2,
+        chest:'more',
+        type:'prismatic-stalactites',
+        bossFloors:[6]
+      },
+      {
+        key:'prism_relic_02',
+        name:'Prism Relic II',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_relic_02.name",
+        level:+10,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'prismatic-stalactites',
+        bossFloors:[11]
+      },
+      {
+        key:'prism_relic_03',
+        name:'Prism Relic III',
+        nameKey: "dungeon.types.prismatic_stalactites.blocks.prism_relic_03.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'less',
+        type:'prismatic-stalactites',
+        bossFloors:[16]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'prismatic_stalactites_pack', name:'Prismatic Stalactites Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'prismatic_stalactites_pack',
+    name:'Prismatic Stalactites Pack',
+    nameKey: "dungeon.packs.prismatic_stalactites_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

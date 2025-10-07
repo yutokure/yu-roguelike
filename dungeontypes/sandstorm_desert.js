@@ -62,7 +62,9 @@
   const gen = {
     id: 'sandstorm-dunes',
     name: '砂嵐の砂漠',
+    nameKey: "dungeon.types.sandstorm_dunes.name",
     description: '砂嵐で視界が閉ざされた灼熱の砂漠地帯',
+    descriptionKey: "dungeon.types.sandstorm_dunes.description",
     dark: true,
     algorithm,
     mixin: { normalMixed: 0.3, blockDimMixed: 0.4, tags: ['field','desert','dark'] }
@@ -78,16 +80,62 @@
 
   const blocks = {
     blocks1: [
-      { key:'sandstorm_theme_01', name:'Sandstorm Theme I', level:+0,  size:0,  depth:+1, chest:'less',   type:'sandstorm-dunes', bossFloors:mkBoss(6) },
-      { key:'sandstorm_theme_02', name:'Sandstorm Theme II', level:+12, size:+1, depth:+2, chest:'normal', type:'sandstorm-dunes', bossFloors:mkBoss(10) }
+      {
+        key:'sandstorm_theme_01',
+        name:'Sandstorm Theme I',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_theme_01.name",
+        level:+0,
+        size:0,
+        depth:+1,
+        chest:'less',
+        type:'sandstorm-dunes',
+        bossFloors:mkBoss(6)
+      },
+      {
+        key:'sandstorm_theme_02',
+        name:'Sandstorm Theme II',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_theme_02.name",
+        level:+12,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'sandstorm-dunes',
+        bossFloors:mkBoss(10)
+      }
     ],
     blocks2: [
-      { key:'sandstorm_core_01', name:'Dune Core', level:+0, size:+1, depth:0, chest:'normal', type:'sandstorm-dunes' }
+      {
+        key:'sandstorm_core_01',
+        name:'Dune Core',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_core_01.name",
+        level:+0,
+        size:+1,
+        depth:0,
+        chest:'normal',
+        type:'sandstorm-dunes'
+      }
     ],
     blocks3: [
-      { key:'sandstorm_relic_01', name:'Storm Eye Relic', level:+18, size:+1, depth:+3, chest:'more', type:'sandstorm-dunes', bossFloors:[9,13] }
+      {
+        key:'sandstorm_relic_01',
+        name:'Storm Eye Relic',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_relic_01.name",
+        level:+18,
+        size:+1,
+        depth:+3,
+        chest:'more',
+        type:'sandstorm-dunes',
+        bossFloors:[9,13]
+      }
     ]
   };
 
-  window.registerDungeonAddon({ id:'sandstorm_dunes_pack', name:'Sandstorm Dunes Pack', version:'1.0.0', blocks, generators:[gen] });
+  window.registerDungeonAddon({
+    id:'sandstorm_dunes_pack',
+    name:'Sandstorm Dunes Pack',
+    nameKey: "dungeon.packs.sandstorm_dunes_pack.name",
+    version:'1.0.0',
+    blocks,
+    generators:[gen]
+  });
 })();

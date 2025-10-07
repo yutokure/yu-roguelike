@@ -1,0 +1,17 @@
+{
+  "name": "dungeon-game-html",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@babel/parser": "^7.28.4",
+    "recast": "^0.23.11"
+  }
+}

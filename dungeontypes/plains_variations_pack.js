@@ -466,6 +466,7 @@
   window.registerDungeonAddon({
     id:'multicolor_plains_pack',
     name:'Multicolor Plains Pack',
+    nameKey: "dungeon.packs.multicolor_plains_pack.name",
     version:'1.0.0',
     blocks,
     generators

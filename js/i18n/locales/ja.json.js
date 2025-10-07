@@ -8193,6 +8193,294 @@
         }
       }
     },
+    "tools": {
+      "sidebar": {
+        "ariaLabel": "ツール一覧",
+        "modMaker": {
+          "label": "ダンジョンタイプMod作成",
+          "hint": "構造や生成アルゴリズムを組み立てて `registerDungeonAddon` ファイルを出力します。"
+        },
+        "sandbox": {
+          "label": "サンドボックスダンジョン",
+          "hint": "自由なマップと敵配置でテスト用ダンジョンを組み立てられます（経験値は獲得できません）。"
+        },
+        "blockdata": {
+          "label": "BlockData編集",
+          "hint": "BlockDim向けのブロック定義をGUIで確認・編集し、JSONをエクスポートできます。"
+        },
+        "imageViewer": {
+          "label": "画像ビューア",
+          "hint": "スクリーンショットなどを拡大・回転・遠近表示しながらメタ情報を確認できます。"
+        },
+        "stateManager": {
+          "label": "状態管理",
+          "hint": "ゲームとツールの全データをまとめてエクスポート／インポートします。"
+        }
+      },
+      "modMaker": {
+        "panelAriaLabel": "ダンジョンタイプMod作成ツール",
+        "header": {
+          "title": "ダンジョンタイプ追加Mod作成ツール",
+          "description": "メタ情報、構造パターン、生成アルゴリズム、BlockDimブロック定義をまとめてアドオンJSとして出力します。"
+        },
+        "meta": {
+          "title": "アドオン情報",
+          "fields": {
+            "id": {
+              "label": "アドオンID",
+              "placeholder": "例: custom_pack"
+            },
+            "name": {
+              "label": "表示名",
+              "placeholder": "例: Custom Dungeon Pack"
+            },
+            "version": {
+              "label": "バージョン"
+            },
+            "author": {
+              "label": "作者",
+              "placeholder": "あなたの名前"
+            },
+            "description": {
+              "label": "説明",
+              "placeholder": "アドオン全体の説明"
+            }
+          }
+        },
+        "structures": {
+          "title": "構造ライブラリ",
+          "actions": {
+            "add": "+ 構造を追加",
+            "remove": "選択を削除"
+          },
+          "listAria": "構造一覧",
+          "fields": {
+            "id": {
+              "label": "ID",
+              "placeholder": "例: custom_room"
+            },
+            "name": {
+              "label": "名前",
+              "placeholder": "表示用の名前"
+            },
+            "anchorX": {
+              "label": "アンカーX"
+            },
+            "anchorY": {
+              "label": "アンカーY"
+            },
+            "tags": {
+              "label": "タグ（カンマ区切り）",
+              "placeholder": "例: rooms,geo"
+            },
+            "allowRotate": {
+              "label": "回転を許可"
+            },
+            "allowMirror": {
+              "label": "反転を許可"
+            },
+            "width": {
+              "label": "幅"
+            },
+            "height": {
+              "label": "高さ"
+            },
+            "preview": {
+              "label": "パターンプレビュー"
+            }
+          },
+          "grid": {
+            "hint": "セルをクリックして「空白 → 床 → 壁」の順で切り替え",
+            "fillEmpty": "全て空白",
+            "fillFloor": "全て床",
+            "fillWall": "全て壁",
+            "ariaLabel": "構造パターン"
+          },
+          "defaultItem": "構造{index}"
+        },
+        "placeholders": {
+          "structurePreview": "構造を追加するとここにプレビューが表示されます。",
+          "fixedDisabled": "固定マップを有効にすると編集できます。",
+          "fixedAddFloor": "階層を追加してください。"
+        },
+        "fixed": {
+          "title": "固定マップ",
+          "enable": {
+            "label": "固定マップを利用"
+          },
+          "fields": {
+            "floorCount": {
+              "label": "フロア数"
+            },
+            "bossFloors": {
+              "label": "ボス階層（カンマ区切り）",
+              "placeholder": "例: 5,10"
+            },
+            "width": {
+              "label": "幅"
+            },
+            "height": {
+              "label": "高さ"
+            }
+          },
+          "note": "アルゴリズムで <code>ctx.fixedMaps.applyCurrent()</code> を呼ぶと、その階層の固定マップが適用されます。",
+          "floorListAria": "固定マップ階層",
+          "actions": {
+            "copyPrevious": "前の階層をコピー"
+          },
+          "grid": {
+            "hint": "セルをクリックして「壁 → 床 → 空白」の順に切り替え",
+            "fillWall": "全て壁",
+            "fillFloor": "全て床",
+            "fillVoid": "全て空白",
+            "ariaLabel": "固定マップパターン"
+          }
+        },
+        "generators": {
+          "title": "生成アルゴリズム",
+          "actions": {
+            "add": "+ 生成タイプを追加",
+            "remove": "選択を削除"
+          },
+          "listAria": "生成タイプ一覧",
+          "fields": {
+            "id": {
+              "label": "ID",
+              "placeholder": "例: custom-dungeon"
+            },
+            "name": {
+              "label": "名前",
+              "placeholder": "ダンジョン名"
+            },
+            "description": {
+              "label": "説明",
+              "placeholder": "一覧に表示する説明"
+            },
+            "normalMix": {
+              "label": "Normal混合参加率"
+            },
+            "blockMix": {
+              "label": "Block次元混合参加率"
+            },
+            "tags": {
+              "label": "タグ（カンマ区切り）",
+              "placeholder": "例: rooms,organic"
+            },
+            "dark": {
+              "label": "暗い（視界半径5）"
+            },
+            "poison": {
+              "label": "毒霧（通常床が毒床扱い）"
+            },
+            "code": {
+              "label": "アルゴリズムコード"
+            }
+          },
+          "template": {
+            "label": "テンプレート",
+            "options": {
+              "blank": "空のテンプレート",
+              "rooms": "部屋と通路サンプル",
+              "structure": "構造配置サンプル",
+              "fixed": "固定マップ適用テンプレート"
+            },
+            "apply": "選択テンプレートを適用"
+          },
+          "defaultItem": "生成タイプ{index}"
+        },
+        "blocks": {
+          "title": "BlockDimブロック定義",
+          "actions": {
+            "addFirst": "+ 1st",
+            "addSecond": "+ 2nd",
+            "addThird": "+ 3rd"
+          },
+          "tiers": {
+            "firstHeading": "1st Blocks",
+            "secondHeading": "2nd Blocks",
+            "thirdHeading": "3rd Blocks",
+            "firstAria": "1st Blocks",
+            "secondAria": "2nd Blocks",
+            "thirdAria": "3rd Blocks"
+          },
+          "empty": "未定義です。右上の追加ボタンで作成できます。",
+          "remove": "削除",
+          "fields": {
+            "key": {
+              "label": "キー"
+            },
+            "name": {
+              "label": "名前"
+            },
+            "level": {
+              "label": "レベル補正",
+              "placeholder": "例: +0"
+            },
+            "size": {
+              "label": "サイズ補正",
+              "placeholder": "例: +1"
+            },
+            "depth": {
+              "label": "深さ補正",
+              "placeholder": "例: +1"
+            },
+            "chest": {
+              "label": "宝箱タイプ",
+              "placeholder": "normal/more/less"
+            },
+            "type": {
+              "label": "タイプID",
+              "placeholder": "例: custom-dungeon"
+            },
+            "bossFloors": {
+              "label": "ボス階層",
+              "placeholder": "例: 5,10,15"
+            },
+            "description": {
+              "label": "説明・メモ"
+            }
+          },
+          "defaultTitle": "{tier} #{index}"
+        },
+        "output": {
+          "title": "出力"
+        },
+        "actions": {
+          "copy": "クリップボードにコピー",
+          "download": ".jsファイルとしてダウンロード"
+        },
+        "status": {
+          "errorHeading": "⚠️ {count} 件の確認事項があります",
+          "ready": "✅ 出力できます"
+        },
+        "feedback": {
+          "copySuccess": "コピーしました",
+          "copyFailed": "コピーできませんでした"
+        },
+        "templates": {
+          "todoComment": "  // TODO: ctx.map などを編集してダンジョンを生成してください。"
+        },
+        "errors": {
+          "missingAddonId": "アドオンIDを入力してください。",
+          "invalidAddonId": "アドオンIDは英数字・ハイフン・アンダースコアのみ使用できます。",
+          "structureMissingId": "構造{index}のIDを入力してください。",
+          "structureDuplicateId": "構造ID「{id}」が重複しています。",
+          "structureAnchorOutOfRange": "構造{index}のアンカー位置が範囲外です。",
+          "generatorMissing": "生成タイプを最低1つ追加してください。",
+          "generatorMissingId": "生成タイプ{index}のIDを入力してください。",
+          "generatorDuplicateId": "生成タイプID「{id}」が重複しています。",
+          "generatorNormalRange": "生成タイプ{index}のNormal混合参加率は0〜1で指定してください。",
+          "generatorBlockRange": "生成タイプ{index}のBlock次元混合参加率は0〜1で指定してください。",
+          "generatorMissingCode": "生成タイプ{index}のアルゴリズムコードを入力してください。",
+          "blockMissingKey": "{tier} ブロック{index}のキーを入力してください。",
+          "blockDuplicateKey": "ブロックキー「{key}」が重複しています。",
+          "generatorFixedMissing": "生成タイプ{index}の固定マップが未設定です。",
+          "generatorFixedFloorMissing": "生成タイプ{index}の{floor}F固定マップが不足しています。",
+          "generatorFixedFloorEmpty": "生成タイプ{index}の{floor}F固定マップに床がありません。"
+        }
+      }
+    },
+
     "achievements": {
       "categories": {
         "dungeon": "ダンジョン関連",

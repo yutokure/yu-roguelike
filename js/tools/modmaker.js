@@ -1,9 +1,36 @@
 (function (global) {
     'use strict';
 
+    const i18n = global.I18n || null;
+
+    function translate(key, params, fallback) {
+        if (key && i18n && typeof i18n.t === 'function') {
+            const value = i18n.t(key, params);
+            if (value !== undefined && value !== null && value !== key) {
+                return value;
+            }
+        }
+        if (typeof fallback === 'function') {
+            return fallback();
+        }
+        if (fallback !== undefined && fallback !== null) {
+            return fallback;
+        }
+        if (typeof key === 'string') {
+            return key;
+        }
+        return '';
+    }
+
+    function pushLocalized(array, key, params, fallback) {
+        if (!Array.isArray(array)) return;
+        array.push(translate(key, params, fallback));
+    }
+
     let modMakerRefs = null;
     let modMakerCopyTimer = null;
-    let modMakerCopyLabel = 'クリップボードにコピー';
+    let modMakerCopyLabel = translate('tools.modMaker.actions.copy', null, 'クリップボードにコピー');
+    let modMakerLocaleUnsubscribe = null;
 
 const MOD_MAKER_TEMPLATES = {
     blank: `function algorithm(ctx) {\n  const { width, height, map } = ctx;\n  for (let y = 1; y < height - 1; y++) {\n    for (let x = 1; x < width - 1; x++) {\n      map[y][x] = 0;\n    }\n  }\n  ctx.ensureConnectivity();\n}\n`,
@@ -32,6 +59,12 @@ const modMakerState = {
     selectedGenerator: 0
 };
 
+function refreshModMakerLocaleStrings() {
+    modMakerCopyLabel = translate('tools.modMaker.actions.copy', null, 'クリップボードにコピー');
+    if (modMakerRefs?.copy) {
+        modMakerRefs.copy.textContent = modMakerCopyLabel;
+    }
+}
 
 // -------------- Tools Tab: Dungeon Mod Maker --------------
 const MOD_MAKER_MAX_STRUCTURE_SIZE = 31;
@@ -127,6 +160,19 @@ function initModMakerTool() {
         download: document.getElementById('modmaker-download'),
         errors: document.getElementById('modmaker-errors')
     };
+
+    refreshModMakerLocaleStrings();
+
+    if (i18n && typeof i18n.onLocaleChanged === 'function') {
+        if (modMakerLocaleUnsubscribe) {
+            modMakerLocaleUnsubscribe();
+            modMakerLocaleUnsubscribe = null;
+        }
+        modMakerLocaleUnsubscribe = i18n.onLocaleChanged(() => {
+            refreshModMakerLocaleStrings();
+            renderModMaker();
+        });
+    }
 
     ensureModMakerDefaults();
 
@@ -699,7 +745,12 @@ function renderStructureGrid(structure) {
     if (!container || !canvas) return;
     if (!structure) {
         clearModMakerCanvas(canvas);
-        setGridPlaceholder(container, placeholder, '構造を追加するとここにプレビューが表示されます。', true);
+        setGridPlaceholder(
+            container,
+            placeholder,
+            translate('tools.modMaker.placeholders.structurePreview', null, '構造を追加するとここにプレビューが表示されます。'),
+            true
+        );
         return;
     }
     setGridPlaceholder(container, placeholder, '', false);
@@ -801,13 +852,23 @@ function renderFixedMapGrid(fixed) {
     container.setAttribute('aria-live', 'polite');
     if (!fixed || !fixed.enabled) {
         clearModMakerCanvas(canvas);
-        setGridPlaceholder(container, placeholder, '固定マップを有効にすると編集できます。', true);
+        setGridPlaceholder(
+            container,
+            placeholder,
+            translate('tools.modMaker.placeholders.fixedDisabled', null, '固定マップを有効にすると編集できます。'),
+            true
+        );
         return;
     }
     const floor = fixed.floors[fixed.selected];
     if (!floor) {
         clearModMakerCanvas(canvas);
-        setGridPlaceholder(container, placeholder, '階層を追加してください。', true);
+        setGridPlaceholder(
+            container,
+            placeholder,
+            translate('tools.modMaker.placeholders.fixedAddFloor', null, '階層を追加してください。'),
+            true
+        );
         return;
     }
     setGridPlaceholder(container, placeholder, '', false);
@@ -1026,21 +1087,21 @@ function normalizeGeneratorFixed(generator, index, errors) {
     if (!fixed || !fixed.enabled) return null;
     const floorCount = clampFixedFloorCount(fixed.floorCount);
     if (!fixed.floors.length) {
-        errors.push(`生成タイプ${index + 1}の固定マップが未設定です。`);
+        pushLocalized(errors, 'tools.modMaker.errors.generatorFixedMissing', { index: index + 1 }, `生成タイプ${index + 1}の固定マップが未設定です。`);
         return null;
     }
     const maps = [];
     for (let i = 0; i < floorCount; i++) {
         const floor = fixed.floors[i];
         if (!floor) {
-            errors.push(`生成タイプ${index + 1}の${i + 1}F固定マップが不足しています。`);
+            pushLocalized(errors, 'tools.modMaker.errors.generatorFixedFloorMissing', { index: index + 1, floor: i + 1 }, `生成タイプ${index + 1}の${i + 1}F固定マップが不足しています。`);
             continue;
         }
         const width = clampFixedMapSize(floor.width, MOD_MAKER_DEFAULT_FIXED_WIDTH);
         const height = clampFixedMapSize(floor.height, MOD_MAKER_DEFAULT_FIXED_HEIGHT);
         const pattern = modMakerPatternFromFixedMatrix(floor.matrix, width, height);
         if (!pattern.some(row => row.includes('.'))) {
-            errors.push(`生成タイプ${index + 1}の${i + 1}F固定マップに床がありません。`);
+            pushLocalized(errors, 'tools.modMaker.errors.generatorFixedFloorEmpty', { index: index + 1, floor: i + 1 }, `生成タイプ${index + 1}の${i + 1}F固定マップに床がありません。`);
         }
         maps.push({ floor: i + 1, layout: pattern });
     }
@@ -1066,7 +1127,7 @@ function renderModMakerBlocks() {
         const entries = modMakerState.blocks[tier] || [];
         if (!entries.length) {
             const empty = document.createElement('p');
-            empty.textContent = '未定義です。右上の追加ボタンで作成できます。';
+            empty.textContent = translate('tools.modMaker.blocks.empty', null, '未定義です。右上の追加ボタンで作成できます。');
             empty.style.fontSize = '12px';
             empty.style.color = '#6b7280';
             container.appendChild(empty);
@@ -1077,11 +1138,13 @@ function renderModMakerBlocks() {
             card.className = 'modmaker-block-card';
             const header = document.createElement('header');
             const title = document.createElement('div');
-            title.textContent = entry.name || entry.key || `${tier.toUpperCase()} #${index + 1}`;
+            title.textContent = entry.name
+                || entry.key
+                || translate('tools.modMaker.blocks.defaultTitle', { tier: tier.toUpperCase(), index: index + 1 }, `${tier.toUpperCase()} #${index + 1}`);
             header.appendChild(title);
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
-            removeBtn.textContent = '削除';
+            removeBtn.textContent = translate('tools.modMaker.blocks.remove', null, '削除');
             removeBtn.addEventListener('click', () => {
                 modMakerState.blocks[tier].splice(index, 1);
                 renderModMaker();
@@ -1089,15 +1152,58 @@ function renderModMakerBlocks() {
             header.appendChild(removeBtn);
             card.appendChild(header);
 
-            card.appendChild(createBlockField('キー', entry.key, (val) => { entry.key = val.trim(); }));
-            card.appendChild(createBlockField('名前', entry.name, (val) => { entry.name = val; }));
-            card.appendChild(createBlockField('レベル補正', entry.level, (val) => { entry.level = val; }, { placeholder: '例: +0' }));
-            card.appendChild(createBlockField('サイズ補正', entry.size, (val) => { entry.size = val; }, { placeholder: '例: +1' }));
-            card.appendChild(createBlockField('深さ補正', entry.depth, (val) => { entry.depth = val; }, { placeholder: '例: +1' }));
-            card.appendChild(createBlockField('宝箱タイプ', entry.chest, (val) => { entry.chest = val; }, { placeholder: 'normal/more/less' }));
-            card.appendChild(createBlockField('タイプID', entry.type, (val) => { entry.type = val; }, { placeholder: '例: custom-dungeon' }));
-            card.appendChild(createBlockField('ボス階層', entry.bossFloors, (val) => { entry.bossFloors = val; }, { placeholder: '例: 5,10,15' }));
-            card.appendChild(createBlockField('説明・メモ', entry.description, (val) => { entry.description = val; }, { multiline: true, rows: 2 }));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.key.label', null, 'キー'),
+                entry.key,
+                (val) => { entry.key = val.trim(); }
+            ));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.name.label', null, '名前'),
+                entry.name,
+                (val) => { entry.name = val; }
+            ));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.level.label', null, 'レベル補正'),
+                entry.level,
+                (val) => { entry.level = val; },
+                { placeholder: translate('tools.modMaker.blocks.fields.level.placeholder', null, '例: +0') }
+            ));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.size.label', null, 'サイズ補正'),
+                entry.size,
+                (val) => { entry.size = val; },
+                { placeholder: translate('tools.modMaker.blocks.fields.size.placeholder', null, '例: +1') }
+            ));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.depth.label', null, '深さ補正'),
+                entry.depth,
+                (val) => { entry.depth = val; },
+                { placeholder: translate('tools.modMaker.blocks.fields.depth.placeholder', null, '例: +1') }
+            ));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.chest.label', null, '宝箱タイプ'),
+                entry.chest,
+                (val) => { entry.chest = val; },
+                { placeholder: translate('tools.modMaker.blocks.fields.chest.placeholder', null, 'normal/more/less') }
+            ));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.type.label', null, 'タイプID'),
+                entry.type,
+                (val) => { entry.type = val; },
+                { placeholder: translate('tools.modMaker.blocks.fields.type.placeholder', null, '例: custom-dungeon') }
+            ));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.bossFloors.label', null, 'ボス階層'),
+                entry.bossFloors,
+                (val) => { entry.bossFloors = val; },
+                { placeholder: translate('tools.modMaker.blocks.fields.bossFloors.placeholder', null, '例: 5,10,15') }
+            ));
+            card.appendChild(createBlockField(
+                translate('tools.modMaker.blocks.fields.description.label', null, '説明・メモ'),
+                entry.description,
+                (val) => { entry.description = val; },
+                { multiline: true, rows: 2 }
+            ));
 
             container.appendChild(card);
         });
@@ -1138,7 +1244,9 @@ function renderModMaker() {
         modMakerState.structures.forEach((item, idx) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.textContent = item.name || item.id || `構造${idx + 1}`;
+            btn.textContent = item.name
+                || item.id
+                || translate('tools.modMaker.structures.defaultItem', { index: idx + 1 }, `構造${idx + 1}`);
             btn.classList.toggle('active', idx === modMakerState.selectedStructure);
             btn.addEventListener('click', () => {
                 modMakerState.selectedStructure = idx;
@@ -1196,7 +1304,9 @@ function renderModMaker() {
         modMakerState.generators.forEach((item, idx) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.textContent = item.name || item.id || `生成タイプ${idx + 1}`;
+            btn.textContent = item.name
+                || item.id
+                || translate('tools.modMaker.generators.defaultItem', { index: idx + 1 }, `生成タイプ${idx + 1}`);
             btn.classList.toggle('active', idx === modMakerState.selectedGenerator);
             btn.addEventListener('click', () => {
                 modMakerState.selectedGenerator = idx;
@@ -1260,20 +1370,25 @@ function buildModMakerOutput() {
     const metaAuthor = (modMakerState.metadata.author || '').trim();
     const metaDescription = (modMakerState.metadata.description || '').trim();
 
-    if (!metaId) errors.push('アドオンIDを入力してください。');
-    if (metaId && !/^[a-zA-Z0-9_\-]+$/.test(metaId)) errors.push('アドオンIDは英数字・ハイフン・アンダースコアのみ使用できます。');
+    if (!metaId) pushLocalized(errors, 'tools.modMaker.errors.missingAddonId', null, 'アドオンIDを入力してください。');
+    if (metaId && !/^[a-zA-Z0-9_\-]+$/.test(metaId)) {
+        pushLocalized(errors, 'tools.modMaker.errors.invalidAddonId', null, 'アドオンIDは英数字・ハイフン・アンダースコアのみ使用できます。');
+    }
 
     const normalizedStructures = [];
     const structureIds = new Set();
     modMakerState.structures.forEach((structure, idx) => {
         const id = (structure.id || '').trim();
-        if (!id) errors.push(`構造${idx + 1}のIDを入力してください。`);
-        else if (structureIds.has(id)) errors.push(`構造ID「${id}」が重複しています。`);
+        if (!id) {
+            pushLocalized(errors, 'tools.modMaker.errors.structureMissingId', { index: idx + 1 }, `構造${idx + 1}のIDを入力してください。`);
+        } else if (structureIds.has(id)) {
+            pushLocalized(errors, 'tools.modMaker.errors.structureDuplicateId', { id }, `構造ID「${id}」が重複しています。`);
+        }
         else structureIds.add(id);
         const width = clampStructureSize(structure.width);
         const height = clampStructureSize(structure.height);
         if (structure.anchorX < 0 || structure.anchorX >= width || structure.anchorY < 0 || structure.anchorY >= height) {
-            errors.push(`構造${idx + 1}のアンカー位置が範囲外です。`);
+            pushLocalized(errors, 'tools.modMaker.errors.structureAnchorOutOfRange', { index: idx + 1 }, `構造${idx + 1}のアンカー位置が範囲外です。`);
         }
         normalizedStructures.push({
             id,
@@ -1289,23 +1404,32 @@ function buildModMakerOutput() {
 
     const normalizedGenerators = [];
     const generatorIds = new Set();
-    if (!modMakerState.generators.length) errors.push('生成タイプを最低1つ追加してください。');
+    if (!modMakerState.generators.length) {
+        pushLocalized(errors, 'tools.modMaker.errors.generatorMissing', null, '生成タイプを最低1つ追加してください。');
+    }
     modMakerState.generators.forEach((generator, idx) => {
         const id = (generator.id || '').trim();
-        if (!id) errors.push(`生成タイプ${idx + 1}のIDを入力してください。`);
-        else if (generatorIds.has(id)) errors.push(`生成タイプID「${id}」が重複しています。`);
+        if (!id) {
+            pushLocalized(errors, 'tools.modMaker.errors.generatorMissingId', { index: idx + 1 }, `生成タイプ${idx + 1}のIDを入力してください。`);
+        } else if (generatorIds.has(id)) {
+            pushLocalized(errors, 'tools.modMaker.errors.generatorDuplicateId', { id }, `生成タイプID「${id}」が重複しています。`);
+        }
         else generatorIds.add(id);
         let code = (generator.code || '').trim();
         const mixNormal = Number(generator.mixinNormal);
         const mixBlock = Number(generator.mixinBlockDim);
-        if (Number.isFinite(mixNormal) && (mixNormal < 0 || mixNormal > 1)) errors.push(`生成タイプ${idx + 1}のNormal混合参加率は0〜1で指定してください。`);
-        if (Number.isFinite(mixBlock) && (mixBlock < 0 || mixBlock > 1)) errors.push(`生成タイプ${idx + 1}のBlock次元混合参加率は0〜1で指定してください。`);
+        if (Number.isFinite(mixNormal) && (mixNormal < 0 || mixNormal > 1)) {
+            pushLocalized(errors, 'tools.modMaker.errors.generatorNormalRange', { index: idx + 1 }, `生成タイプ${idx + 1}のNormal混合参加率は0〜1で指定してください。`);
+        }
+        if (Number.isFinite(mixBlock) && (mixBlock < 0 || mixBlock > 1)) {
+            pushLocalized(errors, 'tools.modMaker.errors.generatorBlockRange', { index: idx + 1 }, `生成タイプ${idx + 1}のBlock次元混合参加率は0〜1で指定してください。`);
+        }
         const floors = normalizeGeneratorFixed(generator, idx, errors);
         if (!code) {
             if (floors) {
                 code = MOD_MAKER_TEMPLATES.fixed.trim();
             } else {
-                errors.push(`生成タイプ${idx + 1}のアルゴリズムコードを入力してください。`);
+                pushLocalized(errors, 'tools.modMaker.errors.generatorMissingCode', { index: idx + 1 }, `生成タイプ${idx + 1}のアルゴリズムコードを入力してください。`);
             }
         }
         normalizedGenerators.push({
@@ -1329,11 +1453,11 @@ function buildModMakerOutput() {
         entries.forEach((entry, idx) => {
             const key = (entry.key || '').trim();
             if (!key) {
-                errors.push(`${tier.toUpperCase()} ブロック${idx + 1}のキーを入力してください。`);
+                pushLocalized(errors, 'tools.modMaker.errors.blockMissingKey', { tier: tier.toUpperCase(), index: idx + 1 }, `${tier.toUpperCase()} ブロック${idx + 1}のキーを入力してください。`);
                 return;
             }
             if (blockKeys.has(key)) {
-                errors.push(`ブロックキー「${key}」が重複しています。`);
+                pushLocalized(errors, 'tools.modMaker.errors.blockDuplicateKey', { key }, `ブロックキー「${key}」が重複しています。`);
                 return;
             }
             blockKeys.add(key);
@@ -1439,7 +1563,7 @@ function updateModMakerOutputView(result) {
         if (errors.length) {
             modMakerRefs.errors.style.color = '#dc2626';
             const heading = document.createElement('div');
-            heading.textContent = `⚠️ ${errors.length} 件の確認事項があります`;
+            heading.textContent = translate('tools.modMaker.status.errorHeading', { count: errors.length }, `⚠️ ${errors.length} 件の確認事項があります`);
             const list = document.createElement('ul');
             errors.forEach(msg => {
                 const li = document.createElement('li');
@@ -1450,7 +1574,7 @@ function updateModMakerOutputView(result) {
             modMakerRefs.errors.appendChild(list);
         } else {
             modMakerRefs.errors.style.color = '#15803d';
-            modMakerRefs.errors.textContent = '✅ 出力できます';
+            modMakerRefs.errors.textContent = translate('tools.modMaker.status.ready', null, '✅ 出力できます');
         }
     }
 }
@@ -1464,7 +1588,7 @@ function formatAlgorithmLines(code) {
     if (!normalized) {
         return [
             'function(ctx) {',
-            '  // TODO: ctx.map などを編集してダンジョンを生成してください。',
+            translate('tools.modMaker.templates.todoComment', null, '  // TODO: ctx.map などを編集してダンジョンを生成してください。'),
             '}'
         ];
     }
@@ -1606,7 +1730,7 @@ async function copyModMakerOutput() {
     try {
         if (navigator.clipboard?.writeText) {
             await navigator.clipboard.writeText(text);
-            showModMakerCopyFeedback('コピーしました');
+            showModMakerCopyFeedback(translate('tools.modMaker.feedback.copySuccess', null, 'コピーしました'));
             return;
         }
     } catch {}
@@ -1616,19 +1740,21 @@ async function copyModMakerOutput() {
         textarea.select();
         const ok = document.execCommand('copy');
         textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-        showModMakerCopyFeedback(ok ? 'コピーしました' : 'コピーできませんでした');
+        showModMakerCopyFeedback(ok
+            ? translate('tools.modMaker.feedback.copySuccess', null, 'コピーしました')
+            : translate('tools.modMaker.feedback.copyFailed', null, 'コピーできませんでした'));
     } catch {
-        showModMakerCopyFeedback('コピーできませんでした');
+        showModMakerCopyFeedback(translate('tools.modMaker.feedback.copyFailed', null, 'コピーできませんでした'));
     }
 }
 
 function showModMakerCopyFeedback(message) {
-    modMakerCopyLabel = message;
+    modMakerCopyLabel = message || translate('tools.modMaker.actions.copy', null, 'クリップボードにコピー');
     if (modMakerRefs?.copy) modMakerRefs.copy.textContent = modMakerCopyLabel;
     if (modMakerCopyTimer) clearTimeout(modMakerCopyTimer);
     modMakerCopyTimer = setTimeout(() => {
-        modMakerCopyLabel = 'クリップボードにコピー';
-        if (modMakerRefs?.copy) modMakerRefs.copy.textContent = modMakerCopyLabel;
+        refreshModMakerLocaleStrings();
+        modMakerCopyTimer = null;
     }, 2000);
 }
 

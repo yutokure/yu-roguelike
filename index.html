@@ -207,94 +207,94 @@
             <div id="tab-tools" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-tools">
                 <div class="row">
                     <div class="tools-layout">
-                        <aside class="tools-sidebar" aria-label="ツール一覧">
-                            <button id="tool-button-modmaker" class="tool-item active" type="button" data-tool-target="mod-maker">ダンジョンタイプMod作成</button>
-                            <p class="tool-hint">構造や生成アルゴリズムを組み立てて `registerDungeonAddon` ファイルを出力します。</p>
-                            <button id="tool-button-sandbox" class="tool-item" type="button" data-tool-target="sandbox-editor">サンドボックスダンジョン</button>
-                            <p class="tool-hint">自由なマップと敵配置でテスト用ダンジョンを組み立てられます（経験値は獲得できません）。</p>
-                            <button id="tool-button-blockdata" class="tool-item" type="button" data-tool-target="blockdata-editor">BlockData編集</button>
-                            <p class="tool-hint">BlockDim向けのブロック定義をGUIで確認・編集し、JSONをエクスポートできます。</p>
-                            <button id="tool-button-image-viewer" class="tool-item" type="button" data-tool-target="image-viewer">画像ビューア</button>
-                            <p class="tool-hint">スクリーンショットなどを拡大・回転・遠近表示しながらメタ情報を確認できます。</p>
-                            <button id="tool-button-state-manager" class="tool-item" type="button" data-tool-target="state-manager">状態管理</button>
-                            <p class="tool-hint">ゲームとツールの全データをまとめてエクスポート／インポートします。</p>
+                        <aside class="tools-sidebar" aria-label="ツール一覧" data-i18n-attr="aria-label:tools.sidebar.ariaLabel">
+                            <button id="tool-button-modmaker" class="tool-item active" type="button" data-tool-target="mod-maker" data-i18n="tools.sidebar.modMaker.label">ダンジョンタイプMod作成</button>
+                            <p class="tool-hint" data-i18n="tools.sidebar.modMaker.hint">構造や生成アルゴリズムを組み立てて `registerDungeonAddon` ファイルを出力します。</p>
+                            <button id="tool-button-sandbox" class="tool-item" type="button" data-tool-target="sandbox-editor" data-i18n="tools.sidebar.sandbox.label">サンドボックスダンジョン</button>
+                            <p class="tool-hint" data-i18n="tools.sidebar.sandbox.hint">自由なマップと敵配置でテスト用ダンジョンを組み立てられます（経験値は獲得できません）。</p>
+                            <button id="tool-button-blockdata" class="tool-item" type="button" data-tool-target="blockdata-editor" data-i18n="tools.sidebar.blockdata.label">BlockData編集</button>
+                            <p class="tool-hint" data-i18n="tools.sidebar.blockdata.hint">BlockDim向けのブロック定義をGUIで確認・編集し、JSONをエクスポートできます。</p>
+                            <button id="tool-button-image-viewer" class="tool-item" type="button" data-tool-target="image-viewer" data-i18n="tools.sidebar.imageViewer.label">画像ビューア</button>
+                            <p class="tool-hint" data-i18n="tools.sidebar.imageViewer.hint">スクリーンショットなどを拡大・回転・遠近表示しながらメタ情報を確認できます。</p>
+                            <button id="tool-button-state-manager" class="tool-item" type="button" data-tool-target="state-manager" data-i18n="tools.sidebar.stateManager.label">状態管理</button>
+                            <p class="tool-hint" data-i18n="tools.sidebar.stateManager.hint">ゲームとツールの全データをまとめてエクスポート／インポートします。</p>
                         </aside>
-                        <section id="tool-mod-maker" class="tool-panel active" data-tool-panel="mod-maker" aria-label="ダンジョンタイプMod作成ツール">
+                        <section id="tool-mod-maker" class="tool-panel active" data-tool-panel="mod-maker" aria-label="ダンジョンタイプMod作成ツール" data-i18n-attr="aria-label:tools.modMaker.panelAriaLabel">
                             <header class="tool-panel-header">
-                                <h3>ダンジョンタイプ追加Mod作成ツール</h3>
-                                <p>メタ情報、構造パターン、生成アルゴリズム、BlockDimブロック定義をまとめてアドオンJSとして出力します。</p>
+                                <h3 data-i18n="tools.modMaker.header.title">ダンジョンタイプ追加Mod作成ツール</h3>
+                                <p data-i18n="tools.modMaker.header.description">メタ情報、構造パターン、生成アルゴリズム、BlockDimブロック定義をまとめてアドオンJSとして出力します。</p>
                             </header>
                             <section class="modmaker-section" aria-labelledby="modmaker-meta-title">
                                 <div class="section-title-row">
-                                    <h4 id="modmaker-meta-title">アドオン情報</h4>
+                                    <h4 id="modmaker-meta-title" data-i18n="tools.modMaker.meta.title">アドオン情報</h4>
                                 </div>
                                 <div class="modmaker-form-grid">
-                                    <label>アドオンID
-                                        <input id="modmaker-addon-id" type="text" placeholder="例: custom_pack">
+                                    <label data-i18n="tools.modMaker.meta.fields.id.label">アドオンID
+                                        <input id="modmaker-addon-id" type="text" placeholder="例: custom_pack" data-i18n-attr="placeholder:tools.modMaker.meta.fields.id.placeholder">
                                     </label>
-                                    <label>表示名
-                                        <input id="modmaker-addon-name" type="text" placeholder="例: Custom Dungeon Pack">
+                                    <label data-i18n="tools.modMaker.meta.fields.name.label">表示名
+                                        <input id="modmaker-addon-name" type="text" placeholder="例: Custom Dungeon Pack" data-i18n-attr="placeholder:tools.modMaker.meta.fields.name.placeholder">
                                     </label>
-                                    <label>バージョン
+                                    <label data-i18n="tools.modMaker.meta.fields.version.label">バージョン
                                         <input id="modmaker-addon-version" type="text" value="1.0.0">
                                     </label>
-                                    <label>作者
-                                        <input id="modmaker-addon-author" type="text" placeholder="あなたの名前">
+                                    <label data-i18n="tools.modMaker.meta.fields.author.label">作者
+                                        <input id="modmaker-addon-author" type="text" placeholder="あなたの名前" data-i18n-attr="placeholder:tools.modMaker.meta.fields.author.placeholder">
                                     </label>
-                                    <label class="full">説明
-                                        <textarea id="modmaker-addon-description" rows="2" placeholder="アドオン全体の説明"></textarea>
+                                    <label class="full" data-i18n="tools.modMaker.meta.fields.description.label">説明
+                                        <textarea id="modmaker-addon-description" rows="2" placeholder="アドオン全体の説明" data-i18n-attr="placeholder:tools.modMaker.meta.fields.description.placeholder"></textarea>
                                     </label>
                                 </div>
                             </section>
                             <section class="modmaker-section" aria-labelledby="modmaker-structures-title">
                                 <div class="section-title-row">
-                                    <h4 id="modmaker-structures-title">構造ライブラリ</h4>
+                                    <h4 id="modmaker-structures-title" data-i18n="tools.modMaker.structures.title">構造ライブラリ</h4>
                                     <div class="section-actions">
-                                        <button id="modmaker-add-structure" type="button">+ 構造を追加</button>
-                                        <button id="modmaker-remove-structure" type="button">選択を削除</button>
+                                        <button id="modmaker-add-structure" type="button" data-i18n="tools.modMaker.structures.actions.add">+ 構造を追加</button>
+                                        <button id="modmaker-remove-structure" type="button" data-i18n="tools.modMaker.structures.actions.remove">選択を削除</button>
                                     </div>
                                 </div>
                                 <div class="modmaker-structures">
-                                    <div id="modmaker-structure-list" class="modmaker-list" role="listbox" aria-label="構造一覧"></div>
+                                    <div id="modmaker-structure-list" class="modmaker-list" role="listbox" aria-label="構造一覧" data-i18n-attr="aria-label:tools.modMaker.structures.listAria"></div>
                                     <div class="modmaker-structure-editor">
                                         <div class="modmaker-form-grid">
-                                            <label>ID
-                                                <input id="modmaker-structure-id" type="text" placeholder="例: custom_room">
+                                            <label data-i18n="tools.modMaker.structures.fields.id.label">ID
+                                                <input id="modmaker-structure-id" type="text" placeholder="例: custom_room" data-i18n-attr="placeholder:tools.modMaker.structures.fields.id.placeholder">
                                             </label>
-                                            <label>名前
-                                                <input id="modmaker-structure-name" type="text" placeholder="表示用の名前">
+                                            <label data-i18n="tools.modMaker.structures.fields.name.label">名前
+                                                <input id="modmaker-structure-name" type="text" placeholder="表示用の名前" data-i18n-attr="placeholder:tools.modMaker.structures.fields.name.placeholder">
                                             </label>
-                                            <label>アンカーX
+                                            <label data-i18n="tools.modMaker.structures.fields.anchorX.label">アンカーX
                                                 <input id="modmaker-structure-anchor-x" type="number" min="0" value="0">
                                             </label>
-                                            <label>アンカーY
+                                            <label data-i18n="tools.modMaker.structures.fields.anchorY.label">アンカーY
                                                 <input id="modmaker-structure-anchor-y" type="number" min="0" value="0">
                                             </label>
-                                            <label>タグ（カンマ区切り）
-                                                <input id="modmaker-structure-tags" type="text" placeholder="例: rooms,geo">
+                                            <label data-i18n="tools.modMaker.structures.fields.tags.label">タグ（カンマ区切り）
+                                                <input id="modmaker-structure-tags" type="text" placeholder="例: rooms,geo" data-i18n-attr="placeholder:tools.modMaker.structures.fields.tags.placeholder">
                                             </label>
-                                            <label class="checkbox-row"><input id="modmaker-structure-allow-rotate" type="checkbox" checked> 回転を許可</label>
-                                            <label class="checkbox-row"><input id="modmaker-structure-allow-mirror" type="checkbox" checked> 反転を許可</label>
-                                            <label>幅
+                                            <label class="checkbox-row"><input id="modmaker-structure-allow-rotate" type="checkbox" checked> <span data-i18n="tools.modMaker.structures.fields.allowRotate.label">回転を許可</span></label>
+                                            <label class="checkbox-row"><input id="modmaker-structure-allow-mirror" type="checkbox" checked> <span data-i18n="tools.modMaker.structures.fields.allowMirror.label">反転を許可</span></label>
+                                            <label data-i18n="tools.modMaker.structures.fields.width.label">幅
                                                 <input id="modmaker-structure-width" type="number" min="1" value="7">
                                             </label>
-                                            <label>高さ
+                                            <label data-i18n="tools.modMaker.structures.fields.height.label">高さ
                                                 <input id="modmaker-structure-height" type="number" min="1" value="7">
                                             </label>
                                         </div>
                                         <div class="modmaker-grid-toolbar">
-                                            <span>セルをクリックして「空白 → 床 → 壁」の順で切り替え</span>
+                                            <span data-i18n="tools.modMaker.structures.grid.hint">セルをクリックして「空白 → 床 → 壁」の順で切り替え</span>
                                             <div class="toolbar-buttons">
-                                                <button id="modmaker-fill-empty" type="button">全て空白</button>
-                                                <button id="modmaker-fill-floor" type="button">全て床</button>
-                                                <button id="modmaker-fill-wall" type="button">全て壁</button>
+                                                <button id="modmaker-fill-empty" type="button" data-i18n="tools.modMaker.structures.grid.fillEmpty">全て空白</button>
+                                                <button id="modmaker-fill-floor" type="button" data-i18n="tools.modMaker.structures.grid.fillFloor">全て床</button>
+                                                <button id="modmaker-fill-wall" type="button" data-i18n="tools.modMaker.structures.grid.fillWall">全て壁</button>
                                             </div>
                                         </div>
-                                        <div id="modmaker-grid" class="modmaker-grid" role="application" aria-label="構造パターン">
+                                        <div id="modmaker-grid" class="modmaker-grid" role="application" aria-label="構造パターン" data-i18n-attr="aria-label:tools.modMaker.structures.grid.ariaLabel">
                                             <canvas id="modmaker-grid-canvas" aria-hidden="true"></canvas>
                                             <div class="modmaker-grid-placeholder" data-placeholder></div>
                                         </div>
-                                        <label class="full">パターンプレビュー
+                                        <label class="full" data-i18n="tools.modMaker.structures.fields.preview.label">パターンプレビュー
                                             <textarea id="modmaker-pattern-preview" class="code" rows="4" readonly></textarea>
                                         </label>
                                     </div>
@@ -302,42 +302,42 @@
                             </section>
                             <section class="modmaker-section" aria-labelledby="modmaker-fixed-title">
                                 <div class="section-title-row">
-                                    <h4 id="modmaker-fixed-title">固定マップ</h4>
-                                    <label class="checkbox-row">
+                                    <h4 id="modmaker-fixed-title" data-i18n="tools.modMaker.fixed.title">固定マップ</h4>
+                                    <label class="checkbox-row" data-i18n="tools.modMaker.fixed.enable.label">
                                         <input id="modmaker-fixed-enabled" type="checkbox"> 固定マップを利用
                                     </label>
                                 </div>
                                 <div id="modmaker-fixed-container" class="modmaker-fixed">
                                     <div class="modmaker-form-grid">
-                                        <label>フロア数
+                                        <label data-i18n="tools.modMaker.fixed.fields.floorCount.label">フロア数
                                             <input id="modmaker-fixed-floor-count" type="number" min="1" max="60" value="1">
                                         </label>
-                                        <label>ボス階層（カンマ区切り）
-                                            <input id="modmaker-fixed-boss-floors" type="text" placeholder="例: 5,10">
+                                        <label data-i18n="tools.modMaker.fixed.fields.bossFloors.label">ボス階層（カンマ区切り）
+                                            <input id="modmaker-fixed-boss-floors" type="text" placeholder="例: 5,10" data-i18n-attr="placeholder:tools.modMaker.fixed.fields.bossFloors.placeholder">
                                         </label>
-                                        <p class="modmaker-fixed-note">アルゴリズムで <code>ctx.fixedMaps.applyCurrent()</code> を呼ぶと、その階層の固定マップが適用されます。</p>
+                                        <p class="modmaker-fixed-note" data-i18n="tools.modMaker.fixed.note" data-i18n-html>アルゴリズムで <code>ctx.fixedMaps.applyCurrent()</code> を呼ぶと、その階層の固定マップが適用されます。</p>
                                     </div>
                                     <div class="modmaker-fixed-editor">
-                                        <div id="modmaker-fixed-floor-list" class="modmaker-list fixed-floor-list" role="listbox" aria-label="固定マップ階層"></div>
+                                        <div id="modmaker-fixed-floor-list" class="modmaker-list fixed-floor-list" role="listbox" aria-label="固定マップ階層" data-i18n-attr="aria-label:tools.modMaker.fixed.floorListAria"></div>
                                         <div class="modmaker-fixed-grid-panel">
                                             <div class="modmaker-fixed-sizebar">
-                                                <label>幅
+                                                <label data-i18n="tools.modMaker.fixed.fields.width.label">幅
                                                     <input id="modmaker-fixed-width" type="number" min="5" max="75" value="21">
                                                 </label>
-                                                <label>高さ
+                                                <label data-i18n="tools.modMaker.fixed.fields.height.label">高さ
                                                     <input id="modmaker-fixed-height" type="number" min="5" max="75" value="15">
                                                 </label>
-                                                <button id="modmaker-fixed-copy-prev" type="button">前の階層をコピー</button>
+                                                <button id="modmaker-fixed-copy-prev" type="button" data-i18n="tools.modMaker.fixed.actions.copyPrevious">前の階層をコピー</button>
                                             </div>
                                             <div class="modmaker-grid-toolbar">
-                                                <span>セルをクリックして「壁 → 床 → 空白」の順に切り替え</span>
+                                                <span data-i18n="tools.modMaker.fixed.grid.hint">セルをクリックして「壁 → 床 → 空白」の順に切り替え</span>
                                                 <div class="toolbar-buttons">
-                                                    <button id="modmaker-fixed-fill-wall" type="button">全て壁</button>
-                                                    <button id="modmaker-fixed-fill-floor" type="button">全て床</button>
-                                                    <button id="modmaker-fixed-fill-void" type="button">全て空白</button>
+                                                    <button id="modmaker-fixed-fill-wall" type="button" data-i18n="tools.modMaker.fixed.grid.fillWall">全て壁</button>
+                                                    <button id="modmaker-fixed-fill-floor" type="button" data-i18n="tools.modMaker.fixed.grid.fillFloor">全て床</button>
+                                                    <button id="modmaker-fixed-fill-void" type="button" data-i18n="tools.modMaker.fixed.grid.fillVoid">全て空白</button>
                                                 </div>
                                             </div>
-                                            <div id="modmaker-fixed-grid" class="modmaker-grid" role="application" aria-label="固定マップパターン">
+                                            <div id="modmaker-fixed-grid" class="modmaker-grid" role="application" aria-label="固定マップパターン" data-i18n-attr="aria-label:tools.modMaker.fixed.grid.ariaLabel">
                                                 <canvas id="modmaker-fixed-grid-canvas" aria-hidden="true"></canvas>
                                                 <div class="modmaker-grid-placeholder" data-placeholder></div>
                                             </div>
@@ -347,54 +347,54 @@
                             </section>
                             <section class="modmaker-section" aria-labelledby="modmaker-generators-title">
                                 <div class="section-title-row">
-                                    <h4 id="modmaker-generators-title">生成アルゴリズム</h4>
+                                    <h4 id="modmaker-generators-title" data-i18n="tools.modMaker.generators.title">生成アルゴリズム</h4>
                                     <div class="section-actions">
-                                        <button id="modmaker-add-generator" type="button">+ 生成タイプを追加</button>
-                                        <button id="modmaker-remove-generator" type="button">選択を削除</button>
+                                        <button id="modmaker-add-generator" type="button" data-i18n="tools.modMaker.generators.actions.add">+ 生成タイプを追加</button>
+                                        <button id="modmaker-remove-generator" type="button" data-i18n="tools.modMaker.generators.actions.remove">選択を削除</button>
                                     </div>
                                 </div>
                                 <div class="modmaker-generators">
-                                    <div id="modmaker-generator-list" class="modmaker-list" role="listbox" aria-label="生成タイプ一覧"></div>
+                                    <div id="modmaker-generator-list" class="modmaker-list" role="listbox" aria-label="生成タイプ一覧" data-i18n-attr="aria-label:tools.modMaker.generators.listAria"></div>
                                     <div class="modmaker-generator-editor">
                                         <div class="modmaker-form-grid">
-                                            <label>ID
-                                                <input id="modmaker-generator-id" type="text" placeholder="例: custom-dungeon">
+                                            <label data-i18n="tools.modMaker.generators.fields.id.label">ID
+                                                <input id="modmaker-generator-id" type="text" placeholder="例: custom-dungeon" data-i18n-attr="placeholder:tools.modMaker.generators.fields.id.placeholder">
                                             </label>
-                                            <label>名前
-                                                <input id="modmaker-generator-name" type="text" placeholder="ダンジョン名">
+                                            <label data-i18n="tools.modMaker.generators.fields.name.label">名前
+                                                <input id="modmaker-generator-name" type="text" placeholder="ダンジョン名" data-i18n-attr="placeholder:tools.modMaker.generators.fields.name.placeholder">
                                             </label>
-                                            <label>説明
-                                                <input id="modmaker-generator-description" type="text" placeholder="一覧に表示する説明">
+                                            <label data-i18n="tools.modMaker.generators.fields.description.label">説明
+                                                <input id="modmaker-generator-description" type="text" placeholder="一覧に表示する説明" data-i18n-attr="placeholder:tools.modMaker.generators.fields.description.placeholder">
                                             </label>
-                                            <label>Normal混合参加率
+                                            <label data-i18n="tools.modMaker.generators.fields.normalMix.label">Normal混合参加率
                                                 <input id="modmaker-generator-normal-mix" type="number" step="0.05" min="0" max="1" value="0">
                                             </label>
-                                            <label>Block次元混合参加率
+                                            <label data-i18n="tools.modMaker.generators.fields.blockMix.label">Block次元混合参加率
                                                 <input id="modmaker-generator-blockdim-mix" type="number" step="0.05" min="0" max="1" value="0">
                                             </label>
-                                            <label>タグ（カンマ区切り）
-                                                <input id="modmaker-generator-tags" type="text" placeholder="例: rooms,organic">
+                                            <label data-i18n="tools.modMaker.generators.fields.tags.label">タグ（カンマ区切り）
+                                                <input id="modmaker-generator-tags" type="text" placeholder="例: rooms,organic" data-i18n-attr="placeholder:tools.modMaker.generators.fields.tags.placeholder">
                                             </label>
                                             <label class="checkbox-row">
                                                 <input id="modmaker-generator-dark" type="checkbox">
-                                                <span>暗い（視界半径5）</span>
+                                                <span data-i18n="tools.modMaker.generators.fields.dark.label">暗い（視界半径5）</span>
                                             </label>
                                             <label class="checkbox-row">
                                                 <input id="modmaker-generator-poison" type="checkbox">
-                                                <span>毒霧（通常床が毒床扱い）</span>
+                                                <span data-i18n="tools.modMaker.generators.fields.poison.label">毒霧（通常床が毒床扱い）</span>
                                             </label>
                                         </div>
                                         <div class="modmaker-template-bar">
-                                            <label for="modmaker-template-select">テンプレート</label>
+                                            <label for="modmaker-template-select" data-i18n="tools.modMaker.generators.template.label">テンプレート</label>
                                             <select id="modmaker-template-select">
-                                                <option value="blank">空のテンプレート</option>
-                                                <option value="rooms">部屋と通路サンプル</option>
-                                                <option value="structure">構造配置サンプル</option>
-                                                <option value="fixed">固定マップ適用テンプレート</option>
+                                                <option value="blank" data-i18n="tools.modMaker.generators.template.options.blank">空のテンプレート</option>
+                                                <option value="rooms" data-i18n="tools.modMaker.generators.template.options.rooms">部屋と通路サンプル</option>
+                                                <option value="structure" data-i18n="tools.modMaker.generators.template.options.structure">構造配置サンプル</option>
+                                                <option value="fixed" data-i18n="tools.modMaker.generators.template.options.fixed">固定マップ適用テンプレート</option>
                                             </select>
-                                            <button id="modmaker-apply-template" type="button">選択テンプレートを適用</button>
+                                            <button id="modmaker-apply-template" type="button" data-i18n="tools.modMaker.generators.template.apply">選択テンプレートを適用</button>
                                         </div>
-                                        <label class="full">アルゴリズムコード
+                                        <label class="full" data-i18n="tools.modMaker.generators.fields.code.label">アルゴリズムコード
                                             <textarea id="modmaker-generator-code" class="code" rows="12" spellcheck="false"></textarea>
                                         </label>
                                     </div>
@@ -402,38 +402,38 @@
                             </section>
                             <section class="modmaker-section" aria-labelledby="modmaker-blocks-title">
                                 <div class="section-title-row">
-                                    <h4 id="modmaker-blocks-title">BlockDimブロック定義</h4>
+                                    <h4 id="modmaker-blocks-title" data-i18n="tools.modMaker.blocks.title">BlockDimブロック定義</h4>
                                     <div class="section-actions">
-                                        <button class="modmaker-add-block" type="button" data-tier="blocks1">+ 1st</button>
-                                        <button class="modmaker-add-block" type="button" data-tier="blocks2">+ 2nd</button>
-                                        <button class="modmaker-add-block" type="button" data-tier="blocks3">+ 3rd</button>
+                                        <button class="modmaker-add-block" type="button" data-tier="blocks1" data-i18n="tools.modMaker.blocks.actions.addFirst">+ 1st</button>
+                                        <button class="modmaker-add-block" type="button" data-tier="blocks2" data-i18n="tools.modMaker.blocks.actions.addSecond">+ 2nd</button>
+                                        <button class="modmaker-add-block" type="button" data-tier="blocks3" data-i18n="tools.modMaker.blocks.actions.addThird">+ 3rd</button>
                                     </div>
                                 </div>
                                 <div class="modmaker-blocks">
-                                    <div class="modmaker-block-tier" data-tier="blocks1" aria-label="1st Blocks">
-                                        <h5>1st Blocks</h5>
+                                    <div class="modmaker-block-tier" data-tier="blocks1" aria-label="1st Blocks" data-i18n-attr="aria-label:tools.modMaker.blocks.tiers.firstAria">
+                                        <h5 data-i18n="tools.modMaker.blocks.tiers.firstHeading">1st Blocks</h5>
                                         <div class="modmaker-block-list" id="modmaker-blocks1"></div>
                                     </div>
-                                    <div class="modmaker-block-tier" data-tier="blocks2" aria-label="2nd Blocks">
-                                        <h5>2nd Blocks</h5>
+                                    <div class="modmaker-block-tier" data-tier="blocks2" aria-label="2nd Blocks" data-i18n-attr="aria-label:tools.modMaker.blocks.tiers.secondAria">
+                                        <h5 data-i18n="tools.modMaker.blocks.tiers.secondHeading">2nd Blocks</h5>
                                         <div class="modmaker-block-list" id="modmaker-blocks2"></div>
                                     </div>
-                                    <div class="modmaker-block-tier" data-tier="blocks3" aria-label="3rd Blocks">
-                                        <h5>3rd Blocks</h5>
+                                    <div class="modmaker-block-tier" data-tier="blocks3" aria-label="3rd Blocks" data-i18n-attr="aria-label:tools.modMaker.blocks.tiers.thirdAria">
+                                        <h5 data-i18n="tools.modMaker.blocks.tiers.thirdHeading">3rd Blocks</h5>
                                         <div class="modmaker-block-list" id="modmaker-blocks3"></div>
                                     </div>
                                 </div>
                             </section>
                             <section class="modmaker-section" aria-labelledby="modmaker-output-title">
                                 <div class="section-title-row">
-                                    <h4 id="modmaker-output-title">出力</h4>
+                                    <h4 id="modmaker-output-title" data-i18n="tools.modMaker.output.title">出力</h4>
                                 </div>
                                 <div class="modmaker-output">
                                     <div id="modmaker-errors" class="modmaker-errors" aria-live="polite"></div>
                                     <textarea id="modmaker-output" class="code" rows="14" readonly></textarea>
                                     <div class="modmaker-output-actions">
-                                        <button id="modmaker-copy" type="button">クリップボードにコピー</button>
-                                        <button id="modmaker-download" type="button">.jsファイルとしてダウンロード</button>
+                                        <button id="modmaker-copy" type="button" data-i18n="tools.modMaker.actions.copy">クリップボードにコピー</button>
+                                        <button id="modmaker-download" type="button" data-i18n="tools.modMaker.actions.download">.jsファイルとしてダウンロード</button>
                                     </div>
                                 </div>
                             </section>

@@ -127,10 +127,14 @@
     "skills": {
       "meta": {
         "currentSp": "Current SP: {value}",
+        "currentSpLabel": "Current SP",
         "costAndCurrent": "SP Cost: {cost} / Current: {current}",
         "reasonSuffix": " ({reason})",
         "remainingTurns": "Active: {turns} turns left",
         "use": "Use"
+      },
+      "modal": {
+        "title": "Skills"
       },
       "availability": {
         "unlockLevel": "Unlocks at Lv100",
@@ -228,6 +232,25 @@
           "veryHard": "Very Hard"
         }
       },
+      "dungeons": {
+        "tooltip": "Recommended Lv: {level}"
+      },
+      "playerStatus": {
+        "title": "Player Status",
+        "toggle": {
+          "expand": "Expand",
+          "collapse": "Collapse"
+        },
+        "labels": {
+          "level": "Level",
+          "hp": "HP",
+          "satiety": "Satiety",
+          "exp": "EXP",
+          "sp": "SP",
+          "attack": "Attack",
+          "defense": "Defense"
+        }
+      },
       "tabs": {
         "ariaLabel": "Dungeon selection tabs",
         "normal": "Normal",
@@ -246,6 +269,7 @@
           "recommendedLabel": "Recommended Level:",
           "damageLabel": "Damage Multipliers:",
           "damageValue": "Deal: 1.6x / Take: 0.5x",
+          "damageMultiplier": "Deal: {deal}x / Take: {take}x",
           "descriptionLabel": "Description:",
           "description": "Dungeon description",
           "start": "Enter Dungeon"
@@ -8811,6 +8835,495 @@
           "description": "COMING SOON – mini-game achievements are on the way.",
           "reward": ""
         }
+      }
+    },
+    "enemy": {
+      "modal": {
+        "noiseBlocked": "The noise is too strong to read the enemy's data...",
+        "title": {
+          "boss": "Boss Information",
+          "standard": "Enemy Information"
+        },
+        "sections": {
+          "damage": "Damage Forecast"
+        },
+        "labels": {
+          "level": "Level:",
+          "type": "Type:",
+          "hp": "HP:",
+          "attack": "Attack:",
+          "defense": "Defense:",
+          "damageDeal": "Damage Dealt:",
+          "damageTake": "Damage Taken:",
+          "hitRate": "Hit Rate:",
+          "enemyHitRate": "Enemy Hit Rate:"
+        },
+        "levelFormat": "Lv.{level}",
+        "typeDescription": {
+          "suppressed": "{description} (Special effects suppressed due to level gap)"
+        },
+        "damage": {
+          "invincibleLabel": "Invincible",
+          "invincible": "0 ({label})",
+          "critLabel": "Crit",
+          "reverseLabel": "Heal",
+          "reverseRange": "{reverseLabel} {min}-{max} ({critLabel}: {critMin}-{critMax})",
+          "range": "{min}-{max} ({critLabel}: {critMin}-{critMax})"
+        },
+        "hitRate": "{value}%",
+        "enemyHitRate": "{value}%"
+      },
+      "types": {
+        "normal": {
+          "label": "Standard",
+          "description": "Performs no special actions."
+        },
+        "statusCaster": {
+          "label": "Status Caster",
+          "description": "May inflict poison or paralysis when its attacks connect."
+        },
+        "warper": {
+          "label": "Warper",
+          "description": "May warp the player to another tile on hit."
+        },
+        "executioner": {
+          "label": "Executioner",
+          "description": "A dangerous foe with a low chance of instant-death attacks."
+        },
+        "knockback": {
+          "label": "Charger",
+          "description": "Knocks the player back; colliding with walls deals extra damage."
+        },
+        "swift": {
+          "label": "Swift Fighter",
+          "description": "Moves quickly, taking two actions during the player's turn."
+        }
+      }
+    },
+    "dungeon": {
+      "types": {
+        "field": "Field Type",
+        "cave": "Cave Type",
+        "maze": "Maze Type",
+        "rooms": "Rooms & Corridors",
+        "single-room": "Single Room",
+        "circle": "Circular Type",
+        "narrow-maze": "Narrow Maze",
+        "wide-maze": "Wide Maze",
+        "snake": "Snake Type",
+        "mixed": "Mixed Type",
+        "circle-rooms": "Circular Rooms & Corridors",
+        "grid": "Grid Type",
+        "open-space": "Open Space"
+      }
+    },
+    "dungeons": {
+      "base": {
+        "1": {
+          "name": "Beginner's Forest",
+          "description": "Obstacles scattered across a wide grassland."
+        },
+        "11": {
+          "name": "Cavern of Gloom",
+          "description": "A winding network of dark caves."
+        },
+        "21": {
+          "name": "Ruined Labyrinth",
+          "description": "Ancient ruins filled with an intricate maze."
+        },
+        "31": {
+          "name": "Subterranean Temple",
+          "description": "A temple composed of interconnected rooms and corridors."
+        },
+        "41": {
+          "name": "Enchanted Garden",
+          "description": "A circular garden overflowing with magic."
+        },
+        "51": {
+          "name": "Crystal Caves",
+          "description": "Serpentine caverns lined with crystal."
+        },
+        "61": {
+          "name": "Ancient Labyrinth",
+          "description": "A timeless, sprawling labyrinth."
+        },
+        "71": {
+          "name": "Dragon's Lair",
+          "description": "Circular chambers linked within a dragon's den."
+        },
+        "81": {
+          "name": "Starry Expanse",
+          "description": "A single vast hall beneath a star-filled sky."
+        },
+        "91": {
+          "name": "Tower of Twilight",
+          "description": "A tower at the world's end blending many layouts."
+        },
+        "X": {
+          "name": "Realm of Extremes",
+          "description": "A 25-floor ultimate dungeon."
+        }
+      }
+    },
+    "game": {
+      "toolbar": {
+        "back": "Back",
+        "items": "Items",
+        "skills": "Skills",
+        "status": "Status",
+        "import": "Import",
+        "export": "Export",
+        "toggleDungeonName": "Show dungeon name",
+        "sandboxMenu": "Interactive",
+        "godConsole": "Creator Console",
+        "floor": {
+          "heading": "Current Floor",
+          "label": "FLOOR"
+        }
+      },
+      "dungeonOverlay": {
+        "label": "Dungeon Traits",
+        "titleFallback": "Dungeon",
+        "typePlaceholder": "Field Type",
+        "descriptionPlaceholder": "Dungeon traits appear here.",
+        "badge": {
+          "none": "No notable traits",
+          "dark": {
+            "active": "Dark",
+            "suppressed": "Dark (Suppressed)"
+          },
+          "poison": {
+            "active": "Poison Fog",
+            "suppressed": "Poison Fog (Suppressed)"
+          },
+          "noise": {
+            "active": "Noise",
+            "suppressed": "Noise (Suppressed)"
+          },
+          "nested": "NESTED x{value}"
+        }
+      },
+      "playerStats": {
+        "labels": {
+          "level": "Level",
+          "attackShort": "ATK",
+          "defenseShort": "DEF",
+          "hp": "HP",
+          "satiety": "Satiety",
+          "exp": "EXP",
+          "sp": "SP"
+        }
+      },
+      "autoItem": {
+        "status": "Auto Items ON: Healing Items x {count}"
+      },
+      "common": {
+        "count": "x {count}",
+        "none": "None",
+        "floor": "Floor {floor}"
+      },
+      "items": {
+        "modal": {
+          "title": "Items"
+        },
+        "countPrefix": "x",
+        "actions": {
+          "use": "Use",
+          "eat": "Consume",
+          "offer": "Offer",
+          "cleanse": "Cleanse a status ailment",
+          "throw": "Throw",
+          "enable": "Enable",
+          "close": "Close"
+        },
+        "autoItem": {
+          "label": "Auto Item",
+          "hint": "Automatically heals when HP falls below 30%."
+        },
+        "potion30": {
+          "label": "30% HP Potion"
+        },
+        "hpBoost": {
+          "label": "Max HP Boost Item"
+        },
+        "atkBoost": {
+          "label": "Attack Boost Item"
+        },
+        "defBoost": {
+          "label": "Defense Boost Item"
+        },
+        "hpBoostMajor": {
+          "label": "Max HP Grand Boost (+25)"
+        },
+        "atkBoostMajor": {
+          "label": "Attack Grand Boost (+10)"
+        },
+        "defBoostMajor": {
+          "label": "Defense Grand Boost (+10)"
+        },
+        "spElixir": {
+          "label": "SP Elixir"
+        },
+        "passiveOrbs": {
+          "header": "Passive Orbs"
+        },
+        "skillCharms": {
+          "header": "Skill Charms (10 turns each)"
+        },
+        "errors": {
+          "noHealingItem": "No healing items available.",
+          "noStatusToCleanse": "No status ailments to cleanse."
+        }
+      },
+      "passiveOrb": {
+        "summary": "Total {total} ({unique} types)",
+        "empty": "You have no passive orbs.",
+        "noEffects": "No effects.",
+        "countDetail": "Owned {count}",
+        "detailSeparator": " / ",
+        "obtainDetail": " ({details})",
+        "obtain": "Obtained passive orb \"{label}\"!{detail}",
+        "orbs": {
+          "attackBoost": { "name": "Attack +1% Orb" },
+          "defenseBoost": { "name": "Defense +1% Orb" },
+          "abilityBoost": { "name": "All Stats +1% Orb" },
+          "maxHpBoost": { "name": "Max HP +10% Orb" },
+          "statusGuard": { "name": "Ailment Guard Orb" },
+          "enemySpecialGuard": { "name": "Enemy Special Guard Orb" },
+          "poisonResist": { "name": "Poison Resist Orb" },
+          "paralysisResist": { "name": "Paralysis Resist Orb" },
+          "abilityDownResist": { "name": "Stat Down Resist Orb" },
+          "levelDownResist": { "name": "Level Down Resist Orb" },
+          "instantDeathResist": { "name": "Instant Death Resist Orb" },
+          "knockbackResist": { "name": "Knockback Resist Orb" },
+          "poisonDamageGuard": { "name": "Poison Damage Guard Orb" },
+          "bombDamageGuard": { "name": "Bomb Damage Guard Orb" },
+          "skillPowerBoost": { "name": "Skill Power +10% Orb" },
+          "damageDealtBoost": { "name": "Damage Dealt +10% Orb" },
+          "damageTakenGuard": { "name": "Damage Taken -10% Orb" },
+          "evasionBoost": { "name": "Evasion +1% Orb" },
+          "accuracyBoost": { "name": "Accuracy +1% Orb" },
+          "critDamageBoost": { "name": "Critical Damage +10% Orb" }
+        },
+        "labels": {
+          "maxHpMul": "Max HP",
+          "attackMul": "Attack",
+          "defenseMul": "Defense",
+          "damageDealtMul": "Damage Dealt",
+          "damageTakenMul": "Damage Taken",
+          "skillPowerMul": "Skill Power",
+          "accuracyMul": "Accuracy",
+          "evasionMul": "Evasion",
+          "critDamageMul": "Critical Damage",
+          "statusChanceMul": "Status Chance",
+          "enemySpecialChanceMul": "Enemy Special Chance",
+          "poisonStatusChanceMul": "Poison Chance",
+          "paralysisStatusChanceMul": "Paralysis Chance",
+          "levelDownStatusChanceMul": "Level Down Chance",
+          "instantDeathChanceMul": "Instant Death Chance",
+          "knockbackChanceMul": "Knockback Chance",
+          "poisonDamageMul": "Poison Damage",
+          "bombDamageMul": "Bomb Damage",
+          "abilityDownPenaltyMul": "Stat Down Severity",
+          "status:poison": "Poison Chance",
+          "status:paralysis": "Paralysis Chance",
+          "status:levelDown": "Level Down Chance",
+          "instantDeath": "Instant Death Chance",
+          "enemySpecial:knockback": "Knockback Chance",
+          "poison": "Poison Damage",
+          "bomb": "Bomb Damage",
+          "abilityDownPenalty": "Stat Down Severity"
+        }
+      },
+      "skillCharms": {
+        "use": "Use",
+        "empty": "No charms owned."
+      },
+      "events": {
+        "hatena": {
+          "spawnSingle": "A mysterious ? block appeared!",
+          "spawnMultiple": "{count} mysterious ? blocks appeared!",
+          "bombGuard": "The explosion's impact was nullified!",
+          "bombHeal": "The explosion reversed and restored {amount} HP!",
+          "bombDamage": "The explosion dealt {amount} damage!",
+          "bombDeath": "You were caught in the explosion… Game Over.",
+          "itemObtained": "Received {item}!",
+          "trigger": "You stepped on a ? block!",
+          "levelUp": "Level increased by {amount}!",
+          "levelNoChange": "But your level didn't change.",
+          "levelDown": "Level decreased by {amount}...",
+          "levelDownNoEffect": "Your level couldn't drop any further.",
+          "expGain": "Gained {amount} EXP!",
+          "expGainNone": "No EXP gained.",
+          "expLoss": "Lost {amount} EXP...",
+          "expLossNone": "No EXP was lost.",
+          "enemyAmbush": "Enemies appeared around you!",
+          "noEnemies": "But no enemies showed up.",
+          "poisonGuarded": "Poison was prevented!",
+          "statusNone": "No status ailment occurred.",
+          "buffFailed": "The power-up failed to take effect.",
+          "debuffNone": "No debuff occurred.",
+          "rareChest": "A dazzling rare chest appeared!",
+          "chestNoSpace": "No space was available for a chest.",
+          "chest": "A chest appeared!",
+          "noChest": "No chest appeared.",
+          "chestRing": "You're surrounded by chests!",
+          "nothing": "But nothing happened."
+        },
+        "skills": {
+          "statusGuarded": "Skill effect nullified the status ailment!"
+        },
+        "sp": {
+          "unlocked": "SP system unlocked!",
+          "notUnlocked": "SP hasn't been unlocked yet.",
+          "notEnough": "Not enough SP.",
+          "offerLocked": "You can offer items once the SP system is unlocked.",
+          "notUnlockedForItem": "You can't use that until SP is unlocked.",
+          "noCapacity": "Your SP cap is 0, so it has no effect.",
+          "alreadyFull": "SP is already full."
+        },
+        "status": {
+          "paralyzed": "You're paralyzed and can't move..."
+        },
+        "sandbox": {
+          "noExp": "Sandbox mode does not award EXP.",
+          "started": "Sandbox mode started. EXP will not be awarded."
+        },
+        "console": {
+          "executed": "Creator Console executed the code."
+        },
+        "unlocks": {
+          "nestedLegend": "Cleared NESTED 99999999 and attained Anos-class divinity!",
+          "consoleAlwaysOn": "Creator Console and Sandbox toggle are now always available."
+        },
+        "actions": {
+          "wallDestroyed": "You destroyed the wall!"
+        },
+        "dungeon": {
+          "darkness": "Darkness shrouds your vision...",
+          "poisonFog": "Poison fog fills the area! Even standard tiles are dangerous."
+        },
+        "charms": {
+          "unknown": "An unknown charm can't be used.",
+          "notOwned": "You don't own that charm."
+        },
+        "satiety": {
+          "enabled": "Satiety system enabled!",
+          "disabled": "Satiety system disabled.",
+          "cannotEat": "You can only eat while the satiety system is active.",
+          "alreadyFull": "Satiety is already at maximum."
+        },
+        "goldenChest": {
+          "elixir": "Found a special SP Elixir in the golden chest! SP greatly restored.",
+          "openedSafely": "Opened the golden chest safely!",
+          "prompt": "A golden chest! Time your press with the bar."
+        },
+        "combat": {
+          "noEnemyInDirection": "No enemy in that direction!",
+          "sureHitIneffective": "The level gap nullified the sure-hit effect...",
+          "miss": "Miss",
+          "enemyDefeated": "Defeated the enemy!",
+          "bossGate": "You can't proceed until the boss is down!",
+          "enemyMissed": "The enemy missed!",
+          "enemyWarped": "Warped by the enemy's teleport attack!",
+          "statusResistedByLevel": "Level gap prevented the status ailment!",
+          "teleportResistedByLevel": "Level gap let you withstand the warp!",
+          "instantDeathResisted": "Level gap nullified the instant-death attack!",
+          "instantDeathHit": "The enemy's instant-death attack landed…!",
+          "knockbackResistedByLevel": "Level gap let you resist the knockback!"
+        },
+        "orb": {
+          "statusAttackNegated": "Orb's blessing nullified the status attack!",
+          "statusAttackPrevented": "Orb's blessing blocked the status attack!",
+          "statusPrevented": "Orb's blessing prevented the status ailment!",
+          "teleportNegated": "Orb's blessing nullified the warp attack!",
+          "teleportPrevented": "Orb's blessing blocked the warp attack!",
+          "instantDeathNegated": "Orb's blessing nullified the instant-death attack!",
+          "instantDeathPrevented": "Orb's blessing let you endure the instant-death attack!",
+          "knockbackNegated": "Orb's blessing nullified the knockback!",
+          "knockbackPrevented": "Orb's blessing blocked the knockback!"
+        },
+        "items": {
+          "noPotion": "You don't have any potions.",
+          "noOfferingItem": "No healing items available to offer.",
+          "throwNoEnemies": "No enemies within throwing range.",
+          "throwNoHealingItem": "No healing items to throw.",
+          "throwNoTarget": "Found no target to throw at.",
+          "throwIneffective": "The enemy's level is too high; the throw had no effect...",
+          "throwNoEffect": "You threw a healing item, but nothing happened.",
+          "hpBoostUsed": "Used a Max HP Boost! Max HP increased by 5!",
+          "attackBoostUsed": "Used an Attack Boost! Attack increased by 1!",
+          "defenseBoostUsed": "Used a Defense Boost! Defense increased by 1!",
+          "notOwned": "You don't have that item.",
+          "noSpElixir": "You don't have an SP Elixir."
+        },
+        "data": {
+          "imported": "Data imported."
+        },
+        "blockdim": {
+          "selectionIncomplete": "Block selection is incomplete."
+        },
+        "progress": {
+          "dungeonCleared": "Dungeon cleared!"
+        }
+      }
+    },
+    "statusModal": {
+      "title": "Player Status",
+      "sections": {
+        "basic": "Basic Stats",
+        "inventory": "Inventory",
+        "settings": "Game Settings",
+        "dungeon": "Dungeon Info"
+      },
+      "labels": {
+        "level": "Level",
+        "exp": "Experience",
+        "hp": "HP",
+        "satiety": "Satiety",
+        "sp": "SP",
+        "attack": "Attack",
+        "defense": "Defense",
+        "statusEffects": "Status Effects",
+        "skillEffects": "Skill Effects",
+        "floor": "Current Floor"
+      },
+      "settings": {
+        "world": "Selected World",
+        "difficulty": "Difficulty"
+      },
+      "dungeon": {
+        "structure": "Layout",
+        "type": "Type"
+      },
+      "effects": {
+        "entry": "{label} {turns} turns remaining"
+      },
+      "skillCharms": {
+        "entry": "{label} x{count}"
+      },
+      "world": {
+        "normal": "{world} World",
+        "blockdim": "BlockDim NESTED {nested} / {dimension}"
+      },
+      "dungeonSummary": {
+        "normal": "{world} World: {dungeon}",
+        "blockdim": "NESTED {nested} / Dimension {dimension}: {block1} · {block2} · {block3}"
+      },
+      "details": {
+        "floor": "Floor: {floor}",
+        "hpBaseSuffix": " (Base {base})",
+        "level": "Lv.{value}",
+        "hp": "HP {current}/{max}{baseSuffix}",
+        "attack": "ATK {value}",
+        "defense": "DEF {value}",
+        "satiety": "Sat {current}/{max}",
+        "line": "{level} {hp} {attack} {defense} {satiety}"
+      },
+      "stats": {
+        "valueWithBase": "{effective} (Base {base})",
+        "levelWithBase": "Lv.{effective} (Base {base})",
+        "hp": "HP {current}/{max}{baseSuffix}"
       }
     }
   };

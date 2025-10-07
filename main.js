@@ -65,6 +65,119 @@ function resolveLocalizedText(key, fallbackText, params) {
     return fallbackText ?? '';
 }
 
+function formatCountLabel(count) {
+    return translateOrFallback('game.common.count', () => `x ${count}`, { count });
+}
+
+function formatPassiveOrbSummary(total, unique) {
+    return translateOrFallback(
+        'game.passiveOrb.summary',
+        () => `合計 ${total}個（${unique}種）`,
+        { total, unique }
+    );
+}
+
+function getPassiveOrbEmptyText() {
+    return translateOrFallback('game.passiveOrb.empty', 'パッシブオーブを所持していません。');
+}
+
+function getPassiveOrbNoEffectText() {
+    return translateOrFallback('game.passiveOrb.noEffects', '効果はありません。');
+}
+
+function getNoneText() {
+    return translateOrFallback('game.common.none', 'なし');
+}
+
+function formatEffectEntry(label, turns) {
+    return translateOrFallback(
+        'statusModal.effects.entry',
+        () => `${label} 残り${turns}ターン`,
+        { label, turns }
+    );
+}
+
+function formatWorldLabel(world) {
+    return translateOrFallback('statusModal.world.normal', () => `${world}世界`, { world });
+}
+
+function formatBlockDimWorldLabel(nested, dimension) {
+    return translateOrFallback(
+        'statusModal.world.blockdim',
+        () => `BlockDim NESTED ${nested} / ${dimension}`,
+        { nested, dimension }
+    );
+}
+
+function formatDungeonSummaryLabel(world, dungeonName) {
+    return translateOrFallback(
+        'statusModal.dungeonSummary.normal',
+        () => `${world}世界：${dungeonName}`,
+        { world, dungeon: dungeonName }
+    );
+}
+
+function formatBlockDimDungeonSummaryLabel({ nested, dimensionName, block1, block2, block3 }) {
+    return translateOrFallback(
+        'statusModal.dungeonSummary.blockdim',
+        () => `NESTED ${nested} ／ 次元 ${dimensionName}：${block1}・${block2}・${block3}`,
+        { nested, dimension: dimensionName, block1, block2, block3 }
+    );
+}
+
+function formatFloorLabel(floor) {
+    return translateOrFallback('game.common.floor', () => `${floor}F`, { floor });
+}
+
+function formatStatusDetailFloor(floor) {
+    return translateOrFallback('statusModal.details.floor', () => `階層: ${floor}`, { floor });
+}
+
+function formatHpBaseSuffix(baseValue) {
+    return translateOrFallback('statusModal.details.hpBaseSuffix', () => ` (基${baseValue})`, { base: baseValue });
+}
+
+function formatLevelSegment(value) {
+    return translateOrFallback('statusModal.details.level', () => `Lv.${value}`, { value });
+}
+
+function formatHpSegment(current, max, baseSuffix = '') {
+    return translateOrFallback(
+        'statusModal.details.hp',
+        () => `HP ${current}/${max}${baseSuffix}`,
+        { current, max, baseSuffix }
+    );
+}
+
+function formatAttackSegment(value) {
+    return translateOrFallback('statusModal.details.attack', () => `攻${value}`, { value });
+}
+
+function formatDefenseSegment(value) {
+    return translateOrFallback('statusModal.details.defense', () => `防${value}`, { value });
+}
+
+function formatSatietySegment(current, max) {
+    return translateOrFallback('statusModal.details.satiety', () => `満${current}/${max}`, { current, max });
+}
+
+function formatStatusDetailLine({ level, hp, attack, defense, satiety }) {
+    return translateOrFallback(
+        'statusModal.details.line',
+        () => [level, hp, attack, defense, satiety].filter(Boolean).join(' '),
+        { level, hp, attack, defense, satiety: satiety || '' }
+    );
+}
+
+function formatStatValueWithBase(effective, base, key = 'statusModal.stats.valueWithBase') {
+    if (effective === base) return String(effective);
+    return translateOrFallback(
+        key,
+        () => `${effective} (基${base})`,
+        { effective, base }
+    );
+}
+
 function updateLanguageDisplayFormatter(locale) {
     if (typeof Intl === 'undefined' || typeof Intl.DisplayNames !== 'function') {
         languageDisplayNames = null;
@@ -1010,9 +1123,16 @@ function spawnHatenaBlocks(recommendedLevel) {
     }
 
     if (hatenaBlocks.length === 1) {
-        addMessage('怪しげなハテナブロックが現れた…！');
+        addMessage({
+            key: 'game.events.hatena.spawnSingle',
+            fallback: '怪しげなハテナブロックが現れた…！'
+        });
     } else {
-        addMessage(`怪しげなハテナブロックが${hatenaBlocks.length}個出現した…！`);
+        addMessage({
+            key: 'game.events.hatena.spawnMultiple',
+            fallback: '怪しげなハテナブロックが{count}個出現した…！',
+            params: { count: hatenaBlocks.length }
+        });
     }
 }
 
@@ -1158,7 +1278,10 @@ function hatenaApplyBombDamage(ratio = 0.8) {
         defenderPos: { x: player.x, y: player.y }
     });
     if (hazardResult.prevented || hazardResult.amount <= 0) {
-        addMessage('爆発の衝撃を無効化した！');
+        addMessage({
+            key: 'game.events.hatena.bombGuard',
+            fallback: '爆発の衝撃を無効化した！'
+        });
         addPopup(player.x, player.y, 'Guard', '#74c0fc');
         return { outcome: 'guard', amount: 0 };
     }
@@ -1169,7 +1292,11 @@ function hatenaApplyBombDamage(ratio = 0.8) {
         enforceEffectiveHpCap();
         const healed = Math.max(0, player.hp - beforeHp);
         if (healed > 0) {
-            addMessage(`爆発のエネルギーが反転し、HPが${healed}回復した！`);
+            addMessage({
+                key: 'game.events.hatena.bombHeal',
+                fallback: '爆発のエネルギーが反転し、HPが{amount}回復した！',
+                params: { amount: healed }
+            });
             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed > 999999999 ? '+' : ''}`, '#4dabf7');
             playSfx('pickup');
         }
@@ -1177,11 +1304,18 @@ function hatenaApplyBombDamage(ratio = 0.8) {
     }
     const damage = hazardResult.amount;
     player.hp = Math.max(0, player.hp - damage);
-    addMessage(`爆発で${damage}のダメージ！`);
+    addMessage({
+        key: 'game.events.hatena.bombDamage',
+        fallback: '爆発で{amount}のダメージ！',
+        params: { amount: damage }
+    });
     addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#ff6b6b');
     playSfx('bomb');
     if (player.hp <= 0) {
-        handlePlayerDeath('爆発に巻き込まれて倒れた…ゲームオーバー');
+        handlePlayerDeath(translateOrFallback(
+            'game.events.hatena.bombDeath',
+            '爆発に巻き込まれて倒れた…ゲームオーバー'
+        ));
     }
     return { outcome: 'damage', amount: damage };
 }
@@ -1206,23 +1340,34 @@ function hatenaApplyRandomStatus() {
 
 function hatenaGrantRandomItem() {
     const options = [
-        { key: 'potion30', label: '回復薬30' },
-        { key: 'hpBoost', label: 'HP強化アイテム' },
-        { key: 'atkBoost', label: '攻撃強化アイテム' },
-        { key: 'defBoost', label: '防御強化アイテム' },
-        { key: 'spElixir', label: 'SPエリクサー' }
+        { key: 'potion30', labelKey: 'game.items.potion30.label', fallbackLabel: '回復薬30' },
+        { key: 'hpBoost', labelKey: 'game.items.hpBoost.label', fallbackLabel: 'HP強化アイテム' },
+        { key: 'atkBoost', labelKey: 'game.items.atkBoost.label', fallbackLabel: '攻撃強化アイテム' },
+        { key: 'defBoost', labelKey: 'game.items.defBoost.label', fallbackLabel: '防御強化アイテム' },
+        { key: 'spElixir', labelKey: 'game.items.spElixir.label', fallbackLabel: 'SPエリクサー' }
     ];
     const pick = options[randomIntInclusive(0, options.length - 1)];
     incrementInventoryCounter(pick.key, 1);
-    addMessage(`${pick.label}を1つ手に入れた！`);
-    return pick;
+    const itemLabel = translateOrFallback(
+        pick.labelKey,
+        () => pick.fallbackLabel || pick.key
+    );
+    addMessage({
+        key: 'game.events.hatena.itemObtained',
+        fallback: '{item}を1つ手に入れた！',
+        params: { item: itemLabel }
+    });
+    return { key: pick.key, label: itemLabel, labelKey: pick.labelKey };
 }
 
 function triggerHatenaBlock(block) {
     if (!block) return;
     removeHatenaBlockAt(block.x, block.y);
     clearFloorTypeAt(block.x, block.y);
-    addMessage('ハテナブロックを踏んだ！');
+    addMessage({
+        key: 'game.events.hatena.trigger',
+        fallback: 'ハテナブロックを踏んだ！'
+    });
     playSfx('pickup');
 
     let recommended = null;
@@ -1245,9 +1390,16 @@ function triggerHatenaBlock(block) {
             hatenaEvent.levelDelta = applied;
             if (applied > 0) {
                 hatenaEvent.classification = 'positive';
-                addMessage(`レベルが${applied}上昇した！`);
+                addMessage({
+                    key: 'game.events.hatena.levelUp',
+                    fallback: 'レベルが{amount}上昇した！',
+                    params: { amount: applied }
+                });
             } else {
-                addMessage('しかしレベルは変わらなかった。');
+                addMessage({
+                    key: 'game.events.hatena.levelNoChange',
+                    fallback: 'しかしレベルは変わらなかった。'
+                });
             }
             break;
         }
@@ -1256,9 +1408,16 @@ function triggerHatenaBlock(block) {
             hatenaEvent.levelDelta = applied;
             if (applied < 0) {
                 hatenaEvent.classification = 'negative';
-                addMessage('レベルが1下がってしまった…');
+                addMessage({
+                    key: 'game.events.hatena.levelDown',
+                    fallback: 'レベルが{amount}下がってしまった…',
+                    params: { amount: Math.abs(applied) }
+                });
             } else {
-                addMessage('これ以上レベルは下がらなかった。');
+                addMessage({
+                    key: 'game.events.hatena.levelDownNoEffect',
+                    fallback: 'これ以上レベルは下がらなかった。'
+                });
             }
             break;
         }
@@ -1268,9 +1427,16 @@ function triggerHatenaBlock(block) {
             hatenaEvent.expDelta = gained;
             if (gained > 0) {
                 hatenaEvent.classification = 'positive';
-                addMessage(`経験値を${gained}獲得した！`);
+                addMessage({
+                    key: 'game.events.hatena.expGain',
+                    fallback: '経験値を{amount}獲得した！',
+                    params: { amount: gained }
+                });
             } else {
-                addMessage('経験値は増えなかった。');
+                addMessage({
+                    key: 'game.events.hatena.expGainNone',
+                    fallback: '経験値は増えなかった。'
+                });
             }
             break;
         }
@@ -1280,9 +1446,16 @@ function triggerHatenaBlock(block) {
             hatenaEvent.expDelta = lost > 0 ? -lost : 0;
             if (lost > 0) {
                 hatenaEvent.classification = 'negative';
-                addMessage(`経験値を${lost}失った…`);
+                addMessage({
+                    key: 'game.events.hatena.expLoss',
+                    fallback: '経験値を{amount}失った…',
+                    params: { amount: lost }
+                });
             } else {
-                addMessage('失う経験値はなかった。');
+                addMessage({
+                    key: 'game.events.hatena.expLossNone',
+                    fallback: '失う経験値はなかった。'
+                });
             }
             break;
         }
@@ -1291,9 +1464,15 @@ function triggerHatenaBlock(block) {
             hatenaEvent.enemyCount = spawned;
             if (spawned > 0) {
                 hatenaEvent.classification = 'negative';
-                addMessage('周囲に敵が現れた！');
+                addMessage({
+                    key: 'game.events.hatena.enemyAmbush',
+                    fallback: '周囲に敵が現れた！'
+                });
             } else {
-                addMessage('しかし敵は現れなかった。');
+                addMessage({
+                    key: 'game.events.hatena.noEnemies',
+                    fallback: 'しかし敵は現れなかった。'
+                });
             }
             break;
         }
@@ -1321,7 +1500,10 @@ function triggerHatenaBlock(block) {
             hatenaEvent.statusApplied = !!applied;
             if (!applied) {
                 hatenaEvent.classification = 'positive';
-                addMessage('毒は無効化された。');
+                addMessage({
+                    key: 'game.events.hatena.poisonGuarded',
+                    fallback: '毒は無効化された。'
+                });
             } else {
                 hatenaEvent.classification = 'negative';
             }
@@ -1334,7 +1516,10 @@ function triggerHatenaBlock(block) {
             hatenaEvent.statusId = status || 'random';
             if (!status) {
                 hatenaEvent.classification = 'positive';
-                addMessage('状態異常は発生しなかった。');
+                addMessage({
+                    key: 'game.events.hatena.statusNone',
+                    fallback: '状態異常は発生しなかった。'
+                });
             } else {
                 hatenaEvent.classification = 'negative';
             }
@@ -1346,7 +1531,10 @@ function triggerHatenaBlock(block) {
                 hatenaEvent.abilityApplied = 'up';
                 hatenaEvent.classification = 'positive';
             } else {
-                addMessage('能力強化の効果は発揮されなかった。');
+                addMessage({
+                    key: 'game.events.hatena.buffFailed',
+                    fallback: '能力強化の効果は発揮されなかった。'
+                });
             }
             break;
         }
@@ -1364,7 +1552,10 @@ function triggerHatenaBlock(block) {
                 hatenaEvent.classification = 'negative';
             } else {
                 hatenaEvent.classification = 'positive';
-                addMessage('能力低下は発生しなかった。');
+                addMessage({
+                    key: 'game.events.hatena.debuffNone',
+                    fallback: '能力低下は発生しなかった。'
+                });
             }
             break;
         }
@@ -1381,9 +1572,15 @@ function triggerHatenaBlock(block) {
             if (chest) {
                 hatenaEvent.rareChestsSpawned = 1;
                 hatenaEvent.classification = 'positive';
-                addMessage('煌びやかなレア宝箱が出現した！');
+                addMessage({
+                    key: 'game.events.hatena.rareChest',
+                    fallback: '煌びやかなレア宝箱が出現した！'
+                });
             } else {
-                addMessage('宝箱を置く場所が見つからなかった。');
+                addMessage({
+                    key: 'game.events.hatena.chestNoSpace',
+                    fallback: '宝箱を置く場所が見つからなかった。'
+                });
             }
             break;
         }
@@ -1392,9 +1589,15 @@ function triggerHatenaBlock(block) {
             if (chest) {
                 hatenaEvent.normalChestsSpawned = 1;
                 hatenaEvent.classification = 'positive';
-                addMessage('宝箱が出現した！');
+                addMessage({
+                    key: 'game.events.hatena.chest',
+                    fallback: '宝箱が出現した！'
+                });
             } else {
-                addMessage('宝箱は現れなかった。');
+                addMessage({
+                    key: 'game.events.hatena.noChest',
+                    fallback: '宝箱は現れなかった。'
+                });
             }
             break;
         }
@@ -1403,14 +1606,23 @@ function triggerHatenaBlock(block) {
             hatenaEvent.normalChestsSpawned = placed;
             if (placed > 0) {
                 hatenaEvent.classification = 'positive';
-                addMessage('宝箱に囲まれた！');
+                addMessage({
+                    key: 'game.events.hatena.chestRing',
+                    fallback: '宝箱に囲まれた！'
+                });
             } else {
-                addMessage('宝箱は現れなかった。');
+                addMessage({
+                    key: 'game.events.hatena.noChest',
+                    fallback: '宝箱は現れなかった。'
+                });
             }
             break;
         }
         default:
-            addMessage('しかし何も起きなかった。');
+            addMessage({
+                key: 'game.events.hatena.nothing',
+                fallback: 'しかし何も起きなかった。'
+            });
             break;
     }
 
@@ -1599,6 +1811,14 @@ const SKILL_EFFECT_DEFS = {
         expireMessage: '必中攻撃の効果が切れた。'
     }
 };
+
+const SKILL_EFFECT_IDS = Object.freeze(Object.keys(SKILL_EFFECT_DEFS));
+
+function getSkillEffectLabel(effectId) {
+    const def = SKILL_EFFECT_DEFS[effectId];
+    if (!def) return effectId;
+    return resolveLocalizedText(def.labelKey, () => def.label || effectId);
+}
 
 const SKILL_DEFINITIONS = [
     { id: 'break-wall', nameKey: 'skills.breakWall.name', nameFallback: '壁破壊', cost: 25, descriptionKey: 'skills.breakWall.description', descriptionFallback: '目の前の壁を1つ破壊する。', action: useSkillBreakWall },
@@ -1879,25 +2099,25 @@ const PASSIVE_ORB_PRODUCT_FORMAT_OPTIONS = Object.freeze({
 });
 
 const PASSIVE_ORB_AGGREGATE_CONFIG = Object.freeze([
-    { key: 'maxHpMul', label: '最大HP', format: 'percent', decimals: 1 },
-    { key: 'attackMul', label: '攻撃力', format: 'percent', decimals: 2 },
-    { key: 'defenseMul', label: '防御力', format: 'percent', decimals: 2 },
-    { key: 'damageDealtMul', label: '与ダメージ', format: 'percent', decimals: 1 },
-    { key: 'damageTakenMul', label: '被ダメージ', format: 'product', decimals: 2 },
-    { key: 'skillPowerMul', label: 'スキル威力', format: 'percent', decimals: 1 },
-    { key: 'accuracyMul', label: '命中率', format: 'percent', decimals: 2 },
-    { key: 'evasionMul', label: '回避率', format: 'percent', decimals: 2 },
-    { key: 'critDamageMul', label: 'クリティカルダメージ', format: 'percent', decimals: 1 },
-    { key: 'statusChanceMul', label: '状態異常確率', format: 'percent', decimals: 2 },
-    { key: 'enemySpecialChanceMul', label: '敵特殊行動確率', format: 'percent', decimals: 2 },
-    { key: 'poisonStatusChanceMul', label: '毒付与確率', format: 'percent', decimals: 2 },
-    { key: 'paralysisStatusChanceMul', label: '麻痺付与確率', format: 'percent', decimals: 2 },
-    { key: 'levelDownStatusChanceMul', label: 'レベルダウン確率', format: 'percent', decimals: 2 },
-    { key: 'instantDeathChanceMul', label: '即死確率', format: 'percent', decimals: 1 },
-    { key: 'knockbackChanceMul', label: '吹き飛ばし確率', format: 'percent', decimals: 2 },
-    { key: 'poisonDamageMul', label: '毒ダメージ', format: 'product', decimals: 2 },
-    { key: 'bombDamageMul', label: '爆弾ダメージ', format: 'product', decimals: 2 },
-    { key: 'abilityDownPenaltyMul', label: '能力低下幅', format: 'product', decimals: 2 },
+    { key: 'maxHpMul', labelKey: 'game.passiveOrb.labels.maxHpMul', label: '最大HP', format: 'percent', decimals: 1 },
+    { key: 'attackMul', labelKey: 'game.passiveOrb.labels.attackMul', label: '攻撃力', format: 'percent', decimals: 2 },
+    { key: 'defenseMul', labelKey: 'game.passiveOrb.labels.defenseMul', label: '防御力', format: 'percent', decimals: 2 },
+    { key: 'damageDealtMul', labelKey: 'game.passiveOrb.labels.damageDealtMul', label: '与ダメージ', format: 'percent', decimals: 1 },
+    { key: 'damageTakenMul', labelKey: 'game.passiveOrb.labels.damageTakenMul', label: '被ダメージ', format: 'product', decimals: 2 },
+    { key: 'skillPowerMul', labelKey: 'game.passiveOrb.labels.skillPowerMul', label: 'スキル威力', format: 'percent', decimals: 1 },
+    { key: 'accuracyMul', labelKey: 'game.passiveOrb.labels.accuracyMul', label: '命中率', format: 'percent', decimals: 2 },
+    { key: 'evasionMul', labelKey: 'game.passiveOrb.labels.evasionMul', label: '回避率', format: 'percent', decimals: 2 },
+    { key: 'critDamageMul', labelKey: 'game.passiveOrb.labels.critDamageMul', label: 'クリティカルダメージ', format: 'percent', decimals: 1 },
+    { key: 'statusChanceMul', labelKey: 'game.passiveOrb.labels.statusChanceMul', label: '状態異常確率', format: 'percent', decimals: 2 },
+    { key: 'enemySpecialChanceMul', labelKey: 'game.passiveOrb.labels.enemySpecialChanceMul', label: '敵特殊行動確率', format: 'percent', decimals: 2 },
+    { key: 'poisonStatusChanceMul', labelKey: 'game.passiveOrb.labels.poisonStatusChanceMul', label: '毒付与確率', format: 'percent', decimals: 2 },
+    { key: 'paralysisStatusChanceMul', labelKey: 'game.passiveOrb.labels.paralysisStatusChanceMul', label: '麻痺付与確率', format: 'percent', decimals: 2 },
+    { key: 'levelDownStatusChanceMul', labelKey: 'game.passiveOrb.labels.levelDownStatusChanceMul', label: 'レベルダウン確率', format: 'percent', decimals: 2 },
+    { key: 'instantDeathChanceMul', labelKey: 'game.passiveOrb.labels.instantDeathChanceMul', label: '即死確率', format: 'percent', decimals: 1 },
+    { key: 'knockbackChanceMul', labelKey: 'game.passiveOrb.labels.knockbackChanceMul', label: '吹き飛ばし確率', format: 'percent', decimals: 2 },
+    { key: 'poisonDamageMul', labelKey: 'game.passiveOrb.labels.poisonDamageMul', label: '毒ダメージ', format: 'product', decimals: 2 },
+    { key: 'bombDamageMul', labelKey: 'game.passiveOrb.labels.bombDamageMul', label: '爆弾ダメージ', format: 'product', decimals: 2 },
+    { key: 'abilityDownPenaltyMul', labelKey: 'game.passiveOrb.labels.abilityDownPenaltyMul', label: '能力低下幅', format: 'product', decimals: 2 },
 ]);
 
 function clampPassiveOrbDecimals(decimals = 1) {
@@ -1936,6 +2156,23 @@ function formatPassiveOrbProduct(multiplier, decimals = 2) {
     return `×${display}`;
 }
 
+function getPassiveOrbLabel(orbId) {
+    const def = PASSIVE_ORB_DEFS[orbId];
+    const fallback = () => (def?.label || orbId || '');
+    return resolveLocalizedText(`game.passiveOrb.orbs.${orbId}.name`, fallback) || fallback();
+}
+
+function resolvePassiveOrbMetricLabel(entry, fallbackLabel = '') {
+    if (!entry || typeof entry !== 'object') {
+        return fallbackLabel;
+    }
+    const fallback = () => fallbackLabel;
+    const labelKey = (typeof entry.labelKey === 'string' && entry.labelKey)
+        || (entry.key ? `game.passiveOrb.labels.${entry.key}` : null)
+        || (entry.source ? `game.passiveOrb.labels.${entry.source}` : null);
+    return labelKey ? resolveLocalizedText(labelKey, fallback) : fallback();
+}
+
 function buildPassiveOrbAggregateEntries(modifiers) {
     if (!modifiers || typeof modifiers !== 'object') {
         return [];
@@ -1948,8 +2185,9 @@ function buildPassiveOrbAggregateEntries(modifiers) {
         const formatted = config.format === 'product'
             ? formatPassiveOrbProduct(value, config.decimals)
             : formatPassiveOrbPercent(value, config.decimals);
+        const fallbackLabel = typeof config.label === 'string' && config.label ? config.label : (config.key || '');
         entries.push({
-            label: config.label,
+            label: resolvePassiveOrbMetricLabel(config, fallbackLabel),
             value: formatted,
         });
     }
@@ -1969,7 +2207,9 @@ function describePassiveOrbEffect(orbId, count = 0) {
         if (!entry || typeof entry !== 'object') continue;
         const format = entry.format === 'product' ? 'product' : 'percent';
         const decimals = Number.isFinite(entry.decimals) ? entry.decimals : format === 'product' ? 2 : 1;
-        const label = typeof entry.label === 'string' && entry.label ? entry.label : '';
+        const fallbackLabel = typeof entry.label === 'string' && entry.label
+            ? entry.label
+            : (entry.key || entry.source || '');
         let perStack = null;
         switch (entry.source) {
             case 'effects':
@@ -2006,8 +2246,9 @@ function describePassiveOrbEffect(orbId, count = 0) {
         const formatted = format === 'product'
             ? formatPassiveOrbProduct(total, decimals)
             : formatPassiveOrbPercent(total, decimals);
-        if (label) {
-            parts.push(`${label} ${formatted}`);
+        const labelText = resolvePassiveOrbMetricLabel(entry, fallbackLabel);
+        if (labelText) {
+            parts.push(`${labelText} ${formatted}`);
         } else {
             parts.push(formatted);
         }
@@ -2017,12 +2258,60 @@ function describePassiveOrbEffect(orbId, count = 0) {
 }
 
 const ENEMY_TYPE_DEFS = {
-    normal: { id: 'normal', label: '通常', description: '特別な行動は行わない。', weight: 0, color: '#2d3436' },
-    'status-caster': { id: 'status-caster', label: '状態異常使い', description: '攻撃命中時に毒や麻痺などの状態異常を付与してくる。', weight: 3, color: '#be4bdb' },
-    warper: { id: 'warper', label: '転移者', description: '攻撃命中時にプレイヤーを別の位置へワープさせることがある。', weight: 2, color: '#228be6' },
-    executioner: { id: 'executioner', label: '死神', description: '低確率で即死攻撃を放つ危険な敵。', weight: 1, color: '#ff6b6b' },
-    knockback: { id: 'knockback', label: '突撃兵', description: '攻撃でプレイヤーを吹き飛ばし、壁に激突すると追加ダメージ。', weight: 2, color: '#ffa94d' },
-    swift: { id: 'swift', label: '迅速兵', description: '素早く、プレイヤー1ターン中に2回行動する。', weight: 2, color: '#40c057' }
+    normal: {
+        id: 'normal',
+        label: '通常',
+        labelKey: 'enemy.types.normal.label',
+        description: '特別な行動は行わない。',
+        descriptionKey: 'enemy.types.normal.description',
+        weight: 0,
+        color: '#2d3436'
+    },
+    'status-caster': {
+        id: 'status-caster',
+        label: '状態異常使い',
+        labelKey: 'enemy.types.statusCaster.label',
+        description: '攻撃命中時に毒や麻痺などの状態異常を付与してくる。',
+        descriptionKey: 'enemy.types.statusCaster.description',
+        weight: 3,
+        color: '#be4bdb'
+    },
+    warper: {
+        id: 'warper',
+        label: '転移者',
+        labelKey: 'enemy.types.warper.label',
+        description: '攻撃命中時にプレイヤーを別の位置へワープさせることがある。',
+        descriptionKey: 'enemy.types.warper.description',
+        weight: 2,
+        color: '#228be6'
+    },
+    executioner: {
+        id: 'executioner',
+        label: '死神',
+        labelKey: 'enemy.types.executioner.label',
+        description: '低確率で即死攻撃を放つ危険な敵。',
+        descriptionKey: 'enemy.types.executioner.description',
+        weight: 1,
+        color: '#ff6b6b'
+    },
+    knockback: {
+        id: 'knockback',
+        label: '突撃兵',
+        labelKey: 'enemy.types.knockback.label',
+        description: '攻撃でプレイヤーを吹き飛ばし、壁に激突すると追加ダメージ。',
+        descriptionKey: 'enemy.types.knockback.description',
+        weight: 2,
+        color: '#ffa94d'
+    },
+    swift: {
+        id: 'swift',
+        label: '迅速兵',
+        labelKey: 'enemy.types.swift.label',
+        description: '素早く、プレイヤー1ターン中に2回行動する。',
+        descriptionKey: 'enemy.types.swift.description',
+        weight: 2,
+        color: '#40c057'
+    }
 };
 
 const ADVANCED_ENEMY_TYPES = [
@@ -3299,7 +3588,10 @@ function sandboxNotifyNoExp() {
     if (sandboxRuntime.expNoticeShown) return;
     sandboxRuntime.expNoticeShown = true;
     try {
-        addMessage('サンドボックスでは経験値は獲得できません。');
+        addMessage({
+            key: 'game.events.sandbox.noExp',
+            fallback: 'サンドボックスでは経験値は獲得できません。'
+        });
     } catch {}
 }
 
@@ -4801,7 +5093,12 @@ function startSandboxGame(rawConfig) {
         resizeCanvasToStage();
         generateLevel();
         updateUI();
-        try { addMessage('サンドボックスを開始しました。経験値は獲得できません。'); } catch {}
+        try {
+            addMessage({
+                key: 'game.events.sandbox.started',
+                fallback: 'サンドボックスを開始しました。経験値は獲得できません。'
+            });
+        } catch {}
         startGameLoop();
     }, 100);
 
@@ -6042,14 +6339,30 @@ function grantPassiveOrb(source = 'unknown') {
     const orbId = pickRandomPassiveOrbIdByWeight();
     if (!orbId) return null;
     const nextCount = incrementPassiveOrb(orbId, 1);
-    const def = PASSIVE_ORB_DEFS[orbId];
-    const label = def?.label || orbId;
+    const label = getPassiveOrbLabel(orbId);
     const effectText = describePassiveOrbEffect(orbId, nextCount);
-    const detailParts = [];
-    if (effectText) detailParts.push(effectText);
-    detailParts.push(`所持数 ${nextCount}`);
-    const detail = detailParts.length ? `（${detailParts.join(' / ')}）` : '';
-    addMessage(`パッシブオーブ「${label}」を手に入れた！${detail}`);
+    const detailSegments = [];
+    if (effectText) detailSegments.push(effectText);
+    const countText = translateOrFallback(
+        'game.passiveOrb.countDetail',
+        () => `所持数 ${nextCount}`,
+        { count: nextCount }
+    );
+    if (countText) detailSegments.push(countText);
+    const separator = translateOrFallback('game.passiveOrb.detailSeparator', ' / ');
+    const detailsCombined = detailSegments.join(separator);
+    const detail = detailSegments.length
+        ? translateOrFallback(
+            'game.passiveOrb.obtainDetail',
+            () => `（${detailsCombined}）`,
+            { details: detailsCombined, separator }
+        )
+        : '';
+    addMessage({
+        key: 'game.passiveOrb.obtain',
+        fallback: 'パッシブオーブ「{label}」を手に入れた！{detail}',
+        params: { label, detail }
+    });
     recordAchievementEvent('passive_orb_obtained', {
         source: source || 'unknown',
         orbId,
@@ -6435,7 +6748,12 @@ function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
         return false;
     }
     if (isSkillEffectActive('statusGuard')) {
-        if (!silent) addMessage('スキル効果により状態異常を無効化した！');
+        if (!silent) {
+            addMessage({
+                key: 'game.events.skills.statusGuarded',
+                fallback: 'スキル効果により状態異常を無効化した！'
+            });
+        }
         return false;
     }
     const turns = Math.max(1, Math.floor(Number.isFinite(duration) ? Number(duration) : def.defaultDuration || 1));
@@ -6623,7 +6941,10 @@ function updatePlayerSpCap({ silent = false } = {}) {
     player.maxSp = newMax;
     if (maxChanged) {
         if (previousMax === 0 && newMax > 0 && !silent) {
-            addMessage('SPが解放された！');
+            addMessage({
+                key: 'game.events.sp.unlocked',
+                fallback: 'SPが解放された！'
+            });
         } else if (newMax > previousMax && !silent) {
             addMessage(`SP上限が${newMax}に上昇した！`);
         }
@@ -6669,7 +6990,12 @@ function trySpendSp(cost, { silent = false } = {}) {
         return true;
     }
     if (!isSpUnlocked()) {
-        if (!silent) addMessage('SPが解放されていない。');
+        if (!silent) {
+            addMessage({
+                key: 'game.events.sp.notUnlocked',
+                fallback: 'SPが解放されていない。'
+            });
+        }
         return false;
     }
     updatePlayerSpCap({ silent: true });
@@ -6677,7 +7003,12 @@ function trySpendSp(cost, { silent = false } = {}) {
     if (required <= 0) return true;
     const current = Math.max(0, Number(player.sp) || 0);
     if (current + 1e-6 < required) {
-        if (!silent) addMessage('SPが足りない。');
+        if (!silent) {
+            addMessage({
+                key: 'game.events.sp.notEnough',
+                fallback: 'SPが足りない。'
+            });
+        }
         return false;
     }
     const remaining = Math.max(0, current - required);
@@ -6927,7 +7258,10 @@ function skipTurnDueToParalysis() {
     const after = Math.max(0, before - 1);
 
     if (status.justApplied) {
-        addMessage('体が痺れて動けない…');
+        addMessage({
+            key: 'game.events.status.paralyzed',
+            fallback: '体が痺れて動けない…'
+        });
         delete status.justApplied;
     } else {
         addMessage(`体が痺れて動けない… (残り${after}ターン)`);
@@ -7201,18 +7535,18 @@ const DUNGEON_TYPE_NAME_FALLBACKS = Object.freeze({
 
 const DUNGEON_OVERLAY_BADGE_KEYS = Object.freeze({
     dark: {
-        active: 'ui.dungeonOverlay.badge.dark.active',
-        suppressed: 'ui.dungeonOverlay.badge.dark.suppressed'
+        active: 'game.dungeonOverlay.badge.dark.active',
+        suppressed: 'game.dungeonOverlay.badge.dark.suppressed'
     },
     poison: {
-        active: 'ui.dungeonOverlay.badge.poison.active',
-        suppressed: 'ui.dungeonOverlay.badge.poison.suppressed'
+        active: 'game.dungeonOverlay.badge.poison.active',
+        suppressed: 'game.dungeonOverlay.badge.poison.suppressed'
     },
     noise: {
-        active: 'ui.dungeonOverlay.badge.noise.active',
-        suppressed: 'ui.dungeonOverlay.badge.noise.suppressed'
+        active: 'game.dungeonOverlay.badge.noise.active',
+        suppressed: 'game.dungeonOverlay.badge.noise.suppressed'
     },
-    none: 'ui.dungeonOverlay.badge.none'
+    none: 'game.dungeonOverlay.badge.none'
 });
 
 function getDungeonBaseData(world, baseId) {
@@ -7320,7 +7654,8 @@ function updateDungeonTypeOverlay() {
     const generatorId = getCurrentFloorGeneratorId();
     const baseData = getDungeonBaseData(selectedWorld, selectedDungeonBase) || null;
 
-    let title = resolveLocalizedText(baseData?.nameKey, () => baseData?.name || 'ダンジョン') || 'ダンジョン';
+    const overlayTitleFallback = translateOrFallback('game.dungeonOverlay.titleFallback', 'ダンジョン');
+    let title = resolveLocalizedText(baseData?.nameKey, () => baseData?.name || overlayTitleFallback) || overlayTitleFallback;
     let description = resolveLocalizedText(baseData?.descriptionKey, () => baseData?.description || '') || '';
     let def = null;
     try {
@@ -7347,7 +7682,7 @@ function updateDungeonTypeOverlay() {
     }
 
     if (dungeonTypeOverlayName) {
-        dungeonTypeOverlayName.textContent = title || 'ダンジョン';
+        dungeonTypeOverlayName.textContent = title || overlayTitleFallback;
     }
 
     if (dungeonTypeOverlayDescription) {
@@ -7380,7 +7715,7 @@ function updateDungeonTypeOverlay() {
     const darkActive = !!currentGeneratorHazards.darkActive;
     if (baseDark) {
         const darkLabelKey = darkActive ? DUNGEON_OVERLAY_BADGE_KEYS.dark.active : DUNGEON_OVERLAY_BADGE_KEYS.dark.suppressed;
-        const darkLabel = resolveLocalizedText(darkLabelKey, () => darkActive ? '暗い' : '暗い(抑制中)');
+        const darkLabel = translateOrFallback(darkLabelKey, darkActive ? '暗い' : '暗い(抑制中)');
         badges.push({
             label: darkLabel,
             className: `dungeon-overlay__badge--hazard-dark${darkActive ? '' : ' dungeon-overlay__badge--suppressed'}`
@@ -7391,7 +7726,7 @@ function updateDungeonTypeOverlay() {
     const poisonActive = !!currentGeneratorHazards.poisonFogActive;
     if (basePoison) {
         const poisonLabelKey = poisonActive ? DUNGEON_OVERLAY_BADGE_KEYS.poison.active : DUNGEON_OVERLAY_BADGE_KEYS.poison.suppressed;
-        const poisonLabel = resolveLocalizedText(poisonLabelKey, () => poisonActive ? '毒霧' : '毒霧(抑制中)');
+        const poisonLabel = translateOrFallback(poisonLabelKey, poisonActive ? '毒霧' : '毒霧(抑制中)');
         badges.push({
             label: poisonLabel,
             className: `dungeon-overlay__badge--hazard-poison${poisonActive ? '' : ' dungeon-overlay__badge--suppressed'}`
@@ -7402,7 +7737,7 @@ function updateDungeonTypeOverlay() {
     const noiseActive = !!currentGeneratorHazards.noiseActive;
     if (baseNoise) {
         const noiseLabelKey = noiseActive ? DUNGEON_OVERLAY_BADGE_KEYS.noise.active : DUNGEON_OVERLAY_BADGE_KEYS.noise.suppressed;
-        const noiseLabel = resolveLocalizedText(noiseLabelKey, () => noiseActive ? 'ノイズ' : 'ノイズ(抑制中)');
+        const noiseLabel = translateOrFallback(noiseLabelKey, noiseActive ? 'ノイズ' : 'ノイズ(抑制中)');
         badges.push({
             label: noiseLabel,
             className: `dungeon-overlay__badge--hazard-noise${noiseActive ? '' : ' dungeon-overlay__badge--suppressed'}`
@@ -7412,13 +7747,14 @@ function updateDungeonTypeOverlay() {
     if (currentMode === 'blockdim' && blockDimState && blockDimState.spec) {
         const nested = Math.max(1, blockDimState.nested || 1);
         if (nested > 1) {
-            badges.push({ label: `NESTED x${nested}`, className: 'dungeon-overlay__badge--neutral' });
+            const nestedLabel = translateOrFallback('game.dungeonOverlay.badge.nested', `NESTED x${nested}`, { value: nested });
+            badges.push({ label: nestedLabel, className: 'dungeon-overlay__badge--neutral' });
         }
     }
 
     if (!badges.length) {
-        const noneLabel = resolveLocalizedText(DUNGEON_OVERLAY_BADGE_KEYS.none, '特記事項なし');
-        badges.push({ label: noneLabel || '特記事項なし', className: 'dungeon-overlay__badge--neutral' });
+        const noneLabel = translateOrFallback(DUNGEON_OVERLAY_BADGE_KEYS.none, '特記事項なし');
+        badges.push({ label: noneLabel, className: 'dungeon-overlay__badge--neutral' });
     }
 
     dungeonTypeOverlayFeatures.innerHTML = badges
@@ -10846,7 +11182,12 @@ async function runGodConsoleCode() {
         } else {
             setGodConsoleStatus('コードを実行しました。', 'success');
         }
-        try { addMessage('創造神コンソールがコードを実行しました。'); } catch {}
+        try {
+            addMessage({
+                key: 'game.events.console.executed',
+                fallback: '創造神コンソールがコードを実行しました。'
+            });
+        } catch {}
         updateUI();
         try { saveAll(); } catch {}
         return result;
@@ -10918,8 +11259,18 @@ function unlockAnosGodhood(details = {}) {
     updateGodConsoleAvailability();
     updateGodConsoleModeLabel();
     try { addSeparator(); } catch {}
-    try { addMessage('NESTED 99999999 のダンジョンを攻略し、アノス級の神格を得た！'); } catch {}
-    try { addMessage('創造神コンソールとサンドボックス切替が常時利用可能になった。'); } catch {}
+    try {
+        addMessage({
+            key: 'game.events.unlocks.nestedLegend',
+            fallback: 'NESTED 99999999 のダンジョンを攻略し、アノス級の神格を得た！'
+        });
+    } catch {}
+    try {
+        addMessage({
+            key: 'game.events.unlocks.consoleAlwaysOn',
+            fallback: '創造神コンソールとサンドボックス切替が常時利用可能になった。'
+        });
+    } catch {}
     setGodConsoleOpen(true);
     try { recordAchievementEvent('godhood_awakened', { nested: godhoodState.nested, dimKey: details.dimKey || null }); } catch {}
     try { saveAll(); } catch {}
@@ -11226,7 +11577,10 @@ function breakWallAt(x, y) {
         tileMeta[y][x] = null;
     }
 
-    addMessage('壁を破壊した！');
+    addMessage({
+        key: 'game.events.actions.wallDestroyed',
+        fallback: '壁を破壊した！'
+    });
     addPopup(x, y, '破壊', '#ffa94d', 1.2);
     return true;
 }
@@ -12890,10 +13244,16 @@ function generateLevel() {
     const actualGenType = lastGeneratedGenType || resolveCurrentGeneratorType() || 'field';
     updateGeneratorHazardsForFloor(actualGenType);
     if (isDarknessActive()) {
-        addMessage('暗闇が視界を包み、見通しが悪い…');
+        addMessage({
+            key: 'game.events.dungeon.darkness',
+            fallback: '暗闇が視界を包み、見通しが悪い…'
+        });
     }
     if (isPoisonFogActive()) {
-        addMessage('毒霧が漂っている！通常の床も危険だ。');
+        addMessage({
+            key: 'game.events.dungeon.poisonFog',
+            fallback: '毒霧が漂っている！通常の床も危険だ。'
+        });
     }
     generateEntities();
     updateCamera();
@@ -13024,7 +13384,11 @@ function showDungeonDetail(dungeonBase) {
     dungeonNameEl.textContent = dungeonName || '';
     dungeonTypeEl.textContent = getDungeonTypeName(dungeonData.type);
     dungeonRecommendedLevelEl.textContent = recommendedLevel;
-    dungeonDamageMultiplierEl.textContent = `与: ${multiplier.deal}x / 被: ${multiplier.take}x`;
+    dungeonDamageMultiplierEl.textContent = translateOrFallback(
+        'selection.normal.detail.damageMultiplier',
+        () => `与: ${multiplier.deal}x / 被: ${multiplier.take}x`,
+        { deal: multiplier.deal, take: multiplier.take }
+    );
     const descriptionText = resolveLocalizedText(dungeonData.descriptionKey, () => dungeonData.description || '');
     dungeonDescriptionEl.textContent = descriptionText;
 
@@ -13067,13 +13431,22 @@ function calculateHitRate(attackerLevel, defenderLevel) {
 function showEnemyInfo(enemy) {
     if (!enemy) return;
     if (isNoiseActive()) {
-        addMessage('ノイズがひどくて敵の情報を読み取れない…');
+        addMessage(translateOrFallback('enemy.modal.noiseBlocked', 'ノイズがひどくて敵の情報を読み取れない…'));
         return;
     }
 
     // 基本ステータス表示
-    enemyModalTitle.textContent = enemy.boss ? 'ボスの情報' : '敵の情報';
-    enemyModalLevel.textContent = `Lv.${enemy.level}`;
+    if (enemyModalTitle) {
+        const titleKey = enemy.boss ? 'enemy.modal.title.boss' : 'enemy.modal.title.standard';
+        enemyModalTitle.textContent = translateOrFallback(titleKey, enemy.boss ? 'ボスの情報' : '敵の情報');
+    }
+    if (enemyModalLevel) {
+        enemyModalLevel.textContent = translateOrFallback(
+            'enemy.modal.levelFormat',
+            () => `Lv.${enemy.level}`,
+            { level: enemy.level ?? '' }
+        );
+    }
     const enemyEffectiveAttack = getEffectiveEnemyAttack(enemy);
     const enemyEffectiveDefense = getEffectiveEnemyDefense(enemy);
     const enemyEffectiveLevel = getEffectiveEnemyLevel(enemy);
@@ -13081,13 +13454,25 @@ function showEnemyInfo(enemy) {
     enemyModalAttack.textContent = enemyEffectiveAttack;
     enemyModalDefense.textContent = enemyEffectiveDefense;
     const typeDef = getEnemyTypeDefinition(enemy.type);
-    if (enemyModalType) enemyModalType.textContent = typeDef.label;
+    if (enemyModalType) {
+        const typeLabel = resolveLocalizedText(typeDef.labelKey, () => typeDef.label || typeDef.id || '');
+        enemyModalType.textContent = typeLabel;
+    }
     if (enemyModalTypeDesc) {
         const suppressed = isEnemyEffectSuppressed(enemy);
-        const baseDesc = typeDef.description || '特別な行動は行わない。';
-        enemyModalTypeDesc.textContent = suppressed && typeDef.id !== ENEMY_TYPE_DEFS.normal.id
-            ? `${baseDesc}（レベル差により特殊効果は無効化中）`
-            : baseDesc;
+        const baseDesc = resolveLocalizedText(
+            typeDef.descriptionKey,
+            () => typeDef.description || '特別な行動は行わない。'
+        );
+        if (suppressed && typeDef.id !== ENEMY_TYPE_DEFS.normal.id) {
+            enemyModalTypeDesc.textContent = translateOrFallback(
+                'enemy.modal.typeDescription.suppressed',
+                () => `${baseDesc}（レベル差により特殊効果は無効化中）`,
+                { description: baseDesc }
+            );
+        } else {
+            enemyModalTypeDesc.textContent = baseDesc;
+        }
     }
 
     // ダメージシミュレーション
@@ -13130,30 +13515,84 @@ function showEnemyInfo(enemy) {
         (Number.isFinite(playerDomain.damageTakenMul) ? playerDomain.damageTakenMul : 1)
     );
 
+    const critLabelText = translateOrFallback('enemy.modal.damage.critLabel', 'クリ');
+    const invincibleLabel = translateOrFallback('enemy.modal.damage.invincibleLabel', '領域無敵');
+    const reverseLabel = translateOrFallback('enemy.modal.damage.reverseLabel', '回復');
+
     let dealText;
     if (enemyDomain.invincible && !enemyDomain.reverseDamage) {
-        dealText = '0 (領域無敵)';
+        dealText = translateOrFallback(
+            'enemy.modal.damage.invincible',
+            () => `0 (${invincibleLabel})`,
+            { label: invincibleLabel }
+        );
     } else if (enemyDomain.reverseDamage) {
-        dealText = `回復 ${baseDealMin}-${baseDealMax} (クリ: ${baseDealCritMin}-${baseDealCritMax})`;
+        dealText = translateOrFallback(
+            'enemy.modal.damage.reverseRange',
+            () => `${reverseLabel} ${baseDealMin}-${baseDealMax} (${critLabelText}: ${baseDealCritMin}-${baseDealCritMax})`,
+            {
+                reverseLabel,
+                min: baseDealMin,
+                max: baseDealMax,
+                critLabel: critLabelText,
+                critMin: baseDealCritMin,
+                critMax: baseDealCritMax
+            }
+        );
     } else {
         const dealMin = Math.ceil(baseDealMin * dealMultiplier);
         const dealMax = Math.ceil(baseDealMax * dealMultiplier);
         const dealCritMin = Math.ceil(baseDealCritMin * dealMultiplier);
         const dealCritMax = Math.ceil(baseDealCritMax * dealMultiplier);
-        dealText = `${dealMin}-${dealMax} (クリ: ${dealCritMin}-${dealCritMax})`;
+        dealText = translateOrFallback(
+            'enemy.modal.damage.range',
+            () => `${dealMin}-${dealMax} (${critLabelText}: ${dealCritMin}-${dealCritMax})`,
+            {
+                min: dealMin,
+                max: dealMax,
+                critLabel: critLabelText,
+                critMin: dealCritMin,
+                critMax: dealCritMax
+            }
+        );
     }
 
     let takeText;
     if (playerDomain.invincible && !playerDomain.reverseDamage) {
-        takeText = '0 (領域無敵)';
+        takeText = translateOrFallback(
+            'enemy.modal.damage.invincible',
+            () => `0 (${invincibleLabel})`,
+            { label: invincibleLabel }
+        );
     } else if (playerDomain.reverseDamage) {
-        takeText = `回復 ${baseTakeMin}-${baseTakeMax} (クリ: ${baseTakeCritMin}-${baseTakeCritMax})`;
+        takeText = translateOrFallback(
+            'enemy.modal.damage.reverseRange',
+            () => `${reverseLabel} ${baseTakeMin}-${baseTakeMax} (${critLabelText}: ${baseTakeCritMin}-${baseTakeCritMax})`,
+            {
+                reverseLabel,
+                min: baseTakeMin,
+                max: baseTakeMax,
+                critLabel: critLabelText,
+                critMin: baseTakeCritMin,
+                critMax: baseTakeCritMax
+            }
+        );
     } else {
         const takeMin = Math.ceil(baseTakeMin * takeMultiplier);
         const takeMax = Math.ceil(baseTakeMax * takeMultiplier);
         const takeCritMin = Math.ceil(baseTakeCritMin * takeMultiplier);
         const takeCritMax = Math.ceil(baseTakeCritMax * takeMultiplier);
-        takeText = `${takeMin}-${takeMax} (クリ: ${takeCritMin}-${takeCritMax})`;
+        takeText = translateOrFallback(
+            'enemy.modal.damage.range',
+            () => `${takeMin}-${takeMax} (${critLabelText}: ${takeCritMin}-${takeCritMax})`,
+            {
+                min: takeMin,
+                max: takeMax,
+                critLabel: critLabelText,
+                critMin: takeCritMin,
+                critMax: takeCritMax
+            }
+        );
     }
 
     damageDealRange.textContent = dealText;
@@ -13163,8 +13602,20 @@ function showEnemyInfo(enemy) {
     const playerHitRate = calculateHitRate(playerEffectiveLevel, enemyEffectiveLevel);
     const enemyHitRateValue = calculateHitRate(enemyEffectiveLevel, playerEffectiveLevel);
     
-    hitRate.textContent = `${playerHitRate}%`;
-    enemyHitRate.textContent = `${enemyHitRateValue}%`;
+    if (hitRate) {
+        hitRate.textContent = translateOrFallback(
+            'enemy.modal.hitRate',
+            () => `${playerHitRate}%`,
+            { value: playerHitRate }
+        );
+    }
+    if (enemyHitRate) {
+        enemyHitRate.textContent = translateOrFallback(
+            'enemy.modal.enemyHitRate',
+            () => `${enemyHitRateValue}%`,
+            { value: enemyHitRateValue }
+        );
+    }
     
     // モーダル表示
     openModal(enemyInfoModal);
@@ -14254,7 +14705,12 @@ function updateUI() {
     const formatStatWithBase = (effective, base) => {
         const effectiveText = formatValue(effective);
         const baseText = formatValue(base);
-        return effective === base ? effectiveText : `${effectiveText} (基${baseText})`;
+        if (effectiveText === baseText) return String(effectiveText);
+        return translateOrFallback(
+            'statusModal.stats.valueWithBase',
+            () => `${effectiveText} (基${baseText})`,
+            { effective: effectiveText, base: baseText }
+        );
     };
 
     if (statLevel) {
@@ -14267,8 +14723,20 @@ function updateUI() {
         statDef.textContent = formatStatWithBase(effectiveDefense, baseDefense);
     }
     if (statHpText) {
-        const baseMaxText = abilityStatusActive && player.maxHp !== effectiveMaxHp ? ` (基${formatValue(player.maxHp)})` : '';
-        statHpText.textContent = `${formatValue(currentHp)}/${formatValue(effectiveMaxHp)}${baseMaxText}`;
+        const currentText = formatValue(currentHp);
+        const maxText = formatValue(effectiveMaxHp);
+        const baseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp
+            ? translateOrFallback(
+                'statusModal.details.hpBaseSuffix',
+                () => ` (基${formatValue(player.maxHp)})`,
+                { base: formatValue(player.maxHp) }
+            )
+            : '';
+        statHpText.textContent = translateOrFallback(
+            'statusModal.stats.hp',
+            () => `${currentText}/${maxText}${baseSuffix}`,
+            { current: currentText, max: maxText, baseSuffix }
+        );
     }
     if (statExpText) statExpText.textContent = Number.isFinite(exp) ? `${expDisp}/${expMax}` : '∞/∞';
     if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(1, hpPct)) * 100}%`;
@@ -14343,12 +14811,11 @@ function updateUI() {
     const defBoostMajorCount = player.inventory?.defBoostMajor || 0;
     const spElixirCount = player.inventory?.spElixir || 0;
     const passiveOrbEntries = PASSIVE_ORB_IDS.map(id => {
-        const def = PASSIVE_ORB_DEFS[id];
         const raw = Number(passiveOrbStore?.[id]);
         const count = Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : 0;
         return {
             id,
-            label: def?.label || id,
+            label: getPassiveOrbLabel(id),
             count,
             effectText: count > 0 ? describePassiveOrbEffect(id, count) : '',
         };
@@ -14363,7 +14830,11 @@ function updateUI() {
         if (autoItemToggle && autoItemToggle.checked) {
             const potionDisplayCount = Math.max(0, Math.floor(Number(potion30Count) || 0));
             autoItemStatusText.style.display = '';
-            autoItemStatusText.textContent = `オートアイテムON：回復アイテム x ${potionDisplayCount}`;
+            autoItemStatusText.textContent = translateOrFallback(
+                'game.autoItem.status',
+                () => `オートアイテムON：回復アイテム x ${potionDisplayCount}`,
+                { count: potionDisplayCount }
+            );
         } else {
             autoItemStatusText.textContent = '';
             autoItemStatusText.style.display = 'none';
@@ -14380,8 +14851,8 @@ function updateUI() {
     if (invSpElixir) invSpElixir.textContent = spElixirCount;
     if (passiveOrbSummaryEl) {
         passiveOrbSummaryEl.textContent = totalPassiveOrbCount > 0
-            ? `合計 ${totalPassiveOrbCount}個（${uniquePassiveOrbCount}種）`
-            : 'パッシブオーブを所持していません。';
+            ? formatPassiveOrbSummary(totalPassiveOrbCount, uniquePassiveOrbCount)
+            : getPassiveOrbEmptyText();
     }
     if (passiveOrbAggregateEl) {
         passiveOrbAggregateEl.innerHTML = passiveOrbAggregateEntries.length
@@ -14395,13 +14866,12 @@ function updateUI() {
                 </div>
                 `.trim();
             }).join('')
-            : '<div class="passive-orb-empty">効果はありません。</div>';
+            : `<div class="passive-orb-empty">${escapeHtml(getPassiveOrbNoEffectText())}</div>`;
     }
     if (passiveOrbListEl) {
         passiveOrbListEl.innerHTML = ownedPassiveOrbs.length
             ? ownedPassiveOrbs.map(entry => {
                 const label = escapeHtml(entry.label);
-                const countText = escapeHtml(entry.count);
                 const effectMarkup = entry.effectText
                     ? `<span class="passive-orb-effect">${escapeHtml(entry.effectText)}</span>`
                     : '';
@@ -14411,11 +14881,11 @@ function updateUI() {
                         <span class="passive-orb-name">${label}</span>
                         ${effectMarkup}
                     </div>
-                    <span class="passive-orb-count">x${countText}</span>
+                    <span class="passive-orb-count">${escapeHtml(formatCountLabel(entry.count))}</span>
                 </div>
                 `.trim();
             }).join('')
-            : '<div class="passive-orb-empty">パッシブオーブを所持していません。</div>';
+            : `<div class="passive-orb-empty">${escapeHtml(getPassiveOrbEmptyText())}</div>`;
     }
     if (skillCharmList) renderSkillCharmInventory(skillCharmCounts);
     if (eatPotion30Btn) eatPotion30Btn.style.display = satietySystemActive ? '' : 'none';
@@ -14424,9 +14894,9 @@ function updateUI() {
         const lacksPotion = !player.inventory || player.inventory.potion30 <= 0;
         cleansePotion30Btn.disabled = lacksPotion || !hasNegativeStatusAilment;
         if (lacksPotion) {
-            cleansePotion30Btn.title = '回復アイテムを持っていない。';
+            cleansePotion30Btn.title = translateOrFallback('game.items.errors.noHealingItem', '回復アイテムを持っていない。');
         } else if (!hasNegativeStatusAilment) {
-            cleansePotion30Btn.title = '治療できる状態異常がない。';
+            cleansePotion30Btn.title = translateOrFallback('game.items.errors.noStatusToCleanse', '治療できる状態異常がない。');
         } else {
             cleansePotion30Btn.removeAttribute('title');
         }
@@ -14466,14 +14936,18 @@ function updateUI() {
     const modalDungeonType = document.getElementById('modal-dungeon-type');
     const modalDungeonTypeRow = document.getElementById('modal-dungeon-type-row');
     
-    if (modalLevel) modalLevel.textContent = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
+    if (modalLevel) modalLevel.textContent = formatStatValueWithBase(effectiveLevel, baseLevel, 'statusModal.stats.levelWithBase');
     if (modalExp) modalExp.textContent = `${expDisp} / ${expMax}`;
     if (modalHp) {
-        const baseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
-        modalHp.textContent = `${currentHp} / ${effectiveMaxHp}${baseSuffix}`;
+        const baseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? formatHpBaseSuffix(player.maxHp) : '';
+        modalHp.textContent = translateOrFallback(
+            'statusModal.stats.hp',
+            () => `${currentHp} / ${effectiveMaxHp}${baseSuffix}`,
+            { current: currentHp, max: effectiveMaxHp, baseSuffix }
+        );
     }
-    if (modalAttack) modalAttack.textContent = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
-    if (modalDefense) modalDefense.textContent = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
+    if (modalAttack) modalAttack.textContent = formatStatValueWithBase(effectiveAttack, baseAttack);
+    if (modalDefense) modalDefense.textContent = formatStatValueWithBase(effectiveDefense, baseDefense);
     if (modalSatietyRow) modalSatietyRow.style.display = satietySystemActive ? '' : 'none';
     if (modalSatiety && satietySystemActive) modalSatiety.textContent = satietyIsInfinite ? `∞ / ${satietyCapText}` : `${satietyDisplayText} / ${satietyCapText}`;
     if (modalSpRow) modalSpRow.style.display = spUnlocked && spMax > 0 ? '' : 'none';
@@ -14482,37 +14956,45 @@ function updateUI() {
         const spDisplayMax = floorSpValue(spMax);
         modalSpValue.textContent = `${spDisplayCurrent} / ${spDisplayMax}`;
     }
-    if (modalFloor) modalFloor.textContent = `${dungeonLevel}F`;
+    if (modalFloor) modalFloor.textContent = formatFloorLabel(dungeonLevel);
     if (modalStatusEffects) {
-        modalStatusEffects.textContent = statusList.length ? statusList.map(s => `${s.label} 残り${s.remaining}ターン`).join('\n') : 'なし';
+        modalStatusEffects.textContent = statusList.length
+            ? statusList.map(s => formatEffectEntry(s.label, s.remaining)).join('\n')
+            : getNoneText();
     }
     if (modalSkillEffects) {
-        modalSkillEffects.textContent = skillEffects.length ? skillEffects.map(s => `${s.label} 残り${s.remaining}ターン`).join('\n') : 'なし';
+        modalSkillEffects.textContent = skillEffects.length
+            ? skillEffects.map(s => formatEffectEntry(s.label, s.remaining)).join('\n')
+            : getNoneText();
     }
-    if (modalPotion30) modalPotion30.textContent = `x ${potion30Count}`;
-    if (modalHpBoost) modalHpBoost.textContent = `x ${hpBoostCount}`;
-    if (modalAtkBoost) modalAtkBoost.textContent = `x ${atkBoostCount}`;
-    if (modalDefBoost) modalDefBoost.textContent = `x ${defBoostCount}`;
-    if (modalHpBoostMajor) modalHpBoostMajor.textContent = `x ${hpBoostMajorCount}`;
-    if (modalAtkBoostMajor) modalAtkBoostMajor.textContent = `x ${atkBoostMajorCount}`;
-    if (modalDefBoostMajor) modalDefBoostMajor.textContent = `x ${defBoostMajorCount}`;
-    if (modalSpElixir) modalSpElixir.textContent = `x ${spElixirCount}`;
+    if (modalPotion30) modalPotion30.textContent = formatCountLabel(potion30Count);
+    if (modalHpBoost) modalHpBoost.textContent = formatCountLabel(hpBoostCount);
+    if (modalAtkBoost) modalAtkBoost.textContent = formatCountLabel(atkBoostCount);
+    if (modalDefBoost) modalDefBoost.textContent = formatCountLabel(defBoostCount);
+    if (modalHpBoostMajor) modalHpBoostMajor.textContent = formatCountLabel(hpBoostMajorCount);
+    if (modalAtkBoostMajor) modalAtkBoostMajor.textContent = formatCountLabel(atkBoostMajorCount);
+    if (modalDefBoostMajor) modalDefBoostMajor.textContent = formatCountLabel(defBoostMajorCount);
+    if (modalSpElixir) modalSpElixir.textContent = formatCountLabel(spElixirCount);
     if (modalSkillCharms) {
         const summary = Object.keys(SKILL_EFFECT_DEFS)
             .map(effectId => {
                 const count = Math.max(0, Math.floor(Number(skillCharmCounts[effectId]) || 0));
                 if (count <= 0) return null;
-                const label = SKILL_EFFECT_DEFS[effectId]?.label || effectId;
-                return `${label} x${count}`;
+                const label = getSkillEffectLabel(effectId);
+                return translateOrFallback(
+                    'statusModal.skillCharms.entry',
+                    () => `${label} x${count}`,
+                    { label, count }
+                );
             })
             .filter(Boolean)
             .join(' / ');
-        modalSkillCharms.textContent = summary || 'なし';
+        modalSkillCharms.textContent = summary || getNoneText();
     }
     if (modalPassiveOrbSummary) {
         modalPassiveOrbSummary.textContent = totalPassiveOrbCount > 0
-            ? `合計 ${totalPassiveOrbCount}個（${uniquePassiveOrbCount}種）`
-            : 'なし';
+            ? formatPassiveOrbSummary(totalPassiveOrbCount, uniquePassiveOrbCount)
+            : getNoneText();
     }
     if (modalPassiveOrbAggregate) {
         if (passiveOrbAggregateEntries.length) {
@@ -14535,9 +15017,11 @@ function updateUI() {
     if (modalWorld) {
         if (currentMode === 'blockdim') {
             const nested = blockDimState?.nested || 1;
-            modalWorld.textContent = `BlockDim NESTED ${nested} / ${blockDimState?.dimKey?.toUpperCase() || ''}`;
+            const dimKey = blockDimState?.dimKey || '';
+            const dimensionName = resolveDimensionNameByKey(dimKey) || (dimKey || '').toUpperCase();
+            modalWorld.textContent = formatBlockDimWorldLabel(nested, dimensionName || '');
         } else {
-            modalWorld.textContent = `${selectedWorld}世界`;
+            modalWorld.textContent = formatWorldLabel(selectedWorld);
         }
     }
     if (modalDifficulty) modalDifficulty.textContent = difficulty;
@@ -14549,7 +15033,13 @@ function updateUI() {
             const b2 = resolveBlockNameByKey(blockDimTables.blocks2, blockDimState.b2Key) || (blockDimState.b2Key || '');
             const b3 = resolveBlockNameByKey(blockDimTables.blocks3, blockDimState.b3Key) || (blockDimState.b3Key || '');
             const nested = blockDimState?.nested || 1;
-            modalDungeonSummary.textContent = `NESTED ${nested} ／ 次元 ${dimName || (blockDimState.dimKey || '').toUpperCase()}：${b1}・${b2}・${b3}`;
+            modalDungeonSummary.textContent = formatBlockDimDungeonSummaryLabel({
+                nested,
+                dimensionName: dimName || (blockDimState.dimKey || '').toUpperCase(),
+                block1: b1,
+                block2: b2,
+                block3: b3
+            });
             if (modalDungeonTypeRow && modalDungeonType) {
                 modalDungeonTypeRow.style.display = '';
                 modalDungeonType.textContent = formatSpecType(blockDimState.spec);
@@ -14557,7 +15047,7 @@ function updateUI() {
         } else {
             const dData = getDungeonBaseData(selectedWorld, selectedDungeonBase);
             const name = dData ? resolveLocalizedText(dData.nameKey, () => dData.name || '-') : '-';
-            modalDungeonSummary.textContent = `${selectedWorld}世界：${name}`;
+            modalDungeonSummary.textContent = formatDungeonSummaryLabel(selectedWorld, name);
             if (modalDungeonTypeRow && modalDungeonType) {
                 modalDungeonTypeRow.style.display = '';
                 modalDungeonType.textContent = dData ? getDungeonTypeName(dData.type) : '-';
@@ -14567,16 +15057,25 @@ function updateUI() {
     
     if (statusDetails) {
         const levelText = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
-        const hpBaseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? ` (基${player.maxHp})` : '';
-        const atkText = effectiveAttack === baseAttack ? effectiveAttack : `${effectiveAttack} (基${baseAttack})`;
-        const defText = effectiveDefense === baseDefense ? effectiveDefense : `${effectiveDefense} (基${baseDefense})`;
-        let detailLine = `Lv.${levelText} HP ${currentHp}/${effectiveMaxHp}${hpBaseSuffix} 攻${atkText} 防${defText}`;
-        if (satietySystemActive) {
-            detailLine += ` 満${satietyDisplayText}/${satietyCapText}`;
-        }
-        statusDetails.innerHTML = `階層: ${dungeonLevel}<br>` + detailLine;
+        const hpBaseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? formatHpBaseSuffix(player.maxHp) : '';
+        const atkText = effectiveAttack === baseAttack ? String(effectiveAttack) : `${effectiveAttack} (基${baseAttack})`;
+        const defText = effectiveDefense === baseDefense ? String(effectiveDefense) : `${effectiveDefense} (基${baseDefense})`;
+        const levelSegment = formatLevelSegment(levelText);
+        const hpSegment = formatHpSegment(currentHp, effectiveMaxHp, hpBaseSuffix);
+        const attackSegment = formatAttackSegment(atkText);
+        const defenseSegment = formatDefenseSegment(defText);
+        const satietySegment = satietySystemActive ? formatSatietySegment(satietyDisplayText, satietyCapText) : '';
+        const detailLine = formatStatusDetailLine({
+            level: levelSegment,
+            hp: hpSegment,
+            attack: attackSegment,
+            defense: defenseSegment,
+            satiety: satietySegment
+        });
+        const floorLine = formatStatusDetailFloor(dungeonLevel);
+        statusDetails.innerHTML = `${escapeHtml(floorLine)}<br>${escapeHtml(detailLine)}`;
     }
-    if (floorIndicatorValue) floorIndicatorValue.textContent = `${dungeonLevel}F`;
+    if (floorIndicatorValue) floorIndicatorValue.textContent = formatFloorLabel(dungeonLevel);
     updateDungeonTypeOverlay();
 
     refreshSkillsModal();
@@ -14590,7 +15089,7 @@ function renderSkillCharmInventory(charmCounts = {}) {
         lastSkillCharmMarkup = '';
         return;
     }
-    const effectIds = Object.keys(SKILL_EFFECT_DEFS);
+    const effectIds = SKILL_EFFECT_IDS;
     const escapeHtml = (value) => String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -14601,26 +15100,28 @@ function renderSkillCharmInventory(charmCounts = {}) {
         const count = Math.max(0, Math.floor(Number(charmCounts?.[effectId]) || 0));
         return {
             effectId,
-            label: SKILL_EFFECT_DEFS[effectId]?.label || effectId,
+            label: getSkillEffectLabel(effectId),
             count
         };
     }).filter(entry => entry.count > 0);
+    const useLabel = translateOrFallback('game.skillCharms.use', '使用');
+    const emptyMessage = translateOrFallback('game.skillCharms.empty', '所持していません。');
     const markup = entries.length
         ? entries.map(entry => {
             const label = escapeHtml(entry.label);
-            const count = escapeHtml(entry.count);
+            const count = escapeHtml(formatCountLabel(entry.count));
             const effect = escapeHtml(entry.effectId);
             return `
             <div class="skill-charm-item">
                 <div class="skill-charm-item__info">
                     <span class="skill-charm-name">${label}</span>
-                    <span class="skill-charm-count">x${count}</span>
+                    <span class="skill-charm-count">${count}</span>
                 </div>
-                <button type="button" class="skill-charm-use" data-effect="${effect}">使用</button>
+                <button type="button" class="skill-charm-use" data-effect="${effect}">${escapeHtml(useLabel)}</button>
             </div>
         `;
         }).join('')
-        : '<div class="skill-charm-empty">所持していません。</div>';
+        : `<div class="skill-charm-empty">${escapeHtml(emptyMessage)}</div>`;
 
     if (markup === lastSkillCharmMarkup) return;
 
@@ -14630,17 +15131,23 @@ function renderSkillCharmInventory(charmCounts = {}) {
 
 function useSkillCharm(effectId) {
     if (!effectId || !Object.prototype.hasOwnProperty.call(SKILL_EFFECT_DEFS, effectId)) {
-        addMessage('未知の護符は使用できない。');
+        addMessage({
+            key: 'game.events.charms.unknown',
+            fallback: '未知の護符は使用できない。'
+        });
         return false;
     }
     const charms = ensureSkillCharmInventory();
     const current = Math.max(0, Math.floor(Number(charms[effectId]) || 0));
     if (current <= 0) {
-        addMessage('その護符は所持していない。');
+        addMessage({
+            key: 'game.events.charms.notOwned',
+            fallback: 'その護符は所持していない。'
+        });
         return false;
     }
     incrementSkillCharm(effectId, -1);
-    const label = SKILL_EFFECT_DEFS[effectId]?.label || effectId;
+    const label = getSkillEffectLabel(effectId);
     updateUI();
     saveAll();
     closeModal(itemsModal);
@@ -14683,11 +15190,21 @@ function refreshSatietyActivation({ notify = false } = {}) {
             }
         }
         if (notify) {
-            try { addMessage('満腹度システムが発動した！'); } catch {}
+            try {
+                addMessage({
+                    key: 'game.events.satiety.enabled',
+                    fallback: '満腹度システムが発動した！'
+                });
+            } catch {}
         }
     } else if (!isActive && satietySystemActive) {
         if (notify) {
-            try { addMessage('満腹度システムが解除された。'); } catch {}
+            try {
+                addMessage({
+                    key: 'game.events.satiety.disabled',
+                    fallback: '満腹度システムが解除された。'
+                });
+            } catch {}
         }
     }
     satietySystemActive = isActive;
@@ -14813,13 +15330,30 @@ function updatePlayerSummaryCard({
     const formatStatWithBase = (effective, base) => {
         const effectiveText = formatValue(effective);
         const baseText = formatValue(base);
-        return effective === base ? effectiveText : `${effectiveText} (基${baseText})`;
+        if (effectiveText === baseText) return String(effectiveText);
+        return translateOrFallback(
+            'statusModal.stats.valueWithBase',
+            () => `${effectiveText} (基${baseText})`,
+            { effective: effectiveText, base: baseText }
+        );
     };
 
     if (levelEl) levelEl.textContent = formatStatWithBase(effectiveLevel, baseLevel);
     if (hpEl) {
-        const baseSuffix = abilityStatusActiveCard && player.maxHp !== effectiveMaxHp ? ` (基${formatValue(player.maxHp)})` : '';
-        hpEl.textContent = `${formatValue(normalizedHp)}/${formatValue(effectiveMaxHp)}${baseSuffix}`;
+        const currentText = formatValue(normalizedHp);
+        const maxText = formatValue(effectiveMaxHp);
+        const baseSuffix = abilityStatusActiveCard && player.maxHp !== effectiveMaxHp
+            ? translateOrFallback(
+                'statusModal.details.hpBaseSuffix',
+                () => ` (基${formatValue(player.maxHp)})`,
+                { base: formatValue(player.maxHp) }
+            )
+            : '';
+        hpEl.textContent = translateOrFallback(
+            'statusModal.stats.hp',
+            () => `${currentText}/${maxText}${baseSuffix}`,
+            { current: currentText, max: maxText, baseSuffix }
+        );
     }
     if (expEl) expEl.textContent = Number.isFinite(player.exp) ? `${expDisp}/${expMax}` : '∞/∞';
     if (atkEl) atkEl.textContent = formatStatWithBase(effectiveAttack, baseAttack);
@@ -15094,15 +15628,18 @@ function grantRareChestSpecialReward() {
         addMessage(`黄金の宝箱から${message}`);
         rewardInfo = { rewardType: key, category: 'majorBoost' };
     } else if (roll < 0.75) {
-        const effects = Object.keys(SKILL_EFFECT_DEFS);
+        const effects = SKILL_EFFECT_IDS;
         const effectId = effects[Math.floor(Math.random() * effects.length)];
         incrementSkillCharm(effectId, 1);
-        const effectName = SKILL_EFFECT_DEFS[effectId]?.label || effectId;
+        const effectName = getSkillEffectLabel(effectId);
         addMessage(`黄金の宝箱からスキル効果「${effectName}」の護符を手に入れた！（${SKILL_CHARM_DURATION_TURNS}ターン）`);
         rewardInfo = { rewardType: `skillCharm:${effectId}`, category: 'skillCharm' };
     } else {
         incrementInventoryCounter('spElixir', 1);
-        addMessage('黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。');
+        addMessage({
+            key: 'game.events.goldenChest.elixir',
+            fallback: '黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。'
+        });
         rewardInfo = { rewardType: 'spElixir', category: 'spItem' };
     }
     const passiveOrbReward = maybeGrantPassiveOrb('rareChest', 0.1);
@@ -15113,7 +15650,10 @@ function grantRareChestSpecialReward() {
 }
 
 function completeRareChestSuccess(diff) {
-    addMessage('黄金の宝箱を安全に開けた！');
+    addMessage({
+        key: 'game.events.goldenChest.openedSafely',
+        fallback: '黄金の宝箱を安全に開けた！'
+    });
     const roll = Math.random();
     let rewardInfo;
     if (roll < 0.5) {
@@ -15183,7 +15723,10 @@ function openChest(chest) {
     if (!chest) return true;
     const rarity = chest.rarity === 'rare' ? 'rare' : 'normal';
     if (rarity === 'rare') {
-        addMessage('黄金の宝箱だ！タイミングバーを狙おう。');
+        addMessage({
+            key: 'game.events.goldenChest.prompt',
+            fallback: '黄金の宝箱だ！タイミングバーを狙おう。'
+        });
         const started = startRareChestMinigame(chest);
         if (!started) {
             const rewardInfo = grantNormalChestReward({ rarity: 'rare' });
@@ -15275,7 +15818,10 @@ function attackInDirection() {
         playerTurn = false;
         setTimeout(enemyTurn, 100);
     } else {
-        addMessage('その方向には敵がいない！');
+        addMessage({
+            key: 'game.events.combat.noEnemyInDirection',
+            fallback: 'その方向には敵がいない！'
+        });
     }
 }
 
@@ -15287,11 +15833,17 @@ function performAttack(enemyAtTarget) {
     const enemyEffectiveDefense = getEffectiveEnemyDefense(enemyAtTarget);
     const forceHit = isSureHitActiveForEnemy(enemyLevel);
     if (!forceHit && isSkillEffectActive('sureHit') && enemyLevel - playerEffectiveLevel >= SP_HIGH_LEVEL_SUPPRESS_GAP) {
-        addMessage('敵のレベルが高すぎて必中攻撃の効果が及ばない…');
+        addMessage({
+            key: 'game.events.combat.sureHitIneffective',
+            fallback: '敵のレベルが高すぎて必中攻撃の効果が及ばない…'
+        });
     }
     const accuracyMul = Number.isFinite(passiveMods?.accuracyMul) ? passiveMods.accuracyMul : 1;
     if (!forceHit && !hitCheck(playerEffectiveLevel || 1, enemyLevel, { attackerType: 'player', accuracyMul })) {
-        addMessage('Miss');
+        addMessage({
+            key: 'game.events.combat.miss',
+            fallback: 'Miss'
+        });
         addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Miss', '#74c0fc');
     } else {
         const baseDef = enemyEffectiveDefense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
@@ -15347,7 +15899,10 @@ function performAttack(enemyAtTarget) {
         addMessage(`プレイヤーは敵に ${applied} のダメージを与えた！`);
         const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied>999999999?'+':''}`;
         if (enemyAtTarget.hp <= 0) {
-            addMessage("敵を倒した！");
+            addMessage({
+                key: 'game.events.combat.enemyDefeated',
+                fallback: '敵を倒した！'
+            });
             addPopup(enemyAtTarget.x, enemyAtTarget.y, `${dmgText}☠`, '#ffffff', 1.3);
             addDefeatedEnemy(enemyAtTarget); // Add defeat animation
             gainSp(1, { silent: true });
@@ -15964,10 +16519,16 @@ function applyPostMoveEffects() {
         if (stairs && player.x === stairs.x && player.y === stairs.y) {
             const maxFloor = getMaxFloor();
             if (isBossFloor(dungeonLevel) && bossAlive) {
-                addMessage('ボスを倒すまでは進めない！');
+                addMessage({
+                    key: 'game.events.combat.bossGate',
+                    fallback: 'ボスを倒すまでは進めない！'
+                });
             } else {
                 if (dungeonLevel === maxFloor) {
-                    addMessage('ダンジョンを攻略した！');
+                    addMessage({
+                        key: 'game.events.progress.dungeonCleared',
+                        fallback: 'ダンジョンを攻略した！'
+                    });
                     player.hp = player.maxHp;
                     enforceEffectiveHpCap();
                     restoreSatietyToMax();
@@ -16324,7 +16885,10 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     const enemyEffectiveLevel = getEffectiveEnemyLevel(enemy);
     const evasionMul = Number.isFinite(passiveMods?.evasionMul) && passiveMods.evasionMul > 0 ? passiveMods.evasionMul : 1;
     if (!hitCheck(enemyEffectiveLevel || 1, playerEffectiveLevel || 1, { attackerType: 'enemy', defenderType: 'player', evasionMul })) {
-        addMessage('敵は外した！');
+        addMessage({
+            key: 'game.events.combat.enemyMissed',
+            fallback: '敵は外した！'
+        });
         addPopup(player.x, player.y, 'Miss', '#74c0fc');
         return;
     }
@@ -16405,7 +16969,10 @@ function warpPlayerFromEnemy(enemy) {
     player.x = destination.x;
     player.y = destination.y;
     updateCamera();
-    addMessage('敵の転移攻撃でワープさせられた！');
+    addMessage({
+        key: 'game.events.combat.enemyWarped',
+        fallback: '敵の転移攻撃でワープさせられた！'
+    });
     addPopup(player.x, player.y, 'ワープ', '#4dabf7');
     applyPostMoveEffects();
 }
@@ -16464,15 +17031,24 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
         case 'status-caster': {
             let triggerChance = applyPassiveChanceMultiplier('enemySpecial:status-caster', 0.45);
             if (triggerChance <= 0) {
-                addMessage('オーブの加護で状態異常攻撃を無効化した！');
+                addMessage({
+                    key: 'game.events.orb.statusAttackNegated',
+                    fallback: 'オーブの加護で状態異常攻撃を無効化した！'
+                });
                 break;
             }
             if (Math.random() >= triggerChance) {
-                addMessage('オーブの加護で状態異常攻撃を防いだ！');
+                addMessage({
+                    key: 'game.events.orb.statusAttackPrevented',
+                    fallback: 'オーブの加護で状態異常攻撃を防いだ！'
+                });
                 break;
             }
             if (suppressed) {
-                addMessage('レベル差で状態異常を防いだ！');
+                addMessage({
+                    key: 'game.events.combat.statusResistedByLevel',
+                    fallback: 'レベル差で状態異常を防いだ！'
+                });
                 break;
             }
             const statusOptions = ['poison', 'paralysis', 'abilityDown', 'levelDown'];
@@ -16481,7 +17057,10 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
             const targetStatus = pool[Math.floor(Math.random() * pool.length)];
             const statusChance = computeStatusInflictionChance(targetStatus, 1);
             if (statusChance <= 0 || Math.random() >= statusChance) {
-                addMessage('オーブの加護で状態異常を防いだ！');
+                addMessage({
+                    key: 'game.events.orb.statusPrevented',
+                    fallback: 'オーブの加護で状態異常を防いだ！'
+                });
                 break;
             }
             applyPlayerStatusEffect(targetStatus);
@@ -16490,15 +17069,24 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
         case 'warper': {
             let warpChance = applyPassiveChanceMultiplier('enemySpecial:warper', 0.35);
             if (warpChance <= 0) {
-                addMessage('オーブの加護で転移攻撃を無効化した！');
+                addMessage({
+                    key: 'game.events.orb.teleportNegated',
+                    fallback: 'オーブの加護で転移攻撃を無効化した！'
+                });
                 break;
             }
             if (Math.random() >= warpChance) {
-                addMessage('オーブの加護で転移攻撃を防いだ！');
+                addMessage({
+                    key: 'game.events.orb.teleportPrevented',
+                    fallback: 'オーブの加護で転移攻撃を防いだ！'
+                });
                 break;
             }
             if (suppressed) {
-                addMessage('レベル差で転移攻撃を耐えた！');
+                addMessage({
+                    key: 'game.events.combat.teleportResistedByLevel',
+                    fallback: 'レベル差で転移攻撃を耐えた！'
+                });
                 break;
             }
             warpPlayerFromEnemy(enemy);
@@ -16508,18 +17096,30 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
             let lethalChance = applyPassiveChanceMultiplier('enemySpecial:executioner:instantDeath', 0.1);
             lethalChance = applyPassiveChanceMultiplier('instantDeath', lethalChance);
             if (lethalChance <= 0) {
-                addMessage('オーブの加護で即死攻撃を無効化した！');
+                addMessage({
+                    key: 'game.events.orb.instantDeathNegated',
+                    fallback: 'オーブの加護で即死攻撃を無効化した！'
+                });
                 break;
             }
             if (Math.random() >= lethalChance) {
-                addMessage('オーブの加護で即死攻撃を耐えた！');
+                addMessage({
+                    key: 'game.events.orb.instantDeathPrevented',
+                    fallback: 'オーブの加護で即死攻撃を耐えた！'
+                });
                 break;
             }
             if (suppressed) {
-                addMessage('レベル差で即死攻撃を無効化した！');
+                addMessage({
+                    key: 'game.events.combat.instantDeathResisted',
+                    fallback: 'レベル差で即死攻撃を無効化した！'
+                });
                 break;
             }
-            addMessage('敵の即死攻撃が命中した…！');
+            addMessage({
+                key: 'game.events.combat.instantDeathHit',
+                fallback: '敵の即死攻撃が命中した…！'
+            });
             addPopup(player.x, player.y, '☠', '#ff6b6b', 1.4);
             player.hp = 0;
             handlePlayerDeath('敵の即死攻撃を受けた…ゲームオーバー');
@@ -16527,16 +17127,25 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
         }
         case 'knockback': {
             if (suppressed) {
-                addMessage('レベル差で吹き飛ばしを踏ん張った！');
+                addMessage({
+                    key: 'game.events.combat.knockbackResistedByLevel',
+                    fallback: 'レベル差で吹き飛ばしを踏ん張った！'
+                });
                 break;
             }
             let knockbackChance = applyPassiveChanceMultiplier('enemySpecial:knockback', 1);
             if (knockbackChance <= 0) {
-                addMessage('オーブの加護で吹き飛ばしを無効化した！');
+                addMessage({
+                    key: 'game.events.orb.knockbackNegated',
+                    fallback: 'オーブの加護で吹き飛ばしを無効化した！'
+                });
                 break;
             }
             if (Math.random() >= knockbackChance) {
-                addMessage('オーブの加護で吹き飛ばしを防いだ！');
+                addMessage({
+                    key: 'game.events.orb.knockbackPrevented',
+                    fallback: 'オーブの加護で吹き飛ばしを防いだ！'
+                });
                 break;
             }
             applyKnockbackFromEnemy(enemy, stepX, stepY);
@@ -16592,11 +17201,21 @@ function eatPotion30({ reason = 'manual' } = {}) {
     const isAuto = reason === 'auto';
     if (!player) return false;
     if (!satietySystemActive) {
-        if (!isAuto) addMessage('満腹度システムが有効な時だけ食べられる。');
+        if (!isAuto) {
+            addMessage({
+                key: 'game.events.satiety.cannotEat',
+                fallback: '満腹度システムが有効な時だけ食べられる。'
+            });
+        }
         return false;
     }
     if (!player.inventory || player.inventory.potion30 <= 0) {
-        if (!isAuto) addMessage('ポーションを持っていない。');
+        if (!isAuto) {
+            addMessage({
+                key: 'game.events.items.noPotion',
+                fallback: 'ポーションを持っていない。'
+            });
+        }
         return false;
     }
     const satietyCap = recalculateSatietyMax({ clampCurrent: false });
@@ -16605,7 +17224,10 @@ function eatPotion30({ reason = 'manual' } = {}) {
     const actualRecovered = Math.min(recoverCandidate, Math.max(0, satietyCap - beforeSatiety));
     if (actualRecovered <= 0) {
         if (!isAuto) {
-            addMessage('満腹度は既に最大値です。');
+            addMessage({
+                key: 'game.events.satiety.alreadyFull',
+                fallback: '満腹度は既に最大値です。'
+            });
             updateUI();
         }
         return false;
@@ -16687,12 +17309,18 @@ function consumePotion30({ reason = 'manual' } = {}) {
 function cleanseNegativeStatusWithPotion() {
     if (!player || !player.inventory) return false;
     if (player.inventory.potion30 <= 0) {
-        addMessage('回復アイテムを持っていない。');
+        addMessage({
+            key: 'game.items.errors.noHealingItem',
+            fallback: '回復アイテムを持っていない。'
+        });
         return false;
     }
     const activeNegative = getActiveNegativeStatusIds();
     if (!activeNegative.length) {
-        addMessage('治療できる状態異常がない。');
+        addMessage({
+            key: 'game.items.errors.noStatusToCleanse',
+            fallback: '治療できる状態異常がない。'
+        });
         return false;
     }
     const targetStatusId = activeNegative.reduce((best, candidate) => {
@@ -16708,7 +17336,10 @@ function cleanseNegativeStatusWithPotion() {
         return best;
     }, null);
     if (!targetStatusId) {
-        addMessage('治療できる状態異常がない。');
+        addMessage({
+            key: 'game.items.errors.noStatusToCleanse',
+            fallback: '治療できる状態異常がない。'
+        });
         return false;
     }
 
@@ -16758,7 +17389,10 @@ importFileInput && importFileInput.addEventListener('change', async (e) => {
         const data = JSON.parse(text);
         applyGameStateSnapshot(data, { applyUI: true });
         showSelectionScreen({ stopLoop: true, refillHp: false, resetModeToNormal: false, rebuildSelection: false });
-        addMessage('データをインポートしました');
+        addMessage({
+            key: 'game.events.data.imported',
+            fallback: 'データをインポートしました'
+        });
         saveAll();
     } catch {}
 });
@@ -16772,11 +17406,17 @@ eatPotion30Btn && eatPotion30Btn.addEventListener('click', () => {
 
 offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
     if (!isSpUnlocked()) {
-        addMessage('SPシステムが解放されてから捧げられる。');
+        addMessage({
+            key: 'game.events.sp.offerLocked',
+            fallback: 'SPシステムが解放されてから捧げられる。'
+        });
         return;
     }
     if (player.inventory.potion30 <= 0) {
-        addMessage('捧げる回復アイテムがない。');
+        addMessage({
+            key: 'game.events.items.noOfferingItem',
+            fallback: '捧げる回復アイテムがない。'
+        });
         return;
     }
     player.inventory.potion30 -= 1;
@@ -16795,11 +17435,17 @@ cleansePotion30Btn && cleansePotion30Btn.addEventListener('click', () => {
 throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {
     const targets = getPotionThrowTargets();
     if (!targets.length) {
-        addMessage('投げつける範囲に敵がいない。');
+        addMessage({
+            key: 'game.events.items.throwNoEnemies',
+            fallback: '投げつける範囲に敵がいない。'
+        });
         return;
     }
     if (player.inventory?.potion30 <= 0) {
-        addMessage('投げつける回復アイテムがない。');
+        addMessage({
+            key: 'game.events.items.throwNoHealingItem',
+            fallback: '投げつける回復アイテムがない。'
+        });
         return;
     }
     const target = targets.reduce((best, enemy) => {
@@ -16807,13 +17453,19 @@ throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {
         return enemy.level > best.level ? enemy : best;
     }, null);
     if (!target) {
-        addMessage('投げつける相手が見つからなかった。');
+        addMessage({
+            key: 'game.events.items.throwNoTarget',
+            fallback: '投げつける相手が見つからなかった。'
+        });
         return;
     }
     const enemyLevel = getEffectiveEnemyLevel(target);
     const playerLevel = getEffectivePlayerLevel();
     if (enemyLevel >= playerLevel + 8) {
-        addMessage('敵のレベルが高すぎて投げつけても効果がなかった…');
+        addMessage({
+            key: 'game.events.items.throwIneffective',
+            fallback: '敵のレベルが高すぎて投げつけても効果がなかった…'
+        });
         addPopup(target.x, target.y, 'Miss', '#74c0fc');
         playSfx('attack');
         return;
@@ -16831,7 +17483,10 @@ throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {
     });
     playSfx('attack');
     if (result.prevented || result.effectType !== 'damage' || result.amount <= 0) {
-        addMessage('回復アイテムを投げつけたが効果がなかった。');
+        addMessage({
+            key: 'game.events.items.throwNoEffect',
+            fallback: '回復アイテムを投げつけたが効果がなかった。'
+        });
         addPopup(target.x, target.y, 'Guard', '#74c0fc');
         updateUI();
         saveAll();
@@ -16845,7 +17500,10 @@ throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {
     addPopup(target.x, target.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ffa94d', 1.1);
 
     if (target.hp <= 0) {
-        addMessage('敵を撃破した！');
+        addMessage({
+            key: 'game.events.combat.enemyDefeated',
+            fallback: '敵を撃破した！'
+        });
         addPopup(target.x, target.y, '☠', '#ffffff', 1.2);
         addDefeatedEnemy(target);
         gainSp(1, { silent: true });
@@ -16870,7 +17528,10 @@ useHpBoostBtn && useHpBoostBtn.addEventListener('click', () => {
         enforceEffectiveHpCap();
         player.inventory.hpBoost -= 1;
         registerRunHealingItemUse('hpBoost');
-        addMessage('最大HP強化アイテムを使用！最大HPが5増加！');
+        addMessage({
+            key: 'game.events.items.hpBoostUsed',
+            fallback: '最大HP強化アイテムを使用！最大HPが5増加！'
+        });
         playSfx('pickup');
         updateUI();
         saveAll();
@@ -16881,7 +17542,10 @@ useAtkBoostBtn && useAtkBoostBtn.addEventListener('click', () => {
     if (player.inventory.atkBoost > 0) {
         player.attack += 1;
         player.inventory.atkBoost -= 1;
-        addMessage('攻撃力強化アイテムを使用！攻撃力が1増加！');
+        addMessage({
+            key: 'game.events.items.attackBoostUsed',
+            fallback: '攻撃力強化アイテムを使用！攻撃力が1増加！'
+        });
         playSfx('pickup');
         updateUI();
         saveAll();
@@ -16892,7 +17556,10 @@ useDefBoostBtn && useDefBoostBtn.addEventListener('click', () => {
     if (player.inventory.defBoost > 0) {
         player.defense += 1;
         player.inventory.defBoost -= 1;
-        addMessage('防御力強化アイテムを使用！防御力が1増加！');
+        addMessage({
+            key: 'game.events.items.defenseBoostUsed',
+            fallback: '防御力強化アイテムを使用！防御力が1増加！'
+        });
         playSfx('pickup');
         updateUI();
         saveAll();
@@ -16911,7 +17578,10 @@ useHpBoostMajorBtn && useHpBoostMajorBtn.addEventListener('click', () => {
         updateUI();
         saveAll();
     } else {
-        addMessage('そのアイテムは所持していない。');
+        addMessage({
+            key: 'game.events.items.notOwned',
+            fallback: 'そのアイテムは所持していない。'
+        });
     }
 });
 
@@ -16924,7 +17594,10 @@ useAtkBoostMajorBtn && useAtkBoostMajorBtn.addEventListener('click', () => {
         updateUI();
         saveAll();
     } else {
-        addMessage('そのアイテムは所持していない。');
+        addMessage({
+            key: 'game.events.items.notOwned',
+            fallback: 'そのアイテムは所持していない。'
+        });
     }
 });
 
@@ -16937,34 +17610,52 @@ useDefBoostMajorBtn && useDefBoostMajorBtn.addEventListener('click', () => {
         updateUI();
         saveAll();
     } else {
-        addMessage('そのアイテムは所持していない。');
+        addMessage({
+            key: 'game.events.items.notOwned',
+            fallback: 'そのアイテムは所持していない。'
+        });
     }
 });
 
 useSpElixirBtn && useSpElixirBtn.addEventListener('click', () => {
     if (player.inventory.spElixir <= 0) {
-        addMessage('SPエリクサーを所持していない。');
+        addMessage({
+            key: 'game.events.items.noSpElixir',
+            fallback: 'SPエリクサーを所持していない。'
+        });
         return;
     }
     if (!isSpUnlocked()) {
-        addMessage('SPが解放されていないため使用できない。');
+        addMessage({
+            key: 'game.events.sp.notUnlockedForItem',
+            fallback: 'SPが解放されていないため使用できない。'
+        });
         return;
     }
     updatePlayerSpCap({ silent: true });
     const maxSp = Math.max(0, Number(player.maxSp) || 0);
     if (maxSp <= 0) {
-        addMessage('SP上限が0のため効果がない。');
+        addMessage({
+            key: 'game.events.sp.noCapacity',
+            fallback: 'SP上限が0のため効果がない。'
+        });
         return;
     }
     const currentSp = Math.max(0, Number(player.sp) || 0);
     if (currentSp >= maxSp - 1e-6) {
-        addMessage('SPはすでに最大だ。');
+        addMessage({
+            key: 'game.events.sp.alreadyFull',
+            fallback: 'SPはすでに最大だ。'
+        });
         return;
     }
     const recover = Math.max(SP_ELIXIR_RECOVERY_FLAT, Math.ceil(maxSp * SP_ELIXIR_RECOVERY_RATIO));
     const gained = gainSp(recover, { silent: true });
     if (gained <= 0) {
-        addMessage('SPはすでに最大だ。');
+        addMessage({
+            key: 'game.events.sp.alreadyFull',
+            fallback: 'SPはすでに最大だ。'
+        });
         return;
     }
     player.inventory.spElixir = Math.max(0, player.inventory.spElixir - 1);
@@ -17224,7 +17915,12 @@ function buildSelection() {
         // Normalプレビューは常に normal 基準で
         const prevMode = currentMode;
         currentMode = 'normal';
-        b.title = `推奨Lv: ${recommendedLevelForSelection(selectedWorld, base, 1)}`;
+        const recommendedLevelValue = recommendedLevelForSelection(selectedWorld, base, 1);
+        b.title = translateOrFallback(
+            'selection.dungeons.tooltip',
+            () => `推奨Lv: ${recommendedLevelValue}`,
+            { level: recommendedLevelValue }
+        );
         currentMode = prevMode;
         b.addEventListener('click', () => {
             selectedDungeonBase = base;
@@ -17244,37 +17940,49 @@ function buildSelection() {
         saveAll(); 
     };
     const expMaxSelect = 1000;
+    const toggleTitleCollapsed = translateOrFallback('selection.playerStatus.toggle.expand', '展開');
+    const toggleTitleExpanded = translateOrFallback('selection.playerStatus.toggle.collapse', '折りたたみ');
+    const toggleTitle = selectionFooterCollapsed ? toggleTitleCollapsed : toggleTitleExpanded;
+    const toggleTitleEscaped = escapeHtml(toggleTitle);
+    const playerStatusTitle = escapeHtml(translateOrFallback('selection.playerStatus.title', 'プレイヤーステータス'));
+    const levelLabel = escapeHtml(translateOrFallback('selection.playerStatus.labels.level', 'レベル'));
+    const hpLabel = escapeHtml(translateOrFallback('selection.playerStatus.labels.hp', 'HP'));
+    const satietyLabel = escapeHtml(translateOrFallback('selection.playerStatus.labels.satiety', '満腹度'));
+    const expLabel = escapeHtml(translateOrFallback('selection.playerStatus.labels.exp', '経験値'));
+    const spLabel = escapeHtml(translateOrFallback('selection.playerStatus.labels.sp', 'SP'));
+    const attackLabel = escapeHtml(translateOrFallback('selection.playerStatus.labels.attack', '攻撃力'));
+    const defenseLabel = escapeHtml(translateOrFallback('selection.playerStatus.labels.defense', '防御力'));
     playerSummaryDiv.innerHTML = `
-        <button id=\"player-summary-toggle\" class=\"summary-toggle\" aria-expanded=\"${!selectionFooterCollapsed}\" title=\"${selectionFooterCollapsed ? '展開' : '折りたたみ'}\">${selectionFooterCollapsed ? '∧' : '∨'}</button>
+        <button id=\"player-summary-toggle\" class=\"summary-toggle\" aria-expanded=\"${!selectionFooterCollapsed}\" title=\"${toggleTitleEscaped}\">${selectionFooterCollapsed ? '∧' : '∨'}</button>
         <div class=\"player-status-card\">
-            <h3>プレイヤーステータス</h3>
+            <h3>${playerStatusTitle}</h3>
             <div class=\"status-grid\">
                 <div class=\"stat-item\">
-                    <span class=\"stat-label\">レベル</span>
+                    <span class=\"stat-label\">${levelLabel}</span>
                     <span class=\"stat-value level\">${player.level}</span>
                 </div>
                 <div class=\"stat-item\">
-                    <span class=\"stat-label\">HP</span>
+                    <span class=\"stat-label\">${hpLabel}</span>
                     <span class=\"stat-value hp\">${player.hp}/${player.maxHp}</span>
                 </div>
                 <div class=\"stat-item satiety\" data-stat=\"satiety\">
-                    <span class=\"stat-label\">満腹度</span>
+                    <span class=\"stat-label\">${satietyLabel}</span>
                     <span class=\"stat-value satiety\">${player.satiety ?? SATIETY_MAX}/${SATIETY_MAX}</span>
                 </div>
                 <div class=\"stat-item\">
-                    <span class=\"stat-label\">経験値</span>
+                    <span class=\"stat-label\">${expLabel}</span>
                     <span class=\"stat-value exp\">${Math.floor(player.exp || 0)}/${expMaxSelect}</span>
                 </div>
                 <div class=\"stat-item sp\" data-stat=\"sp\">
-                    <span class=\"stat-label\">SP</span>
+                    <span class=\"stat-label\">${spLabel}</span>
                     <span class=\"stat-value sp\">${player.maxSp ? `${player.sp}/${player.maxSp}` : '0/0'}</span>
                 </div>
                 <div class=\"stat-item\">
-                    <span class=\"stat-label\">攻撃力</span>
+                    <span class=\"stat-label\">${attackLabel}</span>
                     <span class=\"stat-value attack\">${player.attack}</span>
                 </div>
                 <div class=\"stat-item\">
-                    <span class=\"stat-label\">防御力</span>
+                    <span class=\"stat-label\">${defenseLabel}</span>
                     <span class=\"stat-value defense\">${player.defense}</span>
                 </div>
             </div>
@@ -17332,7 +18040,10 @@ function startGameFromSelection() {
 function startGameFromBlockDim() {
     // Validate spec
     if (!blockDimState?.spec) {
-        addMessage('ブロック選択が不完全です');
+        addMessage({
+            key: 'game.events.blockdim.selectionIncomplete',
+            fallback: 'ブロック選択が不完全です'
+        });
         return;
     }
     currentMode = 'blockdim';

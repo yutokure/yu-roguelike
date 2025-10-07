@@ -1037,23 +1037,23 @@
     </div>
     <div id="player-summary"></div>
     <div id="toolbar">
-        <button id="btn-back">戻る</button>
-        <button id="btn-items">アイテム</button>
-        <button id="btn-skills">スキル</button>
-        <button id="btn-status">ステータス</button>
-        <button id="btn-import">インポート</button>
-        <button id="btn-export">エクスポート</button>
+        <button id="btn-back" data-i18n="game.toolbar.back">戻る</button>
+        <button id="btn-items" data-i18n="game.toolbar.items">アイテム</button>
+        <button id="btn-skills" data-i18n="game.toolbar.skills">スキル</button>
+        <button id="btn-status" data-i18n="game.toolbar.status">ステータス</button>
+        <button id="btn-import" data-i18n="game.toolbar.import">インポート</button>
+        <button id="btn-export" data-i18n="game.toolbar.export">エクスポート</button>
         <label for="toggle-dungeon-name" class="toolbar-toggle">
             <input type="checkbox" id="toggle-dungeon-name" checked>
-            <span>ダンジョン名を表示する</span>
+            <span data-i18n="game.toolbar.toggleDungeonName">ダンジョン名を表示する</span>
         </label>
-        <button id="btn-sandbox-menu" class="sandbox-menu-button" type="button" aria-expanded="false" aria-controls="sandbox-interactive-panel" style="display:none;">インタラクティブ</button>
-        <button id="btn-god-console" class="god-console-button" type="button" aria-expanded="false" aria-controls="god-console-panel" style="display:none;">創造神コンソール</button>
+        <button id="btn-sandbox-menu" class="sandbox-menu-button" type="button" aria-expanded="false" aria-controls="sandbox-interactive-panel" style="display:none;" data-i18n="game.toolbar.sandboxMenu">インタラクティブ</button>
+        <button id="btn-god-console" class="god-console-button" type="button" aria-expanded="false" aria-controls="god-console-panel" style="display:none;" data-i18n="game.toolbar.godConsole">創造神コンソール</button>
         <input type="file" id="import-file" accept="application/json" style="display:none" />
         <div id="floor-indicator" aria-live="polite">
-            <span class="floor-indicator__heading">現在のフロア</span>
+            <span class="floor-indicator__heading" data-i18n="game.toolbar.floor.heading">現在のフロア</span>
             <span id="floor-indicator-value" class="floor-indicator__value">1F</span>
-            <span class="floor-indicator__label">FLOOR</span>
+            <span class="floor-indicator__label" data-i18n="game.toolbar.floor.label">FLOOR</span>
         </div>
     </div>
     <div id="sandbox-interactive-panel" class="sandbox-interactive-panel" role="dialog" aria-modal="false" aria-hidden="true" tabindex="-1">
@@ -1182,36 +1182,36 @@
         <div id="game-container">
         <div id="game-stage">
             <div id="dungeon-type-overlay" aria-live="polite">
-                <span class="dungeon-overlay__label">ダンジョン特徴</span>
-                <div id="dungeon-type-overlay-type" class="dungeon-overlay__type">フィールド型</div>
+                <span class="dungeon-overlay__label" data-i18n="game.dungeonOverlay.label">ダンジョン特徴</span>
+                <div id="dungeon-type-overlay-type" class="dungeon-overlay__type" data-i18n="game.dungeonOverlay.typePlaceholder">フィールド型</div>
                 <div class="dungeon-overlay__divider" aria-hidden="true"></div>
                 <div id="dungeon-type-overlay-features" class="dungeon-overlay__features">
-                    <span class="dungeon-overlay__badge dungeon-overlay__badge--neutral">特記事項なし</span>
+                    <span class="dungeon-overlay__badge dungeon-overlay__badge--neutral" data-i18n="game.dungeonOverlay.badge.none">特記事項なし</span>
                 </div>
-                <p id="dungeon-type-overlay-description" class="dungeon-overlay__description">ダンジョンの特徴がここに表示されます。</p>
+                <p id="dungeon-type-overlay-description" class="dungeon-overlay__description" data-i18n="game.dungeonOverlay.descriptionPlaceholder">ダンジョンの特徴がここに表示されます。</p>
             </div>
             <canvas id="game-canvas"></canvas>
         </div>
         <div id="ui-container">
             <div id="player-stats">
                 <div class="card">
-                    <div class="stat-line"><span>レベル</span><span id="stat-level">1</span></div>
-                    <div class="stat-line"><span>攻撃</span><span id="stat-atk">10</span></div>
-                    <div class="stat-line"><span>防御</span><span id="stat-def">10</span></div>
+                    <div class="stat-line"><span data-i18n="game.playerStats.labels.level">レベル</span><span id="stat-level">1</span></div>
+                    <div class="stat-line"><span data-i18n="game.playerStats.labels.attackShort">攻撃</span><span id="stat-atk">10</span></div>
+                    <div class="stat-line"><span data-i18n="game.playerStats.labels.defenseShort">防御</span><span id="stat-def">10</span></div>
                     <div class="bar hp">
-                        <div class="bar-label">HP <span id="stat-hp-text">100/100</span></div>
+                        <div class="bar-label"><span data-i18n="game.playerStats.labels.hp">HP</span> <span id="stat-hp-text">100/100</span></div>
                         <div class="bar-track"><div id="hp-bar" class="bar-fill"></div></div>
                     </div>
                     <div id="satiety-bar-container" class="bar satiety" style="display:none;">
-                        <div class="bar-label">満腹度 <span id="stat-satiety-text">100/100</span></div>
+                        <div class="bar-label"><span data-i18n="game.playerStats.labels.satiety">満腹度</span> <span id="stat-satiety-text">100/100</span></div>
                         <div class="bar-track"><div id="satiety-bar" class="bar-fill"></div></div>
                     </div>
                     <div class="bar exp">
-                        <div class="bar-label">EXP <span id="stat-exp-text">0/1000</span></div>
+                        <div class="bar-label"><span data-i18n="game.playerStats.labels.exp">EXP</span> <span id="stat-exp-text">0/1000</span></div>
                         <div class="bar-track"><div id="exp-bar" class="bar-fill"></div></div>
                     </div>
                     <div id="sp-bar-container" class="bar sp" style="display:none;">
-                        <div class="bar-label">SP <span id="stat-sp-text">0/0</span></div>
+                        <div class="bar-label"><span data-i18n="game.playerStats.labels.sp">SP</span> <span id="stat-sp-text">0/0</span></div>
                         <div class="bar-track"><div id="sp-bar" class="bar-fill"></div></div>
                     </div>
                 <div class="status-badges" id="stat-status-effects" aria-live="polite"></div>
@@ -1279,80 +1279,80 @@
     <!-- アイテムモーダル -->
     <div id="items-modal" class="modal" style="display:none;" aria-hidden="true">
         <div class="modal-content">
-            <h3>アイテム</h3>
+            <h3 data-i18n="game.items.modal.title">アイテム</h3>
             <div class="item-row item-row--potion">
                 <div class="item-row__header">
-                    <span class="item-row__label">HP30%回復ポーション</span>
-                    <span class="item-row__count">x <span id="inv-potion30">0</span></span>
+                    <span class="item-row__label" data-i18n="game.items.potion30.label">HP30%回復ポーション</span>
+                    <span class="item-row__count"><span data-i18n="game.items.countPrefix">x</span> <span id="inv-potion30">0</span></span>
                 </div>
                 <div class="item-actions item-row__actions">
-                    <button id="use-potion30">使用</button>
-                    <button id="eat-potion30" style="display:none;">食べる</button>
-                    <button id="offer-potion30" style="display:none;">捧げる</button>
-                    <button id="cleanse-potion30">状態異常を一つ治す</button>
-                    <button id="throw-potion30" style="display:none;">投げつける</button>
+                    <button id="use-potion30" data-i18n="game.items.actions.use">使用</button>
+                    <button id="eat-potion30" style="display:none;" data-i18n="game.items.actions.eat">食べる</button>
+                    <button id="offer-potion30" style="display:none;" data-i18n="game.items.actions.offer">捧げる</button>
+                    <button id="cleanse-potion30" data-i18n="game.items.actions.cleanse">状態異常を一つ治す</button>
+                    <button id="throw-potion30" style="display:none;" data-i18n="game.items.actions.throw">投げつける</button>
                 </div>
             </div>
             <div class="item-row item-row--toggle">
                 <div class="item-row__info">
-                    <span>オートアイテム</span>
-                    <small>HPが30%以下になったとき自動で回復します</small>
+                    <span data-i18n="game.items.autoItem.label">オートアイテム</span>
+                    <small data-i18n="game.items.autoItem.hint">HPが30%以下になったとき自動で回復します</small>
                 </div>
                 <label class="item-row__toggle" for="auto-item-toggle">
                     <input type="checkbox" id="auto-item-toggle">
-                    <span>有効にする</span>
+                    <span data-i18n="game.items.actions.enable">有効にする</span>
                 </label>
             </div>
             <div class="item-row">
-                <span>最大HP強化アイテム</span>
-                <span>x <span id="inv-hp-boost">0</span></span>
-                <button id="use-hp-boost">使用</button>
+                <span data-i18n="game.items.hpBoost.label">最大HP強化アイテム</span>
+                <span><span data-i18n="game.items.countPrefix">x</span> <span id="inv-hp-boost">0</span></span>
+                <button id="use-hp-boost" data-i18n="game.items.actions.use">使用</button>
             </div>
             <div class="item-row">
-                <span>攻撃力強化アイテム</span>
-                <span>x <span id="inv-atk-boost">0</span></span>
-                <button id="use-atk-boost">使用</button>
+                <span data-i18n="game.items.atkBoost.label">攻撃力強化アイテム</span>
+                <span><span data-i18n="game.items.countPrefix">x</span> <span id="inv-atk-boost">0</span></span>
+                <button id="use-atk-boost" data-i18n="game.items.actions.use">使用</button>
             </div>
             <div class="item-row">
-                <span>防御力強化アイテム</span>
-                <span>x <span id="inv-def-boost">0</span></span>
-                <button id="use-def-boost">使用</button>
+                <span data-i18n="game.items.defBoost.label">防御力強化アイテム</span>
+                <span><span data-i18n="game.items.countPrefix">x</span> <span id="inv-def-boost">0</span></span>
+                <button id="use-def-boost" data-i18n="game.items.actions.use">使用</button>
             </div>
             <div class="item-row">
-                <span>最大HP特大強化アイテム (+25)</span>
-                <span>x <span id="inv-hp-boost-major">0</span></span>
-                <button id="use-hp-boost-major">使用</button>
+                <span data-i18n="game.items.hpBoostMajor.label">最大HP特大強化アイテム (+25)</span>
+                <span><span data-i18n="game.items.countPrefix">x</span> <span id="inv-hp-boost-major">0</span></span>
+                <button id="use-hp-boost-major" data-i18n="game.items.actions.use">使用</button>
             </div>
             <div class="item-row">
-                <span>攻撃力特大強化アイテム (+10)</span>
-                <span>x <span id="inv-atk-boost-major">0</span></span>
-                <button id="use-atk-boost-major">使用</button>
+                <span data-i18n="game.items.atkBoostMajor.label">攻撃力特大強化アイテム (+10)</span>
+                <span><span data-i18n="game.items.countPrefix">x</span> <span id="inv-atk-boost-major">0</span></span>
+                <button id="use-atk-boost-major" data-i18n="game.items.actions.use">使用</button>
             </div>
             <div class="item-row">
-                <span>防御力特大強化アイテム (+10)</span>
-                <span>x <span id="inv-def-boost-major">0</span></span>
-                <button id="use-def-boost-major">使用</button>
+                <span data-i18n="game.items.defBoostMajor.label">防御力特大強化アイテム (+10)</span>
+                <span><span data-i18n="game.items.countPrefix">x</span> <span id="inv-def-boost-major">0</span></span>
+                <button id="use-def-boost-major" data-i18n="game.items.actions.use">使用</button>
             </div>
             <div class="item-row">
-                <span>SPエリクサー</span>
-                <span>x <span id="inv-sp-elixir">0</span></span>
-                <button id="use-sp-elixir">使用</button>
+                <span data-i18n="game.items.spElixir.label">SPエリクサー</span>
+                <span><span data-i18n="game.items.countPrefix">x</span> <span id="inv-sp-elixir">0</span></span>
+                <button id="use-sp-elixir" data-i18n="game.items.actions.use">使用</button>
             </div>
             <div class="item-section item-section--passive-orbs">
-                <div class="item-section__header">パッシブオーブ</div>
-                <div class="passive-orb-summary" id="passive-orb-summary">パッシブオーブを所持していません。</div>
+                <div class="item-section__header" data-i18n="game.items.passiveOrbs.header">パッシブオーブ</div>
+                <div class="passive-orb-summary" id="passive-orb-summary" data-i18n="game.passiveOrb.empty">パッシブオーブを所持していません。</div>
                 <div class="passive-orb-aggregate" id="passive-orb-aggregate">
-                    <div class="passive-orb-empty">効果はありません。</div>
+                    <div class="passive-orb-empty" data-i18n="game.passiveOrb.noEffects">効果はありません。</div>
                 </div>
                 <div class="passive-orb-list" id="passive-orb-list">
-                    <div class="passive-orb-empty">パッシブオーブを所持していません。</div>
+                    <div class="passive-orb-empty" data-i18n="game.passiveOrb.empty">パッシブオーブを所持していません。</div>
                 </div>
             </div>
             <div class="item-section">
-                <div class="item-section__header">スキル護符（各10ターン）</div>
+                <div class="item-section__header" data-i18n="game.items.skillCharms.header">スキル護符（各10ターン）</div>
                 <div id="skill-charm-list" class="skill-charm-list"></div>
             </div>
-            <button class="close-modal" data-target="items-modal">閉じる</button>
+            <button class="close-modal" data-target="items-modal" data-i18n="game.items.actions.close">閉じる</button>
         </div>
     </div>
 
@@ -1372,94 +1372,94 @@
     <!-- ステータスモーダル -->
     <div id="status-modal" class="modal" style="display:none;" aria-hidden="true">
         <div class="modal-content status-modal">
-            <h3>プレイヤーステータス</h3>
+            <h3 data-i18n="statusModal.title">プレイヤーステータス</h3>
             <div class="status-section">
-                <h4>基本ステータス</h4>
+                <h4 data-i18n="statusModal.sections.basic">基本ステータス</h4>
                 <div class="status-grid">
                     <div class="status-item">
-                        <span class="status-label">レベル</span>
+                        <span class="status-label" data-i18n="statusModal.labels.level">レベル</span>
                         <span class="status-value" id="modal-level">1</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">経験値</span>
+                        <span class="status-label" data-i18n="statusModal.labels.exp">経験値</span>
                         <span class="status-value" id="modal-exp">0 / 1000</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">HP</span>
+                        <span class="status-label" data-i18n="statusModal.labels.hp">HP</span>
                         <span class="status-value hp" id="modal-hp">100 / 100</span>
                     </div>
                     <div class="status-item satiety" id="modal-satiety-row" style="display:none;">
-                        <span class="status-label">満腹度</span>
+                        <span class="status-label" data-i18n="statusModal.labels.satiety">満腹度</span>
                         <span class="status-value satiety" id="modal-satiety">100 / 100</span>
                     </div>
                     <div class="status-item sp" id="modal-sp-row" style="display:none;">
-                        <span class="status-label">SP</span>
+                        <span class="status-label" data-i18n="statusModal.labels.sp">SP</span>
                         <span class="status-value sp" id="modal-sp">0 / 0</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">攻撃力</span>
+                        <span class="status-label" data-i18n="statusModal.labels.attack">攻撃力</span>
                         <span class="status-value attack" id="modal-attack">10</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">防御力</span>
+                        <span class="status-label" data-i18n="statusModal.labels.defense">防御力</span>
                         <span class="status-value defense" id="modal-defense">10</span>
                     </div>
                     <div class="status-item status-effects">
-                        <span class="status-label">状態異常</span>
+                        <span class="status-label" data-i18n="statusModal.labels.statusEffects">状態異常</span>
                         <span class="status-value effects" id="modal-status-effects">なし</span>
                     </div>
                     <div class="status-item status-effects skill-effects">
-                        <span class="status-label">スキル効果</span>
+                        <span class="status-label" data-i18n="statusModal.labels.skillEffects">スキル効果</span>
                         <span class="status-value effects" id="modal-skill-effects">なし</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">現在階層</span>
+                        <span class="status-label" data-i18n="statusModal.labels.floor">現在階層</span>
                         <span class="status-value" id="modal-floor">1F</span>
                     </div>
                 </div>
             </div>
             <div class="status-section">
-                <h4>所持アイテム</h4>
+                <h4 data-i18n="statusModal.sections.inventory">所持アイテム</h4>
                 <div class="inventory-grid">
                     <div class="inventory-item">
-                        <span class="item-name">HP30%回復ポーション</span>
+                        <span class="item-name" data-i18n="game.items.potion30.label">HP30%回復ポーション</span>
                         <span class="item-count" id="modal-potion30">x 0</span>
                     </div>
                     <div class="inventory-item">
-                        <span class="item-name">最大HP強化アイテム</span>
+                        <span class="item-name" data-i18n="game.items.hpBoost.label">最大HP強化アイテム</span>
                         <span class="item-count" id="modal-hp-boost">x 0</span>
                     </div>
                     <div class="inventory-item">
-                        <span class="item-name">攻撃力強化アイテム</span>
+                        <span class="item-name" data-i18n="game.items.atkBoost.label">攻撃力強化アイテム</span>
                         <span class="item-count" id="modal-atk-boost">x 0</span>
                     </div>
                     <div class="inventory-item">
-                        <span class="item-name">防御力強化アイテム</span>
+                        <span class="item-name" data-i18n="game.items.defBoost.label">防御力強化アイテム</span>
                         <span class="item-count" id="modal-def-boost">x 0</span>
                     </div>
                     <div class="inventory-item">
-                        <span class="item-name">最大HP特大強化</span>
+                        <span class="item-name" data-i18n="game.items.hpBoostMajor.label">最大HP特大強化</span>
                         <span class="item-count" id="modal-hp-boost-major">x 0</span>
                     </div>
                     <div class="inventory-item">
-                        <span class="item-name">攻撃力特大強化</span>
+                        <span class="item-name" data-i18n="game.items.atkBoostMajor.label">攻撃力特大強化</span>
                         <span class="item-count" id="modal-atk-boost-major">x 0</span>
                     </div>
                     <div class="inventory-item">
-                        <span class="item-name">防御力特大強化</span>
+                        <span class="item-name" data-i18n="game.items.defBoostMajor.label">防御力特大強化</span>
                         <span class="item-count" id="modal-def-boost-major">x 0</span>
                     </div>
                     <div class="inventory-item">
-                        <span class="item-name">SPエリクサー</span>
+                        <span class="item-name" data-i18n="game.items.spElixir.label">SPエリクサー</span>
                         <span class="item-count" id="modal-sp-elixir">x 0</span>
                     </div>
                     <div class="inventory-item inventory-item--wide">
-                        <span class="item-name">スキル護符</span>
+                        <span class="item-name" data-i18n="game.items.skillCharms.header">スキル護符</span>
                         <span class="item-count" id="modal-skill-charms">なし</span>
                     </div>
                     <div class="inventory-item inventory-item--wide passive-orb-inventory" id="modal-passive-orb-section">
                         <div class="passive-orb-inventory__top">
-                            <span class="item-name">パッシブオーブ</span>
+                            <span class="item-name" data-i18n="game.items.passiveOrbs.header">パッシブオーブ</span>
                             <span class="item-count" id="modal-passive-orb-summary">なし</span>
                         </div>
                         <div class="passive-orb-aggregate passive-orb-aggregate--compact" id="modal-passive-orb-aggregate" style="display:none;"></div>
@@ -1467,42 +1467,42 @@
                 </div>
             </div>
             <div class="status-section">
-                <h4>ゲーム設定</h4>
+                <h4 data-i18n="statusModal.sections.settings">ゲーム設定</h4>
                 <div class="settings-info">
                     <div class="setting-item">
-                        <span class="setting-label">選択世界</span>
+                        <span class="setting-label" data-i18n="statusModal.settings.world">選択世界</span>
                         <span class="setting-value" id="modal-world">A世界</span>
                     </div>
                     <div class="setting-item">
-                        <span class="setting-label">難易度</span>
+                        <span class="setting-label" data-i18n="statusModal.settings.difficulty">難易度</span>
                         <span class="setting-value" id="modal-difficulty">Normal</span>
                     </div>
                 </div>
             </div>
             <div class="status-section" id="modal-dungeon-section">
-                <h4>ダンジョン情報</h4>
+                <h4 data-i18n="statusModal.sections.dungeon">ダンジョン情報</h4>
                 <div class="settings-info">
                     <div class="setting-item">
-                        <span class="setting-label">構成</span>
+                        <span class="setting-label" data-i18n="statusModal.dungeon.structure">構成</span>
                         <span class="setting-value" id="modal-dungeon-summary">-</span>
                     </div>
                     <div class="setting-item" id="modal-dungeon-type-row" style="display:none;">
-                        <span class="setting-label">タイプ</span>
+                        <span class="setting-label" data-i18n="statusModal.dungeon.type">タイプ</span>
                         <span class="setting-value" id="modal-dungeon-type">-</span>
                     </div>
                 </div>
             </div>
-            <button class="close-modal" data-target="status-modal">閉じる</button>
+            <button class="close-modal" data-target="status-modal" data-i18n="game.items.actions.close">閉じる</button>
         </div>
     </div>
 
     <!-- スキルモーダル -->
     <div id="skills-modal" class="modal" style="display:none;" aria-hidden="true">
         <div class="modal-content skills-modal">
-            <h3>スキル</h3>
+            <h3 data-i18n="skills.modal.title">スキル</h3>
             <div id="skills-current-sp" class="skills-current-sp" aria-live="polite">
                 <div class="skills-sp-header">
-                    <span class="skills-sp-label">現在のSP</span>
+                    <span class="skills-sp-label" data-i18n="skills.meta.currentSpLabel">現在のSP</span>
                     <span class="skills-sp-value">0/0</span>
                 </div>
                 <div class="skills-sp-bar" aria-hidden="true">
@@ -1510,59 +1510,59 @@
                 </div>
             </div>
             <div id="skills-list" class="skills-list" aria-live="polite"></div>
-            <button class="close-modal" data-target="skills-modal">閉じる</button>
+            <button class="close-modal" data-target="skills-modal" data-i18n="game.items.actions.close">閉じる</button>
         </div>
     </div>
 
     <!-- 敵情報モーダル -->
     <div id="enemy-info-modal" class="modal" style="display:none;" aria-hidden="true">
         <div class="modal-content enemy-modal">
-            <h3 id="enemy-modal-title">敵の情報</h3>
+            <h3 id="enemy-modal-title" data-i18n="enemy.modal.title.standard">敵の情報</h3>
             <div class="enemy-stats">
                 <div class="stat-row">
-                    <span class="label">レベル:</span>
+                    <span class="label" data-i18n="enemy.modal.labels.level">レベル:</span>
                     <span id="enemy-modal-level">1</span>
                 </div>
                 <div class="stat-row">
-                    <span class="label">種類:</span>
+                    <span class="label" data-i18n="enemy.modal.labels.type">種類:</span>
                     <span id="enemy-modal-type">通常</span>
                 </div>
                 <div class="stat-row">
-                    <span class="label">HP:</span>
+                    <span class="label" data-i18n="enemy.modal.labels.hp">HP:</span>
                     <span id="enemy-modal-hp">50/50</span>
                 </div>
                 <div class="stat-row">
-                    <span class="label">攻撃力:</span>
+                    <span class="label" data-i18n="enemy.modal.labels.attack">攻撃力:</span>
                     <span id="enemy-modal-attack">8</span>
                 </div>
                 <div class="stat-row">
-                    <span class="label">防御力:</span>
+                    <span class="label" data-i18n="enemy.modal.labels.defense">防御力:</span>
                     <span id="enemy-modal-defense">8</span>
                 </div>
             </div>
             <div class="damage-simulation">
-                <h4>ダメージ予測</h4>
+                <h4 data-i18n="enemy.modal.sections.damage">ダメージ予測</h4>
                 <div class="damage-row damage-deal">
-                    <span class="label">与ダメージ範囲:</span>
+                    <span class="label" data-i18n="enemy.modal.labels.damageDeal">与ダメージ範囲:</span>
                     <span id="damage-deal-range">10-15</span>
                 </div>
                 <div class="damage-row damage-take">
-                    <span class="label">被ダメージ範囲:</span>
+                    <span class="label" data-i18n="enemy.modal.labels.damageTake">被ダメージ範囲:</span>
                     <span id="damage-take-range">8-12</span>
                 </div>
                 <div class="hit-rate-info">
                     <div class="hit-rate-row">
-                        <span class="label">命中率:</span>
+                        <span class="label" data-i18n="enemy.modal.labels.hitRate">命中率:</span>
                         <span id="hit-rate">80%</span>
                     </div>
                     <div class="hit-rate-row">
-                        <span class="label">敵の命中率:</span>
+                        <span class="label" data-i18n="enemy.modal.labels.enemyHitRate">敵の命中率:</span>
                         <span id="enemy-hit-rate">80%</span>
                     </div>
                 </div>
             </div>
             <div class="enemy-type-description" id="enemy-modal-type-desc"></div>
-            <button class="close-modal" data-target="enemy-info-modal">閉じる</button>
+            <button class="close-modal" data-target="enemy-info-modal" data-i18n="game.items.actions.close">閉じる</button>
         </div>
     </div>
     <script src="js/tools/tools-tab.js"></script>

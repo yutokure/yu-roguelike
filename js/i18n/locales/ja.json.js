@@ -127,10 +127,14 @@
     "skills": {
       "meta": {
         "currentSp": "現在のSP: {value}",
+        "currentSpLabel": "現在のSP",
         "costAndCurrent": "消費SP: {cost} / 所持: {current}",
         "reasonSuffix": " ({reason})",
         "remainingTurns": "現在: 残り{turns}ターン",
         "use": "使用"
+      },
+      "modal": {
+        "title": "スキル"
       },
       "availability": {
         "unlockLevel": "Lv100で解放",
@@ -228,6 +232,25 @@
           "veryHard": "Very Hard"
         }
       },
+      "dungeons": {
+        "tooltip": "推奨Lv: {level}"
+      },
+      "playerStatus": {
+        "title": "プレイヤーステータス",
+        "toggle": {
+          "expand": "展開",
+          "collapse": "折りたたみ"
+        },
+        "labels": {
+          "level": "レベル",
+          "hp": "HP",
+          "satiety": "満腹度",
+          "exp": "経験値",
+          "sp": "SP",
+          "attack": "攻撃力",
+          "defense": "防御力"
+        }
+      },
       "tabs": {
         "ariaLabel": "ダンジョン選択タブ",
         "normal": "通常",
@@ -246,6 +269,7 @@
           "recommendedLabel": "推奨レベル:",
           "damageLabel": "ダメージ倍率:",
           "damageValue": "与: 1.6x / 被: 0.5x",
+          "damageMultiplier": "与: {deal}x / 被: {take}x",
           "descriptionLabel": "説明:",
           "description": "ダンジョンの説明",
           "start": "ダンジョンに入る"
@@ -8811,6 +8835,495 @@
           "description": "COMING SOON - ミニゲーム用実績は近日追加予定です。",
           "reward": ""
         }
+      }
+    },
+    "enemy": {
+      "modal": {
+        "noiseBlocked": "ノイズがひどくて敵の情報を読み取れない…",
+        "title": {
+          "boss": "ボスの情報",
+          "standard": "敵の情報"
+        },
+        "sections": {
+          "damage": "ダメージ予測"
+        },
+        "labels": {
+          "level": "レベル:",
+          "type": "種類:",
+          "hp": "HP:",
+          "attack": "攻撃力:",
+          "defense": "防御力:",
+          "damageDeal": "与ダメージ範囲:",
+          "damageTake": "被ダメージ範囲:",
+          "hitRate": "命中率:",
+          "enemyHitRate": "敵の命中率:"
+        },
+        "levelFormat": "Lv.{level}",
+        "typeDescription": {
+          "suppressed": "{description}（レベル差により特殊効果は無効化中）"
+        },
+        "damage": {
+          "invincibleLabel": "領域無敵",
+          "invincible": "0 ({label})",
+          "critLabel": "クリ",
+          "reverseLabel": "回復",
+          "reverseRange": "{reverseLabel} {min}-{max} ({critLabel}: {critMin}-{critMax})",
+          "range": "{min}-{max} ({critLabel}: {critMin}-{critMax})"
+        },
+        "hitRate": "{value}%",
+        "enemyHitRate": "{value}%"
+      },
+      "types": {
+        "normal": {
+          "label": "通常",
+          "description": "特別な行動は行わない。"
+        },
+        "statusCaster": {
+          "label": "状態異常使い",
+          "description": "攻撃命中時に毒や麻痺などの状態異常を付与してくる。"
+        },
+        "warper": {
+          "label": "転移者",
+          "description": "攻撃命中時にプレイヤーを別の位置へワープさせることがある。"
+        },
+        "executioner": {
+          "label": "死神",
+          "description": "低確率で即死攻撃を放つ危険な敵。"
+        },
+        "knockback": {
+          "label": "突撃兵",
+          "description": "攻撃でプレイヤーを吹き飛ばし、壁に激突すると追加ダメージ。"
+        },
+        "swift": {
+          "label": "迅速兵",
+          "description": "素早く、プレイヤー1ターン中に2回行動する。"
+        }
+      }
+    },
+    "dungeon": {
+      "types": {
+        "field": "フィールド型",
+        "cave": "洞窟型",
+        "maze": "迷路型",
+        "rooms": "部屋＆通路型",
+        "single-room": "単部屋型",
+        "circle": "円型",
+        "narrow-maze": "狭い迷路型",
+        "wide-maze": "幅広迷路型",
+        "snake": "スネーク型",
+        "mixed": "混合型",
+        "circle-rooms": "円型部屋＆通路型",
+        "grid": "格子型",
+        "open-space": "空間型"
+      }
+    },
+    "dungeons": {
+      "base": {
+        "1": {
+          "name": "初心者の森",
+          "description": "広い草原に点在する障害物。"
+        },
+        "11": {
+          "name": "暗闇の洞窟",
+          "description": "曲がりくねった洞窟システム。"
+        },
+        "21": {
+          "name": "迷宮の遺跡",
+          "description": "細かく複雑な迷路構造の古代遺跡。"
+        },
+        "31": {
+          "name": "地下神殿",
+          "description": "部屋と通路で構成された神殿。"
+        },
+        "41": {
+          "name": "魔法の庭園",
+          "description": "魔力に満ちた円形の庭園。"
+        },
+        "51": {
+          "name": "水晶の洞窟",
+          "description": "蛇行する水晶の洞窟。"
+        },
+        "61": {
+          "name": "古代の迷宮",
+          "description": "時を超えた巨大迷宮。"
+        },
+        "71": {
+          "name": "竜の巣窟",
+          "description": "円形の部屋が連なる竜の巣穴。"
+        },
+        "81": {
+          "name": "星の平原",
+          "description": "星空が美しい一つの大きな部屋。"
+        },
+        "91": {
+          "name": "終焉の塔",
+          "description": "様々な構造が混在する世界の終わりの塔。"
+        },
+        "X": {
+          "name": "極限の地",
+          "description": "25階層の終極ダンジョン。"
+        }
+      }
+    },
+    "game": {
+      "toolbar": {
+        "back": "戻る",
+        "items": "アイテム",
+        "skills": "スキル",
+        "status": "ステータス",
+        "import": "インポート",
+        "export": "エクスポート",
+        "toggleDungeonName": "ダンジョン名を表示する",
+        "sandboxMenu": "インタラクティブ",
+        "godConsole": "創造神コンソール",
+        "floor": {
+          "heading": "現在のフロア",
+          "label": "FLOOR"
+        }
+      },
+      "dungeonOverlay": {
+        "label": "ダンジョン特徴",
+        "titleFallback": "ダンジョン",
+        "typePlaceholder": "フィールド型",
+        "descriptionPlaceholder": "ダンジョンの特徴がここに表示されます。",
+        "badge": {
+          "none": "特記事項なし",
+          "dark": {
+            "active": "暗い",
+            "suppressed": "暗い（抑制中）"
+          },
+          "poison": {
+            "active": "毒霧",
+            "suppressed": "毒霧（抑制中）"
+          },
+          "noise": {
+            "active": "ノイズ",
+            "suppressed": "ノイズ（抑制中）"
+          },
+          "nested": "NESTED x{value}"
+        }
+      },
+      "playerStats": {
+        "labels": {
+          "level": "レベル",
+          "attackShort": "攻撃",
+          "defenseShort": "防御",
+          "hp": "HP",
+          "satiety": "満腹度",
+          "exp": "EXP",
+          "sp": "SP"
+        }
+      },
+      "autoItem": {
+        "status": "オートアイテムON：回復アイテム x {count}"
+      },
+      "common": {
+        "count": "x {count}",
+        "none": "なし",
+        "floor": "{floor}F"
+      },
+      "items": {
+        "modal": {
+          "title": "アイテム"
+        },
+        "countPrefix": "x",
+        "actions": {
+          "use": "使用",
+          "eat": "食べる",
+          "offer": "捧げる",
+          "cleanse": "状態異常を一つ治す",
+          "throw": "投げつける",
+          "enable": "有効にする",
+          "close": "閉じる"
+        },
+        "autoItem": {
+          "label": "オートアイテム",
+          "hint": "HPが30%以下になったとき自動で回復します"
+        },
+        "potion30": {
+          "label": "HP30%回復ポーション"
+        },
+        "hpBoost": {
+          "label": "最大HP強化アイテム"
+        },
+        "atkBoost": {
+          "label": "攻撃力強化アイテム"
+        },
+        "defBoost": {
+          "label": "防御力強化アイテム"
+        },
+        "hpBoostMajor": {
+          "label": "最大HP特大強化アイテム (+25)"
+        },
+        "atkBoostMajor": {
+          "label": "攻撃力特大強化アイテム (+10)"
+        },
+        "defBoostMajor": {
+          "label": "防御力特大強化アイテム (+10)"
+        },
+        "spElixir": {
+          "label": "SPエリクサー"
+        },
+        "passiveOrbs": {
+          "header": "パッシブオーブ"
+        },
+        "skillCharms": {
+          "header": "スキル護符（各10ターン）"
+        },
+        "errors": {
+          "noHealingItem": "回復アイテムを持っていない。",
+          "noStatusToCleanse": "治療できる状態異常がない。"
+        }
+      },
+      "passiveOrb": {
+        "summary": "合計 {total}個（{unique}種）",
+        "empty": "パッシブオーブを所持していません。",
+        "noEffects": "効果はありません。",
+        "countDetail": "所持数 {count}",
+        "detailSeparator": " / ",
+        "obtainDetail": "（{details}）",
+        "obtain": "パッシブオーブ「{label}」を手に入れた！{detail}",
+        "orbs": {
+          "attackBoost": { "name": "攻撃力+1%の玉" },
+          "defenseBoost": { "name": "防御力+1%の玉" },
+          "abilityBoost": { "name": "能力+1%の玉" },
+          "maxHpBoost": { "name": "最大HP+10%の玉" },
+          "statusGuard": { "name": "状態異常耐性の玉" },
+          "enemySpecialGuard": { "name": "敵特殊行動耐性の玉" },
+          "poisonResist": { "name": "毒耐性の玉" },
+          "paralysisResist": { "name": "麻痺耐性の玉" },
+          "abilityDownResist": { "name": "能力低下耐性の玉" },
+          "levelDownResist": { "name": "レベル低下耐性の玉" },
+          "instantDeathResist": { "name": "即死耐性の玉" },
+          "knockbackResist": { "name": "吹き飛び耐性の玉" },
+          "poisonDamageGuard": { "name": "毒ダメージ軽減の玉" },
+          "bombDamageGuard": { "name": "爆弾ダメージ軽減の玉" },
+          "skillPowerBoost": { "name": "スキル威力+10%の玉" },
+          "damageDealtBoost": { "name": "与ダメージ+10%の玉" },
+          "damageTakenGuard": { "name": "被ダメージ-10%の玉" },
+          "evasionBoost": { "name": "回避率+1%の玉" },
+          "accuracyBoost": { "name": "命中率+1%の玉" },
+          "critDamageBoost": { "name": "クリティカルダメージ+10%の玉" }
+        },
+        "labels": {
+          "maxHpMul": "最大HP",
+          "attackMul": "攻撃力",
+          "defenseMul": "防御力",
+          "damageDealtMul": "与ダメージ",
+          "damageTakenMul": "被ダメージ",
+          "skillPowerMul": "スキル威力",
+          "accuracyMul": "命中率",
+          "evasionMul": "回避率",
+          "critDamageMul": "クリティカルダメージ",
+          "statusChanceMul": "状態異常確率",
+          "enemySpecialChanceMul": "敵特殊行動確率",
+          "poisonStatusChanceMul": "毒付与確率",
+          "paralysisStatusChanceMul": "麻痺付与確率",
+          "levelDownStatusChanceMul": "レベルダウン確率",
+          "instantDeathChanceMul": "即死確率",
+          "knockbackChanceMul": "吹き飛ばし確率",
+          "poisonDamageMul": "毒ダメージ",
+          "bombDamageMul": "爆弾ダメージ",
+          "abilityDownPenaltyMul": "能力低下幅",
+          "status:poison": "毒付与確率",
+          "status:paralysis": "麻痺付与確率",
+          "status:levelDown": "レベルダウン確率",
+          "instantDeath": "即死確率",
+          "enemySpecial:knockback": "吹き飛ばし確率",
+          "poison": "毒ダメージ",
+          "bomb": "爆弾ダメージ",
+          "abilityDownPenalty": "能力低下幅"
+        }
+      },
+      "skillCharms": {
+        "use": "使用",
+        "empty": "所持していません。"
+      },
+      "events": {
+        "hatena": {
+          "spawnSingle": "怪しげなハテナブロックが現れた…！",
+          "spawnMultiple": "怪しげなハテナブロックが{count}個出現した…！",
+          "bombGuard": "爆発の衝撃を無効化した！",
+          "bombHeal": "爆発のエネルギーが反転し、HPが{amount}回復した！",
+          "bombDamage": "爆発で{amount}のダメージ！",
+          "bombDeath": "爆発に巻き込まれて倒れた…ゲームオーバー",
+          "itemObtained": "{item}を1つ手に入れた！",
+          "trigger": "ハテナブロックを踏んだ！",
+          "levelUp": "レベルが{amount}上昇した！",
+          "levelNoChange": "しかしレベルは変わらなかった。",
+          "levelDown": "レベルが{amount}下がってしまった…",
+          "levelDownNoEffect": "これ以上レベルは下がらなかった。",
+          "expGain": "経験値を{amount}獲得した！",
+          "expGainNone": "経験値は増えなかった。",
+          "expLoss": "経験値を{amount}失った…",
+          "expLossNone": "失う経験値はなかった。",
+          "enemyAmbush": "周囲に敵が現れた！",
+          "noEnemies": "しかし敵は現れなかった。",
+          "poisonGuarded": "毒は無効化された。",
+          "statusNone": "状態異常は発生しなかった。",
+          "buffFailed": "能力強化の効果は発揮されなかった。",
+          "debuffNone": "能力低下は発生しなかった。",
+          "rareChest": "煌びやかなレア宝箱が出現した！",
+          "chestNoSpace": "宝箱を置く場所が見つからなかった。",
+          "chest": "宝箱が出現した！",
+          "noChest": "宝箱は現れなかった。",
+          "chestRing": "宝箱に囲まれた！",
+          "nothing": "しかし何も起きなかった。"
+        },
+        "skills": {
+          "statusGuarded": "スキル効果により状態異常を無効化した！"
+        },
+        "sp": {
+          "unlocked": "SPが解放された！",
+          "notUnlocked": "SPが解放されていない。",
+          "notEnough": "SPが足りない。",
+          "offerLocked": "SPシステムが解放されてから捧げられる。",
+          "notUnlockedForItem": "SPが解放されていないため使用できない。",
+          "noCapacity": "SP上限が0のため効果がない。",
+          "alreadyFull": "SPはすでに最大だ。"
+        },
+        "status": {
+          "paralyzed": "体が痺れて動けない…"
+        },
+        "sandbox": {
+          "noExp": "サンドボックスでは経験値は獲得できません。",
+          "started": "サンドボックスを開始しました。経験値は獲得できません。"
+        },
+        "console": {
+          "executed": "創造神コンソールがコードを実行しました。"
+        },
+        "unlocks": {
+          "nestedLegend": "NESTED 99999999 のダンジョンを攻略し、アノス級の神格を得た！",
+          "consoleAlwaysOn": "創造神コンソールとサンドボックス切替が常時利用可能になった。"
+        },
+        "actions": {
+          "wallDestroyed": "壁を破壊した！"
+        },
+        "dungeon": {
+          "darkness": "暗闇が視界を包み、見通しが悪い…",
+          "poisonFog": "毒霧が漂っている！通常の床も危険だ。"
+        },
+        "charms": {
+          "unknown": "未知の護符は使用できない。",
+          "notOwned": "その護符は所持していない。"
+        },
+        "satiety": {
+          "enabled": "満腹度システムが発動した！",
+          "disabled": "満腹度システムが解除された。",
+          "cannotEat": "満腹度システムが有効な時だけ食べられる。",
+          "alreadyFull": "満腹度は既に最大値です。"
+        },
+        "goldenChest": {
+          "elixir": "黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。",
+          "openedSafely": "黄金の宝箱を安全に開けた！",
+          "prompt": "黄金の宝箱だ！タイミングバーを狙おう。"
+        },
+        "combat": {
+          "noEnemyInDirection": "その方向には敵がいない！",
+          "sureHitIneffective": "敵のレベルが高すぎて必中攻撃の効果が及ばない…",
+          "miss": "Miss",
+          "enemyDefeated": "敵を倒した！",
+          "bossGate": "ボスを倒すまでは進めない！",
+          "enemyMissed": "敵は外した！",
+          "enemyWarped": "敵の転移攻撃でワープさせられた！",
+          "statusResistedByLevel": "レベル差で状態異常を防いだ！",
+          "teleportResistedByLevel": "レベル差で転移攻撃を耐えた！",
+          "instantDeathResisted": "レベル差で即死攻撃を無効化した！",
+          "instantDeathHit": "敵の即死攻撃が命中した…！",
+          "knockbackResistedByLevel": "レベル差で吹き飛ばしを踏ん張った！"
+        },
+        "orb": {
+          "statusAttackNegated": "オーブの加護で状態異常攻撃を無効化した！",
+          "statusAttackPrevented": "オーブの加護で状態異常攻撃を防いだ！",
+          "statusPrevented": "オーブの加護で状態異常を防いだ！",
+          "teleportNegated": "オーブの加護で転移攻撃を無効化した！",
+          "teleportPrevented": "オーブの加護で転移攻撃を防いだ！",
+          "instantDeathNegated": "オーブの加護で即死攻撃を無効化した！",
+          "instantDeathPrevented": "オーブの加護で即死攻撃を耐えた！",
+          "knockbackNegated": "オーブの加護で吹き飛ばしを無効化した！",
+          "knockbackPrevented": "オーブの加護で吹き飛ばしを防いだ！"
+        },
+        "items": {
+          "noPotion": "ポーションを持っていない。",
+          "noOfferingItem": "捧げる回復アイテムがない。",
+          "throwNoEnemies": "投げつける範囲に敵がいない。",
+          "throwNoHealingItem": "投げつける回復アイテムがない。",
+          "throwNoTarget": "投げつける相手が見つからなかった。",
+          "throwIneffective": "敵のレベルが高すぎて投げつけても効果がなかった…",
+          "throwNoEffect": "回復アイテムを投げつけたが効果がなかった。",
+          "hpBoostUsed": "最大HP強化アイテムを使用！最大HPが5増加！",
+          "attackBoostUsed": "攻撃力強化アイテムを使用！攻撃力が1増加！",
+          "defenseBoostUsed": "防御力強化アイテムを使用！防御力が1増加！",
+          "notOwned": "そのアイテムは所持していない。",
+          "noSpElixir": "SPエリクサーを所持していない。"
+        },
+        "data": {
+          "imported": "データをインポートしました"
+        },
+        "blockdim": {
+          "selectionIncomplete": "ブロック選択が不完全です"
+        },
+        "progress": {
+          "dungeonCleared": "ダンジョンを攻略した！"
+        }
+      }
+    },
+    "statusModal": {
+      "title": "プレイヤーステータス",
+      "sections": {
+        "basic": "基本ステータス",
+        "inventory": "所持アイテム",
+        "settings": "ゲーム設定",
+        "dungeon": "ダンジョン情報"
+      },
+      "labels": {
+        "level": "レベル",
+        "exp": "経験値",
+        "hp": "HP",
+        "satiety": "満腹度",
+        "sp": "SP",
+        "attack": "攻撃力",
+        "defense": "防御力",
+        "statusEffects": "状態異常",
+        "skillEffects": "スキル効果",
+        "floor": "現在階層"
+      },
+      "settings": {
+        "world": "選択世界",
+        "difficulty": "難易度"
+      },
+      "dungeon": {
+        "structure": "構成",
+        "type": "タイプ"
+      },
+      "effects": {
+        "entry": "{label} 残り{turns}ターン"
+      },
+      "skillCharms": {
+        "entry": "{label} x{count}"
+      },
+      "world": {
+        "normal": "{world}世界",
+        "blockdim": "BlockDim NESTED {nested} / {dimension}"
+      },
+      "dungeonSummary": {
+        "normal": "{world}世界：{dungeon}",
+        "blockdim": "NESTED {nested} ／ 次元 {dimension}：{block1}・{block2}・{block3}"
+      },
+      "details": {
+        "floor": "階層: {floor}",
+        "hpBaseSuffix": " (基{base})",
+        "level": "Lv.{value}",
+        "hp": "HP {current}/{max}{baseSuffix}",
+        "attack": "攻{value}",
+        "defense": "防{value}",
+        "satiety": "満{current}/{max}",
+        "line": "{level} {hp} {attack} {defense} {satiety}"
+      },
+      "stats": {
+        "valueWithBase": "{effective} (基{base})",
+        "levelWithBase": "Lv.{effective} (基{base})",
+        "hp": "HP {current}/{max}{baseSuffix}"
       }
     }
   };

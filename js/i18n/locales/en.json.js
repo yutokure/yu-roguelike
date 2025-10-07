@@ -8193,6 +8193,294 @@
         }
       }
     },
+    "tools": {
+      "sidebar": {
+        "ariaLabel": "Tools list",
+        "modMaker": {
+          "label": "Dungeon Mod Maker",
+          "hint": "Assemble structures and algorithms to export a `registerDungeonAddon` file."
+        },
+        "sandbox": {
+          "label": "Sandbox Dungeon",
+          "hint": "Build test dungeons with free layouts and enemies (no EXP)."
+        },
+        "blockdata": {
+          "label": "BlockData Editor",
+          "hint": "Inspect and edit BlockDim block definitions via GUI and export JSON."
+        },
+        "imageViewer": {
+          "label": "Image Viewer",
+          "hint": "Review screenshots with zoom, rotation, perspective, and metadata."
+        },
+        "stateManager": {
+          "label": "State Manager",
+          "hint": "Export or import all game and tool data in one bundle."
+        }
+      },
+      "modMaker": {
+        "panelAriaLabel": "Dungeon Type Mod Maker",
+        "header": {
+          "title": "Dungeon Type Mod Maker",
+          "description": "Export addon JS with metadata, structure patterns, generation algorithms, and BlockDim blocks."
+        },
+        "meta": {
+          "title": "Addon Info",
+          "fields": {
+            "id": {
+              "label": "Addon ID",
+              "placeholder": "e.g. custom_pack"
+            },
+            "name": {
+              "label": "Display Name",
+              "placeholder": "e.g. Custom Dungeon Pack"
+            },
+            "version": {
+              "label": "Version"
+            },
+            "author": {
+              "label": "Author",
+              "placeholder": "Your name"
+            },
+            "description": {
+              "label": "Description",
+              "placeholder": "Overall addon description"
+            }
+          }
+        },
+        "structures": {
+          "title": "Structure Library",
+          "actions": {
+            "add": "+ Add Structure",
+            "remove": "Remove Selection"
+          },
+          "listAria": "Structure list",
+          "fields": {
+            "id": {
+              "label": "ID",
+              "placeholder": "e.g. custom_room"
+            },
+            "name": {
+              "label": "Name",
+              "placeholder": "Display label"
+            },
+            "anchorX": {
+              "label": "Anchor X"
+            },
+            "anchorY": {
+              "label": "Anchor Y"
+            },
+            "tags": {
+              "label": "Tags (comma-separated)",
+              "placeholder": "e.g. rooms,geo"
+            },
+            "allowRotate": {
+              "label": "Allow rotation"
+            },
+            "allowMirror": {
+              "label": "Allow mirroring"
+            },
+            "width": {
+              "label": "Width"
+            },
+            "height": {
+              "label": "Height"
+            },
+            "preview": {
+              "label": "Pattern Preview"
+            }
+          },
+          "grid": {
+            "hint": "Click cells to cycle: empty → floor → wall",
+            "fillEmpty": "All empty",
+            "fillFloor": "All floor",
+            "fillWall": "All wall",
+            "ariaLabel": "Structure pattern"
+          },
+          "defaultItem": "Structure {index}"
+        },
+        "placeholders": {
+          "structurePreview": "Add a structure to preview it here.",
+          "fixedDisabled": "Enable fixed maps to edit them.",
+          "fixedAddFloor": "Add floors to configure fixed layouts."
+        },
+        "fixed": {
+          "title": "Fixed Maps",
+          "enable": {
+            "label": "Use fixed maps"
+          },
+          "fields": {
+            "floorCount": {
+              "label": "Floor count"
+            },
+            "bossFloors": {
+              "label": "Boss floors (comma-separated)",
+              "placeholder": "e.g. 5,10"
+            },
+            "width": {
+              "label": "Width"
+            },
+            "height": {
+              "label": "Height"
+            }
+          },
+          "note": "Call <code>ctx.fixedMaps.applyCurrent()</code> in the algorithm to apply that floor's fixed map.",
+          "floorListAria": "Fixed map floors",
+          "actions": {
+            "copyPrevious": "Copy previous floor"
+          },
+          "grid": {
+            "hint": "Click cells to cycle: wall → floor → empty",
+            "fillWall": "All walls",
+            "fillFloor": "All floor",
+            "fillVoid": "All empty",
+            "ariaLabel": "Fixed map pattern"
+          }
+        },
+        "generators": {
+          "title": "Generation Algorithms",
+          "actions": {
+            "add": "+ Add Generator",
+            "remove": "Remove Selection"
+          },
+          "listAria": "Generator list",
+          "fields": {
+            "id": {
+              "label": "ID",
+              "placeholder": "e.g. custom-dungeon"
+            },
+            "name": {
+              "label": "Name",
+              "placeholder": "Dungeon name"
+            },
+            "description": {
+              "label": "Description",
+              "placeholder": "Summary shown in lists"
+            },
+            "normalMix": {
+              "label": "Normal mix ratio"
+            },
+            "blockMix": {
+              "label": "BlockDim mix ratio"
+            },
+            "tags": {
+              "label": "Tags (comma-separated)",
+              "placeholder": "e.g. rooms,organic"
+            },
+            "dark": {
+              "label": "Dark (vision radius 5)"
+            },
+            "poison": {
+              "label": "Poison fog (normal tiles become poison)"
+            },
+            "code": {
+              "label": "Algorithm Code"
+            }
+          },
+          "template": {
+            "label": "Template",
+            "options": {
+              "blank": "Empty template",
+              "rooms": "Rooms & corridors sample",
+              "structure": "Structure placement sample",
+              "fixed": "Fixed map helper"
+            },
+            "apply": "Apply selected template"
+          },
+          "defaultItem": "Generator {index}"
+        },
+        "blocks": {
+          "title": "BlockDim Block Definitions",
+          "actions": {
+            "addFirst": "+ 1st",
+            "addSecond": "+ 2nd",
+            "addThird": "+ 3rd"
+          },
+          "tiers": {
+            "firstHeading": "1st Blocks",
+            "secondHeading": "2nd Blocks",
+            "thirdHeading": "3rd Blocks",
+            "firstAria": "1st block tier",
+            "secondAria": "2nd block tier",
+            "thirdAria": "3rd block tier"
+          },
+          "empty": "No entries yet. Use the add buttons above to create one.",
+          "remove": "Remove",
+          "fields": {
+            "key": {
+              "label": "Key"
+            },
+            "name": {
+              "label": "Name"
+            },
+            "level": {
+              "label": "Level offset",
+              "placeholder": "e.g. +0"
+            },
+            "size": {
+              "label": "Size offset",
+              "placeholder": "e.g. +1"
+            },
+            "depth": {
+              "label": "Depth offset",
+              "placeholder": "e.g. +1"
+            },
+            "chest": {
+              "label": "Chest type",
+              "placeholder": "normal/more/less"
+            },
+            "type": {
+              "label": "Type ID",
+              "placeholder": "e.g. custom-dungeon"
+            },
+            "bossFloors": {
+              "label": "Boss floors",
+              "placeholder": "e.g. 5,10,15"
+            },
+            "description": {
+              "label": "Notes / description"
+            }
+          },
+          "defaultTitle": "{tier} #{index}"
+        },
+        "output": {
+          "title": "Output"
+        },
+        "actions": {
+          "copy": "Copy to clipboard",
+          "download": "Download as .js file"
+        },
+        "status": {
+          "errorHeading": "⚠️ {count} issue(s) to review",
+          "ready": "✅ Ready to export"
+        },
+        "feedback": {
+          "copySuccess": "Copied!",
+          "copyFailed": "Copy failed"
+        },
+        "templates": {
+          "todoComment": "  // TODO: edit ctx.map to generate the dungeon."
+        },
+        "errors": {
+          "missingAddonId": "Addon ID is required.",
+          "invalidAddonId": "Addon ID may only use alphanumeric characters, hyphen, or underscore.",
+          "structureMissingId": "Enter an ID for structure {index}.",
+          "structureDuplicateId": "Structure ID \"{id}\" is duplicated.",
+          "structureAnchorOutOfRange": "Structure {index} anchor is out of range.",
+          "generatorMissing": "Add at least one generator.",
+          "generatorMissingId": "Enter an ID for generator {index}.",
+          "generatorDuplicateId": "Generator ID \"{id}\" is duplicated.",
+          "generatorNormalRange": "Generator {index} normal mix must be between 0 and 1.",
+          "generatorBlockRange": "Generator {index} BlockDim mix must be between 0 and 1.",
+          "generatorMissingCode": "Enter algorithm code for generator {index}.",
+          "blockMissingKey": "Enter the key for {tier} block {index}.",
+          "blockDuplicateKey": "Block key \"{key}\" is duplicated.",
+          "generatorFixedMissing": "Generator {index} is missing fixed map layouts.",
+          "generatorFixedFloorMissing": "Generator {index} is missing the fixed map for floor {floor}.",
+          "generatorFixedFloorEmpty": "Generator {index} floor {floor} fixed map has no floor tiles."
+        }
+      }
+    },
+
     "achievements": {
       "categories": {
         "dungeon": "Dungeon",

@@ -561,7 +561,171 @@
           },
           "blockcode": {
             "name": "Blockcode Lab",
-            "description": "Experiment with visual blocks to safely script MiniExp APIs."
+            "description": "Experiment with visual blocks to safely script MiniExp APIs.",
+            "defaults": {
+              "projectName": "New Project"
+            },
+            "categories": {
+              "events": "Events",
+              "actions": "Actions",
+              "control": "Control",
+              "variables": "Variables",
+              "utility": "Utility"
+            },
+            "ui": {
+              "title": "Blockcode Lab",
+              "variableSelect": { "placeholder": "-- Variable --" },
+              "workspace": { "elseLabel": "Otherwise" },
+              "stage": { "placeholder": "Assemble blocks and press Run." },
+              "status": { "running": "Running", "stopped": "Stopped" },
+              "toolbar": {
+                "snapOn": "Snap: ON",
+                "snapOff": "Snap: OFF",
+                "speedLabel": "Speed {value}x",
+                "undo": "Undo",
+                "redo": "Redo",
+                "zoomReset": "Reset zoom",
+                "gridToggle": "Toggle grid"
+              },
+              "summary": "{name} · Blocks {blocks} · Variables {variables}",
+              "projectStats": "Blocks {blocks} · Variables {variables}",
+              "tabs": { "logs": "Logs", "variables": "Variable Watch" },
+              "buttons": {
+                "new": "New",
+                "save": "Save",
+                "load": "Load",
+                "share": "Share Code",
+                "run": "Run",
+                "stop": "Stop",
+                "duplicate": "Duplicate",
+                "delete": "Delete",
+                "cancel": "Cancel",
+                "ok": "OK",
+                "addVariable": "Add Variable"
+              },
+              "inputs": {
+                "variableName": "Variable name",
+                "variableInitial": "Initial value",
+                "memo": "Notes (optional)"
+              },
+              "alerts": {
+                "duplicateVariable": "A variable with the same name already exists.",
+                "noSavedProjects": "No saved projects found.",
+                "decodeFailed": "Failed to parse share code."
+              },
+              "prompts": {
+                "confirmStopForNew": "The project is running. Stop and create a new project?",
+                "confirmDiscard": "Discard the current project and start a new one?"
+              },
+              "messages": {
+                "projectCreated": "Created a new project.",
+                "projectSaved": "Saved project \"{name}\".",
+                "projectLoaded": "Loaded project \"{name}\".",
+                "shareImported": "Imported \"{name}\" from share code.",
+                "undoUnavailable": "Undo is not implemented yet.",
+                "redoUnavailable": "Redo is not implemented yet.",
+                "needHat": "A start event block is required.",
+                "executionStopped": "Execution stopped.",
+                "runComplete": "Execution finished.",
+                "genericError": "An error occurred."
+              },
+              "share": {
+                "title": "Share Code",
+                "importLabel": "Paste share code to import",
+                "importPlaceholder": "Share code",
+                "importButton": "Import",
+                "copyButton": "Copy code",
+                "copied": "Copied!"
+              },
+              "variableList": {
+                "initialValue": "Initial: {value}",
+                "empty": "No variables."
+              },
+              "variableTypes": {
+                "number": "Number",
+                "string": "String",
+                "boolean": "Boolean"
+              }
+            },
+            "blocks": {
+              "whenGameStarts": {
+                "label": "When game starts",
+                "description": "Event handler that runs when the project starts."
+              },
+              "whenKeyPressed": {
+                "label": "When key {key} is pressed",
+                "description": "Runs when the specified key is pressed.",
+                "inputs": {
+                  "key": { "placeholder": "Key" }
+                }
+              },
+              "movePlayer": {
+                "label": "Move player by {steps} tiles",
+                "description": "Moves the sandbox player."
+              },
+              "setTile": {
+                "label": "Set tile ({x}, {y}) to {color}",
+                "description": "Changes the stage tile color.",
+                "inputs": {
+                  "color": { "placeholder": "#RRGGBB" }
+                }
+              },
+              "waitSeconds": {
+                "label": "Wait {seconds} seconds",
+                "description": "Waits for the specified seconds."
+              },
+              "repeatTimes": {
+                "label": "Repeat {count} times",
+                "description": "Repeats the given number of times."
+              },
+              "foreverLoop": {
+                "label": "Repeat forever",
+                "description": "Repeats with a safety iteration limit."
+              },
+              "ifCondition": {
+                "label": "If {condition}",
+                "description": "Runs when the condition is true.",
+                "inputs": {
+                  "condition": { "placeholder": "Condition (e.g. score > 5)" }
+                }
+              },
+              "logMessage": {
+                "label": "Log: {message}",
+                "description": "Outputs a message to the log tab.",
+                "inputs": {
+                  "message": { "default": "Hello MiniExp!" }
+                }
+              },
+              "awardXp": {
+                "label": "Gain XP {amount}",
+                "description": "Awards XP."
+              },
+              "setVariable": {
+                "label": "Set variable {variable} to {value}",
+                "description": "Assigns a value to a variable.",
+                "inputs": {
+                  "value": { "placeholder": "Value or expression" }
+                }
+              },
+              "changeVariable": {
+                "label": "Change variable {variable} by {delta}",
+                "description": "Increments or decrements a variable."
+              },
+              "broadcast": {
+                "label": "Broadcast {channel}",
+                "description": "Fires a virtual event."
+              },
+              "stopAll": {
+                "label": "Stop everything",
+                "description": "Stops execution."
+              }
+            },
+            "worker": {
+              "foreverLimit": "Forever loop stopped after {limit} iterations.",
+              "broadcast": "Broadcast: {channel}",
+              "noStart": "No start event block found.",
+              "stopped": "Execution was stopped."
+            }
           },
           "wording": {
             "name": "Wording",

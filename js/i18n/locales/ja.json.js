@@ -561,7 +561,171 @@
           },
           "blockcode": {
             "name": "ブロックコードラボ",
-            "description": "Scratch風のブロックでミニゲームAPIを安全に試せるビジュアルプログラミング環境"
+            "description": "Scratch風のブロックでミニゲームAPIを安全に試せるビジュアルプログラミング環境",
+            "defaults": {
+              "projectName": "新規プロジェクト"
+            },
+            "categories": {
+              "events": "イベント",
+              "actions": "アクション",
+              "control": "制御",
+              "variables": "変数",
+              "utility": "ユーティリティ"
+            },
+            "ui": {
+              "title": "ブロックコードラボ",
+              "variableSelect": { "placeholder": "-- 変数 --" },
+              "workspace": { "elseLabel": "そうでなければ" },
+              "stage": { "placeholder": "ブロックを組み立てて実行ボタンを押してください。" },
+              "status": { "running": "実行中", "stopped": "停止中" },
+              "toolbar": {
+                "snapOn": "スナップ: ON",
+                "snapOff": "スナップ: OFF",
+                "speedLabel": "速度 {value}x",
+                "undo": "Undo",
+                "redo": "Redo",
+                "zoomReset": "ズームリセット",
+                "gridToggle": "グリッド切替"
+              },
+              "summary": "{name} · ブロック {blocks} · 変数 {variables}",
+              "projectStats": "ブロック {blocks} · 変数 {variables}",
+              "tabs": { "logs": "ログ", "variables": "変数ウォッチ" },
+              "buttons": {
+                "new": "新規",
+                "save": "保存",
+                "load": "読み込み",
+                "share": "共有コード",
+                "run": "実行",
+                "stop": "停止",
+                "duplicate": "複製",
+                "delete": "削除",
+                "cancel": "キャンセル",
+                "ok": "OK",
+                "addVariable": "変数を追加"
+              },
+              "inputs": {
+                "variableName": "変数名",
+                "variableInitial": "初期値",
+                "memo": "メモ (任意)"
+              },
+              "alerts": {
+                "duplicateVariable": "同名の変数が既に存在します",
+                "noSavedProjects": "保存済みのプロジェクトがありません。",
+                "decodeFailed": "共有コードの解析に失敗しました。"
+              },
+              "prompts": {
+                "confirmStopForNew": "実行中です。停止して新規プロジェクトを作成しますか？",
+                "confirmDiscard": "現在のプロジェクトを破棄して新規作成しますか？"
+              },
+              "messages": {
+                "projectCreated": "新しいプロジェクトを作成しました。",
+                "projectSaved": "プロジェクト「{name}」を保存しました。",
+                "projectLoaded": "プロジェクト「{name}」を読み込みました。",
+                "shareImported": "共有コードから「{name}」を読み込みました。",
+                "undoUnavailable": "Undo は未実装です。",
+                "redoUnavailable": "Redo は未実装です。",
+                "needHat": "開始イベントブロックが必要です。",
+                "executionStopped": "実行を停止しました。",
+                "runComplete": "実行が完了しました。",
+                "genericError": "エラーが発生しました。"
+              },
+              "share": {
+                "title": "共有コード",
+                "importLabel": "共有コードを貼り付けて読み込み",
+                "importPlaceholder": "共有コード",
+                "importButton": "読み込む",
+                "copyButton": "コードをコピー",
+                "copied": "コピーしました!"
+              },
+              "variableList": {
+                "initialValue": "初期値: {value}",
+                "empty": "変数はありません。"
+              },
+              "variableTypes": {
+                "number": "数値",
+                "string": "文字列",
+                "boolean": "真偽"
+              }
+            },
+            "blocks": {
+              "whenGameStarts": {
+                "label": "ゲーム開始時",
+                "description": "プロジェクト開始時に実行されるイベントハンドラー"
+              },
+              "whenKeyPressed": {
+                "label": "キー {key} が押されたとき",
+                "description": "指定キー押下時に呼び出されます",
+                "inputs": {
+                  "key": { "placeholder": "Key" }
+                }
+              },
+              "movePlayer": {
+                "label": "プレイヤーを {steps} マス移動",
+                "description": "サンドボックスプレイヤーを移動します"
+              },
+              "setTile": {
+                "label": "タイル ({x}, {y}) を {color} にする",
+                "description": "ステージタイルの色を変更",
+                "inputs": {
+                  "color": { "placeholder": "#RRGGBB" }
+                }
+              },
+              "waitSeconds": {
+                "label": "{seconds} 秒待つ",
+                "description": "指定秒数待機"
+              },
+              "repeatTimes": {
+                "label": "{count} 回繰り返す",
+                "description": "指定回数繰り返します"
+              },
+              "foreverLoop": {
+                "label": "ずっと繰り返す",
+                "description": "一定回数制限付きで繰り返します"
+              },
+              "ifCondition": {
+                "label": "もし {condition} なら",
+                "description": "条件成立時に実行します",
+                "inputs": {
+                  "condition": { "placeholder": "条件式 (例: score > 5)" }
+                }
+              },
+              "logMessage": {
+                "label": "ログ: {message}",
+                "description": "ログタブにメッセージを出力",
+                "inputs": {
+                  "message": { "default": "Hello MiniExp!" }
+                }
+              },
+              "awardXp": {
+                "label": "XP {amount} を獲得",
+                "description": "XPを獲得します"
+              },
+              "setVariable": {
+                "label": "変数 {variable} を {value} にする",
+                "description": "変数へ値を代入",
+                "inputs": {
+                  "value": { "placeholder": "値または式" }
+                }
+              },
+              "changeVariable": {
+                "label": "変数 {variable} を {delta} ずつ変える",
+                "description": "変数を増減"
+              },
+              "broadcast": {
+                "label": "ブロードキャスト {channel}",
+                "description": "仮想イベントを発火します"
+              },
+              "stopAll": {
+                "label": "すべて停止する",
+                "description": "実行を停止します"
+              }
+            },
+            "worker": {
+              "foreverLimit": "foreverループが{limit}回で停止しました。",
+              "broadcast": "ブロードキャスト: {channel}",
+              "noStart": "開始イベントが見つかりません。",
+              "stopped": "停止されました。"
+            }
           },
           "wording": {
             "name": "Wording",

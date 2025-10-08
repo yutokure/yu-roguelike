@@ -10324,6 +10324,35 @@
     },
 
     "minigame": {
+      "counter_pad": {
+        "title": "Counter Pad",
+        "subtitle": "Track multiple counters quickly. Adjustments are saved automatically.",
+        "defaults": {
+          "counterName": "Counter {index}",
+          "newCounter": "New Counter"
+        },
+        "form": {
+          "namePlaceholder": "Counter name",
+          "initialValuePlaceholder": "Initial value (0)",
+          "stepPlaceholder": "Step (1)",
+          "addButton": "Add"
+        },
+        "summary": {
+          "count": "Counters {count}",
+          "total": "Total {value}",
+          "sessionXp": "Session EXP {value}"
+        },
+        "emptyState": "No counters yet. Use the form above to add one.",
+        "counter": {
+          "delete": "Delete",
+          "deleteConfirm": "Delete {name}?",
+          "stepLabel": "Step",
+          "reset": "Reset"
+        },
+        "alerts": {
+          "limitReached": "Cannot add more counters (limit {max})"
+        }
+      },
       "taiko_drum": {
         "title": "Taiko Rhythm ({difficulty})",
         "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",

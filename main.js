@@ -4069,7 +4069,10 @@ function updateSandboxToolControls() {
         if (!list.length) {
             const option = document.createElement('option');
             option.value = '';
-            option.textContent = '配置可能なクリスタルなし';
+            option.textContent = translateOrFallback(
+                'tools.sandbox.controls.domain.noneAvailable',
+                '配置可能なクリスタルなし'
+            );
             sandboxToolDomainSelect.appendChild(option);
         } else {
             const fragment = document.createDocumentFragment();
@@ -18849,6 +18852,11 @@ document.addEventListener('app:rerender', () => {
         }
     } catch (err) {
         console.warn('[app] Failed to refresh BlockDim UI on rerender', err);
+    }
+    try {
+        updateSandboxToolControls();
+    } catch (err) {
+        console.warn('[app] Failed to refresh sandbox tool controls on rerender', err);
     }
 });
 

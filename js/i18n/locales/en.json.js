@@ -10324,6 +10324,36 @@
     },
 
     "minigame": {
+      "electro_instrument": {
+        "title": "Electronic Instrument Studio",
+        "badge": "TOY MOD",
+        "description": "Jam freely on a piano keyboard, swapping timbres to sculpt your sound. Earn EXP with every note and playable via typing keys.",
+        "controls": {
+          "instrument": "Timbre",
+          "masterVolume": "Master Volume"
+        },
+        "hud": {
+          "sessionExp": "Session EXP"
+        },
+        "legend": {
+          "whiteKey": "White Keys: Natural notes",
+          "blackKey": "Black Keys: Accidentals"
+        },
+        "activity": {
+          "latest": "Latest Phrase",
+          "limit": "(Up to 10 notes)",
+          "placeholder": {
+            "start": "Press a key to start playing",
+            "empty": "No notes yet"
+          }
+        },
+        "instruments": {
+          "piano": "Studio Piano",
+          "synth_pad": "Synth Pad",
+          "electric_organ": "Electric Organ",
+          "digital_strings": "Digital Strings"
+        }
+      },
       "taiko_drum": {
         "title": "Taiko Rhythm ({difficulty})",
         "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",

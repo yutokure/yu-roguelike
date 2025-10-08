@@ -7971,6 +7971,16 @@ function isBossFloor(level) {
     return level === (selectedWorld === 'X' ? 25 : 10);
 }
 
+let blockDataLoadPromise = null;
+
+function ensureBlockDataPreloaded() {
+    blockDataLoadPromise ??= loadBlockDataOnce().catch((err) => {
+        blockDataLoadPromise = null;
+        throw err;
+    });
+    return blockDataLoadPromise;
+}
+
 async function loadBlockDataOnce() {
     if (blockDimTables.__loaded) return blockDimTables;
 
@@ -8813,7 +8823,7 @@ function formatSpecType(spec) {
 }
 
 async function initBlockDimUI() {
-    await loadBlockDataOnce();
+    await ensureBlockDataPreloaded();
     populateBdimRandomTypeSelect();
     // Build listboxes
     const selDim = blockDimState.dimKey || (blockDimTables.dimensions[0]?.key);
@@ -18367,6 +18377,9 @@ selectionScreen.style.display = 'flex';
 gameScreen.style.display = 'none';
 buildSelection();
 updateUI(); // Initial UI update
+ensureBlockDataPreloaded().catch((err) => {
+    console.warn('Failed to preload BlockDim data', err);
+});
 // Tabs + BlockDim UI init (lazy fetch when opening BlockDim tab)
 setupTabs();
 

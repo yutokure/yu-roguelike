@@ -8246,6 +8246,23 @@
     },
 
     "minigame": {
+      "checkers": {
+        "hud": {
+          "turn": {
+            "playerPrompt": "あなたの番 - 駒を選択して移動",
+            "aiThinking": "AI思考中..."
+          },
+          "expHint": "移動: +1EXP / 捕獲: +6EXP×駒 / 王冠昇格: +12EXP"
+        },
+        "overlay": {
+          "defaultTitle": "ゲーム終了",
+          "restartHint": "Rキーでリスタート",
+          "result": {
+            "win": "勝利！",
+            "loss": "敗北..."
+          }
+        }
+      },
       "othello": {
         "hud": {
           "status": {
@@ -8265,6 +8282,139 @@
         },
         "popup": {
           "movePreview": "{flips}枚 / 予想+{xp}EXP"
+        }
+      },
+      "connect6": {
+        "hud": {
+          "status": {
+            "ended": "ゲーム終了",
+            "playerTurn": "あなたの番",
+            "aiTurn": "AIの番"
+          }
+        },
+        "overlay": {
+          "title": "ゲーム終了",
+          "restartHint": "Rキーでリセットできます",
+          "result": {
+            "win": "あなたの勝ち！",
+            "draw": "引き分け",
+            "loss": "AIの勝ち…"
+          }
+        },
+        "popups": {
+          "defense": "防手",
+          "checkmate": "詰み手",
+          "winning": "勝ち手",
+          "pressured": "追われ手",
+          "chasing": "追い手"
+        }
+      },
+      "gomoku": {
+        "hud": {
+          "status": {
+            "ended": "ゲーム終了",
+            "playerTurn": "あなたの番",
+            "aiTurn": "AIの番"
+          }
+        },
+        "overlay": {
+          "title": "ゲーム終了",
+          "restartHint": "Rキーでリセットできます",
+          "result": {
+            "win": "あなたの勝ち！",
+            "draw": "引き分け",
+            "loss": "AIの勝ち…"
+          }
+        },
+        "popups": {
+          "defense": "防手",
+          "checkmate": "詰み手",
+          "winning": "勝ち手",
+          "pressured": "追われ手",
+          "chasing": "追い手"
+        }
+      },
+      "renju": {
+        "hud": {
+          "status": {
+            "ended": "ゲーム終了",
+            "playerTurn": "あなたの番",
+            "aiTurn": "AIの番"
+          }
+        },
+        "overlay": {
+          "title": "ゲーム終了",
+          "restartHint": "Rキーでリセットできます",
+          "result": {
+            "win": "あなたの勝ち！",
+            "draw": "引き分け",
+            "loss": "AIの勝ち…"
+          }
+        },
+        "popups": {
+          "defense": "防手",
+          "checkmate": "詰み手",
+          "winning": "勝ち手",
+          "pressured": "追われ手",
+          "chasing": "追い手"
+        },
+        "renju": {
+          "foulLabel": {
+            "overline": "禁手: 長連",
+            "doubleFour": "禁手: 四々",
+            "doubleThree": "禁手: 三々"
+          },
+          "genericFoul": "禁手"
+        }
+      },
+      "connect4": {
+        "hud": {
+          "status": {
+            "ended": "ゲーム終了",
+            "playerTurn": "あなたの番",
+            "aiTurn": "AIの番"
+          }
+        },
+        "overlay": {
+          "title": "ゲーム終了",
+          "restartHint": "Rキーでリセットできます",
+          "result": {
+            "win": "あなたの勝ち！",
+            "draw": "引き分け",
+            "loss": "AIの勝ち…"
+          }
+        },
+        "popups": {
+          "defense": "防手",
+          "checkmate": "詰み手",
+          "winning": "勝ち手",
+          "pressured": "追われ手",
+          "chasing": "追い手"
+        }
+      },
+      "tic_tac_toe": {
+        "hud": {
+          "status": {
+            "ended": "ゲーム終了",
+            "playerTurn": "あなたの番",
+            "aiTurn": "AIの番"
+          }
+        },
+        "overlay": {
+          "title": "ゲーム終了",
+          "restartHint": "Rキーでリセットできます",
+          "result": {
+            "win": "あなたの勝ち！",
+            "draw": "引き分け",
+            "loss": "AIの勝ち…"
+          }
+        },
+        "popups": {
+          "defense": "防手",
+          "checkmate": "詰み手",
+          "winning": "勝ち手",
+          "pressured": "追われ手",
+          "chasing": "追い手"
         }
       },
       "riichi_mahjong": {

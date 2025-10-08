@@ -363,16 +363,16 @@
 
     if (overlineSeq){
       const cells = dedupeCells(overlineSeq.stones || []);
-      return { type: 'renju_overline', label: '禁手: 長連', cells };
+      return { type: 'renju_overline', cells };
     }
     if (!hasWin){
       if (patterns.openFours.length >= 2){
         const cells = dedupeCells(patterns.openFours.slice(0, 2).flat());
-        return { type: 'renju_double_four', label: '禁手: 四々', cells };
+        return { type: 'renju_double_four', cells };
       }
       if (patterns.openThrees.length >= 2){
         const cells = dedupeCells(patterns.openThrees.slice(0, 2).flat());
-        return { type: 'renju_double_three', label: '禁手: 三々', cells };
+        return { type: 'renju_double_three', cells };
       }
     }
     return null;
@@ -711,6 +711,33 @@
       const difficulty = opts?.difficulty || 'NORMAL';
       const shortcuts = opts?.shortcuts;
       const xpWin = cfg.xpWin?.[difficulty] ?? cfg.xpWin?.NORMAL ?? 100;
+      const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({ id: cfg.id })
+        : null);
+      const text = (key, fallback, params) => {
+        if (localization && typeof localization.t === 'function'){
+          return localization.t(key, fallback, params);
+        }
+        if (typeof fallback === 'function') return fallback();
+        return fallback ?? '';
+      };
+      const key = (suffix) => `minigame.${cfg.id}.${suffix}`;
+      const t = (suffix, fallback, params) => text(key(suffix), fallback, params);
+      const resultMessage = (suffix, fallback, params) => ({ key: key(suffix), fallback, params });
+      let detachLocale = null;
+      const attachLocaleListener = () => {
+        if (!detachLocale && localization && typeof localization.onChange === 'function'){
+          detachLocale = localization.onChange(() => {
+            try { draw(); } catch {}
+          });
+        }
+      };
+      const detachLocaleListener = () => {
+        if (detachLocale){
+          try { detachLocale(); } catch {}
+          detachLocale = null;
+        }
+      };
 
       const canvas = document.createElement('canvas');
       canvas.width = cfg.dropMode ? 460 : 520;
@@ -727,7 +754,7 @@
       let running = false;
       let ended = false;
       let lastMove = null;
-      let resultText = '';
+      let resultState = { key: null, fallback: '', params: undefined };
       let hover = null; // {x,y} or {col}
       let threats = [];
       let blinkPhase = 0;
@@ -893,29 +920,35 @@
         });
 
         let popup = null;
-        const schedulePopup = (text, cells, color, priority) => {
+        const schedulePopup = (textValue, cells, color, priority) => {
           if (!popup || priority > popup.priority){
-            popup = { text, cells, color, priority };
+            popup = { text: textValue, cells, color, priority };
           }
         };
+
+        const defenseLabel = t('popups.defense', '防手');
+        const checkmateLabel = t('popups.checkmate', '詰み手');
+        const winningLabel = t('popups.winning', '勝ち手');
+        const pressuredLabel = t('popups.pressured', '追われ手');
+        const chasingLabel = t('popups.chasing', '追い手');
 
         if (meta && meta.trigger === 'playerMove' && meta.move){
           let resolved = false;
           for (const key of prevAiKeys){ if (!newAiKeys.has(key)) { resolved = true; break; } }
-          if (resolved){ schedulePopup('防手', [{ x: meta.move.x, y: meta.move.y }], PLAYER_POPUP_COLOR, 3); }
+          if (resolved){ schedulePopup(defenseLabel, [{ x: meta.move.x, y: meta.move.y }], PLAYER_POPUP_COLOR, 3); }
         }
 
         if (newAiCritical.length){
-          schedulePopup('詰み手', newAiCritical[0].cells, AI_POPUP_COLOR, 5);
+          schedulePopup(checkmateLabel, newAiCritical[0].cells, AI_POPUP_COLOR, 5);
         }
         if (newPlayerCritical.length){
-          schedulePopup('勝ち手', newPlayerCritical[0].cells, PLAYER_POPUP_COLOR, 4);
+          schedulePopup(winningLabel, newPlayerCritical[0].cells, PLAYER_POPUP_COLOR, 4);
         }
         if (newAiWarnings.length){
-          schedulePopup('追われ手', newAiWarnings[0].cells, AI_POPUP_COLOR, 2);
+          schedulePopup(pressuredLabel, newAiWarnings[0].cells, AI_POPUP_COLOR, 2);
         }
         if (newPlayerWarnings.length){
-          schedulePopup('追い手', newPlayerWarnings[0].cells, PLAYER_POPUP_COLOR, 1);
+          schedulePopup(chasingLabel, newPlayerWarnings[0].cells, PLAYER_POPUP_COLOR, 1);
         }
 
         if (popup){
@@ -1043,16 +1076,23 @@
         ctx.fillStyle = '#f8fafc';
         ctx.font = '16px system-ui, sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(ended ? 'ゲーム終了' : (turn === PLAYER ? 'あなたの番' : 'AIの番'), offsetX + 8, offsetY - 12);
+        const statusText = ended
+          ? t('hud.status.ended', 'ゲーム終了')
+          : (turn === PLAYER
+            ? t('hud.status.playerTurn', 'あなたの番')
+            : t('hud.status.aiTurn', 'AIの番'));
+        ctx.fillText(statusText, offsetX + 8, offsetY - 12);
         if (ended){
           ctx.fillStyle = 'rgba(15,23,42,0.7)';
           ctx.fillRect(0, canvas.height/2 - 40, canvas.width, 80);
           ctx.fillStyle = '#f8fafc';
           ctx.font = 'bold 28px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText(resultText || 'ゲーム終了', canvas.width/2, canvas.height/2);
+          const resultMessage = text(resultState.key, resultState.fallback, resultState.params);
+          const overlayTitle = t('overlay.title', 'ゲーム終了');
+          ctx.fillText(resultMessage || overlayTitle, canvas.width/2, canvas.height/2);
           ctx.font = '12px system-ui, sans-serif';
-          ctx.fillText('Rキーでリセットできます', canvas.width/2, canvas.height/2 + 22);
+          ctx.fillText(t('overlay.restartHint', 'Rキーでリセットできます'), canvas.width/2, canvas.height/2 + 22);
           ctx.textAlign = 'left';
         }
       }
@@ -1071,7 +1111,7 @@
         for (let y=0;y<cfg.rows;y++) board[y].fill(EMPTY);
         turn = PLAYER;
         ended = false;
-        resultText = '';
+        resultState = { key: null, fallback: '', params: undefined };
         lastMove = null;
         hover = null;
         clearThreats();
@@ -1080,10 +1120,13 @@
         draw();
       }
 
-      function finish(text){
+      function finish(message){
         cancelAiTimer();
         ended = true;
-        resultText = text;
+        if (message){
+          const { key: messageKey = null, fallback = '', params } = message;
+          resultState = { key: messageKey, fallback, params };
+        }
         clearThreats();
         clearRenjuFoulHint();
         draw();
@@ -1098,7 +1141,16 @@
           const foul = detectRenjuFoul(board, cfg, x, y, PLAYER);
           if (foul){
             flashRenjuFoulHint(foul);
-            showPopupAtCell({ x, y }, foul.label || '禁手', '#f97316');
+            const renjuLabels = {
+              renju_overline: { suffix: 'renju.foulLabel.overline', fallback: '禁手: 長連' },
+              renju_double_four: { suffix: 'renju.foulLabel.doubleFour', fallback: '禁手: 四々' },
+              renju_double_three: { suffix: 'renju.foulLabel.doubleThree', fallback: '禁手: 三々' }
+            };
+            const labelInfo = renjuLabels[foul.type];
+            const foulLabel = labelInfo
+              ? t(labelInfo.suffix, labelInfo.fallback)
+              : t('renju.genericFoul', '禁手');
+            showPopupAtCell({ x, y }, foulLabel, '#f97316');
             return;
           }
         }
@@ -1111,11 +1163,11 @@
         if (!won && reached){ awardXp(10, { type:'reach', game: cfg.id }); }
         if (won){
           awardXp(xpWin, { type:'win', game: cfg.id });
-          finish('あなたの勝ち！');
+          finish(resultMessage('overlay.result.win', 'あなたの勝ち！'));
           return;
         }
         if (boardFull(board, cfg.cols, cfg.rows)){
-          finish('引き分け');
+          finish(resultMessage('overlay.result.draw', '引き分け'));
           return;
         }
         turn = AI;
@@ -1128,12 +1180,12 @@
         aiTimer = null;
         if (!running || ended || turn !== AI) return;
         const mv = chooseAiMove(board, cfg, difficulty);
-        if (!mv){ finish('引き分け'); return; }
+        if (!mv){ finish(resultMessage('overlay.result.draw', '引き分け')); return; }
         board[mv.y][mv.x] = AI;
         lastMove = { x: mv.x, y: mv.y, color: AI };
         const win = checkWin(board, cfg.cols, cfg.rows, mv.x, mv.y, AI, cfg.winLength);
-        if (win){ finish('AIの勝ち…'); return; }
-        if (boardFull(board, cfg.cols, cfg.rows)){ finish('引き分け'); return; }
+        if (win){ finish(resultMessage('overlay.result.loss', 'AIの勝ち…')); return; }
+        if (boardFull(board, cfg.cols, cfg.rows)){ finish(resultMessage('overlay.result.draw', '引き分け')); return; }
         turn = PLAYER;
         refreshThreats({ trigger: 'aiMove', move: mv });
         draw();
@@ -1194,7 +1246,19 @@
       function cancelAiTimer(){ if (aiTimer){ clearTimeout(aiTimer); aiTimer = null; } }
       function scheduleAiTurn(delay){ cancelAiTimer(); aiTimer = setTimeout(aiTurn, delay); }
 
-      function start(){ if (running) return; running = true; disableHostRestart(); canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); refreshThreats({ trigger: 'start' }); draw(); if (turn === AI) scheduleAiTurn(200); }
+      function start(){
+        if (running) return;
+        running = true;
+        disableHostRestart();
+        attachLocaleListener();
+        canvas.addEventListener('click', handleClick);
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('mouseleave', handleLeave);
+        window.addEventListener('keydown', handleKey);
+        refreshThreats({ trigger: 'start' });
+        draw();
+        if (turn === AI) scheduleAiTurn(200);
+      }
       function stop(opts = {}){
         if (!running) return;
         running = false;
@@ -1204,9 +1268,13 @@
         canvas.removeEventListener('mouseleave', handleLeave);
         window.removeEventListener('keydown', handleKey);
         clearRenjuFoulHint();
+        detachLocaleListener();
         if (!opts.keepShortcutsDisabled){ enableHostRestart(); }
       }
-      function destroy(){ try { stop(); clearThreats(); clearRenjuFoulHint(); root.removeChild(canvas); } catch {} }
+      function destroy(){
+        try { stop(); clearThreats(); clearRenjuFoulHint(); root.removeChild(canvas); } catch {}
+        detachLocaleListener();
+      }
       function getScore(){ let player=0, ai=0; for (let y=0;y<cfg.rows;y++) for (let x=0;x<cfg.cols;x++){ if(board[y][x]===PLAYER) player++; else if(board[y][x]===AI) ai++; } return player - ai; }
 
       return { start, stop, destroy, getScore };

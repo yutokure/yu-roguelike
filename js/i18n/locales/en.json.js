@@ -8246,6 +8246,23 @@
     },
 
     "minigame": {
+      "checkers": {
+        "hud": {
+          "turn": {
+            "playerPrompt": "Your turn - select a piece to move",
+            "aiThinking": "AI thinking..."
+          },
+          "expHint": "Move: +1 EXP / Capture: +6 EXP per piece / Promotion: +12 EXP"
+        },
+        "overlay": {
+          "defaultTitle": "Game Over",
+          "restartHint": "Press R to restart",
+          "result": {
+            "win": "Victory!",
+            "loss": "Defeat..."
+          }
+        }
+      },
       "othello": {
         "hud": {
           "status": {
@@ -8265,6 +8282,139 @@
         },
         "popup": {
           "movePreview": "{flips} flips / approx +{xp} EXP"
+        }
+      },
+      "connect6": {
+        "hud": {
+          "status": {
+            "ended": "Game Over",
+            "playerTurn": "Your turn",
+            "aiTurn": "AI turn"
+          }
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to reset",
+          "result": {
+            "win": "You win!",
+            "draw": "Draw",
+            "loss": "AI wins..."
+          }
+        },
+        "popups": {
+          "defense": "Countered",
+          "checkmate": "Checkmate threat",
+          "winning": "Winning move",
+          "pressured": "Pressured move",
+          "chasing": "Chasing move"
+        }
+      },
+      "gomoku": {
+        "hud": {
+          "status": {
+            "ended": "Game Over",
+            "playerTurn": "Your turn",
+            "aiTurn": "AI turn"
+          }
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to reset",
+          "result": {
+            "win": "You win!",
+            "draw": "Draw",
+            "loss": "AI wins..."
+          }
+        },
+        "popups": {
+          "defense": "Countered",
+          "checkmate": "Checkmate threat",
+          "winning": "Winning move",
+          "pressured": "Pressured move",
+          "chasing": "Chasing move"
+        }
+      },
+      "renju": {
+        "hud": {
+          "status": {
+            "ended": "Game Over",
+            "playerTurn": "Your turn",
+            "aiTurn": "AI turn"
+          }
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to reset",
+          "result": {
+            "win": "You win!",
+            "draw": "Draw",
+            "loss": "AI wins..."
+          }
+        },
+        "popups": {
+          "defense": "Countered",
+          "checkmate": "Checkmate threat",
+          "winning": "Winning move",
+          "pressured": "Pressured move",
+          "chasing": "Chasing move"
+        },
+        "renju": {
+          "foulLabel": {
+            "overline": "Forbidden move: Overline",
+            "doubleFour": "Forbidden move: Double four",
+            "doubleThree": "Forbidden move: Double three"
+          },
+          "genericFoul": "Forbidden move"
+        }
+      },
+      "connect4": {
+        "hud": {
+          "status": {
+            "ended": "Game Over",
+            "playerTurn": "Your turn",
+            "aiTurn": "AI turn"
+          }
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to reset",
+          "result": {
+            "win": "You win!",
+            "draw": "Draw",
+            "loss": "AI wins..."
+          }
+        },
+        "popups": {
+          "defense": "Countered",
+          "checkmate": "Checkmate threat",
+          "winning": "Winning move",
+          "pressured": "Pressured move",
+          "chasing": "Chasing move"
+        }
+      },
+      "tic_tac_toe": {
+        "hud": {
+          "status": {
+            "ended": "Game Over",
+            "playerTurn": "Your turn",
+            "aiTurn": "AI turn"
+          }
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to reset",
+          "result": {
+            "win": "You win!",
+            "draw": "Draw",
+            "loss": "AI wins..."
+          }
+        },
+        "popups": {
+          "defense": "Countered",
+          "checkmate": "Checkmate threat",
+          "winning": "Winning move",
+          "pressured": "Pressured move",
+          "chasing": "Chasing move"
         }
       },
       "riichi_mahjong": {

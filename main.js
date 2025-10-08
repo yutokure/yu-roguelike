@@ -15636,7 +15636,11 @@ function startRareChestMinigame(chest) {
     rareChestState.direction = Math.random() < 0.5 ? -1 : 1;
     rareChestState.pendingEnemyTurn = true;
     updateRareChestPointerVisual();
-    setRareChestStatus('タイミングバーを中央で止めよう！（Space/Enter）');
+    const statusText = translateOrFallback(
+        'game.goldenChest.modal.status',
+        'タイミングバーを中央で止めよう！（Space/Enter）'
+    );
+    setRareChestStatus(statusText);
     openModal(rareChestModal);
     stopRareChestAnimation();
     rareChestState.rafId = requestAnimationFrame(rareChestAnimationStep);

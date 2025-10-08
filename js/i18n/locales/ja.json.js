@@ -11679,6 +11679,12 @@
           }
         },
         "goldenChest": {
+          "modal": {
+            "title": "黄金の宝箱",
+            "status": "タイミングバーを中央で止めよう！（Space/Enter）",
+            "stop": "ストップ",
+            "hint": "Space / Enter キーでも止められます。"
+          },
           "elixir": "黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。",
           "openedSafely": "黄金の宝箱を安全に開けた！",
           "prompt": "黄金の宝箱だ！タイミングバーを狙おう。",

@@ -11679,6 +11679,12 @@
           }
         },
         "goldenChest": {
+          "modal": {
+            "title": "Golden Chest",
+            "status": "Stop the timing bar in the center! (Space/Enter)",
+            "stop": "Stop",
+            "hint": "You can also press Space or Enter."
+          },
           "elixir": "Found a special SP Elixir in the golden chest! SP greatly restored.",
           "openedSafely": "Opened the golden chest safely!",
           "prompt": "A golden chest! Time your press with the bar.",

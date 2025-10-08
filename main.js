@@ -8893,7 +8893,7 @@ function onBlockDimChanged() {
     const selectionSnapshot = snapshotBlockDimSelection(blockDimState);
     if (selectionSnapshot !== __lastSavedBlockDimSelectionKey) {
         try {
-            saveAll();
+            scheduleSaveAll();
             __lastSavedBlockDimSelectionKey = selectionSnapshot;
         } catch (err) {
             console.error('Failed to persist BlockDim selection', err);
@@ -11659,6 +11659,24 @@ function saveAll() {
         localStorage.setItem('roguelike_save_v1', JSON.stringify(snapshot));
     } catch {}
 }
+
+let __pendingSaveRequest = null;
+
+function scheduleSaveAll() {
+    if (isSandboxActive()) return;
+    if (__pendingSaveRequest !== null) return;
+    const finalize = () => {
+        __pendingSaveRequest = null;
+        saveAll();
+    };
+    if (typeof requestIdleCallback === 'function') {
+        __pendingSaveRequest = requestIdleCallback(finalize);
+    } else {
+        __pendingSaveRequest = setTimeout(finalize, 0);
+    }
+}
+// saveAll を直接呼び出している既存の処理は引き続きそのまま利用でき、
+// 必要に応じて scheduleSaveAll() を共有利用可能です。
 
 window.getGameStateSnapshot = getGameStateSnapshot;
 window.applyGameStateSnapshot = applyGameStateSnapshot;

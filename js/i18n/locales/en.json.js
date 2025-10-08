@@ -589,7 +589,16 @@
           },
           "aim": {
             "name": "Aim Trainer",
-            "description": "Hit targets for 1–3 EXP and keep streaks alive for bonuses."
+            "description": "Hit targets for 1–3 EXP and keep streaks alive for bonuses.",
+            "hud": {
+              "time": "TIME: {time}",
+              "hitsAccuracy": "HITS: {hits}  ACC: {accuracy}%",
+              "combo": "COMBO x{combo}"
+            },
+            "overlay": {
+              "timeUp": "Time Up",
+              "restartHint": "Press R to restart"
+            }
           },
           "dodge_race": {
             "name": "Dodge Race",

@@ -1225,53 +1225,32 @@
         <div id="popup-spacer" aria-hidden="true"></div>
         </div>
     </div>
-    <div id="game-over-screen" style="display: none;">
-        <div class="game-over-overlay">
-            <div class="game-over-card">
-                <div class="game-over-icon">☠️</div>
-                <h2 class="game-over-title">ゲームオーバー</h2>
-                <p class="game-over-message">冒険はここで終わりです...</p>
-                <div class="game-over-stats">
-                    <div class="final-stat">
-                        <span class="stat-label">到達階層</span>
-                        <span id="final-floor" class="stat-value">1F</span>
-                    </div>
-                    <div class="final-stat">
-                        <span class="stat-label">最終レベル</span>
-                        <span id="final-level" class="stat-value">1</span>
-                    </div>
-                </div>
-                <button id="restart-button" class="restart-btn">もう一度プレイ</button>
-            </div>
-        </div>
-    </div>
-
     <div id="run-result-overlay" class="run-result" role="dialog" aria-modal="true" aria-labelledby="run-result-title" style="display:none;">
         <div class="run-result__card">
-            <span class="run-result__badge" id="run-result-badge">冒険結果</span>
-            <h2 class="run-result__title" id="run-result-title">リザルト</h2>
+            <span class="run-result__badge" id="run-result-badge" data-i18n="ui.runResult.reason.return">冒険結果</span>
+            <h2 class="run-result__title" id="run-result-title" data-i18n="ui.runResult.title">リザルト</h2>
             <p class="run-result__cause" id="run-result-cause" style="display:none;"></p>
             <dl class="run-result__list">
                 <div class="run-result__row run-result__row--level">
-                    <dt>レベル</dt>
+                    <dt data-i18n="ui.runResult.stats.level">レベル</dt>
                     <dd id="run-result-level">1→1 (+0)</dd>
                 </div>
                 <div class="run-result__row">
-                    <dt>合計獲得経験値</dt>
+                    <dt data-i18n="ui.runResult.stats.totalExp">合計獲得経験値</dt>
                     <dd id="run-result-exp">+0</dd>
                 </div>
                 <div class="run-result__row">
-                    <dt>合計被ダメージ</dt>
+                    <dt data-i18n="ui.runResult.stats.totalDamage">合計被ダメージ</dt>
                     <dd id="run-result-damage">0</dd>
                 </div>
                 <div class="run-result__row">
-                    <dt>回復アイテム使用数</dt>
+                    <dt data-i18n="ui.runResult.stats.healingItems">回復アイテム使用数</dt>
                     <dd id="run-result-healing">0</dd>
                 </div>
             </dl>
             <div class="run-result__actions">
-                <button type="button" class="run-result__btn run-result__btn--primary" id="run-result-primary">拠点に戻る</button>
-                <button type="button" class="run-result__btn run-result__btn--retry" id="run-result-retry" style="display:none;">再挑戦</button>
+                <button type="button" class="run-result__btn run-result__btn--primary" id="run-result-primary" data-i18n="ui.runResult.actions.return">拠点に戻る</button>
+                <button type="button" class="run-result__btn run-result__btn--retry" id="run-result-retry" data-i18n="ui.runResult.actions.retry" style="display:none;">再挑戦</button>
             </div>
         </div>
     </div>

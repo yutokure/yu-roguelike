@@ -22,12 +22,26 @@
     container.style.gap = '8px';
     container.style.padding = '8px';
 
+    const infoCard = document.createElement('div');
+    infoCard.style.display = 'flex';
+    infoCard.style.justifyContent = 'center';
+    infoCard.style.alignItems = 'center';
+    infoCard.style.padding = '10px 18px';
+    infoCard.style.borderRadius = '12px';
+    infoCard.style.background = 'rgba(15,23,42,0.9)';
+    infoCard.style.border = '1px solid rgba(148,163,184,0.4)';
+    infoCard.style.width = '100%';
+    infoCard.style.maxWidth = '420px';
+    infoCard.style.boxShadow = '0 10px 24px rgba(15,23,42,0.35)';
+
     const info = document.createElement('div');
     info.style.color = '#f8fafc';
     info.style.fontSize = '16px';
     info.style.textAlign = 'center';
     info.textContent = '囲碁 9×9 — あなたが先手 (黒)';
-    container.appendChild(info);
+    infoCard.appendChild(info);
+
+    container.appendChild(infoCard);
 
     const canvas = document.createElement('canvas');
     canvas.width = 480;

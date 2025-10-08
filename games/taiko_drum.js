@@ -203,24 +203,39 @@
     container.style.flexDirection = 'column';
     container.style.gap = '12px';
 
+    const baseFont = "'Segoe UI', 'Yu Gothic UI', sans-serif";
+
+    const headerCard = document.createElement('div');
+    headerCard.style.display = 'flex';
+    headerCard.style.flexDirection = 'column';
+    headerCard.style.alignItems = 'center';
+    headerCard.style.gap = '8px';
+    headerCard.style.padding = '12px 18px';
+    headerCard.style.borderRadius = '16px';
+    headerCard.style.background = 'rgba(15,23,42,0.9)';
+    headerCard.style.border = '1px solid rgba(148,163,184,0.4)';
+    headerCard.style.boxShadow = '0 14px 28px rgba(15,23,42,0.35)';
+
     const title = document.createElement('h2');
     title.style.margin = '0';
     title.style.fontSize = '20px';
     title.style.textAlign = 'center';
     title.style.color = '#f8fafc';
-    title.style.fontFamily = "'Segoe UI', 'Yu Gothic UI', sans-serif";
-    container.appendChild(title);
+    title.style.fontFamily = baseFont;
+    headerCard.appendChild(title);
+
+    const tips = document.createElement('div');
+    tips.style.fontSize = '12px';
+    tips.style.color = 'rgba(226,232,240,0.85)';
+    tips.style.textAlign = 'center';
+    tips.style.fontFamily = baseFont;
+    headerCard.appendChild(tips);
+
+    container.appendChild(headerCard);
 
     const hud = createResultHud();
     container.appendChild(hud);
     let resultNode = null;
-
-    const tips = document.createElement('div');
-    tips.style.fontSize = '12px';
-    tips.style.color = 'rgba(226,232,240,0.8)';
-    tips.style.textAlign = 'center';
-    tips.style.fontFamily = hud.style.fontFamily;
-    container.appendChild(tips);
 
     const canvas = document.createElement('canvas');
     canvas.width = CANVAS_WIDTH;

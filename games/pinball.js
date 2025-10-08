@@ -10,6 +10,18 @@
     wrapper.style.color = '#e2e8f0';
     wrapper.style.fontFamily = "'Segoe UI', sans-serif";
 
+    const infoCard = document.createElement('div');
+    infoCard.style.display = 'flex';
+    infoCard.style.flexDirection = 'column';
+    infoCard.style.alignItems = 'center';
+    infoCard.style.gap = '12px';
+    infoCard.style.padding = '14px 18px';
+    infoCard.style.borderRadius = '16px';
+    infoCard.style.background = 'rgba(15,23,42,0.9)';
+    infoCard.style.border = '1px solid rgba(148,163,184,0.4)';
+    infoCard.style.boxShadow = '0 16px 32px rgba(15,23,42,0.35)';
+    infoCard.style.width = 'min(100%, 620px)';
+
     const info = document.createElement('div');
     info.style.display = 'flex';
     info.style.flexWrap = 'wrap';
@@ -21,14 +33,16 @@
       <span>プランジャー: スペースキー長押しでショット</span>
       <span>Rキー: リセット</span>
     `;
-    wrapper.appendChild(info);
+    infoCard.appendChild(info);
 
     const status = document.createElement('div');
     status.style.display = 'flex';
     status.style.gap = '18px';
     status.style.fontSize = '15px';
     status.style.fontWeight = '600';
-    wrapper.appendChild(status);
+    status.style.flexWrap = 'wrap';
+    status.style.justifyContent = 'center';
+    infoCard.appendChild(status);
 
     const missionInfo = document.createElement('div');
     missionInfo.style.fontSize = '13px';
@@ -37,16 +51,16 @@
     missionInfo.style.minHeight = '56px';
     missionInfo.style.padding = '4px 12px';
     missionInfo.style.borderRadius = '10px';
-    missionInfo.style.background = 'rgba(15, 23, 42, 0.45)';
+    missionInfo.style.background = 'rgba(15, 23, 42, 0.65)';
     missionInfo.style.border = '1px solid rgba(148, 163, 184, 0.35)';
-    wrapper.appendChild(missionInfo);
+    infoCard.appendChild(missionInfo);
 
     const skillInfo = document.createElement('div');
     skillInfo.style.fontSize = '12px';
     skillInfo.style.opacity = '0.85';
     skillInfo.style.textAlign = 'center';
     skillInfo.style.minHeight = '22px';
-    wrapper.appendChild(skillInfo);
+    infoCard.appendChild(skillInfo);
 
     const announcer = document.createElement('div');
     announcer.style.minHeight = '28px';
@@ -55,7 +69,9 @@
     announcer.style.color = '#facc15';
     announcer.style.transition = 'opacity 0.3s ease';
     announcer.style.opacity = '0';
-    wrapper.appendChild(announcer);
+    infoCard.appendChild(announcer);
+
+    wrapper.appendChild(infoCard);
 
     const canvas = document.createElement('canvas');
     const W = 600, H = 820;

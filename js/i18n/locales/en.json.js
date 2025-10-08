@@ -381,7 +381,36 @@
           },
           "chess": {
             "name": "Chess",
-            "description": "Outmaneuver the king with tactical captures and checks to gain EXP."
+            "description": "Outmaneuver the king with tactical captures and checks to gain EXP.",
+            "title": "Chess",
+            "difficultyTag": "Difficulty: {value}",
+            "difficultyValue": {
+              "easy": "Easy",
+              "normal": "Normal",
+              "hard": "Hard"
+            },
+            "status": {
+              "stopped": "Stopped",
+              "turnLabel": "Turn:",
+              "yourTurn": "Your move",
+              "aiThinking": "AI is thinking…",
+              "scoreLabel": "Score:"
+            },
+            "messages": {
+              "checkmateWin": "Checkmate! You win.",
+              "checkmateLoss": "Checkmated…",
+              "stalemate": "Stalemate. The game is a draw.",
+              "draw": "The game was recorded as a draw.",
+              "playerCheck": "Check!",
+              "playerInCheck": "You are in check!",
+              "selectMove": "Select a destination square."
+            },
+            "prompts": {
+              "promotion": "Choose a promotion piece (Q/R/B/N)"
+            },
+            "controls": {
+              "restart": "Restart"
+            }
           },
           "xiangqi": {
             "name": "Xiangqi",

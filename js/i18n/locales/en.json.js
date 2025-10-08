@@ -11229,6 +11229,17 @@
       "runResult": {
         "defaultCause": "Game Over"
       },
+      "death": {
+        "cause": {
+          "generic": "Game Over",
+          "poison": "Succumbed to poison... Game over.",
+          "starvation": "Collapsed from starvation... Game over.",
+          "wallCollision": "Fell after crashing into a wall... Game over.",
+          "instantKill": "Struck down by an instant-death attack... Game over.",
+          "autoItemBackfire": "The auto item backfired and you fell... Game over.",
+          "reversedPotion": "The reversed potion overwhelmed you... Game over."
+        }
+      },
       "items": {
         "modal": {
           "title": "Items"

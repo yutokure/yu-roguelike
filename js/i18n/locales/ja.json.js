@@ -11229,6 +11229,17 @@
       "runResult": {
         "defaultCause": "ゲームオーバー"
       },
+      "death": {
+        "cause": {
+          "generic": "ゲームオーバー",
+          "poison": "毒で倒れた…ゲームオーバー",
+          "starvation": "空腹で倒れた…ゲームオーバー",
+          "wallCollision": "壁への激突で倒れた…ゲームオーバー",
+          "instantKill": "敵の即死攻撃を受けた…ゲームオーバー",
+          "autoItemBackfire": "オートアイテムの暴発で倒れてしまった…ゲームオーバー",
+          "reversedPotion": "反転した回復薬で倒れてしまった…ゲームオーバー"
+        }
+      },
       "items": {
         "modal": {
           "title": "アイテム"

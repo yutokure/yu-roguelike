@@ -9177,13 +9177,31 @@
           "unlocked": "SPが解放された！",
           "notUnlocked": "SPが解放されていない。",
           "notEnough": "SPが足りない。",
+          "maxIncreased": "SP上限が{value}に上昇した！",
+          "gained": "SPを{amount}獲得した。",
+          "spent": "SPを{amount}消費した。",
           "offerLocked": "SPシステムが解放されてから捧げられる。",
           "notUnlockedForItem": "SPが解放されていないため使用できない。",
           "noCapacity": "SP上限が0のため効果がない。",
           "alreadyFull": "SPはすでに最大だ。"
         },
         "status": {
-          "paralyzed": "体が痺れて動けない…"
+          "paralyzed": "体が痺れて動けない…",
+          "paralyzedRemaining": "体が痺れて動けない… (残り{turns}ターン)",
+          "cured": {
+            "poison": "毒が治った。",
+            "paralysis": "体の痺れが解けた。",
+            "abilityUp": "能力強化の効果が切れた。",
+            "abilityDown": "能力低下から解放された。",
+            "levelDown": "一時的なレベル低下が解除された。"
+          },
+          "applied": {
+            "poison": "毒に侵された！ ({turns}ターン)",
+            "paralysis": "体が痺れて動けない！ ({turns}ターン)",
+            "abilityUp": "能力が高まった！最大HP/攻撃/防御が上昇 ({turns}ターン)",
+            "abilityDown": "能力が低下した…最大HP/攻撃/防御が下がる ({turns}ターン)",
+            "levelDown": "レベルが一時的に低下した！ ({turns}ターン)"
+          }
         },
         "sandbox": {
           "noExp": "サンドボックスでは経験値は獲得できません。",
@@ -9226,6 +9244,8 @@
           "bossGate": "ボスを倒すまでは進めない！",
           "enemyMissed": "敵は外した！",
           "enemyWarped": "敵の転移攻撃でワープさせられた！",
+          "enemyAttackDamage": "敵はプレイヤーに {amount} のダメージを与えた！",
+          "enemyWarpPopup": "ワープ",
           "statusResistedByLevel": "レベル差で状態異常を防いだ！",
           "teleportResistedByLevel": "レベル差で転移攻撃を耐えた！",
           "instantDeathResisted": "レベル差で即死攻撃を無効化した！",
@@ -9251,6 +9271,14 @@
           "throwNoTarget": "投げつける相手が見つからなかった。",
           "throwIneffective": "敵のレベルが高すぎて投げつけても効果がなかった…",
           "throwNoEffect": "回復アイテムを投げつけたが効果がなかった。",
+          "autoSatietyRecovered": "オートアイテムが発動！満腹度が{amount}回復",
+          "potionSatietyRecovered": "ポーションを食べた！満腹度が{amount}回復",
+          "autoReversedDamage": "オートアイテムが暴発し、{amount}のダメージを受けた！",
+          "potionReversedDamage": "ポーションが反転し、{amount}のダメージを受けた！",
+          "autoHpRecovered": "オートアイテムが発動！HPが{amount}回復",
+          "potionHpRecovered": "ポーションを使用！HPが{amount}回復",
+          "autoNoEffect": "オートアイテムが発動したが体調に変化はなかった。",
+          "potionNoEffect": "ポーションを使用したが体調に変化はなかった。",
           "hpBoostUsed": "最大HP強化アイテムを使用！最大HPが5増加！",
           "attackBoostUsed": "攻撃力強化アイテムを使用！攻撃力が1増加！",
           "defenseBoostUsed": "防御力強化アイテムを使用！防御力が1増加！",

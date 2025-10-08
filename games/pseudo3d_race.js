@@ -136,6 +136,30 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'pseudo3d_race' })
+      : null);
+    const ownsLocalization = !opts?.localization && !!localization;
+    const buildKey = (suffix)=>`minigame.pseudo3d_race.${suffix}`;
+    const text = (suffix, fallback, params)=>{
+      const key = buildKey(suffix);
+      if (localization && typeof localization.t === 'function'){
+        try {
+          const result = localization.t(key, fallback, params);
+          if (typeof result === 'string' && result !== key) return result;
+        } catch (error) {
+          console.warn('[pseudo3d_race] localization failed for', key, error);
+        }
+      }
+      if (typeof fallback === 'function'){
+        try { return fallback(); } catch (error) {
+          console.warn('[pseudo3d_race] fallback evaluation failed for', key, error);
+          return '';
+        }
+      }
+      return fallback ?? '';
+    };
+    let detachLocale = null;
     const cfg = { ...(DIFFICULTY[difficulty] || DIFFICULTY.NORMAL) };
     const xpSection = 25 * (cfg.xpScale || 1);
     const xpPass = 4 * (cfg.xpScale || 1);
@@ -478,7 +502,7 @@
         const prevAlign = ctx.textAlign;
         ctx.font=`${Math.max(12,boardH*0.22)}px system-ui,sans-serif`;
         ctx.textAlign='center';
-        ctx.fillText('BOOST', point.x, point.y - boardH*0.68);
+        ctx.fillText(text('scenery.billboard', 'BOOST'), point.x, point.y - boardH*0.68);
         ctx.textAlign=prevAlign;
         const poleH = boardH*1.2;
         ctx.fillStyle='#1e293b';
@@ -615,11 +639,18 @@
       ctx.fillStyle='#e2e8f0';
       ctx.font='16px "Segoe UI",system-ui,sans-serif';
       const speedKmh = Math.round(playerSpeed * 0.36);
-      ctx.fillText(`SPEED ${speedKmh} km/h`, 24, 36);
-      ctx.fillText(`DIST ${Math.floor(totalDistance)} m`, W*0.32, 36);
-      ctx.fillText(`TIME ${Math.max(0,remainingTime).toFixed(1)}s`, W*0.58, 36);
-      ctx.fillText(`CRASH ${crashes}/${cfg.crashLimit}`, W*0.8, 36);
-      ctx.fillText(paused?'PAUSED':'', W-110, 36);
+      const distanceMeters = Math.floor(totalDistance);
+      const remainingSeconds = Math.max(0, remainingTime);
+      const speedLabel = text('hud.speed', () => `SPEED ${speedKmh} km/h`, { speed: speedKmh, unit: 'km/h' });
+      const distanceLabel = text('hud.distance', () => `DIST ${distanceMeters} m`, { distance: distanceMeters, unit: 'm' });
+      const timeLabel = text('hud.time', () => `TIME ${remainingSeconds.toFixed(1)}s`, { time: remainingSeconds, unit: 's' });
+      const crashLabel = text('hud.crash', () => `CRASH ${crashes}/${cfg.crashLimit}`, { crashes, limit: cfg.crashLimit });
+      const pausedLabel = paused ? text('hud.paused', 'PAUSED') : '';
+      ctx.fillText(speedLabel, 24, 36);
+      ctx.fillText(distanceLabel, W*0.32, 36);
+      ctx.fillText(timeLabel, W*0.58, 36);
+      ctx.fillText(crashLabel, W*0.8, 36);
+      if (pausedLabel) ctx.fillText(pausedLabel, W-110, 36);
       ctx.fillStyle='#38bdf8';
       ctx.fillRect(24, 44, Math.max(0,Math.min(1,playerSpeed / cfg.maxSpeed))*160, 6);
       // nitro gauge
@@ -628,7 +659,7 @@
       ctx.fillRect(200, 44, cooldownRatio*120, 6);
       ctx.fillStyle='#cbd5f5';
       ctx.font='12px "Segoe UI",system-ui,sans-serif';
-      ctx.fillText('NITRO', 200, 58);
+      ctx.fillText(text('hud.nitro', 'NITRO'), 200, 58);
 
       // track progress bar
       const progressWidth = W*0.6;
@@ -643,7 +674,7 @@
       ctx.fillRect(progressX, progressY-2, progressWidth * lapRatio, 8);
       ctx.fillStyle='#e2e8f0';
       ctx.font='12px "Segoe UI",system-ui,sans-serif';
-      ctx.fillText('コース進捗', progressX, progressY-8);
+      ctx.fillText(text('hud.progress', 'コース進捗'), progressX, progressY-8);
 
       if (indicators){
         const arrowSize = 44;
@@ -672,7 +703,8 @@
           ctx.globalAlpha = 1;
           ctx.fillStyle='#e2e8f0';
           ctx.font='12px "Segoe UI",system-ui,sans-serif';
-          ctx.fillText(direction>0?'右カーブ':'左カーブ', arrowX-38, arrowY+32);
+          const turnLabel = direction>0 ? text('hud.upcomingTurn.right', '右カーブ') : text('hud.upcomingTurn.left', '左カーブ');
+          ctx.fillText(turnLabel, arrowX-38, arrowY+32);
         }
       }
 
@@ -689,10 +721,18 @@
         ctx.globalAlpha = fade;
         ctx.fillStyle='#f8fafc';
         ctx.font='15px "Segoe UI",system-ui,sans-serif';
-        ctx.fillText('操作: ←/→ または A/D でステアリング ・ ↑/W でアクセル ・ ↓/S でブレーキ ・ スペースでニトロ', panelX+16, panelY+28);
+        ctx.fillText(
+          text('help.controls', '操作: ←/→ または A/D でステアリング ・ ↑/W でアクセル ・ ↓/S でブレーキ ・ スペースでニトロ'),
+          panelX+16,
+          panelY+28
+        );
         ctx.font='14px "Segoe UI",system-ui,sans-serif';
-        ctx.fillText('目的: 制限時間内に距離を稼ぎ、交通を安全に追い越そう', panelX+16, panelY+50);
-        ctx.fillText('H でヘルプ切替 / P で一時停止', panelX+16, panelY+68);
+        ctx.fillText(
+          text('help.objective', '目的: 制限時間内に距離を稼ぎ、交通を安全に追い越そう'),
+          panelX+16,
+          panelY+50
+        );
+        ctx.fillText(text('help.shortcuts', 'H でヘルプ切替 / P で一時停止'), panelX+16, panelY+68);
         ctx.restore();
       }
       if (ended){
@@ -701,10 +741,10 @@
         ctx.fillStyle='#f8fafc';
         ctx.font='bold 26px system-ui,sans-serif';
         ctx.textAlign='center';
-        ctx.fillText('GAME OVER', W/2, H*0.45);
+        ctx.fillText(text('end.title', 'GAME OVER'), W/2, H*0.45);
         ctx.font='16px system-ui,sans-serif';
-        ctx.fillText('Rでリスタート', W/2, H*0.52);
-        ctx.fillText('Pで一時停止/再開', W/2, H*0.58);
+        ctx.fillText(text('end.restart', 'Rでリスタート'), W/2, H*0.52);
+        ctx.fillText(text('end.pause', 'Pで一時停止/再開'), W/2, H*0.58);
         ctx.textAlign='start';
       }
     }
@@ -719,7 +759,7 @@
       ctx.font='bold 88px "Segoe UI",system-ui,sans-serif';
       ctx.textAlign='center';
       ctx.textBaseline='middle';
-      const label = remaining<=1 && countdown<=0.5 ? 'GO!' : String(remaining);
+      const label = remaining<=1 && countdown<=0.5 ? text('countdown.go', 'GO!') : String(remaining);
       ctx.fillText(label, W/2, H*0.45);
       ctx.restore();
     }
@@ -938,7 +978,23 @@
       raf=requestAnimationFrame(loop);
     }
     function stop(){ if(running){ running=false; cancelAnimationFrame(raf); } setShortcutsLocked(false); }
-    function destroy(){ try{ stop(); setShortcutsLocked(false); canvas.remove(); removeControls(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); }catch{} }
+    function destroy(){
+      try {
+        stop();
+        setShortcutsLocked(false);
+        canvas.remove();
+        removeControls();
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+      } catch {}
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
+      if (ownsLocalization && localization && typeof localization.destroy === 'function'){
+        try { localization.destroy(); } catch {}
+      }
+    }
     function getScore(){ return Math.floor(totalDistance); }
 
     function reset(){
@@ -959,7 +1015,9 @@
       if (playerNitro.cooldown>0) return;
       playerNitro.active=true;
       playerNitro.remaining=3.5;
-      if (window.showTransientPopupAt){ window.showTransientPopupAt(W*0.5, H*0.65, 'NITRO!', { variant:'combo', level:3 }); }
+      if (window.showTransientPopupAt){
+        window.showTransientPopupAt(W*0.5, H*0.65, text('popup.nitro', 'NITRO!'), { variant:'combo', level:3 });
+      }
     }
 
     function onKeyDown(e){
@@ -1019,8 +1077,14 @@
     const rightBtn = mkBtn('→');
     const accelBtn = mkBtn('↑');
     const brakeBtn = mkBtn('↓');
-    const nitroBtn = mkBtn('NITRO');
-    const pauseBtn = mkBtn('PAUSE');
+    const nitroBtn = mkBtn('');
+    const pauseBtn = mkBtn('');
+
+    function updateControlLabels(){
+      nitroBtn.textContent = text('controls.nitro', 'NITRO');
+      pauseBtn.textContent = text('controls.pause', 'PAUSE');
+    }
+    updateControlLabels();
 
     function bindPress(btn, code){
       const down = (ev)=>{ if(ev) ev.preventDefault(); keys.add(code); if(code==='Space') triggerNitro(); };
@@ -1058,6 +1122,19 @@
 
     reset();
     draw();
+
+    if (localization && typeof localization.onChange === 'function'){
+      try {
+        detachLocale = localization.onChange(() => {
+          try {
+            updateControlLabels();
+            draw();
+          } catch {}
+        });
+      } catch (error) {
+        console.warn('[pseudo3d_race] failed to attach localization listener', error);
+      }
+    }
 
     return { start, stop, destroy, getScore };
   }

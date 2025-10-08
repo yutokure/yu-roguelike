@@ -26,6 +26,16 @@
           "clear": "Dungeon Cleared",
           "retreat": "Dungeon Retreat",
           "return": "Run Summary"
+        },
+        "stats": {
+          "level": "Level",
+          "totalExp": "Total EXP Earned",
+          "totalDamage": "Total Damage Taken",
+          "healingItems": "Healing Items Used"
+        },
+        "actions": {
+          "return": "Return to Base",
+          "retry": "Retry"
         }
       }
     },
@@ -9222,6 +9232,9 @@
         "count": "x {count}",
         "none": "None",
         "floor": "Floor {floor}"
+      },
+      "runResult": {
+        "defaultCause": "Game Over"
       },
       "items": {
         "modal": {

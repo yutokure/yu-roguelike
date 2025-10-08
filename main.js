@@ -654,11 +654,9 @@ const PLAYER_LEVEL_ATTACK_GAIN = 1;
 const PLAYER_LEVEL_DEFENSE_GAIN = 1;
 const SKILL_EXECUTION_DELAY_MS = 500;
 let logBuffer = [];
-const gameOverScreen = document.getElementById('game-over-screen');
-const restartButton = document.getElementById('restart-button');
-const gameOverMessageElement = document.querySelector('.game-over-message');
 const GAME_OVER_BURST_DELAY_MS = 500;
 const GAME_OVER_OVERLAY_DELAY_MS = 1000;
+const GAME_OVER_RESULT_DELAY_MS = 350;
 const PLAYER_BURST_EFFECT_DURATION_MS = 500;
 let gameOverSequence = {
     active: false,
@@ -752,6 +750,7 @@ const rareChestStopButton = document.getElementById('rare-chest-stop');
 const rareChestStatus = document.getElementById('rare-chest-status');
 const runResultOverlay = document.getElementById('run-result-overlay');
 const runResultBadge = document.getElementById('run-result-badge');
+const runResultTitleElement = document.getElementById('run-result-title');
 const runResultLevelValue = document.getElementById('run-result-level');
 const runResultExpValue = document.getElementById('run-result-exp');
 const runResultDamageValue = document.getElementById('run-result-damage');
@@ -932,6 +931,9 @@ function showRunResultOverlay(summary, { onReturn, onRetry } = {}) {
     };
     if (runResultBadge) {
         runResultBadge.textContent = summary.reasonLabel || getRunResultReasonLabel('return');
+    }
+    if (runResultTitleElement) {
+        runResultTitleElement.textContent = summary.title || translate('ui.runResult.title');
     }
     if (runResultLevelValue) {
         runResultLevelValue.textContent = summary.level?.display || '';
@@ -16212,21 +16214,18 @@ function drawPopups() {
     }
 }
 
-function handlePlayerDeath(message = 'ゲームオーバー') {
+function handlePlayerDeath(message) {
     if (isGameOver) return;
-    recordAchievementEvent('death', { cause: message, mode: currentMode, floor: dungeonLevel, difficulty });
-    addMessage(message);
+    const defaultCause = translateOrFallback('game.runResult.defaultCause', 'ゲームオーバー');
+    const deathMessage = (typeof message === 'string' && message.trim()) ? message : defaultCause;
+    recordAchievementEvent('death', { cause: deathMessage, mode: currentMode, floor: dungeonLevel, difficulty });
+    addMessage(deathMessage);
 
     if (player) {
         const normalizedHp = Number.isFinite(player.hp) ? player.hp : 0;
         player.hp = normalizedHp <= 0 ? Math.max(0, normalizedHp) : 0;
     }
     updateUI();
-
-    const finalFloor = document.getElementById('final-floor');
-    const finalLevel = document.getElementById('final-level');
-    if (finalFloor) finalFloor.textContent = `${dungeonLevel}F`;
-    if (finalLevel) finalLevel.textContent = player.level;
 
     if (gameOverSequence.burstTimeoutId) {
         clearTimeout(gameOverSequence.burstTimeoutId);
@@ -16244,7 +16243,7 @@ function handlePlayerDeath(message = 'ゲームオーバー') {
     const now = (typeof performance !== 'undefined' && typeof performance.now === 'function')
         ? performance.now()
         : Date.now();
-    const causeMessage = getLastMeaningfulLogLine() || message;
+    const causeMessage = getLastMeaningfulLogLine() || deathMessage;
 
     gameOverSequence = {
         active: true,
@@ -16260,7 +16259,14 @@ function handlePlayerDeath(message = 'ゲームオーバー') {
     }, GAME_OVER_BURST_DELAY_MS);
 
     gameOverSequence.overlayTimeoutId = setTimeout(() => {
-        showGameOverOverlay();
+        const cause = getLastMeaningfulLogLine() || gameOverSequence.causeMessage || defaultCause;
+        const normalizedCause = (typeof cause === 'string' && cause.trim()) ? cause : defaultCause;
+        playerBurstEffect = null;
+        stopGameLoop();
+        cancelGameOverSequence();
+        setTimeout(() => {
+            presentGameOverResult(normalizedCause);
+        }, GAME_OVER_RESULT_DELAY_MS);
     }, GAME_OVER_OVERLAY_DELAY_MS);
 
     playerTurn = false;
@@ -16282,54 +16288,28 @@ function cancelGameOverSequence() {
     gameOverSequence.startedAt = 0;
 }
 
-function returnToSelectionAfterGameOver() {
+function returnToSelectionAfterRunResult() {
     cancelGameOverSequence();
     playerBurstEffect = null;
-    if (gameOverMessageElement) {
-        gameOverMessageElement.innerHTML = '冒険はここで終わりです...';
-    }
     stopGameLoop();
     dungeonLevel = 1;
     player.hp = player.maxHp;
     enforceEffectiveHpCap();
     isGameOver = false;
     playerTurn = true;
-    if (gameOverScreen) {
-        gameOverScreen.style.display = 'none';
-    }
     showSelectionScreen({ stopLoop: false, refillHp: true, resetModeToNormal: true, rebuildSelection: true });
     try { saveAll(); } catch (err) {}
 }
 
 function presentGameOverResult(cause) {
-    if (gameOverScreen) {
-        gameOverScreen.style.display = 'none';
-    }
     if (!currentRunContext) {
-        returnToSelectionAfterGameOver();
+        returnToSelectionAfterRunResult();
         return;
     }
     exitDungeonWithResult('gameOver', {
         cause,
-        onReturn: returnToSelectionAfterGameOver
+        onReturn: returnToSelectionAfterRunResult
     });
-}
-
-function showGameOverOverlay() {
-    const cause = getLastMeaningfulLogLine() || gameOverSequence.causeMessage || 'ゲームオーバー';
-    if (gameOverMessageElement) {
-        const escapedCause = escapeHtml(cause);
-        gameOverMessageElement.innerHTML = `冒険はここで終わりです..<br>${escapedCause}`;
-    }
-    if (gameOverScreen) {
-        gameOverScreen.style.display = 'block';
-    }
-    playerBurstEffect = null;
-    stopGameLoop();
-    cancelGameOverSequence();
-    setTimeout(() => {
-        presentGameOverResult(cause);
-    }, 350);
 }
 
 function startPlayerBurstEffect() {
@@ -17238,14 +17218,6 @@ function enemyTurn() {
     }
     saveAll();
 }
-
-restartButton.addEventListener('click', () => {
-    if (runResultOverlayState) {
-        hideRunResultOverlay();
-        runResultOverlayState = null;
-    }
-    returnToSelectionAfterGameOver();
-});
 
 function eatPotion30({ reason = 'manual' } = {}) {
     const isAuto = reason === 'auto';

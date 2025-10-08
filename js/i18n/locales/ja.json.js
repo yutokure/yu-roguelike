@@ -26,6 +26,16 @@
           "clear": "ダンジョンクリア",
           "retreat": "ダンジョン帰還",
           "return": "冒険結果"
+        },
+        "stats": {
+          "level": "レベル",
+          "totalExp": "合計獲得経験値",
+          "totalDamage": "合計被ダメージ",
+          "healingItems": "回復アイテム使用数"
+        },
+        "actions": {
+          "return": "拠点に戻る",
+          "retry": "再挑戦"
         }
       }
     },
@@ -9222,6 +9232,9 @@
         "count": "x {count}",
         "none": "なし",
         "floor": "{floor}F"
+      },
+      "runResult": {
+        "defaultCause": "ゲームオーバー"
       },
       "items": {
         "modal": {

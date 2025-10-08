@@ -3,6 +3,33 @@
   const ADDON_NAME = '抽象スペクトラム生成パック';
   const VERSION = '1.0.0';
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
+  function applyThemeLocalization(theme){
+    const typeKey = sanitizeKey(theme.id);
+    const themed = Object.assign({}, theme);
+    themed.nameKey = `dungeon.types.${typeKey}.name`;
+    if(theme.description){
+      themed.descriptionKey = `dungeon.types.${typeKey}.description`;
+    }
+    return themed;
+  }
+
+  function buildBlockEntry(theme, data){
+    if(!data || !data.key){
+      throw new Error('Block entry requires a key');
+    }
+    const entry = Object.assign({ type: theme.id }, data);
+    const typeKey = sanitizeKey(theme.id);
+    entry.nameKey = `dungeon.types.${typeKey}.blocks.${data.key}.name`;
+    if(entry.description){
+      entry.descriptionKey = `dungeon.types.${typeKey}.blocks.${data.key}.description`;
+    }
+    return entry;
+  }
+
   function clamp(value, min, max){
     return value < min ? min : (value > max ? max : value);
   }
@@ -1278,7 +1305,7 @@
       depthBase:3,
       chestBias:'normal'
     }
-  ];
+  ].map(applyThemeLocalization);
   function mergeTheme(theme, index){
     const preset = PATTERN_PRESETS[theme.preset];
     if(!preset){
@@ -1443,7 +1470,9 @@
   const generators = mergedThemes.map((theme) => ({
     id: theme.id,
     name: theme.name,
+    nameKey: theme.nameKey,
     description: theme.description,
+    descriptionKey: theme.descriptionKey,
     mixin: {
       normalMixed: clamp(theme.mix.normal ?? 5, 0, 12),
       blockDimMixed: clamp(theme.mix.block ?? 5, 0, 12),
@@ -1465,55 +1494,51 @@
     const sizeBase = clamp(theme.sizeBias, -2, 2);
     const blockChest = theme.chestBias;
 
-    blocks.blocks1.push({
+    blocks.blocks1.push(buildBlockEntry(theme, {
       key: `${keyBase}_entry`,
       name: `${theme.name}：導入層`,
       level: clamp(levelBase, -5, 10),
       size: clamp(sizeBase, -2, 2),
       depth: clamp(depthBase, 1, 5),
       chest: chestCycle[index % chestCycle.length] || blockChest,
-      type: theme.id,
       bossFloors: depthBase >= 4 ? [depthBase] : undefined
-    });
+    }));
 
-    blocks.blocks2.push({
+    blocks.blocks2.push(buildBlockEntry(theme, {
       key: `${keyBase}_core`,
       name: `${theme.name}：中核層`,
       level: clamp(levelBase + 2, -3, 12),
       size: clamp(sizeBase + 1, -2, 2),
       depth: clamp(depthBase + 1, 1, 6),
       chest: blockChest,
-      type: theme.id,
       bossFloors: depthBase + 1 >= 5 ? [depthBase + 1] : undefined
-    });
+    }));
 
     const apexDepth = clamp(depthBase + 2, 2, 7);
     const bossFloors = [];
     if(apexDepth >= 5) bossFloors.push(5);
     if(apexDepth >= 8) bossFloors.push(8);
 
-    blocks.blocks3.push({
+    blocks.blocks3.push(buildBlockEntry(theme, {
       key: `${keyBase}_apex`,
       name: `${theme.name}：極致層`,
       level: clamp(levelBase + 5, -1, 15),
       size: clamp(sizeBase + (index % 2 === 0 ? 0 : 1), -2, 2),
       depth: apexDepth,
       chest: index % 3 === 0 ? 'more' : blockChest,
-      type: theme.id,
       bossFloors: bossFloors.length ? bossFloors : undefined
-    });
+    }));
 
     if(index < anomalyCount){
-      blocks.blocks3.push({
+      blocks.blocks3.push(buildBlockEntry(theme, {
         key: `${keyBase}_anomaly`,
         name: `${theme.name}：異相断面`,
         level: clamp(levelBase + 7, 0, 18),
         size: clamp(sizeBase - 1, -2, 2),
         depth: clamp(apexDepth + 1, 3, 8),
         chest: 'more',
-        type: theme.id,
         bossFloors: [Math.min(6, clamp(apexDepth + 1, 4, 10))]
-      });
+      }));
     }
   });
 

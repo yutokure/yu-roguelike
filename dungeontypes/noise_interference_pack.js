@@ -3,6 +3,33 @@
   const ADDON_NAME = 'Interference Noise Expansion Pack';
   const VERSION = '1.0.0';
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
+  function applyConfigLocalization(config){
+    const typeKey = sanitizeKey(config.id);
+    const localized = Object.assign({}, config);
+    localized.nameKey = `dungeon.types.${typeKey}.name`;
+    if(config.description){
+      localized.descriptionKey = `dungeon.types.${typeKey}.description`;
+    }
+    return localized;
+  }
+
+  function buildBlockEntry(config, data){
+    if(!data || !data.key){
+      throw new Error('Block entry requires a key');
+    }
+    const entry = Object.assign({ type: config.id }, data);
+    const typeKey = sanitizeKey(config.id);
+    entry.nameKey = `dungeon.types.${typeKey}.blocks.${data.key}.name`;
+    if(entry.description){
+      entry.descriptionKey = `dungeon.types.${typeKey}.blocks.${data.key}.description`;
+    }
+    return entry;
+  }
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -240,12 +267,14 @@
       baseDepth: 5,
       tags: ['industrial', 'energy']
     }
-  ];
+  ].map(applyConfigLocalization);
 
   const generators = generatorConfigs.map(cfg => ({
     id: cfg.id,
     name: cfg.name,
+    nameKey: cfg.nameKey,
     description: cfg.description,
+    descriptionKey: cfg.descriptionKey,
     dark: !!cfg.dark,
     noise: true,
     algorithm: createSignalAlgorithm(cfg),
@@ -267,38 +296,35 @@
       : [5, 10, 15];
 
     const themeBoss = bossFloors.filter(n => n <= baseDepth * 3);
-    const blockTheme = {
+    const blockTheme = buildBlockEntry(cfg, {
       key: `${cfg.id}_theme_${index + 1}`,
       name: `${cfg.name}・外殻`,
       level: baseLevel,
       size: baseSize,
       depth: baseDepth,
-      chest: cfg.chest1 || 'normal',
-      type: cfg.id
-    };
+      chest: cfg.chest1 || 'normal'
+    });
     if (themeBoss.length) blockTheme.bossFloors = themeBoss;
     blocks.blocks1.push(blockTheme);
 
-    blocks.blocks2.push({
+    blocks.blocks2.push(buildBlockEntry(cfg, {
       key: `${cfg.id}_core_${index + 1}`,
       name: `${cfg.name}・中枢`,
       level: baseLevel + 6,
       size: baseSize + 1,
       depth: baseDepth + 1,
-      chest: cfg.chest2 || (index % 2 === 0 ? 'more' : 'less'),
-      type: cfg.id
-    });
+      chest: cfg.chest2 || (index % 2 === 0 ? 'more' : 'less')
+    }));
 
     const relicBoss = bossFloors.filter(n => n <= (cfg.maxDepth ?? 15));
-    const blockRelic = {
+    const blockRelic = buildBlockEntry(cfg, {
       key: `${cfg.id}_relic_${index + 1}`,
       name: `${cfg.name}・信号核`,
       level: baseLevel + 12,
       size: baseSize + 1,
       depth: baseDepth + 2,
-      chest: cfg.chest3 || 'normal',
-      type: cfg.id
-    };
+      chest: cfg.chest3 || 'normal'
+    });
     if (relicBoss.length) blockRelic.bossFloors = relicBoss;
     blocks.blocks3.push(blockRelic);
   });

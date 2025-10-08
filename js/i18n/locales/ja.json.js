@@ -6925,6 +6925,2069 @@
               "name": "Frontier Relic V"
             }
           }
+        },
+
+        "abs_prism_spiral": {
+          "name": "プリズム螺旋界",
+          "description": "虹色の渦と光輪が幾層にも折り重なる抽象螺旋世界。",
+
+          "blocks": {
+            "abs_prism_spiral_entry": {
+              "name": "プリズム螺旋界：導入層"
+            },
+
+            "abs_prism_spiral_core": {
+              "name": "プリズム螺旋界：中核層"
+            },
+
+            "abs_prism_spiral_apex": {
+              "name": "プリズム螺旋界：極致層"
+            },
+
+            "abs_prism_spiral_anomaly": {
+              "name": "プリズム螺旋界：異相断面"
+            }
+          }
+        },
+
+        "abs_chroma_delta": {
+          "name": "クロマデルタ原野",
+          "description": "彩色されたデルタが波紋のように広がる平原型の抽象地形。",
+
+          "blocks": {
+            "abs_chroma_delta_entry": {
+              "name": "クロマデルタ原野：導入層"
+            },
+
+            "abs_chroma_delta_core": {
+              "name": "クロマデルタ原野：中核層"
+            },
+
+            "abs_chroma_delta_apex": {
+              "name": "クロマデルタ原野：極致層"
+            },
+
+            "abs_chroma_delta_anomaly": {
+              "name": "クロマデルタ原野：異相断面"
+            }
+          }
+        },
+
+        "abs_vapor_strata": {
+          "name": "蒸気層の聖域",
+          "description": "蒸気の層が幾筋もの水平面を描く夢幻の聖域。",
+
+          "blocks": {
+            "abs_vapor_strata_entry": {
+              "name": "蒸気層の聖域：導入層"
+            },
+
+            "abs_vapor_strata_core": {
+              "name": "蒸気層の聖域：中核層"
+            },
+
+            "abs_vapor_strata_apex": {
+              "name": "蒸気層の聖域：極致層"
+            },
+
+            "abs_vapor_strata_anomaly": {
+              "name": "蒸気層の聖域：異相断面"
+            }
+          }
+        },
+
+        "abs_lattice_halo": {
+          "name": "格子の光環",
+          "description": "格子状の輝きが光環となって幾何学的に重なる領域。",
+
+          "blocks": {
+            "abs_lattice_halo_entry": {
+              "name": "格子の光環：導入層"
+            },
+
+            "abs_lattice_halo_core": {
+              "name": "格子の光環：中核層"
+            },
+
+            "abs_lattice_halo_apex": {
+              "name": "格子の光環：極致層"
+            },
+
+            "abs_lattice_halo_anomaly": {
+              "name": "格子の光環：異相断面"
+            }
+          }
+        },
+
+        "abs_gossamer_drift": {
+          "name": "薄紗漂流層",
+          "description": "薄紗のような繊維が漂い、紐が絡み合う漂流空間。",
+
+          "blocks": {
+            "abs_gossamer_drift_entry": {
+              "name": "薄紗漂流層：導入層"
+            },
+
+            "abs_gossamer_drift_core": {
+              "name": "薄紗漂流層：中核層"
+            },
+
+            "abs_gossamer_drift_apex": {
+              "name": "薄紗漂流層：極致層"
+            },
+
+            "abs_gossamer_drift_anomaly": {
+              "name": "薄紗漂流層：異相断面"
+            }
+          }
+        },
+
+        "abs_celadon_fragment": {
+          "name": "青磁フラグメント",
+          "description": "青磁色の破片が浮遊し、欠片が繋ぎ合わさる断片界。",
+
+          "blocks": {
+            "abs_celadon_fragment_entry": {
+              "name": "青磁フラグメント：導入層"
+            },
+
+            "abs_celadon_fragment_core": {
+              "name": "青磁フラグメント：中核層"
+            },
+
+            "abs_celadon_fragment_apex": {
+              "name": "青磁フラグメント：極致層"
+            },
+
+            "abs_celadon_fragment_anomaly": {
+              "name": "青磁フラグメント：異相断面"
+            }
+          }
+        },
+
+        "abs_neon_river_mesh": {
+          "name": "ネオン河の網界",
+          "description": "ネオン色の河が網目のように走る流線型の世界。",
+
+          "blocks": {
+            "abs_neon_river_mesh_entry": {
+              "name": "ネオン河の網界：導入層"
+            },
+
+            "abs_neon_river_mesh_core": {
+              "name": "ネオン河の網界：中核層"
+            },
+
+            "abs_neon_river_mesh_apex": {
+              "name": "ネオン河の網界：極致層"
+            },
+
+            "abs_neon_river_mesh_anomaly": {
+              "name": "ネオン河の網界：異相断面"
+            }
+          }
+        },
+
+        "abs_opaline_reservoir": {
+          "name": "オパール貯留層",
+          "description": "オパールの光が水面のように反射する貯留層。",
+
+          "blocks": {
+            "abs_opaline_reservoir_entry": {
+              "name": "オパール貯留層：導入層"
+            },
+
+            "abs_opaline_reservoir_core": {
+              "name": "オパール貯留層：中核層"
+            },
+
+            "abs_opaline_reservoir_apex": {
+              "name": "オパール貯留層：極致層"
+            },
+
+            "abs_opaline_reservoir_anomaly": {
+              "name": "オパール貯留層：異相断面"
+            }
+          }
+        },
+
+        "abs_aurora_petals": {
+          "name": "オーロラ花弁界",
+          "description": "オーロラが花弁となって開く幻想的な空中庭園。",
+
+          "blocks": {
+            "abs_aurora_petals_entry": {
+              "name": "オーロラ花弁界：導入層"
+            },
+
+            "abs_aurora_petals_core": {
+              "name": "オーロラ花弁界：中核層"
+            },
+
+            "abs_aurora_petals_apex": {
+              "name": "オーロラ花弁界：極致層"
+            },
+
+            "abs_aurora_petals_anomaly": {
+              "name": "オーロラ花弁界：異相断面"
+            }
+          }
+        },
+
+        "abs_echo_veil": {
+          "name": "エコーヴェイル回廊",
+          "description": "音の残響が薄いヴェイルとなって延びる回廊。",
+
+          "blocks": {
+            "abs_echo_veil_entry": {
+              "name": "エコーヴェイル回廊：導入層"
+            },
+
+            "abs_echo_veil_core": {
+              "name": "エコーヴェイル回廊：中核層"
+            },
+
+            "abs_echo_veil_apex": {
+              "name": "エコーヴェイル回廊：極致層"
+            },
+
+            "abs_echo_veil_anomaly": {
+              "name": "エコーヴェイル回廊：異相断面"
+            }
+          }
+        },
+
+        "abs_fractal_orchard": {
+          "name": "フラクタル果樹苑",
+          "description": "フラクタル樹冠が幾何学的な果実園を形成する空間。",
+
+          "blocks": {
+            "abs_fractal_orchard_entry": {
+              "name": "フラクタル果樹苑：導入層"
+            },
+
+            "abs_fractal_orchard_core": {
+              "name": "フラクタル果樹苑：中核層"
+            },
+
+            "abs_fractal_orchard_apex": {
+              "name": "フラクタル果樹苑：極致層"
+            },
+
+            "abs_fractal_orchard_anomaly": {
+              "name": "フラクタル果樹苑：異相断面"
+            }
+          }
+        },
+
+        "abs_glass_mandala": {
+          "name": "玻璃マンダラ",
+          "description": "ガラスの破片が曼荼羅のように広がる聖域。",
+
+          "blocks": {
+            "abs_glass_mandala_entry": {
+              "name": "玻璃マンダラ：導入層"
+            },
+
+            "abs_glass_mandala_core": {
+              "name": "玻璃マンダラ：中核層"
+            },
+
+            "abs_glass_mandala_apex": {
+              "name": "玻璃マンダラ：極致層"
+            },
+
+            "abs_glass_mandala_anomaly": {
+              "name": "玻璃マンダラ：異相断面"
+            }
+          }
+        },
+
+        "abs_glyphfield_drift": {
+          "name": "グリフフィールドの漂い",
+          "description": "古代グリフが漂う野原状の抽象空間。",
+
+          "blocks": {
+            "abs_glyphfield_drift_entry": {
+              "name": "グリフフィールドの漂い：導入層"
+            },
+
+            "abs_glyphfield_drift_core": {
+              "name": "グリフフィールドの漂い：中核層"
+            },
+
+            "abs_glyphfield_drift_apex": {
+              "name": "グリフフィールドの漂い：極致層"
+            },
+
+            "abs_glyphfield_drift_anomaly": {
+              "name": "グリフフィールドの漂い：異相断面"
+            }
+          }
+        },
+
+        "abs_origami_horizon": {
+          "name": "折紙地平",
+          "description": "折り紙の折線が地平線のように続く曲面世界。",
+
+          "blocks": {
+            "abs_origami_horizon_entry": {
+              "name": "折紙地平：導入層"
+            },
+
+            "abs_origami_horizon_core": {
+              "name": "折紙地平：中核層"
+            },
+
+            "abs_origami_horizon_apex": {
+              "name": "折紙地平：極致層"
+            },
+
+            "abs_origami_horizon_anomaly": {
+              "name": "折紙地平：異相断面"
+            }
+          }
+        },
+
+        "abs_crystal_cascade": {
+          "name": "クリスタルカスケード",
+          "description": "結晶の滝が階段状に連なる抽象瀑布。",
+
+          "blocks": {
+            "abs_crystal_cascade_entry": {
+              "name": "クリスタルカスケード：導入層"
+            },
+
+            "abs_crystal_cascade_core": {
+              "name": "クリスタルカスケード：中核層"
+            },
+
+            "abs_crystal_cascade_apex": {
+              "name": "クリスタルカスケード：極致層"
+            },
+
+            "abs_crystal_cascade_anomaly": {
+              "name": "クリスタルカスケード：異相断面"
+            }
+          }
+        },
+
+        "abs_ember_shroud": {
+          "name": "残燼の被膜",
+          "description": "残り火が薄い被膜となって漂う陰影空間。",
+
+          "blocks": {
+            "abs_ember_shroud_entry": {
+              "name": "残燼の被膜：導入層"
+            },
+
+            "abs_ember_shroud_core": {
+              "name": "残燼の被膜：中核層"
+            },
+
+            "abs_ember_shroud_apex": {
+              "name": "残燼の被膜：極致層"
+            },
+
+            "abs_ember_shroud_anomaly": {
+              "name": "残燼の被膜：異相断面"
+            }
+          }
+        },
+
+        "abs_lunar_tessellation": {
+          "name": "月面テッセレーション",
+          "description": "月面を思わせるタイルがテッセレーションを描く領域。",
+
+          "blocks": {
+            "abs_lunar_tessellation_entry": {
+              "name": "月面テッセレーション：導入層"
+            },
+
+            "abs_lunar_tessellation_core": {
+              "name": "月面テッセレーション：中核層"
+            },
+
+            "abs_lunar_tessellation_apex": {
+              "name": "月面テッセレーション：極致層"
+            },
+
+            "abs_lunar_tessellation_anomaly": {
+              "name": "月面テッセレーション：異相断面"
+            }
+          }
+        },
+
+        "abs_saffron_tempest": {
+          "name": "サフランテンペスト",
+          "description": "サフラン色の嵐が筋状に走る灼熱の抽象地帯。",
+
+          "blocks": {
+            "abs_saffron_tempest_entry": {
+              "name": "サフランテンペスト：導入層"
+            },
+
+            "abs_saffron_tempest_core": {
+              "name": "サフランテンペスト：中核層"
+            },
+
+            "abs_saffron_tempest_apex": {
+              "name": "サフランテンペスト：極致層"
+            },
+
+            "abs_saffron_tempest_anomaly": {
+              "name": "サフランテンペスト：異相断面"
+            }
+          }
+        },
+
+        "abs_verdigris_tangle": {
+          "name": "緑青タングル",
+          "description": "緑青色の線が絡み合うタングル構造の迷界。",
+
+          "blocks": {
+            "abs_verdigris_tangle_entry": {
+              "name": "緑青タングル：導入層"
+            },
+
+            "abs_verdigris_tangle_core": {
+              "name": "緑青タングル：中核層"
+            },
+
+            "abs_verdigris_tangle_apex": {
+              "name": "緑青タングル：極致層"
+            },
+
+            "abs_verdigris_tangle_anomaly": {
+              "name": "緑青タングル：異相断面"
+            }
+          }
+        },
+
+        "abs_iridescent_delta": {
+          "name": "玉虫デルタ",
+          "description": "玉虫色のデルタが光の筋で区切られた幻想地形。",
+
+          "blocks": {
+            "abs_iridescent_delta_entry": {
+              "name": "玉虫デルタ：導入層"
+            },
+
+            "abs_iridescent_delta_core": {
+              "name": "玉虫デルタ：中核層"
+            },
+
+            "abs_iridescent_delta_apex": {
+              "name": "玉虫デルタ：極致層"
+            },
+
+            "abs_iridescent_delta_anomaly": {
+              "name": "玉虫デルタ：異相断面"
+            }
+          }
+        },
+
+        "abs_quantum_dunes": {
+          "name": "量子砂丘",
+          "description": "量子揺らぎが砂丘に干渉して揺れる不規則な波紋。",
+
+          "blocks": {
+            "abs_quantum_dunes_entry": {
+              "name": "量子砂丘：導入層"
+            },
+
+            "abs_quantum_dunes_core": {
+              "name": "量子砂丘：中核層"
+            },
+
+            "abs_quantum_dunes_apex": {
+              "name": "量子砂丘：極致層"
+            }
+          }
+        },
+
+        "abs_velvet_abyss": {
+          "name": "ベルベット深淵",
+          "description": "ベルベットのように柔らかい闇が広がる深淵。",
+
+          "blocks": {
+            "abs_velvet_abyss_entry": {
+              "name": "ベルベット深淵：導入層"
+            },
+
+            "abs_velvet_abyss_core": {
+              "name": "ベルベット深淵：中核層"
+            },
+
+            "abs_velvet_abyss_apex": {
+              "name": "ベルベット深淵：極致層"
+            }
+          }
+        },
+
+        "abs_radiant_cathedral": {
+          "name": "光輝カテドラル",
+          "description": "光が柱とアーチを形成する抽象聖堂。",
+
+          "blocks": {
+            "abs_radiant_cathedral_entry": {
+              "name": "光輝カテドラル：導入層"
+            },
+
+            "abs_radiant_cathedral_core": {
+              "name": "光輝カテドラル：中核層"
+            },
+
+            "abs_radiant_cathedral_apex": {
+              "name": "光輝カテドラル：極致層"
+            }
+          }
+        },
+
+        "abs_mirage_loom": {
+          "name": "蜃気楼織機",
+          "description": "蜃気楼が織機の糸のように交差する幻影世界。",
+
+          "blocks": {
+            "abs_mirage_loom_entry": {
+              "name": "蜃気楼織機：導入層"
+            },
+
+            "abs_mirage_loom_core": {
+              "name": "蜃気楼織機：中核層"
+            },
+
+            "abs_mirage_loom_apex": {
+              "name": "蜃気楼織機：極致層"
+            }
+          }
+        },
+
+        "abs_vapor_prism_towers": {
+          "name": "蒸気プリズム塔",
+          "description": "蒸気とプリズムが塔のように立ち昇る垂直世界。",
+
+          "blocks": {
+            "abs_vapor_prism_towers_entry": {
+              "name": "蒸気プリズム塔：導入層"
+            },
+
+            "abs_vapor_prism_towers_core": {
+              "name": "蒸気プリズム塔：中核層"
+            },
+
+            "abs_vapor_prism_towers_apex": {
+              "name": "蒸気プリズム塔：極致層"
+            }
+          }
+        },
+
+        "abs_celestial_foldspace": {
+          "name": "星界フォールドスペース",
+          "description": "星明かりが折り畳まれた空間へと折り重なる異界。",
+
+          "blocks": {
+            "abs_celestial_foldspace_entry": {
+              "name": "星界フォールドスペース：導入層"
+            },
+
+            "abs_celestial_foldspace_core": {
+              "name": "星界フォールドスペース：中核層"
+            },
+
+            "abs_celestial_foldspace_apex": {
+              "name": "星界フォールドスペース：極致層"
+            }
+          }
+        },
+
+        "abs_sapphire_ridge": {
+          "name": "サファイアリッジ",
+          "description": "青い稜線が幾何学的に折り重なる稜堡空間。",
+
+          "blocks": {
+            "abs_sapphire_ridge_entry": {
+              "name": "サファイアリッジ：導入層"
+            },
+
+            "abs_sapphire_ridge_core": {
+              "name": "サファイアリッジ：中核層"
+            },
+
+            "abs_sapphire_ridge_apex": {
+              "name": "サファイアリッジ：極致層"
+            }
+          }
+        },
+
+        "abs_emberglass_ribbons": {
+          "name": "焔玻璃リボン",
+          "description": "火と玻璃がリボンとなって絡み合う空間。",
+
+          "blocks": {
+            "abs_emberglass_ribbons_entry": {
+              "name": "焔玻璃リボン：導入層"
+            },
+
+            "abs_emberglass_ribbons_core": {
+              "name": "焔玻璃リボン：中核層"
+            },
+
+            "abs_emberglass_ribbons_apex": {
+              "name": "焔玻璃リボン：極致層"
+            }
+          }
+        },
+
+        "abs_pale_greenwave": {
+          "name": "蒼波グリーンウェイブ",
+          "description": "青緑の波動が静かに打ち寄せる抽象潮汐界。",
+
+          "blocks": {
+            "abs_pale_greenwave_entry": {
+              "name": "蒼波グリーンウェイブ：導入層"
+            },
+
+            "abs_pale_greenwave_core": {
+              "name": "蒼波グリーンウェイブ：中核層"
+            },
+
+            "abs_pale_greenwave_apex": {
+              "name": "蒼波グリーンウェイブ：極致層"
+            }
+          }
+        },
+
+        "abs_twilight_circuit": {
+          "name": "薄暮回路",
+          "description": "薄暮の光が回路となって都市のように流れる空間。",
+
+          "blocks": {
+            "abs_twilight_circuit_entry": {
+              "name": "薄暮回路：導入層"
+            },
+
+            "abs_twilight_circuit_core": {
+              "name": "薄暮回路：中核層"
+            },
+
+            "abs_twilight_circuit_apex": {
+              "name": "薄暮回路：極致層"
+            }
+          }
+        },
+
+        "abs_obsidian_sonar": {
+          "name": "黒曜ソナー",
+          "description": "黒曜石の反響が波紋を描くソナー空間。",
+
+          "blocks": {
+            "abs_obsidian_sonar_entry": {
+              "name": "黒曜ソナー：導入層"
+            },
+
+            "abs_obsidian_sonar_core": {
+              "name": "黒曜ソナー：中核層"
+            },
+
+            "abs_obsidian_sonar_apex": {
+              "name": "黒曜ソナー：極致層"
+            }
+          }
+        },
+
+        "abs_cobalt_mistways": {
+          "name": "コバルト霧道",
+          "description": "コバルト色の霧が道筋となって流れる幻想通路。",
+
+          "blocks": {
+            "abs_cobalt_mistways_entry": {
+              "name": "コバルト霧道：導入層"
+            },
+
+            "abs_cobalt_mistways_core": {
+              "name": "コバルト霧道：中核層"
+            },
+
+            "abs_cobalt_mistways_apex": {
+              "name": "コバルト霧道：極致層"
+            }
+          }
+        },
+
+        "abs_crimson_moire": {
+          "name": "深紅モアレ",
+          "description": "モアレ干渉が深紅の層を揺らす抽象地帯。",
+
+          "blocks": {
+            "abs_crimson_moire_entry": {
+              "name": "深紅モアレ：導入層"
+            },
+
+            "abs_crimson_moire_core": {
+              "name": "深紅モアレ：中核層"
+            },
+
+            "abs_crimson_moire_apex": {
+              "name": "深紅モアレ：極致層"
+            }
+          }
+        },
+
+        "abs_spectral_brushwork": {
+          "name": "スペクトル筆致",
+          "description": "絵筆のような筆致が色彩スペクトルを描くアトリエ世界。",
+
+          "blocks": {
+            "abs_spectral_brushwork_entry": {
+              "name": "スペクトル筆致：導入層"
+            },
+
+            "abs_spectral_brushwork_core": {
+              "name": "スペクトル筆致：中核層"
+            },
+
+            "abs_spectral_brushwork_apex": {
+              "name": "スペクトル筆致：極致層"
+            }
+          }
+        },
+
+        "abs_porcelain_trench": {
+          "name": "磁器トレンチ",
+          "description": "磁器質の断面が幾重にも走る深いトレンチ。",
+
+          "blocks": {
+            "abs_porcelain_trench_entry": {
+              "name": "磁器トレンチ：導入層"
+            },
+
+            "abs_porcelain_trench_core": {
+              "name": "磁器トレンチ：中核層"
+            },
+
+            "abs_porcelain_trench_apex": {
+              "name": "磁器トレンチ：極致層"
+            }
+          }
+        },
+
+        "abs_azure_pendulum": {
+          "name": "蒼の振り子",
+          "description": "振り子運動の軌跡が蒼い軌道を描く世界。",
+
+          "blocks": {
+            "abs_azure_pendulum_entry": {
+              "name": "蒼の振り子：導入層"
+            },
+
+            "abs_azure_pendulum_core": {
+              "name": "蒼の振り子：中核層"
+            },
+
+            "abs_azure_pendulum_apex": {
+              "name": "蒼の振り子：極致層"
+            }
+          }
+        },
+
+        "abs_gilded_vortex": {
+          "name": "金渦殿",
+          "description": "黄金の渦が宮殿のように螺旋を描く神秘空間。",
+
+          "blocks": {
+            "abs_gilded_vortex_entry": {
+              "name": "金渦殿：導入層"
+            },
+
+            "abs_gilded_vortex_core": {
+              "name": "金渦殿：中核層"
+            },
+
+            "abs_gilded_vortex_apex": {
+              "name": "金渦殿：極致層"
+            }
+          }
+        },
+
+        "abs_monochrome_mountain": {
+          "name": "モノクローム山脈",
+          "description": "モノクロームの陰影が山脈の抽象形を描き出す。",
+
+          "blocks": {
+            "abs_monochrome_mountain_entry": {
+              "name": "モノクローム山脈：導入層"
+            },
+
+            "abs_monochrome_mountain_core": {
+              "name": "モノクローム山脈：中核層"
+            },
+
+            "abs_monochrome_mountain_apex": {
+              "name": "モノクローム山脈：極致層"
+            }
+          }
+        },
+
+        "abs_auric_confluence": {
+          "name": "金色コンフルエンス",
+          "description": "金色の流線が一点に収束するコンフルエンス界。",
+
+          "blocks": {
+            "abs_auric_confluence_entry": {
+              "name": "金色コンフルエンス：導入層"
+            },
+
+            "abs_auric_confluence_core": {
+              "name": "金色コンフルエンス：中核層"
+            },
+
+            "abs_auric_confluence_apex": {
+              "name": "金色コンフルエンス：極致層"
+            }
+          }
+        },
+
+        "abs_noctilucent_threadsea": {
+          "name": "夜光糸の海",
+          "description": "夜光虫のような糸が海原に漂う幻想世界。",
+
+          "blocks": {
+            "abs_noctilucent_threadsea_entry": {
+              "name": "夜光糸の海：導入層"
+            },
+
+            "abs_noctilucent_threadsea_core": {
+              "name": "夜光糸の海：中核層"
+            },
+
+            "abs_noctilucent_threadsea_apex": {
+              "name": "夜光糸の海：極致層"
+            }
+          }
+        },
+
+        "mist_rainforest": {
+          "name": "霧雨熱帯林",
+          "description": "濃い霧と川筋が絡み合う湿潤な熱帯林の迷路。苔むした床と水路が交差する。",
+
+          "blocks": {
+            "nature_mist-rainforest_theme": {
+              "name": "霧雨熱帯林 探索"
+            },
+
+            "nature_mist-rainforest_core": {
+              "name": "霧雨熱帯林 中層"
+            },
+
+            "nature_mist-rainforest_relic": {
+              "name": "霧雨熱帯林 遺構"
+            }
+          }
+        },
+
+        "blossom_valley": {
+          "name": "花香る渓谷",
+          "description": "大地が花畑に覆われた渓谷。中央の草地を緩やかな小川が横切る。",
+
+          "blocks": {
+            "nature_blossom-valley_theme": {
+              "name": "花香る渓谷 探索"
+            },
+
+            "nature_blossom-valley_core": {
+              "name": "花香る渓谷 中層"
+            },
+
+            "nature_blossom-valley_relic": {
+              "name": "花香る渓谷 遺構"
+            }
+          }
+        },
+
+        "aurora_taiga": {
+          "name": "オーロラ泰伽",
+          "description": "凍てついた大地にオーロラの光が揺らめく北方の針葉樹地帯。雪の回廊と氷の湖が点在する。",
+
+          "blocks": {
+            "nature_aurora-taiga_theme": {
+              "name": "オーロラ泰伽 探索"
+            },
+
+            "nature_aurora-taiga_core": {
+              "name": "オーロラ泰伽 中層"
+            },
+
+            "nature_aurora-taiga_relic": {
+              "name": "オーロラ泰伽 遺構"
+            }
+          }
+        },
+
+        "mangrove_delta": {
+          "name": "マングローブ三角州",
+          "description": "複雑に分岐した水路と小島が点在する湿地帯。根が絡み合い、歩ける小道が浮かぶ。",
+
+          "blocks": {
+            "nature_mangrove-delta_theme": {
+              "name": "マングローブ三角州 探索"
+            },
+
+            "nature_mangrove-delta_core": {
+              "name": "マングローブ三角州 中層"
+            },
+
+            "nature_mangrove-delta_relic": {
+              "name": "マングローブ三角州 遺構"
+            }
+          }
+        },
+
+        "sunken_springs": {
+          "name": "沈みし泉洞",
+          "description": "地底に湧き出る泉が複数湧く洞。青白く光る鉱石と静かな水面が広がる。",
+
+          "blocks": {
+            "nature_sunken-springs_theme": {
+              "name": "沈みし泉洞 探索"
+            },
+
+            "nature_sunken-springs_core": {
+              "name": "沈みし泉洞 中層"
+            },
+
+            "nature_sunken-springs_relic": {
+              "name": "沈みし泉洞 遺構"
+            }
+          }
+        },
+
+        "crimson_ravine": {
+          "name": "錦秋紅葉渓谷",
+          "description": "断崖に沿って紅葉が燃える秋の渓谷。落ち葉が敷き詰められ、裂け目を小川が縫う。",
+
+          "blocks": {
+            "nature_crimson-ravine_theme": {
+              "name": "錦秋紅葉渓谷 探索"
+            },
+
+            "nature_crimson-ravine_core": {
+              "name": "錦秋紅葉渓谷 中層"
+            },
+
+            "nature_crimson-ravine_relic": {
+              "name": "錦秋紅葉渓谷 遺構"
+            }
+          }
+        },
+
+        "opaline_reef": {
+          "name": "虹彩珊瑚礁",
+          "description": "澄んだ海中に浮かぶ珊瑚礁。虹色に輝く珊瑚帯が迷路状に広がる。",
+
+          "blocks": {
+            "nature_opaline-reef_theme": {
+              "name": "虹彩珊瑚礁 探索"
+            },
+
+            "nature_opaline-reef_core": {
+              "name": "虹彩珊瑚礁 中層"
+            },
+
+            "nature_opaline-reef_relic": {
+              "name": "虹彩珊瑚礁 遺構"
+            }
+          }
+        },
+
+        "sunset_savanna": {
+          "name": "茜陽サバンナ",
+          "description": "夕焼け色に染まるサバンナ。草海の中に獣道が絡み、バオバブが点在する。",
+
+          "blocks": {
+            "nature_sunset-savanna_theme": {
+              "name": "茜陽サバンナ 探索"
+            },
+
+            "nature_sunset-savanna_core": {
+              "name": "茜陽サバンナ 中層"
+            },
+
+            "nature_sunset-savanna_relic": {
+              "name": "茜陽サバンナ 遺構"
+            }
+          }
+        },
+
+        "glacier_fjord": {
+          "name": "蒼氷フィヨルド",
+          "description": "切り立つ氷壁と深い入江が連なるフィヨルド。氷河が削った溝に海水が満ちる。",
+
+          "blocks": {
+            "nature_glacier-fjord_theme": {
+              "name": "蒼氷フィヨルド 探索"
+            },
+
+            "nature_glacier-fjord_core": {
+              "name": "蒼氷フィヨルド 中層"
+            },
+
+            "nature_glacier-fjord_relic": {
+              "name": "蒼氷フィヨルド 遺構"
+            }
+          }
+        },
+
+        "luminous_lotus": {
+          "name": "蛍光蓮湿原",
+          "description": "夜光を放つ蓮が水面を覆う湿原。薄霧に光が反射し幻想的な色彩を描く。",
+
+          "blocks": {
+            "nature_luminous-lotus_theme": {
+              "name": "蛍光蓮湿原 探索"
+            },
+
+            "nature_luminous-lotus_core": {
+              "name": "蛍光蓮湿原 中層"
+            },
+
+            "nature_luminous-lotus_relic": {
+              "name": "蛍光蓮湿原 遺構"
+            }
+          }
+        },
+
+        "azure_oasis": {
+          "name": "蒼穹オアシス",
+          "description": "焼け付く砂丘に蒼い泉が散在する砂漠の安息地。砂紋が波打つ中に椰子が立つ。",
+
+          "blocks": {
+            "nature_azure-oasis_theme": {
+              "name": "蒼穹オアシス 探索"
+            },
+
+            "nature_azure-oasis_core": {
+              "name": "蒼穹オアシス 中層"
+            },
+
+            "nature_azure-oasis_relic": {
+              "name": "蒼穹オアシス 遺構"
+            }
+          }
+        },
+
+        "whispering_bamboo": {
+          "name": "風鳴竹林",
+          "description": "風が囁く竹林に小川が流れる静謐な迷路。竹の幹が並び、苔の地面が柔らかい。",
+
+          "blocks": {
+            "nature_whispering-bamboo_theme": {
+              "name": "風鳴竹林 探索"
+            },
+
+            "nature_whispering-bamboo_core": {
+              "name": "風鳴竹林 中層"
+            },
+
+            "nature_whispering-bamboo_relic": {
+              "name": "風鳴竹林 遺構"
+            }
+          }
+        },
+
+        "thunderhead_highlands": {
+          "name": "雷雲高原",
+          "description": "切り立つ岩棚と稲妻に照らされた高原。窪地に雨水が溜まり、荒れた草が揺れる。",
+
+          "blocks": {
+            "nature_thunderhead-highlands_theme": {
+              "name": "雷雲高原 探索"
+            },
+
+            "nature_thunderhead-highlands_core": {
+              "name": "雷雲高原 中層"
+            },
+
+            "nature_thunderhead-highlands_relic": {
+              "name": "雷雲高原 遺構"
+            }
+          }
+        },
+
+        "crystal_cascades": {
+          "name": "翠晶段瀑",
+          "description": "翡翠色の段瀑が幾重にも落ちる渓谷。水飛沫が光を乱反射し、水晶が岩壁を飾る。",
+
+          "blocks": {
+            "nature_crystal-cascades_theme": {
+              "name": "翠晶段瀑 探索"
+            },
+
+            "nature_crystal-cascades_core": {
+              "name": "翠晶段瀑 中層"
+            },
+
+            "nature_crystal-cascades_relic": {
+              "name": "翠晶段瀑 遺構"
+            }
+          }
+        },
+
+        "starfall_grotto": {
+          "name": "星滴苔窟",
+          "description": "天井から滴る水滴が星のように輝く苔むした洞。静かな水盆が散在する。",
+
+          "blocks": {
+            "nature_starfall-grotto_theme": {
+              "name": "星滴苔窟 探索"
+            },
+
+            "nature_starfall-grotto_core": {
+              "name": "星滴苔窟 中層"
+            },
+
+            "nature_starfall-grotto_relic": {
+              "name": "星滴苔窟 遺構"
+            }
+          }
+        },
+
+        "spring_blossom_hills": {
+          "name": "春霞桜丘",
+          "description": "霞む丘陵に桜が連なる春の迷路。花びらが舞い、段丘に小道が続く。",
+
+          "blocks": {
+            "nature_spring-blossom-hills_theme": {
+              "name": "春霞桜丘 探索"
+            },
+
+            "nature_spring-blossom-hills_core": {
+              "name": "春霞桜丘 中層"
+            },
+
+            "nature_spring-blossom-hills_relic": {
+              "name": "春霞桜丘 遺構"
+            }
+          }
+        },
+
+        "aurora_jungle_delta": {
+          "name": "極光密林デルタ",
+          "description": "極光ツンドラと密林と湿地が入り混じる大規模デルタ地形。",
+
+          "blocks": {
+            "aurora_jungle_delta_blocks1_I": {
+              "name": "Aurora Delta Convergence I"
+            },
+
+            "aurora_jungle_delta_blocks2_II": {
+              "name": "Aurora Delta Convergence II"
+            },
+
+            "aurora_jungle_delta_blocks3_III": {
+              "name": "Aurora Delta Convergence III"
+            },
+
+            "aurora_jungle_delta_blocks4_IV": {
+              "name": "Aurora Delta Convergence IV"
+            }
+          }
+        },
+
+        "ember_tide_fissures": {
+          "name": "紅潮裂溝群",
+          "description": "火山の割れ目と深い海溝が交差する熱水噴出帯。",
+
+          "blocks": {
+            "ember_tide_fissures_blocks1_I": {
+              "name": "Ember Tide Convergence I"
+            },
+
+            "ember_tide_fissures_blocks2_II": {
+              "name": "Ember Tide Convergence II"
+            },
+
+            "ember_tide_fissures_blocks3_III": {
+              "name": "Ember Tide Convergence III"
+            },
+
+            "ember_tide_fissures_blocks4_IV": {
+              "name": "Ember Tide Convergence IV"
+            }
+          }
+        },
+
+        "shifting_dune_forest": {
+          "name": "砂林蜃気楼地帯",
+          "description": "砂漠と針葉樹林と遺跡が交互に現れる蜃気楼地帯。",
+
+          "blocks": {
+            "shifting_dune_forest_blocks1_I": {
+              "name": "Mirage Expanse Convergence I"
+            },
+
+            "shifting_dune_forest_blocks2_II": {
+              "name": "Mirage Expanse Convergence II"
+            },
+
+            "shifting_dune_forest_blocks3_III": {
+              "name": "Mirage Expanse Convergence III"
+            },
+
+            "shifting_dune_forest_blocks4_IV": {
+              "name": "Mirage Expanse Convergence IV"
+            }
+          }
+        },
+
+        "cinder_frost_warrens": {
+          "name": "熾氷迷宮網",
+          "description": "火の洞窟と氷晶洞と地下迷宮が絡み合う極地の巣穴。",
+
+          "blocks": {
+            "cinder_frost_warrens_blocks1_I": {
+              "name": "Cinder Frost Convergence I"
+            },
+
+            "cinder_frost_warrens_blocks2_II": {
+              "name": "Cinder Frost Convergence II"
+            },
+
+            "cinder_frost_warrens_blocks3_III": {
+              "name": "Cinder Frost Convergence III"
+            },
+
+            "cinder_frost_warrens_blocks4_IV": {
+              "name": "Cinder Frost Convergence IV"
+            }
+          }
+        },
+
+        "lumina_spore_basin": {
+          "name": "燐光胞子盆地",
+          "description": "光る茸と湿原の湖沼が交互に沈む盆地群。",
+
+          "blocks": {
+            "lumina_spore_basin_blocks1_I": {
+              "name": "Lumina Basin Convergence I"
+            },
+
+            "lumina_spore_basin_blocks2_II": {
+              "name": "Lumina Basin Convergence II"
+            },
+
+            "lumina_spore_basin_blocks3_III": {
+              "name": "Lumina Basin Convergence III"
+            },
+
+            "lumina_spore_basin_blocks4_IV": {
+              "name": "Lumina Basin Convergence IV"
+            }
+          }
+        },
+
+        "stormroot_plateaus": {
+          "name": "嵐根段丘",
+          "description": "雷鳴轟く高原に湿地と古樹が根を下ろす段丘群。",
+
+          "blocks": {
+            "stormroot_plateaus_blocks1_I": {
+              "name": "Stormroot Convergence I"
+            },
+
+            "stormroot_plateaus_blocks2_II": {
+              "name": "Stormroot Convergence II"
+            },
+
+            "stormroot_plateaus_blocks3_III": {
+              "name": "Stormroot Convergence III"
+            },
+
+            "stormroot_plateaus_blocks4_IV": {
+              "name": "Stormroot Convergence IV"
+            }
+          }
+        },
+
+        "gale_coral_highlands": {
+          "name": "風珊瑚高地",
+          "description": "浮遊する珊瑚礁と風の断崖が連なる高地帯。",
+
+          "blocks": {
+            "gale_coral_highlands_blocks1_I": {
+              "name": "Gale Coral Convergence I"
+            },
+
+            "gale_coral_highlands_blocks2_II": {
+              "name": "Gale Coral Convergence II"
+            },
+
+            "gale_coral_highlands_blocks3_III": {
+              "name": "Gale Coral Convergence III"
+            },
+
+            "gale_coral_highlands_blocks4_IV": {
+              "name": "Gale Coral Convergence IV"
+            }
+          }
+        },
+
+        "obsidian_bloom_bastion": {
+          "name": "黒耀花壁帯",
+          "description": "黒曜石の峡谷と花咲く段丘と霧の谷が入り混じる防壁地形。",
+
+          "blocks": {
+            "obsidian_bloom_bastion_blocks1_I": {
+              "name": "Obsidian Bloom Convergence I"
+            },
+
+            "obsidian_bloom_bastion_blocks2_II": {
+              "name": "Obsidian Bloom Convergence II"
+            },
+
+            "obsidian_bloom_bastion_blocks3_III": {
+              "name": "Obsidian Bloom Convergence III"
+            },
+
+            "obsidian_bloom_bastion_blocks4_IV": {
+              "name": "Obsidian Bloom Convergence IV"
+            }
+          }
+        },
+
+        "crystal_mire_depths": {
+          "name": "晶泥深淵",
+          "description": "結晶化した湿地と底無しの淵が交差する輝く深層。",
+
+          "blocks": {
+            "crystal_mire_depths_blocks1_I": {
+              "name": "Crystal Mire Convergence I"
+            },
+
+            "crystal_mire_depths_blocks2_II": {
+              "name": "Crystal Mire Convergence II"
+            },
+
+            "crystal_mire_depths_blocks3_III": {
+              "name": "Crystal Mire Convergence III"
+            },
+
+            "crystal_mire_depths_blocks4_IV": {
+              "name": "Crystal Mire Convergence IV"
+            }
+          }
+        },
+
+        "verdant_cinder_barrens": {
+          "name": "翠灼荒原",
+          "description": "燃え残る灰原に芽吹く草木と熱風の荒野が共存する。",
+
+          "blocks": {
+            "verdant_cinder_barrens_blocks1_I": {
+              "name": "Verdant Cinder Convergence I"
+            },
+
+            "verdant_cinder_barrens_blocks2_II": {
+              "name": "Verdant Cinder Convergence II"
+            },
+
+            "verdant_cinder_barrens_blocks3_III": {
+              "name": "Verdant Cinder Convergence III"
+            },
+
+            "verdant_cinder_barrens_blocks4_IV": {
+              "name": "Verdant Cinder Convergence IV"
+            }
+          }
+        },
+
+        "deepwood_cavernfall": {
+          "name": "深林洞瀑領域",
+          "description": "巨大な洞窟内に樹海と滝と霧が混在する垂直世界。",
+
+          "blocks": {
+            "deepwood_cavernfall_blocks1_I": {
+              "name": "Cavernfall Convergence I"
+            },
+
+            "deepwood_cavernfall_blocks2_II": {
+              "name": "Cavernfall Convergence II"
+            },
+
+            "deepwood_cavernfall_blocks3_III": {
+              "name": "Cavernfall Convergence III"
+            },
+
+            "deepwood_cavernfall_blocks4_IV": {
+              "name": "Cavernfall Convergence IV"
+            }
+          }
+        },
+
+        "arcanum_glasswastes": {
+          "name": "秘術玻璃荒野",
+          "description": "秘術で融解した砂漠と結晶化した峡谷が広がる荒野。",
+
+          "blocks": {
+            "arcanum_glasswastes_blocks1_I": {
+              "name": "Glasswastes Convergence I"
+            },
+
+            "arcanum_glasswastes_blocks2_II": {
+              "name": "Glasswastes Convergence II"
+            },
+
+            "arcanum_glasswastes_blocks3_III": {
+              "name": "Glasswastes Convergence III"
+            },
+
+            "arcanum_glasswastes_blocks4_IV": {
+              "name": "Glasswastes Convergence IV"
+            }
+          }
+        },
+
+        "twilight_lotus_marsh": {
+          "name": "黄昏蓮湿原",
+          "description": "夕暮れに染まる蓮池と霞む湿原と影の森が交錯する。",
+
+          "blocks": {
+            "twilight_lotus_marsh_blocks1_I": {
+              "name": "Twilight Lotus Convergence I"
+            },
+
+            "twilight_lotus_marsh_blocks2_II": {
+              "name": "Twilight Lotus Convergence II"
+            },
+
+            "twilight_lotus_marsh_blocks3_III": {
+              "name": "Twilight Lotus Convergence III"
+            },
+
+            "twilight_lotus_marsh_blocks4_IV": {
+              "name": "Twilight Lotus Convergence IV"
+            }
+          }
+        },
+
+        "stellar_reef_sanctum": {
+          "name": "星珊瑚聖域",
+          "description": "星屑のように輝く珊瑚と夜光虫の海底が入り混じる聖域。",
+
+          "blocks": {
+            "stellar_reef_sanctum_blocks1_I": {
+              "name": "Stellar Reef Convergence I"
+            },
+
+            "stellar_reef_sanctum_blocks2_II": {
+              "name": "Stellar Reef Convergence II"
+            },
+
+            "stellar_reef_sanctum_blocks3_III": {
+              "name": "Stellar Reef Convergence III"
+            },
+
+            "stellar_reef_sanctum_blocks4_IV": {
+              "name": "Stellar Reef Convergence IV"
+            }
+          }
+        },
+
+        "ashen_aurora_ridge": {
+          "name": "灰極光稜線",
+          "description": "灰の雪原に極光が差す山脈と蒼い洞窟が混在する稜線。",
+
+          "blocks": {
+            "ashen_aurora_ridge_blocks1_I": {
+              "name": "Ashen Aurora Convergence I"
+            },
+
+            "ashen_aurora_ridge_blocks2_II": {
+              "name": "Ashen Aurora Convergence II"
+            },
+
+            "ashen_aurora_ridge_blocks3_III": {
+              "name": "Ashen Aurora Convergence III"
+            },
+
+            "ashen_aurora_ridge_blocks4_IV": {
+              "name": "Ashen Aurora Convergence IV"
+            }
+          }
+        },
+
+        "chaos_biome": {
+          "name": "カオスバイオーム",
+          "description": "全てのバイオームが渦巻く極大融合領域。色彩と気候が刻々と変化する混沌空間。",
+
+          "blocks": {
+            "chaos_biome_blocks1_I": {
+              "name": "Chaos Biome Convergence I"
+            },
+
+            "chaos_biome_blocks2_II": {
+              "name": "Chaos Biome Convergence II"
+            },
+
+            "chaos_biome_blocks3_III": {
+              "name": "Chaos Biome Convergence III"
+            },
+
+            "chaos_biome_blocks4_IV": {
+              "name": "Chaos Biome Convergence IV"
+            }
+          }
+        },
+
+        "sealed_radio_den": {
+          "name": "電波の閉ざされた密室",
+          "description": "遮断された鋼壁と微かな警告灯が点滅する、閉ざされた通信遮断エリア。",
+
+          "blocks": {
+            "sealed-radio-den_theme_1": {
+              "name": "電波の閉ざされた密室・外殻"
+            },
+
+            "sealed-radio-den_core_1": {
+              "name": "電波の閉ざされた密室・中枢"
+            },
+
+            "sealed-radio-den_relic_1": {
+              "name": "電波の閉ざされた密室・信号核"
+            }
+          }
+        },
+
+        "phantasmagoric_woods": {
+          "name": "幻妖の森",
+          "description": "幻光のツタが絡み合い、霧の奥からノイズ混じりの囁きが響く幽玄の森域。",
+
+          "blocks": {
+            "phantasmagoric-woods_theme_2": {
+              "name": "幻妖の森・外殻"
+            },
+
+            "phantasmagoric-woods_core_2": {
+              "name": "幻妖の森・中枢"
+            },
+
+            "phantasmagoric-woods_relic_2": {
+              "name": "幻妖の森・信号核"
+            }
+          }
+        },
+
+        "ultra_secure_base": {
+          "name": "超機密基地",
+          "description": "多重遮蔽された制御区画。乱れた干渉波が監視網を走査している。",
+
+          "blocks": {
+            "ultra-secure-base_theme_3": {
+              "name": "超機密基地・外殻"
+            },
+
+            "ultra-secure-base_core_3": {
+              "name": "超機密基地・中枢"
+            },
+
+            "ultra-secure-base_relic_3": {
+              "name": "超機密基地・信号核"
+            }
+          }
+        },
+
+        "echo_control_sector": {
+          "name": "残響制御区画",
+          "description": "電磁反響を閉じ込める層が幾重にも並ぶ、計測用の調整セクター。",
+
+          "blocks": {
+            "echo-control-sector_theme_4": {
+              "name": "残響制御区画・外殻"
+            },
+
+            "echo-control-sector_core_4": {
+              "name": "残響制御区画・中枢"
+            },
+
+            "echo-control-sector_relic_4": {
+              "name": "残響制御区画・信号核"
+            }
+          }
+        },
+
+        "phantom_circuit_grove": {
+          "name": "幻影回路庭園",
+          "description": "生体回路が発光し、虚像の枝葉が交錯する電磁庭園。暗闇に潜む音が錯綜する。",
+
+          "blocks": {
+            "phantom-circuit-grove_theme_5": {
+              "name": "幻影回路庭園・外殻"
+            },
+
+            "phantom-circuit-grove_core_5": {
+              "name": "幻影回路庭園・中枢"
+            },
+
+            "phantom-circuit-grove_relic_5": {
+              "name": "幻影回路庭園・信号核"
+            }
+          }
+        },
+
+        "quantum_barrier_command": {
+          "name": "量子障壁司令塔",
+          "description": "量子障壁発生装置が林立する司令塔。干渉波の縞模様が空間を歪ませる。",
+
+          "blocks": {
+            "quantum-barrier-command_theme_6": {
+              "name": "量子障壁司令塔・外殻"
+            },
+
+            "quantum-barrier-command_core_6": {
+              "name": "量子障壁司令塔・中枢"
+            },
+
+            "quantum-barrier-command_relic_6": {
+              "name": "量子障壁司令塔・信号核"
+            }
+          }
+        },
+
+        "starmist_signal_hall": {
+          "name": "星霧交信の間",
+          "description": "星霧が舞い、失われた星間通信が残響する聖堂。暗闇を彩るノイズが波打つ。",
+
+          "blocks": {
+            "starmist-signal-hall_theme_7": {
+              "name": "星霧交信の間・外殻"
+            },
+
+            "starmist-signal-hall_core_7": {
+              "name": "星霧交信の間・中枢"
+            },
+
+            "starmist-signal-hall_relic_7": {
+              "name": "星霧交信の間・信号核"
+            }
+          }
+        },
+
+        "rupture_wave_reservoir": {
+          "name": "断絶波動集積庫",
+          "description": "隔離されたエネルギー庫。断絶波動が積層し、赤熱した配管が軋む。",
+
+          "blocks": {
+            "rupture-wave-reservoir_theme_8": {
+              "name": "断絶波動集積庫・外殻"
+            },
+
+            "rupture-wave-reservoir_core_8": {
+              "name": "断絶波動集積庫・中枢"
+            },
+
+            "rupture-wave-reservoir_relic_8": {
+              "name": "断絶波動集積庫・信号核"
+            }
+          }
+        },
+
+        "sakura_ravine": {
+          "name": "桜渓谷",
+          "description": "桜花の舞い散る渓流と小橋が続く迷宮",
+
+          "blocks": {
+            "jp_sakura-ravine_journey": {
+              "name": "桜渓谷 逍遥"
+            },
+
+            "jp_sakura-ravine_core": {
+              "name": "桜渓谷 中核"
+            },
+
+            "jp_sakura-ravine_legend": {
+              "name": "桜渓谷 伝承"
+            }
+          }
+        },
+
+        "zen_garden": {
+          "name": "枯山水庭苑",
+          "description": "白砂を波紋状に引き整えた静謐な庭園",
+
+          "blocks": {
+            "jp_zen-garden_journey": {
+              "name": "枯山水庭苑 逍遥"
+            },
+
+            "jp_zen-garden_core": {
+              "name": "枯山水庭苑 中核"
+            },
+
+            "jp_zen-garden_legend": {
+              "name": "枯山水庭苑 祭事"
+            }
+          }
+        },
+
+        "pagoda_quarter": {
+          "name": "塔郭街区",
+          "description": "多層の塔と瓦屋根が並ぶ古都の街並み",
+
+          "blocks": {
+            "jp_pagoda-quarter_journey": {
+              "name": "塔郭街区 逍遥"
+            },
+
+            "jp_pagoda-quarter_core": {
+              "name": "塔郭街区 中核"
+            },
+
+            "jp_pagoda-quarter_legend": {
+              "name": "塔郭街区 伝承"
+            }
+          }
+        },
+
+        "shogun_keep": {
+          "name": "将軍居城",
+          "description": "堀と石垣で守られた堅牢な城郭",
+
+          "blocks": {
+            "jp_shogun-keep_journey": {
+              "name": "将軍居城 逍遥"
+            },
+
+            "jp_shogun-keep_core": {
+              "name": "将軍居城 中核"
+            },
+
+            "jp_shogun-keep_legend": {
+              "name": "将軍居城 伝承"
+            }
+          }
+        },
+
+        "tea_house_lanes": {
+          "name": "茶屋小路",
+          "description": "茶屋が点在する石畳の横丁",
+
+          "blocks": {
+            "jp_tea-house-lanes_journey": {
+              "name": "茶屋小路 逍遥"
+            },
+
+            "jp_tea-house-lanes_core": {
+              "name": "茶屋小路 中核"
+            },
+
+            "jp_tea-house-lanes_legend": {
+              "name": "茶屋小路 祭事"
+            }
+          }
+        },
+
+        "torii_ridge": {
+          "name": "鳥居の尾根道",
+          "description": "朱塗りの鳥居が連なる山道",
+
+          "blocks": {
+            "jp_torii-ridge_journey": {
+              "name": "鳥居の尾根道 逍遥"
+            },
+
+            "jp_torii-ridge_core": {
+              "name": "鳥居の尾根道 中核"
+            },
+
+            "jp_torii-ridge_legend": {
+              "name": "鳥居の尾根道 伝承"
+            }
+          }
+        },
+
+        "koi_garden": {
+          "name": "錦鯉庭園",
+          "description": "池と太鼓橋が彩る庭園迷宮",
+
+          "blocks": {
+            "jp_koi-garden_journey": {
+              "name": "錦鯉庭園 逍遥"
+            },
+
+            "jp_koi-garden_core": {
+              "name": "錦鯉庭園 中核"
+            },
+
+            "jp_koi-garden_legend": {
+              "name": "錦鯉庭園 祭事"
+            }
+          }
+        },
+
+        "onsen_terraces": {
+          "name": "温泉段丘",
+          "description": "湯煙が立ち昇る段丘状の温泉郷",
+
+          "blocks": {
+            "jp_onsen-terraces_journey": {
+              "name": "温泉段丘 逍遥"
+            },
+
+            "jp_onsen-terraces_core": {
+              "name": "温泉段丘 中核"
+            },
+
+            "jp_onsen-terraces_legend": {
+              "name": "温泉段丘 伝承"
+            }
+          }
+        },
+
+        "rice_terraces": {
+          "name": "棚田山里",
+          "description": "段々に広がる棚田と山里の迷路",
+
+          "blocks": {
+            "jp_rice-terraces_journey": {
+              "name": "棚田山里 逍遥"
+            },
+
+            "jp_rice-terraces_core": {
+              "name": "棚田山里 中核"
+            },
+
+            "jp_rice-terraces_legend": {
+              "name": "棚田山里 祭事"
+            }
+          }
+        },
+
+        "momiji_cliffs": {
+          "name": "紅葉断崖",
+          "description": "燃える紅葉と苔むした断崖が交差する峡谷迷路",
+
+          "blocks": {
+            "jp_momiji-cliffs_journey": {
+              "name": "紅葉断崖 逍遥"
+            },
+
+            "jp_momiji-cliffs_core": {
+              "name": "紅葉断崖 中核"
+            },
+
+            "jp_momiji-cliffs_legend": {
+              "name": "紅葉断崖 伝承"
+            }
+          }
+        },
+
+        "moonlit_bamboo": {
+          "name": "月竹幽境",
+          "description": "月光と蛍が揺らめく竹林の秘境",
+
+          "blocks": {
+            "jp_moonlit-bamboo_journey": {
+              "name": "月竹幽境 逍遥"
+            },
+
+            "jp_moonlit-bamboo_core": {
+              "name": "月竹幽境 中核"
+            },
+
+            "jp_moonlit-bamboo_legend": {
+              "name": "月竹幽境 祭事"
+            }
+          }
+        },
+
+        "snow_view_shrine": {
+          "name": "雪見神苑",
+          "description": "雪灯籠と社殿が静かに佇む冬の神苑",
+
+          "blocks": {
+            "jp_snow-view-shrine_journey": {
+              "name": "雪見神苑 逍遥"
+            },
+
+            "jp_snow-view-shrine_core": {
+              "name": "雪見神苑 中核"
+            },
+
+            "jp_snow-view-shrine_legend": {
+              "name": "雪見神苑 伝承"
+            }
+          }
+        },
+
+        "ukiyo_district": {
+          "name": "浮世絵長屋",
+          "description": "色鮮やかな暖簾と格子が並ぶ町人街の迷廊",
+
+          "blocks": {
+            "jp_ukiyo-district_journey": {
+              "name": "浮世絵長屋 逍遥"
+            },
+
+            "jp_ukiyo-district_core": {
+              "name": "浮世絵長屋 中核"
+            },
+
+            "jp_ukiyo-district_legend": {
+              "name": "浮世絵長屋 祭事"
+            }
+          }
+        },
+
+        "nebuta_floats": {
+          "name": "ねぶた行列",
+          "description": "巨大な灯籠山車が進む祭列の大路",
+
+          "blocks": {
+            "jp_nebuta-floats_journey": {
+              "name": "ねぶた行列 逍遥"
+            },
+
+            "jp_nebuta-floats_core": {
+              "name": "ねぶた行列 中核"
+            },
+
+            "jp_nebuta-floats_legend": {
+              "name": "ねぶた行列 伝承"
+            }
+          }
+        },
+
+        "wisteria_veil": {
+          "name": "藤花回廊",
+          "description": "藤棚が紫の幕を垂らす幻想的な回廊庭園",
+
+          "blocks": {
+            "jp_wisteria-veil_journey": {
+              "name": "藤花回廊 逍遥"
+            },
+
+            "jp_wisteria-veil_core": {
+              "name": "藤花回廊 中核"
+            },
+
+            "jp_wisteria-veil_legend": {
+              "name": "藤花回廊 祭事"
+            }
+          }
+        },
+
+        "grand_shrine_precincts": {
+          "name": "大神社境内",
+          "description": "朱塗りの鳥居と拝殿が連なる厳かな神社の境内",
+
+          "blocks": {
+            "jp_grand-shrine-precincts_journey": {
+              "name": "大神社境内 逍遥"
+            },
+
+            "jp_grand-shrine-precincts_core": {
+              "name": "大神社境内 中核"
+            },
+
+            "jp_grand-shrine-precincts_legend": {
+              "name": "大神社境内 伝承"
+            }
+          }
+        },
+
+        "mountain_temple_terraces": {
+          "name": "山寺石段",
+          "description": "山肌に沿って石段と堂宇が連なる静謐な山寺",
+
+          "blocks": {
+            "jp_mountain-temple-terraces_journey": {
+              "name": "山寺石段 逍遥"
+            },
+
+            "jp_mountain-temple-terraces_core": {
+              "name": "山寺石段 中核"
+            },
+
+            "jp_mountain-temple-terraces_legend": {
+              "name": "山寺石段 祭事"
+            }
+          }
+        },
+
+        "sunrise_bamboo_sea": {
+          "name": "朝霧竹海",
+          "description": "朝霧の差し込む竹林を縫う爽やかな小径",
+
+          "blocks": {
+            "jp_sunrise-bamboo-sea_journey": {
+              "name": "朝霧竹海 逍遥"
+            },
+
+            "jp_sunrise-bamboo-sea_core": {
+              "name": "朝霧竹海 中核"
+            },
+
+            "jp_sunrise-bamboo-sea_legend": {
+              "name": "朝霧竹海 伝承"
+            }
+          }
+        },
+
+        "solitary_farmstead": {
+          "name": "山里一軒家",
+          "description": "山里にぽつんと佇む茅葺きの一軒家と畑",
+
+          "blocks": {
+            "jp_solitary-farmstead_journey": {
+              "name": "山里一軒家 逍遥"
+            },
+
+            "jp_solitary-farmstead_core": {
+              "name": "山里一軒家 中核"
+            },
+
+            "jp_solitary-farmstead_legend": {
+              "name": "山里一軒家 祭事"
+            }
+          }
+        },
+
+        "mountain_pass_trail": {
+          "name": "峠山道",
+          "description": "崖と樹林の間を縫う細い山道と茶屋の跡",
+
+          "blocks": {
+            "jp_mountain-pass-trail_journey": {
+              "name": "峠山道 逍遥"
+            },
+
+            "jp_mountain-pass-trail_core": {
+              "name": "峠山道 中核"
+            },
+
+            "jp_mountain-pass-trail_legend": {
+              "name": "峠山道 伝承"
+            }
+          }
+        },
+
+        "ancestral_graveyard": {
+          "name": "里山墓地",
+          "description": "苔むした石塔と供養灯籠が並ぶ静かな墓地",
+
+          "blocks": {
+            "jp_ancestral-graveyard_journey": {
+              "name": "里山墓地 逍遥"
+            },
+
+            "jp_ancestral-graveyard_core": {
+              "name": "里山墓地 中核"
+            },
+
+            "jp_ancestral-graveyard_legend": {
+              "name": "里山墓地 祭事"
+            }
+          }
         }
       },
 

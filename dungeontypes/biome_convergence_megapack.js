@@ -4,6 +4,33 @@
   const ADDON_NAME = 'Biome Convergence Mega Pack';
   const VERSION = '1.0.0';
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
+  function applyTypeLocalization(config){
+    const typeKey = sanitizeKey(config.id);
+    const localized = Object.assign({}, config);
+    localized.nameKey = `dungeon.types.${typeKey}.name`;
+    if(config.description){
+      localized.descriptionKey = `dungeon.types.${typeKey}.description`;
+    }
+    return localized;
+  }
+
+  function buildBlockEntry(config, data){
+    if(!data || !data.key){
+      throw new Error('Block entry requires a key');
+    }
+    const entry = Object.assign({ type: config.id }, data);
+    const typeKey = sanitizeKey(config.id);
+    entry.nameKey = `dungeon.types.${typeKey}.blocks.${data.key}.name`;
+    if(entry.description){
+      entry.descriptionKey = `dungeon.types.${typeKey}.blocks.${data.key}.description`;
+    }
+    return entry;
+  }
+
   function clamp(v, min, max){
     return v < min ? min : (v > max ? max : v);
   }
@@ -80,7 +107,9 @@
     const {
       id,
       name,
+      nameKey,
       description,
+      descriptionKey,
       tags,
       biomes,
       seedsPerBiome,
@@ -299,7 +328,9 @@
     return {
       id,
       name,
+      nameKey,
       description,
+      descriptionKey,
       algorithm,
       mixin: {
         normalMixed: 0.75,
@@ -655,7 +686,7 @@
         }
       }
     }
-  ];
+  ].map(applyTypeLocalization);
 
   const generators = MULTI_BIOME_CONFIGS.map(createMultiBiomeGenerator);
 
@@ -695,15 +726,14 @@
       const size = clamp(sizeBase + entry.sizeOffset, -2, 3);
       const blockKey = `${keyBase}_${entry.target}_${entry.suffix}`;
       const blockName = `${short} Convergence ${entry.suffix}`;
-      const block = {
+      const block = buildBlockEntry(cfg, {
         key: blockKey,
         name: blockName,
         level,
         size,
         depth,
-        chest: entry.chest,
-        type: cfg.id
-      };
+        chest: entry.chest
+      });
       if(entry.boss && entry.boss.length){
         block.bossFloors = entry.boss.slice();
       }

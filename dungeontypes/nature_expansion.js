@@ -4,6 +4,33 @@
   const ADDON_NAME = 'Nature Biome Expansion Pack';
   const VERSION = '2.1.0';
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
+  function applyThemeLocalization(theme){
+    const typeKey = sanitizeKey(theme.id);
+    const themed = Object.assign({}, theme);
+    themed.nameKey = `dungeon.types.${typeKey}.name`;
+    if(theme.description){
+      themed.descriptionKey = `dungeon.types.${typeKey}.description`;
+    }
+    return themed;
+  }
+
+  function buildBlockEntry(theme, data){
+    if(!data || !data.key){
+      throw new Error('Block entry requires a key');
+    }
+    const entry = Object.assign({ type: theme.id }, data);
+    const typeKey = sanitizeKey(theme.id);
+    entry.nameKey = `dungeon.types.${typeKey}.blocks.${data.key}.name`;
+    if(entry.description){
+      entry.descriptionKey = `dungeon.types.${typeKey}.blocks.${data.key}.description`;
+    }
+    return entry;
+  }
+
   function clamp(value, min, max){
     return value < min ? min : (value > max ? max : value);
   }
@@ -1425,12 +1452,14 @@
       },
       tags:['forest','spring','flower','nature']
     }
-  ];
+  ].map(applyThemeLocalization);
 
   const generators = themes.map(theme => ({
     id: theme.id,
     name: theme.name,
+    nameKey: theme.nameKey,
     description: theme.description,
+    descriptionKey: theme.descriptionKey,
     algorithm: createBiomeAlgorithm(theme),
     mixin: Object.assign({
       normalMixed: 0.45,
@@ -1443,39 +1472,36 @@
   const blocks = { blocks1: [], blocks2: [], blocks3: [] };
   themes.forEach((theme, index) => {
     const levelBase = index * 6;
-    blocks.blocks1.push({
+    blocks.blocks1.push(buildBlockEntry(theme, {
       key:`nature_${theme.id}_theme`,
       name:`${theme.name} 探索`,
       level:+levelBase,
       size:index % 2 === 0 ? 0 : +1,
       depth:+1 + (index % 3 === 0 ? 0 : 1),
       chest:chestCycle[index % chestCycle.length],
-      type:theme.id,
       bossFloors: index % 2 === 0 ? [5] : undefined
-    });
-    blocks.blocks2.push({
+    }));
+    blocks.blocks2.push(buildBlockEntry(theme, {
       key:`nature_${theme.id}_core`,
       name:`${theme.name} 中層`,
       level:+(levelBase + 4),
       size:+1 + (index % 2),
       depth:+1 + (index % 3 === 2 ? 1 : 0),
-      chest:chestCycle[(index + 1) % chestCycle.length],
-      type:theme.id
-    });
+      chest:chestCycle[(index + 1) % chestCycle.length]
+    }));
     const bossFloors = [];
     if(levelBase >= 6) bossFloors.push(5);
     if(levelBase >= 12) bossFloors.push(10);
     if(levelBase >= 18) bossFloors.push(15);
-    blocks.blocks3.push({
+    blocks.blocks3.push(buildBlockEntry(theme, {
       key:`nature_${theme.id}_relic`,
       name:`${theme.name} 遺構`,
       level:+(levelBase + 8),
       size:index % 2 === 0 ? 0 : +1,
       depth:+2 + (index % 3 === 1 ? 1 : 0),
       chest:chestCycle[(index + 2) % chestCycle.length],
-      type:theme.id,
       bossFloors: bossFloors.length ? bossFloors : undefined
-    });
+    }));
   });
 
   window.registerDungeonAddon({

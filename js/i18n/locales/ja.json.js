@@ -10324,6 +10324,50 @@
     },
 
     "minigame": {
+      "calc_combo": {
+        "name": "計算コンボ",
+        "title": "{name} ({difficulty})",
+        "difficulty": {
+          "easy": "EASY",
+          "normal": "NORMAL",
+          "hard": "HARD"
+        },
+        "stats": {
+          "correct": "正解",
+          "mistake": "ミス",
+          "combo": "コンボ",
+          "xp": "累計EXP"
+        },
+        "input": {
+          "answerPlaceholder": "答えを入力"
+        },
+        "buttons": {
+          "submit": "回答"
+        },
+        "shortcuts": {
+          "submitOrSkip": "Enterで回答 / Escでスキップ"
+        },
+        "history": {
+          "title": "履歴 (直近{count}問)",
+          "correctEntry": "○ {expression}",
+          "mistakeEntry": "× {expression} = {answer}",
+          "streakEntry": "★ {combo}連続ボーナス",
+          "gain": "+{value} EXP",
+          "loss": "{value} EXP",
+          "neutral": "±0 EXP"
+        },
+        "question": {
+          "loading": "準備中…",
+          "prompt": "{expression} = ?"
+        },
+        "pop": {
+          "correct": "正解！ 基本{base} + コンボ{combo} + スピード{speed}",
+          "streak": "コンボ{combo}達成！ボーナス+{bonus}",
+          "mistake": "正解は {answer}",
+          "emptyAnswer": "入力してから回答してください",
+          "invalidAnswer": "数値で入力してください"
+        }
+      },
       "taiko_drum": {
         "title": "太鼓リズム（{difficulty}）",
         "tips": "F/J/Space = ドン（赤）、D/K = カッ（青）。大音符は両方同時！タップもOK。",

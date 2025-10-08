@@ -10324,6 +10324,43 @@
     },
 
     "minigame": {
+      "calculator": {
+        "modes": {
+          "standard": "Standard",
+          "programmer": "Programmer",
+          "summary": {
+            "standard": "Standard mode (Base 10)",
+            "programmer": "Programmer mode / Base {base}"
+          }
+        },
+        "programmer": {
+          "baseNames": {
+            "2": "Binary",
+            "4": "Quaternary",
+            "6": "Senary",
+            "8": "Octal",
+            "10": "Decimal",
+            "16": "Hexadecimal",
+            "24": "Base-24",
+            "30": "Base-30"
+          },
+          "baseOption": "{baseName} (Base {base})",
+          "baseSuffix": " (Base {base})"
+        },
+        "history": {
+          "title": "History",
+          "clear": "Clear",
+          "empty": "No history yet.",
+          "status": "History: {count}",
+          "statusWithBase": "History: {count} / Base {base}"
+        },
+        "status": {
+          "memoryEmpty": "M: --",
+          "memory": "M: {value}",
+          "memoryWithBase": "M: {value} (Base {base})"
+        },
+        "error": "Error"
+      },
       "taiko_drum": {
         "title": "Taiko Rhythm ({difficulty})",
         "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",

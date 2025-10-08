@@ -10300,6 +10300,45 @@
     },
 
     "minigame": {
+      "taiko_drum": {
+        "title": "Taiko Rhythm ({difficulty})",
+        "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",
+        "controls": {
+          "difficultyLabel": "Difficulty"
+        },
+        "buttons": {
+          "start": "Start"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "judgement": {
+          "good": "Good",
+          "ok": "OK",
+          "pass": "Pass",
+          "miss": "Miss"
+        },
+        "hud": {
+          "progressTemplate": "{label}: {value}%",
+          "progressLabel": "Progress",
+          "judgementTemplate": "{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}",
+          "comboTemplate": "{comboLabel}: {combo} ({maxLabel} {maxCombo}) | {accuracyLabel}: {accuracy}% | {expLabel}: {exp}",
+          "comboLabel": "Combo",
+          "maxComboLabel": "Max",
+          "accuracyLabel": "Accuracy",
+          "expLabel": "EXP"
+        },
+        "result": {
+          "title": "Result",
+          "judgementTemplate": "{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}",
+          "summaryTemplate": "{maxLabel} {maxCombo} | {totalExpLabel} {score} ({bonusLabel} {clearBonus}) | {goodRateLabel} {rate}%",
+          "totalExpLabel": "Total EXP",
+          "clearBonusLabel": "Clear Bonus",
+          "goodRateLabel": "Good Rate"
+        }
+      },
       "checkers": {
         "hud": {
           "turn": {

@@ -10501,6 +10501,43 @@
     },
 
     "minigame": {
+      "calculator": {
+        "modes": {
+          "standard": "標準",
+          "programmer": "プログラマー",
+          "summary": {
+            "standard": "標準モード (10進)",
+            "programmer": "プログラマーモード / 基数{base}"
+          }
+        },
+        "programmer": {
+          "baseNames": {
+            "2": "2進",
+            "4": "4進",
+            "6": "6進",
+            "8": "8進",
+            "10": "10進",
+            "16": "16進",
+            "24": "24進",
+            "30": "30進"
+          },
+          "baseOption": "{baseName} (基数{base})",
+          "baseSuffix": " (基数{base})"
+        },
+        "history": {
+          "title": "履歴",
+          "clear": "クリア",
+          "empty": "履歴はありません。",
+          "status": "履歴: {count}",
+          "statusWithBase": "履歴: {count} / 基数{base}"
+        },
+        "status": {
+          "memoryEmpty": "M: --",
+          "memory": "M: {value}",
+          "memoryWithBase": "M: {value} (基数{base})"
+        },
+        "error": "エラー"
+      },
       "calc_combo": {
         "name": "計算コンボ",
         "title": "{name} ({difficulty})",

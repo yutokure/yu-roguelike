@@ -5,6 +5,50 @@
   let mathLoader = null;
   let mathJaxLoader = null;
   let mathJaxInstance = null;
+  const i18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : null;
+
+  function evaluateFallbackValue(fallback){
+    if (typeof fallback === 'function') {
+      try {
+        const result = fallback();
+        if (result == null) return '';
+        return typeof result === 'string' ? result : String(result);
+      } catch (error) {
+        console.warn('[math_lab:i18n] Failed to evaluate fallback text:', error);
+        return '';
+      }
+    }
+    if (fallback == null) return '';
+    return typeof fallback === 'string' ? fallback : String(fallback);
+  }
+
+  function translateText(key, fallback, params){
+    if (key && i18n && typeof i18n.t === 'function') {
+      try {
+        const translated = i18n.t(key, params);
+        if (typeof translated === 'string' && translated !== key) {
+          return translated;
+        }
+      } catch (error) {
+        console.warn('[math_lab:i18n] Failed to translate key:', key, error);
+      }
+    }
+    return evaluateFallbackValue(fallback);
+  }
+
+  function gameText(subKey, fallback, params){
+    const key = subKey ? `games.mathLab.${subKey}` : null;
+    return translateText(key, fallback, params);
+  }
+
+  const uiText = (key, fallback, params) => gameText(`ui.${key}`, fallback, params);
+  const statusText = (key, fallback, params) => gameText(`status.${key}`, fallback, params);
+  const graphText = (key, fallback, params) => gameText(`graph.${key}`, fallback, params);
+  const keypadText = (key, fallback, params) => gameText(`keypad.${key}`, fallback, params);
+  const unitText = (key, fallback, params) => gameText(`units.${key}`, fallback, params);
+  const resultText = (key, fallback, params) => gameText(`results.${key}`, fallback, params);
+  const placeholderText = (key, fallback, params) => gameText(`placeholders.${key}`, fallback, params);
+  const errorText = (key, fallback, params) => gameText(`errors.${key}`, fallback, params);
 
   function resolveAssetUrl(path){
     if (!path) return path;
@@ -147,7 +191,15 @@
       background: 'rgba(15,23,42,0.82)',
       zIndex: '4'
     });
-    loadingOverlay.innerHTML = '<div style="text-align:center;font-size:15px;letter-spacing:0.4px;color:#cbd5f5">数学エンジンを読み込んでいます…</div>';
+    const loadingMessage = document.createElement('div');
+    Object.assign(loadingMessage.style, {
+      textAlign: 'center',
+      fontSize: '15px',
+      letterSpacing: '0.4px',
+      color: '#cbd5f5'
+    });
+    loadingMessage.textContent = statusText('loading', '数学エンジンを読み込んでいます…');
+    loadingOverlay.appendChild(loadingMessage);
 
     const keypadPanel = document.createElement('div');
     Object.assign(keypadPanel.style, {
@@ -249,6 +301,7 @@
 
     let expressionInput, expressionInputClassic, expressionInputPretty;
     let expressionPreviewEl;
+    let expressionPreviewPlaceholder = '';
     let exactResultEl, approxResultEl, resultSubLabelExact, resultSubLabelApprox;
     let statusBar, variableList, historyBody;
     let angleToggleRad, angleToggleDeg;
@@ -276,6 +329,7 @@
     const MAX_DECIMAL_DIGITS = 120;
     const buttonGroups = [
       {
+        id: 'standard',
         title: '標準関数',
         color: '#38bdf8',
         buttons: [
@@ -298,6 +352,7 @@
         ]
       },
       {
+        id: 'trigonometry',
         title: '三角・双曲線',
         color: '#a855f7',
         buttons: [
@@ -314,6 +369,7 @@
         ]
       },
       {
+        id: 'complex',
         title: '複素数・行列',
         color: '#f97316',
         buttons: [
@@ -330,6 +386,7 @@
         ]
       },
       {
+        id: 'analysis',
         title: '解析・特殊関数',
         color: '#34d399',
         buttons: [
@@ -358,6 +415,7 @@
         ]
       },
       {
+        id: 'statistics',
         title: '確率・統計',
         color: '#f472b6',
         buttons: [
@@ -373,6 +431,7 @@
         ]
       },
       {
+        id: 'numerical',
         title: '数値解法',
         color: '#fb7185',
         buttons: [
@@ -384,6 +443,7 @@
         ]
       },
       {
+        id: 'programmer',
         title: 'プログラマー・情報',
         color: '#0ea5e9',
         buttons: [
@@ -393,6 +453,7 @@
         ]
       },
       {
+        id: 'constants',
         title: '定数・単位',
         color: '#facc15',
         buttons: [
@@ -415,7 +476,7 @@
     function ensureRadix(value){
       const num = Number(ensureFiniteNumber(value));
       if (!Number.isInteger(num) || num < 2 || num > 30) {
-        throw new Error('基数は 2 以上 30 以下の整数で指定してください。');
+        throw new Error(errorText('radixRange', '基数は 2 以上 30 以下の整数で指定してください。'));
       }
       return num;
     }
@@ -467,7 +528,7 @@
       if (typeof value === 'string') {
         const parsed = parseRadixText(value, base);
         if (parsed === null) {
-          throw new Error('指定した基数に対応しない文字が含まれています。');
+          throw new Error(errorText('radixInvalidCharacter', '指定した基数に対応しない文字が含まれています。'));
         }
         return parsed;
       }
@@ -529,7 +590,7 @@
       if (typeof expr === 'string') {
         return math.parse(expr);
       }
-      throw new Error('式を解釈できませんでした。文字列または math.js のノードを渡してください。');
+      throw new Error(errorText('expressionParse', '式を解釈できませんでした。文字列または math.js のノードを渡してください。'));
     }
 
     function normalizeEquation(expr){
@@ -544,12 +605,12 @@
 
     function ensureFiniteNumber(value){
       if (typeof value === 'number') {
-        if (!Number.isFinite(value)) throw new Error('有限の数値ではありません。');
+        if (!Number.isFinite(value)) throw new Error(errorText('notFinite', '有限の数値ではありません。'));
         return value;
       }
       if (mathRef && mathRef.isBigNumber && mathRef.isBigNumber(value)) {
         const num = value.toNumber();
-        if (!Number.isFinite(num)) throw new Error('有限の数値ではありません。');
+        if (!Number.isFinite(num)) throw new Error(errorText('notFinite', '有限の数値ではありません。'));
         return num;
       }
       if (mathRef && mathRef.isFraction && mathRef.isFraction(value)) {
@@ -557,31 +618,31 @@
       }
       if (mathRef && mathRef.isComplex && mathRef.isComplex(value)) {
         if (Math.abs(value.im) > 1e-10) {
-          const err = new Error('複素数は実数部のみを使用できません。');
+          const err = new Error(errorText('complexRealOnly', '複素数は実数部のみを使用できません。'));
           err.code = 'COMPLEX';
           throw err;
         }
         return value.re;
       }
       if (mathRef && mathRef.isMatrix && mathRef.isMatrix(value)) {
-        const err = new Error('行列はスカラーに変換できません。');
+        const err = new Error(errorText('matrixToScalar', '行列はスカラーに変換できません。'));
         err.code = 'MATRIX';
         throw err;
       }
       if (Array.isArray(value)) {
-        const err = new Error('配列はスカラーに変換できません。');
+        const err = new Error(errorText('arrayToScalar', '配列はスカラーに変換できません。'));
         err.code = 'ARRAY';
         throw err;
       }
       const num = Number(value);
-      if (!Number.isFinite(num)) throw new Error('数値へ変換できませんでした。');
+      if (!Number.isFinite(num)) throw new Error(errorText('numberConversion', '数値へ変換できませんでした。'));
       return num;
     }
 
     function ensurePositiveFiniteNumber(value, message){
       const num = ensureFiniteNumber(value);
       if (num <= 0) {
-        throw new Error(message || '正の実数を指定してください。');
+        throw new Error(message || errorText('positiveRealRequired', '正の実数を指定してください。'));
       }
       return num;
     }
@@ -621,7 +682,7 @@
         });
 
         const headerText = document.createElement('span');
-        headerText.textContent = group.title;
+        headerText.textContent = keypadText(`groups.${group.id}`, group.title);
 
         const chevron = document.createElement('span');
         chevron.textContent = '▾';
@@ -695,7 +756,7 @@
         gap: '12px'
       });
       const favTitle = document.createElement('div');
-      favTitle.textContent = 'ユニット変換テンプレ';
+      favTitle.textContent = uiText('unitTemplates.title', 'ユニット変換テンプレ');
       Object.assign(favTitle.style, {
         fontSize: '14px',
         letterSpacing: '0.4px',
@@ -713,21 +774,21 @@
         fontSize: '13px'
       });
       const unitTemplates = [
-        { label: '長さ: 5 cm → inch', expr: '5 cm to inch' },
-        { label: '重さ: 70 kg → lb', expr: '70 kg to pound' },
-        { label: 'エネルギー: 1 kWh → J', expr: '1 kWh to J' },
-        { label: '温度: 25 degC → degF', expr: '25 degC to degF' },
-        { label: '速度: 100 km/h → m/s', expr: '100 km/h to m/s' }
+        { key: 'length', label: '長さ: 5 cm → inch', expr: '5 cm to inch' },
+        { key: 'mass', label: '重さ: 70 kg → lb', expr: '70 kg to pound' },
+        { key: 'energy', label: 'エネルギー: 1 kWh → J', expr: '1 kWh to J' },
+        { key: 'temperature', label: '温度: 25 degC → degF', expr: '25 degC to degF' },
+        { key: 'speed', label: '速度: 100 km/h → m/s', expr: '100 km/h to m/s' }
       ];
       unitTemplates.forEach(t => {
         const option = document.createElement('option');
         option.value = t.expr;
-        option.textContent = t.label;
+        option.textContent = unitText(`templates.${t.key}`, t.label);
         unitSelect.appendChild(option);
       });
       const unitBtn = document.createElement('button');
       unitBtn.type = 'button';
-      unitBtn.textContent = '挿入';
+      unitBtn.textContent = uiText('unitTemplates.insert', '挿入');
       Object.assign(unitBtn.style, {
         padding: '10px 0',
         borderRadius: '10px',
@@ -767,8 +828,8 @@
         fontSize: '13px'
       });
 
-      angleToggleRad = buildToggle('Radians', true, () => setAngleMode(true));
-      angleToggleDeg = buildToggle('Degrees', false, () => setAngleMode(false));
+      angleToggleRad = buildToggle(uiText('angle.radians', 'Radians'), true, () => setAngleMode(true));
+      angleToggleDeg = buildToggle(uiText('angle.degrees', 'Degrees'), false, () => setAngleMode(false));
 
       angleGroup.appendChild(angleToggleRad.wrapper);
       angleGroup.appendChild(angleToggleDeg.wrapper);
@@ -779,7 +840,7 @@
         color: '#cbd5f5',
         letterSpacing: '0.3px'
       });
-      statusBar.textContent = '準備中…';
+      statusBar.textContent = statusText('initializing', '準備中…');
 
       topBar.appendChild(angleGroup);
       topBar.appendChild(statusBar);
@@ -796,7 +857,7 @@
       });
 
       const worksheetHeader = document.createElement('div');
-      worksheetHeader.textContent = 'ワークシート';
+      worksheetHeader.textContent = uiText('worksheet.title', 'ワークシート');
       Object.assign(worksheetHeader.style, {
         fontSize: '14px',
         color: '#93c5fd',
@@ -813,13 +874,13 @@
         alignSelf: 'flex-start'
       });
 
-      expressionModeToggleClassic = buildSegmentToggle('関数表記', () => setExpressionMode('classic'));
-      expressionModeTogglePretty = buildSegmentToggle('数学記号', () => setExpressionMode('pretty'));
+      expressionModeToggleClassic = buildSegmentToggle(uiText('inputMode.classic', '関数表記'), () => setExpressionMode('classic'));
+      expressionModeTogglePretty = buildSegmentToggle(uiText('inputMode.pretty', '数学記号'), () => setExpressionMode('pretty'));
       inputModeSwitch.appendChild(expressionModeToggleClassic.button);
       inputModeSwitch.appendChild(expressionModeTogglePretty.button);
 
       expressionInputClassic = document.createElement('textarea');
-      expressionInputClassic.placeholder = '式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem(["x+y=3","x-y=1"],["x","y"]))';
+      expressionInputClassic.placeholder = placeholderText('worksheet.classic', '式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem(["x+y=3","x-y=1"],["x","y"]))');
       Object.assign(expressionInputClassic.style, {
         minHeight: '110px',
         resize: 'vertical',
@@ -833,7 +894,7 @@
       });
 
       expressionInputPretty = document.createElement('textarea');
-      expressionInputPretty.placeholder = '例: √(2) + 1/3, 2π, (x+1)/(x−1) など数学記号で入力';
+      expressionInputPretty.placeholder = placeholderText('worksheet.pretty', '例: √(2) + 1/3, 2π, (x+1)/(x−1) など数学記号で入力');
       Object.assign(expressionInputPretty.style, {
         minHeight: '110px',
         resize: 'vertical',
@@ -861,7 +922,7 @@
       });
 
       const previewTitle = document.createElement('div');
-      previewTitle.textContent = '数式プレビュー';
+      previewTitle.textContent = uiText('preview.title', '数式プレビュー');
       Object.assign(previewTitle.style, {
         fontSize: '13px',
         color: '#bae6fd',
@@ -879,7 +940,8 @@
         color: '#f8fafc',
         wordBreak: 'break-word'
       });
-      expressionPreviewEl.textContent = '（入力中の式がここに可視化されます）';
+      expressionPreviewPlaceholder = placeholderText('preview.expression', '（入力中の式がここに可視化されます）');
+      expressionPreviewEl.textContent = expressionPreviewPlaceholder;
       expressionPreviewEl.style.opacity = '0.65';
 
       previewCard.appendChild(previewTitle);
@@ -891,19 +953,21 @@
         gap: '12px'
       });
 
-      evalButton = buildPrimaryButton('計算 (Shift+Enter)', '#4ade80');
+      evalButton = buildPrimaryButton(uiText('actions.evaluate', '計算 (Shift+Enter)'), '#4ade80');
       evalButton.addEventListener('click', evaluateExpression);
 
-      clearButton = buildPrimaryButton('リセット', '#60a5fa');
+      clearButton = buildPrimaryButton(uiText('actions.clear', 'リセット'), '#60a5fa');
       clearButton.addEventListener('click', clearWorksheet);
 
-      const copyButton = buildPrimaryButton('結果をコピー', '#f97316');
+      const copyButton = buildPrimaryButton(uiText('actions.copyResult', '結果をコピー'), '#f97316');
       copyButton.addEventListener('click', () => {
         const result = resultMode === 'numeric'
           ? approxResultEl?.dataset.rawValue
           : exactResultEl?.dataset.rawValue;
         if (result) {
-          navigator.clipboard?.writeText(result).then(() => notifyStatus('結果をクリップボードにコピーしました。')).catch(() => notifyStatus('コピーに失敗しました…'));
+          const successText = statusText('copySuccess', '結果をクリップボードにコピーしました。');
+          const failureText = statusText('copyFailure', 'コピーに失敗しました…');
+          navigator.clipboard?.writeText(result).then(() => notifyStatus(successText)).catch(() => notifyStatus(failureText));
         }
       });
 
@@ -921,7 +985,7 @@
         gap: '10px'
       });
       const resultTitle = document.createElement('div');
-      resultTitle.textContent = '結果';
+      resultTitle.textContent = resultText('title', '結果');
       Object.assign(resultTitle.style, {
         fontSize: '14px',
         color: '#bbf7d0',
@@ -935,8 +999,8 @@
         border: '1px solid rgba(16,185,129,0.35)',
         alignSelf: 'flex-start'
       });
-      resultToggleSymbolic = buildSegmentToggle('分数/記号', () => setResultMode('symbolic'), '#0f766e');
-      resultToggleNumeric = buildSegmentToggle('小数', () => setResultMode('numeric'), '#0f766e');
+      resultToggleSymbolic = buildSegmentToggle(resultText('symbolicToggle', '分数/記号'), () => setResultMode('symbolic'), '#0f766e');
+      resultToggleNumeric = buildSegmentToggle(resultText('numericToggle', '小数'), () => setResultMode('numeric'), '#0f766e');
       resultModeSwitch.appendChild(resultToggleSymbolic.button);
       resultModeSwitch.appendChild(resultToggleNumeric.button);
       exactResultEl = document.createElement('div');
@@ -954,10 +1018,10 @@
       approxResultEl.style.fontFamily = '"Fira Code", monospace';
 
       resultSubLabelExact = document.createElement('div');
-      resultSubLabelExact.textContent = 'Exact / Symbolic';
+      resultSubLabelExact.textContent = resultText('symbolicLabel', 'Exact / Symbolic');
       Object.assign(resultSubLabelExact.style, { fontSize: '12px', color: '#a7f3d0', letterSpacing: '0.3px' });
       resultSubLabelApprox = document.createElement('div');
-      resultSubLabelApprox.textContent = 'Approximate (10進)';
+      resultSubLabelApprox.textContent = resultText('numericLabel', 'Approximate (10進)');
       Object.assign(resultSubLabelApprox.style, { fontSize: '12px', color: '#a7f3d0', letterSpacing: '0.3px' });
 
       resultCard.appendChild(resultTitle);
@@ -967,8 +1031,8 @@
       resultCard.appendChild(resultSubLabelApprox);
       resultCard.appendChild(approxResultEl);
       moreDigitsButton = document.createElement('button');
-      moreDigitsButton.textContent = 'More Digits';
-      moreDigitsButton.title = '小数表示を+5桁拡張';
+      moreDigitsButton.textContent = resultText('moreDigits', 'More Digits');
+      moreDigitsButton.title = resultText('moreDigitsHint', '小数表示を+5桁拡張');
       Object.assign(moreDigitsButton.style, {
         justifySelf: 'flex-end',
         padding: '6px 14px',
@@ -1021,7 +1085,7 @@
         minHeight: '0'
       });
       const historyTitle = document.createElement('div');
-      historyTitle.textContent = '計算履歴';
+      historyTitle.textContent = uiText('history.title', '計算履歴');
       Object.assign(historyTitle.style, {
         fontSize: '14px',
         color: '#cbd5f5',
@@ -1055,7 +1119,7 @@
         gap: '10px'
       });
       const variableTitle = document.createElement('div');
-      variableTitle.textContent = 'スコープ変数';
+      variableTitle.textContent = uiText('variables.title', 'スコープ変数');
       Object.assign(variableTitle.style, {
         fontSize: '13px',
         color: '#bfdbfe',
@@ -1071,11 +1135,11 @@
         overflowY: 'auto'
       });
 
-      const variableReset = buildPrimaryButton('変数をクリア', '#f87171');
+      const variableReset = buildPrimaryButton(uiText('variables.reset', '変数をクリア'), '#f87171');
       variableReset.addEventListener('click', () => {
         scope = { ans: 0 };
         updateVariables();
-        notifyStatus('スコープを初期化しました。');
+        notifyStatus(statusText('scopeReset', 'スコープを初期化しました。'));
       });
 
       variableCard.appendChild(variableTitle);
@@ -1095,7 +1159,7 @@
         gap: '12px'
       });
       const graphHeader = document.createElement('div');
-      graphHeader.textContent = 'グラフ表示';
+      graphHeader.textContent = graphText('title', 'グラフ表示');
       Object.assign(graphHeader.style, {
         fontSize: '14px',
         color: '#bae6fd',
@@ -1103,7 +1167,7 @@
       });
 
       graphInput = document.createElement('input');
-      graphInput.placeholder = 'f(x) を入力 (例: sin(x) / x)';
+      graphInput.placeholder = placeholderText('graph.expression', 'f(x) を入力 (例: sin(x) / x)');
       Object.assign(graphInput.style, {
         borderRadius: '12px',
         border: '1px solid rgba(148,163,184,0.22)',
@@ -1138,7 +1202,7 @@
         });
       });
 
-      plotButton = buildPrimaryButton('グラフ描画', '#38bdf8');
+      plotButton = buildPrimaryButton(graphText('plot', 'グラフ描画'), '#38bdf8');
       plotButton.addEventListener('click', plotGraph);
 
       graphControls.appendChild(graphXMin);
@@ -1162,12 +1226,12 @@
         color: '#bae6fd',
         letterSpacing: '0.3px'
       });
-      graphMessage.textContent = 'x軸・y軸は自動スケール。単位付き値・ベクトル・複素数の虚部は除外されます。';
+      graphMessage.textContent = graphText('info', 'x軸・y軸は自動スケール。単位付き値・ベクトル・複素数の虚部は除外されます。');
 
       graphCard.appendChild(graphHeader);
       graphCard.appendChild(graphInput);
       const rangeLabel = document.createElement('div');
-      rangeLabel.textContent = '範囲 (xmin, xmax)';
+      rangeLabel.textContent = graphText('range', '範囲 (xmin, xmax)');
       Object.assign(rangeLabel.style, { fontSize: '12px', color: '#cbd5f5' });
       graphCard.appendChild(rangeLabel);
       graphCard.appendChild(graphControls);
@@ -1281,13 +1345,13 @@
         expressionInputPretty.style.display = 'none';
         expressionInput = expressionInputClassic;
         syncClassicFromPretty();
-        if (!silent) notifyStatus('入力モード: 関数表記');
+        if (!silent) notifyStatus(statusText('inputModeClassic', '入力モード: 関数表記'));
       } else {
         syncPrettyFromClassic();
         expressionInputClassic.style.display = 'none';
         expressionInputPretty.style.display = '';
         expressionInput = expressionInputPretty;
-        if (!silent) notifyStatus('入力モード: 数学記号');
+        if (!silent) notifyStatus(statusText('inputModePretty', '入力モード: 数学記号'));
       }
       expressionModeToggleClassic?.setActive(mode === 'classic');
       expressionModeTogglePretty?.setActive(mode === 'pretty');
@@ -1303,7 +1367,9 @@
       resultMode = mode;
       updateResultDisplay();
       if (!silent) {
-        notifyStatus(mode === 'symbolic' ? '結果表示: 分数/記号モード' : '結果表示: 小数モード');
+        notifyStatus(mode === 'symbolic'
+          ? statusText('resultModeSymbolic', '結果表示: 分数/記号モード')
+          : statusText('resultModeNumeric', '結果表示: 小数モード'));
       }
     }
 
@@ -1364,7 +1430,7 @@
       radianMode = rad;
       angleToggleRad.setActive(rad);
       angleToggleDeg.setActive(!rad);
-      notifyStatus(rad ? '角度単位: ラジアン' : '角度単位: 度');
+      notifyStatus(rad ? statusText('angleRadians', '角度単位: ラジアン') : statusText('angleDegrees', '角度単位: 度'));
     }
 
     function insertText(text){
@@ -1575,7 +1641,8 @@
       const trimmed = source.trim();
       if (!trimmed) {
         expressionPreviewEl.style.opacity = '0.65';
-        setPlainMathContent(expressionPreviewEl, '（入力中の式がここに可視化されます）');
+        const placeholder = expressionPreviewPlaceholder || placeholderText('preview.expression', '（入力中の式がここに可視化されます）');
+        setPlainMathContent(expressionPreviewEl, placeholder);
         return;
       }
       const displayText = expressionMode === 'pretty'
@@ -1606,7 +1673,7 @@
         });
       if (variableList.childElementCount === 0) {
         const empty = document.createElement('div');
-        empty.textContent = '（変数は未定義）';
+        empty.textContent = uiText('variables.empty', '（変数は未定義）');
         empty.style.color = '#94a3b8';
         variableList.appendChild(empty);
       }
@@ -1632,7 +1699,7 @@
       });
       if (historyBody.childElementCount === 0) {
         const placeholder = document.createElement('div');
-        placeholder.textContent = 'ここに計算履歴が表示されます。';
+        placeholder.textContent = uiText('history.empty', 'ここに計算履歴が表示されます。');
         placeholder.style.color = '#94a3b8';
         historyBody.appendChild(placeholder);
       }
@@ -1643,7 +1710,7 @@
       if (expressionInputPretty) expressionInputPretty.value = '';
       setResults(null, null);
       updateExpressionPreview();
-      notifyStatus('ワークシートをクリアしました。');
+      notifyStatus(statusText('worksheetCleared', 'ワークシートをクリアしました。'));
     }
 
     function setResults(exact, approx){
@@ -2135,7 +2202,7 @@
             return ensureFiniteNumber(si.valueOf());
           }
         }
-        const err = new Error('単位付きの値はグラフ化できません。');
+        const err = new Error(errorText('graphUnitsUnsupported', '単位付きの値はグラフ化できません。'));
         err.code = 'UNIT';
         throw err;
       }
@@ -2176,7 +2243,7 @@
       const b = Number(math ? math.number(base) : Number(base));
       const h = Number(math ? math.number(height) : Number(height));
       if (!Number.isFinite(b) || !Number.isFinite(h)) {
-        throw new Error('tetra は実数引数にのみ対応します。');
+        throw new Error(errorText('tetraRealOnly', 'tetra は実数引数にのみ対応します。'));
       }
       if (h === 0) return 1;
       if (h < 0) {
@@ -2207,10 +2274,10 @@
       const b = Number(math ? math.number(base) : Number(base));
       const v = Number(math ? math.number(value) : Number(value));
       if (!Number.isFinite(b) || !Number.isFinite(v) || b <= 0) {
-        throw new Error('slog は正の底と実数値に対応します。');
+        throw new Error(errorText('slogPositiveBase', 'slog は正の底と実数値に対応します。'));
       }
       if (Math.abs(b - 1) < 1e-8) {
-        throw new Error('slog の底は 1 から十分に離れた値を指定してください。');
+        throw new Error(errorText('slogBaseSeparated', 'slog の底は 1 から十分に離れた値を指定してください。'));
       }
       if (v <= 0) return NaN;
       if (v === 1) return 0;
@@ -2401,7 +2468,7 @@
       const top = String(numerator ?? '').trim();
       const bottom = String(denominator ?? '').trim();
       if (!bottom || bottom === '0' || bottom === '-0') {
-        throw new Error('0 で割ることはできません。');
+        throw new Error(errorText('divideByZero', '0 で割ることはできません。'));
       }
       if (!top || top === '0' || top === '-0') return '0';
       if (bottom === '1') return top;
@@ -2610,7 +2677,7 @@
 
     function integrateExpressionSymbolic(expr, variable = 'x'){
       if (!math) {
-        throw new Error('数学エンジンの初期化を待ってから積分を実行してください。');
+        throw new Error(errorText('integralNotReady', '数学エンジンの初期化を待ってから積分を実行してください。'));
       }
       const varName = normalizeVariableName(variable);
       const expressionNode = compileExpression(expr);
@@ -2620,7 +2687,7 @@
       const restored = restoreSpecialFunctionNodes(simplified);
       const result = integrateNodeToString(restored, varName);
       if (!result) {
-        throw new Error('指定した式の解析的積分を求められませんでした。numericIntegrate を利用してください。');
+        throw new Error(errorText('integralSymbolicFailed', '指定した式の解析的積分を求められませんでした。numericIntegrate を利用してください。'));
       }
       return simplifyExpressionString(result);
     }
@@ -2631,7 +2698,7 @@
       const a = Number(lower);
       const b = Number(upper);
       if (!Number.isFinite(a) || !Number.isFinite(b)) {
-        throw new Error('積分範囲は有限の実数で指定してください。');
+        throw new Error(errorText('integralRange', '積分範囲は有限の実数で指定してください。'));
       }
       const tol = Number(options.tolerance ?? 1e-8);
       const depth = Number(options.maxDepth ?? 10);
@@ -2656,7 +2723,7 @@
       const node = compileExpression(normalized);
       const derivative = math.derivative(node, varName);
       let x = Number(guess);
-      if (!Number.isFinite(x)) throw new Error('初期値には有限の数値を指定してください。');
+      if (!Number.isFinite(x)) throw new Error(errorText('newtonInitialValue', '初期値には有限の数値を指定してください。'));
       const maxIter = Number(options.maxIterations ?? 32);
       const tol = Number(options.tolerance ?? 1e-10);
       const snapshot = cloneScope(scope);
@@ -2667,19 +2734,19 @@
         if (Math.abs(fx) < tol) return x;
         const dfx = ensureFiniteNumber(derivative.evaluate(local));
         if (!Number.isFinite(dfx) || Math.abs(dfx) < 1e-12) {
-          throw new Error('導関数が 0 に近いためニュートン法が収束しません。');
+          throw new Error(errorText('newtonDerivativeZero', '導関数が 0 に近いためニュートン法が収束しません。'));
         }
         const next = x - fx / dfx;
-        if (!Number.isFinite(next)) throw new Error('反復計算が発散しました。');
+        if (!Number.isFinite(next)) throw new Error(errorText('iterationDiverged', '反復計算が発散しました。'));
         if (Math.abs(next - x) < tol) return next;
         x = next;
       }
-      throw new Error('指定した反復回数内に収束しませんでした。');
+      throw new Error(errorText('iterationNotConverged', '指定した反復回数内に収束しませんでした。'));
     }
 
     function solveLinearSystem(matrix, vector){
       if (!math || typeof math.lusolve !== 'function') {
-        throw new Error('線形方程式ソルバが利用できません。');
+        throw new Error(errorText('linearSolverUnavailable', '線形方程式ソルバが利用できません。'));
       }
       const solved = math.lusolve(matrix, vector);
       if (Array.isArray(solved) && solved.length && Array.isArray(solved[0])) {
@@ -2694,10 +2761,10 @@
 
     function newtonSystem(equations, variables, initialGuess = [], options = {}){
       if (!Array.isArray(equations) || !equations.length) {
-        throw new Error('方程式の配列を渡してください。');
+        throw new Error(errorText('systemEquationsArray', '方程式の配列を渡してください。'));
       }
       if (!Array.isArray(variables) || variables.length !== equations.length) {
-        throw new Error('変数リストは方程式の数と一致している必要があります。');
+        throw new Error(errorText('systemVariableCount', '変数リストは方程式の数と一致している必要があります。'));
       }
       const varNames = variables.map(v => String(v));
       const nodes = equations.map(expr => compileExpression(normalizeEquation(expr)));
@@ -2720,7 +2787,7 @@
         const jacobianMatrix = jacNodes.map(row => row.map(cell => ensureFiniteNumber(cell.evaluate(local))));
         const delta = solveLinearSystem(jacobianMatrix, fValues.map(val => [val]));
         if (!Array.isArray(delta) || delta.length !== size) {
-          throw new Error('ヤコビ行列の解が取得できませんでした。');
+          throw new Error(errorText('jacobianSolveFailed', 'ヤコビ行列の解が取得できませんでした。'));
         }
         let diverged = false;
         for (let i = 0; i < size; i++) {
@@ -2732,9 +2799,9 @@
           }
           current[i] = nextVal;
         }
-        if (diverged) throw new Error('反復計算が発散しました。');
+        if (diverged) throw new Error(errorText('iterationDiverged', '反復計算が発散しました。'));
       }
-      throw new Error('指定した反復回数内に収束しませんでした。');
+      throw new Error(errorText('iterationNotConverged', '指定した反復回数内に収束しませんでした。'));
     }
 
     function optimize(expr, variable = 'x', guess = 0, options = {}, maximize = false){
@@ -2748,18 +2815,18 @@
       const curvature = ensureFiniteNumber(second.evaluate(local));
       const curvatureTol = Math.abs(Number(options.curvatureTolerance ?? 1e-7));
       if (maximize && curvature > curvatureTol) {
-        throw new Error('指定の初期値付近では最大値ではなく最小値が見つかりました。');
+        throw new Error(errorText('maximizeFoundMinimum', '指定の初期値付近では最大値ではなく最小値が見つかりました。'));
       }
       if (!maximize && curvature < -curvatureTol) {
-        throw new Error('指定の初期値付近では最小値ではなく最大値が見つかりました。');
+        throw new Error(errorText('minimizeFoundMaximum', '指定の初期値付近では最小値ではなく最大値が見つかりました。'));
       }
       return { point: root, value: ensureFiniteNumber(node.evaluate(local)) };
     }
 
     function digammaReal(x){
       const value = Number(x);
-      if (!Number.isFinite(value)) throw new Error('digamma の引数は有限の実数で指定してください。');
-      if (value <= 0) throw new Error('digamma は正の実数引数にのみ対応します。');
+      if (!Number.isFinite(value)) throw new Error(errorText('digammaFinite', 'digamma の引数は有限の実数で指定してください。'));
+      if (value <= 0) throw new Error(errorText('digammaPositive', 'digamma は正の実数引数にのみ対応します。'));
       let result = 0;
       let z = value;
       while (z < 8) {
@@ -2775,12 +2842,12 @@
     function polygammaReal(order, x){
       const m = Math.floor(Number(order));
       if (!Number.isFinite(m) || m < 0) {
-        throw new Error('polygamma の階数は 0 以上の整数を指定してください。');
+        throw new Error(errorText('polygammaOrder', 'polygamma の階数は 0 以上の整数を指定してください。'));
       }
       if (m === 0) return digammaReal(x);
       const value = Number(x);
       if (!Number.isFinite(value) || value <= 0) {
-        throw new Error('polygamma は正の実数引数にのみ対応します。');
+        throw new Error(errorText('polygammaPositive', 'polygamma は正の実数引数にのみ対応します。'));
       }
       const factorial = math.factorial(m);
       const sign = m % 2 === 0 ? -1 : 1;
@@ -2801,11 +2868,11 @@
     function harmonicNumber(n, r = 1){
       const count = Math.floor(Number(n));
       if (!Number.isFinite(count) || count <= 0) {
-        throw new Error('harmonic の第1引数には 1 以上の整数を指定してください。');
+        throw new Error(errorText('harmonicFirstArg', 'harmonic の第1引数には 1 以上の整数を指定してください。'));
       }
       const order = Number(r);
       if (!Number.isFinite(order) || order <= 0) {
-        throw new Error('harmonic の第2引数には正の実数を指定してください。');
+        throw new Error(errorText('harmonicSecondArg', 'harmonic の第2引数には正の実数を指定してください。'));
       }
       let sum = 0;
       for (let k = 1; k <= count; k++) {
@@ -2817,13 +2884,13 @@
     function riemannZeta(s, terms = 256){
       const sigma = Number(s);
       if (!Number.isFinite(sigma)) {
-        throw new Error('zeta の引数は有限の実数で指定してください。');
+        throw new Error(errorText('zetaFinite', 'zeta の引数は有限の実数で指定してください。'));
       }
       if (sigma === 1) {
-        throw new Error('zeta(1) は発散します。');
+        throw new Error(errorText('zetaOneDiverges', 'zeta(1) は発散します。'));
       }
       if (sigma <= 0) {
-        throw new Error('この簡易実装では実部が正の領域でのみ定義されています。');
+        throw new Error(errorText('zetaPositiveRegion', 'この簡易実装では実部が正の領域でのみ定義されています。'));
       }
       const nTerms = Math.max(32, Math.min(8192, Math.floor(Number(terms)) || 0));
       let eta = 0;
@@ -2839,8 +2906,8 @@
 
     function logGammaReal(z){
       const value = Number(z);
-      if (!Number.isFinite(value)) throw new Error('logGamma の引数は有限の実数で指定してください。');
-      if (value <= 0) throw new Error('logGamma は正の実数引数にのみ対応します。');
+      if (!Number.isFinite(value)) throw new Error(errorText('logGammaFinite', 'logGamma の引数は有限の実数で指定してください。'));
+      if (value <= 0) throw new Error(errorText('logGammaPositive', 'logGamma は正の実数引数にのみ対応します。'));
       if (value < 0.5) {
         return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * value)) - logGammaReal(1 - value);
       }
@@ -2855,8 +2922,8 @@
 
     function gammaReal(z){
       const value = Number(z);
-      if (!Number.isFinite(value)) throw new Error('gamma の引数は有限の実数で指定してください。');
-      if (value <= 0) throw new Error('gamma は正の実数引数にのみ対応します。');
+      if (!Number.isFinite(value)) throw new Error(errorText('gammaFinite', 'gamma の引数は有限の実数で指定してください。'));
+      if (value <= 0) throw new Error(errorText('gammaPositive', 'gamma は正の実数引数にのみ対応します。'));
       const result = Math.exp(logGammaReal(value));
       if (!Number.isFinite(result)) {
         return value > 170 ? Infinity : result;
@@ -2865,28 +2932,28 @@
     }
 
     function betaReal(x, y){
-      const a = ensurePositiveFiniteNumber(x, 'beta の第1引数には正の実数を指定してください。');
-      const b = ensurePositiveFiniteNumber(y, 'beta の第2引数には正の実数を指定してください。');
+      const a = ensurePositiveFiniteNumber(x, errorText('betaFirstArg', 'beta の第1引数には正の実数を指定してください。'));
+      const b = ensurePositiveFiniteNumber(y, errorText('betaSecondArg', 'beta の第2引数には正の実数を指定してください。'));
       const sum = a + b;
       return Math.exp(logGammaReal(a) + logGammaReal(b) - logGammaReal(sum));
     }
 
     function lambertWReal(x, branch = 0){
       const value = Number(x);
-      if (!Number.isFinite(value)) throw new Error('lambertW の引数は有限の実数で指定してください。');
+      if (!Number.isFinite(value)) throw new Error(errorText('lambertFinite', 'lambertW の引数は有限の実数で指定してください。'));
       const branchIndex = Number(branch ?? 0);
       if (!Number.isFinite(branchIndex) || Math.trunc(branchIndex) !== branchIndex) {
-        throw new Error('lambertW のブランチは整数で指定してください。');
+        throw new Error(errorText('lambertBranchInteger', 'lambertW のブランチは整数で指定してください。'));
       }
       if (branchIndex !== 0 && branchIndex !== -1) {
-        throw new Error('この実装では分枝 0 と -1 のみ対応しています。');
+        throw new Error(errorText('lambertBranchRange', 'この実装では分枝 0 と -1 のみ対応しています。'));
       }
       const minValue = -1 / Math.E;
       if (branchIndex === 0 && value < minValue) {
-        throw new Error('lambertW の主枝は x ≥ -1/e の範囲でのみ定義されます。');
+        throw new Error(errorText('lambertPrincipalDomain', 'lambertW の主枝は x ≥ -1/e の範囲でのみ定義されます。'));
       }
       if (branchIndex === -1 && (value < minValue || value >= 0)) {
-        throw new Error('lambertW の分枝 -1 は -1/e ≤ x < 0 の範囲でのみ定義されます。');
+        throw new Error(errorText('lambertNegativeDomain', 'lambertW の分枝 -1 は -1/e ≤ x < 0 の範囲でのみ定義されます。'));
       }
       if (value === 0) return 0;
       if (value === minValue) return -1;
@@ -2919,7 +2986,7 @@
         const delta = f / denom;
         w -= delta;
         if (!Number.isFinite(w)) {
-          throw new Error('lambertW の計算が収束しませんでした。');
+          throw new Error(errorText('lambertNotConverged', 'lambertW の計算が収束しませんでした。'));
         }
         if (Math.abs(delta) <= 1e-14 * (1 + Math.abs(w))) {
           return w;
@@ -2939,10 +3006,10 @@
     function normalPdfReal(x, mu = 0, sigma = 1){
       const mean = Number(mu ?? 0);
       const stdev = Number(sigma ?? 1);
-      if (!Number.isFinite(mean)) throw new Error('normalPdf の平均には有限の実数を指定してください。');
-      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error('normalPdf の標準偏差は正の実数で指定してください。');
+      if (!Number.isFinite(mean)) throw new Error(errorText('normalPdfMean', 'normalPdf の平均には有限の実数を指定してください。'));
+      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error(errorText('normalPdfSigma', 'normalPdf の標準偏差は正の実数で指定してください。'));
       const value = Number(x ?? 0);
-      if (!Number.isFinite(value)) throw new Error('normalPdf の第1引数は有限の実数で指定してください。');
+      if (!Number.isFinite(value)) throw new Error(errorText('normalPdfInput', 'normalPdf の第1引数は有限の実数で指定してください。'));
       const z = (value - mean) / stdev;
       const coeff = 1 / (Math.sqrt(2 * Math.PI) * stdev);
       return coeff * Math.exp(-0.5 * z * z);
@@ -2951,10 +3018,10 @@
     function normalCdfReal(x, mu = 0, sigma = 1){
       const mean = Number(mu ?? 0);
       const stdev = Number(sigma ?? 1);
-      if (!Number.isFinite(mean)) throw new Error('normalCdf の平均には有限の実数を指定してください。');
-      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error('normalCdf の標準偏差は正の実数で指定してください。');
+      if (!Number.isFinite(mean)) throw new Error(errorText('normalCdfMean', 'normalCdf の平均には有限の実数を指定してください。'));
+      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error(errorText('normalCdfSigma', 'normalCdf の標準偏差は正の実数で指定してください。'));
       const value = Number(x ?? 0);
-      if (!Number.isFinite(value)) throw new Error('normalCdf の第1引数は有限の実数で指定してください。');
+      if (!Number.isFinite(value)) throw new Error(errorText('normalCdfInput', 'normalCdf の第1引数は有限の実数で指定してください。'));
       const z = (value - mean) / (stdev * Math.SQRT2);
       const erfValue = math && typeof math.erf === 'function' ? math.erf(z) : erfApprox(z);
       return 0.5 * (1 + erfValue);
@@ -2962,18 +3029,18 @@
 
     function normalInvReal(p, mu = 0, sigma = 1){
       const probability = Number(p);
-      if (!Number.isFinite(probability)) throw new Error('normalInv の確率は有限の実数で指定してください。');
+      if (!Number.isFinite(probability)) throw new Error(errorText('normalInvProbability', 'normalInv の確率は有限の実数で指定してください。'));
       if (probability <= 0) {
         if (probability === 0) return -Infinity;
-        throw new Error('normalInv の確率は 0 < p < 1 の範囲で指定してください。');
+        throw new Error(errorText('normalInvProbabilityRange', 'normalInv の確率は 0 < p < 1 の範囲で指定してください。'));
       }
       if (probability >= 1) {
         if (probability === 1) return Infinity;
-        throw new Error('normalInv の確率は 0 < p < 1 の範囲で指定してください。');
+        throw new Error(errorText('normalInvProbabilityRange', 'normalInv の確率は 0 < p < 1 の範囲で指定してください。'));
       }
       const mean = Number(mu ?? 0);
       const stdev = Number(sigma ?? 1);
-      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error('normalInv の標準偏差は正の実数で指定してください。');
+      if (!Number.isFinite(stdev) || stdev <= 0) throw new Error(errorText('normalInvSigma', 'normalInv の標準偏差は正の実数で指定してください。'));
       const a = [
         -3.969683028665376e+01,
         2.209460984245205e+02,
@@ -3027,18 +3094,18 @@
 
     function poissonPmfReal(k, lambda){
       const rate = Number(lambda);
-      if (!Number.isFinite(rate) || rate <= 0) throw new Error('poissonPmf の平均には正の実数を指定してください。');
+      if (!Number.isFinite(rate) || rate <= 0) throw new Error(errorText('poissonMean', 'poissonPmf の平均には正の実数を指定してください。'));
       const count = Math.floor(Number(k));
-      if (!Number.isFinite(count) || count < 0) throw new Error('poissonPmf の回数には 0 以上の整数を指定してください。');
+      if (!Number.isFinite(count) || count < 0) throw new Error(errorText('poissonCount', 'poissonPmf の回数には 0 以上の整数を指定してください。'));
       const logProb = count * Math.log(rate) - rate - logGammaReal(count + 1);
       return Math.exp(logProb);
     }
 
     function poissonCdfReal(k, lambda){
       const rate = Number(lambda);
-      if (!Number.isFinite(rate) || rate <= 0) throw new Error('poissonCdf の平均には正の実数を指定してください。');
+      if (!Number.isFinite(rate) || rate <= 0) throw new Error(errorText('poissonCdfMean', 'poissonCdf の平均には正の実数を指定してください。'));
       const count = Math.floor(Number(k));
-      if (!Number.isFinite(count) || count < 0) throw new Error('poissonCdf の回数には 0 以上の整数を指定してください。');
+      if (!Number.isFinite(count) || count < 0) throw new Error(errorText('poissonCdfCount', 'poissonCdf の回数には 0 以上の整数を指定してください。'));
       let term = Math.exp(-rate);
       let sum = term;
       for (let i = 1; i <= count; i++) {
@@ -3051,12 +3118,12 @@
 
     function binomialPmfReal(k, n, p){
       const trials = Math.floor(Number(n));
-      if (!Number.isFinite(trials) || trials < 0) throw new Error('binomialPmf の試行回数には 0 以上の整数を指定してください。');
+      if (!Number.isFinite(trials) || trials < 0) throw new Error(errorText('binomialTrials', 'binomialPmf の試行回数には 0 以上の整数を指定してください。'));
       const successes = Math.floor(Number(k));
-      if (!Number.isFinite(successes) || successes < 0) throw new Error('binomialPmf の成功回数には 0 以上の整数を指定してください。');
+      if (!Number.isFinite(successes) || successes < 0) throw new Error(errorText('binomialSuccesses', 'binomialPmf の成功回数には 0 以上の整数を指定してください。'));
       if (successes > trials) return 0;
       const prob = Number(p);
-      if (!Number.isFinite(prob) || prob < 0 || prob > 1) throw new Error('binomialPmf の成功確率は 0〜1 の範囲で指定してください。');
+      if (!Number.isFinite(prob) || prob < 0 || prob > 1) throw new Error(errorText('binomialProbability', 'binomialPmf の成功確率は 0〜1 の範囲で指定してください。'));
       if (prob === 0) return successes === 0 ? 1 : 0;
       if (prob === 1) return successes === trials ? 1 : 0;
       const logCoeff = logGammaReal(trials + 1) - logGammaReal(successes + 1) - logGammaReal(trials - successes + 1);
@@ -3066,11 +3133,11 @@
 
     function binomialCdfReal(k, n, p){
       const trials = Math.floor(Number(n));
-      if (!Number.isFinite(trials) || trials < 0) throw new Error('binomialCdf の試行回数には 0 以上の整数を指定してください。');
+      if (!Number.isFinite(trials) || trials < 0) throw new Error(errorText('binomialCdfTrials', 'binomialCdf の試行回数には 0 以上の整数を指定してください。'));
       const successes = Math.floor(Number(k));
-      if (!Number.isFinite(successes) || successes < 0) throw new Error('binomialCdf の成功回数には 0 以上の整数を指定してください。');
+      if (!Number.isFinite(successes) || successes < 0) throw new Error(errorText('binomialCdfSuccesses', 'binomialCdf の成功回数には 0 以上の整数を指定してください。'));
       const prob = Number(p);
-      if (!Number.isFinite(prob) || prob < 0 || prob > 1) throw new Error('binomialCdf の成功確率は 0〜1 の範囲で指定してください。');
+      if (!Number.isFinite(prob) || prob < 0 || prob > 1) throw new Error(errorText('binomialCdfProbability', 'binomialCdf の成功確率は 0〜1 の範囲で指定してください。'));
       if (successes >= trials) return 1;
       if (successes < 0) return 0;
       let sum = 0;
@@ -3083,18 +3150,18 @@
 
     function logitReal(p){
       const prob = Number(p);
-      if (!Number.isFinite(prob)) throw new Error('logit の引数は有限の実数で指定してください。');
+      if (!Number.isFinite(prob)) throw new Error(errorText('logitFinite', 'logit の引数は有限の実数で指定してください。'));
       if (prob <= 0 || prob >= 1) {
         if (prob === 0) return -Infinity;
         if (prob === 1) return Infinity;
-        throw new Error('logit は 0 と 1 の間の値で指定してください。');
+        throw new Error(errorText('logitRange', 'logit は 0 と 1 の間の値で指定してください。'));
       }
       return Math.log(prob / (1 - prob));
     }
 
     function sigmoidReal(x){
       const value = Number(x);
-      if (!Number.isFinite(value)) throw new Error('sigmoid の引数は有限の実数で指定してください。');
+      if (!Number.isFinite(value)) throw new Error(errorText('sigmoidFinite', 'sigmoid の引数は有限の実数で指定してください。'));
       if (value >= 0) {
         const expNeg = Math.exp(-value);
         return 1 / (1 + expNeg);
@@ -3394,7 +3461,7 @@
 
       function convertFactorialInputToNumber(value, target){
         if (value == null) {
-          throw new Error('factorial の引数には数値を指定してください。');
+          throw new Error(errorText('factorialNumeric', 'factorial の引数には数値を指定してください。'));
         }
         if (typeof value === 'number') {
           return value;
@@ -3402,7 +3469,7 @@
         if (typeof value === 'bigint') {
           const numeric = Number(value);
           if (!Number.isFinite(numeric)) {
-            throw new Error('factorial の引数には有限の実数を指定してください。');
+            throw new Error(errorText('factorialFinite', 'factorial の引数には有限の実数を指定してください。'));
           }
           return numeric;
         }
@@ -3412,11 +3479,11 @@
         if (typeof value === 'string') {
           const trimmed = value.trim();
           if (!trimmed) {
-            throw new Error('factorial の引数には数値を指定してください。');
+            throw new Error(errorText('factorialNumeric', 'factorial の引数には数値を指定してください。'));
           }
           const parsed = Number(trimmed);
           if (!Number.isFinite(parsed)) {
-            throw new Error('factorial の引数には有限の実数を指定してください。');
+            throw new Error(errorText('factorialFinite', 'factorial の引数には有限の実数を指定してください。'));
           }
           return parsed;
         }
@@ -3427,18 +3494,18 @@
           return value.toNumber();
         }
         if (target?.isComplex?.(value)) {
-          throw new Error('factorial の引数には実数を指定してください。');
+          throw new Error(errorText('factorialReal', 'factorial の引数には実数を指定してください。'));
         }
         if (value && typeof value.valueOf === 'function' && value.valueOf() !== value) {
           return convertFactorialInputToNumber(value.valueOf(), target);
         }
-        throw new Error('factorial の引数には数値を指定してください。');
+        throw new Error(errorText('factorialNumeric', 'factorial の引数には数値を指定してください。'));
       }
 
       function installFactorialFallback(target, preferFraction){
         if (!target || typeof target.factorial !== 'function') return;
         const original = target.factorial;
-        const parseInteger = createIntegerParser(target, 'factorial の引数には 0 以上の整数を指定してください。');
+        const parseInteger = createIntegerParser(target, errorText('factorialNonNegativeInteger', 'factorial の引数には 0 以上の整数を指定してください。'));
         const convertResult = (value) => convertBigIntToPreferred(target, value, preferFraction);
         const compute = (value) => {
           let parsedInt = null;
@@ -3452,21 +3519,21 @@
           }
           const numericValue = convertFactorialInputToNumber(value, target);
           if (!Number.isFinite(numericValue)) {
-            throw new Error('factorial の引数には有限の実数を指定してください。');
+            throw new Error(errorText('factorialFinite', 'factorial の引数には有限の実数を指定してください。'));
           }
           if (numericValue < -1) {
-            throw new Error('factorial の引数は -1 より大きい実数を指定してください。');
+            throw new Error(errorText('factorialGreaterThanMinusOne', 'factorial の引数は -1 より大きい実数を指定してください。'));
           }
           const rounded = Math.round(numericValue);
           if (Math.abs(numericValue - rounded) < 1e-12) {
             if (rounded < 0) {
-              throw new Error('factorial は負の整数では定義されません。');
+              throw new Error(errorText('factorialNegativeInteger', 'factorial は負の整数では定義されません。'));
             }
             return convertResult(factorialBigInt(BigInt(rounded)));
           }
           const gammaInput = numericValue + 1;
           if (gammaInput <= 0) {
-            throw new Error('factorial の引数は -1 より大きい実数を指定してください。');
+            throw new Error(errorText('factorialGreaterThanMinusOne', 'factorial の引数は -1 より大きい実数を指定してください。'));
           }
           const gammaValue = gammaReal(gammaInput);
           if (!Number.isFinite(gammaValue)) {
@@ -3487,9 +3554,9 @@
         if (!target) return;
         if (typeof target.permutations === 'function') {
           const originalPerm = target.permutations;
-          const parseInteger = createIntegerParser(target, 'permutations の引数には 0 以上の整数を指定してください。');
+          const parseInteger = createIntegerParser(target, errorText('permutationsInteger', 'permutations の引数には 0 以上の整数を指定してください。'));
           const convertResult = (value) => convertBigIntToPreferred(target, value, preferFraction);
-          const invalidRangeError = new Error('permutations の第2引数は第1引数以下の整数で指定してください。');
+          const invalidRangeError = new Error(errorText('permutationsRange', 'permutations の第2引数は第1引数以下の整数で指定してください。'));
           const computePerm = (nVal, kVal) => {
             const nInt = parseInteger(nVal);
             const kInt = kVal == null ? nInt : parseInteger(kVal);
@@ -3509,10 +3576,10 @@
         }
         if (typeof target.combinations === 'function') {
           const originalComb = target.combinations;
-          const parseInteger = createIntegerParser(target, 'combinations の引数には 0 以上の整数を指定してください。');
+          const parseInteger = createIntegerParser(target, errorText('combinationsInteger', 'combinations の引数には 0 以上の整数を指定してください。'));
           const convertResult = (value) => convertBigIntToPreferred(target, value, preferFraction);
-          const invalidRangeError = new Error('combinations の第2引数は第1引数以下の整数で指定してください。');
-          const missingArgError = new Error('combinations の第2引数には 0 以上の整数を指定してください。');
+          const invalidRangeError = new Error(errorText('combinationsRange', 'combinations の第2引数は第1引数以下の整数で指定してください。'));
+          const missingArgError = new Error(errorText('combinationsSecondArg', 'combinations の第2引数には 0 以上の整数を指定してください。'));
           const computeComb = (nVal, kVal) => {
             if (kVal == null) throw missingArgError;
             const nInt = parseInteger(nVal);
@@ -3577,7 +3644,7 @@
             ? targetMath
             : numericPeer;
           if (!logContext || typeof logContext.log !== 'function') {
-            throw new Error('自然対数関数 ln が利用できません。');
+            throw new Error(errorText('lnUnavailable', '自然対数関数 ln が利用できません。'));
           }
           return logContext.log(value);
         };
@@ -3587,7 +3654,7 @@
           const hasUpper = upper != null;
           if (hasLower || hasUpper) {
             if (!hasLower || !hasUpper) {
-              throw new Error('定積分を求める場合は下限と上限を両方指定してください。');
+              throw new Error(errorText('integralBounds', '定積分を求める場合は下限と上限を両方指定してください。'));
             }
             const lowerVal = evaluateMathArgument(lower);
             const upperVal = evaluateMathArgument(upper);
@@ -3709,7 +3776,7 @@
             ? targetMath
             : numericPeer;
           if (!subtractContext || !erfContext) {
-            throw new Error('erfc は現在利用できません。');
+            throw new Error(errorText('erfcUnavailable', 'erfc は現在利用できません。'));
           }
           const one = typeof subtractContext.bignumber === 'function'
             ? subtractContext.bignumber(1)
@@ -3735,7 +3802,7 @@
 
     function evaluateExpression(){
       if (!math) {
-        notifyStatus('数学エンジンの初期化を待っています…');
+        notifyStatus(statusText('engineWaiting', '数学エンジンの初期化を待っています…'));
         return;
       }
       const rawExpr = expressionMode === 'pretty'
@@ -3747,7 +3814,7 @@
         expressionInputClassic.value = expr;
       }
       if (!expr) {
-        notifyStatus('式を入力してください。');
+        notifyStatus(statusText('enterExpression', '式を入力してください。'));
         return;
       }
       try {
@@ -3782,36 +3849,37 @@
         updateVariables();
         totalComputations += 1;
         try { awardXp && awardXp(12, { type: 'compute', expression: expr }); } catch {}
-        notifyStatus('計算が完了しました。');
+        notifyStatus(statusText('calculationComplete', '計算が完了しました。'));
       } catch (err) {
         latestHistoryEntry = null;
-        setResults('Error', err.message || String(err));
-        notifyStatus('エラー: ' + (err.message || err));
+        const errorLabel = resultText('errorLabel', 'Error');
+        setResults(errorLabel, err.message || String(err));
+        notifyStatus(statusText('error', 'エラー: {message}', { message: err.message || err }));
       }
     }
 
     function plotGraph(){
       if (!math) {
-        notifyStatus('数学エンジンの初期化を待っています…');
+        notifyStatus(statusText('engineWaiting', '数学エンジンの初期化を待っています…'));
         return;
       }
       const exprRaw = graphInput.value.trim();
       const expr = convertPrettyToAscii(exprRaw);
       if (!expr) {
-        notifyStatus('グラフ式を入力してください。');
+        notifyStatus(statusText('enterGraphExpression', 'グラフ式を入力してください。'));
         return;
       }
       let compiled;
       try {
         compiled = math.parse(expr);
       } catch (err) {
-        graphMessage.textContent = '式の解析に失敗しました: ' + err.message;
+        graphMessage.textContent = graphText('parseFailed', '式の解析に失敗しました: {message}', { message: err.message || '' });
         return;
       }
       const xmin = Number(graphXMin.value);
       const xmax = Number(graphXMax.value);
       if (!Number.isFinite(xmin) || !Number.isFinite(xmax) || xmin >= xmax) {
-        graphMessage.textContent = '範囲は有限で xmin < xmax となるように設定してください。';
+        graphMessage.textContent = graphText('invalidRange', '範囲は有限で xmin < xmax となるように設定してください。');
         return;
       }
       const baseScope = cloneScope(scope);
@@ -3842,11 +3910,13 @@
       }
       if (!points.length) {
         const reasons = [];
-        if (rejectedUnits) reasons.push(`単位付き ${rejectedUnits}`);
-        if (rejectedComposite) reasons.push(`ベクトル/行列 ${rejectedComposite}`);
-        if (rejectedComplex) reasons.push(`複素数 ${rejectedComplex}`);
-        const extra = reasons.length ? ` (除外: ${reasons.join(', ')})` : '';
-        graphMessage.textContent = `描画できる点がありません${extra}。`;
+        if (rejectedUnits) reasons.push(graphText('reasons.units', '単位付き: {count}', { count: rejectedUnits }));
+        if (rejectedComposite) reasons.push(graphText('reasons.composite', 'ベクトル/行列: {count}', { count: rejectedComposite }));
+        if (rejectedComplex) reasons.push(graphText('reasons.complex', '複素数: {count}', { count: rejectedComplex }));
+        const detail = reasons.length
+          ? graphText('noPointsDetail', ' (除外: {reasons})', { reasons: reasons.join(', ') })
+          : '';
+        graphMessage.textContent = graphText('noPoints', '描画できる点がありません{detail}。', { detail });
         return;
       }
       if (ymax === ymin) {
@@ -3854,13 +3924,13 @@
         ymin -= 1;
       }
       drawGraph(points, [xmin, xmax], [ymin, ymax]);
-      graphMessage.textContent = `描画ポイント: ${points.length} / ${total + 1}`;
+      graphMessage.textContent = graphText('summary', '描画ポイント: {count} / {total}', { count: points.length, total: total + 1 });
       const extras = [];
-      if (rejectedUnits) extras.push(`単位付き: ${rejectedUnits}`);
-      if (rejectedComposite) extras.push(`ベクトル/行列: ${rejectedComposite}`);
-      if (rejectedComplex) extras.push(`複素数: ${rejectedComplex}`);
+      if (rejectedUnits) extras.push(graphText('reasons.units', '単位付き: {count}', { count: rejectedUnits }));
+      if (rejectedComposite) extras.push(graphText('reasons.composite', 'ベクトル/行列: {count}', { count: rejectedComposite }));
+      if (rejectedComplex) extras.push(graphText('reasons.complex', '複素数: {count}', { count: rejectedComplex }));
       if (extras.length) {
-        graphMessage.textContent += ` / 除外 ${extras.join(', ')}`;
+        graphMessage.textContent += graphText('summaryExtra', ' / 除外 {items}', { items: extras.join(', ') });
       }
       totalGraphs += 1;
       try { awardXp && awardXp(8, { type: 'graph', expression: expr }); } catch {}
@@ -3879,7 +3949,7 @@
       if (active) return;
       active = true;
       expressionInput?.focus();
-      notifyStatus('数学ラボの準備が整いました。');
+      notifyStatus(statusText('ready', '数学ラボの準備が整いました。'));
       refreshShortcutState();
     }
 
@@ -3922,11 +3992,25 @@
         if (destroyed) return;
         bindMath(mathjs);
         loadingOverlay.remove();
-        notifyStatus('数学エンジンを初期化しました。');
+        notifyStatus(statusText('engineInitialized', '数学エンジンを初期化しました。'));
       })
       .catch(err => {
         if (destroyed) return;
-        loadingOverlay.innerHTML = `<div style="color:#fca5a5;font-size:14px;text-align:center;max-width:320px;line-height:1.6">数学エンジンの読み込みに失敗しました。インターネット接続を確認してください。<br>${err?.message || err}</div>`;
+        loadingOverlay.innerHTML = '';
+        const failureMessage = document.createElement('div');
+        Object.assign(failureMessage.style, {
+          color: '#fca5a5',
+          fontSize: '14px',
+          textAlign: 'center',
+          maxWidth: '320px',
+          lineHeight: '1.6',
+          whiteSpace: 'pre-line',
+          margin: '0 auto'
+        });
+        const errorMessage = err?.message || String(err || '');
+        const failureText = statusText('loadFailed', '数学エンジンの読み込みに失敗しました。インターネット接続を確認してください。');
+        failureMessage.textContent = errorMessage ? `${failureText}\n${errorMessage}` : failureText;
+        loadingOverlay.appendChild(failureMessage);
       });
 
     return { start, stop, destroy, getScore };

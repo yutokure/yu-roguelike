@@ -11872,6 +11872,210 @@
         "levelWithBase": "Lv.{effective} (基{base})",
         "hp": "{current}/{max}{baseSuffix}"
       }
+    },
+
+    "games": {
+      "mathLab": {
+        "keypad": {
+          "groups": {
+            "standard": "標準関数",
+            "trigonometry": "三角・双曲線",
+            "complex": "複素数・行列",
+            "analysis": "解析・特殊関数",
+            "statistics": "確率・統計",
+            "numerical": "数値解法",
+            "programmer": "プログラマー・情報",
+            "constants": "定数・単位"
+          }
+        },
+        "units": {
+          "templates": {
+            "length": "長さ: 5 cm → inch",
+            "mass": "重さ: 70 kg → lb",
+            "energy": "エネルギー: 1 kWh → J",
+            "temperature": "温度: 25 degC → degF",
+            "speed": "速度: 100 km/h → m/s"
+          }
+        },
+        "ui": {
+          "unitTemplates": {
+            "title": "ユニット変換テンプレ",
+            "insert": "挿入"
+          },
+          "worksheet": { "title": "ワークシート" },
+          "inputMode": {
+            "classic": "関数表記",
+            "pretty": "数学記号"
+          },
+          "preview": { "title": "数式プレビュー" },
+          "actions": {
+            "evaluate": "計算 (Shift+Enter)",
+            "clear": "リセット",
+            "copyResult": "結果をコピー"
+          },
+          "history": {
+            "title": "計算履歴",
+            "empty": "ここに計算履歴が表示されます。"
+          },
+          "variables": {
+            "title": "スコープ変数",
+            "reset": "変数をクリア",
+            "empty": "（変数は未定義）"
+          },
+          "angle": {
+            "radians": "Radians",
+            "degrees": "Degrees"
+          }
+        },
+        "placeholders": {
+          "worksheet": {
+            "classic": "式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem([\"x+y=3\",\"x-y=1\"],[\"x\",\"y\"]))",
+            "pretty": "例: √(2) + 1/3, 2π, (x+1)/(x−1) など数学記号で入力"
+          },
+          "preview": {
+            "expression": "（入力中の式がここに可視化されます）"
+          },
+          "graph": {
+            "expression": "f(x) を入力 (例: sin(x) / x)"
+          }
+        },
+        "status": {
+          "initializing": "準備中…",
+          "loading": "数学エンジンを読み込んでいます…",
+          "copySuccess": "結果をクリップボードにコピーしました。",
+          "copyFailure": "コピーに失敗しました…",
+          "scopeReset": "スコープを初期化しました。",
+          "inputModeClassic": "入力モード: 関数表記",
+          "inputModePretty": "入力モード: 数学記号",
+          "resultModeSymbolic": "結果表示: 分数/記号モード",
+          "resultModeNumeric": "結果表示: 小数モード",
+          "angleRadians": "角度単位: ラジアン",
+          "angleDegrees": "角度単位: 度",
+          "worksheetCleared": "ワークシートをクリアしました。",
+          "engineWaiting": "数学エンジンの初期化を待っています…",
+          "enterExpression": "式を入力してください。",
+          "calculationComplete": "計算が完了しました。",
+          "error": "エラー: {message}",
+          "enterGraphExpression": "グラフ式を入力してください。",
+          "ready": "数学ラボの準備が整いました。",
+          "engineInitialized": "数学エンジンを初期化しました。",
+          "loadFailed": "数学エンジンの読み込みに失敗しました。インターネット接続を確認してください。"
+        },
+        "results": {
+          "title": "結果",
+          "symbolicToggle": "分数/記号",
+          "numericToggle": "小数",
+          "symbolicLabel": "Exact / Symbolic",
+          "numericLabel": "Approximate (10進)",
+          "moreDigits": "More Digits",
+          "moreDigitsHint": "小数表示を+5桁拡張",
+          "errorLabel": "Error"
+        },
+        "graph": {
+          "title": "グラフ表示",
+          "plot": "グラフ描画",
+          "range": "範囲 (xmin, xmax)",
+          "info": "x軸・y軸は自動スケール。単位付き値・ベクトル・複素数の虚部は除外されます。",
+          "parseFailed": "式の解析に失敗しました: {message}",
+          "invalidRange": "範囲は有限で xmin < xmax となるように設定してください。",
+          "noPoints": "描画できる点がありません{detail}。",
+          "noPointsDetail": " (除外: {reasons})",
+          "summary": "描画ポイント: {count} / {total}",
+          "summaryExtra": " / 除外 {items}",
+          "reasons": {
+            "units": "単位付き: {count}",
+            "composite": "ベクトル/行列: {count}",
+            "complex": "複素数: {count}"
+          }
+        },
+        "errors": {
+          "radixRange": "基数は 2 以上 30 以下の整数で指定してください。",
+          "radixInvalidCharacter": "指定した基数に対応しない文字が含まれています。",
+          "expressionParse": "式を解釈できませんでした。文字列または math.js のノードを渡してください。",
+          "notFinite": "有限の数値ではありません。",
+          "numberConversion": "数値へ変換できませんでした。",
+          "positiveRealRequired": "正の実数を指定してください。",
+          "complexRealOnly": "複素数は実数部のみを使用できません。",
+          "matrixToScalar": "行列はスカラーに変換できません。",
+          "arrayToScalar": "配列はスカラーに変換できません。",
+          "graphUnitsUnsupported": "単位付きの値はグラフ化できません。",
+          "tetraRealOnly": "tetra は実数引数にのみ対応します。",
+          "slogPositiveBase": "slog は正の底と実数値に対応します。",
+          "slogBaseSeparated": "slog の底は 1 から十分に離れた値を指定してください。",
+          "divideByZero": "0 で割ることはできません。",
+          "integralNotReady": "数学エンジンの初期化を待ってから積分を実行してください。",
+          "integralSymbolicFailed": "指定した式の解析的積分を求められませんでした。numericIntegrate を利用してください。",
+          "integralRange": "積分範囲は有限の実数で指定してください。",
+          "integralBounds": "定積分を求める場合は下限と上限を両方指定してください。",
+          "newtonInitialValue": "初期値には有限の数値を指定してください。",
+          "newtonDerivativeZero": "導関数が 0 に近いためニュートン法が収束しません。",
+          "iterationDiverged": "反復計算が発散しました。",
+          "iterationNotConverged": "指定した反復回数内に収束しませんでした。",
+          "linearSolverUnavailable": "線形方程式ソルバが利用できません。",
+          "systemEquationsArray": "方程式の配列を渡してください。",
+          "systemVariableCount": "変数リストは方程式の数と一致している必要があります。",
+          "jacobianSolveFailed": "ヤコビ行列の解が取得できませんでした。",
+          "maximizeFoundMinimum": "指定の初期値付近では最大値ではなく最小値が見つかりました。",
+          "minimizeFoundMaximum": "指定の初期値付近では最小値ではなく最大値が見つかりました。",
+          "digammaFinite": "digamma の引数は有限の実数で指定してください。",
+          "digammaPositive": "digamma は正の実数引数にのみ対応します。",
+          "polygammaOrder": "polygamma の階数は 0 以上の整数を指定してください。",
+          "polygammaPositive": "polygamma は正の実数引数にのみ対応します。",
+          "harmonicFirstArg": "harmonic の第1引数には 1 以上の整数を指定してください。",
+          "harmonicSecondArg": "harmonic の第2引数には正の実数を指定してください。",
+          "zetaFinite": "zeta の引数は有限の実数で指定してください。",
+          "zetaOneDiverges": "zeta(1) は発散します。",
+          "zetaPositiveRegion": "この簡易実装では実部が正の領域でのみ定義されています。",
+          "logGammaFinite": "logGamma の引数は有限の実数で指定してください。",
+          "logGammaPositive": "logGamma は正の実数引数にのみ対応します。",
+          "gammaFinite": "gamma の引数は有限の実数で指定してください。",
+          "gammaPositive": "gamma は正の実数引数にのみ対応します。",
+          "betaFirstArg": "beta の第1引数には正の実数を指定してください。",
+          "betaSecondArg": "beta の第2引数には正の実数を指定してください。",
+          "lambertFinite": "lambertW の引数は有限の実数で指定してください。",
+          "lambertBranchInteger": "lambertW のブランチは整数で指定してください。",
+          "lambertBranchRange": "この実装では分枝 0 と -1 のみ対応しています。",
+          "lambertPrincipalDomain": "lambertW の主枝は x ≥ -1/e の範囲でのみ定義されます。",
+          "lambertNegativeDomain": "lambertW の分枝 -1 は -1/e ≤ x < 0 の範囲でのみ定義されます。",
+          "lambertNotConverged": "lambertW の計算が収束しませんでした。",
+          "normalPdfMean": "normalPdf の平均には有限の実数を指定してください。",
+          "normalPdfSigma": "normalPdf の標準偏差は正の実数で指定してください。",
+          "normalPdfInput": "normalPdf の第1引数は有限の実数で指定してください。",
+          "normalCdfMean": "normalCdf の平均には有限の実数を指定してください。",
+          "normalCdfSigma": "normalCdf の標準偏差は正の実数で指定してください。",
+          "normalCdfInput": "normalCdf の第1引数は有限の実数で指定してください。",
+          "normalInvProbability": "normalInv の確率は有限の実数で指定してください。",
+          "normalInvProbabilityRange": "normalInv の確率は 0 < p < 1 の範囲で指定してください。",
+          "normalInvSigma": "normalInv の標準偏差は正の実数で指定してください。",
+          "poissonMean": "poissonPmf の平均には正の実数を指定してください。",
+          "poissonCount": "poissonPmf の回数には 0 以上の整数を指定してください。",
+          "poissonCdfMean": "poissonCdf の平均には正の実数を指定してください。",
+          "poissonCdfCount": "poissonCdf の回数には 0 以上の整数を指定してください。",
+          "binomialTrials": "binomialPmf の試行回数には 0 以上の整数を指定してください。",
+          "binomialSuccesses": "binomialPmf の成功回数には 0 以上の整数を指定してください。",
+          "binomialProbability": "binomialPmf の成功確率は 0〜1 の範囲で指定してください。",
+          "binomialCdfTrials": "binomialCdf の試行回数には 0 以上の整数を指定してください。",
+          "binomialCdfSuccesses": "binomialCdf の成功回数には 0 以上の整数を指定してください。",
+          "binomialCdfProbability": "binomialCdf の成功確率は 0〜1 の範囲で指定してください。",
+          "logitFinite": "logit の引数は有限の実数で指定してください。",
+          "logitRange": "logit は 0 と 1 の間の値で指定してください。",
+          "sigmoidFinite": "sigmoid の引数は有限の実数で指定してください。",
+          "factorialNumeric": "factorial の引数には数値を指定してください。",
+          "factorialFinite": "factorial の引数には有限の実数を指定してください。",
+          "factorialReal": "factorial の引数には実数を指定してください。",
+          "factorialGreaterThanMinusOne": "factorial の引数は -1 より大きい実数を指定してください。",
+          "factorialNegativeInteger": "factorial は負の整数では定義されません。",
+          "factorialNonNegativeInteger": "factorial の引数には 0 以上の整数を指定してください。",
+          "permutationsRange": "permutations の第2引数は第1引数以下の整数で指定してください。",
+          "permutationsInteger": "permutations の引数には 0 以上の整数を指定してください。",
+          "combinationsRange": "combinations の第2引数は第1引数以下の整数で指定してください。",
+          "combinationsSecondArg": "combinations の第2引数には 0 以上の整数を指定してください。",
+          "combinationsInteger": "combinations の引数には 0 以上の整数を指定してください。",
+          "lnUnavailable": "自然対数関数 ln が利用できません。",
+          "erfcUnavailable": "erfc は現在利用できません。"
+        }
+      }
     }
+
   };
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this);

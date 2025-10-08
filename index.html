@@ -969,59 +969,59 @@
             <div id="tab-achievements" class="tab-content" style="display:none;" role="tabpanel" aria-labelledby="tab-button-achievements">
                 <div class="row">
                     <div class="achievement-layout">
-                        <div class="achievement-subtabs" role="tablist" aria-label="実績と統計のサブタブ">
-                            <button id="achievements-subtab-button-achievements" class="subtab-button active" role="tab" aria-selected="true" aria-controls="achievements-subtab-achievements">実績</button>
-                            <button id="achievements-subtab-button-stats" class="subtab-button" role="tab" aria-selected="false" aria-controls="achievements-subtab-stats">統計</button>
+                        <div class="achievement-subtabs" role="tablist" aria-label="実績と統計のサブタブ" data-i18n-attr="aria-label:achievements.ui.subtabs.ariaLabel">
+                            <button id="achievements-subtab-button-achievements" class="subtab-button active" role="tab" aria-selected="true" aria-controls="achievements-subtab-achievements" data-i18n="achievements.ui.subtabs.achievements">実績</button>
+                            <button id="achievements-subtab-button-stats" class="subtab-button" role="tab" aria-selected="false" aria-controls="achievements-subtab-stats" data-i18n="achievements.ui.subtabs.stats">統計</button>
                         </div>
                         <section id="achievements-subtab-achievements" class="achievement-subtab active" role="tabpanel" aria-labelledby="achievements-subtab-button-achievements">
                             <header class="achievement-header">
-                                <h3>実績</h3>
-                                <p>冒険やツールの利用状況に応じて自動的に更新されます。カテゴリごとの進捗を確認しましょう。</p>
+                                <h3 data-i18n="achievements.ui.achievements.title">実績</h3>
+                                <p data-i18n="achievements.ui.achievements.description">冒険やツールの利用状況に応じて自動的に更新されます。カテゴリごとの進捗を確認しましょう。</p>
                             </header>
                             <div id="achievements-fallback" class="achievements-fallback achievements-fallback--info" role="status" aria-live="polite">
-                                実績システムを読み込み中です… この表示が続く場合は再読み込みしてください。
+                                <span data-i18n="achievements.ui.fallback">実績システムを読み込み中です… この表示が続く場合は再読み込みしてください。</span>
                             </div>
                             <div id="achievement-category-summary" class="achievement-category-summary" aria-live="polite"></div>
                             <div id="achievement-list" class="achievement-list" aria-live="polite"></div>
                             <section class="custom-achievement-section" aria-labelledby="custom-achievement-title">
                                 <div class="custom-achievement-header">
-                                    <h4 id="custom-achievement-title">カスタマイズ能動実績</h4>
-                                    <p>自分で目標や報酬を設定し、ToDoリストや周回目標として使える実績です。</p>
+                                    <h4 id="custom-achievement-title" data-i18n="achievements.ui.custom.title">カスタマイズ能動実績</h4>
+                                    <p data-i18n="achievements.ui.custom.description">自分で目標や報酬を設定し、ToDoリストや周回目標として使える実績です。</p>
                                 </div>
                                 <div id="custom-achievement-list" class="custom-achievement-list" aria-live="polite"></div>
                                 <form id="custom-achievement-form" class="custom-achievement-form" autocomplete="off">
                                     <fieldset>
-                                        <legend>新しいカスタム実績を追加</legend>
+                                        <legend data-i18n="achievements.ui.custom.form.legend">新しいカスタム実績を追加</legend>
                                         <div class="form-grid">
-                                            <label>タイトル
-                                                <input type="text" id="custom-achievement-title-input" required placeholder="例: 毎日ログイン">
+                                            <label data-i18n="achievements.ui.custom.form.title.label">タイトル
+                                                <input type="text" id="custom-achievement-title-input" required placeholder="例: 毎日ログイン" data-i18n-attr="placeholder:achievements.ui.custom.form.title.placeholder">
                                             </label>
-                                            <label>説明
-                                                <input type="text" id="custom-achievement-desc-input" placeholder="何を達成するのか">
+                                            <label data-i18n="achievements.ui.custom.form.description.label">説明
+                                                <input type="text" id="custom-achievement-desc-input" placeholder="何を達成するのか" data-i18n-attr="placeholder:achievements.ui.custom.form.description.placeholder">
                                             </label>
-                                            <label>報酬メモ
-                                                <input type="text" id="custom-achievement-reward-input" placeholder="ご褒美や備考をメモ">
+                                            <label data-i18n="achievements.ui.custom.form.reward.label">報酬メモ
+                                                <input type="text" id="custom-achievement-reward-input" placeholder="ご褒美や備考をメモ" data-i18n-attr="placeholder:achievements.ui.custom.form.reward.placeholder">
                                             </label>
-                                            <label>タイプ
+                                            <label data-i18n="achievements.ui.custom.form.type.label">タイプ
                                                 <select id="custom-achievement-type-input">
-                                                    <option value="todo">ToDo（1回の完了）</option>
-                                                    <option value="repeatable">繰り返し達成</option>
-                                                    <option value="counter">カウント管理</option>
+                                                    <option value="todo" data-i18n="achievements.ui.custom.form.type.todo">ToDo（1回の完了）</option>
+                                                    <option value="repeatable" data-i18n="achievements.ui.custom.form.type.repeatable">繰り返し達成</option>
+                                                    <option value="counter" data-i18n="achievements.ui.custom.form.type.counter">カウント管理</option>
                                                 </select>
                                             </label>
-                                            <label class="target-field">目標回数（任意）
-                                                <input type="number" id="custom-achievement-target-input" min="1" step="1" placeholder="例: 10">
+                                            <label class="target-field" data-i18n="achievements.ui.custom.form.target.label">目標回数（任意）
+                                                <input type="number" id="custom-achievement-target-input" min="1" step="1" placeholder="例: 10" data-i18n-attr="placeholder:achievements.ui.custom.form.target.placeholder">
                                             </label>
                                         </div>
-                                        <button type="submit">実績を追加</button>
+                                        <button type="submit" data-i18n="achievements.ui.custom.form.submit">実績を追加</button>
                                     </fieldset>
                                 </form>
                             </section>
                         </section>
                         <section id="achievements-subtab-stats" class="achievement-subtab" role="tabpanel" aria-labelledby="achievements-subtab-button-stats" hidden>
                             <header class="achievement-header">
-                                <h3>統計</h3>
-                                <p>冒険やツール操作で蓄積された累積記録が一覧表示されます。</p>
+                                <h3 data-i18n="achievements.ui.stats.title">統計</h3>
+                                <p data-i18n="achievements.ui.stats.description">冒険やツール操作で蓄積された累積記録が一覧表示されます。</p>
                             </header>
                             <div id="statistics-summary" class="statistics-summary" aria-live="polite"></div>
                             <div id="statistics-list" class="statistics-list" aria-live="polite"></div>

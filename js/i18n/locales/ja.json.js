@@ -10886,8 +10886,31 @@
         "locked": "未達成"
       },
       "rewardMemo": "報酬メモ: {reward}",
+      "difficulty": {
+        "unplayed": "未攻略",
+        "labels": {
+          "veryEasy": "とても易しい",
+          "easy": "易しい",
+          "normal": "ノーマル",
+          "second": "セカンド",
+          "hard": "ハード",
+          "veryHard": "ベリーハード"
+        }
+      },
       "summary": {
-        "comingSoon": "Coming Soon"
+        "comingSoon": "Coming Soon",
+        "categoryRatio": "{unlocked}/{total}",
+        "highlights": {
+          "playTime": "総プレイ時間",
+          "dungeonsCleared": "攻略ダンジョン",
+          "highestDifficulty": "最高難易度",
+          "totalExp": "累計EXP",
+          "totalExpValue": "{value} EXP",
+          "hatenaTriggered": "ハテナ発動回数",
+          "hatenaTriggeredValue": "{value} 回",
+          "hatenaPositiveRate": "ハテナ好影響率",
+          "hatenaPositiveRateValue": "{value}%"
+        }
       },
       "meta": {
         "repeatableCount": "累計達成回数: {count}",
@@ -10906,6 +10929,142 @@
           "minutes": "{minutes}分 {seconds}秒",
           "seconds": "{seconds}秒",
           "ratio": "{current} / {target}"
+        }
+      },
+      "stats": {
+        "sections": {
+          "core": { "title": "ダンジョンの記録" },
+          "blockdim": { "title": "ブロック次元の記録" },
+          "hatena": { "title": "ハテナブロックの記録" },
+          "tools": { "title": "ツール利用状況" }
+        },
+        "entries": {
+          "core": {
+            "playTime": { "label": "総プレイ時間", "description": "ゲームを起動していた累計時間。" },
+            "totalSteps": { "label": "総移動距離", "description": "これまでに歩いたマスの合計。", "value": "{value} マス" },
+            "floorsAdvanced": { "label": "踏破した階層数", "description": "階段で進んだ累積階層。" },
+            "highestFloorReached": { "label": "最高到達階層", "description": "これまでに到達した最も深い階層。", "value": "{value}F" },
+            "dungeonsCleared": { "label": "攻略したダンジョン数", "description": "通常・ブロック次元を含む攻略回数。" },
+            "enemiesDefeated": { "label": "撃破した敵", "description": "倒した敵の合計数。" },
+            "bossesDefeated": { "label": "ボス撃破数", "description": "撃破したボスの数。" },
+            "totalExpEarned": { "label": "累計獲得EXP", "description": "探索やミニゲームで得た経験値の合計。", "value": "{value} EXP" },
+            "damageDealt": { "label": "累計与ダメージ", "description": "敵に与えたダメージ総量。" },
+            "damageTaken": { "label": "累計被ダメージ", "description": "敵やギミックから受けたダメージ総量。" },
+            "chestsOpened": { "label": "開けた宝箱", "description": "探索中に開封した宝箱の数。" },
+            "rareChestsOpened": { "label": "開けたレア宝箱", "description": "開封したレア宝箱の数。" },
+            "normalChestsOpened": { "label": "開けた通常宝箱", "description": "通常宝箱を開封した回数。" },
+            "healingItemsUsed": { "label": "使用した回復アイテム", "description": "ポーションやHP強化などを使用した回数。" },
+            "autoItemsTriggered": { "label": "オートアイテム発動回数", "description": "HPが減ったとき自動で発動した回復アイテムの回数。" },
+            "deaths": { "label": "戦闘不能回数", "description": "ゲームオーバーになった回数。" },
+            "highestDifficultyIndex": { "label": "最高攻略難易度", "description": "これまで攻略した最も高い難易度。" }
+          },
+          "blockdim": {
+            "gatesOpened": { "label": "Gate 起動回数", "description": "ブロック次元へ突入した回数。" },
+            "bookmarksAdded": { "label": "ブックマーク登録数", "description": "保存したブックマークの数。" },
+            "randomSelections": { "label": "ランダム選択回数", "description": "等確率ランダム選択を使った回数。" },
+            "weightedSelections": { "label": "重み付き選択回数", "description": "狙い撃ちランダムを使った回数。" }
+          },
+          "hatena": {
+            "blocksAppeared": { "label": "出現したブロック", "description": "探索中に見つけたハテナブロックの総数。", "value": "{value} 個" },
+            "blocksTriggered": { "label": "発動したブロック", "description": "踏んで発動させたハテナブロックの回数。", "value": "{value} 回" },
+            "positiveEffects": { "label": "好影響の回数", "description": "好影響（レベルアップ、報酬など）になった回数。", "value": "{value} 回" },
+            "neutralEffects": { "label": "中立効果の回数", "description": "好影響でも悪影響でもなかった結果の回数。", "value": "{value} 回" },
+            "negativeEffects": { "label": "悪影響の回数", "description": "悪影響（被弾や弱体化など）になった回数。", "value": "{value} 回" },
+            "expGained": { "label": "累計獲得EXP", "description": "ハテナブロックから得た経験値の合計。", "value": "{value} EXP" },
+            "expLost": { "label": "累計消失EXP", "description": "ハテナブロックで失った経験値の合計。", "value": "{value} EXP" },
+            "bombDamageTaken": { "label": "爆発による被ダメージ", "description": "爆発効果で受けたダメージの総量。", "value": "{value} ダメージ" },
+            "bombHealed": { "label": "爆発で回復したHP", "description": "爆発の回復効果で得たHPの総量。", "value": "{value} HP" },
+            "bombGuards": { "label": "ガード発動回数", "description": "爆発ガード効果でダメージを軽減した回数。", "value": "{value} 回" },
+            "normalChestsSpawned": { "label": "通常宝箱生成数", "description": "通常宝箱を生成した回数。", "value": "{value} 個" },
+            "rareChestsSpawned": { "label": "レア宝箱生成数", "description": "レア宝箱を生成した回数。", "value": "{value} 個" },
+            "itemsGranted": { "label": "獲得アイテム数", "description": "報酬として受け取ったアイテムの数。", "value": "{value} 個" },
+            "enemyAmbushes": { "label": "奇襲された敵数", "description": "奇襲イベントで出現した敵の総数。", "value": "{value} 体" },
+            "bombsTriggered": { "label": "爆発イベント回数", "description": "爆発の効果を引いた回数。", "value": "{value} 回" },
+            "levelUps": { "label": "レベルアップ回数", "description": "ハテナブロックの効果でレベルアップした回数。", "value": "{value} 回" },
+            "levelUpLevels": { "label": "累計上昇レベル", "description": "ハテナブロックで獲得したレベルの合計。", "value": "{value} レベル" },
+            "levelDowns": { "label": "レベルダウン回数", "description": "ハテナブロックの効果でレベルダウンした回数。", "value": "{value} 回" },
+            "levelDownLevels": { "label": "累計減少レベル", "description": "ハテナブロックで失ったレベルの合計。", "value": "{value} レベル" },
+            "statusesApplied": { "label": "状態異常付与回数", "description": "ハテナブロックで状態異常を受けた回数。", "value": "{value} 回" },
+            "statusesResisted": { "label": "状態異常無効化", "description": "ハテナブロックの状態異常を打ち消した回数。", "value": "{value} 回" },
+            "abilityUps": { "label": "能力上昇回数", "description": "ハテナブロックでステータスが上昇した回数。", "value": "{value} 回" },
+            "abilityDowns": { "label": "能力低下回数", "description": "ハテナブロックでステータスが低下した回数。", "value": "{value} 回" }
+          },
+          "tools": {
+            "tabVisits": { "label": "ツールズタブ訪問回数", "description": "ツールズタブを開いた回数。" },
+            "modExports": { "label": "Mod 出力回数", "description": "Mod 作成ツールで出力した回数。" },
+            "blockdataSaves": { "label": "BlockData 保存回数", "description": "BlockData エディタで保存した回数。" },
+            "blockdataDownloads": { "label": "BlockData ダウンロード回数", "description": "BlockData エディタからダウンロードした回数。" },
+            "sandboxSessions": { "label": "サンドボックス操作回数", "description": "サンドボックスUIを開いた回数。" }
+          }
+        }
+      },
+      "custom": {
+        "empty": "カスタム実績はまだありません。フォームから追加できます。",
+        "actions": {
+          "delete": "削除",
+          "reset": "リセット"
+        },
+        "todo": {
+          "statusCompleted": "状態: 完了済み",
+          "statusIncomplete": "状態: 未完了",
+          "markComplete": "完了にする",
+          "markIncomplete": "未完了に戻す"
+        },
+        "repeatable": {
+          "info": "累計達成回数: {count} 回",
+          "infoWithTarget": "累計達成回数: {count} 回 / 目標 {target} 回"
+        },
+        "counter": {
+          "info": "現在値: {value}",
+          "infoWithTarget": "現在値: {value} / 目標 {target}"
+        },
+        "defaultTitle": "カスタム実績",
+        "confirmDelete": "このカスタム実績を削除しますか？"
+      },
+      "ui": {
+        "subtabs": {
+          "ariaLabel": "実績と統計のサブタブ",
+          "achievements": "実績",
+          "stats": "統計"
+        },
+        "achievements": {
+          "title": "実績",
+          "description": "冒険やツールの利用状況に応じて自動的に更新されます。カテゴリごとの進捗を確認しましょう。"
+        },
+        "stats": {
+          "title": "統計",
+          "description": "冒険やツール操作で蓄積された累積記録が一覧表示されます。"
+        },
+        "fallback": "実績システムを読み込み中です… この表示が続く場合は再読み込みしてください。",
+        "custom": {
+          "title": "カスタマイズ能動実績",
+          "description": "自分で目標や報酬を設定し、ToDoリストや周回目標として使える実績です。",
+          "form": {
+            "legend": "新しいカスタム実績を追加",
+            "title": {
+              "label": "タイトル",
+              "placeholder": "例: 毎日ログイン"
+            },
+            "description": {
+              "label": "説明",
+              "placeholder": "何を達成するのか"
+            },
+            "reward": {
+              "label": "報酬メモ",
+              "placeholder": "ご褒美や備考をメモ"
+            },
+            "type": {
+              "label": "タイプ",
+              "todo": "ToDo（1回の完了）",
+              "repeatable": "繰り返し達成",
+              "counter": "カウント管理"
+            },
+            "target": {
+              "label": "目標回数（任意）",
+              "placeholder": "例: 10"
+            },
+            "submit": "実績を追加"
+          }
         }
       },
       "auto": {

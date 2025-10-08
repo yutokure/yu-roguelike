@@ -18850,6 +18850,11 @@ document.addEventListener('app:rerender', () => {
     } catch (err) {
         console.warn('[app] Failed to refresh BlockDim UI on rerender', err);
     }
+    try {
+        window.AchievementSystem?.refresh?.();
+    } catch (err) {
+        console.warn('[app] Failed to refresh achievements on rerender', err);
+    }
 });
 
 async function initMiniExpUI() {

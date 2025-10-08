@@ -12229,6 +12229,233 @@
         "cleared": "入力をクリアしました。"
       }
     },
+    "games": {
+      "clockHub": {
+        "errors": {
+          "noContainer": "Clock Hubにはコンテナが必要です"
+        },
+        "header": {
+          "title": "時計ユーティリティハブ",
+          "subtitle": "デジタル／アナログ／詳細情報を切り替え",
+          "exp": "獲得EXP: {xp}"
+        },
+        "tabs": {
+          "digital": "デジタル時計",
+          "analog": "アナログ時計",
+          "detail": "詳細"
+        },
+        "detailTabs": {
+          "overview": "概要",
+          "progress": "進捗率",
+          "remain": "残り時間",
+          "stats": "情報一覧",
+          "calendar": "カレンダー"
+        },
+        "digital": {
+          "format": {
+            "24h": "24時間制",
+            "12h": "12時間制"
+          },
+          "period": {
+            "am": "午前",
+            "pm": "午後"
+          },
+          "dateLine": "{year}年{month}月{day}日（{weekday}）",
+          "timeLine12": "{period}{hour}時{minute}分{second}秒",
+          "timeLine24": "{hour}時{minute}分{second}秒"
+        },
+        "analog": {
+          "type": {
+            "12h": "通常アナログ時計",
+            "24h": "24時間制アナログ時計"
+          }
+        },
+        "weekdays": {
+          "0": "日",
+          "1": "月",
+          "2": "火",
+          "3": "水",
+          "4": "木",
+          "5": "金",
+          "6": "土"
+        },
+        "dates": {
+          "full": "{year}年{month}月{day}日（{weekday}）"
+        },
+        "era": {
+          "reiwa": "令和",
+          "heisei": "平成",
+          "showa": "昭和",
+          "taisho": "大正",
+          "meiji": "明治",
+          "format": "{era}{year}年",
+          "unknown": "不明"
+        },
+        "eto": {
+          "stems": {
+            "0": "甲",
+            "1": "乙",
+            "2": "丙",
+            "3": "丁",
+            "4": "戊",
+            "5": "己",
+            "6": "庚",
+            "7": "辛",
+            "8": "壬",
+            "9": "癸"
+          },
+          "branches": {
+            "0": "子",
+            "1": "丑",
+            "2": "寅",
+            "3": "卯",
+            "4": "辰",
+            "5": "巳",
+            "6": "午",
+            "7": "未",
+            "8": "申",
+            "9": "酉",
+            "10": "戌",
+            "11": "亥"
+          },
+          "format": "{stem}{branch}"
+        },
+        "season": {
+          "winter": "冬",
+          "spring": "春",
+          "summer": "夏",
+          "autumn": "秋",
+          "unknown": "不明"
+        },
+        "solarTerms": {
+          "risshun": "立春",
+          "usui": "雨水",
+          "keichitsu": "啓蟄",
+          "shunbun": "春分",
+          "seimei": "清明",
+          "kokuu": "穀雨",
+          "rikka": "立夏",
+          "shoman": "小満",
+          "boshu": "芒種",
+          "geshi": "夏至",
+          "shosho": "小暑",
+          "taisho": "大暑",
+          "risshu": "立秋",
+          "shoshoLimitHeat": "処暑",
+          "hakuro": "白露",
+          "shubun": "秋分",
+          "kanro": "寒露",
+          "soko": "霜降",
+          "rittou": "立冬",
+          "shosetsu": "小雪",
+          "taisetsu": "大雪",
+          "touji": "冬至",
+          "shokan": "小寒",
+          "dahan": "大寒",
+          "nextDate": "{year}年{month}月{day}日",
+          "description": "{previous} → 次は{next}（{nextDate}、{duration}）"
+        },
+        "duration": {
+          "prefix": {
+            "future": "あと",
+            "past": "前"
+          },
+          "unit": {
+            "year": "{value}年",
+            "day": "{value}日",
+            "hour": "{value}時間",
+            "minute": "{value}分",
+            "second": "{value}秒"
+          },
+          "joiner": ""
+        },
+        "progress": {
+          "labels": {
+            "millennium": "千年紀",
+            "century": "世紀",
+            "decade": "年代",
+            "year": "年",
+            "month": "月",
+            "day": "日",
+            "hour": "時",
+            "minute": "分",
+            "second": "秒"
+          },
+          "percent": "{value}%"
+        },
+        "remaining": {
+          "labels": {
+            "nextSecond": "次の秒",
+            "nextMinute": "次の分",
+            "nextHour": "次の時",
+            "nextDay": "次の日",
+            "nextMonth": "次の月",
+            "nextYear": "次の年"
+          },
+          "delta": "（±{millis}ms）",
+          "value": "{duration}{delta}"
+        },
+        "stats": {
+          "labels": {
+            "unix": "UNIX時間",
+            "ticks": "経過ミリ秒",
+            "iso": "ISO 8601",
+            "yearday": "年内通算日",
+            "daySeconds": "今日の経過秒",
+            "timezone": "タイムゾーン"
+          },
+          "yeardayValue": "第{value}日目",
+          "daySecondsValue": "{value}秒",
+          "timezoneFallback": "ローカル"
+        },
+        "calendar": {
+          "settings": {
+            "title": "休暇／出勤日のカスタム設定",
+            "holidayTitle": "祝日・休暇として登録",
+            "workdayTitle": "出勤日として登録",
+            "add": "追加",
+            "empty": "登録なし",
+            "remove": "削除"
+          },
+          "info": {
+            "summary": "日付: {date}",
+            "era": "和暦: {era}｜干支: {eto}",
+            "season": "季節: {season}｜四半期: 第{quarter}四半期",
+            "progress": "年内通算日: 第{dayOfYear}日｜ISO週番号: 第{isoWeek}週｜月内第{weekOfMonth}週",
+            "status": "区分: {status}"
+          },
+          "status": {
+            "rest": "休み",
+            "workday": "出勤日想定",
+            "holiday": "祝日登録あり",
+            "workdayOverride": "出勤登録あり",
+            "separator": " / "
+          },
+          "controls": {
+            "prev": "← 前月",
+            "next": "翌月 →",
+            "today": "今日"
+          },
+          "monthLabel": "{year}年{month}月",
+          "today": "本日: {date}"
+        },
+        "common": {
+          "yes": "はい",
+          "no": "いいえ"
+        },
+        "overview": {
+          "gregorian": "西暦: {year}年 {month}月{day}日（{weekday}）",
+          "era": "和暦: {era}",
+          "eto": "干支: {eto}｜皇紀: {imperial}",
+          "season": "季節: {season}｜二十四節気: {solarTerm}",
+          "leapYear": "うるう年: {value}"
+        },
+        "xp": {
+          "note": "秒:+{second} / 分:+{minute} / 時:+{hour} / 日:+{day} / 月:+{month} / 年:+{year} / 世紀:+{century} / 千年紀:+{millennium}"
+        }
+      }
+    },
+
     "statusModal": {
       "title": "プレイヤーステータス",
       "sections": {

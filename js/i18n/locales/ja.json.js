@@ -10367,6 +10367,65 @@
           "goodRateLabel": "良率"
         }
       },
+      "populite": {
+        "title": "ポピュラス風 ミニ神様モード",
+        "hud": {
+          "faithStatus": "信仰状態",
+          "timeRemaining": "残り時間",
+          "mana": "マナ",
+          "population": "人口",
+          "disasterTimer": "災害タイマー",
+          "nextDisaster": "次の災害",
+          "bestRecord": "最速達成",
+          "paused": "一時停止中",
+          "manaValue": "{current} / {max}",
+          "populationValue": "{current} / {target}",
+          "disasterCountdown": "{value} 秒",
+          "bestTimeValue": "{value}秒"
+        },
+        "controls": {
+          "title": "操作と魔法",
+          "instructions": "左ドラッグ: 整地（Shiftで掘削） / 右クリック: 祈りで信者を招く<br>スペース: 一時停止 / 数字キー1:守護 2:隆起 3:浄化雨"
+        },
+        "spells": {
+          "barrier": "1) 守護バリア ({cost})",
+          "uplift": "2) 隆起 ({cost})",
+          "purify": "3) 浄化雨 ({cost})"
+        },
+        "status": {
+          "manaShort": "マナが不足しています…",
+          "prayerCooldown": "祈りはまだ冷却中です…",
+          "noSettlements": "守るべき集落がありません",
+          "victory": "人口目標を達成しました！",
+          "defeatPopulation": "信者がいなくなってしまった…",
+          "timeout": "時間切れです…",
+          "paused": "一時停止中",
+          "resumed": "再開"
+        },
+        "log": {
+          "title": "出来事ログ",
+          "prayerStarted": "祈りの力で信者が集まり始めた！",
+          "tsunami": "🌊 津波が低地を襲います！",
+          "volcano": "🌋 火山が噴火！ ({x},{y})",
+          "newSettlement": "新しい集落が誕生 ({x},{y}) 高さ{level}",
+          "populationMilestone": "人口が{population}人を突破！",
+          "settlementDestroyed": "集落({x},{y})が壊滅してしまった…",
+          "settlementDamaged": "集落({x},{y})が{lost}人の被害",
+          "barrierCast": "守護バリアが集落({x},{y})を包み込む",
+          "upliftCast": "大地が隆起し安全な高地が生まれた ({x},{y})",
+          "purifyCast": "浄化の雨で災害の兆候が洗い流された",
+          "inventoryFull": "インベントリに空きがなく聖なる欠片は見送られた…",
+          "bestRecord": "最速記録を更新！ {time}秒",
+          "result": "▶ 結果: {message}",
+          "difficulty": "難易度: {difficulty}",
+          "goal": "人口目標 {target} / 制限時間 {duration}秒"
+        },
+        "popup": {
+          "buildingLevel": "建築Lv{level}",
+          "populationGain": "+{value}信者",
+          "barrierBlocked": "バリアが防いだ！"
+        }
+      },
       "checkers": {
         "hud": {
           "turn": {

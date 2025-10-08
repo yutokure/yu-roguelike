@@ -344,7 +344,14 @@
           "wrap": "羅列",
           "detail": "詳細"
         },
-        "list": "ミニゲーム一覧",
+        "actions": {
+          "select": "選択",
+          "selected": "選択中"
+        },
+        "list": {
+          "label": "ミニゲーム一覧",
+          "empty": "該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。"
+        },
         "category": {
           "all": "すべて",
           "action": "アクション",
@@ -734,6 +741,7 @@
         },
         "start": "開始",
         "pause": "一時停止",
+        "resume": "再開",
         "restart": "再開/再起動",
         "quit": "終了",
         "hud": {
@@ -741,7 +749,23 @@
           "sp": "SP",
           "expLabel": "EXP "
         },
-        "placeholder": "左の一覧からミニゲームを選択してください。"
+        "placeholder": {
+          "default": "左の一覧からミニゲームを選択してください。",
+          "loading": "読み込み中...",
+          "loadFailed": "読み込みに失敗しました。",
+          "chooseFromCategory": "カテゴリからゲームを選んでください。",
+          "gameLoading": "ミニゲームを読み込んでいます…",
+          "gameLoadFailed": "ミニゲームのロードに失敗しました。",
+          "gameStartFailed": "ミニゲームの開始に失敗しました。",
+          "selected": "{name} を選択しました。",
+          "chooseSequence": "カテゴリ→ゲームの順に選んでください。"
+        },
+        "records": {
+          "bestScore": "ベストスコア",
+          "totalPlays": "通算プレイ",
+          "totalExp": "通算獲得EXP",
+          "totalExpValue": "{sign}{value}"
+        }
       }
     },
 

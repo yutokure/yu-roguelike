@@ -344,7 +344,14 @@
           "wrap": "Wrap",
           "detail": "Detail"
         },
-        "list": "Mini-game list",
+        "actions": {
+          "select": "Select",
+          "selected": "Selected"
+        },
+        "list": {
+          "label": "Mini-game list",
+          "empty": "No mini-games found for this category. Add more under games/."
+        },
         "category": {
           "all": "All",
           "action": "Action",
@@ -734,6 +741,7 @@
         },
         "start": "Start",
         "pause": "Pause",
+        "resume": "Resume",
         "restart": "Resume/Restart",
         "quit": "Quit",
         "hud": {
@@ -741,7 +749,23 @@
           "sp": "SP",
           "expLabel": "EXP "
         },
-        "placeholder": "Select a mini-game from the list on the left."
+        "placeholder": {
+          "default": "Select a mini-game from the list on the left.",
+          "loading": "Loading...",
+          "loadFailed": "Failed to load.",
+          "chooseFromCategory": "Pick a game from a category.",
+          "gameLoading": "Loading the mini-game...",
+          "gameLoadFailed": "Failed to load the mini-game.",
+          "gameStartFailed": "Failed to start the mini-game.",
+          "selected": "Selected {name}.",
+          "chooseSequence": "Choose a category, then a game."
+        },
+        "records": {
+          "bestScore": "Best score",
+          "totalPlays": "Total plays",
+          "totalExp": "Total EXP earned",
+          "totalExpValue": "{sign}{value}"
+        }
       }
     },
 

@@ -687,6 +687,96 @@
             "name": "3D Graphics Tester",
             "description": "Run visual demos and ray-tracing style renders to benchmark for EXP."
           },
+          "graphicsTester": {
+            "title": "3D Graphics Tester",
+            "badges": {
+              "webgl2": "WebGL2",
+              "rayMarching": "Ray Marching",
+              "benchmark": "Benchmark"
+            },
+            "errors": {
+              "webgl2Unavailable": "WebGL2 is unavailable",
+              "webglInitFailed": "Failed to initialize the WebGL2 context."
+            },
+            "gpuInfo": {
+              "title": "GPU Info",
+              "unsupported": {
+                "message": "WebGL2 is unsupported or disabled.",
+                "description": "This module requires a WebGL2-capable device or browser. Enable WebGL2 or try a compatible browser."
+              },
+              "unknown": "Unknown",
+              "antialias": {
+                "enabled": "ON",
+                "disabled": "OFF"
+              },
+              "entries": {
+                "vendor": "Vendor: {value}",
+                "renderer": "Renderer: {value}",
+                "version": "WebGL: {value}",
+                "shading": "GLSL: {value}",
+                "maxTextureSize": "Max Texture Size: {value}",
+                "maxCubeMap": "Max Cube Map: {value}",
+                "textureUnits": "Texture Units: {value}",
+                "antialias": "Antialias: {value}"
+              }
+            },
+            "controls": {
+              "demoSelect": {
+                "label": "Demo",
+                "options": {
+                  "objectLab": "Object Lab (Placement Demo)",
+                  "ray": "Ray-Tracing Style Demo",
+                  "gallery": "Tech Gallery"
+                },
+                "note": "Drag to orbit and scroll to zoom. The ray-tracing demo is GPU intensive—close other tabs before benchmarking."
+              },
+              "objectLab": {
+                "title": "Object Placement",
+                "actions": {
+                  "addCube": "Add Cube",
+                  "addSphere": "Add Sphere",
+                  "addCylinder": "Add Cylinder",
+                  "clear": "Clear All",
+                  "autoRotate": "Auto Rotate"
+                },
+                "autoRotateState": {
+                  "on": "ON",
+                  "off": "OFF"
+                },
+                "logs": {
+                  "addCube": "Added a cube.",
+                  "addSphere": "Added a sphere.",
+                  "addCylinder": "Added a cylinder.",
+                  "cleared": "Cleared placements.",
+                  "autoRotate": "Auto rotate: {state}"
+                }
+              },
+              "ray": {
+                "title": "Ray-Tracing Settings",
+                "bounces": "Bounce Count",
+                "exposure": "Exposure"
+              },
+              "gallery": {
+                "title": "Tech Gallery Controls",
+                "description": "Explore ring instancing, dynamic motion blur, and material effects."
+              },
+              "benchmark": {
+                "title": "Benchmark",
+                "start": "Run 6-second benchmark"
+              }
+            },
+            "log": {
+              "demoSwitch": "Switched demo: {label}",
+              "benchmarkStart": "Starting benchmark (high load)",
+              "benchmarkResult": "Average FPS: {fps} / Objects drawn: {count}"
+            },
+            "overlay": {
+              "fps": "FPS: {value}",
+              "objects": "Objects: {count}",
+              "bounces": "Bounces: {count}",
+              "gallery": "Gallery Demo"
+            }
+          },
           "physics_sandbox": {
             "name": "Physics Sandbox",
             "description": "Combine fire, water, vines, lightning, and circuits in a playful physics lab."

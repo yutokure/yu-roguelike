@@ -687,6 +687,96 @@
             "name": "3Dグラフィックテスター",
             "description": "3D技術デモとレイトレーシング風レンダリング・ベンチマーク搭載のトイ系テスター"
           },
+          "graphicsTester": {
+            "title": "3Dグラフィックテスター",
+            "badges": {
+              "webgl2": "WebGL2",
+              "rayMarching": "レイマーチング",
+              "benchmark": "ベンチマーク"
+            },
+            "errors": {
+              "webgl2Unavailable": "WebGL2 が利用できません",
+              "webglInitFailed": "WebGL2 コンテキストの初期化に失敗しました。"
+            },
+            "gpuInfo": {
+              "title": "GPU情報",
+              "unsupported": {
+                "message": "WebGL2非対応または無効化されています",
+                "description": "このモジュールは WebGL2 対応デバイス／ブラウザが必要です。設定で WebGL2 を有効化するか、対応ブラウザで再度お試しください。"
+              },
+              "unknown": "不明",
+              "antialias": {
+                "enabled": "ON",
+                "disabled": "OFF"
+              },
+              "entries": {
+                "vendor": "ベンダー: {value}",
+                "renderer": "レンダラー: {value}",
+                "version": "WebGL: {value}",
+                "shading": "GLSL: {value}",
+                "maxTextureSize": "最大テクスチャサイズ: {value}",
+                "maxCubeMap": "最大キューブマップ: {value}",
+                "textureUnits": "テクスチャユニット: {value}",
+                "antialias": "アンチエイリアス: {value}"
+              }
+            },
+            "controls": {
+              "demoSelect": {
+                "label": "デモ選択",
+                "options": {
+                  "objectLab": "オブジェクトラボ (配置デモ)",
+                  "ray": "レイトレーシング風デモ",
+                  "gallery": "技術ギャラリー"
+                },
+                "note": "マウスドラッグで視点操作、ホイールでズーム。レイトレーシング風デモは GPU 負荷が高いためベンチマーク時は他タブを閉じてください。"
+              },
+              "objectLab": {
+                "title": "オブジェクト配置",
+                "actions": {
+                  "addCube": "キューブ追加",
+                  "addSphere": "スフィア追加",
+                  "addCylinder": "シリンダー追加",
+                  "clear": "全削除",
+                  "autoRotate": "オート回転"
+                },
+                "autoRotateState": {
+                  "on": "ON",
+                  "off": "OFF"
+                },
+                "logs": {
+                  "addCube": "キューブを追加しました",
+                  "addSphere": "スフィアを追加しました",
+                  "addCylinder": "シリンダーを追加しました",
+                  "cleared": "配置をリセットしました",
+                  "autoRotate": "オート回転: {state}"
+                }
+              },
+              "ray": {
+                "title": "レイトレーシング風設定",
+                "bounces": "反射回数",
+                "exposure": "露光"
+              },
+              "gallery": {
+                "title": "技術ギャラリー操作",
+                "description": "リング状インスタンシング・動的モーションブラー・マテリアル演出を観察できます。"
+              },
+              "benchmark": {
+                "title": "ベンチマーク",
+                "start": "6秒間ベンチマーク開始"
+              }
+            },
+            "log": {
+              "demoSwitch": "デモ切り替え: {label}",
+              "benchmarkStart": "ベンチマークを開始します (高負荷)",
+              "benchmarkResult": "平均FPS: {fps} / 描画オブジェクト: {count}"
+            },
+            "overlay": {
+              "fps": "FPS: {value}",
+              "objects": "オブジェクト: {count}",
+              "bounces": "反射回数: {count}",
+              "gallery": "ギャラリーデモ"
+            }
+          },
           "physics_sandbox": {
             "name": "物理遊び",
             "description": "火・水・ツタ・雷・回路を組み合わせるトイ系物理サンドボックス"

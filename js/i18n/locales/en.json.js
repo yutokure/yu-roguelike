@@ -10328,6 +10328,76 @@
     },
 
     "minigame": {
+      "acchimuitehoi": {
+        "instructions": {
+          "rpsTitle": "1. Decide roles with Rock-Paper-Scissors",
+          "rpsHint": "Win to attack, lose to defend.",
+          "directionTitle": "2. Acchi Muite Hoi",
+          "directionHint": "Choose a direction within {seconds} s.",
+          "logTitle": "Battle Log"
+        },
+        "ui": {
+          "stage": {
+            "rps": "Decide offense and defense with rock-paper-scissors",
+            "attack": "Attack phase: quickly choose a direction to point.",
+            "defense": "Defense phase: quickly choose a different direction."
+          }
+        },
+        "hands": {
+          "rock": "Rock",
+          "scissors": "Scissors",
+          "paper": "Paper"
+        },
+        "direction": {
+          "up": "Up",
+          "down": "Down",
+          "left": "Left",
+          "right": "Right"
+        },
+        "role": {
+          "attack": "Attack",
+          "defense": "Defense"
+        },
+        "countdown": {
+          "idle": "Time --.- s left",
+          "remaining": "Time {seconds} s left"
+        },
+        "score": {
+          "primary": "Hits landed: {attackWins} / Dodges: {defenseWins}",
+          "secondary": "Attack streak: {attackStreak} (best {bestAttackStreak}) / Defense streak: {defenseStreak} (best {bestDefenseStreak})",
+          "tertiaryWithRate": "Rounds: {rounds} / Success rate: {successRate}%",
+          "tertiaryEmpty": "Rounds: 0 / Success rate: --%"
+        },
+        "status": {
+          "ready": "Pick a hand to start!",
+          "tie": "Tie with {hand}! Try again.",
+          "playerWin": "You won! Point a direction in time to land a hit.",
+          "cpuWin": "CPU attacks! Choose a different direction in time to dodge.",
+          "attack": {
+            "hit": "Hit! {direction} for {exp} EXP.",
+            "hitBonus": "Hit! {direction} for {exp} EXP (streak {streak}).",
+            "miss": "Missed… CPU looked {cpuDirection}.",
+            "timeout": "Time up… missed your chance."
+          },
+          "defense": {
+            "success": "Dodged! Avoided {cpuDirection}! {exp} EXP.",
+            "successBonus": "Dodged! Avoided {cpuDirection} (streak {streak}).",
+            "fail": "Failed to dodge… also looked {direction}.",
+            "timeout": "Time up… took the hit."
+          },
+          "paused": "Paused"
+        },
+        "log": {
+          "tie": "Tie: keep going.",
+          "rpsResult": "RPS: You={playerHand} / CPU={cpuHand} → {role}",
+          "attackSuccess": "Offense success: CPU looked {cpuDirection} → {exp} EXP",
+          "attackFail": "Offense miss: CPU {cpuDirection} / You {playerDirection}",
+          "defenseSuccess": "Defense success: CPU {cpuDirection} / You {playerDirection} → {exp} EXP",
+          "defenseFail": "Defense failed: hit by matching direction.",
+          "attackTimeout": "Offense timeout: chance slipped away.",
+          "defenseTimeout": "Defense timeout: reacted too late."
+        }
+      },
       "taiko_drum": {
         "title": "Taiko Rhythm ({difficulty})",
         "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",

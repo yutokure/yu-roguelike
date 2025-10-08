@@ -10354,13 +10354,30 @@
           "accuracyLabel": "精度",
           "expLabel": "EXP"
         },
-        "result": {
-          "title": "結果",
-          "judgementTemplate": "{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}",
-          "summaryTemplate": "{maxLabel} {maxCombo} | {totalExpLabel} {score} ({bonusLabel} {clearBonus}) | {goodRateLabel} {rate}%",
-          "totalExpLabel": "総EXP",
-          "clearBonusLabel": "クリアボーナス",
-          "goodRateLabel": "良率"
+      "result": {
+        "title": "結果",
+        "judgementTemplate": "{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}",
+        "summaryTemplate": "{maxLabel} {maxCombo} | {totalExpLabel} {score} ({bonusLabel} {clearBonus}) | {goodRateLabel} {rate}%",
+        "totalExpLabel": "総EXP",
+        "clearBonusLabel": "クリアボーナス",
+        "goodRateLabel": "良率"
+      }
+    },
+      "piano_tiles": {
+        "tips": "タップ or D/F/J/Kキーでレーンを叩き、長いノーツは離さずにホールド。",
+        "hud": {
+          "template": "{difficultyLabel}: {difficulty} | {hitsLabel}: {hits} | {missesLabel}: {misses} | {comboLabel}: {combo} ({maxLabel} {maxCombo}) | {accuracyLabel}: {accuracy}%",
+          "difficultyLabel": "難易度",
+          "hitsLabel": "成功",
+          "missesLabel": "ミス",
+          "comboLabel": "コンボ",
+          "maxLabel": "最大",
+          "accuracyLabel": "精度"
+        },
+        "difficulty": {
+          "easy": "EASY",
+          "normal": "NORMAL",
+          "hard": "HARD"
         }
       },
       "checkers": {

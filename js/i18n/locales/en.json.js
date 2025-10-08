@@ -10357,10 +10357,27 @@
         "result": {
           "title": "Result",
           "judgementTemplate": "{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}",
-          "summaryTemplate": "{maxLabel} {maxCombo} | {totalExpLabel} {score} ({bonusLabel} {clearBonus}) | {goodRateLabel} {rate}%",
-          "totalExpLabel": "Total EXP",
-          "clearBonusLabel": "Clear Bonus",
-          "goodRateLabel": "Good Rate"
+        "summaryTemplate": "{maxLabel} {maxCombo} | {totalExpLabel} {score} ({bonusLabel} {clearBonus}) | {goodRateLabel} {rate}%",
+        "totalExpLabel": "Total EXP",
+        "clearBonusLabel": "Clear Bonus",
+        "goodRateLabel": "Good Rate"
+      }
+    },
+      "piano_tiles": {
+        "tips": "Tap lanes or press D/F/J/K keys, and hold for long notes.",
+        "hud": {
+          "template": "{difficultyLabel}: {difficulty} | {hitsLabel}: {hits} | {missesLabel}: {misses} | {comboLabel}: {combo} ({maxLabel} {maxCombo}) | {accuracyLabel}: {accuracy}%",
+          "difficultyLabel": "Difficulty",
+          "hitsLabel": "Hits",
+          "missesLabel": "Misses",
+          "comboLabel": "Combo",
+          "maxLabel": "Max",
+          "accuracyLabel": "Accuracy"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
         }
       },
       "checkers": {

@@ -10509,6 +10509,113 @@
           "chasing": "追い手"
         }
       },
+      "imperial_realm": {
+        "ui": {
+          "logTitle": "作戦ログ",
+          "waveTitle": "ウェーブ情報",
+          "intelTitle": "戦況インテリジェンス",
+          "selectionTitle": "選択情報",
+          "populationLabel": "人口"
+        },
+        "resources": {
+          "food": "食料",
+          "wood": "木材",
+          "gold": "金",
+          "stone": "石",
+          "costEntry": "{resource}{amount}",
+          "costSeparator": " / "
+        },
+        "hud": {
+          "nextWave": "次のウェーブ",
+          "ready": "準備完了",
+          "countdown": "{seconds}秒",
+          "defending": "防衛中！",
+          "waveStatus": "ウェーブ {current} / {total}",
+          "waveInfo": "現在の波: {wave}/{total}\n敵TC耐久: {hp} / {max}",
+          "commanderGoal": "司令官討伐",
+          "finalStand": "終局戦"
+        },
+        "intel": {
+          "summary": "村人: {villagers}\n軍事: {army}\n建物: {structures}"
+        },
+        "selection": {
+          "empty": "何も選択されていません。",
+          "unitEntry": "{name} HP {current}/{max}",
+          "structureEntry": "{name} HP {current}/{max}{status}",
+          "underConstruction": "（建設中）",
+          "separator": "---"
+        },
+        "actions": {
+          "build": {
+            "house": {
+              "label": "建設: 家",
+              "description": "+5人口、建設時間短"
+            },
+            "barracks": {
+              "label": "建設: 兵舎",
+              "description": "民兵の訓練"
+            },
+            "archery": {
+              "label": "建設: 弓兵小屋",
+              "description": "弓兵の訓練"
+            },
+            "tower": {
+              "label": "建設: 見張り塔",
+              "description": "自動射撃タワー"
+            }
+          },
+          "train": {
+            "button": "訓練: {unit}",
+            "details": "{cost} / {time}秒"
+          }
+        },
+        "logs": {
+          "missionStart": "作戦開始。タウンセンターと村人3名が配置されています。",
+          "insufficientResources": "資源が不足しています。",
+          "placementPrompt": "{label} の建設位置を指定してください。",
+          "gatherOrder": "村人に{resource}採集を指示しました。",
+          "attackOrder": "攻撃命令を実行。",
+          "populationCap": "人口上限です。家を建てましょう。",
+          "trainingStarted": "{unit} の訓練を開始しました。",
+          "buildingStarted": "{structure} を建設開始しました。",
+          "unitComplete": "{unit} が完成しました。",
+          "structureComplete": "{structure} が完成しました。",
+          "enemyDefeated": "敵を撃破しました。",
+          "resourceDepleted": "{resource}の資源が枯渇しました。",
+          "commanderArrived": "敵将軍が戦場に現れました！",
+          "waveIncoming": "敵ウェーブ{wave}が接近中！",
+          "waveCleared": "ウェーブ{wave}を撃退！補給物資を受領しました。",
+          "victory": "勝利！",
+          "defeat": "敗北…"
+        },
+        "gameOver": {
+          "message": {
+            "ownTownCenterDestroyed": "タウンセンターが破壊された。",
+            "enemyTownCenterDestroyed": "敵のタウンセンターを破壊した。",
+            "allVillagersLost": "村人が全滅した。"
+          },
+          "overlay": {
+            "victory": "勝利",
+            "defeat": "敗北"
+          }
+        },
+        "units": {
+          "villager": "村人",
+          "militia": "民兵",
+          "archer": "弓兵",
+          "raider": "略奪兵",
+          "horseArcher": "騎馬弓兵",
+          "commander": "敵将軍",
+          "ram": "破城槌"
+        },
+        "structures": {
+          "townCenter": "タウンセンター",
+          "house": "家",
+          "barracks": "兵舎",
+          "archery": "弓兵小屋",
+          "tower": "見張り塔"
+        }
+      },
       "tic_tac_toe": {
         "hud": {
           "status": {

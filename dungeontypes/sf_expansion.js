@@ -3019,9 +3019,11 @@
   const addon = {
     id: ADDON_ID,
     name: ADDON_NAME,
+    nameKey: "dungeon.packs.sf_expansion_pack.name",
     version: VERSION,
     api: '1.0.0',
     description: '宇宙船・サイバー空間・未来都市・軌道施設・量子/時間研究・異星生態・メガコロニーを網羅し、50タイプと5次元拡張を収録した大規模SFダンジョン生成パック。',
+    descriptionKey: "dungeon.packs.sf_expansion_pack.description",
     blocks: createBlocks(),
     structures: createStructures(),
     generators: createGenerators()

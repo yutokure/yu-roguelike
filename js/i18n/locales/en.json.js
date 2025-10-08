@@ -741,12 +741,21 @@
           "name": "Abyssal Whorl Pack"
         },
 
+        "abstract_spectrum_pack": {
+          "name": "Abstract Spectrum Generation Pack"
+        },
+
         "amber_marsh_pack": {
           "name": "Amber Marsh Pack"
         },
 
         "ancient_enigma_pack": {
           "name": "Ancient Enigma Excavation Pack"
+        },
+
+        "arabian_legends_pack": {
+          "name": "Arabian Legends Pack",
+          "description": "A large Arabian-inspired expansion with 16 generation algorithms covering oases, fortresses, markets, sky gardens, astral sanctums, and more alongside 50+ themed blocks."
         },
 
         "axis_gallery_pack": {
@@ -757,6 +766,10 @@
           "name": "Bamboo Hollows Pack"
         },
 
+        "biome_convergence_megapack": {
+          "name": "Biome Convergence Mega Pack"
+        },
+
         "shore_pack": {
           "name": "Sunlit Shore Pack"
         },
@@ -764,6 +777,10 @@
         "bomb_pack": {
           "name": "Bomb Hazard Pack",
           "description": "爆弾ギミックに特化した生成タイプを追加するMOD。地雷原・兵舎・迷宮の3種類を収録。"
+        },
+
+        "celestial_dynasty_pack": {
+          "name": "Celestial Dynasty Pack"
         },
 
         "churning_karst_pack": {
@@ -810,6 +827,10 @@
           "name": "Emberglass Caverns Pack"
         },
 
+        "fantasical_sci_fi_dream_pack": {
+          "name": "Fantasical & Sci-Fi Dream Pack"
+        },
+
         "forest_pack": {
           "name": "Verdant Forest Pack"
         },
@@ -850,8 +871,21 @@
           "name": "Medieval Stronghold Pack"
         },
 
+        "nature_expansion_pack": {
+          "name": "Nature Biome Expansion Pack"
+        },
+
         "natural_roadways_pack": {
           "name": "Natural Roadways Pack"
+        },
+
+        "neo_research_arcology_pack": {
+          "name": "Neo Research Arcology Expansion",
+          "description": "A large expansion set in a futuristic research arcology, adding seven generation types—multi-layer rings, spiral experiment routes, biodomes, coolant vaults, holo cities—and 36 blocks across four dimensional bands."
+        },
+
+        "noise_interference_pack": {
+          "name": "Interference Noise Expansion Pack"
         },
 
         "oneway_labyrinth_pack": {
@@ -898,6 +932,15 @@
           "name": "Serpentine River Pack"
         },
 
+        "sf_expansion_pack": {
+          "name": "SF Expansion Pack",
+          "description": "A massive sci-fi generation pack spanning starships, cyberspace, future cities, orbital facilities, quantum/time research, alien biomes, and mega colonies with 50 dungeon types and five dimensional expansions."
+        },
+
+        "skyrim_nordic_legends_pack": {
+          "name": "Skyrim Nordic Legends Pack"
+        },
+
         "skyward_pack": {
           "name": "Skyward Bastions Pack"
         },
@@ -912,6 +955,14 @@
 
         "traditional_japan_expansion_pack": {
           "name": "Traditional Japan Expansion Pack"
+        },
+
+        "visceral_crimescene_pack": {
+          "name": "Visceral Crime Scene Pack"
+        },
+
+        "western_frontier_pack": {
+          "name": "Western Frontier Mega Pack"
         },
 
         "prison_pack": {

@@ -1565,6 +1565,7 @@
   window.registerDungeonAddon({
     id: ADDON_ID,
     name: ADDON_NAME,
+    nameKey: "dungeon.packs.western_frontier_pack.name",
     version: VERSION,
     blocks,
     generators,

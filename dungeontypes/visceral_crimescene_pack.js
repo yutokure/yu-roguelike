@@ -855,6 +855,7 @@
   window.registerDungeonAddon({
     id: PACK_ID,
     name: PACK_NAME,
+    nameKey: "dungeon.packs.visceral_crimescene_pack.name",
     version: PACK_VERSION,
     generators,
     blocks: {

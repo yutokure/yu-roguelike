@@ -807,9 +807,11 @@
   const addon = {
     id: ADDON_ID,
     name: ADDON_NAME,
+    nameKey: "dungeon.packs.neo_research_arcology_pack.name",
     version: VERSION,
     api: '1.0.0',
     description: '未来研究都市アーコロジーを舞台に、多層リングや螺旋実験路、バイオドーム、冷却金庫、ホロシティなど7つの生成タイプと36ブロック、4次元帯を追加する大規模拡張。',
+    descriptionKey: "dungeon.packs.neo_research_arcology_pack.description",
     blocks: createBlocks(),
     generators: createGenerators()
   };

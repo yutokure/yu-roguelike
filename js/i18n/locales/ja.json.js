@@ -741,12 +741,21 @@
           "name": "Abyssal Whorl Pack"
         },
 
+        "abstract_spectrum_pack": {
+          "name": "抽象スペクトラム生成パック"
+        },
+
         "amber_marsh_pack": {
           "name": "Amber Marsh Pack"
         },
 
         "ancient_enigma_pack": {
           "name": "Ancient Enigma Excavation Pack"
+        },
+
+        "arabian_legends_pack": {
+          "name": "Arabian Legends Pack",
+          "description": "砂海に眠る伝承と幻影をテーマに、オアシス、城砦、市場、宙庭、星図聖堂など16種類のダンジョン生成アルゴリズムと50種以上のアラビア語ブロックを鮮やかな色彩表現で追加する大型パック。"
         },
 
         "axis_gallery_pack": {
@@ -757,6 +766,10 @@
           "name": "Bamboo Hollows Pack"
         },
 
+        "biome_convergence_megapack": {
+          "name": "Biome Convergence Mega Pack"
+        },
+
         "shore_pack": {
           "name": "Sunlit Shore Pack"
         },
@@ -764,6 +777,10 @@
         "bomb_pack": {
           "name": "Bomb Hazard Pack",
           "description": "爆弾ギミックに特化した生成タイプを追加するMOD。地雷原・兵舎・迷宮の3種類を収録。"
+        },
+
+        "celestial_dynasty_pack": {
+          "name": "華夏王朝拡張パック"
         },
 
         "churning_karst_pack": {
@@ -810,6 +827,10 @@
           "name": "Emberglass Caverns Pack"
         },
 
+        "fantasical_sci_fi_dream_pack": {
+          "name": "ファンタジカルと近未来をテーマにした夢の世界パック"
+        },
+
         "forest_pack": {
           "name": "Verdant Forest Pack"
         },
@@ -850,8 +871,21 @@
           "name": "Medieval Stronghold Pack"
         },
 
+        "nature_expansion_pack": {
+          "name": "Nature Biome Expansion Pack"
+        },
+
         "natural_roadways_pack": {
           "name": "Natural Roadways Pack"
+        },
+
+        "neo_research_arcology_pack": {
+          "name": "ネオ・リサーチアーコロジー拡張",
+          "description": "未来研究都市アーコロジーを舞台に、多層リングや螺旋実験路、バイオドーム、冷却金庫、ホロシティなど7つの生成タイプと36ブロック、4次元帯を追加する大規模拡張。"
+        },
+
+        "noise_interference_pack": {
+          "name": "Interference Noise Expansion Pack"
         },
 
         "oneway_labyrinth_pack": {
@@ -898,6 +932,15 @@
           "name": "Serpentine River Pack"
         },
 
+        "sf_expansion_pack": {
+          "name": "SF Expansion Pack",
+          "description": "宇宙船・サイバー空間・未来都市・軌道施設・量子/時間研究・異星生態・メガコロニーを網羅し、50タイプと5次元拡張を収録した大規模SFダンジョン生成パック。"
+        },
+
+        "skyrim_nordic_legends_pack": {
+          "name": "Skyrim Nordic Legends Pack"
+        },
+
         "skyward_pack": {
           "name": "Skyward Bastions Pack"
         },
@@ -912,6 +955,14 @@
 
         "traditional_japan_expansion_pack": {
           "name": "Traditional Japan Expansion Pack"
+        },
+
+        "visceral_crimescene_pack": {
+          "name": "Visceral Crime Scene Pack"
+        },
+
+        "western_frontier_pack": {
+          "name": "Western Frontier Mega Pack"
         },
 
         "prison_pack": {

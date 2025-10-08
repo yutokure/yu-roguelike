@@ -1505,5 +1505,12 @@
     ]
   };
 
-  window.registerDungeonAddon({ id: ADDON_ID, name: ADDON_NAME, version: VERSION, blocks, generators });
+  window.registerDungeonAddon({
+    id: ADDON_ID,
+    name: ADDON_NAME,
+    nameKey: "dungeon.packs.skyrim_nordic_legends_pack.name",
+    version: VERSION,
+    blocks,
+    generators
+  });
 })();

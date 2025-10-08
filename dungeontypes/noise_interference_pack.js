@@ -303,5 +303,12 @@
     blocks.blocks3.push(blockRelic);
   });
 
-  window.registerDungeonAddon({ id: ADDON_ID, name: ADDON_NAME, version: VERSION, blocks, generators });
+  window.registerDungeonAddon({
+    id: ADDON_ID,
+    name: ADDON_NAME,
+    nameKey: "dungeon.packs.noise_interference_pack.name",
+    version: VERSION,
+    blocks,
+    generators
+  });
 })();

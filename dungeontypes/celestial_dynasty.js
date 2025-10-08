@@ -2530,6 +2530,7 @@
   window.registerDungeonAddon({
     id: ADDON_ID,
     name: ADDON_NAME,
+    nameKey: "dungeon.packs.celestial_dynasty_pack.name",
     version: VERSION,
     blocks,
     generators

@@ -589,7 +589,16 @@
           },
           "aim": {
             "name": "的あて（エイム）",
-            "description": "命中で1〜3EXP／連続命中ボーナス"
+            "description": "命中で1〜3EXP／連続命中ボーナス",
+            "hud": {
+              "time": "残り時間: {time}",
+              "hitsAccuracy": "命中: {hits}  精度: {accuracy}%",
+              "combo": "コンボ x{combo}"
+            },
+            "overlay": {
+              "timeUp": "タイムアップ",
+              "restartHint": "Rで再開/再起動"
+            }
           },
           "dodge_race": {
             "name": "回避レース",

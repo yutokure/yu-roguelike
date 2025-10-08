@@ -360,11 +360,32 @@
     boardWrap.style.alignItems = 'center';
     boardWrap.style.gap = '8px';
 
+    const headerCard = document.createElement('div');
+    headerCard.style.display = 'flex';
+    headerCard.style.flexDirection = 'column';
+    headerCard.style.alignItems = 'center';
+    headerCard.style.gap = '6px';
+    headerCard.style.padding = '12px 18px';
+    headerCard.style.borderRadius = '14px';
+    headerCard.style.background = 'rgba(15,23,42,0.9)';
+    headerCard.style.border = '1px solid rgba(148,163,184,0.4)';
+    headerCard.style.boxShadow = '0 12px 28px rgba(15,23,42,0.35)';
+    headerCard.style.width = '100%';
+    headerCard.style.maxWidth = '520px';
+
     const title = document.createElement('div');
     title.textContent = 'ナイン・メンズ・モリス — あなたが先手';
     title.style.fontSize = '18px';
     title.style.fontWeight = '600';
-    boardWrap.appendChild(title);
+    headerCard.appendChild(title);
+
+    const status = document.createElement('div');
+    status.style.fontSize = '16px';
+    status.style.minHeight = '24px';
+    status.style.textAlign = 'center';
+    headerCard.appendChild(status);
+
+    boardWrap.appendChild(headerCard);
 
     const canvas = document.createElement('canvas');
     canvas.width = 520;
@@ -377,11 +398,6 @@
     boardWrap.appendChild(canvas);
 
     const ctx = canvas.getContext('2d');
-
-    const status = document.createElement('div');
-    status.style.fontSize = '16px';
-    status.style.minHeight = '24px';
-    boardWrap.appendChild(status);
 
     const panel = document.createElement('div');
     panel.style.background = 'rgba(15,23,42,0.55)';

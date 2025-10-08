@@ -11494,7 +11494,9 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     player.level = Math.max(1, Math.floor(Number(playerSnap.level) || player.level || 1));
     player.exp = Number(playerSnap.exp) || 0;
     player.maxHp = Math.max(1, Math.floor(Number(playerSnap.maxHp) || player.maxHp || 100));
-    player.hp = Math.max(0, Math.min(player.maxHp, Math.floor(Number(playerSnap.hp) || player.maxHp)));
+    const snapshotHp = Number(playerSnap.hp);
+    const normalizedHp = Number.isFinite(snapshotHp) ? snapshotHp : player.maxHp;
+    player.hp = Math.max(0, Math.min(player.maxHp, Math.floor(normalizedHp)));
     if (Number.isFinite(playerSnap.satietySystemStartLevel)) {
         player.satietySystemStartLevel = Math.max(1, Math.floor(Number(playerSnap.satietySystemStartLevel)));
     } else {

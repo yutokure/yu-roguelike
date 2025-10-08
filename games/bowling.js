@@ -16,6 +16,56 @@
       { cpuSkill: 0.48, variance: 0.28, cpuVariance: 0.22, victoryXp: 30 } :
       { cpuSkill: 0.62, variance: 0.24, cpuVariance: 0.19, victoryXp: 40 };
 
+    const i18n = window.I18n;
+    const I18N_PREFIX = 'games.bowlingDuel';
+
+    function localize(key, params, fallback){
+      const fullKey = `${I18N_PREFIX}.${key}`;
+      try {
+        if(typeof i18n?.t === 'function'){
+          const translated = i18n.t(fullKey, params);
+          if(typeof translated === 'string' && translated !== fullKey){
+            return translated;
+          }
+        }
+      } catch (error) {
+        console.warn('[bowling] Failed to resolve translation for', fullKey, error);
+      }
+      if(typeof fallback === 'function'){ return fallback(params || {}); }
+      if(fallback !== undefined){ return fallback; }
+      return '';
+    }
+
+    const statusFallbacks = {
+      introHint: ()=>'ゲージをタイミング良く止めてストライクを狙おう！',
+      framePlayer: params=>`第${params.frame}フレーム あなたの番です。`,
+      frameCpu: params=>`第${params.frame}フレーム CPUの番です…`,
+      remainingPins: params=>`残りピン: ${params.count} 本。もう一投！`,
+      playerStrike: ()=>'ストライク！',
+      cpuStrike: ()=>'CPUがストライク！',
+      victory: params=>`勝利！ スコア ${params.player} - ${params.cpu}`,
+      draw: params=>`引き分け… スコア ${params.player} - ${params.cpu}`,
+      defeat: params=>`敗北… スコア ${params.player} - ${params.cpu}`
+    };
+
+    const logFallbacks = {
+      playerShot: params=>`あなた: aim ${params.aim}, curve ${params.curve}, power ${params.power}% → <strong>${params.pins}</strong>`,
+      cpuShot: params=>`CPU: aim ${params.aim}, curve ${params.curve}, power ${params.power}% → <strong>${params.pins}</strong>`,
+      victory: params=>`<strong>勝利！</strong> +${params.exp}EXP`,
+      draw: params=>`<strong>引き分け</strong> +${params.exp}EXP`,
+      defeat: params=>`<strong>敗北</strong> +${params.exp}EXP`
+    };
+
+    function translateStatus(key, params){
+      const fallback = statusFallbacks[key] || (()=> '');
+      return localize(`status.${key}`, params, fallback);
+    }
+
+    function formatLog(key, params){
+      const fallback = logFallbacks[key] || (()=> '');
+      return localize(`logs.${key}`, params, fallback);
+    }
+
     if(!document.getElementById('bowling-mod-style')){
       const style = document.createElement('style');
       style.id = 'bowling-mod-style';
@@ -49,10 +99,8 @@
     const container = document.createElement('div');
     container.className = 'bowling-mod';
     const title = document.createElement('h2');
-    title.textContent = 'ボウリング対決 MOD';
     const statusLine = document.createElement('div');
     statusLine.className = 'status-line';
-    statusLine.textContent = 'ゲージをタイミング良く止めてストライクを狙おう！';
 
     const table = document.createElement('table');
     table.className = 'bowling-scoreboard';
@@ -61,7 +109,7 @@
     blankTh.textContent = '';
     headRow.appendChild(blankTh);
     for(let i=1;i<=10;i++){ const th = document.createElement('th'); th.textContent = i; headRow.appendChild(th); }
-    const totalTh = document.createElement('th'); totalTh.textContent = '合計'; headRow.appendChild(totalTh);
+    const totalTh = document.createElement('th'); headRow.appendChild(totalTh);
     table.appendChild(headRow);
 
     function makeScoreRow(labelText, labelClass){
@@ -93,11 +141,11 @@
       totalCell.style.fontSize = '16px';
       totalCell.style.fontWeight = '700';
       row.appendChild(totalCell);
-      return { row, cells, totalCell };
+      return { row, cells, totalCell, labelSpan };
     }
 
-    const playerRow = makeScoreRow('あなた', 'player-label');
-    const cpuRow = makeScoreRow('CPU', 'cpu-label');
+    const playerRow = makeScoreRow(localize('scoreboard.you', null, ()=>'あなた'), 'player-label');
+    const cpuRow = makeScoreRow(localize('scoreboard.cpu', null, ()=>'CPU'), 'cpu-label');
     table.appendChild(playerRow.row);
     table.appendChild(cpuRow.row);
 
@@ -135,10 +183,12 @@
         block,
         input,
         valueEl: spanValue,
+        nameEl: spanName,
         formatter,
         min,
         max,
         step,
+        setLabel(text){ spanName.textContent = text; },
         setValue(v){
           const val = clampToStep(v);
           input.value = String(val);
@@ -152,9 +202,29 @@
       };
     }
 
-    const aimSlider = makeSlider('狙い位置', -100, 100, 1, 0, v=> v===0 ? '中央' : (v>0 ? `右 ${v}` : `左 ${Math.abs(v)}`));
-    const curveSlider = makeSlider('カーブ量', -100, 100, 1, 20, v=> v===0 ? 'なし' : (v>0 ? `右曲がり ${v}` : `左曲がり ${Math.abs(v)}`));
-    const powerSlider = makeSlider('投球パワー', 40, 100, 1, 72, v=> `${v}%`);
+    const aimSlider = makeSlider(
+      localize('sliders.aim.label', null, ()=>'狙い位置'),
+      -100, 100, 1, 0,
+      v => v === 0
+        ? localize('sliders.aim.center', null, ()=>'中央')
+        : v > 0
+          ? localize('sliders.aim.right', { value: v }, () => `右 ${v}`)
+          : localize('sliders.aim.left', { value: Math.abs(v) }, () => `左 ${Math.abs(v)}`)
+    );
+    const curveSlider = makeSlider(
+      localize('sliders.curve.label', null, ()=>'カーブ量'),
+      -100, 100, 1, 20,
+      v => v === 0
+        ? localize('sliders.curve.none', null, ()=>'なし')
+        : v > 0
+          ? localize('sliders.curve.right', { value: v }, () => `右曲がり ${v}`)
+          : localize('sliders.curve.left', { value: Math.abs(v) }, () => `左曲がり ${Math.abs(v)}`)
+    );
+    const powerSlider = makeSlider(
+      localize('sliders.power.label', null, ()=>'投球パワー'),
+      40, 100, 1, 72,
+      v => localize('sliders.power.format', { value: v }, () => `${v}%`)
+    );
 
     controls.appendChild(aimSlider.block);
     controls.appendChild(curveSlider.block);
@@ -165,9 +235,7 @@
     buttonBlock.style.justifyContent = 'flex-end';
     buttonBlock.style.gap = '10px';
     const throwBtn = document.createElement('button');
-    throwBtn.textContent = '🎳 ボールを投げる';
     const resetBtn = document.createElement('button');
-    resetBtn.textContent = '🔄 リセット';
     resetBtn.style.background = 'linear-gradient(135deg,#f97316,#fb7185)';
     resetBtn.style.color = '#0f172a';
     buttonBlock.appendChild(throwBtn);
@@ -176,11 +244,11 @@
 
     const legend = document.createElement('div');
     legend.className = 'legend';
-    legend.textContent = 'ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！';
+    legend.textContent = localize('legend', null, ()=>'ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！');
 
     const historyLog = document.createElement('div');
     historyLog.className = 'history-log';
-    historyLog.innerHTML = '<strong>ログ</strong><br>---';
+    historyLog.innerHTML = `<strong>${localize('history.title', null, ()=>'ログ')}</strong><br>${localize('history.placeholder', null, ()=>'---')}`;
 
     container.appendChild(title);
     container.appendChild(statusLine);
@@ -199,6 +267,61 @@
     let cpuTimeout = 0;
     let selectionStage = null;
     const pendingParams = { aim: 0, curve: 0, power: 0 };
+    let statusSnapshot = { mode: 'status', key: 'introHint', params: {} };
+    let throwState = { mode: 'idle' };
+    let historyEntries = [];
+    let detachLocale = null;
+
+    function renderHistory(){
+      const titleText = localize('history.title', null, ()=>'ログ');
+      const placeholder = localize('history.placeholder', null, ()=>'---');
+      if(historyEntries.length === 0){
+        historyLog.innerHTML = `<strong>${titleText}</strong><br>${placeholder}`;
+      } else {
+        historyLog.innerHTML = [`<strong>${titleText}</strong>`, ...historyEntries].join('<br>');
+      }
+    }
+
+    function log(message){
+      historyEntries.push(message);
+      renderHistory();
+      historyLog.scrollTop = historyLog.scrollHeight;
+    }
+
+    function updateThrowButton(){
+      if(throwState.mode === 'stage' && throwState.stage){
+        const info = stageInfo?.[throwState.stage];
+        throwBtn.textContent = info ? info.getButton() : localize('buttons.throw', null, ()=>'🎳 ボールを投げる');
+      } else if(throwState.mode === 'rolling'){
+        throwBtn.textContent = localize('buttons.throwing', null, ()=>'🎳 投球中…');
+      } else {
+        throwBtn.textContent = localize('buttons.throw', null, ()=>'🎳 ボールを投げる');
+      }
+    }
+
+    function setThrowState(next){
+      throwState = next;
+      updateThrowButton();
+    }
+
+    function applyStatusSnapshot(){
+      if(statusSnapshot.mode === 'stagePrompt' && statusSnapshot.stage){
+        const info = stageInfo?.[statusSnapshot.stage];
+        statusLine.textContent = info ? info.getPrompt() : '';
+      } else if(statusSnapshot.mode === 'stageConfirm' && statusSnapshot.stage){
+        const info = stageInfo?.[statusSnapshot.stage];
+        statusLine.textContent = info ? info.getConfirm(statusSnapshot.value) : '';
+      } else if(statusSnapshot.mode === 'status' && statusSnapshot.key){
+        statusLine.textContent = translateStatus(statusSnapshot.key, statusSnapshot.params);
+      } else {
+        statusLine.textContent = '';
+      }
+    }
+
+    function setStatus(key, params){
+      statusSnapshot = { mode: 'status', key, params };
+      statusLine.textContent = translateStatus(key, params);
+    }
 
     function makeOscillator(slider, unitsPerSecond){
       let animationId = 0;
@@ -251,19 +374,20 @@
       oscillators.aim.stop(false);
       oscillators.curve.stop(false);
       oscillators.power.stop(false);
-      throwBtn.textContent = '🎳 ボールを投げる';
+      setThrowState({ mode: 'idle' });
     }
 
     function resetState(){
       if(cpuTimeout){ clearTimeout(cpuTimeout); cpuTimeout = 0; }
       for(let i=0;i<10;i++){ playerFrames[i].rolls.length = 0; cpuFrames[i].rolls.length = 0; updateCell(playerRow.cells[i], []); updateCell(cpuRow.cells[i], []); }
       updateTotals();
-      historyLog.innerHTML = '<strong>ログ</strong><br>---';
+      historyEntries = [];
+      renderHistory();
       frameIndex = 0;
       turn = 'player';
       running = false;
       ended = false;
-      statusLine.textContent = '第1フレーム あなたの番です。';
+      setStatus('framePlayer', { frame: 1 });
       throwBtn.disabled = false;
       cancelSelection();
       aimSlider.setValue(0);
@@ -389,14 +513,6 @@
       return frame.rolls.length >= 3;
     }
 
-    function log(message){
-      if(historyLog.innerHTML.endsWith('---')){
-        historyLog.innerHTML = historyLog.innerHTML.slice(0, -3);
-      }
-      historyLog.innerHTML += `<br>${message}`;
-      historyLog.scrollTop = historyLog.scrollHeight;
-    }
-
     function evaluateShot(aim, curve, power, pinsLeft, variance){
       const aimNorm = clamp(aim / 100, -1, 1);
       const curveNorm = clamp(curve / 100, -1, 1);
@@ -459,20 +575,21 @@
       cancelSelection();
       const totals = updateTotals();
       if(totals.player > totals.cpu){
-        statusLine.textContent = `勝利！ スコア ${totals.player} - ${totals.cpu}`;
+        setStatus('victory', { player: totals.player, cpu: totals.cpu });
         awardXp(cfg.victoryXp, { type:'victory' });
-        log(`<strong>YOU WIN!</strong> +${cfg.victoryXp}EXP`);
+        log(formatLog('victory', { exp: cfg.victoryXp }));
       } else if(totals.player === totals.cpu){
-        statusLine.textContent = `引き分け… スコア ${totals.player} - ${totals.cpu}`;
+        setStatus('draw', { player: totals.player, cpu: totals.cpu });
         const drawXp = Math.floor(cfg.victoryXp * 0.4);
         awardXp(drawXp, { type:'draw' });
-        log(`<strong>DRAW</strong> +${drawXp}EXP`);
+        log(formatLog('draw', { exp: drawXp }));
       } else {
-        statusLine.textContent = `敗北… スコア ${totals.player} - ${totals.cpu}`;
+        setStatus('defeat', { player: totals.player, cpu: totals.cpu });
         const consolation = Math.floor(cfg.victoryXp * 0.25);
         awardXp(consolation, { type:'consolation' });
-        log(`<strong>LOSE</strong> +${consolation}EXP`);
+        log(formatLog('defeat', { exp: consolation }));
       }
+      setThrowState({ mode: 'idle' });
     }
 
     function nextTurn(){
@@ -480,7 +597,7 @@
       if(frameComplete(turn === 'player' ? playerFrames : cpuFrames, frameIndex)){
         if(turn === 'player'){
           turn = 'cpu';
-          statusLine.textContent = `第${frameIndex+1}フレーム CPUの番です…`;
+          setStatus('frameCpu', { frame: frameIndex+1 });
           throwBtn.disabled = true;
           if(cpuTimeout){ clearTimeout(cpuTimeout); }
           cpuTimeout = setTimeout(cpuThrow, 800 + Math.random()*500);
@@ -489,17 +606,17 @@
             frameIndex++;
             if(frameIndex >= 10){ finishGame(); return; }
             turn = 'player';
-            statusLine.textContent = `第${frameIndex+1}フレーム あなたの番です。`;
+            setStatus('framePlayer', { frame: frameIndex+1 });
             throwBtn.disabled = false;
-            throwBtn.textContent = '🎳 ボールを投げる';
+            setThrowState({ mode: 'idle' });
           }
         }
       } else {
         if(turn === 'player'){
           const remaining = pinsStandingFor(playerFrames, frameIndex);
-          statusLine.textContent = `残りピン: ${remaining} 本。もう一投！`;
+          setStatus('remainingPins', { count: remaining });
           throwBtn.disabled = false;
-          throwBtn.textContent = '🎳 ボールを投げる';
+          setThrowState({ mode: 'idle' });
         }
       }
     }
@@ -511,10 +628,10 @@
       const decision = cpuDecision();
       const knocked = evaluateShot(decision.aim, decision.curve, decision.power, pinsLeft, cfg.cpuVariance);
       recordRoll(cpuFrames, knocked, 'cpu');
-      log(`CPU: aim ${decision.aim|0}, curve ${decision.curve|0}, power ${decision.power|0} → <strong>${knocked}</strong>`);
+      log(formatLog('cpuShot', { aim: decision.aim|0, curve: decision.curve|0, power: decision.power|0, pins: knocked }));
       if(frameIndex === 9){
         const fr = cpuFrames[frameIndex];
-        if(fr.rolls.length === 1 && knocked === 10){ statusLine.textContent = `CPUがストライク！`; }
+        if(fr.rolls.length === 1 && knocked === 10){ setStatus('cpuStrike'); }
       }
       nextTurn();
     }
@@ -526,46 +643,51 @@
       const pinsLeft = pinsStandingFor(playerFrames, frameIndex);
       const knocked = evaluateShot(aim, curve, power, pinsLeft, cfg.variance);
       recordRoll(playerFrames, knocked, 'player');
-      log(`あなた: aim ${aim}, curve ${curve}, power ${power}% → <strong>${knocked}</strong>`);
-      if(knocked === 10 && pinsLeft === 10){ statusLine.textContent = `ストライク！`; }
+      log(formatLog('playerShot', { aim, curve, power, pins: knocked }));
+      if(knocked === 10 && pinsLeft === 10){ setStatus('playerStrike'); }
       nextTurn();
     }
 
-    function start(){ if(running || ended) return; ensureRunning(); statusLine.textContent = `第${frameIndex+1}フレーム あなたの番です。`; }
+    function start(){ if(running || ended) return; ensureRunning(); setStatus('framePlayer', { frame: frameIndex+1 }); }
     function stop(){
       running = false;
       if(cpuTimeout){ clearTimeout(cpuTimeout); cpuTimeout = 0; }
       cancelSelection();
       shortcuts?.enableKey?.('r');
     }
-    function destroy(){ stop(); container.remove(); }
+    function destroy(){
+      stop();
+      detachLocale?.();
+      container.remove();
+    }
     function getScore(){ const totals = updateTotals(); return totals.player; }
 
     const stageOrder = ['aim', 'curve', 'power'];
     const stageInfo = {
       aim: {
-        prompt: '狙いゲージが往復中…止めるタイミングでボタン！',
-        button: '🛑 狙いを止める',
-        confirm: v => `狙い位置を ${aimSlider.formatter(v)} にセット！`
+        getPrompt: () => localize('stage.aim.prompt', null, ()=>'狙いゲージが往復中…止めるタイミングでボタン！'),
+        getButton: () => localize('stage.aim.button', null, ()=>'🛑 狙いを止める'),
+        getConfirm: v => localize('stage.aim.confirm', { value: aimSlider.formatter(v) }, () => `狙い位置を ${aimSlider.formatter(v)} にセット！`)
       },
       curve: {
-        prompt: 'カーブゲージ調整中…ボタンでストップ！',
-        button: '🛑 カーブを止める',
-        confirm: v => `カーブ量は ${curveSlider.formatter(v)} に決定！`
+        getPrompt: () => localize('stage.curve.prompt', null, ()=>'カーブゲージ調整中…ボタンでストップ！'),
+        getButton: () => localize('stage.curve.button', null, ()=>'🛑 カーブを止める'),
+        getConfirm: v => localize('stage.curve.confirm', { value: curveSlider.formatter(v) }, () => `カーブ量は ${curveSlider.formatter(v)} に決定！`)
       },
       power: {
-        prompt: 'パワーゲージを注視…ボタンで投球！',
-        button: '🛑 パワーを止める',
-        confirm: v => `パワー ${powerSlider.formatter(v)} で投球！`
+        getPrompt: () => localize('stage.power.prompt', null, ()=>'パワーゲージを注視…ボタンで投球！'),
+        getButton: () => localize('stage.power.button', null, ()=>'🛑 パワーを止める'),
+        getConfirm: v => localize('stage.power.confirm', { value: powerSlider.formatter(v) }, () => `パワー ${powerSlider.formatter(v)} で投球！`)
       }
     };
 
     function beginStage(stage){
       selectionStage = stage;
       const info = stageInfo[stage];
-      statusLine.textContent = info.prompt;
+      statusSnapshot = { mode: 'stagePrompt', stage };
+      statusLine.textContent = info.getPrompt();
       throwBtn.disabled = false;
-      throwBtn.textContent = info.button;
+      setThrowState({ mode: 'stage', stage });
       oscillators[stage].start();
     }
 
@@ -575,13 +697,14 @@
       const info = stageInfo[stage];
       const value = oscillators[stage].stop();
       pendingParams[stage] = value;
-      statusLine.textContent = info.confirm(value);
+      statusSnapshot = { mode: 'stageConfirm', stage, value };
+      statusLine.textContent = info.getConfirm(value);
       const idx = stageOrder.indexOf(stage);
       if(idx < stageOrder.length - 1){
         beginStage(stageOrder[idx + 1]);
       } else {
         selectionStage = null;
-        throwBtn.textContent = '🎳 投球中…';
+        setThrowState({ mode: 'rolling' });
         playerThrow(pendingParams.aim, pendingParams.curve, pendingParams.power);
       }
     }
@@ -598,7 +721,34 @@
     });
     resetBtn.addEventListener('click', ()=>{ resetState(); shortcuts?.disableKey?.('r'); });
 
+    function applyLocale(){
+      title.textContent = localize('title', null, ()=>'ボウリング対決 MOD');
+      aimSlider.setLabel(localize('sliders.aim.label', null, ()=>'狙い位置'));
+      curveSlider.setLabel(localize('sliders.curve.label', null, ()=>'カーブ量'));
+      powerSlider.setLabel(localize('sliders.power.label', null, ()=>'投球パワー'));
+      aimSlider.refresh();
+      curveSlider.refresh();
+      powerSlider.refresh();
+      legend.textContent = localize('legend', null, ()=>'ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！');
+      resetBtn.textContent = localize('buttons.reset', null, ()=>'🔄 リセット');
+      playerRow.labelSpan.textContent = localize('scoreboard.you', null, ()=>'あなた');
+      cpuRow.labelSpan.textContent = localize('scoreboard.cpu', null, ()=>'CPU');
+      totalTh.textContent = localize('scoreboard.total', null, ()=>'合計');
+      renderHistory();
+      applyStatusSnapshot();
+      updateThrowButton();
+    }
+
+    applyLocale();
+
+    if(typeof i18n?.onLocaleChanged === 'function'){
+      detachLocale = i18n.onLocaleChanged(()=>{ applyLocale(); });
+    }
+
     resetState();
+
+    applyStatusSnapshot();
+    updateThrowButton();
 
     return { start, stop, destroy, getScore };
   }

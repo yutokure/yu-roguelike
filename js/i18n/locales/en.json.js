@@ -10401,6 +10401,12 @@
           "movePreview": "{flips} flips / approx +{xp} EXP"
         }
       },
+      "falling_shooter": {
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to restart"
+        }
+      },
       "connect6": {
         "hud": {
           "status": {

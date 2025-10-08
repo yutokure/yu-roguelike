@@ -10401,6 +10401,12 @@
           "movePreview": "{flips}枚 / 予想+{xp}EXP"
         }
       },
+      "falling_shooter": {
+        "overlay": {
+          "title": "ゲームオーバー",
+          "restartHint": "Rで再開/再起動"
+        }
+      },
       "connect6": {
         "hud": {
           "status": {

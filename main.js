@@ -4069,7 +4069,10 @@ function updateSandboxToolControls() {
         if (!list.length) {
             const option = document.createElement('option');
             option.value = '';
-            option.textContent = '配置可能なクリスタルなし';
+            option.textContent = translateOrFallback(
+                'tools.sandbox.controls.domain.noneAvailable',
+                '配置可能なクリスタルなし'
+            );
             sandboxToolDomainSelect.appendChild(option);
         } else {
             const fragment = document.createDocumentFragment();

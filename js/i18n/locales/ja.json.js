@@ -10300,6 +10300,45 @@
     },
 
     "minigame": {
+      "taiko_drum": {
+        "title": "太鼓リズム（{difficulty}）",
+        "tips": "F/J/Space = ドン（赤）、D/K = カッ（青）。大音符は両方同時！タップもOK。",
+        "controls": {
+          "difficultyLabel": "難易度"
+        },
+        "buttons": {
+          "start": "スタート"
+        },
+        "difficulty": {
+          "easy": "EASY",
+          "normal": "NORMAL",
+          "hard": "HARD"
+        },
+        "judgement": {
+          "good": "良",
+          "ok": "可",
+          "pass": "普",
+          "miss": "不"
+        },
+        "hud": {
+          "progressTemplate": "{label}: {value}%",
+          "progressLabel": "進行度",
+          "judgementTemplate": "{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}",
+          "comboTemplate": "{comboLabel}: {combo} ({maxLabel} {maxCombo}) | {accuracyLabel}: {accuracy}% | {expLabel}: {exp}",
+          "comboLabel": "コンボ",
+          "maxComboLabel": "最大",
+          "accuracyLabel": "精度",
+          "expLabel": "EXP"
+        },
+        "result": {
+          "title": "結果",
+          "judgementTemplate": "{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}",
+          "summaryTemplate": "{maxLabel} {maxCombo} | {totalExpLabel} {score} ({bonusLabel} {clearBonus}) | {goodRateLabel} {rate}%",
+          "totalExpLabel": "総EXP",
+          "clearBonusLabel": "クリアボーナス",
+          "goodRateLabel": "良率"
+        }
+      },
       "checkers": {
         "hud": {
           "turn": {
@@ -10602,6 +10641,13 @@
         "stateManager": {
           "label": "状態管理",
           "hint": "ゲームとツールの全データをまとめてエクスポート／インポートします。"
+        }
+      },
+      "sandbox": {
+        "controls": {
+          "domain": {
+            "noneAvailable": "配置可能なクリスタルなし"
+          }
         }
       },
       "modMaker": {

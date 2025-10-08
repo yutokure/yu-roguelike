@@ -53,6 +53,19 @@
   const judgementOrder = ['良', '可', '普', '不'];
   const judgementPriority = judgementOrder.reduce((map, name, idx) => { map[name] = idx; return map; }, {});
 
+  const JUDGEMENT_TEXT_META = {
+    '良': { key: '.judgement.good', fallback: '良' },
+    '可': { key: '.judgement.ok', fallback: '可' },
+    '普': { key: '.judgement.pass', fallback: '普' },
+    '不': { key: '.judgement.miss', fallback: '不' }
+  };
+
+  const DIFFICULTY_TEXT_META = {
+    EASY: { key: '.difficulty.easy', fallback: 'EASY' },
+    NORMAL: { key: '.difficulty.normal', fallback: 'NORMAL' },
+    HARD: { key: '.difficulty.hard', fallback: 'HARD' }
+  };
+
   function parseChart(def, bpm){
     const beatLength = 60000 / bpm; // quarter note
     const step = beatLength / 4; // 16th resolution
@@ -94,6 +107,95 @@
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const cfg = { ...DIFFICULTIES.NORMAL, ...(DIFFICULTIES[difficulty] || {}) };
 
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'taiko_drum' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try {
+          return localization.formatNumber(value, options);
+        } catch {}
+      }
+      try {
+        const locale = localization && typeof localization.getLocale === 'function'
+          ? localization.getLocale()
+          : undefined;
+        return new Intl.NumberFormat(locale, options).format(value);
+      } catch {
+        if (value == null || Number.isNaN(value)) return '0';
+        if (typeof value === 'number') return value.toString();
+        return String(value);
+      }
+    };
+    const formatTemplate = (template, params = {}) => {
+      const str = template == null ? '' : String(template);
+      return str.replace(/\{([^{}]+)\}/g, (_, key) => {
+        const normalized = key.trim();
+        if (!normalized) return '';
+        const value = params.hasOwnProperty(normalized) ? params[normalized] : '';
+        return value == null ? '' : String(value);
+      });
+    };
+
+    let labelCache = null;
+    let cachedLocale = null;
+    const difficultyOptionNodes = new Map();
+    let detachLocale = null;
+    let lastHudProgress = 0;
+    let lastClearBonus = 0;
+    let lastGoodRate = 0;
+
+    const refreshLabelCache = (force = false) => {
+      const localeId = localization && typeof localization.getLocale === 'function'
+        ? localization.getLocale()
+        : 'default';
+      if (!force && labelCache && cachedLocale === localeId) return labelCache;
+      cachedLocale = localeId;
+      labelCache = {
+        titleTemplate: text('.title', '太鼓リズム（{difficulty}）'),
+        tips: text('.tips', 'F/J/Space = ドン（赤）、D/K = カッ（青）。大音符は両方同時！タップもOK。'),
+        difficultyLabel: text('.controls.difficultyLabel', '難易度'),
+        startLabel: text('.buttons.start', 'スタート'),
+        progressTemplate: text('.hud.progressTemplate', '{label}: {value}%'),
+        progressLabel: text('.hud.progressLabel', '進行度'),
+        judgementTemplate: text('.hud.judgementTemplate', '{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}'),
+        comboTemplate: text('.hud.comboTemplate', '{comboLabel}: {combo} ({maxLabel} {maxCombo}) | {accuracyLabel}: {accuracy}% | {expLabel}: {exp}'),
+        comboLabel: text('.hud.comboLabel', 'コンボ'),
+        maxLabel: text('.hud.maxComboLabel', '最大'),
+        accuracyLabel: text('.hud.accuracyLabel', '精度'),
+        expLabel: text('.hud.expLabel', 'EXP'),
+        judgementLabels: Object.fromEntries(judgementOrder.map((name) => {
+          const meta = JUDGEMENT_TEXT_META[name];
+          return [name, meta ? text(meta.key, meta.fallback) : name];
+        })),
+        difficultyOptions: Object.fromEntries(Object.entries(DIFFICULTY_TEXT_META).map(([id, meta]) => [id, text(meta.key, meta.fallback)])),
+        resultTitle: text('.result.title', '結果'),
+        resultJudgementTemplate: text('.result.judgementTemplate', '{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}'),
+        resultSummaryTemplate: text('.result.summaryTemplate', '{maxLabel} {maxCombo} | {totalExpLabel} {score} ({bonusLabel} {clearBonus}) | {goodRateLabel} {rate}%'),
+        totalExpLabel: text('.result.totalExpLabel', '総EXP'),
+        clearBonusLabel: text('.result.clearBonusLabel', 'クリアボーナス'),
+        goodRateLabel: text('.result.goodRateLabel', '良率')
+      };
+      return labelCache;
+    };
+
+    const resolveDifficultyLabel = (id) => {
+      const cache = refreshLabelCache();
+      return (cache.difficultyOptions && cache.difficultyOptions[id]) || id;
+    };
+
+    const getJudgementLabel = (name) => {
+      const cache = refreshLabelCache();
+      return (cache.judgementLabels && cache.judgementLabels[name]) || name;
+    };
+
     const container = document.createElement('div');
     container.style.maxWidth = CANVAS_WIDTH + 'px';
     container.style.margin = '0 auto';
@@ -101,26 +203,39 @@
     container.style.flexDirection = 'column';
     container.style.gap = '12px';
 
+    const baseFont = "'Segoe UI', 'Yu Gothic UI', sans-serif";
+
+    const headerCard = document.createElement('div');
+    headerCard.style.display = 'flex';
+    headerCard.style.flexDirection = 'column';
+    headerCard.style.alignItems = 'center';
+    headerCard.style.gap = '8px';
+    headerCard.style.padding = '12px 18px';
+    headerCard.style.borderRadius = '16px';
+    headerCard.style.background = 'rgba(15,23,42,0.9)';
+    headerCard.style.border = '1px solid rgba(148,163,184,0.4)';
+    headerCard.style.boxShadow = '0 14px 28px rgba(15,23,42,0.35)';
+
     const title = document.createElement('h2');
-    title.textContent = `太鼓リズム（${difficulty}）`;
     title.style.margin = '0';
     title.style.fontSize = '20px';
     title.style.textAlign = 'center';
     title.style.color = '#f8fafc';
-    title.style.fontFamily = "'Segoe UI', 'Yu Gothic UI', sans-serif";
-    container.appendChild(title);
+    title.style.fontFamily = baseFont;
+    headerCard.appendChild(title);
+
+    const tips = document.createElement('div');
+    tips.style.fontSize = '12px';
+    tips.style.color = 'rgba(226,232,240,0.85)';
+    tips.style.textAlign = 'center';
+    tips.style.fontFamily = baseFont;
+    headerCard.appendChild(tips);
+
+    container.appendChild(headerCard);
 
     const hud = createResultHud();
     container.appendChild(hud);
     let resultNode = null;
-
-    const tips = document.createElement('div');
-    tips.textContent = 'F/J/Space = ドン（赤）、D/K = カッ（青）。大音符は両方同時！タップもOK。';
-    tips.style.fontSize = '12px';
-    tips.style.color = 'rgba(226,232,240,0.8)';
-    tips.style.textAlign = 'center';
-    tips.style.fontFamily = hud.style.fontFamily;
-    container.appendChild(tips);
 
     const canvas = document.createElement('canvas');
     canvas.width = CANVAS_WIDTH;
@@ -139,7 +254,6 @@
     controlRow.style.flexWrap = 'wrap';
 
     const diffLabel = document.createElement('label');
-    diffLabel.textContent = '難易度';
     diffLabel.style.color = '#cbd5f5';
     diffLabel.style.fontFamily = hud.style.fontFamily;
     controlRow.appendChild(diffLabel);
@@ -154,14 +268,14 @@
     for (const key of Object.keys(DIFFICULTIES)){
       const option = document.createElement('option');
       option.value = key;
-      option.textContent = key;
+      option.textContent = resolveDifficultyLabel(key);
       if (key === difficulty) option.selected = true;
       select.appendChild(option);
+      difficultyOptionNodes.set(key, option);
     }
     controlRow.appendChild(select);
 
     const startBtn = document.createElement('button');
-    startBtn.textContent = 'スタート';
     startBtn.style.padding = '6px 12px';
     startBtn.style.borderRadius = '8px';
     startBtn.style.border = 'none';
@@ -173,6 +287,25 @@
     container.appendChild(controlRow);
 
     root.appendChild(container);
+
+    const updateTitle = () => {
+      const cache = refreshLabelCache();
+      const difficultyLabel = resolveDifficultyLabel(select.value || difficulty || 'NORMAL');
+      title.textContent = formatTemplate(cache.titleTemplate || '{difficulty}', { difficulty: difficultyLabel });
+    };
+
+    const updateLocalizedStaticTexts = () => {
+      const cache = refreshLabelCache(true);
+      tips.textContent = cache.tips;
+      diffLabel.textContent = cache.difficultyLabel;
+      startBtn.textContent = cache.startLabel;
+      for (const [id, node] of difficultyOptionNodes.entries()){
+        if (node) node.textContent = resolveDifficultyLabel(id);
+      }
+      updateTitle();
+      updateHud(lastHudProgress);
+      renderResultSummary();
+    };
 
     const ctx = canvas.getContext('2d');
 
@@ -195,6 +328,48 @@
       totalNotes: notes.length
     };
 
+    const formatInteger = (value) => {
+      return formatNumber(Number.isFinite(value) ? value : 0, { maximumFractionDigits: 0 });
+    };
+
+    const formatDecimal = (value, digits = 1) => {
+      return formatNumber(Number.isFinite(value) ? value : 0, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    };
+
+    const createJudgementParams = () => {
+      const cache = refreshLabelCache();
+      return {
+        goodLabel: getJudgementLabel('良'),
+        good: formatInteger(stats.良),
+        okLabel: getJudgementLabel('可'),
+        ok: formatInteger(stats.可),
+        passLabel: getJudgementLabel('普'),
+        pass: formatInteger(stats.普),
+        missLabel: getJudgementLabel('不'),
+        miss: formatInteger(stats.不)
+      };
+    };
+
+    function renderResultSummary(){
+      if (!resultNode) return;
+      const cache = refreshLabelCache();
+      const judgementLine = formatTemplate((cache.resultJudgementTemplate || cache.judgementTemplate || ''), createJudgementParams());
+      const summaryLine = formatTemplate(cache.resultSummaryTemplate || '{maxLabel} {maxCombo}', {
+        maxLabel: cache.maxLabel,
+        maxCombo: formatInteger(stats.maxCombo),
+        totalExpLabel: cache.totalExpLabel,
+        score: formatDecimal(stats.score, 1),
+        bonusLabel: cache.clearBonusLabel,
+        clearBonus: formatDecimal(lastClearBonus, 1),
+        goodRateLabel: cache.goodRateLabel,
+        rate: formatInteger(lastGoodRate)
+      });
+      resultNode.innerHTML = `${cache.resultTitle}: ${judgementLine}<br>${summaryLine}`;
+    }
+
     function resetStats(){
       for (const key of judgementOrder){
         stats[key] = 0;
@@ -207,10 +382,31 @@
     }
 
     function updateHud(progress){
+      lastHudProgress = progress;
+      const cache = refreshLabelCache();
+      const clamped = Math.max(0, Math.min(progress || 0, 1));
+      const progressValue = formatDecimal(clamped * 100, 1);
       const accuracy = stats.totalNotes === 0 ? 0 : ((stats.良 + 0.6 * stats.可 + 0.3 * stats.普) / stats.totalNotes) * 100;
-      hud.innerHTML = `進行度: ${(progress * 100).toFixed(1)}%<br>` +
-        `良: ${stats.良} / 可: ${stats.可} / 普: ${stats.普} / 不: ${stats.不}<br>` +
-        `コンボ: ${stats.combo} (最大 ${stats.maxCombo}) | 精度: ${accuracy.toFixed(1)}% | EXP: ${stats.score.toFixed(1)}`;
+      const accuracyText = formatDecimal(accuracy, 1);
+      const comboText = formatInteger(stats.combo);
+      const maxComboText = formatInteger(stats.maxCombo);
+      const expText = formatDecimal(stats.score, 1);
+      const progressLine = formatTemplate(cache.progressTemplate || '{label}: {value}%', {
+        label: cache.progressLabel,
+        value: progressValue
+      });
+      const judgementLine = formatTemplate(cache.judgementTemplate || '{goodLabel}: {good} / {okLabel}: {ok} / {passLabel}: {pass} / {missLabel}: {miss}', createJudgementParams());
+      const comboLine = formatTemplate(cache.comboTemplate || '{comboLabel}: {combo} ({maxLabel} {maxCombo}) | {accuracyLabel}: {accuracy}% | {expLabel}: {exp}', {
+        comboLabel: cache.comboLabel,
+        combo: comboText,
+        maxLabel: cache.maxLabel,
+        maxCombo: maxComboText,
+        accuracyLabel: cache.accuracyLabel,
+        accuracy: accuracyText,
+        expLabel: cache.expLabel,
+        exp: expText
+      });
+      hud.innerHTML = `${progressLine}<br>${judgementLine}<br>${comboLine}`;
     }
 
     function getJudgement(diffMs){
@@ -443,10 +639,11 @@
       summary.style.marginTop = '8px';
       summary.style.fontFamily = hud.style.fontFamily;
       const rate = stats.totalNotes ? Math.round((stats.良 / stats.totalNotes) * 100) : 0;
-      summary.innerHTML = `結果: 良 ${stats.良} / 可 ${stats.可} / 普 ${stats.普} / 不 ${stats.不}<br>` +
-        `最大コンボ ${stats.maxCombo} | 総EXP ${stats.score.toFixed(1)} (クリアボーナス ${clearBonus.toFixed(1)}) | 良率 ${rate}%`;
+      lastClearBonus = clearBonus;
+      lastGoodRate = rate;
       container.appendChild(summary);
       resultNode = summary;
+      renderResultSummary();
       updateHud(1);
       startBtn.disabled = false;
       select.disabled = false;
@@ -458,6 +655,8 @@
         resultNode.parentElement.removeChild(resultNode);
         resultNode = null;
       }
+      lastClearBonus = 0;
+      lastGoodRate = 0;
       startBtn.disabled = true;
       select.disabled = true;
       laneFlash = { don: 0, ka: 0 };
@@ -492,7 +691,7 @@
       notes = parseChart(currentCfg.chart, currentCfg.bpm);
       totalDuration = notes.length ? notes[notes.length - 1].time + 4000 : 0;
       resetStats();
-      title.textContent = `太鼓リズム（${selected}）`;
+      updateTitle();
     });
 
     function keyHandler(e){
@@ -540,6 +739,17 @@
     window.addEventListener('pointerup', pointerUp);
     canvas.addEventListener('pointermove', pointerMove);
 
+    updateLocalizedStaticTexts();
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try {
+          updateLocalizedStaticTexts();
+        } catch (error) {
+          console.warn('[MiniExp][taiko_drum] Failed to refresh locale:', error);
+        }
+      });
+    }
+
     function isInside(px, py, region){
       return px >= region.x && px <= region.x + region.size && py >= region.y && py <= region.y + region.size;
     }
@@ -557,12 +767,31 @@
         canvas.removeEventListener('pointerdown', pointerDown);
         window.removeEventListener('pointerup', pointerUp);
         canvas.removeEventListener('pointermove', pointerMove);
+        if (typeof detachLocale === 'function'){
+          try { detachLocale(); } catch {}
+          detachLocale = null;
+        }
+        if (resultNode && resultNode.parentElement){
+          try { resultNode.parentElement.removeChild(resultNode); } catch {}
+          resultNode = null;
+        }
       }
     };
   }
 
-  if (!window.MINIEXP){
-    window.MINIEXP = {};
-  }
+  if (!window.MiniGameMods) window.MiniGameMods = {};
+  window.MiniGameMods.taiko_drum = { create };
+  if (!window.MINIEXP) window.MINIEXP = {};
   window.MINIEXP.taiko_drum = { create };
+  if (window.registerMiniGame){
+    window.registerMiniGame({
+      id: 'taiko_drum',
+      name: '太鼓リズム', nameKey: 'selection.miniexp.games.taiko_drum.name',
+      description: '太鼓の達人風の2面譜面。良/可/普/不の判定とコンボEXPボーナスを搭載',
+      descriptionKey: 'selection.miniexp.games.taiko_drum.description',
+      categoryIds: ['rhythm'],
+      localizationKey: 'minigame.taiko_drum',
+      create
+    });
+  }
 })();

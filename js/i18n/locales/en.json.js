@@ -10380,6 +10380,17 @@
           }
         }
       },
+      "pacman": {
+        "hud": {
+          "livesLabel": "LIVES",
+          "pelletsLabel": "PELLETS",
+          "statusTemplate": "{livesLabel}:{lives}  {pelletsLabel}:{pelletsCollected}/{pelletsTotal}"
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to restart"
+        }
+      },
       "othello": {
         "hud": {
           "status": {

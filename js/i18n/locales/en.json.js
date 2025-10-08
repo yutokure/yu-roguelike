@@ -10501,6 +10501,50 @@
     },
 
     "minigame": {
+      "calc_combo": {
+        "name": "Calc Combo",
+        "title": "{name} ({difficulty})",
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "stats": {
+          "correct": "Correct",
+          "mistake": "Miss",
+          "combo": "Combo",
+          "xp": "Total EXP"
+        },
+        "input": {
+          "answerPlaceholder": "Enter your answer"
+        },
+        "buttons": {
+          "submit": "Submit"
+        },
+        "shortcuts": {
+          "submitOrSkip": "Enter to submit / Esc to skip"
+        },
+        "history": {
+          "title": "History (last {count} questions)",
+          "correctEntry": "○ {expression}",
+          "mistakeEntry": "× {expression} = {answer}",
+          "streakEntry": "★ Combo {combo} bonus",
+          "gain": "+{value} EXP",
+          "loss": "{value} EXP",
+          "neutral": "±0 EXP"
+        },
+        "question": {
+          "loading": "Preparing…",
+          "prompt": "{expression} = ?"
+        },
+        "pop": {
+          "correct": "Correct! Base {base} + Combo {combo} + Speed {speed}",
+          "streak": "Combo {combo} achieved! Bonus +{bonus}",
+          "mistake": "Correct answer: {answer}",
+          "emptyAnswer": "Enter an answer before submitting",
+          "invalidAnswer": "Please enter a number"
+        }
+      },
       "acchimuitehoi": {
         "instructions": {
           "rpsTitle": "1. Decide roles with Rock-Paper-Scissors",

@@ -10363,6 +10363,41 @@
           "goodRateLabel": "Good Rate"
         }
       },
+      "darumasan": {
+        "guard": {
+          "title": "Watcher Status",
+          "hint": "Hold Space / ↑ to advance",
+          "state": {
+            "idle": "Preparing...",
+            "safe": "Go now!",
+            "warning": "Turning soon!",
+            "watch": "Watching! Freeze!"
+          },
+          "countdown": {
+            "placeholder": "Time left --.- s",
+            "safe": "Safe for {seconds}s",
+            "warning": "Turning in {seconds}s!",
+            "watch": "Under watch... hold for {seconds}s"
+          }
+        },
+        "movement": {
+          "stopped": "Stopped",
+          "moving": "Moving"
+        },
+        "progress": {
+          "title": "Progress",
+          "detail": "Distance {distance}% / Elapsed {time} s",
+          "bestPlaceholder": "Best: --.- s",
+          "best": "Best: {time} s"
+        },
+        "status": {
+          "initial": "Press Start to begin",
+          "running": "Red Light, Green Light! Move only when it's safe.",
+          "pause": "Paused",
+          "success": "Cleared! +50 EXP in {time} s",
+          "fail": "Caught moving... Failed"
+        }
+      },
       "checkers": {
         "hud": {
           "turn": {

@@ -11387,10 +11387,19 @@
           "maxIncreased": "SP cap increased to {value}!",
           "gained": "Gained {amount} SP.",
           "spent": "Spent {amount} SP.",
+          "offered": "Offered a healing item and gained {amount} SP.",
           "offerLocked": "You can offer items once the SP system is unlocked.",
           "notUnlockedForItem": "You can't use that until SP is unlocked.",
           "noCapacity": "Your SP cap is 0, so it has no effect.",
-          "alreadyFull": "SP is already full."
+          "alreadyFull": "SP is already full.",
+          "elixirUsed": "Used an SP Elixir! Restored {amount} SP.",
+          "fullyRestored": "SP fully restored (+{amount})."
+        },
+        "exp": {
+          "bossBonusSuffix": " (Boss Bonus!)",
+          "enemyGain": "Earned {amount} EXP!{bonus}",
+          "spent": "Spent {amount} EXP. ({context})",
+          "gained": "Earned {amount} EXP! ({context})"
         },
         "status": {
           "paralyzed": "You're paralyzed and can't move...",
@@ -11415,7 +11424,8 @@
           "started": "Sandbox mode started. EXP will not be awarded."
         },
         "console": {
-          "executed": "Creator Console executed the code."
+          "executed": "Creator Console executed the code.",
+          "error": "Creator Console Error: {message}"
         },
         "unlocks": {
           "nestedLegend": "Cleared NESTED 99999999 and attained Anos-class divinity!",
@@ -11430,18 +11440,38 @@
         },
         "charms": {
           "unknown": "An unknown charm can't be used.",
-          "notOwned": "You don't own that charm."
+          "notOwned": "You don't own that charm.",
+          "activated": "Activated the {label} charm! Effect lasts {turns} turns."
         },
         "satiety": {
           "enabled": "Satiety system enabled!",
           "disabled": "Satiety system disabled.",
           "cannotEat": "You can only eat while the satiety system is active.",
-          "alreadyFull": "Satiety is already at maximum."
+          "alreadyFull": "Satiety is already at maximum.",
+          "damage": "Took {amount} damage from hunger!"
+        },
+        "chest": {
+          "prefix": {
+            "normal": "Opened the chest! ",
+            "rare": "Opened the golden chest! "
+          },
+          "reward": {
+            "potion30": "{prefix}Obtained an HP 30% potion!",
+            "hpBoost": "{prefix}Obtained a Max HP Boost item!",
+            "atkBoost": "{prefix}Obtained an Attack Boost item!",
+            "defBoost": "{prefix}Obtained a Defense Boost item!"
+          }
         },
         "goldenChest": {
           "elixir": "Found a special SP Elixir in the golden chest! SP greatly restored.",
           "openedSafely": "Opened the golden chest safely!",
-          "prompt": "A golden chest! Time your press with the bar."
+          "prompt": "A golden chest! Time your press with the bar.",
+          "major": {
+            "hp": "Found a Max HP +{amount} elixir in the golden chest!",
+            "atk": "Found an ATK +{amount} tactical orb in the golden chest!",
+            "def": "Found a DEF +{amount} guardian shield card in the golden chest!"
+          },
+          "skillCharm": "Found a skill charm \"{effectName}\" in the golden chest! ({turns} turns)"
         },
         "combat": {
           "noEnemyInDirection": "No enemy in that direction!",
@@ -11457,7 +11487,9 @@
           "teleportResistedByLevel": "Level gap let you withstand the warp!",
           "instantDeathResisted": "Level gap nullified the instant-death attack!",
           "instantDeathHit": "The enemy's instant-death attack landed…!",
-          "knockbackResistedByLevel": "Level gap let you resist the knockback!"
+          "knockbackResistedByLevel": "Level gap let you resist the knockback!",
+          "playerDamage": "You dealt {amount} damage to the enemy!",
+          "knockbackCollision": "Slammed into the wall and took {amount} damage!"
         },
         "orb": {
           "statusAttackNegated": "Orb's blessing nullified the status attack!",
@@ -11478,6 +11510,7 @@
           "throwNoTarget": "Found no target to throw at.",
           "throwIneffective": "The enemy's level is too high; the throw had no effect...",
           "throwNoEffect": "You threw a healing item, but nothing happened.",
+          "throwDamage": "Threw a healing item and dealt {damage} damage to the enemy!",
           "autoSatietyRecovered": "Auto item triggered! Satiety recovered by {amount}.",
           "potionSatietyRecovered": "Ate a potion! Satiety recovered by {amount}.",
           "autoReversedDamage": "Auto item misfired! Took {amount} damage!",
@@ -11486,9 +11519,13 @@
           "potionHpRecovered": "Used a potion! Recovered {amount} HP.",
           "autoNoEffect": "Auto item triggered but nothing happened.",
           "potionNoEffect": "Used a potion but nothing happened.",
+          "cleansedStatus": "Used a healing item and cured {status}.",
           "hpBoostUsed": "Used a Max HP Boost! Max HP increased by 5!",
           "attackBoostUsed": "Used an Attack Boost! Attack increased by 1!",
           "defenseBoostUsed": "Used a Defense Boost! Defense increased by 1!",
+          "hpBoostMajorUsed": "Used a Grand Max HP Boost! Max HP increased by {amount}!",
+          "attackBoostMajorUsed": "Used a Grand Attack Boost! Attack increased by {amount}!",
+          "defenseBoostMajorUsed": "Used a Grand Defense Boost! Defense increased by {amount}!",
           "notOwned": "You don't have that item.",
           "noSpElixir": "You don't have an SP Elixir."
         },
@@ -11499,7 +11536,8 @@
           "selectionIncomplete": "Block selection is incomplete."
         },
         "progress": {
-          "dungeonCleared": "Dungeon cleared!"
+          "dungeonCleared": "Dungeon cleared!",
+          "nextFloor": "Advanced to the next floor! ({floor}F)"
         }
       }
     },

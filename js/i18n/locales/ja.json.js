@@ -11387,10 +11387,19 @@
           "maxIncreased": "SP上限が{value}に上昇した！",
           "gained": "SPを{amount}獲得した。",
           "spent": "SPを{amount}消費した。",
+          "offered": "回復アイテムを捧げ、SPを{amount}獲得した。",
           "offerLocked": "SPシステムが解放されてから捧げられる。",
           "notUnlockedForItem": "SPが解放されていないため使用できない。",
           "noCapacity": "SP上限が0のため効果がない。",
-          "alreadyFull": "SPはすでに最大だ。"
+          "alreadyFull": "SPはすでに最大だ。",
+          "elixirUsed": "SPエリクサーを使用！SPが{amount}回復した。",
+          "fullyRestored": "SPが全快した。（+{amount}）"
+        },
+        "exp": {
+          "bossBonusSuffix": " (ボスボーナス!)",
+          "enemyGain": "経験値を {amount} 獲得！{bonus}",
+          "spent": "経験値を {amount} 消費。（{context}）",
+          "gained": "経験値を {amount} 獲得！（{context}）"
         },
         "status": {
           "paralyzed": "体が痺れて動けない…",
@@ -11415,7 +11424,8 @@
           "started": "サンドボックスを開始しました。経験値は獲得できません。"
         },
         "console": {
-          "executed": "創造神コンソールがコードを実行しました。"
+          "executed": "創造神コンソールがコードを実行しました。",
+          "error": "創造神コンソール エラー: {message}"
         },
         "unlocks": {
           "nestedLegend": "NESTED 99999999 のダンジョンを攻略し、アノス級の神格を得た！",
@@ -11430,18 +11440,38 @@
         },
         "charms": {
           "unknown": "未知の護符は使用できない。",
-          "notOwned": "その護符は所持していない。"
+          "notOwned": "その護符は所持していない。",
+          "activated": "{label}の護符が発動！効果は{turns}ターン持続する。"
         },
         "satiety": {
           "enabled": "満腹度システムが発動した！",
           "disabled": "満腹度システムが解除された。",
           "cannotEat": "満腹度システムが有効な時だけ食べられる。",
-          "alreadyFull": "満腹度は既に最大値です。"
+          "alreadyFull": "満腹度は既に最大値です。",
+          "damage": "空腹で {amount} のダメージを受けた！"
+        },
+        "chest": {
+          "prefix": {
+            "normal": "宝箱を開けた！",
+            "rare": "黄金の宝箱を開けた！"
+          },
+          "reward": {
+            "potion30": "{prefix}HP30%回復ポーションを手に入れた！",
+            "hpBoost": "{prefix}最大HP強化アイテムを手に入れた！",
+            "atkBoost": "{prefix}攻撃力強化アイテムを手に入れた！",
+            "defBoost": "{prefix}防御力強化アイテムを手に入れた！"
+          }
         },
         "goldenChest": {
           "elixir": "黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。",
           "openedSafely": "黄金の宝箱を安全に開けた！",
-          "prompt": "黄金の宝箱だ！タイミングバーを狙おう。"
+          "prompt": "黄金の宝箱だ！タイミングバーを狙おう。",
+          "major": {
+            "hp": "黄金の宝箱から最大HP+{amount}の秘薬を手に入れた！",
+            "atk": "黄金の宝箱から攻撃力+{amount}の戦術オーブを手に入れた！",
+            "def": "黄金の宝箱から防御力+{amount}の護りの盾札を手に入れた！"
+          },
+          "skillCharm": "黄金の宝箱からスキル効果「{effectName}」の護符を手に入れた！（{turns}ターン）"
         },
         "combat": {
           "noEnemyInDirection": "その方向には敵がいない！",
@@ -11457,7 +11487,9 @@
           "teleportResistedByLevel": "レベル差で転移攻撃を耐えた！",
           "instantDeathResisted": "レベル差で即死攻撃を無効化した！",
           "instantDeathHit": "敵の即死攻撃が命中した…！",
-          "knockbackResistedByLevel": "レベル差で吹き飛ばしを踏ん張った！"
+          "knockbackResistedByLevel": "レベル差で吹き飛ばしを踏ん張った！",
+          "playerDamage": "プレイヤーは敵に {amount} のダメージを与えた！",
+          "knockbackCollision": "壁に激突して{amount}のダメージ！"
         },
         "orb": {
           "statusAttackNegated": "オーブの加護で状態異常攻撃を無効化した！",
@@ -11478,6 +11510,7 @@
           "throwNoTarget": "投げつける相手が見つからなかった。",
           "throwIneffective": "敵のレベルが高すぎて投げつけても効果がなかった…",
           "throwNoEffect": "回復アイテムを投げつけたが効果がなかった。",
+          "throwDamage": "回復アイテムを投げつけ、敵に{damage}のダメージを与えた！",
           "autoSatietyRecovered": "オートアイテムが発動！満腹度が{amount}回復",
           "potionSatietyRecovered": "ポーションを食べた！満腹度が{amount}回復",
           "autoReversedDamage": "オートアイテムが暴発し、{amount}のダメージを受けた！",
@@ -11486,9 +11519,13 @@
           "potionHpRecovered": "ポーションを使用！HPが{amount}回復",
           "autoNoEffect": "オートアイテムが発動したが体調に変化はなかった。",
           "potionNoEffect": "ポーションを使用したが体調に変化はなかった。",
+          "cleansedStatus": "回復アイテムを消費し、{status}の状態異常を治した。",
           "hpBoostUsed": "最大HP強化アイテムを使用！最大HPが5増加！",
           "attackBoostUsed": "攻撃力強化アイテムを使用！攻撃力が1増加！",
           "defenseBoostUsed": "防御力強化アイテムを使用！防御力が1増加！",
+          "hpBoostMajorUsed": "最大HP特大強化アイテムを使用！最大HPが{amount}増加！",
+          "attackBoostMajorUsed": "攻撃力特大強化アイテムを使用！攻撃力が{amount}増加！",
+          "defenseBoostMajorUsed": "防御力特大強化アイテムを使用！防御力が{amount}増加！",
           "notOwned": "そのアイテムは所持していない。",
           "noSpElixir": "SPエリクサーを所持していない。"
         },
@@ -11499,7 +11536,8 @@
           "selectionIncomplete": "ブロック選択が不完全です"
         },
         "progress": {
-          "dungeonCleared": "ダンジョンを攻略した！"
+          "dungeonCleared": "ダンジョンを攻略した！",
+          "nextFloor": "次の階層に進んだ！（{floor}F）"
         }
       }
     },

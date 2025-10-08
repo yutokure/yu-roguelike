@@ -10380,6 +10380,18 @@
           }
         }
       },
+      "invaders": {
+        "hud": {
+          "livesLabel": "Lives",
+          "killsLabel": "Kills",
+          "waveLabel": "Wave",
+          "statusLine": "{livesLabel}: {lives}  {killsLabel}: {kills}  {waveLabel}: {wave}"
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to restart"
+        }
+      },
       "othello": {
         "hud": {
           "status": {

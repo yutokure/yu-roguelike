@@ -270,6 +270,104 @@ if (languageSelect) {
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
+let mapBuffer = null;
+let mapBufferCtx = null;
+let mapBufferNeedsFullRedraw = true;
+const mapBufferDirtyTiles = new Set();
+
+function ensureMapBufferSize() {
+    if (!Number.isFinite(MAP_WIDTH) || !Number.isFinite(MAP_HEIGHT) || MAP_WIDTH <= 0 || MAP_HEIGHT <= 0) {
+        mapBuffer = null;
+        mapBufferCtx = null;
+        mapBufferNeedsFullRedraw = true;
+        mapBufferDirtyTiles.clear();
+        return;
+    }
+    const width = Math.max(1, Math.floor(MAP_WIDTH));
+    const height = Math.max(1, Math.floor(MAP_HEIGHT));
+    if (!mapBuffer) {
+        mapBuffer = document.createElement('canvas');
+        mapBufferCtx = mapBuffer.getContext('2d');
+        mapBufferNeedsFullRedraw = true;
+        mapBufferDirtyTiles.clear();
+    }
+    if (mapBuffer.width !== width || mapBuffer.height !== height) {
+        mapBuffer.width = width;
+        mapBuffer.height = height;
+        if (mapBufferCtx) {
+            mapBufferCtx.imageSmoothingEnabled = false;
+            mapBufferCtx.clearRect(0, 0, width, height);
+        }
+        mapBufferNeedsFullRedraw = true;
+        mapBufferDirtyTiles.clear();
+    }
+}
+
+function markMapBufferDirty() {
+    mapBufferNeedsFullRedraw = true;
+    mapBufferDirtyTiles.clear();
+}
+
+function markTileVisualDirty(x, y) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        markMapBufferDirty();
+        return;
+    }
+    const tx = Math.floor(x);
+    const ty = Math.floor(y);
+    if (tx < 0 || ty < 0 || tx >= MAP_WIDTH || ty >= MAP_HEIGHT) return;
+    if (mapBufferNeedsFullRedraw) {
+        mapBufferDirtyTiles.add(`${tx},${ty}`);
+        return;
+    }
+    mapBufferDirtyTiles.add(`${tx},${ty}`);
+}
+
+function redrawEntireMapBuffer() {
+    ensureMapBufferSize();
+    if (!mapBuffer || !mapBufferCtx) return;
+    mapBufferCtx.imageSmoothingEnabled = false;
+    mapBufferCtx.clearRect(0, 0, mapBuffer.width, mapBuffer.height);
+    for (let y = 0; y < MAP_HEIGHT; y++) {
+        const row = map[y];
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            const isWall = !row || row[x] === 1;
+            mapBufferCtx.fillStyle = getTileRenderColor(x, y, isWall);
+            mapBufferCtx.fillRect(x, y, 1, 1);
+        }
+    }
+}
+
+function redrawDirtyTiles() {
+    if (!mapBufferCtx || mapBufferDirtyTiles.size === 0) return;
+    mapBufferCtx.imageSmoothingEnabled = false;
+    for (const key of mapBufferDirtyTiles) {
+        const [xStr, yStr] = key.split(',');
+        const x = Number(xStr);
+        const y = Number(yStr);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+        if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) continue;
+        const row = map[y];
+        const isWall = !row || row[x] === 1;
+        mapBufferCtx.fillStyle = getTileRenderColor(x, y, isWall);
+        mapBufferCtx.fillRect(x, y, 1, 1);
+    }
+    mapBufferDirtyTiles.clear();
+}
+
+function syncMapBuffer() {
+    ensureMapBufferSize();
+    if (!mapBuffer || !mapBufferCtx) return;
+    if (mapBufferNeedsFullRedraw) {
+        redrawEntireMapBuffer();
+        mapBufferNeedsFullRedraw = false;
+        mapBufferDirtyTiles.clear();
+        return;
+    }
+    if (mapBufferDirtyTiles.size > 0) {
+        redrawDirtyTiles();
+    }
+}
 const playerStatsDiv = document.getElementById('player-stats');
 const statLevel = document.getElementById('stat-level');
 const statAtk = document.getElementById('stat-atk');
@@ -1113,6 +1211,7 @@ function spawnHatenaBlocks(recommendedLevel) {
         if (!meta) continue;
         meta.floorType = FLOOR_TYPE_HATENA;
         delete meta.floorDir;
+        markTileVisualDirty(pos.x, pos.y);
         placed.push({ x: pos.x, y: pos.y });
     }
 
@@ -4218,6 +4317,7 @@ function applySandboxTool() {
                     cfgMetaRow[targetX] = cfgMeta;
                 }
             }
+            markTileVisualDirty(targetX, targetY);
             sandboxLog('床を編集しました。');
             break;
         }
@@ -4232,6 +4332,7 @@ function applySandboxTool() {
             if (cfgMetaRow) {
                 cfgMetaRow[targetX] = null;
             }
+            markTileVisualDirty(targetX, targetY);
             sandboxLog('床を通常状態に戻しました。');
             break;
         }
@@ -4254,6 +4355,7 @@ function applySandboxTool() {
                     rebuildSandboxActivePortals();
                 }
             }
+            markTileVisualDirty(targetX, targetY);
             sandboxLog('壁を設置しました。');
             break;
         }
@@ -4303,6 +4405,7 @@ function applySandboxTool() {
                 }
                 rebuildSandboxActivePortals();
             }
+            markTileVisualDirty(targetX, targetY);
             sandboxLog('階段の位置を更新しました。');
             break;
         }
@@ -4403,6 +4506,8 @@ function applySandboxTool() {
                 if (ai === bi) return 0;
                 return ai - bi;
             });
+
+            markTileVisualDirty(targetX, targetY);
 
             markUiDirty();
             sandboxLog(`${formatSandboxDomainLabel(effect, selectedIndex)}を配置しました。`);
@@ -6051,6 +6156,7 @@ function getGeneratorHazardFlags(id) {
 
 function resetTileMetadata() {
     tileMeta = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
+    markMapBufferDirty();
 }
 
 function ensureTileMeta(x, y) {
@@ -6157,6 +6263,7 @@ function clearFloorTypeAt(x, y) {
             hatenaBlocks.splice(index, 1);
         }
     }
+    markTileVisualDirty(x, y);
 }
 
 function getTileRenderColor(x, y, isWall) {
@@ -6875,6 +6982,9 @@ function activateSkillEffect(effectId, turns, { silent = false } = {}) {
     } else if (!silent) {
         clearSkillEffect(effectId, { silent: true });
     }
+    if (effectId === 'gimmickNullify') {
+        markMapBufferDirty();
+    }
     markSkillsListDirty();
     return normalized;
 }
@@ -6891,6 +7001,9 @@ function clearSkillEffect(effectId, { silent = false } = {}) {
         }
     }
     if (wasActive) markSkillsListDirty();
+    if (wasActive && effectId === 'gimmickNullify') {
+        markMapBufferDirty();
+    }
 }
 
 function getActiveSkillEffectList() {
@@ -7399,9 +7512,13 @@ function refreshGeneratorHazardSuppression() {
     const recommended = currentGeneratorHazards.recommendedLevel;
     const suppressed = (currentGeneratorHazards.baseDark || currentGeneratorHazards.basePoisonFog || currentGeneratorHazards.baseNoise) &&
         Number.isFinite(recommended) && Number.isFinite(playerLevel) && recommended <= playerLevel - 5;
+    const prevPoisonActive = currentGeneratorHazards.poisonFogActive;
     currentGeneratorHazards.darkActive = currentGeneratorHazards.baseDark && !suppressed;
     currentGeneratorHazards.poisonFogActive = currentGeneratorHazards.basePoisonFog && !suppressed;
     currentGeneratorHazards.noiseActive = currentGeneratorHazards.baseNoise && !suppressed;
+    if (currentGeneratorHazards.poisonFogActive !== prevPoisonActive) {
+        markMapBufferDirty();
+    }
     updateDungeonTypeOverlay();
     updateNoiseUiEffects();
 }
@@ -8532,6 +8649,7 @@ function useSkillBuildWall() {
     if (tileMeta[targetY]) {
         tileMeta[targetY][targetX] = null;
     }
+    markTileVisualDirty(targetX, targetY);
     addMessage({ key: 'messages.skills.buildWall.success', fallback: 'SPスキル：壁を生成した！', params: { skillName } });
     playSfx('bomb');
     return true;
@@ -8743,6 +8861,7 @@ function useSkillRuinAnnihilation() {
     currentGeneratorHazards.darkActive = false;
     currentGeneratorHazards.poisonFogActive = false;
     currentGeneratorHazards.noiseActive = false;
+    markMapBufferDirty();
 
     if (Array.isArray(chests) && chests.length) {
         const copy = chests.slice();
@@ -9143,6 +9262,7 @@ function applyBlockDimTestEnvironment(snapshot) {
     if (snapshot.lastSelectionKey !== undefined) {
         __lastSavedBlockDimSelectionKey = snapshot.lastSelectionKey;
     }
+    markMapBufferDirty();
 }
 
 function gatherAllGeneratorTypeIdsForTest() {
@@ -11720,6 +11840,7 @@ function breakWallAt(x, y) {
     if (tileMeta[y]) {
         tileMeta[y][x] = null;
     }
+    markTileVisualDirty(x, y);
 
     addMessage({
         key: 'game.events.actions.wallDestroyed',
@@ -11820,6 +11941,7 @@ function generateMap() {
             });
         });
         lastGeneratedGenType = 'sandbox';
+        markMapBufferDirty();
         return;
     }
     map = [];
@@ -11895,6 +12017,7 @@ function generateMap() {
     }
     // Fallback safety: ensure there are some floor tiles to avoid infinite loops
     ensureMinimumFloors(10);
+    markMapBufferDirty();
 }
 
 function resolveCurrentGeneratorType() {
@@ -13473,13 +13596,14 @@ function generateBossRoom() {
             { x: bossX - 1, y: bossY }, // 左
             { x: bossX + 1, y: bossY }  // 右
         ];
-        
+
         chestPositions.forEach(pos => {
             const rarity = Math.random() < RARE_CHEST_CHANCE ? 'rare' : 'normal';
             chests.push({ x: pos.x, y: pos.y, type: 'chest', rarity });
         });
     }
-    
+
+    markMapBufferDirty();
     items = [];
 }
 
@@ -13930,6 +14054,8 @@ function applyDifficultyDamageMultipliers(type, value) {
 }
 
 function drawMap() {
+    syncMapBuffer();
+
     const startX = camera.x;
     const startY = camera.y;
     const endX = startX + VIEWPORT_WIDTH;
@@ -13937,6 +14063,28 @@ function drawMap() {
 
     const cellW = canvas.width / VIEWPORT_WIDTH;
     const cellH = canvas.height / VIEWPORT_HEIGHT;
+
+    if (mapBuffer) {
+        const availableW = Math.max(0, Math.min(VIEWPORT_WIDTH, mapBuffer.width - startX));
+        const availableH = Math.max(0, Math.min(VIEWPORT_HEIGHT, mapBuffer.height - startY));
+        if (availableW > 0 && availableH > 0) {
+            const prevSmoothing = ctx.imageSmoothingEnabled;
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(
+                mapBuffer,
+                startX,
+                startY,
+                availableW,
+                availableH,
+                0,
+                0,
+                availableW * cellW,
+                availableH * cellH
+            );
+            ctx.imageSmoothingEnabled = prevSmoothing;
+        }
+    }
+
     const darknessActive = isDarknessActive();
 
     for (let y = startY; y < endY; y++) {
@@ -13951,8 +14099,12 @@ function drawMap() {
 
             const isWall = map[y][x] === 1;
             const visible = !darknessActive || isTileVisible(x, y);
-            ctx.fillStyle = visible ? getTileRenderColor(x, y, isWall) : DARKNESS_FILL_COLOR;
-            ctx.fillRect(screenX, screenY, cellW, cellH);
+
+            if (darknessActive && !visible) {
+                ctx.fillStyle = DARKNESS_FILL_COLOR;
+                ctx.fillRect(screenX, screenY, cellW, cellH);
+                continue;
+            }
 
             if (!isWall && visible) {
                 drawFloorGimmickOverlay(x, y, screenX, screenY, cellW, cellH);
@@ -20680,6 +20832,7 @@ function makeGenContext() {
                     if (!meta.wallColor && !Object.keys(meta).length) tileMeta[y][x] = null;
                 }
             }
+            markTileVisualDirty(x, y);
         },
         get(x,y){ return map[y] && (map[y][x] ? 1 : 0); },
         ensureConnectivity: () => { try { ensureConnectivity(); } catch {} },
@@ -20690,13 +20843,19 @@ function makeGenContext() {
             if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;
             if (!ctx.inBounds(x, y) && map[y]?.[x] !== 0) return;
             const meta = ensureTileMeta(x, y);
-            if (meta) meta.floorColor = color;
+            if (meta) {
+                meta.floorColor = color;
+                markTileVisualDirty(x, y);
+            }
         },
         setWallColor: (x, y, color) => {
             if (!color) return;
             if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;
             const meta = ensureTileMeta(x, y);
-            if (meta) meta.wallColor = color;
+            if (meta) {
+                meta.wallColor = color;
+                markTileVisualDirty(x, y);
+            }
         },
         setFloorType: (x, y, type, options) => {
             if (!ctx.inBounds(x, y)) return;
@@ -20712,6 +20871,7 @@ function makeGenContext() {
             if (!targetType || normalized === FLOOR_TYPE_NORMAL) {
                 delete meta.floorType;
                 delete meta.floorDir;
+                markTileVisualDirty(x, y);
                 return;
             }
             if (!FLOOR_TYPE_SET.has(normalized) || normalized === FLOOR_TYPE_NORMAL) {
@@ -20725,6 +20885,7 @@ function makeGenContext() {
             } else if (!floorTypeNeedsDirection(normalized)) {
                 delete meta.floorDir;
             }
+            markTileVisualDirty(x, y);
         },
         setFloorDirection: (x, y, direction) => {
             if (!ctx.inBounds(x, y)) return;
@@ -20733,15 +20894,21 @@ function makeGenContext() {
             const currentType = normalizeFloorType(meta.floorType);
             if (!floorTypeNeedsDirection(currentType)) {
                 delete meta.floorDir;
+                markTileVisualDirty(x, y);
                 return;
             }
             const dir = normalizeFloorDirection(direction);
-            if (dir) meta.floorDir = dir;
-            else delete meta.floorDir;
+            if (dir) {
+                meta.floorDir = dir;
+            } else {
+                delete meta.floorDir;
+            }
+            markTileVisualDirty(x, y);
         },
         clearTileMeta: (x, y) => {
             if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;
             tileMeta[y][x] = null;
+            markTileVisualDirty(x, y);
         },
         getTileMeta: (x, y) => {
             if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return null;

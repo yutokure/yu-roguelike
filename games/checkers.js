@@ -222,6 +222,30 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'checkers' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    let detachLocale = null;
+    const attachLocaleListener = () => {
+      if (!detachLocale && localization && typeof localization.onChange === 'function'){
+        detachLocale = localization.onChange(() => {
+          try { drawBoard(); } catch {}
+        });
+      }
+    };
+    const detachLocaleListener = () => {
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
+    };
     const canvas = document.createElement('canvas');
     canvas.width = 480;
     canvas.height = 520;
@@ -237,7 +261,7 @@
     let turn = PLAYER;
     let running = false;
     let ended = false;
-    let resultText = '';
+    let resultState = { key: null, fallback: '', params: undefined };
     let selected = null;
     let availableMoves = [];
     let legalMoves = [];
@@ -274,7 +298,7 @@
       }
       turn = PLAYER;
       ended = false;
-      resultText = '';
+      resultState = { key: null, fallback: '', params: undefined };
       selected = null;
       availableMoves = [];
       legalMoves = getAllMoves(PLAYER, board);
@@ -351,19 +375,25 @@
       ctx.fillStyle = TEXT_COLOR;
       ctx.textAlign = 'center';
       ctx.font = '20px system-ui, sans-serif';
-      const turnText = ended ? resultText : (turn === PLAYER ? 'あなたの番 - 駒を選択して移動' : 'AI思考中...');
+      const resultMessage = text(resultState.key, resultState.fallback, resultState.params);
+      const defaultEnded = text('minigame.checkers.overlay.defaultTitle', 'ゲーム終了');
+      const turnText = ended
+        ? (resultMessage || defaultEnded)
+        : (turn === PLAYER
+          ? text('minigame.checkers.hud.turn.playerPrompt', 'あなたの番 - 駒を選択して移動')
+          : text('minigame.checkers.hud.turn.aiThinking', 'AI思考中...'));
       ctx.fillText(turnText, w / 2, 24);
       ctx.font = '14px system-ui, sans-serif';
-      ctx.fillText('移動: +1EXP / 捕獲: +6EXP×駒 / 王冠昇格: +12EXP', w / 2, h - 18);
+      ctx.fillText(text('minigame.checkers.hud.expHint', '移動: +1EXP / 捕獲: +6EXP×駒 / 王冠昇格: +12EXP'), w / 2, h - 18);
 
       if (ended){
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
         ctx.fillRect(0, 0, w, h);
         ctx.fillStyle = TEXT_COLOR;
         ctx.font = 'bold 30px system-ui, sans-serif';
-        ctx.fillText(resultText, w / 2, h / 2 - 10);
+        ctx.fillText(resultMessage || defaultEnded, w / 2, h / 2 - 10);
         ctx.font = '16px system-ui, sans-serif';
-        ctx.fillText('Rキーでリスタート', w / 2, h / 2 + 20);
+        ctx.fillText(text('minigame.checkers.overlay.restartHint', 'Rキーでリスタート'), w / 2, h / 2 + 20);
       }
     }
 
@@ -402,13 +432,14 @@
       }
     }
 
-    function finishGame(text){
+    function finishGame(message){
+      if (message){
+        const { key = null, fallback = '', params } = message;
+        resultState = { key, fallback, params };
+      }
       if (!ended){
         ended = true;
-        resultText = text || resultText;
         enableHostRestart();
-      } else if (text){
-        resultText = text;
       }
     }
 
@@ -416,11 +447,11 @@
       const playerPieces = countPieces(board, PLAYER);
       const aiPieces = countPieces(board, AI);
       if (playerPieces === 0 || getAllMoves(PLAYER, board).length === 0){
-        finishGame('敗北...');
+        finishGame({ key: 'minigame.checkers.overlay.result.loss', fallback: '敗北...' });
         return true;
       }
       if (aiPieces === 0 || getAllMoves(AI, board).length === 0){
-        finishGame('勝利！');
+        finishGame({ key: 'minigame.checkers.overlay.result.win', fallback: '勝利！' });
         awardXp(WIN_EXP[difficulty] || 160, { type: 'win' });
         return true;
       }
@@ -466,7 +497,7 @@
       if (ended) return;
       const move = aiChooseMove();
       if (!move){
-        finishGame('勝利！');
+        finishGame({ key: 'minigame.checkers.overlay.result.win', fallback: '勝利！' });
         awardXp(WIN_EXP[difficulty] || 160, { type: 'win' });
         drawBoard();
         return;
@@ -536,6 +567,7 @@
       running = true;
       setupBoard();
       drawBoard();
+      attachLocaleListener();
       canvas.addEventListener('click', handleClick);
       canvas.addEventListener('mousemove', handleMove);
       canvas.addEventListener('mouseleave', handleLeave);
@@ -549,6 +581,7 @@
       canvas.removeEventListener('mousemove', handleMove);
       canvas.removeEventListener('mouseleave', handleLeave);
       window.removeEventListener('keydown', handleKey);
+      detachLocaleListener();
       if (!opts.keepShortcutsDisabled){
         enableHostRestart();
       }
@@ -556,6 +589,7 @@
 
     function destroy(){
       try { stop(); } catch {}
+      detachLocaleListener();
       try { root && root.removeChild(canvas); } catch {}
     }
 

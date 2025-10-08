@@ -977,6 +977,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['action']
   },
   {
+    id: 'treasure_hunt',
+    name: '宝探しダンジョン',
+    nameKey: 'selection.miniexp.games.treasure_hunt.name',
+    entry: 'games/treasure_hunt.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '生成される混合型ダンジョンで宝を探し、距離と時間で指数EXPを稼ぐ探索アクション',
+    descriptionKey: 'selection.miniexp.games.treasure_hunt.description',
+    category: 'アクション',
+    categories: ['アクション'],
+    categoryIds: ['action']
+  },
+  {
     id: 'ten_ten',
     name: '1010パズル',
     nameKey: 'selection.miniexp.games.ten_ten.name',

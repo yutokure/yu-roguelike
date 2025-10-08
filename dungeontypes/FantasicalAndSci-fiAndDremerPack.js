@@ -2079,6 +2079,7 @@
   window.registerDungeonAddon({
     id: addonId,
     name: 'ファンタジカルと近未来をテーマにした夢の世界パック',
+    nameKey: "dungeon.packs.fantasical_sci_fi_dream_pack.name",
     version: '3.0.0',
     blocks,
     generators

@@ -1309,12 +1309,14 @@
   const addon = {
     id: ADDON_ID,
     name: ADDON_NAME,
+    nameKey: "dungeon.packs.arabian_legends_pack.name",
     version: VERSION,
     api: '1.0.0',
     description: [
       '砂海に眠る伝承と幻影をテーマに、オアシス、城砦、市場、宙庭、星図聖堂など16種類のダンジョン生成アルゴリズムと',
       '50種以上のアラビア語ブロックを鮮やかな色彩表現で追加する大型パック。'
     ].join(''),
+    descriptionKey: "dungeon.packs.arabian_legends_pack.description",
     generators: createGenerators(),
     blocks: createBlocks()
   };

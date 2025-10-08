@@ -711,5 +711,12 @@
     });
   });
 
-  window.registerDungeonAddon({ id: ADDON_ID, name: ADDON_NAME, version: VERSION, blocks, generators });
+  window.registerDungeonAddon({
+    id: ADDON_ID,
+    name: ADDON_NAME,
+    nameKey: "dungeon.packs.biome_convergence_megapack.name",
+    version: VERSION,
+    blocks,
+    generators
+  });
 })();

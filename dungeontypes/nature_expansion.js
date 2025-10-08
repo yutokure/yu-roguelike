@@ -1481,6 +1481,7 @@
   window.registerDungeonAddon({
     id: ADDON_ID,
     name: ADDON_NAME,
+    nameKey: "dungeon.packs.nature_expansion_pack.name",
     version: VERSION,
     blocks,
     generators

@@ -1526,6 +1526,7 @@
   window.registerDungeonAddon({
     id: ADDON_ID,
     name: ADDON_NAME,
+    nameKey: "dungeon.packs.abstract_spectrum_pack.name",
     version: VERSION,
     blocks,
     generators

@@ -11872,6 +11872,89 @@
         "levelWithBase": "Lv.{effective} (基{base})",
         "hp": "{current}/{max}{baseSuffix}"
       }
+    },
+    "games": {
+      "notepad": {
+        "defaultFileName": "タイトルなし.txt",
+        "confirm": {
+          "discardChanges": "変更を破棄して閉じますか？",
+          "newWithoutSaving": "変更を保存せずに新しいファイルを開きますか？"
+        },
+        "menu": {
+          "file": "ファイル",
+          "edit": "編集",
+          "view": "表示",
+          "fileNew": "新規",
+          "fileOpen": "開く...",
+          "fileSave": "上書き保存",
+          "fileSaveAs": "名前を付けて保存...",
+          "filePrint": "印刷...",
+          "editUndo": "元に戻す",
+          "editRedo": "やり直し",
+          "editCut": "切り取り",
+          "editCopy": "コピー",
+          "editPaste": "貼り付け",
+          "editDelete": "削除",
+          "editFind": "検索...",
+          "editReplace": "置換...",
+          "editSelectAll": "すべて選択",
+          "viewZoomIn": "ズームイン",
+          "viewZoomOut": "ズームアウト",
+          "viewZoomReset": "ズームを既定に戻す",
+          "view": {
+            "enableWordWrap": "折り返しを有効化",
+            "disableWordWrap": "折り返しを無効化",
+            "showStatusBar": "ステータスバーを表示",
+            "hideStatusBar": "ステータスバーを非表示"
+          }
+        },
+        "commands": {
+          "heading": "見出しを切り替え",
+          "bullet": "箇条書きを切り替え",
+          "bold": "太字 (Markdown)",
+          "italic": "斜体 (Markdown)",
+          "underline": "下線タグ",
+          "wordWrap": "折り返しを切り替え",
+          "zoomReset": "ズームを既定に戻す",
+          "settings": "設定"
+        },
+        "settings": {
+          "title": "設定",
+          "wordWrap": "折り返し",
+          "statusBar": "ステータスバー",
+          "zoom": "ズーム",
+          "zoomReset": "リセット",
+          "insertTimestamp": "日時を挿入"
+        },
+        "prompts": {
+          "search": "検索する文字列を入力してください",
+          "saveFileName": "保存するファイル名を入力してください",
+          "replaceTarget": "置換する文字列を入力してください",
+          "replaceWith": "置換後の文字列を入力してください"
+        },
+        "alerts": {
+          "searchNotFound": "見つかりませんでした。",
+          "replaceNotFound": "対象の文字列が見つかりませんでした。",
+          "fileReadFailed": "ファイルの読み込みに失敗しました。",
+          "printPopupBlocked": "印刷ウィンドウを開けませんでした。ポップアップを許可してください。"
+        },
+        "print": {
+          "label": "印刷",
+          "windowTitleFallback": "メモ帳"
+        },
+        "status": {
+          "position": "行 {line}, 列 {column}",
+          "length": "{count} 文字",
+          "typeText": "テキスト",
+          "lineEnding": {
+            "lf": "Unix (LF)",
+            "crlf": "Windows (CRLF)"
+          }
+        },
+        "timestamp": {
+          "pattern": "{year}-{month}-{day} {hour}:{minute}:{second}"
+        }
+      }
     }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this);

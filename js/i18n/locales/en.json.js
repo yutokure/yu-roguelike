@@ -11872,6 +11872,89 @@
         "levelWithBase": "Lv.{effective} (Base {base})",
         "hp": "{current}/{max}{baseSuffix}"
       }
+    },
+    "games": {
+      "notepad": {
+        "defaultFileName": "Untitled.txt",
+        "confirm": {
+          "discardChanges": "Discard changes and close?",
+          "newWithoutSaving": "Start a new file without saving changes?"
+        },
+        "menu": {
+          "file": "File",
+          "edit": "Edit",
+          "view": "View",
+          "fileNew": "New",
+          "fileOpen": "Open...",
+          "fileSave": "Save",
+          "fileSaveAs": "Save As...",
+          "filePrint": "Print...",
+          "editUndo": "Undo",
+          "editRedo": "Redo",
+          "editCut": "Cut",
+          "editCopy": "Copy",
+          "editPaste": "Paste",
+          "editDelete": "Delete",
+          "editFind": "Find...",
+          "editReplace": "Replace...",
+          "editSelectAll": "Select All",
+          "viewZoomIn": "Zoom In",
+          "viewZoomOut": "Zoom Out",
+          "viewZoomReset": "Reset Zoom",
+          "view": {
+            "enableWordWrap": "Enable Word Wrap",
+            "disableWordWrap": "Disable Word Wrap",
+            "showStatusBar": "Show Status Bar",
+            "hideStatusBar": "Hide Status Bar"
+          }
+        },
+        "commands": {
+          "heading": "Toggle heading level",
+          "bullet": "Toggle bullet list",
+          "bold": "Bold (Markdown)",
+          "italic": "Italic (Markdown)",
+          "underline": "Underline tag",
+          "wordWrap": "Toggle word wrap",
+          "zoomReset": "Reset zoom",
+          "settings": "Settings"
+        },
+        "settings": {
+          "title": "Settings",
+          "wordWrap": "Word wrap",
+          "statusBar": "Status bar",
+          "zoom": "Zoom",
+          "zoomReset": "Reset",
+          "insertTimestamp": "Insert timestamp"
+        },
+        "prompts": {
+          "search": "Enter text to find",
+          "saveFileName": "Enter a file name to save",
+          "replaceTarget": "Enter text to replace",
+          "replaceWith": "Enter replacement text"
+        },
+        "alerts": {
+          "searchNotFound": "No matches found.",
+          "replaceNotFound": "No occurrences found to replace.",
+          "fileReadFailed": "Failed to read the file.",
+          "printPopupBlocked": "Could not open the print window. Please allow pop-ups."
+        },
+        "print": {
+          "label": "Print",
+          "windowTitleFallback": "Notepad"
+        },
+        "status": {
+          "position": "Ln {line}, Col {column}",
+          "length": "{count} characters",
+          "typeText": "Text",
+          "lineEnding": {
+            "lf": "Unix (LF)",
+            "crlf": "Windows (CRLF)"
+          }
+        },
+        "timestamp": {
+          "pattern": "{month}/{day}/{year} {hour}:{minute}:{second}"
+        }
+      }
     }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this);

@@ -7245,7 +7245,9 @@ function processPlayerStatusTurnStart() {
             addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#94d82d');
             playSfx('damage');
             if (player.hp <= 0) {
-                handlePlayerDeath('毒で倒れた…ゲームオーバー');
+                handlePlayerDeath(
+                    translateOrFallback('game.death.cause.poison', '毒で倒れた…ゲームオーバー')
+                );
                 alive = false;
             }
         }
@@ -15332,7 +15334,9 @@ function handleSatietyTurnTick(actionType = 'move') {
                 playSfx('damage');
             } catch {}
             if (player.hp <= 0) {
-                handlePlayerDeath('空腹で倒れた…ゲームオーバー');
+                handlePlayerDeath(
+                    translateOrFallback('game.death.cause.starvation', '空腹で倒れた…ゲームオーバー')
+                );
                 alive = false;
             }
         }
@@ -16284,7 +16288,10 @@ function drawPopups() {
 
 function handlePlayerDeath(message) {
     if (isGameOver) return;
-    const defaultCause = translateOrFallback('game.runResult.defaultCause', 'ゲームオーバー');
+    const defaultCause = translateOrFallback(
+        'game.death.cause.generic',
+        () => translateOrFallback('game.runResult.defaultCause', 'ゲームオーバー')
+    );
     const deathMessage = (typeof message === 'string' && message.trim()) ? message : defaultCause;
     recordAchievementEvent('death', { cause: deathMessage, mode: currentMode, floor: dungeonLevel, difficulty });
     addMessage(deathMessage);
@@ -17053,7 +17060,9 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     playSfx('damage');
 
     if (player.hp <= 0) {
-        handlePlayerDeath('ゲームオーバー');
+        handlePlayerDeath(
+            translateOrFallback('game.death.cause.generic', 'ゲームオーバー')
+        );
         return;
     }
 
@@ -17122,7 +17131,9 @@ function applyKnockbackFromEnemy(enemy, stepX, stepY) {
         addPopup(player.x, player.y, `-${Math.min(scaledDamage, 999999999)}${scaledDamage > 999999999 ? '+' : ''}`, '#ffa94d');
         playSfx('damage');
         if (player.hp <= 0) {
-            handlePlayerDeath('壁への激突で倒れた…ゲームオーバー');
+            handlePlayerDeath(
+                translateOrFallback('game.death.cause.wallCollision', '壁への激突で倒れた…ゲームオーバー')
+            );
         }
     }
     updateUI();
@@ -17230,7 +17241,9 @@ function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}
             });
             addPopup(player.x, player.y, '☠', '#ff6b6b', 1.4);
             player.hp = 0;
-            handlePlayerDeath('敵の即死攻撃を受けた…ゲームオーバー');
+            handlePlayerDeath(
+                translateOrFallback('game.death.cause.instantKill', '敵の即死攻撃を受けた…ゲームオーバー')
+            );
             break;
         }
         case 'knockback': {
@@ -17400,7 +17413,12 @@ function consumePotion30({ reason = 'manual' } = {}) {
         autoTriggerOutcome = 'reversed';
         autoTriggerValue = scaledDamage;
         if (player.hp <= 0) {
-            const deathMessage = isAuto ? 'オートアイテムの暴発で倒れてしまった…ゲームオーバー' : '反転した回復薬で倒れてしまった…ゲームオーバー';
+            const deathMessage = translateOrFallback(
+                isAuto ? 'game.death.cause.autoItemBackfire' : 'game.death.cause.reversedPotion',
+                isAuto
+                    ? 'オートアイテムの暴発で倒れてしまった…ゲームオーバー'
+                    : '反転した回復薬で倒れてしまった…ゲームオーバー'
+            );
             handlePlayerDeath(deathMessage);
         }
     } else {

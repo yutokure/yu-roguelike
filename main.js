@@ -18891,6 +18891,8 @@ document.addEventListener('app:rerender', () => {
         renderMiniExpList(__miniManifest);
     }
     applyMiniExpPlaceholderState(__miniManifest);
+    renderMiniExpRecords();
+    updateMiniExpPauseButtonLabel();
     try {
         if (typeof buildSelection === 'function') {
             buildSelection();
@@ -19987,7 +19989,10 @@ async function startSelectedMiniGame() {
     __miniPaused = false;
     const fallbackName = resolveMiniGameText(def, 'name') || def.id;
     setMiniExpPlaceholderState('selected', { id: def.id, fallbackName }, list);
-    if (miniexpPauseBtn) { miniexpPauseBtn.disabled = false; miniexpPauseBtn.textContent = '一時停止'; }
+    if (miniexpPauseBtn) {
+        miniexpPauseBtn.disabled = false;
+        updateMiniExpPauseButtonLabel(false);
+    }
     if (miniexpRestartBtn) miniexpRestartBtn.disabled = false;
     if (miniexpQuitBtn) miniexpQuitBtn.disabled = false;
 }
@@ -20015,7 +20020,10 @@ function quitMiniGame() {
     __miniPaused = false;
     if (miniexpContainer) miniexpContainer.innerHTML = '';
     if (miniexpStartBtn) miniexpStartBtn.disabled = false;
-    if (miniexpPauseBtn) { miniexpPauseBtn.disabled = true; miniexpPauseBtn.textContent = '一時停止'; }
+    if (miniexpPauseBtn) {
+        miniexpPauseBtn.disabled = true;
+        updateMiniExpPauseButtonLabel(false);
+    }
     if (miniexpRestartBtn) miniexpRestartBtn.disabled = true;
     if (miniexpQuitBtn) miniexpQuitBtn.disabled = true;
     resetMiniShortcutState();
@@ -20030,8 +20038,15 @@ miniexpQuitBtn && miniexpQuitBtn.addEventListener('click', quitMiniGame);
 
 miniexpPauseBtn && miniexpPauseBtn.addEventListener('click', () => {
     if (!__currentMini) return;
-    if (!__miniPaused) { __currentMini.stop && __currentMini.stop(); __miniPaused = true; miniexpPauseBtn.textContent = '再開'; }
-    else { __currentMini.start && __currentMini.start(); __miniPaused = false; miniexpPauseBtn.textContent = '一時停止'; }
+    if (!__miniPaused) {
+        __currentMini.stop && __currentMini.stop();
+        __miniPaused = true;
+        updateMiniExpPauseButtonLabel(true);
+    } else {
+        __currentMini.start && __currentMini.start();
+        __miniPaused = false;
+        updateMiniExpPauseButtonLabel(false);
+    }
 });
 miniexpRestartBtn && miniexpRestartBtn.addEventListener('click', async () => {
     if (!miniExpState.selected) return;
@@ -20048,29 +20063,53 @@ document.addEventListener('keydown', (e) => {
     if (key === 'r') { e.preventDefault(); if (!miniexpRestartBtn?.disabled) miniexpRestartBtn.click(); }
 });
 
+function updateMiniExpPauseButtonLabel(paused = __miniPaused) {
+    if (!miniexpPauseBtn) return;
+    const key = paused ? 'selection.miniexp.resume' : 'selection.miniexp.pause';
+    const fallback = paused ? '再開' : '一時停止';
+    miniexpPauseBtn.textContent = translateOrFallback(key, fallback);
+}
+
 function renderMiniExpRecords() {
     const box = document.getElementById('miniexp-records');
     if (!box) return;
     box.innerHTML = '';
     const id = miniExpState.selected;
     if (!id) return;
-    const rec = miniExpState.records[id];
+    const rec = miniExpState.records[id] || {};
     const mk = (title, value) => {
         const card = document.createElement('div');
         card.className = 'rec-card';
-        const t = document.createElement('div'); t.className='rec-title'; t.textContent = title;
-        const v = document.createElement('div'); v.className='rec-value'; v.textContent = value;
-        card.appendChild(t); card.appendChild(v); return card;
+        const t = document.createElement('div');
+        t.className = 'rec-title';
+        t.textContent = title;
+        const v = document.createElement('div');
+        v.className = 'rec-value';
+        v.textContent = value;
+        card.appendChild(t);
+        card.appendChild(v);
+        return card;
     };
-    const best = rec?.bestScore ?? 0;
-    const plays = rec?.totalPlays ?? 0;
-    const totalExpRaw = rec?.totalExpEarned ?? 0;
+    const best = Number.isFinite(rec.bestScore) ? rec.bestScore : 0;
+    const plays = Number.isFinite(rec.totalPlays) ? rec.totalPlays : 0;
+    const totalExpRaw = Number.isFinite(rec.totalExpEarned) ? rec.totalExpEarned : 0;
     const totalExp = Math.floor(totalExpRaw);
-    const totalExpText = totalExp > 0 ? `+${totalExp}` : String(totalExp);
-    const formattedBest = Number.isFinite(best) ? best.toFixed(2) : String(best);
-    box.appendChild(mk('ベストスコア', formattedBest));
-    box.appendChild(mk('通算プレイ', String(plays)));
-    box.appendChild(mk('通算獲得EXP', totalExpText));
+    const bestLabel = translateOrFallback('selection.miniexp.records.bestScore', 'ベストスコア');
+    const playsLabel = translateOrFallback('selection.miniexp.records.totalPlays', '通算プレイ');
+    const expLabel = translateOrFallback('selection.miniexp.records.totalExp', '通算獲得EXP');
+    const formattedBest = formatNumberLocalized(best, { maximumFractionDigits: 2 });
+    const formattedPlays = formatNumberLocalized(plays, { maximumFractionDigits: 0 });
+    const absExp = Math.abs(totalExp);
+    const formattedExp = formatNumberLocalized(absExp, { maximumFractionDigits: 0 });
+    const sign = totalExp > 0 ? '+' : totalExp < 0 ? '-' : '';
+    const expValue = translateOrFallback(
+        'selection.miniexp.records.totalExpValue',
+        () => `${sign}${formattedExp}`,
+        { sign, value: formattedExp, raw: totalExp }
+    );
+    box.appendChild(mk(bestLabel, formattedBest));
+    box.appendChild(mk(playsLabel, formattedPlays));
+    box.appendChild(mk(expLabel, expValue));
 }
 
 // -------------- Dungeon Addons (生成MOD) --------------

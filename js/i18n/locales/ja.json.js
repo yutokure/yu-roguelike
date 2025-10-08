@@ -10604,6 +10604,13 @@
           "hint": "ゲームとツールの全データをまとめてエクスポート／インポートします。"
         }
       },
+      "sandbox": {
+        "controls": {
+          "domain": {
+            "noneAvailable": "配置可能なクリスタルなし"
+          }
+        }
+      },
       "modMaker": {
         "panelAriaLabel": "ダンジョンタイプMod作成ツール",
         "header": {

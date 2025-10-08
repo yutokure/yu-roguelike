@@ -10604,6 +10604,13 @@
           "hint": "Export or import all game and tool data in one bundle."
         }
       },
+      "sandbox": {
+        "controls": {
+          "domain": {
+            "noneAvailable": "No domain crystals available"
+          }
+        }
+      },
       "modMaker": {
         "panelAriaLabel": "Dungeon Type Mod Maker",
         "header": {

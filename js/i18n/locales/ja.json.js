@@ -10324,6 +10324,76 @@
     },
 
     "minigame": {
+      "acchimuitehoi": {
+        "instructions": {
+          "rpsTitle": "1. じゃんけんで攻守決定",
+          "rpsHint": "勝ったら攻め、負けたら防御",
+          "directionTitle": "2. あっち向いてホイ",
+          "directionHint": "制限時間 {seconds} 秒以内に方向を選択",
+          "logTitle": "戦況ログ"
+        },
+        "ui": {
+          "stage": {
+            "rps": "じゃんけんで攻守を決めよう",
+            "attack": "攻撃フェーズ：指す方向を素早く選ぼう",
+            "defense": "防御フェーズ：相手と違う方向を素早く選ぼう"
+          }
+        },
+        "hands": {
+          "rock": "グー",
+          "scissors": "チョキ",
+          "paper": "パー"
+        },
+        "direction": {
+          "up": "上",
+          "down": "下",
+          "left": "左",
+          "right": "右"
+        },
+        "role": {
+          "attack": "攻め",
+          "defense": "守り"
+        },
+        "countdown": {
+          "idle": "残り --.- 秒",
+          "remaining": "残り {seconds} 秒"
+        },
+        "score": {
+          "primary": "攻め成功: {attackWins}／防御成功: {defenseWins}",
+          "secondary": "攻め連続: {attackStreak}（最高 {bestAttackStreak}）／防御連続: {defenseStreak}（最高 {bestDefenseStreak}）",
+          "tertiaryWithRate": "決着数: {rounds}／成功率: {successRate}%",
+          "tertiaryEmpty": "決着数: 0／成功率: --%"
+        },
+        "status": {
+          "ready": "手を選んでミニゲーム開始！",
+          "tie": "あいこで {hand}！もう一度",
+          "playerWin": "あなたの勝ち！制限内に指す方向を選んでヒットを狙おう",
+          "cpuWin": "相手が攻め！制限内に別方向を選んで回避",
+          "attack": {
+            "hit": "ヒット！{direction}で{exp}EXP",
+            "hitBonus": "ヒット！{direction}で{exp}EXP（連続{streak}）",
+            "miss": "外した…CPUは{cpuDirection}を向いた",
+            "timeout": "時間切れ…指しそびれた"
+          },
+          "defense": {
+            "success": "回避成功！{cpuDirection}を避けた！{exp}EXP",
+            "successBonus": "回避成功！{cpuDirection}を避けた（連続{streak}）",
+            "fail": "回避失敗…同じ{direction}を向いた",
+            "timeout": "時間切れ…反応できずヒット"
+          },
+          "paused": "一時停止中"
+        },
+        "log": {
+          "tie": "あいこ続行",
+          "rpsResult": "じゃんけん結果: あなた={playerHand}／相手={cpuHand} → {role}",
+          "attackSuccess": "攻め成功：CPUは{cpuDirection} → {exp}EXP",
+          "attackFail": "攻め失敗：CPU {cpuDirection}／あなた {playerDirection}",
+          "defenseSuccess": "防御成功：相手 {cpuDirection}／あなた {playerDirection} → {exp}EXP",
+          "defenseFail": "防御失敗：同方向でヒット",
+          "attackTimeout": "攻め時間切れ：チャンスを逃した",
+          "defenseTimeout": "防御時間切れ：反応が遅れた"
+        }
+      },
       "taiko_drum": {
         "title": "太鼓リズム（{difficulty}）",
         "tips": "F/J/Space = ドン（赤）、D/K = カッ（青）。大音符は両方同時！タップもOK。",

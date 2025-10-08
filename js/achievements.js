@@ -11,7 +11,6 @@
         { key: 'hard', label: 'Hard', value: 'Hard' },
         { key: 'veryHard', label: 'Very Hard', value: 'Very Hard' }
     ];
-    const i18n = global.I18n || null;
     const PLAYTIME_TRACKING_INTERVAL_MS = 1000;
 
     const CATEGORY_DEFINITIONS = [
@@ -959,7 +958,12 @@
     let playtimeTimerId = null;
     let lastPlaytimeTimestamp = 0;
 
+    function getI18n() {
+        return global.I18n || null;
+    }
+
     function translate(key, params, fallback) {
+        const i18n = getI18n();
         if (key && i18n && typeof i18n.t === 'function') {
             const value = i18n.t(key, params);
             if (value !== undefined && value !== null && value !== key) {
@@ -981,6 +985,7 @@
     function formatNumber(value) {
         if (!Number.isFinite(value)) return '0';
         const numeric = Math.floor(value);
+        const i18n = getI18n();
         if (i18n && typeof i18n.formatNumber === 'function') {
             return i18n.formatNumber(numeric);
         }
@@ -1001,6 +1006,7 @@
             ? Math.max(minimumFractionDigits, options.maximumFractionDigits)
             : Math.max(minimumFractionDigits, 1);
         const formatOptions = { minimumFractionDigits, maximumFractionDigits };
+        const i18n = getI18n();
         if (i18n && typeof i18n.formatNumber === 'function') {
             try {
                 return i18n.formatNumber(numeric, formatOptions);

@@ -10380,6 +10380,28 @@
           }
         }
       },
+      "forced_scroll_jump": {
+        "hud": {
+          "score": "Score: {score}",
+          "coinStreak": "CX streak: {streak}",
+          "lives": "Lives: {lives}"
+        },
+        "overlay": {
+          "title": "Game Over",
+          "rank": "Rank: {rank}",
+          "summary": "Score {score} / Bonus XP +{bonus}",
+          "restart": "Press Space or click to restart"
+        },
+        "rank": {
+          "extreme": "Extreme",
+          "superb": "Superb",
+          "great": "Great",
+          "notable": "Notable",
+          "fair": "Fair",
+          "steady": "Steady",
+          "modest": "Modest"
+        }
+      },
       "othello": {
         "hud": {
           "status": {

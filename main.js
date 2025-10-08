@@ -619,7 +619,7 @@ if (dungeonNameToggle) {
 
 if (autoItemToggle) {
     autoItemToggle.addEventListener('change', () => {
-        updateUI();
+        markUiDirty();
         if (autoItemToggle.checked) {
             requestAutoItemCheck();
         }
@@ -1168,7 +1168,7 @@ function adjustPlayerLevel(delta) {
         enforceEffectiveHpCap();
         updatePlayerSpCap({ silent: false });
         refreshGeneratorHazardSuppression();
-        updateUI();
+        markUiDirty();
     }
     return changed;
 }
@@ -1634,7 +1634,7 @@ function triggerHatenaBlock(block) {
         console.warn('Failed to record hatena trigger event', err);
     }
 
-    updateUI();
+    markUiDirty();
     if (!isSandboxActive()) saveAll();
 }
 
@@ -3641,7 +3641,7 @@ function getGodConsoleDefaultSnippet() {
         '// 例: プレイヤーの攻撃力を強化し、UIを更新します。',
         'context.player.attack = 99999;',
         'context.utils.enforceEffectiveHpCap();',
-        'context.utils.updateUI();'
+        'context.utils.markUiDirty();'
     ].join('\n');
 }
 
@@ -3957,7 +3957,7 @@ function handleSandboxFullHeal() {
     if (!isSandboxGodModeEnabled()) {
         updatePlayerSpCap({ silent: true });
     }
-    updateUI();
+    markUiDirty();
     syncSandboxStatInputs();
     sandboxLog('HP/満腹度/SPを全回復しました。');
 }
@@ -3986,7 +3986,7 @@ function resetSandboxStatsToDefaults() {
         updatePlayerSpCap({ silent: true });
     }
     resetPlayerStatusEffects();
-    updateUI();
+    markUiDirty();
     syncSandboxStatInputs();
     sandboxLog('プレイヤーパラメータを初期値に戻しました。');
 }
@@ -4017,7 +4017,7 @@ function applySandboxStatChanges() {
     recalculateSatietyMax({ clampCurrent: true });
     enforceEffectiveHpCap();
     updatePlayerSpCap({ silent: true });
-    updateUI();
+    markUiDirty();
     syncSandboxStatInputs();
     sandboxLog('プレイヤーパラメータを更新しました。');
 }
@@ -4147,7 +4147,7 @@ function applySandboxGodMode(enabled, { silent = false } = {}) {
     enforceEffectiveHpCap();
     updatePlayerSpCap({ silent: true });
     updateSandboxToggleInputs();
-    updateUI();
+    markUiDirty();
     syncSandboxStatInputs();
 }
 
@@ -4404,7 +4404,7 @@ function applySandboxTool() {
                 return ai - bi;
             });
 
-            updateUI();
+            markUiDirty();
             sandboxLog(`${formatSandboxDomainLabel(effect, selectedIndex)}を配置しました。`);
             break;
         }
@@ -5110,7 +5110,7 @@ function startSandboxGame(rawConfig) {
     setTimeout(() => {
         resizeCanvasToStage();
         generateLevel();
-        updateUI();
+        markUiDirty();
         try {
             addMessage({
                 key: 'game.events.sandbox.started',
@@ -5300,7 +5300,7 @@ function showSelectionScreen(opts = {}) {
     // 選択画面の再構築
     if (rebuildSelection) {
         try { buildSelection(); } catch {}
-        try { updateUI(); } catch {}
+        try { markUiDirty(); } catch {}
     }
     // フッター高さを反映
     refreshSatietyActivation({ notify: false });
@@ -6386,7 +6386,7 @@ function grantPassiveOrb(source = 'unknown') {
         orbId,
         count: nextCount
     });
-    updateUI();
+    markUiDirty();
     saveAll();
     return { orbId, count: nextCount };
 }
@@ -6831,7 +6831,7 @@ function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
         enforceEffectiveHpCap();
     }
     markSkillsListDirty();
-    updateUI();
+    markUiDirty();
     return true;
 }
 
@@ -7277,7 +7277,7 @@ function processPlayerStatusTurnStart() {
     }
 
     if (!alive) {
-        updateUI();
+        markUiDirty();
         return false;
     }
 
@@ -7306,7 +7306,7 @@ function processPlayerStatusTurnStart() {
     }
 
     enforceEffectiveHpCap();
-    updateUI();
+    markUiDirty();
     return true;
 }
 
@@ -7337,7 +7337,7 @@ function skipTurnDueToParalysis() {
         status.remaining = after;
     }
 
-    updateUI();
+    markUiDirty();
     const alive = onPlayerActionCommitted({ type: 'paralysis' });
     if (!alive || isGameOver) {
         return true;
@@ -8353,7 +8353,7 @@ function attemptUseSkill(def) {
     }
     playerTurn = false;
     markSkillsListDirty();
-    updateUI();
+    markUiDirty();
     pendingSkillTimeout = setTimeout(() => {
         pendingSkillTimeout = null;
         let success = false;
@@ -8366,12 +8366,12 @@ function attemptUseSkill(def) {
         if (!success) {
             gainSp(def.cost, { silent: true });
             markSkillsListDirty();
-            updateUI();
+            markUiDirty();
             playerTurn = true;
             return;
         }
         markSkillsListDirty();
-        updateUI();
+        markUiDirty();
         commitSkillAction();
     }, SKILL_EXECUTION_DELAY_MS);
 }
@@ -11211,6 +11211,8 @@ function createGodConsoleContext() {
         },
         utils: {
             updateUI,
+            markUiDirty,
+            flushPendingUiUpdates,
             generateLevel,
             addMessage,
             saveAll,
@@ -11282,7 +11284,7 @@ async function runGodConsoleCode() {
                 fallback: '創造神コンソールがコードを実行しました。'
             });
         } catch {}
-        updateUI();
+        markUiDirty();
         try { saveAll(); } catch {}
         return result;
     } catch (err) {
@@ -11638,7 +11640,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
         if (difficultySelect) difficultySelect.value = difficulty;
         buildSelection();
         renderHistoryAndBookmarks();
-        updateUI();
+        markUiDirty();
         renderMiniExpPlayerHud();
         if (__miniExpInited && __miniManifest) {
             renderMiniExpCategories(__miniManifest);
@@ -13408,7 +13410,7 @@ function generateLevel() {
         generateBossRoom();
     }
     
-    updateUI(); // Update UI after level generation
+    markUiDirty(); // Update UI after level generation
 }
 
 function generateBossRoom() {
@@ -14746,7 +14748,28 @@ if (!document.getElementById('valueChangeCSS')) {
     document.head.appendChild(style);
 }
 
+let uiDirty = true;
+let uiUpdateScheduled = false;
+
+function flushPendingUiUpdates() {
+    if (!uiDirty) return;
+    uiDirty = false;
+    updateUI();
+}
+
+function markUiDirty() {
+    uiDirty = true;
+    if (!uiUpdateScheduled) {
+        uiUpdateScheduled = true;
+        requestAnimationFrame(() => {
+            uiUpdateScheduled = false;
+            flushPendingUiUpdates();
+        });
+    }
+}
+
 function updateUI() {
+    uiDirty = false;
     refreshSatietyActivation({ notify: false });
     enforceEffectiveHpCap();
 
@@ -15298,7 +15321,7 @@ function useSkillCharm(effectId) {
     }
     incrementSkillCharm(effectId, -1);
     const label = getSkillEffectLabel(effectId);
-    updateUI();
+    markUiDirty();
     saveAll();
     closeModal(itemsModal);
     closeModal(skillsModal);
@@ -15312,7 +15335,7 @@ function useSkillCharm(effectId) {
             params: { label, turns: turnsDisplay }
         });
         playSfx('pickup');
-        updateUI();
+        markUiDirty();
         saveAll();
     }, delay);
     return true;
@@ -15378,7 +15401,7 @@ function handleSatietyTurnTick(actionType = 'move') {
 
     if (isSandboxGodModeEnabled()) {
         player.satiety = Infinity;
-        try { updateUI(); } catch {}
+        try { markUiDirty(); } catch {}
         try { saveAll(); } catch {}
         return !isGameOver;
     }
@@ -15390,7 +15413,7 @@ function handleSatietyTurnTick(actionType = 'move') {
     player.satiety = Math.max(0, Math.min(satietyCap, Number(player.satiety)));
 
     if (areAllEnemiesCleared()) {
-        try { updateUI(); } catch {}
+        try { markUiDirty(); } catch {}
         try { saveAll(); } catch {}
         return !isGameOver;
     }
@@ -15429,7 +15452,7 @@ function handleSatietyTurnTick(actionType = 'move') {
         }
     }
 
-    try { updateUI(); } catch {}
+    try { markUiDirty(); } catch {}
     try { saveAll(); } catch {}
     return alive && !isGameOver;
 }
@@ -15722,7 +15745,7 @@ function handleRareChestExplosion(diff) {
             const healedDisplay = formatNumberLocalized(healed);
             addMessage(translate('messages.domain.rareChestReversed', { amount: healedDisplay }));
             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
-            updateUI();
+            markUiDirty();
         }
         return { outcome: 'healed', damage: -hazardResult.amount };
     }
@@ -15734,7 +15757,7 @@ function handleRareChestExplosion(diff) {
     addMessage(translate('messages.domain.rareChestDamage', { damage: damageDisplay, timing: timingOffset }));
     addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff8787', 1.15);
     playSfx('damage');
-    updateUI();
+    markUiDirty();
     if (player.hp <= 0) {
         handlePlayerDeath(translate('messages.domain.rareChestDeath'));
     }
@@ -15871,7 +15894,7 @@ function completeRareChestSuccess(diff) {
         reward: rewardInfo?.rewardType || null,
         passiveOrb: rewardInfo?.bonusPassiveOrb?.orbId || null
     });
-    updateUI();
+    markUiDirty();
     saveAll();
 }
 
@@ -15940,7 +15963,7 @@ function openChest(chest) {
                 reward: rewardInfo?.rewardType || null,
                 passiveOrb: rewardInfo?.bonusPassiveOrb?.orbId || null
             });
-            updateUI();
+            markUiDirty();
             saveAll();
             return true;
         }
@@ -15953,7 +15976,7 @@ function openChest(chest) {
         reward: rewardInfo?.rewardType || null,
         passiveOrb: rewardInfo?.bonusPassiveOrb?.orbId || null
     });
-    updateUI();
+    markUiDirty();
     saveAll();
     return true;
 }
@@ -16391,7 +16414,7 @@ function handlePlayerDeath(message) {
         const normalizedHp = Number.isFinite(player.hp) ? player.hp : 0;
         player.hp = normalizedHp <= 0 ? Math.max(0, normalizedHp) : 0;
     }
-    updateUI();
+    markUiDirty();
 
     if (gameOverSequence.burstTimeoutId) {
         clearTimeout(gameOverSequence.burstTimeoutId);
@@ -16627,7 +16650,7 @@ function applyPostMoveEffects() {
                             const healedDisplay = formatNumberLocalized(healed);
                             addMessage(translate('messages.domain.poisonFloorReversed', { amount: healedDisplay }));
                             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
-                            updateUI();
+                            markUiDirty();
                         } else {
                             addPopup(player.x, player.y, 'Guard', '#74c0fc');
                         }
@@ -16639,7 +16662,7 @@ function applyPostMoveEffects() {
                         addMessage(translate('messages.domain.poisonFloorDamage', { amount: damageDisplay }));
                         addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ff6b6b');
                         playSfx('damage');
-                        updateUI();
+                        markUiDirty();
                         if (player.hp <= 0) {
                             handlePlayerDeath(translate('messages.domain.poisonFloorDeath'));
                         }
@@ -16673,7 +16696,7 @@ function applyPostMoveEffects() {
                             const healedDisplay = formatNumberLocalized(healed);
                             addMessage(translate('messages.domain.bombReversed', { amount: healedDisplay }));
                             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
-                            updateUI();
+                            markUiDirty();
                         } else {
                             addPopup(player.x, player.y, 'Guard', '#74c0fc');
                         }
@@ -16685,7 +16708,7 @@ function applyPostMoveEffects() {
                         const damageDisplay = formatNumberLocalized(damage);
                         addMessage(translate('messages.domain.bombDamage', { amount: damageDisplay }));
                         addPopup(player.x, player.y, popupValue, '#ff8787', 1.1);
-                        updateUI();
+                        markUiDirty();
                         if (player.hp <= 0) {
                             handlePlayerDeath(translate('messages.domain.bombDeath'));
                         }
@@ -16904,7 +16927,7 @@ function gameLoop() {
     drawChests();
     drawPopups();
 
-    updateUI();
+    flushPendingUiUpdates();
     updateProjectiles();
     updateDefeatedEnemies(); // Update defeat animations
 
@@ -17133,7 +17156,7 @@ function executeEnemyAttack(enemy, stepX, stepY) {
         } else {
             addPopup(player.x, player.y, 'Guard', '#74c0fc');
         }
-        updateUI();
+        markUiDirty();
         return;
     }
 
@@ -17227,7 +17250,7 @@ function applyKnockbackFromEnemy(enemy, stepX, stepY) {
             );
         }
     }
-    updateUI();
+    markUiDirty();
 }
 
 function applyEnemyOnHitEffects(enemy, { stepX = 0, stepY = 0, damage = 0 } = {}) {
@@ -17432,7 +17455,7 @@ function eatPotion30({ reason = 'manual' } = {}) {
                 key: 'game.events.satiety.alreadyFull',
                 fallback: '満腹度は既に最大値です。'
             });
-            updateUI();
+            markUiDirty();
         }
         return false;
     }
@@ -17457,7 +17480,7 @@ function eatPotion30({ reason = 'manual' } = {}) {
         };
     addMessage(satietyMessage);
     playSfx('pickup');
-    updateUI();
+    markUiDirty();
     saveAll();
     return true;
 }
@@ -17555,7 +17578,7 @@ function consumePotion30({ reason = 'manual' } = {}) {
             amount: autoTriggerValue
         });
     }
-    updateUI();
+    markUiDirty();
     saveAll();
     return true;
 }
@@ -17607,7 +17630,7 @@ function cleanseNegativeStatusWithPotion() {
         params: { status: label }
     });
     playSfx('pickup');
-    updateUI();
+    markUiDirty();
     saveAll();
     return true;
 }
@@ -17620,7 +17643,7 @@ btnSkills && btnSkills.addEventListener('click', () => {
     openModal(skillsModal);
     refreshSkillsModal({ force: true });
 });
-btnStatus && btnStatus.addEventListener('click', () => { openModal(statusModal); updateUI(); });
+btnStatus && btnStatus.addEventListener('click', () => { openModal(statusModal); markUiDirty(); });
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => {
     const target = e.currentTarget.getAttribute('data-target');
     const modal = document.getElementById(target);
@@ -17686,7 +17709,7 @@ offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
         fallback: () => `回復アイテムを捧げ、SPを${display}獲得した。`,
         params: { amount: display }
     });
-    updateUI();
+    markUiDirty();
     saveAll();
 });
 
@@ -17750,7 +17773,7 @@ throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {
             fallback: '回復アイテムを投げつけたが効果がなかった。'
         });
         addPopup(target.x, target.y, 'Guard', '#74c0fc');
-        updateUI();
+        markUiDirty();
         saveAll();
         return;
     }
@@ -17784,7 +17807,7 @@ throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {
         if (idx >= 0) enemies.splice(idx, 1);
     }
 
-    updateUI();
+    markUiDirty();
     saveAll();
 });
 
@@ -17800,7 +17823,7 @@ useHpBoostBtn && useHpBoostBtn.addEventListener('click', () => {
             fallback: '最大HP強化アイテムを使用！最大HPが5増加！'
         });
         playSfx('pickup');
-        updateUI();
+        markUiDirty();
         saveAll();
     }
 });
@@ -17814,7 +17837,7 @@ useAtkBoostBtn && useAtkBoostBtn.addEventListener('click', () => {
             fallback: '攻撃力強化アイテムを使用！攻撃力が1増加！'
         });
         playSfx('pickup');
-        updateUI();
+        markUiDirty();
         saveAll();
     }
 });
@@ -17828,7 +17851,7 @@ useDefBoostBtn && useDefBoostBtn.addEventListener('click', () => {
             fallback: '防御力強化アイテムを使用！防御力が1増加！'
         });
         playSfx('pickup');
-        updateUI();
+        markUiDirty();
         saveAll();
     }
 });
@@ -17847,7 +17870,7 @@ useHpBoostMajorBtn && useHpBoostMajorBtn.addEventListener('click', () => {
             params: { amount }
         });
         playSfx('pickup');
-        updateUI();
+        markUiDirty();
         saveAll();
     } else {
         addMessage({
@@ -17868,7 +17891,7 @@ useAtkBoostMajorBtn && useAtkBoostMajorBtn.addEventListener('click', () => {
             params: { amount }
         });
         playSfx('pickup');
-        updateUI();
+        markUiDirty();
         saveAll();
     } else {
         addMessage({
@@ -17889,7 +17912,7 @@ useDefBoostMajorBtn && useDefBoostMajorBtn.addEventListener('click', () => {
             params: { amount }
         });
         playSfx('pickup');
-        updateUI();
+        markUiDirty();
         saveAll();
     } else {
         addMessage({
@@ -17948,7 +17971,7 @@ useSpElixirBtn && useSpElixirBtn.addEventListener('click', () => {
         params: { amount }
     });
     playSfx('pickup');
-    updateUI();
+    markUiDirty();
     saveAll();
 });
 
@@ -18127,7 +18150,7 @@ function spendExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
             });
         } catch {}
     }
-    try { updateUI(); } catch {}
+    try { markUiDirty(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}
     try { saveAll(); } catch {}
     return spent;
@@ -18169,7 +18192,7 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
             expBar.style.width = '100%';
             setTimeout(() => {
                 expBar.style.width = '0%';
-                setTimeout(() => { updateUI(); }, 260);
+                setTimeout(() => { markUiDirty(); }, 260);
             }, 260);
         }
     }
@@ -18188,7 +18211,7 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
         gainSp(v * 0.01, { silent: true });
     }
     refreshSatietyActivation({ notify: true });
-    try { updateUI(); } catch {}
+    try { markUiDirty(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}
     try { saveAll(); } catch {}
     return v;
@@ -18338,7 +18361,7 @@ function startGameFromSelection() {
     setTimeout(() => {
         resizeCanvasToStage();
         generateLevel();
-        updateUI();
+        markUiDirty();
 
         // Start game loop
         startGameLoop();
@@ -18369,7 +18392,7 @@ function startGameFromBlockDim() {
     setTimeout(() => {
         resizeCanvasToStage();
         generateLevel();
-        updateUI();
+        markUiDirty();
         startGameLoop();
     }, 100);
     // 履歴に追加
@@ -18396,7 +18419,7 @@ document.getElementById('toolbar').style.display = 'none';
 selectionScreen.style.display = 'flex';
 gameScreen.style.display = 'none';
 buildSelection();
-updateUI(); // Initial UI update
+markUiDirty(); // Initial UI update
 ensureBlockDataPreloaded().catch((err) => {
     console.warn('Failed to preload BlockDim data', err);
 });
@@ -18417,7 +18440,7 @@ dungeonButtonsDiv.addEventListener('click', (e) => {
 startDungeonBtn && startDungeonBtn.addEventListener('click', () => {
     if (selectedDungeonBase) {
         startGameFromSelection();
-        updateUI(); // Update UI when starting game
+        markUiDirty(); // Update UI when starting game
     }
 });
 
@@ -19743,7 +19766,7 @@ function applyMiniGameInventoryDelta(changes, opts = {}) {
         mutated = true;
     }
     if (mutated) {
-        try { updateUI(); } catch {}
+        try { markUiDirty(); } catch {}
         try { renderMiniExpPlayerHud(); } catch {}
         try { saveAll(); } catch {}
     }
@@ -19778,7 +19801,7 @@ function adjustPlayerSpFromMini(delta, opts = {}) {
             : `SPを${display}消費した。`;
         try { addMessage(message); } catch {}
     }
-    try { updateUI(); } catch {}
+    try { markUiDirty(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}
     try { saveAll(); } catch {}
     return applied;
@@ -19787,7 +19810,7 @@ function adjustPlayerSpFromMini(delta, opts = {}) {
 function fillPlayerSpFromMini(opts = {}) {
     if (isSandboxGodModeEnabled()) {
         player.sp = Infinity;
-        try { updateUI(); } catch {}
+        try { markUiDirty(); } catch {}
         try { renderMiniExpPlayerHud(); } catch {}
         try { saveAll(); } catch {}
         return Infinity;
@@ -19811,7 +19834,7 @@ function fillPlayerSpFromMini(opts = {}) {
             });
         } catch {}
     }
-    try { updateUI(); } catch {}
+    try { markUiDirty(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}
     try { saveAll(); } catch {}
     return gained;
@@ -19841,7 +19864,7 @@ function adjustPlayerHpFromMini(delta, opts = {}) {
             : `HPに${amount}のダメージを受けた。`;
         try { addMessage(message); } catch {}
     }
-    try { updateUI(); } catch {}
+    try { markUiDirty(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}
     try { saveAll(); } catch {}
     return applied;

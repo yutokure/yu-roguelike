@@ -4,6 +4,31 @@
   const PACK_NAME = 'Visceral Crime Scene Pack';
   const PACK_VERSION = '2.0.0';
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
+  function buildBlockEntry(generatorId, variant){
+    const block = {
+      key: variant.key,
+      name: variant.name,
+      level: variant.level,
+      size: variant.size,
+      depth: variant.depth,
+      chest: variant.chest,
+      type: generatorId,
+      weight: variant.weight
+    };
+    const typeKey = sanitizeKey(generatorId);
+    block.nameKey = `dungeon.types.${typeKey}.blocks.${variant.key}.name`;
+    if(variant.description){
+      block.description = variant.description;
+      block.descriptionKey = `dungeon.types.${typeKey}.blocks.${variant.key}.description`;
+    }
+    if(variant.bossFloors) block.bossFloors = variant.bossFloors.slice();
+    return block;
+  }
+
   function clamp(v, min, max){
     return v < min ? min : (v > max ? max : v);
   }
@@ -785,17 +810,7 @@
   const blocks3 = [];
   blockBlueprints.forEach(entry => {
     entry.variants.forEach(variant => {
-      const block = {
-        key: variant.key,
-        name: variant.name,
-        level: variant.level,
-        size: variant.size,
-        depth: variant.depth,
-        chest: variant.chest,
-        type: entry.generator,
-        weight: variant.weight
-      };
-      if(variant.bossFloors) block.bossFloors = variant.bossFloors.slice();
+      const block = buildBlockEntry(entry.generator, variant);
       if(variant.tier === 1) blocks1.push(block);
       else if(variant.tier === 2) blocks2.push(block);
       else blocks3.push(block);

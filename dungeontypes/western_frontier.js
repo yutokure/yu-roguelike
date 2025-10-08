@@ -3,6 +3,10 @@
   const ADDON_NAME = 'Western Frontier Mega Pack';
   const VERSION = '1.1.0';
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
   function clamp(value, min, max){
     return value < min ? min : (value > max ? max : value);
   }
@@ -846,7 +850,16 @@
   }
 
   function mkGenerator(id, name, description, algorithm, mixin){
-    return { id, name, description, algorithm, mixin };
+    const typeKey = sanitizeKey(id);
+    return {
+      id,
+      name,
+      nameKey: `dungeon.types.${typeKey}.name`,
+      description,
+      descriptionKey: description ? `dungeon.types.${typeKey}.description` : undefined,
+      algorithm,
+      mixin
+    };
   }
 
   const generators = [

@@ -1,5 +1,32 @@
 // Addon: Traditional Japan Expansion Pack - rich variety of Japanese-inspired dungeon biomes
 (function(){
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
+  function applyThemeLocalization(theme){
+    const typeKey = sanitizeKey(theme.id);
+    const localized = Object.assign({}, theme);
+    localized.nameKey = `dungeon.types.${typeKey}.name`;
+    if(theme.description){
+      localized.descriptionKey = `dungeon.types.${typeKey}.description`;
+    }
+    return localized;
+  }
+
+  function buildBlockEntry(config, data){
+    if(!data || !data.key){
+      throw new Error('Block entry requires a key');
+    }
+    const entry = Object.assign({ type: config.id }, data);
+    const typeKey = sanitizeKey(config.id);
+    entry.nameKey = `dungeon.types.${typeKey}.blocks.${data.key}.name`;
+    if(entry.description){
+      entry.descriptionKey = `dungeon.types.${typeKey}.blocks.${data.key}.description`;
+    }
+    return entry;
+  }
+
   function createState(ctx){
     const { width, height, map, random } = ctx;
     const seedA = random() * Math.PI * 2;
@@ -1354,12 +1381,14 @@
         return blendHex(base, '#3e433b', lichen * 0.6);
       }
     }
-  ];
+  ].map(applyThemeLocalization);
 
   const generators = themes.map(theme => ({
     id: theme.id,
     name: theme.name,
+    nameKey: theme.nameKey,
     description: theme.description,
+    descriptionKey: theme.descriptionKey,
     algorithm: createJapaneseAlgorithm(theme),
     mixin: {
       normalMixed: 0.5,
@@ -1384,39 +1413,36 @@
     const depth = 1 + Math.floor(idx / 2);
     const chestOptions = ['normal','more','less'];
     const chest = chestOptions[idx % chestOptions.length];
-    blocks.blocks1.push({
+    blocks.blocks1.push(buildBlockEntry(gen, {
       key: `jp_${gen.id}_journey`,
       name: `${gen.name} 逍遥`,
       level: levelBase,
       size,
       depth,
       chest,
-      type: gen.id,
       bossFloors: bossFloorsForTier(Math.floor(idx/3)+1)
-    });
+    }));
 
-    blocks.blocks2.push({
+    blocks.blocks2.push(buildBlockEntry(gen, {
       key: `jp_${gen.id}_core`,
       name: `${gen.name} 中核`,
       level: levelBase + 3,
       size: Math.min(4, size + 1),
       depth: depth + 1,
       chest: chest === 'less' ? 'normal' : 'more',
-      type: gen.id,
       bossFloors: bossFloorsForTier(Math.floor(idx/2)+1)
-    });
+    }));
 
     const legendary = idx % 2 === 0 ? '伝承' : '祭事';
-    blocks.blocks3.push({
+    blocks.blocks3.push(buildBlockEntry(gen, {
       key: `jp_${gen.id}_legend`,
       name: `${gen.name} ${legendary}`,
       level: levelBase + 6,
       size: Math.min(5, size + 2),
       depth: depth + 2,
       chest: idx % 2 === 0 ? 'more' : 'normal',
-      type: gen.id,
       bossFloors: bossFloorsForTier(Math.floor(idx/2)+2)
-    });
+    }));
   });
 
   window.registerDungeonAddon({

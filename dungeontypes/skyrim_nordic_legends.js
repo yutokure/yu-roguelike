@@ -4,6 +4,10 @@
   const ADDON_NAME = 'Skyrim Nordic Legends Pack';
   const VERSION = '3.0.0';
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
   function clamp(value, min, max){
     return Math.max(min, Math.min(max, value));
   }
@@ -715,7 +719,9 @@
   const generators = VARIANTS.map((variant) => ({
     id: variant.id,
     name: variant.name,
+    nameKey: variant.nameKey || `dungeon.types.${sanitizeKey(variant.id)}.name`,
     description: variant.description,
+    descriptionKey: variant.descriptionKey || (variant.description ? `dungeon.types.${sanitizeKey(variant.id)}.description` : undefined),
     mixin: variant.mixin,
     algorithm: (ctx) => generateNordicLayout(ctx, variant)
   }));

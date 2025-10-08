@@ -652,6 +652,10 @@
             "name": "Floor Descent Survival",
             "description": "Descend away from a spiked ceiling, using platforms to survive for EXP."
           },
+          "treasure_hunt": {
+            "name": "Treasure Hunt Dungeon",
+            "description": "Explore mixed-style dungeons to find treasure—longer paths raise base EXP and faster clears multiply it exponentially."
+          },
           "forced_scroll_jump": {
             "name": "Forced Scroll Jump",
             "description": "Dash through forced scrolling stages, gathering CX marks for higher ranks and EXP."
@@ -11847,6 +11851,38 @@
         "valueWithBase": "{effective} (Base {base})",
         "levelWithBase": "Lv.{effective} (Base {base})",
         "hp": "HP {current}/{max}{baseSuffix}"
+      }
+    },
+    "games": {
+      "treasureHunt": {
+        "ui": {
+          "mapTitle": "Map",
+          "start": "Start",
+          "pause": "Pause",
+          "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards."
+        },
+        "labels": {
+          "round": "Round: {value}",
+          "time": "Time: {value}",
+          "distance": "Distance: {value}",
+          "totalExp": "Total EXP: {value}",
+          "timeValue": "{value}s",
+          "distanceValue": "{value} tiles",
+          "none": "-",
+          "lastResult": "Last round {time} for {exp} EXP{best}",
+          "bestSuffix": " / Best {time}"
+        },
+        "status": {
+          "preparing": "Preparing stage…",
+          "generating": "Generating stage…",
+          "generateFailed": "Failed to generate the stage",
+          "noApi": "Dungeon API is unavailable",
+          "placingFailed": "Treasure placement failed—regenerating",
+          "ready": "Moved to start for Round {round}",
+          "running": "Exploring Round {round}…",
+          "paused": "Paused",
+          "found": "Treasure found! Building the next round…"
+        }
       }
     }
   };

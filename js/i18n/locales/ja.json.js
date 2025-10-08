@@ -652,6 +652,10 @@
             "name": "フロア降りサバイバル",
             "description": "迫る針天井から逃げながら下へ進む縦スクロールアクション。足場ギミックで差をつけよう"
           },
+          "treasure_hunt": {
+            "name": "宝探しダンジョン",
+            "description": "混合ダンジョンで宝を探し、距離とタイムで指数的にEXPボーナス"
+          },
           "forced_scroll_jump": {
             "name": "強制スクロールジャンプ",
             "description": "強制横スクロールで穴や鉄球を避けつつCXマークを集めてランクを目指す"
@@ -11847,6 +11851,38 @@
         "valueWithBase": "{effective} (基{base})",
         "levelWithBase": "Lv.{effective} (基{base})",
         "hp": "HP {current}/{max}{baseSuffix}"
+      }
+    },
+    "games": {
+      "treasureHunt": {
+        "ui": {
+          "mapTitle": "マップ",
+          "start": "探索開始",
+          "pause": "一時停止",
+          "hint": "WASD/矢印で移動。宝箱と自分の距離が遠いほど基礎EXPが増え、素早く拾うほど倍率が上がります。"
+        },
+        "labels": {
+          "round": "ラウンド: {value}",
+          "time": "タイム: {value}",
+          "distance": "距離: {value}",
+          "totalExp": "合計EXP: {value}",
+          "timeValue": "{value}s",
+          "distanceValue": "{value}マス",
+          "none": "-",
+          "lastResult": "前回 {time} で {exp}EXP 獲得{best}",
+          "bestSuffix": " / ベスト {time}"
+        },
+        "status": {
+          "preparing": "ステージを生成します…",
+          "generating": "ステージ生成中…",
+          "generateFailed": "ステージ生成に失敗しました",
+          "noApi": "ダンジョンAPIが利用できません",
+          "placingFailed": "生成したマップで宝配置に失敗…再生成します",
+          "ready": "ラウンド{round} 開始位置に移動しました",
+          "running": "ラウンド{round} 探索中…",
+          "paused": "一時停止中",
+          "found": "宝を発見！次のラウンドを生成中…"
+        }
       }
     }
   };

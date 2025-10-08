@@ -6712,31 +6712,68 @@ function getStatusRemaining(effectId) {
     return Math.max(0, Math.floor(Number(status.remaining) || 0));
 }
 
+const STATUS_CLEAR_MESSAGE_FACTORIES = {
+    poison: () => ({
+        key: 'game.events.status.cured.poison',
+        fallback: () => '毒が治った。'
+    }),
+    paralysis: () => ({
+        key: 'game.events.status.cured.paralysis',
+        fallback: () => '体の痺れが解けた。'
+    }),
+    abilityUp: () => ({
+        key: 'game.events.status.cured.abilityUp',
+        fallback: () => '能力強化の効果が切れた。'
+    }),
+    abilityDown: () => ({
+        key: 'game.events.status.cured.abilityDown',
+        fallback: () => '能力低下から解放された。'
+    }),
+    levelDown: () => ({
+        key: 'game.events.status.cured.levelDown',
+        fallback: () => '一時的なレベル低下が解除された。'
+    })
+};
+
+const STATUS_APPLY_MESSAGE_FACTORIES = {
+    poison: (turnsDisplay) => ({
+        key: 'game.events.status.applied.poison',
+        fallback: () => `毒に侵された！ (${turnsDisplay}ターン)`,
+        params: { turns: turnsDisplay }
+    }),
+    paralysis: (turnsDisplay) => ({
+        key: 'game.events.status.applied.paralysis',
+        fallback: () => `体が痺れて動けない！ (${turnsDisplay}ターン)`,
+        params: { turns: turnsDisplay }
+    }),
+    abilityUp: (turnsDisplay) => ({
+        key: 'game.events.status.applied.abilityUp',
+        fallback: () => `能力が高まった！最大HP/攻撃/防御が上昇 (${turnsDisplay}ターン)`,
+        params: { turns: turnsDisplay }
+    }),
+    abilityDown: (turnsDisplay) => ({
+        key: 'game.events.status.applied.abilityDown',
+        fallback: () => `能力が低下した…最大HP/攻撃/防御が下がる (${turnsDisplay}ターン)`,
+        params: { turns: turnsDisplay }
+    }),
+    levelDown: (turnsDisplay) => ({
+        key: 'game.events.status.applied.levelDown',
+        fallback: () => `レベルが一時的に低下した！ (${turnsDisplay}ターン)`,
+        params: { turns: turnsDisplay }
+    })
+};
+
 function clearPlayerStatusEffect(effectId, { silent = false } = {}) {
     const status = getPlayerStatus(effectId);
     const wasActive = isPlayerStatusActive(effectId);
     status.remaining = 0;
     delete status.justApplied;
     if (!silent && wasActive) {
-        let message = '';
-        switch (effectId) {
-            case 'poison':
-                message = '毒が治った。';
-                break;
-            case 'paralysis':
-                message = '体の痺れが解けた。';
-                break;
-            case 'abilityUp':
-                message = '能力強化の効果が切れた。';
-                break;
-            case 'abilityDown':
-                message = '能力低下から解放された。';
-                break;
-            case 'levelDown':
-                message = '一時的なレベル低下が解除された。';
-                break;
+        const factory = STATUS_CLEAR_MESSAGE_FACTORIES[effectId];
+        if (factory) {
+            const descriptor = factory();
+            addMessage(descriptor);
         }
-        if (message) addMessage(message);
     }
     if (wasActive) markSkillsListDirty();
 }
@@ -6765,25 +6802,12 @@ function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
         delete status.justApplied;
     }
     if (!silent) {
-        let message = '';
-        switch (effectId) {
-            case 'poison':
-                message = `毒に侵された！ (${turns}ターン)`;
-                break;
-            case 'paralysis':
-                message = `体が痺れて動けない！ (${turns}ターン)`;
-                break;
-            case 'abilityUp':
-                message = `能力が高まった！最大HP/攻撃/防御が上昇 (${turns}ターン)`;
-                break;
-            case 'abilityDown':
-                message = `能力が低下した…最大HP/攻撃/防御が下がる (${turns}ターン)`;
-                break;
-            case 'levelDown':
-                message = `レベルが一時的に低下した！ (${turns}ターン)`;
-                break;
+        const turnsDisplay = formatNumberLocalized(turns);
+        const factory = STATUS_APPLY_MESSAGE_FACTORIES[effectId];
+        if (factory) {
+            const descriptor = factory(turnsDisplay);
+            addMessage(descriptor);
         }
-        if (message) addMessage(message);
     }
     if (effectId === 'abilityDown') {
         enforceEffectiveHpCap();
@@ -6943,10 +6967,15 @@ function updatePlayerSpCap({ silent = false } = {}) {
         if (previousMax === 0 && newMax > 0 && !silent) {
             addMessage({
                 key: 'game.events.sp.unlocked',
-                fallback: 'SPが解放された！'
+                fallback: () => 'SPが解放された！'
             });
         } else if (newMax > previousMax && !silent) {
-            addMessage(`SP上限が${newMax}に上昇した！`);
+            const newMaxDisplay = formatNumberLocalized(newMax);
+            addMessage({
+                key: 'game.events.sp.maxIncreased',
+                fallback: () => `SP上限が${newMaxDisplay}に上昇した！`,
+                params: { value: newMaxDisplay }
+            });
         }
     }
     const clamped = Math.max(0, Math.min(newMax, Number(player.sp) || 0));
@@ -6980,7 +7009,12 @@ function gainSp(amount, { silent = true } = {}) {
     markSkillsListDirty();
     if (!silent) {
         const display = floorSpValue(gained);
-        addMessage(`SPを${display}獲得した。`);
+        const amountDisplay = formatNumberLocalized(display);
+        addMessage({
+            key: 'game.events.sp.gained',
+            fallback: () => `SPを${amountDisplay}獲得した。`,
+            params: { amount: amountDisplay }
+        });
     }
     return gained;
 }
@@ -7020,7 +7054,12 @@ function trySpendSp(cost, { silent = false } = {}) {
     }
     if (!silent) {
         const display = floorSpValue(required);
-        addMessage(`SPを${display}消費した。`);
+        const amountDisplay = formatNumberLocalized(display);
+        addMessage({
+            key: 'game.events.sp.spent',
+            fallback: () => `SPを${amountDisplay}消費した。`,
+            params: { amount: amountDisplay }
+        });
     }
     return true;
 }
@@ -7260,11 +7299,16 @@ function skipTurnDueToParalysis() {
     if (status.justApplied) {
         addMessage({
             key: 'game.events.status.paralyzed',
-            fallback: '体が痺れて動けない…'
+            fallback: () => '体が痺れて動けない…'
         });
         delete status.justApplied;
     } else {
-        addMessage(`体が痺れて動けない… (残り${after}ターン)`);
+        const turnsDisplay = formatNumberLocalized(after);
+        addMessage({
+            key: 'game.events.status.paralyzedRemaining',
+            fallback: () => `体が痺れて動けない… (残り${turnsDisplay}ターン)`,
+            params: { turns: turnsDisplay }
+        });
     }
 
     if (before <= 1) {
@@ -16945,7 +16989,12 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     const applied = domainResult.amount;
     player.hp = Math.max(0, player.hp - applied);
     recordAchievementEvent('damage_taken', { amount: applied, source: 'enemy', enemy: sanitizeEnemySummary(enemy) });
-    addMessage(`敵はプレイヤーに ${applied} のダメージを与えた！`);
+    const damageDisplay = formatNumberLocalized(applied);
+    addMessage({
+        key: 'game.events.combat.enemyAttackDamage',
+        fallback: () => `敵はプレイヤーに ${damageDisplay} のダメージを与えた！`,
+        params: { amount: damageDisplay }
+    });
     const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied > 999999999 ? '+' : ''}`;
     addPopup(player.x, player.y, dmgText, crit ? '#ffa94d' : '#ff6b6b', crit ? 1.15 : 1);
     playSfx('damage');
@@ -16971,9 +17020,10 @@ function warpPlayerFromEnemy(enemy) {
     updateCamera();
     addMessage({
         key: 'game.events.combat.enemyWarped',
-        fallback: '敵の転移攻撃でワープさせられた！'
+        fallback: () => '敵の転移攻撃でワープさせられた！'
     });
-    addPopup(player.x, player.y, 'ワープ', '#4dabf7');
+    const warpPopupText = translateOrFallback('game.events.combat.enemyWarpPopup', () => 'ワープ');
+    addPopup(player.x, player.y, warpPopupText, '#4dabf7');
     applyPostMoveEffects();
 }
 
@@ -17239,7 +17289,19 @@ function eatPotion30({ reason = 'manual' } = {}) {
     const displayRecovered = Math.abs(actualRecovered - Math.round(actualRecovered)) < 1e-6
         ? Math.round(actualRecovered)
         : Math.round(actualRecovered * 100) / 100;
-    addMessage(isAuto ? `オートアイテムが発動！満腹度が${displayRecovered}回復` : `ポーションを食べた！満腹度が${displayRecovered}回復`);
+    const satietyDisplay = formatNumberLocalized(displayRecovered);
+    const satietyMessage = isAuto
+        ? {
+            key: 'game.events.items.autoSatietyRecovered',
+            fallback: () => `オートアイテムが発動！満腹度が${satietyDisplay}回復`,
+            params: { amount: satietyDisplay }
+        }
+        : {
+            key: 'game.events.items.potionSatietyRecovered',
+            fallback: () => `ポーションを食べた！満腹度が${satietyDisplay}回復`,
+            params: { amount: satietyDisplay }
+        };
+    addMessage(satietyMessage);
     playSfx('pickup');
     updateUI();
     saveAll();
@@ -17270,7 +17332,19 @@ function consumePotion30({ reason = 'manual' } = {}) {
         const scaledDamage = Math.max(0, Math.floor(damage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1)));
         player.hp = Math.max(0, player.hp - scaledDamage);
         recordAchievementEvent('damage_taken', { amount: scaledDamage, source: 'reverse-potion' });
-        addMessage(isAuto ? `オートアイテムが暴発し、${scaledDamage}のダメージを受けた！` : `ポーションが反転し、${scaledDamage}のダメージを受けた！`);
+        const damageDisplay = formatNumberLocalized(scaledDamage);
+        const damageMessage = isAuto
+            ? {
+                key: 'game.events.items.autoReversedDamage',
+                fallback: () => `オートアイテムが暴発し、${damageDisplay}のダメージを受けた！`,
+                params: { amount: damageDisplay }
+            }
+            : {
+                key: 'game.events.items.potionReversedDamage',
+                fallback: () => `ポーションが反転し、${damageDisplay}のダメージを受けた！`,
+                params: { amount: damageDisplay }
+            };
+        addMessage(damageMessage);
         addPopup(player.x, player.y, `-${Math.min(scaledDamage, 999999999)}${scaledDamage>999999999?'+':''}`, '#ff6b6b');
         playSfx('damage');
         autoTriggerOutcome = 'reversed';
@@ -17285,10 +17359,31 @@ function consumePotion30({ reason = 'manual' } = {}) {
         enforceEffectiveHpCap();
         const healed = Math.max(0, player.hp - beforeHp);
         if (healed > 0) {
-            addMessage(isAuto ? `オートアイテムが発動！HPが${healed}回復` : `ポーションを使用！HPが${healed}回復`);
+            const healDisplay = formatNumberLocalized(healed);
+            const healMessage = isAuto
+                ? {
+                    key: 'game.events.items.autoHpRecovered',
+                    fallback: () => `オートアイテムが発動！HPが${healDisplay}回復`,
+                    params: { amount: healDisplay }
+                }
+                : {
+                    key: 'game.events.items.potionHpRecovered',
+                    fallback: () => `ポーションを使用！HPが${healDisplay}回復`,
+                    params: { amount: healDisplay }
+                };
+            addMessage(healMessage);
             addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
         } else {
-            addMessage(isAuto ? 'オートアイテムが発動したが体調に変化はなかった。' : 'ポーションを使用したが体調に変化はなかった。');
+            const noEffectMessage = isAuto
+                ? {
+                    key: 'game.events.items.autoNoEffect',
+                    fallback: () => 'オートアイテムが発動したが体調に変化はなかった。'
+                }
+                : {
+                    key: 'game.events.items.potionNoEffect',
+                    fallback: () => 'ポーションを使用したが体調に変化はなかった。'
+                };
+            addMessage(noEffectMessage);
         }
         playSfx('pickup');
         autoTriggerOutcome = healed > 0 ? 'healed' : 'no_effect';

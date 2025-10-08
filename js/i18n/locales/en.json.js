@@ -9177,13 +9177,31 @@
           "unlocked": "SP system unlocked!",
           "notUnlocked": "SP hasn't been unlocked yet.",
           "notEnough": "Not enough SP.",
+          "maxIncreased": "SP cap increased to {value}!",
+          "gained": "Gained {amount} SP.",
+          "spent": "Spent {amount} SP.",
           "offerLocked": "You can offer items once the SP system is unlocked.",
           "notUnlockedForItem": "You can't use that until SP is unlocked.",
           "noCapacity": "Your SP cap is 0, so it has no effect.",
           "alreadyFull": "SP is already full."
         },
         "status": {
-          "paralyzed": "You're paralyzed and can't move..."
+          "paralyzed": "You're paralyzed and can't move...",
+          "paralyzedRemaining": "You're paralyzed and can't move... ({turns} turns left)",
+          "cured": {
+            "poison": "The poison wore off.",
+            "paralysis": "You shook off the paralysis.",
+            "abilityUp": "The power-up effect expired.",
+            "abilityDown": "The stat penalty faded.",
+            "levelDown": "Your temporary level drop ended."
+          },
+          "applied": {
+            "poison": "You've been poisoned! ({turns} turns)",
+            "paralysis": "You're paralyzed and can't move! ({turns} turns)",
+            "abilityUp": "Power surges through you! Max HP/ATK/DEF up ({turns} turns)",
+            "abilityDown": "Your stats dropped... Max HP/ATK/DEF down ({turns} turns)",
+            "levelDown": "Your level temporarily decreased! ({turns} turns)"
+          }
         },
         "sandbox": {
           "noExp": "Sandbox mode does not award EXP.",
@@ -9226,6 +9244,8 @@
           "bossGate": "You can't proceed until the boss is down!",
           "enemyMissed": "The enemy missed!",
           "enemyWarped": "Warped by the enemy's teleport attack!",
+          "enemyAttackDamage": "The enemy dealt {amount} damage to you!",
+          "enemyWarpPopup": "Warp",
           "statusResistedByLevel": "Level gap prevented the status ailment!",
           "teleportResistedByLevel": "Level gap let you withstand the warp!",
           "instantDeathResisted": "Level gap nullified the instant-death attack!",
@@ -9251,6 +9271,14 @@
           "throwNoTarget": "Found no target to throw at.",
           "throwIneffective": "The enemy's level is too high; the throw had no effect...",
           "throwNoEffect": "You threw a healing item, but nothing happened.",
+          "autoSatietyRecovered": "Auto item triggered! Satiety recovered by {amount}.",
+          "potionSatietyRecovered": "Ate a potion! Satiety recovered by {amount}.",
+          "autoReversedDamage": "Auto item misfired! Took {amount} damage!",
+          "potionReversedDamage": "The potion reversed and dealt {amount} damage!",
+          "autoHpRecovered": "Auto item triggered! Recovered {amount} HP.",
+          "potionHpRecovered": "Used a potion! Recovered {amount} HP.",
+          "autoNoEffect": "Auto item triggered but nothing happened.",
+          "potionNoEffect": "Used a potion but nothing happened.",
           "hpBoostUsed": "Used a Max HP Boost! Max HP increased by 5!",
           "attackBoostUsed": "Used an Attack Boost! Attack increased by 1!",
           "defenseBoostUsed": "Used a Defense Boost! Defense increased by 1!",

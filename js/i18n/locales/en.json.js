@@ -11870,7 +11870,7 @@
       "stats": {
         "valueWithBase": "{effective} (Base {base})",
         "levelWithBase": "Lv.{effective} (Base {base})",
-        "hp": "HP {current}/{max}{baseSuffix}"
+        "hp": "{current}/{max}{baseSuffix}"
       }
     }
   };

@@ -381,7 +381,36 @@
           },
           "chess": {
             "name": "チェス",
-            "description": "駒の組み合わせで王を詰ませる本格チェス。駒取りとチェックでEXPを獲得"
+            "description": "駒の組み合わせで王を詰ませる本格チェス。駒取りとチェックでEXPを獲得",
+            "title": "チェス",
+            "difficultyTag": "難易度: {value}",
+            "difficultyValue": {
+              "easy": "EASY",
+              "normal": "NORMAL",
+              "hard": "HARD"
+            },
+            "status": {
+              "stopped": "停止中",
+              "turnLabel": "手番:",
+              "yourTurn": "あなたの番です",
+              "aiThinking": "AIの思考中…",
+              "scoreLabel": "スコア:"
+            },
+            "messages": {
+              "checkmateWin": "チェックメイト！勝利しました。",
+              "checkmateLoss": "チェックメイトを受けました…",
+              "stalemate": "ステイルメイト。引き分けです。",
+              "draw": "引き分け扱いになりました。",
+              "playerCheck": "チェック！",
+              "playerInCheck": "チェックされています！",
+              "selectMove": "移動するマスを選択してください"
+            },
+            "prompts": {
+              "promotion": "昇格する駒を選んでください (Q/R/B/N)"
+            },
+            "controls": {
+              "restart": "リスタート"
+            }
           },
           "xiangqi": {
             "name": "シャンチー",

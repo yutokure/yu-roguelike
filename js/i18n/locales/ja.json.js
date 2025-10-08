@@ -11455,6 +11455,16 @@
         "none": "なし",
         "floor": "{floor}F"
       },
+      "miniExp": {
+        "dinoRunner": {
+          "comboLabel": "コンボ {combo}",
+          "startPromptPrimary": "スペース / クリックでスタート",
+          "startPromptSecondary": "↑またはスペースでジャンプ、↓でしゃがみ",
+          "gameOver": "GAME OVER",
+          "restartHint": "スペース / R でリスタート",
+          "distanceLabel": "距離 {distance}"
+        }
+      },
       "runResult": {
         "defaultCause": "ゲームオーバー"
       },

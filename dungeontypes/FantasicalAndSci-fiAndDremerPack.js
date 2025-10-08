@@ -3,6 +3,10 @@
   const TWO_PI = Math.PI * 2;
   const HALF_PI = Math.PI / 2;
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
   function clamp(v, min, max){
     return v < min ? min : (v > max ? max : v);
   }
@@ -1893,7 +1897,6 @@
 
     mixin: { normalMixed: 0.62, blockDimMixed: 0.8, tags: ['music','dream','artery','portal'] }
   };
-  const addonId = 'fantasical-sci-fi-dream-pack';
   const generators = [
     prismaticCities,
     neonOrbitarium,
@@ -2032,6 +2035,11 @@
       type: theme.type,
       weight
     };
+    const typeKey = sanitizeKey(theme.type);
+    entry.nameKey = `dungeon.types.${typeKey}.blocks.${entry.key}.name`;
+    if(theme.description){
+      entry.descriptionKey = `dungeon.types.${typeKey}.blocks.${entry.key}.description`;
+    }
     if(tier.includeBoss){
       const start = tier.bossBase + index * 2;
       entry.bossFloors = [start, start + tier.bossSpacing, start + tier.bossSpacing * 2];
@@ -2049,6 +2057,9 @@
     return acc;
   }, { blocks1: [], blocks2: [], blocks3: [] });
 
+  const addonId = 'fantasical-sci-fi-dream-pack';
+  const addonTypeKey = sanitizeKey(addonId);
+
   const blockDimensions = [
     { key: 'prismaverse', name: 'プリズマバース', baseLevel: 25 },
     { key: 'holoorbit', name: 'ホロオービット', baseLevel: 32 },
@@ -2062,7 +2073,10 @@
     { key: 'dream_turbine_biosphere', name: '夢風タービン圏', baseLevel: 40 },
     { key: 'astral_cantor_reach', name: '星界カントル界', baseLevel: 47 },
     { key: 'voidglass_delta', name: '虚玻デルタ界', baseLevel: 43 }
-  ];
+  ].map(dimension => ({
+    ...dimension,
+    nameKey: `dungeon.types.${addonTypeKey}.blocks.${dimension.key}.name`
+  }));
 
   const blocks = {
     dimensions: blockDimensions,

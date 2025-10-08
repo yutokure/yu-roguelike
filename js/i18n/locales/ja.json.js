@@ -11552,6 +11552,32 @@
         }
       }
     },
+    "godConsole": {
+      "mode": {
+        "current": "現在: {mode}",
+        "sandbox": "サンドボックスモード",
+        "normal": "探索モード",
+        "toggle": {
+          "toSandbox": "サンドボックスモードに入る",
+          "toNormal": "探索モードに戻る"
+        }
+      },
+      "status": {
+        "prompt": "コードを入力し、創造の力を解き放ちましょう。",
+        "notAwakened": "創造神の力がまだ覚醒していません。",
+        "enterCode": "コードを入力してください。",
+        "running": "コードを実行中…",
+        "executedWithReturn": "コードを実行しました（返値: {value}）",
+        "executed": "コードを実行しました。",
+        "error": "エラー: {message}",
+        "requiresGodPower": "創造神の力が必要です。",
+        "toggleRestricted": "ダンジョン探索中のみ切り替えできます。",
+        "sandboxEnabled": "サンドボックスモードを有効化しました。",
+        "sandboxDisabled": "探索モードに戻りました。",
+        "sampleInserted": "サンプルコードを挿入しました。",
+        "cleared": "入力をクリアしました。"
+      }
+    },
     "statusModal": {
       "title": "プレイヤーステータス",
       "sections": {

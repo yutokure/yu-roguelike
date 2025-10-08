@@ -3656,11 +3656,21 @@ function ensureGodConsoleDefaultSnippet() {
 function updateGodConsoleModeLabel() {
     if (!godConsoleModeLabel && !godConsoleSandboxToggle) return;
     const inSandbox = isSandboxInteractiveEnabled();
+    const sandboxLabel = translateOrFallback('godConsole.mode.sandbox', 'サンドボックスモード');
+    const normalLabel = translateOrFallback('godConsole.mode.normal', '探索モード');
+    const modeLabel = inSandbox ? sandboxLabel : normalLabel;
     if (godConsoleModeLabel) {
-        godConsoleModeLabel.textContent = `現在: ${inSandbox ? 'サンドボックスモード' : '探索モード'}`;
+        godConsoleModeLabel.textContent = translateOrFallback(
+            'godConsole.mode.current',
+            () => `現在: ${modeLabel}`,
+            { mode: modeLabel }
+        );
     }
     if (godConsoleSandboxToggle) {
-        godConsoleSandboxToggle.textContent = inSandbox ? '探索モードに戻る' : 'サンドボックスモードに入る';
+        godConsoleSandboxToggle.textContent = translateOrFallback(
+            inSandbox ? 'godConsole.mode.toggle.toNormal' : 'godConsole.mode.toggle.toSandbox',
+            inSandbox ? '探索モードに戻る' : 'サンドボックスモードに入る'
+        );
     }
 }
 
@@ -3677,7 +3687,10 @@ function setGodConsoleOpen(open, { silent = false } = {}) {
     if (next) {
         if (!godConsoleState.defaultInjected) ensureGodConsoleDefaultSnippet();
         if (!silent) {
-            setGodConsoleStatus('コードを入力し、創造の力を解き放ちましょう。', 'info');
+            setGodConsoleStatus(
+                translateOrFallback('godConsole.status.prompt', 'コードを入力し、創造の力を解き放ちましょう。'),
+                'info'
+            );
             setTimeout(() => {
                 try { godConsoleInput && godConsoleInput.focus({ preventScroll: true }); } catch {}
             }, 0);
@@ -11209,26 +11222,46 @@ function createGodConsoleContext() {
 
 async function runGodConsoleCode() {
     if (!isAnosGodUnlocked()) {
-        setGodConsoleStatus('創造神の力がまだ覚醒していません。', 'warning');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.notAwakened', '創造神の力がまだ覚醒していません。'),
+            'warning'
+        );
         return;
     }
     if (!godConsoleInput) return;
     const code = godConsoleInput.value;
     if (!code.trim()) {
-        setGodConsoleStatus('コードを入力してください。', 'warning');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.enterCode', 'コードを入力してください。'),
+            'warning'
+        );
         return;
     }
     try {
-        setGodConsoleStatus('コードを実行中…', 'info');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.running', 'コードを実行中…'),
+            'info'
+        );
         const fn = new Function('context', `'use strict';\n${code}`);
         let result = fn(createGodConsoleContext());
         if (result instanceof Promise) {
             result = await result;
         }
         if (typeof result !== 'undefined') {
-            setGodConsoleStatus(`コードを実行しました（返値: ${describeGodConsoleValue(result)}）`, 'success');
+            const described = describeGodConsoleValue(result);
+            setGodConsoleStatus(
+                translateOrFallback(
+                    'godConsole.status.executedWithReturn',
+                    () => `コードを実行しました（返値: ${described}）`,
+                    { value: described }
+                ),
+                'success'
+            );
         } else {
-            setGodConsoleStatus('コードを実行しました。', 'success');
+            setGodConsoleStatus(
+                translateOrFallback('godConsole.status.executed', 'コードを実行しました。'),
+                'success'
+            );
         }
         try {
             addMessage({
@@ -11242,7 +11275,10 @@ async function runGodConsoleCode() {
     } catch (err) {
         console.error('God console execution failed', err);
         const message = err && err.message ? err.message : String(err);
-        setGodConsoleStatus(`エラー: ${message}`, 'error');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.error', () => `エラー: ${message}`, { message }),
+            'error'
+        );
         try {
             const text = String(message);
             addMessage({
@@ -11257,11 +11293,17 @@ async function runGodConsoleCode() {
 
 function toggleGodConsoleSandboxMode() {
     if (!isAnosGodUnlocked()) {
-        setGodConsoleStatus('創造神の力が必要です。', 'warning');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.requiresGodPower', '創造神の力が必要です。'),
+            'warning'
+        );
         return;
     }
     if (!isGameScreenVisible()) {
-        setGodConsoleStatus('ダンジョン探索中のみ切り替えできます。', 'warning');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.toggleRestricted', 'ダンジョン探索中のみ切り替えできます。'),
+            'warning'
+        );
         return;
     }
     const next = !isSandboxInteractiveEnabled();
@@ -11271,10 +11313,16 @@ function toggleGodConsoleSandboxMode() {
     setSandboxInteractiveEnabled(next);
     if (next) {
         setSandboxPanelOpen(true);
-        setGodConsoleStatus('サンドボックスモードを有効化しました。', 'success');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.sandboxEnabled', 'サンドボックスモードを有効化しました。'),
+            'success'
+        );
     } else {
         setSandboxPanelOpen(false, { silent: true });
-        setGodConsoleStatus('探索モードに戻りました。', 'success');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.sandboxDisabled', '探索モードに戻りました。'),
+            'success'
+        );
     }
     updateGodConsoleModeLabel();
     updateGodConsoleAvailability();
@@ -11287,11 +11335,17 @@ function resetGodConsoleInput({ withSample = true } = {}) {
     if (withSample) {
         godConsoleInput.value = getGodConsoleDefaultSnippet();
         godConsoleState.defaultInjected = true;
-        setGodConsoleStatus('サンプルコードを挿入しました。', 'info');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.sampleInserted', 'サンプルコードを挿入しました。'),
+            'info'
+        );
     } else {
         godConsoleInput.value = '';
         godConsoleState.defaultInjected = false;
-        setGodConsoleStatus('入力をクリアしました。', 'info');
+        setGodConsoleStatus(
+            translateOrFallback('godConsole.status.cleared', '入力をクリアしました。'),
+            'info'
+        );
     }
 }
 

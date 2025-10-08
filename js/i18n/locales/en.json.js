@@ -11552,6 +11552,32 @@
         }
       }
     },
+    "godConsole": {
+      "mode": {
+        "current": "Current: {mode}",
+        "sandbox": "Sandbox Mode",
+        "normal": "Exploration Mode",
+        "toggle": {
+          "toSandbox": "Enter Sandbox Mode",
+          "toNormal": "Return to Exploration Mode"
+        }
+      },
+      "status": {
+        "prompt": "Enter code and unleash your creative power.",
+        "notAwakened": "The Creator's power has not awakened yet.",
+        "enterCode": "Please enter code.",
+        "running": "Running code…",
+        "executedWithReturn": "Code executed (return value: {value})",
+        "executed": "Code executed.",
+        "error": "Error: {message}",
+        "requiresGodPower": "Creator power is required.",
+        "toggleRestricted": "Can only switch while exploring a dungeon.",
+        "sandboxEnabled": "Sandbox mode enabled.",
+        "sandboxDisabled": "Returned to exploration mode.",
+        "sampleInserted": "Sample code inserted.",
+        "cleared": "Input cleared."
+      }
+    },
     "statusModal": {
       "title": "Player Status",
       "sections": {

@@ -3,7 +3,14 @@
     'use strict';
 
     const VERSION = 2;
-    const DIFFICULTY_ORDER = ['Very Easy', 'Easy', 'Normal', 'Second', 'Hard', 'Very Hard'];
+    const DIFFICULTY_ORDER = [
+        { key: 'veryEasy', label: 'Very Easy', value: 'Very Easy' },
+        { key: 'easy', label: 'Easy', value: 'Easy' },
+        { key: 'normal', label: 'Normal', value: 'Normal' },
+        { key: 'second', label: 'Second', value: 'Second' },
+        { key: 'hard', label: 'Hard', value: 'Hard' },
+        { key: 'veryHard', label: 'Very Hard', value: 'Very Hard' }
+    ];
     const i18n = global.I18n || null;
     const PLAYTIME_TRACKING_INTERVAL_MS = 1000;
 
@@ -36,7 +43,7 @@
             description: 'Hard 以上の難易度でダンジョンを攻略する。',
             rewardKey: 'achievements.auto.dungeon_hard_clear.reward',
             reward: '高難易度攻略の記念メダル',
-            condition: (stats) => stats.core.highestDifficultyIndex >= DIFFICULTY_ORDER.indexOf('Hard')
+            condition: (stats) => stats.core.highestDifficultyIndex >= difficultyIndex('Hard')
         },
         {
             id: 'dungeon_step_1000',
@@ -508,64 +515,422 @@
     const STAT_SECTIONS = [
         {
             id: 'core',
+            titleKey: 'achievements.stats.sections.core.title',
             title: 'ダンジョンの記録',
             entries: [
-                { path: 'core.playTimeSeconds', label: '総プレイ時間', description: 'ゲームを起動していた累計時間。', formatter: formatDuration },
-                { path: 'core.totalSteps', label: '総移動距離', description: 'これまでに歩いたマスの合計。', formatter: (value) => `${formatNumber(value)} マス` },
-                { path: 'core.floorsAdvanced', label: '踏破した階層数', description: '階段で進んだ累積階層。', formatter: formatNumber },
-                { path: 'core.highestFloorReached', label: '最高到達階層', description: 'これまでに到達した最も深い階層。', formatter: (value) => `${formatNumber(value)}F` },
-                { path: 'core.dungeonsCleared', label: '攻略したダンジョン数', description: '通常・ブロック次元を含む攻略回数。', formatter: formatNumber },
-                { path: 'core.enemiesDefeated', label: '撃破した敵', description: '倒した敵の合計数。', formatter: formatNumber },
-                { path: 'core.bossesDefeated', label: 'ボス撃破数', description: '撃破したボスの数。', formatter: formatNumber },
-                { path: 'core.totalExpEarned', label: '累計獲得EXP', description: '探索やミニゲームで得た経験値の合計。', formatter: (value) => `${formatNumber(Math.floor(value || 0))} EXP` },
-                { path: 'core.damageDealt', label: '累計与ダメージ', description: '敵に与えたダメージ総量。', formatter: formatNumber },
-                { path: 'core.damageTaken', label: '累計被ダメージ', description: '敵やギミックから受けたダメージ総量。', formatter: formatNumber },
-                { path: 'core.chestsOpened', label: '開けた宝箱', description: '探索中に開封した宝箱の数。', formatter: formatNumber },
-                { path: 'core.rareChestsOpened', label: '開けたレア宝箱', description: '開封したレア宝箱の数。', formatter: formatNumber },
-                { path: 'core.normalChestsOpened', label: '開けた通常宝箱', description: '通常宝箱を開封した回数。', formatter: formatNumber },
-                { path: 'core.healingItemsUsed', label: '使用した回復アイテム', description: 'ポーションやHP強化などを使用した回数。', formatter: formatNumber },
-                { path: 'core.autoItemsTriggered', label: 'オートアイテム発動回数', description: 'HPが減ったとき自動で発動した回復アイテムの回数。', formatter: formatNumber },
-                { path: 'core.deaths', label: '戦闘不能回数', description: 'ゲームオーバーになった回数。', formatter: formatNumber },
-                { path: 'core.highestDifficultyIndex', label: '最高攻略難易度', description: 'これまで攻略した最も高い難易度。', formatter: formatDifficultyLabel }
+                {
+                    path: 'core.playTimeSeconds',
+                    labelKey: 'achievements.stats.entries.core.playTime.label',
+                    label: '総プレイ時間',
+                    descriptionKey: 'achievements.stats.entries.core.playTime.description',
+                    description: 'ゲームを起動していた累計時間。',
+                    formatter: (value) => formatDuration(value)
+                },
+                {
+                    path: 'core.totalSteps',
+                    labelKey: 'achievements.stats.entries.core.totalSteps.label',
+                    label: '総移動距離',
+                    descriptionKey: 'achievements.stats.entries.core.totalSteps.description',
+                    description: 'これまでに歩いたマスの合計。',
+                    formatter: (value) => translate('achievements.stats.entries.core.totalSteps.value', { value: formatNumber(value) }, `${formatNumber(value)} マス`)
+                },
+                {
+                    path: 'core.floorsAdvanced',
+                    labelKey: 'achievements.stats.entries.core.floorsAdvanced.label',
+                    label: '踏破した階層数',
+                    descriptionKey: 'achievements.stats.entries.core.floorsAdvanced.description',
+                    description: '階段で進んだ累積階層。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.highestFloorReached',
+                    labelKey: 'achievements.stats.entries.core.highestFloorReached.label',
+                    label: '最高到達階層',
+                    descriptionKey: 'achievements.stats.entries.core.highestFloorReached.description',
+                    description: 'これまでに到達した最も深い階層。',
+                    formatter: (value) => translate('achievements.stats.entries.core.highestFloorReached.value', { value: formatNumber(value) }, `${formatNumber(value)}F`)
+                },
+                {
+                    path: 'core.dungeonsCleared',
+                    labelKey: 'achievements.stats.entries.core.dungeonsCleared.label',
+                    label: '攻略したダンジョン数',
+                    descriptionKey: 'achievements.stats.entries.core.dungeonsCleared.description',
+                    description: '通常・ブロック次元を含む攻略回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.enemiesDefeated',
+                    labelKey: 'achievements.stats.entries.core.enemiesDefeated.label',
+                    label: '撃破した敵',
+                    descriptionKey: 'achievements.stats.entries.core.enemiesDefeated.description',
+                    description: '倒した敵の合計数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.bossesDefeated',
+                    labelKey: 'achievements.stats.entries.core.bossesDefeated.label',
+                    label: 'ボス撃破数',
+                    descriptionKey: 'achievements.stats.entries.core.bossesDefeated.description',
+                    description: '撃破したボスの数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.totalExpEarned',
+                    labelKey: 'achievements.stats.entries.core.totalExpEarned.label',
+                    label: '累計獲得EXP',
+                    descriptionKey: 'achievements.stats.entries.core.totalExpEarned.description',
+                    description: '探索やミニゲームで得た経験値の合計。',
+                    formatter: (value) => translate('achievements.stats.entries.core.totalExpEarned.value', { value: formatNumber(Math.floor(value || 0)) }, `${formatNumber(Math.floor(value || 0))} EXP`)
+                },
+                {
+                    path: 'core.damageDealt',
+                    labelKey: 'achievements.stats.entries.core.damageDealt.label',
+                    label: '累計与ダメージ',
+                    descriptionKey: 'achievements.stats.entries.core.damageDealt.description',
+                    description: '敵に与えたダメージ総量。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.damageTaken',
+                    labelKey: 'achievements.stats.entries.core.damageTaken.label',
+                    label: '累計被ダメージ',
+                    descriptionKey: 'achievements.stats.entries.core.damageTaken.description',
+                    description: '敵やギミックから受けたダメージ総量。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.chestsOpened',
+                    labelKey: 'achievements.stats.entries.core.chestsOpened.label',
+                    label: '開けた宝箱',
+                    descriptionKey: 'achievements.stats.entries.core.chestsOpened.description',
+                    description: '探索中に開封した宝箱の数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.rareChestsOpened',
+                    labelKey: 'achievements.stats.entries.core.rareChestsOpened.label',
+                    label: '開けたレア宝箱',
+                    descriptionKey: 'achievements.stats.entries.core.rareChestsOpened.description',
+                    description: '開封したレア宝箱の数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.normalChestsOpened',
+                    labelKey: 'achievements.stats.entries.core.normalChestsOpened.label',
+                    label: '開けた通常宝箱',
+                    descriptionKey: 'achievements.stats.entries.core.normalChestsOpened.description',
+                    description: '通常宝箱を開封した回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.healingItemsUsed',
+                    labelKey: 'achievements.stats.entries.core.healingItemsUsed.label',
+                    label: '使用した回復アイテム',
+                    descriptionKey: 'achievements.stats.entries.core.healingItemsUsed.description',
+                    description: 'ポーションやHP強化などを使用した回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.autoItemsTriggered',
+                    labelKey: 'achievements.stats.entries.core.autoItemsTriggered.label',
+                    label: 'オートアイテム発動回数',
+                    descriptionKey: 'achievements.stats.entries.core.autoItemsTriggered.description',
+                    description: 'HPが減ったとき自動で発動した回復アイテムの回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.deaths',
+                    labelKey: 'achievements.stats.entries.core.deaths.label',
+                    label: '戦闘不能回数',
+                    descriptionKey: 'achievements.stats.entries.core.deaths.description',
+                    description: 'ゲームオーバーになった回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'core.highestDifficultyIndex',
+                    labelKey: 'achievements.stats.entries.core.highestDifficultyIndex.label',
+                    label: '最高攻略難易度',
+                    descriptionKey: 'achievements.stats.entries.core.highestDifficultyIndex.description',
+                    description: 'これまで攻略した最も高い難易度。',
+                    formatter: formatDifficultyLabel
+                }
             ]
         },
         {
             id: 'blockdim',
+            titleKey: 'achievements.stats.sections.blockdim.title',
             title: 'ブロック次元の記録',
             entries: [
-                { path: 'blockdim.gatesOpened', label: 'Gate 起動回数', description: 'ブロック次元へ突入した回数。', formatter: formatNumber },
-                { path: 'blockdim.bookmarksAdded', label: 'ブックマーク登録数', description: '保存したブックマークの数。', formatter: formatNumber },
-                { path: 'blockdim.randomSelections', label: 'ランダム選択回数', description: '等確率ランダム選択を使った回数。', formatter: formatNumber },
-                { path: 'blockdim.weightedSelections', label: '重み付き選択回数', description: '狙い撃ちランダムを使った回数。', formatter: formatNumber }
+                {
+                    path: 'blockdim.gatesOpened',
+                    labelKey: 'achievements.stats.entries.blockdim.gatesOpened.label',
+                    label: 'Gate 起動回数',
+                    descriptionKey: 'achievements.stats.entries.blockdim.gatesOpened.description',
+                    description: 'ブロック次元へ突入した回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'blockdim.bookmarksAdded',
+                    labelKey: 'achievements.stats.entries.blockdim.bookmarksAdded.label',
+                    label: 'ブックマーク登録数',
+                    descriptionKey: 'achievements.stats.entries.blockdim.bookmarksAdded.description',
+                    description: '保存したブックマークの数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'blockdim.randomSelections',
+                    labelKey: 'achievements.stats.entries.blockdim.randomSelections.label',
+                    label: 'ランダム選択回数',
+                    descriptionKey: 'achievements.stats.entries.blockdim.randomSelections.description',
+                    description: '等確率ランダム選択を使った回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'blockdim.weightedSelections',
+                    labelKey: 'achievements.stats.entries.blockdim.weightedSelections.label',
+                    label: '重み付き選択回数',
+                    descriptionKey: 'achievements.stats.entries.blockdim.weightedSelections.description',
+                    description: '狙い撃ちランダムを使った回数。',
+                    formatter: formatNumber
+                }
             ]
         },
         {
             id: 'hatena',
+            titleKey: 'achievements.stats.sections.hatena.title',
             title: 'ハテナブロックの記録',
             entries: [
-                { path: 'hatena.blocksAppeared', label: '出現したブロック', description: '探索中に見つけたハテナブロックの総数。', formatter: (value) => `${formatNumber(value)} 個` },
-                { path: 'hatena.blocksTriggered', label: '発動したブロック', description: '踏んで発動させたハテナブロックの回数。', formatter: (value) => `${formatNumber(value)} 回` },
-                { path: 'hatena.positiveEffects', label: '好影響の回数', description: '好影響（レベルアップ、報酬など）になった回数。', formatter: (value) => `${formatNumber(value)} 回` },
-                { path: 'hatena.negativeEffects', label: '悪影響の回数', description: '悪影響（被弾や弱体化など）になった回数。', formatter: (value) => `${formatNumber(value)} 回` },
-                { path: 'hatena.expGained', label: '累計獲得EXP', description: 'ハテナブロックから得た経験値の合計。', formatter: (value) => `${formatNumber(Math.floor(value || 0))} EXP` },
-                { path: 'hatena.expLost', label: '累計消失EXP', description: 'ハテナブロックで失った経験値の合計。', formatter: (value) => `${formatNumber(Math.floor(value || 0))} EXP` },
-                { path: 'hatena.normalChestsSpawned', label: '通常宝箱生成数', description: '通常宝箱を生成した回数。', formatter: (value) => `${formatNumber(value)} 個` },
-                { path: 'hatena.rareChestsSpawned', label: 'レア宝箱生成数', description: 'レア宝箱を生成した回数。', formatter: (value) => `${formatNumber(value)} 個` },
-                { path: 'hatena.itemsGranted', label: '獲得アイテム数', description: '報酬として受け取ったアイテムの数。', formatter: (value) => `${formatNumber(value)} 個` },
-                { path: 'hatena.enemyAmbushes', label: '奇襲された敵数', description: '奇襲イベントで出現した敵の総数。', formatter: (value) => `${formatNumber(value)} 体` },
-                { path: 'hatena.bombsTriggered', label: '爆発イベント回数', description: '爆発の効果を引いた回数。', formatter: (value) => `${formatNumber(value)} 回` },
-                { path: 'hatena.statusesResisted', label: '状態異常無効化', description: 'ハテナブロックの状態異常を打ち消した回数。', formatter: (value) => `${formatNumber(value)} 回` }
+                {
+                    path: 'hatena.blocksAppeared',
+                    labelKey: 'achievements.stats.entries.hatena.blocksAppeared.label',
+                    label: '出現したブロック',
+                    descriptionKey: 'achievements.stats.entries.hatena.blocksAppeared.description',
+                    description: '探索中に見つけたハテナブロックの総数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.blocksAppeared.value', { value: formatNumber(value) }, `${formatNumber(value)} 個`)
+                },
+                {
+                    path: 'hatena.blocksTriggered',
+                    labelKey: 'achievements.stats.entries.hatena.blocksTriggered.label',
+                    label: '発動したブロック',
+                    descriptionKey: 'achievements.stats.entries.hatena.blocksTriggered.description',
+                    description: '踏んで発動させたハテナブロックの回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.blocksTriggered.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.positiveEffects',
+                    labelKey: 'achievements.stats.entries.hatena.positiveEffects.label',
+                    label: '好影響の回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.positiveEffects.description',
+                    description: '好影響（レベルアップ、報酬など）になった回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.positiveEffects.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.neutralEffects',
+                    labelKey: 'achievements.stats.entries.hatena.neutralEffects.label',
+                    label: '中立効果の回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.neutralEffects.description',
+                    description: '好影響・悪影響どちらでもない結果になった回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.neutralEffects.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.negativeEffects',
+                    labelKey: 'achievements.stats.entries.hatena.negativeEffects.label',
+                    label: '悪影響の回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.negativeEffects.description',
+                    description: '悪影響（被弾や弱体化など）になった回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.negativeEffects.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.expGained',
+                    labelKey: 'achievements.stats.entries.hatena.expGained.label',
+                    label: '累計獲得EXP',
+                    descriptionKey: 'achievements.stats.entries.hatena.expGained.description',
+                    description: 'ハテナブロックから得た経験値の合計。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.expGained.value', { value: formatNumber(Math.floor(value || 0)) }, `${formatNumber(Math.floor(value || 0))} EXP`)
+                },
+                {
+                    path: 'hatena.expLost',
+                    labelKey: 'achievements.stats.entries.hatena.expLost.label',
+                    label: '累計消失EXP',
+                    descriptionKey: 'achievements.stats.entries.hatena.expLost.description',
+                    description: 'ハテナブロックで失った経験値の合計。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.expLost.value', { value: formatNumber(Math.floor(value || 0)) }, `${formatNumber(Math.floor(value || 0))} EXP`)
+                },
+                {
+                    path: 'hatena.bombDamageTaken',
+                    labelKey: 'achievements.stats.entries.hatena.bombDamageTaken.label',
+                    label: '爆発による被ダメージ',
+                    descriptionKey: 'achievements.stats.entries.hatena.bombDamageTaken.description',
+                    description: '爆発効果で受けたダメージの総量。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.bombDamageTaken.value', { value: formatNumber(value) }, `${formatNumber(value)} ダメージ`)
+                },
+                {
+                    path: 'hatena.bombHealed',
+                    labelKey: 'achievements.stats.entries.hatena.bombHealed.label',
+                    label: '爆発で回復したHP',
+                    descriptionKey: 'achievements.stats.entries.hatena.bombHealed.description',
+                    description: '爆発の回復効果で得たHPの総量。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.bombHealed.value', { value: formatNumber(value) }, `${formatNumber(value)} HP`)
+                },
+                {
+                    path: 'hatena.bombGuards',
+                    labelKey: 'achievements.stats.entries.hatena.bombGuards.label',
+                    label: 'ガード発動回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.bombGuards.description',
+                    description: '爆発ガード効果でダメージを軽減した回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.bombGuards.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.normalChestsSpawned',
+                    labelKey: 'achievements.stats.entries.hatena.normalChestsSpawned.label',
+                    label: '通常宝箱生成数',
+                    descriptionKey: 'achievements.stats.entries.hatena.normalChestsSpawned.description',
+                    description: '通常宝箱を生成した回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.normalChestsSpawned.value', { value: formatNumber(value) }, `${formatNumber(value)} 個`)
+                },
+                {
+                    path: 'hatena.rareChestsSpawned',
+                    labelKey: 'achievements.stats.entries.hatena.rareChestsSpawned.label',
+                    label: 'レア宝箱生成数',
+                    descriptionKey: 'achievements.stats.entries.hatena.rareChestsSpawned.description',
+                    description: 'レア宝箱を生成した回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.rareChestsSpawned.value', { value: formatNumber(value) }, `${formatNumber(value)} 個`)
+                },
+                {
+                    path: 'hatena.itemsGranted',
+                    labelKey: 'achievements.stats.entries.hatena.itemsGranted.label',
+                    label: '獲得アイテム数',
+                    descriptionKey: 'achievements.stats.entries.hatena.itemsGranted.description',
+                    description: '報酬として受け取ったアイテムの数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.itemsGranted.value', { value: formatNumber(value) }, `${formatNumber(value)} 個`)
+                },
+                {
+                    path: 'hatena.enemyAmbushes',
+                    labelKey: 'achievements.stats.entries.hatena.enemyAmbushes.label',
+                    label: '奇襲された敵数',
+                    descriptionKey: 'achievements.stats.entries.hatena.enemyAmbushes.description',
+                    description: '奇襲イベントで出現した敵の総数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.enemyAmbushes.value', { value: formatNumber(value) }, `${formatNumber(value)} 体`)
+                },
+                {
+                    path: 'hatena.bombsTriggered',
+                    labelKey: 'achievements.stats.entries.hatena.bombsTriggered.label',
+                    label: '爆発イベント回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.bombsTriggered.description',
+                    description: '爆発の効果を引いた回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.bombsTriggered.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.levelUps',
+                    labelKey: 'achievements.stats.entries.hatena.levelUps.label',
+                    label: 'レベルアップ回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.levelUps.description',
+                    description: 'ハテナブロックの効果でレベルアップした回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.levelUps.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.levelUpLevels',
+                    labelKey: 'achievements.stats.entries.hatena.levelUpLevels.label',
+                    label: '累計上昇レベル',
+                    descriptionKey: 'achievements.stats.entries.hatena.levelUpLevels.description',
+                    description: 'ハテナブロックで獲得したレベルの合計。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.levelUpLevels.value', { value: formatNumber(value) }, `${formatNumber(value)} レベル`)
+                },
+                {
+                    path: 'hatena.levelDowns',
+                    labelKey: 'achievements.stats.entries.hatena.levelDowns.label',
+                    label: 'レベルダウン回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.levelDowns.description',
+                    description: 'ハテナブロックの効果でレベルダウンした回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.levelDowns.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.levelDownLevels',
+                    labelKey: 'achievements.stats.entries.hatena.levelDownLevels.label',
+                    label: '累計減少レベル',
+                    descriptionKey: 'achievements.stats.entries.hatena.levelDownLevels.description',
+                    description: 'ハテナブロックで失ったレベルの合計。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.levelDownLevels.value', { value: formatNumber(value) }, `${formatNumber(value)} レベル`)
+                },
+                {
+                    path: 'hatena.statusesApplied',
+                    labelKey: 'achievements.stats.entries.hatena.statusesApplied.label',
+                    label: '状態異常付与回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.statusesApplied.description',
+                    description: 'ハテナブロックで状態異常を受けた回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.statusesApplied.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.statusesResisted',
+                    labelKey: 'achievements.stats.entries.hatena.statusesResisted.label',
+                    label: '状態異常無効化',
+                    descriptionKey: 'achievements.stats.entries.hatena.statusesResisted.description',
+                    description: 'ハテナブロックの状態異常を打ち消した回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.statusesResisted.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.abilityUps',
+                    labelKey: 'achievements.stats.entries.hatena.abilityUps.label',
+                    label: '能力上昇回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.abilityUps.description',
+                    description: 'ハテナブロックでステータスが上昇した回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.abilityUps.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                },
+                {
+                    path: 'hatena.abilityDowns',
+                    labelKey: 'achievements.stats.entries.hatena.abilityDowns.label',
+                    label: '能力低下回数',
+                    descriptionKey: 'achievements.stats.entries.hatena.abilityDowns.description',
+                    description: 'ハテナブロックでステータスが低下した回数。',
+                    formatter: (value) => translate('achievements.stats.entries.hatena.abilityDowns.value', { value: formatNumber(value) }, `${formatNumber(value)} 回`)
+                }
             ]
         },
         {
             id: 'tools',
+            titleKey: 'achievements.stats.sections.tools.title',
             title: 'ツール利用状況',
             entries: [
-                { path: 'tools.tabVisits', label: 'ツールズタブ訪問回数', description: 'ツールズタブを開いた回数。', formatter: formatNumber },
-                { path: 'tools.modExports', label: 'Mod 出力回数', description: 'Mod 作成ツールで出力した回数。', formatter: formatNumber },
-                { path: 'tools.blockdataSaves', label: 'BlockData 保存回数', description: 'BlockData エディタで保存した回数。', formatter: formatNumber },
-                { path: 'tools.blockdataDownloads', label: 'BlockData ダウンロード回数', description: 'BlockData エディタからダウンロードした回数。', formatter: formatNumber },
-                { path: 'tools.sandboxSessions', label: 'サンドボックス操作回数', description: 'サンドボックスUIを開いた回数。', formatter: formatNumber }
+                {
+                    path: 'tools.tabVisits',
+                    labelKey: 'achievements.stats.entries.tools.tabVisits.label',
+                    label: 'ツールズタブ訪問回数',
+                    descriptionKey: 'achievements.stats.entries.tools.tabVisits.description',
+                    description: 'ツールズタブを開いた回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'tools.modExports',
+                    labelKey: 'achievements.stats.entries.tools.modExports.label',
+                    label: 'Mod 出力回数',
+                    descriptionKey: 'achievements.stats.entries.tools.modExports.description',
+                    description: 'Mod 作成ツールで出力した回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'tools.blockdataSaves',
+                    labelKey: 'achievements.stats.entries.tools.blockdataSaves.label',
+                    label: 'BlockData 保存回数',
+                    descriptionKey: 'achievements.stats.entries.tools.blockdataSaves.description',
+                    description: 'BlockData エディタで保存した回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'tools.blockdataDownloads',
+                    labelKey: 'achievements.stats.entries.tools.blockdataDownloads.label',
+                    label: 'BlockData ダウンロード回数',
+                    descriptionKey: 'achievements.stats.entries.tools.blockdataDownloads.description',
+                    description: 'BlockData エディタからダウンロードした回数。',
+                    formatter: formatNumber
+                },
+                {
+                    path: 'tools.sandboxSessions',
+                    labelKey: 'achievements.stats.entries.tools.sandboxSessions.label',
+                    label: 'サンドボックス操作回数',
+                    descriptionKey: 'achievements.stats.entries.tools.sandboxSessions.description',
+                    description: 'サンドボックスUIを開いた回数。',
+                    formatter: formatNumber
+                }
             ]
         }
     ];
@@ -626,10 +991,40 @@
         }
     }
 
+    function formatDecimal(value, options = {}) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return '0';
+        const minimumFractionDigits = Number.isInteger(options.minimumFractionDigits)
+            ? Math.max(0, options.minimumFractionDigits)
+            : 0;
+        const maximumFractionDigits = Number.isInteger(options.maximumFractionDigits)
+            ? Math.max(minimumFractionDigits, options.maximumFractionDigits)
+            : Math.max(minimumFractionDigits, 1);
+        const formatOptions = { minimumFractionDigits, maximumFractionDigits };
+        if (i18n && typeof i18n.formatNumber === 'function') {
+            try {
+                return i18n.formatNumber(numeric, formatOptions);
+            } catch (error) {
+                console.warn('[Achievements] Failed to format decimal via i18n:', error);
+            }
+        }
+        try {
+            return new Intl.NumberFormat(undefined, formatOptions).format(numeric);
+        } catch (error) {
+            return numeric.toFixed(formatOptions.maximumFractionDigits);
+        }
+    }
+
     function formatDifficultyLabel(index) {
-        if (!Number.isFinite(index) || index < 0) return '未攻略';
+        if (!Number.isFinite(index) || index < 0) {
+            return translate('achievements.difficulty.unplayed', null, '未攻略');
+        }
         const idx = Math.max(0, Math.min(DIFFICULTY_ORDER.length - 1, Math.floor(index)));
-        return DIFFICULTY_ORDER[idx] || '未攻略';
+        const def = DIFFICULTY_ORDER[idx];
+        if (!def) {
+            return translate('achievements.difficulty.unplayed', null, '未攻略');
+        }
+        return translate(`achievements.difficulty.labels.${def.key}`, null, def.label || '未攻略');
     }
 
     function formatDuration(seconds) {
@@ -751,7 +1146,7 @@
 
     function difficultyIndex(value) {
         if (typeof value !== 'string') return -1;
-        const idx = DIFFICULTY_ORDER.indexOf(value);
+        const idx = DIFFICULTY_ORDER.findIndex(def => def && def.value === value);
         return idx >= 0 ? idx : -1;
     }
 
@@ -1126,7 +1521,10 @@
                         }
                         return !!record.unlocked;
                     }).length;
-                    value.textContent = `${unlocked}/${defs.length}`;
+                    value.textContent = translate('achievements.summary.categoryRatio', {
+                        unlocked: formatNumber(unlocked),
+                        total: formatNumber(defs.length)
+                    }, `${formatNumber(unlocked)}/${formatNumber(defs.length)}`);
                 }
             }
             item.appendChild(name);
@@ -1143,16 +1541,49 @@
         const stats = state.stats?.core || defaults.core;
         const hatenaStats = state.stats?.hatena || defaults.hatena;
         const highlights = [
-            { label: '総プレイ時間', value: formatDuration(stats.playTimeSeconds) },
-            { label: '攻略ダンジョン', value: formatNumber(stats.dungeonsCleared) },
-            { label: '最高難易度', value: formatDifficultyLabel(stats.highestDifficultyIndex) },
-            { label: '累計EXP', value: `${formatNumber(Math.floor(stats.totalExpEarned || 0))} EXP` }
+            {
+                labelKey: 'achievements.summary.highlights.playTime',
+                label: '総プレイ時間',
+                value: formatDuration(stats.playTimeSeconds)
+            },
+            {
+                labelKey: 'achievements.summary.highlights.dungeonsCleared',
+                label: '攻略ダンジョン',
+                value: formatNumber(stats.dungeonsCleared)
+            },
+            {
+                labelKey: 'achievements.summary.highlights.highestDifficulty',
+                label: '最高難易度',
+                value: formatDifficultyLabel(stats.highestDifficultyIndex)
+            },
+            {
+                labelKey: 'achievements.summary.highlights.totalExp',
+                label: '累計EXP',
+                value: translate('achievements.summary.highlights.totalExpValue', {
+                    value: formatNumber(Math.floor(stats.totalExpEarned || 0))
+                }, `${formatNumber(Math.floor(stats.totalExpEarned || 0))} EXP`)
+            }
         ];
         const hatenaTriggered = hatenaStats.blocksTriggered || 0;
         if (hatenaTriggered > 0) {
-            highlights.push({ label: 'ハテナ発動回数', value: `${formatNumber(hatenaTriggered)} 回` });
-            const positiveRate = hatenaStats.positiveEffects ? Math.min(100, Math.max(0, (hatenaStats.positiveEffects / hatenaTriggered) * 100)) : 0;
-            highlights.push({ label: 'ハテナ好影響率', value: `${positiveRate.toFixed(1)}%` });
+            const positiveRate = hatenaStats.positiveEffects
+                ? Math.min(100, Math.max(0, (hatenaStats.positiveEffects / hatenaTriggered) * 100))
+                : 0;
+            const positiveRateValue = formatDecimal(positiveRate, { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+            highlights.push({
+                labelKey: 'achievements.summary.highlights.hatenaTriggered',
+                label: 'ハテナ発動回数',
+                value: translate('achievements.summary.highlights.hatenaTriggeredValue', {
+                    value: formatNumber(hatenaTriggered)
+                }, `${formatNumber(hatenaTriggered)} 回`)
+            });
+            highlights.push({
+                labelKey: 'achievements.summary.highlights.hatenaPositiveRate',
+                label: 'ハテナ好影響率',
+                value: translate('achievements.summary.highlights.hatenaPositiveRateValue', {
+                    value: positiveRateValue
+                }, `${positiveRateValue}%`)
+            });
         }
         const list = document.createElement('ul');
         list.className = 'statistics-summary__list';
@@ -1161,7 +1592,7 @@
             li.className = 'statistics-summary__item';
             const label = document.createElement('span');
             label.className = 'summary-label';
-            label.textContent = item.label;
+            label.textContent = item.labelKey ? translate(item.labelKey, null, item.label) : item.label;
             const value = document.createElement('span');
             value.className = 'summary-value';
             value.textContent = item.value;
@@ -1181,7 +1612,7 @@
             const section = document.createElement('section');
             section.className = 'statistics-section';
             const heading = document.createElement('h4');
-            heading.textContent = sectionDef.title;
+            heading.textContent = translate(sectionDef.titleKey, null, sectionDef.title);
             section.appendChild(heading);
             const table = document.createElement('table');
             table.className = 'statistics-table';
@@ -1191,11 +1622,11 @@
                 const display = formatter(valueRaw, state.stats);
                 const row = document.createElement('tr');
                 const th = document.createElement('th');
-                th.textContent = entry.label;
+                th.textContent = translate(entry.labelKey, null, entry.label);
                 const tdValue = document.createElement('td');
                 tdValue.textContent = display;
                 const tdDesc = document.createElement('td');
-                tdDesc.textContent = entry.description || '';
+                tdDesc.textContent = translate(entry.descriptionKey, null, entry.description || '');
                 row.appendChild(th);
                 row.appendChild(tdValue);
                 row.appendChild(tdDesc);
@@ -1223,7 +1654,7 @@
         if (!entries.length) {
             const empty = document.createElement('p');
             empty.className = 'custom-achievement-empty';
-            empty.textContent = 'カスタム実績はまだありません。フォームから追加できます。';
+            empty.textContent = translate('achievements.custom.empty', null, 'カスタム実績はまだありません。フォームから追加できます。');
             ui.customList.appendChild(empty);
             return;
         }
@@ -1243,7 +1674,7 @@
             deleteBtn.type = 'button';
             deleteBtn.className = 'danger';
             deleteBtn.dataset.action = 'delete';
-            deleteBtn.textContent = '削除';
+            deleteBtn.textContent = translate('achievements.custom.actions.delete', null, '削除');
             actions.appendChild(deleteBtn);
             header.appendChild(actions);
             card.appendChild(header);
@@ -1257,28 +1688,43 @@
             if (entry.reward) {
                 const reward = document.createElement('p');
                 reward.className = 'achievement-card__reward';
-                reward.textContent = `報酬メモ: ${entry.reward}`;
+                reward.textContent = translate('achievements.rewardMemo', { reward: entry.reward }, `報酬メモ: ${entry.reward}`);
                 card.appendChild(reward);
             }
 
             if (entry.type === 'todo') {
                 const status = document.createElement('p');
                 status.className = 'custom-achievement-status';
-                status.textContent = entry.completed ? '状態: 完了済み' : '状態: 未完了';
+                status.textContent = entry.completed
+                    ? translate('achievements.custom.todo.statusCompleted', null, '状態: 完了済み')
+                    : translate('achievements.custom.todo.statusIncomplete', null, '状態: 未完了');
                 card.appendChild(status);
                 const controls = document.createElement('div');
                 controls.className = 'custom-achievement-controls';
                 const toggle = document.createElement('button');
                 toggle.type = 'button';
                 toggle.dataset.action = 'toggle';
-                toggle.textContent = entry.completed ? '未完了に戻す' : '完了にする';
+                toggle.textContent = entry.completed
+                    ? translate('achievements.custom.todo.markIncomplete', null, '未完了に戻す')
+                    : translate('achievements.custom.todo.markComplete', null, '完了にする');
                 controls.appendChild(toggle);
                 card.appendChild(controls);
             } else if (entry.type === 'repeatable') {
                 const info = document.createElement('p');
                 info.className = 'custom-achievement-info';
-                const targetText = entry.target ? ` / 目標 ${formatNumber(entry.target)} 回` : '';
-                info.textContent = `累計達成回数: ${formatNumber(entry.completions)} 回${targetText}`;
+                const params = {
+                    count: formatNumber(entry.completions)
+                };
+                const infoKey = entry.target
+                    ? 'achievements.custom.repeatable.infoWithTarget'
+                    : 'achievements.custom.repeatable.info';
+                const fallback = entry.target
+                    ? `累計達成回数: ${formatNumber(entry.completions)} 回 / 目標 ${formatNumber(entry.target)} 回`
+                    : `累計達成回数: ${formatNumber(entry.completions)} 回`;
+                if (entry.target) {
+                    params.target = formatNumber(entry.target);
+                }
+                info.textContent = translate(infoKey, params, fallback);
                 card.appendChild(info);
                 const controls = document.createElement('div');
                 controls.className = 'custom-achievement-controls';
@@ -1293,7 +1739,7 @@
                 const reset = document.createElement('button');
                 reset.type = 'button';
                 reset.dataset.action = 'reset';
-                reset.textContent = 'リセット';
+                reset.textContent = translate('achievements.custom.actions.reset', null, 'リセット');
                 controls.appendChild(minus);
                 controls.appendChild(plus);
                 controls.appendChild(reset);
@@ -1301,8 +1747,19 @@
             } else if (entry.type === 'counter') {
                 const info = document.createElement('p');
                 info.className = 'custom-achievement-info';
-                const targetText = entry.target ? ` / 目標 ${formatNumber(entry.target)}` : '';
-                info.textContent = `現在値: ${formatNumber(entry.value)}${targetText}`;
+                const params = {
+                    value: formatNumber(entry.value)
+                };
+                const infoKey = entry.target
+                    ? 'achievements.custom.counter.infoWithTarget'
+                    : 'achievements.custom.counter.info';
+                const fallback = entry.target
+                    ? `現在値: ${formatNumber(entry.value)} / 目標 ${formatNumber(entry.target)}`
+                    : `現在値: ${formatNumber(entry.value)}`;
+                if (entry.target) {
+                    params.target = formatNumber(entry.target);
+                }
+                info.textContent = translate(infoKey, params, fallback);
                 card.appendChild(info);
                 const controls = document.createElement('div');
                 controls.className = 'custom-achievement-controls';
@@ -1317,7 +1774,7 @@
                 const reset = document.createElement('button');
                 reset.type = 'button';
                 reset.dataset.action = 'reset';
-                reset.textContent = 'リセット';
+                reset.textContent = translate('achievements.custom.actions.reset', null, 'リセット');
                 controls.appendChild(minus);
                 controls.appendChild(plus);
                 controls.appendChild(reset);
@@ -1334,7 +1791,7 @@
         const id = `custom-${now.toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
         const entry = {
             id,
-            title: title || 'カスタム実績',
+            title: title || translate('achievements.custom.defaultTitle', null, 'カスタム実績'),
             description: description || '',
             reward: reward || '',
             type,
@@ -1676,7 +2133,7 @@
             const action = button.dataset.action;
             switch (action) {
                 case 'delete': {
-                    if (confirm('このカスタム実績を削除しますか？')) {
+                    if (confirm(translate('achievements.custom.confirmDelete', null, 'このカスタム実績を削除しますか？'))) {
                         deleteCustomAchievement(id);
                     }
                     break;

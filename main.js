@@ -18854,9 +18854,9 @@ document.addEventListener('app:rerender', () => {
         console.warn('[app] Failed to refresh BlockDim UI on rerender', err);
     }
     try {
-        updateSandboxToolControls();
+        window.AchievementSystem?.refresh?.();
     } catch (err) {
-        console.warn('[app] Failed to refresh sandbox tool controls on rerender', err);
+        console.warn('[app] Failed to refresh achievements on rerender', err);
     }
 });
 

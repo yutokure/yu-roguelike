@@ -10932,8 +10932,31 @@
         "locked": "Locked"
       },
       "rewardMemo": "Reward memo: {reward}",
+      "difficulty": {
+        "unplayed": "Not Cleared",
+        "labels": {
+          "veryEasy": "Very Easy",
+          "easy": "Easy",
+          "normal": "Normal",
+          "second": "Second",
+          "hard": "Hard",
+          "veryHard": "Very Hard"
+        }
+      },
       "summary": {
-        "comingSoon": "Coming Soon"
+        "comingSoon": "Coming Soon",
+        "categoryRatio": "{unlocked}/{total}",
+        "highlights": {
+          "playTime": "Total Play Time",
+          "dungeonsCleared": "Dungeons Cleared",
+          "highestDifficulty": "Highest Difficulty",
+          "totalExp": "Total EXP",
+          "totalExpValue": "{value} EXP",
+          "hatenaTriggered": "Hatena Activations",
+          "hatenaTriggeredValue": "{value} times",
+          "hatenaPositiveRate": "Hatena Positive Rate",
+          "hatenaPositiveRateValue": "{value}%"
+        }
       },
       "meta": {
         "repeatableCount": "Total completions: {count}",
@@ -10952,6 +10975,142 @@
           "minutes": "{minutes}m {secondsValue}s",
           "seconds": "{seconds}s",
           "ratio": "{current} / {target}"
+        }
+      },
+      "stats": {
+        "sections": {
+          "core": { "title": "Dungeon Records" },
+          "blockdim": { "title": "Block Dimension Records" },
+          "hatena": { "title": "Hatena Block Records" },
+          "tools": { "title": "Tools Usage" }
+        },
+        "entries": {
+          "core": {
+            "playTime": { "label": "Total Play Time", "description": "Total time the game has been running." },
+            "totalSteps": { "label": "Total Steps", "description": "Total tiles traveled so far.", "value": "{value} tiles" },
+            "floorsAdvanced": { "label": "Floors Advanced", "description": "Floors climbed via stairways." },
+            "highestFloorReached": { "label": "Deepest Floor Reached", "description": "The deepest floor reached so far.", "value": "Floor {value}" },
+            "dungeonsCleared": { "label": "Dungeons Cleared", "description": "Total clears across regular and Block Dimension dungeons." },
+            "enemiesDefeated": { "label": "Enemies Defeated", "description": "Total number of defeated enemies." },
+            "bossesDefeated": { "label": "Bosses Defeated", "description": "Total number of bosses defeated." },
+            "totalExpEarned": { "label": "Total EXP Earned", "description": "Experience earned from exploration and mini-games.", "value": "{value} EXP" },
+            "damageDealt": { "label": "Total Damage Dealt", "description": "Total damage dealt to enemies." },
+            "damageTaken": { "label": "Total Damage Taken", "description": "Total damage received from foes and hazards." },
+            "chestsOpened": { "label": "Chests Opened", "description": "Number of chests opened during runs." },
+            "rareChestsOpened": { "label": "Rare Chests Opened", "description": "Number of rare chests opened." },
+            "normalChestsOpened": { "label": "Normal Chests Opened", "description": "Number of standard chests opened." },
+            "healingItemsUsed": { "label": "Healing Items Used", "description": "Times potions or HP boosts were used." },
+            "autoItemsTriggered": { "label": "Auto Items Triggered", "description": "Times automatic healing items activated." },
+            "deaths": { "label": "Defeats", "description": "Number of game overs." },
+            "highestDifficultyIndex": { "label": "Highest Cleared Difficulty", "description": "The highest difficulty cleared so far." }
+          },
+          "blockdim": {
+            "gatesOpened": { "label": "Gate Activations", "description": "Times the block dimension was entered via Gate." },
+            "bookmarksAdded": { "label": "Bookmarks Added", "description": "Number of saved block dimension bookmarks." },
+            "randomSelections": { "label": "Random Selections", "description": "Times the equal-weight random selection was used." },
+            "weightedSelections": { "label": "Weighted Selections", "description": "Times the weighted random selection was used." }
+          },
+          "hatena": {
+            "blocksAppeared": { "label": "Blocks Encountered", "description": "Hatena blocks discovered during runs.", "value": "{value} blocks" },
+            "blocksTriggered": { "label": "Blocks Triggered", "description": "Hatena blocks activated by stepping on them.", "value": "{value} triggers" },
+            "positiveEffects": { "label": "Positive Outcomes", "description": "Times Hatena blocks produced positive effects.", "value": "{value} times" },
+            "neutralEffects": { "label": "Neutral Outcomes", "description": "Times Hatena blocks produced neutral results.", "value": "{value} times" },
+            "negativeEffects": { "label": "Negative Outcomes", "description": "Times Hatena blocks produced negative effects.", "value": "{value} times" },
+            "expGained": { "label": "EXP Gained", "description": "Experience gained from Hatena blocks.", "value": "{value} EXP" },
+            "expLost": { "label": "EXP Lost", "description": "Experience lost to Hatena blocks.", "value": "{value} EXP" },
+            "bombDamageTaken": { "label": "Bomb Damage Taken", "description": "Total damage suffered from Hatena bomb effects.", "value": "{value} damage" },
+            "bombHealed": { "label": "Bomb Healing", "description": "Total HP restored by Hatena bomb healing effects.", "value": "{value} HP" },
+            "bombGuards": { "label": "Bomb Guards", "description": "Times the guard effect reduced bomb damage.", "value": "{value} times" },
+            "normalChestsSpawned": { "label": "Normal Chests Spawned", "description": "Normal chests created by Hatena blocks.", "value": "{value} chests" },
+            "rareChestsSpawned": { "label": "Rare Chests Spawned", "description": "Rare chests created by Hatena blocks.", "value": "{value} chests" },
+            "itemsGranted": { "label": "Items Granted", "description": "Items awarded by Hatena blocks.", "value": "{value} items" },
+            "enemyAmbushes": { "label": "Enemy Ambushes", "description": "Enemies spawned via ambush events.", "value": "{value} enemies" },
+            "bombsTriggered": { "label": "Bomb Events", "description": "Bomb effects triggered from Hatena blocks.", "value": "{value} times" },
+            "levelUps": { "label": "Level Ups", "description": "Times Hatena blocks increased your level.", "value": "{value} times" },
+            "levelUpLevels": { "label": "Levels Gained", "description": "Total levels gained from Hatena blocks.", "value": "{value} levels" },
+            "levelDowns": { "label": "Level Downs", "description": "Times Hatena blocks decreased your level.", "value": "{value} times" },
+            "levelDownLevels": { "label": "Levels Lost", "description": "Total levels lost from Hatena blocks.", "value": "{value} levels" },
+            "statusesApplied": { "label": "Statuses Inflicted", "description": "Times Hatena blocks inflicted status ailments.", "value": "{value} times" },
+            "statusesResisted": { "label": "Statuses Resisted", "description": "Times Hatena statuses were nullified.", "value": "{value} times" },
+            "abilityUps": { "label": "Ability Increases", "description": "Times Hatena blocks raised your stats.", "value": "{value} times" },
+            "abilityDowns": { "label": "Ability Decreases", "description": "Times Hatena blocks lowered your stats.", "value": "{value} times" }
+          },
+          "tools": {
+            "tabVisits": { "label": "Tools Tab Visits", "description": "Times the Tools tab was opened." },
+            "modExports": { "label": "Mod Exports", "description": "Exports performed in the mod creation tool." },
+            "blockdataSaves": { "label": "BlockData Saves", "description": "Times data was saved in the BlockData editor." },
+            "blockdataDownloads": { "label": "BlockData Downloads", "description": "Times data was downloaded from the BlockData editor." },
+            "sandboxSessions": { "label": "Sandbox Sessions", "description": "Times the sandbox interface was opened." }
+          }
+        }
+      },
+      "custom": {
+        "empty": "No custom achievements yet. Use the form to add one.",
+        "actions": {
+          "delete": "Delete",
+          "reset": "Reset"
+        },
+        "todo": {
+          "statusCompleted": "Status: Completed",
+          "statusIncomplete": "Status: Incomplete",
+          "markComplete": "Mark as completed",
+          "markIncomplete": "Mark as incomplete"
+        },
+        "repeatable": {
+          "info": "Total completions: {count}",
+          "infoWithTarget": "Total completions: {count} / Target {target}"
+        },
+        "counter": {
+          "info": "Current value: {value}",
+          "infoWithTarget": "Current value: {value} / Target {target}"
+        },
+        "defaultTitle": "Custom Achievement",
+        "confirmDelete": "Delete this custom achievement?"
+      },
+      "ui": {
+        "subtabs": {
+          "ariaLabel": "Achievements and statistics subtabs",
+          "achievements": "Achievements",
+          "stats": "Statistics"
+        },
+        "achievements": {
+          "title": "Achievements",
+          "description": "Automatically updates based on your adventures and tool usage. Review progress for each category."
+        },
+        "stats": {
+          "title": "Statistics",
+          "description": "View accumulated records from your adventures and tool interactions."
+        },
+        "fallback": "Loading the achievements system… If this message remains, please reload the page.",
+        "custom": {
+          "title": "Custom Active Achievements",
+          "description": "Set your own goals and rewards to use achievements as a to-do list or farming tracker.",
+          "form": {
+            "legend": "Add a new custom achievement",
+            "title": {
+              "label": "Title",
+              "placeholder": "e.g., Log in daily"
+            },
+            "description": {
+              "label": "Description",
+              "placeholder": "What are you trying to accomplish?"
+            },
+            "reward": {
+              "label": "Reward memo",
+              "placeholder": "Note the reward or remarks"
+            },
+            "type": {
+              "label": "Type",
+              "todo": "To-Do (single completion)",
+              "repeatable": "Repeatable",
+              "counter": "Counter"
+            },
+            "target": {
+              "label": "Target count (optional)",
+              "placeholder": "e.g., 10"
+            },
+            "submit": "Add achievement"
+          }
         }
       },
       "auto": {

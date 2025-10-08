@@ -10363,6 +10363,65 @@
           "goodRateLabel": "Good Rate"
         }
       },
+      "populite": {
+        "title": "Populite - Mini God Mode",
+        "hud": {
+          "faithStatus": "Faith Status",
+          "timeRemaining": "Time Remaining",
+          "mana": "Mana",
+          "population": "Population",
+          "disasterTimer": "Disaster Timer",
+          "nextDisaster": "Next Disaster",
+          "bestRecord": "Best Time",
+          "paused": "Paused",
+          "manaValue": "{current} / {max}",
+          "populationValue": "{current} / {target}",
+          "disasterCountdown": "{value}s",
+          "bestTimeValue": "{value}s"
+        },
+        "controls": {
+          "title": "Controls & Miracles",
+          "instructions": "Left drag: Flatten (Shift to dig) / Right click: Pray to invite followers<br>Space: Pause / Number keys 1: Shield 2: Uplift 3: Purifying Rain"
+        },
+        "spells": {
+          "barrier": "1) Guardian Barrier ({cost})",
+          "uplift": "2) Uplift ({cost})",
+          "purify": "3) Purifying Rain ({cost})"
+        },
+        "status": {
+          "manaShort": "Not enough mana...",
+          "prayerCooldown": "Prayer is still cooling down...",
+          "noSettlements": "No settlements to protect",
+          "victory": "Population goal achieved!",
+          "defeatPopulation": "All followers were lost...",
+          "timeout": "Time is up...",
+          "paused": "Paused",
+          "resumed": "Resumed"
+        },
+        "log": {
+          "title": "Event Log",
+          "prayerStarted": "Followers gather through prayer!",
+          "tsunami": "🌊 A tsunami floods the lowlands!",
+          "volcano": "🌋 A volcano erupts at ({x},{y})",
+          "newSettlement": "A new settlement forms at ({x},{y}) height {level}",
+          "populationMilestone": "Population surpassed {population} people!",
+          "settlementDestroyed": "Settlement ({x},{y}) was wiped out...",
+          "settlementDamaged": "Settlement ({x},{y}) lost {lost} people",
+          "barrierCast": "Barrier shields settlement ({x},{y})",
+          "upliftCast": "The earth rises, creating safe high ground ({x},{y})",
+          "purifyCast": "Purifying rain washed away the omens",
+          "inventoryFull": "No inventory space; the holy shard was left behind...",
+          "bestRecord": "New record! {time}s",
+          "result": "▶ Result: {message}",
+          "difficulty": "Difficulty: {difficulty}",
+          "goal": "Population Goal {target} / Time Limit {duration}s"
+        },
+        "popup": {
+          "buildingLevel": "Build Lv{level}",
+          "populationGain": "+{value} followers",
+          "barrierBlocked": "Barrier blocked it!"
+        }
+      },
       "checkers": {
         "hud": {
           "turn": {

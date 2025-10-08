@@ -11872,6 +11872,80 @@
         "levelWithBase": "Lv.{effective} (基{base})",
         "hp": "{current}/{max}{baseSuffix}"
       }
+    },
+
+    "games": {
+      "bowlingDuel": {
+        "title": "ボウリング対決 MOD",
+        "legend": "ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！",
+        "history": {
+          "title": "ログ",
+          "placeholder": "---"
+        },
+        "buttons": {
+          "throw": "🎳 ボールを投げる",
+          "reset": "🔄 リセット",
+          "throwing": "🎳 投球中…"
+        },
+        "scoreboard": {
+          "you": "あなた",
+          "cpu": "CPU",
+          "total": "合計"
+        },
+        "sliders": {
+          "aim": {
+            "label": "狙い位置",
+            "center": "中央",
+            "right": "右 {value}",
+            "left": "左 {value}"
+          },
+          "curve": {
+            "label": "カーブ量",
+            "none": "なし",
+            "right": "右曲がり {value}",
+            "left": "左曲がり {value}"
+          },
+          "power": {
+            "label": "投球パワー",
+            "format": "{value}%"
+          }
+        },
+        "status": {
+          "introHint": "ゲージをタイミング良く止めてストライクを狙おう！",
+          "framePlayer": "第{frame}フレーム あなたの番です。",
+          "frameCpu": "第{frame}フレーム CPUの番です…",
+          "remainingPins": "残りピン: {count} 本。もう一投！",
+          "playerStrike": "ストライク！",
+          "cpuStrike": "CPUがストライク！",
+          "victory": "勝利！ スコア {player} - {cpu}",
+          "draw": "引き分け… スコア {player} - {cpu}",
+          "defeat": "敗北… スコア {player} - {cpu}"
+        },
+        "stage": {
+          "aim": {
+            "prompt": "狙いゲージが往復中…止めるタイミングでボタン！",
+            "button": "🛑 狙いを止める",
+            "confirm": "狙い位置を {value} にセット！"
+          },
+          "curve": {
+            "prompt": "カーブゲージ調整中…ボタンでストップ！",
+            "button": "🛑 カーブを止める",
+            "confirm": "カーブ量は {value} に決定！"
+          },
+          "power": {
+            "prompt": "パワーゲージを注視…ボタンで投球！",
+            "button": "🛑 パワーを止める",
+            "confirm": "パワー {value} で投球！"
+          }
+        },
+        "logs": {
+          "playerShot": "あなた: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+          "cpuShot": "CPU: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+          "victory": "<strong>勝利！</strong> +{exp}EXP",
+          "draw": "<strong>引き分け</strong> +{exp}EXP",
+          "defeat": "<strong>敗北</strong> +{exp}EXP"
+        }
+      }
     }
   };
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this);

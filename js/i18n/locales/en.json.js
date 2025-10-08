@@ -11813,6 +11813,233 @@
         "cleared": "Input cleared."
       }
     },
+    "games": {
+      "clockHub": {
+        "errors": {
+          "noContainer": "Clock Hub requires a container"
+        },
+        "header": {
+          "title": "Clock Utility Hub",
+          "subtitle": "Switch between digital, analog, and detailed time views",
+          "exp": "EXP Earned: {xp}"
+        },
+        "tabs": {
+          "digital": "Digital Clock",
+          "analog": "Analog Clock",
+          "detail": "Details"
+        },
+        "detailTabs": {
+          "overview": "Overview",
+          "progress": "Progress",
+          "remain": "Time Remaining",
+          "stats": "Information",
+          "calendar": "Calendar"
+        },
+        "digital": {
+          "format": {
+            "24h": "24-hour format",
+            "12h": "12-hour format"
+          },
+          "period": {
+            "am": "AM",
+            "pm": "PM"
+          },
+          "dateLine": "{weekday}, {month}/{day}/{year}",
+          "timeLine12": "{period} {hour}:{minute}:{second}",
+          "timeLine24": "{hour}:{minute}:{second}"
+        },
+        "analog": {
+          "type": {
+            "12h": "Standard analog clock",
+            "24h": "24-hour analog clock"
+          }
+        },
+        "weekdays": {
+          "0": "Sun",
+          "1": "Mon",
+          "2": "Tue",
+          "3": "Wed",
+          "4": "Thu",
+          "5": "Fri",
+          "6": "Sat"
+        },
+        "dates": {
+          "full": "{weekday}, {month}/{day}/{year}"
+        },
+        "era": {
+          "reiwa": "Reiwa",
+          "heisei": "Heisei",
+          "showa": "Showa",
+          "taisho": "Taisho",
+          "meiji": "Meiji",
+          "format": "{era} Year {year}",
+          "unknown": "Unknown"
+        },
+        "eto": {
+          "stems": {
+            "0": "Kinoe",
+            "1": "Kinoto",
+            "2": "Hinoe",
+            "3": "Hinoto",
+            "4": "Tsuchinoe",
+            "5": "Tsuchinoto",
+            "6": "Kanoe",
+            "7": "Kanoto",
+            "8": "Mizunoe",
+            "9": "Mizunoto"
+          },
+          "branches": {
+            "0": "Rat",
+            "1": "Ox",
+            "2": "Tiger",
+            "3": "Rabbit",
+            "4": "Dragon",
+            "5": "Snake",
+            "6": "Horse",
+            "7": "Goat",
+            "8": "Monkey",
+            "9": "Rooster",
+            "10": "Dog",
+            "11": "Boar"
+          },
+          "format": "{stem}-{branch}"
+        },
+        "season": {
+          "winter": "Winter",
+          "spring": "Spring",
+          "summer": "Summer",
+          "autumn": "Autumn",
+          "unknown": "Unknown"
+        },
+        "solarTerms": {
+          "risshun": "Beginning of Spring",
+          "usui": "Rain Water",
+          "keichitsu": "Awakening of Insects",
+          "shunbun": "Spring Equinox",
+          "seimei": "Clear and Bright",
+          "kokuu": "Grain Rain",
+          "rikka": "Beginning of Summer",
+          "shoman": "Grain Full",
+          "boshu": "Grain in Ear",
+          "geshi": "Summer Solstice",
+          "shosho": "Lesser Heat",
+          "taisho": "Greater Heat",
+          "risshu": "Beginning of Autumn",
+          "shoshoLimitHeat": "Limit of Heat",
+          "hakuro": "White Dew",
+          "shubun": "Autumn Equinox",
+          "kanro": "Cold Dew",
+          "soko": "Frost Descent",
+          "rittou": "Beginning of Winter",
+          "shosetsu": "Lesser Snow",
+          "taisetsu": "Greater Snow",
+          "touji": "Winter Solstice",
+          "shokan": "Lesser Cold",
+          "dahan": "Greater Cold",
+          "nextDate": "{month}/{day}/{year}",
+          "description": "Prev {previous} → Next {next} ({nextDate}, {duration})"
+        },
+        "duration": {
+          "prefix": {
+            "future": "in ",
+            "past": "ago "
+          },
+          "unit": {
+            "year": "{value} yr",
+            "day": "{value} d",
+            "hour": "{value} h",
+            "minute": "{value} min",
+            "second": "{value} s"
+          },
+          "joiner": " "
+        },
+        "progress": {
+          "labels": {
+            "millennium": "Millennium",
+            "century": "Century",
+            "decade": "Decade",
+            "year": "Year",
+            "month": "Month",
+            "day": "Day",
+            "hour": "Hour",
+            "minute": "Minute",
+            "second": "Second"
+          },
+          "percent": "{value}%"
+        },
+        "remaining": {
+          "labels": {
+            "nextSecond": "Next second",
+            "nextMinute": "Next minute",
+            "nextHour": "Next hour",
+            "nextDay": "Next day",
+            "nextMonth": "Next month",
+            "nextYear": "Next year"
+          },
+          "delta": " (±{millis} ms)",
+          "value": "{duration}{delta}"
+        },
+        "stats": {
+          "labels": {
+            "unix": "UNIX time",
+            "ticks": "Elapsed milliseconds",
+            "iso": "ISO 8601",
+            "yearday": "Day of year",
+            "daySeconds": "Seconds today",
+            "timezone": "Time zone"
+          },
+          "yeardayValue": "Day {value}",
+          "daySecondsValue": "{value} s",
+          "timezoneFallback": "Local"
+        },
+        "calendar": {
+          "settings": {
+            "title": "Custom holiday/workday settings",
+            "holidayTitle": "Add as holiday",
+            "workdayTitle": "Add as workday",
+            "add": "Add",
+            "empty": "None",
+            "remove": "Remove"
+          },
+          "info": {
+            "summary": "Date: {date}",
+            "era": "Japanese era: {era} | Zodiac: {eto}",
+            "season": "Season: {season} | Quarter {quarter}",
+            "progress": "Day {dayOfYear} | ISO week {isoWeek} | Week {weekOfMonth} of month",
+            "status": "Status: {status}"
+          },
+          "status": {
+            "rest": "Rest day",
+            "workday": "Expected workday",
+            "holiday": "Marked holiday",
+            "workdayOverride": "Marked workday",
+            "separator": " / "
+          },
+          "controls": {
+            "prev": "← Prev",
+            "next": "Next →",
+            "today": "Today"
+          },
+          "monthLabel": "{year}-{month}",
+          "today": "Today: {date}"
+        },
+        "common": {
+          "yes": "Yes",
+          "no": "No"
+        },
+        "overview": {
+          "gregorian": "Gregorian: {month}/{day}/{year} ({weekday})",
+          "era": "Japanese era: {era}",
+          "eto": "Zodiac: {eto} | Imperial year: {imperial}",
+          "season": "Season: {season} | Solar term: {solarTerm}",
+          "leapYear": "Leap year: {value}"
+        },
+        "xp": {
+          "note": "Sec:+{second} / Min:+{minute} / Hr:+{hour} / Day:+{day} / Month:+{month} / Year:+{year} / Century:+{century} / Millennium:+{millennium}"
+        }
+      }
+    },
+
     "statusModal": {
       "title": "Player Status",
       "sections": {

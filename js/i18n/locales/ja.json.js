@@ -11602,6 +11602,8 @@
         "type": "タイプ"
       },
       "effects": {
+        "none": "状態異常なし",
+        "remaining": "{label} 残り{turns}ターン",
         "entry": "{label} 残り{turns}ターン"
       },
       "skillCharms": {

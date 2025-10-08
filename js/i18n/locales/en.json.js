@@ -11602,6 +11602,8 @@
         "type": "Type"
       },
       "effects": {
+        "none": "No status ailments.",
+        "remaining": "{label} {turns} turns remaining",
         "entry": "{label} {turns} turns remaining"
       },
       "skillCharms": {

@@ -14821,12 +14821,20 @@ function updateUI() {
 
     if (statStatusEffects) {
         if (!combinedStatusList.length) {
-            statStatusEffects.textContent = '状態異常なし';
+            statStatusEffects.textContent = translateOrFallback(
+                'statusModal.effects.none',
+                '状態異常なし'
+            );
         } else {
             statStatusEffects.innerHTML = combinedStatusList.map(status => {
                 const classes = ['status-badge'];
                 if (status.badgeClass) classes.push(status.badgeClass);
-                return `<span class="${classes.join(' ')}">${status.label} 残り${status.remaining}</span>`;
+                const remainingText = translateOrFallback(
+                    'statusModal.effects.remaining',
+                    () => `${status.label} 残り${status.remaining}`,
+                    { label: status.label, turns: status.remaining }
+                );
+                return `<span class="${classes.join(' ')}">${remainingText}</span>`;
             }).join('');
         }
     }

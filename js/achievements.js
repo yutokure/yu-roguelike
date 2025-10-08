@@ -2219,6 +2219,9 @@
 
     if (typeof global.document?.addEventListener === 'function') {
         global.document.addEventListener('visibilitychange', resetPlaytimeClock, { passive: true });
+        global.document.addEventListener('i18n:locale-changed', () => {
+            if (ui.initialized) renderAll();
+        }, { passive: true });
     }
     if (typeof global.addEventListener === 'function') {
         global.addEventListener('focus', resetPlaytimeClock, { passive: true });

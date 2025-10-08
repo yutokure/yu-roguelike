@@ -11241,7 +11241,14 @@ async function runGodConsoleCode() {
         console.error('God console execution failed', err);
         const message = err && err.message ? err.message : String(err);
         setGodConsoleStatus(`エラー: ${message}`, 'error');
-        try { addMessage(`創造神コンソール エラー: ${message}`); } catch {}
+        try {
+            const text = String(message);
+            addMessage({
+                key: 'game.events.console.error',
+                fallback: () => `創造神コンソール エラー: ${text}`,
+                params: { message: text }
+            });
+        } catch {}
         return undefined;
     }
 }
@@ -15209,7 +15216,12 @@ function useSkillCharm(effectId) {
     const delay = Math.max(0, Number(SKILL_EXECUTION_DELAY_MS) || 0);
     setTimeout(() => {
         activateSkillEffect(effectId, SKILL_CHARM_DURATION_TURNS, { silent: true });
-        addMessage(`${label}の護符が発動！効果は${SKILL_CHARM_DURATION_TURNS}ターン持続する。`);
+        const turnsDisplay = formatNumberLocalized(SKILL_CHARM_DURATION_TURNS);
+        addMessage({
+            key: 'game.events.charms.activated',
+            fallback: () => `${label}の護符が発動！効果は${turnsDisplay}ターン持続する。`,
+            params: { label, turns: turnsDisplay }
+        });
         playSfx('pickup');
         updateUI();
         saveAll();
@@ -15310,7 +15322,12 @@ function handleSatietyTurnTick(actionType = 'move') {
             player.hp = Math.max(0, player.hp - scaledDamage);
             recordAchievementEvent('damage_taken', { amount: scaledDamage, source: 'hunger' });
             try {
-                addMessage(`空腹で ${scaledDamage} のダメージを受けた！`);
+                const damageDisplay = formatNumberLocalized(scaledDamage);
+                addMessage({
+                    key: 'game.events.satiety.damage',
+                    fallback: () => `空腹で ${damageDisplay} のダメージを受けた！`,
+                    params: { amount: damageDisplay }
+                });
                 addPopup(player.x, player.y, `-${Math.min(scaledDamage, 999999999)}${scaledDamage > 999999999 ? '+' : ''}`, '#ff922b');
                 playSfx('damage');
             } catch {}
@@ -15630,27 +15647,47 @@ function handleRareChestExplosion(diff) {
 }
 
 function grantNormalChestReward({ rarity = 'normal' } = {}) {
-    const prefix = rarity === 'rare' ? '黄金の宝箱を開けた！' : '宝箱を開けた！';
+    const prefixKey = rarity === 'rare' ? 'rare' : 'normal';
+    const prefix = translateOrFallback(
+        `game.events.chest.prefix.${prefixKey}`,
+        () => (rarity === 'rare' ? '黄金の宝箱を開けた！' : '宝箱を開けた！')
+    );
     playSfx('pickup');
     const roll = Math.random();
     let rewardInfo = null;
     if (roll < 0.9) {
         incrementInventoryCounter('potion30', 1);
-        addMessage(`${prefix}HP30%回復ポーションを手に入れた！`);
+        addMessage({
+            key: 'game.events.chest.reward.potion30',
+            fallback: () => `${prefix}HP30%回復ポーションを手に入れた！`,
+            params: { prefix }
+        });
         rewardInfo = { rewardType: 'potion30', category: 'potion' };
     } else {
         const boostType = Math.floor(Math.random() * 3);
         if (boostType === 0) {
             incrementInventoryCounter('hpBoost', 1);
-            addMessage(`${prefix}最大HP強化アイテムを手に入れた！`);
+            addMessage({
+                key: 'game.events.chest.reward.hpBoost',
+                fallback: () => `${prefix}最大HP強化アイテムを手に入れた！`,
+                params: { prefix }
+            });
             rewardInfo = { rewardType: 'hpBoost', category: 'boost' };
         } else if (boostType === 1) {
             incrementInventoryCounter('atkBoost', 1);
-            addMessage(`${prefix}攻撃力強化アイテムを手に入れた！`);
+            addMessage({
+                key: 'game.events.chest.reward.atkBoost',
+                fallback: () => `${prefix}攻撃力強化アイテムを手に入れた！`,
+                params: { prefix }
+            });
             rewardInfo = { rewardType: 'atkBoost', category: 'boost' };
         } else {
             incrementInventoryCounter('defBoost', 1);
-            addMessage(`${prefix}防御力強化アイテムを手に入れた！`);
+            addMessage({
+                key: 'game.events.chest.reward.defBoost',
+                fallback: () => `${prefix}防御力強化アイテムを手に入れた！`,
+                params: { prefix }
+            });
             rewardInfo = { rewardType: 'defBoost', category: 'boost' };
         }
     }
@@ -15671,22 +15708,40 @@ function grantRareChestSpecialReward() {
         const options = ['hpBoostMajor', 'atkBoostMajor', 'defBoostMajor'];
         const key = options[Math.floor(Math.random() * options.length)];
         incrementInventoryCounter(key, 1);
-        let message;
         if (key === 'hpBoostMajor') {
-            message = `最大HP+${MAJOR_HP_BOOST_VALUE}の秘薬を手に入れた！`;
+            const amount = formatNumberLocalized(MAJOR_HP_BOOST_VALUE);
+            addMessage({
+                key: 'game.events.goldenChest.major.hp',
+                fallback: () => `黄金の宝箱から最大HP+${amount}の秘薬を手に入れた！`,
+                params: { amount }
+            });
         } else if (key === 'atkBoostMajor') {
-            message = `攻撃力+${MAJOR_ATK_BOOST_VALUE}の戦術オーブを手に入れた！`;
+            const amount = formatNumberLocalized(MAJOR_ATK_BOOST_VALUE);
+            addMessage({
+                key: 'game.events.goldenChest.major.atk',
+                fallback: () => `黄金の宝箱から攻撃力+${amount}の戦術オーブを手に入れた！`,
+                params: { amount }
+            });
         } else {
-            message = `防御力+${MAJOR_DEF_BOOST_VALUE}の護りの盾札を手に入れた！`;
+            const amount = formatNumberLocalized(MAJOR_DEF_BOOST_VALUE);
+            addMessage({
+                key: 'game.events.goldenChest.major.def',
+                fallback: () => `黄金の宝箱から防御力+${amount}の護りの盾札を手に入れた！`,
+                params: { amount }
+            });
         }
-        addMessage(`黄金の宝箱から${message}`);
         rewardInfo = { rewardType: key, category: 'majorBoost' };
     } else if (roll < 0.75) {
         const effects = SKILL_EFFECT_IDS;
         const effectId = effects[Math.floor(Math.random() * effects.length)];
         incrementSkillCharm(effectId, 1);
         const effectName = getSkillEffectLabel(effectId);
-        addMessage(`黄金の宝箱からスキル効果「${effectName}」の護符を手に入れた！（${SKILL_CHARM_DURATION_TURNS}ターン）`);
+        const turnsDisplay = formatNumberLocalized(SKILL_CHARM_DURATION_TURNS);
+        addMessage({
+            key: 'game.events.goldenChest.skillCharm',
+            fallback: () => `黄金の宝箱からスキル効果「${effectName}」の護符を手に入れた！（${turnsDisplay}ターン）`,
+            params: { effectName, turns: turnsDisplay }
+        });
         rewardInfo = { rewardType: `skillCharm:${effectId}`, category: 'skillCharm' };
     } else {
         incrementInventoryCounter('spElixir', 1);
@@ -15950,7 +16005,12 @@ function performAttack(enemyAtTarget) {
         const applied = domainResult.amount;
         enemyAtTarget.hp -= applied;
         recordAchievementEvent('damage_dealt', { amount: applied, enemy: sanitizeEnemySummary(enemyAtTarget) });
-        addMessage(`プレイヤーは敵に ${applied} のダメージを与えた！`);
+        const damageDisplay = formatNumberLocalized(applied);
+        addMessage({
+            key: 'game.events.combat.playerDamage',
+            fallback: () => `プレイヤーは敵に ${damageDisplay} のダメージを与えた！`,
+            params: { amount: damageDisplay }
+        });
         const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied>999999999?'+':''}`;
         if (enemyAtTarget.hp <= 0) {
             addMessage({
@@ -16596,7 +16656,12 @@ function applyPostMoveEffects() {
                         mode: currentMode,
                         difficulty
                     });
-                    addMessage(`次の階層に進んだ！（${dungeonLevel}F）`);
+                    const floorDisplay = formatNumberLocalized(dungeonLevel);
+                    addMessage({
+                        key: 'game.events.progress.nextFloor',
+                        fallback: () => `次の階層に進んだ！（${floorDisplay}F）`,
+                        params: { floor: floorDisplay }
+                    });
                     playSfx('stair');
                     generateLevel();
                 }
@@ -17048,7 +17113,12 @@ function applyKnockbackFromEnemy(enemy, stepX, stepY) {
         const scaledDamage = Math.max(0, Math.floor(collisionDamage * (Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1)));
         player.hp = Math.max(0, player.hp - scaledDamage);
         recordAchievementEvent('damage_taken', { amount: scaledDamage, source: 'collision' });
-        addMessage(`壁に激突して${scaledDamage}のダメージ！`);
+        const damageDisplay = formatNumberLocalized(scaledDamage);
+        addMessage({
+            key: 'game.events.combat.knockbackCollision',
+            fallback: () => `壁に激突して${damageDisplay}のダメージ！`,
+            params: { amount: damageDisplay }
+        });
         addPopup(player.x, player.y, `-${Math.min(scaledDamage, 999999999)}${scaledDamage > 999999999 ? '+' : ''}`, '#ffa94d');
         playSfx('damage');
         if (player.hp <= 0) {
@@ -17422,7 +17492,11 @@ function cleanseNegativeStatusWithPotion() {
     registerRunHealingItemUse('potion30');
     clearPlayerStatusEffect(targetStatusId, { silent: true });
     const label = getStatusLabel(targetStatusId);
-    addMessage(`回復アイテムを消費し、${label}の状態異常を治した。`);
+    addMessage({
+        key: 'game.events.items.cleansedStatus',
+        fallback: () => `回復アイテムを消費し、${label}の状態異常を治した。`,
+        params: { status: label }
+    });
     playSfx('pickup');
     updateUI();
     saveAll();
@@ -17498,7 +17572,11 @@ offerPotion30Btn && offerPotion30Btn.addEventListener('click', () => {
     const gained = gainSp(SP_SACRIFICE_VALUE, { silent: true });
     playSfx('pickup');
     const display = floorSpValue(gained);
-    addMessage(`回復アイテムを捧げ、SPを${display}獲得した。`);
+    addMessage({
+        key: 'game.events.sp.offered',
+        fallback: () => `回復アイテムを捧げ、SPを${display}獲得した。`,
+        params: { amount: display }
+    });
     updateUI();
     saveAll();
 });
@@ -17571,7 +17649,12 @@ throwPotion30Btn && throwPotion30Btn.addEventListener('click', () => {
     const damage = result.amount;
     target.hp -= damage;
     recordAchievementEvent('damage_dealt', { amount: damage, enemy: sanitizeEnemySummary(target), method: 'potion_throw' });
-    addMessage(`回復アイテムを投げつけ、敵に${damage}のダメージを与えた！`);
+    const damageDisplay = formatNumberLocalized(damage);
+    addMessage({
+        key: 'game.events.items.throwDamage',
+        fallback: () => `回復アイテムを投げつけ、敵に${damageDisplay}のダメージを与えた！`,
+        params: { damage: damageDisplay }
+    });
     addPopup(target.x, target.y, `-${Math.min(damage, 999999999)}${damage>999999999?'+':''}`, '#ffa94d', 1.1);
 
     if (target.hp <= 0) {
@@ -17648,7 +17731,12 @@ useHpBoostMajorBtn && useHpBoostMajorBtn.addEventListener('click', () => {
         player.maxHp += MAJOR_HP_BOOST_VALUE;
         player.hp += MAJOR_HP_BOOST_VALUE;
         enforceEffectiveHpCap();
-        addMessage(`最大HP特大強化アイテムを使用！最大HPが${MAJOR_HP_BOOST_VALUE}増加！`);
+        const amount = formatNumberLocalized(MAJOR_HP_BOOST_VALUE);
+        addMessage({
+            key: 'game.events.items.hpBoostMajorUsed',
+            fallback: () => `最大HP特大強化アイテムを使用！最大HPが${amount}増加！`,
+            params: { amount }
+        });
         playSfx('pickup');
         updateUI();
         saveAll();
@@ -17664,7 +17752,12 @@ useAtkBoostMajorBtn && useAtkBoostMajorBtn.addEventListener('click', () => {
     if (player.inventory.atkBoostMajor > 0) {
         player.inventory.atkBoostMajor -= 1;
         player.attack += MAJOR_ATK_BOOST_VALUE;
-        addMessage(`攻撃力特大強化アイテムを使用！攻撃力が${MAJOR_ATK_BOOST_VALUE}増加！`);
+        const amount = formatNumberLocalized(MAJOR_ATK_BOOST_VALUE);
+        addMessage({
+            key: 'game.events.items.attackBoostMajorUsed',
+            fallback: () => `攻撃力特大強化アイテムを使用！攻撃力が${amount}増加！`,
+            params: { amount }
+        });
         playSfx('pickup');
         updateUI();
         saveAll();
@@ -17680,7 +17773,12 @@ useDefBoostMajorBtn && useDefBoostMajorBtn.addEventListener('click', () => {
     if (player.inventory.defBoostMajor > 0) {
         player.inventory.defBoostMajor -= 1;
         player.defense += MAJOR_DEF_BOOST_VALUE;
-        addMessage(`防御力特大強化アイテムを使用！防御力が${MAJOR_DEF_BOOST_VALUE}増加！`);
+        const amount = formatNumberLocalized(MAJOR_DEF_BOOST_VALUE);
+        addMessage({
+            key: 'game.events.items.defenseBoostMajorUsed',
+            fallback: () => `防御力特大強化アイテムを使用！防御力が${amount}増加！`,
+            params: { amount }
+        });
         playSfx('pickup');
         updateUI();
         saveAll();
@@ -17734,7 +17832,12 @@ useSpElixirBtn && useSpElixirBtn.addEventListener('click', () => {
         return;
     }
     player.inventory.spElixir = Math.max(0, player.inventory.spElixir - 1);
-    addMessage(`SPエリクサーを使用！SPが${floorSpValue(gained)}回復した。`);
+    const amount = floorSpValue(gained);
+    addMessage({
+        key: 'game.events.sp.elixirUsed',
+        fallback: () => `SPエリクサーを使用！SPが${amount}回復した。`,
+        params: { amount }
+    });
     playSfx('pickup');
     updateUI();
     saveAll();
@@ -17876,7 +17979,13 @@ function grantExpFromEnemy(enemyLevel, isBoss = false) {
         gained *= 2;
     }
     
-    addMessage(`経験値を ${gained} 獲得！${isBoss ? ' (ボスボーナス!)' : ''}`);
+    const amountDisplay = formatNumberLocalized(gained);
+    const bonus = isBoss ? translateOrFallback('game.events.exp.bossBonusSuffix', () => ' (ボスボーナス!)') : '';
+    addMessage({
+        key: 'game.events.exp.enemyGain',
+        fallback: () => `経験値を ${amountDisplay} 獲得！${bonus}`,
+        params: { amount: amountDisplay, bonus }
+    });
     grantExp(gained, { source: 'battle', reason: isBoss ? 'boss' : '', popup: false });
 }
 
@@ -17899,7 +18008,15 @@ function spendExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     player.exp = Math.max(0, (player.exp || 0) - spent);
     prevExp = player.exp || 0;
     if (opts.popup) {
-        try { addMessage(`経験値を ${Math.floor(spent)} 消費。（${opts.source}${opts.reason ? ': ' + opts.reason : ''}）`); } catch {}
+        try {
+            const spentDisplay = formatNumberLocalized(Math.floor(spent));
+            const context = `${opts.source}${opts.reason ? ': ' + opts.reason : ''}`;
+            addMessage({
+                key: 'game.events.exp.spent',
+                fallback: () => `経験値を ${spentDisplay} 消費。（${context}）`,
+                params: { amount: spentDisplay, context }
+            });
+        } catch {}
     }
     try { updateUI(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}
@@ -17948,7 +18065,15 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
         }
     }
     if (opts.popup) {
-        try { addMessage(`経験値を ${Math.floor(v)} 獲得！（${opts.source}${opts.reason ? ': ' + opts.reason : ''}）`); } catch {}
+        try {
+            const amountDisplay = formatNumberLocalized(Math.floor(v));
+            const context = `${opts.source}${opts.reason ? ': ' + opts.reason : ''}`;
+            addMessage({
+                key: 'game.events.exp.gained',
+                fallback: () => `経験値を ${amountDisplay} 獲得！（${context}）`,
+                params: { amount: amountDisplay, context }
+            });
+        } catch {}
     }
     if (opts.source === 'mini' && v > 0) {
         gainSp(v * 0.01, { silent: true });
@@ -19561,7 +19686,13 @@ function fillPlayerSpFromMini(opts = {}) {
     markSkillsListDirty();
     if (!opts.silent) {
         const display = floorSpValue(gained);
-        try { addMessage(`SPが全快した。（+${display}）`); } catch {}
+        try {
+            addMessage({
+                key: 'game.events.sp.fullyRestored',
+                fallback: () => `SPが全快した。（+${display}）`,
+                params: { amount: display }
+            });
+        } catch {}
     }
     try { updateUI(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}

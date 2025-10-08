@@ -1592,7 +1592,7 @@
   }
 
   function createStructures() {
-    return [
+    const entries = [
       { id: 'sf_cross_hub', name: 'クロス制御室', pattern: [
         '#######',
         '#.....#',
@@ -1832,6 +1832,10 @@
         '#########'
       ], tags: ['sf', 'colony', 'arcology'], allowRotation: true }
     ];
+    return entries.map(structure => ({
+      ...structure,
+      nameKey: structure.nameKey || `dungeon.structures.${structure.id}.name`
+    }));
   }
   function createBlocks() {
     const dimensions = [

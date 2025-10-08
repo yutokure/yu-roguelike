@@ -3,6 +3,10 @@
   const ADDON_NAME = '華夏王朝拡張パック';
   const VERSION = '1.2.0';
 
+  function sanitizeKey(value){
+    return (value || '').toString().trim().replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+  }
+
   function clamp(value, min, max) {
     return value < min ? min : (value > max ? max : value);
   }
@@ -2524,7 +2528,10 @@
       { key: 'longmai', name: '龍脈天廊', baseLevel: 22 },
       { key: 'xinglu', name: '星路天界', baseLevel: 28 },
       { key: 'cuitian', name: '翠天雲境', baseLevel: 26 }
-    ]
+    ].map(dimension => ({
+      ...dimension,
+      nameKey: `dungeon.types.${sanitizeKey(ADDON_ID)}.blocks.${dimension.key}.name`
+    }))
   };
 
   window.registerDungeonAddon({

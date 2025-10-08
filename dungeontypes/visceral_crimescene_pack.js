@@ -805,6 +805,16 @@
     }
   ];
 
+  blockBlueprints.forEach(entry => {
+    const typeKey = sanitizeKey(entry.generator);
+    entry.variants.forEach(variant => {
+      variant.nameKey = variant.nameKey || `dungeon.types.${typeKey}.blocks.${variant.key}.name`;
+      if(variant.description){
+        variant.descriptionKey = variant.descriptionKey || `dungeon.types.${typeKey}.blocks.${variant.key}.description`;
+      }
+    });
+  });
+
   const blocks1 = [];
   const blocks2 = [];
   const blocks3 = [];
@@ -817,11 +827,15 @@
     });
   });
 
+  const packKey = sanitizeKey(PACK_ID);
   const dimensions = [
     { key: 'hemorrhage-depths', name: 'ヘモレージ血溜層', baseLevel: 32 },
     { key: 'autopsy-catacombs', name: '検視地下霊廟', baseLevel: 44 },
     { key: 'evidence-vitrines', name: '血染証拠標本界', baseLevel: 52 }
-  ];
+  ].map(dimension => ({
+    ...dimension,
+    nameKey: `dungeon.types.${packKey}.blocks.${dimension.key}.name`
+  }));
 
   const structures = [
     {
@@ -865,7 +879,10 @@
       tags: ['industrial','vertical'],
       allowRotation: true
     }
-  ];
+  ].map(structure => ({
+    ...structure,
+    nameKey: structure.nameKey || `dungeon.structures.${structure.id}.name`
+  }));
 
   window.registerDungeonAddon({
     id: PACK_ID,

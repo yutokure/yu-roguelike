@@ -733,6 +733,168 @@
           }
         },
 
+        "logicCircuit": {
+          "categories": {
+            "input": "Input",
+            "gate": "Gate",
+            "wiring": "Wiring",
+            "composite": "Composite",
+            "sequential": "Sequential",
+            "measurement": "Measurement",
+            "output": "Output",
+            "other": "Other"
+          },
+          "common": {
+            "high": "HIGH",
+            "low": "LOW",
+            "on": "ON",
+            "off": "OFF",
+            "set": "SET",
+            "reset": "RESET",
+            "metastable": "Metastable",
+            "metastableIndicator": "S=R=1 (Invalid)",
+            "metastableMessage": "S and R are both 1. Output is unstable.",
+            "warning": "Warning",
+            "toggleState": "Toggle state",
+            "previousClock": "Previous clock",
+            "periodMs": "Period (ms)",
+            "outLabel": "OUT: {value}",
+            "muxStatus": "OUT:{out} (SEL={sel})"
+          },
+          "ui": {
+            "title": "Logic Circuit Simulator",
+            "subtitle": "Arrange inputs and gates to verify combinational logic in real time",
+            "clearCanvas": "Reset canvas",
+            "clearTool": "Clear tool (Esc)",
+            "step": "⏭ Step",
+            "stepLabel": "Step (ms)",
+            "pause": "⏸ Pause",
+            "resume": "▶ Resume",
+            "sessionXp": "Session EXP: {value}",
+            "elapsedTime": "Elapsed time: {value}ms"
+          },
+          "hints": {
+            "board": "Select a tool and click an empty spot on the canvas to place it. Click output ports then input ports to draw wires. Press Delete to remove the selected component.",
+            "wires": "Click a wire path to remove it. Alt+click an input port to detach its incoming wire.",
+            "footer": "Tip: Toggle inputs to inspect results instantly. Pause or step the simulation to analyze sequential behavior."
+          },
+          "inspector": {
+            "title": "Component Inspector",
+            "empty": "Select a component to see its details and an auto-generated truth table for up to 3 inputs.",
+            "truthTitle": "Truth table",
+            "connectionCount": "{count} lines",
+            "delayValue": "{value} ns",
+            "fields": {
+              "id": "ID",
+              "type": "Type",
+              "inputs": "Input ports",
+              "outputs": "Output ports",
+              "lastInputs": "Last inputs",
+              "lastOutputs": "Last outputs",
+              "inputConnections": "Input connections",
+              "outputConnections": "Output connections",
+              "delay": "Propagation delay (approx.)",
+              "description": "Description"
+            }
+          },
+          "truthTable": {
+            "out": "OUT"
+          },
+          "ports": {
+            "output": "Output #{index}",
+            "input": "Input #{index}"
+          },
+          "components": {
+            "toggle": {
+              "label": "Toggle input",
+              "description": "Basic input that toggles ON/OFF when clicked",
+              "buttonOn": "Turn ON",
+              "buttonOff": "Turn OFF"
+            },
+            "clock": {
+              "label": "Clock",
+              "description": "Clock input oscillating at a fixed interval"
+            },
+            "constHigh": {
+              "label": "Constant 1",
+              "description": "Constant source that always outputs HIGH"
+            },
+            "constLow": {
+              "label": "Constant 0",
+              "description": "Constant source that always outputs LOW"
+            },
+            "buffer": {
+              "label": "Buffer",
+              "description": "Buffer that outputs the input as-is"
+            },
+            "not": {
+              "label": "NOT",
+              "description": "NOT gate that inverts the input"
+            },
+            "and": {
+              "label": "AND",
+              "description": "Outputs HIGH when all inputs are HIGH"
+            },
+            "nand": {
+              "label": "NAND",
+              "description": "Inverted AND gate"
+            },
+            "or": {
+              "label": "OR",
+              "description": "Outputs HIGH when any input is HIGH"
+            },
+            "nor": {
+              "label": "NOR",
+              "description": "Inverted OR gate"
+            },
+            "xor": {
+              "label": "XOR",
+              "description": "Outputs HIGH when the number of HIGH inputs is odd"
+            },
+            "xnor": {
+              "label": "XNOR",
+              "description": "Inverted XOR gate"
+            },
+            "splitter": {
+              "label": "Splitter",
+              "description": "Duplicate one input to multiple outputs"
+            },
+            "mux2": {
+              "label": "2:1 MUX",
+              "description": "Two-input multiplexer controlled by a select signal"
+            },
+            "decoder2": {
+              "label": "2-4 Decoder",
+              "description": "Decoder producing one-hot outputs from a 2-bit input"
+            },
+            "dff": {
+              "label": "D Flip-Flop",
+              "description": "Edge-triggered flip-flop that latches D on the rising clock (with async reset)",
+              "indicator": "Q={q} / Q̅={qbar}",
+              "status": "Q={value}",
+              "inspectLatch": "Latch state"
+            },
+            "srLatch": {
+              "label": "SR Latch",
+              "description": "Basic NOR SR latch. S sets, R resets.",
+              "qStatus": "Q={value}"
+            },
+            "tff": {
+              "label": "T Flip-Flop",
+              "description": "Toggles output on each rising clock edge when T input is HIGH. Includes reset input.",
+              "status": "Q={value}"
+            },
+            "probe": {
+              "label": "Probe",
+              "description": "Measurement node that monitors the input value"
+            },
+            "led": {
+              "label": "LED",
+              "description": "Lights when the input is HIGH"
+            }
+          }
+        },
+
         "difficulty": {
           "label": "Difficulty",
           "easy": "EASY",

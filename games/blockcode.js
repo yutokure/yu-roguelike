@@ -5,22 +5,66 @@
   const WORKER_HEARTBEAT_MS = 5000;
   const BLOCK_BUILD_XP_INTERVAL = 5;
 
+  const BC_I18N_PREFIX = 'selection.miniexp.games.blockcode';
+  const I18N = typeof window !== 'undefined' ? window.I18n : null;
+
+  function computeFallbackText(fallback) {
+    if (typeof fallback === 'function') {
+      try {
+        const result = fallback();
+        return typeof result === 'string' ? result : (result ?? '');
+      } catch (error) {
+        console.warn('[blockcode] Failed to evaluate fallback text:', error);
+        return '';
+      }
+    }
+    return fallback ?? '';
+  }
+
+  function translateText(key, fallback, params) {
+    if (key && I18N && typeof I18N.t === 'function') {
+      try {
+        const translated = I18N.t(key, params);
+        if (typeof translated === 'string' && translated !== key) {
+          return translated;
+        }
+      } catch (error) {
+        console.warn('[blockcode] Failed to translate key:', key, error);
+      }
+    }
+    return computeFallbackText(fallback);
+  }
+
+  function translateBlockcode(path, fallback, params) {
+    const key = path ? `${BC_I18N_PREFIX}.${path}` : BC_I18N_PREFIX;
+    return translateText(key, fallback, params);
+  }
+
   const BLOCK_DEFS = [
     {
       id: 'whenGameStarts',
       category: 'events',
       type: 'hat',
       label: 'ゲーム開始時',
-      description: 'プロジェクト開始時に実行されるイベントハンドラー'
+      labelKey: `${BC_I18N_PREFIX}.blocks.whenGameStarts.label`,
+      description: 'プロジェクト開始時に実行されるイベントハンドラー',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.whenGameStarts.description`
     },
     {
       id: 'whenKeyPressed',
       category: 'events',
       type: 'hat',
       label: 'キー {key} が押されたとき',
+      labelKey: `${BC_I18N_PREFIX}.blocks.whenKeyPressed.label`,
       description: '指定キー押下時に呼び出されます',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.whenKeyPressed.description`,
       inputs: {
-        key: { type: 'string', default: 'Space', placeholder: 'Key' }
+        key: {
+          type: 'string',
+          default: 'Space',
+          placeholder: 'Key',
+          placeholderKey: `${BC_I18N_PREFIX}.blocks.whenKeyPressed.inputs.key.placeholder`
+        }
       }
     },
     {
@@ -28,7 +72,9 @@
       category: 'actions',
       type: 'statement',
       label: 'プレイヤーを {steps} マス移動',
+      labelKey: `${BC_I18N_PREFIX}.blocks.movePlayer.label`,
       description: 'サンドボックスプレイヤーを移動します',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.movePlayer.description`,
       inputs: {
         steps: { type: 'number', default: 1, min: -20, max: 20 }
       }
@@ -38,11 +84,18 @@
       category: 'actions',
       type: 'statement',
       label: 'タイル ({x}, {y}) を {color} にする',
+      labelKey: `${BC_I18N_PREFIX}.blocks.setTile.label`,
       description: 'ステージタイルの色を変更',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.setTile.description`,
       inputs: {
         x: { type: 'number', default: 0, min: 0, max: 9 },
         y: { type: 'number', default: 0, min: 0, max: 9 },
-        color: { type: 'string', default: '#38bdf8', placeholder: '#RRGGBB' }
+        color: {
+          type: 'string',
+          default: '#38bdf8',
+          placeholder: '#RRGGBB',
+          placeholderKey: `${BC_I18N_PREFIX}.blocks.setTile.inputs.color.placeholder`
+        }
       }
     },
     {
@@ -50,7 +103,9 @@
       category: 'control',
       type: 'statement',
       label: '{seconds} 秒待つ',
+      labelKey: `${BC_I18N_PREFIX}.blocks.waitSeconds.label`,
       description: '指定秒数待機',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.waitSeconds.description`,
       inputs: {
         seconds: { type: 'number', default: 1, min: 0, step: 0.1 }
       }
@@ -60,7 +115,9 @@
       category: 'control',
       type: 'statement',
       label: '{count} 回繰り返す',
+      labelKey: `${BC_I18N_PREFIX}.blocks.repeatTimes.label`,
       description: '指定回数繰り返します',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.repeatTimes.description`,
       inputs: {
         count: { type: 'number', default: 4, min: 0, max: 999 }
       },
@@ -71,7 +128,9 @@
       category: 'control',
       type: 'statement',
       label: 'ずっと繰り返す',
+      labelKey: `${BC_I18N_PREFIX}.blocks.foreverLoop.label`,
       description: '一定回数制限付きで繰り返します',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.foreverLoop.description`,
       hasChild: true
     },
     {
@@ -79,9 +138,16 @@
       category: 'control',
       type: 'statement',
       label: 'もし {condition} なら',
+      labelKey: `${BC_I18N_PREFIX}.blocks.ifCondition.label`,
       description: '条件成立時に実行します',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.ifCondition.description`,
       inputs: {
-        condition: { type: 'string', default: 'true', placeholder: '条件式 (例: score > 5)' }
+        condition: {
+          type: 'string',
+          default: 'true',
+          placeholder: '条件式 (例: score > 5)',
+          placeholderKey: `${BC_I18N_PREFIX}.blocks.ifCondition.inputs.condition.placeholder`
+        }
       },
       hasChild: true,
       hasElse: true
@@ -91,9 +157,15 @@
       category: 'utility',
       type: 'statement',
       label: 'ログ: {message}',
+      labelKey: `${BC_I18N_PREFIX}.blocks.logMessage.label`,
       description: 'ログタブにメッセージを出力',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.logMessage.description`,
       inputs: {
-        message: { type: 'string', default: 'Hello MiniExp!' }
+        message: {
+          type: 'string',
+          default: 'Hello MiniExp!',
+          defaultKey: `${BC_I18N_PREFIX}.blocks.logMessage.inputs.message.default`
+        }
       }
     },
     {
@@ -101,7 +173,9 @@
       category: 'utility',
       type: 'statement',
       label: 'XP {amount} を獲得',
+      labelKey: `${BC_I18N_PREFIX}.blocks.awardXp.label`,
       description: 'XPを獲得します',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.awardXp.description`,
       inputs: {
         amount: { type: 'number', default: 2, min: -100, max: 1000 }
       }
@@ -111,10 +185,17 @@
       category: 'variables',
       type: 'statement',
       label: '変数 {variable} を {value} にする',
+      labelKey: `${BC_I18N_PREFIX}.blocks.setVariable.label`,
       description: '変数へ値を代入',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.setVariable.description`,
       inputs: {
         variable: { type: 'variable' },
-        value: { type: 'string', default: '0', placeholder: '値または式' }
+        value: {
+          type: 'string',
+          default: '0',
+          placeholder: '値または式',
+          placeholderKey: `${BC_I18N_PREFIX}.blocks.setVariable.inputs.value.placeholder`
+        }
       }
     },
     {
@@ -122,7 +203,9 @@
       category: 'variables',
       type: 'statement',
       label: '変数 {variable} を {delta} ずつ変える',
+      labelKey: `${BC_I18N_PREFIX}.blocks.changeVariable.label`,
       description: '変数を増減',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.changeVariable.description`,
       inputs: {
         variable: { type: 'variable' },
         delta: { type: 'string', default: '1' }
@@ -133,7 +216,9 @@
       category: 'events',
       type: 'statement',
       label: 'ブロードキャスト {channel}',
+      labelKey: `${BC_I18N_PREFIX}.blocks.broadcast.label`,
       description: '仮想イベントを発火します',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.broadcast.description`,
       inputs: {
         channel: { type: 'string', default: 'signal1' }
       }
@@ -143,19 +228,108 @@
       category: 'control',
       type: 'statement',
       label: 'すべて停止する',
-      description: '実行を停止します'
+      labelKey: `${BC_I18N_PREFIX}.blocks.stopAll.label`,
+      description: '実行を停止します',
+      descriptionKey: `${BC_I18N_PREFIX}.blocks.stopAll.description`
     }
   ];
 
-  const CATEGORY_LABELS = {
-    events: 'イベント',
-    actions: 'アクション',
-    control: '制御',
-    variables: '変数',
-    utility: 'ユーティリティ'
+  const CATEGORY_DEFS = {
+    events: { key: `${BC_I18N_PREFIX}.categories.events`, fallback: 'イベント' },
+    actions: { key: `${BC_I18N_PREFIX}.categories.actions`, fallback: 'アクション' },
+    control: { key: `${BC_I18N_PREFIX}.categories.control`, fallback: '制御' },
+    variables: { key: `${BC_I18N_PREFIX}.categories.variables`, fallback: '変数' },
+    utility: { key: `${BC_I18N_PREFIX}.categories.utility`, fallback: 'ユーティリティ' }
+  };
+
+  const VARIABLE_TYPE_DEFS = {
+    number: { key: `${BC_I18N_PREFIX}.ui.variableTypes.number`, fallback: '数値' },
+    string: { key: `${BC_I18N_PREFIX}.ui.variableTypes.string`, fallback: '文字列' },
+    boolean: { key: `${BC_I18N_PREFIX}.ui.variableTypes.boolean`, fallback: '真偽' }
   };
 
   let uidCounter = 1;
+
+  function getCategoryLabel(category) {
+    const def = CATEGORY_DEFS[category];
+    return translateText(def?.key, def?.fallback || category);
+  }
+
+  function getVariableTypeLabel(type) {
+    const def = VARIABLE_TYPE_DEFS[type];
+    return translateText(def?.key, def?.fallback || type);
+  }
+
+  function getBlockLabel(def) {
+    return translateText(def.labelKey, def.label || def.id);
+  }
+
+  function getBlockDescription(def) {
+    return translateText(def.descriptionKey, def.description || '');
+  }
+
+  function getInputPlaceholder(spec) {
+    if (!spec) return '';
+    return translateText(spec.placeholderKey, spec.placeholder || '');
+  }
+
+  function getInputDefault(spec) {
+    if (!spec) return '';
+    return translateText(spec.defaultKey, spec.default ?? '');
+  }
+
+  function getVariablePlaceholderLabel() {
+    return translateBlockcode('ui.variableSelect.placeholder', '-- 変数 --');
+  }
+
+  function getElseLabel() {
+    return translateBlockcode('ui.workspace.elseLabel', 'そうでなければ');
+  }
+
+  function getStagePlaceholderMessage() {
+    return translateBlockcode('ui.stage.placeholder', 'ブロックを組み立てて実行ボタンを押してください。');
+  }
+
+  function getStatusLabel(running) {
+    return running
+      ? translateBlockcode('ui.status.running', '実行中')
+      : translateBlockcode('ui.status.stopped', '停止中');
+  }
+
+  function getToolbarSnapLabel(enabled) {
+    return enabled
+      ? translateBlockcode('ui.toolbar.snapOn', 'スナップ: ON')
+      : translateBlockcode('ui.toolbar.snapOff', 'スナップ: OFF');
+  }
+
+  function getToolbarSpeedLabel(value) {
+    return translateBlockcode('ui.toolbar.speedLabel', () => `速度 ${value.toFixed(2)}x`, { value: value.toFixed(2) });
+  }
+
+  function getDefaultProjectName() {
+    return translateBlockcode('defaults.projectName', '新規プロジェクト');
+  }
+
+  function getSummaryText(state, blockCount, variableCount) {
+    return translateBlockcode(
+      'ui.summary',
+      () => `${state.project.name} · ブロック ${blockCount} · 変数 ${variableCount}`,
+      { name: state.project.name, blocks: blockCount, variables: variableCount }
+    );
+  }
+
+  function getXpBadgeText(value) {
+    return translateBlockcode('ui.badges.xp', () => `XP ${value}`, { value });
+  }
+
+  function getXpChangeText(amount) {
+    const sign = amount >= 0 ? '+' : '';
+    return translateBlockcode('ui.messages.xpChange', () => `XP ${sign}${amount}`, { amount, sign });
+  }
+
+  function formatVariableEntry(name, value) {
+    return translateBlockcode('ui.variableList.entry', () => `${name}: ${value}`, { name, value });
+  }
   function nextUid(){
     return 'bc_' + (uidCounter++);
   }
@@ -170,7 +344,7 @@
     }
     return {
       id: project.id || 'project-' + Date.now(),
-      name: typeof project.name === 'string' && project.name.trim() ? project.name.trim() : '新規プロジェクト',
+      name: typeof project.name === 'string' && project.name.trim() ? project.name.trim() : getDefaultProjectName(),
       createdAt: Number.isFinite(project.createdAt) ? project.createdAt : Date.now(),
       updatedAt: Date.now(),
       blocks: Array.isArray(project.blocks) ? project.blocks.map(normalizeBlock).filter(Boolean) : [],
@@ -210,7 +384,8 @@
         } else if (spec.type === 'variable') {
           inputs[key] = typeof raw === 'string' ? raw : '';
         } else {
-          inputs[key] = typeof raw === 'string' ? raw : (spec.default ?? '');
+          const defaultValue = getInputDefault(spec);
+          inputs[key] = typeof raw === 'string' ? raw : defaultValue;
         }
       }
     }
@@ -226,7 +401,7 @@
   function createBlankProject(){
     return {
       id: 'project-' + Date.now(),
-      name: '新規プロジェクト',
+      name: getDefaultProjectName(),
       createdAt: Date.now(),
       updatedAt: Date.now(),
       blocks: [
@@ -322,6 +497,15 @@
     }
   }
 
+  function formatSavedProjectOption(project){
+    const updatedAt = formatDateTime(project.updatedAt);
+    return translateBlockcode(
+      'ui.load.projectOption',
+      () => `${project.name} (${updatedAt})`,
+      { name: project.name, updatedAt }
+    );
+  }
+
   function createStyle(){
     const existing = document.querySelector('style[data-blockcode-style="1"]');
     if (existing) return () => {};
@@ -405,7 +589,7 @@
   }
 
   function renderBlockLabel(def, block, variableNames){
-    let text = def.label;
+    const text = getBlockLabel(def);
     if (!def.inputs) return [document.createTextNode(text)];
     const fragments = [];
     const parts = text.split(/\{([^}]+)\}/g);
@@ -438,7 +622,7 @@
           select.className = 'bc-input bc-input-variable';
           const opt = document.createElement('option');
           opt.value = '';
-          opt.textContent = '-- 変数 --';
+          opt.textContent = getVariablePlaceholderLabel();
           select.appendChild(opt);
           variableNames.forEach(name => {
             const option = document.createElement('option');
@@ -455,8 +639,9 @@
           const input = document.createElement('input');
           input.type = 'text';
           input.className = 'bc-input';
-          if (spec.placeholder) input.placeholder = spec.placeholder;
-          input.value = typeof value === 'string' ? value : (spec.default ?? '');
+          const placeholder = getInputPlaceholder(spec);
+          if (placeholder) input.placeholder = placeholder;
+          input.value = typeof value === 'string' ? value : getInputDefault(spec);
           input.addEventListener('change', () => {
             block.inputs[key] = input.value;
           });
@@ -503,14 +688,14 @@
     const header = document.createElement('div');
     header.className = 'bc-block-header';
     const title = document.createElement('span');
-    title.textContent = CATEGORY_LABELS[def.category] || def.category;
+    title.textContent = getCategoryLabel(def.category);
     header.appendChild(title);
     const controls = document.createElement('div');
     controls.className = 'bc-block-controls';
     const dupBtn = document.createElement('button');
     dupBtn.type = 'button';
     dupBtn.textContent = '⧉';
-    dupBtn.title = '複製';
+    dupBtn.title = translateBlockcode('ui.buttons.duplicate', '複製');
     dupBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       duplicateBlock(state, block.uid);
@@ -518,7 +703,7 @@
     const delBtn = document.createElement('button');
     delBtn.type = 'button';
     delBtn.textContent = '×';
-    delBtn.title = '削除';
+    delBtn.title = translateBlockcode('ui.buttons.delete', '削除');
     delBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       deleteBlock(state, block.uid);
@@ -544,7 +729,7 @@
     if (def.hasElse) {
       const elseLabel = document.createElement('div');
       elseLabel.className = 'bc-else-label';
-      elseLabel.textContent = 'そうでなければ';
+      elseLabel.textContent = getElseLabel();
       blockEl.appendChild(elseLabel);
       const subElse = document.createElement('div');
       subElse.className = 'bc-substack';
@@ -617,7 +802,7 @@
         for (const key of Object.keys(def.inputs)) {
           const spec = def.inputs[key];
           if (spec.type === 'number') blockToInsert.inputs[key] = spec.default ?? 0;
-          else blockToInsert.inputs[key] = spec.default ?? '';
+          else blockToInsert.inputs[key] = getInputDefault(spec);
         }
       }
       state.blockCreationCount = (state.blockCreationCount || 0) + 1;
@@ -734,7 +919,7 @@
     if (!state.summaryEl) return;
     const blockCount = countBlocks(state.project.blocks);
     const variableCount = state.project.variables.length;
-    state.summaryEl.textContent = `${state.project.name} · ブロック ${blockCount} · 変数 ${variableCount}`;
+    state.summaryEl.textContent = getSummaryText(state, blockCount, variableCount);
   }
 
   function addBlockFromLibrary(state, def){
@@ -750,7 +935,7 @@
       for (const key of Object.keys(def.inputs)) {
         const spec = def.inputs[key];
         if (spec.type === 'number') block.inputs[key] = spec.default ?? 0;
-        else block.inputs[key] = spec.default ?? '';
+        else block.inputs[key] = getInputDefault(spec);
       }
     }
     if (def.type === 'hat') {
@@ -786,11 +971,12 @@
       const item = document.createElement('div');
       item.className = 'bc-lib-block';
       item.draggable = true;
-      item.textContent = def.label.replace(/\{([^}]+)\}/g, (_, key) => `«${key}»`);
-      if (def.description) {
+      item.textContent = getBlockLabel(def).replace(/\{([^}]+)\}/g, (_, key) => `«${key}»`);
+      const description = getBlockDescription(def);
+      if (description) {
         const desc = document.createElement('div');
         desc.className = 'bc-lib-desc';
-        desc.textContent = def.description;
+        desc.textContent = description;
         item.appendChild(desc);
       }
       item.addEventListener('dragstart', (e) => {
@@ -830,7 +1016,7 @@
       const cancel = document.createElement('button');
       cancel.type = 'button';
       cancel.className = 'blockcode-btn';
-      cancel.textContent = opts.cancelLabel || 'キャンセル';
+      cancel.textContent = opts.cancelLabel || translateBlockcode('ui.buttons.cancel', 'キャンセル');
       cancel.addEventListener('click', () => {
         opts.onCancel();
         closeModal(state);
@@ -841,7 +1027,7 @@
       const ok = document.createElement('button');
       ok.type = 'button';
       ok.className = 'blockcode-btn primary';
-      ok.textContent = opts.confirmLabel || 'OK';
+      ok.textContent = opts.confirmLabel || translateBlockcode('ui.buttons.ok', 'OK');
       ok.addEventListener('click', () => {
         if (opts.onConfirm() !== false) closeModal(state);
       });
@@ -869,10 +1055,14 @@
       const name = document.createElement('span');
       name.textContent = variable.name;
       const value = document.createElement('span');
-      value.textContent = `初期値: ${variable.initialValue}`;
+      value.textContent = translateBlockcode(
+        'ui.variableList.initialValue',
+        () => `初期値: ${variable.initialValue}`,
+        { value: variable.initialValue }
+      );
       const remove = document.createElement('button');
       remove.type = 'button';
-      remove.textContent = '削除';
+      remove.textContent = translateBlockcode('ui.buttons.delete', '削除');
       remove.className = 'blockcode-btn';
       remove.style.padding = '2px 8px';
       remove.style.fontSize = '11px';
@@ -895,25 +1085,25 @@
   function showAddVariableDialog(state){
     const refs = {};
     openModal(state, {
-      title: '変数を追加',
+      title: translateBlockcode('ui.modals.addVariableTitle', '変数を追加'),
       render() {
         const wrap = document.createElement('div');
         wrap.style.display = 'flex';
         wrap.style.flexDirection = 'column';
         wrap.style.gap = '12px';
         const nameInput = document.createElement('input');
-        nameInput.placeholder = '変数名';
+        nameInput.placeholder = translateBlockcode('ui.inputs.variableName', '変数名');
         nameInput.className = 'bc-input';
         const typeSelect = document.createElement('select');
         typeSelect.className = 'bc-input';
-        [['number','数値'], ['string','文字列'], ['boolean','真偽']].forEach(([value,label]) => {
+        ['number', 'string', 'boolean'].forEach((value) => {
           const opt = document.createElement('option');
           opt.value = value;
-          opt.textContent = label;
+          opt.textContent = getVariableTypeLabel(value);
           typeSelect.appendChild(opt);
         });
         const initialInput = document.createElement('input');
-        initialInput.placeholder = '初期値';
+        initialInput.placeholder = translateBlockcode('ui.inputs.variableInitial', '初期値');
         initialInput.className = 'bc-input';
         wrap.appendChild(nameInput);
         wrap.appendChild(typeSelect);
@@ -930,7 +1120,7 @@
         const type = refs.typeSelect?.value || 'number';
         const initialValue = refs.initialInput?.value ?? '';
         if (state.project.variables.some(v => v.name === name)) {
-          alert('同名の変数が既に存在します');
+          alert(translateBlockcode('ui.alerts.duplicateVariable', '同名の変数が既に存在します'));
           return false;
         }
         state.project.variables.push({
@@ -989,7 +1179,7 @@
   function showSaveDialog(state){
     const refs = {};
     openModal(state, {
-      title: 'プロジェクトを保存',
+      title: translateBlockcode('ui.modals.saveProjectTitle', 'プロジェクトを保存'),
       render() {
         const wrap = document.createElement('div');
         wrap.style.display = 'flex';
@@ -999,7 +1189,7 @@
         nameInput.className = 'bc-input';
         nameInput.value = state.project.name;
         const descArea = document.createElement('textarea');
-        descArea.placeholder = 'メモ (任意)';
+        descArea.placeholder = translateBlockcode('ui.inputs.memo', 'メモ (任意)');
         descArea.value = state.project.metadata?.description || '';
         wrap.appendChild(nameInput);
         wrap.appendChild(descArea);
@@ -1009,14 +1199,18 @@
       },
       onCancel() {},
       onConfirm() {
-        const name = refs.nameInput?.value?.trim() || '新規プロジェクト';
+        const name = refs.nameInput?.value?.trim() || getDefaultProjectName();
         state.project.name = name;
         if (!state.project.metadata) state.project.metadata = {};
         state.project.metadata.description = refs.descArea?.value || '';
         state.project.updatedAt = Date.now();
         persistProject(state.project);
         updateProjectSummary(state);
-        pushLog(state, 'info', `プロジェクト「${name}」を保存しました。`);
+        pushLog(
+          state,
+          'info',
+          translateBlockcode('ui.messages.projectSaved', () => `プロジェクト「${name}」を保存しました。`, { name })
+        );
         return true;
       }
     });
@@ -1025,12 +1219,12 @@
   function showLoadDialog(state){
     const projects = loadStoredProjects();
     if (!projects.length) {
-      alert('保存済みのプロジェクトがありません。');
+      alert(translateBlockcode('ui.alerts.noSavedProjects', '保存済みのプロジェクトがありません。'));
       return;
     }
     const refs = { idx: 0 };
     openModal(state, {
-      title: 'プロジェクトを読み込み',
+      title: translateBlockcode('ui.modals.loadProjectTitle', 'プロジェクトを読み込み'),
       render() {
         const wrap = document.createElement('div');
         wrap.style.display = 'flex';
@@ -1041,7 +1235,7 @@
         projects.forEach((project, index) => {
           const option = document.createElement('option');
           option.value = String(index);
-          option.textContent = `${project.name} (${formatDateTime(project.updatedAt)})`;
+          option.textContent = formatSavedProjectOption(project);
           select.appendChild(option);
         });
         select.addEventListener('change', () => {
@@ -1051,10 +1245,21 @@
         const summary = document.createElement('div');
         summary.style.fontSize = '12px';
         summary.style.color = '#475569';
-        summary.textContent = `ブロック ${countBlocks(projects[0].blocks)} · 変数 ${projects[0].variables.length}`;
+        summary.textContent = translateBlockcode(
+          'ui.projectStats',
+          () => `ブロック ${countBlocks(projects[0].blocks)} · 変数 ${projects[0].variables.length}`,
+          {
+            blocks: countBlocks(projects[0].blocks),
+            variables: projects[0].variables.length
+          }
+        );
         select.addEventListener('change', () => {
           const chosen = projects[Number(select.value) || 0];
-          summary.textContent = `ブロック ${countBlocks(chosen.blocks)} · 変数 ${chosen.variables.length}`;
+          summary.textContent = translateBlockcode(
+            'ui.projectStats',
+            () => `ブロック ${countBlocks(chosen.blocks)} · 変数 ${chosen.variables.length}`,
+            { blocks: countBlocks(chosen.blocks), variables: chosen.variables.length }
+          );
         });
         wrap.appendChild(summary);
         refs.summary = summary;
@@ -1069,7 +1274,11 @@
         updateVariableList(state);
         updateProjectSummary(state);
         resetStageView(state);
-        pushLog(state, 'info', `プロジェクト「${chosen.name}」を読み込みました。`);
+        pushLog(
+          state,
+          'info',
+          translateBlockcode('ui.messages.projectLoaded', () => `プロジェクト「${chosen.name}」を読み込みました。`, { name: chosen.name })
+        );
         return true;
       }
     });
@@ -1078,7 +1287,7 @@
   function showShareDialog(state){
     const refs = {};
     openModal(state, {
-      title: '共有コード',
+      title: translateBlockcode('ui.share.title', '共有コード'),
       render() {
         const wrap = document.createElement('div');
         wrap.style.display = 'flex';
@@ -1090,24 +1299,24 @@
         refs.shareArea = shareArea;
         wrap.appendChild(shareArea);
         const importLabel = document.createElement('div');
-        importLabel.textContent = '共有コードを貼り付けて読み込み';
+        importLabel.textContent = translateBlockcode('ui.share.importLabel', '共有コードを貼り付けて読み込み');
         importLabel.style.fontSize = '12px';
         importLabel.style.color = '#475569';
         wrap.appendChild(importLabel);
         const importArea = document.createElement('textarea');
-        importArea.placeholder = '共有コード';
+        importArea.placeholder = translateBlockcode('ui.share.importPlaceholder', '共有コード');
         refs.importArea = importArea;
         wrap.appendChild(importArea);
         const importBtn = document.createElement('button');
         importBtn.type = 'button';
         importBtn.className = 'blockcode-btn';
-        importBtn.textContent = '読み込む';
+        importBtn.textContent = translateBlockcode('ui.share.importButton', '読み込む');
         importBtn.addEventListener('click', () => {
           const code = refs.importArea?.value?.trim();
           if (!code) return;
           const project = decodeProject(code);
           if (!project) {
-            alert('共有コードの解析に失敗しました。');
+            alert(translateBlockcode('ui.alerts.decodeFailed', '共有コードの解析に失敗しました。'));
             return;
           }
           state.project = project;
@@ -1115,23 +1324,33 @@
           updateVariableList(state);
           updateProjectSummary(state);
           resetStageView(state);
-          pushLog(state, 'info', `共有コードから「${project.name}」を読み込みました。`);
+          pushLog(
+            state,
+            'info',
+            translateBlockcode('ui.messages.shareImported', () => `共有コードから「${project.name}」を読み込みました。`, { name: project.name })
+          );
           closeModal(state);
         });
         wrap.appendChild(importBtn);
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
         copyBtn.className = 'blockcode-btn';
-        copyBtn.textContent = 'コードをコピー';
+        copyBtn.textContent = translateBlockcode('ui.share.copyButton', 'コードをコピー');
         copyBtn.addEventListener('click', async () => {
           try {
             if (navigator.clipboard && navigator.clipboard.writeText) {
               await navigator.clipboard.writeText(refs.shareArea.value);
-              copyBtn.textContent = 'コピーしました!';
-              setTimeout(() => { copyBtn.textContent = 'コードをコピー'; }, 1500);
+              copyBtn.textContent = translateBlockcode('ui.share.copied', 'コピーしました!');
+              setTimeout(() => {
+                copyBtn.textContent = translateBlockcode('ui.share.copyButton', 'コードをコピー');
+              }, 1500);
             } else {
               refs.shareArea.select();
               document.execCommand('copy');
+              copyBtn.textContent = translateBlockcode('ui.share.copied', 'コピーしました!');
+              setTimeout(() => {
+                copyBtn.textContent = translateBlockcode('ui.share.copyButton', 'コードをコピー');
+              }, 1500);
             }
           } catch (err) {
             console.error(err);
@@ -1186,7 +1405,7 @@
       placeholder.className = 'blockcode-stage-placeholder';
       state.stagePlaceholder = placeholder;
     }
-    state.stagePlaceholder.textContent = message || 'ブロックを組み立てて実行ボタンを押してください。';
+    state.stagePlaceholder.textContent = message || getStagePlaceholderMessage();
     state.stageContainer.innerHTML = '';
     state.stageContainer.appendChild(state.stagePlaceholder);
     state.stageCanvas = null;
@@ -1228,7 +1447,7 @@
     const entries = Object.entries(state.runtimeVars || {});
     if (!entries.length) {
       const empty = document.createElement('div');
-      empty.textContent = '変数はありません。';
+      empty.textContent = translateBlockcode('ui.variableList.empty', '変数はありません。');
       state.varsPanel.appendChild(empty);
       return;
     }
@@ -1236,7 +1455,7 @@
     entries.forEach(([name, value]) => {
       const row = document.createElement('div');
       row.className = 'blockcode-logline';
-      row.textContent = `${name}: ${value}`;
+      row.textContent = formatVariableEntry(name, value);
       state.varsPanel.appendChild(row);
     });
   }
@@ -1273,12 +1492,12 @@
     if (typeof state.awardXp === 'function') {
       try { state.awardXp(amount, meta || {}); } catch (err) { console.error(err); }
     }
-    pushLog(state, amount >= 0 ? 'info' : 'warn', `XP ${amount >= 0 ? '+' : ''}${amount}`);
+    pushLog(state, amount >= 0 ? 'info' : 'warn', getXpChangeText(amount));
   }
 
   function updateXpBadge(state){
     if (state.xpBadge) {
-      state.xpBadge.textContent = `XP ${state.xpState.total}`;
+      state.xpBadge.textContent = getXpBadgeText(state.xpState.total);
     }
   }
 
@@ -1287,7 +1506,7 @@
     if (state.runButton) state.runButton.disabled = running;
     if (state.stopButton) state.stopButton.disabled = !running;
     if (state.statusBadge) {
-      state.statusBadge.textContent = running ? '実行中' : '停止中';
+      state.statusBadge.textContent = getStatusLabel(running);
       state.statusBadge.classList.toggle('blockcode-running', running);
     }
   }
@@ -1430,7 +1649,13 @@
               iterations++;
             }
             if (iterations >= 512) {
-              send({ type: 'log', level: 'warn', message: 'foreverループが512回で停止しました。' });
+              send({
+                type: 'log',
+                level: 'warn',
+                messageKey: '${BC_I18N_PREFIX}.worker.foreverLimit',
+                messageParams: { limit: 512 },
+                message: 'foreverループが512回で停止しました。'
+              });
             }
             break;
           }
@@ -1485,7 +1710,13 @@
           case 'broadcast': {
             const channel = block.inputs?.channel ?? '';
             const message = 'ブロードキャスト: ' + String(channel ?? '');
-            send({ type: 'log', level: 'info', message });
+            send({
+              type: 'log',
+              level: 'info',
+              messageKey: '${BC_I18N_PREFIX}.worker.broadcast',
+              messageParams: { channel: String(channel ?? '') },
+              message
+            });
             break;
           }
           case 'stopAll': {
@@ -1512,7 +1743,12 @@
         const blocks = Array.isArray(program?.blocks) ? program.blocks : [];
         const hats = blocks.filter(block => block.defId === 'whenGameStarts');
         if (!hats.length) {
-          send({ type: 'log', level: 'warn', message: '開始イベントが見つかりません。' });
+          send({
+            type: 'log',
+            level: 'warn',
+            messageKey: '${BC_I18N_PREFIX}.worker.noStart',
+            message: '開始イベントが見つかりません。'
+          });
         }
         for (const hat of hats) {
           if (stopRequested) break;
@@ -1521,7 +1757,12 @@
         if (!stopRequested) {
           send({ type: 'done' });
         } else {
-          send({ type: 'log', level: 'warn', message: '停止されました。' });
+          send({
+            type: 'log',
+            level: 'warn',
+            messageKey: '${BC_I18N_PREFIX}.worker.stopped',
+            message: '停止されました。'
+          });
         }
       }
 
@@ -1563,15 +1804,19 @@
         case 'vars':
           updateVariableWatch(state, data.variables);
           break;
-        case 'log':
-          pushLog(state, data.level || 'info', data.message || '');
+        case 'log': {
+          const text = data.messageKey
+            ? translateText(data.messageKey, data.message || '', data.messageParams)
+            : (data.message || '');
+          pushLog(state, data.level || 'info', text);
           break;
+        }
         case 'error':
-          pushLog(state, 'error', data.message || 'エラーが発生しました');
+          pushLog(state, 'error', data.message || translateBlockcode('ui.messages.genericError', 'エラーが発生しました'));
           stopExecution(state, false);
           break;
         case 'done':
-          pushLog(state, 'info', '実行が完了しました。');
+          pushLog(state, 'info', translateBlockcode('ui.messages.runComplete', '実行が完了しました。'));
           awardXpLocal(state, 8, { type: 'run' });
           stopExecution(state, false);
           break;
@@ -1614,7 +1859,7 @@
       return def?.type === 'hat';
     });
     if (!hatExists) {
-      pushLog(state, 'warn', '開始イベントブロックが必要です。');
+      pushLog(state, 'warn', translateBlockcode('ui.messages.needHat', '開始イベントブロックが必要です。'));
       return;
     }
     state.logPanel && (state.logPanel.innerHTML = '');
@@ -1625,7 +1870,7 @@
     updateRunState(state, true);
     state.worker = createSandboxWorker(state);
     state.worker.onerror = (err) => {
-      pushLog(state, 'error', err.message || 'Worker error');
+      pushLog(state, 'error', err.message || translateBlockcode('ui.messages.workerError', 'Worker error'));
       stopExecution(state, false);
     };
     state.worker.postMessage({ type: 'run', program: serializeProject(state.project, state.executionSpeed) });
@@ -1641,13 +1886,13 @@
     cleanupWorker(state);
     updateRunState(state, false);
     if (manual) {
-      pushLog(state, 'warn', '実行を停止しました。');
-      resetStageView(state, 'ブロックを組み立てて実行ボタンを押してください。');
+      pushLog(state, 'warn', translateBlockcode('ui.messages.executionStopped', '実行を停止しました。'));
+      resetStageView(state, getStagePlaceholderMessage());
     }
   }
 
   function create(root, awardXp, options){
-    if (!root) throw new Error('MiniExp BlockCode requires a container');
+    if (!root) throw new Error(translateBlockcode('errors.containerRequired', 'MiniExp BlockCode requires a container'));
     const cleanupStyle = createStyle();
     root.innerHTML = '';
     const wrapper = document.createElement('div');
@@ -1683,7 +1928,7 @@
     headerLeft.className = 'blockcode-header-left';
     const title = document.createElement('div');
     title.className = 'blockcode-header-title';
-    title.textContent = 'ブロックコードラボ';
+    title.textContent = translateBlockcode('ui.title', 'ブロックコードラボ');
     headerLeft.appendChild(title);
     const summary = document.createElement('div');
     summary.className = 'blockcode-header-sub';
@@ -1700,7 +1945,7 @@
     updateXpBadge(state);
     const statusBadge = document.createElement('div');
     statusBadge.className = 'blockcode-badge';
-    statusBadge.textContent = '停止中';
+    statusBadge.textContent = getStatusLabel(false);
     state.statusBadge = statusBadge;
     statusArea.appendChild(xpBadge);
     statusArea.appendChild(statusBadge);
@@ -1708,14 +1953,14 @@
     const btnNew = document.createElement('button');
     btnNew.type = 'button';
     btnNew.className = 'blockcode-btn';
-    btnNew.textContent = '新規';
+    btnNew.textContent = translateBlockcode('ui.buttons.new', '新規');
     btnNew.addEventListener('click', () => {
       if (state.running) {
-        if (!confirm('実行中です。停止して新規プロジェクトを作成しますか？')) return;
+        if (!confirm(translateBlockcode('ui.prompts.confirmStopForNew', '実行中です。停止して新規プロジェクトを作成しますか？'))) return;
         stopExecution(state);
       }
       if (countBlocks(state.project.blocks) > 0) {
-        if (!confirm('現在のプロジェクトを破棄して新規作成しますか？')) return;
+        if (!confirm(translateBlockcode('ui.prompts.confirmDiscard', '現在のプロジェクトを破棄して新規作成しますか？'))) return;
       }
       state.project = createBlankProject();
       syncUidCounter(state.project);
@@ -1723,38 +1968,38 @@
       updateVariableList(state);
       updateProjectSummary(state);
       resetStageView(state);
-      pushLog(state, 'info', '新しいプロジェクトを作成しました。');
+      pushLog(state, 'info', translateBlockcode('ui.messages.projectCreated', '新しいプロジェクトを作成しました。'));
     });
 
     const btnSave = document.createElement('button');
     btnSave.type = 'button';
     btnSave.className = 'blockcode-btn';
-    btnSave.textContent = '保存';
+    btnSave.textContent = translateBlockcode('ui.buttons.save', '保存');
     btnSave.addEventListener('click', () => showSaveDialog(state));
 
     const btnLoad = document.createElement('button');
     btnLoad.type = 'button';
     btnLoad.className = 'blockcode-btn';
-    btnLoad.textContent = '読み込み';
+    btnLoad.textContent = translateBlockcode('ui.buttons.load', '読み込み');
     btnLoad.addEventListener('click', () => showLoadDialog(state));
 
     const btnShare = document.createElement('button');
     btnShare.type = 'button';
     btnShare.className = 'blockcode-btn';
-    btnShare.textContent = '共有コード';
+    btnShare.textContent = translateBlockcode('ui.buttons.share', '共有コード');
     btnShare.addEventListener('click', () => showShareDialog(state));
 
     const btnRun = document.createElement('button');
     btnRun.type = 'button';
     btnRun.className = 'blockcode-btn primary';
-    btnRun.textContent = '実行';
+    btnRun.textContent = translateBlockcode('ui.buttons.run', '実行');
     btnRun.addEventListener('click', () => runProject(state));
     state.runButton = btnRun;
 
     const btnStop = document.createElement('button');
     btnStop.type = 'button';
     btnStop.className = 'blockcode-btn';
-    btnStop.textContent = '停止';
+    btnStop.textContent = translateBlockcode('ui.buttons.stop', '停止');
     btnStop.disabled = true;
     btnStop.addEventListener('click', () => stopExecution(state));
     state.stopButton = btnStop;
@@ -1783,11 +2028,11 @@
     blockList.className = 'blockcode-blocklist';
     state.blockListEl = blockList;
 
-    Object.keys(CATEGORY_LABELS).forEach(cat => {
+    Object.keys(CATEGORY_DEFS).forEach(cat => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'blockcode-catbtn';
-      btn.textContent = CATEGORY_LABELS[cat] || cat;
+      btn.textContent = getCategoryLabel(cat);
       if (cat === state.activeCategory) btn.classList.add('active');
       btn.addEventListener('click', () => {
         state.activeCategory = cat;
@@ -1805,7 +2050,7 @@
     variableBox.className = 'blockcode-variable-list';
     const addVarBtn = document.createElement('button');
     addVarBtn.type = 'button';
-    addVarBtn.textContent = '変数を追加';
+    addVarBtn.textContent = translateBlockcode('ui.buttons.addVariable', '変数を追加');
     addVarBtn.addEventListener('click', () => showAddVariableDialog(state));
     variableBox.appendChild(addVarBtn);
     const varList = document.createElement('div');
@@ -1834,7 +2079,7 @@
     stageArea.className = 'blockcode-stage';
     const stagePlaceholder = document.createElement('div');
     stagePlaceholder.className = 'blockcode-stage-placeholder';
-    stagePlaceholder.textContent = 'ブロックを組み立てて実行ボタンを押してください。';
+    stagePlaceholder.textContent = getStagePlaceholderMessage();
     stageArea.appendChild(stagePlaceholder);
     state.stageContainer = stageArea;
     state.stagePlaceholder = stagePlaceholder;
@@ -1845,12 +2090,12 @@
     const logsBtn = document.createElement('button');
     logsBtn.type = 'button';
     logsBtn.className = 'blockcode-tabbtn active';
-    logsBtn.textContent = 'ログ';
+    logsBtn.textContent = translateBlockcode('ui.tabs.logs', 'ログ');
     logsBtn.addEventListener('click', () => switchTab(state, 'logs'));
     const varsBtn = document.createElement('button');
     varsBtn.type = 'button';
     varsBtn.className = 'blockcode-tabbtn';
-    varsBtn.textContent = '変数ウォッチ';
+    varsBtn.textContent = translateBlockcode('ui.tabs.variables', '変数ウォッチ');
     varsBtn.addEventListener('click', () => switchTab(state, 'vars'));
     state.logsTabBtn = logsBtn;
     state.varsTabBtn = varsBtn;
@@ -1876,15 +2121,15 @@
     toolbar.className = 'blockcode-toolbar';
     const undoBtn = document.createElement('button');
     undoBtn.type = 'button';
-    undoBtn.textContent = 'Undo';
-    undoBtn.addEventListener('click', () => pushLog(state, 'warn', 'Undo は未実装です。'));
+    undoBtn.textContent = translateBlockcode('ui.toolbar.undo', 'Undo');
+    undoBtn.addEventListener('click', () => pushLog(state, 'warn', translateBlockcode('ui.messages.undoUnavailable', 'Undo は未実装です。')));
     const redoBtn = document.createElement('button');
     redoBtn.type = 'button';
-    redoBtn.textContent = 'Redo';
-    redoBtn.addEventListener('click', () => pushLog(state, 'warn', 'Redo は未実装です。'));
+    redoBtn.textContent = translateBlockcode('ui.toolbar.redo', 'Redo');
+    redoBtn.addEventListener('click', () => pushLog(state, 'warn', translateBlockcode('ui.messages.redoUnavailable', 'Redo は未実装です。')));
     const zoomReset = document.createElement('button');
     zoomReset.type = 'button';
-    zoomReset.textContent = 'ズームリセット';
+    zoomReset.textContent = translateBlockcode('ui.toolbar.zoomReset', 'ズームリセット');
     zoomReset.addEventListener('click', () => {
       state.zoom = 1;
       state.workspaceRoot.style.transform = 'scale(1)';
@@ -1892,14 +2137,14 @@
     });
     const snapBtn = document.createElement('button');
     snapBtn.type = 'button';
-    snapBtn.textContent = 'スナップ: OFF';
+    snapBtn.textContent = getToolbarSnapLabel(false);
     snapBtn.addEventListener('click', () => {
       state.snapEnabled = !state.snapEnabled;
-      snapBtn.textContent = state.snapEnabled ? 'スナップ: ON' : 'スナップ: OFF';
+      snapBtn.textContent = getToolbarSnapLabel(state.snapEnabled);
     });
     const gridBtn = document.createElement('button');
     gridBtn.type = 'button';
-    gridBtn.textContent = 'グリッド切替';
+    gridBtn.textContent = translateBlockcode('ui.toolbar.gridToggle', 'グリッド切替');
     gridBtn.addEventListener('click', () => {
       canvasWrap.classList.toggle('hide-grid');
     });
@@ -1907,7 +2152,7 @@
     const sliderBox = document.createElement('div');
     sliderBox.className = 'blockcode-slider';
     const sliderLabel = document.createElement('span');
-    sliderLabel.textContent = '速度 1.0x';
+    sliderLabel.textContent = getToolbarSpeedLabel(1);
     const speedSlider = document.createElement('input');
     speedSlider.type = 'range';
     speedSlider.min = '0.25';
@@ -1916,7 +2161,7 @@
     speedSlider.value = '1';
     speedSlider.addEventListener('input', () => {
       state.executionSpeed = Number(speedSlider.value) || 1;
-      sliderLabel.textContent = `速度 ${state.executionSpeed.toFixed(2)}x`;
+      sliderLabel.textContent = getToolbarSpeedLabel(state.executionSpeed);
     });
     sliderBox.appendChild(sliderLabel);
     sliderBox.appendChild(speedSlider);
@@ -1959,7 +2204,7 @@
   window.registerMiniGame({
     id: 'blockcode',
     name: 'ブロックコードラボ', nameKey: 'selection.miniexp.games.blockcode.name', description: '', descriptionKey: 'selection.miniexp.games.blockcode.description', categoryIds: ['utility'],
-    category: 'ユーティリティ',
+    category: translateText('selection.miniexp.category.utility', 'ユーティリティ'),
     create: create
   });
 })();

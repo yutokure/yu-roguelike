@@ -12827,6 +12827,13 @@
           "sp": "SP"
         }
       },
+      "statuses": {
+        "poison": "Poison",
+        "paralysis": "Paralysis",
+        "abilityUp": "Power Up",
+        "abilityDown": "Stat Down",
+        "levelDown": "Level Down"
+      },
       "autoItem": {
         "status": "Auto Items ON: Healing Items x {count}"
       },
@@ -13048,6 +13055,9 @@
             "abilityDown": "Your stats dropped... Max HP/ATK/DEF down ({turns} turns)",
             "levelDown": "Your level temporarily decreased! ({turns} turns)"
           }
+        },
+        "levelUp": {
+          "log": "Level Up!\nLevel: {level} (+{levelDelta})\nMax HP: {maxHp} (+{maxHpDelta})\nATK: {attack} (+{attackDelta})\nDEF: {defense} (+{defenseDelta})"
         },
         "sandbox": {
           "noExp": "Sandbox mode does not award EXP.",

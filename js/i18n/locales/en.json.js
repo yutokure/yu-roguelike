@@ -10903,6 +10903,14 @@
     },
 
     "minigame": {
+      "breakout_k": {
+        "hud": {
+          "lives": "Lives: {count}",
+          "destroyed": "Destroyed: {count}",
+          "difficulty": "Difficulty: {difficulty}",
+          "controls": "Move with ← / → or A / D"
+        }
+      },
       "login_bonus": {
         "title": "Login Bonus Calendar",
         "subtitle": "Log in daily to claim rewards. Your progress is saved automatically.",

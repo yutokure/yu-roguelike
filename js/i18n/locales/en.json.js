@@ -537,7 +537,20 @@
           },
           "match3": {
             "name": "Match 3",
-            "description": "Swap gems to make chains, with longer matches and combos boosting EXP."
+            "description": "Swap gems to make chains, with longer matches and combos boosting EXP.",
+            "hud": {
+              "title": "Match-3",
+              "cleared": "Cleared",
+              "status": "{title} | {difficulty} | {clearedLabel}: {tiles}"
+            },
+            "difficulty": {
+              "easy": "Easy",
+              "normal": "Normal",
+              "hard": "Hard"
+            },
+            "popup": {
+              "chain": "Chain {chain}!"
+            }
           },
           "minesweeper": {
             "name": "Minesweeper",

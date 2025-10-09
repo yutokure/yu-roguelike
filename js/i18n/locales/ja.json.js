@@ -537,7 +537,20 @@
           },
           "match3": {
             "name": "マッチ3",
-            "description": "3:+1 / 4:+3 / 5:+10、連鎖×1.5"
+            "description": "3:+1 / 4:+3 / 5:+10、連鎖×1.5",
+            "hud": {
+              "title": "マッチ3",
+              "cleared": "消去数",
+              "status": "{title} | {difficulty} | {clearedLabel}: {tiles}"
+            },
+            "difficulty": {
+              "easy": "かんたん",
+              "normal": "ふつう",
+              "hard": "むずかしい"
+            },
+            "popup": {
+              "chain": "{chain}連鎖！"
+            }
           },
           "minesweeper": {
             "name": "マインスイーパー",

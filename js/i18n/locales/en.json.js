@@ -11782,6 +11782,39 @@
           "chasing": "Chasing move"
         }
       },
+      "dungeon_td": {
+        "controls": {
+          "startWave": "Start Wave"
+        },
+        "hud": {
+          "hint": "Click a floor tile to place a turret (Shift+Click to upgrade). Enemies that reach the core reduce its durability.",
+          "wave": "Wave {currentFormatted}{suffix}",
+          "coins": "Funds {formatted} G",
+          "baseHp": "Core HP {valueFormatted}/{maxFormatted}",
+          "exp": "EXP Earned {formatted}"
+        },
+        "status": {
+          "tileUnavailable": "You can't place a turret on that tile.",
+          "insufficientFunds": "Not enough funds.",
+          "towerPlaced": "Turret placed.",
+          "upgradeInsufficientFunds": "Not enough funds to upgrade ({costFormatted} G).",
+          "towerUpgraded": "Upgraded turret to Lv{levelFormatted}.",
+          "noPath": "Unable to compute a valid path.",
+          "waveStarted": "Wave {waveFormatted} has begun!",
+          "allWavesCleared": "All waves defended! Bonus {bonusCoinsFormatted} G / EXP +{bonusXpFormatted}",
+          "waveCleared": "Defended Wave {waveFormatted}! Funds +{bonusCoinsFormatted} / EXP +{bonusXpFormatted}",
+          "coreDestroyed": "The core was destroyed… Wave failed.",
+          "fullClearBonus": "Perfect defense! Bonus EXP +{bonusFormatted}",
+          "coreBreached": "Enemies breached the core…",
+          "coreDamaged": "An enemy reached the core! Durability decreased.",
+          "apiUnavailable": "Dungeon API unavailable.",
+          "generatingStage": "Generating stage…",
+          "pathFailedRetry": "Failed to secure a path. Please reload.",
+          "ready": "Place turrets and press Start Wave.",
+          "stageGenerationFailed": "Stage generation failed.",
+          "upgradeHint": "Shift+Click to upgrade a turret."
+        }
+      },
       "imperial_realm": {
         "ui": {
           "logTitle": "Operations Log",

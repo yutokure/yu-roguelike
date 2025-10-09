@@ -11786,6 +11786,39 @@
           "chasing": "追い手"
         }
       },
+      "dungeon_td": {
+        "controls": {
+          "startWave": "ウェーブ開始"
+        },
+        "hud": {
+          "hint": "床タイルをクリックで砲塔を設置 (Shift+クリックで砲塔強化)。敵がコアに到達すると耐久が減ります。",
+          "wave": "Wave {currentFormatted}{suffix}",
+          "coins": "資金 {formatted} G",
+          "baseHp": "コア耐久 {valueFormatted}/{maxFormatted}",
+          "exp": "獲得EXP {formatted}"
+        },
+        "status": {
+          "tileUnavailable": "そのタイルには砲塔を設置できません",
+          "insufficientFunds": "資金が不足しています",
+          "towerPlaced": "砲塔を設置しました",
+          "upgradeInsufficientFunds": "強化に必要な資金が不足しています ({costFormatted} G)",
+          "towerUpgraded": "砲塔をLv{levelFormatted}に強化しました",
+          "noPath": "経路を構成できませんでした",
+          "waveStarted": "Wave {waveFormatted} が始まりました！",
+          "allWavesCleared": "全ウェーブ防衛成功！ボーナス {bonusCoinsFormatted}G / EXP +{bonusXpFormatted}",
+          "waveCleared": "Wave {waveFormatted} を防衛！ 資金+{bonusCoinsFormatted} / EXP +{bonusXpFormatted}",
+          "coreDestroyed": "コアが破壊されました…ウェーブ失敗",
+          "fullClearBonus": "完全防衛達成！追加ボーナスEXP +{bonusFormatted}",
+          "coreBreached": "敵がコアに侵入しました…",
+          "coreDamaged": "敵がコアに到達！耐久が減少",
+          "apiUnavailable": "ダンジョンAPIを利用できません",
+          "generatingStage": "ステージ生成中…",
+          "pathFailedRetry": "経路の確保に失敗しました。再読み込みしてください。",
+          "ready": "砲塔を配置してウェーブ開始を押してください",
+          "stageGenerationFailed": "ステージ生成に失敗しました",
+          "upgradeHint": "Shift+クリックで砲塔を強化できます"
+        }
+      },
       "imperial_realm": {
         "ui": {
           "logTitle": "作戦ログ",

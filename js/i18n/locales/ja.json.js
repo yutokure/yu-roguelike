@@ -874,7 +874,27 @@
           },
           "virus_buster": {
             "name": "ドクターマリオ風",
-            "description": "カプセルで4つ揃え！ウイルス退治でEXP獲得"
+            "description": "カプセルで4つ揃え！ウイルス退治でEXP獲得",
+            "title": "ドクターマリオ風",
+            "hud": {
+              "level": "レベル {level}",
+              "viruses": "ウイルス {count}",
+              "cleared": "除去数 {count}",
+              "chainLabel": "{chain}連鎖！",
+              "chainNice": "ナイス！",
+              "chainVirus": "ウイルス x{count}",
+              "stageClear": "ステージクリア！",
+              "controls": "操作: ←→移動 / ↓ソフトドロップ / ↑またはX回転 / Spaceハードドロップ / Rリセット"
+            },
+            "floating": {
+              "drop": "ドロップ！",
+              "virus": "ウイルス x{count}",
+              "stageClear": "ステージクリア！"
+            },
+            "status": {
+              "gameOver": "ゲームオーバー",
+              "restartHint": "Rでリスタート"
+            }
           },
           "sichuan": {
             "name": "四川省パズル",

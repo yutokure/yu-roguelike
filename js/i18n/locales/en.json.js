@@ -859,7 +859,15 @@
           },
           "floor_descent": {
             "name": "Floor Descent Survival",
-            "description": "Descend away from a spiked ceiling, using platforms to survive for EXP."
+            "description": "Descend away from a spiked ceiling, using platforms to survive for EXP.",
+            "hud": {
+              "life": "LIFE",
+              "floor": "Floor {floor}",
+              "best": "Best {floor}",
+              "gameOver": "Game Over",
+              "reachedFloor": "Reached Floor {floor}",
+              "retryHint": "Press Space to retry"
+            }
           },
           "treasure_hunt": {
             "name": "Treasure Hunt Dungeon",

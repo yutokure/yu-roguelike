@@ -859,7 +859,15 @@
           },
           "floor_descent": {
             "name": "フロア降りサバイバル",
-            "description": "迫る針天井から逃げながら下へ進む縦スクロールアクション。足場ギミックで差をつけよう"
+            "description": "迫る針天井から逃げながら下へ進む縦スクロールアクション。足場ギミックで差をつけよう",
+            "hud": {
+              "life": "ライフ",
+              "floor": "現在{floor}F",
+              "best": "最高{floor}F",
+              "gameOver": "ゲームオーバー",
+              "reachedFloor": "{floor}Fまで到達",
+              "retryHint": "スペースキーでリトライ"
+            }
           },
           "treasure_hunt": {
             "name": "宝探しダンジョン",

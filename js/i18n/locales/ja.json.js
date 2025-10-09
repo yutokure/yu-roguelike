@@ -11175,6 +11175,18 @@
           }
         }
       },
+      "invaders": {
+        "hud": {
+          "livesLabel": "残機",
+          "killsLabel": "撃破",
+          "waveLabel": "ウェーブ",
+          "statusLine": "{livesLabel}:{lives}  {killsLabel}:{kills}  {waveLabel}:{wave}"
+        },
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Rで再開/再起動"
+        }
+      },
       "forced_scroll_jump": {
         "hud": {
           "score": "スコア: {score}",

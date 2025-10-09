@@ -10819,6 +10819,137 @@
     },
 
     "minigame": {
+      "login_bonus": {
+        "title": "Login Bonus Calendar",
+        "subtitle": "Log in daily to claim rewards. Your progress is saved automatically.",
+        "summary": {
+          "total": "Total claims: {countFormatted}",
+          "month": "Claims in {monthName} {year}: {countFormatted}"
+        },
+        "calendar": {
+          "monthLabel": "{monthName} {year}",
+          "weekdayShort": {
+            "sun": "Sun",
+            "mon": "Mon",
+            "tue": "Tue",
+            "wed": "Wed",
+            "thu": "Thu",
+            "fri": "Fri",
+            "sat": "Sat"
+          },
+          "badge": {
+            "claimed": "Claimed"
+          }
+        },
+        "buttons": {
+          "claimToday": "Claim today's bonus"
+        },
+        "detail": {
+          "descriptionTemplate": "{description}\n{effect}",
+          "status": {
+            "claimed": "Claimed ({time})",
+            "today": "You can claim this today.",
+            "expired": "Expired. Only previously claimed entries remain recorded.",
+            "locked": "Not yet available. Please wait until the login date."
+          }
+        },
+        "messages": {
+          "alreadyClaimed": "You've already claimed this bonus.",
+          "onlyToday": "Only today's bonus can be claimed.",
+          "grant": {
+            "header": "Claimed the bonus for {date}.",
+            "exp": "Earned +{amount} EXP.",
+            "itemReceived": "Received {item} x{amount}.",
+            "itemFailed": "Couldn't receive {item} (host API unsupported?).",
+            "itemGeneric": "Received an item reward.",
+            "itemsReceived": "Received the following items: {summary}",
+            "itemsFailed": "The following items couldn't be granted because the host API is unsupported: {summary}",
+            "spFilled": "SP fully recovered.",
+            "spFillFailed": "SP was already full or the host API doesn't support it.",
+            "spRecovered": "SP recovered by {amount}.",
+            "spReduced": "SP decreased by {amount}.",
+            "spNoChange": "SP didn't change.",
+            "spChanged": "SP will change.",
+            "default": "Reward claimed.",
+            "specialTag": "Special Event: {tag}"
+          }
+        },
+        "describe": {
+          "exp": "EXP +{amount}",
+          "itemQuantity": "{item} x{amount} can be claimed.",
+          "itemSingle": "You can claim {item}.",
+          "itemGeneric": "You can claim item rewards.",
+          "itemsList": "You can claim the following items: {summary}",
+          "spFill": "SP is fully restored.",
+          "spRecover": "SP recovers by {amount}.",
+          "spReduce": "SP decreases by {amount}.",
+          "spChange": "SP will change."
+        },
+        "format": {
+          "itemSummary": "{item} x{amount}",
+          "itemSummarySeparator": " / ",
+          "longDate": "{formatted}"
+        },
+        "items": {
+          "potion30": "Healing Item",
+          "hpBoost": "HP Boost",
+          "atkBoost": "Attack Boost",
+          "defBoost": "Defense Boost"
+        },
+        "rewards": {
+          "exp333": {
+            "label": "EXP {amount}",
+            "description": "Log in to receive {amount} EXP."
+          },
+          "exp777": {
+            "label": "EXP {amount}",
+            "description": "Log in to receive {amount} EXP."
+          },
+          "exp2000": {
+            "label": "EXP {amount} ({levels} level ups)",
+            "description": "Jump ahead with {amount} EXP!"
+          },
+          "heal10": {
+            "label": "Healing Items x{amount}",
+            "description": "Grab {amount} {item} at once. Perfect prep before an adventure."
+          },
+          "item_set": {
+            "label": "Item Set ({amount} of each)",
+            "description": "Receive {amount} of each core item."
+          },
+          "sp_full": {
+            "label": "Full SP Restore",
+            "description": "Fully recover your SP and unleash your skills!"
+          },
+          "exp1300": {
+            "label": "EXP {amount}",
+            "description": "Another boost of {amount} EXP for growth."
+          },
+          "unknown": {
+            "label": "Unknown Reward",
+            "description": "The reward could not be resolved."
+          }
+        },
+        "specialRewards": {
+          "monthEnd": {
+            "label": "Month-End Bonus EXP {amount}",
+            "description": "Log in at the end of the month for {amount} EXP! Start next month strong."
+          },
+          "newYear": {
+            "label": "New Year Special EXP {amount}",
+            "description": "January 1st celebration! Claim {amount} EXP."
+          },
+          "sunday": {
+            "label": "Healing Items x{amount}",
+            "description": "Every Sunday, get {amount} {item}!"
+          }
+        },
+        "specialTags": {
+          "monthEnd": "Month-End Special",
+          "newYear": "New Year Limited",
+          "sunday": "Sunday Bonus"
+        }
+      },
       "exceler": {
         "header": {
           "title": "Exceler Spreadsheet",

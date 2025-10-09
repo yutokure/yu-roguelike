@@ -10819,6 +10819,137 @@
     },
 
     "minigame": {
+      "login_bonus": {
+        "title": "ログインボーナスカレンダー",
+        "subtitle": "毎日ログインして特典を獲得しましょう。獲得情報は自動保存されます。",
+        "summary": {
+          "total": "累計受け取り: {countFormatted}回",
+          "month": "{year}年{month}月の受け取り: {countFormatted}回"
+        },
+        "calendar": {
+          "monthLabel": "{year}年{month}月",
+          "weekdayShort": {
+            "sun": "日",
+            "mon": "月",
+            "tue": "火",
+            "wed": "水",
+            "thu": "木",
+            "fri": "金",
+            "sat": "土"
+          },
+          "badge": {
+            "claimed": "受取済み"
+          }
+        },
+        "buttons": {
+          "claimToday": "今日のボーナスを受け取る"
+        },
+        "detail": {
+          "descriptionTemplate": "{description}\n{effect}",
+          "status": {
+            "claimed": "受取済み ({time})",
+            "today": "本日受け取れます。",
+            "expired": "期間終了。受け取り済みの場合のみ記録が残ります。",
+            "locked": "まだ受け取れません。ログイン可能日までお待ちください。"
+          }
+        },
+        "messages": {
+          "alreadyClaimed": "既に受け取り済みです。",
+          "onlyToday": "本日のボーナスのみ受け取れます。",
+          "grant": {
+            "header": "{date} のボーナスを受け取りました。",
+            "exp": "経験値 +{amount} を獲得。",
+            "itemReceived": "{item} x{amount} を獲得しました。",
+            "itemFailed": "{item}を受け取れませんでした（API未対応の可能性があります）。",
+            "itemGeneric": "アイテム報酬を受け取りました。",
+            "itemsReceived": "以下のアイテムを獲得しました: {summary}",
+            "itemsFailed": "以下のアイテム付与はホストAPI未対応のため反映されませんでした: {summary}",
+            "spFilled": "SPが最大まで回復しました。",
+            "spFillFailed": "SPは既に最大か、APIが未対応でした。",
+            "spRecovered": "SPが{amount}回復しました。",
+            "spReduced": "SPが{amount}減少しました。",
+            "spNoChange": "SPに変化はありませんでした。",
+            "spChanged": "SPが変化します。",
+            "default": "報酬を受け取りました。",
+            "specialTag": "特別イベント: {tag}"
+          }
+        },
+        "describe": {
+          "exp": "経験値 +{amount}",
+          "itemQuantity": "{item}を{amount}個受け取れます。",
+          "itemSingle": "{item}を受け取れます。",
+          "itemGeneric": "アイテム報酬を受け取れます。",
+          "itemsList": "以下のアイテムを受け取れます: {summary}",
+          "spFill": "SPが最大まで回復します。",
+          "spRecover": "SPが{amount}回復します。",
+          "spReduce": "SPが{amount}減少します。",
+          "spChange": "SPが変化します。"
+        },
+        "format": {
+          "itemSummary": "{item} x{amount}",
+          "itemSummarySeparator": " / ",
+          "longDate": "{formatted}"
+        },
+        "items": {
+          "potion30": "回復アイテム",
+          "hpBoost": "HPブースト",
+          "atkBoost": "攻撃力ブースト",
+          "defBoost": "防御力ブースト"
+        },
+        "rewards": {
+          "exp333": {
+            "label": "EXP{amount}",
+            "description": "ログインで経験値{amount}を獲得できます。"
+          },
+          "exp777": {
+            "label": "EXP{amount}",
+            "description": "ログインで経験値{amount}を獲得できます。"
+          },
+          "exp2000": {
+            "label": "EXP{amount}（{levels}レベルアップ）",
+            "description": "経験値{amount}で一気にレベルアップ！"
+          },
+          "heal10": {
+            "label": "回復アイテムx{amount}",
+            "description": "{item}をまとめて{amount}個獲得。冒険前に備えましょう。"
+          },
+          "item_set": {
+            "label": "アイテムセット（全種類{amount}個ずつ）",
+            "description": "主要アイテムを各{amount}個ずつ受け取れます。"
+          },
+          "sp_full": {
+            "label": "SP満タン",
+            "description": "SPが最大まで回復します。スキル連発のチャンス！"
+          },
+          "exp1300": {
+            "label": "EXP{amount}",
+            "description": "経験値{amount}でさらなる成長。"
+          },
+          "unknown": {
+            "label": "不明な報酬",
+            "description": "報酬内容を取得できませんでした。"
+          }
+        },
+        "specialRewards": {
+          "monthEnd": {
+            "label": "月末ボーナス EXP{amount}",
+            "description": "月末ログインで経験値{amount}！来月への準備も万端です。"
+          },
+          "newYear": {
+            "label": "新年スペシャル EXP{amount}",
+            "description": "1月1日は大盤振る舞い！経験値{amount}を獲得できます。"
+          },
+          "sunday": {
+            "label": "回復アイテムx{amount}",
+            "description": "毎週日曜日は{item}を{amount}個プレゼント！"
+          }
+        },
+        "specialTags": {
+          "monthEnd": "月末スペシャル",
+          "newYear": "新年限定",
+          "sunday": "サンデーボーナス"
+        }
+      },
       "exceler": {
         "header": {
           "title": "表計算エクセラー",

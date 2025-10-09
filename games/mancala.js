@@ -222,6 +222,32 @@
     const multiplier = XP_MULTIPLIER[difficulty] || 1;
     const initialSeeds = INITIAL_SEEDS[difficulty] || INITIAL_SEEDS.NORMAL;
 
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'mancala' })
+      : null);
+    const text = (key, fallback, params) => {
+      const fallbackText = typeof fallback === 'function' ? fallback() : fallback;
+      if (localization && typeof localization.t === 'function'){
+        try {
+          return localization.t(key, fallbackText, params);
+        } catch (error){
+          console.warn('[MiniExp:Mancala] Failed to translate key', key, error);
+        }
+      }
+      return fallbackText ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try {
+          return localization.formatNumber(value, options);
+        } catch (error){
+          console.warn('[MiniExp:Mancala] Failed to format number', value, error);
+        }
+      }
+      if (value == null) return '';
+      return String(value);
+    };
+
     const state = {
       pits: {
         player: new Array(PIT_COUNT).fill(initialSeeds),
@@ -236,6 +262,11 @@
     };
 
     let aiTimer = null;
+    let statusState = null;
+    let detachLocale = null;
+
+    const storeLabels = { player: null, ai: null };
+    const pitLabelRefs = { player: [], ai: [] };
 
     root.innerHTML = '';
     root.classList.add('mini-mancala-root');
@@ -247,18 +278,27 @@
     const scoreEl = document.createElement('div');
     scoreEl.className = 'mancala-score';
     const playerStoreBadge = document.createElement('span');
-    playerStoreBadge.innerHTML = 'あなた: <strong>0</strong>';
+    const playerStoreLabel = document.createElement('span');
+    const playerStoreSeparator = document.createTextNode(': ');
+    const playerStoreValue = document.createElement('strong');
     const aiStoreBadge = document.createElement('span');
-    aiStoreBadge.innerHTML = 'AI: <strong>0</strong>';
+    const aiStoreLabel = document.createElement('span');
+    const aiStoreSeparator = document.createTextNode(': ');
+    const aiStoreValue = document.createElement('strong');
+    playerStoreBadge.append(playerStoreLabel, playerStoreSeparator, playerStoreValue);
+    aiStoreBadge.append(aiStoreLabel, aiStoreSeparator, aiStoreValue);
+    playerStoreValue.textContent = '0';
+    aiStoreValue.textContent = '0';
+    updateScoreLabels();
     scoreEl.append(playerStoreBadge, aiStoreBadge);
 
     const actions = document.createElement('div');
     actions.className = 'mancala-actions';
     const restartBtn = document.createElement('button');
-    restartBtn.textContent = 'リスタート';
+    restartBtn.textContent = text('actions.restart', 'Restart');
     restartBtn.className = 'mini';
     const hintBtn = document.createElement('button');
-    hintBtn.textContent = 'ヒント';
+    hintBtn.textContent = text('actions.hint', 'Hint');
     hintBtn.className = 'mini';
     actions.append(restartBtn, hintBtn);
 
@@ -267,9 +307,9 @@
     const board = document.createElement('div');
     board.className = 'mancala-board';
 
-    const storeAi = createStore('AI');
+    const storeAi = createStore('ai');
     storeAi.classList.add('ai');
-    const storePlayer = createStore('あなた');
+    const storePlayer = createStore('player');
     storePlayer.classList.add('player');
 
     const pitsArea = document.createElement('div');
@@ -307,12 +347,13 @@
 
     root.append(info, board, historyBox);
 
-    function createStore(label){
+    function createStore(role){
       const el = document.createElement('div');
       el.className = 'store';
       const name = document.createElement('div');
       name.className = 'label';
-      name.textContent = label;
+      storeLabels[role] = name;
+      updateStoreLabel(role);
       const count = document.createElement('div');
       count.className = 'count';
       count.textContent = '0';
@@ -327,7 +368,8 @@
       btn.dataset.index = String(index);
       const sub = document.createElement('div');
       sub.className = 'sub';
-      sub.textContent = owner === 'player' ? `P${index + 1}` : `AI${index + 1}`;
+      pitLabelRefs[owner][index] = sub;
+      updatePitLabel(owner, index);
       btn.appendChild(sub);
       btn.addEventListener('click', () => {
         if (!state.running || state.locked || state.current !== 'player') return;
@@ -347,7 +389,7 @@
       state.locked = false;
       state.history = [];
       state.ended = false;
-      statusEl.textContent = 'あなたのターン — ピットを選んで種を蒔こう';
+      setStatus('status.start', 'Your turn — pick a pit to sow seeds');
       updateBoard();
       updateHistory();
       scheduleAi();
@@ -356,17 +398,17 @@
     function updateBoard(){
       for (let i = 0; i < PIT_COUNT; i++){
         const playerBtn = pitButtons.player[i];
-        playerBtn.dataset.seeds = String(state.pits.player[i]);
+        playerBtn.dataset.seeds = formatNumber(state.pits.player[i]);
         playerBtn.classList.toggle('disabled', state.pits.player[i] === 0);
         playerBtn.classList.toggle('player-turn', state.current === 'player' && !state.locked && state.pits.player[i] > 0 && !state.ended);
         const aiBtn = pitButtons.ai[i];
-        aiBtn.dataset.seeds = String(state.pits.ai[i]);
+        aiBtn.dataset.seeds = formatNumber(state.pits.ai[i]);
         aiBtn.classList.toggle('disabled', true);
       }
-      storePlayer.querySelector('.count').textContent = state.stores.player;
-      storeAi.querySelector('.count').textContent = state.stores.ai;
-      playerStoreBadge.querySelector('strong').textContent = state.stores.player;
-      aiStoreBadge.querySelector('strong').textContent = state.stores.ai;
+      storePlayer.querySelector('.count').textContent = formatNumber(state.stores.player);
+      storeAi.querySelector('.count').textContent = formatNumber(state.stores.ai);
+      playerStoreValue.textContent = formatNumber(state.stores.player);
+      aiStoreValue.textContent = formatNumber(state.stores.ai);
     }
 
     function updateHistory(){
@@ -375,9 +417,26 @@
         const li = document.createElement('li');
         const who = document.createElement('span');
         who.className = 'who';
-        who.textContent = entry.who;
+        const whoKey = entry.side === 'player' ? 'history.who.player' : 'history.who.ai';
+        const whoFallback = entry.side === 'player' ? 'You' : 'AI';
+        who.textContent = text(whoKey, whoFallback);
         const detail = document.createElement('span');
-        detail.textContent = entry.detail;
+        const detailParts = [];
+        const pitNumberText = formatNumber(entry.pitIndex + 1);
+        detailParts.push(text('history.entry.pit', () => `Pit ${pitNumberText}`, { number: pitNumberText }));
+        if (entry.storeGain){
+          const storeGainText = formatNumber(entry.storeGain);
+          detailParts.push(text('history.entry.store', () => `Store +${storeGainText}`, { amount: storeGainText }));
+        }
+        if (entry.captured){
+          const capturedText = formatNumber(entry.captured);
+          detailParts.push(text('history.entry.capture', () => `Captured ${capturedText}`, { amount: capturedText }));
+        }
+        if (entry.extraTurn){
+          detailParts.push(text('history.entry.extraTurn', 'Extra turn'));
+        }
+        const separator = text('history.entry.separator', ' / ');
+        detail.textContent = detailParts.join(separator || ' / ');
         li.append(who, detail);
         historyList.appendChild(li);
       }
@@ -414,7 +473,7 @@
       }
       if (result.extraTurn){
         state.current = side;
-        statusEl.textContent = side === 'player' ? 'もう一度手番！別のピットを選ぼう' : 'AI が連続手番...';
+        setStatus(side === 'player' ? 'status.extraTurn.player' : 'status.extraTurn.ai', side === 'player' ? 'Extra turn! Pick another pit.' : 'AI gets another turn...');
         state.locked = false;
         updateBoard();
         if (side === 'ai') scheduleAi();
@@ -422,7 +481,7 @@
       }
       state.current = side === 'player' ? 'ai' : 'player';
       state.locked = false;
-      statusEl.textContent = state.current === 'player' ? 'あなたのターン' : 'AI が考えています...';
+      setStatus(state.current === 'player' ? 'status.turn.player' : 'status.turn.aiThinking', state.current === 'player' ? 'Your turn' : 'AI is thinking...');
       updateBoard();
       if (state.current === 'ai') scheduleAi();
     }
@@ -474,14 +533,82 @@
     }
 
     function recordHistory(side, index, result){
-      const label = side === 'player' ? 'YOU' : 'AI';
-      const detailParts = [];
-      detailParts.push(`${index + 1}番ピット`);
-      if (result.seedsToStore) detailParts.push(`ストア+${result.seedsToStore}`);
-      if (result.captured) detailParts.push(`捕獲${result.captured}`);
-      if (result.extraTurn) detailParts.push('追加ターン');
-      state.history.push({ who: label, detail: detailParts.join(' / ') });
+      state.history.push({
+        side,
+        pitIndex: index,
+        storeGain: result.seedsToStore,
+        captured: result.captured,
+        extraTurn: result.extraTurn
+      });
       updateHistory();
+    }
+
+    function updateScoreLabels(){
+      playerStoreLabel.textContent = text('hud.score.player', 'You');
+      aiStoreLabel.textContent = text('hud.score.ai', 'AI');
+      const separator = text('hud.score.separator', ': ');
+      playerStoreSeparator.textContent = separator;
+      aiStoreSeparator.textContent = separator;
+    }
+
+    function updateStoreLabel(role){
+      const label = storeLabels[role];
+      if (!label) return;
+      const key = role === 'player' ? 'board.store.player' : 'board.store.ai';
+      const fallback = role === 'player' ? 'You' : 'AI';
+      label.textContent = text(key, fallback);
+    }
+
+    function updatePitLabel(owner, index){
+      const sub = pitLabelRefs[owner]?.[index];
+      if (!sub) return;
+      const key = owner === 'player' ? 'board.pitLabel.player' : 'board.pitLabel.ai';
+      const numberText = formatNumber(index + 1);
+      const fallback = () => owner === 'player' ? `P${numberText}` : `AI${numberText}`;
+      sub.textContent = text(key, fallback, { index: numberText });
+    }
+
+    function updatePitLabels(){
+      for (let i = 0; i < PIT_COUNT; i++){
+        if (pitLabelRefs.player[i]) updatePitLabel('player', i);
+        if (pitLabelRefs.ai[i]) updatePitLabel('ai', i);
+      }
+    }
+
+    function applyStatus(){
+      if (!statusState) return;
+      statusEl.textContent = text(statusState.key, statusState.fallback, statusState.params);
+    }
+
+    function setStatus(key, fallback, params){
+      statusState = { key, fallback, params };
+      applyStatus();
+    }
+
+    function refreshLocalization(){
+      updateScoreLabels();
+      updateStoreLabel('player');
+      updateStoreLabel('ai');
+      updatePitLabels();
+      restartBtn.textContent = text('actions.restart', 'Restart');
+      hintBtn.textContent = text('actions.hint', 'Hint');
+      applyStatus();
+      updateBoard();
+      updateHistory();
+    }
+
+    if (localization && typeof localization.onChange === 'function'){
+      try {
+        detachLocale = localization.onChange(() => {
+          try {
+            refreshLocalization();
+          } catch (error){
+            console.warn('[MiniExp:Mancala] Failed to refresh localization', error);
+          }
+        });
+      } catch (error){
+        console.warn('[MiniExp:Mancala] Failed to attach localization listener', error);
+      }
     }
 
     function flashCapture(index){
@@ -515,17 +642,24 @@
       state.locked = true;
       clearTimeout(aiTimer);
       aiTimer = null;
-      let message;
       if (result.winner === 'draw'){
-        message = `引き分け！ ${state.stores.player} 対 ${state.stores.ai}`;
+        setStatus('status.result.draw', () => `Draw! ${formatNumber(state.stores.player)} to ${formatNumber(state.stores.ai)}`, {
+          player: formatNumber(state.stores.player),
+          ai: formatNumber(state.stores.ai)
+        });
       } else if (result.winner === 'player'){
-        message = `勝利！ ${state.stores.player} 対 ${state.stores.ai}`;
+        setStatus('status.result.win', () => `Victory! ${formatNumber(state.stores.player)} to ${formatNumber(state.stores.ai)}`, {
+          player: formatNumber(state.stores.player),
+          ai: formatNumber(state.stores.ai)
+        });
         const base = 22 + Math.min(40, result.diff * 2.5);
         awardXp(Math.round(base * multiplier));
       } else {
-        message = `敗北… ${state.stores.player} 対 ${state.stores.ai}`;
+        setStatus('status.result.loss', () => `Defeat... ${formatNumber(state.stores.player)} to ${formatNumber(state.stores.ai)}`, {
+          player: formatNumber(state.stores.player),
+          ai: formatNumber(state.stores.ai)
+        });
       }
-      statusEl.textContent = message;
     }
 
     function scheduleAi(){
@@ -701,7 +835,9 @@
       const btn = pitButtons.player[top.idx];
       btn.classList.add('flash');
       setTimeout(() => btn.classList.remove('flash'), 1000);
-      statusEl.textContent = `ヒント: ${top.idx + 1}番ピットが好手です`;
+      const pitNumber = top.idx + 1;
+      const pitNumberText = formatNumber(pitNumber);
+      setStatus('status.hint', () => `Hint: Pit ${pitNumberText} is promising`, { pit: pitNumberText });
     }
 
     restartBtn.addEventListener('click', onRestart);
@@ -733,6 +869,10 @@
     function destroy(){
       stop();
       window.removeEventListener('keydown', handleKey);
+      if (typeof detachLocale === 'function'){
+        try { detachLocale(); } catch (error){ console.warn('[MiniExp:Mancala] Failed to detach localization listener', error); }
+        detachLocale = null;
+      }
       root.innerHTML = '';
       root.classList.remove('mini-mancala-root');
     }

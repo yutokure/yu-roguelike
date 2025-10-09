@@ -122,10 +122,54 @@
     return Number(num).toString();
   }
 
+
   function create(root, awardXp, opts){
     if (!root) throw new Error('Calculation Combo requires a container');
 
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: GAME_ID })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function'){
+        try { return new Intl.NumberFormat(undefined, options).format(value); } catch {}
+      }
+      if (value != null && typeof value.toLocaleString === 'function'){
+        try { return value.toLocaleString(); } catch {}
+      }
+      return String(value ?? '');
+    };
+    const formatExpValue = (value) => {
+      const numeric = Number(value) || 0;
+      const hasFraction = Math.abs(numeric - Math.trunc(numeric)) > 1e-6;
+      return formatNumber(numeric, {
+        minimumFractionDigits: hasFraction ? 1 : 0,
+        maximumFractionDigits: hasFraction ? 1 : 0
+      });
+    };
+    const getDifficultyLabel = (value) => {
+      switch (value){
+        case 'EASY':
+          return text('.difficulty.easy', 'EASY');
+        case 'HARD':
+          return text('.difficulty.hard', 'HARD');
+        case 'NORMAL':
+        default:
+          return text('.difficulty.normal', 'NORMAL');
+      }
+    };
+    const getLocalizedName = () => text('.name', GAME_NAME);
+    let detachLocale = null;
 
     const state = {
       running: false,
@@ -186,7 +230,10 @@
 
     const title = document.createElement('h2');
     title.className = 'calc-combo-title';
-    title.textContent = `${GAME_NAME} (${difficulty})`;
+    title.textContent = text('.title', () => `${GAME_NAME} (${difficulty})`, {
+      name: getLocalizedName(),
+      difficulty: getDifficultyLabel(difficulty)
+    });
 
     const info = document.createElement('div');
     info.className = 'calc-combo-info';
@@ -200,13 +247,13 @@
       valueSpan.textContent = value;
       chip.appendChild(labelSpan);
       chip.appendChild(valueSpan);
-      return { chip, value: valueSpan };
+      return { chip, label: labelSpan, value: valueSpan };
     }
 
-    const chipCorrect = makeChip('正解', '0');
-    const chipMistake = makeChip('ミス', '0');
-    const chipCombo = makeChip('コンボ', '0');
-    const chipXp = makeChip('累計EXP', '0');
+    const chipCorrect = makeChip(text('.stats.correct', '正解'), '0');
+    const chipMistake = makeChip(text('.stats.mistake', 'ミス'), '0');
+    const chipCombo = makeChip(text('.stats.combo', 'コンボ'), '0');
+    const chipXp = makeChip(text('.stats.xp', '累計EXP'), '0');
 
     info.appendChild(chipCorrect.chip);
     info.appendChild(chipMistake.chip);
@@ -224,7 +271,7 @@
 
     const questionText = document.createElement('p');
     questionText.className = 'calc-combo-question';
-    questionText.textContent = '準備中…';
+    questionText.textContent = text('.question.loading', '準備中…');
 
     const timer = document.createElement('div');
     timer.className = 'calc-combo-timer';
@@ -245,19 +292,19 @@
     input.type = 'number';
     input.inputMode = 'numeric';
     input.autocomplete = 'off';
-    input.placeholder = '答えを入力';
+    input.placeholder = text('.input.answerPlaceholder', '答えを入力');
 
     const submit = document.createElement('button');
     submit.type = 'submit';
     submit.className = 'calc-combo-submit';
-    submit.textContent = '回答';
+    submit.textContent = text('.buttons.submit', '回答');
 
     form.appendChild(input);
     form.appendChild(submit);
 
     const shortcuts = document.createElement('div');
     shortcuts.className = 'calc-combo-shortcuts';
-    shortcuts.textContent = 'Enterで回答 / Escでスキップ';
+    shortcuts.textContent = text('.shortcuts.submitOrSkip', 'Enterで回答 / Escでスキップ');
 
     footer.appendChild(form);
     footer.appendChild(shortcuts);
@@ -270,7 +317,7 @@
     const history = document.createElement('div');
     history.className = 'calc-combo-history';
     const historyTitle = document.createElement('h3');
-    historyTitle.textContent = '履歴 (直近5問)';
+    historyTitle.textContent = text('.history.title', () => `履歴 (直近${MAX_HISTORY}問)`, { count: MAX_HISTORY });
     const historyList = document.createElement('ul');
     history.appendChild(historyTitle);
     history.appendChild(historyList);
@@ -287,40 +334,71 @@
       chipCorrect.value.textContent = formatNumber(state.totalCorrect);
       chipMistake.value.textContent = formatNumber(state.totalMistake);
       chipCombo.value.textContent = formatNumber(state.combo);
-      chipXp.value.textContent = state.totalXp.toFixed(1).replace(/\.0$/, '');
+      chipXp.value.textContent = formatExpValue(state.totalXp);
     }
 
-    function addHistory(entry){
-      state.history.unshift(entry);
-      state.history = state.history.slice(0, MAX_HISTORY);
+    function formatHistoryLabel(entry){
+      if (!entry) return '';
+      switch (entry.type){
+        case 'correct':
+          return text('.history.correctEntry', () => `○ ${entry.expression}`, { expression: entry.expression });
+        case 'mistake':
+          return text('.history.mistakeEntry', () => `× ${entry.expression} = ${formatNumber(entry.answer)}`, {
+            expression: entry.expression,
+            answer: formatNumber(entry.answer)
+          });
+        case 'streak':
+          return text('.history.streakEntry', () => `★ ${entry.combo}連続ボーナス`, { combo: entry.combo });
+        default:
+          return entry.label || '';
+      }
+    }
+
+    function formatHistoryExp(entry){
+      if (!entry) return { text: '', className: 'neutral' };
+      const value = Number(entry.exp) || 0;
+      if (value > 0){
+        return {
+          className: 'gain',
+          text: text('.history.gain', () => `+${formatExpValue(value)} EXP`, { value: formatExpValue(value) })
+        };
+      }
+      if (value < 0){
+        return {
+          className: 'loss',
+          text: text('.history.loss', () => `${formatExpValue(value)} EXP`, { value: formatExpValue(value) })
+        };
+      }
+      return {
+        className: 'neutral',
+        text: text('.history.neutral', '±0 EXP')
+      };
+    }
+
+    function renderHistory(){
       historyList.innerHTML = '';
       for (const item of state.history){
         const li = document.createElement('li');
         const left = document.createElement('span');
-        left.textContent = item.label;
+        left.textContent = formatHistoryLabel(item);
         const right = document.createElement('span');
-        let className = 'neutral';
-        if (item.exp > 0){
-          className = 'gain';
-        } else if (item.exp < 0){
-          className = 'loss';
-        }
-        right.className = `calc-combo-exp ${className}`;
-        if (item.exp > 0){
-          right.textContent = `+${item.exp.toFixed(1).replace(/\.0$/, '')} EXP`;
-        } else if (item.exp < 0){
-          right.textContent = `${item.exp.toFixed(1)} EXP`;
-        } else {
-          right.textContent = '±0 EXP';
-        }
+        const expMeta = formatHistoryExp(item);
+        right.className = `calc-combo-exp ${expMeta.className}`;
+        right.textContent = expMeta.text;
         li.appendChild(left);
         li.appendChild(right);
         historyList.appendChild(li);
       }
     }
 
-    function showPop(text){
-      pop.textContent = text;
+    function addHistory(entry){
+      state.history.unshift(entry);
+      state.history = state.history.slice(0, MAX_HISTORY);
+      renderHistory();
+    }
+
+    function showPop(message){
+      pop.textContent = message;
     }
 
     function clearFeedback(){
@@ -343,7 +421,7 @@
       const q = generateQuestion(difficulty, state.lastType);
       state.question = q;
       state.lastType = q.type;
-      questionText.textContent = `${q.text} = ?`;
+      questionText.textContent = text('.question.prompt', () => `${q.text} = ?`, { expression: q.text });
       input.value = '';
       input.focus({ preventScroll: true });
       timerBar.style.width = '100%';
@@ -369,16 +447,23 @@
       const actualGain = typeof awarded === 'number' ? awarded : totalGain;
       state.totalXp += Number(actualGain) || 0;
       state.lastAward = actualGain;
-      addHistory({ label: `○ ${question.text}`, exp: actualGain });
-      showPop(`正解！ 基本${BASE_EXP} + コンボ${comboBonus} + スピード${speedBonus}`);
+      addHistory({ type: 'correct', expression: question.text, exp: actualGain });
+      showPop(text('.pop.correct', () => `正解！ 基本${formatExpValue(BASE_EXP)} + コンボ${formatExpValue(comboBonus)} + スピード${formatExpValue(speedBonus)}`, {
+        base: formatExpValue(BASE_EXP),
+        combo: formatExpValue(comboBonus),
+        speed: formatExpValue(speedBonus)
+      }));
       applyFeedback('correct');
       if (state.combo > 0 && state.combo % STREAK_BONUS_INTERVAL === 0){
         const streakGain = 10;
         const streakAward = awardXp ? awardXp(streakGain, { type: 'streak', combo: state.combo }) : streakGain;
         const actualStreakGain = typeof streakAward === 'number' ? streakAward : streakGain;
         state.totalXp += Number(actualStreakGain) || 0;
-        addHistory({ label: `★ ${state.combo}連続ボーナス`, exp: actualStreakGain });
-        showPop(`コンボ${state.combo}達成！ボーナス+${streakGain}`);
+        addHistory({ type: 'streak', combo: state.combo, exp: actualStreakGain });
+        showPop(text('.pop.streak', () => `コンボ${state.combo}達成！ボーナス+${formatExpValue(actualStreakGain)}`, {
+          combo: state.combo,
+          bonus: formatExpValue(actualStreakGain)
+        }));
         if (window && window.playSfx){
           try { window.playSfx('pickup'); } catch (_) {}
         }
@@ -389,8 +474,13 @@
     function handleMistake(correctAnswer){
       state.combo = 0;
       state.totalMistake += 1;
-      addHistory({ label: `× ${state.question ? state.question.text : ''} = ${correctAnswer}`, exp: 0 });
-      showPop(`正解は ${correctAnswer}`);
+      addHistory({
+        type: 'mistake',
+        expression: state.question ? state.question.text : '',
+        answer: correctAnswer,
+        exp: 0
+      });
+      showPop(text('.pop.mistake', () => `正解は ${formatNumber(correctAnswer)}`, { answer: formatNumber(correctAnswer) }));
       applyFeedback('wrong');
       updateHud();
     }
@@ -411,12 +501,12 @@
       if (!state.question || !state.running) return;
       const raw = input.value.trim();
       if (raw === ''){
-        showPop('入力してから回答してください');
+        showPop(text('.pop.emptyAnswer', '入力してから回答してください'));
         return;
       }
       const userAnswer = Number(raw);
       if (!Number.isFinite(userAnswer)){
-        showPop('数値で入力してください');
+        showPop(text('.pop.invalidAnswer', '数値で入力してください'));
         return;
       }
       const expected = state.question.answer;
@@ -500,7 +590,40 @@
 
     window.addEventListener('keydown', keyHandler, keyHandlerOptions);
 
+    function applyLocalization(){
+      const localizedName = getLocalizedName();
+      const difficultyLabel = getDifficultyLabel(difficulty);
+      title.textContent = text('.title', () => `${localizedName} (${difficultyLabel})`, {
+        name: localizedName,
+        difficulty: difficultyLabel
+      });
+      chipCorrect.label.textContent = text('.stats.correct', '正解');
+      chipMistake.label.textContent = text('.stats.mistake', 'ミス');
+      chipCombo.label.textContent = text('.stats.combo', 'コンボ');
+      chipXp.label.textContent = text('.stats.xp', '累計EXP');
+      input.placeholder = text('.input.answerPlaceholder', '答えを入力');
+      submit.textContent = text('.buttons.submit', '回答');
+      shortcuts.textContent = text('.shortcuts.submitOrSkip', 'Enterで回答 / Escでスキップ');
+      historyTitle.textContent = text('.history.title', () => `履歴 (直近${MAX_HISTORY}問)`, { count: MAX_HISTORY });
+      if (state.question){
+        questionText.textContent = text('.question.prompt', () => `${state.question.text} = ?`, { expression: state.question.text });
+      } else {
+        questionText.textContent = text('.question.loading', '準備中…');
+      }
+      renderHistory();
+    }
+
+    applyLocalization();
     updateHud();
+
+    if (!detachLocale && localization && typeof localization.onChange === 'function'){
+      try {
+        detachLocale = localization.onChange(() => {
+          applyLocalization();
+          updateHud();
+        });
+      } catch {}
+    }
 
     return {
       start(){
@@ -518,6 +641,10 @@
         stopLoop();
         form.removeEventListener('submit', formSubmitHandler);
         window.removeEventListener('keydown', keyHandler, keyHandlerOptions);
+        if (detachLocale){
+          try { detachLocale(); } catch {}
+          detachLocale = null;
+        }
         if (wrapper.parentNode){
           wrapper.parentNode.removeChild(wrapper);
         }

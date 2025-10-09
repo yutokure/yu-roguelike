@@ -12915,6 +12915,65 @@
           "distanceLabel": "DIST {distance}"
         }
       },
+      "backgammon": {
+        "actor": {
+          "player": "Player",
+          "ai": "AI"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "point": "Point {point}",
+        "bar": "Bar",
+        "dice": {
+          "none": "-"
+        },
+        "board": {
+          "playerOff": "{actor} OFF ({countFormatted})",
+          "aiOff": "{actor} OFF ({countFormatted})",
+          "barText": "{label}"
+        },
+        "action": {
+          "roll": "Roll Dice",
+          "rematch": "Rematch"
+        },
+        "badge": {
+          "difficulty": "Difficulty: {difficulty}",
+          "hits": "Hits: {hitsFormatted}",
+          "score": "Score: {scoreFormatted}"
+        },
+        "ui": {
+          "turn": "Turn: {actor}{status}",
+          "turnFinishedSuffix": " (Finished)",
+          "dice": {
+            "empty": "Dice: -",
+            "detail": "Dice: [{diceFormatted}] / Remaining [{remainingFormatted}]"
+          },
+          "bar": "{bar}: {playerLabel} {playerFormatted} / {aiLabel} {aiFormatted}",
+          "bearOff": {
+            "title": "Bear Off",
+            "summary": "{title}: {playerLabel} {playerFormatted} / {aiLabel} {aiFormatted}"
+          }
+        },
+        "log": {
+          "bearOff": "{actor} bears off from {fromLabel} ({dieFormatted})",
+          "barHit": "{actor} enters from {bar} to {toLabel} ({dieFormatted}): Hit!",
+          "barEntry": "{actor} enters from {bar} to {toLabel} ({dieFormatted})",
+          "moveHit": "{actor} moves {fromLabel} → {toLabel} ({dieFormatted}): Hit!",
+          "move": "{actor} moves {fromLabel} → {toLabel} ({dieFormatted})",
+          "win": {
+            "player": "Player wins! {rewardFormatted} EXP earned.",
+            "ai": "AI wins... Try again."
+          },
+          "aiDice": "AI dice: {diceFormatted}",
+          "aiNoMove": "AI cannot move.",
+          "playerDice": "Player dice: {diceFormatted}",
+          "noMoves": "No legal moves available.",
+          "newGame": "New game started. Player goes first."
+        }
+      },
       "runResult": {
         "defaultCause": "Game Over"
       },

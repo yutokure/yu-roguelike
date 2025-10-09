@@ -11056,6 +11056,28 @@
           }
         }
       },
+      "forced_scroll_jump": {
+        "hud": {
+          "score": "スコア: {score}",
+          "coinStreak": "CX連続: {streak}",
+          "lives": "ライフ: {lives}"
+        },
+        "overlay": {
+          "title": "ゲームオーバー",
+          "rank": "ランク: {rank}",
+          "summary": "スコア {score} / ボーナスXP +{bonus}",
+          "restart": "スペースかクリックでリスタート"
+        },
+        "rank": {
+          "extreme": "極めて",
+          "superb": "非常に",
+          "great": "すごい",
+          "notable": "かなり",
+          "fair": "わりと",
+          "steady": "そこそこ",
+          "modest": "まあまあ"
+        }
+      },
       "othello": {
         "hud": {
           "status": {

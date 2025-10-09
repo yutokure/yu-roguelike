@@ -21,8 +21,8 @@
       if (typeof fallback === 'function') return fallback(params);
       return fallback ?? '';
     };
-    const defaultTimerFallback = (params) => {
-      const seconds = Number(params?.seconds ?? 0);
+    const defaultTimerFallback = () => {
+      const seconds = Number(timerState?.params?.seconds ?? 0);
       return `残り ${seconds.toFixed(1)}s`;
     };
     const timerState = {

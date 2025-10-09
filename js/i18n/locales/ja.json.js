@@ -444,7 +444,65 @@
           },
           "shogi": {
             "name": "将棋",
-            "description": "持ち駒と成りを駆使する本格将棋。指し手/捕獲/王手でEXP"
+            "description": "持ち駒と成りを駆使する本格将棋。指し手/捕獲/王手でEXP",
+            "ui": {
+              "title": "将棋",
+              "subtitle": "MiniExp版",
+              "legend": "指し手:+{moveExpFormatted}EXP / 持ち駒投入:+{dropExpFormatted}EXP / 捕獲でボーナス / 成り:+{promoteExpFormatted}EXP / 王手:+{checkExpFormatted}EXP / 勝利ボーナスあり",
+              "hands": {
+                "aiLabel": "先手 (CPU)",
+                "playerLabel": "後手 (あなた)",
+                "empty": "なし",
+                "chip": "{piece}×{countFormatted}",
+                "total": "{countFormatted}枚",
+                "totalNone": "なし"
+              },
+              "actions": {
+                "restart": "リスタート"
+              },
+              "confirm": {
+                "promote": "成りますか？"
+              }
+            },
+            "status": {
+              "playerTurn": "あなたの番です。駒または持ち駒を選んでください。",
+              "aiThinking": "CPUが指し手を検討中…",
+              "playerInCheck": "王手を受けています！対応してください。",
+              "aiInCheck": "王手！決め手を狙いましょう。"
+            },
+            "result": {
+              "playerWin": "詰み！あなたの勝利",
+              "playerLose": "詰まされました…敗北",
+              "draw": "持将棋 / 千日手で引き分け"
+            },
+            "pieces": {
+              "glyph": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉",
+                "promotedPawn": "と",
+                "promotedLance": "成香",
+                "promotedKnight": "成桂",
+                "promotedSilver": "成銀",
+                "promotedBishop": "馬",
+                "promotedRook": "龍"
+              },
+              "label": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉"
+              }
+            }
           },
           "riichi_mahjong": {
             "name": "リーチ麻雀ライト",

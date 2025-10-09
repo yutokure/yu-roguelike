@@ -11504,6 +11504,17 @@
           }
         }
       },
+      "pacman": {
+        "hud": {
+          "livesLabel": "残機",
+          "pelletsLabel": "ドット",
+          "statusTemplate": "{livesLabel}:{lives}  {pelletsLabel}:{pelletsCollected}/{pelletsTotal}"
+        },
+        "overlay": {
+          "title": "ゲーム終了",
+          "restartHint": "Rで再開/再起動"
+        }
+      },
       "invaders": {
         "hud": {
           "livesLabel": "残機",

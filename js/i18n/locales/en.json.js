@@ -11504,6 +11504,13 @@
           }
         }
       },
+      "pacman": {
+        "hud": {
+          "livesLabel": "LIVES",
+          "pelletsLabel": "PELLETS",
+          "statusTemplate": "{livesLabel}:{lives}  {pelletsLabel}:{pelletsCollected}/{pelletsTotal}"
+        }
+      },
       "invaders": {
         "hud": {
           "livesLabel": "Lives",

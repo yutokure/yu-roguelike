@@ -10530,6 +10530,36 @@
     },
 
     "minigame": {
+      "electro_instrument": {
+        "title": "電子楽器スタジオ",
+        "badge": "TOY MOD",
+        "description": "ピアノ鍵盤で自由に演奏し、音色を切り替えてサウンドメイク。各音を奏でるたびにEXPを獲得します。キーボードでも演奏可能です。",
+        "controls": {
+          "instrument": "音色",
+          "masterVolume": "マスターボリューム"
+        },
+        "hud": {
+          "sessionExp": "セッションEXP"
+        },
+        "legend": {
+          "whiteKey": "白鍵：基本音",
+          "blackKey": "黒鍵：半音"
+        },
+        "activity": {
+          "latest": "最新のフレーズ",
+          "limit": "(最大10音)",
+          "placeholder": {
+            "start": "キーを押して演奏開始",
+            "empty": "まだ音がありません"
+          }
+        },
+        "instruments": {
+          "piano": "スタジオピアノ",
+          "synth_pad": "シンセパッド",
+          "electric_organ": "エレクトリックオルガン",
+          "digital_strings": "デジタルストリングス"
+        }
+      },
       "counter_pad": {
         "title": "カウンターパッド",
         "subtitle": "複数のカウントを素早く管理。増減操作は自動保存されます。",

@@ -10530,6 +10530,36 @@
     },
 
     "minigame": {
+      "electro_instrument": {
+        "title": "Electronic Instrument Studio",
+        "badge": "TOY MOD",
+        "description": "Jam freely on a piano keyboard, swapping timbres to sculpt your sound. Earn EXP with every note and playable via typing keys.",
+        "controls": {
+          "instrument": "Timbre",
+          "masterVolume": "Master Volume"
+        },
+        "hud": {
+          "sessionExp": "Session EXP"
+        },
+        "legend": {
+          "whiteKey": "White Keys: Natural notes",
+          "blackKey": "Black Keys: Accidentals"
+        },
+        "activity": {
+          "latest": "Latest Phrase",
+          "limit": "(Up to 10 notes)",
+          "placeholder": {
+            "start": "Press a key to start playing",
+            "empty": "No notes yet"
+          }
+        },
+        "instruments": {
+          "piano": "Studio Piano",
+          "synth_pad": "Synth Pad",
+          "electric_organ": "Electric Organ",
+          "digital_strings": "Digital Strings"
+        }
+      },
       "counter_pad": {
         "title": "Counter Pad",
         "subtitle": "Track multiple counters quickly. Adjustments are saved automatically.",

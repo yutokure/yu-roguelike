@@ -418,6 +418,14 @@ window.DUNGEONTYPE_MANIFEST = [
     author: 'community-mod'
   },
   {
+    id: 'enchanted_forest_realms_pack',
+    name: 'Enchanted Forest Realms Pack',
+    nameKey: "dungeon.packs.enchanted_forest_realms_pack.name",
+    entry: 'dungeontypes/enchanted_forest_pack.js',
+    version: '1.0.0',
+    author: 'community-mod'
+  },
+  {
     id: 'biome_convergence_megapack',
     name: 'Biome Convergence Mega Pack',
     nameKey: "dungeon.packs.biome_convergence_megapack.name",

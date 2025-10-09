@@ -13204,6 +13204,71 @@
       }
     },
     "games": {
+      "diagramMaker": {
+        "errors": {
+          "containerMissing": "MiniExp Diagram Maker requires a container",
+          "pngSignature": "Unable to recognize PNG signature",
+          "pngDataMissing": "No draw.io data found inside the PNG",
+          "inflateUnsupported": "This environment does not support inflating compressed data",
+          "parseXml": "Failed to parse XML",
+          "diagramMissing": "No diagram element found",
+          "mxGraphMissing": "No mxGraphModel element found",
+          "diagramDecodeFailed": "Failed to decode diagram data",
+          "mxGraphRootMissing": "mxGraphModel root element is missing",
+          "loadFailed": "Failed to load: {error}",
+          "saveFailed": "Failed to save: {error}",
+          "exportFailed": "Failed to export: {error}"
+        },
+        "defaults": {
+          "fileName": "Untitled Diagram.drawio",
+          "layerName": "Layer {index}",
+          "pageName": "Page {index}",
+          "textPlaceholder": "Text",
+          "nodePlaceholder": "New Node"
+        },
+        "tools": {
+          "select": "Select",
+          "rectangle": "Rectangle",
+          "ellipse": "Ellipse",
+          "text": "Text",
+          "connector": "Connector",
+          "delete": "Delete"
+        },
+        "actions": {
+          "new": "New",
+          "open": "Open",
+          "save": "Save",
+          "export": "Export",
+          "exportFormat": "Export as {formatLabel}",
+          "undo": "Undo",
+          "redo": "Redo"
+        },
+        "sections": {
+          "properties": "Properties"
+        },
+        "fields": {
+          "x": "X",
+          "y": "Y",
+          "width": "Width",
+          "height": "Height",
+          "fill": "Fill",
+          "stroke": "Stroke",
+          "strokeWidth": "Stroke Width",
+          "textColor": "Text Color",
+          "fontSize": "Font Size",
+          "text": "Text"
+        },
+        "toggles": {
+          "grid": "Grid",
+          "snap": "Snap"
+        },
+        "labels": {
+          "exp": "EXP: {value}"
+        },
+        "confirm": {
+          "newDocument": "You have unsaved changes. Create a new diagram?"
+        }
+      },
       "clockHub": {
         "errors": {
           "noContainer": "Clock Hub requires a container"

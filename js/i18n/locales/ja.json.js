@@ -13907,6 +13907,116 @@
       }
     },
     "games": {
+      "sugorokuLife": {
+        "ui": {
+          "currencySuffix": "G",
+          "expUnit": "EXP",
+          "expAmount": "{formatted} {unit}",
+          "hud": {
+            "turn": "ターン",
+            "money": "所持金",
+            "salary": "年収(概算)",
+            "exp": "獲得EXP"
+          },
+          "controls": {
+            "roll": "サイコロを振る",
+            "restart": "もう一度プレイ"
+          },
+          "welcome": {
+            "title": "ようこそ人生すごろくへ",
+            "message": "サイコロを振ってコマを進め、イベントの結果でEXPを獲得しましょう。"
+          },
+          "log": {
+            "title": "出来事ログ",
+            "noMoneyDelta": "±0G",
+            "expText": "EXP {formatted}",
+            "meta": "{money} / {exp}"
+          },
+          "event": {
+            "expText": "EXP {formatted}",
+            "delta": "{money} / {exp}"
+          },
+          "summary": {
+            "rank": "最終ランク {grade}",
+            "money": "最終所持金: {money}",
+            "bonus": "ボーナスEXP: {formatted}",
+            "total": "累計獲得EXP: {formatted}"
+          },
+          "restart": {
+            "title": "再スタート！",
+            "message": "もう一度人生を駆け抜けましょう。"
+          }
+        },
+        "board": {
+          "start": { "label": "スタート", "sub": "キャリアの幕開け" },
+          "orientation": { "label": "キャリア設計", "sub": "将来をイメージ" },
+          "chance": {
+            "label": "チャンスカード",
+            "unknown": "未知の出来事",
+            "mixed": "良くも悪くも",
+            "fate": "運命の一枚",
+            "twist": "予想外の展開",
+            "shift": "状況一変"
+          },
+          "sidejob": { "label": "副業準備", "sub": "週末プロジェクト" },
+          "travel": { "label": "リフレッシュ旅行", "sub": "感性が磨かれる" },
+          "salary": { "label": "給料日", "sub": "努力の実り" },
+          "family": { "label": "家族イベント", "sub": "大切な時間" },
+          "qualification": { "label": "資格取得", "sub": "勉強の成果" },
+          "living": { "label": "生活費", "sub": "固定費の支払い" },
+          "health": { "label": "健康診断", "sub": "体調を見直す" },
+          "project": { "label": "大型プロジェクト", "sub": "責任重大" },
+          "donation": { "label": "社会貢献", "sub": "寄付活動" },
+          "payday": { "label": "昇給ボーナス", "sub": "成果が評価された" },
+          "mentor": { "label": "メンタリング", "sub": "後輩育成" },
+          "expense": { "label": "突発出費", "sub": "想定外の修理" },
+          "team": { "label": "チームビルド", "sub": "信頼を築く" },
+          "innovation": { "label": "新規事業提案", "sub": "挑戦のとき" },
+          "tax": { "label": "税金の支払い", "sub": "社会の一員として" },
+          "festival": { "label": "地域フェス", "sub": "人脈を広げる" },
+          "savings": { "label": "資産運用", "sub": "堅実に増やす" },
+          "final": { "label": "ゴール", "sub": "人生の集大成" }
+        },
+        "events": {
+          "start": { "title": "社会人生活スタート！", "message": "初任給で生活の基盤を整えよう。" },
+          "orientation": { "title": "キャリアプランを描いた", "message": "自己分析セミナーで視界がクリアに。将来の基礎が固まった。" },
+          "sidejob": { "title": "副業プロジェクト始動", "message": "学んだスキルを活かした副業で早速収益が発生！" },
+          "travel": { "title": "旅で感性が豊かに", "message": "景色と文化に触れて視野が拡大した。" },
+          "salary": { "title": "給料日！", "message": "今月も頑張った。生活費と貯蓄をバランスよく管理しよう。" },
+          "family": { "title": "家族との思い出", "message": "大切な時間はプライスレス。心が満たされた。" },
+          "qualification": { "title": "資格を取得！", "message": "専門資格で年収がアップ。今後の給料に反映される。" },
+          "living": { "title": "生活費を支払った", "message": "節約術を磨けばもっと余裕が生まれるかも。" },
+          "health": { "title": "健康診断で安心", "message": "定期的なケアで万全の体制。将来のリスクを減らせる。" },
+          "project": { "title": "大型案件を成功させた", "message": "チームを率いて成果を出し、大幅昇給のチャンス！" },
+          "donation": { "title": "地域へ寄付した", "message": "社会貢献で得た信頼が今後の活動にもプラスに働きそう。" },
+          "payday": { "title": "昇給ボーナス獲得！", "message": "努力が認められ年収がさらにアップ。" },
+          "mentor": { "title": "後輩のメンターに", "message": "人を育てる経験は自分の成長にもつながる。" },
+          "expense": { "title": "突発的な修理費", "message": "冷静に対応して被害を最小限に抑えた。" },
+          "team": { "title": "チームビルディング合宿", "message": "チームの絆が深まりプロジェクトが進めやすくなった。" },
+          "innovation": { "title": "新規事業がヒット", "message": "市場のニーズを読み切り、部署の柱となる事業が完成した。" },
+          "tax": { "title": "税金を納めた", "message": "社会への還元。次のチャンスに備えて家計を見直そう。" },
+          "festival": { "title": "地域フェスで交流", "message": "人脈が広がり次の仕事のヒントを得た。" },
+          "savings": { "title": "資産運用が好調", "message": "分散投資が功を奏し堅実に資産が増えた。" },
+          "goal": {
+            "logTitle": "ゴール！",
+            "logDetail": "最終資産 {money} / グレード{grade} / 追加EXP {bonusFormatted}",
+            "title": "人生の総決算",
+            "message": "最終資産 {money}。グレード{grade}達成！所持金に応じたボーナスEXPを獲得しました。"
+          }
+        },
+        "chance": {
+          "startup": { "label": "スタートアップ投資", "description": "先見の明で投資したスタートアップが大成功！" },
+          "travel": { "label": "世界一周の旅", "description": "人生経験は増えたが旅費がかさんだ。" },
+          "innovation": { "label": "イノベーション賞", "description": "社内ハッカソンで優勝し賞金を獲得！" },
+          "carRepair": { "label": "車の修理費", "description": "突然の故障で修理費が必要になった……。" },
+          "mentor": { "label": "メンターとの出会い", "description": "優秀なメンターに出会いキャリアが開けた。" },
+          "sideBusiness": { "label": "副業ヒット", "description": "週末に始めた副業が話題になり売上が伸びた！" },
+          "medicalBill": { "label": "医療費の支払い", "description": "体調を崩して入院。治療費は痛い出費だが健康第一。" },
+          "community": { "label": "地域イベント主催", "description": "地域イベントの主催で感謝され、経験も積めた。" },
+          "award": { "label": "年間表彰", "description": "社内年間表彰で表彰金を獲得！" },
+          "market": { "label": "相場急落", "description": "投資していた銘柄が急落。冷静に受け止めよう。" }
+        }
+      },
       "treasureHunt": {
         "ui": {
           "mapTitle": "マップ",

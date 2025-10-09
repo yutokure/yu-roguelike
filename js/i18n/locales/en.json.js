@@ -13903,6 +13903,116 @@
       }
     },
     "games": {
+      "sugorokuLife": {
+        "ui": {
+          "currencySuffix": "G",
+          "expUnit": "EXP",
+          "expAmount": "{formatted} {unit}",
+          "hud": {
+            "turn": "Turn",
+            "money": "Cash on Hand",
+            "salary": "Estimated Annual Income",
+            "exp": "EXP Earned"
+          },
+          "controls": {
+            "roll": "Roll the Dice",
+            "restart": "Play Again"
+          },
+          "welcome": {
+            "title": "Welcome to Life Sugoroku",
+            "message": "Roll the dice, advance your piece, and gain EXP from each life event."
+          },
+          "log": {
+            "title": "Event Log",
+            "noMoneyDelta": "±0G",
+            "expText": "EXP {formatted}",
+            "meta": "{money} / {exp}"
+          },
+          "event": {
+            "expText": "EXP {formatted}",
+            "delta": "{money} / {exp}"
+          },
+          "summary": {
+            "rank": "Final Rank {grade}",
+            "money": "Final Funds: {money}",
+            "bonus": "Bonus EXP: {formatted}",
+            "total": "Total EXP Earned: {formatted}"
+          },
+          "restart": {
+            "title": "Restart!",
+            "message": "Dash through life once more."
+          }
+        },
+        "board": {
+          "start": { "label": "Start", "sub": "Career begins" },
+          "orientation": { "label": "Career Planning", "sub": "Visualize your future" },
+          "chance": {
+            "label": "Chance Card",
+            "unknown": "Unexpected event",
+            "mixed": "Could go either way",
+            "fate": "Draw of fate",
+            "twist": "Surprising development",
+            "shift": "Sudden change"
+          },
+          "sidejob": { "label": "Side Hustle Prep", "sub": "Weekend project" },
+          "travel": { "label": "Refreshing Trip", "sub": "Sharpen your senses" },
+          "salary": { "label": "Payday", "sub": "Hard work pays off" },
+          "family": { "label": "Family Event", "sub": "Cherished time" },
+          "qualification": { "label": "Certification", "sub": "Study pays off" },
+          "living": { "label": "Living Costs", "sub": "Pay the bills" },
+          "health": { "label": "Health Check", "sub": "Review your wellbeing" },
+          "project": { "label": "Major Project", "sub": "High responsibility" },
+          "donation": { "label": "Community Contribution", "sub": "Charity efforts" },
+          "payday": { "label": "Raise Bonus", "sub": "Recognition earned" },
+          "mentor": { "label": "Mentoring", "sub": "Train juniors" },
+          "expense": { "label": "Unexpected Expense", "sub": "Emergency repairs" },
+          "team": { "label": "Team Building", "sub": "Build trust" },
+          "innovation": { "label": "New Venture Pitch", "sub": "Time to challenge" },
+          "tax": { "label": "Tax Payment", "sub": "Part of society" },
+          "festival": { "label": "Community Festival", "sub": "Expand your network" },
+          "savings": { "label": "Asset Management", "sub": "Grow steadily" },
+          "final": { "label": "Goal", "sub": "Life's culmination" }
+        },
+        "events": {
+          "start": { "title": "Career Begins!", "message": "Use your first paycheck to build a stable life." },
+          "orientation": { "title": "Mapped Your Career", "message": "A self-analysis seminar clarified your goals." },
+          "sidejob": { "title": "Side Hustle Launched", "message": "Your weekend project immediately turned a profit!" },
+          "travel": { "title": "Inspiration from Travel", "message": "New scenery and culture expanded your horizons." },
+          "salary": { "title": "Payday!", "message": "Another month of effort. Balance living costs with savings." },
+          "family": { "title": "Family Memories", "message": "Priceless time together filled your heart." },
+          "qualification": { "title": "Earned a Certification!", "message": "A professional credential boosts your future salary." },
+          "living": { "title": "Paid Living Expenses", "message": "Sharpening your frugal habits could free up more funds." },
+          "health": { "title": "Health Check Complete", "message": "Routine care keeps you ready and reduces future risk." },
+          "project": { "title": "Major Project Success", "message": "Leading the team to results opened the door to a big raise!" },
+          "donation": { "title": "Donated to the Community", "message": "Giving back earned trust that will help future endeavors." },
+          "payday": { "title": "Raise Bonus Awarded!", "message": "Your achievements were recognized and your income climbed again." },
+          "mentor": { "title": "Became a Mentor", "message": "Helping others grow also strengthens your own skills." },
+          "expense": { "title": "Emergency Repair Costs", "message": "Calm action kept the damage to a minimum." },
+          "team": { "title": "Team-Building Retreat", "message": "Stronger bonds make upcoming projects smoother." },
+          "innovation": { "title": "New Venture Success", "message": "You read the market and built a flagship business for the division." },
+          "tax": { "title": "Paid Your Taxes", "message": "Returning value to society prompts a budget review for the next chance." },
+          "festival": { "title": "Networked at a Local Festival", "message": "Connections expanded and sparked your next idea." },
+          "savings": { "title": "Investments Performing Well", "message": "Diversification steadily grew your assets." },
+          "goal": {
+            "logTitle": "Goal!",
+            "logDetail": "Final assets {money} / Grade {grade} / Bonus EXP {bonusFormatted}",
+            "title": "Life Ledger Closed",
+            "message": "Final assets {money}. Grade {grade} achieved! Bonus EXP awarded based on your savings."
+          }
+        },
+        "chance": {
+          "startup": { "label": "Startup Investment", "description": "Your foresight backed a startup that absolutely took off!" },
+          "travel": { "label": "World Tour", "description": "The trip broadened your experience but cost a lot." },
+          "innovation": { "label": "Innovation Award", "description": "You won the company hackathon and the prize money!" },
+          "carRepair": { "label": "Car Repairs", "description": "A sudden breakdown forced you to pay for fixes..." },
+          "mentor": { "label": "Met a Mentor", "description": "A brilliant mentor guided you and unlocked your career." },
+          "sideBusiness": { "label": "Side Business Hit", "description": "Your weekend gig went viral and sales surged!" },
+          "medicalBill": { "label": "Medical Bills", "description": "A hospital stay was expensive, but health comes first." },
+          "community": { "label": "Hosted a Community Event", "description": "Your local event earned gratitude and valuable experience." },
+          "award": { "label": "Annual Award", "description": "You received a year-end company award and prize money!" },
+          "market": { "label": "Market Crash", "description": "Your investments plunged—stay calm and ride it out." }
+        }
+      },
       "treasureHunt": {
         "ui": {
           "mapTitle": "Map",

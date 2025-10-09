@@ -4,7 +4,7 @@
     .electro-studio { display:flex; flex-direction:column; gap:16px; padding:18px; width:100%; box-sizing:border-box; font-family:'Segoe UI','Hiragino Sans','sans-serif'; color:#0f172a; background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(14,116,144,0.12)); border-radius:16px; border:1px solid rgba(15,23,42,0.12); box-shadow:0 18px 42px rgba(15,23,42,0.12); }
     .electro-header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; }
     .electro-header h2 { margin:0; font-size:20px; letter-spacing:0.02em; display:flex; align-items:center; gap:8px; }
-    .electro-header h2 span { font-size:13px; font-weight:600; color:#2563eb; padding:2px 10px; background:rgba(37,99,235,0.12); border-radius:999px; }
+    .electro-header h2 .badge { font-size:13px; font-weight:600; color:#2563eb; padding:2px 10px; background:rgba(37,99,235,0.12); border-radius:999px; }
     .electro-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
     .electro-control { display:flex; flex-direction:column; gap:6px; font-size:12px; font-weight:600; color:#1f2937; }
     .electro-control select, .electro-control input[type="range"] { min-width:160px; border-radius:999px; border:1px solid rgba(15,23,42,0.16); padding:6px 14px; font-weight:600; color:#0f172a; background:rgba(255,255,255,0.92); box-shadow:0 4px 12px rgba(15,23,42,0.12); }
@@ -91,6 +91,7 @@
     {
       id:'piano',
       label:'スタジオピアノ',
+      labelKey: '.instruments.piano',
       envelope:{ attack:0.018, decay:0.28, sustain:0.45, release:1.1 },
       oscillators:[
         { type:'sine', gain:0.85 },
@@ -102,6 +103,7 @@
     {
       id:'synth_pad',
       label:'シンセパッド',
+      labelKey: '.instruments.synth_pad',
       envelope:{ attack:0.35, decay:0.4, sustain:0.8, release:2.6 },
       oscillators:[
         { type:'sawtooth', gain:0.6, detune:-6 },
@@ -113,6 +115,7 @@
     {
       id:'electric_organ',
       label:'エレクトリックオルガン',
+      labelKey: '.instruments.electric_organ',
       envelope:{ attack:0.02, decay:0.12, sustain:0.7, release:0.7 },
       oscillators:[
         { type:'square', gain:0.7 },
@@ -124,6 +127,7 @@
     {
       id:'digital_strings',
       label:'デジタルストリングス',
+      labelKey: '.instruments.digital_strings',
       envelope:{ attack:0.26, decay:0.35, sustain:0.75, release:2.8 },
       oscillators:[
         { type:'triangle', gain:0.7, detune:-4 },
@@ -149,6 +153,20 @@
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const xpPerNote = difficulty === 'HARD' ? 1.2 : difficulty === 'EASY' ? 0.6 : 0.9;
 
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'electro_instrument' })
+      : null);
+
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        try {
+          return localization.t(key, fallback, params);
+        } catch {}
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+
     const wrapper = document.createElement('div');
     wrapper.className = 'electro-studio';
 
@@ -156,9 +174,11 @@
     header.className = 'electro-header';
 
     const title = document.createElement('h2');
-    title.textContent = '電子楽器スタジオ';
+    const titleLabel = document.createElement('span');
+    titleLabel.className = 'title-text';
+    title.appendChild(titleLabel);
     const badge = document.createElement('span');
-    badge.textContent = 'TOY MOD';
+    badge.className = 'badge';
     title.appendChild(badge);
     header.appendChild(title);
 
@@ -167,19 +187,26 @@
 
     const instrumentControl = document.createElement('label');
     instrumentControl.className = 'electro-control';
-    instrumentControl.textContent = '音色';
+    const instrumentLabel = document.createElement('span');
+    instrumentLabel.className = 'label';
+    instrumentControl.appendChild(instrumentLabel);
     const instrumentSelect = document.createElement('select');
+    const instrumentOptions = new Map();
+    const instrumentById = new Map(INSTRUMENTS.map(inst => [inst.id, inst]));
     INSTRUMENTS.forEach(inst => {
       const opt = document.createElement('option');
       opt.value = inst.id;
       opt.textContent = inst.label;
       instrumentSelect.appendChild(opt);
+      instrumentOptions.set(inst.id, opt);
     });
     instrumentControl.appendChild(instrumentSelect);
 
     const volumeControl = document.createElement('label');
     volumeControl.className = 'electro-control';
-    volumeControl.textContent = 'マスターボリューム';
+    const volumeLabel = document.createElement('span');
+    volumeLabel.className = 'label';
+    volumeControl.appendChild(volumeLabel);
     const volumeSlider = document.createElement('input');
     volumeSlider.type = 'range';
     volumeSlider.min = '0';
@@ -191,7 +218,6 @@
     const xpMeter = document.createElement('div');
     xpMeter.className = 'electro-meter';
     const xpLabel = document.createElement('span');
-    xpLabel.textContent = 'セッションEXP';
     const xpValue = document.createElement('span');
     xpValue.className = 'value';
     xpValue.textContent = '0';
@@ -222,15 +248,12 @@
     const infos = document.createElement('div');
     infos.className = 'electro-infos';
     const description = document.createElement('p');
-    description.textContent = 'ピアノ鍵盤で自由に演奏し、音色を切り替えてサウンドメイク。各音を奏でるたびにEXPを獲得します。キーボードでも演奏可能です。';
     const legend = document.createElement('div');
     legend.className = 'electro-legend';
     const whiteLegend = document.createElement('span');
     whiteLegend.className = 'white';
-    whiteLegend.textContent = '白鍵：基本音';
     const blackLegend = document.createElement('span');
     blackLegend.className = 'black';
-    blackLegend.textContent = '黒鍵：半音';
     legend.appendChild(whiteLegend);
     legend.appendChild(blackLegend);
     infos.appendChild(description);
@@ -240,7 +263,12 @@
     const activity = document.createElement('div');
     activity.className = 'electro-activity';
     const activityLabel = document.createElement('div');
-    activityLabel.innerHTML = '<strong>最新のフレーズ</strong> (最大10音)';
+    const activityTitle = document.createElement('strong');
+    activityLabel.appendChild(activityTitle);
+    activityLabel.appendChild(document.createTextNode(' '));
+    const activityLimit = document.createElement('span');
+    activityLimit.className = 'limit';
+    activityLabel.appendChild(activityLimit);
     const recentWrap = document.createElement('div');
     recentWrap.className = 'electro-recent';
     activity.appendChild(activityLabel);
@@ -263,6 +291,7 @@
 
     const keyElements = new Map();
     const recentNotes = [];
+    let recentPlaceholderType = 'start';
 
     let audioCtx = null;
     let masterGain = null;
@@ -270,6 +299,62 @@
     let currentInstrument = INSTRUMENTS[0];
     let listenersActive = false;
     let sessionXp = 0;
+    let detachLocale = null;
+
+    function refreshInstrumentOptions(){
+      instrumentOptions.forEach((opt, id) => {
+        const inst = instrumentById.get(id);
+        if (!inst) return;
+        const key = inst.labelKey || `.instruments.${inst.id}`;
+        opt.textContent = text(key, inst.label);
+      });
+    }
+
+    function renderRecentList(){
+      recentWrap.innerHTML = '';
+      if (recentNotes.length === 0) {
+        const placeholder = document.createElement('span');
+        placeholder.className = 'tag';
+        const key = recentPlaceholderType === 'start'
+          ? '.activity.placeholder.start'
+          : '.activity.placeholder.empty';
+        const fallback = recentPlaceholderType === 'start'
+          ? 'キーを押して演奏開始'
+          : 'まだ音がありません';
+        placeholder.textContent = text(key, fallback);
+        recentWrap.appendChild(placeholder);
+        return;
+      }
+      recentNotes.slice().reverse().forEach(name => {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = name;
+        recentWrap.appendChild(tag);
+      });
+    }
+
+    function refreshTexts(){
+      titleLabel.textContent = text('.title', '電子楽器スタジオ');
+      badge.textContent = text('.badge', 'TOY MOD');
+      instrumentLabel.textContent = text('.controls.instrument', '音色');
+      volumeLabel.textContent = text('.controls.masterVolume', 'マスターボリューム');
+      xpLabel.textContent = text('.hud.sessionExp', 'セッションEXP');
+      description.textContent = text('.description', 'ピアノ鍵盤で自由に演奏し、音色を切り替えてサウンドメイク。各音を奏でるたびにEXPを獲得します。キーボードでも演奏可能です。');
+      whiteLegend.textContent = text('.legend.whiteKey', '白鍵：基本音');
+      blackLegend.textContent = text('.legend.blackKey', '黒鍵：半音');
+      activityTitle.textContent = text('.activity.latest', '最新のフレーズ');
+      activityLimit.textContent = text('.activity.limit', '(最大10音)');
+      refreshInstrumentOptions();
+      renderRecentList();
+    }
+
+    refreshTexts();
+
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try { refreshTexts(); } catch {}
+      });
+    }
 
     function ensureAudio(){
       if (!audioCtx) {
@@ -294,22 +379,12 @@
     }
 
     function updateRecent(noteName){
-      recentNotes.push(noteName);
-      while (recentNotes.length > 10) recentNotes.shift();
-      recentWrap.innerHTML = '';
-      if (recentNotes.length === 0) {
-        const placeholder = document.createElement('span');
-        placeholder.className = 'tag';
-        placeholder.textContent = 'まだ音がありません';
-        recentWrap.appendChild(placeholder);
-        return;
+      if (noteName != null) {
+        recentNotes.push(noteName);
+        while (recentNotes.length > 10) recentNotes.shift();
       }
-      recentNotes.slice().reverse().forEach(name => {
-        const tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.textContent = name;
-        recentWrap.appendChild(tag);
-      });
+      recentPlaceholderType = recentNotes.length === 0 ? 'empty' : 'notes';
+      renderRecentList();
     }
 
     function grantXp(){
@@ -502,7 +577,7 @@
     blackNotes.forEach(bindKey);
 
     function setInstrument(id){
-      const next = INSTRUMENTS.find(inst => inst.id === id) || INSTRUMENTS[0];
+      const next = instrumentById.get(id) || INSTRUMENTS[0];
       currentInstrument = next;
     }
 
@@ -517,11 +592,9 @@
     });
 
     function renderRecentPlaceholder(){
-      recentWrap.innerHTML = '';
-      const placeholder = document.createElement('span');
-      placeholder.className = 'tag';
-      placeholder.textContent = 'キーを押して演奏開始';
-      recentWrap.appendChild(placeholder);
+      recentNotes.length = 0;
+      recentPlaceholderType = 'start';
+      renderRecentList();
     }
 
     function start(){
@@ -529,7 +602,6 @@
       listenersActive = true;
       window.addEventListener('keydown', handleKeyDown, { passive:false });
       window.addEventListener('keyup', handleKeyUp, { passive:false });
-      recentNotes.length = 0;
       renderRecentPlaceholder();
     }
 
@@ -545,6 +617,10 @@
 
     function destroy(){
       stop();
+      if (detachLocale) {
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       try { root.removeChild(wrapper); } catch {}
       if (audioCtx) {
         try { masterGain?.disconnect(); } catch {}
@@ -567,11 +643,15 @@
 
   window.registerMiniGame({
     id: 'electro_instrument',
-    name: '電子楽器スタジオ', nameKey: 'selection.miniexp.games.electro_instrument.name',
-    description: '電子鍵盤で自由に演奏し音色チェンジ毎音EXP', descriptionKey: 'selection.miniexp.games.electro_instrument.description', categoryIds: ['toy'],
+    name: '電子楽器スタジオ',
+    nameKey: 'selection.miniexp.games.electro_instrument.name',
+    description: '電子鍵盤で自由に演奏し音色チェンジ毎音EXP',
+    descriptionKey: 'selection.miniexp.games.electro_instrument.description',
+    categoryIds: ['toy'],
     category: 'トイ',
     version: '0.1.0',
     author: 'mod',
+    localizationKey: 'minigame.electro_instrument',
     create
   });
 })();

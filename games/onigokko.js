@@ -8,6 +8,46 @@
     const shortcuts = opts?.shortcuts;
     const dungeonApi = opts?.dungeon;
     const difficulty = opts?.difficulty || 'NORMAL';
+    let timerLabel = null;
+    let statusLabel = null;
+
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'onigokko' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (key && localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback(params);
+      return fallback ?? '';
+    };
+    const defaultTimerFallback = (params) => {
+      const seconds = Number(params?.seconds ?? 0);
+      return `残り ${seconds.toFixed(1)}s`;
+    };
+    const timerState = {
+      key: 'miniexp.games.onigokko.timer.remaining',
+      fallback: defaultTimerFallback,
+      params: { seconds: 0 }
+    };
+    let statusState = { key: null, fallback: '', params: undefined };
+    let detachLocale = null;
+    const refreshLocalizedTexts = () => {
+      if (timerLabel) timerLabel.textContent = text(timerState.key, timerState.fallback, timerState.params);
+      if (statusLabel) statusLabel.textContent = text(statusState.key, statusState.fallback, statusState.params);
+    };
+    const attachLocaleListener = () => {
+      if (!localization || typeof localization.onChange !== 'function' || detachLocale) return;
+      detachLocale = localization.onChange(() => {
+        refreshLocalizedTexts();
+      });
+    };
+    const detachLocaleListener = () => {
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
+    };
 
     const wrapper = document.createElement('div');
     wrapper.className = 'mini-onigokko';
@@ -25,9 +65,8 @@
     infoPanel.style.justifyContent = 'space-between';
     infoPanel.style.alignItems = 'center';
 
-    const timerLabel = document.createElement('span');
-    const statusLabel = document.createElement('span');
-    statusLabel.textContent = 'ステージ読み込み中…';
+    timerLabel = document.createElement('span');
+    statusLabel = document.createElement('span');
 
     infoPanel.appendChild(timerLabel);
     infoPanel.appendChild(statusLabel);
@@ -46,6 +85,8 @@
     const SURVIVAL_EXP_PER_SECOND = 3;
     const SURVIVAL_BONUS = difficulty === 'HARD' ? 180 : difficulty === 'EASY' ? 110 : 140;
     const baseDuration = difficulty === 'HARD' ? 75 : difficulty === 'EASY' ? 55 : 65;
+    timerState.params.seconds = Math.max(0, baseDuration);
+    refreshLocalizedTexts();
 
     const player = { x: 0, y: 0, radius: 10, speed: 80 };
     const chasers = [];
@@ -66,8 +107,19 @@
     let hunterSpeed = 70;
     let hunterPathInterval = 0.35;
 
-    function setStatus(text){ statusLabel.textContent = text; }
-    function updateTimer(){ timerLabel.textContent = `残り ${Math.max(0, remaining).toFixed(1)}s`; }
+    function setStatus(key, fallback, params){
+      if (typeof fallback === 'undefined' && typeof params === 'undefined'){
+        fallback = key;
+        key = null;
+      }
+      statusState = { key, fallback, params };
+      if (statusLabel) statusLabel.textContent = text(key, fallback, params);
+    }
+    function updateTimer(){
+      const seconds = Math.max(0, remaining);
+      timerState.params.seconds = seconds;
+      if (timerLabel) timerLabel.textContent = text(timerState.key, timerState.fallback, timerState.params);
+    }
 
     function disableHostShortcuts(){ shortcuts?.disableKey?.('r'); shortcuts?.disableKey?.('p'); }
     function enableHostShortcuts(){ shortcuts?.enableKey?.('r'); shortcuts?.enableKey?.('p'); }
@@ -219,13 +271,13 @@
       cancelAnimationFrame(raf);
       enableHostShortcuts();
       if (result === 'caught'){
-        setStatus('捕まってしまった！獲得EXPなし');
+        setStatus('miniexp.games.onigokko.status.caught_no_reward', '捕まってしまった！獲得EXPなし');
       } else if (result === 'escaped'){
         if (!victoryGranted){
           awardXp(SURVIVAL_BONUS, { reason: 'clear', gameId: 'onigokko' });
           victoryGranted = true;
         }
-        setStatus('見事逃げ切った！');
+        setStatus('miniexp.games.onigokko.status.escaped', '見事逃げ切った！');
       }
     }
 
@@ -252,12 +304,12 @@
       draw();
 
       if (checkCaught()){
-        setStatus('捕まった！');
+        setStatus('miniexp.games.onigokko.status.caught', '捕まった！');
         endGame('caught');
         return;
       }
       if (remaining <= 0){
-        setStatus('逃げ切り成功！');
+        setStatus('miniexp.games.onigokko.status.escape_success', '逃げ切り成功！');
         endGame('escaped');
       }
     }
@@ -318,7 +370,7 @@
       elapsed = 0;
       lastTs = 0;
       updateTimer();
-      setStatus('鬼ごっこ開始！矢印キー/WASDで移動');
+      setStatus('miniexp.games.onigokko.status.start', '鬼ごっこ開始！矢印キー/WASDで移動');
       disableHostShortcuts();
       raf = requestAnimationFrame(loop);
     }
@@ -328,15 +380,16 @@
       running = false;
       cancelAnimationFrame(raf);
       enableHostShortcuts();
-      setStatus('一時停止中');
+      setStatus('miniexp.games.onigokko.status.paused', '一時停止中');
     }
 
     function prepareStage(){
       if (!dungeonApi || typeof dungeonApi.generateStage !== 'function'){
-        setStatus('ダンジョンAPIが利用できません');
+        setStatus('miniexp.games.onigokko.status.api_unavailable', 'ダンジョンAPIが利用できません');
         stageReady = false;
         return;
       }
+      setStatus('miniexp.games.onigokko.status.loading', 'ステージ読み込み中…');
       dungeonApi.generateStage({ type: 'mixed', tilesX: 40, tilesY: 30, tileSize: 18 }).then((generated) => {
         stage = generated;
         configureStageMetrics();
@@ -346,10 +399,10 @@
         stageReady = true;
         resetEntities();
         updateTimer();
-        setStatus('準備完了！開始で鬼ごっこスタート');
+        setStatus('miniexp.games.onigokko.status.ready', '準備完了！開始で鬼ごっこスタート');
         if (pendingStart) startLoop();
       }).catch(() => {
-        setStatus('ステージ生成に失敗しました');
+        setStatus('miniexp.games.onigokko.status.stage_generation_failed', 'ステージ生成に失敗しました');
       });
     }
 
@@ -368,6 +421,7 @@
 
     function destroy(){
       stopLoop();
+      detachLocaleListener();
       document.removeEventListener('keydown', keyDownHandler);
       document.removeEventListener('keyup', keyUpHandler);
       try { wrapper.remove(); } catch {}
@@ -392,6 +446,9 @@
         pressedKeys.delete(key);
       }
     }
+
+    setStatus('miniexp.games.onigokko.status.loading', 'ステージ読み込み中…');
+    attachLocaleListener();
 
     document.addEventListener('keydown', keyDownHandler, { passive: false });
     document.addEventListener('keyup', keyUpHandler, { passive: true });

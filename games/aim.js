@@ -6,6 +6,25 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'aim' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatInteger = (value) => {
+      const numeric = Number.isFinite(value) ? Math.round(value) : 0;
+      if (localization && typeof localization.formatNumber === 'function') {
+        try {
+          return localization.formatNumber(numeric, { maximumFractionDigits: 0 });
+        } catch {}
+      }
+      return String(numeric);
+    };
     const cfg = (
       difficulty==='HARD' ? { duration:60, spawn:0.75, minR:10, maxR:20, speed:80, comboMs:900 } :
       difficulty==='EASY' ? { duration:60, spawn:1.4,  minR:18, maxR:30, speed:50, comboMs:1300 } :
@@ -58,15 +77,23 @@
         ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(t.x, t.y, t.r*0.6, 0, Math.PI*2); ctx.stroke();
       }
       // UI
+      const timeValue = Math.max(0, Math.ceil(timeLeft));
+      const hitsValue = hits;
+      const accuracyValue = clicks ? Math.round(hits / clicks * 100) : 0;
+      const comboValue = combo;
+      const timeText = formatInteger(timeValue);
+      const hitsText = formatInteger(hitsValue);
+      const accuracyText = formatInteger(accuracyValue);
+      const comboText = formatInteger(comboValue);
       ctx.fillStyle='#cbd5e1'; ctx.font='bold 14px system-ui,sans-serif';
-      ctx.fillText(`TIME: ${Math.max(0,Math.ceil(timeLeft))}`, 8, 18);
-      ctx.fillText(`HITS: ${hits}  ACC: ${clicks?Math.round(hits/clicks*100):0}%`, 8, 36);
-      if (combo>1){ ctx.fillStyle='#f59e0b'; ctx.fillText(`COMBO x${combo}`, 8, 54); }
+      ctx.fillText(text('.hud.time', () => `TIME: ${timeText}`, { time: timeText }), 8, 18);
+      ctx.fillText(text('.hud.hitsAccuracy', () => `HITS: ${hitsText}  ACC: ${accuracyText}%`, { hits: hitsText, accuracy: accuracyText }), 8, 36);
+      if (combo>1){ ctx.fillStyle='#f59e0b'; ctx.fillText(text('.hud.combo', () => `COMBO x${comboText}`, { combo: comboText }), 8, 54); }
       if (ended){
         ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,W,H);
         ctx.fillStyle='#f8fafc'; ctx.font='bold 22px system-ui,sans-serif'; ctx.textAlign='center';
-        ctx.fillText('Time Up', W/2, H/2-6);
-        ctx.font='12px system-ui,sans-serif'; ctx.fillText('Rで再開/再起動', W/2, H/2+16);
+        ctx.fillText(text('.overlay.timeUp', 'Time Up'), W/2, H/2-6);
+        ctx.font='12px system-ui,sans-serif'; ctx.fillText(text('.overlay.restartHint', 'Press R to restart'), W/2, H/2+16);
         ctx.textAlign='start';
       }
 
@@ -135,7 +162,14 @@
     function loop(ts){ const now = ts*0.001; const dt = Math.min(0.033, now-(last||now)); last=now; if(running){ step(dt); draw(); raf=requestAnimationFrame(loop); } }
     function start(){ if(running) return; running=true; ended=false; disableHostRestart(); last=0; raf=requestAnimationFrame(loop); }
     function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
-    function destroy(){ try{ stop(); canvas.remove(); canvas.removeEventListener('mousemove', onMove); canvas.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); }catch{} }
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => { try { draw(); } catch {} })
+      : null;
+
+    function destroy(){
+      try{ stop(); canvas.remove(); canvas.removeEventListener('mousemove', onMove); canvas.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); }catch{}
+      try{ detachLocale && detachLocale(); }catch{}
+    }
     function getScore(){ return hits*10; }
 
     canvas.addEventListener('mousemove', onMove);

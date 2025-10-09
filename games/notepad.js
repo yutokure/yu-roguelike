@@ -1,16 +1,17 @@
 (function(){
   const STORAGE_KEY = 'mini_notepad_state_v1';
   const EDIT_XP_COOLDOWN = 750;
-  const DEFAULT_FILENAME = 'タイトルなし.txt';
+  const DEFAULT_FILENAME_FALLBACK = 'タイトルなし.txt';
+  const DEFAULT_TIMESTAMP_PATTERN = '{year}-{month}-{day} {hour}:{minute}:{second}';
 
-  function loadPersistentState(){
+  function loadPersistentState(defaultFileName){
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object') return null;
       return {
-        fileName: typeof parsed.fileName === 'string' && parsed.fileName.trim() ? parsed.fileName : DEFAULT_FILENAME,
+        fileName: typeof parsed.fileName === 'string' && parsed.fileName.trim() ? parsed.fileName : defaultFileName,
         text: typeof parsed.text === 'string' ? parsed.text : '',
         zoom: Number.isFinite(parsed.zoom) ? Math.min(200, Math.max(50, parsed.zoom)) : 100,
         wordWrap: !!parsed.wordWrap,
@@ -39,10 +40,46 @@
     if (!root) throw new Error('MiniExp Notepad requires a container');
 
     const shortcuts = opts?.shortcuts;
+    const i18n = typeof window !== 'undefined' ? window.I18n : null;
 
-    const persisted = loadPersistentState();
+    const translate = (key, fallback, params) => {
+      if (key && typeof i18n?.t === 'function') {
+        try {
+          const value = i18n.t(key, params);
+          if (typeof value === 'string' && value !== key) return value;
+          if (value !== undefined && value !== null && value !== key) return value;
+        } catch {}
+      }
+      if (typeof fallback === 'function') {
+        try { return fallback(); } catch { return ''; }
+      }
+      if (fallback !== undefined) return fallback;
+      if (typeof key === 'string') return key;
+      return '';
+    };
+
+    const formatNumber = (value, options) => {
+      if (typeof i18n?.formatNumber === 'function') {
+        try {
+          return i18n.formatNumber(value, options);
+        } catch {}
+      }
+      if (options?.minimumIntegerDigits) {
+        return String(Math.trunc(value)).padStart(options.minimumIntegerDigits, '0');
+      }
+      return String(value);
+    };
+
+    const getDefaultFileName = () => translate('games.notepad.defaultFileName', DEFAULT_FILENAME_FALLBACK);
+    const getTimestampPattern = () => translate('games.notepad.timestamp.pattern', DEFAULT_TIMESTAMP_PATTERN);
+    const getPrintLabel = () => translate('games.notepad.print.label', '印刷');
+    const getNotepadTitle = () => translate('games.notepad.print.windowTitleFallback', () => translate('selection.miniexp.games.notepad.name', 'メモ帳'));
+
+    let currentDefaultFileName = getDefaultFileName();
+
+    const persisted = loadPersistentState(currentDefaultFileName);
     const state = {
-      fileName: persisted?.fileName || DEFAULT_FILENAME,
+      fileName: persisted?.fileName || currentDefaultFileName,
       text: persisted?.text || '',
       savedText: persisted?.text || '',
       zoom: persisted?.zoom || 100,
@@ -61,6 +98,28 @@
     let settingsControls = null;
     let isRunning = false;
     let shortcutsDisabled = false;
+    let localeUnsubscribe = null;
+
+    function formatTimestamp(date, pattern){
+      const safePattern = typeof pattern === 'string' && pattern ? pattern : DEFAULT_TIMESTAMP_PATTERN;
+      const d = date instanceof Date ? date : new Date(date);
+      if (!(d instanceof Date) || Number.isNaN(d.getTime())) return safePattern;
+      const tokens = {
+        year: String(d.getFullYear()),
+        month: String(d.getMonth() + 1).padStart(2, '0'),
+        day: String(d.getDate()).padStart(2, '0'),
+        hour: String(d.getHours()).padStart(2, '0'),
+        minute: String(d.getMinutes()).padStart(2, '0'),
+        second: String(d.getSeconds()).padStart(2, '0')
+      };
+      return safePattern.replace(/\{([^{}]+)\}/g, (match, token) => {
+        const key = token.trim().toLowerCase();
+        if (Object.prototype.hasOwnProperty.call(tokens, key)) {
+          return tokens[key];
+        }
+        return match;
+      });
+    }
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -150,7 +209,8 @@
       btn.addEventListener('pointerleave', () => { btn.style.background = 'transparent'; });
       if (symbol === '×') {
         btn.addEventListener('click', () => {
-          if (!state.savedText || state.savedText === state.text || confirm('変更を破棄して閉じますか？')) quit();
+          const message = translate('games.notepad.confirm.discardChanges', '変更を破棄して閉じますか？');
+          if (!state.savedText || state.savedText === state.text || confirm(message)) quit();
         });
       }
       windowControls.appendChild(btn);
@@ -250,16 +310,31 @@
     updateStatusBar();
     persistSoon();
 
+    if (typeof i18n?.onLocaleChanged === 'function') {
+      localeUnsubscribe = i18n.onLocaleChanged(() => {
+        try {
+          handleLocaleChange();
+        } catch (error) {
+          console.error('[Notepad] Failed to apply locale change:', error);
+        }
+      });
+    }
+
     award('open', 5);
 
     newTabBtn.addEventListener('click', () => newDocument());
 
     function populateMenuBar(){
       menuBar.innerHTML = '';
-      ['ファイル','編集','表示'].forEach(name => {
+      const menuDefs = [
+        { key: 'file', labelKey: 'games.notepad.menu.file', fallback: 'ファイル' },
+        { key: 'edit', labelKey: 'games.notepad.menu.edit', fallback: '編集' },
+        { key: 'view', labelKey: 'games.notepad.menu.view', fallback: '表示' }
+      ];
+      menuDefs.forEach(def => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.textContent = name;
+        btn.textContent = translate(def.labelKey, def.fallback);
         btn.style.background = 'transparent';
         btn.style.border = 'none';
         btn.style.cursor = 'pointer';
@@ -268,7 +343,7 @@
         btn.style.padding = '4px 0';
         btn.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          toggleMenu(name, btn);
+          toggleMenu(def.key, btn);
         });
         menuBar.appendChild(btn);
       });
@@ -285,7 +360,9 @@
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.textContent = def.icon;
-          btn.title = def.label;
+          const label = translate(def.labelKey, def.label);
+          btn.title = label;
+          btn.setAttribute('aria-label', label);
           btn.style.minWidth = def.minWidth || '44px';
           btn.style.height = '34px';
           btn.style.borderRadius = '8px';
@@ -303,23 +380,23 @@
       };
 
       createGroup([
-        { key: 'heading', icon: 'H1', label: '見出しを切り替え', handler: () => toggleHeadingLevel() },
-        { key: 'bullet', icon: '•', label: '箇条書きを切り替え', handler: () => toggleBulletList() }
+        { key: 'heading', icon: 'H1', labelKey: 'games.notepad.commands.heading', label: '見出しを切り替え', handler: () => toggleHeadingLevel() },
+        { key: 'bullet', icon: '•', labelKey: 'games.notepad.commands.bullet', label: '箇条書きを切り替え', handler: () => toggleBulletList() }
       ]);
 
       createGroup([
-        { key: 'bold', icon: 'B', label: '太字 (Markdown)', handler: () => toggleWrap('**', '**') },
-        { key: 'italic', icon: 'I', label: '斜体 (Markdown)', handler: () => toggleWrap('*', '*') },
-        { key: 'underline', icon: 'U', label: '下線タグ', handler: () => toggleWrap('<u>', '</u>') }
+        { key: 'bold', icon: 'B', labelKey: 'games.notepad.commands.bold', label: '太字 (Markdown)', handler: () => toggleWrap('**', '**') },
+        { key: 'italic', icon: 'I', labelKey: 'games.notepad.commands.italic', label: '斜体 (Markdown)', handler: () => toggleWrap('*', '*') },
+        { key: 'underline', icon: 'U', labelKey: 'games.notepad.commands.underline', label: '下線タグ', handler: () => toggleWrap('<u>', '</u>') }
       ]);
 
       createGroup([
-        { key: 'wordWrap', icon: '↔', label: '折り返しを切り替え', handler: () => toggleWordWrap() },
-        { key: 'zoomReset', icon: `${state.zoom}%`, label: 'ズームを既定に戻す', handler: () => setZoom(100), minWidth: '64px' }
+        { key: 'wordWrap', icon: '↔', labelKey: 'games.notepad.commands.wordWrap', label: '折り返しを切り替え', handler: () => toggleWordWrap() },
+        { key: 'zoomReset', icon: `${state.zoom}%`, labelKey: 'games.notepad.commands.zoomReset', label: 'ズームを既定に戻す', handler: () => setZoom(100), minWidth: '64px' }
       ]);
 
       createGroup([
-        { key: 'settings', icon: '⚙', label: '設定', handler: (ev, btn) => toggleSettingsPanel(btn) }
+        { key: 'settings', icon: '⚙', labelKey: 'games.notepad.commands.settings', label: '設定', handler: (ev, btn) => toggleSettingsPanel(btn) }
       ]);
 
       refreshCommandBarStates();
@@ -337,7 +414,7 @@
     function refreshCommandBarStates(){
       styleCommandButton(commandButtons.wordWrap, { active: state.wordWrap });
       if (commandButtons.zoomReset) {
-        commandButtons.zoomReset.textContent = `${state.zoom}%`;
+        commandButtons.zoomReset.textContent = `${formatNumber(state.zoom)}%`;
         styleCommandButton(commandButtons.zoomReset, { active: state.zoom !== 100 });
       }
       styleCommandButton(commandButtons.bold, { active: isSelectionWrapped('**', '**') });
@@ -461,13 +538,13 @@
       panel.addEventListener('click', ev => ev.stopPropagation());
 
       const title = document.createElement('div');
-      title.textContent = '設定';
+      title.textContent = translate('games.notepad.settings.title', '設定');
       title.style.fontWeight = '600';
       title.style.fontSize = '15px';
       panel.appendChild(title);
 
-      const { row: wrapRow, input: wrapCheckbox } = createSettingsToggle('折り返し', state.wordWrap, (checked) => setWordWrap(checked));
-      const { row: statusRow, input: statusCheckbox } = createSettingsToggle('ステータスバー', state.showStatusBar, (checked) => setStatusBarVisible(checked));
+      const { row: wrapRow, input: wrapCheckbox } = createSettingsToggle(translate('games.notepad.settings.wordWrap', '折り返し'), state.wordWrap, (checked) => setWordWrap(checked));
+      const { row: statusRow, input: statusCheckbox } = createSettingsToggle(translate('games.notepad.settings.statusBar', 'ステータスバー'), state.showStatusBar, (checked) => setStatusBarVisible(checked));
 
       const zoomBlock = document.createElement('div');
       zoomBlock.style.display = 'flex';
@@ -479,7 +556,7 @@
       zoomHeader.style.justifyContent = 'space-between';
       zoomHeader.style.alignItems = 'center';
       const zoomLabel = document.createElement('span');
-      zoomLabel.textContent = 'ズーム';
+      zoomLabel.textContent = translate('games.notepad.settings.zoom', 'ズーム');
       zoomLabel.style.fontSize = '14px';
       const zoomValue = document.createElement('span');
       zoomValue.style.fontSize = '13px';
@@ -516,7 +593,7 @@
       zoomInBtn.addEventListener('click', () => adjustZoom(10));
       const zoomResetBtn = document.createElement('button');
       zoomResetBtn.type = 'button';
-      zoomResetBtn.textContent = 'リセット';
+      zoomResetBtn.textContent = translate('games.notepad.settings.zoomReset', 'リセット');
       zoomResetBtn.style.flex = '2';
       zoomResetBtn.style.height = '32px';
       zoomResetBtn.style.borderRadius = '6px';
@@ -532,7 +609,7 @@
 
       const timestampBtn = document.createElement('button');
       timestampBtn.type = 'button';
-      timestampBtn.textContent = '日時を挿入';
+      timestampBtn.textContent = translate('games.notepad.settings.insertTimestamp', '日時を挿入');
       timestampBtn.style.height = '34px';
       timestampBtn.style.borderRadius = '8px';
       timestampBtn.style.border = '1px solid rgba(148,163,184,0.4)';
@@ -590,12 +667,12 @@
       settingsControls.wrapCheckbox.checked = state.wordWrap;
       settingsControls.statusCheckbox.checked = state.showStatusBar;
       settingsControls.zoomSlider.value = String(state.zoom);
-      settingsControls.zoomValue.textContent = `${state.zoom}%`;
+      settingsControls.zoomValue.textContent = `${formatNumber(state.zoom)}%`;
     }
 
-    function toggleMenu(name, anchor){
+    function toggleMenu(menuKey, anchor){
       closeSettingsPanel();
-      if (currentMenu && currentMenu.__menuName === name) {
+      if (currentMenu && currentMenu.__menuKey === menuKey) {
         closeMenu();
         return;
       }
@@ -655,37 +732,37 @@
         menu.appendChild(hr);
       };
 
-      if (name === 'ファイル') {
-        addItem('新規', newDocument, 'Ctrl+N');
-        addItem('開く...', openDocument, 'Ctrl+O');
-        addItem('上書き保存', () => saveDocument(false), 'Ctrl+S', state.text !== state.savedText);
-        addItem('名前を付けて保存...', () => saveDocument(true), 'Ctrl+Shift+S');
+      if (menuKey === 'file') {
+        addItem(translate('games.notepad.menu.fileNew', '新規'), newDocument, 'Ctrl+N');
+        addItem(translate('games.notepad.menu.fileOpen', '開く...'), openDocument, 'Ctrl+O');
+        addItem(translate('games.notepad.menu.fileSave', '上書き保存'), () => saveDocument(false), 'Ctrl+S', state.text !== state.savedText);
+        addItem(translate('games.notepad.menu.fileSaveAs', '名前を付けて保存...'), () => saveDocument(true), 'Ctrl+Shift+S');
         addSeparator();
-        addItem('印刷...', printDocument, 'Ctrl+P');
-      } else if (name === '編集') {
-        addItem('元に戻す', () => execCommand('undo'), 'Ctrl+Z');
-        addItem('やり直し', () => execCommand('redo'), 'Ctrl+Y');
+        addItem(translate('games.notepad.menu.filePrint', '印刷...'), printDocument, 'Ctrl+P');
+      } else if (menuKey === 'edit') {
+        addItem(translate('games.notepad.menu.editUndo', '元に戻す'), () => execCommand('undo'), 'Ctrl+Z');
+        addItem(translate('games.notepad.menu.editRedo', 'やり直し'), () => execCommand('redo'), 'Ctrl+Y');
         addSeparator();
-        addItem('切り取り', () => execCommand('cut'), 'Ctrl+X');
-        addItem('コピー', () => execCommand('copy'), 'Ctrl+C');
-        addItem('貼り付け', () => execCommand('paste'), 'Ctrl+V');
-        addItem('削除', () => execCommand('delete'));
+        addItem(translate('games.notepad.menu.editCut', '切り取り'), () => execCommand('cut'), 'Ctrl+X');
+        addItem(translate('games.notepad.menu.editCopy', 'コピー'), () => execCommand('copy'), 'Ctrl+C');
+        addItem(translate('games.notepad.menu.editPaste', '貼り付け'), () => execCommand('paste'), 'Ctrl+V');
+        addItem(translate('games.notepad.menu.editDelete', '削除'), () => execCommand('delete'));
         addSeparator();
-        addItem('検索...', findText, 'Ctrl+F');
-        addItem('置換...', replaceText, 'Ctrl+H');
+        addItem(translate('games.notepad.menu.editFind', '検索...'), findText, 'Ctrl+F');
+        addItem(translate('games.notepad.menu.editReplace', '置換...'), replaceText, 'Ctrl+H');
         addSeparator();
-        addItem('すべて選択', () => execCommand('selectAll'), 'Ctrl+A');
+        addItem(translate('games.notepad.menu.editSelectAll', 'すべて選択'), () => execCommand('selectAll'), 'Ctrl+A');
       } else {
-        addItem('ズームイン', () => adjustZoom(10), 'Ctrl+Plus');
-        addItem('ズームアウト', () => adjustZoom(-10), 'Ctrl+Minus');
-        addItem('ズームを既定に戻す', () => setZoom(100), 'Ctrl+0');
+        addItem(translate('games.notepad.menu.viewZoomIn', 'ズームイン'), () => adjustZoom(10), 'Ctrl+Plus');
+        addItem(translate('games.notepad.menu.viewZoomOut', 'ズームアウト'), () => adjustZoom(-10), 'Ctrl+Minus');
+        addItem(translate('games.notepad.menu.viewZoomReset', 'ズームを既定に戻す'), () => setZoom(100), 'Ctrl+0');
         addSeparator();
-        addItem(state.wordWrap ? '折り返しを無効化' : '折り返しを有効化', toggleWordWrap);
-        addItem(state.showStatusBar ? 'ステータスバーを非表示' : 'ステータスバーを表示', toggleStatusBar);
+        addItem(state.wordWrap ? translate('games.notepad.menu.view.disableWordWrap', '折り返しを無効化') : translate('games.notepad.menu.view.enableWordWrap', '折り返しを有効化'), toggleWordWrap);
+        addItem(state.showStatusBar ? translate('games.notepad.menu.view.hideStatusBar', 'ステータスバーを非表示') : translate('games.notepad.menu.view.showStatusBar', 'ステータスバーを表示'), toggleStatusBar);
       }
 
       closeMenu();
-      menu.__menuName = name;
+      menu.__menuKey = menuKey;
       currentMenu = menu;
       frame.appendChild(menu);
     }
@@ -704,11 +781,14 @@
 
     function newDocument(){
       if (state.text !== state.savedText) {
-        if (!confirm('変更を保存せずに新しいファイルを開きますか？')) return;
+        const message = translate('games.notepad.confirm.newWithoutSaving', '変更を保存せずに新しいファイルを開きますか？');
+        if (!confirm(message)) return;
       }
       closeMenu();
       closeSettingsPanel();
-      state.fileName = DEFAULT_FILENAME;
+      const defaultName = getDefaultFileName();
+      currentDefaultFileName = defaultName;
+      state.fileName = defaultName;
       state.text = '';
       state.savedText = '';
       state.lineEnding = '\r\n';
@@ -731,28 +811,33 @@
       const reader = new FileReader();
       reader.onload = () => {
         const content = typeof reader.result === 'string' ? reader.result : '';
-        state.fileName = file.name || DEFAULT_FILENAME;
+        const defaultName = getDefaultFileName();
+        if (!file.name) currentDefaultFileName = defaultName;
+        state.fileName = file.name || defaultName;
         state.text = content;
-      state.savedText = content;
-      textarea.value = content;
-      state.lineEnding = detectLineEnding(content);
-      updateTitle();
-      scheduleStatusUpdate();
-      persistSoon();
+        state.savedText = content;
+        textarea.value = content;
+        state.lineEnding = detectLineEnding(content);
+        updateTitle();
+        scheduleStatusUpdate();
+        persistSoon();
       };
-      reader.onerror = () => alert('ファイルの読み込みに失敗しました。');
+      reader.onerror = () => alert(translate('games.notepad.alerts.fileReadFailed', 'ファイルの読み込みに失敗しました。'));
       reader.readAsText(file, 'utf-8');
     };
     hiddenFileInput.addEventListener('change', onFileChange);
 
     function saveDocument(forcePrompt){
-      let name = state.fileName || DEFAULT_FILENAME;
-      if (forcePrompt || name === DEFAULT_FILENAME) {
-        const entered = prompt('保存するファイル名を入力してください', name);
+      const defaultName = getDefaultFileName();
+      let name = state.fileName || defaultName;
+      if (forcePrompt || name === currentDefaultFileName) {
+        const promptMessage = translate('games.notepad.prompts.saveFileName', '保存するファイル名を入力してください');
+        const entered = prompt(promptMessage, name);
         if (!entered) return;
         name = entered.trim();
-        if (!name) name = DEFAULT_FILENAME;
+        if (!name) name = defaultName;
       }
+      if (!name) name = defaultName;
       const payload = textarea.value;
       state.lineEnding = detectLineEnding(payload);
       const blob = new Blob([payload], { type: 'text/plain;charset=utf-8' });
@@ -761,6 +846,7 @@
       hiddenDownloader.click();
       setTimeout(() => URL.revokeObjectURL(hiddenDownloader.href), 0);
       state.fileName = name;
+      currentDefaultFileName = defaultName;
       state.savedText = payload;
       state.text = payload;
       updateTitle();
@@ -774,13 +860,16 @@
       closeSettingsPanel();
       const printWindow = window.open('', '_blank', 'noopener');
       if (!printWindow) {
-        alert('印刷ウィンドウを開けませんでした。ポップアップを許可してください。');
+        alert(translate('games.notepad.alerts.printPopupBlocked', '印刷ウィンドウを開けませんでした。ポップアップを許可してください。'));
         return;
       }
-      const title = state.fileName || 'メモ帳';
+      const locale = (typeof i18n?.getLocale === 'function' && i18n.getLocale()) || (typeof i18n?.getDefaultLocale === 'function' && i18n.getDefaultLocale()) || 'ja';
+      const fallbackTitle = getNotepadTitle();
+      const title = state.fileName || fallbackTitle;
       const escapedTitle = escapeHtml(title);
       const escapedBody = escapeHtml(textarea.value);
-      const html = `<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>${escapedTitle} - 印刷</title><style>body{font-family:'Segoe UI','Yu Gothic',sans-serif;padding:24px;margin:0;background:#ffffff;color:#0f172a;}h1{font-size:18px;margin:0 0 16px 0;}pre{white-space:pre-wrap;word-break:break-word;font-size:${computeFontSize(state.zoom)};line-height:1.6;}</style></head><body><h1>${escapedTitle}</h1><pre>${escapedBody}</pre></body></html>`;
+      const printLabel = escapeHtml(getPrintLabel());
+      const html = `<!DOCTYPE html><html lang="${escapeHtml(locale)}"><head><meta charset="utf-8"><title>${escapedTitle} - ${printLabel}</title><style>body{font-family:'Segoe UI','Yu Gothic',sans-serif;padding:24px;margin:0;background:#ffffff;color:#0f172a;}h1{font-size:18px;margin:0 0 16px 0;}pre{white-space:pre-wrap;word-break:break-word;font-size:${computeFontSize(state.zoom)};line-height:1.6;}</style></head><body><h1>${escapedTitle}</h1><pre>${escapedBody}</pre></body></html>`;
       printWindow.document.open();
       printWindow.document.write(html);
       printWindow.document.close();
@@ -808,7 +897,8 @@
     }
 
     function findText(){
-      const term = prompt('検索する文字列を入力してください');
+      const message = translate('games.notepad.prompts.search', '検索する文字列を入力してください');
+      const term = prompt(message);
       if (!term) return;
       const text = textarea.value;
       const start = textarea.selectionEnd;
@@ -819,14 +909,16 @@
         textarea.setSelectionRange(target, target + term.length);
         scheduleStatusUpdate();
       } else {
-        alert('見つかりませんでした。');
+        alert(translate('games.notepad.alerts.searchNotFound', '見つかりませんでした。'));
       }
     }
 
     function replaceText(){
-      const term = prompt('置換する文字列を入力してください');
+      const targetPrompt = translate('games.notepad.prompts.replaceTarget', '置換する文字列を入力してください');
+      const term = prompt(targetPrompt);
       if (term === null) return;
-      const repl = prompt('置換後の文字列を入力してください', '');
+      const replacementPrompt = translate('games.notepad.prompts.replaceWith', '置換後の文字列を入力してください');
+      const repl = prompt(replacementPrompt, '');
       if (repl === null) return;
       const text = textarea.value;
       const start = textarea.selectionStart;
@@ -844,21 +936,15 @@
           textarea.focus();
           textarea.setSelectionRange(idx, idx + term.length);
         } else {
-          alert('対象の文字列が見つかりませんでした。');
+          alert(translate('games.notepad.alerts.replaceNotFound', '対象の文字列が見つかりませんでした。'));
         }
       }
     }
 
     function insertTimestamp(){
       const now = new Date();
-      const stamp = now.toLocaleString('ja-JP', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }).replace(/\//g, '-');
+      const pattern = getTimestampPattern();
+      const stamp = formatTimestamp(now, pattern);
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const value = textarea.value;
@@ -960,11 +1046,21 @@
       const length = textarea.value.length;
       statusLeft.innerHTML = '';
       statusRight.innerHTML = '';
-      statusLeft.appendChild(makeStatusChip(`行 ${line}, 列 ${column}`));
-      statusLeft.appendChild(makeStatusChip(`${length} 文字`));
-      statusLeft.appendChild(makeStatusChip('テキスト'));
-      statusRight.appendChild(makeStatusChip(`${state.zoom}%`));
-      statusRight.appendChild(makeStatusChip(state.lineEnding === '\n' ? 'Unix (LF)' : 'Windows (CRLF)'));
+      const positionText = translate('games.notepad.status.position', '行 {line}, 列 {column}', {
+        line: formatNumber(line),
+        column: formatNumber(column)
+      });
+      const lengthText = translate('games.notepad.status.length', '{count} 文字', {
+        count: formatNumber(length)
+      });
+      const typeText = translate('games.notepad.status.typeText', 'テキスト');
+      statusLeft.appendChild(makeStatusChip(positionText));
+      statusLeft.appendChild(makeStatusChip(lengthText));
+      statusLeft.appendChild(makeStatusChip(typeText));
+      statusRight.appendChild(makeStatusChip(`${formatNumber(state.zoom)}%`));
+      statusRight.appendChild(makeStatusChip(state.lineEnding === '\n'
+        ? translate('games.notepad.status.lineEnding.lf', 'Unix (LF)')
+        : translate('games.notepad.status.lineEnding.crlf', 'Windows (CRLF)')));
       statusRight.appendChild(makeStatusChip(state.encoding));
     }
 
@@ -1032,6 +1128,22 @@
       closeSettingsPanel();
     }
 
+    function handleLocaleChange(){
+      const previousDefault = currentDefaultFileName;
+      const nextDefault = getDefaultFileName();
+      currentDefaultFileName = nextDefault;
+      if (state.fileName === previousDefault) {
+        state.fileName = nextDefault;
+      }
+      closeMenu();
+      closeSettingsPanel();
+      populateMenuBar();
+      populateCommandBar();
+      updateTitle();
+      updateStatusBar();
+      persistSoon();
+    }
+
     let currentRuntimeRef = null;
 
     function quit(){
@@ -1078,6 +1190,10 @@
       }
       closeMenu();
       closeSettingsPanel();
+      if (typeof localeUnsubscribe === 'function') {
+        try { localeUnsubscribe(); } catch {}
+        localeUnsubscribe = null;
+      }
       if (persistTimer) {
         clearTimeout(persistTimer);
         persistTimer = null;

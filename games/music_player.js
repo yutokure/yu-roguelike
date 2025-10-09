@@ -18,11 +18,17 @@
   ];
 
   const EQ_PRESETS = {
-    flat: { label: 'フラット', gains: [0, 0, 0, 0, 0, 0] },
-    rock: { label: 'ロック', gains: [4, 3, 0, 2, 4, 5] },
-    vocal: { label: 'ボーカル', gains: [-2, -1, 2, 4, 3, 1] },
-    bass_boost: { label: '低音強調', gains: [6, 4, 2, 0, -1, -3] }
+    flat: { labelKey: 'minigame.music_player.eq.presets.flat', fallbackLabel: 'フラット', gains: [0, 0, 0, 0, 0, 0] },
+    rock: { labelKey: 'minigame.music_player.eq.presets.rock', fallbackLabel: 'ロック', gains: [4, 3, 0, 2, 4, 5] },
+    vocal: { labelKey: 'minigame.music_player.eq.presets.vocal', fallbackLabel: 'ボーカル', gains: [-2, -1, 2, 4, 3, 1] },
+    bass_boost: { labelKey: 'minigame.music_player.eq.presets.bassBoost', fallbackLabel: '低音強調', gains: [6, 4, 2, 0, -1, -3] }
   };
+  const LOOP_OPTIONS = [
+    { value: 'none', labelKey: 'minigame.music_player.loop.none', fallbackLabel: 'ループなし' },
+    { value: 'one', labelKey: 'minigame.music_player.loop.one', fallbackLabel: '1曲リピート' },
+    { value: 'all', labelKey: 'minigame.music_player.loop.all', fallbackLabel: '全曲リピート' }
+  ];
+  const UNTITLED_MARKER = '名称未設定';
 
   function createId(){
     if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -65,7 +71,7 @@
       const tracks = Array.isArray(parsed.tracks) ? parsed.tracks.map(t => {
         if (!t || typeof t !== 'object') return null;
         const id = safeString(t.id, createId());
-        const name = safeString(t.name, '名称未設定');
+        const name = safeString(t.name, UNTITLED_MARKER);
         const duration = Number.isFinite(t.duration) ? t.duration : null;
         const type = safeString(t.type, 'audio/mpeg');
         const size = Number.isFinite(t.size) ? t.size : null;
@@ -228,8 +234,60 @@
       }
     };
   }
-  function create(root, awardXp){
+  function create(root, awardXp, opts = {}){
     if (!root) throw new Error('MiniExp Music Player requires a container');
+
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'music_player' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const toText = value => (value == null ? '' : String(value));
+    const localizationUpdaters = [];
+    const registerLocalizationUpdater = fn => {
+      if (typeof fn !== 'function') return () => {};
+      localizationUpdaters.push(fn);
+      try { fn(); } catch {}
+      return fn;
+    };
+    const applyLocaleUpdates = () => {
+      localizationUpdaters.forEach(fn => {
+        try { fn(); } catch {}
+      });
+    };
+    let detachLocale = null;
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        applyLocaleUpdates();
+        updateHeader();
+        updateEqUI();
+        renderPlaylist();
+      });
+    }
+    const toast = createToast();
+    const bindLocalizedText = (element, key, fallback, { attr = 'textContent', params } = {}) => {
+      return registerLocalizationUpdater(() => {
+        const paramValue = typeof params === 'function' ? params() : params;
+        const resolved = text(key, fallback, paramValue);
+        if (attr === 'textContent') element.textContent = toText(resolved);
+        else element[attr] = toText(resolved);
+      });
+    };
+    const showLocalizedToast = (key, fallback, params) => {
+      const resolved = text(key, fallback, params);
+      toast.show(toText(resolved));
+    };
+    const resolveUntitledName = name => {
+      if (!name || name === UNTITLED_MARKER) {
+        return text('minigame.music_player.track.untitled', UNTITLED_MARKER);
+      }
+      return name;
+    };
 
     const trackStore = new TrackStore();
     const persisted = loadPersistentState();
@@ -270,8 +328,6 @@
     const eqNodes = [];
     let persistTimer = null;
     let isRunning = false;
-
-    const toast = createToast();
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -332,12 +388,10 @@
     trackTitle.style.fontSize = '18px';
     trackTitle.style.fontWeight = '700';
     trackTitle.style.color = '#f8fafc';
-    trackTitle.textContent = 'ミュージックプレイヤー';
 
     const trackSubtitle = document.createElement('div');
     trackSubtitle.style.fontSize = '13px';
     trackSubtitle.style.color = '#cbd5f5';
-    trackSubtitle.textContent = 'ローカル音源を再生するユーティリティ';
 
     headerTextWrap.appendChild(trackTitle);
     headerTextWrap.appendChild(trackSubtitle);
@@ -350,7 +404,6 @@
     headerActions.style.gap = '12px';
 
     const importLabel = document.createElement('label');
-    importLabel.textContent = '音源を追加';
     importLabel.style.padding = '10px 18px';
     importLabel.style.borderRadius = '999px';
     importLabel.style.cursor = 'pointer';
@@ -358,6 +411,8 @@
     importLabel.style.color = '#0f172a';
     importLabel.style.fontWeight = '700';
     importLabel.style.boxShadow = '0 12px 24px rgba(34,211,238,0.45)';
+    const importLabelText = document.createElement('span');
+    importLabel.appendChild(importLabelText);
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -400,7 +455,8 @@
     shuffleToggle.style.padding = '8px 12px';
     shuffleToggle.style.borderRadius = '12px';
     shuffleToggle.style.cursor = 'pointer';
-    shuffleToggle.textContent = 'シャッフル再生';
+    const shuffleLabel = document.createElement('span');
+    shuffleToggle.appendChild(shuffleLabel);
 
     const shuffleInput = document.createElement('input');
     shuffleInput.type = 'checkbox';
@@ -413,7 +469,8 @@
     loopLabel.style.display = 'flex';
     loopLabel.style.flexDirection = 'column';
     loopLabel.style.gap = '6px';
-    loopLabel.textContent = 'ループモード';
+    const loopLabelText = document.createElement('span');
+    loopLabel.appendChild(loopLabelText);
 
     const loopSelect = document.createElement('select');
     loopSelect.style.padding = '8px 10px';
@@ -421,10 +478,10 @@
     loopSelect.style.border = '1px solid rgba(148,163,184,0.2)';
     loopSelect.style.background = 'rgba(15,23,42,0.8)';
     loopSelect.style.color = '#e2e8f0';
-    [{ value: 'none', label: 'ループなし' }, { value: 'one', label: '1曲リピート' }, { value: 'all', label: '全曲リピート' }].forEach(opt => {
+    LOOP_OPTIONS.forEach(opt => {
       const option = document.createElement('option');
       option.value = opt.value;
-      option.textContent = opt.label;
+      bindLocalizedText(option, opt.labelKey, opt.fallbackLabel);
       loopSelect.appendChild(option);
     });
     loopSelect.value = state.loopMode;
@@ -432,7 +489,6 @@
 
     const clearBtn = document.createElement('button');
     clearBtn.type = 'button';
-    clearBtn.textContent = 'ライブラリを全削除';
     clearBtn.style.padding = '9px 12px';
     clearBtn.style.borderRadius = '12px';
     clearBtn.style.border = '1px solid rgba(248,113,113,0.45)';
@@ -463,7 +519,6 @@
     playlistHeader.style.justifyContent = 'space-between';
 
     const playlistTitle = document.createElement('div');
-    playlistTitle.textContent = 'プレイリスト';
     playlistTitle.style.fontSize = '16px';
     playlistTitle.style.fontWeight = '700';
 
@@ -476,7 +531,12 @@
 
     const searchInput = document.createElement('input');
     searchInput.type = 'search';
-    searchInput.placeholder = '検索...';
+    bindLocalizedText(importLabelText, 'minigame.music_player.actions.import', '音源を追加');
+    bindLocalizedText(shuffleLabel, 'minigame.music_player.settings.shuffle', 'シャッフル再生');
+    bindLocalizedText(loopLabelText, 'minigame.music_player.settings.loopMode', 'ループモード');
+    bindLocalizedText(clearBtn, 'minigame.music_player.settings.clearLibrary', 'ライブラリを全削除');
+    bindLocalizedText(playlistTitle, 'minigame.music_player.playlist.title', 'プレイリスト');
+    bindLocalizedText(searchInput, 'minigame.music_player.playlist.search', '検索...', { attr: 'placeholder' });
     searchInput.style.padding = '10px 12px';
     searchInput.style.borderRadius = '12px';
     searchInput.style.border = '1px solid rgba(148,163,184,0.24)';
@@ -579,7 +639,8 @@
     volumeWrap.style.gap = '6px';
     volumeWrap.style.fontSize = '13px';
     volumeWrap.style.color = '#cbd5f5';
-    volumeWrap.textContent = '音量';
+    const volumeLabelText = document.createElement('span');
+    volumeWrap.appendChild(volumeLabelText);
 
     const volumeSlider = document.createElement('input');
     volumeSlider.type = 'range';
@@ -597,7 +658,8 @@
     rateWrap.style.gap = '6px';
     rateWrap.style.fontSize = '13px';
     rateWrap.style.color = '#cbd5f5';
-    rateWrap.textContent = '再生速度';
+    const rateLabelText = document.createElement('span');
+    rateWrap.appendChild(rateLabelText);
 
     const rateSlider = document.createElement('input');
     rateSlider.type = 'range';
@@ -611,6 +673,9 @@
 
     slidersRow.appendChild(volumeWrap);
     slidersRow.appendChild(rateWrap);
+
+    bindLocalizedText(volumeLabelText, 'minigame.music_player.controls.volume', '音量');
+    bindLocalizedText(rateLabelText, 'minigame.music_player.controls.playbackRate', '再生速度');
 
     controlsPanel.appendChild(mainControls);
     controlsPanel.appendChild(timelineWrap);
@@ -632,7 +697,6 @@
     oscWrap.style.gap = '8px';
 
     const oscTitle = document.createElement('div');
-    oscTitle.textContent = 'オシロスコープ';
     oscTitle.style.fontSize = '14px';
     oscTitle.style.fontWeight = '600';
     oscTitle.style.color = '#cbd5f5';
@@ -658,7 +722,6 @@
     freqWrap.style.gap = '8px';
 
     const freqTitle = document.createElement('div');
-    freqTitle.textContent = '周波数スペクトラム';
     freqTitle.style.fontSize = '14px';
     freqTitle.style.fontWeight = '600';
     freqTitle.style.color = '#cbd5f5';
@@ -688,7 +751,6 @@
     eqHeader.style.justifyContent = 'space-between';
 
     const eqTitle = document.createElement('div');
-    eqTitle.textContent = 'イコライザー';
     eqTitle.style.fontSize = '15px';
     eqTitle.style.fontWeight = '700';
 
@@ -701,12 +763,12 @@
     Object.entries(EQ_PRESETS).forEach(([key, preset]) => {
       const option = document.createElement('option');
       option.value = key;
-      option.textContent = preset.label;
+      bindLocalizedText(option, preset.labelKey, preset.fallbackLabel);
       eqPresetSelect.appendChild(option);
     });
     const customOption = document.createElement('option');
     customOption.value = 'custom';
-    customOption.textContent = 'カスタム';
+    bindLocalizedText(customOption, 'minigame.music_player.eq.presets.custom', 'カスタム');
     eqPresetSelect.appendChild(customOption);
     eqPresetSelect.value = EQ_PRESETS[state.eqPreset] ? state.eqPreset : 'custom';
 
@@ -761,6 +823,10 @@
     eqPanel.appendChild(eqHeader);
     eqPanel.appendChild(eqSliders);
 
+    bindLocalizedText(oscTitle, 'minigame.music_player.visualizer.oscilloscope', 'オシロスコープ');
+    bindLocalizedText(freqTitle, 'minigame.music_player.visualizer.frequency', '周波数スペクトラム');
+    bindLocalizedText(eqTitle, 'minigame.music_player.eq.title', 'イコライザー');
+
     vizPanel.appendChild(oscWrap);
     vizPanel.appendChild(freqWrap);
     vizPanel.appendChild(eqPanel);
@@ -777,7 +843,6 @@
 
     const statusPlaylist = document.createElement('div');
     const statusSession = document.createElement('div');
-    statusSession.textContent = 'Session EXP: 0';
 
     statusBar.appendChild(statusPlaylist);
     statusBar.appendChild(statusSession);
@@ -796,10 +861,6 @@
     wrapper.appendChild(settingsMenu);
     wrapper.appendChild(toast.element);
     root.appendChild(wrapper);
-    function showToast(message){
-      toast.show(message);
-    }
-
     function schedulePersist(){
       if (persistTimer) clearTimeout(persistTimer);
       persistTimer = setTimeout(() => {
@@ -837,7 +898,7 @@
         gainNode.connect(analyserNode);
         analyserNode.connect(audioContext.destination);
       } catch (err) {
-        showToast('オーディオコンテキストを初期化できませんでした');
+        showLocalizedToast('minigame.music_player.toast.audioInitFailed', 'オーディオコンテキストを初期化できませんでした');
       }
     }
 
@@ -853,21 +914,23 @@
     function updateHeader(){
       const track = state.tracks.find(t => t.id === state.currentTrackId);
       if (track){
-        trackTitle.textContent = track.name;
-        const duration = track.duration ? formatDuration(track.duration) : '長さ計測中';
-        trackSubtitle.textContent = `再生中 • ${duration}`;
+        const name = resolveUntitledName(track.name);
+        trackTitle.textContent = name;
+        const duration = track.duration ? formatDuration(track.duration) : text('minigame.music_player.header.measuring', '長さ計測中');
+        trackSubtitle.textContent = text('minigame.music_player.header.playing', () => `再生中 • ${duration}`, { duration, name });
       } else {
-        trackTitle.textContent = 'ミュージックプレイヤー';
-        trackSubtitle.textContent = 'ローカル音源を再生するユーティリティ';
+        trackTitle.textContent = text('minigame.music_player.title', 'ミュージックプレイヤー');
+        trackSubtitle.textContent = text('minigame.music_player.subtitle', 'ローカル音源を再生するユーティリティ');
       }
       playPauseBtn.textContent = state.isPlaying ? '⏸' : '▶';
     }
 
     function updateStatus(){
       const totalDuration = state.tracks.reduce((sum, track) => sum + (Number.isFinite(track.duration) ? track.duration : 0), 0);
-      statusPlaylist.textContent = `曲数: ${state.tracks.length} / ${MAX_TRACKS} | 合計時間: ${formatDuration(totalDuration)}`;
-      statusSession.textContent = `Session EXP: ${state.sessionXp}`;
-      playlistCount.textContent = `${state.tracks.length} 曲`;
+      const durationText = formatDuration(totalDuration);
+      statusPlaylist.textContent = toText(text('minigame.music_player.status.playlist', () => `曲数: ${state.tracks.length} / ${MAX_TRACKS} | 合計時間: ${durationText}`, { count: state.tracks.length, max: MAX_TRACKS, duration: durationText }));
+      statusSession.textContent = toText(text('minigame.music_player.status.session', () => `Session EXP: ${state.sessionXp}`, { exp: state.sessionXp }));
+      playlistCount.textContent = toText(text('minigame.music_player.playlist.count', () => `${state.tracks.length} 曲`, { count: state.tracks.length }));
     }
 
     function createPlaylistItem(track){
@@ -889,7 +952,7 @@
       info.style.gap = '4px';
 
       const name = document.createElement('div');
-      name.textContent = track.name;
+      name.textContent = resolveUntitledName(track.name);
       name.style.fontSize = '14px';
       name.style.fontWeight = isActive ? '700' : '600';
       name.style.color = isActive ? '#f8fafc' : '#e2e8f0';
@@ -967,7 +1030,7 @@
 
       name.addEventListener('dblclick', ev => {
         ev.stopPropagation();
-        const newName = prompt('トラック名を入力', track.name);
+        const newName = prompt(text('minigame.music_player.dialog.renamePrompt', 'トラック名を入力'), resolveUntitledName(track.name));
         if (newName) renameTrack(track.id, newName);
       });
 
@@ -978,7 +1041,11 @@
       playlistList.innerHTML = '';
       const keyword = searchInput.value.trim().toLowerCase();
       state.tracks.forEach(track => {
-        if (keyword && !track.name.toLowerCase().includes(keyword)) return;
+        if (keyword){
+          const rawName = track.name.toLowerCase();
+          const localizedName = resolveUntitledName(track.name).toLowerCase();
+          if (!rawName.includes(keyword) && !localizedName.includes(keyword)) return;
+        }
         playlistList.appendChild(createPlaylistItem(track));
       });
       updateStatus();
@@ -994,7 +1061,7 @@
         objectUrls.set(id, url);
         return url;
       } catch {
-        showToast('音源の読み込みに失敗しました');
+        showLocalizedToast('minigame.music_player.toast.loadFailed', '音源の読み込みに失敗しました');
         return null;
       }
     }
@@ -1010,7 +1077,7 @@
       if (!id) return;
       const track = state.tracks.find(t => t.id === id);
       if (!track){
-        showToast('トラックが見つかりません');
+        showLocalizedToast('minigame.music_player.toast.trackMissing', 'トラックが見つかりません');
         return;
       }
       if (state.currentTrackId !== id){
@@ -1058,7 +1125,7 @@
     async function play(opts = {}){
       if (!state.currentTrackId){
         if (state.tracks.length === 0){
-          showToast('再生するトラックがありません');
+          showLocalizedToast('minigame.music_player.toast.noTracks', '再生するトラックがありません');
           return;
         }
         await setCurrentTrack(state.tracks[0].id, { autoPlay: false });
@@ -1082,7 +1149,7 @@
       } catch {
         state.isPlaying = false;
         updateHeader();
-        showToast('再生を開始できませんでした');
+        showLocalizedToast('minigame.music_player.toast.playFailed', '再生を開始できませんでした');
       }
     }
 
@@ -1147,7 +1214,8 @@
       try {
         await trackStore.delete(id);
       } catch {}
-      showToast(`${removed.name} を削除しました`);
+      const removedName = resolveUntitledName(removed.name);
+      showLocalizedToast('minigame.music_player.toast.removed', () => `${removedName} を削除しました`, { name: removedName });
     }
 
     async function handleFiles(files){
@@ -1156,11 +1224,11 @@
       for (const file of files){
         if (!file.type.startsWith('audio/')) continue;
         if (file.size > MAX_FILE_SIZE){
-          showToast(`${file.name} はサイズ上限を超えています`);
+          showLocalizedToast('minigame.music_player.toast.fileTooLarge', () => `${file.name} はサイズ上限を超えています`, { name: file.name, maxBytes: MAX_FILE_SIZE });
           continue;
         }
         if (state.tracks.length + accepted.length >= MAX_TRACKS){
-          showToast('プレイリストの上限に達しました');
+          showLocalizedToast('minigame.music_player.toast.playlistFull', 'プレイリストの上限に達しました', { max: MAX_TRACKS });
           break;
         }
         accepted.push(file);
@@ -1174,7 +1242,7 @@
         try {
           await trackStore.put(record);
         } catch {
-          showToast(`${file.name} を保存できませんでした`);
+          showLocalizedToast('minigame.music_player.toast.saveFailed', () => `${file.name} を保存できませんでした`, { name: file.name });
           continue;
         }
         const track = { id, name: file.name, duration: null, type: file.type, size: file.size, addedAt: record.addedAt };
@@ -1349,7 +1417,7 @@
     }
 
     function clearLibrary(){
-      if (!confirm('すべての音源を削除しますか？')) return;
+      if (!confirm(text('minigame.music_player.dialog.clearConfirm', 'すべての音源を削除しますか？'))) return;
       pause();
       state.tracks.slice().forEach(track => revokeUrl(track.id));
       state.tracks = [];
@@ -1363,7 +1431,7 @@
         const tx = db.transaction(DB_STORE, 'readwrite');
         tx.objectStore(DB_STORE).clear();
       }).catch(()=>{});
-      showToast('ライブラリをクリアしました');
+      showLocalizedToast('minigame.music_player.toast.libraryCleared', 'ライブラリをクリアしました');
     }
 
     function setupEventListeners(){
@@ -1484,7 +1552,7 @@
           await setCurrentTrack(state.currentTrackId, { autoPlay: false, seekTime: state.currentTime });
         }
       } catch {
-        showToast('ライブラリの読み込みに失敗しました');
+        showLocalizedToast('minigame.music_player.toast.libraryLoadFailed', 'ライブラリの読み込みに失敗しました');
       }
       renderPlaylist();
       updateHeader();
@@ -1515,6 +1583,10 @@
       wrapper.remove();
       if (audioContext){
         try { audioContext.close(); } catch {}
+      }
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
       }
       trackStore.close();
       objectUrls.forEach(url => URL.revokeObjectURL(url));

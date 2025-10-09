@@ -16,6 +16,31 @@
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const cfg = { ...BASE_CFG, ...(DIFFICULTY_CFG[difficulty] || DIFFICULTY_CFG.NORMAL) };
 
+    const i18n = window.I18n;
+    function translate(key, fallback, params){
+      const computeFallback = () => {
+        if (typeof fallback === 'function'){
+          try {
+            const result = fallback();
+            return typeof result === 'string' ? result : (result ?? '');
+          } catch (error) {
+            console.warn('[dino_runner] Failed to evaluate fallback for', key, error);
+            return '';
+          }
+        }
+        return fallback ?? '';
+      };
+      if (!key) return computeFallback();
+      if (!i18n || typeof i18n.t !== 'function') return computeFallback();
+      try {
+        const translated = i18n.t(key, params);
+        if (typeof translated === 'string' && translated !== key) return translated;
+      } catch (error) {
+        console.warn('[dino_runner] Failed to translate key', key, error);
+      }
+      return computeFallback();
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = cfg.width;
     canvas.height = cfg.height;
@@ -223,21 +248,22 @@
       ctx.fillText(Math.floor(distance).toString().padStart(5,'0'), canvas.width - 16, 38);
       ctx.font = '12px system-ui, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`COMBO ${combo}`, 16, 28);
+      ctx.fillText(translate('game.miniExp.dinoRunner.comboLabel', () => `COMBO ${combo}`, { combo }), 16, 28);
       if (!running && !ended){
         ctx.textAlign = 'center';
-        ctx.fillText('スペース / クリックでスタート', canvas.width/2, canvas.height/2 - 18);
-        ctx.fillText('↑またはスペースでジャンプ、↓でしゃがみ', canvas.width/2, canvas.height/2 + 4);
+        ctx.fillText(translate('game.miniExp.dinoRunner.startPromptPrimary', 'スペース / クリックでスタート'), canvas.width/2, canvas.height/2 - 18);
+        ctx.fillText(translate('game.miniExp.dinoRunner.startPromptSecondary', '↑またはスペースでジャンプ、↓でしゃがみ'), canvas.width/2, canvas.height/2 + 4);
       }
       if (ended){
         ctx.fillStyle = 'rgba(15,23,42,0.6)';
         ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle = '#f8fafc';
         ctx.font = 'bold 24px system-ui, sans-serif';
-        ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2 - 10);
+        ctx.fillText(translate('game.miniExp.dinoRunner.gameOver', 'GAME OVER'), canvas.width/2, canvas.height/2 - 10);
         ctx.font = '13px system-ui, sans-serif';
-        ctx.fillText('スペース / R でリスタート', canvas.width/2, canvas.height/2 + 16);
-        ctx.fillText(`DIST ${Math.floor(distance)}`, canvas.width/2, canvas.height/2 + 40);
+        ctx.fillText(translate('game.miniExp.dinoRunner.restartHint', 'スペース / R でリスタート'), canvas.width/2, canvas.height/2 + 16);
+        const distanceValue = Math.floor(distance);
+        ctx.fillText(translate('game.miniExp.dinoRunner.distanceLabel', () => `DIST ${distanceValue}`, { distance: distanceValue }), canvas.width/2, canvas.height/2 + 40);
       }
     }
 

@@ -1,4 +1,39 @@
 (function(){
+  const globalObject = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
+
+  function getI18n(){
+    return globalObject && globalObject.I18n ? globalObject.I18n : null;
+  }
+
+  function translate(key, params, fallback){
+    const i18n = getI18n();
+    if (key && i18n && typeof i18n.t === 'function') {
+      try {
+        const value = i18n.t(key, params);
+        if (value !== undefined && value !== null && value !== key) {
+          return value;
+        }
+      } catch (error) {
+        console.warn('[MiniPaint] Failed to translate key:', key, error);
+      }
+    }
+    if (typeof fallback === 'function') {
+      try {
+        return fallback();
+      } catch (error) {
+        console.warn('[MiniPaint] Failed to evaluate fallback for key:', key, error);
+        return '';
+      }
+    }
+    if (fallback !== undefined && fallback !== null) {
+      return fallback;
+    }
+    if (typeof key === 'string') {
+      return key;
+    }
+    return '';
+  }
+
   const STORAGE_KEY = 'mini_paint_state_v1';
   const CANVAS_WIDTH = 960;
   const CANVAS_HEIGHT = 540;
@@ -11,18 +46,20 @@
   const IMPORT_XP = 5;
   const DEFAULT_PRIMARY = '#1f2937';
   const DEFAULT_SECONDARY = '#ffffff';
-  const DEFAULT_FILENAME = '未タイトル.png';
+  const DEFAULT_APP_NAME = 'ペイント';
+  const DEFAULT_FILENAME_FALLBACK = '未タイトル.png';
+  const DEFAULT_IMPORTED_FILENAME = 'インポート画像.png';
 
   const TOOL_DEFINITIONS = {
-    brush: { kind: 'stroke', label: 'ブラシ', icon: '🖌️', sizeMultiplier: 1, lineCap: 'round', lineJoin: 'round' },
-    pencil: { kind: 'stroke', label: '鉛筆', icon: '✏️', sizeMultiplier: 0.55, lineCap: 'round', lineJoin: 'round' },
-    marker: { kind: 'stroke', label: 'マーカー', icon: '🖍️', sizeMultiplier: 1.8, lineCap: 'round', lineJoin: 'round', alpha: 0.45 },
-    eraser: { kind: 'stroke', label: '消しゴム', icon: '🧼', sizeMultiplier: 1.6, lineCap: 'round', lineJoin: 'round', erase: true },
-    line: { kind: 'shape-line', label: '直線', icon: '／' },
-    rectangle: { kind: 'shape-rect', label: '四角', icon: '▭' },
-    ellipse: { kind: 'shape-ellipse', label: '楕円', icon: '◯' },
-    fill: { kind: 'fill', label: '塗りつぶし', icon: '🪣' },
-    picker: { kind: 'picker', label: 'スポイト', icon: '🎯' }
+    brush: { kind: 'stroke', label: 'ブラシ', labelKey: 'miniPaint.tools.brush', icon: '🖌️', sizeMultiplier: 1, lineCap: 'round', lineJoin: 'round' },
+    pencil: { kind: 'stroke', label: '鉛筆', labelKey: 'miniPaint.tools.pencil', icon: '✏️', sizeMultiplier: 0.55, lineCap: 'round', lineJoin: 'round' },
+    marker: { kind: 'stroke', label: 'マーカー', labelKey: 'miniPaint.tools.marker', icon: '🖍️', sizeMultiplier: 1.8, lineCap: 'round', lineJoin: 'round', alpha: 0.45 },
+    eraser: { kind: 'stroke', label: '消しゴム', labelKey: 'miniPaint.tools.eraser', icon: '🧼', sizeMultiplier: 1.6, lineCap: 'round', lineJoin: 'round', erase: true },
+    line: { kind: 'shape-line', label: '直線', labelKey: 'miniPaint.tools.line', icon: '／' },
+    rectangle: { kind: 'shape-rect', label: '四角', labelKey: 'miniPaint.tools.rectangle', icon: '▭' },
+    ellipse: { kind: 'shape-ellipse', label: '楕円', labelKey: 'miniPaint.tools.ellipse', icon: '◯' },
+    fill: { kind: 'fill', label: '塗りつぶし', labelKey: 'miniPaint.tools.fill', icon: '🪣' },
+    picker: { kind: 'picker', label: 'スポイト', labelKey: 'miniPaint.tools.picker', icon: '🎯' }
   };
 
   const PALETTE_COLORS = [
@@ -36,7 +73,7 @@
     return Math.min(max, Math.max(min, value));
   }
 
-  function loadPersistentState(){
+  function loadPersistentState(defaultFileName){
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
@@ -51,7 +88,7 @@
         showGrid: !!parsed.showGrid,
         zoom: Number.isFinite(parsed.zoom) ? clamp(parsed.zoom, 50, 200) : 100,
         canvasData: typeof parsed.canvasData === 'string' && parsed.canvasData.startsWith('data:image') ? parsed.canvasData : null,
-        fileName: typeof parsed.fileName === 'string' && parsed.fileName.trim() ? parsed.fileName : DEFAULT_FILENAME
+        fileName: typeof parsed.fileName === 'string' && parsed.fileName.trim() ? parsed.fileName : defaultFileName
       };
     } catch {
       return null;
@@ -82,16 +119,23 @@
   function create(root, awardXp){
     if (!root) throw new Error('MiniExp Paint requires a container');
 
-    const persisted = loadPersistentState();
+    const initialAppName = translate('miniPaint.appName', null, DEFAULT_APP_NAME);
+    const initialDefaultFileName = translate('miniPaint.defaultFileName', null, DEFAULT_FILENAME_FALLBACK);
+    const initialImportedFileName = translate('miniPaint.importedFileName', null, DEFAULT_IMPORTED_FILENAME);
+    const persisted = loadPersistentState(initialDefaultFileName);
+    const initialTool = persisted?.tool && TOOL_DEFINITIONS[persisted.tool] ? persisted.tool : 'brush';
     const state = {
       primaryColor: persisted?.primaryColor || DEFAULT_PRIMARY,
       secondaryColor: persisted?.secondaryColor || DEFAULT_SECONDARY,
       brushSize: clamp(persisted?.brushSize ?? 10, 1, 96),
-      tool: persisted?.tool && TOOL_DEFINITIONS[persisted.tool] ? persisted.tool : 'brush',
+      tool: initialTool,
       shapeFilled: persisted?.shapeFilled ?? false,
       showGrid: persisted?.showGrid ?? false,
       zoom: clamp(persisted?.zoom ?? 100, 50, 200),
-      fileName: persisted?.fileName || DEFAULT_FILENAME,
+      defaultFileName: initialDefaultFileName,
+      importedFileName: initialImportedFileName,
+      appName: initialAppName,
+      fileName: persisted?.fileName || initialDefaultFileName,
       canvasData: persisted?.canvasData || null,
       lastStrokeAwardAt: 0,
       sessionXp: 0
@@ -121,6 +165,7 @@
     let actionDirty = false;
     let hoverPosition = null;
     const toolButtons = [];
+    let localeUnsubscribe = null;
     let brushSlider;
     let brushValue;
     let zoomSlider;
@@ -129,6 +174,16 @@
     let gridToggle;
     let undoBtn;
     let redoBtn;
+    let newBtn;
+    let importBtn;
+    let saveBtn;
+    let saveAsBtn;
+    let exportBtn;
+    let clearBtn;
+    let brushLabel;
+    let zoomLabel;
+    let primaryCaption;
+    let secondaryCaption;
     let primarySwatch;
     let secondarySwatch;
     let primaryInput;
@@ -197,7 +252,8 @@
       btn.addEventListener('pointerleave', () => { btn.style.background = 'transparent'; });
       if (symbol === '×') {
         btn.addEventListener('click', () => {
-          if (!hasUnsavedChanges || confirm('変更を破棄してペイントを閉じますか？')) quit();
+          const message = translate('miniPaint.prompts.closeConfirm', null, '変更を破棄してペイントを閉じますか？');
+          if (!hasUnsavedChanges || confirm(message)) quit();
         });
       }
       windowControls.appendChild(btn);
@@ -352,7 +408,13 @@
 
     function setTitle(){
       const marker = hasUnsavedChanges ? '* ' : '';
-      titleLabel.textContent = `${marker}${state.fileName || DEFAULT_FILENAME} - ペイント`;
+      const fileName = state.fileName || state.defaultFileName;
+      const appName = state.appName || translate('miniPaint.appName', null, DEFAULT_APP_NAME);
+      titleLabel.textContent = translate(
+        'miniPaint.windowTitle',
+        { marker, fileName, appName },
+        () => `${marker}${fileName} - ${appName}`
+      );
     }
 
     function award(type, amount){
@@ -446,17 +508,25 @@
       gridOverlay.style.opacity = state.showGrid ? '0.6' : '0';
     }
 
+    function formatZoomValue(value){
+      return translate('miniPaint.labels.zoomValue', { value }, () => `${value}%`);
+    }
+
+    function formatBrushValue(value){
+      return translate('miniPaint.labels.sizeValue', { value }, () => `${value}px`);
+    }
+
     function updateZoom(){
       canvasFrame.style.transform = `scale(${state.zoom / 100})`;
       zoomSlider.value = String(state.zoom);
-      zoomValue.textContent = `${state.zoom}%`;
+      zoomValue.textContent = formatZoomValue(state.zoom);
       updateStatusBar();
       persistStateSoon();
     }
 
     function updateBrushSize(){
       brushSlider.value = String(state.brushSize);
-      brushValue.textContent = `${state.brushSize}px`;
+      brushValue.textContent = formatBrushValue(state.brushSize);
       updateStatusBar();
       persistStateSoon();
     }
@@ -498,13 +568,75 @@
 
     function updateStatusBar(){
       if (hoverPosition) {
-        statusPosition.textContent = `座標: ${hoverPosition.x.toFixed(0)}, ${hoverPosition.y.toFixed(0)}`;
+        const x = Math.round(hoverPosition.x);
+        const y = Math.round(hoverPosition.y);
+        statusPosition.textContent = translate(
+          'miniPaint.status.position',
+          { x, y },
+          () => `座標: ${x}, ${y}`
+        );
       } else {
-        statusPosition.textContent = '座標: -';
+        statusPosition.textContent = translate('miniPaint.status.positionIdle', null, '座標: -');
       }
-      statusSize.textContent = `太さ: ${state.brushSize}px`;
-      statusZoom.textContent = `ズーム: ${state.zoom}%`;
-      statusXp.textContent = `獲得EXP: ${state.sessionXp}`;
+      statusSize.textContent = translate(
+        'miniPaint.status.brushSize',
+        { value: state.brushSize },
+        () => `太さ: ${state.brushSize}px`
+      );
+      statusZoom.textContent = translate(
+        'miniPaint.status.zoom',
+        { value: state.zoom },
+        () => `ズーム: ${state.zoom}%`
+      );
+      statusXp.textContent = translate(
+        'miniPaint.status.exp',
+        { value: state.sessionXp },
+        () => `獲得EXP: ${state.sessionXp}`
+      );
+    }
+
+    function refreshLocaleText(){
+      const previousDefault = state.defaultFileName;
+      const previousImported = state.importedFileName;
+      state.appName = translate('miniPaint.appName', null, DEFAULT_APP_NAME);
+      state.defaultFileName = translate('miniPaint.defaultFileName', null, DEFAULT_FILENAME_FALLBACK);
+      state.importedFileName = translate('miniPaint.importedFileName', null, DEFAULT_IMPORTED_FILENAME);
+      if (!state.fileName || state.fileName === previousDefault) {
+        state.fileName = state.defaultFileName;
+      } else if (previousImported && state.fileName === previousImported) {
+        state.fileName = state.importedFileName;
+      }
+      setTitle();
+
+      if (newBtn) newBtn.textContent = translate('miniPaint.menu.new', null, '新規');
+      if (importBtn) importBtn.textContent = translate('miniPaint.menu.import', null, '読み込み');
+      if (saveBtn) saveBtn.textContent = translate('miniPaint.menu.save', null, '保存');
+      if (saveAsBtn) saveAsBtn.textContent = translate('miniPaint.menu.saveAs', null, '名前を付けて保存');
+      if (exportBtn) exportBtn.textContent = translate('miniPaint.menu.export', null, 'エクスポート');
+      if (clearBtn) clearBtn.textContent = translate('miniPaint.menu.clear', null, 'クリア');
+      if (gridToggle) updateGridToggleLabel();
+      if (undoBtn) undoBtn.textContent = translate('miniPaint.menu.undo', null, '元に戻す');
+      if (redoBtn) redoBtn.textContent = translate('miniPaint.menu.redo', null, 'やり直す');
+
+      toolButtons.forEach(btn => {
+        if (!btn || !btn.__toolId) return;
+        const def = TOOL_DEFINITIONS[btn.__toolId];
+        if (!def) return;
+        btn.textContent = `${def.icon} ${translate(def.labelKey, null, def.label)}`;
+      });
+
+      if (fillToggle) fillToggle.textContent = translate('miniPaint.tools.fillMode', null, '形を塗りつぶす');
+      if (brushLabel) brushLabel.textContent = translate('miniPaint.labels.size', null, 'サイズ');
+      if (zoomLabel) zoomLabel.textContent = translate('miniPaint.labels.zoom', null, 'ズーム');
+      if (primaryCaption) primaryCaption.textContent = translate('miniPaint.labels.primary', null, '前景');
+      if (secondaryCaption) secondaryCaption.textContent = translate('miniPaint.labels.secondary', null, '背景');
+      if (primaryInput) primaryInput.title = translate('miniPaint.labels.primaryColorTitle', null, '前景色');
+      if (secondaryInput) secondaryInput.title = translate('miniPaint.labels.secondaryColorTitle', null, '背景色');
+
+      if (brushValue) brushValue.textContent = formatBrushValue(state.brushSize);
+      if (zoomValue) zoomValue.textContent = formatZoomValue(state.zoom);
+
+      updateStatusBar();
     }
 
     function markDirty(){
@@ -549,9 +681,23 @@
       updateZoom();
     }
 
+    function getGridToggleLabel(isOn){
+      return translate(
+        isOn ? 'miniPaint.menu.gridOn' : 'miniPaint.menu.gridOff',
+        null,
+        isOn ? 'グリッド: ON' : 'グリッド: OFF'
+      );
+    }
+
+    function updateGridToggleLabel(){
+      if (gridToggle) {
+        gridToggle.textContent = getGridToggleLabel(state.showGrid);
+      }
+    }
+
     function toggleGrid(){
       state.showGrid = !state.showGrid;
-      gridToggle.textContent = state.showGrid ? 'グリッド: ON' : 'グリッド: OFF';
+      updateGridToggleLabel();
       updateGrid();
       persistStateSoon();
     }
@@ -569,7 +715,8 @@
 
     function clearCanvas(skipConfirmation){
       if (!skipConfirmation && hasUnsavedChanges) {
-        if (!confirm('現在のキャンバスを消去しますか？')) return;
+        const message = translate('miniPaint.prompts.clearConfirm', null, '現在のキャンバスを消去しますか？');
+        if (!confirm(message)) return;
       }
       ctx.save();
       ctx.fillStyle = '#ffffff';
@@ -583,12 +730,15 @@
     }
 
     function newCanvas(){
-      if (hasUnsavedChanges && !confirm('保存せずに新規キャンバスを作成しますか？')) return;
+      if (hasUnsavedChanges) {
+        const message = translate('miniPaint.prompts.newConfirm', null, '保存せずに新規キャンバスを作成しますか？');
+        if (!confirm(message)) return;
+      }
       clearCanvas(true);
       history.length = 0;
       historyIndex = -1;
       pushHistory(captureSnapshot());
-      state.fileName = DEFAULT_FILENAME;
+      state.fileName = state.defaultFileName;
       hasUnsavedChanges = false;
       setTitle();
       updateHistoryButtons();
@@ -597,9 +747,10 @@
     }
 
     function saveCanvas(forcePrompt){
-      let name = state.fileName || DEFAULT_FILENAME;
-      if (forcePrompt || !name || name === DEFAULT_FILENAME) {
-        const entered = prompt('保存するファイル名を入力してください', name.replace(/\.png$/i, ''));
+      let name = state.fileName || state.defaultFileName;
+      if (forcePrompt || !name || name === state.defaultFileName) {
+        const promptMessage = translate('miniPaint.prompts.saveFileName', null, '保存するファイル名を入力してください');
+        const entered = prompt(promptMessage, name.replace(/\.png$/i, ''));
         if (!entered) return;
         name = entered.endsWith('.png') ? entered : `${entered}.png`;
       }
@@ -618,7 +769,7 @@
         award('save', SAVE_XP);
         persistCanvasSoon();
       } catch {
-        alert('画像の保存に失敗しました。');
+        alert(translate('miniPaint.messages.saveFailed', null, '画像の保存に失敗しました。'));
       }
     }
 
@@ -645,17 +796,17 @@
           const dy = (CANVAS_HEIGHT - drawH) / 2;
           ctx.drawImage(img, dx, dy, drawW, drawH);
           pushHistory(captureSnapshot());
-          state.fileName = file.name || 'インポート画像.png';
+          state.fileName = file.name || state.importedFileName;
           hasUnsavedChanges = true;
           setTitle();
           persistCanvasSoon();
           updateHistoryButtons();
           award('import', IMPORT_XP);
         };
-        img.onerror = () => alert('画像の読み込みに失敗しました。');
+        img.onerror = () => alert(translate('miniPaint.messages.imageLoadFailed', null, '画像の読み込みに失敗しました。'));
         img.src = typeof reader.result === 'string' ? reader.result : '';
       };
-      reader.onerror = () => alert('ファイルの読み込みに失敗しました。');
+      reader.onerror = () => alert(translate('miniPaint.messages.fileLoadFailed', null, 'ファイルの読み込みに失敗しました。'));
       reader.readAsDataURL(file);
     }
 
@@ -1008,6 +1159,10 @@
       if (persistTimer) { clearTimeout(persistTimer); persistTimer = null; }
       if (canvasPersistTimer) { clearTimeout(canvasPersistTimer); canvasPersistTimer = null; }
       hiddenFileInput.removeEventListener('change', handleFileSelected);
+      if (localeUnsubscribe) {
+        try { localeUnsubscribe(); } catch (error) { console.warn('[MiniPaint] Failed to unsubscribe locale listener:', error); }
+        localeUnsubscribe = null;
+      }
       try { root.removeChild(wrapper); } catch {}
       try { root.removeChild(hiddenFileInput); } catch {}
       try { root.removeChild(hiddenDownloader); } catch {}
@@ -1015,13 +1170,13 @@
       currentRuntimeRef = null;
     }
 
-    const newBtn = createToolbarButton('新規', () => newCanvas());
-    const importBtn = createToolbarButton('読み込み', () => importCanvas());
-    const saveBtn = createToolbarButton('保存', () => saveCanvas(false));
-    const saveAsBtn = createToolbarButton('名前を付けて保存', () => saveCanvas(true));
-    const exportBtn = createToolbarButton('エクスポート', () => exportCanvas());
-    const clearBtn = createToolbarButton('クリア', () => clearCanvas());
-    gridToggle = createToolbarButton(state.showGrid ? 'グリッド: ON' : 'グリッド: OFF', () => toggleGrid());
+    newBtn = createToolbarButton(translate('miniPaint.menu.new', null, '新規'), () => newCanvas());
+    importBtn = createToolbarButton(translate('miniPaint.menu.import', null, '読み込み'), () => importCanvas());
+    saveBtn = createToolbarButton(translate('miniPaint.menu.save', null, '保存'), () => saveCanvas(false));
+    saveAsBtn = createToolbarButton(translate('miniPaint.menu.saveAs', null, '名前を付けて保存'), () => saveCanvas(true));
+    exportBtn = createToolbarButton(translate('miniPaint.menu.export', null, 'エクスポート'), () => exportCanvas());
+    clearBtn = createToolbarButton(translate('miniPaint.menu.clear', null, 'クリア'), () => clearCanvas());
+    gridToggle = createToolbarButton(getGridToggleLabel(state.showGrid), () => toggleGrid());
     gridToggle.style.marginLeft = 'auto';
 
     fileRow.appendChild(newBtn);
@@ -1032,8 +1187,8 @@
     fileRow.appendChild(clearBtn);
     fileRow.appendChild(gridToggle);
 
-    undoBtn = createToolbarButton('元に戻す', () => undo());
-    redoBtn = createToolbarButton('やり直す', () => redo());
+    undoBtn = createToolbarButton(translate('miniPaint.menu.undo', null, '元に戻す'), () => undo());
+    redoBtn = createToolbarButton(translate('miniPaint.menu.redo', null, 'やり直す'), () => redo());
     undoBtn.style.width = redoBtn.style.width = '100%';
     undoBtn.style.padding = redoBtn.style.padding = '10px 0';
 
@@ -1044,7 +1199,7 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.__toolId = id;
-      btn.textContent = `${def.icon} ${def.label}`;
+      btn.textContent = `${def.icon} ${translate(def.labelKey, null, def.label)}`;
       btn.style.border = '1px solid rgba(148,163,184,0.4)';
       btn.style.borderRadius = '10px';
       btn.style.padding = '8px 10px';
@@ -1062,7 +1217,7 @@
 
     fillToggle = document.createElement('button');
     fillToggle.type = 'button';
-    fillToggle.textContent = '形を塗りつぶす';
+    fillToggle.textContent = translate('miniPaint.tools.fillMode', null, '形を塗りつぶす');
     fillToggle.style.border = '1px solid rgba(148,163,184,0.4)';
     fillToggle.style.borderRadius = '10px';
     fillToggle.style.padding = '8px 12px';
@@ -1072,8 +1227,8 @@
     fillToggle.addEventListener('click', toggleFillMode);
     toolRow.appendChild(fillToggle);
 
-    const brushLabel = document.createElement('span');
-    brushLabel.textContent = 'サイズ';
+    brushLabel = document.createElement('span');
+    brushLabel.textContent = translate('miniPaint.labels.size', null, 'サイズ');
     brushLabel.style.fontSize = '12px';
     setImportantColor(brushLabel, '#475569');
 
@@ -1089,8 +1244,8 @@
     brushValue.style.fontSize = '12px';
     setImportantColor(brushValue, '#1f2937');
 
-    const zoomLabel = document.createElement('span');
-    zoomLabel.textContent = 'ズーム';
+    zoomLabel = document.createElement('span');
+    zoomLabel.textContent = translate('miniPaint.labels.zoom', null, 'ズーム');
     zoomLabel.style.fontSize = '12px';
     setImportantColor(zoomLabel, '#475569');
 
@@ -1135,7 +1290,7 @@
     primaryInput = document.createElement('input');
     primaryInput.type = 'color';
     primaryInput.value = normalizeColorInput(state.primaryColor);
-    primaryInput.title = '前景色';
+    primaryInput.title = translate('miniPaint.labels.primaryColorTitle', null, '前景色');
     primaryInput.style.width = '42px';
     primaryInput.style.height = '32px';
     primaryInput.style.border = '1px solid rgba(148,163,184,0.4)';
@@ -1145,7 +1300,7 @@
     secondaryInput = document.createElement('input');
     secondaryInput.type = 'color';
     secondaryInput.value = normalizeColorInput(state.secondaryColor);
-    secondaryInput.title = '背景色';
+    secondaryInput.title = translate('miniPaint.labels.secondaryColorTitle', null, '背景色');
     secondaryInput.style.width = '42px';
     secondaryInput.style.height = '32px';
     secondaryInput.style.border = '1px solid rgba(148,163,184,0.4)';
@@ -1157,8 +1312,8 @@
     primaryWrap.style.flexDirection = 'column';
     primaryWrap.style.alignItems = 'center';
     primaryWrap.style.gap = '4px';
-    const primaryCaption = document.createElement('span');
-    primaryCaption.textContent = '前景';
+    primaryCaption = document.createElement('span');
+    primaryCaption.textContent = translate('miniPaint.labels.primary', null, '前景');
     primaryCaption.style.fontSize = '11px';
     setImportantColor(primaryCaption, '#475569');
     primaryWrap.appendChild(primarySwatch);
@@ -1169,8 +1324,8 @@
     secondaryWrap.style.flexDirection = 'column';
     secondaryWrap.style.alignItems = 'center';
     secondaryWrap.style.gap = '4px';
-    const secondaryCaption = document.createElement('span');
-    secondaryCaption.textContent = '背景';
+    secondaryCaption = document.createElement('span');
+    secondaryCaption.textContent = translate('miniPaint.labels.secondary', null, '背景');
     secondaryCaption.style.fontSize = '11px';
     setImportantColor(secondaryCaption, '#475569');
     secondaryWrap.appendChild(secondarySwatch);
@@ -1251,15 +1406,24 @@
       }
     }
 
-    setTitle();
-    updateBrushSize();
-    updateZoom();
+    refreshLocaleText();
     updateColorPreview();
     updateToolSelection();
     updateGrid();
     updateHistoryButtons();
     initializeCanvas();
     updateStatusBar();
+
+    const i18nInstance = getI18n();
+    if (i18nInstance && typeof i18nInstance.onLocaleChanged === 'function') {
+      try {
+        localeUnsubscribe = i18nInstance.onLocaleChanged(() => {
+          refreshLocaleText();
+        });
+      } catch (error) {
+        console.warn('[MiniPaint] Failed to subscribe to locale changes:', error);
+      }
+    }
 
     const runtime = {
       start,

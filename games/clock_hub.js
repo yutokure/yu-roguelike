@@ -1,48 +1,95 @@
 (function(){
+  const globalScope = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+  const i18n = globalScope && globalScope.I18n ? globalScope.I18n : null;
+  const KEY_BASE = 'games.clockHub';
+
+  function translate(key, fallback, params){
+    if (key && i18n && typeof i18n.t === 'function'){
+      try {
+        const value = i18n.t(key, params);
+        if (typeof value === 'string' && value !== key){
+          return value;
+        }
+      } catch (error){
+        console.warn('[clock_hub] Failed to translate key', key, error);
+      }
+    }
+    if (typeof fallback === 'function'){
+      try {
+        const result = fallback();
+        return typeof result === 'string' ? result : (result ?? '');
+      } catch (error){
+        console.warn('[clock_hub] Failed to evaluate fallback for', key, error);
+        return '';
+      }
+    }
+    return fallback ?? '';
+  }
+
+  function t(path, fallback, params){
+    return translate(path ? `${KEY_BASE}.${path}` : null, fallback, params);
+  }
+
+  function formatNumberLocalized(value, options){
+    if (i18n && typeof i18n.formatNumber === 'function'){
+      try {
+        return i18n.formatNumber(value, options);
+      } catch (error){
+        console.warn('[clock_hub] Failed to format number via i18n:', error);
+      }
+    }
+    try {
+      return new Intl.NumberFormat(i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : undefined, options).format(value);
+    } catch (error){
+      console.warn('[clock_hub] Intl.NumberFormat failed:', error);
+      return String(value ?? '');
+    }
+  }
+
   const STORAGE_KEY = 'clock_hub_prefs_v1';
   const UPDATE_INTERVAL = 50;
   const DETAIL_TABS = [
-    { id: 'overview', label: '概要' },
-    { id: 'progress', label: '進捗率' },
-    { id: 'remain', label: '残り時間' },
-    { id: 'stats', label: '情報一覧' },
-    { id: 'calendar', label: 'カレンダー' }
+    { id: 'overview', labelKey: 'detailTabs.overview', labelFallback: '概要' },
+    { id: 'progress', labelKey: 'detailTabs.progress', labelFallback: '進捗率' },
+    { id: 'remain', labelKey: 'detailTabs.remain', labelFallback: '残り時間' },
+    { id: 'stats', labelKey: 'detailTabs.stats', labelFallback: '情報一覧' },
+    { id: 'calendar', labelKey: 'detailTabs.calendar', labelFallback: 'カレンダー' }
   ];
   const ERA_DATA = [
-    { name: '令和', start: new Date(2019, 4, 1) },
-    { name: '平成', start: new Date(1989, 0, 8) },
-    { name: '昭和', start: new Date(1926, 11, 25) },
-    { name: '大正', start: new Date(1912, 6, 30) },
-    { name: '明治', start: new Date(1868, 0, 25) }
+    { nameKey: 'era.reiwa', nameFallback: '令和', start: new Date(2019, 4, 1) },
+    { nameKey: 'era.heisei', nameFallback: '平成', start: new Date(1989, 0, 8) },
+    { nameKey: 'era.showa', nameFallback: '昭和', start: new Date(1926, 11, 25) },
+    { nameKey: 'era.taisho', nameFallback: '大正', start: new Date(1912, 6, 30) },
+    { nameKey: 'era.meiji', nameFallback: '明治', start: new Date(1868, 0, 25) }
   ];
   const TENKAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
   const JUNISHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-  const WEEKDAY_JP = ['日', '月', '火', '水', '木', '金', '土'];
+  const WEEKDAY_DEFAULTS = ['日', '月', '火', '水', '木', '金', '土'];
   const SOLAR_TERMS = [
-    { label: '立春', month: 1, day: 4 },
-    { label: '雨水', month: 1, day: 19 },
-    { label: '啓蟄', month: 2, day: 5 },
-    { label: '春分', month: 2, day: 20 },
-    { label: '清明', month: 3, day: 4 },
-    { label: '穀雨', month: 3, day: 19 },
-    { label: '立夏', month: 4, day: 5 },
-    { label: '小満', month: 4, day: 20 },
-    { label: '芒種', month: 5, day: 5 },
-    { label: '夏至', month: 5, day: 21 },
-    { label: '小暑', month: 6, day: 6 },
-    { label: '大暑', month: 6, day: 22 },
-    { label: '立秋', month: 7, day: 7 },
-    { label: '処暑', month: 7, day: 22 },
-    { label: '白露', month: 8, day: 7 },
-    { label: '秋分', month: 8, day: 23 },
-    { label: '寒露', month: 9, day: 8 },
-    { label: '霜降', month: 9, day: 23 },
-    { label: '立冬', month: 10, day: 7 },
-    { label: '小雪', month: 10, day: 22 },
-    { label: '大雪', month: 11, day: 7 },
-    { label: '冬至', month: 11, day: 21 },
-    { label: '小寒', month: 0, day: 5 },
-    { label: '大寒', month: 0, day: 20 }
+    { labelKey: 'solarTerms.risshun', labelFallback: '立春', month: 1, day: 4 },
+    { labelKey: 'solarTerms.usui', labelFallback: '雨水', month: 1, day: 19 },
+    { labelKey: 'solarTerms.keichitsu', labelFallback: '啓蟄', month: 2, day: 5 },
+    { labelKey: 'solarTerms.shunbun', labelFallback: '春分', month: 2, day: 20 },
+    { labelKey: 'solarTerms.seimei', labelFallback: '清明', month: 3, day: 4 },
+    { labelKey: 'solarTerms.kokuu', labelFallback: '穀雨', month: 3, day: 19 },
+    { labelKey: 'solarTerms.rikka', labelFallback: '立夏', month: 4, day: 5 },
+    { labelKey: 'solarTerms.shoman', labelFallback: '小満', month: 4, day: 20 },
+    { labelKey: 'solarTerms.boshu', labelFallback: '芒種', month: 5, day: 5 },
+    { labelKey: 'solarTerms.geshi', labelFallback: '夏至', month: 5, day: 21 },
+    { labelKey: 'solarTerms.shosho', labelFallback: '小暑', month: 6, day: 6 },
+    { labelKey: 'solarTerms.taisho', labelFallback: '大暑', month: 6, day: 22 },
+    { labelKey: 'solarTerms.risshu', labelFallback: '立秋', month: 7, day: 7 },
+    { labelKey: 'solarTerms.shoshoLimitHeat', labelFallback: '処暑', month: 7, day: 22 },
+    { labelKey: 'solarTerms.hakuro', labelFallback: '白露', month: 8, day: 7 },
+    { labelKey: 'solarTerms.shubun', labelFallback: '秋分', month: 8, day: 23 },
+    { labelKey: 'solarTerms.kanro', labelFallback: '寒露', month: 9, day: 8 },
+    { labelKey: 'solarTerms.soko', labelFallback: '霜降', month: 9, day: 23 },
+    { labelKey: 'solarTerms.rittou', labelFallback: '立冬', month: 10, day: 7 },
+    { labelKey: 'solarTerms.shosetsu', labelFallback: '小雪', month: 10, day: 22 },
+    { labelKey: 'solarTerms.taisetsu', labelFallback: '大雪', month: 11, day: 7 },
+    { labelKey: 'solarTerms.touji', labelFallback: '冬至', month: 11, day: 21 },
+    { labelKey: 'solarTerms.shokan', labelFallback: '小寒', month: 0, day: 5 },
+    { labelKey: 'solarTerms.dahan', labelFallback: '大寒', month: 0, day: 20 }
   ];
   const XP_REWARDS = {
     second: 0.5,
@@ -53,6 +100,84 @@
     year: 260000,
     century: 10000000,
     millennium: 100000000
+  };
+
+  const TAB_CONFIG = {
+    digital: { key: 'tabs.digital', fallback: 'デジタル時計' },
+    analog: { key: 'tabs.analog', fallback: 'アナログ時計' },
+    detail: { key: 'tabs.detail', fallback: '詳細' }
+  };
+
+  const PROGRESS_ITEMS = [
+    { id: 'millennium', labelKey: 'progress.labels.millennium', labelFallback: '千年紀' },
+    { id: 'century', labelKey: 'progress.labels.century', labelFallback: '世紀' },
+    { id: 'decade', labelKey: 'progress.labels.decade', labelFallback: '年代' },
+    { id: 'year', labelKey: 'progress.labels.year', labelFallback: '年' },
+    { id: 'month', labelKey: 'progress.labels.month', labelFallback: '月' },
+    { id: 'day', labelKey: 'progress.labels.day', labelFallback: '日' },
+    { id: 'hour', labelKey: 'progress.labels.hour', labelFallback: '時' },
+    { id: 'minute', labelKey: 'progress.labels.minute', labelFallback: '分' },
+    { id: 'second', labelKey: 'progress.labels.second', labelFallback: '秒' }
+  ];
+
+  const REMAINING_CONFIG = [
+    {
+      id: 'nextSecond',
+      labelKey: 'remaining.labels.nextSecond',
+      labelFallback: '次の秒',
+      compute(now){
+        return new Date(now.getTime() + 1000 - now.getMilliseconds());
+      }
+    },
+    {
+      id: 'nextMinute',
+      labelKey: 'remaining.labels.nextMinute',
+      labelFallback: '次の分',
+      compute(now){
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes() + 1);
+      }
+    },
+    {
+      id: 'nextHour',
+      labelKey: 'remaining.labels.nextHour',
+      labelFallback: '次の時',
+      compute(now){
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1);
+      }
+    },
+    {
+      id: 'nextDay',
+      labelKey: 'remaining.labels.nextDay',
+      labelFallback: '次の日',
+      compute(now){
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      }
+    },
+    {
+      id: 'nextMonth',
+      labelKey: 'remaining.labels.nextMonth',
+      labelFallback: '次の月',
+      compute(now){
+        return new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      }
+    },
+    {
+      id: 'nextYear',
+      labelKey: 'remaining.labels.nextYear',
+      labelFallback: '次の年',
+      compute(now){
+        return new Date(now.getFullYear() + 1, 0, 1);
+      }
+    }
+  ];
+
+  const STATS_LABELS = {
+    unix: { key: 'stats.labels.unix', fallback: 'UNIX時間' },
+    ticks: { key: 'stats.labels.ticks', fallback: '経過ミリ秒' },
+    iso: { key: 'stats.labels.iso', fallback: 'ISO 8601' },
+    yearday: { key: 'stats.labels.yearday', fallback: '年内通算日' },
+    daySeconds: { key: 'stats.labels.daySeconds', fallback: '今日の経過秒' },
+    timezone: { key: 'stats.labels.timezone', fallback: 'タイムゾーン' }
   };
 
   const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -137,8 +262,39 @@
     return Math.floor(monthIndex / 3) + 1;
   }
 
-  function formatJapaneseDate(date){
-    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日（${WEEKDAY_JP[date.getDay()]}）`;
+  function getWeekdayLabel(index){
+    const fallback = WEEKDAY_DEFAULTS[index] || '';
+    return t(`weekdays.${index}`, fallback);
+  }
+
+  function getStemLabel(index){
+    const base = TENKAN.length;
+    const normalized = ((index % base) + base) % base;
+    return t(`eto.stems.${normalized}`, TENKAN[normalized] || '');
+  }
+
+  function getBranchLabel(index){
+    const base = JUNISHI.length;
+    const normalized = ((index % base) + base) % base;
+    return t(`eto.branches.${normalized}`, JUNISHI[normalized] || '');
+  }
+
+  function getSolarTermLabel(term){
+    return t(term.labelKey, term.labelFallback);
+  }
+
+  function formatLocalizedDate(date){
+    const params = {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+      weekday: getWeekdayLabel(date.getDay())
+    };
+    return t('dates.full', () => `${params.year}年${params.month}月${params.day}日（${params.weekday}）`, params);
+  }
+
+  function getYesNo(value){
+    return value ? t('common.yes', 'はい') : t('common.no', 'いいえ');
   }
 
   function pad(num){
@@ -146,20 +302,28 @@
   }
 
   function formatDigital(date, mode){
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const weekday = WEEKDAY_JP[date.getDay()];
-    const dateLine = `${year}年${month}月${day}日（${weekday}）`;
+    const params = {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+      weekday: getWeekdayLabel(date.getDay())
+    };
+    const dateLine = t('digital.dateLine', () => `${params.year}年${params.month}月${params.day}日（${params.weekday}）`, params);
     let timeLine = '';
+    const minute = pad(date.getMinutes());
+    const second = pad(date.getSeconds());
     if (mode === '12h'){
       const hours24 = date.getHours();
       const am = hours24 < 12;
       let hours = hours24 % 12;
       if (hours === 0) hours = 12;
-      timeLine = `${am ? '午前' : '午後'}${hours}時${pad(date.getMinutes())}分${pad(date.getSeconds())}秒`;
+      const period = am ? t('digital.period.am', '午前') : t('digital.period.pm', '午後');
+      const timeParams = { period, hour: hours, minute, second };
+      timeLine = t('digital.timeLine12', () => `${period}${hours}時${minute}分${second}秒`, timeParams);
     } else {
-      timeLine = `${pad(date.getHours())}時${pad(date.getMinutes())}分${pad(date.getSeconds())}秒`;
+      const hour = pad(date.getHours());
+      const timeParams = { hour, minute, second };
+      timeLine = t('digital.timeLine24', () => `${hour}時${minute}分${second}秒`, timeParams);
     }
     return { dateLine, timeLine };
   }
@@ -168,24 +332,25 @@
     for (const era of ERA_DATA){
       if (date >= era.start){
         const eraYear = date.getFullYear() - era.start.getFullYear() + 1;
-        return `${era.name}${eraYear}年`;
+        const eraName = t(era.nameKey, era.nameFallback);
+        return t('era.format', () => `${eraName}${eraYear}年`, { era: eraName, year: eraYear });
       }
     }
-    return '不明';
+    return t('era.unknown', '不明');
   }
 
   function getEto(year){
-    const stem = TENKAN[(year - 4) % 10];
-    const branch = JUNISHI[(year - 4) % 12];
-    return `${stem}${branch}`;
+    const stem = getStemLabel(year - 4);
+    const branch = getBranchLabel(year - 4);
+    return t('eto.format', () => `${stem}${branch}`, { stem, branch });
   }
 
   function getSeason(monthIndex){
-    if (monthIndex === 11 || monthIndex <= 1) return '冬';
-    if (monthIndex >= 2 && monthIndex <= 4) return '春';
-    if (monthIndex >= 5 && monthIndex <= 7) return '夏';
-    if (monthIndex >= 8 && monthIndex <= 10) return '秋';
-    return '不明';
+    if (monthIndex === 11 || monthIndex <= 1) return t('season.winter', '冬');
+    if (monthIndex >= 2 && monthIndex <= 4) return t('season.spring', '春');
+    if (monthIndex >= 5 && monthIndex <= 7) return t('season.summer', '夏');
+    if (monthIndex >= 8 && monthIndex <= 10) return t('season.autumn', '秋');
+    return t('season.unknown', '不明');
   }
 
   function getSolarTermInfo(date){
@@ -193,7 +358,10 @@
     const terms = [];
     [-1, 0, 1].forEach(offset => {
       SOLAR_TERMS.forEach(item => {
-        terms.push({ label: item.label, date: new Date(year + offset, item.month, item.day, 0, 0, 0) });
+        terms.push({
+          label: getSolarTermLabel(item),
+          date: new Date(year + offset, item.month, item.day, 0, 0, 0)
+        });
       });
     });
     terms.sort((a, b) => a.date - b.date);
@@ -231,14 +399,15 @@
   }
 
   function formatDuration(diff){
-    const prefix = diff.sign >= 0 ? 'あと' : '前';
+    const prefix = diff.sign >= 0 ? t('duration.prefix.future', 'あと') : t('duration.prefix.past', '前');
     const parts = [];
-    if (diff.years) parts.push(`${diff.years}年`);
-    if (diff.days) parts.push(`${diff.days}日`);
-    if (diff.hours) parts.push(`${diff.hours}時間`);
-    if (diff.minutes) parts.push(`${diff.minutes}分`);
-    parts.push(`${diff.seconds}秒`);
-    return `${prefix}${parts.join('')}`;
+    if (diff.years) parts.push(t('duration.unit.year', () => `${diff.years}年`, { value: diff.years }));
+    if (diff.days) parts.push(t('duration.unit.day', () => `${diff.days}日`, { value: diff.days }));
+    if (diff.hours) parts.push(t('duration.unit.hour', () => `${diff.hours}時間`, { value: diff.hours }));
+    if (diff.minutes) parts.push(t('duration.unit.minute', () => `${diff.minutes}分`, { value: diff.minutes }));
+    parts.push(t('duration.unit.second', () => `${diff.seconds}秒`, { value: diff.seconds }));
+    const joiner = t('duration.joiner', '');
+    return `${prefix}${parts.join(joiner)}`;
   }
 
   function drawAnalogClock(ctx, size, date, mode){
@@ -358,7 +527,7 @@
   }
 
   function create(root, awardXp){
-    if (!root) throw new Error('Clock Hub requires a container');
+    if (!root) throw new Error(t('errors.noContainer', 'Clock Hub requires a container'));
     const prefs = loadPrefs() || {
       digitalFormat: '24h',
       analogType: '12h',
@@ -418,14 +587,14 @@
 
     const titleBox = document.createElement('div');
     const title = document.createElement('h2');
-    title.textContent = '時計ユーティリティハブ';
+    title.textContent = t('header.title', '時計ユーティリティハブ');
     title.style.margin = '0';
     title.style.fontSize = '24px';
     title.style.color = '#0f172a';
     const subtitle = document.createElement('div');
     subtitle.style.fontSize = '14px';
     subtitle.style.color = '#475569';
-    subtitle.textContent = 'デジタル／アナログ／詳細情報を切り替え';
+    subtitle.textContent = t('header.subtitle', 'デジタル／アナログ／詳細情報を切り替え');
     titleBox.appendChild(title);
     titleBox.appendChild(subtitle);
 
@@ -435,10 +604,16 @@
     xpBadge.style.color = '#ffffff';
     xpBadge.style.borderRadius = '999px';
     xpBadge.style.fontWeight = '600';
-    xpBadge.textContent = '獲得EXP: 0';
 
     header.appendChild(titleBox);
     header.appendChild(xpBadge);
+
+    function setXpBadgeText(value){
+      const formatted = formatNumberLocalized(value, { maximumFractionDigits: 3, minimumFractionDigits: 0 });
+      xpBadge.textContent = t('header.exp', () => `獲得EXP: ${formatted}`, { xp: formatted });
+    }
+
+    setXpBadgeText(state.sessionXp);
 
     const tabBar = document.createElement('div');
     tabBar.style.display = 'flex';
@@ -449,7 +624,6 @@
     const tabButtons = {};
     const tabContents = {};
     const tabIds = ['digital', 'analog', 'detail'];
-    const tabLabels = { digital: 'デジタル時計', analog: 'アナログ時計', detail: '詳細' };
 
     const contentArea = document.createElement('div');
     contentArea.style.flex = '1';
@@ -461,7 +635,8 @@
     tabIds.forEach(id => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = tabLabels[id];
+      const tabCfg = TAB_CONFIG[id];
+      btn.textContent = tabCfg ? t(tabCfg.key, tabCfg.fallback) : '';
       btn.style.padding = '10px 18px';
       btn.style.borderRadius = '999px';
       btn.style.border = '1px solid rgba(59,130,246,0.3)';
@@ -537,7 +712,10 @@
       });
 
       label.appendChild(radio);
-      label.appendChild(document.createTextNode(mode === '24h' ? '24時間制' : '12時間制'));
+      const labelText = mode === '24h'
+        ? t('digital.format.24h', '24時間制')
+        : t('digital.format.12h', '12時間制');
+      label.appendChild(document.createTextNode(labelText));
       digitalToggle.appendChild(label);
     });
 
@@ -590,7 +768,10 @@
       });
 
       label.appendChild(radio);
-      label.appendChild(document.createTextNode(mode === '12h' ? '通常アナログ時計' : '24時間制アナログ時計'));
+      const labelText = mode === '12h'
+        ? t('analog.type.12h', '通常アナログ時計')
+        : t('analog.type.24h', '24時間制アナログ時計');
+      label.appendChild(document.createTextNode(labelText));
       analogToggle.appendChild(label);
     });
 
@@ -613,7 +794,7 @@
     DETAIL_TABS.forEach(tab => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = tab.label;
+      btn.textContent = t(tab.labelKey, tab.labelFallback);
       btn.style.padding = '8px 16px';
       btn.style.borderRadius = '10px';
       btn.style.border = '1px solid rgba(148,163,184,0.4)';
@@ -677,26 +858,15 @@
     detailViews.stats.appendChild(statsList);
 
     const progressRows = {};
-    const progressItems = [
-      { id: 'millennium', label: '千年紀' },
-      { id: 'century', label: '世紀' },
-      { id: 'decade', label: '年代' },
-      { id: 'year', label: '年' },
-      { id: 'month', label: '月' },
-      { id: 'day', label: '日' },
-      { id: 'hour', label: '時' },
-      { id: 'minute', label: '分' },
-      { id: 'second', label: '秒' }
-    ];
-    progressItems.forEach(item => {
+    PROGRESS_ITEMS.forEach(item => {
       const row = createProgressRow();
-      row.labelLeft.textContent = item.label;
+      row.labelLeft.textContent = t(item.labelKey, item.labelFallback);
       progressContainer.appendChild(row.row);
       progressRows[item.id] = row;
     });
 
     const remainingItems = {};
-    ['次の秒', '次の分', '次の時', '次の日', '次の月', '次の年'].forEach(label => {
+    REMAINING_CONFIG.forEach(item => {
       const card = document.createElement('div');
       card.style.background = 'rgba(248,250,252,0.9)';
       card.style.border = '1px solid rgba(148,163,184,0.25)';
@@ -709,7 +879,7 @@
       const titleLabel = document.createElement('div');
       titleLabel.style.fontSize = '14px';
       titleLabel.style.color = '#475569';
-      titleLabel.textContent = label;
+      titleLabel.textContent = t(item.labelKey, item.labelFallback);
 
       const value = document.createElement('div');
       value.style.fontSize = '16px';
@@ -719,26 +889,19 @@
       card.appendChild(titleLabel);
       card.appendChild(value);
       remainingList.appendChild(card);
-      remainingItems[label] = value;
+      remainingItems[item.id] = value;
     });
 
     const statsItems = {};
-    const statsLabels = {
-      unix: 'UNIX時間',
-      ticks: '経過ミリ秒',
-      iso: 'ISO 8601',
-      yearday: '年内通算日',
-      daySeconds: '今日の経過秒',
-      timezone: 'タイムゾーン'
-    };
-    Object.keys(statsLabels).forEach(key => {
+    Object.keys(STATS_LABELS).forEach(key => {
       const line = document.createElement('div');
       line.style.display = 'flex';
       line.style.justifyContent = 'space-between';
       line.style.fontSize = '14px';
       line.style.color = '#0f172a';
       const label = document.createElement('span');
-      label.textContent = statsLabels[key];
+      const cfg = STATS_LABELS[key];
+      label.textContent = t(cfg.key, cfg.fallback);
       const value = document.createElement('span');
       value.style.fontFamily = '"Roboto Mono", "Cascadia Code", monospace';
       line.appendChild(label);
@@ -775,10 +938,10 @@
     calendarControls.style.display = 'flex';
     calendarControls.style.gap = '8px';
 
-    function createCalendarButton(label){
+    function createCalendarButton(key, fallback){
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = label;
+      btn.textContent = t(key, fallback);
       btn.style.padding = '6px 12px';
       btn.style.borderRadius = '8px';
       btn.style.border = '1px solid rgba(148,163,184,0.4)';
@@ -789,9 +952,9 @@
       return btn;
     }
 
-    const prevMonthBtn = createCalendarButton('← 前月');
-    const nextMonthBtn = createCalendarButton('翌月 →');
-    const todayBtn = createCalendarButton('今日');
+    const prevMonthBtn = createCalendarButton('calendar.controls.prev', '← 前月');
+    const nextMonthBtn = createCalendarButton('calendar.controls.next', '翌月 →');
+    const todayBtn = createCalendarButton('calendar.controls.today', '今日');
 
     calendarControls.appendChild(prevMonthBtn);
     calendarControls.appendChild(todayBtn);
@@ -804,8 +967,9 @@
     weekdayHeader.style.display = 'grid';
     weekdayHeader.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
     weekdayHeader.style.gap = '6px';
-    WEEKDAY_JP.forEach((label, index) => {
+    WEEKDAY_DEFAULTS.forEach((_, index) => {
       const cell = document.createElement('div');
+      const label = getWeekdayLabel(index);
       cell.textContent = label;
       cell.style.textAlign = 'center';
       cell.style.fontSize = '13px';
@@ -854,7 +1018,7 @@
     calendarSettingsCard.style.gap = '12px';
 
     const calendarSettingsTitle = document.createElement('div');
-    calendarSettingsTitle.textContent = '休暇／出勤日のカスタム設定';
+    calendarSettingsTitle.textContent = t('calendar.settings.title', '休暇／出勤日のカスタム設定');
     calendarSettingsTitle.style.fontSize = '15px';
     calendarSettingsTitle.style.fontWeight = '600';
     calendarSettingsTitle.style.color = '#0f172a';
@@ -865,14 +1029,14 @@
     calendarSettingsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(220px, 1fr))';
     calendarSettingsGrid.style.gap = '16px';
 
-    function createSettingsSection(titleText, buttonText){
+    function createSettingsSection(config){
       const section = document.createElement('div');
       section.style.display = 'flex';
       section.style.flexDirection = 'column';
       section.style.gap = '8px';
 
       const title = document.createElement('div');
-      title.textContent = titleText;
+      title.textContent = t(config.titleKey, config.titleFallback);
       title.style.fontSize = '14px';
       title.style.fontWeight = '600';
       title.style.color = '#0f172a';
@@ -890,7 +1054,7 @@
 
       const addBtn = document.createElement('button');
       addBtn.type = 'button';
-      addBtn.textContent = buttonText;
+      addBtn.textContent = t(config.buttonKey, config.buttonFallback);
       addBtn.style.padding = '6px 10px';
       addBtn.style.borderRadius = '8px';
       addBtn.style.border = '1px solid rgba(37,99,235,0.4)';
@@ -916,8 +1080,18 @@
       return { section, dateInput, addBtn, list };
     }
 
-    const holidaySection = createSettingsSection('祝日・休暇として登録', '追加');
-    const workdaySection = createSettingsSection('出勤日として登録', '追加');
+    const holidaySection = createSettingsSection({
+      titleKey: 'calendar.settings.holidayTitle',
+      titleFallback: '祝日・休暇として登録',
+      buttonKey: 'calendar.settings.add',
+      buttonFallback: '追加'
+    });
+    const workdaySection = createSettingsSection({
+      titleKey: 'calendar.settings.workdayTitle',
+      titleFallback: '出勤日として登録',
+      buttonKey: 'calendar.settings.add',
+      buttonFallback: '追加'
+    });
 
     calendarSettingsGrid.appendChild(holidaySection.section);
     calendarSettingsGrid.appendChild(workdaySection.section);
@@ -981,23 +1155,46 @@
       const holidayRegistered = isCustomHoliday(key);
       const workdayRegistered = isCustomWorkday(key);
       const rest = isRestDay(key, selectedDate);
-      calendarInfoItems.summary.textContent = `日付: ${formatJapaneseDate(selectedDate)}`;
-      calendarInfoItems.era.textContent = `和暦: ${getEra(selectedDate)}｜干支: ${getEto(selectedDate.getFullYear())}`;
-      calendarInfoItems.season.textContent = `季節: ${getSeason(selectedDate.getMonth())}｜四半期: 第${getQuarter(selectedDate.getMonth())}四半期`;
+      const summaryDate = formatLocalizedDate(selectedDate);
+      calendarInfoItems.summary.textContent = t('calendar.info.summary', () => `日付: ${summaryDate}`, { date: summaryDate });
+      const eraLabel = getEra(selectedDate);
+      const etoLabel = getEto(selectedDate.getFullYear());
+      calendarInfoItems.era.textContent = t('calendar.info.era', () => `和暦: ${eraLabel}｜干支: ${etoLabel}`, {
+        era: eraLabel,
+        eto: etoLabel
+      });
+      const seasonLabel = getSeason(selectedDate.getMonth());
+      const quarter = getQuarter(selectedDate.getMonth());
+      calendarInfoItems.season.textContent = t('calendar.info.season', () => `季節: ${seasonLabel}｜四半期: 第${quarter}四半期`, {
+        season: seasonLabel,
+        quarter
+      });
       const dayOfYear = getDayOfYear(selectedDate);
-      calendarInfoItems.progress.textContent = `年内通算日: 第${dayOfYear}日｜ISO週番号: 第${getIsoWeek(selectedDate)}週｜月内第${getWeekOfMonth(selectedDate)}週`;
+      const isoWeek = getIsoWeek(selectedDate);
+      const weekOfMonth = getWeekOfMonth(selectedDate);
+      calendarInfoItems.progress.textContent = t('calendar.info.progress', () => `年内通算日: 第${dayOfYear}日｜ISO週番号: 第${isoWeek}週｜月内第${weekOfMonth}週`, {
+        dayOfYear,
+        isoWeek,
+        weekOfMonth
+      });
       const statusParts = [];
-      if (rest) statusParts.push('休み'); else statusParts.push('出勤日想定');
-      if (holidayRegistered) statusParts.push('祝日登録あり');
-      if (workdayRegistered) statusParts.push('出勤登録あり');
-      calendarInfoItems.status.textContent = `区分: ${statusParts.join(' / ')}`;
+      if (rest) statusParts.push(t('calendar.status.rest', '休み')); else statusParts.push(t('calendar.status.workday', '出勤日想定'));
+      if (holidayRegistered) statusParts.push(t('calendar.status.holiday', '祝日登録あり'));
+      if (workdayRegistered) statusParts.push(t('calendar.status.workdayOverride', '出勤登録あり'));
+      const statusSeparator = t('calendar.status.separator', ' / ');
+      const statusText = statusParts.join(statusSeparator);
+      calendarInfoItems.status.textContent = t('calendar.info.status', () => `区分: ${statusText}`, { status: statusText });
     }
 
     function renderCalendar(force = false){
       const signature = computeCalendarSignature();
       if (!force && signature === calendarSignature) return;
       calendarSignature = signature;
-      calendarMonthLabel.textContent = `${calendarState.currentYear}年${calendarState.currentMonth + 1}月`;
+      const monthParams = {
+        year: calendarState.currentYear,
+        month: calendarState.currentMonth + 1
+      };
+      calendarMonthLabel.textContent = t('calendar.monthLabel', () => `${monthParams.year}年${monthParams.month}月`, monthParams);
       calendarGrid.innerHTML = '';
       calendarCells = new Map();
       const firstOfMonth = new Date(calendarState.currentYear, calendarState.currentMonth, 1);
@@ -1045,7 +1242,7 @@
       const sorted = items.slice().sort();
       if (!sorted.length){
         const empty = document.createElement('div');
-        empty.textContent = '登録なし';
+        empty.textContent = t('calendar.settings.empty', '登録なし');
         empty.style.fontSize = '13px';
         empty.style.color = '#94a3b8';
         container.appendChild(empty);
@@ -1066,7 +1263,7 @@
         label.textContent = key;
         const remove = document.createElement('button');
         remove.type = 'button';
-        remove.textContent = '削除';
+        remove.textContent = t('calendar.settings.remove', '削除');
         remove.style.border = 'none';
         remove.style.background = 'rgba(239,68,68,0.12)';
         remove.style.color = '#ef4444';
@@ -1201,7 +1398,15 @@
     const xpNote = document.createElement('div');
     xpNote.style.fontSize = '13px';
     xpNote.style.color = '#475569';
-    xpNote.textContent = '秒:+0.5 / 分:+50 / 時:+980 / 日:+7690 / 月:+32768 / 年:+260000 / 世紀:+10000000 / 千年紀:+100000000';
+    const xpNoteValues = Object.keys(XP_REWARDS).reduce((acc, key) => {
+      acc[key] = formatNumberLocalized(XP_REWARDS[key], { maximumFractionDigits: 3 });
+      return acc;
+    }, {});
+    xpNote.textContent = t(
+      'xp.note',
+      () => `秒:+${xpNoteValues.second} / 分:+${xpNoteValues.minute} / 時:+${xpNoteValues.hour} / 日:+${xpNoteValues.day} / 月:+${xpNoteValues.month} / 年:+${xpNoteValues.year} / 世紀:+${xpNoteValues.century} / 千年紀:+${xpNoteValues.millennium}`,
+      xpNoteValues
+    );
     detailSection.appendChild(xpNote);
 
     frame.appendChild(header);
@@ -1255,26 +1460,44 @@
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
       const day = now.getDate();
+      const weekday = getWeekdayLabel(now.getDay());
+      const eraLabel = getEra(now);
+      const etoLabel = getEto(year);
+      const imperial = year + 660;
+      const season = getSeason(now.getMonth());
+      const solarTerm = describeSolarTerm(now);
+      const leapValue = getYesNo(isLeapYear(year));
       const lines = [
-        `西暦: ${year}年 ${month}月${day}日（${WEEKDAY_JP[now.getDay()]}）`,
-        `和暦: ${getEra(now)}`,
-        `干支: ${getEto(year)}｜皇紀: ${year + 660}`,
-        `季節: ${getSeason(now.getMonth())}｜二十四節気: ${describeSolarTerm(now)}`,
-        `うるう年: ${isLeapYear(year) ? 'はい' : 'いいえ'}`
+        t('overview.gregorian', () => `西暦: ${year}年 ${month}月${day}日（${weekday}）`, { year, month, day, weekday }),
+        t('overview.era', () => `和暦: ${eraLabel}`, { era: eraLabel }),
+        t('overview.eto', () => `干支: ${etoLabel}｜皇紀: ${imperial}`, { eto: etoLabel, imperial }),
+        t('overview.season', () => `季節: ${season}｜二十四節気: ${solarTerm}`, { season, solarTerm }),
+        t('overview.leapYear', () => `うるう年: ${leapValue}`, { value: leapValue })
       ];
       for (let i = 0; i < overviewLines.length; i++){
         overviewLines[i].textContent = lines[i] || '';
       }
     }
 
-    function describeSolarTerm(now){
-      const info = getSolarTermInfo(now);
-      const prev = info.prev;
-      const next = info.next;
-      const diff = timeDiffComponents(next.date, now);
-      const nextDate = `${next.date.getFullYear()}年${next.date.getMonth() + 1}月${next.date.getDate()}日`;
-      return `${prev.label} → 次は${next.label}（${nextDate}、${formatDuration(diff)}）`;
-    }
+  function describeSolarTerm(now){
+    const info = getSolarTermInfo(now);
+    const prev = info.prev;
+    const next = info.next;
+    const diff = timeDiffComponents(next.date, now);
+    const dateParts = {
+      year: next.date.getFullYear(),
+      month: next.date.getMonth() + 1,
+      day: next.date.getDate()
+    };
+    const nextDate = t('solarTerms.nextDate', () => `${dateParts.year}年${dateParts.month}月${dateParts.day}日`, dateParts);
+    const duration = formatDuration(diff);
+    return t('solarTerms.description', () => `${prev.label} → 次は${next.label}（${nextDate}、${duration}）`, {
+      previous: prev.label,
+      next: next.label,
+      nextDate,
+      duration
+    });
+  }
 
     function updateProgress(now){
       const year = now.getFullYear();
@@ -1314,45 +1537,50 @@
       const row = progressRows[id];
       if (!row) return;
       const clamped = Math.max(0, Math.min(1, fraction));
-      const percent = (clamped * 100).toFixed(4);
-      const valueText = `${percent}%`;
+      const percentValue = clamped * 100;
+      const formatted = formatNumberLocalized(percentValue, {
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4
+      });
+      const valueText = t('progress.percent', () => `${formatted}%`, { value: formatted });
       if (row.labelRight.textContent !== valueText) row.labelRight.textContent = valueText;
       row.bar.style.width = `${clamped * 100}%`;
     }
 
     function updateRemaining(now){
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      const day = now.getDate();
-      const targets = {
-        '次の秒': new Date(now.getTime() + 1000 - now.getMilliseconds()),
-        '次の分': new Date(year, month, day, now.getHours(), now.getMinutes() + 1),
-        '次の時': new Date(year, month, day, now.getHours() + 1),
-        '次の日': new Date(year, month, day + 1),
-        '次の月': new Date(year, month + 1, 1),
-        '次の年': new Date(year + 1, 0, 1)
-      };
-      Object.keys(targets).forEach(label => {
-        const diff = timeDiffComponents(targets[label], now);
-        remainingItems[label].textContent = `${formatDuration(diff)}（±${diff.millis}ms）`;
+      REMAINING_CONFIG.forEach(item => {
+        const target = item.compute(now);
+        const diff = timeDiffComponents(target, now);
+        const durationText = formatDuration(diff);
+        const deltaText = t('remaining.delta', () => `（±${diff.millis}ms）`, { millis: diff.millis });
+        const combined = t('remaining.value', () => `${durationText}${deltaText}`, {
+          duration: durationText,
+          delta: deltaText,
+          millis: diff.millis
+        });
+        const node = remainingItems[item.id];
+        if (node) node.textContent = combined;
       });
     }
 
     function updateStats(now){
-      statsItems.unix.textContent = Math.floor(now.getTime() / 1000).toString();
-      statsItems.ticks.textContent = now.getTime().toString();
+      statsItems.unix.textContent = formatNumberLocalized(Math.floor(now.getTime() / 1000));
+      statsItems.ticks.textContent = formatNumberLocalized(now.getTime());
       statsItems.iso.textContent = now.toISOString();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const dayOfYear = Math.floor((now - startOfYear) / 86400000) + 1;
-      statsItems.yearday.textContent = `${dayOfYear}日目`;
+      const dayOfYearFormatted = formatNumberLocalized(dayOfYear);
+      statsItems.yearday.textContent = t('stats.yeardayValue', () => `${dayOfYearFormatted}日目`, { value: dayOfYearFormatted });
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const seconds = ((now - startOfDay) / 1000).toFixed(0);
-      statsItems.daySeconds.textContent = `${seconds}秒`;
-      statsItems.timezone.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+      const secondsFormatted = formatNumberLocalized(Number(seconds));
+      statsItems.daySeconds.textContent = t('stats.daySecondsValue', () => `${secondsFormatted}秒`, { value: secondsFormatted });
+      statsItems.timezone.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || t('stats.timezoneFallback', 'Local');
     }
 
     function updateCalendar(now){
-      calendarTodayLabel.textContent = `本日: ${formatJapaneseDate(now)}`;
+      const todayText = formatLocalizedDate(now);
+      calendarTodayLabel.textContent = t('calendar.today', () => `本日: ${todayText}`, { date: todayText });
       renderCalendar();
       updateCalendarCellStyles(now);
       updateCalendarDetail(now);
@@ -1385,7 +1613,7 @@
       });
       if (gained){
         state.sessionXp += gained;
-        xpBadge.textContent = `獲得EXP: ${state.sessionXp.toLocaleString()}`;
+        setXpBadgeText(state.sessionXp);
       }
       lastSegments = segments;
     }

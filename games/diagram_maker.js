@@ -1,5 +1,107 @@
 
 (function(){
+  const i18n = window?.I18n;
+
+  function translateOrFallback(key, fallback, params){
+    const computeFallback = () => {
+      if (typeof fallback === 'function') {
+        try {
+          const result = fallback(params);
+          return typeof result === 'string' ? result : (result ?? '');
+        } catch (error) {
+          console.warn('[DiagramMaker:i18n] Failed to evaluate fallback text:', error);
+          return '';
+        }
+      }
+      return fallback ?? '';
+    };
+    if (!key || !i18n || typeof i18n.t !== 'function') return computeFallback();
+    try {
+      const translated = i18n.t(key, params);
+      if (typeof translated === 'string' && translated !== key) return translated;
+    } catch (error) {
+      console.warn('[DiagramMaker:i18n] Failed to translate key:', key, error);
+    }
+    return computeFallback();
+  }
+
+  const TEXT = {
+    'errors.containerMissing': { key: 'games.diagramMaker.errors.containerMissing', fallback: () => 'MiniExp Diagram Maker requires a container' },
+    'defaults.fileName': { key: 'games.diagramMaker.defaults.fileName', fallback: () => '未保存の図.drawio' },
+    'defaults.layerName': { key: 'games.diagramMaker.defaults.layerName', fallback: ({ index } = {}) => `レイヤー ${index ?? 1}` },
+    'defaults.pageName': { key: 'games.diagramMaker.defaults.pageName', fallback: ({ index } = {}) => `ページ ${index ?? 1}` },
+    'errors.pngSignature': { key: 'games.diagramMaker.errors.pngSignature', fallback: () => 'PNG署名を認識できませんでした' },
+    'errors.pngDataMissing': { key: 'games.diagramMaker.errors.pngDataMissing', fallback: () => 'PNG内にdraw.ioデータが見つかりませんでした' },
+    'errors.inflateUnsupported': { key: 'games.diagramMaker.errors.inflateUnsupported', fallback: () => '圧縮データの展開に対応していない環境です' },
+    'errors.parseXml': { key: 'games.diagramMaker.errors.parseXml', fallback: () => 'XMLを解析できませんでした' },
+    'errors.diagramMissing': { key: 'games.diagramMaker.errors.diagramMissing', fallback: () => 'diagram 要素が見つかりません' },
+    'errors.mxGraphMissing': { key: 'games.diagramMaker.errors.mxGraphMissing', fallback: () => 'mxGraphModel が見つかりません' },
+    'errors.diagramDecodeFailed': { key: 'games.diagramMaker.errors.diagramDecodeFailed', fallback: () => 'diagram データを展開できませんでした' },
+    'errors.mxGraphRootMissing': { key: 'games.diagramMaker.errors.mxGraphRootMissing', fallback: () => 'mxGraphModel root が見つかりません' },
+    'tools.select': { key: 'games.diagramMaker.tools.select', fallback: () => '選択' },
+    'tools.rectangle': { key: 'games.diagramMaker.tools.rectangle', fallback: () => '四角' },
+    'tools.ellipse': { key: 'games.diagramMaker.tools.ellipse', fallback: () => '楕円' },
+    'tools.text': { key: 'games.diagramMaker.tools.text', fallback: () => 'テキスト' },
+    'tools.connector': { key: 'games.diagramMaker.tools.connector', fallback: () => 'コネクタ' },
+    'tools.delete': { key: 'games.diagramMaker.tools.delete', fallback: () => '削除' },
+    'defaults.textPlaceholder': { key: 'games.diagramMaker.defaults.textPlaceholder', fallback: () => 'テキスト' },
+    'defaults.nodePlaceholder': { key: 'games.diagramMaker.defaults.nodePlaceholder', fallback: () => '新しいノード' },
+    'actions.new': { key: 'games.diagramMaker.actions.new', fallback: () => '新規' },
+    'actions.open': { key: 'games.diagramMaker.actions.open', fallback: () => '開く' },
+    'actions.save': { key: 'games.diagramMaker.actions.save', fallback: () => '保存' },
+    'actions.export': { key: 'games.diagramMaker.actions.export', fallback: () => '書き出し' },
+    'actions.exportFormat': { key: 'games.diagramMaker.actions.exportFormat', fallback: ({ formatLabel } = {}) => `${formatLabel ?? ''} で書き出し` },
+    'sections.properties': { key: 'games.diagramMaker.sections.properties', fallback: () => 'プロパティ' },
+    'fields.x': { key: 'games.diagramMaker.fields.x', fallback: () => 'X' },
+    'fields.y': { key: 'games.diagramMaker.fields.y', fallback: () => 'Y' },
+    'fields.width': { key: 'games.diagramMaker.fields.width', fallback: () => '幅' },
+    'fields.height': { key: 'games.diagramMaker.fields.height', fallback: () => '高さ' },
+    'fields.fill': { key: 'games.diagramMaker.fields.fill', fallback: () => '塗り' },
+    'fields.stroke': { key: 'games.diagramMaker.fields.stroke', fallback: () => '線' },
+    'fields.strokeWidth': { key: 'games.diagramMaker.fields.strokeWidth', fallback: () => '線幅' },
+    'fields.textColor': { key: 'games.diagramMaker.fields.textColor', fallback: () => '文字色' },
+    'fields.fontSize': { key: 'games.diagramMaker.fields.fontSize', fallback: () => '文字サイズ' },
+    'fields.text': { key: 'games.diagramMaker.fields.text', fallback: () => 'テキスト' },
+    'toggles.grid': { key: 'games.diagramMaker.toggles.grid', fallback: () => 'グリッド' },
+    'toggles.snap': { key: 'games.diagramMaker.toggles.snap', fallback: () => 'スナップ' },
+    'labels.exp': { key: 'games.diagramMaker.labels.exp', fallback: ({ value } = {}) => `EXP: ${value ?? 0}` },
+    'actions.undo': { key: 'games.diagramMaker.actions.undo', fallback: () => 'Undo' },
+    'actions.redo': { key: 'games.diagramMaker.actions.redo', fallback: () => 'Redo' },
+    'confirm.newDocument': { key: 'games.diagramMaker.confirm.newDocument', fallback: () => '保存されていない変更があります。新規作成しますか？' },
+    'errors.loadFailed': { key: 'games.diagramMaker.errors.loadFailed', fallback: ({ error } = {}) => `読み込みに失敗しました: ${error ?? ''}` },
+    'errors.saveFailed': { key: 'games.diagramMaker.errors.saveFailed', fallback: ({ error } = {}) => `保存に失敗しました: ${error ?? ''}` },
+    'errors.exportFailed': { key: 'games.diagramMaker.errors.exportFailed', fallback: ({ error } = {}) => `書き出しに失敗しました: ${error ?? ''}` }
+  };
+
+  function localizeText(id, params){
+    const entry = TEXT[id];
+    if (!entry) return '';
+    return translateOrFallback(entry.key, entry.fallback, params);
+  }
+
+  function getDefaultFileName(){
+    return localizeText('defaults.fileName');
+  }
+
+  function getDefaultLayerName(index = 1){
+    return localizeText('defaults.layerName', { index });
+  }
+
+  function getDefaultPageName(index = 1){
+    return localizeText('defaults.pageName', { index });
+  }
+
+  function formatErrorMessage(error){
+    if (error == null) return '';
+    if (typeof error === 'string') return error;
+    if (typeof error?.message === 'string') return error.message;
+    try {
+      return String(error);
+    } catch {
+      return '';
+    }
+  }
+
   const STORAGE_KEY = 'mini_diagram_maker_state_v1';
   const AUTOSAVE_KEY = 'mini_diagram_maker_autosaves_v1';
   const AUTOSAVE_LIMIT = 5;
@@ -14,7 +116,6 @@
   };
   const ACTION_COOLDOWN_MS = 5000;
   const AUTOSAVE_INTERVAL_MS = 60000;
-  const DEFAULT_FILENAME = '未保存の図.drawio';
   const GRID_SIZE = 10;
   const SVG_WIDTH = 1200;
   const SVG_HEIGHT = 720;
@@ -22,12 +123,12 @@
   const MIN_ZOOM = 25;
 
   const TOOL_DEFS = [
-    { id: 'select', label: '選択', icon: '🖱️' },
-    { id: 'rectangle', label: '四角', icon: '▭' },
-    { id: 'ellipse', label: '楕円', icon: '◯' },
-    { id: 'text', label: 'テキスト', icon: '🅣' },
-    { id: 'connector', label: 'コネクタ', icon: '⇄' },
-    { id: 'delete', label: '削除', icon: '🗑️' }
+    { id: 'select', labelId: 'tools.select', icon: '🖱️' },
+    { id: 'rectangle', labelId: 'tools.rectangle', icon: '▭' },
+    { id: 'ellipse', labelId: 'tools.ellipse', icon: '◯' },
+    { id: 'text', labelId: 'tools.text', icon: '🅣' },
+    { id: 'connector', labelId: 'tools.connector', icon: '⇄' },
+    { id: 'delete', labelId: 'tools.delete', icon: '🗑️' }
   ];
 
   const DEFAULT_STYLE = {
@@ -136,13 +237,13 @@
   }
 
   function createLayer(){
-    return { id: 'layer1', name: 'レイヤー 1', visible: true, locked: false };
+    return { id: 'layer1', name: getDefaultLayerName(1), visible: true, locked: false };
   }
 
   function createEmptyDiagram(){
     return {
       id: 'diagram-1',
-      name: 'ページ 1',
+      name: getDefaultPageName(1),
       nodes: [],
       edges: [],
       layers: [createLayer()],
@@ -251,7 +352,7 @@
     }
     const signature = [137, 80, 78, 71, 13, 10, 26, 10];
     for (let i = 0; i < signature.length; i++) {
-      if (bytes[i] !== signature[i]) throw new Error('PNG署名を認識できませんでした');
+      if (bytes[i] !== signature[i]) throw new Error(localizeText('errors.pngSignature'));
     }
     let offset = 8;
     while (offset + 8 <= bytes.length) {
@@ -307,7 +408,7 @@
       }
       offset = dataEnd + 4;
     }
-    throw new Error('PNG内にdraw.ioデータが見つかりませんでした');
+    throw new Error(localizeText('errors.pngDataMissing'));
   }
 
   async function inflateBytes(bytes){
@@ -332,7 +433,7 @@
       }
       return new TextDecoder().decode(merged);
     }
-    throw new Error('圧縮データの展開に対応していない環境です');
+    throw new Error(localizeText('errors.inflateUnsupported'));
   }
 
   function decodeHtml(text){
@@ -351,24 +452,24 @@
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlString, 'text/xml');
     if (doc.querySelector('parsererror')) {
-      throw new Error('XMLを解析できませんでした');
+      throw new Error(localizeText('errors.parseXml'));
     }
     const diagramEl = doc.querySelector('diagram');
-    if (!diagramEl) throw new Error('diagram 要素が見つかりません');
+    if (!diagramEl) throw new Error(localizeText('errors.diagramMissing'));
     let modelEl = diagramEl.querySelector('mxGraphModel');
     if (!modelEl) {
       const text = diagramEl.textContent || '';
-      if (!text.trim()) throw new Error('mxGraphModel が見つかりません');
+      if (!text.trim()) throw new Error(localizeText('errors.mxGraphMissing'));
       const decoded = decodeURIComponent(escape(atob(text)));
       const innerDoc = parser.parseFromString(decoded, 'text/xml');
       if (innerDoc.querySelector('parsererror')) {
-        throw new Error('diagram データを展開できませんでした');
+        throw new Error(localizeText('errors.diagramDecodeFailed'));
       }
       modelEl = innerDoc.querySelector('mxGraphModel');
-      if (!modelEl) throw new Error('mxGraphModel が見つかりません');
+      if (!modelEl) throw new Error(localizeText('errors.mxGraphMissing'));
     }
     const rootEl = modelEl.querySelector('root');
-    if (!rootEl) throw new Error('mxGraphModel root が見つかりません');
+    if (!rootEl) throw new Error(localizeText('errors.mxGraphRootMissing'));
     const diagram = createEmptyDiagram();
     diagram.id = diagramEl.getAttribute('id') || diagram.id;
     diagram.name = diagramEl.getAttribute('name') || diagram.name;
@@ -428,7 +529,7 @@
         const isLayer = !cell.getAttribute('parent') || cell.getAttribute('parent') === '0';
         if (isLayer) {
           const layerId = cell.getAttribute('id');
-          const layerName = cell.getAttribute('value') ? decodeHtml(cell.getAttribute('value')) : `レイヤー ${diagram.layers.length + 1}`;
+          const layerName = cell.getAttribute('value') ? decodeHtml(cell.getAttribute('value')) : getDefaultLayerName(diagram.layers.length + 1);
           diagram.layers.push({
             id: layerId,
             name: layerName,
@@ -479,7 +580,7 @@
     const iso = new Date().toISOString();
     lines.push('<?xml version="1.0" encoding="UTF-8"?>');
     lines.push('<mxfile host="app.diagrams.net" modified="' + iso + '" agent="MiniExp Diagram Maker" version="21.6.5" type="device">');
-    lines.push('  <diagram id="' + escapeXml(diagram.id || 'diagram-1') + '" name="' + escapeXml(diagram.name || 'ページ 1') + '">');
+    lines.push('  <diagram id="' + escapeXml(diagram.id || 'diagram-1') + '" name="' + escapeXml(diagram.name || getDefaultPageName(1)) + '">');
     lines.push('    <mxGraphModel dx="1024" dy="768" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">');
     lines.push('      <root>');
     lines.push('        <mxCell id="0"/>');
@@ -545,12 +646,12 @@
   }
 
   function create(root, awardXp){
-    if (!root) throw new Error('MiniExp Diagram Maker requires a container');
+    if (!root) throw new Error(localizeText('errors.containerMissing'));
 
     const persisted = loadPersistentState();
     const state = {
       documentId: crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`,
-      fileName: persisted?.fileName || DEFAULT_FILENAME,
+      fileName: persisted?.fileName || getDefaultFileName(),
       diagram: persisted?.diagram ? cloneDiagram(persisted.diagram) : createEmptyDiagram(),
       selection: [],
       tool: 'select',
@@ -650,7 +751,7 @@
       if (typeof awardXp === 'function') {
         try { awardXp(amount, meta); } catch {}
       }
-      if (xpLabel) xpLabel.textContent = `EXP: ${state.xp}`;
+      if (xpLabel) xpLabel.textContent = localizeText('labels.exp', { value: state.xp });
     }
 
     function grantXp(kind, amount, meta){
@@ -878,7 +979,7 @@
         width: type === 'text' ? 160 : 160,
         height: type === 'text' ? 60 : 90,
         rotation: 0,
-        text: type === 'text' ? 'テキスト' : '新しいノード',
+        text: type === 'text' ? localizeText('defaults.textPlaceholder') : localizeText('defaults.nodePlaceholder'),
         fill: DEFAULT_STYLE.fill,
         stroke: defaultStroke,
         strokeWidth: DEFAULT_STYLE.strokeWidth,
@@ -1127,10 +1228,10 @@
       actions.style.display = 'flex';
       actions.style.gap = '8px';
 
-      function createButton(label, onClick){
+      function createButton(labelId, onClick, params){
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.textContent = label;
+        btn.textContent = localizeText(labelId, params);
         btn.style.padding = '6px 12px';
         btn.style.borderRadius = '8px';
         btn.style.border = '1px solid rgba(148,163,184,0.4)';
@@ -1142,10 +1243,10 @@
         return btn;
       }
 
-      const newBtn = createButton('新規', handleNew);
-      const openBtn = createButton('開く', () => hiddenFileInput.click());
-      const saveBtn = createButton('保存', handleSave);
-      const exportBtn = createButton('書き出し', toggleExportMenu);
+      const newBtn = createButton('actions.new', handleNew);
+      const openBtn = createButton('actions.open', () => hiddenFileInput.click());
+      const saveBtn = createButton('actions.save', handleSave);
+      const exportBtn = createButton('actions.export', toggleExportMenu);
       exportBtn.style.position = 'relative';
 
       exportMenu = document.createElement('div');
@@ -1162,7 +1263,8 @@
       ['png', 'jpg', 'bmp'].forEach(fmt => {
         const item = document.createElement('button');
         item.type = 'button';
-        item.textContent = fmt.toUpperCase() + ' で書き出し';
+        const formatLabel = fmt.toUpperCase();
+        item.textContent = localizeText('actions.exportFormat', { format: fmt, formatLabel });
         item.style.border = 'none';
         item.style.background = 'transparent';
         item.style.padding = '6px 12px';
@@ -1210,7 +1312,9 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.dataset.tool = def.id;
-        btn.textContent = `${def.icon} ${def.label}`;
+        const labelText = localizeText(def.labelId) || def.labelId;
+        btn.textContent = def.icon + (labelText ? ` ${labelText}` : '');
+        btn.setAttribute('aria-label', labelText || def.id);
         btn.style.padding = '8px 12px';
         btn.style.borderRadius = '8px';
         btn.style.border = '1px solid rgba(148,163,184,0.4)';
@@ -1245,20 +1349,21 @@
       properties.style.gap = '12px';
 
       const propertyTitle = document.createElement('h3');
-      propertyTitle.textContent = 'プロパティ';
+      propertyTitle.textContent = localizeText('sections.properties');
       propertyTitle.style.fontSize = '16px';
       propertyTitle.style.margin = '0';
       propertyTitle.style.color = '#0f172a';
       propertyGroups.push(propertyTitle);
       properties.appendChild(propertyTitle);
 
-      function createField(label, type){
+      function createField(labelId, type){
         const wrapper = document.createElement('label');
         wrapper.style.display = 'flex';
         wrapper.style.flexDirection = 'column';
         wrapper.style.fontSize = '13px';
         wrapper.style.color = '#0f172a';
-        wrapper.textContent = label;
+        const labelText = localizeText(labelId);
+        wrapper.textContent = labelText;
         const input = document.createElement('input');
         input.type = type;
         input.style.marginTop = '4px';
@@ -1272,21 +1377,21 @@
         return input;
       }
 
-      propertyInputs.x = createField('X', 'number');
-      propertyInputs.y = createField('Y', 'number');
-      propertyInputs.width = createField('幅', 'number');
-      propertyInputs.height = createField('高さ', 'number');
-      propertyInputs.fill = createField('塗り', 'color');
-      propertyInputs.stroke = createField('線', 'color');
-      propertyInputs.strokeWidth = createField('線幅', 'number');
-      propertyInputs.textColor = createField('文字色', 'color');
-      propertyInputs.fontSize = createField('文字サイズ', 'number');
+      propertyInputs.x = createField('fields.x', 'number');
+      propertyInputs.y = createField('fields.y', 'number');
+      propertyInputs.width = createField('fields.width', 'number');
+      propertyInputs.height = createField('fields.height', 'number');
+      propertyInputs.fill = createField('fields.fill', 'color');
+      propertyInputs.stroke = createField('fields.stroke', 'color');
+      propertyInputs.strokeWidth = createField('fields.strokeWidth', 'number');
+      propertyInputs.textColor = createField('fields.textColor', 'color');
+      propertyInputs.fontSize = createField('fields.fontSize', 'number');
       const textLabel = document.createElement('label');
       textLabel.style.display = 'flex';
       textLabel.style.flexDirection = 'column';
       textLabel.style.fontSize = '13px';
       textLabel.style.color = '#0f172a';
-      textLabel.textContent = 'テキスト';
+      textLabel.textContent = localizeText('fields.text');
       const textArea = document.createElement('textarea');
       textArea.rows = 3;
       textArea.style.marginTop = '4px';
@@ -1349,7 +1454,7 @@
         writePersistentState(state);
       });
       gridToggle.appendChild(gridCheckbox);
-      gridToggle.appendChild(document.createTextNode('グリッド'));
+      gridToggle.appendChild(document.createTextNode(localizeText('toggles.grid')));
       toggleLabels.push(gridToggle);
       toggleInputs.push(gridCheckbox);
 
@@ -1365,7 +1470,7 @@
         writePersistentState(state);
       });
       snapToggle.appendChild(snapCheckbox);
-      snapToggle.appendChild(document.createTextNode('スナップ'));
+      snapToggle.appendChild(document.createTextNode(localizeText('toggles.snap')));
       toggleLabels.push(snapToggle);
       toggleInputs.push(snapCheckbox);
 
@@ -1375,20 +1480,20 @@
       left.appendChild(snapToggle);
 
       xpLabel = document.createElement('div');
-      xpLabel.textContent = 'EXP: 0';
+      xpLabel.textContent = localizeText('labels.exp', { value: state.xp });
       xpLabel.style.fontWeight = '600';
       xpLabel.style.color = '#0f172a';
 
       undoBtn = document.createElement('button');
       undoBtn.type = 'button';
-      undoBtn.textContent = 'Undo';
+      undoBtn.textContent = localizeText('actions.undo');
       undoBtn.style.marginRight = '8px';
       undoBtn.addEventListener('click', undo);
       footerButtons.push(undoBtn);
 
       redoBtn = document.createElement('button');
       redoBtn.type = 'button';
-      redoBtn.textContent = 'Redo';
+      redoBtn.textContent = localizeText('actions.redo');
       redoBtn.style.marginRight = '12px';
       redoBtn.addEventListener('click', redo);
       footerButtons.push(redoBtn);
@@ -1520,10 +1625,10 @@
     }
 
     function handleNew(){
-      if (state.hasUnsavedChanges && !confirm('保存されていない変更があります。新規作成しますか？')) return;
+      if (state.hasUnsavedChanges && !confirm(localizeText('confirm.newDocument'))) return;
       state.diagram = createEmptyDiagram();
       ensureDiagramIds(state.diagram);
-      state.fileName = DEFAULT_FILENAME;
+      state.fileName = getDefaultFileName();
       state.selection = [];
       state.history = [];
       state.historyIndex = -1;
@@ -1557,7 +1662,7 @@
         pushHistory();
         grantXp('import', XP_VALUES.import, { file: file.name });
       } catch (err) {
-        alert('読み込みに失敗しました: ' + (err?.message || err));
+        alert(localizeText('errors.loadFailed', { error: formatErrorMessage(err) }));
       } finally {
         hiddenFileInput.value = '';
       }
@@ -1579,7 +1684,7 @@
         awardSessionXp(XP_VALUES.saveXml, { type: 'save_xml' });
         writePersistentState(state);
       } catch (err) {
-        alert('保存に失敗しました: ' + (err?.message || err));
+        alert(localizeText('errors.saveFailed', { error: formatErrorMessage(err) }));
       }
     }
 
@@ -1611,7 +1716,7 @@
         document.body.removeChild(a);
         awardSessionXp(XP_VALUES.exportImage, { type: 'export_image', format });
       } catch (err) {
-        alert('書き出しに失敗しました: ' + (err?.message || err));
+        alert(localizeText('errors.exportFailed', { error: formatErrorMessage(err) }));
       }
     }
 

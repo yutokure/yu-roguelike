@@ -3,6 +3,19 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'pacman' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => { try { draw(); } catch {} })
+      : null;
     const G = 18; // tile size px (scaled later)
     const layout = [
       '#####################',
@@ -67,8 +80,26 @@
       // ghosts
       ctx.fillStyle='#f87171'; ghosts.forEach(g=>{ ctx.fillRect((g.x-0.4)*s,(g.y-0.4)*s,s*0.8,s*0.8); });
       // UI
-      ctx.fillStyle='#cbd5e1'; ctx.font=`${Math.floor(12*scale)}px system-ui,sans-serif`; ctx.fillText(`LIVES:${lives}  PELLETS:${eaten}/${pellets.size+eaten}`, 6, 12*scale);
-      if (ended){ ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#f8fafc'; ctx.font=`bold ${18*scale}px system-ui,sans-serif`; ctx.textAlign='center'; ctx.fillText('Game Over', canvas.width/2, canvas.height/2-6*scale); ctx.font=`${10*scale}px system-ui,sans-serif`; ctx.fillText('Rで再開/再起動', canvas.width/2, canvas.height/2+12*scale); ctx.textAlign='start'; }
+      const livesLabel = text('hud.livesLabel', 'LIVES');
+      const pelletsLabel = text('hud.pelletsLabel', 'PELLETS');
+      const statusText = text(
+        'hud.statusTemplate',
+        () => `${livesLabel}:${lives}  ${pelletsLabel}:${eaten}/${pellets.size+eaten}`,
+        {
+          livesLabel,
+          pelletsLabel,
+          lives,
+          pelletsCollected: eaten,
+          pelletsRemaining: pellets.size,
+          pelletsTotal: pellets.size + eaten,
+        }
+      );
+      ctx.fillStyle='#cbd5e1'; ctx.font=`${Math.floor(12*scale)}px system-ui,sans-serif`; ctx.fillText(statusText, 6, 12*scale);
+      if (ended){
+        const overlayTitle = text('overlay.title', 'Game Over');
+        const restartHint = text('overlay.restartHint', 'Rで再開/再起動');
+        ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#f8fafc'; ctx.font=`bold ${18*scale}px system-ui,sans-serif`; ctx.textAlign='center'; ctx.fillText(overlayTitle, canvas.width/2, canvas.height/2-6*scale); ctx.font=`${10*scale}px system-ui,sans-serif`; ctx.fillText(restartHint, canvas.width/2, canvas.height/2+12*scale); ctx.textAlign='start';
+      }
     }
 
     function step(dt){
@@ -112,7 +143,7 @@
     function loop(t){ const now=t*0.001; const dt=Math.min(0.033, now-(last||now)); last=now; if(running){ step(dt); draw(); raf=requestAnimationFrame(loop);} }
     function start(){ if(running) return; running=true; disableHostRestart(); raf=requestAnimationFrame(loop); }
     function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
-    function destroy(){ try{ stop(); canvas.remove(); document.removeEventListener('keydown', onKey); }catch{} }
+    function destroy(){ try{ stop(); canvas.remove(); document.removeEventListener('keydown', onKey); detachLocale && detachLocale(); }catch{} }
     function restart(){ stop({ keepShortcutsDisabled: true }); // rebuild pellets
       pellets.clear(); eaten=0; ghosts.length=0; for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const ch = layout[y][x]; if(ch==='.'||ch==='o') pellets.add(`${x},${y}`); if (ch==='G') ghosts.push({ x:x+0.5, y:y+0.5, dir:{x:0,y:1}, speed:(difficulty==='HARD'?3.6:(difficulty==='EASY'?2.8:3.2)) }); if(ch==='P'){ pac.x=x+0.5; pac.y=y+0.5; pac.dir={x:1,y:0}; pac.next={x:1,y:0}; }} lives=(difficulty==='HARD'?2:3); ended=false; start(); }
     function getScore(){ return eaten; }

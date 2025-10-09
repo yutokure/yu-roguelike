@@ -2,6 +2,58 @@
   const DEG = Math.PI/180;
 
   function create(root, awardXp, opts){
+    const localization = opts?.localization || null;
+
+    const translate = (key, fallback, params) => {
+      const hasKey = typeof key === 'string' && key.length > 0;
+      if (localization && typeof localization.t === 'function' && hasKey) {
+        try {
+          const result = localization.t(key, fallback, params);
+          if (result !== undefined && result !== null) return result;
+        } catch (error) {
+          console?.warn?.('[Pinball] Failed to translate key:', key, error);
+        }
+      }
+      if (typeof fallback === 'function') {
+        try {
+          const computed = fallback();
+          return typeof computed === 'string' ? computed : (computed ?? '');
+        } catch (error) {
+          console?.warn?.('[Pinball] Failed to compute fallback for key:', key, error);
+          return '';
+        }
+      }
+      if (fallback === undefined || fallback === null) return '';
+      return `${fallback}`;
+    };
+
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try {
+          return localization.formatNumber(value, options);
+        } catch (error) {
+          console?.warn?.('[Pinball] Failed to format number:', value, error);
+        }
+      }
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        try {
+          return new Intl.NumberFormat(undefined, options).format(value);
+        } catch {}
+      }
+      return `${value ?? ''}`;
+    };
+
+    const onLocalizationChange = (listener) => {
+      if (!localization || typeof localization.onChange !== 'function') return () => {};
+      try {
+        const detach = localization.onChange(listener);
+        if (typeof detach === 'function') return detach;
+      } catch (error) {
+        console?.warn?.('[Pinball] Failed to subscribe to localization changes:', error);
+      }
+      return () => {};
+    };
+
     const wrapper = document.createElement('div');
     wrapper.style.display = 'flex';
     wrapper.style.flexDirection = 'column';
@@ -28,11 +80,17 @@
     info.style.justifyContent = 'center';
     info.style.gap = '16px';
     info.style.fontSize = '14px';
-    info.innerHTML = `
-      <span>左右フリッパー: ← / → または A / D</span>
-      <span>プランジャー: スペースキー長押しでショット</span>
-      <span>Rキー: リセット</span>
-    `;
+    function updateControlsInfo(){
+      const flipperText = translate('.ui.controls.flippers', '左右フリッパー: ← / → または A / D');
+      const plungerText = translate('.ui.controls.plunger', 'プランジャー: スペースキー長押しでショット');
+      const resetText = translate('.ui.controls.reset', 'Rキー: リセット');
+      info.innerHTML = `
+        <span>${flipperText}</span>
+        <span>${plungerText}</span>
+        <span>${resetText}</span>
+      `;
+    }
+    updateControlsInfo();
     infoCard.appendChild(info);
 
     const status = document.createElement('div');
@@ -112,6 +170,7 @@
     let skillShotTimer = 0;
     let skillShotReady = true;
     let announcementTimeout = 0;
+    let detachLocalizationListener = null;
 
     const gravity = 0.28;
     const friction = 0.995;
@@ -183,10 +242,50 @@
     ];
 
     const missionTypes = [
-      { id: 'bumper-blitz', name: 'バンパーブリッツ', description: 'バンパーに6回ヒットしよう', event: 'bumper', target: 6, reward: 45, duration: 60 * 45 },
-      { id: 'sling-storm', name: 'スリングストーム', description: 'スリングショットを4回作動させる', event: 'sling', target: 4, reward: 35, duration: 60 * 35 },
-      { id: 'lane-master', name: 'レーンマスター', description: 'L/M/Rレーンセットを2回完成', event: 'lane-set', target: 2, reward: 60, duration: 60 * 55 },
-      { id: 'post-challenge', name: 'ポストチャレンジ', description: 'ポストに5回ヒット', event: 'post', target: 5, reward: 40, duration: 60 * 40 }
+      {
+        id: 'bumper-blitz',
+        name: 'バンパーブリッツ',
+        nameKey: '.missions.bumperBlitz.name',
+        description: 'バンパーに6回ヒットしよう',
+        descriptionKey: '.missions.bumperBlitz.description',
+        event: 'bumper',
+        target: 6,
+        reward: 45,
+        duration: 60 * 45
+      },
+      {
+        id: 'sling-storm',
+        name: 'スリングストーム',
+        nameKey: '.missions.slingStorm.name',
+        description: 'スリングショットを4回作動させる',
+        descriptionKey: '.missions.slingStorm.description',
+        event: 'sling',
+        target: 4,
+        reward: 35,
+        duration: 60 * 35
+      },
+      {
+        id: 'lane-master',
+        name: 'レーンマスター',
+        nameKey: '.missions.laneMaster.name',
+        description: 'L/M/Rレーンセットを2回完成',
+        descriptionKey: '.missions.laneMaster.description',
+        event: 'lane-set',
+        target: 2,
+        reward: 60,
+        duration: 60 * 55
+      },
+      {
+        id: 'post-challenge',
+        name: 'ポストチャレンジ',
+        nameKey: '.missions.postChallenge.name',
+        description: 'ポストに5回ヒット',
+        descriptionKey: '.missions.postChallenge.description',
+        event: 'post',
+        target: 5,
+        reward: 40,
+        duration: 60 * 40
+      }
     ];
 
     const posts = [
@@ -199,18 +298,53 @@
 
     const sparks = [];
 
+    function getMissionName(def){
+      if (!def) return '';
+      const key = def.nameKey || (def.id ? `.missions.${def.id}.name` : null);
+      const fallback = def.name || def.id || '';
+      return key ? translate(key, fallback) : (fallback == null ? '' : `${fallback}`);
+    }
+
+    function getMissionDescription(def){
+      if (!def) return '';
+      const key = def.descriptionKey || (def.id ? `.missions.${def.id}.description` : null);
+      const fallback = def.description || '';
+      return key ? translate(key, fallback) : (fallback == null ? '' : `${fallback}`);
+    }
+
     function award(amount, meta){
       totalXp += amount;
       awardXp && awardXp(amount, meta);
     }
 
     function updateMissionDisplay(){
+      const missionLabel = translate('.ui.mission.label', 'ミッション:');
       if (!mission){
-        missionInfo.innerHTML = `<strong>ミッション:</strong> なし<br><span style="opacity:0.75">L/M/Rレーンを揃えて新しいミッションを開始</span>`;
-      } else {
-        const remain = Math.max(0, Math.ceil(missionTimer / 60));
-        missionInfo.innerHTML = `<strong>ミッション:</strong> ${mission.name}<br>${mission.description}<br>進行: ${mission.progress} / ${mission.target}（残り${remain}s）`;
+        const noneText = translate('.ui.mission.none', 'なし');
+        const hintText = translate('.ui.mission.hint', 'L/M/Rレーンを揃えて新しいミッションを開始');
+        missionInfo.innerHTML = `<strong>${missionLabel}</strong> ${noneText}<br><span style="opacity:0.75">${hintText}</span>`;
+        return;
       }
+      const missionName = getMissionName(mission);
+      const missionDescription = getMissionDescription(mission);
+      const progressValue = mission.progress || 0;
+      const progressText = formatNumber(progressValue);
+      const targetText = formatNumber(mission.target || 0);
+      const remainSeconds = Math.max(0, Math.ceil(missionTimer / 60));
+      const remainText = formatNumber(remainSeconds);
+      const progressLine = translate(
+        '.ui.mission.progress',
+        () => `進行: ${progressText} / ${targetText}（残り${remainText}s）`,
+        {
+          progress: progressValue,
+          progressText,
+          target: mission.target,
+          targetText,
+          remainingSeconds: remainSeconds,
+          remainingSecondsText: remainText
+        }
+      );
+      missionInfo.innerHTML = `<strong>${missionLabel}</strong> ${missionName}<br>${missionDescription}<br>${progressLine}`;
     }
 
     function updateSkillInfo(){
@@ -220,16 +354,40 @@
         return;
       }
       if (skillShotTimer > 0){
-        skillInfo.textContent = `スキルショット: ${target.label} レーン / 残り ${Math.ceil(skillShotTimer / 60)}s`;
+        const seconds = Math.max(0, Math.ceil(skillShotTimer / 60));
+        const secondsText = formatNumber(seconds);
+        skillInfo.textContent = translate(
+          '.ui.skillShot.active',
+          () => `スキルショット: ${target.label} レーン / 残り ${secondsText}s`,
+          { lane: target.label, seconds, secondsText }
+        );
       } else if (ball.held && skillShotReady){
-        skillInfo.textContent = `スキルショット準備完了: ${target.label} レーンを狙おう！`;
+        skillInfo.textContent = translate(
+          '.ui.skillShot.ready',
+          () => `スキルショット準備完了: ${target.label} レーンを狙おう！`,
+          { lane: target.label }
+        );
       } else {
-        skillInfo.textContent = `次のスキルショット標的: ${target.label} レーン`;
+        skillInfo.textContent = translate(
+          '.ui.skillShot.next',
+          () => `次のスキルショット標的: ${target.label} レーン`,
+          { lane: target.label }
+        );
       }
     }
 
     function pushAnnouncement(message){
-      announcer.textContent = message;
+      const text = message == null ? '' : `${message}`;
+      if (!text){
+        announcer.textContent = '';
+        announcer.style.opacity = '0';
+        if (announcementTimeout){
+          clearTimeout(announcementTimeout);
+          announcementTimeout = 0;
+        }
+        return;
+      }
+      announcer.textContent = text;
       announcer.style.opacity = '1';
       if (announcementTimeout){
         clearTimeout(announcementTimeout);
@@ -253,7 +411,16 @@
         mission.progress = 1;
       }
       updateMissionDisplay();
-      pushAnnouncement(`${def.name} 開始！`);
+      const missionName = getMissionName(mission);
+      const missionStartMessage = translate(
+        '.announcements.missionStart',
+        () => {
+          if (missionName) return `${missionName} 開始！`;
+          return translate('.announcements.missionStart.generic', 'ミッション開始！');
+        },
+        { mission: missionName }
+      );
+      pushAnnouncement(missionStartMessage);
       if (mission.progress >= mission.target){
         completeMission();
       }
@@ -265,7 +432,18 @@
       award(reward, { type: 'mission', id: mission.id, chain: bonusChain });
       score += reward * 18;
       bonusChain = Math.min(8, bonusChain + 1.1);
-      pushAnnouncement(`${mission.name} クリア！ +${reward}EXP`);
+      const missionName = getMissionName(mission);
+      const rewardText = formatNumber(reward);
+      const completeMessage = translate(
+        '.announcements.missionComplete',
+        () => {
+          if (missionName) return `${missionName} クリア！ +${rewardText}EXP`;
+          const generic = translate('.announcements.missionComplete.generic', 'ミッション完了！');
+          return `${generic} +${rewardText}EXP`;
+        },
+        { mission: missionName, reward, rewardText }
+      );
+      pushAnnouncement(completeMessage);
       mission = null;
       missionTimer = 0;
       updateMissionDisplay();
@@ -273,7 +451,16 @@
 
     function failMission(){
       if (!mission) return;
-      pushAnnouncement(`${mission.name} 失敗…`);
+      const missionName = getMissionName(mission);
+      const failMessage = translate(
+        '.announcements.missionFailed',
+        () => {
+          if (missionName) return `${missionName} 失敗…`;
+          return translate('.announcements.missionFailed.generic', 'ミッション失敗…');
+        },
+        { mission: missionName }
+      );
+      pushAnnouncement(failMessage);
       mission = null;
       missionTimer = 0;
       updateMissionDisplay();
@@ -300,7 +487,15 @@
         award(comboXp, { type: 'combo', count: comboCount });
         score += comboXp * 14;
         bonusChain = Math.min(7.5, bonusChain + comboCount * 0.05);
-        pushAnnouncement(`コンボ ${comboCount}！ +${comboXp}EXP`);
+        const countText = formatNumber(comboCount);
+        const xpText = formatNumber(comboXp);
+        pushAnnouncement(
+          translate(
+            '.announcements.combo',
+            () => `コンボ ${countText}！ +${xpText}EXP`,
+            { count: comboCount, countText, xp: comboXp, xpText }
+          )
+        );
       }
     }
 
@@ -344,13 +539,40 @@
     }
 
     function updateStatus(){
-      status.textContent = `Balls: ${lives} / Score: ${score} / EXP: ${totalXp} / Chain: x${bonusChain.toFixed(1)} / Combo: ${comboCount > 1 ? comboCount : '-'}`;
+      const livesText = formatNumber(lives);
+      const scoreText = formatNumber(score);
+      const expText = formatNumber(totalXp);
+      const chainValue = Number.isFinite(bonusChain) ? Number(bonusChain.toFixed(1)) : bonusChain;
+      const chainText = formatNumber(chainValue, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const comboDisplay = comboCount > 1 ? formatNumber(comboCount) : translate('.hud.combo.none', '-');
+      status.textContent = translate(
+        '.hud.status',
+        () => `Balls: ${livesText} / Score: ${scoreText} / EXP: ${expText} / Chain: x${chainText} / Combo: ${comboDisplay}`,
+        {
+          lives,
+          livesText,
+          score,
+          scoreText,
+          exp: totalXp,
+          expText,
+          chain: bonusChain,
+          chainText,
+          combo: comboCount,
+          comboText: comboDisplay
+        }
+      );
       updateMissionDisplay();
       updateSkillInfo();
     }
 
     chooseSkillShotTarget();
     updateStatus();
+
+    detachLocalizationListener = onLocalizationChange(() => {
+      updateControlsInfo();
+      updateStatus();
+      drawTable();
+    });
 
     function reflectVelocity(nx, ny){
       const dot = ball.vx * nx + ball.vy * ny;
@@ -677,7 +899,8 @@
         ctx.fillStyle = '#38bdf8';
         ctx.font = 'bold 16px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('スペースでショット', W-95, table.bottom-120);
+        const holdHint = translate('.ui.holdHint', 'スペースでショット');
+        ctx.fillText(holdHint, W-95, table.bottom-120);
       }
     }
 
@@ -697,7 +920,14 @@
               bonusChain = Math.min(8.5, bonusChain + 1.2);
               skillShotTimer = 0;
               skillShotReady = false;
-              pushAnnouncement(`スキルショット成功！ +${bonus}EXP`);
+              const xpText = formatNumber(bonus);
+              pushAnnouncement(
+                translate(
+                  '.announcements.skillShotSuccess',
+                  () => `スキルショット成功！ +${xpText}EXP`,
+                  { xp: bonus, xpText, lane: r.label }
+                )
+              );
             }
           }
         }
@@ -883,6 +1113,11 @@
       }
       if (announcementTimeout){
         clearTimeout(announcementTimeout);
+        announcementTimeout = 0;
+      }
+      if (typeof detachLocalizationListener === 'function'){
+        try { detachLocalizationListener(); } catch {}
+        detachLocalizationListener = null;
       }
     }
 

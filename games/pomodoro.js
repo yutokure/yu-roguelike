@@ -1,4 +1,6 @@
 (function(){
+  const GLOBAL = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
+  const I18N_PREFIX = 'minigame.pomodoro';
   const STORAGE_KEY = 'mini_pomodoro_timer_state_v1';
   const HISTORY_LIMIT = 60;
   const FOCUS_MIN_RANGE = [5, 180];
@@ -18,6 +20,41 @@
     const num = Number(value);
     if (!Number.isFinite(num)) return min;
     return Math.min(max, Math.max(min, Math.round(num)));
+  }
+
+  function formatTemplate(template, params){
+    if (template === undefined || template === null) return '';
+    if (!params || typeof params !== 'object') return String(template);
+    return String(template).replace(/\{([^{}]+)\}/g, (match, token) => {
+      const key = token.trim();
+      if (!key) return match;
+      const value = params[key];
+      return value === undefined || value === null ? match : String(value);
+    });
+  }
+
+  function translateKey(key, fallback, params){
+    const i18n = GLOBAL && GLOBAL.I18n;
+    if (i18n && typeof i18n.t === 'function'){
+      try {
+        const value = i18n.t(key, params);
+        if (typeof value === 'string' && value !== key) return value;
+      } catch {}
+    }
+    if (fallback !== undefined) return params ? formatTemplate(fallback, params) : String(fallback);
+    return params ? formatTemplate(key, params) : String(key);
+  }
+
+  function t(suffix, fallback, params){
+    return translateKey(`${I18N_PREFIX}.${suffix}`, fallback, params);
+  }
+
+  function formatNumberIntl(value){
+    const i18n = GLOBAL && GLOBAL.I18n;
+    if (i18n && typeof i18n.formatNumber === 'function'){
+      try { return i18n.formatNumber(value); } catch {}
+    }
+    return String(value);
   }
 
   function sanitizeConfig(raw){
@@ -234,7 +271,11 @@
     left.textContent = dateLabel;
 
     const right = document.createElement('div');
-    right.textContent = `集中 ${stats.focus} / 休憩 ${stats.shortBreak + stats.longBreak} / +${stats.xp}XP`;
+    right.textContent = t('history.entry', '集中 {focus} / 休憩 {breaks} / +{xp}XP', {
+      focus: formatNumberIntl(stats.focus),
+      breaks: formatNumberIntl((stats.shortBreak || 0) + (stats.longBreak || 0)),
+      xp: formatNumberIntl(stats.xp)
+    });
     right.style.whiteSpace = 'nowrap';
 
     row.appendChild(left);
@@ -285,7 +326,11 @@
           today.xp += Math.max(0, Math.floor(num));
         }
         if (badgeText && window && window.showMiniExpBadge){
-          try { window.showMiniExpBadge(`${badgeText} +${Math.floor(amount)}XP`, badgeOpts); } catch {}
+          try {
+            const xpText = formatNumberIntl(Math.max(0, Math.floor(amount)));
+            const message = t('badges.gainTemplate', '{label} +{xp}XP', { label: badgeText, xp: xpText });
+            window.showMiniExpBadge(message, badgeOpts);
+          } catch {}
         }
         return gained;
       } catch {
@@ -297,9 +342,9 @@
     }
 
     function phaseName(type){
-      if (type === 'short_break') return '小休憩';
-      if (type === 'long_break') return '長休憩';
-      return '集中';
+      if (type === 'short_break') return t('phase.shortBreak', '小休憩');
+      if (type === 'long_break') return t('phase.longBreak', '長休憩');
+      return t('phase.focus', '集中');
     }
 
     function nextPhaseAfterFocus(advance = true){
@@ -372,7 +417,7 @@
           }
           const streakBonus = Math.min(40, Math.max(0, (state.totals.currentStreak - 1) * 5));
           const amount = 50 + streakBonus;
-          grantXp(amount, { type: 'focus_complete', streak: state.totals.currentStreak, total: state.totals.focus }, '集中セッション達成', { variant: 'combo', level: Math.min(5, state.totals.currentStreak) });
+          grantXp(amount, { type: 'focus_complete', streak: state.totals.currentStreak, total: state.totals.focus }, t('badges.focusComplete', '集中セッション達成'), { variant: 'combo', level: Math.min(5, state.totals.currentStreak) });
           nextPhase = nextPhaseAfterFocus(true);
         } else {
           state.totals.currentStreak = 0;
@@ -386,11 +431,11 @@
           if (current === 'short_break'){
             state.totals.shortBreak = (state.totals.shortBreak || 0) + 1;
             today.shortBreak += 1;
-            grantXp(12, { type: 'short_break_complete', total: state.totals.shortBreak }, 'ショートブレイク完了', { variant: 'info' });
+            grantXp(12, { type: 'short_break_complete', total: state.totals.shortBreak }, t('badges.shortBreakComplete', 'ショートブレイク完了'), { variant: 'info' });
           } else if (current === 'long_break'){
             state.totals.longBreak = (state.totals.longBreak || 0) + 1;
             today.longBreak += 1;
-            grantXp(25, { type: 'long_break_complete', total: state.totals.longBreak }, 'ロングブレイク完了', { variant: 'info' });
+            grantXp(25, { type: 'long_break_complete', total: state.totals.longBreak }, t('badges.longBreakComplete', 'ロングブレイク完了'), { variant: 'info' });
           }
         }
         nextPhase = 'focus';
@@ -448,13 +493,13 @@
 
     const titleWrap = document.createElement('div');
     const title = document.createElement('h2');
-    title.textContent = 'ポモドーロタイマー';
+    title.textContent = t('title', 'ポモドーロタイマー');
     title.style.margin = '0';
     title.style.fontSize = '24px';
     title.style.color = '#0f172a';
 
     const subtitle = document.createElement('div');
-    subtitle.textContent = '集中と休憩をリズム良く切り替え、完了ごとにEXPを獲得します。';
+    subtitle.textContent = t('subtitle', '集中と休憩をリズム良く切り替え、完了ごとにEXPを獲得します。');
     subtitle.style.fontSize = '14px';
     subtitle.style.color = '#475569';
 
@@ -518,9 +563,9 @@
     controlRow.style.gap = '12px';
     controlRow.style.justifyContent = 'center';
 
-    const startBtn = createButton('▶ 開始', 'primary');
-    const skipBtn = createButton('⏭ 次へ', 'outline');
-    const resetBtn = createButton('↺ リセット', 'ghost');
+    const startBtn = createButton(t('buttons.start', '▶ 開始'), 'primary');
+    const skipBtn = createButton(t('buttons.skip', '⏭ 次へ'), 'outline');
+    const resetBtn = createButton(t('buttons.reset', '↺ リセット'), 'ghost');
 
     controlRow.appendChild(startBtn);
     controlRow.appendChild(skipBtn);
@@ -541,7 +586,7 @@
     statsCard.style.flexDirection = 'column';
     statsCard.style.gap = '16px';
 
-    const statsTitle = createSectionTitle('進捗サマリー');
+    const statsTitle = createSectionTitle(t('stats.title', '進捗サマリー'));
     statsCard.appendChild(statsTitle);
 
     const statsGrid = document.createElement('div');
@@ -549,10 +594,10 @@
     statsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(150px, 1fr))';
     statsGrid.style.gap = '12px';
 
-    const focusChip = createStatChip('集中セッション', '0');
-    const breakChip = createStatChip('休憩回数', '0');
-    const streakChip = createStatChip('連続集中', '0');
-    const xpChip = createStatChip('累計EXP', '0');
+    const focusChip = createStatChip(t('stats.focusLabel', '集中セッション'), formatNumberIntl(0));
+    const breakChip = createStatChip(t('stats.breakLabel', '休憩回数'), formatNumberIntl(0));
+    const streakChip = createStatChip(t('stats.streakLabel', '連続集中'), formatNumberIntl(0));
+    const xpChip = createStatChip(t('stats.xpLabel', '累計EXP'), formatNumberIntl(0));
 
     statsGrid.appendChild(focusChip.wrap);
     statsGrid.appendChild(breakChip.wrap);
@@ -575,7 +620,7 @@
     historyCard.style.flexDirection = 'column';
     historyCard.style.gap = '12px';
 
-    const historyTitle = createSectionTitle('直近の履歴');
+    const historyTitle = createSectionTitle(t('history.title', '直近の履歴'));
     const historyList = document.createElement('div');
 
     historyCard.appendChild(historyTitle);
@@ -590,16 +635,16 @@
     settingsCard.style.flexDirection = 'column';
     settingsCard.style.gap = '16px';
 
-    const settingsTitle = createSectionTitle('タイマー設定');
+    const settingsTitle = createSectionTitle(t('settings.title', 'タイマー設定'));
     const settingsForm = document.createElement('div');
     settingsForm.style.display = 'grid';
     settingsForm.style.gridTemplateColumns = 'repeat(auto-fit, minmax(180px, 1fr))';
     settingsForm.style.gap = '14px';
 
-    const focusInput = createNumberInput('集中 (分)', FOCUS_MIN_RANGE[0], FOCUS_MIN_RANGE[1], state.config.focusMinutes);
-    const shortInput = createNumberInput('小休憩 (分)', SHORT_BREAK_RANGE[0], SHORT_BREAK_RANGE[1], state.config.shortBreakMinutes);
-    const longInput = createNumberInput('長休憩 (分)', LONG_BREAK_RANGE[0], LONG_BREAK_RANGE[1], state.config.longBreakMinutes);
-    const cycleInput = createNumberInput('長休憩までの集中回数', CYCLE_RANGE[0], CYCLE_RANGE[1], state.config.cyclesBeforeLong);
+    const focusInput = createNumberInput(t('settings.focusLabel', '集中 (分)'), FOCUS_MIN_RANGE[0], FOCUS_MIN_RANGE[1], state.config.focusMinutes);
+    const shortInput = createNumberInput(t('settings.shortBreakLabel', '小休憩 (分)'), SHORT_BREAK_RANGE[0], SHORT_BREAK_RANGE[1], state.config.shortBreakMinutes);
+    const longInput = createNumberInput(t('settings.longBreakLabel', '長休憩 (分)'), LONG_BREAK_RANGE[0], LONG_BREAK_RANGE[1], state.config.longBreakMinutes);
+    const cycleInput = createNumberInput(t('settings.cyclesLabel', '長休憩までの集中回数'), CYCLE_RANGE[0], CYCLE_RANGE[1], state.config.cyclesBeforeLong);
 
     settingsForm.appendChild(focusInput.wrap);
     settingsForm.appendChild(shortInput.wrap);
@@ -611,13 +656,13 @@
     toggles.style.flexDirection = 'column';
     toggles.style.gap = '10px';
 
-    const autoBreakToggle = createToggle('集中完了後に自動で休憩を開始', state.config.autoStartBreaks);
-    const autoFocusToggle = createToggle('休憩完了後に自動で集中を開始', state.config.autoStartFocus);
+    const autoBreakToggle = createToggle(t('settings.autoBreak', '集中完了後に自動で休憩を開始'), state.config.autoStartBreaks);
+    const autoFocusToggle = createToggle(t('settings.autoFocus', '休憩完了後に自動で集中を開始'), state.config.autoStartFocus);
 
     toggles.appendChild(autoBreakToggle.wrap);
     toggles.appendChild(autoFocusToggle.wrap);
 
-    const applyBtn = createButton('設定を保存', 'primary');
+    const applyBtn = createButton(t('buttons.save', '設定を保存'), 'primary');
     applyBtn.style.alignSelf = 'flex-start';
 
     settingsCard.appendChild(settingsTitle);
@@ -638,7 +683,8 @@
       const total = getPhaseDurationMinutes(runtimeState.phase) * 60;
       const progress = total > 0 ? Math.min(100, Math.max(0, 100 - (runtimeState.remainingSec / total) * 100)) : 0;
       progressInner.style.width = `${progress.toFixed(1)}%`;
-      phaseBadge.textContent = `${phaseName(runtimeState.phase)}モード`;
+      const phaseLabel = phaseName(runtimeState.phase);
+      phaseBadge.textContent = t('phase.badge', '{phase}モード', { phase: phaseLabel });
       if (runtimeState.phase === 'focus'){
         phaseBadge.style.background = 'rgba(56,189,248,0.15)';
         phaseBadge.style.color = '#0369a1';
@@ -651,33 +697,41 @@
     }
 
     function updateControls(){
-      startBtn.textContent = runtimeState.running ? '⏸ 一時停止' : '▶ 開始';
+      startBtn.textContent = runtimeState.running ? t('buttons.pause', '⏸ 一時停止') : t('buttons.start', '▶ 開始');
       startBtn.setAttribute('aria-pressed', runtimeState.running ? 'true' : 'false');
       skipBtn.disabled = runtimeState.running && runtimeState.phase === 'focus' && runtimeState.remainingSec < (getPhaseDurationMinutes('focus') * 60 * 0.2);
     }
 
     function updateStats(){
-      focusChip.valueEl.textContent = `${state.totals.focus || 0} 回`;
+      const focusCount = formatNumberIntl(state.totals.focus || 0);
+      focusChip.valueEl.textContent = t('stats.focusValue', '{count} 回', { count: focusCount });
       const totalBreaks = (state.totals.shortBreak || 0) + (state.totals.longBreak || 0);
-      breakChip.valueEl.textContent = `${totalBreaks} 回`;
-      streakChip.valueEl.textContent = `${state.totals.currentStreak || 0} 回`;
-      xpChip.valueEl.textContent = `${state.totals.xp || 0} XP`;
+      const breakCount = formatNumberIntl(totalBreaks);
+      breakChip.valueEl.textContent = t('stats.breakValue', '{count} 回', { count: breakCount });
+      const streakCount = formatNumberIntl(state.totals.currentStreak || 0);
+      streakChip.valueEl.textContent = t('stats.streakValue', '{count} 回', { count: streakCount });
+      const xpValue = formatNumberIntl(state.totals.xp || 0);
+      xpChip.valueEl.textContent = t('stats.xpValue', '{xp} XP', { xp: xpValue });
       const today = state.daily[getTodayKey()] || { focus: 0, shortBreak: 0, longBreak: 0, xp: 0 };
-      todaySummary.textContent = `今日: 集中 ${today.focus} 回 / 休憩 ${today.shortBreak + today.longBreak} 回 / 獲得EXP +${today.xp}`;
+      todaySummary.textContent = t('stats.todaySummary', '今日: 集中 {focus} 回 / 休憩 {breaks} 回 / 獲得EXP +{xp}', {
+        focus: formatNumberIntl(today.focus || 0),
+        breaks: formatNumberIntl((today.shortBreak || 0) + (today.longBreak || 0)),
+        xp: formatNumberIntl(today.xp || 0)
+      });
       const completed = state.totals.focusInCycle || 0;
       let remaining = state.config.cyclesBeforeLong - completed;
       if (remaining <= 0) remaining = state.config.cyclesBeforeLong;
       if (runtimeState.phase === 'focus'){
         const preview = nextPhaseAfterFocus(false);
         if (preview === 'long_break'){
-          cycleInfo.textContent = 'この集中で長休憩に入ります';
+          cycleInfo.textContent = t('cycle.longBreakSoon', 'この集中で長休憩に入ります');
         } else {
-          cycleInfo.textContent = `長休憩まであと ${remaining} セッション`;
+          cycleInfo.textContent = t('cycle.untilLong', '長休憩まであと {count} セッション', { count: formatNumberIntl(remaining) });
         }
       } else if (runtimeState.phase === 'long_break'){
-        cycleInfo.textContent = '長休憩中：しっかりリフレッシュしましょう';
+        cycleInfo.textContent = t('cycle.longBreakActive', '長休憩中：しっかりリフレッシュしましょう');
       } else {
-        cycleInfo.textContent = `長休憩まであと ${remaining} セッション`;
+        cycleInfo.textContent = t('cycle.untilLong', '長休憩まであと {count} セッション', { count: formatNumberIntl(remaining) });
       }
     }
 
@@ -686,9 +740,14 @@
         const next = nextPhaseAfterFocus(false);
         const label = phaseName(next);
         const minutes = getPhaseDurationMinutes(next);
-        upcomingInfo.textContent = `次は ${label} (${minutes}分)`;
+        upcomingInfo.textContent = t('upcoming.generic', '次は {label} ({minutes}分)', {
+          label,
+          minutes: formatNumberIntl(minutes)
+        });
       } else {
-        upcomingInfo.textContent = `次は 集中 (${state.config.focusMinutes}分)`;
+        upcomingInfo.textContent = t('upcoming.focus', '次は 集中 ({minutes}分)', {
+          minutes: formatNumberIntl(state.config.focusMinutes)
+        });
       }
     }
 
@@ -699,7 +758,7 @@
         .slice(0, HISTORY_LIMIT);
       if (!entries.length){
         const empty = document.createElement('div');
-        empty.textContent = '記録はまだありません。';
+        empty.textContent = t('history.empty', '記録はまだありません。');
         empty.style.fontSize = '13px';
         empty.style.color = '#94a3b8';
         historyList.appendChild(empty);
@@ -728,7 +787,7 @@
         updateTimerDisplay();
       }
       if (window && window.showMiniExpBadge){
-        try { window.showMiniExpBadge('設定を保存しました', { variant: 'info' }); } catch {}
+        try { window.showMiniExpBadge(t('settings.savedBadge', '設定を保存しました'), { variant: 'info' }); } catch {}
       }
     }
 
@@ -784,9 +843,9 @@
 
   window.registerMiniGame({
     id: 'pomodoro',
-    name: 'ポモドーロタイマー', nameKey: 'selection.miniexp.games.pomodoro.name',
-    description: '25分集中＋休憩サイクルを管理し、完了ごとにEXPを獲得できるユーティリティ', descriptionKey: 'selection.miniexp.games.pomodoro.description', categoryIds: ['utility'],
-    category: 'ユーティリティ',
+    name: translateKey('selection.miniexp.games.pomodoro.name', 'ポモドーロタイマー'), nameKey: 'selection.miniexp.games.pomodoro.name',
+    description: translateKey('selection.miniexp.games.pomodoro.description', '25分集中＋休憩サイクルを管理し、完了ごとにEXPを獲得できるユーティリティ'), descriptionKey: 'selection.miniexp.games.pomodoro.description', categoryIds: ['utility'],
+    category: translateKey('selection.miniexp.category.utility', 'ユーティリティ'),
     version: '0.1.0',
     author: 'mod',
     create

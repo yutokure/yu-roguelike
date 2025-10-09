@@ -11583,6 +11583,65 @@
           "movePreview": "{flips} flips / approx +{xp} EXP"
         }
       },
+      "pomodoro": {
+        "title": "Pomodoro Timer",
+        "subtitle": "Alternate focus and breaks to earn EXP every completion.",
+        "phase": {
+          "focus": "Focus",
+          "shortBreak": "Short Break",
+          "longBreak": "Long Break",
+          "badge": "{phase} Mode"
+        },
+        "buttons": {
+          "start": "▶ Start",
+          "pause": "⏸ Pause",
+          "skip": "⏭ Skip",
+          "reset": "↺ Reset",
+          "save": "Save Settings"
+        },
+        "stats": {
+          "title": "Progress Summary",
+          "focusLabel": "Focus Sessions",
+          "breakLabel": "Break Sessions",
+          "streakLabel": "Focus Streak",
+          "xpLabel": "Total EXP",
+          "focusValue": "{count} sessions",
+          "breakValue": "{count} breaks",
+          "streakValue": "{count} in a row",
+          "xpValue": "{xp} XP",
+          "todaySummary": "Today: Focus {focus} / Breaks {breaks} / EXP +{xp}"
+        },
+        "history": {
+          "title": "Recent History",
+          "empty": "No history yet.",
+          "entry": "Focus {focus} / Breaks {breaks} / +{xp} XP"
+        },
+        "settings": {
+          "title": "Timer Settings",
+          "focusLabel": "Focus (minutes)",
+          "shortBreakLabel": "Short Break (minutes)",
+          "longBreakLabel": "Long Break (minutes)",
+          "cyclesLabel": "Focus sessions before long break",
+          "autoBreak": "Automatically start breaks after focus sessions",
+          "autoFocus": "Automatically resume focus after breaks",
+          "savedBadge": "Settings saved"
+        },
+        "cycle": {
+          "longBreakSoon": "Long break after this focus session",
+          "untilLong": "Long break in {count} sessions",
+          "longBreakActive": "Long break: take a deep rest"
+        },
+        "upcoming": {
+          "generic": "Next: {label} ({minutes} min)",
+          "focus": "Next: Focus ({minutes} min)"
+        },
+        "badges": {
+          "focusComplete": "Focus Session Complete",
+          "shortBreakComplete": "Short Break Complete",
+          "longBreakComplete": "Long Break Complete",
+          "gainTemplate": "{label} +{xp}XP"
+        }
+      },
       "falling_shooter": {
         "overlay": {
           "title": "Game Over",

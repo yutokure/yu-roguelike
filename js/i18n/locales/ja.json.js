@@ -11587,6 +11587,65 @@
           "movePreview": "{flips}枚 / 予想+{xp}EXP"
         }
       },
+      "pomodoro": {
+        "title": "ポモドーロタイマー",
+        "subtitle": "集中と休憩をリズム良く切り替え、完了ごとにEXPを獲得します。",
+        "phase": {
+          "focus": "集中",
+          "shortBreak": "小休憩",
+          "longBreak": "長休憩",
+          "badge": "{phase}モード"
+        },
+        "buttons": {
+          "start": "▶ 開始",
+          "pause": "⏸ 一時停止",
+          "skip": "⏭ 次へ",
+          "reset": "↺ リセット",
+          "save": "設定を保存"
+        },
+        "stats": {
+          "title": "進捗サマリー",
+          "focusLabel": "集中セッション",
+          "breakLabel": "休憩回数",
+          "streakLabel": "連続集中",
+          "xpLabel": "累計EXP",
+          "focusValue": "{count} 回",
+          "breakValue": "{count} 回",
+          "streakValue": "{count} 回",
+          "xpValue": "{xp} XP",
+          "todaySummary": "今日: 集中 {focus} 回 / 休憩 {breaks} 回 / 獲得EXP +{xp}"
+        },
+        "history": {
+          "title": "直近の履歴",
+          "empty": "記録はまだありません。",
+          "entry": "集中 {focus} / 休憩 {breaks} / +{xp}XP"
+        },
+        "settings": {
+          "title": "タイマー設定",
+          "focusLabel": "集中 (分)",
+          "shortBreakLabel": "小休憩 (分)",
+          "longBreakLabel": "長休憩 (分)",
+          "cyclesLabel": "長休憩までの集中回数",
+          "autoBreak": "集中完了後に自動で休憩を開始",
+          "autoFocus": "休憩完了後に自動で集中を開始",
+          "savedBadge": "設定を保存しました"
+        },
+        "cycle": {
+          "longBreakSoon": "この集中で長休憩に入ります",
+          "untilLong": "長休憩まであと {count} セッション",
+          "longBreakActive": "長休憩中：しっかりリフレッシュしましょう"
+        },
+        "upcoming": {
+          "generic": "次は {label} ({minutes}分)",
+          "focus": "次は 集中 ({minutes}分)"
+        },
+        "badges": {
+          "focusComplete": "集中セッション達成",
+          "shortBreakComplete": "ショートブレイク完了",
+          "longBreakComplete": "ロングブレイク完了",
+          "gainTemplate": "{label} +{xp}XP"
+        }
+      },
       "falling_shooter": {
         "overlay": {
           "title": "ゲームオーバー",

@@ -10749,6 +10749,41 @@
           "goodRateLabel": "良率"
         }
       },
+      "darumasan": {
+        "guard": {
+          "title": "見張りの様子",
+          "hint": "スペース / ↑ で前進",
+          "state": {
+            "idle": "準備中…",
+            "safe": "今だ！前進！",
+            "warning": "そろそろ振り向く！",
+            "watch": "見てる！止まって！"
+          },
+          "countdown": {
+            "placeholder": "残り --.- 秒",
+            "safe": "安全残り {seconds} 秒",
+            "warning": "あと {seconds} 秒で振り向く！",
+            "watch": "監視中… {seconds} 秒我慢"
+          }
+        },
+        "movement": {
+          "stopped": "停止中",
+          "moving": "移動中"
+        },
+        "progress": {
+          "title": "進行状況",
+          "detail": "距離 {distance}% / 経過 {time} 秒",
+          "bestPlaceholder": "ベストタイム: --.- 秒",
+          "best": "ベストタイム: {time} 秒"
+        },
+        "status": {
+          "initial": "スタートで開始",
+          "running": "だるまさんがころんだ！安全な時だけ前進しよう",
+          "pause": "一時停止中",
+          "success": "クリア！50EXP獲得！所要 {time} 秒",
+          "fail": "動いているのを見られた…失敗"
+        }
+      },
       "populite": {
         "title": "ポピュラス風 ミニ神様モード",
         "hud": {

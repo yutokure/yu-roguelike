@@ -13546,7 +13546,6 @@
         "saveFailed": "Failed to save the image.",
         "imageLoadFailed": "Failed to load the image.",
         "fileLoadFailed": "Failed to read the file."
-        }
       }
     },
     "games": {

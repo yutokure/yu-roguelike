@@ -571,8 +571,8 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
-        const text = typeof reader.result === 'string' ? reader.result : '';
-        const parsed = safeParse(text);
+        const fileText = typeof reader.result === 'string' ? reader.result : '';
+        const parsed = safeParse(fileText);
         if (!parsed) {
           alert(text('.import.error.invalidJson', 'JSON を読み取れませんでした。'));
           return;

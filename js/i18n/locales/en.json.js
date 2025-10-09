@@ -11344,6 +11344,40 @@
           "defenseTimeout": "Defense timeout: reacted too late."
         }
       },
+      "sudoku": {
+        "title": "Number Place (Sudoku)",
+        "description": "Fill each row, column, and 3×3 box with digits 1-9 without repeats. Click cells or use the keyboard (digits/arrows/Backspace).",
+        "info": {
+          "difficultyLabel": "Difficulty",
+          "progressLabel": "Progress",
+          "progressValue": "{filledFormatted}/{totalFormatted}",
+          "mistakesLabel": "Mistakes",
+          "mistakesValue": "{formatted}",
+          "timeLabel": "Time"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "time": {
+          "display": "{minutesFormatted}:{secondsFormatted}"
+        },
+        "keypad": {
+          "clear": "Clear"
+        },
+        "actions": {
+          "reset": "Reset",
+          "newBoard": "New Puzzle"
+        },
+        "status": {
+          "invalid": "That digit can't go there.",
+          "selectCell": "Select a cell first.",
+          "reset": "Board reset.",
+          "newBoard": "Generated a new puzzle.",
+          "cleared": "Solved! Time {time} / Mistakes {mistakes}."
+        }
+      },
       "taiko_drum": {
         "title": "Taiko Rhythm ({difficulty})",
         "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",

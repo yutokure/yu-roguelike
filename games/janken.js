@@ -249,9 +249,6 @@
       renderHistory();
     }
 
-    applyStaticTexts();
-    attachLocaleListener();
-
     const timers = new Set();
     const BEATS = [1,2,0];
     const BEATEN_BY = [2,0,1];
@@ -265,6 +262,9 @@
     let roundCount = 0;
     let isResolving = false;
     let lastPlayerChoice = null;
+
+    applyStaticTexts();
+    attachLocaleListener();
 
     function setGameTimeout(fn, delay){
       const id = setTimeout(() => {

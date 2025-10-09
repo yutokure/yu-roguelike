@@ -323,16 +323,42 @@
           "weightedRandomTitle": "Random selection weighted by target level and type priority"
         },
         "history": {
-          "title": "Gate History"
+          "title": "Gate History",
+          "empty": "No history yet.",
+          "entryLabel": "NESTED {nested} | {dimension} | {block1} · {block2} · {block3}",
+          "entryTooltip": "Lv{level} / {type} / Depth {depth} / seed {seed}",
+          "confirmClear": "Clear all Gate history?",
+          "delete": "Delete"
         },
         "bookmarks": {
-          "title": "Block Bookmarks"
+          "title": "Block Bookmarks",
+          "empty": "No bookmarks yet.",
+          "entryTooltip": "Lv{level} / {type} / Depth {depth} / seed {seed}",
+          "delete": "Delete"
         },
         "test": {
           "title": "Dungeon Test",
           "description": "Generates every registered dungeon type with random seeds to verify BlockDim is safe. Errors are logged and the run never finishes if an infinite loop occurs.",
           "run": "🧪 Run Dungeon Test",
-          "idle": "Idle"
+          "idle": "Idle",
+          "status": {
+            "initializing": "Initialising…",
+            "noTargets": "No targets",
+            "running": "Running ({current}/{total})",
+            "completedWithFailures": "Completed (failures: {count})",
+            "completedSuccess": "Completed (all passed)",
+            "error": "An error occurred"
+          },
+          "log": {
+            "addonLoadError": "Addon load error: {error}",
+            "noTargets": "No dungeon types found for testing.",
+            "targetCount": "Test targets: {count} types",
+            "start": "▶ Starting generation test for {name} ({id})",
+            "success": "✅ Success: {name} ({id}) seed={seed} Size={width}×{height} Floors={floors} Actual={actual}",
+            "failure": "❌ Failure: {name} ({id}) seed={seed}",
+            "summary": "Done: Success {success} / Failure {failure} / Duration {duration}ms",
+            "fatal": "Critical error: {error}"
+          }
         }
       },
       "miniexp": {

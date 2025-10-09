@@ -9092,7 +9092,9 @@ function populateBdimRandomTypeSelect() {
     if (!bdimRandomTypeSelect) return;
     const previous = bdimRandomTypeSelect.value;
     const placeholderOption = Array.from(bdimRandomTypeSelect.options || []).find(opt => opt.value === '');
-    const placeholderLabel = placeholderOption ? placeholderOption.textContent : '指定なし';
+    const placeholderLabel = placeholderOption
+        ? placeholderOption.textContent
+        : translateOrFallback('selection.blockdim.card.randomTypeNone', '指定なし');
     const typeMap = new Map();
     const addType = (id) => {
         const key = (id || '').trim();
@@ -9146,7 +9148,7 @@ function populateBdimRandomTypeSelect() {
     bdimRandomTypeSelect.innerHTML = '';
     const placeholder = document.createElement('option');
     placeholder.value = '';
-    placeholder.textContent = placeholderLabel || '指定なし';
+    placeholder.textContent = placeholderLabel || translateOrFallback('selection.blockdim.card.randomTypeNone', '指定なし');
     bdimRandomTypeSelect.appendChild(placeholder);
     for (const { id, label } of sorted) {
         const opt = document.createElement('option');
@@ -9408,7 +9410,10 @@ async function runBlockDimDungeonTestSuite() {
     bdimTestRunning = true;
     bdimTestButton.disabled = true;
     clearBdimTestLog();
-    setBdimTestStatus('初期化中…', 'info');
+    setBdimTestStatus(
+        translateOrFallback('selection.blockdim.test.status.initializing', '初期化中…'),
+        'info'
+    );
     const originalSnapshot = captureBlockDimTestEnvironment();
     const baselineSnapshot = captureBlockDimTestEnvironment();
     try {
@@ -9416,15 +9421,35 @@ async function runBlockDimDungeonTestSuite() {
             await initBlockDimUI();
         }
         if (typeof window !== 'undefined' && window.__addonLoadPromise && typeof window.__addonLoadPromise.then === 'function') {
-            try { await window.__addonLoadPromise; } catch (addonErr) { appendBdimTestLog(`アドオン読込エラー: ${formatTestError(addonErr)}`); }
+            try { await window.__addonLoadPromise; }
+            catch (addonErr) {
+                appendBdimTestLog(
+                    translateOrFallback(
+                        'selection.blockdim.test.log.addonLoadError',
+                        () => `アドオン読込エラー: ${formatTestError(addonErr)}`,
+                        { error: formatTestError(addonErr) }
+                    )
+                );
+            }
         }
         const ids = gatherAllGeneratorTypeIdsForTest();
         if (ids.length === 0) {
-            appendBdimTestLog('テスト対象のダンジョンタイプが見つかりません。');
-            setBdimTestStatus('対象なし', 'warning');
+            appendBdimTestLog(
+                translateOrFallback('selection.blockdim.test.log.noTargets', 'テスト対象のダンジョンタイプが見つかりません。')
+            );
+            setBdimTestStatus(
+                translateOrFallback('selection.blockdim.test.status.noTargets', '対象なし'),
+                'warning'
+            );
             return;
         }
-        appendBdimTestLog(`テスト対象: ${ids.length} タイプ`);
+        appendBdimTestLog(
+            translateOrFallback(
+                'selection.blockdim.test.log.targetCount',
+                () => `テスト対象: ${ids.length} タイプ`,
+                { count: ids.length }
+            )
+        );
         const mixedPool = ids.filter(id => id !== 'mixed');
         let success = 0;
         let failure = 0;
@@ -9432,8 +9457,21 @@ async function runBlockDimDungeonTestSuite() {
         for (let i = 0; i < ids.length; i++) {
             const genType = ids[i];
             const displayName = getDungeonTypeName(genType);
-            setBdimTestStatus(`実行中 (${i + 1}/${ids.length})`, 'info');
-            appendBdimTestLog(`▶ ${displayName} (${genType}) の生成テストを開始`);
+            setBdimTestStatus(
+                translateOrFallback(
+                    'selection.blockdim.test.status.running',
+                    () => `実行中 (${i + 1}/${ids.length})`,
+                    { current: i + 1, total: ids.length }
+                ),
+                'info'
+            );
+            appendBdimTestLog(
+                translateOrFallback(
+                    'selection.blockdim.test.log.start',
+                    () => `▶ ${displayName} (${genType}) の生成テストを開始`,
+                    { name: displayName, id: genType }
+                )
+            );
             applyBlockDimTestEnvironment(baselineSnapshot);
             await new Promise(resolve => setTimeout(resolve, 0));
             const seed = randomTestSeed();
@@ -9441,24 +9479,69 @@ async function runBlockDimDungeonTestSuite() {
                 const result = runSingleBlockDimDungeonTest(genType, seed, mixedPool);
                 success++;
                 const actualName = getDungeonTypeName(result.actualGenerator || genType);
-                appendBdimTestLog(`✅ 成功: ${displayName} (${genType}) seed=${formatSeed(seed)} サイズ=${result.width}×${result.height} 床数=${result.floorCount} 実タイプ=${actualName}`);
+                appendBdimTestLog(
+                    translateOrFallback(
+                        'selection.blockdim.test.log.success',
+                        () => `✅ 成功: ${displayName} (${genType}) seed=${formatSeed(seed)} サイズ=${result.width}×${result.height} 床数=${result.floorCount} 実タイプ=${actualName}`,
+                        {
+                            name: displayName,
+                            id: genType,
+                            seed: formatSeed(seed),
+                            width: result.width,
+                            height: result.height,
+                            floors: result.floorCount,
+                            actual: actualName
+                        }
+                    )
+                );
             } catch (err) {
                 failure++;
-                appendBdimTestLog(`❌ 失敗: ${displayName} (${genType}) seed=${formatSeed(seed)}`);
+                appendBdimTestLog(
+                    translateOrFallback(
+                        'selection.blockdim.test.log.failure',
+                        () => `❌ 失敗: ${displayName} (${genType}) seed=${formatSeed(seed)}`,
+                        { name: displayName, id: genType, seed: formatSeed(seed) }
+                    )
+                );
                 appendBdimTestLog(formatTestError(err));
             }
         }
         const end = typeof performance !== 'undefined' && typeof performance.now === 'function' ? performance.now() : Date.now();
         const duration = Math.max(0, Math.round(end - start));
-        appendBdimTestLog(`完了: 成功 ${success} 件 / 失敗 ${failure} 件 / 所要時間 ${duration}ms`);
+        appendBdimTestLog(
+            translateOrFallback(
+                'selection.blockdim.test.log.summary',
+                () => `完了: 成功 ${success} 件 / 失敗 ${failure} 件 / 所要時間 ${duration}ms`,
+                { success, failure, duration }
+            )
+        );
         if (failure > 0) {
-            setBdimTestStatus(`完了（失敗 ${failure} 件）`, 'warning');
+            setBdimTestStatus(
+                translateOrFallback(
+                    'selection.blockdim.test.status.completedWithFailures',
+                    () => `完了（失敗 ${failure} 件）`,
+                    { count: failure }
+                ),
+                'warning'
+            );
         } else {
-            setBdimTestStatus('完了（全て成功）', 'success');
+            setBdimTestStatus(
+                translateOrFallback('selection.blockdim.test.status.completedSuccess', '完了（全て成功）'),
+                'success'
+            );
         }
     } catch (err) {
-        appendBdimTestLog(`重大なエラー: ${formatTestError(err)}`);
-        setBdimTestStatus('エラーが発生しました', 'error');
+        appendBdimTestLog(
+            translateOrFallback(
+                'selection.blockdim.test.log.fatal',
+                () => `重大なエラー: ${formatTestError(err)}`,
+                { error: formatTestError(err) }
+            )
+        );
+        setBdimTestStatus(
+            translateOrFallback('selection.blockdim.test.status.error', 'エラーが発生しました'),
+            'error'
+        );
     } finally {
         applyBlockDimTestEnvironment(originalSnapshot);
         try { renderBdimPreview(blockDimState?.spec || null); } catch {}
@@ -9479,7 +9562,11 @@ function labelForEntry(entry) {
     const b2 = resolveBlockNameByKey(blockDimTables.blocks2, entry.b2);
     const b3 = resolveBlockNameByKey(blockDimTables.blocks3, entry.b3);
     const nested = entry.nested || 1;
-    return `NESTED ${nested}｜${dim}｜${b1}・${b2}・${b3}`;
+    return translateOrFallback(
+        'selection.blockdim.history.entryLabel',
+        () => `NESTED ${nested}｜${dim}｜${b1}・${b2}・${b3}`,
+        { nested, dimension: dim, block1: b1, block2: b2, block3: b3 }
+    );
 }
 
 function renderHistoryAndBookmarks(force = false) {
@@ -9489,7 +9576,7 @@ function renderHistoryAndBookmarks(force = false) {
         bdimHistoryDiv.innerHTML = '';
         if (blockDimHistory.length === 0) {
             const p = document.createElement('div');
-            p.textContent = 'まだ履歴はありません。';
+            p.textContent = translateOrFallback('selection.blockdim.history.empty', 'まだ履歴はありません。');
             bdimHistoryDiv.appendChild(p);
         } else {
             blockDimHistory.forEach((e, idx) => {
@@ -9498,11 +9585,21 @@ function renderHistoryAndBookmarks(force = false) {
                 const btn = document.createElement('button');
                 btn.textContent = labelForEntry(e);
                 const typeLabel = getHistoryEntryTypeLabel(e) || e.type || '-';
-                btn.title = `Lv${e.level} / ${typeLabel} / 深さ${e.depth} / seed ${e.seed}`;
+                const tooltipParams = {
+                    level: Number.isFinite(e.level) ? e.level : '?',
+                    type: typeLabel,
+                    depth: Number.isFinite(e.depth) ? e.depth : '?',
+                    seed: e.seed ?? '?'
+                };
+                btn.title = translateOrFallback(
+                    'selection.blockdim.history.entryTooltip',
+                    () => `Lv${tooltipParams.level} / ${tooltipParams.type} / 深さ${tooltipParams.depth} / seed ${tooltipParams.seed}`,
+                    tooltipParams
+                );
                 btn.addEventListener('click', () => applyBdimSelection(e));
                 const del = document.createElement('button');
                 del.textContent = '×';
-                del.title = '削除';
+                del.title = translateOrFallback('selection.blockdim.history.delete', '削除');
                 del.addEventListener('click', () => { blockDimHistory.splice(idx,1); renderHistoryAndBookmarks(); saveAll(); });
                 row.appendChild(btn); row.appendChild(del);
                 bdimHistoryDiv.appendChild(row);
@@ -9515,7 +9612,7 @@ function renderHistoryAndBookmarks(force = false) {
         bdimBookmarksDiv.innerHTML = '';
         if (blockDimBookmarks.length === 0) {
             const p = document.createElement('div');
-            p.textContent = 'ブックマークはまだありません。';
+            p.textContent = translateOrFallback('selection.blockdim.bookmarks.empty', 'ブックマークはまだありません。');
             bdimBookmarksDiv.appendChild(p);
         } else {
             blockDimBookmarks.forEach((e, idx) => {
@@ -9524,11 +9621,21 @@ function renderHistoryAndBookmarks(force = false) {
                 const btn = document.createElement('button');
                 btn.textContent = labelForEntry(e);
                 const typeLabel = getHistoryEntryTypeLabel(e) || e.type || '-';
-                btn.title = `Lv${e.level} / ${typeLabel} / 深さ${e.depth} / seed ${e.seed}`;
+                const tooltipParams = {
+                    level: Number.isFinite(e.level) ? e.level : '?',
+                    type: typeLabel,
+                    depth: Number.isFinite(e.depth) ? e.depth : '?',
+                    seed: e.seed ?? '?'
+                };
+                btn.title = translateOrFallback(
+                    'selection.blockdim.bookmarks.entryTooltip',
+                    () => `Lv${tooltipParams.level} / ${tooltipParams.type} / 深さ${tooltipParams.depth} / seed ${tooltipParams.seed}`,
+                    tooltipParams
+                );
                 btn.addEventListener('click', () => applyBdimSelection(e));
                 const del = document.createElement('button');
                 del.textContent = '×';
-                del.title = '削除';
+                del.title = translateOrFallback('selection.blockdim.bookmarks.delete', '削除');
                 del.addEventListener('click', () => { blockDimBookmarks.splice(idx,1); renderHistoryAndBookmarks(); saveAll(); });
                 row.appendChild(btn); row.appendChild(del);
                 bdimBookmarksDiv.appendChild(row);
@@ -9807,7 +9914,7 @@ function setupTabs() {
     }
     if (bdimClearHistoryBtn) {
         bdimClearHistoryBtn.addEventListener('click', () => {
-            if (confirm('Gate履歴をすべて削除しますか？')) {
+            if (confirm(translateOrFallback('selection.blockdim.history.confirmClear', 'Gate履歴をすべて削除しますか？'))) {
                 blockDimHistory = [];
                 renderHistoryAndBookmarks();
                 saveAll();

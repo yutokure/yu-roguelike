@@ -34,6 +34,62 @@
     ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
   ];
 
+  const baseI18n = window.I18n || null;
+  const ESCAPE_HTML_RE = /[&<>"']/g;
+  const ESCAPE_HTML_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+  function evaluateFallback(fallback, params){
+    if (typeof fallback === 'function'){
+      try {
+        const result = fallback(params);
+        if (typeof result === 'string') return result;
+        return result ?? '';
+      } catch (error){
+        console.warn('[Chess] Failed to evaluate fallback text:', error);
+        return '';
+      }
+    }
+    return fallback ?? '';
+  }
+
+  function translateText(key, fallback, params){
+    const activeI18n = window.I18n || baseI18n;
+    if (key && activeI18n && typeof activeI18n.t === 'function'){
+      try {
+        const translated = activeI18n.t(key, params);
+        if (typeof translated === 'string' && translated !== key){
+          return translated;
+        }
+      } catch (error){
+        console.warn('[Chess] Failed to translate key:', key, error);
+      }
+    }
+    return evaluateFallback(fallback, params);
+  }
+
+  function formatLocalizedNumber(value){
+    const activeI18n = window.I18n || baseI18n;
+    if (typeof activeI18n?.formatNumber === 'function'){
+      try {
+        return activeI18n.formatNumber(value);
+      } catch (error){
+        console.warn('[Chess] Failed to format number via i18n:', error);
+      }
+    }
+    if (typeof value === 'number'){
+      try {
+        return new Intl.NumberFormat(activeI18n?.getLocale?.() || undefined).format(value);
+      } catch (error){
+        console.warn('[Chess] Failed to format number via Intl:', error);
+      }
+    }
+    return String(value ?? '');
+  }
+
+  function escapeHtml(value){
+    return String(value ?? '').replace(ESCAPE_HTML_RE, (ch) => ESCAPE_HTML_MAP[ch] || ch);
+  }
+
   function ensureStyle(){
     if (document.getElementById('mini-chess-style')) return;
     const style = document.createElement('style');
@@ -524,9 +580,7 @@
 
     const heading = document.createElement('h2');
     const title = document.createElement('span');
-    title.textContent = 'チェス';
     const diffTag = document.createElement('span');
-    diffTag.textContent = `難易度: ${difficulty}`;
     heading.appendChild(title);
     heading.appendChild(diffTag);
 
@@ -545,7 +599,6 @@
     const controls = document.createElement('div');
     controls.className = 'mini-chess-controls';
     const resetBtn = document.createElement('button');
-    resetBtn.textContent = 'リスタート';
     controls.appendChild(resetBtn);
     infoBox.appendChild(controls);
 
@@ -571,25 +624,56 @@
     let legalMoves = [];
     let lastMove = null;
     let aiTimer = null;
-    let message = '';
+    let messageState = { key: null, fallback: '', params: undefined, text: '' };
     let playerScore = 0;
     let halfMoveClock = 0;
     let totalMoves = 0;
+    let handleLocaleChange = null;
+
+    function getMessageText(){
+      if (messageState.key){
+        return translateText(messageState.key, messageState.fallback, messageState.params);
+      }
+      return messageState.text || '';
+    }
 
     function updateInfo(){
       if (!running){
-        turnLine.innerHTML = '<strong>停止中</strong>';
+        const stoppedText = translateText('games.chess.status.stopped', '停止中');
+        turnLine.innerHTML = `<strong>${escapeHtml(stoppedText)}</strong>`;
       } else {
-        const t = turn === 'w' ? 'あなたの番です' : 'AIの思考中…';
-        turnLine.innerHTML = `<strong>手番:</strong> ${t}`;
+        const turnLabel = translateText('games.chess.status.turnLabel', '手番:');
+        const stateText = turn === 'w'
+          ? translateText('games.chess.status.yourTurn', 'あなたの番です')
+          : translateText('games.chess.status.aiThinking', 'AIの思考中…');
+        turnLine.innerHTML = `<strong>${escapeHtml(turnLabel)}</strong> ${escapeHtml(stateText)}`;
       }
-      scoreLine.innerHTML = `<strong>スコア:</strong> ${playerScore}`;
-      messageLine.textContent = message || '';
+      const scoreLabel = translateText('games.chess.status.scoreLabel', 'スコア:');
+      const scoreText = formatLocalizedNumber(playerScore);
+      scoreLine.innerHTML = `<strong>${escapeHtml(scoreLabel)}</strong> ${escapeHtml(scoreText)}`;
+      messageLine.textContent = getMessageText();
     }
 
-    function setMessage(text){
-      message = text || '';
+    function setMessage(entry){
+      if (typeof entry === 'string'){
+        messageState = { key: null, fallback: entry, params: undefined, text: entry };
+      } else if (entry && typeof entry === 'object'){
+        const key = entry.key || null;
+        const fallback = entry.fallback ?? '';
+        const params = entry.params;
+        const text = key ? translateText(key, fallback, params) : evaluateFallback(fallback, params);
+        messageState = { key, fallback, params, text };
+      } else {
+        messageState = { key: null, fallback: '', params: undefined, text: '' };
+      }
       updateInfo();
+    }
+
+    function applyStaticText(){
+      const difficultyName = translateText(`games.chess.difficultyValue.${difficulty.toLowerCase()}`, difficulty);
+      title.textContent = translateText('games.chess.title', 'チェス');
+      diffTag.textContent = translateText('games.chess.difficultyTag', () => `難易度: ${difficultyName}`, { value: difficultyName });
+      resetBtn.textContent = translateText('games.chess.controls.restart', 'リスタート');
     }
 
     function resetSelection(){
@@ -672,13 +756,13 @@
         if (inCheck){
           if (opponent === 'b'){
             awardXp(WIN_EXP[difficulty] || WIN_EXP.NORMAL, { reason: 'checkmate' });
-            setMessage('チェックメイト！勝利しました。');
+            setMessage({ key: 'games.chess.messages.checkmateWin', fallback: 'チェックメイト！勝利しました。' });
           } else {
-            setMessage('チェックメイトを受けました…');
+            setMessage({ key: 'games.chess.messages.checkmateLoss', fallback: 'チェックメイトを受けました…' });
           }
         } else {
           awardXp(DRAW_EXP, { reason: 'draw' });
-          setMessage('ステイルメイト。引き分けです。');
+          setMessage({ key: 'games.chess.messages.stalemate', fallback: 'ステイルメイト。引き分けです。' });
         }
         running = false;
         resetSelection();
@@ -687,7 +771,7 @@
       }
       if (halfMoveClock >= 100 || totalMoves >= 200 || insufficientMaterial(board)){
         awardXp(DRAW_EXP, { reason: 'draw' });
-        setMessage('引き分け扱いになりました。');
+        setMessage({ key: 'games.chess.messages.draw', fallback: '引き分け扱いになりました。' });
         running = false;
         updateInfo();
         return true;
@@ -734,9 +818,9 @@
       if (inCheck){
         if (moverColor === 'w'){
           awardXp(CHECK_EXP, { reason: 'check' });
-          setMessage('チェック！');
+          setMessage({ key: 'games.chess.messages.playerCheck', fallback: 'チェック！' });
         } else {
-          setMessage('チェックされています！');
+          setMessage({ key: 'games.chess.messages.playerInCheck', fallback: 'チェックされています！' });
         }
       } else if (moverColor === 'w'){
         setMessage('');
@@ -766,7 +850,10 @@
         const move = legalMoves.find(m => m.toX === x && m.toY === y);
         if (move){
           if (move.promote){
-            const choice = window.prompt('昇格する駒を選んでください (Q/R/B/N)', 'Q');
+            const choice = window.prompt(
+              translateText('games.chess.prompts.promotion', '昇格する駒を選んでください (Q/R/B/N)'),
+              'Q'
+            );
             if (choice){
               const trimmed = choice.trim();
               move.promoteTo = (trimmed.charAt(0) || 'Q').toUpperCase();
@@ -782,7 +869,7 @@
       if (piece && pieceColor(piece) === 'w'){
         selected = { x, y };
         legalMoves = generateLegalMoves(board, 'w').filter(m => m.fromX === x && m.fromY === y);
-        setMessage('移動するマスを選択してください');
+        setMessage({ key: 'games.chess.messages.selectMove', fallback: '移動するマスを選択してください' });
       } else {
         resetSelection();
       }
@@ -799,7 +886,7 @@
       turn = 'w';
       lastMove = null;
       resetSelection();
-      message = '';
+      messageState = { key: null, fallback: '', params: undefined, text: '' };
       playerScore = 0;
       halfMoveClock = 0;
       totalMoves = 0;
@@ -835,12 +922,24 @@
 
     function destroy(){
       stop();
+      if (handleLocaleChange){
+        document.removeEventListener('i18n:locale-changed', handleLocaleChange);
+        handleLocaleChange = null;
+      }
       try { root.removeChild(container); } catch {}
     }
 
     function getScore(){
       return Math.round(playerScore);
     }
+
+    applyStaticText();
+
+    handleLocaleChange = () => {
+      applyStaticText();
+      updateInfo();
+    };
+    document.addEventListener('i18n:locale-changed', handleLocaleChange);
 
     resetGameState();
 

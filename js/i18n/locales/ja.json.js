@@ -381,7 +381,36 @@
           },
           "chess": {
             "name": "チェス",
-            "description": "駒の組み合わせで王を詰ませる本格チェス。駒取りとチェックでEXPを獲得"
+            "description": "駒の組み合わせで王を詰ませる本格チェス。駒取りとチェックでEXPを獲得",
+            "title": "チェス",
+            "difficultyTag": "難易度: {value}",
+            "difficultyValue": {
+              "easy": "EASY",
+              "normal": "NORMAL",
+              "hard": "HARD"
+            },
+            "status": {
+              "stopped": "停止中",
+              "turnLabel": "手番:",
+              "yourTurn": "あなたの番です",
+              "aiThinking": "AIの思考中…",
+              "scoreLabel": "スコア:"
+            },
+            "messages": {
+              "checkmateWin": "チェックメイト！勝利しました。",
+              "checkmateLoss": "チェックメイトを受けました…",
+              "stalemate": "ステイルメイト。引き分けです。",
+              "draw": "引き分け扱いになりました。",
+              "playerCheck": "チェック！",
+              "playerInCheck": "チェックされています！",
+              "selectMove": "移動するマスを選択してください"
+            },
+            "prompts": {
+              "promotion": "昇格する駒を選んでください (Q/R/B/N)"
+            },
+            "controls": {
+              "restart": "リスタート"
+            }
           },
           "xiangqi": {
             "name": "シャンチー",
@@ -561,7 +590,171 @@
           },
           "blockcode": {
             "name": "ブロックコードラボ",
-            "description": "Scratch風のブロックでミニゲームAPIを安全に試せるビジュアルプログラミング環境"
+            "description": "Scratch風のブロックでミニゲームAPIを安全に試せるビジュアルプログラミング環境",
+            "defaults": {
+              "projectName": "新規プロジェクト"
+            },
+            "categories": {
+              "events": "イベント",
+              "actions": "アクション",
+              "control": "制御",
+              "variables": "変数",
+              "utility": "ユーティリティ"
+            },
+            "ui": {
+              "title": "ブロックコードラボ",
+              "variableSelect": { "placeholder": "-- 変数 --" },
+              "workspace": { "elseLabel": "そうでなければ" },
+              "stage": { "placeholder": "ブロックを組み立てて実行ボタンを押してください。" },
+              "status": { "running": "実行中", "stopped": "停止中" },
+              "toolbar": {
+                "snapOn": "スナップ: ON",
+                "snapOff": "スナップ: OFF",
+                "speedLabel": "速度 {value}x",
+                "undo": "Undo",
+                "redo": "Redo",
+                "zoomReset": "ズームリセット",
+                "gridToggle": "グリッド切替"
+              },
+              "summary": "{name} · ブロック {blocks} · 変数 {variables}",
+              "projectStats": "ブロック {blocks} · 変数 {variables}",
+              "tabs": { "logs": "ログ", "variables": "変数ウォッチ" },
+              "buttons": {
+                "new": "新規",
+                "save": "保存",
+                "load": "読み込み",
+                "share": "共有コード",
+                "run": "実行",
+                "stop": "停止",
+                "duplicate": "複製",
+                "delete": "削除",
+                "cancel": "キャンセル",
+                "ok": "OK",
+                "addVariable": "変数を追加"
+              },
+              "inputs": {
+                "variableName": "変数名",
+                "variableInitial": "初期値",
+                "memo": "メモ (任意)"
+              },
+              "alerts": {
+                "duplicateVariable": "同名の変数が既に存在します",
+                "noSavedProjects": "保存済みのプロジェクトがありません。",
+                "decodeFailed": "共有コードの解析に失敗しました。"
+              },
+              "prompts": {
+                "confirmStopForNew": "実行中です。停止して新規プロジェクトを作成しますか？",
+                "confirmDiscard": "現在のプロジェクトを破棄して新規作成しますか？"
+              },
+              "messages": {
+                "projectCreated": "新しいプロジェクトを作成しました。",
+                "projectSaved": "プロジェクト「{name}」を保存しました。",
+                "projectLoaded": "プロジェクト「{name}」を読み込みました。",
+                "shareImported": "共有コードから「{name}」を読み込みました。",
+                "undoUnavailable": "Undo は未実装です。",
+                "redoUnavailable": "Redo は未実装です。",
+                "needHat": "開始イベントブロックが必要です。",
+                "executionStopped": "実行を停止しました。",
+                "runComplete": "実行が完了しました。",
+                "genericError": "エラーが発生しました。"
+              },
+              "share": {
+                "title": "共有コード",
+                "importLabel": "共有コードを貼り付けて読み込み",
+                "importPlaceholder": "共有コード",
+                "importButton": "読み込む",
+                "copyButton": "コードをコピー",
+                "copied": "コピーしました!"
+              },
+              "variableList": {
+                "initialValue": "初期値: {value}",
+                "empty": "変数はありません。"
+              },
+              "variableTypes": {
+                "number": "数値",
+                "string": "文字列",
+                "boolean": "真偽"
+              }
+            },
+            "blocks": {
+              "whenGameStarts": {
+                "label": "ゲーム開始時",
+                "description": "プロジェクト開始時に実行されるイベントハンドラー"
+              },
+              "whenKeyPressed": {
+                "label": "キー {key} が押されたとき",
+                "description": "指定キー押下時に呼び出されます",
+                "inputs": {
+                  "key": { "placeholder": "Key" }
+                }
+              },
+              "movePlayer": {
+                "label": "プレイヤーを {steps} マス移動",
+                "description": "サンドボックスプレイヤーを移動します"
+              },
+              "setTile": {
+                "label": "タイル ({x}, {y}) を {color} にする",
+                "description": "ステージタイルの色を変更",
+                "inputs": {
+                  "color": { "placeholder": "#RRGGBB" }
+                }
+              },
+              "waitSeconds": {
+                "label": "{seconds} 秒待つ",
+                "description": "指定秒数待機"
+              },
+              "repeatTimes": {
+                "label": "{count} 回繰り返す",
+                "description": "指定回数繰り返します"
+              },
+              "foreverLoop": {
+                "label": "ずっと繰り返す",
+                "description": "一定回数制限付きで繰り返します"
+              },
+              "ifCondition": {
+                "label": "もし {condition} なら",
+                "description": "条件成立時に実行します",
+                "inputs": {
+                  "condition": { "placeholder": "条件式 (例: score > 5)" }
+                }
+              },
+              "logMessage": {
+                "label": "ログ: {message}",
+                "description": "ログタブにメッセージを出力",
+                "inputs": {
+                  "message": { "default": "Hello MiniExp!" }
+                }
+              },
+              "awardXp": {
+                "label": "XP {amount} を獲得",
+                "description": "XPを獲得します"
+              },
+              "setVariable": {
+                "label": "変数 {variable} を {value} にする",
+                "description": "変数へ値を代入",
+                "inputs": {
+                  "value": { "placeholder": "値または式" }
+                }
+              },
+              "changeVariable": {
+                "label": "変数 {variable} を {delta} ずつ変える",
+                "description": "変数を増減"
+              },
+              "broadcast": {
+                "label": "ブロードキャスト {channel}",
+                "description": "仮想イベントを発火します"
+              },
+              "stopAll": {
+                "label": "すべて停止する",
+                "description": "実行を停止します"
+              }
+            },
+            "worker": {
+              "foreverLimit": "foreverループが{limit}回で停止しました。",
+              "broadcast": "ブロードキャスト: {channel}",
+              "noStart": "開始イベントが見つかりません。",
+              "stopped": "停止されました。"
+            }
           },
           "wording": {
             "name": "Wording",
@@ -589,7 +782,16 @@
           },
           "aim": {
             "name": "的あて（エイム）",
-            "description": "命中で1〜3EXP／連続命中ボーナス"
+            "description": "命中で1〜3EXP／連続命中ボーナス",
+            "hud": {
+              "time": "残り時間: {time}",
+              "hitsAccuracy": "命中: {hits}  精度: {accuracy}%",
+              "combo": "コンボ x{combo}"
+            },
+            "overlay": {
+              "timeUp": "タイムアップ",
+              "restartHint": "Rで再開/再起動"
+            }
           },
           "dodge_race": {
             "name": "回避レース",
@@ -658,6 +860,10 @@
           "floor_descent": {
             "name": "フロア降りサバイバル",
             "description": "迫る針天井から逃げながら下へ進む縦スクロールアクション。足場ギミックで差をつけよう"
+          },
+          "treasure_hunt": {
+            "name": "宝探しダンジョン",
+            "description": "混合ダンジョンで宝を探し、距離とタイムで指数的にEXPボーナス"
           },
           "forced_scroll_jump": {
             "name": "強制スクロールジャンプ",
@@ -10354,6 +10560,186 @@
           "digital_strings": "デジタルストリングス"
         }
       },
+      "counter_pad": {
+        "title": "カウンターパッド",
+        "subtitle": "複数のカウントを素早く管理。増減操作は自動保存されます。",
+        "defaults": {
+          "counterName": "カウンター{index}",
+          "newCounter": "新しいカウンター"
+        },
+        "form": {
+          "namePlaceholder": "カウンター名",
+          "initialValuePlaceholder": "初期値 (0)",
+          "stepPlaceholder": "ステップ (1)",
+          "addButton": "追加"
+        },
+        "summary": {
+          "count": "カウンター {count}件",
+          "total": "合計 {value}",
+          "sessionXp": "セッションEXP {value}"
+        },
+        "emptyState": "まだカウンターがありません。上のフォームから追加してください。",
+        "counter": {
+          "delete": "削除",
+          "deleteConfirm": "{name} を削除しますか？",
+          "stepLabel": "ステップ",
+          "reset": "リセット"
+        },
+        "alerts": {
+          "limitReached": "これ以上は追加できません (最大{max}件)"
+        }
+      },
+      "calculator": {
+        "modes": {
+          "standard": "標準",
+          "programmer": "プログラマー",
+          "summary": {
+            "standard": "標準モード (10進)",
+            "programmer": "プログラマーモード / 基数{base}"
+          }
+        },
+        "programmer": {
+          "baseNames": {
+            "2": "2進",
+            "4": "4進",
+            "6": "6進",
+            "8": "8進",
+            "10": "10進",
+            "16": "16進",
+            "24": "24進",
+            "30": "30進"
+          },
+          "baseOption": "{baseName} (基数{base})",
+          "baseSuffix": " (基数{base})"
+        },
+        "history": {
+          "title": "履歴",
+          "clear": "クリア",
+          "empty": "履歴はありません。",
+          "status": "履歴: {count}",
+          "statusWithBase": "履歴: {count} / 基数{base}"
+        },
+        "status": {
+          "memoryEmpty": "M: --",
+          "memory": "M: {value}",
+          "memoryWithBase": "M: {value} (基数{base})"
+        },
+        "error": "エラー"
+      },
+      "calc_combo": {
+        "name": "計算コンボ",
+        "title": "{name} ({difficulty})",
+        "difficulty": {
+          "easy": "EASY",
+          "normal": "NORMAL",
+          "hard": "HARD"
+        },
+        "stats": {
+          "correct": "正解",
+          "mistake": "ミス",
+          "combo": "コンボ",
+          "xp": "累計EXP"
+        },
+        "input": {
+          "answerPlaceholder": "答えを入力"
+        },
+        "buttons": {
+          "submit": "回答"
+        },
+        "shortcuts": {
+          "submitOrSkip": "Enterで回答 / Escでスキップ"
+        },
+        "history": {
+          "title": "履歴 (直近{count}問)",
+          "correctEntry": "○ {expression}",
+          "mistakeEntry": "× {expression} = {answer}",
+          "streakEntry": "★ {combo}連続ボーナス",
+          "gain": "+{value} EXP",
+          "loss": "{value} EXP",
+          "neutral": "±0 EXP"
+        },
+        "question": {
+          "loading": "準備中…",
+          "prompt": "{expression} = ?"
+        },
+        "pop": {
+          "correct": "正解！ 基本{base} + コンボ{combo} + スピード{speed}",
+          "streak": "コンボ{combo}達成！ボーナス+{bonus}",
+          "mistake": "正解は {answer}",
+          "emptyAnswer": "入力してから回答してください",
+          "invalidAnswer": "数値で入力してください"
+        }
+      },
+      "acchimuitehoi": {
+        "instructions": {
+          "rpsTitle": "1. じゃんけんで攻守決定",
+          "rpsHint": "勝ったら攻め、負けたら防御",
+          "directionTitle": "2. あっち向いてホイ",
+          "directionHint": "制限時間 {seconds} 秒以内に方向を選択",
+          "logTitle": "戦況ログ"
+        },
+        "ui": {
+          "stage": {
+            "rps": "じゃんけんで攻守を決めよう",
+            "attack": "攻撃フェーズ：指す方向を素早く選ぼう",
+            "defense": "防御フェーズ：相手と違う方向を素早く選ぼう"
+          }
+        },
+        "hands": {
+          "rock": "グー",
+          "scissors": "チョキ",
+          "paper": "パー"
+        },
+        "direction": {
+          "up": "上",
+          "down": "下",
+          "left": "左",
+          "right": "右"
+        },
+        "role": {
+          "attack": "攻め",
+          "defense": "守り"
+        },
+        "countdown": {
+          "idle": "残り --.- 秒",
+          "remaining": "残り {seconds} 秒"
+        },
+        "score": {
+          "primary": "攻め成功: {attackWins}／防御成功: {defenseWins}",
+          "secondary": "攻め連続: {attackStreak}（最高 {bestAttackStreak}）／防御連続: {defenseStreak}（最高 {bestDefenseStreak}）",
+          "tertiaryWithRate": "決着数: {rounds}／成功率: {successRate}%",
+          "tertiaryEmpty": "決着数: 0／成功率: --%"
+        },
+        "status": {
+          "ready": "手を選んでミニゲーム開始！",
+          "tie": "あいこで {hand}！もう一度",
+          "playerWin": "あなたの勝ち！制限内に指す方向を選んでヒットを狙おう",
+          "cpuWin": "相手が攻め！制限内に別方向を選んで回避",
+          "attack": {
+            "hit": "ヒット！{direction}で{exp}EXP",
+            "hitBonus": "ヒット！{direction}で{exp}EXP（連続{streak}）",
+            "miss": "外した…CPUは{cpuDirection}を向いた",
+            "timeout": "時間切れ…指しそびれた"
+          },
+          "defense": {
+            "success": "回避成功！{cpuDirection}を避けた！{exp}EXP",
+            "successBonus": "回避成功！{cpuDirection}を避けた（連続{streak}）",
+            "fail": "回避失敗…同じ{direction}を向いた",
+            "timeout": "時間切れ…反応できずヒット"
+          },
+          "paused": "一時停止中"
+        },
+        "log": {
+          "tie": "あいこ続行",
+          "rpsResult": "じゃんけん結果: あなた={playerHand}／相手={cpuHand} → {role}",
+          "attackSuccess": "攻め成功：CPUは{cpuDirection} → {exp}EXP",
+          "attackFail": "攻め失敗：CPU {cpuDirection}／あなた {playerDirection}",
+          "defenseSuccess": "防御成功：相手 {cpuDirection}／あなた {playerDirection} → {exp}EXP",
+          "defenseFail": "防御失敗：同方向でヒット",
+          "attackTimeout": "攻め時間切れ：チャンスを逃した",
+          "defenseTimeout": "防御時間切れ：反応が遅れた"
+        }
+      },
       "taiko_drum": {
         "title": "太鼓リズム（{difficulty}）",
         "tips": "F/J/Space = ドン（赤）、D/K = カッ（青）。大音符は両方同時！タップもOK。",
@@ -10391,6 +10777,100 @@
           "totalExpLabel": "総EXP",
           "clearBonusLabel": "クリアボーナス",
           "goodRateLabel": "良率"
+        }
+      },
+      "darumasan": {
+        "guard": {
+          "title": "見張りの様子",
+          "hint": "スペース / ↑ で前進",
+          "state": {
+            "idle": "準備中…",
+            "safe": "今だ！前進！",
+            "warning": "そろそろ振り向く！",
+            "watch": "見てる！止まって！"
+          },
+          "countdown": {
+            "placeholder": "残り --.- 秒",
+            "safe": "安全残り {seconds} 秒",
+            "warning": "あと {seconds} 秒で振り向く！",
+            "watch": "監視中… {seconds} 秒我慢"
+          }
+        },
+        "movement": {
+          "stopped": "停止中",
+          "moving": "移動中"
+        },
+        "progress": {
+          "title": "進行状況",
+          "detail": "距離 {distance}% / 経過 {time} 秒",
+          "bestPlaceholder": "ベストタイム: --.- 秒",
+          "best": "ベストタイム: {time} 秒"
+        },
+        "status": {
+          "initial": "スタートで開始",
+          "running": "だるまさんがころんだ！安全な時だけ前進しよう",
+          "pause": "一時停止中",
+          "success": "クリア！50EXP獲得！所要 {time} 秒",
+          "fail": "動いているのを見られた…失敗"
+        }
+      },
+      "populite": {
+        "title": "ポピュラス風 ミニ神様モード",
+        "hud": {
+          "faithStatus": "信仰状態",
+          "timeRemaining": "残り時間",
+          "mana": "マナ",
+          "population": "人口",
+          "disasterTimer": "災害タイマー",
+          "nextDisaster": "次の災害",
+          "bestRecord": "最速達成",
+          "paused": "一時停止中",
+          "manaValue": "{current} / {max}",
+          "populationValue": "{current} / {target}",
+          "disasterCountdown": "{value} 秒",
+          "bestTimeValue": "{value}秒"
+        },
+        "controls": {
+          "title": "操作と魔法",
+          "instructions": "左ドラッグ: 整地（Shiftで掘削） / 右クリック: 祈りで信者を招く<br>スペース: 一時停止 / 数字キー1:守護 2:隆起 3:浄化雨"
+        },
+        "spells": {
+          "barrier": "1) 守護バリア ({cost})",
+          "uplift": "2) 隆起 ({cost})",
+          "purify": "3) 浄化雨 ({cost})"
+        },
+        "status": {
+          "manaShort": "マナが不足しています…",
+          "prayerCooldown": "祈りはまだ冷却中です…",
+          "noSettlements": "守るべき集落がありません",
+          "victory": "人口目標を達成しました！",
+          "defeatPopulation": "信者がいなくなってしまった…",
+          "timeout": "時間切れです…",
+          "paused": "一時停止中",
+          "resumed": "再開"
+        },
+        "log": {
+          "title": "出来事ログ",
+          "prayerStarted": "祈りの力で信者が集まり始めた！",
+          "tsunami": "🌊 津波が低地を襲います！",
+          "volcano": "🌋 火山が噴火！ ({x},{y})",
+          "newSettlement": "新しい集落が誕生 ({x},{y}) 高さ{level}",
+          "populationMilestone": "人口が{population}人を突破！",
+          "settlementDestroyed": "集落({x},{y})が壊滅してしまった…",
+          "settlementDamaged": "集落({x},{y})が{lost}人の被害",
+          "barrierCast": "守護バリアが集落({x},{y})を包み込む",
+          "upliftCast": "大地が隆起し安全な高地が生まれた ({x},{y})",
+          "purifyCast": "浄化の雨で災害の兆候が洗い流された",
+          "inventoryFull": "インベントリに空きがなく聖なる欠片は見送られた…",
+          "bestRecord": "最速記録を更新！ {time}秒",
+          "result": "▶ 結果: {message}",
+          "difficulty": "難易度: {difficulty}",
+          "goal": "人口目標 {target} / 制限時間 {duration}秒"
+        },
+        "popup": {
+          "buildingLevel": "建築Lv{level}",
+          "populationGain": "+{value}信者",
+          "barrierBlocked": "バリアが防いだ！"
         }
       },
       "checkers": {
@@ -11485,6 +11965,16 @@
         "none": "なし",
         "floor": "{floor}F"
       },
+      "miniExp": {
+        "dinoRunner": {
+          "comboLabel": "コンボ {combo}",
+          "startPromptPrimary": "スペース / クリックでスタート",
+          "startPromptSecondary": "↑またはスペースでジャンプ、↓でしゃがみ",
+          "gameOver": "GAME OVER",
+          "restartHint": "スペース / R でリスタート",
+          "distanceLabel": "距離 {distance}"
+        }
+      },
       "runResult": {
         "defaultCause": "ゲームオーバー"
       },
@@ -11843,6 +12333,233 @@
         "cleared": "入力をクリアしました。"
       }
     },
+    "games": {
+      "clockHub": {
+        "errors": {
+          "noContainer": "Clock Hubにはコンテナが必要です"
+        },
+        "header": {
+          "title": "時計ユーティリティハブ",
+          "subtitle": "デジタル／アナログ／詳細情報を切り替え",
+          "exp": "獲得EXP: {xp}"
+        },
+        "tabs": {
+          "digital": "デジタル時計",
+          "analog": "アナログ時計",
+          "detail": "詳細"
+        },
+        "detailTabs": {
+          "overview": "概要",
+          "progress": "進捗率",
+          "remain": "残り時間",
+          "stats": "情報一覧",
+          "calendar": "カレンダー"
+        },
+        "digital": {
+          "format": {
+            "24h": "24時間制",
+            "12h": "12時間制"
+          },
+          "period": {
+            "am": "午前",
+            "pm": "午後"
+          },
+          "dateLine": "{year}年{month}月{day}日（{weekday}）",
+          "timeLine12": "{period}{hour}時{minute}分{second}秒",
+          "timeLine24": "{hour}時{minute}分{second}秒"
+        },
+        "analog": {
+          "type": {
+            "12h": "通常アナログ時計",
+            "24h": "24時間制アナログ時計"
+          }
+        },
+        "weekdays": {
+          "0": "日",
+          "1": "月",
+          "2": "火",
+          "3": "水",
+          "4": "木",
+          "5": "金",
+          "6": "土"
+        },
+        "dates": {
+          "full": "{year}年{month}月{day}日（{weekday}）"
+        },
+        "era": {
+          "reiwa": "令和",
+          "heisei": "平成",
+          "showa": "昭和",
+          "taisho": "大正",
+          "meiji": "明治",
+          "format": "{era}{year}年",
+          "unknown": "不明"
+        },
+        "eto": {
+          "stems": {
+            "0": "甲",
+            "1": "乙",
+            "2": "丙",
+            "3": "丁",
+            "4": "戊",
+            "5": "己",
+            "6": "庚",
+            "7": "辛",
+            "8": "壬",
+            "9": "癸"
+          },
+          "branches": {
+            "0": "子",
+            "1": "丑",
+            "2": "寅",
+            "3": "卯",
+            "4": "辰",
+            "5": "巳",
+            "6": "午",
+            "7": "未",
+            "8": "申",
+            "9": "酉",
+            "10": "戌",
+            "11": "亥"
+          },
+          "format": "{stem}{branch}"
+        },
+        "season": {
+          "winter": "冬",
+          "spring": "春",
+          "summer": "夏",
+          "autumn": "秋",
+          "unknown": "不明"
+        },
+        "solarTerms": {
+          "risshun": "立春",
+          "usui": "雨水",
+          "keichitsu": "啓蟄",
+          "shunbun": "春分",
+          "seimei": "清明",
+          "kokuu": "穀雨",
+          "rikka": "立夏",
+          "shoman": "小満",
+          "boshu": "芒種",
+          "geshi": "夏至",
+          "shosho": "小暑",
+          "taisho": "大暑",
+          "risshu": "立秋",
+          "shoshoLimitHeat": "処暑",
+          "hakuro": "白露",
+          "shubun": "秋分",
+          "kanro": "寒露",
+          "soko": "霜降",
+          "rittou": "立冬",
+          "shosetsu": "小雪",
+          "taisetsu": "大雪",
+          "touji": "冬至",
+          "shokan": "小寒",
+          "dahan": "大寒",
+          "nextDate": "{year}年{month}月{day}日",
+          "description": "{previous} → 次は{next}（{nextDate}、{duration}）"
+        },
+        "duration": {
+          "prefix": {
+            "future": "あと",
+            "past": "前"
+          },
+          "unit": {
+            "year": "{value}年",
+            "day": "{value}日",
+            "hour": "{value}時間",
+            "minute": "{value}分",
+            "second": "{value}秒"
+          },
+          "joiner": ""
+        },
+        "progress": {
+          "labels": {
+            "millennium": "千年紀",
+            "century": "世紀",
+            "decade": "年代",
+            "year": "年",
+            "month": "月",
+            "day": "日",
+            "hour": "時",
+            "minute": "分",
+            "second": "秒"
+          },
+          "percent": "{value}%"
+        },
+        "remaining": {
+          "labels": {
+            "nextSecond": "次の秒",
+            "nextMinute": "次の分",
+            "nextHour": "次の時",
+            "nextDay": "次の日",
+            "nextMonth": "次の月",
+            "nextYear": "次の年"
+          },
+          "delta": "（±{millis}ms）",
+          "value": "{duration}{delta}"
+        },
+        "stats": {
+          "labels": {
+            "unix": "UNIX時間",
+            "ticks": "経過ミリ秒",
+            "iso": "ISO 8601",
+            "yearday": "年内通算日",
+            "daySeconds": "今日の経過秒",
+            "timezone": "タイムゾーン"
+          },
+          "yeardayValue": "第{value}日目",
+          "daySecondsValue": "{value}秒",
+          "timezoneFallback": "ローカル"
+        },
+        "calendar": {
+          "settings": {
+            "title": "休暇／出勤日のカスタム設定",
+            "holidayTitle": "祝日・休暇として登録",
+            "workdayTitle": "出勤日として登録",
+            "add": "追加",
+            "empty": "登録なし",
+            "remove": "削除"
+          },
+          "info": {
+            "summary": "日付: {date}",
+            "era": "和暦: {era}｜干支: {eto}",
+            "season": "季節: {season}｜四半期: 第{quarter}四半期",
+            "progress": "年内通算日: 第{dayOfYear}日｜ISO週番号: 第{isoWeek}週｜月内第{weekOfMonth}週",
+            "status": "区分: {status}"
+          },
+          "status": {
+            "rest": "休み",
+            "workday": "出勤日想定",
+            "holiday": "祝日登録あり",
+            "workdayOverride": "出勤登録あり",
+            "separator": " / "
+          },
+          "controls": {
+            "prev": "← 前月",
+            "next": "翌月 →",
+            "today": "今日"
+          },
+          "monthLabel": "{year}年{month}月",
+          "today": "本日: {date}"
+        },
+        "common": {
+          "yes": "はい",
+          "no": "いいえ"
+        },
+        "overview": {
+          "gregorian": "西暦: {year}年 {month}月{day}日（{weekday}）",
+          "era": "和暦: {era}",
+          "eto": "干支: {eto}｜皇紀: {imperial}",
+          "season": "季節: {season}｜二十四節気: {solarTerm}",
+          "leapYear": "うるう年: {value}"
+        },
+        "xp": {
+          "note": "秒:+{second} / 分:+{minute} / 時:+{hour} / 日:+{day} / 月:+{month} / 年:+{year} / 世紀:+{century} / 千年紀:+{millennium}"
+        }
+      }
+    },
+
     "statusModal": {
       "title": "プレイヤーステータス",
       "sections": {
@@ -11901,6 +12618,112 @@
         "valueWithBase": "{effective} (基{base})",
         "levelWithBase": "Lv.{effective} (基{base})",
         "hp": "{current}/{max}{baseSuffix}"
+      }
+    },
+
+    "games": {
+      "bowlingDuel": {
+        "title": "ボウリング対決 MOD",
+        "legend": "ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！",
+        "history": {
+          "title": "ログ",
+          "placeholder": "---"
+        },
+        "buttons": {
+          "throw": "🎳 ボールを投げる",
+          "reset": "🔄 リセット",
+          "throwing": "🎳 投球中…"
+        },
+        "scoreboard": {
+          "you": "あなた",
+          "cpu": "CPU",
+          "total": "合計"
+        },
+        "sliders": {
+          "aim": {
+            "label": "狙い位置",
+            "center": "中央",
+            "right": "右 {value}",
+            "left": "左 {value}"
+          },
+          "curve": {
+            "label": "カーブ量",
+            "none": "なし",
+            "right": "右曲がり {value}",
+            "left": "左曲がり {value}"
+          },
+          "power": {
+            "label": "投球パワー",
+            "format": "{value}%"
+          }
+        },
+        "status": {
+          "introHint": "ゲージをタイミング良く止めてストライクを狙おう！",
+          "framePlayer": "第{frame}フレーム あなたの番です。",
+          "frameCpu": "第{frame}フレーム CPUの番です…",
+          "remainingPins": "残りピン: {count} 本。もう一投！",
+          "playerStrike": "ストライク！",
+          "cpuStrike": "CPUがストライク！",
+          "victory": "勝利！ スコア {player} - {cpu}",
+          "draw": "引き分け… スコア {player} - {cpu}",
+          "defeat": "敗北… スコア {player} - {cpu}"
+        },
+        "stage": {
+          "aim": {
+            "prompt": "狙いゲージが往復中…止めるタイミングでボタン！",
+            "button": "🛑 狙いを止める",
+            "confirm": "狙い位置を {value} にセット！"
+          },
+          "curve": {
+            "prompt": "カーブゲージ調整中…ボタンでストップ！",
+            "button": "🛑 カーブを止める",
+            "confirm": "カーブ量は {value} に決定！"
+          },
+          "power": {
+            "prompt": "パワーゲージを注視…ボタンで投球！",
+            "button": "🛑 パワーを止める",
+            "confirm": "パワー {value} で投球！"
+          }
+        },
+        "logs": {
+          "playerShot": "あなた: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+          "cpuShot": "CPU: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+          "victory": "<strong>勝利！</strong> +{exp}EXP",
+          "draw": "<strong>引き分け</strong> +{exp}EXP",
+          "defeat": "<strong>敗北</strong> +{exp}EXP"
+        }
+      }
+    },
+    "games": {
+      "treasureHunt": {
+        "ui": {
+          "mapTitle": "マップ",
+          "start": "探索開始",
+          "pause": "一時停止",
+          "hint": "WASD/矢印で移動。宝箱と自分の距離が遠いほど基礎EXPが増え、素早く拾うほど倍率が上がります。"
+        },
+        "labels": {
+          "round": "ラウンド: {value}",
+          "time": "タイム: {value}",
+          "distance": "距離: {value}",
+          "totalExp": "合計EXP: {value}",
+          "timeValue": "{value}s",
+          "distanceValue": "{value}マス",
+          "none": "-",
+          "lastResult": "前回 {time} で {exp}EXP 獲得{best}",
+          "bestSuffix": " / ベスト {time}"
+        },
+        "status": {
+          "preparing": "ステージを生成します…",
+          "generating": "ステージ生成中…",
+          "generateFailed": "ステージ生成に失敗しました",
+          "noApi": "ダンジョンAPIが利用できません",
+          "placingFailed": "生成したマップで宝配置に失敗…再生成します",
+          "ready": "ラウンド{round} 開始位置に移動しました",
+          "running": "ラウンド{round} 探索中…",
+          "paused": "一時停止中",
+          "found": "宝を発見！次のラウンドを生成中…"
+        }
       }
     }
   };

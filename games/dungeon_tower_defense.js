@@ -8,6 +8,31 @@
     const shortcuts = opts?.shortcuts;
     const dungeonApi = opts?.dungeon;
     const difficulty = opts?.difficulty || 'NORMAL';
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'dungeon_td' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumberLocalized = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      const locale = typeof localization?.getLocale === 'function' ? localization.getLocale() : undefined;
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function') {
+        try { return new Intl.NumberFormat(locale, options).format(value); } catch {}
+      }
+      if (value != null && typeof value.toLocaleString === 'function') {
+        try { return value.toLocaleString(); } catch {}
+      }
+      return String(value ?? '');
+    };
+    const formatInteger = (value) => formatNumberLocalized(value, { maximumFractionDigits: 0 });
+    let detachLocale = null;
 
     const wrapper = document.createElement('div');
     wrapper.className = 'mini-dungeon-td';
@@ -54,7 +79,7 @@
 
     const startWaveBtn = document.createElement('button');
     startWaveBtn.type = 'button';
-    startWaveBtn.textContent = 'ウェーブ開始';
+    startWaveBtn.textContent = text('controls.startWave', 'ウェーブ開始');
     startWaveBtn.style.padding = '8px 14px';
     startWaveBtn.style.borderRadius = '8px';
     startWaveBtn.style.border = 'none';
@@ -71,7 +96,7 @@
     hintLabel.style.background = 'rgba(15,23,42,0.85)';
     hintLabel.style.borderRadius = '8px';
     hintLabel.style.padding = '8px 10px';
-    hintLabel.textContent = '床タイルをクリックで砲塔を設置 (Shift+クリックで砲塔強化)。敵がコアに到達すると耐久が減ります。';
+    hintLabel.textContent = text('hud.hint', '床タイルをクリックで砲塔を設置 (Shift+クリックで砲塔強化)。敵がコアに到達すると耐久が減ります。');
 
     const statusLabel = document.createElement('div');
     statusLabel.style.background = 'rgba(15,23,42,0.88)';
@@ -187,18 +212,67 @@
     function disableHostShortcuts(){ shortcuts?.disableKey?.('r'); shortcuts?.disableKey?.('p'); }
     function enableHostShortcuts(){ shortcuts?.enableKey?.('r'); shortcuts?.enableKey?.('p'); }
 
-    function setStatus(text){ statusLabel.textContent = text; }
-
-    function formatCoins(value){ return `${value} G`; }
+    const lastStatus = { key: null, fallback: '', params: undefined };
+    function refreshStatus(){
+      statusLabel.textContent = text(lastStatus.key, lastStatus.fallback, lastStatus.params);
+    }
+    function setStatus(key, fallback, params){
+      lastStatus.key = key || null;
+      lastStatus.fallback = fallback !== undefined ? fallback : '';
+      lastStatus.params = params;
+      refreshStatus();
+    }
 
     function updateHud(){
       const nextWaveNumber = state.runningWave ? state.wave : state.wave + 1;
-      const maxWavesDisplay = config.maxWaves > 0 ? `/${config.maxWaves}` : '';
-      waveLabel.textContent = `Wave ${Math.min(nextWaveNumber, config.maxWaves)}${maxWavesDisplay}`;
-      coinsLabel.textContent = `資金 ${formatCoins(state.coins)}`;
-      baseLabel.textContent = `コア耐久 ${state.baseHp}/${state.maxBaseHp}`;
-      expLabel.textContent = `獲得EXP ${Math.floor(state.totalExp)}`;
+      const currentWave = Math.min(nextWaveNumber, config.maxWaves);
+      const waveParams = {
+        current: currentWave,
+        currentFormatted: formatInteger(currentWave),
+        max: config.maxWaves > 0 ? config.maxWaves : null,
+        maxFormatted: config.maxWaves > 0 ? formatInteger(config.maxWaves) : null
+      };
+      waveLabel.textContent = text(
+        'hud.wave',
+        () => {
+          if (config.maxWaves > 0){
+            return `Wave ${waveParams.currentFormatted}/${waveParams.maxFormatted}`;
+          }
+          return `Wave ${waveParams.currentFormatted}`;
+        },
+        waveParams
+      );
+      const coinsFormatted = formatInteger(state.coins);
+      coinsLabel.textContent = text('hud.coins', () => `資金 ${coinsFormatted} G`, { value: state.coins, formatted: coinsFormatted });
+      const baseHpFormatted = formatInteger(state.baseHp);
+      const maxHpFormatted = formatInteger(state.maxBaseHp);
+      baseLabel.textContent = text('hud.baseHp', () => `コア耐久 ${baseHpFormatted}/${maxHpFormatted}`, {
+        value: state.baseHp,
+        valueFormatted: baseHpFormatted,
+        max: state.maxBaseHp,
+        maxFormatted: maxHpFormatted
+      });
+      const expValue = Math.floor(state.totalExp);
+      const expFormatted = formatInteger(expValue);
+      expLabel.textContent = text('hud.exp', () => `獲得EXP ${expFormatted}`, { value: expValue, formatted: expFormatted });
       startWaveBtn.disabled = !state.stageReady || state.runningWave || state.baseHp <= 0 || state.wave >= config.maxWaves;
+    }
+
+    function applyLocale(){
+      startWaveBtn.textContent = text('controls.startWave', 'ウェーブ開始');
+      hintLabel.textContent = text('hud.hint', '床タイルをクリックで砲塔を設置 (Shift+クリックで砲塔強化)。敵がコアに到達すると耐久が減ります。');
+      refreshStatus();
+      updateHud();
+    }
+
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try {
+          applyLocale();
+        } catch (error) {
+          console.warn('[dungeon_td] Failed to apply locale update:', error);
+        }
+      });
     }
 
     function clampNumber(value, fallback = 0){
@@ -356,11 +430,11 @@
 
     function addTower(tile){
       if (!isTileBuildable(tile)){
-        setStatus('そのタイルには砲塔を設置できません');
+        setStatus('status.tileUnavailable', 'そのタイルには砲塔を設置できません');
         return;
       }
       if (state.coins < config.towerCost){
-        setStatus('資金が不足しています');
+        setStatus('status.insufficientFunds', '資金が不足しています');
         return;
       }
       const center = state.stage.tileCenter(tile.x, tile.y);
@@ -377,14 +451,19 @@
       };
       state.towers.push(tower);
       state.coins -= config.towerCost;
-      setStatus('砲塔を設置しました');
+      setStatus('status.towerPlaced', '砲塔を設置しました');
       updateHud();
     }
 
     function upgradeTower(tower){
       const upgradeCost = Math.floor(config.towerUpgradeBase * Math.pow(1.35, tower.level - 1));
       if (state.coins < upgradeCost){
-        setStatus(`強化に必要な資金が不足しています (${upgradeCost} G)`);
+        const upgradeCostFormatted = formatInteger(upgradeCost);
+        setStatus(
+          'status.upgradeInsufficientFunds',
+          () => `強化に必要な資金が不足しています (${upgradeCostFormatted} G)`,
+          { cost: upgradeCost, costFormatted: upgradeCostFormatted }
+        );
         return;
       }
       state.coins -= upgradeCost;
@@ -392,7 +471,12 @@
       tower.damage *= 1.32;
       tower.range *= 1.06;
       tower.fireInterval = Math.max(0.32, tower.fireInterval * 0.88);
-      setStatus(`砲塔をLv${tower.level}に強化しました`);
+      const towerLevelFormatted = formatInteger(tower.level);
+      setStatus(
+        'status.towerUpgraded',
+        () => `砲塔をLv${towerLevelFormatted}に強化しました`,
+        { level: tower.level, levelFormatted: towerLevelFormatted }
+      );
       updateHud();
     }
 
@@ -416,7 +500,7 @@
     function beginWave(){
       if (!state.stageReady || state.runningWave || state.baseHp <= 0) return;
       if (!state.pathSegments.length){
-        setStatus('経路を構成できませんでした');
+        setStatus('status.noPath', '経路を構成できませんでした');
         return;
       }
       state.wave += 1;
@@ -426,7 +510,8 @@
       state.runningWave = true;
       state.paused = false;
       disableHostShortcuts();
-      setStatus(`Wave ${state.wave} が始まりました！`);
+      const waveFormatted = formatInteger(state.wave);
+      setStatus('status.waveStarted', () => `Wave ${waveFormatted} が始まりました！`, { wave: state.wave, waveFormatted });
       updateHud();
     }
 
@@ -437,10 +522,36 @@
       state.coins += bonusCoins;
       const gained = clampNumber(awardXp(config.waveBonusXp + state.wave * 4, { reason: 'wave-clear', wave: state.wave, gameId: 'dungeon_td' }), 0);
       state.totalExp += gained;
+      const waveFormatted = formatInteger(state.wave);
+      const bonusCoinsFormatted = formatInteger(bonusCoins);
+      const waveXp = config.waveBonusXp + state.wave * 4;
+      const waveXpFormatted = formatInteger(waveXp);
       if (state.wave >= config.maxWaves){
-        setStatus(`全ウェーブ防衛成功！ボーナス ${bonusCoins}G / EXP +${config.waveBonusXp + state.wave * 4}`);
+        setStatus(
+          'status.allWavesCleared',
+          () => `全ウェーブ防衛成功！ボーナス ${bonusCoinsFormatted}G / EXP +${waveXpFormatted}`,
+          {
+            wave: state.wave,
+            waveFormatted,
+            bonusCoins,
+            bonusCoinsFormatted,
+            bonusXp: waveXp,
+            bonusXpFormatted: waveXpFormatted
+          }
+        );
       } else {
-        setStatus(`Wave ${state.wave} を防衛！ 資金+${bonusCoins} / EXP +${config.waveBonusXp + state.wave * 4}`);
+        setStatus(
+          'status.waveCleared',
+          () => `Wave ${waveFormatted} を防衛！ 資金+${bonusCoinsFormatted} / EXP +${waveXpFormatted}`,
+          {
+            wave: state.wave,
+            waveFormatted,
+            bonusCoins,
+            bonusCoinsFormatted,
+            bonusXp: waveXp,
+            bonusXpFormatted: waveXpFormatted
+          }
+        );
       }
       updateHud();
       if (state.wave >= config.maxWaves){
@@ -461,11 +572,12 @@
       state.enemies.length = 0;
       enableHostShortcuts();
       if (result === 'defeat'){
-        setStatus('コアが破壊されました…ウェーブ失敗');
+        setStatus('status.coreDestroyed', 'コアが破壊されました…ウェーブ失敗');
       } else if (result === 'victory'){
         const bonus = clampNumber(awardXp(120, { reason: 'full-clear', gameId: 'dungeon_td' }), 0);
         state.totalExp += bonus;
-        setStatus('完全防衛達成！追加ボーナスEXP +120');
+        const bonusFormatted = formatInteger(120);
+        setStatus('status.fullClearBonus', () => `完全防衛達成！追加ボーナスEXP +${bonusFormatted}`, { bonus: 120, bonusFormatted });
       }
       updateHud();
     }
@@ -496,11 +608,11 @@
           if (state.baseHp <= 0){
             state.baseHp = 0;
             updateHud();
-            setStatus('敵がコアに侵入しました…');
+            setStatus('status.coreBreached', '敵がコアに侵入しました…');
             endGame('defeat');
             return;
           }
-          setStatus('敵がコアに到達！耐久が減少');
+          setStatus('status.coreDamaged', '敵がコアに到達！耐久が減少');
           updateHud();
           continue;
         }
@@ -655,10 +767,10 @@
 
     function prepareStage(){
       if (!dungeonApi || typeof dungeonApi.generateStage !== 'function'){
-        setStatus('ダンジョンAPIを利用できません');
+        setStatus('status.apiUnavailable', 'ダンジョンAPIを利用できません');
         return;
       }
-      setStatus('ステージ生成中…');
+      setStatus('status.generatingStage', 'ステージ生成中…');
       dungeonApi.generateStage({ type: 'mixed', tilesX: 44, tilesY: 32, tileSize: 20 }).then((generated) => {
         state.stage = generated;
         state.tileSize = generated.tileSize;
@@ -667,12 +779,12 @@
         canvas.height = state.background.canvas.height;
         const pathReady = pickPathEndpoints();
         if (!pathReady){
-          setStatus('経路の確保に失敗しました。再読み込みしてください。');
+          setStatus('status.pathFailedRetry', '経路の確保に失敗しました。再読み込みしてください。');
           return;
         }
         state.stageReady = true;
         state.paused = false;
-        setStatus('砲塔を配置してウェーブ開始を押してください');
+        setStatus('status.ready', '砲塔を配置してウェーブ開始を押してください');
         updateHud();
         draw();
         if (state.pendingStart){
@@ -681,7 +793,7 @@
         }
         startAnimation();
       }).catch(() => {
-        setStatus('ステージ生成に失敗しました');
+        setStatus('status.stageGenerationFailed', 'ステージ生成に失敗しました');
       });
     }
 
@@ -721,7 +833,7 @@
         if (event.shiftKey){
           upgradeTower(tower);
         } else {
-          setStatus('Shift+クリックで砲塔を強化できます');
+          setStatus('status.upgradeHint', 'Shift+クリックで砲塔を強化できます');
         }
         return;
       }
@@ -738,7 +850,7 @@
 
     startWaveBtn.addEventListener('click', handleStartWave);
 
-    updateHud();
+    applyLocale();
     prepareStage();
 
     function start(){
@@ -763,6 +875,10 @@
       canvas.removeEventListener('mouseleave', handlePointerLeave);
       canvas.removeEventListener('click', handlePointerClick);
       startWaveBtn.removeEventListener('click', handleStartWave);
+      if (detachLocale){
+        try { detachLocale(); } catch (error) { console.warn('[dungeon_td] Failed to detach locale listener:', error); }
+        detachLocale = null;
+      }
       try { wrapper.remove(); } catch {}
     }
 

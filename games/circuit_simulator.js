@@ -117,62 +117,92 @@
     wire: {
       id: 'wire',
       label: '導線',
+      labelKey: 'components.wire.label',
+      nameKey: 'components.wire.name',
       description: '抵抗値ほぼ0の線',
+      descriptionKey: 'components.wire.description',
       defaultProps: () => ({ resistance: 0.001 })
     },
     resistor: {
       id: 'resistor',
       label: '抵抗',
+      labelKey: 'components.resistor.label',
+      nameKey: 'components.resistor.name',
       description: 'オーム抵抗',
+      descriptionKey: 'components.resistor.description',
       defaultProps: () => ({ resistance: 100 })
     },
     capacitor: {
       id: 'capacitor',
       label: 'コンデンサ',
+      labelKey: 'components.capacitor.label',
+      nameKey: 'components.capacitor.name',
       description: '容量性リアクタンス素子',
+      descriptionKey: 'components.capacitor.description',
       defaultProps: () => ({ capacitance: 1e-6 })
     },
     inductor: {
       id: 'inductor',
       label: 'インダクタ',
+      labelKey: 'components.inductor.label',
+      nameKey: 'components.inductor.name',
       description: '誘導性リアクタンス素子',
+      descriptionKey: 'components.inductor.description',
       defaultProps: () => ({ inductance: 1e-3 })
     },
     power: {
       id: 'power',
       label: '電源',
+      labelKey: 'components.power.label',
+      nameKey: 'components.power.name',
       description: '理想電圧源＋内部抵抗',
+      descriptionKey: 'components.power.description',
       defaultProps: () => ({ voltage: 12, resistance: 0.5 })
     },
     ac_source: {
       id: 'ac_source',
       label: 'AC電源',
+      labelKey: 'components.ac_source.label',
+      nameKey: 'components.ac_source.name',
       description: '正弦波電圧源（RMS設定）',
+      descriptionKey: 'components.ac_source.description',
       defaultProps: () => ({ amplitude: 5, phase: 0, resistance: 0.2 })
     },
     current_source: {
       id: 'current_source',
       label: '電流源',
+      labelKey: 'components.current_source.label',
+      nameKey: 'components.current_source.name',
       description: '理想定電流源',
+      descriptionKey: 'components.current_source.description',
       defaultProps: () => ({ current: 0.05, phase: 0 })
     },
     ammeter: {
       id: 'ammeter',
       label: '電流計',
+      labelKey: 'components.ammeter.label',
+      nameKey: 'components.ammeter.name',
       description: '回路電流を計測（ほぼ0Ω）',
+      descriptionKey: 'components.ammeter.description',
       defaultProps: () => ({ resistance: 0.0005 })
     },
     voltmeter: {
       id: 'voltmeter',
       label: '電圧計',
+      labelKey: 'components.voltmeter.label',
+      nameKey: 'components.voltmeter.name',
       description: 'ノード間電位差を測定',
+      descriptionKey: 'components.voltmeter.description',
       defaultProps: () => ({ name: '' }),
       isProbe: true
     },
     wattmeter: {
       id: 'wattmeter',
       label: '電力計',
+      labelKey: 'components.wattmeter.label',
+      nameKey: 'components.wattmeter.name',
       description: 'ノード間電力を測定',
+      descriptionKey: 'components.wattmeter.description',
       defaultProps: () => ({ name: '' }),
       isProbe: true
     }
@@ -346,6 +376,16 @@
     const frequencyHz = clampFrequency(options.frequencyHz ?? 50, 50);
     const omega = 2 * Math.PI * frequencyHz;
     const isAC = mode === 'ac';
+    const text = typeof options.text === 'function'
+      ? options.text
+      : (key, fallback, params) => {
+        if (typeof fallback === 'function') {
+          try {
+            return fallback();
+          } catch {}
+        }
+        return fallback ?? '';
+      };
     const nodeIds = nodes.map(n => n.id);
     if (nodeIds.length === 0) {
       return {
@@ -353,7 +393,7 @@
         elementStats: {},
         branchCurrents: {},
         totals: { delivered: { re: 0, im: 0 }, dissipated: { re: 0, im: 0 } },
-        warnings: ['ノードがありません'],
+        warnings: [text('solver.warnings.noNodes', 'ノードがありません')],
         diagnostics: []
       };
     }
@@ -499,7 +539,7 @@
             }
           }
           if (maxAbs < 1e-9){
-            throw new Error('行列が特異なため解けません');
+            throw new Error(text('solver.errors.singular', '行列が特異なため解けません'));
           }
           if (pivot !== col){
             [A[col], A[pivot]] = [A[pivot], A[col]];
@@ -522,7 +562,7 @@
         }
         solution = b;
       } catch (err){
-        warnings.push(err.message || '回路の解が求まりませんでした');
+        warnings.push(err.message || text('solver.warnings.noSolution', '回路の解が求まりませんでした'));
         solution = Array(size).fill(0);
       }
     }
@@ -606,17 +646,17 @@
       if (id === groundId) return;
       if (!connectionCount[id]){
         const node = nodes.find(n => n.id === id);
-        diagnostics.push(`ノード「${node?.name || id}」は非導電要素により孤立しています`);
+        diagnostics.push(text('solver.diagnostics.isolatedNode', () => `ノード「${node?.name || id}」は非導電要素により孤立しています`, { node: node?.name || id }));
       }
     });
 
     if (!isAC){
       const hasCapacitor = elements.some(el => el?.type === 'capacitor');
       const hasInductor = elements.some(el => el?.type === 'inductor');
-      if (hasCapacitor) diagnostics.push('DC解析ではコンデンサが開放状態として扱われます');
-      if (hasInductor) diagnostics.push('DC解析ではインダクタはほぼ短絡として扱われます');
+      if (hasCapacitor) diagnostics.push(text('solver.diagnostics.dcCapacitor', 'DC解析ではコンデンサが開放状態として扱われます'));
+      if (hasInductor) diagnostics.push(text('solver.diagnostics.dcInductor', 'DC解析ではインダクタはほぼ短絡として扱われます'));
     } else if (frequencyHz === 0){
-      diagnostics.push('AC解析の周波数が0Hzのため、結果はDCと同一です');
+      diagnostics.push(text('solver.diagnostics.acZeroFrequency', 'AC解析の周波数が0Hzのため、結果はDCと同一です'));
     }
 
     return {
@@ -631,7 +671,7 @@
     };
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts = {}){
     if (!root) throw new Error('MiniExp Circuit Simulator requires a container');
 
     const state = {
@@ -677,6 +717,70 @@
     let applyTheme = () => {};
     const listeners = [];
 
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'circuit_simulator' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') {
+        try {
+          return fallback();
+        } catch {}
+      }
+      return fallback ?? '';
+    };
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => {
+        try {
+          render();
+        } catch {}
+      })
+      : null;
+    if (detachLocale) listeners.push(detachLocale);
+
+    const formatLocalizedNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try {
+          return localization.formatNumber(value, options);
+        } catch {}
+      }
+      try {
+        if (options && typeof Intl?.NumberFormat === 'function') {
+          const locale = localization?.getLocale?.() || undefined;
+          return new Intl.NumberFormat(locale, options).format(value);
+        }
+      } catch {}
+      return formatNumber(value, options?.digits ?? 3);
+    };
+
+    const getComponentLabel = (def) => {
+      if (!def) return '';
+      return text(def.labelKey || `components.${def.id}.label`, def.label);
+    };
+
+    const getComponentDefaultName = (def, index) => {
+      if (!def) return '';
+      const key = def.nameKey || def.labelKey || `components.${def.id}.name`;
+      return text(key, () => `${getComponentLabel(def)}${index}`, { index });
+    };
+
+    const getToolLabel = (toolId) => {
+      if (toolId === 'select') return text('tools.select', '選択・移動');
+      if (toolId === 'add-node') return text('tools.addNode', 'ノード追加');
+      const def = COMPONENT_TYPES[toolId];
+      if (def) return getComponentLabel(def) || toolId;
+      return toolId;
+    };
+
+    const getAnalysisModeLabel = (mode) => {
+      if (mode === 'ac') return text('analysis.mode.ac', 'AC解析');
+      return text('analysis.mode.dc', 'DC解析');
+    };
+
+    const getAutoNodeName = (index) => text('nodes.autoName', () => `ノード${index}`, { index });
+
     function getTheme(){
       return COLOR_THEMES[currentTheme] || COLOR_THEMES.light;
     }
@@ -693,18 +797,40 @@
       const positiveId = createId('node');
       const loadId = createId('node');
       state.nodes.push(
-        { id: positiveId, x: 280, y: 140, name: 'ノードA' },
-        { id: loadId, x: 520, y: 280, name: 'ノードB' },
-        { id: groundId, x: 280, y: 420, name: 'グラウンド' }
+        { id: positiveId, x: 280, y: 140, name: text('defaults.nodes.a', 'ノードA') },
+        { id: loadId, x: 520, y: 280, name: text('defaults.nodes.b', 'ノードB') },
+        { id: groundId, x: 280, y: 420, name: text('defaults.nodes.ground', 'グラウンド') }
       );
       state.groundNodeId = groundId;
       const powerId = createId('component');
       const resistorId = createId('component');
       const wireId = createId('component');
       state.elements.push(
-        { id: powerId, type: 'power', nodeA: positiveId, nodeB: groundId, voltage: 12, resistance: 0.5, name: '電源' },
-        { id: resistorId, type: 'resistor', nodeA: positiveId, nodeB: loadId, resistance: 120, name: 'R1' },
-        { id: wireId, type: 'wire', nodeA: loadId, nodeB: groundId, resistance: 0.001, name: 'ライン' }
+        {
+          id: powerId,
+          type: 'power',
+          nodeA: positiveId,
+          nodeB: groundId,
+          voltage: 12,
+          resistance: 0.5,
+          name: text('defaults.elements.power', () => getComponentLabel(COMPONENT_TYPES.power))
+        },
+        {
+          id: resistorId,
+          type: 'resistor',
+          nodeA: positiveId,
+          nodeB: loadId,
+          resistance: 120,
+          name: text('defaults.elements.resistor', () => `${getComponentLabel(COMPONENT_TYPES.resistor)}1`, { index: 1 })
+        },
+        {
+          id: wireId,
+          type: 'wire',
+          nodeA: loadId,
+          nodeB: groundId,
+          resistance: 0.001,
+          name: text('defaults.elements.wire', 'ライン')
+        }
       );
     }
 
@@ -733,13 +859,13 @@
     leftPanel.style.boxShadow = '0 12px 32px rgba(15,23,42,0.35)';
 
     const title = document.createElement('h2');
-    title.textContent = '電気回路シミュレータ';
+    title.textContent = text('title', '電気回路シミュレータ');
     title.style.margin = '0';
     title.style.fontSize = '22px';
     title.style.letterSpacing = '0.03em';
 
     const subtitle = document.createElement('div');
-    subtitle.textContent = '電源・受動素子・計器をつないでDC/AC回路をリアルタイム解析します。';
+    subtitle.textContent = text('subtitle', '電源・受動素子・計器をつないでDC/AC回路をリアルタイム解析します。');
     subtitle.style.fontSize = '13px';
     subtitle.style.opacity = '0.85';
 
@@ -749,7 +875,7 @@
     toolSection.style.gap = '8px';
 
     const toolHeader = document.createElement('div');
-    toolHeader.textContent = 'ツール';
+    toolHeader.textContent = text('tools.header', 'ツール');
     toolHeader.style.fontWeight = '700';
     toolHeader.style.fontSize = '14px';
 
@@ -778,16 +904,16 @@
       return btn;
     }
 
-    const selectBtn = makeToolButton('選択・移動', 'select');
+    const selectBtn = makeToolButton(getToolLabel('select'), 'select');
     selectBtn.style.gridColumn = '1 / -1';
-    const addNodeBtn = makeToolButton('ノード追加', 'add-node');
+    const addNodeBtn = makeToolButton(getToolLabel('add-node'), 'add-node');
     addNodeBtn.style.gridColumn = '1 / -1';
 
     toolGrid.appendChild(selectBtn);
     toolGrid.appendChild(addNodeBtn);
 
     Object.values(COMPONENT_TYPES).forEach(def => {
-      const btn = makeToolButton(def.label, def.id);
+      const btn = makeToolButton(getComponentLabel(def), def.id);
       toolGrid.appendChild(btn);
     });
 
@@ -802,7 +928,7 @@
     analysisBox.style.gap = '8px';
 
     const analysisHeader = document.createElement('div');
-    analysisHeader.textContent = '解析モード';
+    analysisHeader.textContent = text('analysis.header', '解析モード');
     analysisHeader.style.fontWeight = '700';
     analysisHeader.style.fontSize = '13px';
 
@@ -833,8 +959,8 @@
       return btn;
     }
 
-    const dcBtn = makeModeButton('DC解析', 'dc');
-    const acBtn = makeModeButton('AC解析', 'ac');
+    const dcBtn = makeModeButton(getAnalysisModeLabel('dc'), 'dc');
+    const acBtn = makeModeButton(getAnalysisModeLabel('ac'), 'ac');
     modeButtonWrap.appendChild(dcBtn);
     modeButtonWrap.appendChild(acBtn);
 
@@ -844,7 +970,7 @@
     freqWrapper.style.gap = '6px';
 
     const freqLabel = document.createElement('div');
-    freqLabel.textContent = '解析周波数 (Hz)';
+    freqLabel.textContent = text('analysis.frequency.label', '解析周波数 (Hz)');
 
     const freqInputs = document.createElement('div');
     freqInputs.style.display = 'grid';
@@ -889,7 +1015,7 @@
     freqInputs.appendChild(freqNumber);
 
     const freqHint = document.createElement('div');
-    freqHint.textContent = 'AC解析で有効。0Hz〜1MHzまで設定可能。';
+    freqHint.textContent = text('analysis.frequency.hintActive', 'AC解析で有効。0Hz〜1MHzまで設定可能。');
     freqHint.style.fontSize = '11px';
     freqHint.style.opacity = '0.8';
 
@@ -965,7 +1091,7 @@
     inspector.style.boxShadow = '0 12px 24px rgba(15,23,42,0.15)';
 
     const inspectorTitle = document.createElement('h3');
-    inspectorTitle.textContent = 'インスペクタ';
+    inspectorTitle.textContent = text('inspector.title', 'インスペクタ');
     inspectorTitle.style.margin = '0';
     inspectorTitle.style.fontSize = '18px';
     inspectorTitle.style.color = '#1f2937';
@@ -1114,7 +1240,7 @@
         const snappedX = Math.round(sx / GRID_SIZE) * GRID_SIZE;
         const snappedY = Math.round(sy / GRID_SIZE) * GRID_SIZE;
         const id = createId('node');
-        state.nodes.push({ id, x: snappedX, y: snappedY, name: `ノード${state.nodes.length + 1}` });
+        state.nodes.push({ id, x: snappedX, y: snappedY, name: getAutoNodeName(state.nodes.length + 1) });
         if (!state.groundNodeId){
           state.groundNodeId = id;
         }
@@ -1167,7 +1293,7 @@
           const def = COMPONENT_TYPES[type];
           const props = def.defaultProps ? def.defaultProps() : {};
           const id = createId('component');
-          const element = Object.assign({ id, type, nodeA: a, nodeB: b, name: `${def.label}${state.elements.length + 1}` }, props);
+          const element = Object.assign({ id, type, nodeA: a, nodeB: b, name: getComponentDefaultName(def, state.elements.length + 1) }, props);
           state.elements.push(element);
           state.pendingNodes = [];
           if (!def.isProbe){
@@ -1185,7 +1311,8 @@
     function updateSolution(){
       const result = solveCircuit(state.nodes, state.elements, state.groundNodeId, {
         mode: state.analysisMode,
-        frequencyHz: state.frequencyHz
+        frequencyHz: state.frequencyHz,
+        text
       });
       state.solution = result;
       state.warnings = result.warnings;
@@ -1214,6 +1341,35 @@
       }
     }
 
+    function updateLocalizedStaticTexts(){
+      title.textContent = text('title', '電気回路シミュレータ');
+      subtitle.textContent = text('subtitle', '電源・受動素子・計器をつないでDC/AC回路をリアルタイム解析します。');
+      toolHeader.textContent = text('tools.header', 'ツール');
+      analysisHeader.textContent = text('analysis.header', '解析モード');
+      freqLabel.textContent = text('analysis.frequency.label', '解析周波数 (Hz)');
+      inspectorTitle.textContent = text('inspector.title', 'インスペクタ');
+    }
+
+    function updateToolButtonLabels(){
+      toolButtons.forEach(btn => {
+        const toolId = btn.dataset.toolId;
+        if (!toolId) return;
+        if (COMPONENT_TYPES[toolId]) {
+          btn.textContent = getComponentLabel(COMPONENT_TYPES[toolId]);
+        } else {
+          btn.textContent = getToolLabel(toolId);
+        }
+      });
+    }
+
+    function updateModeButtonLabels(){
+      modeButtons.forEach(btn => {
+        const mode = btn.dataset.mode;
+        if (!mode) return;
+        btn.textContent = getAnalysisModeLabel(mode);
+      });
+    }
+
     function renderToolbarState(){
       const theme = getTheme();
       toolButtons.forEach(btn => {
@@ -1227,6 +1383,7 @@
 
     function renderAnalysisControls(){
       const theme = getTheme();
+      updateModeButtonLabels();
       modeButtons.forEach(btn => {
         const active = btn.dataset.mode === state.analysisMode;
         btn.style.border = active ? theme.toolButtonActiveBorder : theme.toolButtonBorder;
@@ -1244,8 +1401,8 @@
       freqLabel.style.opacity = isAC ? '1' : '0.6';
       freqHint.style.display = 'block';
       freqHint.textContent = isAC
-        ? 'AC解析で有効。0Hz〜1MHzまで設定可能。'
-        : 'AC解析を有効化すると周波数を調整できます。';
+        ? text('analysis.frequency.hintActive', 'AC解析で有効。0Hz〜1MHzまで設定可能。')
+        : text('analysis.frequency.hintInactive', 'AC解析を有効化すると周波数を調整できます。');
       freqSlider.value = String(state.frequencyHz);
       freqNumber.value = String(state.frequencyHz);
     }
@@ -1255,42 +1412,57 @@
 
       const analysisLine = document.createElement('div');
       if (state.analysisMode === 'ac'){
-        analysisLine.textContent = `解析モード: AC (${formatNumber(state.frequencyHz, 2)} Hz)`;
+        const freqText = formatNumber(state.frequencyHz, 2);
+        analysisLine.textContent = text('status.analysisMode.ac', () => `解析モード: ${getAnalysisModeLabel('ac')} (${freqText} Hz)`, {
+          frequency: freqText,
+          frequencyHz: state.frequencyHz
+        });
       } else {
-        analysisLine.textContent = '解析モード: DC';
+        analysisLine.textContent = text('status.analysisMode.dc', () => `解析モード: ${getAnalysisModeLabel('dc')}`);
       }
       statusBox.appendChild(analysisLine);
 
       if (state.analysisMode === 'ac' && state.frequencyHz > 0){
         const omegaLine = document.createElement('div');
-        omegaLine.textContent = `角周波数: ${formatNumber(state.frequencyHz * 2 * Math.PI, 2)} rad/s`;
+        const omegaValue = formatNumber(state.frequencyHz * 2 * Math.PI, 2);
+        omegaLine.textContent = text('status.angularFrequency', () => `角周波数: ${omegaValue} rad/s`, {
+          value: omegaValue,
+          radiansPerSecond: state.frequencyHz * 2 * Math.PI
+        });
         statusBox.appendChild(omegaLine);
       }
 
       const activeTool = state.pendingTool;
       const lineTool = document.createElement('div');
-      lineTool.textContent = `操作ツール: ${activeTool === 'select' ? '選択' : activeTool === 'add-node' ? 'ノード追加' : (COMPONENT_TYPES[activeTool]?.label || activeTool)}`;
+      const toolLabel = getToolLabel(activeTool);
+      lineTool.textContent = text('status.activeTool', () => `操作ツール: ${toolLabel}`, { tool: toolLabel, toolId: activeTool });
       statusBox.appendChild(lineTool);
 
       if (state.pendingNodes.length === 1){
         const node = state.nodes.find(n => n.id === state.pendingNodes[0]);
         if (node){
           const l = document.createElement('div');
-          l.textContent = `接続開始: ${node.name || node.id}`;
+          const nodeLabel = node.name || node.id;
+          l.textContent = text('status.connectionStart', () => `接続開始: ${nodeLabel}`, { node: nodeLabel });
           statusBox.appendChild(l);
         }
       }
 
       const groundNode = state.nodes.find(n => n.id === state.groundNodeId);
       const groundLine = document.createElement('div');
-      groundLine.textContent = `グラウンド: ${groundNode ? (groundNode.name || groundNode.id) : '未設定'}`;
+      if (groundNode){
+        const label = groundNode.name || groundNode.id;
+        groundLine.textContent = text('status.ground.set', () => `グラウンド: ${label}`, { node: label });
+      } else {
+        groundLine.textContent = text('status.ground.unset', 'グラウンド: 未設定');
+      }
       statusBox.appendChild(groundLine);
 
       if (state.warnings && state.warnings.length){
         const theme = getTheme();
         state.warnings.forEach(w => {
           const warn = document.createElement('div');
-          warn.textContent = `⚠ ${w}`;
+          warn.textContent = text('status.warningItem', () => `⚠ ${w}`, { message: w });
           warn.style.color = theme.statusWarning;
           statusBox.appendChild(warn);
         });
@@ -1298,13 +1470,13 @@
 
       if (state.diagnostics && state.diagnostics.length){
         const diagHeader = document.createElement('div');
-        diagHeader.textContent = '診断:';
+        diagHeader.textContent = text('status.diagnostics.header', '診断:');
         diagHeader.style.marginTop = '4px';
         diagHeader.style.fontWeight = '600';
         statusBox.appendChild(diagHeader);
         state.diagnostics.forEach(msg => {
           const line = document.createElement('div');
-          line.textContent = `・${msg}`;
+          line.textContent = text('status.diagnostics.item', () => `・${msg}`, { message: msg });
           statusBox.appendChild(line);
         });
       }
@@ -1315,23 +1487,26 @@
       const solution = state.solution;
       if (!solution){
         const msg = document.createElement('div');
-        msg.textContent = '解析待ちです';
+        msg.textContent = text('summary.pending', '解析待ちです');
         summaryBox.appendChild(msg);
         return;
       }
       const { totals, nodeVoltages, branchCurrents } = solution;
       const deliveredLine = document.createElement('div');
-      deliveredLine.textContent = `供給電力: ${formatPowerQuantity(totals.delivered, state.analysisMode, 2)}`;
+      const deliveredText = formatPowerQuantity(totals.delivered, state.analysisMode, 2);
+      deliveredLine.textContent = text('summary.powerDelivered', () => `供給電力: ${deliveredText}`, { value: deliveredText });
       summaryBox.appendChild(deliveredLine);
       const dissipatedLine = document.createElement('div');
-      dissipatedLine.textContent = `消費電力: ${formatPowerQuantity(totals.dissipated, state.analysisMode, 2)}`;
+      const dissipatedText = formatPowerQuantity(totals.dissipated, state.analysisMode, 2);
+      dissipatedLine.textContent = text('summary.powerDissipated', () => `消費電力: ${dissipatedText}`, { value: dissipatedText });
       summaryBox.appendChild(dissipatedLine);
 
       if (state.analysisMode === 'ac'){
         const deliveredApparent = complexAbs(totals.delivered || { re: 0, im: 0 });
         const pf = deliveredApparent > 0 ? (totals.delivered.re || 0) / deliveredApparent : 1;
         const pfLine = document.createElement('div');
-        pfLine.textContent = `力率: ${formatNumber(pf, 3)}`;
+        const pfValue = formatNumber(pf, 3);
+        pfLine.textContent = text('summary.powerFactor', () => `力率: ${pfValue}`, { value: pfValue });
         summaryBox.appendChild(pfLine);
       }
 
@@ -1349,7 +1524,12 @@
 
       if (maxVoltageNode){
         const maxLine = document.createElement('div');
-        maxLine.textContent = `最大ノード電位: ${(maxVoltageNode.name || maxVoltageNode.id)} = ${formatQuantity(nodeVoltages[maxVoltageNode.id], state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3)}`;
+        const nodeLabel = maxVoltageNode.name || maxVoltageNode.id;
+        const valueText = formatQuantity(nodeVoltages[maxVoltageNode.id], state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3);
+        maxLine.textContent = text('summary.maxNodeVoltage', () => `最大ノード電位: ${nodeLabel} = ${valueText}`, {
+          node: nodeLabel,
+          value: valueText
+        });
         summaryBox.appendChild(maxLine);
       }
 
@@ -1360,21 +1540,32 @@
           if (mag > peakCurrent) peakCurrent = mag;
         });
         const currentLine = document.createElement('div');
-        currentLine.textContent = `最大枝電流: ${formatNumber(peakCurrent, 3)} ${state.analysisMode === 'ac' ? 'Arms' : 'A'}`;
+        const currentValue = formatNumber(peakCurrent, 3);
+        const unit = state.analysisMode === 'ac' ? 'Arms' : 'A';
+        currentLine.textContent = text('summary.maxBranchCurrent', () => `最大枝電流: ${currentValue} ${unit}`, {
+          value: currentValue,
+          unit
+        });
         summaryBox.appendChild(currentLine);
       }
 
       const xpLine = document.createElement('div');
-      xpLine.textContent = `セッションXP: ${state.sessionXp}`;
+      const xpValue = formatLocalizedNumber(state.sessionXp, { maximumFractionDigits: 0 });
+      xpLine.textContent = text('summary.sessionXp', () => `セッションXP: ${xpValue}`, { value: xpValue });
       summaryBox.appendChild(xpLine);
       const voltList = document.createElement('div');
-      voltList.textContent = 'ノード電位:';
+      voltList.textContent = text('summary.nodeVoltagesHeader', 'ノード電位:');
       summaryBox.appendChild(voltList);
       state.nodes.forEach(node => {
         const value = nodeVoltages[node.id];
         if (value === undefined) return;
         const entry = document.createElement('div');
-        entry.textContent = `- ${(node.name || node.id)}: ${formatQuantity(value, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3)}`;
+        const nodeLabel = node.name || node.id;
+        const quantity = formatQuantity(value, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3);
+        entry.textContent = text('summary.nodeVoltageItem', () => `- ${nodeLabel}: ${quantity}`, {
+          node: nodeLabel,
+          value: quantity
+        });
         entry.style.paddingLeft = '8px';
         summaryBox.appendChild(entry);
       });
@@ -1389,6 +1580,11 @@
       const voltages = solution ? solution.nodeVoltages : {};
       const stats = solution ? solution.elementStats : {};
       const theme = getTheme();
+
+      const labelVoltageShort = text('canvas.labels.voltage', 'V');
+      const labelCurrentShort = text('canvas.labels.current', 'I');
+      const labelPowerShort = text('canvas.labels.power', 'P');
+      const labelReactiveShort = text('canvas.labels.reactivePower', 'Q');
 
       state.elements.forEach(el => {
         const nodeA = state.nodes.find(n => n.id === el.nodeA);
@@ -1443,39 +1639,41 @@
         label.setAttribute('font-family', '"Noto Sans JP", sans-serif');
         label.setAttribute('fill', theme.nodeLabel);
         const stat = stats[el.id] || { voltage: 0, current: 0, power: 0 };
+        const def = COMPONENT_TYPES[el.type];
+        const displayName = el.name || getComponentLabel(def) || el.type;
         let line1 = '';
         if (el.type === 'resistor' || el.type === 'wire' || el.type === 'ammeter'){
-          line1 = `${el.name || el.type}  ${formatNumber(el.resistance ?? 0, 2)}Ω`;
+          line1 = `${displayName}  ${formatNumber(el.resistance ?? 0, 2)}Ω`;
         } else if (el.type === 'power'){
-          line1 = `${el.name || '電源'}  ${formatNumber(el.voltage ?? 0, 2)}V`;
+          line1 = `${displayName}  ${formatNumber(el.voltage ?? 0, 2)}V`;
         } else if (el.type === 'ac_source'){
           const amplitude = formatNumber(el.amplitude ?? 0, 2);
           const phase = formatNumber(clampPhase(el.phase ?? 0, 0), 1);
-          line1 = `${el.name || 'AC電源'}  ${amplitude}Vrms ∠${phase}°`;
+          line1 = `${displayName}  ${amplitude}Vrms ∠${phase}°`;
         } else if (el.type === 'capacitor'){
-          line1 = `${el.name || 'コンデンサ'}  ${formatNumber(el.capacitance ?? 0, 2)}F`;
+          line1 = `${displayName}  ${formatNumber(el.capacitance ?? 0, 2)}F`;
         } else if (el.type === 'inductor'){
-          line1 = `${el.name || 'インダクタ'}  ${formatNumber(el.inductance ?? 0, 2)}H`;
+          line1 = `${displayName}  ${formatNumber(el.inductance ?? 0, 2)}H`;
         } else if (el.type === 'current_source'){
           const amplitude = formatNumber(el.current ?? 0, 2);
           let phaseText = '';
           if (state.analysisMode === 'ac'){
             phaseText = ` ∠${formatNumber(clampPhase(el.phase ?? 0, 0), 1)}°`;
           }
-          line1 = `${el.name || '電流源'}  ${amplitude}A${phaseText}`;
+          line1 = `${displayName}  ${amplitude}A${phaseText}`;
         } else if (el.type === 'voltmeter'){
-          line1 = `${el.name || '電圧計'}`;
+          line1 = `${displayName}`;
         } else if (el.type === 'wattmeter'){
-          line1 = `${el.name || '電力計'}`;
+          line1 = `${displayName}`;
         }
         const voltageUnit = state.analysisMode === 'ac' ? 'Vrms' : 'V';
         const currentUnit = state.analysisMode === 'ac' ? 'Arms' : 'A';
-        const line2 = `V:${formatQuantity(stat.voltage, voltageUnit, state.analysisMode, 2)}  I:${formatQuantity(stat.current, currentUnit, state.analysisMode, 2)}`;
+        const line2 = `${labelVoltageShort}:${formatQuantity(stat.voltage, voltageUnit, state.analysisMode, 2)}  ${labelCurrentShort}:${formatQuantity(stat.current, currentUnit, state.analysisMode, 2)}`;
         const realPower = isComplex(stat.power) ? stat.power.re : (stat.power ?? 0);
         const reactivePower = isComplex(stat.power) ? stat.power.im : 0;
-        let line3 = `P:${formatNumber(realPower, 2)}W`;
+        let line3 = `${labelPowerShort}:${formatNumber(realPower, 2)}W`;
         if (state.analysisMode === 'ac'){
-          line3 = `P:${formatNumber(realPower, 2)}W  Q:${formatNumber(reactivePower, 2)}var`;
+          line3 = `${labelPowerShort}:${formatNumber(realPower, 2)}W  ${labelReactiveShort}:${formatNumber(reactivePower, 2)}var`;
         }
 
         const textLine1 = document.createElementNS(SVG_NS, 'tspan');
@@ -1578,7 +1776,7 @@
       const theme = getTheme();
       if (!state.selected){
         const msg = document.createElement('div');
-        msg.textContent = 'ノードまたはコンポーネントを選択してください。';
+        msg.textContent = text('inspector.prompt', 'ノードまたはコンポーネントを選択してください。');
         msg.style.color = theme.inspectorMuted;
         inspectorBody.appendChild(msg);
         return;
@@ -1587,17 +1785,17 @@
       if (state.selected.type === 'node'){
         const node = state.nodes.find(n => n.id === state.selected.id);
         if (!node){
-          inspectorBody.textContent = 'ノードが見つかりません';
+          inspectorBody.textContent = text('inspector.node.notFound', 'ノードが見つかりません');
           return;
         }
         const title = document.createElement('div');
-        title.textContent = `ノード: ${node.name || node.id}`;
+        title.textContent = text('inspector.node.title', () => `ノード: ${node.name || node.id}`, { node: node.name || node.id });
         title.style.fontWeight = '700';
         title.style.color = theme.inspectorText;
         inspectorBody.appendChild(title);
 
         const nameLabel = document.createElement('label');
-        nameLabel.textContent = '名称';
+        nameLabel.textContent = text('inspector.fields.name', '名称');
         nameLabel.style.display = 'flex';
         nameLabel.style.flexDirection = 'column';
         nameLabel.style.gap = '6px';
@@ -1619,12 +1817,13 @@
 
         const voltageValue = state.solution?.nodeVoltages?.[node.id];
         const voltageLine = document.createElement('div');
-        voltageLine.textContent = `電位: ${formatQuantity(voltageValue || { re: 0, im: 0 }, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3)}`;
+        const voltageText = formatQuantity(voltageValue || { re: 0, im: 0 }, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3);
+        voltageLine.textContent = text('inspector.node.potential', () => `電位: ${voltageText}`, { value: voltageText });
         voltageLine.style.color = theme.inspectorMuted;
         inspectorBody.appendChild(voltageLine);
 
         const groundBtn = document.createElement('button');
-        groundBtn.textContent = 'このノードをグラウンドに設定';
+        groundBtn.textContent = text('inspector.node.setGround', 'このノードをグラウンドに設定');
         groundBtn.style.padding = '8px';
         groundBtn.style.borderRadius = '8px';
         groundBtn.style.border = `1px solid ${theme.primaryButtonBorder}`;
@@ -1639,7 +1838,7 @@
         inspectorBody.appendChild(groundBtn);
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'ノード削除';
+        deleteBtn.textContent = text('inspector.node.delete', 'ノード削除');
         deleteBtn.style.padding = '8px';
         deleteBtn.style.borderRadius = '8px';
         deleteBtn.style.border = `1px solid ${theme.dangerButtonBorder}`;
@@ -1647,7 +1846,8 @@
         deleteBtn.style.color = theme.dangerButtonText;
         deleteBtn.style.cursor = 'pointer';
         deleteBtn.addEventListener('click', () => {
-          if (confirm('このノードと接続部品を削除しますか？')){
+          const confirmText = text('inspector.node.deleteConfirm', 'このノードと接続部品を削除しますか？');
+          if (confirm(confirmText)){
             deleteNode(node.id);
             state.selected = null;
             render();
@@ -1660,21 +1860,23 @@
       if (state.selected.type === 'element'){
         const element = state.elements.find(el => el.id === state.selected.id);
         if (!element){
-          inspectorBody.textContent = 'コンポーネントが見つかりません';
+          inspectorBody.textContent = text('inspector.element.notFound', 'コンポーネントが見つかりません');
           return;
         }
         const stat = state.solution?.elementStats?.[element.id] || { voltage: 0, current: 0, power: 0 };
         const nodeA = state.nodes.find(n => n.id === element.nodeA);
         const nodeB = state.nodes.find(n => n.id === element.nodeB);
+        const def = COMPONENT_TYPES[element.type];
+        const componentLabel = getComponentLabel(def) || element.type;
 
         const header = document.createElement('div');
-        header.textContent = `${COMPONENT_TYPES[element.type]?.label || element.type}`;
+        header.textContent = text('inspector.element.title', () => `${componentLabel}`, { component: componentLabel });
         header.style.fontWeight = '700';
         header.style.color = theme.inspectorText;
         inspectorBody.appendChild(header);
 
         const nameLabel = document.createElement('label');
-        nameLabel.textContent = '名称';
+        nameLabel.textContent = text('inspector.fields.name', '名称');
         nameLabel.style.display = 'flex';
         nameLabel.style.flexDirection = 'column';
         nameLabel.style.gap = '6px';
@@ -1696,7 +1898,7 @@
 
         if (element.type === 'resistor' || element.type === 'wire' || element.type === 'ammeter'){
           const resLabel = document.createElement('label');
-          resLabel.textContent = '抵抗 (Ω)';
+          resLabel.textContent = text('inspector.fields.resistance', '抵抗 (Ω)');
           resLabel.style.display = 'flex';
           resLabel.style.flexDirection = 'column';
           resLabel.style.gap = '6px';
@@ -1721,7 +1923,7 @@
 
         if (element.type === 'power'){
           const voltLabel = document.createElement('label');
-          voltLabel.textContent = '電圧 (V)';
+          voltLabel.textContent = text('inspector.fields.voltage', '電圧 (V)');
           voltLabel.style.display = 'flex';
           voltLabel.style.flexDirection = 'column';
           voltLabel.style.gap = '6px';
@@ -1744,7 +1946,7 @@
           inspectorBody.appendChild(voltLabel);
 
           const resLabel = document.createElement('label');
-          resLabel.textContent = '内部抵抗 (Ω)';
+          resLabel.textContent = text('inspector.fields.internalResistance', '内部抵抗 (Ω)');
           resLabel.style.display = 'flex';
           resLabel.style.flexDirection = 'column';
           resLabel.style.gap = '6px';
@@ -1769,7 +1971,7 @@
 
         if (element.type === 'ac_source'){
           const ampLabel = document.createElement('label');
-          ampLabel.textContent = '電圧（RMS, V）';
+          ampLabel.textContent = text('inspector.fields.acVoltage', '電圧（RMS, V）');
           ampLabel.style.display = 'flex';
           ampLabel.style.flexDirection = 'column';
           ampLabel.style.gap = '6px';
@@ -1793,7 +1995,7 @@
           inspectorBody.appendChild(ampLabel);
 
           const phaseLabel = document.createElement('label');
-          phaseLabel.textContent = '位相 (°)';
+          phaseLabel.textContent = text('inspector.fields.phase', '位相 (°)');
           phaseLabel.style.display = 'flex';
           phaseLabel.style.flexDirection = 'column';
           phaseLabel.style.gap = '6px';
@@ -1816,7 +2018,7 @@
           inspectorBody.appendChild(phaseLabel);
 
           const resLabel = document.createElement('label');
-          resLabel.textContent = '内部抵抗 (Ω)';
+          resLabel.textContent = text('inspector.fields.internalResistance', '内部抵抗 (Ω)');
           resLabel.style.display = 'flex';
           resLabel.style.flexDirection = 'column';
           resLabel.style.gap = '6px';
@@ -1841,7 +2043,7 @@
 
         if (element.type === 'capacitor'){
           const capLabel = document.createElement('label');
-          capLabel.textContent = '容量 (F)';
+          capLabel.textContent = text('inspector.fields.capacitance', '容量 (F)');
           capLabel.style.display = 'flex';
           capLabel.style.flexDirection = 'column';
           capLabel.style.gap = '6px';
@@ -1869,9 +2071,10 @@
             const capacitance = clampCapacitance(element.capacitance ?? 1e-6, 1e-6);
             const reactance = -1 / (omega * capacitance);
             const reactLine = document.createElement('div');
+            const reactText = formatNumber(reactance, 3);
             reactLine.textContent = Number.isFinite(reactance)
-              ? `リアクタンス Xc: ${formatNumber(reactance, 3)} Ω`
-              : 'リアクタンス Xc: ∞ Ω';
+              ? text('inspector.reactive.capacitor', () => `リアクタンス Xc: ${reactText} Ω`, { value: reactText })
+              : text('inspector.reactive.capacitorInfinite', 'リアクタンス Xc: ∞ Ω');
             reactLine.style.color = theme.inspectorMuted;
             inspectorBody.appendChild(reactLine);
           }
@@ -1879,7 +2082,7 @@
 
         if (element.type === 'inductor'){
           const indLabel = document.createElement('label');
-          indLabel.textContent = 'インダクタンス (H)';
+          indLabel.textContent = text('inspector.fields.inductance', 'インダクタンス (H)');
           indLabel.style.display = 'flex';
           indLabel.style.flexDirection = 'column';
           indLabel.style.gap = '6px';
@@ -1907,9 +2110,10 @@
             const inductance = clampInductance(element.inductance ?? 1e-3, 1e-3);
             const reactance = omega * inductance;
             const reactLine = document.createElement('div');
+            const reactText = formatNumber(reactance, 3);
             reactLine.textContent = Number.isFinite(reactance)
-              ? `リアクタンス Xl: ${formatNumber(reactance, 3)} Ω`
-              : 'リアクタンス Xl: —';
+              ? text('inspector.reactive.inductor', () => `リアクタンス Xl: ${reactText} Ω`, { value: reactText })
+              : text('inspector.reactive.inductorInfinite', 'リアクタンス Xl: —');
             reactLine.style.color = theme.inspectorMuted;
             inspectorBody.appendChild(reactLine);
           }
@@ -1917,7 +2121,7 @@
 
         if (element.type === 'current_source'){
           const curLabel = document.createElement('label');
-          curLabel.textContent = '電流 (A)';
+          curLabel.textContent = text('inspector.fields.current', '電流 (A)');
           curLabel.style.display = 'flex';
           curLabel.style.flexDirection = 'column';
           curLabel.style.gap = '6px';
@@ -1941,7 +2145,7 @@
 
           if (state.analysisMode === 'ac'){
             const phaseLabel = document.createElement('label');
-            phaseLabel.textContent = '位相 (°)';
+            phaseLabel.textContent = text('inspector.fields.phase', '位相 (°)');
             phaseLabel.style.display = 'flex';
             phaseLabel.style.flexDirection = 'column';
             phaseLabel.style.gap = '6px';
@@ -1967,30 +2171,44 @@
 
         if (element.type === 'voltmeter' || element.type === 'wattmeter'){
           const note = document.createElement('div');
-          note.textContent = '計器は回路には影響しません。ノード間の実測値を表示します。';
+          note.textContent = text('inspector.meterNote', '計器は回路には影響しません。ノード間の実測値を表示します。');
           note.style.fontSize = '12px';
           note.style.color = theme.inspectorMuted;
           inspectorBody.appendChild(note);
         }
 
         const nodesLine = document.createElement('div');
-        nodesLine.textContent = `接続: ${(nodeA?.name || element.nodeA)} ↔ ${(nodeB?.name || element.nodeB)}`;
+        const nodeALabel = nodeA?.name || element.nodeA;
+        const nodeBLabel = nodeB?.name || element.nodeB;
+        nodesLine.textContent = text('inspector.connection', () => `接続: ${nodeALabel} ↔ ${nodeBLabel}`, { nodeA: nodeALabel, nodeB: nodeBLabel });
         nodesLine.style.color = theme.inspectorMuted;
         inspectorBody.appendChild(nodesLine);
 
         const statsList = document.createElement('div');
+        statsList.style.color = theme.inspectorText;
         const voltageText = formatQuantity(stat.voltage, state.analysisMode === 'ac' ? 'Vrms' : 'V', state.analysisMode, 3);
         const currentText = formatQuantity(stat.current, state.analysisMode === 'ac' ? 'Arms' : 'A', state.analysisMode, 3);
         const powerText = formatPowerQuantity(stat.power, state.analysisMode, 3);
-        statsList.innerHTML = `電圧: <strong>${voltageText}</strong><br>電流: <strong>${currentText}</strong><br>電力: <strong>${powerText}</strong>`;
-        statsList.style.color = theme.inspectorText;
-        statsList.querySelectorAll('strong').forEach(strong => {
-          strong.style.color = theme.primaryButtonBorder;
+        const statsEntries = [
+          { key: 'inspector.stats.voltage', fallback: '電圧', value: voltageText },
+          { key: 'inspector.stats.current', fallback: '電流', value: currentText },
+          { key: 'inspector.stats.power', fallback: '電力', value: powerText }
+        ];
+        statsEntries.forEach(({ key, fallback, value }) => {
+          const row = document.createElement('div');
+          const labelSpan = document.createElement('span');
+          labelSpan.textContent = `${text(key, fallback)}: `;
+          const valueStrong = document.createElement('strong');
+          valueStrong.textContent = value;
+          valueStrong.style.color = theme.primaryButtonBorder;
+          row.appendChild(labelSpan);
+          row.appendChild(valueStrong);
+          statsList.appendChild(row);
         });
         inspectorBody.appendChild(statsList);
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'コンポーネント削除';
+        deleteBtn.textContent = text('inspector.element.delete', 'コンポーネント削除');
         deleteBtn.style.padding = '8px';
         deleteBtn.style.borderRadius = '8px';
         deleteBtn.style.border = `1px solid ${theme.dangerButtonBorder}`;
@@ -1998,7 +2216,8 @@
         deleteBtn.style.color = theme.dangerButtonText;
         deleteBtn.style.cursor = 'pointer';
         deleteBtn.addEventListener('click', () => {
-          if (confirm('このコンポーネントを削除しますか？')){
+          const confirmText = text('inspector.element.deleteConfirm', 'このコンポーネントを削除しますか？');
+          if (confirm(confirmText)){
             deleteElement(element.id);
             state.selected = null;
             render();
@@ -2009,6 +2228,8 @@
     }
 
     function render(){
+      updateLocalizedStaticTexts();
+      updateToolButtonLabels();
       renderToolbarState();
       renderAnalysisControls();
       renderStatus();

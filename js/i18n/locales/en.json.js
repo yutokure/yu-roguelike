@@ -13549,6 +13549,53 @@
       }
     },
     "games": {
+      "todoList": {
+        "defaults": {
+          "untitled": "Untitled"
+        },
+        "header": {
+          "title": "To-Do List",
+          "today": "Today · {date}",
+          "stats": "Pending: {pending} / Completed: {completed}"
+        },
+        "form": {
+          "titleCreate": "Add New To-Do",
+          "titleEdit": "Edit To-Do",
+          "name": "Name",
+          "namePlaceholder": "e.g., Send daily report",
+          "xp": "EXP Reward",
+          "color": "Color",
+          "memo": "Notes",
+          "memoPlaceholder": "Add notes or checkpoints",
+          "submitCreate": "Add",
+          "submitUpdate": "Update",
+          "cancel": "Cancel"
+        },
+        "sections": {
+          "pending": "Pending Tasks",
+          "completed": "Completed Tasks",
+          "emptyPending": "No pending to-dos.",
+          "emptyCompleted": "No completed to-dos yet."
+        },
+        "task": {
+          "xpChip": "{xp} EXP",
+          "memoEmpty": "No notes",
+          "createdAt": "Created: {date}",
+          "completedAt": "Completed: {date}",
+          "statusCompleted": "Success",
+          "statusFailed": "Failed",
+          "actions": {
+            "complete": "Complete",
+            "fail": "Fail",
+            "edit": "Edit",
+            "delete": "Delete"
+          }
+        },
+        "dialogs": {
+          "confirmDelete": "Delete this to-do?",
+          "requireName": "Enter a name."
+        }
+      },
       "notepad": {
         "defaultFileName": "Untitled.txt",
         "confirm": {

@@ -22,7 +22,8 @@
     return value.slice(0, MAX_MEMO);
   }
 
-  function loadPersistentState(){
+  function loadPersistentState(defaultName = '名称未設定'){
+    const fallbackName = typeof defaultName === 'string' && defaultName.trim() ? defaultName : '名称未設定';
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
@@ -31,7 +32,7 @@
       return parsed.map(item => {
         if (!item || typeof item !== 'object') return null;
         const id = typeof item.id === 'string' && item.id ? item.id : `todo_${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
-        const name = sanitizeString(item.name || '', '').slice(0, MAX_NAME).trim() || '名称未設定';
+        const name = sanitizeString(item.name || '', '').slice(0, MAX_NAME).trim() || fallbackName;
         const memo = sanitizeString(item.memo || '', '');
         const xp = clampXp(item.xp);
         const color = sanitizeColor(item.color);
@@ -51,20 +52,88 @@
     } catch {}
   }
 
-  function formatDate(ts){
-    if (!ts) return '-';
+  function formatDate(ts, i18n, options){
+    if (ts === null || ts === undefined) return '-';
     try {
-      return new Date(ts).toLocaleString();
+      const date = ts instanceof Date ? ts : new Date(ts);
+      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '-';
+      if (i18n && typeof i18n.formatDate === 'function'){
+        try {
+          return i18n.formatDate(date, options);
+        } catch {}
+      }
+      if (options && typeof date.toLocaleString === 'function'){
+        return date.toLocaleString(undefined, options);
+      }
+      return date.toLocaleString();
     } catch {
-      return new Date(ts).toISOString();
+      try {
+        return new Date(ts).toISOString();
+      } catch {
+        return '-';
+      }
     }
   }
 
   function create(root, awardXp){
     if (!root) throw new Error('MiniExp ToDo requires a container');
 
+    const i18n = typeof window !== 'undefined' ? window.I18n : null;
+
+    const applyParams = (value, params) => {
+      if (!params || typeof value !== 'string') return value;
+      return value.replace(/\{([^{}]+)\}/g, (match, token) => {
+        const key = token.trim();
+        if (!key) return match;
+        const paramValue = params[key];
+        return paramValue === undefined || paramValue === null ? match : String(paramValue);
+      });
+    };
+
+    const translate = (key, fallback, params) => {
+      if (key && typeof i18n?.t === 'function') {
+        try {
+          const value = i18n.t(key, params);
+          if (typeof value === 'string' && value !== key) return value;
+          if (value !== undefined && value !== null && value !== key) return value;
+        } catch {}
+      }
+      let result = fallback;
+      if (typeof fallback === 'function') {
+        try {
+          result = fallback();
+        } catch {
+          result = '';
+        }
+      }
+      if (result === undefined || result === null) {
+        if (typeof key === 'string') return key;
+        return '';
+      }
+      if (typeof result === 'string') {
+        return applyParams(result, params);
+      }
+      return result;
+    };
+
+    const formatNumber = (value, options) => {
+      if (typeof i18n?.formatNumber === 'function') {
+        try {
+          return i18n.formatNumber(value, options);
+        } catch {}
+      }
+      try {
+        return new Intl.NumberFormat(undefined, options).format(value);
+      } catch {}
+      return String(value);
+    };
+
+    const defaultTaskName = translate('games.todoList.defaults.untitled', '名称未設定');
+    const dateTimeOptions = { dateStyle: 'medium', timeStyle: 'short' };
+    const headerDateOptions = { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' };
+
     const state = {
-      tasks: loadPersistentState(),
+      tasks: loadPersistentState(defaultTaskName),
       editingTaskId: null,
       sessionXp: 0
     };
@@ -73,15 +142,9 @@
       completed: false
     };
 
-    const today = (() => {
-      try {
-        return new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' });
-      } catch {
-        return new Date().toDateString();
-      }
-    })();
-
     let isRunning = false;
+
+    let localeUnsubscribe = null;
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -107,13 +170,11 @@
     titleWrap.style.gap = '4px';
 
     const title = document.createElement('h2');
-    title.textContent = 'ToDoリスト';
     title.style.margin = '0';
     title.style.fontSize = '24px';
     title.style.color = '#111827';
 
     const subtitle = document.createElement('div');
-    subtitle.textContent = today;
     subtitle.style.fontSize = '14px';
     subtitle.style.color = '#6b7280';
 
@@ -139,37 +200,40 @@
     formCard.style.boxShadow = '0 8px 24px rgba(15,23,42,0.08)';
 
     const formTitle = document.createElement('h3');
-    formTitle.textContent = '新規ToDoを登録';
     formTitle.style.gridColumn = '1 / -1';
     formTitle.style.margin = '0';
     formTitle.style.fontSize = '18px';
     formTitle.style.color = '#1f2937';
 
     const nameLabel = document.createElement('label');
-    nameLabel.textContent = '名前';
     nameLabel.style.display = 'flex';
     nameLabel.style.flexDirection = 'column';
     nameLabel.style.fontSize = '14px';
     nameLabel.style.color = '#374151';
 
+    const nameLabelText = document.createElement('span');
+    nameLabelText.style.fontWeight = '600';
+
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.required = true;
     nameInput.maxLength = MAX_NAME;
-    nameInput.placeholder = '例: 日次レポートを送信';
     nameInput.style.marginTop = '4px';
     nameInput.style.padding = '10px 12px';
     nameInput.style.borderRadius = '8px';
     nameInput.style.border = '1px solid #cbd5f5';
     nameInput.style.fontSize = '14px';
+    nameLabel.appendChild(nameLabelText);
     nameLabel.appendChild(nameInput);
 
     const xpLabel = document.createElement('label');
-    xpLabel.textContent = '獲得EXP';
     xpLabel.style.display = 'flex';
     xpLabel.style.flexDirection = 'column';
     xpLabel.style.fontSize = '14px';
     xpLabel.style.color = '#374151';
+
+    const xpLabelText = document.createElement('span');
+    xpLabelText.style.fontWeight = '600';
 
     const xpInput = document.createElement('input');
     xpInput.type = 'number';
@@ -183,14 +247,17 @@
     xpInput.style.borderRadius = '8px';
     xpInput.style.border = '1px solid #cbd5f5';
     xpInput.style.fontSize = '14px';
+    xpLabel.appendChild(xpLabelText);
     xpLabel.appendChild(xpInput);
 
     const colorLabel = document.createElement('label');
-    colorLabel.textContent = 'カラー';
     colorLabel.style.display = 'flex';
     colorLabel.style.flexDirection = 'column';
     colorLabel.style.fontSize = '14px';
     colorLabel.style.color = '#374151';
+
+    const colorLabelText = document.createElement('span');
+    colorLabelText.style.fontWeight = '600';
 
     const colorInput = document.createElement('input');
     colorInput.type = 'color';
@@ -199,26 +266,29 @@
     colorInput.style.height = '42px';
     colorInput.style.border = '1px solid #cbd5f5';
     colorInput.style.borderRadius = '8px';
+    colorLabel.appendChild(colorLabelText);
     colorLabel.appendChild(colorInput);
 
     const memoLabel = document.createElement('label');
-    memoLabel.textContent = 'メモ';
     memoLabel.style.display = 'flex';
     memoLabel.style.flexDirection = 'column';
     memoLabel.style.fontSize = '14px';
     memoLabel.style.color = '#374151';
     memoLabel.style.gridColumn = '1 / -1';
 
+    const memoLabelText = document.createElement('span');
+    memoLabelText.style.fontWeight = '600';
+
     const memoInput = document.createElement('textarea');
     memoInput.maxLength = MAX_MEMO;
     memoInput.rows = 3;
-    memoInput.placeholder = '補足情報やチェックポイントなどを入力';
     memoInput.style.marginTop = '4px';
     memoInput.style.padding = '10px 12px';
     memoInput.style.borderRadius = '8px';
     memoInput.style.border = '1px solid #cbd5f5';
     memoInput.style.fontSize = '14px';
     memoInput.style.resize = 'vertical';
+    memoLabel.appendChild(memoLabelText);
     memoLabel.appendChild(memoInput);
 
     const buttonRow = document.createElement('div');
@@ -229,7 +299,6 @@
 
     const submitBtn = document.createElement('button');
     submitBtn.type = 'submit';
-    submitBtn.textContent = '追加';
     submitBtn.style.padding = '10px 18px';
     submitBtn.style.borderRadius = '999px';
     submitBtn.style.border = 'none';
@@ -240,7 +309,6 @@
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.textContent = 'キャンセル';
     cancelBtn.style.padding = '10px 18px';
     cancelBtn.style.borderRadius = '999px';
     cancelBtn.style.border = '1px solid #cbd5f5';
@@ -267,7 +335,6 @@
 
     const pendingSection = document.createElement('section');
     const pendingTitle = document.createElement('h3');
-    pendingTitle.textContent = '未完了タスク';
     pendingTitle.style.margin = '0';
     pendingTitle.style.fontSize = '18px';
     pendingTitle.style.color = '#b91c1c';
@@ -282,7 +349,6 @@
 
     const completedSection = document.createElement('section');
     const completedTitle = document.createElement('h3');
-    completedTitle.textContent = '完了済みタスク';
     completedTitle.style.margin = '0';
     completedTitle.style.fontSize = '18px';
     completedTitle.style.color = '#6b7280';
@@ -295,8 +361,8 @@
     completedSection.appendChild(completedTitle);
     completedSection.appendChild(completedList);
 
-    const updatePendingVisibility = makeCollapsibleSection(pendingTitle, pendingList, 'pending');
-    const updateCompletedVisibility = makeCollapsibleSection(completedTitle, completedList, 'completed');
+    const pendingSectionControls = makeCollapsibleSection(pendingTitle, pendingList, 'pending');
+    const completedSectionControls = makeCollapsibleSection(completedTitle, completedList, 'completed');
 
     listsWrap.appendChild(pendingSection);
     listsWrap.appendChild(completedSection);
@@ -307,10 +373,19 @@
 
     root.appendChild(wrapper);
 
+    function setFormMode(mode){
+      if (mode === 'edit'){
+        formTitle.textContent = translate('games.todoList.form.titleEdit', 'ToDoを編集');
+        submitBtn.textContent = translate('games.todoList.form.submitUpdate', '更新');
+      } else {
+        formTitle.textContent = translate('games.todoList.form.titleCreate', '新規ToDoを登録');
+        submitBtn.textContent = translate('games.todoList.form.submitCreate', '追加');
+      }
+    }
+
     function resetForm(){
       state.editingTaskId = null;
-      formTitle.textContent = '新規ToDoを登録';
-      submitBtn.textContent = '追加';
+      setFormMode('create');
       nameInput.value = '';
       xpInput.value = '25';
       colorInput.value = '#f97316';
@@ -319,8 +394,7 @@
 
     function fillForm(task){
       state.editingTaskId = task.id;
-      formTitle.textContent = 'ToDoを編集';
-      submitBtn.textContent = '更新';
+      setFormMode('edit');
       nameInput.value = task.name;
       xpInput.value = String(task.xp);
       colorInput.value = task.color;
@@ -334,7 +408,10 @@
     function updateStats(){
       const pendingCount = state.tasks.filter(t => t.status === 'pending').length;
       const completedCount = state.tasks.filter(t => t.status !== 'pending').length;
-      stats.textContent = `未完了: ${pendingCount}件 / 完了: ${completedCount}件`;
+      stats.textContent = translate('games.todoList.header.stats', '未完了: {pending}件 / 完了: {completed}件', {
+        pending: formatNumber(pendingCount, { maximumFractionDigits: 0 }),
+        completed: formatNumber(completedCount, { maximumFractionDigits: 0 })
+      });
     }
 
     function renderLists(){
@@ -345,7 +422,7 @@
 
       if (pending.length === 0){
         const empty = document.createElement('div');
-        empty.textContent = '未完了のToDoはありません。';
+        empty.textContent = translate('games.todoList.sections.emptyPending', '未完了のToDoはありません。');
         empty.style.color = '#9ca3af';
         empty.style.fontSize = '14px';
         pendingList.appendChild(empty);
@@ -355,7 +432,7 @@
 
       if (done.length === 0){
         const empty = document.createElement('div');
-        empty.textContent = '完了したToDoはまだありません。';
+        empty.textContent = translate('games.todoList.sections.emptyCompleted', '完了したToDoはまだありません。');
         empty.style.color = '#9ca3af';
         empty.style.fontSize = '14px';
         completedList.appendChild(empty);
@@ -363,12 +440,46 @@
         done.forEach(task => completedList.appendChild(renderTaskCard(task)));
       }
 
-      updatePendingVisibility();
-      updateCompletedVisibility();
+      pendingSectionControls.update();
+      completedSectionControls.update();
+    }
+
+    function applyTranslations(includeDynamic = false){
+      title.textContent = translate('games.todoList.header.title', 'ToDoリスト');
+      const headerDateText = (() => {
+        const now = Date.now();
+        const formatted = formatDate(now, i18n, headerDateOptions);
+        if (formatted && formatted !== '-') return formatted;
+        try {
+          return new Date(now).toLocaleDateString(undefined, headerDateOptions);
+        } catch {
+          return new Date(now).toDateString();
+        }
+      })();
+      subtitle.textContent = translate('games.todoList.header.today', () => headerDateText, { date: headerDateText });
+
+      nameLabelText.textContent = translate('games.todoList.form.name', '名前');
+      nameInput.placeholder = translate('games.todoList.form.namePlaceholder', '例: 日次レポートを送信');
+
+      xpLabelText.textContent = translate('games.todoList.form.xp', '獲得EXP');
+      colorLabelText.textContent = translate('games.todoList.form.color', 'カラー');
+      memoLabelText.textContent = translate('games.todoList.form.memo', 'メモ');
+      memoInput.placeholder = translate('games.todoList.form.memoPlaceholder', '補足情報やチェックポイントなどを入力');
+
+      cancelBtn.textContent = translate('games.todoList.form.cancel', 'キャンセル');
+
+      pendingSectionControls.setLabel(translate('games.todoList.sections.pending', '未完了タスク'));
+      completedSectionControls.setLabel(translate('games.todoList.sections.completed', '完了済みタスク'));
+
+      setFormMode(state.editingTaskId ? 'edit' : 'create');
+
+      if (includeDynamic){
+        updateStats();
+        renderLists();
+      }
     }
 
     function makeCollapsibleSection(titleEl, listEl, key){
-      const labelText = titleEl.textContent;
       const icon = document.createElement('span');
       icon.textContent = '▼';
       icon.style.display = 'inline-flex';
@@ -379,7 +490,7 @@
       icon.style.color = titleEl.style.color || '#111827';
 
       const label = document.createElement('span');
-      label.textContent = labelText;
+      label.textContent = '';
 
       titleEl.textContent = '';
       titleEl.appendChild(icon);
@@ -395,6 +506,12 @@
         listEl.id = `todo_section_${key}`;
       }
       titleEl.setAttribute('aria-controls', listEl.id);
+
+      const setLabel = (text) => {
+        const safe = text ?? '';
+        label.textContent = safe;
+        titleEl.setAttribute('aria-label', safe);
+      };
 
       function update(){
         const collapsed = !!collapseState[key];
@@ -417,7 +534,10 @@
       });
 
       update();
-      return update;
+      return {
+        update,
+        setLabel
+      };
     }
 
     function renderTaskCard(task){
@@ -453,7 +573,10 @@
       name.style.fontWeight = '600';
 
       const xpChip = document.createElement('span');
-      xpChip.textContent = `${task.xp} EXP`;
+      const xpText = translate('games.todoList.task.xpChip', '{xp} EXP', {
+        xp: formatNumber(task.xp, { maximumFractionDigits: 0 })
+      });
+      xpChip.textContent = xpText;
       xpChip.style.padding = '2px 8px';
       xpChip.style.borderRadius = '999px';
       xpChip.style.background = '#fee2e2';
@@ -471,7 +594,7 @@
       titleRow.appendChild(colorChip);
 
       const memo = document.createElement('div');
-      memo.textContent = task.memo || 'メモなし';
+      memo.textContent = task.memo || translate('games.todoList.task.memoEmpty', 'メモなし');
       memo.style.fontSize = '14px';
       memo.style.color = '#4b5563';
 
@@ -482,11 +605,15 @@
       meta.style.fontSize = '12px';
       meta.style.color = '#6b7280';
       const createdLabel = document.createElement('span');
-      createdLabel.textContent = `登録: ${formatDate(task.createdAt)}`;
+      createdLabel.textContent = translate('games.todoList.task.createdAt', '登録: {date}', {
+        date: formatDate(task.createdAt, i18n, dateTimeOptions)
+      });
       meta.appendChild(createdLabel);
       if (task.completedAt){
         const completedLabel = document.createElement('span');
-        completedLabel.textContent = `完了: ${formatDate(task.completedAt)}`;
+        completedLabel.textContent = translate('games.todoList.task.completedAt', '完了: {date}', {
+          date: formatDate(task.completedAt, i18n, dateTimeOptions)
+        });
         meta.appendChild(completedLabel);
       }
 
@@ -502,11 +629,11 @@
         statusBadge.style.fontSize = '12px';
         statusBadge.style.fontWeight = '600';
         if (task.status === 'completed'){
-          statusBadge.textContent = '成功';
+          statusBadge.textContent = translate('games.todoList.task.statusCompleted', '成功');
           statusBadge.style.background = '#dcfce7';
           statusBadge.style.color = '#166534';
         } else {
-          statusBadge.textContent = '失敗';
+          statusBadge.textContent = translate('games.todoList.task.statusFailed', '失敗');
           statusBadge.style.background = '#fee2e2';
           statusBadge.style.color = '#b91c1c';
         }
@@ -544,10 +671,10 @@
 
       if (task.status === 'pending'){
         card.style.borderColor = '#ef4444';
-        const completeBtn = makeButton('完了', { background: '#22c55e', text: '#064e3b' }, () => markTask(task.id, 'completed'));
-        const failBtn = makeButton('失敗', { background: '#f97316', text: '#7c2d12' }, () => markTask(task.id, 'failed'));
-        const editBtn = makeButton('編集', { background: '#93c5fd', text: '#1d4ed8' }, () => { fillForm(task); nameInput.focus(); });
-        const deleteBtn = makeButton('削除', { background: '#e5e7eb', text: '#374151' }, () => deleteTask(task.id));
+        const completeBtn = makeButton(translate('games.todoList.task.actions.complete', '完了'), { background: '#22c55e', text: '#064e3b' }, () => markTask(task.id, 'completed'));
+        const failBtn = makeButton(translate('games.todoList.task.actions.fail', '失敗'), { background: '#f97316', text: '#7c2d12' }, () => markTask(task.id, 'failed'));
+        const editBtn = makeButton(translate('games.todoList.task.actions.edit', '編集'), { background: '#93c5fd', text: '#1d4ed8' }, () => { fillForm(task); nameInput.focus(); });
+        const deleteBtn = makeButton(translate('games.todoList.task.actions.delete', '削除'), { background: '#e5e7eb', text: '#374151' }, () => deleteTask(task.id));
         actions.appendChild(completeBtn);
         actions.appendChild(failBtn);
         actions.appendChild(editBtn);
@@ -557,8 +684,8 @@
         card.style.color = '#6b7280';
         name.style.color = '#4b5563';
         memo.style.color = '#6b7280';
-        const editBtn = makeButton('編集', { background: '#bfdbfe', text: '#1d4ed8' }, () => { fillForm(task); nameInput.focus(); });
-        const deleteBtn = makeButton('削除', { background: '#e5e7eb', text: '#4b5563' }, () => deleteTask(task.id));
+        const editBtn = makeButton(translate('games.todoList.task.actions.edit', '編集'), { background: '#bfdbfe', text: '#1d4ed8' }, () => { fillForm(task); nameInput.focus(); });
+        const deleteBtn = makeButton(translate('games.todoList.task.actions.delete', '削除'), { background: '#e5e7eb', text: '#4b5563' }, () => deleteTask(task.id));
         actions.appendChild(editBtn);
         actions.appendChild(deleteBtn);
       }
@@ -572,7 +699,7 @@
     function deleteTask(id){
       const idx = state.tasks.findIndex(t => t.id === id);
       if (idx === -1) return;
-      if (!confirm('このToDoを削除しますか？')) return;
+      if (!confirm(translate('games.todoList.dialogs.confirmDelete', 'このToDoを削除しますか？'))) return;
       state.tasks.splice(idx, 1);
       if (state.editingTaskId === id){
         resetForm();
@@ -603,7 +730,7 @@
       event.preventDefault();
       const name = nameInput.value.trim();
       if (!name){
-        alert('名前を入力してください。');
+        alert(translate('games.todoList.dialogs.requireName', '名前を入力してください。'));
         nameInput.focus();
         return;
       }
@@ -668,6 +795,10 @@
 
     function destroy(){
       stop();
+      if (typeof localeUnsubscribe === 'function'){
+        localeUnsubscribe();
+        localeUnsubscribe = null;
+      }
       root.removeChild(wrapper);
     }
 
@@ -677,6 +808,14 @@
       destroy,
       getScore(){ return state.sessionXp; }
     };
+
+    applyTranslations(false);
+
+    if (typeof i18n?.onLocaleChanged === 'function'){
+      localeUnsubscribe = i18n.onLocaleChanged(() => {
+        applyTranslations(true);
+      });
+    }
 
     start();
     return runtime;

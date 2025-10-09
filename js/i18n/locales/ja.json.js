@@ -438,7 +438,36 @@
           },
           "go": {
             "name": "囲碁",
-            "description": "配置+1/捕獲ボーナス/勝利EXP"
+            "description": "配置+1/捕獲ボーナス/勝利EXP",
+            "info": {
+              "intro": "囲碁 9×9 — あなたが先手 (黒)"
+            },
+            "hud": {
+              "turn": {
+                "player": "あなたの番 (黒)",
+                "ai": "AIの番 (白)"
+              },
+              "status": "{turn} ｜ 黒 捕獲:{blackCaptures} ｜ 白 捕獲:{whiteCaptures} (コミ+{komi})",
+              "passNotice": "{actor}がパスしました (連続{count})",
+              "aiThinking": "AIが思考中…"
+            },
+            "buttons": {
+              "pass": "パス",
+              "resign": "投了"
+            },
+            "messages": {
+              "koViolation": "その手はコウで禁じられています"
+            },
+            "actors": {
+              "player": "あなた",
+              "ai": "AI"
+            },
+            "result": {
+              "win": "あなたの勝ち！",
+              "loss": "AIの勝ち…",
+              "draw": "持碁 (引き分け)",
+              "summary": "{result} ｜ 黒 {blackScore} - 白 {whiteScore}"
+            }
           },
           "backgammon": {
             "name": "バックギャモン",

@@ -2,6 +2,17 @@
   function create(root, awardXp, opts){
     const shortcuts = opts?.shortcuts;
     const diff = (opts && opts.difficulty) || 'NORMAL';
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'bubble_shooter' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    let detachLocale = null;
     const cfg = {
       EASY:   { colors: 5, startRows: 5, shotsCycle: 8 },
       NORMAL: { colors: 6, startRows: 5, shotsCycle: 6 },
@@ -524,8 +535,23 @@
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '16px "Segoe UI", sans-serif';
-      ctx.fillText(`Bubble Shooter | ${diff} | Cleared: ${totalCleared} | Dropped: ${totalDropped}`, PAD, PAD + 18);
-      ctx.fillText(`Shots: ${shotsLeft}/${cfg.shotsCycle}`, PAD, PAD + 36);
+      const titleText = text('title', 'Bubble Shooter');
+      const difficultyLabel = text(`difficulty.${diff}`, diff);
+      const headerText = text('hud.summary', () => `${titleText} | ${difficultyLabel} | Cleared: ${totalCleared} | Dropped: ${totalDropped}`, {
+        title: titleText,
+        difficulty: diff,
+        difficultyLabel,
+        cleared: totalCleared,
+        dropped: totalDropped
+      });
+      ctx.fillText(headerText, PAD, PAD + 18);
+      const shotsText = text('hud.shots', () => `Shots: ${shotsLeft}/${cfg.shotsCycle}`, {
+        current: shotsLeft,
+        remaining: shotsLeft,
+        max: cfg.shotsCycle,
+        cycle: cfg.shotsCycle
+      });
+      ctx.fillText(shotsText, PAD, PAD + 36);
 
       // draw fail line indicator
       ctx.strokeStyle = 'rgba(248,113,113,0.35)';
@@ -604,7 +630,7 @@
       const queueBaseY = HEIGHT - PAD - 60;
       ctx.fillStyle = '#cbd5f5';
       ctx.font = '14px "Segoe UI", sans-serif';
-      ctx.fillText('Next', queueBaseX - 10, queueBaseY - 36);
+      ctx.fillText(text('hud.next', 'Next'), queueBaseX - 10, queueBaseY - 36);
       for (let i = 0; i < queue.length; i++) {
         drawBubble(queueBaseX + i * 40, queueBaseY, queue[i], 0.75);
       }
@@ -619,11 +645,19 @@
         ctx.fillRect(0, 0, WIDTH, HEIGHT);
         ctx.fillStyle = '#f8fafc';
         ctx.font = '28px "Segoe UI", sans-serif';
-        ctx.fillText('Game Over', WIDTH / 2 - 82, HEIGHT / 2 - 10);
+        ctx.textAlign = 'center';
+        ctx.fillText(text('status.gameOver', 'Game Over'), WIDTH / 2, HEIGHT / 2 - 10);
         ctx.font = '18px "Segoe UI", sans-serif';
-        ctx.fillText('Rキーでリスタート', WIDTH / 2 - 92, HEIGHT / 2 + 22);
+        ctx.fillText(text('status.restartHint', 'Press R to restart'), WIDTH / 2, HEIGHT / 2 + 22);
+        ctx.textAlign = 'start';
         ctx.restore();
       }
+    }
+
+    if (localization && typeof localization.onChange === 'function') {
+      detachLocale = localization.onChange(() => {
+        try { draw(); } catch {}
+      });
     }
 
     function step(timestamp){
@@ -712,6 +746,7 @@
       canvas.removeEventListener('mousedown', shoot);
       canvas.removeEventListener('touchstart', onTouch);
       window.removeEventListener('keydown', onKey);
+      try { detachLocale && detachLocale(); } catch {}
       canvas.remove();
     }
 

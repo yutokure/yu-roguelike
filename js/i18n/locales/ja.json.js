@@ -10845,6 +10845,14 @@
     },
 
     "minigame": {
+      "breakout_k": {
+        "hud": {
+          "lives": "ライフ: {count}",
+          "destroyed": "破壊: {count}",
+          "difficulty": "難易度: {difficulty}",
+          "controls": "← / → または A / D でバー操作"
+        }
+      },
       "login_bonus": {
         "title": "ログインボーナスカレンダー",
         "subtitle": "毎日ログインして特典を獲得しましょう。獲得情報は自動保存されます。",

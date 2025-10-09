@@ -7,14 +7,15 @@
   const LAUNCH_BONUS = 8;
   const DEFAULT_TITLE = '文書1';
 
-  function loadPersistentState(){
+  function loadPersistentState(defaultTitle){
+    const fallbackTitle = typeof defaultTitle === 'string' && defaultTitle.trim() ? defaultTitle : DEFAULT_TITLE;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object') return null;
       return {
-        title: typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title : DEFAULT_TITLE,
+        title: typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title : fallbackTitle,
         contentHTML: typeof parsed.contentHTML === 'string' ? parsed.contentHTML : '',
         zoom: Number.isFinite(parsed.zoom) ? Math.min(200, Math.max(50, parsed.zoom)) : 100,
         theme: parsed.theme === 'dark' ? 'dark' : 'light',
@@ -46,11 +47,11 @@
   }
 
   const WORDING_FONTS = [
-    { label: '游ゴシック', value: '"Yu Gothic UI", "YuGothic", sans-serif' },
-    { label: '游明朝', value: '"Yu Mincho", "YuMincho", serif' },
-    { label: 'メイリオ', value: '"Meiryo", sans-serif' },
-    { label: 'ヒラギノ角ゴ', value: '"Hiragino Kaku Gothic ProN", sans-serif' },
-    { label: '等幅 (Consolas)', value: 'Consolas, "Cascadia Mono", monospace' }
+    { id: 'yuGothic', fallback: '游ゴシック', value: '"Yu Gothic UI", "YuGothic", sans-serif' },
+    { id: 'yuMincho', fallback: '游明朝', value: '"Yu Mincho", "YuMincho", serif' },
+    { id: 'meiryo', fallback: 'メイリオ', value: '"Meiryo", sans-serif' },
+    { id: 'hiraginoKaku', fallback: 'ヒラギノ角ゴ', value: '"Hiragino Kaku Gothic ProN", sans-serif' },
+    { id: 'monospace', fallback: '等幅 (Consolas)', value: 'Consolas, "Cascadia Mono", monospace' }
   ];
 
   const FONT_SIZE_OPTIONS = [8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72];
@@ -59,11 +60,91 @@
     if (!root) throw new Error('MiniExp Wording requires a container');
 
     const shortcuts = opts?.shortcuts;
+    const i18n = typeof window !== 'undefined' ? window.I18n : null;
 
-    const persisted = loadPersistentState();
+    const localeBindings = [];
+    const registerLocaleBinding = (fn) => {
+      if (typeof fn === 'function') localeBindings.push(fn);
+    };
+    const applyLocaleBindings = () => {
+      localeBindings.forEach(fn => {
+        try { fn(); } catch {}
+      });
+    };
+
+    const translate = (key, fallback, params) => {
+      if (key && typeof i18n?.t === 'function') {
+        try {
+          const value = i18n.t(key, params);
+          if (typeof value === 'string' && value !== key) return value;
+          if (value !== undefined && value !== null && value !== key) return value;
+        } catch {}
+      }
+      if (typeof fallback === 'function') {
+        try { return fallback(); } catch { return ''; }
+      }
+      if (fallback !== undefined) return fallback;
+      if (typeof key === 'string') return key;
+      return '';
+    };
+
+    const formatNumber = (value, options) => {
+      if (typeof i18n?.formatNumber === 'function') {
+        try { return i18n.formatNumber(value, options); } catch {}
+      }
+      try {
+        return new Intl.NumberFormat(i18n?.getLocale?.() || undefined, options).format(value);
+      } catch {
+        if (options?.minimumIntegerDigits) {
+          const digits = Number.isFinite(value) ? Math.trunc(value) : 0;
+          return String(digits).padStart(options.minimumIntegerDigits, '0');
+        }
+        return String(value);
+      }
+    };
+
+    const localizeText = (element, key, fallback, params) => {
+      if (!element) return () => {};
+      const fallbackFn = typeof fallback === 'function' ? fallback : () => fallback;
+      const paramsFn = typeof params === 'function' ? params : () => params;
+      const apply = () => {
+        const translated = translate(key, fallbackFn, paramsFn());
+        if (translated !== undefined && translated !== null) {
+          element.textContent = translated;
+        }
+      };
+      registerLocaleBinding(apply);
+      apply();
+      return apply;
+    };
+
+    const localizeAttr = (element, attr, key, fallback, params) => {
+      if (!element) return () => {};
+      const fallbackFn = typeof fallback === 'function' ? fallback : () => fallback;
+      const paramsFn = typeof params === 'function' ? params : () => params;
+      const apply = () => {
+        const translated = translate(key, fallbackFn, paramsFn());
+        if (translated !== undefined && translated !== null) {
+          element[attr] = translated;
+        }
+      };
+      registerLocaleBinding(apply);
+      apply();
+      return apply;
+    };
+
+    const getGameName = () => translate('selection.miniexp.games.wording.name', 'Wording');
+    const getDefaultTitle = () => translate('games.wording.defaultTitle', DEFAULT_TITLE);
+    const getAutoTitle = (number) => {
+      const formattedNumber = formatNumber(number);
+      return translate('games.wording.autoTitle', () => `文書${formattedNumber}`, { number, formattedNumber });
+    };
+
+    const defaultTitle = getDefaultTitle();
+    const persisted = loadPersistentState(defaultTitle);
     const state = {
-      title: persisted?.title || DEFAULT_TITLE,
-      savedTitle: persisted?.title || DEFAULT_TITLE,
+      title: persisted?.title || defaultTitle,
+      savedTitle: persisted?.title || defaultTitle,
       contentHTML: persisted?.contentHTML || '',
       savedHTML: persisted?.contentHTML || '',
       zoom: persisted?.zoom || 100,
@@ -89,6 +170,7 @@
     let persistTimer = null;
     const skipFormatXpCommands = new Set(['insertText', 'insertHTML']);
     let shortcutsDisabled = false;
+    let localeUnsubscribe = null;
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -146,7 +228,11 @@
     const titleSuffix = document.createElement('span');
     titleSuffix.style.fontSize = '13px';
     titleSuffix.style.opacity = '0.8';
-    titleSuffix.textContent = '- Wording';
+    const updateTitleSuffix = () => {
+      titleSuffix.textContent = ` - ${getGameName()}`;
+    };
+    registerLocaleBinding(updateTitleSuffix);
+    updateTitleSuffix();
 
     const renameBtn = document.createElement('button');
     renameBtn.type = 'button';
@@ -157,6 +243,7 @@
     renameBtn.style.fontSize = '12px';
     renameBtn.style.color = '#1e3a8a';
     renameBtn.style.background = 'rgba(255,255,255,0.9)';
+    localizeText(renameBtn, 'games.wording.buttons.rename', '名前の変更');
     renameBtn.style.cursor = 'pointer';
 
     titleLabel.appendChild(titleName);
@@ -191,7 +278,7 @@
       });
       if (symbol === '×') {
         btn.addEventListener('click', () => {
-          if (!state.savedHTML || state.savedHTML === state.contentHTML || confirm('保存せずに閉じますか？')) {
+          if (!state.savedHTML || state.savedHTML === state.contentHTML || confirm(translate('games.wording.confirm.closeWithoutSave', '保存せずに閉じますか？'))) {
             quit();
           }
         });
@@ -223,6 +310,7 @@
       btn.type = 'button';
       btn.innerHTML = `<span style="font-size:16px;line-height:1">${icon}</span>`;
       btn.title = label;
+      btn.setAttribute('aria-label', label);
       btn.style.width = '32px';
       btn.style.height = '32px';
       btn.style.borderRadius = '8px';
@@ -250,13 +338,23 @@
     const quickUndoBtn = createIconButton('↶', '元に戻す (Ctrl+Z)');
     const quickRedoBtn = createIconButton('↷', 'やり直し (Ctrl+Y)');
     const quickPrintBtn = createIconButton('🖨️', '印刷');
+    localizeAttr(quickSaveBtn, 'title', 'games.wording.quickBar.save', '上書き保存 (Ctrl+S)');
+    localizeAttr(quickSaveBtn, 'aria-label', 'games.wording.quickBar.save', '上書き保存 (Ctrl+S)');
+    localizeAttr(quickSaveAsBtn, 'title', 'games.wording.quickBar.saveAs', '名前を付けて保存 (Ctrl+Shift+S)');
+    localizeAttr(quickSaveAsBtn, 'aria-label', 'games.wording.quickBar.saveAs', '名前を付けて保存 (Ctrl+Shift+S)');
+    localizeAttr(quickUndoBtn, 'title', 'games.wording.quickBar.undo', '元に戻す (Ctrl+Z)');
+    localizeAttr(quickUndoBtn, 'aria-label', 'games.wording.quickBar.undo', '元に戻す (Ctrl+Z)');
+    localizeAttr(quickRedoBtn, 'title', 'games.wording.quickBar.redo', 'やり直し (Ctrl+Y)');
+    localizeAttr(quickRedoBtn, 'aria-label', 'games.wording.quickBar.redo', 'やり直し (Ctrl+Y)');
+    localizeAttr(quickPrintBtn, 'title', 'games.wording.quickBar.print', '印刷');
+    localizeAttr(quickPrintBtn, 'aria-label', 'games.wording.quickBar.print', '印刷');
 
     quickSaveBtn.addEventListener('click', () => { saveDocument(false); });
     quickSaveAsBtn.addEventListener('click', () => { saveDocument(true); });
     quickUndoBtn.addEventListener('click', () => { document.execCommand('undo'); });
     quickRedoBtn.addEventListener('click', () => { document.execCommand('redo'); });
     quickPrintBtn.addEventListener('click', () => {
-      showToast('印刷ダイアログは近日対応予定です');
+      showToast(translate('games.wording.messages.printUnavailable', '印刷ダイアログは近日対応予定です'));
       grantXp('insert', 3, INSERT_COOLDOWN);
     });
 
@@ -273,11 +371,11 @@
     tabBar.style.gap = '24px';
 
     const tabs = [
-      { id:'home', label:'ホーム' },
-      { id:'insert', label:'挿入' },
-      { id:'layout', label:'レイアウト' },
-      { id:'review', label:'校閲' },
-      { id:'view', label:'表示' }
+      { id: 'home', key: 'games.wording.tabs.home', fallback: 'ホーム' },
+      { id: 'insert', key: 'games.wording.tabs.insert', fallback: '挿入' },
+      { id: 'layout', key: 'games.wording.tabs.layout', fallback: 'レイアウト' },
+      { id: 'review', key: 'games.wording.tabs.review', fallback: '校閲' },
+      { id: 'view', key: 'games.wording.tabs.view', fallback: '表示' }
     ];
 
     const tabButtons = new Map();
@@ -287,7 +385,7 @@
     tabs.forEach(tab => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = tab.label;
+      btn.textContent = tab.fallback;
       btn.dataset.tab = tab.id;
       btn.style.border = 'none';
       btn.style.background = 'transparent';
@@ -303,6 +401,7 @@
       tabButtons.set(tab.id, btn);
       tabBar.appendChild(btn);
       ribbonTabButtons.push(btn);
+      localizeText(btn, tab.key, tab.fallback);
     });
 
     const ribbonContent = document.createElement('div');
@@ -331,6 +430,13 @@
       return group;
     }
 
+    function createLocalizedGroup(key, fallback){
+      const group = createGroup(fallback);
+      const label = group.firstChild;
+      if (label) localizeText(label, key, fallback);
+      return group;
+    }
+
     function makeToggleButton(text, opts){
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -352,6 +458,12 @@
         if (opts?.grantXp) grantXp(opts.grantXp.type, opts.grantXp.amount, opts.grantXp.cooldown || FORMAT_COOLDOWN);
       });
       ribbonGroupButtons.push(btn);
+      return btn;
+    }
+
+    function makeLocalizedToggleButton(key, fallback, opts, params){
+      const btn = makeToggleButton(fallback, opts);
+      localizeText(btn, key, fallback, params);
       return btn;
     }
 
@@ -387,7 +499,8 @@
     WORDING_FONTS.forEach(opt => {
       const option = document.createElement('option');
       option.value = opt.value;
-      option.textContent = opt.label;
+      option.textContent = opt.fallback;
+      localizeText(option, `games.wording.fonts.${opt.id}`, opt.fallback);
       fontSelect.appendChild(option);
     });
     fontSelect.addEventListener('change', () => {
@@ -404,6 +517,7 @@
       const option = document.createElement('option');
       option.value = size;
       option.textContent = `${size} pt`;
+      localizeText(option, 'games.wording.fontSize.option', () => `${formatNumber(size)} pt`, { size, formattedSize: formatNumber(size) });
       fontSizeSelect.appendChild(option);
     });
     fontSizeSelect.value = '11';
@@ -414,29 +528,38 @@
     });
 
     const homeGroups = [];
-    const groupClipboard = createGroup('クリップボード');
-    const pasteBtn = makeToggleButton('貼り付け', { handler(){ document.execCommand('paste'); }, grantXp:{ type:'insert', amount:2, cooldown:INSERT_COOLDOWN }});
-    const copyBtn = makeToggleButton('コピー', { handler(){ document.execCommand('copy'); }});
-    const cutBtn = makeToggleButton('切り取り', { handler(){ document.execCommand('cut'); grantXp('format', 1, FORMAT_COOLDOWN); }});
+    const groupClipboard = createLocalizedGroup('games.wording.groups.clipboard', 'クリップボード');
+    const pasteBtn = makeLocalizedToggleButton('games.wording.buttons.paste', '貼り付け', { handler(){ document.execCommand('paste'); }, grantXp:{ type:'insert', amount:2, cooldown:INSERT_COOLDOWN }});
+    const copyBtn = makeLocalizedToggleButton('games.wording.buttons.copy', 'コピー', { handler(){ document.execCommand('copy'); }});
+    const cutBtn = makeLocalizedToggleButton('games.wording.buttons.cut', '切り取り', { handler(){ document.execCommand('cut'); grantXp('format', 1, FORMAT_COOLDOWN); }});
     groupClipboard.appendChild(pasteBtn);
     groupClipboard.appendChild(copyBtn);
     groupClipboard.appendChild(cutBtn);
     homeGroups.push(groupClipboard);
 
-    const groupFont = createGroup('フォント');
+    const groupFont = createLocalizedGroup('games.wording.groups.font', 'フォント');
     const fontRow1 = document.createElement('div');
     fontRow1.style.display = 'flex';
     fontRow1.style.flexWrap = 'wrap';
     fontRow1.style.gap = '6px';
     [
-      { text:'B', command:'bold' },
-      { text:'I', command:'italic' },
-      { text:'U', command:'underline' },
-      { text:'abc', handler: () => runCommand('strikeThrough') },
-      { text:'上付き', handler: () => runCommand('superscript') },
-      { text:'下付き', handler: () => runCommand('subscript') }
+      { text:'B', command:'bold', titleKey:'games.wording.buttons.bold', titleFallback:'太字' },
+      { text:'I', command:'italic', titleKey:'games.wording.buttons.italic', titleFallback:'斜体' },
+      { text:'U', command:'underline', titleKey:'games.wording.buttons.underline', titleFallback:'下線' },
+      { text:'abc', handler: () => runCommand('strikeThrough'), titleKey:'games.wording.buttons.strikethrough', titleFallback:'取り消し線' },
+      { text:'上付き', handler: () => runCommand('superscript'), labelKey:'games.wording.buttons.superscript', labelFallback:'上付き' },
+      { text:'下付き', handler: () => runCommand('subscript'), labelKey:'games.wording.buttons.subscript', labelFallback:'下付き' }
     ].forEach(cfg => {
       const btn = makeToggleButton(cfg.text, { command: cfg.command, handler: cfg.handler });
+      if (cfg.labelKey) {
+        localizeText(btn, cfg.labelKey, cfg.labelFallback);
+      }
+      if (cfg.titleKey) {
+        btn.title = cfg.titleFallback;
+        btn.setAttribute('aria-label', cfg.titleFallback);
+        localizeAttr(btn, 'title', cfg.titleKey, cfg.titleFallback);
+        localizeAttr(btn, 'aria-label', cfg.titleKey, cfg.titleFallback);
+      }
       fontRow1.appendChild(btn);
     });
     const fontRow2 = document.createElement('div');
@@ -451,74 +574,86 @@
     groupFont.appendChild(fontRow2);
     homeGroups.push(groupFont);
 
-    const groupParagraph = createGroup('段落');
+    const groupParagraph = createLocalizedGroup('games.wording.groups.paragraph', '段落');
     const paraRow = document.createElement('div');
     paraRow.style.display = 'flex';
     paraRow.style.flexWrap = 'wrap';
     paraRow.style.gap = '6px';
     [
-      { text:'•', handler: () => runCommand('insertUnorderedList') },
-      { text:'1.', handler: () => runCommand('insertOrderedList') },
-      { text:'左揃え', handler: () => runCommand('justifyLeft') },
-      { text:'中央', handler: () => runCommand('justifyCenter') },
-      { text:'右揃え', handler: () => runCommand('justifyRight') },
-      { text:'両端', handler: () => runCommand('justifyFull') },
-      { text:'インデント↑', handler: () => runCommand('outdent') },
-      { text:'インデント↓', handler: () => runCommand('indent') }
+      { text:'•', handler: () => runCommand('insertUnorderedList'), titleKey:'games.wording.buttons.bullets', titleFallback:'箇条書き' },
+      { text:'1.', handler: () => runCommand('insertOrderedList'), titleKey:'games.wording.buttons.numberedList', titleFallback:'番号付きリスト' },
+      { text:'左揃え', handler: () => runCommand('justifyLeft'), labelKey:'games.wording.buttons.alignLeft', labelFallback:'左揃え' },
+      { text:'中央', handler: () => runCommand('justifyCenter'), labelKey:'games.wording.buttons.alignCenter', labelFallback:'中央' },
+      { text:'右揃え', handler: () => runCommand('justifyRight'), labelKey:'games.wording.buttons.alignRight', labelFallback:'右揃え' },
+      { text:'両端', handler: () => runCommand('justifyFull'), labelKey:'games.wording.buttons.alignJustify', labelFallback:'両端' },
+      { text:'インデント↑', handler: () => runCommand('outdent'), labelKey:'games.wording.buttons.outdent', labelFallback:'インデント↑', titleKey:'games.wording.buttons.outdent', titleFallback:'インデント↑' },
+      { text:'インデント↓', handler: () => runCommand('indent'), labelKey:'games.wording.buttons.indent', labelFallback:'インデント↓', titleKey:'games.wording.buttons.indent', titleFallback:'インデント↓' }
     ].forEach(cfg => {
       const btn = makeToggleButton(cfg.text, { handler: cfg.handler });
+      if (cfg.labelKey) {
+        localizeText(btn, cfg.labelKey, cfg.labelFallback);
+      }
+      if (cfg.titleKey) {
+        btn.title = cfg.titleFallback;
+        btn.setAttribute('aria-label', cfg.titleFallback);
+        localizeAttr(btn, 'title', cfg.titleKey, cfg.titleFallback);
+        localizeAttr(btn, 'aria-label', cfg.titleKey, cfg.titleFallback);
+      }
       paraRow.appendChild(btn);
     });
     groupParagraph.appendChild(paraRow);
     homeGroups.push(groupParagraph);
 
-    const groupStyles = createGroup('スタイル');
+    const groupStyles = createLocalizedGroup('games.wording.groups.style', 'スタイル');
     const styleRow = document.createElement('div');
     styleRow.style.display = 'grid';
     styleRow.style.gridTemplateColumns = 'repeat(2, minmax(0,1fr))';
     styleRow.style.gap = '6px';
     [
-      { text:'本文', block:'p' },
-      { text:'見出し 1', block:'h1' },
-      { text:'見出し 2', block:'h2' },
-      { text:'引用', block:'blockquote' }
+      { block:'p', key:'games.wording.buttons.blockParagraph', fallback:'本文' },
+      { block:'h1', key:'games.wording.buttons.blockHeading', fallback: () => `見出し ${formatNumber(1)}`, params: () => ({ level: formatNumber(1), rawLevel: 1 }) },
+      { block:'h2', key:'games.wording.buttons.blockHeading', fallback: () => `見出し ${formatNumber(2)}`, params: () => ({ level: formatNumber(2), rawLevel: 2 }) },
+      { block:'blockquote', key:'games.wording.buttons.blockQuote', fallback:'引用' }
     ].forEach(cfg => {
-      const btn = makeToggleButton(cfg.text, { handler: () => {
+      const fallbackText = typeof cfg.fallback === 'function' ? cfg.fallback() : cfg.fallback;
+      const btn = makeToggleButton(fallbackText, { handler: () => {
         runCommand('formatBlock', cfg.block);
       }});
+      const paramsFn = cfg.params || (() => undefined);
+      localizeText(btn, cfg.key, cfg.fallback, paramsFn);
       styleRow.appendChild(btn);
     });
     groupStyles.appendChild(styleRow);
     homeGroups.push(groupStyles);
 
     const insertGroups = [];
-    const groupInsert = createGroup('挿入');
+    const groupInsert = createLocalizedGroup('games.wording.groups.insert', '挿入');
     const insertRow = document.createElement('div');
     insertRow.style.display = 'flex';
     insertRow.style.flexWrap = 'wrap';
     insertRow.style.gap = '6px';
-    const insertDate = makeToggleButton('日付', { handler: () => {
+    const insertDate = makeLocalizedToggleButton('games.wording.buttons.insertDate', '日付', { handler: () => {
       const now = new Date();
       runCommand('insertText', now.toLocaleDateString());
       grantXp('insert', 3, INSERT_COOLDOWN);
     }});
-    const insertTime = makeToggleButton('時刻', { handler: () => {
+    const insertTime = makeLocalizedToggleButton('games.wording.buttons.insertTime', '時刻', { handler: () => {
       const now = new Date();
       runCommand('insertText', now.toLocaleTimeString());
       grantXp('insert', 3, INSERT_COOLDOWN);
     }});
-    const insertLine = makeToggleButton('横罫線', { handler: () => {
+    const insertLine = makeLocalizedToggleButton('games.wording.buttons.insertHorizontalRule', '横罫線', { handler: () => {
       runCommand('insertHorizontalRule');
       grantXp('insert', 3, INSERT_COOLDOWN);
     }});
-    const insertEmoji = makeToggleButton('スタンプ', { handler: () => {
+    const insertEmoji = makeLocalizedToggleButton('games.wording.buttons.insertEmoji', 'スタンプ', { handler: () => {
       const emojis = ['📌','✨','🔥','✅','💡','🎯','📝','⭐','📎'];
       const emoji = emojis[Math.floor(Math.random() * emojis.length)];
       runCommand('insertText', ` ${emoji} `);
       grantXp('insert', 3, INSERT_COOLDOWN);
     }});
-    const insertToc = makeToggleButton('目次', { handler: () => {
-      const template = '<ol><li>はじめに</li><li>本題</li><li>まとめ</li></ol>';
+    const insertToc = makeLocalizedToggleButton('games.wording.buttons.insertToc', '目次', { handler: () => {
+      const template = translate('games.wording.insert.tocTemplate', '<ol><li>はじめに</li><li>本題</li><li>まとめ</li></ol>');
       runCommand('insertHTML', template);
       grantXp('insert', 3, INSERT_COOLDOWN);
     }});
@@ -530,12 +665,12 @@
     groupInsert.appendChild(insertRow);
     insertGroups.push(groupInsert);
 
-    const groupMedia = createGroup('メディア');
+    const groupMedia = createLocalizedGroup('games.wording.groups.media', 'メディア');
     const imageInput = document.createElement('input');
     imageInput.type = 'file';
     imageInput.accept = 'image/*';
     imageInput.style.display = 'none';
-    const insertImageBtn = makeToggleButton('画像', { handler: () => imageInput.click() });
+    const insertImageBtn = makeLocalizedToggleButton('games.wording.buttons.insertImage', '画像', { handler: () => imageInput.click() });
     imageInput.addEventListener('change', () => {
       const file = imageInput.files && imageInput.files[0];
       if (!file) return;
@@ -547,8 +682,9 @@
       reader.readAsDataURL(file);
       imageInput.value = '';
     });
-    const insertDivider = makeToggleButton('テキストボックス', { handler: () => {
-      const html = '<div style="border:1px solid #94a3b8;padding:12px;border-radius:12px;background:#f8fafc;">テキストボックス</div>';
+    const insertDivider = makeLocalizedToggleButton('games.wording.buttons.insertTextbox', 'テキストボックス', { handler: () => {
+      const label = translate('games.wording.insert.textboxLabel', 'テキストボックス');
+      const html = `<div style="border:1px solid #94a3b8;padding:12px;border-radius:12px;background:#f8fafc;">${label}</div>`;
       runCommand('insertHTML', html);
       grantXp('insert', 4, INSERT_COOLDOWN);
     }});
@@ -560,18 +696,18 @@
     const layoutGroups = [];
     const reviewGroups = [];
     const viewGroups = [];
-    const groupTheme = createGroup('テーマ');
+    const groupTheme = createLocalizedGroup('games.wording.groups.theme', 'テーマ');
     const themeRow = document.createElement('div');
     themeRow.style.display = 'flex';
     themeRow.style.gap = '6px';
-    const lightBtn = makeToggleButton('ライト', { handler: () => { state.theme = 'light'; updateTheme(); grantXp('format', 2, FORMAT_COOLDOWN); }});
-    const darkBtn = makeToggleButton('ダーク紙', { handler: () => { state.theme = 'dark'; updateTheme(); grantXp('format', 2, FORMAT_COOLDOWN); }});
+    const lightBtn = makeLocalizedToggleButton('games.wording.buttons.themeLight', 'ライト', { handler: () => { state.theme = 'light'; updateTheme(); grantXp('format', 2, FORMAT_COOLDOWN); }});
+    const darkBtn = makeLocalizedToggleButton('games.wording.buttons.themeDark', 'ダーク紙', { handler: () => { state.theme = 'dark'; updateTheme(); grantXp('format', 2, FORMAT_COOLDOWN); }});
     themeRow.appendChild(lightBtn);
     themeRow.appendChild(darkBtn);
     groupTheme.appendChild(themeRow);
     layoutGroups.push(groupTheme);
 
-    const groupColumns = createGroup('列');
+    const groupColumns = createLocalizedGroup('games.wording.groups.columns', '列');
     const columnRow = document.createElement('div');
     columnRow.style.display = 'flex';
     columnRow.style.gap = '6px';
@@ -582,47 +718,56 @@
         grantXp('format', 2, FORMAT_COOLDOWN);
         schedulePersist();
       }});
+      localizeText(btn, 'games.wording.buttons.columnsOption', () => `${formatNumber(count)} 列`, () => ({ count, formattedCount: formatNumber(count) }));
       columnRow.appendChild(btn);
     });
     groupColumns.appendChild(columnRow);
     layoutGroups.push(groupColumns);
 
-    const groupMargins = createGroup('余白');
+    const groupMargins = createLocalizedGroup('games.wording.groups.margins', '余白');
     const marginRow = document.createElement('div');
     marginRow.style.display = 'flex';
     marginRow.style.gap = '6px';
     [
-      { text:'狭い', value:'40px' },
-      { text:'標準', value:'64px' },
-      { text:'広い', value:'90px' }
+      { text:'狭い', value:'40px', key:'games.wording.buttons.marginNarrow' },
+      { text:'標準', value:'64px', key:'games.wording.buttons.marginNormal' },
+      { text:'広い', value:'90px', key:'games.wording.buttons.marginWide' }
     ].forEach(cfg => {
       const btn = makeToggleButton(cfg.text, { handler: () => {
         page.style.padding = `${cfg.value} ${Math.max(parseInt(cfg.value,10)+60, 60)}px`;
         grantXp('format', 2, FORMAT_COOLDOWN);
       }});
+      if (cfg.key) {
+        localizeText(btn, cfg.key, cfg.text);
+      }
       marginRow.appendChild(btn);
     });
     groupMargins.appendChild(marginRow);
     layoutGroups.push(groupMargins);
 
-    const groupProofing = createGroup('校閲ツール');
+    const groupProofing = createLocalizedGroup('games.wording.groups.proofing', '校閲ツール');
     const reviewRow = document.createElement('div');
     reviewRow.style.display = 'flex';
     reviewRow.style.flexWrap = 'wrap';
     reviewRow.style.gap = '6px';
-    const wordCountBtn = makeToggleButton('文字数カウント', { handler: () => {
+    const wordCountBtn = makeLocalizedToggleButton('games.wording.buttons.wordCount', '文字数カウント', { handler: () => {
       const text = editor.innerText || '';
       const trimmed = text.trim();
       const charCount = text.replace(/\s+/g, '').length;
       const wordCount = trimmed ? trimmed.split(/\s+/).length : 0;
       const paragraphCount = trimmed ? trimmed.split(/\n{2,}/).length : 0;
-      showToast(`文字数: ${charCount} / 単語: ${wordCount} / 段落: ${paragraphCount}`);
+      const message = translate('games.wording.messages.wordCount', () => `文字数: ${formatNumber(charCount)} / 単語: ${formatNumber(wordCount)} / 段落: ${formatNumber(paragraphCount)}`, {
+        characters: formatNumber(charCount),
+        words: formatNumber(wordCount),
+        paragraphs: formatNumber(paragraphCount)
+      });
+      showToast(message);
     }});
-    const readingTimeBtn = makeToggleButton('読了目安', { handler: () => {
+    const readingTimeBtn = makeLocalizedToggleButton('games.wording.buttons.readingTime', '読了目安', { handler: () => {
       const text = editor.innerText || '';
       const words = text.trim() ? text.trim().split(/\s+/).length : 0;
       if (!words) {
-        showToast('本文がありません');
+        showToast(translate('games.wording.messages.noContent', '本文がありません'));
         return;
       }
       const wordsPerMinute = 400;
@@ -635,42 +780,57 @@
         minutes += 1;
         seconds = 0;
       }
-      showToast(`およそ ${minutes} 分 ${seconds.toString().padStart(2, '0')} 秒で読めます`);
+      const secondsPadded = seconds.toString().padStart(2, '0');
+      const message = translate('games.wording.messages.readingTime', () => `およそ ${formatNumber(minutes)} 分 ${secondsPadded} 秒で読めます`, {
+        minutes: formatNumber(minutes),
+        seconds,
+        secondsPadded
+      });
+      showToast(message);
     }});
     const reviewHighlightBtn = makeToggleButton('長文検出', { handler: () => {
       state.reviewHighlight = !state.reviewHighlight;
-      reviewHighlightBtn.textContent = state.reviewHighlight ? '長文解除' : '長文検出';
+      updateReviewHighlightLabel();
       updateReviewHighlights();
     }});
+    const updateReviewHighlightLabel = () => {
+      const key = state.reviewHighlight ? 'games.wording.buttons.reviewHighlightOff' : 'games.wording.buttons.reviewHighlightOn';
+      const fallback = state.reviewHighlight ? '長文解除' : '長文検出';
+      reviewHighlightBtn.textContent = translate(key, fallback);
+    };
+    registerLocaleBinding(updateReviewHighlightLabel);
+    updateReviewHighlightLabel();
     reviewRow.appendChild(wordCountBtn);
     reviewRow.appendChild(readingTimeBtn);
     reviewRow.appendChild(reviewHighlightBtn);
     groupProofing.appendChild(reviewRow);
     reviewGroups.push(groupProofing);
 
-    const groupComments = createGroup('コメント');
+    const groupComments = createLocalizedGroup('games.wording.groups.comments', 'コメント');
     const commentRow = document.createElement('div');
     commentRow.style.display = 'flex';
     commentRow.style.flexWrap = 'wrap';
     commentRow.style.gap = '6px';
-    const insertCommentBtn = makeToggleButton('コメント挿入', { handler: () => {
-      const note = prompt('コメントを入力してください');
+    const insertCommentBtn = makeLocalizedToggleButton('games.wording.buttons.commentInsert', 'コメント挿入', { handler: () => {
+      const note = prompt(translate('games.wording.prompts.comment', 'コメントを入力してください'));
       if (!note) return;
       const span = document.createElement('span');
       span.textContent = `💬 ${note}`;
       span.setAttribute('style', 'background:rgba(254,240,138,0.85);padding:2px 6px;border-radius:6px;margin:0 2px;font-size:13px;');
       runCommand('insertHTML', span.outerHTML);
     }});
-    const changeSummaryBtn = makeToggleButton('変更サマリ', { handler: () => {
+    const changeSummaryBtn = makeLocalizedToggleButton('games.wording.buttons.changeSummary', '変更サマリ', { handler: () => {
       const currentLength = (editor.innerText || '').replace(/\s+/g, '').length;
       const savedVirtual = document.createElement('div');
       savedVirtual.innerHTML = state.savedHTML || '';
       const savedLength = (savedVirtual.innerText || '').replace(/\s+/g, '').length;
       const diff = Math.abs(currentLength - savedLength);
       if (!diff && state.contentHTML === state.savedHTML) {
-        showToast('保存済み: 差分はありません');
+        showToast(translate('games.wording.messages.changeSummarySaved', '保存済み: 差分はありません'));
       } else {
-        showToast(`未保存の差分目安: 約 ${diff} 文字`);
+        showToast(translate('games.wording.messages.changeSummaryDiff', () => `未保存の差分目安: 約 ${formatNumber(diff)} 文字`, {
+          difference: formatNumber(diff)
+        }));
       }
     }});
     commentRow.appendChild(insertCommentBtn);
@@ -678,7 +838,7 @@
     groupComments.appendChild(commentRow);
     reviewGroups.push(groupComments);
 
-    const groupLineHeight = createGroup('行間');
+    const groupLineHeight = createLocalizedGroup('games.wording.groups.lineHeight', '行間');
     const lineRow = document.createElement('div');
     lineRow.style.display = 'flex';
     lineRow.style.flexWrap = 'wrap';
@@ -691,12 +851,13 @@
       const btn = makeToggleButton(cfg.text, { handler: () => {
         setLineHeight(cfg.value);
       }});
+      localizeText(btn, 'games.wording.buttons.lineHeightOption', () => `${formatNumber(cfg.value)} 倍`, { value: cfg.value, formattedValue: formatNumber(cfg.value) });
       lineRow.appendChild(btn);
     });
     groupLineHeight.appendChild(lineRow);
     viewGroups.push(groupLineHeight);
 
-    const groupGuides = createGroup('ガイド');
+    const groupGuides = createLocalizedGroup('games.wording.groups.guides', 'ガイド');
     const guidesRow = document.createElement('div');
     guidesRow.style.display = 'flex';
     guidesRow.style.flexWrap = 'wrap';
@@ -704,35 +865,50 @@
     const toggleRulerBtn = makeToggleButton('ルーラー表示', { handler: () => {
       state.showRuler = !state.showRuler;
       ruler.style.display = state.showRuler ? 'flex' : 'none';
-      toggleRulerBtn.textContent = state.showRuler ? 'ルーラー非表示' : 'ルーラー表示';
+      updateRulerToggleLabel();
       schedulePersist();
     }});
-    toggleRulerBtn.textContent = state.showRuler ? 'ルーラー非表示' : 'ルーラー表示';
+    const updateRulerToggleLabel = () => {
+      const key = state.showRuler ? 'games.wording.buttons.hideRuler' : 'games.wording.buttons.showRuler';
+      const fallback = state.showRuler ? 'ルーラー非表示' : 'ルーラー表示';
+      toggleRulerBtn.textContent = translate(key, fallback);
+    };
+    registerLocaleBinding(updateRulerToggleLabel);
+    updateRulerToggleLabel();
     const toggleStatusBtn = makeToggleButton('ステータスバー', { handler: () => {
       state.showStatusBar = !state.showStatusBar;
       statusBar.style.display = state.showStatusBar ? 'flex' : 'none';
-      toggleStatusBtn.textContent = state.showStatusBar ? 'ステータス隠す' : 'ステータス表示';
+      updateStatusToggleLabel();
       schedulePersist();
     }});
-    toggleStatusBtn.textContent = state.showStatusBar ? 'ステータス隠す' : 'ステータス表示';
+    const updateStatusToggleLabel = () => {
+      const key = state.showStatusBar ? 'games.wording.buttons.hideStatus' : 'games.wording.buttons.showStatus';
+      const fallback = state.showStatusBar ? 'ステータス隠す' : 'ステータス表示';
+      toggleStatusBtn.textContent = translate(key, fallback);
+    };
+    registerLocaleBinding(updateStatusToggleLabel);
+    updateStatusToggleLabel();
     guidesRow.appendChild(toggleRulerBtn);
     guidesRow.appendChild(toggleStatusBtn);
     groupGuides.appendChild(guidesRow);
     viewGroups.push(groupGuides);
 
-    const groupPaper = createGroup('紙の色');
+    const groupPaper = createLocalizedGroup('games.wording.groups.paper', '紙の色');
     const paperRow = document.createElement('div');
     paperRow.style.display = 'flex';
     paperRow.style.flexWrap = 'wrap';
     paperRow.style.gap = '6px';
     [
-      { text:'ホワイト', value:'white' },
-      { text:'クリーム', value:'cream' },
-      { text:'グレー', value:'gray' }
+      { text:'ホワイト', value:'white', key:'games.wording.buttons.paperWhite' },
+      { text:'クリーム', value:'cream', key:'games.wording.buttons.paperCream' },
+      { text:'グレー', value:'gray', key:'games.wording.buttons.paperGray' }
     ].forEach(cfg => {
       const btn = makeToggleButton(cfg.text, { handler: () => {
         setPageTint(cfg.value);
       }});
+      if (cfg.key) {
+        localizeText(btn, cfg.key, cfg.text);
+      }
       paperRow.appendChild(btn);
     });
     groupPaper.appendChild(paperRow);
@@ -800,7 +976,7 @@
     editor.style.columnGap = '48px';
     editor.style.columnCount = String(state.columnCount);
     editor.style.wordBreak = 'break-word';
-    editor.innerHTML = state.contentHTML || '<p>ようこそ、Wording へ！ここで文章作成を始めましょう。</p>';
+    editor.innerHTML = state.contentHTML || translate('games.wording.editor.welcomeHtml', '<p>ようこそ、Wording へ！ここで文章作成を始めましょう。</p>');
 
     page.appendChild(editor);
     pageViewport.appendChild(ruler);
@@ -834,6 +1010,10 @@
     zoomLabel.style.display = 'inline-block';
     zoomLabel.style.textAlign = 'center';
     const zoomUpBtn = createIconButton('＋', 'ズームイン');
+    localizeAttr(zoomDownBtn, 'title', 'games.wording.buttons.zoomOut', 'ズームアウト');
+    localizeAttr(zoomDownBtn, 'aria-label', 'games.wording.buttons.zoomOut', 'ズームアウト');
+    localizeAttr(zoomUpBtn, 'title', 'games.wording.buttons.zoomIn', 'ズームイン');
+    localizeAttr(zoomUpBtn, 'aria-label', 'games.wording.buttons.zoomIn', 'ズームイン');
 
     zoomDownBtn.addEventListener('click', () => { changeZoom(-10); });
     zoomUpBtn.addEventListener('click', () => { changeZoom(10); });
@@ -869,6 +1049,7 @@
     searchTitle.style.margin = '0';
     searchTitle.style.fontSize = '18px';
     searchPanel.appendChild(searchTitle);
+    localizeText(searchTitle, 'games.wording.search.title', '検索と置換');
 
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
@@ -877,6 +1058,7 @@
     searchInput.style.fontSize = '14px';
     searchInput.style.border = '1px solid rgba(148,163,184,0.6)';
     searchInput.style.borderRadius = '8px';
+    localizeAttr(searchInput, 'placeholder', 'games.wording.search.placeholder', '検索語');
 
     const replaceInput = document.createElement('input');
     replaceInput.type = 'text';
@@ -885,6 +1067,7 @@
     replaceInput.style.fontSize = '14px';
     replaceInput.style.border = '1px solid rgba(148,163,184,0.6)';
     replaceInput.style.borderRadius = '8px';
+    localizeAttr(replaceInput, 'placeholder', 'games.wording.search.replacePlaceholder', '置換文字列');
 
     const searchStatus = document.createElement('div');
     searchStatus.style.fontSize = '12px';
@@ -910,17 +1093,25 @@
       return btn;
     }
 
-    const searchNextBtn = makeActionButton('次を検索', () => {
+    function makeLocalizedActionButton(key, fallback, handler){
+      const btn = makeActionButton(fallback, handler);
+      localizeText(btn, key, fallback);
+      return btn;
+    }
+
+    const searchNextBtn = makeLocalizedActionButton('games.wording.search.next', '次を検索', () => {
       performSearch(searchInput.value.trim(), false);
     });
-    const replaceBtn = makeActionButton('置換', () => {
+    const replaceBtn = makeLocalizedActionButton('games.wording.search.replace', '置換', () => {
       performSearch(searchInput.value.trim(), true, replaceInput.value);
     });
-    const replaceAllBtn = makeActionButton('すべて置換', () => {
+    const replaceAllBtn = makeLocalizedActionButton('games.wording.search.replaceAll', 'すべて置換', () => {
       const count = replaceAll(searchInput.value.trim(), replaceInput.value);
-      searchStatus.textContent = count ? `${count} 件置換しました` : '一致はありません';
+      searchStatus.textContent = count
+        ? translate('games.wording.search.replacedCount', () => `${formatNumber(count)} 件置換しました`, { count: formatNumber(count) })
+        : translate('games.wording.search.noMatch', '一致はありません');
     });
-    const closeSearchBtn = makeActionButton('閉じる', hideSearch);
+    const closeSearchBtn = makeLocalizedActionButton('games.wording.search.close', '閉じる', hideSearch);
     closeSearchBtn.style.background = '#64748b';
 
     searchBtnRow.appendChild(searchNextBtn);
@@ -950,12 +1141,14 @@
     root.appendChild(fileInput);
 
     const openBtn = createIconButton('📂', '開く (Ctrl+O)');
+    localizeAttr(openBtn, 'title', 'games.wording.quickBar.open', '開く (Ctrl+O)');
+    localizeAttr(openBtn, 'aria-label', 'games.wording.quickBar.open', '開く (Ctrl+O)');
     quickBar.insertBefore(openBtn, quickSaveBtn);
     openBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', handleFileOpen);
 
     renameBtn.addEventListener('click', () => {
-      const next = prompt('文書名を入力してください', state.title);
+      const next = prompt(translate('games.wording.prompts.rename', '文書名を入力してください'), state.title);
       if (next && next.trim()) {
         state.title = next.trim();
         updateTitle();
@@ -1053,7 +1246,7 @@
       page.style.transformOrigin = 'top center';
       page.style.transform = `scale(${next / 100})`;
       pageViewport.style.paddingBottom = `${Math.max(0, (next - 100) * 2)}px`;
-      zoomLabel.textContent = `${state.zoom}%`;
+      zoomLabel.textContent = `${formatNumber(state.zoom)}%`;
       schedulePersist();
     }
 
@@ -1169,8 +1362,13 @@
       const text = editor.innerText || '';
       const charCount = text.replace(/\s+/g, '').length;
       const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-      statusLeft.textContent = `ページ 1 / 1 | 文字数: ${charCount} | 単語: ${wordCount}`;
-      zoomLabel.textContent = `${state.zoom}%`;
+      statusLeft.textContent = translate('games.wording.status.summary', () => `ページ 1 / 1 | 文字数: ${formatNumber(charCount)} | 単語: ${formatNumber(wordCount)}`, {
+        pageCurrent: formatNumber(1),
+        pageTotal: formatNumber(1),
+        characters: formatNumber(charCount),
+        words: formatNumber(wordCount)
+      });
+      zoomLabel.textContent = `${formatNumber(state.zoom)}%`;
     }
 
     function showToast(message){
@@ -1236,14 +1434,18 @@
 
     function saveDocument(forceRename){
       let name = state.title;
-      if (forceRename || !name || name === DEFAULT_TITLE) {
-        const entered = prompt('保存するファイル名 (.wording.html)', name || DEFAULT_TITLE);
+      if (forceRename || !name || name === DEFAULT_TITLE || name === defaultTitle) {
+        const entered = prompt(translate('games.wording.prompts.saveFile', '保存するファイル名 (.wording.html)'), name || defaultTitle);
         if (!entered) return;
-        name = entered;
-        state.title = entered;
+        name = entered.trim();
+        if (!name) return;
+        state.title = name;
       }
+      const locale = (typeof i18n?.getLocale === 'function' && i18n.getLocale())
+        || (typeof i18n?.getDefaultLocale === 'function' && i18n.getDefaultLocale())
+        || 'ja';
       const blob = new Blob([
-        `<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>${name}</title></head><body>${state.contentHTML}</body></html>`
+        `<!DOCTYPE html><html lang="${locale}"><head><meta charset="utf-8"><title>${name}</title></head><body>${state.contentHTML}</body></html>`
       ], { type: 'text/html' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -1291,7 +1493,7 @@
 
     function performSearch(query, replace, replaceText = ''){
       if (!query) {
-        searchStatus.textContent = '検索語を入力してください';
+        searchStatus.textContent = translate('games.wording.search.enterQuery', '検索語を入力してください');
         return;
       }
       if (state.searchQuery !== query) {
@@ -1300,7 +1502,7 @@
         state.searchResults = buildSearchIndex(query);
       }
       if (!state.searchResults.length) {
-        searchStatus.textContent = '一致はありません';
+        searchStatus.textContent = translate('games.wording.search.noMatch', '一致はありません');
         return;
       }
       state.searchIndex = (state.searchIndex + 1) % state.searchResults.length;
@@ -1321,7 +1523,10 @@
         grantXp('insert', 3, INSERT_COOLDOWN);
         updateTitle();
       }
-      searchStatus.textContent = `${state.searchResults.length} 件中 ${state.searchIndex + 1} 件目`;
+      searchStatus.textContent = translate('games.wording.search.progress', () => `${formatNumber(state.searchResults.length)} 件中 ${formatNumber(state.searchIndex + 1)} 件目`, {
+        total: formatNumber(state.searchResults.length),
+        current: formatNumber(state.searchIndex + 1)
+      });
       updateStatus();
       schedulePersist();
     }
@@ -1363,9 +1568,10 @@
     }
 
     function handleFileNew(){
-      if (state.contentHTML !== state.savedHTML && !confirm('保存されていない変更があります。新規作成しますか？')) return;
-      state.title = `文書${Math.floor(Math.random()*999)+1}`;
-      editor.innerHTML = '<p>新しい文書を開始しましょう。</p>';
+      if (state.contentHTML !== state.savedHTML && !confirm(translate('games.wording.confirm.newWithoutSave', '保存されていない変更があります。新規作成しますか？'))) return;
+      const randomNumber = Math.floor(Math.random() * 999) + 1;
+      state.title = getAutoTitle(randomNumber);
+      editor.innerHTML = translate('games.wording.editor.newDocumentHtml', '<p>新しい文書を開始しましょう。</p>');
       state.contentHTML = editor.innerHTML;
       state.savedHTML = editor.innerHTML;
       state.savedTitle = state.title;
@@ -1394,7 +1600,7 @@
             break;
           case 'p':
             ev.preventDefault();
-            showToast('印刷ダイアログは近日対応予定です');
+            showToast(translate('games.wording.messages.printUnavailable', '印刷ダイアログは近日対応予定です'));
             break;
           case 'f':
             ev.preventDefault();
@@ -1491,6 +1697,10 @@
         shortcuts?.enableKey('r');
         shortcutsDisabled = false;
       }
+      if (typeof localeUnsubscribe === 'function') {
+        try { localeUnsubscribe(); } catch {}
+        localeUnsubscribe = null;
+      }
       flushPersist();
       document.removeEventListener('selectionchange', handleSelectionChange);
       window.removeEventListener('resize', handleResize);
@@ -1532,6 +1742,20 @@
         ribbonContent.style.gridTemplateColumns = 'repeat(auto-fit, minmax(220px, 1fr))';
         page.style.padding = '64px 120px';
       }
+    }
+
+    if (typeof i18n?.onLocaleChanged === 'function') {
+      try {
+        localeUnsubscribe = i18n.onLocaleChanged(() => {
+          applyLocaleBindings();
+          updateTitle();
+          updateStatus();
+          updateTheme();
+          updateReviewHighlightLabel();
+          updateRulerToggleLabel();
+          updateStatusToggleLabel();
+        });
+      } catch {}
     }
 
     window.addEventListener('resize', handleResize);

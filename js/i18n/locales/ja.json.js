@@ -10845,6 +10845,67 @@
     },
 
     "minigame": {
+      "pinball_xp": {
+        "ui": {
+          "controls": {
+            "flippers": "左右フリッパー: ← / → または A / D",
+            "plunger": "プランジャー: スペースキー長押しでショット",
+            "reset": "Rキー: リセット"
+          },
+          "mission": {
+            "label": "ミッション:",
+            "none": "なし",
+            "hint": "L/M/Rレーンを揃えて新しいミッションを開始",
+            "progress": "進行: {progressText} / {targetText}（残り{remainingSecondsText}s）"
+          },
+          "skillShot": {
+            "active": "スキルショット: {lane} レーン / 残り {secondsText}s",
+            "ready": "スキルショット準備完了: {lane} レーンを狙おう！",
+            "next": "次のスキルショット標的: {lane} レーン"
+          },
+          "holdHint": "スペースでショット"
+        },
+        "missions": {
+          "bumperBlitz": {
+            "name": "バンパーブリッツ",
+            "description": "バンパーに6回ヒットしよう"
+          },
+          "slingStorm": {
+            "name": "スリングストーム",
+            "description": "スリングショットを4回作動させる"
+          },
+          "laneMaster": {
+            "name": "レーンマスター",
+            "description": "L/M/Rレーンセットを2回完成"
+          },
+          "postChallenge": {
+            "name": "ポストチャレンジ",
+            "description": "ポストに5回ヒット"
+          }
+        },
+        "announcements": {
+          "missionStart": {
+            "named": "{mission} 開始！",
+            "generic": "ミッション開始！"
+          },
+          "missionComplete": {
+            "named": "{mission} クリア！ +{rewardText}EXP",
+            "generic": "ミッション完了！ +{rewardText}EXP"
+          },
+          "missionFailed": {
+            "named": "{mission} 失敗…",
+            "generic": "ミッション失敗…"
+          },
+          "combo": "コンボ {countText}！ +{xpText}EXP",
+          "skillShotSuccess": "スキルショット成功！ +{xpText}EXP"
+        },
+        "hud": {
+          "combo": {
+            "none": "-"
+          },
+          "status": "ボール: {livesText} / スコア: {scoreText} / EXP: {expText} / チェイン: x{chainText} / コンボ: {comboText}"
+        }
+      },
       "login_bonus": {
         "title": "ログインボーナスカレンダー",
         "subtitle": "毎日ログインして特典を獲得しましょう。獲得情報は自動保存されます。",

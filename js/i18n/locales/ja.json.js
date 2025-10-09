@@ -862,7 +862,44 @@
           },
           "topdown_race": {
             "name": "Aurora Circuit",
-            "description": "見下ろし型周回レース。ラップと順位でEXP獲得"
+            "description": "見下ろし型周回レース。ラップと順位でEXP獲得",
+            "difficulty": {
+              "EASY": "EASY",
+              "NORMAL": "NORMAL",
+              "HARD": "HARD"
+            },
+            "hud": {
+              "title": "Aurora Circuit ({difficulty})",
+              "lap": "ラップ: <strong>{current}/{total}</strong> (次 {next})",
+              "lapTime": "ラップタイム: {time}",
+              "bestLap": "ベストラップ: {time}",
+              "turbo": "ターボ: {percent}%{active}",
+              "turboActive": " (発動中)",
+              "position": "順位: <strong>{position}/{total}</strong>",
+              "rivals": "ライバル",
+              "rivalLapSuffix": " · ラップ {current}/{total}",
+              "secondsSuffix": "秒"
+            },
+            "overlay": {
+              "idlePrompt": "STARTで開始",
+              "go": "GO!"
+            },
+            "results": {
+              "title": "レース結果",
+              "totalTime": "総タイム {time}",
+              "headers": {
+                "position": "順位",
+                "driver": "ドライバー",
+                "finish": "フィニッシュ"
+              },
+              "expSummary": "獲得EXP: ラップ{lap} / ベスト{best} / ブースト{boost} / フィニッシュ{finish}",
+              "restartHint": "Rキーで再スタート"
+            },
+            "status": {
+              "you": "自分",
+              "dnf": "DNF",
+              "fin": "FIN"
+            }
           },
           "falling_shooter": {
             "name": "落下ブロック・シューター",

@@ -11383,6 +11383,22 @@
         "goodRateLabel": "Good Rate"
       }
     },
+      "minesweeper": {
+        "controls": {
+          "restart": "Restart ({key})"
+        },
+        "hud": {
+          "info": "{difficultyLabel}: {difficulty} | Mines: {mines} | Flags left: {flags} | Time: {timeWithUnit} | Revealed: {opened}",
+          "timeUnit": {
+            "seconds": "s"
+          }
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        }
+      },
       "piano_tiles": {
         "tips": "Tap lanes or press D/F/J/K keys, and hold for long notes.",
         "hud": {

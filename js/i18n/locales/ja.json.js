@@ -11383,6 +11383,22 @@
         "goodRateLabel": "良率"
       }
     },
+      "minesweeper": {
+        "controls": {
+          "restart": "再開/再起動 ({key})"
+        },
+        "hud": {
+          "info": "難易度:{difficulty} 地雷:{mines} 残り旗:{flags} 時間:{timeWithUnit} 開放:{opened}",
+          "timeUnit": {
+            "seconds": "秒"
+          }
+        },
+        "difficulty": {
+          "easy": "かんたん",
+          "normal": "ふつう",
+          "hard": "むずかしい"
+        }
+      },
       "piano_tiles": {
         "tips": "タップ or D/F/J/Kキーでレーンを叩き、長いノーツは離さずにホールド。",
         "hud": {

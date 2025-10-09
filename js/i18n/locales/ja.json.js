@@ -817,7 +817,80 @@
           },
           "video_player": {
             "name": "動画プレイヤー",
-            "description": "ローカル動画とYouTubeの視聴でEXPを獲得できるユーティリティ"
+            "description": "ローカル動画とYouTubeの視聴でEXPを獲得できるユーティリティ",
+            "title": "動画プレイヤー",
+            "sessionXp": "セッションEXP: {exp}",
+            "info": {
+              "source": "ソース",
+              "title": "タイトル",
+              "duration": "長さ",
+              "status": "ステータス",
+              "sourceLocal": "ローカル",
+              "sourceYoutube": "YouTube",
+              "untitled": "未タイトル"
+            },
+            "tabs": {
+              "local": "ローカルファイル",
+              "youtube": "YouTube URL"
+            },
+            "local": {
+              "hint": "MP4 / WebM / Ogg など、ブラウザで再生できる動画を選択してください。",
+              "noFile": "ファイル未選択",
+              "loading": "ローカル動画を読み込み中…"
+            },
+            "youtube": {
+              "placeholder": "https://www.youtube.com/watch?v=...",
+              "loadButton": "読み込み",
+              "hint": "YouTube の URL または動画IDを入力してください。IFrame API が利用できない環境では簡易モードで再生します。",
+              "loading": "YouTube 動画を読み込み中…",
+              "ready": "YouTube 動画を読み込みました。再生を開始してください。",
+              "prepared": "YouTube 動画準備完了。",
+              "simple": "YouTube (簡易モード) を読み込みました。",
+              "fallbackTitle": "YouTube動画 ({id})"
+            },
+            "placeholder": "再生する動画を選択してください。",
+            "status": {
+              "noSource": "ソース未選択。",
+              "loadingLocal": "ローカル動画を読み込み中…",
+              "loadingYoutube": "YouTube 動画を読み込み中…",
+              "localReady": "ローカル動画を読み込みました。再生を開始してください。",
+              "youtubeReady": "YouTube 動画を読み込みました。再生を開始してください。",
+              "youtubePrepared": "YouTube 動画準備完了。",
+              "youtubeSimple": "YouTube (簡易モード) を読み込みました。",
+              "playing": "再生中",
+              "paused": "一時停止",
+              "ended": "再生完了",
+              "error": "読み込みエラー",
+              "youtubeError": "YouTube プレイヤーエラー",
+              "buffering": "バッファリング中…"
+            },
+            "message": {
+              "reselectLocal": "同じ動画ファイルを再選択してください。",
+              "historyCleared": "履歴をクリアしました。",
+              "localLoading": "ローカル動画を読み込み中…",
+              "localLoaded": "ローカル動画を読み込みました。",
+              "localError": "動画の読み込み中にエラーが発生しました。別のファイルを試してください。",
+              "localSelectFile": "動画ファイルを選択してください。",
+              "youtubeSimpleLoaded": "YouTube 動画を簡易モードで読み込みました。",
+              "youtubeLoaded": "YouTube 動画を読み込みました。",
+              "youtubeError": "YouTube 動画の読み込みに失敗しました。",
+              "youtubeInvalid": "有効な YouTube URL または動画IDを入力してください。"
+            },
+            "history": {
+              "title": "視聴履歴",
+              "clear": "履歴をクリア",
+              "empty": "視聴履歴はまだありません。",
+              "typeLocal": "ローカル",
+              "typeYoutube": "YouTube",
+              "untitled": "未タイトル"
+            },
+            "shortcuts": {
+              "title": "ショートカット / ヒント",
+              "playPause": "Space: 再生/一時停止 (ローカル動画 / API 利用時の YouTube)",
+              "seek": "← / →: -5 / +5 秒シーク (ローカル動画 / API 利用時の YouTube)",
+              "history": "履歴のエントリをクリックして再度再生できます。ローカル動画は再選択ダイアログが開きます。",
+              "simpleMode": "YouTube 簡易モードでは YouTube 側のショートカットをご利用ください。"
+            }
           },
           "pomodoro": {
             "name": "ポモドーロタイマー",

@@ -42,6 +42,12 @@
     }
   };
 
+  const DIFFICULTY_TEXT_META = {
+    EASY: { key: '.difficulty.easy', fallback: 'EASY' },
+    NORMAL: { key: '.difficulty.normal', fallback: 'NORMAL' },
+    HARD: { key: '.difficulty.hard', fallback: 'HARD' }
+  };
+
   function clamp(v, min, max){
     return v < min ? min : v > max ? max : v;
   }
@@ -57,6 +63,72 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const cfg = { ...DIFFICULTY_CFG.NORMAL, ...(DIFFICULTY_CFG[difficulty] || {}) };
+
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'piano_tiles' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try {
+          return localization.formatNumber(value, options);
+        } catch {}
+      }
+      try {
+        const locale = localization && typeof localization.getLocale === 'function'
+          ? localization.getLocale()
+          : undefined;
+        return new Intl.NumberFormat(locale, options).format(value);
+      } catch {
+        if (value == null || Number.isNaN(value)) return '0';
+        if (typeof value === 'number') return value.toString();
+        return String(value);
+      }
+    };
+    const formatTemplate = (template, params = {}) => {
+      const str = template == null ? '' : String(template);
+      return str.replace(/\{([^{}]+)\}/g, (_, key) => {
+        const normalized = key.trim();
+        if (!normalized) return '';
+        const value = Object.prototype.hasOwnProperty.call(params, normalized) ? params[normalized] : '';
+        return value == null ? '' : String(value);
+      });
+    };
+
+    let labelCache = null;
+    let cachedLocale = null;
+    let detachLocale = null;
+
+    const refreshLabelCache = (force = false) => {
+      const localeId = localization && typeof localization.getLocale === 'function'
+        ? localization.getLocale()
+        : 'default';
+      if (!force && labelCache && cachedLocale === localeId) return labelCache;
+      cachedLocale = localeId;
+      labelCache = {
+        tips: text('.tips', 'タップ or D/F/J/Kキーでレーンを叩き、長いノーツは離さずにホールド。'),
+        hudTemplate: text('.hud.template', '{difficultyLabel}: {difficulty} | {hitsLabel}: {hits} | {missesLabel}: {misses} | {comboLabel}: {combo} ({maxLabel} {maxCombo}) | {accuracyLabel}: {accuracy}%'),
+        hudDifficultyLabel: text('.hud.difficultyLabel', '難易度'),
+        hudHitsLabel: text('.hud.hitsLabel', '成功'),
+        hudMissesLabel: text('.hud.missesLabel', 'ミス'),
+        hudComboLabel: text('.hud.comboLabel', 'コンボ'),
+        hudMaxLabel: text('.hud.maxLabel', '最大'),
+        hudAccuracyLabel: text('.hud.accuracyLabel', '精度')
+      };
+      return labelCache;
+    };
+
+    const resolveDifficultyLabel = (id) => {
+      const meta = DIFFICULTY_TEXT_META[id];
+      if (!meta) return id;
+      return text(meta.key, meta.fallback);
+    };
 
     const container = document.createElement('div');
     container.style.maxWidth = BASE_WIDTH + 'px';
@@ -83,7 +155,6 @@
     tips.style.fontSize = '12px';
     tips.style.opacity = '0.75';
     tips.style.marginTop = '-4px';
-    tips.textContent = 'タップ or D/F/J/Kキーでレーンを叩き、長いノーツは離さずにホールド。';
     container.appendChild(tips);
 
     const canvas = document.createElement('canvas');
@@ -122,10 +193,30 @@
     function updateHud(){
       const total = stats.hits + stats.misses;
       const accuracy = total === 0 ? 100 : Math.round((stats.hits / total) * 1000) / 10;
-      hud.innerHTML = `難易度: ${difficulty} | 成功: ${stats.hits} | ミス: ${stats.misses} | コンボ: ${stats.combo} (Max ${stats.maxCombo}) | 精度: ${accuracy}%`;
+      const formattedAccuracy = formatNumber(accuracy, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const cache = refreshLabelCache();
+      const message = formatTemplate(cache.hudTemplate, {
+        difficultyLabel: cache.hudDifficultyLabel,
+        difficulty: resolveDifficultyLabel(difficulty),
+        hitsLabel: cache.hudHitsLabel,
+        hits: formatNumber(stats.hits),
+        missesLabel: cache.hudMissesLabel,
+        misses: formatNumber(stats.misses),
+        comboLabel: cache.hudComboLabel,
+        combo: formatNumber(stats.combo),
+        maxLabel: cache.hudMaxLabel,
+        maxCombo: formatNumber(stats.maxCombo),
+        accuracyLabel: cache.hudAccuracyLabel,
+        accuracy: formattedAccuracy
+      });
+      hud.textContent = message;
     }
 
-    updateHud();
+    const updateLocalizedStaticTexts = (force = false) => {
+      const cache = refreshLabelCache(force);
+      tips.textContent = cache.tips;
+      updateHud();
+    };
 
     function spawnNote(){
       const lane = chooseLane();
@@ -310,6 +401,17 @@
     window.addEventListener('keydown', keyDown);
     window.addEventListener('keyup', keyUp);
 
+    updateLocalizedStaticTexts(true);
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try {
+          updateLocalizedStaticTexts(true);
+        } catch (error) {
+          console.warn('[MiniExp][piano_tiles] Failed to refresh locale:', error);
+        }
+      });
+    }
+
     function drawLanes(){
       for (let i=0; i<LANES; i++){
         const x = i * laneWidth;
@@ -449,6 +551,10 @@
       canvas.removeEventListener('pointerout', pointerCancel);
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
+      if (typeof detachLocale === 'function'){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       container.remove();
     }
 
@@ -462,6 +568,7 @@
       id: 'piano_tiles',
       name: 'リズムタイル', nameKey: 'selection.miniexp.games.piano_tiles.name',
       description: '4レーンのタップ＆ホールド譜面をタイミング良く刻むリズムゲーム', descriptionKey: 'selection.miniexp.games.piano_tiles.description', categoryIds: ['rhythm'],
+      localizationKey: 'minigame.piano_tiles',
       create
     });
   }

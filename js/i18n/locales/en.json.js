@@ -11274,6 +11274,188 @@
           "invalidAnswer": "Please enter a number"
         }
       },
+      "circuit_simulator": {
+        "title": "Electric Circuit Simulator",
+        "subtitle": "Connect sources, passive components, and instruments to analyze DC/AC circuits in real time.",
+        "tools": {
+          "header": "Tools",
+          "select": "Select & Move",
+          "addNode": "Add Node"
+        },
+        "components": {
+          "wire": {
+            "label": "Wire",
+            "name": "Wire {index}",
+            "description": "Near-zero resistance wire"
+          },
+          "resistor": {
+            "label": "Resistor",
+            "name": "Resistor {index}",
+            "description": "Ohmic resistor"
+          },
+          "capacitor": {
+            "label": "Capacitor",
+            "name": "Capacitor {index}",
+            "description": "Capacitive reactance component"
+          },
+          "inductor": {
+            "label": "Inductor",
+            "name": "Inductor {index}",
+            "description": "Inductive reactance component"
+          },
+          "power": {
+            "label": "DC Source",
+            "name": "DC Source {index}",
+            "description": "Ideal voltage source with internal resistance"
+          },
+          "ac_source": {
+            "label": "AC Source",
+            "name": "AC Source {index}",
+            "description": "Sine-wave voltage source (RMS settings)"
+          },
+          "current_source": {
+            "label": "Current Source",
+            "name": "Current Source {index}",
+            "description": "Ideal constant current source"
+          },
+          "ammeter": {
+            "label": "Ammeter",
+            "name": "Ammeter {index}",
+            "description": "Measures circuit current (≈0 Ω)"
+          },
+          "voltmeter": {
+            "label": "Voltmeter",
+            "name": "Voltmeter {index}",
+            "description": "Measures potential difference between nodes"
+          },
+          "wattmeter": {
+            "label": "Wattmeter",
+            "name": "Wattmeter {index}",
+            "description": "Measures power between nodes"
+          }
+        },
+        "defaults": {
+          "nodes": {
+            "a": "Node A",
+            "b": "Node B",
+            "ground": "Ground"
+          },
+          "elements": {
+            "power": "DC Source",
+            "resistor": "Resistor {index}",
+            "wire": "Line"
+          }
+        },
+        "nodes": {
+          "autoName": "Node {index}"
+        },
+        "analysis": {
+          "header": "Analysis Mode",
+          "mode": {
+            "dc": "DC Analysis",
+            "ac": "AC Analysis"
+          },
+          "frequency": {
+            "label": "Analysis frequency (Hz)",
+            "hintActive": "Available in AC analysis. Adjustable from 0 Hz to 1 MHz.",
+            "hintInactive": "Enable AC analysis to adjust the frequency."
+          }
+        },
+        "status": {
+          "analysisMode": {
+            "dc": "Analysis: DC Mode",
+            "ac": "Analysis: AC Mode ({frequency} Hz)"
+          },
+          "angularFrequency": "Angular frequency: {value} rad/s",
+          "activeTool": "Active tool: {tool}",
+          "connectionStart": "Starting connection: {node}",
+          "ground": {
+            "set": "Ground: {node}",
+            "unset": "Ground: Not set"
+          },
+          "warningItem": "⚠ {message}",
+          "diagnostics": {
+            "header": "Diagnostics:",
+            "item": "• {message}"
+          }
+        },
+        "summary": {
+          "pending": "Analysis pending",
+          "powerDelivered": "Power delivered: {value}",
+          "powerDissipated": "Power dissipated: {value}",
+          "powerFactor": "Power factor: {value}",
+          "maxNodeVoltage": "Highest node voltage: {node} = {value}",
+          "maxBranchCurrent": "Maximum branch current: {value} {unit}",
+          "sessionXp": "Session EXP: {value}",
+          "nodeVoltagesHeader": "Node voltages:",
+          "nodeVoltageItem": "- {node}: {value}"
+        },
+        "canvas": {
+          "labels": {
+            "voltage": "V",
+            "current": "I",
+            "power": "P",
+            "reactivePower": "Q"
+          }
+        },
+        "inspector": {
+          "title": "Inspector",
+          "prompt": "Select a node or component.",
+          "node": {
+            "title": "Node: {node}",
+            "notFound": "Node not found",
+            "potential": "Potential: {value}",
+            "setGround": "Set this node as ground",
+            "delete": "Delete node",
+            "deleteConfirm": "Delete this node and connected components?"
+          },
+          "element": {
+            "title": "{component}",
+            "notFound": "Component not found",
+            "delete": "Delete component",
+            "deleteConfirm": "Delete this component?"
+          },
+          "fields": {
+            "name": "Name",
+            "resistance": "Resistance (Ω)",
+            "voltage": "Voltage (V)",
+            "internalResistance": "Internal resistance (Ω)",
+            "acVoltage": "Voltage (RMS, V)",
+            "phase": "Phase (°)",
+            "capacitance": "Capacitance (F)",
+            "inductance": "Inductance (H)",
+            "current": "Current (A)"
+          },
+          "meterNote": "Instruments do not affect the circuit. They show measured values between nodes.",
+          "connection": "Connection: {nodeA} ↔ {nodeB}",
+          "reactive": {
+            "capacitor": "Reactance Xc: {value} Ω",
+            "capacitorInfinite": "Reactance Xc: ∞ Ω",
+            "inductor": "Reactance Xl: {value} Ω",
+            "inductorInfinite": "Reactance Xl: —"
+          },
+          "stats": {
+            "voltage": "Voltage",
+            "current": "Current",
+            "power": "Power"
+          }
+        },
+        "solver": {
+          "warnings": {
+            "noNodes": "No nodes defined.",
+            "noSolution": "Unable to solve the circuit."
+          },
+          "errors": {
+            "singular": "Matrix is singular and cannot be solved."
+          },
+          "diagnostics": {
+            "isolatedNode": "Node \u201c{node}\u201d is isolated by non-conductive elements.",
+            "dcCapacitor": "In DC analysis, capacitors are treated as open circuits.",
+            "dcInductor": "In DC analysis, inductors behave almost like shorts.",
+            "acZeroFrequency": "AC analysis frequency is 0 Hz, so the result matches DC."
+          }
+        }
+      },
       "acchimuitehoi": {
         "instructions": {
           "rpsTitle": "1. Decide roles with Rock-Paper-Scissors",

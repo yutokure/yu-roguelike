@@ -37,7 +37,7 @@
   }
 
   function gameText(subKey, fallback, params){
-    const key = subKey ? `games.mathLab.${subKey}` : null;
+    const key = subKey ? `games.math_lab.${subKey}` : null;
     return translateText(key, fallback, params);
   }
 

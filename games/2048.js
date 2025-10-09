@@ -2,11 +2,40 @@
   /** MiniExp: 2048 (v0.1.0) */
   function create(root, awardXp, opts){
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'game2048' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    let detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => {
+          try { updateLocaleTexts(); } catch {}
+          try { draw(); } catch {}
+        })
+      : null;
     const panel = document.createElement('div'); panel.className='g2048-panel';
-    const form = document.createElement('div'); form.className='g2048-setup'; form.innerHTML = '<label>盤面サイズ: </label>';
-    const sel = document.createElement('select'); for(let n=4;n<=16;n++){ const o=document.createElement('option'); o.value=String(n); o.textContent=`${n}×${n}`; if(n===4) o.selected=true; sel.appendChild(o); }
-    const btn = document.createElement('button'); btn.textContent='開始';
-    form.appendChild(sel); form.appendChild(btn); panel.appendChild(form); root.appendChild(panel);
+    const form = document.createElement('div'); form.className='g2048-setup';
+    const selectId = `g2048-size-${Math.random().toString(36).slice(2)}`;
+    const label = document.createElement('label'); label.setAttribute('for', selectId);
+    const sel = document.createElement('select'); sel.id = selectId;
+    for(let n=4;n<=16;n++){
+      const o=document.createElement('option');
+      o.value=String(n);
+      o.dataset.size=String(n);
+      if(n===4) o.selected=true;
+      sel.appendChild(o);
+    }
+    const btn = document.createElement('button');
+    btn.type='button';
+    form.appendChild(label);
+    form.appendChild(sel);
+    form.appendChild(btn);
+    panel.appendChild(form); root.appendChild(panel);
 
     let N = 4; let board=null; let moved=false; let running=false; let ended=false; let maxTile=2; let awarded2048=false;
     const canvas=document.createElement('canvas'); canvas.style.display='none'; panel.appendChild(canvas); const ctx=canvas.getContext('2d');
@@ -54,6 +83,16 @@
       if((e.key==='r'||e.key==='R') && !running){ restart(); }
     }
 
+    function updateLocaleTexts(){
+      label.textContent = text('setup.sizeLabel', '盤面サイズ: ');
+      btn.textContent = text('setup.startButton', '開始');
+      Array.from(sel.options).forEach(opt => {
+        const size = Number(opt.dataset.size || opt.value || 0) || 0;
+        opt.textContent = text('setup.boardSizeOption', () => `${size}×${size}`, { size });
+      });
+    }
+    updateLocaleTexts();
+
     btn.addEventListener('click', ()=>{ const n=parseInt(sel.value,10); form.style.display='none'; init(n); });
     function finishGame(){
       if (!ended){
@@ -65,7 +104,11 @@
 
     function start(){ /* waits for setup */ }
     function stop(opts = {}){ running=false; document.removeEventListener('keydown', onKey); if (!opts.keepShortcutsDisabled){ enableHostRestart(); } }
-    function destroy(){ try{ stop(); panel.remove(); }catch{} }
+    function destroy(){
+      try{ stop(); }catch{}
+      try{ if(detachLocale){ detachLocale(); detachLocale=null; } }catch{}
+      try{ panel.remove(); }catch{}
+    }
     function restart(){ stop(); form.style.display='block'; canvas.style.display='none'; awarded2048=false; maxTile=2; }
     function getScore(){ return maxTile; }
 

@@ -12831,6 +12831,13 @@
           "sp": "SP"
         }
       },
+      "statuses": {
+        "poison": "毒",
+        "paralysis": "麻痺",
+        "abilityUp": "能力強化",
+        "abilityDown": "能力低下",
+        "levelDown": "レベル低下"
+      },
       "autoItem": {
         "status": "オートアイテムON：回復アイテム x {count}"
       },
@@ -13052,6 +13059,9 @@
             "abilityDown": "能力が低下した…最大HP/攻撃/防御が下がる ({turns}ターン)",
             "levelDown": "レベルが一時的に低下した！ ({turns}ターン)"
           }
+        },
+        "levelUp": {
+          "log": "レベルアップ！\nレベル：{level} (+{levelDelta})\n最大HP：{maxHp}(+{maxHpDelta})\n攻撃力：{attack}(+{attackDelta})\n防御力：{defense}(+{defenseDelta})"
         },
         "sandbox": {
           "noExp": "サンドボックスでは経験値は獲得できません。",

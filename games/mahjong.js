@@ -351,16 +351,16 @@
     function calculatePoints(han, fu, isDealer){
       let basePoints;
       let limit = null;
-      if (han >= 13){ basePoints = 8000; limit = '役満'; }
-      else if (han >= 11){ basePoints = 6000; limit = '三倍満'; }
-      else if (han >= 8){ basePoints = 4000; limit = '倍満'; }
-      else if (han >= 6){ basePoints = 3000; limit = '跳満'; }
-      else if (han >= 5){ basePoints = 2000; limit = '満貫'; }
+      if (han >= 13){ basePoints = 8000; limit = text('result.limits.yakuman', '役満'); }
+      else if (han >= 11){ basePoints = 6000; limit = text('result.limits.sanbaiman', '三倍満'); }
+      else if (han >= 8){ basePoints = 4000; limit = text('result.limits.baiman', '倍満'); }
+      else if (han >= 6){ basePoints = 3000; limit = text('result.limits.haneman', '跳満'); }
+      else if (han >= 5){ basePoints = 2000; limit = text('result.limits.mangan', '満貫'); }
       else {
         basePoints = fu * Math.pow(2, 2 + han);
         if (basePoints > 2000){
           basePoints = 2000;
-          limit = '満貫';
+          limit = text('result.limits.mangan', '満貫');
         }
       }
 
@@ -687,7 +687,8 @@
     let forcedDiscardIndex = null;
 
     function seatName(wind){
-      return text(`seats.${wind}`, HONOR_LABELS[wind] || wind);
+      const fallback = HONOR_LABELS[wind] || wind;
+      return text(`seats.${wind}`, fallback, { seat: fallback, wind });
     }
 
     function tileDisplay(base){
@@ -695,13 +696,15 @@
       if (base.startsWith('z')){
         const idx = Math.max(0, Math.min(HONORS.length - 1, Number(base.slice(1)) - 1));
         const honor = HONORS[idx] || '';
-        return text(`tiles.honors.${honor}`, HONOR_LABELS[honor] || honor || base);
+        const fallback = HONOR_LABELS[honor] || honor || base;
+        return text(`tiles.honors.${honor}`, fallback, { name: fallback, honor });
       }
       const suit = base[0];
       const rank = Number(base.slice(1));
       const fallbackSuit = SUIT_LABELS[suit] || suit;
-      const fallback = `${rank} ${fallbackSuit}`;
-      return text(`tiles.suits.${suit}`, fallback, { rank });
+      const suitName = text(`tiles.suitNames.${suit}`, fallbackSuit, { suit: fallbackSuit, code: suit });
+      const fallback = `${rank} ${suitName}`;
+      return text(`tiles.suits.${suit}`, fallback, { rank, suit: suitName, code: suit });
     }
 
     function renderOpponentHands(){
@@ -735,8 +738,10 @@
         if (idx === 0){
           const waits = player.waitCache;
           if (waits && waits.length){
-            const tilesText = waits.map(wIdx => tileDisplay(TILE_ORDER[wIdx])).join(' ');
-            panel.waitsEl.textContent = text('hud.waits', () => `Waits: ${tilesText}`, { tiles: tilesText });
+            const waitSeparator = text('hud.waitsSeparator', ' ');
+            const waitTiles = waits.map(wIdx => tileDisplay(TILE_ORDER[wIdx]));
+            const tilesText = waitTiles.join(waitSeparator);
+            panel.waitsEl.textContent = text('hud.waits', () => `Waits: ${tilesText}`, { tiles: tilesText, separator: waitSeparator, items: waitTiles });
           } else {
             panel.waitsEl.textContent = '';
           }
@@ -747,13 +752,14 @@
     }
 
     function renderScores(){
+      const tagSeparator = text('hud.tags.separator', ' / ');
       players.forEach((player, idx)=>{
         const panel = playerPanels[idx];
         panel.scoreEl.textContent = text('hud.scoreValue', () => `${formatNumber(player.score)} pts`, { value: formatNumber(player.score) });
         const tags = [];
         if (idx === dealerIndex) tags.push(text('hud.tags.dealer', 'Dealer'));
         if (player.riichi) tags.push(text('hud.tags.riichi', 'Riichi'));
-        panel.statusEl.textContent = tags.join(' / ');
+        panel.statusEl.textContent = tags.join(tagSeparator);
       });
       const roundSeat = seatName('E');
       infoRound.textContent = text('info.roundValue', () => `${roundSeat} ${roundNumber}`, { seat: roundSeat, round: roundNumber });
@@ -1064,10 +1070,12 @@
         player: winner.name,
         han: result.han,
         fu: result.fu,
-        description
+        description,
+        limit: result.points.limit
       });
-      const yakuLine = result.yaku.join(' / ');
-      logLocalized('log.yaku', () => `Yaku: ${yakuLine}`, { list: yakuLine });
+      const yakuSeparator = text('log.yakuSeparator', ' / ');
+      const yakuLine = result.yaku.join(yakuSeparator);
+      logLocalized('log.yaku', () => `Yaku: ${yakuLine}`, { list: yakuLine, separator: yakuSeparator, items: result.yaku });
       const basePoints = result.points;
       if (tsumo){
         if (winnerIdx === dealerIndex){
@@ -1159,8 +1167,10 @@
       running = false;
       phase = 'idle';
       const standings = players.map(p=>({ name: p.name, score: p.score })).sort((a,b)=>b.score-a.score);
-      const summary = standings.map(s=>`${s.name} ${formatNumber(s.score)}`).join(' / ');
-      logLocalized('log.finalResult', () => `Final result: ${summary}`, { list: summary });
+      const summarySeparator = text('log.summarySeparator', ' / ');
+      const summaryItems = standings.map(s=>`${s.name} ${formatNumber(s.score)}`);
+      const summary = summaryItems.join(summarySeparator);
+      logLocalized('log.finalResult', () => `Final result: ${summary}`, { list: summary, separator: summarySeparator, items: summaryItems });
       awardXp(Math.max(50, Math.floor(players[0].score / 120)), { type: 'end', reason: text('rewards.matchComplete', 'Match complete') });
     }
 

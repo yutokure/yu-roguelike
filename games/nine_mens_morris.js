@@ -344,6 +344,29 @@
 
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'nine_mens_morris' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatValue = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function'){
+        try { return new Intl.NumberFormat(undefined, options).format(value); } catch {}
+      }
+      if (value != null && typeof value.toLocaleString === 'function'){
+        try { return value.toLocaleString(undefined, options); } catch {}
+      }
+      return String(value ?? '');
+    };
+    let detachLocale = null;
 
     const container = document.createElement('div');
     container.style.display = 'flex';
@@ -374,7 +397,6 @@
     headerCard.style.maxWidth = '520px';
 
     const title = document.createElement('div');
-    title.textContent = 'ナイン・メンズ・モリス — あなたが先手';
     title.style.fontSize = '18px';
     title.style.fontWeight = '600';
     headerCard.appendChild(title);
@@ -419,7 +441,7 @@
     tips.style.fontSize = '13px';
     tips.style.lineHeight = '1.6';
     tips.style.color = 'rgba(226,232,240,0.85)';
-    tips.innerHTML = '操作: 盤上をクリックして配置 / 駒→移動先をクリックして移動。<br>ミル成立時は赤枠の相手駒を選択して除去。';
+    tips.innerHTML = '';
 
     panel.appendChild(info);
     panel.appendChild(phaseInfo);
@@ -429,6 +451,22 @@
     container.appendChild(panel);
 
     root.appendChild(container);
+
+    function applyStaticTexts(){
+      title.textContent = text('minigame.nine_mens_morris.header.title', 'ナイン・メンズ・モリス — あなたが先手');
+      tips.innerHTML = text('minigame.nine_mens_morris.tips.controls', '操作: 盤上をクリックして配置 / 駒→移動先をクリックして移動。<br>ミル成立時は赤枠の相手駒を選択して除去。');
+    }
+
+    applyStaticTexts();
+    if (!detachLocale && localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try {
+          applyStaticTexts();
+          updateInfo();
+          draw();
+        } catch {}
+      });
+    }
 
     let board = Array(POINT_COORDS.length).fill(EMPTY);
     let placed = { [PLAYER]: 0, [AI]: 0 };
@@ -469,20 +507,53 @@
       const aiPieces = countPieces(board, AI);
       const playerPhase = getPhase(board, placed, PLAYER);
       const aiPhase = getPhase(board, placed, AI);
-      info.innerHTML = `プレイヤー駒: <strong>${playerPieces}</strong> / 捕獲: ${captured[PLAYER]}<br>` +
-        `AI駒: <strong>${aiPieces}</strong> / 捕獲: ${captured[AI]}`;
-      const phaseLabel = phase => phase === 'place' ? '配置フェーズ' : phase === 'slide' ? '移動フェーズ' : 'フライトモード';
-      phaseInfo.innerHTML = `あなた: ${phaseLabel(playerPhase)}（残り配置 ${Math.max(0, 9 - placed[PLAYER])}）<br>` +
-        `AI: ${phaseLabel(aiPhase)}（残り配置 ${Math.max(0, 9 - placed[AI])}）`;
+      const playerPiecesFormatted = formatValue(playerPieces);
+      const playerCapturedFormatted = formatValue(captured[PLAYER]);
+      const playerInfo = text('minigame.nine_mens_morris.hud.info.player', () => `プレイヤー駒: <strong>${playerPiecesFormatted}</strong> / 捕獲: ${playerCapturedFormatted}`, {
+        pieces: playerPieces,
+        piecesFormatted: playerPiecesFormatted,
+        captured: captured[PLAYER],
+        capturedFormatted: playerCapturedFormatted
+      });
+      const aiPiecesFormatted = formatValue(aiPieces);
+      const aiCapturedFormatted = formatValue(captured[AI]);
+      const aiInfo = text('minigame.nine_mens_morris.hud.info.ai', () => `AI駒: <strong>${aiPiecesFormatted}</strong> / 捕獲: ${aiCapturedFormatted}`, {
+        pieces: aiPieces,
+        piecesFormatted: aiPiecesFormatted,
+        captured: captured[AI],
+        capturedFormatted: aiCapturedFormatted
+      });
+      info.innerHTML = `${playerInfo}<br>${aiInfo}`;
+      const phaseFallbacks = { place: '配置フェーズ', slide: '移動フェーズ', fly: 'フライトモード' };
+      const playerPhaseLabel = text(`minigame.nine_mens_morris.phase.${playerPhase}`, phaseFallbacks[playerPhase] || playerPhase);
+      const aiPhaseLabel = text(`minigame.nine_mens_morris.phase.${aiPhase}`, phaseFallbacks[aiPhase] || aiPhase);
+      const playerRemainingRaw = Math.max(0, 9 - placed[PLAYER]);
+      const aiRemainingRaw = Math.max(0, 9 - placed[AI]);
+      const playerRemaining = formatValue(playerRemainingRaw);
+      const aiRemaining = formatValue(aiRemainingRaw);
+      phaseInfo.innerHTML = text('minigame.nine_mens_morris.hud.phaseInfo', () =>
+        `あなた: ${playerPhaseLabel}（残り配置 ${playerRemaining}）<br>` +
+        `AI: ${aiPhaseLabel}（残り配置 ${aiRemaining}）`, {
+        playerPhase: playerPhaseLabel,
+        playerPhaseKey: playerPhase,
+        playerRemaining,
+        playerRemainingRaw,
+        aiPhase: aiPhaseLabel,
+        aiPhaseKey: aiPhase,
+        aiRemaining,
+        aiRemainingRaw
+      });
       if (ended){
         return;
       }
       if (removalPending){
-        status.textContent = 'ミル成立！除去する相手駒を選んでください。';
+        status.textContent = text('minigame.nine_mens_morris.status.removalPrompt', 'ミル成立！除去する相手駒を選んでください。');
       } else if (thinking){
-        status.textContent = 'AIが思考中…';
+        status.textContent = text('minigame.nine_mens_morris.status.aiThinking', 'AIが思考中…');
       } else {
-        status.textContent = turn === PLAYER ? 'あなたの番です。' : 'AIの番です…';
+        status.textContent = turn === PLAYER
+          ? text('minigame.nine_mens_morris.status.playerTurn', 'あなたの番です。')
+          : text('minigame.nine_mens_morris.status.aiTurn', 'AIの番です…');
       }
     }
 
@@ -590,7 +661,7 @@
     function concludePlayerWin(){
       ended = true;
       thinking = false;
-      status.textContent = 'あなたの勝ち！AIの駒を封じました。';
+      status.textContent = text('minigame.nine_mens_morris.result.win', 'あなたの勝ち！AIの駒を封じました。');
       if (typeof awardXp === 'function'){
         const xp = WIN_EXP[difficulty] || WIN_EXP.NORMAL;
         try { awardXp(xp, { type: 'win', game: 'nine_mens_morris', difficulty }); } catch (err) {}
@@ -600,7 +671,7 @@
     function concludePlayerLose(){
       ended = true;
       thinking = false;
-      status.textContent = '敗北… AIに駒を封じられました。';
+      status.textContent = text('minigame.nine_mens_morris.result.lose', '敗北… AIに駒を封じられました。');
     }
 
     function checkEndAfterMove(color){
@@ -692,7 +763,7 @@
       if (typeof awardXp === 'function'){
         try { awardXp(CAPTURE_XP, { type: 'capture', game: 'nine_mens_morris' }); } catch (err) {}
       }
-      showPopup(index, `+${CAPTURE_XP}`);
+      showPopup(index, `+${formatValue(CAPTURE_XP)}`);
       if (checkEndAfterMove(PLAYER)){
         updateInfo();
         draw();
@@ -738,13 +809,13 @@
         if (typeof awardXp === 'function'){
           try { awardXp(PLACE_XP, { type: 'place', game: 'nine_mens_morris' }); } catch (err) {}
         }
-        showPopup(idx, `+${PLACE_XP}`);
+        showPopup(idx, `+${formatValue(PLACE_XP)}`);
         if (formsMill(board, idx, PLAYER)){
           lastMove.formsMill = true;
           if (typeof awardXp === 'function'){
             try { awardXp(MILL_XP, { type: 'mill', game: 'nine_mens_morris' }); } catch (err) {}
           }
-          showPopup(idx, `+${MILL_XP}`, { variant: 'combo' });
+          showPopup(idx, `+${formatValue(MILL_XP)}`, { variant: 'combo' });
           beginRemoval();
         } else {
           if (checkEndAfterMove(PLAYER)){
@@ -775,13 +846,13 @@
       if (typeof awardXp === 'function'){
         try { awardXp(MOVE_XP, { type: 'move', game: 'nine_mens_morris', phase }); } catch (err) {}
       }
-      showPopup(idx, `+${MOVE_XP}`);
+      showPopup(idx, `+${formatValue(MOVE_XP)}`);
       if (formsMill(board, idx, PLAYER)){
         lastMove.formsMill = true;
         if (typeof awardXp === 'function'){
           try { awardXp(MILL_XP, { type: 'mill', game: 'nine_mens_morris' }); } catch (err) {}
         }
-        showPopup(idx, `+${MILL_XP}`, { variant: 'combo' });
+        showPopup(idx, `+${formatValue(MILL_XP)}`, { variant: 'combo' });
         beginRemoval();
       } else {
         if (checkEndAfterMove(PLAYER)){
@@ -835,6 +906,10 @@
 
     function destroy(){
       try { stop(); } catch (err) {}
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       try { root && root.removeChild(container); } catch (err) {}
     }
 

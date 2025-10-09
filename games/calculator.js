@@ -114,6 +114,16 @@
     panel.style.flexDirection = 'column';
     panel.style.overflow = 'hidden';
 
+    let tokens = [];
+    let current = '';
+    let lastExpression = '';
+    let lastResult = 0;
+    let displayMode = 'input'; // 'input' | 'result'
+    let totalCalculations = 0;
+    let active = false;
+    let mode = 'standard';
+    let programmerBase = 16;
+
     const display = document.createElement('div');
     display.style.padding = '24px 20px 16px';
     display.style.display = 'flex';
@@ -445,16 +455,6 @@
     container.appendChild(panel);
     panel.appendChild(historySection);
     root.appendChild(container);
-
-    let tokens = [];
-    let current = '';
-    let lastExpression = '';
-    let lastResult = 0;
-    let displayMode = 'input'; // 'input' | 'result'
-    let totalCalculations = 0;
-    let active = false;
-    let mode = 'standard';
-    let programmerBase = 16;
 
     updateModeUI();
     updateDigitControls();

@@ -3,7 +3,43 @@
    *  - Classic rock-paper-scissors vs CPU
    *  - Win rounds to earn 10 EXP apiece
    */
-  function create(root, awardXp){
+  function create(root, awardXp, opts){
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'janken' })
+      : null);
+    const text = (key, fallback, params) => {
+      try {
+        if (localization && typeof localization.t === 'function'){
+          return localization.t(key, fallback, params);
+        }
+      } catch (error) {
+        console.warn('[MiniExp:Janken] Failed to translate key:', key, error);
+      }
+      if (typeof fallback === 'function'){
+        try { return fallback(); } catch { return ''; }
+      }
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      try {
+        if (localization && typeof localization.formatNumber === 'function'){
+          return localization.formatNumber(value, options);
+        }
+      } catch (error) {
+        console.warn('[MiniExp:Janken] Failed to format number:', value, error);
+      }
+      try {
+        const locale = localization?.getLocale?.();
+        return new Intl.NumberFormat(locale || undefined, options).format(value);
+      } catch {}
+      return String(value ?? '');
+    };
+    const resolveParams = (params) => {
+      if (typeof params === 'function'){
+        try { return params(); } catch { return undefined; }
+      }
+      return params;
+    };
     function createCard(){
       const card = document.createElement('div');
       card.style.background = 'rgba(2,6,23,0.92)';
@@ -14,6 +50,18 @@
       card.style.gap = '10px';
       return card;
     }
+
+    const CHOICES = [
+      { key: 'choices.rock', fallback: 'グー' },
+      { key: 'choices.scissors', fallback: 'チョキ' },
+      { key: 'choices.paper', fallback: 'パー' },
+    ];
+
+    const CHANT_SEQUENCE = [
+      { key: 'chant.step1', fallback: '最初はグー…' },
+      { key: 'chant.step2', fallback: 'じゃんけん…' },
+      { key: 'chant.step3', fallback: 'ぽん！' },
+    ];
 
     const wrapper = document.createElement('div');
     wrapper.style.display = 'grid';
@@ -28,27 +76,27 @@
     const title = document.createElement('div');
     title.style.fontSize = '1.3rem';
     title.style.fontWeight = '600';
-    title.textContent = 'じゃんけん 10EXP';
+    title.textContent = text('title', 'じゃんけん 10EXP');
     const subtitle = document.createElement('div');
     subtitle.style.fontSize = '0.85rem';
     subtitle.style.opacity = '0.75';
-    subtitle.textContent = '3連勝以上でボーナスEXP！';
+    subtitle.textContent = text('subtitle', '3連勝以上でボーナスEXP！');
     titleCard.appendChild(title);
     titleCard.appendChild(subtitle);
 
     const controlCard = createCard();
     const statusLabel = document.createElement('div');
     statusLabel.style.fontSize = '0.95rem';
-    statusLabel.textContent = '手を選ぶと掛け声が始まるよ';
+    statusLabel.textContent = text('status.prompt', '手を選ぶと掛け声が始まるよ');
     const buttonRow = document.createElement('div');
     buttonRow.style.display = 'flex';
     buttonRow.style.gap = '10px';
 
     const buttons = [];
-    ['グー','チョキ','パー'].forEach((label, idx) => {
+    CHOICES.forEach((choice, idx) => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = label;
+      btn.textContent = text(choice.key, choice.fallback);
       btn.style.flex = '1';
       btn.style.padding = '12px';
       btn.style.borderRadius = '8px';
@@ -77,10 +125,10 @@
     const logTitle = document.createElement('div');
     logTitle.style.fontSize = '0.9rem';
     logTitle.style.opacity = '0.75';
-    logTitle.textContent = '直近の結果';
+    logTitle.textContent = text('log.title', '直近の結果');
     const log = document.createElement('div');
     log.style.minHeight = '48px';
-    log.textContent = '勝てば10EXP！';
+    log.textContent = text('log.intro', '勝てば10EXP！');
     const historyList = document.createElement('ul');
     historyList.style.listStyle = 'none';
     historyList.style.margin = '0';
@@ -106,10 +154,107 @@
     wrapper.appendChild(statsCard);
     root.appendChild(wrapper);
 
+    const historyRecords = [];
+    let statusState = { key: 'status.prompt', fallback: '手を選ぶと掛け声が始まるよ', params: null };
+    let detachLocale = null;
+
+    function choiceLabel(index){
+      const def = CHOICES[index] || {};
+      return text(def.key, def.fallback);
+    }
+
+    function choiceFallback(index){
+      return CHOICES[index]?.fallback ?? '';
+    }
+
+    function applyStatus(){
+      const params = resolveParams(statusState.params);
+      statusLabel.textContent = text(statusState.key, statusState.fallback, params);
+    }
+
+    function setStatus(key, fallback, params){
+      statusState = { key, fallback, params: params ?? null };
+      applyStatus();
+    }
+
+    function createHistoryRecord({ round, messageKey, messageFallback, params }){
+      return { round, messageKey, messageFallback, params };
+    }
+
+    function resolveHistoryMessage(record){
+      if (!record) return '';
+      const params = resolveParams(record.params);
+      return text(record.messageKey, record.messageFallback, params);
+    }
+
+    function resolveHistoryEntry(record){
+      if (!record) return '';
+      const message = resolveHistoryMessage(record);
+      const fallback = () => `[第${record.round}戦] ${record.messageFallback()}`;
+      const params = {
+        round: formatNumber(record.round),
+        message,
+      };
+      return text('log.entry', fallback, params);
+    }
+
+    function renderHistory(){
+      while (historyList.firstChild){
+        historyList.removeChild(historyList.firstChild);
+      }
+      if (historyRecords.length === 0){
+        log.textContent = text('log.intro', '勝てば10EXP！');
+        return;
+      }
+      historyRecords.forEach((record) => {
+        const li = document.createElement('li');
+        li.textContent = resolveHistoryEntry(record);
+        li.style.fontSize = '0.82rem';
+        li.style.opacity = '0.85';
+        historyList.appendChild(li);
+      });
+      log.textContent = resolveHistoryEntry(historyRecords[0]);
+    }
+
+    function attachLocaleListener(){
+      if (!detachLocale && localization && typeof localization.onChange === 'function'){
+        detachLocale = localization.onChange(() => {
+          try {
+            applyStaticTexts();
+          } catch (error) {
+            console.warn('[MiniExp:Janken] Failed to refresh locale:', error);
+          }
+        });
+      }
+    }
+
+    function detachLocaleListener(){
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
+    }
+
+    function applyStaticTexts(){
+      title.textContent = text('title', 'じゃんけん 10EXP');
+      subtitle.textContent = text('subtitle', '3連勝以上でボーナスEXP！');
+      logTitle.textContent = text('log.title', '直近の結果');
+      buttons.forEach((btn, idx) => {
+        const choice = CHOICES[idx];
+        if (!choice) return;
+        btn.textContent = text(choice.key, choice.fallback);
+      });
+      applyStatus();
+      updateStats();
+      renderHistory();
+    }
+
+    applyStaticTexts();
+    attachLocaleListener();
+
     const timers = new Set();
     const BEATS = [1,2,0];
     const BEATEN_BY = [2,0,1];
-    const CHANT_STEPS = ['最初はグー…', 'じゃんけん…', 'ぽん！'];
     const CHANT_INTERVAL = 260;
 
     let wins = 0;
@@ -136,10 +281,26 @@
     }
 
     function updateStats(){
-      statsPrimary.textContent = `勝ち: ${wins}／負け: ${losses}／あいこ: ${ties}`;
       const total = wins + losses + ties;
       const winRate = total ? Math.round((wins / total) * 100) : 0;
-      statsSecondary.textContent = `連勝: ${streak}（最高 ${bestStreak}）／勝率: ${winRate}%`;
+      statsPrimary.textContent = text(
+        'stats.primary',
+        () => `勝ち: ${wins}／負け: ${losses}／あいこ: ${ties}`,
+        {
+          wins: formatNumber(wins),
+          losses: formatNumber(losses),
+          ties: formatNumber(ties),
+        }
+      );
+      statsSecondary.textContent = text(
+        'stats.secondary',
+        () => `連勝: ${streak}（最高 ${bestStreak}）／勝率: ${winRate}%`,
+        {
+          streak: formatNumber(streak),
+          best: formatNumber(bestStreak),
+          winRate: formatNumber(winRate),
+        }
+      );
     }
 
     function setButtonsDisabled(disabled){
@@ -172,15 +333,13 @@
       });
     }
 
-    function pushHistory(entry){
-      const li = document.createElement('li');
-      li.textContent = entry;
-      li.style.fontSize = '0.82rem';
-      li.style.opacity = '0.85';
-      historyList.prepend(li);
-      while (historyList.children.length > 6){
-        historyList.removeChild(historyList.lastChild);
+    function pushHistory(record){
+      if (!record) return;
+      historyRecords.unshift(record);
+      if (historyRecords.length > 6){
+        historyRecords.length = 6;
       }
+      renderHistory();
     }
 
     function play(player){
@@ -188,12 +347,18 @@
       isResolving = true;
       setButtonsDisabled(true);
       highlightButton(player);
-      statusLabel.textContent = CHANT_STEPS[0];
+      const firstStep = CHANT_SEQUENCE[0];
+      if (firstStep){
+        setStatus(firstStep.key, firstStep.fallback);
+      }
       let step = 1;
 
       function continueChant(){
-        if (step < CHANT_STEPS.length){
-          statusLabel.textContent = CHANT_STEPS[step];
+        if (step < CHANT_SEQUENCE.length){
+          const sequence = CHANT_SEQUENCE[step];
+          if (sequence){
+            setStatus(sequence.key, sequence.fallback);
+          }
           step += 1;
           setGameTimeout(continueChant, CHANT_INTERVAL);
         } else {
@@ -210,9 +375,11 @@
       roundCount += 1;
 
       const result = judge(player, cpu);
-      let message = '';
       let xpGain = 0;
       let bonus = 0;
+      let messageKey = null;
+      let messageFallback = null;
+      let messageParamsFactory = null;
 
       if (result === 'win'){
         wins += 1;
@@ -228,22 +395,45 @@
         const payload = { reason: bonus > 0 ? 'streak-win' : 'win', gameId: 'janken', streak };
         if (bonus > 0) payload.bonus = bonus;
         awardXp(xpGain, payload);
-        message = `勝ち！あなた=${labelOf(player)}／相手=${labelOf(cpu)} → ${xpGain}EXP`;
-        statusLabel.textContent = streak >= 2 ? `連勝${streak}！次は？` : 'ナイス！次の手を選んでね';
+        messageKey = 'messages.win';
+        messageFallback = () => `勝ち！あなた=${choiceFallback(player)}／相手=${choiceFallback(cpu)} → ${xpGain}EXP`;
+        messageParamsFactory = () => ({
+          player: choiceLabel(player),
+          cpu: choiceLabel(cpu),
+          xp: formatNumber(xpGain),
+        });
+        if (streak >= 2){
+          setStatus('status.winStreak', () => `連勝${streak}！次は？`, () => ({ streak: formatNumber(streak) }));
+        } else {
+          setStatus('status.winNext', 'ナイス！次の手を選んでね');
+        }
       } else if (result === 'lose'){
         losses += 1;
         streak = 0;
-        message = `負け… あなた=${labelOf(player)}／相手=${labelOf(cpu)}`;
-        statusLabel.textContent = '切り替えて次こそ勝とう！';
+        messageKey = 'messages.lose';
+        messageFallback = () => `負け… あなた=${choiceFallback(player)}／相手=${choiceFallback(cpu)}`;
+        messageParamsFactory = () => ({
+          player: choiceLabel(player),
+          cpu: choiceLabel(cpu),
+        });
+        setStatus('status.lose', '切り替えて次こそ勝とう！');
       } else {
         ties += 1;
-        message = `あいこ：${labelOf(player)} vs ${labelOf(cpu)} もう一度！`;
-        statusLabel.textContent = 'あいこ！そのままもう一度';
+        messageKey = 'messages.tie';
+        messageFallback = () => `あいこ：${choiceFallback(player)} vs ${choiceFallback(cpu)} もう一度！`;
+        messageParamsFactory = () => ({
+          player: choiceLabel(player),
+          cpu: choiceLabel(cpu),
+        });
+        setStatus('status.tie', 'あいこ！そのままもう一度');
       }
 
-      const historyEntry = `[第${roundCount}戦] ${message}`;
-      log.textContent = historyEntry;
-      pushHistory(historyEntry);
+      pushHistory(createHistoryRecord({
+        round: roundCount,
+        messageKey: messageKey || '',
+        messageFallback: messageFallback || (() => ''),
+        params: messageParamsFactory,
+      }));
       updateStats();
 
       clearHighlights();
@@ -269,10 +459,6 @@
       return 'lose';
     }
 
-    function labelOf(index){
-      return index === 0 ? 'グー' : index === 1 ? 'チョキ' : 'パー';
-    }
-
     updateStats();
 
     function start(){}
@@ -282,11 +468,12 @@
         isResolving = false;
         setButtonsDisabled(false);
         clearHighlights();
-        statusLabel.textContent = '一時停止中';
       }
+      setStatus('status.paused', '一時停止中');
     }
     function destroy(){
       stop();
+      detachLocaleListener();
       try { wrapper.remove(); } catch {}
     }
     function getScore(){ return wins * 10; }

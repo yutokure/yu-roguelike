@@ -11064,6 +11064,42 @@
           "goodRateLabel": "Good Rate"
         }
       },
+      "janken": {
+        "title": "Rock-Paper-Scissors 10 EXP",
+        "subtitle": "Win 3+ in a row for bonus EXP!",
+        "status": {
+          "prompt": "Pick a hand to start the chant.",
+          "winStreak": "Streak {streak}! What's next?",
+          "winNext": "Nice! Pick your next hand.",
+          "lose": "Shake it off and win the next one!",
+          "tie": "Draw! Go again.",
+          "paused": "Paused"
+        },
+        "chant": {
+          "step1": "Rock first...",
+          "step2": "Janken...",
+          "step3": "Shoot!"
+        },
+        "choices": {
+          "rock": "Rock",
+          "scissors": "Scissors",
+          "paper": "Paper"
+        },
+        "log": {
+          "title": "Recent results",
+          "intro": "Win to earn 10 EXP!",
+          "entry": "[Round {round}] {message}"
+        },
+        "stats": {
+          "primary": "Wins: {wins} / Losses: {losses} / Draws: {ties}",
+          "secondary": "Streak: {streak} (Best {best}) / Win rate: {winRate}%"
+        },
+        "messages": {
+          "win": "Win! You={player} / Opponent={cpu} → {xp} EXP",
+          "lose": "Defeat... You={player} / Opponent={cpu}",
+          "tie": "Draw: {player} vs {cpu}. Try again!"
+        }
+      },
       "darumasan": {
         "guard": {
           "title": "Watcher Status",

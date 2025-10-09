@@ -11064,6 +11064,42 @@
           "goodRateLabel": "良率"
         }
       },
+      "janken": {
+        "title": "じゃんけん 10EXP",
+        "subtitle": "3連勝以上でボーナスEXP！",
+        "status": {
+          "prompt": "手を選ぶと掛け声が始まるよ",
+          "winStreak": "連勝{streak}！次は？",
+          "winNext": "ナイス！次の手を選んでね",
+          "lose": "切り替えて次こそ勝とう！",
+          "tie": "あいこ！そのままもう一度",
+          "paused": "一時停止中"
+        },
+        "chant": {
+          "step1": "最初はグー…",
+          "step2": "じゃんけん…",
+          "step3": "ぽん！"
+        },
+        "choices": {
+          "rock": "グー",
+          "scissors": "チョキ",
+          "paper": "パー"
+        },
+        "log": {
+          "title": "直近の結果",
+          "intro": "勝てば10EXP！",
+          "entry": "[第{round}戦] {message}"
+        },
+        "stats": {
+          "primary": "勝ち: {wins}／負け: {losses}／あいこ: {ties}",
+          "secondary": "連勝: {streak}（最高 {best}）／勝率: {winRate}%"
+        },
+        "messages": {
+          "win": "勝ち！あなた={player}／相手={cpu} → {xp}EXP",
+          "lose": "負け… あなた={player}／相手={cpu}",
+          "tie": "あいこ：{player} vs {cpu} もう一度！"
+        }
+      },
       "darumasan": {
         "guard": {
           "title": "見張りの様子",

@@ -5,6 +5,57 @@
    */
   function create(root, awardXp, opts){
     const shortcuts = opts?.shortcuts;
+    const i18n = window.I18n;
+
+    function computeFallback(fallback, params){
+      if (typeof fallback === 'function'){
+        try {
+          const value = fallback(params || {});
+          return value == null ? '' : String(value);
+        } catch (error){
+          console.warn('[darumasan] Failed to evaluate fallback text:', error);
+          return '';
+        }
+      }
+      return fallback ?? '';
+    }
+
+    function text(key, fallback, params){
+      if (i18n && typeof i18n.t === 'function'){
+        try {
+          const result = i18n.t(key, params);
+          if (typeof result === 'string' && result !== key) return result;
+          if (result !== undefined && result !== null && result !== key) return result;
+        } catch (error){
+          console.warn('[darumasan] Failed to translate key:', key, error);
+        }
+      }
+      return computeFallback(fallback, params);
+    }
+
+    function formatNumberLocalized(value, options, fallbackDigits = 0){
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return '0';
+      if (i18n && typeof i18n.formatNumber === 'function'){
+        try {
+          return i18n.formatNumber(numeric, options);
+        } catch (error){
+          console.warn('[darumasan] Failed to format number:', value, error);
+        }
+      }
+      if (options && typeof options.minimumFractionDigits === 'number' && typeof options.maximumFractionDigits === 'number'){
+        if (options.minimumFractionDigits === options.maximumFractionDigits){
+          return numeric.toFixed(options.minimumFractionDigits);
+        }
+        try {
+          return numeric.toLocaleString(undefined, options);
+        } catch {}
+      }
+      if (typeof fallbackDigits === 'number'){
+        return numeric.toFixed(fallbackDigits);
+      }
+      return String(numeric);
+    }
 
     function createCard(){
       const card = document.createElement('div');
@@ -27,30 +78,25 @@
 
     const guardCard = createCard();
     const guardTitle = document.createElement('div');
-    guardTitle.textContent = '見張りの様子';
     guardTitle.style.fontSize = '0.95rem';
     guardTitle.style.opacity = '0.7';
 
     const guardStateLabel = document.createElement('div');
     guardStateLabel.style.fontSize = '1.4rem';
     guardStateLabel.style.fontWeight = '700';
-    guardStateLabel.textContent = '準備中…';
 
     const guardCountdownLabel = document.createElement('div');
     guardCountdownLabel.style.fontSize = '0.9rem';
     guardCountdownLabel.style.color = '#fef3c7';
-    guardCountdownLabel.textContent = '残り --.- 秒';
 
     const moveIndicator = document.createElement('div');
     moveIndicator.style.fontSize = '0.85rem';
     moveIndicator.style.opacity = '0.85';
     moveIndicator.style.color = '#cbd5f5';
-    moveIndicator.textContent = '停止中';
 
     const hintLabel = document.createElement('div');
     hintLabel.style.fontSize = '0.85rem';
     hintLabel.style.opacity = '0.7';
-    hintLabel.textContent = 'スペース / ↑ で前進';
 
     guardCard.appendChild(guardTitle);
     guardCard.appendChild(guardStateLabel);
@@ -60,7 +106,6 @@
 
     const progressCard = createCard();
     const progressTitle = document.createElement('div');
-    progressTitle.textContent = '進行状況';
     progressTitle.style.fontSize = '0.95rem';
     progressTitle.style.opacity = '0.7';
 
@@ -78,12 +123,10 @@
     const progressDetailLabel = document.createElement('div');
     progressDetailLabel.style.fontSize = '0.85rem';
     progressDetailLabel.style.opacity = '0.85';
-    progressDetailLabel.textContent = '距離 0% / 経過 0.0 秒';
 
     const bestRecordLabel = document.createElement('div');
     bestRecordLabel.style.fontSize = '0.8rem';
     bestRecordLabel.style.opacity = '0.6';
-    bestRecordLabel.textContent = 'ベストタイム: --.- 秒';
 
     progressCard.appendChild(progressTitle);
     progressCard.appendChild(progressWrapper);
@@ -94,7 +137,6 @@
     statusCard.style.padding = '14px';
     const statusLabel = document.createElement('div');
     statusLabel.style.fontSize = '0.95rem';
-    statusLabel.textContent = 'スタートで開始';
     statusCard.appendChild(statusLabel);
 
     wrapper.appendChild(guardCard);
@@ -115,6 +157,8 @@
     let lastMovingReported = null;
     let timeElapsed = 0;
     let bestTime = null;
+    let statusMode = 'initial';
+    let statusParams = {};
 
     const total = 100;
     const MOVE_SPEED = 22; // units per second
@@ -123,19 +167,19 @@
 
     function updateGuardPresentation(){
       if (guardState === 'watch'){
-        guardStateLabel.textContent = '見てる！止まって！';
+        guardStateLabel.textContent = text('minigame.darumasan.guard.state.watch', '見てる！止まって！');
         guardStateLabel.style.color = '#f87171';
         guardCountdownLabel.style.color = '#fca5a5';
       } else if (guardState === 'warning'){
-        guardStateLabel.textContent = 'そろそろ振り向く！';
+        guardStateLabel.textContent = text('minigame.darumasan.guard.state.warning', 'そろそろ振り向く！');
         guardStateLabel.style.color = '#fbbf24';
         guardCountdownLabel.style.color = '#fef08a';
       } else if (guardState === 'safe'){
-        guardStateLabel.textContent = '今だ！前進！';
+        guardStateLabel.textContent = text('minigame.darumasan.guard.state.safe', '今だ！前進！');
         guardStateLabel.style.color = '#34d399';
         guardCountdownLabel.style.color = '#bbf7d0';
       } else {
-        guardStateLabel.textContent = '準備中…';
+        guardStateLabel.textContent = text('minigame.darumasan.guard.state.idle', '準備中…');
         guardStateLabel.style.color = '#e2e8f0';
         guardCountdownLabel.style.color = '#fef3c7';
       }
@@ -144,13 +188,16 @@
 
     function updateGuardCountdown(){
       if (guardState === 'safe'){
-        guardCountdownLabel.textContent = `安全残り ${(Math.max(0, guardTimer)).toFixed(2)} 秒`;
+        const seconds = formatNumberLocalized(Math.max(0, guardTimer), { minimumFractionDigits: 2, maximumFractionDigits: 2 }, 2);
+        guardCountdownLabel.textContent = text('minigame.darumasan.guard.countdown.safe', ({ seconds: s }) => `安全残り ${s} 秒`, { seconds });
       } else if (guardState === 'warning'){
-        guardCountdownLabel.textContent = `あと ${(Math.max(0, guardTimer)).toFixed(2)} 秒で振り向く！`;
+        const seconds = formatNumberLocalized(Math.max(0, guardTimer), { minimumFractionDigits: 2, maximumFractionDigits: 2 }, 2);
+        guardCountdownLabel.textContent = text('minigame.darumasan.guard.countdown.warning', ({ seconds: s }) => `あと ${s} 秒で振り向く！`, { seconds });
       } else if (guardState === 'watch'){
-        guardCountdownLabel.textContent = `監視中… ${(Math.max(0, guardTimer)).toFixed(2)} 秒我慢`; 
+        const seconds = formatNumberLocalized(Math.max(0, guardTimer), { minimumFractionDigits: 2, maximumFractionDigits: 2 }, 2);
+        guardCountdownLabel.textContent = text('minigame.darumasan.guard.countdown.watch', ({ seconds: s }) => `監視中… ${s} 秒我慢`, { seconds });
       } else {
-        guardCountdownLabel.textContent = '残り --.- 秒';
+        guardCountdownLabel.textContent = text('minigame.darumasan.guard.countdown.placeholder', '残り --.- 秒');
       }
     }
 
@@ -198,10 +245,54 @@
     function updateProgressDisplay(){
       const pct = Math.min(100, Math.max(0, (progress / total) * 100));
       progressFill.style.width = pct.toFixed(1) + '%';
-      progressDetailLabel.textContent = `距離 ${pct.toFixed(1)}% / 経過 ${timeElapsed.toFixed(1)} 秒`;
+      const distance = formatNumberLocalized(pct, { minimumFractionDigits: 1, maximumFractionDigits: 1 }, 1);
+      const timeText = formatNumberLocalized(timeElapsed, { minimumFractionDigits: 1, maximumFractionDigits: 1 }, 1);
+      progressDetailLabel.textContent = text(
+        'minigame.darumasan.progress.detail',
+        ({ distance: d, time: t }) => `距離 ${d}% / 経過 ${t} 秒`,
+        { distance, time: timeText }
+      );
       if (bestTime != null){
-        bestRecordLabel.textContent = `ベストタイム: ${bestTime.toFixed(1)} 秒`;
+        const bestTimeText = formatNumberLocalized(bestTime, { minimumFractionDigits: 1, maximumFractionDigits: 1 }, 1);
+        bestRecordLabel.textContent = text(
+          'minigame.darumasan.progress.best',
+          ({ time }) => `ベストタイム: ${time} 秒`,
+          { time: bestTimeText }
+        );
+      } else {
+        bestRecordLabel.textContent = text('minigame.darumasan.progress.bestPlaceholder', 'ベストタイム: --.- 秒');
       }
+    }
+
+    const STATUS_CONFIG = {
+      initial: {
+        key: 'minigame.darumasan.status.initial',
+        fallback: () => 'スタートで開始'
+      },
+      running: {
+        key: 'minigame.darumasan.status.running',
+        fallback: () => 'だるまさんがころんだ！安全な時だけ前進しよう'
+      },
+      pause: {
+        key: 'minigame.darumasan.status.pause',
+        fallback: () => '一時停止中'
+      },
+      success: {
+        key: 'minigame.darumasan.status.success',
+        fallback: ({ time }) => `クリア！50EXP獲得！所要 ${time ?? '0.0'} 秒`
+      },
+      fail: {
+        key: 'minigame.darumasan.status.fail',
+        fallback: () => '動いているのを見られた…失敗'
+      }
+    };
+
+    function setStatus(mode, params){
+      const config = STATUS_CONFIG[mode] || STATUS_CONFIG.initial;
+      const effectiveParams = params ? { ...params } : {};
+      statusMode = config ? mode : 'initial';
+      statusParams = effectiveParams;
+      statusLabel.textContent = text(config.key, config.fallback, effectiveParams);
     }
 
     function endGame(result){
@@ -214,13 +305,14 @@
         success = true;
         if (bestTime == null || timeElapsed < bestTime){
           bestTime = timeElapsed;
-          bestRecordLabel.textContent = `ベストタイム: ${bestTime.toFixed(1)} 秒`;
         }
-        statusLabel.textContent = `クリア！50EXP獲得！所要 ${timeElapsed.toFixed(1)} 秒`;
+        const elapsedText = formatNumberLocalized(timeElapsed, { minimumFractionDigits: 1, maximumFractionDigits: 1 }, 1);
+        setStatus('success', { time: elapsedText });
+        updateProgressDisplay();
         awardXp(50, { reason: 'clear', gameId: 'darumasan' });
       } else if (result === 'fail'){
         fail = true;
-        statusLabel.textContent = '動いているのを見られた…失敗';
+        setStatus('fail');
       }
     }
 
@@ -275,10 +367,10 @@
       if (lastMovingReported === moving) return;
       lastMovingReported = moving;
       if (moving){
-        moveIndicator.textContent = '移動中';
+        moveIndicator.textContent = text('minigame.darumasan.movement.moving', '移動中');
         moveIndicator.style.color = '#bae6fd';
       } else {
-        moveIndicator.textContent = '停止中';
+        moveIndicator.textContent = text('minigame.darumasan.movement.stopped', '停止中');
         moveIndicator.style.color = '#cbd5f5';
       }
     }
@@ -294,7 +386,7 @@
       updateProgressDisplay();
       running = true;
       scheduleGuard('safe');
-      statusLabel.textContent = 'だるまさんがころんだ！安全な時だけ前進しよう';
+      setStatus('running');
       lastTs = 0;
       lastMovingReported = null;
       disableHost();
@@ -308,7 +400,7 @@
       running = false;
       cancelAnimationFrame(raf);
       enableHost();
-      statusLabel.textContent = '一時停止中';
+      setStatus('pause');
     }
 
     function destroy(){
@@ -316,6 +408,7 @@
       enableHost();
       document.removeEventListener('keydown', keyDown);
       document.removeEventListener('keyup', keyUp);
+      document.removeEventListener('i18n:locale-changed', handleLocaleChange);
       try { wrapper.remove(); } catch {}
     }
 
@@ -323,9 +416,26 @@
       return progress;
     }
 
+    function refreshStaticTexts(){
+      guardTitle.textContent = text('minigame.darumasan.guard.title', '見張りの様子');
+      hintLabel.textContent = text('minigame.darumasan.guard.hint', 'スペース / ↑ で前進');
+      progressTitle.textContent = text('minigame.darumasan.progress.title', '進行状況');
+      updateGuardPresentation();
+      lastMovingReported = null;
+      updateMovementIndicator();
+      updateProgressDisplay();
+      setStatus(statusMode, statusParams);
+    }
+
+    function handleLocaleChange(){
+      refreshStaticTexts();
+    }
+
     document.addEventListener('keydown', keyDown, { passive: false });
     document.addEventListener('keyup', keyUp, { passive: true });
+    document.addEventListener('i18n:locale-changed', handleLocaleChange);
     scheduleGuard('idle');
+    refreshStaticTexts();
 
     return { start, stop, destroy, getScore };
   }

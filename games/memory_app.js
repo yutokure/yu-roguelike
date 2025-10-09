@@ -6,7 +6,7 @@
     .memo-sidebar { width:280px; display:flex; flex-direction:column; gap:16px; background:rgba(15,23,42,0.02); border-radius:18px; padding:16px; box-shadow:inset 0 0 0 1px rgba(15,23,42,0.08); }
     .memo-sidebar-header { display:flex; align-items:center; justify-content:space-between; }
     .memo-sidebar-header h2 { margin:0; font-size:18px; display:flex; gap:8px; align-items:center; }
-    .memo-sidebar-header h2 span { font-size:11px; color:#2563eb; background:rgba(37,99,235,0.15); padding:2px 10px; border-radius:999px; letter-spacing:0.04em; }
+    .memo-sidebar-header h2 span.memo-badge { font-size:11px; color:#2563eb; background:rgba(37,99,235,0.15); padding:2px 10px; border-radius:999px; letter-spacing:0.04em; }
     .memo-deck-list { display:flex; flex-direction:column; gap:10px; max-height:46vh; overflow-y:auto; padding-right:6px; }
     .memo-deck-card { border-radius:14px; padding:12px; border:1px solid rgba(15,23,42,0.08); background:#fff; cursor:pointer; transition:transform 0.12s ease, box-shadow 0.12s ease; }
     .memo-deck-card:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(15,23,42,0.12); }
@@ -153,6 +153,65 @@
     if (!root) throw new Error('MiniExp Memo Studio requires a container');
     ensureStyle();
 
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'memo_studio' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        try { return localization.t(key, fallback, params); } catch {}
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    function formatNumber(value, options){
+      if (localization && typeof localization.formatNumber === 'function') {
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      try {
+        const locale = localization && typeof localization.getLocale === 'function'
+          ? localization.getLocale()
+          : undefined;
+        if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function') {
+          return new Intl.NumberFormat(locale, options).format(value);
+        }
+      } catch {}
+      if (value == null) return '0';
+      if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+      if (typeof value === 'bigint') return value.toString();
+      if (typeof value === 'string') return value;
+      try { return String(value ?? ''); } catch { return ''; }
+    }
+    function formatDate(value, options){
+      if (!value) return '';
+      if (localization && typeof localization.formatDate === 'function') {
+        try { return localization.formatDate(value, options); } catch {}
+      }
+      try {
+        const date = value instanceof Date ? value : new Date(value);
+        if (!Number.isFinite(date.getTime())) return String(value);
+        const locale = localization && typeof localization.getLocale === 'function'
+          ? localization.getLocale()
+          : undefined;
+        return new Intl.DateTimeFormat(locale, options).format(date);
+      } catch {}
+      try { return String(value ?? ''); } catch { return ''; }
+    }
+    function formatTemplate(template, params = {}){
+      const str = template == null ? '' : String(template);
+      return str.replace(/\{([^{}]+)\}/g, (_, rawKey) => {
+        const key = rawKey.trim();
+        if (!key) return '';
+        if (Object.prototype.hasOwnProperty.call(params, key)) {
+          const value = params[key];
+          return value == null ? '' : String(value);
+        }
+        return '';
+      });
+    }
+    const localeUpdaters = [];
+    const registerLocaleUpdater = (fn) => { if (typeof fn === 'function') localeUpdaters.push(fn); };
+    let detachLocale = null;
+
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const xpMultiplier = difficulty === 'HARD' ? 1.25 : difficulty === 'EASY' ? 0.8 : 1;
 
@@ -183,10 +242,18 @@
     const sidebarHeader = document.createElement('div');
     sidebarHeader.className = 'memo-sidebar-header';
     const title = document.createElement('h2');
-    title.textContent = '暗記スタジオ';
+    const titleLabel = document.createElement('span');
+    titleLabel.className = 'memo-title-text';
+    title.appendChild(titleLabel);
     const badge = document.createElement('span');
-    badge.textContent = 'TOY MOD';
+    badge.className = 'memo-badge';
     title.appendChild(badge);
+    const updateTitleText = () => { titleLabel.textContent = text('.title', '暗記スタジオ'); };
+    const updateBadgeText = () => { badge.textContent = text('.badge', 'TOY MOD'); };
+    updateTitleText();
+    updateBadgeText();
+    registerLocaleUpdater(updateTitleText);
+    registerLocaleUpdater(updateBadgeText);
     sidebarHeader.appendChild(title);
     sidebar.appendChild(sidebarHeader);
 
@@ -199,26 +266,38 @@
 
     const addDeckBtn = document.createElement('button');
     addDeckBtn.type = 'button';
-    addDeckBtn.textContent = '＋ デッキ追加';
+    const updateAddDeckLabel = () => { addDeckBtn.textContent = text('.controls.addDeck', '＋ デッキ追加'); };
+    updateAddDeckLabel();
+    registerLocaleUpdater(updateAddDeckLabel);
     sidebarControls.appendChild(addDeckBtn);
 
     const exportBtn = document.createElement('button');
     exportBtn.type = 'button';
-    exportBtn.textContent = 'エクスポート (JSON)';
+    const updateExportLabel = () => { exportBtn.textContent = text('.controls.export', 'エクスポート (JSON)'); };
+    updateExportLabel();
+    registerLocaleUpdater(updateExportLabel);
     sidebarControls.appendChild(exportBtn);
 
     const importBtn = document.createElement('button');
     importBtn.type = 'button';
-    importBtn.textContent = 'インポート (JSON)';
+    const updateImportLabel = () => { importBtn.textContent = text('.controls.import', 'インポート (JSON)'); };
+    updateImportLabel();
+    registerLocaleUpdater(updateImportLabel);
     sidebarControls.appendChild(importBtn);
 
     const tagFilterBox = document.createElement('div');
     tagFilterBox.className = 'memo-tag-filter';
     const tagFilterLabel = document.createElement('label');
-    tagFilterLabel.textContent = 'タグフィルター';
+    const updateTagFilterLabel = () => { tagFilterLabel.textContent = text('.filters.tag.label', 'タグフィルター'); };
+    updateTagFilterLabel();
+    registerLocaleUpdater(updateTagFilterLabel);
     const tagFilterInput = document.createElement('input');
     tagFilterInput.type = 'text';
-    tagFilterInput.placeholder = 'カンマ区切りで入力';
+    const updateTagFilterPlaceholder = () => {
+      tagFilterInput.placeholder = text('.filters.tag.placeholder', 'カンマ区切りで入力');
+    };
+    updateTagFilterPlaceholder();
+    registerLocaleUpdater(updateTagFilterPlaceholder);
     tagFilterBox.appendChild(tagFilterLabel);
     tagFilterBox.appendChild(tagFilterInput);
 
@@ -238,14 +317,16 @@
     cardForm.className = 'memo-card-form';
 
     const formTitle = document.createElement('h3');
-    formTitle.textContent = 'カード登録';
+    const updateFormTitle = () => { formTitle.textContent = text('.form.title', 'カード登録'); };
+    updateFormTitle();
+    registerLocaleUpdater(updateFormTitle);
     cardForm.appendChild(formTitle);
 
-    const frontField = createField('表面 (タイトル)', 'text');
-    const backField = createTextAreaField('裏面 (解答)');
-    const hintField = createTextAreaField('ヒント / 説明 (任意)');
-    const tagsField = createField('タグ (カンマ区切り)', 'text');
-    const intervalField = createField('初期間隔（日）', 'number');
+    const frontField = createField({ key: '.form.fields.front', fallback: '表面 (タイトル)' }, 'text');
+    const backField = createTextAreaField({ key: '.form.fields.back', fallback: '裏面 (解答)' });
+    const hintField = createTextAreaField({ key: '.form.fields.hint', fallback: 'ヒント / 説明 (任意)' });
+    const tagsField = createField({ key: '.form.fields.tags', fallback: 'タグ (カンマ区切り)' }, 'text');
+    const intervalField = createField({ key: '.form.fields.interval', fallback: '初期間隔（日）' }, 'number');
     intervalField.input.min = '1';
     intervalField.input.value = '1';
 
@@ -257,18 +338,30 @@
 
     const previewWrapper = document.createElement('div');
     previewWrapper.className = 'memo-preview';
-    previewWrapper.innerHTML = '<em>入力するとプレビューが表示されます。</em>';
     const previewLabel = document.createElement('label');
-    previewLabel.textContent = '裏面プレビュー';
     previewLabel.style.display = 'flex';
     previewLabel.style.flexDirection = 'column';
     previewLabel.style.gap = '6px';
+    const previewLabelText = document.createElement('span');
+    const updatePreviewLabel = () => { previewLabelText.textContent = text('.form.preview.label', '裏面プレビュー'); };
+    updatePreviewLabel();
+    registerLocaleUpdater(updatePreviewLabel);
+    previewLabel.appendChild(previewLabelText);
     previewLabel.appendChild(previewWrapper);
+    const updatePreviewPlaceholder = () => {
+      if (!backField.input.value.trim()) {
+        previewWrapper.innerHTML = `<em>${sanitizeHtml(text('.form.preview.empty', '入力するとプレビューが表示されます。'))}</em>`;
+      }
+    };
+    updatePreviewPlaceholder();
+    registerLocaleUpdater(updatePreviewPlaceholder);
     cardForm.appendChild(previewLabel);
 
     const submitBtn = document.createElement('button');
     submitBtn.type = 'submit';
-    submitBtn.textContent = 'カードを追加';
+    const updateSubmitLabel = () => { submitBtn.textContent = text('.form.submit', 'カードを追加'); };
+    updateSubmitLabel();
+    registerLocaleUpdater(updateSubmitLabel);
     cardForm.appendChild(submitBtn);
 
     const reviewCard = document.createElement('div');
@@ -301,27 +394,37 @@
     const showBtn = document.createElement('button');
     showBtn.type = 'button';
     showBtn.className = 'memo-btn-show';
-    showBtn.textContent = '表示';
+    const updateShowLabel = () => { showBtn.textContent = text('.review.controls.show', '表示'); };
+    updateShowLabel();
+    registerLocaleUpdater(updateShowLabel);
 
     const goodBtn = document.createElement('button');
     goodBtn.type = 'button';
     goodBtn.className = 'memo-btn-good';
-    goodBtn.textContent = '覚えた';
+    const updateGoodLabel = () => { goodBtn.textContent = text('.review.controls.good', '覚えた'); };
+    updateGoodLabel();
+    registerLocaleUpdater(updateGoodLabel);
 
     const hardBtn = document.createElement('button');
     hardBtn.type = 'button';
     hardBtn.className = 'memo-btn-hard';
-    hardBtn.textContent = '難しい';
+    const updateHardLabel = () => { hardBtn.textContent = text('.review.controls.hard', '難しい'); };
+    updateHardLabel();
+    registerLocaleUpdater(updateHardLabel);
 
     const againBtn = document.createElement('button');
     againBtn.type = 'button';
     againBtn.className = 'memo-btn-again';
-    againBtn.textContent = '再学習';
+    const updateAgainLabel = () => { againBtn.textContent = text('.review.controls.again', '再学習'); };
+    updateAgainLabel();
+    registerLocaleUpdater(updateAgainLabel);
 
     const noteBtn = document.createElement('button');
     noteBtn.type = 'button';
     noteBtn.className = 'memo-btn-note';
-    noteBtn.textContent = 'ノート';
+    const updateNoteLabel = () => { noteBtn.textContent = text('.review.controls.note', 'ノート'); };
+    updateNoteLabel();
+    registerLocaleUpdater(updateNoteLabel);
 
     reviewControls.appendChild(showBtn);
     reviewControls.appendChild(goodBtn);
@@ -334,10 +437,10 @@
     hud.className = 'memo-hud';
 
     const hudCards = [
-      createHudCard('レビュー済み'),
-      createHudCard('正答率'),
-      createHudCard('経過時間'),
-      createHudCard('セッションEXP')
+      createHudCard({ key: '.hud.reviewed.label', fallback: 'レビュー済み' }),
+      createHudCard({ key: '.hud.accuracy.label', fallback: '正答率' }),
+      createHudCard({ key: '.hud.elapsed.label', fallback: '経過時間' }),
+      createHudCard({ key: '.hud.sessionXp.label', fallback: 'セッションEXP' })
     ];
     hudCards.forEach(card => hud.appendChild(card.wrapper));
 
@@ -367,7 +470,10 @@
     runtime.frameListeners.forEach(l => l.target.addEventListener(l.type, l.handler));
 
     addDeckBtn.addEventListener('click', () => {
-      const name = prompt('新しいデッキ名を入力してください', '新しいデッキ');
+      const name = prompt(
+        text('.dialogs.addDeck.prompt', '新しいデッキ名を入力してください'),
+        text('.dialogs.addDeck.defaultName', '新しいデッキ')
+      );
       if (!name) return;
       const deck = createDeck(name.trim());
       data.decks.push(deck);
@@ -412,7 +518,7 @@
       const tags = tagsField.input.value.split(',').map(t => t.trim()).filter(Boolean);
       const initialInterval = Math.max(1, parseInt(intervalField.input.value, 10) || 1);
       if (!front || !back) {
-        alert('表面と裏面は必須です。');
+        alert(text('.form.validation.missingSides', '表面と裏面は必須です。'));
         return;
       }
       const now = new Date();
@@ -439,14 +545,14 @@
       award('add_card', 6);
       cardForm.reset();
       intervalField.input.value = '1';
-      previewWrapper.innerHTML = '<em>入力するとプレビューが表示されます。</em>';
+      updatePreviewPlaceholder();
     });
 
     backField.input.addEventListener('input', () => {
       if (backField.input.value.trim()) {
         previewWrapper.innerHTML = markdownToHtml(backField.input.value);
       } else {
-        previewWrapper.innerHTML = '<em>入力するとプレビューが表示されます。</em>';
+        updatePreviewPlaceholder();
       }
     });
 
@@ -468,7 +574,7 @@
         const text = typeof reader.result === 'string' ? reader.result : '';
         const parsed = safeParse(text);
         if (!parsed) {
-          alert('JSON を読み取れませんでした。');
+          alert(text('.import.error.invalidJson', 'JSON を読み取れませんでした。'));
           return;
         }
         if (Array.isArray(parsed.decks)) {
@@ -493,7 +599,7 @@
         beginNextCard();
         award('import', 10);
       };
-      reader.onerror = () => alert('ファイルの読み込みに失敗しました。');
+      reader.onerror = () => alert(text('.import.error.read', 'ファイルの読み込みに失敗しました。'));
       reader.readAsText(file, 'utf-8');
     }
 
@@ -507,7 +613,12 @@
       const stat = stats[index];
       if (!stat) return;
       const accuracy = stat.reviewed ? Math.round((stat.correct / stat.reviewed) * 100) : 0;
-      tooltip.textContent = `${stat.date} / ${stat.reviewed}枚 / ${accuracy}% / ${Math.round(stat.xp)}XP`;
+      tooltip.textContent = formatTemplate(text('.sparkline.tooltip', '{date} / {reviewed}枚 / {accuracy}% / {xp}XP'), {
+        date: formatDate(stat.date),
+        reviewed: formatNumber(stat.reviewed || 0),
+        accuracy: formatNumber(accuracy),
+        xp: formatNumber(Math.round(stat.xp || 0))
+      });
       tooltip.style.left = `${ev.clientX - reviewCard.getBoundingClientRect().left + 12}px`;
       tooltip.style.top = `${ev.clientY - reviewCard.getBoundingClientRect().top - 32}px`;
       tooltip.classList.add('visible');
@@ -570,10 +681,20 @@
 
     function updateReviewCard(){
       const deck = getSelectedDeck();
-      reviewDeckName.textContent = deck ? `${deck.name} (${deck.cards.length}枚)` : 'デッキ未選択';
-      reviewQueueInfo.textContent = deck ? `残り ${runtime.queue.length + (runtime.current ? 1 : 0)} 枚` : '';
+      reviewDeckName.textContent = deck
+        ? formatTemplate(text('.review.deckName', '{name} ({count}枚)'), {
+            name: deck.name,
+            count: formatNumber(deck.cards.length)
+          })
+        : text('.review.noDeck', 'デッキ未選択');
+      reviewQueueInfo.textContent = deck
+        ? formatTemplate(text('.review.queueInfo', '残り {count} 枚'), {
+            count: formatNumber(runtime.queue.length + (runtime.current ? 1 : 0))
+          })
+        : '';
       if (!runtime.current) {
-        reviewFront.innerHTML = '<div class="memo-empty">レビュー対象のカードはありません。追加またはインポートしてください。</div>';
+        const emptyMessage = sanitizeHtml(text('.review.empty', 'レビュー対象のカードはありません。追加またはインポートしてください。'));
+        reviewFront.innerHTML = `<div class="memo-empty">${emptyMessage}</div>`;
         reviewHint.textContent = '';
         reviewAnswer.classList.remove('visible');
         reviewAnswer.innerHTML = '';
@@ -590,7 +711,7 @@
       againBtn.disabled = false;
       noteBtn.disabled = false;
       reviewFront.textContent = runtime.current.front;
-      reviewHint.textContent = runtime.current.hint ? `ヒント: ${runtime.current.hint}` : '';
+      reviewHint.textContent = runtime.current.hint ? `${text('.review.hintPrefix', 'ヒント: ')}${runtime.current.hint}` : '';
       reviewAnswer.innerHTML = markdownToHtml(runtime.current.back);
       reviewAnswer.classList.toggle('visible', runtime.showingAnswer);
     }
@@ -600,7 +721,7 @@
       if (!data.decks.length) {
         const empty = document.createElement('div');
         empty.className = 'memo-empty';
-        empty.textContent = 'デッキがありません。追加してください。';
+        empty.textContent = text('.deck.empty', 'デッキがありません。追加してください。');
         deckList.appendChild(empty);
         return;
       }
@@ -625,11 +746,17 @@
         const metrics = document.createElement('div');
         metrics.className = 'memo-deck-metrics';
         const totalSpan = document.createElement('span');
-        totalSpan.textContent = `${deck.cards.length}枚`;
+        totalSpan.textContent = formatTemplate(text('.deck.metrics.total', '{count}枚'), {
+          count: formatNumber(deck.cards.length)
+        });
         const dueSpan = document.createElement('span');
-        dueSpan.textContent = `期限 ${calculateDueCount(deck)}枚`;
+        dueSpan.textContent = formatTemplate(text('.deck.metrics.due', '期限 {count}枚'), {
+          count: formatNumber(calculateDueCount(deck))
+        });
         const accuracySpan = document.createElement('span');
-        accuracySpan.textContent = `達成率 ${(calculateAccuracy(deck) * 100 | 0)}%`;
+        accuracySpan.textContent = formatTemplate(text('.deck.metrics.accuracy', '達成率 {percent}%'), {
+          percent: formatNumber((calculateAccuracy(deck) * 100) | 0)
+        });
         metrics.appendChild(totalSpan);
         metrics.appendChild(dueSpan);
         metrics.appendChild(accuracySpan);
@@ -702,17 +829,28 @@
     function renderHud(){
       const elapsedMs = Date.now() - runtime.sessionStart;
       const accuracy = runtime.reviewed ? Math.round((runtime.correct / runtime.reviewed) * 100) : 0;
-      hudCards[0].value.textContent = `${runtime.reviewed}枚`;
-      hudCards[1].value.textContent = `${accuracy}%`;
+      hudCards[0].value.textContent = formatTemplate(text('.hud.reviewed.value', '{count}枚'), {
+        count: formatNumber(runtime.reviewed)
+      });
+      hudCards[1].value.textContent = formatTemplate(text('.hud.accuracy.value', '{percent}%'), {
+        percent: formatNumber(accuracy)
+      });
       hudCards[2].value.textContent = formatDuration(elapsedMs);
-      hudCards[3].value.textContent = `${Math.round(runtime.sessionXp)}XP`;
+      hudCards[3].value.textContent = formatTemplate(text('.hud.sessionXp.value', '{xp}XP'), {
+        xp: formatNumber(Math.round(runtime.sessionXp))
+      });
     }
 
     function formatDuration(ms){
       const totalSec = Math.floor(ms / 1000);
       const m = Math.floor(totalSec / 60);
       const s = totalSec % 60;
-      return `${m}分${s.toString().padStart(2,'0')}秒`;
+      const secondsPadded = s.toString().padStart(2, '0');
+      return formatTemplate(text('.hud.elapsed.value', '{minutes}分{secondsPadded}秒'), {
+        minutes: formatNumber(m),
+        seconds: formatNumber(s),
+        secondsPadded
+      });
     }
 
     function renderSparkline(){
@@ -726,7 +864,7 @@
       if (!stats.length) {
         sparklineCtx.fillStyle = '#94a3b8';
         sparklineCtx.font = '12px "Segoe UI"';
-        sparklineCtx.fillText('履歴なし', 8, height / 2);
+        sparklineCtx.fillText(text('.sparkline.empty', '履歴なし'), 8, height / 2);
         return;
       }
       const maxReviewed = Math.max(...stats.map(s => s.reviewed || 0), 1);
@@ -760,7 +898,7 @@
       const dialog = document.createElement('div');
       dialog.className = 'memo-note-dialog';
       const title = document.createElement('h3');
-      title.textContent = `${card.front} のノート`;
+      title.textContent = formatTemplate(text('.note.title', '{front} のノート'), { front: card.front });
       const textarea = document.createElement('textarea');
       textarea.value = card.note || '';
       const actions = document.createElement('div');
@@ -768,11 +906,11 @@
       const cancelBtn = document.createElement('button');
       cancelBtn.type = 'button';
       cancelBtn.className = 'memo-note-close';
-      cancelBtn.textContent = '閉じる';
+      cancelBtn.textContent = text('.note.actions.cancel', '閉じる');
       const saveBtn = document.createElement('button');
       saveBtn.type = 'button';
       saveBtn.className = 'memo-note-save';
-      saveBtn.textContent = '保存';
+      saveBtn.textContent = text('.note.actions.save', '保存');
       actions.appendChild(cancelBtn);
       actions.appendChild(saveBtn);
       dialog.appendChild(title);
@@ -801,11 +939,13 @@
       });
     }
 
-    function createHudCard(title){
+    function createHudCard(meta){
       const wrapper = document.createElement('div');
       wrapper.className = 'memo-hud-card';
       const label = document.createElement('span');
-      label.textContent = title;
+      const update = () => { label.textContent = text(meta && meta.key, meta && meta.fallback); };
+      update();
+      registerLocaleUpdater(update);
       const value = document.createElement('strong');
       value.textContent = '0';
       wrapper.appendChild(label);
@@ -813,18 +953,26 @@
       return { wrapper, value };
     }
 
-    function createField(labelText, type){
+    function createField(meta, type){
       const wrapper = document.createElement('label');
-      wrapper.textContent = labelText;
+      const labelNode = document.createElement('span');
+      const update = () => { labelNode.textContent = text(meta && meta.key, meta && meta.fallback); };
+      update();
+      registerLocaleUpdater(update);
+      wrapper.appendChild(labelNode);
       const input = document.createElement('input');
       input.type = type;
       wrapper.appendChild(input);
       return { wrapper, input };
     }
 
-    function createTextAreaField(labelText){
+    function createTextAreaField(meta){
       const wrapper = document.createElement('label');
-      wrapper.textContent = labelText;
+      const labelNode = document.createElement('span');
+      const update = () => { labelNode.textContent = text(meta && meta.key, meta && meta.fallback); };
+      update();
+      registerLocaleUpdater(update);
+      wrapper.appendChild(labelNode);
       const textarea = document.createElement('textarea');
       wrapper.appendChild(textarea);
       return { wrapper, input: textarea };
@@ -834,7 +982,7 @@
       const now = new Date();
       return {
         id: 'deck-' + uuid(),
-        name: name || '新しいデッキ',
+        name: name || text('.deck.defaultName', '新しいデッキ'),
         color: randomColor(),
         createdAt: now.toISOString(),
         reviewOrder: 'due',
@@ -849,12 +997,14 @@
     }
 
     function createDefaultData(){
-      const deck = createDeck('スターターデッキ');
+      const deck = createDeck(text('.defaults.deckName', 'スターターデッキ'));
       const now = new Date();
+      const webTag = text('.defaults.tags.web', 'Web');
+      const defaultTags = webTag ? [webTag] : ['Web'];
       deck.cards = [
-        { id:'card-'+uuid(), front:'HTML', back:'HyperText Markup Language', hint:'Webページの骨組み', tags:['Web'], createdAt:now.toISOString(), updatedAt:now.toISOString(), ease:2.5, interval:1, due:now.toISOString(), lapses:0, totalReviews:0, correctStreak:0, note:'' },
-        { id:'card-'+uuid(), front:'CSS', back:'Cascading Style Sheets', hint:'見た目を装飾', tags:['Web'], createdAt:now.toISOString(), updatedAt:now.toISOString(), ease:2.5, interval:1, due:now.toISOString(), lapses:0, totalReviews:0, correctStreak:0, note:'' },
-        { id:'card-'+uuid(), front:'JavaScript', back:'ブラウザで動作するプログラミング言語', hint:'インタラクティブ', tags:['Web'], createdAt:now.toISOString(), updatedAt:now.toISOString(), ease:2.5, interval:1, due:now.toISOString(), lapses:0, totalReviews:0, correctStreak:0, note:'' }
+        { id:'card-'+uuid(), front:text('.defaults.cards.html.front', 'HTML'), back:text('.defaults.cards.html.back', 'HyperText Markup Language'), hint:text('.defaults.cards.html.hint', 'Webページの骨組み'), tags:defaultTags.slice(), createdAt:now.toISOString(), updatedAt:now.toISOString(), ease:2.5, interval:1, due:now.toISOString(), lapses:0, totalReviews:0, correctStreak:0, note:'' },
+        { id:'card-'+uuid(), front:text('.defaults.cards.css.front', 'CSS'), back:text('.defaults.cards.css.back', 'Cascading Style Sheets'), hint:text('.defaults.cards.css.hint', '見た目を装飾'), tags:defaultTags.slice(), createdAt:now.toISOString(), updatedAt:now.toISOString(), ease:2.5, interval:1, due:now.toISOString(), lapses:0, totalReviews:0, correctStreak:0, note:'' },
+        { id:'card-'+uuid(), front:text('.defaults.cards.javascript.front', 'JavaScript'), back:text('.defaults.cards.javascript.back', 'ブラウザで動作するプログラミング言語'), hint:text('.defaults.cards.javascript.hint', 'インタラクティブ'), tags:defaultTags.slice(), createdAt:now.toISOString(), updatedAt:now.toISOString(), ease:2.5, interval:1, due:now.toISOString(), lapses:0, totalReviews:0, correctStreak:0, note:'' }
       ];
       return { decks:[deck], stats:[], lastSession:{ reviewed:0, correct:0, xp:0, timeSpentMs:0 } };
     }
@@ -930,12 +1080,34 @@
       stop();
       runtime.frameListeners.forEach(l => l.target.removeEventListener(l.type, l.handler));
       persist();
+      if (typeof detachLocale === 'function') {
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       try { root.removeChild(wrapper); } catch {}
     }
 
-    renderDeckList();
+    function refreshLocale(){
+      localeUpdaters.forEach(fn => {
+        try { fn(); }
+        catch (error) { console.warn('[MiniExp][memo_studio] Failed to update localized text:', error); }
+      });
+      renderDeckList();
+      updateReviewCard();
+      renderHud();
+      renderSparkline();
+    }
+
+    if (localization && typeof localization.onChange === 'function') {
+      detachLocale = localization.onChange(() => {
+        try { refreshLocale(); }
+        catch (error) { console.warn('[MiniExp][memo_studio] Locale change refresh failed:', error); }
+      });
+    }
+
     rebuildQueue();
     beginNextCard();
+    refreshLocale();
     start();
 
     return {
@@ -953,6 +1125,7 @@
     category: 'トイ',
     version: '0.1.0',
     author: 'mod',
+    localizationKey: 'minigame.memo_studio',
     create
   });
 })();

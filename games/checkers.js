@@ -23,6 +23,7 @@
   const AI = -1;
 
   const WIN_EXP = { EASY: 70, NORMAL: 160, HARD: 360 };
+  const XP_REWARDS = { move: 1, capture: 6, promote: 12 };
 
   const PLAYER_DIRS = [[-1, -1], [1, -1]];
   const AI_DIRS = [[-1, 1], [1, 1]];
@@ -367,7 +368,7 @@
             ctx.font = `${Math.floor(cell * 0.36)}px "Segoe UI", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('K', cx, cy);
+            ctx.fillText(text('minigame.checkers.board.kingLabel', 'K'), cx, cy);
           }
         }
       }
@@ -384,7 +385,8 @@
           : text('minigame.checkers.hud.turn.aiThinking', 'AI思考中...'));
       ctx.fillText(turnText, w / 2, 24);
       ctx.font = '14px system-ui, sans-serif';
-      ctx.fillText(text('minigame.checkers.hud.expHint', '移動: +1EXP / 捕獲: +6EXP×駒 / 王冠昇格: +12EXP'), w / 2, h - 18);
+      const xpHintFallback = () => `移動: +${XP_REWARDS.move}EXP / 捕獲: +${XP_REWARDS.capture}EXP×駒 / 王冠昇格: +${XP_REWARDS.promote}EXP`;
+      ctx.fillText(text('minigame.checkers.hud.expHint', xpHintFallback, XP_REWARDS), w / 2, h - 18);
 
       if (ended){
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
@@ -422,12 +424,12 @@
       board[move.to.y][move.to.x] = placed;
       if (color === PLAYER && award){
         if (move.captures.length > 0){
-          awardXp(move.captures.length * 6, { type: 'capture' });
+          awardXp(move.captures.length * XP_REWARDS.capture, { type: 'capture' });
         } else {
-          awardXp(1, { type: 'move' });
+          awardXp(XP_REWARDS.move, { type: 'move' });
         }
         if (move.promote){
-          awardXp(12, { type: 'promote' });
+          awardXp(XP_REWARDS.promote, { type: 'promote' });
         }
       }
     }

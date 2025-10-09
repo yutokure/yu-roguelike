@@ -829,7 +829,222 @@
           },
           "tester": {
             "name": "JSテスター",
-            "description": "JS機能テストとCPUベンチマーク、ブロック式アドベンチャー作成ツール"
+            "description": "JS機能テストとCPUベンチマーク、ブロック式アドベンチャー作成ツール",
+            "title": "JSテスター / MiniExp MOD",
+            "subtitle": "JavaScript機能のセルフチェック、CPUベンチマーク、ブロック式アドベンチャーメーカーを収録。",
+            "tabs": {
+              "tests": "機能テスト",
+              "benchmark": "CPUベンチマーク",
+              "blocks": "ブロックアドベンチャー"
+            },
+            "tests": {
+              "heading": "JavaScriptセルフチェックラボ",
+              "description": "ブラウザが提供する代表的な機能をワンタップで検査できます。結果を共有すればデバッグにも役立ちます。",
+              "runAll": "すべて実行",
+              "runSingle": "テスト実行",
+              "running": "実行中…",
+              "defs": {
+                "numbers": {
+                  "name": "数値/BigInt",
+                  "description": "浮動小数とBigIntの演算、Math拡張を試験します。",
+                  "errors": {
+                    "bigInt": "BigInt演算が期待どおりではありません",
+                    "hypot": "Math.hypot結果に誤差が大きいです"
+                  }
+                },
+                "json": {
+                  "name": "JSON & structuredClone",
+                  "description": "JSONシリアライズとstructuredCloneをチェックします。",
+                  "errors": {
+                    "restore": "JSON復元に失敗しました",
+                    "clone": "structuredCloneがMapを保持できません"
+                  }
+                },
+                "intl": {
+                  "name": "Intlフォーマット",
+                  "description": "Intl.DateTimeFormatとNumberFormatを検証します。",
+                  "errors": {
+                    "date": "日付フォーマットが想定外です",
+                    "currency": "通貨フォーマットが想定外です"
+                  }
+                },
+                "crypto": {
+                  "name": "Crypto API",
+                  "description": "暗号学的乱数と微小なハッシュ処理を行います。",
+                  "errors": {
+                    "random": "crypto.getRandomValuesが利用できません"
+                  }
+                },
+                "storage": {
+                  "name": "Storage API",
+                  "description": "localStorage/sessionStorage の読み書きを確認します。",
+                  "errors": {
+                    "read": "Storage読み書き失敗",
+                    "blocked": "Storage利用がブロックされています"
+                  }
+                },
+                "canvas": {
+                  "name": "Canvas & Offscreen",
+                  "description": "Canvas描画とOffscreenCanvasの存在を検査します。",
+                  "errors": {
+                    "sample": "Canvasピクセル取得に失敗"
+                  }
+                }
+              }
+            },
+            "benchmark": {
+              "heading": "CPUベンチマーク - 1秒間のインクリメント回数",
+              "description": "整数に1を加算し続け、1秒間で何回ループできるか計測します。ブラウザや端末の瞬間的な性能をチェックしましょう。",
+              "labels": {
+                "current": "最新結果 (回/秒)",
+                "best": "自己ベスト (回/秒)",
+                "runs": "累計実行回数"
+              },
+              "start": "計測スタート (1秒)",
+              "notice": "計測中はUIが1秒間固まる場合があります。",
+              "log": {
+                "start": "計測を開始します…",
+                "record": "新記録: {value} 回/秒",
+                "result": "結果: {value} 回/秒"
+              }
+            },
+            "blocks": {
+              "controls": {
+                "add": "ブロックを追加",
+                "clear": "全削除"
+              },
+              "alert": {
+                "title": "カスタムAlert関数",
+                "description": "message, context を受け取る関数本体を記述します。context.flags や context.log を使って高度な演出が可能です。",
+                "template": "// message: string\\n// context: { flags, log, awardXp }\\nconst box = document.createElement('div');\\nbox.textContent = message;\\nbox.style.padding = '16px';\\nbox.style.background = 'rgba(96,165,250,0.15)';\\nbox.style.border = '1px solid rgba(96,165,250,0.4)';\\nbox.style.borderRadius = '12px';\\nbox.style.margin = '6px 0';\\ncontext.log(box);\\n",
+                "apply": "更新",
+                "test": "テスト実行",
+                "statusDefault": "既定: ログに表示します。alert() に変えることも可能です。",
+                "statusApplied": "✅ カスタムalertを適用しました。",
+                "statusError": "❌ エラー: {message}",
+                "testMessage": "カスタムalertのテストです。",
+                "statusTestSent": "✅ テストメッセージを送信しました。",
+                "statusTestError": "❌ 実行エラー: {message}"
+              },
+              "story": {
+                "title": "ブロックストーリーランナー",
+                "play": "ストーリー再生",
+                "stop": "停止",
+                "logStart": "▶ ストーリー開始 ({count} ブロック)",
+                "logAborted": "⚠ 実行中断: {message}",
+                "logEnd": "■ ストーリー終了",
+                "logUserStop": "■ ユーザーが停止しました",
+                "logEmpty": "⚠ ブロックが1つもありません。"
+              },
+              "variables": {
+                "title": "変数ビュー (flags)",
+                "empty": "(空)"
+              },
+              "defaults": {
+                "choiceQuestion": "どうする？",
+                "choiceGo": "進む",
+                "choiceStop": "やめる",
+                "controlMessage": "進みますか？",
+                "yes": "はい",
+                "no": "いいえ",
+                "message": "メッセージ",
+                "prompt": "名前を入力してください"
+              },
+              "text": {
+                "placeholder": "表示するメッセージ",
+                "delivery": {
+                  "log": "ログに出力",
+                  "alert": "カスタムalert",
+                  "both": "両方"
+                },
+                "nextLabel": "次に進むブロック (# または空)",
+                "nextPlaceholder": "空なら自動で次"
+              },
+              "choice": {
+                "questionPlaceholder": "選択肢の前に表示する文章",
+                "storePlaceholder": "選択した値を保存する変数名 (例: choice)",
+                "labelPlaceholder": "ボタン表示",
+                "valuePlaceholder": "保存する値",
+                "targetPlaceholder": "次の#",
+                "addOption": "選択肢を追加",
+                "newOption": "新しい選択肢",
+                "logLabel": "選択",
+                "buttonFallback": "選択",
+                "logSelection": "▶ 選択: {value}",
+                "noOptions": "※ 選択肢が設定されていません"
+              },
+              "set": {
+                "namePlaceholder": "変数名",
+                "valuePlaceholder": "値 (文字列)",
+                "nextPlaceholder": "次のブロック (空=順番通り)"
+              },
+              "jump": {
+                "namePlaceholder": "判定する変数名",
+                "equalsPlaceholder": "比較値 (文字列)",
+                "targetPlaceholder": "一致した時のブロック#",
+                "elsePlaceholder": "不一致の時のブロック# (空=次)"
+              },
+              "award": {
+                "amountPlaceholder": "付与するEXP (負数も可)",
+                "nextPlaceholder": "次のブロック (空=順番通り)"
+              },
+              "types": {
+                "text": "text",
+                "choice": "choice",
+                "set": "set",
+                "jump": "jump",
+                "award": "award",
+                "control": "control"
+              },
+              "control": {
+                "modeLabel": "種類",
+                "modeConfirm": "確認 (はい/いいえ)",
+                "modePrompt": "入力ボックス",
+                "messagePlaceholder": "表示するメッセージ",
+                "storePlaceholder": "結果を保存する変数名 (空=保存しない)",
+                "yesLabel": "はいボタンの表示",
+                "yesValue": "はいを押した時に保存する値",
+                "yesTarget": "はいの次ブロック# (空=次)",
+                "noLabel": "いいえボタンの表示",
+                "noValue": "いいえを押した時に保存する値",
+                "noTarget": "いいえの次ブロック# (空=次)",
+                "labelPrompt": "入力",
+                "labelConfirm": "確認",
+                "okLabel": "決定",
+                "cancelLabel": "キャンセル",
+                "errorRequired": "値を入力してください。",
+                "errorNumber": "数値を入力してください。",
+                "summaryStored": "▶ {variable} = {value}",
+                "summaryValueOnly": "▶ 値 = {value}",
+                "summaryCancelStored": "▶ キャンセル ({variable} = {value})",
+                "summaryCancel": "▶ 入力をキャンセル",
+                "summaryChoiceStored": "▶ {label} を選択 → {variable} = {value}",
+                "summaryChoice": "▶ {label} を選択"
+              },
+              "prompt": {
+                "messagePlaceholder": "入力ボックスの前に表示する文章",
+                "storePlaceholder": "入力値を保存する変数名",
+                "inputTypeText": "テキスト",
+                "inputTypeNumber": "数値",
+                "defaultValue": "既定値 (固定文字列)",
+                "defaultFrom": "既定値を読み込む変数名 (空=固定)",
+                "allowEmpty": "空入力を許可",
+                "okLabel": "決定ボタンの表示",
+                "okTarget": "決定後のブロック# (空=次)",
+                "cancelLabel": "キャンセルボタンの表示",
+                "cancelValue": "キャンセル時に保存する値",
+                "cancelTarget": "キャンセル後のブロック# (空=次)"
+              },
+              "logs": {
+                "jumpMatch": "一致",
+                "jumpMismatch": "不一致",
+                "jump": "[JUMP] {name}={value} => {status}",
+                "alertError": "❌ alert実行エラー: {message}"
+              },
+              "errors": {
+                "tooManySteps": "ステップ回数が多すぎます。ループしていませんか？"
+              }
+            }
           },
           "system": {
             "name": "システム",

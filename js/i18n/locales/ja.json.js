@@ -12820,6 +12820,11 @@
           "nested": "NESTED x{value}"
         }
       },
+      "blockDim": {
+        "preview": {
+          "selection": "NESTED {nested} ／ 次元 {dimension}：{block1}・{block2}・{block3}"
+        }
+      },
       "playerStats": {
         "labels": {
           "level": "レベル",

@@ -12816,6 +12816,11 @@
           "nested": "NESTED x{value}"
         }
       },
+      "blockDim": {
+        "preview": {
+          "selection": "NESTED {nested} / Dimension {dimension}: {block1} · {block2} · {block3}"
+        }
+      },
       "playerStats": {
         "labels": {
           "level": "Level",

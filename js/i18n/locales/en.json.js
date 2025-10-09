@@ -589,16 +589,7 @@
           },
           "aim": {
             "name": "Aim Trainer",
-            "description": "Hit targets for 1–3 EXP and keep streaks alive for bonuses.",
-            "hud": {
-              "time": "TIME: {time}",
-              "hitsAccuracy": "HITS: {hits}  ACC: {accuracy}%",
-              "combo": "COMBO x{combo}"
-            },
-            "overlay": {
-              "timeUp": "Time Up",
-              "restartHint": "Press R to restart"
-            }
+            "description": "Hit targets for 1–3 EXP and keep streaks alive for bonuses."
           },
           "dodge_race": {
             "name": "Dodge Race",
@@ -10333,6 +10324,17 @@
     },
 
     "minigame": {
+      "aim": {
+        "hud": {
+          "time": "TIME: {time}",
+          "hitsAccuracy": "HITS: {hits}  ACC: {accuracy}%",
+          "combo": "COMBO x{combo}"
+        },
+        "overlay": {
+          "timeUp": "Time Up",
+          "restartHint": "Press R to restart"
+        }
+      },
       "taiko_drum": {
         "title": "Taiko Rhythm ({difficulty})",
         "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",

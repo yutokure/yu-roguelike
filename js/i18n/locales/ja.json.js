@@ -589,16 +589,7 @@
           },
           "aim": {
             "name": "的あて（エイム）",
-            "description": "命中で1〜3EXP／連続命中ボーナス",
-            "hud": {
-              "time": "残り時間: {time}",
-              "hitsAccuracy": "命中: {hits}  精度: {accuracy}%",
-              "combo": "コンボ x{combo}"
-            },
-            "overlay": {
-              "timeUp": "タイムアップ",
-              "restartHint": "Rで再開/再起動"
-            }
+            "description": "命中で1〜3EXP／連続命中ボーナス"
           },
           "dodge_race": {
             "name": "回避レース",
@@ -10333,6 +10324,17 @@
     },
 
     "minigame": {
+      "aim": {
+        "hud": {
+          "time": "残り時間: {time}",
+          "hitsAccuracy": "命中: {hits}  精度: {accuracy}%",
+          "combo": "コンボ x{combo}"
+        },
+        "overlay": {
+          "timeUp": "タイムアップ",
+          "restartHint": "Rで再開/再起動"
+        }
+      },
       "taiko_drum": {
         "title": "太鼓リズム（{difficulty}）",
         "tips": "F/J/Space = ドン（赤）、D/K = カッ（青）。大音符は両方同時！タップもOK。",

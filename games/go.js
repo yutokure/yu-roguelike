@@ -11,6 +11,32 @@
   const KOMI = 6.5;
   const XP_WIN = { EASY: 90, NORMAL: 180, HARD: 320 };
   const CAPTURE_MULT = { EASY: 2, NORMAL: 2.5, HARD: 3 };
+  const FALLBACK_MESSAGES = {
+    '.buttons.pass': { ja: 'パス', en: 'Pass' },
+    '.buttons.resign': { ja: '投了', en: 'Resign' },
+    '.info.intro': { ja: '9路盤の囲碁 — あなたが先手（黒）', en: 'Go 9×9 — You play first (Black)' },
+    '.hud.turn.player': { ja: 'あなたの番（黒）', en: 'Your turn (Black)' },
+    '.hud.turn.ai': { ja: 'AIの番（白）', en: 'AI turn (White)' },
+    '.hud.status': {
+      ja: (params) => `${params.turn} | 黒の捕獲: ${params.blackCaptures} | 白の捕獲: ${params.whiteCaptures} (コミ+${params.komi})`,
+      en: (params) => `${params.turn} | Black captures: ${params.blackCaptures} | White captures: ${params.whiteCaptures} (komi +${params.komi})`
+    },
+    '.result.win': { ja: 'あなたの勝ち！', en: 'You win!' },
+    '.result.loss': { ja: 'AIの勝ち…', en: 'AI wins…' },
+    '.result.draw': { ja: '持碁（引き分け）', en: 'Jigo (Draw)' },
+    '.result.summary': {
+      ja: (params) => `${params.result} | 黒 ${params.blackScore} - 白 ${params.whiteScore}`,
+      en: (params) => `${params.result} | Black ${params.blackScore} - White ${params.whiteScore}`
+    },
+    '.actors.ai': { ja: 'AI', en: 'AI' },
+    '.actors.player': { ja: 'あなた', en: 'You' },
+    '.hud.passNotice': {
+      ja: (params) => `${params.actor}がパスしました（${params.count}連続）`,
+      en: (params) => `${params.actor} passed (${params.count} in a row)`
+    },
+    '.hud.aiThinking': { ja: 'AIが思考中…', en: 'AI is thinking…' },
+    '.messages.koViolation': { ja: 'その手はコウにより打てません。', en: 'That move violates the ko rule.' }
+  };
 
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
@@ -18,12 +44,40 @@
     const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
       ? window.createMiniGameLocalization({ id: 'go' })
       : null);
-    const text = (key, fallback, params) => {
-      if (localization && typeof localization.t === 'function') {
-        return localization.t(key, fallback, params);
+    const getLocale = () => {
+      try {
+        if (localization && typeof localization.getLocale === 'function') {
+          const value = localization.getLocale();
+          if (value) return String(value).toLowerCase();
+        }
+      } catch {}
+      if (typeof navigator !== 'undefined' && navigator.language) {
+        return String(navigator.language || '').toLowerCase();
       }
+      return 'ja';
+    };
+
+    const resolveFallback = (key, fallback) => {
+      const entry = FALLBACK_MESSAGES[key];
+      if (!entry) return fallback;
+      const locale = getLocale();
+      const candidates = [locale, locale.split('-')[0], 'ja', 'en', 'default'];
+      for (const candidate of candidates){
+        if (!candidate) continue;
+        const value = entry[candidate];
+        if (value != null) return value;
+      }
+      return fallback;
+    };
+
+    const text = (key, fallback, params) => {
+      const resolvedFallback = resolveFallback(key, fallback);
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, resolvedFallback, params);
+      }
+      if (typeof resolvedFallback === 'function') return resolvedFallback(params || {});
       if (typeof fallback === 'function') return fallback(params || {});
-      return fallback ?? '';
+      return resolvedFallback ?? (fallback ?? '');
     };
     const detachLocale = localization && typeof localization.onChange === 'function'
       ? localization.onChange(() => { try { refreshLocalization(); } catch {} })

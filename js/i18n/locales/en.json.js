@@ -906,7 +906,14 @@
           },
           "flappy_bird": {
             "name": "Flappy Bird Clone",
-            "description": "Slip through pipe gaps for EXP and multiply it with streaks."
+            "description": "Slip through pipe gaps for EXP and multiply it with streaks.",
+            "ui": {
+              "combo": "COMBO {combo}",
+              "start": "Press Space / Click to start",
+              "gameOver": "GAME OVER",
+              "restart": "Press Space / R to restart",
+              "finalScore": "Score {formattedScore}"
+            }
           },
           "dino_runner": {
             "name": "Dino Runner",

@@ -906,7 +906,14 @@
           },
           "flappy_bird": {
             "name": "フラッピーバード風",
-            "description": "パイプ通過でEXP。連続成功でボーナス"
+            "description": "パイプ通過でEXP。連続成功でボーナス",
+            "ui": {
+              "combo": "コンボ {combo}",
+              "start": "スペース / クリックで開始",
+              "gameOver": "ゲームオーバー",
+              "restart": "スペース / R でリスタート",
+              "finalScore": "スコア {formattedScore}"
+            }
           },
           "dino_runner": {
             "name": "ダイノランナー",

@@ -381,7 +381,36 @@
           },
           "chess": {
             "name": "Chess",
-            "description": "Outmaneuver the king with tactical captures and checks to gain EXP."
+            "description": "Outmaneuver the king with tactical captures and checks to gain EXP.",
+            "title": "Chess",
+            "difficultyTag": "Difficulty: {value}",
+            "difficultyValue": {
+              "easy": "Easy",
+              "normal": "Normal",
+              "hard": "Hard"
+            },
+            "status": {
+              "stopped": "Stopped",
+              "turnLabel": "Turn:",
+              "yourTurn": "Your move",
+              "aiThinking": "AI is thinking…",
+              "scoreLabel": "Score:"
+            },
+            "messages": {
+              "checkmateWin": "Checkmate! You win.",
+              "checkmateLoss": "Checkmated…",
+              "stalemate": "Stalemate. The game is a draw.",
+              "draw": "The game was recorded as a draw.",
+              "playerCheck": "Check!",
+              "playerInCheck": "You are in check!",
+              "selectMove": "Select a destination square."
+            },
+            "prompts": {
+              "promotion": "Choose a promotion piece (Q/R/B/N)"
+            },
+            "controls": {
+              "restart": "Restart"
+            }
           },
           "xiangqi": {
             "name": "Xiangqi",
@@ -409,7 +438,36 @@
           },
           "go": {
             "name": "Go",
-            "description": "Surround territory, capture stones, and score EXP for smart invasions and victories."
+            "description": "Surround territory, capture stones, and score EXP for smart invasions and victories.",
+            "info": {
+              "intro": "Go 9×9 — You play first (Black)"
+            },
+            "hud": {
+              "turn": {
+                "player": "Your turn (Black)",
+                "ai": "AI turn (White)"
+              },
+              "status": "{turn} | Black captures: {blackCaptures} | White captures: {whiteCaptures} (komi +{komi})",
+              "passNotice": "{actor} passed ({count} in a row)",
+              "aiThinking": "AI is thinking…"
+            },
+            "buttons": {
+              "pass": "Pass",
+              "resign": "Resign"
+            },
+            "messages": {
+              "koViolation": "That move violates the ko rule."
+            },
+            "actors": {
+              "player": "You",
+              "ai": "AI"
+            },
+            "result": {
+              "win": "You win!",
+              "loss": "AI wins…",
+              "draw": "Jigo (Draw)",
+              "summary": "{result} | Black {blackScore} - White {whiteScore}"
+            }
           },
           "backgammon": {
             "name": "Backgammon",
@@ -561,7 +619,171 @@
           },
           "blockcode": {
             "name": "Blockcode Lab",
-            "description": "Experiment with visual blocks to safely script MiniExp APIs."
+            "description": "Experiment with visual blocks to safely script MiniExp APIs.",
+            "defaults": {
+              "projectName": "New Project"
+            },
+            "categories": {
+              "events": "Events",
+              "actions": "Actions",
+              "control": "Control",
+              "variables": "Variables",
+              "utility": "Utility"
+            },
+            "ui": {
+              "title": "Blockcode Lab",
+              "variableSelect": { "placeholder": "-- Variable --" },
+              "workspace": { "elseLabel": "Otherwise" },
+              "stage": { "placeholder": "Assemble blocks and press Run." },
+              "status": { "running": "Running", "stopped": "Stopped" },
+              "toolbar": {
+                "snapOn": "Snap: ON",
+                "snapOff": "Snap: OFF",
+                "speedLabel": "Speed {value}x",
+                "undo": "Undo",
+                "redo": "Redo",
+                "zoomReset": "Reset zoom",
+                "gridToggle": "Toggle grid"
+              },
+              "summary": "{name} · Blocks {blocks} · Variables {variables}",
+              "projectStats": "Blocks {blocks} · Variables {variables}",
+              "tabs": { "logs": "Logs", "variables": "Variable Watch" },
+              "buttons": {
+                "new": "New",
+                "save": "Save",
+                "load": "Load",
+                "share": "Share Code",
+                "run": "Run",
+                "stop": "Stop",
+                "duplicate": "Duplicate",
+                "delete": "Delete",
+                "cancel": "Cancel",
+                "ok": "OK",
+                "addVariable": "Add Variable"
+              },
+              "inputs": {
+                "variableName": "Variable name",
+                "variableInitial": "Initial value",
+                "memo": "Notes (optional)"
+              },
+              "alerts": {
+                "duplicateVariable": "A variable with the same name already exists.",
+                "noSavedProjects": "No saved projects found.",
+                "decodeFailed": "Failed to parse share code."
+              },
+              "prompts": {
+                "confirmStopForNew": "The project is running. Stop and create a new project?",
+                "confirmDiscard": "Discard the current project and start a new one?"
+              },
+              "messages": {
+                "projectCreated": "Created a new project.",
+                "projectSaved": "Saved project \"{name}\".",
+                "projectLoaded": "Loaded project \"{name}\".",
+                "shareImported": "Imported \"{name}\" from share code.",
+                "undoUnavailable": "Undo is not implemented yet.",
+                "redoUnavailable": "Redo is not implemented yet.",
+                "needHat": "A start event block is required.",
+                "executionStopped": "Execution stopped.",
+                "runComplete": "Execution finished.",
+                "genericError": "An error occurred."
+              },
+              "share": {
+                "title": "Share Code",
+                "importLabel": "Paste share code to import",
+                "importPlaceholder": "Share code",
+                "importButton": "Import",
+                "copyButton": "Copy code",
+                "copied": "Copied!"
+              },
+              "variableList": {
+                "initialValue": "Initial: {value}",
+                "empty": "No variables."
+              },
+              "variableTypes": {
+                "number": "Number",
+                "string": "String",
+                "boolean": "Boolean"
+              }
+            },
+            "blocks": {
+              "whenGameStarts": {
+                "label": "When game starts",
+                "description": "Event handler that runs when the project starts."
+              },
+              "whenKeyPressed": {
+                "label": "When key {key} is pressed",
+                "description": "Runs when the specified key is pressed.",
+                "inputs": {
+                  "key": { "placeholder": "Key" }
+                }
+              },
+              "movePlayer": {
+                "label": "Move player by {steps} tiles",
+                "description": "Moves the sandbox player."
+              },
+              "setTile": {
+                "label": "Set tile ({x}, {y}) to {color}",
+                "description": "Changes the stage tile color.",
+                "inputs": {
+                  "color": { "placeholder": "#RRGGBB" }
+                }
+              },
+              "waitSeconds": {
+                "label": "Wait {seconds} seconds",
+                "description": "Waits for the specified seconds."
+              },
+              "repeatTimes": {
+                "label": "Repeat {count} times",
+                "description": "Repeats the given number of times."
+              },
+              "foreverLoop": {
+                "label": "Repeat forever",
+                "description": "Repeats with a safety iteration limit."
+              },
+              "ifCondition": {
+                "label": "If {condition}",
+                "description": "Runs when the condition is true.",
+                "inputs": {
+                  "condition": { "placeholder": "Condition (e.g. score > 5)" }
+                }
+              },
+              "logMessage": {
+                "label": "Log: {message}",
+                "description": "Outputs a message to the log tab.",
+                "inputs": {
+                  "message": { "default": "Hello MiniExp!" }
+                }
+              },
+              "awardXp": {
+                "label": "Gain XP {amount}",
+                "description": "Awards XP."
+              },
+              "setVariable": {
+                "label": "Set variable {variable} to {value}",
+                "description": "Assigns a value to a variable.",
+                "inputs": {
+                  "value": { "placeholder": "Value or expression" }
+                }
+              },
+              "changeVariable": {
+                "label": "Change variable {variable} by {delta}",
+                "description": "Increments or decrements a variable."
+              },
+              "broadcast": {
+                "label": "Broadcast {channel}",
+                "description": "Fires a virtual event."
+              },
+              "stopAll": {
+                "label": "Stop everything",
+                "description": "Stops execution."
+              }
+            },
+            "worker": {
+              "foreverLimit": "Forever loop stopped after {limit} iterations.",
+              "broadcast": "Broadcast: {channel}",
+              "noStart": "No start event block found.",
+              "stopped": "Execution was stopped."
+            }
           },
           "wording": {
             "name": "Wording",
@@ -589,7 +811,16 @@
           },
           "aim": {
             "name": "Aim Trainer",
-            "description": "Hit targets for 1–3 EXP and keep streaks alive for bonuses."
+            "description": "Hit targets for 1–3 EXP and keep streaks alive for bonuses.",
+            "hud": {
+              "time": "TIME: {time}",
+              "hitsAccuracy": "HITS: {hits}  ACC: {accuracy}%",
+              "combo": "COMBO x{combo}"
+            },
+            "overlay": {
+              "timeUp": "Time Up",
+              "restartHint": "Press R to restart"
+            }
           },
           "dodge_race": {
             "name": "Dodge Race",
@@ -657,7 +888,19 @@
           },
           "floor_descent": {
             "name": "Floor Descent Survival",
-            "description": "Descend away from a spiked ceiling, using platforms to survive for EXP."
+            "description": "Descend away from a spiked ceiling, using platforms to survive for EXP.",
+            "hud": {
+              "life": "LIFE",
+              "floor": "Floor {floor}",
+              "best": "Best {floor}",
+              "gameOver": "Game Over",
+              "reachedFloor": "Reached Floor {floor}",
+              "retryHint": "Press Space to retry"
+            }
+          },
+          "treasure_hunt": {
+            "name": "Treasure Hunt Dungeon",
+            "description": "Explore mixed-style dungeons to find treasure—longer paths raise base EXP and faster clears multiply it exponentially."
           },
           "forced_scroll_jump": {
             "name": "Forced Scroll Jump",
@@ -686,6 +929,96 @@
           "graphics_tester": {
             "name": "3D Graphics Tester",
             "description": "Run visual demos and ray-tracing style renders to benchmark for EXP."
+          },
+          "graphicsTester": {
+            "title": "3D Graphics Tester",
+            "badges": {
+              "webgl2": "WebGL2",
+              "rayMarching": "Ray Marching",
+              "benchmark": "Benchmark"
+            },
+            "errors": {
+              "webgl2Unavailable": "WebGL2 is unavailable",
+              "webglInitFailed": "Failed to initialize the WebGL2 context."
+            },
+            "gpuInfo": {
+              "title": "GPU Info",
+              "unsupported": {
+                "message": "WebGL2 is unsupported or disabled.",
+                "description": "This module requires a WebGL2-capable device or browser. Enable WebGL2 or try a compatible browser."
+              },
+              "unknown": "Unknown",
+              "antialias": {
+                "enabled": "ON",
+                "disabled": "OFF"
+              },
+              "entries": {
+                "vendor": "Vendor: {value}",
+                "renderer": "Renderer: {value}",
+                "version": "WebGL: {value}",
+                "shading": "GLSL: {value}",
+                "maxTextureSize": "Max Texture Size: {value}",
+                "maxCubeMap": "Max Cube Map: {value}",
+                "textureUnits": "Texture Units: {value}",
+                "antialias": "Antialias: {value}"
+              }
+            },
+            "controls": {
+              "demoSelect": {
+                "label": "Demo",
+                "options": {
+                  "objectLab": "Object Lab (Placement Demo)",
+                  "ray": "Ray-Tracing Style Demo",
+                  "gallery": "Tech Gallery"
+                },
+                "note": "Drag to orbit and scroll to zoom. The ray-tracing demo is GPU intensive—close other tabs before benchmarking."
+              },
+              "objectLab": {
+                "title": "Object Placement",
+                "actions": {
+                  "addCube": "Add Cube",
+                  "addSphere": "Add Sphere",
+                  "addCylinder": "Add Cylinder",
+                  "clear": "Clear All",
+                  "autoRotate": "Auto Rotate"
+                },
+                "autoRotateState": {
+                  "on": "ON",
+                  "off": "OFF"
+                },
+                "logs": {
+                  "addCube": "Added a cube.",
+                  "addSphere": "Added a sphere.",
+                  "addCylinder": "Added a cylinder.",
+                  "cleared": "Cleared placements.",
+                  "autoRotate": "Auto rotate: {state}"
+                }
+              },
+              "ray": {
+                "title": "Ray-Tracing Settings",
+                "bounces": "Bounce Count",
+                "exposure": "Exposure"
+              },
+              "gallery": {
+                "title": "Tech Gallery Controls",
+                "description": "Explore ring instancing, dynamic motion blur, and material effects."
+              },
+              "benchmark": {
+                "title": "Benchmark",
+                "start": "Run 6-second benchmark"
+              }
+            },
+            "log": {
+              "demoSwitch": "Switched demo: {label}",
+              "benchmarkStart": "Starting benchmark (high load)",
+              "benchmarkResult": "Average FPS: {fps} / Objects drawn: {count}"
+            },
+            "overlay": {
+              "fps": "FPS: {value}",
+              "objects": "Objects: {count}",
+              "bounces": "Bounces: {count}",
+              "gallery": "Gallery Demo"
+            }
           },
           "physics_sandbox": {
             "name": "Physics Sandbox",
@@ -10324,6 +10657,374 @@
     },
 
     "minigame": {
+      "exceler": {
+        "header": {
+          "title": "Exceler Spreadsheet",
+          "subtitle": "{filename} — {sheet}",
+          "buttons": {
+            "new": "New",
+            "import": "Import",
+            "export": "Export",
+            "compatibility": "Compatibility"
+          }
+        },
+        "ribbon": {
+          "tabs": {
+            "home": "Home",
+            "formulas": "Formulas",
+            "view": "View"
+          },
+          "groups": {
+            "clipboard": "Clipboard",
+            "font": "Font",
+            "alignment": "Alignment & Borders",
+            "number": "Number",
+            "functionLibrary": "Function Library",
+            "formulaHelper": "Formula Assist",
+            "display": "Display",
+            "zoom": "Zoom"
+          },
+          "buttons": {
+            "undo": "↺ Undo",
+            "redo": "↻ Redo",
+            "alignLeft": "⟸ Align Left",
+            "alignCenter": "⇔ Align Center",
+            "alignRight": "⟹ Align Right",
+            "alignTop": "⇑ Align Top",
+            "alignMiddle": "⇕ Align Middle",
+            "alignBottom": "⇓ Align Bottom",
+            "insertFunction": "Insert Function",
+            "insertSum": "Σ SUM",
+            "insertAverage": "AVG",
+            "insertIf": "IF"
+          },
+          "tooltips": {
+            "fontSize": "Font size",
+            "borderColor": "Border color"
+          },
+          "borderOptions": {
+            "placeholder": "Border style",
+            "outline": "Outline",
+            "all": "All borders",
+            "top": "Top border",
+            "bottom": "Bottom border",
+            "left": "Left border",
+            "right": "Right border",
+            "clear": "Clear borders"
+          },
+          "numberFormats": {
+            "general": "General",
+            "number": "Number",
+            "currency": "Currency",
+            "percent": "Percent",
+            "comma": "Thousands",
+            "scientific": "Scientific",
+            "date": "Date",
+            "time": "Time"
+          }
+        },
+        "formula": {
+          "placeholder": "Enter formula (e.g. =SUM(A1:B3))"
+        },
+        "functions": {
+          "descriptions": {
+            "SUM": "Returns the sum of numbers.",
+            "AVERAGE": "Returns the average of numbers.",
+            "MIN": "Returns the minimum value.",
+            "MAX": "Returns the maximum value.",
+            "COUNT": "Counts cells containing numbers.",
+            "COUNTA": "Counts non-empty cells.",
+            "IF": "Returns one value depending on a condition.",
+            "ROUND": "Rounds to the specified digits.",
+            "ROUNDUP": "Rounds up to the specified digits.",
+            "ROUNDDOWN": "Rounds down to the specified digits.",
+            "ABS": "Returns the absolute value.",
+            "INT": "Returns the integer portion.",
+            "MOD": "Returns the remainder of division.",
+            "POWER": "Raises a number to a power.",
+            "SQRT": "Returns the square root.",
+            "CONCAT": "Joins text strings together.",
+            "CONCATENATE": "Joins text strings together.",
+            "TEXT": "Formats a number as text.",
+            "LEN": "Returns the length of a text string.",
+            "SUBTOTAL": "Performs the specified subtotal calculation.",
+            "SUMIF": "Sums values matching a condition.",
+            "COUNTIF": "Counts cells matching a condition.",
+            "AVERAGEIF": "Averages values matching a condition.",
+            "IFERROR": "Returns an alternate value when an error occurs.",
+            "PRODUCT": "Multiplies all numbers together.",
+            "VLOOKUP": "Looks up a value vertically and returns the result.",
+            "HLOOKUP": "Looks up a value horizontally and returns the result.",
+            "INDEX": "Returns a value from a range by row and column.",
+            "MATCH": "Returns the position of a lookup value.",
+            "TODAY": "Returns the current date.",
+            "NOW": "Returns the current date and time.",
+            "DATE": "Builds a date from year, month, and day.",
+            "TIME": "Builds a time value.",
+            "UPPER": "Converts text to uppercase.",
+            "LOWER": "Converts text to lowercase.",
+            "LEFT": "Returns characters from the start.",
+            "RIGHT": "Returns characters from the end.",
+            "MID": "Returns characters from the middle.",
+            "TRIM": "Removes extra spaces."
+          }
+        },
+        "view": {
+          "showGrid": "Show gridlines"
+        },
+        "sheet": {
+          "tab": { "tooltip": "Click to switch, double-click to rename, right-click to change tab color" },
+          "add": { "tooltip": "Add a new sheet" },
+          "color": { "tooltip": "Change current sheet tab color (right-click to clear)" },
+          "renamePrompt": "Enter sheet name",
+          "duplicateName": "A sheet with that name already exists."
+        },
+        "status": {
+          "sessionXp": "Session EXP: {value}"
+        },
+        "confirm": {
+          "unsavedChanges": "You have unsaved changes. Continue?"
+        },
+        "filename": {
+          "newWorkbook": "New Workbook.xlsx",
+          "defaultExport": "Worksheet.xlsx"
+        },
+        "warning": {
+          "newWorkbook": "New workbooks have compatibility limits. Shapes and macros aren't supported.",
+          "importLimited": "Compatibility notice: Shapes, macros, external references, and some formatting weren't imported."
+        },
+        "alert": {
+          "fileTooLarge": "File is too large (up to 5 MB).",
+          "importUnsupported": "Compatibility notice: Unsupported features will be discarded.",
+          "importFailed": "Failed to load: {message}",
+          "exportCompatibility": "Compatibility notice: Shapes, macros, and some formats/functions won't be saved.",
+          "exportFailed": "Failed to export: {message}"
+        },
+        "errors": {
+          "parseFailed": "Failed to parse formula.",
+          "unterminatedString": "String literal wasn't closed.",
+          "unknownToken": "Unknown token: {token}",
+          "incompleteExpression": "Formula is incomplete.",
+          "missingClosingParen": "Missing closing ).",
+          "unknownIdentifier": "Unknown identifier: {identifier}",
+          "invalidRangeEnd": "Invalid range end.",
+          "unparsableToken": "Unable to parse token.",
+          "sheetNotFound": "Sheet not found."
+        },
+        "modal": {
+          "compatibility": "Compatibility\n- Multiple sheets/tab colors have limited support (advanced settings are lost)\n- Shapes, macros, pivots, and external links aren't supported\n- Conditional formats and merged cells are not preserved"
+        }
+      },
+      "electro_instrument": {
+        "title": "Electronic Instrument Studio",
+        "badge": "TOY MOD",
+        "description": "Jam freely on a piano keyboard, swapping timbres to sculpt your sound. Earn EXP with every note and playable via typing keys.",
+        "controls": {
+          "instrument": "Timbre",
+          "masterVolume": "Master Volume"
+        },
+        "hud": {
+          "sessionExp": "Session EXP"
+        },
+        "legend": {
+          "whiteKey": "White Keys: Natural notes",
+          "blackKey": "Black Keys: Accidentals"
+        },
+        "activity": {
+          "latest": "Latest Phrase",
+          "limit": "(Up to 10 notes)",
+          "placeholder": {
+            "start": "Press a key to start playing",
+            "empty": "No notes yet"
+          }
+        },
+        "instruments": {
+          "piano": "Studio Piano",
+          "synth_pad": "Synth Pad",
+          "electric_organ": "Electric Organ",
+          "digital_strings": "Digital Strings"
+        }
+      },
+      "counter_pad": {
+        "title": "Counter Pad",
+        "subtitle": "Track multiple counters quickly. Adjustments are saved automatically.",
+        "defaults": {
+          "counterName": "Counter {index}",
+          "newCounter": "New Counter"
+        },
+        "form": {
+          "namePlaceholder": "Counter name",
+          "initialValuePlaceholder": "Initial value (0)",
+          "stepPlaceholder": "Step (1)",
+          "addButton": "Add"
+        },
+        "summary": {
+          "count": "Counters {count}",
+          "total": "Total {value}",
+          "sessionXp": "Session EXP {value}"
+        },
+        "emptyState": "No counters yet. Use the form above to add one.",
+        "counter": {
+          "delete": "Delete",
+          "deleteConfirm": "Delete {name}?",
+          "stepLabel": "Step",
+          "reset": "Reset"
+        },
+        "alerts": {
+          "limitReached": "Cannot add more counters (limit {max})"
+        }
+      },
+      "calculator": {
+        "modes": {
+          "standard": "Standard",
+          "programmer": "Programmer",
+          "summary": {
+            "standard": "Standard mode (Base 10)",
+            "programmer": "Programmer mode / Base {base}"
+          }
+        },
+        "programmer": {
+          "baseNames": {
+            "2": "Binary",
+            "4": "Quaternary",
+            "6": "Senary",
+            "8": "Octal",
+            "10": "Decimal",
+            "16": "Hexadecimal",
+            "24": "Base-24",
+            "30": "Base-30"
+          },
+          "baseOption": "{baseName} (Base {base})",
+          "baseSuffix": " (Base {base})"
+        },
+        "history": {
+          "title": "History",
+          "clear": "Clear",
+          "empty": "No history yet.",
+          "status": "History: {count}",
+          "statusWithBase": "History: {count} / Base {base}"
+        },
+        "status": {
+          "memoryEmpty": "M: --",
+          "memory": "M: {value}",
+          "memoryWithBase": "M: {value} (Base {base})"
+        },
+        "error": "Error"
+      },
+      "calc_combo": {
+        "name": "Calc Combo",
+        "title": "{name} ({difficulty})",
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "stats": {
+          "correct": "Correct",
+          "mistake": "Miss",
+          "combo": "Combo",
+          "xp": "Total EXP"
+        },
+        "input": {
+          "answerPlaceholder": "Enter your answer"
+        },
+        "buttons": {
+          "submit": "Submit"
+        },
+        "shortcuts": {
+          "submitOrSkip": "Enter to submit / Esc to skip"
+        },
+        "history": {
+          "title": "History (last {count} questions)",
+          "correctEntry": "○ {expression}",
+          "mistakeEntry": "× {expression} = {answer}",
+          "streakEntry": "★ Combo {combo} bonus",
+          "gain": "+{value} EXP",
+          "loss": "{value} EXP",
+          "neutral": "±0 EXP"
+        },
+        "question": {
+          "loading": "Preparing…",
+          "prompt": "{expression} = ?"
+        },
+        "pop": {
+          "correct": "Correct! Base {base} + Combo {combo} + Speed {speed}",
+          "streak": "Combo {combo} achieved! Bonus +{bonus}",
+          "mistake": "Correct answer: {answer}",
+          "emptyAnswer": "Enter an answer before submitting",
+          "invalidAnswer": "Please enter a number"
+        }
+      },
+      "acchimuitehoi": {
+        "instructions": {
+          "rpsTitle": "1. Decide roles with Rock-Paper-Scissors",
+          "rpsHint": "Win to attack, lose to defend.",
+          "directionTitle": "2. Acchi Muite Hoi",
+          "directionHint": "Choose a direction within {seconds} s.",
+          "logTitle": "Battle Log"
+        },
+        "ui": {
+          "stage": {
+            "rps": "Decide offense and defense with rock-paper-scissors",
+            "attack": "Attack phase: quickly choose a direction to point.",
+            "defense": "Defense phase: quickly choose a different direction."
+          }
+        },
+        "hands": {
+          "rock": "Rock",
+          "scissors": "Scissors",
+          "paper": "Paper"
+        },
+        "direction": {
+          "up": "Up",
+          "down": "Down",
+          "left": "Left",
+          "right": "Right"
+        },
+        "role": {
+          "attack": "Attack",
+          "defense": "Defense"
+        },
+        "countdown": {
+          "idle": "Time --.- s left",
+          "remaining": "Time {seconds} s left"
+        },
+        "score": {
+          "primary": "Hits landed: {attackWins} / Dodges: {defenseWins}",
+          "secondary": "Attack streak: {attackStreak} (best {bestAttackStreak}) / Defense streak: {defenseStreak} (best {bestDefenseStreak})",
+          "tertiaryWithRate": "Rounds: {rounds} / Success rate: {successRate}%",
+          "tertiaryEmpty": "Rounds: 0 / Success rate: --%"
+        },
+        "status": {
+          "ready": "Pick a hand to start!",
+          "tie": "Tie with {hand}! Try again.",
+          "playerWin": "You won! Point a direction in time to land a hit.",
+          "cpuWin": "CPU attacks! Choose a different direction in time to dodge.",
+          "attack": {
+            "hit": "Hit! {direction} for {exp} EXP.",
+            "hitBonus": "Hit! {direction} for {exp} EXP (streak {streak}).",
+            "miss": "Missed… CPU looked {cpuDirection}.",
+            "timeout": "Time up… missed your chance."
+          },
+          "defense": {
+            "success": "Dodged! Avoided {cpuDirection}! {exp} EXP.",
+            "successBonus": "Dodged! Avoided {cpuDirection} (streak {streak}).",
+            "fail": "Failed to dodge… also looked {direction}.",
+            "timeout": "Time up… took the hit."
+          },
+          "paused": "Paused"
+        },
+        "log": {
+          "tie": "Tie: keep going.",
+          "rpsResult": "RPS: You={playerHand} / CPU={cpuHand} → {role}",
+          "attackSuccess": "Offense success: CPU looked {cpuDirection} → {exp} EXP",
+          "attackFail": "Offense miss: CPU {cpuDirection} / You {playerDirection}",
+          "defenseSuccess": "Defense success: CPU {cpuDirection} / You {playerDirection} → {exp} EXP",
+          "defenseFail": "Defense failed: hit by matching direction.",
+          "attackTimeout": "Offense timeout: chance slipped away.",
+          "defenseTimeout": "Defense timeout: reacted too late."
+        }
+      },
       "taiko_drum": {
         "title": "Taiko Rhythm ({difficulty})",
         "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",
@@ -10363,6 +11064,100 @@
           "goodRateLabel": "Good Rate"
         }
       },
+      "darumasan": {
+        "guard": {
+          "title": "Watcher Status",
+          "hint": "Hold Space / ↑ to advance",
+          "state": {
+            "idle": "Preparing...",
+            "safe": "Go now!",
+            "warning": "Turning soon!",
+            "watch": "Watching! Freeze!"
+          },
+          "countdown": {
+            "placeholder": "Time left --.- s",
+            "safe": "Safe for {seconds}s",
+            "warning": "Turning in {seconds}s!",
+            "watch": "Under watch... hold for {seconds}s"
+          }
+        },
+        "movement": {
+          "stopped": "Stopped",
+          "moving": "Moving"
+        },
+        "progress": {
+          "title": "Progress",
+          "detail": "Distance {distance}% / Elapsed {time} s",
+          "bestPlaceholder": "Best: --.- s",
+          "best": "Best: {time} s"
+        },
+        "status": {
+          "initial": "Press Start to begin",
+          "running": "Red Light, Green Light! Move only when it's safe.",
+          "pause": "Paused",
+          "success": "Cleared! +50 EXP in {time} s",
+          "fail": "Caught moving... Failed"
+        }
+      },
+      "populite": {
+        "title": "Populite - Mini God Mode",
+        "hud": {
+          "faithStatus": "Faith Status",
+          "timeRemaining": "Time Remaining",
+          "mana": "Mana",
+          "population": "Population",
+          "disasterTimer": "Disaster Timer",
+          "nextDisaster": "Next Disaster",
+          "bestRecord": "Best Time",
+          "paused": "Paused",
+          "manaValue": "{current} / {max}",
+          "populationValue": "{current} / {target}",
+          "disasterCountdown": "{value}s",
+          "bestTimeValue": "{value}s"
+        },
+        "controls": {
+          "title": "Controls & Miracles",
+          "instructions": "Left drag: Flatten (Shift to dig) / Right click: Pray to invite followers<br>Space: Pause / Number keys 1: Shield 2: Uplift 3: Purifying Rain"
+        },
+        "spells": {
+          "barrier": "1) Guardian Barrier ({cost})",
+          "uplift": "2) Uplift ({cost})",
+          "purify": "3) Purifying Rain ({cost})"
+        },
+        "status": {
+          "manaShort": "Not enough mana...",
+          "prayerCooldown": "Prayer is still cooling down...",
+          "noSettlements": "No settlements to protect",
+          "victory": "Population goal achieved!",
+          "defeatPopulation": "All followers were lost...",
+          "timeout": "Time is up...",
+          "paused": "Paused",
+          "resumed": "Resumed"
+        },
+        "log": {
+          "title": "Event Log",
+          "prayerStarted": "Followers gather through prayer!",
+          "tsunami": "🌊 A tsunami floods the lowlands!",
+          "volcano": "🌋 A volcano erupts at ({x},{y})",
+          "newSettlement": "A new settlement forms at ({x},{y}) height {level}",
+          "populationMilestone": "Population surpassed {population} people!",
+          "settlementDestroyed": "Settlement ({x},{y}) was wiped out...",
+          "settlementDamaged": "Settlement ({x},{y}) lost {lost} people",
+          "barrierCast": "Barrier shields settlement ({x},{y})",
+          "upliftCast": "The earth rises, creating safe high ground ({x},{y})",
+          "purifyCast": "Purifying rain washed away the omens",
+          "inventoryFull": "No inventory space; the holy shard was left behind...",
+          "bestRecord": "New record! {time}s",
+          "result": "▶ Result: {message}",
+          "difficulty": "Difficulty: {difficulty}",
+          "goal": "Population Goal {target} / Time Limit {duration}s"
+        },
+        "popup": {
+          "buildingLevel": "Build Lv{level}",
+          "populationGain": "+{value} followers",
+          "barrierBlocked": "Barrier blocked it!"
+        }
+      },
       "checkers": {
         "hud": {
           "turn": {
@@ -10392,6 +11187,28 @@
           "restartHint": "Press R to restart"
         }
       },
+      "forced_scroll_jump": {
+        "hud": {
+          "score": "Score: {score}",
+          "coinStreak": "CX streak: {streak}",
+          "lives": "Lives: {lives}"
+        },
+        "overlay": {
+          "title": "Game Over",
+          "rank": "Rank: {rank}",
+          "summary": "Score {score} / Bonus XP +{bonus}",
+          "restart": "Press Space or click to restart"
+        },
+        "rank": {
+          "extreme": "Extreme",
+          "superb": "Superb",
+          "great": "Great",
+          "notable": "Notable",
+          "fair": "Fair",
+          "steady": "Steady",
+          "modest": "Modest"
+        }
+      },
       "othello": {
         "hud": {
           "status": {
@@ -10411,6 +11228,12 @@
         },
         "popup": {
           "movePreview": "{flips} flips / approx +{xp} EXP"
+        }
+      },
+      "falling_shooter": {
+        "overlay": {
+          "title": "Game Over",
+          "restartHint": "Press R to restart"
         }
       },
       "connect6": {
@@ -10519,6 +11342,113 @@
           "winning": "Winning move",
           "pressured": "Pressured move",
           "chasing": "Chasing move"
+        }
+      },
+      "imperial_realm": {
+        "ui": {
+          "logTitle": "Operations Log",
+          "waveTitle": "Wave Intel",
+          "intelTitle": "Battle Intelligence",
+          "selectionTitle": "Selection Info",
+          "populationLabel": "Population"
+        },
+        "resources": {
+          "food": "Food",
+          "wood": "Wood",
+          "gold": "Gold",
+          "stone": "Stone",
+          "costEntry": "{resource} {amount}",
+          "costSeparator": " / "
+        },
+        "hud": {
+          "nextWave": "Next Wave",
+          "ready": "Ready",
+          "countdown": "{seconds}s",
+          "defending": "Defending!",
+          "waveStatus": "Wave {current} / {total}",
+          "waveInfo": "Current Wave: {wave}/{total}\nEnemy TC HP: {hp} / {max}",
+          "commanderGoal": "Defeat the Commander",
+          "finalStand": "Final Stand"
+        },
+        "intel": {
+          "summary": "Villagers: {villagers}\nMilitary: {army}\nStructures: {structures}"
+        },
+        "selection": {
+          "empty": "Nothing selected.",
+          "unitEntry": "{name} HP {current}/{max}",
+          "structureEntry": "{name} HP {current}/{max}{status}",
+          "underConstruction": "(Building)",
+          "separator": "---"
+        },
+        "actions": {
+          "build": {
+            "house": {
+              "label": "Build: House",
+              "description": "+5 population, quick build"
+            },
+            "barracks": {
+              "label": "Build: Barracks",
+              "description": "Train militia"
+            },
+            "archery": {
+              "label": "Build: Archery Range",
+              "description": "Train archers"
+            },
+            "tower": {
+              "label": "Build: Watch Tower",
+              "description": "Autonomous defense tower"
+            }
+          },
+          "train": {
+            "button": "Train: {unit}",
+            "details": "{cost} / {time}s"
+          }
+        },
+        "logs": {
+          "missionStart": "Operation begins. Town Center and three villagers deployed.",
+          "insufficientResources": "Insufficient resources.",
+          "placementPrompt": "Select a location to build {label}.",
+          "gatherOrder": "Villagers ordered to gather {resource}.",
+          "attackOrder": "Issued attack command.",
+          "populationCap": "Population cap reached. Build more houses.",
+          "trainingStarted": "Training {unit} has begun.",
+          "buildingStarted": "Construction started: {structure}.",
+          "unitComplete": "{unit} training complete.",
+          "structureComplete": "{structure} completed.",
+          "enemyDefeated": "Enemy eliminated.",
+          "resourceDepleted": "{resource} deposit depleted.",
+          "commanderArrived": "Enemy commander has entered the battlefield!",
+          "waveIncoming": "Enemy wave {wave} incoming!",
+          "waveCleared": "Wave {wave} repelled! Supply crates secured.",
+          "victory": "Victory!",
+          "defeat": "Defeat..."
+        },
+        "gameOver": {
+          "message": {
+            "ownTownCenterDestroyed": "The Town Center was destroyed.",
+            "enemyTownCenterDestroyed": "Enemy Town Center destroyed.",
+            "allVillagersLost": "All villagers were lost."
+          },
+          "overlay": {
+            "victory": "Victory",
+            "defeat": "Defeat"
+          }
+        },
+        "units": {
+          "villager": "Villager",
+          "militia": "Militia",
+          "archer": "Archer",
+          "raider": "Raider",
+          "horseArcher": "Horse Archer",
+          "commander": "Enemy Commander",
+          "ram": "Battering Ram"
+        },
+        "structures": {
+          "townCenter": "Town Center",
+          "house": "House",
+          "barracks": "Barracks",
+          "archery": "Archery Range",
+          "tower": "Watch Tower"
         }
       },
       "tic_tac_toe": {
@@ -11467,6 +12397,16 @@
         "none": "None",
         "floor": "Floor {floor}"
       },
+      "miniExp": {
+        "dinoRunner": {
+          "comboLabel": "COMBO {combo}",
+          "startPromptPrimary": "Press Space / Click to Start",
+          "startPromptSecondary": "Press ↑ or Space to jump, ↓ to duck",
+          "gameOver": "GAME OVER",
+          "restartHint": "Press Space / R to Restart",
+          "distanceLabel": "DIST {distance}"
+        }
+      },
       "runResult": {
         "defaultCause": "Game Over"
       },
@@ -11825,6 +12765,233 @@
         "cleared": "Input cleared."
       }
     },
+    "games": {
+      "clockHub": {
+        "errors": {
+          "noContainer": "Clock Hub requires a container"
+        },
+        "header": {
+          "title": "Clock Utility Hub",
+          "subtitle": "Switch between digital, analog, and detailed time views",
+          "exp": "EXP Earned: {xp}"
+        },
+        "tabs": {
+          "digital": "Digital Clock",
+          "analog": "Analog Clock",
+          "detail": "Details"
+        },
+        "detailTabs": {
+          "overview": "Overview",
+          "progress": "Progress",
+          "remain": "Time Remaining",
+          "stats": "Information",
+          "calendar": "Calendar"
+        },
+        "digital": {
+          "format": {
+            "24h": "24-hour format",
+            "12h": "12-hour format"
+          },
+          "period": {
+            "am": "AM",
+            "pm": "PM"
+          },
+          "dateLine": "{weekday}, {month}/{day}/{year}",
+          "timeLine12": "{period} {hour}:{minute}:{second}",
+          "timeLine24": "{hour}:{minute}:{second}"
+        },
+        "analog": {
+          "type": {
+            "12h": "Standard analog clock",
+            "24h": "24-hour analog clock"
+          }
+        },
+        "weekdays": {
+          "0": "Sun",
+          "1": "Mon",
+          "2": "Tue",
+          "3": "Wed",
+          "4": "Thu",
+          "5": "Fri",
+          "6": "Sat"
+        },
+        "dates": {
+          "full": "{weekday}, {month}/{day}/{year}"
+        },
+        "era": {
+          "reiwa": "Reiwa",
+          "heisei": "Heisei",
+          "showa": "Showa",
+          "taisho": "Taisho",
+          "meiji": "Meiji",
+          "format": "{era} Year {year}",
+          "unknown": "Unknown"
+        },
+        "eto": {
+          "stems": {
+            "0": "Kinoe",
+            "1": "Kinoto",
+            "2": "Hinoe",
+            "3": "Hinoto",
+            "4": "Tsuchinoe",
+            "5": "Tsuchinoto",
+            "6": "Kanoe",
+            "7": "Kanoto",
+            "8": "Mizunoe",
+            "9": "Mizunoto"
+          },
+          "branches": {
+            "0": "Rat",
+            "1": "Ox",
+            "2": "Tiger",
+            "3": "Rabbit",
+            "4": "Dragon",
+            "5": "Snake",
+            "6": "Horse",
+            "7": "Goat",
+            "8": "Monkey",
+            "9": "Rooster",
+            "10": "Dog",
+            "11": "Boar"
+          },
+          "format": "{stem}-{branch}"
+        },
+        "season": {
+          "winter": "Winter",
+          "spring": "Spring",
+          "summer": "Summer",
+          "autumn": "Autumn",
+          "unknown": "Unknown"
+        },
+        "solarTerms": {
+          "risshun": "Beginning of Spring",
+          "usui": "Rain Water",
+          "keichitsu": "Awakening of Insects",
+          "shunbun": "Spring Equinox",
+          "seimei": "Clear and Bright",
+          "kokuu": "Grain Rain",
+          "rikka": "Beginning of Summer",
+          "shoman": "Grain Full",
+          "boshu": "Grain in Ear",
+          "geshi": "Summer Solstice",
+          "shosho": "Lesser Heat",
+          "taisho": "Greater Heat",
+          "risshu": "Beginning of Autumn",
+          "shoshoLimitHeat": "Limit of Heat",
+          "hakuro": "White Dew",
+          "shubun": "Autumn Equinox",
+          "kanro": "Cold Dew",
+          "soko": "Frost Descent",
+          "rittou": "Beginning of Winter",
+          "shosetsu": "Lesser Snow",
+          "taisetsu": "Greater Snow",
+          "touji": "Winter Solstice",
+          "shokan": "Lesser Cold",
+          "dahan": "Greater Cold",
+          "nextDate": "{month}/{day}/{year}",
+          "description": "Prev {previous} → Next {next} ({nextDate}, {duration})"
+        },
+        "duration": {
+          "prefix": {
+            "future": "in ",
+            "past": "ago "
+          },
+          "unit": {
+            "year": "{value} yr",
+            "day": "{value} d",
+            "hour": "{value} h",
+            "minute": "{value} min",
+            "second": "{value} s"
+          },
+          "joiner": " "
+        },
+        "progress": {
+          "labels": {
+            "millennium": "Millennium",
+            "century": "Century",
+            "decade": "Decade",
+            "year": "Year",
+            "month": "Month",
+            "day": "Day",
+            "hour": "Hour",
+            "minute": "Minute",
+            "second": "Second"
+          },
+          "percent": "{value}%"
+        },
+        "remaining": {
+          "labels": {
+            "nextSecond": "Next second",
+            "nextMinute": "Next minute",
+            "nextHour": "Next hour",
+            "nextDay": "Next day",
+            "nextMonth": "Next month",
+            "nextYear": "Next year"
+          },
+          "delta": " (±{millis} ms)",
+          "value": "{duration}{delta}"
+        },
+        "stats": {
+          "labels": {
+            "unix": "UNIX time",
+            "ticks": "Elapsed milliseconds",
+            "iso": "ISO 8601",
+            "yearday": "Day of year",
+            "daySeconds": "Seconds today",
+            "timezone": "Time zone"
+          },
+          "yeardayValue": "Day {value}",
+          "daySecondsValue": "{value} s",
+          "timezoneFallback": "Local"
+        },
+        "calendar": {
+          "settings": {
+            "title": "Custom holiday/workday settings",
+            "holidayTitle": "Add as holiday",
+            "workdayTitle": "Add as workday",
+            "add": "Add",
+            "empty": "None",
+            "remove": "Remove"
+          },
+          "info": {
+            "summary": "Date: {date}",
+            "era": "Japanese era: {era} | Zodiac: {eto}",
+            "season": "Season: {season} | Quarter {quarter}",
+            "progress": "Day {dayOfYear} | ISO week {isoWeek} | Week {weekOfMonth} of month",
+            "status": "Status: {status}"
+          },
+          "status": {
+            "rest": "Rest day",
+            "workday": "Expected workday",
+            "holiday": "Marked holiday",
+            "workdayOverride": "Marked workday",
+            "separator": " / "
+          },
+          "controls": {
+            "prev": "← Prev",
+            "next": "Next →",
+            "today": "Today"
+          },
+          "monthLabel": "{year}-{month}",
+          "today": "Today: {date}"
+        },
+        "common": {
+          "yes": "Yes",
+          "no": "No"
+        },
+        "overview": {
+          "gregorian": "Gregorian: {month}/{day}/{year} ({weekday})",
+          "era": "Japanese era: {era}",
+          "eto": "Zodiac: {eto} | Imperial year: {imperial}",
+          "season": "Season: {season} | Solar term: {solarTerm}",
+          "leapYear": "Leap year: {value}"
+        },
+        "xp": {
+          "note": "Sec:+{second} / Min:+{minute} / Hr:+{hour} / Day:+{day} / Month:+{month} / Year:+{year} / Century:+{century} / Millennium:+{millennium}"
+        }
+      }
+    },
+
     "statusModal": {
       "title": "Player Status",
       "sections": {
@@ -11883,6 +13050,112 @@
         "valueWithBase": "{effective} (Base {base})",
         "levelWithBase": "Lv.{effective} (Base {base})",
         "hp": "{current}/{max}{baseSuffix}"
+      }
+    },
+
+    "games": {
+      "bowlingDuel": {
+        "title": "Bowling Duel MOD",
+        "legend": "Press the button to stop the Aim → Curve → Power gauges in order and roll the ball!",
+        "history": {
+          "title": "Log",
+          "placeholder": "---"
+        },
+        "buttons": {
+          "throw": "🎳 Throw Ball",
+          "reset": "🔄 Reset",
+          "throwing": "🎳 Rolling…"
+        },
+        "scoreboard": {
+          "you": "You",
+          "cpu": "CPU",
+          "total": "Total"
+        },
+        "sliders": {
+          "aim": {
+            "label": "Aim Position",
+            "center": "Center",
+            "right": "Right {value}",
+            "left": "Left {value}"
+          },
+          "curve": {
+            "label": "Curve Amount",
+            "none": "None",
+            "right": "Hooks Right {value}",
+            "left": "Hooks Left {value}"
+          },
+          "power": {
+            "label": "Throw Power",
+            "format": "{value}%"
+          }
+        },
+        "status": {
+          "introHint": "Stop each moving gauge at the right moment to chase strikes!",
+          "framePlayer": "Frame {frame}: Your turn.",
+          "frameCpu": "Frame {frame}: CPU turn…",
+          "remainingPins": "Pins left: {count}. Take another shot!",
+          "playerStrike": "Strike!",
+          "cpuStrike": "CPU rolled a strike!",
+          "victory": "Victory! Score {player} - {cpu}",
+          "draw": "Draw… Score {player} - {cpu}",
+          "defeat": "Defeat… Score {player} - {cpu}"
+        },
+        "stage": {
+          "aim": {
+            "prompt": "Aim gauge oscillating—press to lock it in!",
+            "button": "🛑 Stop Aim",
+            "confirm": "Aim set to {value}!"
+          },
+          "curve": {
+            "prompt": "Curve gauge moving—stop it with the button!",
+            "button": "🛑 Stop Curve",
+            "confirm": "Curve locked at {value}!"
+          },
+          "power": {
+            "prompt": "Watch the power gauge—press to roll!",
+            "button": "🛑 Stop Power",
+            "confirm": "Rolling with {value}!"
+          }
+        },
+        "logs": {
+          "playerShot": "You: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+          "cpuShot": "CPU: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+          "victory": "<strong>Victory!</strong> +{exp}EXP",
+          "draw": "<strong>Draw</strong> +{exp}EXP",
+          "defeat": "<strong>Defeat</strong> +{exp}EXP"
+        }
+      }
+    },
+    "games": {
+      "treasureHunt": {
+        "ui": {
+          "mapTitle": "Map",
+          "start": "Start",
+          "pause": "Pause",
+          "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards."
+        },
+        "labels": {
+          "round": "Round: {value}",
+          "time": "Time: {value}",
+          "distance": "Distance: {value}",
+          "totalExp": "Total EXP: {value}",
+          "timeValue": "{value}s",
+          "distanceValue": "{value} tiles",
+          "none": "-",
+          "lastResult": "Last round {time} for {exp} EXP{best}",
+          "bestSuffix": " / Best {time}"
+        },
+        "status": {
+          "preparing": "Preparing stage…",
+          "generating": "Generating stage…",
+          "generateFailed": "Failed to generate the stage",
+          "noApi": "Dungeon API is unavailable",
+          "placingFailed": "Treasure placement failed—regenerating",
+          "ready": "Moved to start for Round {round}",
+          "running": "Exploring Round {round}…",
+          "paused": "Paused",
+          "found": "Treasure found! Building the next round…"
+        }
       }
     }
   };

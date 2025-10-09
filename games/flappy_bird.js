@@ -14,6 +14,42 @@
     HARD:   { gravity: 900, flap: 300, maxFall: 470, scroll: 180, gap: 120, spawnMs: 1250, passXp: 11, comboBonus: 2.5 }
   };
 
+  const warnedTranslationKeys = new Set();
+
+  function translateUi(key, fallbackText, params){
+    const computeFallback = () => {
+      if (typeof fallbackText === 'function'){
+        try {
+          const result = fallbackText();
+          return typeof result === 'string' ? result : (result ?? '');
+        } catch (error){
+          if (key && !warnedTranslationKeys.has(key)){
+            warnedTranslationKeys.add(key);
+            console.warn('[flappy_bird] Failed to evaluate fallback text for', key, error);
+          }
+          return '';
+        }
+      }
+      return typeof fallbackText === 'string' ? fallbackText : (fallbackText ?? '');
+    };
+
+    const i18n = window.I18n;
+    if (key && i18n && typeof i18n.t === 'function'){
+      try {
+        const translated = i18n.t(key, params);
+        if (typeof translated === 'string' && translated !== key){
+          return translated;
+        }
+      } catch (error){
+        if (!warnedTranslationKeys.has(key)){
+          warnedTranslationKeys.add(key);
+          console.warn('[flappy_bird] Failed to translate key', key, error);
+        }
+      }
+    }
+    return computeFallback();
+  }
+
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const cfg = { ...BASE_CFG, ...(DIFFICULTY_CFG[difficulty] || DIFFICULTY_CFG.NORMAL) };
@@ -167,23 +203,52 @@
       ctx.fillStyle = '#f8fafc';
       ctx.font = 'bold 32px system-ui, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(score.toString(), canvas.width/2, 58);
+      const i18n = window.I18n;
+      let scoreText = score.toString();
+      if (i18n && typeof i18n.formatNumber === 'function'){
+        try {
+          scoreText = i18n.formatNumber(score);
+        } catch {}
+      }
+      ctx.fillText(scoreText, canvas.width/2, 58);
       ctx.font = '12px system-ui, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`COMBO ${combo}`, 16, 28);
+      const comboLabel = translateUi(
+        'selection.miniexp.games.flappy_bird.ui.combo',
+        () => `COMBO ${combo}`,
+        { combo }
+      );
+      ctx.fillText(comboLabel, 16, 28);
       if (!running && !ended){
         ctx.textAlign = 'center';
-        ctx.fillText('スペース / クリックで開始', canvas.width/2, canvas.height/2 - 24);
+        const startText = translateUi(
+          'selection.miniexp.games.flappy_bird.ui.start',
+          'スペース / クリックで開始'
+        );
+        ctx.fillText(startText, canvas.width/2, canvas.height/2 - 24);
       }
       if (ended){
         ctx.fillStyle = 'rgba(15,23,42,0.58)';
         ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle = '#f8fafc';
         ctx.font = 'bold 26px system-ui, sans-serif';
-        ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2 - 12);
+        const gameOverText = translateUi(
+          'selection.miniexp.games.flappy_bird.ui.gameOver',
+          'GAME OVER'
+        );
+        ctx.fillText(gameOverText, canvas.width/2, canvas.height/2 - 12);
         ctx.font = '14px system-ui, sans-serif';
-        ctx.fillText('スペース / R でリスタート', canvas.width/2, canvas.height/2 + 16);
-        ctx.fillText(`SCORE ${score}`, canvas.width/2, canvas.height/2 + 40);
+        const restartText = translateUi(
+          'selection.miniexp.games.flappy_bird.ui.restart',
+          'スペース / R でリスタート'
+        );
+        ctx.fillText(restartText, canvas.width/2, canvas.height/2 + 16);
+        const finalScoreText = translateUi(
+          'selection.miniexp.games.flappy_bird.ui.finalScore',
+          () => `SCORE ${scoreText}`,
+          { score, formattedScore: scoreText }
+        );
+        ctx.fillText(finalScoreText, canvas.width/2, canvas.height/2 + 40);
       }
     }
 
@@ -262,11 +327,21 @@
     document.addEventListener('keydown', onKeyDown, { passive:false });
     canvas.addEventListener('pointerdown', onPointerDown, { passive:false });
 
+    const i18n = window.I18n;
+    const detachLocaleListener = (i18n && typeof i18n.onLocaleChanged === 'function')
+      ? i18n.onLocaleChanged(() => {
+          draw();
+        })
+      : null;
+
     function destroy(){
       try {
         stop();
         document.removeEventListener('keydown', onKeyDown);
         canvas.removeEventListener('pointerdown', onPointerDown);
+        if (typeof detachLocaleListener === 'function'){
+          detachLocaleListener();
+        }
         canvas.remove();
       } catch {}
     }

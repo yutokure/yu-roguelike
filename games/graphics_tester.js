@@ -53,6 +53,55 @@
     @media (max-width:860px){ .gfx3d-main { grid-template-columns:1fr; } }
   `;
 
+  const I18N_NAMESPACE = 'games.graphicsTester';
+  const i18n = typeof window !== 'undefined' ? window.I18n : null;
+
+  function translateWithFallback(fullKey, fallbackText, params){
+    const computeFallback = () => {
+      if (typeof fallbackText === 'function') {
+        try {
+          const result = fallbackText();
+          return typeof result === 'string' ? result : (result ?? '');
+        } catch (error) {
+          console.warn('[graphicsTester:i18n] Failed to evaluate fallback text:', error);
+          return '';
+        }
+      }
+      return fallbackText ?? '';
+    };
+
+    if (!i18n || typeof i18n.t !== 'function') {
+      return computeFallback();
+    }
+
+    try {
+      const translated = i18n.t(fullKey, params);
+      if (typeof translated === 'string' && translated !== fullKey) {
+        return translated;
+      }
+    } catch (error) {
+      console.warn('[graphicsTester:i18n] Failed to translate key:', fullKey, error);
+    }
+
+    return computeFallback();
+  }
+
+  function t(key, fallbackText, params){
+    return translateWithFallback(`${I18N_NAMESPACE}.${key}`, fallbackText, params);
+  }
+
+  const DEMO_OPTION_DEFS = Object.freeze([
+    { value: 'objectLab', labelKey: 'controls.demoSelect.options.objectLab', fallback: 'オブジェクトラボ (配置デモ)' },
+    { value: 'ray', labelKey: 'controls.demoSelect.options.ray', fallback: 'レイトレーシング風デモ' },
+    { value: 'gallery', labelKey: 'controls.demoSelect.options.gallery', fallback: '技術ギャラリー' }
+  ]);
+
+  function getDemoLabel(id){
+    const def = DEMO_OPTION_DEFS.find((option) => option.value === id);
+    if (!def) return id;
+    return t(def.labelKey, def.fallback);
+  }
+
   function ensureStyle(){
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
@@ -691,7 +740,7 @@
     constructor(canvas, log, existingGL){
       this.canvas = canvas;
       this.gl = existingGL || canvas.getContext('webgl2', { antialias:true, preserveDrawingBuffer:true });
-      if(!this.gl) throw new Error('WebGL2 が利用できません');
+      if(!this.gl) throw new Error(t('errors.webgl2Unavailable', 'WebGL2 が利用できません'));
       this.log = log;
       this.width = 640;
       this.height = 480;
@@ -738,7 +787,13 @@
     setActive(name){
       this.activeName = name;
       this.active = this.demos[name];
-      if(this.log) logLine(this.log, `デモ切り替え: ${name}`);
+      if(this.log){
+        const label = getDemoLabel(name);
+        logLine(
+          this.log,
+          t('log.demoSwitch', () => `デモ切り替え: ${label}`, { label, id: name })
+        );
+      }
     }
     loop(time){
       if(!this._running) return;
@@ -790,12 +845,13 @@
     }
   }
   function gatherGPUInfo(gl){
-    if(!gl) return { info:'WebGL非対応', version:'', shading:'' };
+    if(!gl) return {};
     const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
     const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
     const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
     const version = gl.getParameter(gl.VERSION);
     const shading = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+    const antialias = !!(gl.getContextAttributes()?.antialias);
     return {
       vendor,
       renderer,
@@ -804,7 +860,7 @@
       maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
       maxCubeMap: gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE),
       maxTextureUnits: gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),
-      antialias: gl.getContextAttributes()?.antialias ? 'ON' : 'OFF'
+      antialias
     };
   }
 
@@ -816,11 +872,15 @@
     const header = createEl('div','gfx3d-header', root);
     const headingBox = createEl('div', '', header);
     const title = createEl('h2','', headingBox);
-    title.textContent = '3Dグラフィックテスター';
+    title.textContent = t('title', '3Dグラフィックテスター');
     const badges = createEl('div','gfx3d-badges', headingBox);
-    ['WebGL2', 'Ray Marching', 'Benchmark'].forEach(label=>{
+    [
+      { key: 'badges.webgl2', fallback: 'WebGL2' },
+      { key: 'badges.rayMarching', fallback: 'Ray Marching' },
+      { key: 'badges.benchmark', fallback: 'Benchmark' }
+    ].forEach(({ key, fallback }) => {
       const badge = createEl('span','gfx3d-badge', badges);
-      badge.textContent = label;
+      badge.textContent = t(key, fallback);
     });
     const gpuInfoBox = createEl('div','gfx3d-gpuinfo', header);
 
@@ -837,13 +897,17 @@
 
     const gl = canvas.getContext('webgl2', { antialias:true, preserveDrawingBuffer:true });
     if(!gl){
-      gpuInfoBox.innerHTML = `
-        <strong>GPU情報</strong>
-        <span>WebGL2非対応または無効化されています</span>
-      `;
+      gpuInfoBox.innerHTML = '';
+      const gpuTitle = createEl('strong','', gpuInfoBox);
+      gpuTitle.textContent = t('gpuInfo.title', 'GPU情報');
+      const unsupported = createEl('span','', gpuInfoBox);
+      unsupported.textContent = t('gpuInfo.unsupported.message', 'WebGL2非対応または無効化されています');
       const warn = createEl('div','gfx3d-note', controls);
-      warn.textContent = 'このモジュールは WebGL2 対応デバイス／ブラウザが必要です。設定で WebGL2 を有効化するか、対応ブラウザで再度お試しください。';
-      logLine(logPre, 'WebGL2 コンテキストの初期化に失敗しました。');
+      warn.textContent = t(
+        'gpuInfo.unsupported.description',
+        'このモジュールは WebGL2 対応デバイス／ブラウザが必要です。設定で WebGL2 を有効化するか、対応ブラウザで再度お試しください。'
+      );
+      logLine(logPre, t('errors.webglInitFailed', 'WebGL2 コンテキストの初期化に失敗しました。'));
       return {
         start(){},
         stop(){},
@@ -859,67 +923,112 @@
     renderer.demos.gallery.attachCanvas(canvas);
 
     const gpu = gatherGPUInfo(gl);
-    gpuInfoBox.innerHTML = `
-      <strong>GPU情報</strong>
-      <span>Vendor: ${gpu.vendor || 'Unknown'}</span>
-      <span>Renderer: ${gpu.renderer || 'Unknown'}</span>
-      <span>WebGL: ${gpu.version || ''}</span>
-      <span>GLSL: ${gpu.shading || ''}</span>
-      <span>MaxTextureSize: ${gpu.maxTextureSize}</span>
-      <span>MaxCubeMap: ${gpu.maxCubeMap}</span>
-      <span>TextureUnits: ${gpu.maxTextureUnits}</span>
-      <span>Antialias: ${gpu.antialias}</span>
-    `;
+    gpuInfoBox.innerHTML = '';
+    const gpuTitle = createEl('strong','', gpuInfoBox);
+    gpuTitle.textContent = t('gpuInfo.title', 'GPU情報');
+    const unknownText = t('gpuInfo.unknown', 'Unknown');
+    const antialiasValue = gpu.antialias
+      ? t('gpuInfo.antialias.enabled', 'ON')
+      : t('gpuInfo.antialias.disabled', 'OFF');
+    const fallbackLabels = {
+      vendor: 'Vendor',
+      renderer: 'Renderer',
+      version: 'WebGL',
+      shading: 'GLSL',
+      maxTextureSize: 'MaxTextureSize',
+      maxCubeMap: 'MaxCubeMap',
+      maxTextureUnits: 'TextureUnits',
+      antialias: 'Antialias'
+    };
+    const entries = [
+      { key: 'vendor', value: gpu.vendor || unknownText },
+      { key: 'renderer', value: gpu.renderer || unknownText },
+      { key: 'version', value: gpu.version || unknownText },
+      { key: 'shading', value: gpu.shading || unknownText },
+      { key: 'maxTextureSize', value: gpu.maxTextureSize != null ? String(gpu.maxTextureSize) : unknownText },
+      { key: 'maxCubeMap', value: gpu.maxCubeMap != null ? String(gpu.maxCubeMap) : unknownText },
+      { key: 'maxTextureUnits', value: gpu.maxTextureUnits != null ? String(gpu.maxTextureUnits) : unknownText },
+      { key: 'antialias', value: antialiasValue }
+    ];
+    entries.forEach(({ key, value }) => {
+      const span = createEl('span','', gpuInfoBox);
+      span.textContent = t(
+        `gpuInfo.entries.${key}`,
+        () => `${fallbackLabels[key] || key}: ${value}`,
+        { value }
+      );
+    });
 
     const demoSection = createEl('div','gfx3d-section', controls);
     const demoLabel = createEl('label','', demoSection);
-    demoLabel.innerHTML = '<span>デモ選択</span>';
+    const demoLabelSpan = createEl('span','', demoLabel);
+    demoLabelSpan.textContent = t('controls.demoSelect.label', 'デモ選択');
     const demoSelect = createEl('select','', demoLabel);
-    [{ value:'objectLab', text:'オブジェクトラボ (配置デモ)' },
-     { value:'ray', text:'レイトレーシング風デモ' },
-     { value:'gallery', text:'技術ギャラリー' }
-    ].forEach(opt=>{
+    DEMO_OPTION_DEFS.forEach(opt=>{
       const o = createEl('option','', demoSelect);
-      o.value = opt.value; o.textContent = opt.text;
+      o.value = opt.value; o.textContent = t(opt.labelKey, opt.fallback);
     });
 
     const dynamicArea = createEl('div','gfx3d-section', controls);
     const note = createEl('div','gfx3d-note', controls);
-    note.innerHTML = 'マウスドラッグで視点操作、ホイールでズーム。レイトレーシング風デモは GPU 負荷が高いためベンチマーク時は他タブを閉じてください。';
+    note.textContent = t(
+      'controls.demoSelect.note',
+      'マウスドラッグで視点操作、ホイールでズーム。レイトレーシング風デモは GPU 負荷が高いためベンチマーク時は他タブを閉じてください。'
+    );
 
     function refreshDynamicControls(){
       dynamicArea.innerHTML = '';
       const name = demoSelect.value;
       if(name === 'objectLab'){
         const title = createEl('h3','', dynamicArea);
-        title.textContent = 'オブジェクト配置';
+        title.textContent = t('controls.objectLab.title', 'オブジェクト配置');
         const buttons = createEl('div','gfx3d-grid', dynamicArea);
         const addBtn = createEl('button','gfx3d-mini-btn', buttons);
-        addBtn.textContent = 'キューブ追加';
-        addBtn.addEventListener('click', ()=>{ renderer.demos.objectLab.addObject('cube'); logLine(logPre, 'キューブを追加しました'); });
+        addBtn.textContent = t('controls.objectLab.actions.addCube', 'キューブ追加');
+        addBtn.addEventListener('click', ()=>{
+          renderer.demos.objectLab.addObject('cube');
+          logLine(logPre, t('controls.objectLab.logs.addCube', 'キューブを追加しました'));
+        });
         const sphereBtn = createEl('button','gfx3d-mini-btn', buttons);
-        sphereBtn.textContent = 'スフィア追加';
-        sphereBtn.addEventListener('click', ()=>{ renderer.demos.objectLab.addObject('sphere'); logLine(logPre, 'スフィアを追加しました'); });
+        sphereBtn.textContent = t('controls.objectLab.actions.addSphere', 'スフィア追加');
+        sphereBtn.addEventListener('click', ()=>{
+          renderer.demos.objectLab.addObject('sphere');
+          logLine(logPre, t('controls.objectLab.logs.addSphere', 'スフィアを追加しました'));
+        });
         const cylBtn = createEl('button','gfx3d-mini-btn', buttons);
-        cylBtn.textContent = 'シリンダー追加';
-        cylBtn.addEventListener('click', ()=>{ renderer.demos.objectLab.addObject('cylinder'); logLine(logPre, 'シリンダーを追加しました'); });
+        cylBtn.textContent = t('controls.objectLab.actions.addCylinder', 'シリンダー追加');
+        cylBtn.addEventListener('click', ()=>{
+          renderer.demos.objectLab.addObject('cylinder');
+          logLine(logPre, t('controls.objectLab.logs.addCylinder', 'シリンダーを追加しました'));
+        });
         const clearBtn = createEl('button','gfx3d-mini-btn', buttons);
-        clearBtn.textContent = '全削除';
-        clearBtn.addEventListener('click', ()=>{ renderer.demos.objectLab.clearObjects(); logLine(logPre, '配置をリセットしました'); });
+        clearBtn.textContent = t('controls.objectLab.actions.clear', '全削除');
+        clearBtn.addEventListener('click', ()=>{
+          renderer.demos.objectLab.clearObjects();
+          logLine(logPre, t('controls.objectLab.logs.cleared', '配置をリセットしました'));
+        });
         const chkWrap = createEl('label','gfx3d-flex', dynamicArea);
-        chkWrap.innerHTML = '<span class="gfx3d-chip">オート回転</span>';
+        const autoLabel = createEl('span','gfx3d-chip', chkWrap);
+        autoLabel.textContent = t('controls.objectLab.actions.autoRotate', 'オート回転');
         const autoChk = createEl('input','', chkWrap);
         autoChk.type = 'checkbox';
         autoChk.checked = renderer.demos.objectLab.autoRotate;
         autoChk.addEventListener('change', ()=>{
           renderer.demos.objectLab.autoRotate = autoChk.checked;
-          logLine(logPre, `オート回転: ${autoChk.checked ? 'ON' : 'OFF'}`);
+          const state = autoChk.checked
+            ? t('controls.objectLab.autoRotateState.on', 'ON')
+            : t('controls.objectLab.autoRotateState.off', 'OFF');
+          logLine(
+            logPre,
+            t('controls.objectLab.logs.autoRotate', () => `オート回転: ${state}`, { state })
+          );
         });
       } else if(name === 'ray'){
         const title = createEl('h3','', dynamicArea);
-        title.textContent = 'レイトレーシング風設定';
+        title.textContent = t('controls.ray.title', 'レイトレーシング風設定');
         const bounceLabel = createEl('label','', dynamicArea);
-        bounceLabel.innerHTML = '<span>反射回数</span>';
+        const bounceSpan = createEl('span','', bounceLabel);
+        bounceSpan.textContent = t('controls.ray.bounces', '反射回数');
         const bounceSlider = createEl('input','gfx3d-slider', bounceLabel);
         bounceSlider.type = 'range';
         bounceSlider.min = '1'; bounceSlider.max = '6';
@@ -928,7 +1037,8 @@
           renderer.demos.ray.bounces = parseInt(bounceSlider.value,10);
         });
         const exposureLabel = createEl('label','', dynamicArea);
-        exposureLabel.innerHTML = '<span>露光</span>';
+        const exposureSpan = createEl('span','', exposureLabel);
+        exposureSpan.textContent = t('controls.ray.exposure', '露光');
         const exposureSlider = createEl('input','gfx3d-slider', exposureLabel);
         exposureSlider.type = 'range';
         exposureSlider.min = '0.4'; exposureSlider.max = '2.2'; exposureSlider.step = '0.1';
@@ -938,9 +1048,12 @@
         });
       } else {
         const title = createEl('h3','', dynamicArea);
-        title.textContent = '技術ギャラリー操作';
+        title.textContent = t('controls.gallery.title', '技術ギャラリー操作');
         const info = createEl('div','gfx3d-note', dynamicArea);
-        info.textContent = 'リング状インスタンシング・動的モーションブラー・マテリアル演出を観察できます。';
+        info.textContent = t(
+          'controls.gallery.description',
+          'リング状インスタンシング・動的モーションブラー・マテリアル演出を観察できます。'
+        );
       }
     }
     refreshDynamicControls();
@@ -952,16 +1065,23 @@
 
     const benchSection = createEl('div','gfx3d-section', controls);
     const benchTitle = createEl('h3','', benchSection);
-    benchTitle.textContent = 'ベンチマーク';
+    benchTitle.textContent = t('controls.benchmark.title', 'ベンチマーク');
     const benchBtn = createEl('button','', benchSection);
-    benchBtn.textContent = '6秒間ベンチマーク開始';
+    benchBtn.textContent = t('controls.benchmark.start', '6秒間ベンチマーク開始');
     benchBtn.addEventListener('click', ()=>{
       renderer.setActive('objectLab');
       demoSelect.value = 'objectLab';
       refreshDynamicControls();
-      logLine(logPre, 'ベンチマークを開始します (高負荷)');
+      logLine(logPre, t('log.benchmarkStart', 'ベンチマークを開始します (高負荷)'));
       renderer.demos.objectLab.startBenchmark((result)=>{
-        logLine(logPre, `平均FPS: ${result.fps} / 描画オブジェクト: ${result.count}`);
+        logLine(
+          logPre,
+          t(
+            'log.benchmarkResult',
+            () => `平均FPS: ${result.fps} / 描画オブジェクト: ${result.count}`,
+            { fps: result.fps, count: result.count }
+          )
+        );
         if(typeof awardXp === 'function'){
           const bonus = Math.min(200, Math.max(0, Math.round(result.fps)));
           if(bonus > 0) awardXp(bonus);
@@ -973,14 +1093,17 @@
     let overlayRaf = null;
     const overlayFrame = () => {
       if(!overlayRunning) return;
-      fpsPill.textContent = `FPS: ${renderer.fps.toFixed(1)}`;
+      const fpsValue = renderer.fps.toFixed(1);
+      fpsPill.textContent = t('overlay.fps', () => `FPS: ${fpsValue}`, { value: fpsValue });
       if(renderer.activeName === 'objectLab'){
         const stats = renderer.demos.objectLab.getStats();
-        statPill.textContent = `Objects: ${stats.objects}`;
+        const count = stats.objects;
+        statPill.textContent = t('overlay.objects', () => `Objects: ${count}`, { count });
       } else if(renderer.activeName === 'ray'){
-        statPill.textContent = `Bounces: ${renderer.demos.ray.bounces}`;
+        const bounces = renderer.demos.ray.bounces;
+        statPill.textContent = t('overlay.bounces', () => `Bounces: ${bounces}`, { count: bounces });
       } else {
-        statPill.textContent = 'Gallery Demo';
+        statPill.textContent = t('overlay.gallery', 'Gallery Demo');
       }
       overlayRaf = requestAnimationFrame(overlayFrame);
     };

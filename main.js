@@ -7763,6 +7763,7 @@ let blockDimTables = { dimensions: [], blocks1: [], blocks2: [], blocks3: [] };
 let blockDimHistory = [];
 let blockDimBookmarks = [];
 let __lastSavedBlockDimSelectionKey = null;
+let __blockDimUiInitialized = false;
 const BDIM_TEST_LOG_LIMIT = 400;
 let bdimTestLogLines = [];
 let bdimTestRunning = false;
@@ -8942,6 +8943,7 @@ function formatSpecType(spec) {
 }
 
 async function initBlockDimUI() {
+    if (__blockDimUiInitialized) return;
     await ensureBlockDataPreloaded();
     populateBdimRandomTypeSelect();
     // Build listboxes
@@ -8969,13 +8971,14 @@ async function initBlockDimUI() {
         bdimNestedInput.addEventListener('change', onBlockDimChanged);
     }
     // First render
-    onBlockDimChanged();
+    onBlockDimChanged(true);
     if (bdimStartBtn) { bdimStartBtn.disabled = false; bdimStartBtn.title = ''; }
-    renderHistoryAndBookmarks();
+    __blockDimUiInitialized = true;
+    renderHistoryAndBookmarks(true);
 }
 
 function refreshBlockDimLocaleSensitiveUi() {
-    if (!blockDimTables.__loaded) return;
+    if (!__blockDimUiInitialized || !blockDimTables.__loaded) return;
     populateBdimRandomTypeSelect();
     const dimKey = blockDimState?.dimKey || getSelectedKey(bdimDimList) || (blockDimTables.dimensions[0]?.key);
     const b1Key = blockDimState?.b1Key || getSelectedKey(bdim1List) || (blockDimTables.blocks1[0]?.key);
@@ -8993,8 +8996,8 @@ function refreshBlockDimLocaleSensitiveUi() {
     renderHistoryAndBookmarks();
 }
 
-function onBlockDimChanged() {
-    if (!blockDimTables.__loaded) return;
+function onBlockDimChanged(force = false) {
+    if (!blockDimTables.__loaded || (!force && !__blockDimUiInitialized)) return;
     const dimKey = getSelectedKey(bdimDimList) || blockDimTables.dimensions[0]?.key;
     const b1Key  = getSelectedKey(bdim1List)  || blockDimTables.blocks1[0]?.key;
     const b2Key  = getSelectedKey(bdim2List)  || blockDimTables.blocks2[0]?.key;
@@ -9022,7 +9025,7 @@ function onBlockDimChanged() {
 
 // 1st/2nd/3rd をランダムに選択
 function randomizeBdimBlocks() {
-    if (!blockDimTables.__loaded) return;
+    if (!__blockDimUiInitialized || !blockDimTables.__loaded) return;
     const pickRandomKeyFrom = (listEl) => {
         if (!listEl) return null;
         const options = Array.from(listEl.querySelectorAll('.bdim-option'));
@@ -9157,7 +9160,7 @@ function populateBdimRandomTypeSelect() {
 }
 
 function weightedRandomizeBdimBlocks(targetSumRaw, typePrefRaw) {
-    if (!blockDimTables.__loaded) return;
+    if (!__blockDimUiInitialized || !blockDimTables.__loaded) return;
     const targetSum = clampInt(targetSumRaw, -10, 102, 0); // ブロック合計Lv（次元は無視）
     const typePref = (typePrefRaw || '').trim() || null;   // 例: 'maze' 等
 
@@ -9479,7 +9482,8 @@ function labelForEntry(entry) {
     return `NESTED ${nested}｜${dim}｜${b1}・${b2}・${b3}`;
 }
 
-function renderHistoryAndBookmarks() {
+function renderHistoryAndBookmarks(force = false) {
+    if (!force && !__blockDimUiInitialized) return;
     // History
     if (bdimHistoryDiv) {
         bdimHistoryDiv.innerHTML = '';
@@ -9557,6 +9561,7 @@ function setScrollableList(container, rows = 5) {
 }
 
 function applyBdimSelection(entry) {
+    if (!__blockDimUiInitialized) return;
     // Set list selections and recompute spec
     if (bdimNestedInput && entry.nested) { bdimNestedInput.value = entry.nested; }
     selectOption(bdimDimList, entry.dim);
@@ -9730,7 +9735,7 @@ function setupTabs() {
     tabBtnBlockDim.addEventListener('click', async () => {
         activateTab('blockdim');
         // Lazy init
-        if (!blockDimTables.__loaded) await initBlockDimUI();
+        if (!__blockDimUiInitialized) await initBlockDimUI();
         renderHistoryAndBookmarks();
     });
     if (tabBtnMiniExp) {
@@ -9775,7 +9780,7 @@ function setupTabs() {
     if (bdimRandomBtn) {
         bdimRandomBtn.addEventListener('click', () => {
             // 未初期化なら最初にロード
-            if (!blockDimTables.__loaded) {
+            if (!__blockDimUiInitialized) {
                 initBlockDimUI().then(() => randomizeBdimBlocks());
             } else {
                 randomizeBdimBlocks();
@@ -9786,7 +9791,7 @@ function setupTabs() {
         bdimWeightedRandomBtn.addEventListener('click', () => {
             const target = bdimRandomTargetInput ? bdimRandomTargetInput.value : 0;
             const typePref = bdimRandomTypeSelect ? bdimRandomTypeSelect.value : '';
-            if (!blockDimTables.__loaded) {
+            if (!__blockDimUiInitialized) {
                 initBlockDimUI().then(() => weightedRandomizeBdimBlocks(target, typePref));
             } else {
                 weightedRandomizeBdimBlocks(target, typePref);

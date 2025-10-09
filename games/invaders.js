@@ -3,6 +3,16 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'invaders' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
     const cfg = (
       difficulty==='HARD' ? { rows:6, cols:11, enemyShot:0.02, speed:1.4, lives:2 } :
       difficulty==='EASY' ? { rows:4, cols:6,  enemyShot:0.00, speed:0.9, lives:3 } :
@@ -39,6 +49,10 @@
     }
     mkFleet();
 
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => { try { draw(); } catch {} })
+      : null;
+
     function draw(){
       ctx.fillStyle='#0b1020'; ctx.fillRect(0,0,W,H);
       // player
@@ -55,8 +69,26 @@
         }
       }
       // UI
-      ctx.fillStyle='#cbd5e1'; ctx.font='14px system-ui,sans-serif'; ctx.fillText(`LIVES:${lives}  KILLS:${kills}  WAVE:${waveClears+1}`, 8, 18);
-      if (ended){ ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#f8fafc'; ctx.font='bold 24px system-ui,sans-serif'; ctx.textAlign='center'; ctx.fillText('Game Over', W/2, H/2-6); ctx.font='12px system-ui,sans-serif'; ctx.fillText('Rで再開/再起動', W/2, H/2+16); ctx.textAlign='start'; }
+      const livesLabel = text('hud.livesLabel', 'LIVES');
+      const killsLabel = text('hud.killsLabel', 'KILLS');
+      const waveLabel = text('hud.waveLabel', 'WAVE');
+      const statusText = text('hud.statusLine', () => `${livesLabel}:${lives}  ${killsLabel}:${kills}  ${waveLabel}:${waveClears+1}`, {
+        livesLabel,
+        killsLabel,
+        waveLabel,
+        lives,
+        kills,
+        wave: waveClears + 1,
+      });
+      ctx.fillStyle='#cbd5e1'; ctx.font='14px system-ui,sans-serif'; ctx.fillText(statusText, 8, 18);
+      if (ended){
+        ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle='#f8fafc'; ctx.font='bold 24px system-ui,sans-serif'; ctx.textAlign='center';
+        ctx.fillText(text('overlay.title', 'Game Over'), W/2, H/2-6);
+        ctx.font='12px system-ui,sans-serif';
+        ctx.fillText(text('overlay.restartHint', 'Rで再開/再起動'), W/2, H/2+16);
+        ctx.textAlign='start';
+      }
     }
 
     function anyAlive(){ for(let r=0;r<cfg.rows;r++) for(let c=0;c<cfg.cols;c++) if(fleet[r][c].alive) return true; return false; }
@@ -114,7 +146,15 @@
     function loop(t){ const now=t*0.001; const dt=Math.min(0.033, now-(last||now)); last=now; if(running){ step(dt); draw(); raf=requestAnimationFrame(loop); } }
     function start(){ if(running) return; running=true; ended=false; disableHostRestart(); last=0; raf=requestAnimationFrame(loop); }
     function stop(opts = {}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled){ enableHostRestart(); } }
-    function destroy(){ try{ stop(); canvas.remove(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); }catch{} }
+    function destroy(){
+      try{
+        stop();
+        canvas.remove();
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+      }catch{}
+      try{ detachLocale && detachLocale(); }catch{}
+    }
     function onKeyDown(e){ if(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='Space'){ e.preventDefault(); } keys.add(e.code==='Space'?' ':e.code); if((e.key==='r'||e.key==='R') && !running) { // restart
         kills=0; waveClears=0; lives=cfg.lives; bullets.length=0; ebullets.length=0; mkFleet(); ended=false; start(); }
     }

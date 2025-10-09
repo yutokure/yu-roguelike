@@ -4,6 +4,19 @@
    */
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'dodge_race' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => { try { draw(); } catch {} })
+      : null;
     const cfg = (
       difficulty==='HARD' ? { tickMs:70,  lanes:5, spawnChance:0.5,  tickXp:0.18, cpTicks:26 } :
       difficulty==='EASY' ? { tickMs:250, lanes:4, spawnChance:0.28, tickXp:0.12, cpTicks:50 } :
@@ -38,7 +51,14 @@
       ctx.fillStyle='#f87171'; for(const o of hazards){ ctx.fillRect(o.lane*CELL+4, o.row*CELL+6, CELL-8, CELL-12); }
       // player
       ctx.fillStyle='#22d3ee'; ctx.fillRect(player.lane*CELL+4, player.row*CELL+6, CELL-8, CELL-12);
-      if (ended){ ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#f8fafc'; ctx.font='bold 20px system-ui,sans-serif'; ctx.textAlign='center'; ctx.fillText('Crash!', W/2, H/2-6); ctx.font='12px system-ui,sans-serif'; ctx.fillText('Rで再開/再起動', W/2, H/2+16); ctx.textAlign='start'; }
+      if (ended){
+        ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle='#f8fafc'; ctx.font='bold 20px system-ui,sans-serif'; ctx.textAlign='center';
+        ctx.fillText(text('overlay.crash', 'Crash!'), W/2, H/2-6);
+        ctx.font='12px system-ui,sans-serif';
+        ctx.fillText(text('overlay.restartHint', 'Press R to restart'), W/2, H/2+16);
+        ctx.textAlign='start';
+      }
     }
 
     function tick(dtMs){
@@ -90,7 +110,15 @@
     }
     function start(){ if(running) return; running=true; ended=false; last=0; acc=0; raf=requestAnimationFrame(loop); }
     function stop(){ if(!running) return; running=false; cancelAnimationFrame(raf); }
-    function destroy(){ try{ stop(); canvas.remove(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); }catch{} }
+    function destroy(){
+      try{
+        stop();
+        canvas.remove();
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+        if (detachLocale) detachLocale();
+      }catch{}
+    }
     function getScore(){ return ticks; }
 
     function onKeyDown(e){

@@ -1,6 +1,28 @@
 (function(){
   function create(root, awardXp, opts){
     const diff = (opts && opts.difficulty) || 'NORMAL';
+
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'match3' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      try {
+        if (localization && typeof localization.formatNumber === 'function') {
+          return localization.formatNumber(value, options);
+        }
+      } catch {}
+      try {
+        return new Intl.NumberFormat(undefined, options).format(value);
+      } catch {}
+      return `${value}`;
+    };
     const cfg = {
       EASY:   { cols: 8,  rows: 8,  colors: 5 },
       NORMAL: { cols: 8,  rows: 10, colors: 6 },
@@ -17,6 +39,7 @@
 
     const COLS = cfg.cols, ROWS = cfg.rows, COLORS = cfg.colors;
     const board = Array.from({length:ROWS}, ()=>Array(COLS).fill(0));
+    let detachLocale = null;
     let lastClickPos = { x: W/2, y: H/2 };
     let sel = null; // {x,y}
     let running = false;
@@ -89,9 +112,10 @@
         if (cells.length===0) break;
         chain++;
         // chain popup near cursor (or last click)
+        const chainText = text('popup.chain', () => `${chain}連鎖！`, { chain });
         try {
-          if (window && window.showTransientPopupAt) window.showTransientPopupAt(lastClickPos.x, lastClickPos.y, `${chain}連鎖！`, { variant:'combo', level: chain });
-          else if (window && window.showMiniExpBadge) window.showMiniExpBadge(`${chain}連鎖！`, { variant:'combo', level: chain });
+          if (window && window.showTransientPopupAt) window.showTransientPopupAt(lastClickPos.x, lastClickPos.y, chainText, { variant:'combo', level: chain });
+          else if (window && window.showMiniExpBadge) window.showMiniExpBadge(chainText, { variant:'combo', level: chain });
         } catch {}
         // flash highlight
         ctx.save(); ctx.globalAlpha=0.35; ctx.fillStyle='#fde68a';
@@ -152,7 +176,19 @@
     function draw(){
       ctx.fillStyle = '#0b1220'; ctx.fillRect(0,0,W,H);
       ctx.fillStyle = '#e2e8f0'; ctx.font='12px system-ui,sans-serif';
-      ctx.fillText(`Match-3 | ${diff} | Cleared: ${totalCleared}`, 8, 18);
+      const titleLabel = text('hud.title', 'Match-3');
+      const difficultyLabel = text(`difficulty.${diff.toLowerCase()}`, () => diff, { difficulty: diff });
+      const clearedLabel = text('hud.cleared', 'Cleared');
+      const clearedValue = formatNumber(totalCleared, { maximumFractionDigits: 0 });
+      const statusText = text('hud.status', () => `${titleLabel} | ${difficultyLabel} | ${clearedLabel}: ${clearedValue}`, {
+        title: titleLabel,
+        difficulty: difficultyLabel,
+        difficultyKey: diff,
+        clearedLabel,
+        tiles: clearedValue,
+        rawTiles: totalCleared,
+      });
+      ctx.fillText(statusText, 8, 18);
       for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
         const val = board[y][x]; const px = PAD + x*CELL; const py = PAD + 24 + y*CELL;
         if (val<0) { ctx.fillStyle='rgba(148,163,184,0.2)'; ctx.fillRect(px+4,py+4,CELL-8,CELL-8); continue; }
@@ -163,6 +199,12 @@
         const px = PAD + sel.x*CELL; const py = PAD + 24 + sel.y*CELL;
         ctx.strokeStyle='#fde68a'; ctx.lineWidth=3; ctx.strokeRect(px+2,py+2,CELL-4,CELL-4);
       }
+    }
+
+    if (!detachLocale && localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try { draw(); } catch {}
+      });
     }
 
     function cellAt(mx,my){
@@ -208,7 +250,13 @@
 
     function start(){ if (!running){ running=true; fillInitial(); if(!anyPossibleMove()) reshuffle(); canvas.addEventListener('click', onClick, { passive:false }); draw(); } }
     function stop(){ if (running){ running=false; canvas.removeEventListener('click', onClick); } }
-    function destroy(){ try{ stop(); root && root.removeChild(canvas); }catch{} }
+    function destroy(){
+      try{ stop(); root && root.removeChild(canvas); }catch{}
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
+    }
     function getScore(){ return totalCleared; }
 
     return { start, stop, destroy, getScore };

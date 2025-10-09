@@ -60,7 +60,7 @@
     'SUMIF','COUNTIF','AVERAGEIF','IFERROR','PRODUCT','VLOOKUP','HLOOKUP','INDEX','MATCH','TODAY','NOW','DATE','TIME','UPPER','LOWER','LEFT','RIGHT','MID','TRIM','CONCATENATE'
   ]);
 
-  const FUNCTION_DESCRIPTIONS = {
+  const FUNCTION_DESCRIPTION_FALLBACKS = {
     SUM: '数値の合計を求めます。',
     AVERAGE: '数値の平均を返します。',
     MIN: '最小値を返します。',
@@ -101,6 +101,28 @@
     MID: '指定位置から文字列を取得します。',
     TRIM: '余分な空白を除去します。'
   };
+
+  const BORDER_OPTIONS = [
+    { value: '', key: 'ribbon.borderOptions.placeholder', fallback: '罫線スタイル' },
+    { value: 'outline', key: 'ribbon.borderOptions.outline', fallback: '外枠' },
+    { value: 'all', key: 'ribbon.borderOptions.all', fallback: '格子' },
+    { value: 'top', key: 'ribbon.borderOptions.top', fallback: '上罫線' },
+    { value: 'bottom', key: 'ribbon.borderOptions.bottom', fallback: '下罫線' },
+    { value: 'left', key: 'ribbon.borderOptions.left', fallback: '左罫線' },
+    { value: 'right', key: 'ribbon.borderOptions.right', fallback: '右罫線' },
+    { value: 'clear', key: 'ribbon.borderOptions.clear', fallback: '罫線を消去' }
+  ];
+
+  const NUMBER_FORMAT_OPTIONS = [
+    { value: 'general', key: 'ribbon.numberFormats.general', fallback: '標準' },
+    { value: 'number', key: 'ribbon.numberFormats.number', fallback: '数値' },
+    { value: 'currency', key: 'ribbon.numberFormats.currency', fallback: '通貨' },
+    { value: 'percent', key: 'ribbon.numberFormats.percent', fallback: 'パーセント' },
+    { value: 'comma', key: 'ribbon.numberFormats.comma', fallback: '桁区切り' },
+    { value: 'scientific', key: 'ribbon.numberFormats.scientific', fallback: '指数' },
+    { value: 'date', key: 'ribbon.numberFormats.date', fallback: '日付' },
+    { value: 'time', key: 'ribbon.numberFormats.time', fallback: '時刻' }
+  ];
 
   function clamp(value, min, max){
     return Math.max(min, Math.min(max, value));
@@ -296,8 +318,25 @@
     if (cell.format === 'time'){ return formatTimeValue(value); }
     return String(value);
   }
-  function create(root, awardXp){
+  function create(root, awardXp, opts = {}){
     if (!root) throw new Error('MiniExp exceler requires a root element');
+
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'exceler' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, typeof params === 'function' ? params() : params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const resolveParams = (params) => (typeof params === 'function' ? params() : params);
+    const localeBindings = [];
+    const registerLocaleBinding = (fn) => {
+      if (typeof fn === 'function') localeBindings.push(fn);
+      return fn;
+    };
 
     const state = {
       sheets: [createSheetRecord('Sheet1')],
@@ -314,11 +353,13 @@
       cols: COL_COUNT,
       clipboard: null,
       dirty: false,
-      filename: '新しいブック.xlsx',
+      filename: '',
+      filenameInfo: null,
       sessionXp: 0,
       lastEditXpAt: 0,
       formatOps: 0,
       warning: '',
+      warningInfo: null,
       running: false,
       autoSaveTimer: null,
       isSelecting: false,
@@ -329,6 +370,8 @@
     };
 
     const elements = {};
+    const localized = (key, fallback, params) => ({ key, fallback, params });
+
     const STYLE_ID = 'exceler-style';
     if (!document.getElementById(STYLE_ID)){
       const style = document.createElement('style');
@@ -378,6 +421,97 @@
     }
     const cellElements = new Map();
 
+    const applyLocaleBindings = () => {
+      localeBindings.forEach(fn => {
+        try {
+          fn();
+        } catch (error){
+          console.warn('[MiniExp] Exceler localization binding failed:', error);
+        }
+      });
+    };
+
+    function bindTextContent(target, key, fallback, params){
+      const apply = () => {
+        target.textContent = text(key, fallback, resolveParams(params));
+      };
+      registerLocaleBinding(apply);
+      apply();
+      return target;
+    }
+
+    function bindAttribute(target, attr, key, fallback, params){
+      const apply = () => {
+        target[attr] = text(key, fallback, resolveParams(params));
+      };
+      registerLocaleBinding(apply);
+      apply();
+      return target;
+    }
+
+    function applyLocalizedText(target, descriptor){
+      if (!descriptor) return target;
+      if (typeof descriptor === 'string'){
+        target.textContent = descriptor;
+        return target;
+      }
+      if (typeof descriptor === 'object' && descriptor.key){
+        return bindTextContent(target, descriptor.key, descriptor.fallback, descriptor.params);
+      }
+      target.textContent = String(descriptor);
+      return target;
+    }
+
+    function applyLocalizedAttribute(target, attr, descriptor){
+      if (!descriptor) return target;
+      if (typeof descriptor === 'object' && descriptor.key){
+        return bindAttribute(target, attr, descriptor.key, descriptor.fallback, descriptor.params);
+      }
+      target[attr] = typeof descriptor === 'string' ? descriptor : String(descriptor ?? '');
+      return target;
+    }
+
+    const showAlert = (key, fallback, params) => {
+      alert(text(key, fallback, resolveParams(params)));
+    };
+
+    const showConfirm = (key, fallback, params) => {
+      return confirm(text(key, fallback, resolveParams(params)));
+    };
+
+    const showPrompt = (key, fallback, defaultValue, params) => {
+      return prompt(text(key, fallback, resolveParams(params)), defaultValue);
+    };
+
+    function refreshLocalizedState(){
+      if (state.filenameInfo){
+        const { key, fallback, params } = state.filenameInfo;
+        state.filename = text(key, fallback, resolveParams(params));
+      }
+      if (state.warningInfo){
+        const { key, fallback, params } = state.warningInfo;
+        state.warning = text(key, fallback, resolveParams(params));
+      }
+    }
+
+    function applyLocalization(){
+      refreshLocalizedState();
+      applyLocaleBindings();
+      updateSubtitle();
+      updateStatusBar();
+    }
+
+    let detachLocale = null;
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try {
+          applyLocalization();
+        } catch (error){
+          console.warn('[MiniExp] Exceler localization refresh failed:', error);
+        }
+      });
+    }
+
     function currentSheet(){
       return state.sheets[state.activeSheetIndex];
     }
@@ -386,6 +520,42 @@
       state.dirty = true;
       currentSheet().dirty = true;
     }
+
+    function setFilename(value, info = null){
+      state.filename = value;
+      state.filenameInfo = info;
+      updateSubtitle();
+    }
+
+    function setLocalizedFilename(key, fallback, params){
+      if (!key){
+        const value = typeof fallback === 'function' ? fallback() : (fallback ?? '');
+        setFilename(value, null);
+        return;
+      }
+      setFilename(text(key, fallback, resolveParams(params)), { key, fallback, params });
+    }
+
+    function setWarning(value, info = null){
+      state.warning = value;
+      state.warningInfo = info;
+      updateStatusBar();
+    }
+
+    function setLocalizedWarning(key, fallback, params){
+      if (!key){
+        const value = typeof fallback === 'function' ? fallback() : (fallback ?? '');
+        setWarning(value, null);
+        return;
+      }
+      setWarning(text(key, fallback, resolveParams(params)), { key, fallback, params });
+    }
+
+    function clearWarning(){
+      setWarning('', null);
+    }
+
+    setLocalizedFilename('minigame.exceler.filename.newWorkbook', '新しいブック.xlsx');
 
     function sanitizeSelection(sel){
       const startRow = clamp(sel.startRow ?? 0, 0, state.rows - 1);
@@ -407,7 +577,10 @@
 
     function updateSubtitle(){
       if (elements.subtitle){
-        elements.subtitle.textContent = `${state.filename} — ${currentSheet().name}`;
+        elements.subtitle.textContent = text('header.subtitle', () => `${state.filename} — ${currentSheet().name}`, {
+          filename: state.filename,
+          sheet: currentSheet().name
+        });
       }
     }
 
@@ -570,13 +743,16 @@
       const cell = state.cells.get(ref);
       let info = `${currentSheet().name} | ${ref}`;
       if (cell){
-        info += ' | ' + (cell.format || 'general');
+        const formatKey = cell.format || 'general';
+        const formatOption = NUMBER_FORMAT_OPTIONS.find(option => option.value === formatKey);
+        const formatLabel = text(`ribbon.numberFormats.${formatKey}`, formatOption?.fallback || formatKey);
+        info += ' | ' + formatLabel;
         if (cell.computed){
           info += ' | ' + cell.computed.type;
         }
       }
       elements.statusInfo.textContent = info;
-      elements.statusXp.textContent = `Session EXP: ${state.sessionXp}`;
+      elements.statusXp.textContent = text('status.sessionXp', () => `セッションEXP: ${state.sessionXp}`, { value: state.sessionXp });
       elements.statusWarn.textContent = state.warning || '';
       elements.statusWarn.style.display = state.warning ? 'block' : 'none';
     }
@@ -597,7 +773,7 @@
       titleWrap.style.gap = '4px';
 
       const title = document.createElement('h2');
-      title.textContent = '表計算エクセラー';
+      bindTextContent(title, 'header.title', '表計算エクセラー');
       title.style.margin = '0';
       title.style.fontSize = '20px';
       title.style.letterSpacing = '0.03em';
@@ -613,10 +789,10 @@
       buttonRow.style.display = 'flex';
       buttonRow.style.gap = '10px';
 
-      buttonRow.appendChild(createButton('新規', handleNewWorkbook));
-      buttonRow.appendChild(createButton('インポート', openImportDialog));
-      buttonRow.appendChild(createButton('エクスポート', handleExport));
-      const warnBtn = createButton('互換性', showCompatibilityModal);
+      buttonRow.appendChild(createButton(localized('header.buttons.new', '新規'), handleNewWorkbook));
+      buttonRow.appendChild(createButton(localized('header.buttons.import', 'インポート'), openImportDialog));
+      buttonRow.appendChild(createButton(localized('header.buttons.export', 'エクスポート'), handleExport));
+      const warnBtn = createButton(localized('header.buttons.compatibility', '互換性'), showCompatibilityModal);
       warnBtn.style.background = 'rgba(248,113,113,0.15)';
       warnBtn.style.color = '#fecaca';
       warnBtn.style.borderColor = 'rgba(248,113,113,0.25)';
@@ -633,7 +809,7 @@
     function createButton(label, onClick){
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = label;
+      applyLocalizedText(btn, label);
       btn.style.padding = '8px 16px';
       btn.style.borderRadius = '8px';
       btn.style.border = '1px solid rgba(148,163,184,0.25)';
@@ -649,7 +825,7 @@
     function createToolButton(label, onClick){
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = label;
+      applyLocalizedText(btn, label);
       btn.style.padding = '8px 12px';
       btn.style.borderRadius = '8px';
       btn.style.border = '1px solid rgba(148,163,184,0.2)';
@@ -686,7 +862,7 @@
       body.style.gap = '6px';
 
       const caption = document.createElement('div');
-      caption.textContent = title;
+      applyLocalizedText(caption, title);
       caption.style.fontSize = '11px';
       caption.style.color = '#94a3b8';
       caption.style.textTransform = 'uppercase';
@@ -721,9 +897,9 @@
       ribbon.appendChild(content);
 
       const tabs = [
-        { id: 'home', label: 'ホーム', builder: buildHomePanel },
-        { id: 'formulas', label: '数式', builder: buildFormulaPanel },
-        { id: 'view', label: '表示', builder: buildViewPanel }
+        { id: 'home', label: localized('ribbon.tabs.home', 'ホーム'), builder: buildHomePanel },
+        { id: 'formulas', label: localized('ribbon.tabs.formulas', '数式'), builder: buildFormulaPanel },
+        { id: 'view', label: localized('ribbon.tabs.view', '表示'), builder: buildViewPanel }
       ];
 
       const tabButtons = new Map();
@@ -732,7 +908,7 @@
       tabs.forEach(tab => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.textContent = tab.label;
+        applyLocalizedText(btn, tab.label);
         btn.style.padding = '8px 16px';
         btn.style.borderRadius = '999px';
         btn.style.border = '1px solid rgba(148,163,184,0.25)';
@@ -768,13 +944,13 @@
         panel.style.flexWrap = 'wrap';
         panel.style.gap = '16px';
 
-        const clipboard = createRibbonGroup('クリップボード');
-        const undoBtn = createToolButton('↺ 元に戻す', handleUndo);
-        const redoBtn = createToolButton('↻ やり直し', handleRedo);
+        const clipboard = createRibbonGroup(localized('ribbon.groups.clipboard', 'クリップボード'));
+        const undoBtn = createToolButton(localized('ribbon.buttons.undo', '↺ 元に戻す'), handleUndo);
+        const redoBtn = createToolButton(localized('ribbon.buttons.redo', '↻ やり直し'), handleRedo);
         clipboard.body.appendChild(undoBtn);
         clipboard.body.appendChild(redoBtn);
 
-        const fontGroup = createRibbonGroup('フォント');
+        const fontGroup = createRibbonGroup(localized('ribbon.groups.font', 'フォント'));
         const boldBtn = createToggleButton('B', 'bold');
         boldBtn.style.fontWeight = '700';
         const italicBtn = createToggleButton('I', 'italic');
@@ -787,7 +963,7 @@
         fontSize.min = '8';
         fontSize.max = '48';
         fontSize.value = String(DEFAULT_STYLE.fontSize);
-        fontSize.title = 'フォントサイズ';
+        applyLocalizedAttribute(fontSize, 'title', localized('ribbon.tooltips.fontSize', 'フォントサイズ'));
         fontSize.style.background = 'rgba(30,41,59,0.6)';
         fontSize.style.border = '1px solid rgba(148,163,184,0.25)';
         fontSize.style.color = '#e2e8f0';
@@ -812,18 +988,18 @@
         fontGroup.body.appendChild(textColor);
         fontGroup.body.appendChild(fillColor);
 
-        const alignGroup = createRibbonGroup('配置 / 罫線');
-        const alignLeft = createToolButton('⟸ 左寄せ', () => applyFormat({ horizontalAlign: 'left' }));
-        const alignCenter = createToolButton('⇔ 中央', () => applyFormat({ horizontalAlign: 'center' }));
-        const alignRight = createToolButton('⟹ 右寄せ', () => applyFormat({ horizontalAlign: 'right' }));
-        const alignTop = createToolButton('⇑ 上', () => applyFormat({ verticalAlign: 'top' }));
-        const alignMiddle = createToolButton('⇕ 中央', () => applyFormat({ verticalAlign: 'middle' }));
-        const alignBottom = createToolButton('⇓ 下', () => applyFormat({ verticalAlign: 'bottom' }));
+        const alignGroup = createRibbonGroup(localized('ribbon.groups.alignment', '配置 / 罫線'));
+        const alignLeft = createToolButton(localized('ribbon.buttons.alignLeft', '⟸ 左寄せ'), () => applyFormat({ horizontalAlign: 'left' }));
+        const alignCenter = createToolButton(localized('ribbon.buttons.alignCenter', '⇔ 中央'), () => applyFormat({ horizontalAlign: 'center' }));
+        const alignRight = createToolButton(localized('ribbon.buttons.alignRight', '⟹ 右寄せ'), () => applyFormat({ horizontalAlign: 'right' }));
+        const alignTop = createToolButton(localized('ribbon.buttons.alignTop', '⇑ 上'), () => applyFormat({ verticalAlign: 'top' }));
+        const alignMiddle = createToolButton(localized('ribbon.buttons.alignMiddle', '⇕ 中央'), () => applyFormat({ verticalAlign: 'middle' }));
+        const alignBottom = createToolButton(localized('ribbon.buttons.alignBottom', '⇓ 下'), () => applyFormat({ verticalAlign: 'bottom' }));
 
         const borderColor = document.createElement('input');
         borderColor.type = 'color';
         borderColor.value = DEFAULT_BORDER_COLOR;
-        borderColor.title = '罫線色';
+        applyLocalizedAttribute(borderColor, 'title', localized('ribbon.tooltips.borderColor', '罫線色'));
         borderColor.addEventListener('input', () => applyFormat({ borderColor: borderColor.value }));
 
         const borderSelect = document.createElement('select');
@@ -832,13 +1008,12 @@
         borderSelect.style.color = '#e2e8f0';
         borderSelect.style.borderRadius = '8px';
         borderSelect.style.padding = '8px 10px';
-        [['', '罫線スタイル'], ['outline', '外枠'], ['all', '格子'], ['top', '上罫線'], ['bottom', '下罫線'], ['left', '左罫線'], ['right', '右罫線'], ['clear', '罫線を消去']]
-          .forEach(([value, label]) => {
-            const opt = document.createElement('option');
-            opt.value = value;
-            opt.textContent = label;
-            borderSelect.appendChild(opt);
-          });
+        BORDER_OPTIONS.forEach(({ value, key, fallback }) => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          applyLocalizedText(opt, localized(key, fallback));
+          borderSelect.appendChild(opt);
+        });
         borderSelect.addEventListener('change', () => {
           if (borderSelect.value){
             applyBorders(borderSelect.value);
@@ -855,26 +1030,17 @@
         alignGroup.body.appendChild(borderColor);
         alignGroup.body.appendChild(borderSelect);
 
-        const numberGroup = createRibbonGroup('数値');
+        const numberGroup = createRibbonGroup(localized('ribbon.groups.number', '数値'));
         const formatSelect = document.createElement('select');
         formatSelect.style.background = 'rgba(30,41,59,0.6)';
         formatSelect.style.border = '1px solid rgba(148,163,184,0.25)';
         formatSelect.style.color = '#e2e8f0';
         formatSelect.style.borderRadius = '8px';
         formatSelect.style.padding = '8px 10px';
-        [
-          ['general','標準'],
-          ['number','数値'],
-          ['currency','通貨'],
-          ['percent','パーセント'],
-          ['comma','桁区切り'],
-          ['scientific','指数'],
-          ['date','日付'],
-          ['time','時刻']
-        ].forEach(([value,label]) => {
+        NUMBER_FORMAT_OPTIONS.forEach(({ value, key, fallback }) => {
           const opt = document.createElement('option');
           opt.value = value;
-          opt.textContent = label;
+          applyLocalizedText(opt, localized(key, fallback));
           formatSelect.appendChild(opt);
         });
         formatSelect.addEventListener('change', () => applyFormat({ format: formatSelect.value }));
@@ -899,7 +1065,7 @@
         panel.style.flexWrap = 'wrap';
         panel.style.gap = '16px';
 
-        const fxGroup = createRibbonGroup('関数ライブラリ');
+        const fxGroup = createRibbonGroup(localized('ribbon.groups.functionLibrary', '関数ライブラリ'));
         const select = document.createElement('select');
         select.style.background = 'rgba(30,41,59,0.6)';
         select.style.border = '1px solid rgba(148,163,184,0.25)';
@@ -914,24 +1080,27 @@
           select.appendChild(opt);
         });
 
-        const insertBtn = createToolButton('関数を挿入', () => insertFunctionTemplate(select.value));
+        const insertBtn = createToolButton(localized('ribbon.buttons.insertFunction', '関数を挿入'), () => insertFunctionTemplate(select.value));
         const description = document.createElement('div');
         description.style.fontSize = '12px';
         description.style.color = '#cbd5f5';
         description.style.maxWidth = '260px';
-        description.textContent = FUNCTION_DESCRIPTIONS[select.value] || '';
-        select.addEventListener('change', () => {
-          description.textContent = FUNCTION_DESCRIPTIONS[select.value] || '';
-        });
+        const updateDescription = () => {
+          const fallback = FUNCTION_DESCRIPTION_FALLBACKS[select.value] || '';
+          description.textContent = text(`functions.descriptions.${select.value}`, fallback);
+        };
+        select.addEventListener('change', updateDescription);
+        registerLocaleBinding(updateDescription);
+        updateDescription();
 
         fxGroup.body.appendChild(select);
         fxGroup.body.appendChild(insertBtn);
         fxGroup.body.appendChild(description);
 
-        const helperGroup = createRibbonGroup('数式アシスト');
-        const sumBtn = createToolButton('Σ SUM', () => insertFunctionTemplate('SUM'));
-        const avgBtn = createToolButton('AVG', () => insertFunctionTemplate('AVERAGE'));
-        const ifBtn = createToolButton('IF', () => insertFunctionTemplate('IF'));
+        const helperGroup = createRibbonGroup(localized('ribbon.groups.formulaHelper', '数式アシスト'));
+        const sumBtn = createToolButton(localized('ribbon.buttons.insertSum', 'Σ SUM'), () => insertFunctionTemplate('SUM'));
+        const avgBtn = createToolButton(localized('ribbon.buttons.insertAverage', 'AVG'), () => insertFunctionTemplate('AVERAGE'));
+        const ifBtn = createToolButton(localized('ribbon.buttons.insertIf', 'IF'), () => insertFunctionTemplate('IF'));
         helperGroup.body.appendChild(sumBtn);
         helperGroup.body.appendChild(avgBtn);
         helperGroup.body.appendChild(ifBtn);
@@ -947,7 +1116,7 @@
         panel.style.flexWrap = 'wrap';
         panel.style.gap = '16px';
 
-        const displayGroup = createRibbonGroup('表示設定');
+        const displayGroup = createRibbonGroup(localized('ribbon.groups.display', '表示設定'));
         const gridToggleLabel = document.createElement('label');
         gridToggleLabel.style.display = 'flex';
         gridToggleLabel.style.alignItems = 'center';
@@ -961,12 +1130,12 @@
           cellElements.forEach((_el, key) => updateCellElement(key));
         });
         const gridLabel = document.createElement('span');
-        gridLabel.textContent = 'グリッド線を表示';
+        bindTextContent(gridLabel, 'view.showGrid', 'グリッド線を表示');
         gridToggleLabel.appendChild(gridToggle);
         gridToggleLabel.appendChild(gridLabel);
         displayGroup.body.appendChild(gridToggleLabel);
 
-        const zoomGroup = createRibbonGroup('ズーム');
+        const zoomGroup = createRibbonGroup(localized('ribbon.groups.zoom', 'ズーム'));
         const zoomSlider = document.createElement('input');
         zoomSlider.type = 'range';
         zoomSlider.min = '50';
@@ -1013,7 +1182,7 @@
 
       const formulaInput = document.createElement('input');
       formulaInput.type = 'text';
-      formulaInput.placeholder = '数式を入力 (例: =SUM(A1:B3))';
+      bindAttribute(formulaInput, 'placeholder', 'formula.placeholder', '数式を入力 (例: =SUM(A1:B3))');
       formulaInput.style.flex = '1';
       formulaInput.style.background = 'rgba(30,41,59,0.6)';
       formulaInput.style.border = '1px solid rgba(148,163,184,0.25)';
@@ -1294,7 +1463,7 @@
           event.preventDefault();
           openSheetColorDialog(index);
         });
-        tab.title = 'クリックで切り替え、ダブルクリックで名前変更、右クリックでタブ色を変更';
+        applyLocalizedAttribute(tab, 'title', localized('sheet.tab.tooltip', 'クリックで切り替え、ダブルクリックで名前変更、右クリックでタブ色を変更'));
         tabsWrap.appendChild(tab);
       });
       const addBtn = document.createElement('button');
@@ -1307,7 +1476,7 @@
       addBtn.style.color = '#e0f2fe';
       addBtn.style.cursor = 'pointer';
       addBtn.addEventListener('click', addSheet);
-      addBtn.title = '新しいシートを追加';
+      applyLocalizedAttribute(addBtn, 'title', localized('sheet.add.tooltip', '新しいシートを追加'));
 
       const toolsWrap = document.createElement('div');
       toolsWrap.style.display = 'flex';
@@ -1324,7 +1493,7 @@
       colorBtn.style.background = 'rgba(14,116,144,0.45)';
       colorBtn.style.color = '#e0f2fe';
       colorBtn.style.cursor = 'pointer';
-      colorBtn.title = '現在のシートタブの色を変更 (右クリックでクリア)';
+      applyLocalizedAttribute(colorBtn, 'title', localized('sheet.color.tooltip', '現在のシートタブの色を変更 (右クリックでクリア)'));
       colorBtn.disabled = state.sheets.length === 0;
       colorBtn.style.opacity = colorBtn.disabled ? '0.4' : '1';
       colorBtn.addEventListener('click', () => {
@@ -1353,12 +1522,12 @@
     function renameSheet(index){
       const sheet = state.sheets[index];
       if (!sheet) return;
-      const input = prompt('シート名を入力', sheet.name);
+      const input = showPrompt('sheet.renamePrompt', 'シート名を入力', sheet.name);
       if (input == null) return;
       const trimmed = input.trim();
       if (!trimmed) return;
       if (state.sheets.some((s, i) => i !== index && s.name === trimmed)){
-        alert('同じ名前のシートがあります。');
+        showAlert('sheet.duplicateName', '同じ名前のシートがあります。');
         return;
       }
       sheet.name = trimmed;
@@ -1944,7 +2113,7 @@
       const parser = createFormulaParser(tokens);
       const ast = parser.parseExpression();
       if (!parser.atEnd()){
-        throw new Error('式の解析に失敗しました');
+        throw new Error(text('errors.parseFailed', '式の解析に失敗しました'));
       }
       return evaluateNode(ast);
 
@@ -2477,7 +2646,7 @@
             if (expr[j] === '"') break;
             str += expr[j++];
           }
-          if (expr[j] !== '"') throw new Error('文字列リテラルが閉じられていません');
+          if (expr[j] !== '"') throw new Error(text('errors.unterminatedString', '文字列リテラルが閉じられていません'));
           tokens.push({ type: 'string', value: str });
           i = j + 1;
           continue;
@@ -2521,7 +2690,7 @@
           i++;
           continue;
         }
-        throw new Error('未知のトークン: ' + ch);
+        throw new Error(text('errors.unknownToken', () => `未知のトークン: ${ch}`, { token: ch }));
       }
       return tokens;
     }
@@ -2594,7 +2763,7 @@
       }
       function parsePrimary(){
         const token = consume();
-        if (!token) throw new Error('式が不完全です');
+        if (!token) throw new Error(text('errors.incompleteExpression', '式が不完全です'));
         if (token.type === 'number') return { type: 'number', value: token.value };
         if (token.type === 'string') return { type: 'string', value: token.value };
         if (token.type === 'identifier'){
@@ -2609,27 +2778,27 @@
                 args.push(parseExpression());
               } while (match('comma'));
               if (!match('operator', ')')){
-                throw new Error(') が必要です');
+                throw new Error(text('errors.missingClosingParen', ') が必要です'));
               }
             }
             return { type: 'function', name: token.value, args };
           }
-          throw new Error('未知の識別子: ' + token.value);
+          throw new Error(text('errors.unknownIdentifier', () => `未知の識別子: ${token.value}`, { identifier: token.value }));
         }
         if (token.type === 'cell'){
           if (match('colon')){
             const end = consume();
-            if (!end || end.type !== 'cell') throw new Error('範囲の終端が不正です');
+            if (!end || end.type !== 'cell') throw new Error(text('errors.invalidRangeEnd', '範囲の終端が不正です'));
             return { type: 'range', startRow: parseCellRef(token.value).row, startCol: parseCellRef(token.value).col, endRow: parseCellRef(end.value).row, endCol: parseCellRef(end.value).col };
           }
           return { type: 'cell', ref: token.value };
         }
         if (token.type === 'operator' && token.value === '('){
           const inner = parseExpression();
-          if (!match('operator', ')')) throw new Error(') が必要です');
+          if (!match('operator', ')')) throw new Error(text('errors.missingClosingParen', ') が必要です'));
           return inner;
         }
-        throw new Error('解析できないトークン');
+        throw new Error(text('errors.unparsableToken', '解析できないトークン'));
       }
       function atEnd(){ return index >= tokens.length; }
       return { parseExpression, atEnd };
@@ -2663,12 +2832,12 @@
     }
 
     function handleNewWorkbook(){
-      if (state.dirty && !confirm('未保存の変更があります。続行しますか？')) return;
+      if (state.dirty && !showConfirm('confirm.unsavedChanges', '未保存の変更があります。続行しますか？')) return;
       state.sheets = [createSheetRecord('Sheet1')];
       state.activeSheetIndex = 0;
       state.sheetCounter = 1;
-      state.filename = '新しいブック.xlsx';
-      state.warning = '新規ブックは互換性制限があります。図形/マクロは未対応です。';
+      setLocalizedFilename('filename.newWorkbook', '新しいブック.xlsx');
+      setLocalizedWarning('warning.newWorkbook', '新規ブックは互換性制限があります。図形/マクロは未対応です。');
       state.dirty = false;
       renderSheetTabs();
       updateSubtitle();
@@ -2687,21 +2856,20 @@
         const file = input.files && input.files[0];
         if (!file) return;
         if (file.size > MAX_FILE_SIZE){
-          alert('ファイルが大きすぎます (5MB まで)');
+          showAlert('alert.fileTooLarge', 'ファイルが大きすぎます (5MB まで)');
           return;
         }
         const reader = new FileReader();
         reader.onload = () => {
           try {
             loadWorkbook(new Uint8Array(reader.result));
-            state.filename = file.name;
-            updateSubtitle();
-            state.warning = '互換性注意: 図形・マクロ・外部参照・一部の書式は読み込まれていません。';
+            setFilename(file.name || state.filename);
+            setLocalizedWarning('warning.importLimited', '互換性注意: 図形・マクロ・外部参照・一部の書式は読み込まれていません。');
             award('import', 10);
-            alert('互換性注意: 未対応の機能は破棄されます。');
+            showAlert('alert.importUnsupported', '互換性注意: 未対応の機能は破棄されます。');
           } catch (err){
             console.error(err);
-            alert('読み込みに失敗しました: ' + err.message);
+            showAlert('alert.importFailed', () => `読み込みに失敗しました: ${err.message}`, { message: err.message });
           }
         };
         reader.readAsArrayBuffer(file);
@@ -2800,7 +2968,7 @@
             sheetEntries.push({ name: `Sheet${index + 1}`, path: name });
           });
       }
-      if (!sheetEntries.length) throw new Error('シートが見つかりません');
+      if (!sheetEntries.length) throw new Error(text('errors.sheetNotFound', 'シートが見つかりません'));
       const sheetRecords = [];
       sheetEntries.forEach(entry => {
         const file = files[entry.path];
@@ -2878,20 +3046,21 @@
     }
 
     function handleExport(){
-      alert('互換性注意: 図形・マクロ・一部の書式や関数は保存されません。');
+      showAlert('alert.exportCompatibility', '互換性注意: 図形・マクロ・一部の書式や関数は保存されません。');
       try {
         const zip = buildWorkbook();
         const blob = new Blob([zip], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = state.filename || 'ワークシート.xlsx';
+        const defaultName = text('filename.defaultExport', 'ワークシート.xlsx');
+        a.download = state.filename || defaultName;
         a.click();
         URL.revokeObjectURL(url);
         award('export', 12);
       } catch (err){
         console.error(err);
-        alert('書き出しに失敗しました: ' + err.message);
+        showAlert('alert.exportFailed', () => `書き出しに失敗しました: ${err.message}`, { message: err.message });
       }
     }
 
@@ -3024,8 +3193,7 @@
     }
 
     function showCompatibilityModal(){
-      const message = '互換性について\n- 複数シート/タブ色は簡易サポート (高度な設定は失われます)\n- 図形・マクロ・ピボット・外部リンクは未対応\n- 条件付き書式・結合セルは保持されません';
-      alert(message);
+      showAlert('modal.compatibility', '互換性について\n- 複数シート/タブ色は簡易サポート (高度な設定は失われます)\n- 図形・マクロ・ピボット・外部リンクは未対応\n- 条件付き書式・結合セルは保持されません');
     }
 
     function autoSaveLater(){
@@ -3063,7 +3231,11 @@
         const payload = JSON.parse(raw);
         if (!payload || typeof payload !== 'object') return;
         state.filename = typeof payload.filename === 'string' ? payload.filename : state.filename;
+        if (typeof payload.filename === 'string'){
+          state.filenameInfo = null;
+        }
         state.warning = typeof payload.warning === 'string' ? payload.warning : state.warning;
+        state.warningInfo = null;
         const restoredSheets = Array.isArray(payload.sheets) && payload.sheets.length ? payload.sheets : null;
         if (restoredSheets){
           state.sheets = restoredSheets.map((sheet, index) => {
@@ -3148,6 +3320,9 @@
 
     function destroy(){
       stop();
+      if (typeof detachLocale === 'function'){
+        try { detachLocale(); } catch {}
+      }
       if (elements.wrapper && elements.wrapper.parentNode){
         elements.wrapper.parentNode.removeChild(elements.wrapper);
       }

@@ -11332,6 +11332,113 @@
           "chasing": "Chasing move"
         }
       },
+      "imperial_realm": {
+        "ui": {
+          "logTitle": "Operations Log",
+          "waveTitle": "Wave Intel",
+          "intelTitle": "Battle Intelligence",
+          "selectionTitle": "Selection Info",
+          "populationLabel": "Population"
+        },
+        "resources": {
+          "food": "Food",
+          "wood": "Wood",
+          "gold": "Gold",
+          "stone": "Stone",
+          "costEntry": "{resource} {amount}",
+          "costSeparator": " / "
+        },
+        "hud": {
+          "nextWave": "Next Wave",
+          "ready": "Ready",
+          "countdown": "{seconds}s",
+          "defending": "Defending!",
+          "waveStatus": "Wave {current} / {total}",
+          "waveInfo": "Current Wave: {wave}/{total}\nEnemy TC HP: {hp} / {max}",
+          "commanderGoal": "Defeat the Commander",
+          "finalStand": "Final Stand"
+        },
+        "intel": {
+          "summary": "Villagers: {villagers}\nMilitary: {army}\nStructures: {structures}"
+        },
+        "selection": {
+          "empty": "Nothing selected.",
+          "unitEntry": "{name} HP {current}/{max}",
+          "structureEntry": "{name} HP {current}/{max}{status}",
+          "underConstruction": "(Building)",
+          "separator": "---"
+        },
+        "actions": {
+          "build": {
+            "house": {
+              "label": "Build: House",
+              "description": "+5 population, quick build"
+            },
+            "barracks": {
+              "label": "Build: Barracks",
+              "description": "Train militia"
+            },
+            "archery": {
+              "label": "Build: Archery Range",
+              "description": "Train archers"
+            },
+            "tower": {
+              "label": "Build: Watch Tower",
+              "description": "Autonomous defense tower"
+            }
+          },
+          "train": {
+            "button": "Train: {unit}",
+            "details": "{cost} / {time}s"
+          }
+        },
+        "logs": {
+          "missionStart": "Operation begins. Town Center and three villagers deployed.",
+          "insufficientResources": "Insufficient resources.",
+          "placementPrompt": "Select a location to build {label}.",
+          "gatherOrder": "Villagers ordered to gather {resource}.",
+          "attackOrder": "Issued attack command.",
+          "populationCap": "Population cap reached. Build more houses.",
+          "trainingStarted": "Training {unit} has begun.",
+          "buildingStarted": "Construction started: {structure}.",
+          "unitComplete": "{unit} training complete.",
+          "structureComplete": "{structure} completed.",
+          "enemyDefeated": "Enemy eliminated.",
+          "resourceDepleted": "{resource} deposit depleted.",
+          "commanderArrived": "Enemy commander has entered the battlefield!",
+          "waveIncoming": "Enemy wave {wave} incoming!",
+          "waveCleared": "Wave {wave} repelled! Supply crates secured.",
+          "victory": "Victory!",
+          "defeat": "Defeat..."
+        },
+        "gameOver": {
+          "message": {
+            "ownTownCenterDestroyed": "The Town Center was destroyed.",
+            "enemyTownCenterDestroyed": "Enemy Town Center destroyed.",
+            "allVillagersLost": "All villagers were lost."
+          },
+          "overlay": {
+            "victory": "Victory",
+            "defeat": "Defeat"
+          }
+        },
+        "units": {
+          "villager": "Villager",
+          "militia": "Militia",
+          "archer": "Archer",
+          "raider": "Raider",
+          "horseArcher": "Horse Archer",
+          "commander": "Enemy Commander",
+          "ram": "Battering Ram"
+        },
+        "structures": {
+          "townCenter": "Town Center",
+          "house": "House",
+          "barracks": "Barracks",
+          "archery": "Archery Range",
+          "tower": "Watch Tower"
+        }
+      },
       "tic_tac_toe": {
         "hud": {
           "status": {

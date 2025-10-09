@@ -8921,7 +8921,12 @@ function renderBdimPreview(spec) {
         const b1 = resolveBlockNameByKey(blockDimTables.blocks1, b1Key) || b1Key;
         const b2 = resolveBlockNameByKey(blockDimTables.blocks2, b2Key) || b2Key;
         const b3 = resolveBlockNameByKey(blockDimTables.blocks3, b3Key) || b3Key;
-        bdimCardSelection.textContent = `NESTED ${nested} ／ 次元 ${dimensionName || String(dimKey).toUpperCase()}：${b1}・${b2}・${b3}`;
+        const dimensionLabel = dimensionName || String(dimKey).toUpperCase();
+        bdimCardSelection.textContent = translateOrFallback(
+            'game.blockDim.preview.selection',
+            () => `NESTED ${nested} ／ 次元 ${dimensionLabel}：${b1}・${b2}・${b3}`,
+            { nested, dimension: dimensionLabel, block1: b1, block2: b2, block3: b3 }
+        );
     }
     bdimCardLevel.textContent = String(spec.level);
     bdimCardType.textContent = formatSpecType(spec);

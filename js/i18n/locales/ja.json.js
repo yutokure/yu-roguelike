@@ -13562,7 +13562,13 @@
         "menu": {
           "file": "ファイル",
           "edit": "編集",
-          "view": "表示",
+          "view": {
+            "label": "表示",
+            "enableWordWrap": "折り返しを有効化",
+            "disableWordWrap": "折り返しを無効化",
+            "showStatusBar": "ステータスバーを表示",
+            "hideStatusBar": "ステータスバーを非表示"
+          },
           "fileNew": "新規",
           "fileOpen": "開く...",
           "fileSave": "上書き保存",
@@ -13579,13 +13585,7 @@
           "editSelectAll": "すべて選択",
           "viewZoomIn": "ズームイン",
           "viewZoomOut": "ズームアウト",
-          "viewZoomReset": "ズームを既定に戻す",
-          "view": {
-            "enableWordWrap": "折り返しを有効化",
-            "disableWordWrap": "折り返しを無効化",
-            "showStatusBar": "ステータスバーを表示",
-            "hideStatusBar": "ステータスバーを非表示"
-          }
+          "viewZoomReset": "ズームを既定に戻す"
         },
         "commands": {
           "heading": "見出しを切り替え",

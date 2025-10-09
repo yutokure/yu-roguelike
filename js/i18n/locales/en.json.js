@@ -13558,7 +13558,13 @@
         "menu": {
           "file": "File",
           "edit": "Edit",
-          "view": "View",
+          "view": {
+            "label": "View",
+            "enableWordWrap": "Enable Word Wrap",
+            "disableWordWrap": "Disable Word Wrap",
+            "showStatusBar": "Show Status Bar",
+            "hideStatusBar": "Hide Status Bar"
+          },
           "fileNew": "New",
           "fileOpen": "Open...",
           "fileSave": "Save",
@@ -13575,13 +13581,7 @@
           "editSelectAll": "Select All",
           "viewZoomIn": "Zoom In",
           "viewZoomOut": "Zoom Out",
-          "viewZoomReset": "Reset Zoom",
-          "view": {
-            "enableWordWrap": "Enable Word Wrap",
-            "disableWordWrap": "Disable Word Wrap",
-            "showStatusBar": "Show Status Bar",
-            "hideStatusBar": "Hide Status Bar"
-          }
+          "viewZoomReset": "Reset Zoom"
         },
         "commands": {
           "heading": "Toggle heading level",

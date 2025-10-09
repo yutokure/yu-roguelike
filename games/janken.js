@@ -461,14 +461,21 @@
 
     updateStats();
 
-    function start(){}
-    function stop(){
+    function resetInteractionState(){
       clearTimers();
       if (isResolving){
         isResolving = false;
-        setButtonsDisabled(false);
-        clearHighlights();
       }
+      setButtonsDisabled(false);
+      clearHighlights();
+    }
+
+    function start(){
+      resetInteractionState();
+      setStatus('status.prompt', '手を選ぶと掛け声が始まるよ');
+    }
+    function stop(){
+      resetInteractionState();
       setStatus('status.paused', '一時停止中');
     }
     function destroy(){

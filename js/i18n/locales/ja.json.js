@@ -13392,6 +13392,64 @@
         "hp": "{current}/{max}{baseSuffix}"
       }
     },
+    "miniPaint": {
+      "appName": "ペイント",
+      "windowTitle": "{marker}{fileName} - {appName}",
+      "defaultFileName": "未タイトル.png",
+      "importedFileName": "インポート画像.png",
+      "menu": {
+        "new": "新規",
+        "import": "読み込み",
+        "save": "保存",
+        "saveAs": "名前を付けて保存",
+        "export": "エクスポート",
+        "clear": "クリア",
+        "undo": "元に戻す",
+        "redo": "やり直す",
+        "gridOn": "グリッド: ON",
+        "gridOff": "グリッド: OFF"
+      },
+      "tools": {
+        "brush": "ブラシ",
+        "pencil": "鉛筆",
+        "marker": "マーカー",
+        "eraser": "消しゴム",
+        "line": "直線",
+        "rectangle": "四角",
+        "ellipse": "楕円",
+        "fill": "塗りつぶし",
+        "picker": "スポイト",
+        "fillMode": "形を塗りつぶす"
+      },
+      "labels": {
+        "size": "サイズ",
+        "zoom": "ズーム",
+        "primary": "前景",
+        "secondary": "背景",
+        "sizeValue": "{value}px",
+        "zoomValue": "{value}%",
+        "primaryColorTitle": "前景色",
+        "secondaryColorTitle": "背景色"
+      },
+      "status": {
+        "position": "座標: {x}, {y}",
+        "positionIdle": "座標: -",
+        "brushSize": "太さ: {value}px",
+        "zoom": "ズーム: {value}%",
+        "exp": "獲得EXP: {value}"
+      },
+      "prompts": {
+        "closeConfirm": "変更を破棄してペイントを閉じますか？",
+        "clearConfirm": "現在のキャンバスを消去しますか？",
+        "newConfirm": "保存せずに新規キャンバスを作成しますか？",
+        "saveFileName": "保存するファイル名を入力してください"
+      },
+      "messages": {
+        "saveFailed": "画像の保存に失敗しました。",
+        "imageLoadFailed": "画像の読み込みに失敗しました。",
+        "fileLoadFailed": "ファイルの読み込みに失敗しました。"
+      }
+    },
     "games": {
       "notepad": {
         "defaultFileName": "タイトルなし.txt",

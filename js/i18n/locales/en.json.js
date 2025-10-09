@@ -13388,6 +13388,65 @@
         "hp": "{current}/{max}{baseSuffix}"
       }
     },
+    "miniPaint": {
+      "appName": "Paint",
+      "windowTitle": "{marker}{fileName} - {appName}",
+      "defaultFileName": "Untitled.png",
+      "importedFileName": "Imported Image.png",
+      "menu": {
+        "new": "New",
+        "import": "Import",
+        "save": "Save",
+        "saveAs": "Save As",
+        "export": "Export",
+        "clear": "Clear",
+        "undo": "Undo",
+        "redo": "Redo",
+        "gridOn": "Grid: ON",
+        "gridOff": "Grid: OFF"
+      },
+      "tools": {
+        "brush": "Brush",
+        "pencil": "Pencil",
+        "marker": "Marker",
+        "eraser": "Eraser",
+        "line": "Line",
+        "rectangle": "Rectangle",
+        "ellipse": "Ellipse",
+        "fill": "Fill",
+        "picker": "Eyedropper",
+        "fillMode": "Fill Shapes"
+      },
+      "labels": {
+        "size": "Size",
+        "zoom": "Zoom",
+        "primary": "Foreground",
+        "secondary": "Background",
+        "sizeValue": "{value}px",
+        "zoomValue": "{value}%",
+        "primaryColorTitle": "Foreground color",
+        "secondaryColorTitle": "Background color"
+      },
+      "status": {
+        "position": "Coords: {x}, {y}",
+        "positionIdle": "Coords: -",
+        "brushSize": "Size: {value}px",
+        "zoom": "Zoom: {value}%",
+        "exp": "EXP Earned: {value}"
+      },
+      "prompts": {
+        "closeConfirm": "Discard changes and close Paint?",
+        "clearConfirm": "Clear the current canvas?",
+        "newConfirm": "Create a new canvas without saving?",
+        "saveFileName": "Enter a file name to save"
+      },
+      "messages": {
+        "saveFailed": "Failed to save the image.",
+        "imageLoadFailed": "Failed to load the image.",
+        "fileLoadFailed": "Failed to read the file."
+        }
+      }
+    },
     "games": {
       "notepad": {
         "defaultFileName": "Untitled.txt",

@@ -114,6 +114,14 @@ window.DUNGEONTYPE_MANIFEST = [
     author: 'builtin-sample'
   },
   {
+    id: 'fairytale_wonderlands_pack',
+    name: 'Fairytale Wonderlands Pack',
+    nameKey: "dungeon.packs.fairytale_wonderlands_pack.name",
+    entry: 'dungeontypes/fairytale_wonderlands_pack.js',
+    version: '1.0.0',
+    author: 'fairytale-pack-author'
+  },
+  {
     id: 'forest_pack',
     name: 'Verdant Forest Pack',
     nameKey: "dungeon.packs.forest_pack.name",

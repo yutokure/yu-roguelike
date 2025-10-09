@@ -1084,7 +1084,69 @@
           },
           "typing": {
             "name": "タイピングチャレンジ",
-            "description": "60秒タイプで正確さとスピードを競うタイピングチャレンジ"
+            "description": "60秒タイプで正確さとスピードを競うタイピングチャレンジ",
+            "controls": {
+              "difficulty": "難易度",
+              "target": "ターゲットWPM",
+              "targetValue": "{targetWpm} WPM",
+              "difficultyOptions": {
+                "easy": "EASY",
+                "normal": "NORMAL",
+                "hard": "HARD"
+              }
+            },
+            "words": {
+              "nextEmpty": "次: -",
+              "nextWithValue": "次: {word}"
+            },
+            "input": {
+              "placeholder": "表示された単語をタイプ（Space/Enterで確定）"
+            },
+            "buttons": {
+              "reset": "リセット",
+              "retry": "もう一度挑戦"
+            },
+            "stats": {
+              "labels": {
+                "accuracy": "ACC",
+                "wpm": "WPM",
+                "combo": "COMBO",
+                "sessionXp": "SESSION XP"
+              },
+              "targetInfo": {
+                "pending": "ターゲット {targetWpm} WPM / 達成度 -",
+                "active": "ターゲット {targetWpm} WPM / 達成度 {progress}%"
+              }
+            },
+            "result": {
+              "title": "RESULT",
+              "labels": {
+                "accuracy": "精度",
+                "wpm": "平均WPM",
+                "words": "正タイプ数",
+                "combo": "最高コンボ"
+              },
+              "wordsValue": "{count} 文字"
+            },
+            "xp": {
+              "title": "EXP 内訳",
+              "none": "EXPは獲得できませんでした",
+              "wordLabel": "単語 {index}",
+              "word": "{label}: +{xp} EXP",
+              "wordWithMilestones": "{label}: +{xp} EXP ({milestones})",
+              "milestoneEntry": "x{combo}+{bonus}",
+              "milestoneSeparator": "、",
+              "accuracyLabel": "精度ボーナス ({accuracyPercent}%)",
+              "accuracy": "{label}: +{xp} EXP",
+              "generic": "+{xp} EXP"
+            },
+            "toasts": {
+              "start": "60秒チャレンジ開始！がんばって！",
+              "mistype": "ミスタイプ！",
+              "completeBeforeConfirm": "全文字をタイプしてから確定！",
+              "comboMilestone": "Combo x{combo}! +{bonus} EXP",
+              "comboSeparator": " / "
+            }
           },
           "imperial_realm": {
             "name": "インペリアル・レルム",

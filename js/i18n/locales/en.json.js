@@ -11935,6 +11935,16 @@
         "none": "None",
         "floor": "Floor {floor}"
       },
+      "miniExp": {
+        "dinoRunner": {
+          "comboLabel": "COMBO {combo}",
+          "startPromptPrimary": "Press Space / Click to Start",
+          "startPromptSecondary": "Press ↑ or Space to jump, ↓ to duck",
+          "gameOver": "GAME OVER",
+          "restartHint": "Press Space / R to Restart",
+          "distanceLabel": "DIST {distance}"
+        }
+      },
       "runResult": {
         "defaultCause": "Game Over"
       },

@@ -10,6 +10,20 @@
                             { tickMs:500, bulletSpeed:10, widthScale:0.33, shotCooldownMs:50 }
     );
 
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'falling_shooter' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => { try { draw(); } catch {} })
+      : null;
+
     const allowAutoFire = difficulty==='EASY';
     const bulletSpeed = Math.max(1, cfg.bulletSpeed||1);
     const bulletStepMs = Math.max(16, Math.floor(cfg.tickMs / bulletSpeed));
@@ -106,7 +120,17 @@
       // bullets
       ctx.fillStyle='#e5e7eb'; for(const bu of bullets){ ctx.fillRect(bu.x*CELL + CELL/2 - 2, bu.y*CELL + 4, 4, CELL-8); }
       // UI
-      if (ended){ ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#f8fafc'; ctx.font='bold 20px system-ui,sans-serif'; ctx.textAlign='center'; ctx.fillText('Game Over', W/2, H/2-6); ctx.font='12px system-ui,sans-serif'; ctx.fillText('Rで再開/再起動', W/2, H/2+16); ctx.textAlign='start'; }
+      if (ended){
+        ctx.fillStyle='rgba(0,0,0,0.45)';
+        ctx.fillRect(0,0,W,H);
+        ctx.fillStyle='#f8fafc';
+        ctx.font='bold 20px system-ui,sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText(text('.overlay.title', 'Game Over'), W/2, H/2-6);
+        ctx.font='12px system-ui,sans-serif';
+        ctx.fillText(text('.overlay.restartHint', 'Rで再開/再起動'), W/2, H/2+16);
+        ctx.textAlign='start';
+      }
     }
 
     function tick(){
@@ -157,7 +181,17 @@
     }
     function start(){ if(running) return; running=true; ended=false; last=0; acc=0; bulletAcc=0; raf=requestAnimationFrame(loop); }
     function stop(){ if(!running) return; running=false; cancelAnimationFrame(raf); }
-    function destroy(){ try{ stop(); canvas.remove(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); }catch{} }
+    function destroy(){
+      try{
+        stop();
+        canvas.remove();
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+      }catch{}
+      finally {
+        try { detachLocale && detachLocale(); } catch {}
+      }
+    }
     function getScore(){ return 0; }
 
     function onKeyDown(e){

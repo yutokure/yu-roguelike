@@ -15,6 +15,20 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
 
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'go' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback(params || {});
+      return fallback ?? '';
+    };
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => { try { refreshLocalization(); } catch {} })
+      : null;
+
     const container = document.createElement('div');
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
@@ -38,7 +52,6 @@
     info.style.color = '#f8fafc';
     info.style.fontSize = '16px';
     info.style.textAlign = 'center';
-    info.textContent = '囲碁 9×9 — あなたが先手 (黒)';
     infoCard.appendChild(info);
 
     container.appendChild(infoCard);
@@ -58,7 +71,7 @@
     buttons.style.gap = '12px';
 
     const passBtn = document.createElement('button');
-    passBtn.textContent = 'パス';
+    passBtn.textContent = text('.buttons.pass', 'Pass');
     passBtn.style.padding = '6px 18px';
     passBtn.style.borderRadius = '999px';
     passBtn.style.border = 'none';
@@ -68,7 +81,7 @@
     passBtn.style.fontSize = '15px';
 
     const resignBtn = document.createElement('button');
-    resignBtn.textContent = '投了';
+    resignBtn.textContent = text('.buttons.resign', 'Resign');
     resignBtn.style.padding = '6px 18px';
     resignBtn.style.borderRadius = '999px';
     resignBtn.style.border = 'none';
@@ -94,6 +107,9 @@
     let whiteCaptures = 0;
     let thinking = false;
     let history = new Set([boardHash(board)]);
+    let currentInfoSpec = null;
+
+    updateInfo({ key: '.info.intro', fallback: 'Go 9×9 — You play first (Black)' });
 
     function inBounds(x,y){ return x>=0 && x<SIZE && y>=0 && y<SIZE; }
     const neighbors = [[1,0],[-1,0],[0,1],[0,-1]];
@@ -226,11 +242,46 @@
       };
     }
 
-    function updateInfo(text){
-      if (text){ info.textContent = text; return; }
+    function applyInfoSpec(){
+      if (currentInfoSpec){
+        const spec = currentInfoSpec;
+        let params = {};
+        try {
+          params = typeof spec.getParams === 'function' ? spec.getParams() : (spec.params || {});
+        } catch {
+          params = spec.params || {};
+        }
+        const fallback = typeof spec.fallback === 'function'
+          ? () => spec.fallback(params)
+          : spec.fallback;
+        info.textContent = text(spec.key, fallback, params);
+        return;
+      }
       if (ended){ return; }
-      const turnText = turn === BLACK ? 'あなたの番 (黒)' : 'AIの番 (白)';
-      info.textContent = `${turnText} ｜ 黒 捕獲:${blackCaptures} ｜ 白 捕獲:${whiteCaptures} (コミ+${KOMI})`;
+      const turnKey = turn === BLACK ? '.hud.turn.player' : '.hud.turn.ai';
+      const turnText = text(turnKey, turn === BLACK ? 'Your turn (Black)' : 'AI turn (White)');
+      const params = {
+        turn: turnText,
+        blackCaptures,
+        whiteCaptures,
+        komi: formatScore(KOMI)
+      };
+      info.textContent = text('.hud.status', () => `${turnText} | Black captures: ${blackCaptures} | White captures: ${whiteCaptures} (komi +${params.komi})`, params);
+    }
+
+    function updateInfo(spec){
+      if (spec){
+        currentInfoSpec = spec;
+      } else {
+        currentInfoSpec = null;
+      }
+      applyInfoSpec();
+    }
+
+    function refreshLocalization(){
+      passBtn.textContent = text('.buttons.pass', 'Pass');
+      resignBtn.textContent = text('.buttons.resign', 'Resign');
+      applyInfoSpec();
     }
 
     function draw(){
@@ -296,7 +347,7 @@
       const sim = simulateMove(board, x, y, color);
       if (!sim) return false;
       if (isKoViolation(sim.board)){
-        if (isPlayer) updateInfo('その手はコウで禁じられています');
+        if (isPlayer) updateInfo({ key: '.messages.koViolation', fallback: 'That move violates the ko rule.' });
         return false;
       }
       board = sim.board;
@@ -328,17 +379,32 @@
       draw();
       const finalScore = computeScore(board);
       const diff = finalScore.black - finalScore.white;
-      let msg;
+      let resultKey;
+      let resultFallback;
       if (winner){
-        msg = winner === BLACK ? 'あなたの勝ち！' : 'AIの勝ち…';
+        resultKey = winner === BLACK ? '.result.win' : '.result.loss';
+        resultFallback = winner === BLACK ? 'You win!' : 'AI wins…';
       } else {
         if (diff > 0) winner = BLACK;
         else if (diff < 0) winner = WHITE;
         else winner = 0;
-        msg = diff === 0 ? '持碁 (引き分け)' : (winner === BLACK ? 'あなたの勝ち！' : 'AIの勝ち…');
+        if (diff === 0){
+          resultKey = '.result.draw';
+          resultFallback = 'Jigo (Draw)';
+        } else {
+          resultKey = winner === BLACK ? '.result.win' : '.result.loss';
+          resultFallback = winner === BLACK ? 'You win!' : 'AI wins…';
+        }
       }
-      msg += ` ｜ 黒 ${formatScore(finalScore.black)} - 白 ${formatScore(finalScore.white)}`;
-      updateInfo(msg);
+      updateInfo({
+        key: '.result.summary',
+        fallback: (params) => `${params.result} | Black ${params.blackScore} - White ${params.whiteScore}`,
+        getParams: () => ({
+          result: text(resultKey, resultFallback),
+          blackScore: formatScore(finalScore.black),
+          whiteScore: formatScore(finalScore.white)
+        })
+      });
       if (winner === BLACK && awardXp){
         const xp = XP_WIN[difficulty] || XP_WIN.NORMAL;
         awardXp(xp, { type:'win', game:'go', reason });
@@ -349,8 +415,16 @@
       if (ended || thinking) return;
       consecutivePasses++;
       lastMove = null;
-      const who = isAi ? 'AI' : 'あなた';
-      updateInfo(`${who}がパスしました (連続${consecutivePasses})`);
+      const actorKey = isAi ? '.actors.ai' : '.actors.player';
+      const actorFallback = isAi ? 'AI' : 'You';
+      updateInfo({
+        key: '.hud.passNotice',
+        fallback: (params) => `${params.actor} passed (${params.count} in a row)`,
+        getParams: () => ({
+          actor: text(actorKey, actorFallback),
+          count: consecutivePasses
+        })
+      });
       if (consecutivePasses >= 2){
         endGame('pass', null);
         draw();
@@ -365,7 +439,7 @@
     function aiMove(){
       if (ended) return;
       thinking = true;
-      updateInfo('AIが思考中…');
+      updateInfo({ key: '.hud.aiThinking', fallback: 'AI is thinking…' });
       const moves = generateLegalMoves(WHITE);
       let choice = null;
       if (moves.length > 0){
@@ -473,6 +547,7 @@
 
     function destroy(){
       try { stop(); root.removeChild(container); } catch {}
+      try { detachLocale && detachLocale(); } catch {}
     }
 
     function reset(){
@@ -486,7 +561,7 @@
       whiteCaptures = 0;
       thinking = false;
       history = new Set([boardHash(board)]);
-      updateInfo('囲碁 9×9 — あなたが先手 (黒)');
+      updateInfo({ key: '.info.intro', fallback: 'Go 9×9 — You play first (Black)' });
       draw();
     }
 
@@ -601,6 +676,8 @@
 
     // expose restart via pause menu if needed
     container.resetGame = reset;
+
+    refreshLocalization();
 
     start();
 

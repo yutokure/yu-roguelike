@@ -95,7 +95,6 @@
     leftPanel.style.boxShadow = '0 12px 30px rgba(2, 6, 23, 0.45) inset';
 
     const logTitle = document.createElement('div');
-    logTitle.textContent = '作戦ログ';
     logTitle.style.fontWeight = '700';
     logTitle.style.color = '#38bdf8';
     leftPanel.appendChild(logTitle);
@@ -162,7 +161,6 @@
     rightPanel.style.boxShadow = '0 12px 30px rgba(2, 6, 23, 0.45) inset';
 
     const waveTitle = document.createElement('div');
-    waveTitle.textContent = 'ウェーブ情報';
     waveTitle.style.fontWeight = '700';
     waveTitle.style.color = '#facc15';
     rightPanel.appendChild(waveTitle);
@@ -191,16 +189,46 @@
       root.appendChild(container);
     }
 
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'imperial_realm' })
+      : null);
+
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+
+    const formatNumberLocalized = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try {
+          return localization.formatNumber(value, options);
+        } catch {}
+      }
+      try {
+        const locale = localization && typeof localization.getLocale === 'function'
+          ? localization.getLocale()
+          : undefined;
+        return new Intl.NumberFormat(locale || undefined, options).format(value);
+      } catch {
+        return String(value ?? '');
+      }
+    };
+
+    let detachLocale = null;
+
     const RESOURCE_TYPES = ['food', 'wood', 'gold', 'stone'];
-    const RESOURCE_LABELS = { food: '食料', wood: '木材', gold: '金', stone: '石' };
+    const RESOURCE_DEFAULT_LABELS = { food: '食料', wood: '木材', gold: '金', stone: '石' };
     const resourceSpans = new Map();
+    const resourceLabelElements = new Map();
     RESOURCE_TYPES.forEach((type) => {
       const span = document.createElement('div');
       span.style.display = 'flex';
       span.style.alignItems = 'center';
       span.style.gap = '4px';
       const label = document.createElement('span');
-      label.textContent = RESOURCE_LABELS[type];
       label.style.color = '#94a3b8';
       label.style.fontSize = '12px';
       const value = document.createElement('span');
@@ -211,23 +239,29 @@
       span.appendChild(value);
       resourcePanel.appendChild(span);
       resourceSpans.set(type, value);
+      resourceLabelElements.set(type, label);
     });
 
     const popSpan = document.createElement('div');
     popSpan.style.display = 'flex';
     popSpan.style.alignItems = 'center';
     popSpan.style.gap = '4px';
-    popSpan.innerHTML = '<span style="color:#94a3b8;font-size:12px;">人口</span><span style="color:#e2e8f0;">0/0</span>';
+    const popLabel = document.createElement('span');
+    popLabel.style.color = '#94a3b8';
+    popLabel.style.fontSize = '12px';
+    const popValue = document.createElement('span');
+    popValue.style.color = '#e2e8f0';
+    popValue.textContent = '0/0';
+    popSpan.appendChild(popLabel);
+    popSpan.appendChild(popValue);
     resourcePanel.appendChild(popSpan);
 
     const timerHeading = document.createElement('div');
-    timerHeading.textContent = '次のウェーブ';
     timerHeading.style.color = '#94a3b8';
     timerHeading.style.fontWeight = '600';
     timerPanel.appendChild(timerHeading);
 
     const timerValue = document.createElement('div');
-    timerValue.textContent = '準備完了';
     timerValue.style.fontSize = '20px';
     timerValue.style.fontWeight = '700';
     timerValue.style.color = '#facc15';
@@ -240,7 +274,6 @@
     timerPanel.appendChild(statusRow);
 
     const intelHeading = document.createElement('div');
-    intelHeading.textContent = '戦況インテリジェンス';
     intelHeading.style.fontWeight = '700';
     intelHeading.style.color = '#38bdf8';
     intelPanel.appendChild(intelHeading);
@@ -251,7 +284,6 @@
     intelPanel.appendChild(intelBody);
 
     const selectionHeading = document.createElement('div');
-    selectionHeading.textContent = '選択情報';
     selectionHeading.style.fontWeight = '700';
     selectionHeading.style.color = '#38bdf8';
     selectionPanel.appendChild(selectionHeading);
@@ -329,6 +361,8 @@
 
     const unitConfigs = {
       villager: {
+        name: '村人',
+        nameKey: 'units.villager',
         radius: 12,
         maxHp: 40,
         speed: 46,
@@ -339,6 +373,8 @@
         buildRate: 0.15
       },
       militia: {
+        name: '民兵',
+        nameKey: 'units.militia',
         radius: 13,
         maxHp: 60,
         speed: 56,
@@ -347,6 +383,8 @@
         attackCooldown: 1.1
       },
       archer: {
+        name: '弓兵',
+        nameKey: 'units.archer',
         radius: 13,
         maxHp: 45,
         speed: 52,
@@ -356,6 +394,8 @@
         projectileSpeed: 220
       },
       raider: {
+        name: '略奪兵',
+        nameKey: 'units.raider',
         radius: 13,
         maxHp: 55,
         speed: 58,
@@ -364,6 +404,8 @@
         attackCooldown: 1.2
       },
       horseArcher: {
+        name: '騎馬弓兵',
+        nameKey: 'units.horseArcher',
         radius: 16,
         maxHp: 70,
         speed: 72,
@@ -373,6 +415,8 @@
         projectileSpeed: 260
       },
       commander: {
+        name: '敵将軍',
+        nameKey: 'units.commander',
         radius: 18,
         maxHp: 280,
         speed: 62,
@@ -381,6 +425,8 @@
         attackCooldown: 1.1
       },
       ram: {
+        name: '破城槌',
+        nameKey: 'units.ram',
         radius: 20,
         maxHp: 220,
         speed: 34,
@@ -392,31 +438,41 @@
 
     const structureConfigs = {
       townCenter: {
+        name: 'タウンセンター',
+        nameKey: 'structures.townCenter',
         radius: 42,
         maxHp: 1600,
         buildTime: 0,
         popCap: 10,
-        trainable: [{ type: 'villager', label: '村人', cost: { food: 50 }, time: 22 }]
+        trainable: [{ type: 'villager', label: '村人', labelKey: 'units.villager', cost: { food: 50 }, time: 22 }]
       },
       house: {
+        name: '家',
+        nameKey: 'structures.house',
         radius: 20,
         maxHp: 600,
         buildTime: 22,
         popCap: 5
       },
       barracks: {
+        name: '兵舎',
+        nameKey: 'structures.barracks',
         radius: 32,
         maxHp: 1200,
         buildTime: 35,
-        trainable: [{ type: 'militia', label: '民兵', cost: { food: 60, gold: 20 }, time: 25 }]
+        trainable: [{ type: 'militia', label: '民兵', labelKey: 'units.militia', cost: { food: 60, gold: 20 }, time: 25 }]
       },
       archery: {
+        name: '弓兵小屋',
+        nameKey: 'structures.archery',
         radius: 32,
         maxHp: 1100,
         buildTime: 38,
-        trainable: [{ type: 'archer', label: '弓兵', cost: { wood: 50, gold: 40 }, time: 26 }]
+        trainable: [{ type: 'archer', label: '弓兵', labelKey: 'units.archer', cost: { wood: 50, gold: 40 }, time: 26 }]
       },
       tower: {
+        name: '見張り塔',
+        nameKey: 'structures.tower',
         radius: 24,
         maxHp: 900,
         buildTime: 36,
@@ -425,6 +481,25 @@
         attackCooldown: 2.4
       }
     };
+
+    function getResourceLabel(type){
+      const fallback = RESOURCE_DEFAULT_LABELS[type] || type;
+      return text(`resources.${type}`, fallback);
+    }
+
+    function getUnitName(type){
+      const cfg = unitConfigs[type] || {};
+      const fallback = cfg.name || type;
+      const key = cfg.nameKey || `units.${type}`;
+      return text(key, fallback);
+    }
+
+    function getStructureName(type){
+      const cfg = structureConfigs[type] || {};
+      const fallback = cfg.name || type;
+      const key = cfg.nameKey || `structures.${type}`;
+      return text(key, fallback);
+    }
 
     const TRAINING_COST_XP = 4;
     const BUILDING_EXP = 12;
@@ -554,7 +629,7 @@
       createStructure('house', size.width * 0.74, size.height * 0.60, ENEMY, { partial: 1 });
       createStructure('barracks', size.width * 0.80, size.height * 0.40, ENEMY, { partial: 1 });
 
-      addLog('作戦開始。タウンセンターと村人3名が配置されています。');
+      addLog(text('logs.missionStart', '作戦開始。タウンセンターと村人3名が配置されています。'));
     }
 
     setupInitialState();
@@ -562,8 +637,12 @@
     function formatCost(cost){
       return RESOURCE_TYPES
         .filter((type) => cost[type])
-        .map((type) => `${RESOURCE_LABELS[type]}${cost[type]}`)
-        .join(' / ');
+        .map((type) => {
+          const label = getResourceLabel(type);
+          const amount = formatNumberLocalized(cost[type], { maximumFractionDigits: 0 });
+          return text('resources.costEntry', () => `${label}${amount}`, { resource: label, amount });
+        })
+        .join(text('resources.costSeparator', ' / '));
     }
 
     function hasResources(cost){
@@ -597,29 +676,53 @@
       RESOURCE_TYPES.forEach((type) => {
         const el = resourceSpans.get(type);
         if (el) {
-          el.textContent = Math.floor(state.resources[type]).toString();
+          const value = Math.floor(state.resources[type]);
+          el.textContent = formatNumberLocalized(value, { maximumFractionDigits: 0 });
         }
       });
-      const popText = popSpan.querySelector('span:last-child');
-      if (popText) {
-        popText.textContent = `${state.pop.used}/${state.pop.cap}`;
+      if (popValue) {
+        const used = formatNumberLocalized(state.pop.used, { maximumFractionDigits: 0 });
+        const cap = formatNumberLocalized(state.pop.cap, { maximumFractionDigits: 0 });
+        popValue.textContent = `${used}/${cap}`;
       }
     }
 
     function updateWaveInfo(){
       const remaining = state.wave >= difficultyCfg.waveCount ? 0 : Math.max(0, state.nextWaveTime - state.time);
-      timerValue.textContent = state.wave >= difficultyCfg.waveCount && !state.waveActive
-        ? (state.enemyCommanderSpawned ? '司令官討伐' : '終局戦')
-        : `${Math.floor(remaining/1000)}s`;
-      statusRow.textContent = state.waveActive ? '防衛中！' : `ウェーブ ${state.wave + 1} / ${difficultyCfg.waveCount}`;
-      waveInfo.textContent = `現在の波: ${state.wave}/${difficultyCfg.waveCount}
-敵TC耐久: ${Math.max(0, Math.round(enemyStructures[0]?.hp || 0))} / ${(enemyStructures[0]?.maxHp)||0}`;
+      if (state.wave >= difficultyCfg.waveCount && !state.waveActive) {
+        timerValue.textContent = state.enemyCommanderSpawned
+          ? text('hud.commanderGoal', '司令官討伐')
+          : text('hud.finalStand', '終局戦');
+      } else {
+        const seconds = Math.floor(remaining / 1000);
+        timerValue.textContent = text('hud.countdown', () => `${seconds}秒`, { seconds });
+      }
+      statusRow.textContent = state.waveActive
+        ? text('hud.defending', '防衛中！')
+        : text('hud.waveStatus', () => `ウェーブ ${state.wave + 1} / ${difficultyCfg.waveCount}`, {
+            current: state.wave + 1,
+            total: difficultyCfg.waveCount
+          });
+      const enemyTc = enemyStructures[0];
+      const hp = Math.max(0, Math.round(enemyTc?.hp || 0));
+      const maxHp = Math.round(enemyTc?.maxHp || 0);
+      waveInfo.textContent = text('hud.waveInfo', () => `現在の波: ${state.wave}/${difficultyCfg.waveCount}\n敵TC耐久: ${hp} / ${maxHp}`, {
+        wave: state.wave,
+        total: difficultyCfg.waveCount,
+        hp,
+        max: maxHp
+      });
     }
 
     function updateIntel(){
       const villagerCount = units.filter((u) => u.owner === PLAYER && u.type === 'villager').length;
       const armyCount = units.filter((u) => u.owner === PLAYER && u.type !== 'villager').length;
-      intelBody.textContent = `村人: ${villagerCount}\n軍事: ${armyCount}\n建物: ${structures.filter((s) => s.owner === PLAYER && s.completed).length}`;
+      const structureCount = structures.filter((s) => s.owner === PLAYER && s.completed).length;
+      intelBody.textContent = text('intel.summary', () => `村人: ${villagerCount}\n軍事: ${armyCount}\n建物: ${structureCount}`, {
+        villagers: villagerCount,
+        army: armyCount,
+        structures: structureCount
+      });
     }
 
     function clearSelection(){
@@ -629,24 +732,41 @@
 
     function describeSelection(){
       if (state.selection.units.size === 0 && state.selection.structures.size === 0) {
-        selectionBody.textContent = '何も選択されていません。';
+        selectionBody.textContent = text('selection.empty', '何も選択されていません。');
         return;
       }
       const unitList = [];
       state.selection.units.forEach((id) => {
         const unit = units.find((u) => u.id === id);
         if (unit) {
-          unitList.push(`${unit.type} HP ${Math.round(unit.hp)}/${unit.maxHp}`);
+          const name = getUnitName(unit.type);
+          const current = Math.round(unit.hp);
+          const max = Math.round(unit.maxHp);
+          unitList.push(text('selection.unitEntry', () => `${name} HP ${current}/${max}`, {
+            name,
+            current,
+            max
+          }));
         }
       });
       const structureList = [];
       state.selection.structures.forEach((id) => {
         const structure = structures.find((s) => s.id === id);
         if (structure) {
-          structureList.push(`${structure.type} HP ${Math.round(structure.hp)}/${structure.maxHp}${structure.completed ? '' : ' (建設中)'}`);
+          const name = getStructureName(structure.type);
+          const current = Math.round(structure.hp);
+          const max = Math.round(structure.maxHp);
+          const status = structure.completed ? '' : text('selection.underConstruction', '（建設中）');
+          structureList.push(text('selection.structureEntry', () => `${name} HP ${current}/${max}${status}`, {
+            name,
+            current,
+            max,
+            status
+          }));
         }
       });
-      selectionBody.textContent = `${unitList.join('\n')}${unitList.length && structureList.length ? '\n---\n' : ''}${structureList.join('\n')}`;
+      const separator = unitList.length && structureList.length ? text('selection.separator', '---') : '';
+      selectionBody.textContent = `${unitList.join('\n')}${separator ? `\n${separator}\n` : ''}${structureList.join('\n')}`.trim();
     }
 
     function rebuildActionButtons(){
@@ -657,15 +777,37 @@
       if (selectedUnits.length === 1 && selectedUnits[0].type === 'villager') {
         const villager = selectedUnits[0];
         const buildActions = [
-          { type: 'house', label: '建設: 家', cost: { wood: 50 }, description: '+5人口、建設時間短' },
-          { type: 'barracks', label: '建設: 兵舎', cost: { wood: 175 }, description: '民兵の訓練' },
-          { type: 'archery', label: '建設: 弓兵小屋', cost: { wood: 200, gold: 50 }, description: '弓兵の訓練' },
-          { type: 'tower', label: '建設: 見張り塔', cost: { wood: 125, stone: 125 }, description: '自動射撃タワー' }
+          {
+            type: 'house',
+            cost: { wood: 50 },
+            label: text('actions.build.house.label', '建設: 家'),
+            description: text('actions.build.house.description', '+5人口、建設時間短')
+          },
+          {
+            type: 'barracks',
+            cost: { wood: 175 },
+            label: text('actions.build.barracks.label', '建設: 兵舎'),
+            description: text('actions.build.barracks.description', '民兵の訓練')
+          },
+          {
+            type: 'archery',
+            cost: { wood: 200, gold: 50 },
+            label: text('actions.build.archery.label', '建設: 弓兵小屋'),
+            description: text('actions.build.archery.description', '弓兵の訓練')
+          },
+          {
+            type: 'tower',
+            cost: { wood: 125, stone: 125 },
+            label: text('actions.build.tower.label', '建設: 見張り塔'),
+            description: text('actions.build.tower.description', '自動射撃タワー')
+          }
         ];
         buildActions.forEach((action) => {
-          actionButtonPanel.appendChild(createActionButton(action.label, `${action.description}\n${formatCost(action.cost)}`, () => {
+          const costText = formatCost(action.cost);
+          const description = `${action.description}\n${costText}`;
+          actionButtonPanel.appendChild(createActionButton(action.label, description, () => {
             if (!hasResources(action.cost)) {
-              addLog('資源が不足しています。');
+              addLog(text('logs.insufficientResources', '資源が不足しています。'));
               return;
             }
             state.placementMode = {
@@ -675,7 +817,9 @@
               radius: structureConfigs[action.type].radius
             };
             placementOverlay.style.display = 'block';
-            addLog(`${action.label} の建設位置を指定してください。`);
+            addLog(text('logs.placementPrompt', () => `${action.label} の建設位置を指定してください。`, {
+              label: action.label
+            }));
           }));
         });
       }
@@ -684,13 +828,20 @@
         const cfg = structureConfigs[structure.type];
         if (cfg && cfg.trainable && structure.completed) {
           cfg.trainable.forEach((trainCfg) => {
-            actionButtonPanel.appendChild(createActionButton(`訓練: ${trainCfg.label}`, `${formatCost(trainCfg.cost)} / ${trainCfg.time}s`, () => {
+            const unitName = getUnitName(trainCfg.type) || trainCfg.label || trainCfg.type;
+            const buttonLabel = text('actions.train.button', () => `訓練: ${unitName}`, { unit: unitName });
+            const costText = formatCost(trainCfg.cost);
+            const detailText = text('actions.train.details', () => `${costText} / ${Math.round(trainCfg.time)}秒`, {
+              cost: costText,
+              time: trainCfg.time
+            });
+            actionButtonPanel.appendChild(createActionButton(buttonLabel, detailText, () => {
               if (!hasResources(trainCfg.cost)) {
-                addLog('資源が不足しています。');
+                addLog(text('logs.insufficientResources', '資源が不足しています。'));
                 return;
               }
               if (state.pop.used >= state.pop.cap) {
-                addLog('人口上限です。家を建てましょう。');
+                addLog(text('logs.populationCap', '人口上限です。家を建てましょう。'));
                 return;
               }
               spendResources(trainCfg.cost);
@@ -698,7 +849,9 @@
               if (structure.queue.length === 1) {
                 structure.queueProgress = 0;
               }
-              addLog(`${trainCfg.label} の訓練を開始しました。`);
+              addLog(text('logs.trainingStarted', () => `${unitName} の訓練を開始しました。`, {
+                unit: unitName
+              }));
               awardBufferedXp(TRAINING_COST_XP);
               updateResourcesDisplay();
             }));
@@ -779,7 +932,10 @@
         const villager = units.find((u) => u.id === id);
         if (!villager || villager.owner !== PLAYER || !villager.gatherRates) return;
         villager.action = { type: 'gather', resourceId: resource.id };
-        addLog(`村人に${RESOURCE_LABELS[resource.type]}採集を指示しました。`);
+        const resourceLabel = getResourceLabel(resource.type);
+        addLog(text('logs.gatherOrder', () => `村人に${resourceLabel}採集を指示しました。`, {
+          resource: resourceLabel
+        }));
       });
     }
 
@@ -788,7 +944,7 @@
       selected.forEach((unit) => {
         unit.action = { type: 'attack', targetId: target.id };
       });
-      addLog('攻撃命令を実行。');
+      addLog(text('logs.attackOrder', '攻撃命令を実行。'));
     }
 
     function cancelPlacement(){
@@ -808,13 +964,16 @@
       if (event.button === 0) {
         if (state.placementMode) {
           if (!hasResources(state.placementMode.cost)) {
-            addLog('資源が不足しています。');
+            addLog(text('logs.insufficientResources', '資源が不足しています。'));
             cancelPlacement();
             return;
           }
           const structure = createStructure(state.placementMode.type, x, y, PLAYER, { partial: 0.4 });
           spendResources(state.placementMode.cost);
-          addLog(`${state.placementMode.type} を建設開始しました。`);
+          const structureName = getStructureName(state.placementMode.type);
+          addLog(text('logs.buildingStarted', () => `${structureName} を建設開始しました。`, {
+            structure: structureName
+          }));
           assignVillagersToBuild(structure);
           cancelPlacement();
           updateResourcesDisplay();
@@ -896,6 +1055,29 @@
       rebuildActionButtons();
     }
 
+    function applyLocalization(){
+      logTitle.textContent = text('ui.logTitle', '作戦ログ');
+      waveTitle.textContent = text('ui.waveTitle', 'ウェーブ情報');
+      intelHeading.textContent = text('ui.intelTitle', '戦況インテリジェンス');
+      selectionHeading.textContent = text('ui.selectionTitle', '選択情報');
+      timerHeading.textContent = text('hud.nextWave', '次のウェーブ');
+      timerValue.textContent = text('hud.ready', '準備完了');
+      if (popLabel) {
+        popLabel.textContent = text('ui.populationLabel', '人口');
+      }
+      RESOURCE_TYPES.forEach((type) => {
+        const labelEl = resourceLabelElements.get(type);
+        if (labelEl) {
+          labelEl.textContent = getResourceLabel(type);
+        }
+      });
+      updateResourcesDisplay();
+      updateWaveInfo();
+      updateIntel();
+      describeSelection();
+      rebuildActionButtons();
+    }
+
     function distance(a, b){
       const dx = (a.x || 0) - (b.x || 0);
       const dy = (a.y || 0) - (b.y || 0);
@@ -914,7 +1096,10 @@
       if (structure.queueProgress >= current.time) {
         const spawn = createUnit(current.type, structure.x + (Math.random() - 0.5) * 40, structure.y + (Math.random() - 0.5) * 40, structure.owner);
         if (spawn.owner === PLAYER) {
-          addLog(`${current.label || current.type} が完成しました。`);
+          const unitName = getUnitName(spawn.type) || current.label || spawn.type;
+          addLog(text('logs.unitComplete', () => `${unitName} が完成しました。`, {
+            unit: unitName
+          }));
         }
         structure.queue.shift();
         structure.queueProgress = 0;
@@ -935,7 +1120,10 @@
           if (structure.owner === PLAYER) {
             state.pop.cap += structure.popProvided || 0;
             awardBufferedXp(BUILDING_EXP);
-            addLog(`${structure.type} が完成しました。`);
+            const structureName = getStructureName(structure.type);
+            addLog(text('logs.structureComplete', () => `${structureName} が完成しました。`, {
+              structure: structureName
+            }));
             updateResourcesDisplay();
             updateIntel();
           }
@@ -951,11 +1139,11 @@
       if (structure.owner === PLAYER) {
         state.pop.cap -= structure.popProvided || 0;
         if (structure.type === 'townCenter') {
-          triggerGameOver(false, 'タウンセンターが破壊された。');
+          triggerGameOver(false, text('gameOver.message.ownTownCenterDestroyed', 'タウンセンターが破壊された。'));
         }
       } else {
         if (structure.type === 'townCenter') {
-          triggerGameOver(true, '敵のタウンセンターを破壊した。');
+          triggerGameOver(true, text('gameOver.message.enemyTownCenterDestroyed', '敵のタウンセンターを破壊した。'));
         }
       }
     }
@@ -968,7 +1156,7 @@
         if (unit.type === 'villager') {
           const villagersLeft = units.some((u) => u.owner === PLAYER && u.type === 'villager');
           if (!villagersLeft) {
-            triggerGameOver(false, '村人が全滅した。');
+            triggerGameOver(false, text('gameOver.message.allVillagersLost', '村人が全滅した。'));
           }
         }
       } else {
@@ -979,8 +1167,9 @@
     function triggerGameOver(victory, message){
       if (state.gameOver) return;
       state.gameOver = { victory, message };
-      addLog(victory ? '勝利！' : '敗北…');
-      addLog(message);
+      const resultLog = victory ? text('logs.victory', '勝利！') : text('logs.defeat', '敗北…');
+      addLog(resultLog);
+      if (message) addLog(message);
       const overlay = document.createElement('div');
       overlay.style.position = 'absolute';
       overlay.style.left = '0';
@@ -995,7 +1184,7 @@
       overlay.style.fontSize = '32px';
       overlay.style.fontWeight = '700';
       overlay.style.textShadow = '0 10px 30px rgba(2,6,23,0.9)';
-      overlay.textContent = victory ? '勝利' : '敗北';
+      overlay.textContent = victory ? text('gameOver.overlay.victory', '勝利') : text('gameOver.overlay.defeat', '敗北');
       container.appendChild(overlay);
     }
 
@@ -1090,7 +1279,7 @@
           removeUnit(target);
         }
         if (source && source.owner === PLAYER) {
-          addLog('敵を撃破しました。');
+          addLog(text('logs.enemyDefeated', '敵を撃破しました。'));
         }
       }
     }
@@ -1161,7 +1350,10 @@
               state.gatherXpBucket -= GATHER_XP_UNIT;
             }
             if (resource.amount <= 0) {
-              addLog(`${RESOURCE_LABELS[resource.type]}の資源が枯渇しました。`);
+              const resourceLabel = getResourceLabel(resource.type);
+              addLog(text('logs.resourceDepleted', () => `${resourceLabel}の資源が枯渇しました。`, {
+                resource: resourceLabel
+              }));
               const index = resourceNodes.indexOf(resource);
               if (index >= 0) resourceNodes.splice(index, 1);
               unit.action = { type: 'idle' };
@@ -1189,14 +1381,16 @@
         if (!state.enemyCommanderSpawned) {
           const commander = createUnit('commander', size.width * 0.78, size.height * 0.48, ENEMY);
           commander.xpValue = 120;
-          addLog('敵将軍が戦場に現れました！');
+          addLog(text('logs.commanderArrived', '敵将軍が戦場に現れました！'));
           state.enemyCommanderSpawned = true;
         }
         return;
       }
       state.wave += 1;
       state.waveActive = true;
-      addLog(`敵ウェーブ${state.wave}が接近中！`);
+      addLog(text('logs.waveIncoming', () => `敵ウェーブ${state.wave}が接近中！`, {
+        wave: state.wave
+      }));
       const spawnX = size.width * 0.88;
       const spawnY = size.height * 0.50;
       const spawnConfigs = [
@@ -1238,7 +1432,9 @@
           RESOURCE_TYPES.forEach((type) => {
             state.resources[type] += 40;
           });
-          addLog(`ウェーブ${state.wave}を撃退！補給物資を受領しました。`);
+          addLog(text('logs.waveCleared', () => `ウェーブ${state.wave}を撃退！補給物資を受領しました。`, {
+            wave: state.wave
+          }));
           updateResourcesDisplay();
         }
       }
@@ -1288,7 +1484,8 @@
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 11px "Segoe UI"';
         ctx.textAlign = 'center';
-        ctx.fillText(structure.type, structure.x, structure.y + 4);
+        const structureLabel = getStructureName(structure.type);
+        ctx.fillText(structureLabel, structure.x, structure.y + 4);
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(structure.x - structure.radius, structure.y - structure.radius - 12, structure.radius * 2, 6);
         ctx.fillStyle = structure.owner === PLAYER ? '#38bdf8' : '#f97316';
@@ -1305,7 +1502,8 @@
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 10px "Segoe UI"';
         ctx.textAlign = 'center';
-        ctx.fillText(unit.type, unit.x, unit.y + 4);
+        const unitLabel = getUnitName(unit.type);
+        ctx.fillText(unitLabel, unit.x, unit.y + 4);
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(unit.x - unit.radius, unit.y - unit.radius - 10, unit.radius * 2, 4);
         ctx.fillStyle = unit.owner === PLAYER ? '#38bdf8' : '#fb7185';
@@ -1402,15 +1600,22 @@
 
     requestAnimationFrame(frame);
 
-    updateSelectionPanels();
-    updateResourcesDisplay();
-    updateWaveInfo();
-    updateIntel();
+    applyLocalization();
+    if (localization && typeof localization.onChange === 'function') {
+      try {
+        detachLocale = localization.onChange(() => {
+          applyLocalization();
+        });
+      } catch {}
+    }
 
     return {
       destroy(){
         if (container && container.parentNode) {
           container.parentNode.removeChild(container);
+        }
+        if (typeof detachLocale === 'function') {
+          try { detachLocale(); } catch {}
         }
       }
     };

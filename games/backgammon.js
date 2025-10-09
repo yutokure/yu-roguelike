@@ -22,6 +22,104 @@
     win: { EASY: 140, NORMAL: 230, HARD: 360 }
   };
 
+  const i18n = window.I18n;
+
+  function getLocale(){
+    if (typeof i18n?.getLocale === 'function'){
+      try {
+        return i18n.getLocale();
+      } catch (error){
+        console.warn('[backgammon] Failed to get locale', error);
+      }
+    }
+    return undefined;
+  }
+
+  function formatNumberLocalized(value, options){
+    if (typeof i18n?.formatNumber === 'function'){
+      try {
+        return i18n.formatNumber(value, options);
+      } catch (error){
+        console.warn('[backgammon] Failed to format number via i18n', error);
+      }
+    }
+    try {
+      return new Intl.NumberFormat(getLocale(), options).format(value);
+    } catch (error){
+      console.warn('[backgammon] Failed to format number', error);
+      return String(value ?? '');
+    }
+  }
+
+  function translateOrFallback(key, fallback, params){
+    if (key && typeof i18n?.t === 'function'){
+      try {
+        const translated = i18n.t(key, params);
+        if (typeof translated === 'string' && translated !== key){
+          return translated;
+        }
+      } catch (error){
+        console.warn('[backgammon] Failed to translate key', key, error);
+      }
+    }
+    if (typeof fallback === 'function'){
+      try {
+        const result = fallback();
+        return typeof result === 'string' ? result : (result ?? '');
+      } catch (error){
+        console.warn('[backgammon] Failed to resolve fallback text for key', key, error);
+        return '';
+      }
+    }
+    return fallback ?? '';
+  }
+
+  function getActorLabel(owner){
+    if (owner === PLAYER){
+      return translateOrFallback('game.backgammon.actor.player', 'プレイヤー');
+    }
+    return translateOrFallback('game.backgammon.actor.ai', 'AI');
+  }
+
+  function getDifficultyLabel(difficulty){
+    const map = {
+      EASY: { key: 'game.backgammon.difficulty.easy', fallback: 'イージー' },
+      NORMAL: { key: 'game.backgammon.difficulty.normal', fallback: 'ノーマル' },
+      HARD: { key: 'game.backgammon.difficulty.hard', fallback: 'ハード' }
+    };
+    const entry = map[difficulty] || { key: '', fallback: difficulty };
+    return translateOrFallback(entry.key, entry.fallback);
+  }
+
+  function formatPoint(index){
+    const label = pointLabel(index);
+    return translateOrFallback('game.backgammon.point', () => `ポイント${label}`, { point: label });
+  }
+
+  function formatBarLabel(){
+    return translateOrFallback('game.backgammon.bar', 'バー');
+  }
+
+  function formatDiceArray(values){
+    return values.map(value => formatNumberLocalized(value)).join(', ');
+  }
+
+  function formatRemainingDice(values){
+    if (!values || values.length === 0) return translateOrFallback('game.backgammon.dice.none', '-');
+    return formatDiceArray(values);
+  }
+
+  function formatBearOffArea(owner, count){
+    const actor = getActorLabel(owner);
+    const countFormatted = formatNumberLocalized(count);
+    const key = owner === PLAYER ? 'game.backgammon.board.playerOff' : 'game.backgammon.board.aiOff';
+    return translateOrFallback(key, () => `${actor} OFF (${countFormatted})`, {
+      actor,
+      count,
+      countFormatted
+    });
+  }
+
   const TOP_ORDER = [23,22,21,20,19,18,17,16,15,14,13,12];
   const BOTTOM_ORDER = [11,10,9,8,7,6,5,4,3,2,1,0];
 
@@ -125,11 +223,11 @@
 
     const rollBtn = document.createElement('button');
     rollBtn.className = 'bgm-button';
-    rollBtn.textContent = 'ダイスを振る';
+    rollBtn.textContent = translateOrFallback('game.backgammon.action.roll', 'ダイスを振る');
 
     const newGameBtn = document.createElement('button');
     newGameBtn.className = 'bgm-button';
-    newGameBtn.textContent = '再戦';
+    newGameBtn.textContent = translateOrFallback('game.backgammon.action.rematch', '再戦');
 
     const statusPanel = document.createElement('div');
     statusPanel.className = 'bgm-panel';
@@ -270,10 +368,22 @@
 
     function updateBadges(){
       badges.innerHTML = '';
+      const difficultyLabel = getDifficultyLabel(state.difficulty);
+      const playerHitsFormatted = formatNumberLocalized(state.playerHits);
+      const scoreFormatted = formatNumberLocalized(state.score);
       const items = [
-        `難易度: ${difficulty}`,
-        `ヒット: ${state.playerHits}`,
-        `スコア: ${state.score}`
+        translateOrFallback('game.backgammon.badge.difficulty', () => `難易度: ${difficultyLabel}`, {
+          difficulty: difficultyLabel,
+          rawDifficulty: state.difficulty
+        }),
+        translateOrFallback('game.backgammon.badge.hits', () => `ヒット: ${playerHitsFormatted}`, {
+          hits: state.playerHits,
+          hitsFormatted: playerHitsFormatted
+        }),
+        translateOrFallback('game.backgammon.badge.score', () => `スコア: ${scoreFormatted}`, {
+          score: state.score,
+          scoreFormatted
+        })
       ];
       for (const text of items){
         const span = document.createElement('span');
@@ -284,18 +394,45 @@
     }
 
     function updateUi(){
-      turnLabel.textContent = `手番: ${state.currentPlayer === PLAYER ? 'プレイヤー' : 'AI'}` + (state.gameOver ? '（終了）' : '');
+      const actor = getActorLabel(state.currentPlayer);
+      turnLabel.textContent = translateOrFallback('game.backgammon.ui.turn', () => `手番: ${actor}${state.gameOver ? '（終了）' : ''}`, {
+        actor,
+        gameOver: state.gameOver
+      });
       if (state.dice.length === 0){
-        diceLabel.textContent = 'ダイス: -';
+        diceLabel.textContent = translateOrFallback('game.backgammon.ui.dice.empty', 'ダイス: -');
       } else {
-        const original = state.dice.join(', ');
-        const remaining = state.movesLeft.join(', ');
-        diceLabel.textContent = `ダイス: [${original}] / 残り [${remaining || '-'}]`;
+        const original = formatDiceArray(state.dice);
+        const remaining = formatRemainingDice(state.movesLeft);
+        diceLabel.textContent = translateOrFallback('game.backgammon.ui.dice.detail', () => `ダイス: [${original}] / 残り [${remaining}]`, {
+          dice: state.dice,
+          diceFormatted: original,
+          remaining: state.movesLeft,
+          remainingFormatted: remaining
+        });
       }
       rollBtn.disabled = state.paused || state.destroyed || state.gameOver || state.currentPlayer !== PLAYER || !state.awaitingRoll;
       newGameBtn.disabled = state.paused || state.destroyed;
-      barLabel.textContent = `バー: プレイヤー ${state.playerBar} / AI ${state.aiBar}`;
-      offLabel.textContent = `ベアオフ: プレイヤー ${state.playerOff} / AI ${state.aiOff}`;
+      const barTitle = formatBarLabel();
+      const playerBarFormatted = formatNumberLocalized(state.playerBar);
+      const aiBarFormatted = formatNumberLocalized(state.aiBar);
+      barLabel.textContent = translateOrFallback('game.backgammon.ui.bar', () => `${barTitle}: ${getActorLabel(PLAYER)} ${playerBarFormatted} / ${getActorLabel(AI)} ${aiBarFormatted}`, {
+        bar: barTitle,
+        player: state.playerBar,
+        playerFormatted: playerBarFormatted,
+        ai: state.aiBar,
+        aiFormatted: aiBarFormatted
+      });
+      const bearOffTitle = translateOrFallback('game.backgammon.ui.bearOff.title', 'ベアオフ');
+      const playerOffFormatted = formatNumberLocalized(state.playerOff);
+      const aiOffFormatted = formatNumberLocalized(state.aiOff);
+      offLabel.textContent = translateOrFallback('game.backgammon.ui.bearOff', () => `${bearOffTitle}: ${getActorLabel(PLAYER)} ${playerOffFormatted} / ${getActorLabel(AI)} ${aiOffFormatted}`, {
+        title: bearOffTitle,
+        player: state.playerOff,
+        playerFormatted: playerOffFormatted,
+        ai: state.aiOff,
+        aiFormatted: aiOffFormatted
+      });
       updateBadges();
     }
 
@@ -515,13 +652,51 @@
     }
 
     function logMove(owner, move){
-      const actor = owner === PLAYER ? 'プレイヤー' : 'AI';
+      const actor = getActorLabel(owner);
+      const dieFormatted = formatNumberLocalized(move.die);
       if (move.bearOff){
-        logMessage(`${actor} がポイント${pointLabel(move.from)}からベアオフ（${move.die}）`);
-      } else if (move.from === 'bar'){
-        logMessage(`${actor} がバーからポイント${pointLabel(move.to)}へエントリー（${move.die}）` + (move.hit ? '：ヒット！' : ''));
+        const fromLabel = formatPoint(move.from);
+        logMessage(translateOrFallback('game.backgammon.log.bearOff', () => `${actor} が${fromLabel}からベアオフ（${dieFormatted}）`, {
+          actor,
+          from: move.from,
+          fromLabel,
+          die: move.die,
+          dieFormatted
+        }));
+        return;
+      }
+      if (move.from === 'bar'){
+        const toLabel = formatPoint(move.to);
+        const baseParams = {
+          actor,
+          to: move.to,
+          toLabel,
+          die: move.die,
+          dieFormatted,
+          bar: formatBarLabel()
+        };
+        if (move.hit){
+          logMessage(translateOrFallback('game.backgammon.log.barHit', () => `${actor} が${baseParams.bar}から${toLabel}へエントリー（${dieFormatted}）：ヒット！`, baseParams));
+        } else {
+          logMessage(translateOrFallback('game.backgammon.log.barEntry', () => `${actor} が${baseParams.bar}から${toLabel}へエントリー（${dieFormatted}）`, baseParams));
+        }
+        return;
+      }
+      const fromLabel = formatPoint(move.from);
+      const toLabel = formatPoint(move.to);
+      const params = {
+        actor,
+        from: move.from,
+        fromLabel,
+        to: move.to,
+        toLabel,
+        die: move.die,
+        dieFormatted
+      };
+      if (move.hit){
+        logMessage(translateOrFallback('game.backgammon.log.moveHit', () => `${actor} が${fromLabel} → ${toLabel}（${dieFormatted}）：ヒット！`, params));
       } else {
-        logMessage(`${actor} がポイント${pointLabel(move.from)} → ${pointLabel(move.to)}（${move.die}）` + (move.hit ? '：ヒット！' : ''));
+        logMessage(translateOrFallback('game.backgammon.log.move', () => `${actor} が${fromLabel} → ${toLabel}（${dieFormatted}）`, params));
       }
     }
 
@@ -607,9 +782,15 @@
       if (winner === PLAYER){
         const gain = XP_GAIN.win[difficulty] || XP_GAIN.win.NORMAL;
         const actual = awardXpSafely(gain);
-        logMessage(`プレイヤーの勝利！${actual || gain} EXP 獲得`);
+        const reward = typeof actual === 'number' && !Number.isNaN(actual) ? actual : gain;
+        const rewardFormatted = formatNumberLocalized(reward);
+        logMessage(translateOrFallback('game.backgammon.log.win.player', () => `プレイヤーの勝利！${rewardFormatted} EXP 獲得`, {
+          actor: getActorLabel(PLAYER),
+          reward,
+          rewardFormatted
+        }));
       } else {
-        logMessage('AIの勝利…再挑戦しよう');
+        logMessage(translateOrFallback('game.backgammon.log.win.ai', 'AIの勝利…再挑戦しよう'));
       }
     }
 
@@ -659,10 +840,15 @@
     function aiTakeTurn(){
       if (state.paused || state.destroyed || state.gameOver || state.currentPlayer !== AI) return;
       rollDiceForCurrentPlayer();
-      logMessage(`AIのダイス: ${state.dice.join(', ')}`);
+      const diceFormatted = formatDiceArray(state.dice);
+      logMessage(translateOrFallback('game.backgammon.log.aiDice', () => `AIのダイス: ${diceFormatted}`, {
+        actor: getActorLabel(AI),
+        dice: state.dice,
+        diceFormatted
+      }));
       refreshLegalMoves();
       if (state.legalMoves.length === 0){
-        logMessage('AIは動けない');
+        logMessage(translateOrFallback('game.backgammon.log.aiNoMove', 'AIは動けない'));
         endTurn();
         return;
       }
@@ -724,10 +910,15 @@
     function rollButtonClicked(){
       if (state.paused || state.gameOver || state.currentPlayer !== PLAYER || !state.awaitingRoll) return;
       rollDiceForCurrentPlayer();
-      logMessage(`プレイヤーのダイス: ${state.dice.join(', ')}`);
+      const diceFormatted = formatDiceArray(state.dice);
+      logMessage(translateOrFallback('game.backgammon.log.playerDice', () => `プレイヤーのダイス: ${diceFormatted}`, {
+        actor: getActorLabel(PLAYER),
+        dice: state.dice,
+        diceFormatted
+      }));
       refreshLegalMoves();
       if (state.legalMoves.length === 0){
-        logMessage('動かせる手がありません');
+        logMessage(translateOrFallback('game.backgammon.log.noMoves', '動かせる手がありません'));
         endTurn();
       }
     }
@@ -753,7 +944,7 @@
       renderLog();
       updateUi();
       draw();
-      logMessage('新しいゲームを開始。プレイヤーの手番です');
+      logMessage(translateOrFallback('game.backgammon.log.newGame', '新しいゲームを開始。プレイヤーの手番です'));
     }
 
     function draw(){
@@ -885,7 +1076,10 @@
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '12px "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('BAR', layout.barRect.x + layout.barRect.width / 2, layout.midY);
+      const barText = translateOrFallback('game.backgammon.board.barText', () => 'BAR', {
+        label: formatBarLabel()
+      });
+      ctx.fillText(barText, layout.barRect.x + layout.barRect.width / 2, layout.midY);
       ctx.restore();
     }
 
@@ -898,8 +1092,10 @@
       ctx.font = '12px "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`AI OFF (${state.aiOff})`, layout.aiBearRect.x + layout.aiBearRect.width / 2, layout.aiBearRect.y + layout.aiBearRect.height / 2);
-      ctx.fillText(`PLAYER OFF (${state.playerOff})`, layout.playerBearRect.x + layout.playerBearRect.width / 2, layout.playerBearRect.y + layout.playerBearRect.height / 2);
+      const aiOffText = formatBearOffArea(AI, state.aiOff);
+      const playerOffText = formatBearOffArea(PLAYER, state.playerOff);
+      ctx.fillText(aiOffText, layout.aiBearRect.x + layout.aiBearRect.width / 2, layout.aiBearRect.y + layout.aiBearRect.height / 2);
+      ctx.fillText(playerOffText, layout.playerBearRect.x + layout.playerBearRect.width / 2, layout.playerBearRect.y + layout.playerBearRect.height / 2);
       ctx.restore();
     }
 

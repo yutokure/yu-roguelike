@@ -38,13 +38,13 @@
   };
 
   const RANKS = [
-    { min: 50010, max: Infinity, name: '極めて', bonusXp: 1500 },
-    { min: 40010, max: 50000, name: '非常に', bonusXp: 750 },
-    { min: 20010, max: 40000, name: 'すごい', bonusXp: 500 },
-    { min: 10010, max: 20000, name: 'かなり', bonusXp: 400 },
-    { min:  5010, max: 10000, name: 'わりと', bonusXp: 300 },
-    { min:  2010, max:  5000, name: 'そこそこ', bonusXp: 200 },
-    { min:     0, max:  2000, name: 'まあまあ', bonusXp: 100 }
+    { id: 'extreme', min: 50010, max: Infinity, labelFallback: '極めて', bonusXp: 1500 },
+    { id: 'superb', min: 40010, max: 50000, labelFallback: '非常に', bonusXp: 750 },
+    { id: 'great', min: 20010, max: 40000, labelFallback: 'すごい', bonusXp: 500 },
+    { id: 'notable', min: 10010, max: 20000, labelFallback: 'かなり', bonusXp: 400 },
+    { id: 'fair', min:  5010, max: 10000, labelFallback: 'わりと', bonusXp: 300 },
+    { id: 'steady', min:  2010, max:  5000, labelFallback: 'そこそこ', bonusXp: 200 },
+    { id: 'modest', min:     0, max:  2000, labelFallback: 'まあまあ', bonusXp: 100 }
   ];
 
   function clamp(v, min, max){
@@ -59,6 +59,37 @@
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const cfg = { ...CFG, ...(DIFFICULTY_MODS[difficulty] || DIFFICULTY_MODS.NORMAL) };
 
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'forced_scroll_jump' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try {
+          return localization.formatNumber(value, options);
+        } catch {}
+      }
+      if (typeof value === 'number' && Number.isFinite(value)){
+        try {
+          return value.toLocaleString(undefined, options);
+        } catch {}
+        return String(value);
+      }
+      return String(value ?? '');
+    };
+    const formatScore = (value) => formatNumber(Math.max(0, Math.floor(Number.isFinite(value) ? value : Number(value) || 0)), { maximumFractionDigits: 0 });
+    const formatInteger = (value) => {
+      const numeric = Number.isFinite(value) ? value : Number(value) || 0;
+      return formatNumber(Math.round(numeric), { maximumFractionDigits: 0 });
+    };
+    let detachLocale = null;
+
     const canvas = document.createElement('canvas');
     canvas.width = cfg.width;
     canvas.height = cfg.height;
@@ -68,6 +99,9 @@
     canvas.style.background = '#020617';
     root.appendChild(canvas);
     const ctx = canvas.getContext('2d');
+    if (!detachLocale && localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => { try { draw(); } catch {} });
+    }
 
     const state = {
       running: false,
@@ -338,7 +372,8 @@
       cancelAnimationFrame(state.raf);
       const result = determineRank(state.score);
       if (awardXp && result){
-        awardXp(result.bonusXp, { type:'rank', rank: result.name, score: Math.round(state.score) });
+        const rankLabel = getRankLabel(result);
+        awardXp(result.bonusXp, { type:'rank', rank: rankLabel, score: Math.round(state.score) });
       }
       draw();
     }
@@ -353,6 +388,11 @@
         }
       }
       return RANKS[RANKS.length-1];
+    }
+
+    function getRankLabel(rank){
+      if (!rank) return '';
+      return text(`minigame.forced_scroll_jump.rank.${rank.id}`, rank.labelFallback);
     }
 
     function update(dtMs){
@@ -658,9 +698,12 @@
       ctx.font = '16px sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      ctx.fillText(`スコア: ${Math.floor(state.score)}`, 22, 20);
-      ctx.fillText(`CX連続: ${state.coinStreak}`, 22, 44);
-      ctx.fillText(`ライフ: ${state.lives}`, 22, 68);
+      const hudScore = formatScore(state.score);
+      const hudStreak = formatInteger(state.coinStreak);
+      const hudLives = formatInteger(state.lives);
+      ctx.fillText(text('minigame.forced_scroll_jump.hud.score', () => `スコア: ${hudScore}`, { score: hudScore }), 22, 20);
+      ctx.fillText(text('minigame.forced_scroll_jump.hud.coinStreak', () => `CX連続: ${hudStreak}`, { streak: hudStreak }), 22, 44);
+      ctx.fillText(text('minigame.forced_scroll_jump.hud.lives', () => `ライフ: ${hudLives}`, { lives: hudLives }), 22, 68);
     }
 
     function drawResultOverlay(){
@@ -671,12 +714,15 @@
       ctx.font = 'bold 28px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('ゲームオーバー', canvas.width/2, canvas.height/2 - 70);
+      ctx.fillText(text('minigame.forced_scroll_jump.overlay.title', 'ゲームオーバー'), canvas.width/2, canvas.height/2 - 70);
       ctx.font = '24px sans-serif';
-      ctx.fillText(`ランク: ${rank.name}`, canvas.width/2, canvas.height/2 - 20);
+      const rankLabel = getRankLabel(rank);
+      ctx.fillText(text('minigame.forced_scroll_jump.overlay.rank', () => `ランク: ${rankLabel}`, { rank: rankLabel }), canvas.width/2, canvas.height/2 - 20);
       ctx.font = '20px sans-serif';
-      ctx.fillText(`スコア ${Math.floor(state.score)} / ボーナスXP +${rank.bonusXp}`, canvas.width/2, canvas.height/2 + 20);
-      ctx.fillText('スペースかクリックでリスタート', canvas.width/2, canvas.height/2 + 70);
+      const scoreValue = formatScore(state.score);
+      const bonusValue = formatInteger(rank?.bonusXp ?? 0);
+      ctx.fillText(text('minigame.forced_scroll_jump.overlay.summary', () => `スコア ${scoreValue} / ボーナスXP +${bonusValue}`, { score: scoreValue, bonus: bonusValue }), canvas.width/2, canvas.height/2 + 20);
+      ctx.fillText(text('minigame.forced_scroll_jump.overlay.restart', 'スペースかクリックでリスタート'), canvas.width/2, canvas.height/2 + 70);
     }
 
     function gameLoop(ts){
@@ -706,6 +752,10 @@
 
     function destroy(){
       stop();
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('keyup', onKeyUp);
       canvas.removeEventListener('pointerdown', onPointerDown);

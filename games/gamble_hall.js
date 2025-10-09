@@ -197,6 +197,68 @@
       rouletteBallTimer: null
     };
 
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'gamble_hall' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumberLocalized = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try {
+          return localization.formatNumber(value, options);
+        } catch {}
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function') {
+        try {
+          return new Intl.NumberFormat(undefined, options).format(value);
+        } catch {}
+      }
+      if (value && typeof value.toLocaleString === 'function') {
+        return value.toLocaleString();
+      }
+      return String(value ?? '');
+    };
+    let detachLocale = null;
+
+    const gameLabels = {
+      roulette: () => text('nav.items.roulette.label', 'ルーレット'),
+      slot: () => text('nav.items.slot.label', 'パチンコスロット'),
+      dice: () => text('nav.items.dice.label', 'ラッキーダイス')
+    };
+
+    const ROULETTE_BET_TYPE_ORDER = ['color_red', 'color_black', 'color_green', 'parity_even', 'parity_odd', 'number'];
+    const ROULETTE_BET_TYPE_CONFIG = {
+      color_red: { labelKey: 'roulette.betTypes.colorRed', labelFallback: '赤' },
+      color_black: { labelKey: 'roulette.betTypes.colorBlack', labelFallback: '黒' },
+      color_green: { labelKey: 'roulette.betTypes.colorGreen', labelFallback: '緑(0)' },
+      parity_even: { labelKey: 'roulette.betTypes.parityEven', labelFallback: '偶数' },
+      parity_odd: { labelKey: 'roulette.betTypes.parityOdd', labelFallback: '奇数' },
+      number: { labelKey: 'roulette.betTypes.number', labelFallback: '番号指定' }
+    };
+    const ROULETTE_COLOR_CONFIG = {
+      red: { key: 'roulette.colors.red', fallback: '赤' },
+      black: { key: 'roulette.colors.black', fallback: '黒' },
+      green: { key: 'roulette.colors.green', fallback: '緑' }
+    };
+
+    const formatExpValue = (value) => {
+      const formatted = formatNumberLocalized(Math.max(0, Math.round(Number(value) || 0)));
+      return text('hud.expValue', () => `${formatted} EXP`, { value: formatted, raw: value });
+    };
+    const formatNetValue = (value) => {
+      const delta = formatDelta(value);
+      return text('hud.netValue', () => `${delta} EXP`, { delta, raw: value });
+    };
+    const formatBetLabel = (bet) => {
+      const formatted = formatNumberLocalized(Math.max(0, Math.round(Number(bet) || 0)));
+      return text('history.betLabel', () => `BET ${formatted}`, { bet: formatted, raw: bet });
+    };
+
     const layout = document.createElement('div');
     layout.className = 'mini-gamble-hall';
     root.appendChild(layout);
@@ -221,6 +283,22 @@
     let summaryBalanceEl;
     let summaryNetEl;
     let summaryMaxEl;
+    let summaryBalanceLabelEl;
+    let summaryNetLabelEl;
+    let summaryMaxLabelEl;
+    let navTitleEl;
+    let balanceLabelEl;
+    let betLabelEl;
+    let sessionLabelEl;
+    let biggestLabelEl;
+    let balanceValueEl;
+    let betInput;
+    let btnPlus10;
+    let btnPlus50;
+    let btnMax;
+    let historyTitleEl;
+    let historyList;
+    let statusEl;
     const navButtons = {};
     const navMeta = {};
     let panelTitleIcon;
@@ -233,6 +311,8 @@
     let betTypeSelect;
     let numberSelect;
     let spinButton;
+    let slotButton;
+    let slotHint;
     const rouletteMarkerMap = new Map();
     let activeRouletteMarker = null;
 
@@ -244,8 +324,9 @@
       return Math.max(0, Math.floor(playerExp));
     }
 
-    function setStatus(text, tone){
-      statusEl.textContent = text;
+    let lastStatusEntry = null;
+    function setStatusTextValue(value, tone){
+      statusEl.textContent = value;
       statusEl.className = 'mini-gh-status';
       statusEl.classList.remove('pulse-win','pulse-loss');
       if (tone){
@@ -255,25 +336,43 @@
       }
     }
 
+    function setStatusMessage(key, fallback, tone, params){
+      let actualTone = tone;
+      let actualParams = params;
+      if (typeof actualTone === 'object' && actualTone !== null && params === undefined){
+        actualParams = actualTone;
+        actualTone = undefined;
+      }
+      lastStatusEntry = { key, fallback, tone: actualTone, params: actualParams };
+      setStatusTextValue(text(key, fallback, actualParams), actualTone);
+    }
+
+    function refreshStatusMessage(){
+      if (!lastStatusEntry) return;
+      setStatusTextValue(text(lastStatusEntry.key, lastStatusEntry.fallback, lastStatusEntry.params), lastStatusEntry.tone);
+    }
+
     function updateSessionHud(){
-      sessionNetEl.textContent = formatDelta(state.netExp) + ' EXP';
+      const netText = formatNetValue(state.netExp);
+      sessionNetEl.textContent = netText;
       sessionNetEl.classList.remove('positive','negative');
       if (state.netExp > 0) sessionNetEl.classList.add('positive');
       else if (state.netExp < 0) sessionNetEl.classList.add('negative');
-      biggestWinEl.textContent = `${Math.round(Math.max(0,state.biggestWin))} EXP`;
+      biggestWinEl.textContent = formatExpValue(Math.max(0, state.biggestWin));
       if (summaryNetEl){
-        summaryNetEl.textContent = formatDelta(state.netExp) + ' EXP';
+        summaryNetEl.textContent = netText;
         summaryNetEl.classList.remove('positive','negative');
         if (state.netExp > 0) summaryNetEl.classList.add('positive');
         else if (state.netExp < 0) summaryNetEl.classList.add('negative');
       }
       if (summaryMaxEl){
-        summaryMaxEl.textContent = `${Math.round(Math.max(0,state.biggestWin))} EXP`;
+        summaryMaxEl.textContent = formatExpValue(Math.max(0, state.biggestWin));
       }
     }
 
     function renderBalance(){
-      const value = `${getBalance()} EXP`;
+      const balance = getBalance();
+      const value = formatExpValue(balance);
       balanceValueEl.textContent = value;
       if (summaryBalanceEl){
         summaryBalanceEl.textContent = value;
@@ -313,12 +412,23 @@
       }
     }
 
+    function resolveHistoryText(entry){
+      if (!entry) return '';
+      if (typeof entry === 'function') {
+        try { return entry(); } catch { return ''; }
+      }
+      if (typeof entry === 'object') {
+        return text(entry.key, entry.fallback, entry.params);
+      }
+      return String(entry);
+    }
+
     function renderHistory(){
       historyList.innerHTML = '';
       if (!state.history.length){
         const empty = document.createElement('div');
         empty.className = 'mini-gh-small';
-        empty.textContent = 'まだ履歴がありません。';
+        empty.textContent = text('history.empty', 'まだ履歴がありません。');
         historyList.appendChild(empty);
         return;
       }
@@ -327,9 +437,22 @@
         if (entry.net > 0) li.classList.add('win');
         else if (entry.net < 0) li.classList.add('loss');
         const left = document.createElement('div');
-        left.innerHTML = `<strong>${entry.game}</strong> <span class="meta">BET ${entry.bet} / ${entry.detail}</span>`;
+        const title = document.createElement('strong');
+        const gameText = resolveHistoryText(entry.game);
+        title.textContent = gameText;
+        const meta = document.createElement('span');
+        meta.className = 'meta';
+        const detailText = resolveHistoryText(entry.detail);
+        const betLabel = formatBetLabel(entry.bet);
+        meta.textContent = text('history.meta', () => `${betLabel} / ${detailText}`, {
+          bet: betLabel,
+          detail: detailText,
+          betValue: entry.bet
+        });
+        left.append(title, meta);
         const right = document.createElement('div');
-        right.textContent = formatDelta(entry.net);
+        const deltaText = formatDelta(entry.net);
+        right.textContent = text('history.netDelta', () => deltaText, { delta: deltaText, value: entry.net });
         li.appendChild(left);
         li.appendChild(right);
         historyList.appendChild(li);
@@ -386,23 +509,89 @@
       updateSessionHud();
     }
 
+    function evaluateRouletteHit(type, result, color, pick){
+      switch (type){
+        case 'color_red': {
+          const win = color === 'red';
+          return {
+            multiplier: win ? 2 : 0,
+            key: win ? 'roulette.results.colorRed.hit' : 'roulette.results.colorRed.miss',
+            fallback: win ? '赤的中' : '赤ハズレ',
+            params: () => ({ color: text(ROULETTE_COLOR_CONFIG.red.key, ROULETTE_COLOR_CONFIG.red.fallback) })
+          };
+        }
+        case 'color_black': {
+          const win = color === 'black';
+          return {
+            multiplier: win ? 2 : 0,
+            key: win ? 'roulette.results.colorBlack.hit' : 'roulette.results.colorBlack.miss',
+            fallback: win ? '黒的中' : '黒ハズレ',
+            params: () => ({ color: text(ROULETTE_COLOR_CONFIG.black.key, ROULETTE_COLOR_CONFIG.black.fallback) })
+          };
+        }
+        case 'color_green': {
+          const win = result === 0;
+          return {
+            multiplier: win ? 36 : 0,
+            key: win ? 'roulette.results.colorGreen.hit' : 'roulette.results.colorGreen.miss',
+            fallback: win ? '0ヒット！' : '0ハズレ',
+            params: () => ({ number: result })
+          };
+        }
+        case 'parity_even': {
+          const win = result !== 0 && result % 2 === 0;
+          return {
+            multiplier: win ? 2 : 0,
+            key: win ? 'roulette.results.parityEven.hit' : 'roulette.results.parityEven.miss',
+            fallback: win ? '偶数的中' : '偶数ハズレ',
+            params: () => ({ number: result })
+          };
+        }
+        case 'parity_odd': {
+          const win = result % 2 === 1;
+          return {
+            multiplier: win ? 2 : 0,
+            key: win ? 'roulette.results.parityOdd.hit' : 'roulette.results.parityOdd.miss',
+            fallback: win ? '奇数的中' : '奇数ハズレ',
+            params: () => ({ number: result })
+          };
+        }
+        case 'number': {
+          const win = result === pick;
+          return {
+            multiplier: win ? 36 : 0,
+            key: win ? 'roulette.results.number.hit' : 'roulette.results.number.miss',
+            fallback: win ? `${pick} 的中！` : `${pick} ハズレ`,
+            params: () => ({ number: pick, result })
+          };
+        }
+        default:
+          return {
+            multiplier: 0,
+            key: 'roulette.results.miss',
+            fallback: 'ハズレ',
+            params: () => ({ result })
+          };
+      }
+    }
+
     function handleRoulette(){
       clampBet();
       const bet = getBetAmount();
-      if (state.rouletteSpinning){ setStatus('ルーレットが回転中です…', 'warn'); return; }
-      if (bet <= 0){ setStatus('ベット額を入力してください。', 'warn'); return; }
-      if (getBalance() <= 0){ setStatus('利用可能なEXPがありません。', 'warn'); return; }
+      if (state.rouletteSpinning){ setStatusMessage('status.rouletteBusy', 'ルーレットが回転中です…', 'warn'); return; }
+      if (bet <= 0){ setStatusMessage('status.betRequired', 'ベット額を入力してください。', 'warn'); return; }
+      if (getBalance() <= 0){ setStatusMessage('status.noExp', '利用可能なEXPがありません。', 'warn'); return; }
       const spendDelta = awardXp(-bet);
       if (!spendDelta){
         renderBalance();
-        setStatus('EXPが不足しています。', 'warn');
+        setStatusMessage('status.notEnoughExp', 'EXPが不足しています。', 'warn');
         return;
       }
       const actualBet = Math.abs(Math.round(spendDelta));
       applyDelta(spendDelta);
       state.rouletteSpinning = true;
       if (spinButton) spinButton.disabled = true;
-      setStatus('ルーレットを回しています…', 'info');
+      setStatusMessage('status.rouletteSpinning', 'ルーレットを回しています…', 'info');
       if (activeRouletteMarker){
         activeRouletteMarker.classList.remove('active');
         activeRouletteMarker = null;
@@ -421,7 +610,10 @@
       const resultEntry = ROULETTE_NUMBERS[resultIndex];
       const result = resultEntry.value;
       const color = resultEntry.color;
-      const colorLabel = color === 'red' ? '赤' : color === 'black' ? '黒' : '緑';
+      const colorLabelFn = () => {
+        const cfg = ROULETTE_COLOR_CONFIG[color] || { key: 'roulette.colors.unknown', fallback: color };
+        return text(cfg.key, cfg.fallback);
+      };
       const baseAngle = resultIndex * ROULETTE_SEGMENT_ANGLE;
       const targetBase = (360 - baseAngle) % 360;
       const minRotation = state.rouletteRotation + 720;
@@ -444,20 +636,22 @@
         }, ROULETTE_SPIN_MS);
       }
 
-      let multiplier = 0;
-      let hitText = 'ハズレ';
       const type = betTypeSelect.value;
-      if (type === 'color_red'){ multiplier = color === 'red' ? 2 : 0; hitText = multiplier ? '赤的中' : '赤ハズレ'; }
-      else if (type === 'color_black'){ multiplier = color === 'black' ? 2 : 0; hitText = multiplier ? '黒的中' : '黒ハズレ'; }
-      else if (type === 'color_green'){ multiplier = result === 0 ? 36 : 0; hitText = multiplier ? '0ヒット！' : '0ハズレ'; }
-      else if (type === 'parity_even'){ multiplier = (result !== 0 && result % 2 === 0) ? 2 : 0; hitText = multiplier ? '偶数的中' : '偶数ハズレ'; }
-      else if (type === 'parity_odd'){ multiplier = result % 2 === 1 ? 2 : 0; hitText = multiplier ? '奇数的中' : '奇数ハズレ'; }
-      else if (type === 'number'){ const pick = Number(numberSelect.value)||0; multiplier = result === pick ? 36 : 0; hitText = multiplier ? `${pick} 的中！` : `${pick} ハズレ`; }
-      const detailText = `No.${result} ${colorLabel}`;
+      const pickNumber = Number(numberSelect.value) || 0;
+      const hitInfo = evaluateRouletteHit(type, result, color, pickNumber);
+      const hitLabelFn = () => text(hitInfo.key, hitInfo.fallback, typeof hitInfo.params === 'function' ? hitInfo.params() : hitInfo.params);
+      const detailLabelFn = () => {
+        const numberLabel = text('roulette.result.numberLabel', () => `No.${result}`, { number: result });
+        const colorLabel = colorLabelFn();
+        return text('roulette.result.detail', () => `${numberLabel} ${colorLabel}`, {
+          number: result,
+          color: colorLabel
+        });
+      };
 
       state.rouletteSpinTimer = setTimeout(() => {
         let gainDelta = 0;
-        const payout = multiplier > 0 ? Math.round(actualBet * multiplier) : 0;
+        const payout = hitInfo.multiplier > 0 ? Math.round(actualBet * hitInfo.multiplier) : 0;
         if (payout > 0){
           const gained = awardXp(payout);
           gainDelta = Number(gained)||0;
@@ -467,7 +661,7 @@
         const tone = net > 0 ? 'win' : (net < 0 ? 'loss' : 'info');
         if (rouletteNumberEl) rouletteNumberEl.textContent = String(result);
         if (rouletteColorEl){
-          rouletteColorEl.textContent = colorLabel;
+          rouletteColorEl.textContent = colorLabelFn();
           rouletteColorEl.style.color = ROULETTE_DISPLAY_COLORS[color] || '#f8fafc';
         }
         const marker = rouletteMarkerMap.get(result);
@@ -475,8 +669,32 @@
           marker.classList.add('active');
           activeRouletteMarker = marker;
         }
-        setStatus(`ルーレット: ${hitText} (${colorLabel} / ${result}) ${formatDelta(net)} EXP`, tone);
-        pushHistory({ game: 'ルーレット', bet: actualBet, detail: detailText, net });
+        const hitLabel = hitLabelFn();
+        const detailLabel = detailLabelFn();
+        const netText = formatNetValue(net);
+        const statusParams = {
+          game: gameLabels.roulette(),
+          result: hitLabel,
+          detail: detailLabel,
+          net: netText,
+          number: result
+        };
+        setStatusMessage('status.rouletteResult', () => `${statusParams.game}: ${hitLabel} (${detailLabel}) ${netText}`, tone, statusParams);
+        pushHistory({
+          game: () => gameLabels.roulette(),
+          detail: () => {
+            const outcome = hitLabelFn();
+            const detail = detailLabelFn();
+            return text('history.roulette.detail', () => `${detail} / ${outcome}`, {
+              result: detail,
+              outcome,
+              number: result,
+              color: colorLabelFn()
+            });
+          },
+          bet: actualBet,
+          net
+        });
         renderBalance();
         setBetValue(actualBet);
         state.rouletteSpinTimer = null;
@@ -490,25 +708,25 @@
     function evaluateSlot(symbols){
       const [a,b,c] = symbols;
       const counts = symbols.reduce((map, sym) => { map[sym] = (map[sym]||0)+1; return map; }, {});
-      if (a === '7' && b === '7' && c === '7') return { multiplier: 18, label: '777ジャックポット！' };
-      if (a === 'BAR' && b === 'BAR' && c === 'BAR') return { multiplier: 12, label: 'BAR揃い！' };
-      if (counts[a] === 3 || counts[b] === 3 || counts[c] === 3) return { multiplier: 9, label: 'トリプルヒット！' };
+      if (a === '7' && b === '7' && c === '7') return { multiplier: 18, labelKey: 'slot.results.jackpot', labelFallback: '777ジャックポット！' };
+      if (a === 'BAR' && b === 'BAR' && c === 'BAR') return { multiplier: 12, labelKey: 'slot.results.barTriple', labelFallback: 'BAR揃い！' };
+      if (counts[a] === 3 || counts[b] === 3 || counts[c] === 3) return { multiplier: 9, labelKey: 'slot.results.triple', labelFallback: 'トリプルヒット！' };
       const entries = Object.entries(counts);
       const pair = entries.find(([sym,count]) => count === 2);
       if (pair){
-        if (symbols.includes('☆')) return { multiplier: 4, label: `${pair[0]} ペア＋スター！` };
-        return { multiplier: 2, label: `${pair[0]} ペア！` };
+        if (symbols.includes('☆')) return { multiplier: 4, labelKey: 'slot.results.pairWithStar', labelFallback: `${pair[0]} ペア＋スター！`, params: { symbol: pair[0] } };
+        return { multiplier: 2, labelKey: 'slot.results.pair', labelFallback: `${pair[0]} ペア！`, params: { symbol: pair[0] } };
       }
-      return { multiplier: 0, label: 'ハズレ…' };
+      return { multiplier: 0, labelKey: 'slot.results.miss', labelFallback: 'ハズレ…' };
     }
 
     const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
     const diceModes = {
-      high: { label: 'ハイ (11-18)', multiplier: 2, hint: '合計が11以上で配当x2。ゾロ目は対象外。', check: ({ total, isTriple }) => total >= 11 && !isTriple },
-      low: { label: 'ロー (3-10)', multiplier: 2, hint: '合計が10以下で配当x2。ゾロ目は対象外。', check: ({ total, isTriple }) => total <= 10 && !isTriple },
-      lucky7: { label: 'ラッキー7', multiplier: 9, hint: '合計7ちょうどで高配当！', check: ({ total }) => total === 7 },
-      all_diff: { label: 'バラバラ', multiplier: 4, hint: '3つとも違う目で配当x4。', check: ({ uniqueCount, isTriple }) => uniqueCount === 3 && !isTriple },
-      triple: { label: 'ゾロ目', multiplier: 24, hint: '全て同じ目で超高配当！', check: ({ isTriple }) => isTriple }
+      high: { labelKey: 'dice.modes.high.label', labelFallback: 'ハイ (11-18)', multiplier: 2, hintKey: 'dice.modes.high.hint', hintFallback: '合計が11以上で配当x2。ゾロ目は対象外。', check: ({ total, isTriple }) => total >= 11 && !isTriple },
+      low: { labelKey: 'dice.modes.low.label', labelFallback: 'ロー (3-10)', multiplier: 2, hintKey: 'dice.modes.low.hint', hintFallback: '合計が10以下で配当x2。ゾロ目は対象外。', check: ({ total, isTriple }) => total <= 10 && !isTriple },
+      lucky7: { labelKey: 'dice.modes.lucky7.label', labelFallback: 'ラッキー7', multiplier: 9, hintKey: 'dice.modes.lucky7.hint', hintFallback: '合計7ちょうどで高配当！', check: ({ total }) => total === 7 },
+      all_diff: { labelKey: 'dice.modes.allDiff.label', labelFallback: 'バラバラ', multiplier: 4, hintKey: 'dice.modes.allDiff.hint', hintFallback: '3つとも違う目で配当x4。', check: ({ uniqueCount, isTriple }) => uniqueCount === 3 && !isTriple },
+      triple: { labelKey: 'dice.modes.triple.label', labelFallback: 'ゾロ目', multiplier: 24, hintKey: 'dice.modes.triple.hint', hintFallback: '全て同じ目で超高配当！', check: ({ isTriple }) => isTriple }
     };
     function faceFromNumber(num){ return diceFaces[Math.max(1, Math.min(6, num)) - 1]; }
     function rollDie(){ return Math.floor(Math.random() * 6) + 1; }
@@ -516,15 +734,15 @@
     function handleSlot(){
       clampBet();
       const bet = getBetAmount();
-      if (bet <= 0){ setStatus('ベット額を入力してください。', 'warn'); return; }
-      if (state.slotBusy){ setStatus('リール停止を待っています…', 'warn'); return; }
+      if (bet <= 0){ setStatusMessage('status.betRequired', 'ベット額を入力してください。', 'warn'); return; }
+      if (state.slotBusy){ setStatusMessage('status.slotBusy', 'リール停止を待っています…', 'warn'); return; }
       const spendDelta = awardXp(-bet);
-      if (!spendDelta){ renderBalance(); setStatus('EXPが不足しています。', 'warn'); return; }
+      if (!spendDelta){ renderBalance(); setStatusMessage('status.notEnoughExp', 'EXPが不足しています。', 'warn'); return; }
       const actualBet = Math.abs(Math.round(spendDelta));
       applyDelta(spendDelta);
       state.slotBusy = true;
       slotPanel.classList.add('running');
-      setStatus('リール回転中…', 'info');
+      setStatusMessage('status.slotSpinning', 'リール回転中…', 'info');
       const spinInterval = setInterval(() => {
         reelEls.forEach((el, idx) => { el.textContent = randomSymbol(); });
       }, 120);
@@ -535,6 +753,7 @@
         stopSlotTimers();
         for (let i=0;i<reelEls.length;i++) reelEls[i].textContent = finalSymbols[i];
         const result = evaluateSlot(finalSymbols);
+        const resultLabelFn = () => text(result.labelKey, result.labelFallback, result.params);
         const payout = result.multiplier > 0 ? Math.round(actualBet * result.multiplier) : 0;
         let gainDelta = 0;
         if (payout > 0){
@@ -544,8 +763,19 @@
         }
         const net = spendDelta + gainDelta;
         const tone = net > 0 ? 'win' : (net < 0 ? 'loss' : 'info');
-        setStatus(`スロット: ${result.label} ${formatDelta(net)} EXP`, tone);
-        pushHistory({ game: 'スロット', bet: actualBet, detail: finalSymbols.join(' | '), net });
+        const symbolString = finalSymbols.join(' | ');
+        const netText = formatNetValue(net);
+        const statusParams = { game: gameLabels.slot(), result: resultLabelFn(), net: netText };
+        setStatusMessage('status.slotResult', () => `${statusParams.game}: ${resultLabelFn()} ${netText}`, tone, statusParams);
+        pushHistory({
+          game: () => gameLabels.slot(),
+          detail: () => {
+            const outcome = resultLabelFn();
+            return text('history.slot.detail', () => `${symbolString} / ${outcome}`, { symbols: symbolString, result: outcome });
+          },
+          bet: actualBet,
+          net
+        });
         renderBalance();
         setBetValue(actualBet);
       }, stopAfter);
@@ -555,7 +785,11 @@
       if (!diceHint) return;
       const mode = diceModes[diceModeSelect && diceModeSelect.value];
       if (mode){
-        diceHint.textContent = `${mode.hint} (x${mode.multiplier})`;
+        const hintText = text(mode.hintKey, mode.hintFallback, { multiplier: mode.multiplier });
+        diceHint.textContent = text('dice.mode.hintDisplay', () => `${hintText} (x${mode.multiplier})`, {
+          hint: hintText,
+          multiplier: mode.multiplier
+        });
       } else {
         diceHint.textContent = '';
       }
@@ -564,16 +798,16 @@
     function handleDice(){
       clampBet();
       const bet = getBetAmount();
-      if (bet <= 0){ setStatus('ベット額を入力してください。', 'warn'); return; }
-      if (state.diceRolling){ setStatus('結果表示をお待ちください…', 'warn'); return; }
+      if (bet <= 0){ setStatusMessage('status.betRequired', 'ベット額を入力してください。', 'warn'); return; }
+      if (state.diceRolling){ setStatusMessage('status.diceBusy', '結果表示をお待ちください…', 'warn'); return; }
       const spendDelta = awardXp(-bet);
-      if (!spendDelta){ renderBalance(); setStatus('EXPが不足しています。', 'warn'); return; }
+      if (!spendDelta){ renderBalance(); setStatusMessage('status.notEnoughExp', 'EXPが不足しています。', 'warn'); return; }
       const actualBet = Math.abs(Math.round(spendDelta));
       applyDelta(spendDelta);
       state.diceRolling = true;
-      diceResultEl.textContent = 'ロール中…';
+      diceResultEl.textContent = text('dice.rollingLabel', 'ロール中…');
       diceEls.forEach(el => el.classList.add('roll'));
-      setStatus('ダイスを振っています…', 'info');
+      setStatusMessage('status.diceRolling', 'ダイスを振っています…', 'info');
       state.diceInterval = setInterval(() => {
         diceEls.forEach(el => { el.textContent = faceFromNumber(rollDie()); });
       }, 100);
@@ -597,10 +831,33 @@
         const net = spendDelta + gainDelta;
         const tone = net > 0 ? 'win' : (net < 0 ? 'loss' : 'info');
         const faces = final.map(faceFromNumber).join(' ');
-        diceResultEl.textContent = `出目 ${faces} (合計 ${total})`;
-        const modeLabel = mode ? mode.label : '不明';
-        setStatus(`ダイス: ${modeLabel} ${hit ? '的中！' : 'ハズレ…'} ${formatDelta(net)} EXP`, tone);
-        pushHistory({ game: 'ラッキーダイス', bet: actualBet, detail: `${faces} / 合計${total}`, net });
+        diceResultEl.textContent = text('dice.resultLine', () => `出目 ${faces} (合計 ${total})`, {
+          faces,
+          total,
+          totalFormatted: formatNumberLocalized(total)
+        });
+        const modeLabelFn = () => text(mode ? mode.labelKey : 'dice.modes.unknown', mode ? mode.labelFallback : '不明');
+        const hitLabel = text(hit ? 'dice.results.hit' : 'dice.results.miss', hit ? '的中！' : 'ハズレ…');
+        const netText = formatNetValue(net);
+        const statusParams = {
+          game: gameLabels.dice(),
+          mode: modeLabelFn(),
+          outcome: hitLabel,
+          net: netText,
+          total,
+          faces
+        };
+        setStatusMessage('status.diceResult', () => `${statusParams.game}: ${modeLabelFn()} ${hitLabel} ${netText}`, tone, statusParams);
+        pushHistory({
+          game: () => gameLabels.dice(),
+          detail: () => text('history.dice.detail', () => `${faces} / 合計${total}`, {
+            faces,
+            total,
+            totalFormatted: formatNumberLocalized(total)
+          }),
+          bet: actualBet,
+          net
+        });
         renderBalance();
         setBetValue(actualBet);
       }, 1200);
@@ -612,49 +869,41 @@
     summaryBox.className = 'mini-gh-summary';
     summaryCard.appendChild(summaryBox);
     const summaryBalanceBlock = document.createElement('div');
-    const summaryBalanceLabel = document.createElement('span');
-    summaryBalanceLabel.className = 'label';
-    summaryBalanceLabel.textContent = 'BALANCE';
+    summaryBalanceLabelEl = document.createElement('span');
+    summaryBalanceLabelEl.className = 'label';
     summaryBalanceEl = document.createElement('strong');
-    summaryBalanceEl.textContent = '0 EXP';
-    summaryBalanceBlock.append(summaryBalanceLabel, summaryBalanceEl);
+    summaryBalanceBlock.append(summaryBalanceLabelEl, summaryBalanceEl);
     const summaryNetBlock = document.createElement('div');
-    const summaryNetLabel = document.createElement('span');
-    summaryNetLabel.className = 'label';
-    summaryNetLabel.textContent = 'SESSION NET';
+    summaryNetLabelEl = document.createElement('span');
+    summaryNetLabelEl.className = 'label';
     summaryNetEl = document.createElement('span');
     summaryNetEl.className = 'net';
-    summaryNetEl.textContent = '±0 EXP';
-    summaryNetBlock.append(summaryNetLabel, summaryNetEl);
+    summaryNetBlock.append(summaryNetLabelEl, summaryNetEl);
     const summaryMaxBlock = document.createElement('div');
-    const summaryMaxLabel = document.createElement('span');
-    summaryMaxLabel.className = 'label';
-    summaryMaxLabel.textContent = 'MAX WIN';
+    summaryMaxLabelEl = document.createElement('span');
+    summaryMaxLabelEl.className = 'label';
     summaryMaxEl = document.createElement('span');
     summaryMaxEl.className = 'max';
-    summaryMaxEl.textContent = '0 EXP';
-    summaryMaxBlock.append(summaryMaxLabel, summaryMaxEl);
+    summaryMaxBlock.append(summaryMaxLabelEl, summaryMaxEl);
     summaryBox.append(summaryBalanceBlock, summaryNetBlock, summaryMaxBlock);
     sidebar.appendChild(summaryCard);
 
     const navCard = document.createElement('div');
     navCard.className = 'mini-gh-card mini-gh-nav-card';
-    const navTitle = document.createElement('div');
-    navTitle.className = 'mini-gh-nav-title';
-    navTitle.textContent = 'ゲームセレクト';
-    navCard.appendChild(navTitle);
+    navTitleEl = document.createElement('div');
+    navTitleEl.className = 'mini-gh-nav-title';
+    navCard.appendChild(navTitleEl);
     const navList = document.createElement('div');
     navList.className = 'mini-gh-nav-list';
     navCard.appendChild(navList);
     sidebar.appendChild(navCard);
 
     const navItems = [
-      { id: 'roulette', label: 'ルーレット', icon: '🎯', detail: '欧州式37マス' },
-      { id: 'slot', label: 'パチンコスロット', icon: '🎰', detail: '3リール＋スター配当' },
-      { id: 'dice', label: 'ラッキーダイス', icon: '🎲', detail: '5種のベットモード' }
+      { id: 'roulette', icon: '🎯', labelKey: 'nav.items.roulette.label', labelFallback: 'ルーレット', detailKey: 'nav.items.roulette.detail', detailFallback: '欧州式37マス' },
+      { id: 'slot', icon: '🎰', labelKey: 'nav.items.slot.label', labelFallback: 'パチンコスロット', detailKey: 'nav.items.slot.detail', detailFallback: '3リール＋スター配当' },
+      { id: 'dice', icon: '🎲', labelKey: 'nav.items.dice.label', labelFallback: 'ラッキーダイス', detailKey: 'nav.items.dice.detail', detailFallback: '5種のベットモード' }
     ];
     navItems.forEach(item => {
-      navMeta[item.id] = item;
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.dataset.game = item.id;
@@ -664,13 +913,12 @@
       const body = document.createElement('div');
       body.className = 'body';
       const strong = document.createElement('strong');
-      strong.textContent = item.label;
       const detail = document.createElement('span');
-      detail.textContent = item.detail;
       body.append(strong, detail);
       btn.append(icon, body);
       navList.appendChild(btn);
       navButtons[item.id] = btn;
+      navMeta[item.id] = { ...item, button: btn, labelEl: strong, detailEl: detail };
     });
 
     // Header UI
@@ -680,35 +928,42 @@
 
     const balanceBox = document.createElement('div');
     balanceBox.className = 'mini-gh-balance';
-    balanceBox.innerHTML = `<span class="label">利用可能EXP</span>`;
-    const balanceValueEl = document.createElement('strong');
+    balanceLabelEl = document.createElement('span');
+    balanceLabelEl.className = 'label';
+    balanceBox.appendChild(balanceLabelEl);
+    balanceValueEl = document.createElement('strong');
     balanceBox.appendChild(balanceValueEl);
     header.appendChild(balanceBox);
 
     const betBox = document.createElement('div');
     betBox.className = 'mini-gh-bet';
-    betBox.innerHTML = '<span class="label">ベット額</span>';
+    betLabelEl = document.createElement('span');
+    betLabelEl.className = 'label';
+    betBox.appendChild(betLabelEl);
     const betInputRow = document.createElement('div');
     betInputRow.className = 'mini-gh-bet-input';
-    const betInput = document.createElement('input');
+    betInput = document.createElement('input');
     betInput.type = 'number';
     betInput.min = '0';
     betInput.step = '10';
-    betInput.placeholder = '10';
     betInputRow.appendChild(betInput);
-    const btnPlus10 = document.createElement('button'); btnPlus10.textContent = '+10';
-    const btnPlus50 = document.createElement('button'); btnPlus50.textContent = '+50';
-    const btnMax = document.createElement('button'); btnMax.textContent = 'MAX';
+    btnPlus10 = document.createElement('button');
+    btnPlus50 = document.createElement('button');
+    btnMax = document.createElement('button');
     betInputRow.append(btnPlus10, btnPlus50, btnMax);
     betBox.appendChild(betInputRow);
     header.appendChild(betBox);
 
     const sessionBox = document.createElement('div');
     sessionBox.className = 'mini-gh-session';
-    sessionBox.innerHTML = `<span class="label">セッション収支</span>`;
+    sessionLabelEl = document.createElement('span');
+    sessionLabelEl.className = 'label';
+    sessionBox.appendChild(sessionLabelEl);
     const sessionNetEl = document.createElement('div'); sessionNetEl.className = 'net'; sessionBox.appendChild(sessionNetEl);
-    const biggestWrap = document.createElement('div'); biggestWrap.className = 'mini-gh-small'; biggestWrap.textContent = '最大獲得';
-    const biggestWinEl = document.createElement('div'); biggestWinEl.className = 'mini-gh-small'; sessionBox.append(biggestWrap, biggestWinEl);
+    const biggestWrap = document.createElement('div'); biggestWrap.className = 'mini-gh-small';
+    biggestLabelEl = biggestWrap;
+    sessionBox.appendChild(biggestWrap);
+    const biggestWinEl = document.createElement('div'); biggestWinEl.className = 'mini-gh-small'; sessionBox.appendChild(biggestWinEl);
     header.appendChild(sessionBox);
 
     const panelTitle = document.createElement('div');
@@ -764,17 +1019,12 @@
     rouletteControls.className = 'mini-gh-roulette-controls';
     betTypeSelect = document.createElement('select');
     betTypeSelect.className = 'mini-gh-roulette-type';
-    [
-      { value: 'color_red', label: '赤' },
-      { value: 'color_black', label: '黒' },
-      { value: 'color_green', label: '緑(0)' },
-      { value: 'parity_even', label: '偶数' },
-      { value: 'parity_odd', label: '奇数' },
-      { value: 'number', label: '番号指定' }
-    ].forEach(opt => {
+    ROULETTE_BET_TYPE_ORDER.forEach(value => {
+      const cfg = ROULETTE_BET_TYPE_CONFIG[value] || { labelKey: `roulette.betTypes.${value}`, labelFallback: value };
       const option = document.createElement('option');
-      option.value = opt.value;
-      option.textContent = opt.label;
+      option.value = value;
+      option.dataset.type = value;
+      option.textContent = text(cfg.labelKey, cfg.labelFallback);
       betTypeSelect.appendChild(option);
     });
     numberSelect = document.createElement('select');
@@ -782,7 +1032,7 @@
     numberSelect.disabled = true;
     spinButton = document.createElement('button');
     spinButton.className = 'mini-gh-roulette-spin';
-    spinButton.textContent = 'スピン';
+    spinButton.textContent = text('roulette.spin', 'スピン');
     rouletteControls.append(betTypeSelect, numberSelect, spinButton);
     roulettePanel.appendChild(rouletteControls);
     panels.appendChild(roulettePanel);
@@ -790,7 +1040,8 @@
     for (let i=0; i<=36; i++){
       const opt = document.createElement('option');
       opt.value = String(i);
-      opt.textContent = `No.${i}`;
+      opt.dataset.number = String(i);
+      opt.textContent = text('roulette.numberOption', () => `No.${i}`, { number: i });
       numberSelect.appendChild(opt);
     }
 
@@ -824,8 +1075,8 @@
       reelsWrap.appendChild(el);
       return el;
     });
-    const slotButton = document.createElement('button'); slotButton.textContent = 'スタート';
-    const slotHint = document.createElement('div'); slotHint.className = 'mini-gh-small'; slotHint.textContent = '同じ絵柄やスター付きペアで配当アップ！';
+    slotButton = document.createElement('button'); slotButton.textContent = text('slot.start', 'スタート');
+    slotHint = document.createElement('div'); slotHint.className = 'mini-gh-small'; slotHint.textContent = text('slot.hint', '同じ絵柄やスター付きペアで配当アップ！');
     slotPanel.append(reelsWrap, slotButton, slotHint);
     panels.appendChild(slotPanel);
 
@@ -844,10 +1095,12 @@
     Object.entries(diceModes).forEach(([value, mode]) => {
       const opt = document.createElement('option');
       opt.value = value;
-      opt.textContent = `${mode.label} x${mode.multiplier}`;
+      opt.dataset.mode = value;
+      const label = text(mode.labelKey, mode.labelFallback);
+      opt.textContent = text('dice.mode.option', () => `${label} x${mode.multiplier}`, { label, multiplier: mode.multiplier });
       diceModeSelect.appendChild(opt);
     });
-    diceButton = document.createElement('button'); diceButton.textContent = 'ロール';
+    diceButton = document.createElement('button'); diceButton.textContent = text('dice.buttons.roll', 'ロール');
     diceControls.append(diceModeSelect, diceButton);
     diceHint = document.createElement('div'); diceHint.className = 'mini-gh-small';
     diceResultEl = document.createElement('div'); diceResultEl.className = 'mini-gh-small'; diceResultEl.textContent = '---';
@@ -859,15 +1112,16 @@
     lowerRow.className = 'mini-gh-lower';
     main.appendChild(lowerRow);
 
-    const statusEl = document.createElement('div');
+    statusEl = document.createElement('div');
     statusEl.className = 'mini-gh-status';
-    statusEl.textContent = 'ベットしてゲームを始めましょう。';
+    statusEl.textContent = text('status.ready', 'ベットしてゲームを始めましょう。');
     lowerRow.appendChild(statusEl);
 
     const historyBox = document.createElement('div');
     historyBox.className = 'mini-gh-history';
-    historyBox.innerHTML = '<h3>直近の結果</h3>';
-    const historyList = document.createElement('div');
+    historyTitleEl = document.createElement('h3');
+    historyBox.appendChild(historyTitleEl);
+    historyList = document.createElement('div');
     historyList.className = 'mini-gh-history-list';
     historyBox.appendChild(historyList);
     lowerRow.appendChild(historyBox);
@@ -882,11 +1136,79 @@
       dicePanel.classList.toggle('active', id === 'dice');
       const meta = navMeta[id];
       if (panelTitleIcon) panelTitleIcon.textContent = meta ? meta.icon : '';
-      if (panelTitleLabel) panelTitleLabel.textContent = meta ? meta.label : '';
-      if (panelTitleSubtitle) panelTitleSubtitle.textContent = meta && meta.detail ? meta.detail : '';
+      if (panelTitleLabel) panelTitleLabel.textContent = meta ? text(meta.labelKey, meta.labelFallback) : '';
+      if (panelTitleSubtitle) panelTitleSubtitle.textContent = meta && meta.detailKey ? text(meta.detailKey, meta.detailFallback) : '';
+    }
+
+    function applyLocalization(){
+      if (summaryBalanceLabelEl) summaryBalanceLabelEl.textContent = text('sidebar.balanceLabel', 'BALANCE');
+      if (summaryNetLabelEl) summaryNetLabelEl.textContent = text('sidebar.sessionNetLabel', 'SESSION NET');
+      if (summaryMaxLabelEl) summaryMaxLabelEl.textContent = text('sidebar.maxWinLabel', 'MAX WIN');
+      if (navTitleEl) navTitleEl.textContent = text('nav.title', 'ゲームセレクト');
+      Object.values(navMeta).forEach(meta => {
+        if (!meta) return;
+        if (meta.labelEl) meta.labelEl.textContent = text(meta.labelKey, meta.labelFallback);
+        if (meta.detailEl) meta.detailEl.textContent = text(meta.detailKey, meta.detailFallback);
+      });
+      if (balanceLabelEl) balanceLabelEl.textContent = text('header.balanceLabel', '利用可能EXP');
+      if (betLabelEl) betLabelEl.textContent = text('header.betLabel', 'ベット額');
+      if (sessionLabelEl) sessionLabelEl.textContent = text('header.sessionNet', 'セッション収支');
+      if (biggestLabelEl) biggestLabelEl.textContent = text('header.biggestWin', '最大獲得');
+      if (betInput) betInput.placeholder = text('header.betPlaceholder', '10');
+      if (btnPlus10) btnPlus10.textContent = text('header.betAdjust.plus10', '+10');
+      if (btnPlus50) btnPlus50.textContent = text('header.betAdjust.plus50', '+50');
+      if (btnMax) btnMax.textContent = text('header.betAdjust.max', 'MAX');
+      if (spinButton) spinButton.textContent = text('roulette.spin', 'スピン');
+      if (slotButton) slotButton.textContent = text('slot.start', 'スタート');
+      if (slotHint) slotHint.textContent = text('slot.hint', '同じ絵柄やスター付きペアで配当アップ！');
+      if (diceButton) diceButton.textContent = text('dice.buttons.roll', 'ロール');
+      if (historyTitleEl) historyTitleEl.textContent = text('history.title', '直近の結果');
+      if (betTypeSelect){
+        Array.from(betTypeSelect.options).forEach(opt => {
+          const cfg = ROULETTE_BET_TYPE_CONFIG[opt.value];
+          if (cfg) opt.textContent = text(cfg.labelKey, cfg.labelFallback);
+        });
+      }
+      if (numberSelect){
+        Array.from(numberSelect.options).forEach(opt => {
+          const num = Number(opt.dataset.number || opt.value);
+          opt.textContent = text('roulette.numberOption', () => `No.${num}`, { number: num });
+        });
+      }
+      if (diceModeSelect){
+        Array.from(diceModeSelect.options).forEach(opt => {
+          const mode = diceModes[opt.value];
+          if (!mode) return;
+          const label = text(mode.labelKey, mode.labelFallback);
+          opt.textContent = text('dice.mode.option', () => `${label} x${mode.multiplier}`, { label, multiplier: mode.multiplier });
+        });
+      }
+      if (statusEl){
+        if (lastStatusEntry) refreshStatusMessage();
+        else statusEl.textContent = text('status.ready', 'ベットしてゲームを始めましょう。');
+      }
+      updateDiceHint();
+      switchGame(state.currentGame);
+      renderBalance();
+      updateSessionHud();
+      renderHistory();
     }
 
     switchGame('roulette');
+    applyLocalization();
+
+    if (localization && typeof localization.onChange === 'function') {
+      try {
+        detachLocale = localization.onChange(() => {
+          try { applyLocalization(); } catch (error) { console.warn('[MiniExp] Failed to apply localization for gamble hall:', error); }
+        });
+      } catch (error) {
+        console.warn('[MiniExp] Failed to register localization listener:', error);
+      }
+      if (detachLocale) {
+        disposers.push(() => { try { detachLocale(); } catch {} });
+      }
+    }
 
     function bind(el, evt, handler){
       el.addEventListener(evt, handler);
@@ -923,7 +1245,7 @@
       diceResultEl.textContent = '---';
       updateDiceHint();
       setBetValue(10);
-      setStatus('ベットしてゲームを始めましょう。');
+      setStatusMessage('status.ready', 'ベットしてゲームを始めましょう。');
     }
 
     function stop(){

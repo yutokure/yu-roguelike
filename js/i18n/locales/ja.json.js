@@ -1068,7 +1068,22 @@
           },
           "onigokko": {
             "name": "鬼ごっこ",
-            "description": "混合型ダンジョンを舞台に鬼から逃げるトイアクション"
+            "description": "混合型ダンジョンを舞台に鬼から逃げるトイアクション",
+            "timer": {
+              "remaining": "残り {seconds}s"
+            },
+            "status": {
+              "start": "鬼ごっこ開始！矢印キー/WASDで移動",
+              "paused": "一時停止中",
+              "loading": "ステージ読み込み中…",
+              "ready": "準備完了！開始で鬼ごっこスタート",
+              "stage_generation_failed": "ステージ生成に失敗しました",
+              "api_unavailable": "ダンジョンAPIが利用できません",
+              "caught": "捕まった！",
+              "caught_no_reward": "捕まってしまった！獲得EXPなし",
+              "escaped": "見事逃げ切った！",
+              "escape_success": "逃げ切り成功！"
+            }
           },
           "darumasan": {
             "name": "だるまさんがころんだ",

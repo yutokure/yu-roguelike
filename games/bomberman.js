@@ -3,6 +3,31 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'bomberman' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function') {
+        try { return new Intl.NumberFormat(undefined, options).format(value); } catch {}
+      }
+      if (value && typeof value.toLocaleString === 'function') {
+        try { return value.toLocaleString(); } catch {}
+      }
+      return String(value ?? '');
+    };
+    const detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => { try { draw(); } catch {} })
+      : null;
     const TILE = 36; // base tile px before scaling
     const layout = [
       '#############',
@@ -329,9 +354,16 @@
       ctx.fillStyle='#f8fafc';
       ctx.font=`bold ${12*scale}px system-ui, sans-serif`;
       ctx.textAlign='left';
-      ctx.fillText(`LIVES: ${Math.max(0,lives)}  SCORE: ${score}  ENEMIES: ${enemies.filter(e=>e.alive).length}`, 8*scale, 14*scale);
+      const aliveEnemies = enemies.filter(e=>e.alive).length;
+      const statusText = text('minigame.bomberman.hud.status', () => `LIVES: ${Math.max(0,lives)}  SCORE: ${score}  ENEMIES: ${aliveEnemies}`, {
+        lives: formatNumber(Math.max(0,lives)),
+        score: formatNumber(score),
+        enemies: formatNumber(aliveEnemies),
+      });
+      ctx.fillText(statusText, 8*scale, 14*scale);
       ctx.font=`${10*scale}px system-ui, sans-serif`;
-      ctx.fillText('操作: 矢印キーで移動 / SPACEで爆弾 / Rで再開', 8*scale, canvas.height-6*scale);
+      const controlsText = text('minigame.bomberman.hud.controls', '操作: 矢印キーで移動 / SPACEで爆弾 / Rで再開');
+      ctx.fillText(controlsText, 8*scale, canvas.height-6*scale);
 
       if(ended){
         ctx.fillStyle='rgba(15,23,42,0.6)';
@@ -339,9 +371,12 @@
         ctx.fillStyle='#f8fafc';
         ctx.textAlign='center';
         ctx.font=`bold ${20*scale}px system-ui, sans-serif`;
-        ctx.fillText(enemies.every(e=>!e.alive)?'ステージクリア!':'ゲームオーバー', canvas.width/2, canvas.height/2 - 10*scale);
+        const endTitle = enemies.every(e=>!e.alive)
+          ? text('minigame.bomberman.overlay.cleared', 'ステージクリア!')
+          : text('minigame.bomberman.overlay.gameOver', 'ゲームオーバー');
+        ctx.fillText(endTitle, canvas.width/2, canvas.height/2 - 10*scale);
         ctx.font=`${12*scale}px system-ui, sans-serif`;
-        ctx.fillText('Rで再スタート', canvas.width/2, canvas.height/2 + 10*scale);
+        ctx.fillText(text('minigame.bomberman.overlay.restartHint', 'Rで再スタート'), canvas.width/2, canvas.height/2 + 10*scale);
         ctx.textAlign='left';
       }
     }
@@ -359,7 +394,17 @@
 
     function start(){ if(running) return; running=true; disableHostRestart(); raf=requestAnimationFrame(loop); }
     function stop(opts={}){ if(!running) return; running=false; cancelAnimationFrame(raf); if(!opts.keepShortcutsDisabled) enableHostRestart(); }
-    function destroy(){ try{ stop(); document.removeEventListener('keydown', onKeyDown); document.removeEventListener('keyup', onKeyUp); canvas.remove(); }catch{} }
+    function destroy(){
+      try{
+        stop();
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+        canvas.remove();
+      }catch{}
+      finally {
+        try { detachLocale && detachLocale(); } catch {}
+      }
+    }
 
     function finishGame(){ if(!ended){ ended=true; enableHostRestart(); } running=false; }
 

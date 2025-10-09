@@ -54,6 +54,32 @@
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const cfg = { ...BASE_CFG, ...(DIFFICULTY_MODS[difficulty] || DIFFICULTY_MODS.NORMAL) };
 
+    const i18n = window.I18n;
+    function translate(key, fallback, params){
+      if (i18n && typeof i18n.t === 'function'){
+        try {
+          const result = i18n.t(key, params);
+          if (typeof result === 'string' && result !== key){
+            return result;
+          }
+        } catch (err) {
+          // ignore translation errors and fall back
+        }
+      }
+      if (typeof fallback === 'function'){
+        try {
+          return fallback();
+        } catch (err) {
+          return '';
+        }
+      }
+      return fallback ?? '';
+    }
+
+    function translateHud(key, fallback, params){
+      return translate(`miniexp.games.floor_descent.hud.${key}`, fallback, params);
+    }
+
     const container = document.createElement('div');
     container.style.position = 'relative';
     container.style.width = cfg.width + 'px';
@@ -515,7 +541,7 @@
       ctx.font = '16px "Segoe UI", sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      ctx.fillText(`LIFE`, 16, 16);
+      ctx.fillText(translateHud('life', 'LIFE'), 16, 16);
       for (let i = 0; i < 5; i++){
         const filled = i < state.lives;
         ctx.fillStyle = filled ? '#f87171' : '#64748b';
@@ -524,8 +550,16 @@
 
       ctx.textAlign = 'right';
       ctx.fillStyle = COLORS.hudText;
-      ctx.fillText(`Floor ${state.floor}`, cfg.width - 16, 16);
-      ctx.fillText(`Best ${state.bestFloor}`, cfg.width - 16, 36);
+      ctx.fillText(
+        translateHud('floor', () => `Floor ${state.floor}`, { floor: state.floor }),
+        cfg.width - 16,
+        16
+      );
+      ctx.fillText(
+        translateHud('best', () => `Best ${state.bestFloor}`, { floor: state.bestFloor }),
+        cfg.width - 16,
+        36
+      );
 
       // ceiling gauge
       const dist = Math.max(0, (player.y - player.h / 2) - state.ceilingY);
@@ -556,10 +590,22 @@
         ctx.fillStyle = '#f8fafc';
         ctx.textAlign = 'center';
         ctx.font = '28px "Segoe UI", sans-serif';
-        ctx.fillText('Game Over', cfg.width / 2, cfg.height / 2 - 40);
+        ctx.fillText(
+          translateHud('gameOver', 'Game Over'),
+          cfg.width / 2,
+          cfg.height / 2 - 40
+        );
         ctx.font = '18px "Segoe UI", sans-serif';
-        ctx.fillText(`Reached Floor ${state.floor}`, cfg.width / 2, cfg.height / 2);
-        ctx.fillText('Press Space to retry', cfg.width / 2, cfg.height / 2 + 40);
+        ctx.fillText(
+          translateHud('reachedFloor', () => `Reached Floor ${state.floor}`, { floor: state.floor }),
+          cfg.width / 2,
+          cfg.height / 2
+        );
+        ctx.fillText(
+          translateHud('retryHint', 'Press Space to retry'),
+          cfg.width / 2,
+          cfg.height / 2 + 40
+        );
       }
     }
 

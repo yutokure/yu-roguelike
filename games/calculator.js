@@ -5,7 +5,7 @@
   const HISTORY_LIMIT = 50;
   const BASE_DIGITS = '0123456789ABCDEFGHIJKLMNOPQRST';
   const PROGRAMMER_BASES = [2, 4, 6, 8, 10, 16, 24, 30];
-  const PROGRAMMER_BASE_LABELS = {
+  const PROGRAMMER_BASE_FALLBACK_NAMES = {
     2: '2進',
     4: '4進',
     6: '6進',
@@ -15,6 +15,57 @@
     24: '24進',
     30: '30進'
   };
+
+  const i18n = window.I18n;
+
+  function computeFallbackText(fallback){
+    if (typeof fallback === 'function') {
+      try {
+        const value = fallback();
+        return value == null ? '' : String(value);
+      } catch (error) {
+        console.warn('[calculator][i18n] Failed to evaluate fallback text', error);
+        return '';
+      }
+    }
+    return fallback == null ? '' : String(fallback);
+  }
+
+  function translateOrFallback(key, fallback, params){
+    if (i18n && typeof i18n.t === 'function' && key) {
+      try {
+        const translated = i18n.t(key, params);
+        if (typeof translated === 'string' && translated !== key) {
+          return translated;
+        }
+      } catch (error) {
+        console.warn('[calculator][i18n] Failed to translate key', key, error);
+      }
+    }
+    return computeFallbackText(fallback);
+  }
+
+  function t(key, fallback, params){
+    return translateOrFallback(`minigame.calculator.${key}`, fallback, params);
+  }
+
+  function getProgrammerBaseName(base){
+    return t(`programmer.baseNames.${base}`, () => PROGRAMMER_BASE_FALLBACK_NAMES[base] || `${base}進`, { base });
+  }
+
+  function formatProgrammerBaseLabel(base){
+    const baseName = getProgrammerBaseName(base);
+    return t('programmer.baseOption', () => `${baseName} (基数${base})`, { base, baseName });
+  }
+
+  function formatProgrammerBaseSuffix(base){
+    if (!base) return '';
+    return t('programmer.baseSuffix', () => ` (基数${base})`, { base });
+  }
+
+  function getErrorLabel(){
+    return t('error', 'エラー');
+  }
 
   function loadPersistentState(){
     try {
@@ -115,13 +166,13 @@
 
     const modeButtons = [];
     const modeDefs = [
-      { label: '標準', value: 'standard' },
-      { label: 'プログラマー', value: 'programmer' }
+      { labelKey: 'modes.standard', fallback: '標準', value: 'standard' },
+      { labelKey: 'modes.programmer', fallback: 'プログラマー', value: 'programmer' }
     ];
     modeDefs.forEach(def => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = def.label;
+      btn.textContent = t(def.labelKey, def.fallback);
       btn.style.borderRadius = '999px';
       btn.style.border = '1px solid rgba(148,163,184,0.25)';
       btn.style.padding = '6px 14px';
@@ -159,7 +210,7 @@
     PROGRAMMER_BASES.forEach(base => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = `${PROGRAMMER_BASE_LABELS[base]} (基数${base})`;
+      btn.textContent = formatProgrammerBaseLabel(base);
       btn.style.padding = '8px 12px';
       btn.style.borderRadius = '10px';
       btn.style.border = '1px solid rgba(96,165,250,0.4)';
@@ -227,7 +278,7 @@
       row.style.background = 'rgba(15,23,42,0.45)';
 
       const label = document.createElement('span');
-      label.textContent = `${PROGRAMMER_BASE_LABELS[base]} (基数${base})`;
+      label.textContent = formatProgrammerBaseLabel(base);
       label.style.fontSize = '11px';
       label.style.color = '#60a5fa';
       label.style.letterSpacing = '0.3px';
@@ -242,7 +293,7 @@
       row.appendChild(label);
       row.appendChild(value);
       conversionContainer.appendChild(row);
-      conversionItems.push({ base, valueEl: value });
+      conversionItems.push({ base, valueEl: value, labelEl: label });
     });
 
     programmerPanel.appendChild(baseSelector);
@@ -356,13 +407,13 @@
     historyHeader.style.justifyContent = 'space-between';
     historyHeader.style.alignItems = 'center';
     const historyTitle = document.createElement('span');
-    historyTitle.textContent = '履歴';
+    historyTitle.textContent = t('history.title', '履歴');
     historyTitle.style.color = '#cbd5f5';
     historyTitle.style.fontSize = '14px';
     historyTitle.style.fontWeight = '500';
     const historyClearBtn = document.createElement('button');
     historyClearBtn.type = 'button';
-    historyClearBtn.textContent = 'クリア';
+    historyClearBtn.textContent = t('history.clear', 'クリア');
     historyClearBtn.style.fontSize = '12px';
     historyClearBtn.style.padding = '4px 10px';
     historyClearBtn.style.borderRadius = '999px';
@@ -458,19 +509,25 @@
       });
       programmerPanel.style.display = isProgrammerMode() ? 'flex' : 'none';
       modeSummary.textContent = isProgrammerMode()
-        ? `プログラマーモード / 基数${programmerBase}`
-        : '標準モード (10進)';
+        ? t('modes.summary.programmer', () => `プログラマーモード / 基数${programmerBase}`, { base: programmerBase })
+        : t('modes.summary.standard', '標準モード (10進)', { base: 10 });
       updateBaseButtons();
     }
 
     function updateBaseButtons(){
       baseButtons.forEach(({ base, button }) => {
         const activeBase = base === programmerBase;
+        button.textContent = formatProgrammerBaseLabel(base);
         button.style.background = activeBase
           ? 'linear-gradient(135deg, rgba(96,165,250,0.35), rgba(14,116,144,0.55))'
           : 'rgba(15,23,42,0.5)';
         button.style.borderColor = activeBase ? 'rgba(96,165,250,0.7)' : 'rgba(96,165,250,0.4)';
         button.style.color = activeBase ? '#f8fafc' : '#cbd5f5';
+      });
+      conversionItems.forEach(item => {
+        if (item?.labelEl) {
+          item.labelEl.textContent = formatProgrammerBaseLabel(item.base);
+        }
       });
     }
 
@@ -931,7 +988,7 @@
     }
 
     function formatNumber(num){
-      if (!Number.isFinite(num)) return 'エラー';
+      if (!Number.isFinite(num)) return getErrorLabel();
       if (Math.abs(num) >= 1e12 || (Math.abs(num) > 0 && Math.abs(num) < 1e-6)) {
         return num.toExponential(6).replace(/e\+?/, 'e');
       }
@@ -1029,7 +1086,7 @@
     function showEvaluationError(){
       lastExpression = '';
       lastResult = 0;
-      current = 'エラー';
+      current = getErrorLabel();
       displayMode = 'result';
       tokens = [];
       updateDisplay();
@@ -1125,7 +1182,7 @@
         const empty = document.createElement('div');
         empty.style.fontSize = '12px';
         empty.style.color = 'rgba(148,163,184,0.65)';
-        empty.textContent = '履歴はありません。';
+        empty.textContent = t('history.empty', '履歴はありません。');
         historyList.appendChild(empty);
         return;
       }
@@ -1150,7 +1207,9 @@
         exprSpan.style.flex = '1';
         exprSpan.style.textAlign = 'left';
         const resultSpan = document.createElement('span');
-        const baseInfo = entry.mode === 'programmer' && entry.base ? ` (基数${entry.base})` : '';
+        const baseInfo = (entry.mode === 'programmer' && entry.base)
+          ? formatProgrammerBaseSuffix(entry.base)
+          : '';
         resultSpan.textContent = entry.result + baseInfo;
         resultSpan.style.color = '#94a3b8';
         resultSpan.style.whiteSpace = 'nowrap';
@@ -1186,15 +1245,23 @@
 
     function updateStatusBar(){
       if (memoryValue === null) {
-        memoryStatus.textContent = 'M: --';
+        memoryStatus.textContent = t('status.memoryEmpty', 'M: --');
       } else if (isProgrammerMode()) {
-        memoryStatus.textContent = `M: ${convertDecimalToBase(memoryValue, programmerBase)} (基数${programmerBase})`;
+        const valueText = convertDecimalToBase(memoryValue, programmerBase);
+        memoryStatus.textContent = t('status.memoryWithBase', () => `M: ${valueText} (基数${programmerBase})`, {
+          value: valueText,
+          base: programmerBase
+        });
       } else {
-        memoryStatus.textContent = `M: ${formatNumber(memoryValue)}`;
+        const valueText = formatNumber(memoryValue);
+        memoryStatus.textContent = t('status.memory', () => `M: ${valueText}`, { value: valueText });
       }
       historyStatus.textContent = isProgrammerMode()
-        ? `履歴: ${history.length} / 基数${programmerBase}`
-        : `履歴: ${history.length}`;
+        ? t('history.statusWithBase', () => `履歴: ${history.length} / 基数${programmerBase}`, {
+          count: history.length,
+          base: programmerBase
+        })
+        : t('history.status', () => `履歴: ${history.length}`, { count: history.length });
     }
 
     function awardDigitXp(){

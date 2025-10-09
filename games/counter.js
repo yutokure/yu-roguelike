@@ -43,42 +43,54 @@
     return `ctr_${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  function sanitizeCounter(raw, index = 0){
+  function resolveDefaultName(index, factory){
+    if (typeof factory === 'function'){
+      try {
+        const generated = factory(index);
+        const sanitized = sanitizeName(generated, '');
+        if (sanitized) return sanitized;
+      } catch {}
+    }
+    return `カウンター${index + 1}`;
+  }
+
+  function sanitizeCounter(raw, index = 0, defaultNameFactory){
+    const fallbackName = resolveDefaultName(index, defaultNameFactory);
     if (!raw || typeof raw !== 'object'){
       return {
         id: randomId(),
-        name: `カウンター${index + 1}`,
+        name: fallbackName,
         value: 0,
         step: 1
       };
     }
     const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id : randomId();
-    const name = sanitizeName(raw.name, `カウンター${index + 1}`) || `カウンター${index + 1}`;
+    const name = sanitizeName(raw.name, fallbackName) || fallbackName;
     const value = clampValue(safeNumber(raw.value, 0));
     const step = clampStep(raw.step);
     return { id, name, value, step };
   }
 
-  function loadPersistentState(){
+  function loadPersistentState(defaultNameFactory){
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return { counters: [] };
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object') return { counters: [] };
       const list = Array.isArray(parsed.counters) ? parsed.counters : [];
-      const counters = list.slice(0, MAX_COUNTERS).map(sanitizeCounter);
+      const counters = list.slice(0, MAX_COUNTERS).map((entry, index) => sanitizeCounter(entry, index, defaultNameFactory));
       return { counters };
     } catch {
       return { counters: [] };
     }
   }
 
-  function writePersistentState(state){
+  function writePersistentState(state, defaultNameFactory){
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         counters: state.counters.map((counter, index) => ({
           id: counter.id || randomId(),
-          name: sanitizeName(counter.name, `カウンター${index + 1}`) || `カウンター${index + 1}`,
+          name: sanitizeName(counter.name, resolveDefaultName(index, defaultNameFactory)) || resolveDefaultName(index, defaultNameFactory),
           value: clampValue(counter.value),
           step: clampStep(counter.step)
         }))
@@ -86,10 +98,89 @@
     } catch {}
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts){
     if (!root) throw new Error('MiniExp Counter requires a container');
 
-    const persisted = loadPersistentState();
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'counter_pad' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        try {
+          return localization.t(key, fallback, params);
+        } catch {}
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try {
+          return localization.formatNumber(value, options);
+        } catch {}
+      }
+      try {
+        const locale = localization && typeof localization.getLocale === 'function'
+          ? localization.getLocale()
+          : undefined;
+        return new Intl.NumberFormat(locale, options).format(value);
+      } catch {}
+      if (value == null || Number.isNaN(value)) return '0';
+      if (typeof value === 'number') return value.toString();
+      return String(value);
+    };
+    const formatTemplate = (template, params = {}) => {
+      const str = template == null ? '' : String(template);
+      if (!str) return '';
+      return str.replace(/\{([^{}]+)\}/g, (_, key) => {
+        const normalized = key.trim();
+        if (!normalized) return '';
+        const value = Object.prototype.hasOwnProperty.call(params, normalized) ? params[normalized] : '';
+        return value == null ? '' : String(value);
+      });
+    };
+
+    let labelCache = null;
+    let cachedLocale = null;
+    let detachLocale = null;
+    const refreshLabels = (force = false) => {
+      const localeId = localization && typeof localization.getLocale === 'function'
+        ? localization.getLocale()
+        : 'default';
+      if (!force && labelCache && cachedLocale === localeId) return labelCache;
+      cachedLocale = localeId;
+      labelCache = {
+        title: text('.title', 'カウンターパッド'),
+        subtitle: text('.subtitle', '複数のカウントを素早く管理。増減操作は自動保存されます。'),
+        defaultCounterTemplate: text('.defaults.counterName', 'カウンター{index}'),
+        newCounterFallback: text('.defaults.newCounter', '新しいカウンター'),
+        placeholders: {
+          name: text('.form.namePlaceholder', 'カウンター名'),
+          initialValue: text('.form.initialValuePlaceholder', '初期値 (0)'),
+          step: text('.form.stepPlaceholder', 'ステップ (1)')
+        },
+        addButton: text('.form.addButton', '追加'),
+        emptyState: text('.emptyState', 'まだカウンターがありません。上のフォームから追加してください。'),
+        summaryCount: text('.summary.count', 'カウンター {count}件'),
+        summaryTotal: text('.summary.total', '合計 {value}'),
+        summaryXp: text('.summary.sessionXp', 'セッションEXP {value}'),
+        deleteButton: text('.counter.delete', '削除'),
+        deleteConfirm: text('.counter.deleteConfirm', '{name} を削除しますか？'),
+        stepLabel: text('.counter.stepLabel', 'ステップ'),
+        resetButton: text('.counter.reset', 'リセット'),
+        limitReached: text('.alerts.limitReached', 'これ以上は追加できません (最大{max}件)')
+      };
+      return labelCache;
+    };
+
+    const defaultNameFactory = (index) => {
+      const labels = refreshLabels();
+      const template = labels.defaultCounterTemplate || 'カウンター{index}';
+      const formatted = formatTemplate(template, { index: formatNumber(index + 1) });
+      return sanitizeName(formatted, '') || `カウンター${index + 1}`;
+    };
+
+    const persisted = loadPersistentState(defaultNameFactory);
     const state = {
       counters: persisted.counters,
       sessionXp: 0,
@@ -251,11 +342,39 @@
 
     root.appendChild(wrapper);
 
+    const applyStaticTexts = () => {
+      const labels = refreshLabels();
+      title.textContent = labels.title;
+      subtitle.textContent = labels.subtitle;
+      nameInput.placeholder = labels.placeholders.name;
+      valueInput.placeholder = labels.placeholders.initialValue;
+      stepInput.placeholder = labels.placeholders.step;
+      addButton.textContent = labels.addButton;
+      emptyState.textContent = labels.emptyState;
+    };
+
+    applyStaticTexts();
+    updateSummary();
+
+    const handleLocaleChange = () => {
+      refreshLabels(true);
+      applyStaticTexts();
+      renderCounters();
+    };
+
+    if (localization && typeof localization.onChange === 'function'){
+      try {
+        detachLocale = localization.onChange(handleLocaleChange);
+      } catch (error) {
+        console.warn('[MiniExp] Counter localization listener error:', error);
+      }
+    }
+
     function persistSoon(){
       if (persistTimer) return;
       persistTimer = setTimeout(() => {
         persistTimer = null;
-        writePersistentState(state);
+        writePersistentState(state, defaultNameFactory);
       }, 250);
     }
 
@@ -275,10 +394,11 @@
     }
 
     function updateSummary(){
+      const labels = refreshLabels();
       const total = state.counters.reduce((sum, counter) => sum + counter.value, 0);
-      chipCount.textContent = `カウンター ${state.counters.length}件`;
-      chipSum.textContent = `合計 ${total}`;
-      chipXp.textContent = `セッションEXP ${Math.round(state.sessionXp)}`;
+      chipCount.textContent = formatTemplate(labels.summaryCount, { count: formatNumber(state.counters.length) });
+      chipSum.textContent = formatTemplate(labels.summaryTotal, { value: formatNumber(total) });
+      chipXp.textContent = formatTemplate(labels.summaryXp, { value: formatNumber(Math.round(state.sessionXp)) });
     }
 
     function createActionButton(label){
@@ -360,13 +480,15 @@
     }
 
     function renderCounters(){
+      const labels = refreshLabels();
       listContainer.innerHTML = '';
       if (!state.counters.length){
+        emptyState.textContent = labels.emptyState;
         listContainer.appendChild(emptyState);
         updateSummary();
         return;
       }
-      state.counters.forEach(counter => {
+      state.counters.forEach((counter, index) => {
         const card = document.createElement('div');
         card.style.display = 'flex';
         card.style.flexDirection = 'column';
@@ -397,11 +519,14 @@
           updateCounterMeta(counter.id, { name: nameField.value });
         });
 
-        const deleteBtn = createActionButton('削除');
+        const deleteBtn = createActionButton(labels.deleteButton);
         deleteBtn.style.background = 'rgba(239,68,68,0.2)';
         deleteBtn.style.borderColor = 'rgba(248,113,113,0.5)';
         deleteBtn.addEventListener('click', () => {
-          if (confirm(`${counter.name} を削除しますか？`)){
+          const confirmMessage = formatTemplate(labels.deleteConfirm, {
+            name: counter.name || defaultNameFactory(index)
+          });
+          if (!confirmMessage || confirm(confirmMessage)){
             removeCounter(counter.id);
           }
         });
@@ -416,7 +541,7 @@
         valueDisplay.style.gap = '12px';
 
         const valueLabel = document.createElement('div');
-        valueLabel.textContent = counter.value;
+        valueLabel.textContent = formatNumber(counter.value);
         valueLabel.style.fontSize = '40px';
         valueLabel.style.fontWeight = '700';
         valueLabel.style.letterSpacing = '0.04em';
@@ -443,10 +568,10 @@
         controls.style.gridTemplateColumns = 'repeat(4, minmax(0,1fr))';
         controls.style.gap = '10px';
 
-        const minusBig = createActionButton(`-${counter.step * 5}`);
-        const minus = createActionButton(`-${counter.step}`);
-        const plus = createActionButton(`+${counter.step}`);
-        const plusBig = createActionButton(`+${counter.step * 5}`);
+        const minusBig = createActionButton(`-${formatNumber(counter.step * 5)}`);
+        const minus = createActionButton(`-${formatNumber(counter.step)}`);
+        const plus = createActionButton(`+${formatNumber(counter.step)}`);
+        const plusBig = createActionButton(`+${formatNumber(counter.step * 5)}`);
 
         minusBig.addEventListener('click', () => adjustCounter(counter.id, -counter.step * 5));
         minus.addEventListener('click', () => adjustCounter(counter.id, -counter.step));
@@ -465,7 +590,7 @@
         footer.style.flexWrap = 'wrap';
 
         const stepLabel = document.createElement('label');
-        stepLabel.textContent = 'ステップ';
+        stepLabel.textContent = labels.stepLabel;
         stepLabel.style.fontSize = '13px';
         stepLabel.style.opacity = '0.85';
 
@@ -484,7 +609,7 @@
           updateCounterMeta(counter.id, { step: stepField.value });
         });
 
-        const resetBtn = createActionButton('リセット');
+        const resetBtn = createActionButton(labels.resetButton);
         resetBtn.style.background = 'rgba(14,165,233,0.22)';
         resetBtn.style.borderColor = 'rgba(125,211,252,0.5)';
         resetBtn.addEventListener('click', () => {
@@ -507,11 +632,14 @@
 
     formCard.addEventListener('submit', (ev) => {
       ev.preventDefault();
+      const labels = refreshLabels();
       if (state.counters.length >= MAX_COUNTERS){
-        alert(`これ以上は追加できません (最大${MAX_COUNTERS}件)`);
+        alert(formatTemplate(labels.limitReached, { max: formatNumber(MAX_COUNTERS) }));
         return;
       }
-      const name = sanitizeName(nameInput.value, '新しいカウンター') || `カウンター${state.counters.length + 1}`;
+      const defaultName = defaultNameFactory(state.counters.length);
+      const fallbackName = sanitizeName(labels.newCounterFallback, '') || defaultName;
+      const name = sanitizeName(nameInput.value, fallbackName) || defaultName;
       const value = clampValue(safeNumber(valueInput.value, 0));
       const step = clampStep(stepInput.value);
       state.counters.push({ id: randomId(), name, value, step });
@@ -528,7 +656,6 @@
       if (isRunning) return;
       isRunning = true;
       renderCounters();
-      updateSummary();
       setTimeout(() => { try { nameInput.focus(); } catch {} }, 0);
     }
 
@@ -539,11 +666,15 @@
         clearTimeout(persistTimer);
         persistTimer = null;
       }
-      writePersistentState(state);
+      writePersistentState(state, defaultNameFactory);
     }
 
     function destroy(){
       stop();
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       try {
         if (root.contains(wrapper)) root.removeChild(wrapper);
       } catch {}

@@ -8,6 +8,54 @@
   const CANVAS_SIZE = MAP_SIZE * TILE_SIZE;
   const LEVEL_CAP = 3;
 
+  const I18N = window.I18n;
+
+  function translateText(key, fallback, params){
+    const computeFallback = () => {
+      if (typeof fallback === 'function'){
+        try {
+          const result = fallback();
+          return typeof result === 'string' ? result : (result ?? '');
+        } catch (error){
+          console.warn('[Populite] Failed to evaluate fallback for', key, error);
+          return '';
+        }
+      }
+      return fallback ?? '';
+    };
+    if (!I18N || typeof I18N.t !== 'function') return computeFallback();
+    try {
+      const translated = I18N.t(key, params);
+      if (typeof translated === 'string' && translated !== key){
+        return translated;
+      }
+    } catch (error){
+      console.warn('[Populite] Failed to translate key:', key, error);
+    }
+    return computeFallback();
+  }
+
+  function formatNumberLocalized(value, options){
+    if (typeof I18N?.formatNumber === 'function'){
+      try {
+        return I18N.formatNumber(value, options);
+      } catch (error){
+        console.warn('[Populite] Failed to format number via i18n:', error);
+      }
+    }
+    try {
+      const locale = I18N?.getLocale?.();
+      return new Intl.NumberFormat(locale || undefined, options).format(value);
+    } catch (error){
+      console.warn('[Populite] Failed to format number:', error);
+      return String(value ?? '');
+    }
+  }
+
+  function translatePopulite(path, fallback, params){
+    return translateText(`minigame.populite.${path}`, fallback, params);
+  }
+
   const DIFFICULTY_CONFIG = {
     EASY: {
       duration: 210,
@@ -99,7 +147,7 @@
     container.className = 'populite-mod';
 
     const title = document.createElement('h2');
-    title.textContent = 'ポピュラス風 ミニ神様モード';
+    title.textContent = translatePopulite('title', 'ポピュラス風 ミニ神様モード');
 
     const hud = document.createElement('div');
     hud.className = 'hud';
@@ -110,11 +158,11 @@
     const statusBox = document.createElement('div');
     statusBox.className = 'stat-box';
     const statusTitle = document.createElement('h3');
-    statusTitle.textContent = '信仰状態';
+    statusTitle.textContent = translatePopulite('hud.faithStatus', '信仰状態');
     const timeLine = document.createElement('div');
     timeLine.className = 'stat-line';
     const timeLabel = document.createElement('span');
-    timeLabel.textContent = '残り時間';
+    timeLabel.textContent = translatePopulite('hud.timeRemaining', '残り時間');
     const timeValue = document.createElement('span');
     timeValue.textContent = '--:--';
     timeLine.appendChild(timeLabel);
@@ -123,7 +171,7 @@
     const manaLine = document.createElement('div');
     manaLine.className = 'stat-line';
     const manaLabel = document.createElement('span');
-    manaLabel.textContent = 'マナ';
+    manaLabel.textContent = translatePopulite('hud.mana', 'マナ');
     const manaValue = document.createElement('span');
     manaValue.textContent = '0 / 0';
     manaLine.appendChild(manaLabel);
@@ -137,7 +185,7 @@
     const popLine = document.createElement('div');
     popLine.className = 'stat-line';
     const popLabel = document.createElement('span');
-    popLabel.textContent = '人口';
+    popLabel.textContent = translatePopulite('hud.population', '人口');
     const popValue = document.createElement('span');
     popValue.textContent = '0 / 0';
     popLine.appendChild(popLabel);
@@ -151,11 +199,11 @@
     const disasterBox = document.createElement('div');
     disasterBox.className = 'stat-box disaster-box';
     const disasterTitle = document.createElement('h3');
-    disasterTitle.textContent = '災害タイマー';
+    disasterTitle.textContent = translatePopulite('hud.disasterTimer', '災害タイマー');
     const disasterLine = document.createElement('div');
     disasterLine.className = 'stat-line';
     const disasterLabel = document.createElement('span');
-    disasterLabel.textContent = '次の災害';
+    disasterLabel.textContent = translatePopulite('hud.nextDisaster', '次の災害');
     const disasterTimerValue = document.createElement('span');
     disasterTimerValue.textContent = '--';
     disasterLine.appendChild(disasterLabel);
@@ -163,7 +211,7 @@
     const bestTimeLine = document.createElement('div');
     bestTimeLine.className = 'stat-line';
     const bestLabel = document.createElement('span');
-    bestLabel.textContent = '最速達成';
+    bestLabel.textContent = translatePopulite('hud.bestRecord', '最速達成');
     const bestValue = document.createElement('span');
     bestValue.textContent = '--';
     bestTimeLine.appendChild(bestLabel);
@@ -185,21 +233,21 @@
     const controlBox = document.createElement('div');
     controlBox.className = 'stat-box';
     const controlTitle = document.createElement('h3');
-    controlTitle.textContent = '操作と魔法';
+    controlTitle.textContent = translatePopulite('controls.title', '操作と魔法');
     const controlInfo = document.createElement('div');
     controlInfo.className = 'controls';
-    controlInfo.innerHTML = `
+    controlInfo.innerHTML = translatePopulite('controls.instructions', `
       左ドラッグ: 整地（Shiftで掘削） / 右クリック: 祈りで信者を招く<br>
       スペース: 一時停止 / 数字キー1:守護 2:隆起 3:浄化雨
-    `;
+    `);
     const spellButtons = document.createElement('div');
     spellButtons.className = 'spell-buttons';
     const spellGuard = document.createElement('button');
-    spellGuard.textContent = '1) 守護バリア (30)';
+    spellGuard.textContent = translatePopulite('spells.barrier', () => `1) 守護バリア (30)`, { cost: 30 });
     const spellUplift = document.createElement('button');
-    spellUplift.textContent = '2) 隆起 (40)';
+    spellUplift.textContent = translatePopulite('spells.uplift', () => `2) 隆起 (40)`, { cost: 40 });
     const spellPurify = document.createElement('button');
-    spellPurify.textContent = '3) 浄化雨 (50)';
+    spellPurify.textContent = translatePopulite('spells.purify', () => `3) 浄化雨 (50)`, { cost: 50 });
     spellButtons.appendChild(spellGuard);
     spellButtons.appendChild(spellUplift);
     spellButtons.appendChild(spellPurify);
@@ -212,7 +260,7 @@
     const logBox = document.createElement('div');
     logBox.className = 'stat-box';
     const logTitle = document.createElement('h3');
-    logTitle.textContent = '出来事ログ';
+    logTitle.textContent = translatePopulite('log.title', '出来事ログ');
     const logContainer = document.createElement('div');
     logContainer.className = 'log';
     logContainer.innerHTML = '---';
@@ -228,7 +276,7 @@
     canvas.height = CANVAS_SIZE;
     const pauseOverlay = document.createElement('div');
     pauseOverlay.className = 'paused-overlay';
-    pauseOverlay.textContent = '一時停止中';
+    pauseOverlay.textContent = translatePopulite('hud.paused', '一時停止中');
     pauseOverlay.style.display = 'none';
     canvasWrapper.appendChild(canvas);
     canvasWrapper.appendChild(pauseOverlay);
@@ -326,7 +374,7 @@
     function adjustTile(x, y, delta){
       const cost = cfg.flattenCost;
       if (state.mana < cost){
-        updateStatusMessage('マナが不足しています…');
+        updateStatusMessage(translatePopulite('status.manaShort', 'マナが不足しています…'));
         return false;
       }
       const before = getTileHeight(x, y);
@@ -412,7 +460,8 @@
             shielded: false,
             lastLevel: level
           };
-          logEvent(`新しい集落が誕生 (${sx},${sy}) 高さ${level}`);
+          const levelLabel = formatNumberLocalized(level);
+          logEvent(translatePopulite('log.newSettlement', () => `新しい集落が誕生 (${sx},${sy}) 高さ${levelLabel}`, { x: sx, y: sy, level: levelLabel }));
           awardXp(1, { type:'settlement', level });
         } else {
           settlement.level = level;
@@ -421,7 +470,8 @@
           const reward = settlement.level === 1 ? 1 : settlement.level === 2 ? 2 : 3;
           awardXp(reward, { type:'build', level: settlement.level });
           settlement.buildAwarded = settlement.level;
-          showPopup((settlement.x + 1.5) * TILE_SIZE, (settlement.y + 1.5) * TILE_SIZE, `建築Lv${settlement.level}`, { variant:'bonus' });
+          const levelLabel = formatNumberLocalized(settlement.level);
+          showPopup((settlement.x + 1.5) * TILE_SIZE, (settlement.y + 1.5) * TILE_SIZE, translatePopulite('popup.buildingLevel', () => `建築Lv${levelLabel}`, { level: levelLabel }), { variant:'bonus' });
         }
         settlement.lastLevel = settlement.level;
         updated.push(settlement);
@@ -443,7 +493,8 @@
       while (state.population >= state.populationMilestone + 10){
         state.populationMilestone += 10;
         awardXp(5, { type:'population_milestone', value: state.populationMilestone });
-        logEvent(`人口が${state.populationMilestone}人を突破！`);
+        const milestoneLabel = formatNumberLocalized(state.populationMilestone);
+        logEvent(translatePopulite('log.populationMilestone', () => `人口が${milestoneLabel}人を突破！`, { population: milestoneLabel }));
       }
     }
 
@@ -496,7 +547,8 @@
             s.population += gain;
             s.progress -= gain;
             awardXp(0.5 * gain, { type:'growth', level: s.level });
-            showPopup((s.x + 1.5) * TILE_SIZE, (s.y + 1.5) * TILE_SIZE, `+${gain}信者`, { variant:'combo' });
+            const gainLabel = formatNumberLocalized(gain);
+            showPopup((s.x + 1.5) * TILE_SIZE, (s.y + 1.5) * TILE_SIZE, translatePopulite('popup.populationGain', () => `+${gainLabel}信者`, { value: gainLabel, count: gain }), { variant:'combo' });
           } else {
             s.progress = Math.min(s.progress, 1);
           }
@@ -508,19 +560,19 @@
 
     function triggerPrayer(){
       if (state.prayerCooldown > 0){
-        updateStatusMessage('祈りはまだ冷却中です…');
+        updateStatusMessage(translatePopulite('status.prayerCooldown', '祈りはまだ冷却中です…'));
         return;
       }
       const cost = 10;
       if (state.mana < cost){
-        updateStatusMessage('マナが不足しています…');
+        updateStatusMessage(translatePopulite('status.manaShort', 'マナが不足しています…'));
         return;
       }
       state.mana -= cost;
       state.followersQueue += 10;
       state.prayerCooldown = 8;
       awardXp(3, { type:'prayer' });
-      logEvent('祈りの力で信者が集まり始めた！');
+      logEvent(translatePopulite('log.prayerStarted', '祈りの力で信者が集まり始めた！'));
     }
 
     function updateCooldowns(dt){
@@ -535,7 +587,7 @@
     function triggerDisaster(){
       const type = Math.random() < 0.5 ? 'tsunami' : 'volcano';
       if (type === 'tsunami'){
-        logEvent('🌊 津波が低地を襲います！');
+        logEvent(translatePopulite('log.tsunami', '🌊 津波が低地を襲います！'));
         const affected = [];
         for (let y = 0; y < MAP_SIZE; y++){
           for (let x = 0; x < MAP_SIZE; x++){
@@ -567,7 +619,7 @@
         }
         handleDisasterDamage(affected, { range: radius, type });
         state.disasters.push({ type, cx, cy, time: 0, duration: 5 });
-        logEvent(`🌋 火山が噴火！ (${cx},${cy})`);
+        logEvent(translatePopulite('log.volcano', () => `🌋 火山が噴火！ (${cx},${cy})`, { x: cx, y: cy }));
       }
       recomputeSettlements();
       state.disasterTimer = cfg.disasterInterval;
@@ -587,7 +639,7 @@
         }
         if (!hit) continue;
         if (s.barrierUntil && s.barrierUntil > now){
-          showPopup((s.x + 1.5) * TILE_SIZE, (s.y + 1.5) * TILE_SIZE, 'バリアが防いだ！', { variant:'shield' });
+          showPopup((s.x + 1.5) * TILE_SIZE, (s.y + 1.5) * TILE_SIZE, translatePopulite('popup.barrierBlocked', 'バリアが防いだ！'), { variant:'shield' });
           continue;
         }
         const lossRatio = opts.type === 'tsunami' ? 0.4 : 0.3 + opts.range * 0.05;
@@ -596,9 +648,10 @@
         s.progress = 0;
         s.lastDamage = now;
         if (s.population === 0){
-          logEvent(`集落(${s.x},${s.y})が壊滅してしまった…`);
+          logEvent(translatePopulite('log.settlementDestroyed', () => `集落(${s.x},${s.y})が壊滅してしまった…`, { x: s.x, y: s.y }));
         } else {
-          logEvent(`集落(${s.x},${s.y})が${lost}人の被害`);
+          const lostLabel = formatNumberLocalized(lost);
+          logEvent(translatePopulite('log.settlementDamaged', () => `集落(${s.x},${s.y})が${lostLabel}人の被害`, { x: s.x, y: s.y, lost: lostLabel }));
         }
         state.population = Math.max(0, state.population - lost);
       }
@@ -612,20 +665,20 @@
 
     function castBarrier(){
       const cost = 30;
-      if (state.mana < cost){ updateStatusMessage('マナが不足しています…'); return; }
-      if (state.settlements.length === 0){ updateStatusMessage('守るべき集落がありません'); return; }
+      if (state.mana < cost){ updateStatusMessage(translatePopulite('status.manaShort', 'マナが不足しています…')); return; }
+      if (state.settlements.length === 0){ updateStatusMessage(translatePopulite('status.noSettlements', '守るべき集落がありません')); return; }
       const target = state.settlements.reduce((best, cur) => (cur.population > (best?.population || -1) ? cur : best), null);
       if (!target) return;
       state.mana -= cost;
       const now = performance.now();
       target.barrierUntil = now + 10000;
-      logEvent(`守護バリアが集落(${target.x},${target.y})を包み込む`);
+      logEvent(translatePopulite('log.barrierCast', () => `守護バリアが集落(${target.x},${target.y})を包み込む`, { x: target.x, y: target.y }));
       awardXp(5, { type:'spell', spell:'barrier' });
     }
 
     function castUplift(){
       const cost = 40;
-      if (state.mana < cost){ updateStatusMessage('マナが不足しています…'); return; }
+      if (state.mana < cost){ updateStatusMessage(translatePopulite('status.manaShort', 'マナが不足しています…')); return; }
       state.mana -= cost;
       const cx = 2 + Math.floor(Math.random() * (MAP_SIZE - 4));
       const cy = 2 + Math.floor(Math.random() * (MAP_SIZE - 4));
@@ -641,16 +694,18 @@
       }
       recomputeSettlements();
       awardXp(6, { type:'spell', spell:'uplift' });
-      logEvent(`大地が隆起し安全な高地が生まれた (${cx-1},${cy-1})`);
+      const originX = cx - 1;
+      const originY = cy - 1;
+      logEvent(translatePopulite('log.upliftCast', () => `大地が隆起し安全な高地が生まれた (${originX},${originY})`, { x: originX, y: originY }));
     }
 
     function castPurify(){
       const cost = 50;
-      if (state.mana < cost){ updateStatusMessage('マナが不足しています…'); return; }
+      if (state.mana < cost){ updateStatusMessage(translatePopulite('status.manaShort', 'マナが不足しています…')); return; }
       state.mana -= cost;
       state.disasterTimer = cfg.disasterInterval;
       awardXp(8, { type:'spell', spell:'purify' });
-      logEvent('浄化の雨で災害の兆候が洗い流された');
+      logEvent(translatePopulite('log.purifyCast', '浄化の雨で災害の兆候が洗い流された'));
     }
 
     function endGame(reason){
@@ -659,11 +714,11 @@
       state.reason = reason;
       let message = '';
       if (reason === 'victory'){
-        message = '人口目標を達成しました！';
+        message = translatePopulite('status.victory', '人口目標を達成しました！');
       } else if (reason === 'population'){
-        message = '信者がいなくなってしまった…';
+        message = translatePopulite('status.defeatPopulation', '信者がいなくなってしまった…');
       } else {
-        message = '時間切れです…';
+        message = translatePopulite('status.timeout', '時間切れです…');
       }
       updateStatusMessage(message, 6);
       pauseOverlay.style.display = 'none';
@@ -678,7 +733,7 @@
           try {
             const result = opts.player.awardItems({ holyShard: 1 });
             if (result === 0){
-              logEvent('インベントリに空きがなく聖なる欠片は見送られた…');
+              logEvent(translatePopulite('log.inventoryFull', 'インベントリに空きがなく聖なる欠片は見送られた…'));
             }
           } catch (err){
             console.error(err);
@@ -689,11 +744,12 @@
           if (!state.bestTime || elapsed < state.bestTime){
             localStorage.setItem('mini_populite_bestTime', String(elapsed));
             state.bestTime = elapsed;
-            logEvent(`最速記録を更新！ ${elapsed.toFixed(1)}秒`);
+            const elapsedLabel = formatNumberLocalized(elapsed, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            logEvent(translatePopulite('log.bestRecord', () => `最速記録を更新！ ${elapsedLabel}秒`, { time: elapsedLabel }));
           }
         } catch {}
       }
-      logEvent(`▶ 結果: ${message}`);
+      logEvent(translatePopulite('log.result', () => `▶ 結果: ${message}`, { message }));
       renderHUD();
     }
 
@@ -805,16 +861,27 @@
 
     function renderHUD(){
       timeValue.textContent = formatTime(state.timeLeft);
-      manaValue.textContent = `${Math.round(state.mana)} / ${state.manaMax}`;
+      const manaCurrent = formatNumberLocalized(Math.round(state.mana));
+      const manaMax = formatNumberLocalized(state.manaMax);
+      manaValue.textContent = translatePopulite('hud.manaValue', () => `${manaCurrent} / ${manaMax}`, { current: manaCurrent, max: manaMax });
       const manaRatio = Math.min(1, state.mana / state.manaMax);
       manaBarFill.style.width = `${Math.max(4, manaRatio * 100)}%`;
-      popValue.textContent = `${state.population} / ${state.target}`;
+      const popCurrent = formatNumberLocalized(state.population);
+      const popTarget = formatNumberLocalized(state.target);
+      popValue.textContent = translatePopulite('hud.populationValue', () => `${popCurrent} / ${popTarget}`, { current: popCurrent, target: popTarget });
       popBarFill.style.width = `${Math.min(100, (state.population / state.target) * 100)}%`;
-      disasterTimerValue.textContent = `${Math.ceil(state.disasterTimer)} 秒`;
+      const nextDisaster = Math.max(0, Math.ceil(state.disasterTimer));
+      const nextDisasterLabel = formatNumberLocalized(nextDisaster);
+      disasterTimerValue.textContent = translatePopulite('hud.disasterCountdown', () => `${nextDisasterLabel} 秒`, { value: nextDisasterLabel, seconds: nextDisaster });
       spellGuard.disabled = state.mana < 30;
       spellUplift.disabled = state.mana < 40;
       spellPurify.disabled = state.mana < 50;
-      bestValue.textContent = state.bestTime ? `${state.bestTime.toFixed(1)}秒` : '--';
+      if (state.bestTime){
+        const bestLabel = formatNumberLocalized(state.bestTime, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        bestValue.textContent = translatePopulite('hud.bestTimeValue', () => `${bestLabel}秒`, { value: bestLabel });
+      } else {
+        bestValue.textContent = '--';
+      }
     }
 
     let raf = 0;
@@ -861,10 +928,10 @@
       state.paused = !state.paused;
       if (state.paused){
         pauseOverlay.style.display = 'flex';
-        updateStatusMessage('一時停止中');
+        updateStatusMessage(translatePopulite('status.paused', '一時停止中'));
       } else {
         pauseOverlay.style.display = 'none';
-        updateStatusMessage('再開');
+        updateStatusMessage(translatePopulite('status.resumed', '再開'));
       }
     }
 
@@ -942,8 +1009,17 @@
     resetTiles();
     draw();
     renderHUD();
-    logEvent(`難易度: ${difficulty}`);
-    logEvent(`人口目標 ${state.target} / 制限時間 ${cfg.duration}秒`);
+    let difficultyLabel = difficulty;
+    if (typeof difficulty === 'string'){
+      const difficultyKey = `selection.miniexp.difficulty.${difficulty.toLowerCase?.()}`;
+      if (difficultyKey){
+        difficultyLabel = translateText(difficultyKey, difficulty);
+      }
+    }
+    logEvent(translatePopulite('log.difficulty', () => `難易度: ${difficultyLabel}`, { difficulty: difficultyLabel }));
+    const targetLabel = formatNumberLocalized(state.target);
+    const durationLabel = formatNumberLocalized(cfg.duration);
+    logEvent(translatePopulite('log.goal', () => `人口目標 ${targetLabel} / 制限時間 ${durationLabel}秒`, { target: targetLabel, duration: durationLabel }));
 
     start();
 

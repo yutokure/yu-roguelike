@@ -3,7 +3,7 @@
    *  - First win Rock-Paper-Scissors, then point/avoid directions
    *  - Player attack win: +15 EXP, successful dodge as defender: +5 EXP
    */
-  function create(root, awardXp){
+  function create(root, awardXp, options = {}){
     function createCard(){
       const card = document.createElement('div');
       card.style.background = 'rgba(2,6,23,0.92)';
@@ -27,15 +27,12 @@
     const stageTitle = document.createElement('div');
     stageTitle.style.fontSize = '1.2rem';
     stageTitle.style.fontWeight = '600';
-    stageTitle.textContent = 'じゃんけんで攻守を決めよう';
     const statusLabel = document.createElement('div');
     statusLabel.style.fontSize = '0.95rem';
-    statusLabel.textContent = '手を選んでミニゲーム開始！';
     const countdownLabel = document.createElement('div');
     countdownLabel.style.fontSize = '0.85rem';
     countdownLabel.style.opacity = '0.85';
     countdownLabel.style.color = '#cbd5f5';
-    countdownLabel.textContent = '残り --.- 秒';
     flowCard.appendChild(stageTitle);
     flowCard.appendChild(statusLabel);
     flowCard.appendChild(countdownLabel);
@@ -44,14 +41,12 @@
     const rpsTitle = document.createElement('div');
     rpsTitle.style.fontSize = '0.95rem';
     rpsTitle.style.opacity = '0.75';
-    rpsTitle.textContent = '1. じゃんけんで攻守決定';
     const rpsRow = document.createElement('div');
     rpsRow.style.display = 'flex';
     rpsRow.style.gap = '10px';
     const rpsHint = document.createElement('div');
     rpsHint.style.fontSize = '0.8rem';
     rpsHint.style.opacity = '0.7';
-    rpsHint.textContent = '勝ったら攻め、負けたら防御';
     rpsCard.appendChild(rpsTitle);
     rpsCard.appendChild(rpsRow);
     rpsCard.appendChild(rpsHint);
@@ -61,7 +56,6 @@
     const directionTitle = document.createElement('div');
     directionTitle.style.fontSize = '0.95rem';
     directionTitle.style.opacity = '0.75';
-    directionTitle.textContent = '2. あっち向いてホイ';
     const directionRow = document.createElement('div');
     directionRow.style.display = 'grid';
     directionRow.style.gridTemplateColumns = 'repeat(3, 72px)';
@@ -70,7 +64,6 @@
     const directionHint = document.createElement('div');
     directionHint.style.fontSize = '0.8rem';
     directionHint.style.opacity = '0.7';
-    directionHint.textContent = '制限時間 1.8 秒以内に方向を選択';
     directionCard.appendChild(directionTitle);
     directionCard.appendChild(directionRow);
     directionCard.appendChild(directionHint);
@@ -92,7 +85,6 @@
     const logTitle = document.createElement('div');
     logTitle.style.fontSize = '0.9rem';
     logTitle.style.opacity = '0.75';
-    logTitle.textContent = '戦況ログ';
     const logList = document.createElement('ul');
     logList.style.listStyle = 'none';
     logList.style.margin = '0';
@@ -112,6 +104,108 @@
     root.appendChild(wrapper);
 
     const directionLimit = 1.8;
+    const localization = options?.localization || null;
+    const cleanupCallbacks = [];
+    const logEntries = [];
+
+    const evaluateFallback = (fallback) => {
+      if (typeof fallback === 'function') {
+        try {
+          return fallback();
+        } catch (error) {
+          console.warn('[MiniExp][acchimuitehoi] Failed to evaluate fallback text', error);
+          return '';
+        }
+      }
+      return fallback ?? '';
+    };
+
+    const resolveParams = (params) => {
+      if (typeof params === 'function') {
+        try {
+          return params();
+        } catch (error) {
+          console.warn('[MiniExp][acchimuitehoi] Failed to resolve params', error);
+          return undefined;
+        }
+      }
+      return params;
+    };
+
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try {
+          return localization.formatNumber(value, options);
+        } catch (error) {
+          console.warn('[MiniExp][acchimuitehoi] Failed to format number', error);
+        }
+      }
+      if (typeof value === 'number') {
+        try {
+          return new Intl.NumberFormat(undefined, options).format(value);
+        } catch {}
+        return String(value);
+      }
+      return String(value ?? '');
+    };
+
+    function t(key, fallback, params){
+      const resolvedParams = resolveParams(params);
+      if (localization && typeof localization.t === 'function') {
+        try {
+          return localization.t(key, fallback, resolvedParams);
+        } catch (error) {
+          console.warn('[MiniExp][acchimuitehoi] Failed to translate key:', key, error);
+        }
+      }
+      return evaluateFallback(fallback);
+    }
+
+    const stageTitleState = { key: 'ui.stage.rps', fallback: 'じゃんけんで攻守を決めよう', params: null };
+    const statusState = { key: 'status.ready', fallback: '手を選んでミニゲーム開始！', params: null };
+
+    function applyStageTitle(){
+      stageTitle.textContent = t(stageTitleState.key, stageTitleState.fallback, stageTitleState.params);
+    }
+
+    function setStageTitle(key, fallback, params){
+      stageTitleState.key = key;
+      stageTitleState.fallback = fallback;
+      stageTitleState.params = params || null;
+      applyStageTitle();
+    }
+
+    function applyStatus(){
+      statusLabel.textContent = t(statusState.key, statusState.fallback, statusState.params);
+    }
+
+    function setStatus(key, fallback, params){
+      statusState.key = key;
+      statusState.fallback = fallback;
+      statusState.params = params || null;
+      applyStatus();
+    }
+
+    function setCountdownIdle(){
+      countdownLabel.textContent = t('countdown.idle', '残り --.- 秒');
+      countdownLabel.style.color = '#cbd5f5';
+    }
+
+    function updateInstructionTexts(){
+      rpsTitle.textContent = t('instructions.rpsTitle', '1. じゃんけんで攻守決定');
+      rpsHint.textContent = t('instructions.rpsHint', '勝ったら攻め、負けたら防御');
+      directionTitle.textContent = t('instructions.directionTitle', '2. あっち向いてホイ');
+      const limitLabel = () => formatNumber(directionLimit, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      directionHint.textContent = t('instructions.directionHint', () => `制限時間 ${limitLabel()} 秒以内に方向を選択`, () => ({ seconds: limitLabel() }));
+      logTitle.textContent = t('instructions.logTitle', '戦況ログ');
+    }
+
+    function updateRpsButtonLabels(){
+      buttons.rock.textContent = getHandLabel('rock');
+      buttons.scissors.textContent = getHandLabel('scissors');
+      buttons.paper.textContent = getHandLabel('paper');
+    }
+
     let state = 'rps';
     let attacker = null; // 'player' | 'cpu'
     let playerWins = 0;
@@ -126,9 +220,9 @@
     let directionDeadline = 0;
 
     const buttons = {
-      rock: createButton('グー'),
-      scissors: createButton('チョキ'),
-      paper: createButton('パー')
+      rock: createButton(''),
+      scissors: createButton(''),
+      paper: createButton('')
     };
     rpsRow.appendChild(buttons.rock);
     rpsRow.appendChild(buttons.scissors);
@@ -160,8 +254,27 @@
     dirButtons.left.addEventListener('click', () => handleDirectionInput('left'));
     dirButtons.right.addEventListener('click', () => handleDirectionInput('right'));
 
+    updateInstructionTexts();
+    updateRpsButtonLabels();
+    setStatus('status.ready', '手を選んでミニゲーム開始！');
+    setStageTitle('ui.stage.rps', 'じゃんけんで攻守を決めよう');
+    setCountdownIdle();
     updateScore();
     updateUI();
+    renderLogs();
+
+    if (localization && typeof localization.onChange === 'function') {
+      const unsubscribe = localization.onChange(() => {
+        updateInstructionTexts();
+        updateRpsButtonLabels();
+        applyStageTitle();
+        applyStatus();
+        updateScore();
+        updateCountdownLabel();
+        renderLogs();
+      });
+      if (typeof unsubscribe === 'function') cleanupCallbacks.push(unsubscribe);
+    }
 
     function createButton(label){
       const btn = document.createElement('button');
@@ -210,10 +323,34 @@
     }
 
     function updateScore(){
-      scorePrimary.textContent = `攻め成功: ${playerWins}／防御成功: ${successfulDodges}`;
-      scoreSecondary.textContent = `攻め連続: ${attackStreak}（最高 ${bestAttackStreak}）／防御連続: ${defenseStreak}（最高 ${bestDefenseStreak}）`;
+      const attackWinsLabel = formatNumber(playerWins);
+      const dodgeLabel = formatNumber(successfulDodges);
+      scorePrimary.textContent = t('score.primary', () => `攻め成功: ${attackWinsLabel}／防御成功: ${dodgeLabel}`, () => ({
+        attackWins: attackWinsLabel,
+        defenseWins: dodgeLabel
+      }));
+      const attackStreakLabel = formatNumber(attackStreak);
+      const bestAttackLabel = formatNumber(bestAttackStreak);
+      const defenseStreakLabel = formatNumber(defenseStreak);
+      const bestDefenseLabel = formatNumber(bestDefenseStreak);
+      scoreSecondary.textContent = t('score.secondary', () => `攻め連続: ${attackStreakLabel}（最高 ${bestAttackLabel}）／防御連続: ${defenseStreakLabel}（最高 ${bestDefenseLabel}）`, () => ({
+        attackStreak: attackStreakLabel,
+        bestAttackStreak: bestAttackLabel,
+        defenseStreak: defenseStreakLabel,
+        bestDefenseStreak: bestDefenseLabel
+      }));
       const successTotal = playerWins + successfulDodges;
-      scoreTertiary.textContent = rounds > 0 ? `決着数: ${rounds}／成功率: ${Math.round((successTotal / rounds) * 100)}%` : '決着数: 0／成功率: --%';
+      if (rounds > 0){
+        const successRate = Math.round((successTotal / rounds) * 100);
+        const roundsLabel = formatNumber(rounds);
+        const rateLabel = formatNumber(successRate);
+        scoreTertiary.textContent = t('score.tertiaryWithRate', () => `決着数: ${roundsLabel}／成功率: ${rateLabel}%`, () => ({
+          rounds: roundsLabel,
+          successRate: rateLabel
+        }));
+      } else {
+        scoreTertiary.textContent = t('score.tertiaryEmpty', '決着数: 0／成功率: --%');
+      }
     }
 
     function updateUI(){
@@ -222,11 +359,11 @@
       Object.values(buttons).forEach(btn => btn.disabled = state !== 'rps');
       Object.values(dirButtons).forEach(btn => btn.disabled = state !== 'direction');
       if (state === 'rps'){
-        stageTitle.textContent = 'じゃんけんで攻守を決めよう';
+        setStageTitle('ui.stage.rps', 'じゃんけんで攻守を決めよう');
       } else if (attacker === 'player'){
-        stageTitle.textContent = '攻撃フェーズ：指す方向を素早く選ぼう';
+        setStageTitle('ui.stage.attack', '攻撃フェーズ：指す方向を素早く選ぼう');
       } else {
-        stageTitle.textContent = '防御フェーズ：相手と違う方向を素早く選ぼう';
+        setStageTitle('ui.stage.defense', '防御フェーズ：相手と違う方向を素早く選ぼう');
       }
       updateCountdownLabel();
     }
@@ -234,7 +371,8 @@
     function handleRps(playerChoice){
       const cpuChoice = randomRps();
       if (playerChoice === cpuChoice){
-        statusLabel.textContent = `あいこで ${rpsToJapanese(cpuChoice)}！もう一度`; pushLog('あいこ続行');
+        setStatus('status.tie', () => `あいこで ${getHandLabel(cpuChoice)}！もう一度`, () => ({ hand: getHandLabel(cpuChoice) }));
+        pushLogEntry('log.tie', 'あいこ続行');
         return;
       }
       const playerWinsRound =
@@ -243,11 +381,19 @@
         (playerChoice === 'paper' && cpuChoice === 'rock');
       attacker = playerWinsRound ? 'player' : 'cpu';
       state = 'direction';
-      const roleText = playerWinsRound ? '攻め' : '守り';
-      statusLabel.textContent = playerWinsRound
-        ? 'あなたの勝ち！制限内に指す方向を選んでヒットを狙おう'
-        : '相手が攻め！制限内に別方向を選んで回避';
-      pushLog(`じゃんけん結果: あなた=${rpsToJapanese(playerChoice)}／相手=${rpsToJapanese(cpuChoice)} → ${roleText}`);
+      const role = playerWinsRound ? 'attack' : 'defense';
+      const roleLabel = getRoleLabel(role);
+      setStatus(
+        playerWinsRound ? 'status.playerWin' : 'status.cpuWin',
+        playerWinsRound
+          ? 'あなたの勝ち！制限内に指す方向を選んでヒットを狙おう'
+          : '相手が攻め！制限内に別方向を選んで回避'
+      );
+      pushLogEntry('log.rpsResult', () => `じゃんけん結果: あなた=${getHandLabel(playerChoice)}／相手=${getHandLabel(cpuChoice)} → ${roleLabel}`, () => ({
+        playerHand: getHandLabel(playerChoice),
+        cpuHand: getHandLabel(cpuChoice),
+        role: roleLabel
+      }));
       updateUI();
       startDirectionCountdown();
     }
@@ -281,14 +427,33 @@
           if (bonus > 0) payload.bonus = bonus;
           awardXp(xp, payload);
           playerWins += 1;
-          statusLabel.textContent = bonus
-            ? `ヒット！${dirToJapanese(playerDir)}で${xp}EXP（連続${attackStreak}）`
-            : `ヒット！${dirToJapanese(playerDir)}で15EXP`;
-          pushLog(`攻め成功：CPUは${dirToJapanese(cpuDir)} → ${xp}EXP`);
+          const xpLabel = formatNumber(xp);
+          if (bonus){
+            const streakLabel = formatNumber(attackStreak);
+            setStatus('status.attack.hitBonus', () => `ヒット！${getDirectionLabel(playerDir)}で${xpLabel}EXP（連続${streakLabel}）`, () => ({
+              direction: getDirectionLabel(playerDir),
+              exp: xpLabel,
+              streak: streakLabel
+            }));
+          } else {
+            setStatus('status.attack.hit', () => `ヒット！${getDirectionLabel(playerDir)}で${xpLabel}EXP`, () => ({
+              direction: getDirectionLabel(playerDir),
+              exp: xpLabel
+            }));
+          }
+          pushLogEntry('log.attackSuccess', () => `攻め成功：CPUは${getDirectionLabel(cpuDir)} → ${xpLabel}EXP`, () => ({
+            cpuDirection: getDirectionLabel(cpuDir),
+            exp: xpLabel
+          }));
         } else {
           attackStreak = 0;
-          statusLabel.textContent = `外した…CPUは${dirToJapanese(cpuDir)}を向いた`;
-          pushLog(`攻め失敗：CPU ${dirToJapanese(cpuDir)}／あなた ${dirToJapanese(playerDir)}`);
+          setStatus('status.attack.miss', () => `外した…CPUは${getDirectionLabel(cpuDir)}を向いた`, () => ({
+            cpuDirection: getDirectionLabel(cpuDir)
+          }));
+          pushLogEntry('log.attackFail', () => `攻め失敗：CPU ${getDirectionLabel(cpuDir)}／あなた ${getDirectionLabel(playerDir)}`, () => ({
+            cpuDirection: getDirectionLabel(cpuDir),
+            playerDirection: getDirectionLabel(playerDir)
+          }));
         }
       } else {
         const avoided = playerDir !== cpuDir;
@@ -306,14 +471,30 @@
           if (bonus > 0) payload.bonus = bonus;
           awardXp(xp, payload);
           successfulDodges += 1;
-          statusLabel.textContent = bonus
-            ? `回避成功！${dirToJapanese(cpuDir)}を避けた（連続${defenseStreak}）`
-            : `回避成功！${dirToJapanese(cpuDir)}を避けた！5EXP`;
-          pushLog(`防御成功：相手 ${dirToJapanese(cpuDir)}／あなた ${dirToJapanese(playerDir)} → ${xp}EXP`);
+          const xpLabel = formatNumber(xp);
+          if (bonus){
+            const streakLabel = formatNumber(defenseStreak);
+            setStatus('status.defense.successBonus', () => `回避成功！${getDirectionLabel(cpuDir)}を避けた（連続${streakLabel}）`, () => ({
+              cpuDirection: getDirectionLabel(cpuDir),
+              streak: streakLabel
+            }));
+          } else {
+            setStatus('status.defense.success', () => `回避成功！${getDirectionLabel(cpuDir)}を避けた！${xpLabel}EXP`, () => ({
+              cpuDirection: getDirectionLabel(cpuDir),
+              exp: xpLabel
+            }));
+          }
+          pushLogEntry('log.defenseSuccess', () => `防御成功：相手 ${getDirectionLabel(cpuDir)}／あなた ${getDirectionLabel(playerDir)} → ${xpLabel}EXP`, () => ({
+            cpuDirection: getDirectionLabel(cpuDir),
+            playerDirection: getDirectionLabel(playerDir),
+            exp: xpLabel
+          }));
         } else {
           defenseStreak = 0;
-          statusLabel.textContent = `回避失敗…同じ${dirToJapanese(cpuDir)}を向いた`;
-          pushLog('防御失敗：同方向でヒット');
+          setStatus('status.defense.fail', () => `回避失敗…同じ${getDirectionLabel(cpuDir)}を向いた`, () => ({
+            direction: getDirectionLabel(cpuDir)
+          }));
+          pushLogEntry('log.defenseFail', '防御失敗：同方向でヒット');
         }
       }
 
@@ -340,12 +521,12 @@
       clearDirectionCountdown();
       if (attacker === 'player'){
         attackStreak = 0;
-        statusLabel.textContent = '時間切れ…指しそびれた';
-        pushLog('攻め時間切れ：チャンスを逃した');
+        setStatus('status.attack.timeout', '時間切れ…指しそびれた');
+        pushLogEntry('log.attackTimeout', '攻め時間切れ：チャンスを逃した');
       } else {
         defenseStreak = 0;
-        statusLabel.textContent = '時間切れ…反応できずヒット';
-        pushLog('防御時間切れ：反応が遅れた');
+        setStatus('status.defense.timeout', '時間切れ…反応できずヒット');
+        pushLogEntry('log.defenseTimeout', '防御時間切れ：反応が遅れた');
       }
       attacker = null;
       state = 'rps';
@@ -362,18 +543,17 @@
         clearInterval(directionIntervalId);
         directionIntervalId = null;
       }
-      countdownLabel.textContent = '残り --.- 秒';
-      countdownLabel.style.color = '#cbd5f5';
+      setCountdownIdle();
     }
 
     function updateCountdownLabel(){
       if (state !== 'direction'){
-        countdownLabel.textContent = '残り --.- 秒';
-        countdownLabel.style.color = '#cbd5f5';
+        setCountdownIdle();
         return;
       }
       const remaining = Math.max(0, (directionDeadline - performance.now()) / 1000);
-      countdownLabel.textContent = `残り ${remaining.toFixed(1)} 秒`;
+      const display = remaining.toFixed(1);
+      countdownLabel.textContent = t('countdown.remaining', () => `残り ${display} 秒`, () => ({ seconds: display }));
       if (remaining <= 0.3){
         countdownLabel.style.color = '#fca5a5';
       } else if (remaining <= 0.7){
@@ -383,15 +563,23 @@
       }
     }
 
-    function pushLog(message){
-      const entry = document.createElement('li');
-      entry.textContent = message;
-      entry.style.fontSize = '0.82rem';
-      entry.style.opacity = '0.85';
-      logList.prepend(entry);
-      while (logList.children.length > 8){
-        logList.removeChild(logList.lastChild);
+    function renderLogs(){
+      logList.innerHTML = '';
+      for (const entry of logEntries){
+        const li = document.createElement('li');
+        li.textContent = t(entry.key, entry.fallback, entry.params);
+        li.style.fontSize = '0.82rem';
+        li.style.opacity = '0.85';
+        logList.appendChild(li);
       }
+    }
+
+    function pushLogEntry(key, fallback, params){
+      logEntries.unshift({ key, fallback, params });
+      if (logEntries.length > 8){
+        logEntries.length = 8;
+      }
+      renderLogs();
     }
 
     function randomRps(){
@@ -404,18 +592,29 @@
       return values[Math.floor(Math.random() * values.length)];
     }
 
-    function rpsToJapanese(value){
-      return value === 'rock' ? 'グー' : value === 'scissors' ? 'チョキ' : 'パー';
+    function getHandLabel(value){
+      switch (value){
+        case 'rock': return t('hands.rock', 'グー');
+        case 'scissors': return t('hands.scissors', 'チョキ');
+        case 'paper': return t('hands.paper', 'パー');
+        default: return value;
+      }
     }
 
-    function dirToJapanese(dir){
+    function getDirectionLabel(dir){
       switch (dir){
-        case 'up': return '上';
-        case 'down': return '下';
-        case 'left': return '左';
-        case 'right': return '右';
+        case 'up': return t('direction.up', '上');
+        case 'down': return t('direction.down', '下');
+        case 'left': return t('direction.left', '左');
+        case 'right': return t('direction.right', '右');
         default: return dir;
       }
+    }
+
+    function getRoleLabel(role){
+      if (role === 'attack') return t('role.attack', '攻め');
+      if (role === 'defense') return t('role.defense', '守り');
+      return role;
     }
 
     function start(){}
@@ -425,11 +624,12 @@
         attacker = null;
         state = 'rps';
       }
-      statusLabel.textContent = '一時停止中';
+      setStatus('status.paused', '一時停止中');
       updateUI();
     }
     function destroy(){
       clearDirectionCountdown();
+      try { cleanupCallbacks.forEach(fn => { try { fn && fn(); } catch {} }); } catch {}
       try { wrapper.remove(); } catch {}
     }
     function getScore(){

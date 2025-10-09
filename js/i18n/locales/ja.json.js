@@ -10845,6 +10845,176 @@
     },
 
     "minigame": {
+      "gamble_hall": {
+        "nav": {
+          "title": "ゲームセレクト",
+          "items": {
+            "roulette": {
+              "label": "ルーレット",
+              "detail": "欧州式37マス"
+            },
+            "slot": {
+              "label": "パチンコスロット",
+              "detail": "3リール＋スター配当"
+            },
+            "dice": {
+              "label": "ラッキーダイス",
+              "detail": "5種のベットモード"
+            }
+          }
+        },
+        "sidebar": {
+          "balanceLabel": "残高",
+          "sessionNetLabel": "セッション収支",
+          "maxWinLabel": "最大勝利"
+        },
+        "header": {
+          "balanceLabel": "利用可能EXP",
+          "betLabel": "ベット額",
+          "sessionNet": "セッション収支",
+          "biggestWin": "最大獲得",
+          "betPlaceholder": "10",
+          "betAdjust": {
+            "plus10": "+10",
+            "plus50": "+50",
+            "max": "MAX"
+          }
+        },
+        "hud": {
+          "expValue": "{value} EXP",
+          "netValue": "{delta} EXP"
+        },
+        "history": {
+          "title": "直近の結果",
+          "empty": "まだ履歴がありません。",
+          "betLabel": "BET {bet}",
+          "meta": "{bet} / {detail}",
+          "netDelta": "{delta}",
+          "roulette": {
+            "detail": "{result} / {outcome}"
+          },
+          "slot": {
+            "detail": "{symbols} / {result}"
+          },
+          "dice": {
+            "detail": "{faces} / 合計{totalFormatted}"
+          }
+        },
+        "roulette": {
+          "spin": "スピン",
+          "numberOption": "No.{number}",
+          "result": {
+            "numberLabel": "No.{number}",
+            "detail": "No.{number} {color}"
+          },
+          "betTypes": {
+            "colorRed": "赤",
+            "colorBlack": "黒",
+            "colorGreen": "緑(0)",
+            "parityEven": "偶数",
+            "parityOdd": "奇数",
+            "number": "番号指定"
+          },
+          "colors": {
+            "red": "赤",
+            "black": "黒",
+            "green": "緑",
+            "unknown": "不明"
+          },
+          "results": {
+            "colorRed": {
+              "hit": "赤的中",
+              "miss": "赤ハズレ"
+            },
+            "colorBlack": {
+              "hit": "黒的中",
+              "miss": "黒ハズレ"
+            },
+            "colorGreen": {
+              "hit": "0ヒット！",
+              "miss": "0ハズレ"
+            },
+            "parityEven": {
+              "hit": "偶数的中",
+              "miss": "偶数ハズレ"
+            },
+            "parityOdd": {
+              "hit": "奇数的中",
+              "miss": "奇数ハズレ"
+            },
+            "number": {
+              "hit": "{number} 的中！",
+              "miss": "{number} ハズレ"
+            },
+            "miss": "ハズレ"
+          }
+        },
+        "slot": {
+          "start": "スタート",
+          "hint": "同じ絵柄やスター付きペアで配当アップ！",
+          "results": {
+            "jackpot": "777ジャックポット！",
+            "barTriple": "BAR揃い！",
+            "triple": "トリプルヒット！",
+            "pairWithStar": "{symbol} ペア＋スター！",
+            "pair": "{symbol} ペア！",
+            "miss": "ハズレ…"
+          }
+        },
+        "dice": {
+          "buttons": {
+            "roll": "ロール"
+          },
+          "mode": {
+            "option": "{label} x{multiplier}",
+            "hintDisplay": "{hint} (x{multiplier})"
+          },
+          "modes": {
+            "high": {
+              "label": "ハイ (11-18)",
+              "hint": "合計が11以上で配当x2。ゾロ目は対象外。"
+            },
+            "low": {
+              "label": "ロー (3-10)",
+              "hint": "合計が10以下で配当x2。ゾロ目は対象外。"
+            },
+            "lucky7": {
+              "label": "ラッキー7",
+              "hint": "合計7ちょうどで高配当！"
+            },
+            "allDiff": {
+              "label": "バラバラ",
+              "hint": "3つとも違う目で配当x4。"
+            },
+            "triple": {
+              "label": "ゾロ目",
+              "hint": "全て同じ目で超高配当！"
+            },
+            "unknown": "不明"
+          },
+          "rollingLabel": "ロール中…",
+          "resultLine": "出目 {faces} (合計 {totalFormatted})",
+          "results": {
+            "hit": "的中！",
+            "miss": "ハズレ…"
+          }
+        },
+        "status": {
+          "ready": "ベットしてゲームを始めましょう。",
+          "betRequired": "ベット額を入力してください。",
+          "slotBusy": "リール停止を待っています…",
+          "notEnoughExp": "EXPが不足しています。",
+          "slotSpinning": "リール回転中…",
+          "slotResult": "{game}: {result} {net}",
+          "diceBusy": "結果表示をお待ちください…",
+          "diceRolling": "ダイスを振っています…",
+          "diceResult": "{game}: {mode} {outcome} {net}",
+          "rouletteBusy": "ルーレットが回転中です…",
+          "noExp": "利用可能なEXPがありません。",
+          "rouletteSpinning": "ルーレットを回しています…",
+          "rouletteResult": "{game}: {result} ({detail}) {net}"
+        }
+      },
       "login_bonus": {
         "title": "ログインボーナスカレンダー",
         "subtitle": "毎日ログインして特典を獲得しましょう。獲得情報は自動保存されます。",

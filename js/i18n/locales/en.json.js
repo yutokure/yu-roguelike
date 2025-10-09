@@ -13830,107 +13830,107 @@
           "erfcUnavailable": "erfc is currently unavailable."
         }
       },
-      "bowlingDuel": {
-        "title": "Bowling Duel MOD",
-        "legend": "Press the button to stop the Aim → Curve → Power gauges in order and roll the ball!",
-        "history": {
-          "title": "Log",
-          "placeholder": "---"
-        },
-        "buttons": {
-          "throw": "🎳 Throw Ball",
-          "reset": "🔄 Reset",
-          "throwing": "🎳 Rolling…"
-        },
-        "scoreboard": {
-          "you": "You",
-          "cpu": "CPU",
-          "total": "Total"
-        },
-        "sliders": {
-          "aim": {
-            "label": "Aim Position",
-            "center": "Center",
-            "right": "Right {value}",
-            "left": "Left {value}"
+      "games": {
+        "bowlingDuel": {
+          "title": "Bowling Duel MOD",
+          "legend": "Press the button to stop the Aim → Curve → Power gauges in order and roll the ball!",
+          "history": {
+            "title": "Log",
+            "placeholder": "---"
           },
-          "curve": {
-            "label": "Curve Amount",
-            "none": "None",
-            "right": "Hooks Right {value}",
-            "left": "Hooks Left {value}"
+          "buttons": {
+            "throw": "🎳 Throw Ball",
+            "reset": "🔄 Reset",
+            "throwing": "🎳 Rolling…"
           },
-          "power": {
-            "label": "Throw Power",
-            "format": "{value}%"
+          "scoreboard": {
+            "you": "You",
+            "cpu": "CPU",
+            "total": "Total"
+          },
+          "sliders": {
+            "aim": {
+              "label": "Aim Position",
+              "center": "Center",
+              "right": "Right {value}",
+              "left": "Left {value}"
+            },
+            "curve": {
+              "label": "Curve Amount",
+              "none": "None",
+              "right": "Hooks Right {value}",
+              "left": "Hooks Left {value}"
+            },
+            "power": {
+              "label": "Throw Power",
+              "format": "{value}%"
+            }
+          },
+          "status": {
+            "introHint": "Stop each moving gauge at the right moment to chase strikes!",
+            "framePlayer": "Frame {frame}: Your turn.",
+            "frameCpu": "Frame {frame}: CPU turn…",
+            "remainingPins": "Pins left: {count}. Take another shot!",
+            "playerStrike": "Strike!",
+            "cpuStrike": "CPU rolled a strike!",
+            "victory": "Victory! Score {player} - {cpu}",
+            "draw": "Draw… Score {player} - {cpu}",
+            "defeat": "Defeat… Score {player} - {cpu}"
+          },
+          "stage": {
+            "aim": {
+              "prompt": "Aim gauge oscillating—press to lock it in!",
+              "button": "🛑 Stop Aim",
+              "confirm": "Aim set to {value}!"
+            },
+            "curve": {
+              "prompt": "Curve gauge moving—stop it with the button!",
+              "button": "🛑 Stop Curve",
+              "confirm": "Curve locked at {value}!"
+            },
+            "power": {
+              "prompt": "Watch the power gauge—press to roll!",
+              "button": "🛑 Stop Power",
+              "confirm": "Rolling with {value}!"
+            }
+          },
+          "logs": {
+            "playerShot": "You: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+            "cpuShot": "CPU: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+            "victory": "<strong>Victory!</strong> +{exp}EXP",
+            "draw": "<strong>Draw</strong> +{exp}EXP",
+            "defeat": "<strong>Defeat</strong> +{exp}EXP"
           }
         },
-        "status": {
-          "introHint": "Stop each moving gauge at the right moment to chase strikes!",
-          "framePlayer": "Frame {frame}: Your turn.",
-          "frameCpu": "Frame {frame}: CPU turn…",
-          "remainingPins": "Pins left: {count}. Take another shot!",
-          "playerStrike": "Strike!",
-          "cpuStrike": "CPU rolled a strike!",
-          "victory": "Victory! Score {player} - {cpu}",
-          "draw": "Draw… Score {player} - {cpu}",
-          "defeat": "Defeat… Score {player} - {cpu}"
-        },
-        "stage": {
-          "aim": {
-            "prompt": "Aim gauge oscillating—press to lock it in!",
-            "button": "🛑 Stop Aim",
-            "confirm": "Aim set to {value}!"
+        "treasureHunt": {
+          "ui": {
+            "mapTitle": "Map",
+            "start": "Start",
+            "pause": "Pause",
+            "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards."
           },
-          "curve": {
-            "prompt": "Curve gauge moving—stop it with the button!",
-            "button": "🛑 Stop Curve",
-            "confirm": "Curve locked at {value}!"
+          "labels": {
+            "round": "Round: {value}",
+            "time": "Time: {value}",
+            "distance": "Distance: {value}",
+            "totalExp": "Total EXP: {value}",
+            "timeValue": "{value}s",
+            "distanceValue": "{value} tiles",
+            "none": "-",
+            "lastResult": "Last round {time} for {exp} EXP{best}",
+            "bestSuffix": " / Best {time}"
           },
-          "power": {
-            "prompt": "Watch the power gauge—press to roll!",
-            "button": "🛑 Stop Power",
-            "confirm": "Rolling with {value}!"
+          "status": {
+            "preparing": "Preparing stage…",
+            "generating": "Generating stage…",
+            "generateFailed": "Failed to generate the stage",
+            "noApi": "Dungeon API is unavailable",
+            "placingFailed": "Treasure placement failed—regenerating",
+            "ready": "Moved to start for Round {round}",
+            "running": "Exploring Round {round}…",
+            "paused": "Paused",
+            "found": "Treasure found! Building the next round…"
           }
-        },
-        "logs": {
-          "playerShot": "You: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
-          "cpuShot": "CPU: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
-          "victory": "<strong>Victory!</strong> +{exp}EXP",
-          "draw": "<strong>Draw</strong> +{exp}EXP",
-          "defeat": "<strong>Defeat</strong> +{exp}EXP"
-        }
-      }
-    },
-    "games": {
-      "treasureHunt": {
-        "ui": {
-          "mapTitle": "Map",
-          "start": "Start",
-          "pause": "Pause",
-          "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards."
-        },
-        "labels": {
-          "round": "Round: {value}",
-          "time": "Time: {value}",
-          "distance": "Distance: {value}",
-          "totalExp": "Total EXP: {value}",
-          "timeValue": "{value}s",
-          "distanceValue": "{value} tiles",
-          "none": "-",
-          "lastResult": "Last round {time} for {exp} EXP{best}",
-          "bestSuffix": " / Best {time}"
-        },
-        "status": {
-          "preparing": "Preparing stage…",
-          "generating": "Generating stage…",
-          "generateFailed": "Failed to generate the stage",
-          "noApi": "Dungeon API is unavailable",
-          "placingFailed": "Treasure placement failed—regenerating",
-          "ready": "Moved to start for Round {round}",
-          "running": "Exploring Round {round}…",
-          "paused": "Paused",
-          "found": "Treasure found! Building the next round…"
         }
       }
     }

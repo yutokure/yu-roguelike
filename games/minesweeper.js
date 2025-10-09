@@ -3,6 +3,29 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'minesweeper' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function'){
+        try { return new Intl.NumberFormat(undefined, options).format(value); } catch {}
+      }
+      if (value != null && typeof value.toLocaleString === 'function'){
+        try { return value.toLocaleString(); } catch {}
+      }
+      return String(value ?? '');
+    };
+    let detachLocale = null;
     const cfg = (
       difficulty==='HARD'   ? { w:30, h:16, m:99,  bonus:1600 } :
       difficulty==='EASY'   ? { w:9,  h:9,  m:10,  bonus:25   } :
@@ -37,7 +60,7 @@
 
     const info = document.createElement('span');
     info.style.fontVariantNumeric = 'tabular-nums';
-    const btnR = document.createElement('button'); btnR.textContent='再開/再起動 (R)';
+    const btnR = document.createElement('button');
     btnR.style.padding = '6px 12px';
     btnR.style.border = 'none';
     btnR.style.borderRadius = '999px';
@@ -52,6 +75,11 @@
     wrapper.appendChild(canvas);
     root.appendChild(wrapper);
     const ctx = canvas.getContext('2d');
+
+    const uiTextState = {
+      secondsUnit: text('.hud.timeUnit.seconds', 's')
+    };
+    btnR.textContent = text('.controls.restart', () => `再開/再起動 (R)`, { key: 'R' });
 
     let cellSize = Math.floor(Math.min(canvas.width/cfg.w, canvas.height/cfg.h));
     let gridOffsetX = Math.floor((canvas.width - cellSize*cfg.w)/2);
@@ -103,8 +131,37 @@
       // top info
       const elapsed = Math.floor(((ended?clearTime:Date.now()) - startTime)/1000);
       const bombsLeft = cfg.m - (function(){ let f=0; forEachCell((x,y,c)=>{ if(c.flag) f++; }); return f; })();
-      info.textContent = `難易度:${difficulty} 地雷:${cfg.m} 残り旗:${bombsLeft} 時間:${elapsed}s 開放:${openedSafe}`;
+      const difficultyLabel = text(`.difficulty.${String(difficulty || '').toLowerCase()}`, difficulty);
+      const minesValue = formatNumber(cfg.m);
+      const flagsValue = formatNumber(bombsLeft);
+      const elapsedValue = formatNumber(elapsed);
+      const openedValue = formatNumber(openedSafe);
+      const timeWithUnit = `${elapsedValue}${uiTextState.secondsUnit}`;
+      info.textContent = text('.hud.info', () => `難易度:${difficultyLabel} 地雷:${minesValue} 残り旗:${flagsValue} 時間:${timeWithUnit} 開放:${openedValue}`, {
+        difficulty: difficultyLabel,
+        mines: minesValue,
+        flags: flagsValue,
+        elapsed: elapsedValue,
+        seconds: elapsed,
+        timeUnit: uiTextState.secondsUnit,
+        timeWithUnit,
+        opened: openedValue,
+      });
     }
+
+    function refreshLocalizedTexts(){
+      uiTextState.secondsUnit = text('.hud.timeUnit.seconds', 's');
+      btnR.textContent = text('.controls.restart', () => `再開/再起動 (R)`, { key: 'R' });
+      draw();
+    }
+
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try { refreshLocalizedTexts(); } catch {}
+      });
+    }
+
+    refreshLocalizedTexts();
 
     function floodOpen(sx,sy){
       const q=[[sx,sy]]; const visited=new Set(); let opened=0;
@@ -142,7 +199,12 @@
 
     function start(){ if(running) return; running=true; shortcuts?.disableKey('r'); canvas.addEventListener('click', onClick); canvas.addEventListener('contextmenu', onContext); document.addEventListener('keydown', onKey); btnR.onclick = restart; draw(); }
     function stop(opts = {}){ if(!running) return; running=false; canvas.removeEventListener('click', onClick); canvas.removeEventListener('contextmenu', onContext); document.removeEventListener('keydown', onKey); if(!opts.keepShortcutsDisabled){ shortcuts?.enableKey('r'); } }
-    function destroy(){ try{ stop(); wrapper.remove(); }catch{} }
+    function destroy(){
+      try { stop(); } catch {}
+      try { detachLocale && detachLocale(); } catch {}
+      detachLocale = null;
+      try { wrapper.remove(); } catch {}
+    }
     function restart(){ stop({ keepShortcutsDisabled: true }); initBoard(); start(); }
     function getScore(){ return ended && openedSafe>0 ? Math.floor(1000000/Math.max(1,(clearTime-startTime))) : openedSafe; }
 

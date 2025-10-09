@@ -10976,6 +10976,58 @@
           "sunday": "サンデーボーナス"
         }
       },
+      "timer": {
+        "title": "タイマー",
+        "subtitle": "集中や休憩の時間管理に。シンプルなカウントダウンとストップウォッチ。",
+        "xpBadge": {
+          "current": "今回獲得 {amount} EXP"
+        },
+        "modes": {
+          "countdown": "カウントダウン",
+          "stopwatch": "ストップウォッチ"
+        },
+        "inputs": {
+          "hours": "時間",
+          "minutes": "分",
+          "seconds": "秒"
+        },
+        "quickButtons": {
+          "plus1m": "+1分",
+          "plus5m": "+5分",
+          "plus10m": "+10分",
+          "minus1m": "-1分",
+          "pomodoro": "25分ポモドーロ"
+        },
+        "buttons": {
+          "start": "開始",
+          "pause": "一時停止",
+          "resume": "再開",
+          "reset": "リセット"
+        },
+        "status": {
+          "readyGeneric": "準備完了",
+          "readyCountdown": "カウントダウンの準備完了",
+          "readyStopwatch": "ストップウォッチの準備完了",
+          "countdownRunning": "カウント中…",
+          "countdownResumed": "再開しました",
+          "paused": "一時停止中",
+          "completed": "完了！お疲れさまでした",
+          "stopwatchRunning": "計測中…",
+          "stopwatchMinute": "{minutes}分経過",
+          "stopwatchMinuteWithXp": "{minutes}分経過！"
+        },
+        "history": {
+          "title": "最近のログ",
+          "labels": {
+            "complete": "完了",
+            "start": "開始",
+            "stopwatchMinute": "経過",
+            "default": "達成"
+          },
+          "expGain": "{label}: +{xp} EXP",
+          "completeNoXp": "タイマー完了！"
+        }
+      },
       "exceler": {
         "header": {
           "title": "表計算エクセラー",

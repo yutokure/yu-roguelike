@@ -4,6 +4,42 @@
   const MAX_MINUTES = 59;
   const MAX_SECONDS = 59;
   const DEFAULT_DURATION = 5 * 60 * 1000; // 5 minutes
+  const GLOBAL = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
+  const I18N = GLOBAL && GLOBAL.I18n;
+  const I18N_PREFIX = 'minigame.timer';
+
+  function formatTemplate(template, params){
+    if (template === undefined || template === null) return '';
+    if (!params || typeof params !== 'object') return String(template);
+    return String(template).replace(/\{([^{}]+)\}/g, (match, token) => {
+      const key = token.trim();
+      if (!key) return match;
+      const value = params[key];
+      return value === undefined || value === null ? match : String(value);
+    });
+  }
+
+  function translateKey(key, fallback, params){
+    if (key && I18N && typeof I18N.t === 'function'){
+      try {
+        const value = I18N.t(key, params);
+        if (typeof value === 'string' && value !== key) return value;
+      } catch {}
+    }
+    if (fallback !== undefined) return params ? formatTemplate(fallback, params) : String(fallback);
+    return params ? formatTemplate(key, params) : String(key ?? '');
+  }
+
+  function t(path, fallback, params){
+    return translateKey(path ? `${I18N_PREFIX}.${path}` : I18N_PREFIX, fallback, params);
+  }
+
+  function formatNumberLocalized(value){
+    if (I18N && typeof I18N.formatNumber === 'function'){
+      try { return I18N.formatNumber(value); } catch {}
+    }
+    return String(value);
+  }
 
   function clampInt(value, min, max){
     const num = Number(value);
@@ -131,13 +167,13 @@
     titleWrap.style.flexDirection = 'column';
 
     const title = document.createElement('h2');
-    title.textContent = 'タイマー';
+    title.textContent = t('title', 'タイマー');
     title.style.margin = '0';
     title.style.fontSize = '24px';
     title.style.color = '#0f172a';
 
     const subtitle = document.createElement('div');
-    subtitle.textContent = '集中や休憩の時間管理に。シンプルなカウントダウンとストップウォッチ';
+    subtitle.textContent = t('subtitle', '集中や休憩の時間管理に。シンプルなカウントダウンとストップウォッチ。');
     subtitle.style.fontSize = '13px';
     subtitle.style.color = '#475569';
 
@@ -145,13 +181,20 @@
     titleWrap.appendChild(subtitle);
 
     const xpBadge = document.createElement('div');
-    xpBadge.textContent = '今回獲得 0 EXP';
     xpBadge.style.padding = '6px 12px';
     xpBadge.style.background = 'linear-gradient(135deg, #2563eb, #4f46e5)';
     xpBadge.style.color = '#fff';
     xpBadge.style.borderRadius = '999px';
     xpBadge.style.fontSize = '13px';
     xpBadge.style.fontWeight = '600';
+
+    function updateXpBadge(){
+      xpBadge.textContent = t('xpBadge.current', '今回獲得 {amount} EXP', {
+        amount: formatNumberLocalized(Math.floor(state.sessionXp))
+      });
+    }
+
+    updateXpBadge();
 
     header.appendChild(titleWrap);
     header.appendChild(xpBadge);
@@ -181,8 +224,8 @@
       return btn;
     }
 
-    const countdownBtn = makeModeButton('countdown', 'カウントダウン');
-    const stopwatchBtn = makeModeButton('stopwatch', 'ストップウォッチ');
+    const countdownBtn = makeModeButton('countdown', t('modes.countdown', 'カウントダウン'));
+    const stopwatchBtn = makeModeButton('stopwatch', t('modes.stopwatch', 'ストップウォッチ'));
     modeSwitch.appendChild(countdownBtn);
     modeSwitch.appendChild(stopwatchBtn);
 
@@ -207,7 +250,7 @@
     timerFraction.style.minHeight = '24px';
 
     const statusLabel = document.createElement('div');
-    statusLabel.textContent = '準備完了';
+    statusLabel.textContent = t('status.readyGeneric', '準備完了');
     statusLabel.style.fontSize = '13px';
     statusLabel.style.color = '#475569';
 
@@ -247,9 +290,9 @@
       return { wrap, input };
     }
 
-    const hoursInput = makeInput('時間', 0, MAX_HOURS, initialHours);
-    const minutesInput = makeInput('分', 0, MAX_MINUTES, initialMinutes);
-    const secondsInput = makeInput('秒', 0, MAX_SECONDS, initialSeconds);
+    const hoursInput = makeInput(t('inputs.hours', '時間'), 0, MAX_HOURS, initialHours);
+    const minutesInput = makeInput(t('inputs.minutes', '分'), 0, MAX_MINUTES, initialMinutes);
+    const secondsInput = makeInput(t('inputs.seconds', '秒'), 0, MAX_SECONDS, initialSeconds);
 
     countdownControls.appendChild(hoursInput.wrap);
     countdownControls.appendChild(minutesInput.wrap);
@@ -275,11 +318,11 @@
       return btn;
     }
 
-    quickButtons.appendChild(makeQuickButton('+1分', () => adjustDuration(60_000)));
-    quickButtons.appendChild(makeQuickButton('+5分', () => adjustDuration(5 * 60_000)));
-    quickButtons.appendChild(makeQuickButton('+10分', () => adjustDuration(10 * 60_000)));
-    quickButtons.appendChild(makeQuickButton('-1分', () => adjustDuration(-60_000)));
-    quickButtons.appendChild(makeQuickButton('25分ポモドーロ', () => setDuration(25 * 60_000)));
+    quickButtons.appendChild(makeQuickButton(t('quickButtons.plus1m', '+1分'), () => adjustDuration(60_000)));
+    quickButtons.appendChild(makeQuickButton(t('quickButtons.plus5m', '+5分'), () => adjustDuration(5 * 60_000)));
+    quickButtons.appendChild(makeQuickButton(t('quickButtons.plus10m', '+10分'), () => adjustDuration(10 * 60_000)));
+    quickButtons.appendChild(makeQuickButton(t('quickButtons.minus1m', '-1分'), () => adjustDuration(-60_000)));
+    quickButtons.appendChild(makeQuickButton(t('quickButtons.pomodoro', '25分ポモドーロ'), () => setDuration(25 * 60_000)));
 
     const controls = document.createElement('div');
     controls.style.display = 'flex';
@@ -288,7 +331,7 @@
 
     const startBtn = document.createElement('button');
     startBtn.type = 'button';
-    startBtn.textContent = '開始';
+    startBtn.textContent = t('buttons.start', '開始');
     startBtn.style.flex = '1 1 150px';
     startBtn.style.padding = '14px';
     startBtn.style.borderRadius = '12px';
@@ -301,7 +344,7 @@
 
     const resetBtn = document.createElement('button');
     resetBtn.type = 'button';
-    resetBtn.textContent = 'リセット';
+    resetBtn.textContent = t('buttons.reset', 'リセット');
     resetBtn.style.flex = '1 1 120px';
     resetBtn.style.padding = '14px';
     resetBtn.style.borderRadius = '12px';
@@ -325,7 +368,7 @@
     historyCard.style.gap = '8px';
 
     const historyTitle = document.createElement('div');
-    historyTitle.textContent = '最近のログ';
+    historyTitle.textContent = t('history.title', '最近のログ');
     historyTitle.style.fontSize = '13px';
     historyTitle.style.color = '#475569';
     historyTitle.style.fontWeight = '600';
@@ -339,6 +382,13 @@
 
     historyCard.appendChild(historyTitle);
     historyCard.appendChild(historyList);
+
+    const HISTORY_LABELS = {
+      complete: { key: 'history.labels.complete', fallback: '完了' },
+      start: { key: 'history.labels.start', fallback: '開始' },
+      stopwatch_minute: { key: 'history.labels.stopwatchMinute', fallback: '経過' },
+      default: { key: 'history.labels.default', fallback: '達成' }
+    };
 
     card.appendChild(header);
     card.appendChild(modeSwitch);
@@ -357,9 +407,11 @@
         const gained = Number(awardXp(amount, { type, mode: state.mode }));
         if (Number.isFinite(gained) && gained !== 0){
           state.sessionXp += gained;
-          xpBadge.textContent = `今回獲得 ${Math.floor(state.sessionXp)} EXP`;
-          const label = type === 'complete' ? '完了' : type === 'start' ? '開始' : type === 'stopwatch_minute' ? '経過' : '達成';
-          logEvent(`${label}: +${Math.floor(gained)} EXP`);
+          updateXpBadge();
+          const labelConfig = HISTORY_LABELS[type] || HISTORY_LABELS.default;
+          const label = t(labelConfig.key, labelConfig.fallback);
+          const xpValue = formatNumberLocalized(Math.floor(gained));
+          logEvent(t('history.expGain', '{label}: +{xp} EXP', { label, xp: xpValue }));
         }
         return gained;
       } catch {
@@ -461,11 +513,11 @@
       state.mode = mode === 'stopwatch' ? 'stopwatch' : 'countdown';
       if (state.mode === 'countdown'){
         state.remainingMs = state.totalMs;
-        statusLabel.textContent = 'カウントダウンの準備完了';
+        statusLabel.textContent = t('status.readyCountdown', 'カウントダウンの準備完了');
       } else {
         state.stopwatchElapsed = 0;
         state.stopwatchAwardedMinutes = 0;
-        statusLabel.textContent = 'ストップウォッチの準備完了';
+        statusLabel.textContent = t('status.readyStopwatch', 'ストップウォッチの準備完了');
       }
       updateModeButtons();
       updateDisplay();
@@ -475,13 +527,13 @@
     function finishCountdown(){
       state.running = false;
       state.remainingMs = 0;
-      statusLabel.textContent = '完了！お疲れさまでした';
-      startBtn.textContent = '開始';
+      statusLabel.textContent = t('status.completed', '完了！お疲れさまでした');
+      startBtn.textContent = t('buttons.start', '開始');
       toggleInputs(false);
       updateDisplay();
       const minutes = Math.max(1, Math.round(state.totalMs / 60000));
       const gained = award('complete', Math.min(60, minutes * 4));
-      if (!gained) logEvent('タイマー完了！');
+      if (!gained) logEvent(t('history.completeNoXp', 'タイマー完了！'));
     }
 
     function handleCountdownTick(){
@@ -503,7 +555,9 @@
       if (minutes > state.stopwatchAwardedMinutes){
         const diff = minutes - state.stopwatchAwardedMinutes;
         const gained = award('stopwatch_minute', diff * 2);
-        if (gained) statusLabel.textContent = `${minutes}分経過！`; else statusLabel.textContent = `${minutes}分経過`; 
+        const minuteText = formatNumberLocalized(minutes);
+        if (gained) statusLabel.textContent = t('status.stopwatchMinuteWithXp', '{minutes}分経過！', { minutes: minuteText });
+        else statusLabel.textContent = t('status.stopwatchMinute', '{minutes}分経過', { minutes: minuteText });
         state.stopwatchAwardedMinutes = minutes;
       }
       updateDisplay();
@@ -533,8 +587,8 @@
       state.remainingMs = state.totalMs;
       state.endTime = Date.now() + state.remainingMs;
       state.running = true;
-      startBtn.textContent = '一時停止';
-      statusLabel.textContent = 'カウント中…';
+      startBtn.textContent = t('buttons.pause', '一時停止');
+      statusLabel.textContent = t('status.countdownRunning', 'カウント中…');
       toggleInputs(true);
       updateDisplay();
       award('start', 3);
@@ -548,8 +602,8 @@
       }
       state.endTime = Date.now() + state.remainingMs;
       state.running = true;
-      startBtn.textContent = '一時停止';
-      statusLabel.textContent = '再開しました';
+      startBtn.textContent = t('buttons.pause', '一時停止');
+      statusLabel.textContent = t('status.countdownResumed', '再開しました');
       toggleInputs(true);
       requestNextTick();
     }
@@ -558,8 +612,8 @@
       if (!state.running) return;
       state.remainingMs = Math.max(0, state.endTime - Date.now());
       state.running = false;
-      startBtn.textContent = '再開';
-      statusLabel.textContent = '一時停止中';
+      startBtn.textContent = t('buttons.resume', '再開');
+      statusLabel.textContent = t('status.paused', '一時停止中');
       toggleInputs(false);
       updateDisplay();
     }
@@ -567,8 +621,8 @@
     function resetCountdown(){
       state.running = false;
       state.remainingMs = state.totalMs;
-      startBtn.textContent = '開始';
-      statusLabel.textContent = 'カウントダウンの準備完了';
+      startBtn.textContent = t('buttons.start', '開始');
+      statusLabel.textContent = t('status.readyCountdown', 'カウントダウンの準備完了');
       toggleInputs(false);
       updateDisplay();
     }
@@ -578,8 +632,8 @@
       const fresh = state.stopwatchElapsed === 0;
       state.stopwatchStart = Date.now();
       state.running = true;
-      startBtn.textContent = '一時停止';
-      statusLabel.textContent = '計測中…';
+      startBtn.textContent = t('buttons.pause', '一時停止');
+      statusLabel.textContent = t('status.stopwatchRunning', '計測中…');
       if (fresh) award('start', 2);
       requestNextTick();
     }
@@ -588,8 +642,8 @@
       if (!state.running) return;
       state.stopwatchElapsed += Date.now() - state.stopwatchStart;
       state.running = false;
-      startBtn.textContent = '再開';
-      statusLabel.textContent = '一時停止中';
+      startBtn.textContent = t('buttons.resume', '再開');
+      statusLabel.textContent = t('status.paused', '一時停止中');
       updateDisplay();
     }
 
@@ -597,8 +651,8 @@
       state.running = false;
       state.stopwatchElapsed = 0;
       state.stopwatchAwardedMinutes = 0;
-      startBtn.textContent = '開始';
-      statusLabel.textContent = 'ストップウォッチの準備完了';
+      startBtn.textContent = t('buttons.start', '開始');
+      statusLabel.textContent = t('status.readyStopwatch', 'ストップウォッチの準備完了');
       updateDisplay();
     }
 
@@ -671,8 +725,8 @@
     updateModeButtons();
     updateInputsFromState();
     statusLabel.textContent = state.mode === 'stopwatch'
-      ? 'ストップウォッチの準備完了'
-      : 'カウントダウンの準備完了';
+      ? t('status.readyStopwatch', 'ストップウォッチの準備完了')
+      : t('status.readyCountdown', 'カウントダウンの準備完了');
     updateDisplay();
 
     const runtime = {
@@ -688,9 +742,9 @@
 
   window.registerMiniGame({
     id: 'timer',
-    name: 'タイマー', nameKey: 'selection.miniexp.games.timer.name',
-    description: 'シンプルなカウントダウンとストップウォッチで時間管理', descriptionKey: 'selection.miniexp.games.timer.description', categoryIds: ['utility'],
-    category: 'ユーティリティ',
+    name: translateKey('selection.miniexp.games.timer.name', 'タイマー'), nameKey: 'selection.miniexp.games.timer.name',
+    description: translateKey('selection.miniexp.games.timer.description', 'シンプルなカウントダウンとストップウォッチで時間管理'), descriptionKey: 'selection.miniexp.games.timer.description', categoryIds: ['utility'],
+    category: translateKey('selection.miniexp.category.utility', 'ユーティリティ'),
     version: '0.1.0',
     author: 'mod',
     create

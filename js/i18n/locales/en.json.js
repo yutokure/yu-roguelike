@@ -938,7 +938,30 @@
           },
           "ten_ten": {
             "name": "1010 Puzzle",
-            "description": "Place blocks to clear lines, with cross clears doubling your EXP."
+            "description": "Place blocks to clear lines, with cross clears doubling your EXP.",
+            "hint": "Drag blocks onto the board / press R to restart",
+            "hud": {
+              "lines": "Lines: {total} / Largest clear: {max}",
+              "moves": "Moves: {moves} / Remaining blocks: {remaining}",
+              "combo": {
+                "base": "Combo: {combo} (Max {max}) / XP: {xp}",
+                "detail": " / Last: +{lastXp}XP ({lines} lines)"
+              }
+            },
+            "end": {
+              "title": "Game Over",
+              "reasons": {
+                "noSpace": "No space available",
+                "generationFailed": "Unable to generate placeable pieces"
+              },
+              "retryHint": "Press R to restart"
+            },
+            "shelf": {
+              "refilling": "Refilling pieces..."
+            },
+            "errors": {
+              "cannotGenerate": "Unable to generate placeable pieces"
+            }
           },
           "trump_games": {
             "name": "Trump Selection",

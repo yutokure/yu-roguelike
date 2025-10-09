@@ -12849,6 +12849,65 @@
           "distanceLabel": "距離 {distance}"
         }
       },
+      "backgammon": {
+        "actor": {
+          "player": "プレイヤー",
+          "ai": "AI"
+        },
+        "difficulty": {
+          "easy": "イージー",
+          "normal": "ノーマル",
+          "hard": "ハード"
+        },
+        "point": "ポイント{point}",
+        "bar": "バー",
+        "dice": {
+          "none": "-"
+        },
+        "board": {
+          "playerOff": "{actor} OFF（{countFormatted}）",
+          "aiOff": "{actor} OFF（{countFormatted}）",
+          "barText": "{label}"
+        },
+        "action": {
+          "roll": "ダイスを振る",
+          "rematch": "再戦"
+        },
+        "badge": {
+          "difficulty": "難易度: {difficulty}",
+          "hits": "ヒット: {hitsFormatted}",
+          "score": "スコア: {scoreFormatted}"
+        },
+        "ui": {
+          "turn": "手番: {actor}{status}",
+          "turnFinishedSuffix": "（終了）",
+          "dice": {
+            "empty": "ダイス: -",
+            "detail": "ダイス: [{diceFormatted}] / 残り [{remainingFormatted}]"
+          },
+          "bar": "{bar}: {playerLabel} {playerFormatted} / {aiLabel} {aiFormatted}",
+          "bearOff": {
+            "title": "ベアオフ",
+            "summary": "{title}: {playerLabel} {playerFormatted} / {aiLabel} {aiFormatted}"
+          }
+        },
+        "log": {
+          "bearOff": "{actor} が{fromLabel}からベアオフ（{dieFormatted}）",
+          "barHit": "{actor} が{bar}から{toLabel}へエントリー（{dieFormatted}）：ヒット！",
+          "barEntry": "{actor} が{bar}から{toLabel}へエントリー（{dieFormatted}）",
+          "moveHit": "{actor} が{fromLabel} → {toLabel}（{dieFormatted}）：ヒット！",
+          "move": "{actor} が{fromLabel} → {toLabel}（{dieFormatted}）",
+          "win": {
+            "player": "{actor}の勝利！{rewardFormatted} EXP 獲得",
+            "ai": "AIの勝利…再挑戦しよう"
+          },
+          "aiDice": "{actor}のダイス: {diceFormatted}",
+          "aiNoMove": "AIは動けない",
+          "playerDice": "{actor}のダイス: {diceFormatted}",
+          "noMoves": "動かせる手がありません",
+          "newGame": "新しいゲームを開始。プレイヤーの手番です"
+        }
+      },
       "runResult": {
         "defaultCause": "ゲームオーバー"
       },

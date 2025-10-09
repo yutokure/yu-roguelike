@@ -444,7 +444,65 @@
           },
           "shogi": {
             "name": "Shogi",
-            "description": "Use drops and promotions in Japanese chess to rack up move and capture EXP."
+            "description": "Use drops and promotions in Japanese chess to rack up move and capture EXP.",
+            "ui": {
+              "title": "Shogi",
+              "subtitle": "MiniExp Edition",
+              "legend": "Moves: +{moveExpFormatted} EXP / Drops: +{dropExpFormatted} EXP / Capture bonus / Promotion: +{promoteExpFormatted} EXP / Check: +{checkExpFormatted} EXP / Win bonus available",
+              "hands": {
+                "aiLabel": "Sente (CPU)",
+                "playerLabel": "Gote (You)",
+                "empty": "None",
+                "chip": "{piece}×{countFormatted}",
+                "total": "{countFormatted} pieces",
+                "totalNone": "None"
+              },
+              "actions": {
+                "restart": "Restart"
+              },
+              "confirm": {
+                "promote": "Promote this piece?"
+              }
+            },
+            "status": {
+              "playerTurn": "Your turn. Select a piece or click a captured piece.",
+              "aiThinking": "CPU is considering a move…",
+              "playerInCheck": "You're in check! Respond quickly.",
+              "aiInCheck": "Check! Press the attack."
+            },
+            "result": {
+              "playerWin": "Checkmate! You win.",
+              "playerLose": "Checkmated… Defeat.",
+              "draw": "Impasse / repetition draw."
+            },
+            "pieces": {
+              "glyph": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉",
+                "promotedPawn": "と",
+                "promotedLance": "成香",
+                "promotedKnight": "成桂",
+                "promotedSilver": "成銀",
+                "promotedBishop": "馬",
+                "promotedRook": "龍"
+              },
+              "label": {
+                "pawn": "Pawn",
+                "lance": "Lance",
+                "knight": "Knight",
+                "silver": "Silver",
+                "gold": "Gold",
+                "bishop": "Bishop",
+                "rook": "Rook",
+                "king": "King"
+              }
+            }
           },
           "riichi_mahjong": {
             "name": "Riichi Mahjong Lite",

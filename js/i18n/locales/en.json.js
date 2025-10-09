@@ -10530,6 +10530,164 @@
     },
 
     "minigame": {
+      "exceler": {
+        "header": {
+          "title": "Exceler Spreadsheet",
+          "subtitle": "{filename} — {sheet}",
+          "buttons": {
+            "new": "New",
+            "import": "Import",
+            "export": "Export",
+            "compatibility": "Compatibility"
+          }
+        },
+        "ribbon": {
+          "tabs": {
+            "home": "Home",
+            "formulas": "Formulas",
+            "view": "View"
+          },
+          "groups": {
+            "clipboard": "Clipboard",
+            "font": "Font",
+            "alignment": "Alignment & Borders",
+            "number": "Number",
+            "functionLibrary": "Function Library",
+            "formulaHelper": "Formula Assist",
+            "display": "Display",
+            "zoom": "Zoom"
+          },
+          "buttons": {
+            "undo": "↺ Undo",
+            "redo": "↻ Redo",
+            "alignLeft": "⟸ Align Left",
+            "alignCenter": "⇔ Align Center",
+            "alignRight": "⟹ Align Right",
+            "alignTop": "⇑ Align Top",
+            "alignMiddle": "⇕ Align Middle",
+            "alignBottom": "⇓ Align Bottom",
+            "insertFunction": "Insert Function",
+            "insertSum": "Σ SUM",
+            "insertAverage": "AVG",
+            "insertIf": "IF"
+          },
+          "tooltips": {
+            "fontSize": "Font size",
+            "borderColor": "Border color"
+          },
+          "borderOptions": {
+            "placeholder": "Border style",
+            "outline": "Outline",
+            "all": "All borders",
+            "top": "Top border",
+            "bottom": "Bottom border",
+            "left": "Left border",
+            "right": "Right border",
+            "clear": "Clear borders"
+          },
+          "numberFormats": {
+            "general": "General",
+            "number": "Number",
+            "currency": "Currency",
+            "percent": "Percent",
+            "comma": "Thousands",
+            "scientific": "Scientific",
+            "date": "Date",
+            "time": "Time"
+          }
+        },
+        "formula": {
+          "placeholder": "Enter formula (e.g. =SUM(A1:B3))"
+        },
+        "functions": {
+          "descriptions": {
+            "SUM": "Returns the sum of numbers.",
+            "AVERAGE": "Returns the average of numbers.",
+            "MIN": "Returns the minimum value.",
+            "MAX": "Returns the maximum value.",
+            "COUNT": "Counts cells containing numbers.",
+            "COUNTA": "Counts non-empty cells.",
+            "IF": "Returns one value depending on a condition.",
+            "ROUND": "Rounds to the specified digits.",
+            "ROUNDUP": "Rounds up to the specified digits.",
+            "ROUNDDOWN": "Rounds down to the specified digits.",
+            "ABS": "Returns the absolute value.",
+            "INT": "Returns the integer portion.",
+            "MOD": "Returns the remainder of division.",
+            "POWER": "Raises a number to a power.",
+            "SQRT": "Returns the square root.",
+            "CONCAT": "Joins text strings together.",
+            "CONCATENATE": "Joins text strings together.",
+            "TEXT": "Formats a number as text.",
+            "LEN": "Returns the length of a text string.",
+            "SUBTOTAL": "Performs the specified subtotal calculation.",
+            "SUMIF": "Sums values matching a condition.",
+            "COUNTIF": "Counts cells matching a condition.",
+            "AVERAGEIF": "Averages values matching a condition.",
+            "IFERROR": "Returns an alternate value when an error occurs.",
+            "PRODUCT": "Multiplies all numbers together.",
+            "VLOOKUP": "Looks up a value vertically and returns the result.",
+            "HLOOKUP": "Looks up a value horizontally and returns the result.",
+            "INDEX": "Returns a value from a range by row and column.",
+            "MATCH": "Returns the position of a lookup value.",
+            "TODAY": "Returns the current date.",
+            "NOW": "Returns the current date and time.",
+            "DATE": "Builds a date from year, month, and day.",
+            "TIME": "Builds a time value.",
+            "UPPER": "Converts text to uppercase.",
+            "LOWER": "Converts text to lowercase.",
+            "LEFT": "Returns characters from the start.",
+            "RIGHT": "Returns characters from the end.",
+            "MID": "Returns characters from the middle.",
+            "TRIM": "Removes extra spaces."
+          }
+        },
+        "view": {
+          "showGrid": "Show gridlines"
+        },
+        "sheet": {
+          "tab": { "tooltip": "Click to switch, double-click to rename, right-click to change tab color" },
+          "add": { "tooltip": "Add a new sheet" },
+          "color": { "tooltip": "Change current sheet tab color (right-click to clear)" },
+          "renamePrompt": "Enter sheet name",
+          "duplicateName": "A sheet with that name already exists."
+        },
+        "status": {
+          "sessionXp": "Session EXP: {value}"
+        },
+        "confirm": {
+          "unsavedChanges": "You have unsaved changes. Continue?"
+        },
+        "filename": {
+          "newWorkbook": "New Workbook.xlsx",
+          "defaultExport": "Worksheet.xlsx"
+        },
+        "warning": {
+          "newWorkbook": "New workbooks have compatibility limits. Shapes and macros aren't supported.",
+          "importLimited": "Compatibility notice: Shapes, macros, external references, and some formatting weren't imported."
+        },
+        "alert": {
+          "fileTooLarge": "File is too large (up to 5 MB).",
+          "importUnsupported": "Compatibility notice: Unsupported features will be discarded.",
+          "importFailed": "Failed to load: {message}",
+          "exportCompatibility": "Compatibility notice: Shapes, macros, and some formats/functions won't be saved.",
+          "exportFailed": "Failed to export: {message}"
+        },
+        "errors": {
+          "parseFailed": "Failed to parse formula.",
+          "unterminatedString": "String literal wasn't closed.",
+          "unknownToken": "Unknown token: {token}",
+          "incompleteExpression": "Formula is incomplete.",
+          "missingClosingParen": "Missing closing ).",
+          "unknownIdentifier": "Unknown identifier: {identifier}",
+          "invalidRangeEnd": "Invalid range end.",
+          "unparsableToken": "Unable to parse token.",
+          "sheetNotFound": "Sheet not found."
+        },
+        "modal": {
+          "compatibility": "Compatibility\n- Multiple sheets/tab colors have limited support (advanced settings are lost)\n- Shapes, macros, pivots, and external links aren't supported\n- Conditional formats and merged cells are not preserved"
+        }
+      },
       "electro_instrument": {
         "title": "Electronic Instrument Studio",
         "badge": "TOY MOD",

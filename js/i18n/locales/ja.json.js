@@ -10530,6 +10530,164 @@
     },
 
     "minigame": {
+      "exceler": {
+        "header": {
+          "title": "表計算エクセラー",
+          "subtitle": "{filename} — {sheet}",
+          "buttons": {
+            "new": "新規",
+            "import": "インポート",
+            "export": "エクスポート",
+            "compatibility": "互換性"
+          }
+        },
+        "ribbon": {
+          "tabs": {
+            "home": "ホーム",
+            "formulas": "数式",
+            "view": "表示"
+          },
+          "groups": {
+            "clipboard": "クリップボード",
+            "font": "フォント",
+            "alignment": "配置 / 罫線",
+            "number": "数値",
+            "functionLibrary": "関数ライブラリ",
+            "formulaHelper": "数式アシスト",
+            "display": "表示設定",
+            "zoom": "ズーム"
+          },
+          "buttons": {
+            "undo": "↺ 元に戻す",
+            "redo": "↻ やり直し",
+            "alignLeft": "⟸ 左寄せ",
+            "alignCenter": "⇔ 中央",
+            "alignRight": "⟹ 右寄せ",
+            "alignTop": "⇑ 上",
+            "alignMiddle": "⇕ 中央",
+            "alignBottom": "⇓ 下",
+            "insertFunction": "関数を挿入",
+            "insertSum": "Σ SUM",
+            "insertAverage": "AVG",
+            "insertIf": "IF"
+          },
+          "tooltips": {
+            "fontSize": "フォントサイズ",
+            "borderColor": "罫線色"
+          },
+          "borderOptions": {
+            "placeholder": "罫線スタイル",
+            "outline": "外枠",
+            "all": "格子",
+            "top": "上罫線",
+            "bottom": "下罫線",
+            "left": "左罫線",
+            "right": "右罫線",
+            "clear": "罫線を消去"
+          },
+          "numberFormats": {
+            "general": "標準",
+            "number": "数値",
+            "currency": "通貨",
+            "percent": "パーセント",
+            "comma": "桁区切り",
+            "scientific": "指数",
+            "date": "日付",
+            "time": "時刻"
+          }
+        },
+        "formula": {
+          "placeholder": "数式を入力 (例: =SUM(A1:B3))"
+        },
+        "functions": {
+          "descriptions": {
+            "SUM": "数値の合計を求めます。",
+            "AVERAGE": "数値の平均を返します。",
+            "MIN": "最小値を返します。",
+            "MAX": "最大値を返します。",
+            "COUNT": "数値が入力されたセルをカウントします。",
+            "COUNTA": "空白でないセルをカウントします。",
+            "IF": "条件に応じて値を切り替えます。",
+            "ROUND": "指定した桁数で四捨五入します。",
+            "ROUNDUP": "指定した桁数で切り上げます。",
+            "ROUNDDOWN": "指定した桁数で切り捨てます。",
+            "ABS": "絶対値を返します。",
+            "INT": "整数部分を返します。",
+            "MOD": "除算の余りを返します。",
+            "POWER": "累乗を計算します。",
+            "SQRT": "平方根を求めます。",
+            "CONCAT": "文字列を結合します。",
+            "CONCATENATE": "文字列を結合します。",
+            "TEXT": "数値を書式設定して文字列にします。",
+            "LEN": "文字列の長さを返します。",
+            "SUBTOTAL": "指定した集計を実行します。",
+            "SUMIF": "条件に一致する値の合計を計算します。",
+            "COUNTIF": "条件に一致するセルを数えます。",
+            "AVERAGEIF": "条件に一致する値の平均を計算します。",
+            "IFERROR": "エラー時に代替値を返します。",
+            "PRODUCT": "数値をすべて乗算します。",
+            "VLOOKUP": "縦方向に検索して値を返します。",
+            "HLOOKUP": "横方向に検索して値を返します。",
+            "INDEX": "範囲から行・列を指定して値を取得します。",
+            "MATCH": "範囲内で検索値の位置を返します。",
+            "TODAY": "本日の日付を返します。",
+            "NOW": "現在の日付と時刻を返します。",
+            "DATE": "年・月・日から日付を生成します。",
+            "TIME": "時刻を生成します。",
+            "UPPER": "文字列を大文字に変換します。",
+            "LOWER": "文字列を小文字に変換します。",
+            "LEFT": "先頭から指定文字数を取得します。",
+            "RIGHT": "末尾から指定文字数を取得します。",
+            "MID": "指定位置から文字列を取得します。",
+            "TRIM": "余分な空白を除去します。"
+          }
+        },
+        "view": {
+          "showGrid": "グリッド線を表示"
+        },
+        "sheet": {
+          "tab": { "tooltip": "クリックで切り替え、ダブルクリックで名前変更、右クリックでタブ色を変更" },
+          "add": { "tooltip": "新しいシートを追加" },
+          "color": { "tooltip": "現在のシートタブの色を変更 (右クリックでクリア)" },
+          "renamePrompt": "シート名を入力",
+          "duplicateName": "同じ名前のシートがあります。"
+        },
+        "status": {
+          "sessionXp": "セッションEXP: {value}"
+        },
+        "confirm": {
+          "unsavedChanges": "未保存の変更があります。続行しますか？"
+        },
+        "filename": {
+          "newWorkbook": "新しいブック.xlsx",
+          "defaultExport": "ワークシート.xlsx"
+        },
+        "warning": {
+          "newWorkbook": "新規ブックは互換性制限があります。図形/マクロは未対応です。",
+          "importLimited": "互換性注意: 図形・マクロ・外部参照・一部の書式は読み込まれていません。"
+        },
+        "alert": {
+          "fileTooLarge": "ファイルが大きすぎます (5MB まで)",
+          "importUnsupported": "互換性注意: 未対応の機能は破棄されます。",
+          "importFailed": "読み込みに失敗しました: {message}",
+          "exportCompatibility": "互換性注意: 図形・マクロ・一部の書式や関数は保存されません。",
+          "exportFailed": "書き出しに失敗しました: {message}"
+        },
+        "errors": {
+          "parseFailed": "式の解析に失敗しました",
+          "unterminatedString": "文字列リテラルが閉じられていません",
+          "unknownToken": "未知のトークン: {token}",
+          "incompleteExpression": "式が不完全です",
+          "missingClosingParen": ") が必要です",
+          "unknownIdentifier": "未知の識別子: {identifier}",
+          "invalidRangeEnd": "範囲の終端が不正です",
+          "unparsableToken": "解析できないトークン",
+          "sheetNotFound": "シートが見つかりません"
+        },
+        "modal": {
+          "compatibility": "互換性について\n- 複数シート/タブ色は簡易サポート (高度な設定は失われます)\n- 図形・マクロ・ピボット・外部リンクは未対応\n- 条件付き書式・結合セルは保持されません"
+        }
+      },
       "electro_instrument": {
         "title": "電子楽器スタジオ",
         "badge": "TOY MOD",

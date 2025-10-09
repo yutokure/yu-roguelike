@@ -10845,6 +10845,112 @@
     },
 
     "minigame": {
+      "trump_games": {
+        "layout": {
+          "navHeader": "Card Games",
+          "title": "Trump Selection",
+          "difficulty": "Difficulty {difficulty} ×{multiplier}",
+          "settings": "Settings"
+        },
+        "placeholder": {
+          "primary": "Select a game from the list on the left.",
+          "separator": " / ",
+          "phaseInfo": "Phase {phase}: {games}"
+        },
+        "status": {
+          "selectGame": "Choose a game to begin.",
+          "comingSoon": "This game is still in development. Please look forward to future updates.",
+          "devPlaceholder": "Currently under development."
+        },
+        "actions": {
+          "returnToHub": "Return to Selection",
+          "default": "Action",
+          "backToList": "Back to List"
+        },
+        "list": {
+          "badge": {
+            "comingSoon": "Coming Soon",
+            "bestScore": "Best {score}"
+          },
+          "unimplemented": {
+            "phase": "Planned for Phase {phase}.",
+            "status": "In preparation."
+          }
+        },
+        "errors": {
+          "initToast": "Failed to initialize the game.",
+          "initFallback": "Initialization failed. Please try a different game."
+        },
+        "settings": {
+          "heading": "Settings",
+          "cardBack": "Card back theme",
+          "autoFlip": "Auto flip mismatched cards in Concentration"
+        },
+        "cardBacks": {
+          "classic": {
+            "label": "Classic",
+            "description": "Navy classic pattern"
+          },
+          "modern": {
+            "label": "Modern",
+            "description": "Vivid cyber style"
+          },
+          "forest": {
+            "label": "Forest",
+            "description": "Deep green gradient with gold"
+          }
+        },
+        "games": {
+          "memory": {
+            "title": "Concentration",
+            "description": "Flip cards to find matching pairs."
+          },
+          "blackjack": {
+            "title": "Blackjack",
+            "description": "Battle the dealer to reach 21."
+          },
+          "baba": {
+            "title": "Old Maid",
+            "description": "Avoid being the last player holding the joker."
+          },
+          "klondike": {
+            "title": "Solitaire (Klondike)",
+            "description": "Sort seven tableau columns to build up the foundations."
+          },
+          "spider": {
+            "title": "Spider Solitaire",
+            "description": "Complete full suit sequences to clear columns."
+          },
+          "freecell": {
+            "title": "FreeCell",
+            "description": "Solve each layout using the four free cells."
+          },
+          "hearts": {
+            "title": "Hearts",
+            "description": "Trick-taking game where you dodge hearts."
+          },
+          "sevens": {
+            "title": "Sevens",
+            "description": "Play cards outward from each seven."
+          },
+          "poker": {
+            "title": "Draw Poker",
+            "description": "Build strong poker hands to score big."
+          },
+          "jiji": {
+            "title": "Jiji Old Maid",
+            "description": "An Old Maid variant with configurable jokers."
+          },
+          "daifugo": {
+            "title": "Daifugō",
+            "description": "High-stakes shedding game with revolutions."
+          },
+          "pageone": {
+            "title": "Page One",
+            "description": "Classic shedding game that inspired UNO."
+          }
+        }
+      },
       "login_bonus": {
         "title": "Login Bonus Calendar",
         "subtitle": "Log in daily to claim rewards. Your progress is saved automatically.",

@@ -10530,6 +10530,35 @@
     },
 
     "minigame": {
+      "counter_pad": {
+        "title": "カウンターパッド",
+        "subtitle": "複数のカウントを素早く管理。増減操作は自動保存されます。",
+        "defaults": {
+          "counterName": "カウンター{index}",
+          "newCounter": "新しいカウンター"
+        },
+        "form": {
+          "namePlaceholder": "カウンター名",
+          "initialValuePlaceholder": "初期値 (0)",
+          "stepPlaceholder": "ステップ (1)",
+          "addButton": "追加"
+        },
+        "summary": {
+          "count": "カウンター {count}件",
+          "total": "合計 {value}",
+          "sessionXp": "セッションEXP {value}"
+        },
+        "emptyState": "まだカウンターがありません。上のフォームから追加してください。",
+        "counter": {
+          "delete": "削除",
+          "deleteConfirm": "{name} を削除しますか？",
+          "stepLabel": "ステップ",
+          "reset": "リセット"
+        },
+        "alerts": {
+          "limitReached": "これ以上は追加できません (最大{max}件)"
+        }
+      },
       "calculator": {
         "modes": {
           "standard": "標準",

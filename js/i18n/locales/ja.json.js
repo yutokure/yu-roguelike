@@ -1066,6 +1066,168 @@
           }
         },
 
+        "logicCircuit": {
+          "categories": {
+            "input": "入力",
+            "gate": "ゲート",
+            "wiring": "配線",
+            "composite": "複合",
+            "sequential": "シーケンシャル",
+            "measurement": "計測",
+            "output": "出力",
+            "other": "その他"
+          },
+          "common": {
+            "high": "HIGH",
+            "low": "LOW",
+            "on": "ON",
+            "off": "OFF",
+            "set": "SET",
+            "reset": "RESET",
+            "metastable": "不定状態",
+            "metastableIndicator": "S=R=1 (不定)",
+            "metastableMessage": "SとRが同時に1です。安定しません。",
+            "warning": "注意",
+            "toggleState": "トグル状態",
+            "previousClock": "前回クロック",
+            "periodMs": "周期 (ms)",
+            "outLabel": "OUT: {value}",
+            "muxStatus": "OUT:{out} (SEL={sel})"
+          },
+          "ui": {
+            "title": "論理回路シミュレータ",
+            "subtitle": "入力ノードとゲートを並べ、リアルタイム評価で組み合わせ論理を検証",
+            "clearCanvas": "キャンバス初期化",
+            "clearTool": "ツール解除 (Esc)",
+            "step": "⏭ ステップ",
+            "stepLabel": "ステップ(ms)",
+            "pause": "⏸ 停止",
+            "resume": "▶ 再開",
+            "sessionXp": "セッションEXP: {value}",
+            "elapsedTime": "経過時間: {value}ms"
+          },
+          "hints": {
+            "board": "ツールを選択し、キャンバスの空いている場所をクリックして配置します。出力ポート→入力ポートの順でクリックすると配線できます。Deleteキーで選択中の部品を削除。",
+            "wires": "配線はパスをクリックで削除。Alt+入力クリックでその入力への配線を解除。",
+            "footer": "ヒント: 入力をトグルして即座に出力を確認。シミュレーション制御で一時停止やステップ実行を行いながらシーケンシャル動作を解析できます。"
+          },
+          "inspector": {
+            "title": "部品インスペクタ",
+            "empty": "部品を選択すると詳細と真理値表を表示します。最大入力3本のゲートで真理値表を自動生成します。",
+            "truthTitle": "真理値表",
+            "connectionCount": "{count} 本",
+            "delayValue": "{value} ns",
+            "fields": {
+              "id": "ID",
+              "type": "タイプ",
+              "inputs": "入力ポート",
+              "outputs": "出力ポート",
+              "lastInputs": "最新入力",
+              "lastOutputs": "最新出力",
+              "inputConnections": "入力接続",
+              "outputConnections": "出力接続",
+              "delay": "伝播遅延(目安)",
+              "description": "説明"
+            }
+          },
+          "truthTable": {
+            "out": "OUT"
+          },
+          "ports": {
+            "output": "出力 #{index}",
+            "input": "入力 #{index}"
+          },
+          "components": {
+            "toggle": {
+              "label": "トグル入力",
+              "description": "クリックでON/OFFを切り替える基本入力",
+              "buttonOn": "ONにする",
+              "buttonOff": "OFFにする"
+            },
+            "clock": {
+              "label": "クロック",
+              "description": "一定周期で振動するクロック入力"
+            },
+            "constHigh": {
+              "label": "定数1",
+              "description": "常にHIGHを出力する定数ソース"
+            },
+            "constLow": {
+              "label": "定数0",
+              "description": "常にLOWを出力する定数ソース"
+            },
+            "buffer": {
+              "label": "バッファ",
+              "description": "入力をそのまま出力するバッファ"
+            },
+            "not": {
+              "label": "NOT",
+              "description": "入力を反転するNOTゲート"
+            },
+            "and": {
+              "label": "AND",
+              "description": "全ての入力がHIGHでHIGH"
+            },
+            "nand": {
+              "label": "NAND",
+              "description": "ANDの反転"
+            },
+            "or": {
+              "label": "OR",
+              "description": "いずれかの入力がHIGHでHIGH"
+            },
+            "nor": {
+              "label": "NOR",
+              "description": "ORの反転"
+            },
+            "xor": {
+              "label": "XOR",
+              "description": "入力のHIGH数が奇数でHIGH"
+            },
+            "xnor": {
+              "label": "XNOR",
+              "description": "XORの反転"
+            },
+            "splitter": {
+              "label": "スプリッタ",
+              "description": "1入力を複数の出力へ複製する"
+            },
+            "mux2": {
+              "label": "2:1 MUX",
+              "description": "選択信号で入力を切り替える2入力1出力の多重化器"
+            },
+            "decoder2": {
+              "label": "2-4デコーダ",
+              "description": "2ビット入力からワンホットの4出力を生成するデコーダ"
+            },
+            "dff": {
+              "label": "Dフリップフロップ",
+              "description": "立ち上がりクロックでD入力をラッチしQ/Q̅を出力する同期フリップフロップ (非同期リセット付)",
+              "indicator": "Q={q} / Q̅={qbar}",
+              "status": "Q={value}",
+              "inspectLatch": "ラッチ状態"
+            },
+            "srLatch": {
+              "label": "SRラッチ",
+              "description": "NOR構成の基本SRラッチ。Sでセット、Rでリセット。",
+              "qStatus": "Q={value}"
+            },
+            "tff": {
+              "label": "Tフリップフロップ",
+              "description": "立ち上がりクロック毎にT入力がHIGHなら出力を反転。リセット入力付き。",
+              "status": "Q={value}"
+            },
+            "probe": {
+              "label": "プローブ",
+              "description": "入力値を監視する計測ノード"
+            },
+            "led": {
+              "label": "LED",
+              "description": "入力がHIGHのとき点灯"
+            }
+          }
+        },
+
         "difficulty": {
           "label": "難易度",
           "easy": "EASY",

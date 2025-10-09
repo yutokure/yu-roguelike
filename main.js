@@ -15,6 +15,29 @@ const formatNumberLocalized = (value, options) => {
         return String(value ?? '');
     }
 };
+const formatDateLocalized = (value, options) => {
+    if (typeof i18n?.formatDate === 'function') {
+        try {
+            return i18n.formatDate(value, options);
+        } catch (error) {
+            console.warn('[i18n] Failed to format date with provider:', error);
+        }
+    }
+    try {
+        const date = value instanceof Date ? value : new Date(value);
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+            return value == null ? '' : String(value);
+        }
+        return new Intl.DateTimeFormat(i18n?.getLocale?.() || undefined, options).format(date);
+    } catch (error) {
+        try {
+            return String(value ?? '');
+        } catch (coerceError) {
+            console.warn('[i18n] Failed to coerce date value:', coerceError);
+            return '';
+        }
+    }
+};
 const localeCompareLocalized = (a, b, options) => {
     if (typeof i18n?.localeCompare === 'function') {
         return i18n.localeCompare(a, b, options);
@@ -18768,12 +18791,14 @@ function createMiniGameLocalization(def) {
     };
 
     const formatNumber = (value, options) => formatNumberLocalized(value, options);
+    const formatDate = (value, options) => formatDateLocalized(value, options);
     const localeCompare = (a, b, options) => localeCompareLocalized(a, b, options);
 
     return {
         prefix,
         t: (key, fallbackText, params) => translateText(key, fallbackText, params),
         formatNumber,
+        formatDate,
         localeCompare,
         getLocale: () => (i18n?.getLocale?.() || i18n?.getDefaultLocale?.() || 'ja'),
         onChange: handleLocaleChange,

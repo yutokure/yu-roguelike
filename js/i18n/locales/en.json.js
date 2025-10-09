@@ -409,36 +409,7 @@
           },
           "go": {
             "name": "Go",
-            "description": "Surround territory, capture stones, and score EXP for smart invasions and victories.",
-            "info": {
-              "intro": "Go 9×9 — You play first (Black)"
-            },
-            "hud": {
-              "turn": {
-                "player": "Your turn (Black)",
-                "ai": "AI turn (White)"
-              },
-              "status": "{turn} | Black captures: {blackCaptures} | White captures: {whiteCaptures} (komi +{komi})",
-              "passNotice": "{actor} passed ({count} in a row)",
-              "aiThinking": "AI is thinking…"
-            },
-            "buttons": {
-              "pass": "Pass",
-              "resign": "Resign"
-            },
-            "messages": {
-              "koViolation": "That move violates the ko rule."
-            },
-            "actors": {
-              "player": "You",
-              "ai": "AI"
-            },
-            "result": {
-              "win": "You win!",
-              "loss": "AI wins…",
-              "draw": "Jigo (Draw)",
-              "summary": "{result} | Black {blackScore} - White {whiteScore}"
-            }
+            "description": "Surround territory, capture stones, and score EXP for smart invasions and victories."
           },
           "backgammon": {
             "name": "Backgammon",
@@ -10511,6 +10482,37 @@
             "doubleThree": "Forbidden move: Double three"
           },
           "genericFoul": "Forbidden move"
+        }
+      },
+      "go": {
+        "info": {
+          "intro": "Go 9×9 — You play first (Black)"
+        },
+        "hud": {
+          "turn": {
+            "player": "Your turn (Black)",
+            "ai": "AI turn (White)"
+          },
+          "status": "{turn} | Black captures: {blackCaptures} | White captures: {whiteCaptures} (komi +{komi})",
+          "passNotice": "{actor} passed ({count} in a row)",
+          "aiThinking": "AI is thinking…"
+        },
+        "buttons": {
+          "pass": "Pass",
+          "resign": "Resign"
+        },
+        "messages": {
+          "koViolation": "That move violates the ko rule."
+        },
+        "actors": {
+          "player": "You",
+          "ai": "AI"
+        },
+        "result": {
+          "win": "You win!",
+          "loss": "AI wins…",
+          "draw": "Jigo (Draw)",
+          "summary": "{result} | Black {blackScore} - White {whiteScore}"
         }
       },
       "connect4": {

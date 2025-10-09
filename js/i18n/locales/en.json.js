@@ -13383,6 +13383,206 @@
     },
 
     "games": {
+      "mathLab": {
+        "keypad": {
+          "groups": {
+            "standard": "Standard Functions",
+            "trigonometry": "Trigonometry & Hyperbolic",
+            "complex": "Complex & Matrices",
+            "analysis": "Analysis & Special Functions",
+            "statistics": "Probability & Statistics",
+            "numerical": "Numerical Methods",
+            "programmer": "Programmer & Info",
+            "constants": "Constants & Units"
+          }
+        },
+        "units": {
+          "templates": {
+            "length": "Length: 5 cm → inch",
+            "mass": "Mass: 70 kg → lb",
+            "energy": "Energy: 1 kWh → J",
+            "temperature": "Temperature: 25 degC → degF",
+            "speed": "Speed: 100 km/h → m/s"
+          }
+        },
+        "ui": {
+          "unitTemplates": {
+            "title": "Unit Conversion Presets",
+            "insert": "Insert"
+          },
+          "worksheet": { "title": "Worksheet" },
+          "inputMode": {
+            "classic": "Function Notation",
+            "pretty": "Mathematical Symbols"
+          },
+          "preview": { "title": "Expression Preview" },
+          "actions": {
+            "evaluate": "Evaluate (Shift+Enter)",
+            "clear": "Reset",
+            "copyResult": "Copy Result"
+          },
+          "history": {
+            "title": "History",
+            "empty": "Your computation history will appear here."
+          },
+          "variables": {
+            "title": "Scope Variables",
+            "reset": "Clear Variables",
+            "empty": "(No variables defined)"
+          },
+          "angle": {
+            "radians": "Radians",
+            "degrees": "Degrees"
+          }
+        },
+        "placeholders": {
+          "worksheet": {
+            "classic": "Enter expressions or commands (e.g., integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem([\"x+y=3\",\"x-y=1\"],[\"x\",\"y\"]))",
+            "pretty": "Examples: √(2) + 1/3, 2π, (x+1)/(x−1) using mathematical symbols"
+          },
+          "preview": {
+            "expression": "(The entered expression will be visualized here)"
+          },
+          "graph": {
+            "expression": "Enter f(x) (e.g., sin(x) / x)"
+          }
+        },
+        "status": {
+          "initializing": "Initializing…",
+          "loading": "Loading math engine…",
+          "copySuccess": "Copied result to clipboard.",
+          "copyFailure": "Failed to copy to clipboard.",
+          "scopeReset": "Scope reset.",
+          "inputModeClassic": "Input Mode: Function Notation",
+          "inputModePretty": "Input Mode: Mathematical Symbols",
+          "resultModeSymbolic": "Result Mode: Fraction/Symbolic",
+          "resultModeNumeric": "Result Mode: Decimal",
+          "angleRadians": "Angle Unit: Radians",
+          "angleDegrees": "Angle Unit: Degrees",
+          "worksheetCleared": "Worksheet cleared.",
+          "engineWaiting": "Waiting for math engine initialization…",
+          "enterExpression": "Enter an expression.",
+          "calculationComplete": "Calculation complete.",
+          "error": "Error: {message}",
+          "enterGraphExpression": "Enter an expression to plot.",
+          "ready": "Math Lab is ready.",
+          "engineInitialized": "Math engine initialized.",
+          "loadFailed": "Failed to load math engine. Check your internet connection."
+        },
+        "results": {
+          "title": "Result",
+          "symbolicToggle": "Fraction/Symbolic",
+          "numericToggle": "Decimal",
+          "symbolicLabel": "Exact / Symbolic",
+          "numericLabel": "Approximate (Base 10)",
+          "moreDigits": "More Digits",
+          "moreDigitsHint": "Extend decimal output by +5 digits",
+          "errorLabel": "Error"
+        },
+        "graph": {
+          "title": "Graph",
+          "plot": "Plot",
+          "range": "Range (xmin, xmax)",
+          "info": "Axes auto-scale. Values with units, vectors/matrices, and complex imaginary parts are omitted.",
+          "parseFailed": "Failed to parse expression: {message}",
+          "invalidRange": "Range must be finite with xmin < xmax.",
+          "noPoints": "No plottable points{detail}.",
+          "noPointsDetail": " (Excluded: {reasons})",
+          "summary": "Plotted points: {count} / {total}",
+          "summaryExtra": " / Excluded {items}",
+          "reasons": {
+            "units": "With units: {count}",
+            "composite": "Vectors/Matrices: {count}",
+            "complex": "Complex numbers: {count}"
+          }
+        },
+        "errors": {
+          "radixRange": "Radix must be an integer between 2 and 30.",
+          "radixInvalidCharacter": "The value contains characters not valid for the selected radix.",
+          "expressionParse": "Could not interpret the expression. Provide a string or math.js node.",
+          "notFinite": "Value must be a finite number.",
+          "numberConversion": "Unable to convert value to a number.",
+          "positiveRealRequired": "A positive real number is required.",
+          "complexRealOnly": "Cannot use only the real part of a complex number.",
+          "matrixToScalar": "Cannot convert a matrix to a scalar.",
+          "arrayToScalar": "Cannot convert an array to a scalar.",
+          "graphUnitsUnsupported": "Values with units cannot be graphed.",
+          "tetraRealOnly": "tetra is only defined for real arguments.",
+          "slogPositiveBase": "slog requires a positive base and real arguments.",
+          "slogBaseSeparated": "Choose a slog base sufficiently far from 1.",
+          "divideByZero": "Division by zero is not allowed.",
+          "integralNotReady": "Wait for the math engine to initialize before integrating.",
+          "integralSymbolicFailed": "Could not compute an analytic integral. Try numericIntegrate.",
+          "integralRange": "Integration bounds must be finite real numbers.",
+          "integralBounds": "Provide both lower and upper limits for a definite integral.",
+          "newtonInitialValue": "Initial value must be a finite number.",
+          "newtonDerivativeZero": "Newton's method failed: derivative near zero.",
+          "iterationDiverged": "Iterative computation diverged.",
+          "iterationNotConverged": "Failed to converge within the specified iterations.",
+          "linearSolverUnavailable": "Linear equation solver is unavailable.",
+          "systemEquationsArray": "Provide an array of equations.",
+          "systemVariableCount": "Variable list must match the number of equations.",
+          "jacobianSolveFailed": "Could not solve the Jacobian system.",
+          "maximizeFoundMinimum": "Search found a minimum near the starting point, not a maximum.",
+          "minimizeFoundMaximum": "Search found a maximum near the starting point, not a minimum.",
+          "digammaFinite": "digamma requires a finite real input.",
+          "digammaPositive": "digamma is only defined for positive real inputs.",
+          "polygammaOrder": "polygamma order must be an integer ≥ 0.",
+          "polygammaPositive": "polygamma is only defined for positive real inputs.",
+          "harmonicFirstArg": "harmonic requires an integer n ≥ 1.",
+          "harmonicSecondArg": "harmonic's second parameter must be a positive real number.",
+          "zetaFinite": "zeta argument must be a finite real number.",
+          "zetaOneDiverges": "zeta(1) diverges.",
+          "zetaPositiveRegion": "This simplified implementation is only defined where the real part is positive.",
+          "logGammaFinite": "logGamma requires a finite real input.",
+          "logGammaPositive": "logGamma is only defined for positive real inputs.",
+          "gammaFinite": "gamma requires a finite real input.",
+          "gammaPositive": "gamma is only defined for positive real inputs.",
+          "betaFirstArg": "beta's first argument must be a positive real number.",
+          "betaSecondArg": "beta's second argument must be a positive real number.",
+          "lambertFinite": "lambertW argument must be a finite real number.",
+          "lambertBranchInteger": "lambertW branch must be an integer.",
+          "lambertBranchRange": "This implementation only supports branches 0 and -1.",
+          "lambertPrincipalDomain": "lambertW principal branch is only defined for x ≥ -1/e.",
+          "lambertNegativeDomain": "lambertW branch -1 is only defined for -1/e ≤ x < 0.",
+          "lambertNotConverged": "lambertW calculation did not converge.",
+          "normalPdfMean": "normalPdf mean must be a finite real number.",
+          "normalPdfSigma": "normalPdf standard deviation must be a positive real number.",
+          "normalPdfInput": "normalPdf input must be a finite real number.",
+          "normalCdfMean": "normalCdf mean must be a finite real number.",
+          "normalCdfSigma": "normalCdf standard deviation must be a positive real number.",
+          "normalCdfInput": "normalCdf input must be a finite real number.",
+          "normalInvProbability": "normalInv probability must be a finite real number.",
+          "normalInvProbabilityRange": "normalInv probability must satisfy 0 < p < 1.",
+          "normalInvSigma": "normalInv standard deviation must be a positive real number.",
+          "poissonMean": "poissonPmf mean must be a positive real number.",
+          "poissonCount": "poissonPmf count must be an integer ≥ 0.",
+          "poissonCdfMean": "poissonCdf mean must be a positive real number.",
+          "poissonCdfCount": "poissonCdf count must be an integer ≥ 0.",
+          "binomialTrials": "binomialPmf trials must be an integer ≥ 0.",
+          "binomialSuccesses": "binomialPmf successes must be an integer ≥ 0.",
+          "binomialProbability": "binomialPmf success probability must be between 0 and 1.",
+          "binomialCdfTrials": "binomialCdf trials must be an integer ≥ 0.",
+          "binomialCdfSuccesses": "binomialCdf successes must be an integer ≥ 0.",
+          "binomialCdfProbability": "binomialCdf success probability must be between 0 and 1.",
+          "logitFinite": "logit argument must be a finite real number.",
+          "logitRange": "logit argument must satisfy 0 < x < 1.",
+          "sigmoidFinite": "sigmoid argument must be a finite real number.",
+          "factorialNumeric": "factorial argument must be numeric.",
+          "factorialFinite": "factorial argument must be a finite real number.",
+          "factorialReal": "factorial argument must be real.",
+          "factorialGreaterThanMinusOne": "factorial argument must be greater than -1.",
+          "factorialNegativeInteger": "factorial is undefined for negative integers.",
+          "factorialNonNegativeInteger": "factorial argument must be a non-negative integer.",
+          "permutationsRange": "permutations second argument must be an integer not exceeding the first.",
+          "permutationsInteger": "permutations arguments must be integers ≥ 0.",
+          "combinationsRange": "combinations second argument must be an integer not exceeding the first.",
+          "combinationsSecondArg": "combinations second argument must be an integer ≥ 0.",
+          "combinationsInteger": "combinations arguments must be integers ≥ 0.",
+          "lnUnavailable": "Natural logarithm function ln is unavailable.",
+          "erfcUnavailable": "erfc is currently unavailable."
+        }
+      },
       "bowlingDuel": {
         "title": "Bowling Duel MOD",
         "legend": "Press the button to stop the Aim → Curve → Power gauges in order and roll the ball!",

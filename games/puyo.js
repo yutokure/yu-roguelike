@@ -3,6 +3,34 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'falling_puyos' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try {
+          return localization.formatNumber(value, options);
+        } catch {}
+      }
+      try {
+        const locale = localization && typeof localization.getLocale === 'function'
+          ? localization.getLocale()
+          : undefined;
+        return new Intl.NumberFormat(locale, options).format(value);
+      } catch {
+        if (value == null || Number.isNaN(value)) return '0';
+        if (typeof value === 'number') return value.toString();
+        return String(value ?? '');
+      }
+    };
+    let detachLocale = null;
     const config = {
       EASY:  { fall: 0.8, colors: 3 },
       NORMAL:{ fall: 0.6, colors: 4 },
@@ -14,6 +42,11 @@
     const LOCK_DELAY = 0.5;
     const COLORS = ['#ef4444','#38bdf8','#a855f7','#facc15','#22c55e'];
     const ORIENT = [ [0,-1], [1,0], [0,1], [-1,0] ]; // child offset relative to pivot
+    const DIFFICULTY_TEXT_META = {
+      EASY: { key: '.difficulty.easy', fallback: 'EASY' },
+      NORMAL: { key: '.difficulty.normal', fallback: 'NORMAL' },
+      HARD: { key: '.difficulty.hard', fallback: 'HARD' },
+    };
 
     const canvas = document.createElement('canvas');
     const W = Math.max(360, Math.min(520, root.clientWidth || 420));
@@ -217,9 +250,9 @@
         if (removed > 0){
           boardPulse = Math.max(boardPulse, 0.35 + chain * 0.08);
           if (chain === 1){
-            addFloatingText('CLEAR!', { color:'#f8fafc', jitter:true });
+            addFloatingText(text('.floating.clear', 'CLEAR!'), { color:'#f8fafc', jitter:true });
           } else {
-            addFloatingText(`${chain}連鎖!`, { color:'#fbbf24', jitter:true });
+            addFloatingText(text('.floating.chain', () => `${chain}連鎖!`, { chain }), { color:'#fbbf24', jitter:true });
           }
         }
         if (chain >= 2) showChainBadge(chain);
@@ -348,14 +381,19 @@
       // info labels
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '600 16px "Segoe UI", system-ui, sans-serif';
-      ctx.fillText('FALLING PUYOS', margin, 38);
+      ctx.fillText(text('.hud.title', 'FALLING PUYOS'), margin, 38);
       ctx.font = '14px "Segoe UI", system-ui, sans-serif';
       ctx.fillStyle = '#cbd5f5';
-      ctx.fillText(`難易度: ${difficulty}`, margin, 62);
-      ctx.fillText(`消去数: ${totalCleared}`, margin, 82);
-      ctx.fillText(`最大連鎖: ${maxChain}`, margin, 102);
+      const difficultyMeta = DIFFICULTY_TEXT_META[difficulty] || { key: '.difficulty.normal', fallback: difficulty };
+      const difficultyLabel = text(difficultyMeta.key, difficultyMeta.fallback);
+      ctx.fillText(text('.hud.difficulty', () => `難易度: ${difficultyLabel}`, { difficulty: difficultyLabel }), margin, 62);
+      const totalClearedFormatted = formatNumber(totalCleared);
+      ctx.fillText(text('.hud.totalCleared', () => `消去数: ${totalClearedFormatted}`, { value: totalClearedFormatted, raw: totalCleared }), margin, 82);
+      const maxChainFormatted = formatNumber(maxChain);
+      ctx.fillText(text('.hud.maxChain', () => `最大連鎖: ${maxChainFormatted}`, { value: maxChainFormatted, raw: maxChain }), margin, 102);
       if (lastChainCleared > 0){
-        ctx.fillText(`直近消去: ${lastChainCleared}`, margin, 122);
+        const lastClearedFormatted = formatNumber(lastChainCleared);
+        ctx.fillText(text('.hud.lastClear', () => `直近消去: ${lastClearedFormatted}`, { value: lastClearedFormatted, raw: lastChainCleared }), margin, 122);
       }
 
       // preview panel
@@ -379,7 +417,7 @@
       }
       ctx.fillStyle = '#f1f5f9';
       ctx.font = '600 14px "Segoe UI", system-ui, sans-serif';
-      ctx.fillText('NEXT', panelX + 20, panelY + 30);
+      ctx.fillText(text('.panel.next', 'NEXT'), panelX + 20, panelY + 30);
       ctx.font = '13px "Segoe UI", system-ui, sans-serif';
       ctx.fillStyle = '#cbd5f5';
       let previewY = panelY + 54;
@@ -408,11 +446,17 @@
         ctx.fillStyle = '#f8fafc';
         ctx.font = 'bold 28px "Segoe UI", system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText('Game Over', W/2, H/2 - 10);
+        ctx.fillText(text('.overlay.gameOver', 'Game Over'), W/2, H/2 - 10);
         ctx.font = '14px "Segoe UI", system-ui';
-        ctx.fillText('Rで再開 / 再挑戦', W/2, H/2 + 18);
+        ctx.fillText(text('.overlay.restartHint', 'Rで再開 / 再挑戦'), W/2, H/2 + 18);
         ctx.textAlign = 'start';
       }
+    }
+
+    if (!detachLocale && localization && typeof localization.onChange === 'function'){
+      try {
+        detachLocale = localization.onChange(() => { try { draw(); } catch {} });
+      } catch {}
     }
 
     function drawBlob(px, py, size, color, opts = {}){
@@ -576,7 +620,8 @@
     function showChainBadge(chain){
       try{
         if (window && window.showMiniExpBadge){
-          window.showMiniExpBadge(`${chain}連鎖!`, { variant:'combo', level: chain });
+          const label = text('.badge.chain', () => `${chain}連鎖!`, { chain });
+          window.showMiniExpBadge(label, { variant:'combo', level: chain });
         }
       }catch{}
     }
@@ -675,6 +720,10 @@
       window.removeEventListener('keydown', keydown);
       window.removeEventListener('keyup', keyup);
       window.removeEventListener('blur', blur);
+      if (typeof detachLocale === 'function'){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       try { root && root.removeChild(canvas); } catch{}
     }
 
@@ -689,6 +738,7 @@
     description: '4つ以上で消去＆連鎖でボーナス', descriptionKey: 'selection.miniexp.games.falling_puyos.description', categoryIds: ['puzzle'],
     version: '0.1.0',
     category: 'パズル',
+    localizationKey: 'minigame.falling_puyos',
     create
   });
 })();

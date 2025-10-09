@@ -10845,6 +10845,34 @@
     },
 
     "minigame": {
+      "falling_puyos": {
+        "floating": {
+          "clear": "CLEAR!",
+          "chain": "{chain}連鎖!"
+        },
+        "hud": {
+          "title": "ぷよぷよ風",
+          "difficulty": "難易度: {difficulty}",
+          "totalCleared": "消去数: {value}",
+          "maxChain": "最大連鎖: {value}",
+          "lastClear": "直近消去: {value}"
+        },
+        "panel": {
+          "next": "NEXT"
+        },
+        "overlay": {
+          "gameOver": "ゲームオーバー",
+          "restartHint": "Rキーで再開 / 再挑戦"
+        },
+        "badge": {
+          "chain": "{chain}連鎖!"
+        },
+        "difficulty": {
+          "easy": "EASY",
+          "normal": "NORMAL",
+          "hard": "HARD"
+        }
+      },
       "login_bonus": {
         "title": "ログインボーナスカレンダー",
         "subtitle": "毎日ログインして特典を獲得しましょう。獲得情報は自動保存されます。",

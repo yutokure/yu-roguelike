@@ -10845,6 +10845,34 @@
     },
 
     "minigame": {
+      "falling_puyos": {
+        "floating": {
+          "clear": "CLEAR!",
+          "chain": "{chain} Chain!"
+        },
+        "hud": {
+          "title": "Falling Puyos",
+          "difficulty": "Difficulty: {difficulty}",
+          "totalCleared": "Clears: {value}",
+          "maxChain": "Max Chain: {value}",
+          "lastClear": "Last Clear: {value}"
+        },
+        "panel": {
+          "next": "NEXT"
+        },
+        "overlay": {
+          "gameOver": "Game Over",
+          "restartHint": "Press R to resume / retry"
+        },
+        "badge": {
+          "chain": "{chain} Chain!"
+        },
+        "difficulty": {
+          "easy": "EASY",
+          "normal": "NORMAL",
+          "hard": "HARD"
+        }
+      },
       "login_bonus": {
         "title": "Login Bonus Calendar",
         "subtitle": "Log in daily to claim rewards. Your progress is saved automatically.",

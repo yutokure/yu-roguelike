@@ -10845,6 +10845,174 @@
     },
 
     "minigame": {
+      "system": {
+        "header": {
+          "title": "System Inspector",
+          "subtitle": "Review PC, OS, browser, and network information in one dashboard",
+          "sessionXp": "Session EXP {xp}"
+        },
+        "tabs": {
+          "pc": "PC",
+          "os": "OS",
+          "browser": "Browser",
+          "ip": "IP"
+        },
+        "pcSubTabs": {
+          "pc-info": "Overview",
+          "pc-monitor": "Hardware Monitor"
+        },
+        "controls": {
+          "copySummary": "Copy Summary",
+          "refreshHardware": "Refresh Hardware Stats",
+          "refreshOs": "Reload",
+          "refreshBrowser": "Reanalyse",
+          "fetchIp": "Fetch IP Info",
+          "cancelIp": "Cancel Fetch",
+          "copyIp": "Copy Result"
+        },
+        "sections": {
+          "pcInfo": { "title": "System Information" },
+          "monitor": {
+            "title": "Realtime Monitor",
+            "note": "Estimates use standard browser APIs. Values may differ from actual system usage."
+          },
+          "os": { "title": "OS Details" },
+          "browser": { "title": "Browser Details" },
+          "ip": { "title": "IP Details" }
+        },
+        "pcInfo": {
+          "motherboard": "Motherboard",
+          "cpuFamily": "CPU Family",
+          "cpuThreads": "CPU Threads",
+          "cpuFrequency": "CPU Frequency",
+          "architecture": "Architecture",
+          "memory": "Memory Capacity",
+          "jsHeap": "JS Heap Limit",
+          "storage": "Storage Estimate",
+          "touch": "Touch Points",
+          "gpuVendor": "GPU Vendor",
+          "gpuName": "GPU Name",
+          "gpuMemory": "GPU Memory",
+          "battery": "Battery",
+          "notes": {
+            "motherboardUnavailable": "Browsers cannot expose motherboard information.",
+            "cpuFrequencyUnavailable": "CPU frequency is not exposed through web standards.",
+            "jsHeapChromeOnly": "Only reported by Chromium-based browsers.",
+            "storageEstimate": "Estimate via navigator.storage.estimate().",
+            "gpuWebgl": "Retrieved from WEBGL_debug_renderer_info.",
+            "gpuDisabled": "WebGL may be disabled.",
+            "gpuMemoryUnavailable": "Browsers do not reveal total GPU memory.",
+            "batteryUnavailable": "Battery Status API is unavailable or not permitted."
+          },
+          "battery": {
+            "charging": "Charging",
+            "discharging": "Discharging"
+          },
+          "values": {
+            "cpuThreads": "{threads} threads",
+            "deviceMemory": "{memory} GB (navigator.deviceMemory)",
+            "battery": "{level} ({state})"
+          }
+        },
+        "monitor": {
+          "cpu": "CPU Usage (estimate)",
+          "loopLag": "Event Loop Lag",
+          "fps": "Frame Updates (FPS)",
+          "jsHeap": "JS Heap Usage",
+          "deviceMemory": "Physical Memory (estimate)",
+          "notes": {
+            "cpuUsage": "Estimated from event loop latency.",
+            "loopLag": "Difference against setInterval baseline.",
+            "fps": "Derived from requestAnimationFrame.",
+            "memoryUsage": "Utilisation {percent}",
+            "memoryChromeOnly": "Only available in Chromium browsers.",
+            "memoryUnavailable": "performance.memory is unavailable.",
+            "deviceMemoryEstimate": "Approximation from navigator.deviceMemory."
+          }
+        },
+        "os": {
+          "name": "OS Name",
+          "version": "Version",
+          "build": "Build",
+          "bitness": "Bitness",
+          "platform": "Platform",
+          "timezone": "Time Zone",
+          "locale": "Locale",
+          "languages": "Preferred Languages",
+          "uptime": "Uptime (estimate)",
+          "lastChecked": "Last Updated",
+          "notes": {
+            "buildUnavailable": "Browsers do not provide detailed build numbers.",
+            "uptime": "OS uptime is unavailable; showing browser runtime instead."
+          },
+          "values": {
+            "uptime": "{hours} hours (browser runtime)"
+          }
+        },
+        "browser": {
+          "name": "Browser Name",
+          "version": "Version",
+          "engine": "Rendering Engine",
+          "agent": "User Agent",
+          "brands": "Brand Info",
+          "vendor": "Vendor",
+          "doNotTrack": "Do Not Track",
+          "online": "Online Status",
+          "cookies": "Cookies",
+          "storage": "Storage APIs",
+          "features": "Key APIs",
+          "html5": "HTML5 Support (core APIs)",
+          "status": {
+            "online": "Online",
+            "offline": "Offline",
+            "dntEnabled": "Enabled",
+            "dntDisabled": "Disabled",
+            "cookiesEnabled": "Available",
+            "cookiesDisabled": "Disabled"
+          },
+          "notes": {
+            "noFeatures": "No major APIs detected.",
+            "html5Unknown": "Unable to determine."
+          }
+        },
+        "ip": {
+          "statusIdle": "Network access is required. Press the fetch button.",
+          "statusSource": "Fetched via {source}",
+          "ip": "IP Address",
+          "hostname": "Hostname",
+          "city": "City",
+          "region": "Region",
+          "country": "Country",
+          "loc": "Latitude / Longitude",
+          "org": "Organisation / ISP",
+          "postal": "Postal Code",
+          "timezone": "Time Zone",
+          "asn": "ASN",
+          "userAgent": "Agent",
+          "updated": "Last Retrieved"
+        },
+        "status": {
+          "unavailable": "Unavailable",
+          "unknown": "Unknown",
+          "notAvailable": "-",
+          "loading": "Loading…",
+          "failed": "Failed"
+        },
+        "errors": {
+          "hardwareFetch": "Failed to retrieve information.",
+          "ipCancelled": "Fetch cancelled.",
+          "ipFetch": "Unable to fetch IP details. Firewalls or offline environments may block access."
+        },
+        "summary": {
+          "header": "[System Summary] {timestamp}",
+          "cpu": "CPU: {family} / {threads} threads / arch {arch}",
+          "memory": "Memory: {memory} (JS heap limit {heap})",
+          "gpu": "GPU: {name} (vendor {vendor})",
+          "os": "OS: {name} {version} ({bitness})",
+          "browser": "Browser: {name} {version} ({engine})",
+          "ip": "IP: {ip} @ {city}, {country}"
+        }
+      },
       "login_bonus": {
         "title": "Login Bonus Calendar",
         "subtitle": "Log in daily to claim rewards. Your progress is saved automatically.",

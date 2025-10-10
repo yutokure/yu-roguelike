@@ -11055,6 +11055,58 @@
           "sunday": "Sunday Bonus"
         }
       },
+      "timer": {
+        "title": "Timer",
+        "subtitle": "Manage focus and breaks with a simple countdown and stopwatch.",
+        "xpBadge": {
+          "current": "Session EXP {amount}"
+        },
+        "modes": {
+          "countdown": "Countdown",
+          "stopwatch": "Stopwatch"
+        },
+        "inputs": {
+          "hours": "Hours",
+          "minutes": "Minutes",
+          "seconds": "Seconds"
+        },
+        "quickButtons": {
+          "plus1m": "+1 min",
+          "plus5m": "+5 min",
+          "plus10m": "+10 min",
+          "minus1m": "-1 min",
+          "pomodoro": "25-min Pomodoro"
+        },
+        "buttons": {
+          "start": "Start",
+          "pause": "Pause",
+          "resume": "Resume",
+          "reset": "Reset"
+        },
+        "status": {
+          "readyGeneric": "Ready",
+          "readyCountdown": "Countdown ready",
+          "readyStopwatch": "Stopwatch ready",
+          "countdownRunning": "Counting...",
+          "countdownResumed": "Resumed",
+          "paused": "Paused",
+          "completed": "Done! Great job",
+          "stopwatchRunning": "Running...",
+          "stopwatchMinute": "{minutes} min elapsed",
+          "stopwatchMinuteWithXp": "{minutes} min elapsed!"
+        },
+        "history": {
+          "title": "Recent log",
+          "labels": {
+            "complete": "Complete",
+            "start": "Start",
+            "stopwatchMinute": "Elapsed",
+            "default": "Progress"
+          },
+          "expGain": "{label}: +{xp} EXP",
+          "completeNoXp": "Timer finished!"
+        }
+      },
       "exceler": {
         "header": {
           "title": "Exceler Spreadsheet",

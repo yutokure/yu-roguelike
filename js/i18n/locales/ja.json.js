@@ -11368,6 +11368,74 @@
           "digital_strings": "デジタルストリングス"
         }
       },
+      "music_player": {
+        "title": "ミュージックプレイヤー",
+        "subtitle": "ローカル音源を再生するユーティリティ",
+        "actions": {
+          "import": "音源を追加"
+        },
+        "settings": {
+          "shuffle": "シャッフル再生",
+          "loopMode": "ループモード",
+          "clearLibrary": "ライブラリを全削除"
+        },
+        "controls": {
+          "volume": "音量",
+          "playbackRate": "再生速度"
+        },
+        "playlist": {
+          "title": "プレイリスト",
+          "search": "検索...",
+          "count": "{count} 曲"
+        },
+        "status": {
+          "playlist": "曲数: {count} / {max} | 合計時間: {duration}",
+          "session": "セッションEXP: {exp}"
+        },
+        "eq": {
+          "title": "イコライザー",
+          "presets": {
+            "flat": "フラット",
+            "rock": "ロック",
+            "vocal": "ボーカル",
+            "bassBoost": "低音強調",
+            "custom": "カスタム"
+          }
+        },
+        "loop": {
+          "none": "ループなし",
+          "one": "1曲リピート",
+          "all": "全曲リピート"
+        },
+        "visualizer": {
+          "oscilloscope": "オシロスコープ",
+          "frequency": "周波数スペクトラム"
+        },
+        "toast": {
+          "audioInitFailed": "オーディオコンテキストを初期化できませんでした",
+          "fileTooLarge": "{name} はサイズ上限 ({maxBytes} バイト) を超えています",
+          "libraryCleared": "ライブラリをクリアしました",
+          "libraryLoadFailed": "ライブラリの読み込みに失敗しました",
+          "loadFailed": "音源の読み込みに失敗しました",
+          "noTracks": "再生するトラックがありません",
+          "playFailed": "再生を開始できませんでした",
+          "playlistFull": "プレイリストの上限に達しました（最大 {max} 曲）",
+          "removed": "{name} を削除しました",
+          "saveFailed": "{name} を保存できませんでした",
+          "trackMissing": "トラックが見つかりません"
+        },
+        "dialog": {
+          "renamePrompt": "トラック名を入力",
+          "clearConfirm": "すべての音源を削除しますか？"
+        },
+        "track": {
+          "untitled": "名称未設定"
+        },
+        "header": {
+          "measuring": "長さ計測中",
+          "playing": "再生中 • {duration}"
+        }
+      },
       "counter_pad": {
         "title": "カウンターパッド",
         "subtitle": "複数のカウントを素早く管理。増減操作は自動保存されます。",

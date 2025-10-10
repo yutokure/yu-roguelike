@@ -11368,6 +11368,74 @@
           "digital_strings": "Digital Strings"
         }
       },
+      "music_player": {
+        "title": "Music Player",
+        "subtitle": "Play local tracks with visualizers and EQ.",
+        "actions": {
+          "import": "Import Tracks"
+        },
+        "settings": {
+          "shuffle": "Shuffle Play",
+          "loopMode": "Loop Mode",
+          "clearLibrary": "Clear Library"
+        },
+        "controls": {
+          "volume": "Volume",
+          "playbackRate": "Playback Speed"
+        },
+        "playlist": {
+          "title": "Playlist",
+          "search": "Search...",
+          "count": "Tracks {count}"
+        },
+        "status": {
+          "playlist": "Tracks: {count} / {max} | Total time: {duration}",
+          "session": "Session EXP: {exp}"
+        },
+        "eq": {
+          "title": "Equalizer",
+          "presets": {
+            "flat": "Flat",
+            "rock": "Rock",
+            "vocal": "Vocal",
+            "bassBoost": "Bass Boost",
+            "custom": "Custom"
+          }
+        },
+        "loop": {
+          "none": "No Loop",
+          "one": "Repeat One",
+          "all": "Repeat All"
+        },
+        "visualizer": {
+          "oscilloscope": "Oscilloscope",
+          "frequency": "Frequency Spectrum"
+        },
+        "toast": {
+          "audioInitFailed": "Failed to initialize the audio context.",
+          "fileTooLarge": "{name} exceeds the size limit ({maxBytes} bytes).",
+          "libraryCleared": "Library cleared.",
+          "libraryLoadFailed": "Failed to load the library.",
+          "loadFailed": "Failed to load the track.",
+          "noTracks": "No tracks to play.",
+          "playFailed": "Couldn't start playback.",
+          "playlistFull": "Playlist limit reached ({max} tracks).",
+          "removed": "Removed {name}.",
+          "saveFailed": "Couldn't save {name}.",
+          "trackMissing": "Track not found."
+        },
+        "dialog": {
+          "renamePrompt": "Enter track name",
+          "clearConfirm": "Delete all tracks?"
+        },
+        "track": {
+          "untitled": "Untitled"
+        },
+        "header": {
+          "measuring": "Measuring length",
+          "playing": "Playing • {duration}"
+        }
+      },
       "counter_pad": {
         "title": "Counter Pad",
         "subtitle": "Track multiple counters quickly. Adjustments are saved automatically.",

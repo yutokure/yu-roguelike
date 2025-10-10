@@ -11410,6 +11410,112 @@
     },
 
     "minigame": {
+      "trump_games": {
+        "layout": {
+          "navHeader": "トランプゲーム",
+          "title": "トランプセレクション",
+          "difficulty": "難易度 {difficulty} ×{multiplier}",
+          "settings": "設定"
+        },
+        "placeholder": {
+          "primary": "左のリストからゲームを選んでください。",
+          "separator": " / ",
+          "phaseInfo": "Phase {phase}: {games}"
+        },
+        "status": {
+          "selectGame": "ゲームを選択してください。",
+          "comingSoon": "開発中のゲームです。今後のアップデートをお待ちください。",
+          "devPlaceholder": "現在は開発中です。"
+        },
+        "actions": {
+          "returnToHub": "ゲームを終了",
+          "default": "Action",
+          "backToList": "一覧に戻る"
+        },
+        "list": {
+          "badge": {
+            "comingSoon": "準備中",
+            "bestScore": "ベスト {score}"
+          },
+          "unimplemented": {
+            "phase": "Phase {phase} で実装予定です。",
+            "status": "実装準備中です。"
+          }
+        },
+        "errors": {
+          "initToast": "ゲームの初期化に失敗しました。",
+          "initFallback": "初期化に失敗しました。別のゲームを試してください。"
+        },
+        "settings": {
+          "heading": "設定",
+          "cardBack": "カード裏面テーマ",
+          "autoFlip": "神経衰弱で不一致カードを自動で裏返す"
+        },
+        "cardBacks": {
+          "classic": {
+            "label": "クラシック",
+            "description": "ネイビーの王道パターン"
+          },
+          "modern": {
+            "label": "モダン",
+            "description": "ビビッドなサイバー柄"
+          },
+          "forest": {
+            "label": "フォレスト",
+            "description": "深緑と金のグラデ"
+          }
+        },
+        "games": {
+          "memory": {
+            "title": "神経衰弱",
+            "description": "ペアを揃える定番記憶ゲーム。"
+          },
+          "blackjack": {
+            "title": "ブラックジャック",
+            "description": "21を目指してディーラーと勝負。"
+          },
+          "baba": {
+            "title": "ババ抜き",
+            "description": "ジョーカーを最後まで残さないように。"
+          },
+          "klondike": {
+            "title": "ソリティア（クロンダイク）",
+            "description": "7列の場札から台札を揃えるソリティア。"
+          },
+          "spider": {
+            "title": "スパイダーソリティア",
+            "description": "完成した列を確実に作る耐久ソリティア。"
+          },
+          "freecell": {
+            "title": "フリーセル",
+            "description": "4つのセルを駆使するソリティア。"
+          },
+          "hearts": {
+            "title": "ハーツ",
+            "description": "ハートを避けるトリックテイキング。"
+          },
+          "sevens": {
+            "title": "七並べ",
+            "description": "7を基点にカードを並べる。"
+          },
+          "poker": {
+            "title": "ポーカー（ドロー）",
+            "description": "役を完成させて高得点を狙う。"
+          },
+          "jiji": {
+            "title": "ジジ抜き",
+            "description": "ジョーカー設定可のババ抜き拡張。"
+          },
+          "daifugo": {
+            "title": "大富豪",
+            "description": "革命必至の手札管理ゲーム。"
+          },
+          "pageone": {
+            "title": "ページワン",
+            "description": "UNOの祖先とされる定番ゲーム。"
+          }
+        }
+      },
       "gamble_hall": {
         "nav": {
           "title": "ゲームセレクト",

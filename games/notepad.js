@@ -329,7 +329,7 @@
       const menuDefs = [
         { key: 'file', labelKey: 'games.notepad.menu.file', fallback: 'ファイル' },
         { key: 'edit', labelKey: 'games.notepad.menu.edit', fallback: '編集' },
-        { key: 'view', labelKey: 'games.notepad.menu.view', fallback: '表示' }
+        { key: 'view', labelKey: 'games.notepad.menu.view.label', fallback: '表示' }
       ];
       menuDefs.forEach(def => {
         const btn = document.createElement('button');

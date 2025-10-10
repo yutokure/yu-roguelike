@@ -8,6 +8,63 @@
     const shortcuts = opts?.shortcuts;
     const dungeonApi = opts?.dungeon;
     const difficulty = opts?.difficulty || 'NORMAL';
+    const i18n = window.I18n;
+
+    const textBindings = new Map();
+    let detachLocale = null;
+
+    function translateText(key, fallback, params){
+      if (key && i18n && typeof i18n.t === 'function'){
+        try {
+          const result = i18n.t(key, params);
+          if (typeof result === 'string' && result !== key){
+            return result;
+          }
+        } catch (err) {
+          // ignore translation failures and fall back
+        }
+      }
+      if (typeof fallback === 'function'){
+        try {
+          return fallback(params);
+        } catch (err) {
+          return '';
+        }
+      }
+      return fallback ?? '';
+    }
+
+    function bindText(element, key, fallback, paramsBuilder){
+      if (!element) return;
+      const builder = typeof paramsBuilder === 'function' ? paramsBuilder : () => (paramsBuilder || {});
+      textBindings.set(element, { key, fallback, builder });
+      const params = builder() || {};
+      element.textContent = translateText(key, fallback, params);
+    }
+
+    function refreshBindings(){
+      for (const [element, binding] of textBindings.entries()){
+        if (!element || !binding) continue;
+        const params = (binding.builder && binding.builder()) || {};
+        element.textContent = translateText(binding.key, binding.fallback, params);
+      }
+    }
+
+    function formatNumber(value, options){
+      if (typeof value !== 'number' || Number.isNaN(value)) return '';
+      if (i18n && typeof i18n.formatNumber === 'function'){
+        try {
+          return i18n.formatNumber(value, options);
+        } catch (err) {
+          // ignore formatting failures and fall back
+        }
+      }
+      try {
+        return new Intl.NumberFormat(undefined, options).format(value);
+      } catch (err) {
+        return value.toLocaleString();
+      }
+    }
 
     const wrapper = document.createElement('div');
     wrapper.className = 'mini-tosochu';
@@ -39,7 +96,7 @@
     missionPanel.style.borderRadius = '8px';
     missionPanel.style.padding = '8px 10px';
     missionPanel.style.fontSize = '0.9rem';
-    missionPanel.textContent = 'ミッション: まだ発動していません';
+    setMissionPanel('miniexp.games.tosochu.ui.missionNotReady', 'ミッション: まだ発動していません');
 
     const canvas = document.createElement('canvas');
     canvas.style.display = 'block';
@@ -53,7 +110,7 @@
 
     const surrenderBtn = document.createElement('button');
     surrenderBtn.type = 'button';
-    surrenderBtn.textContent = '自首する';
+    setSurrenderButton('miniexp.games.tosochu.ui.surrender', '自首する');
     surrenderBtn.style.padding = '8px 12px';
     surrenderBtn.style.borderRadius = '8px';
     surrenderBtn.style.border = 'none';
@@ -62,6 +119,28 @@
     surrenderBtn.style.color = '#1f2937';
 
     controlRow.appendChild(surrenderBtn);
+
+    function setStatus(key, fallback, paramsBuilder){
+      bindText(statusLabel, key, fallback, paramsBuilder);
+    }
+
+    function setMissionPanel(key, fallback, paramsBuilder){
+      bindText(missionPanel, key, fallback, paramsBuilder);
+    }
+
+    function setSurrenderButton(key, fallback, paramsBuilder){
+      bindText(surrenderBtn, key, fallback, paramsBuilder);
+    }
+
+    function translateMissionLabel(mission){
+      if (!mission) return '';
+      return translateText(mission.labelKey, mission.labelFallback);
+    }
+
+    function missionOptionalSuffix(mission){
+      if (!mission?.optional) return '';
+      return translateText('miniexp.games.tosochu.missions.optionalSuffix', '（任意）');
+    }
 
     wrapper.appendChild(infoBar);
     wrapper.appendChild(missionPanel);
@@ -112,8 +191,20 @@
     function enableHost(){ shortcuts?.enableKey?.('r'); shortcuts?.enableKey?.('p'); }
 
     function updateLabels(){
-      timerLabel.textContent = `残り ${Math.max(0, remaining).toFixed(1)}s`;
-      expLabel.textContent = `蓄積EXP ${Math.floor(pendingExp)}`;
+      bindText(
+        timerLabel,
+        'miniexp.games.tosochu.ui.timer',
+        params => `残り ${params.seconds}s`,
+        () => ({
+          seconds: formatNumber(Math.max(0, remaining), { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+        })
+      );
+      bindText(
+        expLabel,
+        'miniexp.games.tosochu.ui.exp',
+        params => `蓄積EXP ${params.exp}`,
+        () => ({ exp: formatNumber(Math.floor(pendingExp)) })
+      );
     }
 
     function keyDown(e){
@@ -273,7 +364,7 @@
       const tile = pos.tile ? pos.tile : pos;
       const center = stage.tileCenter(tile.x, tile.y);
       hunters.push(createHunter(center.x, center.y));
-      statusLabel.textContent = 'ハンターが追加投入された！';
+      setStatus('miniexp.games.tosochu.status.hunterAdded', 'ハンターが追加投入された！');
     }
 
     function removeNearestHunter(){
@@ -286,7 +377,7 @@
         if (d < bestDist){ bestDist = d; bestIdx = i; }
       }
       hunters.splice(bestIdx, 1);
-      statusLabel.textContent = 'ミッション成功！ハンター1体が撤退';
+      setStatus('miniexp.games.tosochu.status.hunterRetreat', 'ミッション成功！ハンター1体が撤退');
     }
 
     function processMissions(dt){
@@ -297,19 +388,31 @@
           const targetTile = stage.pickFloorPosition({ minDistance: 6 }) || { x: Math.floor(stage.width / 2), y: Math.floor(stage.height / 2) };
           const center = stage.tileCenter(targetTile.x, targetTile.y);
           mission.target = { tile: targetTile, x: center.x, y: center.y };
-          statusLabel.textContent = `ミッション発動：${mission.label}`;
+          setStatus(
+            'miniexp.games.tosochu.status.missionActivated',
+            params => `ミッション発動：${params.label}`,
+            () => ({ label: translateMissionLabel(mission) })
+          );
         }
         if (mission.state === 'active'){
           mission.timeLeft -= dt;
           if (distancePx({ x: player.px, y: player.py }, mission.target) <= stage.tileSize * 0.5){
             mission.state = 'success';
-            missionPanel.textContent = `${mission.label}：成功！`;
+            setMissionPanel(
+              'miniexp.games.tosochu.ui.missionSuccess',
+              params => `${params.label}：成功！`,
+              () => ({ label: translateMissionLabel(mission) })
+            );
             mission.onSuccess();
             continue;
           }
           if (mission.timeLeft <= 0){
             mission.state = 'failed';
-            missionPanel.textContent = `${mission.label}：失敗…`;
+            setMissionPanel(
+              'miniexp.games.tosochu.ui.missionFailed',
+              params => `${params.label}：失敗…`,
+              () => ({ label: translateMissionLabel(mission) })
+            );
             mission.onFail();
             continue;
           }
@@ -318,11 +421,26 @@
       const active = missions.find(m => m.state === 'active');
       if (active){
         const coords = `${active.target.tile.x},${active.target.tile.y}`;
-        const optionalSuffix = active.optional ? '（任意）' : '';
-        missionPanel.textContent = `${active.label}${optionalSuffix}：残り${Math.ceil(active.timeLeft)}s (地点: ${coords})`;
+        setMissionPanel(
+          'miniexp.games.tosochu.ui.missionActive',
+          params => `ミッション: ${params.label}${params.optionalSuffix}：残り${params.seconds}s (地点: ${params.coords})`,
+          () => ({
+            label: translateMissionLabel(active),
+            optionalSuffix: missionOptionalSuffix(active),
+            seconds: formatNumber(Math.max(0, Math.ceil(active.timeLeft))),
+            coords
+          })
+        );
       } else if (!missions.some(m => m.state === 'pending')){
         const successCount = missions.filter(m => m.state === 'success').length;
-        missionPanel.textContent = `ミッション完了：成功${successCount}/${missions.length}`;
+        setMissionPanel(
+          'miniexp.games.tosochu.ui.missionComplete',
+          params => `ミッション完了：成功${params.success}/${params.total}`,
+          () => ({
+            success: formatNumber(successCount),
+            total: formatNumber(missions.length)
+          })
+        );
       }
     }
 
@@ -342,23 +460,31 @@
       return dist <= Math.max(0, surrenderZone.radius - player.radius * 0.1);
     }
 
-    function cancelSurrender(message){
+    function cancelSurrender(statusKey, fallback, paramsBuilder){
       if (!surrenderCountdown) return;
       surrenderCountdown = null;
       surrenderBtn.disabled = false;
-      surrenderBtn.textContent = '自首する';
-      if (message) statusLabel.textContent = message;
+      setSurrenderButton('miniexp.games.tosochu.ui.surrender', '自首する');
+      if (statusKey || fallback){
+        setStatus(statusKey, fallback, paramsBuilder);
+      }
     }
 
     function updateSurrender(dt){
       if (!surrenderCountdown) return;
       if (!playerInSurrenderZone()){
-        cancelSurrender('自首を中断しました');
+        cancelSurrender('miniexp.games.tosochu.status.surrenderCancelled', '自首を中断しました');
         return;
       }
       surrenderCountdown.timeLeft -= dt;
       const remainingTime = Math.max(0, surrenderCountdown.timeLeft);
-      surrenderBtn.textContent = `自首中...${remainingTime.toFixed(1)}s`;
+      setSurrenderButton(
+        'miniexp.games.tosochu.ui.surrenderCountdown',
+        params => `自首中...${params.seconds}s`,
+        () => ({
+          seconds: formatNumber(remainingTime, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+        })
+      );
       if (surrenderCountdown.timeLeft <= 0){
         endGame('surrender');
       }
@@ -479,16 +605,28 @@
       pressed.clear();
       cancelSurrender();
       surrenderBtn.disabled = true;
-      surrenderBtn.textContent = '自首する';
+      setSurrenderButton('miniexp.games.tosochu.ui.surrender', '自首する');
       if (result === 'escape'){
         const total = pendingExp + ESCAPE_BONUS;
         awardXp(total, { reason: 'escape', gameId: 'tosochu' });
-        statusLabel.textContent = `逃走成功！+${total} EXP (内訳 ${pendingExp}+${ESCAPE_BONUS})`;
+        setStatus(
+          'miniexp.games.tosochu.status.escapeSuccess',
+          params => `逃走成功！+${params.total} EXP (内訳 ${params.base}+${params.bonus})`,
+          () => ({
+            total: formatNumber(total),
+            base: formatNumber(pendingExp),
+            bonus: formatNumber(ESCAPE_BONUS)
+          })
+        );
       } else if (result === 'surrender'){
         awardXp(pendingExp, { reason: 'surrender', gameId: 'tosochu' });
-        statusLabel.textContent = `自首。蓄積${pendingExp}EXPを獲得`;
+        setStatus(
+          'miniexp.games.tosochu.status.surrenderSuccess',
+          params => `自首。蓄積${params.exp}EXPを獲得`,
+          () => ({ exp: formatNumber(pendingExp) })
+        );
       } else if (result === 'caught'){
-        statusLabel.textContent = '捕まってしまった…獲得EXPなし';
+        setStatus('miniexp.games.tosochu.status.caught', '捕まってしまった…獲得EXPなし');
       }
     }
 
@@ -546,9 +684,9 @@
       surrenderCountdown = null;
       surrenderZone = null;
       surrenderBtn.disabled = false;
-      surrenderBtn.textContent = '自首する';
-      statusLabel.textContent = '逃走中スタンバイ';
-      missionPanel.textContent = 'ミッション: まだ発動していません';
+      setSurrenderButton('miniexp.games.tosochu.ui.surrender', '自首する');
+      setStatus('miniexp.games.tosochu.status.standby', '逃走中スタンバイ');
+      setMissionPanel('miniexp.games.tosochu.ui.missionNotReady', 'ミッション: まだ発動していません');
       runInitialized = false;
       pressed.clear();
     }
@@ -575,24 +713,71 @@
 
       missions.push(
         {
-          id: 'beacon', label: 'ビーコンに接触せよ', triggerAt: 30, timeLimit: 35, state: 'pending',
-          onSuccess(){ removeNearestHunter(); pendingExp += 200; statusLabel.textContent = 'ビーコン成功！電波妨害を強化'; },
-          onFail(){ statusLabel.textContent = 'ビーコン失敗…ハンターが警戒強化'; spawnHunter(stage.pickFloorPosition({ minDistance: 4, exclude: takenTiles })); }
+          id: 'beacon',
+          labelKey: 'miniexp.games.tosochu.missions.beacon.label',
+          labelFallback: 'ビーコンに接触せよ',
+          triggerAt: 30,
+          timeLimit: 35,
+          state: 'pending',
+          onSuccess(){
+            removeNearestHunter();
+            pendingExp += 200;
+            setStatus('miniexp.games.tosochu.status.beaconSuccess', 'ビーコン成功！電波妨害を強化');
+          },
+          onFail(){
+            setStatus('miniexp.games.tosochu.status.beaconFail', 'ビーコン失敗…ハンターが警戒強化');
+            spawnHunter(stage.pickFloorPosition({ minDistance: 4, exclude: takenTiles }));
+          }
         },
         {
-          id: 'data', label: '情報端末をハック', triggerAt: 55, timeLimit: 25, state: 'pending',
-          onSuccess(){ pendingExp += 800; statusLabel.textContent = '極秘情報を確保！報酬が増加'; },
-          onFail(){ statusLabel.textContent = '警報が鳴った！高速ハンターが出現'; spawnHunter(stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles })); }
+          id: 'data',
+          labelKey: 'miniexp.games.tosochu.missions.data.label',
+          labelFallback: '情報端末をハック',
+          triggerAt: 55,
+          timeLimit: 25,
+          state: 'pending',
+          onSuccess(){
+            pendingExp += 800;
+            setStatus('miniexp.games.tosochu.status.dataSuccess', '極秘情報を確保！報酬が増加');
+          },
+          onFail(){
+            setStatus('miniexp.games.tosochu.status.dataFail', '警報が鳴った！高速ハンターが出現');
+            spawnHunter(stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles }));
+          }
         },
         {
-          id: 'box', label: 'ハンターボックスを解除', triggerAt: 80, timeLimit: 30, state: 'pending',
-          onSuccess(){ statusLabel.textContent = '解除成功！ハンターボックスの発動が遅延'; hunterBoxes.forEach(b => b.triggerAt += 20); },
-          onFail(){ statusLabel.textContent = '解除失敗…ハンターが追加投入'; spawnHunter(stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles })); }
+          id: 'box',
+          labelKey: 'miniexp.games.tosochu.missions.box.label',
+          labelFallback: 'ハンターボックスを解除',
+          triggerAt: 80,
+          timeLimit: 30,
+          state: 'pending',
+          onSuccess(){
+            setStatus('miniexp.games.tosochu.status.boxSuccess', '解除成功！ハンターボックスの発動が遅延');
+            hunterBoxes.forEach(b => b.triggerAt += 20);
+          },
+          onFail(){
+            setStatus('miniexp.games.tosochu.status.boxFail', '解除失敗…ハンターが追加投入');
+            spawnHunter(stage.pickFloorPosition({ minDistance: 5, exclude: takenTiles }));
+          }
         },
         {
-          id: 'vault', label: 'ハイリスク金庫を解錠', triggerAt: 120, timeLimit: 30, state: 'pending', optional: true,
-          onSuccess(){ pendingExp += 2000; statusLabel.textContent = '大金獲得！しかし狙われやすくなった'; },
-          onFail(){ statusLabel.textContent = '金庫防衛が発動…ハンターが二体解放'; spawnHunter(stage.pickFloorPosition({ minDistance: 6, exclude: takenTiles })); spawnHunter(stage.pickFloorPosition({ minDistance: 6, exclude: takenTiles })); }
+          id: 'vault',
+          labelKey: 'miniexp.games.tosochu.missions.vault.label',
+          labelFallback: 'ハイリスク金庫を解錠',
+          triggerAt: 120,
+          timeLimit: 30,
+          state: 'pending',
+          optional: true,
+          onSuccess(){
+            pendingExp += 2000;
+            setStatus('miniexp.games.tosochu.status.vaultSuccess', '大金獲得！しかし狙われやすくなった');
+          },
+          onFail(){
+            setStatus('miniexp.games.tosochu.status.vaultFail', '金庫防衛が発動…ハンターが二体解放');
+            spawnHunter(stage.pickFloorPosition({ minDistance: 6, exclude: takenTiles }));
+            spawnHunter(stage.pickFloorPosition({ minDistance: 6, exclude: takenTiles }));
+          }
         }
       );
 
@@ -614,7 +799,7 @@
 
     function initStage(){
       if (!dungeonApi?.generateStage){
-        statusLabel.textContent = 'ダンジョンAPI利用不可';
+        setStatus('miniexp.games.tosochu.status.dungeonUnavailable', 'ダンジョンAPI利用不可');
         return;
       }
       dungeonApi.generateStage({ type: 'mixed', tilesX: 48, tilesY: 36, tileSize: 17 }).then((generated) => {
@@ -636,7 +821,7 @@
         setupRun();
         if (pendingStart) startLoop();
       }).catch(() => {
-        statusLabel.textContent = 'ステージ生成に失敗しました';
+        setStatus('miniexp.games.tosochu.status.stageGenerationFailed', 'ステージ生成に失敗しました');
       });
     }
 
@@ -648,7 +833,7 @@
       if (camera) camera.setCenter(player.px, player.py);
       updateLabels();
       raf = requestAnimationFrame(loop);
-      statusLabel.textContent = '逃走開始！';
+      setStatus('miniexp.games.tosochu.status.runStart', '逃走開始！');
     }
 
     function stopLoop(){
@@ -656,7 +841,7 @@
       running = false;
       cancelAnimationFrame(raf);
       enableHost();
-      statusLabel.textContent = '一時停止中';
+      setStatus('miniexp.games.tosochu.status.runPaused', '一時停止中');
     }
 
     function start(){
@@ -678,6 +863,10 @@
       cancelAnimationFrame(raf);
       enableHost();
       cancelSurrender();
+      if (typeof detachLocale === 'function'){
+        try { detachLocale(); } catch (err) {}
+      }
+      textBindings.clear();
       document.removeEventListener('keydown', keyDown);
       document.removeEventListener('keyup', keyUp);
       surrenderBtn.removeEventListener('click', onSurrender);
@@ -689,13 +878,32 @@
     function onSurrender(){
       if (!stageReady || finished || surrenderCountdown) return;
       if (!playerInSurrenderZone()){
-        statusLabel.textContent = '自首ゾーンに入ってからボタンを押してください';
+        setStatus('miniexp.games.tosochu.status.surrenderZoneHint', '自首ゾーンに入ってからボタンを押してください');
         return;
       }
       surrenderCountdown = { timeLeft: SURRENDER_DURATION };
       surrenderBtn.disabled = true;
-      surrenderBtn.textContent = `自首中...${SURRENDER_DURATION.toFixed(1)}s`;
-      statusLabel.textContent = '自首を試みています…5秒耐え抜け！';
+      setSurrenderButton(
+        'miniexp.games.tosochu.ui.surrenderCountdown',
+        params => `自首中...${params.seconds}s`,
+        () => ({
+          seconds: formatNumber(SURRENDER_DURATION, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+        })
+      );
+      setStatus(
+        'miniexp.games.tosochu.status.surrenderAttempt',
+        params => `自首を試みています…${params.duration}s耐え抜け！`,
+        () => ({
+          duration: formatNumber(SURRENDER_DURATION, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+        })
+      );
+    }
+
+    if (typeof i18n?.onLocaleChanged === 'function'){
+      detachLocale = i18n.onLocaleChanged(() => {
+        updateLabels();
+        refreshBindings();
+      });
     }
 
     surrenderBtn.addEventListener('click', onSurrender);

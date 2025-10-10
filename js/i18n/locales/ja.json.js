@@ -11890,6 +11890,188 @@
           "invalidAnswer": "数値で入力してください"
         }
       },
+      "circuit_simulator": {
+        "title": "電気回路シミュレータ",
+        "subtitle": "電源・受動素子・計器をつないでDC/AC回路をリアルタイム解析します。",
+        "tools": {
+          "header": "ツール",
+          "select": "選択・移動",
+          "addNode": "ノード追加"
+        },
+        "components": {
+          "wire": {
+            "label": "導線",
+            "name": "導線{index}",
+            "description": "抵抗値ほぼ0の線"
+          },
+          "resistor": {
+            "label": "抵抗",
+            "name": "抵抗{index}",
+            "description": "オーム抵抗"
+          },
+          "capacitor": {
+            "label": "コンデンサ",
+            "name": "コンデンサ{index}",
+            "description": "容量性リアクタンス素子"
+          },
+          "inductor": {
+            "label": "インダクタ",
+            "name": "インダクタ{index}",
+            "description": "誘導性リアクタンス素子"
+          },
+          "power": {
+            "label": "電源",
+            "name": "電源{index}",
+            "description": "理想電圧源＋内部抵抗"
+          },
+          "ac_source": {
+            "label": "AC電源",
+            "name": "AC電源{index}",
+            "description": "正弦波電圧源（RMS設定）"
+          },
+          "current_source": {
+            "label": "電流源",
+            "name": "電流源{index}",
+            "description": "理想定電流源"
+          },
+          "ammeter": {
+            "label": "電流計",
+            "name": "電流計{index}",
+            "description": "回路電流を計測（ほぼ0Ω）"
+          },
+          "voltmeter": {
+            "label": "電圧計",
+            "name": "電圧計{index}",
+            "description": "ノード間電位差を測定"
+          },
+          "wattmeter": {
+            "label": "電力計",
+            "name": "電力計{index}",
+            "description": "ノード間電力を測定"
+          }
+        },
+        "defaults": {
+          "nodes": {
+            "a": "ノードA",
+            "b": "ノードB",
+            "ground": "グラウンド"
+          },
+          "elements": {
+            "power": "電源",
+            "resistor": "抵抗{index}",
+            "wire": "ライン"
+          }
+        },
+        "nodes": {
+          "autoName": "ノード{index}"
+        },
+        "analysis": {
+          "header": "解析モード",
+          "mode": {
+            "dc": "DC解析",
+            "ac": "AC解析"
+          },
+          "frequency": {
+            "label": "解析周波数 (Hz)",
+            "hintActive": "AC解析で有効。0Hz〜1MHzまで設定可能。",
+            "hintInactive": "AC解析を有効化すると周波数を調整できます。"
+          }
+        },
+        "status": {
+          "analysisMode": {
+            "dc": "解析モード: DC解析",
+            "ac": "解析モード: AC解析 ({frequency}Hz)"
+          },
+          "angularFrequency": "角周波数: {value} rad/s",
+          "activeTool": "操作ツール: {tool}",
+          "connectionStart": "接続開始: {node}",
+          "ground": {
+            "set": "グラウンド: {node}",
+            "unset": "グラウンド: 未設定"
+          },
+          "warningItem": "⚠ {message}",
+          "diagnostics": {
+            "header": "診断:",
+            "item": "・{message}"
+          }
+        },
+        "summary": {
+          "pending": "解析待ちです",
+          "powerDelivered": "供給電力: {value}",
+          "powerDissipated": "消費電力: {value}",
+          "powerFactor": "力率: {value}",
+          "maxNodeVoltage": "最大ノード電位: {node} = {value}",
+          "maxBranchCurrent": "最大枝電流: {value} {unit}",
+          "sessionXp": "セッションXP: {value}",
+          "nodeVoltagesHeader": "ノード電位:",
+          "nodeVoltageItem": "- {node}: {value}"
+        },
+        "canvas": {
+          "labels": {
+            "voltage": "V",
+            "current": "I",
+            "power": "P",
+            "reactivePower": "Q"
+          }
+        },
+        "inspector": {
+          "title": "インスペクタ",
+          "prompt": "ノードまたはコンポーネントを選択してください。",
+          "node": {
+            "title": "ノード: {node}",
+            "notFound": "ノードが見つかりません",
+            "potential": "電位: {value}",
+            "setGround": "このノードをグラウンドに設定",
+            "delete": "ノード削除",
+            "deleteConfirm": "このノードと接続部品を削除しますか？"
+          },
+          "element": {
+            "title": "{component}",
+            "notFound": "コンポーネントが見つかりません",
+            "delete": "コンポーネント削除",
+            "deleteConfirm": "このコンポーネントを削除しますか？"
+          },
+          "fields": {
+            "name": "名称",
+            "resistance": "抵抗 (Ω)",
+            "voltage": "電圧 (V)",
+            "internalResistance": "内部抵抗 (Ω)",
+            "acVoltage": "電圧（RMS, V）",
+            "phase": "位相 (°)",
+            "capacitance": "容量 (F)",
+            "inductance": "インダクタンス (H)",
+            "current": "電流 (A)"
+          },
+          "meterNote": "計器は回路には影響しません。ノード間の実測値を表示します。",
+          "connection": "接続: {nodeA} ↔ {nodeB}",
+          "reactive": {
+            "capacitor": "リアクタンス Xc: {value} Ω",
+            "capacitorInfinite": "リアクタンス Xc: ∞ Ω",
+            "inductor": "リアクタンス Xl: {value} Ω",
+            "inductorInfinite": "リアクタンス Xl: —"
+          },
+          "stats": {
+            "voltage": "電圧",
+            "current": "電流",
+            "power": "電力"
+          }
+        },
+        "solver": {
+          "warnings": {
+            "noNodes": "ノードがありません",
+            "noSolution": "回路の解が求まりませんでした"
+          },
+          "errors": {
+            "singular": "行列が特異なため解けません"
+          },
+          "diagnostics": {
+            "isolatedNode": "ノード「{node}」は非導電要素により孤立しています",
+            "dcCapacitor": "DC解析ではコンデンサが開放状態として扱われます",
+            "dcInductor": "DC解析ではインダクタはほぼ短絡として扱われます",
+            "acZeroFrequency": "AC解析の周波数が0Hzのため、結果はDCと同一です"
+          }
+        }
+      },
       "acchimuitehoi": {
         "instructions": {
           "rpsTitle": "1. じゃんけんで攻守決定",

@@ -1587,7 +1587,69 @@
           },
           "typing": {
             "name": "Typing Challenge",
-            "description": "Type accurately for 60 seconds to push WPM and EXP."
+            "description": "Type accurately for 60 seconds to push WPM and EXP.",
+            "controls": {
+              "difficulty": "Difficulty",
+              "target": "Target WPM",
+              "targetValue": "{targetWpm} WPM",
+              "difficultyOptions": {
+                "easy": "Easy",
+                "normal": "Normal",
+                "hard": "Hard"
+              }
+            },
+            "words": {
+              "nextEmpty": "Next: -",
+              "nextWithValue": "Next: {word}"
+            },
+            "input": {
+              "placeholder": "Type the shown word (Space/Enter to confirm)"
+            },
+            "buttons": {
+              "reset": "Reset",
+              "retry": "Try again"
+            },
+            "stats": {
+              "labels": {
+                "accuracy": "ACC",
+                "wpm": "WPM",
+                "combo": "COMBO",
+                "sessionXp": "SESSION XP"
+              },
+              "targetInfo": {
+                "pending": "Target {targetWpm} WPM / Progress -",
+                "active": "Target {targetWpm} WPM / Progress {progress}%"
+              }
+            },
+            "result": {
+              "title": "RESULT",
+              "labels": {
+                "accuracy": "Accuracy",
+                "wpm": "Average WPM",
+                "words": "Correct chars",
+                "combo": "Max combo"
+              },
+              "wordsValue": "{count} chars"
+            },
+            "xp": {
+              "title": "EXP breakdown",
+              "none": "No EXP earned this run",
+              "wordLabel": "Word {index}",
+              "word": "{label}: +{xp} EXP",
+              "wordWithMilestones": "{label}: +{xp} EXP ({milestones})",
+              "milestoneEntry": "x{combo}+{bonus}",
+              "milestoneSeparator": ", ",
+              "accuracyLabel": "Accuracy bonus ({accuracyPercent}%)",
+              "accuracy": "{label}: +{xp} EXP",
+              "generic": "+{xp} EXP"
+            },
+            "toasts": {
+              "start": "60-second challenge started! Good luck!",
+              "mistype": "Mistype!",
+              "completeBeforeConfirm": "Type the full word before confirming!",
+              "comboMilestone": "Combo x{combo}! +{bonus} EXP",
+              "comboSeparator": " / "
+            }
           },
           "imperial_realm": {
             "name": "Imperial Realm",

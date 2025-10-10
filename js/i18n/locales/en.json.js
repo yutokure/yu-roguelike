@@ -12125,6 +12125,44 @@
           "modest": "Modest"
         }
       },
+      "pseudo3d_race": {
+        "scenery": {
+          "billboard": "BOOST"
+        },
+        "hud": {
+          "speed": "SPEED {speed} {unit}",
+          "distance": "DIST {distance} {unit}",
+          "time": "TIME {time}{unit}",
+          "crash": "CRASH {crashes}/{limit}",
+          "paused": "PAUSED",
+          "nitro": "NITRO",
+          "progress": "COURSE PROGRESS",
+          "upcomingTurn": {
+            "right": "Right turn",
+            "left": "Left turn"
+          }
+        },
+        "help": {
+          "controls": "Controls: Steer with ←/→ or A/D • Accelerate with ↑/W • Brake with ↓/S • Press Space for Nitro",
+          "objective": "Objective: Cover distance before time runs out and overtake traffic safely.",
+          "shortcuts": "H to toggle help / P to pause"
+        },
+        "end": {
+          "title": "GAME OVER",
+          "restart": "Press R to restart",
+          "pause": "Press P to pause/resume"
+        },
+        "countdown": {
+          "go": "GO!"
+        },
+        "popup": {
+          "nitro": "NITRO!"
+        },
+        "controls": {
+          "nitro": "NITRO",
+          "pause": "PAUSE"
+        }
+      },
       "othello": {
         "hud": {
           "status": {

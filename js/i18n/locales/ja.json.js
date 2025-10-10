@@ -12129,6 +12129,44 @@
           "modest": "まあまあ"
         }
       },
+      "pseudo3d_race": {
+        "scenery": {
+          "billboard": "ブースト"
+        },
+        "hud": {
+          "speed": "速度 {speed}{unit}",
+          "distance": "距離 {distance}{unit}",
+          "time": "残り {time}{unit}",
+          "crash": "クラッシュ {crashes}/{limit}",
+          "paused": "一時停止",
+          "nitro": "ニトロ",
+          "progress": "コース進捗",
+          "upcomingTurn": {
+            "right": "右カーブ",
+            "left": "左カーブ"
+          }
+        },
+        "help": {
+          "controls": "操作: ←/→ または A/D でステアリング ・ ↑/W でアクセル ・ ↓/S でブレーキ ・ スペースでニトロ",
+          "objective": "目的: 制限時間内に距離を稼ぎ、交通を安全に追い越そう",
+          "shortcuts": "H でヘルプ切替 / P で一時停止"
+        },
+        "end": {
+          "title": "ゲームオーバー",
+          "restart": "Rでリスタート",
+          "pause": "Pで一時停止/再開"
+        },
+        "countdown": {
+          "go": "スタート!"
+        },
+        "popup": {
+          "nitro": "ニトロ!"
+        },
+        "controls": {
+          "nitro": "ニトロ",
+          "pause": "一時停止"
+        }
+      },
       "othello": {
         "hud": {
           "status": {

@@ -11410,6 +11410,176 @@
     },
 
     "minigame": {
+      "gamble_hall": {
+        "nav": {
+          "title": "Game Selection",
+          "items": {
+            "roulette": {
+              "label": "Roulette",
+              "detail": "European 37-pocket"
+            },
+            "slot": {
+              "label": "Pachislo Slots",
+              "detail": "3 reels + star bonus"
+            },
+            "dice": {
+              "label": "Lucky Dice",
+              "detail": "5 betting modes"
+            }
+          }
+        },
+        "sidebar": {
+          "balanceLabel": "Balance",
+          "sessionNetLabel": "Session Net",
+          "maxWinLabel": "Max Win"
+        },
+        "header": {
+          "balanceLabel": "Available EXP",
+          "betLabel": "Bet Amount",
+          "sessionNet": "Session Net",
+          "biggestWin": "Biggest Win",
+          "betPlaceholder": "10",
+          "betAdjust": {
+            "plus10": "+10",
+            "plus50": "+50",
+            "max": "MAX"
+          }
+        },
+        "hud": {
+          "expValue": "{value} EXP",
+          "netValue": "{delta} EXP"
+        },
+        "history": {
+          "title": "Recent Results",
+          "empty": "No game history yet.",
+          "betLabel": "BET {bet}",
+          "meta": "{bet} / {detail}",
+          "netDelta": "{delta}",
+          "roulette": {
+            "detail": "{result} / {outcome}"
+          },
+          "slot": {
+            "detail": "{symbols} / {result}"
+          },
+          "dice": {
+            "detail": "{faces} / Total {totalFormatted}"
+          }
+        },
+        "roulette": {
+          "spin": "Spin",
+          "numberOption": "No.{number}",
+          "result": {
+            "numberLabel": "No.{number}",
+            "detail": "No.{number} {color}"
+          },
+          "betTypes": {
+            "colorRed": "Red",
+            "colorBlack": "Black",
+            "colorGreen": "Green (0)",
+            "parityEven": "Even",
+            "parityOdd": "Odd",
+            "number": "Pick a Number"
+          },
+          "colors": {
+            "red": "Red",
+            "black": "Black",
+            "green": "Green",
+            "unknown": "Unknown"
+          },
+          "results": {
+            "colorRed": {
+              "hit": "Red hit",
+              "miss": "Red miss"
+            },
+            "colorBlack": {
+              "hit": "Black hit",
+              "miss": "Black miss"
+            },
+            "colorGreen": {
+              "hit": "0 hit!",
+              "miss": "0 miss"
+            },
+            "parityEven": {
+              "hit": "Even hit",
+              "miss": "Even miss"
+            },
+            "parityOdd": {
+              "hit": "Odd hit",
+              "miss": "Odd miss"
+            },
+            "number": {
+              "hit": "Hit {number}!",
+              "miss": "Miss {number}"
+            },
+            "miss": "Miss"
+          }
+        },
+        "slot": {
+          "start": "Start",
+          "hint": "Match symbols or land star pairs for bigger payouts!",
+          "results": {
+            "jackpot": "777 Jackpot!",
+            "barTriple": "Triple BAR!",
+            "triple": "Triple hit!",
+            "pairWithStar": "{symbol} pair + star!",
+            "pair": "{symbol} pair!",
+            "miss": "Miss…"
+          }
+        },
+        "dice": {
+          "buttons": {
+            "roll": "Roll"
+          },
+          "mode": {
+            "option": "{label} x{multiplier}",
+            "hintDisplay": "{hint} (x{multiplier})"
+          },
+          "modes": {
+            "high": {
+              "label": "High (11-18)",
+              "hint": "Totals of 11 or more pay x2. Triples excluded."
+            },
+            "low": {
+              "label": "Low (3-10)",
+              "hint": "Totals of 10 or less pay x2. Triples excluded."
+            },
+            "lucky7": {
+              "label": "Lucky 7",
+              "hint": "Exact total of 7 for a high payout!"
+            },
+            "allDiff": {
+              "label": "All Different",
+              "hint": "All three faces different pays x4."
+            },
+            "triple": {
+              "label": "Triple",
+              "hint": "All faces match for a huge payout!"
+            },
+            "unknown": "Unknown"
+          },
+          "rollingLabel": "Rolling…",
+          "resultLine": "Roll {faces} (Total {totalFormatted})",
+          "results": {
+            "hit": "Win!",
+            "miss": "Miss…"
+          }
+        },
+        "status": {
+          "ready": "Place a bet to start playing.",
+          "betRequired": "Enter a bet amount.",
+          "slotBusy": "Please wait for the reels to stop…",
+          "notEnoughExp": "Not enough EXP.",
+          "slotSpinning": "Spinning the reels…",
+          "slotResult": "{game}: {result} {net}",
+          "diceBusy": "Please wait for the result…",
+          "diceRolling": "Rolling the dice…",
+          "diceResult": "{game}: {mode} {outcome} {net}",
+          "rouletteBusy": "The wheel is still spinning…",
+          "noExp": "No EXP available.",
+          "rouletteSpinning": "Spinning the wheel…",
+          "rouletteResult": "{game}: {result} ({detail}) {net}"
+        }
+      },
       "breakout_k": {
         "hud": {
           "lives": "Lives: {count}",

@@ -973,7 +973,222 @@
           },
           "tester": {
             "name": "JS Tester",
-            "description": "Benchmark JavaScript features and build block adventures for EXP."
+            "description": "Benchmark JavaScript features and build block adventures for EXP.",
+            "title": "JS Tester / MiniExp MOD",
+            "subtitle": "Run JavaScript self-checks, CPU benchmarks, and a block-based adventure maker.",
+            "tabs": {
+              "tests": "Feature Tests",
+              "benchmark": "CPU Benchmark",
+              "blocks": "Block Adventure"
+            },
+            "tests": {
+              "heading": "JavaScript Self-Check Lab",
+              "description": "Quickly verify representative browser features with one tap. Share the output to streamline debugging.",
+              "runAll": "Run All",
+              "runSingle": "Run Test",
+              "running": "Running…",
+              "defs": {
+                "numbers": {
+                  "name": "Numbers/BigInt",
+                  "description": "Exercise floating-point math, BigInt, and Math helpers.",
+                  "errors": {
+                    "bigInt": "BigInt arithmetic did not match expectations",
+                    "hypot": "Math.hypot returned an unexpected value"
+                  }
+                },
+                "json": {
+                  "name": "JSON & structuredClone",
+                  "description": "Validate JSON serialization and structuredClone behavior.",
+                  "errors": {
+                    "restore": "Failed to restore from JSON",
+                    "clone": "structuredClone could not preserve the Map"
+                  }
+                },
+                "intl": {
+                  "name": "Intl Formatting",
+                  "description": "Confirm Intl.DateTimeFormat and NumberFormat output.",
+                  "errors": {
+                    "date": "Date formatting differed from expectations",
+                    "currency": "Currency formatting differed from expectations"
+                  }
+                },
+                "crypto": {
+                  "name": "Crypto API",
+                  "description": "Generate cryptographic randomness and hash a sample buffer.",
+                  "errors": {
+                    "random": "crypto.getRandomValues is unavailable"
+                  }
+                },
+                "storage": {
+                  "name": "Storage API",
+                  "description": "Verify localStorage/sessionStorage read and write operations.",
+                  "errors": {
+                    "read": "Storage read/write failed",
+                    "blocked": "Storage access is blocked"
+                  }
+                },
+                "canvas": {
+                  "name": "Canvas & Offscreen",
+                  "description": "Render to Canvas and check for OffscreenCanvas support.",
+                  "errors": {
+                    "sample": "Failed to sample a Canvas pixel"
+                  }
+                }
+              }
+            },
+            "benchmark": {
+              "heading": "CPU Benchmark – increments per second",
+              "description": "Keep adding 1 to an integer for one second to gauge burst performance.",
+              "labels": {
+                "current": "Latest (ops/sec)",
+                "best": "Personal best (ops/sec)",
+                "runs": "Total runs"
+              },
+              "start": "Start benchmark (1 sec)",
+              "notice": "The UI may freeze for one second while the benchmark runs.",
+              "log": {
+                "start": "Starting benchmark…",
+                "record": "New record: {value} ops/sec",
+                "result": "Result: {value} ops/sec"
+              }
+            },
+            "blocks": {
+              "controls": {
+                "add": "Add block",
+                "clear": "Clear all"
+              },
+              "alert": {
+                "title": "Custom Alert Function",
+                "description": "Write the body of a function that receives message and context. Use context.flags and context.log for richer effects.",
+                "template": "// message: string\\n// context: { flags, log, awardXp }\\nconst box = document.createElement('div');\\nbox.textContent = message;\\nbox.style.padding = '16px';\\nbox.style.background = 'rgba(96,165,250,0.15)';\\nbox.style.border = '1px solid rgba(96,165,250,0.4)';\\nbox.style.borderRadius = '12px';\\nbox.style.margin = '6px 0';\\ncontext.log(box);\\n",
+                "apply": "Apply",
+                "test": "Test Run",
+                "statusDefault": "Default: write to the log. You can switch back to alert().",
+                "statusApplied": "✅ Applied custom alert handler.",
+                "statusError": "❌ Error: {message}",
+                "testMessage": "This is a custom alert test.",
+                "statusTestSent": "✅ Sent a test message.",
+                "statusTestError": "❌ Runtime error: {message}"
+              },
+              "story": {
+                "title": "Block Story Runner",
+                "play": "Play Story",
+                "stop": "Stop",
+                "logStart": "▶ Story started ({count} blocks)",
+                "logAborted": "⚠ Execution aborted: {message}",
+                "logEnd": "■ Story finished",
+                "logUserStop": "■ Stopped by user",
+                "logEmpty": "⚠ No blocks defined."
+              },
+              "variables": {
+                "title": "Flag Viewer (flags)",
+                "empty": "(empty)"
+              },
+              "defaults": {
+                "choiceQuestion": "What will you do?",
+                "choiceGo": "Go",
+                "choiceStop": "Stop",
+                "controlMessage": "Proceed?",
+                "yes": "Yes",
+                "no": "No",
+                "message": "Message",
+                "prompt": "Please enter your name"
+              },
+              "text": {
+                "placeholder": "Message to display",
+                "delivery": {
+                  "log": "Send to log",
+                  "alert": "Custom alert",
+                  "both": "Both"
+                },
+                "nextLabel": "Next block (# or blank)",
+                "nextPlaceholder": "Leave blank to auto-advance"
+              },
+              "choice": {
+                "questionPlaceholder": "Text shown above the choices",
+                "storePlaceholder": "Variable to store the choice (e.g. choice)",
+                "labelPlaceholder": "Button label",
+                "valuePlaceholder": "Stored value",
+                "targetPlaceholder": "Next block #",
+                "addOption": "Add choice",
+                "newOption": "New option",
+                "logLabel": "Choice",
+                "buttonFallback": "Select",
+                "logSelection": "▶ Choice: {value}",
+                "noOptions": "※ No choices configured"
+              },
+              "set": {
+                "namePlaceholder": "Variable name",
+                "valuePlaceholder": "Value (string)",
+                "nextPlaceholder": "Next block (blank = sequential)"
+              },
+              "jump": {
+                "namePlaceholder": "Variable to compare",
+                "equalsPlaceholder": "Comparison value (string)",
+                "targetPlaceholder": "Block # on match",
+                "elsePlaceholder": "Block # on mismatch (blank = next)"
+              },
+              "award": {
+                "amountPlaceholder": "EXP to grant (negatives allowed)",
+                "nextPlaceholder": "Next block (blank = sequential)"
+              },
+              "types": {
+                "text": "Text",
+                "choice": "Choice",
+                "set": "Set",
+                "jump": "Jump",
+                "award": "Award",
+                "control": "Control"
+              },
+              "control": {
+                "modeLabel": "Type",
+                "modeConfirm": "Confirm (Yes/No)",
+                "modePrompt": "Input field",
+                "messagePlaceholder": "Message to display",
+                "storePlaceholder": "Variable name to store result (blank = none)",
+                "yesLabel": "Label for the Yes button",
+                "yesValue": "Value stored when Yes is chosen",
+                "yesTarget": "Next block # after Yes (blank = next)",
+                "noLabel": "Label for the No button",
+                "noValue": "Value stored when No is chosen",
+                "noTarget": "Next block # after No (blank = next)",
+                "labelPrompt": "Input",
+                "labelConfirm": "Confirm",
+                "okLabel": "Confirm",
+                "cancelLabel": "Cancel",
+                "errorRequired": "Please enter a value.",
+                "errorNumber": "Enter a valid number.",
+                "summaryStored": "▶ {variable} = {value}",
+                "summaryValueOnly": "▶ Value = {value}",
+                "summaryCancelStored": "▶ Cancel ({variable} = {value})",
+                "summaryCancel": "▶ Input cancelled",
+                "summaryChoiceStored": "▶ Selected {label} → {variable} = {value}",
+                "summaryChoice": "▶ Selected {label}"
+              },
+              "prompt": {
+                "messagePlaceholder": "Text shown before the input field",
+                "storePlaceholder": "Variable name for the input",
+                "inputTypeText": "Text",
+                "inputTypeNumber": "Number",
+                "defaultValue": "Default value (literal)",
+                "defaultFrom": "Variable providing default (blank = literal)",
+                "allowEmpty": "Allow empty input",
+                "okLabel": "Label for confirm button",
+                "okTarget": "Block # after confirm (blank = next)",
+                "cancelLabel": "Label for cancel button",
+                "cancelValue": "Value stored on cancel",
+                "cancelTarget": "Block # after cancel (blank = next)"
+              },
+              "logs": {
+                "jumpMatch": "match",
+                "jumpMismatch": "no match",
+                "jump": "[JUMP] {name}={value} => {status}",
+                "alertError": "❌ Alert error: {message}"
+              },
+              "errors": {
+                "tooManySteps": "Too many steps executed. Possibly looping?"
+              }
+            }
           },
           "system": {
             "name": "System Inspector",

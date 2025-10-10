@@ -1221,7 +1221,44 @@
           },
           "topdown_race": {
             "name": "Aurora Circuit",
-            "description": "Drive a top-down circuit, earning EXP from laps and finishing order."
+            "description": "Drive a top-down circuit, earning EXP from laps and finishing order.",
+            "difficulty": {
+              "EASY": "EASY",
+              "NORMAL": "NORMAL",
+              "HARD": "HARD"
+            },
+            "hud": {
+              "title": "Aurora Circuit ({difficulty})",
+              "lap": "Lap: <strong>{current}/{total}</strong> (Next {next})",
+              "lapTime": "Lap Time: {time}",
+              "bestLap": "Best Lap: {time}",
+              "turbo": "Turbo: {percent}%{active}",
+              "turboActive": " (Active)",
+              "position": "Position: <strong>{position}/{total}</strong>",
+              "rivals": "Rivals",
+              "rivalLapSuffix": " · Lap {current}/{total}",
+              "secondsSuffix": "s"
+            },
+            "overlay": {
+              "idlePrompt": "Press START",
+              "go": "GO!"
+            },
+            "results": {
+              "title": "Race Results",
+              "totalTime": "Total Time {time}",
+              "headers": {
+                "position": "Position",
+                "driver": "Driver",
+                "finish": "Finish"
+              },
+              "expSummary": "EXP Earned: Lap {lap} / Best {best} / Boost {boost} / Finish {finish}",
+              "restartHint": "Press {key} to restart"
+            },
+            "status": {
+              "you": "You",
+              "dnf": "DNF",
+              "fin": "FIN"
+            }
           },
           "falling_shooter": {
             "name": "Falling Block Shooter",

@@ -1556,7 +1556,22 @@
           },
           "onigokko": {
             "name": "Tag Escape",
-            "description": "Run around a mixed dungeon to dodge the chaser and survive for EXP."
+            "description": "Run around a mixed dungeon to dodge the chaser and survive for EXP.",
+            "timer": {
+              "remaining": "Time left: {seconds}s"
+            },
+            "status": {
+              "start": "Chase start! Move with Arrow keys / WASD.",
+              "paused": "Paused",
+              "loading": "Loading stage…",
+              "ready": "Ready! Press Start to begin the chase.",
+              "stage_generation_failed": "Stage generation failed",
+              "api_unavailable": "Dungeon API unavailable",
+              "caught": "Caught!",
+              "caught_no_reward": "Caught! No EXP earned.",
+              "escaped": "Escaped! Great job!",
+              "escape_success": "Escape successful!"
+            }
           },
           "darumasan": {
             "name": "Darumasan ga Koronda",

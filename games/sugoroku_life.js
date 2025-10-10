@@ -10,6 +10,53 @@
     11, 12
   ];
 
+  const I18N = typeof window !== 'undefined' ? window.I18n : null;
+  const I18N_PREFIX = 'games.sugorokuLife';
+
+  function translate(path, fallback, params) {
+    const key = `${I18N_PREFIX}.${path}`;
+    if (I18N && typeof I18N.t === 'function') {
+      try {
+        const translated = I18N.t(key, params);
+        if (typeof translated === 'string' && translated !== key) {
+          return translated;
+        }
+      } catch (error) {
+        console.warn('[sugoroku_life] Failed to translate', key, error);
+      }
+    }
+    if (typeof fallback === 'function') {
+      return fallback(params || {});
+    }
+    return fallback !== undefined ? fallback : '';
+  }
+
+  function formatNumber(value, options) {
+    if (I18N && typeof I18N.formatNumber === 'function') {
+      try {
+        return I18N.formatNumber(value, options);
+      } catch (error) {
+        console.warn('[sugoroku_life] Failed to format number', value, error);
+      }
+    }
+    return value.toLocaleString(undefined, options);
+  }
+
+  function formatMoney(value) {
+    const sign = value >= 0 ? '' : '-';
+    const abs = Math.abs(value);
+    const formatted = formatNumber(abs, { maximumFractionDigits: 0 });
+    const unit = translate('ui.currencySuffix', 'G');
+    return `${sign}${formatted}${unit}`;
+  }
+
+  function formatExp(value) {
+    const rounded = Math.round(value);
+    const unit = translate('ui.expUnit', 'EXP');
+    const number = formatNumber(rounded, { maximumFractionDigits: 0 });
+    return translate('ui.expAmount', () => `${number} ${unit}`, { value: rounded, formatted: number, unit });
+  }
+
   const DIFFICULTY_PRESETS = {
     EASY: {
       startMoney: 2200,
@@ -175,16 +222,16 @@
     return [
       {
         key: 'start',
-        label: 'スタート',
-        sub: 'キャリアの幕開け',
+        label: translate('board.start.label', 'スタート'),
+        sub: translate('board.start.sub', 'キャリアの幕開け'),
         theme: 'start',
         onLand: (ctx) => {
           const gain = Math.round(config.salary * 0.8);
           ctx.addMoney(gain);
           const xp = ctx.awardMoneyXp(gain, { multiplier: 1.3, reason: 'first-pay' });
           return {
-            title: '社会人生活スタート！',
-            message: '初任給で生活の基盤を整えよう。',
+            title: translate('events.start.title', '社会人生活スタート！'),
+            message: translate('events.start.message', '初任給で生活の基盤を整えよう。'),
             moneyDelta: gain,
             xpEarned: xp
           };
@@ -192,16 +239,16 @@
       },
       {
         key: 'orientation',
-        label: 'キャリア設計',
-        sub: '将来をイメージ',
+        label: translate('board.orientation.label', 'キャリア設計'),
+        sub: translate('board.orientation.sub', '将来をイメージ'),
         theme: 'growth',
         onLand: (ctx) => {
           const cost = Math.round(160 * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(12, { reason: 'career-plan' });
           return {
-            title: 'キャリアプランを描いた',
-            message: '自己分析セミナーで視界がクリアに。将来の基礎が固まった。',
+            title: translate('events.orientation.title', 'キャリアプランを描いた'),
+            message: translate('events.orientation.message', '自己分析セミナーで視界がクリアに。将来の基礎が固まった。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -209,15 +256,15 @@
       },
       {
         key: 'chance',
-        label: 'チャンスカード',
-        sub: '未知の出来事',
+        label: translate('board.chance.label', 'チャンスカード'),
+        sub: translate('board.chance.unknown', '未知の出来事'),
         theme: 'chance',
         onLand: (ctx) => ctx.drawChance()
       },
       {
         key: 'sidejob',
-        label: '副業準備',
-        sub: '週末プロジェクト',
+        label: translate('board.sidejob.label', '副業準備'),
+        sub: translate('board.sidejob.sub', '週末プロジェクト'),
         theme: 'growth',
         onLand: (ctx) => {
           const invest = Math.round(220 * ctx.config.riskMultiplier);
@@ -229,8 +276,8 @@
             ? ctx.awardMoneyXp(net, { multiplier: 1.1, reason: 'side-job' })
             : ctx.grantFixedXp(Math.round(10 * ctx.config.resilienceRate), { reason: 'side-job-resilience' });
           return {
-            title: '副業プロジェクト始動',
-            message: '学んだスキルを活かした副業で早速収益が発生！',
+            title: translate('events.sidejob.title', '副業プロジェクト始動'),
+            message: translate('events.sidejob.message', '学んだスキルを活かした副業で早速収益が発生！'),
             moneyDelta: gain - invest,
             xpEarned: xp
           };
@@ -238,16 +285,16 @@
       },
       {
         key: 'travel',
-        label: 'リフレッシュ旅行',
-        sub: '感性が磨かれる',
+        label: translate('board.travel.label', 'リフレッシュ旅行'),
+        sub: translate('board.travel.sub', '感性が磨かれる'),
         theme: 'life',
         onLand: (ctx) => {
           const cost = Math.round(260 * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(10, { reason: 'travel' });
           return {
-            title: '旅で感性が豊かに',
-            message: '景色と文化に触れて視野が拡大した。',
+            title: translate('events.travel.title', '旅で感性が豊かに'),
+            message: translate('events.travel.message', '景色と文化に触れて視野が拡大した。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -255,16 +302,16 @@
       },
       {
         key: 'salary',
-        label: '給料日',
-        sub: '努力の実り',
+        label: translate('board.salary.label', '給料日'),
+        sub: translate('board.salary.sub', '努力の実り'),
         theme: 'income',
         onLand: (ctx) => {
           const gain = Math.round((ctx.state.salary + ctx.state.salaryBonus) * (0.9 + Math.random() * 0.3) * ctx.config.bonusMultiplier);
           ctx.addMoney(gain);
           const xp = ctx.awardMoneyXp(gain, { multiplier: 1.15, reason: 'salary' });
           return {
-            title: '給料日！',
-            message: '今月も頑張った。生活費と貯蓄をバランスよく管理しよう。',
+            title: translate('events.salary.title', '給料日！'),
+            message: translate('events.salary.message', '今月も頑張った。生活費と貯蓄をバランスよく管理しよう。'),
             moneyDelta: gain,
             xpEarned: xp
           };
@@ -272,16 +319,16 @@
       },
       {
         key: 'family',
-        label: '家族イベント',
-        sub: '大切な時間',
+        label: translate('board.family.label', '家族イベント'),
+        sub: translate('board.family.sub', '大切な時間'),
         theme: 'life',
         onLand: (ctx) => {
           const cost = Math.round(200 * ctx.config.riskMultiplier + Math.random() * 120);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(14, { reason: 'family' });
           return {
-            title: '家族との思い出',
-            message: '大切な時間はプライスレス。心が満たされた。',
+            title: translate('events.family.title', '家族との思い出'),
+            message: translate('events.family.message', '大切な時間はプライスレス。心が満たされた。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -289,8 +336,8 @@
       },
       {
         key: 'qualification',
-        label: '資格取得',
-        sub: '勉強の成果',
+        label: translate('board.qualification.label', '資格取得'),
+        sub: translate('board.qualification.sub', '勉強の成果'),
         theme: 'growth',
         onLand: (ctx) => {
           const cost = Math.round(240 * ctx.config.riskMultiplier);
@@ -298,8 +345,8 @@
           ctx.state.salaryBonus += 70;
           const xp = ctx.grantFixedXp(18, { reason: 'qualification' });
           return {
-            title: '資格を取得！',
-            message: '専門資格で年収がアップ。今後の給料に反映される。',
+            title: translate('events.qualification.title', '資格を取得！'),
+            message: translate('events.qualification.message', '専門資格で年収がアップ。今後の給料に反映される。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -307,16 +354,16 @@
       },
       {
         key: 'living',
-        label: '生活費',
-        sub: '固定費の支払い',
+        label: translate('board.living.label', '生活費'),
+        sub: translate('board.living.sub', '固定費の支払い'),
         theme: 'expense',
         onLand: (ctx) => {
           const cost = Math.round((180 + Math.random() * 120) * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(Math.round(8 * ctx.config.resilienceRate * 2.4), { reason: 'living-cost' });
           return {
-            title: '生活費を支払った',
-            message: '節約術を磨けばもっと余裕が生まれるかも。',
+            title: translate('events.living.title', '生活費を支払った'),
+            message: translate('events.living.message', '節約術を磨けばもっと余裕が生まれるかも。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -324,23 +371,23 @@
       },
       {
         key: 'chance',
-        label: 'チャンスカード',
-        sub: '良くも悪くも',
+        label: translate('board.chance.label', 'チャンスカード'),
+        sub: translate('board.chance.mixed', '良くも悪くも'),
         theme: 'chance',
         onLand: (ctx) => ctx.drawChance()
       },
       {
         key: 'health',
-        label: '健康診断',
-        sub: '体調を見直す',
+        label: translate('board.health.label', '健康診断'),
+        sub: translate('board.health.sub', '体調を見直す'),
         theme: 'life',
         onLand: (ctx) => {
           const cost = Math.round(140 * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(9, { reason: 'health-check' });
           return {
-            title: '健康診断で安心',
-            message: '定期的なケアで万全の体制。将来のリスクを減らせる。',
+            title: translate('events.health.title', '健康診断で安心'),
+            message: translate('events.health.message', '定期的なケアで万全の体制。将来のリスクを減らせる。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -348,16 +395,16 @@
       },
       {
         key: 'project',
-        label: '大型プロジェクト',
-        sub: '責任重大',
+        label: translate('board.project.label', '大型プロジェクト'),
+        sub: translate('board.project.sub', '責任重大'),
         theme: 'growth',
         onLand: (ctx) => {
           const gain = Math.round(340 * ctx.config.bonusMultiplier + Math.random() * 160);
           ctx.addMoney(gain);
           const xp = ctx.awardMoneyXp(gain, { multiplier: 1.25, reason: 'project' });
           return {
-            title: '大型案件を成功させた',
-            message: 'チームを率いて成果を出し、大幅昇給のチャンス！',
+            title: translate('events.project.title', '大型案件を成功させた'),
+            message: translate('events.project.message', 'チームを率いて成果を出し、大幅昇給のチャンス！'),
             moneyDelta: gain,
             xpEarned: xp
           };
@@ -365,16 +412,16 @@
       },
       {
         key: 'donation',
-        label: '社会貢献',
-        sub: '寄付活動',
+        label: translate('board.donation.label', '社会貢献'),
+        sub: translate('board.donation.sub', '寄付活動'),
         theme: 'life',
         onLand: (ctx) => {
           const cost = Math.round(180 * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(16, { reason: 'donation' });
           return {
-            title: '地域へ寄付した',
-            message: '社会貢献で得た信頼が今後の活動にもプラスに働きそう。',
+            title: translate('events.donation.title', '地域へ寄付した'),
+            message: translate('events.donation.message', '社会貢献で得た信頼が今後の活動にもプラスに働きそう。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -382,8 +429,8 @@
       },
       {
         key: 'payday',
-        label: '昇給ボーナス',
-        sub: '成果が評価された',
+        label: translate('board.payday.label', '昇給ボーナス'),
+        sub: translate('board.payday.sub', '成果が評価された'),
         theme: 'income',
         onLand: (ctx) => {
           const gain = Math.round((ctx.state.salary + ctx.state.salaryBonus) * 1.4 * ctx.config.bonusMultiplier);
@@ -391,8 +438,8 @@
           const xp = ctx.awardMoneyXp(gain, { multiplier: 1.35, reason: 'raise' });
           ctx.state.salaryBonus += 40;
           return {
-            title: '昇給ボーナス獲得！',
-            message: '努力が認められ年収がさらにアップ。',
+            title: translate('events.payday.title', '昇給ボーナス獲得！'),
+            message: translate('events.payday.message', '努力が認められ年収がさらにアップ。'),
             moneyDelta: gain,
             xpEarned: xp
           };
@@ -400,21 +447,21 @@
       },
       {
         key: 'chance',
-        label: 'チャンスカード',
-        sub: '運命の一枚',
+        label: translate('board.chance.label', 'チャンスカード'),
+        sub: translate('board.chance.fate', '運命の一枚'),
         theme: 'chance',
         onLand: (ctx) => ctx.drawChance()
       },
       {
         key: 'mentor',
-        label: 'メンタリング',
-        sub: '後輩育成',
+        label: translate('board.mentor.label', 'メンタリング'),
+        sub: translate('board.mentor.sub', '後輩育成'),
         theme: 'growth',
         onLand: (ctx) => {
           const xp = ctx.grantFixedXp(15, { reason: 'mentoring' });
           return {
-            title: '後輩のメンターに',
-            message: '人を育てる経験は自分の成長にもつながる。',
+            title: translate('events.mentor.title', '後輩のメンターに'),
+            message: translate('events.mentor.message', '人を育てる経験は自分の成長にもつながる。'),
             moneyDelta: 0,
             xpEarned: xp
           };
@@ -422,16 +469,16 @@
       },
       {
         key: 'expense',
-        label: '突発出費',
-        sub: '想定外の修理',
+        label: translate('board.expense.label', '突発出費'),
+        sub: translate('board.expense.sub', '想定外の修理'),
         theme: 'expense',
         onLand: (ctx) => {
           const cost = Math.round((220 + Math.random() * 180) * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(Math.round(10 * ctx.config.resilienceRate * 2.2), { reason: 'unexpected-cost' });
           return {
-            title: '突発的な修理費',
-            message: '冷静に対応して被害を最小限に抑えた。',
+            title: translate('events.expense.title', '突発的な修理費'),
+            message: translate('events.expense.message', '冷静に対応して被害を最小限に抑えた。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -439,16 +486,16 @@
       },
       {
         key: 'team',
-        label: 'チームビルド',
-        sub: '信頼を築く',
+        label: translate('board.team.label', 'チームビルド'),
+        sub: translate('board.team.sub', '信頼を築く'),
         theme: 'life',
         onLand: (ctx) => {
           const cost = Math.round(150 * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(13, { reason: 'team-build' });
           return {
-            title: 'チームビルディング合宿',
-            message: 'チームの絆が深まりプロジェクトが進めやすくなった。',
+            title: translate('events.team.title', 'チームビルディング合宿'),
+            message: translate('events.team.message', 'チームの絆が深まりプロジェクトが進めやすくなった。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -456,15 +503,15 @@
       },
       {
         key: 'chance',
-        label: 'チャンスカード',
-        sub: '予想外の展開',
+        label: translate('board.chance.label', 'チャンスカード'),
+        sub: translate('board.chance.twist', '予想外の展開'),
         theme: 'chance',
         onLand: (ctx) => ctx.drawChance()
       },
       {
         key: 'innovation',
-        label: '新規事業提案',
-        sub: '挑戦のとき',
+        label: translate('board.innovation.label', '新規事業提案'),
+        sub: translate('board.innovation.sub', '挑戦のとき'),
         theme: 'growth',
         onLand: (ctx) => {
           const invest = Math.round(260 * ctx.config.riskMultiplier);
@@ -476,8 +523,8 @@
             ? ctx.awardMoneyXp(net, { multiplier: 1.3, reason: 'new-business' })
             : ctx.grantFixedXp(Math.round(12 * ctx.config.resilienceRate), { reason: 'new-business-resilience' });
           return {
-            title: '新規事業がヒット',
-            message: '市場のニーズを読み切り、部署の柱となる事業が完成した。',
+            title: translate('events.innovation.title', '新規事業がヒット'),
+            message: translate('events.innovation.message', '市場のニーズを読み切り、部署の柱となる事業が完成した。'),
             moneyDelta: gain - invest,
             xpEarned: xp
           };
@@ -485,16 +532,16 @@
       },
       {
         key: 'tax',
-        label: '税金の支払い',
-        sub: '社会の一員として',
+        label: translate('board.tax.label', '税金の支払い'),
+        sub: translate('board.tax.sub', '社会の一員として'),
         theme: 'expense',
         onLand: (ctx) => {
           const cost = Math.round((260 + Math.random() * 140) * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(Math.round(9 * ctx.config.resilienceRate * 2.6), { reason: 'tax' });
           return {
-            title: '税金を納めた',
-            message: '社会への還元。次のチャンスに備えて家計を見直そう。',
+            title: translate('events.tax.title', '税金を納めた'),
+            message: translate('events.tax.message', '社会への還元。次のチャンスに備えて家計を見直そう。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -502,23 +549,23 @@
       },
       {
         key: 'chance',
-        label: 'チャンスカード',
-        sub: '状況一変',
+        label: translate('board.chance.label', 'チャンスカード'),
+        sub: translate('board.chance.shift', '状況一変'),
         theme: 'chance',
         onLand: (ctx) => ctx.drawChance()
       },
       {
         key: 'festival',
-        label: '地域フェス',
-        sub: '人脈を広げる',
+        label: translate('board.festival.label', '地域フェス'),
+        sub: translate('board.festival.sub', '人脈を広げる'),
         theme: 'life',
         onLand: (ctx) => {
           const cost = Math.round(160 * ctx.config.riskMultiplier);
           ctx.addMoney(-cost);
           const xp = ctx.grantFixedXp(17, { reason: 'festival' });
           return {
-            title: '地域フェスで交流',
-            message: '人脈が広がり次の仕事のヒントを得た。',
+            title: translate('events.festival.title', '地域フェスで交流'),
+            message: translate('events.festival.message', '人脈が広がり次の仕事のヒントを得た。'),
             moneyDelta: -cost,
             xpEarned: xp
           };
@@ -526,16 +573,16 @@
       },
       {
         key: 'savings',
-        label: '資産運用',
-        sub: '堅実に増やす',
+        label: translate('board.savings.label', '資産運用'),
+        sub: translate('board.savings.sub', '堅実に増やす'),
         theme: 'income',
         onLand: (ctx) => {
           const gain = Math.round((260 + Math.random() * 200) * ctx.config.bonusMultiplier);
           ctx.addMoney(gain);
           const xp = ctx.awardMoneyXp(gain, { multiplier: 1.2, reason: 'investment' });
           return {
-            title: '資産運用が好調',
-            message: '分散投資が功を奏し堅実に資産が増えた。',
+            title: translate('events.savings.title', '資産運用が好調'),
+            message: translate('events.savings.message', '分散投資が功を奏し堅実に資産が増えた。'),
             moneyDelta: gain,
             xpEarned: xp
           };
@@ -543,18 +590,12 @@
       },
       {
         key: 'final',
-        label: 'ゴール',
-        sub: '人生の集大成',
+        label: translate('board.final.label', 'ゴール'),
+        sub: translate('board.final.sub', '人生の集大成'),
         theme: 'final',
         onLand: (ctx) => ctx.reachGoal()
       }
     ];
-  }
-
-  function formatMoney(value) {
-    const sign = value >= 0 ? '' : '-';
-    const abs = Math.abs(value);
-    return `${sign}${abs.toLocaleString()}G`;
   }
 
   function create(root, awardXp, opts) {
@@ -632,25 +673,30 @@
       return strong;
     }
 
-    const turnValue = createHudItem('ターン');
-    const moneyValue = createHudItem('所持金');
-    const salaryValue = createHudItem('年収(概算)');
-    const xpValue = createHudItem('獲得EXP');
+    const turnValue = createHudItem(translate('ui.hud.turn', 'ターン'));
+    const moneyValue = createHudItem(translate('ui.hud.money', '所持金'));
+    const salaryValue = createHudItem(translate('ui.hud.salary', '年収(概算)'));
+    const xpValue = createHudItem(translate('ui.hud.exp', '獲得EXP'));
 
     const rollButton = document.createElement('button');
     rollButton.className = 'mini-sugoroku-roll';
-    rollButton.textContent = 'サイコロを振る';
+    rollButton.textContent = translate('ui.controls.roll', 'サイコロを振る');
     side.appendChild(rollButton);
 
     const eventPanel = document.createElement('div');
     eventPanel.className = 'mini-sugoroku-event';
-    eventPanel.innerHTML = '<h3>ようこそ人生すごろくへ</h3><p>サイコロを振ってコマを進め、イベントの結果でEXPを獲得しましょう。</p>';
+    const welcomeTitle = document.createElement('h3');
+    welcomeTitle.textContent = translate('ui.welcome.title', 'ようこそ人生すごろくへ');
+    const welcomeMessage = document.createElement('p');
+    welcomeMessage.textContent = translate('ui.welcome.message', 'サイコロを振ってコマを進め、イベントの結果でEXPを獲得しましょう。');
+    eventPanel.appendChild(welcomeTitle);
+    eventPanel.appendChild(welcomeMessage);
     side.appendChild(eventPanel);
 
     const logPanel = document.createElement('div');
     logPanel.className = 'mini-sugoroku-log';
     const logTitle = document.createElement('h4');
-    logTitle.textContent = '出来事ログ';
+    logTitle.textContent = translate('ui.log.title', '出来事ログ');
     const logList = document.createElement('ul');
     logPanel.appendChild(logTitle);
     logPanel.appendChild(logList);
@@ -663,7 +709,7 @@
 
     const restartButton = document.createElement('button');
     restartButton.className = 'mini-sugoroku-restart';
-    restartButton.textContent = 'もう一度プレイ';
+    restartButton.textContent = translate('ui.controls.restart', 'もう一度プレイ');
     restartButton.style.display = 'none';
     side.appendChild(restartButton);
 
@@ -695,6 +741,8 @@
       },
       drawChance() {
         const card = CHANCE_CARDS[Math.floor(Math.random() * CHANCE_CARDS.length)];
+        const title = translate(`chance.${card.id}.label`, card.label);
+        const description = translate(`chance.${card.id}.description`, card.description);
         const baseMoney = typeof card.money === 'function' ? card.money(state) : (card.money || 0);
         const scaled = Math.round(baseMoney >= 0 ? baseMoney * config.bonusMultiplier : baseMoney * config.riskMultiplier);
         let xp = 0;
@@ -712,8 +760,8 @@
           xp += ctx.grantFixedXp(card.resilienceBonus, { reason: `chance:${card.id}:resilience` });
         }
         return {
-          title: `${card.label}`,
-          message: card.description,
+          title,
+          message: description,
           moneyDelta: scaled,
           xpEarned: xp
         };
@@ -724,6 +772,9 @@
         const finalBonus = Math.max(0, Math.floor(state.money / config.finalDivisor));
         const finalXp = ctx.grantFixedXp(finalBonus, { reason: 'retire-bonus' });
         const grade = state.money >= 5000 ? 'S' : state.money >= 3800 ? 'A' : state.money >= 2600 ? 'B' : state.money >= 1500 ? 'C' : 'D';
+        const summaryMoney = formatMoney(state.money);
+        const bonusAmount = Math.round(finalXp);
+        const bonusText = formatNumber(bonusAmount, { maximumFractionDigits: 0 });
         showSummary({
           grade,
           finalXp,
@@ -731,12 +782,12 @@
         });
         logEvent({
           tone: 'positive',
-          title: 'ゴール！',
-          detail: `最終資産 ${formatMoney(state.money)} / グレード${grade} / 追加EXP ${Math.round(finalXp)}`
+          title: translate('events.goal.logTitle', 'ゴール！'),
+          detail: translate('events.goal.logDetail', () => `最終資産 ${summaryMoney} / グレード${grade} / 追加EXP ${bonusText}`, { money: summaryMoney, grade, bonus: bonusAmount, bonusFormatted: bonusText })
         });
         return {
-          title: '人生の総決算',
-          message: `最終資産 ${formatMoney(state.money)}。グレード${grade}達成！所持金に応じたボーナスEXPを獲得しました。`,
+          title: translate('events.goal.title', '人生の総決算'),
+          message: translate('events.goal.message', () => `最終資産 ${summaryMoney}。グレード${grade}達成！所持金に応じたボーナスEXPを獲得しました。`, { money: summaryMoney, grade, bonus: bonusAmount, bonusFormatted: bonusText }),
           moneyDelta: 0,
           xpEarned: finalXp
         };
@@ -744,10 +795,10 @@
     };
 
     function updateHud() {
-      turnValue.textContent = `${state.turn}`;
+      turnValue.textContent = formatNumber(state.turn, { maximumFractionDigits: 0 });
       moneyValue.textContent = formatMoney(state.money);
-      salaryValue.textContent = `${Math.round(state.salary + state.salaryBonus)}G`;
-      xpValue.textContent = `${Math.round(state.totalXp)} EXP`;
+      salaryValue.textContent = formatMoney(Math.round(state.salary + state.salaryBonus));
+      xpValue.textContent = formatExp(state.totalXp);
     }
 
     function logEvent(entry) {
@@ -773,7 +824,11 @@
         detail.textContent = item.detail || '';
         const meta = document.createElement('div');
         meta.className = 'mini-sugoroku-resume';
-        meta.textContent = `${item.moneyDelta ? formatMoney(item.moneyDelta) : '±0G'} / EXP ${Math.round(item.xp)}`;
+        const moneyText = item.moneyDelta ? formatMoney(item.moneyDelta) : translate('ui.log.noMoneyDelta', '±0G');
+        const expAmount = Math.round(item.xp);
+        const expFormatted = formatNumber(expAmount, { maximumFractionDigits: 0 });
+        const expText = translate('ui.log.expText', () => `EXP ${expFormatted}`, { value: expAmount, formatted: expFormatted });
+        meta.textContent = translate('ui.log.meta', () => `${moneyText} / ${expText}`, { money: moneyText, exp: expText, expValue: expAmount, expFormatted });
         li.appendChild(title);
         if (item.detail) li.appendChild(detail);
         li.appendChild(meta);
@@ -792,7 +847,11 @@
       if (result.moneyDelta > 0) delta.classList.add('positive');
       else if (result.moneyDelta < 0) delta.classList.add('negative');
       else delta.classList.add('neutral');
-      delta.textContent = `${formatMoney(result.moneyDelta)} / EXP ${Math.round(result.xpEarned || 0)}`;
+      const deltaExpAmount = Math.round(result.xpEarned || 0);
+      const deltaExpFormatted = formatNumber(deltaExpAmount, { maximumFractionDigits: 0 });
+      const deltaExpText = translate('ui.event.expText', () => `EXP ${deltaExpFormatted}`, { value: deltaExpAmount, formatted: deltaExpFormatted });
+      const moneyDeltaText = formatMoney(result.moneyDelta);
+      delta.textContent = translate('ui.event.delta', () => `${moneyDeltaText} / ${deltaExpText}`, { money: moneyDeltaText, exp: deltaExpText, expValue: deltaExpAmount, expFormatted: deltaExpFormatted });
       eventPanel.appendChild(h3);
       eventPanel.appendChild(message);
       eventPanel.appendChild(delta);
@@ -802,13 +861,18 @@
       summaryPanel.style.display = 'flex';
       summaryPanel.innerHTML = '';
       const title = document.createElement('strong');
-      title.textContent = `最終ランク ${grade}`;
+      title.textContent = translate('ui.summary.rank', () => `最終ランク ${grade}`, { grade });
       const moneyLine = document.createElement('div');
-      moneyLine.textContent = `最終所持金: ${formatMoney(money)}`;
+      const finalMoneyText = formatMoney(money);
+      moneyLine.textContent = translate('ui.summary.money', () => `最終所持金: ${finalMoneyText}`, { money: finalMoneyText });
       const bonusLine = document.createElement('div');
-      bonusLine.textContent = `ボーナスEXP: ${Math.round(finalXp)}`;
+      const bonusAmount = Math.round(finalXp);
+      const bonusFormatted = formatNumber(bonusAmount, { maximumFractionDigits: 0 });
+      bonusLine.textContent = translate('ui.summary.bonus', () => `ボーナスEXP: ${bonusFormatted}`, { value: bonusAmount, formatted: bonusFormatted });
       const totalLine = document.createElement('div');
-      totalLine.textContent = `累計獲得EXP: ${Math.round(state.totalXp)}`;
+      const totalAmount = Math.round(state.totalXp);
+      const totalFormatted = formatNumber(totalAmount, { maximumFractionDigits: 0 });
+      totalLine.textContent = translate('ui.summary.total', () => `累計獲得EXP: ${totalFormatted}`, { value: totalAmount, formatted: totalFormatted });
       summaryPanel.appendChild(title);
       summaryPanel.appendChild(moneyLine);
       summaryPanel.appendChild(bonusLine);
@@ -902,7 +966,13 @@
       restartButton.style.display = 'none';
       pathCells.forEach((cell) => cell.classList.remove('visited', 'active'));
       movePieceTo(0);
-      eventPanel.innerHTML = '<h3>再スタート！</h3><p>もう一度人生を駆け抜けましょう。</p>';
+      eventPanel.innerHTML = '';
+      const restartTitle = document.createElement('h3');
+      restartTitle.textContent = translate('ui.restart.title', '再スタート！');
+      const restartMessage = document.createElement('p');
+      restartMessage.textContent = translate('ui.restart.message', 'もう一度人生を駆け抜けましょう。');
+      eventPanel.appendChild(restartTitle);
+      eventPanel.appendChild(restartMessage);
       rollButton.disabled = false;
       updateHud();
       applySquare(0);

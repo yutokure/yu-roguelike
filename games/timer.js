@@ -74,6 +74,42 @@
   const MAX_MINUTES = 59;
   const MAX_SECONDS = 59;
   const DEFAULT_DURATION = 5 * 60 * 1000; // 5 minutes
+  const GLOBAL = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
+  const I18N = GLOBAL && GLOBAL.I18n;
+  const I18N_PREFIX = 'minigame.timer';
+
+  function formatTemplate(template, params){
+    if (template === undefined || template === null) return '';
+    if (!params || typeof params !== 'object') return String(template);
+    return String(template).replace(/\{([^{}]+)\}/g, (match, token) => {
+      const key = token.trim();
+      if (!key) return match;
+      const value = params[key];
+      return value === undefined || value === null ? match : String(value);
+    });
+  }
+
+  function translateKey(key, fallback, params){
+    if (key && I18N && typeof I18N.t === 'function'){
+      try {
+        const value = I18N.t(key, params);
+        if (typeof value === 'string' && value !== key) return value;
+      } catch {}
+    }
+    if (fallback !== undefined) return params ? formatTemplate(fallback, params) : String(fallback);
+    return params ? formatTemplate(key, params) : String(key ?? '');
+  }
+
+  function t(path, fallback, params){
+    return translateKey(path ? `${I18N_PREFIX}.${path}` : I18N_PREFIX, fallback, params);
+  }
+
+  function formatNumberLocalized(value){
+    if (I18N && typeof I18N.formatNumber === 'function'){
+      try { return I18N.formatNumber(value); } catch {}
+    }
+    return String(value);
+  }
 
   function clampInt(value, min, max){
     const num = Number(value);
@@ -898,9 +934,9 @@
 
   window.registerMiniGame({
     id: 'timer',
-    name: 'タイマー', nameKey: 'selection.miniexp.games.timer.name',
-    description: 'シンプルなカウントダウンとストップウォッチで時間管理', descriptionKey: 'selection.miniexp.games.timer.description', categoryIds: ['utility'],
-    category: 'ユーティリティ',
+    name: translateKey('selection.miniexp.games.timer.name', 'タイマー'), nameKey: 'selection.miniexp.games.timer.name',
+    description: translateKey('selection.miniexp.games.timer.description', 'シンプルなカウントダウンとストップウォッチで時間管理'), descriptionKey: 'selection.miniexp.games.timer.description', categoryIds: ['utility'],
+    category: translateKey('selection.miniexp.category.utility', 'ユーティリティ'),
     version: '0.1.0',
     author: 'mod',
     create

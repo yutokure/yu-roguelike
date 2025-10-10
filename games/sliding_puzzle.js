@@ -5,6 +5,28 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'sliding_puzzle' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function'){
+        try { return new Intl.NumberFormat(undefined, options).format(value); } catch {}
+      }
+      if (value != null && typeof value.toLocaleString === 'function'){
+        try { return value.toLocaleString(); } catch {}
+      }
+      return String(value ?? '');
+    };
     const sizeMap = { EASY: 3, NORMAL: 4, HARD: 5 };
     const boardSize = sizeMap[difficulty] || sizeMap.NORMAL;
     const tileCount = boardSize * boardSize;
@@ -40,13 +62,11 @@
     wrapper.style.boxShadow = '0 12px 32px rgba(0,0,0,0.55)';
 
     const title = document.createElement('div');
-    title.textContent = `${boardSize}×${boardSize} スライドパズル`;
     title.style.fontSize = '20px';
     title.style.fontWeight = '600';
     title.style.marginBottom = '8px';
 
     const description = document.createElement('div');
-    description.textContent = '空きマスにタイルをスライドして 1 → N の順に揃えよう。クリックまたは矢印キー/WASDで操作。Rで再スタート。';
     description.style.fontSize = '13px';
     description.style.lineHeight = '1.45';
     description.style.opacity = '0.85';
@@ -59,20 +79,25 @@
     infoBar.style.marginBottom = '12px';
     infoBar.style.fontSize = '13px';
 
-    function createInfo(label){
+    function createInfo(labelKey, fallbackLabel){
       const span = document.createElement('span');
       span.style.display = 'flex';
       span.style.gap = '4px';
-      const strong = document.createElement('span'); strong.textContent = label; strong.style.opacity = '0.7';
+      const strong = document.createElement('span');
+      strong.style.opacity = '0.7';
       const value = document.createElement('span'); value.textContent = '0'; value.style.fontVariantNumeric = 'tabular-nums';
       span.appendChild(strong); span.appendChild(value);
-      return { span, value };
+      const updateLabel = () => {
+        strong.textContent = text(labelKey, fallbackLabel);
+      };
+      updateLabel();
+      return { span, value, updateLabel };
     }
 
-    const movesInfo = createInfo('Moves');
-    const timeInfo = createInfo('Time');
-    const bestInfo = createInfo('Best');
-    const solveInfo = createInfo('Clears');
+    const movesInfo = createInfo('.info.moves', 'Moves');
+    const timeInfo = createInfo('.info.time', 'Time');
+    const bestInfo = createInfo('.info.best', 'Best');
+    const solveInfo = createInfo('.info.clears', 'Clears');
 
     bestInfo.value.textContent = '-';
     timeInfo.value.textContent = '0:00.0';
@@ -110,6 +135,69 @@
     statusBar.style.fontSize = '13px';
     statusBar.style.opacity = '0.9';
 
+    let statusState = { mode: 'intro', data: {} };
+
+    function renderStatus(){
+      if (statusState.mode === 'clear'){
+        const movesValue = statusState.data.moves ?? moves;
+        const movesText = formatNumber(movesValue, { maximumFractionDigits: 0 });
+        const timeMs = statusState.data.timeMs ?? elapsedMs;
+        const timeText = formatTime(timeMs);
+        const xpValue = statusState.data.xp ?? solveXp;
+        const xpText = formatNumber(xpValue, { maximumFractionDigits: 2 });
+        statusBar.textContent = text('.status.cleared', () => `クリア！ ${movesText} 手 / ${timeText} 取得EXP: ${xpText}`, {
+          moves: movesText,
+          movesValue,
+          time: timeText,
+          timeMs,
+          xp: xpText,
+          xpValue,
+          difficulty,
+        });
+        statusBar.style.color = '#facc15';
+      } else if (statusState.mode === 'intro'){
+        statusBar.textContent = text('.status.intro', 'ノーマルなら15パズル、イージーは8パズル、ハードは24パズルです。', {
+          difficulty,
+          size: boardSize,
+          easySize: sizeMap.EASY,
+          normalSize: sizeMap.NORMAL,
+          hardSize: sizeMap.HARD,
+        });
+        statusBar.style.color = '#e2e8f0';
+      } else {
+        statusBar.textContent = '';
+        statusBar.style.color = '#e2e8f0';
+      }
+    }
+
+    function setStatus(mode, data){
+      statusState = { mode, data: data || {} };
+      renderStatus();
+    }
+
+    let detachLocale = null;
+
+    function refreshLocalizedTexts(){
+      const sizeValue = boardSize;
+      const sizeText = formatNumber(sizeValue, { maximumFractionDigits: 0 });
+      title.textContent = text('.title', () => `${sizeText}×${sizeText} スライドパズル`, { size: sizeValue, sizeText });
+      description.textContent = text('.description', '空きマスにタイルをスライドして 1 → N の順に揃えよう。クリックまたは矢印キー/WASDで操作。Rで再スタート。', {
+        difficulty,
+        size: sizeValue,
+        sizeText,
+      });
+      const resetKey = typeof shortcuts?.getLabel === 'function' ? shortcuts.getLabel('r') || 'R' : 'R';
+      resetBtn.textContent = text('.controls.reset', () => `リセット (${resetKey})`, {
+        key: resetKey,
+        keyLabel: resetKey,
+      });
+      movesInfo.updateLabel();
+      timeInfo.updateLabel();
+      bestInfo.updateLabel();
+      solveInfo.updateLabel();
+      renderStatus();
+    }
+
     const controlsBar = document.createElement('div');
     controlsBar.style.marginTop = '12px';
     controlsBar.style.display = 'flex';
@@ -117,7 +205,6 @@
     controlsBar.style.flexWrap = 'wrap';
 
     const resetBtn = document.createElement('button');
-    resetBtn.textContent = 'リセット (R)';
     resetBtn.style.padding = '8px 16px';
     resetBtn.style.fontSize = '13px';
     resetBtn.style.borderRadius = '999px';
@@ -139,6 +226,14 @@
     wrapper.appendChild(statusBar);
     wrapper.appendChild(controlsBar);
     root.appendChild(wrapper);
+
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try { refreshLocalizedTexts(); } catch {}
+      });
+    }
+
+    refreshLocalizedTexts();
 
     const tiles = [];
     for (let i = 0; i < tileCount; i++){
@@ -200,10 +295,10 @@
     }
 
     function updateInfo(){
-      movesInfo.value.textContent = String(moves);
+      movesInfo.value.textContent = formatNumber(moves, { maximumFractionDigits: 0 });
       timeInfo.value.textContent = formatTime(elapsedMs);
       bestInfo.value.textContent = bestTimeMs == null ? '-' : formatTime(bestTimeMs);
-      solveInfo.value.textContent = String(solveCount);
+      solveInfo.value.textContent = formatNumber(solveCount, { maximumFractionDigits: 0 });
     }
 
     function tintTile(tile, idx, value){
@@ -213,7 +308,7 @@
         tile.style.boxShadow = '0 0 0 1px rgba(148,163,184,0.25) inset';
         tile.style.cursor = 'default';
       } else {
-        tile.textContent = String(value);
+        tile.textContent = formatNumber(value, { maximumFractionDigits: 0 });
         const correct = value === idx + 1;
         tile.style.background = correct ? 'linear-gradient(160deg, #22d3ee, #0ea5e9)' : 'linear-gradient(160deg, #64748b, #475569)';
         tile.style.boxShadow = correct ? '0 6px 16px rgba(14,165,233,0.4)' : '0 4px 10px rgba(15,23,42,0.55)';
@@ -324,8 +419,7 @@
         }
         enableHostRestart();
         updateInfo();
-        statusBar.textContent = `クリア！ ${moves} 手 / ${formatTime(elapsedMs)} 取得EXP: ${total ?? solveXp}`;
-        statusBar.style.color = '#facc15';
+        setStatus('clear', { moves, timeMs: elapsedMs, xp: total ?? solveXp });
       }
     }
 
@@ -359,8 +453,7 @@
       moveXpBuffer = 0;
       bufferedMoves = 0;
       solved = false;
-      statusBar.textContent = `ノーマルなら15パズル、イージーは8パズル、ハードは24パズルです。`; 
-      statusBar.style.color = '#e2e8f0';
+      setStatus('intro');
       render();
       updateInfo();
     }
@@ -409,6 +502,8 @@
       stop();
       tiles.forEach(function(tile){ tile.removeEventListener('click', onTilePointer); });
       boardEl.removeEventListener('keydown', onKeyDown);
+      try { detachLocale && detachLocale(); } catch {}
+      detachLocale = null;
       wrapper.remove();
     }
 

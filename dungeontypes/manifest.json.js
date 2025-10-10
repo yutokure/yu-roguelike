@@ -114,6 +114,14 @@ window.DUNGEONTYPE_MANIFEST = [
     author: 'builtin-sample'
   },
   {
+    id: 'fairytale_wonderlands_pack',
+    name: 'Fairytale Wonderlands Pack',
+    nameKey: "dungeon.packs.fairytale_wonderlands_pack.name",
+    entry: 'dungeontypes/fairytale_wonderlands_pack.js',
+    version: '1.0.0',
+    author: 'fairytale-pack-author'
+  },
+  {
     id: 'forest_pack',
     name: 'Verdant Forest Pack',
     nameKey: "dungeon.packs.forest_pack.name",
@@ -414,6 +422,14 @@ window.DUNGEONTYPE_MANIFEST = [
     name: 'Natural Roadways Pack',
     nameKey: "dungeon.packs.natural_roadways_pack.name",
     entry: 'dungeontypes/natural_roadways_pack.js',
+    version: '1.0.0',
+    author: 'community-mod'
+  },
+  {
+    id: 'enchanted_forest_realms_pack',
+    name: 'Enchanted Forest Realms Pack',
+    nameKey: "dungeon.packs.enchanted_forest_realms_pack.name",
+    entry: 'dungeontypes/enchanted_forest_pack.js',
     version: '1.0.0',
     author: 'community-mod'
   },

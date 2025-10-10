@@ -888,7 +888,80 @@
           },
           "video_player": {
             "name": "Video Player",
-            "description": "Watch local files or YouTube clips to accumulate viewing EXP."
+            "description": "Watch local files or YouTube clips to accumulate viewing EXP.",
+            "title": "Video Player",
+            "sessionXp": "Session EXP: {exp}",
+            "info": {
+              "source": "Source",
+              "title": "Title",
+              "duration": "Duration",
+              "status": "Status",
+              "sourceLocal": "Local",
+              "sourceYoutube": "YouTube",
+              "untitled": "Untitled"
+            },
+            "tabs": {
+              "local": "Local File",
+              "youtube": "YouTube URL"
+            },
+            "local": {
+              "hint": "Choose videos like MP4/WebM/Ogg that your browser can play.",
+              "noFile": "No file selected",
+              "loading": "Loading local video…"
+            },
+            "youtube": {
+              "placeholder": "https://www.youtube.com/watch?v=...",
+              "loadButton": "Load",
+              "hint": "Enter a YouTube URL or video ID. When the IFrame API is unavailable, a simplified mode will be used.",
+              "loading": "Loading YouTube video…",
+              "ready": "YouTube video loaded. Press play to start.",
+              "prepared": "YouTube video ready.",
+              "simple": "Loaded YouTube (simple mode).",
+              "fallbackTitle": "YouTube Video ({id})"
+            },
+            "placeholder": "Select a video to play.",
+            "status": {
+              "noSource": "No source selected.",
+              "loadingLocal": "Loading local video…",
+              "loadingYoutube": "Loading YouTube video…",
+              "localReady": "Local video loaded. Press play to start.",
+              "youtubeReady": "YouTube video loaded. Press play to start.",
+              "youtubePrepared": "YouTube video ready.",
+              "youtubeSimple": "Loaded YouTube (simple mode).",
+              "playing": "Playing",
+              "paused": "Paused",
+              "ended": "Playback finished",
+              "error": "Load error",
+              "youtubeError": "YouTube player error",
+              "buffering": "Buffering…"
+            },
+            "message": {
+              "reselectLocal": "Select the same video file again.",
+              "historyCleared": "Cleared watch history.",
+              "localLoading": "Loading local video…",
+              "localLoaded": "Local video loaded.",
+              "localError": "An error occurred while loading the video. Try a different file.",
+              "localSelectFile": "Please choose a video file.",
+              "youtubeSimpleLoaded": "Loaded the YouTube video in simple mode.",
+              "youtubeLoaded": "YouTube video loaded.",
+              "youtubeError": "Failed to load the YouTube video.",
+              "youtubeInvalid": "Enter a valid YouTube URL or video ID."
+            },
+            "history": {
+              "title": "Watch History",
+              "clear": "Clear History",
+              "empty": "No videos watched yet.",
+              "typeLocal": "Local",
+              "typeYoutube": "YouTube",
+              "untitled": "Untitled"
+            },
+            "shortcuts": {
+              "title": "Shortcuts & Tips",
+              "playPause": "Space: Play/Pause (local videos or YouTube with API)",
+              "seek": "← / →: Seek -5/+5 seconds (local videos or YouTube with API)",
+              "history": "Click a history entry to replay it. Local videos will prompt you to reselect the file.",
+              "simpleMode": "In YouTube simple mode, use the YouTube player shortcuts."
+            }
           },
           "pomodoro": {
             "name": "Pomodoro Timer",

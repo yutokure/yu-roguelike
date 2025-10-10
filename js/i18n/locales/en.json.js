@@ -674,6 +674,10 @@
             "name": "Notepad",
             "description": "Write, edit, and save notes to earn incremental EXP."
           },
+          "wording": {
+            "name": "Wording",
+            "description": "Word processor awarding EXP: Edit +1 / Format +2 / Save +6"
+          },
           "exceler": {
             "name": "Exceler Spreadsheet",
             "description": "Lightweight XLSX editing with formulas and formatting for productivity EXP."
@@ -881,10 +885,6 @@
               "noStart": "No start event block found.",
               "stopped": "Execution was stopped."
             }
-          },
-          "wording": {
-            "name": "Wording",
-            "description": "Edit, format, and save documents in a word processor to gain EXP."
           },
           "video_player": {
             "name": "Video Player",
@@ -14044,6 +14044,146 @@
         },
         "timestamp": {
           "pattern": "{month}/{day}/{year} {hour}:{minute}:{second}"
+        }
+      },
+      "wording": {
+        "name": "Wording",
+        "description": "Word processor awarding EXP: Edit +1 / Format +2 / Save +6",
+        "defaultTitle": "Document 1",
+        "autoTitle": "Document {formattedNumber}",
+        "quickBar": {
+          "open": "Open (Ctrl+O)",
+          "save": "Save (Ctrl+S)",
+          "saveAs": "Save As (Ctrl+Shift+S)",
+          "undo": "Undo (Ctrl+Z)",
+          "redo": "Redo (Ctrl+Y)",
+          "print": "Print"
+        },
+        "tabs": {
+          "home": "Home",
+          "insert": "Insert",
+          "layout": "Layout",
+          "review": "Review",
+          "view": "View"
+        },
+        "groups": {
+          "clipboard": "Clipboard",
+          "font": "Font",
+          "paragraph": "Paragraph",
+          "style": "Styles",
+          "insert": "Insert",
+          "media": "Media",
+          "theme": "Theme",
+          "columns": "Columns",
+          "margins": "Margins",
+          "proofing": "Proofing Tools",
+          "comments": "Comments",
+          "lineHeight": "Line Spacing",
+          "guides": "Guides",
+          "paper": "Page Color"
+        },
+        "buttons": {
+          "rename": "Rename",
+          "paste": "Paste",
+          "copy": "Copy",
+          "cut": "Cut",
+          "bold": "Bold",
+          "italic": "Italic",
+          "underline": "Underline",
+          "strikethrough": "Strikethrough",
+          "superscript": "Superscript",
+          "subscript": "Subscript",
+          "bullets": "Bulleted list",
+          "numberedList": "Numbered list",
+          "alignLeft": "Align left",
+          "alignCenter": "Align center",
+          "alignRight": "Align right",
+          "alignJustify": "Justify",
+          "outdent": "Decrease indent",
+          "indent": "Increase indent",
+          "blockParagraph": "Body text",
+          "blockHeading": "Heading {level}",
+          "blockQuote": "Quote",
+          "insertDate": "Date",
+          "insertTime": "Time",
+          "insertHorizontalRule": "Horizontal rule",
+          "insertEmoji": "Emoji",
+          "insertImage": "Image",
+          "insertTextbox": "Textbox",
+          "insertToc": "Table of contents",
+          "commentInsert": "Insert comment",
+          "changeSummary": "Change summary",
+          "wordCount": "Word count",
+          "readingTime": "Reading time",
+          "reviewHighlightOn": "Highlight long text",
+          "reviewHighlightOff": "Clear highlight",
+          "columnsOption": "{formattedCount} col",
+          "lineHeightOption": "{formattedValue}x",
+          "marginNarrow": "Narrow",
+          "marginNormal": "Normal",
+          "marginWide": "Wide",
+          "themeLight": "Light",
+          "themeDark": "Dark paper",
+          "showRuler": "Show ruler",
+          "hideRuler": "Hide ruler",
+          "showStatus": "Show status bar",
+          "hideStatus": "Hide status bar",
+          "paperWhite": "White",
+          "paperCream": "Cream",
+          "paperGray": "Gray",
+          "zoomOut": "Zoom out",
+          "zoomIn": "Zoom in"
+        },
+        "messages": {
+          "printUnavailable": "Print dialog support coming soon.",
+          "noContent": "No content to analyze.",
+          "wordCount": "Characters: {characters} / Words: {words} / Paragraphs: {paragraphs}",
+          "readingTime": "Approx. {minutes} min {secondsPadded} sec to read",
+          "changeSummarySaved": "Saved: no differences detected",
+          "changeSummaryDiff": "Unsaved change estimate: about {difference} characters"
+        },
+        "prompts": {
+          "rename": "Enter a document name",
+          "saveFile": "Enter a file name to save (.wording.html)",
+          "comment": "Enter a comment"
+        },
+        "confirm": {
+          "closeWithoutSave": "Close without saving?",
+          "newWithoutSave": "There are unsaved changes. Start a new document?"
+        },
+        "fonts": {
+          "yuGothic": "Yu Gothic",
+          "yuMincho": "Yu Mincho",
+          "meiryo": "Meiryo",
+          "hiraginoKaku": "Hiragino Sans",
+          "monospace": "Monospace (Consolas)"
+        },
+        "fontSize": {
+          "option": "{formattedSize} pt"
+        },
+        "insert": {
+          "tocTemplate": "<ol><li>Introduction</li><li>Main Content</li><li>Summary</li></ol>",
+          "textboxLabel": "Textbox"
+        },
+        "editor": {
+          "welcomeHtml": "<p>Welcome to Wording! Start drafting your document here.</p>",
+          "newDocumentHtml": "<p>Let's start a new document.</p>"
+        },
+        "status": {
+          "summary": "Page {pageCurrent} / {pageTotal} | Characters: {characters} | Words: {words}"
+        },
+        "search": {
+          "title": "Find & Replace",
+          "placeholder": "Search term",
+          "replacePlaceholder": "Replacement text",
+          "enterQuery": "Enter a search term",
+          "noMatch": "No matches found",
+          "next": "Find next",
+          "replace": "Replace",
+          "replaceAll": "Replace all",
+          "close": "Close",
+          "replacedCount": "Replaced {count} matches",
+          "progress": "Match {current} of {total}"
         }
       },
       "mathLab": {

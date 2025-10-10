@@ -3,6 +3,17 @@
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const shortcuts = opts?.shortcuts;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'virus_buster' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    let detachLocale = null;
     const config = {
       EASY:   { fall: 0.9, lockDelay: 0.65, startViruses: 10, virusStep: 2 },
       NORMAL: { fall: 0.7, lockDelay: 0.5, startViruses: 14, virusStep: 3 },
@@ -224,7 +235,7 @@
       if (dist > 0){
         boardPulse = Math.max(boardPulse, 0.24 + Math.min(0.16, dist * 0.02));
         if (awardXp) awardXp(dist * 0.2, { type: 'harddrop' });
-        addFloatingText('DROP!', { color: '#bae6fd', jitter: true, duration: 0.9, y: 1.5 });
+        addFloatingText(text('floating.drop', 'DROP!'), { color: '#bae6fd', jitter: true, duration: 0.9, y: 1.5 });
       }
       lockPiece();
     }
@@ -363,7 +374,7 @@
           const multiplier = 1 + (chain - 1) * 0.5;
           xpGain += base * multiplier;
           boardPulse = Math.max(boardPulse, 0.26 + chain * 0.06);
-          if (chain >= 2) addFloatingText(`${chain} Chain!`, { color: '#fbbf24', jitter: true, y: 1.2, duration: 1.4 });
+          if (chain >= 2) addFloatingText(text('hud.chainLabel', () => `${chain} Chain!`, { chain }), { color: '#fbbf24', jitter: true, y: 1.2, duration: 1.4 });
         }
       }
       if (xpGain > 0 && awardXp){
@@ -374,7 +385,7 @@
         totalVirusCleared += totalVirusRemoved;
         chainFlash = { chain, removed: totalVirusRemoved };
         chainFlashTimer = 2.0;
-        addFloatingText(`Virus x${totalVirusRemoved}`, { color: '#f97316', jitter: true, duration: 1.4, y: 2.0 });
+        addFloatingText(text('floating.virus', () => `Virus x${totalVirusRemoved}`, { count: totalVirusRemoved }), { color: '#f97316', jitter: true, duration: 1.4, y: 2.0 });
       }
       if (remainingViruses <= 0 && !ended){
         stageClearTimer = 2.5;
@@ -501,7 +512,7 @@
       const newVirusCount = Math.min(COLS * ROWS - 4, config.startViruses + (level - 1) * config.virusStep);
       stageClearTimer = 2.5;
       if (awardXp) awardXp(25 + (level - 1) * 5, { type: 'stage' });
-      addFloatingText('STAGE CLEAR!', { color: '#34d399', jitter: true, duration: 2.0, y: 2.4 });
+      addFloatingText(text('floating.stageClear', 'STAGE CLEAR!'), { color: '#34d399', jitter: true, duration: 2.0, y: 2.4 });
       clearGrid();
       placeViruses(newVirusCount);
       nextQueue = [];
@@ -670,10 +681,22 @@
         ctx.fillStyle = '#f8fafc';
         ctx.font = 'bold 28px "M PLUS Rounded 1c", system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText('Game Over', W/2, H/2 - 10);
+        ctx.fillText(text('status.gameOver', 'Game Over'), W/2, H/2 - 10);
         ctx.font = '14px "M PLUS Rounded 1c", system-ui';
-        ctx.fillText('Rでリスタート', W/2, H/2 + 18);
+        ctx.fillText(text('status.restartHint', 'Rでリスタート'), W/2, H/2 + 18);
         ctx.textAlign = 'start';
+      }
+    }
+
+    function attachLocaleListener(){
+      if (!detachLocale && localization && typeof localization.onChange === 'function'){
+        detachLocale = localization.onChange(() => {
+          try {
+            draw();
+          } catch (error) {
+            console.warn('[virus_buster] Failed to redraw after locale change:', error);
+          }
+        });
       }
     }
 
@@ -752,27 +775,29 @@
       ctx.fillRect(0, 0, panelW, H - y - 30);
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '16px "M PLUS Rounded 1c", system-ui';
-      ctx.fillText('VIRUS BUSTER', 16, 28);
+      ctx.fillText(text('title', 'VIRUS BUSTER'), 16, 28);
       ctx.font = '12px "M PLUS Rounded 1c", system-ui';
-      ctx.fillText(`Level ${level}`, 16, 56);
-      ctx.fillText(`Viruses ${remainingViruses}`, 16, 74);
-      ctx.fillText(`Cleared ${totalVirusCleared}`, 16, 92);
+      ctx.fillText(text('hud.level', () => `Level ${level}`, { level }), 16, 56);
+      ctx.fillText(text('hud.viruses', () => `Viruses ${remainingViruses}`, { count: remainingViruses }), 16, 74);
+      ctx.fillText(text('hud.cleared', () => `Cleared ${totalVirusCleared}`, { count: totalVirusCleared }), 16, 92);
       if (chainFlash && chainFlashTimer > 0){
         ctx.fillStyle = '#fbbf24';
         ctx.font = 'bold 14px "M PLUS Rounded 1c", system-ui';
-        const chainText = chainFlash.chain > 1 ? `${chainFlash.chain} Chain!` : 'Nice!';
+        const chainText = chainFlash.chain > 1
+          ? text('hud.chainLabel', () => `${chainFlash.chain} Chain!`, { chain: chainFlash.chain })
+          : text('hud.chainNice', 'Nice!');
         ctx.fillText(chainText, 16, 122);
         ctx.fillStyle = '#fde68a';
-        ctx.fillText(`Virus x${chainFlash.removed}`, 16, 142);
+        ctx.fillText(text('hud.chainVirus', () => `Virus x${chainFlash.removed}`, { count: chainFlash.removed }), 16, 142);
       }
       if (stageClearTimer > 0){
         ctx.fillStyle = '#34d399';
         ctx.font = 'bold 16px "M PLUS Rounded 1c", system-ui';
-        ctx.fillText('Stage Clear!', 16, 178);
+        ctx.fillText(text('hud.stageClear', 'Stage Clear!'), 16, 178);
       }
       ctx.fillStyle = '#94a3b8';
       ctx.font = '11px "M PLUS Rounded 1c", system-ui';
-      ctx.fillText('操作: ←→移動 / ↓ソフトドロップ / ↑orX回転 / Spaceハードドロップ / Rリセット', 16, H - y - 40);
+      ctx.fillText(text('hud.controls', '操作: ←→移動 / ↓ソフトドロップ / ↑orX回転 / Spaceハードドロップ / Rリセット'), 16, H - y - 40);
       ctx.restore();
     }
 
@@ -938,6 +963,7 @@
     window.addEventListener('keyup', keyup);
     window.addEventListener('blur', blur);
 
+    attachLocaleListener();
     reset();
 
     function destroy(){
@@ -946,6 +972,12 @@
       window.removeEventListener('keydown', keydown);
       window.removeEventListener('keyup', keyup);
       window.removeEventListener('blur', blur);
+      if (typeof detachLocale === 'function'){
+        try { detachLocale(); } catch (error) {
+          console.warn('[virus_buster] Failed to detach locale listener:', error);
+        }
+        detachLocale = null;
+      }
       try { root && root.removeChild(canvas); } catch {}
     }
 

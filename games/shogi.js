@@ -13,8 +13,34 @@
   const LAST_MOVE_COLOR = 'rgba(96, 165, 250, 0.35)';
   const CHECK_COLOR = 'rgba(248, 113, 113, 0.6)';
 
-  const PIECE_NAMES = { P: '歩', L: '香', N: '桂', S: '銀', G: '金', B: '角', R: '飛', K: '玉' };
-  const PROMOTED_NAMES = { P: 'と', L: '成香', N: '成桂', S: '成銀', B: '馬', R: '龍' };
+  const PIECE_GLYPHS = {
+    P: { key: 'games.shogi.pieces.glyph.pawn', fallback: '歩' },
+    L: { key: 'games.shogi.pieces.glyph.lance', fallback: '香' },
+    N: { key: 'games.shogi.pieces.glyph.knight', fallback: '桂' },
+    S: { key: 'games.shogi.pieces.glyph.silver', fallback: '銀' },
+    G: { key: 'games.shogi.pieces.glyph.gold', fallback: '金' },
+    B: { key: 'games.shogi.pieces.glyph.bishop', fallback: '角' },
+    R: { key: 'games.shogi.pieces.glyph.rook', fallback: '飛' },
+    K: { key: 'games.shogi.pieces.glyph.king', fallback: '玉' }
+  };
+  const PROMOTED_GLYPHS = {
+    P: { key: 'games.shogi.pieces.glyph.promotedPawn', fallback: 'と' },
+    L: { key: 'games.shogi.pieces.glyph.promotedLance', fallback: '成香' },
+    N: { key: 'games.shogi.pieces.glyph.promotedKnight', fallback: '成桂' },
+    S: { key: 'games.shogi.pieces.glyph.promotedSilver', fallback: '成銀' },
+    B: { key: 'games.shogi.pieces.glyph.promotedBishop', fallback: '馬' },
+    R: { key: 'games.shogi.pieces.glyph.promotedRook', fallback: '龍' }
+  };
+  const PIECE_LABELS = {
+    P: { key: 'games.shogi.pieces.label.pawn', fallback: '歩' },
+    L: { key: 'games.shogi.pieces.label.lance', fallback: '香' },
+    N: { key: 'games.shogi.pieces.label.knight', fallback: '桂' },
+    S: { key: 'games.shogi.pieces.label.silver', fallback: '銀' },
+    G: { key: 'games.shogi.pieces.label.gold', fallback: '金' },
+    B: { key: 'games.shogi.pieces.label.bishop', fallback: '角' },
+    R: { key: 'games.shogi.pieces.label.rook', fallback: '飛' },
+    K: { key: 'games.shogi.pieces.label.king', fallback: '玉' }
+  };
   const HAND_ORDER = ['R', 'B', 'G', 'S', 'N', 'L', 'P'];
 
   const PIECE_VALUES = { P: 100, L: 240, N: 260, S: 320, G: 360, B: 540, R: 650, K: 12000 };
@@ -37,6 +63,73 @@
     [null,'B',null,null,null,null,null,'R',null],
     ['L','N','S','G','K','G','S','N','L']
   ];
+
+  const baseI18n = typeof window !== 'undefined' ? window.I18n : null;
+
+  function evaluateFallback(fallback, params){
+    if (typeof fallback === 'function'){
+      try {
+        const value = fallback(params || {});
+        if (value == null) return '';
+        return typeof value === 'string' ? value : String(value);
+      } catch (error){
+        console.warn('[Shogi] Failed to evaluate fallback text:', error);
+        return '';
+      }
+    }
+    if (fallback == null) return '';
+    return typeof fallback === 'string' ? fallback : String(fallback);
+  }
+
+  function translateText(key, fallback, params){
+    const activeI18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : baseI18n;
+    if (key && activeI18n && typeof activeI18n.t === 'function'){
+      try {
+        const translated = activeI18n.t(key, params);
+        if (translated != null && translated !== key){
+          return typeof translated === 'string' ? translated : String(translated);
+        }
+      } catch (error){
+        console.warn('[Shogi] Failed to translate key:', key, error);
+      }
+    }
+    return evaluateFallback(fallback, params);
+  }
+
+  function formatNumberLocalized(value){
+    const activeI18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : baseI18n;
+    if (typeof activeI18n?.formatNumber === 'function'){
+      try {
+        return activeI18n.formatNumber(value);
+      } catch (error){
+        console.warn('[Shogi] Failed to format number via i18n:', error);
+      }
+    }
+    if (typeof value === 'number'){
+      try {
+        return new Intl.NumberFormat(activeI18n?.getLocale?.() || undefined).format(value);
+      } catch (error){
+        console.warn('[Shogi] Failed to format number via Intl:', error);
+      }
+    }
+    return String(value ?? '');
+  }
+
+  function glyphForPiece(type){
+    const entry = PIECE_GLYPHS[type];
+    return translateText(entry?.key, entry?.fallback ?? type);
+  }
+
+  function glyphForPromoted(type){
+    const entry = PROMOTED_GLYPHS[type];
+    if (!entry) return null;
+    return translateText(entry.key, entry.fallback);
+  }
+
+  function labelForPiece(type){
+    const entry = PIECE_LABELS[type];
+    return translateText(entry?.key, entry?.fallback ?? type);
+  }
 
   function ensureStyle(){
     if (document.getElementById('mini-shogi-style')) return;
@@ -421,29 +514,49 @@
 
     const info = document.createElement('div');
     info.className = 'mini-shogi-info';
-    info.innerHTML = `
-      <h2>将棋 <span>MiniExp版</span></h2>
-      <p class="status-line">あなたの番です。駒を選択するか持ち駒をクリックしてください。</p>
-      <p class="message"></p>
-    `;
+    const infoTitle = document.createElement('h2');
+    const infoTitleMain = document.createElement('span');
+    const infoTitleSub = document.createElement('span');
+    infoTitle.appendChild(infoTitleMain);
+    infoTitle.appendChild(document.createTextNode(' '));
+    infoTitle.appendChild(infoTitleSub);
+    const statusLine = document.createElement('p');
+    statusLine.className = 'status-line';
+    const messageLine = document.createElement('p');
+    messageLine.className = 'message';
+    info.appendChild(infoTitle);
+    info.appendChild(statusLine);
+    info.appendChild(messageLine);
     container.appendChild(info);
-    const statusLine = info.querySelector('.status-line');
-    const messageLine = info.querySelector('.message');
 
     const handsWrap = document.createElement('div');
     handsWrap.className = 'mini-shogi-hands';
 
     const aiHandBox = document.createElement('div');
     aiHandBox.className = 'mini-shogi-hand';
-    aiHandBox.innerHTML = `<h3>先手 (CPU)<span class="count"></span></h3><div class="pieces"></div>`;
-    const aiPieces = aiHandBox.querySelector('.pieces');
-    const aiCountLabel = aiHandBox.querySelector('.count');
+    const aiHandTitle = document.createElement('h3');
+    const aiHandLabel = document.createElement('span');
+    const aiCountLabel = document.createElement('span');
+    aiCountLabel.className = 'count';
+    aiHandTitle.appendChild(aiHandLabel);
+    aiHandTitle.appendChild(aiCountLabel);
+    const aiPieces = document.createElement('div');
+    aiPieces.className = 'pieces';
+    aiHandBox.appendChild(aiHandTitle);
+    aiHandBox.appendChild(aiPieces);
 
     const playerHandBox = document.createElement('div');
     playerHandBox.className = 'mini-shogi-hand';
-    playerHandBox.innerHTML = `<h3>後手 (あなた)<span class="count"></span></h3><div class="pieces"></div>`;
-    const playerPieces = playerHandBox.querySelector('.pieces');
-    const playerCountLabel = playerHandBox.querySelector('.count');
+    const playerHandTitle = document.createElement('h3');
+    const playerHandLabel = document.createElement('span');
+    const playerCountLabel = document.createElement('span');
+    playerCountLabel.className = 'count';
+    playerHandTitle.appendChild(playerHandLabel);
+    playerHandTitle.appendChild(playerCountLabel);
+    const playerPieces = document.createElement('div');
+    playerPieces.className = 'pieces';
+    playerHandBox.appendChild(playerHandTitle);
+    playerHandBox.appendChild(playerPieces);
 
     handsWrap.appendChild(aiHandBox);
     handsWrap.appendChild(playerHandBox);
@@ -488,7 +601,7 @@
     let turn = 'w';
     let running = false;
     let ended = false;
-    let resultText = '';
+    let resultMessage = null;
     let legalMoves = [];
     let selected = null;
     let selectedDrop = null;
@@ -508,24 +621,24 @@
       };
       turn = 'w';
       ended = false;
-      resultText = '';
+      resultMessage = null;
       legalMoves = generateLegalMoves(board, hands, 'w');
       selected = null;
       selectedDrop = null;
       availableMoves = [];
       hover = null;
       lastMove = null;
-      updateStatus();
-      renderHands();
+      applyLocale();
       draw();
     }
 
     function pieceGlyph(piece){
       if (!piece) return '';
-      if (piece.promoted && PROMOTED_NAMES[piece.type]){
-        return PROMOTED_NAMES[piece.type];
+      if (piece.promoted){
+        const promoted = glyphForPromoted(piece.type);
+        if (promoted) return promoted;
       }
-      return PIECE_NAMES[piece.type] || piece.type;
+      return glyphForPiece(piece.type);
     }
 
     function draw(){
@@ -626,7 +739,14 @@
           aiTotal += aiCount;
           const chip = document.createElement('div');
           chip.className = 'mini-shogi-chip';
-          chip.textContent = `${PIECE_NAMES[type]}×${aiCount}`;
+          const pieceLabel = labelForPiece(type);
+          const countFormatted = formatNumberLocalized(aiCount);
+          chip.textContent = translateText('games.shogi.ui.hands.chip', (params) => `${params.piece}×${params.countFormatted}`, {
+            piece: pieceLabel,
+            pieceKey: type,
+            count: aiCount,
+            countFormatted
+          });
           aiPieces.appendChild(chip);
         }
         const playerCount = hands.w[type];
@@ -635,7 +755,14 @@
           const chip = document.createElement('div');
           chip.className = 'mini-shogi-chip selectable';
           chip.dataset.type = type;
-          chip.textContent = `${PIECE_NAMES[type]}×${playerCount}`;
+          const pieceLabel = labelForPiece(type);
+          const countFormatted = formatNumberLocalized(playerCount);
+          chip.textContent = translateText('games.shogi.ui.hands.chip', (params) => `${params.piece}×${params.countFormatted}`, {
+            piece: pieceLabel,
+            pieceKey: type,
+            count: playerCount,
+            countFormatted
+          });
           if (selectedDrop === type){
             chip.classList.add('active');
           }
@@ -658,33 +785,81 @@
       if (!aiPieces.childElementCount){
         const empty = document.createElement('div');
         empty.className = 'mini-shogi-chip';
-        empty.textContent = 'なし';
+        empty.textContent = translateText('games.shogi.ui.hands.empty', 'なし');
         aiPieces.appendChild(empty);
       }
       if (!playerPieces.childElementCount){
         const empty = document.createElement('div');
         empty.className = 'mini-shogi-chip';
-        empty.textContent = 'なし';
+        empty.textContent = translateText('games.shogi.ui.hands.empty', 'なし');
         playerPieces.appendChild(empty);
       }
-      aiCountLabel.textContent = aiTotal ? `${aiTotal}枚` : 'なし';
-      playerCountLabel.textContent = playerTotal ? `${playerTotal}枚` : 'なし';
+      if (aiTotal){
+        const formatted = formatNumberLocalized(aiTotal);
+        aiCountLabel.textContent = translateText('games.shogi.ui.hands.total', (params) => `${params.countFormatted}枚`, {
+          count: aiTotal,
+          countFormatted: formatted
+        });
+      } else {
+        aiCountLabel.textContent = translateText('games.shogi.ui.hands.totalNone', 'なし');
+      }
+      if (playerTotal){
+        const formatted = formatNumberLocalized(playerTotal);
+        playerCountLabel.textContent = translateText('games.shogi.ui.hands.total', (params) => `${params.countFormatted}枚`, {
+          count: playerTotal,
+          countFormatted: formatted
+        });
+      } else {
+        playerCountLabel.textContent = translateText('games.shogi.ui.hands.totalNone', 'なし');
+      }
+    }
+
+    function resolveMessage(entry){
+      if (!entry) return '';
+      return translateText(entry.key, entry.fallback, entry.params);
     }
 
     function updateStatus(){
       if (ended){
-        statusLine.textContent = resultText;
+        statusLine.textContent = resolveMessage(resultMessage);
         messageLine.textContent = '';
         return;
       }
-      statusLine.textContent = turn === 'w' ? 'あなたの番です。駒または持ち駒を選んでください。' : 'CPUが指し手を検討中…';
+      statusLine.textContent = turn === 'w'
+        ? translateText('games.shogi.status.playerTurn', 'あなたの番です。駒または持ち駒を選んでください。')
+        : translateText('games.shogi.status.aiThinking', 'CPUが指し手を検討中…');
       if (turn === 'w' && isKingInCheck(board, 'w')){
-        messageLine.textContent = '王手を受けています！対応してください。';
+        messageLine.textContent = translateText('games.shogi.status.playerInCheck', '王手を受けています！対応してください。');
       } else if (turn === 'b' && isKingInCheck(board, 'b')){
-        messageLine.textContent = '王手！決め手を狙いましょう。';
+        messageLine.textContent = translateText('games.shogi.status.aiInCheck', '王手！決め手を狙いましょう。');
       } else {
         messageLine.textContent = '';
       }
+    }
+
+    function applyLocale(){
+      infoTitleMain.textContent = translateText('games.shogi.ui.title', '将棋');
+      infoTitleSub.textContent = translateText('games.shogi.ui.subtitle', 'MiniExp版');
+      aiHandLabel.textContent = translateText('games.shogi.ui.hands.aiLabel', '先手 (CPU)');
+      playerHandLabel.textContent = translateText('games.shogi.ui.hands.playerLabel', '後手 (あなた)');
+      const legendParams = {
+        moveExp: MOVE_EXP,
+        moveExpFormatted: formatNumberLocalized(MOVE_EXP),
+        dropExp: DROP_EXP,
+        dropExpFormatted: formatNumberLocalized(DROP_EXP),
+        promoteExp: PROMOTE_EXP,
+        promoteExpFormatted: formatNumberLocalized(PROMOTE_EXP),
+        checkExp: CHECK_EXP,
+        checkExpFormatted: formatNumberLocalized(CHECK_EXP)
+      };
+      legend.textContent = translateText('games.shogi.ui.legend', (params) => `指し手:+${params.moveExpFormatted}EXP / 持ち駒投入:+${params.dropExpFormatted}EXP / 捕獲でボーナス / 成り:+${params.promoteExpFormatted}EXP / 王手:+${params.checkExpFormatted}EXP / 勝利ボーナスあり`, legendParams);
+      restartBtn.textContent = translateText('games.shogi.ui.actions.restart', 'リスタート');
+      renderHands();
+      updateStatus();
+    }
+
+    function handleLocaleChange(){
+      applyLocale();
     }
 
     function pickMoveFromCell(cell){
@@ -694,7 +869,8 @@
       const promote = matches.find(m => m.promote);
       const normal = matches.find(m => !m.promote);
       if (promote && normal){
-        const answer = window.confirm('成りますか？');
+        const prompt = translateText('games.shogi.ui.confirm.promote', '成りますか？');
+        const answer = window.confirm(prompt);
         return answer ? promote : normal;
       }
       return matches[0];
@@ -728,13 +904,22 @@
         ended = true;
         if (opponentInCheck){
           if (afterMoveColor === 'w'){
-            resultText = '詰み！あなたの勝利';
+            resultMessage = {
+              key: 'games.shogi.result.playerWin',
+              fallback: '詰み！あなたの勝利'
+            };
             awardXp(WIN_EXP[difficulty] || 420, { type: 'win' });
           } else {
-            resultText = '詰まされました…敗北';
+            resultMessage = {
+              key: 'games.shogi.result.playerLose',
+              fallback: '詰まされました…敗北'
+            };
           }
         } else {
-          resultText = '持将棋 / 千日手で引き分け';
+          resultMessage = {
+            key: 'games.shogi.result.draw',
+            fallback: '持将棋 / 千日手で引き分け'
+          };
           awardXp(DRAW_EXP, { type: 'draw' });
         }
         updateStatus();
@@ -792,7 +977,10 @@
       const move = aiChooseMove();
       if (!move){
         ended = true;
-        resultText = '詰み！あなたの勝利';
+        resultMessage = {
+          key: 'games.shogi.result.playerWin',
+          fallback: '詰み！あなたの勝利'
+        };
         awardXp(WIN_EXP[difficulty] || 420, { type: 'win' });
         updateStatus();
         draw();
@@ -908,6 +1096,7 @@
 
     function destroy(){
       try { stop(); } catch (err){}
+      document.removeEventListener('i18n:locale-changed', handleLocaleChange);
       if (container.parentNode){
         container.parentNode.removeChild(container);
       }
@@ -929,6 +1118,9 @@
       }
       return Math.max(0, Math.floor(score / 100));
     }
+
+    document.addEventListener('i18n:locale-changed', handleLocaleChange);
+    applyLocale();
 
     return { start, stop, destroy, getScore };
   }

@@ -17,9 +17,34 @@
     'k': '將', 'a': '士', 'e': '象', 'h': '馬', 'r': '車', 'c': '砲', 's': '卒'
   };
 
-  const PIECE_NAMES = {
-    k: '将', a: '士', e: '象', h: '馬', r: '車', c: '砲', s: '卒'
+  const GLOBAL_SCOPE = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+  const BASE_I18N = GLOBAL_SCOPE && GLOBAL_SCOPE.I18n ? GLOBAL_SCOPE.I18n : null;
+
+  const PIECE_NAME_KEYS = {
+    k: 'minigame.xiangqi.pieces.general',
+    a: 'minigame.xiangqi.pieces.advisor',
+    e: 'minigame.xiangqi.pieces.elephant',
+    h: 'minigame.xiangqi.pieces.horse',
+    r: 'minigame.xiangqi.pieces.chariot',
+    c: 'minigame.xiangqi.pieces.cannon',
+    s: 'minigame.xiangqi.pieces.soldier'
   };
+
+  const PIECE_NAME_DEFAULTS = {
+    k: '将',
+    a: '士',
+    e: '象',
+    h: '馬',
+    r: '車',
+    c: '砲',
+    s: '卒'
+  };
+
+  const COLOR_NAME_KEYS = { red: 'minigame.xiangqi.color.red', black: 'minigame.xiangqi.color.black' };
+  const COLOR_NAME_DEFAULTS = { red: '赤', black: '黒' };
+
+  const PLAYER_LABEL_KEYS = { red: 'minigame.xiangqi.color.redPlayer', black: 'minigame.xiangqi.color.blackPlayer' };
+  const PLAYER_LABEL_DEFAULTS = { red: '赤（下）', black: '黒（上）' };
 
   const PIECE_VALUES = { k: 0, a: 2, e: 2, h: 4, r: 9, c: 6, s: 1 };
   const CAPTURE_EXP = { k: 400, a: 55, e: 55, h: 85, r: 130, c: 110, s: 40 };
@@ -51,6 +76,63 @@
     { dx: -2, dy: -1, leg: { dx: -1, dy: 0 } }
   ];
 
+  function getActiveI18n(){
+    const scope = typeof window !== 'undefined' ? window : GLOBAL_SCOPE;
+    return scope && scope.I18n ? scope.I18n : BASE_I18N;
+  }
+
+  function evaluateFallback(fallback, params){
+    if (typeof fallback === 'function'){
+      try {
+        const result = fallback(params || {});
+        if (result == null) return '';
+        return String(result);
+      } catch (error){
+        console.warn('[xiangqi] Failed to evaluate fallback text:', error);
+        return '';
+      }
+    }
+    return fallback ?? '';
+  }
+
+  function text(key, fallback, params){
+    const activeI18n = getActiveI18n();
+    if (key && activeI18n && typeof activeI18n.t === 'function'){
+      try {
+        const translated = activeI18n.t(key, params);
+        if (typeof translated === 'string' && translated !== key){
+          return translated;
+        }
+        if (translated !== undefined && translated !== null && translated !== key){
+          return translated;
+        }
+      } catch (error){
+        console.warn('[xiangqi] Failed to translate key:', key, error);
+      }
+    }
+    return evaluateFallback(fallback, params);
+  }
+
+  function formatLocalizedNumber(value, options){
+    const activeI18n = getActiveI18n();
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)){
+      if (typeof activeI18n?.formatNumber === 'function'){
+        try {
+          return activeI18n.formatNumber(numeric, options);
+        } catch (error){
+          console.warn('[xiangqi] Failed to format number via i18n:', error);
+        }
+      }
+      try {
+        return new Intl.NumberFormat(activeI18n?.getLocale?.() || undefined, options).format(numeric);
+      } catch (error){
+        console.warn('[xiangqi] Failed to format number via Intl:', error);
+      }
+    }
+    return String(value ?? '');
+  }
+
   function ensureStyle(){
     if (document.getElementById('mini-xiangqi-style')) return;
     const style = document.createElement('style');
@@ -64,7 +146,7 @@
       .mini-xiangqi-cell { position: relative; width: ${TILE_SIZE}px; height: ${TILE_SIZE}px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; font-size: 28px; font-weight: 600; transition: background-color 0.15s ease; }
       .mini-xiangqi-cell:nth-child(odd) { background: rgba(255,255,255,0.05); }
       .mini-xiangqi-cell:nth-child(even) { background: rgba(0,0,0,0.03); }
-      .mini-xiangqi-cell[data-river='true']::after { content: '楚河　漢界'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 22px; letter-spacing: 6px; color: rgba(120, 53, 15, 0.35); pointer-events: none; }
+      .mini-xiangqi-cell[data-river='true']::after { content: attr(data-river-label); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 22px; letter-spacing: 6px; color: rgba(120, 53, 15, 0.35); pointer-events: none; }
       .mini-xiangqi-cell span { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(254, 249, 195, 0.9); border: 2px solid rgba(234, 179, 8, 0.85); box-shadow: inset 0 2px 6px rgba(0,0,0,0.2); color: #b91c1c; text-shadow: 0 1px 1px rgba(255,255,255,0.6); transition: transform 0.12s ease; }
       .mini-xiangqi-cell span[data-color='black'] { background: rgba(248, 250, 252, 0.92); border-color: rgba(30, 64, 175, 0.75); color: #1f2937; text-shadow: none; }
       .mini-xiangqi-cell span[data-moved='true'] { transform: scale(1.04); }
@@ -435,7 +517,12 @@
 
     const info = document.createElement('div');
     info.className = 'mini-xiangqi-info';
-    info.innerHTML = `<h2><span>シャンチー</span><span>赤が先手</span></h2>`;
+    const header = document.createElement('h2');
+    const headerTitle = document.createElement('span');
+    const headerSubtitle = document.createElement('span');
+    header.appendChild(headerTitle);
+    header.appendChild(headerSubtitle);
+    info.appendChild(header);
 
     const turnLine = document.createElement('div');
     turnLine.className = 'status-line';
@@ -464,6 +551,7 @@
     root.appendChild(container);
 
     const cells = [];
+    const riverCells = [];
     for (let y = 0; y < BOARD_HEIGHT; y++){
       const row = [];
       for (let x = 0; x < BOARD_WIDTH; x++){
@@ -471,6 +559,8 @@
         cell.className = 'mini-xiangqi-cell';
         if (y === 4){
           cell.dataset.river = 'true';
+          cell.dataset.riverLabel = '楚河　漢界';
+          riverCells.push(cell);
         }
         cell.dataset.x = String(x);
         cell.dataset.y = String(y);
@@ -488,6 +578,8 @@
     let ended = false;
     let lastMove = null;
     let playerScore = 0;
+    let lastMessageSpec = null;
+    let detachLocaleListener = null;
 
     function resetState(){
       board = cloneBoard(START_POSITION);
@@ -498,16 +590,83 @@
       lastMove = null;
       playerScore = 0;
       updateBoard();
-      updateInfo('赤の番です', '');
+      updateInfo(null);
     }
 
-    function updateInfo(turnText, message){
-      const turnLabel = turn === 'red' ? '赤（下）' : '黒（上）';
-      turnLine.textContent = `手番: ${turnLabel}`;
-      const fallback = `${turnLabel}の番です`;
-      messageLine.textContent = message || turnText || fallback;
-      const score = Math.round(playerScore);
-      scoreLine.textContent = `合計スコア: ${score}`;
+    function evaluateSpec(spec, fallbackValue){
+      if (!spec){
+        return evaluateFallback(fallbackValue);
+      }
+      if (typeof spec === 'string'){
+        return spec;
+      }
+      const params = typeof spec.params === 'function' ? spec.params() : spec.params;
+      const fallback = spec.fallback !== undefined ? spec.fallback : fallbackValue;
+      if (spec.key){
+        return text(spec.key, fallback, params);
+      }
+      return evaluateFallback(fallback, params);
+    }
+
+    function getColorName(color){
+      const key = COLOR_NAME_KEYS[color];
+      const fallback = COLOR_NAME_DEFAULTS[color];
+      return text(key, fallback !== undefined ? fallback : (color == null ? '' : String(color)));
+    }
+
+    function getPlayerLabel(color){
+      const key = PLAYER_LABEL_KEYS[color];
+      const fallback = PLAYER_LABEL_DEFAULTS[color];
+      return text(key, fallback !== undefined ? fallback : getColorName(color));
+    }
+
+    function getPieceName(piece){
+      if (!piece) return text(null, '駒');
+      const lower = piece.toLowerCase();
+      const key = PIECE_NAME_KEYS[lower];
+      const fallback = PIECE_NAME_DEFAULTS[lower] || '駒';
+      return text(key, fallback);
+    }
+
+    function getExpLabel(){
+      return text('minigame.xiangqi.expLabel', 'EXP');
+    }
+
+    function describePiece(piece){
+      if (!piece) return '';
+      const color = pieceColor(piece);
+      const colorName = getColorName(color);
+      const name = getPieceName(piece);
+      return text('minigame.xiangqi.piece.description', ({ color: c, piece: p }) => `${c}の${p}`, {
+        color: colorName,
+        piece: name
+      });
+    }
+
+    function renderInfo(){
+      const turnLabel = getPlayerLabel(turn);
+      turnLine.textContent = text('minigame.xiangqi.status.turnLine', ({ turn: t }) => `手番: ${t}`, { turn: turnLabel });
+
+      const defaultMessageSpec = {
+        key: turn === 'red' ? 'minigame.xiangqi.status.turn.red' : 'minigame.xiangqi.status.turn.black',
+        fallback: ({ color }) => `${color}の番です`,
+        params: () => ({ color: getColorName(turn) })
+      };
+      const defaultMessageText = evaluateSpec(defaultMessageSpec);
+      const messageText = lastMessageSpec ? evaluateSpec(lastMessageSpec, defaultMessageText) : defaultMessageText;
+      messageLine.textContent = messageText;
+
+      const roundedScore = Math.round(playerScore);
+      const formattedScore = formatLocalizedNumber(roundedScore);
+      scoreLine.textContent = text('minigame.xiangqi.status.scoreLine', ({ score }) => `合計スコア: ${score}`, {
+        score: formattedScore,
+        rawScore: roundedScore
+      });
+    }
+
+    function updateInfo(messageSpec){
+      lastMessageSpec = messageSpec || null;
+      renderInfo();
     }
 
     function updateBoard(){
@@ -548,11 +707,21 @@
       }
     }
 
-    function describePiece(piece){
-      if (!piece) return '';
-      const lower = piece.toLowerCase();
-      const name = PIECE_NAMES[lower] || '駒';
-      return `${pieceColor(piece) === 'red' ? '赤' : '黒'}の${name}`;
+    function refreshStaticTexts(){
+      headerTitle.textContent = text('minigame.xiangqi.header.title', 'シャンチー');
+      headerSubtitle.textContent = text('minigame.xiangqi.header.subtitle', ({ color }) => `${color}が先手`, {
+        color: getColorName('red')
+      });
+      resetBtn.textContent = text('minigame.xiangqi.controls.reset', '初期配置に戻す');
+      const riverLabel = text('minigame.xiangqi.board.riverLabel', '楚河　漢界');
+      for (const cell of riverCells){
+        cell.dataset.riverLabel = riverLabel;
+      }
+    }
+
+    function handleLocaleChange(){
+      refreshStaticTexts();
+      renderInfo();
     }
 
     function handleMove(move){
@@ -569,9 +738,23 @@
         const exp = CAPTURE_EXP[type] || 40;
         playerScore += PIECE_VALUES[type] || 1;
         awardXp(exp, { reason: 'capture', piece: type, color: pieceColor(piece) });
-        updateInfo('', `${describePiece(piece)}が${describePiece(captured)}を取りました (+${exp}EXP)`);
+        updateInfo({
+          key: 'minigame.xiangqi.status.capture',
+          fallback: ({ actor, target, exp: value, expLabel }) => `${actor}が${target}を取りました (+${value}${expLabel})`,
+          params: () => ({
+            actor: describePiece(piece),
+            target: describePiece(captured),
+            exp: formatLocalizedNumber(exp),
+            expRaw: exp,
+            expLabel: getExpLabel()
+          })
+        });
       } else {
-        updateInfo('', `${describePiece(piece)}が移動しました`);
+        updateInfo({
+          key: 'minigame.xiangqi.status.move',
+          fallback: ({ piece: p }) => `${p}が移動しました`,
+          params: () => ({ piece: describePiece(piece) })
+        });
       }
 
       const nextTurn = opposite(turn);
@@ -586,16 +769,38 @@
       if (nextMoves.length === 0){
         ended = true;
         if (opponentInCheck){
-          const winText = turn === 'red' ? '黒が詰みました。赤の勝利！' : '赤が詰みました。黒の勝利！';
+          const winner = opposite(turn);
           awardXp(WIN_EXP[difficulty] || WIN_EXP.NORMAL, { reason: 'win' });
-          updateInfo('', winText);
+          updateInfo({
+            key: 'minigame.xiangqi.status.win',
+            fallback: ({ loser, winner: w }) => `${loser}が詰みました。${w}の勝利！`,
+            params: () => ({
+              winner: getColorName(winner),
+              loser: getColorName(turn)
+            })
+          });
         } else {
           awardXp(STALEMATE_EXP, { reason: 'stalemate' });
-          updateInfo('', '持将軍（合法手がありません）');
+          updateInfo({
+            key: 'minigame.xiangqi.status.stalemate',
+            fallback: '持将軍（合法手がありません）'
+          });
         }
       } else {
-        const message = opponentInCheck ? `${turn === 'red' ? '赤' : '黒'}が王手を受けています (+${CHECK_EXP}EXP)` : '';
-        updateInfo('', message);
+        if (opponentInCheck){
+          updateInfo({
+            key: 'minigame.xiangqi.status.check',
+            fallback: ({ defender, exp: value, expLabel }) => `${defender}が王手を受けています (+${value}${expLabel})`,
+            params: () => ({
+              defender: getColorName(turn),
+              exp: formatLocalizedNumber(CHECK_EXP),
+              expRaw: CHECK_EXP,
+              expLabel: getExpLabel()
+            })
+          });
+        } else {
+          updateInfo(null);
+        }
       }
 
       updateBoard();
@@ -622,6 +827,19 @@
       updateBoard();
     }
 
+    refreshStaticTexts();
+    renderInfo();
+
+    const activeI18n = getActiveI18n();
+    if (typeof activeI18n?.onLocaleChanged === 'function'){
+      try {
+        detachLocaleListener = activeI18n.onLocaleChanged(() => handleLocaleChange());
+      } catch (error){
+        console.warn('[xiangqi] Failed to attach i18n locale listener:', error);
+      }
+    }
+    document.addEventListener('i18n:locale-changed', handleLocaleChange);
+
     function start(){
       if (running) return;
       running = true;
@@ -647,6 +865,11 @@
 
     function destroy(){
       stop();
+      document.removeEventListener('i18n:locale-changed', handleLocaleChange);
+      if (typeof detachLocaleListener === 'function'){
+        try { detachLocaleListener(); } catch {}
+        detachLocaleListener = null;
+      }
       try { root.removeChild(container); } catch {}
     }
 

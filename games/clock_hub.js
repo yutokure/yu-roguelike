@@ -1,9 +1,17 @@
 (function(){
   const globalScope = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
-  const i18n = globalScope && globalScope.I18n ? globalScope.I18n : null;
+
+  function getI18n(){
+    const scope = globalScope;
+    if (scope && scope.I18n && typeof scope.I18n === 'object'){
+      return scope.I18n;
+    }
+    return null;
+  }
   const KEY_BASE = 'games.clockHub';
 
   function translate(key, fallback, params){
+    const i18n = getI18n();
     if (key && i18n && typeof i18n.t === 'function'){
       try {
         const value = i18n.t(key, params);
@@ -31,6 +39,7 @@
   }
 
   function formatNumberLocalized(value, options){
+    const i18n = getI18n();
     if (i18n && typeof i18n.formatNumber === 'function'){
       try {
         return i18n.formatNumber(value, options);

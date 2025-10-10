@@ -580,8 +580,8 @@
           continue;
         }
         if (timeUntil > NOTE_TRAVEL_TIME) continue;
-        const ratio = 1 - (timeUntil + NOTE_TRAVEL_TIME) / NOTE_TRAVEL_TIME;
-        const x = HIT_CIRCLE_X + (spawnX - HIT_CIRCLE_X) * (1 - ratio);
+        const travelProgress = Math.min(Math.max(1 - timeUntil / NOTE_TRAVEL_TIME, 0), 1);
+        const x = spawnX - (spawnX - HIT_CIRCLE_X) * travelProgress;
         const y = CANVAS_HEIGHT / 2;
         const color = note.type === 'don' ? DON_COLOR : KA_COLOR;
         const radius = note.big ? 42 : 28;

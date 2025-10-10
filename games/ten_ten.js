@@ -89,6 +89,44 @@
     const baseWidth = Math.max(400, Math.min(640, root.clientWidth || 520));
     const cellPx = Math.floor(Math.max(28, Math.min(52, baseWidth / (BOARD_SIZE + 2))));
     const boardPx = cellPx * BOARD_SIZE;
+    const i18n = window.I18n;
+
+    function formatNumber(value){
+      if (i18n && typeof i18n.formatNumber === 'function'){
+        try {
+          return i18n.formatNumber(value);
+        } catch (error) {
+          console.warn('[ten_ten] Failed to format number', value, error);
+        }
+      }
+      if (value === undefined || value === null) return '';
+      if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+      return String(value);
+    }
+
+    function translate(key, fallback, params){
+      const computeFallback = () => {
+        if (typeof fallback === 'function'){
+          try {
+            const result = fallback();
+            return typeof result === 'string' ? result : (result ?? '');
+          } catch (error) {
+            console.warn('[ten_ten] Failed to evaluate fallback for', key, error);
+            return '';
+          }
+        }
+        return fallback ?? '';
+      };
+      if (!key) return computeFallback();
+      if (!i18n || typeof i18n.t !== 'function') return computeFallback();
+      try {
+        const translated = i18n.t(key, params);
+        if (typeof translated === 'string' && translated && translated !== key) return translated;
+      } catch (error) {
+        console.warn('[ten_ten] Failed to translate key', key, error);
+      }
+      return computeFallback();
+    }
 
     const container = document.createElement('div');
     container.style.position = 'relative';
@@ -138,7 +176,10 @@
     shelf.style.gap = '6px';
 
     const hint = document.createElement('div');
-    hint.textContent = 'ブロックをドラッグして盤面に配置 / Rでリスタート';
+    hint.textContent = translate(
+      'selection.miniexp.games.ten_ten.hint',
+      'ブロックをドラッグして盤面に配置 / Rでリスタート'
+    );
     hint.style.font = '11px system-ui, sans-serif';
     hint.style.color = 'rgba(226,232,240,0.75)';
     hint.style.marginTop = '8px';
@@ -254,10 +295,19 @@
         boardCtx.fillStyle = '#f8fafc';
         boardCtx.textAlign = 'center';
         boardCtx.font = 'bold 20px system-ui, sans-serif';
-        boardCtx.fillText('Game Over', boardPx / 2, boardPx / 2 - 6);
+        boardCtx.fillText(
+          translate('selection.miniexp.games.ten_ten.end.title', 'Game Over'),
+          boardPx / 2,
+          boardPx / 2 - 6
+        );
         boardCtx.font = '12px system-ui, sans-serif';
-        boardCtx.fillText(endText || '置ける場所がありません', boardPx / 2, boardPx / 2 + 14);
-        boardCtx.fillText('Rで再開/再起動', boardPx / 2, boardPx / 2 + 32);
+        const defaultReason = translate('selection.miniexp.games.ten_ten.end.reasons.noSpace', '置ける場所がありません');
+        boardCtx.fillText(endText || defaultReason, boardPx / 2, boardPx / 2 + 14);
+        boardCtx.fillText(
+          translate('selection.miniexp.games.ten_ten.end.retryHint', 'Rで再開/再起動'),
+          boardPx / 2,
+          boardPx / 2 + 32
+        );
       }
     }
 
@@ -356,10 +406,39 @@
     }
 
     function updateHud(){
-      lineInfo.textContent = `ライン: ${totalLines} / 最大同時: ${largestClear}`;
-      moveInfo.textContent = `手番: ${moves} / 残ブロック: ${currentPieces.length}`;
-      const lastDetail = lastXpGain > 0 ? ` / 最終:+${lastXpGain}XP(${lastClearCount}ライン)` : '';
-      comboInfo.textContent = `コンボ: ${currentCombo} (最大 ${maxCombo}) / XP: ${totalXp}${lastDetail}`;
+      const formattedTotalLines = formatNumber(totalLines);
+      const formattedLargestClear = formatNumber(largestClear);
+      lineInfo.textContent = translate(
+        'selection.miniexp.games.ten_ten.hud.lines',
+        () => `ライン: ${formattedTotalLines} / 最大同時: ${formattedLargestClear}`,
+        { total: formattedTotalLines, max: formattedLargestClear }
+      );
+      const formattedMoves = formatNumber(moves);
+      const formattedRemaining = formatNumber(currentPieces.length);
+      moveInfo.textContent = translate(
+        'selection.miniexp.games.ten_ten.hud.moves',
+        () => `手番: ${formattedMoves} / 残ブロック: ${formattedRemaining}`,
+        { moves: formattedMoves, remaining: formattedRemaining }
+      );
+      const formattedCombo = formatNumber(currentCombo);
+      const formattedMaxCombo = formatNumber(maxCombo);
+      const formattedXp = formatNumber(totalXp);
+      const baseText = translate(
+        'selection.miniexp.games.ten_ten.hud.combo.base',
+        () => `コンボ: ${formattedCombo} (最大 ${formattedMaxCombo}) / XP: ${formattedXp}`,
+        { combo: formattedCombo, max: formattedMaxCombo, xp: formattedXp }
+      );
+      let detailText = '';
+      if (lastXpGain > 0){
+        const formattedLastXp = formatNumber(lastXpGain);
+        const formattedLines = formatNumber(lastClearCount);
+        detailText = translate(
+          'selection.miniexp.games.ten_ten.hud.combo.detail',
+          () => ` / 最終:+${formattedLastXp}XP(${formattedLines}ライン)`,
+          { lastXp: formattedLastXp, lines: formattedLines }
+        );
+      }
+      comboInfo.textContent = `${baseText}${detailText}`;
     }
 
     function hasPlacement(piece){
@@ -385,7 +464,7 @@
 
     function endGame(reason){
       ended = true;
-      endText = reason || '置ける場所がありません';
+      endText = reason || translate('selection.miniexp.games.ten_ten.end.reasons.noSpace', '置ける場所がありません');
       updateHud();
       drawBoard();
       enableHostRestart();
@@ -430,7 +509,7 @@
         if (initial){
           board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null));
         }
-        endGame('置けるピースが生成できませんでした');
+        endGame(translate('selection.miniexp.games.ten_ten.errors.cannotGenerate', '置けるピースが生成できませんでした'));
         return;
       }
       renderShelf();
@@ -441,7 +520,7 @@
       shelf.textContent = '';
       if (!currentPieces.length){
         const placeholder = document.createElement('div');
-        placeholder.textContent = 'ピース補充中...';
+        placeholder.textContent = translate('selection.miniexp.games.ten_ten.shelf.refilling', 'ピース補充中...');
         placeholder.style.flex = '1';
         placeholder.style.textAlign = 'center';
         placeholder.style.color = 'rgba(148,163,184,0.8)';
@@ -584,7 +663,7 @@
           generateSet(false);
         }
         if (!ended && !anyMoveAvailable()){
-          endGame('置ける場所がありません');
+          endGame(translate('selection.miniexp.games.ten_ten.end.reasons.noSpace', '置ける場所がありません'));
         }
       }
       drawBoard();

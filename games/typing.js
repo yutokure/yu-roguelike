@@ -49,6 +49,54 @@
   const TARGET_WPM_RANGE = { min: 40, max: 120 };
   const STYLE_ELEMENT_ID = 'typing_challenge_style';
 
+  function getI18n(){
+    return typeof window !== 'undefined' ? window.I18n : null;
+  }
+
+  function translate(key, fallback, params){
+    const i18n = getI18n();
+    const computeFallback = () => {
+      if (typeof fallback === 'function'){
+        try {
+          const value = fallback();
+          return typeof value === 'string' ? value : (value ?? '');
+        } catch (error) {
+          console.warn('[typing] Failed to compute fallback for', key, error);
+          return '';
+        }
+      }
+      return fallback ?? '';
+    };
+    if (!key || !i18n || typeof i18n.t !== 'function'){
+      return computeFallback();
+    }
+    try {
+      const translated = i18n.t(key, params);
+      if (typeof translated === 'string' && translated !== key){
+        return translated;
+      }
+    } catch (error) {
+      console.warn('[typing] Failed to translate key', key, error);
+    }
+    return computeFallback();
+  }
+
+  function formatNumber(value, digits = 1){
+    if (!Number.isFinite(value)) return '0';
+    const i18n = getI18n();
+    if (i18n && typeof i18n.formatNumber === 'function'){
+      try {
+        return i18n.formatNumber(value, {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        });
+      } catch (error) {
+        console.warn('[typing] Failed to format number', value, error);
+      }
+    }
+    return value.toFixed(digits);
+  }
+
   const STYLE_CONTENT = `
     .typing-game-wrapper {
       width: 100%;
@@ -382,11 +430,6 @@
     return Math.round(num);
   }
 
-  function formatNumber(num, digits = 1){
-    if (!Number.isFinite(num)) return '0';
-    return num.toFixed(digits);
-  }
-
   function pickDifficulty(name){
     const key = typeof name === 'string' ? name.toUpperCase() : 'NORMAL';
     if (DIFFICULTY_OPTIONS[key]) return key;
@@ -441,6 +484,7 @@
     let rafId = null;
     let lastTick = null;
     let lastInputValue = '';
+    let localeUnsubscribe = null;
 
     const wrapper = document.createElement('div');
     wrapper.className = 'typing-game-wrapper';
@@ -453,25 +497,33 @@
 
     const title = document.createElement('h2');
     title.className = 'title';
-    title.textContent = DISPLAY_NAME;
+    title.textContent = translate('selection.miniexp.games.typing.name', () => DISPLAY_NAME);
 
     const controls = document.createElement('div');
     controls.className = 'typing-controls';
 
     const difficultyLabel = document.createElement('label');
-    difficultyLabel.textContent = '難易度';
+    const difficultyLabelText = document.createElement('span');
+    difficultyLabel.appendChild(difficultyLabelText);
 
     const difficultySelect = document.createElement('select');
-    difficultySelect.innerHTML = `
-      <option value="EASY">EASY</option>
-      <option value="NORMAL">NORMAL</option>
-      <option value="HARD">HARD</option>
-    `;
+    const difficultyOptions = [
+      { value: 'EASY', key: 'easy' },
+      { value: 'NORMAL', key: 'normal' },
+      { value: 'HARD', key: 'hard' }
+    ];
+    difficultyOptions.forEach(option => {
+      const opt = document.createElement('option');
+      opt.value = option.value;
+      difficultySelect.appendChild(opt);
+      option.element = opt;
+    });
     difficultySelect.value = state.difficulty;
     difficultyLabel.appendChild(difficultySelect);
 
     const targetLabel = document.createElement('label');
-    targetLabel.textContent = `ターゲットWPM`;
+    const targetLabelText = document.createElement('span');
+    targetLabel.appendChild(targetLabelText);
 
     const targetSlider = document.createElement('input');
     targetSlider.type = 'range';
@@ -480,7 +532,6 @@
     targetSlider.value = String(state.targetWpm);
 
     const targetValue = document.createElement('span');
-    targetValue.textContent = `${state.targetWpm} WPM`;
 
     targetLabel.appendChild(targetSlider);
     targetLabel.appendChild(targetValue);
@@ -517,7 +568,6 @@
 
     const nextWordEl = document.createElement('div');
     nextWordEl.className = 'typing-next';
-    nextWordEl.textContent = '次: -';
 
     wordsArea.appendChild(currentWordEl);
     wordsArea.appendChild(nextWordEl);
@@ -530,11 +580,11 @@
     input.autocapitalize = 'off';
     input.autocomplete = 'off';
     input.spellcheck = false;
-    input.placeholder = '表示された単語をタイプ（Space/Enterで確定）';
+    input.placeholder = translate('miniGames.typing.input.placeholder', '表示された単語をタイプ（Space/Enterで確定）');
 
     const resetButton = document.createElement('button');
     resetButton.type = 'button';
-    resetButton.textContent = 'リセット';
+    resetButton.textContent = translate('miniGames.typing.buttons.reset', 'リセット');
 
     inputRow.appendChild(input);
     inputRow.appendChild(resetButton);
@@ -545,25 +595,30 @@
     const statsGrid = document.createElement('div');
     statsGrid.className = 'typing-stats';
 
-    function makeStat(label){
+    const statLabelUpdaters = [];
+    function makeStat(labelKey, fallback){
       const card = document.createElement('div');
       card.className = 'typing-stat-card';
       const lbl = document.createElement('div');
       lbl.className = 'label';
-      lbl.textContent = label;
       const value = document.createElement('div');
       value.className = 'value';
       value.textContent = '0';
       card.appendChild(lbl);
       card.appendChild(value);
       statsGrid.appendChild(card);
+      const updateLabel = () => {
+        lbl.textContent = translate(labelKey, fallback);
+      };
+      statLabelUpdaters.push(updateLabel);
+      updateLabel();
       return value;
     }
 
-    const accuracyValue = makeStat('ACC');
-    const wpmValue = makeStat('WPM');
-    const comboValue = makeStat('COMBO');
-    const xpValue = makeStat('SESSION XP');
+    const accuracyValue = makeStat('miniGames.typing.stats.labels.accuracy', 'ACC');
+    const wpmValue = makeStat('miniGames.typing.stats.labels.wpm', 'WPM');
+    const comboValue = makeStat('miniGames.typing.stats.labels.combo', 'COMBO');
+    const xpValue = makeStat('miniGames.typing.stats.labels.sessionXp', 'SESSION XP');
 
     const resultOverlay = document.createElement('div');
     resultOverlay.className = 'typing-result-overlay';
@@ -572,35 +627,40 @@
     resultCard.className = 'typing-result-card';
 
     const resultTitle = document.createElement('h3');
-    resultTitle.textContent = 'RESULT';
+    resultTitle.textContent = translate('miniGames.typing.result.title', 'RESULT');
 
     const resultGrid = document.createElement('div');
     resultGrid.className = 'typing-result-grid';
 
-    function makeResultItem(label){
+    const resultLabelUpdaters = [];
+    function makeResultItem(labelKey, fallback){
       const item = document.createElement('div');
       item.className = 'item';
       const lbl = document.createElement('div');
       lbl.className = 'label';
-      lbl.textContent = label;
       const value = document.createElement('div');
       value.className = 'value';
       value.textContent = '-';
       item.appendChild(lbl);
       item.appendChild(value);
       resultGrid.appendChild(item);
+      const updateLabel = () => {
+        lbl.textContent = translate(labelKey, fallback);
+      };
+      resultLabelUpdaters.push(updateLabel);
+      updateLabel();
       return value;
     }
 
-    const resultAccuracy = makeResultItem('精度');
-    const resultWpm = makeResultItem('平均WPM');
-    const resultWords = makeResultItem('正タイプ数');
-    const resultCombo = makeResultItem('最高コンボ');
+    const resultAccuracy = makeResultItem('miniGames.typing.result.labels.accuracy', '精度');
+    const resultWpm = makeResultItem('miniGames.typing.result.labels.wpm', '平均WPM');
+    const resultWords = makeResultItem('miniGames.typing.result.labels.words', '正タイプ数');
+    const resultCombo = makeResultItem('miniGames.typing.result.labels.combo', '最高コンボ');
 
     const xpSummary = document.createElement('div');
     xpSummary.className = 'typing-result-xp';
     const xpSummaryTitle = document.createElement('div');
-    xpSummaryTitle.textContent = 'EXP 内訳';
+    xpSummaryTitle.textContent = translate('miniGames.typing.xp.title', 'EXP 内訳');
     const xpList = document.createElement('ul');
     xpSummary.appendChild(xpSummaryTitle);
     xpSummary.appendChild(xpList);
@@ -611,7 +671,7 @@
 
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
-    closeButton.textContent = 'もう一度挑戦';
+    closeButton.textContent = translate('miniGames.typing.buttons.retry', 'もう一度挑戦');
 
     resultCard.appendChild(resultTitle);
     resultCard.appendChild(resultGrid);
@@ -642,6 +702,134 @@
           state.toastTimer = null;
         }, 2600);
       }
+    }
+
+    function formatNextWordText(word){
+      if (word){
+        return translate('miniGames.typing.words.nextWithValue', () => `次: ${word}`, { word });
+      }
+      return translate('miniGames.typing.words.nextEmpty', '次: -');
+    }
+
+    function updateTargetValue(){
+      targetValue.textContent = translate('miniGames.typing.controls.targetValue', () => `${state.targetWpm} WPM`, {
+        targetWpm: state.targetWpm
+      });
+    }
+
+    function updateTargetInfo(progressPercent){
+      if (progressPercent == null || Number.isNaN(progressPercent)){
+        targetInfo.textContent = translate('miniGames.typing.stats.targetInfo.pending', () => `ターゲット ${state.targetWpm} WPM / 達成度 -`, {
+          targetWpm: state.targetWpm
+        });
+        return;
+      }
+      const clamped = Math.min(progressPercent, 999);
+      const formatted = formatNumber(clamped, 1);
+      targetInfo.textContent = translate('miniGames.typing.stats.targetInfo.active', () => `ターゲット ${state.targetWpm} WPM / 達成度 ${formatted}%`, {
+        targetWpm: state.targetWpm,
+        progress: formatted
+      });
+    }
+
+    function formatMilestoneEntry(milestone){
+      return translate('miniGames.typing.xp.milestoneEntry', () => `x${milestone.combo}+${milestone.bonus}`, {
+        combo: milestone.combo,
+        bonus: milestone.bonus
+      });
+    }
+
+    function formatXpEvent(event){
+      const xpValueText = Number.isInteger(event.xp) ? String(event.xp) : formatNumber(event.xp, 1);
+      if (event.type === 'word'){
+        const label = translate('miniGames.typing.xp.wordLabel', () => `単語 ${event.index}`, {
+          index: event.index
+        });
+        if (event.milestones && event.milestones.length){
+          const milestoneText = event.milestones.map(formatMilestoneEntry).join(translate('miniGames.typing.xp.milestoneSeparator', ', '));
+          return translate('miniGames.typing.xp.wordWithMilestones', () => `${label}: +${xpValueText} EXP (${milestoneText})`, {
+            label,
+            xp: xpValueText,
+            milestones: milestoneText,
+            index: event.index
+          });
+        }
+        return translate('miniGames.typing.xp.word', () => `${label}: +${xpValueText} EXP`, {
+          label,
+          xp: xpValueText,
+          index: event.index
+        });
+      }
+      if (event.type === 'accuracy'){
+        const percentText = formatNumber(event.accuracy * 100, 1);
+        const label = translate('miniGames.typing.xp.accuracyLabel', () => `精度ボーナス (${percentText}%)`, {
+          accuracyPercent: percentText
+        });
+        return translate('miniGames.typing.xp.accuracy', () => `${label}: +${xpValueText} EXP`, {
+          label,
+          xp: xpValueText,
+          accuracyPercent: percentText
+        });
+      }
+      return translate('miniGames.typing.xp.generic', () => `+${xpValueText} EXP`, {
+        xp: xpValueText
+      });
+    }
+
+    function renderXpList(){
+      xpList.innerHTML = '';
+      if (!state.xpEvents.length){
+        const item = document.createElement('li');
+        item.textContent = translate('miniGames.typing.xp.none', 'EXPは獲得できませんでした');
+        xpList.appendChild(item);
+        return;
+      }
+      state.xpEvents.forEach(event => {
+        const item = document.createElement('li');
+        item.textContent = formatXpEvent(event);
+        xpList.appendChild(item);
+      });
+    }
+
+    function applyLocaleTexts(){
+      title.textContent = translate('selection.miniexp.games.typing.name', () => DISPLAY_NAME);
+      difficultyLabelText.textContent = translate('miniGames.typing.controls.difficulty', '難易度');
+      difficultyOptions.forEach(option => {
+        const key = `miniGames.typing.controls.difficultyOptions.${option.key}`;
+        option.element.textContent = translate(key, option.value);
+      });
+      targetLabelText.textContent = translate('miniGames.typing.controls.target', 'ターゲットWPM');
+      updateTargetValue();
+      input.placeholder = translate('miniGames.typing.input.placeholder', '表示された単語をタイプ（Space/Enterで確定）');
+      resetButton.textContent = translate('miniGames.typing.buttons.reset', 'リセット');
+      statLabelUpdaters.forEach(update => update());
+      resultTitle.textContent = translate('miniGames.typing.result.title', 'RESULT');
+      resultLabelUpdaters.forEach(update => update());
+      xpSummaryTitle.textContent = translate('miniGames.typing.xp.title', 'EXP 内訳');
+      closeButton.textContent = translate('miniGames.typing.buttons.retry', 'もう一度挑戦');
+      updateNextWord();
+      const ratio = state.phase === 'finished' || state.phase === 'running'
+        ? (state.targetWpm > 0 ? (computeWpm() / state.targetWpm) * 100 : 0)
+        : null;
+      updateTargetInfo(ratio);
+      renderXpList();
+    }
+
+    const i18nInstance = getI18n();
+    const handleLocaleChange = () => applyLocaleTexts();
+    if (typeof i18nInstance?.onLocaleChanged === 'function'){
+      try {
+        localeUnsubscribe = i18nInstance.onLocaleChanged(handleLocaleChange);
+      } catch (error) {
+        console.warn('[typing] Failed to subscribe to locale changes via onLocaleChanged', error);
+      }
+    }
+    if (!localeUnsubscribe){
+      const listener = () => handleLocaleChange();
+      document.addEventListener('i18n:locale-changed', listener);
+      localeUnsubscribe = () => {
+        document.removeEventListener('i18n:locale-changed', listener);
+      };
     }
 
     function prepareWordQueue(){
@@ -700,11 +888,7 @@
     }
 
     function updateNextWord(){
-      if (state.nextWord){
-        nextWordEl.textContent = `次: ${state.nextWord}`;
-      } else {
-        nextWordEl.textContent = '次: -';
-      }
+      nextWordEl.textContent = formatNextWordText(state.nextWord);
     }
 
     function updateTimerVisual(){
@@ -749,8 +933,12 @@
       const wpm = computeWpm();
       wpmValue.textContent = formatNumber(wpm, 1);
       if (state.phase !== 'finished'){
-        const liveRatio = state.targetWpm > 0 ? (wpm / state.targetWpm) * 100 : 0;
-        targetInfo.textContent = `ターゲット ${state.targetWpm} WPM / 達成度 ${formatNumber(Math.min(liveRatio, 999), 1)}%`;
+        if (state.running){
+          const liveRatio = state.targetWpm > 0 ? (wpm / state.targetWpm) * 100 : 0;
+          updateTargetInfo(liveRatio);
+        } else {
+          updateTargetInfo(null);
+        }
       }
       comboValue.textContent = String(state.combo);
       xpValue.textContent = formatNumber(state.sessionXp, 1);
@@ -766,7 +954,7 @@
       state.incorrectChars += 1;
       resetCombo();
       currentWordEl.classList.add('typing-word-error');
-      setToast('ミスタイプ！', '#fca5a5');
+      setToast(translate('miniGames.typing.toasts.mistype', 'ミスタイプ！'), '#fca5a5');
       setTimeout(() => currentWordEl.classList.remove('typing-word-error'), 280);
       updateStats();
     }
@@ -793,12 +981,17 @@
           awardXp(xpGain, { type: 'char', word, chars: length, combo: state.combo, milestones: triggered.map(m => m.count) });
         }
         state.sessionXp += xpGain;
-        state.xpEvents.push({ label: `単語 ${state.wordsCompleted}`, xp: xpGain, milestones: triggered.map(m => ({ count: m.count, bonus: m.bonus })) });
+        state.xpEvents.push({ type: 'word', index: state.wordsCompleted, xp: xpGain, milestones: triggered.map(m => ({ combo: m.count, bonus: m.bonus })) });
         updateStats();
+        renderXpList();
       }
       if (triggered.length){
-        const milestoneText = triggered.map(m => `Combo x${m.count}! +${m.bonus}EXP`).join(' / ');
-        setToast(milestoneText, '#fde68a');
+        const milestoneTexts = triggered.map(m => translate('miniGames.typing.toasts.comboMilestone', () => `Combo x${m.count}! +${m.bonus} EXP`, {
+          combo: m.count,
+          bonus: m.bonus
+        }));
+        const separator = translate('miniGames.typing.toasts.comboSeparator', ' / ');
+        setToast(milestoneTexts.join(separator), '#fde68a');
         window.playSfx?.('pickup');
       }
       state.typed = '';
@@ -813,7 +1006,7 @@
     function finalizeWord(){
       if (!state.running) return;
       if (state.typed.length !== state.currentWord.length){
-        setToast('全文字をタイプしてから確定！', '#fde68a');
+        setToast(translate('miniGames.typing.toasts.completeBeforeConfirm', '全文字をタイプしてから確定！'), '#fde68a');
         return;
       }
       handleWordConfirmed();
@@ -843,7 +1036,9 @@
       state.accuracyXp = 0;
       state.xpEvents = [];
       setToast('');
-      targetInfo.textContent = `ターゲット ${state.targetWpm} WPM / 達成度 -`;
+      updateTargetValue();
+      updateTargetInfo(null);
+      renderXpList();
       lastInputValue = '';
       input.value = '';
       input.disabled = false;
@@ -864,10 +1059,12 @@
       const wpm = computeWpm();
       resultAccuracy.textContent = `${formatNumber(accuracy * 100, 1)}%`;
       resultWpm.textContent = formatNumber(wpm, 1);
-      resultWords.textContent = `${state.correctChars} 文字`;
+      resultWords.textContent = translate('miniGames.typing.result.wordsValue', () => `${state.correctChars} 文字`, {
+        count: state.correctChars
+      });
       resultCombo.textContent = `${state.maxCombo}`;
       const targetRatio = state.targetWpm > 0 ? (wpm / state.targetWpm) * 100 : 0;
-      targetInfo.textContent = `ターゲット ${state.targetWpm} WPM / 達成度 ${formatNumber(Math.min(targetRatio, 999), 1)}%`;
+      updateTargetInfo(targetRatio);
 
       let accuracyXp = 0;
       for (const bonus of ACCURACY_BONUSES){
@@ -882,27 +1079,11 @@
         }
         state.sessionXp += accuracyXp;
         state.accuracyXp = accuracyXp;
-        state.xpEvents.push({ label: `精度ボーナス (${formatNumber(accuracy * 100, 1)}%)`, xp: accuracyXp });
+        state.xpEvents.push({ type: 'accuracy', accuracy, xp: accuracyXp });
       }
       xpValue.textContent = formatNumber(state.sessionXp, 1);
 
-      xpList.innerHTML = '';
-      state.xpEvents.forEach(event => {
-        const item = document.createElement('li');
-        const xpText = Number.isInteger(event.xp) ? `${event.xp}` : event.xp.toFixed(1);
-        if (event.milestones && event.milestones.length){
-          const milestoneInfo = event.milestones.map(m => `x${m.count}+${m.bonus}`).join(', ');
-          item.textContent = `${event.label}: +${xpText} EXP (${milestoneInfo})`;
-        } else {
-          item.textContent = `${event.label}: +${xpText} EXP`;
-        }
-        xpList.appendChild(item);
-      });
-      if (state.xpEvents.length === 0){
-        const item = document.createElement('li');
-        item.textContent = 'EXPは獲得できませんでした';
-        xpList.appendChild(item);
-      }
+      renderXpList();
 
       resultOverlay.classList.add('active');
     }
@@ -933,7 +1114,7 @@
       state.phase = 'running';
       lastTick = null;
       rafId = requestAnimationFrame(tick);
-      setToast('60秒チャレンジ開始！がんばって！', '#fde68a');
+      setToast(translate('miniGames.typing.toasts.start', '60秒チャレンジ開始！がんばって！'), '#fde68a');
     }
 
     function stopTimer(){
@@ -967,6 +1148,14 @@
       difficultySelect.removeEventListener('change', onDifficultyChange);
       targetSlider.removeEventListener('input', onTargetChange);
       closeButton.removeEventListener('click', onCloseResult);
+      if (typeof localeUnsubscribe === 'function'){
+        try {
+          localeUnsubscribe();
+        } catch (error) {
+          console.warn('[typing] Failed to unsubscribe from locale changes', error);
+        }
+        localeUnsubscribe = null;
+      }
       if (wrapper.parentNode === root){
         root.removeChild(wrapper);
       }
@@ -1027,10 +1216,10 @@
     function onTargetChange(){
       state.targetWpm = clampTargetWpm(targetSlider.value);
       targetSlider.value = String(state.targetWpm);
-      targetValue.textContent = `${state.targetWpm} WPM`;
+      updateTargetValue();
       if (state.phase === 'finished'){
         const ratio = state.targetWpm > 0 ? (computeWpm() / state.targetWpm) * 100 : 0;
-        targetInfo.textContent = `ターゲット ${state.targetWpm} WPM / 達成度 ${formatNumber(Math.min(ratio, 999), 1)}%`;
+        updateTargetInfo(ratio);
       } else {
         updateStats();
       }
@@ -1051,6 +1240,7 @@
     applyDifficultyStyles();
     updateTimerVisual();
     updateStats();
+    applyLocaleTexts();
 
     const runtime = {
       start,

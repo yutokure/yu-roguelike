@@ -82,6 +82,23 @@
   }
 
   function create(root, awardXp, opts){
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'steady_wire' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    let detachLocale = localization && typeof localization.onChange === 'function'
+      ? localization.onChange(() => {
+          try { updateLocaleTexts(); } catch {}
+          try { draw(); } catch {}
+        })
+      : null;
+
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const baseDiff = DIFFICULTY_CFG[difficulty] || DIFFICULTY_CFG.NORMAL;
     const diffCfg = { ...baseDiff };
@@ -105,7 +122,7 @@
     infoBar.style.fontFamily = 'system-ui, sans-serif';
 
     const statusEl = document.createElement('div');
-    statusEl.textContent = '操作方法を選択してください';
+    statusEl.textContent = text('status.selectControl', '操作方法を選択してください');
     statusEl.style.fontSize = '14px';
     statusEl.style.flex = '1 1 auto';
 
@@ -167,7 +184,7 @@
     const overlayMessage = document.createElement('div');
     overlayMessage.style.fontSize = '16px';
     overlayMessage.style.marginBottom = '14px';
-    overlayMessage.textContent = '操作方法を選んでスタート！';
+    overlayMessage.textContent = text('overlay.modePrompt', '操作方法を選んでスタート！');
 
     const overlayButtons = document.createElement('div');
     overlayButtons.style.display = 'flex';
@@ -192,9 +209,9 @@
       return btn;
     }
 
-    const mouseBtn = createButton('マウスモードで開始');
-    const keyboardBtn = createButton('キーボードモードで開始');
-    const retryBtn = createButton('同じモードで再挑戦');
+    const mouseBtn = createButton(text('buttons.startMouse', 'マウスモードで開始'));
+    const keyboardBtn = createButton(text('buttons.startKeyboard', 'キーボードモードで開始'));
+    const retryBtn = createButton(text('buttons.retrySameMode', '同じモードで再挑戦'));
 
     overlayButtons.appendChild(mouseBtn);
     overlayButtons.appendChild(keyboardBtn);
@@ -227,9 +244,13 @@
     let checkpointsAwarded = 0;
     let progressValue = 0;
     let runStartTime = 0;
+    let lastStatus = null;
+    let lastOverlayConfig = null;
 
-    function updateStatus(text){
-      statusEl.textContent = text;
+    function updateStatus(key, fallback, params){
+      lastStatus = key ? { key, fallback, params } : null;
+      const value = key ? text(key, fallback, params) : (typeof fallback === 'function' ? fallback() : (fallback ?? ''));
+      statusEl.textContent = value;
     }
 
     function updateProgress(progress){
@@ -239,7 +260,16 @@
     }
 
     function showOverlay(opts){
-      overlayMessage.textContent = opts.message || '';
+      if (!opts){
+        lastOverlayConfig = null;
+        overlay.style.display = 'none';
+        return;
+      }
+      lastOverlayConfig = { ...opts };
+      const message = opts.messageKey
+        ? text(opts.messageKey, opts.messageFallback, opts.messageParams)
+        : (typeof opts.message === 'function' ? opts.message() : (opts.message || ''));
+      overlayMessage.textContent = message;
       overlay.style.display = 'flex';
       mouseBtn.style.display = opts.showModeButtons ? 'inline-flex' : 'none';
       keyboardBtn.style.display = opts.showModeButtons ? 'inline-flex' : 'none';
@@ -248,6 +278,7 @@
 
     function hideOverlay(){
       overlay.style.display = 'none';
+      lastOverlayConfig = null;
     }
 
     function resetPath(){
@@ -336,8 +367,19 @@
       cancelAnimationFrame(raf);
       const progress = clamp(progressFromPlayer(), 0, 1);
       awardFail(progress);
-      updateStatus(reason || 'ぶつかってしまった…');
-      showOverlay({ message: 'ぶつかってしまった！再挑戦しますか？', showModeButtons: true, showRetry: !!controlMode });
+      if (reason && typeof reason === 'object'){
+        updateStatus(reason.key, reason.fallback, reason.params);
+      } else if (typeof reason === 'string'){
+        updateStatus(null, reason);
+      } else {
+        updateStatus('status.hitObstacle', 'ぶつかってしまった…');
+      }
+      showOverlay({
+        messageKey: 'overlay.retryPrompt',
+        messageFallback: 'ぶつかってしまった！再挑戦しますか？',
+        showModeButtons: true,
+        showRetry: !!controlMode
+      });
     }
 
     function win(totalTime){
@@ -349,11 +391,30 @@
       awardFinish(totalTime);
       updateProgress(1);
       const timeText = (typeof totalTime === 'number' && isFinite(totalTime)) ? totalTime.toFixed(2) : null;
-      updateStatus(timeText ? `クリア！おめでとう (${timeText}s)` : 'クリア！おめでとう！');
-      const msg = timeText
-        ? `クリア！難易度 ${difficulty} を ${timeText} 秒で突破しました！`
-        : `クリア！難易度 ${difficulty} を突破しました！`;
-      showOverlay({ message: msg, showModeButtons: true, showRetry: !!controlMode });
+      const difficultyLabel = text(`difficulty.label.${String(difficulty).toLowerCase()}`, () => {
+        if (difficulty === 'EASY') return 'かんたん';
+        if (difficulty === 'HARD') return 'むずかしい';
+        return 'ふつう';
+      });
+      if (timeText){
+        updateStatus('status.clearedWithTime', () => `クリア！おめでとう (${timeText}s)`, { time: timeText });
+        showOverlay({
+          messageKey: 'overlay.clearedWithTime',
+          messageFallback: () => `クリア！難易度 ${difficultyLabel} を ${timeText} 秒で突破しました！`,
+          messageParams: { difficulty: difficultyLabel, time: timeText },
+          showModeButtons: true,
+          showRetry: !!controlMode
+        });
+      } else {
+        updateStatus('status.cleared', 'クリア！おめでとう！');
+        showOverlay({
+          messageKey: 'overlay.cleared',
+          messageFallback: () => `クリア！難易度 ${difficultyLabel} を突破しました！`,
+          messageParams: { difficulty: difficultyLabel },
+          showModeButtons: true,
+          showRetry: !!controlMode
+        });
+      }
     }
 
     function update(dt){
@@ -378,7 +439,7 @@
 
       const inside = isInsidePath(player.x, player.y);
       if (!inside){
-        fail('コースから外れてしまった…');
+        fail({ key: 'status.leftCourse', fallback: 'コースから外れてしまった…' });
         return;
       }
 
@@ -437,8 +498,8 @@
       // text overlays
       ctx.fillStyle = 'rgba(148,163,184,0.5)';
       ctx.font = '12px system-ui';
-      ctx.fillText('START', startPoint.x - 20, startPoint.y - diffCfg.corridor * 0.6);
-      ctx.fillText('GOAL', finishPoint.x - 16, finishPoint.y - finishRadius - 14);
+      ctx.fillText(getStartLabel(), startPoint.x - 20, startPoint.y - diffCfg.corridor * 0.6);
+      ctx.fillText(getGoalLabel(), finishPoint.x - 16, finishPoint.y - finishRadius - 14);
     }
 
     function loop(ts){
@@ -475,10 +536,10 @@
       hideOverlay();
       if (mode === 'mouse'){
         mouseActive = false;
-        updateStatus('マウスで操作: スタート円をクリックして進もう');
+        updateStatus('status.mouseInstructions', 'マウスで操作: スタート円をクリックして進もう');
       } else {
         mouseActive = true;
-        updateStatus('キーボードで操作: 矢印 / WASD で移動');
+        updateStatus('status.keyboardInstructions', 'キーボードで操作: 矢印 / WASD で移動');
       }
       startRun();
     }
@@ -491,7 +552,7 @@
     });
     retryBtn.addEventListener('click', () => {
       if (!controlMode){
-        showOverlay({ message: 'まず操作方法を選んでください', showModeButtons: true, showRetry: false });
+        showOverlay({ messageKey: 'overlay.selectControlFirst', messageFallback: 'まず操作方法を選んでください', showModeButtons: true, showRetry: false });
         return;
       }
       startGame(controlMode);
@@ -516,7 +577,7 @@
         if (canvas.setPointerCapture){
           try { canvas.setPointerCapture(e.pointerId); } catch {}
         }
-        updateStatus('マウスで●をコースから外さないように進もう');
+        updateStatus('status.mouseDrag', 'マウスで●をコースから外さないように進もう');
         draw();
       }
     }
@@ -539,7 +600,7 @@
     function onPointerLeave(e){
       if (controlMode !== 'mouse') return;
       if (!ended && mouseActive){
-        fail('コースから出てしまった…');
+        fail({ key: 'status.pointerLeft', fallback: 'コースから出てしまった…' });
       }
       if (e && canvas.releasePointerCapture){
         try { canvas.releasePointerCapture(e.pointerId); } catch {}
@@ -573,8 +634,39 @@
     document.addEventListener('keydown', onKeyDown, { passive: false });
     document.addEventListener('keyup', onKeyUp, { passive: false });
 
+    function updateLocaleTexts(){
+      mouseBtn.textContent = text('buttons.startMouse', 'マウスモードで開始');
+      keyboardBtn.textContent = text('buttons.startKeyboard', 'キーボードモードで開始');
+      retryBtn.textContent = text('buttons.retrySameMode', '同じモードで再挑戦');
+      if (lastStatus){
+        statusEl.textContent = text(lastStatus.key, lastStatus.fallback, lastStatus.params);
+      } else {
+        statusEl.textContent = text('status.selectControl', '操作方法を選択してください');
+      }
+      if (overlay.style.display !== 'none' && lastOverlayConfig){
+        const cfg = { ...lastOverlayConfig };
+        showOverlay(cfg);
+      }
+    }
+
+    function getStartLabel(){
+      return text('canvas.startLabel', 'START');
+    }
+
+    function getGoalLabel(){
+      return text('canvas.goalLabel', 'GOAL');
+    }
+
+    updateStatus('status.selectControl', '操作方法を選択してください');
+    updateLocaleTexts();
+
     resetPath();
-    showOverlay({ message: 'イライラ棒ミニゲームへようこそ！\nマウスまたはキーボード操作を選んでください。\nコースから外れずに右端のゴールまで進みましょう。', showModeButtons: true, showRetry: false });
+    showOverlay({
+      messageKey: 'overlay.welcome',
+      messageFallback: 'イライラ棒ミニゲームへようこそ！\nマウスまたはキーボード操作を選んでください。\nコースから外れずに右端のゴールまで進みましょう。',
+      showModeButtons: true,
+      showRetry: false
+    });
 
     function stop(){
       running = false;
@@ -590,6 +682,10 @@
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerLeave);
       canvas.removeEventListener('pointercancel', onPointerLeave);
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       wrapper.remove();
     }
 

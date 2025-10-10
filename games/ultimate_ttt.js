@@ -10,6 +10,75 @@
   const XP_WIN = { EASY: 50, NORMAL: 100, HARD: 250 };
   const SUB_WIN_REWARD = 25;
 
+  const baseI18n = typeof window !== 'undefined' ? window.I18n : null;
+
+  function getI18nInstance(){
+    if (typeof window !== 'undefined' && window.I18n) return window.I18n;
+    return baseI18n;
+  }
+
+  function formatWithParams(text, params){
+    if (typeof text !== 'string') return text ?? '';
+    if (!params) return text;
+    return text.replace(/\{([^{}]+)\}/g, (match, token) => {
+      const key = token.trim();
+      if (!key) return match;
+      const value = params[key];
+      return value === undefined || value === null ? match : String(value);
+    });
+  }
+
+  function evaluateFallback(fallback, params){
+    if (typeof fallback === 'function'){
+      try {
+        const value = fallback(params);
+        if (value !== undefined && value !== null) return value;
+      } catch (error){
+        console.warn('[UltimateTTT] Failed to evaluate fallback text:', error);
+      }
+      return '';
+    }
+    return fallback ?? '';
+  }
+
+  function translateEntry(entry, params){
+    if (entry === null || entry === undefined) return '';
+    if (typeof entry === 'string'){
+      return formatWithParams(entry, params);
+    }
+    const key = entry?.key;
+    const fallback = entry?.fallback;
+    const combinedParams = params || entry?.params;
+    const i18n = getI18nInstance();
+    if (key && i18n && typeof i18n.t === 'function'){
+      try {
+        const result = i18n.t(key, combinedParams);
+        if (result !== undefined && result !== null && result !== key){
+          return typeof result === 'string' ? result : formatWithParams(result, combinedParams);
+        }
+      } catch (error){
+        console.warn('[UltimateTTT] Failed to translate key:', key, error);
+      }
+    }
+    const fallbackValue = evaluateFallback(fallback, combinedParams);
+    return typeof fallbackValue === 'string' ? formatWithParams(fallbackValue, combinedParams) : (fallbackValue ?? '');
+  }
+
+  function message(key, fallback){
+    return { key, fallback };
+  }
+
+  const TEXT = {
+    statusPlayer: message('miniExp.ultimateTtt.status.player', 'あなたの番'),
+    statusAi: message('miniExp.ultimateTtt.status.ai', 'AIの番'),
+    statusEnded: message('miniExp.ultimateTtt.status.ended', 'ゲーム終了'),
+    activeBoard: message('miniExp.ultimateTtt.activeBoard', '指定盤: ({x}, {y})'),
+    restartHint: message('miniExp.ultimateTtt.overlay.restartHint', 'Rキーで再開できます'),
+    resultPlayerWin: message('miniExp.ultimateTtt.result.playerWin', 'あなたの勝ち！'),
+    resultAiWin: message('miniExp.ultimateTtt.result.aiWin', 'AIの勝ち…'),
+    resultDraw: message('miniExp.ultimateTtt.result.draw', '引き分け'),
+  };
+
   function lineThreat(values, color){
     let count = 0, empties = 0;
     for (const v of values){
@@ -243,9 +312,10 @@
     let turn = PLAYER;
     let running = false;
     let ended = false;
-    let resultText = '';
+    let resultMessage = null;
     let lastMove = null;
     let hover = null; // { board, x, y }
+    let detachLocale = null;
 
     function disableHostRestart(){
       shortcuts?.disableKey('r');
@@ -362,10 +432,14 @@
       ctx.fillStyle = '#f8fafc';
       ctx.font = '16px system-ui, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(ended ? 'ゲーム終了' : (turn === PLAYER ? 'あなたの番' : 'AIの番'), 12, 20);
+      const statusEntry = ended ? TEXT.statusEnded : (turn === PLAYER ? TEXT.statusPlayer : TEXT.statusAi);
+      ctx.fillText(translateEntry(statusEntry), 12, 20);
       if (activeBoard !== null && !ended){
         ctx.font = '12px system-ui, sans-serif';
-        ctx.fillText(`指定盤: (${(activeBoard%3)+1}, ${(Math.floor(activeBoard/3))+1})`, 12, 38);
+        ctx.fillText(translateEntry(TEXT.activeBoard, {
+          x: (activeBoard % MACRO_SIZE) + 1,
+          y: ((activeBoard / MACRO_SIZE) | 0) + 1,
+        }), 12, 38);
       }
       if (ended){
         ctx.fillStyle = 'rgba(15,23,42,0.75)';
@@ -373,9 +447,10 @@
         ctx.fillStyle = '#f8fafc';
         ctx.font = 'bold 28px system-ui, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(resultText || 'ゲーム終了', canvas.width/2, canvas.height/2);
+        const overlayMessage = resultMessage || TEXT.statusEnded;
+        ctx.fillText(translateEntry(overlayMessage), canvas.width/2, canvas.height/2);
         ctx.font = '12px system-ui, sans-serif';
-        ctx.fillText('Rキーで再開できます', canvas.width/2, canvas.height/2 + 24);
+        ctx.fillText(translateEntry(TEXT.restartHint), canvas.width/2, canvas.height/2 + 24);
         ctx.textAlign = 'left';
       }
     }
@@ -389,15 +464,29 @@
       activeBoard = null;
       turn = PLAYER;
       ended = false;
-      resultText = '';
+      resultMessage = null;
       lastMove = null;
       hover = null;
       draw();
     }
 
-    function finish(text){
+    function normalizeMessage(message){
+      if (!message && message !== 0) return null;
+      if (typeof message === 'string'){
+        return { key: null, fallback: message };
+      }
+      if (typeof message === 'object' && message){
+        if ('key' in message || 'fallback' in message || 'params' in message){
+          return message;
+        }
+        return { key: null, fallback: String(message) };
+      }
+      return { key: null, fallback: String(message) };
+    }
+
+    function finish(message){
       ended = true;
-      resultText = text;
+      resultMessage = normalizeMessage(message);
       draw();
       enableHostRestart();
     }
@@ -431,7 +520,7 @@
       const wonMacro = macroWinner(boards, PLAYER);
       if (wonMacro){
         awardXp(xpWin, { type:'win', game:'ultimate_ttt' });
-        finish('あなたの勝ち！');
+        finish(TEXT.resultPlayerWin);
         return;
       }
       if (!wonLocal){
@@ -441,7 +530,7 @@
         }
       }
       if (!boardsRemaining(boards)){
-        finish('引き分け');
+        finish(TEXT.resultDraw);
         return;
       }
       turn = AI;
@@ -453,16 +542,16 @@
       if (ended || turn !== AI) return;
       const mv = chooseAiMove(boards, activeBoard, difficulty);
       if (!mv){
-        finish('引き分け');
+        finish(TEXT.resultDraw);
         return;
       }
       applyMove(mv, AI);
       if (macroWinner(boards, AI)){
-        finish('AIの勝ち…');
+        finish(TEXT.resultAiWin);
         return;
       }
       if (!boardsRemaining(boards)){
-        finish('引き分け');
+        finish(TEXT.resultDraw);
         return;
       }
       turn = PLAYER;
@@ -505,9 +594,18 @@
     function handleLeave(){ hover = null; draw(); }
     function handleKey(e){ if (e.key === 'r' || e.key === 'R') reset(); }
 
+    const i18nInstance = getI18nInstance();
+    if (typeof i18nInstance?.onLocaleChanged === 'function'){
+      detachLocale = i18nInstance.onLocaleChanged(() => { draw(); });
+    } else if (typeof document !== 'undefined' && typeof document.addEventListener === 'function'){
+      const handler = () => draw();
+      document.addEventListener('i18n:locale-changed', handler);
+      detachLocale = () => document.removeEventListener('i18n:locale-changed', handler);
+    }
+
     function start(){ if (running) return; running = true; disableHostRestart(); canvas.addEventListener('click', handleClick); canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('mouseleave', handleLeave); window.addEventListener('keydown', handleKey); draw(); if (turn === AI) setTimeout(aiTurn, 200); }
     function stop(opts = {}){ if (!running) return; running = false; canvas.removeEventListener('click', handleClick); canvas.removeEventListener('mousemove', handleMove); canvas.removeEventListener('mouseleave', handleLeave); window.removeEventListener('keydown', handleKey); if (!opts.keepShortcutsDisabled){ enableHostRestart(); } }
-    function destroy(){ try { stop(); root.removeChild(canvas); } catch {} }
+    function destroy(){ try { stop(); detachLocale && detachLocale(); detachLocale = null; root.removeChild(canvas); } catch {} }
     function getScore(){
       let playerBoards = 0, aiBoards = 0;
       for (const b of boards){ if (b.winner === PLAYER) playerBoards++; else if (b.winner === AI) aiBoards++; }

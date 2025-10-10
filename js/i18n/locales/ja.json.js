@@ -1403,7 +1403,30 @@
           },
           "ten_ten": {
             "name": "1010パズル",
-            "description": "ラインでEXP／クロス消しは倍増"
+            "description": "ラインでEXP／クロス消しは倍増",
+            "hint": "ブロックをドラッグして盤面に配置 / Rでリスタート",
+            "hud": {
+              "lines": "ライン: {total} / 最大同時: {max}",
+              "moves": "手番: {moves} / 残ブロック: {remaining}",
+              "combo": {
+                "base": "コンボ: {combo} (最大 {max}) / XP: {xp}",
+                "detail": " / 最終:+{lastXp}XP({lines}ライン)"
+              }
+            },
+            "end": {
+              "title": "ゲームオーバー",
+              "reasons": {
+                "noSpace": "置ける場所がありません",
+                "generationFailed": "置けるピースが生成できませんでした"
+              },
+              "retryHint": "Rで再開/再起動"
+            },
+            "shelf": {
+              "refilling": "ピース補充中..."
+            },
+            "errors": {
+              "cannotGenerate": "置けるピースが生成できませんでした"
+            }
           },
           "trump_games": {
             "name": "トランプセレクション",

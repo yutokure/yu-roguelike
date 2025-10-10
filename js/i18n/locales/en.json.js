@@ -1270,7 +1270,27 @@
           },
           "virus_buster": {
             "name": "Virus Buster",
-            "description": "Stack capsules to match colors and wipe viruses for EXP."
+            "description": "Stack capsules to match colors and wipe viruses for EXP.",
+            "title": "Virus Buster",
+            "hud": {
+              "level": "Level {level}",
+              "viruses": "Viruses {count}",
+              "cleared": "Cleared {count}",
+              "chainLabel": "{chain} Chain!",
+              "chainNice": "Nice!",
+              "chainVirus": "Virus x{count}",
+              "stageClear": "Stage Clear!",
+              "controls": "Controls: ←→ Move / ↓ Soft Drop / ↑ or X Rotate / Space Hard Drop / R Reset"
+            },
+            "floating": {
+              "drop": "DROP!",
+              "virus": "Virus x{count}",
+              "stageClear": "STAGE CLEAR!"
+            },
+            "status": {
+              "gameOver": "Game Over",
+              "restartHint": "Press R to restart"
+            }
           },
           "sichuan": {
             "name": "Sichuan Puzzle",

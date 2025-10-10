@@ -1,6 +1,34 @@
 (function(){
   /** MiniExp: Triomino Columns (トリオミノコラムス) */
   function create(root, awardXp, opts){
+    const i18n = typeof window !== 'undefined' ? window.I18n : null;
+    const I18N_PREFIX = 'games.triominoColumns';
+
+    function localize(key, params, fallback){
+      const fullKey = `${I18N_PREFIX}.${key}`;
+      try {
+        if (typeof i18n?.t === 'function'){
+          const translated = i18n.t(fullKey, params);
+          if (typeof translated === 'string' && translated !== fullKey){
+            return translated;
+          }
+        }
+      } catch (error) {
+        console.warn('[triomino_columns] Failed to resolve translation for', fullKey, error);
+      }
+      if (typeof fallback === 'function'){
+        return fallback(params || {});
+      }
+      if (fallback !== undefined){
+        return fallback;
+      }
+      return '';
+    }
+
+    function text(key, fallback, params){
+      const fb = typeof fallback === 'function' ? fallback : () => fallback;
+      return localize(key, params, fb);
+    }
     const wrapper = document.createElement('div');
     wrapper.className = 'triomino-columns-root';
     wrapper.style.position = 'relative';
@@ -56,11 +84,11 @@
       title.style.fontSize = '26px';
       title.style.fontWeight = '600';
       title.style.textShadow = '0 3px 8px rgba(0,0,0,0.4)';
-      title.textContent = 'トリオミノコラムス';
+      title.textContent = text('menu.title', 'トリオミノコラムス');
       const subtitle = document.createElement('div');
       subtitle.style.color = '#cbd5f5';
       subtitle.style.fontSize = '14px';
-      subtitle.textContent = 'モードを選んでください';
+      subtitle.textContent = text('menu.subtitle', 'モードを選んでください');
       menu.appendChild(title);
       menu.appendChild(subtitle);
       const btnWrap = document.createElement('div');
@@ -68,9 +96,21 @@
       btnWrap.style.flexDirection = 'column';
       btnWrap.style.gap = '12px';
       const configs = [
-        { label: 'ENDLESS - ゲームオーバーまで', desc: '基本のひとり用モード', handler: () => startMode('ENDLESS') },
-        { label: 'VS.RIVAL - CPU戦', desc: 'GEARSキャラクター達と対戦', handler: () => renderCpuSelect() },
-        { label: 'VS.2P - ふたりで対戦', desc: 'ローカル対戦用（WASD + JK）', handler: () => startMode('VS_2P') }
+        {
+          label: text('menu.options.endless.label', 'ENDLESS - ゲームオーバーまで'),
+          desc: text('menu.options.endless.description', '基本のひとり用モード'),
+          handler: () => startMode('ENDLESS')
+        },
+        {
+          label: text('menu.options.vsCpu.label', 'VS.RIVAL - CPU戦'),
+          desc: text('menu.options.vsCpu.description', 'GEARSキャラクター達と対戦'),
+          handler: () => renderCpuSelect()
+        },
+        {
+          label: text('menu.options.vs2p.label', 'VS.2P - ふたりで対戦'),
+          desc: text('menu.options.vs2p.description', 'ローカル対戦用（WASD + JK）'),
+          handler: () => startMode('VS_2P')
+        }
       ];
       configs.forEach(cfg => {
         const item = document.createElement('div');
@@ -93,11 +133,11 @@
       title.style.color = '#f8fafc';
       title.style.fontSize = '24px';
       title.style.fontWeight = '600';
-      title.textContent = 'VS.RIVAL - 対戦相手選択';
+      title.textContent = text('cpuSelect.title', 'VS.RIVAL - 対戦相手選択');
       const subtitle = document.createElement('div');
       subtitle.style.color = '#94a3b8';
       subtitle.style.fontSize = '13px';
-      subtitle.textContent = '挑戦したいライバルを選んでください';
+      subtitle.textContent = text('cpuSelect.subtitle', '挑戦したいライバルを選んでください');
       menu.appendChild(title);
       menu.appendChild(subtitle);
       const grid = document.createElement('div');
@@ -132,11 +172,20 @@
         const name = document.createElement('div');
         name.style.fontSize = '16px';
         name.style.fontWeight = '600';
-        name.textContent = `${idx+1}. ${rival.name}`;
+        const rivalLabel = text(`cpuSelect.rivals.${idx}.name`, rival.name);
+        name.textContent = `${idx+1}. ${rivalLabel}`;
         const detail = document.createElement('div');
         detail.style.fontSize = '12px';
         detail.style.color = '#cbd5f5';
-        detail.textContent = locked ? lockReason(idx) : `速さLv.${rival.speedLevel} / 攻撃性 ${(rival.aggression*100)|0}%`;
+        if (locked){
+          detail.textContent = lockReason(idx);
+        } else {
+          const aggression = Math.round(rival.aggression * 100);
+          detail.textContent = text('cpuSelect.detail', params => `速さLv.${params.speedLevel} / 攻撃性 ${params.aggression}%`, {
+            speedLevel: rival.speedLevel,
+            aggression
+          });
+        }
         card.appendChild(name);
         card.appendChild(detail);
         if (!locked) card.addEventListener('click', () => startVsCpuChain(idx));
@@ -146,9 +195,9 @@
       const hint = document.createElement('div');
       hint.style.fontSize = '11px';
       hint.style.color = '#94a3b8';
-      hint.textContent = '※ ハグルマンレディは連勝で解放。？？？はノーコンティニュー＆15分以内で解放。';
+      hint.textContent = text('cpuSelect.hint', '※ ハグルマンレディは連勝で解放。？？？はノーコンティニュー＆15分以内で解放。');
       menu.appendChild(hint);
-      const back = makeMenuButton('← モード選択に戻る', () => renderMainMenu());
+      const back = makeMenuButton(text('cpuSelect.back', '← モード選択に戻る'), () => renderMainMenu());
       back.style.marginTop = '8px';
       menu.appendChild(back);
     }
@@ -233,12 +282,12 @@
     };
 
     const MARKS = [
-      { id: 'sun', color: '#f97316', name: '太陽' },
-      { id: 'leaf', color: '#22c55e', name: '葉っぱ' },
-      { id: 'aqua', color: '#38bdf8', name: 'しずく' },
-      { id: 'berry', color: '#a855f7', name: 'ベリー' },
-      { id: 'rose', color: '#f43f5e', name: 'ローズ' },
-      { id: 'amber', color: '#facc15', name: 'アンバー' }
+      { id: 'sun', color: '#f97316', name: text('marks.sun', '太陽') },
+      { id: 'leaf', color: '#22c55e', name: text('marks.leaf', '葉っぱ') },
+      { id: 'aqua', color: '#38bdf8', name: text('marks.aqua', 'しずく') },
+      { id: 'berry', color: '#a855f7', name: text('marks.berry', 'ベリー') },
+      { id: 'rose', color: '#f43f5e', name: text('marks.rose', 'ローズ') },
+      { id: 'amber', color: '#facc15', name: text('marks.amber', 'アンバー') }
     ];
     const MULTI_COLOR = '#e2e8f0';
     const GARBAGE_COLOR = '#0f172a';
@@ -388,7 +437,7 @@
       }
       const proto = createProtoPiece(shapeKey, blocks, forceMulti ? 1 : 0);
       if (forceMulti) {
-        proto.blocks[0] = { mark: 'multi', color: MULTI_COLOR, name: 'マルチ', multi: true };
+        proto.blocks[0] = { mark: 'multi', color: MULTI_COLOR, name: text('blocks.multi', 'マルチ'), multi: true };
       }
       applyMultiInjection(proto);
       return proto;
@@ -889,18 +938,26 @@
       if (result.totalCleared > 0) {
         boardState.stats.lines += result.totalCleared;
         awardXp(result.totalCleared * 0.6, { type: 'clear', cells: result.totalCleared, mode: currentMode });
-        addBoardFloatingText(boardState, `${result.totalCleared} CLEAR`, { color: '#cbd5f5', jitter: true, duration: 1.1 });
+        addBoardFloatingText(
+          boardState,
+          text('floating.clear', params => `${params.count} CLEAR`, { count: result.totalCleared }),
+          { color: '#cbd5f5', jitter: true, duration: 1.1 }
+        );
       }
       if (result.combo >= 2) {
         boardState.stats.combos += 1;
-        showInfo(`${boardState.name}: ${result.combo}連鎖!`);
+        showInfo(text('messages.combo', params => `${params.target}: ${params.combo}連鎖!`, { target: boardState.name, combo: result.combo }));
         awardXp(result.combo * 2, { type: 'combo', combo: result.combo });
-        addBoardFloatingText(boardState, `${result.combo}連鎖!`, { color: '#fbbf24', jitter: true, duration: 1.4 });
+        addBoardFloatingText(
+          boardState,
+          text('floating.combo', params => `${params.combo}連鎖!`, { combo: result.combo }),
+          { color: '#fbbf24', jitter: true, duration: 1.4 }
+        );
       }
       if (result.totalSpark > 0) {
         boardState.stats.spark += result.totalSpark;
-        showInfo('ラインスパーク!');
-        addBoardFloatingText(boardState, 'SPARK!', { color: '#38bdf8', jitter: true });
+        showInfo(text('messages.lineSpark', 'ラインスパーク!'));
+        addBoardFloatingText(boardState, text('floating.spark', 'SPARK!'), { color: '#38bdf8', jitter: true });
         if (boards.length > 1) {
           boards.forEach(other => {
             if (other !== boardState && other.alive) {
@@ -954,7 +1011,7 @@
         const idx = order[i];
         const base = piece.blocks[idx] || {};
         if (base.multi) continue;
-        piece.blocks[idx] = { mark: 'multi', color: MULTI_COLOR, name: 'マルチ', multi: true, garbage: false };
+        piece.blocks[idx] = { mark: 'multi', color: MULTI_COLOR, name: text('blocks.multi', 'マルチ'), multi: true, garbage: false };
         existing += 1;
       }
       piece.multiInjected = Math.max(desired, existing);
@@ -986,7 +1043,7 @@
         boardState.current.y = Math.max(boardState.current.y - rows, -3);
       }
       if (opts.fromLineSpark) {
-        showInfo(`${boardState.name}におじゃま!`);
+        showInfo(text('messages.garbageAttack', params => `${params.target}におじゃま!`, { target: boardState.name }));
       }
       if (isOverTop(boardState.grid)) {
         boardState.alive = false;
@@ -1044,9 +1101,9 @@
     }
 
     function lockReason(idx){
-      if (idx === 6) return '条件: 連勝でハグルマン軍を突破';
-      if (idx === 7) return '条件: ノーコンティニュー15分以内で解放';
-      return '条件: 直前のライバルに勝利';
+      if (idx === 6) return text('cpuSelect.lockReasons.lady', '条件: 連勝でハグルマン軍を突破');
+      if (idx === 7) return text('cpuSelect.lockReasons.hidden', '条件: ノーコンティニュー15分以内で解放');
+      return text('cpuSelect.lockReasons.default', '条件: 直前のライバルに勝利');
     }
 
     function startVsCpuChain(index, opts = {}){
@@ -1124,28 +1181,29 @@
     function setupMode(mode, opts = {}){
       boards = [];
       if (mode === 'ENDLESS'){
-        const player = createBoardState('プレイヤー');
+        const player = createBoardState(text('boards.player', 'プレイヤー'));
         boards.push(player);
         spawnPiece(player);
       } else if (mode === 'VS_CPU') {
         const rivalIndex = typeof opts.rivalIndex === 'number' ? opts.rivalIndex : (vsCpuState ? vsCpuState.rivalIndex : 0);
         const rivalInfo = CPU_RIVALS[rivalIndex] || CPU_RIVALS[0];
-        const player = createBoardState('プレイヤー');
-        const rival = createBoardState(rivalInfo.name, { cpu: { rivalIndex, plan: null, info: rivalInfo } });
+        const rivalName = text(`cpuSelect.rivals.${rivalIndex}.name`, rivalInfo.name);
+        const player = createBoardState(text('boards.player', 'プレイヤー'));
+        const rival = createBoardState(rivalName, { cpu: { rivalIndex, plan: null, info: rivalInfo } });
         boards.push(player, rival);
         spawnPiece(player);
         spawnPiece(rival);
-        showInfo(`VS RIVAL: ${rivalInfo.name}`);
+        showInfo(text('messages.vsCpuStart', params => `VS RIVAL: ${params.name}`, { name: rivalName }));
         if (!vsCpuState) vsCpuState = { rivalIndex, totalRunTime: 0, wins: 0, noContinue: true, matchStart: nowMs(), originIndex: rivalIndex };
         vsCpuState.rivalIndex = rivalIndex;
         vsCpuState.matchStart = nowMs();
       } else if (mode === 'VS_2P') {
-        const p1 = createBoardState('P1');
-        const p2 = createBoardState('P2');
+        const p1 = createBoardState(text('boards.p1', 'P1'));
+        const p2 = createBoardState(text('boards.p2', 'P2'));
         boards.push(p1, p2);
         spawnPiece(p1);
         spawnPiece(p2);
-        showInfo('VS 2P スタート!');
+        showInfo(text('messages.vs2pStart', 'VS 2P スタート!'));
       }
     }
 
@@ -1249,16 +1307,16 @@
 
     function checkWinConditions(){
       if (currentMode === 'ENDLESS'){
-        if (!boards[0].alive) finishGame('Game Over', boards[0]);
+        if (!boards[0].alive) finishGame(text('results.gameOver', 'Game Over'), boards[0]);
       } else {
         const alive = boards.filter(b => b.alive);
         if (alive.length === 1){
           const winner = alive[0];
           winner.stats.wins += 1;
           awardXp(40, { type: 'victory', mode: currentMode, name: winner.name });
-          finishGame(`${winner.name} Win!`, winner);
+          finishGame(text('results.victoryTitle', params => `${params.name} Win!`, { name: winner.name }), winner);
         } else if (alive.length === 0) {
-          finishGame('Draw', null);
+          finishGame(text('results.drawTitle', 'Draw'), null);
         }
       }
     }
@@ -1271,10 +1329,14 @@
         const stats = boards[0]?.stats || { lines:0, combos:0, spark:0 };
         showResultOverlay({
           title: message,
-          message: `ライン ${stats.lines} / コンボ ${stats.combos} / スパーク ${stats.spark}`,
+          message: text('results.endlessStats', params => `ライン ${params.lines} / コンボ ${params.combos} / スパーク ${params.spark}`, {
+            lines: stats.lines,
+            combos: stats.combos,
+            spark: stats.spark
+          }),
           buttons: [
-            { label: 'もう一度ENDLESS', primary: true, onClick: () => startMode('ENDLESS') },
-            { label: 'モード選択に戻る', onClick: () => goToMainMenu() }
+            { label: text('results.buttons.retryEndless', 'もう一度ENDLESS'), primary: true, onClick: () => startMode('ENDLESS') },
+            { label: text('results.buttons.backToMenu', 'モード選択に戻る'), onClick: () => goToMainMenu() }
           ]
         });
         return;
@@ -1302,25 +1364,28 @@
         }
         const nextIndex = Math.min(CPU_RIVALS.length - 1, (vsCpuState?.rivalIndex ?? 0) + 1);
         const buttons = [];
+        const durationText = duration.toFixed(1);
+        const totalText = (vsCpuState?.totalRunTime ?? 0).toFixed(1);
         const infoMessage = playerWin
-          ? `勝利！タイム ${duration.toFixed(1)}秒 / 総経過 ${(vsCpuState?.totalRunTime ?? 0).toFixed(1)}秒`
-          : `敗北… タイム ${duration.toFixed(1)}秒`;
+          ? text('results.vsCpu.victoryMessage', params => `勝利！タイム ${params.duration}秒 / 総経過 ${params.total}秒`, { duration: durationText, total: totalText })
+          : text('results.vsCpu.defeatMessage', params => `敗北… タイム ${params.duration}秒`, { duration: durationText });
         if (playerWin && nextIndex < CPU_RIVALS.length && !isRivalLocked(nextIndex)){
-          buttons.push({ label: `次のライバル (${CPU_RIVALS[nextIndex].name})`, primary: true, onClick: () => continueVsCpu(nextIndex) });
+          const nextName = text(`cpuSelect.rivals.${nextIndex}.name`, CPU_RIVALS[nextIndex].name);
+          buttons.push({ label: text('results.vsCpu.nextRival', params => `次のライバル (${params.name})`, { name: nextName }), primary: true, onClick: () => continueVsCpu(nextIndex) });
         }
-        buttons.push({ label: '同じ相手に再挑戦', onClick: () => continueVsCpu(vsCpuState?.rivalIndex ?? 0) });
-        buttons.push({ label: '対戦相手選択に戻る', onClick: () => goToCpuSelect() });
-        buttons.push({ label: 'モード選択に戻る', onClick: () => goToMainMenu() });
+        buttons.push({ label: text('results.vsCpu.retrySame', '同じ相手に再挑戦'), onClick: () => continueVsCpu(vsCpuState?.rivalIndex ?? 0) });
+        buttons.push({ label: text('results.vsCpu.backToSelect', '対戦相手選択に戻る'), onClick: () => goToCpuSelect() });
+        buttons.push({ label: text('results.buttons.backToMenu', 'モード選択に戻る'), onClick: () => goToMainMenu() });
         showResultOverlay({ title: message, message: infoMessage, buttons });
         return;
       }
 
       if (currentMode === 'VS_2P'){
         const buttons = [
-          { label: 'もう一度対戦', primary: true, onClick: () => startMode('VS_2P') },
-          { label: 'モード選択に戻る', onClick: () => goToMainMenu() }
+          { label: text('results.vs2p.retry', 'もう一度対戦'), primary: true, onClick: () => startMode('VS_2P') },
+          { label: text('results.buttons.backToMenu', 'モード選択に戻る'), onClick: () => goToMainMenu() }
         ];
-        showResultOverlay({ title: message, message: 'キーボード同士で再戦できます。', buttons });
+        showResultOverlay({ title: message, message: text('results.vs2p.hint', 'キーボード同士で再戦できます。'), buttons });
       }
     }
 
@@ -1626,20 +1691,20 @@
     function drawPanels(board, x, y, cellSize){
       const queueBoxH = 120;
       const holdBoxH = 80;
-      drawPanelBox(x, y, 120, queueBoxH, 'NEXT');
+      drawPanelBox(x, y, 120, queueBoxH, text('panel.next', 'NEXT'));
       board.queue.slice(0,3).forEach((piece, idx) => {
         drawPiecePreview(piece, x + 60, y + 26 + idx * 36, cellSize * 0.5);
       });
-      drawPanelBox(x, y + queueBoxH + 12, 120, holdBoxH, 'HOLD');
+      drawPanelBox(x, y + queueBoxH + 12, 120, holdBoxH, text('panel.hold', 'HOLD'));
       if (board.hold) drawPiecePreview(board.hold, x + 60, y + queueBoxH + 12 + 44, cellSize * 0.6);
-      drawPanelBox(x, y + queueBoxH + holdBoxH + 24, 120, 120, 'STATS');
+      drawPanelBox(x, y + queueBoxH + holdBoxH + 24, 120, 120, text('panel.stats', 'STATS'));
       ctx.fillStyle = '#94a3b8';
       ctx.font = '12px system-ui';
       const statY = y + queueBoxH + holdBoxH + 48;
-      ctx.fillText(`Lines: ${board.stats.lines}`, x + 12, statY);
-      ctx.fillText(`Combo: ${board.stats.combos}`, x + 12, statY + 16);
-      ctx.fillText(`Spark: ${board.stats.spark}`, x + 12, statY + 32);
-      if (currentMode !== 'ENDLESS') ctx.fillText(`Attack: ${Math.floor(board.attackGauge)}`, x + 12, statY + 48);
+      ctx.fillText(text('panel.lines', params => `Lines: ${params.value}`, { value: board.stats.lines }), x + 12, statY);
+      ctx.fillText(text('panel.combo', params => `Combo: ${params.value}`, { value: board.stats.combos }), x + 12, statY + 16);
+      ctx.fillText(text('panel.spark', params => `Spark: ${params.value}`, { value: board.stats.spark }), x + 12, statY + 32);
+      if (currentMode !== 'ENDLESS') ctx.fillText(text('panel.attack', params => `Attack: ${params.value}`, { value: Math.floor(board.attackGauge) }), x + 12, statY + 48);
     }
 
     function drawPanelBox(x,y,w,h,title){
@@ -1663,8 +1728,8 @@
       ctx.restore();
       ctx.fillStyle = '#cbd5e1';
       ctx.font = '12px system-ui';
-      ctx.fillText(`Lines ${board.stats.lines}`, x + 12, y + 20);
-      ctx.fillText(`Combo ${board.stats.combos} / Spark ${board.stats.spark}`, x + 12, y + 36);
+      ctx.fillText(text('miniStats.lines', params => `Lines ${params.value}`, { value: board.stats.lines }), x + 12, y + 20);
+      ctx.fillText(text('miniStats.comboSpark', params => `Combo ${params.combo} / Spark ${params.spark}`, { combo: board.stats.combos, spark: board.stats.spark }), x + 12, y + 36);
     }
 
     function drawPiecePreview(pieceProto, cx, cy, size){
@@ -1699,9 +1764,9 @@
 
     function modeLabel(mode){
       if (!mode) return '';
-      if (mode === 'ENDLESS') return 'ENDLESS モード';
-      if (mode === 'VS_CPU') return 'VS.RIVAL モード';
-      if (mode === 'VS_2P') return 'VS.2P モード';
+      if (mode === 'ENDLESS') return text('modeLabels.endless', 'ENDLESS モード');
+      if (mode === 'VS_CPU') return text('modeLabels.vsCpu', 'VS.RIVAL モード');
+      if (mode === 'VS_2P') return text('modeLabels.vs2p', 'VS.2P モード');
       return mode;
     }
 

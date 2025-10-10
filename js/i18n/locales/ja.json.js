@@ -11423,6 +11423,40 @@
           "defenseTimeout": "防御時間切れ：反応が遅れた"
         }
       },
+      "sudoku": {
+        "title": "ナンプレ (数独)",
+        "description": "1〜9の数字を使い、各行・列・3×3ブロックに同じ数字が入らないよう埋めてください。クリックまたはキーボード（数字/矢印/Backspace）で操作できます。",
+        "info": {
+          "difficultyLabel": "難易度",
+          "progressLabel": "進行",
+          "progressValue": "{filledFormatted}/{totalFormatted}",
+          "mistakesLabel": "ミス",
+          "mistakesValue": "{formatted}",
+          "timeLabel": "タイム"
+        },
+        "difficulty": {
+          "easy": "EASY",
+          "normal": "NORMAL",
+          "hard": "HARD"
+        },
+        "time": {
+          "display": "{minutesFormatted}:{secondsFormatted}"
+        },
+        "keypad": {
+          "clear": "消す"
+        },
+        "actions": {
+          "reset": "リセット",
+          "newBoard": "新しい盤面"
+        },
+        "status": {
+          "invalid": "その数字は入れられません。",
+          "selectCell": "マスを選択してください。",
+          "reset": "リセットしました。",
+          "newBoard": "新しい盤面を生成しました。",
+          "cleared": "クリア！タイム {time} / ミス {mistakes}。"
+        }
+      },
       "taiko_drum": {
         "title": "太鼓リズム（{difficulty}）",
         "tips": "F/J/Space = ドン（赤）、D/K = カッ（青）。大音符は両方同時！タップもOK。",

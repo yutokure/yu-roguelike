@@ -13021,6 +13021,22 @@
           "gameOver": "GAME OVER",
           "restartHint": "スペース / R でリスタート",
           "distanceLabel": "距離 {distance}"
+        },
+        "ultimateTtt": {
+          "status": {
+            "player": "あなたの番",
+            "ai": "AIの番",
+            "ended": "ゲーム終了"
+          },
+          "activeBoard": "指定盤: ({x}, {y})",
+          "overlay": {
+            "restartHint": "Rキーで再開できます"
+          },
+          "result": {
+            "playerWin": "あなたの勝ち！",
+            "aiWin": "AIの勝ち…",
+            "draw": "引き分け"
+          }
         }
       },
       "backgammon": {

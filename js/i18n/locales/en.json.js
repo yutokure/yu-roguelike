@@ -13017,6 +13017,22 @@
           "gameOver": "GAME OVER",
           "restartHint": "Press Space / R to Restart",
           "distanceLabel": "DIST {distance}"
+        },
+        "ultimateTtt": {
+          "status": {
+            "player": "Your turn",
+            "ai": "AI's turn",
+            "ended": "Game Over"
+          },
+          "activeBoard": "Target board: ({x}, {y})",
+          "overlay": {
+            "restartHint": "Press R to restart"
+          },
+          "result": {
+            "playerWin": "You win!",
+            "aiWin": "AI wins...",
+            "draw": "Draw"
+          }
         }
       },
       "backgammon": {

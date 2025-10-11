@@ -12927,6 +12927,23 @@
           "hard": "むずかしい"
         }
       },
+      "sliding_puzzle": {
+        "title": "{sizeText}×{sizeText} スライドパズル",
+        "description": "空きマスにタイルをスライドして1→Nの順に並べよう。タイルをクリックするか矢印キー/WASDで操作できます。",
+        "controls": {
+          "reset": "リセット ({keyLabel})"
+        },
+        "info": {
+          "moves": "手数",
+          "time": "タイム",
+          "best": "ベスト",
+          "clears": "クリア数"
+        },
+        "status": {
+          "cleared": "クリア！ {moves} 手 / {time} 取得EXP: {xp}",
+          "intro": "難易度で盤面サイズが変わります：EASYは{easySize}×{easySize}、NORMALは{normalSize}×{normalSize}、HARDは{hardSize}×{hardSize}です。"
+        }
+      },
       "piano_tiles": {
         "tips": "タップ or D/F/J/Kキーでレーンを叩き、長いノーツは離さずにホールド。",
         "hud": {

@@ -12927,6 +12927,23 @@
           "hard": "Hard"
         }
       },
+      "sliding_puzzle": {
+        "title": "{sizeText}×{sizeText} Sliding Puzzle",
+        "description": "Slide tiles into the empty space to arrange 1 through N in order. Click tiles or use Arrow keys / WASD to move.",
+        "controls": {
+          "reset": "Reset ({keyLabel})"
+        },
+        "info": {
+          "moves": "Moves",
+          "time": "Time",
+          "best": "Best",
+          "clears": "Clears"
+        },
+        "status": {
+          "cleared": "Solved! {moves} moves / {time} EXP gained: {xp}",
+          "intro": "Board size changes with difficulty: EASY {easySize}×{easySize}, NORMAL {normalSize}×{normalSize}, HARD {hardSize}×{hardSize}."
+        }
+      },
       "piano_tiles": {
         "tips": "Tap lanes or press D/F/J/K keys, and hold for long notes.",
         "hud": {

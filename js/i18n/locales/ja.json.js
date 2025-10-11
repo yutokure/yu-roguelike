@@ -12085,7 +12085,7 @@
         "placeholder": {
           "primary": "左のリストからゲームを選んでください。",
           "separator": " / ",
-          "phaseInfo": "Phase {phase}: {games}"
+          "phaseInfo": "フェーズ {phase}: {games}"
         },
         "status": {
           "selectGame": "ゲームを選択してください。",
@@ -12093,8 +12093,8 @@
           "devPlaceholder": "現在は開発中です。"
         },
         "actions": {
-          "returnToHub": "ゲームを終了",
-          "default": "Action",
+          "returnToHub": "セレクションに戻る",
+          "default": "操作",
           "backToList": "一覧に戻る"
         },
         "list": {
@@ -12103,7 +12103,7 @@
             "bestScore": "ベスト {score}"
           },
           "unimplemented": {
-            "phase": "Phase {phase} で実装予定です。",
+            "phase": "フェーズ {phase} で実装予定です。",
             "status": "実装準備中です。"
           }
         },

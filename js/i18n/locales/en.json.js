@@ -12103,8 +12103,8 @@
             "bestScore": "Best {score}"
           },
           "unimplemented": {
-            "phase": "Planned for Phase {phase}.",
-            "status": "In preparation."
+            "phase": "Scheduled for Phase {phase}.",
+            "status": "Preparing content."
           }
         },
         "errors": {
@@ -12127,7 +12127,7 @@
           },
           "forest": {
             "label": "Forest",
-            "description": "Deep green gradient with gold"
+            "description": "Deep green gradient with gold accents"
           }
         },
         "games": {

@@ -500,6 +500,17 @@
     const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
       ? window.createMiniGameLocalization({ id: 'trump_games' })
       : null);
+    const getLocale = () => {
+      if (localization && typeof localization.getLocale === 'function') {
+        try {
+          const value = localization.getLocale();
+          if (value) return value;
+        } catch (error) {
+          console.warn('[Mini Trump] failed to resolve locale from localization object', error);
+        }
+      }
+      return 'ja';
+    };
     const text = (key, fallback, params) => {
       if (localization && typeof localization.t === 'function') {
         try { return localization.t(key, fallback, params); } catch (error) {
@@ -541,11 +552,13 @@
       stats: persisted.stats || {},
       settings: Object.assign({}, DEFAULT_SETTINGS, persisted.settings || {}),
       settingsListeners: new Set(),
-     selectedGameId: persisted.selectedGameId,
+      localeListeners: new Set(),
+      selectedGameId: persisted.selectedGameId,
       saveTimer: null,
       destroyed: false,
       titleMeta: null,
-      statusMeta: null
+      statusMeta: null,
+      currentLocale: getLocale()
     };
 
     const wrapper = document.createElement('div');
@@ -892,6 +905,7 @@
       state.currentRuntime = null;
       state.currentGame = null;
       state.selectedGameId = null;
+      state.localeListeners.clear();
       board.innerHTML = '';
       board.appendChild(placeholder);
       setTitle(text('layout.title', 'トランプセレクション'), { key: 'layout.title', fallback: 'トランプセレクション' });
@@ -1026,6 +1040,7 @@
         try { state.currentRuntime.destroy && state.currentRuntime.destroy(); } catch {}
         state.currentRuntime = null;
       }
+      state.localeListeners.clear();
       state.currentGame = def;
       state.selectedGameId = def.id;
       queueSave();
@@ -1051,7 +1066,17 @@
         stats: () => getStats(def.id),
         commitStats: (delta) => commitStats(def.id, delta),
         queueSave,
-        playClick: () => { window.playSfx && window.playSfx('pickup'); }
+        playClick: () => { window.playSfx && window.playSfx('pickup'); },
+        text,
+        localization,
+        formatNumber,
+        getLocale,
+        onLocaleChange: (listener) => {
+          if (typeof listener !== 'function') return () => {};
+          try { listener(state.currentLocale, localization); } catch (error) { console.warn('[Mini Trump] locale listener errored', error); }
+          state.localeListeners.add(listener);
+          return () => state.localeListeners.delete(listener);
+        }
       };
 
       const localizedTitle = getLocalizedGameTitle(def);
@@ -1085,7 +1110,20 @@
       }
 
       state.currentRuntime = runtime;
+      notifyLocaleConsumers();
       try { runtime.start && runtime.start(); } catch (err) { console.error(err); }
+    }
+
+    function notifyLocaleConsumers(){
+      const locale = state.currentLocale;
+      state.localeListeners.forEach(listener => {
+        try { listener(locale, localization); } catch (error) { console.warn('[Mini Trump] locale listener error', error); }
+      });
+      if (state.currentRuntime && typeof state.currentRuntime.onLocaleChange === 'function') {
+        try { state.currentRuntime.onLocaleChange(locale, localization); } catch (error) {
+          console.warn('[Mini Trump] runtime locale handler failed', error);
+        }
+      }
     }
 
     function createPlaceholderGame(container, ctx, def){
@@ -1204,16 +1242,17 @@
 
     renderGameList();
 
+    const handleLocaleChange = () => {
+      state.currentLocale = getLocale();
+      updateLocalizedUi();
+      notifyLocaleConsumers();
+    };
+
     if (!detachLocale && localization && typeof localization.onChange === 'function') {
-      detachLocale = localization.onChange(() => {
-        updateLocalizedUi();
-      });
+      detachLocale = localization.onChange(handleLocaleChange);
     }
 
-    if (localization && typeof localization.getLocale === 'function') {
-      // Ensure localization-dependent UI is consistent even if locale was restored before init
-      updateLocalizedUi();
-    }
+    handleLocaleChange();
 
     if (state.selectedGameId) {
       const def = getGameDef(state.selectedGameId);
@@ -1237,6 +1276,7 @@
         state.currentRuntime = null;
         closeSettingsPanel();
         state.settingsListeners.clear();
+        state.localeListeners.clear();
         if (detachLocale) {
           try { detachLocale(); } catch {}
           detachLocale = null;

@@ -16095,7 +16095,7 @@ function startRareChestMinigame(chest) {
     rareChestState.pendingEnemyTurn = true;
     updateRareChestPointerVisual();
     const statusText = translateOrFallback(
-        'game.goldenChest.modal.status',
+        'game.events.goldenChest.modal.status',
         'タイミングバーを中央で止めよう！（Space/Enter）'
     );
     setRareChestStatus(statusText);

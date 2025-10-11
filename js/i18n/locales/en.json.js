@@ -440,7 +440,49 @@
           },
           "xiangqi": {
             "name": "Xiangqi",
-            "description": "Command Chinese chess pieces, scoring EXP for captures, checks, and mates."
+            "description": "Command Chinese chess pieces, scoring EXP for captures, checks, and mates.",
+            "header": {
+              "title": "Xiangqi",
+              "subtitle": "{color} moves first"
+            },
+            "controls": {
+              "reset": "Reset position"
+            },
+            "board": {
+              "riverLabel": "Chu River  Han Border"
+            },
+            "color": {
+              "red": "Red",
+              "black": "Black",
+              "redPlayer": "Red (Bottom)",
+              "blackPlayer": "Black (Top)"
+            },
+            "pieces": {
+              "general": "General",
+              "advisor": "Advisor",
+              "elephant": "Elephant",
+              "horse": "Horse",
+              "chariot": "Chariot",
+              "cannon": "Cannon",
+              "soldier": "Soldier"
+            },
+            "expLabel": "EXP",
+            "piece": {
+              "description": "{color} {piece}"
+            },
+            "status": {
+              "turnLine": "Turn: {turn}",
+              "turn": {
+                "red": "It is {color}'s move.",
+                "black": "It is {color}'s move."
+              },
+              "scoreLine": "Total score: {score}",
+              "capture": "{actor} captured {target} (+{exp}{expLabel})",
+              "move": "{piece} moved.",
+              "win": "{loser} is checkmated. {winner} wins!",
+              "stalemate": "Stalemate (no legal moves).",
+              "check": "{defender} is in check (+{exp}{expLabel})"
+            }
           },
           "shogi": {
             "name": "Shogi",

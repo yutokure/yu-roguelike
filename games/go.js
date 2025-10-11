@@ -18,21 +18,51 @@
     '.hud.turn.player': { ja: 'あなたの番（黒）', en: 'Your turn (Black)' },
     '.hud.turn.ai': { ja: 'AIの番（白）', en: 'AI turn (White)' },
     '.hud.status': {
-      ja: (params) => `${params.turn} | 黒の捕獲: ${params.blackCaptures} | 白の捕獲: ${params.whiteCaptures} (コミ+${params.komi})`,
-      en: (params) => `${params.turn} | Black captures: ${params.blackCaptures} | White captures: ${params.whiteCaptures} (komi +${params.komi})`
+      ja: (params = {}) => {
+        const turn = params.turn ?? '';
+        const black = params.blackCaptures ?? 0;
+        const white = params.whiteCaptures ?? 0;
+        const komi = params.komi ?? '';
+        return `${turn} | 黒の捕獲: ${black} | 白の捕獲: ${white} (コミ+${komi})`;
+      },
+      en: (params = {}) => {
+        const turn = params.turn ?? '';
+        const black = params.blackCaptures ?? 0;
+        const white = params.whiteCaptures ?? 0;
+        const komi = params.komi ?? '';
+        return `${turn} | Black captures: ${black} | White captures: ${white} (komi+${komi})`;
+      }
     },
     '.result.win': { ja: 'あなたの勝ち！', en: 'You win!' },
     '.result.loss': { ja: 'AIの勝ち…', en: 'AI wins…' },
     '.result.draw': { ja: '持碁（引き分け）', en: 'Jigo (Draw)' },
     '.result.summary': {
-      ja: (params) => `${params.result} | 黒 ${params.blackScore} - 白 ${params.whiteScore}`,
-      en: (params) => `${params.result} | Black ${params.blackScore} - White ${params.whiteScore}`
+      ja: (params = {}) => {
+        const result = params.result ?? '';
+        const black = params.blackScore ?? 0;
+        const white = params.whiteScore ?? 0;
+        return `${result} | 黒 ${black} - 白 ${white}`;
+      },
+      en: (params = {}) => {
+        const result = params.result ?? '';
+        const black = params.blackScore ?? 0;
+        const white = params.whiteScore ?? 0;
+        return `${result} | Black ${black} - White ${white}`;
+      }
     },
     '.actors.ai': { ja: 'AI', en: 'AI' },
     '.actors.player': { ja: 'あなた', en: 'You' },
     '.hud.passNotice': {
-      ja: (params) => `${params.actor}がパスしました（${params.count}連続）`,
-      en: (params) => `${params.actor} passed (${params.count} in a row)`
+      ja: (params = {}) => {
+        const actor = params.actor ?? '';
+        const count = params.count ?? 0;
+        return `${actor}がパスしました（${count}連続）`;
+      },
+      en: (params = {}) => {
+        const actor = params.actor ?? '';
+        const count = params.count ?? 0;
+        return `${actor} passed (${count} in a row)`;
+      }
     },
     '.hud.aiThinking': { ja: 'AIが思考中…', en: 'AI is thinking…' },
     '.messages.koViolation': { ja: 'その手はコウにより打てません。', en: 'That move violates the ko rule.' }

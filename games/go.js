@@ -18,21 +18,39 @@
     '.hud.turn.player': { ja: 'あなたの番（黒）', en: 'Your turn (Black)' },
     '.hud.turn.ai': { ja: 'AIの番（白）', en: 'AI turn (White)' },
     '.hud.status': {
-      ja: (params) => `${params.turn} | 黒の捕獲: ${params.blackCaptures} | 白の捕獲: ${params.whiteCaptures} (コミ+${params.komi})`,
-      en: (params) => `${params.turn} | Black captures: ${params.blackCaptures} | White captures: ${params.whiteCaptures} (komi +${params.komi})`
+      ja: (params = {}) => {
+        const { turn = '', blackCaptures = 0, whiteCaptures = 0, komi = KOMI } = params;
+        return `${turn} | 黒の捕獲: ${blackCaptures} | 白の捕獲: ${whiteCaptures} (コミ+${komi})`;
+      },
+      en: (params = {}) => {
+        const { turn = '', blackCaptures = 0, whiteCaptures = 0, komi = KOMI } = params;
+        return `${turn} | Black captures: ${blackCaptures} | White captures: ${whiteCaptures} (komi+${komi})`;
+      }
     },
     '.result.win': { ja: 'あなたの勝ち！', en: 'You win!' },
     '.result.loss': { ja: 'AIの勝ち…', en: 'AI wins…' },
     '.result.draw': { ja: '持碁（引き分け）', en: 'Jigo (Draw)' },
     '.result.summary': {
-      ja: (params) => `${params.result} | 黒 ${params.blackScore} - 白 ${params.whiteScore}`,
-      en: (params) => `${params.result} | Black ${params.blackScore} - White ${params.whiteScore}`
+      ja: (params = {}) => {
+        const { result = '', blackScore = 0, whiteScore = 0 } = params;
+        return `${result} | 黒 ${blackScore} - 白 ${whiteScore}`;
+      },
+      en: (params = {}) => {
+        const { result = '', blackScore = 0, whiteScore = 0 } = params;
+        return `${result} | Black ${blackScore} - White ${whiteScore}`;
+      }
     },
     '.actors.ai': { ja: 'AI', en: 'AI' },
     '.actors.player': { ja: 'あなた', en: 'You' },
     '.hud.passNotice': {
-      ja: (params) => `${params.actor}がパスしました（${params.count}連続）`,
-      en: (params) => `${params.actor} passed (${params.count} in a row)`
+      ja: (params = {}) => {
+        const { actor = '', count = 0 } = params;
+        return `${actor}がパスしました（${count}連続）`;
+      },
+      en: (params = {}) => {
+        const { actor = '', count = 0 } = params;
+        return `${actor} passed (${count} in a row)`;
+      }
     },
     '.hud.aiThinking': { ja: 'AIが思考中…', en: 'AI is thinking…' },
     '.messages.koViolation': { ja: 'その手はコウにより打てません。', en: 'That move violates the ko rule.' }
@@ -72,11 +90,22 @@
 
     const text = (key, fallback, params) => {
       const resolvedFallback = resolveFallback(key, fallback);
+      const callFallback = (fn) => {
+        try {
+          return fn(params || {});
+        } catch (error) {
+          console.warn('[go] Failed to evaluate fallback for', key, error);
+          return '';
+        }
+      };
       if (localization && typeof localization.t === 'function') {
-        return localization.t(key, resolvedFallback, params);
+        const fallbackForLocalization = typeof resolvedFallback === 'function'
+          ? () => callFallback(resolvedFallback)
+          : resolvedFallback;
+        return localization.t(key, fallbackForLocalization, params);
       }
-      if (typeof resolvedFallback === 'function') return resolvedFallback(params || {});
-      if (typeof fallback === 'function') return fallback(params || {});
+      if (typeof resolvedFallback === 'function') return callFallback(resolvedFallback);
+      if (typeof fallback === 'function') return callFallback(fallback);
       return resolvedFallback ?? (fallback ?? '');
     };
     const detachLocale = localization && typeof localization.onChange === 'function'

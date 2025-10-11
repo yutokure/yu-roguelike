@@ -12,10 +12,17 @@
       || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
         ? window.createMiniGameLocalization({ id: 'tosochu' })
         : null);
-    const globalI18n = typeof window !== 'undefined' ? window.I18n : null;
+    const explicitLocale = typeof opts?.locale === 'string' && opts.locale ? opts.locale : null;
+    const globalI18n = (() => {
+      if (opts?.i18n && typeof opts.i18n === 'object') return opts.i18n;
+      if (typeof window === 'undefined') return null;
+      if (window.I18n && typeof window.I18n === 'object') return window.I18n;
+      if (window.i18n && typeof window.i18n === 'object') return window.i18n;
+      return null;
+    })();
 
     const textBindings = new Map();
-    let detachLocale = null;
+    const detachLocale = [];
 
     function translateText(key, fallback, params){
       if (localization && typeof localization.t === 'function'){
@@ -87,9 +94,29 @@
         }
       }
       try {
-        const locale = (localization && typeof localization.getLocale === 'function')
-          ? localization.getLocale()
-          : (globalI18n?.getLocale?.() || undefined);
+        const locale = (() => {
+          if (localization && typeof localization.getLocale === 'function'){
+            try {
+              const loc = localization.getLocale();
+              if (typeof loc === 'string' && loc) return loc;
+            } catch (err) {
+              // ignore locale lookup failures
+            }
+          }
+          if (typeof explicitLocale === 'string' && explicitLocale) return explicitLocale;
+          if (globalI18n?.getLocale){
+            try {
+              const loc = globalI18n.getLocale();
+              if (typeof loc === 'string' && loc) return loc;
+            } catch (err) {
+              // ignore global locale lookup failures
+            }
+          }
+          if (typeof navigator !== 'undefined' && typeof navigator.language === 'string'){
+            return navigator.language;
+          }
+          return undefined;
+        })();
         return new Intl.NumberFormat(locale, options).format(value);
       } catch (err) {
         return value.toLocaleString();
@@ -893,8 +920,11 @@
       cancelAnimationFrame(raf);
       enableHost();
       cancelSurrender();
-      if (typeof detachLocale === 'function'){
-        try { detachLocale(); } catch (err) {}
+      if (Array.isArray(detachLocale)){
+        for (const detach of detachLocale){
+          if (typeof detach !== 'function') continue;
+          try { detach(); } catch (err) {}
+        }
       }
       textBindings.clear();
       document.removeEventListener('keydown', keyDown);
@@ -930,15 +960,18 @@
     }
 
     if (typeof localization?.onChange === 'function'){
-      detachLocale = localization.onChange(() => {
+      const detach = localization.onChange(() => {
         updateLabels();
         refreshBindings();
       });
-    } else if (typeof globalI18n?.onLocaleChanged === 'function'){
-      detachLocale = globalI18n.onLocaleChanged(() => {
+      if (typeof detach === 'function') detachLocale.push(detach);
+    }
+    if (typeof globalI18n?.onLocaleChanged === 'function'){
+      const detach = globalI18n.onLocaleChanged(() => {
         updateLabels();
         refreshBindings();
       });
+      if (typeof detach === 'function') detachLocale.push(detach);
     }
 
     surrenderBtn.addEventListener('click', onSurrender);

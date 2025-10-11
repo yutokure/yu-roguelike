@@ -15083,6 +15083,99 @@
           "timerComplete": "タイマー完了！"
         }
       },
+      "stopwatch": {
+        "header": {
+          "title": "ストップウォッチ Pro"
+        },
+        "statusBadge": {
+          "running": "計測中",
+          "stopped": "停止中"
+        },
+        "info": {
+          "lapCount": "ラップ: {count}",
+          "lastLap": "前ラップ: {time}",
+          "lastLapNone": "前ラップ: -",
+          "sessionXp": "セッションEXP: {xp}"
+        },
+        "buttons": {
+          "start": "スタート",
+          "pause": "一時停止",
+          "resume": "再開",
+          "lap": "ラップ",
+          "reset": "リセット"
+        },
+        "laps": {
+          "title": "ラップ記録",
+          "subtitle": "最新順に表示",
+          "empty": "ラップを記録するとここに表示されます",
+          "label": "ラップ {index}"
+        }
+      },
+      "diagramMaker": {
+        "errors": {
+          "containerMissing": "MiniExp Diagram Maker を表示するコンテナが必要です",
+          "pngSignature": "PNG署名を認識できませんでした",
+          "pngDataMissing": "PNG内にdraw.ioデータが見つかりませんでした",
+          "inflateUnsupported": "圧縮データの展開に対応していない環境です",
+          "parseXml": "XMLを解析できませんでした",
+          "diagramMissing": "diagram 要素が見つかりません",
+          "mxGraphMissing": "mxGraphModel が見つかりません",
+          "diagramDecodeFailed": "diagram データを展開できませんでした",
+          "mxGraphRootMissing": "mxGraphModel root が見つかりません",
+          "loadFailed": "読み込みに失敗しました: {error}",
+          "saveFailed": "保存に失敗しました: {error}",
+          "exportFailed": "書き出しに失敗しました: {error}"
+        },
+        "defaults": {
+          "fileName": "未保存の図.drawio",
+          "layerName": "レイヤー {index}",
+          "pageName": "ページ {index}",
+          "textPlaceholder": "テキスト",
+          "nodePlaceholder": "新しいノード"
+        },
+        "tools": {
+          "select": "選択",
+          "rectangle": "四角",
+          "ellipse": "楕円",
+          "text": "テキスト",
+          "connector": "コネクタ",
+          "delete": "削除"
+        },
+        "actions": {
+          "new": "新規",
+          "open": "開く",
+          "save": "保存",
+          "export": "書き出し",
+          "exportFormat": "{formatLabel} で書き出し",
+          "undo": "元に戻す",
+          "redo": "やり直す"
+        },
+        "sections": {
+          "properties": "プロパティ"
+        },
+        "fields": {
+          "x": "X",
+          "y": "Y",
+          "width": "幅",
+          "height": "高さ",
+          "fill": "塗り",
+          "stroke": "線",
+          "strokeWidth": "線幅",
+          "textColor": "文字色",
+          "fontSize": "文字サイズ",
+          "text": "テキスト"
+        },
+        "toggles": {
+          "grid": "グリッド",
+          "snap": "スナップ"
+        },
+        "labels": {
+          "exp": "EXP: {value}"
+        },
+        "confirm": {
+          "newDocument": "保存されていない変更があります。新規作成しますか？"
+        }
+      },
       "clockHub": {
         "errors": {
           "noContainer": "Clock Hubにはコンテナが必要です"

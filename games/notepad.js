@@ -40,28 +40,109 @@
     if (!root) throw new Error('MiniExp Notepad requires a container');
 
     const shortcuts = opts?.shortcuts;
-    const i18n = typeof window !== 'undefined' ? window.I18n : null;
+    let i18n = typeof window !== 'undefined' ? window.I18n : null;
+    let i18nReadyTimer = null;
+
+    const formatTemplate = (template, params) => {
+      if (!params || typeof template !== 'string') return template;
+      return template.replace(/\{([^{}]+)\}/g, (match, token) => {
+        const key = token.trim();
+        if (!key) return match;
+        const value = params[key];
+        return value === undefined || value === null ? match : String(value);
+      });
+    };
+
+    function getI18n(){
+      if (typeof window !== 'undefined') {
+        const candidate = window.I18n;
+        if (candidate && candidate !== i18n) {
+          i18n = candidate;
+        }
+      }
+      return i18n;
+    }
+
+    function detachLocaleSubscription(){
+      if (typeof localeUnsubscribe === 'function') {
+        try { localeUnsubscribe(); } catch {}
+        localeUnsubscribe = null;
+      }
+    }
+
+    function ensureLocaleSubscription(source){
+      const api = source || getI18n();
+      if (!api || typeof api.onLocaleChanged !== 'function') return;
+      if (typeof localeUnsubscribe === 'function') return;
+      localeUnsubscribe = api.onLocaleChanged(() => {
+        try {
+          handleLocaleChange();
+        } catch (error) {
+          console.error('[Notepad] Failed to apply locale change:', error);
+        }
+      });
+    }
+
+    function watchForI18n(){
+      if (i18n || typeof window === 'undefined' || typeof window.setInterval !== 'function') return;
+      if (i18nReadyTimer) return;
+      let attempts = 0;
+      i18nReadyTimer = window.setInterval(() => {
+        attempts += 1;
+        const api = getI18n();
+        if (api && typeof api.t === 'function') {
+          window.clearInterval(i18nReadyTimer);
+          i18nReadyTimer = null;
+          detachLocaleSubscription();
+          ensureLocaleSubscription(api);
+          try {
+            handleLocaleChange();
+          } catch (error) {
+            console.error('[Notepad] Failed to apply locale change:', error);
+          }
+        } else if (attempts >= 40) {
+          window.clearInterval(i18nReadyTimer);
+          i18nReadyTimer = null;
+        }
+      }, 250);
+    }
 
     const translate = (key, fallback, params) => {
-      if (key && typeof i18n?.t === 'function') {
+      const api = getI18n();
+      if (key && typeof api?.t === 'function') {
         try {
-          const value = i18n.t(key, params);
-          if (typeof value === 'string' && value !== key) return value;
-          if (value !== undefined && value !== null && value !== key) return value;
+          const value = api.t(key, params);
+          if (value !== undefined && value !== null && value !== key) {
+            return typeof value === 'string' ? formatTemplate(value, params) : value;
+          }
         } catch {}
       }
+
+      let fallbackValue;
       if (typeof fallback === 'function') {
-        try { return fallback(); } catch { return ''; }
+        try {
+          fallbackValue = fallback();
+        } catch {
+          return '';
+        }
+      } else if (fallback !== undefined) {
+        fallbackValue = fallback;
+      } else if (typeof key === 'string') {
+        fallbackValue = key;
+      } else {
+        fallbackValue = '';
       }
-      if (fallback !== undefined) return fallback;
-      if (typeof key === 'string') return key;
-      return '';
+
+      return typeof fallbackValue === 'string'
+        ? formatTemplate(fallbackValue, params)
+        : fallbackValue;
     };
 
     const formatNumber = (value, options) => {
-      if (typeof i18n?.formatNumber === 'function') {
+      const api = getI18n();
+      if (typeof api?.formatNumber === 'function') {
         try {
-          return i18n.formatNumber(value, options);
+          return api.formatNumber(value, options);
         } catch {}
       }
       if (options?.minimumIntegerDigits) {
@@ -310,14 +391,9 @@
     updateStatusBar();
     persistSoon();
 
-    if (typeof i18n?.onLocaleChanged === 'function') {
-      localeUnsubscribe = i18n.onLocaleChanged(() => {
-        try {
-          handleLocaleChange();
-        } catch (error) {
-          console.error('[Notepad] Failed to apply locale change:', error);
-        }
-      });
+    ensureLocaleSubscription();
+    if (!getI18n()) {
+      watchForI18n();
     }
 
     award('open', 5);
@@ -863,7 +939,10 @@
         alert(translate('games.notepad.alerts.printPopupBlocked', '印刷ウィンドウを開けませんでした。ポップアップを許可してください。'));
         return;
       }
-      const locale = (typeof i18n?.getLocale === 'function' && i18n.getLocale()) || (typeof i18n?.getDefaultLocale === 'function' && i18n.getDefaultLocale()) || 'ja';
+      const api = getI18n();
+      const locale = (typeof api?.getLocale === 'function' && api.getLocale())
+        || (typeof api?.getDefaultLocale === 'function' && api.getDefaultLocale())
+        || 'ja';
       const fallbackTitle = getNotepadTitle();
       const title = state.fileName || fallbackTitle;
       const escapedTitle = escapeHtml(title);
@@ -1190,9 +1269,10 @@
       }
       closeMenu();
       closeSettingsPanel();
-      if (typeof localeUnsubscribe === 'function') {
-        try { localeUnsubscribe(); } catch {}
-        localeUnsubscribe = null;
+      detachLocaleSubscription();
+      if (i18nReadyTimer) {
+        try { clearInterval(i18nReadyTimer); } catch {}
+        i18nReadyTimer = null;
       }
       if (persistTimer) {
         clearTimeout(persistTimer);

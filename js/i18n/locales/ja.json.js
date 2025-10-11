@@ -1301,6 +1301,9 @@
               "expSummary": "獲得EXP: ラップ{lap} / ベスト{best} / ブースト{boost} / フィニッシュ{finish}",
               "restartHint": "Rキーで再スタート"
             },
+            "instructions": {
+              "controls": "↑/W:アクセル　↓/S:ブレーキ　←→/A・D:ステア<br>Space:ターボ　R:リスタート"
+            },
             "status": {
               "you": "自分",
               "dnf": "DNF",

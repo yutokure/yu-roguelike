@@ -260,7 +260,10 @@
     instruction.style.color = '#cbd5f5';
     instruction.style.fontSize = '12px';
     instruction.style.lineHeight = '1.6';
-    instruction.innerHTML = '↑/W:アクセル　↓/S:ブレーキ　←→/A・D:ステア<br>Space:ターボ　R:リスタート';
+    instruction.innerHTML = translateUi(
+      'selection.miniexp.games.topdown_race.instructions.controls',
+      '↑/W: Accelerate  ↓/S: Brake  ←→/A·D: Steer<br>Space: Turbo  R: Restart'
+    );
     container.appendChild(instruction);
 
     root.appendChild(container);

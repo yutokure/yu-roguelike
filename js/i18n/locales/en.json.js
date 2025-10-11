@@ -1368,7 +1368,42 @@
           },
           "steady_wire": {
             "name": "Steady Wire",
-            "description": "Trace randomized mazes without touching the edge to collect EXP."
+            "description": "Trace randomized mazes without touching the edge to collect EXP.",
+            "status": {
+              "selectControl": "Choose a control method",
+              "hitObstacle": "You bumped the wire…",
+              "clearedWithTime": "Cleared! Great job ({time}s)",
+              "cleared": "Cleared! Great job!",
+              "leftCourse": "You left the course…",
+              "pointerLeft": "Pointer left the corridor…",
+              "mouseInstructions": "Mouse: Click the start circle to begin moving",
+              "keyboardInstructions": "Keyboard: Move with Arrow keys or WASD",
+              "mouseDrag": "Drag the dot carefully—stay inside the corridor"
+            },
+            "overlay": {
+              "modePrompt": "Pick a control method to begin!",
+              "retryPrompt": "You hit the edge! Try again?",
+              "clearedWithTime": "Cleared! Finished {difficulty} in {time} seconds!",
+              "cleared": "Cleared! You conquered {difficulty}!",
+              "selectControlFirst": "Choose a control method first",
+              "welcome": "Welcome to Steady Wire!\nPick mouse or keyboard controls to get started.\nStay in the corridor and reach the goal on the right."
+            },
+            "buttons": {
+              "startMouse": "Start with mouse",
+              "startKeyboard": "Start with keyboard",
+              "retrySameMode": "Retry with same controls"
+            },
+            "difficulty": {
+              "label": {
+                "easy": "Easy",
+                "normal": "Normal",
+                "hard": "Hard"
+              }
+            },
+            "canvas": {
+              "startLabel": "START",
+              "goalLabel": "GOAL"
+            }
           },
           "flappy_bird": {
             "name": "Flappy Bird Clone",
@@ -16665,7 +16700,8 @@
           "mapTitle": "Map",
           "start": "Start",
           "pause": "Pause",
-          "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards."
+          "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards.",
+          "hintNoMap": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP. On NORMAL and above the minimap is hidden, so rely on status hints to navigate."
         },
         "labels": {
           "round": "Round: {value}",

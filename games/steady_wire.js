@@ -1,4 +1,5 @@
 (function(){
+  const GLOBAL = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
   const CANVAS_CFG = { width: 640, height: 420, margin: 40 };
   const DIFFICULTY_CFG = {
     EASY:   { corridor: 88, checkpointXp: 4, finishXp: 24, jitter: 60, keyboardSpeed: 180 },
@@ -82,8 +83,8 @@
   }
 
   function create(root, awardXp, opts){
-    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
-      ? window.createMiniGameLocalization({ id: 'steady_wire' })
+    const localization = opts?.localization || (GLOBAL && typeof GLOBAL.createMiniGameLocalization === 'function'
+      ? GLOBAL.createMiniGameLocalization({ id: 'steady_wire' })
       : null);
     const text = (key, fallback, params) => {
       if (localization && typeof localization.t === 'function'){

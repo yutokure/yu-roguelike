@@ -1368,7 +1368,42 @@
           },
           "steady_wire": {
             "name": "イライラ棒",
-            "description": "毎回生成されるコースを外れず進むワイヤーループ。操作方法を選んで挑戦"
+            "description": "毎回生成されるコースを外れず進むワイヤーループ。操作方法を選んで挑戦",
+            "status": {
+              "selectControl": "操作方法を選択してください",
+              "hitObstacle": "ぶつかってしまった…",
+              "clearedWithTime": "クリア！おめでとう ({time}s)",
+              "cleared": "クリア！おめでとう！",
+              "leftCourse": "コースから外れてしまった…",
+              "pointerLeft": "コースから出てしまった…",
+              "mouseInstructions": "マウスで操作: スタート円をクリックして進もう",
+              "keyboardInstructions": "キーボードで操作: 矢印 / WASD で移動",
+              "mouseDrag": "マウスで●をコースから外さないように進もう"
+            },
+            "overlay": {
+              "modePrompt": "操作方法を選んでスタート！",
+              "retryPrompt": "ぶつかってしまった！再挑戦しますか？",
+              "clearedWithTime": "クリア！難易度 {difficulty} を {time} 秒で突破しました！",
+              "cleared": "クリア！難易度 {difficulty} を突破しました！",
+              "selectControlFirst": "まず操作方法を選んでください",
+              "welcome": "イライラ棒ミニゲームへようこそ！\nマウスまたはキーボード操作を選んでください。\nコースから外れずに右端のゴールまで進みましょう。"
+            },
+            "buttons": {
+              "startMouse": "マウスモードで開始",
+              "startKeyboard": "キーボードモードで開始",
+              "retrySameMode": "同じモードで再挑戦"
+            },
+            "difficulty": {
+              "label": {
+                "easy": "かんたん",
+                "normal": "ふつう",
+                "hard": "むずかしい"
+              }
+            },
+            "canvas": {
+              "startLabel": "スタート",
+              "goalLabel": "ゴール"
+            }
           },
           "flappy_bird": {
             "name": "フラッピーバード風",
@@ -16669,7 +16704,8 @@
           "mapTitle": "マップ",
           "start": "探索開始",
           "pause": "一時停止",
-          "hint": "WASD/矢印で移動。宝箱と自分の距離が遠いほど基礎EXPが増え、素早く拾うほど倍率が上がります。"
+          "hint": "WASD/矢印で移動。宝箱と自分の距離が遠いほど基礎EXPが増え、素早く拾うほど倍率が上がります。",
+          "hintNoMap": "WASD/矢印で移動。宝箱と自分の距離が遠いほど基礎EXPが増えます。NORMAL以上ではマップが非表示なのでステータスのヒントを頼りに探索しましょう。"
         },
         "labels": {
           "round": "ラウンド: {value}",

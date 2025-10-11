@@ -81,16 +81,43 @@
     return typeof fallback === 'string' ? fallback : String(fallback);
   }
 
+  function expandTranslationKeys(rawKey){
+    if (!rawKey) return [];
+    const queue = Array.isArray(rawKey) ? rawKey : [rawKey];
+    const seen = new Set();
+    const expanded = [];
+    for (const entry of queue){
+      if (typeof entry !== 'string') continue;
+      const normalized = entry.trim();
+      if (!normalized) continue;
+      if (!seen.has(normalized)){
+        seen.add(normalized);
+        expanded.push(normalized);
+      }
+      if (normalized.startsWith('games.shogi.')){
+        const alt = `selection.miniexp.${normalized}`;
+        if (!seen.has(alt)){
+          seen.add(alt);
+          expanded.push(alt);
+        }
+      }
+    }
+    return expanded;
+  }
+
   function translateText(key, fallback, params){
     const activeI18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : baseI18n;
-    if (key && activeI18n && typeof activeI18n.t === 'function'){
-      try {
-        const translated = activeI18n.t(key, params);
-        if (translated != null && translated !== key){
-          return typeof translated === 'string' ? translated : String(translated);
+    const candidates = expandTranslationKeys(key);
+    if (candidates.length && activeI18n && typeof activeI18n.t === 'function'){
+      for (const candidate of candidates){
+        try {
+          const translated = activeI18n.t(candidate, params);
+          if (translated != null && translated !== candidate){
+            return typeof translated === 'string' ? translated : String(translated);
+          }
+        } catch (error){
+          console.warn('[Shogi] Failed to translate key:', candidate, error);
         }
-      } catch (error){
-        console.warn('[Shogi] Failed to translate key:', key, error);
       }
     }
     return evaluateFallback(fallback, params);

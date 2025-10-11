@@ -87,6 +87,7 @@
     let rafId = null;
     let tickerId = null;
     let isActive = false;
+    let detachLocaleListener = null;
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -163,13 +164,13 @@
     infoRow.style.fontSize = '13px';
 
     const lapCountEl = document.createElement('span');
-    lapCountEl.textContent = t('info.lapCount', params => `Lap: ${params.count}`, { count: formatNumberLocalized(0) });
+    lapCountEl.textContent = t('info.lapCount', 'Lap: {count}', { count: formatNumberLocalized(0) });
 
     const lastLapEl = document.createElement('span');
     lastLapEl.textContent = t('info.lastLapNone', 'Last lap: -');
 
     const sessionXpEl = document.createElement('span');
-    sessionXpEl.textContent = t('info.sessionXp', params => `Session EXP: ${params.xp}`, { xp: formatXp(0) });
+    sessionXpEl.textContent = t('info.sessionXp', 'Session EXP: {xp}', { xp: formatXp(0) });
 
     infoRow.appendChild(lapCountEl);
     infoRow.appendChild(lastLapEl);
@@ -284,7 +285,7 @@
 
     function updateSessionXp(){
       const xpValue = formatXp(state.sessionXp);
-      sessionXpEl.textContent = t('info.sessionXp', params => `Session EXP: ${params.xp}`, { xp: xpValue });
+      sessionXpEl.textContent = t('info.sessionXp', 'Session EXP: {xp}', { xp: xpValue });
     }
 
     function currentElapsed(){
@@ -298,11 +299,11 @@
       mainTime.textContent = `${pad2(parts.hours)}:${pad2(parts.minutes)}:${pad2(parts.seconds)}`;
       fractionalTime.textContent = `.${pad2(parts.centis)}`;
       const lapCount = formatNumberLocalized(state.laps.length);
-      lapCountEl.textContent = t('info.lapCount', params => `Lap: ${params.count}`, { count: lapCount });
+      lapCountEl.textContent = t('info.lapCount', 'Lap: {count}', { count: lapCount });
       if (state.laps.length){
         const last = state.laps[state.laps.length - 1];
         const formatted = formatForDisplay(last.split, { trimHours: true });
-        lastLapEl.textContent = t('info.lastLap', params => `Last lap: ${params.time}`, { time: formatted });
+        lastLapEl.textContent = t('info.lastLap', 'Last lap: {time}', { time: formatted });
       } else {
         lastLapEl.textContent = t('info.lastLapNone', 'Last lap: -');
       }
@@ -460,7 +461,7 @@
 
         const label = document.createElement('span');
         const labelIndex = formatNumberLocalized(lap.index);
-        label.textContent = t('laps.label', params => `Lap ${params.index}`, { index: labelIndex });
+        label.textContent = t('laps.label', 'Lap {index}', { index: labelIndex });
         label.style.color = '#99f6e4';
         label.style.fontWeight = '600';
 
@@ -492,6 +493,16 @@
       });
 
       lapsList.appendChild(rows);
+    }
+
+    function applyLocaleStrings(){
+      title.textContent = t('header.title', 'Stopwatch Pro');
+      lapBtn.textContent = t('buttons.lap', 'Lap');
+      resetBtn.textContent = t('buttons.reset', 'Reset');
+      lapsTitle.textContent = t('laps.title', 'Lap history');
+      lapsSubtitle.textContent = t('laps.subtitle', 'Most recent first');
+      updateDisplay();
+      renderLaps();
     }
 
     startStopBtn.addEventListener('click', () => {
@@ -530,6 +541,10 @@
 
     function destroy(){
       stop();
+      if (typeof detachLocaleListener === 'function'){
+        detachLocaleListener();
+        detachLocaleListener = null;
+      }
       if (rafId){
         cancelAnimationFrame(rafId);
         rafId = null;
@@ -537,6 +552,13 @@
       root.removeChild(wrapper);
     }
 
+    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function'){
+      const handleLocaleChange = () => applyLocaleStrings();
+      document.addEventListener('i18n:locale-changed', handleLocaleChange);
+      detachLocaleListener = () => document.removeEventListener('i18n:locale-changed', handleLocaleChange);
+    }
+
+    applyLocaleStrings();
     start();
 
     return {

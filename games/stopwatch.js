@@ -2,6 +2,10 @@
   const UPDATE_INTERVAL = 33;
   const MAX_LAPS = 60;
 
+  const globalScope = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+  const I18N = globalScope && globalScope.I18n;
+  const I18N_PREFIX = 'games.stopwatch';
+
   function pad2(value){
     return value.toString().padStart(2, '0');
   }
@@ -29,6 +33,44 @@
 
   function formatXp(value){
     return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  }
+
+  function formatTemplate(template, params){
+    if (template === undefined || template === null) return '';
+    if (!params || typeof params !== 'object') return String(template);
+    return String(template).replace(/\{([^{}]+)\}/g, (match, token) => {
+      const key = token.trim();
+      if (!key) return match;
+      const value = params[key];
+      return value === undefined || value === null ? match : String(value);
+    });
+  }
+
+  function translateKey(key, fallback, params){
+    if (key && I18N && typeof I18N.t === 'function'){
+      try {
+        const value = I18N.t(key, params);
+        if (typeof value === 'string' && value !== key) return value;
+      } catch {}
+    }
+    if (fallback !== undefined) return params ? formatTemplate(fallback, params) : String(fallback);
+    return params ? formatTemplate(key, params) : String(key ?? '');
+  }
+
+  function t(path, fallback, params){
+    return translateKey(path ? `${I18N_PREFIX}.${path}` : I18N_PREFIX, fallback, params);
+  }
+
+  function formatNumberLocalized(value){
+    if (I18N && typeof I18N.formatNumber === 'function'){
+      try { return I18N.formatNumber(value); } catch {}
+    }
+    try {
+      const locale = I18N && typeof I18N.getLocale === 'function' ? I18N.getLocale() : undefined;
+      return new Intl.NumberFormat(locale).format(value);
+    } catch {
+      return String(value ?? '');
+    }
   }
 
   function create(root, awardXp){
@@ -73,7 +115,7 @@
     header.style.alignItems = 'center';
 
     const title = document.createElement('div');
-    title.textContent = 'Stopwatch Pro';
+    title.textContent = t('header.title', 'Stopwatch Pro');
     title.style.fontSize = '22px';
     title.style.fontWeight = '600';
     title.style.color = '#e2e8f0';
@@ -85,7 +127,7 @@
     statusPill.style.letterSpacing = '0.02em';
     statusPill.style.background = 'rgba(45,212,191,0.12)';
     statusPill.style.color = '#5eead4';
-    statusPill.textContent = '停止中';
+    statusPill.textContent = t('statusBadge.stopped', 'Stopped');
 
     header.appendChild(title);
     header.appendChild(statusPill);
@@ -121,13 +163,13 @@
     infoRow.style.fontSize = '13px';
 
     const lapCountEl = document.createElement('span');
-    lapCountEl.textContent = 'ラップ: 0';
+    lapCountEl.textContent = t('info.lapCount', params => `Lap: ${params.count}`, { count: formatNumberLocalized(0) });
 
     const lastLapEl = document.createElement('span');
-    lastLapEl.textContent = '前ラップ: -';
+    lastLapEl.textContent = t('info.lastLapNone', 'Last lap: -');
 
     const sessionXpEl = document.createElement('span');
-    sessionXpEl.textContent = 'セッションEXP: 0';
+    sessionXpEl.textContent = t('info.sessionXp', params => `Session EXP: ${params.xp}`, { xp: formatXp(0) });
 
     infoRow.appendChild(lapCountEl);
     infoRow.appendChild(lastLapEl);
@@ -177,9 +219,9 @@
       return btn;
     }
 
-    const startStopBtn = createButton('スタート', 'primary');
-    const lapBtn = createButton('ラップ', 'accent');
-    const resetBtn = createButton('リセット', 'ghost');
+    const startStopBtn = createButton(t('buttons.start', 'Start'), 'primary');
+    const lapBtn = createButton(t('buttons.lap', 'Lap'), 'accent');
+    const resetBtn = createButton(t('buttons.reset', 'Reset'), 'ghost');
 
     buttonsRow.appendChild(startStopBtn);
     buttonsRow.appendChild(lapBtn);
@@ -201,12 +243,12 @@
     lapsHeader.style.alignItems = 'center';
 
     const lapsTitle = document.createElement('span');
-    lapsTitle.textContent = 'ラップ記録';
+    lapsTitle.textContent = t('laps.title', 'Lap history');
     lapsTitle.style.color = '#e0f2fe';
     lapsTitle.style.fontWeight = '600';
 
     const lapsSubtitle = document.createElement('span');
-    lapsSubtitle.textContent = '最新順に表示';
+    lapsSubtitle.textContent = t('laps.subtitle', 'Most recent first');
     lapsSubtitle.style.color = 'rgba(148,163,184,0.75)';
     lapsSubtitle.style.fontSize = '12px';
 
@@ -241,7 +283,8 @@
     }
 
     function updateSessionXp(){
-      sessionXpEl.textContent = `セッションEXP: ${formatXp(state.sessionXp)}`;
+      const xpValue = formatXp(state.sessionXp);
+      sessionXpEl.textContent = t('info.sessionXp', params => `Session EXP: ${params.xp}`, { xp: xpValue });
     }
 
     function currentElapsed(){
@@ -254,12 +297,14 @@
       const parts = timeParts(elapsed);
       mainTime.textContent = `${pad2(parts.hours)}:${pad2(parts.minutes)}:${pad2(parts.seconds)}`;
       fractionalTime.textContent = `.${pad2(parts.centis)}`;
-      lapCountEl.textContent = `ラップ: ${state.laps.length}`;
+      const lapCount = formatNumberLocalized(state.laps.length);
+      lapCountEl.textContent = t('info.lapCount', params => `Lap: ${params.count}`, { count: lapCount });
       if (state.laps.length){
         const last = state.laps[state.laps.length - 1];
-        lastLapEl.textContent = `前ラップ: ${formatForDisplay(last.split, { trimHours: true })}`;
+        const formatted = formatForDisplay(last.split, { trimHours: true });
+        lastLapEl.textContent = t('info.lastLap', params => `Last lap: ${params.time}`, { time: formatted });
       } else {
-        lastLapEl.textContent = '前ラップ: -';
+        lastLapEl.textContent = t('info.lastLapNone', 'Last lap: -');
       }
       updateSessionXp();
       updateStatusIndicator();
@@ -268,11 +313,11 @@
 
     function updateStatusIndicator(){
       if (state.running){
-        statusPill.textContent = '計測中';
+        statusPill.textContent = t('statusBadge.running', 'Running');
         statusPill.style.background = 'rgba(56,189,248,0.18)';
         statusPill.style.color = '#38bdf8';
       } else {
-        statusPill.textContent = '停止中';
+        statusPill.textContent = t('statusBadge.stopped', 'Stopped');
         statusPill.style.background = 'rgba(94,234,212,0.12)';
         statusPill.style.color = '#5eead4';
       }
@@ -280,11 +325,11 @@
 
     function updateButtons(){
       if (state.running){
-        startStopBtn.textContent = '一時停止';
+        startStopBtn.textContent = t('buttons.pause', 'Pause');
         startStopBtn.style.background = 'linear-gradient(135deg, #f97316, #ea580c)';
         startStopBtn.style.color = '#fff7ed';
       } else {
-        startStopBtn.textContent = state.baseElapsed > 0 ? '再開' : 'スタート';
+        startStopBtn.textContent = state.baseElapsed > 0 ? t('buttons.resume', 'Resume') : t('buttons.start', 'Start');
         startStopBtn.style.background = 'linear-gradient(135deg, #22d3ee, #0ea5e9)';
         startStopBtn.style.color = '#0f172a';
       }
@@ -385,7 +430,7 @@
       lapsList.innerHTML = '';
       if (!state.laps.length){
         const empty = document.createElement('div');
-        empty.textContent = 'ラップを記録するとここに表示されます';
+        empty.textContent = t('laps.empty', 'Your laps will appear here once recorded.');
         empty.style.color = 'rgba(148,163,184,0.75)';
         empty.style.textAlign = 'center';
         empty.style.padding = '32px 0';
@@ -414,7 +459,8 @@
         row.style.border = '1px solid rgba(34,211,238,0.16)';
 
         const label = document.createElement('span');
-        label.textContent = `LAP ${lap.index}`;
+        const labelIndex = formatNumberLocalized(lap.index);
+        label.textContent = t('laps.label', params => `Lap ${params.index}`, { index: labelIndex });
         label.style.color = '#99f6e4';
         label.style.fontWeight = '600';
 

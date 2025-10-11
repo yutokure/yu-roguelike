@@ -16863,6 +16863,36 @@
     store['en'].games = {};
   }
   var enGames = store['en'].games;
+  if (!enGames.stopwatch) {
+    enGames.stopwatch = {
+      "header": {
+        "title": "Stopwatch Pro"
+      },
+      "statusBadge": {
+        "running": "Running",
+        "stopped": "Stopped"
+      },
+      "info": {
+        "lapCount": "Lap: {count}",
+        "lastLap": "Last lap: {time}",
+        "lastLapNone": "Last lap: -",
+        "sessionXp": "Session EXP: {xp}"
+      },
+      "buttons": {
+        "start": "Start",
+        "pause": "Pause",
+        "resume": "Resume",
+        "lap": "Lap",
+        "reset": "Reset"
+      },
+      "laps": {
+        "title": "Lap history",
+        "subtitle": "Most recent first",
+        "empty": "Your laps will appear here once recorded.",
+        "label": "Lap {index}"
+      }
+    };
+  }
   if (!enGames.wording) {
     enGames.wording = {
         "name": "Wording",

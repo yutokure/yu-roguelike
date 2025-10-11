@@ -16097,6 +16097,56 @@
       },
     },
       "games": {
+        "timer": {
+          "header": {
+            "title": "Timer", 
+            "subtitle": "Stay on task with a focused countdown or track sessions with the stopwatch."
+          },
+          "xpBadge": "Session EXP {formattedXp}",
+          "modes": {
+            "countdown": "Countdown",
+            "stopwatch": "Stopwatch"
+          },
+          "inputs": {
+            "hours": "Hours",
+            "minutes": "Minutes",
+            "seconds": "Seconds"
+          },
+          "quickButtons": {
+            "addMinutes": "+{minutes} min",
+            "subtractMinutes": "-{minutes} min",
+            "pomodoro": "Pomodoro {minutes} min"
+          },
+          "controls": {
+            "start": "Start",
+            "pause": "Pause",
+            "resume": "Resume",
+            "reset": "Reset"
+          },
+          "status": {
+            "ready": "Ready",
+            "countdownReady": "Countdown ready",
+            "stopwatchReady": "Stopwatch ready",
+            "countdownRunning": "Counting down…",
+            "resumed": "Resumed",
+            "paused": "Paused",
+            "stopwatchRunning": "Stopwatch running…",
+            "stopwatchMinuteAwarded": "{minutes} min elapsed!",
+            "stopwatchMinute": "{minutes} min elapsed",
+            "completed": "Complete! Great work"
+          },
+          "history": {
+            "title": "Recent Log",
+            "labels": {
+              "complete": "Complete",
+              "start": "Start",
+              "stopwatchMinute": "Minute",
+              "generic": "Milestone"
+            },
+            "xpAward": "{label}: +{formattedXp} EXP",
+            "timerComplete": "Timer finished!"
+          }
+        },
         "diagramMaker": {
           "errors": {
             "containerMissing": "MiniExp Diagram Maker requires a container",

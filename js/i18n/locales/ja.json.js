@@ -16101,6 +16101,56 @@
       },
     },
       "games": {
+        "timer": {
+          "header": {
+            "title": "タイマー",
+            "subtitle": "カウントダウンやストップウォッチで集中時間や休憩をスマートに管理"
+          },
+          "xpBadge": "今回獲得 {formattedXp} EXP",
+          "modes": {
+            "countdown": "カウントダウン",
+            "stopwatch": "ストップウォッチ"
+          },
+          "inputs": {
+            "hours": "時間",
+            "minutes": "分",
+            "seconds": "秒"
+          },
+          "quickButtons": {
+            "addMinutes": "+{minutes}分",
+            "subtractMinutes": "-{minutes}分",
+            "pomodoro": "{minutes}分ポモドーロ"
+          },
+          "controls": {
+            "start": "開始",
+            "pause": "一時停止",
+            "resume": "再開",
+            "reset": "リセット"
+          },
+          "status": {
+            "ready": "準備完了",
+            "countdownReady": "カウントダウンの準備完了",
+            "stopwatchReady": "ストップウォッチの準備完了",
+            "countdownRunning": "カウント中…",
+            "resumed": "再開しました",
+            "paused": "一時停止中",
+            "stopwatchRunning": "計測中…",
+            "stopwatchMinuteAwarded": "{minutes}分経過！",
+            "stopwatchMinute": "{minutes}分経過",
+            "completed": "完了！お疲れさまでした"
+          },
+          "history": {
+            "title": "最近のログ",
+            "labels": {
+              "complete": "完了",
+              "start": "開始",
+              "stopwatchMinute": "経過",
+              "generic": "達成"
+            },
+            "xpAward": "{label}: +{formattedXp} EXP",
+            "timerComplete": "タイマー完了！"
+          }
+        },
         "diagramMaker": {
           "errors": {
             "containerMissing": "MiniExp Diagram Maker を表示するコンテナが必要です",

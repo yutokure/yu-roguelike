@@ -1301,6 +1301,9 @@
               "expSummary": "EXP Earned: Lap {lap} / Best {best} / Boost {boost} / Finish {finish}",
               "restartHint": "Press {key} to restart"
             },
+            "instructions": {
+              "controls": "↑/W: Accelerate  ↓/S: Brake  ←→/A·D: Steer<br>Space: Turbo  R: Restart"
+            },
             "status": {
               "you": "You",
               "dnf": "DNF",

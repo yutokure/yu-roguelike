@@ -12996,7 +12996,7 @@
           "cleared": "クリア！ {moves} 手 / {time} 取得EXP: {xp}",
           "intro": "難易度で盤面サイズが変わります：EASYは{easySize}×{easySize}、NORMALは{normalSize}×{normalSize}、HARDは{hardSize}×{hardSize}です。"
         }
-      }
+      },
       "same": {
         "hud": {
           "title": "セイムゲーム",

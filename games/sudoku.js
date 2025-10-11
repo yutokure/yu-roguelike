@@ -7,6 +7,30 @@
     const fillXp = xpPerFill[difficulty] || xpPerFill.NORMAL;
     const clearXp = xpClear[difficulty] || xpClear.NORMAL;
 
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'sudoku' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, typeof params === 'function' ? params() : params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function'){
+        try { return new Intl.NumberFormat(undefined, options).format(value); } catch {}
+      }
+      if (value != null && typeof value.toLocaleString === 'function'){
+        try { return value.toLocaleString(); } catch {}
+      }
+      return String(value ?? '');
+    };
+    let detachLocale = null;
+
     const PUZZLES = {
       EASY: [
         {
@@ -101,13 +125,11 @@
     wrapper.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
 
     const title = document.createElement('div');
-    title.textContent = 'ナンプレ (数独)';
     title.style.fontSize = '22px';
     title.style.fontWeight = '700';
     title.style.marginBottom = '6px';
 
     const description = document.createElement('div');
-    description.textContent = '1〜9の数字を使い、各行・列・3×3ブロックに同じ数字が入らないよう埋めてください。クリックまたはキーボード(数字/矢印/Backspace)に対応。';
     description.style.fontSize = '13px';
     description.style.opacity = '0.85';
     description.style.lineHeight = '1.5';
@@ -120,21 +142,33 @@
     infoBar.style.fontSize = '13px';
     infoBar.style.marginBottom = '12px';
 
-    function infoItem(label){
+    const infoItems = [];
+    function infoItem(labelKey, fallback){
       const span = document.createElement('span');
       span.style.display = 'flex';
       span.style.gap = '4px';
-      const key = document.createElement('span'); key.textContent = label; key.style.opacity = '0.7';
+      const key = document.createElement('span'); key.style.opacity = '0.7';
       const value = document.createElement('span'); value.style.fontVariantNumeric = 'tabular-nums';
       span.appendChild(key); span.appendChild(value);
       infoBar.appendChild(span);
-      return value;
+      const item = {
+        labelKey,
+        labelFallback: fallback,
+        labelEl: key,
+        valueEl: value,
+        refreshLabel(){
+          key.textContent = text(labelKey, fallback);
+        }
+      };
+      item.refreshLabel();
+      infoItems.push(item);
+      return item;
     }
 
-    const infoDifficulty = infoItem('難易度'); infoDifficulty.textContent = difficulty;
-    const infoProgress = infoItem('進行');
-    const infoMistakes = infoItem('ミス');
-    const infoTime = infoItem('タイム'); infoTime.textContent = '0:00';
+    const infoDifficulty = infoItem('.info.difficultyLabel', '難易度');
+    const infoProgress = infoItem('.info.progressLabel', '進行');
+    const infoMistakes = infoItem('.info.mistakesLabel', 'ミス');
+    const infoTime = infoItem('.info.timeLabel', 'タイム');
 
     const boardFrame = document.createElement('div');
     boardFrame.style.position = 'relative';
@@ -191,6 +225,26 @@
     statusBar.style.minHeight = '20px';
     statusBar.style.fontSize = '13px';
     statusBar.style.opacity = '0.9';
+
+    const statusState = { key: null, fallback: '', params: null, fallbackFactory: null, paramsFactory: null };
+    function renderStatus(){
+      const fallback = statusState.fallbackFactory ? statusState.fallbackFactory() : statusState.fallback;
+      const params = statusState.paramsFactory ? statusState.paramsFactory() : statusState.params;
+      if (statusState.key){
+        statusBar.textContent = text(statusState.key, fallback, params);
+      } else {
+        statusBar.textContent = typeof fallback === 'function' ? fallback() : (fallback ?? '');
+      }
+    }
+
+    function setStatus(key, fallback, params){
+      statusState.key = key || null;
+      statusState.fallbackFactory = typeof fallback === 'function' ? fallback : null;
+      statusState.fallback = typeof fallback === 'function' ? null : (fallback ?? '');
+      statusState.paramsFactory = typeof params === 'function' ? params : null;
+      statusState.params = typeof params === 'function' ? null : (params ?? null);
+      renderStatus();
+    }
 
     wrapper.appendChild(title);
     wrapper.appendChild(description);
@@ -301,26 +355,46 @@
       }
     }
 
-    function setStatus(text){
-      statusBar.textContent = text || '';
-    }
-
     function updateProgress(){
+      const totalCells = 81;
       const filled = boardValues.reduce((acc, v)=> acc + (v ? 1 : 0), 0);
-      infoProgress.textContent = `${filled}/81`;
-      infoMistakes.textContent = String(mistakes);
+      const filledFormatted = formatNumber(filled);
+      const totalFormatted = formatNumber(totalCells);
+      infoProgress.valueEl.textContent = text('.info.progressValue', () => `${filledFormatted}/${totalFormatted}`, {
+        filled,
+        total: totalCells,
+        filledFormatted,
+        totalFormatted,
+      });
+      const mistakesFormatted = formatNumber(mistakes);
+      infoMistakes.valueEl.textContent = text('.info.mistakesValue', () => mistakesFormatted, {
+        count: mistakes,
+        formatted: mistakesFormatted,
+      });
     }
 
     function formatTime(ms){
       const totalSeconds = Math.floor(ms / 1000);
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
-      return `${minutes}:${seconds.toString().padStart(2,'0')}`;
+      const minutesFormatted = formatNumber(minutes);
+      const secondsFormatted = seconds.toString().padStart(2,'0');
+      return text('.time.display', () => `${minutesFormatted}:${secondsFormatted}`, {
+        minutes,
+        seconds,
+        minutesFormatted,
+        secondsFormatted,
+        totalSeconds,
+        milliseconds: ms,
+      });
     }
 
     function updateTime(){
-      const baseMs = solved ? elapsedMs : Date.now() - startTime;
-      infoTime.textContent = formatTime(baseMs);
+      let baseMs = elapsedMs;
+      if (!solved && running && startTime){
+        baseMs = Date.now() - startTime;
+      }
+      infoTime.valueEl.textContent = formatTime(baseMs);
     }
 
     function startTimer(){
@@ -345,7 +419,14 @@
       elapsedMs = Date.now() - startTime;
       stopTimer();
       document.removeEventListener('keydown', onKeyDown);
-      setStatus(`クリア！タイム ${formatTime(elapsedMs)} / ミス ${mistakes}。`);
+      setStatus('.status.cleared', () => `クリア！タイム ${formatTime(elapsedMs)} / ミス ${mistakes}。`, () => ({
+        time: formatTime(elapsedMs),
+        milliseconds: elapsedMs,
+        mistakes: formatNumber(mistakes),
+        mistakesRaw: mistakes,
+        difficulty,
+        difficultyLabel: text(`.difficulty.${String(difficulty || '').toLowerCase()}`, () => difficulty),
+      }));
       awardXp(clearXp, { type:'clear', mistakes, timeSec: Math.floor(elapsedMs/1000), difficulty });
       refreshHighlights();
       updateTime();
@@ -387,14 +468,14 @@
         }
       } else {
         mistakes += 1;
-        infoMistakes.textContent = String(mistakes);
-        setStatus('その数字は入れられません。');
+        updateProgress();
+        setStatus('.status.invalid', 'その数字は入れられません。');
         flashCell(idx);
       }
     }
 
     function handleNumberInput(value){
-      if (selectedIndex < 0){ setStatus('マスを選択してください。'); return; }
+      if (selectedIndex < 0){ setStatus('.status.selectCell', 'マスを選択してください。'); return; }
       setCellValue(selectedIndex, value);
     }
 
@@ -415,7 +496,7 @@
       if (running){ startTimer(); }
       boardValues.forEach((_, idx)=>{ updateCellContent(idx); });
       selectedIndex = -1;
-      setStatus('リセットしました。');
+      setStatus('.status.reset', 'リセットしました。');
       updateProgress();
       updateTime();
       refreshHighlights();
@@ -448,7 +529,7 @@
       startTime = Date.now();
       stopTimer();
       if (running){ startTimer(); }
-      setStatus('新しい盤面を生成しました。');
+      setStatus('.status.newBoard', '新しい盤面を生成しました。');
       updateProgress();
       updateTime();
       refreshHighlights();
@@ -469,11 +550,12 @@
       const btn = createKeypadButton(String(n), String(n));
       keypad.appendChild(btn);
     }
-    keypad.appendChild(createKeypadButton('消す', ''));
+    const clearBtn = createKeypadButton(text('.keypad.clear', '消す'), '');
+    keypad.appendChild(clearBtn);
 
-    const resetBtn = createButton('リセット');
+    const resetBtn = createButton(text('.actions.reset', 'リセット'));
     resetBtn.onclick = () => { if (!running) return; resetBoard(); };
-    const newBtn = createButton('新しい盤面');
+    const newBtn = createButton(text('.actions.newBoard', '新しい盤面'));
     newBtn.onclick = () => { if (!running) return; newPuzzle(); };
     actionsBar.appendChild(resetBtn);
     actionsBar.appendChild(newBtn);
@@ -540,7 +622,7 @@
       } else {
         startTime = Date.now() - elapsedMs;
       }
-      setStatus('');
+      setStatus(null, '');
       document.addEventListener('keydown', onKeyDown);
       startTimer();
       updateTime();
@@ -557,6 +639,10 @@
 
     function destroy(){
       stop();
+      if (typeof detachLocale === 'function'){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       try { wrapper.remove(); } catch {}
     }
 
@@ -571,9 +657,33 @@
 
     // Initialize display
     boardValues.forEach((_, idx)=> updateCellContent(idx));
-    updateProgress();
     refreshHighlights();
     givenSet.forEach(idx => awardedCells.add(idx));
+
+    function refreshLocalizedTexts(){
+      title.textContent = text('.title', 'ナンプレ (数独)');
+      description.textContent = text('.description', '1〜9の数字を使い、各行・列・3×3ブロックに同じ数字が入らないよう埋めてください。クリックまたはキーボード(数字/矢印/Backspace)に対応。');
+      infoItems.forEach(item => item.refreshLabel());
+      const difficultyLabelKey = `.difficulty.${String(difficulty || '').toLowerCase()}`;
+      infoDifficulty.valueEl.textContent = text(difficultyLabelKey, () => difficulty);
+      clearBtn.textContent = text('.keypad.clear', '消す');
+      resetBtn.textContent = text('.actions.reset', 'リセット');
+      newBtn.textContent = text('.actions.newBoard', '新しい盤面');
+      updateProgress();
+      updateTime();
+      renderStatus();
+    }
+
+    refreshLocalizedTexts();
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        try {
+          refreshLocalizedTexts();
+        } catch (error) {
+          console.warn('[MiniExp] Sudoku localization refresh failed:', error);
+        }
+      });
+    }
 
     return { start, stop, destroy, getScore };
   }

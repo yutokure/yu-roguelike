@@ -639,16 +639,16 @@
 
     function updateInfo(){
       if (!running){
-        const stoppedText = translateText('games.chess.status.stopped', '停止中');
+        const stoppedText = translateText('miniexp.games.chess.status.stopped', '停止中');
         turnLine.innerHTML = `<strong>${escapeHtml(stoppedText)}</strong>`;
       } else {
-        const turnLabel = translateText('games.chess.status.turnLabel', '手番:');
+        const turnLabel = translateText('miniexp.games.chess.status.turnLabel', '手番:');
         const stateText = turn === 'w'
-          ? translateText('games.chess.status.yourTurn', 'あなたの番です')
-          : translateText('games.chess.status.aiThinking', 'AIの思考中…');
+          ? translateText('miniexp.games.chess.status.yourTurn', 'あなたの番です')
+          : translateText('miniexp.games.chess.status.aiThinking', 'AIの思考中…');
         turnLine.innerHTML = `<strong>${escapeHtml(turnLabel)}</strong> ${escapeHtml(stateText)}`;
       }
-      const scoreLabel = translateText('games.chess.status.scoreLabel', 'スコア:');
+      const scoreLabel = translateText('miniexp.games.chess.status.scoreLabel', 'スコア:');
       const scoreText = formatLocalizedNumber(playerScore);
       scoreLine.innerHTML = `<strong>${escapeHtml(scoreLabel)}</strong> ${escapeHtml(scoreText)}`;
       messageLine.textContent = getMessageText();
@@ -670,10 +670,10 @@
     }
 
     function applyStaticText(){
-      const difficultyName = translateText(`games.chess.difficultyValue.${difficulty.toLowerCase()}`, difficulty);
-      title.textContent = translateText('games.chess.title', 'チェス');
-      diffTag.textContent = translateText('games.chess.difficultyTag', () => `難易度: ${difficultyName}`, { value: difficultyName });
-      resetBtn.textContent = translateText('games.chess.controls.restart', 'リスタート');
+      const difficultyName = translateText(`miniexp.games.chess.difficultyValue.${difficulty.toLowerCase()}`, difficulty);
+      title.textContent = translateText('miniexp.games.chess.title', 'チェス');
+      diffTag.textContent = translateText('miniexp.games.chess.difficultyTag', () => `難易度: ${difficultyName}`, { value: difficultyName });
+      resetBtn.textContent = translateText('miniexp.games.chess.controls.restart', 'リスタート');
     }
 
     function resetSelection(){
@@ -756,13 +756,13 @@
         if (inCheck){
           if (opponent === 'b'){
             awardXp(WIN_EXP[difficulty] || WIN_EXP.NORMAL, { reason: 'checkmate' });
-            setMessage({ key: 'games.chess.messages.checkmateWin', fallback: 'チェックメイト！勝利しました。' });
+            setMessage({ key: 'miniexp.games.chess.messages.checkmateWin', fallback: 'チェックメイト！勝利しました。' });
           } else {
-            setMessage({ key: 'games.chess.messages.checkmateLoss', fallback: 'チェックメイトを受けました…' });
+            setMessage({ key: 'miniexp.games.chess.messages.checkmateLoss', fallback: 'チェックメイトを受けました…' });
           }
         } else {
           awardXp(DRAW_EXP, { reason: 'draw' });
-          setMessage({ key: 'games.chess.messages.stalemate', fallback: 'ステイルメイト。引き分けです。' });
+          setMessage({ key: 'miniexp.games.chess.messages.stalemate', fallback: 'ステイルメイト。引き分けです。' });
         }
         running = false;
         resetSelection();
@@ -771,7 +771,7 @@
       }
       if (halfMoveClock >= 100 || totalMoves >= 200 || insufficientMaterial(board)){
         awardXp(DRAW_EXP, { reason: 'draw' });
-        setMessage({ key: 'games.chess.messages.draw', fallback: '引き分け扱いになりました。' });
+        setMessage({ key: 'miniexp.games.chess.messages.draw', fallback: '引き分け扱いになりました。' });
         running = false;
         updateInfo();
         return true;
@@ -818,9 +818,9 @@
       if (inCheck){
         if (moverColor === 'w'){
           awardXp(CHECK_EXP, { reason: 'check' });
-          setMessage({ key: 'games.chess.messages.playerCheck', fallback: 'チェック！' });
+          setMessage({ key: 'miniexp.games.chess.messages.playerCheck', fallback: 'チェック！' });
         } else {
-          setMessage({ key: 'games.chess.messages.playerInCheck', fallback: 'チェックされています！' });
+          setMessage({ key: 'miniexp.games.chess.messages.playerInCheck', fallback: 'チェックされています！' });
         }
       } else if (moverColor === 'w'){
         setMessage('');
@@ -851,7 +851,7 @@
         if (move){
           if (move.promote){
             const choice = window.prompt(
-              translateText('games.chess.prompts.promotion', '昇格する駒を選んでください (Q/R/B/N)'),
+              translateText('miniexp.games.chess.prompts.promotion', '昇格する駒を選んでください (Q/R/B/N)'),
               'Q'
             );
             if (choice){
@@ -869,7 +869,7 @@
       if (piece && pieceColor(piece) === 'w'){
         selected = { x, y };
         legalMoves = generateLegalMoves(board, 'w').filter(m => m.fromX === x && m.fromY === y);
-        setMessage({ key: 'games.chess.messages.selectMove', fallback: '移動するマスを選択してください' });
+        setMessage({ key: 'miniexp.games.chess.messages.selectMove', fallback: '移動するマスを選択してください' });
       } else {
         resetSelection();
       }

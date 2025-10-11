@@ -1,6 +1,28 @@
 (function(){
   function create(root, awardXp, opts){
     const W = 560, H = 420;
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'same' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      try {
+        if (localization && typeof localization.formatNumber === 'function') {
+          return localization.formatNumber(value, options);
+        }
+      } catch {}
+      try {
+        return new Intl.NumberFormat(undefined, options).format(value);
+      } catch {}
+      return `${value}`;
+    };
+
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     canvas.style.display='block'; canvas.style.margin='0 auto'; canvas.style.background='#0b1220'; canvas.style.borderRadius='8px';
@@ -27,6 +49,7 @@
     refillAll();
 
     let running=false, hoverGroup=null; // group: array of [x,y]
+    let detachLocale = null;
     let lastHintKey = '';
     const pops=[]; // pop ring animations {x,y,t}
     let totalRemoved = 0;
@@ -75,7 +98,20 @@
     function draw(){
       ctx.fillStyle = '#0b1220'; ctx.fillRect(0,0,W,H);
       // title
-      ctx.fillStyle='#e2e8f0'; ctx.font='12px sans-serif'; ctx.fillText(`Same Game | ${diff} | Removed: ${totalRemoved}`, 8, 18);
+      ctx.fillStyle='#e2e8f0'; ctx.font='12px sans-serif';
+      const titleLabel = text('.hud.title', 'Same Game');
+      const difficultyLabel = text(`difficulty.${diff.toLowerCase()}`, () => diff, { difficulty: diff });
+      const removedLabel = text('.hud.removed', 'Removed');
+      const removedValue = formatNumber(totalRemoved, { maximumFractionDigits: 0 });
+      const statusText = text('.hud.status', () => `${titleLabel} | ${difficultyLabel} | ${removedLabel}: ${removedValue}`, {
+        title: titleLabel,
+        difficulty: difficultyLabel,
+        difficultyKey: diff,
+        removedLabel,
+        removed: removedValue,
+        rawRemoved: totalRemoved,
+      });
+      ctx.fillText(statusText, 8, 18);
       for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
         const val = grid[y][x];
         const px = ORGX + x*CELL, py = ORGY + y*CELL;
@@ -109,15 +145,30 @@
         const key = `${x},${y},${size}`;
         if (key !== lastHintKey) {
           lastHintKey = key;
-          try { if (window.showTransientPopupAt) window.showTransientPopupAt(cx, cy, `${size}個 / 予想+${exp}EXP`); } catch {}
+          try {
+            if (window.showTransientPopupAt) {
+              const expValue = formatNumber(exp, { maximumFractionDigits: 0 });
+              const popupText = text('.hint.popup', () => `${size}個 / 予想+${expValue}EXP`, {
+                size,
+                removed: size,
+                exp,
+                expFormatted: expValue,
+              });
+              window.showTransientPopupAt(cx, cy, popupText);
+            }
+          } catch {}
         }
       }
     }
     function onClick(e){ if(!hoverGroup){ return; } for(const [x,y] of hoverGroup){ pops.push({ x,y,t:12 }); } const g=hoverGroup; hoverGroup=null; draw(); setTimeout(()=>{ removeGroup(g); draw(); }, 90); }
 
+    if (!detachLocale && localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => { try { draw(); } catch {} });
+    }
+
     function start(){ if(!running){ running=true; canvas.addEventListener('mousemove',onMove); canvas.addEventListener('click',onClick); draw(); } }
     function stop(){ if(running){ running=false; canvas.removeEventListener('mousemove',onMove); canvas.removeEventListener('click',onClick); } }
-    function destroy(){ try{ stop(); root && root.removeChild(canvas); }catch{} }
+    function destroy(){ try{ stop(); detachLocale && detachLocale(); detachLocale=null; root && root.removeChild(canvas); }catch{} }
     function getScore(){ return totalRemoved; }
 
     return { start, stop, destroy, getScore };

@@ -49,11 +49,17 @@
     return `${m}:${String(s).padStart(2, '0')}`;
   }
 
-  function formatTimestamp(ts){
+  function formatTimestamp(ts, locale){
     try {
-      return new Date(ts).toLocaleString();
+      const date = new Date(ts);
+      if (Number.isNaN(date.getTime())) throw new Error('Invalid date');
+      return date.toLocaleString(locale || undefined);
     } catch {
-      return new Date(ts).toISOString();
+      try {
+        return new Date(ts).toISOString();
+      } catch {
+        return String(ts);
+      }
     }
   }
 
@@ -123,10 +129,66 @@
     }
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts = {}){
     if (!root) throw new Error('Video player requires a root element');
 
     const historyItems = loadHistory();
+
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'video_player' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const toText = (value) => (value == null ? '' : String(value));
+    const localizationUpdaters = [];
+    const registerLocalizationUpdater = (fn) => {
+      if (typeof fn !== 'function') return () => {};
+      localizationUpdaters.push(fn);
+      try { fn(); } catch {}
+      return fn;
+    };
+    const bindLocalizedText = (element, key, fallback, { attr = 'textContent', params } = {}) => {
+      return registerLocalizationUpdater(() => {
+        const resolved = text(key, fallback, typeof params === 'function' ? params() : params);
+        if (attr === 'textContent'){
+          element.textContent = toText(resolved);
+        } else {
+          element[attr] = toText(resolved);
+        }
+      });
+    };
+    const formatLocaleNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function'){
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      if (Number.isFinite(value)){
+        try { return value.toLocaleString(undefined, options || {}); } catch {}
+        return String(value);
+      }
+      return value == null ? '' : String(value);
+    };
+    const messageState = { type: null, key: null, fallback: '', params: null };
+    const statusState = { key: '.status.noSource', fallback: 'ソース未選択。', params: null };
+    let detachLocale = null;
+    function applyLocaleUpdates(){
+      localizationUpdaters.forEach(fn => {
+        try { fn(); } catch {}
+      });
+      updateXpDisplay();
+      applyStatus();
+      applyMessage();
+      updateHistoryList();
+    }
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        applyLocaleUpdates();
+      });
+    }
 
     const state = {
       currentSource: null,
@@ -185,13 +247,13 @@
     titleRow.style.gap = '12px';
 
     const title = document.createElement('h2');
-    title.textContent = '動画プレイヤー';
+    bindLocalizedText(title, '.title', '動画プレイヤー');
     title.style.margin = '0';
     title.style.fontSize = '28px';
     title.style.fontWeight = '700';
 
     const xpBadge = document.createElement('div');
-    xpBadge.textContent = 'セッションEXP: 0';
+    xpBadge.textContent = '';
     xpBadge.style.padding = '6px 12px';
     xpBadge.style.borderRadius = '999px';
     xpBadge.style.background = 'rgba(56,189,248,0.2)';
@@ -206,13 +268,13 @@
     infoGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(160px, 1fr))';
     infoGrid.style.gap = '12px';
 
-    function createInfoItem(label){
+    function createInfoItem(labelKey, fallback){
       const wrap = document.createElement('div');
       wrap.style.display = 'flex';
       wrap.style.flexDirection = 'column';
       wrap.style.gap = '4px';
       const labelEl = document.createElement('span');
-      labelEl.textContent = label;
+      bindLocalizedText(labelEl, labelKey, fallback);
       labelEl.style.fontSize = '12px';
       labelEl.style.color = '#94a3b8';
       const valueEl = document.createElement('span');
@@ -225,10 +287,10 @@
       return { wrapper: wrap, valueEl };
     }
 
-    const infoSource = createInfoItem('ソース');
-    const infoTitle = createInfoItem('タイトル');
-    const infoDuration = createInfoItem('長さ');
-    const infoStatus = createInfoItem('ステータス');
+    const infoSource = createInfoItem('.info.source', 'ソース');
+    const infoTitle = createInfoItem('.info.title', 'タイトル');
+    const infoDuration = createInfoItem('.info.duration', '長さ');
+    const infoStatus = createInfoItem('.info.status', 'ステータス');
 
     infoGrid.appendChild(infoSource.wrapper);
     infoGrid.appendChild(infoTitle.wrapper);
@@ -255,10 +317,10 @@
     sourceTabs.style.gap = '4px';
     sourceTabs.style.alignSelf = 'flex-start';
 
-    function createTabButton(label){
+    function createTabButton(){
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = label;
+      btn.textContent = '';
       btn.style.border = 'none';
       btn.style.padding = '8px 18px';
       btn.style.borderRadius = '999px';
@@ -276,8 +338,10 @@
       return btn;
     }
 
-    const localTab = createTabButton('ローカルファイル');
-    const youtubeTab = createTabButton('YouTube URL');
+    const localTab = createTabButton();
+    const youtubeTab = createTabButton();
+    bindLocalizedText(localTab, '.tabs.local', 'ローカルファイル');
+    bindLocalizedText(youtubeTab, '.tabs.youtube', 'YouTube URL');
     sourceTabs.appendChild(localTab);
     sourceTabs.appendChild(youtubeTab);
 
@@ -285,22 +349,46 @@
     messageBanner.style.minHeight = '24px';
     messageBanner.style.fontSize = '14px';
     messageBanner.style.fontWeight = '500';
+    messageBanner.style.display = 'none';
 
-    function setMessage(type, text){
-      if (!text){
+    function applyMessage(){
+      if (!messageBanner) return;
+      if (!messageState.type || !messageState.key){
         messageBanner.textContent = '';
         messageBanner.style.display = 'none';
         return;
       }
-      messageBanner.textContent = text;
+      const params = typeof messageState.params === 'function' ? messageState.params() : messageState.params;
+      const resolved = text(messageState.key, messageState.fallback, params);
+      messageBanner.textContent = toText(resolved);
       messageBanner.style.display = 'block';
-      if (type === 'error'){
+      if (messageState.type === 'error'){
         messageBanner.style.color = '#fca5a5';
-      } else if (type === 'success'){
+      } else if (messageState.type === 'success'){
         messageBanner.style.color = '#6ee7b7';
       } else {
         messageBanner.style.color = '#bfdbfe';
       }
+    }
+
+    function clearMessage(){
+      messageState.type = null;
+      messageState.key = null;
+      messageState.fallback = '';
+      messageState.params = null;
+      applyMessage();
+    }
+
+    function setMessage(type, key, fallback, params){
+      if (!type || !key){
+        clearMessage();
+        return;
+      }
+      messageState.type = type;
+      messageState.key = key;
+      messageState.fallback = fallback ?? '';
+      messageState.params = params ?? null;
+      applyMessage();
     }
 
     const localSection = document.createElement('div');
@@ -309,7 +397,7 @@
     localSection.style.gap = '12px';
 
     const localHint = document.createElement('p');
-    localHint.textContent = 'MP4 / WebM / Ogg など、ブラウザで再生できる動画を選択してください。';
+    bindLocalizedText(localHint, '.local.hint', 'MP4 / WebM / Ogg など、ブラウザで再生できる動画を選択してください。');
     localHint.style.margin = '0';
     localHint.style.fontSize = '14px';
     localHint.style.color = '#cbd5f5';
@@ -326,9 +414,17 @@
     fileInput.style.color = '#f8fafc';
 
     const selectedFileLabel = document.createElement('span');
-    selectedFileLabel.textContent = 'ファイル未選択';
+    selectedFileLabel.textContent = '';
     selectedFileLabel.style.fontSize = '14px';
     selectedFileLabel.style.color = '#94a3b8';
+
+    let defaultSelectedFileLabel = '';
+    registerLocalizationUpdater(() => {
+      defaultSelectedFileLabel = text('.local.noFile', 'ファイル未選択');
+      if (!state.currentMeta || state.currentMeta.type !== 'local'){
+        selectedFileLabel.textContent = defaultSelectedFileLabel;
+      }
+    });
 
     localInputRow.appendChild(fileInput);
     localInputRow.appendChild(selectedFileLabel);
@@ -348,7 +444,7 @@
 
     const youtubeInput = document.createElement('input');
     youtubeInput.type = 'url';
-    youtubeInput.placeholder = 'https://www.youtube.com/watch?v=...';
+    bindLocalizedText(youtubeInput, '.youtube.placeholder', 'https://www.youtube.com/watch?v=...', { attr: 'placeholder' });
     youtubeInput.style.flex = '1';
     youtubeInput.style.minWidth = '200px';
     youtubeInput.style.padding = '10px 14px';
@@ -359,7 +455,7 @@
 
     const youtubeLoadBtn = document.createElement('button');
     youtubeLoadBtn.type = 'button';
-    youtubeLoadBtn.textContent = '読み込み';
+    bindLocalizedText(youtubeLoadBtn, '.youtube.loadButton', '読み込み');
     youtubeLoadBtn.style.padding = '10px 18px';
     youtubeLoadBtn.style.borderRadius = '12px';
     youtubeLoadBtn.style.border = 'none';
@@ -372,7 +468,7 @@
     youtubeInputRow.appendChild(youtubeLoadBtn);
 
     const youtubeHint = document.createElement('p');
-    youtubeHint.textContent = 'YouTube の URL または動画IDを入力してください。IFrame API が利用できない環境では簡易モードで再生します。';
+    bindLocalizedText(youtubeHint, '.youtube.hint', 'YouTube の URL または動画IDを入力してください。IFrame API が利用できない環境では簡易モードで再生します。');
     youtubeHint.style.margin = '0';
     youtubeHint.style.fontSize = '14px';
     youtubeHint.style.color = '#cbd5f5';
@@ -420,7 +516,7 @@
     youtubeContainer.style.display = 'none';
 
     const placeholder = document.createElement('div');
-    placeholder.textContent = '再生する動画を選択してください。';
+    bindLocalizedText(placeholder, '.placeholder', '再生する動画を選択してください。');
     placeholder.style.color = '#64748b';
     placeholder.style.fontSize = '16px';
 
@@ -431,7 +527,7 @@
     const statusText = document.createElement('div');
     statusText.style.fontSize = '14px';
     statusText.style.color = '#94a3b8';
-    statusText.textContent = 'ソース未選択。';
+    statusText.textContent = '';
 
     playerCard.appendChild(playerViewport);
     playerCard.appendChild(statusText);
@@ -455,13 +551,13 @@
     historyHeaderRow.style.justifyContent = 'space-between';
 
     const historyTitle = document.createElement('h3');
-    historyTitle.textContent = '視聴履歴';
+    bindLocalizedText(historyTitle, '.history.title', '視聴履歴');
     historyTitle.style.margin = '0';
     historyTitle.style.fontSize = '18px';
 
     const historyClearBtn = document.createElement('button');
     historyClearBtn.type = 'button';
-    historyClearBtn.textContent = '履歴をクリア';
+    bindLocalizedText(historyClearBtn, '.history.clear', '履歴をクリア');
     historyClearBtn.style.border = 'none';
     historyClearBtn.style.background = 'rgba(239,68,68,0.2)';
     historyClearBtn.style.color = '#fca5a5';
@@ -478,7 +574,7 @@
     historyList.style.gap = '8px';
 
     const historyEmpty = document.createElement('div');
-    historyEmpty.textContent = '視聴履歴はまだありません。';
+    bindLocalizedText(historyEmpty, '.history.empty', '視聴履歴はまだありません。');
     historyEmpty.style.fontSize = '14px';
     historyEmpty.style.color = '#94a3b8';
 
@@ -496,7 +592,7 @@
     shortcutCard.style.gap = '8px';
 
     const shortcutTitle = document.createElement('h3');
-    shortcutTitle.textContent = 'ショートカット / ヒント';
+    bindLocalizedText(shortcutTitle, '.shortcuts.title', 'ショートカット / ヒント');
     shortcutTitle.style.margin = '0';
     shortcutTitle.style.fontSize = '18px';
 
@@ -509,18 +605,23 @@
     shortcutList.style.fontSize = '14px';
     shortcutList.style.color = '#cbd5f5';
 
-    const hints = [
-      'Space: 再生/一時停止 (ローカル動画 / API 利用時の YouTube)',
-      '← / →: -5 / +5 秒シーク (ローカル動画 / API 利用時の YouTube)',
-      '履歴のエントリをクリックして再度再生できます。ローカル動画は再選択ダイアログが開きます。',
-      'YouTube 簡易モードでは YouTube 側のショートカットをご利用ください。'
-    ];
-
-    hints.forEach(text => {
-      const li = document.createElement('li');
-      li.textContent = text;
-      shortcutList.appendChild(li);
-    });
+    function renderShortcutHints(){
+      shortcutList.innerHTML = '';
+      const hints = [
+        text('.shortcuts.playPause', 'Space: 再生/一時停止 (ローカル動画 / API 利用時の YouTube)'),
+        text('.shortcuts.seek', '← / →: -5 / +5 秒シーク (ローカル動画 / API 利用時の YouTube)'),
+        text('.shortcuts.history', '履歴のエントリをクリックして再度再生できます。ローカル動画は再選択ダイアログが開きます。'),
+        text('.shortcuts.simpleMode', 'YouTube 簡易モードでは YouTube 側のショートカットをご利用ください。')
+      ];
+      hints.forEach(value => {
+        const resolved = toText(value);
+        if (!resolved) return;
+        const li = document.createElement('li');
+        li.textContent = resolved;
+        shortcutList.appendChild(li);
+      });
+    }
+    registerLocalizationUpdater(renderShortcutHints);
 
     shortcutCard.appendChild(shortcutTitle);
     shortcutCard.appendChild(shortcutList);
@@ -554,7 +655,15 @@
     setActiveTab(localTab);
 
     function updateXpDisplay(){
-      xpBadge.textContent = `セッションEXP: ${state.sessionXp.toFixed(1).replace(/\.0$/, '')}`;
+      const xpValue = Number.isFinite(state.sessionXp) ? state.sessionXp : 0;
+      const hasFraction = Math.abs(xpValue % 1) > 1e-6;
+      const options = hasFraction ? { minimumFractionDigits: 0, maximumFractionDigits: 1 } : { maximumFractionDigits: 0 };
+      let formatted = formatLocaleNumber(xpValue, options);
+      if (!formatted){
+        formatted = xpValue.toFixed(hasFraction ? 1 : 0).replace(/\.0$/, '');
+      }
+      const resolved = text('.sessionXp', () => `セッションEXP: ${formatted}`, { exp: formatted });
+      xpBadge.textContent = toText(resolved);
     }
 
     function addXp(amount, payload){
@@ -572,8 +681,20 @@
         infoStatus.valueEl.textContent = '-';
         return;
       }
-      infoSource.valueEl.textContent = state.currentMeta.type === 'youtube' ? 'YouTube' : 'ローカル';
-      infoTitle.valueEl.textContent = state.currentMeta.title || '-';
+      const sourceLabel = state.currentMeta.type === 'youtube'
+        ? text('.info.sourceYoutube', 'YouTube')
+        : text('.info.sourceLocal', 'ローカル');
+      infoSource.valueEl.textContent = toText(sourceLabel);
+      let titleValue = state.currentMeta.title;
+      if (!titleValue || titleValue === '未タイトル'){
+        titleValue = text('.info.untitled', '未タイトル');
+      } else {
+        const match = /^YouTube動画 \((.+)\)$/u.exec(titleValue);
+        if (match){
+          titleValue = text('.youtube.fallbackTitle', () => `YouTube動画 (${match[1]})`, { id: match[1] });
+        }
+      }
+      infoTitle.valueEl.textContent = toText(titleValue || text('.info.untitled', '未タイトル'));
       infoDuration.valueEl.textContent = formatDuration(state.currentMeta.duration);
       infoStatus.valueEl.textContent = statusText.textContent || '-';
     }
@@ -603,15 +724,30 @@
         item.style.textAlign = 'left';
 
         const titleEl = document.createElement('span');
-        titleEl.textContent = entry.title;
+        const displayTitle = (() => {
+          if (!entry.title || entry.title === '未タイトル'){
+            return text('.history.untitled', '未タイトル');
+          }
+          const match = /^YouTube動画 \((.+)\)$/u.exec(entry.title);
+          if (match){
+            return text('.youtube.fallbackTitle', () => `YouTube動画 (${match[1]})`, { id: match[1] });
+          }
+          return entry.title;
+        })();
+        titleEl.textContent = toText(displayTitle);
         titleEl.style.fontSize = '15px';
         titleEl.style.fontWeight = '600';
 
         const meta = document.createElement('span');
         meta.style.fontSize = '12px';
         meta.style.color = '#94a3b8';
-        const typeLabel = entry.type === 'youtube' ? 'YouTube' : 'ローカル';
-        meta.textContent = `${typeLabel} / ${formatDuration(entry.duration)} / ${formatTimestamp(entry.lastViewedAt)}`;
+        const typeLabel = entry.type === 'youtube'
+          ? text('.history.typeYoutube', 'YouTube')
+          : text('.history.typeLocal', 'ローカル');
+        const durationText = formatDuration(entry.duration);
+        const locale = localization && typeof localization.getLocale === 'function' ? localization.getLocale() : undefined;
+        const timestamp = formatTimestamp(entry.lastViewedAt, locale);
+        meta.textContent = `${toText(typeLabel)} / ${durationText} / ${timestamp}`;
 
         item.appendChild(titleEl);
         item.appendChild(meta);
@@ -621,7 +757,7 @@
             loadYouTubeUrl(entry.originalUrl || `https://www.youtube.com/watch?v=${entry.source}`, { fromHistory: true });
           } else {
             state.pendingLocalHistoryId = entry.id;
-            setMessage('info', '同じ動画ファイルを再選択してください。');
+            setMessage('info', '.message.reselectLocal', '同じ動画ファイルを再選択してください。');
             fileInput.click();
           }
         });
@@ -637,7 +773,7 @@
       const entry = {
         id: meta.id,
         type: meta.type,
-        title: meta.title || '未タイトル',
+        title: meta.title || '',
         source: meta.source,
         duration: meta.duration || null,
         lastViewedAt: Date.now(),
@@ -659,16 +795,37 @@
       historyItems.length = 0;
       persistHistory(historyItems);
       updateHistoryList();
-      setMessage('info', '履歴をクリアしました。');
+      setMessage('info', '.message.historyCleared', '履歴をクリアしました。');
     }
 
     historyClearBtn.addEventListener('click', () => {
       clearHistory();
     });
 
-    function setStatus(text){
-      statusText.textContent = text;
+    function applyStatus(){
+      if (!statusText) return;
+      if (!statusState.key){
+        statusText.textContent = '';
+        updateInfoPanel();
+        return;
+      }
+      const params = typeof statusState.params === 'function' ? statusState.params() : statusState.params;
+      statusText.textContent = toText(text(statusState.key, statusState.fallback, params));
       updateInfoPanel();
+    }
+
+    function setStatus(key, fallback, params){
+      if (!key){
+        statusState.key = null;
+        statusState.fallback = '';
+        statusState.params = null;
+        applyStatus();
+        return;
+      }
+      statusState.key = key;
+      statusState.fallback = fallback ?? '';
+      statusState.params = params ?? null;
+      applyStatus();
     }
 
     function resetProgressAwards(){
@@ -718,8 +875,8 @@
       videoElement.style.display = 'none';
       youtubeContainer.style.display = 'none';
       placeholder.style.display = 'flex';
-      setStatus('ソース未選択。');
-      updateInfoPanel();
+      setStatus('.status.noSource', 'ソース未選択。');
+      selectedFileLabel.textContent = defaultSelectedFileLabel;
     }
 
     function grantLoadXp(){
@@ -752,14 +909,14 @@
       }
       if (state.pendingLoad && state.pendingLoad.type === 'local'){
         grantLoadXp();
-        setMessage('success', 'ローカル動画を読み込みました。');
-        setStatus('ローカル動画を読み込みました。再生を開始してください。');
+        setMessage('success', '.message.localLoaded', 'ローカル動画を読み込みました。');
+        setStatus('.status.localReady', 'ローカル動画を読み込みました。再生を開始してください。');
       }
     });
 
     videoElement.addEventListener('error', () => {
-      setMessage('error', '動画の読み込み中にエラーが発生しました。別のファイルを試してください。');
-      setStatus('読み込みエラー');
+      setMessage('error', '.message.localError', '動画の読み込み中にエラーが発生しました。別のファイルを試してください。');
+      setStatus('.status.error', '読み込みエラー');
     });
 
     videoElement.addEventListener('play', () => {
@@ -768,12 +925,12 @@
         state.localPlayAwarded = true;
         addXp(1, { type: 'video-play', sourceType: 'local', id: state.currentMeta?.id || null });
       }
-      setStatus('再生中');
+      setStatus('.status.playing', '再生中');
     });
 
     videoElement.addEventListener('pause', () => {
       if (state.currentSource !== 'local') return;
-      setStatus('一時停止');
+      setStatus('.status.paused', '一時停止');
     });
 
     videoElement.addEventListener('ended', () => {
@@ -782,7 +939,7 @@
         state.localEndedAwarded = true;
         addXp(8, { type: 'video-complete', sourceType: 'local', id: state.currentMeta?.id || null });
       }
-      setStatus('再生完了');
+      setStatus('.status.ended', '再生完了');
     });
 
     videoElement.addEventListener('timeupdate', () => {
@@ -811,14 +968,14 @@
           iframe.style.border = 'none';
           youtubeContainer.appendChild(iframe);
           state.youtubeFallbackIframe = iframe;
-          setStatus('YouTube (簡易モード) を読み込みました。');
+          setStatus('.status.youtubeSimple', 'YouTube (簡易モード) を読み込みました。');
           if (
             state.currentMeta?.source === videoId &&
             state.pendingLoad &&
             state.pendingLoad.type === 'youtube'
           ){
             grantLoadXp();
-            setMessage('success', 'YouTube 動画を簡易モードで読み込みました。');
+            setMessage('success', '.message.youtubeSimpleLoaded', 'YouTube 動画を簡易モードで読み込みました。');
           }
           return;
         }
@@ -855,10 +1012,10 @@
               }
               if (state.pendingLoad && state.pendingLoad.type === 'youtube'){
                 grantLoadXp();
-                setMessage('success', 'YouTube 動画を読み込みました。');
-                setStatus('YouTube 動画を読み込みました。再生を開始してください。');
+                setMessage('success', '.message.youtubeLoaded', 'YouTube 動画を読み込みました。');
+                setStatus('.status.youtubeReady', 'YouTube 動画を読み込みました。再生を開始してください。');
               } else {
-                setStatus('YouTube 動画準備完了。');
+                setStatus('.status.youtubePrepared', 'YouTube 動画準備完了。');
               }
             },
             onStateChange(event){
@@ -866,7 +1023,7 @@
               if (state.currentMeta?.source !== videoId) return;
               const playerState = event.data;
               if (playerState === window.YT.PlayerState.PLAYING){
-                setStatus('再生中');
+                setStatus('.status.playing', '再生中');
                 if (!state.youtubePlayAwarded){
                   state.youtubePlayAwarded = true;
                   addXp(1, { type: 'video-play', sourceType: 'youtube', id: state.currentMeta?.id || null });
@@ -878,7 +1035,7 @@
                   handleProgressXp(seconds, 'youtube');
                 }, 1000);
               } else if (playerState === window.YT.PlayerState.PAUSED){
-                setStatus('一時停止');
+                setStatus('.status.paused', '一時停止');
                 stopYouTubeProgressTimer();
               } else if (playerState === window.YT.PlayerState.ENDED){
                 stopYouTubeProgressTimer();
@@ -886,14 +1043,14 @@
                   state.youtubeEndedAwarded = true;
                   addXp(8, { type: 'video-complete', sourceType: 'youtube', id: state.currentMeta?.id || null });
                 }
-                setStatus('再生完了');
+                setStatus('.status.ended', '再生完了');
               } else if (playerState === window.YT.PlayerState.BUFFERING){
-                setStatus('バッファリング中…');
+                setStatus('.status.buffering', 'バッファリング中…');
               }
             },
             onError(){
-              setStatus('YouTube プレイヤーエラー');
-              setMessage('error', 'YouTube 動画の読み込みに失敗しました。');
+              setStatus('.status.youtubeError', 'YouTube プレイヤーエラー');
+              setMessage('error', '.message.youtubeError', 'YouTube 動画の読み込みに失敗しました。');
             }
           }
         });
@@ -912,13 +1069,13 @@
       } catch (err){
         console.warn('Failed to fetch YouTube title', err);
       }
-      return `YouTube動画 (${videoId})`;
+      return text('.youtube.fallbackTitle', () => `YouTube動画 (${videoId})`, { id: videoId });
     }
 
     async function loadYouTubeUrl(url, options = {}){
       const videoId = parseYouTubeId(url);
       if (!videoId){
-        setMessage('error', '有効な YouTube URL または動画IDを入力してください。');
+        setMessage('error', '.message.youtubeInvalid', '有効な YouTube URL または動画IDを入力してください。');
         return;
       }
       cleanupSource();
@@ -931,13 +1088,13 @@
       state.currentMeta = {
         id: `youtube:${videoId}`,
         type: 'youtube',
-        title: `YouTube動画 (${videoId})`,
+        title: text('.youtube.fallbackTitle', () => `YouTube動画 (${videoId})`, { id: videoId }),
         source: videoId,
         duration: null,
         originalUrl: url
       };
       state.pendingLoad = { type: 'youtube', fromHistory: !!options.fromHistory };
-      setStatus('YouTube 動画を読み込み中…');
+      setStatus('.status.youtubeLoading', 'YouTube 動画を読み込み中…');
       updateInfoPanel();
       try {
         const title = await fetchYouTubeTitle(videoId);
@@ -951,7 +1108,7 @@
 
     function loadLocalFile(file){
       if (!(file instanceof File)){
-        setMessage('error', '動画ファイルを選択してください。');
+        setMessage('error', '.message.localSelectFile', '動画ファイルを選択してください。');
         return;
       }
       const metaId = `local:${file.name}:${file.size}`;
@@ -977,8 +1134,8 @@
       videoElement.src = objectUrl;
       videoElement.load();
       selectedFileLabel.textContent = file.name;
-      setMessage('info', 'ローカル動画を読み込み中…');
-      setStatus('ローカル動画を読み込み中…');
+      setMessage('info', '.message.localLoading', 'ローカル動画を読み込み中…');
+      setStatus('.status.loadingLocal', 'ローカル動画を読み込み中…');
       updateInfoPanel();
     }
 
@@ -991,12 +1148,12 @@
 
     localTab.addEventListener('click', () => {
       setActiveTab(localTab);
-      setMessage(null, '');
+      clearMessage();
     });
 
     youtubeTab.addEventListener('click', () => {
       setActiveTab(youtubeTab);
-      setMessage(null, '');
+      clearMessage();
     });
 
     youtubeLoadBtn.addEventListener('click', () => {
@@ -1051,7 +1208,7 @@
 
     function stop(){
       cleanupSource();
-      setMessage(null, '');
+      clearMessage();
     }
 
     function destroy(){
@@ -1061,11 +1218,14 @@
       if (wrapper.parentElement){
         wrapper.parentElement.removeChild(wrapper);
       }
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
     }
 
     function start(){
-      setStatus('ソース未選択。');
-      updateInfoPanel();
+      setStatus('.status.noSource', 'ソース未選択。');
       updateXpDisplay();
     }
 

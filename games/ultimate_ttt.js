@@ -69,14 +69,14 @@
   }
 
   const TEXT = {
-    statusPlayer: message('miniExp.ultimateTtt.status.player', 'あなたの番'),
-    statusAi: message('miniExp.ultimateTtt.status.ai', 'AIの番'),
-    statusEnded: message('miniExp.ultimateTtt.status.ended', 'ゲーム終了'),
-    activeBoard: message('miniExp.ultimateTtt.activeBoard', '指定盤: ({x}, {y})'),
-    restartHint: message('miniExp.ultimateTtt.overlay.restartHint', 'Rキーで再開できます'),
-    resultPlayerWin: message('miniExp.ultimateTtt.result.playerWin', 'あなたの勝ち！'),
-    resultAiWin: message('miniExp.ultimateTtt.result.aiWin', 'AIの勝ち…'),
-    resultDraw: message('miniExp.ultimateTtt.result.draw', '引き分け'),
+    statusPlayer: message('game.miniExp.ultimateTtt.status.player', 'あなたの番'),
+    statusAi: message('game.miniExp.ultimateTtt.status.ai', 'AIの番'),
+    statusEnded: message('game.miniExp.ultimateTtt.status.ended', 'ゲーム終了'),
+    activeBoard: message('game.miniExp.ultimateTtt.activeBoard', '指定盤: ({x}, {y})'),
+    restartHint: message('game.miniExp.ultimateTtt.overlay.restartHint', 'Rキーで再開できます'),
+    resultPlayerWin: message('game.miniExp.ultimateTtt.result.playerWin', 'あなたの勝ち！'),
+    resultAiWin: message('game.miniExp.ultimateTtt.result.aiWin', 'AIの勝ち…'),
+    resultDraw: message('game.miniExp.ultimateTtt.result.draw', '引き分け'),
   };
 
   function lineThreat(values, color){

@@ -101,6 +101,28 @@
         chest:'normal',
         type:'sandstorm-dunes',
         bossFloors:mkBoss(10)
+      },
+      {
+        key:'sandstorm_theme_03',
+        name:'Sandstorm Theme III',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_theme_03.name",
+        level:+16,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'sandstorm-dunes',
+        bossFloors:mkBoss(12)
+      },
+      {
+        key:'sandstorm_theme_04',
+        name:'Sandstorm Theme IV',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_theme_04.name",
+        level:+20,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'sandstorm-dunes',
+        bossFloors:mkBoss(14)
       }
     ],
     blocks2: [
@@ -112,6 +134,36 @@
         size:+1,
         depth:0,
         chest:'normal',
+        type:'sandstorm-dunes'
+      },
+      {
+        key:'sandstorm_core_02',
+        name:'Mirage Nexus',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_core_02.name",
+        level:+8,
+        size:+1,
+        depth:+1,
+        chest:'more',
+        type:'sandstorm-dunes'
+      },
+      {
+        key:'sandstorm_core_03',
+        name:'Shifting Basin',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_core_03.name",
+        level:+14,
+        size:+2,
+        depth:+2,
+        chest:'rich',
+        type:'sandstorm-dunes'
+      },
+      {
+        key:'sandstorm_core_04',
+        name:'Storm Shelter',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_core_04.name",
+        level:+18,
+        size:+2,
+        depth:+3,
+        chest:'rare',
         type:'sandstorm-dunes'
       }
     ],
@@ -126,6 +178,39 @@
         chest:'more',
         type:'sandstorm-dunes',
         bossFloors:[9,13]
+      },
+      {
+        key:'sandstorm_relic_02',
+        name:'Dune Oracle',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_relic_02.name",
+        level:+22,
+        size:+2,
+        depth:+3,
+        chest:'rich',
+        type:'sandstorm-dunes',
+        bossFloors:[11,15]
+      },
+      {
+        key:'sandstorm_relic_03',
+        name:'Oasis Vault',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_relic_03.name",
+        level:+26,
+        size:+2,
+        depth:+4,
+        chest:'rare',
+        type:'sandstorm-dunes',
+        bossFloors:[13,17]
+      },
+      {
+        key:'sandstorm_relic_04',
+        name:'Golden Tempest',
+        nameKey: "dungeon.types.sandstorm_dunes.blocks.sandstorm_relic_04.name",
+        level:+30,
+        size:+3,
+        depth:+4,
+        chest:'legendary',
+        type:'sandstorm-dunes',
+        bossFloors:[20]
       }
     ]
   };

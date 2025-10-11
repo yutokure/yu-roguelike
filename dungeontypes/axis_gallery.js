@@ -106,6 +106,26 @@
         depth: +2,
         chest: 'more',
         type: 'axis-gallery'
+      },
+      {
+        key: 'axis_gallery_c',
+        name: '方位の回廊',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_c.name",
+        level: +22,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'axis-gallery'
+      },
+      {
+        key: 'axis_gallery_d',
+        name: '均衡展示室',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_d.name",
+        level: +26,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'axis-gallery'
       }
     ],
     blocks2: [
@@ -117,6 +137,36 @@
         size: +1,
         depth: +2,
         chest: 'rich',
+        type: 'axis-gallery'
+      },
+      {
+        key: 'axis_gallery_cross',
+        name: '交差展示廊',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_cross.name",
+        level: +30,
+        size: +1,
+        depth: +2,
+        chest: 'more',
+        type: 'axis-gallery'
+      },
+      {
+        key: 'axis_gallery_hub',
+        name: '連結の中心',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_hub.name",
+        level: +32,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'axis-gallery'
+      },
+      {
+        key: 'axis_gallery_reflect',
+        name: '鏡写しの回廊',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_reflect.name",
+        level: +34,
+        size: +2,
+        depth: +3,
+        chest: 'rare',
         type: 'axis-gallery'
       }
     ],
@@ -131,6 +181,39 @@
         chest: 'rich',
         type: 'axis-gallery',
         bossFloors: [7, 14]
+      },
+      {
+        key: 'axis_gallery_relic',
+        name: '軸心の聖遺',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_relic.name",
+        level: +38,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'axis-gallery',
+        bossFloors: [10, 18]
+      },
+      {
+        key: 'axis_gallery_sanctum',
+        name: '静謐の至堂',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_sanctum.name",
+        level: +42,
+        size: +3,
+        depth: +4,
+        chest: 'rare',
+        type: 'axis-gallery',
+        bossFloors: [14]
+      },
+      {
+        key: 'axis_gallery_vault',
+        name: '軸封の宝庫',
+        nameKey: "dungeon.types.axis_gallery.blocks.axis_gallery_vault.name",
+        level: +46,
+        size: +3,
+        depth: +4,
+        chest: 'legendary',
+        type: 'axis-gallery',
+        bossFloors: [21]
       }
     ]
   };

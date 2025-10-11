@@ -96,6 +96,26 @@
         depth: +2,
         chest: 'less',
         type: 'conveyor-foundry'
+      },
+      {
+        key: 'conveyor_foundry_c',
+        name: '歯車整備室',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_c.name",
+        level: +20,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'conveyor-foundry'
+      },
+      {
+        key: 'conveyor_foundry_d',
+        name: '試験炉通路',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_d.name",
+        level: +24,
+        size: +2,
+        depth: +3,
+        chest: 'more',
+        type: 'conveyor-foundry'
       }
     ],
     blocks2: [
@@ -107,6 +127,36 @@
         size: +1,
         depth: +2,
         chest: 'more',
+        type: 'conveyor-foundry'
+      },
+      {
+        key: 'conveyor_foundry_press',
+        name: '油圧プレス区画',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_press.name",
+        level: +28,
+        size: +1,
+        depth: +2,
+        chest: 'rich',
+        type: 'conveyor-foundry'
+      },
+      {
+        key: 'conveyor_foundry_smelter',
+        name: '連続溶解炉',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_smelter.name",
+        level: +30,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'conveyor-foundry'
+      },
+      {
+        key: 'conveyor_foundry_dispatch',
+        name: '出荷ヤード',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_dispatch.name",
+        level: +32,
+        size: +2,
+        depth: +3,
+        chest: 'rare',
         type: 'conveyor-foundry'
       }
     ],
@@ -121,6 +171,39 @@
         chest: 'rich',
         type: 'conveyor-foundry',
         bossFloors: [6, 12]
+      },
+      {
+        key: 'conveyor_foundry_overseer',
+        name: '監督塔制御盤',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_overseer.name",
+        level: +36,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'conveyor-foundry',
+        bossFloors: [9, 15]
+      },
+      {
+        key: 'conveyor_foundry_vault',
+        name: '資材保管庫',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_vault.name",
+        level: +40,
+        size: +3,
+        depth: +4,
+        chest: 'rare',
+        type: 'conveyor-foundry',
+        bossFloors: [12]
+      },
+      {
+        key: 'conveyor_foundry_reactor',
+        name: '炉心反応層',
+        nameKey: "dungeon.types.conveyor_foundry.blocks.conveyor_foundry_reactor.name",
+        level: +44,
+        size: +3,
+        depth: +4,
+        chest: 'legendary',
+        type: 'conveyor-foundry',
+        bossFloors: [18]
       }
     ]
   };

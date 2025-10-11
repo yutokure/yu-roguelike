@@ -146,6 +146,14 @@ window.DUNGEONTYPE_MANIFEST = [
     author: 'builtin-sample'
   },
   {
+    id: 'desert_mirage_pack',
+    name: 'Desert Mirage Pack',
+    nameKey: "dungeon.packs.desert_mirage_pack.name",
+    entry: 'dungeontypes/desert_mirage_pack.js',
+    version: '1.0.0',
+    author: 'mod-contributor'
+  },
+  {
     id: 'bog_pack',
     name: 'Toxic Boglands Pack',
     nameKey: "dungeon.packs.bog_pack.name",

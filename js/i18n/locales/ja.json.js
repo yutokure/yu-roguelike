@@ -16100,8 +16100,73 @@
         }
       },
     },
-    "games": {
-      "sugorokuLife": {
+      "games": {
+        "diagramMaker": {
+          "errors": {
+            "containerMissing": "MiniExp Diagram Maker を表示するコンテナが必要です",
+            "pngSignature": "PNG署名を認識できませんでした",
+            "pngDataMissing": "PNG内にdraw.ioデータが見つかりませんでした",
+            "inflateUnsupported": "圧縮データの展開に対応していない環境です",
+            "parseXml": "XMLを解析できませんでした",
+            "diagramMissing": "diagram 要素が見つかりません",
+            "mxGraphMissing": "mxGraphModel が見つかりません",
+            "diagramDecodeFailed": "diagram データを展開できませんでした",
+            "mxGraphRootMissing": "mxGraphModel root が見つかりません",
+            "loadFailed": "読み込みに失敗しました: {error}",
+            "saveFailed": "保存に失敗しました: {error}",
+            "exportFailed": "書き出しに失敗しました: {error}"
+          },
+          "defaults": {
+            "fileName": "未保存の図.drawio",
+            "layerName": "レイヤー {index}",
+            "pageName": "ページ {index}",
+            "textPlaceholder": "テキスト",
+            "nodePlaceholder": "新しいノード"
+          },
+          "tools": {
+            "select": "選択",
+            "rectangle": "四角",
+            "ellipse": "楕円",
+            "text": "テキスト",
+            "connector": "コネクタ",
+            "delete": "削除"
+          },
+          "actions": {
+            "new": "新規",
+            "open": "開く",
+            "save": "保存",
+            "export": "書き出し",
+            "exportFormat": "{formatLabel} で書き出し",
+            "undo": "元に戻す",
+            "redo": "やり直す"
+          },
+          "sections": {
+            "properties": "プロパティ"
+          },
+          "fields": {
+            "x": "X",
+            "y": "Y",
+            "width": "幅",
+            "height": "高さ",
+            "fill": "塗り",
+            "stroke": "線",
+            "strokeWidth": "線幅",
+            "textColor": "文字色",
+            "fontSize": "文字サイズ",
+            "text": "テキスト"
+          },
+          "toggles": {
+            "grid": "グリッド",
+            "snap": "スナップ"
+          },
+          "labels": {
+            "exp": "EXP: {value}"
+          },
+          "confirm": {
+            "newDocument": "保存されていない変更があります。新規作成しますか？"
+          }
+        },
+        "sugorokuLife": {
         "ui": {
           "currencySuffix": "G",
           "expUnit": "EXP",
@@ -16348,6 +16413,87 @@
           "running": "ラウンド{round} 探索中…",
           "paused": "一時停止中",
           "found": "宝を発見！次のラウンドを生成中…"
+        }
+      },
+      "notepad": {
+        "defaultFileName": "タイトルなし.txt",
+        "confirm": {
+          "discardChanges": "変更を破棄して閉じますか？",
+          "newWithoutSaving": "変更を保存せずに新しいファイルを開きますか？"
+        },
+        "menu": {
+          "file": "ファイル",
+          "edit": "編集",
+          "view": {
+            "label": "表示",
+            "enableWordWrap": "折り返しを有効化",
+            "disableWordWrap": "折り返しを無効化",
+            "showStatusBar": "ステータスバーを表示",
+            "hideStatusBar": "ステータスバーを非表示"
+          },
+          "fileNew": "新規",
+          "fileOpen": "開く...",
+          "fileSave": "上書き保存",
+          "fileSaveAs": "名前を付けて保存...",
+          "filePrint": "印刷...",
+          "editUndo": "元に戻す",
+          "editRedo": "やり直し",
+          "editCut": "切り取り",
+          "editCopy": "コピー",
+          "editPaste": "貼り付け",
+          "editDelete": "削除",
+          "editFind": "検索...",
+          "editReplace": "置換...",
+          "editSelectAll": "すべて選択",
+          "viewZoomIn": "ズームイン",
+          "viewZoomOut": "ズームアウト",
+          "viewZoomReset": "ズームを既定に戻す"
+        },
+        "commands": {
+          "heading": "見出しを切り替え",
+          "bullet": "箇条書きを切り替え",
+          "bold": "太字 (Markdown)",
+          "italic": "斜体 (Markdown)",
+          "underline": "下線タグ",
+          "wordWrap": "折り返しを切り替え",
+          "zoomReset": "ズームを既定に戻す",
+          "settings": "設定"
+        },
+        "settings": {
+          "title": "設定",
+          "wordWrap": "折り返し",
+          "statusBar": "ステータスバー",
+          "zoom": "ズーム",
+          "zoomReset": "リセット",
+          "insertTimestamp": "日時を挿入"
+        },
+        "prompts": {
+          "search": "検索する文字列を入力してください",
+          "saveFileName": "保存するファイル名を入力してください",
+          "replaceTarget": "置換する文字列を入力してください",
+          "replaceWith": "置換後の文字列を入力してください"
+        },
+        "alerts": {
+          "searchNotFound": "見つかりませんでした。",
+          "replaceNotFound": "対象の文字列が見つかりませんでした。",
+          "fileReadFailed": "ファイルの読み込みに失敗しました。",
+          "printPopupBlocked": "印刷ウィンドウを開けませんでした。ポップアップを許可してください。"
+        },
+        "print": {
+          "label": "印刷",
+          "windowTitleFallback": "メモ帳"
+        },
+        "status": {
+          "position": "行 {line}, 列 {column}",
+          "length": "{count} 文字",
+          "typeText": "テキスト",
+          "lineEnding": {
+            "lf": "Unix (LF)",
+            "crlf": "Windows (CRLF)"
+          }
+        },
+        "timestamp": {
+          "pattern": "{year}-{month}-{day} {hour}:{minute}:{second}"
         }
       }
     }

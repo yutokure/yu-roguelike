@@ -3,6 +3,7 @@
   const MAX_NAME = 32;
   const MAX_MEMO = 256;
   const MAX_XP = 9999;
+  const DEFAULT_AUTO_NAMES = new Set(['名称未設定', 'Untitled']);
 
   function clampXp(value){
     const num = Number(value);
@@ -24,6 +25,7 @@
 
   function loadPersistentState(defaultName = '名称未設定'){
     const fallbackName = typeof defaultName === 'string' && defaultName.trim() ? defaultName : '名称未設定';
+    DEFAULT_AUTO_NAMES.add(fallbackName);
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
@@ -32,14 +34,21 @@
       return parsed.map(item => {
         if (!item || typeof item !== 'object') return null;
         const id = typeof item.id === 'string' && item.id ? item.id : `todo_${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
-        const name = sanitizeString(item.name || '', '').slice(0, MAX_NAME).trim() || fallbackName;
+        const rawName = sanitizeString(item.name || '', '').slice(0, MAX_NAME).trim();
+        const name = rawName || fallbackName;
         const memo = sanitizeString(item.memo || '', '');
         const xp = clampXp(item.xp);
         const color = sanitizeColor(item.color);
         const createdAt = Number.isFinite(item.createdAt) ? item.createdAt : Date.now();
         const completedAt = Number.isFinite(item.completedAt) ? item.completedAt : null;
         const status = item.status === 'completed' || item.status === 'failed' ? item.status : 'pending';
-        return { id, name, memo, xp, color, createdAt, completedAt, status };
+        const persistedAutoName = item.autoName === true;
+        const inferredAutoName = !rawName && (DEFAULT_AUTO_NAMES.has(item.name) || DEFAULT_AUTO_NAMES.has(name));
+        const autoName = persistedAutoName || inferredAutoName;
+        if (autoName) {
+          DEFAULT_AUTO_NAMES.add(name);
+        }
+        return { id, name, memo, xp, color, createdAt, completedAt, status, autoName };
       }).filter(Boolean);
     } catch {
       return [];
@@ -139,7 +148,8 @@
       return String(value);
     };
 
-    const defaultTaskName = translate('games.todoList.defaults.untitled', '名称未設定');
+    let defaultTaskName = '名称未設定';
+    DEFAULT_AUTO_NAMES.add(defaultTaskName);
     const dateTimeOptions = { dateStyle: 'medium', timeStyle: 'short' };
     const headerDateOptions = { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' };
 
@@ -152,6 +162,34 @@
       pending: false,
       completed: false
     };
+
+    function setDefaultTaskName(nextName){
+      const sanitized = sanitizeString(nextName || '', '').slice(0, MAX_NAME).trim() || '名称未設定';
+      if (sanitized === defaultTaskName) return false;
+      const previous = defaultTaskName;
+      defaultTaskName = sanitized;
+      DEFAULT_AUTO_NAMES.add(sanitized);
+      if (previous) {
+        DEFAULT_AUTO_NAMES.add(previous);
+      }
+      let mutated = false;
+      state.tasks.forEach(task => {
+        if (task.autoName) {
+          if (task.name !== sanitized) {
+            task.name = sanitized;
+            mutated = true;
+          }
+        } else if (DEFAULT_AUTO_NAMES.has(task.name) && task.status !== undefined) {
+          task.autoName = true;
+          task.name = sanitized;
+          mutated = true;
+        }
+      });
+      if (mutated) {
+        persist();
+      }
+      return mutated;
+    }
 
     let isRunning = false;
     let localeUnsubscribe = null;
@@ -407,7 +445,7 @@
     function fillForm(task){
       state.editingTaskId = task.id;
       setFormMode('edit');
-      nameInput.value = task.name;
+      nameInput.value = task.autoName ? '' : task.name;
       xpInput.value = String(task.xp);
       colorInput.value = task.color;
       memoInput.value = task.memo;
@@ -457,6 +495,8 @@
     }
 
     function applyTranslations(includeDynamic = false){
+      const translatedDefaultName = translate('games.todoList.defaults.untitled', defaultTaskName);
+      const defaultChanged = setDefaultTaskName(translatedDefaultName);
       title.textContent = translate('games.todoList.header.title', 'ToDoリスト');
       const headerDateText = (() => {
         const now = Date.now();
@@ -485,7 +525,7 @@
 
       setFormMode(state.editingTaskId ? 'edit' : 'create');
 
-      if (includeDynamic){
+      if (includeDynamic || defaultChanged){
         updateStats();
         renderLists();
       }
@@ -740,7 +780,9 @@
 
     formCard.addEventListener('submit', (event) => {
       event.preventDefault();
-      const name = nameInput.value.trim();
+      const rawName = sanitizeString(nameInput.value || '', '').slice(0, MAX_NAME).trim();
+      const isAutoName = !rawName;
+      const name = isAutoName ? defaultTaskName : rawName;
       if (!name){
         alert(translate('games.todoList.dialogs.requireName', '名前を入力してください。'));
         nameInput.focus();
@@ -748,13 +790,14 @@
       }
       const xp = clampXp(xpInput.value);
       const color = sanitizeColor(colorInput.value);
-      const memo = memoInput.value.slice(0, MAX_MEMO);
+      const memo = sanitizeString(memoInput.value || '', '');
       if (state.editingTaskId){
         const task = state.tasks.find(t => t.id === state.editingTaskId);
         if (!task){
           resetForm();
         } else {
           task.name = name;
+          task.autoName = isAutoName;
           task.xp = xp;
           task.color = color;
           task.memo = memo;
@@ -766,6 +809,7 @@
         state.tasks.push({
           id,
           name,
+          autoName: isAutoName,
           memo,
           xp,
           color,

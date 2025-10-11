@@ -444,7 +444,65 @@
           },
           "shogi": {
             "name": "Shogi",
-            "description": "Use drops and promotions in Japanese chess to rack up move and capture EXP."
+            "description": "Use drops and promotions in Japanese chess to rack up move and capture EXP.",
+            "ui": {
+              "title": "Shogi",
+              "subtitle": "MiniExp Edition",
+              "legend": "Moves: +{moveExpFormatted} EXP / Drops: +{dropExpFormatted} EXP / Capture bonus / Promotion: +{promoteExpFormatted} EXP / Check: +{checkExpFormatted} EXP / Win bonus available",
+              "hands": {
+                "aiLabel": "Sente (CPU)",
+                "playerLabel": "Gote (You)",
+                "empty": "None",
+                "chip": "{piece}×{countFormatted}",
+                "total": "{countFormatted} pieces",
+                "totalNone": "None"
+              },
+              "actions": {
+                "restart": "Restart"
+              },
+              "confirm": {
+                "promote": "Promote this piece?"
+              }
+            },
+            "status": {
+              "playerTurn": "Your turn. Select a piece or click a captured piece.",
+              "aiThinking": "CPU is considering a move…",
+              "playerInCheck": "You're in check! Respond quickly.",
+              "aiInCheck": "Check! Press the attack."
+            },
+            "result": {
+              "playerWin": "Checkmate! You win.",
+              "playerLose": "Checkmated… Defeat.",
+              "draw": "Impasse / repetition draw."
+            },
+            "pieces": {
+              "glyph": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉",
+                "promotedPawn": "と",
+                "promotedLance": "成香",
+                "promotedKnight": "成桂",
+                "promotedSilver": "成銀",
+                "promotedBishop": "馬",
+                "promotedRook": "龍"
+              },
+              "label": {
+                "pawn": "Pawn",
+                "lance": "Lance",
+                "knight": "Knight",
+                "silver": "Silver",
+                "gold": "Gold",
+                "bishop": "Bishop",
+                "rook": "Rook",
+                "king": "King"
+              }
+            }
           },
           "riichi_mahjong": {
             "name": "Riichi Mahjong Lite",
@@ -537,7 +595,20 @@
           },
           "match3": {
             "name": "Match 3",
-            "description": "Swap gems to make chains, with longer matches and combos boosting EXP."
+            "description": "Swap gems to make chains, with longer matches and combos boosting EXP.",
+            "hud": {
+              "title": "Match-3",
+              "cleared": "Cleared",
+              "status": "{title} | {difficulty} | {clearedLabel}: {tiles}"
+            },
+            "difficulty": {
+              "easy": "Easy",
+              "normal": "Normal",
+              "hard": "Hard"
+            },
+            "popup": {
+              "chain": "Chain {chain}!"
+            }
           },
           "minesweeper": {
             "name": "Minesweeper",
@@ -602,6 +673,10 @@
           "notepad": {
             "name": "Notepad",
             "description": "Write, edit, and save notes to earn incremental EXP."
+          },
+          "wording": {
+            "name": "Wording",
+            "description": "Word processor awarding EXP: Edit +1 / Format +2 / Save +6"
           },
           "exceler": {
             "name": "Exceler Spreadsheet",
@@ -811,13 +886,82 @@
               "stopped": "Execution was stopped."
             }
           },
-          "wording": {
-            "name": "Wording",
-            "description": "Edit, format, and save documents in a word processor to gain EXP."
-          },
           "video_player": {
             "name": "Video Player",
-            "description": "Watch local files or YouTube clips to accumulate viewing EXP."
+            "description": "Watch local files or YouTube clips to accumulate viewing EXP.",
+            "title": "Video Player",
+            "sessionXp": "Session EXP: {exp}",
+            "info": {
+              "source": "Source",
+              "title": "Title",
+              "duration": "Duration",
+              "status": "Status",
+              "sourceLocal": "Local",
+              "sourceYoutube": "YouTube",
+              "untitled": "Untitled"
+            },
+            "tabs": {
+              "local": "Local File",
+              "youtube": "YouTube URL"
+            },
+            "local": {
+              "hint": "Choose videos like MP4/WebM/Ogg that your browser can play.",
+              "noFile": "No file selected",
+              "loading": "Loading local video…"
+            },
+            "youtube": {
+              "placeholder": "https://www.youtube.com/watch?v=...",
+              "loadButton": "Load",
+              "hint": "Enter a YouTube URL or video ID. When the IFrame API is unavailable, a simplified mode will be used.",
+              "loading": "Loading YouTube video…",
+              "ready": "YouTube video loaded. Press play to start.",
+              "prepared": "YouTube video ready.",
+              "simple": "Loaded YouTube (simple mode).",
+              "fallbackTitle": "YouTube Video ({id})"
+            },
+            "placeholder": "Select a video to play.",
+            "status": {
+              "noSource": "No source selected.",
+              "loadingLocal": "Loading local video…",
+              "loadingYoutube": "Loading YouTube video…",
+              "localReady": "Local video loaded. Press play to start.",
+              "youtubeReady": "YouTube video loaded. Press play to start.",
+              "youtubePrepared": "YouTube video ready.",
+              "youtubeSimple": "Loaded YouTube (simple mode).",
+              "playing": "Playing",
+              "paused": "Paused",
+              "ended": "Playback finished",
+              "error": "Load error",
+              "youtubeError": "YouTube player error",
+              "buffering": "Buffering…"
+            },
+            "message": {
+              "reselectLocal": "Select the same video file again.",
+              "historyCleared": "Cleared watch history.",
+              "localLoading": "Loading local video…",
+              "localLoaded": "Local video loaded.",
+              "localError": "An error occurred while loading the video. Try a different file.",
+              "localSelectFile": "Please choose a video file.",
+              "youtubeSimpleLoaded": "Loaded the YouTube video in simple mode.",
+              "youtubeLoaded": "YouTube video loaded.",
+              "youtubeError": "Failed to load the YouTube video.",
+              "youtubeInvalid": "Enter a valid YouTube URL or video ID."
+            },
+            "history": {
+              "title": "Watch History",
+              "clear": "Clear History",
+              "empty": "No videos watched yet.",
+              "typeLocal": "Local",
+              "typeYoutube": "YouTube",
+              "untitled": "Untitled"
+            },
+            "shortcuts": {
+              "title": "Shortcuts & Tips",
+              "playPause": "Space: Play/Pause (local videos or YouTube with API)",
+              "seek": "← / →: Seek -5/+5 seconds (local videos or YouTube with API)",
+              "history": "Click a history entry to replay it. Local videos will prompt you to reselect the file.",
+              "simpleMode": "In YouTube simple mode, use the YouTube player shortcuts."
+            }
           },
           "pomodoro": {
             "name": "Pomodoro Timer",
@@ -829,7 +973,222 @@
           },
           "tester": {
             "name": "JS Tester",
-            "description": "Benchmark JavaScript features and build block adventures for EXP."
+            "description": "Benchmark JavaScript features and build block adventures for EXP.",
+            "title": "JS Tester / MiniExp MOD",
+            "subtitle": "Run JavaScript self-checks, CPU benchmarks, and a block-based adventure maker.",
+            "tabs": {
+              "tests": "Feature Tests",
+              "benchmark": "CPU Benchmark",
+              "blocks": "Block Adventure"
+            },
+            "tests": {
+              "heading": "JavaScript Self-Check Lab",
+              "description": "Quickly verify representative browser features with one tap. Share the output to streamline debugging.",
+              "runAll": "Run All",
+              "runSingle": "Run Test",
+              "running": "Running…",
+              "defs": {
+                "numbers": {
+                  "name": "Numbers/BigInt",
+                  "description": "Exercise floating-point math, BigInt, and Math helpers.",
+                  "errors": {
+                    "bigInt": "BigInt arithmetic did not match expectations",
+                    "hypot": "Math.hypot returned an unexpected value"
+                  }
+                },
+                "json": {
+                  "name": "JSON & structuredClone",
+                  "description": "Validate JSON serialization and structuredClone behavior.",
+                  "errors": {
+                    "restore": "Failed to restore from JSON",
+                    "clone": "structuredClone could not preserve the Map"
+                  }
+                },
+                "intl": {
+                  "name": "Intl Formatting",
+                  "description": "Confirm Intl.DateTimeFormat and NumberFormat output.",
+                  "errors": {
+                    "date": "Date formatting differed from expectations",
+                    "currency": "Currency formatting differed from expectations"
+                  }
+                },
+                "crypto": {
+                  "name": "Crypto API",
+                  "description": "Generate cryptographic randomness and hash a sample buffer.",
+                  "errors": {
+                    "random": "crypto.getRandomValues is unavailable"
+                  }
+                },
+                "storage": {
+                  "name": "Storage API",
+                  "description": "Verify localStorage/sessionStorage read and write operations.",
+                  "errors": {
+                    "read": "Storage read/write failed",
+                    "blocked": "Storage access is blocked"
+                  }
+                },
+                "canvas": {
+                  "name": "Canvas & Offscreen",
+                  "description": "Render to Canvas and check for OffscreenCanvas support.",
+                  "errors": {
+                    "sample": "Failed to sample a Canvas pixel"
+                  }
+                }
+              }
+            },
+            "benchmark": {
+              "heading": "CPU Benchmark – increments per second",
+              "description": "Keep adding 1 to an integer for one second to gauge burst performance.",
+              "labels": {
+                "current": "Latest (ops/sec)",
+                "best": "Personal best (ops/sec)",
+                "runs": "Total runs"
+              },
+              "start": "Start benchmark (1 sec)",
+              "notice": "The UI may freeze for one second while the benchmark runs.",
+              "log": {
+                "start": "Starting benchmark…",
+                "record": "New record: {value} ops/sec",
+                "result": "Result: {value} ops/sec"
+              }
+            },
+            "blocks": {
+              "controls": {
+                "add": "Add block",
+                "clear": "Clear all"
+              },
+              "alert": {
+                "title": "Custom Alert Function",
+                "description": "Write the body of a function that receives message and context. Use context.flags and context.log for richer effects.",
+                "template": "// message: string\\n// context: { flags, log, awardXp }\\nconst box = document.createElement('div');\\nbox.textContent = message;\\nbox.style.padding = '16px';\\nbox.style.background = 'rgba(96,165,250,0.15)';\\nbox.style.border = '1px solid rgba(96,165,250,0.4)';\\nbox.style.borderRadius = '12px';\\nbox.style.margin = '6px 0';\\ncontext.log(box);\\n",
+                "apply": "Apply",
+                "test": "Test Run",
+                "statusDefault": "Default: write to the log. You can switch back to alert().",
+                "statusApplied": "✅ Applied custom alert handler.",
+                "statusError": "❌ Error: {message}",
+                "testMessage": "This is a custom alert test.",
+                "statusTestSent": "✅ Sent a test message.",
+                "statusTestError": "❌ Runtime error: {message}"
+              },
+              "story": {
+                "title": "Block Story Runner",
+                "play": "Play Story",
+                "stop": "Stop",
+                "logStart": "▶ Story started ({count} blocks)",
+                "logAborted": "⚠ Execution aborted: {message}",
+                "logEnd": "■ Story finished",
+                "logUserStop": "■ Stopped by user",
+                "logEmpty": "⚠ No blocks defined."
+              },
+              "variables": {
+                "title": "Flag Viewer (flags)",
+                "empty": "(empty)"
+              },
+              "defaults": {
+                "choiceQuestion": "What will you do?",
+                "choiceGo": "Go",
+                "choiceStop": "Stop",
+                "controlMessage": "Proceed?",
+                "yes": "Yes",
+                "no": "No",
+                "message": "Message",
+                "prompt": "Please enter your name"
+              },
+              "text": {
+                "placeholder": "Message to display",
+                "delivery": {
+                  "log": "Send to log",
+                  "alert": "Custom alert",
+                  "both": "Both"
+                },
+                "nextLabel": "Next block (# or blank)",
+                "nextPlaceholder": "Leave blank to auto-advance"
+              },
+              "choice": {
+                "questionPlaceholder": "Text shown above the choices",
+                "storePlaceholder": "Variable to store the choice (e.g. choice)",
+                "labelPlaceholder": "Button label",
+                "valuePlaceholder": "Stored value",
+                "targetPlaceholder": "Next block #",
+                "addOption": "Add choice",
+                "newOption": "New option",
+                "logLabel": "Choice",
+                "buttonFallback": "Select",
+                "logSelection": "▶ Choice: {value}",
+                "noOptions": "※ No choices configured"
+              },
+              "set": {
+                "namePlaceholder": "Variable name",
+                "valuePlaceholder": "Value (string)",
+                "nextPlaceholder": "Next block (blank = sequential)"
+              },
+              "jump": {
+                "namePlaceholder": "Variable to compare",
+                "equalsPlaceholder": "Comparison value (string)",
+                "targetPlaceholder": "Block # on match",
+                "elsePlaceholder": "Block # on mismatch (blank = next)"
+              },
+              "award": {
+                "amountPlaceholder": "EXP to grant (negatives allowed)",
+                "nextPlaceholder": "Next block (blank = sequential)"
+              },
+              "types": {
+                "text": "Text",
+                "choice": "Choice",
+                "set": "Set",
+                "jump": "Jump",
+                "award": "Award",
+                "control": "Control"
+              },
+              "control": {
+                "modeLabel": "Type",
+                "modeConfirm": "Confirm (Yes/No)",
+                "modePrompt": "Input field",
+                "messagePlaceholder": "Message to display",
+                "storePlaceholder": "Variable name to store result (blank = none)",
+                "yesLabel": "Label for the Yes button",
+                "yesValue": "Value stored when Yes is chosen",
+                "yesTarget": "Next block # after Yes (blank = next)",
+                "noLabel": "Label for the No button",
+                "noValue": "Value stored when No is chosen",
+                "noTarget": "Next block # after No (blank = next)",
+                "labelPrompt": "Input",
+                "labelConfirm": "Confirm",
+                "okLabel": "Confirm",
+                "cancelLabel": "Cancel",
+                "errorRequired": "Please enter a value.",
+                "errorNumber": "Enter a valid number.",
+                "summaryStored": "▶ {variable} = {value}",
+                "summaryValueOnly": "▶ Value = {value}",
+                "summaryCancelStored": "▶ Cancel ({variable} = {value})",
+                "summaryCancel": "▶ Input cancelled",
+                "summaryChoiceStored": "▶ Selected {label} → {variable} = {value}",
+                "summaryChoice": "▶ Selected {label}"
+              },
+              "prompt": {
+                "messagePlaceholder": "Text shown before the input field",
+                "storePlaceholder": "Variable name for the input",
+                "inputTypeText": "Text",
+                "inputTypeNumber": "Number",
+                "defaultValue": "Default value (literal)",
+                "defaultFrom": "Variable providing default (blank = literal)",
+                "allowEmpty": "Allow empty input",
+                "okLabel": "Label for confirm button",
+                "okTarget": "Block # after confirm (blank = next)",
+                "cancelLabel": "Label for cancel button",
+                "cancelValue": "Value stored on cancel",
+                "cancelTarget": "Block # after cancel (blank = next)"
+              },
+              "logs": {
+                "jumpMatch": "match",
+                "jumpMismatch": "no match",
+                "jump": "[JUMP] {name}={value} => {status}",
+                "alertError": "❌ Alert error: {message}"
+              },
+              "errors": {
+                "tooManySteps": "Too many steps executed. Possibly looping?"
+              }
+            }
           },
           "system": {
             "name": "System Inspector",
@@ -862,7 +1221,44 @@
           },
           "topdown_race": {
             "name": "Aurora Circuit",
-            "description": "Drive a top-down circuit, earning EXP from laps and finishing order."
+            "description": "Drive a top-down circuit, earning EXP from laps and finishing order.",
+            "difficulty": {
+              "EASY": "EASY",
+              "NORMAL": "NORMAL",
+              "HARD": "HARD"
+            },
+            "hud": {
+              "title": "Aurora Circuit ({difficulty})",
+              "lap": "Lap: <strong>{current}/{total}</strong> (Next {next})",
+              "lapTime": "Lap Time: {time}",
+              "bestLap": "Best Lap: {time}",
+              "turbo": "Turbo: {percent}%{active}",
+              "turboActive": " (Active)",
+              "position": "Position: <strong>{position}/{total}</strong>",
+              "rivals": "Rivals",
+              "rivalLapSuffix": " · Lap {current}/{total}",
+              "secondsSuffix": "s"
+            },
+            "overlay": {
+              "idlePrompt": "Press START",
+              "go": "GO!"
+            },
+            "results": {
+              "title": "Race Results",
+              "totalTime": "Total Time {time}",
+              "headers": {
+                "position": "Position",
+                "driver": "Driver",
+                "finish": "Finish"
+              },
+              "expSummary": "EXP Earned: Lap {lap} / Best {best} / Boost {boost} / Finish {finish}",
+              "restartHint": "Press {key} to restart"
+            },
+            "status": {
+              "you": "You",
+              "dnf": "DNF",
+              "fin": "FIN"
+            }
           },
           "falling_shooter": {
             "name": "Falling Block Shooter",
@@ -874,7 +1270,27 @@
           },
           "virus_buster": {
             "name": "Virus Buster",
-            "description": "Stack capsules to match colors and wipe viruses for EXP."
+            "description": "Stack capsules to match colors and wipe viruses for EXP.",
+            "title": "Virus Buster",
+            "hud": {
+              "level": "Level {level}",
+              "viruses": "Viruses {count}",
+              "cleared": "Cleared {count}",
+              "chainLabel": "{chain} Chain!",
+              "chainNice": "Nice!",
+              "chainVirus": "Virus x{count}",
+              "stageClear": "Stage Clear!",
+              "controls": "Controls: ←→ Move / ↓ Soft Drop / ↑ or X Rotate / Space Hard Drop / R Reset"
+            },
+            "floating": {
+              "drop": "DROP!",
+              "virus": "Virus x{count}",
+              "stageClear": "STAGE CLEAR!"
+            },
+            "status": {
+              "gameOver": "Game Over",
+              "restartHint": "Press R to restart"
+            }
           },
           "sichuan": {
             "name": "Sichuan Puzzle",
@@ -906,7 +1322,14 @@
           },
           "flappy_bird": {
             "name": "Flappy Bird Clone",
-            "description": "Slip through pipe gaps for EXP and multiply it with streaks."
+            "description": "Slip through pipe gaps for EXP and multiply it with streaks.",
+            "ui": {
+              "combo": "COMBO {combo}",
+              "start": "Press Space / Click to start",
+              "gameOver": "GAME OVER",
+              "restart": "Press Space / R to restart",
+              "finalScore": "Score {formattedScore}"
+            }
           },
           "dino_runner": {
             "name": "Dino Runner",
@@ -934,11 +1357,76 @@
           },
           "tosochu": {
             "name": "Run for Money",
-            "description": "Evade hunters in a TV-style chase, banking massive EXP if you last or surrender safely."
+            "description": "Evade hunters in a TV-style chase, banking massive EXP if you last or surrender safely.",
+            "ui": {
+              "timer": "Time Left {seconds}s",
+              "exp": "Stored EXP {exp}",
+              "missionNotReady": "Mission: Not yet activated",
+              "missionActive": "Mission: {label}{optionalSuffix} — {seconds}s remaining (Coords: {coords})",
+              "missionComplete": "Missions Complete: {success}/{total} succeeded",
+              "missionSuccess": "{label}: Success!",
+              "missionFailed": "{label}: Failed…",
+              "surrender": "Surrender",
+              "surrenderCountdown": "Surrendering...{seconds}s"
+            },
+            "status": {
+              "hunterAdded": "A hunter has joined the chase!",
+              "hunterRetreat": "Mission success! One hunter retreated",
+              "missionActivated": "Mission activated: {label}",
+              "escapeSuccess": "Escaped! +{total} EXP (Breakdown {base}+{bonus})",
+              "surrenderSuccess": "Surrendered. Banked {exp} EXP",
+              "caught": "Caught... no EXP earned",
+              "dungeonUnavailable": "Dungeon API unavailable",
+              "stageGenerationFailed": "Failed to generate the stage",
+              "runStart": "The chase begins!",
+              "runPaused": "Paused",
+              "standby": "Standby",
+              "surrenderZoneHint": "Enter the surrender zone before pressing the button",
+              "surrenderAttempt": "Attempting surrender… endure for {duration}s!",
+              "surrenderCancelled": "Surrender cancelled",
+              "beaconSuccess": "Beacon secured! Signal jamming strengthened",
+              "beaconFail": "Beacon failed... hunters are on alert",
+              "dataSuccess": "Classified intel secured! Rewards increased",
+              "dataFail": "Alarm triggered! A fast hunter has appeared",
+              "boxSuccess": "Disarmed! Hunter boxes are delayed",
+              "boxFail": "Disarm failed... an extra hunter deployed",
+              "vaultSuccess": "Jackpot! But you're now a prime target",
+              "vaultFail": "Vault defended... two hunters released"
+            },
+            "missions": {
+              "optionalSuffix": " (Optional)",
+              "beacon": { "label": "Reach the beacon" },
+              "data": { "label": "Hack the data terminal" },
+              "box": { "label": "Disarm the hunter box" },
+              "vault": { "label": "Crack the high-risk vault" }
+            }
           },
           "ten_ten": {
             "name": "1010 Puzzle",
-            "description": "Place blocks to clear lines, with cross clears doubling your EXP."
+            "description": "Place blocks to clear lines, with cross clears doubling your EXP.",
+            "hint": "Drag blocks onto the board / press R to restart",
+            "hud": {
+              "lines": "Lines: {total} / Largest clear: {max}",
+              "moves": "Moves: {moves} / Remaining blocks: {remaining}",
+              "combo": {
+                "base": "Combo: {combo} (Max {max}) / XP: {xp}",
+                "detail": " / Last: +{lastXp}XP ({lines} lines)"
+              }
+            },
+            "end": {
+              "title": "Game Over",
+              "reasons": {
+                "noSpace": "No space available",
+                "generationFailed": "Unable to generate placeable pieces"
+              },
+              "retryHint": "Press R to restart"
+            },
+            "shelf": {
+              "refilling": "Refilling pieces..."
+            },
+            "errors": {
+              "cannotGenerate": "Unable to generate placeable pieces"
+            }
           },
           "trump_games": {
             "name": "Trump Selection",
@@ -1068,7 +1556,22 @@
           },
           "onigokko": {
             "name": "Tag Escape",
-            "description": "Run around a mixed dungeon to dodge the chaser and survive for EXP."
+            "description": "Run around a mixed dungeon to dodge the chaser and survive for EXP.",
+            "timer": {
+              "remaining": "Time left: {seconds}s"
+            },
+            "status": {
+              "start": "Chase start! Move with Arrow keys / WASD.",
+              "paused": "Paused",
+              "loading": "Loading stage…",
+              "ready": "Ready! Press Start to begin the chase.",
+              "stage_generation_failed": "Stage generation failed",
+              "api_unavailable": "Dungeon API unavailable",
+              "caught": "Caught!",
+              "caught_no_reward": "Caught! No EXP earned.",
+              "escaped": "Escaped! Great job!",
+              "escape_success": "Escape successful!"
+            }
           },
           "darumasan": {
             "name": "Darumasan ga Koronda",
@@ -1084,7 +1587,69 @@
           },
           "typing": {
             "name": "Typing Challenge",
-            "description": "Type accurately for 60 seconds to push WPM and EXP."
+            "description": "Type accurately for 60 seconds to push WPM and EXP.",
+            "controls": {
+              "difficulty": "Difficulty",
+              "target": "Target WPM",
+              "targetValue": "{targetWpm} WPM",
+              "difficultyOptions": {
+                "easy": "Easy",
+                "normal": "Normal",
+                "hard": "Hard"
+              }
+            },
+            "words": {
+              "nextEmpty": "Next: -",
+              "nextWithValue": "Next: {word}"
+            },
+            "input": {
+              "placeholder": "Type the shown word (Space/Enter to confirm)"
+            },
+            "buttons": {
+              "reset": "Reset",
+              "retry": "Try again"
+            },
+            "stats": {
+              "labels": {
+                "accuracy": "ACC",
+                "wpm": "WPM",
+                "combo": "COMBO",
+                "sessionXp": "SESSION XP"
+              },
+              "targetInfo": {
+                "pending": "Target {targetWpm} WPM / Progress -",
+                "active": "Target {targetWpm} WPM / Progress {progress}%"
+              }
+            },
+            "result": {
+              "title": "RESULT",
+              "labels": {
+                "accuracy": "Accuracy",
+                "wpm": "Average WPM",
+                "words": "Correct chars",
+                "combo": "Max combo"
+              },
+              "wordsValue": "{count} chars"
+            },
+            "xp": {
+              "title": "EXP breakdown",
+              "none": "No EXP earned this run",
+              "wordLabel": "Word {index}",
+              "word": "{label}: +{xp} EXP",
+              "wordWithMilestones": "{label}: +{xp} EXP ({milestones})",
+              "milestoneEntry": "x{combo}+{bonus}",
+              "milestoneSeparator": ", ",
+              "accuracyLabel": "Accuracy bonus ({accuracyPercent}%)",
+              "accuracy": "{label}: +{xp} EXP",
+              "generic": "+{xp} EXP"
+            },
+            "toasts": {
+              "start": "60-second challenge started! Good luck!",
+              "mistype": "Mistype!",
+              "completeBeforeConfirm": "Type the full word before confirming!",
+              "comboMilestone": "Combo x{combo}! +{bonus} EXP",
+              "comboSeparator": " / "
+            }
           },
           "imperial_realm": {
             "name": "Imperial Realm",
@@ -10845,6 +11410,547 @@
     },
 
     "minigame": {
+      "system": {
+        "header": {
+          "title": "System Inspector",
+          "subtitle": "Review PC, OS, browser, and network information in one dashboard",
+          "sessionXp": "Session EXP {xp}"
+        },
+        "tabs": {
+          "pc": "PC",
+          "os": "OS",
+          "browser": "Browser",
+          "ip": "IP"
+        },
+        "pcSubTabs": {
+          "pc-info": "Overview",
+          "pc-monitor": "Hardware Monitor"
+        },
+        "controls": {
+          "copySummary": "Copy Summary",
+          "refreshHardware": "Refresh Hardware Stats",
+          "refreshOs": "Reload",
+          "refreshBrowser": "Reanalyse",
+          "fetchIp": "Fetch IP Info",
+          "cancelIp": "Cancel Fetch",
+          "copyIp": "Copy Result"
+        },
+        "sections": {
+          "pcInfo": { "title": "System Information" },
+          "monitor": {
+            "title": "Realtime Monitor",
+            "note": "Estimates use standard browser APIs. Values may differ from actual system usage."
+          },
+          "os": { "title": "OS Details" },
+          "browser": { "title": "Browser Details" },
+          "ip": { "title": "IP Details" }
+        },
+        "pcInfo": {
+          "motherboard": "Motherboard",
+          "cpuFamily": "CPU Family",
+          "cpuThreads": "CPU Threads",
+          "cpuFrequency": "CPU Frequency",
+          "architecture": "Architecture",
+          "memory": "Memory Capacity",
+          "jsHeap": "JS Heap Limit",
+          "storage": "Storage Estimate",
+          "touch": "Touch Points",
+          "gpuVendor": "GPU Vendor",
+          "gpuName": "GPU Name",
+          "gpuMemory": "GPU Memory",
+          "battery": "Battery",
+          "notes": {
+            "motherboardUnavailable": "Browsers cannot expose motherboard information.",
+            "cpuFrequencyUnavailable": "CPU frequency is not exposed through web standards.",
+            "jsHeapChromeOnly": "Only reported by Chromium-based browsers.",
+            "storageEstimate": "Estimate via navigator.storage.estimate().",
+            "gpuWebgl": "Retrieved from WEBGL_debug_renderer_info.",
+            "gpuDisabled": "WebGL may be disabled.",
+            "gpuMemoryUnavailable": "Browsers do not reveal total GPU memory.",
+            "batteryUnavailable": "Battery Status API is unavailable or not permitted."
+          },
+          "battery": {
+            "charging": "Charging",
+            "discharging": "Discharging"
+          },
+          "values": {
+            "cpuThreads": "{threads} threads",
+            "deviceMemory": "{memory} GB (navigator.deviceMemory)",
+            "battery": "{level} ({state})"
+          }
+        },
+        "monitor": {
+          "cpu": "CPU Usage (estimate)",
+          "loopLag": "Event Loop Lag",
+          "fps": "Frame Updates (FPS)",
+          "jsHeap": "JS Heap Usage",
+          "deviceMemory": "Physical Memory (estimate)",
+          "notes": {
+            "cpuUsage": "Estimated from event loop latency.",
+            "loopLag": "Difference against setInterval baseline.",
+            "fps": "Derived from requestAnimationFrame.",
+            "memoryUsage": "Utilisation {percent}",
+            "memoryChromeOnly": "Only available in Chromium browsers.",
+            "memoryUnavailable": "performance.memory is unavailable.",
+            "deviceMemoryEstimate": "Approximation from navigator.deviceMemory."
+          }
+        },
+        "os": {
+          "name": "OS Name",
+          "version": "Version",
+          "build": "Build",
+          "bitness": "Bitness",
+          "platform": "Platform",
+          "timezone": "Time Zone",
+          "locale": "Locale",
+          "languages": "Preferred Languages",
+          "uptime": "Uptime (estimate)",
+          "lastChecked": "Last Updated",
+          "notes": {
+            "buildUnavailable": "Browsers do not provide detailed build numbers.",
+            "uptime": "OS uptime is unavailable; showing browser runtime instead."
+          },
+          "values": {
+            "uptime": "{hours} hours (browser runtime)"
+          }
+        },
+        "browser": {
+          "name": "Browser Name",
+          "version": "Version",
+          "engine": "Rendering Engine",
+          "agent": "User Agent",
+          "brands": "Brand Info",
+          "vendor": "Vendor",
+          "doNotTrack": "Do Not Track",
+          "online": "Online Status",
+          "cookies": "Cookies",
+          "storage": "Storage APIs",
+          "features": "Key APIs",
+          "html5": "HTML5 Support (core APIs)",
+          "status": {
+            "online": "Online",
+            "offline": "Offline",
+            "dntEnabled": "Enabled",
+            "dntDisabled": "Disabled",
+            "cookiesEnabled": "Available",
+            "cookiesDisabled": "Disabled"
+          },
+          "notes": {
+            "noFeatures": "No major APIs detected.",
+            "html5Unknown": "Unable to determine."
+          }
+        },
+        "ip": {
+          "statusIdle": "Network access is required. Press the fetch button.",
+          "statusSource": "Fetched via {source}",
+          "ip": "IP Address",
+          "hostname": "Hostname",
+          "city": "City",
+          "region": "Region",
+          "country": "Country",
+          "loc": "Latitude / Longitude",
+          "org": "Organisation / ISP",
+          "postal": "Postal Code",
+          "timezone": "Time Zone",
+          "asn": "ASN",
+          "userAgent": "Agent",
+          "updated": "Last Retrieved"
+        },
+        "status": {
+          "unavailable": "Unavailable",
+          "unknown": "Unknown",
+          "notAvailable": "-",
+          "loading": "Loading…",
+          "failed": "Failed"
+        },
+        "errors": {
+          "hardwareFetch": "Failed to retrieve information.",
+          "ipCancelled": "Fetch cancelled.",
+          "ipFetch": "Unable to fetch IP details. Firewalls or offline environments may block access."
+        },
+        "summary": {
+          "header": "[System Summary] {timestamp}",
+          "cpu": "CPU: {family} / {threads} threads / arch {arch}",
+          "memory": "Memory: {memory} (JS heap limit {heap})",
+          "gpu": "GPU: {name} (vendor {vendor})",
+          "os": "OS: {name} {version} ({bitness})",
+          "browser": "Browser: {name} {version} ({engine})",
+          "ip": "IP: {ip} @ {city}, {country}"
+        }
+      },
+      "falling_puyos": {
+        "floating": {
+          "clear": "CLEAR!",
+          "chain": "{chain} Chain!"
+        },
+        "hud": {
+          "title": "Falling Puyos",
+          "difficulty": "Difficulty: {difficulty}",
+          "totalCleared": "Clears: {value}",
+          "maxChain": "Max Chain: {value}",
+          "lastClear": "Last Clear: {value}"
+        },
+        "panel": {
+          "next": "NEXT"
+        },
+        "overlay": {
+          "gameOver": "Game Over",
+          "restartHint": "Press R to resume / retry"
+        },
+        "badge": {
+          "chain": "{chain} Chain!"
+        },
+        "difficulty": {
+          "easy": "EASY",
+          "normal": "NORMAL",
+          "hard": "HARD"
+        }
+      },
+      "pinball_xp": {
+        "ui": {
+          "controls": {
+            "flippers": "Flippers: ← / → or A / D",
+            "plunger": "Plunger: Hold Space to charge and launch",
+            "reset": "Reset: Press R"
+          },
+          "mission": {
+            "label": "Mission:",
+            "none": "None",
+            "hint": "Complete the L/M/R lanes to start a new mission",
+            "progress": "Progress: {progressText} / {targetText} ({remainingSecondsText}s left)"
+          },
+          "skillShot": {
+            "active": "Skill Shot: Lane {lane} / {secondsText}s remaining",
+            "ready": "Skill shot ready: Aim for the {lane} lane!",
+            "next": "Next skill shot target: Lane {lane}"
+          },
+          "holdHint": "Press Space to launch"
+        },
+        "missions": {
+          "bumperBlitz": {
+            "name": "Bumper Blitz",
+            "description": "Hit the bumpers 6 times."
+          },
+          "slingStorm": {
+            "name": "Sling Storm",
+            "description": "Trigger the slingshots 4 times."
+          },
+          "laneMaster": {
+            "name": "Lane Master",
+            "description": "Complete the L/M/R lane set twice."
+          },
+          "postChallenge": {
+            "name": "Post Challenge",
+            "description": "Hit the posts 5 times."
+          }
+        },
+        "announcements": {
+          "missionStart": {
+            "named": "Mission start: {mission}",
+            "generic": "Mission started!"
+          },
+          "missionComplete": {
+            "named": "Mission complete: {mission}! +{rewardText} EXP",
+            "generic": "Mission complete! +{rewardText} EXP"
+          },
+          "missionFailed": {
+            "named": "Mission failed: {mission}…",
+            "generic": "Mission failed…"
+          },
+          "combo": "Combo {countText}! +{xpText} EXP",
+          "skillShotSuccess": "Skill Shot! +{xpText} EXP"
+        },
+        "hud": {
+          "combo": {
+            "none": "-"
+          },
+          "status": "Balls: {livesText} / Score: {scoreText} / EXP: {expText} / Chain: x{chainText} / Combo: {comboText}"
+        }
+      },
+      "trump_games": {
+        "layout": {
+          "navHeader": "Card Games",
+          "title": "Trump Selection",
+          "difficulty": "Difficulty {difficulty} ×{multiplier}",
+          "settings": "Settings"
+        },
+        "placeholder": {
+          "primary": "Select a game from the list on the left.",
+          "separator": " / ",
+          "phaseInfo": "Phase {phase}: {games}"
+        },
+        "status": {
+          "selectGame": "Choose a game to begin.",
+          "comingSoon": "This game is still in development. Please look forward to future updates.",
+          "devPlaceholder": "Currently under development."
+        },
+        "actions": {
+          "returnToHub": "Return to Selection",
+          "default": "Action",
+          "backToList": "Back to List"
+        },
+        "list": {
+          "badge": {
+            "comingSoon": "Coming Soon",
+            "bestScore": "Best {score}"
+          },
+          "unimplemented": {
+            "phase": "Planned for Phase {phase}.",
+            "status": "In preparation."
+          }
+        },
+        "errors": {
+          "initToast": "Failed to initialize the game.",
+          "initFallback": "Initialization failed. Please try a different game."
+        },
+        "settings": {
+          "heading": "Settings",
+          "cardBack": "Card back theme",
+          "autoFlip": "Auto flip mismatched cards in Concentration"
+        },
+        "cardBacks": {
+          "classic": {
+            "label": "Classic",
+            "description": "Navy classic pattern"
+          },
+          "modern": {
+            "label": "Modern",
+            "description": "Vivid cyber style"
+          },
+          "forest": {
+            "label": "Forest",
+            "description": "Deep green gradient with gold"
+          }
+        },
+        "games": {
+          "memory": {
+            "title": "Concentration",
+            "description": "Flip cards to find matching pairs."
+          },
+          "blackjack": {
+            "title": "Blackjack",
+            "description": "Battle the dealer to reach 21."
+          },
+          "baba": {
+            "title": "Old Maid",
+            "description": "Avoid being the last player holding the joker."
+          },
+          "klondike": {
+            "title": "Solitaire (Klondike)",
+            "description": "Sort seven tableau columns to build up the foundations."
+          },
+          "spider": {
+            "title": "Spider Solitaire",
+            "description": "Complete full suit sequences to clear columns."
+          },
+          "freecell": {
+            "title": "FreeCell",
+            "description": "Solve each layout using the four free cells."
+          },
+          "hearts": {
+            "title": "Hearts",
+            "description": "Trick-taking game where you dodge hearts."
+          },
+          "sevens": {
+            "title": "Sevens",
+            "description": "Play cards outward from each seven."
+          },
+          "poker": {
+            "title": "Draw Poker",
+            "description": "Build strong poker hands to score big."
+          },
+          "jiji": {
+            "title": "Jiji Old Maid",
+            "description": "An Old Maid variant with configurable jokers."
+          },
+          "daifugo": {
+            "title": "Daifugō",
+            "description": "High-stakes shedding game with revolutions."
+          },
+          "pageone": {
+            "title": "Page One",
+            "description": "Classic shedding game that inspired UNO."
+          }
+        }
+      },
+      "gamble_hall": {
+        "nav": {
+          "title": "Game Selection",
+          "items": {
+            "roulette": {
+              "label": "Roulette",
+              "detail": "European 37-pocket"
+            },
+            "slot": {
+              "label": "Pachislo Slots",
+              "detail": "3 reels + star bonus"
+            },
+            "dice": {
+              "label": "Lucky Dice",
+              "detail": "5 betting modes"
+            }
+          }
+        },
+        "sidebar": {
+          "balanceLabel": "Balance",
+          "sessionNetLabel": "Session Net",
+          "maxWinLabel": "Max Win"
+        },
+        "header": {
+          "balanceLabel": "Available EXP",
+          "betLabel": "Bet Amount",
+          "sessionNet": "Session Net",
+          "biggestWin": "Biggest Win",
+          "betPlaceholder": "10",
+          "betAdjust": {
+            "plus10": "+10",
+            "plus50": "+50",
+            "max": "MAX"
+          }
+        },
+        "hud": {
+          "expValue": "{value} EXP",
+          "netValue": "{delta} EXP"
+        },
+        "history": {
+          "title": "Recent Results",
+          "empty": "No game history yet.",
+          "betLabel": "BET {bet}",
+          "meta": "{bet} / {detail}",
+          "netDelta": "{delta}",
+          "roulette": {
+            "detail": "{result} / {outcome}"
+          },
+          "slot": {
+            "detail": "{symbols} / {result}"
+          },
+          "dice": {
+            "detail": "{faces} / Total {totalFormatted}"
+          }
+        },
+        "roulette": {
+          "spin": "Spin",
+          "numberOption": "No.{number}",
+          "result": {
+            "numberLabel": "No.{number}",
+            "detail": "No.{number} {color}"
+          },
+          "betTypes": {
+            "colorRed": "Red",
+            "colorBlack": "Black",
+            "colorGreen": "Green (0)",
+            "parityEven": "Even",
+            "parityOdd": "Odd",
+            "number": "Pick a Number"
+          },
+          "colors": {
+            "red": "Red",
+            "black": "Black",
+            "green": "Green",
+            "unknown": "Unknown"
+          },
+          "results": {
+            "colorRed": {
+              "hit": "Red hit",
+              "miss": "Red miss"
+            },
+            "colorBlack": {
+              "hit": "Black hit",
+              "miss": "Black miss"
+            },
+            "colorGreen": {
+              "hit": "0 hit!",
+              "miss": "0 miss"
+            },
+            "parityEven": {
+              "hit": "Even hit",
+              "miss": "Even miss"
+            },
+            "parityOdd": {
+              "hit": "Odd hit",
+              "miss": "Odd miss"
+            },
+            "number": {
+              "hit": "Hit {number}!",
+              "miss": "Miss {number}"
+            },
+            "miss": "Miss"
+          }
+        },
+        "slot": {
+          "start": "Start",
+          "hint": "Match symbols or land star pairs for bigger payouts!",
+          "results": {
+            "jackpot": "777 Jackpot!",
+            "barTriple": "Triple BAR!",
+            "triple": "Triple hit!",
+            "pairWithStar": "{symbol} pair + star!",
+            "pair": "{symbol} pair!",
+            "miss": "Miss…"
+          }
+        },
+        "dice": {
+          "buttons": {
+            "roll": "Roll"
+          },
+          "mode": {
+            "option": "{label} x{multiplier}",
+            "hintDisplay": "{hint} (x{multiplier})"
+          },
+          "modes": {
+            "high": {
+              "label": "High (11-18)",
+              "hint": "Totals of 11 or more pay x2. Triples excluded."
+            },
+            "low": {
+              "label": "Low (3-10)",
+              "hint": "Totals of 10 or less pay x2. Triples excluded."
+            },
+            "lucky7": {
+              "label": "Lucky 7",
+              "hint": "Exact total of 7 for a high payout!"
+            },
+            "allDiff": {
+              "label": "All Different",
+              "hint": "All three faces different pays x4."
+            },
+            "triple": {
+              "label": "Triple",
+              "hint": "All faces match for a huge payout!"
+            },
+            "unknown": "Unknown"
+          },
+          "rollingLabel": "Rolling…",
+          "resultLine": "Roll {faces} (Total {totalFormatted})",
+          "results": {
+            "hit": "Win!",
+            "miss": "Miss…"
+          }
+        },
+        "status": {
+          "ready": "Place a bet to start playing.",
+          "betRequired": "Enter a bet amount.",
+          "slotBusy": "Please wait for the reels to stop…",
+          "notEnoughExp": "Not enough EXP.",
+          "slotSpinning": "Spinning the reels…",
+          "slotResult": "{game}: {result} {net}",
+          "diceBusy": "Please wait for the result…",
+          "diceRolling": "Rolling the dice…",
+          "diceResult": "{game}: {mode} {outcome} {net}",
+          "rouletteBusy": "The wheel is still spinning…",
+          "noExp": "No EXP available.",
+          "rouletteSpinning": "Spinning the wheel…",
+          "rouletteResult": "{game}: {result} ({detail}) {net}"
+        }
+      },
+      "breakout_k": {
+        "hud": {
+          "lives": "Lives: {count}",
+          "destroyed": "Destroyed: {count}",
+          "difficulty": "Difficulty: {difficulty}",
+          "controls": "Move with ← / → or A / D"
+        }
+      },
       "login_bonus": {
         "title": "Login Bonus Calendar",
         "subtitle": "Log in daily to claim rewards. Your progress is saved automatically.",
@@ -10974,6 +12080,58 @@
           "monthEnd": "Month-End Special",
           "newYear": "New Year Limited",
           "sunday": "Sunday Bonus"
+        }
+      },
+      "timer": {
+        "title": "Timer",
+        "subtitle": "Manage focus and breaks with a simple countdown and stopwatch.",
+        "xpBadge": {
+          "current": "Session EXP {amount}"
+        },
+        "modes": {
+          "countdown": "Countdown",
+          "stopwatch": "Stopwatch"
+        },
+        "inputs": {
+          "hours": "Hours",
+          "minutes": "Minutes",
+          "seconds": "Seconds"
+        },
+        "quickButtons": {
+          "plus1m": "+1 min",
+          "plus5m": "+5 min",
+          "plus10m": "+10 min",
+          "minus1m": "-1 min",
+          "pomodoro": "25-min Pomodoro"
+        },
+        "buttons": {
+          "start": "Start",
+          "pause": "Pause",
+          "resume": "Resume",
+          "reset": "Reset"
+        },
+        "status": {
+          "readyGeneric": "Ready",
+          "readyCountdown": "Countdown ready",
+          "readyStopwatch": "Stopwatch ready",
+          "countdownRunning": "Counting...",
+          "countdownResumed": "Resumed",
+          "paused": "Paused",
+          "completed": "Done! Great job",
+          "stopwatchRunning": "Running...",
+          "stopwatchMinute": "{minutes} min elapsed",
+          "stopwatchMinuteWithXp": "{minutes} min elapsed!"
+        },
+        "history": {
+          "title": "Recent log",
+          "labels": {
+            "complete": "Complete",
+            "start": "Start",
+            "stopwatchMinute": "Elapsed",
+            "default": "Progress"
+          },
+          "expGain": "{label}: +{xp} EXP",
+          "completeNoXp": "Timer finished!"
         }
       },
       "exceler": {
@@ -11164,6 +12322,74 @@
           "digital_strings": "Digital Strings"
         }
       },
+      "music_player": {
+        "title": "Music Player",
+        "subtitle": "Play local tracks with visualizers and EQ.",
+        "actions": {
+          "import": "Import Tracks"
+        },
+        "settings": {
+          "shuffle": "Shuffle Play",
+          "loopMode": "Loop Mode",
+          "clearLibrary": "Clear Library"
+        },
+        "controls": {
+          "volume": "Volume",
+          "playbackRate": "Playback Speed"
+        },
+        "playlist": {
+          "title": "Playlist",
+          "search": "Search...",
+          "count": "Tracks {count}"
+        },
+        "status": {
+          "playlist": "Tracks: {count} / {max} | Total time: {duration}",
+          "session": "Session EXP: {exp}"
+        },
+        "eq": {
+          "title": "Equalizer",
+          "presets": {
+            "flat": "Flat",
+            "rock": "Rock",
+            "vocal": "Vocal",
+            "bassBoost": "Bass Boost",
+            "custom": "Custom"
+          }
+        },
+        "loop": {
+          "none": "No Loop",
+          "one": "Repeat One",
+          "all": "Repeat All"
+        },
+        "visualizer": {
+          "oscilloscope": "Oscilloscope",
+          "frequency": "Frequency Spectrum"
+        },
+        "toast": {
+          "audioInitFailed": "Failed to initialize the audio context.",
+          "fileTooLarge": "{name} exceeds the size limit ({maxBytes} bytes).",
+          "libraryCleared": "Library cleared.",
+          "libraryLoadFailed": "Failed to load the library.",
+          "loadFailed": "Failed to load the track.",
+          "noTracks": "No tracks to play.",
+          "playFailed": "Couldn't start playback.",
+          "playlistFull": "Playlist limit reached ({max} tracks).",
+          "removed": "Removed {name}.",
+          "saveFailed": "Couldn't save {name}.",
+          "trackMissing": "Track not found."
+        },
+        "dialog": {
+          "renamePrompt": "Enter track name",
+          "clearConfirm": "Delete all tracks?"
+        },
+        "track": {
+          "untitled": "Untitled"
+        },
+        "header": {
+          "measuring": "Measuring length",
+          "playing": "Playing • {duration}"
+        }
+      },
       "counter_pad": {
         "title": "Counter Pad",
         "subtitle": "Track multiple counters quickly. Adjustments are saved automatically.",
@@ -11274,6 +12500,188 @@
           "invalidAnswer": "Please enter a number"
         }
       },
+      "circuit_simulator": {
+        "title": "Electric Circuit Simulator",
+        "subtitle": "Connect sources, passive components, and instruments to analyze DC/AC circuits in real time.",
+        "tools": {
+          "header": "Tools",
+          "select": "Select & Move",
+          "addNode": "Add Node"
+        },
+        "components": {
+          "wire": {
+            "label": "Wire",
+            "name": "Wire {index}",
+            "description": "Near-zero resistance wire"
+          },
+          "resistor": {
+            "label": "Resistor",
+            "name": "Resistor {index}",
+            "description": "Ohmic resistor"
+          },
+          "capacitor": {
+            "label": "Capacitor",
+            "name": "Capacitor {index}",
+            "description": "Capacitive reactance component"
+          },
+          "inductor": {
+            "label": "Inductor",
+            "name": "Inductor {index}",
+            "description": "Inductive reactance component"
+          },
+          "power": {
+            "label": "DC Source",
+            "name": "DC Source {index}",
+            "description": "Ideal voltage source with internal resistance"
+          },
+          "ac_source": {
+            "label": "AC Source",
+            "name": "AC Source {index}",
+            "description": "Sine-wave voltage source (RMS settings)"
+          },
+          "current_source": {
+            "label": "Current Source",
+            "name": "Current Source {index}",
+            "description": "Ideal constant current source"
+          },
+          "ammeter": {
+            "label": "Ammeter",
+            "name": "Ammeter {index}",
+            "description": "Measures circuit current (≈0 Ω)"
+          },
+          "voltmeter": {
+            "label": "Voltmeter",
+            "name": "Voltmeter {index}",
+            "description": "Measures potential difference between nodes"
+          },
+          "wattmeter": {
+            "label": "Wattmeter",
+            "name": "Wattmeter {index}",
+            "description": "Measures power between nodes"
+          }
+        },
+        "defaults": {
+          "nodes": {
+            "a": "Node A",
+            "b": "Node B",
+            "ground": "Ground"
+          },
+          "elements": {
+            "power": "DC Source",
+            "resistor": "Resistor {index}",
+            "wire": "Line"
+          }
+        },
+        "nodes": {
+          "autoName": "Node {index}"
+        },
+        "analysis": {
+          "header": "Analysis Mode",
+          "mode": {
+            "dc": "DC Analysis",
+            "ac": "AC Analysis"
+          },
+          "frequency": {
+            "label": "Analysis frequency (Hz)",
+            "hintActive": "Available in AC analysis. Adjustable from 0 Hz to 1 MHz.",
+            "hintInactive": "Enable AC analysis to adjust the frequency."
+          }
+        },
+        "status": {
+          "analysisMode": {
+            "dc": "Analysis: DC Mode",
+            "ac": "Analysis: AC Mode ({frequency} Hz)"
+          },
+          "angularFrequency": "Angular frequency: {value} rad/s",
+          "activeTool": "Active tool: {tool}",
+          "connectionStart": "Starting connection: {node}",
+          "ground": {
+            "set": "Ground: {node}",
+            "unset": "Ground: Not set"
+          },
+          "warningItem": "⚠ {message}",
+          "diagnostics": {
+            "header": "Diagnostics:",
+            "item": "• {message}"
+          }
+        },
+        "summary": {
+          "pending": "Analysis pending",
+          "powerDelivered": "Power delivered: {value}",
+          "powerDissipated": "Power dissipated: {value}",
+          "powerFactor": "Power factor: {value}",
+          "maxNodeVoltage": "Highest node voltage: {node} = {value}",
+          "maxBranchCurrent": "Maximum branch current: {value} {unit}",
+          "sessionXp": "Session EXP: {value}",
+          "nodeVoltagesHeader": "Node voltages:",
+          "nodeVoltageItem": "- {node}: {value}"
+        },
+        "canvas": {
+          "labels": {
+            "voltage": "V",
+            "current": "I",
+            "power": "P",
+            "reactivePower": "Q"
+          }
+        },
+        "inspector": {
+          "title": "Inspector",
+          "prompt": "Select a node or component.",
+          "node": {
+            "title": "Node: {node}",
+            "notFound": "Node not found",
+            "potential": "Potential: {value}",
+            "setGround": "Set this node as ground",
+            "delete": "Delete node",
+            "deleteConfirm": "Delete this node and connected components?"
+          },
+          "element": {
+            "title": "{component}",
+            "notFound": "Component not found",
+            "delete": "Delete component",
+            "deleteConfirm": "Delete this component?"
+          },
+          "fields": {
+            "name": "Name",
+            "resistance": "Resistance (Ω)",
+            "voltage": "Voltage (V)",
+            "internalResistance": "Internal resistance (Ω)",
+            "acVoltage": "Voltage (RMS, V)",
+            "phase": "Phase (°)",
+            "capacitance": "Capacitance (F)",
+            "inductance": "Inductance (H)",
+            "current": "Current (A)"
+          },
+          "meterNote": "Instruments do not affect the circuit. They show measured values between nodes.",
+          "connection": "Connection: {nodeA} ↔ {nodeB}",
+          "reactive": {
+            "capacitor": "Reactance Xc: {value} Ω",
+            "capacitorInfinite": "Reactance Xc: ∞ Ω",
+            "inductor": "Reactance Xl: {value} Ω",
+            "inductorInfinite": "Reactance Xl: —"
+          },
+          "stats": {
+            "voltage": "Voltage",
+            "current": "Current",
+            "power": "Power"
+          }
+        },
+        "solver": {
+          "warnings": {
+            "noNodes": "No nodes defined.",
+            "noSolution": "Unable to solve the circuit."
+          },
+          "errors": {
+            "singular": "Matrix is singular and cannot be solved."
+          },
+          "diagnostics": {
+            "isolatedNode": "Node \u201c{node}\u201d is isolated by non-conductive elements.",
+            "dcCapacitor": "In DC analysis, capacitors are treated as open circuits.",
+            "dcInductor": "In DC analysis, inductors behave almost like shorts.",
+            "acZeroFrequency": "AC analysis frequency is 0 Hz, so the result matches DC."
+          }
+        }
+      },
       "acchimuitehoi": {
         "instructions": {
           "rpsTitle": "1. Decide roles with Rock-Paper-Scissors",
@@ -11344,6 +12752,40 @@
           "defenseTimeout": "Defense timeout: reacted too late."
         }
       },
+      "sudoku": {
+        "title": "Number Place (Sudoku)",
+        "description": "Fill each row, column, and 3×3 box with digits 1-9 without repeats. Click cells or use the keyboard (digits/arrows/Backspace).",
+        "info": {
+          "difficultyLabel": "Difficulty",
+          "progressLabel": "Progress",
+          "progressValue": "{filledFormatted}/{totalFormatted}",
+          "mistakesLabel": "Mistakes",
+          "mistakesValue": "{formatted}",
+          "timeLabel": "Time"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "time": {
+          "display": "{minutesFormatted}:{secondsFormatted}"
+        },
+        "keypad": {
+          "clear": "Clear"
+        },
+        "actions": {
+          "reset": "Reset",
+          "newBoard": "New Puzzle"
+        },
+        "status": {
+          "invalid": "That digit can't go there.",
+          "selectCell": "Select a cell first.",
+          "reset": "Board reset.",
+          "newBoard": "Generated a new puzzle.",
+          "cleared": "Solved! Time {time} / Mistakes {mistakes}."
+        }
+      },
       "taiko_drum": {
         "title": "Taiko Rhythm ({difficulty})",
         "tips": "F/J/Space = Don (red), D/K = Ka (blue). Hit both at once for big notes! Touch input works too.",
@@ -11383,6 +12825,22 @@
         "goodRateLabel": "Good Rate"
       }
     },
+      "minesweeper": {
+        "controls": {
+          "restart": "Restart ({key})"
+        },
+        "hud": {
+          "info": "{difficultyLabel}: {difficulty} | Mines: {mines} | Flags left: {flags} | Time: {timeWithUnit} | Revealed: {opened}",
+          "timeUnit": {
+            "seconds": "s"
+          }
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        }
+      },
       "piano_tiles": {
         "tips": "Tap lanes or press D/F/J/K keys, and hold for long notes.",
         "hud": {
@@ -11588,6 +13046,44 @@
           "modest": "Modest"
         }
       },
+      "pseudo3d_race": {
+        "scenery": {
+          "billboard": "BOOST"
+        },
+        "hud": {
+          "speed": "SPEED {speed} {unit}",
+          "distance": "DIST {distance} {unit}",
+          "time": "TIME {time}{unit}",
+          "crash": "CRASH {crashes}/{limit}",
+          "paused": "PAUSED",
+          "nitro": "NITRO",
+          "progress": "COURSE PROGRESS",
+          "upcomingTurn": {
+            "right": "Right turn",
+            "left": "Left turn"
+          }
+        },
+        "help": {
+          "controls": "Controls: Steer with ←/→ or A/D • Accelerate with ↑/W • Brake with ↓/S • Press Space for Nitro",
+          "objective": "Objective: Cover distance before time runs out and overtake traffic safely.",
+          "shortcuts": "H to toggle help / P to pause"
+        },
+        "end": {
+          "title": "GAME OVER",
+          "restart": "Press R to restart",
+          "pause": "Press P to pause/resume"
+        },
+        "countdown": {
+          "go": "GO!"
+        },
+        "popup": {
+          "nitro": "NITRO!"
+        },
+        "controls": {
+          "nitro": "NITRO",
+          "pause": "PAUSE"
+        }
+      },
       "othello": {
         "hud": {
           "status": {
@@ -11780,6 +13276,69 @@
           "winning": "Winning move",
           "pressured": "Pressured move",
           "chasing": "Chasing move"
+        }
+      },
+      "nine_mens_morris": {
+        "header": {
+          "title": "Nine Men's Morris — You Move First"
+        },
+        "tips": {
+          "controls": "Controls: Click a point to place pieces / select a piece then click a destination to move.<br>When you form a mill, choose a red-highlighted enemy piece to remove."
+        },
+        "hud": {
+          "info": {
+            "player": "Player Pieces: <strong>{piecesFormatted}</strong> / Captured: {capturedFormatted}",
+            "ai": "AI Pieces: <strong>{piecesFormatted}</strong> / Captured: {capturedFormatted}"
+          },
+          "phaseInfo": "You: {playerPhase} (placements left {playerRemaining})<br>AI: {aiPhase} (placements left {aiRemaining})"
+        },
+        "phase": {
+          "place": "Placement Phase",
+          "slide": "Sliding Phase",
+          "fly": "Flying Phase"
+        },
+        "status": {
+          "removalPrompt": "Mill formed! Choose an enemy piece to remove.",
+          "aiThinking": "AI is thinking…",
+          "playerTurn": "Your turn.",
+          "aiTurn": "AI's turn…"
+        },
+        "result": {
+          "win": "Victory! You locked down the AI's pieces.",
+          "lose": "Defeat... The AI has locked down your pieces."
+        }
+      },
+      "dungeon_td": {
+        "controls": {
+          "startWave": "Start Wave"
+        },
+        "hud": {
+          "hint": "Click a floor tile to place a turret (Shift+Click to upgrade). Enemies that reach the core reduce its durability.",
+          "wave": "Wave {currentFormatted}{suffix}",
+          "coins": "Funds {formatted} G",
+          "baseHp": "Core HP {valueFormatted}/{maxFormatted}",
+          "exp": "EXP Earned {formatted}"
+        },
+        "status": {
+          "tileUnavailable": "You can't place a turret on that tile.",
+          "insufficientFunds": "Not enough funds.",
+          "towerPlaced": "Turret placed.",
+          "upgradeInsufficientFunds": "Not enough funds to upgrade ({costFormatted} G).",
+          "towerUpgraded": "Upgraded turret to Lv{levelFormatted}.",
+          "noPath": "Unable to compute a valid path.",
+          "waveStarted": "Wave {waveFormatted} has begun!",
+          "allWavesCleared": "All waves defended! Bonus {bonusCoinsFormatted} G / EXP +{bonusXpFormatted}",
+          "waveCleared": "Defended Wave {waveFormatted}! Funds +{bonusCoinsFormatted} / EXP +{bonusXpFormatted}",
+          "coreDestroyed": "The core was destroyed… Wave failed.",
+          "fullClearBonus": "Perfect defense! Bonus EXP +{bonusFormatted}",
+          "coreBreached": "Enemies breached the core…",
+          "coreDamaged": "An enemy reached the core! Durability decreased.",
+          "apiUnavailable": "Dungeon API unavailable.",
+          "generatingStage": "Generating stage…",
+          "pathFailedRetry": "Failed to secure a path. Please reload.",
+          "ready": "Place turrets and press Start Wave.",
+          "stageGenerationFailed": "Stage generation failed.",
+          "upgradeHint": "Shift+Click to upgrade a turret."
         }
       },
       "imperial_realm": {
@@ -12816,6 +14375,11 @@
           "nested": "NESTED x{value}"
         }
       },
+      "blockDim": {
+        "preview": {
+          "selection": "NESTED {nested} / Dimension {dimension}: {block1} · {block2} · {block3}"
+        }
+      },
       "playerStats": {
         "labels": {
           "level": "Level",
@@ -12826,6 +14390,13 @@
           "exp": "EXP",
           "sp": "SP"
         }
+      },
+      "statuses": {
+        "poison": "Poison",
+        "paralysis": "Paralysis",
+        "abilityUp": "Power Up",
+        "abilityDown": "Stat Down",
+        "levelDown": "Level Down"
       },
       "autoItem": {
         "status": "Auto Items ON: Healing Items x {count}"
@@ -12843,6 +14414,81 @@
           "gameOver": "GAME OVER",
           "restartHint": "Press Space / R to Restart",
           "distanceLabel": "DIST {distance}"
+        },
+        "ultimateTtt": {
+          "status": {
+            "player": "Your turn",
+            "ai": "AI's turn",
+            "ended": "Game Over"
+          },
+          "activeBoard": "Target board: ({x}, {y})",
+          "overlay": {
+            "restartHint": "Press R to restart"
+          },
+          "result": {
+            "playerWin": "You win!",
+            "aiWin": "AI wins...",
+            "draw": "Draw"
+          }
+        }
+      },
+      "backgammon": {
+        "actor": {
+          "player": "Player",
+          "ai": "AI"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "point": "Point {point}",
+        "bar": "Bar",
+        "dice": {
+          "none": "-"
+        },
+        "board": {
+          "playerOff": "{actor} OFF ({countFormatted})",
+          "aiOff": "{actor} OFF ({countFormatted})",
+          "barText": "{label}"
+        },
+        "action": {
+          "roll": "Roll Dice",
+          "rematch": "Rematch"
+        },
+        "badge": {
+          "difficulty": "Difficulty: {difficulty}",
+          "hits": "Hits: {hitsFormatted}",
+          "score": "Score: {scoreFormatted}"
+        },
+        "ui": {
+          "turn": "Turn: {actor}{status}",
+          "turnFinishedSuffix": " (Finished)",
+          "dice": {
+            "empty": "Dice: -",
+            "detail": "Dice: [{diceFormatted}] / Remaining [{remainingFormatted}]"
+          },
+          "bar": "{bar}: {playerLabel} {playerFormatted} / {aiLabel} {aiFormatted}",
+          "bearOff": {
+            "title": "Bear Off",
+            "summary": "{title}: {playerLabel} {playerFormatted} / {aiLabel} {aiFormatted}"
+          }
+        },
+        "log": {
+          "bearOff": "{actor} bears off from {fromLabel} ({dieFormatted})",
+          "barHit": "{actor} enters from {bar} to {toLabel} ({dieFormatted}): Hit!",
+          "barEntry": "{actor} enters from {bar} to {toLabel} ({dieFormatted})",
+          "moveHit": "{actor} moves {fromLabel} → {toLabel} ({dieFormatted}): Hit!",
+          "move": "{actor} moves {fromLabel} → {toLabel} ({dieFormatted})",
+          "win": {
+            "player": "Player wins! {rewardFormatted} EXP earned.",
+            "ai": "AI wins... Try again."
+          },
+          "aiDice": "AI dice: {diceFormatted}",
+          "aiNoMove": "AI cannot move.",
+          "playerDice": "Player dice: {diceFormatted}",
+          "noMoves": "No legal moves available.",
+          "newGame": "New game started. Player goes first."
         }
       },
       "runResult": {
@@ -13049,6 +14695,9 @@
             "levelDown": "Your level temporarily decreased! ({turns} turns)"
           }
         },
+        "levelUp": {
+          "log": "Level Up!\nLevel: {level} (+{levelDelta})\nMax HP: {maxHp} (+{maxHpDelta})\nATK: {attack} (+{attackDelta})\nDEF: {defense} (+{defenseDelta})"
+        },
         "sandbox": {
           "noExp": "Sandbox mode does not award EXP.",
           "started": "Sandbox mode started. EXP will not be awarded."
@@ -13204,6 +14853,121 @@
       }
     },
     "games": {
+      "timer": {
+        "header": {
+          "title": "Timer Utility",
+          "subtitle": "Manage focus or breaks with countdowns and a stopwatch."
+        },
+        "xpBadge": "Session EXP {formattedXp}",
+        "modes": {
+          "countdown": "Countdown",
+          "stopwatch": "Stopwatch"
+        },
+        "inputs": {
+          "hours": "Hours",
+          "minutes": "Minutes",
+          "seconds": "Seconds"
+        },
+        "quickButtons": {
+          "addMinutes": "+{minutes} min",
+          "subtractMinutes": "-{minutes} min",
+          "pomodoro": "Pomodoro {minutes} min"
+        },
+        "controls": {
+          "start": "Start",
+          "pause": "Pause",
+          "resume": "Resume",
+          "reset": "Reset"
+        },
+        "status": {
+          "ready": "Ready",
+          "countdownReady": "Countdown ready",
+          "stopwatchReady": "Stopwatch ready",
+          "countdownRunning": "Counting down…",
+          "resumed": "Resumed",
+          "paused": "Paused",
+          "stopwatchRunning": "Stopwatch running…",
+          "stopwatchMinuteAwarded": "{minutes} min elapsed!",
+          "stopwatchMinute": "{minutes} min elapsed",
+          "completed": "Complete! Nice work"
+        },
+        "history": {
+          "title": "Recent Log",
+          "labels": {
+            "complete": "Complete",
+            "start": "Start",
+            "stopwatchMinute": "Minute",
+            "generic": "Milestone"
+          },
+          "xpAward": "{label}: +{formattedXp} EXP",
+          "timerComplete": "Timer finished!"
+        }
+      },
+      "diagramMaker": {
+        "errors": {
+          "containerMissing": "MiniExp Diagram Maker requires a container",
+          "pngSignature": "Unable to recognize PNG signature",
+          "pngDataMissing": "No draw.io data found inside the PNG",
+          "inflateUnsupported": "This environment does not support inflating compressed data",
+          "parseXml": "Failed to parse XML",
+          "diagramMissing": "No diagram element found",
+          "mxGraphMissing": "No mxGraphModel element found",
+          "diagramDecodeFailed": "Failed to decode diagram data",
+          "mxGraphRootMissing": "mxGraphModel root element is missing",
+          "loadFailed": "Failed to load: {error}",
+          "saveFailed": "Failed to save: {error}",
+          "exportFailed": "Failed to export: {error}"
+        },
+        "defaults": {
+          "fileName": "Untitled Diagram.drawio",
+          "layerName": "Layer {index}",
+          "pageName": "Page {index}",
+          "textPlaceholder": "Text",
+          "nodePlaceholder": "New Node"
+        },
+        "tools": {
+          "select": "Select",
+          "rectangle": "Rectangle",
+          "ellipse": "Ellipse",
+          "text": "Text",
+          "connector": "Connector",
+          "delete": "Delete"
+        },
+        "actions": {
+          "new": "New",
+          "open": "Open",
+          "save": "Save",
+          "export": "Export",
+          "exportFormat": "Export as {formatLabel}",
+          "undo": "Undo",
+          "redo": "Redo"
+        },
+        "sections": {
+          "properties": "Properties"
+        },
+        "fields": {
+          "x": "X",
+          "y": "Y",
+          "width": "Width",
+          "height": "Height",
+          "fill": "Fill",
+          "stroke": "Stroke",
+          "strokeWidth": "Stroke Width",
+          "textColor": "Text Color",
+          "fontSize": "Font Size",
+          "text": "Text"
+        },
+        "toggles": {
+          "grid": "Grid",
+          "snap": "Snap"
+        },
+        "labels": {
+          "exp": "EXP: {value}"
+        },
+        "confirm": {
+          "newDocument": "You have unsaved changes. Create a new diagram?"
+        }
+      },
       "clockHub": {
         "errors": {
           "noContainer": "Clock Hub requires a container"
@@ -13549,6 +15313,53 @@
       }
     },
     "games": {
+      "todoList": {
+        "defaults": {
+          "untitled": "Untitled"
+        },
+        "header": {
+          "title": "To-Do List",
+          "today": "Today · {date}",
+          "stats": "Pending: {pending} / Completed: {completed}"
+        },
+        "form": {
+          "titleCreate": "Add New To-Do",
+          "titleEdit": "Edit To-Do",
+          "name": "Name",
+          "namePlaceholder": "e.g., Send daily report",
+          "xp": "EXP Reward",
+          "color": "Color",
+          "memo": "Notes",
+          "memoPlaceholder": "Add notes or checkpoints",
+          "submitCreate": "Add",
+          "submitUpdate": "Update",
+          "cancel": "Cancel"
+        },
+        "sections": {
+          "pending": "Pending Tasks",
+          "completed": "Completed Tasks",
+          "emptyPending": "No pending to-dos.",
+          "emptyCompleted": "No completed to-dos yet."
+        },
+        "task": {
+          "xpChip": "{xp} EXP",
+          "memoEmpty": "No notes",
+          "createdAt": "Created: {date}",
+          "completedAt": "Completed: {date}",
+          "statusCompleted": "Success",
+          "statusFailed": "Failed",
+          "actions": {
+            "complete": "Complete",
+            "fail": "Fail",
+            "edit": "Edit",
+            "delete": "Delete"
+          }
+        },
+        "dialogs": {
+          "confirmDelete": "Delete this to-do?",
+          "requireName": "Enter a name."
+        }
+      },
       "notepad": {
         "defaultFileName": "Untitled.txt",
         "confirm": {
@@ -13558,7 +15369,13 @@
         "menu": {
           "file": "File",
           "edit": "Edit",
-          "view": "View",
+          "view": {
+            "label": "View",
+            "enableWordWrap": "Enable Word Wrap",
+            "disableWordWrap": "Disable Word Wrap",
+            "showStatusBar": "Show Status Bar",
+            "hideStatusBar": "Hide Status Bar"
+          },
           "fileNew": "New",
           "fileOpen": "Open...",
           "fileSave": "Save",
@@ -13575,13 +15392,7 @@
           "editSelectAll": "Select All",
           "viewZoomIn": "Zoom In",
           "viewZoomOut": "Zoom Out",
-          "viewZoomReset": "Reset Zoom",
-          "view": {
-            "enableWordWrap": "Enable Word Wrap",
-            "disableWordWrap": "Disable Word Wrap",
-            "showStatusBar": "Show Status Bar",
-            "hideStatusBar": "Hide Status Bar"
-          }
+          "viewZoomReset": "Reset Zoom"
         },
         "commands": {
           "heading": "Toggle heading level",
@@ -13628,6 +15439,146 @@
         },
         "timestamp": {
           "pattern": "{month}/{day}/{year} {hour}:{minute}:{second}"
+        }
+      },
+      "wording": {
+        "name": "Wording",
+        "description": "Word processor awarding EXP: Edit +1 / Format +2 / Save +6",
+        "defaultTitle": "Document 1",
+        "autoTitle": "Document {formattedNumber}",
+        "quickBar": {
+          "open": "Open (Ctrl+O)",
+          "save": "Save (Ctrl+S)",
+          "saveAs": "Save As (Ctrl+Shift+S)",
+          "undo": "Undo (Ctrl+Z)",
+          "redo": "Redo (Ctrl+Y)",
+          "print": "Print"
+        },
+        "tabs": {
+          "home": "Home",
+          "insert": "Insert",
+          "layout": "Layout",
+          "review": "Review",
+          "view": "View"
+        },
+        "groups": {
+          "clipboard": "Clipboard",
+          "font": "Font",
+          "paragraph": "Paragraph",
+          "style": "Styles",
+          "insert": "Insert",
+          "media": "Media",
+          "theme": "Theme",
+          "columns": "Columns",
+          "margins": "Margins",
+          "proofing": "Proofing Tools",
+          "comments": "Comments",
+          "lineHeight": "Line Spacing",
+          "guides": "Guides",
+          "paper": "Page Color"
+        },
+        "buttons": {
+          "rename": "Rename",
+          "paste": "Paste",
+          "copy": "Copy",
+          "cut": "Cut",
+          "bold": "Bold",
+          "italic": "Italic",
+          "underline": "Underline",
+          "strikethrough": "Strikethrough",
+          "superscript": "Superscript",
+          "subscript": "Subscript",
+          "bullets": "Bulleted list",
+          "numberedList": "Numbered list",
+          "alignLeft": "Align left",
+          "alignCenter": "Align center",
+          "alignRight": "Align right",
+          "alignJustify": "Justify",
+          "outdent": "Decrease indent",
+          "indent": "Increase indent",
+          "blockParagraph": "Body text",
+          "blockHeading": "Heading {level}",
+          "blockQuote": "Quote",
+          "insertDate": "Date",
+          "insertTime": "Time",
+          "insertHorizontalRule": "Horizontal rule",
+          "insertEmoji": "Emoji",
+          "insertImage": "Image",
+          "insertTextbox": "Textbox",
+          "insertToc": "Table of contents",
+          "commentInsert": "Insert comment",
+          "changeSummary": "Change summary",
+          "wordCount": "Word count",
+          "readingTime": "Reading time",
+          "reviewHighlightOn": "Highlight long text",
+          "reviewHighlightOff": "Clear highlight",
+          "columnsOption": "{formattedCount} col",
+          "lineHeightOption": "{formattedValue}x",
+          "marginNarrow": "Narrow",
+          "marginNormal": "Normal",
+          "marginWide": "Wide",
+          "themeLight": "Light",
+          "themeDark": "Dark paper",
+          "showRuler": "Show ruler",
+          "hideRuler": "Hide ruler",
+          "showStatus": "Show status bar",
+          "hideStatus": "Hide status bar",
+          "paperWhite": "White",
+          "paperCream": "Cream",
+          "paperGray": "Gray",
+          "zoomOut": "Zoom out",
+          "zoomIn": "Zoom in"
+        },
+        "messages": {
+          "printUnavailable": "Print dialog support coming soon.",
+          "noContent": "No content to analyze.",
+          "wordCount": "Characters: {characters} / Words: {words} / Paragraphs: {paragraphs}",
+          "readingTime": "Approx. {minutes} min {secondsPadded} sec to read",
+          "changeSummarySaved": "Saved: no differences detected",
+          "changeSummaryDiff": "Unsaved change estimate: about {difference} characters"
+        },
+        "prompts": {
+          "rename": "Enter a document name",
+          "saveFile": "Enter a file name to save (.wording.html)",
+          "comment": "Enter a comment"
+        },
+        "confirm": {
+          "closeWithoutSave": "Close without saving?",
+          "newWithoutSave": "There are unsaved changes. Start a new document?"
+        },
+        "fonts": {
+          "yuGothic": "Yu Gothic",
+          "yuMincho": "Yu Mincho",
+          "meiryo": "Meiryo",
+          "hiraginoKaku": "Hiragino Sans",
+          "monospace": "Monospace (Consolas)"
+        },
+        "fontSize": {
+          "option": "{formattedSize} pt"
+        },
+        "insert": {
+          "tocTemplate": "<ol><li>Introduction</li><li>Main Content</li><li>Summary</li></ol>",
+          "textboxLabel": "Textbox"
+        },
+        "editor": {
+          "welcomeHtml": "<p>Welcome to Wording! Start drafting your document here.</p>",
+          "newDocumentHtml": "<p>Let's start a new document.</p>"
+        },
+        "status": {
+          "summary": "Page {pageCurrent} / {pageTotal} | Characters: {characters} | Words: {words}"
+        },
+        "search": {
+          "title": "Find & Replace",
+          "placeholder": "Search term",
+          "replacePlaceholder": "Replacement text",
+          "enterQuery": "Enter a search term",
+          "noMatch": "No matches found",
+          "next": "Find next",
+          "replace": "Replace",
+          "replaceAll": "Replace all",
+          "close": "Close",
+          "replacedCount": "Replaced {count} matches",
+          "progress": "Match {current} of {total}"
         }
       },
       "mathLab": {
@@ -13931,6 +15882,264 @@
             "paused": "Paused",
             "found": "Treasure found! Building the next round…"
           }
+        },
+        "logs": {
+          "playerShot": "You: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+          "cpuShot": "CPU: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+          "victory": "<strong>Victory!</strong> +{exp}EXP",
+          "draw": "<strong>Draw</strong> +{exp}EXP",
+          "defeat": "<strong>Defeat</strong> +{exp}EXP"
+        }
+      },
+      "triominoColumns": {
+        "menu": {
+          "title": "Triomino Columns",
+          "subtitle": "Choose a mode",
+          "options": {
+            "endless": {
+              "label": "ENDLESS - Play until game over",
+              "description": "Core single-player mode"
+            },
+            "vsCpu": {
+              "label": "VS.RIVAL - CPU Battle",
+              "description": "Face off against GEARS characters"
+            },
+            "vs2p": {
+              "label": "VS.2P - Two-Player Battle",
+              "description": "Local battle (WASD + JK controls)"
+            }
+          }
+        },
+        "cpuSelect": {
+          "title": "VS.RIVAL - Select Opponent",
+          "subtitle": "Choose the rival you want to challenge",
+          "detail": "Speed Lv.{speedLevel} / Aggression {aggression}%",
+          "hint": "※ Hugleman Lady unlocks by consecutive victories. ??? unlocks by clearing without continues within 15 minutes.",
+          "back": "← Back to Mode Select",
+          "lockReasons": {
+            "lady": "Requirement: Break through the Hugleman squad in one streak",
+            "hidden": "Requirement: Clear without continues within 15 minutes",
+            "default": "Requirement: Defeat the previous rival"
+          },
+          "rivals": {
+            "0": { "name": "Karakurin" },
+            "1": { "name": "Hugleman Jr." },
+            "2": { "name": "Karakuri Ninja" },
+            "3": { "name": "Hugleman Mk-II" },
+            "4": { "name": "Hugleman Mk-III" },
+            "5": { "name": "Shadow Hugle" },
+            "6": { "name": "Hugleman Lady" },
+            "7": { "name": "???" }
+          }
+        },
+        "marks": {
+          "sun": "Sun",
+          "leaf": "Leaf",
+          "aqua": "Droplet",
+          "berry": "Berry",
+          "rose": "Rose",
+          "amber": "Amber"
+        },
+        "blocks": {
+          "multi": "Multi"
+        },
+        "messages": {
+          "garbageAttack": "Sent garbage to {target}!",
+          "lineSpark": "Line Spark!",
+          "vs2pStart": "VS 2P Start!",
+          "vsCpuStart": "VS RIVAL: {name}",
+          "combo": "{target}: {combo}-chain!"
+        },
+        "floating": {
+          "clear": "{count} CLEAR",
+          "combo": "{combo} Chain!",
+          "spark": "SPARK!"
+        },
+        "boards": {
+          "player": "Player",
+          "p1": "P1",
+          "p2": "P2"
+        },
+        "results": {
+          "gameOver": "Game Over",
+          "victoryTitle": "{name} Wins!",
+          "drawTitle": "Draw",
+          "endlessStats": "Lines {lines} / Combos {combos} / Sparks {spark}",
+          "buttons": {
+            "retryEndless": "Play Endless Again",
+            "backToMenu": "Back to Mode Select"
+          },
+          "vsCpu": {
+            "victoryMessage": "Victory! Time {duration}s / Total {total}s",
+            "defeatMessage": "Defeat… Time {duration}s",
+            "nextRival": "Next Rival ({name})",
+            "retrySame": "Rematch Same Rival",
+            "backToSelect": "Back to Rival Select"
+          },
+          "vs2p": {
+            "retry": "Rematch",
+            "hint": "You can battle again with the same keyboard setup."
+          }
+        },
+        "panel": {
+          "next": "NEXT",
+          "hold": "HOLD",
+          "stats": "STATS",
+          "lines": "Lines: {value}",
+          "combo": "Combo: {value}",
+          "spark": "Spark: {value}",
+          "attack": "Attack: {value}"
+        },
+        "miniStats": {
+          "lines": "Lines {value}",
+          "comboSpark": "Combo {combo} / Spark {spark}"
+        },
+        "modeLabels": {
+          "endless": "ENDLESS Mode",
+          "vsCpu": "VS.RIVAL Mode",
+          "vs2p": "VS.2P Mode"
+        }
+      }
+    },
+    "games": {
+      "sugorokuLife": {
+        "ui": {
+          "currencySuffix": "G",
+          "expUnit": "EXP",
+          "expAmount": "{formatted} {unit}",
+          "hud": {
+            "turn": "Turn",
+            "money": "Cash on Hand",
+            "salary": "Estimated Annual Income",
+            "exp": "EXP Earned"
+          },
+          "controls": {
+            "roll": "Roll the Dice",
+            "restart": "Play Again"
+          },
+          "welcome": {
+            "title": "Welcome to Life Sugoroku",
+            "message": "Roll the dice, advance your piece, and gain EXP from each life event."
+          },
+          "log": {
+            "title": "Event Log",
+            "noMoneyDelta": "±0G",
+            "expText": "EXP {formatted}",
+            "meta": "{money} / {exp}"
+          },
+          "event": {
+            "expText": "EXP {formatted}",
+            "delta": "{money} / {exp}"
+          },
+          "summary": {
+            "rank": "Final Rank {grade}",
+            "money": "Final Funds: {money}",
+            "bonus": "Bonus EXP: {formatted}",
+            "total": "Total EXP Earned: {formatted}"
+          },
+          "restart": {
+            "title": "Restart!",
+            "message": "Dash through life once more."
+          }
+        },
+        "board": {
+          "start": { "label": "Start", "sub": "Career begins" },
+          "orientation": { "label": "Career Planning", "sub": "Visualize your future" },
+          "chance": {
+            "label": "Chance Card",
+            "unknown": "Unexpected event",
+            "mixed": "Could go either way",
+            "fate": "Draw of fate",
+            "twist": "Surprising development",
+            "shift": "Sudden change"
+          },
+          "sidejob": { "label": "Side Hustle Prep", "sub": "Weekend project" },
+          "travel": { "label": "Refreshing Trip", "sub": "Sharpen your senses" },
+          "salary": { "label": "Payday", "sub": "Hard work pays off" },
+          "family": { "label": "Family Event", "sub": "Cherished time" },
+          "qualification": { "label": "Certification", "sub": "Study pays off" },
+          "living": { "label": "Living Costs", "sub": "Pay the bills" },
+          "health": { "label": "Health Check", "sub": "Review your wellbeing" },
+          "project": { "label": "Major Project", "sub": "High responsibility" },
+          "donation": { "label": "Community Contribution", "sub": "Charity efforts" },
+          "payday": { "label": "Raise Bonus", "sub": "Recognition earned" },
+          "mentor": { "label": "Mentoring", "sub": "Train juniors" },
+          "expense": { "label": "Unexpected Expense", "sub": "Emergency repairs" },
+          "team": { "label": "Team Building", "sub": "Build trust" },
+          "innovation": { "label": "New Venture Pitch", "sub": "Time to challenge" },
+          "tax": { "label": "Tax Payment", "sub": "Part of society" },
+          "festival": { "label": "Community Festival", "sub": "Expand your network" },
+          "savings": { "label": "Asset Management", "sub": "Grow steadily" },
+          "final": { "label": "Goal", "sub": "Life's culmination" }
+        },
+        "events": {
+          "start": { "title": "Career Begins!", "message": "Use your first paycheck to build a stable life." },
+          "orientation": { "title": "Mapped Your Career", "message": "A self-analysis seminar clarified your goals." },
+          "sidejob": { "title": "Side Hustle Launched", "message": "Your weekend project immediately turned a profit!" },
+          "travel": { "title": "Inspiration from Travel", "message": "New scenery and culture expanded your horizons." },
+          "salary": { "title": "Payday!", "message": "Another month of effort. Balance living costs with savings." },
+          "family": { "title": "Family Memories", "message": "Priceless time together filled your heart." },
+          "qualification": { "title": "Earned a Certification!", "message": "A professional credential boosts your future salary." },
+          "living": { "title": "Paid Living Expenses", "message": "Sharpening your frugal habits could free up more funds." },
+          "health": { "title": "Health Check Complete", "message": "Routine care keeps you ready and reduces future risk." },
+          "project": { "title": "Major Project Success", "message": "Leading the team to results opened the door to a big raise!" },
+          "donation": { "title": "Donated to the Community", "message": "Giving back earned trust that will help future endeavors." },
+          "payday": { "title": "Raise Bonus Awarded!", "message": "Your achievements were recognized and your income climbed again." },
+          "mentor": { "title": "Became a Mentor", "message": "Helping others grow also strengthens your own skills." },
+          "expense": { "title": "Emergency Repair Costs", "message": "Calm action kept the damage to a minimum." },
+          "team": { "title": "Team-Building Retreat", "message": "Stronger bonds make upcoming projects smoother." },
+          "innovation": { "title": "New Venture Success", "message": "You read the market and built a flagship business for the division." },
+          "tax": { "title": "Paid Your Taxes", "message": "Returning value to society prompts a budget review for the next chance." },
+          "festival": { "title": "Networked at a Local Festival", "message": "Connections expanded and sparked your next idea." },
+          "savings": { "title": "Investments Performing Well", "message": "Diversification steadily grew your assets." },
+          "goal": {
+            "logTitle": "Goal!",
+            "logDetail": "Final assets {money} / Grade {grade} / Bonus EXP {bonusFormatted}",
+            "title": "Life Ledger Closed",
+            "message": "Final assets {money}. Grade {grade} achieved! Bonus EXP awarded based on your savings."
+          }
+        },
+        "chance": {
+          "startup": { "label": "Startup Investment", "description": "Your foresight backed a startup that absolutely took off!" },
+          "travel": { "label": "World Tour", "description": "The trip broadened your experience but cost a lot." },
+          "innovation": { "label": "Innovation Award", "description": "You won the company hackathon and the prize money!" },
+          "carRepair": { "label": "Car Repairs", "description": "A sudden breakdown forced you to pay for fixes..." },
+          "mentor": { "label": "Met a Mentor", "description": "A brilliant mentor guided you and unlocked your career." },
+          "sideBusiness": { "label": "Side Business Hit", "description": "Your weekend gig went viral and sales surged!" },
+          "medicalBill": { "label": "Medical Bills", "description": "A hospital stay was expensive, but health comes first." },
+          "community": { "label": "Hosted a Community Event", "description": "Your local event earned gratitude and valuable experience." },
+          "award": { "label": "Annual Award", "description": "You received a year-end company award and prize money!" },
+          "market": { "label": "Market Crash", "description": "Your investments plunged—stay calm and ride it out." }
+        }
+      },
+      "treasureHunt": {
+        "ui": {
+          "mapTitle": "Map",
+          "start": "Start",
+          "pause": "Pause",
+          "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards."
+        },
+        "labels": {
+          "round": "Round: {value}",
+          "time": "Time: {value}",
+          "distance": "Distance: {value}",
+          "totalExp": "Total EXP: {value}",
+          "timeValue": "{value}s",
+          "distanceValue": "{value} tiles",
+          "none": "-",
+          "lastResult": "Last round {time} for {exp} EXP{best}",
+          "bestSuffix": " / Best {time}"
+        },
+        "status": {
+          "preparing": "Preparing stage…",
+          "generating": "Generating stage…",
+          "generateFailed": "Failed to generate the stage",
+          "noApi": "Dungeon API is unavailable",
+          "placingFailed": "Treasure placement failed—regenerating",
+          "ready": "Moved to start for Round {round}",
+          "running": "Exploring Round {round}…",
+          "paused": "Paused",
+          "found": "Treasure found! Building the next round…"
         }
       }
     }

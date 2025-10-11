@@ -631,9 +631,209 @@
     category: 'トイ',
     version: '0.1.0',
     author: 'mod',
-    create(root, awardXp){
+    create(root, awardXp, opts = {}){
       if (!root) throw new Error('Logic circuit simulator requires a container');
       ensureStyle();
+
+      const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({ id: 'logic_circuit' })
+        : null);
+
+      const text = (key, fallback, params) => {
+        if (localization && typeof localization.t === 'function') {
+          try {
+            return localization.t(key, fallback, params);
+          } catch {}
+        }
+        if (typeof fallback === 'function') return fallback();
+        return fallback ?? '';
+      };
+
+      const formatNumber = (value, options) => {
+        if (localization && typeof localization.formatNumber === 'function') {
+          try {
+            return localization.formatNumber(value, options);
+          } catch {}
+        }
+        try {
+          const locale = localization && typeof localization.getLocale === 'function'
+            ? localization.getLocale()
+            : undefined;
+          return new Intl.NumberFormat(locale, options).format(value);
+        } catch {}
+        if (value == null || Number.isNaN(value)) return '0';
+        if (typeof value === 'number') return value.toString();
+        return String(value ?? '');
+      };
+
+      const formatTemplate = (template, params = {}) => {
+        const str = template == null ? '' : String(template);
+        if (!str) return '';
+        return str.replace(/\{([^{}]+)\}/g, (_, key) => {
+          const normalized = key.trim();
+          if (!normalized) return '';
+          const value = Object.prototype.hasOwnProperty.call(params, normalized) ? params[normalized] : '';
+          return value == null ? '' : String(value);
+        });
+      };
+
+      const baseLibrary = COMPONENT_LIBRARY;
+      let currentLabels = null;
+      let currentLibrary = null;
+      let currentLocaleId = null;
+      let detachLocale = null;
+      const categoryKeyMap = new Map([
+        ['入力', '.categories.inputs'],
+        ['ゲート', '.categories.gates'],
+        ['配線', '.categories.wiring'],
+        ['複合', '.categories.composite'],
+        ['シーケンシャル', '.categories.sequential'],
+        ['計測', '.categories.measurement'],
+        ['出力', '.categories.outputs'],
+        ['その他', '.categories.misc']
+      ]);
+
+      const getLocaleId = () => {
+        if (localization && typeof localization.getLocale === 'function') {
+          try {
+            return localization.getLocale() || 'default';
+          } catch {}
+        }
+        return 'default';
+      };
+
+      const normalizeSignalText = (textContent, signals) => {
+        if (!textContent) return textContent;
+        let result = textContent;
+        const replacements = [
+          { pattern: /\bHIGH\b/g, value: signals.high },
+          { pattern: /\bLOW\b/g, value: signals.low },
+          { pattern: /\bON\b/g, value: signals.on },
+          { pattern: /\bOFF\b/g, value: signals.off },
+          { pattern: /\bSET\b/g, value: signals.set },
+          { pattern: /\bRESET\b/g, value: signals.reset }
+        ];
+        for (const { pattern, value } of replacements) {
+          if (value) result = result.replace(pattern, value);
+        }
+        return result;
+      };
+
+      const refreshLocalization = (force = false) => {
+        const localeId = getLocaleId();
+        if (!force && currentLabels && currentLibrary && localeId === currentLocaleId) {
+          return { labels: currentLabels, library: currentLibrary };
+        }
+        currentLocaleId = localeId;
+        const signals = {
+          high: text('.signals.high', 'HIGH'),
+          low: text('.signals.low', 'LOW'),
+          on: text('.signals.on', 'ON'),
+          off: text('.signals.off', 'OFF'),
+          set: text('.signals.set', 'SET'),
+          reset: text('.signals.reset', 'RESET'),
+          neutral: text('.signals.neutral', '---')
+        };
+
+        currentLabels = {
+          signals,
+          chips: {
+            sessionXp: text('.chips.sessionXp', 'セッションEXP: {value}'),
+            elapsedTime: text('.chips.elapsedTime', '経過時間: {value}ms')
+          },
+          controls: {
+            runStart: text('.controls.run.start', '▶ 再開'),
+            runStop: text('.controls.run.stop', '⏸ 停止'),
+            step: text('.controls.step', '⏭ ステップ'),
+            clear: text('.controls.clearCanvas', 'キャンバス初期化'),
+            deselect: text('.controls.deselectTool', 'ツール解除 (Esc)'),
+            stepLabel: text('.controls.stepLabel', 'ステップ(ms)')
+          },
+          header: {
+            title: text('.header.title', '論理回路シミュレータ'),
+            subtitle: text('.header.subtitle', '入力ノードとゲートを並べ、リアルタイム評価で組み合わせ論理を検証')
+          },
+          board: {
+            hint: text('.board.hint', 'ツールを選択し、キャンバスの空いている場所をクリックして配置します。出力ポート→入力ポートの順でクリックすると配線できます。Deleteキーで選択中の部品を削除。')
+          },
+          inspector: {
+            title: text('.inspector.title', '部品インスペクタ'),
+            empty: text('.inspector.empty', '部品を選択すると詳細と真理値表を表示します。最大入力3本のゲートで真理値表を自動生成します。'),
+            truthTitle: text('.inspector.truthTitle', '真理値表'),
+            wiresHint: text('.inspector.wiresHint', '配線はパスをクリックで削除。Alt+入力クリックでその入力への配線を解除。'),
+            info: {
+              id: text('.inspector.info.id', 'ID'),
+              type: text('.inspector.info.type', 'タイプ'),
+              inputs: text('.inspector.info.inputs', '入力ポート'),
+              outputs: text('.inspector.info.outputs', '出力ポート'),
+              clockPeriod: text('.inspector.info.clockPeriod', '周期 (ms)'),
+              clockPeriodValue: text('.inspector.info.clockPeriodValue', '{value} ms'),
+              latestInputs: text('.inspector.info.latestInputs', '最新入力'),
+              latestOutputs: text('.inspector.info.latestOutputs', '最新出力'),
+              fanIn: text('.inspector.info.fanIn', '入力接続'),
+              fanOut: text('.inspector.info.fanOut', '出力接続'),
+              connections: text('.inspector.info.connections', '{count} 本'),
+              propagationDelay: text('.inspector.info.propagationDelay', '伝播遅延(目安)'),
+              propagationDelayValue: text('.inspector.info.propagationDelayValue', '{value} ns'),
+              description: text('.inspector.info.description', '説明')
+            },
+            truthHeaderInput: text('.inspector.truthTable.input', 'IN{index}'),
+            truthHeaderOutput: text('.inspector.truthTable.output', 'OUT')
+          },
+          footer: text('.footer.hint', 'ヒント: 入力をトグルして即座に出力を確認。シミュレーション制御で一時停止やステップ実行を行いながらシーケンシャル動作を解析できます。'),
+          ports: {
+            input: text('.ports.input', '入力 #{index}'),
+            output: text('.ports.output', '出力 #{index}')
+          },
+          placeholders: {
+            status: signals.neutral || '---'
+          }
+        };
+
+        currentLibrary = baseLibrary.map(def => {
+          const localized = Object.assign({}, def);
+          const categoryKey = categoryKeyMap.get(def.category) || '.categories.misc';
+          localized.category = text(categoryKey, def.category || 'その他');
+          localized.label = text(`.components.${def.id}.label`, def.label);
+          localized.description = text(`.components.${def.id}.description`, def.description);
+          if (typeof def.updateVisual === 'function') {
+            const originalUpdate = def.updateVisual;
+            localized.updateVisual = function(component){
+              originalUpdate(component);
+              if (component?.dom?.status) {
+                component.dom.status.textContent = normalizeSignalText(component.dom.status.textContent, signals);
+              }
+              if (component?.controls) {
+                for (const control of Object.values(component.controls)) {
+                  if (control && typeof control.textContent === 'string') {
+                    control.textContent = normalizeSignalText(control.textContent, signals);
+                  }
+                }
+              }
+            };
+          }
+          if (typeof def.inspect === 'function') {
+            const originalInspect = def.inspect;
+            localized.inspect = function(component){
+              const result = originalInspect(component) || [];
+              return result.map((entry, index) => {
+                if (!entry || typeof entry !== 'object') return entry;
+                const localizedLabel = text(`.components.${def.id}.inspect.${index}.label`, entry.label);
+                let value = entry.value;
+                if (typeof value === 'string') {
+                  value = normalizeSignalText(value, signals);
+                }
+                return Object.assign({}, entry, { label: localizedLabel, value });
+              });
+            };
+          }
+          return localized;
+        });
+
+        return { labels: currentLabels, library: currentLibrary };
+      };
+
+      refreshLocalization(true);
 
       const state = {
         components: [],
@@ -664,10 +864,10 @@
       const titleWrap = document.createElement('div');
       const title = document.createElement('h2');
       title.className = 'logic-circuit-title';
-      title.textContent = '論理回路シミュレータ';
+      title.textContent = currentLabels.header.title;
       const subtitle = document.createElement('div');
       subtitle.className = 'logic-circuit-subtitle';
-      subtitle.textContent = '入力ノードとゲートを並べ、リアルタイム評価で組み合わせ論理を検証';
+      subtitle.textContent = currentLabels.header.subtitle;
       titleWrap.appendChild(title);
       titleWrap.appendChild(subtitle);
 
@@ -675,14 +875,12 @@
       headerActions.className = 'logic-circuit-actions';
       const xpChip = document.createElement('div');
       xpChip.className = 'logic-chip';
-      xpChip.textContent = 'セッションEXP: 0';
       const timeChip = document.createElement('div');
       timeChip.className = 'logic-chip neutral';
-      timeChip.textContent = '経過時間: 0.0ms';
 
       const clearButton = document.createElement('button');
       clearButton.className = 'logic-mini-button';
-      clearButton.textContent = 'キャンバス初期化';
+      clearButton.textContent = currentLabels.controls.clear;
       clearButton.addEventListener('click', () => {
         if (!state.components.length && !state.wires.length) return;
         for (const wire of [...state.wires]) removeWire(wire.id);
@@ -696,12 +894,11 @@
 
       const deselectButton = document.createElement('button');
       deselectButton.className = 'logic-mini-button';
-      deselectButton.textContent = 'ツール解除 (Esc)';
+      deselectButton.textContent = currentLabels.controls.deselect;
       deselectButton.addEventListener('click', () => setActiveTool(null));
 
       const runButton = document.createElement('button');
       runButton.className = 'logic-mini-button';
-      runButton.textContent = '⏸ 停止';
       runButton.addEventListener('click', () => {
         if (state.isRunning) {
           stop();
@@ -713,7 +910,7 @@
 
       const stepButton = document.createElement('button');
       stepButton.className = 'logic-mini-button';
-      stepButton.textContent = '⏭ ステップ';
+      stepButton.textContent = currentLabels.controls.step;
       stepButton.addEventListener('click', () => {
         stop();
         advanceSimulation(state.stepDuration, { immediate: true });
@@ -724,7 +921,9 @@
       stepControl.style.alignItems = 'center';
       stepControl.style.gap = '6px';
       stepControl.style.fontSize = '12px';
-      stepControl.textContent = 'ステップ(ms)';
+      const stepControlLabel = document.createElement('span');
+      stepControlLabel.textContent = currentLabels.controls.stepLabel;
+      stepControl.appendChild(stepControlLabel);
       const stepInput = document.createElement('input');
       stepInput.type = 'number';
       stepInput.min = '1';
@@ -757,68 +956,74 @@
 
       const boardHint = document.createElement('div');
       boardHint.className = 'logic-board-hint';
-      boardHint.textContent = 'ツールを選択し、キャンバスの空いている場所をクリックして配置します。出力ポート→入力ポートの順でクリックすると配線できます。Deleteキーで選択中の部品を削除。';
+      boardHint.textContent = currentLabels.board.hint;
 
       const toolGroups = document.createElement('div');
       toolGroups.className = 'logic-tool-groups';
-
-      const groups = groupByCategory(COMPONENT_LIBRARY);
       const toolButtons = new Map();
-      for (const [cat, defs] of groups) {
-        const groupEl = document.createElement('div');
-        groupEl.style.display = 'flex';
-        groupEl.style.flexDirection = 'column';
-        groupEl.style.gap = '6px';
 
-        const label = document.createElement('div');
-        label.textContent = cat;
-        label.style.fontSize = '12px';
-        label.style.fontWeight = '700';
-        label.style.letterSpacing = '0.04em';
-        label.style.color = '#1f2937';
+      function renderToolbar(){
+        toolButtons.clear();
+        toolGroups.innerHTML = '';
+        const groups = groupByCategory(currentLibrary);
+        for (const [cat, defs] of groups) {
+          const groupEl = document.createElement('div');
+          groupEl.style.display = 'flex';
+          groupEl.style.flexDirection = 'column';
+          groupEl.style.gap = '6px';
 
-        const buttonsWrap = document.createElement('div');
-        buttonsWrap.style.display = 'flex';
-        buttonsWrap.style.flexWrap = 'wrap';
-        buttonsWrap.style.gap = '8px';
+          const label = document.createElement('div');
+          label.textContent = cat;
+          label.style.fontSize = '12px';
+          label.style.fontWeight = '700';
+          label.style.letterSpacing = '0.04em';
+          label.style.color = '#1f2937';
 
-        for (const def of defs) {
-          const btn = document.createElement('button');
-          btn.className = 'logic-tool-button';
-          btn.dataset.toolId = def.id;
+          const buttonsWrap = document.createElement('div');
+          buttonsWrap.style.display = 'flex';
+          buttonsWrap.style.flexWrap = 'wrap';
+          buttonsWrap.style.gap = '8px';
 
-          const icon = document.createElement('span');
-          icon.textContent = def.icon || '■';
-          icon.style.fontSize = '20px';
+          for (const def of defs) {
+            const btn = document.createElement('button');
+            btn.className = 'logic-tool-button';
+            btn.dataset.toolId = def.id;
 
-          const labelEl = document.createElement('span');
-          labelEl.className = 'logic-tool-label';
-          labelEl.textContent = def.label;
+            const icon = document.createElement('span');
+            icon.textContent = def.icon || '■';
+            icon.style.fontSize = '20px';
 
-          const desc = document.createElement('span');
-          desc.className = 'logic-tool-desc';
-          desc.textContent = def.description;
+            const labelEl = document.createElement('span');
+            labelEl.className = 'logic-tool-label';
+            labelEl.textContent = def.label;
 
-          btn.appendChild(icon);
-          btn.appendChild(labelEl);
-          btn.appendChild(desc);
+            const desc = document.createElement('span');
+            desc.className = 'logic-tool-desc';
+            desc.textContent = def.description;
 
-          btn.addEventListener('click', () => {
-            if (state.activeToolId === def.id) {
-              setActiveTool(null);
-            } else {
-              setActiveTool(def.id);
-            }
-          });
+            btn.appendChild(icon);
+            btn.appendChild(labelEl);
+            btn.appendChild(desc);
 
-          toolButtons.set(def.id, btn);
-          buttonsWrap.appendChild(btn);
+            btn.addEventListener('click', () => {
+              if (state.activeToolId === def.id) {
+                setActiveTool(null);
+              } else {
+                setActiveTool(def.id);
+              }
+            });
+
+            toolButtons.set(def.id, btn);
+            buttonsWrap.appendChild(btn);
+          }
+
+          groupEl.appendChild(label);
+          groupEl.appendChild(buttonsWrap);
+          toolGroups.appendChild(groupEl);
         }
-
-        groupEl.appendChild(label);
-        groupEl.appendChild(buttonsWrap);
-        toolGroups.appendChild(groupEl);
       }
+
+      renderToolbar();
 
       toolbar.appendChild(boardHint);
       toolbar.appendChild(toolGroups);
@@ -841,10 +1046,10 @@
       const inspector = document.createElement('div');
       inspector.className = 'logic-inspector';
       const inspectorTitle = document.createElement('h3');
-      inspectorTitle.textContent = '部品インスペクタ';
+      inspectorTitle.textContent = currentLabels.inspector.title;
       const inspectorEmpty = document.createElement('div');
       inspectorEmpty.className = 'logic-empty-inspector';
-      inspectorEmpty.textContent = '部品を選択すると詳細と真理値表を表示します。最大入力3本のゲートで真理値表を自動生成します。';
+      inspectorEmpty.textContent = currentLabels.inspector.empty;
 
       const inspectorDetails = document.createElement('div');
       inspectorDetails.className = 'logic-inspector-section';
@@ -854,14 +1059,14 @@
       truthSection.className = 'logic-inspector-section';
       truthSection.style.display = 'none';
       const truthTitle = document.createElement('div');
-      truthTitle.textContent = '真理値表';
+      truthTitle.textContent = currentLabels.inspector.truthTitle;
       truthTitle.style.fontWeight = '700';
       truthTitle.style.fontSize = '13px';
       const truthTableWrap = document.createElement('div');
 
       const inspectorFooter = document.createElement('div');
       inspectorFooter.className = 'logic-wires-hint';
-      inspectorFooter.textContent = '配線はパスをクリックで削除。Alt+入力クリックでその入力への配線を解除。';
+      inspectorFooter.textContent = currentLabels.inspector.wiresHint;
 
       inspector.appendChild(inspectorTitle);
       inspector.appendChild(inspectorEmpty);
@@ -877,13 +1082,83 @@
 
       const footer = document.createElement('div');
       footer.className = 'logic-footer-note';
-      footer.textContent = 'ヒント: 入力をトグルして即座に出力を確認。シミュレーション制御で一時停止やステップ実行を行いながらシーケンシャル動作を解析できます。';
+      footer.textContent = currentLabels.footer;
+
+      function refreshXpChip(){
+        const template = currentLabels.chips.sessionXp || 'セッションEXP: {value}';
+        xpChip.textContent = formatTemplate(template, { value: formatNumber(state.sessionXp) });
+      }
+
+      function refreshTimeChip(){
+        const template = currentLabels.chips.elapsedTime || '経過時間: {value}ms';
+        const formattedTime = formatNumber(state.simTime, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        timeChip.textContent = formatTemplate(template, { value: formattedTime });
+      }
+
+      function grantXp(amount, meta){
+        if (!amount) return;
+        if (awardXp) {
+          try {
+            awardXp(amount, Object.assign({ source: 'logic_circuit' }, meta || {}));
+          } catch {}
+        }
+        state.sessionXp += amount;
+        refreshXpChip();
+      }
+
+      function updateSimulationControls(){
+        refreshTimeChip();
+        runButton.textContent = state.isRunning ? currentLabels.controls.runStop : currentLabels.controls.runStart;
+        stepButton.disabled = state.isRunning;
+        stepButton.textContent = currentLabels.controls.step;
+        stepInput.value = String(state.stepDuration);
+      }
+
+      function applyLocalization(force = false){
+        refreshLocalization(force);
+        title.textContent = currentLabels.header.title;
+        subtitle.textContent = currentLabels.header.subtitle;
+        clearButton.textContent = currentLabels.controls.clear;
+        deselectButton.textContent = currentLabels.controls.deselect;
+        stepControlLabel.textContent = currentLabels.controls.stepLabel;
+        boardHint.textContent = currentLabels.board.hint;
+        inspectorTitle.textContent = currentLabels.inspector.title;
+        inspectorEmpty.textContent = currentLabels.inspector.empty;
+        truthTitle.textContent = currentLabels.inspector.truthTitle;
+        inspectorFooter.textContent = currentLabels.inspector.wiresHint;
+        footer.textContent = currentLabels.footer;
+        renderToolbar();
+        setActiveTool(state.activeToolId);
+        refreshXpChip();
+        refreshTimeChip();
+        updateSimulationControls();
+        for (const component of state.components) {
+          const nextDef = currentLibrary.find(item => item.id === component.type) || component.def;
+          component.def = nextDef;
+          if (component.dom?.header) {
+            const titleNode = component.dom.header.querySelector('.logic-comp-title');
+            if (titleNode) titleNode.textContent = component.def.label;
+          }
+          if (typeof component.def.updateVisual === 'function') {
+            try { component.def.updateVisual(component); } catch {}
+          }
+        }
+        updateInspector();
+      }
 
       wrapper.appendChild(header);
       wrapper.appendChild(toolbar);
       wrapper.appendChild(layout);
       wrapper.appendChild(footer);
       root.appendChild(wrapper);
+
+      applyLocalization(true);
+
+      if (localization && typeof localization.onChange === 'function') {
+        try {
+          detachLocale = localization.onChange(() => applyLocalization(true));
+        } catch {}
+      }
 
       const resizeObserver = new ResizeObserver(() => {
         updateAllWireGeometry();
@@ -895,26 +1170,6 @@
       };
       window.addEventListener('scroll', handleViewportChange, true);
       window.addEventListener('resize', handleViewportChange);
-
-      function updateXp(amount){
-        state.sessionXp += amount;
-        xpChip.textContent = `セッションEXP: ${state.sessionXp}`;
-      }
-
-      function grantXp(amount, meta){
-        if (!awardXp || !amount) return;
-        try {
-          awardXp(amount, Object.assign({ source: 'logic_circuit' }, meta || {}));
-        } catch {}
-        updateXp(amount);
-      }
-
-      function updateSimulationControls(){
-        timeChip.textContent = `経過時間: ${state.simTime.toFixed(1)}ms`;
-        runButton.textContent = state.isRunning ? '⏸ 停止' : '▶ 再開';
-        stepButton.disabled = state.isRunning;
-        stepInput.value = String(state.stepDuration);
-      }
 
       function setActiveTool(toolId){
         state.activeToolId = toolId;
@@ -951,7 +1206,7 @@
         port.dataset.portIndex = String(index);
         port.dataset.kind = kind;
         if (kind === 'output') {
-          port.title = `出力 #${index + 1}`;
+          port.title = formatTemplate(currentLabels.ports.output, { index: formatNumber(index + 1) });
           port.addEventListener('click', () => {
             if (state.pendingConnection && state.pendingConnection.kind === 'output' && state.pendingConnection.componentId === componentId && state.pendingConnection.portIndex === index) {
               clearPendingConnection();
@@ -960,7 +1215,7 @@
             startPendingConnection('output', componentId, index, port);
           });
         } else {
-          port.title = `入力 #${index + 1}`;
+          port.title = formatTemplate(currentLabels.ports.input, { index: formatNumber(index + 1) });
           port.addEventListener('click', (event) => {
             if (event.altKey) {
               removeInputConnections(componentId, index);
@@ -1039,7 +1294,7 @@
         titleEl.textContent = def.label;
         const statusChip = document.createElement('div');
         statusChip.className = 'logic-chip neutral';
-        statusChip.textContent = '---';
+        statusChip.textContent = currentLabels.placeholders.status;
         headerEl.appendChild(titleEl);
         headerEl.appendChild(statusChip);
 
@@ -1084,7 +1339,19 @@
         };
 
         if (typeof def.setup === 'function') {
-          def.setup(component, component.dom, { grantXp, scheduleEvaluation, updateInspector });
+          const helper = {
+            grantXp,
+            scheduleEvaluation,
+            updateInspector,
+            text: (key, fallback, params) => text(key, fallback, params),
+            componentText: (key, fallback, params) => {
+              if (typeof key !== 'string') return text(key, fallback, params);
+              const normalized = key.startsWith('.') ? key : `.${key}`;
+              return text(`.components.${def.id}${normalized}`, fallback, params);
+            },
+            formatNumber
+          };
+          def.setup(component, component.dom, helper);
         }
         if (typeof def.updateVisual === 'function') {
           def.updateVisual(component);
@@ -1257,11 +1524,11 @@
         const headRow = document.createElement('tr');
         for (let i = 0; i < inputsCount; i++) {
           const th = document.createElement('th');
-          th.textContent = `IN${i + 1}`;
+          th.textContent = formatTemplate(currentLabels.inspector.truthHeaderInput, { index: formatNumber(i + 1) });
           headRow.appendChild(th);
         }
         const thOut = document.createElement('th');
-        thOut.textContent = 'OUT';
+        thOut.textContent = currentLabels.inspector.truthHeaderOutput;
         headRow.appendChild(thOut);
         thead.appendChild(headRow);
         table.appendChild(thead);
@@ -1315,29 +1582,35 @@
           inspectorStats.appendChild(dd);
         };
 
-        addRow('ID', component.id);
-        addRow('タイプ', component.def.label);
-        addRow('入力ポート', String(component.def.inputs || 0));
-        addRow('出力ポート', String(component.def.outputs || 0));
+        addRow(currentLabels.inspector.info.id, component.id);
+        addRow(currentLabels.inspector.info.type, component.def.label);
+        addRow(currentLabels.inspector.info.inputs, String(component.def.inputs || 0));
+        addRow(currentLabels.inspector.info.outputs, String(component.def.outputs || 0));
         if (component.def.id === 'clock') {
-          addRow('周期 (ms)', String(Math.round(component.period || 0)));
+          const value = formatTemplate(currentLabels.inspector.info.clockPeriodValue, {
+            value: formatNumber(Math.round(component.period || 0))
+          });
+          addRow(currentLabels.inspector.info.clockPeriod, value);
         }
         if ((component.lastInputs || []).length) {
           const code = document.createElement('code');
           code.textContent = component.lastInputs.map(v => (v ? '1' : '0')).join(' ');
-          addRow('最新入力', code);
+          addRow(currentLabels.inspector.info.latestInputs, code);
         }
         if ((component.cachedOutputs || []).length) {
           const code = document.createElement('code');
           code.textContent = component.cachedOutputs.map(v => (v ? '1' : '0')).join(' ');
-          addRow('最新出力', code);
+          addRow(currentLabels.inspector.info.latestOutputs, code);
         }
         const fanIn = state.wires.filter(w => w.to.componentId === component.id).length;
         const fanOut = state.wires.filter(w => w.from.componentId === component.id).length;
-        addRow('入力接続', `${fanIn} 本`);
-        addRow('出力接続', `${fanOut} 本`);
+        addRow(currentLabels.inspector.info.fanIn, formatTemplate(currentLabels.inspector.info.connections, { count: formatNumber(fanIn) }));
+        addRow(currentLabels.inspector.info.fanOut, formatTemplate(currentLabels.inspector.info.connections, { count: formatNumber(fanOut) }));
         if (typeof component.def.propagationDelayNs === 'number') {
-          addRow('伝播遅延(目安)', `${component.def.propagationDelayNs.toFixed(1)} ns`);
+          const value = formatTemplate(currentLabels.inspector.info.propagationDelayValue, {
+            value: formatNumber(component.def.propagationDelayNs, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+          });
+          addRow(currentLabels.inspector.info.propagationDelay, value);
         }
         if (typeof component.def.inspect === 'function') {
           try {
@@ -1348,7 +1621,7 @@
             }
           } catch {}
         }
-        if (component.def.description) addRow('説明', component.def.description);
+        if (component.def.description) addRow(currentLabels.inspector.info.description, component.def.description);
         renderTruthTable(component);
       }
 
@@ -1462,7 +1735,7 @@
           selectComponent(null);
           return;
         }
-        const def = COMPONENT_LIBRARY.find(item => item.id === state.activeToolId);
+        const def = currentLibrary.find(item => item.id === state.activeToolId);
         if (!def) return;
         const point = boardPoint(event);
         const offsetX = point.x - 90;
@@ -1564,6 +1837,10 @@
         board.removeEventListener('mousedown', handleBoardClick);
         board.removeEventListener('pointermove', handleBoardPointerMove);
         wrapper.removeEventListener('keydown', handleKeyDown);
+        if (detachLocale) {
+          try { detachLocale(); } catch {}
+          detachLocale = null;
+        }
         if (wrapper.parentNode === root) root.removeChild(wrapper);
         state.components.length = 0;
         state.wires.length = 0;

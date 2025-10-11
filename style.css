@@ -1,12 +1,58 @@
 body {
-    font-family: sans-serif;
+    font-family: 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    color: #0f172a;
+    background: linear-gradient(120deg, #e0f2fe 0%, #ede9fe 45%, #f5f3ff 100%);
     min-height: 100vh;
     margin: 0;
-    padding: 20px;
+    padding: 24px;
+    line-height: 1.6;
+}
+
+.site-header {
+    width: 100%;
+    max-width: 980px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 24px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 20px 44px rgba(148, 163, 184, 0.25);
+}
+
+.site-header h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 0.04em;
+}
+
+.language-switcher {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    color: #334155;
+}
+
+.language-switcher label {
+    font-weight: 600;
+}
+
+.language-switcher select {
+    appearance: none;
+    background: #f8fafc;
+    border: 1px solid #cbd5f5;
+    border-radius: 10px;
+    padding: 6px 12px;
+    color: #0f172a;
+    font-size: 0.95rem;
+    box-shadow: 0 6px 18px rgba(148, 163, 184, 0.2);
 }
 
 .visually-hidden {
@@ -46,7 +92,7 @@ body.in-game #game-container {
     display: flex;
     justify-content: center;
     margin-bottom: 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(135deg, rgba(224,242,254,0.65), rgba(237,233,254,0.6));
     min-height: 100vh;
     align-items: center;
     padding-bottom: var(--selection-footer-h, 140px); /* フッター分の余白を確保 */

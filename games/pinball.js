@@ -2,7 +2,11 @@
   const DEG = Math.PI/180;
 
   function create(root, awardXp, opts){
-    const localization = opts?.localization || null;
+    const fallbackLocalization = (!opts?.localization && typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function')
+      ? window.createMiniGameLocalization({ id: 'pinball_xp' })
+      : null;
+    const localization = opts?.localization || fallbackLocalization || null;
+    const ownsLocalization = !opts?.localization && !!fallbackLocalization;
 
     const translate = (key, fallback, params) => {
       const hasKey = typeof key === 'string' && key.length > 0;
@@ -412,14 +416,16 @@
       }
       updateMissionDisplay();
       const missionName = getMissionName(mission);
-      const missionStartMessage = translate(
-        '.announcements.missionStart',
-        () => {
-          if (missionName) return `${missionName} 開始！`;
-          return translate('.announcements.missionStart.generic', 'ミッション開始！');
-        },
-        { mission: missionName }
-      );
+      let missionStartMessage;
+      if (missionName){
+        missionStartMessage = translate(
+          '.announcements.missionStart.named',
+          () => `${missionName} 開始！`,
+          { mission: missionName }
+        );
+      } else {
+        missionStartMessage = translate('.announcements.missionStart.generic', 'ミッション開始！');
+      }
       pushAnnouncement(missionStartMessage);
       if (mission.progress >= mission.target){
         completeMission();
@@ -434,15 +440,21 @@
       bonusChain = Math.min(8, bonusChain + 1.1);
       const missionName = getMissionName(mission);
       const rewardText = formatNumber(reward);
-      const completeMessage = translate(
-        '.announcements.missionComplete',
-        () => {
-          if (missionName) return `${missionName} クリア！ +${rewardText}EXP`;
-          const generic = translate('.announcements.missionComplete.generic', 'ミッション完了！');
-          return `${generic} +${rewardText}EXP`;
-        },
-        { mission: missionName, reward, rewardText }
-      );
+      const rewardParams = { mission: missionName, reward, rewardText };
+      let completeMessage;
+      if (missionName){
+        completeMessage = translate(
+          '.announcements.missionComplete.named',
+          () => `${missionName} クリア！ +${rewardText}EXP`,
+          rewardParams
+        );
+      } else {
+        completeMessage = translate(
+          '.announcements.missionComplete.generic',
+          () => `ミッション完了！ +${rewardText}EXP`,
+          rewardParams
+        );
+      }
       pushAnnouncement(completeMessage);
       mission = null;
       missionTimer = 0;
@@ -452,14 +464,13 @@
     function failMission(){
       if (!mission) return;
       const missionName = getMissionName(mission);
-      const failMessage = translate(
-        '.announcements.missionFailed',
-        () => {
-          if (missionName) return `${missionName} 失敗…`;
-          return translate('.announcements.missionFailed.generic', 'ミッション失敗…');
-        },
-        { mission: missionName }
-      );
+      const failMessage = missionName
+        ? translate(
+            '.announcements.missionFailed.named',
+            () => `${missionName} 失敗…`,
+            { mission: missionName }
+          )
+        : translate('.announcements.missionFailed.generic', 'ミッション失敗…');
       pushAnnouncement(failMessage);
       mission = null;
       missionTimer = 0;
@@ -1119,6 +1130,9 @@
         try { detachLocalizationListener(); } catch {}
         detachLocalizationListener = null;
       }
+      if (ownsLocalization && localization && typeof localization.destroy === 'function'){
+        try { localization.destroy(); } catch {}
+      }
     }
 
     function launchBall(){
@@ -1237,6 +1251,7 @@
     id: 'pinball_xp',
     name: 'XPピンボール', nameKey: 'selection.miniexp.games.pinball_xp.name',
     description: '3Dピンボール風テーブル。バンパーやレーンでEXPを稼ごう', descriptionKey: 'selection.miniexp.games.pinball_xp.description', categoryIds: ['action'],
+    localizationKey: 'minigame.pinball_xp',
     create
   });
 })();

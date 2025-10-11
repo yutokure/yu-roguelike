@@ -11,6 +11,30 @@
     root.appendChild(canvas);
     const ctx = canvas.getContext('2d');
 
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'breakout_k' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        try {
+          return localization.t(key, fallback, params);
+        } catch (error) {
+          console.warn('[breakout_k] Failed to translate key', key, error);
+        }
+      }
+      if (typeof fallback === 'function') {
+        try {
+          const value = fallback();
+          return typeof value === 'string' ? value : (value ?? '');
+        } catch (error) {
+          console.warn('[breakout_k] Failed to evaluate fallback for', key, error);
+          return '';
+        }
+      }
+      return fallback ?? '';
+    };
+    let detachLocale = null;
+
     const diff = (opts && opts.difficulty) || 'NORMAL';
     const cfg = {
       EASY:   { paddleW: 120, ballSpeed: 3.4, lives: 5, move: 7,  clearBonus: 10 },
@@ -61,10 +85,10 @@
     function drawHUD(){
       ctx.fillStyle='#e2e8f0';
       ctx.font='12px sans-serif';
-      ctx.fillText(`Lives: ${lives}`, 8, 16);
-      ctx.fillText(`Destroyed: ${destroyed}`, 80, 16);
-      ctx.fillText(`Diff: ${diff}`, 190, 16);
-      ctx.fillText('← / → または A / D でバー操作', 360, 16);
+      ctx.fillText(text('hud.lives', () => `Lives: ${lives}`, { count: lives }), 8, 16);
+      ctx.fillText(text('hud.destroyed', () => `Destroyed: ${destroyed}`, { count: destroyed }), 80, 16);
+      ctx.fillText(text('hud.difficulty', () => `Diff: ${diff}`, { difficulty: diff }), 190, 16);
+      ctx.fillText(text('hud.controls', '← / → または A / D でバー操作'), 360, 16);
     }
 
     function draw(){
@@ -190,6 +214,9 @@
         running=true;
         window.addEventListener('keydown',keyDown,{passive:false});
         window.addEventListener('keyup',keyUp);
+        if (!detachLocale && localization && typeof localization.onChange === 'function') {
+          detachLocale = localization.onChange(() => { try { draw(); } catch {} });
+        }
         draw();
         rafId = requestAnimationFrame(step);
       }
@@ -205,6 +232,10 @@
     }
     function destroy(){
       try{
+        if (typeof detachLocale === 'function') {
+          try { detachLocale(); } catch {}
+          detachLocale = null;
+        }
         stop();
         root && root.removeChild(canvas);
       }catch{}

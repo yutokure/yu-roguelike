@@ -15,6 +15,29 @@ const formatNumberLocalized = (value, options) => {
         return String(value ?? '');
     }
 };
+const formatDateLocalized = (value, options) => {
+    if (typeof i18n?.formatDate === 'function') {
+        try {
+            return i18n.formatDate(value, options);
+        } catch (error) {
+            console.warn('[i18n] Failed to format date with provider:', error);
+        }
+    }
+    try {
+        const date = value instanceof Date ? value : new Date(value);
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+            return value == null ? '' : String(value);
+        }
+        return new Intl.DateTimeFormat(i18n?.getLocale?.() || undefined, options).format(date);
+    } catch (error) {
+        try {
+            return String(value ?? '');
+        } catch (coerceError) {
+            console.warn('[i18n] Failed to coerce date value:', coerceError);
+            return '';
+        }
+    }
+};
 const localeCompareLocalized = (a, b, options) => {
     if (typeof i18n?.localeCompare === 'function') {
         return i18n.localeCompare(a, b, options);
@@ -1992,11 +2015,45 @@ const SKILL_AREA_OFFSETS = [
 ];
 
 const PLAYER_STATUS_EFFECTS = {
-    poison: { id: 'poison', label: '毒', defaultDuration: 4, damageRatio: 0.1, badgeClass: 'status-badge--poison' },
-    paralysis: { id: 'paralysis', label: '麻痺', defaultDuration: 5, badgeClass: 'status-badge--paralysis' },
-    abilityUp: { id: 'abilityUp', label: '能力強化', defaultDuration: 5, statMultiplier: 1.2, badgeClass: 'status-badge--ability' },
-    abilityDown: { id: 'abilityDown', label: '能力低下', defaultDuration: 5, statMultiplier: 0.8, badgeClass: 'status-badge--ability' },
-    levelDown: { id: 'levelDown', label: 'レベル低下', defaultDuration: 5, levelReduction: 3, badgeClass: 'status-badge--level' }
+    poison: {
+        id: 'poison',
+        labelKey: 'game.statuses.poison',
+        label: '毒',
+        defaultDuration: 4,
+        damageRatio: 0.1,
+        badgeClass: 'status-badge--poison'
+    },
+    paralysis: {
+        id: 'paralysis',
+        labelKey: 'game.statuses.paralysis',
+        label: '麻痺',
+        defaultDuration: 5,
+        badgeClass: 'status-badge--paralysis'
+    },
+    abilityUp: {
+        id: 'abilityUp',
+        labelKey: 'game.statuses.abilityUp',
+        label: '能力強化',
+        defaultDuration: 5,
+        statMultiplier: 1.2,
+        badgeClass: 'status-badge--ability'
+    },
+    abilityDown: {
+        id: 'abilityDown',
+        labelKey: 'game.statuses.abilityDown',
+        label: '能力低下',
+        defaultDuration: 5,
+        statMultiplier: 0.8,
+        badgeClass: 'status-badge--ability'
+    },
+    levelDown: {
+        id: 'levelDown',
+        labelKey: 'game.statuses.levelDown',
+        label: 'レベル低下',
+        defaultDuration: 5,
+        levelReduction: 3,
+        badgeClass: 'status-badge--level'
+    }
 };
 
 const NEGATIVE_STATUS_EFFECT_IDS = Object.freeze(['poison', 'paralysis', 'abilityDown', 'levelDown']);
@@ -6820,7 +6877,9 @@ function getPlayerStatus(effectId) {
 }
 
 function getStatusLabel(effectId) {
-    return PLAYER_STATUS_EFFECTS[effectId]?.label || effectId;
+    const def = PLAYER_STATUS_EFFECTS[effectId];
+    if (!def) return effectId;
+    return resolveLocalizedText(def.labelKey, def.label || effectId);
 }
 
 function isPlayerStatusActive(effectId) {
@@ -7316,9 +7375,10 @@ function getPlayerStatusDisplayList() {
         const remaining = getStatusRemaining(key);
         if (remaining > 0) {
             const def = PLAYER_STATUS_EFFECTS[key];
+            const label = getStatusLabel(key);
             list.push({
                 id: key,
-                label: def.label,
+                label,
                 remaining,
                 badgeClass: def.badgeClass || null
             });
@@ -8921,7 +8981,12 @@ function renderBdimPreview(spec) {
         const b1 = resolveBlockNameByKey(blockDimTables.blocks1, b1Key) || b1Key;
         const b2 = resolveBlockNameByKey(blockDimTables.blocks2, b2Key) || b2Key;
         const b3 = resolveBlockNameByKey(blockDimTables.blocks3, b3Key) || b3Key;
-        bdimCardSelection.textContent = `NESTED ${nested} ／ 次元 ${dimensionName || String(dimKey).toUpperCase()}：${b1}・${b2}・${b3}`;
+        const dimensionLabel = dimensionName || String(dimKey).toUpperCase();
+        bdimCardSelection.textContent = translateOrFallback(
+            'game.blockDim.preview.selection',
+            () => `NESTED ${nested} ／ 次元 ${dimensionLabel}：${b1}・${b2}・${b3}`,
+            { nested, dimension: dimensionLabel, block1: b1, block2: b2, block3: b3 }
+        );
     }
     bdimCardLevel.textContent = String(spec.level);
     bdimCardType.textContent = formatSpecType(spec);
@@ -18448,8 +18513,28 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
         refreshGeneratorHazardSuppression();
         try { showLevelUpPopup(); } catch {}
         try {
-            const levelUpMsg = `レベルアップ！レベル：${player.level} (+${player.level - beforeLevel})|最大HP：${player.maxHp}(+${player.maxHp - beforeMaxHp})|攻撃力：${player.attack}(+${player.attack - beforeAttack})|防御力：${player.defense}(+${player.defense - beforeDefense})`;
-            addMessage(levelUpMsg);
+            const levelDisplay = formatNumberLocalized(player.level);
+            const levelDeltaDisplay = formatNumberLocalized(player.level - beforeLevel);
+            const maxHpDisplay = formatNumberLocalized(player.maxHp);
+            const maxHpDeltaDisplay = formatNumberLocalized(player.maxHp - beforeMaxHp);
+            const attackDisplay = formatNumberLocalized(player.attack);
+            const attackDeltaDisplay = formatNumberLocalized(player.attack - beforeAttack);
+            const defenseDisplay = formatNumberLocalized(player.defense);
+            const defenseDeltaDisplay = formatNumberLocalized(player.defense - beforeDefense);
+            addMessage({
+                key: 'game.events.levelUp.log',
+                fallback: () => `レベルアップ！\nレベル：${levelDisplay} (+${levelDeltaDisplay})\n最大HP：${maxHpDisplay}(+${maxHpDeltaDisplay})\n攻撃力：${attackDisplay}(+${attackDeltaDisplay})\n防御力：${defenseDisplay}(+${defenseDeltaDisplay})`,
+                params: {
+                    level: levelDisplay,
+                    levelDelta: levelDeltaDisplay,
+                    maxHp: maxHpDisplay,
+                    maxHpDelta: maxHpDeltaDisplay,
+                    attack: attackDisplay,
+                    attackDelta: attackDeltaDisplay,
+                    defense: defenseDisplay,
+                    defenseDelta: defenseDeltaDisplay
+                }
+            });
         } catch {}
         if (expBar) {
             expBar.style.transition = 'width 0.25s';
@@ -18768,12 +18853,14 @@ function createMiniGameLocalization(def) {
     };
 
     const formatNumber = (value, options) => formatNumberLocalized(value, options);
+    const formatDate = (value, options) => formatDateLocalized(value, options);
     const localeCompare = (a, b, options) => localeCompareLocalized(a, b, options);
 
     return {
         prefix,
         t: (key, fallbackText, params) => translateText(key, fallbackText, params),
         formatNumber,
+        formatDate,
         localeCompare,
         getLocale: () => (i18n?.getLocale?.() || i18n?.getDefaultLocale?.() || 'ja'),
         onChange: handleLocaleChange,

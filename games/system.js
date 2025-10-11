@@ -1,4 +1,6 @@
 (function(){
+  const GLOBAL = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
+  const I18N_PREFIX = 'minigame.system';
   const MAIN_TABS = [
     { id: 'pc', label: 'PC' },
     { id: 'os', label: 'OS' },
@@ -217,10 +219,10 @@
     throw new Error(errors.join('\n'));
   }
 
-  function createTabButton(label){
+  function createTabButton(label = ''){
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.textContent = label;
+    btn.textContent = label ?? '';
     btn.style.border = '1px solid rgba(148,163,184,0.35)';
     btn.style.background = 'rgba(15,23,42,0.45)';
     btn.style.color = '#e2e8f0';
@@ -286,6 +288,9 @@
     grid.appendChild(labelEl);
     grid.appendChild(valueWrap);
     return {
+      label: labelEl,
+      value: valueEl,
+      note: noteEl,
       set(value, note){
         valueEl.textContent = value ?? '-';
         if (note){
@@ -298,7 +303,7 @@
     };
   }
 
-  function createMetricCard(title){
+  function createMetricCard(title = ''){
     const card = document.createElement('div');
     card.style.background = 'rgba(15,23,42,0.65)';
     card.style.border = '1px solid rgba(148,163,184,0.25)';
@@ -308,7 +313,7 @@
     card.style.flexDirection = 'column';
     card.style.gap = '6px';
     const titleEl = document.createElement('div');
-    titleEl.textContent = title;
+    titleEl.textContent = title ?? '';
     titleEl.style.fontSize = '13px';
     titleEl.style.color = 'rgba(226,232,240,0.75)';
     const valueEl = document.createElement('div');
@@ -325,6 +330,9 @@
     card.appendChild(noteEl);
     return {
       element: card,
+      title: titleEl,
+      value: valueEl,
+      note: noteEl,
       setValue(value, note){
         valueEl.textContent = value ?? '-';
         noteEl.textContent = note ?? '';
@@ -332,9 +340,9 @@
     };
   }
 
-  function createSectionTitle(text){
+  function createSectionTitle(text = ''){
     const heading = document.createElement('h3');
-    heading.textContent = text;
+    heading.textContent = text ?? '';
     heading.style.margin = '0';
     heading.style.fontSize = '16px';
     heading.style.color = '#1f2937';
@@ -342,8 +350,47 @@
     return heading;
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts = {}){
     if (!root) throw new Error('System utility requires a container');
+
+    const localization = opts?.localization || (GLOBAL && typeof GLOBAL.createMiniGameLocalization === 'function'
+      ? GLOBAL.createMiniGameLocalization({ id: 'system' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function'){
+        return localization.t(key, fallback, params);
+      }
+      if (typeof fallback === 'function') return fallback();
+      return fallback ?? '';
+    };
+    const toText = value => (value == null ? '' : String(value));
+    const localizationUpdaters = [];
+    const registerLocalizationUpdater = fn => {
+      if (typeof fn !== 'function') return () => {};
+      localizationUpdaters.push(fn);
+      try { fn(); } catch {}
+      return fn;
+    };
+    const applyLocaleUpdates = () => {
+      localizationUpdaters.forEach(fn => {
+        try { fn(); } catch {}
+      });
+    };
+    let detachLocale = null;
+    if (localization && typeof localization.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        applyLocaleUpdates();
+      });
+    }
+    const bindLocalizedText = (element, key, fallback, { attr = 'textContent', params } = {}) => {
+      return registerLocalizationUpdater(() => {
+        const paramValue = typeof params === 'function' ? params() : params;
+        const resolved = text(key, fallback, paramValue);
+        if (attr === 'textContent') element.textContent = toText(resolved);
+        else element[attr] = toText(resolved);
+      });
+    };
+    const localText = (suffix, fallback, params) => text(`${I18N_PREFIX}.${suffix}`, fallback, params);
 
     const state = {
       sessionXp: 0,
@@ -394,15 +441,15 @@
     titleWrap.style.gap = '4px';
 
     const title = document.createElement('h2');
-    title.textContent = 'システムユーティリティ';
     title.style.margin = '0';
     title.style.fontSize = '26px';
     title.style.color = '#0f172a';
+    bindLocalizedText(title, `${I18N_PREFIX}.header.title`, 'システムユーティリティ');
 
     const subtitle = document.createElement('div');
-    subtitle.textContent = 'PC / OS / ブラウザ / ネットワーク情報をまとめて確認';
     subtitle.style.fontSize = '14px';
     subtitle.style.color = '#475569';
+    bindLocalizedText(subtitle, `${I18N_PREFIX}.header.subtitle`, 'PC / OS / ブラウザ / ネットワーク情報をまとめて確認');
 
     titleWrap.appendChild(title);
     titleWrap.appendChild(subtitle);
@@ -420,10 +467,16 @@
     xpChip.style.color = '#1d4ed8';
     xpChip.style.fontSize = '13px';
     xpChip.style.fontWeight = '600';
-    xpChip.textContent = 'セッションEXP 0';
+    const updateXpChipLabel = () => {
+      xpChip.textContent = toText(text(`${I18N_PREFIX}.header.sessionXp`, 'セッションEXP {xp}', {
+        xp: Math.round(state.sessionXp)
+      }));
+    };
+    registerLocalizationUpdater(updateXpChipLabel);
 
-    const copyButton = createTabButton('概要をコピー');
+    const copyButton = createTabButton();
     copyButton.style.padding = '10px 14px';
+    bindLocalizedText(copyButton, `${I18N_PREFIX}.controls.copySummary`, '概要をコピー');
 
     headerActions.appendChild(xpChip);
     headerActions.appendChild(copyButton);
@@ -438,8 +491,9 @@
 
     const tabButtons = new Map();
     MAIN_TABS.forEach(tab => {
-      const btn = createTabButton(tab.label);
+      const btn = createTabButton();
       btn.dataset.tab = tab.id;
+      bindLocalizedText(btn, `${I18N_PREFIX}.tabs.${tab.id}`, tab.label);
       btn.addEventListener('click', () => selectMainTab(tab.id));
       tabButtons.set(tab.id, btn);
       tabBar.appendChild(btn);
@@ -465,9 +519,10 @@
 
     const pcSubButtons = new Map();
     PC_SUB_TABS.forEach(tab => {
-      const btn = createTabButton(tab.label);
+      const btn = createTabButton();
       btn.dataset.tab = tab.id;
       btn.style.fontSize = '13px';
+      bindLocalizedText(btn, `${I18N_PREFIX}.pcSubTabs.${tab.id}`, tab.label);
       btn.addEventListener('click', () => selectPcSubTab(tab.id));
       pcSubButtons.set(tab.id, btn);
       pcTabBar.appendChild(btn);
@@ -494,8 +549,10 @@
     pcInfoHeader.style.flexWrap = 'wrap';
     pcInfoHeader.style.gap = '10px';
 
-    const pcInfoTitle = createSectionTitle('システム情報');
-    const refreshPcButton = createTabButton('最新情報を取得');
+    const pcInfoTitle = createSectionTitle();
+    bindLocalizedText(pcInfoTitle, `${I18N_PREFIX}.sections.pcInfo.title`, 'システム情報');
+    const refreshPcButton = createTabButton();
+    bindLocalizedText(refreshPcButton, `${I18N_PREFIX}.controls.refreshHardware`, '最新情報を取得');
     refreshPcButton.style.fontSize = '13px';
     refreshPcButton.style.padding = '8px 12px';
 
@@ -504,20 +561,33 @@
 
     const pcInfoGrid = createInfoGrid();
     const pcInfoRows = {
-      motherboard: appendRow(pcInfoGrid, 'マザーボード'),
-      cpuFamily: appendRow(pcInfoGrid, 'CPUファミリー'),
-      cpuThreads: appendRow(pcInfoGrid, 'CPUスレッド数'),
-      cpuFrequency: appendRow(pcInfoGrid, 'CPU周波数'),
-      architecture: appendRow(pcInfoGrid, 'アーキテクチャ'),
-      memory: appendRow(pcInfoGrid, 'メモリ容量'),
-      jsHeap: appendRow(pcInfoGrid, 'JSヒープ上限'),
-      storage: appendRow(pcInfoGrid, 'ストレージ推定'),
-      touch: appendRow(pcInfoGrid, 'タッチポイント'),
-      gpuVendor: appendRow(pcInfoGrid, 'GPUベンダー'),
-      gpuName: appendRow(pcInfoGrid, 'GPU名'),
-      gpuMemory: appendRow(pcInfoGrid, 'GPUメモリ'),
-      battery: appendRow(pcInfoGrid, 'バッテリー')
+      motherboard: appendRow(pcInfoGrid, ''),
+      cpuFamily: appendRow(pcInfoGrid, ''),
+      cpuThreads: appendRow(pcInfoGrid, ''),
+      cpuFrequency: appendRow(pcInfoGrid, ''),
+      architecture: appendRow(pcInfoGrid, ''),
+      memory: appendRow(pcInfoGrid, ''),
+      jsHeap: appendRow(pcInfoGrid, ''),
+      storage: appendRow(pcInfoGrid, ''),
+      touch: appendRow(pcInfoGrid, ''),
+      gpuVendor: appendRow(pcInfoGrid, ''),
+      gpuName: appendRow(pcInfoGrid, ''),
+      gpuMemory: appendRow(pcInfoGrid, ''),
+      battery: appendRow(pcInfoGrid, '')
     };
+    bindLocalizedText(pcInfoRows.motherboard.label, `${I18N_PREFIX}.pcInfo.motherboard`, 'マザーボード');
+    bindLocalizedText(pcInfoRows.cpuFamily.label, `${I18N_PREFIX}.pcInfo.cpuFamily`, 'CPUファミリー');
+    bindLocalizedText(pcInfoRows.cpuThreads.label, `${I18N_PREFIX}.pcInfo.cpuThreads`, 'CPUスレッド数');
+    bindLocalizedText(pcInfoRows.cpuFrequency.label, `${I18N_PREFIX}.pcInfo.cpuFrequency`, 'CPU周波数');
+    bindLocalizedText(pcInfoRows.architecture.label, `${I18N_PREFIX}.pcInfo.architecture`, 'アーキテクチャ');
+    bindLocalizedText(pcInfoRows.memory.label, `${I18N_PREFIX}.pcInfo.memory`, 'メモリ容量');
+    bindLocalizedText(pcInfoRows.jsHeap.label, `${I18N_PREFIX}.pcInfo.jsHeap`, 'JSヒープ上限');
+    bindLocalizedText(pcInfoRows.storage.label, `${I18N_PREFIX}.pcInfo.storage`, 'ストレージ推定');
+    bindLocalizedText(pcInfoRows.touch.label, `${I18N_PREFIX}.pcInfo.touch`, 'タッチポイント');
+    bindLocalizedText(pcInfoRows.gpuVendor.label, `${I18N_PREFIX}.pcInfo.gpuVendor`, 'GPUベンダー');
+    bindLocalizedText(pcInfoRows.gpuName.label, `${I18N_PREFIX}.pcInfo.gpuName`, 'GPU名');
+    bindLocalizedText(pcInfoRows.gpuMemory.label, `${I18N_PREFIX}.pcInfo.gpuMemory`, 'GPUメモリ');
+    bindLocalizedText(pcInfoRows.battery.label, `${I18N_PREFIX}.pcInfo.battery`, 'バッテリー');
 
     const monitorSection = document.createElement('div');
     monitorSection.style.display = 'flex';
@@ -531,11 +601,12 @@
     monitorHeader.style.flexWrap = 'wrap';
     monitorHeader.style.gap = '10px';
 
-    const monitorTitle = createSectionTitle('リアルタイムモニター');
+    const monitorTitle = createSectionTitle();
+    bindLocalizedText(monitorTitle, `${I18N_PREFIX}.sections.monitor.title`, 'リアルタイムモニター');
     const monitorNote = document.createElement('div');
-    monitorNote.textContent = 'ブラウザの標準APIを用いた推定値です。実際のシステム使用率とは異なる場合があります。';
     monitorNote.style.fontSize = '12px';
     monitorNote.style.color = '#64748b';
+    bindLocalizedText(monitorNote, `${I18N_PREFIX}.sections.monitor.note`, 'ブラウザの標準APIを用いた推定値です。実際のシステム使用率とは異なる場合があります。');
 
     monitorHeader.appendChild(monitorTitle);
     monitorHeader.appendChild(monitorNote);
@@ -545,11 +616,16 @@
     monitorGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
     monitorGrid.style.gap = '16px';
 
-    const cpuCard = createMetricCard('CPU使用率 (推定)');
-    const lagCard = createMetricCard('イベントループ遅延');
-    const fpsCard = createMetricCard('描画更新 (FPS)');
-    const memoryCard = createMetricCard('JSヒープ使用量');
-    const deviceMemoryCard = createMetricCard('実メモリ (推定)');
+    const cpuCard = createMetricCard();
+    const lagCard = createMetricCard();
+    const fpsCard = createMetricCard();
+    const memoryCard = createMetricCard();
+    const deviceMemoryCard = createMetricCard();
+    bindLocalizedText(cpuCard.title, `${I18N_PREFIX}.monitor.cpu`, 'CPU使用率 (推定)');
+    bindLocalizedText(lagCard.title, `${I18N_PREFIX}.monitor.loopLag`, 'イベントループ遅延');
+    bindLocalizedText(fpsCard.title, `${I18N_PREFIX}.monitor.fps`, '描画更新 (FPS)');
+    bindLocalizedText(memoryCard.title, `${I18N_PREFIX}.monitor.jsHeap`, 'JSヒープ使用量');
+    bindLocalizedText(deviceMemoryCard.title, `${I18N_PREFIX}.monitor.deviceMemory`, '実メモリ (推定)');
 
     monitorGrid.appendChild(cpuCard.element);
     monitorGrid.appendChild(lagCard.element);
@@ -588,8 +664,10 @@
     osHeader.style.flexWrap = 'wrap';
     osHeader.style.gap = '10px';
 
-    const osTitle = createSectionTitle('OS情報');
-    const refreshOsButton = createTabButton('再読み込み');
+    const osTitle = createSectionTitle();
+    bindLocalizedText(osTitle, `${I18N_PREFIX}.sections.os.title`, 'OS情報');
+    const refreshOsButton = createTabButton();
+    bindLocalizedText(refreshOsButton, `${I18N_PREFIX}.controls.refreshOs`, '再読み込み');
     refreshOsButton.style.fontSize = '13px';
     refreshOsButton.style.padding = '8px 12px';
 
@@ -598,17 +676,27 @@
 
     const osGrid = createInfoGrid();
     const osRows = {
-      name: appendRow(osGrid, 'OS名称'),
-      version: appendRow(osGrid, 'バージョン'),
-      build: appendRow(osGrid, 'ビルド'),
-      bitness: appendRow(osGrid, 'ビット数'),
-      platform: appendRow(osGrid, 'プラットフォーム'),
-      timezone: appendRow(osGrid, 'タイムゾーン'),
-      locale: appendRow(osGrid, 'ロケール'),
-      languages: appendRow(osGrid, '利用言語'),
-      uptime: appendRow(osGrid, '起動時間 (推定)'),
-      lastChecked: appendRow(osGrid, '最終更新')
+      name: appendRow(osGrid, ''),
+      version: appendRow(osGrid, ''),
+      build: appendRow(osGrid, ''),
+      bitness: appendRow(osGrid, ''),
+      platform: appendRow(osGrid, ''),
+      timezone: appendRow(osGrid, ''),
+      locale: appendRow(osGrid, ''),
+      languages: appendRow(osGrid, ''),
+      uptime: appendRow(osGrid, ''),
+      lastChecked: appendRow(osGrid, '')
     };
+    bindLocalizedText(osRows.name.label, `${I18N_PREFIX}.os.name`, 'OS名称');
+    bindLocalizedText(osRows.version.label, `${I18N_PREFIX}.os.version`, 'バージョン');
+    bindLocalizedText(osRows.build.label, `${I18N_PREFIX}.os.build`, 'ビルド');
+    bindLocalizedText(osRows.bitness.label, `${I18N_PREFIX}.os.bitness`, 'ビット数');
+    bindLocalizedText(osRows.platform.label, `${I18N_PREFIX}.os.platform`, 'プラットフォーム');
+    bindLocalizedText(osRows.timezone.label, `${I18N_PREFIX}.os.timezone`, 'タイムゾーン');
+    bindLocalizedText(osRows.locale.label, `${I18N_PREFIX}.os.locale`, 'ロケール');
+    bindLocalizedText(osRows.languages.label, `${I18N_PREFIX}.os.languages`, '利用言語');
+    bindLocalizedText(osRows.uptime.label, `${I18N_PREFIX}.os.uptime`, '起動時間 (推定)');
+    bindLocalizedText(osRows.lastChecked.label, `${I18N_PREFIX}.os.lastChecked`, '最終更新');
 
     osPanel.appendChild(osHeader);
     osPanel.appendChild(osGrid);
@@ -631,8 +719,10 @@
     browserHeader.style.flexWrap = 'wrap';
     browserHeader.style.gap = '10px';
 
-    const browserTitle = createSectionTitle('ブラウザ情報');
-    const refreshBrowserButton = createTabButton('再分析');
+    const browserTitle = createSectionTitle();
+    bindLocalizedText(browserTitle, `${I18N_PREFIX}.sections.browser.title`, 'ブラウザ情報');
+    const refreshBrowserButton = createTabButton();
+    bindLocalizedText(refreshBrowserButton, `${I18N_PREFIX}.controls.refreshBrowser`, '再分析');
     refreshBrowserButton.style.fontSize = '13px';
     refreshBrowserButton.style.padding = '8px 12px';
 
@@ -641,19 +731,31 @@
 
     const browserGrid = createInfoGrid();
     const browserRows = {
-      name: appendRow(browserGrid, 'ブラウザ名'),
-      version: appendRow(browserGrid, 'バージョン'),
-      engine: appendRow(browserGrid, 'レンダリングエンジン'),
-      agent: appendRow(browserGrid, 'ユーザーエージェント'),
-      brands: appendRow(browserGrid, 'ブランド情報'),
-      vendor: appendRow(browserGrid, 'ベンダー'),
-      doNotTrack: appendRow(browserGrid, 'Do Not Track'),
-      online: appendRow(browserGrid, 'オンライン状態'),
-      cookies: appendRow(browserGrid, 'Cookie'),
-      storage: appendRow(browserGrid, 'ストレージAPI'),
-      features: appendRow(browserGrid, '主な技術'),
-      html5: appendRow(browserGrid, 'HTML5サポート (主要API)')
+      name: appendRow(browserGrid, ''),
+      version: appendRow(browserGrid, ''),
+      engine: appendRow(browserGrid, ''),
+      agent: appendRow(browserGrid, ''),
+      brands: appendRow(browserGrid, ''),
+      vendor: appendRow(browserGrid, ''),
+      doNotTrack: appendRow(browserGrid, ''),
+      online: appendRow(browserGrid, ''),
+      cookies: appendRow(browserGrid, ''),
+      storage: appendRow(browserGrid, ''),
+      features: appendRow(browserGrid, ''),
+      html5: appendRow(browserGrid, '')
     };
+    bindLocalizedText(browserRows.name.label, `${I18N_PREFIX}.browser.name`, 'ブラウザ名');
+    bindLocalizedText(browserRows.version.label, `${I18N_PREFIX}.browser.version`, 'バージョン');
+    bindLocalizedText(browserRows.engine.label, `${I18N_PREFIX}.browser.engine`, 'レンダリングエンジン');
+    bindLocalizedText(browserRows.agent.label, `${I18N_PREFIX}.browser.agent`, 'ユーザーエージェント');
+    bindLocalizedText(browserRows.brands.label, `${I18N_PREFIX}.browser.brands`, 'ブランド情報');
+    bindLocalizedText(browserRows.vendor.label, `${I18N_PREFIX}.browser.vendor`, 'ベンダー');
+    bindLocalizedText(browserRows.doNotTrack.label, `${I18N_PREFIX}.browser.doNotTrack`, 'Do Not Track');
+    bindLocalizedText(browserRows.online.label, `${I18N_PREFIX}.browser.online`, 'オンライン状態');
+    bindLocalizedText(browserRows.cookies.label, `${I18N_PREFIX}.browser.cookies`, 'Cookie');
+    bindLocalizedText(browserRows.storage.label, `${I18N_PREFIX}.browser.storage`, 'ストレージAPI');
+    bindLocalizedText(browserRows.features.label, `${I18N_PREFIX}.browser.features`, '主な技術');
+    bindLocalizedText(browserRows.html5.label, `${I18N_PREFIX}.browser.html5`, 'HTML5サポート (主要API)');
 
     browserPanel.appendChild(browserHeader);
     browserPanel.appendChild(browserGrid);
@@ -676,22 +778,26 @@
     ipHeader.style.justifyContent = 'space-between';
     ipHeader.style.gap = '10px';
 
-    const ipTitle = createSectionTitle('IP情報');
+    const ipTitle = createSectionTitle();
+    bindLocalizedText(ipTitle, `${I18N_PREFIX}.sections.ip.title`, 'IP情報');
     const ipActionWrap = document.createElement('div');
     ipActionWrap.style.display = 'flex';
     ipActionWrap.style.gap = '8px';
     ipActionWrap.style.flexWrap = 'wrap';
 
-    const fetchIpButton = createTabButton('IP情報を取得');
+    const fetchIpButton = createTabButton();
+    bindLocalizedText(fetchIpButton, `${I18N_PREFIX}.controls.fetchIp`, 'IP情報を取得');
     fetchIpButton.style.fontSize = '13px';
     fetchIpButton.style.padding = '8px 12px';
 
-    const cancelIpButton = createTabButton('取得を中止');
+    const cancelIpButton = createTabButton();
+    bindLocalizedText(cancelIpButton, `${I18N_PREFIX}.controls.cancelIp`, '取得を中止');
     cancelIpButton.style.fontSize = '13px';
     cancelIpButton.style.padding = '8px 12px';
     cancelIpButton.style.display = 'none';
 
-    const copyIpButton = createTabButton('結果をコピー');
+    const copyIpButton = createTabButton();
+    bindLocalizedText(copyIpButton, `${I18N_PREFIX}.controls.copyIp`, '結果をコピー');
     copyIpButton.style.fontSize = '13px';
     copyIpButton.style.padding = '8px 12px';
 
@@ -705,23 +811,35 @@
     const ipStatus = document.createElement('div');
     ipStatus.style.fontSize = '13px';
     ipStatus.style.color = '#475569';
-    ipStatus.textContent = 'ネットワークアクセスが必要です。取得ボタンを押してください。';
+    bindLocalizedText(ipStatus, `${I18N_PREFIX}.ip.statusIdle`, 'ネットワークアクセスが必要です。取得ボタンを押してください。');
 
     const ipGrid = createInfoGrid();
     const ipRows = {
-      ip: appendRow(ipGrid, 'IPアドレス'),
-      hostname: appendRow(ipGrid, 'ホスト名'),
-      city: appendRow(ipGrid, '都市'),
-      region: appendRow(ipGrid, '地域'),
-      country: appendRow(ipGrid, '国'),
-      loc: appendRow(ipGrid, '緯度経度'),
-      org: appendRow(ipGrid, '組織 / ISP'),
-      postal: appendRow(ipGrid, '郵便番号'),
-      timezone: appendRow(ipGrid, 'タイムゾーン'),
-      asn: appendRow(ipGrid, 'ASN'),
-      userAgent: appendRow(ipGrid, 'エージェント'),
-      updated: appendRow(ipGrid, '最終取得')
+      ip: appendRow(ipGrid, ''),
+      hostname: appendRow(ipGrid, ''),
+      city: appendRow(ipGrid, ''),
+      region: appendRow(ipGrid, ''),
+      country: appendRow(ipGrid, ''),
+      loc: appendRow(ipGrid, ''),
+      org: appendRow(ipGrid, ''),
+      postal: appendRow(ipGrid, ''),
+      timezone: appendRow(ipGrid, ''),
+      asn: appendRow(ipGrid, ''),
+      userAgent: appendRow(ipGrid, ''),
+      updated: appendRow(ipGrid, '')
     };
+    bindLocalizedText(ipRows.ip.label, `${I18N_PREFIX}.ip.ip`, 'IPアドレス');
+    bindLocalizedText(ipRows.hostname.label, `${I18N_PREFIX}.ip.hostname`, 'ホスト名');
+    bindLocalizedText(ipRows.city.label, `${I18N_PREFIX}.ip.city`, '都市');
+    bindLocalizedText(ipRows.region.label, `${I18N_PREFIX}.ip.region`, '地域');
+    bindLocalizedText(ipRows.country.label, `${I18N_PREFIX}.ip.country`, '国');
+    bindLocalizedText(ipRows.loc.label, `${I18N_PREFIX}.ip.loc`, '緯度経度');
+    bindLocalizedText(ipRows.org.label, `${I18N_PREFIX}.ip.org`, '組織 / ISP');
+    bindLocalizedText(ipRows.postal.label, `${I18N_PREFIX}.ip.postal`, '郵便番号');
+    bindLocalizedText(ipRows.timezone.label, `${I18N_PREFIX}.ip.timezone`, 'タイムゾーン');
+    bindLocalizedText(ipRows.asn.label, `${I18N_PREFIX}.ip.asn`, 'ASN');
+    bindLocalizedText(ipRows.userAgent.label, `${I18N_PREFIX}.ip.userAgent`, 'エージェント');
+    bindLocalizedText(ipRows.updated.label, `${I18N_PREFIX}.ip.updated`, '最終取得');
 
     ipPanel.appendChild(ipHeader);
     ipPanel.appendChild(ipStatus);
@@ -739,8 +857,8 @@
 
     root.appendChild(wrapper);
 
-    function updateXpChip(){
-      xpChip.textContent = `セッションEXP ${Math.round(state.sessionXp)}`;
+    function updateSessionXp(){
+      updateXpChipLabel();
     }
 
     function award(type, amount, payload){
@@ -750,7 +868,7 @@
         const num = Number(gained);
         if (Number.isFinite(num) && num !== 0){
           state.sessionXp += num;
-          updateXpChip();
+          updateSessionXp();
         }
         return gained;
       } catch {
@@ -780,91 +898,117 @@
     }
 
     function updatePcInfoUI(info){
+      const unavailable = localText('status.unavailable', '取得不可');
+      const unknown = localText('status.unknown', '不明');
+      const notAvailable = localText('status.notAvailable', '-');
+      const noMotherboard = localText('pcInfo.notes.motherboardUnavailable', 'ブラウザからはマザーボード情報にアクセスできません。');
+      const cpuFreqNote = localText('pcInfo.notes.cpuFrequencyUnavailable', 'CPU周波数はWeb標準APIでは公開されていません。');
+      const jsHeapNote = localText('pcInfo.notes.jsHeapChromeOnly', 'Chrome系ブラウザのみ提供されます。');
+      const storageNote = localText('pcInfo.notes.storageEstimate', 'navigator.storage.estimate() による推定値');
+      const gpuNote = localText('pcInfo.notes.gpuWebgl', 'WEBGL_debug_renderer_infoから取得');
+      const gpuDisabled = localText('pcInfo.notes.gpuDisabled', 'WebGLが無効化されている可能性があります。');
+      const gpuMemoryNote = localText('pcInfo.notes.gpuMemoryUnavailable', 'ブラウザはGPUメモリの総量を公開しません。');
+      const batteryUnavailable = localText('pcInfo.notes.batteryUnavailable', 'Battery Status APIは利用できないか、許可されていません。');
+      const batteryCharging = localText('pcInfo.battery.charging', '充電中');
+      const batteryDischarging = localText('pcInfo.battery.discharging', '放電中');
+
       if (!info){
-        pcInfoRows.motherboard.set('取得不可', 'ブラウザからはマザーボード情報にアクセスできません。');
-        pcInfoRows.cpuFamily.set('不明');
-        pcInfoRows.cpuThreads.set('-');
-        pcInfoRows.cpuFrequency.set('取得不可', 'CPU周波数はWeb標準APIでは公開されていません。');
-        pcInfoRows.architecture.set('-');
-        pcInfoRows.memory.set('-');
-        pcInfoRows.jsHeap.set('-');
-        pcInfoRows.storage.set('-');
-        pcInfoRows.touch.set('-');
-        pcInfoRows.gpuVendor.set('-');
-        pcInfoRows.gpuName.set('-');
-        pcInfoRows.gpuMemory.set('取得不可', 'WebGLはGPUメモリ容量を提供しません。');
-        pcInfoRows.battery.set('-');
+        pcInfoRows.motherboard.set(unavailable, noMotherboard);
+        pcInfoRows.cpuFamily.set(unknown);
+        pcInfoRows.cpuThreads.set(notAvailable);
+        pcInfoRows.cpuFrequency.set(unavailable, cpuFreqNote);
+        pcInfoRows.architecture.set(notAvailable);
+        pcInfoRows.memory.set(notAvailable);
+        pcInfoRows.jsHeap.set(notAvailable);
+        pcInfoRows.storage.set(notAvailable);
+        pcInfoRows.touch.set(notAvailable);
+        pcInfoRows.gpuVendor.set(notAvailable);
+        pcInfoRows.gpuName.set(notAvailable);
+        pcInfoRows.gpuMemory.set(unavailable, gpuMemoryNote);
+        pcInfoRows.battery.set(notAvailable);
         return;
       }
-      pcInfoRows.motherboard.set('取得不可', 'ブラウザからはマザーボード情報にアクセスできません。');
-      pcInfoRows.cpuFamily.set(info.cpuFamily || '不明');
-      pcInfoRows.cpuThreads.set(info.cpuThreads ? `${info.cpuThreads} スレッド` : '-');
-      pcInfoRows.cpuFrequency.set('取得不可', 'CPU周波数はWeb標準APIでは公開されていません。');
-      pcInfoRows.architecture.set(info.architecture || '-');
-      pcInfoRows.memory.set(info.deviceMemory ? `${info.deviceMemory} GB (navigator.deviceMemory)` : '-');
+
+      pcInfoRows.motherboard.set(unavailable, noMotherboard);
+      pcInfoRows.cpuFamily.set(info.cpuFamily || unknown);
+      pcInfoRows.cpuThreads.set(info.cpuThreads ? localText('pcInfo.values.cpuThreads', '{threads} スレッド', { threads: info.cpuThreads }) : notAvailable);
+      pcInfoRows.cpuFrequency.set(unavailable, cpuFreqNote);
+      pcInfoRows.architecture.set(info.architecture || notAvailable);
+      pcInfoRows.memory.set(info.deviceMemory ? localText('pcInfo.values.deviceMemory', '{memory} GB (navigator.deviceMemory)', { memory: info.deviceMemory }) : notAvailable);
       if (info.jsHeapLimit){
-        pcInfoRows.jsHeap.set(formatBytes(info.jsHeapLimit), info.jsHeapNote || 'Chrome系ブラウザのみ提供されます。');
+        pcInfoRows.jsHeap.set(formatBytes(info.jsHeapLimit), info.jsHeapNote || jsHeapNote);
       } else {
-        pcInfoRows.jsHeap.set('-');
+        pcInfoRows.jsHeap.set(notAvailable);
       }
       if (info.storage){
-        pcInfoRows.storage.set(`${formatBytes(info.storage.usage)} / ${formatBytes(info.storage.quota)}`, 'navigator.storage.estimate() による推定値');
+        pcInfoRows.storage.set(`${formatBytes(info.storage.usage)} / ${formatBytes(info.storage.quota)}`, storageNote);
       } else {
-        pcInfoRows.storage.set('-');
+        pcInfoRows.storage.set(notAvailable);
       }
-      pcInfoRows.touch.set(info.touchPoints != null ? `${info.touchPoints}` : '-');
-      pcInfoRows.gpuVendor.set(info.gpu?.vendor || '取得不可', info.gpu ? 'WEBGL_debug_renderer_infoから取得' : 'WebGLが無効化されている可能性があります。');
-      pcInfoRows.gpuName.set(info.gpu?.renderer || '-');
-      pcInfoRows.gpuMemory.set('取得不可', 'ブラウザはGPUメモリの総量を公開しません。');
+      pcInfoRows.touch.set(info.touchPoints != null ? String(info.touchPoints) : notAvailable);
+      pcInfoRows.gpuVendor.set(info.gpu?.vendor || unavailable, info.gpu ? gpuNote : gpuDisabled);
+      pcInfoRows.gpuName.set(info.gpu?.renderer || notAvailable);
+      pcInfoRows.gpuMemory.set(unavailable, gpuMemoryNote);
       if (info.battery){
-        const percent = Number.isFinite(info.battery.level) ? `${PERCENT_FORMAT.format(info.battery.level * 100)}%` : '不明';
-        const charging = info.battery.charging ? '充電中' : '放電中';
-        pcInfoRows.battery.set(`${percent} (${charging})`);
+        const percent = Number.isFinite(info.battery.level) ? `${PERCENT_FORMAT.format(info.battery.level * 100)}%` : unknown;
+        const charging = info.battery.charging ? batteryCharging : batteryDischarging;
+        pcInfoRows.battery.set(localText('pcInfo.values.battery', '{level} ({state})', { level: percent, state: charging }));
       } else {
-        pcInfoRows.battery.set('取得不可', 'Battery Status APIは利用できないか、許可されていません。');
+        pcInfoRows.battery.set(unavailable, batteryUnavailable);
       }
     }
 
     function updateMonitorCards(){
-      cpuCard.setValue(formatPercent(state.monitor.cpuUsage * 100), 'イベントループ遅延から推定');
-      lagCard.setValue(`${NUMBER_FORMAT.format(state.monitor.loopLag)} ms`, 'setInterval基準との差分');
-      fpsCard.setValue(state.monitor.fps ? `${NUMBER_FORMAT.format(state.monitor.fps)} fps` : '-', 'requestAnimationFrameの結果');
+      cpuCard.setValue(formatPercent(state.monitor.cpuUsage * 100), localText('monitor.notes.cpuUsage', 'イベントループ遅延から推定'));
+      lagCard.setValue(`${NUMBER_FORMAT.format(state.monitor.loopLag)} ms`, localText('monitor.notes.loopLag', 'setInterval基準との差分'));
+      fpsCard.setValue(state.monitor.fps ? `${NUMBER_FORMAT.format(state.monitor.fps)} fps` : localText('status.notAvailable', '-'), localText('monitor.notes.fps', 'requestAnimationFrameの結果'));
       const memoryInfo = state.hardwareInfo?.memoryUsage;
       if (memoryInfo){
         const pct = memoryInfo.limit > 0 ? (memoryInfo.used / memoryInfo.limit) : NaN;
         const value = `${formatBytes(memoryInfo.used)} / ${formatBytes(memoryInfo.limit)}`;
-        const note = Number.isFinite(pct) ? `使用率 ${formatPercent(pct * 100)}` : 'Chrome系でのみ利用可能';
+        const note = Number.isFinite(pct)
+          ? localText('monitor.notes.memoryUsage', '使用率 {percent}', { percent: formatPercent(pct * 100) })
+          : localText('monitor.notes.memoryChromeOnly', 'Chrome系でのみ利用可能');
         memoryCard.setValue(value, note);
       } else {
-        memoryCard.setValue('-', 'performance.memory が利用できません');
+        memoryCard.setValue(localText('status.notAvailable', '-'), localText('monitor.notes.memoryUnavailable', 'performance.memory が利用できません'));
       }
       if (state.hardwareInfo?.deviceMemory){
-        deviceMemoryCard.setValue(`${state.hardwareInfo.deviceMemory} GB`, 'navigator.deviceMemoryによる概算');
+        deviceMemoryCard.setValue(`${state.hardwareInfo.deviceMemory} GB`, localText('monitor.notes.deviceMemoryEstimate', 'navigator.deviceMemoryによる概算'));
       } else {
-        deviceMemoryCard.setValue('-', '取得不可');
+        deviceMemoryCard.setValue(localText('status.notAvailable', '-'), localText('status.unavailable', '取得不可'));
       }
     }
 
     function updateOsUI(){
       const info = state.osInfo;
       const now = new Date();
-      osRows.name.set(info?.name || '不明', info?.detail || '');
-      osRows.version.set(info?.version || '-');
-      osRows.build.set(info?.build || '-', 'ブラウザは詳細なビルド番号を提供しません。');
-      osRows.bitness.set(info?.bitness || '-');
-      osRows.platform.set(navigator.platform || '-');
+      const unknown = localText('status.unknown', '不明');
+      const dash = localText('status.notAvailable', '-');
+      const buildNote = localText('os.notes.buildUnavailable', 'ブラウザは詳細なビルド番号を提供しません。');
+      const uptimeNote = localText('os.notes.uptime', 'OSの起動時間は取得できないためブラウザ稼働時間を表示');
+      osRows.name.set(info?.name || unknown, info?.detail || '');
+      osRows.version.set(info?.version || dash);
+      osRows.build.set(info?.build || dash, buildNote);
+      osRows.bitness.set(info?.bitness || dash);
+      osRows.platform.set(navigator.platform || dash);
       const tz = (() => {
         try {
-          return Intl.DateTimeFormat().resolvedOptions().timeZone || '-';
+          return Intl.DateTimeFormat().resolvedOptions().timeZone || dash;
         } catch {
-          return '-';
+          return dash;
         }
       })();
       osRows.timezone.set(tz);
-      osRows.locale.set(navigator.language || '-');
-      osRows.languages.set(Array.isArray(navigator.languages) ? navigator.languages.join(', ') : '-');
+      osRows.locale.set(navigator.language || dash);
+      osRows.languages.set(Array.isArray(navigator.languages) ? navigator.languages.join(', ') : dash);
       const uptimeSeconds = performance.now ? Math.floor(performance.now() / 1000) : null;
-      osRows.uptime.set(uptimeSeconds != null ? `${NUMBER_FORMAT.format(uptimeSeconds / 3600)} 時間 (ブラウザ稼働時間)` : '-', 'OSの起動時間は取得できないためブラウザ稼働時間を表示');
+      osRows.uptime.set(
+        uptimeSeconds != null
+          ? localText('os.values.uptime', '{hours} 時間 (ブラウザ稼働時間)', { hours: NUMBER_FORMAT.format(uptimeSeconds / 3600) })
+          : dash,
+        uptimeNote
+      );
       osRows.lastChecked.set(DATE_TIME_FORMAT.format(now));
     }
 
@@ -872,15 +1016,26 @@
       const info = state.browserInfo;
       const ua = navigator.userAgent || '-';
       const brands = navigator.userAgentData?.brands || [];
-      browserRows.name.set(info?.name || '不明');
-      browserRows.version.set(info?.version || '-');
-      browserRows.engine.set(info?.engine || '-');
+      const unknown = localText('status.unknown', '不明');
+      const dash = localText('status.notAvailable', '-');
+      const unavailable = localText('status.unavailable', '取得不可');
+      const onlineText = navigator.onLine ? localText('browser.status.online', 'オンライン') : localText('browser.status.offline', 'オフライン');
+      const dntEnabled = localText('browser.status.dntEnabled', '有効');
+      const dntDisabled = localText('browser.status.dntDisabled', '無効');
+      const dntUnknown = localText('status.unknown', '不明');
+      const cookiesEnabled = localText('browser.status.cookiesEnabled', '利用可能');
+      const cookiesDisabled = localText('browser.status.cookiesDisabled', '無効');
+      const noFeatures = localText('browser.notes.noFeatures', '主要API情報なし');
+      const html5Unknown = localText('browser.notes.html5Unknown', '判定不可');
+      browserRows.name.set(info?.name || unknown);
+      browserRows.version.set(info?.version || dash);
+      browserRows.engine.set(info?.engine || dash);
       browserRows.agent.set(ua);
-      browserRows.brands.set(brands.length ? brands.map(b => `${b.brand} ${b.version}`).join(', ') : '取得不可');
-      browserRows.vendor.set(info?.vendor || '-');
-      browserRows.doNotTrack.set(navigator.doNotTrack === '1' ? '有効' : (navigator.doNotTrack === '0' ? '無効' : '不明'));
-      browserRows.online.set(navigator.onLine ? 'オンライン' : 'オフライン');
-      browserRows.cookies.set(navigator.cookieEnabled ? '利用可能' : '無効');
+      browserRows.brands.set(brands.length ? brands.map(b => `${b.brand} ${b.version}`).join(', ') : unavailable);
+      browserRows.vendor.set(info?.vendor || dash);
+      browserRows.doNotTrack.set(navigator.doNotTrack === '1' ? dntEnabled : (navigator.doNotTrack === '0' ? dntDisabled : dntUnknown));
+      browserRows.online.set(onlineText);
+      browserRows.cookies.set(navigator.cookieEnabled ? cookiesEnabled : cookiesDisabled);
       const storageApis = [];
       try {
         if ('localStorage' in window) storageApis.push('localStorage');
@@ -890,7 +1045,7 @@
       } catch {}
       if ('indexedDB' in window) storageApis.push('IndexedDB');
       if (navigator.storage && navigator.storage.persist) storageApis.push('StorageManager');
-      browserRows.storage.set(storageApis.length ? storageApis.join(', ') : '取得不可');
+      browserRows.storage.set(storageApis.length ? storageApis.join(', ') : unavailable);
       const features = [];
       if (typeof window.fetch === 'function') features.push('Fetch');
       if ('serviceWorker' in navigator) features.push('ServiceWorker');
@@ -899,7 +1054,7 @@
       if ('gpu' in navigator) features.push('WebGPU');
       if ('bluetooth' in navigator) features.push('Web Bluetooth');
       if ('mediaDevices' in navigator) features.push('MediaDevices');
-      browserRows.features.set(features.length ? features.join(', ') : '主要API情報なし');
+      browserRows.features.set(features.length ? features.join(', ') : noFeatures);
       const html5 = [];
       if ('geolocation' in navigator) html5.push('Geolocation');
       if ('localStorage' in window) html5.push('Web Storage');
@@ -909,72 +1064,103 @@
       try {
         if (document.createElement('canvas').getContext) html5.push('Canvas');
       } catch {}
-      browserRows.html5.set(html5.length ? html5.join(', ') : '判定不可');
+      browserRows.html5.set(html5.length ? html5.join(', ') : html5Unknown);
     }
 
     function updateIpUI(){
+      const dash = localText('status.notAvailable', '-');
+      const idleMessage = localText('ip.statusIdle', 'ネットワークアクセスが必要です。取得ボタンを押してください。');
       if (state.ipError){
         ipStatus.textContent = state.ipError;
         ipStatus.style.color = '#b91c1c';
       } else if (state.ipInfo){
-        const lines = [`${state.ipSource} から取得`, state.ipUpdatedAt ? DATE_TIME_FORMAT.format(state.ipUpdatedAt) : ''];
+        const lines = [state.ipSource ? localText('ip.statusSource', '{source} から取得', { source: state.ipSource }) : '', state.ipUpdatedAt ? DATE_TIME_FORMAT.format(state.ipUpdatedAt) : ''];
         ipStatus.textContent = lines.filter(Boolean).join(' / ');
         ipStatus.style.color = '#0f172a';
       } else {
-        ipStatus.textContent = 'ネットワークアクセスが必要です。取得ボタンを押してください。';
+        ipStatus.textContent = idleMessage;
         ipStatus.style.color = '#475569';
       }
       const data = state.ipInfo;
-      ipRows.ip.set(data?.ip || data?.query || '-');
-      ipRows.hostname.set(data?.hostname || data?.host || '-');
-      ipRows.city.set(data?.city || '-');
-      ipRows.region.set(data?.region || data?.regionName || '-');
-      ipRows.country.set(data?.country || data?.countryCode || '-');
-      ipRows.loc.set(data?.loc || (data?.latitude && data?.longitude ? `${data.latitude}, ${data.longitude}` : '-'));
-      ipRows.org.set(data?.org || data?.asn || data?.isp || '-');
-      ipRows.postal.set(data?.postal || '-');
-      ipRows.timezone.set(data?.timezone || data?.time_zone || '-');
-      ipRows.asn.set(data?.asn || data?.as || '-');
-      ipRows.userAgent.set(data?.user_agent || data?.userAgent || '-');
-      ipRows.updated.set(state.ipUpdatedAt ? DATE_TIME_FORMAT.format(state.ipUpdatedAt) : '-');
+      ipRows.ip.set(data?.ip || data?.query || dash);
+      ipRows.hostname.set(data?.hostname || data?.host || dash);
+      ipRows.city.set(data?.city || dash);
+      ipRows.region.set(data?.region || data?.regionName || dash);
+      ipRows.country.set(data?.country || data?.countryCode || dash);
+      ipRows.loc.set(data?.loc || (data?.latitude && data?.longitude ? `${data.latitude}, ${data.longitude}` : dash));
+      ipRows.org.set(data?.org || data?.asn || data?.isp || dash);
+      ipRows.postal.set(data?.postal || dash);
+      ipRows.timezone.set(data?.timezone || data?.time_zone || dash);
+      ipRows.asn.set(data?.asn || data?.as || dash);
+      ipRows.userAgent.set(data?.user_agent || data?.userAgent || dash);
+      ipRows.updated.set(state.ipUpdatedAt ? DATE_TIME_FORMAT.format(state.ipUpdatedAt) : dash);
     }
 
     function buildSummary(){
       const lines = [];
       const now = new Date();
-      lines.push(`[システム概要] ${DATE_TIME_FORMAT.format(now)}`);
+      lines.push(localText('summary.header', '[システム概要] {timestamp}', { timestamp: DATE_TIME_FORMAT.format(now) }));
       if (state.hardwareInfo){
         const h = state.hardwareInfo;
-        lines.push(`CPU: ${h.cpuFamily || '不明'} / ${h.cpuThreads || '-'} threads / arch ${h.architecture || '-'}`);
-        lines.push(`Memory: ${h.deviceMemory ? `${h.deviceMemory}GB` : '-'} (JS heap limit ${h.jsHeapLimit ? formatBytes(h.jsHeapLimit) : '-'})`);
-        lines.push(`GPU: ${(h.gpu && h.gpu.renderer) || '-'} (vendor ${(h.gpu && h.gpu.vendor) || '-'})`);
+        lines.push(localText('summary.cpu', 'CPU: {family} / {threads} threads / arch {arch}', {
+          family: h.cpuFamily || localText('status.unknown', '不明'),
+          threads: h.cpuThreads || localText('status.notAvailable', '-'),
+          arch: h.architecture || localText('status.notAvailable', '-')
+        }));
+        lines.push(localText('summary.memory', 'Memory: {memory} (JS heap limit {heap})', {
+          memory: h.deviceMemory ? `${h.deviceMemory}GB` : localText('status.notAvailable', '-'),
+          heap: h.jsHeapLimit ? formatBytes(h.jsHeapLimit) : localText('status.notAvailable', '-')
+        }));
+        lines.push(localText('summary.gpu', 'GPU: {name} (vendor {vendor})', {
+          name: (h.gpu && h.gpu.renderer) || localText('status.notAvailable', '-'),
+          vendor: (h.gpu && h.gpu.vendor) || localText('status.notAvailable', '-')
+        }));
       }
       if (state.osInfo){
         const o = state.osInfo;
-        lines.push(`OS: ${o.name || '不明'} ${o.version || ''} (${o.bitness || '-'})`);
+        lines.push(localText('summary.os', 'OS: {name} {version} ({bitness})', {
+          name: o.name || localText('status.unknown', '不明'),
+          version: o.version || '',
+          bitness: o.bitness || localText('status.notAvailable', '-')
+        }));
       }
       if (state.browserInfo){
         const b = state.browserInfo;
-        lines.push(`Browser: ${b.name || '不明'} ${b.version || ''} (${b.engine || '-'})`);
+        lines.push(localText('summary.browser', 'Browser: {name} {version} ({engine})', {
+          name: b.name || localText('status.unknown', '不明'),
+          version: b.version || '',
+          engine: b.engine || localText('status.notAvailable', '-')
+        }));
       }
       if (state.ipInfo){
-        lines.push(`IP: ${state.ipInfo.ip || state.ipInfo.query || '-'} @ ${state.ipInfo.city || '-'}, ${state.ipInfo.country || '-'}`);
+        lines.push(localText('summary.ip', 'IP: {ip} @ {city}, {country}', {
+          ip: state.ipInfo.ip || state.ipInfo.query || localText('status.notAvailable', '-'),
+          city: state.ipInfo.city || localText('status.notAvailable', '-'),
+          country: state.ipInfo.country || localText('status.notAvailable', '-')
+        }));
       }
       return lines.join('\n');
     }
 
+    registerLocalizationUpdater(() => updatePcInfoUI(state.hardwareInfo));
+    registerLocalizationUpdater(() => updateMonitorCards());
+    registerLocalizationUpdater(() => updateOsUI());
+    registerLocalizationUpdater(() => updateBrowserUI());
+    registerLocalizationUpdater(() => updateIpUI());
+
     async function refreshHardware(manual){
-      pcInfoRows.motherboard.set('取得中…');
-      pcInfoRows.cpuFamily.set('取得中…');
-      pcInfoRows.cpuThreads.set('取得中…');
-      pcInfoRows.architecture.set('取得中…');
-      pcInfoRows.memory.set('取得中…');
-      pcInfoRows.jsHeap.set('取得中…');
-      pcInfoRows.storage.set('取得中…');
-      pcInfoRows.touch.set('取得中…');
-      pcInfoRows.gpuVendor.set('取得中…');
-      pcInfoRows.gpuName.set('取得中…');
-      pcInfoRows.battery.set('取得中…');
+      const loading = localText('status.loading', '取得中…');
+      pcInfoRows.motherboard.set(loading);
+      pcInfoRows.cpuFamily.set(loading);
+      pcInfoRows.cpuThreads.set(loading);
+      pcInfoRows.architecture.set(loading);
+      pcInfoRows.memory.set(loading);
+      pcInfoRows.jsHeap.set(loading);
+      pcInfoRows.storage.set(loading);
+      pcInfoRows.touch.set(loading);
+      pcInfoRows.gpuVendor.set(loading);
+      pcInfoRows.gpuName.set(loading);
+      pcInfoRows.battery.set(loading);
       try {
         const ua = navigator.userAgent || '';
         const entropy = await getHighEntropyValues(['architecture', 'bitness', 'model', 'platformVersion']);
@@ -1005,7 +1191,7 @@
         updateMonitorCards();
         if (manual) award('pc-refresh', 2);
       } catch (err){
-        pcInfoRows.motherboard.set('取得失敗', err && err.message ? err.message : '情報の取得に失敗しました');
+        pcInfoRows.motherboard.set(localText('status.failed', '取得失敗'), err && err.message ? err.message : localText('errors.hardwareFetch', '情報の取得に失敗しました'));
       }
     }
 
@@ -1030,7 +1216,7 @@
       state.ipError = null;
       state.ipInfo = null;
       state.ipUpdatedAt = null;
-      ipStatus.textContent = '取得中…';
+      ipStatus.textContent = localText('status.loading', '取得中…');
       ipStatus.style.color = '#0f172a';
       fetchIpButton.disabled = true;
       cancelIpButton.style.display = 'inline-flex';
@@ -1044,9 +1230,9 @@
         award('ip-refresh', 3, { source: result.source });
       } catch (err){
         if (err?.name === 'AbortError'){
-          state.ipError = '取得を中止しました。';
+          state.ipError = localText('errors.ipCancelled', '取得を中止しました。');
         } else {
-          state.ipError = err && err.message ? err.message : 'IP情報の取得に失敗しました。ファイアウォールやオフライン環境では取得できません。';
+          state.ipError = err && err.message ? err.message : localText('errors.ipFetch', 'IP情報の取得に失敗しました。ファイアウォールやオフライン環境では取得できません。');
         }
         state.ipInfo = null;
         state.ipSource = null;
@@ -1161,7 +1347,7 @@
     });
     cancelIpButton.addEventListener('click', () => {
       cancelIpFetch();
-      state.ipError = '取得を中止しました。';
+      state.ipError = localText('errors.ipCancelled', '取得を中止しました。');
       state.ipInfo = null;
       state.ipSource = null;
       state.ipUpdatedAt = null;
@@ -1227,6 +1413,10 @@
 
     function destroy(){
       stop();
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       try {
         if (root.contains(wrapper)) root.removeChild(wrapper);
       } catch {}
@@ -1244,9 +1434,9 @@
 
   window.registerMiniGame({
     id: 'system',
-    name: 'システム', nameKey: 'selection.miniexp.games.system.name',
-    description: 'PCやOS、ブラウザ、IP情報を一括確認できるシステムモニターユーティリティ', descriptionKey: 'selection.miniexp.games.system.description', categoryIds: ['utility'],
-    category: 'ユーティリティ',
+    name: text('selection.miniexp.games.system.name', 'システム'), nameKey: 'selection.miniexp.games.system.name',
+    description: text('selection.miniexp.games.system.description', 'PCやOS、ブラウザ、IP情報を一括確認できるシステムモニターユーティリティ'), descriptionKey: 'selection.miniexp.games.system.description', categoryIds: ['utility'],
+    category: text('selection.miniexp.category.utility', 'ユーティリティ'),
     version: '0.1.0',
     author: 'mod',
     create

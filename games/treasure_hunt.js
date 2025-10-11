@@ -8,6 +8,17 @@
     const shortcuts = opts?.shortcuts;
     const dungeonApi = opts?.dungeon;
     const i18n = window?.I18n;
+    const difficultyRaw = opts?.difficulty || 'NORMAL';
+    const difficulty = typeof difficultyRaw === 'string' ? difficultyRaw.toUpperCase() : 'NORMAL';
+    const DIFFICULTY_CONFIG = {
+      EASY: { mapEnabled: true, stageScale: 1, cameraZoom: 1 },
+      NORMAL: { mapEnabled: false, stageScale: 1.5, cameraZoom: 2 },
+      HARD: { mapEnabled: false, stageScale: 4, cameraZoom: 2 }
+    };
+    const difficultyConfig = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.NORMAL;
+    const BASE_STAGE_SIZE = { tilesX: 44, tilesY: 32 };
+    const BASE_CAMERA_VIEW = { tilesX: 24, tilesY: 18 };
+    const XP_BASE_MULTIPLIER = 0.25;
 
     function translate(key, fallback, params){
       const computeFallback = () => {
@@ -54,6 +65,8 @@
         return value == null ? '' : String(value);
       }
     }
+
+    const showMiniMap = difficultyConfig.mapEnabled;
 
     const wrapper = document.createElement('div');
     wrapper.className = 'mini-treasure-hunt';
@@ -174,8 +187,13 @@
     controlPanel.appendChild(lastResultLabel);
     controlPanel.appendChild(hintLabel);
 
-    lowerPanel.appendChild(miniMapWrapper);
-    lowerPanel.appendChild(controlPanel);
+    if (showMiniMap){
+      lowerPanel.appendChild(miniMapWrapper);
+      lowerPanel.appendChild(controlPanel);
+    } else {
+      lowerPanel.style.gridTemplateColumns = 'minmax(200px, 1fr)';
+      lowerPanel.appendChild(controlPanel);
+    }
 
     wrapper.appendChild(infoPanel);
     wrapper.appendChild(canvas);
@@ -287,7 +305,11 @@
       startBtn.textContent = translate('games.treasureHunt.ui.start', '探索開始');
       stopBtn.textContent = translate('games.treasureHunt.ui.pause', '一時停止');
       miniMapTitle.textContent = translate('games.treasureHunt.ui.mapTitle', 'マップ');
-      hintLabel.textContent = translate('games.treasureHunt.ui.hint', 'WASD/矢印で移動。宝箱と自分の距離が遠いほど基礎EXPが増え、素早く拾うほど倍率が上がります。');
+      const hintKey = showMiniMap ? 'games.treasureHunt.ui.hint' : 'games.treasureHunt.ui.hintNoMap';
+      const hintFallback = showMiniMap
+        ? 'WASD/矢印で移動。宝箱と自分の距離が遠いほど基礎EXPが増え、素早く拾うほど倍率が上がります。'
+        : 'WASD/矢印で移動。宝箱と自分の距離が遠いほど基礎EXPが増えます。NORMAL以上ではマップ非表示なので手がかりを頼りに探索しましょう。';
+      hintLabel.textContent = translate(hintKey, hintFallback);
     }
 
     function renderLastResult(){
@@ -466,6 +488,7 @@
     }
 
     function drawMiniMap(){
+      if (!showMiniMap) return;
       const ctx = miniMapCanvas.getContext('2d');
       ctx.clearRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
       if (!stage || !background){
@@ -532,7 +555,7 @@
       treasure.visible = false;
       const timeSpent = Math.max(0.5, roundTime);
       const base = 10 * Math.max(1, treasureDistanceTiles);
-      const xpGain = Math.max(1, Math.round(base * (60 / timeSpent)));
+      const xpGain = Math.max(1, Math.round(base * (60 / timeSpent) * XP_BASE_MULTIPLIER));
       totalExp += xpGain;
       awardXp?.(xpGain);
       if (bestTime == null || roundTime < bestTime) bestTime = roundTime;
@@ -554,23 +577,30 @@
       if (generating) return;
       generating = true;
       setStatusState('generating');
-      dungeonApi.generateStage({ type: 'mixed', tilesX: 44, tilesY: 32, tileSize: 18 }).then((generated) => {
+      const stageTilesX = Math.max(8, Math.round(BASE_STAGE_SIZE.tilesX * difficultyConfig.stageScale));
+      const stageTilesY = Math.max(8, Math.round(BASE_STAGE_SIZE.tilesY * difficultyConfig.stageScale));
+      const cameraViewX = Math.max(8, Math.round(BASE_CAMERA_VIEW.tilesX / Math.max(1, difficultyConfig.cameraZoom)));
+      const cameraViewY = Math.max(8, Math.round(BASE_CAMERA_VIEW.tilesY / Math.max(1, difficultyConfig.cameraZoom)));
+      dungeonApi.generateStage({ type: 'mixed', tilesX: stageTilesX, tilesY: stageTilesY, tileSize: 18 }).then((generated) => {
         stage = generated;
         background = dungeonApi.renderStage(stage, { tileSize: stage.tileSize, showGrid: false });
-        camera = stage.createCamera({ viewTilesX: 24, viewTilesY: 18 });
+        camera = stage.createCamera({ viewTilesX: cameraViewX, viewTilesY: cameraViewY });
         if (camera){
+          const zoomScale = Math.max(1, difficultyConfig.cameraZoom || 1);
           canvas.width = camera.width;
           canvas.height = camera.height;
-          canvas.style.width = `${camera.width}px`;
-          canvas.style.height = `${camera.height}px`;
+          canvas.style.width = `${camera.width * zoomScale}px`;
+          canvas.style.height = `${camera.height * zoomScale}px`;
         } else if (background){
           canvas.width = background.canvas.width;
           canvas.height = background.canvas.height;
           canvas.style.width = `${background.canvas.width}px`;
           canvas.style.height = `${background.canvas.height}px`;
         }
-        miniMapCanvas.width = Math.min(240, Math.max(160, Math.floor(stage.width * 4)));
-        miniMapCanvas.height = Math.min(200, Math.max(120, Math.floor(stage.height * 4)));
+        if (showMiniMap){
+          miniMapCanvas.width = Math.min(240, Math.max(160, Math.floor(stage.width * 4)));
+          miniMapCanvas.height = Math.min(200, Math.max(120, Math.floor(stage.height * 4)));
+        }
         if (!pickStartAndTreasure()){
           setStatusState('placingFailed');
           generating = false;

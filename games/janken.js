@@ -157,6 +157,14 @@
     const historyRecords = [];
     let statusState = { key: 'status.prompt', fallback: '手を選ぶと掛け声が始まるよ', params: null };
     let detachLocale = null;
+    let wins = 0;
+    let losses = 0;
+    let ties = 0;
+    let streak = 0;
+    let bestStreak = 0;
+    let roundCount = 0;
+    let isResolving = false;
+    let lastPlayerChoice = null;
 
     function choiceLabel(index){
       const def = CHOICES[index] || {};
@@ -256,15 +264,6 @@
     const BEATS = [1,2,0];
     const BEATEN_BY = [2,0,1];
     const CHANT_INTERVAL = 260;
-
-    let wins = 0;
-    let losses = 0;
-    let ties = 0;
-    let streak = 0;
-    let bestStreak = 0;
-    let roundCount = 0;
-    let isResolving = false;
-    let lastPlayerChoice = null;
 
     function setGameTimeout(fn, delay){
       const id = setTimeout(() => {
@@ -461,14 +460,21 @@
 
     updateStats();
 
-    function start(){}
-    function stop(){
+    function resetInteractionState(){
       clearTimers();
       if (isResolving){
         isResolving = false;
-        setButtonsDisabled(false);
-        clearHighlights();
       }
+      setButtonsDisabled(false);
+      clearHighlights();
+    }
+
+    function start(){
+      resetInteractionState();
+      setStatus('status.prompt', '手を選ぶと掛け声が始まるよ');
+    }
+    function stop(){
+      resetInteractionState();
       setStatus('status.paused', '一時停止中');
     }
     function destroy(){

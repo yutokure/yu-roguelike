@@ -120,6 +120,26 @@
         depth: +2,
         chest: 'more',
         type: 'oneway-labyrinth'
+      },
+      {
+        key: 'oneway_labyrinth_c',
+        name: '渦巻きの縁',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_c.name",
+        level: +24,
+        size: +1,
+        depth: +2,
+        chest: 'normal',
+        type: 'oneway-labyrinth'
+      },
+      {
+        key: 'oneway_labyrinth_d',
+        name: '順行の要塞',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_d.name",
+        level: +28,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'oneway-labyrinth'
       }
     ],
     blocks2: [
@@ -131,6 +151,36 @@
         size: +1,
         depth: +2,
         chest: 'rich',
+        type: 'oneway-labyrinth'
+      },
+      {
+        key: 'oneway_labyrinth_cross',
+        name: '矢路の交点',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_cross.name",
+        level: +32,
+        size: +1,
+        depth: +2,
+        chest: 'rich',
+        type: 'oneway-labyrinth'
+      },
+      {
+        key: 'oneway_labyrinth_loop',
+        name: '無限輪路',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_loop.name",
+        level: +34,
+        size: +2,
+        depth: +3,
+        chest: 'rare',
+        type: 'oneway-labyrinth'
+      },
+      {
+        key: 'oneway_labyrinth_gate',
+        name: '逆行の門',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_gate.name",
+        level: +36,
+        size: +2,
+        depth: +3,
+        chest: 'rare',
         type: 'oneway-labyrinth'
       }
     ],
@@ -145,6 +195,39 @@
         chest: 'rich',
         type: 'oneway-labyrinth',
         bossFloors: [8, 16]
+      },
+      {
+        key: 'oneway_labyrinth_relic',
+        name: '矢導の聖所',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_relic.name",
+        level: +40,
+        size: +2,
+        depth: +3,
+        chest: 'rich',
+        type: 'oneway-labyrinth',
+        bossFloors: [10, 18]
+      },
+      {
+        key: 'oneway_labyrinth_sanctum',
+        name: '方向の祭室',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_sanctum.name",
+        level: +44,
+        size: +3,
+        depth: +4,
+        chest: 'rare',
+        type: 'oneway-labyrinth',
+        bossFloors: [12, 20]
+      },
+      {
+        key: 'oneway_labyrinth_maestro',
+        name: '迷宮指揮塔',
+        nameKey: "dungeon.types.oneway_labyrinth.blocks.oneway_labyrinth_maestro.name",
+        level: +48,
+        size: +3,
+        depth: +4,
+        chest: 'legendary',
+        type: 'oneway-labyrinth',
+        bossFloors: [24]
       }
     ]
   };

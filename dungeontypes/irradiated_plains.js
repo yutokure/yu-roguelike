@@ -95,6 +95,28 @@
         chest:'less',
         type:'irradiated-plains',
         bossFloors:mkBoss(12)
+      },
+      {
+        key:'irradiated_theme_03',
+        name:'Fallout Plains III',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_theme_03.name",
+        level:+18,
+        size:+1,
+        depth:+2,
+        chest:'normal',
+        type:'irradiated-plains',
+        bossFloors:mkBoss(14)
+      },
+      {
+        key:'irradiated_theme_04',
+        name:'Fallout Plains IV',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_theme_04.name",
+        level:+22,
+        size:+2,
+        depth:+3,
+        chest:'more',
+        type:'irradiated-plains',
+        bossFloors:mkBoss(16)
       }
     ],
     blocks2: [
@@ -106,6 +128,36 @@
         size:+1,
         depth:+1,
         chest:'normal',
+        type:'irradiated-plains'
+      },
+      {
+        key:'irradiated_core_02',
+        name:'Toxic Heart',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_core_02.name",
+        level:+16,
+        size:+1,
+        depth:+2,
+        chest:'more',
+        type:'irradiated-plains'
+      },
+      {
+        key:'irradiated_core_03',
+        name:'Fission Ward',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_core_03.name",
+        level:+20,
+        size:+2,
+        depth:+2,
+        chest:'rich',
+        type:'irradiated-plains'
+      },
+      {
+        key:'irradiated_core_04',
+        name:'Glow Hub',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_core_04.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'rare',
         type:'irradiated-plains'
       }
     ],
@@ -120,6 +172,39 @@
         chest:'more',
         type:'irradiated-plains',
         bossFloors:[6,12]
+      },
+      {
+        key:'irradiated_relic_02',
+        name:'Core Containment',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_relic_02.name",
+        level:+24,
+        size:+2,
+        depth:+3,
+        chest:'rich',
+        type:'irradiated-plains',
+        bossFloors:[9,15]
+      },
+      {
+        key:'irradiated_relic_03',
+        name:'Fallout Vault',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_relic_03.name",
+        level:+28,
+        size:+3,
+        depth:+4,
+        chest:'rare',
+        type:'irradiated-plains',
+        bossFloors:[12,18]
+      },
+      {
+        key:'irradiated_relic_04',
+        name:'Gamma Sanctum',
+        nameKey: "dungeon.types.irradiated_plains.blocks.irradiated_relic_04.name",
+        level:+32,
+        size:+3,
+        depth:+4,
+        chest:'legendary',
+        type:'irradiated-plains',
+        bossFloors:[20]
       }
     ]
   };

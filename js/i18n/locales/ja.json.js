@@ -16868,6 +16868,36 @@
     store['ja'].games = {};
   }
   var jaGames = store['ja'].games;
+  if (!jaGames.stopwatch) {
+    jaGames.stopwatch = {
+      "header": {
+        "title": "ストップウォッチ Pro"
+      },
+      "statusBadge": {
+        "running": "計測中",
+        "stopped": "停止中"
+      },
+      "info": {
+        "lapCount": "ラップ: {count}",
+        "lastLap": "前ラップ: {time}",
+        "lastLapNone": "前ラップ: -",
+        "sessionXp": "セッションEXP: {xp}"
+      },
+      "buttons": {
+        "start": "スタート",
+        "pause": "一時停止",
+        "resume": "再開",
+        "lap": "ラップ",
+        "reset": "リセット"
+      },
+      "laps": {
+        "title": "ラップ記録",
+        "subtitle": "最新順に表示",
+        "empty": "ラップを記録するとここに表示されます",
+        "label": "ラップ {index}"
+      }
+    };
+  }
   if (!jaGames.wording) {
     jaGames.wording = {
         "name": "Wording",

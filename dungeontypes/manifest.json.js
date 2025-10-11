@@ -74,6 +74,14 @@ window.DUNGEONTYPE_MANIFEST = [
     author: 'builtin-sample'
   },
   {
+    id: 'wide_maze_variations_pack',
+    name: 'Wide Maze Variations Pack',
+    nameKey: "dungeon.packs.wide_maze_variations_pack.name",
+    entry: 'dungeontypes/wide_maze_variations_pack.js',
+    version: '1.0.0',
+    author: 'wide-maze-pack'
+  },
+  {
     id: 'skyward_pack',
     name: 'Skyward Bastions Pack',
     nameKey: "dungeon.packs.skyward_pack.name",

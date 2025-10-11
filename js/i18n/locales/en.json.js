@@ -702,7 +702,12 @@
           },
           "game2048": {
             "name": "2048",
-            "description": "Merge tiles toward 2048, earning EXP based on log2 sums."
+            "description": "Merge tiles toward 2048, earning EXP based on log2 sums.",
+            "setup": {
+              "sizeLabel": "Board size: ",
+              "startButton": "Start",
+              "boardSizeOption": "{size}×{size}"
+            }
           },
           "todo_list": {
             "name": "To-Do List",

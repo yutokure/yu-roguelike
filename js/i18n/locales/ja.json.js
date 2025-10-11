@@ -1301,6 +1301,9 @@
               "expSummary": "獲得EXP: ラップ{lap} / ベスト{best} / ブースト{boost} / フィニッシュ{finish}",
               "restartHint": "Rキーで再スタート"
             },
+            "instructions": {
+              "controls": "↑/W:アクセル　↓/S:ブレーキ　←→/A・D:ステア<br>Space:ターボ　R:リスタート"
+            },
             "status": {
               "you": "自分",
               "dnf": "DNF",
@@ -16689,6 +16692,53 @@
           "running": "ラウンド{round} 探索中…",
           "paused": "一時停止中",
           "found": "宝を発見！次のラウンドを生成中…"
+        }
+      },
+      "todoList": {
+        "defaults": {
+          "untitled": "名称未設定"
+        },
+        "header": {
+          "title": "ToDoリスト",
+          "today": "{date}",
+          "stats": "未完了: {pending}件 / 完了: {completed}件"
+        },
+        "form": {
+          "titleCreate": "新規ToDoを登録",
+          "titleEdit": "ToDoを編集",
+          "name": "名前",
+          "namePlaceholder": "例: 日次レポートを送信",
+          "xp": "獲得EXP",
+          "color": "カラー",
+          "memo": "メモ",
+          "memoPlaceholder": "補足情報やチェックポイントなどを入力",
+          "submitCreate": "追加",
+          "submitUpdate": "更新",
+          "cancel": "キャンセル"
+        },
+        "sections": {
+          "pending": "未完了タスク",
+          "completed": "完了済みタスク",
+          "emptyPending": "未完了のToDoはありません。",
+          "emptyCompleted": "完了したToDoはまだありません。"
+        },
+        "task": {
+          "xpChip": "{xp} EXP",
+          "memoEmpty": "メモなし",
+          "createdAt": "登録: {date}",
+          "completedAt": "完了: {date}",
+          "statusCompleted": "成功",
+          "statusFailed": "失敗",
+          "actions": {
+            "complete": "完了",
+            "fail": "失敗",
+            "edit": "編集",
+            "delete": "削除"
+          }
+        },
+        "dialogs": {
+          "confirmDelete": "このToDoを削除しますか？",
+          "requireName": "名前を入力してください。"
         }
       },
       "notepad": {

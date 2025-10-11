@@ -1,15 +1,8 @@
 (function(){
   const UPDATE_INTERVAL = 33;
   const MAX_LAPS = 60;
-
-  const globalScope = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
-
-  function getI18n(){
-    if (!globalScope) return null;
-    const instance = globalScope.I18n;
-    return (instance && typeof instance === 'object') ? instance : null;
-  }
   const I18N_PREFIX = 'games.stopwatch';
+  const TRANSLATION_SENTINEL = '__mini_stopwatch_missing__';
 
   function pad2(value){
     return value.toString().padStart(2, '0');
@@ -51,37 +44,46 @@
     });
   }
 
-  function translateKey(key, fallback, params){
-    const i18n = getI18n();
-    if (key && i18n && typeof i18n.t === 'function'){
+  function translateWithLocalization(localization, path, fallback, params){
+    if (localization && typeof localization.t === 'function'){
       try {
-        const value = i18n.t(key, params);
-        if (typeof value === 'string' && value !== key) return value;
-      } catch {}
+        const result = localization.t(path, TRANSLATION_SENTINEL, params);
+        if (typeof result === 'string' && result !== TRANSLATION_SENTINEL){
+          return result;
+        }
+      } catch (error){
+        console.warn('[stopwatch] Failed to translate key', path, error);
+      }
     }
-    if (fallback !== undefined) return params ? formatTemplate(fallback, params) : String(fallback);
-    return params ? formatTemplate(key, params) : String(key ?? '');
+    if (fallback !== undefined){
+      return formatTemplate(fallback, params);
+    }
+    if (!path) return '';
+    const fullKey = path.startsWith('.') ? `${I18N_PREFIX}${path}` : `${I18N_PREFIX}.${path}`;
+    return formatTemplate(fullKey, params);
   }
 
-  function t(path, fallback, params){
-    return translateKey(path ? `${I18N_PREFIX}.${path}` : I18N_PREFIX, fallback, params);
-  }
-
-  function formatNumberLocalized(value){
-    const i18n = getI18n();
-    if (i18n && typeof i18n.formatNumber === 'function'){
-      try { return i18n.formatNumber(value); } catch {}
+  function formatNumberLocalized(localization, value){
+    if (localization && typeof localization.formatNumber === 'function'){
+      try { return localization.formatNumber(value); } catch {}
     }
     try {
-      const locale = i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : undefined;
+      const locale = localization && typeof localization.getLocale === 'function' ? localization.getLocale() : undefined;
       return new Intl.NumberFormat(locale).format(value);
     } catch {
       return String(value ?? '');
     }
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts){
     if (!root) throw new Error('MiniExp Stopwatch requires a container');
+
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'stopwatch', localizationKey: I18N_PREFIX })
+      : null);
+
+    const t = (path, fallback, params) => translateWithLocalization(localization, path, fallback, params);
+    const formatNumberIntl = (value) => formatNumberLocalized(localization, value);
 
     const state = {
       running: false,
@@ -94,7 +96,7 @@
     let rafId = null;
     let tickerId = null;
     let isActive = false;
-    let detachLocaleListener = null;
+    const localeCleanup = [];
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -171,7 +173,7 @@
     infoRow.style.fontSize = '13px';
 
     const lapCountEl = document.createElement('span');
-    lapCountEl.textContent = t('info.lapCount', 'Lap: {count}', { count: formatNumberLocalized(0) });
+    lapCountEl.textContent = t('info.lapCount', 'Lap: {count}', { count: formatNumberIntl(0) });
 
     const lastLapEl = document.createElement('span');
     lastLapEl.textContent = t('info.lastLapNone', 'Last lap: -');
@@ -281,6 +283,27 @@
     wrapper.appendChild(panel);
     root.appendChild(wrapper);
 
+    function addLocaleCleanup(handler){
+      if (typeof handler === 'function') localeCleanup.push(handler);
+    }
+
+    function cleanupLocaleObservers(){
+      while (localeCleanup.length){
+        const handler = localeCleanup.pop();
+        try {
+          handler();
+        } catch {}
+      }
+    }
+
+    function safeApplyLocaleStrings(){
+      try {
+        applyLocaleStrings();
+      } catch (error){
+        console.warn('[stopwatch] Failed to apply localized strings', error);
+      }
+    }
+
     function grantXp(amount, detail){
       if (!(amount > 0)) return;
       state.sessionXp += amount;
@@ -305,7 +328,7 @@
       const parts = timeParts(elapsed);
       mainTime.textContent = `${pad2(parts.hours)}:${pad2(parts.minutes)}:${pad2(parts.seconds)}`;
       fractionalTime.textContent = `.${pad2(parts.centis)}`;
-      const lapCount = formatNumberLocalized(state.laps.length);
+      const lapCount = formatNumberIntl(state.laps.length);
       lapCountEl.textContent = t('info.lapCount', 'Lap: {count}', { count: lapCount });
       if (state.laps.length){
         const last = state.laps[state.laps.length - 1];
@@ -467,7 +490,7 @@
         row.style.border = '1px solid rgba(34,211,238,0.16)';
 
         const label = document.createElement('span');
-        const labelIndex = formatNumberLocalized(lap.index);
+        const labelIndex = formatNumberIntl(lap.index);
         label.textContent = t('laps.label', 'Lap {index}', { index: labelIndex });
         label.style.color = '#99f6e4';
         label.style.fontWeight = '600';
@@ -548,10 +571,7 @@
 
     function destroy(){
       stop();
-      if (typeof detachLocaleListener === 'function'){
-        detachLocaleListener();
-        detachLocaleListener = null;
-      }
+      cleanupLocaleObservers();
       if (rafId){
         cancelAnimationFrame(rafId);
         rafId = null;
@@ -559,13 +579,25 @@
       root.removeChild(wrapper);
     }
 
+    if (localization && typeof localization.onChange === 'function'){
+      try {
+        const detach = localization.onChange(() => safeApplyLocaleStrings());
+        addLocaleCleanup(() => { try { detach && detach(); } catch {} });
+      } catch (error){
+        console.warn('[stopwatch] Failed to observe localization changes', error);
+      }
+    }
+
     if (typeof document !== 'undefined' && typeof document.addEventListener === 'function'){
-      const handleLocaleChange = () => applyLocaleStrings();
+      const handleLocaleChange = () => safeApplyLocaleStrings();
       document.addEventListener('i18n:locale-changed', handleLocaleChange);
-      detachLocaleListener = () => document.removeEventListener('i18n:locale-changed', handleLocaleChange);
+      addLocaleCleanup(() => {
+        try { document.removeEventListener('i18n:locale-changed', handleLocaleChange); } catch {}
+      });
     }
 
     applyLocaleStrings();
+    safeApplyLocaleStrings();
     start();
 
     return {

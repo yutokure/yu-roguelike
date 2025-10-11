@@ -12179,6 +12179,103 @@
             "title": "Page One",
             "description": "Classic shedding game that inspired UNO."
           }
+        },
+        "common": {
+          "actions": {
+            "hint": "Hint (H)",
+            "restart": "Restart (R)",
+            "returnToList": "Game List (B)",
+            "rematch": "Play Again"
+          },
+          "hud": {
+            "scoreSummary": "Total {plays} games / Best {best} / Hand {hand} cards",
+            "noRecord": "---",
+            "bestPlace": "Place {place}"
+          },
+          "status": {
+            "turn": "{name}'s turn"
+          },
+          "youSuffix": " (You)",
+          "hand": {
+            "empty": "No cards",
+            "cleared": "Finished (Place {place})"
+          },
+          "player": {
+            "finished": "Secured place {place}"
+          }
+        },
+        "baba": {
+          "status": {
+            "humanTurn": "Your turn: Click the card of the player on your right. (Hand {cards} cards)"
+          },
+          "toast": {
+            "hint": "Click the player on your right to draw a card.",
+            "start": "Game start! Draw a card from the player on your right.",
+            "finish": "Finished! Place {place}",
+            "loser": "{name} is holding the joker. Game over!"
+          }
+        },
+        "jiji": {
+          "table": {
+            "label": "Table card",
+            "rank": "Rank: {rank}",
+            "none": "No table card"
+          },
+          "controls": {
+            "swap": {
+              "enable": "Swap mode",
+              "disable": "Exit swap mode"
+            }
+          },
+          "status": {
+            "humanTurn": "Your turn: Swap with the table if needed, then draw from the player on your right.",
+            "selectSwap": "Choose a card from your hand to swap.",
+            "humanDraw": "Swap with the table or draw from your right-hand player."
+          },
+          "toast": {
+            "noTable": "No table card available to swap.",
+            "hint": "Match the table rank to shed cards from your hand.",
+            "swapped": "Swapped with the table card.",
+            "exitSwap": "Exit swap mode first.",
+            "loser": "{name} is stuck with the Jiji. Game over!",
+            "tableMissing": "No table card available.",
+            "cannotPlaceJiji": "You can't place the Jiji on the table card.",
+            "finish": "Finished! Place {place}"
+          }
+        },
+        "blackjack": {
+          "labels": {
+            "dealer": "Dealer",
+            "player": "Player"
+          },
+          "actions": {
+            "hit": "Hit (H)",
+            "stand": "Stand (S)",
+            "restart": "Restart (R)",
+            "nextHand": "Next Hand (N)"
+          },
+          "messages": {
+            "chooseAction": "Select HIT or STAND.",
+            "chooseActionAlt": "Choose HIT or STAND.",
+            "blackjackPlayer": "Blackjack!",
+            "blackjackDealer": "Dealer has blackjack...",
+            "blackjackPush": "Both have blackjack. Push!",
+            "bust": "Bust ({value})",
+            "totalPrompt": "Total {value} / HIT or STAND",
+            "dealerBust": "Dealer busts ({value})",
+            "dealerVsPlayer": "Dealer {dealer} vs {player}",
+            "playerWin": "You win! {player} vs {dealer}",
+            "push": "Push ({value})"
+          },
+          "status": {
+            "tally": "Wins {wins} / Losses {losses} / Pushes {pushes}"
+          },
+          "hud": {
+            "score": "Total plays {plays} / Wins {wins}"
+          },
+          "toast": {
+            "consolation": "Tough luck! You'll get them next time."
+          }
         }
       },
       "gamble_hall": {

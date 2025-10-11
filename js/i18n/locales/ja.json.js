@@ -12179,6 +12179,103 @@
             "title": "ページワン",
             "description": "UNOの祖先とされる定番ゲーム。"
           }
+        },
+        "common": {
+          "actions": {
+            "hint": "ヒント (H)",
+            "restart": "リスタート (R)",
+            "returnToList": "ゲーム一覧 (B)",
+            "rematch": "再戦する"
+          },
+          "hud": {
+            "scoreSummary": "通算 {plays} 回 / ベスト {best} / 手札 {hand} 枚",
+            "noRecord": "---",
+            "bestPlace": "{place} 位"
+          },
+          "status": {
+            "turn": "{name} の番"
+          },
+          "youSuffix": " (You)",
+          "hand": {
+            "empty": "手札なし",
+            "cleared": "上がり ({place}位)"
+          },
+          "player": {
+            "finished": "{place} 位確定"
+          }
+        },
+        "baba": {
+          "status": {
+            "humanTurn": "あなたの番：右隣のカードをクリックしてください。（手札 {cards} 枚）"
+          },
+          "toast": {
+            "hint": "右隣のプレイヤーのカードをクリックして引きましょう。",
+            "start": "ゲーム開始！右隣のプレイヤーからカードを引きましょう。",
+            "finish": "上がり！順位 {place}",
+            "loser": "{name} がジョーカーを持っています。ゲーム終了！"
+          }
+        },
+        "jiji": {
+          "table": {
+            "label": "台札",
+            "rank": "ランク: {rank}",
+            "none": "台札なし"
+          },
+          "controls": {
+            "swap": {
+              "enable": "交換モード",
+              "disable": "交換モード解除"
+            }
+          },
+          "status": {
+            "humanTurn": "あなたの番：必要なら台札と交換し、右隣からカードを引きましょう。",
+            "selectSwap": "交換するカードを自分の手札から選んでください。",
+            "humanDraw": "台札と交換するか、右隣からカードを引いてください。"
+          },
+          "toast": {
+            "noTable": "交換できる台札がありません。",
+            "hint": "台札と同じランクを揃えると手札を減らせます。",
+            "swapped": "台札と交換しました。",
+            "exitSwap": "交換モードを終了してください。",
+            "loser": "{name} がジジを持っています。ゲーム終了！",
+            "tableMissing": "台札がありません。",
+            "cannotPlaceJiji": "ジジは台札に置けません。",
+            "finish": "上がり！順位 {place}"
+          }
+        },
+        "blackjack": {
+          "labels": {
+            "dealer": "ディーラー",
+            "player": "プレイヤー"
+          },
+          "actions": {
+            "hit": "ヒット (H)",
+            "stand": "スタンド (S)",
+            "restart": "リスタート (R)",
+            "nextHand": "次のハンド (N)"
+          },
+          "messages": {
+            "chooseAction": "HIT / STAND を選択してください。",
+            "chooseActionAlt": "HIT または STAND を選択してください。",
+            "blackjackPlayer": "ブラックジャック！",
+            "blackjackDealer": "ディーラーがブラックジャック…",
+            "blackjackPush": "両者ブラックジャック。プッシュ！",
+            "bust": "バースト ({value})",
+            "totalPrompt": "合計 {value} / HIT or STAND",
+            "dealerBust": "ディーラーがバースト ({value})",
+            "dealerVsPlayer": "ディーラー {dealer} 対 {player}",
+            "playerWin": "勝利！{player} 対 {dealer}",
+            "push": "プッシュ ({value})"
+          },
+          "status": {
+            "tally": "勝利 {wins} / 敗北 {losses} / プッシュ {pushes}"
+          },
+          "hud": {
+            "score": "通算プレイ {plays} ・ 勝利 {wins}"
+          },
+          "toast": {
+            "consolation": "残念！次は勝てるはず。"
+          }
         }
       },
       "gamble_hall": {

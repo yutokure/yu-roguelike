@@ -16775,4 +16775,153 @@
     }
 
   };
+  if (!store['ja']) {
+    store['ja'] = {};
+  }
+  if (!store['ja'].games) {
+    store['ja'].games = {};
+  }
+  var jaGames = store['ja'].games;
+  if (!jaGames.wording) {
+    jaGames.wording = {
+        "name": "Wording",
+        "description": "編集+1 / 書式+2 / 保存+6 EXP のワープロ",
+        "defaultTitle": "文書1",
+        "autoTitle": "文書{formattedNumber}",
+        "quickBar": {
+          "open": "開く (Ctrl+O)",
+          "save": "上書き保存 (Ctrl+S)",
+          "saveAs": "名前を付けて保存 (Ctrl+Shift+S)",
+          "undo": "元に戻す (Ctrl+Z)",
+          "redo": "やり直し (Ctrl+Y)",
+          "print": "印刷"
+        },
+        "tabs": {
+          "home": "ホーム",
+          "insert": "挿入",
+          "layout": "レイアウト",
+          "review": "校閲",
+          "view": "表示"
+        },
+        "groups": {
+          "clipboard": "クリップボード",
+          "font": "フォント",
+          "paragraph": "段落",
+          "style": "スタイル",
+          "insert": "挿入",
+          "media": "メディア",
+          "theme": "テーマ",
+          "columns": "列",
+          "margins": "余白",
+          "proofing": "校閲ツール",
+          "comments": "コメント",
+          "lineHeight": "行間",
+          "guides": "ガイド",
+          "paper": "紙の色"
+        },
+        "buttons": {
+          "rename": "名前の変更",
+          "paste": "貼り付け",
+          "copy": "コピー",
+          "cut": "切り取り",
+          "bold": "太字",
+          "italic": "斜体",
+          "underline": "下線",
+          "strikethrough": "取り消し線",
+          "superscript": "上付き",
+          "subscript": "下付き",
+          "bullets": "箇条書き",
+          "numberedList": "番号付きリスト",
+          "alignLeft": "左揃え",
+          "alignCenter": "中央揃え",
+          "alignRight": "右揃え",
+          "alignJustify": "両端揃え",
+          "outdent": "インデント解除",
+          "indent": "インデント追加",
+          "blockParagraph": "本文",
+          "blockHeading": "見出し {level}",
+          "blockQuote": "引用",
+          "insertDate": "日付",
+          "insertTime": "時刻",
+          "insertHorizontalRule": "横罫線",
+          "insertEmoji": "スタンプ",
+          "insertImage": "画像",
+          "insertTextbox": "テキストボックス",
+          "insertToc": "目次",
+          "commentInsert": "コメント挿入",
+          "changeSummary": "変更サマリ",
+          "wordCount": "文字数カウント",
+          "readingTime": "読了目安",
+          "reviewHighlightOn": "長文検出",
+          "reviewHighlightOff": "長文解除",
+          "columnsOption": "{formattedCount} 列",
+          "lineHeightOption": "{formattedValue} 倍",
+          "marginNarrow": "狭い",
+          "marginNormal": "標準",
+          "marginWide": "広い",
+          "themeLight": "ライト",
+          "themeDark": "ダーク紙",
+          "showRuler": "ルーラー表示",
+          "hideRuler": "ルーラー非表示",
+          "showStatus": "ステータス表示",
+          "hideStatus": "ステータス隠す",
+          "paperWhite": "ホワイト",
+          "paperCream": "クリーム",
+          "paperGray": "グレー",
+          "zoomOut": "ズームアウト",
+          "zoomIn": "ズームイン"
+        },
+        "messages": {
+          "printUnavailable": "印刷ダイアログは近日対応予定です",
+          "noContent": "本文がありません",
+          "wordCount": "文字数: {characters} / 単語: {words} / 段落: {paragraphs}",
+          "readingTime": "およそ {minutes} 分 {secondsPadded} 秒で読めます",
+          "changeSummarySaved": "保存済み: 差分はありません",
+          "changeSummaryDiff": "未保存の差分目安: 約 {difference} 文字"
+        },
+        "prompts": {
+          "rename": "文書名を入力してください",
+          "saveFile": "保存するファイル名 (.wording.html)",
+          "comment": "コメントを入力してください"
+        },
+        "confirm": {
+          "closeWithoutSave": "保存せずに閉じますか？",
+          "newWithoutSave": "保存されていない変更があります。新規作成しますか？"
+        },
+        "fonts": {
+          "yuGothic": "游ゴシック",
+          "yuMincho": "游明朝",
+          "meiryo": "メイリオ",
+          "hiraginoKaku": "ヒラギノ角ゴ",
+          "monospace": "等幅 (Consolas)"
+        },
+        "fontSize": {
+          "option": "{formattedSize} pt"
+        },
+        "insert": {
+          "tocTemplate": "<ol><li>はじめに</li><li>本題</li><li>まとめ</li></ol>",
+          "textboxLabel": "テキストボックス"
+        },
+        "editor": {
+          "welcomeHtml": "<p>ようこそ、Wording へ！ここで文章作成を始めましょう。</p>",
+          "newDocumentHtml": "<p>新しい文書を開始しましょう。</p>"
+        },
+        "status": {
+          "summary": "ページ {pageCurrent} / {pageTotal} | 文字数: {characters} | 単語: {words}"
+        },
+        "search": {
+          "title": "検索と置換",
+          "placeholder": "検索語",
+          "replacePlaceholder": "置換文字列",
+          "enterQuery": "検索語を入力してください",
+          "noMatch": "一致はありません",
+          "next": "次を検索",
+          "replace": "置換",
+          "replaceAll": "すべて置換",
+          "close": "閉じる",
+          "replacedCount": "{count} 件置換しました",
+          "progress": "全{total}件中 {current}件目"
+        }
+      };
+  }
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this);

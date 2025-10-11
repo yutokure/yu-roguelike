@@ -14022,6 +14022,54 @@
         }
       }
     },
+    "miniexp": {
+      "games": {
+        "tosochu": {
+          "ui": {
+            "timer": "Time Left {seconds}s",
+            "exp": "Stored EXP {exp}",
+            "missionNotReady": "Mission: Not yet activated",
+            "missionActive": "Mission: {label}{optionalSuffix} — {seconds}s remaining (Coords: {coords})",
+            "missionComplete": "Missions Complete: {success}/{total} succeeded",
+            "missionSuccess": "{label}: Success!",
+            "missionFailed": "{label}: Failed…",
+            "surrender": "Surrender",
+            "surrenderCountdown": "Surrendering...{seconds}s"
+          },
+          "status": {
+            "hunterAdded": "A hunter has joined the chase!",
+            "hunterRetreat": "Mission success! One hunter retreated",
+            "missionActivated": "Mission activated: {label}",
+            "escapeSuccess": "Escaped! +{total} EXP (Breakdown {base}+{bonus})",
+            "surrenderSuccess": "Surrendered. Banked {exp} EXP",
+            "caught": "Caught... no EXP earned",
+            "dungeonUnavailable": "Dungeon API unavailable",
+            "stageGenerationFailed": "Failed to generate the stage",
+            "runStart": "The chase begins!",
+            "runPaused": "Paused",
+            "standby": "Standby",
+            "surrenderZoneHint": "Enter the surrender zone before pressing the button",
+            "surrenderAttempt": "Attempting surrender… endure for {duration}s!",
+            "surrenderCancelled": "Surrender cancelled",
+            "beaconSuccess": "Beacon secured! Signal jamming strengthened",
+            "beaconFail": "Beacon failed... hunters are on alert",
+            "dataSuccess": "Classified intel secured! Rewards increased",
+            "dataFail": "Alarm triggered! A fast hunter has appeared",
+            "boxSuccess": "Disarmed! Hunter boxes are delayed",
+            "boxFail": "Disarm failed... an extra hunter deployed",
+            "vaultSuccess": "Jackpot! But you're now a prime target",
+            "vaultFail": "Vault defended... two hunters released"
+          },
+          "missions": {
+            "optionalSuffix": " (Optional)",
+            "beacon": { "label": "Reach the beacon" },
+            "data": { "label": "Hack the data terminal" },
+            "box": { "label": "Disarm the hunter box" },
+            "vault": { "label": "Crack the high-risk vault" }
+          }
+        }
+      }
+    },
     "tools": {
       "sidebar": {
         "ariaLabel": "Tools list",

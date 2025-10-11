@@ -14026,6 +14026,54 @@
         }
       }
     },
+    "miniexp": {
+      "games": {
+        "tosochu": {
+          "ui": {
+            "timer": "残り {seconds}s",
+            "exp": "蓄積EXP {exp}",
+            "missionNotReady": "ミッション: まだ発動していません",
+            "missionActive": "ミッション: {label}{optionalSuffix}：残り{seconds}s (地点: {coords})",
+            "missionComplete": "ミッション完了：成功{success}/{total}",
+            "missionSuccess": "{label}：成功！",
+            "missionFailed": "{label}：失敗…",
+            "surrender": "自首する",
+            "surrenderCountdown": "自首中...{seconds}s"
+          },
+          "status": {
+            "hunterAdded": "ハンターが追加投入された！",
+            "hunterRetreat": "ミッション成功！ハンター1体が撤退",
+            "missionActivated": "ミッション発動：{label}",
+            "escapeSuccess": "逃走成功！+{total} EXP (内訳 {base}+{bonus})",
+            "surrenderSuccess": "自首。蓄積{exp}EXPを獲得",
+            "caught": "捕まってしまった…獲得EXPなし",
+            "dungeonUnavailable": "ダンジョンAPI利用不可",
+            "stageGenerationFailed": "ステージ生成に失敗しました",
+            "runStart": "逃走開始！",
+            "runPaused": "一時停止中",
+            "standby": "逃走中スタンバイ",
+            "surrenderZoneHint": "自首ゾーンに入ってからボタンを押してください",
+            "surrenderAttempt": "自首を試みています…{duration}s耐え抜け！",
+            "surrenderCancelled": "自首を中断しました",
+            "beaconSuccess": "ビーコン成功！電波妨害を強化",
+            "beaconFail": "ビーコン失敗…ハンターが警戒強化",
+            "dataSuccess": "極秘情報を確保！報酬が増加",
+            "dataFail": "警報が鳴った！高速ハンターが出現",
+            "boxSuccess": "解除成功！ハンターボックスの発動が遅延",
+            "boxFail": "解除失敗…ハンターが追加投入",
+            "vaultSuccess": "大金獲得！しかし狙われやすくなった",
+            "vaultFail": "金庫防衛が発動…ハンターが二体解放"
+          },
+          "missions": {
+            "optionalSuffix": "（任意）",
+            "beacon": { "label": "ビーコンに接触せよ" },
+            "data": { "label": "情報端末をハック" },
+            "box": { "label": "ハンターボックスを解除" },
+            "vault": { "label": "ハイリスク金庫を解錠" }
+          }
+        }
+      }
+    },
     "tools": {
       "sidebar": {
         "ariaLabel": "ツール一覧",

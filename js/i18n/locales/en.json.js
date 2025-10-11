@@ -16665,7 +16665,8 @@
           "mapTitle": "Map",
           "start": "Start",
           "pause": "Pause",
-          "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards."
+          "hint": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP, and faster pickups exponentially boost rewards.",
+          "hintNoMap": "Move with WASD or the arrow keys. Greater treasure distance raises base EXP. On NORMAL and above the minimap is hidden, so rely on status hints to navigate."
         },
         "labels": {
           "round": "Round: {value}",

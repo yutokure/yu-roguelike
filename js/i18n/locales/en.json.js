@@ -13082,6 +13082,36 @@
           "chasing": "Chasing move"
         }
       },
+      "nine_mens_morris": {
+        "header": {
+          "title": "Nine Men's Morris — You Move First"
+        },
+        "tips": {
+          "controls": "Controls: Click a point to place pieces / select a piece then click a destination to move.<br>When you form a mill, choose a red-highlighted enemy piece to remove."
+        },
+        "hud": {
+          "info": {
+            "player": "Player Pieces: <strong>{piecesFormatted}</strong> / Captured: {capturedFormatted}",
+            "ai": "AI Pieces: <strong>{piecesFormatted}</strong> / Captured: {capturedFormatted}"
+          },
+          "phaseInfo": "You: {playerPhase} (placements left {playerRemaining})<br>AI: {aiPhase} (placements left {aiRemaining})"
+        },
+        "phase": {
+          "place": "Placement Phase",
+          "slide": "Sliding Phase",
+          "fly": "Flying Phase"
+        },
+        "status": {
+          "removalPrompt": "Mill formed! Choose an enemy piece to remove.",
+          "aiThinking": "AI is thinking…",
+          "playerTurn": "Your turn.",
+          "aiTurn": "AI's turn…"
+        },
+        "result": {
+          "win": "Victory! You locked down the AI's pieces.",
+          "lose": "Defeat... The AI has locked down your pieces."
+        }
+      },
       "dungeon_td": {
         "controls": {
           "startWave": "Start Wave"

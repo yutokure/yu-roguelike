@@ -13086,6 +13086,36 @@
           "chasing": "追い手"
         }
       },
+      "nine_mens_morris": {
+        "header": {
+          "title": "ナイン・メンズ・モリス — あなたが先手"
+        },
+        "tips": {
+          "controls": "操作: 盤上をクリックして配置 / 駒→移動先をクリックして移動。<br>ミル成立時は赤枠の相手駒を選択して除去。"
+        },
+        "hud": {
+          "info": {
+            "player": "プレイヤー駒: <strong>{piecesFormatted}</strong> / 捕獲: {capturedFormatted}",
+            "ai": "AI駒: <strong>{piecesFormatted}</strong> / 捕獲: {capturedFormatted}"
+          },
+          "phaseInfo": "あなた: {playerPhase}（残り配置 {playerRemaining}）<br>AI: {aiPhase}（残り配置 {aiRemaining}）"
+        },
+        "phase": {
+          "place": "配置フェーズ",
+          "slide": "移動フェーズ",
+          "fly": "フライトモード"
+        },
+        "status": {
+          "removalPrompt": "ミル成立！除去する相手駒を選んでください。",
+          "aiThinking": "AIが思考中…",
+          "playerTurn": "あなたの番です。",
+          "aiTurn": "AIの番です…"
+        },
+        "result": {
+          "win": "あなたの勝ち！AIの駒を封じました。",
+          "lose": "敗北… AIに駒を封じられました。"
+        }
+      },
       "dungeon_td": {
         "controls": {
           "startWave": "ウェーブ開始"

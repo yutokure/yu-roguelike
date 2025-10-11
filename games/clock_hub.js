@@ -8,20 +8,11 @@
     }
     return null;
   }
-  const KEY_BASE = 'games.clockHub';
+  const KEY_BASE = 'minigame.clock_hub';
+  const LEGACY_KEY_BASES = ['games.clockHub'];
+  let activeLocalization = null;
 
-  function translate(key, fallback, params){
-    const i18n = getI18n();
-    if (key && i18n && typeof i18n.t === 'function'){
-      try {
-        const value = i18n.t(key, params);
-        if (typeof value === 'string' && value !== key){
-          return value;
-        }
-      } catch (error){
-        console.warn('[clock_hub] Failed to translate key', key, error);
-      }
-    }
+  function resolveFallbackValue(fallback, key){
     if (typeof fallback === 'function'){
       try {
         const result = fallback();
@@ -34,19 +25,82 @@
     return fallback ?? '';
   }
 
+  function createFallbackAccessor(fallback, key){
+    let computed = false;
+    let cached = '';
+    return () => {
+      if (!computed){
+        cached = resolveFallbackValue(fallback, key);
+        computed = true;
+      }
+      return cached;
+    };
+  }
+
+  function translate(key, fallback, params){
+    const i18n = getI18n();
+    const candidates = [];
+    if (key){
+      candidates.push(key);
+      LEGACY_KEY_BASES.forEach(base => {
+        if (key.startsWith(KEY_BASE)){
+          const suffix = key.slice(KEY_BASE.length);
+          candidates.push(`${base}${suffix}`);
+        } else if (!key.startsWith(base)){
+          const baseSuffix = key.replace(/^minigame\.clock_hub/, base);
+          if (baseSuffix !== key) candidates.push(baseSuffix);
+        }
+      });
+    }
+    if (i18n && typeof i18n.t === 'function'){
+      for (const candidate of candidates){
+        if (!candidate) continue;
+        try {
+          const value = i18n.t(candidate, params);
+          if (typeof value === 'string' && value !== candidate){
+            return value;
+          }
+        } catch (error){
+          console.warn('[clock_hub] Failed to translate key', candidate, error);
+        }
+      }
+    }
+    if (typeof fallback === 'function'){
+      return resolveFallbackValue(fallback, key);
+    }
+    return fallback ?? '';
+  }
+
   function t(path, fallback, params){
-    return translate(path ? `${KEY_BASE}.${path}` : null, fallback, params);
+    const localization = activeLocalization;
+    const fallbackKey = path ? `${KEY_BASE}.${path}` : KEY_BASE;
+    const getFallback = createFallbackAccessor(fallback, fallbackKey);
+    if (localization && typeof localization.t === 'function'){
+      const key = path || '';
+      try {
+        const result = localization.t(key, getFallback, params);
+        const fallbackValue = getFallback();
+        if (typeof result === 'string' && result !== key && result !== fallbackValue) return result;
+        if (result !== undefined && result !== null && result !== key && result !== fallbackValue) return result;
+      } catch (error){
+        console.warn('[clock_hub] Failed to translate via localization', key, error);
+      }
+    }
+    if (!path) return translate(KEY_BASE, getFallback(), params);
+    const key = `${KEY_BASE}.${path}`;
+    return translate(key, getFallback(), params);
   }
 
   function formatNumberLocalized(value, options){
-    const i18n = getI18n();
-    if (i18n && typeof i18n.formatNumber === 'function'){
+    const localization = activeLocalization;
+    if (localization && typeof localization.formatNumber === 'function'){
       try {
-        return i18n.formatNumber(value, options);
+        return localization.formatNumber(value, options);
       } catch (error){
-        console.warn('[clock_hub] Failed to format number via i18n:', error);
+        console.warn('[clock_hub] Failed to format number via localization:', error);
       }
     }
+    const i18n = getI18n();
     try {
       return new Intl.NumberFormat(i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : undefined, options).format(value);
     } catch (error){
@@ -186,7 +240,8 @@
     iso: { key: 'stats.labels.iso', fallback: 'ISO 8601' },
     yearday: { key: 'stats.labels.yearday', fallback: '年内通算日' },
     daySeconds: { key: 'stats.labels.daySeconds', fallback: '今日の経過秒' },
-    timezone: { key: 'stats.labels.timezone', fallback: 'タイムゾーン' }
+    timezone: { key: 'stats.labels.timezone', fallback: 'タイムゾーン' },
+    locale: { key: 'stats.labels.locale', fallback: 'ロケール' }
   };
 
   const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -535,8 +590,14 @@
     return { row, labelLeft, labelRight, bar };
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts){
     if (!root) throw new Error(t('errors.noContainer', 'Clock Hub requires a container'));
+    const localization = (opts && opts.localization)
+      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({ id: 'clock_hub', legacyKeyPrefixes: LEGACY_KEY_BASES })
+        : null);
+    const previousLocalization = activeLocalization;
+    activeLocalization = localization || activeLocalization;
     const prefs = loadPrefs() || {
       digitalFormat: '24h',
       analogType: '12h',
@@ -632,6 +693,8 @@
 
     const tabButtons = {};
     const tabContents = {};
+    const digitalFormatLabels = [];
+    const analogTypeLabels = [];
     const tabIds = ['digital', 'analog', 'detail'];
 
     const contentArea = document.createElement('div');
@@ -724,7 +787,9 @@
       const labelText = mode === '24h'
         ? t('digital.format.24h', '24時間制')
         : t('digital.format.12h', '12時間制');
-      label.appendChild(document.createTextNode(labelText));
+      const labelNode = document.createTextNode(labelText);
+      label.appendChild(labelNode);
+      digitalFormatLabels.push({ mode, node: labelNode });
       digitalToggle.appendChild(label);
     });
 
@@ -780,7 +845,9 @@
       const labelText = mode === '12h'
         ? t('analog.type.12h', '通常アナログ時計')
         : t('analog.type.24h', '24時間制アナログ時計');
-      label.appendChild(document.createTextNode(labelText));
+      const labelNode = document.createTextNode(labelText);
+      label.appendChild(labelNode);
+      analogTypeLabels.push({ mode, node: labelNode });
       analogToggle.appendChild(label);
     });
 
@@ -875,6 +942,7 @@
     });
 
     const remainingItems = {};
+    const remainingLabels = {};
     REMAINING_CONFIG.forEach(item => {
       const card = document.createElement('div');
       card.style.background = 'rgba(248,250,252,0.9)';
@@ -899,9 +967,11 @@
       card.appendChild(value);
       remainingList.appendChild(card);
       remainingItems[item.id] = value;
+      remainingLabels[item.id] = titleLabel;
     });
 
     const statsItems = {};
+    const statsLabels = {};
     Object.keys(STATS_LABELS).forEach(key => {
       const line = document.createElement('div');
       line.style.display = 'flex';
@@ -917,6 +987,7 @@
       line.appendChild(value);
       statsList.appendChild(line);
       statsItems[key] = value;
+      statsLabels[key] = label;
     });
 
     const calendarView = detailViews.calendar;
@@ -976,6 +1047,7 @@
     weekdayHeader.style.display = 'grid';
     weekdayHeader.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
     weekdayHeader.style.gap = '6px';
+    const weekdayCells = [];
     WEEKDAY_DEFAULTS.forEach((_, index) => {
       const cell = document.createElement('div');
       const label = getWeekdayLabel(index);
@@ -988,6 +1060,7 @@
       cell.style.background = 'rgba(226,232,240,0.6)';
       cell.style.color = index === 0 ? '#ef4444' : index === 6 ? '#2563eb' : '#0f172a';
       weekdayHeader.appendChild(cell);
+      weekdayCells.push(cell);
     });
 
     const calendarGrid = document.createElement('div');
@@ -1037,6 +1110,7 @@
     calendarSettingsGrid.style.display = 'grid';
     calendarSettingsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(220px, 1fr))';
     calendarSettingsGrid.style.gap = '16px';
+    const settingsSections = [];
 
     function createSettingsSection(config){
       const section = document.createElement('div');
@@ -1086,7 +1160,7 @@
       section.appendChild(controlRow);
       section.appendChild(list);
 
-      return { section, dateInput, addBtn, list };
+      return { section, title, dateInput, addBtn, list, config };
     }
 
     const holidaySection = createSettingsSection({
@@ -1101,6 +1175,7 @@
       buttonKey: 'calendar.settings.add',
       buttonFallback: '追加'
     });
+    settingsSections.push(holidaySection, workdaySection);
 
     calendarSettingsGrid.appendChild(holidaySection.section);
     calendarSettingsGrid.appendChild(workdaySection.section);
@@ -1407,15 +1482,18 @@
     const xpNote = document.createElement('div');
     xpNote.style.fontSize = '13px';
     xpNote.style.color = '#475569';
-    const xpNoteValues = Object.keys(XP_REWARDS).reduce((acc, key) => {
-      acc[key] = formatNumberLocalized(XP_REWARDS[key], { maximumFractionDigits: 3 });
-      return acc;
-    }, {});
-    xpNote.textContent = t(
-      'xp.note',
-      () => `秒:+${xpNoteValues.second} / 分:+${xpNoteValues.minute} / 時:+${xpNoteValues.hour} / 日:+${xpNoteValues.day} / 月:+${xpNoteValues.month} / 年:+${xpNoteValues.year} / 世紀:+${xpNoteValues.century} / 千年紀:+${xpNoteValues.millennium}`,
-      xpNoteValues
-    );
+    function updateXpNoteText(){
+      const xpNoteValues = Object.keys(XP_REWARDS).reduce((acc, key) => {
+        acc[key] = formatNumberLocalized(XP_REWARDS[key], { maximumFractionDigits: 3 });
+        return acc;
+      }, {});
+      xpNote.textContent = t(
+        'xp.note',
+        () => `秒:+${xpNoteValues.second} / 分:+${xpNoteValues.minute} / 時:+${xpNoteValues.hour} / 日:+${xpNoteValues.day} / 月:+${xpNoteValues.month} / 年:+${xpNoteValues.year} / 世紀:+${xpNoteValues.century} / 千年紀:+${xpNoteValues.millennium}`,
+        xpNoteValues
+      );
+    }
+    updateXpNoteText();
     detailSection.appendChild(xpNote);
 
     frame.appendChild(header);
@@ -1423,6 +1501,112 @@
     frame.appendChild(contentArea);
     wrapper.appendChild(frame);
     root.appendChild(wrapper);
+
+    const detachLocaleHandlers = [];
+    const addDetachHandler = handler => {
+      if (typeof handler === 'function') detachLocaleHandlers.push(handler);
+    };
+    const handleLocaleRefresh = () => {
+      try {
+        refreshLocalizationTexts();
+      } catch (error){
+        console.warn('[clock_hub] Failed to refresh after locale change', error);
+      }
+    };
+    if (localization && typeof localization.onChange === 'function'){
+      try {
+        const unsubscribe = localization.onChange(handleLocaleRefresh);
+        addDetachHandler(unsubscribe);
+      } catch (error){
+        console.warn('[clock_hub] Failed to register locale listener', error);
+      }
+    }
+    const baseI18n = getI18n();
+    if (baseI18n && typeof baseI18n.onLocaleChanged === 'function'){
+      try {
+        const unsubscribe = baseI18n.onLocaleChanged(handleLocaleRefresh);
+        addDetachHandler(unsubscribe);
+      } catch (error){
+        console.warn('[clock_hub] Failed to observe base locale changes', error);
+      }
+    }
+    if (typeof document !== 'undefined' && document.addEventListener){
+      const docListener = () => handleLocaleRefresh();
+      try {
+        document.addEventListener('i18n:locale-changed', docListener);
+        document.addEventListener('app:rerender', docListener);
+        addDetachHandler(() => {
+          try { document.removeEventListener('i18n:locale-changed', docListener); } catch {}
+          try { document.removeEventListener('app:rerender', docListener); } catch {}
+        });
+      } catch (error){
+        console.warn('[clock_hub] Failed to attach document locale listeners', error);
+      }
+    }
+    const detachLocale = () => {
+      detachLocaleHandlers.forEach(handler => {
+        try {
+          handler();
+        } catch {}
+      });
+    };
+
+    refreshLocalizationTexts();
+
+    function refreshLocalizationTexts(){
+      title.textContent = t('header.title', '時計ユーティリティハブ');
+      subtitle.textContent = t('header.subtitle', 'デジタル／アナログ／詳細情報を切り替え');
+      setXpBadgeText(state.sessionXp);
+      tabIds.forEach(id => {
+        const cfg = TAB_CONFIG[id];
+        if (cfg && tabButtons[id]) tabButtons[id].textContent = t(cfg.key, cfg.fallback);
+      });
+      digitalFormatLabels.forEach(entry => {
+        if (!entry || !entry.node) return;
+        const text = entry.mode === '24h'
+          ? t('digital.format.24h', '24時間制')
+          : t('digital.format.12h', '12時間制');
+        entry.node.textContent = text;
+      });
+      analogTypeLabels.forEach(entry => {
+        if (!entry || !entry.node) return;
+        const text = entry.mode === '12h'
+          ? t('analog.type.12h', '通常アナログ時計')
+          : t('analog.type.24h', '24時間制アナログ時計');
+        entry.node.textContent = text;
+      });
+      DETAIL_TABS.forEach(tab => {
+        if (detailButtons[tab.id]) detailButtons[tab.id].textContent = t(tab.labelKey, tab.labelFallback);
+      });
+      PROGRESS_ITEMS.forEach(item => {
+        const row = progressRows[item.id];
+        if (row && row.labelLeft) row.labelLeft.textContent = t(item.labelKey, item.labelFallback);
+      });
+      REMAINING_CONFIG.forEach(item => {
+        const labelEl = remainingLabels[item.id];
+        if (labelEl) labelEl.textContent = t(item.labelKey, item.labelFallback);
+      });
+      Object.keys(statsLabels).forEach(key => {
+        const cfg = STATS_LABELS[key];
+        if (cfg && statsLabels[key]) statsLabels[key].textContent = t(cfg.key, cfg.fallback);
+      });
+      prevMonthBtn.textContent = t('calendar.controls.prev', '← 前月');
+      nextMonthBtn.textContent = t('calendar.controls.next', '翌月 →');
+      todayBtn.textContent = t('calendar.controls.today', '今日');
+      calendarSettingsTitle.textContent = t('calendar.settings.title', '休暇／出勤日のカスタム設定');
+      settingsSections.forEach(section => {
+        if (!section || !section.config) return;
+        section.title.textContent = t(section.config.titleKey, section.config.titleFallback);
+        section.addBtn.textContent = t(section.config.buttonKey, section.config.buttonFallback);
+      });
+      weekdayCells.forEach((cell, index) => {
+        if (!cell) return;
+        cell.textContent = getWeekdayLabel(index);
+      });
+      updateXpNoteText();
+      calendarSignature = '';
+      updateCalendar(new Date());
+    }
 
     switchTab('digital');
     switchDetailTab(prefs.detailTab);
@@ -1585,6 +1769,10 @@
       const secondsFormatted = formatNumberLocalized(Number(seconds));
       statsItems.daySeconds.textContent = t('stats.daySecondsValue', () => `${secondsFormatted}秒`, { value: secondsFormatted });
       statsItems.timezone.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || t('stats.timezoneFallback', 'Local');
+      const localeValue = (activeLocalization && typeof activeLocalization.getLocale === 'function'
+        ? activeLocalization.getLocale()
+        : (getI18n()?.getLocale?.() || Intl.DateTimeFormat().resolvedOptions().locale));
+      statsItems.locale.textContent = (localeValue && String(localeValue).trim()) || t('stats.localeFallback', '不明');
     }
 
     function updateCalendar(now){
@@ -1646,6 +1834,10 @@
 
     function destroy(){
       stop();
+      if (typeof detachLocale === 'function'){
+        try { detachLocale(); } catch {}
+      }
+      activeLocalization = previousLocalization;
       try { wrapper.remove(); } catch {}
     }
 
@@ -1660,6 +1852,7 @@
     id: 'clock_hub',
     name: '時計ハブ', nameKey: 'selection.miniexp.games.clock_hub.name',
     description: 'デジタル・アナログ・詳細情報を備えた時計ユーティリティ。時の節目でEXP獲得', descriptionKey: 'selection.miniexp.games.clock_hub.description', categoryIds: ['utility'],
+    legacyKeyPrefixes: LEGACY_KEY_BASES,
     create
   });
 })();

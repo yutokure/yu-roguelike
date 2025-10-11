@@ -11496,6 +11496,59 @@
           "check": "{defender} is in check (+{exp}{expLabel})"
         }
       },
+      "mancala": {
+        "actions": {
+          "restart": "Restart",
+          "hint": "Hint"
+        },
+        "hud": {
+          "score": {
+            "player": "You",
+            "ai": "AI",
+            "separator": ": "
+          }
+        },
+        "board": {
+          "store": {
+            "player": "You",
+            "ai": "AI"
+          },
+          "pitLabel": {
+            "player": "You {index}",
+            "ai": "AI {index}"
+          }
+        },
+        "status": {
+          "start": "Your turn — choose a pit to sow.",
+          "extraTurn": {
+            "player": "Extra turn! Pick another pit.",
+            "ai": "The AI gained another turn…"
+          },
+          "turn": {
+            "player": "Your turn",
+            "aiThinking": "AI is thinking…"
+          },
+          "result": {
+            "draw": "Draw! {player} to {ai}",
+            "win": "Victory! {player} to {ai}",
+            "loss": "Defeat… {player} to {ai}"
+          },
+          "hint": "Hint: Pit {pit} looks promising"
+        },
+        "history": {
+          "who": {
+            "player": "You",
+            "ai": "AI"
+          },
+          "entry": {
+            "pit": "Pit {number}",
+            "store": "Store +{amount}",
+            "capture": "Capture {amount}",
+            "extraTurn": "Extra turn",
+            "separator": " / "
+          }
+        }
+      },
       "system": {
         "header": {
           "title": "System Inspector",
@@ -12942,6 +12995,21 @@
         "status": {
           "cleared": "Solved! {moves} moves / {time} EXP gained: {xp}",
           "intro": "Board size changes with difficulty: EASY {easySize}×{easySize}, NORMAL {normalSize}×{normalSize}, HARD {hardSize}×{hardSize}."
+        }
+      },
+      "same": {
+        "hud": {
+          "title": "SameGame",
+          "removed": "Removed",
+          "status": "{title} | {difficulty} | {removedLabel}: {removed}"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "hint": {
+          "popup": "Group of {size} / +{expFormatted} EXP"
         }
       },
       "piano_tiles": {

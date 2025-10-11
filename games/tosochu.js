@@ -8,15 +8,35 @@
     const shortcuts = opts?.shortcuts;
     const dungeonApi = opts?.dungeon;
     const difficulty = opts?.difficulty || 'NORMAL';
-    const i18n = window.I18n;
+    const localization = opts?.localization
+      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({ id: 'tosochu' })
+        : null);
+    const globalI18n = typeof window !== 'undefined' ? window.I18n : null;
 
     const textBindings = new Map();
     let detachLocale = null;
 
     function translateText(key, fallback, params){
-      if (key && i18n && typeof i18n.t === 'function'){
+      if (localization && typeof localization.t === 'function'){
         try {
-          const result = i18n.t(key, params);
+          const adaptedFallback = typeof fallback === 'function'
+            ? () => {
+                try { return fallback(params); }
+                catch (err) { return ''; }
+              }
+            : fallback;
+          const translated = localization.t(key, adaptedFallback, params);
+          if (translated != null){
+            return typeof translated === 'string' ? translated : String(translated);
+          }
+        } catch (err) {
+          // ignore translation failures and fall back
+        }
+      }
+      if (key && globalI18n && typeof globalI18n.t === 'function'){
+        try {
+          const result = globalI18n.t(key, params);
           if (typeof result === 'string' && result !== key){
             return result;
           }
@@ -52,15 +72,25 @@
 
     function formatNumber(value, options){
       if (typeof value !== 'number' || Number.isNaN(value)) return '';
-      if (i18n && typeof i18n.formatNumber === 'function'){
+      if (localization && typeof localization.formatNumber === 'function'){
         try {
-          return i18n.formatNumber(value, options);
+          return localization.formatNumber(value, options);
+        } catch (err) {
+          // ignore formatting failures and fall back
+        }
+      }
+      if (globalI18n && typeof globalI18n.formatNumber === 'function'){
+        try {
+          return globalI18n.formatNumber(value, options);
         } catch (err) {
           // ignore formatting failures and fall back
         }
       }
       try {
-        return new Intl.NumberFormat(undefined, options).format(value);
+        const locale = (localization && typeof localization.getLocale === 'function')
+          ? localization.getLocale()
+          : (globalI18n?.getLocale?.() || undefined);
+        return new Intl.NumberFormat(locale, options).format(value);
       } catch (err) {
         return value.toLocaleString();
       }
@@ -899,8 +929,13 @@
       );
     }
 
-    if (typeof i18n?.onLocaleChanged === 'function'){
-      detachLocale = i18n.onLocaleChanged(() => {
+    if (typeof localization?.onChange === 'function'){
+      detachLocale = localization.onChange(() => {
+        updateLabels();
+        refreshBindings();
+      });
+    } else if (typeof globalI18n?.onLocaleChanged === 'function'){
+      detachLocale = globalI18n.onLocaleChanged(() => {
         updateLabels();
         refreshBindings();
       });

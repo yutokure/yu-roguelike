@@ -12980,6 +12980,21 @@
           "hard": "Hard"
         }
       },
+      "same": {
+        "hud": {
+          "title": "SameGame",
+          "removed": "Removed",
+          "status": "{title} | {difficulty} | {removedLabel}: {removed}"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "hint": {
+          "popup": "Group of {size} / +{expFormatted} EXP"
+        }
+      },
       "piano_tiles": {
         "tips": "Tap lanes or press D/F/J/K keys, and hold for long notes.",
         "hud": {

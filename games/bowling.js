@@ -16,14 +16,40 @@
       { cpuSkill: 0.48, variance: 0.28, cpuVariance: 0.22, victoryXp: 30 } :
       { cpuSkill: 0.62, variance: 0.24, cpuVariance: 0.19, victoryXp: 40 };
 
-    const i18n = window.I18n;
     const I18N_PREFIX = 'games.bowlingDuel';
+    const globalI18n = typeof window !== 'undefined'
+      ? (window.I18n || window.i18n || null)
+      : null;
+    const localization = opts?.localization
+      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({ id: 'bowling_duel', localizationKey: I18N_PREFIX, textKeyPrefix: I18N_PREFIX })
+        : null);
+    const ownsLocalization = !opts?.localization && localization && typeof localization.destroy === 'function';
 
     function localize(key, params, fallback){
+      if(localization && typeof localization.t === 'function'){
+        try {
+          const result = localization.t(key, typeof fallback === 'function' ? ()=>{
+            try {
+              const value = fallback();
+              return value == null ? '' : String(value);
+            } catch (error) {
+              console.warn('[bowling] Failed to evaluate localization fallback for', key, error);
+              return '';
+            }
+          } : fallback, params);
+          if(result !== undefined && result !== null && result !== key){
+            return typeof result === 'string' ? result : String(result);
+          }
+        } catch (error) {
+          console.warn('[bowling] Failed to translate via helper for', key, error);
+        }
+      }
+
       const fullKey = `${I18N_PREFIX}.${key}`;
       try {
-        if(typeof i18n?.t === 'function'){
-          const translated = i18n.t(fullKey, params);
+        if(typeof globalI18n?.t === 'function'){
+          const translated = globalI18n.t(fullKey, params);
           if(typeof translated === 'string' && translated !== fullKey){
             return translated;
           }
@@ -31,9 +57,22 @@
       } catch (error) {
         console.warn('[bowling] Failed to resolve translation for', fullKey, error);
       }
-      if(typeof fallback === 'function'){ return fallback(params || {}); }
-      if(fallback !== undefined){ return fallback; }
-      return '';
+
+      if(typeof fallback === 'function'){
+        try {
+          const value = fallback();
+          return value == null ? '' : String(value);
+        } catch (error) {
+          console.warn('[bowling] Failed to evaluate fallback for', key, error);
+          return '';
+        }
+      }
+      if(fallback == null) return '';
+      try {
+        return String(fallback);
+      } catch {
+        return '';
+      }
     }
 
     const statusFallbacks = {
@@ -58,12 +97,12 @@
 
     function translateStatus(key, params){
       const fallback = statusFallbacks[key] || (()=> '');
-      return localize(`status.${key}`, params, fallback);
+      return localize(`status.${key}`, params, ()=>fallback(params || {}));
     }
 
     function formatLog(key, params){
       const fallback = logFallbacks[key] || (()=> '');
-      return localize(`logs.${key}`, params, fallback);
+      return localize(`logs.${key}`, params, ()=>fallback(params || {}));
     }
 
     if(!document.getElementById('bowling-mod-style')){
@@ -657,7 +696,17 @@
     }
     function destroy(){
       stop();
-      detachLocale?.();
+      try {
+        detachLocale?.();
+      } catch (error) {
+        console.warn('[bowling] Failed to detach locale listener:', error);
+      }
+      detachLocale = null;
+      if(ownsLocalization && localization && typeof localization.destroy === 'function'){
+        try { localization.destroy(); } catch (error) {
+          console.warn('[bowling] Failed to dispose localization helper:', error);
+        }
+      }
       container.remove();
     }
     function getScore(){ const totals = updateTotals(); return totals.player; }
@@ -741,8 +790,24 @@
 
     applyLocale();
 
-    if(typeof i18n?.onLocaleChanged === 'function'){
-      detachLocale = i18n.onLocaleChanged(()=>{ applyLocale(); });
+    let localeListenerAttached = false;
+    if(localization && typeof localization.onChange === 'function'){
+      try {
+        const unsubscribe = localization.onChange(() => { applyLocale(); });
+        localeListenerAttached = true;
+        detachLocale = typeof unsubscribe === 'function' ? unsubscribe : null;
+      } catch (error) {
+        console.warn('[bowling] Failed to attach localization listener via helper:', error);
+      }
+    }
+    if(!localeListenerAttached && typeof globalI18n?.onLocaleChanged === 'function'){
+      try {
+        const unsubscribe = globalI18n.onLocaleChanged(() => { applyLocale(); });
+        detachLocale = typeof unsubscribe === 'function' ? unsubscribe : null;
+        localeListenerAttached = true;
+      } catch (error) {
+        console.warn('[bowling] Failed to attach localization listener:', error);
+      }
     }
 
     resetState();

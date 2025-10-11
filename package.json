@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/bowling-localization.test.js"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +13,8 @@
   "dependencies": {
     "@babel/parser": "^7.28.4",
     "recast": "^0.23.11"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
   }
 }

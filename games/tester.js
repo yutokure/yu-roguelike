@@ -808,6 +808,7 @@
       TEST_DEFS.forEach(def => {
         const item = document.createElement('div');
         item.className = 'mini-tester-test-item';
+        item.dataset.testId = def.id;
 
         const title = document.createElement('strong');
         if (def.nameKey) {
@@ -860,7 +861,7 @@
       async function runAllTests() {
         for (const def of TEST_DEFS) {
           if (destroyed) return;
-          const entry = [...list.children].find(child => child.querySelector('strong').textContent === def.name);
+          const entry = list.querySelector(`[data-test-id="${def.id}"]`);
           if (!entry) continue;
           const btn = entry.querySelector('button');
           const resultEl = entry.querySelector('.mini-tester-test-result');

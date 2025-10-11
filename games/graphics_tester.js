@@ -55,17 +55,8 @@
 
   const I18N_NAMESPACE = 'games.graphicsTester';
   const i18n = typeof window !== 'undefined' ? window.I18n : null;
-  let activeLocalizationInstance = null;
 
-  function getActiveLocalization(){
-    return activeLocalizationInstance;
-  }
-
-  function setActiveLocalization(instance){
-    activeLocalizationInstance = instance || null;
-  }
-
-  function translateWithFallback(fullKey, fallbackText, params){
+  function translateWithFallback(localization, fullKey, fallbackText, params){
     const computeFallback = () => {
       if (typeof fallbackText === 'function') {
         try {
@@ -79,7 +70,6 @@
       return fallbackText ?? '';
     };
 
-    const localization = getActiveLocalization();
     if (localization && typeof localization.t === 'function') {
       try {
         const translated = localization.t(fullKey, fallbackText, params);
@@ -107,8 +97,21 @@
     return computeFallback();
   }
 
-  function t(key, fallbackText, params){
-    return translateWithFallback(`${I18N_NAMESPACE}.${key}`, fallbackText, params);
+  function createLocalizationHelpers(localization){
+    const boundTranslateWithFallback = (fullKey, fallbackText, params) =>
+      translateWithFallback(localization, fullKey, fallbackText, params);
+    const boundT = (key, fallbackText, params) =>
+      boundTranslateWithFallback(`${I18N_NAMESPACE}.${key}`, fallbackText, params);
+    const boundGetDemoLabel = (id) => {
+      const def = DEMO_OPTION_DEFS.find((option) => option.value === id);
+      if (!def) return id;
+      return boundT(def.labelKey, def.fallback);
+    };
+    return {
+      translateWithFallback: boundTranslateWithFallback,
+      t: boundT,
+      getDemoLabel: boundGetDemoLabel
+    };
   }
 
   function resolveLocalization(opts){
@@ -130,12 +133,6 @@
     { value: 'ray', labelKey: 'controls.demoSelect.options.ray', fallback: 'レイトレーシング風デモ' },
     { value: 'gallery', labelKey: 'controls.demoSelect.options.gallery', fallback: '技術ギャラリー' }
   ]);
-
-  function getDemoLabel(id){
-    const def = DEMO_OPTION_DEFS.find((option) => option.value === id);
-    if (!def) return id;
-    return t(def.labelKey, def.fallback);
-  }
 
   function ensureStyle(){
     if (document.getElementById(STYLE_ID)) return;
@@ -772,10 +769,17 @@
   };
   // --- Renderer --------------------------------------------------------------
   class GraphicsRenderer {
-    constructor(canvas, log, existingGL){
+    constructor(canvas, log, existingGL, localizationHelpers){
       this.canvas = canvas;
+      this.i18n = localizationHelpers || {};
+      this.t = typeof this.i18n.t === 'function'
+        ? this.i18n.t
+        : ((key, fallbackText) => (typeof fallbackText === 'function' ? fallbackText() : (fallbackText ?? key)));
+      this.getDemoLabel = typeof this.i18n.getDemoLabel === 'function'
+        ? this.i18n.getDemoLabel
+        : ((id) => id);
       this.gl = existingGL || canvas.getContext('webgl2', { antialias:true, preserveDrawingBuffer:true });
-      if(!this.gl) throw new Error(t('errors.webgl2Unavailable', 'WebGL2 が利用できません'));
+      if(!this.gl) throw new Error(this.t('errors.webgl2Unavailable', 'WebGL2 が利用できません'));
       this.log = log;
       this.width = 640;
       this.height = 480;
@@ -823,10 +827,10 @@
       this.activeName = name;
       this.active = this.demos[name];
       if(this.log){
-        const label = getDemoLabel(name);
+        const label = this.getDemoLabel(name);
         logLine(
           this.log,
-          t('log.demoSwitch', () => `デモ切り替え: ${label}`, { label, id: name })
+          this.t('log.demoSwitch', () => `デモ切り替え: ${label}`, { label, id: name })
         );
       }
     }
@@ -904,13 +908,7 @@
     if(!root) return null;
     root.innerHTML = '';
     root.classList.add('gfx3d-root');
-    const previousLocalization = getActiveLocalization();
-    setActiveLocalization(localization);
-    const restoreLocalization = () => {
-      if (getActiveLocalization() === localization) {
-        setActiveLocalization(previousLocalization);
-      }
-    };
+    const { t, getDemoLabel } = createLocalizationHelpers(localization);
     const localizationBindings = [];
     const addBinding = (fn) => {
       if (typeof fn === 'function') localizationBindings.push(fn);
@@ -993,13 +991,12 @@
             try { detachLocaleChange(); } catch {}
             detachLocaleChange = null;
           }
-          restoreLocalization();
         },
         getScore(){ return 0; }
       };
     }
 
-    const renderer = new GraphicsRenderer(canvas, logPre, gl);
+    const renderer = new GraphicsRenderer(canvas, logPre, gl, { t, getDemoLabel });
     renderer.demos.objectLab.attachCanvas(canvas);
     renderer.demos.gallery.attachCanvas(canvas);
 
@@ -1277,7 +1274,6 @@
           try { detachLocaleChange(); } catch {}
           detachLocaleChange = null;
         }
-        restoreLocalization();
       },
       getScore(){
         if(renderer.activeName === 'objectLab'){

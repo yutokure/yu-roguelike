@@ -17,49 +17,29 @@
       { cpuSkill: 0.62, variance: 0.24, cpuVariance: 0.19, victoryXp: 40 };
 
     const I18N_PREFIX = 'games.bowlingDuel';
-    const globalI18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : null;
+    const globalI18n = typeof window !== 'undefined'
+      ? (window.I18n || window.i18n || null)
+      : null;
     const localization = opts?.localization
       || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
         ? window.createMiniGameLocalization({ id: 'bowling_duel', localizationKey: I18N_PREFIX, textKeyPrefix: I18N_PREFIX })
         : null);
     const ownsLocalization = !opts?.localization && localization && typeof localization.destroy === 'function';
 
-    function computeFallbackValue(key, params, fallback){
-      if(typeof fallback === 'function'){
-        try {
-          const value = fallback(params || {});
-          return value == null ? '' : String(value);
-        } catch (error) {
-          console.warn('[bowling] Failed to evaluate fallback for', key, error);
-          return '';
-        }
-      }
-      if(fallback == null) return '';
-      try {
-        return String(fallback);
-      } catch {
-        return '';
-      }
-    }
-
     function localize(key, params, fallback){
-      const fallbackResolver = (()=>{
-        let evaluated = false;
-        let cached = '';
-        return ()=>{
-          if(!evaluated){
-            evaluated = true;
-            cached = computeFallbackValue(key, params, fallback);
-          }
-          return cached;
-        };
-      })();
-
       if(localization && typeof localization.t === 'function'){
         try {
-          const result = localization.t(key, fallbackResolver, params);
+          const result = localization.t(key, typeof fallback === 'function' ? ()=>{
+            try {
+              const value = fallback();
+              return value == null ? '' : String(value);
+            } catch (error) {
+              console.warn('[bowling] Failed to evaluate localization fallback for', key, error);
+              return '';
+            }
+          } : fallback, params);
           if(result !== undefined && result !== null && result !== key){
-            return result;
+            return typeof result === 'string' ? result : String(result);
           }
         } catch (error) {
           console.warn('[bowling] Failed to translate via helper for', key, error);
@@ -78,7 +58,21 @@
         console.warn('[bowling] Failed to resolve translation for', fullKey, error);
       }
 
-      return fallbackResolver();
+      if(typeof fallback === 'function'){
+        try {
+          const value = fallback();
+          return value == null ? '' : String(value);
+        } catch (error) {
+          console.warn('[bowling] Failed to evaluate fallback for', key, error);
+          return '';
+        }
+      }
+      if(fallback == null) return '';
+      try {
+        return String(fallback);
+      } catch {
+        return '';
+      }
     }
 
     const statusFallbacks = {
@@ -103,12 +97,12 @@
 
     function translateStatus(key, params){
       const fallback = statusFallbacks[key] || (()=> '');
-      return localize(`status.${key}`, params, fallback);
+      return localize(`status.${key}`, params, ()=>fallback(params || {}));
     }
 
     function formatLog(key, params){
       const fallback = logFallbacks[key] || (()=> '');
-      return localize(`logs.${key}`, params, fallback);
+      return localize(`logs.${key}`, params, ()=>fallback(params || {}));
     }
 
     if(!document.getElementById('bowling-mod-style')){

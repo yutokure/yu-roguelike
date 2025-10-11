@@ -206,7 +206,9 @@
       letterSpacing: '0.4px',
       color: '#cbd5f5'
     });
-    loadingMessage.textContent = statusText('loading', '数学エンジンを読み込んでいます…');
+    registerLocaleBinding(() => {
+      loadingMessage.textContent = statusText('loading', '数学エンジンを読み込んでいます…');
+    });
     loadingOverlay.appendChild(loadingMessage);
 
     const keypadPanel = document.createElement('div');
@@ -331,6 +333,68 @@
     let approxForceEllipsis = false;
     let latestHistoryEntry = null;
     let lastSymbolicRaw = null;
+
+    const localeBindings = [];
+    const localeCleanup = [];
+    let lastStatusDescriptor = null;
+    let lastStatusTimestamp = null;
+
+    function runLocaleBindings(){
+      localeBindings.forEach(fn => {
+        try {
+          fn();
+        } catch (error) {
+          console.warn('[math_lab:i18n] Failed to refresh locale binding:', error);
+        }
+      });
+    }
+
+    function registerLocaleBinding(fn){
+      if (typeof fn !== 'function') return;
+      localeBindings.push(fn);
+      try {
+        fn();
+      } catch (error) {
+        console.warn('[math_lab:i18n] Failed to apply locale binding:', error);
+      }
+    }
+
+    function renderStatusFromDescriptor(descriptor){
+      if (!statusBar || !descriptor) return;
+      const timestamp = lastStatusTimestamp instanceof Date ? lastStatusTimestamp : new Date();
+      const message = statusText(descriptor.key, descriptor.fallback, descriptor.params);
+      statusBar.textContent = `${timestamp.toLocaleTimeString()} — ${message}`;
+    }
+
+    function notifyStatusKey(key, fallback, params){
+      lastStatusDescriptor = { key, fallback, params };
+      lastStatusTimestamp = new Date();
+      renderStatusFromDescriptor(lastStatusDescriptor);
+    }
+
+    function setupLocaleSync(){
+      const instance = getI18n();
+      if (instance && typeof instance.onLocaleChanged === 'function') {
+        const detach = instance.onLocaleChanged(() => runLocaleBindings());
+        if (typeof detach === 'function') {
+          localeCleanup.push(detach);
+        }
+      } else if (typeof document !== 'undefined') {
+        const handler = () => runLocaleBindings();
+        document.addEventListener('i18n:locale-changed', handler);
+        localeCleanup.push(() => document.removeEventListener('i18n:locale-changed', handler));
+      }
+      if (instance && typeof instance.isReady === 'function' && !instance.isReady()) {
+        Promise.resolve().then(() => {
+          const latest = getI18n();
+          if (latest && typeof latest.isReady === 'function' && latest.isReady()) {
+            runLocaleBindings();
+          }
+        });
+      } else {
+        runLocaleBindings();
+      }
+    }
 
     const DEFAULT_DECIMAL_DIGITS = 10;
     const DECIMAL_DIGIT_STEP = 5;
@@ -690,7 +754,9 @@
         });
 
         const headerText = document.createElement('span');
-        headerText.textContent = keypadText(`groups.${group.id}`, group.title);
+        registerLocaleBinding(() => {
+          headerText.textContent = keypadText(`groups.${group.id}`, group.title);
+        });
 
         const chevron = document.createElement('span');
         chevron.textContent = '▾';
@@ -764,7 +830,9 @@
         gap: '12px'
       });
       const favTitle = document.createElement('div');
-      favTitle.textContent = uiText('unitTemplates.title', 'ユニット変換テンプレ');
+      registerLocaleBinding(() => {
+        favTitle.textContent = uiText('unitTemplates.title', 'ユニット変換テンプレ');
+      });
       Object.assign(favTitle.style, {
         fontSize: '14px',
         letterSpacing: '0.4px',
@@ -791,12 +859,16 @@
       unitTemplates.forEach(t => {
         const option = document.createElement('option');
         option.value = t.expr;
-        option.textContent = unitText(`templates.${t.key}`, t.label);
+        registerLocaleBinding(() => {
+          option.textContent = unitText(`templates.${t.key}`, t.label);
+        });
         unitSelect.appendChild(option);
       });
       const unitBtn = document.createElement('button');
       unitBtn.type = 'button';
-      unitBtn.textContent = uiText('unitTemplates.insert', '挿入');
+      registerLocaleBinding(() => {
+        unitBtn.textContent = uiText('unitTemplates.insert', '挿入');
+      });
       Object.assign(unitBtn.style, {
         padding: '10px 0',
         borderRadius: '10px',
@@ -838,6 +910,14 @@
 
       angleToggleRad = buildToggle(uiText('angle.radians', 'Radians'), true, () => setAngleMode(true));
       angleToggleDeg = buildToggle(uiText('angle.degrees', 'Degrees'), false, () => setAngleMode(false));
+      registerLocaleBinding(() => {
+        if (angleToggleRad?.labelEl) {
+          angleToggleRad.labelEl.textContent = uiText('angle.radians', 'Radians');
+        }
+        if (angleToggleDeg?.labelEl) {
+          angleToggleDeg.labelEl.textContent = uiText('angle.degrees', 'Degrees');
+        }
+      });
 
       angleGroup.appendChild(angleToggleRad.wrapper);
       angleGroup.appendChild(angleToggleDeg.wrapper);
@@ -848,7 +928,17 @@
         color: '#cbd5f5',
         letterSpacing: '0.3px'
       });
-      statusBar.textContent = statusText('initializing', '準備中…');
+      lastStatusDescriptor = { key: 'initializing', fallback: '準備中…' };
+      lastStatusTimestamp = new Date();
+      registerLocaleBinding(() => {
+        if (!lastStatusDescriptor) {
+          lastStatusDescriptor = { key: 'initializing', fallback: '準備中…' };
+        }
+        if (!(lastStatusTimestamp instanceof Date)) {
+          lastStatusTimestamp = new Date();
+        }
+        renderStatusFromDescriptor(lastStatusDescriptor);
+      });
 
       topBar.appendChild(angleGroup);
       topBar.appendChild(statusBar);
@@ -865,7 +955,9 @@
       });
 
       const worksheetHeader = document.createElement('div');
-      worksheetHeader.textContent = uiText('worksheet.title', 'ワークシート');
+      registerLocaleBinding(() => {
+        worksheetHeader.textContent = uiText('worksheet.title', 'ワークシート');
+      });
       Object.assign(worksheetHeader.style, {
         fontSize: '14px',
         color: '#93c5fd',
@@ -884,11 +976,21 @@
 
       expressionModeToggleClassic = buildSegmentToggle(uiText('inputMode.classic', '関数表記'), () => setExpressionMode('classic'));
       expressionModeTogglePretty = buildSegmentToggle(uiText('inputMode.pretty', '数学記号'), () => setExpressionMode('pretty'));
+      registerLocaleBinding(() => {
+        if (expressionModeToggleClassic?.button) {
+          expressionModeToggleClassic.button.textContent = uiText('inputMode.classic', '関数表記');
+        }
+        if (expressionModeTogglePretty?.button) {
+          expressionModeTogglePretty.button.textContent = uiText('inputMode.pretty', '数学記号');
+        }
+      });
       inputModeSwitch.appendChild(expressionModeToggleClassic.button);
       inputModeSwitch.appendChild(expressionModeTogglePretty.button);
 
       expressionInputClassic = document.createElement('textarea');
-      expressionInputClassic.placeholder = placeholderText('worksheet.classic', '式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem(["x+y=3","x-y=1"],["x","y"]))');
+      registerLocaleBinding(() => {
+        expressionInputClassic.placeholder = placeholderText('worksheet.classic', '式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem(["x+y=3","x-y=1"],["x","y"]))');
+      });
       Object.assign(expressionInputClassic.style, {
         minHeight: '110px',
         resize: 'vertical',
@@ -902,7 +1004,9 @@
       });
 
       expressionInputPretty = document.createElement('textarea');
-      expressionInputPretty.placeholder = placeholderText('worksheet.pretty', '例: √(2) + 1/3, 2π, (x+1)/(x−1) など数学記号で入力');
+      registerLocaleBinding(() => {
+        expressionInputPretty.placeholder = placeholderText('worksheet.pretty', '例: √(2) + 1/3, 2π, (x+1)/(x−1) など数学記号で入力');
+      });
       Object.assign(expressionInputPretty.style, {
         minHeight: '110px',
         resize: 'vertical',
@@ -930,7 +1034,9 @@
       });
 
       const previewTitle = document.createElement('div');
-      previewTitle.textContent = uiText('preview.title', '数式プレビュー');
+      registerLocaleBinding(() => {
+        previewTitle.textContent = uiText('preview.title', '数式プレビュー');
+      });
       Object.assign(previewTitle.style, {
         fontSize: '13px',
         color: '#bae6fd',
@@ -948,8 +1054,10 @@
         color: '#f8fafc',
         wordBreak: 'break-word'
       });
-      expressionPreviewPlaceholder = placeholderText('preview.expression', '（入力中の式がここに可視化されます）');
-      expressionPreviewEl.textContent = expressionPreviewPlaceholder;
+      registerLocaleBinding(() => {
+        expressionPreviewPlaceholder = placeholderText('preview.expression', '（入力中の式がここに可視化されます）');
+        updateExpressionPreview();
+      });
       expressionPreviewEl.style.opacity = '0.65';
 
       previewCard.appendChild(previewTitle);
@@ -962,20 +1070,33 @@
       });
 
       evalButton = buildPrimaryButton(uiText('actions.evaluate', '計算 (Shift+Enter)'), '#4ade80');
+      registerLocaleBinding(() => {
+        if (evalButton) {
+          evalButton.textContent = uiText('actions.evaluate', '計算 (Shift+Enter)');
+        }
+      });
       evalButton.addEventListener('click', evaluateExpression);
 
       clearButton = buildPrimaryButton(uiText('actions.clear', 'リセット'), '#60a5fa');
+      registerLocaleBinding(() => {
+        if (clearButton) {
+          clearButton.textContent = uiText('actions.clear', 'リセット');
+        }
+      });
       clearButton.addEventListener('click', clearWorksheet);
 
       const copyButton = buildPrimaryButton(uiText('actions.copyResult', '結果をコピー'), '#f97316');
+      registerLocaleBinding(() => {
+        copyButton.textContent = uiText('actions.copyResult', '結果をコピー');
+      });
       copyButton.addEventListener('click', () => {
         const result = resultMode === 'numeric'
           ? approxResultEl?.dataset.rawValue
           : exactResultEl?.dataset.rawValue;
         if (result) {
-          const successText = statusText('copySuccess', '結果をクリップボードにコピーしました。');
-          const failureText = statusText('copyFailure', 'コピーに失敗しました…');
-          navigator.clipboard?.writeText(result).then(() => notifyStatus(successText)).catch(() => notifyStatus(failureText));
+          navigator.clipboard?.writeText(result)
+            .then(() => notifyStatusKey('copySuccess', '結果をクリップボードにコピーしました。'))
+            .catch(() => notifyStatusKey('copyFailure', 'コピーに失敗しました…'));
         }
       });
 
@@ -993,7 +1114,9 @@
         gap: '10px'
       });
       const resultTitle = document.createElement('div');
-      resultTitle.textContent = resultText('title', '結果');
+      registerLocaleBinding(() => {
+        resultTitle.textContent = resultText('title', '結果');
+      });
       Object.assign(resultTitle.style, {
         fontSize: '14px',
         color: '#bbf7d0',
@@ -1009,6 +1132,14 @@
       });
       resultToggleSymbolic = buildSegmentToggle(resultText('symbolicToggle', '分数/記号'), () => setResultMode('symbolic'), '#0f766e');
       resultToggleNumeric = buildSegmentToggle(resultText('numericToggle', '小数'), () => setResultMode('numeric'), '#0f766e');
+      registerLocaleBinding(() => {
+        if (resultToggleSymbolic?.button) {
+          resultToggleSymbolic.button.textContent = resultText('symbolicToggle', '分数/記号');
+        }
+        if (resultToggleNumeric?.button) {
+          resultToggleNumeric.button.textContent = resultText('numericToggle', '小数');
+        }
+      });
       resultModeSwitch.appendChild(resultToggleSymbolic.button);
       resultModeSwitch.appendChild(resultToggleNumeric.button);
       exactResultEl = document.createElement('div');
@@ -1026,10 +1157,14 @@
       approxResultEl.style.fontFamily = '"Fira Code", monospace';
 
       resultSubLabelExact = document.createElement('div');
-      resultSubLabelExact.textContent = resultText('symbolicLabel', 'Exact / Symbolic');
+      registerLocaleBinding(() => {
+        resultSubLabelExact.textContent = resultText('symbolicLabel', 'Exact / Symbolic');
+      });
       Object.assign(resultSubLabelExact.style, { fontSize: '12px', color: '#a7f3d0', letterSpacing: '0.3px' });
       resultSubLabelApprox = document.createElement('div');
-      resultSubLabelApprox.textContent = resultText('numericLabel', 'Approximate (10進)');
+      registerLocaleBinding(() => {
+        resultSubLabelApprox.textContent = resultText('numericLabel', 'Approximate (10進)');
+      });
       Object.assign(resultSubLabelApprox.style, { fontSize: '12px', color: '#a7f3d0', letterSpacing: '0.3px' });
 
       resultCard.appendChild(resultTitle);
@@ -1039,8 +1174,10 @@
       resultCard.appendChild(resultSubLabelApprox);
       resultCard.appendChild(approxResultEl);
       moreDigitsButton = document.createElement('button');
-      moreDigitsButton.textContent = resultText('moreDigits', 'More Digits');
-      moreDigitsButton.title = resultText('moreDigitsHint', '小数表示を+5桁拡張');
+      registerLocaleBinding(() => {
+        moreDigitsButton.textContent = resultText('moreDigits', 'More Digits');
+        moreDigitsButton.title = resultText('moreDigitsHint', '小数表示を+5桁拡張');
+      });
       Object.assign(moreDigitsButton.style, {
         justifySelf: 'flex-end',
         padding: '6px 14px',
@@ -1093,7 +1230,9 @@
         minHeight: '0'
       });
       const historyTitle = document.createElement('div');
-      historyTitle.textContent = uiText('history.title', '計算履歴');
+      registerLocaleBinding(() => {
+        historyTitle.textContent = uiText('history.title', '計算履歴');
+      });
       Object.assign(historyTitle.style, {
         fontSize: '14px',
         color: '#cbd5f5',
@@ -1127,7 +1266,9 @@
         gap: '10px'
       });
       const variableTitle = document.createElement('div');
-      variableTitle.textContent = uiText('variables.title', 'スコープ変数');
+      registerLocaleBinding(() => {
+        variableTitle.textContent = uiText('variables.title', 'スコープ変数');
+      });
       Object.assign(variableTitle.style, {
         fontSize: '13px',
         color: '#bfdbfe',
@@ -1144,10 +1285,13 @@
       });
 
       const variableReset = buildPrimaryButton(uiText('variables.reset', '変数をクリア'), '#f87171');
+      registerLocaleBinding(() => {
+        variableReset.textContent = uiText('variables.reset', '変数をクリア');
+      });
       variableReset.addEventListener('click', () => {
         scope = { ans: 0 };
         updateVariables();
-        notifyStatus(statusText('scopeReset', 'スコープを初期化しました。'));
+        notifyStatusKey('scopeReset', 'スコープを初期化しました。');
       });
 
       variableCard.appendChild(variableTitle);
@@ -1167,7 +1311,9 @@
         gap: '12px'
       });
       const graphHeader = document.createElement('div');
-      graphHeader.textContent = graphText('title', 'グラフ表示');
+      registerLocaleBinding(() => {
+        graphHeader.textContent = graphText('title', 'グラフ表示');
+      });
       Object.assign(graphHeader.style, {
         fontSize: '14px',
         color: '#bae6fd',
@@ -1175,7 +1321,9 @@
       });
 
       graphInput = document.createElement('input');
-      graphInput.placeholder = placeholderText('graph.expression', 'f(x) を入力 (例: sin(x) / x)');
+      registerLocaleBinding(() => {
+        graphInput.placeholder = placeholderText('graph.expression', 'f(x) を入力 (例: sin(x) / x)');
+      });
       Object.assign(graphInput.style, {
         borderRadius: '12px',
         border: '1px solid rgba(148,163,184,0.22)',
@@ -1211,6 +1359,11 @@
       });
 
       plotButton = buildPrimaryButton(graphText('plot', 'グラフ描画'), '#38bdf8');
+      registerLocaleBinding(() => {
+        if (plotButton) {
+          plotButton.textContent = graphText('plot', 'グラフ描画');
+        }
+      });
       plotButton.addEventListener('click', plotGraph);
 
       graphControls.appendChild(graphXMin);
@@ -1234,12 +1387,20 @@
         color: '#bae6fd',
         letterSpacing: '0.3px'
       });
-      graphMessage.textContent = graphText('info', 'x軸・y軸は自動スケール。単位付き値・ベクトル・複素数の虚部は除外されます。');
+      registerLocaleBinding(() => {
+        if (!graphMessage.dataset.graphState || graphMessage.dataset.graphState === 'info') {
+          graphMessage.textContent = graphText('info', 'x軸・y軸は自動スケール。単位付き値・ベクトル・複素数の虚部は除外されます。');
+          graphMessage.dataset.graphState = 'info';
+        }
+      });
+      graphMessage.dataset.graphState = 'info';
 
       graphCard.appendChild(graphHeader);
       graphCard.appendChild(graphInput);
       const rangeLabel = document.createElement('div');
-      rangeLabel.textContent = graphText('range', '範囲 (xmin, xmax)');
+      registerLocaleBinding(() => {
+        rangeLabel.textContent = graphText('range', '範囲 (xmin, xmax)');
+      });
       Object.assign(rangeLabel.style, { fontSize: '12px', color: '#cbd5f5' });
       graphCard.appendChild(rangeLabel);
       graphCard.appendChild(graphControls);
@@ -1353,13 +1514,13 @@
         expressionInputPretty.style.display = 'none';
         expressionInput = expressionInputClassic;
         syncClassicFromPretty();
-        if (!silent) notifyStatus(statusText('inputModeClassic', '入力モード: 関数表記'));
+        if (!silent) notifyStatusKey('inputModeClassic', '入力モード: 関数表記');
       } else {
         syncPrettyFromClassic();
         expressionInputClassic.style.display = 'none';
         expressionInputPretty.style.display = '';
         expressionInput = expressionInputPretty;
-        if (!silent) notifyStatus(statusText('inputModePretty', '入力モード: 数学記号'));
+        if (!silent) notifyStatusKey('inputModePretty', '入力モード: 数学記号');
       }
       expressionModeToggleClassic?.setActive(mode === 'classic');
       expressionModeTogglePretty?.setActive(mode === 'pretty');
@@ -1375,9 +1536,11 @@
       resultMode = mode;
       updateResultDisplay();
       if (!silent) {
-        notifyStatus(mode === 'symbolic'
-          ? statusText('resultModeSymbolic', '結果表示: 分数/記号モード')
-          : statusText('resultModeNumeric', '結果表示: 小数モード'));
+        if (mode === 'symbolic') {
+          notifyStatusKey('resultModeSymbolic', '結果表示: 分数/記号モード');
+        } else {
+          notifyStatusKey('resultModeNumeric', '結果表示: 小数モード');
+        }
       }
     }
 
@@ -1427,7 +1590,7 @@
       wrapper.addEventListener('click', () => {
         onClick();
       });
-      return { wrapper, dot, setActive: (state) => {
+      return { wrapper, dot, labelEl: text, setActive: (state) => {
         wrapper.style.background = state ? 'rgba(59,130,246,0.28)' : 'rgba(15,23,42,0.55)';
         dot.style.background = state ? '#38bdf8' : '#94a3b8';
       }};
@@ -1438,7 +1601,7 @@
       radianMode = rad;
       angleToggleRad.setActive(rad);
       angleToggleDeg.setActive(!rad);
-      notifyStatus(rad ? statusText('angleRadians', '角度単位: ラジアン') : statusText('angleDegrees', '角度単位: 度'));
+      notifyStatusKey(rad ? 'angleRadians' : 'angleDegrees', rad ? '角度単位: ラジアン' : '角度単位: 度');
     }
 
     function insertText(text){
@@ -1463,8 +1626,9 @@
 
     function notifyStatus(message){
       if (!statusBar) return;
-      const now = new Date();
-      statusBar.textContent = `${now.toLocaleTimeString()} — ${message}`;
+      lastStatusDescriptor = null;
+      lastStatusTimestamp = new Date();
+      statusBar.textContent = `${lastStatusTimestamp.toLocaleTimeString()} — ${message}`;
     }
 
     function escapeLatexIdentifier(name){
@@ -1718,7 +1882,7 @@
       if (expressionInputPretty) expressionInputPretty.value = '';
       setResults(null, null);
       updateExpressionPreview();
-      notifyStatus(statusText('worksheetCleared', 'ワークシートをクリアしました。'));
+      notifyStatusKey('worksheetCleared', 'ワークシートをクリアしました。');
     }
 
     function setResults(exact, approx){
@@ -3810,7 +3974,7 @@
 
     function evaluateExpression(){
       if (!math) {
-        notifyStatus(statusText('engineWaiting', '数学エンジンの初期化を待っています…'));
+        notifyStatusKey('engineWaiting', '数学エンジンの初期化を待っています…');
         return;
       }
       const rawExpr = expressionMode === 'pretty'
@@ -3822,7 +3986,7 @@
         expressionInputClassic.value = expr;
       }
       if (!expr) {
-        notifyStatus(statusText('enterExpression', '式を入力してください。'));
+        notifyStatusKey('enterExpression', '式を入力してください。');
         return;
       }
       try {
@@ -3857,24 +4021,24 @@
         updateVariables();
         totalComputations += 1;
         try { awardXp && awardXp(12, { type: 'compute', expression: expr }); } catch {}
-        notifyStatus(statusText('calculationComplete', '計算が完了しました。'));
+        notifyStatusKey('calculationComplete', '計算が完了しました。');
       } catch (err) {
         latestHistoryEntry = null;
         const errorLabel = resultText('errorLabel', 'Error');
         setResults(errorLabel, err.message || String(err));
-        notifyStatus(statusText('error', 'エラー: {message}', { message: err.message || err }));
+        notifyStatusKey('error', 'エラー: {message}', { message: err.message || err });
       }
     }
 
     function plotGraph(){
       if (!math) {
-        notifyStatus(statusText('engineWaiting', '数学エンジンの初期化を待っています…'));
+        notifyStatusKey('engineWaiting', '数学エンジンの初期化を待っています…');
         return;
       }
       const exprRaw = graphInput.value.trim();
       const expr = convertPrettyToAscii(exprRaw);
       if (!expr) {
-        notifyStatus(statusText('enterGraphExpression', 'グラフ式を入力してください。'));
+        notifyStatusKey('enterGraphExpression', 'グラフ式を入力してください。');
         return;
       }
       let compiled;
@@ -3882,12 +4046,14 @@
         compiled = math.parse(expr);
       } catch (err) {
         graphMessage.textContent = graphText('parseFailed', '式の解析に失敗しました: {message}', { message: err.message || '' });
+        graphMessage.dataset.graphState = 'custom';
         return;
       }
       const xmin = Number(graphXMin.value);
       const xmax = Number(graphXMax.value);
       if (!Number.isFinite(xmin) || !Number.isFinite(xmax) || xmin >= xmax) {
         graphMessage.textContent = graphText('invalidRange', '範囲は有限で xmin < xmax となるように設定してください。');
+        graphMessage.dataset.graphState = 'custom';
         return;
       }
       const baseScope = cloneScope(scope);
@@ -3925,6 +4091,7 @@
           ? graphText('noPointsDetail', ' (除外: {reasons})', { reasons: reasons.join(', ') })
           : '';
         graphMessage.textContent = graphText('noPoints', '描画できる点がありません{detail}。', { detail });
+        graphMessage.dataset.graphState = 'custom';
         return;
       }
       if (ymax === ymin) {
@@ -3933,6 +4100,7 @@
       }
       drawGraph(points, [xmin, xmax], [ymin, ymax]);
       graphMessage.textContent = graphText('summary', '描画ポイント: {count} / {total}', { count: points.length, total: total + 1 });
+      graphMessage.dataset.graphState = 'custom';
       const extras = [];
       if (rejectedUnits) extras.push(graphText('reasons.units', '単位付き: {count}', { count: rejectedUnits }));
       if (rejectedComposite) extras.push(graphText('reasons.composite', 'ベクトル/行列: {count}', { count: rejectedComposite }));
@@ -3957,7 +4125,7 @@
       if (active) return;
       active = true;
       expressionInput?.focus();
-      notifyStatus(statusText('ready', '数学ラボの準備が整いました。'));
+      notifyStatusKey('ready', '数学ラボの準備が整いました。');
       refreshShortcutState();
     }
 
@@ -3974,6 +4142,15 @@
       container.removeEventListener('focusin', handleFocusIn);
       container.removeEventListener('focusout', handleFocusOut);
       unlockShortcuts();
+      while (localeCleanup.length) {
+        const cleanup = localeCleanup.pop();
+        try { cleanup?.(); } catch (error) {
+          console.warn('[math_lab:i18n] Failed to cleanup locale listener:', error);
+        }
+      }
+      localeBindings.length = 0;
+      lastStatusDescriptor = null;
+      lastStatusTimestamp = null;
       try { root && root.contains(container) && root.removeChild(container); } catch {}
     }
 
@@ -3983,7 +4160,11 @@
 
     buildKeypad();
     buildWorkspace();
-    updateHistory();
+    registerLocaleBinding(() => {
+      updateVariables();
+      updateHistory();
+    });
+    setupLocaleSync();
     setResults(null, null);
 
     ensureMathJax()
@@ -4000,7 +4181,7 @@
         if (destroyed) return;
         bindMath(mathjs);
         loadingOverlay.remove();
-        notifyStatus(statusText('engineInitialized', '数学エンジンを初期化しました。'));
+        notifyStatusKey('engineInitialized', '数学エンジンを初期化しました。');
       })
       .catch(err => {
         if (destroyed) return;

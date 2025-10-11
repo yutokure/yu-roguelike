@@ -11410,6 +11410,174 @@
     },
 
     "minigame": {
+      "system": {
+        "header": {
+          "title": "システムユーティリティ",
+          "subtitle": "PC / OS / ブラウザ / ネットワーク情報をまとめて確認",
+          "sessionXp": "セッションEXP {xp}"
+        },
+        "tabs": {
+          "pc": "PC",
+          "os": "OS",
+          "browser": "ブラウザ",
+          "ip": "IP"
+        },
+        "pcSubTabs": {
+          "pc-info": "情報",
+          "pc-monitor": "ハードウェアモニター"
+        },
+        "controls": {
+          "copySummary": "概要をコピー",
+          "refreshHardware": "最新情報を取得",
+          "refreshOs": "再読み込み",
+          "refreshBrowser": "再分析",
+          "fetchIp": "IP情報を取得",
+          "cancelIp": "取得を中止",
+          "copyIp": "結果をコピー"
+        },
+        "sections": {
+          "pcInfo": { "title": "システム情報" },
+          "monitor": {
+            "title": "リアルタイムモニター",
+            "note": "ブラウザの標準APIを用いた推定値です。実際のシステム使用率とは異なる場合があります。"
+          },
+          "os": { "title": "OS情報" },
+          "browser": { "title": "ブラウザ情報" },
+          "ip": { "title": "IP情報" }
+        },
+        "pcInfo": {
+          "motherboard": "マザーボード",
+          "cpuFamily": "CPUファミリー",
+          "cpuThreads": "CPUスレッド数",
+          "cpuFrequency": "CPU周波数",
+          "architecture": "アーキテクチャ",
+          "memory": "メモリ容量",
+          "jsHeap": "JSヒープ上限",
+          "storage": "ストレージ推定",
+          "touch": "タッチポイント",
+          "gpuVendor": "GPUベンダー",
+          "gpuName": "GPU名",
+          "gpuMemory": "GPUメモリ",
+          "battery": "バッテリー",
+          "notes": {
+            "motherboardUnavailable": "ブラウザからはマザーボード情報にアクセスできません。",
+            "cpuFrequencyUnavailable": "CPU周波数はWeb標準APIでは公開されていません。",
+            "jsHeapChromeOnly": "Chrome系ブラウザのみ提供されます。",
+            "storageEstimate": "navigator.storage.estimate() による推定値",
+            "gpuWebgl": "WEBGL_debug_renderer_infoから取得",
+            "gpuDisabled": "WebGLが無効化されている可能性があります。",
+            "gpuMemoryUnavailable": "ブラウザはGPUメモリの総量を公開しません。",
+            "batteryUnavailable": "Battery Status APIは利用できないか、許可されていません。"
+          },
+          "battery": {
+            "charging": "充電中",
+            "discharging": "放電中"
+          },
+          "values": {
+            "cpuThreads": "{threads} スレッド",
+            "deviceMemory": "{memory} GB (navigator.deviceMemory)",
+            "battery": "{level} ({state})"
+          }
+        },
+        "monitor": {
+          "cpu": "CPU使用率 (推定)",
+          "loopLag": "イベントループ遅延",
+          "fps": "描画更新 (FPS)",
+          "jsHeap": "JSヒープ使用量",
+          "deviceMemory": "実メモリ (推定)",
+          "notes": {
+            "cpuUsage": "イベントループ遅延から推定",
+            "loopLag": "setInterval基準との差分",
+            "fps": "requestAnimationFrameの結果",
+            "memoryUsage": "使用率 {percent}",
+            "memoryChromeOnly": "Chrome系でのみ利用可能",
+            "memoryUnavailable": "performance.memory が利用できません",
+            "deviceMemoryEstimate": "navigator.deviceMemoryによる概算"
+          }
+        },
+        "os": {
+          "name": "OS名称",
+          "version": "バージョン",
+          "build": "ビルド",
+          "bitness": "ビット数",
+          "platform": "プラットフォーム",
+          "timezone": "タイムゾーン",
+          "locale": "ロケール",
+          "languages": "利用言語",
+          "uptime": "起動時間 (推定)",
+          "lastChecked": "最終更新",
+          "notes": {
+            "buildUnavailable": "ブラウザは詳細なビルド番号を提供しません。",
+            "uptime": "OSの起動時間は取得できないためブラウザ稼働時間を表示"
+          },
+          "values": {
+            "uptime": "{hours} 時間 (ブラウザ稼働時間)"
+          }
+        },
+        "browser": {
+          "name": "ブラウザ名",
+          "version": "バージョン",
+          "engine": "レンダリングエンジン",
+          "agent": "ユーザーエージェント",
+          "brands": "ブランド情報",
+          "vendor": "ベンダー",
+          "doNotTrack": "Do Not Track",
+          "online": "オンライン状態",
+          "cookies": "Cookie",
+          "storage": "ストレージAPI",
+          "features": "主な技術",
+          "html5": "HTML5サポート (主要API)",
+          "status": {
+            "online": "オンライン",
+            "offline": "オフライン",
+            "dntEnabled": "有効",
+            "dntDisabled": "無効",
+            "cookiesEnabled": "利用可能",
+            "cookiesDisabled": "無効"
+          },
+          "notes": {
+            "noFeatures": "主要API情報なし",
+            "html5Unknown": "判定不可"
+          }
+        },
+        "ip": {
+          "statusIdle": "ネットワークアクセスが必要です。取得ボタンを押してください。",
+          "statusSource": "{source} から取得",
+          "ip": "IPアドレス",
+          "hostname": "ホスト名",
+          "city": "都市",
+          "region": "地域",
+          "country": "国",
+          "loc": "緯度経度",
+          "org": "組織 / ISP",
+          "postal": "郵便番号",
+          "timezone": "タイムゾーン",
+          "asn": "ASN",
+          "userAgent": "エージェント",
+          "updated": "最終取得"
+        },
+        "status": {
+          "unavailable": "取得不可",
+          "unknown": "不明",
+          "notAvailable": "-",
+          "loading": "取得中…",
+          "failed": "取得失敗"
+        },
+        "errors": {
+          "hardwareFetch": "情報の取得に失敗しました",
+          "ipCancelled": "取得を中止しました。",
+          "ipFetch": "IP情報の取得に失敗しました。ファイアウォールやオフライン環境では取得できません。"
+        },
+        "summary": {
+          "header": "[システム概要] {timestamp}",
+          "cpu": "CPU: {family} / {threads} threads / arch {arch}",
+          "memory": "Memory: {memory} (JS heap limit {heap})",
+          "gpu": "GPU: {name} (vendor {vendor})",
+          "os": "OS: {name} {version} ({bitness})",
+          "browser": "Browser: {name} {version} ({engine})",
+          "ip": "IP: {ip} @ {city}, {country}"
+        }
+      },
       "falling_puyos": {
         "floating": {
           "clear": "CLEAR!",

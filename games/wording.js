@@ -60,7 +60,9 @@
     if (!root) throw new Error('MiniExp Wording requires a container');
 
     const shortcuts = opts?.shortcuts;
-    const i18n = typeof window !== 'undefined' ? window.I18n : null;
+    let i18n = typeof window !== 'undefined' ? window.I18n : null;
+    let i18nReadyTimer = null;
+    let localeUnsubscribe = null;
 
     const localeBindings = [];
     const registerLocaleBinding = (fn) => {
@@ -72,10 +74,30 @@
       });
     };
 
+    const detachLocaleSubscription = () => {
+      if (typeof localeUnsubscribe === 'function') {
+        try { localeUnsubscribe(); } catch {}
+        localeUnsubscribe = null;
+      }
+    };
+
+    const getI18n = () => {
+      if (typeof window !== 'undefined') {
+        const candidate = window.I18n;
+        if (candidate && candidate !== i18n) {
+          detachLocaleSubscription();
+          i18n = candidate;
+          ensureLocaleSubscription(candidate);
+        }
+      }
+      return i18n;
+    };
+
     const translate = (key, fallback, params) => {
-      if (key && typeof i18n?.t === 'function') {
+      const api = getI18n();
+      if (key && typeof api?.t === 'function') {
         try {
-          const value = i18n.t(key, params);
+          const value = api.t(key, params);
           if (typeof value === 'string' && value !== key) return value;
           if (value !== undefined && value !== null && value !== key) return value;
         } catch {}
@@ -89,11 +111,12 @@
     };
 
     const formatNumber = (value, options) => {
-      if (typeof i18n?.formatNumber === 'function') {
-        try { return i18n.formatNumber(value, options); } catch {}
+      const api = getI18n();
+      if (typeof api?.formatNumber === 'function') {
+        try { return api.formatNumber(value, options); } catch {}
       }
       try {
-        return new Intl.NumberFormat(i18n?.getLocale?.() || undefined, options).format(value);
+        return new Intl.NumberFormat(api?.getLocale?.() || undefined, options).format(value);
       } catch {
         if (options?.minimumIntegerDigits) {
           const digits = Number.isFinite(value) ? Math.trunc(value) : 0;
@@ -170,7 +193,6 @@
     let persistTimer = null;
     const skipFormatXpCommands = new Set(['insertText', 'insertHTML']);
     let shortcutsDisabled = false;
-    let localeUnsubscribe = null;
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -1697,9 +1719,10 @@
         shortcuts?.enableKey('r');
         shortcutsDisabled = false;
       }
-      if (typeof localeUnsubscribe === 'function') {
-        try { localeUnsubscribe(); } catch {}
-        localeUnsubscribe = null;
+      detachLocaleSubscription();
+      if (i18nReadyTimer && typeof window !== 'undefined') {
+        try { window.clearInterval(i18nReadyTimer); } catch {}
+        i18nReadyTimer = null;
       }
       flushPersist();
       document.removeEventListener('selectionchange', handleSelectionChange);
@@ -1744,18 +1767,62 @@
       }
     }
 
-    if (typeof i18n?.onLocaleChanged === 'function') {
+    function handleLocaleChange(){
+      applyLocaleBindings();
+      updateTitle();
+      updateStatus();
+      updateTheme();
+      updateReviewHighlightLabel();
+      updateRulerToggleLabel();
+      updateStatusToggleLabel();
+    }
+
+    function ensureLocaleSubscription(source){
+      const api = source || getI18n();
+      if (!api || typeof api.onLocaleChanged !== 'function') return;
+      if (typeof localeUnsubscribe === 'function') return;
       try {
-        localeUnsubscribe = i18n.onLocaleChanged(() => {
-          applyLocaleBindings();
-          updateTitle();
-          updateStatus();
-          updateTheme();
-          updateReviewHighlightLabel();
-          updateRulerToggleLabel();
-          updateStatusToggleLabel();
+        localeUnsubscribe = api.onLocaleChanged(() => {
+          try {
+            handleLocaleChange();
+          } catch (error) {
+            console.error('[Wording] Failed to apply locale change:', error);
+          }
         });
-      } catch {}
+      } catch (error) {
+        console.warn('[Wording] Failed to subscribe to locale changes:', error);
+      }
+    }
+
+    function watchForI18n(){
+      if (typeof window === 'undefined' || typeof window.setInterval !== 'function') return;
+      if (i18nReadyTimer) return;
+      let attempts = 0;
+      i18nReadyTimer = window.setInterval(() => {
+        attempts += 1;
+        const api = getI18n();
+        if (api && typeof api.t === 'function') {
+          window.clearInterval(i18nReadyTimer);
+          i18nReadyTimer = null;
+          ensureLocaleSubscription(api);
+          try {
+            handleLocaleChange();
+          } catch (error) {
+            console.error('[Wording] Failed to apply locale change:', error);
+          }
+        } else if (attempts >= 40) {
+          window.clearInterval(i18nReadyTimer);
+          i18nReadyTimer = null;
+        }
+      }, 250);
+    }
+
+    const initialI18n = getI18n();
+    ensureLocaleSubscription(initialI18n);
+    if (initialI18n && typeof initialI18n.t === 'function') {
+      handleLocaleChange();
+    } else {
+      watchForI18n();
     }
 
     window.addEventListener('resize', handleResize);

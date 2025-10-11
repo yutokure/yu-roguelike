@@ -55,6 +55,15 @@
 
   const I18N_NAMESPACE = 'games.graphicsTester';
   const i18n = typeof window !== 'undefined' ? window.I18n : null;
+  let activeLocalizationInstance = null;
+
+  function getActiveLocalization(){
+    return activeLocalizationInstance;
+  }
+
+  function setActiveLocalization(instance){
+    activeLocalizationInstance = instance || null;
+  }
 
   function translateWithFallback(fullKey, fallbackText, params){
     const computeFallback = () => {
@@ -69,6 +78,18 @@
       }
       return fallbackText ?? '';
     };
+
+    const localization = getActiveLocalization();
+    if (localization && typeof localization.t === 'function') {
+      try {
+        const translated = localization.t(fullKey, fallbackText, params);
+        if (typeof translated === 'string' && translated !== fullKey) {
+          return translated;
+        }
+      } catch (error) {
+        console.warn('[graphicsTester:i18n] Failed to translate key via localization helper:', fullKey, error);
+      }
+    }
 
     if (!i18n || typeof i18n.t !== 'function') {
       return computeFallback();
@@ -88,6 +109,20 @@
 
   function t(key, fallbackText, params){
     return translateWithFallback(`${I18N_NAMESPACE}.${key}`, fallbackText, params);
+  }
+
+  function resolveLocalization(opts){
+    if (opts?.localization) {
+      return opts.localization;
+    }
+    if (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function') {
+      try {
+        return window.createMiniGameLocalization({ id: 'graphics_tester', localizationKey: I18N_NAMESPACE });
+      } catch (error) {
+        console.warn('[graphicsTester:i18n] Failed to create localization helper:', error);
+      }
+    }
+    return null;
   }
 
   const DEMO_OPTION_DEFS = Object.freeze([
@@ -864,23 +899,51 @@
     };
   }
 
-  function setupUI(root, awardXp){
+  function setupUI(root, awardXp, localization){
     ensureStyle();
     if(!root) return null;
     root.innerHTML = '';
     root.classList.add('gfx3d-root');
+    const previousLocalization = getActiveLocalization();
+    setActiveLocalization(localization);
+    const restoreLocalization = () => {
+      if (getActiveLocalization() === localization) {
+        setActiveLocalization(previousLocalization);
+      }
+    };
+    const localizationBindings = [];
+    const addBinding = (fn) => {
+      if (typeof fn === 'function') localizationBindings.push(fn);
+    };
+    const applyLocalizationBindings = () => {
+      for (const fn of localizationBindings) {
+        try {
+          fn();
+        } catch (error) {
+          console.warn('[graphicsTester:i18n] Failed to apply localization binding:', error);
+        }
+      }
+    };
+    let detachLocaleChange = null;
+
     const header = createEl('div','gfx3d-header', root);
     const headingBox = createEl('div', '', header);
     const title = createEl('h2','', headingBox);
-    title.textContent = t('title', '3Dグラフィックテスター');
     const badges = createEl('div','gfx3d-badges', headingBox);
-    [
+    const badgeDefs = [
       { key: 'badges.webgl2', fallback: 'WebGL2' },
       { key: 'badges.rayMarching', fallback: 'Ray Marching' },
       { key: 'badges.benchmark', fallback: 'Benchmark' }
-    ].forEach(({ key, fallback }) => {
+    ];
+    const badgeElements = badgeDefs.map(({ key, fallback }) => {
       const badge = createEl('span','gfx3d-badge', badges);
-      badge.textContent = t(key, fallback);
+      return { element: badge, key, fallback };
+    });
+    addBinding(() => {
+      title.textContent = t('title', '3Dグラフィックテスター');
+      badgeElements.forEach(({ element, key, fallback }) => {
+        element.textContent = t(key, fallback);
+      });
     });
     const gpuInfoBox = createEl('div','gfx3d-gpuinfo', header);
 
@@ -899,20 +962,38 @@
     if(!gl){
       gpuInfoBox.innerHTML = '';
       const gpuTitle = createEl('strong','', gpuInfoBox);
-      gpuTitle.textContent = t('gpuInfo.title', 'GPU情報');
       const unsupported = createEl('span','', gpuInfoBox);
-      unsupported.textContent = t('gpuInfo.unsupported.message', 'WebGL2非対応または無効化されています');
       const warn = createEl('div','gfx3d-note', controls);
-      warn.textContent = t(
-        'gpuInfo.unsupported.description',
-        'このモジュールは WebGL2 対応デバイス／ブラウザが必要です。設定で WebGL2 を有効化するか、対応ブラウザで再度お試しください。'
-      );
+      addBinding(() => {
+        gpuTitle.textContent = t('gpuInfo.title', 'GPU情報');
+        unsupported.textContent = t('gpuInfo.unsupported.message', 'WebGL2非対応または無効化されています');
+        warn.textContent = t(
+          'gpuInfo.unsupported.description',
+          'このモジュールは WebGL2 対応デバイス／ブラウザが必要です。設定で WebGL2 を有効化するか、対応ブラウザで再度お試しください。'
+        );
+      });
       logLine(logPre, t('errors.webglInitFailed', 'WebGL2 コンテキストの初期化に失敗しました。'));
+      const applyLocalization = () => {
+        applyLocalizationBindings();
+      };
+      applyLocalization();
+      if (!detachLocaleChange && localization && typeof localization.onChange === 'function'){
+        try {
+          detachLocaleChange = localization.onChange(() => { applyLocalization(); });
+        } catch (error) {
+          console.warn('[graphicsTester:i18n] Failed to attach locale listener:', error);
+        }
+      }
       return {
         start(){},
         stop(){},
         destroy(){
           try { root.innerHTML = ''; root.classList.remove('gfx3d-root'); } catch {}
+          if (detachLocaleChange) {
+            try { detachLocaleChange(); } catch {}
+            detachLocaleChange = null;
+          }
+          restoreLocalization();
         },
         getScore(){ return 0; }
       };
@@ -925,11 +1006,6 @@
     const gpu = gatherGPUInfo(gl);
     gpuInfoBox.innerHTML = '';
     const gpuTitle = createEl('strong','', gpuInfoBox);
-    gpuTitle.textContent = t('gpuInfo.title', 'GPU情報');
-    const unknownText = t('gpuInfo.unknown', 'Unknown');
-    const antialiasValue = gpu.antialias
-      ? t('gpuInfo.antialias.enabled', 'ON')
-      : t('gpuInfo.antialias.disabled', 'OFF');
     const fallbackLabels = {
       vendor: 'Vendor',
       renderer: 'Renderer',
@@ -940,41 +1016,87 @@
       maxTextureUnits: 'TextureUnits',
       antialias: 'Antialias'
     };
-    const entries = [
-      { key: 'vendor', value: gpu.vendor || unknownText },
-      { key: 'renderer', value: gpu.renderer || unknownText },
-      { key: 'version', value: gpu.version || unknownText },
-      { key: 'shading', value: gpu.shading || unknownText },
-      { key: 'maxTextureSize', value: gpu.maxTextureSize != null ? String(gpu.maxTextureSize) : unknownText },
-      { key: 'maxCubeMap', value: gpu.maxCubeMap != null ? String(gpu.maxCubeMap) : unknownText },
-      { key: 'maxTextureUnits', value: gpu.maxTextureUnits != null ? String(gpu.maxTextureUnits) : unknownText },
-      { key: 'antialias', value: antialiasValue }
+    const gpuEntries = [
+      { key: 'vendor' },
+      { key: 'renderer' },
+      { key: 'version' },
+      { key: 'shading' },
+      { key: 'maxTextureSize' },
+      { key: 'maxCubeMap' },
+      { key: 'maxTextureUnits' },
+      { key: 'antialias' }
     ];
-    entries.forEach(({ key, value }) => {
+    const gpuEntryElements = gpuEntries.map(({ key }) => {
       const span = createEl('span','', gpuInfoBox);
-      span.textContent = t(
-        `gpuInfo.entries.${key}`,
-        () => `${fallbackLabels[key] || key}: ${value}`,
-        { value }
-      );
+      return { element: span, key };
+    });
+    addBinding(() => {
+      gpuTitle.textContent = t('gpuInfo.title', 'GPU情報');
+      const unknownText = t('gpuInfo.unknown', 'Unknown');
+      gpuEntryElements.forEach(({ element, key }) => {
+        let value;
+        switch(key){
+          case 'vendor':
+            value = gpu.vendor || unknownText;
+            break;
+          case 'renderer':
+            value = gpu.renderer || unknownText;
+            break;
+          case 'version':
+            value = gpu.version || unknownText;
+            break;
+          case 'shading':
+            value = gpu.shading || unknownText;
+            break;
+          case 'maxTextureSize':
+            value = gpu.maxTextureSize != null ? String(gpu.maxTextureSize) : unknownText;
+            break;
+          case 'maxCubeMap':
+            value = gpu.maxCubeMap != null ? String(gpu.maxCubeMap) : unknownText;
+            break;
+          case 'maxTextureUnits':
+            value = gpu.maxTextureUnits != null ? String(gpu.maxTextureUnits) : unknownText;
+            break;
+          case 'antialias':
+            value = gpu.antialias
+              ? t('gpuInfo.antialias.enabled', 'ON')
+              : t('gpuInfo.antialias.disabled', 'OFF');
+            break;
+          default:
+            value = unknownText;
+        }
+        element.textContent = t(
+          `gpuInfo.entries.${key}`,
+          () => `${fallbackLabels[key] || key}: ${value}`,
+          { value }
+        );
+      });
     });
 
     const demoSection = createEl('div','gfx3d-section', controls);
     const demoLabel = createEl('label','', demoSection);
     const demoLabelSpan = createEl('span','', demoLabel);
-    demoLabelSpan.textContent = t('controls.demoSelect.label', 'デモ選択');
     const demoSelect = createEl('select','', demoLabel);
-    DEMO_OPTION_DEFS.forEach(opt=>{
-      const o = createEl('option','', demoSelect);
-      o.value = opt.value; o.textContent = t(opt.labelKey, opt.fallback);
+    const demoOptionElements = DEMO_OPTION_DEFS.map((opt)=>{
+      const optionEl = createEl('option','', demoSelect);
+      optionEl.value = opt.value;
+      return { element: optionEl, def: opt };
     });
 
     const dynamicArea = createEl('div','gfx3d-section', controls);
     const note = createEl('div','gfx3d-note', controls);
-    note.textContent = t(
-      'controls.demoSelect.note',
-      'マウスドラッグで視点操作、ホイールでズーム。レイトレーシング風デモは GPU 負荷が高いためベンチマーク時は他タブを閉じてください。'
-    );
+    addBinding(() => {
+      demoLabelSpan.textContent = t('controls.demoSelect.label', 'デモ選択');
+      demoOptionElements.forEach(({ element, def }) => {
+        element.textContent = t(def.labelKey, def.fallback);
+      });
+    });
+    addBinding(() => {
+      note.textContent = t(
+        'controls.demoSelect.note',
+        'マウスドラッグで視点操作、ホイールでズーム。レイトレーシング風デモは GPU 負荷が高いためベンチマーク時は他タブを閉じてください。'
+      );
+    });
 
     function refreshDynamicControls(){
       dynamicArea.innerHTML = '';
@@ -1056,8 +1178,6 @@
         );
       }
     }
-    refreshDynamicControls();
-
     demoSelect.addEventListener('change', ()=>{
       renderer.setActive(demoSelect.value);
       refreshDynamicControls();
@@ -1065,9 +1185,11 @@
 
     const benchSection = createEl('div','gfx3d-section', controls);
     const benchTitle = createEl('h3','', benchSection);
-    benchTitle.textContent = t('controls.benchmark.title', 'ベンチマーク');
     const benchBtn = createEl('button','', benchSection);
-    benchBtn.textContent = t('controls.benchmark.start', '6秒間ベンチマーク開始');
+    addBinding(() => {
+      benchTitle.textContent = t('controls.benchmark.title', 'ベンチマーク');
+      benchBtn.textContent = t('controls.benchmark.start', '6秒間ベンチマーク開始');
+    });
     benchBtn.addEventListener('click', ()=>{
       renderer.setActive('objectLab');
       demoSelect.value = 'objectLab';
@@ -1088,6 +1210,23 @@
         }
       });
     });
+
+    const applyLocalization = () => {
+      const currentSelection = demoSelect.value;
+      applyLocalizationBindings();
+      demoSelect.value = currentSelection;
+      refreshDynamicControls();
+    };
+
+    applyLocalization();
+
+    if (!detachLocaleChange && localization && typeof localization.onChange === 'function'){
+      try {
+        detachLocaleChange = localization.onChange(() => { applyLocalization(); });
+      } catch (error) {
+        console.warn('[graphicsTester:i18n] Failed to attach locale listener:', error);
+      }
+    }
 
     let overlayRunning = false;
     let overlayRaf = null;
@@ -1134,6 +1273,11 @@
         stopOverlay();
         renderer.dispose();
         try { root.innerHTML = ''; root.classList.remove('gfx3d-root'); } catch {}
+        if (detachLocaleChange) {
+          try { detachLocaleChange(); } catch {}
+          detachLocaleChange = null;
+        }
+        restoreLocalization();
       },
       getScore(){
         if(renderer.activeName === 'objectLab'){
@@ -1145,8 +1289,9 @@
     };
   }
 
-  function create(root, awardXp){
-    const runtime = setupUI(root, awardXp) || {};
+  function create(root, awardXp, opts){
+    const localization = resolveLocalization(opts);
+    const runtime = setupUI(root, awardXp, localization) || {};
     return {
       start(){ try { runtime.start && runtime.start(); } catch {} },
       stop(){ try { runtime.stop && runtime.stop(); } catch {} },
@@ -1178,7 +1323,7 @@
       id: definition.id,
       name: definition.name,
       mount(target){
-        const runtime = setupUI(target, null);
+        const runtime = setupUI(target, null, resolveLocalization()) || {};
         try { runtime && runtime.start && runtime.start(); } catch {}
         return runtime;
       }

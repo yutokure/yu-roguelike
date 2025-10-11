@@ -2,6 +2,46 @@
   /** MiniExp: Aurora Circuit (Top-down racing)
    *  - Circular track with boost zones, difficulty-based AI opponents.
    */
+  const warnedTranslationKeys = new Set();
+
+  function translateUi(key, fallbackText, params){
+    const computeFallback = () => {
+      if (typeof fallbackText === 'function'){
+        try {
+          const result = fallbackText();
+          return typeof result === 'string' ? result : (result ?? '');
+        } catch (error){
+          if (key && !warnedTranslationKeys.has(key)){
+            warnedTranslationKeys.add(key);
+            console.warn('[topdown_race] Failed to evaluate fallback for', key, error);
+          }
+          return '';
+        }
+      }
+      return typeof fallbackText === 'string' ? fallbackText : (fallbackText ?? '');
+    };
+
+    const i18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : null;
+    if (key && i18n && typeof i18n.t === 'function'){
+      try {
+        const translated = i18n.t(key, params);
+        if (typeof translated === 'string' && translated !== key){
+          return translated;
+        }
+      } catch (error){
+        if (!warnedTranslationKeys.has(key)){
+          warnedTranslationKeys.add(key);
+          console.warn('[topdown_race] Failed to translate key', key, error);
+        }
+      }
+    }
+    return computeFallback();
+  }
+
+  function getSecondsSuffix(){
+    return translateUi('selection.miniexp.games.topdown_race.hud.secondsSuffix', 's');
+  }
+
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
     const cfg = (
@@ -57,6 +97,11 @@
     ];
     const boostCooldownMs = 10000;
     const boostXp = 2;
+
+    const youLabel = translateUi('selection.miniexp.games.topdown_race.status.you', 'You');
+    const dnfLabel = translateUi('selection.miniexp.games.topdown_race.status.dnf', 'DNF');
+    const finLabel = translateUi('selection.miniexp.games.topdown_race.status.fin', 'FIN');
+    const secondsSuffix = getSecondsSuffix();
 
     const container = document.createElement('div');
     container.style.position = 'relative';
@@ -441,23 +486,38 @@
         xpEarned.finish += xpFinish;
       }
       resultPanel.style.display = 'block';
+      const resultsTitle = translateUi('selection.miniexp.games.topdown_race.results.title', 'レース結果');
+      const totalTimeText = translateUi(
+        'selection.miniexp.games.topdown_race.results.totalTime',
+        () => `総タイム ${formatTime(totalTime)}`,
+        { time: formatTime(totalTime) }
+      );
+      const headerPosition = translateUi('selection.miniexp.games.topdown_race.results.headers.position', '順位');
+      const headerDriver = translateUi('selection.miniexp.games.topdown_race.results.headers.driver', 'ドライバー');
+      const headerFinish = translateUi('selection.miniexp.games.topdown_race.results.headers.finish', 'フィニッシュ');
+      const xpSummaryText = translateUi(
+        'selection.miniexp.games.topdown_race.results.expSummary',
+        () => `獲得EXP: ラップ${xpEarned.lap} / ベスト${xpEarned.best} / ブースト${xpEarned.boost} / フィニッシュ${xpEarned.finish}`,
+        { lap: xpEarned.lap, best: xpEarned.best, boost: xpEarned.boost, finish: xpEarned.finish }
+      );
+      const restartHint = translateUi('selection.miniexp.games.topdown_race.results.restartHint', 'Rキーで再スタート', { key: 'R' });
       resultPanel.innerHTML = `
-        <h2 style="margin-top:0;font-size:24px;letter-spacing:0.05em;">レース結果</h2>
-        <p style="margin:4px 0 16px;color:#94a3b8;">総タイム ${formatTime(totalTime)}</p>
+        <h2 style="margin-top:0;font-size:24px;letter-spacing:0.05em;">${resultsTitle}</h2>
+        <p style="margin:4px 0 16px;color:#94a3b8;">${totalTimeText}</p>
         <table style="width:100%;margin-bottom:16px;color:#cbd5f5;font-size:13px;border-collapse:collapse;">
-          <thead><tr style="text-align:left;color:#94a3b8;"><th style="padding-bottom:6px;">順位</th><th>ドライバー</th><th style="text-align:right;">フィニッシュ</th></tr></thead>
+          <thead><tr style="text-align:left;color:#94a3b8;"><th style="padding-bottom:6px;">${headerPosition}</th><th>${headerDriver}</th><th style="text-align:right;">${headerFinish}</th></tr></thead>
           <tbody>
             ${finishOrder.map((entry, idx) => `
               <tr>
-                <td style="padding:4px 0;">${idx+1}</td>
+                <td style='padding:4px 0;'>${idx+1}</td>
                 <td>${entry.name}</td>
-                <td style="text-align:right;">${entry.time ? formatTime(entry.time) : 'DNF'}</td>
+                <td style='text-align:right;'>${entry.time ? formatTime(entry.time) : dnfLabel}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
-        <div style="font-size:13px;color:#94a3b8;margin-bottom:10px;">獲得EXP: ラップ${xpEarned.lap} / ベスト${xpEarned.best} / ブースト${xpEarned.boost} / フィニッシュ${xpEarned.finish}</div>
-        <div style="font-size:12px;color:#60a5fa;">Rキーで再スタート</div>
+        <div style="font-size:13px;color:#94a3b8;margin-bottom:10px;">${xpSummaryText}</div>
+        <div style="font-size:12px;color:#60a5fa;">${restartHint}</div>
       `;
     }
 
@@ -468,7 +528,7 @@
 
     function getStandings(){
       const list = [];
-      list.push({ id: 'player', name: 'You', lap: player.lap, progress: player.progress || 0, time: player.finishTime });
+      list.push({ id: 'player', name: youLabel, lap: player.lap, progress: player.progress || 0, time: player.finishTime });
       for (const car of aiCars){
         list.push({ id: car.name, name: car.name, lap: car.lap, progress: car.progress || 0, time: car.finishTime });
       }
@@ -501,19 +561,55 @@
       lapMeter.value.textContent = `${Math.round(lapPct)}%`;
       lapMeter.fill.style.width = `${lapPct.toFixed(1)}%`;
 
+      const difficultyLabel = translateUi(
+        `selection.miniexp.games.topdown_race.difficulty.${difficulty}`,
+        difficulty
+      );
+      const titleLine = translateUi(
+        'selection.miniexp.games.topdown_race.hud.title',
+        () => `Aurora Circuit (${difficultyLabel})`,
+        { difficulty: difficultyLabel }
+      );
+      const lapLine = translateUi(
+        'selection.miniexp.games.topdown_race.hud.lap',
+        () => `Lap: <strong>${Math.min(player.lap, cfg.laps)}/${cfg.laps}</strong> (Next ${lapLabel})`,
+        { current: Math.min(player.lap, cfg.laps), total: cfg.laps, next: lapLabel }
+      );
+      const lapTimeLine = translateUi(
+        'selection.miniexp.games.topdown_race.hud.lapTime',
+        () => `Lap Time: ${formatTime(player.lapTime || 0)}`,
+        { time: formatTime(player.lapTime || 0) }
+      );
+      const bestLapLine = translateUi(
+        'selection.miniexp.games.topdown_race.hud.bestLap',
+        () => `Best Lap: ${bestLabel}`,
+        { time: bestLabel }
+      );
+      const turboActiveText = player.turboActive ? translateUi('selection.miniexp.games.topdown_race.hud.turboActive', ' (Active)') : '';
+      const turboLine = translateUi(
+        'selection.miniexp.games.topdown_race.hud.turbo',
+        () => `Turbo: ${turboPct}%${turboActiveText}`,
+        { percent: turboPct, active: turboActiveText }
+      );
       const lines = [
-        `<div style="font-size:15px;margin-bottom:4px;font-weight:600;">Aurora Circuit (${difficulty})</div>`,
-        `<div>Lap: <strong>${Math.min(player.lap, cfg.laps)}/${cfg.laps}</strong> (Next ${lapLabel})</div>`,
-        `<div>Lap Time: ${formatTime(player.lapTime || 0)}</div>`,
-        `<div>Best Lap: ${bestLabel}</div>`,
-        `<div>Turbo: ${turboPct}% ${player.turboActive ? '(Active)' : ''}</div>`
+        `<div style="font-size:15px;margin-bottom:4px;font-weight:600;">${titleLine}</div>`,
+        `<div>${lapLine}</div>`,
+        `<div>${lapTimeLine}</div>`,
+        `<div>${bestLapLine}</div>`,
+        `<div>${turboLine}</div>`
       ];
       const standings = getStandings();
       const playerPos = standings.findIndex(entry => entry.id === 'player') + 1;
       if (playerPos > 0){
-        lines.push(`<div>Position: <strong>${playerPos}/${standings.length}</strong></div>`);
+        const positionLine = translateUi(
+          'selection.miniexp.games.topdown_race.hud.position',
+          () => `Position: <strong>${playerPos}/${standings.length}</strong>`,
+          { position: playerPos, total: standings.length }
+        );
+        lines.push(`<div>${positionLine}</div>`);
       }
-      lines.push(`<div style="margin-top:8px;font-weight:600;">ライバル</div>`);
+      const rivalsHeading = translateUi('selection.miniexp.games.topdown_race.hud.rivals', 'ライバル');
+      lines.push(`<div style="margin-top:8px;font-weight:600;">${rivalsHeading}</div>`);
       for (const entry of standings){
         if (entry.id === 'player') continue;
         let diff = '';
@@ -521,19 +617,24 @@
           if (player.finishTime && entry.time){
             diff = formatDelta(entry.time - player.finishTime);
           } else if (entry.time == null){
-            diff = 'DNF';
+            diff = dnfLabel;
           }
         } else if (entry.time != null && !player.finishTime){
-          diff = 'FIN';
+          diff = finLabel;
         } else {
           const delta = computeTimeGap(entry);
-          diff = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}s`;
+          diff = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}${secondsSuffix}`;
         }
         if (!diff){
           diff = '-';
         }
         if (entry.time == null){
-          diff += ` · Lap ${Math.min(entry.lap, cfg.laps)}/${cfg.laps}`;
+          const rivalLapSuffix = translateUi(
+            'selection.miniexp.games.topdown_race.hud.rivalLapSuffix',
+            () => ` · Lap ${Math.min(entry.lap, cfg.laps)}/${cfg.laps}`,
+            { current: Math.min(entry.lap, cfg.laps), total: cfg.laps }
+          );
+          diff += rivalLapSuffix;
         }
         lines.push(`<div style="display:flex;justify-content:space-between;"><span>${entry.name}</span><span>${diff}</span></div>`);
       }
@@ -562,7 +663,7 @@
       drawMiniMap();
       if (state === 'countdown'){
         overlay.style.display = 'flex';
-        overlay.textContent = countdown > 0 ? Math.ceil(countdown) : 'GO!';
+        overlay.textContent = countdown > 0 ? Math.ceil(countdown) : translateUi('selection.miniexp.games.topdown_race.overlay.go', 'GO!');
       } else if (state === 'finished'){
         overlay.style.display = 'none';
       } else if (state === 'running'){
@@ -570,7 +671,7 @@
       } else {
         overlay.style.display = 'flex';
         overlay.style.fontSize = '32px';
-        overlay.textContent = 'Press START';
+        overlay.textContent = translateUi('selection.miniexp.games.topdown_race.overlay.idlePrompt', 'Press START');
       }
     }
 
@@ -704,7 +805,7 @@
     function formatDelta(delta){
       const sign = delta >= 0 ? '+' : '-';
       const abs = Math.abs(delta);
-      return `${sign}${abs.toFixed(3)}s`;
+      return `${sign}${abs.toFixed(3)}${secondsSuffix}`;
     }
 
     function drawMiniMap(){
@@ -842,7 +943,7 @@
         countdown -= 1;
         countdownTimer = 0;
         if (countdown <= 0){
-          overlay.textContent = 'GO!';
+          overlay.textContent = translateUi('selection.miniexp.games.topdown_race.overlay.go', 'GO!');
           state = 'running';
           running = true;
           setTimeout(() => overlay.style.display = 'none', 420);

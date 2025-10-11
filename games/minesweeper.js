@@ -10,7 +10,7 @@
       if (localization && typeof localization.t === 'function'){
         return localization.t(key, fallback, params);
       }
-      if (typeof fallback === 'function') return fallback();
+      if (typeof fallback === 'function') return fallback(params || {});
       return fallback ?? '';
     };
     const formatNumber = (value, options) => {
@@ -139,6 +139,7 @@
       const timeWithUnit = `${elapsedValue}${uiTextState.secondsUnit}`;
       info.textContent = text('.hud.info', () => `難易度:${difficultyLabel} 地雷:${minesValue} 残り旗:${flagsValue} 時間:${timeWithUnit} 開放:${openedValue}`, {
         difficulty: difficultyLabel,
+        difficultyLabel,
         mines: minesValue,
         flags: flagsValue,
         elapsed: elapsedValue,

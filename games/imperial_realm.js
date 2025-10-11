@@ -53,6 +53,8 @@
     topPanel.style.background = 'rgba(15, 23, 42, 0.82)';
     topPanel.style.borderRadius = '12px';
     topPanel.style.boxShadow = '0 10px 24px rgba(2, 6, 23, 0.45)';
+    topPanel.style.flexWrap = 'wrap';
+    topPanel.style.gap = '12px';
     container.appendChild(topPanel);
 
     const resourcePanel = document.createElement('div');
@@ -62,12 +64,111 @@
     resourcePanel.style.fontWeight = '600';
     topPanel.appendChild(resourcePanel);
 
+    const agePanel = document.createElement('div');
+    agePanel.style.display = 'flex';
+    agePanel.style.flexDirection = 'column';
+    agePanel.style.minWidth = '180px';
+    agePanel.style.flex = '1 1 220px';
+    agePanel.style.background = 'linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(59, 130, 246, 0.05))';
+    agePanel.style.padding = '6px 12px 10px';
+    agePanel.style.borderRadius = '10px';
+    agePanel.style.boxShadow = 'inset 0 0 0 1px rgba(56, 189, 248, 0.18)';
+    agePanel.style.transition = 'box-shadow 0.3s ease';
+
+    const ageLabel = document.createElement('div');
+    ageLabel.style.fontWeight = '700';
+    ageLabel.style.fontSize = '13px';
+    ageLabel.style.letterSpacing = '0.02em';
+    ageLabel.style.color = '#bae6fd';
+    agePanel.appendChild(ageLabel);
+
+    const ageSummary = document.createElement('div');
+    ageSummary.style.fontSize = '12px';
+    ageSummary.style.marginTop = '2px';
+    ageSummary.style.color = '#cbd5f5';
+    ageSummary.style.opacity = '0.88';
+    agePanel.appendChild(ageSummary);
+
+    const ageProgress = document.createElement('div');
+    ageProgress.style.marginTop = '6px';
+    ageProgress.style.height = '6px';
+    ageProgress.style.background = 'rgba(15, 23, 42, 0.7)';
+    ageProgress.style.borderRadius = '999px';
+    ageProgress.style.overflow = 'hidden';
+    ageProgress.style.position = 'relative';
+    agePanel.appendChild(ageProgress);
+
+    const ageProgressFill = document.createElement('div');
+    ageProgressFill.style.height = '100%';
+    ageProgressFill.style.width = '100%';
+    ageProgressFill.style.background = 'linear-gradient(135deg, #38bdf8, #0ea5e9)';
+    ageProgressFill.style.transition = 'width 0.25s ease';
+    ageProgressFill.style.borderRadius = 'inherit';
+    ageProgress.appendChild(ageProgressFill);
+
+    const ageStatus = document.createElement('div');
+    ageStatus.style.fontSize = '11px';
+    ageStatus.style.marginTop = '6px';
+    ageStatus.style.color = '#a5b4fc';
+    ageStatus.style.fontFeatureSettings = '"tnum" 1';
+    agePanel.appendChild(ageStatus);
+
     const timerPanel = document.createElement('div');
     timerPanel.style.display = 'flex';
     timerPanel.style.flexDirection = 'column';
     timerPanel.style.alignItems = 'flex-end';
     timerPanel.style.fontSize = '13px';
     timerPanel.style.lineHeight = '1.4';
+
+    const momentumPanel = document.createElement('div');
+    momentumPanel.style.display = 'flex';
+    momentumPanel.style.flexDirection = 'column';
+    momentumPanel.style.alignItems = 'flex-end';
+    momentumPanel.style.background = 'linear-gradient(135deg, rgba(250, 204, 21, 0.14), rgba(234, 179, 8, 0.06))';
+    momentumPanel.style.padding = '6px 12px 10px';
+    momentumPanel.style.borderRadius = '10px';
+    momentumPanel.style.minWidth = '160px';
+    momentumPanel.style.boxShadow = 'inset 0 0 0 1px rgba(250, 204, 21, 0.18)';
+
+    const momentumHeading = document.createElement('div');
+    momentumHeading.style.fontWeight = '700';
+    momentumHeading.style.fontSize = '13px';
+    momentumHeading.style.color = '#facc15';
+    momentumPanel.appendChild(momentumHeading);
+
+    const momentumValue = document.createElement('div');
+    momentumValue.style.fontSize = '20px';
+    momentumValue.style.fontWeight = '700';
+    momentumValue.style.marginTop = '2px';
+    momentumValue.style.color = '#fef3c7';
+    momentumPanel.appendChild(momentumValue);
+
+    const momentumDetail = document.createElement('div');
+    momentumDetail.style.fontSize = '11px';
+    momentumDetail.style.opacity = '0.85';
+    momentumDetail.style.marginTop = '2px';
+    momentumDetail.style.color = '#fde68a';
+    momentumPanel.appendChild(momentumDetail);
+
+    const momentumBar = document.createElement('div');
+    momentumBar.style.marginTop = '6px';
+    momentumBar.style.height = '6px';
+    momentumBar.style.width = '100%';
+    momentumBar.style.background = 'rgba(15, 23, 42, 0.7)';
+    momentumBar.style.borderRadius = '999px';
+    momentumBar.style.overflow = 'hidden';
+    momentumPanel.appendChild(momentumBar);
+
+    const momentumBarFill = document.createElement('div');
+    momentumBarFill.style.height = '100%';
+    momentumBarFill.style.width = '30%';
+    momentumBarFill.style.background = 'linear-gradient(135deg, #facc15, #f97316)';
+    momentumBarFill.style.transition = 'width 0.25s ease';
+    momentumBarFill.style.borderRadius = 'inherit';
+    momentumBar.appendChild(momentumBarFill);
+
+    topPanel.appendChild(agePanel);
+    topPanel.appendChild(momentumPanel);
     topPanel.appendChild(timerPanel);
 
     const mainCanvas = document.createElement('canvas');
@@ -293,10 +394,17 @@
     selectionBody.style.lineHeight = '1.5';
     selectionPanel.appendChild(selectionBody);
 
-    function createActionButton(label, description, handler){
+    function createActionButton(label, description, handler, options = {}){
+      const { disabled = false, onDisabledClick = null, variant = 'azure', badge = null } = options || {};
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.style.background = 'linear-gradient(135deg, #1d4ed8, #38bdf8)';
+      btn.style.position = 'relative';
+      const gradient = variant === 'gold'
+        ? 'linear-gradient(135deg, #f59e0b, #facc15)'
+        : variant === 'emerald'
+          ? 'linear-gradient(135deg, #10b981, #34d399)'
+          : 'linear-gradient(135deg, #1d4ed8, #38bdf8)';
+      btn.style.background = gradient;
       btn.style.color = '#f8fafc';
       btn.style.border = 'none';
       btn.style.borderRadius = '10px';
@@ -304,16 +412,55 @@
       btn.style.fontWeight = '600';
       btn.style.fontSize = '12px';
       btn.style.cursor = 'pointer';
-      btn.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.35)';
+      btn.style.boxShadow = variant === 'gold'
+        ? '0 10px 24px rgba(250, 204, 21, 0.35)'
+        : variant === 'emerald'
+          ? '0 8px 20px rgba(16, 185, 129, 0.35)'
+          : '0 8px 20px rgba(59, 130, 246, 0.35)';
       btn.style.textAlign = 'left';
       btn.innerHTML = `<div>${label}</div><div style="font-size:11px;font-weight:500;opacity:0.82;margin-top:4px;">${description}</div>`;
-      btn.addEventListener('click', handler);
-      btn.addEventListener('mouseenter', () => {
-        btn.style.boxShadow = '0 12px 26px rgba(56, 189, 248, 0.45)';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.35)';
-      });
+      if (badge) {
+        const badgeEl = document.createElement('span');
+        badgeEl.textContent = badge;
+        badgeEl.style.position = 'absolute';
+        badgeEl.style.top = '8px';
+        badgeEl.style.right = '10px';
+        badgeEl.style.fontSize = '10px';
+        badgeEl.style.padding = '2px 6px';
+        badgeEl.style.borderRadius = '999px';
+        badgeEl.style.background = 'rgba(15, 23, 42, 0.35)';
+        badgeEl.style.color = '#f8fafc';
+        badgeEl.style.fontWeight = '700';
+        badgeEl.style.letterSpacing = '0.05em';
+        btn.appendChild(badgeEl);
+      }
+      if (disabled) {
+        btn.style.opacity = '0.55';
+        btn.style.cursor = onDisabledClick ? 'help' : 'not-allowed';
+        btn.style.filter = 'saturate(0.5)';
+        if (onDisabledClick) {
+          btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            onDisabledClick();
+          });
+        }
+      } else {
+        btn.addEventListener('click', handler);
+        btn.addEventListener('mouseenter', () => {
+          btn.style.boxShadow = variant === 'gold'
+            ? '0 14px 30px rgba(250, 204, 21, 0.42)'
+            : variant === 'emerald'
+              ? '0 12px 28px rgba(16, 185, 129, 0.45)'
+              : '0 12px 26px rgba(56, 189, 248, 0.45)';
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.boxShadow = variant === 'gold'
+            ? '0 10px 24px rgba(250, 204, 21, 0.35)'
+            : variant === 'emerald'
+              ? '0 8px 20px rgba(16, 185, 129, 0.35)'
+              : '0 8px 20px rgba(59, 130, 246, 0.35)';
+        });
+      }
       return btn;
     }
 
@@ -333,10 +480,64 @@
       return `${prefix}${idCounter++}`;
     }
 
+    const AGE_STAGES = [
+      {
+        id: 'frontier',
+        label: '開拓期',
+        labelKey: 'age.frontier',
+        summary: '村落の礎を築き、生存を優先する段階。',
+        summaryKey: 'age.frontier.summary',
+        cost: null,
+        time: 0,
+        attackBonus: 0,
+        accent: '#38bdf8',
+        glow: 'rgba(56, 189, 248, 0.16)'
+      },
+      {
+        id: 'feudal',
+        label: '封建期',
+        labelKey: 'age.feudal',
+        summary: '歩兵の再編と防衛線の強化が可能になる。',
+        summaryKey: 'age.feudal.summary',
+        cost: { food: 500, gold: 200 },
+        time: 45,
+        attackBonus: 0.05,
+        accent: '#f97316',
+        glow: 'rgba(249, 115, 22, 0.14)'
+      },
+      {
+        id: 'castle',
+        label: '城塞期',
+        labelKey: 'age.castle',
+        summary: '重装兵と騎兵の整備で攻勢に転じられる。',
+        summaryKey: 'age.castle.summary',
+        cost: { food: 800, gold: 450 },
+        time: 60,
+        attackBonus: 0.1,
+        accent: '#22c55e',
+        glow: 'rgba(34, 197, 94, 0.14)'
+      },
+      {
+        id: 'imperial',
+        label: '帝国期',
+        labelKey: 'age.imperial',
+        summary: '最先端の軍制で決定的な優位を築く。',
+        summaryKey: 'age.imperial.summary',
+        cost: { food: 1200, gold: 750, stone: 300 },
+        time: 75,
+        attackBonus: 0.18,
+        accent: '#facc15',
+        glow: 'rgba(250, 204, 21, 0.16)'
+      }
+    ];
+
+    const MAX_MOMENTUM = 160;
+
     const state = {
       resources: { ...difficultyCfg.startingResources },
       pop: { used: 3, cap: 10 },
-      age: 1,
+      ageStage: 0,
+      ageResearch: null,
       time: 0,
       wave: 0,
       nextWaveTime: difficultyCfg.waveInterval,
@@ -347,7 +548,8 @@
       placementMode: null,
       gameOver: null,
       enemyCommanderSpawned: false,
-      gatherXpBucket: 0
+      gatherXpBucket: 0,
+      empireMomentum: 24
     };
 
     const units = [];
@@ -382,6 +584,16 @@
         attackRange: 24,
         attackCooldown: 1.1
       },
+      spearman: {
+        name: '槍兵',
+        nameKey: 'units.spearman',
+        radius: 14,
+        maxHp: 70,
+        speed: 54,
+        attackDamage: 11,
+        attackRange: 30,
+        attackCooldown: 1.15
+      },
       archer: {
         name: '弓兵',
         nameKey: 'units.archer',
@@ -393,6 +605,17 @@
         attackCooldown: 1.35,
         projectileSpeed: 220
       },
+      crossbowman: {
+        name: 'クロスボウ兵',
+        nameKey: 'units.crossbowman',
+        radius: 13,
+        maxHp: 55,
+        speed: 52,
+        attackDamage: 11,
+        attackRange: 140,
+        attackCooldown: 1.4,
+        projectileSpeed: 280
+      },
       raider: {
         name: '略奪兵',
         nameKey: 'units.raider',
@@ -402,6 +625,16 @@
         attackDamage: 8,
         attackRange: 24,
         attackCooldown: 1.2
+      },
+      knight: {
+        name: '騎士',
+        nameKey: 'units.knight',
+        radius: 18,
+        maxHp: 130,
+        speed: 78,
+        attackDamage: 18,
+        attackRange: 34,
+        attackCooldown: 1.25
       },
       horseArcher: {
         name: '騎馬弓兵',
@@ -444,6 +677,7 @@
         maxHp: 1600,
         buildTime: 0,
         popCap: 10,
+        requiredAge: 0,
         trainable: [{ type: 'villager', label: '村人', labelKey: 'units.villager', cost: { food: 50 }, time: 22 }]
       },
       house: {
@@ -452,7 +686,8 @@
         radius: 20,
         maxHp: 600,
         buildTime: 22,
-        popCap: 5
+        popCap: 5,
+        requiredAge: 0
       },
       barracks: {
         name: '兵舎',
@@ -460,7 +695,11 @@
         radius: 32,
         maxHp: 1200,
         buildTime: 35,
-        trainable: [{ type: 'militia', label: '民兵', labelKey: 'units.militia', cost: { food: 60, gold: 20 }, time: 25 }]
+        requiredAge: 0,
+        trainable: [
+          { type: 'militia', label: '民兵', labelKey: 'units.militia', cost: { food: 60, gold: 20 }, time: 25, requiredAge: 0 },
+          { type: 'spearman', label: '槍兵', labelKey: 'units.spearman', cost: { food: 60, wood: 25 }, time: 26, requiredAge: 1 }
+        ]
       },
       archery: {
         name: '弓兵小屋',
@@ -468,7 +707,11 @@
         radius: 32,
         maxHp: 1100,
         buildTime: 38,
-        trainable: [{ type: 'archer', label: '弓兵', labelKey: 'units.archer', cost: { wood: 50, gold: 40 }, time: 26 }]
+        requiredAge: 1,
+        trainable: [
+          { type: 'archer', label: '弓兵', labelKey: 'units.archer', cost: { wood: 50, gold: 40 }, time: 26, requiredAge: 1 },
+          { type: 'crossbowman', label: 'クロスボウ兵', labelKey: 'units.crossbowman', cost: { wood: 75, gold: 60 }, time: 30, requiredAge: 2 }
+        ]
       },
       tower: {
         name: '見張り塔',
@@ -476,9 +719,40 @@
         radius: 24,
         maxHp: 900,
         buildTime: 36,
+        requiredAge: 1,
         attackDamage: 12,
         attackRange: 200,
         attackCooldown: 2.4
+      },
+      blacksmith: {
+        name: '鍛冶場',
+        nameKey: 'structures.blacksmith',
+        radius: 28,
+        maxHp: 950,
+        buildTime: 32,
+        requiredAge: 1
+      },
+      stable: {
+        name: '厩舎',
+        nameKey: 'structures.stable',
+        radius: 34,
+        maxHp: 1200,
+        buildTime: 40,
+        requiredAge: 2,
+        trainable: [
+          { type: 'knight', label: '騎士', labelKey: 'units.knight', cost: { food: 120, gold: 70 }, time: 32, requiredAge: 2 }
+        ]
+      },
+      siegeWorkshop: {
+        name: '攻城工房',
+        nameKey: 'structures.siegeWorkshop',
+        radius: 36,
+        maxHp: 1250,
+        buildTime: 44,
+        requiredAge: 2,
+        trainable: [
+          { type: 'ram', label: '破城槌', labelKey: 'units.ram', cost: { wood: 160, gold: 40 }, time: 40, requiredAge: 2 }
+        ]
       }
     };
 
@@ -498,6 +772,20 @@
       const cfg = structureConfigs[type] || {};
       const fallback = cfg.name || type;
       const key = cfg.nameKey || `structures.${type}`;
+      return text(key, fallback);
+    }
+
+    function getAgeName(index){
+      const ageCfg = AGE_STAGES[Math.max(0, Math.min(AGE_STAGES.length - 1, index))];
+      const fallback = ageCfg?.label || `Age ${index + 1}`;
+      const key = ageCfg?.labelKey || `age.stage${index}`;
+      return text(key, fallback);
+    }
+
+    function getAgeSummary(index){
+      const ageCfg = AGE_STAGES[Math.max(0, Math.min(AGE_STAGES.length - 1, index))];
+      const fallback = ageCfg?.summary || '';
+      const key = ageCfg?.summaryKey || `age.stage${index}.summary`;
       return text(key, fallback);
     }
 
@@ -665,6 +953,91 @@
       });
     }
 
+    function gainMomentum(amount){
+      if (!amount) return;
+      state.empireMomentum = Math.max(0, Math.min(MAX_MOMENTUM, state.empireMomentum + amount));
+      updateMomentumDisplay();
+    }
+
+    function updateAgeDisplay(){
+      const currentAgeName = getAgeName(state.ageStage);
+      const ageCfg = AGE_STAGES[state.ageStage];
+      if (ageLabel) {
+        ageLabel.textContent = text('hud.ageHeading', () => `帝国段階: ${currentAgeName}`, { age: currentAgeName });
+      }
+      if (ageSummary) {
+        ageSummary.textContent = getAgeSummary(state.ageStage);
+      }
+      if (agePanel && ageCfg) {
+        agePanel.style.boxShadow = `0 8px 18px ${ageCfg.glow}, inset 0 0 0 1px ${ageCfg.glow}`;
+        agePanel.style.background = `linear-gradient(135deg, ${ageCfg.glow}, rgba(15, 23, 42, 0.65))`;
+      }
+      if (ageProgressFill && ageCfg) {
+        ageProgressFill.style.background = `linear-gradient(135deg, ${ageCfg.accent}, rgba(2,6,23,0.35))`;
+      }
+      if (state.ageResearch) {
+        const remaining = Math.max(0, state.ageResearch.remaining);
+        const progress = state.ageResearch.total > 0 ? 1 - remaining / state.ageResearch.total : 0;
+        if (ageProgressFill) {
+          ageProgressFill.style.width = `${Math.min(1, Math.max(0, progress)) * 100}%`;
+        }
+        const seconds = Math.ceil(remaining);
+        if (ageStatus) {
+          ageStatus.textContent = text('hud.ageProgress', () => `進化中… 残り${seconds}秒`, { remaining: seconds });
+        }
+      } else {
+        if (ageProgressFill) {
+          ageProgressFill.style.width = '100%';
+        }
+        const nextAgeIndex = state.ageStage + 1;
+        if (nextAgeIndex < AGE_STAGES.length) {
+          const nextAgeName = getAgeName(nextAgeIndex);
+          const nextAge = AGE_STAGES[nextAgeIndex];
+          const requirement = nextAge.cost ? formatCost(nextAge.cost) : text('hud.ageReady', '進化可能');
+          if (ageStatus) {
+            ageStatus.textContent = text('hud.ageNext', () => `次: ${nextAgeName} / ${requirement}`, {
+              nextAge: nextAgeName,
+              requirement
+            });
+          }
+        } else if (ageStatus) {
+          ageStatus.textContent = text('hud.ageMax', '帝国期を維持しています。');
+        }
+      }
+    }
+
+    function getMomentumBonusPercent(){
+      return (getPlayerAttackMultiplier() - 1) * 100;
+    }
+
+    function updateMomentumDisplay(){
+      if (momentumHeading) {
+        momentumHeading.textContent = text('hud.momentumTitle', '帝国士気');
+      }
+      if (momentumValue) {
+        const value = Math.round(state.empireMomentum);
+        momentumValue.textContent = formatNumberLocalized(value, { maximumFractionDigits: 0 });
+      }
+      if (momentumDetail) {
+        const bonus = Math.max(0, getMomentumBonusPercent());
+        momentumDetail.textContent = text('hud.momentumDetail', () => `攻撃補正 +${bonus.toFixed(1)}%`, {
+          bonus: Number(bonus.toFixed(1))
+        });
+      }
+      if (momentumBarFill) {
+        const percent = Math.max(0, Math.min(1, state.empireMomentum / MAX_MOMENTUM));
+        const width = Math.max(0.06, percent) * 100;
+        momentumBarFill.style.width = `${width}%`;
+        if (percent > 0.75) {
+          momentumBarFill.style.background = 'linear-gradient(135deg, #facc15, #22c55e)';
+        } else if (percent > 0.4) {
+          momentumBarFill.style.background = 'linear-gradient(135deg, #f97316, #facc15)';
+        } else {
+          momentumBarFill.style.background = 'linear-gradient(135deg, #facc15, #f97316)';
+        }
+      }
+    }
+
     function awardBufferedXp(value){
       const xp = Math.round(value * difficultyCfg.bonusXp);
       if (xp > 0) {
@@ -718,11 +1091,21 @@
       const villagerCount = units.filter((u) => u.owner === PLAYER && u.type === 'villager').length;
       const armyCount = units.filter((u) => u.owner === PLAYER && u.type !== 'villager').length;
       const structureCount = structures.filter((s) => s.owner === PLAYER && s.completed).length;
-      intelBody.textContent = text('intel.summary', () => `村人: ${villagerCount}\n軍事: ${armyCount}\n建物: ${structureCount}`, {
-        villagers: villagerCount,
-        army: armyCount,
-        structures: structureCount
-      });
+      const ageName = getAgeName(state.ageStage);
+      const momentumScore = Math.round(state.empireMomentum);
+      const attackBonus = getMomentumBonusPercent();
+      intelBody.textContent = text(
+        'intel.summary',
+        () => `村人: ${villagerCount}\n軍事: ${armyCount}\n建物: ${structureCount}\n時代: ${ageName}\n士気: ${momentumScore}（攻撃+${attackBonus.toFixed(1)}%）`,
+        {
+          villagers: villagerCount,
+          army: armyCount,
+          structures: structureCount,
+          age: ageName,
+          momentum: momentumScore,
+          attackBonus: Number(attackBonus.toFixed(1))
+        }
+      );
     }
 
     function clearSelection(){
@@ -780,47 +1163,96 @@
           {
             type: 'house',
             cost: { wood: 50 },
+            requiredAge: 0,
             label: text('actions.build.house.label', '建設: 家'),
             description: text('actions.build.house.description', '+5人口、建設時間短')
           },
           {
             type: 'barracks',
             cost: { wood: 175 },
+            requiredAge: 0,
             label: text('actions.build.barracks.label', '建設: 兵舎'),
             description: text('actions.build.barracks.description', '民兵の訓練')
           },
           {
             type: 'archery',
             cost: { wood: 200, gold: 50 },
+            requiredAge: 1,
             label: text('actions.build.archery.label', '建設: 弓兵小屋'),
-            description: text('actions.build.archery.description', '弓兵の訓練')
+            description: text('actions.build.archery.description', '射撃兵を解禁')
           },
           {
             type: 'tower',
             cost: { wood: 125, stone: 125 },
+            requiredAge: 1,
             label: text('actions.build.tower.label', '建設: 見張り塔'),
             description: text('actions.build.tower.description', '自動射撃タワー')
+          },
+          {
+            type: 'blacksmith',
+            cost: { wood: 150, gold: 50 },
+            requiredAge: 1,
+            label: text('actions.build.blacksmith.label', '建設: 鍛冶場'),
+            description: text('actions.build.blacksmith.description', '武具を鍛え士気を高める')
+          },
+          {
+            type: 'stable',
+            cost: { wood: 225, food: 125, gold: 50 },
+            requiredAge: 2,
+            label: text('actions.build.stable.label', '建設: 厩舎'),
+            description: text('actions.build.stable.description', '騎士の訓練施設')
+          },
+          {
+            type: 'siegeWorkshop',
+            cost: { wood: 260, gold: 120 },
+            requiredAge: 2,
+            label: text('actions.build.siegeWorkshop.label', '建設: 攻城工房'),
+            description: text('actions.build.siegeWorkshop.description', '攻城兵器を製造')
           }
         ];
         buildActions.forEach((action) => {
           const costText = formatCost(action.cost);
-          const description = `${action.description}\n${costText}`;
-          actionButtonPanel.appendChild(createActionButton(action.label, description, () => {
-            if (!hasResources(action.cost)) {
-              addLog(text('logs.insufficientResources', '資源が不足しています。'));
-              return;
+          const requiredAgeName = getAgeName(action.requiredAge || 0);
+          const requirementText = state.ageStage >= (action.requiredAge || 0)
+            ? ''
+            : text('actions.requireAge', () => `必要時代: ${requiredAgeName}`, { age: requiredAgeName });
+          const description = [action.description, costText, requirementText].filter(Boolean).join('\n');
+          const disabled = state.ageStage < (action.requiredAge || 0);
+          actionButtonPanel.appendChild(createActionButton(
+            action.label,
+            description,
+            () => {
+              if (disabled) {
+                const nextAgeLabel = requiredAgeName;
+                addLog(text('logs.requireAge', () => `${nextAgeLabel} に到達すると建設可能です。`, { age: nextAgeLabel }));
+                return;
+              }
+              if (!hasResources(action.cost)) {
+                addLog(text('logs.insufficientResources', '資源が不足しています。'));
+                return;
+              }
+              state.placementMode = {
+                type: action.type,
+                cost: action.cost,
+                villagerIds: [villager.id],
+                radius: structureConfigs[action.type].radius
+              };
+              placementOverlay.style.display = 'block';
+              const label = action.label;
+              addLog(text('logs.placementPrompt', () => `${label} の建設位置を指定してください。`, {
+                label
+              }));
+            },
+            {
+              disabled,
+              onDisabledClick: disabled
+                ? () => {
+                    const nextAgeLabel = requiredAgeName;
+                    addLog(text('logs.requireAge', () => `${nextAgeLabel} に到達すると建設可能です。`, { age: nextAgeLabel }));
+                  }
+                : null
             }
-            state.placementMode = {
-              type: action.type,
-              cost: action.cost,
-              villagerIds: [villager.id],
-              radius: structureConfigs[action.type].radius
-            };
-            placementOverlay.style.display = 'block';
-            addLog(text('logs.placementPrompt', () => `${action.label} の建設位置を指定してください。`, {
-              label: action.label
-            }));
-          }));
+          ));
         });
       }
 
@@ -831,31 +1263,108 @@
             const unitName = getUnitName(trainCfg.type) || trainCfg.label || trainCfg.type;
             const buttonLabel = text('actions.train.button', () => `訓練: ${unitName}`, { unit: unitName });
             const costText = formatCost(trainCfg.cost);
+            const ageRequirement = trainCfg.requiredAge || 0;
+            const meetsAge = state.ageStage >= ageRequirement;
+            const requirementDetail = meetsAge
+              ? ''
+              : text('actions.requireAge', () => `必要時代: ${getAgeName(ageRequirement)}`, { age: getAgeName(ageRequirement) });
             const detailText = text('actions.train.details', () => `${costText} / ${Math.round(trainCfg.time)}秒`, {
               cost: costText,
               time: trainCfg.time
             });
-            actionButtonPanel.appendChild(createActionButton(buttonLabel, detailText, () => {
-              if (!hasResources(trainCfg.cost)) {
-                addLog(text('logs.insufficientResources', '資源が不足しています。'));
-                return;
+            const descriptionLines = [detailText];
+            if (requirementDetail) descriptionLines.push(requirementDetail);
+            actionButtonPanel.appendChild(createActionButton(
+              buttonLabel,
+              descriptionLines.join('\n'),
+              () => {
+                if (!meetsAge) {
+                  const ageName = getAgeName(ageRequirement);
+                  addLog(text('logs.requireAge', () => `${ageName} に到達すると訓練可能です。`, { age: ageName }));
+                  return;
+                }
+                if (!hasResources(trainCfg.cost)) {
+                  addLog(text('logs.insufficientResources', '資源が不足しています。'));
+                  return;
+                }
+                if (state.pop.used >= state.pop.cap) {
+                  addLog(text('logs.populationCap', '人口上限です。家を建てましょう。'));
+                  return;
+                }
+                spendResources(trainCfg.cost);
+                structure.queue.push({ ...trainCfg });
+                if (structure.queue.length === 1) {
+                  structure.queueProgress = 0;
+                }
+                addLog(text('logs.trainingStarted', () => `${unitName} の訓練を開始しました。`, {
+                  unit: unitName
+                }));
+                awardBufferedXp(TRAINING_COST_XP);
+                updateResourcesDisplay();
+              },
+              {
+                disabled: !meetsAge,
+                onDisabledClick: !meetsAge
+                  ? () => {
+                      const ageName = getAgeName(ageRequirement);
+                      addLog(text('logs.requireAge', () => `${ageName} に到達すると訓練可能です。`, { age: ageName }));
+                    }
+                  : null
               }
-              if (state.pop.used >= state.pop.cap) {
-                addLog(text('logs.populationCap', '人口上限です。家を建てましょう。'));
-                return;
-              }
-              spendResources(trainCfg.cost);
-              structure.queue.push({ ...trainCfg });
-              if (structure.queue.length === 1) {
-                structure.queueProgress = 0;
-              }
-              addLog(text('logs.trainingStarted', () => `${unitName} の訓練を開始しました。`, {
-                unit: unitName
-              }));
-              awardBufferedXp(TRAINING_COST_XP);
-              updateResourcesDisplay();
-            }));
+            ));
           });
+        }
+
+        if (structure.owner === PLAYER && structure.type === 'townCenter') {
+          const nextAgeIndex = state.ageStage + 1;
+          if (nextAgeIndex < AGE_STAGES.length) {
+            const nextAge = AGE_STAGES[nextAgeIndex];
+            const nextAgeName = getAgeName(nextAgeIndex);
+            const costText = nextAge.cost ? formatCost(nextAge.cost) : '';
+            const timeText = text('actions.ageUp.time', () => `進化時間: ${Math.round(nextAge.time)}秒`, {
+              time: Math.round(nextAge.time)
+            });
+            const summaryLine = nextAge.summary ? text(nextAge.summaryKey || 'actions.ageUp.summary', nextAge.summary) : '';
+            const detailLines = [summaryLine, costText, timeText].filter(Boolean).join('\n');
+            const isResearching = Boolean(state.ageResearch);
+            actionButtonPanel.appendChild(createActionButton(
+              text('actions.ageUp.label', () => `時代進化: ${nextAgeName}`, { age: nextAgeName }),
+              detailLines,
+              () => {
+                if (state.ageResearch) {
+                  addLog(text('logs.ageResearchInProgress', '既に時代進化を研究中です。'));
+                  return;
+                }
+                if (nextAge.cost && !hasResources(nextAge.cost)) {
+                  addLog(text('logs.insufficientResources', '資源が不足しています。'));
+                  return;
+                }
+                if (nextAge.cost) {
+                  spendResources(nextAge.cost);
+                  updateResourcesDisplay();
+                }
+                state.ageResearch = {
+                  targetIndex: nextAgeIndex,
+                  remaining: nextAge.time,
+                  total: nextAge.time,
+                  structureId: structure.id
+                };
+                addLog(text('logs.ageResearchStarted', () => `${nextAgeName} への進化を開始しました。`, {
+                  age: nextAgeName
+                }));
+                gainMomentum(4);
+                updateAgeDisplay();
+              },
+              {
+                variant: 'gold',
+                badge: text('actions.badge.ageUp', '時代'),
+                disabled: isResearching,
+                onDisabledClick: isResearching
+                  ? () => addLog(text('logs.ageResearchInProgress', '既に時代進化を研究中です。'))
+                  : null
+              }
+            ));
+          }
         }
       });
     }
@@ -1074,6 +1583,8 @@
       updateResourcesDisplay();
       updateWaveInfo();
       updateIntel();
+      updateAgeDisplay();
+      updateMomentumDisplay();
       describeSelection();
       rebuildActionButtons();
     }
@@ -1089,6 +1600,20 @@
       return { x: dx / len, y: dy / len };
     }
 
+    function countCompletedStructures(type){
+      return structures.filter((structure) => structure.owner === PLAYER && structure.type === type && structure.completed).length;
+    }
+
+    function getPlayerAttackMultiplier(){
+      let bonus = 0;
+      for (let i = 0; i <= state.ageStage; i++) {
+        bonus += AGE_STAGES[i]?.attackBonus || 0;
+      }
+      bonus += countCompletedStructures('blacksmith') * 0.04;
+      bonus += Math.min(state.empireMomentum, MAX_MOMENTUM) / 200;
+      return Math.max(1, 1 + bonus);
+    }
+
     function updateTraining(structure, dt){
       if (!structure.queue.length) return;
       structure.queueProgress += dt;
@@ -1100,9 +1625,42 @@
           addLog(text('logs.unitComplete', () => `${unitName} が完成しました。`, {
             unit: unitName
           }));
+          gainMomentum(3);
         }
         structure.queue.shift();
         structure.queueProgress = 0;
+      }
+    }
+
+    function updateAgeResearch(dt){
+      if (!state.ageResearch) return;
+      const tcExists = structures.some((structure) => structure.id === state.ageResearch.structureId && structure.owner === PLAYER);
+      if (!tcExists) {
+        state.ageResearch = null;
+        addLog(text('logs.ageResearchCancelled', 'タウンセンター喪失により時代進化が中断されました。'));
+        updateAgeDisplay();
+        return;
+      }
+      state.ageResearch.remaining = Math.max(0, state.ageResearch.remaining - dt);
+      updateAgeDisplay();
+      if (state.ageResearch.remaining <= 0) {
+        state.ageStage = Math.max(state.ageStage, Math.min(state.ageResearch.targetIndex, AGE_STAGES.length - 1));
+        state.ageResearch = null;
+        const ageName = getAgeName(state.ageStage);
+        addLog(text('logs.ageAdvanced', () => `${ageName} に進化しました！`, { age: ageName }));
+        gainMomentum(14);
+        updateSelectionPanels();
+        updateIntel();
+        updateAgeDisplay();
+      }
+    }
+
+    function tickMomentum(dt){
+      const before = state.empireMomentum;
+      const decayRate = state.empireMomentum > 90 ? 0.42 : state.empireMomentum > 60 ? 0.26 : 0.14;
+      state.empireMomentum = Math.max(0, state.empireMomentum - decayRate * dt);
+      if (Math.abs(before - state.empireMomentum) > 0.05) {
+        updateMomentumDisplay();
       }
     }
 
@@ -1124,6 +1682,7 @@
             addLog(text('logs.structureComplete', () => `${structureName} が完成しました。`, {
               structure: structureName
             }));
+            gainMomentum(structure.type === 'blacksmith' ? 8 : 6);
             updateResourcesDisplay();
             updateIntel();
           }
@@ -1141,10 +1700,12 @@
         if (structure.type === 'townCenter') {
           triggerGameOver(false, text('gameOver.message.ownTownCenterDestroyed', 'タウンセンターが破壊された。'));
         }
+        gainMomentum(-12);
       } else {
         if (structure.type === 'townCenter') {
           triggerGameOver(true, text('gameOver.message.enemyTownCenterDestroyed', '敵のタウンセンターを破壊した。'));
         }
+        gainMomentum(10);
       }
     }
 
@@ -1159,8 +1720,10 @@
             triggerGameOver(false, text('gameOver.message.allVillagersLost', '村人が全滅した。'));
           }
         }
+        gainMomentum(-6);
       } else {
         awardBufferedXp(unit.xpValue);
+        gainMomentum(1.5);
       }
     }
 
@@ -1250,12 +1813,13 @@
     }
 
     function createProjectile(source, target, damage, speed){
+      const scaledDamage = source.owner === PLAYER ? damage * getPlayerAttackMultiplier() : damage;
       projectiles.push({
         id: nextId('p'),
         x: source.x,
         y: source.y,
         targetId: target.id,
-        damage,
+        damage: scaledDamage,
         speed,
         owner: source.owner
       });
@@ -1266,12 +1830,15 @@
         createProjectile(attacker, target, attacker.attackDamage, attacker.projectileSpeed);
         return;
       }
-      applyDamage(target, attacker.attackDamage, attacker);
+      const base = attacker.attackDamage;
+      const scaled = attacker.owner === PLAYER ? base * getPlayerAttackMultiplier() : base;
+      applyDamage(target, scaled, attacker);
     }
 
     function applyDamage(target, amount, source){
       if (!target) return;
-      target.hp -= amount;
+      const finalAmount = Math.max(1, Math.round(amount));
+      target.hp -= finalAmount;
       if (target.hp <= 0) {
         if ('queue' in target) {
           removeStructure(target);
@@ -1408,12 +1975,14 @@
           for (let i = 0; i < 3; i++) createUnit('horseArcher', spawnX + Math.random() * 40, spawnY + (Math.random()-0.5)*80, ENEMY);
           createUnit('ram', spawnX - 20, spawnY + 40);
           createUnit('ram', spawnX - 20, spawnY - 40);
+          for (let i = 0; i < 2; i++) createUnit('knight', spawnX + Math.random() * 30, spawnY + (Math.random()-0.5)*70, ENEMY);
         },
         () => {
           for (let i = 0; i < 12; i++) createUnit('raider', spawnX + Math.random() * 50, spawnY + (Math.random()-0.5)*120, ENEMY);
           for (let i = 0; i < 5; i++) createUnit('horseArcher', spawnX + Math.random() * 40, spawnY + (Math.random()-0.5)*120, ENEMY);
           createUnit('ram', spawnX - 20, spawnY + 40);
           createUnit('ram', spawnX - 20, spawnY - 40);
+          for (let i = 0; i < 3; i++) createUnit('knight', spawnX + Math.random() * 40, spawnY + (Math.random()-0.5)*120, ENEMY);
         }
       ];
       const spawnFn = spawnConfigs[Math.min(spawnConfigs.length - 1, state.wave - 1)];
@@ -1435,6 +2004,7 @@
           addLog(text('logs.waveCleared', () => `ウェーブ${state.wave}を撃退！補給物資を受領しました。`, {
             wave: state.wave
           }));
+          gainMomentum(12);
           updateResourcesDisplay();
         }
       }
@@ -1442,11 +2012,22 @@
 
     function draw(){
       ctx.clearRect(0, 0, size.width, size.height);
-      ctx.fillStyle = '#0f172a';
+      const skyGradient = ctx.createLinearGradient(0, 0, size.width, size.height);
+      skyGradient.addColorStop(0, '#020617');
+      skyGradient.addColorStop(0.55, '#0f172a');
+      skyGradient.addColorStop(1, '#020b1a');
+      ctx.fillStyle = skyGradient;
+      ctx.fillRect(0, 0, size.width, size.height);
+
+      const glowColor = AGE_STAGES[state.ageStage]?.glow || 'rgba(56, 189, 248, 0.16)';
+      const radial = ctx.createRadialGradient(size.width * 0.45, size.height * 0.58, 60, size.width * 0.45, size.height * 0.58, size.width * 0.9);
+      radial.addColorStop(0, glowColor);
+      radial.addColorStop(1, 'rgba(8, 15, 30, 0)');
+      ctx.fillStyle = radial;
       ctx.fillRect(0, 0, size.width, size.height);
 
       ctx.save();
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+      ctx.strokeStyle = 'rgba(100, 116, 139, 0.12)';
       for (let x = 0; x <= size.width; x += 40) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
@@ -1461,50 +2042,89 @@
       }
       ctx.restore();
 
+      const resourcePalette = {
+        food: { inner: '#fca5a5', outer: '#f87171' },
+        wood: { inner: '#86efac', outer: '#22c55e' },
+        gold: { inner: '#fde68a', outer: '#facc15' },
+        stone: { inner: '#cbd5f5', outer: '#94a3b8' }
+      };
+
       resourceNodes.forEach((resource) => {
+        const palette = resourcePalette[resource.type] || resourcePalette.stone;
+        ctx.save();
+        const gradient = ctx.createRadialGradient(resource.x, resource.y, 6, resource.x, resource.y, resource.radius);
+        gradient.addColorStop(0, palette.inner);
+        gradient.addColorStop(1, palette.outer);
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = 0.92;
+        ctx.shadowColor = palette.outer;
+        ctx.shadowBlur = 22;
         ctx.beginPath();
-        ctx.fillStyle = resource.type === 'food' ? '#f87171' : resource.type === 'wood' ? '#22c55e' : resource.type === 'gold' ? '#facc15' : '#94a3b8';
-        ctx.globalAlpha = 0.85;
         ctx.arc(resource.x, resource.y, resource.radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = '#0f172a';
+        ctx.restore();
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
         ctx.font = '10px "Segoe UI"';
         ctx.textAlign = 'center';
-        ctx.fillText(Math.max(0, Math.floor(resource.amount)).toString(), resource.x, resource.y + 4);
+        ctx.fillText(formatNumberLocalized(Math.max(0, Math.floor(resource.amount)), { maximumFractionDigits: 0 }), resource.x, resource.y + 4);
+        ctx.restore();
       });
 
       structures.forEach((structure) => {
+        ctx.save();
+        const ownerColor = structure.owner === PLAYER ? '#38bdf8' : '#f97316';
+        ctx.shadowColor = ownerColor;
+        ctx.shadowBlur = structure.completed ? 26 : 14;
+        const baseGradient = ctx.createRadialGradient(structure.x, structure.y, structure.radius * 0.2, structure.x, structure.y, structure.radius);
+        baseGradient.addColorStop(0, structure.owner === PLAYER ? '#bae6fd' : '#ffd0a6');
+        baseGradient.addColorStop(1, ownerColor);
+        ctx.globalAlpha = structure.completed ? 0.95 : 0.7;
         ctx.beginPath();
-        ctx.fillStyle = structure.owner === PLAYER ? '#38bdf8' : '#f97316';
-        ctx.globalAlpha = structure.completed ? 0.9 : 0.6;
+        ctx.fillStyle = baseGradient;
         ctx.arc(structure.x, structure.y, structure.radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 1;
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = 0.95;
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 11px "Segoe UI"';
         ctx.textAlign = 'center';
         const structureLabel = getStructureName(structure.type);
         ctx.fillText(structureLabel, structure.x, structure.y + 4);
-        ctx.fillStyle = '#1e293b';
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
         ctx.fillRect(structure.x - structure.radius, structure.y - structure.radius - 12, structure.radius * 2, 6);
-        ctx.fillStyle = structure.owner === PLAYER ? '#38bdf8' : '#f97316';
+        ctx.fillStyle = ownerColor;
         ctx.fillRect(structure.x - structure.radius, structure.y - structure.radius - 12, structure.radius * 2 * (structure.hp / structure.maxHp), 6);
+        ctx.restore();
       });
 
       units.forEach((unit) => {
+        ctx.save();
+        const ownerColor = unit.owner === PLAYER ? '#bae6fd' : '#fb7185';
+        ctx.shadowColor = ownerColor;
+        ctx.shadowBlur = 18;
+        ctx.globalAlpha = 0.96;
         ctx.beginPath();
-        ctx.fillStyle = unit.owner === PLAYER ? '#a5f3fc' : '#fb7185';
-        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = ownerColor;
         ctx.arc(unit.x, unit.y, unit.radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 1;
+        ctx.restore();
+
+        ctx.save();
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 10px "Segoe UI"';
         ctx.textAlign = 'center';
         const unitLabel = getUnitName(unit.type);
         ctx.fillText(unitLabel, unit.x, unit.y + 4);
-        ctx.fillStyle = '#1e293b';
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
         ctx.fillRect(unit.x - unit.radius, unit.y - unit.radius - 10, unit.radius * 2, 4);
         ctx.fillStyle = unit.owner === PLAYER ? '#38bdf8' : '#fb7185';
         ctx.fillRect(unit.x - unit.radius, unit.y - unit.radius - 10, unit.radius * 2 * (unit.hp / unit.maxHp), 4);
@@ -1512,16 +2132,20 @@
           ctx.strokeStyle = '#38bdf8';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(unit.x, unit.y, unit.radius + 4, 0, Math.PI * 2);
+          ctx.arc(unit.x, unit.y, unit.radius + 5, 0, Math.PI * 2);
           ctx.stroke();
         }
+        ctx.restore();
       });
 
       projectiles.forEach((projectile) => {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = projectile.owner === PLAYER ? 'rgba(254, 249, 195, 0.9)' : 'rgba(253, 164, 175, 0.9)';
         ctx.beginPath();
-        ctx.fillStyle = projectile.owner === PLAYER ? '#fef9c3' : '#fda4af';
         ctx.arc(projectile.x, projectile.y, 3, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
       });
 
       if (dragRect) {
@@ -1536,8 +2160,13 @@
 
     function drawMiniMap(){
       miniCtx.clearRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
-      miniCtx.fillStyle = '#0f172a';
+      const background = miniCtx.createLinearGradient(0, 0, miniMapCanvas.width, miniMapCanvas.height);
+      background.addColorStop(0, '#020617');
+      background.addColorStop(1, '#111c2f');
+      miniCtx.fillStyle = background;
       miniCtx.fillRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
+      miniCtx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+      miniCtx.strokeRect(0.5, 0.5, miniMapCanvas.width - 1, miniMapCanvas.height - 1);
       const scaleX = miniMapCanvas.width / size.width;
       const scaleY = miniMapCanvas.height / size.height;
 
@@ -1558,6 +2187,8 @@
     function update(dt){
       if (state.gameOver) return;
       state.time += dt * 1000;
+      updateAgeResearch(dt);
+      tickMomentum(dt);
       if (!state.waveActive && state.time >= state.nextWaveTime) {
         spawnWave();
       }
@@ -1572,6 +2203,7 @@
       updateWaveInfo();
       updateResourcesDisplay();
       updateIntel();
+      updateMomentumDisplay();
     }
 
     function updateTrainingLoop(dt){

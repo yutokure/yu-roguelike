@@ -226,22 +226,17 @@
     function updateHud(){
       const nextWaveNumber = state.runningWave ? state.wave : state.wave + 1;
       const currentWave = Math.min(nextWaveNumber, config.maxWaves);
+      const hasMax = config.maxWaves > 0;
       const waveParams = {
         current: currentWave,
         currentFormatted: formatInteger(currentWave),
-        max: config.maxWaves > 0 ? config.maxWaves : null,
-        maxFormatted: config.maxWaves > 0 ? formatInteger(config.maxWaves) : null
+        max: hasMax ? config.maxWaves : null,
+        maxFormatted: hasMax ? formatInteger(config.maxWaves) : null
       };
-      waveLabel.textContent = text(
-        'hud.wave',
-        () => {
-          if (config.maxWaves > 0){
-            return `Wave ${waveParams.currentFormatted}/${waveParams.maxFormatted}`;
-          }
-          return `Wave ${waveParams.currentFormatted}`;
-        },
-        waveParams
-      );
+      const waveSuffix = hasMax ? `/${waveParams.maxFormatted}` : '';
+      waveParams.suffix = waveSuffix;
+      const waveFallback = `Wave ${waveParams.currentFormatted}${waveSuffix}`;
+      waveLabel.textContent = text('hud.wave', waveFallback, waveParams);
       const coinsFormatted = formatInteger(state.coins);
       coinsLabel.textContent = text('hud.coins', () => `資金 ${coinsFormatted} G`, { value: state.coins, formatted: coinsFormatted });
       const baseHpFormatted = formatInteger(state.baseHp);

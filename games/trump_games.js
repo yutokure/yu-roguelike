@@ -3542,7 +3542,8 @@
       settled: false,
       wins: 0,
       losses: 0,
-      pushes: 0
+      pushes: 0,
+      messageMeta: null
     };
 
     const root = document.createElement('div');
@@ -3550,21 +3551,27 @@
 
     const dealerLabel = document.createElement('div');
     dealerLabel.className = 'mini-trump-label';
-    dealerLabel.textContent = 'ディーラー';
+    const updateLabels = () => {
+      dealerLabel.textContent = ctx.text('games.trump.blackjack.labels.dealer', 'ディーラー');
+      playerLabel.textContent = ctx.text('games.trump.blackjack.labels.player', 'プレイヤー');
+    };
 
     const dealerHandEl = document.createElement('div');
     dealerHandEl.className = 'mini-trump-hand';
 
     const playerLabel = document.createElement('div');
     playerLabel.className = 'mini-trump-label';
-    playerLabel.textContent = 'プレイヤー';
 
     const playerHandEl = document.createElement('div');
     playerHandEl.className = 'mini-trump-hand';
 
     const message = document.createElement('div');
     message.className = 'mini-trump-meta';
-    message.textContent = 'HIT / STAND を選択してください。';
+    const chooseActionFallback = () => 'HIT / STAND を選択してください。';
+    setMessage(
+      ctx.text('games.trump.blackjack.messages.chooseAction', chooseActionFallback),
+      { key: 'games.trump.blackjack.messages.chooseAction', params: null, fallback: chooseActionFallback }
+    );
 
     root.appendChild(dealerLabel);
     root.appendChild(dealerHandEl);
@@ -3575,11 +3582,13 @@
     container.innerHTML = '';
     container.appendChild(root);
 
+    updateLabels();
+
     ctx.setActions([
-      { label: 'ヒット (H)', variant: 'primary', hotkey: 'H', onClick: () => hit() },
-      { label: 'スタンド (S)', variant: 'secondary', hotkey: 'S', onClick: () => stand() },
-      { label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => newRound(true) },
-      { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      { labelKey: 'games.trump.blackjack.actions.hit', label: 'ヒット (H)', variant: 'primary', hotkey: 'H', onClick: () => hit() },
+      { labelKey: 'games.trump.blackjack.actions.stand', label: 'スタンド (S)', variant: 'secondary', hotkey: 'S', onClick: () => stand() },
+      { labelKey: 'games.trump.blackjack.actions.restart', label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => newRound(true) },
+      { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
     ]);
 
     function ensureShoe(){
@@ -3630,20 +3639,47 @@
 
     function updateStatus(){
       const stats = ctx.stats();
-      ctx.setStatus(`Wins ${state.wins} / Losses ${state.losses} / Push ${state.pushes}`);
-      ctx.setScore(`通算プレイ ${stats.plays||0} ・ 勝利 ${stats.wins||0}`);
+      const statusParams = { wins: state.wins, losses: state.losses, pushes: state.pushes };
+      const statusFallback = ({ wins, losses, pushes }) => `勝利 ${wins} / 敗北 ${losses} / プッシュ ${pushes}`;
+      ctx.setStatus(
+        ctx.text('games.trump.blackjack.status.tally', statusFallback, statusParams),
+        { key: 'games.trump.blackjack.status.tally', params: statusParams, fallback: statusFallback }
+      );
+      const scoreParams = { plays: stats.plays || 0, wins: stats.wins || 0 };
+      const scoreFallback = ({ plays, wins }) => `通算プレイ ${plays} ・ 勝利 ${wins}`;
+      ctx.setScore(ctx.text('games.trump.blackjack.hud.score', scoreFallback, scoreParams));
     }
 
-    function setMessage(text){
-      message.textContent = text;
+    function setMessage(textValue, metadata){
+      message.textContent = textValue ?? '';
+      if (metadata === null) return;
+      if (metadata && typeof metadata === 'object') {
+        state.messageMeta = {
+          key: metadata.key || null,
+          params: metadata.params || null,
+          fallback: metadata.fallback != null ? metadata.fallback : textValue
+        };
+      } else {
+        state.messageMeta = { key: null, params: null, fallback: textValue };
+      }
+    }
+
+    function applyStoredMessage(){
+      if (!state.messageMeta) return;
+      const meta = state.messageMeta;
+      if (meta.key) {
+        message.textContent = ctx.text(meta.key, meta.fallback, meta.params);
+      } else {
+        message.textContent = meta.fallback ?? '';
+      }
     }
 
     function settleRound(outcome){
       if (state.settled) return;
       state.settled = true;
       ctx.setActions([
-        { label: '次のハンド (N)', variant: 'primary', hotkey: 'N', onClick: () => newRound(false) },
-        { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        { labelKey: 'games.trump.blackjack.actions.nextHand', label: '次のハンド (N)', variant: 'primary', hotkey: 'N', onClick: () => newRound(false) },
+        { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
       ]);
       const isWin = outcome === 'win' || outcome === 'bj';
       const projectedWins = state.wins + (isWin ? 1 : 0);
@@ -3659,7 +3695,8 @@
         ctx.award(10, { type: 'blackjack-push' });
       } else {
         state.losses++;
-        ctx.showToast('残念！次は勝てるはず。', { type: 'warn', duration: 2600 });
+        const fallback = () => '残念！次は勝てるはず。';
+        ctx.showToast(ctx.text('games.trump.blackjack.toast.consolation', fallback), { type: 'warn', duration: 2600 });
       }
       renderHands(true);
       updateStatus();
@@ -3669,17 +3706,29 @@
       const playerEval = handValue(state.playerHand);
       const dealerEval = handValue(state.dealerHand);
       if (playerEval.total === 21 && dealerEval.total !== 21) {
-        setMessage('ブラックジャック！');
+        const fallback = () => 'ブラックジャック！';
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.blackjackPlayer', fallback),
+          { key: 'games.trump.blackjack.messages.blackjackPlayer', params: null, fallback }
+        );
         settleRound('bj');
         return true;
       }
       if (dealerEval.total === 21 && playerEval.total !== 21) {
-        setMessage('ディーラーがブラックジャック…');
+        const fallback = () => 'ディーラーがブラックジャック…';
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.blackjackDealer', fallback),
+          { key: 'games.trump.blackjack.messages.blackjackDealer', params: null, fallback }
+        );
         settleRound('lose');
         return true;
       }
       if (dealerEval.total === 21 && playerEval.total === 21) {
-        setMessage('両者ブラックジャック。プッシュ！');
+        const fallback = () => '両者ブラックジャック。プッシュ！';
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.blackjackPush', fallback),
+          { key: 'games.trump.blackjack.messages.blackjackPush', params: null, fallback }
+        );
         settleRound('push');
         return true;
       }
@@ -3692,10 +3741,20 @@
       renderHands(false);
       const value = handValue(state.playerHand).total;
       if (value > 21) {
-        setMessage(`バースト (${value})`);
+        const params = { value };
+        const fallback = ({ value }) => `バースト (${value})`;
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.bust', fallback, params),
+          { key: 'games.trump.blackjack.messages.bust', params, fallback }
+        );
         settleRound('lose');
       } else {
-        setMessage(`合計 ${value} / HIT or STAND`);
+        const params = { value };
+        const fallback = ({ value }) => `合計 ${value} / HIT or STAND`;
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.totalPrompt', fallback, params),
+          { key: 'games.trump.blackjack.messages.totalPrompt', params, fallback }
+        );
       }
     }
 
@@ -3714,18 +3773,38 @@
       }
       const playerVal = handValue(state.playerHand).total;
       if (dealerEval.total > 21) {
-        setMessage(`ディーラーがバースト (${dealerEval.total})`);
+        const params = { value: dealerEval.total };
+        const fallback = ({ value }) => `ディーラーがバースト (${value})`;
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.dealerBust', fallback, params),
+          { key: 'games.trump.blackjack.messages.dealerBust', params, fallback }
+        );
         settleRound('win');
         return;
       }
       if (dealerEval.total > playerVal) {
-        setMessage(`ディーラー ${dealerEval.total} 対 ${playerVal}`);
+        const params = { dealer: dealerEval.total, player: playerVal };
+        const fallback = ({ dealer, player }) => `ディーラー ${dealer} 対 ${player}`;
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.dealerVsPlayer', fallback, params),
+          { key: 'games.trump.blackjack.messages.dealerVsPlayer', params, fallback }
+        );
         settleRound('lose');
       } else if (dealerEval.total < playerVal) {
-        setMessage(`勝利！${playerVal} 対 ${dealerEval.total}`);
+        const params = { dealer: dealerEval.total, player: playerVal };
+        const fallback = ({ player, dealer }) => `勝利！${player} 対 ${dealer}`;
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.playerWin', fallback, params),
+          { key: 'games.trump.blackjack.messages.playerWin', params, fallback }
+        );
         settleRound('win');
       } else {
-        setMessage(`プッシュ (${playerVal})`);
+        const params = { value: playerVal };
+        const fallback = ({ value }) => `プッシュ (${value})`;
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.push', fallback, params),
+          { key: 'games.trump.blackjack.messages.push', params, fallback }
+        );
         settleRound('push');
       }
     }
@@ -3740,10 +3819,10 @@
       state.settled = false;
 
       ctx.setActions([
-        { label: 'ヒット (H)', variant: 'primary', hotkey: 'H', onClick: () => hit() },
-        { label: 'スタンド (S)', variant: 'secondary', hotkey: 'S', onClick: () => stand() },
-        { label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => newRound(true) },
-        { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        { labelKey: 'games.trump.blackjack.actions.hit', label: 'ヒット (H)', variant: 'primary', hotkey: 'H', onClick: () => hit() },
+        { labelKey: 'games.trump.blackjack.actions.stand', label: 'スタンド (S)', variant: 'secondary', hotkey: 'S', onClick: () => stand() },
+        { labelKey: 'games.trump.blackjack.actions.restart', label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => newRound(true) },
+        { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
       ]);
 
       deal(state.playerHand);
@@ -3753,16 +3832,26 @@
       state.dealerHand[0].faceUp = false;
       renderHands(false);
       if (!checkForNaturals()) {
-        setMessage('HIT または STAND を選択してください。');
+        const fallback = () => 'HIT または STAND を選択してください。';
+        setMessage(
+          ctx.text('games.trump.blackjack.messages.chooseActionAlt', fallback),
+          { key: 'games.trump.blackjack.messages.chooseActionAlt', params: null, fallback }
+        );
       }
     }
+
+    const detachLocale = ctx.onLocaleChange(() => {
+      updateLabels();
+      updateStatus();
+      applyStoredMessage();
+    });
 
     newRound(true);
 
     return {
       start(){},
       stop(){},
-      destroy(){},
+      destroy(){ if (typeof detachLocale === 'function') detachLocale(); },
       getScore(){ return state.wins; }
     };
   }
@@ -3793,17 +3882,40 @@
     container.appendChild(layout);
     const animator = createCardAnimator(layout);
 
+    const hintToastFallback = () => '右隣のプレイヤーのカードをクリックして引きましょう。';
     ctx.setActions([
-      { label: 'ヒント (H)', variant: 'secondary', hotkey: 'H', onClick: () => ctx.showToast('右隣のプレイヤーのカードをクリックして引きましょう。') },
-      { label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => initGame() },
-      { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      {
+        labelKey: 'games.trump.common.actions.hint',
+        label: 'ヒント (H)',
+        variant: 'secondary',
+        hotkey: 'H',
+        onClick: () => ctx.showToast(ctx.text('games.trump.baba.toast.hint', hintToastFallback))
+      },
+      {
+        labelKey: 'games.trump.common.actions.restart',
+        label: 'リスタート (R)',
+        variant: 'secondary',
+        hotkey: 'R',
+        onClick: () => initGame()
+      },
+      {
+        labelKey: 'games.trump.common.actions.returnToList',
+        label: 'ゲーム一覧 (B)',
+        variant: 'secondary',
+        hotkey: 'B',
+        onClick: () => ctx.exitToHub()
+      }
     ]);
 
     function updateHud(){
       const stats = ctx.stats();
       const human = players[0];
-      const best = stats.bestScore != null ? `${stats.bestScore} 位` : '---';
-      ctx.setScore(`通算 ${stats.plays||0} 回 / ベスト ${best} / 手札 ${human.hand.length} 枚`);
+      const best = stats.bestScore != null
+        ? ctx.text('games.trump.common.hud.bestPlace', ({ place }) => `${place} 位`, { place: stats.bestScore })
+        : ctx.text('games.trump.common.hud.noRecord', '---');
+      const params = { plays: stats.plays || 0, best, hand: human.hand.length };
+      const fallback = ({ plays, best, hand }) => `通算 ${plays} 回 / ベスト ${best} / 手札 ${hand} 枚`;
+      ctx.setScore(ctx.text('games.trump.common.hud.scoreSummary', fallback, params));
     }
 
     function initGame(){
@@ -3833,9 +3945,15 @@
       }
       state.current = findNextActive(0);
       render();
-      ctx.setStatus(`あなたの番：右隣のカードをクリックしてください。（手札 ${players[0].hand.length} 枚）`);
+      const statusParams = { cards: players[0].hand.length };
+      const statusFallback = ({ cards }) => `あなたの番：右隣のカードをクリックしてください。（手札 ${cards} 枚）`;
+      ctx.setStatus(
+        ctx.text('games.trump.baba.status.humanTurn', statusFallback, statusParams),
+        { key: 'games.trump.baba.status.humanTurn', params: statusParams, fallback: statusFallback }
+      );
       updateHud();
-      ctx.showToast('ゲーム開始！右隣のプレイヤーからカードを引きましょう。');
+      const startFallback = () => 'ゲーム開始！右隣のプレイヤーからカードを引きましょう。';
+      ctx.showToast(ctx.text('games.trump.baba.toast.start', startFallback));
     }
 
     function findNextActive(start){
@@ -3878,7 +3996,12 @@
         state.order.push(player.id);
         if (player.human) {
           ctx.award(80, { type: 'baba-finish', place: player.finishedAt });
-          ctx.showToast(`上がり！順位 ${player.finishedAt}`, { duration: 2600 });
+          const toastParams = { place: player.finishedAt };
+          const finishFallback = ({ place }) => `上がり！順位 ${place}`;
+          ctx.showToast(
+            ctx.text('games.trump.baba.toast.finish', finishFallback, toastParams),
+            { duration: 2600 }
+          );
         }
       }
       updateHud();
@@ -3917,9 +4040,19 @@
       state.turnCount++;
       const current = players[state.current];
       if (current.human) {
-        ctx.setStatus(`あなたの番：右隣のカードをクリックしてください。（手札 ${current.hand.length} 枚）`);
+        const params = { cards: current.hand.length };
+        const fallback = ({ cards }) => `あなたの番：右隣のカードをクリックしてください。（手札 ${cards} 枚）`;
+        ctx.setStatus(
+          ctx.text('games.trump.baba.status.humanTurn', fallback, params),
+          { key: 'games.trump.baba.status.humanTurn', params, fallback }
+        );
       } else {
-        ctx.setStatus(`${current.name} の番`);
+        const params = { name: current.name };
+        const fallback = ({ name }) => `${name} の番`;
+        ctx.setStatus(
+          ctx.text('games.trump.common.status.turn', fallback, params),
+          { key: 'games.trump.common.status.turn', params, fallback }
+        );
       }
       render();
       if (!current.human) {
@@ -3934,14 +4067,19 @@
       if (active.length <= 1) {
         state.finished = true;
         const loser = active[0];
-        ctx.showToast(`${loser.name} がジョーカーを持っています。ゲーム終了！`, { duration: 2800 });
+        const toastParams = { name: loser.name };
+        const loserFallback = ({ name }) => `${name} がジョーカーを持っています。ゲーム終了！`;
+        ctx.showToast(
+          ctx.text('games.trump.baba.toast.loser', loserFallback, toastParams),
+          { duration: 2800 }
+        );
         if (loser && loser.human) {
           ctx.award(-10, { type: 'baba-joker-penalty' });
         }
         ctx.commitStats({ plays: 1, wins: players[0].finishedAt === 1 ? 1 : 0, score: players[0].finishedAt || players.length, bestMode: 'lower' });
         ctx.setActions([
-          { label: '再戦する', variant: 'primary', onClick: () => initGame() },
-          { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+          { labelKey: 'games.trump.common.actions.rematch', label: '再戦する', variant: 'primary', onClick: () => initGame() },
+          { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
         ]);
         updateHud();
         return true;
@@ -3960,14 +4098,21 @@
         if (player.id === state.current) card.classList.add('active');
         const name = document.createElement('div');
         name.className = 'name';
-        name.textContent = player.name + (player.human ? ' (You)' : '');
+        const youSuffix = player.human ? ctx.text('games.trump.common.youSuffix', ' (You)') : '';
+        name.textContent = player.name + youSuffix;
         card.appendChild(name);
         const handBox = document.createElement('div');
         handBox.className = 'hand';
         if (player.hand.length === 0) {
           const empty = document.createElement('div');
           empty.className = 'hand-empty';
-          empty.textContent = player.finishedAt ? `上がり (${player.finishedAt}位)` : '手札なし';
+          if (player.finishedAt) {
+            const clearedParams = { place: player.finishedAt };
+            const clearedFallback = ({ place }) => `上がり (${place}位)`;
+            empty.textContent = ctx.text('games.trump.common.hand.cleared', clearedFallback, clearedParams);
+          } else {
+            empty.textContent = ctx.text('games.trump.common.hand.empty', '手札なし');
+          }
           handBox.appendChild(empty);
         } else if (player.human) {
           for (const cardInfo of player.hand) {
@@ -4005,7 +4150,9 @@
         if (player.finishedAt) {
           const finished = document.createElement('div');
           finished.className = 'mini-trump-finished';
-          finished.textContent = `${player.finishedAt} 位確定`;
+          const finishedParams = { place: player.finishedAt };
+          const finishedFallback = ({ place }) => `${place} 位確定`;
+          finished.textContent = ctx.text('games.trump.common.player.finished', finishedFallback, finishedParams);
           card.appendChild(finished);
         }
         ring.appendChild(card);
@@ -4014,12 +4161,17 @@
       animator.animate();
     }
 
+    const detachLocale = ctx.onLocaleChange(() => {
+      render();
+      updateHud();
+    });
+
     initGame();
 
     return {
       start(){},
       stop(){},
-      destroy(){},
+      destroy(){ if (typeof detachLocale === 'function') detachLocale(); },
       getScore(){ return players[0].finishedAt || 0; }
     };
   }
@@ -4434,13 +4586,15 @@
     tableEl.className = 'mini-trump-jiji-table-card';
     const tableLabel = document.createElement('div');
     tableLabel.className = 'label';
-    tableLabel.textContent = '台札';
+    tableLabel.textContent = ctx.text('games.trump.jiji.table.label', '台札');
     const tableCardHost = document.createElement('div');
     const tableMeta = document.createElement('div');
     tableMeta.className = 'meta';
     const swapButton = document.createElement('button');
     swapButton.type = 'button';
-    swapButton.textContent = '交換モード';
+    const swapEnableFallback = () => '交換モード';
+    const swapDisableFallback = () => '交換モード解除';
+    swapButton.textContent = ctx.text('games.trump.jiji.controls.swap.enable', swapEnableFallback);
     tableEl.appendChild(tableLabel);
     tableEl.appendChild(tableCardHost);
     tableEl.appendChild(tableMeta);
@@ -4461,7 +4615,7 @@
       const player = players[state.current];
       if (!player || !player.human) return;
       if (!state.tableCard) {
-        ctx.showToast('交換できる台札がありません。', { type: 'warn' });
+        ctx.showToast(ctx.text('games.trump.jiji.toast.noTable', '交換できる台札がありません。'), { type: 'warn' });
         return;
       }
       state.selectingSwap = !state.selectingSwap;
@@ -4469,10 +4623,29 @@
       render();
     });
 
+    const hintToast = () => '台札と同じランクを揃えると手札を減らせます。';
     ctx.setActions([
-      { label: 'ヒント (H)', variant: 'secondary', hotkey: 'H', onClick: () => ctx.showToast('台札と同じランクを揃えると手札を減らせます。') },
-      { label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => initGame() },
-      { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      {
+        labelKey: 'games.trump.common.actions.hint',
+        label: 'ヒント (H)',
+        variant: 'secondary',
+        hotkey: 'H',
+        onClick: () => ctx.showToast(ctx.text('games.trump.jiji.toast.hint', hintToast))
+      },
+      {
+        labelKey: 'games.trump.common.actions.restart',
+        label: 'リスタート (R)',
+        variant: 'secondary',
+        hotkey: 'R',
+        onClick: () => initGame()
+      },
+      {
+        labelKey: 'games.trump.common.actions.returnToList',
+        label: 'ゲーム一覧 (B)',
+        variant: 'secondary',
+        hotkey: 'B',
+        onClick: () => ctx.exitToHub()
+      }
     ]);
 
     function initGame(){
@@ -4513,7 +4686,11 @@
 
       players.forEach(player => removePairs(player));
       state.current = findNextActive(0);
-      ctx.setStatus('あなたの番：必要なら台札と交換し、右隣からカードを引きましょう。');
+      const statusFallback = () => 'あなたの番：必要なら台札と交換し、右隣からカードを引きましょう。';
+      ctx.setStatus(
+        ctx.text('games.trump.jiji.status.humanTurn', statusFallback),
+        { key: 'games.trump.jiji.status.humanTurn', params: null, fallback: statusFallback }
+      );
       render();
       updateHud();
     }
@@ -4521,20 +4698,32 @@
     function updateHud(){
       const stats = ctx.stats();
       const human = players[0];
-      const best = stats.bestScore != null ? `${stats.bestScore} 位` : '---';
-      ctx.setScore(`通算 ${stats.plays || 0} 回 / ベスト ${best} / 手札 ${human.hand.length} 枚`);
+      const best = stats.bestScore != null
+        ? ctx.text('games.trump.common.hud.bestPlace', ({ place }) => `${place} 位`, { place: stats.bestScore })
+        : ctx.text('games.trump.common.hud.noRecord', '---');
+      const params = { plays: stats.plays || 0, best, hand: human.hand.length };
+      const fallback = ({ plays, best, hand }) => `通算 ${plays} 回 / ベスト ${best} / 手札 ${hand} 枚`;
+      ctx.setScore(ctx.text('games.trump.common.hud.scoreSummary', fallback, params));
     }
 
     function updateSwapState(){
       if (state.selectingSwap) {
-        swapButton.textContent = '交換モード解除';
+        swapButton.textContent = ctx.text('games.trump.jiji.controls.swap.disable', swapDisableFallback);
         tableEl.classList.add('swap-ready');
-        ctx.setStatus('交換するカードを自分の手札から選んでください。');
+        const fallback = () => '交換するカードを自分の手札から選んでください。';
+        ctx.setStatus(
+          ctx.text('games.trump.jiji.status.selectSwap', fallback),
+          { key: 'games.trump.jiji.status.selectSwap', params: null, fallback }
+        );
       } else {
-        swapButton.textContent = '交換モード';
+        swapButton.textContent = ctx.text('games.trump.jiji.controls.swap.enable', swapEnableFallback);
         tableEl.classList.remove('swap-ready');
         if (state.current === 0) {
-          ctx.setStatus('台札と交換するか、右隣からカードを引いてください。');
+          const fallback = () => '台札と交換するか、右隣からカードを引いてください。';
+          ctx.setStatus(
+            ctx.text('games.trump.jiji.status.humanDraw', fallback),
+            { key: 'games.trump.jiji.status.humanDraw', params: null, fallback }
+          );
         }
       }
     }
@@ -4578,14 +4767,20 @@
         state.order.push(player.id);
         if (player.id === 0) {
           ctx.award(90, { type: 'jiji-finish', place: player.finishedAt });
-          ctx.showToast(`上がり！順位 ${player.finishedAt}`, { duration: 2600 });
+          const toastParams = { place: player.finishedAt };
+          const fallback = ({ place }) => `上がり！順位 ${place}`;
+          ctx.showToast(
+            ctx.text('games.trump.jiji.toast.finish', fallback, toastParams),
+            { duration: 2600 }
+          );
         }
       }
     }
 
     function swapWithTable(player, idx){
       if (!state.tableCard) {
-        ctx.showToast('台札がありません。', { type: 'warn' });
+        const fallback = () => '台札がありません。';
+        ctx.showToast(ctx.text('games.trump.jiji.toast.tableMissing', fallback), { type: 'warn' });
         state.selectingSwap = false;
         updateSwapState();
         render();
@@ -4594,7 +4789,10 @@
       const card = player.hand[idx];
       if (!card) return;
       if (card.id === state.jijiId) {
-        if (player.human) ctx.showToast('ジジは台札に置けません。', { type: 'warn' });
+        if (player.human) {
+          const fallback = () => 'ジジは台札に置けません。';
+          ctx.showToast(ctx.text('games.trump.jiji.toast.cannotPlaceJiji', fallback), { type: 'warn' });
+        }
         return;
       }
       const newCard = state.tableCard;
@@ -4607,7 +4805,7 @@
       removePairs(player);
       render();
       if (player.human) {
-        ctx.showToast('台札と交換しました。');
+        ctx.showToast(ctx.text('games.trump.jiji.toast.swapped', '台札と交換しました。'));
       }
     }
 
@@ -4667,7 +4865,7 @@
       const target = players[targetIdx];
       if (!target || target.hand.length <= cardIdx) return;
       if (state.selectingSwap) {
-        ctx.showToast('交換モードを終了してください。', { type: 'warn' });
+        ctx.showToast(ctx.text('games.trump.jiji.toast.exitSwap', '交換モードを終了してください。'), { type: 'warn' });
         return;
       }
       const drawn = target.hand.splice(cardIdx, 1)[0];
@@ -4687,10 +4885,19 @@
       state.selectingSwap = false;
       updateSwapState();
       if (current.human) {
-        ctx.setStatus('台札と交換するか、右隣からカードを引いてください。');
+        const fallback = () => '台札と交換するか、右隣からカードを引いてください。';
+        ctx.setStatus(
+          ctx.text('games.trump.jiji.status.humanDraw', fallback),
+          { key: 'games.trump.jiji.status.humanDraw', params: null, fallback }
+        );
         render();
       } else {
-        ctx.setStatus(`${current.name} の番`);
+        const params = { name: current.name };
+        const fallback = ({ name }) => `${name} の番`;
+        ctx.setStatus(
+          ctx.text('games.trump.common.status.turn', fallback, params),
+          { key: 'games.trump.common.status.turn', params, fallback }
+        );
         render();
         setTimeout(() => executeTurn(current), 600);
       }
@@ -4701,14 +4908,19 @@
       if (active.length <= 1) {
         state.finished = true;
         const loser = active[0];
-        ctx.showToast(`${loser.name} がジジを持っています。ゲーム終了！`, { duration: 2800 });
+        const toastParams = { name: loser.name };
+        const fallback = ({ name }) => `${name} がジジを持っています。ゲーム終了！`;
+        ctx.showToast(
+          ctx.text('games.trump.jiji.toast.loser', fallback, toastParams),
+          { duration: 2800 }
+        );
         if (loser && loser.human) {
           ctx.award(-20, { type: 'jiji-joker-penalty' });
         }
         ctx.commitStats({ plays: 1, wins: players[0].finishedAt === 1 ? 1 : 0, score: players[0].finishedAt || players.length, bestMode: 'lower' });
         ctx.setActions([
-          { label: '再戦する', variant: 'primary', onClick: () => initGame() },
-          { label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+          { labelKey: 'games.trump.common.actions.rematch', label: '再戦する', variant: 'primary', onClick: () => initGame() },
+          { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
         ]);
         updateHud();
         return true;
@@ -4729,9 +4941,11 @@
       if (state.tableCard) {
         const el = ctx.cardUtils.renderCard(state.tableCard, { faceUp: true, size: 'small' });
         tableCardHost.appendChild(el);
-        tableMeta.textContent = `ランク: ${state.tableCard.rankLabel}`;
+        const params = { rank: state.tableCard.rankLabel };
+        const fallback = ({ rank }) => `ランク: ${rank}`;
+        tableMeta.textContent = ctx.text('games.trump.jiji.table.rank', fallback, params);
       } else {
-        tableMeta.textContent = '台札なし';
+        tableMeta.textContent = ctx.text('games.trump.jiji.table.none', '台札なし');
       }
       swapButton.disabled = state.finished || state.current !== 0 || !state.tableCard;
       updateSwapState();
@@ -4746,14 +4960,21 @@
         if (player.id === state.current) card.classList.add('active');
         const name = document.createElement('div');
         name.className = 'name';
-        name.textContent = player.name + (player.human ? ' (You)' : '');
+        const youSuffix = player.human ? ctx.text('games.trump.common.youSuffix', ' (You)') : '';
+        name.textContent = player.name + youSuffix;
         card.appendChild(name);
         const handBox = document.createElement('div');
         handBox.className = 'hand';
         if (player.hand.length === 0) {
           const empty = document.createElement('div');
           empty.className = 'hand-empty';
-          empty.textContent = player.finishedAt ? `上がり (${player.finishedAt}位)` : '手札なし';
+          if (player.finishedAt) {
+            const clearedParams = { place: player.finishedAt };
+            const clearedFallback = ({ place }) => `上がり (${place}位)`;
+            empty.textContent = ctx.text('games.trump.common.hand.cleared', clearedFallback, clearedParams);
+          } else {
+            empty.textContent = ctx.text('games.trump.common.hand.empty', '手札なし');
+          }
           handBox.appendChild(empty);
         } else if (player.human) {
           player.hand.forEach((cardInfo, idx) => {
@@ -4785,19 +5006,27 @@
         if (player.finishedAt) {
           const finished = document.createElement('div');
           finished.className = 'mini-trump-finished';
-          finished.textContent = `${player.finishedAt} 位確定`;
+          const finishedParams = { place: player.finishedAt };
+          const finishedFallback = ({ place }) => `${place} 位確定`;
+          finished.textContent = ctx.text('games.trump.common.player.finished', finishedFallback, finishedParams);
           card.appendChild(finished);
         }
         ring.appendChild(card);
       }
     }
 
+    const detachLocale = ctx.onLocaleChange(() => {
+      render();
+      updateHud();
+      updateSwapState();
+    });
+
     initGame();
 
     return {
       start(){},
       stop(){},
-      destroy(){},
+      destroy(){ if (typeof detachLocale === 'function') detachLocale(); },
       getScore(){ return players[0].finishedAt || 0; }
     };
   }

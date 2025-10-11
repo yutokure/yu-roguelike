@@ -26,24 +26,24 @@
   ];
 
   const GAME_DEFS = [
-    { id: 'memory', title: '神経衰弱', icon: '🧠', phase: 1, implemented: true, description: 'ペアを揃える定番記憶ゲーム。' },
-    { id: 'blackjack', title: 'ブラックジャック', icon: '🃏', phase: 1, implemented: true, description: '21を目指してディーラーと勝負。' },
-    { id: 'baba', title: 'ババ抜き', icon: '😼', phase: 1, implemented: true, description: 'ジョーカーを最後まで残さないように。' },
-    { id: 'klondike', title: 'ソリティア（クロンダイク）', icon: '🂮', phase: 2, implemented: true, description: '7列の場札から台札を揃えるソリティア。' },
-    { id: 'spider', title: 'スパイダーソリティア', icon: '🕷️', phase: 3, implemented: true, description: '完成した列を確実に作る耐久ソリティア。' },
-    { id: 'freecell', title: 'フリーセル', icon: '🗄️', phase: 2, implemented: true, description: '4つのセルを駆使するソリティア。' },
-    { id: 'hearts', title: 'ハーツ', icon: '♥️', phase: 3, implemented: true, description: 'ハートを避けるトリックテイキング。' },
-    { id: 'sevens', title: '七並べ', icon: '7️⃣', phase: 2, implemented: true, description: '7を基点にカードを並べる。' },
-    { id: 'poker', title: 'ポーカー（ドロー）', icon: '♠️', phase: 2, implemented: true, description: '役を完成させて高得点を狙う。' },
-    { id: 'jiji', title: 'ジジ抜き', icon: '👴', phase: 2, implemented: true, description: 'ジョーカー設定可のババ抜き拡張。' },
-    { id: 'daifugo', title: '大富豪', icon: '👑', phase: 3, implemented: true, description: '革命必至の手札管理ゲーム。' },
-    { id: 'pageone', title: 'ページワン', icon: '📖', phase: 2, implemented: true, description: 'UNOの祖先とされる定番ゲーム。' }
+    { id: 'memory', title: '神経衰弱', titleKey: 'games.memory.title', descriptionKey: 'games.memory.description', icon: '🧠', phase: 1, implemented: true, description: 'ペアを揃える定番記憶ゲーム。' },
+    { id: 'blackjack', title: 'ブラックジャック', titleKey: 'games.blackjack.title', descriptionKey: 'games.blackjack.description', icon: '🃏', phase: 1, implemented: true, description: '21を目指してディーラーと勝負。' },
+    { id: 'baba', title: 'ババ抜き', titleKey: 'games.baba.title', descriptionKey: 'games.baba.description', icon: '😼', phase: 1, implemented: true, description: 'ジョーカーを最後まで残さないように。' },
+    { id: 'klondike', title: 'ソリティア（クロンダイク）', titleKey: 'games.klondike.title', descriptionKey: 'games.klondike.description', icon: '🂮', phase: 2, implemented: true, description: '7列の場札から台札を揃えるソリティア。' },
+    { id: 'spider', title: 'スパイダーソリティア', titleKey: 'games.spider.title', descriptionKey: 'games.spider.description', icon: '🕷️', phase: 3, implemented: true, description: '完成した列を確実に作る耐久ソリティア。' },
+    { id: 'freecell', title: 'フリーセル', titleKey: 'games.freecell.title', descriptionKey: 'games.freecell.description', icon: '🗄️', phase: 2, implemented: true, description: '4つのセルを駆使するソリティア。' },
+    { id: 'hearts', title: 'ハーツ', titleKey: 'games.hearts.title', descriptionKey: 'games.hearts.description', icon: '♥️', phase: 3, implemented: true, description: 'ハートを避けるトリックテイキング。' },
+    { id: 'sevens', title: '七並べ', titleKey: 'games.sevens.title', descriptionKey: 'games.sevens.description', icon: '7️⃣', phase: 2, implemented: true, description: '7を基点にカードを並べる。' },
+    { id: 'poker', title: 'ポーカー（ドロー）', titleKey: 'games.poker.title', descriptionKey: 'games.poker.description', icon: '♠️', phase: 2, implemented: true, description: '役を完成させて高得点を狙う。' },
+    { id: 'jiji', title: 'ジジ抜き', titleKey: 'games.jiji.title', descriptionKey: 'games.jiji.description', icon: '👴', phase: 2, implemented: true, description: 'ジョーカー設定可のババ抜き拡張。' },
+    { id: 'daifugo', title: '大富豪', titleKey: 'games.daifugo.title', descriptionKey: 'games.daifugo.description', icon: '👑', phase: 3, implemented: true, description: '革命必至の手札管理ゲーム。' },
+    { id: 'pageone', title: 'ページワン', titleKey: 'games.pageone.title', descriptionKey: 'games.pageone.description', icon: '📖', phase: 2, implemented: true, description: 'UNOの祖先とされる定番ゲーム。' }
   ];
 
   const CARD_BACK_OPTIONS = [
-    { id: 'classic', label: 'クラシック', description: 'ネイビーの王道パターン', gradient: 'linear-gradient(135deg,#0f172a,#1e40af)', border: 'rgba(37,99,235,0.8)', color: '#93c5fd' },
-    { id: 'modern', label: 'モダン', description: 'ビビッドなサイバー柄', gradient: 'linear-gradient(135deg,#831843,#ef4444)', border: 'rgba(244,114,182,0.9)', color: '#fecdd3' },
-    { id: 'forest', label: 'フォレスト', description: '深緑と金のグラデ', gradient: 'linear-gradient(135deg,#134e4a,#0f766e)', border: 'rgba(45,212,191,0.85)', color: '#5eead4' }
+    { id: 'classic', label: 'クラシック', labelKey: 'cardBacks.classic.label', descriptionKey: 'cardBacks.classic.description', description: 'ネイビーの王道パターン', gradient: 'linear-gradient(135deg,#0f172a,#1e40af)', border: 'rgba(37,99,235,0.8)', color: '#93c5fd' },
+    { id: 'modern', label: 'モダン', labelKey: 'cardBacks.modern.label', descriptionKey: 'cardBacks.modern.description', description: 'ビビッドなサイバー柄', gradient: 'linear-gradient(135deg,#831843,#ef4444)', border: 'rgba(244,114,182,0.9)', color: '#fecdd3' },
+    { id: 'forest', label: 'フォレスト', labelKey: 'cardBacks.forest.label', descriptionKey: 'cardBacks.forest.description', description: '深緑と金のグラデ', gradient: 'linear-gradient(135deg,#134e4a,#0f766e)', border: 'rgba(45,212,191,0.85)', color: '#5eead4' }
   ];
 
   function ensureStyleInjected(){
@@ -497,6 +497,34 @@
     if (!root) throw new Error('MiniExp trump requires container');
     ensureStyleInjected();
 
+    const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({ id: 'trump_games' })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        try { return localization.t(key, fallback, params); } catch (error) {
+          console.warn('[Mini Trump] localization error', error);
+        }
+      }
+      if (typeof fallback === 'function') {
+        try { return fallback(params || {}); } catch { return ''; }
+      }
+      return fallback ?? '';
+    };
+    const formatNumber = (value, options) => {
+      if (localization && typeof localization.formatNumber === 'function') {
+        try { return localization.formatNumber(value, options); } catch {}
+      }
+      if (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function') {
+        try { return new Intl.NumberFormat(undefined, options).format(value); } catch {}
+      }
+      if (value != null && typeof value.toLocaleString === 'function') {
+        try { return value.toLocaleString(undefined, options); } catch {}
+      }
+      return String(value ?? '');
+    };
+    let detachLocale = null;
+
     const persisted = loadPersisted();
     const difficulty = (opts?.difficulty || 'NORMAL').toUpperCase();
     const multiplier = getMultiplier(difficulty);
@@ -515,7 +543,9 @@
       settingsListeners: new Set(),
      selectedGameId: persisted.selectedGameId,
       saveTimer: null,
-      destroyed: false
+      destroyed: false,
+      titleMeta: null,
+      statusMeta: null
     };
 
     const wrapper = document.createElement('div');
@@ -526,7 +556,6 @@
     nav.className = 'mini-trump-nav mini-trump-panel';
 
     const navHeader = document.createElement('header');
-    navHeader.textContent = 'トランプゲーム';
 
     const navList = document.createElement('div');
     navList.className = 'mini-trump-nav-list';
@@ -542,14 +571,12 @@
 
     const title = document.createElement('div');
     title.className = 'mini-trump-header-title';
-    title.textContent = 'トランプセレクション';
 
     const statusBox = document.createElement('div');
     statusBox.className = 'mini-trump-header-status';
 
     const statusLine = document.createElement('div');
     statusLine.className = 'mini-trump-status-line';
-    statusLine.textContent = 'ゲームを選択してください。';
 
     const scoreLine = document.createElement('div');
     scoreLine.className = 'mini-trump-score';
@@ -563,13 +590,10 @@
 
     const difficultyBadge = document.createElement('span');
     difficultyBadge.className = 'mini-trump-difficulty';
-    const multiplierTxt = state.multiplier.toFixed(1).replace(/\.0$/, '');
-    difficultyBadge.textContent = `難易度 ${state.difficulty} ×${multiplierTxt}`;
 
     const settingsButton = document.createElement('button');
     settingsButton.type = 'button';
     settingsButton.className = 'mini-trump-header-settings';
-    settingsButton.setAttribute('aria-label', '設定');
     settingsButton.textContent = '⚙';
 
     headerControls.appendChild(difficultyBadge);
@@ -593,7 +617,14 @@
 
     const placeholder = document.createElement('div');
     placeholder.className = 'mini-trump-placeholder';
-    placeholder.innerHTML = '<div>左のリストからゲームを選んでください。</div><div style="font-size:12px;color:#94a3b8;">Phase 1: 神経衰弱 / ブラックジャック / ババ抜き</div>';
+    const placeholderPrimary = document.createElement('div');
+    placeholderPrimary.className = 'mini-trump-placeholder-primary';
+    const placeholderSecondary = document.createElement('div');
+    placeholderSecondary.className = 'mini-trump-placeholder-secondary';
+    placeholderSecondary.style.fontSize = '12px';
+    placeholderSecondary.style.color = '#94a3b8';
+    placeholder.appendChild(placeholderPrimary);
+    placeholder.appendChild(placeholderSecondary);
     board.appendChild(placeholder);
 
     const actionsBar = document.createElement('div');
@@ -614,6 +645,11 @@
     wrapper.appendChild(nav);
     wrapper.appendChild(main);
     root.appendChild(wrapper);
+
+    updateHeaderLocalization();
+    updatePlaceholderLocalization();
+    setTitle(text('layout.title', 'トランプセレクション'), { key: 'layout.title', fallback: 'トランプセレクション' });
+    setStatus(text('status.selectGame', 'ゲームを選択してください。'), { key: 'status.selectGame', fallback: 'ゲームを選択してください。' });
 
     applySettings();
 
@@ -676,13 +712,13 @@
       panel.className = 'mini-trump-settings-panel';
 
       const heading = document.createElement('h3');
-      heading.textContent = '設定';
+      heading.textContent = text('settings.heading', '設定');
       panel.appendChild(heading);
 
       const backGroup = document.createElement('div');
       backGroup.className = 'mini-trump-settings-group';
       const backLabel = document.createElement('span');
-      backLabel.textContent = 'カード裏面テーマ';
+      backLabel.textContent = text('settings.cardBack', 'カード裏面テーマ');
       backLabel.style.fontSize = '12px';
       backLabel.style.color = '#cbd5f5';
       backLabel.style.fontWeight = '600';
@@ -706,7 +742,7 @@
         });
 
         const name = document.createElement('span');
-        name.textContent = opt.label;
+        name.textContent = text(opt.labelKey, opt.label);
         name.style.fontSize = '13px';
         name.style.fontWeight = '600';
         const preview = document.createElement('div');
@@ -715,7 +751,7 @@
         preview.style.border = `1px solid ${opt.border}`;
         preview.style.color = opt.color;
         const desc = document.createElement('small');
-        desc.textContent = opt.description;
+        desc.textContent = text(opt.descriptionKey, opt.description);
 
         optionBtn.appendChild(name);
         optionBtn.appendChild(preview);
@@ -730,7 +766,7 @@
       const toggleRow = document.createElement('label');
       toggleRow.className = 'toggle';
       const toggleText = document.createElement('span');
-      toggleText.textContent = '神経衰弱で不一致カードを自動で裏返す';
+      toggleText.textContent = text('settings.autoFlip', '神経衰弱で不一致カードを自動で裏返す');
       const toggleInput = document.createElement('input');
       toggleInput.type = 'checkbox';
       toggleInput.checked = state.settings.autoFlip !== false;
@@ -814,16 +850,38 @@
       }, opts?.duration || 2200);
     }
 
-    function setStatus(text){
-      statusLine.textContent = text;
+    function setStatus(textValue, metadata){
+      const resolved = textValue == null ? '' : String(textValue);
+      statusLine.textContent = resolved;
+      if (metadata === null) return;
+      if (metadata && typeof metadata === 'object') {
+        state.statusMeta = {
+          key: metadata.key || null,
+          params: metadata.params || null,
+          fallback: metadata.fallback != null ? metadata.fallback : resolved
+        };
+      } else {
+        state.statusMeta = { key: null, params: null, fallback: resolved };
+      }
     }
 
     function setScore(text){
       scoreLine.textContent = text || '';
     }
 
-    function setTitle(text){
-      title.textContent = text;
+    function setTitle(textValue, metadata){
+      const resolved = textValue == null ? '' : String(textValue);
+      title.textContent = resolved;
+      if (metadata === null) return;
+      if (metadata && typeof metadata === 'object') {
+        state.titleMeta = {
+          key: metadata.key || null,
+          params: metadata.params || null,
+          fallback: metadata.fallback != null ? metadata.fallback : resolved
+        };
+      } else {
+        state.titleMeta = { key: null, params: null, fallback: resolved };
+      }
     }
 
     function returnToSelection(){
@@ -836,8 +894,8 @@
       state.selectedGameId = null;
       board.innerHTML = '';
       board.appendChild(placeholder);
-      setTitle('トランプセレクション');
-      setStatus('ゲームを選択してください。');
+      setTitle(text('layout.title', 'トランプセレクション'), { key: 'layout.title', fallback: 'トランプセレクション' });
+      setStatus(text('status.selectGame', 'ゲームを選択してください。'), { key: 'status.selectGame', fallback: 'ゲームを選択してください。' });
       setScore('');
       closeSettingsPanel();
       queueSave();
@@ -850,16 +908,18 @@
       state.hotkeys.clear();
       if (!state.actions.length) {
         const btn = document.createElement('button');
-        btn.textContent = 'ゲームを終了';
+        const exitLabel = text('actions.returnToHub', 'ゲームを終了');
+        btn.textContent = exitLabel;
         btn.addEventListener('click', returnToSelection);
         actionsBar.appendChild(btn);
-        state.hotkeys.set('ESCAPE', { trigger: () => btn.click(), label: 'ゲームを終了' });
-        state.hotkeys.set('ESC', { trigger: () => btn.click(), label: 'ゲームを終了' });
+        state.hotkeys.set('ESCAPE', { trigger: () => btn.click(), label: exitLabel });
+        state.hotkeys.set('ESC', { trigger: () => btn.click(), label: exitLabel });
         return;
       }
       for (const entry of state.actions) {
         const btn = document.createElement('button');
-        btn.textContent = entry.label || 'Action';
+        const labelText = entry.labelKey ? text(entry.labelKey, entry.label || '') : (entry.label != null ? entry.label : text('actions.default', 'Action'));
+        btn.textContent = labelText;
         if (entry.variant === 'primary') btn.classList.add('primary');
         if (entry.variant === 'secondary') btn.classList.add('secondary');
         btn.disabled = !!entry.disabled;
@@ -868,9 +928,19 @@
         }
         actionsBar.appendChild(btn);
         if (entry.hotkey) {
-          state.hotkeys.set(entry.hotkey.toUpperCase(), { trigger: () => btn.click(), label: entry.label });
+          state.hotkeys.set(entry.hotkey.toUpperCase(), { trigger: () => btn.click(), label: labelText });
         }
       }
+    }
+
+    function getLocalizedGameTitle(def){
+      if (!def) return '';
+      return text(def.titleKey, def.title);
+    }
+
+    function getLocalizedGameDescription(def){
+      if (!def) return '';
+      return text(def.descriptionKey, def.description);
     }
 
     function getGameDef(id){
@@ -886,21 +956,23 @@
         icon.className = 'icon';
         icon.textContent = def.icon;
         const label = document.createElement('span');
-        label.textContent = def.title;
+        const titleText = getLocalizedGameTitle(def);
+        label.textContent = titleText;
         button.appendChild(icon);
         button.appendChild(label);
         if (!def.implemented) {
           button.classList.add('disabled');
           const badge = document.createElement('span');
           badge.className = 'meta';
-          badge.textContent = '準備中';
+          badge.textContent = text('list.badge.comingSoon', '準備中');
           button.appendChild(badge);
         } else {
           const stats = state.stats[def.id];
           if (stats && stats.bestScore != null) {
             const badge = document.createElement('span');
             badge.className = 'meta';
-            badge.textContent = `Best ${stats.bestScore}`;
+            const bestScore = formatNumber(stats.bestScore);
+            badge.textContent = text('list.badge.bestScore', () => `Best ${bestScore}`, { score: bestScore, rawScore: stats.bestScore });
             button.appendChild(badge);
           }
         }
@@ -909,13 +981,30 @@
         }
         button.addEventListener('click', () => {
           if (!def.implemented) {
-            setTitle(def.title);
+            setTitle(titleText, { key: def.titleKey, fallback: def.title });
             board.innerHTML = '';
             const msg = document.createElement('div');
             msg.className = 'mini-trump-placeholder';
-            msg.innerHTML = `<div style="font-size:18px;">${def.title}</div><div style="max-width:420px;font-size:13px;color:#94a3b8;">${def.description}<br>Phase ${def.phase} で実装予定です。</div>`;
+            const titleEl = document.createElement('div');
+            titleEl.style.fontSize = '18px';
+            titleEl.textContent = titleText;
+            const descWrap = document.createElement('div');
+            descWrap.style.maxWidth = '420px';
+            descWrap.style.fontSize = '13px';
+            descWrap.style.color = '#94a3b8';
+            descWrap.style.display = 'flex';
+            descWrap.style.flexDirection = 'column';
+            descWrap.style.gap = '4px';
+            const descEl = document.createElement('div');
+            descEl.textContent = getLocalizedGameDescription(def);
+            const phaseEl = document.createElement('div');
+            phaseEl.textContent = text('list.unimplemented.phase', () => `Phase ${def.phase} で実装予定です。`, { phase: def.phase });
+            descWrap.appendChild(descEl);
+            descWrap.appendChild(phaseEl);
+            msg.appendChild(titleEl);
+            msg.appendChild(descWrap);
             board.appendChild(msg);
-            setStatus('開発中のゲームです。今後のアップデートをお待ちください。');
+            setStatus(text('status.comingSoon', '開発中のゲームです。今後のアップデートをお待ちください。'), { key: 'status.comingSoon', fallback: '開発中のゲームです。今後のアップデートをお待ちください。' });
             setScore('');
             setActions([]);
             return;
@@ -965,7 +1054,8 @@
         playClick: () => { window.playSfx && window.playSfx('pickup'); }
       };
 
-      setTitle(def.title);
+      const localizedTitle = getLocalizedGameTitle(def);
+      setTitle(localizedTitle, { key: def.titleKey, fallback: def.title });
       renderGameList();
 
       let runtime;
@@ -985,10 +1075,10 @@
         else runtime = createPlaceholderGame(gameRoot, context, def);
       } catch (err) {
         console.error('Trump game init failed', err);
-        showToast('ゲームの初期化に失敗しました。', { type: 'warn' });
+        showToast(text('errors.initToast', 'ゲームの初期化に失敗しました。'), { type: 'warn' });
         const fallback = document.createElement('div');
         fallback.className = 'mini-trump-placeholder';
-        fallback.textContent = '初期化に失敗しました。別のゲームを試してください。';
+        fallback.textContent = text('errors.initFallback', '初期化に失敗しました。別のゲームを試してください。');
         board.appendChild(fallback);
         setActions([]);
         return;
@@ -1002,18 +1092,96 @@
       container.innerHTML = '';
       const msg = document.createElement('div');
       msg.className = 'mini-trump-placeholder';
-      msg.innerHTML = `<div style="font-size:18px;">${def.title}</div><div style="font-size:14px;color:#94a3b8;max-width:420px;">${def.description}<br>実装準備中です。</div>`;
+      const titleEl = document.createElement('div');
+      titleEl.style.fontSize = '18px';
+      titleEl.textContent = getLocalizedGameTitle(def);
+      const descWrap = document.createElement('div');
+      descWrap.style.fontSize = '14px';
+      descWrap.style.color = '#94a3b8';
+      descWrap.style.maxWidth = '420px';
+      descWrap.style.display = 'flex';
+      descWrap.style.flexDirection = 'column';
+      descWrap.style.gap = '6px';
+      const descEl = document.createElement('div');
+      descEl.textContent = getLocalizedGameDescription(def);
+      const statusEl = document.createElement('div');
+      statusEl.textContent = text('list.unimplemented.status', '実装準備中です。');
+      descWrap.appendChild(descEl);
+      descWrap.appendChild(statusEl);
+      msg.appendChild(titleEl);
+      msg.appendChild(descWrap);
       container.appendChild(msg);
-      ctx.setStatus('現在は開発中です。');
+      ctx.setStatus(text('status.devPlaceholder', '現在は開発中です。'), { key: 'status.devPlaceholder', fallback: '現在は開発中です。' });
       ctx.setScore('');
       ctx.setActions([
-        { label: '一覧に戻る', variant: 'secondary', onClick: () => ctx.exitToHub() }
+        { label: text('actions.backToList', '一覧に戻る'), labelKey: 'actions.backToList', variant: 'secondary', onClick: () => ctx.exitToHub() }
       ]);
       return {
         start(){},
         stop(){},
         destroy(){ container.innerHTML=''; }
       };
+    }
+
+    function updateDifficultyBadge(){
+      const multiplierTxt = state.multiplier.toFixed(1).replace(/\.0$/, '');
+      difficultyBadge.textContent = text('layout.difficulty', () => `難易度 ${state.difficulty} ×${multiplierTxt}`, {
+        difficulty: state.difficulty,
+        multiplier: multiplierTxt
+      });
+    }
+
+    function updateHeaderLocalization(){
+      navHeader.textContent = text('layout.navHeader', 'トランプゲーム');
+      updateDifficultyBadge();
+      const settingsLabel = text('layout.settings', '設定');
+      settingsButton.setAttribute('aria-label', settingsLabel);
+      settingsButton.title = settingsLabel;
+    }
+
+    function updatePlaceholderLocalization(){
+      placeholderPrimary.textContent = text('placeholder.primary', '左のリストからゲームを選んでください。');
+      const separator = text('placeholder.separator', ' / ');
+      const phaseGames = GAME_DEFS.filter((def) => def.phase === 1 && def.implemented).map((def) => getLocalizedGameTitle(def));
+      const joined = phaseGames.filter(Boolean).join(separator);
+      placeholderSecondary.textContent = text('placeholder.phaseInfo', () => {
+        const summary = joined || '神経衰弱 / ブラックジャック / ババ抜き';
+        return `Phase 1: ${summary}`;
+      }, { phase: 1, games: joined });
+    }
+
+    function applyStoredTitle(){
+      if (!state.titleMeta) return;
+      const meta = state.titleMeta;
+      if (meta.key) {
+        title.textContent = text(meta.key, meta.fallback, meta.params);
+      } else {
+        title.textContent = meta.fallback ?? '';
+      }
+    }
+
+    function applyStoredStatus(){
+      if (!state.statusMeta) return;
+      const meta = state.statusMeta;
+      if (meta.key) {
+        statusLine.textContent = text(meta.key, meta.fallback, meta.params);
+      } else {
+        statusLine.textContent = meta.fallback ?? '';
+      }
+    }
+
+    function updateLocalizedUi(){
+      updateHeaderLocalization();
+      updatePlaceholderLocalization();
+      renderGameList();
+      applyStoredTitle();
+      applyStoredStatus();
+      if (actionsBar.children.length || (state.actions && state.actions.length)) {
+        setActions(state.actions && state.actions.length ? state.actions : []);
+      }
+      if (settingsPanelElement) {
+        closeSettingsPanel();
+      }
     }
 
     function handleKeydown(e){
@@ -1035,6 +1203,17 @@
     document.addEventListener('keydown', handleKeydown);
 
     renderGameList();
+
+    if (!detachLocale && localization && typeof localization.onChange === 'function') {
+      detachLocale = localization.onChange(() => {
+        updateLocalizedUi();
+      });
+    }
+
+    if (localization && typeof localization.getLocale === 'function') {
+      // Ensure localization-dependent UI is consistent even if locale was restored before init
+      updateLocalizedUi();
+    }
 
     if (state.selectedGameId) {
       const def = getGameDef(state.selectedGameId);
@@ -1058,6 +1237,10 @@
         state.currentRuntime = null;
         closeSettingsPanel();
         state.settingsListeners.clear();
+        if (detachLocale) {
+          try { detachLocale(); } catch {}
+          detachLocale = null;
+        }
         root.removeChild(wrapper);
       },
       getScore(){

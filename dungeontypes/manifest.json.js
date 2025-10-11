@@ -330,6 +330,14 @@ window.DUNGEONTYPE_MANIFEST = [
     author: 'builtin-sample'
   },
   {
+    id: 'star_wars_galactic_saga',
+    name: 'Galactic Saga: Star Wars Worlds',
+    nameKey: "dungeon.packs.star_wars_galactic_saga.name",
+    entry: 'dungeontypes/star_wars_galactic_saga_pack.js',
+    version: '1.0.0',
+    author: 'holocron-cartographers'
+  },
+  {
     id: 'celestial_dynasty_pack',
     name: '華夏王朝拡張パック',
     nameKey: "dungeon.packs.celestial_dynasty_pack.name",

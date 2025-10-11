@@ -3552,8 +3552,8 @@
     const dealerLabel = document.createElement('div');
     dealerLabel.className = 'mini-trump-label';
     const updateLabels = () => {
-      dealerLabel.textContent = ctx.text('games.trump.blackjack.labels.dealer', 'ディーラー');
-      playerLabel.textContent = ctx.text('games.trump.blackjack.labels.player', 'プレイヤー');
+      dealerLabel.textContent = ctx.text('minigame.trump_games.blackjack.labels.dealer', 'ディーラー');
+      playerLabel.textContent = ctx.text('minigame.trump_games.blackjack.labels.player', 'プレイヤー');
     };
 
     const dealerHandEl = document.createElement('div');
@@ -3569,8 +3569,8 @@
     message.className = 'mini-trump-meta';
     const chooseActionFallback = () => 'HIT / STAND を選択してください。';
     setMessage(
-      ctx.text('games.trump.blackjack.messages.chooseAction', chooseActionFallback),
-      { key: 'games.trump.blackjack.messages.chooseAction', params: null, fallback: chooseActionFallback }
+      ctx.text('minigame.trump_games.blackjack.messages.chooseAction', chooseActionFallback),
+      { key: 'minigame.trump_games.blackjack.messages.chooseAction', params: null, fallback: chooseActionFallback }
     );
 
     root.appendChild(dealerLabel);
@@ -3585,10 +3585,10 @@
     updateLabels();
 
     ctx.setActions([
-      { labelKey: 'games.trump.blackjack.actions.hit', label: 'ヒット (H)', variant: 'primary', hotkey: 'H', onClick: () => hit() },
-      { labelKey: 'games.trump.blackjack.actions.stand', label: 'スタンド (S)', variant: 'secondary', hotkey: 'S', onClick: () => stand() },
-      { labelKey: 'games.trump.blackjack.actions.restart', label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => newRound(true) },
-      { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      { labelKey: 'minigame.trump_games.blackjack.actions.hit', label: 'ヒット (H)', variant: 'primary', hotkey: 'H', onClick: () => hit() },
+      { labelKey: 'minigame.trump_games.blackjack.actions.stand', label: 'スタンド (S)', variant: 'secondary', hotkey: 'S', onClick: () => stand() },
+      { labelKey: 'minigame.trump_games.blackjack.actions.restart', label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => newRound(true) },
+      { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
     ]);
 
     function ensureShoe(){
@@ -3642,12 +3642,12 @@
       const statusParams = { wins: state.wins, losses: state.losses, pushes: state.pushes };
       const statusFallback = ({ wins, losses, pushes }) => `勝利 ${wins} / 敗北 ${losses} / プッシュ ${pushes}`;
       ctx.setStatus(
-        ctx.text('games.trump.blackjack.status.tally', statusFallback, statusParams),
-        { key: 'games.trump.blackjack.status.tally', params: statusParams, fallback: statusFallback }
+        ctx.text('minigame.trump_games.blackjack.status.tally', statusFallback, statusParams),
+        { key: 'minigame.trump_games.blackjack.status.tally', params: statusParams, fallback: statusFallback }
       );
       const scoreParams = { plays: stats.plays || 0, wins: stats.wins || 0 };
       const scoreFallback = ({ plays, wins }) => `通算プレイ ${plays} ・ 勝利 ${wins}`;
-      ctx.setScore(ctx.text('games.trump.blackjack.hud.score', scoreFallback, scoreParams));
+      ctx.setScore(ctx.text('minigame.trump_games.blackjack.hud.score', scoreFallback, scoreParams));
     }
 
     function setMessage(textValue, metadata){
@@ -3678,8 +3678,8 @@
       if (state.settled) return;
       state.settled = true;
       ctx.setActions([
-        { labelKey: 'games.trump.blackjack.actions.nextHand', label: '次のハンド (N)', variant: 'primary', hotkey: 'N', onClick: () => newRound(false) },
-        { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        { labelKey: 'minigame.trump_games.blackjack.actions.nextHand', label: '次のハンド (N)', variant: 'primary', hotkey: 'N', onClick: () => newRound(false) },
+        { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
       ]);
       const isWin = outcome === 'win' || outcome === 'bj';
       const projectedWins = state.wins + (isWin ? 1 : 0);
@@ -3696,7 +3696,7 @@
       } else {
         state.losses++;
         const fallback = () => '残念！次は勝てるはず。';
-        ctx.showToast(ctx.text('games.trump.blackjack.toast.consolation', fallback), { type: 'warn', duration: 2600 });
+        ctx.showToast(ctx.text('minigame.trump_games.blackjack.toast.consolation', fallback), { type: 'warn', duration: 2600 });
       }
       renderHands(true);
       updateStatus();
@@ -3708,8 +3708,8 @@
       if (playerEval.total === 21 && dealerEval.total !== 21) {
         const fallback = () => 'ブラックジャック！';
         setMessage(
-          ctx.text('games.trump.blackjack.messages.blackjackPlayer', fallback),
-          { key: 'games.trump.blackjack.messages.blackjackPlayer', params: null, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.blackjackPlayer', fallback),
+          { key: 'minigame.trump_games.blackjack.messages.blackjackPlayer', params: null, fallback }
         );
         settleRound('bj');
         return true;
@@ -3717,8 +3717,8 @@
       if (dealerEval.total === 21 && playerEval.total !== 21) {
         const fallback = () => 'ディーラーがブラックジャック…';
         setMessage(
-          ctx.text('games.trump.blackjack.messages.blackjackDealer', fallback),
-          { key: 'games.trump.blackjack.messages.blackjackDealer', params: null, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.blackjackDealer', fallback),
+          { key: 'minigame.trump_games.blackjack.messages.blackjackDealer', params: null, fallback }
         );
         settleRound('lose');
         return true;
@@ -3726,8 +3726,8 @@
       if (dealerEval.total === 21 && playerEval.total === 21) {
         const fallback = () => '両者ブラックジャック。プッシュ！';
         setMessage(
-          ctx.text('games.trump.blackjack.messages.blackjackPush', fallback),
-          { key: 'games.trump.blackjack.messages.blackjackPush', params: null, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.blackjackPush', fallback),
+          { key: 'minigame.trump_games.blackjack.messages.blackjackPush', params: null, fallback }
         );
         settleRound('push');
         return true;
@@ -3744,16 +3744,16 @@
         const params = { value };
         const fallback = ({ value }) => `バースト (${value})`;
         setMessage(
-          ctx.text('games.trump.blackjack.messages.bust', fallback, params),
-          { key: 'games.trump.blackjack.messages.bust', params, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.bust', fallback, params),
+          { key: 'minigame.trump_games.blackjack.messages.bust', params, fallback }
         );
         settleRound('lose');
       } else {
         const params = { value };
         const fallback = ({ value }) => `合計 ${value} / HIT or STAND`;
         setMessage(
-          ctx.text('games.trump.blackjack.messages.totalPrompt', fallback, params),
-          { key: 'games.trump.blackjack.messages.totalPrompt', params, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.totalPrompt', fallback, params),
+          { key: 'minigame.trump_games.blackjack.messages.totalPrompt', params, fallback }
         );
       }
     }
@@ -3776,8 +3776,8 @@
         const params = { value: dealerEval.total };
         const fallback = ({ value }) => `ディーラーがバースト (${value})`;
         setMessage(
-          ctx.text('games.trump.blackjack.messages.dealerBust', fallback, params),
-          { key: 'games.trump.blackjack.messages.dealerBust', params, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.dealerBust', fallback, params),
+          { key: 'minigame.trump_games.blackjack.messages.dealerBust', params, fallback }
         );
         settleRound('win');
         return;
@@ -3786,24 +3786,24 @@
         const params = { dealer: dealerEval.total, player: playerVal };
         const fallback = ({ dealer, player }) => `ディーラー ${dealer} 対 ${player}`;
         setMessage(
-          ctx.text('games.trump.blackjack.messages.dealerVsPlayer', fallback, params),
-          { key: 'games.trump.blackjack.messages.dealerVsPlayer', params, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.dealerVsPlayer', fallback, params),
+          { key: 'minigame.trump_games.blackjack.messages.dealerVsPlayer', params, fallback }
         );
         settleRound('lose');
       } else if (dealerEval.total < playerVal) {
         const params = { dealer: dealerEval.total, player: playerVal };
         const fallback = ({ player, dealer }) => `勝利！${player} 対 ${dealer}`;
         setMessage(
-          ctx.text('games.trump.blackjack.messages.playerWin', fallback, params),
-          { key: 'games.trump.blackjack.messages.playerWin', params, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.playerWin', fallback, params),
+          { key: 'minigame.trump_games.blackjack.messages.playerWin', params, fallback }
         );
         settleRound('win');
       } else {
         const params = { value: playerVal };
         const fallback = ({ value }) => `プッシュ (${value})`;
         setMessage(
-          ctx.text('games.trump.blackjack.messages.push', fallback, params),
-          { key: 'games.trump.blackjack.messages.push', params, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.push', fallback, params),
+          { key: 'minigame.trump_games.blackjack.messages.push', params, fallback }
         );
         settleRound('push');
       }
@@ -3819,10 +3819,10 @@
       state.settled = false;
 
       ctx.setActions([
-        { labelKey: 'games.trump.blackjack.actions.hit', label: 'ヒット (H)', variant: 'primary', hotkey: 'H', onClick: () => hit() },
-        { labelKey: 'games.trump.blackjack.actions.stand', label: 'スタンド (S)', variant: 'secondary', hotkey: 'S', onClick: () => stand() },
-        { labelKey: 'games.trump.blackjack.actions.restart', label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => newRound(true) },
-        { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+        { labelKey: 'minigame.trump_games.blackjack.actions.hit', label: 'ヒット (H)', variant: 'primary', hotkey: 'H', onClick: () => hit() },
+        { labelKey: 'minigame.trump_games.blackjack.actions.stand', label: 'スタンド (S)', variant: 'secondary', hotkey: 'S', onClick: () => stand() },
+        { labelKey: 'minigame.trump_games.blackjack.actions.restart', label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => newRound(true) },
+        { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
       ]);
 
       deal(state.playerHand);
@@ -3834,8 +3834,8 @@
       if (!checkForNaturals()) {
         const fallback = () => 'HIT または STAND を選択してください。';
         setMessage(
-          ctx.text('games.trump.blackjack.messages.chooseActionAlt', fallback),
-          { key: 'games.trump.blackjack.messages.chooseActionAlt', params: null, fallback }
+          ctx.text('minigame.trump_games.blackjack.messages.chooseActionAlt', fallback),
+          { key: 'minigame.trump_games.blackjack.messages.chooseActionAlt', params: null, fallback }
         );
       }
     }
@@ -3885,21 +3885,21 @@
     const hintToastFallback = () => '右隣のプレイヤーのカードをクリックして引きましょう。';
     ctx.setActions([
       {
-        labelKey: 'games.trump.common.actions.hint',
+        labelKey: 'minigame.trump_games.common.actions.hint',
         label: 'ヒント (H)',
         variant: 'secondary',
         hotkey: 'H',
-        onClick: () => ctx.showToast(ctx.text('games.trump.baba.toast.hint', hintToastFallback))
+        onClick: () => ctx.showToast(ctx.text('minigame.trump_games.baba.toast.hint', hintToastFallback))
       },
       {
-        labelKey: 'games.trump.common.actions.restart',
+        labelKey: 'minigame.trump_games.common.actions.restart',
         label: 'リスタート (R)',
         variant: 'secondary',
         hotkey: 'R',
         onClick: () => initGame()
       },
       {
-        labelKey: 'games.trump.common.actions.returnToList',
+        labelKey: 'minigame.trump_games.common.actions.returnToList',
         label: 'ゲーム一覧 (B)',
         variant: 'secondary',
         hotkey: 'B',
@@ -3911,11 +3911,11 @@
       const stats = ctx.stats();
       const human = players[0];
       const best = stats.bestScore != null
-        ? ctx.text('games.trump.common.hud.bestPlace', ({ place }) => `${place} 位`, { place: stats.bestScore })
-        : ctx.text('games.trump.common.hud.noRecord', '---');
+        ? ctx.text('minigame.trump_games.common.hud.bestPlace', ({ place }) => `${place} 位`, { place: stats.bestScore })
+        : ctx.text('minigame.trump_games.common.hud.noRecord', '---');
       const params = { plays: stats.plays || 0, best, hand: human.hand.length };
       const fallback = ({ plays, best, hand }) => `通算 ${plays} 回 / ベスト ${best} / 手札 ${hand} 枚`;
-      ctx.setScore(ctx.text('games.trump.common.hud.scoreSummary', fallback, params));
+      ctx.setScore(ctx.text('minigame.trump_games.common.hud.scoreSummary', fallback, params));
     }
 
     function initGame(){
@@ -3948,12 +3948,12 @@
       const statusParams = { cards: players[0].hand.length };
       const statusFallback = ({ cards }) => `あなたの番：右隣のカードをクリックしてください。（手札 ${cards} 枚）`;
       ctx.setStatus(
-        ctx.text('games.trump.baba.status.humanTurn', statusFallback, statusParams),
-        { key: 'games.trump.baba.status.humanTurn', params: statusParams, fallback: statusFallback }
+        ctx.text('minigame.trump_games.baba.status.humanTurn', statusFallback, statusParams),
+        { key: 'minigame.trump_games.baba.status.humanTurn', params: statusParams, fallback: statusFallback }
       );
       updateHud();
       const startFallback = () => 'ゲーム開始！右隣のプレイヤーからカードを引きましょう。';
-      ctx.showToast(ctx.text('games.trump.baba.toast.start', startFallback));
+      ctx.showToast(ctx.text('minigame.trump_games.baba.toast.start', startFallback));
     }
 
     function findNextActive(start){
@@ -3999,7 +3999,7 @@
           const toastParams = { place: player.finishedAt };
           const finishFallback = ({ place }) => `上がり！順位 ${place}`;
           ctx.showToast(
-            ctx.text('games.trump.baba.toast.finish', finishFallback, toastParams),
+            ctx.text('minigame.trump_games.baba.toast.finish', finishFallback, toastParams),
             { duration: 2600 }
           );
         }
@@ -4043,15 +4043,15 @@
         const params = { cards: current.hand.length };
         const fallback = ({ cards }) => `あなたの番：右隣のカードをクリックしてください。（手札 ${cards} 枚）`;
         ctx.setStatus(
-          ctx.text('games.trump.baba.status.humanTurn', fallback, params),
-          { key: 'games.trump.baba.status.humanTurn', params, fallback }
+          ctx.text('minigame.trump_games.baba.status.humanTurn', fallback, params),
+          { key: 'minigame.trump_games.baba.status.humanTurn', params, fallback }
         );
       } else {
         const params = { name: current.name };
         const fallback = ({ name }) => `${name} の番`;
         ctx.setStatus(
-          ctx.text('games.trump.common.status.turn', fallback, params),
-          { key: 'games.trump.common.status.turn', params, fallback }
+          ctx.text('minigame.trump_games.common.status.turn', fallback, params),
+          { key: 'minigame.trump_games.common.status.turn', params, fallback }
         );
       }
       render();
@@ -4070,7 +4070,7 @@
         const toastParams = { name: loser.name };
         const loserFallback = ({ name }) => `${name} がジョーカーを持っています。ゲーム終了！`;
         ctx.showToast(
-          ctx.text('games.trump.baba.toast.loser', loserFallback, toastParams),
+          ctx.text('minigame.trump_games.baba.toast.loser', loserFallback, toastParams),
           { duration: 2800 }
         );
         if (loser && loser.human) {
@@ -4078,8 +4078,8 @@
         }
         ctx.commitStats({ plays: 1, wins: players[0].finishedAt === 1 ? 1 : 0, score: players[0].finishedAt || players.length, bestMode: 'lower' });
         ctx.setActions([
-          { labelKey: 'games.trump.common.actions.rematch', label: '再戦する', variant: 'primary', onClick: () => initGame() },
-          { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+          { labelKey: 'minigame.trump_games.common.actions.rematch', label: '再戦する', variant: 'primary', onClick: () => initGame() },
+          { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
         ]);
         updateHud();
         return true;
@@ -4098,7 +4098,7 @@
         if (player.id === state.current) card.classList.add('active');
         const name = document.createElement('div');
         name.className = 'name';
-        const youSuffix = player.human ? ctx.text('games.trump.common.youSuffix', ' (You)') : '';
+        const youSuffix = player.human ? ctx.text('minigame.trump_games.common.youSuffix', ' (You)') : '';
         name.textContent = player.name + youSuffix;
         card.appendChild(name);
         const handBox = document.createElement('div');
@@ -4109,9 +4109,9 @@
           if (player.finishedAt) {
             const clearedParams = { place: player.finishedAt };
             const clearedFallback = ({ place }) => `上がり (${place}位)`;
-            empty.textContent = ctx.text('games.trump.common.hand.cleared', clearedFallback, clearedParams);
+            empty.textContent = ctx.text('minigame.trump_games.common.hand.cleared', clearedFallback, clearedParams);
           } else {
-            empty.textContent = ctx.text('games.trump.common.hand.empty', '手札なし');
+            empty.textContent = ctx.text('minigame.trump_games.common.hand.empty', '手札なし');
           }
           handBox.appendChild(empty);
         } else if (player.human) {
@@ -4152,7 +4152,7 @@
           finished.className = 'mini-trump-finished';
           const finishedParams = { place: player.finishedAt };
           const finishedFallback = ({ place }) => `${place} 位確定`;
-          finished.textContent = ctx.text('games.trump.common.player.finished', finishedFallback, finishedParams);
+          finished.textContent = ctx.text('minigame.trump_games.common.player.finished', finishedFallback, finishedParams);
           card.appendChild(finished);
         }
         ring.appendChild(card);
@@ -4586,7 +4586,7 @@
     tableEl.className = 'mini-trump-jiji-table-card';
     const tableLabel = document.createElement('div');
     tableLabel.className = 'label';
-    tableLabel.textContent = ctx.text('games.trump.jiji.table.label', '台札');
+    tableLabel.textContent = ctx.text('minigame.trump_games.jiji.table.label', '台札');
     const tableCardHost = document.createElement('div');
     const tableMeta = document.createElement('div');
     tableMeta.className = 'meta';
@@ -4594,7 +4594,7 @@
     swapButton.type = 'button';
     const swapEnableFallback = () => '交換モード';
     const swapDisableFallback = () => '交換モード解除';
-    swapButton.textContent = ctx.text('games.trump.jiji.controls.swap.enable', swapEnableFallback);
+    swapButton.textContent = ctx.text('minigame.trump_games.jiji.controls.swap.enable', swapEnableFallback);
     tableEl.appendChild(tableLabel);
     tableEl.appendChild(tableCardHost);
     tableEl.appendChild(tableMeta);
@@ -4615,7 +4615,7 @@
       const player = players[state.current];
       if (!player || !player.human) return;
       if (!state.tableCard) {
-        ctx.showToast(ctx.text('games.trump.jiji.toast.noTable', '交換できる台札がありません。'), { type: 'warn' });
+        ctx.showToast(ctx.text('minigame.trump_games.jiji.toast.noTable', '交換できる台札がありません。'), { type: 'warn' });
         return;
       }
       state.selectingSwap = !state.selectingSwap;
@@ -4626,21 +4626,21 @@
     const hintToast = () => '台札と同じランクを揃えると手札を減らせます。';
     ctx.setActions([
       {
-        labelKey: 'games.trump.common.actions.hint',
+        labelKey: 'minigame.trump_games.common.actions.hint',
         label: 'ヒント (H)',
         variant: 'secondary',
         hotkey: 'H',
-        onClick: () => ctx.showToast(ctx.text('games.trump.jiji.toast.hint', hintToast))
+        onClick: () => ctx.showToast(ctx.text('minigame.trump_games.jiji.toast.hint', hintToast))
       },
       {
-        labelKey: 'games.trump.common.actions.restart',
+        labelKey: 'minigame.trump_games.common.actions.restart',
         label: 'リスタート (R)',
         variant: 'secondary',
         hotkey: 'R',
         onClick: () => initGame()
       },
       {
-        labelKey: 'games.trump.common.actions.returnToList',
+        labelKey: 'minigame.trump_games.common.actions.returnToList',
         label: 'ゲーム一覧 (B)',
         variant: 'secondary',
         hotkey: 'B',
@@ -4688,8 +4688,8 @@
       state.current = findNextActive(0);
       const statusFallback = () => 'あなたの番：必要なら台札と交換し、右隣からカードを引きましょう。';
       ctx.setStatus(
-        ctx.text('games.trump.jiji.status.humanTurn', statusFallback),
-        { key: 'games.trump.jiji.status.humanTurn', params: null, fallback: statusFallback }
+        ctx.text('minigame.trump_games.jiji.status.humanTurn', statusFallback),
+        { key: 'minigame.trump_games.jiji.status.humanTurn', params: null, fallback: statusFallback }
       );
       render();
       updateHud();
@@ -4699,30 +4699,30 @@
       const stats = ctx.stats();
       const human = players[0];
       const best = stats.bestScore != null
-        ? ctx.text('games.trump.common.hud.bestPlace', ({ place }) => `${place} 位`, { place: stats.bestScore })
-        : ctx.text('games.trump.common.hud.noRecord', '---');
+        ? ctx.text('minigame.trump_games.common.hud.bestPlace', ({ place }) => `${place} 位`, { place: stats.bestScore })
+        : ctx.text('minigame.trump_games.common.hud.noRecord', '---');
       const params = { plays: stats.plays || 0, best, hand: human.hand.length };
       const fallback = ({ plays, best, hand }) => `通算 ${plays} 回 / ベスト ${best} / 手札 ${hand} 枚`;
-      ctx.setScore(ctx.text('games.trump.common.hud.scoreSummary', fallback, params));
+      ctx.setScore(ctx.text('minigame.trump_games.common.hud.scoreSummary', fallback, params));
     }
 
     function updateSwapState(){
       if (state.selectingSwap) {
-        swapButton.textContent = ctx.text('games.trump.jiji.controls.swap.disable', swapDisableFallback);
+        swapButton.textContent = ctx.text('minigame.trump_games.jiji.controls.swap.disable', swapDisableFallback);
         tableEl.classList.add('swap-ready');
         const fallback = () => '交換するカードを自分の手札から選んでください。';
         ctx.setStatus(
-          ctx.text('games.trump.jiji.status.selectSwap', fallback),
-          { key: 'games.trump.jiji.status.selectSwap', params: null, fallback }
+          ctx.text('minigame.trump_games.jiji.status.selectSwap', fallback),
+          { key: 'minigame.trump_games.jiji.status.selectSwap', params: null, fallback }
         );
       } else {
-        swapButton.textContent = ctx.text('games.trump.jiji.controls.swap.enable', swapEnableFallback);
+        swapButton.textContent = ctx.text('minigame.trump_games.jiji.controls.swap.enable', swapEnableFallback);
         tableEl.classList.remove('swap-ready');
         if (state.current === 0) {
           const fallback = () => '台札と交換するか、右隣からカードを引いてください。';
           ctx.setStatus(
-            ctx.text('games.trump.jiji.status.humanDraw', fallback),
-            { key: 'games.trump.jiji.status.humanDraw', params: null, fallback }
+            ctx.text('minigame.trump_games.jiji.status.humanDraw', fallback),
+            { key: 'minigame.trump_games.jiji.status.humanDraw', params: null, fallback }
           );
         }
       }
@@ -4770,7 +4770,7 @@
           const toastParams = { place: player.finishedAt };
           const fallback = ({ place }) => `上がり！順位 ${place}`;
           ctx.showToast(
-            ctx.text('games.trump.jiji.toast.finish', fallback, toastParams),
+            ctx.text('minigame.trump_games.jiji.toast.finish', fallback, toastParams),
             { duration: 2600 }
           );
         }
@@ -4780,7 +4780,7 @@
     function swapWithTable(player, idx){
       if (!state.tableCard) {
         const fallback = () => '台札がありません。';
-        ctx.showToast(ctx.text('games.trump.jiji.toast.tableMissing', fallback), { type: 'warn' });
+        ctx.showToast(ctx.text('minigame.trump_games.jiji.toast.tableMissing', fallback), { type: 'warn' });
         state.selectingSwap = false;
         updateSwapState();
         render();
@@ -4791,7 +4791,7 @@
       if (card.id === state.jijiId) {
         if (player.human) {
           const fallback = () => 'ジジは台札に置けません。';
-          ctx.showToast(ctx.text('games.trump.jiji.toast.cannotPlaceJiji', fallback), { type: 'warn' });
+          ctx.showToast(ctx.text('minigame.trump_games.jiji.toast.cannotPlaceJiji', fallback), { type: 'warn' });
         }
         return;
       }
@@ -4805,7 +4805,7 @@
       removePairs(player);
       render();
       if (player.human) {
-        ctx.showToast(ctx.text('games.trump.jiji.toast.swapped', '台札と交換しました。'));
+        ctx.showToast(ctx.text('minigame.trump_games.jiji.toast.swapped', '台札と交換しました。'));
       }
     }
 
@@ -4865,7 +4865,7 @@
       const target = players[targetIdx];
       if (!target || target.hand.length <= cardIdx) return;
       if (state.selectingSwap) {
-        ctx.showToast(ctx.text('games.trump.jiji.toast.exitSwap', '交換モードを終了してください。'), { type: 'warn' });
+        ctx.showToast(ctx.text('minigame.trump_games.jiji.toast.exitSwap', '交換モードを終了してください。'), { type: 'warn' });
         return;
       }
       const drawn = target.hand.splice(cardIdx, 1)[0];
@@ -4887,16 +4887,16 @@
       if (current.human) {
         const fallback = () => '台札と交換するか、右隣からカードを引いてください。';
         ctx.setStatus(
-          ctx.text('games.trump.jiji.status.humanDraw', fallback),
-          { key: 'games.trump.jiji.status.humanDraw', params: null, fallback }
+          ctx.text('minigame.trump_games.jiji.status.humanDraw', fallback),
+          { key: 'minigame.trump_games.jiji.status.humanDraw', params: null, fallback }
         );
         render();
       } else {
         const params = { name: current.name };
         const fallback = ({ name }) => `${name} の番`;
         ctx.setStatus(
-          ctx.text('games.trump.common.status.turn', fallback, params),
-          { key: 'games.trump.common.status.turn', params, fallback }
+          ctx.text('minigame.trump_games.common.status.turn', fallback, params),
+          { key: 'minigame.trump_games.common.status.turn', params, fallback }
         );
         render();
         setTimeout(() => executeTurn(current), 600);
@@ -4911,7 +4911,7 @@
         const toastParams = { name: loser.name };
         const fallback = ({ name }) => `${name} がジジを持っています。ゲーム終了！`;
         ctx.showToast(
-          ctx.text('games.trump.jiji.toast.loser', fallback, toastParams),
+          ctx.text('minigame.trump_games.jiji.toast.loser', fallback, toastParams),
           { duration: 2800 }
         );
         if (loser && loser.human) {
@@ -4919,8 +4919,8 @@
         }
         ctx.commitStats({ plays: 1, wins: players[0].finishedAt === 1 ? 1 : 0, score: players[0].finishedAt || players.length, bestMode: 'lower' });
         ctx.setActions([
-          { labelKey: 'games.trump.common.actions.rematch', label: '再戦する', variant: 'primary', onClick: () => initGame() },
-          { labelKey: 'games.trump.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+          { labelKey: 'minigame.trump_games.common.actions.rematch', label: '再戦する', variant: 'primary', onClick: () => initGame() },
+          { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
         ]);
         updateHud();
         return true;
@@ -4943,9 +4943,9 @@
         tableCardHost.appendChild(el);
         const params = { rank: state.tableCard.rankLabel };
         const fallback = ({ rank }) => `ランク: ${rank}`;
-        tableMeta.textContent = ctx.text('games.trump.jiji.table.rank', fallback, params);
+        tableMeta.textContent = ctx.text('minigame.trump_games.jiji.table.rank', fallback, params);
       } else {
-        tableMeta.textContent = ctx.text('games.trump.jiji.table.none', '台札なし');
+        tableMeta.textContent = ctx.text('minigame.trump_games.jiji.table.none', '台札なし');
       }
       swapButton.disabled = state.finished || state.current !== 0 || !state.tableCard;
       updateSwapState();
@@ -4960,7 +4960,7 @@
         if (player.id === state.current) card.classList.add('active');
         const name = document.createElement('div');
         name.className = 'name';
-        const youSuffix = player.human ? ctx.text('games.trump.common.youSuffix', ' (You)') : '';
+        const youSuffix = player.human ? ctx.text('minigame.trump_games.common.youSuffix', ' (You)') : '';
         name.textContent = player.name + youSuffix;
         card.appendChild(name);
         const handBox = document.createElement('div');
@@ -4971,9 +4971,9 @@
           if (player.finishedAt) {
             const clearedParams = { place: player.finishedAt };
             const clearedFallback = ({ place }) => `上がり (${place}位)`;
-            empty.textContent = ctx.text('games.trump.common.hand.cleared', clearedFallback, clearedParams);
+            empty.textContent = ctx.text('minigame.trump_games.common.hand.cleared', clearedFallback, clearedParams);
           } else {
-            empty.textContent = ctx.text('games.trump.common.hand.empty', '手札なし');
+            empty.textContent = ctx.text('minigame.trump_games.common.hand.empty', '手札なし');
           }
           handBox.appendChild(empty);
         } else if (player.human) {
@@ -5008,7 +5008,7 @@
           finished.className = 'mini-trump-finished';
           const finishedParams = { place: player.finishedAt };
           const finishedFallback = ({ place }) => `${place} 位確定`;
-          finished.textContent = ctx.text('games.trump.common.player.finished', finishedFallback, finishedParams);
+          finished.textContent = ctx.text('minigame.trump_games.common.player.finished', finishedFallback, finishedParams);
           card.appendChild(finished);
         }
         ring.appendChild(card);

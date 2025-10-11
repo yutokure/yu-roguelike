@@ -18905,10 +18905,13 @@ function createMiniGameLocalization(def) {
                 if (id) {
                     addPrefix(`minigame.${id}`);
                     addPrefix(`miniexp.games.${id}`);
+                    addPrefix(`selection.miniexp.games.${id}`);
                 }
             }
         }
         addPrefix('minigame');
+        addPrefix('miniexp.games');
+        addPrefix('selection.miniexp.games');
         return list.length ? list : ['minigame'];
     })();
 

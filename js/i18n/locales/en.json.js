@@ -702,7 +702,12 @@
           },
           "game2048": {
             "name": "2048",
-            "description": "Merge tiles toward 2048, earning EXP based on log2 sums."
+            "description": "Merge tiles toward 2048, earning EXP based on log2 sums.",
+            "setup": {
+              "sizeLabel": "Board size: ",
+              "startButton": "Start",
+              "boardSizeOption": "{size}×{size}"
+            }
           },
           "todo_list": {
             "name": "To-Do List",
@@ -15074,71 +15079,6 @@
           "timerComplete": "Timer finished!"
         }
       },
-      "diagramMaker": {
-        "errors": {
-          "containerMissing": "MiniExp Diagram Maker requires a container",
-          "pngSignature": "Unable to recognize PNG signature",
-          "pngDataMissing": "No draw.io data found inside the PNG",
-          "inflateUnsupported": "This environment does not support inflating compressed data",
-          "parseXml": "Failed to parse XML",
-          "diagramMissing": "No diagram element found",
-          "mxGraphMissing": "No mxGraphModel element found",
-          "diagramDecodeFailed": "Failed to decode diagram data",
-          "mxGraphRootMissing": "mxGraphModel root element is missing",
-          "loadFailed": "Failed to load: {error}",
-          "saveFailed": "Failed to save: {error}",
-          "exportFailed": "Failed to export: {error}"
-        },
-        "defaults": {
-          "fileName": "Untitled Diagram.drawio",
-          "layerName": "Layer {index}",
-          "pageName": "Page {index}",
-          "textPlaceholder": "Text",
-          "nodePlaceholder": "New Node"
-        },
-        "tools": {
-          "select": "Select",
-          "rectangle": "Rectangle",
-          "ellipse": "Ellipse",
-          "text": "Text",
-          "connector": "Connector",
-          "delete": "Delete"
-        },
-        "actions": {
-          "new": "New",
-          "open": "Open",
-          "save": "Save",
-          "export": "Export",
-          "exportFormat": "Export as {formatLabel}",
-          "undo": "Undo",
-          "redo": "Redo"
-        },
-        "sections": {
-          "properties": "Properties"
-        },
-        "fields": {
-          "x": "X",
-          "y": "Y",
-          "width": "Width",
-          "height": "Height",
-          "fill": "Fill",
-          "stroke": "Stroke",
-          "strokeWidth": "Stroke Width",
-          "textColor": "Text Color",
-          "fontSize": "Font Size",
-          "text": "Text"
-        },
-        "toggles": {
-          "grid": "Grid",
-          "snap": "Snap"
-        },
-        "labels": {
-          "exp": "EXP: {value}"
-        },
-        "confirm": {
-          "newDocument": "You have unsaved changes. Create a new diagram?"
-        }
-      },
       "clockHub": {
         "errors": {
           "noContainer": "Clock Hub requires a container"
@@ -16024,7 +15964,7 @@
             "defeat": "<strong>Defeat</strong> +{exp}EXP"
           }
         },
-        "treasureHunt": {
+      "treasureHunt": {
           "ui": {
             "mapTitle": "Map",
             "start": "Start",
@@ -16062,118 +16002,74 @@
           "defeat": "<strong>Defeat</strong> +{exp}EXP"
         }
       },
-      "triominoColumns": {
-        "menu": {
-          "title": "Triomino Columns",
-          "subtitle": "Choose a mode",
-          "options": {
-            "endless": {
-              "label": "ENDLESS - Play until game over",
-              "description": "Core single-player mode"
-            },
-            "vsCpu": {
-              "label": "VS.RIVAL - CPU Battle",
-              "description": "Face off against GEARS characters"
-            },
-            "vs2p": {
-              "label": "VS.2P - Two-Player Battle",
-              "description": "Local battle (WASD + JK controls)"
-            }
-          }
-        },
-        "cpuSelect": {
-          "title": "VS.RIVAL - Select Opponent",
-          "subtitle": "Choose the rival you want to challenge",
-          "detail": "Speed Lv.{speedLevel} / Aggression {aggression}%",
-          "hint": "※ Hugleman Lady unlocks by consecutive victories. ??? unlocks by clearing without continues within 15 minutes.",
-          "back": "← Back to Mode Select",
-          "lockReasons": {
-            "lady": "Requirement: Break through the Hugleman squad in one streak",
-            "hidden": "Requirement: Clear without continues within 15 minutes",
-            "default": "Requirement: Defeat the previous rival"
-          },
-          "rivals": {
-            "0": { "name": "Karakurin" },
-            "1": { "name": "Hugleman Jr." },
-            "2": { "name": "Karakuri Ninja" },
-            "3": { "name": "Hugleman Mk-II" },
-            "4": { "name": "Hugleman Mk-III" },
-            "5": { "name": "Shadow Hugle" },
-            "6": { "name": "Hugleman Lady" },
-            "7": { "name": "???" }
-          }
-        },
-        "marks": {
-          "sun": "Sun",
-          "leaf": "Leaf",
-          "aqua": "Droplet",
-          "berry": "Berry",
-          "rose": "Rose",
-          "amber": "Amber"
-        },
-        "blocks": {
-          "multi": "Multi"
-        },
-        "messages": {
-          "garbageAttack": "Sent garbage to {target}!",
-          "lineSpark": "Line Spark!",
-          "vs2pStart": "VS 2P Start!",
-          "vsCpuStart": "VS RIVAL: {name}",
-          "combo": "{target}: {combo}-chain!"
-        },
-        "floating": {
-          "clear": "{count} CLEAR",
-          "combo": "{combo} Chain!",
-          "spark": "SPARK!"
-        },
-        "boards": {
-          "player": "Player",
-          "p1": "P1",
-          "p2": "P2"
-        },
-        "results": {
-          "gameOver": "Game Over",
-          "victoryTitle": "{name} Wins!",
-          "drawTitle": "Draw",
-          "endlessStats": "Lines {lines} / Combos {combos} / Sparks {spark}",
-          "buttons": {
-            "retryEndless": "Play Endless Again",
-            "backToMenu": "Back to Mode Select"
-          },
-          "vsCpu": {
-            "victoryMessage": "Victory! Time {duration}s / Total {total}s",
-            "defeatMessage": "Defeat… Time {duration}s",
-            "nextRival": "Next Rival ({name})",
-            "retrySame": "Rematch Same Rival",
-            "backToSelect": "Back to Rival Select"
-          },
-          "vs2p": {
-            "retry": "Rematch",
-            "hint": "You can battle again with the same keyboard setup."
-          }
-        },
-        "panel": {
-          "next": "NEXT",
-          "hold": "HOLD",
-          "stats": "STATS",
-          "lines": "Lines: {value}",
-          "combo": "Combo: {value}",
-          "spark": "Spark: {value}",
-          "attack": "Attack: {value}"
-        },
-        "miniStats": {
-          "lines": "Lines {value}",
-          "comboSpark": "Combo {combo} / Spark {spark}"
-        },
-        "modeLabels": {
-          "endless": "ENDLESS Mode",
-          "vsCpu": "VS.RIVAL Mode",
-          "vs2p": "VS.2P Mode"
-        }
-      }
     },
-    "games": {
-      "sugorokuLife": {
+      "games": {
+        "diagramMaker": {
+          "errors": {
+            "containerMissing": "MiniExp Diagram Maker requires a container",
+            "pngSignature": "Unable to recognize PNG signature",
+            "pngDataMissing": "No draw.io data found inside the PNG",
+            "inflateUnsupported": "This environment does not support inflating compressed data",
+            "parseXml": "Failed to parse XML",
+            "diagramMissing": "No diagram element found",
+            "mxGraphMissing": "No mxGraphModel element found",
+            "diagramDecodeFailed": "Failed to decode diagram data",
+            "mxGraphRootMissing": "mxGraphModel root element is missing",
+            "loadFailed": "Failed to load: {error}",
+            "saveFailed": "Failed to save: {error}",
+            "exportFailed": "Failed to export: {error}"
+          },
+          "defaults": {
+            "fileName": "Untitled Diagram.drawio",
+            "layerName": "Layer {index}",
+            "pageName": "Page {index}",
+            "textPlaceholder": "Text",
+            "nodePlaceholder": "New Node"
+          },
+          "tools": {
+            "select": "Select",
+            "rectangle": "Rectangle",
+            "ellipse": "Ellipse",
+            "text": "Text",
+            "connector": "Connector",
+            "delete": "Delete"
+          },
+          "actions": {
+            "new": "New",
+            "open": "Open",
+            "save": "Save",
+            "export": "Export",
+            "exportFormat": "Export as {formatLabel}",
+            "undo": "Undo",
+            "redo": "Redo"
+          },
+          "sections": {
+            "properties": "Properties"
+          },
+          "fields": {
+            "x": "X",
+            "y": "Y",
+            "width": "Width",
+            "height": "Height",
+            "fill": "Fill",
+            "stroke": "Stroke",
+            "strokeWidth": "Stroke Width",
+            "textColor": "Text Color",
+            "fontSize": "Font Size",
+            "text": "Text"
+          },
+          "toggles": {
+            "grid": "Grid",
+            "snap": "Snap"
+          },
+          "labels": {
+            "exp": "EXP: {value}"
+          },
+          "confirm": {
+            "newDocument": "You have unsaved changes. Create a new diagram?"
+          }
+        },
+        "sugorokuLife": {
         "ui": {
           "currencySuffix": "G",
           "expUnit": "EXP",
@@ -16282,6 +16178,115 @@
           "award": { "label": "Annual Award", "description": "You received a year-end company award and prize money!" },
           "market": { "label": "Market Crash", "description": "Your investments plunged—stay calm and ride it out." }
         }
+      },
+      "triominoColumns": {
+      "menu": {
+        "title": "Triomino Columns",
+        "subtitle": "Choose a mode",
+        "options": {
+          "endless": {
+            "label": "ENDLESS - Play until game over",
+            "description": "Core single-player mode"
+          },
+          "vsCpu": {
+            "label": "VS.RIVAL - CPU Battle",
+            "description": "Face off against GEARS characters"
+          },
+          "vs2p": {
+            "label": "VS.2P - Two-Player Battle",
+            "description": "Local battle (WASD + JK controls)"
+          }
+        }
+      },
+      "cpuSelect": {
+        "title": "VS.RIVAL - Select Opponent",
+        "subtitle": "Choose the rival you want to challenge",
+        "detail": "Speed Lv.{speedLevel} / Aggression {aggression}%",
+        "hint": "※ Hugleman Lady unlocks by consecutive victories. ??? unlocks by clearing without continues within 15 minutes.",
+        "back": "← Back to Mode Select",
+        "lockReasons": {
+          "lady": "Requirement: Break through the Hugleman squad in one streak",
+          "hidden": "Requirement: Clear without continues within 15 minutes",
+          "default": "Requirement: Defeat the previous rival"
+        },
+        "rivals": {
+          "0": { "name": "Karakurin" },
+          "1": { "name": "Hugleman Jr." },
+          "2": { "name": "Karakuri Ninja" },
+          "3": { "name": "Hugleman Mk-II" },
+          "4": { "name": "Hugleman Mk-III" },
+          "5": { "name": "Shadow Hugle" },
+          "6": { "name": "Hugleman Lady" },
+          "7": { "name": "???" }
+        }
+      },
+      "marks": {
+        "sun": "Sun",
+        "leaf": "Leaf",
+        "aqua": "Droplet",
+        "berry": "Berry",
+        "rose": "Rose",
+        "amber": "Amber"
+      },
+      "blocks": {
+        "multi": "Multi"
+      },
+      "messages": {
+        "garbageAttack": "Sent garbage to {target}!",
+        "lineSpark": "Line Spark!",
+        "vs2pStart": "VS 2P Start!",
+        "vsCpuStart": "VS RIVAL: {name}",
+        "combo": "{target}: {combo}-chain!"
+      },
+      "floating": {
+        "clear": "{count} CLEAR",
+        "combo": "{combo} Chain!",
+        "spark": "SPARK!"
+      },
+      "boards": {
+        "player": "Player",
+        "p1": "P1",
+        "p2": "P2"
+      },
+      "results": {
+        "gameOver": "Game Over",
+        "victoryTitle": "{name} Wins!",
+        "drawTitle": "Draw",
+        "endlessStats": "Lines {lines} / Combos {combos} / Sparks {spark}",
+        "buttons": {
+          "retryEndless": "Play Endless Again",
+          "backToMenu": "Back to Mode Select"
+        },
+        "vsCpu": {
+          "victoryMessage": "Victory! Time {duration}s / Total {total}s",
+          "defeatMessage": "Defeat… Time {duration}s",
+          "nextRival": "Next Rival ({name})",
+          "retrySame": "Rematch Same Rival",
+          "backToSelect": "Back to Rival Select"
+        },
+        "vs2p": {
+          "retry": "Rematch",
+          "hint": "You can battle again with the same keyboard setup."
+        }
+      },
+      "panel": {
+        "next": "NEXT",
+        "hold": "HOLD",
+        "stats": "STATS",
+        "lines": "Lines: {value}",
+        "combo": "Combo: {value}",
+        "spark": "Spark: {value}",
+        "attack": "Attack: {value}"
+      },
+      "miniStats": {
+        "lines": "Lines {value}",
+        "comboSpark": "Combo {combo} / Spark {spark}"
+      },
+      "modeLabels": {
+        "endless": "ENDLESS Mode",
+        "vsCpu": "VS.RIVAL Mode",
+        "vs2p": "VS.2P Mode"
+      }
       },
       "treasureHunt": {
         "ui": {

@@ -702,7 +702,12 @@
           },
           "game2048": {
             "name": "2048",
-            "description": "合成log2 / 2048で+777"
+            "description": "合成log2 / 2048で+777",
+            "setup": {
+              "sizeLabel": "盤面サイズ: ",
+              "startButton": "開始",
+              "boardSizeOption": "{size}×{size}"
+            }
           },
           "todo_list": {
             "name": "ToDoリスト",
@@ -15078,71 +15083,6 @@
           "timerComplete": "タイマー完了！"
         }
       },
-      "diagramMaker": {
-        "errors": {
-          "containerMissing": "MiniExp Diagram Maker を表示するコンテナが必要です",
-          "pngSignature": "PNG署名を認識できませんでした",
-          "pngDataMissing": "PNG内にdraw.ioデータが見つかりませんでした",
-          "inflateUnsupported": "圧縮データの展開に対応していない環境です",
-          "parseXml": "XMLを解析できませんでした",
-          "diagramMissing": "diagram 要素が見つかりません",
-          "mxGraphMissing": "mxGraphModel が見つかりません",
-          "diagramDecodeFailed": "diagram データを展開できませんでした",
-          "mxGraphRootMissing": "mxGraphModel root が見つかりません",
-          "loadFailed": "読み込みに失敗しました: {error}",
-          "saveFailed": "保存に失敗しました: {error}",
-          "exportFailed": "書き出しに失敗しました: {error}"
-        },
-        "defaults": {
-          "fileName": "未保存の図.drawio",
-          "layerName": "レイヤー {index}",
-          "pageName": "ページ {index}",
-          "textPlaceholder": "テキスト",
-          "nodePlaceholder": "新しいノード"
-        },
-        "tools": {
-          "select": "選択",
-          "rectangle": "四角",
-          "ellipse": "楕円",
-          "text": "テキスト",
-          "connector": "コネクタ",
-          "delete": "削除"
-        },
-        "actions": {
-          "new": "新規",
-          "open": "開く",
-          "save": "保存",
-          "export": "書き出し",
-          "exportFormat": "{formatLabel} で書き出し",
-          "undo": "元に戻す",
-          "redo": "やり直す"
-        },
-        "sections": {
-          "properties": "プロパティ"
-        },
-        "fields": {
-          "x": "X",
-          "y": "Y",
-          "width": "幅",
-          "height": "高さ",
-          "fill": "塗り",
-          "stroke": "線",
-          "strokeWidth": "線幅",
-          "textColor": "文字色",
-          "fontSize": "文字サイズ",
-          "text": "テキスト"
-        },
-        "toggles": {
-          "grid": "グリッド",
-          "snap": "スナップ"
-        },
-        "labels": {
-          "exp": "EXP: {value}"
-        },
-        "confirm": {
-          "newDocument": "保存されていない変更があります。新規作成しますか？"
-        }
-      },
       "clockHub": {
         "errors": {
           "noContainer": "Clock Hubにはコンテナが必要です"
@@ -16028,7 +15968,7 @@
             "defeat": "<strong>敗北</strong> +{exp}EXP"
           }
         },
-        "treasureHunt": {
+      "treasureHunt": {
           "ui": {
             "mapTitle": "マップ",
             "start": "探索開始",
@@ -16066,118 +16006,74 @@
           "defeat": "<strong>敗北</strong> +{exp}EXP"
         }
       },
-      "triominoColumns": {
-        "menu": {
-          "title": "トリオミノコラムス",
-          "subtitle": "モードを選んでください",
-          "options": {
-            "endless": {
-              "label": "ENDLESS - ゲームオーバーまで",
-              "description": "基本のひとり用モード"
-            },
-            "vsCpu": {
-              "label": "VS.RIVAL - CPU戦",
-              "description": "GEARSキャラクター達と対戦"
-            },
-            "vs2p": {
-              "label": "VS.2P - ふたりで対戦",
-              "description": "ローカル対戦用（WASD + JK）"
-            }
-          }
-        },
-        "cpuSelect": {
-          "title": "VS.RIVAL - 対戦相手選択",
-          "subtitle": "挑戦したいライバルを選んでください",
-          "detail": "速さLv.{speedLevel} / 攻撃性 {aggression}%",
-          "hint": "※ ハグルマンレディは連勝で解放。？？？はノーコンティニュー＆15分以内で解放。",
-          "back": "← モード選択に戻る",
-          "lockReasons": {
-            "lady": "条件: 連勝でハグルマン軍を突破",
-            "hidden": "条件: ノーコンティニュー15分以内で解放",
-            "default": "条件: 直前のライバルに勝利"
-          },
-          "rivals": {
-            "0": { "name": "カラクリン" },
-            "1": { "name": "ハグルマンJr." },
-            "2": { "name": "からくり忍者" },
-            "3": { "name": "ハグルマン2号" },
-            "4": { "name": "ハグルマン3号" },
-            "5": { "name": "シャドウハグル" },
-            "6": { "name": "ハグルマンレディ" },
-            "7": { "name": "？？？" }
-          }
-        },
-        "marks": {
-          "sun": "太陽",
-          "leaf": "葉っぱ",
-          "aqua": "しずく",
-          "berry": "ベリー",
-          "rose": "ローズ",
-          "amber": "アンバー"
-        },
-        "blocks": {
-          "multi": "マルチ"
-        },
-        "messages": {
-          "garbageAttack": "{target}におじゃま!",
-          "lineSpark": "ラインスパーク!",
-          "vs2pStart": "VS 2P スタート!",
-          "vsCpuStart": "VS RIVAL: {name}",
-          "combo": "{target}: {combo}連鎖!"
-        },
-        "floating": {
-          "clear": "{count} CLEAR",
-          "combo": "{combo}連鎖!",
-          "spark": "SPARK!"
-        },
-        "boards": {
-          "player": "プレイヤー",
-          "p1": "P1",
-          "p2": "P2"
-        },
-        "results": {
-          "gameOver": "Game Over",
-          "victoryTitle": "{name} 勝利!",
-          "drawTitle": "引き分け",
-          "endlessStats": "ライン {lines} / コンボ {combos} / スパーク {spark}",
-          "buttons": {
-            "retryEndless": "もう一度ENDLESS",
-            "backToMenu": "モード選択に戻る"
-          },
-          "vsCpu": {
-            "victoryMessage": "勝利！タイム {duration}秒 / 総経過 {total}秒",
-            "defeatMessage": "敗北… タイム {duration}秒",
-            "nextRival": "次のライバル ({name})",
-            "retrySame": "同じ相手に再挑戦",
-            "backToSelect": "対戦相手選択に戻る"
-          },
-          "vs2p": {
-            "retry": "もう一度対戦",
-            "hint": "キーボード同士で再戦できます。"
-          }
-        },
-        "panel": {
-          "next": "NEXT",
-          "hold": "HOLD",
-          "stats": "STATS",
-          "lines": "ライン: {value}",
-          "combo": "コンボ: {value}",
-          "spark": "スパーク: {value}",
-          "attack": "アタック: {value}"
-        },
-        "miniStats": {
-          "lines": "ライン {value}",
-          "comboSpark": "コンボ {combo} / スパーク {spark}"
-        },
-        "modeLabels": {
-          "endless": "ENDLESS モード",
-          "vsCpu": "VS.RIVAL モード",
-          "vs2p": "VS.2P モード"
-        }
-      }
     },
-    "games": {
-      "sugorokuLife": {
+      "games": {
+        "diagramMaker": {
+          "errors": {
+            "containerMissing": "MiniExp Diagram Maker を表示するコンテナが必要です",
+            "pngSignature": "PNG署名を認識できませんでした",
+            "pngDataMissing": "PNG内にdraw.ioデータが見つかりませんでした",
+            "inflateUnsupported": "圧縮データの展開に対応していない環境です",
+            "parseXml": "XMLを解析できませんでした",
+            "diagramMissing": "diagram 要素が見つかりません",
+            "mxGraphMissing": "mxGraphModel が見つかりません",
+            "diagramDecodeFailed": "diagram データを展開できませんでした",
+            "mxGraphRootMissing": "mxGraphModel root が見つかりません",
+            "loadFailed": "読み込みに失敗しました: {error}",
+            "saveFailed": "保存に失敗しました: {error}",
+            "exportFailed": "書き出しに失敗しました: {error}"
+          },
+          "defaults": {
+            "fileName": "未保存の図.drawio",
+            "layerName": "レイヤー {index}",
+            "pageName": "ページ {index}",
+            "textPlaceholder": "テキスト",
+            "nodePlaceholder": "新しいノード"
+          },
+          "tools": {
+            "select": "選択",
+            "rectangle": "四角",
+            "ellipse": "楕円",
+            "text": "テキスト",
+            "connector": "コネクタ",
+            "delete": "削除"
+          },
+          "actions": {
+            "new": "新規",
+            "open": "開く",
+            "save": "保存",
+            "export": "書き出し",
+            "exportFormat": "{formatLabel} で書き出し",
+            "undo": "元に戻す",
+            "redo": "やり直す"
+          },
+          "sections": {
+            "properties": "プロパティ"
+          },
+          "fields": {
+            "x": "X",
+            "y": "Y",
+            "width": "幅",
+            "height": "高さ",
+            "fill": "塗り",
+            "stroke": "線",
+            "strokeWidth": "線幅",
+            "textColor": "文字色",
+            "fontSize": "文字サイズ",
+            "text": "テキスト"
+          },
+          "toggles": {
+            "grid": "グリッド",
+            "snap": "スナップ"
+          },
+          "labels": {
+            "exp": "EXP: {value}"
+          },
+          "confirm": {
+            "newDocument": "保存されていない変更があります。新規作成しますか？"
+          }
+        },
+        "sugorokuLife": {
         "ui": {
           "currencySuffix": "G",
           "expUnit": "EXP",
@@ -16286,6 +16182,115 @@
           "award": { "label": "年間表彰", "description": "社内年間表彰で表彰金を獲得！" },
           "market": { "label": "相場急落", "description": "投資していた銘柄が急落。冷静に受け止めよう。" }
         }
+      },
+      "triominoColumns": {
+      "menu": {
+        "title": "トリオミノコラムス",
+        "subtitle": "モードを選んでください",
+        "options": {
+          "endless": {
+            "label": "ENDLESS - ゲームオーバーまで",
+            "description": "基本のひとり用モード"
+          },
+          "vsCpu": {
+            "label": "VS.RIVAL - CPU戦",
+            "description": "GEARSキャラクター達と対戦"
+          },
+          "vs2p": {
+            "label": "VS.2P - ふたりで対戦",
+            "description": "ローカル対戦用（WASD + JK）"
+          }
+        }
+      },
+      "cpuSelect": {
+        "title": "VS.RIVAL - 対戦相手選択",
+        "subtitle": "挑戦したいライバルを選んでください",
+        "detail": "速さLv.{speedLevel} / 攻撃性 {aggression}%",
+        "hint": "※ ハグルマンレディは連勝で解放。？？？はノーコンティニュー＆15分以内で解放。",
+        "back": "← モード選択に戻る",
+        "lockReasons": {
+          "lady": "条件: 連勝でハグルマン軍を突破",
+          "hidden": "条件: ノーコンティニュー15分以内で解放",
+          "default": "条件: 直前のライバルに勝利"
+        },
+        "rivals": {
+          "0": { "name": "カラクリン" },
+          "1": { "name": "ハグルマンJr." },
+          "2": { "name": "からくり忍者" },
+          "3": { "name": "ハグルマン2号" },
+          "4": { "name": "ハグルマン3号" },
+          "5": { "name": "シャドウハグル" },
+          "6": { "name": "ハグルマンレディ" },
+          "7": { "name": "？？？" }
+        }
+      },
+      "marks": {
+        "sun": "太陽",
+        "leaf": "葉っぱ",
+        "aqua": "しずく",
+        "berry": "ベリー",
+        "rose": "ローズ",
+        "amber": "アンバー"
+      },
+      "blocks": {
+        "multi": "マルチ"
+      },
+      "messages": {
+        "garbageAttack": "{target}におじゃま!",
+        "lineSpark": "ラインスパーク!",
+        "vs2pStart": "VS 2P スタート!",
+        "vsCpuStart": "VS RIVAL: {name}",
+        "combo": "{target}: {combo}連鎖!"
+      },
+      "floating": {
+        "clear": "{count} CLEAR",
+        "combo": "{combo}連鎖!",
+        "spark": "SPARK!"
+      },
+      "boards": {
+        "player": "プレイヤー",
+        "p1": "P1",
+        "p2": "P2"
+      },
+      "results": {
+        "gameOver": "Game Over",
+        "victoryTitle": "{name} 勝利!",
+        "drawTitle": "引き分け",
+        "endlessStats": "ライン {lines} / コンボ {combos} / スパーク {spark}",
+        "buttons": {
+          "retryEndless": "もう一度ENDLESS",
+          "backToMenu": "モード選択に戻る"
+        },
+        "vsCpu": {
+          "victoryMessage": "勝利！タイム {duration}秒 / 総経過 {total}秒",
+          "defeatMessage": "敗北… タイム {duration}秒",
+          "nextRival": "次のライバル ({name})",
+          "retrySame": "同じ相手に再挑戦",
+          "backToSelect": "対戦相手選択に戻る"
+        },
+        "vs2p": {
+          "retry": "もう一度対戦",
+          "hint": "キーボード同士で再戦できます。"
+        }
+      },
+      "panel": {
+        "next": "NEXT",
+        "hold": "HOLD",
+        "stats": "STATS",
+        "lines": "ライン: {value}",
+        "combo": "コンボ: {value}",
+        "spark": "スパーク: {value}",
+        "attack": "アタック: {value}"
+      },
+      "miniStats": {
+        "lines": "ライン {value}",
+        "comboSpark": "コンボ {combo} / スパーク {spark}"
+      },
+      "modeLabels": {
+        "endless": "ENDLESS モード",
+        "vsCpu": "VS.RIVAL モード",
+        "vs2p": "VS.2P モード"
+      }
       },
       "treasureHunt": {
         "ui": {

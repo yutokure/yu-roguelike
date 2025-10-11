@@ -15079,6 +15079,34 @@
           "timerComplete": "Timer finished!"
         }
       },
+      "stopwatch": {
+        "header": {
+          "title": "Stopwatch Pro"
+        },
+        "statusBadge": {
+          "running": "Running",
+          "stopped": "Stopped"
+        },
+        "info": {
+          "lapCount": "Lap: {count}",
+          "lastLap": "Last lap: {time}",
+          "lastLapNone": "Last lap: -",
+          "sessionXp": "Session EXP: {xp}"
+        },
+        "buttons": {
+          "start": "Start",
+          "pause": "Pause",
+          "resume": "Resume",
+          "lap": "Lap",
+          "reset": "Reset"
+        },
+        "laps": {
+          "title": "Lap history",
+          "subtitle": "Most recent first",
+          "empty": "Your laps will appear here once recorded.",
+          "label": "Lap {index}"
+        }
+      },
       "diagramMaker": {
         "errors": {
           "containerMissing": "MiniExp Diagram Maker requires a container",

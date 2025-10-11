@@ -702,7 +702,12 @@
           },
           "game2048": {
             "name": "2048",
-            "description": "Merge tiles toward 2048, earning EXP based on log2 sums."
+            "description": "Merge tiles toward 2048, earning EXP based on log2 sums.",
+            "setup": {
+              "sizeLabel": "Board size: ",
+              "startButton": "Start",
+              "boardSizeOption": "{size}×{size}"
+            }
           },
           "todo_list": {
             "name": "To-Do List",
@@ -11496,6 +11501,59 @@
           "check": "{defender} is in check (+{exp}{expLabel})"
         }
       },
+      "mancala": {
+        "actions": {
+          "restart": "Restart",
+          "hint": "Hint"
+        },
+        "hud": {
+          "score": {
+            "player": "You",
+            "ai": "AI",
+            "separator": ": "
+          }
+        },
+        "board": {
+          "store": {
+            "player": "You",
+            "ai": "AI"
+          },
+          "pitLabel": {
+            "player": "You {index}",
+            "ai": "AI {index}"
+          }
+        },
+        "status": {
+          "start": "Your turn — choose a pit to sow.",
+          "extraTurn": {
+            "player": "Extra turn! Pick another pit.",
+            "ai": "The AI gained another turn…"
+          },
+          "turn": {
+            "player": "Your turn",
+            "aiThinking": "AI is thinking…"
+          },
+          "result": {
+            "draw": "Draw! {player} to {ai}",
+            "win": "Victory! {player} to {ai}",
+            "loss": "Defeat… {player} to {ai}"
+          },
+          "hint": "Hint: Pit {pit} looks promising"
+        },
+        "history": {
+          "who": {
+            "player": "You",
+            "ai": "AI"
+          },
+          "entry": {
+            "pit": "Pit {number}",
+            "store": "Store +{amount}",
+            "capture": "Capture {amount}",
+            "extraTurn": "Extra turn",
+            "separator": " / "
+          }
+        }
+      },
       "system": {
         "header": {
           "title": "System Inspector",
@@ -12925,6 +12983,38 @@
           "easy": "Easy",
           "normal": "Normal",
           "hard": "Hard"
+        }
+      },
+      "sliding_puzzle": {
+        "title": "{sizeText}×{sizeText} Sliding Puzzle",
+        "description": "Slide tiles into the empty space to arrange 1 through N in order. Click tiles or use Arrow keys / WASD to move.",
+        "controls": {
+          "reset": "Reset ({keyLabel})"
+        },
+        "info": {
+          "moves": "Moves",
+          "time": "Time",
+          "best": "Best",
+          "clears": "Clears"
+        },
+        "status": {
+          "cleared": "Solved! {moves} moves / {time} EXP gained: {xp}",
+          "intro": "Board size changes with difficulty: EASY {easySize}×{easySize}, NORMAL {normalSize}×{normalSize}, HARD {hardSize}×{hardSize}."
+        }
+      },
+      "same": {
+        "hud": {
+          "title": "SameGame",
+          "removed": "Removed",
+          "status": "{title} | {difficulty} | {removedLabel}: {removed}"
+        },
+        "difficulty": {
+          "easy": "Easy",
+          "normal": "Normal",
+          "hard": "Hard"
+        },
+        "hint": {
+          "popup": "Group of {size} / +{expFormatted} EXP"
         }
       },
       "piano_tiles": {

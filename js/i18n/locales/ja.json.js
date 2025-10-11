@@ -702,7 +702,12 @@
           },
           "game2048": {
             "name": "2048",
-            "description": "合成log2 / 2048で+777"
+            "description": "合成log2 / 2048で+777",
+            "setup": {
+              "sizeLabel": "盤面サイズ: ",
+              "startButton": "開始",
+              "boardSizeOption": "{size}×{size}"
+            }
           },
           "todo_list": {
             "name": "ToDoリスト",
@@ -11496,6 +11501,59 @@
           "check": "{defender}が王手を受けています (+{exp}{expLabel})"
         }
       },
+      "mancala": {
+        "actions": {
+          "restart": "リスタート",
+          "hint": "ヒント"
+        },
+        "hud": {
+          "score": {
+            "player": "あなた",
+            "ai": "AI",
+            "separator": "："
+          }
+        },
+        "board": {
+          "store": {
+            "player": "あなた",
+            "ai": "AI"
+          },
+          "pitLabel": {
+            "player": "自{index}",
+            "ai": "AI{index}"
+          }
+        },
+        "status": {
+          "start": "あなたのターン ― 種をまく穴を選んでください",
+          "extraTurn": {
+            "player": "追加ターン！別の穴を選びましょう。",
+            "ai": "AIがもう一度ターンを獲得しました…"
+          },
+          "turn": {
+            "player": "あなたのターン",
+            "aiThinking": "AIが考えています…"
+          },
+          "result": {
+            "draw": "引き分け！ {player} 対 {ai}",
+            "win": "勝利！ {player} 対 {ai}",
+            "loss": "敗北… {player} 対 {ai}"
+          },
+          "hint": "ヒント: 穴{pit}が有望です"
+        },
+        "history": {
+          "who": {
+            "player": "あなた",
+            "ai": "AI"
+          },
+          "entry": {
+            "pit": "穴{number}",
+            "store": "ストア +{amount}",
+            "capture": "捕獲 {amount}",
+            "extraTurn": "追加ターン",
+            "separator": " ／ "
+          }
+        }
+      },
       "system": {
         "header": {
           "title": "システムユーティリティ",
@@ -12925,6 +12983,38 @@
           "easy": "かんたん",
           "normal": "ふつう",
           "hard": "むずかしい"
+        }
+      },
+      "sliding_puzzle": {
+        "title": "{sizeText}×{sizeText} スライドパズル",
+        "description": "空きマスにタイルをスライドして1→Nの順に並べよう。タイルをクリックするか矢印キー/WASDで操作できます。",
+        "controls": {
+          "reset": "リセット ({keyLabel})"
+        },
+        "info": {
+          "moves": "手数",
+          "time": "タイム",
+          "best": "ベスト",
+          "clears": "クリア数"
+        },
+        "status": {
+          "cleared": "クリア！ {moves} 手 / {time} 取得EXP: {xp}",
+          "intro": "難易度で盤面サイズが変わります：EASYは{easySize}×{easySize}、NORMALは{normalSize}×{normalSize}、HARDは{hardSize}×{hardSize}です。"
+        }
+      },
+      "same": {
+        "hud": {
+          "title": "セイムゲーム",
+          "removed": "消去数",
+          "status": "{title} | {difficulty} | {removedLabel}: {removed}"
+        },
+        "difficulty": {
+          "easy": "かんたん",
+          "normal": "ふつう",
+          "hard": "むずかしい"
+        },
+        "hint": {
+          "popup": "{size}個 / 予想+{expFormatted}EXP"
         }
       },
       "piano_tiles": {

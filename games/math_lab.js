@@ -160,6 +160,10 @@
     let totalGraphs = 0;
     const shortcuts = opts?.shortcuts;
     let shortcutsLocked = false;
+    const localeBindings = [];
+    const localeCleanup = [];
+    let lastStatusDescriptor = null;
+    let lastStatusTimestamp = null;
 
     const container = document.createElement('div');
     container.className = 'math-lab-root';
@@ -333,11 +337,6 @@
     let approxForceEllipsis = false;
     let latestHistoryEntry = null;
     let lastSymbolicRaw = null;
-
-    const localeBindings = [];
-    const localeCleanup = [];
-    let lastStatusDescriptor = null;
-    let lastStatusTimestamp = null;
 
     function runLocaleBindings(){
       localeBindings.forEach(fn => {

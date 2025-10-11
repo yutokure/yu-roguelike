@@ -330,6 +330,14 @@ window.DUNGEONTYPE_MANIFEST = [
     author: 'builtin-sample'
   },
   {
+    id: 'modern_metropolis_pack',
+    name: 'Modern Metropolis Expansion Pack',
+    nameKey: "dungeon.packs.modern_metropolis_pack.name",
+    entry: 'dungeontypes/modern_metropolis_pack.js',
+    version: '1.0.0',
+    author: 'builtin-modern'
+  },
+  {
     id: 'star_wars_galactic_saga',
     name: 'Galactic Saga: Star Wars Worlds',
     nameKey: "dungeon.packs.star_wars_galactic_saga.name",

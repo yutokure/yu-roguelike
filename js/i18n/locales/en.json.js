@@ -14119,6 +14119,54 @@
         }
       }
     },
+    "miniexp": {
+      "games": {
+        "tosochu": {
+          "ui": {
+            "timer": "Time Left {seconds}s",
+            "exp": "Stored EXP {exp}",
+            "missionNotReady": "Mission: Not yet activated",
+            "missionActive": "Mission: {label}{optionalSuffix} — {seconds}s remaining (Coords: {coords})",
+            "missionComplete": "Missions Complete: {success}/{total} succeeded",
+            "missionSuccess": "{label}: Success!",
+            "missionFailed": "{label}: Failed…",
+            "surrender": "Surrender",
+            "surrenderCountdown": "Surrendering...{seconds}s"
+          },
+          "status": {
+            "hunterAdded": "A hunter has joined the chase!",
+            "hunterRetreat": "Mission success! One hunter retreated",
+            "missionActivated": "Mission activated: {label}",
+            "escapeSuccess": "Escaped! +{total} EXP (Breakdown {base}+{bonus})",
+            "surrenderSuccess": "Surrendered. Banked {exp} EXP",
+            "caught": "Caught... no EXP earned",
+            "dungeonUnavailable": "Dungeon API unavailable",
+            "stageGenerationFailed": "Failed to generate the stage",
+            "runStart": "The chase begins!",
+            "runPaused": "Paused",
+            "standby": "Standby",
+            "surrenderZoneHint": "Enter the surrender zone before pressing the button",
+            "surrenderAttempt": "Attempting surrender… endure for {duration}s!",
+            "surrenderCancelled": "Surrender cancelled",
+            "beaconSuccess": "Beacon secured! Signal jamming strengthened",
+            "beaconFail": "Beacon failed... hunters are on alert",
+            "dataSuccess": "Classified intel secured! Rewards increased",
+            "dataFail": "Alarm triggered! A fast hunter has appeared",
+            "boxSuccess": "Disarmed! Hunter boxes are delayed",
+            "boxFail": "Disarm failed... an extra hunter deployed",
+            "vaultSuccess": "Jackpot! But you're now a prime target",
+            "vaultFail": "Vault defended... two hunters released"
+          },
+          "missions": {
+            "optionalSuffix": " (Optional)",
+            "beacon": { "label": "Reach the beacon" },
+            "data": { "label": "Hack the data terminal" },
+            "box": { "label": "Disarm the hunter box" },
+            "vault": { "label": "Crack the high-risk vault" }
+          }
+        }
+      }
+    },
     "tools": {
       "sidebar": {
         "ariaLabel": "Tools list",
@@ -16458,6 +16506,77 @@
       },
     },
       "games": {
+        "bowlingDuel": {
+          "title": "Bowling Duel MOD",
+          "legend": "Press the button to stop the Aim → Curve → Power gauges in order and roll the ball!",
+          "history": {
+            "title": "Log",
+            "placeholder": "---"
+          },
+          "buttons": {
+            "throw": "🎳 Throw Ball",
+            "reset": "🔄 Reset",
+            "throwing": "🎳 Rolling…"
+          },
+          "scoreboard": {
+            "you": "You",
+            "cpu": "CPU",
+            "total": "Total"
+          },
+          "sliders": {
+            "aim": {
+              "label": "Aim Position",
+              "center": "Center",
+              "right": "Right {value}",
+              "left": "Left {value}"
+            },
+            "curve": {
+              "label": "Curve Amount",
+              "none": "None",
+              "right": "Hooks Right {value}",
+              "left": "Hooks Left {value}"
+            },
+            "power": {
+              "label": "Throw Power",
+              "format": "{value}%"
+            }
+          },
+          "status": {
+            "introHint": "Stop each moving gauge at the right moment to chase strikes!",
+            "framePlayer": "Frame {frame}: Your turn.",
+            "frameCpu": "Frame {frame}: CPU turn…",
+            "remainingPins": "Pins left: {count}. Take another shot!",
+            "playerStrike": "Strike!",
+            "cpuStrike": "CPU rolled a strike!",
+            "victory": "Victory! Score {player} - {cpu}",
+            "draw": "Draw… Score {player} - {cpu}",
+            "defeat": "Defeat… Score {player} - {cpu}"
+          },
+          "stage": {
+            "aim": {
+              "prompt": "Aim gauge oscillating—press to lock it in!",
+              "button": "🛑 Stop Aim",
+              "confirm": "Aim set to {value}!"
+            },
+            "curve": {
+              "prompt": "Curve gauge moving—stop it with the button!",
+              "button": "🛑 Stop Curve",
+              "confirm": "Curve locked at {value}!"
+            },
+            "power": {
+              "prompt": "Watch the power gauge—press to roll!",
+              "button": "🛑 Stop Power",
+              "confirm": "Rolling with {value}!"
+            }
+          },
+          "logs": {
+            "playerShot": "You: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+            "cpuShot": "CPU: aim {aim}, curve {curve}, power {power}% → <strong>{pins}</strong>",
+            "victory": "<strong>Victory!</strong> +{exp}EXP",
+            "draw": "<strong>Draw</strong> +{exp}EXP",
+            "defeat": "<strong>Defeat</strong> +{exp}EXP"
+          }
+        },
         "timer": {
           "header": {
             "title": "Timer", 

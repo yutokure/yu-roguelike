@@ -3,6 +3,15 @@
   const MAX_LAPS = 60;
   const I18N_PREFIX = 'games.stopwatch';
   const TRANSLATION_SENTINEL = '__mini_stopwatch_missing__';
+  const I18N_FALLBACK_PREFIXES = Object.freeze([
+    I18N_PREFIX,
+    'minigame.stopwatch',
+    'miniexp.games.stopwatch',
+    'selection.miniexp.games.stopwatch',
+    'minigame',
+    'miniexp.games',
+    'selection.miniexp.games'
+  ]);
 
   function pad2(value){
     return value.toString().padStart(2, '0');
@@ -44,6 +53,30 @@
     });
   }
 
+  function buildTranslationCandidates(path){
+    const candidates = [];
+    const push = (value) => {
+      if (!value || candidates.includes(value)) return;
+      candidates.push(value);
+    };
+    const normalized = typeof path === 'string' ? path.trim() : '';
+    if (!normalized){
+      I18N_FALLBACK_PREFIXES.forEach(push);
+      return candidates.length ? candidates : [I18N_PREFIX];
+    }
+    const key = normalized.startsWith('.') ? normalized.slice(1) : normalized;
+    I18N_FALLBACK_PREFIXES.forEach((prefix) => {
+      if (!prefix) return;
+      if (key.startsWith(prefix)){
+        push(key);
+      } else {
+        push(`${prefix}.${key}`);
+      }
+    });
+    push(key);
+    return candidates;
+  }
+
   function translateWithLocalization(localization, path, fallback, params){
     if (localization && typeof localization.t === 'function'){
       try {
@@ -55,6 +88,23 @@
         console.warn('[stopwatch] Failed to translate key', path, error);
       }
     }
+
+    const globalI18n = (typeof window !== 'undefined' && (window.I18n || window.i18n)) || null;
+    if (globalI18n && typeof globalI18n.t === 'function'){
+      const candidates = buildTranslationCandidates(path);
+      for (let index = 0; index < candidates.length; index += 1){
+        const candidate = candidates[index];
+        try {
+          const translated = globalI18n.t(candidate, params);
+          if (typeof translated === 'string' && translated !== candidate){
+            return translated;
+          }
+        } catch (error){
+          console.warn('[stopwatch] Failed to translate via global i18n for key', candidate, error);
+        }
+      }
+    }
+
     if (fallback !== undefined){
       return formatTemplate(fallback, params);
     }

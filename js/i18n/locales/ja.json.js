@@ -702,7 +702,12 @@
           },
           "game2048": {
             "name": "2048",
-            "description": "合成log2 / 2048で+777"
+            "description": "合成log2 / 2048で+777",
+            "setup": {
+              "sizeLabel": "盤面サイズ: ",
+              "startButton": "開始",
+              "boardSizeOption": "{size}×{size}"
+            }
           },
           "todo_list": {
             "name": "ToDoリスト",

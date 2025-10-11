@@ -191,13 +191,13 @@
         .bgm-button{background:linear-gradient(135deg,#f59e0b,#facc15);color:#1e293b;border:none;border-radius:999px;padding:8px 18px;font-weight:600;cursor:pointer;transition:transform 0.15s ease, box-shadow 0.15s ease;}
         .bgm-button:disabled{background:#475569;color:#cbd5f5;cursor:not-allowed;box-shadow:none;transform:none;}
         .bgm-button:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(250,204,21,0.35);}
-        .bgm-label{padding:6px 12px;border-radius:999px;background:rgba(148,163,184,0.2);font-size:0.9rem;}
+        .bgm-label{padding:6px 12px;border-radius:14px;background:rgba(226,232,240,0.92);color:#0f172a;font-size:0.9rem;font-weight:600;box-shadow:0 2px 6px rgba(15,23,42,0.18);}
         .bgm-panel{display:flex;flex-direction:column;gap:6px;min-width:160px;}
         .bgm-log{background:rgba(15,23,42,0.75);border-radius:12px;padding:10px;font-size:0.85rem;max-height:140px;overflow-y:auto;line-height:1.5;box-shadow:inset 0 0 0 1px rgba(148,163,184,0.25);}
         .bgm-log p{margin:0 0 4px;}
         .bgm-log p:last-child{margin-bottom:0;}
         .bgm-badges{display:flex;flex-wrap:wrap;gap:8px;font-size:0.8rem;}
-        .bgm-badge{background:rgba(148,163,184,0.25);padding:4px 10px;border-radius:999px;}
+        .bgm-badge{background:rgba(226,232,240,0.9);color:#0f172a;padding:4px 10px;border-radius:12px;font-weight:600;box-shadow:0 1px 4px rgba(15,23,42,0.18);}
       `;
       document.head.appendChild(style);
     }
@@ -395,9 +395,12 @@
 
     function updateUi(){
       const actor = getActorLabel(state.currentPlayer);
-      turnLabel.textContent = translateOrFallback('game.backgammon.ui.turn', () => `手番: ${actor}${state.gameOver ? '（終了）' : ''}`, {
+      const statusSuffix = state.gameOver
+        ? translateOrFallback('game.backgammon.ui.turnFinishedSuffix', '（終了）')
+        : '';
+      turnLabel.textContent = translateOrFallback('game.backgammon.ui.turn', () => `手番: ${actor}${statusSuffix}`, {
         actor,
-        gameOver: state.gameOver
+        status: statusSuffix
       });
       if (state.dice.length === 0){
         diceLabel.textContent = translateOrFallback('game.backgammon.ui.dice.empty', 'ダイス: -');
@@ -416,22 +419,28 @@
       const barTitle = formatBarLabel();
       const playerBarFormatted = formatNumberLocalized(state.playerBar);
       const aiBarFormatted = formatNumberLocalized(state.aiBar);
-      barLabel.textContent = translateOrFallback('game.backgammon.ui.bar', () => `${barTitle}: ${getActorLabel(PLAYER)} ${playerBarFormatted} / ${getActorLabel(AI)} ${aiBarFormatted}`, {
+      const playerLabelText = getActorLabel(PLAYER);
+      const aiLabelText = getActorLabel(AI);
+      barLabel.textContent = translateOrFallback('game.backgammon.ui.bar', () => `${barTitle}: ${playerLabelText} ${playerBarFormatted} / ${aiLabelText} ${aiBarFormatted}`, {
         bar: barTitle,
         player: state.playerBar,
         playerFormatted: playerBarFormatted,
+        playerLabel: playerLabelText,
         ai: state.aiBar,
-        aiFormatted: aiBarFormatted
+        aiFormatted: aiBarFormatted,
+        aiLabel: aiLabelText
       });
       const bearOffTitle = translateOrFallback('game.backgammon.ui.bearOff.title', 'ベアオフ');
       const playerOffFormatted = formatNumberLocalized(state.playerOff);
       const aiOffFormatted = formatNumberLocalized(state.aiOff);
-      offLabel.textContent = translateOrFallback('game.backgammon.ui.bearOff', () => `${bearOffTitle}: ${getActorLabel(PLAYER)} ${playerOffFormatted} / ${getActorLabel(AI)} ${aiOffFormatted}`, {
+      offLabel.textContent = translateOrFallback('game.backgammon.ui.bearOff', () => `${bearOffTitle}: ${playerLabelText} ${playerOffFormatted} / ${aiLabelText} ${aiOffFormatted}`, {
         title: bearOffTitle,
         player: state.playerOff,
         playerFormatted: playerOffFormatted,
+        playerLabel: playerLabelText,
         ai: state.aiOff,
-        aiFormatted: aiOffFormatted
+        aiFormatted: aiOffFormatted,
+        aiLabel: aiLabelText
       });
       updateBadges();
     }

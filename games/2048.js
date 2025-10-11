@@ -3,7 +3,7 @@
   function create(root, awardXp, opts){
     const shortcuts = opts?.shortcuts;
     const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
-      ? window.createMiniGameLocalization({ id: 'game2048' })
+      ? window.createMiniGameLocalization({ id: 'game2048', textKeyPrefix: 'miniexp.games.game2048' })
       : null);
     const text = (key, fallback, params) => {
       if (localization && typeof localization.t === 'function') {

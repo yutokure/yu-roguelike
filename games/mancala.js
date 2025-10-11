@@ -295,10 +295,10 @@
     const actions = document.createElement('div');
     actions.className = 'mancala-actions';
     const restartBtn = document.createElement('button');
-    restartBtn.textContent = text('actions.restart', 'Restart');
+    restartBtn.textContent = text('actions.restart', 'リスタート');
     restartBtn.className = 'mini';
     const hintBtn = document.createElement('button');
-    hintBtn.textContent = text('actions.hint', 'Hint');
+    hintBtn.textContent = text('actions.hint', 'ヒント');
     hintBtn.className = 'mini';
     actions.append(restartBtn, hintBtn);
 
@@ -389,7 +389,7 @@
       state.locked = false;
       state.history = [];
       state.ended = false;
-      setStatus('status.start', 'Your turn — pick a pit to sow seeds');
+      setStatus('status.start', 'あなたのターン ― 種をまく穴を選んでください');
       updateBoard();
       updateHistory();
       scheduleAi();
@@ -418,25 +418,25 @@
         const who = document.createElement('span');
         who.className = 'who';
         const whoKey = entry.side === 'player' ? 'history.who.player' : 'history.who.ai';
-        const whoFallback = entry.side === 'player' ? 'You' : 'AI';
+        const whoFallback = entry.side === 'player' ? 'あなた' : 'AI';
         who.textContent = text(whoKey, whoFallback);
         const detail = document.createElement('span');
         const detailParts = [];
         const pitNumberText = formatNumber(entry.pitIndex + 1);
-        detailParts.push(text('history.entry.pit', () => `Pit ${pitNumberText}`, { number: pitNumberText }));
+        detailParts.push(text('history.entry.pit', () => `穴${pitNumberText}`, { number: pitNumberText }));
         if (entry.storeGain){
           const storeGainText = formatNumber(entry.storeGain);
-          detailParts.push(text('history.entry.store', () => `Store +${storeGainText}`, { amount: storeGainText }));
+          detailParts.push(text('history.entry.store', () => `ストア +${storeGainText}`, { amount: storeGainText }));
         }
         if (entry.captured){
           const capturedText = formatNumber(entry.captured);
-          detailParts.push(text('history.entry.capture', () => `Captured ${capturedText}`, { amount: capturedText }));
+          detailParts.push(text('history.entry.capture', () => `捕獲 ${capturedText}`, { amount: capturedText }));
         }
         if (entry.extraTurn){
-          detailParts.push(text('history.entry.extraTurn', 'Extra turn'));
+          detailParts.push(text('history.entry.extraTurn', '追加ターン'));
         }
-        const separator = text('history.entry.separator', ' / ');
-        detail.textContent = detailParts.join(separator || ' / ');
+        const separator = text('history.entry.separator', ' ／ ');
+        detail.textContent = detailParts.join(separator || ' ／ ');
         li.append(who, detail);
         historyList.appendChild(li);
       }
@@ -473,7 +473,7 @@
       }
       if (result.extraTurn){
         state.current = side;
-        setStatus(side === 'player' ? 'status.extraTurn.player' : 'status.extraTurn.ai', side === 'player' ? 'Extra turn! Pick another pit.' : 'AI gets another turn...');
+        setStatus(side === 'player' ? 'status.extraTurn.player' : 'status.extraTurn.ai', side === 'player' ? '追加ターン！別の穴を選びましょう。' : 'AIがもう一度ターンを獲得しました…');
         state.locked = false;
         updateBoard();
         if (side === 'ai') scheduleAi();
@@ -481,7 +481,7 @@
       }
       state.current = side === 'player' ? 'ai' : 'player';
       state.locked = false;
-      setStatus(state.current === 'player' ? 'status.turn.player' : 'status.turn.aiThinking', state.current === 'player' ? 'Your turn' : 'AI is thinking...');
+      setStatus(state.current === 'player' ? 'status.turn.player' : 'status.turn.aiThinking', state.current === 'player' ? 'あなたのターン' : 'AIが考えています…');
       updateBoard();
       if (state.current === 'ai') scheduleAi();
     }
@@ -544,9 +544,9 @@
     }
 
     function updateScoreLabels(){
-      playerStoreLabel.textContent = text('hud.score.player', 'You');
+      playerStoreLabel.textContent = text('hud.score.player', 'あなた');
       aiStoreLabel.textContent = text('hud.score.ai', 'AI');
-      const separator = text('hud.score.separator', ': ');
+      const separator = text('hud.score.separator', '：');
       playerStoreSeparator.textContent = separator;
       aiStoreSeparator.textContent = separator;
     }
@@ -555,7 +555,7 @@
       const label = storeLabels[role];
       if (!label) return;
       const key = role === 'player' ? 'board.store.player' : 'board.store.ai';
-      const fallback = role === 'player' ? 'You' : 'AI';
+      const fallback = role === 'player' ? 'あなた' : 'AI';
       label.textContent = text(key, fallback);
     }
 
@@ -564,7 +564,7 @@
       if (!sub) return;
       const key = owner === 'player' ? 'board.pitLabel.player' : 'board.pitLabel.ai';
       const numberText = formatNumber(index + 1);
-      const fallback = () => owner === 'player' ? `P${numberText}` : `AI${numberText}`;
+      const fallback = () => owner === 'player' ? `自${numberText}` : `AI${numberText}`;
       sub.textContent = text(key, fallback, { index: numberText });
     }
 
@@ -590,8 +590,8 @@
       updateStoreLabel('player');
       updateStoreLabel('ai');
       updatePitLabels();
-      restartBtn.textContent = text('actions.restart', 'Restart');
-      hintBtn.textContent = text('actions.hint', 'Hint');
+      restartBtn.textContent = text('actions.restart', 'リスタート');
+      hintBtn.textContent = text('actions.hint', 'ヒント');
       applyStatus();
       updateBoard();
       updateHistory();
@@ -643,19 +643,19 @@
       clearTimeout(aiTimer);
       aiTimer = null;
       if (result.winner === 'draw'){
-        setStatus('status.result.draw', () => `Draw! ${formatNumber(state.stores.player)} to ${formatNumber(state.stores.ai)}`, {
+        setStatus('status.result.draw', () => `引き分け！ ${formatNumber(state.stores.player)} 対 ${formatNumber(state.stores.ai)}`, {
           player: formatNumber(state.stores.player),
           ai: formatNumber(state.stores.ai)
         });
       } else if (result.winner === 'player'){
-        setStatus('status.result.win', () => `Victory! ${formatNumber(state.stores.player)} to ${formatNumber(state.stores.ai)}`, {
+        setStatus('status.result.win', () => `勝利！ ${formatNumber(state.stores.player)} 対 ${formatNumber(state.stores.ai)}`, {
           player: formatNumber(state.stores.player),
           ai: formatNumber(state.stores.ai)
         });
         const base = 22 + Math.min(40, result.diff * 2.5);
         awardXp(Math.round(base * multiplier));
       } else {
-        setStatus('status.result.loss', () => `Defeat... ${formatNumber(state.stores.player)} to ${formatNumber(state.stores.ai)}`, {
+        setStatus('status.result.loss', () => `敗北… ${formatNumber(state.stores.player)} 対 ${formatNumber(state.stores.ai)}`, {
           player: formatNumber(state.stores.player),
           ai: formatNumber(state.stores.ai)
         });
@@ -837,7 +837,7 @@
       setTimeout(() => btn.classList.remove('flash'), 1000);
       const pitNumber = top.idx + 1;
       const pitNumberText = formatNumber(pitNumber);
-      setStatus('status.hint', () => `Hint: Pit ${pitNumberText} is promising`, { pit: pitNumberText });
+      setStatus('status.hint', () => `ヒント: 穴${pitNumberText}が有望です`, { pit: pitNumberText });
     }
 
     restartBtn.addEventListener('click', onRestart);

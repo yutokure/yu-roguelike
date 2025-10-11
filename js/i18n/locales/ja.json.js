@@ -440,7 +440,49 @@
           },
           "xiangqi": {
             "name": "シャンチー",
-            "description": "中国の将棋・象棋。駒取り・王手・詰みでEXPを稼ごう"
+            "description": "中国の将棋・象棋。駒取り・王手・詰みでEXPを稼ごう",
+            "header": {
+              "title": "シャンチー",
+              "subtitle": "{color}が先手"
+            },
+            "controls": {
+              "reset": "初期配置に戻す"
+            },
+            "board": {
+              "riverLabel": "楚河　漢界"
+            },
+            "color": {
+              "red": "赤",
+              "black": "黒",
+              "redPlayer": "赤（下）",
+              "blackPlayer": "黒（上）"
+            },
+            "pieces": {
+              "general": "将",
+              "advisor": "士",
+              "elephant": "象",
+              "horse": "馬",
+              "chariot": "車",
+              "cannon": "砲",
+              "soldier": "卒"
+            },
+            "expLabel": "EXP",
+            "piece": {
+              "description": "{color}の{piece}"
+            },
+            "status": {
+              "turnLine": "手番: {turn}",
+              "turn": {
+                "red": "{color}の番です",
+                "black": "{color}の番です"
+              },
+              "scoreLine": "合計スコア: {score}",
+              "capture": "{actor}が{target}を取りました (+{exp}{expLabel})",
+              "move": "{piece}が移動しました",
+              "win": "{loser}が詰みました。{winner}の勝利！",
+              "stalemate": "持将軍（合法手がありません）",
+              "check": "{defender}が王手を受けています (+{exp}{expLabel})"
+            }
           },
           "shogi": {
             "name": "将棋",

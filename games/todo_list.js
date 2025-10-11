@@ -78,7 +78,16 @@
   function create(root, awardXp){
     if (!root) throw new Error('MiniExp ToDo requires a container');
 
-    const i18n = typeof window !== 'undefined' ? window.I18n : null;
+    let i18n = (typeof window !== 'undefined' && typeof window.I18n === 'object') ? window.I18n : null;
+
+    const getI18n = () => {
+      if (typeof window !== 'undefined' && typeof window.I18n === 'object'){
+        if (i18n !== window.I18n){
+          i18n = window.I18n;
+        }
+      }
+      return i18n;
+    };
 
     const applyParams = (value, params) => {
       if (!params || typeof value !== 'string') return value;
@@ -91,9 +100,10 @@
     };
 
     const translate = (key, fallback, params) => {
-      if (key && typeof i18n?.t === 'function') {
+      const instance = getI18n();
+      if (key && typeof instance?.t === 'function') {
         try {
-          const value = i18n.t(key, params);
+          const value = instance.t(key, params);
           if (typeof value === 'string' && value !== key) return value;
           if (value !== undefined && value !== null && value !== key) return value;
         } catch {}
@@ -117,9 +127,10 @@
     };
 
     const formatNumber = (value, options) => {
-      if (typeof i18n?.formatNumber === 'function') {
+      const instance = getI18n();
+      if (typeof instance?.formatNumber === 'function') {
         try {
-          return i18n.formatNumber(value, options);
+          return instance.formatNumber(value, options);
         } catch {}
       }
       try {
@@ -143,8 +154,9 @@
     };
 
     let isRunning = false;
-
     let localeUnsubscribe = null;
+    let detachDocumentLocale = null;
+    let lastAppliedLocale = null;
 
     const wrapper = document.createElement('div');
     wrapper.style.width = '100%';
@@ -448,7 +460,7 @@
       title.textContent = translate('games.todoList.header.title', 'ToDoリスト');
       const headerDateText = (() => {
         const now = Date.now();
-        const formatted = formatDate(now, i18n, headerDateOptions);
+        const formatted = formatDate(now, getI18n(), headerDateOptions);
         if (formatted && formatted !== '-') return formatted;
         try {
           return new Date(now).toLocaleDateString(undefined, headerDateOptions);
@@ -606,13 +618,13 @@
       meta.style.color = '#6b7280';
       const createdLabel = document.createElement('span');
       createdLabel.textContent = translate('games.todoList.task.createdAt', '登録: {date}', {
-        date: formatDate(task.createdAt, i18n, dateTimeOptions)
+        date: formatDate(task.createdAt, getI18n(), dateTimeOptions)
       });
       meta.appendChild(createdLabel);
       if (task.completedAt){
         const completedLabel = document.createElement('span');
         completedLabel.textContent = translate('games.todoList.task.completedAt', '完了: {date}', {
-          date: formatDate(task.completedAt, i18n, dateTimeOptions)
+          date: formatDate(task.completedAt, getI18n(), dateTimeOptions)
         });
         meta.appendChild(completedLabel);
       }
@@ -799,6 +811,10 @@
         localeUnsubscribe();
         localeUnsubscribe = null;
       }
+      if (typeof detachDocumentLocale === 'function'){
+        detachDocumentLocale();
+        detachDocumentLocale = null;
+      }
       root.removeChild(wrapper);
     }
 
@@ -811,10 +827,35 @@
 
     applyTranslations(false);
 
-    if (typeof i18n?.onLocaleChanged === 'function'){
-      localeUnsubscribe = i18n.onLocaleChanged(() => {
-        applyTranslations(true);
-      });
+    function subscribeLocale(){
+      const instance = getI18n();
+      if (instance && typeof instance.onLocaleChanged === 'function' && !localeUnsubscribe){
+        localeUnsubscribe = instance.onLocaleChanged(() => {
+          handleLocaleChange();
+        });
+      }
+    }
+
+    function handleLocaleChange(){
+      i18n = null;
+      const instance = getI18n();
+      subscribeLocale();
+      const nextLocale = instance && typeof instance.getLocale === 'function' ? instance.getLocale() : null;
+      if (nextLocale && lastAppliedLocale && nextLocale === lastAppliedLocale){
+        return;
+      }
+      applyTranslations(true);
+      lastAppliedLocale = nextLocale || lastAppliedLocale;
+    }
+
+    subscribeLocale();
+
+    if (typeof document !== 'undefined' && typeof document.addEventListener === 'function'){
+      const listener = () => handleLocaleChange();
+      document.addEventListener('i18n:locale-changed', listener);
+      detachDocumentLocale = () => {
+        document.removeEventListener('i18n:locale-changed', listener);
+      };
     }
 
     start();

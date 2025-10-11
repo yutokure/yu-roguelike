@@ -11496,6 +11496,59 @@
           "check": "{defender}が王手を受けています (+{exp}{expLabel})"
         }
       },
+      "mancala": {
+        "actions": {
+          "restart": "リスタート",
+          "hint": "ヒント"
+        },
+        "hud": {
+          "score": {
+            "player": "あなた",
+            "ai": "AI",
+            "separator": "："
+          }
+        },
+        "board": {
+          "store": {
+            "player": "あなた",
+            "ai": "AI"
+          },
+          "pitLabel": {
+            "player": "自{index}",
+            "ai": "AI{index}"
+          }
+        },
+        "status": {
+          "start": "あなたのターン ― 種をまく穴を選んでください",
+          "extraTurn": {
+            "player": "追加ターン！別の穴を選びましょう。",
+            "ai": "AIがもう一度ターンを獲得しました…"
+          },
+          "turn": {
+            "player": "あなたのターン",
+            "aiThinking": "AIが考えています…"
+          },
+          "result": {
+            "draw": "引き分け！ {player} 対 {ai}",
+            "win": "勝利！ {player} 対 {ai}",
+            "loss": "敗北… {player} 対 {ai}"
+          },
+          "hint": "ヒント: 穴{pit}が有望です"
+        },
+        "history": {
+          "who": {
+            "player": "あなた",
+            "ai": "AI"
+          },
+          "entry": {
+            "pit": "穴{number}",
+            "store": "ストア +{amount}",
+            "capture": "捕獲 {amount}",
+            "extraTurn": "追加ターン",
+            "separator": " ／ "
+          }
+        }
+      },
       "system": {
         "header": {
           "title": "システムユーティリティ",

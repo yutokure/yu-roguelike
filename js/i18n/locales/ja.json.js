@@ -12927,6 +12927,21 @@
           "hard": "むずかしい"
         }
       },
+      "same": {
+        "hud": {
+          "title": "セイムゲーム",
+          "removed": "消去数",
+          "status": "{title} | {difficulty} | {removedLabel}: {removed}"
+        },
+        "difficulty": {
+          "easy": "かんたん",
+          "normal": "ふつう",
+          "hard": "むずかしい"
+        },
+        "hint": {
+          "popup": "{size}個 / 予想+{expFormatted}EXP"
+        }
+      },
       "piano_tiles": {
         "tips": "タップ or D/F/J/Kキーでレーンを叩き、長いノーツは離さずにホールド。",
         "hud": {

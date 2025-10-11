@@ -11410,6 +11410,67 @@
     },
 
     "minigame": {
+      "pinball_xp": {
+        "ui": {
+          "controls": {
+            "flippers": "Flippers: ← / → or A / D",
+            "plunger": "Plunger: Hold Space to charge and launch",
+            "reset": "Reset: Press R"
+          },
+          "mission": {
+            "label": "Mission:",
+            "none": "None",
+            "hint": "Complete the L/M/R lanes to start a new mission",
+            "progress": "Progress: {progressText} / {targetText} ({remainingSecondsText}s left)"
+          },
+          "skillShot": {
+            "active": "Skill Shot: Lane {lane} / {secondsText}s remaining",
+            "ready": "Skill shot ready: Aim for the {lane} lane!",
+            "next": "Next skill shot target: Lane {lane}"
+          },
+          "holdHint": "Press Space to launch"
+        },
+        "missions": {
+          "bumperBlitz": {
+            "name": "Bumper Blitz",
+            "description": "Hit the bumpers 6 times."
+          },
+          "slingStorm": {
+            "name": "Sling Storm",
+            "description": "Trigger the slingshots 4 times."
+          },
+          "laneMaster": {
+            "name": "Lane Master",
+            "description": "Complete the L/M/R lane set twice."
+          },
+          "postChallenge": {
+            "name": "Post Challenge",
+            "description": "Hit the posts 5 times."
+          }
+        },
+        "announcements": {
+          "missionStart": {
+            "named": "Mission start: {mission}",
+            "generic": "Mission started!"
+          },
+          "missionComplete": {
+            "named": "Mission complete: {mission}! +{rewardText} EXP",
+            "generic": "Mission complete! +{rewardText} EXP"
+          },
+          "missionFailed": {
+            "named": "Mission failed: {mission}…",
+            "generic": "Mission failed…"
+          },
+          "combo": "Combo {countText}! +{xpText} EXP",
+          "skillShotSuccess": "Skill Shot! +{xpText} EXP"
+        },
+        "hud": {
+          "combo": {
+            "none": "-"
+          },
+          "status": "Balls: {livesText} / Score: {scoreText} / EXP: {expText} / Chain: x{chainText} / Combo: {comboText}"
+        }
+      },
       "trump_games": {
         "layout": {
           "navHeader": "Card Games",

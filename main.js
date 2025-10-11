@@ -18886,24 +18886,88 @@ function resolveMiniGameText(def, key) {
 }
 
 function createMiniGameLocalization(def) {
-    const prefix = (() => {
-        if (!def) return 'minigame';
-        if (def.localizationKey) return def.localizationKey;
-        if (def.textKeyPrefix) return def.textKeyPrefix;
-        if (def.id) return `minigame.${def.id}`;
-        return 'minigame';
+    const prefixCandidates = (() => {
+        const list = [];
+        const addPrefix = (value) => {
+            if (!value) return;
+            const normalized = String(value || '');
+            if (!normalized) return;
+            if (!list.includes(normalized)) list.push(normalized);
+        };
+        if (def) {
+            addPrefix(def.localizationKey);
+            addPrefix(def.textKeyPrefix);
+            if (Array.isArray(def.legacyKeyPrefixes)) {
+                def.legacyKeyPrefixes.forEach(addPrefix);
+            }
+            if (def.id != null) {
+                const id = String(def.id || '').trim();
+                if (id) {
+                    addPrefix(`minigame.${id}`);
+                    addPrefix(`miniexp.games.${id}`);
+                    addPrefix(`selection.miniexp.games.${id}`);
+                }
+            }
+        }
+        addPrefix('minigame');
+        addPrefix('miniexp.games');
+        addPrefix('selection.miniexp.games');
+        return list.length ? list : ['minigame'];
     })();
 
-    const normalizeKey = (key) => {
-        if (!key) return prefix;
-        if (key.startsWith(prefix) || key.startsWith('minigame.')) return key;
-        if (key.startsWith('.')) return `${prefix}${key}`;
-        return `${prefix}.${key}`;
+    const prefix = prefixCandidates[0] || 'minigame';
+
+    const buildCandidateKeys = (key) => {
+        if (!key) return prefixCandidates.slice();
+        const textKey = String(key);
+        const candidates = [];
+        const push = (value) => {
+            if (!value) return;
+            if (!candidates.includes(value)) candidates.push(value);
+        };
+        for (const base of prefixCandidates) {
+            if (textKey.startsWith(base)) {
+                push(textKey);
+                continue;
+            }
+            if (textKey.startsWith('.')) {
+                push(`${base}${textKey}`);
+            } else {
+                push(`${base}.${textKey}`);
+            }
+        }
+        push(textKey);
+        return candidates;
+    };
+
+    const computeFallback = (fallbackText) => {
+        if (typeof fallbackText === 'function') {
+            try {
+                const result = fallbackText();
+                return typeof result === 'string' ? result : (result ?? '');
+            } catch (error) {
+                console.warn('[MiniExp] Mini game fallback text error:', error);
+                return '';
+            }
+        }
+        return fallbackText ?? '';
     };
 
     const translateText = (key, fallbackText, params) => {
-        const normalized = normalizeKey(key);
-        return translateOrFallback(normalized, fallbackText, params);
+        const candidates = buildCandidateKeys(key);
+        if (i18n && typeof i18n.t === 'function') {
+            for (const candidate of candidates) {
+                try {
+                    const translated = i18n.t(candidate, params);
+                    if (typeof translated === 'string' && translated !== candidate) {
+                        return translated;
+                    }
+                } catch (error) {
+                    console.warn('[MiniExp] Mini game translation failed for key:', candidate, error);
+                }
+            }
+        }
+        return computeFallback(fallbackText);
     };
 
     const handleLocaleChange = (listener) => {

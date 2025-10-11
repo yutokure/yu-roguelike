@@ -3,7 +3,12 @@
   const MAX_LAPS = 60;
 
   const globalScope = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
-  const I18N = globalScope && globalScope.I18n;
+
+  function getI18n(){
+    if (!globalScope) return null;
+    const instance = globalScope.I18n;
+    return (instance && typeof instance === 'object') ? instance : null;
+  }
   const I18N_PREFIX = 'games.stopwatch';
 
   function pad2(value){
@@ -47,9 +52,10 @@
   }
 
   function translateKey(key, fallback, params){
-    if (key && I18N && typeof I18N.t === 'function'){
+    const i18n = getI18n();
+    if (key && i18n && typeof i18n.t === 'function'){
       try {
-        const value = I18N.t(key, params);
+        const value = i18n.t(key, params);
         if (typeof value === 'string' && value !== key) return value;
       } catch {}
     }
@@ -62,11 +68,12 @@
   }
 
   function formatNumberLocalized(value){
-    if (I18N && typeof I18N.formatNumber === 'function'){
-      try { return I18N.formatNumber(value); } catch {}
+    const i18n = getI18n();
+    if (i18n && typeof i18n.formatNumber === 'function'){
+      try { return i18n.formatNumber(value); } catch {}
     }
     try {
-      const locale = I18N && typeof I18N.getLocale === 'function' ? I18N.getLocale() : undefined;
+      const locale = i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : undefined;
       return new Intl.NumberFormat(locale).format(value);
     } catch {
       return String(value ?? '');

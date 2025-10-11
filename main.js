@@ -885,6 +885,11 @@ if (runResultPrimaryButton) {
 if (runResultRetryButton) {
     runResultRetryButton.addEventListener('click', handleRunResultRetryAction);
 }
+document.querySelectorAll('.modal[aria-hidden="true"]').forEach(modal => {
+    if (typeof modal.setAttribute === 'function') {
+        modal.setAttribute('inert', '');
+    }
+});
 // Selection screen
 const selectionScreen = document.getElementById('selection-screen');
 const gameScreen = document.getElementById('game-screen');
@@ -7614,7 +7619,55 @@ let sandboxGimmicks = [];
 let sandboxGimmickRuntime = null;
 
 // -------------------- Modal helpers --------------------
+const MODAL_FOCUSABLE_SELECTOR = [
+    'a[href]',
+    'area[href]',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    'button:not([disabled])',
+    'iframe',
+    'object',
+    'embed',
+    '[contenteditable]',
+    '[tabindex]:not([tabindex="-1"])'
+].join(', ');
 let __openModalCount = 0;
+
+function focusInitialModalElement(modal) {
+    if (!(modal instanceof HTMLElement)) return;
+    const autofocusTarget = modal.querySelector('[autofocus]');
+    const focusCandidate = autofocusTarget || modal.querySelector(MODAL_FOCUSABLE_SELECTOR);
+
+    if (focusCandidate && typeof focusCandidate.focus === 'function') {
+        try {
+            focusCandidate.focus({ preventScroll: true });
+            return;
+        } catch {}
+        try { focusCandidate.focus(); return; } catch {}
+    }
+
+    if (!modal.hasAttribute('tabindex')) {
+        modal.setAttribute('tabindex', '-1');
+        modal.__modalAddedTabIndex = true;
+    }
+
+    if (typeof modal.focus === 'function') {
+        try {
+            modal.focus({ preventScroll: true });
+        } catch {
+            try { modal.focus(); } catch {}
+        }
+    }
+}
+
+function cleanupModalFocusState(modal) {
+    if (!(modal instanceof HTMLElement)) return;
+    if (modal.__modalAddedTabIndex) {
+        modal.removeAttribute('tabindex');
+        delete modal.__modalAddedTabIndex;
+    }
+}
 function isAnyModalOpen() {
     if (__openModalCount > 0) return true;
     try {
@@ -7642,10 +7695,18 @@ function openModal(el) {
         el.style.display = 'flex';
     }
     if (typeof el.setAttribute === 'function') {
+        el.removeAttribute('inert');
         el.setAttribute('aria-hidden', 'false');
     }
     if (!alreadyOpen) {
+        const previouslyFocused = document.activeElement;
+        if (previouslyFocused && previouslyFocused !== document.body && typeof previouslyFocused.focus === 'function' && !el.contains(previouslyFocused)) {
+            el.__previousActiveElement = previouslyFocused;
+        } else {
+            el.__previousActiveElement = null;
+        }
         __openModalCount++;
+        focusInitialModalElement(el);
     }
     updateModalBodyState();
 }
@@ -7654,6 +7715,10 @@ function closeModal(el) {
     const hadClass = el.classList ? el.classList.contains('modal--open') : false;
     const displayed = el.style.display !== 'none';
     if (!hadClass && !displayed) return;
+    const activeElement = document.activeElement;
+    if (activeElement && el.contains(activeElement) && typeof activeElement.blur === 'function') {
+        activeElement.blur();
+    }
     if (el.classList) {
         el.classList.remove('modal--open');
     }
@@ -7662,9 +7727,20 @@ function closeModal(el) {
     }
     if (typeof el.setAttribute === 'function') {
         el.setAttribute('aria-hidden', 'true');
+        el.setAttribute('inert', '');
     }
     if (hadClass || displayed) {
         __openModalCount = Math.max(0, __openModalCount - 1);
+        const toFocus = el.__previousActiveElement;
+        if (toFocus && toFocus instanceof Element && document.contains(toFocus) && typeof toFocus.focus === 'function') {
+            try {
+                toFocus.focus({ preventScroll: true });
+            } catch {
+                try { toFocus.focus(); } catch {}
+            }
+        }
+        el.__previousActiveElement = null;
+        cleanupModalFocusState(el);
     }
     updateModalBodyState();
 }

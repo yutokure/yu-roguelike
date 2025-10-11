@@ -5,7 +5,14 @@
   let mathLoader = null;
   let mathJaxLoader = null;
   let mathJaxInstance = null;
-  const i18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : null;
+  let i18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : null;
+
+  function getI18n(){
+    if (typeof window !== 'undefined' && window.I18n && i18n !== window.I18n){
+      i18n = window.I18n;
+    }
+    return i18n;
+  }
 
   function evaluateFallbackValue(fallback){
     if (typeof fallback === 'function') {
@@ -23,9 +30,10 @@
   }
 
   function translateText(key, fallback, params){
-    if (key && i18n && typeof i18n.t === 'function') {
+    const instance = getI18n();
+    if (key && instance && typeof instance.t === 'function') {
       try {
-        const translated = i18n.t(key, params);
+        const translated = instance.t(key, params);
         if (typeof translated === 'string' && translated !== key) {
           return translated;
         }

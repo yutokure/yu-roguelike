@@ -75,34 +75,136 @@
       }
     }
 
-    const statusFallbacks = {
-      introHint: ()=>'ゲージをタイミング良く止めてストライクを狙おう！',
-      framePlayer: params=>`第${params.frame}フレーム あなたの番です。`,
-      frameCpu: params=>`第${params.frame}フレーム CPUの番です…`,
-      remainingPins: params=>`残りピン: ${params.count} 本。もう一投！`,
-      playerStrike: ()=>'ストライク！',
-      cpuStrike: ()=>'CPUがストライク！',
-      victory: params=>`勝利！ スコア ${params.player} - ${params.cpu}`,
-      draw: params=>`引き分け… スコア ${params.player} - ${params.cpu}`,
-      defeat: params=>`敗北… スコア ${params.player} - ${params.cpu}`
+    function getLocaleCode(){
+      const candidates = [
+        localization?.getLocale?.(),
+        globalI18n?.getLocale?.(),
+        globalI18n?.getStoredLocale?.(),
+        typeof navigator !== 'undefined' ? navigator.language : null,
+        globalI18n?.getDefaultLocale?.(),
+        'ja'
+      ];
+      for(const candidate of candidates){
+        if(!candidate) continue;
+        const normalized = String(candidate).toLowerCase();
+        if(normalized.startsWith('en')) return 'en';
+        if(normalized.startsWith('ja')) return 'ja';
+      }
+      return 'ja';
+    }
+
+    const textFallbacks = {
+      ja: {
+        title: ()=>'ボウリング対決 MOD',
+        legend: ()=>'ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！',
+        'history.title': ()=>'ログ',
+        'history.placeholder': ()=>'---',
+        'buttons.throw': ()=>'🎳 ボールを投げる',
+        'buttons.reset': ()=>'🔄 リセット',
+        'buttons.throwing': ()=>'🎳 投球中…',
+        'scoreboard.you': ()=>'あなた',
+        'scoreboard.cpu': ()=>'CPU',
+        'scoreboard.total': ()=>'合計',
+        'sliders.aim.label': ()=>'狙い位置',
+        'sliders.aim.center': ()=>'中央',
+        'sliders.aim.right': params=>`右 ${params.value}`,
+        'sliders.aim.left': params=>`左 ${params.value}`,
+        'sliders.curve.label': ()=>'カーブ量',
+        'sliders.curve.none': ()=>'なし',
+        'sliders.curve.right': params=>`右曲がり ${params.value}`,
+        'sliders.curve.left': params=>`左曲がり ${params.value}`,
+        'sliders.power.label': ()=>'投球パワー',
+        'sliders.power.format': params=>`${params.value}%`,
+        'status.introHint': ()=>'ゲージをタイミング良く止めてストライクを狙おう！',
+        'status.framePlayer': params=>`第${params.frame}フレーム あなたの番です。`,
+        'status.frameCpu': params=>`第${params.frame}フレーム CPUの番です…`,
+        'status.remainingPins': params=>`残りピン: ${params.count} 本。もう一投！`,
+        'status.playerStrike': ()=>'ストライク！',
+        'status.cpuStrike': ()=>'CPUがストライク！',
+        'status.victory': params=>`勝利！ スコア ${params.player} - ${params.cpu}`,
+        'status.draw': params=>`引き分け… スコア ${params.player} - ${params.cpu}`,
+        'status.defeat': params=>`敗北… スコア ${params.player} - ${params.cpu}`,
+        'stage.aim.prompt': ()=>'狙いゲージが往復中…止めるタイミングでボタン！',
+        'stage.aim.button': ()=>'🛑 狙いを止める',
+        'stage.aim.confirm': params=>`狙い位置を ${params.value} にセット！`,
+        'stage.curve.prompt': ()=>'カーブゲージ調整中…ボタンでストップ！',
+        'stage.curve.button': ()=>'🛑 カーブを止める',
+        'stage.curve.confirm': params=>`カーブ量は ${params.value} に決定！`,
+        'stage.power.prompt': ()=>'パワーゲージを注視…ボタンで投球！',
+        'stage.power.button': ()=>'🛑 パワーを止める',
+        'stage.power.confirm': params=>`パワー ${params.value} で投球！`,
+        'logs.playerShot': params=>`あなた: aim ${params.aim}, curve ${params.curve}, power ${params.power}% → <strong>${params.pins}</strong>`,
+        'logs.cpuShot': params=>`CPU: aim ${params.aim}, curve ${params.curve}, power ${params.power}% → <strong>${params.pins}</strong>`,
+        'logs.victory': params=>`<strong>勝利！</strong> +${params.exp}EXP`,
+        'logs.draw': params=>`<strong>引き分け</strong> +${params.exp}EXP`,
+        'logs.defeat': params=>`<strong>敗北</strong> +${params.exp}EXP`
+      },
+      en: {
+        title: ()=>'Bowling Duel MOD',
+        legend: ()=>'Press the button to stop the Aim → Curve → Power gauges in order and roll the ball!',
+        'history.title': ()=>'Log',
+        'history.placeholder': ()=>'---',
+        'buttons.throw': ()=>'🎳 Throw Ball',
+        'buttons.reset': ()=>'🔄 Reset',
+        'buttons.throwing': ()=>'🎳 Rolling…',
+        'scoreboard.you': ()=>'You',
+        'scoreboard.cpu': ()=>'CPU',
+        'scoreboard.total': ()=>'Total',
+        'sliders.aim.label': ()=>'Aim Position',
+        'sliders.aim.center': ()=>'Center',
+        'sliders.aim.right': params=>`Right ${params.value}`,
+        'sliders.aim.left': params=>`Left ${params.value}`,
+        'sliders.curve.label': ()=>'Curve Amount',
+        'sliders.curve.none': ()=>'None',
+        'sliders.curve.right': params=>`Hooks Right ${params.value}`,
+        'sliders.curve.left': params=>`Hooks Left ${params.value}`,
+        'sliders.power.label': ()=>'Throw Power',
+        'sliders.power.format': params=>`${params.value}%`,
+        'status.introHint': ()=>'Stop each moving gauge at the right moment to chase strikes!',
+        'status.framePlayer': params=>`Frame ${params.frame}: Your turn.`,
+        'status.frameCpu': params=>`Frame ${params.frame}: CPU turn…`,
+        'status.remainingPins': params=>`Pins left: ${params.count}. Take another shot!`,
+        'status.playerStrike': ()=>'Strike!',
+        'status.cpuStrike': ()=>'CPU rolled a strike!',
+        'status.victory': params=>`Victory! Score ${params.player} - ${params.cpu}`,
+        'status.draw': params=>`Draw… Score ${params.player} - ${params.cpu}`,
+        'status.defeat': params=>`Defeat… Score ${params.player} - ${params.cpu}`,
+        'stage.aim.prompt': ()=>'Aim gauge oscillating—press to lock it in!',
+        'stage.aim.button': ()=>'🛑 Stop Aim',
+        'stage.aim.confirm': params=>`Aim set to ${params.value}!`,
+        'stage.curve.prompt': ()=>'Curve gauge moving—stop it with the button!',
+        'stage.curve.button': ()=>'🛑 Stop Curve',
+        'stage.curve.confirm': params=>`Curve locked at ${params.value}!`,
+        'stage.power.prompt': ()=>'Watch the power gauge—press to roll!',
+        'stage.power.button': ()=>'🛑 Stop Power',
+        'stage.power.confirm': params=>`Rolling with ${params.value}!`,
+        'logs.playerShot': params=>`You: aim ${params.aim}, curve ${params.curve}, power ${params.power}% → <strong>${params.pins}</strong>`,
+        'logs.cpuShot': params=>`CPU: aim ${params.aim}, curve ${params.curve}, power ${params.power}% → <strong>${params.pins}</strong>`,
+        'logs.victory': params=>`<strong>Victory!</strong> +${params.exp}EXP`,
+        'logs.draw': params=>`<strong>Draw</strong> +${params.exp}EXP`,
+        'logs.defeat': params=>`<strong>Defeat</strong> +${params.exp}EXP`
+      }
     };
 
-    const logFallbacks = {
-      playerShot: params=>`あなた: aim ${params.aim}, curve ${params.curve}, power ${params.power}% → <strong>${params.pins}</strong>`,
-      cpuShot: params=>`CPU: aim ${params.aim}, curve ${params.curve}, power ${params.power}% → <strong>${params.pins}</strong>`,
-      victory: params=>`<strong>勝利！</strong> +${params.exp}EXP`,
-      draw: params=>`<strong>引き分け</strong> +${params.exp}EXP`,
-      defeat: params=>`<strong>敗北</strong> +${params.exp}EXP`
-    };
+    function fallbackText(key, params){
+      const locale = getLocaleCode();
+      const entry = textFallbacks[locale]?.[key] || textFallbacks.ja?.[key];
+      if(!entry) return '';
+      try {
+        const value = typeof entry === 'function' ? entry(params || {}) : entry;
+        return value == null ? '' : String(value);
+      } catch (error) {
+        console.warn('[bowling] Failed to compute fallback text for', key, error);
+        return '';
+      }
+    }
 
     function translateStatus(key, params){
-      const fallback = statusFallbacks[key] || (()=> '');
-      return localize(`status.${key}`, params, ()=>fallback(params || {}));
+      return localize(`status.${key}`, params, () => fallbackText(`status.${key}`, params));
     }
 
     function formatLog(key, params){
-      const fallback = logFallbacks[key] || (()=> '');
-      return localize(`logs.${key}`, params, ()=>fallback(params || {}));
+      return localize(`logs.${key}`, params, () => fallbackText(`logs.${key}`, params));
     }
 
     if(!document.getElementById('bowling-mod-style')){
@@ -183,8 +285,8 @@
       return { row, cells, totalCell, labelSpan };
     }
 
-    const playerRow = makeScoreRow(localize('scoreboard.you', null, ()=>'あなた'), 'player-label');
-    const cpuRow = makeScoreRow(localize('scoreboard.cpu', null, ()=>'CPU'), 'cpu-label');
+    const playerRow = makeScoreRow(localize('scoreboard.you', null, () => fallbackText('scoreboard.you')), 'player-label');
+    const cpuRow = makeScoreRow(localize('scoreboard.cpu', null, () => fallbackText('scoreboard.cpu')), 'cpu-label');
     table.appendChild(playerRow.row);
     table.appendChild(cpuRow.row);
 
@@ -242,27 +344,27 @@
     }
 
     const aimSlider = makeSlider(
-      localize('sliders.aim.label', null, ()=>'狙い位置'),
+      localize('sliders.aim.label', null, () => fallbackText('sliders.aim.label')),
       -100, 100, 1, 0,
       v => v === 0
-        ? localize('sliders.aim.center', null, ()=>'中央')
+        ? localize('sliders.aim.center', null, () => fallbackText('sliders.aim.center'))
         : v > 0
-          ? localize('sliders.aim.right', { value: v }, () => `右 ${v}`)
-          : localize('sliders.aim.left', { value: Math.abs(v) }, () => `左 ${Math.abs(v)}`)
+          ? localize('sliders.aim.right', { value: v }, () => fallbackText('sliders.aim.right', { value: v }))
+          : localize('sliders.aim.left', { value: Math.abs(v) }, () => fallbackText('sliders.aim.left', { value: Math.abs(v) }))
     );
     const curveSlider = makeSlider(
-      localize('sliders.curve.label', null, ()=>'カーブ量'),
+      localize('sliders.curve.label', null, () => fallbackText('sliders.curve.label')),
       -100, 100, 1, 20,
       v => v === 0
-        ? localize('sliders.curve.none', null, ()=>'なし')
+        ? localize('sliders.curve.none', null, () => fallbackText('sliders.curve.none'))
         : v > 0
-          ? localize('sliders.curve.right', { value: v }, () => `右曲がり ${v}`)
-          : localize('sliders.curve.left', { value: Math.abs(v) }, () => `左曲がり ${Math.abs(v)}`)
+          ? localize('sliders.curve.right', { value: v }, () => fallbackText('sliders.curve.right', { value: v }))
+          : localize('sliders.curve.left', { value: Math.abs(v) }, () => fallbackText('sliders.curve.left', { value: Math.abs(v) }))
     );
     const powerSlider = makeSlider(
-      localize('sliders.power.label', null, ()=>'投球パワー'),
+      localize('sliders.power.label', null, () => fallbackText('sliders.power.label')),
       40, 100, 1, 72,
-      v => localize('sliders.power.format', { value: v }, () => `${v}%`)
+      v => localize('sliders.power.format', { value: v }, () => fallbackText('sliders.power.format', { value: v }))
     );
 
     controls.appendChild(aimSlider.block);
@@ -283,11 +385,11 @@
 
     const legend = document.createElement('div');
     legend.className = 'legend';
-    legend.textContent = localize('legend', null, ()=>'ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！');
+    legend.textContent = localize('legend', null, () => fallbackText('legend'));
 
     const historyLog = document.createElement('div');
     historyLog.className = 'history-log';
-    historyLog.innerHTML = `<strong>${localize('history.title', null, ()=>'ログ')}</strong><br>${localize('history.placeholder', null, ()=>'---')}`;
+    historyLog.innerHTML = `<strong>${localize('history.title', null, () => fallbackText('history.title'))}</strong><br>${localize('history.placeholder', null, () => fallbackText('history.placeholder'))}`;
 
     container.appendChild(title);
     container.appendChild(statusLine);
@@ -312,8 +414,8 @@
     let detachLocale = null;
 
     function renderHistory(){
-      const titleText = localize('history.title', null, ()=>'ログ');
-      const placeholder = localize('history.placeholder', null, ()=>'---');
+      const titleText = localize('history.title', null, () => fallbackText('history.title'));
+      const placeholder = localize('history.placeholder', null, () => fallbackText('history.placeholder'));
       if(historyEntries.length === 0){
         historyLog.innerHTML = `<strong>${titleText}</strong><br>${placeholder}`;
       } else {
@@ -330,11 +432,11 @@
     function updateThrowButton(){
       if(throwState.mode === 'stage' && throwState.stage){
         const info = stageInfo?.[throwState.stage];
-        throwBtn.textContent = info ? info.getButton() : localize('buttons.throw', null, ()=>'🎳 ボールを投げる');
+        throwBtn.textContent = info ? info.getButton() : localize('buttons.throw', null, () => fallbackText('buttons.throw'));
       } else if(throwState.mode === 'rolling'){
-        throwBtn.textContent = localize('buttons.throwing', null, ()=>'🎳 投球中…');
+        throwBtn.textContent = localize('buttons.throwing', null, () => fallbackText('buttons.throwing'));
       } else {
-        throwBtn.textContent = localize('buttons.throw', null, ()=>'🎳 ボールを投げる');
+        throwBtn.textContent = localize('buttons.throw', null, () => fallbackText('buttons.throw'));
       }
     }
 
@@ -714,19 +816,19 @@
     const stageOrder = ['aim', 'curve', 'power'];
     const stageInfo = {
       aim: {
-        getPrompt: () => localize('stage.aim.prompt', null, ()=>'狙いゲージが往復中…止めるタイミングでボタン！'),
-        getButton: () => localize('stage.aim.button', null, ()=>'🛑 狙いを止める'),
-        getConfirm: v => localize('stage.aim.confirm', { value: aimSlider.formatter(v) }, () => `狙い位置を ${aimSlider.formatter(v)} にセット！`)
+        getPrompt: () => localize('stage.aim.prompt', null, () => fallbackText('stage.aim.prompt')),
+        getButton: () => localize('stage.aim.button', null, () => fallbackText('stage.aim.button')),
+        getConfirm: v => localize('stage.aim.confirm', { value: aimSlider.formatter(v) }, () => fallbackText('stage.aim.confirm', { value: aimSlider.formatter(v) }))
       },
       curve: {
-        getPrompt: () => localize('stage.curve.prompt', null, ()=>'カーブゲージ調整中…ボタンでストップ！'),
-        getButton: () => localize('stage.curve.button', null, ()=>'🛑 カーブを止める'),
-        getConfirm: v => localize('stage.curve.confirm', { value: curveSlider.formatter(v) }, () => `カーブ量は ${curveSlider.formatter(v)} に決定！`)
+        getPrompt: () => localize('stage.curve.prompt', null, () => fallbackText('stage.curve.prompt')),
+        getButton: () => localize('stage.curve.button', null, () => fallbackText('stage.curve.button')),
+        getConfirm: v => localize('stage.curve.confirm', { value: curveSlider.formatter(v) }, () => fallbackText('stage.curve.confirm', { value: curveSlider.formatter(v) }))
       },
       power: {
-        getPrompt: () => localize('stage.power.prompt', null, ()=>'パワーゲージを注視…ボタンで投球！'),
-        getButton: () => localize('stage.power.button', null, ()=>'🛑 パワーを止める'),
-        getConfirm: v => localize('stage.power.confirm', { value: powerSlider.formatter(v) }, () => `パワー ${powerSlider.formatter(v)} で投球！`)
+        getPrompt: () => localize('stage.power.prompt', null, () => fallbackText('stage.power.prompt')),
+        getButton: () => localize('stage.power.button', null, () => fallbackText('stage.power.button')),
+        getConfirm: v => localize('stage.power.confirm', { value: powerSlider.formatter(v) }, () => fallbackText('stage.power.confirm', { value: powerSlider.formatter(v) }))
       }
     };
 
@@ -771,18 +873,18 @@
     resetBtn.addEventListener('click', ()=>{ resetState(); shortcuts?.disableKey?.('r'); });
 
     function applyLocale(){
-      title.textContent = localize('title', null, ()=>'ボウリング対決 MOD');
-      aimSlider.setLabel(localize('sliders.aim.label', null, ()=>'狙い位置'));
-      curveSlider.setLabel(localize('sliders.curve.label', null, ()=>'カーブ量'));
-      powerSlider.setLabel(localize('sliders.power.label', null, ()=>'投球パワー'));
+      title.textContent = localize('title', null, () => fallbackText('title'));
+      aimSlider.setLabel(localize('sliders.aim.label', null, () => fallbackText('sliders.aim.label')));
+      curveSlider.setLabel(localize('sliders.curve.label', null, () => fallbackText('sliders.curve.label')));
+      powerSlider.setLabel(localize('sliders.power.label', null, () => fallbackText('sliders.power.label')));
       aimSlider.refresh();
       curveSlider.refresh();
       powerSlider.refresh();
-      legend.textContent = localize('legend', null, ()=>'ボタンを押して狙い→カーブ→パワーの順にゲージを止め、投球しよう！');
-      resetBtn.textContent = localize('buttons.reset', null, ()=>'🔄 リセット');
-      playerRow.labelSpan.textContent = localize('scoreboard.you', null, ()=>'あなた');
-      cpuRow.labelSpan.textContent = localize('scoreboard.cpu', null, ()=>'CPU');
-      totalTh.textContent = localize('scoreboard.total', null, ()=>'合計');
+      legend.textContent = localize('legend', null, () => fallbackText('legend'));
+      resetBtn.textContent = localize('buttons.reset', null, () => fallbackText('buttons.reset'));
+      playerRow.labelSpan.textContent = localize('scoreboard.you', null, () => fallbackText('scoreboard.you'));
+      cpuRow.labelSpan.textContent = localize('scoreboard.cpu', null, () => fallbackText('scoreboard.cpu'));
+      totalTh.textContent = localize('scoreboard.total', null, () => fallbackText('scoreboard.total'));
       renderHistory();
       applyStatusSnapshot();
       updateThrowButton();

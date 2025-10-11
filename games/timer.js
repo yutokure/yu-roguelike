@@ -1,45 +1,65 @@
 (function(){
-  const globalScope = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
-  const i18n = globalScope && globalScope.I18n ? globalScope.I18n : null;
-  const I18N_PREFIX = 'games.timer';
+  const GLOBAL = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
+  const I18N = GLOBAL && GLOBAL.I18n ? GLOBAL.I18n : null;
+  const TIMER_I18N_PREFIX = 'games.timer';
 
-  function translate(path, fallback, params){
-    if (path && i18n && typeof i18n.t === 'function'){
-      try {
-        const result = i18n.t(path, params);
-        if (typeof result === 'string' && result !== path){
-          return result;
-        }
-      } catch (error){
-        console.warn('[timer] Failed to translate key', path, error);
-      }
-    }
+  function formatTemplate(template, params){
+    if (template === undefined || template === null) return '';
+    if (!params || typeof params !== 'object') return String(template);
+    return String(template).replace(/\{([^{}]+)\}/g, (match, token) => {
+      const key = token.trim();
+      if (!key) return match;
+      const value = params[key];
+      return value === undefined || value === null ? match : String(value);
+    });
+  }
+
+  function evaluateFallback(fallback, params){
+    if (fallback === undefined || fallback === null) return '';
     if (typeof fallback === 'function'){
       try {
         const value = fallback(params || {});
         return typeof value === 'string' ? value : (value ?? '');
       } catch (error){
-        console.warn('[timer] Failed to evaluate fallback for', path, error);
+        console.warn('[timer] Failed to evaluate fallback:', error);
         return '';
       }
     }
-    return fallback ?? '';
+    return formatTemplate(fallback, params);
+  }
+
+  function translateKey(key, fallback, params){
+    if (key && I18N && typeof I18N.t === 'function'){
+      try {
+        const result = I18N.t(key, params);
+        if (typeof result === 'string' && result !== key){
+          return result;
+        }
+      } catch (error){
+        console.warn('[timer] Failed to translate key', key, error);
+      }
+    }
+    if (fallback !== undefined){
+      return evaluateFallback(fallback, params);
+    }
+    return key ? formatTemplate(key, params) : '';
   }
 
   function t(path, fallback, params){
-    return translate(path ? `${I18N_PREFIX}.${path}` : null, fallback, params);
+    const key = path ? `${TIMER_I18N_PREFIX}.${path}` : TIMER_I18N_PREFIX;
+    return translateKey(key, fallback, params);
   }
 
   function formatNumberLocalized(value){
-    if (i18n && typeof i18n.formatNumber === 'function'){
+    if (I18N && typeof I18N.formatNumber === 'function'){
       try {
-        return i18n.formatNumber(value);
+        return I18N.formatNumber(value);
       } catch (error){
         console.warn('[timer] Failed to format number via i18n:', error);
       }
     }
     try {
-      const locale = i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : undefined;
+      const locale = I18N && typeof I18N.getLocale === 'function' ? I18N.getLocale() : undefined;
       return new Intl.NumberFormat(locale).format(value);
     } catch (error){
       console.warn('[timer] Intl.NumberFormat failed:', error);
@@ -49,15 +69,15 @@
 
   function formatTimestamp(date){
     if (!(date instanceof Date)) return '';
-    if (i18n && typeof i18n.formatTime === 'function'){
+    if (I18N && typeof I18N.formatTime === 'function'){
       try {
-        return i18n.formatTime(date, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return I18N.formatTime(date, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       } catch (error){
         console.warn('[timer] Failed to format time via i18n:', error);
       }
     }
     try {
-      const locale = i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : undefined;
+      const locale = I18N && typeof I18N.getLocale === 'function' ? I18N.getLocale() : undefined;
       return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(date);
     } catch (error){
       console.warn('[timer] Intl.DateTimeFormat failed:', error);
@@ -74,42 +94,6 @@
   const MAX_MINUTES = 59;
   const MAX_SECONDS = 59;
   const DEFAULT_DURATION = 5 * 60 * 1000; // 5 minutes
-  const GLOBAL = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
-  const I18N = GLOBAL && GLOBAL.I18n;
-  const I18N_PREFIX = 'minigame.timer';
-
-  function formatTemplate(template, params){
-    if (template === undefined || template === null) return '';
-    if (!params || typeof params !== 'object') return String(template);
-    return String(template).replace(/\{([^{}]+)\}/g, (match, token) => {
-      const key = token.trim();
-      if (!key) return match;
-      const value = params[key];
-      return value === undefined || value === null ? match : String(value);
-    });
-  }
-
-  function translateKey(key, fallback, params){
-    if (key && I18N && typeof I18N.t === 'function'){
-      try {
-        const value = I18N.t(key, params);
-        if (typeof value === 'string' && value !== key) return value;
-      } catch {}
-    }
-    if (fallback !== undefined) return params ? formatTemplate(fallback, params) : String(fallback);
-    return params ? formatTemplate(key, params) : String(key ?? '');
-  }
-
-  function t(path, fallback, params){
-    return translateKey(path ? `${I18N_PREFIX}.${path}` : I18N_PREFIX, fallback, params);
-  }
-
-  function formatNumberLocalized(value){
-    if (I18N && typeof I18N.formatNumber === 'function'){
-      try { return I18N.formatNumber(value); } catch {}
-    }
-    return String(value);
-  }
 
   function clampInt(value, min, max){
     const num = Number(value);
@@ -913,9 +897,9 @@
     updateDisplay();
     applyLocale();
 
-    if (i18n && typeof i18n.onLocaleChanged === 'function'){
+    if (I18N && typeof I18N.onLocaleChanged === 'function'){
       try {
-        detachLocale = i18n.onLocaleChanged(() => applyLocale());
+        detachLocale = I18N.onLocaleChanged(() => applyLocale());
       } catch (error){
         console.warn('[timer] Failed to register locale listener:', error);
       }

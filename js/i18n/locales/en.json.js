@@ -16643,6 +16643,7 @@
         "detailSeparator": " / ",
         "obtainDetail": " ({details})",
         "obtain": "Obtained passive orb \"{label}\"!{detail}",
+        "obtainMultiple": "Obtained passive orb \"{label}\" ×{delta}!{detail}",
         "orbs": {
           "attackBoost": { "name": "Attack +1% Orb" },
           "defenseBoost": { "name": "Defense +1% Orb" },
@@ -17425,14 +17426,34 @@
         "header": {
           "title": "To-Do List",
           "today": "Today · {date}",
-          "stats": "Pending: {pending} / Completed: {completed}"
+          "stats": "Pending: {pending} / Completed: {completed} / Achievements: {achievements}"
         },
         "form": {
           "titleCreate": "Add New To-Do",
           "titleEdit": "Edit To-Do",
           "name": "Name",
           "namePlaceholder": "e.g., Send daily report",
+          "type": "Type",
+          "typeSingle": "Single",
+          "typeRepeatable": "Repeatable",
           "xp": "EXP Reward",
+          "rewards": {
+            "title": "Additional Rewards",
+            "passiveOrb": {
+              "label": "Passive Orb",
+              "placeholder": "e.g., attackBoost",
+              "amount": "Quantity"
+            },
+            "item": {
+              "label": "Item",
+              "placeholder": "e.g., potion30",
+              "amount": "Quantity"
+            },
+            "sp": {
+              "label": "SP",
+              "amount": "Amount"
+            }
+          },
           "color": "Color",
           "memo": "Notes",
           "memoPlaceholder": "Add notes or checkpoints",
@@ -17448,12 +17469,19 @@
         },
         "task": {
           "xpChip": "{xp} EXP",
+          "rewards": {
+            "passiveOrb": "Orb: {orb} ×{amount}",
+            "item": "{item} ×{amount}",
+            "sp": "+{amount} SP"
+          },
           "memoEmpty": "No notes",
           "createdAt": "Created: {date}",
           "completedAt": "Completed: {date}",
+          "repeatableCount": "Achieved: {count} times",
           "statusCompleted": "Success",
           "statusFailed": "Failed",
           "actions": {
+            "achieve": "Achieve",
             "complete": "Complete",
             "fail": "Fail",
             "edit": "Edit",

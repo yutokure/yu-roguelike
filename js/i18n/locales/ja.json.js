@@ -16589,6 +16589,7 @@
         "detailSeparator": " / ",
         "obtainDetail": "（{details}）",
         "obtain": "パッシブオーブ「{label}」を手に入れた！{detail}",
+        "obtainMultiple": "パッシブオーブ「{label}」を{delta}個手に入れた！{detail}",
         "orbs": {
           "attackBoost": { "name": "攻撃力+1%の玉" },
           "defenseBoost": { "name": "防御力+1%の玉" },
@@ -17371,14 +17372,34 @@
         "header": {
           "title": "ToDoリスト",
           "today": "{date}",
-          "stats": "未完了: {pending}件 / 完了: {completed}件"
+          "stats": "未完了: {pending}件 / 完了: {completed}件 / 達成: {achievements}回"
         },
         "form": {
           "titleCreate": "新規ToDoを登録",
           "titleEdit": "ToDoを編集",
           "name": "名前",
           "namePlaceholder": "例: 日次レポートを送信",
+          "type": "タイプ",
+          "typeSingle": "単発",
+          "typeRepeatable": "繰り返し",
           "xp": "獲得EXP",
+          "rewards": {
+            "title": "追加報酬",
+            "passiveOrb": {
+              "label": "パッシブオーブ",
+              "placeholder": "例: attackBoost",
+              "amount": "個数"
+            },
+            "item": {
+              "label": "アイテム",
+              "placeholder": "例: potion30",
+              "amount": "個数"
+            },
+            "sp": {
+              "label": "SP",
+              "amount": "回復量"
+            }
+          },
           "color": "カラー",
           "memo": "メモ",
           "memoPlaceholder": "補足情報やチェックポイントなどを入力",
@@ -17394,12 +17415,19 @@
         },
         "task": {
           "xpChip": "{xp} EXP",
+          "rewards": {
+            "passiveOrb": "オーブ: {orb} ×{amount}",
+            "item": "{item} ×{amount}",
+            "sp": "SP +{amount}"
+          },
           "memoEmpty": "メモなし",
           "createdAt": "登録: {date}",
           "completedAt": "完了: {date}",
+          "repeatableCount": "達成回数: {count}回",
           "statusCompleted": "成功",
           "statusFailed": "失敗",
           "actions": {
+            "achieve": "達成",
             "complete": "完了",
             "fail": "失敗",
             "edit": "編集",

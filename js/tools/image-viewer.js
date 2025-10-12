@@ -915,4 +915,12 @@
     if (global.ToolsTab?.registerTool) {
         global.ToolsTab.registerTool(TOOL_ID, (context) => api.init(context));
     }
+    if (global.ToolStateRegistry?.register) {
+        global.ToolStateRegistry.register('imageViewer', {
+            getState: () => getSerializedState(),
+            setState: (snapshot) => applySerializedState(snapshot),
+            labelKey: 'tools.sidebar.stateManager.toolNames.imageViewer',
+            labelFallback: '画像ビューア'
+        });
+    }
 })(window);

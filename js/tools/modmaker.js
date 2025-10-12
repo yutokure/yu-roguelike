@@ -55,6 +55,7 @@ const modMakerState = {
         blocks2: [],
         blocks3: []
     },
+    allowEmptyStructures: false,
     selectedStructure: 0,
     selectedGenerator: 0
 };
@@ -211,12 +212,11 @@ function initModMakerTool() {
     }
     if (modMakerRefs.removeStructure) {
         modMakerRefs.removeStructure.addEventListener('click', () => {
-            if (modMakerState.structures.length <= 1) {
-                const single = modMakerState.structures[0];
-                if (single) single.matrix = modMakerCreateMatrix(single.width, single.height, null);
-            } else {
-                modMakerState.structures.splice(modMakerState.selectedStructure, 1);
-                modMakerState.selectedStructure = Math.max(0, modMakerState.selectedStructure - 1);
+            if (!modMakerState.structures.length) return;
+            const index = Math.max(0, Math.min(modMakerState.selectedStructure || 0, modMakerState.structures.length - 1));
+            modMakerState.structures.splice(index, 1);
+            if (!modMakerState.structures.length) {
+                modMakerState.allowEmptyStructures = true;
             }
             ensureModMakerDefaults();
             renderModMaker();
@@ -470,7 +470,12 @@ function initModMakerTool() {
 }
 function ensureModMakerDefaults() {
     if (!Array.isArray(modMakerState.structures)) modMakerState.structures = [];
-    if (!modMakerState.structures.length) modMakerState.structures.push(createNewStructure());
+    if (typeof modMakerState.allowEmptyStructures !== 'boolean') {
+        modMakerState.allowEmptyStructures = modMakerState.structures.length === 0;
+    }
+    if (!modMakerState.structures.length && !modMakerState.allowEmptyStructures) {
+        modMakerState.structures.push(createNewStructure());
+    }
     if (!Array.isArray(modMakerState.generators)) modMakerState.generators = [];
     if (!modMakerState.generators.length) modMakerState.generators.push(createNewGenerator());
     modMakerState.generators.forEach(gen => ensureGeneratorFixedState(gen));
@@ -480,7 +485,14 @@ function ensureModMakerDefaults() {
     for (const tier of ['blocks1', 'blocks2', 'blocks3']) {
         if (!Array.isArray(modMakerState.blocks[tier])) modMakerState.blocks[tier] = [];
     }
-    modMakerState.selectedStructure = Math.min(Math.max(0, modMakerState.selectedStructure || 0), modMakerState.structures.length - 1);
+    if (!modMakerState.structures.length) {
+        modMakerState.selectedStructure = -1;
+    } else {
+        modMakerState.selectedStructure = Math.min(
+            Math.max(0, Math.floor(modMakerState.selectedStructure ?? 0)),
+            modMakerState.structures.length - 1
+        );
+    }
     modMakerState.selectedGenerator = Math.min(Math.max(0, modMakerState.selectedGenerator || 0), modMakerState.generators.length - 1);
 }
 
@@ -1774,18 +1786,104 @@ function downloadModMakerOutput() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function safeClone(value) {
+    if (value === null || value === undefined) return value;
+    try {
+        return JSON.parse(JSON.stringify(value));
+    } catch (err) {
+        if (typeof structuredClone === 'function') {
+            try { return structuredClone(value); } catch (inner) {
+                console.warn('[ModMakerTool] structuredClone failed:', inner);
+            }
+        }
+        console.warn('[ModMakerTool] Failed to deep clone value:', err);
+        return value;
+    }
+}
 
+function exportLocalModMakerState() {
+    const cloned = safeClone(modMakerState);
+    if (cloned && typeof cloned === 'object') return cloned;
+    return {
+        metadata: { ...modMakerState.metadata },
+        structures: [],
+        generators: [],
+        blocks: { blocks1: [], blocks2: [], blocks3: [] },
+        allowEmptyStructures: !!modMakerState.allowEmptyStructures,
+        selectedStructure: modMakerState.selectedStructure,
+        selectedGenerator: modMakerState.selectedGenerator
+    };
+}
 
+function applyLocalModMakerSnapshot(snapshot) {
+    const payload = safeClone(snapshot);
+    if (!payload || typeof payload !== 'object') return false;
+    modMakerState.metadata = { ...modMakerState.metadata, ...(payload.metadata || {}) };
+    modMakerState.structures = Array.isArray(payload.structures) ? payload.structures : [];
+    modMakerState.generators = Array.isArray(payload.generators) ? payload.generators : [];
+    modMakerState.blocks = payload.blocks && typeof payload.blocks === 'object'
+        ? payload.blocks
+        : { blocks1: [], blocks2: [], blocks3: [] };
+    modMakerState.allowEmptyStructures = !!payload.allowEmptyStructures;
+    modMakerState.selectedStructure = Number.isFinite(payload.selectedStructure)
+        ? payload.selectedStructure
+        : 0;
+    modMakerState.selectedGenerator = Number.isFinite(payload.selectedGenerator)
+        ? payload.selectedGenerator
+        : 0;
+    ensureModMakerDefaults();
+    if (modMakerRefs) {
+        renderModMaker();
+        refreshModMakerPreview();
+    }
+    return true;
+}
+
+function exportModMakerSnapshot() {
+    if (typeof global.getModMakerStateSnapshot === 'function') {
+        try {
+            const external = global.getModMakerStateSnapshot();
+            if (external !== undefined && external !== null) {
+                return external;
+            }
+        } catch (err) {
+            console.warn('[ModMakerTool] Failed to export state via global getter:', err);
+        }
+    }
+    return exportLocalModMakerState();
+}
+
+function applyModMakerSnapshotPayload(snapshot) {
+    if (typeof global.applyModMakerStateSnapshot === 'function') {
+        try {
+            global.applyModMakerStateSnapshot(snapshot);
+            return true;
+        } catch (err) {
+            console.warn('[ModMakerTool] Failed to apply state via global setter:', err);
+        }
+    }
+    return applyLocalModMakerSnapshot(snapshot);
+}
 
 
     const api = {
         init: initModMakerTool,
         refreshOutput: refreshModMakerPreview,
-        state: modMakerState
+        state: modMakerState,
+        getState: () => exportModMakerSnapshot(),
+        setState: (snapshot) => applyModMakerSnapshotPayload(snapshot)
     };
 
     global.ModMakerTool = api;
     if (global.ToolsTab?.registerTool) {
         global.ToolsTab.registerTool('mod-maker', () => api.init());
+    }
+    if (global.ToolStateRegistry?.register) {
+        global.ToolStateRegistry.register('modMaker', {
+            getState: () => exportModMakerSnapshot(),
+            setState: (snapshot) => applyModMakerSnapshotPayload(snapshot),
+            labelKey: 'tools.sidebar.stateManager.toolNames.modMaker',
+            labelFallback: 'Mod作成'
+        });
     }
 })(window);

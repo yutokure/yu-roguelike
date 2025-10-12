@@ -37,6 +37,41 @@
     let lastSummarySnapshot = null;
     let refsCache = null;
     let localeUnsubscribe = null;
+    const toolLabelRegistry = new Map();
+    let registryUnsubscribe = null;
+
+    function getToolStateRegistry() {
+        return global.ToolStateRegistry || null;
+    }
+
+    function refreshToolLabelRegistry() {
+        toolLabelRegistry.clear();
+        const registry = getToolStateRegistry();
+        if (!registry?.list) return;
+        try {
+            const entries = registry.list();
+            entries.forEach((entry) => {
+                if (!entry || !entry.id) return;
+                const key = entry.labelKey || TOOL_LABEL_KEYS[entry.id] || null;
+                const fallback = entry.labelFallback !== undefined && entry.labelFallback !== null
+                    ? entry.labelFallback
+                    : (TOOL_LABEL_FALLBACKS[entry.id] || entry.id);
+                toolLabelRegistry.set(entry.id, { key, fallback });
+            });
+        } catch (err) {
+            console.warn('[StateManager] Failed to refresh tool label registry:', err);
+        }
+    }
+
+    function ensureRegistrySubscription() {
+        if (registryUnsubscribe) return;
+        const registry = getToolStateRegistry();
+        if (!registry?.subscribe) return;
+        registryUnsubscribe = registry.subscribe(() => {
+            refreshToolLabelRegistry();
+            applySummary(refsCache);
+        });
+    }
 
     function translate(key, params, fallback) {
         if (key && i18n && typeof i18n.t === 'function') {
@@ -106,8 +141,12 @@
     }
 
     function getToolLabel(toolId) {
-        const key = TOOL_LABEL_KEYS[toolId] || null;
-        const fallback = TOOL_LABEL_FALLBACKS[toolId] || toolId;
+        if (!toolId) return '';
+        const descriptor = toolLabelRegistry.get(toolId) || null;
+        const key = descriptor?.key || TOOL_LABEL_KEYS[toolId] || null;
+        const fallback = descriptor?.fallback !== undefined && descriptor?.fallback !== null
+            ? descriptor.fallback
+            : (TOOL_LABEL_FALLBACKS[toolId] || toolId);
         return translate(key, null, fallback);
     }
 
@@ -229,24 +268,79 @@
             snapshot.game = deepClone(global.getGameStateSnapshot());
         }
         const tools = {};
-        if (global.ModMakerTool?.getState) {
-            const modState = await Promise.resolve(global.ModMakerTool.getState());
-            if (modState) tools.modMaker = deepClone(modState);
-        } else if (typeof global.getModMakerStateSnapshot === 'function') {
-            const modState = global.getModMakerStateSnapshot();
-            if (modState) tools.modMaker = deepClone(modState);
+        const handled = new Set();
+        const registry = getToolStateRegistry();
+        if (registry?.list) {
+            refreshToolLabelRegistry();
+            const entries = registry.list();
+            for (const entry of entries) {
+                if (!entry || typeof entry.getState !== 'function') continue;
+                try {
+                    const state = await Promise.resolve(entry.getState());
+                    if (state !== undefined && state !== null) {
+                        tools[entry.id] = sanitizeSnapshot(state);
+                        handled.add(entry.id);
+                    }
+                } catch (err) {
+                    console.warn(`[StateManager] Failed to export tool state for "${entry.id}":`, err);
+                }
+            }
         }
-        if (global.BlockDataEditor?.getState) {
-            const bdState = global.BlockDataEditor.getState();
-            if (bdState) tools.blockDataEditor = deepClone(bdState);
+        if (!handled.has('modMaker')) {
+            if (global.ModMakerTool?.getState) {
+                try {
+                    const modState = await Promise.resolve(global.ModMakerTool.getState());
+                    if (modState !== undefined && modState !== null) {
+                        tools.modMaker = sanitizeSnapshot(modState);
+                        handled.add('modMaker');
+                    }
+                } catch (err) {
+                    console.warn('[StateManager] Failed to export ModMaker state:', err);
+                }
+            } else if (typeof global.getModMakerStateSnapshot === 'function') {
+                try {
+                    const modState = global.getModMakerStateSnapshot();
+                    if (modState !== undefined && modState !== null) {
+                        tools.modMaker = sanitizeSnapshot(modState);
+                        handled.add('modMaker');
+                    }
+                } catch (err) {
+                    console.warn('[StateManager] Failed to export ModMaker snapshot:', err);
+                }
+            }
         }
-        if (global.SandboxEditor?.getState) {
-            const sandboxState = global.SandboxEditor.getState();
-            if (sandboxState) tools.sandbox = deepClone(sandboxState);
+        if (!handled.has('blockDataEditor') && global.BlockDataEditor?.getState) {
+            try {
+                const bdState = global.BlockDataEditor.getState();
+                if (bdState !== undefined && bdState !== null) {
+                    tools.blockDataEditor = sanitizeSnapshot(bdState);
+                    handled.add('blockDataEditor');
+                }
+            } catch (err) {
+                console.warn('[StateManager] Failed to export BlockDataEditor state:', err);
+            }
         }
-        if (global.ImageViewerTool?.getState) {
-            const viewerState = await Promise.resolve(global.ImageViewerTool.getState());
-            if (viewerState) tools.imageViewer = sanitizeSnapshot(viewerState);
+        if (!handled.has('sandbox') && global.SandboxEditor?.getState) {
+            try {
+                const sandboxState = global.SandboxEditor.getState();
+                if (sandboxState !== undefined && sandboxState !== null) {
+                    tools.sandbox = sanitizeSnapshot(sandboxState);
+                    handled.add('sandbox');
+                }
+            } catch (err) {
+                console.warn('[StateManager] Failed to export sandbox state:', err);
+            }
+        }
+        if (!handled.has('imageViewer') && global.ImageViewerTool?.getState) {
+            try {
+                const viewerState = await Promise.resolve(global.ImageViewerTool.getState());
+                if (viewerState !== undefined && viewerState !== null) {
+                    tools.imageViewer = sanitizeSnapshot(viewerState);
+                    handled.add('imageViewer');
+                }
+            } catch (err) {
+                console.warn('[StateManager] Failed to export ImageViewer state:', err);
+            }
         }
         if (Object.keys(tools).length) {
             snapshot.tools = tools;
@@ -262,26 +356,81 @@
             global.applyGameStateSnapshot(snapshot.game, { applyUI: true });
         }
         const toolPromises = [];
-        if (snapshot.tools) {
-            if (snapshot.tools.modMaker) {
-                if (global.ModMakerTool?.setState) {
-                    toolPromises.push(Promise.resolve(global.ModMakerTool.setState(snapshot.tools.modMaker)));
-                } else if (typeof global.applyModMakerStateSnapshot === 'function') {
-                    global.applyModMakerStateSnapshot(snapshot.tools.modMaker);
+        if (snapshot.tools && typeof snapshot.tools === 'object') {
+            const registry = getToolStateRegistry();
+            for (const [toolId, toolSnapshot] of Object.entries(snapshot.tools)) {
+                if (toolSnapshot === undefined) continue;
+                let handled = false;
+                const entry = registry?.get?.(toolId);
+                if (entry?.setState) {
+                    handled = true;
+                    try {
+                        const result = entry.setState(toolSnapshot);
+                        if (result && typeof result.then === 'function') {
+                            toolPromises.push(result.catch(err => {
+                                console.warn(`[StateManager] Failed to apply tool state for "${toolId}":`, err);
+                            }));
+                        }
+                    } catch (err) {
+                        console.warn(`[StateManager] Failed to apply tool state for "${toolId}":`, err);
+                    }
                 }
-            }
-            if (snapshot.tools.blockDataEditor && global.BlockDataEditor?.setState) {
-                try { global.BlockDataEditor.setState(snapshot.tools.blockDataEditor); } catch (err) {
-                    console.warn('[StateManager] Failed to apply BlockDataEditor state:', err);
+                if (handled) continue;
+                if (toolId === 'modMaker') {
+                    if (global.ModMakerTool?.setState) {
+                        try {
+                            const result = global.ModMakerTool.setState(toolSnapshot);
+                            if (result && typeof result.then === 'function') {
+                                toolPromises.push(result.catch(err => {
+                                    console.warn('[StateManager] Failed to apply ModMaker state:', err);
+                                }));
+                            }
+                        } catch (err) {
+                            console.warn('[StateManager] Failed to apply ModMaker state:', err);
+                        }
+                    } else if (typeof global.applyModMakerStateSnapshot === 'function') {
+                        try {
+                            global.applyModMakerStateSnapshot(toolSnapshot);
+                        } catch (err) {
+                            console.warn('[StateManager] Failed to apply ModMaker snapshot:', err);
+                        }
+                    }
+                    continue;
                 }
-            }
-            if (snapshot.tools.sandbox && global.SandboxEditor?.setState) {
-                try { global.SandboxEditor.setState(snapshot.tools.sandbox); } catch (err) {
-                    console.warn('[StateManager] Failed to apply sandbox state:', err);
+                if (toolId === 'blockDataEditor') {
+                    if (global.BlockDataEditor?.setState) {
+                        try {
+                            global.BlockDataEditor.setState(toolSnapshot);
+                        } catch (err) {
+                            console.warn('[StateManager] Failed to apply BlockDataEditor state:', err);
+                        }
+                    }
+                    continue;
                 }
-            }
-            if (snapshot.tools.imageViewer && global.ImageViewerTool?.setState) {
-                toolPromises.push(Promise.resolve(global.ImageViewerTool.setState(snapshot.tools.imageViewer)));
+                if (toolId === 'sandbox') {
+                    if (global.SandboxEditor?.setState) {
+                        try {
+                            global.SandboxEditor.setState(toolSnapshot);
+                        } catch (err) {
+                            console.warn('[StateManager] Failed to apply sandbox state:', err);
+                        }
+                    }
+                    continue;
+                }
+                if (toolId === 'imageViewer') {
+                    if (global.ImageViewerTool?.setState) {
+                        try {
+                            const result = global.ImageViewerTool.setState(toolSnapshot);
+                            if (result && typeof result.then === 'function') {
+                                toolPromises.push(result.catch(err => {
+                                    console.warn('[StateManager] Failed to apply ImageViewer state:', err);
+                                }));
+                            }
+                        } catch (err) {
+                            console.warn('[StateManager] Failed to apply ImageViewer state:', err);
+                        }
+                    }
+                }
             }
         }
         if (toolPromises.length) {
@@ -322,6 +471,8 @@
             summary: panel.querySelector('#state-manager-summary')
         };
         refsCache = refs;
+        refreshToolLabelRegistry();
+        ensureRegistrySubscription();
         setSummaryToDefault(refs);
 
         if (!localeUnsubscribe && i18n && typeof i18n.onLocaleChanged === 'function') {

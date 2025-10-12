@@ -4979,4 +4979,12 @@
         getState: exportSerializedState,
         setState: importSerializedState
     };
+    if (global.ToolStateRegistry?.register) {
+        global.ToolStateRegistry.register('sandbox', {
+            getState: () => exportSerializedState(),
+            setState: (snapshot) => importSerializedState(snapshot),
+            labelKey: 'tools.sidebar.stateManager.toolNames.sandbox',
+            labelFallback: 'サンドボックス'
+        });
+    }
 })(window);

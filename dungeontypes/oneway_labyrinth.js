@@ -99,6 +99,7 @@
     mixin: { normalMixed: 0.25, blockDimMixed: 0.5, tags: ['labyrinth', 'hazard'] }
   };
 
+  // Chest bias mapping note: legacy labels mapped as 'rich'→'more', 'rare'→'less', 'legendary'→'more'
   const blocks = {
     blocks1: [
       {
@@ -138,7 +139,7 @@
         level: +28,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'oneway-labyrinth'
       }
     ],
@@ -150,7 +151,7 @@
         level: +28,
         size: +1,
         depth: +2,
-        chest: 'rich',
+        chest: 'more',
         type: 'oneway-labyrinth'
       },
       {
@@ -160,7 +161,7 @@
         level: +32,
         size: +1,
         depth: +2,
-        chest: 'rich',
+        chest: 'more',
         type: 'oneway-labyrinth'
       },
       {
@@ -170,7 +171,7 @@
         level: +34,
         size: +2,
         depth: +3,
-        chest: 'rare',
+        chest: 'less',
         type: 'oneway-labyrinth'
       },
       {
@@ -180,7 +181,7 @@
         level: +36,
         size: +2,
         depth: +3,
-        chest: 'rare',
+        chest: 'less',
         type: 'oneway-labyrinth'
       }
     ],
@@ -192,7 +193,7 @@
         level: +36,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'oneway-labyrinth',
         bossFloors: [8, 16]
       },
@@ -203,7 +204,7 @@
         level: +40,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'oneway-labyrinth',
         bossFloors: [10, 18]
       },
@@ -214,7 +215,7 @@
         level: +44,
         size: +3,
         depth: +4,
-        chest: 'rare',
+        chest: 'less',
         type: 'oneway-labyrinth',
         bossFloors: [12, 20]
       },
@@ -225,7 +226,7 @@
         level: +48,
         size: +3,
         depth: +4,
-        chest: 'legendary',
+        chest: 'more',
         type: 'oneway-labyrinth',
         bossFloors: [24]
       }

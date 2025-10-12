@@ -75,6 +75,7 @@
     mixin: { normalMixed: 0.35, blockDimMixed: 0.45, tags: ['mechanical', 'hazard'] }
   };
 
+  // Chest bias mapping note: legacy labels mapped as 'rich'→'more', 'rare'→'less', 'legendary'→'more'
   const blocks = {
     blocks1: [
       {
@@ -136,7 +137,7 @@
         level: +28,
         size: +1,
         depth: +2,
-        chest: 'rich',
+        chest: 'more',
         type: 'conveyor-foundry'
       },
       {
@@ -146,7 +147,7 @@
         level: +30,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'conveyor-foundry'
       },
       {
@@ -156,7 +157,7 @@
         level: +32,
         size: +2,
         depth: +3,
-        chest: 'rare',
+        chest: 'less',
         type: 'conveyor-foundry'
       }
     ],
@@ -168,7 +169,7 @@
         level: +32,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'conveyor-foundry',
         bossFloors: [6, 12]
       },
@@ -179,7 +180,7 @@
         level: +36,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'conveyor-foundry',
         bossFloors: [9, 15]
       },
@@ -190,7 +191,7 @@
         level: +40,
         size: +3,
         depth: +4,
-        chest: 'rare',
+        chest: 'less',
         type: 'conveyor-foundry',
         bossFloors: [12]
       },
@@ -201,7 +202,7 @@
         level: +44,
         size: +3,
         depth: +4,
-        chest: 'legendary',
+        chest: 'more',
         type: 'conveyor-foundry',
         bossFloors: [18]
       }

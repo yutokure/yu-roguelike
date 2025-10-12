@@ -85,6 +85,7 @@
     mixin: { normalMixed: 0.3, blockDimMixed: 0.5, tags: ['gallery', 'hazard'] }
   };
 
+  // Chest bias mapping note: legacy labels mapped as 'rich'→'more', 'rare'→'less', 'legendary'→'more'
   const blocks = {
     blocks1: [
       {
@@ -124,7 +125,7 @@
         level: +26,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'axis-gallery'
       }
     ],
@@ -136,7 +137,7 @@
         level: +26,
         size: +1,
         depth: +2,
-        chest: 'rich',
+        chest: 'more',
         type: 'axis-gallery'
       },
       {
@@ -156,7 +157,7 @@
         level: +32,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'axis-gallery'
       },
       {
@@ -166,7 +167,7 @@
         level: +34,
         size: +2,
         depth: +3,
-        chest: 'rare',
+        chest: 'less',
         type: 'axis-gallery'
       }
     ],
@@ -178,7 +179,7 @@
         level: +34,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'axis-gallery',
         bossFloors: [7, 14]
       },
@@ -189,7 +190,7 @@
         level: +38,
         size: +2,
         depth: +3,
-        chest: 'rich',
+        chest: 'more',
         type: 'axis-gallery',
         bossFloors: [10, 18]
       },
@@ -200,7 +201,7 @@
         level: +42,
         size: +3,
         depth: +4,
-        chest: 'rare',
+        chest: 'less',
         type: 'axis-gallery',
         bossFloors: [14]
       },
@@ -211,7 +212,7 @@
         level: +46,
         size: +3,
         depth: +4,
-        chest: 'legendary',
+        chest: 'more',
         type: 'axis-gallery',
         bossFloors: [21]
       }

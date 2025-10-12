@@ -15069,6 +15069,102 @@
           }
         }
       },
+      "blockdataEditor": {
+        "panelAriaLabel": "Block Data Editor",
+        "header": {
+          "title": "BlockData Visual Editor",
+          "description": "Load blockdata.json to review, edit, and export BlockDim block definitions."
+        },
+        "sidebar": {
+          "ariaLabel": "Block list",
+          "groupLabel": "Target set",
+          "groupAriaLabel": "BlockData sets",
+          "groups": {
+            "blocks1": "1st Blocks",
+            "blocks2": "2nd Blocks",
+            "blocks3": "3rd Blocks"
+          },
+          "searchLabel": "Search",
+          "searchPlaceholder": "Filter by name or key",
+          "create": "+ New block",
+          "listAriaLabel": "Block candidates",
+          "empty": {
+            "noData": "No data loaded.",
+            "noMatches": "No blocks match the filter.",
+            "noBlocks": "No blocks available."
+          },
+          "untitled": "(Untitled)"
+        },
+        "main": {
+          "versionLabel": "Version",
+          "actions": {
+            "reload": "Reload",
+            "import": "Import",
+            "copy": "Copy",
+            "download": "Download"
+          },
+          "formLegend": "Block details",
+          "fields": {
+            "key": { "label": "Key", "placeholder": "e.g. b3999" },
+            "name": { "label": "Name", "placeholder": "Block name" },
+            "level": { "label": "Recommended Lv" },
+            "size": { "label": "Size" },
+            "depth": { "label": "Depth" },
+            "chest": { "label": "Chest" },
+            "type": { "label": "Type", "placeholder": "e.g. maze" },
+            "bossFloors": { "label": "Boss floors", "placeholder": "Comma separated (e.g. 5,10)" },
+            "extras": { "label": "Extra properties (JSON)" }
+          },
+          "formActions": {
+            "save": "Save selection",
+            "delete": "Delete"
+          },
+          "preview": {
+            "ariaLabel": "JSON preview",
+            "title": "blockdata.json preview",
+            "size": "{lines} lines / {bytes} bytes"
+          },
+          "dirty": {
+            "dirty": "Unsaved changes detected. Remember to export or copy your data.",
+            "clean": "All changes saved."
+          },
+          "status": {
+            "loading": "Loading blockdata.json…",
+            "loadSuccess": "Loaded blockdata.json.",
+            "loadError": "Failed to load {source}. Please import it from the Import action.",
+            "noData": "No data loaded.",
+            "creating": "Creating a new block. Fill in the required fields.",
+            "importSuccess": "Loaded {name}.",
+            "importParseError": "Failed to parse JSON. Please verify the format.",
+            "importReadError": "Could not read the file.",
+            "saved": "Block saved.",
+            "deleteNoSelection": "No block is selected for deletion.",
+            "deleted": "Block deleted.",
+            "copyEmpty": "Nothing to copy.",
+            "copied": "Copied to clipboard.",
+            "copyFailed": "Copy failed.",
+            "downloadEmpty": "Nothing to download.",
+            "downloaded": "JSON file downloaded."
+          },
+          "confirm": {
+            "reload": "Unsaved changes will be lost. Reload anyway?",
+            "delete": "Delete the selected block?",
+            "discard": "Discard the in-progress edits?"
+          },
+          "list": {
+            "levelValue": "Lv {level}",
+            "levelUnknown": "Lv -",
+            "meta": "{key} · {level}"
+          }
+        },
+        "errors": {
+          "extrasObject": "Extra properties must be a JSON object.",
+          "missingKey": "Enter a key.",
+          "missingName": "Enter a name.",
+          "duplicateKey": "A block with the same key already exists.",
+          "invalidBossFloor": "Boss floors contain a non-numeric value: {value}"
+        }
+      },
       "modMaker": {
         "panelAriaLabel": "Dungeon Type Mod Maker",
         "header": {

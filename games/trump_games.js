@@ -191,9 +191,9 @@
     .mini-trump-poker-player{background:rgba(15,23,42,0.45);border:1px solid rgba(148,163,184,0.2);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;}
     .mini-trump-poker-player h3{margin:0;font-size:15px;color:#e2e8f0;}
     .mini-trump-poker-hand{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
-    .mini-trump-poker-card{position:relative;cursor:pointer;}
-    .mini-trump-poker-card.hold::after{content:'HOLD';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:11px;background:rgba(56,189,248,0.85);color:#0f172a;padding:2px 6px;border-radius:999px;font-weight:700;letter-spacing:0.04em;}
-    .mini-trump-poker-card.locked{cursor:default;}
+    .mini-trump-card.hold{box-shadow:0 0 0 3px rgba(56,189,248,0.85),0 12px 24px rgba(56,189,248,0.35);border-color:rgba(56,189,248,0.85);}
+    .mini-trump-card.hold::after{content:'HOLD';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:11px;background:rgba(56,189,248,0.92);color:#0f172a;padding:2px 6px;border-radius:999px;font-weight:700;letter-spacing:0.04em;box-shadow:0 2px 6px rgba(15,23,42,0.45);}
+    .mini-trump-card.locked{cursor:default;}
     .mini-trump-poker-summary{font-size:13px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;}
     .mini-trump-jiji-table{display:flex;flex-direction:column;gap:18px;align-items:center;}
     .mini-trump-jiji-center{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}

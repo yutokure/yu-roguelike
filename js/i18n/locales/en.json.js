@@ -375,6 +375,146 @@
             "summary": "Done: Success {success} / Failure {failure} / Duration {duration}ms",
             "fatal": "Critical error: {error}"
           }
+        },
+        "hud": {
+          "summary": "Shapes {bodyCount} / Emitters {emitterCount} / Cloths {clothCount} / Particles {particleCount}",
+          "powerGravityExp": "Powered {poweredCount} / Gravity {gravity} / EXP {exp}",
+          "solver": "Solver {iterations} iter × {substeps} sub",
+          "temperature": "Average Temp {average}°C / Ambient {ambient}°C / Max {max}°C",
+          "phases": "States Solid {solid} / Liquid {liquid} / Gas {gas}",
+          "wind": "Wind Gusts {gusts} / Wind Emitters {emitters}"
+        },
+        "inspector": {
+          "title": "Settings",
+          "world": {
+            "gravityY": "Gravity Y ({value})",
+            "airDrag": "Air Drag ({value})",
+            "iterations": "Solver Iterations ({value})",
+            "substeps": "Substeps ({value})",
+            "ambientTemperature": "Ambient Temperature ({value}°C)",
+            "boundary": {
+              "label": "Boundary Mode",
+              "options": {
+                "wall": "Wall (bounce at edges)",
+                "void": "Void (fall out)"
+              },
+              "voidHint": "Void: Bodies that exit the bounds will disappear after traveling a distance."
+            }
+          },
+          "noSelection": "Add shapes from the toolbar and select them to see detailed settings.",
+          "savedLayouts": {
+            "title": "Saved Layouts",
+            "load": "Load",
+            "delete": "Delete"
+          },
+          "common": {
+            "unknown": "Unknown"
+          },
+          "body": {
+            "title": "Body Properties",
+            "state": "State: {state}",
+            "damage": "Wear: {percent}%",
+            "integrity": "Integrity: {percent}%",
+            "stress": "Stress Index: {value} kPa",
+            "strain": "Strain: {percent}%",
+            "heatFlux": "Heat Flux Index: {value}",
+            "fracture": "Fracture Threshold: {threshold} / Fragments {fragments}",
+            "reactionCooldown": "Reaction Cooldown: {seconds}s",
+            "materialPreset": "Material Preset",
+            "mass": "Mass (est. {value})",
+            "angleInfo": "Angle {angle}° / Angular Velocity {angular} rad/s",
+            "static": "Make Static",
+            "restitution": "Restitution ({value})",
+            "friction": "Friction ({value})",
+            "wallNote": "Absolute walls have fixed materials. Only size and position can be changed.",
+            "radius": "Radius ({value})",
+            "width": "Width ({value})",
+            "height": "Height ({value})",
+            "color": "Color",
+            "chemical": {
+              "formula": "Formula: {formula}",
+              "components": "Components: {list}",
+              "molarMass": "Molar Mass: {mass} g/mol",
+              "hazards": "Properties: {list}"
+            },
+            "phase": {
+              "solid": "Solid",
+              "liquid": "Liquid",
+              "gas": "Gas"
+            }
+          },
+          "customMaterial": {
+            "alertAddElement": "Please add at least one element.",
+            "title": "Chemical Customizer",
+            "components": "Components: {list}",
+            "componentsEmpty": "Components: No elements added",
+            "formulaPreview": "Formula Preview: {formula}",
+            "molarMass": "Estimated Molar Mass: {mass} g/mol",
+            "suggestedDensity": "Average Element Density: {average} (Current {current})",
+            "removeComponent": "Remove",
+            "addElement": "Add Element",
+            "nameLabel": "Material Name",
+            "namePlaceholder": "Custom material name",
+            "density": "Density ({value})",
+            "baseTemperature": "Base Temperature ({value}°C)",
+            "meltingPoint": "Melting Point ({value}°C)",
+            "boilingPoint": "Boiling Point ({value}°C)",
+            "ignitionPoint": "Ignition Point ({value}°C)",
+            "hazardTitle": "Hazard Tags",
+            "appliedHazards": "Applied Tags: {list}",
+            "apply": "Apply Custom Material",
+            "reset": "Clear Composition",
+            "hazards": {
+              "flammable": "Flammable",
+              "conductive": "Conductive",
+              "elastic": "Elastic",
+              "insulator": "Insulator",
+              "aqueous": "Water-soluble",
+              "superheated": "Superheated",
+              "ionized": "Ionized",
+              "alkali-metal": "Alkali Metal",
+              "water-reactive": "Water-reactive",
+              "acidic": "Acidic",
+              "corrosive": "Corrosive",
+              "toxic": "Toxic",
+              "inert": "Inert",
+              "oxidizer": "Oxidizer",
+              "explosive": "Explosive",
+              "cryogenic": "Cryogenic",
+              "refractory": "Refractory",
+              "catalytic": "Catalytic"
+            }
+          },
+          "emitter": {
+            "title": "Emitter Settings",
+            "type": "Type: {kind}",
+            "rate": "Rate ({value}/s)",
+            "power": "Strength ({value})",
+            "direction": "Direction ({value}°)",
+            "circuit": {
+              "alwaysOn": "Keep powered",
+              "connections": "Connected Nodes",
+              "disconnect": "Disconnect",
+              "cancel": "Cancel Linking",
+              "connect": "Link Mode"
+            }
+          },
+          "cloth": {
+            "title": "Cloth Properties",
+            "integrity": "Integrity {percent}%",
+            "links": "Nodes {cols}×{rows} / Links {intact}/{total}",
+            "strain": "Average Strain {average}% / Max {max}%",
+            "fatigue": "Fatigue {value}",
+            "structural": "Structural ({value})",
+            "shear": "Shear ({value})",
+            "bend": "Bend ({value})",
+            "damping": "Damping ({value})",
+            "tearFactor": "Tear Factor ({value})",
+            "windInfluence": "Wind Response ({value})",
+            "color": "Color",
+            "pinTop": "Pin Top Edge",
+            "unpinAll": "Unpin All"
+          }
         }
       },
       "miniexp": {
@@ -14336,6 +14476,146 @@
               "label": "Load",
               "title": "Load a saved layout"
             }
+          }
+        },
+        "hud": {
+          "summary": "Shapes {bodyCount} / Emitters {emitterCount} / Cloths {clothCount} / Particles {particleCount}",
+          "powerGravityExp": "Powered {poweredCount} / Gravity {gravity} / EXP {exp}",
+          "solver": "Solver {iterations} iter × {substeps} sub",
+          "temperature": "Average Temp {average}°C / Ambient {ambient}°C / Max {max}°C",
+          "phases": "States Solid {solid} / Liquid {liquid} / Gas {gas}",
+          "wind": "Wind Gusts {gusts} / Wind Emitters {emitters}"
+        },
+        "inspector": {
+          "title": "Settings",
+          "world": {
+            "gravityY": "Gravity Y ({value})",
+            "airDrag": "Air Drag ({value})",
+            "iterations": "Solver Iterations ({value})",
+            "substeps": "Substeps ({value})",
+            "ambientTemperature": "Ambient Temperature ({value}°C)",
+            "boundary": {
+              "label": "Boundary Mode",
+              "options": {
+                "wall": "Wall (bounce at edges)",
+                "void": "Void (fall out)"
+              },
+              "voidHint": "Void: Bodies that exit the bounds will disappear after traveling a distance."
+            }
+          },
+          "noSelection": "Add shapes from the toolbar and select them to see detailed settings.",
+          "savedLayouts": {
+            "title": "Saved Layouts",
+            "load": "Load",
+            "delete": "Delete"
+          },
+          "common": {
+            "unknown": "Unknown"
+          },
+          "body": {
+            "title": "Body Properties",
+            "state": "State: {state}",
+            "damage": "Wear: {percent}%",
+            "integrity": "Integrity: {percent}%",
+            "stress": "Stress Index: {value} kPa",
+            "strain": "Strain: {percent}%",
+            "heatFlux": "Heat Flux Index: {value}",
+            "fracture": "Fracture Threshold: {threshold} / Fragments {fragments}",
+            "reactionCooldown": "Reaction Cooldown: {seconds}s",
+            "materialPreset": "Material Preset",
+            "mass": "Mass (est. {value})",
+            "angleInfo": "Angle {angle}° / Angular Velocity {angular} rad/s",
+            "static": "Make Static",
+            "restitution": "Restitution ({value})",
+            "friction": "Friction ({value})",
+            "wallNote": "Absolute walls have fixed materials. Only size and position can be changed.",
+            "radius": "Radius ({value})",
+            "width": "Width ({value})",
+            "height": "Height ({value})",
+            "color": "Color",
+            "chemical": {
+              "formula": "Formula: {formula}",
+              "components": "Components: {list}",
+              "molarMass": "Molar Mass: {mass} g/mol",
+              "hazards": "Properties: {list}"
+            },
+            "phase": {
+              "solid": "Solid",
+              "liquid": "Liquid",
+              "gas": "Gas"
+            }
+          },
+          "customMaterial": {
+            "alertAddElement": "Please add at least one element.",
+            "title": "Chemical Customizer",
+            "components": "Components: {list}",
+            "componentsEmpty": "Components: No elements added",
+            "formulaPreview": "Formula Preview: {formula}",
+            "molarMass": "Estimated Molar Mass: {mass} g/mol",
+            "suggestedDensity": "Average Element Density: {average} (Current {current})",
+            "removeComponent": "Remove",
+            "addElement": "Add Element",
+            "nameLabel": "Material Name",
+            "namePlaceholder": "Custom material name",
+            "density": "Density ({value})",
+            "baseTemperature": "Base Temperature ({value}°C)",
+            "meltingPoint": "Melting Point ({value}°C)",
+            "boilingPoint": "Boiling Point ({value}°C)",
+            "ignitionPoint": "Ignition Point ({value}°C)",
+            "hazardTitle": "Hazard Tags",
+            "appliedHazards": "Applied Tags: {list}",
+            "apply": "Apply Custom Material",
+            "reset": "Clear Composition",
+            "hazards": {
+              "flammable": "Flammable",
+              "conductive": "Conductive",
+              "elastic": "Elastic",
+              "insulator": "Insulator",
+              "aqueous": "Water-soluble",
+              "superheated": "Superheated",
+              "ionized": "Ionized",
+              "alkali-metal": "Alkali Metal",
+              "water-reactive": "Water-reactive",
+              "acidic": "Acidic",
+              "corrosive": "Corrosive",
+              "toxic": "Toxic",
+              "inert": "Inert",
+              "oxidizer": "Oxidizer",
+              "explosive": "Explosive",
+              "cryogenic": "Cryogenic",
+              "refractory": "Refractory",
+              "catalytic": "Catalytic"
+            }
+          },
+          "emitter": {
+            "title": "Emitter Settings",
+            "type": "Type: {kind}",
+            "rate": "Rate ({value}/s)",
+            "power": "Strength ({value})",
+            "direction": "Direction ({value}°)",
+            "circuit": {
+              "alwaysOn": "Keep powered",
+              "connections": "Connected Nodes",
+              "disconnect": "Disconnect",
+              "cancel": "Cancel Linking",
+              "connect": "Link Mode"
+            }
+          },
+          "cloth": {
+            "title": "Cloth Properties",
+            "integrity": "Integrity {percent}%",
+            "links": "Nodes {cols}×{rows} / Links {intact}/{total}",
+            "strain": "Average Strain {average}% / Max {max}%",
+            "fatigue": "Fatigue {value}",
+            "structural": "Structural ({value})",
+            "shear": "Shear ({value})",
+            "bend": "Bend ({value})",
+            "damping": "Damping ({value})",
+            "tearFactor": "Tear Factor ({value})",
+            "windInfluence": "Wind Response ({value})",
+            "color": "Color",
+            "pinTop": "Pin Top Edge",
+            "unpinAll": "Unpin All"
           }
         }
       },

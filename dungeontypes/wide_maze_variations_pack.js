@@ -89,6 +89,22 @@
     }
   }
 
+  function assignTileMeta(ctx, x, y, values, options){
+    if(!values || typeof values !== 'object') return;
+    if(!ctx || typeof ctx.getTileMeta !== 'function') return;
+    if(typeof ctx.inBounds === 'function' && !ctx.inBounds(x, y)) return;
+    let meta = ctx.getTileMeta(x, y);
+    if(!meta){
+      const ensureColor = options && typeof options.ensureFloorColor === 'string' ? options.ensureFloorColor : null;
+      if(ensureColor && typeof ctx.setFloorColor === 'function'){
+        ctx.setFloorColor(x, y, ensureColor);
+        meta = ctx.getTileMeta(x, y);
+      }
+    }
+    if(!meta) return;
+    Object.assign(meta, values);
+  }
+
   function generateWideMazeLayout(ctx, options){
     const rnd = ctx.random;
     const padding = clamp(Math.floor(options && options.padding != null ? options.padding : 2), 1, 6);
@@ -311,8 +327,9 @@
         });
         scatterOnFloors(ctx, 40, (x, y, i) => {
           if(i % 4 === 0){
-            ctx.setTileMeta(x, y, { supportBeam: true });
-            ctx.setFloorColor(x, y, '#9e7b4f');
+            const color = '#9e7b4f';
+            ctx.setFloorColor(x, y, color);
+            assignTileMeta(ctx, x, y, { supportBeam: true }, { ensureFloorColor: color });
           }
         });
       },
@@ -335,7 +352,7 @@
         scatterOnFloors(ctx, 30, (x, y, i) => {
           if(i % 5 === 0){
             ctx.setFloorColor(x, y, '#8f63f2');
-            ctx.setTileMeta(x, y, { runeCircle: true });
+            assignTileMeta(ctx, x, y, { runeCircle: true });
           }
         });
       },
@@ -383,7 +400,7 @@
         scatterOnFloors(ctx, 35, (x, y, i) => {
           if(i % 4 === 0){
             ctx.setFloorColor(x, y, '#c27f3a');
-            ctx.setTileMeta(x, y, { ore: true });
+            assignTileMeta(ctx, x, y, { ore: true });
           }
         });
         for(let step = 4; step < ctx.width - 4; step += 9){
@@ -430,7 +447,7 @@
         scatterOnFloors(ctx, 40, (x, y, i) => {
           if(i % 4 === 0){
             ctx.setFloorColor(x, y, '#8ec5ff');
-            ctx.setTileMeta(x, y, { crystal: true });
+            assignTileMeta(ctx, x, y, { crystal: true });
           }
         });
       },
@@ -474,7 +491,7 @@
         scatterOnFloors(ctx, 28, (x, y, i) => {
           if(i % 3 === 0){
             ctx.setFloorColor(x, y, '#3f4c7d');
-            ctx.setTileMeta(x, y, { lantern: true });
+            assignTileMeta(ctx, x, y, { lantern: true });
           }
         });
       },
@@ -495,7 +512,7 @@
         scatterOnFloors(ctx, 45, (x, y, i) => {
           if(i % 3 === 0){
             ctx.setFloorColor(x, y, '#a4c96c');
-            ctx.setTileMeta(x, y, { flora: true });
+            assignTileMeta(ctx, x, y, { flora: true });
           } else if(i % 5 === 0){
             ctx.setFloorColor(x, y, '#c8a6e5');
           }

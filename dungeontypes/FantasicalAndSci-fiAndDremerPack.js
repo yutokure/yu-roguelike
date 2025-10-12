@@ -120,7 +120,10 @@
           ctx.setFloorType(tx, ty, typeof floorType === 'function' ? floorType(tx, ty, step) : floorType);
         }
         if(setMeta && step % 11 === 0){
-          ctx.setTileMeta(tx, ty, { spearStep: step });
+          const meta = ctx.getTileMeta(tx, ty);
+          if(meta){
+            meta.spearStep = step;
+          }
         }
       }
     }

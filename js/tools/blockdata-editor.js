@@ -1,7 +1,9 @@
 (function (global) {
     'use strict';
 
-    const i18n = global.I18n || null;
+    function getI18n() {
+        return global.I18n || null;
+    }
 
     const GROUPS = ['blocks1', 'blocks2', 'blocks3'];
     const STANDARD_KEYS = new Set(['key', 'name', 'level', 'size', 'depth', 'chest', 'type', 'bossFloors']);
@@ -18,8 +20,19 @@
         formDirty: false,
         dirty: false,
         loading: false,
-        localeUnsubscribe: null
+        localeUnsubscribe: null,
+        localeEventHandler: null
     };
+
+    function ensureLocaleSubscription() {
+        if (state.localeUnsubscribe) return;
+        const i18n = getI18n();
+        if (i18n && typeof i18n.onLocaleChanged === 'function') {
+            state.localeUnsubscribe = i18n.onLocaleChanged(() => {
+                refreshLocaleDependentUI();
+            });
+        }
+    }
 
     const refs = {};
     let pendingSerializedState = null;
@@ -29,46 +42,47 @@
         dirty: {
             dirty: {
                 key: 'tools.blockdataEditor.main.dirty.dirty',
-                fallback: 'Unsaved changes detected. Remember to export or copy your data.'
+                fallback: '未保存の変更があります。エクスポートまたはコピーを忘れずに。'
             },
             clean: {
                 key: 'tools.blockdataEditor.main.dirty.clean',
-                fallback: 'All changes saved.'
+                fallback: '最新の状態です。'
             }
         },
         status: {
             loadError: {
                 key: 'tools.blockdataEditor.main.status.loadError',
-                fallback: ({ source } = {}) => `Failed to load ${source || 'the file'}. Please import it from the Import action.`
+                fallback: ({ source } = {}) => `${source || 'ファイル'} の読み込みに失敗しました。インポートから読み込んでください。`
             },
             noData: {
                 key: 'tools.blockdataEditor.main.status.noData',
-                fallback: 'No data loaded.'
+                fallback: 'データが読み込まれていません。'
             },
             creating: {
                 key: 'tools.blockdataEditor.main.status.creating',
-                fallback: 'Creating a new block. Fill in the required fields.'
+                fallback: '新規ブロックを作成中です。必要な項目を入力してください。'
             }
         },
         sidebar: {
             empty: {
                 noData: {
                     key: 'tools.blockdataEditor.sidebar.empty.noData',
-                    fallback: 'No data loaded.'
+                    fallback: 'データが読み込まれていません。'
                 },
                 noMatches: {
                     key: 'tools.blockdataEditor.sidebar.empty.noMatches',
-                    fallback: 'No blocks match the filter.'
+                    fallback: '該当するブロックがありません。'
                 },
                 noBlocks: {
                     key: 'tools.blockdataEditor.sidebar.empty.noBlocks',
-                    fallback: 'No blocks available.'
+                    fallback: 'ブロックがありません。'
                 }
             }
         }
     };
 
     function translate(key, params, fallback) {
+        const i18n = getI18n();
         if (key && i18n && typeof i18n.t === 'function') {
             const value = i18n.t(key, params);
             if (value !== undefined && value !== null && value !== key) {
@@ -225,6 +239,8 @@
     }
 
     function refreshLocaleDependentUI() {
+        ensureLocaleSubscription();
+        const i18n = getI18n();
         if (state.panel && i18n && typeof i18n.applyTranslations === 'function') {
             i18n.applyTranslations(state.panel);
         }
@@ -314,10 +330,10 @@
         cacheElements(context.panel);
         bindEvents();
         resetUI();
-        if (!state.localeUnsubscribe && i18n && typeof i18n.onLocaleChanged === 'function') {
-            state.localeUnsubscribe = i18n.onLocaleChanged(() => {
-                refreshLocaleDependentUI();
-            });
+        ensureLocaleSubscription();
+        if (!state.localeEventHandler && typeof document !== 'undefined' && document?.addEventListener) {
+            state.localeEventHandler = () => refreshLocaleDependentUI();
+            document.addEventListener('i18n:locale-changed', state.localeEventHandler);
         }
         refreshLocaleDependentUI();
         loadInitialData();

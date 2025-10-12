@@ -2,6 +2,33 @@
     'use strict';
 
     const ToolsTab = global.ToolsTab;
+    const i18n = global.I18n || null;
+
+    function translate(key, params, fallback) {
+        if (key && i18n && typeof i18n.t === 'function') {
+            const value = i18n.t(key, params);
+            if (value !== undefined && value !== null && value !== key) {
+                return value;
+            }
+        }
+        if (typeof fallback === 'function') {
+            return fallback();
+        }
+        if (fallback !== undefined && fallback !== null) {
+            return fallback;
+        }
+        if (typeof key === 'string') {
+            return key;
+        }
+        return '';
+    }
+
+    function translateSandbox(key, params, fallback) {
+        if (typeof key === 'string' && !key.startsWith('tools.sandbox')) {
+            return translate(`tools.sandbox.${key}`, params, fallback);
+        }
+        return translate(key, params, fallback);
+    }
     let Bridge = null;
 
     if (!ToolsTab || typeof ToolsTab.registerTool !== 'function') {
@@ -28,7 +55,7 @@
     };
     const FLOOR_TYPES = ['normal', 'ice', 'poison', 'bomb', 'conveyor', 'one-way', 'vertical', 'horizontal'];
     const FLOOR_TYPES_NEED_DIRECTION = new Set(['conveyor', 'one-way']);
-    const FLOOR_DIRECTION_OPTIONS = ['','up','down','left','right'];
+    const FLOOR_DIRECTION_OPTIONS = ['', 'up', 'down', 'left', 'right'];
     const DEFAULT_FLOOR_COLOR = '#ced6e0';
     const DEFAULT_WALL_COLOR = '#2f3542';
     const PORTAL_TYPES = ['stairs', 'gate'];
@@ -48,14 +75,15 @@
     const GRID_SELECTED_ENEMY_COLOR = '#f97316';
     const GRID_DOMAIN_COLOR = '#7c3aed';
     const GRID_GATE_COLOR = '#f59f00';
-    const FLOOR_TYPE_LABELS = {
-        ice: '氷',
-        poison: '毒',
-        bomb: '爆弾',
-        conveyor: 'コンベヤー',
-        'one-way': '一方通行',
-        vertical: '縦通行のみ',
-        horizontal: '横通行のみ'
+    const FLOOR_TYPE_DEFINITIONS = {
+        normal: { key: 'tools.sandbox.map.options.floorType.options.normal', fallback: '通常' },
+        ice: { key: 'tools.sandbox.map.options.floorType.options.ice', fallback: '氷' },
+        poison: { key: 'tools.sandbox.map.options.floorType.options.poison', fallback: '毒' },
+        bomb: { key: 'tools.sandbox.map.options.floorType.options.bomb', fallback: '爆弾' },
+        conveyor: { key: 'tools.sandbox.map.options.floorType.options.conveyor', fallback: 'コンベヤー' },
+        'one-way': { key: 'tools.sandbox.map.options.floorType.options.oneWay', fallback: '一方通行' },
+        vertical: { key: 'tools.sandbox.map.options.floorType.options.vertical', fallback: '縦通行のみ' },
+        horizontal: { key: 'tools.sandbox.map.options.floorType.options.horizontal', fallback: '横通行のみ' }
     };
     const FLOOR_TYPE_COLORS = {
         ice: '#74c0fc',
@@ -72,6 +100,17 @@
         left: '←',
         right: '→'
     };
+
+    function getFloorTypeLabel(type) {
+        const def = FLOOR_TYPE_DEFINITIONS?.[type];
+        if (def) {
+            return translate(def.key, null, def.fallback);
+        }
+        if (typeof type === 'string' && type) {
+            return type;
+        }
+        return '';
+    }
 
     const WIRE_SIGNAL_TYPES = ['binary', 'pulse', 'value'];
     const DEFAULT_WIRE_SIGNAL_TYPE = 'binary';
@@ -327,23 +366,23 @@
 
     let refs = {};
     const DOMAIN_EFFECT_OPTIONS = [
-        { id: 'attackUp', label: '攻撃力アップ' },
-        { id: 'defenseUp', label: '防御力アップ' },
-        { id: 'attackDown', label: '攻撃力ダウン' },
-        { id: 'defenseDown', label: '防御力ダウン' },
-        { id: 'allyBoost', label: '味方強化' },
-        { id: 'enemyBoost', label: '敵強化' },
-        { id: 'enemyOverpower', label: '超敵強化' },
-        { id: 'levelUp', label: '高レベル化' },
-        { id: 'levelDown', label: '低レベル化' },
-        { id: 'abilityUp', label: '能力アップ' },
-        { id: 'abilityDown', label: '能力ダウン' },
-        { id: 'enemyInvincible', label: '敵無敵' },
-        { id: 'allInvincible', label: '無敵' },
-        { id: 'damageReverse', label: 'ダメージ反転' },
-        { id: 'slow', label: '遅い' },
-        { id: 'fast', label: '速い' },
-        { id: 'ailment', label: '状態異常化' }
+        { id: 'attackUp', label: '攻撃力アップ', labelKey: 'map.domain.effects.attackUp' },
+        { id: 'defenseUp', label: '防御力アップ', labelKey: 'map.domain.effects.defenseUp' },
+        { id: 'attackDown', label: '攻撃力ダウン', labelKey: 'map.domain.effects.attackDown' },
+        { id: 'defenseDown', label: '防御力ダウン', labelKey: 'map.domain.effects.defenseDown' },
+        { id: 'allyBoost', label: '味方強化', labelKey: 'map.domain.effects.allyBoost' },
+        { id: 'enemyBoost', label: '敵強化', labelKey: 'map.domain.effects.enemyBoost' },
+        { id: 'enemyOverpower', label: '超敵強化', labelKey: 'map.domain.effects.enemyOverpower' },
+        { id: 'levelUp', label: '高レベル化', labelKey: 'map.domain.effects.levelUp' },
+        { id: 'levelDown', label: '低レベル化', labelKey: 'map.domain.effects.levelDown' },
+        { id: 'abilityUp', label: '能力アップ', labelKey: 'map.domain.effects.abilityUp' },
+        { id: 'abilityDown', label: '能力ダウン', labelKey: 'map.domain.effects.abilityDown' },
+        { id: 'enemyInvincible', label: '敵無敵', labelKey: 'map.domain.effects.enemyInvincible' },
+        { id: 'allInvincible', label: '無敵', labelKey: 'map.domain.effects.allInvincible' },
+        { id: 'damageReverse', label: 'ダメージ反転', labelKey: 'map.domain.effects.damageReverse' },
+        { id: 'slow', label: '遅い', labelKey: 'map.domain.effects.slow' },
+        { id: 'fast', label: '速い', labelKey: 'map.domain.effects.fast' },
+        { id: 'ailment', label: '状態異常化', labelKey: 'map.domain.effects.ailment' }
     ];
 
     const DOMAIN_EFFECT_PARAM_DEFAULTS = {
@@ -1169,7 +1208,13 @@
 
     function getDomainEffectLabel(effectId) {
         const option = DOMAIN_EFFECT_OPTIONS.find(opt => opt.id === effectId);
-        return option ? option.label : effectId;
+        if (!option) {
+            return effectId;
+        }
+        const key = option.labelKey ? `tools.sandbox.${option.labelKey}` : null;
+        return key
+            ? translateSandbox(key, null, option.label || effectId)
+            : translateSandbox(`map.domain.effects.${option.id}`, null, option.label || effectId);
     }
 
     function normalizeDomainEffects(list, width, height) {
@@ -2004,44 +2049,51 @@
         }
         const cell = state.grid[y][x];
         const meta = state.meta?.[y]?.[x] || null;
-        const baseLabel = `${cell === 0 ? '床' : '壁'} (${x}, ${y})`;
+        const typeKey = cell === 0 ? 'floor' : 'wall';
+        const typeLabel = translateSandbox(`map.cell.types.${typeKey}`, null, cell === 0 ? '床' : '壁');
+        const baseLabel = translateSandbox('map.cell.base', { type: typeLabel, x, y }, `${typeLabel} (${x}, ${y})`);
         const detailParts = [];
         if (state.playerStart && state.playerStart.x === x && state.playerStart.y === y) {
-            detailParts.push('開始位置');
+            detailParts.push(translateSandbox('map.cell.details.playerStart', null, '開始位置'));
         }
         const portalHere = Array.isArray(state.portals)
             ? state.portals.find(portal => portal && portal.x === x && portal.y === y)
             : null;
         if (portalHere) {
             if (portalHere.type === 'stairs') {
-                detailParts.push('階段');
+                detailParts.push(translateSandbox('map.cell.details.stairs', null, '階段'));
             } else {
                 const label = (portalHere.label || '').trim();
-                detailParts.push(label ? `ゲート: ${label}` : 'ゲート');
+                detailParts.push(label
+                    ? translateSandbox('map.cell.details.gateWithLabel', { label }, `ゲート: ${label}`)
+                    : translateSandbox('map.cell.details.gate', null, 'ゲート'));
             }
         }
         if (cell === 0) {
             const floorType = meta?.floorType || '';
             if (floorType && floorType !== 'normal') {
-                const label = FLOOR_TYPE_LABELS[floorType] || floorType;
-                let suffix = '';
+                const label = getFloorTypeLabel(floorType) || floorType;
+                let directionIcon = '';
                 if (FLOOR_TYPES_NEED_DIRECTION.has(floorType)) {
                     const dir = meta?.floorDir || '';
                     if (dir && FLOOR_DIRECTION_ICONS[dir]) {
-                        suffix = `（${FLOOR_DIRECTION_ICONS[dir]}）`;
+                        directionIcon = FLOOR_DIRECTION_ICONS[dir];
                     }
                 } else if (floorType === 'vertical') {
-                    suffix = '（↕）';
+                    directionIcon = '↕';
                 } else if (floorType === 'horizontal') {
-                    suffix = '（↔）';
+                    directionIcon = '↔';
                 }
-                detailParts.push(`床タイプ: ${label}${suffix}`);
+                const suffix = directionIcon
+                    ? translateSandbox('map.cell.details.floorTypeDirectionSuffix', { icon: directionIcon }, `（${directionIcon}）`)
+                    : '';
+                detailParts.push(translateSandbox('map.cell.details.floorType', { label, suffix }, `床タイプ: ${label}${suffix}`));
             }
             if (meta?.floorColor) {
-                detailParts.push(`床色: ${meta.floorColor}`);
+                detailParts.push(translateSandbox('map.cell.details.floorColor', { color: meta.floorColor }, `床色: ${meta.floorColor}`));
             }
         } else if (meta?.wallColor) {
-            detailParts.push(`壁色: ${meta.wallColor}`);
+            detailParts.push(translateSandbox('map.cell.details.wallColor', { color: meta.wallColor }, `壁色: ${meta.wallColor}`));
         }
         const enemiesHere = Array.isArray(state.enemies) ? state.enemies.filter(e => e.x === x && e.y === y) : [];
         if (enemiesHere.length) {
@@ -2050,43 +2102,69 @@
                 const enemy = enemiesHere[0];
                 const name = (enemy.name || '').trim();
                 if (name) {
-                    enemyDetail = `敵: ${name}${enemy.boss ? '（ボス）' : ''}`;
+                    enemyDetail = translateSandbox(
+                        enemy.boss ? 'map.cell.details.enemy.singleNamedBoss' : 'map.cell.details.enemy.singleNamed',
+                        { name },
+                        enemy.boss ? `敵: ${name}（ボス）` : `敵: ${name}`
+                    );
                 } else {
-                    enemyDetail = enemy.boss ? '敵: ボス1体' : '敵: 1体';
+                    enemyDetail = translateSandbox(
+                        enemy.boss ? 'map.cell.details.enemy.singleBoss' : 'map.cell.details.enemy.single',
+                        { count: 1 },
+                        enemy.boss ? '敵: ボス1体' : '敵: 1体'
+                    );
                 }
             } else {
                 const nameParts = enemiesHere
                     .map(e => {
                         const nm = (e.name || '').trim();
-                        return nm ? `${nm}${e.boss ? '（ボス）' : ''}` : '';
+                        return nm ? `${nm}${e.boss ? translateSandbox('map.cell.details.enemy.bossSuffix', null, '（ボス）') : ''}` : '';
                     })
                     .filter(Boolean);
                 if (nameParts.length === enemiesHere.length) {
-                    enemyDetail = `敵: ${nameParts.join('、')}`;
+                    const list = nameParts.join(translateSandbox('map.cell.details.enemy.nameSeparator', null, '、'));
+                    enemyDetail = translateSandbox('map.cell.details.enemy.multipleNamed', { list }, `敵: ${list}`);
                 } else {
                     const bossCount = enemiesHere.filter(e => e.boss).length;
                     if (bossCount && bossCount === enemiesHere.length) {
-                        enemyDetail = `敵: ボス${enemiesHere.length}体`;
+                        enemyDetail = translateSandbox('map.cell.details.enemy.multipleAllBoss', { count: enemiesHere.length }, `敵: ボス${enemiesHere.length}体`);
                     } else if (bossCount) {
-                        enemyDetail = `敵: ${enemiesHere.length}体（ボス${bossCount}体含む）`;
+                        enemyDetail = translateSandbox(
+                            'map.cell.details.enemy.multipleWithBoss',
+                            { count: enemiesHere.length, bossCount },
+                            `敵: ${enemiesHere.length}体（ボス${bossCount}体含む）`
+                        );
                     } else {
-                        enemyDetail = `敵: ${enemiesHere.length}体`;
+                        enemyDetail = translateSandbox('map.cell.details.enemy.multiple', { count: enemiesHere.length }, `敵: ${enemiesHere.length}体`);
                     }
                 }
             }
-            detailParts.push(enemyDetail);
+            if (enemyDetail) detailParts.push(enemyDetail);
         }
         const domainsHere = Array.isArray(state.domainEffects) ? state.domainEffects.filter(e => e.x === x && e.y === y) : [];
         if (domainsHere.length) {
+            const effectSeparator = translateSandbox('map.cell.details.domain.effectSeparator', null, '・');
+            const domainSeparator = translateSandbox('map.cell.details.domain.separator', null, ' / ');
             const labels = domainsHere.map(effect => {
                 const name = (effect.name || '').trim();
                 const effects = Array.isArray(effect.effects) ? effect.effects.map(getDomainEffectLabel) : [];
-                const effectLabel = effects.length ? effects.join('・') : '効果なし';
-                return name ? `${name}: ${effectLabel}` : effectLabel;
+                const effectLabel = effects.length
+                    ? effects.join(effectSeparator)
+                    : translateSandbox('map.cell.details.domain.effectNone', null, '効果なし');
+                if (name) {
+                    return translateSandbox('map.cell.details.domain.named', { name, effects: effectLabel }, `${name}: ${effectLabel}`);
+                }
+                return translateSandbox('map.cell.details.domain.unnamed', { effects: effectLabel }, effectLabel);
             });
-            detailParts.push(`領域: ${labels.join(' / ')}`);
+            const summary = labels.join(domainSeparator);
+            detailParts.push(translateSandbox('map.cell.details.domain.summary', { summary }, `領域: ${summary}`));
         }
-        return detailParts.length ? `${baseLabel} - ${detailParts.join(' / ')}` : baseLabel;
+        if (!detailParts.length) {
+            return baseLabel;
+        }
+        const detailJoiner = translateSandbox('map.cell.details.joiner', null, ' / ');
+        const detailText = detailParts.join(detailJoiner);
+        return translateSandbox('map.cell.summary', { base: baseLabel, details: detailText }, `${baseLabel} - ${detailText}`);
     }
 
     function renderGrid() {
@@ -2329,13 +2407,21 @@
     }
 
     function updateSelectedCellLabel() {
-        const fallbackText = 'セルをクリックして編集します。';
+        const fallbackText = translateSandbox('map.selectedCell.hint', null, 'セルをクリックして編集します。');
         const description = state.lastCell ? describeCell(state.lastCell.x, state.lastCell.y) : '';
         if (refs.selectedCell) {
             if (state.lastCell && description) {
-                refs.selectedCell.textContent = `選択セル: ${description}`;
+                refs.selectedCell.textContent = translateSandbox(
+                    'map.selectedCell.selectedWithDescription',
+                    { description },
+                    `選択セル: ${description}`
+                );
             } else if (state.lastCell) {
-                refs.selectedCell.textContent = `選択セル: (${state.lastCell.x}, ${state.lastCell.y})`;
+                refs.selectedCell.textContent = translateSandbox(
+                    'map.selectedCell.selected',
+                    { x: state.lastCell.x, y: state.lastCell.y },
+                    `選択セル: (${state.lastCell.x}, ${state.lastCell.y})`
+                );
             } else {
                 refs.selectedCell.textContent = fallbackText;
             }

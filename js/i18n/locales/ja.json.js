@@ -15015,6 +15015,102 @@
           }
         }
       },
+      "blockdataEditor": {
+        "panelAriaLabel": "ブロックデータ編集ツール",
+        "header": {
+          "title": "BlockDataビジュアルエディタ",
+          "description": "blockdata.json を読み込み、BlockDimブロックの一覧・編集・書き出しを行います。"
+        },
+        "sidebar": {
+          "ariaLabel": "ブロック一覧",
+          "groupLabel": "対象セット",
+          "groupAriaLabel": "BlockDataセット",
+          "groups": {
+            "blocks1": "1stブロック",
+            "blocks2": "2ndブロック",
+            "blocks3": "3rdブロック"
+          },
+          "searchLabel": "検索",
+          "searchPlaceholder": "名前 / キーで絞り込み",
+          "create": "+ 新規ブロック",
+          "listAriaLabel": "ブロック候補",
+          "empty": {
+            "noData": "データが読み込まれていません。",
+            "noMatches": "該当するブロックがありません。",
+            "noBlocks": "ブロックがありません。"
+          },
+          "untitled": "(無題)"
+        },
+        "main": {
+          "versionLabel": "バージョン",
+          "actions": {
+            "reload": "再読込",
+            "import": "インポート",
+            "copy": "コピー",
+            "download": "ダウンロード"
+          },
+          "formLegend": "ブロック詳細",
+          "fields": {
+            "key": { "label": "キー", "placeholder": "例: b3999" },
+            "name": { "label": "名前", "placeholder": "ブロック名" },
+            "level": { "label": "推奨Lv" },
+            "size": { "label": "サイズ" },
+            "depth": { "label": "深さ" },
+            "chest": { "label": "宝箱" },
+            "type": { "label": "タイプ", "placeholder": "例: maze" },
+            "bossFloors": { "label": "ボス階層", "placeholder": "カンマ区切り (例: 5,10)" },
+            "extras": { "label": "追加プロパティ(JSON)" }
+          },
+          "formActions": {
+            "save": "選択を保存",
+            "delete": "削除"
+          },
+          "preview": {
+            "ariaLabel": "JSONプレビュー",
+            "title": "blockdata.jsonプレビュー",
+            "size": "{lines} 行 / {bytes} bytes"
+          },
+          "dirty": {
+            "dirty": "未保存の変更があります。エクスポートまたはコピーを忘れずに。",
+            "clean": "最新の状態です。"
+          },
+          "status": {
+            "loading": "blockdata.json を読み込んでいます…",
+            "loadSuccess": "blockdata.json を読み込みました。",
+            "loadError": "{source} の読み込みに失敗しました。インポートから読み込んでください。",
+            "noData": "データが読み込まれていません。",
+            "creating": "新規ブロックを作成中です。必要な項目を入力してください。",
+            "importSuccess": "{name} を読み込みました。",
+            "importParseError": "JSONの読み込みに失敗しました。形式を確認してください。",
+            "importReadError": "ファイルを読み込めませんでした。",
+            "saved": "ブロックを保存しました。",
+            "deleteNoSelection": "削除対象のブロックが選択されていません。",
+            "deleted": "ブロックを削除しました。",
+            "copyEmpty": "コピーする内容がありません。",
+            "copied": "クリップボードにコピーしました。",
+            "copyFailed": "コピーできませんでした。",
+            "downloadEmpty": "ダウンロードする内容がありません。",
+            "downloaded": "JSONファイルをダウンロードしました。"
+          },
+          "confirm": {
+            "reload": "未エクスポートの変更が失われます。再読込しますか？",
+            "delete": "選択したブロックを削除しますか？",
+            "discard": "編集中の内容が破棄されます。続行しますか？"
+          },
+          "list": {
+            "levelValue": "Lv {level}",
+            "levelUnknown": "Lv -",
+            "meta": "{key} · {level}"
+          }
+        },
+        "errors": {
+          "extrasObject": "追加プロパティはJSONオブジェクトで入力してください。",
+          "missingKey": "キーを入力してください。",
+          "missingName": "名前を入力してください。",
+          "duplicateKey": "同じキーのブロックが既に存在します。",
+          "invalidBossFloor": "ボス階層に数値ではない値があります: {value}"
+        }
+      },
       "modMaker": {
         "panelAriaLabel": "ダンジョンタイプMod作成ツール",
         "header": {

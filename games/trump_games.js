@@ -554,6 +554,38 @@
     const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
       ? window.createMiniGameLocalization({ id: 'trump_games' })
       : null);
+    const formatTemplateString = (template, params) => {
+      if (template == null) return '';
+      const source = String(template);
+      if (!params || typeof params !== 'object') return source;
+      return source.replace(/\{([^{}]+)\}/g, (match, token) => {
+        const key = token.trim();
+        if (!key) return match;
+        const value = params[key];
+        return value === undefined || value === null ? match : String(value);
+      });
+    };
+    const computeFallbackText = (fallback, params) => {
+      if (typeof fallback === 'function') {
+        try {
+          const result = fallback(params || {});
+          return result == null ? '' : String(result);
+        } catch (error) {
+          console.warn('[Mini Trump] fallback text error', error);
+          return '';
+        }
+      }
+      if (typeof fallback === 'string') {
+        return formatTemplateString(fallback, params);
+      }
+      if (fallback == null) return '';
+      try {
+        return String(fallback);
+      } catch (error) {
+        console.warn('[Mini Trump] failed to stringify fallback text', error);
+        return '';
+      }
+    };
     const getLocale = () => {
       if (localization && typeof localization.getLocale === 'function') {
         try {

@@ -15077,7 +15077,7 @@
           "status": {
             "loading": "blockdata.json を読み込んでいます…",
             "loadSuccess": "blockdata.json を読み込みました。",
-            "loadError": "blockdata.json の読み込みに失敗しました。インポートから読み込んでください。",
+            "loadError": "{source} の読み込みに失敗しました。インポートから読み込んでください。",
             "noData": "データが読み込まれていません。",
             "creating": "新規ブロックを作成中です。必要な項目を入力してください。",
             "importSuccess": "{name} を読み込みました。",

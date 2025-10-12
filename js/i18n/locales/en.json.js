@@ -15131,7 +15131,7 @@
           "status": {
             "loading": "Loading blockdata.json…",
             "loadSuccess": "Loaded blockdata.json.",
-            "loadError": "Failed to load blockdata.json. Please import data manually.",
+            "loadError": "Failed to load {source}. Please import it from the Import action.",
             "noData": "No data loaded.",
             "creating": "Creating a new block. Fill in the required fields.",
             "importSuccess": "Loaded {name}.",

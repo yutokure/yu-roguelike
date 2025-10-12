@@ -25,6 +25,25 @@
     let pendingSerializedState = null;
     let lastStatusPayload = { key: null, params: null, fallback: '', isError: false, variant: null };
 
+    const MESSAGE_DESCRIPTORS = {
+        dirty: {
+            dirty: {
+                key: 'tools.blockdataEditor.main.dirty.dirty',
+                fallback: 'Unsaved changes detected. Remember to export or copy your data.'
+            },
+            clean: {
+                key: 'tools.blockdataEditor.main.dirty.clean',
+                fallback: 'All changes saved.'
+            }
+        },
+        status: {
+            loadError: {
+                key: 'tools.blockdataEditor.main.status.loadError',
+                fallback: ({ source } = {}) => `Failed to load ${source || 'the file'}. Please import it from the Import action.`
+            }
+        }
+    };
+
     function translate(key, params, fallback) {
         if (key && i18n && typeof i18n.t === 'function') {
             const value = i18n.t(key, params);
@@ -42,6 +61,21 @@
             return key;
         }
         return '';
+    }
+
+    function resolveFallback(descriptor, params) {
+        if (!descriptor) return '';
+        const { fallback } = descriptor;
+        if (typeof fallback === 'function') {
+            const payload = params || {};
+            return () => fallback(payload);
+        }
+        return fallback;
+    }
+
+    function translateDescriptor(descriptor, params) {
+        if (!descriptor) return '';
+        return translate(descriptor.key, params, resolveFallback(descriptor, params));
     }
 
     function applyStatusFromPayload() {
@@ -309,8 +343,9 @@
                 console.warn('[BlockDataEditor] Failed to load blockdata.json:', err);
                 applyData(createEmptyData());
                 setStatus({
-                    key: 'tools.blockdataEditor.main.status.loadError',
-                    fallback: 'blockdata.json の読み込みに失敗しました。インポートから読み込んでください。',
+                    key: MESSAGE_DESCRIPTORS.status.loadError.key,
+                    params: { source: 'blockdata.json' },
+                    fallback: resolveFallback(MESSAGE_DESCRIPTORS.status.loadError, { source: 'blockdata.json' }),
                     isError: true
                 });
             })
@@ -563,18 +598,10 @@
     function updateDirtyIndicator() {
         if (!refs.dirtyIndicator) return;
         if (state.dirty) {
-            refs.dirtyIndicator.textContent = translate(
-                'tools.blockdataEditor.main.dirty.dirty',
-                null,
-                '未保存の変更があります。エクスポートまたはコピーを忘れずに。'
-            );
+            refs.dirtyIndicator.textContent = translateDescriptor(MESSAGE_DESCRIPTORS.dirty.dirty);
             refs.dirtyIndicator.classList.add('is-dirty');
         } else {
-            refs.dirtyIndicator.textContent = translate(
-                'tools.blockdataEditor.main.dirty.clean',
-                null,
-                '最新の状態です。'
-            );
+            refs.dirtyIndicator.textContent = translateDescriptor(MESSAGE_DESCRIPTORS.dirty.clean);
             refs.dirtyIndicator.classList.remove('is-dirty');
         }
     }

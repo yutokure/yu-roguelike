@@ -15005,7 +15005,35 @@
         },
         "stateManager": {
           "label": "状態管理",
-          "hint": "ゲームとツールの全データをまとめてエクスポート／インポートします。"
+          "hint": "ゲームとツールの全データをまとめてエクスポート／インポートします。",
+          "summary": {
+            "default": "エクスポート／インポートの概要がここに表示されます。",
+            "exportedAt": "エクスポート日時: {value}",
+            "player": "プレイヤー: Lv {level} / HP {hp}",
+            "dungeon": "現在階層: {floor}F / 難易度: {difficulty}",
+            "miniExp": "MiniExp: 選択 {selected} / 記録 {records}件",
+            "blockDim": "BlockDim: 履歴 {history}件 / ブックマーク {bookmarks}件",
+            "tools": "ツールデータ: {names}",
+            "noTools": "ツールデータ: なし",
+            "toolSeparator": "、"
+          },
+          "toolNames": {
+            "modMaker": "Mod作成",
+            "blockDataEditor": "BlockData編集",
+            "sandbox": "サンドボックス",
+            "imageViewer": "画像ビューア"
+          },
+          "status": {
+            "exportPreparing": "全体エクスポートを準備しています…",
+            "exportSuccess": "{fileName} として保存しました。",
+            "exportError": "エクスポートに失敗しました。コンソールログを確認してください。",
+            "importReading": "{fileName} を読み込み中です…",
+            "importSuccess": "全体インポートが完了しました。",
+            "importError": "インポートに失敗しました。ファイル形式を確認してください。"
+          },
+          "messages": {
+            "importComplete": "状態データをインポートしました。"
+          }
         }
       },
       "sandbox": {

@@ -15059,7 +15059,35 @@
         },
         "stateManager": {
           "label": "State Manager",
-          "hint": "Export or import all game and tool data in one bundle."
+          "hint": "Export or import all game and tool data in one bundle.",
+          "summary": {
+            "default": "Export/import summary will appear here.",
+            "exportedAt": "Exported at: {value}",
+            "player": "Player: Lv {level} / HP {hp}",
+            "dungeon": "Current floor: {floor}F / Difficulty: {difficulty}",
+            "miniExp": "MiniExp: Selected {selected} / Records {records}",
+            "blockDim": "BlockDim: History {history} / Bookmarks {bookmarks}",
+            "tools": "Tool data: {names}",
+            "noTools": "Tool data: none",
+            "toolSeparator": ", "
+          },
+          "toolNames": {
+            "modMaker": "Mod Maker",
+            "blockDataEditor": "BlockData Editor",
+            "sandbox": "Sandbox",
+            "imageViewer": "Image Viewer"
+          },
+          "status": {
+            "exportPreparing": "Preparing full export…",
+            "exportSuccess": "Saved as {fileName}.",
+            "exportError": "Export failed. Check the console log.",
+            "importReading": "Loading {fileName}…",
+            "importSuccess": "Full import completed.",
+            "importError": "Import failed. Verify the file format."
+          },
+          "messages": {
+            "importComplete": "Imported state data."
+          }
         }
       },
       "sandbox": {

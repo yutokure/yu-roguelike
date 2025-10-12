@@ -6522,10 +6522,7 @@ function pickRandomPassiveOrbIdByWeight() {
     return weighted[weighted.length - 1].id;
 }
 
-function grantPassiveOrb(source = 'unknown') {
-    const orbId = pickRandomPassiveOrbIdByWeight();
-    if (!orbId) return null;
-    const nextCount = incrementPassiveOrb(orbId, 1);
+function handlePassiveOrbAcquisition(orbId, nextCount, delta, source, opts = {}) {
     const label = getPassiveOrbLabel(orbId);
     const effectText = describePassiveOrbEffect(orbId, nextCount);
     const detailSegments = [];
@@ -6545,19 +6542,45 @@ function grantPassiveOrb(source = 'unknown') {
             { details: detailsCombined, separator }
         )
         : '';
-    addMessage({
-        key: 'game.passiveOrb.obtain',
-        fallback: 'パッシブオーブ「{label}」を手に入れた！{detail}',
-        params: { label, detail }
-    });
+    if (!opts.silent) {
+        const key = delta > 1 ? 'game.passiveOrb.obtainMultiple' : 'game.passiveOrb.obtain';
+        addMessage({
+            key,
+            fallback: delta > 1
+                ? 'パッシブオーブ「{label}」を{delta}個手に入れた！{detail}'
+                : 'パッシブオーブ「{label}」を手に入れた！{detail}',
+            params: { label, detail, delta }
+        });
+    }
     recordAchievementEvent('passive_orb_obtained', {
         source: source || 'unknown',
         orbId,
-        count: nextCount
+        count: nextCount,
+        delta
     });
     markUiDirty();
     saveAll();
+    return { label, detail };
+}
+
+function grantPassiveOrb(source = 'unknown') {
+    const orbId = pickRandomPassiveOrbIdByWeight();
+    if (!orbId) return null;
+    const nextCount = incrementPassiveOrb(orbId, 1);
+    handlePassiveOrbAcquisition(orbId, nextCount, 1, source);
     return { orbId, count: nextCount };
+}
+
+function awardPassiveOrbFromMini(orbId, amount = 1, opts = {}) {
+    if (!PASSIVE_ORB_DEFS[orbId]) return null;
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) return null;
+    const delta = numericAmount > 0 ? Math.floor(numericAmount) : Math.ceil(numericAmount);
+    if (delta <= 0) return null;
+    const nextCount = incrementPassiveOrb(orbId, delta);
+    const options = opts && typeof opts === 'object' ? opts : {};
+    handlePassiveOrbAcquisition(orbId, nextCount, delta, options.source || 'mini', options);
+    return { orbId, count: nextCount, delta };
 }
 
 function maybeGrantPassiveOrb(source, chance = 1) {
@@ -20445,6 +20468,11 @@ async function startSelectedMiniGame() {
             getState: () => getMiniGamePlayerSnapshot(),
             awardItems: (changes, opts) => applyMiniGameInventoryDelta(changes, opts || {}),
             adjustItems: (changes, opts) => applyMiniGameInventoryDelta(changes, opts || {}),
+            awardPassiveOrb: (orbId, amount, opts) => {
+                const options = opts && typeof opts === 'object' ? { ...opts } : {};
+                if (!options.source) options.source = def.id;
+                return awardPassiveOrbFromMini(orbId, amount, options);
+            },
             adjustHp: (delta, opts) => adjustPlayerHpFromMini(delta, opts || {}),
             healHp: (amount, opts) => healPlayerFromMini(amount, opts || {}),
             damageHp: (amount, opts) => damagePlayerFromMini(amount, opts || {}),

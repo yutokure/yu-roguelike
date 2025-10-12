@@ -2,13 +2,83 @@
   const STORAGE_KEY = 'mini_todo_tasks_v1';
   const MAX_NAME = 32;
   const MAX_MEMO = 256;
-  const MAX_XP = 9999;
+  const MAX_XP = 99999999;
+  const MAX_REWARD_AMOUNT = 99999999;
+  const MAX_REWARD_KEY_LENGTH = 64;
   const DEFAULT_AUTO_NAMES = new Set(['名称未設定', 'Untitled']);
+  const TASK_TYPE_SINGLE = 'single';
+  const TASK_TYPE_REPEATABLE = 'repeatable';
+
+  function sanitizeTaskType(value){
+    return value === TASK_TYPE_REPEATABLE ? TASK_TYPE_REPEATABLE : TASK_TYPE_SINGLE;
+  }
 
   function clampXp(value){
     const num = Number(value);
     if (!Number.isFinite(num) || num < 0) return 0;
     return Math.min(MAX_XP, Math.floor(num));
+  }
+
+  function clampRewardAmount(value, { min = 0, max = MAX_REWARD_AMOUNT } = {}){
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return min;
+    let rounded = numeric >= 0 ? Math.floor(numeric) : Math.ceil(numeric);
+    if (rounded < min) rounded = min;
+    if (rounded > max) rounded = max;
+    return rounded;
+  }
+
+  function sanitizeRewardKey(value){
+    if (typeof value !== 'string') return '';
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    return trimmed.slice(0, MAX_REWARD_KEY_LENGTH);
+  }
+
+  function sanitizeTaskRewards(raw){
+    const base = {
+      passiveOrb: { enabled: false, orbId: '', amount: 1 },
+      item: { enabled: false, key: '', amount: 1 },
+      sp: { enabled: false, amount: 0 }
+    };
+    const source = raw && typeof raw === 'object' ? raw : {};
+
+    const passiveSource = (source.passiveOrb && typeof source.passiveOrb === 'object') ? source.passiveOrb : source;
+    const passiveEnabledRaw = passiveSource.enabled === true || source.passiveOrbEnabled === true;
+    const passiveId = sanitizeRewardKey(passiveSource.orbId ?? passiveSource.id ?? source.passiveOrbId ?? '');
+    const passiveAmount = clampRewardAmount(passiveSource.amount ?? source.passiveOrbAmount ?? 1, { min: 1 });
+    base.passiveOrb = {
+      enabled: passiveEnabledRaw && !!passiveId && passiveAmount > 0,
+      orbId: passiveId,
+      amount: passiveAmount > 0 ? passiveAmount : 1
+    };
+
+    const itemSource = (source.item && typeof source.item === 'object') ? source.item : source;
+    const itemEnabledRaw = itemSource.enabled === true || source.itemEnabled === true;
+    const itemKey = sanitizeRewardKey(itemSource.key ?? itemSource.id ?? source.itemKey ?? '');
+    const itemAmount = clampRewardAmount(itemSource.amount ?? source.itemAmount ?? 1, { min: 1 });
+    base.item = {
+      enabled: itemEnabledRaw && !!itemKey && itemAmount > 0,
+      key: itemKey,
+      amount: itemAmount > 0 ? itemAmount : 1
+    };
+
+    const spSource = (source.sp && typeof source.sp === 'object') ? source.sp : source;
+    const spEnabledRaw = spSource.enabled === true || source.spEnabled === true;
+    const spAmount = clampRewardAmount(spSource.amount ?? spSource.value ?? source.spAmount ?? source.spValue ?? 0, { min: 0 });
+    base.sp = {
+      enabled: spEnabledRaw && spAmount > 0,
+      amount: spAmount > 0 ? spAmount : 0
+    };
+
+    return base;
+  }
+
+  function ensureTaskRewards(task){
+    if (!task || typeof task !== 'object') return sanitizeTaskRewards(null);
+    const sanitized = sanitizeTaskRewards(task.rewards);
+    task.rewards = sanitized;
+    return sanitized;
   }
 
   function sanitizeColor(value){
@@ -45,10 +115,14 @@
         const persistedAutoName = item.autoName === true;
         const inferredAutoName = !rawName && (DEFAULT_AUTO_NAMES.has(item.name) || DEFAULT_AUTO_NAMES.has(name));
         const autoName = persistedAutoName || inferredAutoName;
+        const type = sanitizeTaskType(item.type);
+        const achievedCountRaw = Number.isFinite(item.achievedCount) ? item.achievedCount : Number.isFinite(item.completedCount) ? item.completedCount : 0;
+        const achievedCount = Math.max(0, Math.floor(achievedCountRaw));
         if (autoName) {
           DEFAULT_AUTO_NAMES.add(name);
         }
-        return { id, name, memo, xp, color, createdAt, completedAt, status, autoName };
+        const rewards = sanitizeTaskRewards(item.rewards);
+        return { id, name, memo, xp, color, createdAt, completedAt, status, autoName, type, achievedCount, rewards };
       }).filter(Boolean);
     } catch {
       return [];
@@ -84,10 +158,11 @@
     }
   }
 
-  function create(root, awardXp){
+  function create(root, awardXp, opts = {}){
     if (!root) throw new Error('MiniExp ToDo requires a container');
 
     let i18n = (typeof window !== 'undefined' && typeof window.I18n === 'object') ? window.I18n : null;
+    const playerApi = (opts && typeof opts === 'object' && opts.player && typeof opts.player === 'object') ? opts.player : null;
 
     const getI18n = () => {
       if (typeof window !== 'undefined' && typeof window.I18n === 'object'){
@@ -276,6 +351,32 @@
     nameLabel.appendChild(nameLabelText);
     nameLabel.appendChild(nameInput);
 
+    const typeLabel = document.createElement('label');
+    typeLabel.style.display = 'flex';
+    typeLabel.style.flexDirection = 'column';
+    typeLabel.style.fontSize = '14px';
+    typeLabel.style.color = '#374151';
+
+    const typeLabelText = document.createElement('span');
+    typeLabelText.style.fontWeight = '600';
+
+    const typeSelect = document.createElement('select');
+    typeSelect.style.marginTop = '4px';
+    typeSelect.style.padding = '10px 12px';
+    typeSelect.style.borderRadius = '8px';
+    typeSelect.style.border = '1px solid #cbd5f5';
+    typeSelect.style.fontSize = '14px';
+
+    const typeOptionSingle = document.createElement('option');
+    typeOptionSingle.value = TASK_TYPE_SINGLE;
+    const typeOptionRepeatable = document.createElement('option');
+    typeOptionRepeatable.value = TASK_TYPE_REPEATABLE;
+    typeSelect.appendChild(typeOptionSingle);
+    typeSelect.appendChild(typeOptionRepeatable);
+
+    typeLabel.appendChild(typeLabelText);
+    typeLabel.appendChild(typeSelect);
+
     const xpLabel = document.createElement('label');
     xpLabel.style.display = 'flex';
     xpLabel.style.flexDirection = 'column';
@@ -299,6 +400,182 @@
     xpInput.style.fontSize = '14px';
     xpLabel.appendChild(xpLabelText);
     xpLabel.appendChild(xpInput);
+
+    const rewardsSection = document.createElement('div');
+    rewardsSection.style.gridColumn = '1 / -1';
+    rewardsSection.style.display = 'flex';
+    rewardsSection.style.flexDirection = 'column';
+    rewardsSection.style.gap = '10px';
+    rewardsSection.style.padding = '12px';
+    rewardsSection.style.borderRadius = '10px';
+    rewardsSection.style.border = '1px solid #d1d5db';
+    rewardsSection.style.background = '#ffffff';
+
+    const rewardsTitle = document.createElement('div');
+    rewardsTitle.style.fontSize = '14px';
+    rewardsTitle.style.fontWeight = '600';
+    rewardsTitle.style.color = '#1f2937';
+    rewardsSection.appendChild(rewardsTitle);
+
+    function makeRewardRow(){
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.flexWrap = 'wrap';
+      row.style.gap = '8px';
+      row.style.alignItems = 'center';
+      return row;
+    }
+
+    function makeToggleLabel(){
+      const label = document.createElement('label');
+      label.style.display = 'inline-flex';
+      label.style.alignItems = 'center';
+      label.style.gap = '6px';
+      label.style.fontWeight = '600';
+      label.style.fontSize = '13px';
+      return label;
+    }
+
+    function makeAmountLabel(){
+      const label = document.createElement('label');
+      label.style.display = 'inline-flex';
+      label.style.alignItems = 'center';
+      label.style.gap = '6px';
+      label.style.fontSize = '13px';
+      return label;
+    }
+
+    const passiveRow = makeRewardRow();
+    const passiveToggleLabel = makeToggleLabel();
+    const passiveEnableInput = document.createElement('input');
+    passiveEnableInput.type = 'checkbox';
+    const passiveEnableText = document.createElement('span');
+    passiveToggleLabel.appendChild(passiveEnableInput);
+    passiveToggleLabel.appendChild(passiveEnableText);
+
+    const passiveOrbIdInput = document.createElement('input');
+    passiveOrbIdInput.type = 'text';
+    passiveOrbIdInput.maxLength = MAX_REWARD_KEY_LENGTH;
+    passiveOrbIdInput.style.padding = '8px 10px';
+    passiveOrbIdInput.style.borderRadius = '8px';
+    passiveOrbIdInput.style.border = '1px solid #cbd5f5';
+    passiveOrbIdInput.style.fontSize = '13px';
+    passiveOrbIdInput.style.minWidth = '180px';
+
+    const passiveAmountLabel = makeAmountLabel();
+    const passiveAmountText = document.createElement('span');
+    const passiveAmountInput = document.createElement('input');
+    passiveAmountInput.type = 'number';
+    passiveAmountInput.min = '1';
+    passiveAmountInput.max = String(MAX_REWARD_AMOUNT);
+    passiveAmountInput.step = '1';
+    passiveAmountInput.value = '1';
+    passiveAmountInput.style.width = '90px';
+    passiveAmountInput.style.padding = '6px 8px';
+    passiveAmountInput.style.borderRadius = '8px';
+    passiveAmountInput.style.border = '1px solid #cbd5f5';
+    passiveAmountInput.style.fontSize = '13px';
+    passiveAmountLabel.appendChild(passiveAmountText);
+    passiveAmountLabel.appendChild(passiveAmountInput);
+
+    passiveRow.appendChild(passiveToggleLabel);
+    passiveRow.appendChild(passiveOrbIdInput);
+    passiveRow.appendChild(passiveAmountLabel);
+    rewardsSection.appendChild(passiveRow);
+
+    const itemRow = makeRewardRow();
+    const itemToggleLabel = makeToggleLabel();
+    const itemEnableInput = document.createElement('input');
+    itemEnableInput.type = 'checkbox';
+    const itemEnableText = document.createElement('span');
+    itemToggleLabel.appendChild(itemEnableInput);
+    itemToggleLabel.appendChild(itemEnableText);
+
+    const itemKeyInput = document.createElement('input');
+    itemKeyInput.type = 'text';
+    itemKeyInput.maxLength = MAX_REWARD_KEY_LENGTH;
+    itemKeyInput.style.padding = '8px 10px';
+    itemKeyInput.style.borderRadius = '8px';
+    itemKeyInput.style.border = '1px solid #cbd5f5';
+    itemKeyInput.style.fontSize = '13px';
+    itemKeyInput.style.minWidth = '180px';
+
+    const itemAmountLabel = makeAmountLabel();
+    const itemAmountText = document.createElement('span');
+    const itemAmountInput = document.createElement('input');
+    itemAmountInput.type = 'number';
+    itemAmountInput.min = '1';
+    itemAmountInput.max = String(MAX_REWARD_AMOUNT);
+    itemAmountInput.step = '1';
+    itemAmountInput.value = '1';
+    itemAmountInput.style.width = '90px';
+    itemAmountInput.style.padding = '6px 8px';
+    itemAmountInput.style.borderRadius = '8px';
+    itemAmountInput.style.border = '1px solid #cbd5f5';
+    itemAmountInput.style.fontSize = '13px';
+    itemAmountLabel.appendChild(itemAmountText);
+    itemAmountLabel.appendChild(itemAmountInput);
+
+    itemRow.appendChild(itemToggleLabel);
+    itemRow.appendChild(itemKeyInput);
+    itemRow.appendChild(itemAmountLabel);
+    rewardsSection.appendChild(itemRow);
+
+    const spRow = makeRewardRow();
+    const spToggleLabel = makeToggleLabel();
+    const spEnableInput = document.createElement('input');
+    spEnableInput.type = 'checkbox';
+    const spEnableText = document.createElement('span');
+    spToggleLabel.appendChild(spEnableInput);
+    spToggleLabel.appendChild(spEnableText);
+
+    const spAmountLabel = makeAmountLabel();
+    const spAmountText = document.createElement('span');
+    const spAmountInput = document.createElement('input');
+    spAmountInput.type = 'number';
+    spAmountInput.min = '1';
+    spAmountInput.max = String(MAX_REWARD_AMOUNT);
+    spAmountInput.step = '1';
+    spAmountInput.value = '10';
+    spAmountInput.style.width = '90px';
+    spAmountInput.style.padding = '6px 8px';
+    spAmountInput.style.borderRadius = '8px';
+    spAmountInput.style.border = '1px solid #cbd5f5';
+    spAmountInput.style.fontSize = '13px';
+    spAmountLabel.appendChild(spAmountText);
+    spAmountLabel.appendChild(spAmountInput);
+
+    spRow.appendChild(spToggleLabel);
+    spRow.appendChild(spAmountLabel);
+    rewardsSection.appendChild(spRow);
+
+    function updatePassiveRowState(){
+      const enabled = !!passiveEnableInput.checked;
+      passiveOrbIdInput.disabled = !enabled;
+      passiveAmountInput.disabled = !enabled;
+      passiveRow.style.opacity = enabled ? '1' : '0.6';
+    }
+
+    function updateItemRowState(){
+      const enabled = !!itemEnableInput.checked;
+      itemKeyInput.disabled = !enabled;
+      itemAmountInput.disabled = !enabled;
+      itemRow.style.opacity = enabled ? '1' : '0.6';
+    }
+
+    function updateSpRowState(){
+      const enabled = !!spEnableInput.checked;
+      spAmountInput.disabled = !enabled;
+      spRow.style.opacity = enabled ? '1' : '0.6';
+    }
+
+    passiveEnableInput.addEventListener('change', updatePassiveRowState);
+    itemEnableInput.addEventListener('change', updateItemRowState);
+    spEnableInput.addEventListener('change', updateSpRowState);
+
+    updatePassiveRowState();
+    updateItemRowState();
+    updateSpRowState();
 
     const colorLabel = document.createElement('label');
     colorLabel.style.display = 'flex';
@@ -371,7 +648,9 @@
 
     formCard.appendChild(formTitle);
     formCard.appendChild(nameLabel);
+    formCard.appendChild(typeLabel);
     formCard.appendChild(xpLabel);
+    formCard.appendChild(rewardsSection);
     formCard.appendChild(colorLabel);
     formCard.appendChild(memoLabel);
     formCard.appendChild(buttonRow);
@@ -437,30 +716,81 @@
       state.editingTaskId = null;
       setFormMode('create');
       nameInput.value = '';
+      typeSelect.value = TASK_TYPE_SINGLE;
       xpInput.value = '25';
       colorInput.value = '#f97316';
       memoInput.value = '';
+      passiveEnableInput.checked = false;
+      passiveOrbIdInput.value = '';
+      passiveAmountInput.value = '1';
+      itemEnableInput.checked = false;
+      itemKeyInput.value = '';
+      itemAmountInput.value = '1';
+      spEnableInput.checked = false;
+      spAmountInput.value = '10';
+      updatePassiveRowState();
+      updateItemRowState();
+      updateSpRowState();
     }
 
     function fillForm(task){
       state.editingTaskId = task.id;
       setFormMode('edit');
       nameInput.value = task.autoName ? '' : task.name;
+      typeSelect.value = sanitizeTaskType(task.type);
       xpInput.value = String(task.xp);
       colorInput.value = task.color;
       memoInput.value = task.memo;
+      const rewards = ensureTaskRewards(task);
+      passiveEnableInput.checked = !!rewards.passiveOrb.enabled;
+      passiveOrbIdInput.value = rewards.passiveOrb.orbId || '';
+      passiveAmountInput.value = String(rewards.passiveOrb.amount || 1);
+      itemEnableInput.checked = !!rewards.item.enabled;
+      itemKeyInput.value = rewards.item.key || '';
+      itemAmountInput.value = String(rewards.item.amount || 1);
+      spEnableInput.checked = !!rewards.sp.enabled;
+      spAmountInput.value = String(rewards.sp.amount || 10);
+      updatePassiveRowState();
+      updateItemRowState();
+      updateSpRowState();
+    }
+
+    function readRewardsFromForm(){
+      return sanitizeTaskRewards({
+        passiveOrb: {
+          enabled: passiveEnableInput.checked,
+          orbId: passiveOrbIdInput.value,
+          amount: passiveAmountInput.value
+        },
+        item: {
+          enabled: itemEnableInput.checked,
+          key: itemKeyInput.value,
+          amount: itemAmountInput.value
+        },
+        sp: {
+          enabled: spEnableInput.checked,
+          amount: spAmountInput.value
+        }
+      });
     }
 
     function persist(){
+      state.tasks.forEach(task => {
+        if (!task || typeof task !== 'object') return;
+        task.xp = clampXp(task.xp);
+        ensureTaskRewards(task);
+      });
       writePersistentState(state.tasks);
     }
 
     function updateStats(){
       const pendingCount = state.tasks.filter(t => t.status === 'pending').length;
       const completedCount = state.tasks.filter(t => t.status !== 'pending').length;
-      stats.textContent = translate('games.todoList.header.stats', '未完了: {pending}件 / 完了: {completed}件', {
+      const totalAchievements = state.tasks.reduce((sum, task) => sum + (task.type === TASK_TYPE_REPEATABLE ? task.achievedCount || 0 : 0), 0);
+      stats.textContent = translate('games.todoList.header.stats', '未完了: {pending}件 / 完了: {completed}件 / 達成: {achievements}回', {
         pending: formatNumber(pendingCount, { maximumFractionDigits: 0 }),
-        completed: formatNumber(completedCount, { maximumFractionDigits: 0 })
+        completed: formatNumber(completedCount, { maximumFractionDigits: 0 }),
+        achievements: formatNumber(totalAchievements, { maximumFractionDigits: 0 })
       });
     }
 
@@ -513,7 +843,20 @@
       nameLabelText.textContent = translate('games.todoList.form.name', '名前');
       nameInput.placeholder = translate('games.todoList.form.namePlaceholder', '例: 日次レポートを送信');
 
+      typeLabelText.textContent = translate('games.todoList.form.type', 'タイプ');
+      typeOptionSingle.textContent = translate('games.todoList.form.typeSingle', '単発');
+      typeOptionRepeatable.textContent = translate('games.todoList.form.typeRepeatable', '繰り返し');
+
       xpLabelText.textContent = translate('games.todoList.form.xp', '獲得EXP');
+      rewardsTitle.textContent = translate('games.todoList.form.rewards.title', '追加報酬');
+      passiveEnableText.textContent = translate('games.todoList.form.rewards.passiveOrb.label', 'パッシブオーブ');
+      passiveOrbIdInput.placeholder = translate('games.todoList.form.rewards.passiveOrb.placeholder', '例: attackBoost');
+      passiveAmountText.textContent = translate('games.todoList.form.rewards.passiveOrb.amount', '個数');
+      itemEnableText.textContent = translate('games.todoList.form.rewards.item.label', 'アイテム');
+      itemKeyInput.placeholder = translate('games.todoList.form.rewards.item.placeholder', '例: potion30');
+      itemAmountText.textContent = translate('games.todoList.form.rewards.item.amount', '個数');
+      spEnableText.textContent = translate('games.todoList.form.rewards.sp.label', 'SP');
+      spAmountText.textContent = translate('games.todoList.form.rewards.sp.amount', '量');
       colorLabelText.textContent = translate('games.todoList.form.color', 'カラー');
       memoLabelText.textContent = translate('games.todoList.form.memo', 'メモ');
       memoInput.placeholder = translate('games.todoList.form.memoPlaceholder', '補足情報やチェックポイントなどを入力');
@@ -593,6 +936,7 @@
     }
 
     function renderTaskCard(task){
+      const rewards = ensureTaskRewards(task);
       const card = document.createElement('div');
       card.style.display = 'flex';
       card.style.gap = '16px';
@@ -618,32 +962,72 @@
       titleRow.style.display = 'flex';
       titleRow.style.alignItems = 'center';
       titleRow.style.gap = '8px';
+      titleRow.style.justifyContent = 'space-between';
 
       const name = document.createElement('div');
       name.textContent = task.name;
       name.style.fontSize = '16px';
       name.style.fontWeight = '600';
+      name.style.flexGrow = '1';
 
-      const xpChip = document.createElement('span');
-      const xpText = translate('games.todoList.task.xpChip', '{xp} EXP', {
-        xp: formatNumber(task.xp, { maximumFractionDigits: 0 })
-      });
-      xpChip.textContent = xpText;
-      xpChip.style.padding = '2px 8px';
-      xpChip.style.borderRadius = '999px';
-      xpChip.style.background = '#fee2e2';
-      xpChip.style.color = '#991b1b';
-      xpChip.style.fontSize = '12px';
-      xpChip.style.fontWeight = '600';
+      function makeChip(text, background, textColor){
+        const chip = document.createElement('span');
+        chip.textContent = text;
+        chip.style.padding = '2px 8px';
+        chip.style.borderRadius = '999px';
+        chip.style.background = background;
+        chip.style.color = textColor;
+        chip.style.fontSize = '12px';
+        chip.style.fontWeight = '600';
+        return chip;
+      }
+
+      const chipRow = document.createElement('div');
+      chipRow.style.display = 'flex';
+      chipRow.style.flexWrap = 'wrap';
+      chipRow.style.gap = '6px';
+      chipRow.style.alignItems = 'center';
+
+      const xpChip = makeChip(
+        translate('games.todoList.task.xpChip', '{xp} EXP', {
+          xp: formatNumber(task.xp, { maximumFractionDigits: 0 })
+        }),
+        '#fee2e2',
+        '#991b1b'
+      );
+      chipRow.appendChild(xpChip);
+
+      if (rewards.passiveOrb.enabled){
+        const passiveText = translate('games.todoList.task.rewards.passiveOrb', 'オーブ: {orb} ×{amount}', {
+          orb: rewards.passiveOrb.orbId,
+          amount: formatNumber(rewards.passiveOrb.amount, { maximumFractionDigits: 0 })
+        });
+        chipRow.appendChild(makeChip(passiveText, '#ede9fe', '#5b21b6'));
+      }
+
+      if (rewards.item.enabled){
+        const itemText = translate('games.todoList.task.rewards.item', '{item} ×{amount}', {
+          item: rewards.item.key,
+          amount: formatNumber(rewards.item.amount, { maximumFractionDigits: 0 })
+        });
+        chipRow.appendChild(makeChip(itemText, '#dbeafe', '#1d4ed8'));
+      }
+
+      if (rewards.sp.enabled){
+        const spText = translate('games.todoList.task.rewards.sp', '+{amount} SP', {
+          amount: formatNumber(rewards.sp.amount, { maximumFractionDigits: 0 })
+        });
+        chipRow.appendChild(makeChip(spText, '#cffafe', '#0f766e'));
+      }
 
       const colorChip = document.createElement('span');
       colorChip.textContent = '●';
       colorChip.style.color = task.color;
       colorChip.style.fontSize = '14px';
+      chipRow.appendChild(colorChip);
 
       titleRow.appendChild(name);
-      titleRow.appendChild(xpChip);
-      titleRow.appendChild(colorChip);
+      titleRow.appendChild(chipRow);
 
       const memo = document.createElement('div');
       memo.textContent = task.memo || translate('games.todoList.task.memoEmpty', 'メモなし');
@@ -667,6 +1051,14 @@
           date: formatDate(task.completedAt, getI18n(), dateTimeOptions)
         });
         meta.appendChild(completedLabel);
+      }
+
+      if (task.type === TASK_TYPE_REPEATABLE){
+        const achievedLabel = document.createElement('span');
+        achievedLabel.textContent = translate('games.todoList.task.repeatableCount', '達成回数: {count}回', {
+          count: formatNumber(task.achievedCount || 0, { maximumFractionDigits: 0 })
+        });
+        meta.appendChild(achievedLabel);
       }
 
       const statusWrap = document.createElement('div');
@@ -723,6 +1115,10 @@
 
       if (task.status === 'pending'){
         card.style.borderColor = '#ef4444';
+        if (task.type === TASK_TYPE_REPEATABLE){
+          const achieveBtn = makeButton(translate('games.todoList.task.actions.achieve', '達成'), { background: '#34d399', text: '#064e3b' }, () => achieveTask(task.id));
+          actions.appendChild(achieveBtn);
+        }
         const completeBtn = makeButton(translate('games.todoList.task.actions.complete', '完了'), { background: '#22c55e', text: '#064e3b' }, () => markTask(task.id, 'completed'));
         const failBtn = makeButton(translate('games.todoList.task.actions.fail', '失敗'), { background: '#f97316', text: '#7c2d12' }, () => markTask(task.id, 'failed'));
         const editBtn = makeButton(translate('games.todoList.task.actions.edit', '編集'), { background: '#93c5fd', text: '#1d4ed8' }, () => { fillForm(task); nameInput.focus(); });
@@ -748,6 +1144,38 @@
       return card;
     }
 
+    function applyTaskRewards(task, meta){
+      const rewards = ensureTaskRewards(task);
+      let xpGained = 0;
+      if (task.xp > 0 && typeof awardXp === 'function'){
+        try {
+          const gained = awardXp(task.xp, meta);
+          const numeric = Number(gained);
+          if (Number.isFinite(numeric)){
+            xpGained = numeric;
+          } else {
+            xpGained = task.xp;
+          }
+        } catch {}
+      }
+      if (playerApi && rewards.sp.enabled && rewards.sp.amount > 0 && typeof playerApi.adjustSp === 'function'){
+        try {
+          playerApi.adjustSp(rewards.sp.amount, { source: 'todo_list', reason: meta?.type || 'todo_list' });
+        } catch {}
+      }
+      if (playerApi && rewards.item.enabled && rewards.item.key && typeof playerApi.awardItems === 'function'){
+        try {
+          playerApi.awardItems({ [rewards.item.key]: rewards.item.amount }, { allowNegative: false });
+        } catch {}
+      }
+      if (playerApi && rewards.passiveOrb.enabled && rewards.passiveOrb.orbId && typeof playerApi.awardPassiveOrb === 'function'){
+        try {
+          playerApi.awardPassiveOrb(rewards.passiveOrb.orbId, rewards.passiveOrb.amount, { source: meta?.type || 'todo_list' });
+        } catch {}
+      }
+      return xpGained > 0 ? xpGained : 0;
+    }
+
     function deleteTask(id){
       const idx = state.tasks.findIndex(t => t.id === id);
       if (idx === -1) return;
@@ -768,12 +1196,26 @@
       task.status = status === 'completed' ? 'completed' : 'failed';
       task.completedAt = Date.now();
       persist();
-      if (task.status === 'completed' && task.xp > 0){
-        try {
-          awardXp(task.xp, { type: 'todo-complete', todoId: task.id, name: task.name });
-        } catch {}
-        state.sessionXp += task.xp;
+      if (task.status === 'completed'){
+        const meta = { type: 'todo-complete', todoId: task.id, name: task.name };
+        const gained = applyTaskRewards(task, meta);
+        if (gained > 0) state.sessionXp += gained;
       }
+      updateStats();
+      renderLists();
+    }
+
+    function achieveTask(id){
+      const task = state.tasks.find(t => t.id === id);
+      if (!task) return;
+      if (task.status !== 'pending') return;
+      if (task.type !== TASK_TYPE_REPEATABLE) return;
+      const nextCount = Math.max(0, (task.achievedCount || 0) + 1);
+      task.achievedCount = nextCount;
+      const meta = { type: 'todo-achieve', todoId: task.id, name: task.name, count: nextCount };
+      const gained = applyTaskRewards(task, meta);
+      if (gained > 0) state.sessionXp += gained;
+      persist();
       updateStats();
       renderLists();
     }
@@ -789,8 +1231,10 @@
         return;
       }
       const xp = clampXp(xpInput.value);
+      const type = sanitizeTaskType(typeSelect.value);
       const color = sanitizeColor(colorInput.value);
       const memo = sanitizeString(memoInput.value || '', '');
+      const rewards = readRewardsFromForm();
       if (state.editingTaskId){
         const task = state.tasks.find(t => t.id === state.editingTaskId);
         if (!task){
@@ -798,9 +1242,11 @@
         } else {
           task.name = name;
           task.autoName = isAutoName;
+          task.type = type;
           task.xp = xp;
           task.color = color;
           task.memo = memo;
+          task.rewards = rewards;
           persist();
         }
       } else {
@@ -813,6 +1259,9 @@
           memo,
           xp,
           color,
+          type,
+          achievedCount: 0,
+          rewards,
           createdAt: now,
           completedAt: null,
           status: 'pending'
@@ -911,7 +1360,7 @@
     name: 'ToDoリスト', nameKey: 'selection.miniexp.games.todo_list.name',
     description: '完了で設定EXPを獲得 / 失敗は獲得なし', descriptionKey: 'selection.miniexp.games.todo_list.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
-    version: '0.1.0',
+    version: '0.3.0',
     author: 'mod',
     create
   });

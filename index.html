@@ -867,40 +867,40 @@
                                 <option value="snake"></option>
                             </datalist>
                         </section>
-                        <section id="tool-image-viewer" class="tool-panel" data-tool-panel="image-viewer" aria-label="画像ビューア">
+                        <section id="tool-image-viewer" class="tool-panel" data-tool-panel="image-viewer" aria-label="画像ビューア" data-i18n-attr="aria-label:tools.imageViewer.panelAriaLabel">
                             <header class="tool-panel-header">
-                                <h3>画像ビューア</h3>
-                                <p>ユーティリティカテゴリ向けのプレビュー。画像を読み込み、パン・ズーム・回転・伸縮・遠近変換を組み合わせて確認できます（変換はプレビューのみ）。</p>
+                                <h3 data-i18n="tools.imageViewer.header.title">画像ビューア</h3>
+                                <p data-i18n="tools.imageViewer.header.description">ユーティリティカテゴリ向けのプレビュー。画像を読み込み、パン・ズーム・回転・伸縮・遠近変換を組み合わせて確認できます（変換はプレビューのみ）。</p>
                             </header>
                             <div class="image-viewer-body">
                                 <div class="image-viewer-stage-wrapper">
-                                    <div id="image-viewer-stage" class="image-viewer-stage" tabindex="0" aria-label="画像プレビュー領域">
-                                        <div id="image-viewer-placeholder" class="image-viewer-placeholder">画像ファイルを選択するか、ここにドラッグ＆ドロップしてください。</div>
-                                        <img id="image-viewer-image" alt="選択した画像のプレビュー" draggable="false" />
+                                    <div id="image-viewer-stage" class="image-viewer-stage" tabindex="0" aria-label="画像プレビュー領域" data-i18n-attr="aria-label:tools.imageViewer.stage.ariaLabel">
+                                        <div id="image-viewer-placeholder" class="image-viewer-placeholder" data-i18n="tools.imageViewer.stage.placeholder">画像ファイルを選択するか、ここにドラッグ＆ドロップしてください。</div>
+                                        <img id="image-viewer-image" alt="選択した画像のプレビュー" draggable="false" data-i18n-attr="alt:tools.imageViewer.stage.imageAlt" />
                                     </div>
-                                    <p class="image-viewer-stage-hint">ホイールでズーム、ドラッグでパン、ダブルクリックでビューをリセットします。</p>
+                                    <p class="image-viewer-stage-hint" data-i18n="tools.imageViewer.stage.hint">ホイールでズーム、ドラッグでパン、ダブルクリックでビューをリセットします。</p>
                                     <div id="image-viewer-message" class="image-viewer-message" role="status" aria-live="polite"></div>
                                 </div>
                                 <div class="image-viewer-controls">
                                     <div class="image-viewer-upload">
                                         <label class="image-viewer-file-label">
-                                            <span>画像ファイルを選択</span>
+                                            <span data-i18n="tools.imageViewer.upload.select">画像ファイルを選択</span>
                                             <input type="file" id="image-viewer-file" accept="image/*" />
                                         </label>
                                         <div class="image-viewer-upload-actions">
-                                            <button type="button" id="image-viewer-reset-view">ビューリセット</button>
-                                            <button type="button" id="image-viewer-reset-all">全てリセット</button>
+                                            <button type="button" id="image-viewer-reset-view" data-i18n="tools.imageViewer.upload.resetView">ビューリセット</button>
+                                            <button type="button" id="image-viewer-reset-all" data-i18n="tools.imageViewer.upload.resetAll">全てリセット</button>
                                         </div>
                                     </div>
                                     <div class="image-viewer-control-group">
-                                        <label for="image-viewer-zoom">ズーム</label>
+                                        <label for="image-viewer-zoom" data-i18n="tools.imageViewer.controls.zoom">ズーム</label>
                                         <div class="image-viewer-control">
                                             <input type="range" id="image-viewer-zoom" min="0.1" max="8" step="0.01" value="1">
                                             <span id="image-viewer-zoom-value" class="image-viewer-value">100%</span>
                                         </div>
                                     </div>
                                     <div class="image-viewer-control-group">
-                                        <label for="image-viewer-rotation">回転</label>
+                                        <label for="image-viewer-rotation" data-i18n="tools.imageViewer.controls.rotation">回転</label>
                                         <div class="image-viewer-control">
                                             <input type="range" id="image-viewer-rotation" min="-180" max="180" step="1" value="0">
                                             <span id="image-viewer-rotation-value" class="image-viewer-value">0°</span>
@@ -908,14 +908,14 @@
                                     </div>
                                     <div class="image-viewer-control-row">
                                         <div class="image-viewer-control-group">
-                                            <label for="image-viewer-stretch-x">横伸縮</label>
+                                            <label for="image-viewer-stretch-x" data-i18n="tools.imageViewer.controls.stretchX">横伸縮</label>
                                             <div class="image-viewer-control">
                                                 <input type="range" id="image-viewer-stretch-x" min="0.2" max="4" step="0.01" value="1">
                                                 <span id="image-viewer-stretch-x-value" class="image-viewer-value">100%</span>
                                             </div>
                                         </div>
                                         <div class="image-viewer-control-group">
-                                            <label for="image-viewer-stretch-y">縦伸縮</label>
+                                            <label for="image-viewer-stretch-y" data-i18n="tools.imageViewer.controls.stretchY">縦伸縮</label>
                                             <div class="image-viewer-control">
                                                 <input type="range" id="image-viewer-stretch-y" min="0.2" max="4" step="0.01" value="1">
                                                 <span id="image-viewer-stretch-y-value" class="image-viewer-value">100%</span>
@@ -923,7 +923,7 @@
                                         </div>
                                     </div>
                                     <div class="image-viewer-control-group">
-                                        <label for="image-viewer-perspective">遠近距離</label>
+                                        <label for="image-viewer-perspective" data-i18n="tools.imageViewer.controls.perspective">遠近距離</label>
                                         <div class="image-viewer-control">
                                             <input type="range" id="image-viewer-perspective" min="200" max="2000" step="10" value="800">
                                             <span id="image-viewer-perspective-value" class="image-viewer-value">800px</span>
@@ -931,14 +931,14 @@
                                     </div>
                                     <div class="image-viewer-control-row">
                                         <div class="image-viewer-control-group">
-                                            <label for="image-viewer-rotate-x">遠近X回転</label>
+                                            <label for="image-viewer-rotate-x" data-i18n="tools.imageViewer.controls.rotateX">遠近X回転</label>
                                             <div class="image-viewer-control">
                                                 <input type="range" id="image-viewer-rotate-x" min="-75" max="75" step="1" value="0">
                                                 <span id="image-viewer-rotate-x-value" class="image-viewer-value">0°</span>
                                             </div>
                                         </div>
                                         <div class="image-viewer-control-group">
-                                            <label for="image-viewer-rotate-y">遠近Y回転</label>
+                                            <label for="image-viewer-rotate-y" data-i18n="tools.imageViewer.controls.rotateY">遠近Y回転</label>
                                             <div class="image-viewer-control">
                                                 <input type="range" id="image-viewer-rotate-y" min="-75" max="75" step="1" value="0">
                                                 <span id="image-viewer-rotate-y-value" class="image-viewer-value">0°</span>
@@ -946,26 +946,26 @@
                                         </div>
                                     </div>
                                     <div class="image-viewer-meta" aria-live="polite">
-                                        <h4>メタ情報</h4>
+                                        <h4 data-i18n="tools.imageViewer.meta.title">メタ情報</h4>
                                         <dl class="image-viewer-meta-grid">
                                             <div class="image-viewer-meta-row">
-                                                <dt>ファイル名</dt>
+                                                <dt data-i18n="tools.imageViewer.meta.name">ファイル名</dt>
                                                 <dd id="image-viewer-meta-name">-</dd>
                                             </div>
                                             <div class="image-viewer-meta-row">
-                                                <dt>種類</dt>
+                                                <dt data-i18n="tools.imageViewer.meta.type">種類</dt>
                                                 <dd id="image-viewer-meta-type">-</dd>
                                             </div>
                                             <div class="image-viewer-meta-row">
-                                                <dt>サイズ</dt>
+                                                <dt data-i18n="tools.imageViewer.meta.size">サイズ</dt>
                                                 <dd id="image-viewer-meta-size">-</dd>
                                             </div>
                                             <div class="image-viewer-meta-row">
-                                                <dt>画像解像度</dt>
+                                                <dt data-i18n="tools.imageViewer.meta.dimensions">画像解像度</dt>
                                                 <dd id="image-viewer-meta-dimensions">-</dd>
                                             </div>
                                             <div class="image-viewer-meta-row">
-                                                <dt>最終更新日</dt>
+                                                <dt data-i18n="tools.imageViewer.meta.modified">最終更新日</dt>
                                                 <dd id="image-viewer-meta-modified">-</dd>
                                             </div>
                                         </dl>

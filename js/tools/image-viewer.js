@@ -1,6 +1,8 @@
 (function (global) {
     'use strict';
 
+    const i18n = global.I18n || null;
+
     const TOOL_ID = 'image-viewer';
     const STYLE_ID = 'tool-image-viewer-styles';
     const ZOOM_MIN = 0.1;
@@ -13,13 +15,44 @@
     const ROTATE_LIMIT = 180;
     const ROTATE_3D_LIMIT = 75;
 
-    const dateFormatter = new Intl.DateTimeFormat('ja-JP', {
+    const DATE_TIME_FORMAT_OPTIONS = {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
+    };
+
+    const MESSAGE_DESCRIPTORS = Object.freeze({
+        loadSuccess: {
+            key: 'tools.imageViewer.messages.loadSuccess',
+            fallback: 'Image loaded.'
+        },
+        loadError: {
+            key: 'tools.imageViewer.messages.loadError',
+            fallback: 'Failed to load the image.'
+        },
+        invalidType: {
+            key: 'tools.imageViewer.messages.invalidType',
+            fallback: 'Only image files are supported.'
+        },
+        loading: {
+            key: 'tools.imageViewer.messages.loading',
+            fallback: 'Loading image…'
+        },
+        resetView: {
+            key: 'tools.imageViewer.messages.resetView',
+            fallback: 'View settings reset.'
+        },
+        resetAll: {
+            key: 'tools.imageViewer.messages.resetAll',
+            fallback: 'Image Viewer has been reset.'
+        },
+        missingElements: {
+            key: 'tools.imageViewer.errors.missingElements',
+            fallback: '[ImageViewer] Required elements not found.'
+        }
     });
 
     const defaultState = () => ({
@@ -42,6 +75,47 @@
     let naturalSize = { width: 0, height: 0 };
     let pendingSerializedState = null;
     let pendingTransform = null;
+    let localeUnsubscribe = null;
+    let lastMessageDescriptor = null;
+
+    function translate(key, params, fallback) {
+        if (key && i18n && typeof i18n.t === 'function') {
+            const value = i18n.t(key, params);
+            if (value !== undefined && value !== null && value !== key) {
+                return value;
+            }
+        }
+        if (typeof fallback === 'function') {
+            try {
+                return fallback(params || {});
+            } catch (error) {
+                // fall back below
+            }
+        }
+        if (fallback !== undefined && fallback !== null) {
+            return fallback;
+        }
+        if (typeof key === 'string') {
+            return key;
+        }
+        return '';
+    }
+
+    function formatMetaDate(timestamp) {
+        if (!Number.isFinite(timestamp)) return '-';
+        const date = new Date(timestamp);
+        if (Number.isNaN(date.getTime())) return '-';
+        if (i18n && typeof i18n.formatDate === 'function') {
+            const formatted = i18n.formatDate(date, DATE_TIME_FORMAT_OPTIONS);
+            if (formatted) return formatted;
+        }
+        const locale = (i18n && typeof i18n.getLocale === 'function' && i18n.getLocale()) || 'ja-JP';
+        try {
+            return new Intl.DateTimeFormat(locale, DATE_TIME_FORMAT_OPTIONS).format(date);
+        } catch (error) {
+            return new Intl.DateTimeFormat('ja-JP', DATE_TIME_FORMAT_OPTIONS).format(date);
+        }
+    }
 
     function ensureStylesInjected() {
         if (document.getElementById(STYLE_ID)) {
@@ -321,7 +395,7 @@
         return `${gb.toFixed(2)} GB`;
     }
 
-    function setMessage(text, type = 'info') {
+    function renderMessage(text, type = 'info') {
         if (!refs?.message) return;
         refs.message.textContent = text || '';
         refs.message.classList.remove('error', 'success');
@@ -330,7 +404,25 @@
     }
 
     function clearMessage() {
-        setMessage('');
+        lastMessageDescriptor = null;
+        renderMessage('');
+    }
+
+    function setMessage(descriptor, type = 'info', params) {
+        if (!descriptor) {
+            clearMessage();
+            return;
+        }
+        const text = translate(descriptor.key, params, descriptor.fallback);
+        lastMessageDescriptor = { key: descriptor.key || null, params: params || null, fallback: descriptor.fallback, type };
+        renderMessage(text, type);
+    }
+
+    function reapplyLastMessage() {
+        if (!lastMessageDescriptor) return;
+        const { key, params, fallback, type } = lastMessageDescriptor;
+        const text = translate(key, params, fallback);
+        renderMessage(text, type || 'info');
     }
 
     function setStageHasImage(hasImage) {
@@ -425,14 +517,18 @@
             refs.metaModified.textContent = '-';
             return;
         }
-        refs.metaName.textContent = currentFile.name || '(名称未設定)';
-        refs.metaType.textContent = currentFile.type || '不明';
+        refs.metaName.textContent = currentFile.name || translate('tools.imageViewer.meta.nameFallback', null, '(Untitled)');
+        refs.metaType.textContent = currentFile.type || translate('tools.imageViewer.meta.typeFallback', null, 'Unknown');
         refs.metaSize.textContent = formatFileSize(currentFile.size);
         refs.metaDimensions.textContent = (naturalSize.width && naturalSize.height)
-            ? `${naturalSize.width} × ${naturalSize.height} px`
+            ? translate(
+                'tools.imageViewer.meta.dimensionsValue',
+                { width: naturalSize.width, height: naturalSize.height },
+                ({ width, height }) => `${width} × ${height} px`
+            )
             : '-';
         if (typeof currentFile.lastModified === 'number') {
-            refs.metaModified.textContent = dateFormatter.format(new Date(currentFile.lastModified));
+            refs.metaModified.textContent = formatMetaDate(currentFile.lastModified);
         } else {
             refs.metaModified.textContent = '-';
         }
@@ -474,18 +570,18 @@
         applyPendingTransform();
         updateTransform();
         updateValueLabels();
-        setMessage('画像を読み込みました。', 'success');
+        setMessage(MESSAGE_DESCRIPTORS.loadSuccess, 'success');
     }
 
     function handleImageError() {
-        setMessage('画像の読み込みに失敗しました。', 'error');
+        setMessage(MESSAGE_DESCRIPTORS.loadError, 'error');
         resetAllState();
     }
 
     function loadFile(file) {
         if (!file) return;
         if (!file.type || !file.type.startsWith('image/')) {
-            setMessage('画像ファイルのみ読み込み可能です。', 'error');
+            setMessage(MESSAGE_DESCRIPTORS.invalidType, 'error');
             return;
         }
         if (objectUrl) {
@@ -497,7 +593,7 @@
         setStageHasImage(false);
         resetTransformState();
         updateMeta();
-        setMessage('画像を読み込み中...', 'info');
+        setMessage(MESSAGE_DESCRIPTORS.loading, 'info');
         objectUrl = URL.createObjectURL(file);
         refs.image.src = objectUrl;
     }
@@ -554,7 +650,7 @@
         if (!currentFile) return;
         ev.preventDefault();
         resetTransformState();
-        setMessage('ビュー設定をリセットしました。', 'info');
+        setMessage(MESSAGE_DESCRIPTORS.resetView, 'info');
     }
 
     function onDragOver(ev) {
@@ -669,12 +765,12 @@
                 return;
             }
             resetTransformState();
-            setMessage('ビュー設定をリセットしました。', 'info');
+            setMessage(MESSAGE_DESCRIPTORS.resetView, 'info');
         });
 
         refs.resetAll.addEventListener('click', () => {
             resetAllState();
-            setMessage('画像ビューアを初期化しました。', 'info');
+            setMessage(MESSAGE_DESCRIPTORS.resetAll, 'info');
         });
 
         refs.zoom.addEventListener('input', () => {
@@ -769,8 +865,16 @@
         };
 
         if (!refs.stage || !refs.image || !refs.file) {
-            console.warn('[ImageViewer] 必須要素が見つかりません。');
+            console.warn(translate(
+                MESSAGE_DESCRIPTORS.missingElements.key,
+                null,
+                MESSAGE_DESCRIPTORS.missingElements.fallback
+            ));
             return;
+        }
+
+        if (i18n && typeof i18n.applyTranslations === 'function') {
+            i18n.applyTranslations(context.panel);
         }
 
         refs.image.addEventListener('load', handleImageLoad);
@@ -778,8 +882,19 @@
 
         resetAllState();
         bindControlEvents();
-        updateMeta();
         clearMessage();
+
+        if (!localeUnsubscribe && i18n && typeof i18n.onLocaleChanged === 'function') {
+            localeUnsubscribe = i18n.onLocaleChanged(() => {
+                if (!refs?.panel) return;
+                if (typeof i18n.applyTranslations === 'function') {
+                    i18n.applyTranslations(refs.panel);
+                }
+                updateMeta();
+                updateValueLabels();
+                reapplyLastMessage();
+            });
+        }
 
         if (pendingSerializedState) {
             const payload = pendingSerializedState;

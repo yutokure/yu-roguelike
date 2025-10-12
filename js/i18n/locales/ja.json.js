@@ -15015,6 +15015,55 @@
           }
         }
       },
+      "imageViewer": {
+        "panelAriaLabel": "画像ビューア",
+        "header": {
+          "title": "画像ビューア",
+          "description": "ユーティリティカテゴリ向けのプレビュー。画像を読み込み、パン・ズーム・回転・伸縮・遠近変換を組み合わせて確認できます（変換はプレビューのみ）。"
+        },
+        "stage": {
+          "ariaLabel": "画像プレビュー領域",
+          "placeholder": "画像ファイルを選択するか、ここにドラッグ＆ドロップしてください。",
+          "hint": "ホイールでズーム、ドラッグでパン、ダブルクリックでビューをリセットします。",
+          "imageAlt": "選択した画像のプレビュー"
+        },
+        "upload": {
+          "select": "画像ファイルを選択",
+          "resetView": "ビューリセット",
+          "resetAll": "全てリセット"
+        },
+        "controls": {
+          "zoom": "ズーム",
+          "rotation": "回転",
+          "stretchX": "横伸縮",
+          "stretchY": "縦伸縮",
+          "perspective": "遠近距離",
+          "rotateX": "遠近X回転",
+          "rotateY": "遠近Y回転"
+        },
+        "meta": {
+          "title": "メタ情報",
+          "name": "ファイル名",
+          "type": "種類",
+          "size": "サイズ",
+          "dimensions": "画像解像度",
+          "modified": "最終更新日",
+          "nameFallback": "(名称未設定)",
+          "typeFallback": "不明",
+          "dimensionsValue": "{width} × {height} px"
+        },
+        "messages": {
+          "loadSuccess": "画像を読み込みました。",
+          "loadError": "画像の読み込みに失敗しました。",
+          "invalidType": "画像ファイルのみ読み込み可能です。",
+          "loading": "画像を読み込み中...",
+          "resetView": "ビュー設定をリセットしました。",
+          "resetAll": "画像ビューアを初期化しました。"
+        },
+        "errors": {
+          "missingElements": "[ImageViewer] 必須要素が見つかりません。"
+        }
+      },
       "blockdataEditor": {
         "panelAriaLabel": "ブロックデータ編集ツール",
         "header": {

@@ -28,6 +28,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['board']
   },
   {
+    id: 'othello_weak',
+    name: '最弱オセロ',
+    nameKey: 'selection.miniexp.games.othello_weak.name',
+    entry: 'games/othello_weak.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '少ない石で勝利する最弱オセロ。難易度が高いほどAIが自滅',
+    descriptionKey: 'selection.miniexp.games.othello_weak.description',
+    category: 'ボード',
+    categories: ['ボード'],
+    categoryIds: ['board']
+  },
+  {
     id: 'checkers',
     name: 'チェッカー',
     nameKey: 'selection.miniexp.games.checkers.name',

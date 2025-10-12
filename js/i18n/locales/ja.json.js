@@ -559,6 +559,10 @@
             "name": "オセロ",
             "description": "ひっくり返し×0.5EXP＋勝利ボーナス"
           },
+          "othello_weak": {
+            "name": "最弱オセロ",
+            "description": "石が少ないほど勝ち。難易度が高いほどAIがわざと悪手を選びます"
+          },
           "checkers": {
             "name": "チェッカー",
             "description": "ジャンプで駒取りしつつ王冠を目指すクラシックボードゲーム"
@@ -14307,6 +14311,30 @@
           "result": {
             "win": "あなたの勝ち！",
             "loss": "あなたの負け…",
+            "draw": "引き分け"
+          }
+        },
+        "popup": {
+          "movePreview": "{flips}枚 / 予想+{xp}EXP"
+        }
+      },
+      "othello_weak": {
+        "hud": {
+          "status": {
+            "ended": "ゲーム終了",
+            "playerTurn": "あなたの番（クリックで配置）",
+            "aiTurn": "AIの番"
+          },
+          "discCount": "あなた {player}枚 / AI {ai}枚",
+          "rule": "目標: 自分の石をより少なく保とう"
+        },
+        "overlay": {
+          "title": "ゲーム終了",
+          "summary": "あなた {player}枚 ・ AI {ai}枚",
+          "restartHint": "Rで再開 / 再起動できます",
+          "result": {
+            "win": "石が少なく勝利！",
+            "loss": "石が多すぎて負け…",
             "draw": "引き分け"
           }
         },

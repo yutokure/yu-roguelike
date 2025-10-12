@@ -557,6 +557,10 @@
             "name": "Othello",
             "description": "Flip discs to swing the board and win for bonus EXP."
           },
+          "othello_weak": {
+            "name": "Weakest Othello",
+            "description": "A misère twist where fewer discs win and higher difficulties make the AI blunder on purpose."
+          },
           "checkers": {
             "name": "Checkers",
             "description": "Jump enemy pieces and crown your men in a classic board duel."
@@ -14301,6 +14305,30 @@
           "result": {
             "win": "You win!",
             "loss": "You lose…",
+            "draw": "Draw"
+          }
+        },
+        "popup": {
+          "movePreview": "{flips} flips / approx +{xp} EXP"
+        }
+      },
+      "othello_weak": {
+        "hud": {
+          "status": {
+            "ended": "Game Over",
+            "playerTurn": "Your turn (click to place)",
+            "aiTurn": "AI turn"
+          },
+          "discCount": "You: {player} / AI: {ai}",
+          "rule": "Goal: finish with fewer discs"
+        },
+        "overlay": {
+          "title": "Game Over",
+          "summary": "You {player} • AI {ai}",
+          "restartHint": "Press R to restart",
+          "result": {
+            "win": "Fewer discs — you win!",
+            "loss": "Too many discs — you lose…",
             "draw": "Draw"
           }
         },

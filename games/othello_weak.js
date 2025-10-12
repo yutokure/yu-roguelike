@@ -90,6 +90,13 @@
       return false;
     }
 
+    function isCorner(x, y){
+      return (x === 0 || x === SIZE-1) && (y === 0 || y === SIZE-1);
+    }
+    function isEdge(x, y){
+      return x === 0 || x === SIZE-1 || y === 0 || y === SIZE-1;
+    }
+
     function evaluateMoveNormal(mv){
       let score = mv.flips.length * 1.6;
       score += POSITION_WEIGHTS[mv.y][mv.x];
@@ -99,6 +106,39 @@
       const oppMoves = legalMoves(BLACK, simulated).length;
       score += (myFollow - oppMoves) * 1.2;
       return score;
+    }
+
+    function countDiscsOnBoard(targetBoard){
+      let white = 0, black = 0, empty = 0;
+      for (let y = 0; y < SIZE; y++){
+        for (let x = 0; x < SIZE; x++){
+          const cell = targetBoard[y][x];
+          if (cell === WHITE) white++;
+          else if (cell === BLACK) black++;
+          else empty++;
+        }
+      }
+      return { white, black, empty };
+    }
+
+    function evaluateMoveSabotage(mv){
+      const simulated = applyMoveOnBoard(board, mv, WHITE);
+      const counts = countDiscsOnBoard(simulated);
+      const oppMoves = legalMoves(BLACK, simulated);
+      const myMoves = legalMoves(WHITE, simulated);
+      let value = 0;
+      if (isCorner(mv.x, mv.y)) value -= 250;
+      else if (isEdge(mv.x, mv.y)) value -= 15;
+      if (isAdjacentToEmptyCorner(mv.x, mv.y, board)) value += 80;
+      const oppCornerChances = oppMoves.filter(m => isCorner(m.x, m.y)).length;
+      value += oppCornerChances * 140;
+      if (oppMoves.length === 0) value -= 40;
+      if (myMoves.length === 0 && oppMoves.length > 0) value += 60;
+      value += (oppMoves.length - myMoves.length) * 10;
+      value += (counts.black - counts.white) * 6;
+      value -= mv.flips.length * 3;
+      value += Math.random();
+      return value;
     }
 
     function evaluateBoard(targetBoard){
@@ -283,7 +323,18 @@
       }
       let choice = null;
       if (difficulty==='EASY'){
-        choice = pickWeakMove(moves, WEAKNESS_EXPONENT.EASY, { randomBlunderChance: 0.3 });
+        let best = -Infinity;
+        let maxDepth = HARD_DEPTH;
+        const { empty } = countDiscsOnBoard(board);
+        if (empty <= 10) maxDepth = HARD_DEPTH + 1;
+        for (const mv of moves){
+          const next = applyMoveOnBoard(board, mv, WHITE);
+          const val = minimax(next, maxDepth-1, false, -Infinity, Infinity);
+          if (val > best){
+            best = val;
+            choice = mv;
+          }
+        }
       } else if (difficulty === 'NORMAL'){
         if (moves.length <= 3 && Math.random() < 0.25){
           choice = moves[(Math.random()*moves.length)|0];
@@ -291,20 +342,14 @@
           choice = pickWeakMove(moves, WEAKNESS_EXPONENT.NORMAL);
         }
       } else {
-        const scored = moves.map(mv => ({ mv, value: evaluateMoveNormal(mv) }));
-        scored.sort((a,b)=>a.value - b.value);
-        const worst = scored[0];
-        const consider = scored.slice(0, Math.min(3, scored.length));
-        let bestVal = Infinity;
-        for (const cand of consider){
-          const next = applyMoveOnBoard(board, cand.mv, WHITE);
-          const val = minimax(next, HARD_DEPTH-1, false, -Infinity, Infinity);
-          if (val < bestVal){
-            bestVal = val;
-            choice = cand.mv;
-          }
+        const sabotage = moves.map(mv => ({ mv, value: evaluateMoveSabotage(mv) }));
+        sabotage.sort((a,b)=>b.value - a.value);
+        const topValue = sabotage[0]?.value ?? -Infinity;
+        const topCandidates = sabotage.filter(s => (topValue - s.value) <= 20);
+        if (topCandidates.length>0){
+          choice = topCandidates[(Math.random()*topCandidates.length)|0].mv;
         }
-        if (!choice) choice = pickWeakMove(moves, WEAKNESS_EXPONENT.HARD, { preferSecondWhenLimited: true }) || worst.mv;
+        if (!choice) choice = sabotage[0]?.mv || pickWeakMove(moves, WEAKNESS_EXPONENT.HARD, { preferSecondWhenLimited: true });
       }
       if (!choice) choice = moves[(Math.random()*moves.length)|0];
       applyMove(choice, WHITE, false);

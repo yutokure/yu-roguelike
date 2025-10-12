@@ -167,6 +167,38 @@
 
     let i18n = (typeof window !== 'undefined' && typeof window.I18n === 'object') ? window.I18n : null;
     const playerApi = (opts && typeof opts === 'object' && opts.player && typeof opts.player === 'object') ? opts.player : null;
+    const shortcuts = (opts && typeof opts === 'object' && opts.shortcuts && typeof opts.shortcuts === 'object') ? opts.shortcuts : null;
+
+    const HOST_SHORTCUT_KEYS = Object.freeze(['r', 'p']);
+    let hostShortcutsSuppressed = false;
+
+    function suppressHostShortcuts(){
+      if (hostShortcutsSuppressed || !shortcuts) return;
+      HOST_SHORTCUT_KEYS.forEach(key => {
+        try {
+          if (typeof shortcuts.disableKey === 'function') {
+            shortcuts.disableKey.call(shortcuts, key);
+          } else if (typeof shortcuts.setKeyEnabled === 'function') {
+            shortcuts.setKeyEnabled(key, false);
+          }
+        } catch {}
+      });
+      hostShortcutsSuppressed = true;
+    }
+
+    function restoreHostShortcuts(){
+      if (!hostShortcutsSuppressed || !shortcuts) return;
+      HOST_SHORTCUT_KEYS.forEach(key => {
+        try {
+          if (typeof shortcuts.enableKey === 'function') {
+            shortcuts.enableKey.call(shortcuts, key);
+          } else if (typeof shortcuts.setKeyEnabled === 'function') {
+            shortcuts.setKeyEnabled(key, true);
+          }
+        } catch {}
+      });
+      hostShortcutsSuppressed = false;
+    }
 
     const getI18n = () => {
       if (typeof window !== 'undefined' && typeof window.I18n === 'object'){
@@ -457,14 +489,15 @@
     passiveToggleLabel.appendChild(passiveEnableInput);
     passiveToggleLabel.appendChild(passiveEnableText);
 
-    const passiveOrbIdInput = document.createElement('input');
-    passiveOrbIdInput.type = 'text';
-    passiveOrbIdInput.maxLength = MAX_REWARD_KEY_LENGTH;
+    const passiveOrbIdInput = document.createElement('select');
     passiveOrbIdInput.style.padding = '8px 10px';
     passiveOrbIdInput.style.borderRadius = '8px';
     passiveOrbIdInput.style.border = '1px solid #cbd5f5';
     passiveOrbIdInput.style.fontSize = '13px';
-    passiveOrbIdInput.style.minWidth = '180px';
+    passiveOrbIdInput.style.minWidth = '200px';
+    passiveOrbIdInput.style.background = '#ffffff';
+    passiveOrbIdInput.style.color = '#111827';
+    passiveOrbIdInput.style.cursor = 'pointer';
 
     const passiveAmountLabel = makeAmountLabel();
     const passiveAmountText = document.createElement('span');
@@ -495,14 +528,15 @@
     itemToggleLabel.appendChild(itemEnableInput);
     itemToggleLabel.appendChild(itemEnableText);
 
-    const itemKeyInput = document.createElement('input');
-    itemKeyInput.type = 'text';
-    itemKeyInput.maxLength = MAX_REWARD_KEY_LENGTH;
+    const itemKeyInput = document.createElement('select');
     itemKeyInput.style.padding = '8px 10px';
     itemKeyInput.style.borderRadius = '8px';
     itemKeyInput.style.border = '1px solid #cbd5f5';
     itemKeyInput.style.fontSize = '13px';
-    itemKeyInput.style.minWidth = '180px';
+    itemKeyInput.style.minWidth = '200px';
+    itemKeyInput.style.background = '#ffffff';
+    itemKeyInput.style.color = '#111827';
+    itemKeyInput.style.cursor = 'pointer';
 
     const itemAmountLabel = makeAmountLabel();
     const itemAmountText = document.createElement('span');
@@ -552,6 +586,154 @@
     spRow.appendChild(spToggleLabel);
     spRow.appendChild(spAmountLabel);
     rewardsSection.appendChild(spRow);
+
+    const PASSIVE_ORB_DEFS_REF = (typeof window !== 'undefined' && window.PASSIVE_ORB_DEFS && typeof window.PASSIVE_ORB_DEFS === 'object') ? window.PASSIVE_ORB_DEFS : {};
+    const PASSIVE_ORB_KNOWN_IDS = (() => {
+      const ids = new Set();
+      if (typeof window !== 'undefined' && Array.isArray(window.PASSIVE_ORB_IDS)) {
+        window.PASSIVE_ORB_IDS.forEach(id => ids.add(id));
+      }
+      Object.keys(PASSIVE_ORB_DEFS_REF || {}).forEach(id => ids.add(id));
+      return ids;
+    })();
+
+    const DEFAULT_ITEM_IDS = Object.freeze(['potion30', 'hpBoost', 'atkBoost', 'defBoost', 'hpBoostMajor', 'atkBoostMajor', 'defBoostMajor', 'spElixir']);
+    const DEFAULT_ITEM_LABEL_MAP = Object.freeze({
+      potion30: 'Potion (30%)',
+      hpBoost: 'HP Boost',
+      atkBoost: 'ATK Boost',
+      defBoost: 'DEF Boost',
+      hpBoostMajor: 'Grand HP Boost',
+      atkBoostMajor: 'Grand ATK Boost',
+      defBoostMajor: 'Grand DEF Boost',
+      spElixir: 'SP Elixir'
+    });
+
+    function ensureSelectHasValue(select, value, label){
+      if (!select || !value) return;
+      const exists = Array.from(select.options).some(option => option.value === value);
+      if (exists) return;
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label || value;
+      select.appendChild(option);
+    }
+
+    function getPassiveOrbLabel(id){
+      if (!id) return '';
+      const fallbackLabel = (PASSIVE_ORB_DEFS_REF && PASSIVE_ORB_DEFS_REF[id] && typeof PASSIVE_ORB_DEFS_REF[id].label === 'string')
+        ? PASSIVE_ORB_DEFS_REF[id].label
+        : id;
+      let label = translate(`game.passiveOrb.orbs.${id}.name`, () => fallbackLabel);
+      if (!PASSIVE_ORB_KNOWN_IDS.has(id) && (!label || label === id)){ 
+        label = translate('games.todoList.form.rewards.passiveOrb.customOption', '{value} (保存済み)', { value: id });
+      }
+      return label || id;
+    }
+
+    function getItemLabel(id){
+      if (!id) return '';
+      const fallback = DEFAULT_ITEM_LABEL_MAP[id] || id;
+      let label = translate(`game.items.${id}.label`, () => fallback);
+      if ((!DEFAULT_ITEM_IDS.includes(id)) && (!label || label === fallback || label === id)){
+        label = translate('games.todoList.form.rewards.item.customOption', '{value} (保存済み)', { value: id });
+      }
+      return label || id;
+    }
+
+    function collectPassiveOrbIds(){
+      const ids = new Set();
+      PASSIVE_ORB_KNOWN_IDS.forEach(id => ids.add(id));
+      if (typeof playerApi?.getState === 'function'){
+        try {
+          const snapshot = playerApi.getState();
+          const inventory = snapshot && typeof snapshot === 'object' ? snapshot.inventory : null;
+          const passiveOrbs = inventory && typeof inventory === 'object' ? inventory.passiveOrbs : null;
+          if (passiveOrbs && typeof passiveOrbs === 'object'){
+            Object.keys(passiveOrbs).forEach(id => ids.add(id));
+          }
+        } catch {}
+      }
+      state.tasks.forEach(task => {
+        const rewards = ensureTaskRewards(task);
+        if (rewards.passiveOrb?.orbId) ids.add(rewards.passiveOrb.orbId);
+      });
+      return Array.from(ids).filter(Boolean);
+    }
+
+    function collectItemIds(){
+      const ids = new Set(DEFAULT_ITEM_IDS);
+      if (typeof playerApi?.getState === 'function'){
+        try {
+          const snapshot = playerApi.getState();
+          const inventory = snapshot && typeof snapshot === 'object' ? snapshot.inventory : null;
+          if (inventory && typeof inventory === 'object'){
+            Object.keys(inventory).forEach(key => {
+              if (!key || key === 'passiveOrbs' || key === 'skillCharms') return;
+              ids.add(key);
+            });
+          }
+        } catch {}
+      }
+      state.tasks.forEach(task => {
+        const rewards = ensureTaskRewards(task);
+        if (rewards.item?.key) ids.add(rewards.item.key);
+      });
+      return Array.from(ids).filter(Boolean);
+    }
+
+    function refreshPassiveOrbSelect(preserveValue = true){
+      const previous = preserveValue ? passiveOrbIdInput.value : '';
+      const placeholderText = translate('games.todoList.form.rewards.passiveOrb.selectPlaceholder', 'パッシブオーブを選択');
+      const entries = collectPassiveOrbIds().map(id => ({
+        value: id,
+        label: getPassiveOrbLabel(id)
+      })).sort((a, b) => a.label.localeCompare(b.label));
+      passiveOrbIdInput.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = placeholderText;
+      passiveOrbIdInput.appendChild(placeholder);
+      entries.forEach(({ value, label }) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        passiveOrbIdInput.appendChild(option);
+      });
+      if (previous && Array.from(passiveOrbIdInput.options).some(option => option.value === previous)){
+        passiveOrbIdInput.value = previous;
+      } else {
+        passiveOrbIdInput.value = '';
+      }
+    }
+
+    function refreshItemSelect(preserveValue = true){
+      const previous = preserveValue ? itemKeyInput.value : '';
+      const placeholderText = translate('games.todoList.form.rewards.item.selectPlaceholder', 'アイテムを選択');
+      const entries = collectItemIds().map(id => ({
+        value: id,
+        label: getItemLabel(id)
+      })).sort((a, b) => a.label.localeCompare(b.label));
+      itemKeyInput.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = placeholderText;
+      itemKeyInput.appendChild(placeholder);
+      entries.forEach(({ value, label }) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        itemKeyInput.appendChild(option);
+      });
+      if (previous && Array.from(itemKeyInput.options).some(option => option.value === previous)){
+        itemKeyInput.value = previous;
+      } else {
+        itemKeyInput.value = '';
+      }
+    }
+
+    refreshPassiveOrbSelect(false);
+    refreshItemSelect(false);
 
     function updatePassiveRowState(){
       const enabled = !!passiveEnableInput.checked;
@@ -719,6 +901,8 @@
     function resetForm(){
       state.editingTaskId = null;
       setFormMode('create');
+      refreshPassiveOrbSelect(false);
+      refreshItemSelect(false);
       nameInput.value = '';
       typeSelect.value = TASK_TYPE_SINGLE;
       xpInput.value = '25';
@@ -740,6 +924,8 @@
     function fillForm(task){
       state.editingTaskId = task.id;
       setFormMode('edit');
+      refreshPassiveOrbSelect(false);
+      refreshItemSelect(false);
       nameInput.value = task.autoName ? '' : task.name;
       typeSelect.value = sanitizeTaskType(task.type);
       xpInput.value = String(task.xp);
@@ -747,9 +933,15 @@
       memoInput.value = task.memo;
       const rewards = ensureTaskRewards(task);
       passiveEnableInput.checked = !!rewards.passiveOrb.enabled;
+      if (rewards.passiveOrb?.orbId){
+        ensureSelectHasValue(passiveOrbIdInput, rewards.passiveOrb.orbId, getPassiveOrbLabel(rewards.passiveOrb.orbId));
+      }
       passiveOrbIdInput.value = rewards.passiveOrb.orbId || '';
       passiveAmountInput.value = String(rewards.passiveOrb.amount || 1);
       itemEnableInput.checked = !!rewards.item.enabled;
+      if (rewards.item?.key){
+        ensureSelectHasValue(itemKeyInput, rewards.item.key, getItemLabel(rewards.item.key));
+      }
       itemKeyInput.value = rewards.item.key || '';
       itemAmountInput.value = String(rewards.item.amount || 1);
       spEnableInput.checked = !!rewards.sp.enabled;
@@ -854,16 +1046,23 @@
       xpLabelText.textContent = translate('games.todoList.form.xp', 'EXP変化量（マイナスで没収）');
       rewardsTitle.textContent = translate('games.todoList.form.rewards.title', '追加報酬');
       passiveEnableText.textContent = translate('games.todoList.form.rewards.passiveOrb.label', 'パッシブオーブ');
-      passiveOrbIdInput.placeholder = translate('games.todoList.form.rewards.passiveOrb.placeholder', '例: attackBoost');
+      const passiveSelectPlaceholder = translate('games.todoList.form.rewards.passiveOrb.selectPlaceholder', 'パッシブオーブを選択');
+      passiveOrbIdInput.title = passiveSelectPlaceholder;
+      passiveOrbIdInput.setAttribute('aria-label', passiveSelectPlaceholder);
       passiveAmountText.textContent = translate('games.todoList.form.rewards.passiveOrb.amount', '個数');
       itemEnableText.textContent = translate('games.todoList.form.rewards.item.label', 'アイテム');
-      itemKeyInput.placeholder = translate('games.todoList.form.rewards.item.placeholder', '例: potion30');
+      const itemSelectPlaceholder = translate('games.todoList.form.rewards.item.selectPlaceholder', 'アイテムを選択');
+      itemKeyInput.title = itemSelectPlaceholder;
+      itemKeyInput.setAttribute('aria-label', itemSelectPlaceholder);
       itemAmountText.textContent = translate('games.todoList.form.rewards.item.amount', '個数（マイナスで没収）');
       spEnableText.textContent = translate('games.todoList.form.rewards.sp.label', 'SP');
       spAmountText.textContent = translate('games.todoList.form.rewards.sp.amount', '量');
       colorLabelText.textContent = translate('games.todoList.form.color', 'カラー');
       memoLabelText.textContent = translate('games.todoList.form.memo', 'メモ');
       memoInput.placeholder = translate('games.todoList.form.memoPlaceholder', '補足情報やチェックポイントなどを入力');
+
+      refreshPassiveOrbSelect(true);
+      refreshItemSelect(true);
 
       cancelBtn.textContent = translate('games.todoList.form.cancel', 'キャンセル');
 
@@ -1305,6 +1504,7 @@
     function start(){
       if (isRunning) return;
       isRunning = true;
+      suppressHostShortcuts();
       updateStats();
       renderLists();
       nameInput.focus();
@@ -1313,11 +1513,13 @@
     function stop(){
       if (!isRunning) return;
       isRunning = false;
+      restoreHostShortcuts();
       persist();
     }
 
     function destroy(){
       stop();
+      restoreHostShortcuts();
       if (typeof localeUnsubscribe === 'function'){
         localeUnsubscribe();
         localeUnsubscribe = null;

@@ -1096,4 +1096,12 @@
     if (global.ToolsTab?.registerTool) {
         global.ToolsTab.registerTool('blockdata-editor', initBlockDataEditor);
     }
+    if (global.ToolStateRegistry?.register) {
+        global.ToolStateRegistry.register('blockDataEditor', {
+            getState: () => exportSerializedState(),
+            setState: (snapshot) => importSerializedState(snapshot),
+            labelKey: 'tools.sidebar.stateManager.toolNames.blockDataEditor',
+            labelFallback: 'BlockData編集'
+        });
+    }
 })(window);

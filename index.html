@@ -743,41 +743,50 @@
                                 </div>
                             </div>
                         </section>
-                        <section id="tool-blockdata-editor" class="tool-panel" data-tool-panel="blockdata-editor" aria-label="ブロックデータ編集ツール">
+                        <section id="tool-blockdata-editor" class="tool-panel" data-tool-panel="blockdata-editor" aria-label="ブロックデータ編集ツール" data-i18n-attr="aria-label:tools.blockdataEditor.panelAriaLabel">
                             <header class="tool-panel-header">
-                                <h3>BlockDataビジュアルエディタ</h3>
-                                <p>blockdata.json を読み込み、BlockDimブロックの一覧・編集・書き出しを行います。</p>
+                                <h3 data-i18n="tools.blockdataEditor.header.title">BlockDataビジュアルエディタ</h3>
+                                <p data-i18n="tools.blockdataEditor.header.description">blockdata.json を読み込み、BlockDimブロックの一覧・編集・書き出しを行います。</p>
                             </header>
                             <div class="blockdata-editor">
-                                <aside class="blockdata-sidebar" aria-label="ブロック一覧">
+                                <aside class="blockdata-sidebar" aria-label="ブロック一覧" data-i18n-attr="aria-label:tools.blockdataEditor.sidebar.ariaLabel">
                                     <div class="blockdata-group">
-                                        <span class="blockdata-group-label">対象セット</span>
-                                        <div class="blockdata-group-buttons" role="tablist" aria-label="BlockDataセット">
-                                            <button type="button" class="blockdata-group-button active" data-block-group="blocks1" aria-pressed="true">1stブロック <span class="count" aria-hidden="true">0</span></button>
-                                            <button type="button" class="blockdata-group-button" data-block-group="blocks2" aria-pressed="false">2ndブロック <span class="count" aria-hidden="true">0</span></button>
-                                            <button type="button" class="blockdata-group-button" data-block-group="blocks3" aria-pressed="false">3rdブロック <span class="count" aria-hidden="true">0</span></button>
+                                        <span class="blockdata-group-label" data-i18n="tools.blockdataEditor.sidebar.groupLabel">対象セット</span>
+                                        <div class="blockdata-group-buttons" role="tablist" aria-label="BlockDataセット" data-i18n-attr="aria-label:tools.blockdataEditor.sidebar.groupAriaLabel">
+                                            <button type="button" class="blockdata-group-button active" data-block-group="blocks1" aria-pressed="true">
+                                                <span class="label" data-i18n="tools.blockdataEditor.sidebar.groups.blocks1">1stブロック</span>
+                                                <span class="count" aria-hidden="true">0</span>
+                                            </button>
+                                            <button type="button" class="blockdata-group-button" data-block-group="blocks2" aria-pressed="false">
+                                                <span class="label" data-i18n="tools.blockdataEditor.sidebar.groups.blocks2">2ndブロック</span>
+                                                <span class="count" aria-hidden="true">0</span>
+                                            </button>
+                                            <button type="button" class="blockdata-group-button" data-block-group="blocks3" aria-pressed="false">
+                                                <span class="label" data-i18n="tools.blockdataEditor.sidebar.groups.blocks3">3rdブロック</span>
+                                                <span class="count" aria-hidden="true">0</span>
+                                            </button>
                                         </div>
                                     </div>
                                     <label class="blockdata-search" for="blockdata-search-input">
-                                        <span>検索</span>
-                                        <input id="blockdata-search-input" type="search" placeholder="名前 / キーで絞り込み">
+                                        <span data-i18n="tools.blockdataEditor.sidebar.searchLabel">検索</span>
+                                        <input id="blockdata-search-input" type="search" placeholder="名前 / キーで絞り込み" data-i18n-attr="placeholder:tools.blockdataEditor.sidebar.searchPlaceholder">
                                     </label>
                                     <div class="blockdata-sidebar-actions">
-                                        <button type="button" id="blockdata-create" class="blockdata-primary">+ 新規ブロック</button>
+                                        <button type="button" id="blockdata-create" class="blockdata-primary" data-i18n="tools.blockdataEditor.sidebar.create">+ 新規ブロック</button>
                                     </div>
-                                    <div id="blockdata-list" class="blockdata-list" role="listbox" aria-label="ブロック候補"></div>
+                                    <div id="blockdata-list" class="blockdata-list" role="listbox" aria-label="ブロック候補" data-i18n-attr="aria-label:tools.blockdataEditor.sidebar.listAriaLabel"></div>
                                 </aside>
                                 <div class="blockdata-main">
                                     <div class="blockdata-filebar">
                                         <label class="blockdata-version">
-                                            <span>バージョン</span>
+                                            <span data-i18n="tools.blockdataEditor.main.versionLabel">バージョン</span>
                                             <input id="blockdata-version" type="number" min="1" step="1" value="1">
                                         </label>
                                         <div class="blockdata-file-actions">
-                                            <button type="button" id="blockdata-reload">再読込</button>
-                                            <button type="button" id="blockdata-import">インポート</button>
-                                            <button type="button" id="blockdata-copy">コピー</button>
-                                            <button type="button" id="blockdata-download">ダウンロード</button>
+                                            <button type="button" id="blockdata-reload" data-i18n="tools.blockdataEditor.main.actions.reload">再読込</button>
+                                            <button type="button" id="blockdata-import" data-i18n="tools.blockdataEditor.main.actions.import">インポート</button>
+                                            <button type="button" id="blockdata-copy" data-i18n="tools.blockdataEditor.main.actions.copy">コピー</button>
+                                            <button type="button" id="blockdata-download" data-i18n="tools.blockdataEditor.main.actions.download">ダウンロード</button>
                                         </div>
                                         <input type="file" id="blockdata-import-file" accept="application/json" hidden>
                                     </div>
@@ -785,30 +794,30 @@
                                     <p id="blockdata-status" class="blockdata-status" role="status"></p>
                                     <form id="blockdata-form">
                                         <fieldset data-blockdata-fieldset disabled>
-                                            <legend id="blockdata-form-legend">ブロック詳細</legend>
+                                            <legend id="blockdata-form-legend" data-i18n="tools.blockdataEditor.main.formLegend">ブロック詳細</legend>
                                             <div class="blockdata-form-grid">
                                                 <label>
-                                                    <span>キー</span>
-                                                    <input id="blockdata-field-key" type="text" required placeholder="例: b3999">
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.key.label">キー</span>
+                                                    <input id="blockdata-field-key" type="text" required placeholder="例: b3999" data-i18n-attr="placeholder:tools.blockdataEditor.main.fields.key.placeholder">
                                                 </label>
                                                 <label>
-                                                    <span>名前</span>
-                                                    <input id="blockdata-field-name" type="text" required placeholder="ブロック名">
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.name.label">名前</span>
+                                                    <input id="blockdata-field-name" type="text" required placeholder="ブロック名" data-i18n-attr="placeholder:tools.blockdataEditor.main.fields.name.placeholder">
                                                 </label>
                                                 <label>
-                                                    <span>推奨Lv</span>
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.level.label">推奨Lv</span>
                                                     <input id="blockdata-field-level" type="number" step="1" value="0">
                                                 </label>
                                                 <label>
-                                                    <span>サイズ</span>
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.size.label">サイズ</span>
                                                     <input id="blockdata-field-size" type="number" step="1" value="0">
                                                 </label>
                                                 <label>
-                                                    <span>深さ</span>
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.depth.label">深さ</span>
                                                     <input id="blockdata-field-depth" type="number" step="1" value="0">
                                                 </label>
                                                 <label>
-                                                    <span>宝箱</span>
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.chest.label">宝箱</span>
                                                     <select id="blockdata-field-chest">
                                                         <option value="normal">normal</option>
                                                         <option value="more">more</option>
@@ -816,27 +825,27 @@
                                                     </select>
                                                 </label>
                                                 <label>
-                                                    <span>タイプ</span>
-                                                    <input id="blockdata-field-type" type="text" list="blockdata-type-options" placeholder="例: maze">
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.type.label">タイプ</span>
+                                                    <input id="blockdata-field-type" type="text" list="blockdata-type-options" placeholder="例: maze" data-i18n-attr="placeholder:tools.blockdataEditor.main.fields.type.placeholder">
                                                 </label>
                                                 <label class="full">
-                                                    <span>ボス階層</span>
-                                                    <input id="blockdata-field-bossfloors" type="text" placeholder="カンマ区切り (例: 5,10)">
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.bossFloors.label">ボス階層</span>
+                                                    <input id="blockdata-field-bossfloors" type="text" placeholder="カンマ区切り (例: 5,10)" data-i18n-attr="placeholder:tools.blockdataEditor.main.fields.bossFloors.placeholder">
                                                 </label>
                                                 <label class="full">
-                                                    <span>追加プロパティ(JSON)</span>
+                                                    <span data-i18n="tools.blockdataEditor.main.fields.extras.label">追加プロパティ(JSON)</span>
                                                     <textarea id="blockdata-field-extras" rows="4" placeholder="{}"></textarea>
                                                 </label>
                                             </div>
                                         </fieldset>
                                         <div class="blockdata-form-actions">
-                                            <button type="button" id="blockdata-save" class="blockdata-primary" disabled>選択を保存</button>
-                                            <button type="button" id="blockdata-delete" class="blockdata-danger" disabled>削除</button>
+                                            <button type="button" id="blockdata-save" class="blockdata-primary" disabled data-i18n="tools.blockdataEditor.main.formActions.save">選択を保存</button>
+                                            <button type="button" id="blockdata-delete" class="blockdata-danger" disabled data-i18n="tools.blockdataEditor.main.formActions.delete">削除</button>
                                         </div>
                                     </form>
-                                    <section class="blockdata-preview-section" aria-label="JSONプレビュー">
+                                    <section class="blockdata-preview-section" aria-label="JSONプレビュー" data-i18n-attr="aria-label:tools.blockdataEditor.main.preview.ariaLabel">
                                         <header>
-                                            <h4>blockdata.jsonプレビュー</h4>
+                                            <h4 data-i18n="tools.blockdataEditor.main.preview.title">blockdata.jsonプレビュー</h4>
                                             <span id="blockdata-preview-size" class="blockdata-preview-size"></span>
                                         </header>
                                         <textarea id="blockdata-json-preview" readonly></textarea>
@@ -857,6 +866,7 @@
                                 <option value="wide-maze"></option>
                                 <option value="snake"></option>
                             </datalist>
+                        </section>
                         <section id="tool-image-viewer" class="tool-panel" data-tool-panel="image-viewer" aria-label="画像ビューア">
                             <header class="tool-panel-header">
                                 <h3>画像ビューア</h3>

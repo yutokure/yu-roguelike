@@ -18562,14 +18562,35 @@ try {
 function spendExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     const v = Math.max(0, Math.floor(Number(amount) || 0));
     if (!Number.isFinite(v) || v <= 0) return 0;
-    const available = Math.max(0, Math.floor(player.exp || 0));
-    const spent = Math.min(v, available);
-    if (spent <= 0) return 0;
-    player.exp = Math.max(0, (player.exp || 0) - spent);
-    prevExp = player.exp || 0;
+    let remaining = v;
+    let totalSpent = 0;
+    while (remaining > 0) {
+        const available = Math.max(0, Math.floor(Number(player.exp) || 0));
+        if (available >= remaining) {
+            player.exp = available - remaining;
+            totalSpent += remaining;
+            remaining = 0;
+            break;
+        }
+        if (available > 0) {
+            player.exp = 0;
+            totalSpent += available;
+            remaining -= available;
+        }
+        if (remaining <= 0) break;
+        const leveledDown = adjustPlayerLevel(-1);
+        if (leveledDown >= 0) {
+            break;
+        }
+        player.exp = Math.max(0, Math.floor(Number(player.exp) || 0) + 1000);
+    }
+    const normalizedExp = Math.max(0, Math.floor(Number(player.exp) || 0));
+    player.exp = normalizedExp;
+    prevExp = normalizedExp;
+    if (totalSpent <= 0) return 0;
     if (opts.popup) {
         try {
-            const spentDisplay = formatNumberLocalized(Math.floor(spent));
+            const spentDisplay = formatNumberLocalized(Math.floor(totalSpent));
             const context = `${opts.source}${opts.reason ? ': ' + opts.reason : ''}`;
             addMessage({
                 key: 'game.events.exp.spent',
@@ -18581,7 +18602,7 @@ function spendExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
     try { markUiDirty(); } catch {}
     try { renderMiniExpPlayerHud(); } catch {}
     try { saveAll(); } catch {}
-    return spent;
+    return totalSpent;
 }
 
 function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {

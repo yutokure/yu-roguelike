@@ -12714,6 +12714,9 @@
             "empty": "No cards",
             "cleared": "Finished (Place {place})"
           },
+          "labels": {
+            "empty": "---"
+          },
           "player": {
             "finished": "Secured place {place}"
           }
@@ -12857,17 +12860,87 @@
             "newDeal": "New Deal (R)",
             "nextDeal": "Next Deal (R)"
           },
+          "players": {
+            "you": "You",
+            "north": "North",
+            "east": "East",
+            "west": "West",
+            "meta": "Hand {hand} cards / Round {round} pts / Total {total} pts"
+          },
           "status": {
             "summary": "Tricks {trick}/13 ・ Hearts broken {status}",
             "heartsBroken": {
               "yes": "Broken",
               "no": "Not yet"
             }
+          },
+          "hud": {
+            "scoreEntry": "{name} {score} pts",
+            "scoreSummary": "{you} / {north} / {east} / {west}"
+          },
+          "summary": {
+            "heartStatus": {
+              "yes": "Yes",
+              "no": "No"
+            },
+            "heartsBroken": "Hearts broken: {status}",
+            "rankingEntry": "{name}: {score} pts",
+            "roundResult": "Round result: {ranking}",
+            "turn": "{name}'s turn.",
+            "lead": "{name} leads."
+          },
+          "toast": {
+            "roundWin": "Won the deal of Hearts!",
+            "invalidCard": "You can't play that card."
           }
         },
         "spider": {
           "actions": {
-            "dealStock": "Deal Stock (D)"
+            "dealStock": "Deal Stock (D)",
+            "playAgain": "Play Again (R)"
+          },
+          "toast": {
+            "suitRunOnly": "You can only move runs of the same suit.",
+            "invalidDrop": "You can't drop cards on that column.",
+            "noDealToEmpty": "Can't deal while columns are empty.",
+            "sequenceComplete": "Completed a {card} suit sequence!",
+            "cleared": "Spider Solitaire cleared!"
+          },
+          "meta": {
+            "stock": "Stock deals {count}",
+            "completed": "Completed {completed} / 8"
+          },
+          "status": {
+            "summary": "Moves {moves} ・ Completed {completed}/8 ・ Stock {stock}"
+          },
+          "hud": {
+            "score": "Score {score} ・ Face-up {columns}"
+          }
+        },
+        "freecell": {
+          "toast": {
+            "alternatingRun": "Only alternating-color sequences can move.",
+            "notEnoughSpace": "Not enough free cells or empty columns.",
+            "invalidColumnDrop": "Only alternating colors descending by one can be placed.",
+            "cellSingle": "Cells can hold only one card.",
+            "cellOccupied": "That cell already has a card.",
+            "foundationOneAtATime": "Foundations accept one card at a time.",
+            "foundationSuit": "Cards must match the suit.",
+            "foundationExpected": "Expecting {rank}.",
+            "noMoves": "No available moves.",
+            "cleared": "FreeCell cleared! Congrats."
+          },
+          "hint": {
+            "moveToEmpty": "{card} can move to an empty column.",
+            "moveToStack": "{card} can move onto {target}.",
+            "moveToFoundation": "{card} can move to the foundation."
+          },
+          "status": {
+            "summary": "Moves {moves} ・ Free cells {freeCells} ・ Foundations {foundations}"
+          },
+          "hud": {
+            "bestMoves": "{value} moves",
+            "scoreSummary": "Total {plays} games / Wins {wins} / Best {best}"
           }
         },
         "baba": {
@@ -12879,6 +12952,96 @@
             "start": "Game start! Draw a card from the player on your right.",
             "finish": "Finished! Place {place}",
             "loser": "{name} is holding the joker. Game over!"
+          }
+        },
+        "poker": {
+          "playerTitle": "Your Hand",
+          "status": {
+            "selectHolds": "Select cards to hold, then press Draw.",
+            "resultSummary": "Winners: {winners} ・ You placed {placement} ({hand})"
+          },
+          "hud": {
+            "scoreSummary": "Total {plays} hands / Wins {wins} / Best {best}"
+          },
+          "players": {
+            "you": "You"
+          },
+          "opponents": {
+            "ai1": "AI-1",
+            "ai2": "AI-2",
+            "ai3": "AI-3"
+          },
+          "actions": {
+            "draw": "Draw (D)",
+            "showdown": "Showdown (S)",
+            "newHand": "New Hand (R)",
+            "nextHand": "Next Hand (R)"
+          },
+          "toast": {
+            "holdHint": "Mark cards as HOLD to keep them.",
+            "strategyHint": "Plan your holds to chase strong hands.",
+            "atLeastOneHold": "Keep at least one card.",
+            "maxDiscards": "You can discard at most three cards."
+          },
+          "opponent": {
+            "waiting": "Waiting for draw…"
+          },
+          "summary": {
+            "holdHint": "Cards kept show HOLD.",
+            "deckCount": "Deck: {count} cards",
+            "placement": "Placement: {place}"
+          },
+          "hands": {
+            "highCard": "High Card",
+            "onePair": "One Pair",
+            "twoPair": "Two Pair",
+            "threeKind": "Three of a Kind",
+            "straight": "Straight",
+            "flush": "Flush",
+            "fullHouse": "Full House",
+            "fourKind": "Four of a Kind",
+            "straightFlush": "Straight Flush",
+            "royalFlush": "Royal Flush"
+          }
+        },
+        "pageone": {
+          "players": {
+            "you": "You",
+            "north": "North",
+            "east": "East",
+            "west": "West"
+          },
+          "labels": {
+            "deck": "Deck",
+            "discard": "Discard",
+            "deckCount": "{count} cards"
+          },
+          "status": {
+            "playable": "Play a card matching rank or suit.",
+            "currentCard": "Current pile: {card}",
+            "yourTurn": "It's your turn.",
+            "turnOf": "{name}'s turn",
+            "winner": "{name} wins!"
+          },
+          "actions": {
+            "draw": "Draw (D)",
+            "declare": "Declare (P)",
+            "restart": "Restart (R)"
+          },
+          "toast": {
+            "declareReminder": "One card left! Press Declare.",
+            "alreadyDeclared": "You've already declared.",
+            "invalidDeclare": "You can only declare with one card left.",
+            "pageOne": "Page One!",
+            "missedDeclare": "No declaration – -10 EXP.",
+            "invalidCard": "You can't play that card."
+          },
+          "opponents": {
+            "meta": "{count} cards",
+            "metaDeclared": "{count} cards / Declared"
+          },
+          "hud": {
+            "scoreSummary": "Total {plays} games / Wins {wins}"
           }
         },
         "jiji": {

@@ -12716,6 +12716,9 @@
             "empty": "手札なし",
             "cleared": "上がり ({place}位)"
           },
+          "labels": {
+            "empty": "---"
+          },
           "player": {
             "finished": "{place} 位確定"
           }
@@ -12859,17 +12862,87 @@
             "newDeal": "新しいディール (R)",
             "nextDeal": "次のディール (R)"
           },
+          "players": {
+            "you": "あなた",
+            "north": "北",
+            "east": "東",
+            "west": "西",
+            "meta": "手札 {hand} 枚 / ラウンド {round} 点 / 通算 {total} 点"
+          },
           "status": {
             "summary": "トリック {trick}/13 ・ ハート解禁 {status}",
             "heartsBroken": {
               "yes": "済",
               "no": "未"
             }
+          },
+          "hud": {
+            "scoreEntry": "{name} {score} 点",
+            "scoreSummary": "{you} / {north} / {east} / {west}"
+          },
+          "summary": {
+            "heartStatus": {
+              "yes": "はい",
+              "no": "いいえ"
+            },
+            "heartsBroken": "ハート解禁: {status}",
+            "rankingEntry": "{name}: {score}点",
+            "roundResult": "ラウンド結果: {ranking}",
+            "turn": "{name} の番です。",
+            "lead": "{name} がリードします。"
+          },
+          "toast": {
+            "roundWin": "ハーツでラウンド勝利！",
+            "invalidCard": "そのカードは出せません。"
           }
         },
         "spider": {
           "actions": {
-            "dealStock": "山札を配る (D)"
+            "dealStock": "山札を配る (D)",
+            "playAgain": "もう一度遊ぶ (R)"
+          },
+          "toast": {
+            "suitRunOnly": "連続した同スートの列のみ移動できます。",
+            "invalidDrop": "その列には移動できません。",
+            "noDealToEmpty": "空の列があるときは配れません。",
+            "sequenceComplete": "{card} の列を完成！",
+            "cleared": "スパイダーソリティアを制覇！"
+          },
+          "meta": {
+            "stock": "山札 {count} 回",
+            "completed": "完成列 {completed} / 8"
+          },
+          "status": {
+            "summary": "移動 {moves} 回 ・ 完成列 {completed} / 8 ・ 山札 {stock}"
+          },
+          "hud": {
+            "score": "スコア {score} ・ 表向き {columns}"
+          }
+        },
+        "freecell": {
+          "toast": {
+            "alternatingRun": "交互色の連続したカードのみ移動できます。",
+            "notEnoughSpace": "空きセルと空列が不足しています。",
+            "invalidColumnDrop": "置けるのは交互色で1小さいカードです。",
+            "cellSingle": "セルには1枚のみ置けます。",
+            "cellOccupied": "すでにカードがあります。",
+            "foundationOneAtATime": "台札には1枚ずつ積みます。",
+            "foundationSuit": "同じスートのみ移動できます。",
+            "foundationExpected": "{rank} を待っています。",
+            "noMoves": "利用できる移動はありません。",
+            "cleared": "フリーセルクリア！おめでとうございます。"
+          },
+          "hint": {
+            "moveToEmpty": "{card} を空列へ移動できます。",
+            "moveToStack": "{card} を {target} の上に移動できます。",
+            "moveToFoundation": "{card} を台札に移動できます。"
+          },
+          "status": {
+            "summary": "移動 {moves} 回 ・ セル空き {freeCells} ・ 台札 {foundations}"
+          },
+          "hud": {
+            "bestMoves": "{value} 手",
+            "scoreSummary": "通算 {plays} 回 / 勝利 {wins} 回 / ベスト {best}"
           }
         },
         "baba": {
@@ -12881,6 +12954,96 @@
             "start": "ゲーム開始！右隣のプレイヤーからカードを引きましょう。",
             "finish": "上がり！順位 {place}",
             "loser": "{name} がジョーカーを持っています。ゲーム終了！"
+          }
+        },
+        "poker": {
+          "playerTitle": "あなたの手札",
+          "status": {
+            "selectHolds": "保持するカードを選んで「交換する」を押してください。",
+            "resultSummary": "勝者: {winners} ・ あなたは {placement} 位 ({hand})"
+          },
+          "hud": {
+            "scoreSummary": "通算 {plays} ハンド / 勝利 {wins} / ベスト {best}"
+          },
+          "players": {
+            "you": "あなた"
+          },
+          "opponents": {
+            "ai1": "AI-1",
+            "ai2": "AI-2",
+            "ai3": "AI-3"
+          },
+          "actions": {
+            "draw": "交換する (D)",
+            "showdown": "勝負 (S)",
+            "newHand": "新しいハンド (R)",
+            "nextHand": "次のハンド (R)"
+          },
+          "toast": {
+            "holdHint": "残したいカードを「HOLD」にして交換しましょう。",
+            "strategyHint": "保持するカードを工夫すると強い役が狙えます。",
+            "atLeastOneHold": "最低1枚は保持してください。",
+            "maxDiscards": "一度に捨てられるのは3枚までです。"
+          },
+          "opponent": {
+            "waiting": "交換待ち..."
+          },
+          "summary": {
+            "holdHint": "交換しないカードは「HOLD」が表示されます。",
+            "deckCount": "山札: {count} 枚",
+            "placement": "順位: {place} 位"
+          },
+          "hands": {
+            "highCard": "ハイカード",
+            "onePair": "ワンペア",
+            "twoPair": "ツーペア",
+            "threeKind": "スリーカード",
+            "straight": "ストレート",
+            "flush": "フラッシュ",
+            "fullHouse": "フルハウス",
+            "fourKind": "フォーカード",
+            "straightFlush": "ストレートフラッシュ",
+            "royalFlush": "ロイヤルフラッシュ"
+          }
+        },
+        "pageone": {
+          "players": {
+            "you": "あなた",
+            "north": "北",
+            "east": "東",
+            "west": "西"
+          },
+          "labels": {
+            "deck": "山札",
+            "discard": "捨て札",
+            "deckCount": "{count} 枚"
+          },
+          "status": {
+            "playable": "同じ数字か同じスートのカードを出してください。",
+            "currentCard": "現在の場: {card}",
+            "yourTurn": "あなたの番です。",
+            "turnOf": "{name} の番",
+            "winner": "{name} の勝利！"
+          },
+          "actions": {
+            "draw": "ドロー (D)",
+            "declare": "宣言する (P)",
+            "restart": "リスタート (R)"
+          },
+          "toast": {
+            "declareReminder": "残り1枚！「宣言する」を押してください。",
+            "alreadyDeclared": "すでに宣言済みです。",
+            "invalidDeclare": "宣言できるのは残り1枚のときだけです。",
+            "pageOne": "「ページワン！」",
+            "missedDeclare": "宣言していなかったため -10XP。",
+            "invalidCard": "そのカードは出せません。"
+          },
+          "opponents": {
+            "meta": "{count} 枚",
+            "metaDeclared": "{count} 枚 / 宣言済"
+          },
+          "hud": {
+            "scoreSummary": "通算 {plays} 回 / 勝利 {wins} 回"
           }
         },
         "jiji": {

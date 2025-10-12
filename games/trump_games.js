@@ -3153,7 +3153,12 @@
 
   function createSevensGame(container, ctx){
     const text = createTextResolver(ctx);
-    const playerNames = ['あなた', '北', '東', '西'];
+    const playerConfigs = [
+      { key: 'minigame.trump_games.sevens.players.you', fallback: 'あなた' },
+      { key: 'minigame.trump_games.sevens.players.north', fallback: '北' },
+      { key: 'minigame.trump_games.sevens.players.east', fallback: '東' },
+      { key: 'minigame.trump_games.sevens.players.west', fallback: '西' }
+    ];
     const suits = SUITS.filter(s => s.id !== 'joker');
     const root = document.createElement('div');
     root.className = 'mini-trump-table-game';
@@ -3188,18 +3193,18 @@
     handRow.className = 'mini-trump-hand-row';
     board.appendChild(handRow);
 
-    const playerEls = playerNames.map((name) => {
+    const playerEls = playerConfigs.map((config, idx) => {
       const el = document.createElement('div');
       el.className = 'mini-trump-table-player';
       const label = document.createElement('div');
       label.className = 'name';
-      label.textContent = name;
+      label.textContent = text(config.key, config.fallback);
       const meta = document.createElement('div');
       meta.className = 'meta';
       el.appendChild(label);
       el.appendChild(meta);
       playerList.appendChild(el);
-      return { el, meta };
+      return { el, meta, label, config, idx };
     });
 
     const state = {
@@ -3214,10 +3219,51 @@
       log: []
     };
 
+    function refreshPlayerNames(){
+      if (!state.players.length) return;
+      state.players.forEach((player, idx) => {
+        const entry = playerEls[idx];
+        if (!entry) return;
+        const name = text(entry.config.key, entry.config.fallback);
+        player.name = name;
+        entry.label.textContent = name;
+      });
+    }
+
+    function addLogEntry(key, fallback, params){
+      state.log.push({ key, fallback, params });
+    }
+
+    function formatLogEntry(entry){
+      if (!entry) return '';
+      const params = Object.assign({}, entry.params);
+      if (params && params.playerIdx != null) {
+        params.name = state.players[params.playerIdx]?.name || '';
+      }
+      return text(entry.key, entry.fallback, params);
+    }
+
+    function setFinishActions(){
+      ctx.setActions([
+        { labelKey: 'minigame.trump_games.sevens.actions.restart', label: '再戦 (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+    }
+
     function restart(){
       const deck = ctx.cardUtils.createDeck().filter(card => card.suit !== 'joker');
       ctx.cardUtils.shuffle(deck);
-      state.players = playerNames.map((name, idx) => ({ name, idx, hand: [] }));
+      state.players = playerConfigs.map((config, idx) => ({
+        name: text(config.key, config.fallback),
+        nameKey: config.key,
+        nameFallback: config.fallback,
+        idx,
+        hand: []
+      }));
+      playerEls.forEach((entry, idx) => {
+        if (!state.players[idx]) return;
+        entry.label.textContent = state.players[idx].name;
+      });
       for (let i = 0; i < deck.length; i++) {
         state.players[i % 4].hand.push(deck[i]);
       }
@@ -3247,7 +3293,11 @@
       }
       const card = starter.hand.splice(idx, 1)[0];
       placeCardOnBoard(card);
-      state.log.push(`${starter.name} が ${formatCard(card)} を開始に配置。`);
+      addLogEntry(
+        'minigame.trump_games.sevens.log.startingCard',
+        '{name} が {card} を開始に配置。',
+        { playerIdx: starter.idx, card: formatCard(card) }
+      );
       ctx.award(5, { type: 'sevens-start' });
       state.turn = (starter.idx + 1) % 4;
     }
@@ -3270,7 +3320,7 @@
       if (state.finished || state.turn !== 0) return;
       const legal = legalCards(0);
       if (!legal.some(c => c.id === card.id)) {
-        ctx.showToast('そのカードは並べられません。', { type: 'warn', duration: 1500 });
+        ctx.showToast(text('minigame.trump_games.sevens.toast.invalidCard', 'そのカードは並べられません。'), { type: 'warn', duration: 1500 });
         return;
       }
       playCard(0, card);
@@ -3280,7 +3330,7 @@
       if (state.finished || state.turn !== 0) return;
       const legal = legalCards(0);
       if (legal.length) {
-        ctx.showToast('出せるカードがあります。', { type: 'warn', duration: 1400 });
+        ctx.showToast(text('minigame.trump_games.sevens.toast.cardsAvailable', '出せるカードがあります。'), { type: 'warn', duration: 1400 });
         return;
       }
       passTurn(0);
@@ -3315,7 +3365,11 @@
       player.hand.splice(index, 1);
       placeCardOnBoard(card);
       ctx.award(2, { type: 'sevens-play', suit: card.suit, rank: card.rank });
-      state.log.push(`${player.name} が ${formatCard(card)} を配置。`);
+      addLogEntry(
+        'minigame.trump_games.sevens.log.playCard',
+        '{name} が {card} を配置。',
+        { playerIdx: player.idx, card: formatCard(card) }
+      );
       if (player.hand.length === 0) {
         finishGame(player);
         return;
@@ -3330,8 +3384,8 @@
       if (state.finished) return;
       const legal = state.turn === 0 ? legalCards(0) : [];
       ctx.setActions([
-        { label: '再戦 (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
-        { label: 'パス', variant: 'secondary', onClick: () => handlePlayerPass(), disabled: state.turn !== 0 || legal.length > 0 },
+        { labelKey: 'minigame.trump_games.sevens.actions.restart', label: '再戦 (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
+        { labelKey: 'minigame.trump_games.sevens.actions.pass', label: 'パス', variant: 'secondary', onClick: () => handlePlayerPass(), disabled: state.turn !== 0 || legal.length > 0 },
         { labelKey: 'minigame.trump_games.common.actions.returnToList', label: '一覧に戻る (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
       ]);
     }
@@ -3347,14 +3401,18 @@
     }
 
     function passTurn(playerIdx){
-      state.log.push(`${state.players[playerIdx].name} はパス。`);
+      addLogEntry(
+        'minigame.trump_games.sevens.log.pass',
+        '{name} はパス。',
+        { playerIdx }
+      );
       state.passes += 1;
       if (playerIdx === 0) {
         ctx.award(-3, { type: 'sevens-pass' });
       }
       state.turn = (state.turn + 1) % 4;
       if (state.passes >= 4) {
-        ctx.showToast('全員がパスしました。状況が進むまで待ちましょう。', { duration: 2000 });
+        ctx.showToast(text('minigame.trump_games.sevens.toast.everyonePassed', '全員がパスしました。状況が進むまで待ちましょう。'), { duration: 2000 });
         state.passes = 0;
       }
       render();
@@ -3366,11 +3424,8 @@
       state.finished = true;
       ctx.award(100, { type: 'sevens-clear', winner: player.name });
       ctx.commitStats({ wins: player.idx === 0 ? 1 : 0 });
-      ctx.showToast(`${player.name} の勝利！`, { duration: 2800 });
-      ctx.setActions([
-        { label: '再戦 (R)', variant: 'primary', hotkey: 'R', onClick: () => restart() },
-        { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
-      ]);
+      ctx.showToast(text('minigame.trump_games.sevens.toast.victory', '{name} の勝利！', { name: player.name }), { duration: 2800 });
+      setFinishActions();
       render();
     }
 
@@ -3379,7 +3434,7 @@
         const player = state.players[idx];
         if (!player) return;
         if (state.turn === idx && !state.finished) el.classList.add('active'); else el.classList.remove('active');
-        meta.textContent = `手札 ${player.hand.length} 枚`;
+        meta.textContent = text('minigame.trump_games.sevens.player.handCount', '手札 {count} 枚', { count: player.hand.length });
       });
     }
 
@@ -3408,7 +3463,7 @@
         }
         row.appendChild(frag);
       });
-      boardStatus.innerHTML = state.log.slice(-4).map(item => `<div>${item}</div>`).join('');
+      boardStatus.innerHTML = state.log.slice(-4).map(entry => `<div>${formatLogEntry(entry)}</div>`).join('');
     }
 
     function rankLabel(value){
@@ -3442,8 +3497,15 @@
         if (player.hand.length < best.count) return { name: player.name, count: player.hand.length };
         return best;
       }, { name: '', count: Infinity });
-      ctx.setStatus(`手番: ${playerNames[state.turn]} ・ パス連続 ${state.passes}`);
-      ctx.setScore(`最少手札: ${leader.count === Infinity ? '-' : `${leader.name} (${leader.count}枚)`}`);
+      const currentPlayer = state.players[state.turn];
+      ctx.setStatus(text('minigame.trump_games.sevens.status.turn', '手番: {name} ・ パス連続 {passes}', {
+        name: currentPlayer ? currentPlayer.name : '',
+        passes: state.passes
+      }));
+      const leaderSummary = leader.count === Infinity
+        ? text('minigame.trump_games.sevens.hud.noLeader', '-')
+        : text('minigame.trump_games.sevens.hud.leaderDetail', '{name} ({count}枚)', { name: leader.name, count: leader.count });
+      ctx.setScore(text('minigame.trump_games.sevens.hud.score', '最少手札: {summary}', { summary: leaderSummary }));
     }
 
     function render(){
@@ -3454,12 +3516,18 @@
       if (!state.finished) updateActions();
     }
 
+    const detachLocale = ctx.onLocaleChange(() => {
+      refreshPlayerNames();
+      render();
+      if (state.finished) setFinishActions();
+    });
+
     restart();
 
     return {
       start(){},
       stop(){},
-      destroy(){},
+      destroy(){ if (typeof detachLocale === 'function') detachLocale(); },
       getScore(){ return state.finished && state.players[0].hand.length === 0 ? 1 : 0; }
     };
   }
@@ -5216,12 +5284,21 @@
 
   function createDaifugoGame(container, ctx){
     const text = createTextResolver(ctx);
-    const players = [
-      { id: 0, name: 'あなた', human: true, hand: [], finishedAt: null },
-      { id: 1, name: '北', human: false, hand: [], finishedAt: null },
-      { id: 2, name: '東', human: false, hand: [], finishedAt: null },
-      { id: 3, name: '西', human: false, hand: [], finishedAt: null }
+    const playerConfigs = [
+      { id: 0, key: 'minigame.trump_games.daifugo.players.you', fallback: 'あなた', human: true },
+      { id: 1, key: 'minigame.trump_games.daifugo.players.north', fallback: '北', human: false },
+      { id: 2, key: 'minigame.trump_games.daifugo.players.east', fallback: '東', human: false },
+      { id: 3, key: 'minigame.trump_games.daifugo.players.west', fallback: '西', human: false }
     ];
+    const players = playerConfigs.map(config => ({
+      id: config.id,
+      human: config.human,
+      nameKey: config.key,
+      nameFallback: config.fallback,
+      name: text(config.key, config.fallback),
+      hand: [],
+      finishedAt: null
+    }));
     const state = {
       deck: [],
       leadValue: null,
@@ -5244,7 +5321,6 @@
     const pile = document.createElement('div');
     pile.className = 'pile';
     const pileTitle = document.createElement('h4');
-    pileTitle.textContent = '現在の場';
     const pileBody = document.createElement('div');
     pile.appendChild(pileTitle);
     pile.appendChild(pileBody);
@@ -5265,16 +5341,66 @@
     const playerEls = players.map(player => {
       const el = document.createElement('div');
       el.className = 'mini-trump-daifugo-player';
-      const name = document.createElement('div');
-      name.className = 'name';
-      name.textContent = player.name;
+      const nameEl = document.createElement('div');
+      nameEl.className = 'name';
+      nameEl.textContent = player.name;
       const meta = document.createElement('div');
       meta.className = 'meta';
-      el.appendChild(name);
+      el.appendChild(nameEl);
       el.appendChild(meta);
       playerGrid.appendChild(el);
-      return { el, meta };
+      return { el, meta, nameEl };
     });
+
+    function refreshPlayerNames(){
+      players.forEach((player, idx) => {
+        const name = text(player.nameKey, player.nameFallback);
+        player.name = name;
+        const entry = playerEls[idx];
+        if (entry) entry.nameEl.textContent = name;
+      });
+    }
+
+    function pushHistory(key, fallback, params){
+      state.history.unshift({ key, fallback, params });
+      if (state.history.length > 6) state.history.length = 6;
+    }
+
+    function resolveHistory(entry){
+      if (!entry) return '';
+      const params = Object.assign({}, entry.params);
+      if (params && params.playerId != null) {
+        params.name = players[params.playerId]?.name || '';
+      }
+      return text(entry.key, entry.fallback, params);
+    }
+
+    function setFinishActions(){
+      ctx.setActions([
+        { labelKey: 'minigame.trump_games.daifugo.actions.nextRound', label: '次のラウンド (R)', variant: 'primary', hotkey: 'R', onClick: () => initGame() },
+        { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+    }
+
+    function updateStatusMessage(){
+      if (state.finished) {
+        ctx.setStatus(text('minigame.trump_games.daifugo.status.roundEnd', 'ラウンド終了'));
+        return;
+      }
+      const player = players[state.current];
+      if (!player) return;
+      if (player.human) {
+        const key = state.leadValue == null
+          ? 'minigame.trump_games.daifugo.status.playAny'
+          : 'minigame.trump_games.daifugo.status.mustBeatOrPass';
+        const fallback = state.leadValue == null
+          ? '好きなカードを出してください。'
+          : '場より強いカードを出すかパス (P) してください。';
+        ctx.setStatus(text(key, fallback));
+      } else {
+        ctx.setStatus(text('minigame.trump_games.daifugo.status.lead', 'リード: {name}', { name: player.name }));
+      }
+    }
 
     function initGame(){
       players.forEach(p => { p.hand = []; p.finishedAt = null; });
@@ -5287,12 +5413,10 @@
       state.history = [];
       state.finished = false;
       state.order = [];
+      refreshPlayerNames();
 
       dealCards();
       state.current = findStartPlayer();
-      ctx.setStatus(`${players[state.current].name} のリード`);
-      updateActions();
-      render();
       ctx.commitStats({ plays: 1 });
       advanceTurn({ stay: true });
     }
@@ -5336,8 +5460,7 @@
       state.leadValue = valueOf(card);
       state.leadPlayer = player.id;
       state.passCount = 0;
-      state.history.unshift(`${player.name}: ${formatCard(card)}`);
-      if (state.history.length > 6) state.history.length = 6;
+      pushHistory('minigame.trump_games.daifugo.history.playCard', '{name}: {card}', { playerId: player.id, card: formatCard(card) });
       if (player.hand.length === 0 && player.finishedAt == null) {
         player.finishedAt = state.order.length + 1;
         state.order.push(player.id);
@@ -5350,8 +5473,7 @@
 
     function pass(player){
       state.passCount += 1;
-      state.history.unshift(`${player.name}: パス`);
-      if (state.history.length > 6) state.history.length = 6;
+      pushHistory('minigame.trump_games.daifugo.history.pass', '{name}: パス', { playerId: player.id });
       const active = players.filter(p => p.hand.length > 0).length;
       if (state.passCount >= Math.max(1, active - 1)) {
         const lead = state.leadPlayer;
@@ -5377,11 +5499,8 @@
         const awards = [0, 150, 80, 40, 10];
         if (placement <= 4) ctx.award(awards[placement], { type: 'daifugo-result', place: placement });
         ctx.commitStats({ wins: placement === 1 ? 1 : 0, score: placement, bestMode: 'lower' });
-        ctx.setStatus('ラウンド終了');
-        ctx.setActions([
-          { label: '次のラウンド (R)', variant: 'primary', hotkey: 'R', onClick: () => initGame() },
-          { labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
-        ]);
+        ctx.setStatus(text('minigame.trump_games.daifugo.status.roundEnd', 'ラウンド終了'));
+        setFinishActions();
         updateHud();
         render();
         return true;
@@ -5397,12 +5516,12 @@
         state.current = state.current % players.length;
       }
       const player = players[state.current];
-      if (player.hand.length === 0) {
+      if (!player || player.hand.length === 0) {
         advanceTurn({ stay: false });
         return;
       }
+      updateStatusMessage();
       if (player.human) {
-        ctx.setStatus(state.leadValue == null ? '好きなカードを出してください。' : `場より強いカードを出すかパス (P) してください。`);
         updateActions();
         render();
       } else {
@@ -5416,12 +5535,12 @@
       if (state.finished) return;
       const legal = legalCards(player);
       if (!legal.length) {
-      const reset = pass(player);
-      render();
-      advanceTurn({ stay: reset });
-      return;
-    }
-      const choice = legal.sort((a, b) => valueOf(a) - valueOf(b))[0];
+        const reset = pass(player);
+        render();
+        advanceTurn({ stay: reset });
+        return;
+      }
+      const choice = legal.slice().sort((a, b) => valueOf(a) - valueOf(b))[0];
       playCard(player, choice);
     }
 
@@ -5429,7 +5548,7 @@
       if (state.current !== 0 || state.finished) return;
       const legal = legalCards(players[0]);
       if (!legal.some(c => c.id === card.id)) {
-        ctx.showToast('そのカードは出せません。', { type: 'warn' });
+        ctx.showToast(text('minigame.trump_games.daifugo.toast.invalidCard', 'そのカードは出せません。'), { type: 'warn' });
         return;
       }
       playCard(players[0], card);
@@ -5438,7 +5557,7 @@
     function handleHumanPass(){
       if (state.current !== 0 || state.finished) return;
       if (state.leadValue == null) {
-        ctx.showToast('最初のリードではパスできません。', { type: 'warn' });
+        ctx.showToast(text('minigame.trump_games.daifugo.toast.cannotPassLead', '最初のリードではパスできません。'), { type: 'warn' });
         return;
       }
       const reset = pass(players[0]);
@@ -5450,17 +5569,23 @@
       if (state.finished) return;
       const actions = [];
       if (state.current === 0 && state.leadValue != null) {
-        actions.push({ label: 'パス (P)', variant: 'secondary', hotkey: 'P', onClick: () => handleHumanPass() });
+        actions.push({ labelKey: 'minigame.trump_games.daifugo.actions.pass', label: 'パス (P)', variant: 'secondary', hotkey: 'P', onClick: () => handleHumanPass() });
       }
-      actions.push({ label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => initGame() });
+      actions.push({ labelKey: 'minigame.trump_games.daifugo.actions.restart', label: 'リスタート (R)', variant: 'secondary', hotkey: 'R', onClick: () => initGame() });
       actions.push({ labelKey: 'minigame.trump_games.common.actions.returnToList', label: 'ゲーム一覧 (B)', variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() });
       ctx.setActions(actions);
     }
 
     function updateHud(){
       const stats = ctx.stats();
-      const best = stats.bestScore != null ? `${stats.bestScore} 位` : '---';
-      ctx.setScore(`通算 ${stats.plays || 0} 回 / 勝利 ${stats.wins || 0} / ベスト ${best}`);
+      const best = stats.bestScore != null
+        ? text('minigame.trump_games.daifugo.hud.bestPlace', '{place} 位', { place: stats.bestScore })
+        : text('minigame.trump_games.daifugo.hud.noRecord', '---');
+      ctx.setScore(text('minigame.trump_games.daifugo.hud.scoreSummary', '通算 {plays} 回 / 勝利 {wins} / ベスト {best}', {
+        plays: stats.plays || 0,
+        wins: stats.wins || 0,
+        best
+      }));
     }
 
     function render(){
@@ -5476,16 +5601,19 @@
         const player = players[idx];
         if (!player) return;
         if (state.current === idx && !state.finished) el.classList.add('active'); else el.classList.remove('active');
-        const status = player.finishedAt ? `${player.finishedAt} 位` : `${player.hand.length} 枚`;
+        const status = player.finishedAt
+          ? text('minigame.trump_games.daifugo.playersMeta.finished', '{place} 位', { place: player.finishedAt })
+          : text('minigame.trump_games.daifugo.playersMeta.handCount', '{count} 枚', { count: player.hand.length });
         meta.textContent = status;
       });
     }
 
     function renderPile(){
+      pileTitle.textContent = text('minigame.trump_games.daifugo.pile.title', '現在の場');
       if (state.leadValue == null) {
-        pileBody.textContent = 'リセット';
+        pileBody.textContent = text('minigame.trump_games.daifugo.pile.reset', 'リセット');
       } else {
-        pileBody.textContent = `要求値: ${state.leadValue}`;
+        pileBody.textContent = text('minigame.trump_games.daifugo.pile.requirement', '要求値: {value}', { value: state.leadValue });
       }
     }
 
@@ -5510,17 +5638,24 @@
       log.innerHTML = '';
       state.history.forEach(entry => {
         const line = document.createElement('div');
-        line.textContent = entry;
+        line.textContent = resolveHistory(entry);
         log.appendChild(line);
       });
     }
+
+    const detachLocale = ctx.onLocaleChange(() => {
+      refreshPlayerNames();
+      updateStatusMessage();
+      if (state.finished) setFinishActions(); else updateActions();
+      render();
+    });
 
     initGame();
 
     return {
       start(){},
       stop(){},
-      destroy(){},
+      destroy(){ if (typeof detachLocale === 'function') detachLocale(); },
       getScore(){ return players[0].finishedAt || 0; }
     };
   }

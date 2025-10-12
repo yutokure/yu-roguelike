@@ -12720,6 +12720,81 @@
             "finished": "{place} 位確定"
           }
         },
+        "sevens": {
+          "players": {
+            "you": "あなた",
+            "north": "北",
+            "east": "東",
+            "west": "西"
+          },
+          "log": {
+            "startingCard": "{name} が {card} を開始に配置。",
+            "playCard": "{name} が {card} を配置。",
+            "pass": "{name} はパス。"
+          },
+          "toast": {
+            "invalidCard": "そのカードは並べられません。",
+            "cardsAvailable": "出せるカードがあります。",
+            "everyonePassed": "全員がパスしました。状況が進むまで待ちましょう。",
+            "victory": "{name} の勝利！"
+          },
+          "actions": {
+            "restart": "再戦 (R)",
+            "pass": "パス"
+          },
+          "player": {
+            "handCount": "手札 {count} 枚"
+          },
+          "status": {
+            "turn": "手番: {name} ・ パス連続 {passes}"
+          },
+          "hud": {
+            "leaderDetail": "{name} ({count}枚)",
+            "noLeader": "-",
+            "score": "最少手札: {summary}"
+          }
+        },
+        "daifugo": {
+          "players": {
+            "you": "あなた",
+            "north": "北",
+            "east": "東",
+            "west": "西"
+          },
+          "pile": {
+            "title": "現在の場",
+            "reset": "リセット",
+            "requirement": "要求値: {value}"
+          },
+          "status": {
+            "lead": "リード: {name}",
+            "playAny": "好きなカードを出してください。",
+            "mustBeatOrPass": "場より強いカードを出すかパス (P) してください。",
+            "roundEnd": "ラウンド終了"
+          },
+          "history": {
+            "playCard": "{name}: {card}",
+            "pass": "{name}: パス"
+          },
+          "toast": {
+            "invalidCard": "そのカードは出せません。",
+            "cannotPassLead": "最初のリードではパスできません。"
+          },
+          "actions": {
+            "pass": "パス (P)",
+            "restart": "リスタート (R)",
+            "nextRound": "次のラウンド (R)"
+          },
+          "playersMeta": {
+            "finished": "{place} 位",
+            "handCount": "{count} 枚"
+          },
+          "hud": {
+            "bestPlace": "{place} 位",
+            "noRecord": "---",
+            "scoreSummary": "通算 {plays} 回 / 勝利 {wins} 回 / ベスト {best}"
+          }
+        },
         "klondike": {
           "labels": {
             "stock": "山札",

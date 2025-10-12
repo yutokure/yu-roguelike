@@ -12558,6 +12558,7 @@
             "hint": "Hint (H)",
             "restart": "Restart (R)",
             "returnToList": "Game List (B)",
+            "newGame": "New Game (R)",
             "rematch": "Play Again"
           },
           "hud": {
@@ -12575,6 +12576,83 @@
           },
           "player": {
             "finished": "Secured place {place}"
+          }
+        },
+        "klondike": {
+          "labels": {
+            "stock": "Stock",
+            "waste": "Waste",
+            "foundation": "{symbol} Foundation"
+          },
+          "info": {
+            "initial": "Draw from the stock or move tableau cards.",
+            "selectDestination": "Choose a destination. Only kings may fill empty columns.",
+            "recyclePrompt": "Click the waste pile to recycle the stock.",
+            "finished": "Congratulations! Try a new deal to test your skills."
+          },
+          "actions": {
+            "drawStock": "Draw Stock (D)",
+            "autoFoundation": "Auto to Foundation (A)",
+            "newGame": "New Deal (R)"
+          },
+          "status": {
+            "summary": "Moves {moves} ・ Recycles {recycles} ・ Stock {stock} ・ Waste {waste} ・ Foundation {foundation}"
+          },
+          "hud": {
+            "bestMoves": "{moves} moves",
+            "scoreSummary": "Total {plays} games / Wins {wins} / Best {best}"
+          },
+          "placeholders": {
+            "recycle": "Redeal",
+            "empty": "Empty"
+          },
+          "toast": {
+            "newLayout": "Starting a new deal.",
+            "emptyStock": "Both the stock and waste are empty.",
+            "recycledWaste": "Returned the waste to the stock.",
+            "noFoundationSpace": "No space available on the foundation.",
+            "invalidTableauMove": "You can't move to that column.",
+            "lockedCard": "You can't flip this card yet.",
+            "cleared": "Klondike cleared!"
+          }
+        },
+        "memory": {
+          "actions": {
+            "retry": "Play Again (R)"
+          },
+          "toast": {
+            "resolveOpenCards": "Close the open cards before flipping another.",
+            "manualReset": "Mismatch. Tap the cards to turn them face down.",
+            "cleared": "Cleared! Time {time} / Misses {misses}"
+          },
+          "flip": {
+            "auto": "Auto",
+            "manual": "Manual"
+          },
+          "status": {
+            "summary": "Pairs {matches}/{pairs} ・ Misses {misses} ・ Time {time} ・ Flip {mode}"
+          },
+          "hud": {
+            "bestSeconds": "{seconds}s",
+            "scoreSummary": "Total {plays} games / Best {best}"
+          }
+        },
+        "hearts": {
+          "actions": {
+            "newDeal": "New Deal (R)",
+            "nextDeal": "Next Deal (R)"
+          },
+          "status": {
+            "summary": "Tricks {trick}/13 ・ Hearts broken {status}",
+            "heartsBroken": {
+              "yes": "Broken",
+              "no": "Not yet"
+            }
+          }
+        },
+        "spider": {
+          "actions": {
+            "dealStock": "Deal Stock (D)"
           }
         },
         "baba": {

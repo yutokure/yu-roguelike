@@ -12560,6 +12560,7 @@
             "hint": "ヒント (H)",
             "restart": "リスタート (R)",
             "returnToList": "ゲーム一覧 (B)",
+            "newGame": "新しいゲーム (R)",
             "rematch": "再戦する"
           },
           "hud": {
@@ -12577,6 +12578,83 @@
           },
           "player": {
             "finished": "{place} 位確定"
+          }
+        },
+        "klondike": {
+          "labels": {
+            "stock": "山札",
+            "waste": "捨て札",
+            "foundation": "{symbol} 台札"
+          },
+          "info": {
+            "initial": "山札をめくるか、場札を選択して移動しましょう。",
+            "selectDestination": "移動先をクリックしてください。空列にはキングのみ置けます。",
+            "recyclePrompt": "捨て札をクリックして山札に戻しましょう。",
+            "finished": "おめでとうございます！新しいゲームで腕試ししましょう。"
+          },
+          "actions": {
+            "drawStock": "山札をめくる (D)",
+            "autoFoundation": "自動で台札へ (A)",
+            "newGame": "新しいゲーム (R)"
+          },
+          "status": {
+            "summary": "移動 {moves} 手 ・ 再構築 {recycles} 回 ・ 山札 {stock} ・ 捨て札 {waste} ・ 台札 {foundation}"
+          },
+          "hud": {
+            "bestMoves": "{moves} 手",
+            "scoreSummary": "通算 {plays} 回 / 勝利 {wins} 回 / ベスト {best}"
+          },
+          "placeholders": {
+            "recycle": "返す",
+            "empty": "空"
+          },
+          "toast": {
+            "newLayout": "新しい配置でゲームを開始しました。",
+            "emptyStock": "山札も捨て札も空です。",
+            "recycledWaste": "捨て札を山札に戻しました。",
+            "noFoundationSpace": "台札に置ける場所がありません。",
+            "invalidTableauMove": "その列には移動できません。",
+            "lockedCard": "このカードはまだ表にできません。",
+            "cleared": "クロンダイクをクリアしました！"
+          }
+        },
+        "memory": {
+          "actions": {
+            "retry": "もう一度 (R)"
+          },
+          "toast": {
+            "resolveOpenCards": "開いたカードを戻してから次をめくってください。",
+            "manualReset": "不一致です。カードをタップして裏返してください。",
+            "cleared": "クリア！タイム {time} / ミス {misses}"
+          },
+          "flip": {
+            "auto": "自動",
+            "manual": "手動"
+          },
+          "status": {
+            "summary": "ペア {matches}/{pairs} ・ ミス {misses} ・ 経過 {time} ・ 裏返し {mode}"
+          },
+          "hud": {
+            "bestSeconds": "{seconds} 秒",
+            "scoreSummary": "通算 {plays} 回 / ベスト {best}"
+          }
+        },
+        "hearts": {
+          "actions": {
+            "newDeal": "新しいディール (R)",
+            "nextDeal": "次のディール (R)"
+          },
+          "status": {
+            "summary": "トリック {trick}/13 ・ ハート解禁 {status}",
+            "heartsBroken": {
+              "yes": "済",
+              "no": "未"
+            }
+          }
+        },
+        "spider": {
+          "actions": {
+            "dealStock": "山札を配る (D)"
           }
         },
         "baba": {

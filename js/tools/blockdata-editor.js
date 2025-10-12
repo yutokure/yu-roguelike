@@ -1,6 +1,8 @@
 (function (global) {
     'use strict';
 
+    const i18n = global.I18n || null;
+
     const GROUPS = ['blocks1', 'blocks2', 'blocks3'];
     const STANDARD_KEYS = new Set(['key', 'name', 'level', 'size', 'depth', 'chest', 'type', 'bossFloors']);
     const CHEST_OPTIONS = ['normal', 'more', 'less'];
@@ -15,11 +17,46 @@
         form: null,
         formDirty: false,
         dirty: false,
-        loading: false
+        loading: false,
+        localeUnsubscribe: null
     };
 
     const refs = {};
     let pendingSerializedState = null;
+    let lastStatusPayload = { key: null, params: null, fallback: '', isError: false, variant: null };
+
+    function translate(key, params, fallback) {
+        if (key && i18n && typeof i18n.t === 'function') {
+            const value = i18n.t(key, params);
+            if (value !== undefined && value !== null && value !== key) {
+                return value;
+            }
+        }
+        if (typeof fallback === 'function') {
+            return fallback();
+        }
+        if (fallback !== undefined && fallback !== null) {
+            return fallback;
+        }
+        if (typeof key === 'string') {
+            return key;
+        }
+        return '';
+    }
+
+    function applyStatusFromPayload() {
+        if (!refs.status) return;
+        const { key, params, fallback, isError, variant } = lastStatusPayload || {};
+        const text = key ? translate(key, params, fallback) : (typeof fallback === 'string' ? fallback : (typeof fallback === 'function' ? fallback() : ''));
+        refs.status.textContent = text || '';
+        refs.status.classList.remove('error', 'success');
+        if (!text) return;
+        if (variant === 'success') {
+            refs.status.classList.add('success');
+        } else if (variant === 'error' || isError) {
+            refs.status.classList.add('error');
+        }
+    }
 
     function createEmptyData() {
         return {
@@ -129,6 +166,16 @@
         refs.previewSize = panel.querySelector('#blockdata-preview-size');
     }
 
+    function refreshLocaleDependentUI() {
+        if (state.panel && i18n && typeof i18n.applyTranslations === 'function') {
+            i18n.applyTranslations(state.panel);
+        }
+        updateDirtyIndicator();
+        renderList();
+        renderPreview();
+        applyStatusFromPayload();
+    }
+
     function bindEvents() {
         refs.groupButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -209,6 +256,12 @@
         cacheElements(context.panel);
         bindEvents();
         resetUI();
+        if (!state.localeUnsubscribe && i18n && typeof i18n.onLocaleChanged === 'function') {
+            state.localeUnsubscribe = i18n.onLocaleChanged(() => {
+                refreshLocaleDependentUI();
+            });
+        }
+        refreshLocaleDependentUI();
         loadInitialData();
     }
 
@@ -232,7 +285,10 @@
     }
 
     function loadInitialData() {
-        setStatus('blockdata.json を読み込んでいます…');
+        setStatus({
+            key: 'tools.blockdataEditor.main.status.loading',
+            fallback: 'blockdata.json を読み込んでいます…'
+        });
         state.loading = true;
         fetch('blockdata.json', { cache: 'no-store' })
             .then(res => {
@@ -243,12 +299,20 @@
             })
             .then(data => {
                 applyData(data);
-                setStatus('blockdata.json を読み込みました。', false, 'success');
+                setStatus({
+                    key: 'tools.blockdataEditor.main.status.loadSuccess',
+                    fallback: 'blockdata.json を読み込みました。',
+                    variant: 'success'
+                });
             })
             .catch(err => {
                 console.warn('[BlockDataEditor] Failed to load blockdata.json:', err);
                 applyData(createEmptyData());
-                setStatus('blockdata.json の読み込みに失敗しました。インポートから読み込んでください。', true);
+                setStatus({
+                    key: 'tools.blockdataEditor.main.status.loadError',
+                    fallback: 'blockdata.json の読み込みに失敗しました。インポートから読み込んでください。',
+                    isError: true
+                });
             })
             .finally(() => {
                 state.loading = false;
@@ -313,7 +377,11 @@
         if (!state.data) {
             const empty = document.createElement('p');
             empty.className = 'blockdata-empty';
-            empty.textContent = 'データが読み込まれていません。';
+            empty.textContent = translate(
+                'tools.blockdataEditor.sidebar.empty.noData',
+                null,
+                'データが読み込まれていません。'
+            );
             refs.list.appendChild(empty);
             return;
         }
@@ -330,7 +398,9 @@
         if (!filtered.length) {
             const empty = document.createElement('p');
             empty.className = 'blockdata-empty';
-            empty.textContent = term ? '該当するブロックがありません。' : 'ブロックがありません。';
+            empty.textContent = term
+                ? translate('tools.blockdataEditor.sidebar.empty.noMatches', null, '該当するブロックがありません。')
+                : translate('tools.blockdataEditor.sidebar.empty.noBlocks', null, 'ブロックがありません。');
             refs.list.appendChild(empty);
             return;
         }
@@ -346,11 +416,19 @@
             btn.dataset.index = String(index);
 
             const title = document.createElement('strong');
-            title.textContent = block.name || '(無題)';
+            const displayName = block.name || translate('tools.blockdataEditor.sidebar.untitled', null, '(無題)');
+            title.textContent = displayName;
             const meta = document.createElement('span');
             meta.className = 'meta';
-            const levelText = Number.isFinite(block.level) ? `Lv ${block.level}` : 'Lv -';
-            meta.textContent = `${block.key || '-'} · ${levelText}`;
+            const levelText = Number.isFinite(block.level)
+                ? translate('tools.blockdataEditor.main.list.levelValue', { level: block.level }, `Lv ${block.level}`)
+                : translate('tools.blockdataEditor.main.list.levelUnknown', null, 'Lv -');
+            const metaText = translate(
+                'tools.blockdataEditor.main.list.meta',
+                { key: block.key || '-', level: levelText },
+                `${block.key || '-'} · ${levelText}`
+            );
+            meta.textContent = metaText;
             btn.appendChild(title);
             btn.appendChild(meta);
 
@@ -452,35 +530,62 @@
     }
 
     function setStatus(message, isError = false, variant = null) {
-        if (!refs.status) return;
-        refs.status.textContent = message || '';
-        refs.status.classList.remove('error', 'success');
-        if (!message) return;
-        if (variant === 'success') {
-            refs.status.classList.add('success');
-        } else if (variant === 'error' || isError) {
-            refs.status.classList.add('error');
+        if (message && typeof message === 'object') {
+            const payload = message;
+            const payloadIsError = typeof payload.isError === 'boolean' ? payload.isError : isError;
+            const payloadVariant = payload.variant !== undefined ? payload.variant : variant;
+            const fallback = payload.fallback !== undefined ? payload.fallback : (payload.text !== undefined ? payload.text : '');
+            lastStatusPayload = {
+                key: payload.key || null,
+                params: payload.params || null,
+                fallback,
+                isError: payloadIsError,
+                variant: payloadVariant
+            };
+            applyStatusFromPayload();
+            return;
         }
+        lastStatusPayload = {
+            key: null,
+            params: null,
+            fallback: message || '',
+            isError,
+            variant
+        };
+        applyStatusFromPayload();
     }
 
     function clearStatus() {
-        setStatus('');
+        lastStatusPayload = { key: null, params: null, fallback: '', isError: false, variant: null };
+        applyStatusFromPayload();
     }
 
     function updateDirtyIndicator() {
         if (!refs.dirtyIndicator) return;
         if (state.dirty) {
-            refs.dirtyIndicator.textContent = '未保存の変更があります。エクスポートまたはコピーを忘れずに。';
+            refs.dirtyIndicator.textContent = translate(
+                'tools.blockdataEditor.main.dirty.dirty',
+                null,
+                '未保存の変更があります。エクスポートまたはコピーを忘れずに。'
+            );
             refs.dirtyIndicator.classList.add('is-dirty');
         } else {
-            refs.dirtyIndicator.textContent = '最新の状態です。';
+            refs.dirtyIndicator.textContent = translate(
+                'tools.blockdataEditor.main.dirty.clean',
+                null,
+                '最新の状態です。'
+            );
             refs.dirtyIndicator.classList.remove('is-dirty');
         }
     }
 
     function handleCreateNew() {
         if (!state.data) {
-            setStatus('データが読み込まれていません。', true);
+            setStatus({
+                key: 'tools.blockdataEditor.main.status.noData',
+                fallback: 'データが読み込まれていません。',
+                isError: true
+            });
             return;
         }
         if (!maybeDiscardForm()) return;
@@ -490,7 +595,10 @@
         state.formDirty = true;
         fillForm();
         updateFormButtons();
-        setStatus('新規ブロックを作成中です。必要な項目を入力してください。');
+        setStatus({
+            key: 'tools.blockdataEditor.main.status.creating',
+            fallback: '新規ブロックを作成中です。必要な項目を入力してください。'
+        });
         if (refs.fieldKey) refs.fieldKey.focus();
     }
 
@@ -507,7 +615,11 @@
 
     function handleReload() {
         if (state.loading) return;
-        if ((state.dirty || state.formDirty) && !confirm('未エクスポートの変更が失われます。再読込しますか？')) {
+        if ((state.dirty || state.formDirty) && !confirm(translate(
+            'tools.blockdataEditor.main.confirm.reload',
+            null,
+            '未エクスポートの変更が失われます。再読込しますか？'
+        ))) {
             return;
         }
         loadInitialData();
@@ -521,14 +633,27 @@
             try {
                 const parsed = JSON.parse(e.target.result);
                 applyData(parsed);
-                setStatus(`${file.name} を読み込みました。`, false, 'success');
+                setStatus({
+                    key: 'tools.blockdataEditor.main.status.importSuccess',
+                    params: { name: file.name },
+                    fallback: `${file.name} を読み込みました。`,
+                    variant: 'success'
+                });
             } catch (err) {
                 console.error('[BlockDataEditor] Failed to import file:', err);
-                setStatus('JSONの読み込みに失敗しました。形式を確認してください。', true);
+                setStatus({
+                    key: 'tools.blockdataEditor.main.status.importParseError',
+                    fallback: 'JSONの読み込みに失敗しました。形式を確認してください。',
+                    isError: true
+                });
             }
         };
         reader.onerror = () => {
-            setStatus('ファイルを読み込めませんでした。', true);
+            setStatus({
+                key: 'tools.blockdataEditor.main.status.importReadError',
+                fallback: 'ファイルを読み込めませんでした。',
+                isError: true
+            });
         };
         reader.readAsText(file, 'utf-8');
     }
@@ -556,7 +681,7 @@
             }
             return parsed;
         } catch (err) {
-            throw new Error('追加プロパティはJSONオブジェクトで入力してください。');
+            throw new Error(translate('tools.blockdataEditor.errors.extrasObject', null, '追加プロパティはJSONオブジェクトで入力してください。'));
         }
     }
 
@@ -568,23 +693,27 @@
         const list = state.data[group] || [];
         const key = state.form.key.trim();
         if (!key) {
-            errors.push('キーを入力してください。');
+            errors.push(translate('tools.blockdataEditor.errors.missingKey', null, 'キーを入力してください。'));
         }
         const name = state.form.name.trim();
         if (!name) {
-            errors.push('名前を入力してください。');
+            errors.push(translate('tools.blockdataEditor.errors.missingName', null, '名前を入力してください。'));
         }
         if (key) {
             const duplicateIndex = list.findIndex((item, idx) => item.key === key && idx !== state.selectedIndex);
             if (duplicateIndex >= 0) {
-                errors.push('同じキーのブロックが既に存在します。');
+                errors.push(translate('tools.blockdataEditor.errors.duplicateKey', null, '同じキーのブロックが既に存在します。'));
             }
         }
         let bossFloorsResult = { values: [] };
         if (state.form.bossFloorsText) {
             bossFloorsResult = parseBossFloors(state.form.bossFloorsText);
             if (bossFloorsResult.error) {
-                errors.push(`ボス階層に数値ではない値があります: ${bossFloorsResult.error}`);
+                errors.push(translate(
+                    'tools.blockdataEditor.errors.invalidBossFloor',
+                    { value: bossFloorsResult.error },
+                    `ボス階層に数値ではない値があります: ${bossFloorsResult.error}`
+                ));
             }
         }
         let extras = {};
@@ -630,17 +759,25 @@
         updateGroupCounts();
         renderList();
         renderPreview();
-        setStatus('ブロックを保存しました。', false, 'success');
+        setStatus({
+            key: 'tools.blockdataEditor.main.status.saved',
+            fallback: 'ブロックを保存しました。',
+            variant: 'success'
+        });
         global.AchievementSystem?.recordEvent('tools_blockdata_save');
     }
 
     function handleDelete() {
         if (!state.data) return;
         if (state.selectedIndex < 0 || !GROUPS.includes(state.selectedGroup)) {
-            setStatus('削除対象のブロックが選択されていません。', true);
+            setStatus({
+                key: 'tools.blockdataEditor.main.status.deleteNoSelection',
+                fallback: '削除対象のブロックが選択されていません。',
+                isError: true
+            });
             return;
         }
-        if (!confirm('選択したブロックを削除しますか？')) {
+        if (!confirm(translate('tools.blockdataEditor.main.confirm.delete', null, '選択したブロックを削除しますか？'))) {
             return;
         }
         const list = state.data[state.selectedGroup];
@@ -655,7 +792,11 @@
         renderList();
         renderPreview();
         markDirty();
-        setStatus('ブロックを削除しました。', false, 'success');
+        setStatus({
+            key: 'tools.blockdataEditor.main.status.deleted',
+            fallback: 'ブロックを削除しました。',
+            variant: 'success'
+        });
     }
 
     function markDirty() {
@@ -678,7 +819,12 @@
             if (typeof TextEncoder !== 'undefined') {
                 bytes = new TextEncoder().encode(jsonString).length;
             }
-            refs.previewSize.textContent = `${lines.toLocaleString()} 行 / ${bytes.toLocaleString()} bytes`;
+            const sizeText = translate(
+                'tools.blockdataEditor.main.preview.size',
+                { lines: lines.toLocaleString(), bytes: bytes.toLocaleString() },
+                `${lines.toLocaleString()} 行 / ${bytes.toLocaleString()} bytes`
+            );
+            refs.previewSize.textContent = sizeText;
         }
     }
 
@@ -686,12 +832,20 @@
         if (!refs.preview) return;
         const text = refs.preview.value;
         if (!text) {
-            setStatus('コピーする内容がありません。', true);
+            setStatus({
+                key: 'tools.blockdataEditor.main.status.copyEmpty',
+                fallback: 'コピーする内容がありません。',
+                isError: true
+            });
             return;
         }
         if (navigator.clipboard?.writeText) {
             navigator.clipboard.writeText(text)
-                .then(() => setStatus('クリップボードにコピーしました。', false, 'success'))
+                .then(() => setStatus({
+                    key: 'tools.blockdataEditor.main.status.copied',
+                    fallback: 'クリップボードにコピーしました。',
+                    variant: 'success'
+                }))
                 .catch(err => {
                     console.warn('[BlockDataEditor] Clipboard write failed:', err);
                     fallbackCopy(text);
@@ -714,10 +868,18 @@
         textarea.select();
         try {
             document.execCommand('copy');
-            setStatus('クリップボードにコピーしました。', false, 'success');
+            setStatus({
+                key: 'tools.blockdataEditor.main.status.copied',
+                fallback: 'クリップボードにコピーしました。',
+                variant: 'success'
+            });
         } catch (err) {
             console.error('[BlockDataEditor] execCommand copy failed:', err);
-            setStatus('コピーできませんでした。', true);
+            setStatus({
+                key: 'tools.blockdataEditor.main.status.copyFailed',
+                fallback: 'コピーできませんでした。',
+                isError: true
+            });
         }
         document.body.removeChild(textarea);
     }
@@ -726,7 +888,11 @@
         if (!refs.preview) return;
         const text = refs.preview.value;
         if (!text) {
-            setStatus('ダウンロードする内容がありません。', true);
+            setStatus({
+                key: 'tools.blockdataEditor.main.status.downloadEmpty',
+                fallback: 'ダウンロードする内容がありません。',
+                isError: true
+            });
             return;
         }
         const blob = new Blob([text], { type: 'application/json' });
@@ -738,13 +904,17 @@
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 500);
-        setStatus('JSONファイルをダウンロードしました。', false, 'success');
+        setStatus({
+            key: 'tools.blockdataEditor.main.status.downloaded',
+            fallback: 'JSONファイルをダウンロードしました。',
+            variant: 'success'
+        });
         global.AchievementSystem?.recordEvent('tools_blockdata_download');
     }
 
     function maybeDiscardForm() {
         if (!state.formDirty) return true;
-        const ok = confirm('編集中の内容が破棄されます。続行しますか？');
+        const ok = confirm(translate('tools.blockdataEditor.main.confirm.discard', null, '編集中の内容が破棄されます。続行しますか？'));
         if (ok) {
             state.formDirty = false;
         }

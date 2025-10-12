@@ -15063,6 +15063,176 @@
         }
       },
       "sandbox": {
+        "panelAriaLabel": "Sandbox Dungeon Tool",
+        "header": {
+          "title": "Sandbox Dungeon",
+          "description": "Assemble a test dungeon on the fly with custom maps and enemy placements without affecting experience gain."
+        },
+        "map": {
+          "title": "Map Settings",
+          "actions": {
+            "fillFloor": "Fill floor",
+            "fillWall": "Fill walls",
+            "resetMarkers": "Reset stairs/start"
+          },
+          "fields": {
+            "width": { "label": "Width" },
+            "height": { "label": "Height" }
+          },
+          "brush": {
+            "ariaLabel": "Brush selection",
+            "modes": {
+              "select": "Select",
+              "floor": "Floor",
+              "wall": "Wall",
+              "start": "Start point",
+              "stairs": "Stairs",
+              "gate": "Gate",
+              "enemy": "Enemy placement",
+              "domain": "Domain"
+            }
+          },
+          "selectedCell": {
+            "hint": "Click a cell to edit.",
+            "selectedWithDescription": "Selected cell: {description}",
+            "selected": "Selected cell: ({x}, {y})"
+          },
+          "list": {
+            "title": "Map list",
+            "actions": {
+              "add": "+ Add map",
+              "node": "Node map",
+              "setEntry": "Set as entry map"
+            },
+            "ariaLabel": "Map list",
+            "fields": {
+              "name": { "label": "Name" },
+              "floor": { "label": "Floor" },
+              "branch": { "label": "Branch key" }
+            }
+          },
+          "options": {
+            "title": "Brush options",
+            "floorType": {
+              "label": "Floor type",
+              "options": {
+                "normal": "Normal",
+                "ice": "Ice",
+                "poison": "Poison",
+                "bomb": "Bomb",
+                "conveyor": "Conveyor",
+                "oneWay": "One-way",
+                "vertical": "Vertical only",
+                "horizontal": "Horizontal only"
+              }
+            },
+            "floorDirection": {
+              "label": "Direction",
+              "options": {
+                "none": "None",
+                "up": "↑ Up",
+                "right": "→ Right",
+                "down": "↓ Down",
+                "left": "← Left"
+              },
+              "hint": "Use with conveyor / one-way tiles"
+            },
+            "floorColor": { "label": "Floor color" },
+            "wallColor": { "label": "Wall color" },
+            "color": { "auto": "Auto" }
+          },
+          "palette": {
+            "title": "Color palette",
+            "ariaLabel": "Saved colors",
+            "actions": {
+              "saveFloor": "Save floor color",
+              "saveWall": "Save wall color",
+              "clear": "Clear palette",
+              "eyedropper": "Eyedropper"
+            }
+          },
+          "notes": {
+            "apply": "Apply colors and floor types to the selected cell or fill target."
+          },
+          "preview": {
+            "title": "Map preview",
+            "ariaLabel": "Sandbox map",
+            "legend": {
+              "wall": "Wall",
+              "floor": "Floor",
+              "start": "Start",
+              "stairs": "Stairs",
+              "enemy": "Enemy",
+              "ice": "Ice floor",
+              "poison": "Poison floor",
+              "bomb": "Bomb floor",
+              "conveyor": "Conveyor floor",
+              "oneWay": "One-way floor",
+              "vertical": "Vertical-only floor",
+              "horizontal": "Horizontal-only floor"
+            }
+          },
+          "cell": {
+            "types": {
+              "floor": "Floor",
+              "wall": "Wall"
+            },
+            "base": "{type} ({x}, {y})",
+            "details": {
+              "playerStart": "Start",
+              "stairs": "Stairs",
+              "gate": "Gate",
+              "gateWithLabel": "Gate: {label}",
+              "floorType": "Floor type: {label}{suffix}",
+              "floorTypeDirectionSuffix": " ({icon})",
+              "floorColor": "Floor color: {color}",
+              "wallColor": "Wall color: {color}",
+              "enemy": {
+                "singleNamed": "Enemy: {name}",
+                "singleNamedBoss": "Enemy: {name} (Boss)",
+                "singleBoss": "Enemy: Boss x1",
+                "single": "Enemy: x1",
+                "bossSuffix": " (Boss)",
+                "nameSeparator": ", ",
+                "multipleNamed": "Enemies: {list}",
+                "multipleAllBoss": "Enemies: {count} bosses",
+                "multipleWithBoss": "Enemies: {count} (includes {bossCount} bosses)",
+                "multiple": "Enemies: {count}"
+              },
+              "domain": {
+                "effectSeparator": ", ",
+                "separator": " / ",
+                "effectNone": "No effect",
+                "named": "{name}: {effects}",
+                "unnamed": "{effects}",
+                "summary": "Domain: {summary}"
+              },
+              "joiner": " / "
+            },
+            "summary": "{base} - {details}"
+          },
+          "domain": {
+            "effects": {
+              "attackUp": "Attack up",
+              "defenseUp": "Defense up",
+              "attackDown": "Attack down",
+              "defenseDown": "Defense down",
+              "allyBoost": "Ally boost",
+              "enemyBoost": "Enemy boost",
+              "enemyOverpower": "Overpowering enemies",
+              "levelUp": "Higher level",
+              "levelDown": "Lower level",
+              "abilityUp": "Ability up",
+              "abilityDown": "Ability down",
+              "enemyInvincible": "Enemy invincible",
+              "allInvincible": "Invincibility",
+              "damageReverse": "Damage reversal",
+              "slow": "Slow",
+              "fast": "Fast",
+              "ailment": "Status ailments"
+            }
+          }
+        },
         "controls": {
           "domain": {
             "noneAvailable": "No domain crystals available"

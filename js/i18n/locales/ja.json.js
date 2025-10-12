@@ -15009,6 +15009,176 @@
         }
       },
       "sandbox": {
+        "panelAriaLabel": "サンドボックスダンジョンツール",
+        "header": {
+          "title": "サンドボックスダンジョン",
+          "description": "自由にマップと敵を配置して、経験値に影響しないテスト用ダンジョンをその場で試走できます。"
+        },
+        "map": {
+          "title": "マップ設定",
+          "actions": {
+            "fillFloor": "全て床",
+            "fillWall": "全て壁",
+            "resetMarkers": "階段/開始位置をリセット"
+          },
+          "fields": {
+            "width": { "label": "幅" },
+            "height": { "label": "高さ" }
+          },
+          "brush": {
+            "ariaLabel": "ブラシ選択",
+            "modes": {
+              "select": "選択",
+              "floor": "床",
+              "wall": "壁",
+              "start": "開始位置",
+              "stairs": "階段",
+              "gate": "ゲート",
+              "enemy": "敵配置",
+              "domain": "領域"
+            }
+          },
+          "selectedCell": {
+            "hint": "セルをクリックして編集します。",
+            "selectedWithDescription": "選択セル: {description}",
+            "selected": "選択セル: ({x}, {y})"
+          },
+          "list": {
+            "title": "マップ一覧",
+            "actions": {
+              "add": "+ マップ追加",
+              "node": "ノードマップ",
+              "setEntry": "開始マップに設定"
+            },
+            "ariaLabel": "マップ一覧",
+            "fields": {
+              "name": { "label": "名前" },
+              "floor": { "label": "階層" },
+              "branch": { "label": "ブランチキー" }
+            }
+          },
+          "options": {
+            "title": "ブラシオプション",
+            "floorType": {
+              "label": "床タイプ",
+              "options": {
+                "normal": "通常",
+                "ice": "氷",
+                "poison": "毒",
+                "bomb": "爆弾",
+                "conveyor": "コンベヤー",
+                "oneWay": "一方通行",
+                "vertical": "縦通行のみ",
+                "horizontal": "横通行のみ"
+              }
+            },
+            "floorDirection": {
+              "label": "進行方向",
+              "options": {
+                "none": "指定なし",
+                "up": "↑ 上",
+                "right": "→ 右",
+                "down": "↓ 下",
+                "left": "← 左"
+              },
+              "hint": "※ コンベヤー / 一方通行床で使用"
+            },
+            "floorColor": { "label": "床の色" },
+            "wallColor": { "label": "壁の色" },
+            "color": { "auto": "自動" }
+          },
+          "palette": {
+            "title": "カラーパレット",
+            "ariaLabel": "保存済みカラー",
+            "actions": {
+              "saveFloor": "床色を保存",
+              "saveWall": "壁色を保存",
+              "clear": "パレットをクリア",
+              "eyedropper": "スポイト"
+            }
+          },
+          "notes": {
+            "apply": "選択セルや塗りつぶすマスに色・床タイプを適用できます。"
+          },
+          "preview": {
+            "title": "マッププレビュー",
+            "ariaLabel": "サンドボックスマップ",
+            "legend": {
+              "wall": "壁",
+              "floor": "床",
+              "start": "開始位置",
+              "stairs": "階段",
+              "enemy": "敵",
+              "ice": "氷床",
+              "poison": "毒床",
+              "bomb": "爆弾床",
+              "conveyor": "コンベヤー床",
+              "oneWay": "一方通行床",
+              "vertical": "縦通行のみ床",
+              "horizontal": "横通行のみ床"
+            }
+          },
+          "cell": {
+            "types": {
+              "floor": "床",
+              "wall": "壁"
+            },
+            "base": "{type} ({x}, {y})",
+            "details": {
+              "playerStart": "開始位置",
+              "stairs": "階段",
+              "gate": "ゲート",
+              "gateWithLabel": "ゲート: {label}",
+              "floorType": "床タイプ: {label}{suffix}",
+              "floorTypeDirectionSuffix": "（{icon}）",
+              "floorColor": "床色: {color}",
+              "wallColor": "壁色: {color}",
+              "enemy": {
+                "singleNamed": "敵: {name}",
+                "singleNamedBoss": "敵: {name}（ボス）",
+                "singleBoss": "敵: ボス1体",
+                "single": "敵: 1体",
+                "bossSuffix": "（ボス）",
+                "nameSeparator": "、",
+                "multipleNamed": "敵: {list}",
+                "multipleAllBoss": "敵: ボス{count}体",
+                "multipleWithBoss": "敵: {count}体（ボス{bossCount}体含む）",
+                "multiple": "敵: {count}体"
+              },
+              "domain": {
+                "effectSeparator": "・",
+                "separator": " / ",
+                "effectNone": "効果なし",
+                "named": "{name}: {effects}",
+                "unnamed": "{effects}",
+                "summary": "領域: {summary}"
+              },
+              "joiner": " / "
+            },
+            "summary": "{base} - {details}"
+          },
+          "domain": {
+            "effects": {
+              "attackUp": "攻撃力アップ",
+              "defenseUp": "防御力アップ",
+              "attackDown": "攻撃力ダウン",
+              "defenseDown": "防御力ダウン",
+              "allyBoost": "味方強化",
+              "enemyBoost": "敵強化",
+              "enemyOverpower": "超敵強化",
+              "levelUp": "高レベル化",
+              "levelDown": "低レベル化",
+              "abilityUp": "能力アップ",
+              "abilityDown": "能力ダウン",
+              "enemyInvincible": "敵無敵",
+              "allInvincible": "無敵",
+              "damageReverse": "ダメージ反転",
+              "slow": "遅い",
+              "fast": "速い",
+              "ailment": "状態異常化"
+            }
+          }
+        },
         "controls": {
           "domain": {
             "noneAvailable": "配置可能なクリスタルなし"

@@ -496,6 +496,8 @@
     let pendingSerializedState = null;
     const paintState = { active: false, pointerId: null, lastKey: null, blockClick: false };
     const EXPORT_FILE_PREFIX = 'sandbox-dungeon';
+    const EXPORT_SCHEMA = 'yu.sandbox.dungeon';
+    const EXPORT_KIND = 'sandbox_dungeon';
 
     function formatTimestamp(date) {
         const pad = (value) => String(value).padStart(2, '0');
@@ -542,22 +544,120 @@
         renderIoStatus();
     }
 
+    function buildExportBundle(snapshot) {
+        const version = snapshot?.version || Bridge?.configVersion || SANDBOX_CONFIG_VERSION;
+        const exportedAt = new Date().toISOString();
+        const summary = snapshot ? {
+            mapCount: Array.isArray(snapshot.maps) ? snapshot.maps.length : 0,
+            interactiveMode: !!snapshot.interactiveMode,
+            playerLevel: snapshot.playerLevel ?? null
+        } : null;
+        const bundle = {
+            schema: EXPORT_SCHEMA,
+            version,
+            exportedAt,
+            type: EXPORT_KIND,
+            data: snapshot || null,
+            payload: {
+                config: snapshot || null,
+                summary
+            }
+        };
+        if (!bundle.payload.summary) delete bundle.payload.summary;
+        if (!bundle.payload.config) delete bundle.payload.config;
+        if (!bundle.data) delete bundle.data;
+        return bundle;
+    }
+
     function extractSandboxPayload(raw) {
         if (!raw || typeof raw !== 'object') return null;
-        const candidates = [];
-        if (raw.type === 'sandbox_dungeon' && raw.data) candidates.push(raw.data);
-        if (raw.sandbox) candidates.push(raw.sandbox);
-        if (raw.data && raw.type !== 'sandbox_dungeon') candidates.push(raw.data);
-        if (raw.sandboxState) candidates.push(raw.sandboxState);
-        if (raw.state && !Array.isArray(raw.state)) candidates.push(raw.state);
-        candidates.push(raw);
-        for (const candidate of candidates) {
-            if (!candidate || typeof candidate !== 'object') continue;
-            const width = Number(candidate.width);
-            const height = Number(candidate.height);
-            if (!Number.isFinite(width) || !Number.isFinite(height)) continue;
-            return { ...candidate, width, height };
+
+        const seen = new WeakSet();
+        const queue = [];
+        const enqueue = (value) => {
+            if (!value || typeof value !== 'object') return;
+            if (seen.has(value)) return;
+            seen.add(value);
+            queue.push(value);
+        };
+
+        const considerObject = (value) => {
+            if (!value || typeof value !== 'object') return;
+            if (Array.isArray(value.maps)) {
+                return value;
+            }
+            if (value.config && typeof value.config === 'object') {
+                const config = value.config;
+                if (Array.isArray(config.maps)) return config;
+                const width = Number(config.width);
+                const height = Number(config.height);
+                if (Number.isFinite(width) && Number.isFinite(height)) {
+                    return { ...config, width, height };
+                }
+            }
+            const width = Number(value.width);
+            const height = Number(value.height);
+            if (Number.isFinite(width) && Number.isFinite(height)) {
+                return { ...value, width, height };
+            }
+            return null;
+        };
+
+        const seed = () => {
+            enqueue(raw);
+            if (raw.payload) {
+                enqueue(raw.payload);
+                if (Array.isArray(raw.payload)) {
+                    raw.payload.forEach(enqueue);
+                } else if (typeof raw.payload === 'object') {
+                    enqueue(raw.payload.config);
+                    enqueue(raw.payload.data);
+                    enqueue(raw.payload.state);
+                }
+            }
+            if (raw.bundle) enqueue(raw.bundle);
+            if (raw.content) enqueue(raw.content);
+            if (raw.contents) enqueue(raw.contents);
+            if (raw.data) enqueue(raw.data);
+            if (raw.state && !Array.isArray(raw.state)) enqueue(raw.state);
+            if (raw.sandbox) enqueue(raw.sandbox);
+            if (raw.sandboxState) enqueue(raw.sandboxState);
+            if (raw.config) enqueue(raw.config);
+            if (raw.meta && typeof raw.meta === 'object') {
+                enqueue(raw.meta.config);
+                enqueue(raw.meta.payload);
+            }
+            if (raw.type === EXPORT_KIND && raw.data) enqueue(raw.data);
+        };
+
+        seed();
+
+        while (queue.length) {
+            const current = queue.shift();
+            if (Array.isArray(current)) {
+                current.forEach(enqueue);
+                continue;
+            }
+            const result = considerObject(current);
+            if (result) return result;
+            if (current && typeof current === 'object') {
+                if (current.payload) {
+                    if (Array.isArray(current.payload)) current.payload.forEach(enqueue);
+                    else if (typeof current.payload === 'object') {
+                        enqueue(current.payload);
+                        enqueue(current.payload.config);
+                        enqueue(current.payload.data);
+                        enqueue(current.payload.state);
+                    }
+                }
+                if (current.config) enqueue(current.config);
+                if (current.data) enqueue(current.data);
+                if (current.state && !Array.isArray(current.state)) enqueue(current.state);
+                if (current.contents) enqueue(current.contents);
+                if (current.bundle) enqueue(current.bundle);
+            }
         }
+
         return null;
     }
 
@@ -4906,11 +5006,7 @@
                 if (!state) return;
                 try {
                     const snapshot = exportSerializedState();
-                    const payload = {
-                        version: 1,
-                        type: 'sandbox_dungeon',
-                        data: snapshot
-                    };
+                    const payload = buildExportBundle(snapshot);
                     const filename = `${EXPORT_FILE_PREFIX}-${formatTimestamp(new Date())}.json`;
                     triggerDownload(JSON.stringify(payload, null, 2), filename);
                     updateIoStatus('success', '設定をエクスポートしました。');

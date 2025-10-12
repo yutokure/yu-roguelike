@@ -40,6 +40,30 @@
             loadError: {
                 key: 'tools.blockdataEditor.main.status.loadError',
                 fallback: ({ source } = {}) => `Failed to load ${source || 'the file'}. Please import it from the Import action.`
+            },
+            noData: {
+                key: 'tools.blockdataEditor.main.status.noData',
+                fallback: 'No data loaded.'
+            },
+            creating: {
+                key: 'tools.blockdataEditor.main.status.creating',
+                fallback: 'Creating a new block. Fill in the required fields.'
+            }
+        },
+        sidebar: {
+            empty: {
+                noData: {
+                    key: 'tools.blockdataEditor.sidebar.empty.noData',
+                    fallback: 'No data loaded.'
+                },
+                noMatches: {
+                    key: 'tools.blockdataEditor.sidebar.empty.noMatches',
+                    fallback: 'No blocks match the filter.'
+                },
+                noBlocks: {
+                    key: 'tools.blockdataEditor.sidebar.empty.noBlocks',
+                    fallback: 'No blocks available.'
+                }
             }
         }
     };
@@ -412,11 +436,7 @@
         if (!state.data) {
             const empty = document.createElement('p');
             empty.className = 'blockdata-empty';
-            empty.textContent = translate(
-                'tools.blockdataEditor.sidebar.empty.noData',
-                null,
-                'データが読み込まれていません。'
-            );
+            empty.textContent = translateDescriptor(MESSAGE_DESCRIPTORS.sidebar.empty.noData);
             refs.list.appendChild(empty);
             return;
         }
@@ -434,8 +454,8 @@
             const empty = document.createElement('p');
             empty.className = 'blockdata-empty';
             empty.textContent = term
-                ? translate('tools.blockdataEditor.sidebar.empty.noMatches', null, '該当するブロックがありません。')
-                : translate('tools.blockdataEditor.sidebar.empty.noBlocks', null, 'ブロックがありません。');
+                ? translateDescriptor(MESSAGE_DESCRIPTORS.sidebar.empty.noMatches)
+                : translateDescriptor(MESSAGE_DESCRIPTORS.sidebar.empty.noBlocks);
             refs.list.appendChild(empty);
             return;
         }
@@ -609,8 +629,8 @@
     function handleCreateNew() {
         if (!state.data) {
             setStatus({
-                key: 'tools.blockdataEditor.main.status.noData',
-                fallback: 'データが読み込まれていません。',
+                key: MESSAGE_DESCRIPTORS.status.noData.key,
+                fallback: resolveFallback(MESSAGE_DESCRIPTORS.status.noData),
                 isError: true
             });
             return;
@@ -623,8 +643,8 @@
         fillForm();
         updateFormButtons();
         setStatus({
-            key: 'tools.blockdataEditor.main.status.creating',
-            fallback: '新規ブロックを作成中です。必要な項目を入力してください。'
+            key: MESSAGE_DESCRIPTORS.status.creating.key,
+            fallback: resolveFallback(MESSAGE_DESCRIPTORS.status.creating)
         });
         if (refs.fieldKey) refs.fieldKey.focus();
     }

@@ -377,6 +377,146 @@
             "summary": "完了: 成功 {success} 件 / 失敗 {failure} 件 / 所要時間 {duration}ms",
             "fatal": "重大なエラー: {error}"
           }
+        },
+        "hud": {
+          "summary": "図形 {bodyCount} / エミッタ {emitterCount} / 布 {clothCount} / 粒子 {particleCount}",
+          "powerGravityExp": "通電 {poweredCount} / 重力 {gravity} / EXP {exp}",
+          "solver": "ソルバ {iterations}回 × サブステップ {substeps}",
+          "temperature": "平均温度 {average}°C / 周囲 {ambient}°C / 最高 {max}°C",
+          "phases": "状態 固体{solid} / 液体{liquid} / 気体{gas}",
+          "wind": "風ガスト {gusts} / 風エミッタ {emitters}"
+        },
+        "inspector": {
+          "title": "設定",
+          "world": {
+            "gravityY": "重力Y ({value})",
+            "airDrag": "空気抵抗 ({value})",
+            "iterations": "反復回数 ({value})",
+            "substeps": "サブステップ ({value})",
+            "ambientTemperature": "周囲温度 ({value}°C)",
+            "boundary": {
+              "label": "外周モード",
+              "options": {
+                "wall": "壁 (外周で反射)",
+                "void": "奈落 (外に落下)"
+              },
+              "voidHint": "奈落: 図形が外に出ると一定距離で消滅します。"
+            }
+          },
+          "noSelection": "上部ツールから図形を追加して選択すると詳細設定が表示されます。",
+          "savedLayouts": {
+            "title": "保存データ",
+            "load": "読み込み",
+            "delete": "削除"
+          },
+          "common": {
+            "unknown": "不明"
+          },
+          "body": {
+            "title": "図形プロパティ",
+            "state": "状態: {state}",
+            "damage": "損耗度: {percent}%",
+            "integrity": "健全度: {percent}%",
+            "stress": "応力指標: {value} kPa相当",
+            "strain": "ひずみ: {percent}%",
+            "heatFlux": "熱流指標: {value}",
+            "fracture": "破断閾値: {threshold} / 破片生成 {fragments}回",
+            "reactionCooldown": "化学反応クールダウン: {seconds}s",
+            "materialPreset": "素材プリセット",
+            "mass": "質量 (推定 {value})",
+            "angleInfo": "角度 {angle}° / 角速度 {angular}rad/s",
+            "static": "固定する",
+            "restitution": "反発 ({value})",
+            "friction": "摩擦 ({value})",
+            "wallNote": "絶対壁は素材と物性が固定されています。サイズと位置のみ変更できます。",
+            "radius": "半径 ({value})",
+            "width": "幅 ({value})",
+            "height": "高さ ({value})",
+            "color": "色",
+            "chemical": {
+              "formula": "化学式: {formula}",
+              "components": "構成元素: {list}",
+              "molarMass": "モル質量: {mass} g/mol",
+              "hazards": "性質: {list}"
+            },
+            "phase": {
+              "solid": "固体",
+              "liquid": "液体",
+              "gas": "気体"
+            }
+          },
+          "customMaterial": {
+            "alertAddElement": "元素を1種類以上追加してください。",
+            "title": "化学式カスタマイザ",
+            "components": "構成: {list}",
+            "componentsEmpty": "構成: 追加された元素はありません",
+            "formulaPreview": "化学式プレビュー: {formula}",
+            "molarMass": "推定モル質量: {mass} g/mol",
+            "suggestedDensity": "元素平均密度: {average} (現在 {current})",
+            "removeComponent": "削除",
+            "addElement": "元素追加",
+            "nameLabel": "素材名",
+            "namePlaceholder": "カスタム素材名",
+            "density": "密度 ({value})",
+            "baseTemperature": "基準温度 ({value}°C)",
+            "meltingPoint": "融点 ({value}°C)",
+            "boilingPoint": "沸点 ({value}°C)",
+            "ignitionPoint": "発火点 ({value}°C)",
+            "hazardTitle": "性質タグ",
+            "appliedHazards": "適用タグ: {list}",
+            "apply": "カスタム素材を適用",
+            "reset": "構成クリア",
+            "hazards": {
+              "flammable": "可燃性",
+              "conductive": "導電性",
+              "elastic": "弾性体",
+              "insulator": "絶縁体",
+              "aqueous": "水溶性",
+              "superheated": "超高温",
+              "ionized": "電離",
+              "alkali-metal": "アルカリ金属",
+              "water-reactive": "水と激しく反応",
+              "acidic": "酸性",
+              "corrosive": "腐食性",
+              "toxic": "有毒",
+              "inert": "不活性",
+              "oxidizer": "助燃性",
+              "explosive": "爆発性",
+              "cryogenic": "超低温",
+              "refractory": "耐火性",
+              "catalytic": "触媒性"
+            }
+          },
+          "emitter": {
+            "title": "エミッタ設定",
+            "type": "タイプ: {kind}",
+            "rate": "レート ({value}/s)",
+            "power": "強さ ({value})",
+            "direction": "向き ({value}°)",
+            "circuit": {
+              "alwaysOn": "常時通電させる",
+              "connections": "接続ノード",
+              "disconnect": "切断",
+              "cancel": "接続キャンセル",
+              "connect": "接続モード"
+            }
+          },
+          "cloth": {
+            "title": "布プロパティ",
+            "integrity": "健全度 {percent}%",
+            "links": "節点 {cols}×{rows} / 結合 {intact}/{total}",
+            "strain": "平均伸長 {average}% / 最大 {max}%",
+            "fatigue": "疲労蓄積 {value}",
+            "structural": "張力 ({value})",
+            "shear": "せん断 ({value})",
+            "bend": "しなり ({value})",
+            "damping": "減衰 ({value})",
+            "tearFactor": "破断倍率 ({value})",
+            "windInfluence": "風反応 ({value})",
+            "color": "色",
+            "pinTop": "上辺を固定",
+            "unpinAll": "固定解除"
+          }
         }
       },
       "miniexp": {
@@ -14338,88 +14478,168 @@
       "physics_sandbox": {
         "toolbar": {
           "tools": {
-            "select": {
-              "label": "選択",
-              "title": "図形やエミッタを選択・ドラッグ"
-            },
-            "godFinger": {
-              "label": "神の指",
-              "title": "シミュレーション中の物体を直接つかんで動かす"
-            },
-            "addCircle": {
-              "label": "円",
-              "title": "円形の剛体を追加"
-            },
-            "addBox": {
-              "label": "箱",
-              "title": "箱型の剛体を追加"
-            },
-            "addCloth": {
-              "label": "布",
-              "title": "布のソフトボディを追加"
-            },
-            "addWall": {
-              "label": "絶対壁",
-              "title": "壊れない壁を描画"
-            },
-            "addFire": {
-              "label": "火",
-              "title": "炎エミッタを追加"
-            },
-            "addWater": {
-              "label": "水",
-              "title": "水エミッタを追加"
-            },
-            "addIce": {
-              "label": "氷",
-              "title": "氷結エミッタを追加"
-            },
-            "addWind": {
-              "label": "風",
-              "title": "風のエミッタを追加"
-            },
-            "addVine": {
-              "label": "ツタ",
-              "title": "ツタエミッタを追加"
-            },
-            "addLightning": {
-              "label": "雷",
-              "title": "雷エミッタを追加"
-            },
-            "addAcid": {
-              "label": "酸",
-              "title": "酸性エミッタを追加"
-            },
-            "addCircuit": {
-              "label": "回路",
-              "title": "回路ノードを追加"
-            }
+            "select": { "label": "選択", "title": "図形やエミッタを選択・ドラッグ" },
+            "godFinger": { "label": "神の指", "title": "シミュレーション中の物体を直接つかんで動かす" },
+            "addCircle": { "label": "円", "title": "円形の剛体を追加" },
+            "addBox": { "label": "箱", "title": "箱型の剛体を追加" },
+            "addCloth": { "label": "布", "title": "布のソフトボディを追加" },
+            "addWall": { "label": "絶対壁", "title": "壊れない壁を描画" },
+            "addFire": { "label": "火", "title": "炎エミッタを追加" },
+            "addWater": { "label": "水", "title": "水エミッタを追加" },
+            "addIce": { "label": "氷", "title": "氷結エミッタを追加" },
+            "addWind": { "label": "風", "title": "風のエミッタを追加" },
+            "addVine": { "label": "ツタ", "title": "ツタエミッタを追加" },
+            "addLightning": { "label": "雷", "title": "雷エミッタを追加" },
+            "addAcid": { "label": "酸", "title": "酸性エミッタを追加" },
+            "addCircuit": { "label": "回路", "title": "回路ノードを追加" }
           },
           "actions": {
-            "start": {
-              "label": "開始",
-              "title": "シミュレーションを開始/再開"
-            },
-            "pause": {
-              "label": "停止",
-              "title": "シミュレーションを一時停止"
-            },
-            "reset": {
-              "label": "リセット",
-              "title": "初期状態へ戻す"
-            },
-            "delete": {
-              "label": "削除",
-              "title": "選択中の図形/エミッタを削除"
-            },
-            "save": {
-              "label": "保存",
-              "title": "現在の配置を保存"
-            },
-            "load": {
-              "label": "読み込み",
-              "title": "保存した配置を読み込む"
+            "start": { "label": "開始", "title": "シミュレーションを開始/再開" },
+            "pause": { "label": "停止", "title": "シミュレーションを一時停止" },
+            "reset": { "label": "リセット", "title": "初期状態へ戻す" },
+            "delete": { "label": "削除", "title": "選択中の図形/エミッタを削除" },
+            "save": { "label": "保存", "title": "現在の配置を保存" },
+            "load": { "label": "読み込み", "title": "保存した配置を読み込む" }
+          }
+        },
+        "hud": {
+          "summary": "図形 {bodyCount} / エミッタ {emitterCount} / 布 {clothCount} / 粒子 {particleCount}",
+          "powerGravityExp": "通電 {poweredCount} / 重力 {gravity} / EXP {exp}",
+          "solver": "ソルバ {iterations}回 × サブステップ {substeps}",
+          "temperature": "平均温度 {average}°C / 周囲 {ambient}°C / 最高 {max}°C",
+          "phases": "状態 固体{solid} / 液体{liquid} / 気体{gas}",
+          "wind": "風ガスト {gusts} / 風エミッタ {emitters}"
+        },
+        "inspector": {
+          "title": "設定",
+          "world": {
+            "gravityY": "重力Y ({value})",
+            "airDrag": "空気抵抗 ({value})",
+            "iterations": "反復回数 ({value})",
+            "substeps": "サブステップ ({value})",
+            "ambientTemperature": "周囲温度 ({value}°C)",
+            "boundary": {
+              "label": "外周モード",
+              "options": {
+                "wall": "壁 (外周で反射)",
+                "void": "奈落 (外に落下)"
+              },
+              "voidHint": "奈落: 図形が外に出ると一定距離で消滅します。"
             }
+          },
+          "noSelection": "上部ツールから図形を追加して選択すると詳細設定が表示されます。",
+          "savedLayouts": {
+            "title": "保存データ",
+            "load": "読み込み",
+            "delete": "削除"
+          },
+          "common": {
+            "unknown": "不明"
+          },
+          "body": {
+            "title": "図形プロパティ",
+            "state": "状態: {state}",
+            "damage": "損耗度: {percent}%",
+            "integrity": "健全度: {percent}%",
+            "stress": "応力指標: {value} kPa相当",
+            "strain": "ひずみ: {percent}%",
+            "heatFlux": "熱流指標: {value}",
+            "fracture": "破断閾値: {threshold} / 破片生成 {fragments}回",
+            "reactionCooldown": "化学反応クールダウン: {seconds}s",
+            "materialPreset": "素材プリセット",
+            "mass": "質量 (推定 {value})",
+            "angleInfo": "角度 {angle}° / 角速度 {angular}rad/s",
+            "static": "固定する",
+            "restitution": "反発 ({value})",
+            "friction": "摩擦 ({value})",
+            "wallNote": "絶対壁は素材と物性が固定されています。サイズと位置のみ変更できます。",
+            "radius": "半径 ({value})",
+            "width": "幅 ({value})",
+            "height": "高さ ({value})",
+            "color": "色",
+            "chemical": {
+              "formula": "化学式: {formula}",
+              "components": "構成元素: {list}",
+              "molarMass": "モル質量: {mass} g/mol",
+              "hazards": "性質: {list}"
+            },
+            "phase": {
+              "solid": "固体",
+              "liquid": "液体",
+              "gas": "気体"
+            }
+          },
+          "customMaterial": {
+            "alertAddElement": "元素を1種類以上追加してください。",
+            "title": "化学式カスタマイザ",
+            "components": "構成: {list}",
+            "componentsEmpty": "構成: 追加された元素はありません",
+            "formulaPreview": "化学式プレビュー: {formula}",
+            "molarMass": "推定モル質量: {mass} g/mol",
+            "suggestedDensity": "元素平均密度: {average} (現在 {current})",
+            "removeComponent": "削除",
+            "addElement": "元素追加",
+            "nameLabel": "素材名",
+            "namePlaceholder": "カスタム素材名",
+            "density": "密度 ({value})",
+            "baseTemperature": "基準温度 ({value}°C)",
+            "meltingPoint": "融点 ({value}°C)",
+            "boilingPoint": "沸点 ({value}°C)",
+            "ignitionPoint": "発火点 ({value}°C)",
+            "hazardTitle": "性質タグ",
+            "appliedHazards": "適用タグ: {list}",
+            "apply": "カスタム素材を適用",
+            "reset": "構成クリア",
+            "hazards": {
+              "flammable": "可燃性",
+              "conductive": "導電性",
+              "elastic": "弾性体",
+              "insulator": "絶縁体",
+              "aqueous": "水溶性",
+              "superheated": "超高温",
+              "ionized": "電離",
+              "alkali-metal": "アルカリ金属",
+              "water-reactive": "水と激しく反応",
+              "acidic": "酸性",
+              "corrosive": "腐食性",
+              "toxic": "有毒",
+              "inert": "不活性",
+              "oxidizer": "助燃性",
+              "explosive": "爆発性",
+              "cryogenic": "超低温",
+              "refractory": "耐火性",
+              "catalytic": "触媒性"
+            }
+          },
+          "emitter": {
+            "title": "エミッタ設定",
+            "type": "タイプ: {kind}",
+            "rate": "レート ({value}/s)",
+            "power": "強さ ({value})",
+            "direction": "向き ({value}°)",
+            "circuit": {
+              "alwaysOn": "常時通電させる",
+              "connections": "接続ノード",
+              "disconnect": "切断",
+              "cancel": "接続キャンセル",
+              "connect": "接続モード"
+            }
+          },
+          "cloth": {
+            "title": "布プロパティ",
+            "integrity": "健全度 {percent}%",
+            "links": "節点 {cols}×{rows} / 結合 {intact}/{total}",
+            "strain": "平均伸長 {average}% / 最大 {max}%",
+            "fatigue": "疲労蓄積 {value}",
+            "structural": "張力 ({value})",
+            "shear": "せん断 ({value})",
+            "bend": "しなり ({value})",
+            "damping": "減衰 ({value})",
+            "tearFactor": "破断倍率 ({value})",
+            "windInfluence": "風反応 ({value})",
+            "color": "色",
+            "pinTop": "上辺を固定",
+            "unpinAll": "固定解除"
           }
         }
       },

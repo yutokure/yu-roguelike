@@ -202,6 +202,26 @@
     refractory:'耐火性',
     catalytic:'触媒性'
   };
+  const HAZARD_FALLBACK_LABELS = {
+    flammable:'Flammable',
+    conductive:'Conductive',
+    elastic:'Elastic',
+    insulator:'Insulator',
+    aqueous:'Water-soluble',
+    superheated:'Superheated',
+    ionized:'Ionized',
+    'alkali-metal':'Alkali Metal',
+    'water-reactive':'Water-reactive',
+    acidic:'Acidic',
+    corrosive:'Corrosive',
+    toxic:'Toxic',
+    inert:'Inert',
+    oxidizer:'Oxidizer',
+    explosive:'Explosive',
+    cryogenic:'Cryogenic',
+    refractory:'Refractory',
+    catalytic:'Catalytic'
+  };
   const DEFAULT_MATERIAL = 'wood';
   const WIND_FIELD_RANGE = 320;
   const WIND_FIELD_DECAY = 0.0028;
@@ -543,6 +563,13 @@
         }
       });
     }
+
+    const phaseFallbackLabels = { solid:'Solid', liquid:'Liquid', gas:'Gas' };
+    const getPhaseLabel = (phase) => {
+      const key = phase === 'liquid' ? 'liquid' : phase === 'gas' ? 'gas' : 'solid';
+      return text(`inspector.body.phase.${key}`, phaseFallbackLabels[key]);
+    };
+    const getHazardLabel = (id) => text(`inspector.customMaterial.hazards.${id}`, HAZARD_FALLBACK_LABELS[id] || HAZARD_LABELS[id] || id);
 
     const state = {
       tool:'select',
@@ -3530,20 +3557,44 @@
       hud.innerHTML = '';
       const info = document.createElement('div');
       info.className = 'phys-hud-line';
-      info.textContent = `図形 ${state.bodies.length} / エミッタ ${state.emitters.length} / 布 ${state.cloths.length} / 粒子 ${state.particles.length}`;
+      const bodyCount = state.bodies.length;
+      const emitterCount = state.emitters.length;
+      const clothCount = state.cloths.length;
+      const particleCount = state.particles.length;
+      info.textContent = text(
+        'hud.summary',
+        params => `Shapes ${params.bodyCount} / Emitters ${params.emitterCount} / Cloths ${params.clothCount} / Particles ${params.particleCount}`,
+        { bodyCount, emitterCount, clothCount, particleCount }
+      );
       const info2 = document.createElement('div');
       info2.className = 'phys-hud-line';
       const powered = state.emitters.filter(e => e.kind === 'circuit' && e.poweredTicks > 0).length;
-      info2.textContent = `Powered ${powered} / Gravity ${state.gravity.y.toFixed(0)} / EXP ${state.sessionExp.toFixed(1)}`;
+      info2.textContent = text(
+        'hud.powerGravityExp',
+        params => `Powered ${params.poweredCount} / Gravity ${params.gravity} / EXP ${params.exp}`,
+        { poweredCount: powered, gravity: state.gravity.y.toFixed(0), exp: state.sessionExp.toFixed(1) }
+      );
       const info3 = document.createElement('div');
       info3.className = 'phys-hud-line';
-      info3.textContent = `Solver ${state.solverIterations} iter × ${state.substeps} sub`;
+      info3.textContent = text(
+        'hud.solver',
+        params => `Solver ${params.iterations} iter × ${params.substeps} sub`,
+        { iterations: state.solverIterations, substeps: state.substeps }
+      );
       const temps = state.bodies.map(b => b.temperature ?? state.ambientTemperature);
       const avgTemp = temps.length ? temps.reduce((sum, v) => sum + v, 0) / temps.length : state.ambientTemperature;
       const maxTemp = temps.length ? Math.max(...temps) : state.ambientTemperature;
       const info4 = document.createElement('div');
       info4.className = 'phys-hud-line';
-      info4.textContent = `平均温度 ${avgTemp.toFixed(1)}°C / 周囲 ${state.ambientTemperature.toFixed(1)}°C / 最高 ${maxTemp.toFixed(1)}°C`;
+      info4.textContent = text(
+        'hud.temperature',
+        params => `Average Temp ${params.average}°C / Ambient ${params.ambient}°C / Max ${params.max}°C`,
+        {
+          average: avgTemp.toFixed(1),
+          ambient: state.ambientTemperature.toFixed(1),
+          max: maxTemp.toFixed(1)
+        }
+      );
       const phaseCounts = state.bodies.reduce((acc, body) => {
         const key = body.absoluteWall ? 'solid' : (body.phase || 'solid');
         acc[key] = (acc[key] || 0) + 1;
@@ -3551,24 +3602,43 @@
       }, {});
       const info5 = document.createElement('div');
       info5.className = 'phys-hud-line';
-      info5.textContent = `状態 固体${phaseCounts.solid || 0} / 液体${phaseCounts.liquid || 0} / 気体${phaseCounts.gas || 0}`;
+      info5.textContent = text(
+        'hud.phases',
+        params => `States Solid ${params.solid} / Liquid ${params.liquid} / Gas ${params.gas}`,
+        {
+          solid: phaseCounts.solid || 0,
+          liquid: phaseCounts.liquid || 0,
+          gas: phaseCounts.gas || 0
+        }
+      );
       const windEmitters = state.emitters.filter(e => e.kind === 'wind').length;
       const info6 = document.createElement('div');
       info6.className = 'phys-hud-line';
-      info6.textContent = `風ガスト ${state.windGusts.length} / 風エミッタ ${windEmitters}`;
+      info6.textContent = text(
+        'hud.wind',
+        params => `Wind Gusts ${params.gusts} / Wind Emitters ${params.emitters}`,
+        { gusts: state.windGusts.length, emitters: windEmitters }
+      );
       hud.append(info, info2, info3, info4, info5, info6);
     }
 
     function renderInspector(){
       inspector.innerHTML = '';
       const title = document.createElement('h3');
-      title.textContent = '設定';
+      title.textContent = text('inspector.title', 'Settings');
       inspector.appendChild(title);
 
       const worldSection = document.createElement('div');
       worldSection.className = 'phys-section';
       const gLabel = document.createElement('label');
-      gLabel.textContent = `重力Y (${state.gravity.y.toFixed(0)})`;
+      const updateGravityLabel = () => {
+        gLabel.textContent = text(
+          'inspector.world.gravityY',
+          params => `Gravity Y (${params.value})`,
+          { value: state.gravity.y.toFixed(0) }
+        );
+      };
+      updateGravityLabel();
       const gInput = document.createElement('input');
       gInput.type = 'range';
       gInput.min = '-2000';
@@ -3576,10 +3646,17 @@
       gInput.value = String(state.gravity.y);
       gInput.addEventListener('input', () => {
         state.gravity.y = Number(gInput.value);
-        gLabel.textContent = `重力Y (${state.gravity.y.toFixed(0)})`;
+        updateGravityLabel();
       });
       const dragLabel = document.createElement('label');
-      dragLabel.textContent = `空気抵抗 (${state.airDrag.toFixed(2)})`;
+      const updateDragLabel = () => {
+        dragLabel.textContent = text(
+          'inspector.world.airDrag',
+          params => `Air Drag (${params.value})`,
+          { value: state.airDrag.toFixed(2) }
+        );
+      };
+      updateDragLabel();
       const dragInput = document.createElement('input');
       dragInput.type = 'range';
       dragInput.min = '0';
@@ -3588,10 +3665,17 @@
       dragInput.value = String(state.airDrag);
       dragInput.addEventListener('input', () => {
         state.airDrag = Number(dragInput.value);
-        dragLabel.textContent = `空気抵抗 (${state.airDrag.toFixed(2)})`;
+        updateDragLabel();
       });
       const iterLabel = document.createElement('label');
-      iterLabel.textContent = `反復回数 (${state.solverIterations})`;
+      const updateIterLabel = () => {
+        iterLabel.textContent = text(
+          'inspector.world.iterations',
+          params => `Solver Iterations (${params.value})`,
+          { value: state.solverIterations }
+        );
+      };
+      updateIterLabel();
       const iterInput = document.createElement('input');
       iterInput.type = 'range';
       iterInput.min = '1';
@@ -3600,10 +3684,17 @@
       iterInput.value = String(state.solverIterations);
       iterInput.addEventListener('input', () => {
         state.solverIterations = Math.round(Number(iterInput.value) || 1);
-        iterLabel.textContent = `反復回数 (${state.solverIterations})`;
+        updateIterLabel();
       });
       const subLabel = document.createElement('label');
-      subLabel.textContent = `サブステップ (${state.substeps})`;
+      const updateSubLabel = () => {
+        subLabel.textContent = text(
+          'inspector.world.substeps',
+          params => `Substeps (${params.value})`,
+          { value: state.substeps }
+        );
+      };
+      updateSubLabel();
       const subInput = document.createElement('input');
       subInput.type = 'range';
       subInput.min = '1';
@@ -3612,10 +3703,17 @@
       subInput.value = String(state.substeps);
       subInput.addEventListener('input', () => {
         state.substeps = Math.max(1, Math.round(Number(subInput.value) || 1));
-        subLabel.textContent = `サブステップ (${state.substeps})`;
+        updateSubLabel();
       });
       const ambientLabel = document.createElement('label');
-      ambientLabel.textContent = `周囲温度 (${state.ambientTemperature.toFixed(1)}°C)`;
+      const updateAmbientLabel = () => {
+        ambientLabel.textContent = text(
+          'inspector.world.ambientTemperature',
+          params => `Ambient Temperature (${params.value}°C)`,
+          { value: state.ambientTemperature.toFixed(1) }
+        );
+      };
+      updateAmbientLabel();
       const ambientInput = document.createElement('input');
       ambientInput.type = 'range';
       ambientInput.min = '-80';
@@ -3624,14 +3722,20 @@
       ambientInput.value = String(state.ambientTemperature);
       ambientInput.addEventListener('input', () => {
         state.ambientTemperature = Math.round(Number(ambientInput.value) || 0);
-        ambientLabel.textContent = `周囲温度 (${state.ambientTemperature.toFixed(1)}°C)`;
+        updateAmbientLabel();
       });
       const boundaryLabel = document.createElement('label');
-      boundaryLabel.textContent = '外周モード';
+      boundaryLabel.textContent = text('inspector.world.boundary.label', 'Boundary Mode');
       const boundarySelect = document.createElement('select');
       [
-        { value:'wall', text:'壁 (外周で反射)' },
-        { value:'void', text:'奈落 (外に落下)' }
+        {
+          value:'wall',
+          text: text('inspector.world.boundary.options.wall', 'Wall (bounce at edges)')
+        },
+        {
+          value:'void',
+          text: text('inspector.world.boundary.options.void', 'Void (fall out)')
+        }
       ].forEach(optDef => {
         const opt = document.createElement('option');
         opt.value = optDef.value;
@@ -3648,7 +3752,7 @@
       if (state.boundaryMode === 'void') {
         const voidHint = document.createElement('p');
         voidHint.className = 'phys-hint';
-        voidHint.textContent = '奈落: 図形が外に出ると一定距離で消滅します。';
+        voidHint.textContent = text('inspector.world.boundary.voidHint', 'Void: Bodies that exit the bounds will disappear after traveling a distance.');
         worldSection.appendChild(voidHint);
       }
       inspector.appendChild(worldSection);
@@ -3657,7 +3761,7 @@
       if (!selected) {
         const p = document.createElement('p');
         p.className = 'phys-hint';
-        p.textContent = '上部ツールから図形を追加して選択すると詳細設定が表示されます。';
+        p.textContent = text('inspector.noSelection', 'Add shapes from the toolbar and select them to see detailed settings.');
         inspector.appendChild(p);
       } else if (state.selectionKind === 'body') {
         renderBodyInspector(selected);
@@ -3670,7 +3774,7 @@
       const saveSection = document.createElement('div');
       saveSection.className = 'phys-section';
       const saveTitle = document.createElement('h4');
-      saveTitle.textContent = '保存データ';
+      saveTitle.textContent = text('inspector.savedLayouts.title', 'Saved Layouts');
       const saveSelect = document.createElement('select');
       (state.savedLayouts || []).forEach(layout => {
         const opt = document.createElement('option');
@@ -3679,13 +3783,13 @@
         saveSelect.appendChild(opt);
       });
       const loadBtn2 = document.createElement('button');
-      loadBtn2.textContent = '読み込み';
+      loadBtn2.textContent = text('inspector.savedLayouts.load', 'Load');
       loadBtn2.addEventListener('click', () => {
         const name = saveSelect.value;
         if (name) applySnapshotByName(name);
       });
       const deleteBtn2 = document.createElement('button');
-      deleteBtn2.textContent = '削除';
+      deleteBtn2.textContent = text('inspector.savedLayouts.delete', 'Delete');
       deleteBtn2.addEventListener('click', () => {
         const name = saveSelect.value;
         if (!name) return;
@@ -3791,7 +3895,7 @@
     function applyCustomMaterialFromDraft(body, draft){
       const material = buildCustomMaterialFromDraft(body, draft);
       if (!material) {
-        window.alert('元素を1種類以上追加してください。');
+        window.alert(text('inspector.customMaterial.alertAddElement', 'Please add at least one element.'));
         return;
       }
       state.customMaterials.set(material.id, deepClone(material));
@@ -3817,65 +3921,99 @@
       const section = document.createElement('div');
       section.className = 'phys-section';
       const h = document.createElement('h4');
-      h.textContent = '図形プロパティ';
+      h.textContent = text('inspector.body.title', 'Body Properties');
       const phaseInfo = document.createElement('p');
       phaseInfo.className = 'phys-hint';
-      phaseInfo.textContent = `状態: ${phaseLabel(body.phase || 'solid')}`;
+      const phaseText = getPhaseLabel(body.phase || 'solid');
+      phaseInfo.textContent = text('inspector.body.state', params => `State: ${params.state}`, { state: phaseText });
       section.append(h, phaseInfo);
       const chemical = body.chemical;
       if (chemical) {
         const formulaInfo = document.createElement('p');
         formulaInfo.className = 'phys-hint';
-        formulaInfo.textContent = `化学式: ${chemical.formula || '不明'}`;
+        const formulaValue = chemical.formula || text('inspector.common.unknown', 'Unknown');
+        formulaInfo.textContent = text('inspector.body.chemical.formula', params => `Formula: ${params.formula}`, { formula: formulaValue });
         section.appendChild(formulaInfo);
         if (chemical.components && chemical.components.length) {
           const compInfo = document.createElement('p');
           compInfo.className = 'phys-hint';
-          compInfo.textContent = '構成元素: ' + chemical.components.map(c => `${c.name}(${c.symbol})×${c.count}`).join(' / ');
+          const componentList = chemical.components.map(c => `${c.name}(${c.symbol})×${c.count}`).join(' / ');
+          compInfo.textContent = text('inspector.body.chemical.components', params => `Components: ${params.list}`, { list: componentList });
           section.appendChild(compInfo);
         }
         if (chemical.molarMass) {
           const massInfo = document.createElement('p');
           massInfo.className = 'phys-hint';
-          massInfo.textContent = `モル質量: ${chemical.molarMass.toFixed(2)} g/mol`;
+          massInfo.textContent = text(
+            'inspector.body.chemical.molarMass',
+            params => `Molar Mass: ${params.mass} g/mol`,
+            { mass: chemical.molarMass.toFixed(2) }
+          );
           section.appendChild(massInfo);
         }
         if (chemical.hazardLabels && chemical.hazardLabels.length) {
           const hazardInfo = document.createElement('p');
           hazardInfo.className = 'phys-hint';
-          hazardInfo.textContent = `性質: ${chemical.hazardLabels.join(' / ')}`;
+          const hazardNames = Array.isArray(chemical.hazards) && chemical.hazards.length
+            ? chemical.hazards.map(id => getHazardLabel(id))
+            : chemical.hazardLabels;
+          hazardInfo.textContent = text(
+            'inspector.body.chemical.hazards',
+            params => `Properties: ${params.list}`,
+            { list: (hazardNames || []).join(' / ') }
+          );
           section.appendChild(hazardInfo);
         }
       }
       const damageInfo = document.createElement('p');
       damageInfo.className = 'phys-hint';
       damageInfo.dataset.role = 'body-damage';
-      damageInfo.textContent = `損耗度: ${(Math.min(body.damage || 0, 1) * 100).toFixed(0)}%`;
+      damageInfo.textContent = text(
+        'inspector.body.damage',
+        params => `Wear: ${params.percent}%`,
+        { percent: (Math.min(body.damage || 0, 1) * 100).toFixed(0) }
+      );
       section.appendChild(damageInfo);
 
       if (!body.absoluteWall) {
         const integrityInfo = document.createElement('p');
         integrityInfo.className = 'phys-hint';
         integrityInfo.dataset.role = 'body-integrity';
-        integrityInfo.textContent = `健全度: ${((body.integrity ?? (1 - (body.damage || 0))) * 100).toFixed(1)}%`;
+        integrityInfo.textContent = text(
+          'inspector.body.integrity',
+          params => `Integrity: ${params.percent}%`,
+          { percent: ((body.integrity ?? (1 - (body.damage || 0))) * 100).toFixed(1) }
+        );
         section.appendChild(integrityInfo);
 
         const stressInfo = document.createElement('p');
         stressInfo.className = 'phys-hint';
         stressInfo.dataset.role = 'body-stress';
-        stressInfo.textContent = `応力指標: ${(body.stress || 0).toFixed(0)} kPa相当`;
+        stressInfo.textContent = text(
+          'inspector.body.stress',
+          params => `Stress Index: ${params.value} kPa`,
+          { value: (body.stress || 0).toFixed(0) }
+        );
         section.appendChild(stressInfo);
 
         const strainInfo = document.createElement('p');
         strainInfo.className = 'phys-hint';
         strainInfo.dataset.role = 'body-strain';
-        strainInfo.textContent = `ひずみ: ${((body.strain || 0) * 100).toFixed(1)}%`;
+        strainInfo.textContent = text(
+          'inspector.body.strain',
+          params => `Strain: ${params.percent}%`,
+          { percent: ((body.strain || 0) * 100).toFixed(1) }
+        );
         section.appendChild(strainInfo);
 
         const heatFluxInfo = document.createElement('p');
         heatFluxInfo.className = 'phys-hint';
         heatFluxInfo.dataset.role = 'body-heatflux';
-        heatFluxInfo.textContent = `熱流指標: ${(body.heatFlux || 0).toFixed(1)}`;
+        heatFluxInfo.textContent = text(
+          'inspector.body.heatFlux',
+          params => `Heat Flux Index: ${params.value}`,
+          { value: (body.heatFlux || 0).toFixed(1) }
+        );
         section.appendChild(heatFluxInfo);
 
         const fractureInfo = document.createElement('p');
@@ -3883,17 +4021,25 @@
         fractureInfo.dataset.role = 'body-fracture';
         const threshold = body.fractureThreshold ? body.fractureThreshold.toFixed(0) : '---';
         const fragments = body.fragmentCount || 0;
-        fractureInfo.textContent = `破断閾値: ${threshold} / 破片生成 ${fragments}回`;
+        fractureInfo.textContent = text(
+          'inspector.body.fracture',
+          params => `Fracture Threshold: ${params.threshold} / Fragments ${params.fragments}`,
+          { threshold, fragments }
+        );
         section.appendChild(fractureInfo);
       }
       if ((body.reactionCooldown || 0) > 0) {
         const cooldownInfo = document.createElement('p');
         cooldownInfo.className = 'phys-hint';
-        cooldownInfo.textContent = `化学反応クールダウン: ${body.reactionCooldown.toFixed(2)}s`;
+        cooldownInfo.textContent = text(
+          'inspector.body.reactionCooldown',
+          params => `Reaction Cooldown: ${params.seconds}s`,
+          { seconds: body.reactionCooldown.toFixed(2) }
+        );
         section.appendChild(cooldownInfo);
       }
       const matLabel = document.createElement('label');
-      matLabel.textContent = '素材プリセット';
+      matLabel.textContent = text('inspector.body.materialPreset', 'Material Preset');
       const matSelect = document.createElement('select');
       Object.values(MATERIALS).forEach(mat => {
         const opt = document.createElement('option');
@@ -3916,10 +4062,24 @@
       });
 
       const massLabel = document.createElement('label');
-      massLabel.textContent = `質量 (推定 ${body.mass.toFixed(2)})`;
+      const updateMassLabel = () => {
+        massLabel.textContent = text(
+          'inspector.body.mass',
+          params => `Mass (est. ${params.value})`,
+          { value: body.mass.toFixed(2) }
+        );
+      };
+      updateMassLabel();
       const angleInfo = document.createElement('p');
       angleInfo.className = 'phys-hint';
-      angleInfo.textContent = `角度 ${(normalizeAngle(body.angle || 0) * 180 / Math.PI).toFixed(1)}° / 角速度 ${(body.angularVelocity || 0).toFixed(2)}rad/s`;
+      angleInfo.textContent = text(
+        'inspector.body.angleInfo',
+        params => `Angle ${params.angle}° / Angular Velocity ${params.angular} rad/s`,
+        {
+          angle: (normalizeAngle(body.angle || 0) * 180 / Math.PI).toFixed(1),
+          angular: (body.angularVelocity || 0).toFixed(2)
+        }
+      );
       const staticToggle = document.createElement('label');
       staticToggle.className = 'phys-checkbox';
       const staticInput = document.createElement('input');
@@ -3928,26 +4088,43 @@
       staticInput.addEventListener('change', () => {
         body.static = staticInput.checked;
         applyMaterial(body, body.material);
+        updateMassLabel();
       });
-      staticToggle.append(staticInput, document.createTextNode('固定する'));
+      staticToggle.append(staticInput, document.createTextNode(text('inspector.body.static', 'Make Static')));
 
-      const restLabel = document.createElement('label'); restLabel.textContent = `反発 (${body.restitution.toFixed(2)})`;
+      const restLabel = document.createElement('label');
+      const updateRestitutionLabel = () => {
+        restLabel.textContent = text(
+          'inspector.body.restitution',
+          params => `Restitution (${params.value})`,
+          { value: body.restitution.toFixed(2) }
+        );
+      };
+      updateRestitutionLabel();
       const restInput = document.createElement('input');
       restInput.type = 'range'; restInput.min = '0'; restInput.max = '1'; restInput.step = '0.05'; restInput.value = String(body.restitution);
       restInput.addEventListener('input', () => {
         body.restitution = Number(restInput.value);
-        restLabel.textContent = `反発 (${body.restitution.toFixed(2)})`;
+        updateRestitutionLabel();
         body.baseRestitution = body.restitution;
         const draft = getChemicalDraft(body);
         if (draft) draft.restitution = body.restitution;
         syncCustomMaterialFromBody(body);
       });
-      const fricLabel = document.createElement('label'); fricLabel.textContent = `摩擦 (${body.friction.toFixed(2)})`;
+      const fricLabel = document.createElement('label');
+      const updateFrictionLabel = () => {
+        fricLabel.textContent = text(
+          'inspector.body.friction',
+          params => `Friction (${params.value})`,
+          { value: body.friction.toFixed(2) }
+        );
+      };
+      updateFrictionLabel();
       const fricInput = document.createElement('input');
       fricInput.type = 'range'; fricInput.min = '0'; fricInput.max = '1'; fricInput.step = '0.05'; fricInput.value = String(body.friction);
       fricInput.addEventListener('input', () => {
         body.friction = Number(fricInput.value);
-        fricLabel.textContent = `摩擦 (${body.friction.toFixed(2)})`;
+        updateFrictionLabel();
         body.baseFriction = body.friction;
         const draft = getChemicalDraft(body);
         if (draft) draft.friction = body.friction;
@@ -3966,39 +4143,66 @@
       if (body.absoluteWall) {
         const wallNote = document.createElement('p');
         wallNote.className = 'phys-hint';
-        wallNote.textContent = '絶対壁は素材と物性が固定されています。サイズと位置のみ変更できます。';
+        wallNote.textContent = text('inspector.body.wallNote', 'Absolute walls have fixed materials. Only size and position can be changed.');
         section.appendChild(wallNote);
       }
 
       if (body.shape === 'circle') {
-        const rLabel = document.createElement('label'); rLabel.textContent = `半径 (${body.radius.toFixed(1)})`;
+        const rLabel = document.createElement('label');
+        const updateRadiusLabel = () => {
+          rLabel.textContent = text(
+            'inspector.body.radius',
+            params => `Radius (${params.value})`,
+            { value: body.radius.toFixed(1) }
+          );
+        };
+        updateRadiusLabel();
         const rInput = document.createElement('input');
         rInput.type = 'range'; rInput.min = '10'; rInput.max = '240'; rInput.value = String(body.radius);
         rInput.addEventListener('input', () => {
           body.radius = Number(rInput.value);
-          rLabel.textContent = `半径 (${body.radius.toFixed(1)})`;
+          updateRadiusLabel();
           applyMaterial(body, body.material);
+          updateMassLabel();
         });
         section.append(rLabel, rInput);
       } else {
-        const wLabel = document.createElement('label'); wLabel.textContent = `幅 (${body.width.toFixed(1)})`;
+        const wLabel = document.createElement('label');
+        const updateWidthLabel = () => {
+          wLabel.textContent = text(
+            'inspector.body.width',
+            params => `Width (${params.value})`,
+            { value: body.width.toFixed(1) }
+          );
+        };
+        updateWidthLabel();
         const wInput = document.createElement('input'); wInput.type = 'range'; wInput.min = '20'; wInput.max = '320'; wInput.value = String(body.width);
         wInput.addEventListener('input', () => {
           body.width = Number(wInput.value);
-          wLabel.textContent = `幅 (${body.width.toFixed(1)})`;
+          updateWidthLabel();
           applyMaterial(body, body.material);
+          updateMassLabel();
         });
-        const hLabel = document.createElement('label'); hLabel.textContent = `高さ (${body.height.toFixed(1)})`;
+        const hLabel = document.createElement('label');
+        const updateHeightLabel = () => {
+          hLabel.textContent = text(
+            'inspector.body.height',
+            params => `Height (${params.value})`,
+            { value: body.height.toFixed(1) }
+          );
+        };
+        updateHeightLabel();
         const hInput = document.createElement('input'); hInput.type = 'range'; hInput.min = '20'; hInput.max = '320'; hInput.value = String(body.height);
         hInput.addEventListener('input', () => {
           body.height = Number(hInput.value);
-          hLabel.textContent = `高さ (${body.height.toFixed(1)})`;
+          updateHeightLabel();
           applyMaterial(body, body.material);
+          updateMassLabel();
         });
         section.append(wLabel, wInput, hLabel, hInput);
       }
 
-      const colorLabel = document.createElement('label'); colorLabel.textContent = '色';
+      const colorLabel = document.createElement('label'); colorLabel.textContent = text('inspector.body.color', 'Color');
       const colorInput = document.createElement('input'); colorInput.type = 'color'; colorInput.value = body.color;
       colorInput.addEventListener('input', () => {
         body.color = colorInput.value;
@@ -4014,33 +4218,49 @@
         const chemSection = document.createElement('div');
         chemSection.className = 'phys-section';
         const chemTitle = document.createElement('h4');
-        chemTitle.textContent = '化学式カスタマイザ';
+        chemTitle.textContent = text('inspector.customMaterial.title', 'Chemical Customizer');
         chemSection.appendChild(chemTitle);
 
         const formula = chemicalFormulaFromComponents(chemDraft.components);
         const compInfo = document.createElement('p');
         compInfo.className = 'phys-hint';
         compInfo.textContent = chemDraft.components.length
-          ? '構成: ' + chemDraft.components.map(c => `${c.symbol}×${c.count}`).join(' / ')
-          : '構成: 追加された元素はありません';
+          ? text(
+              'inspector.customMaterial.components',
+              params => `Components: ${params.list}`,
+              { list: chemDraft.components.map(c => `${c.symbol}×${c.count}`).join(' / ') }
+            )
+          : text('inspector.customMaterial.componentsEmpty', 'Components: No elements added');
         chemSection.appendChild(compInfo);
 
         const formulaInfo = document.createElement('p');
         formulaInfo.className = 'phys-hint';
-        formulaInfo.textContent = `化学式プレビュー: ${formula || '---'}`;
+        formulaInfo.textContent = text(
+          'inspector.customMaterial.formulaPreview',
+          params => `Formula Preview: ${params.formula}`,
+          { formula: formula || '---' }
+        );
         chemSection.appendChild(formulaInfo);
 
         const molarMass = molarMassFromComponents(chemDraft.components);
         const molarInfo = document.createElement('p');
         molarInfo.className = 'phys-hint';
-        molarInfo.textContent = `推定モル質量: ${molarMass ? molarMass.toFixed(2) : '---'} g/mol`;
+        molarInfo.textContent = text(
+          'inspector.customMaterial.molarMass',
+          params => `Estimated Molar Mass: ${params.mass} g/mol`,
+          { mass: molarMass ? molarMass.toFixed(2) : '---' }
+        );
         chemSection.appendChild(molarInfo);
 
         const suggestedDensity = averageElementProperty(chemDraft.components, 'density');
         if (typeof suggestedDensity === 'number') {
           const densityHint = document.createElement('p');
           densityHint.className = 'phys-hint';
-          densityHint.textContent = `元素平均密度: ${suggestedDensity.toFixed(2)} (現在 ${chemDraft.density.toFixed(2)})`;
+          densityHint.textContent = text(
+            'inspector.customMaterial.suggestedDensity',
+            params => `Average Element Density: ${params.average} (Current ${params.current})`,
+            { average: suggestedDensity.toFixed(2), current: chemDraft.density.toFixed(2) }
+          );
           chemSection.appendChild(densityHint);
         }
 
@@ -4066,7 +4286,7 @@
             }
             renderInspector();
           });
-          const removeBtn = document.createElement('button'); removeBtn.type = 'button'; removeBtn.textContent = '削除';
+          const removeBtn = document.createElement('button'); removeBtn.type = 'button'; removeBtn.textContent = text('inspector.customMaterial.removeComponent', 'Remove');
           removeBtn.addEventListener('click', () => {
             chemDraft.components.splice(index,1);
             renderInspector();
@@ -4092,7 +4312,7 @@
         countInput.max = '256';
         countInput.step = '1';
         countInput.value = '1';
-        const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.textContent = '元素追加';
+        const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.textContent = text('inspector.customMaterial.addElement', 'Add Element');
         addBtn.addEventListener('click', () => {
           const symbol = elementSelect.value;
           const count = clamp(Math.round(Number(countInput.value) || 1), 1, 256);
@@ -4105,11 +4325,11 @@
         chemSection.appendChild(addRow);
 
         const labelWrap = document.createElement('label');
-        labelWrap.textContent = '素材名';
+        labelWrap.textContent = text('inspector.customMaterial.nameLabel', 'Material Name');
         const labelInput = document.createElement('input');
         labelInput.type = 'text';
         labelInput.value = chemDraft.label || '';
-        labelInput.placeholder = 'カスタム素材名';
+        labelInput.placeholder = text('inspector.customMaterial.namePlaceholder', 'Custom material name');
         labelInput.addEventListener('input', () => {
           chemDraft.label = labelInput.value.slice(0, 40);
         });
@@ -4117,7 +4337,14 @@
         chemSection.appendChild(labelWrap);
 
         const densityLabel = document.createElement('label');
-        densityLabel.textContent = `密度 (${chemDraft.density.toFixed(2)})`;
+        const updateDensityLabel = () => {
+          densityLabel.textContent = text(
+            'inspector.customMaterial.density',
+            params => `Density (${params.value})`,
+            { value: chemDraft.density.toFixed(2) }
+          );
+        };
+        updateDensityLabel();
         const densityInput = document.createElement('input');
         densityInput.type = 'number';
         densityInput.min = '0.05';
@@ -4126,65 +4353,93 @@
         densityInput.value = String(chemDraft.density);
         densityInput.addEventListener('input', () => {
           chemDraft.density = clamp(Number(densityInput.value) || chemDraft.density, 0.05, 25);
-          densityLabel.textContent = `密度 (${chemDraft.density.toFixed(2)})`;
+          updateDensityLabel();
         });
         densityLabel.appendChild(densityInput);
         chemSection.appendChild(densityLabel);
 
         const tempLabel = document.createElement('label');
-        tempLabel.textContent = `基準温度 (${chemDraft.baseTemperature.toFixed(1)}°C)`;
+        const updateBaseTempLabel = () => {
+          tempLabel.textContent = text(
+            'inspector.customMaterial.baseTemperature',
+            params => `Base Temperature (${params.value}°C)`,
+            { value: chemDraft.baseTemperature.toFixed(1) }
+          );
+        };
+        updateBaseTempLabel();
         const tempInput = document.createElement('input');
         tempInput.type = 'number';
         tempInput.step = '1';
         tempInput.value = String(Math.round(chemDraft.baseTemperature));
         tempInput.addEventListener('input', () => {
           chemDraft.baseTemperature = clamp(Number(tempInput.value) || chemDraft.baseTemperature, -200, 800);
-          tempLabel.textContent = `基準温度 (${chemDraft.baseTemperature.toFixed(1)}°C)`;
+          updateBaseTempLabel();
         });
         tempLabel.appendChild(tempInput);
         chemSection.appendChild(tempLabel);
 
         const meltLabel = document.createElement('label');
-        meltLabel.textContent = `融点 (${chemDraft.meltingPoint.toFixed(0)}°C)`;
+        const updateMeltLabel = () => {
+          meltLabel.textContent = text(
+            'inspector.customMaterial.meltingPoint',
+            params => `Melting Point (${params.value}°C)`,
+            { value: chemDraft.meltingPoint.toFixed(0) }
+          );
+        };
+        updateMeltLabel();
         const meltInput = document.createElement('input');
         meltInput.type = 'number';
         meltInput.step = '10';
         meltInput.value = String(Math.round(chemDraft.meltingPoint));
         meltInput.addEventListener('input', () => {
           chemDraft.meltingPoint = Number(meltInput.value) || chemDraft.meltingPoint;
-          meltLabel.textContent = `融点 (${chemDraft.meltingPoint.toFixed(0)}°C)`;
+          updateMeltLabel();
         });
         meltLabel.appendChild(meltInput);
         chemSection.appendChild(meltLabel);
 
         const boilLabel = document.createElement('label');
-        boilLabel.textContent = `沸点 (${chemDraft.boilingPoint.toFixed(0)}°C)`;
+        const updateBoilLabel = () => {
+          boilLabel.textContent = text(
+            'inspector.customMaterial.boilingPoint',
+            params => `Boiling Point (${params.value}°C)`,
+            { value: chemDraft.boilingPoint.toFixed(0) }
+          );
+        };
+        updateBoilLabel();
         const boilInput = document.createElement('input');
         boilInput.type = 'number';
         boilInput.step = '10';
         boilInput.value = String(Math.round(chemDraft.boilingPoint));
         boilInput.addEventListener('input', () => {
           chemDraft.boilingPoint = Number(boilInput.value) || chemDraft.boilingPoint;
-          boilLabel.textContent = `沸点 (${chemDraft.boilingPoint.toFixed(0)}°C)`;
+          updateBoilLabel();
         });
         boilLabel.appendChild(boilInput);
         chemSection.appendChild(boilLabel);
 
         const ignitionLabel = document.createElement('label');
-        ignitionLabel.textContent = `発火点 (${chemDraft.ignitionPoint.toFixed(0)}°C)`;
+        const updateIgnitionLabel = () => {
+          ignitionLabel.textContent = text(
+            'inspector.customMaterial.ignitionPoint',
+            params => `Ignition Point (${params.value}°C)`,
+            { value: chemDraft.ignitionPoint.toFixed(0) }
+          );
+        };
+        updateIgnitionLabel();
         const ignitionInput = document.createElement('input');
         ignitionInput.type = 'number';
         ignitionInput.step = '10';
         ignitionInput.value = String(Math.round(chemDraft.ignitionPoint));
         ignitionInput.addEventListener('input', () => {
           chemDraft.ignitionPoint = Number(ignitionInput.value) || chemDraft.ignitionPoint;
-          ignitionLabel.textContent = `発火点 (${chemDraft.ignitionPoint.toFixed(0)}°C)`;
+          updateIgnitionLabel();
         });
         ignitionLabel.appendChild(ignitionInput);
         chemSection.appendChild(ignitionLabel);
 
         const hazardTitle = document.createElement('h5');
-        hazardTitle.textContent = '性質タグ';
+        hazardTitle.textContent = text('inspector.customMaterial.hazardTitle', 'Hazard Tags');
         chemSection.appendChild(hazardTitle);
 
         const hazardWrap = document.createElement('div');
@@ -4200,7 +4455,7 @@
             else chemDraft.hazards.delete(id);
             renderInspector();
           });
-          hazardLabel.append(checkbox, document.createTextNode(label));
+          hazardLabel.append(checkbox, document.createTextNode(getHazardLabel(id)));
           hazardWrap.appendChild(hazardLabel);
         });
         chemSection.appendChild(hazardWrap);
@@ -4208,15 +4463,19 @@
         if (chemDraft.hazards.size) {
           const hazardInfo = document.createElement('p');
           hazardInfo.className = 'phys-hint';
-          hazardInfo.textContent = '適用タグ: ' + Array.from(chemDraft.hazards).map(id => HAZARD_LABELS[id] || id).join(' / ');
+          hazardInfo.textContent = text(
+            'inspector.customMaterial.appliedHazards',
+            params => `Applied Tags: ${params.list}`,
+            { list: Array.from(chemDraft.hazards).map(id => getHazardLabel(id)).join(' / ') }
+          );
           chemSection.appendChild(hazardInfo);
         }
 
         const buttonRow = document.createElement('div');
         buttonRow.className = 'phys-tool-group';
-        const applyBtn = document.createElement('button'); applyBtn.type = 'button'; applyBtn.textContent = 'カスタム素材を適用';
+        const applyBtn = document.createElement('button'); applyBtn.type = 'button'; applyBtn.textContent = text('inspector.customMaterial.apply', 'Apply Custom Material');
         applyBtn.addEventListener('click', () => applyCustomMaterialFromDraft(body, chemDraft));
-        const resetBtn = document.createElement('button'); resetBtn.type = 'button'; resetBtn.textContent = '構成クリア';
+        const resetBtn = document.createElement('button'); resetBtn.type = 'button'; resetBtn.textContent = text('inspector.customMaterial.reset', 'Clear Composition');
         resetBtn.addEventListener('click', () => {
           chemDraft.components = [];
           chemDraft.hazards = new Set();
@@ -4232,19 +4491,28 @@
     function renderEmitterInspector(emitter){
       const section = document.createElement('div');
       section.className = 'phys-section';
-      const h = document.createElement('h4'); h.textContent = 'エミッタ設定';
-      const kindLabel = document.createElement('p'); kindLabel.textContent = `タイプ: ${emitter.kind}`;
-      const rateLabel = document.createElement('label'); rateLabel.textContent = `レート (${emitter.rate.toFixed(1)}/s)`;
+      const h = document.createElement('h4'); h.textContent = text('inspector.emitter.title', 'Emitter Settings');
+      const kindLabel = document.createElement('p');
+      kindLabel.textContent = text('inspector.emitter.type', params => `Type: ${params.kind}`, { kind: emitter.kind });
+      const rateLabel = document.createElement('label');
+      const updateRateLabel = () => {
+        rateLabel.textContent = text('inspector.emitter.rate', params => `Rate (${params.value}/s)`, { value: emitter.rate.toFixed(1) });
+      };
+      updateRateLabel();
       const rateInput = document.createElement('input'); rateInput.type = 'range'; rateInput.min = '0'; rateInput.max = '40'; rateInput.step = '0.5'; rateInput.value = String(emitter.rate);
       rateInput.addEventListener('input', () => {
         emitter.rate = Number(rateInput.value);
-        rateLabel.textContent = `レート (${emitter.rate.toFixed(1)}/s)`;
+        updateRateLabel();
       });
-      const powerLabel = document.createElement('label'); powerLabel.textContent = `強さ (${(emitter.power||1).toFixed(1)})`;
+      const powerLabel = document.createElement('label');
+      const updatePowerLabel = () => {
+        powerLabel.textContent = text('inspector.emitter.power', params => `Strength (${params.value})`, { value: (emitter.power || 1).toFixed(1) });
+      };
+      updatePowerLabel();
       const powerInput = document.createElement('input'); powerInput.type = 'range'; powerInput.min = '0.2'; powerInput.max = '5'; powerInput.step = '0.1'; powerInput.value = String(emitter.power || 1);
       powerInput.addEventListener('input', () => {
         emitter.power = Number(powerInput.value);
-        powerLabel.textContent = `強さ (${(emitter.power||1).toFixed(1)})`;
+        updatePowerLabel();
       });
 
       section.append(h, kindLabel, rateLabel, rateInput, powerLabel, powerInput);
@@ -4252,7 +4520,10 @@
       if (emitter.kind === 'wind') {
         const dirLabel = document.createElement('label');
         const current = Math.round(emitter.direction ?? 0);
-        dirLabel.textContent = `向き (${current}°)`;
+        const updateDirectionLabel = () => {
+          dirLabel.textContent = text('inspector.emitter.direction', params => `Direction (${params.value}°)`, { value: emitter.direction ?? current });
+        };
+        updateDirectionLabel();
         const dirInput = document.createElement('input');
         dirInput.type = 'range';
         dirInput.min = '0';
@@ -4260,7 +4531,7 @@
         dirInput.value = String(current);
         dirInput.addEventListener('input', () => {
           emitter.direction = Math.round(Number(dirInput.value) || 0);
-          dirLabel.textContent = `向き (${emitter.direction}°)`;
+          updateDirectionLabel();
         });
         section.append(dirLabel, dirInput);
       }
@@ -4269,22 +4540,28 @@
         const sourceToggle = document.createElement('label'); sourceToggle.className = 'phys-checkbox';
         const sourceInput = document.createElement('input'); sourceInput.type = 'checkbox'; sourceInput.checked = emitter.source;
         sourceInput.addEventListener('change', () => { emitter.source = sourceInput.checked; });
-        sourceToggle.append(sourceInput, document.createTextNode('常時通電させる'));
+        sourceToggle.append(sourceInput, document.createTextNode(text('inspector.emitter.circuit.alwaysOn', 'Keep powered')));
         section.append(sourceToggle);
 
-        const connTitle = document.createElement('h5'); connTitle.textContent = '接続ノード';
+        const connTitle = document.createElement('h5'); connTitle.textContent = text('inspector.emitter.circuit.connections', 'Connected Nodes');
         section.append(connTitle);
         const list = document.createElement('ul'); list.className = 'phys-conn-list';
         (emitter.connections || []).forEach(id => {
           const li = document.createElement('li');
           li.textContent = `→ ${id.slice(0,6)}`;
-          const btn = document.createElement('button'); btn.textContent = '切断';
+          const btn = document.createElement('button'); btn.textContent = text('inspector.emitter.circuit.disconnect', 'Disconnect');
           btn.addEventListener('click', () => { disconnectCircuit(emitter.id, id); renderInspector(); });
           li.appendChild(btn);
           list.appendChild(li);
         });
         section.append(list);
-        const connectBtn = document.createElement('button'); connectBtn.textContent = state.pendingConnection === emitter.id ? '接続キャンセル' : '接続モード';
+        const connectBtn = document.createElement('button');
+        const updateConnectLabel = () => {
+          connectBtn.textContent = state.pendingConnection === emitter.id
+            ? text('inspector.emitter.circuit.cancel', 'Cancel Linking')
+            : text('inspector.emitter.circuit.connect', 'Link Mode');
+        };
+        updateConnectLabel();
         connectBtn.addEventListener('click', () => {
           if (state.pendingConnection === emitter.id) state.pendingConnection = null;
           else state.pendingConnection = emitter.id;
@@ -4299,96 +4576,128 @@
     function renderClothInspector(cloth){
       const section = document.createElement('div');
       section.className = 'phys-section';
-      const h = document.createElement('h4'); h.textContent = '布プロパティ';
+      const h = document.createElement('h4'); h.textContent = text('inspector.cloth.title', 'Cloth Properties');
       section.appendChild(h);
       const integrity = document.createElement('p');
       integrity.className = 'phys-hint';
       integrity.dataset.role = 'cloth-integrity';
-      integrity.textContent = `健全度 ${(cloth.integrity * 100).toFixed(1)}%`;
+      integrity.textContent = text('inspector.cloth.integrity', params => `Integrity ${params.percent}%`, { percent: (cloth.integrity * 100).toFixed(1) });
       section.appendChild(integrity);
       const info = document.createElement('p');
       info.className = 'phys-hint';
       info.dataset.role = 'cloth-links';
       const intact = cloth.constraints.filter(c => !c.broken).length;
-      info.textContent = `節点 ${cloth.cols}×${cloth.rows} / 結合 ${intact}/${cloth.constraints.length}`;
+      info.textContent = text(
+        'inspector.cloth.links',
+        params => `Nodes ${params.cols}×${params.rows} / Links ${params.intact}/${params.total}`,
+        { cols: cloth.cols, rows: cloth.rows, intact, total: cloth.constraints.length }
+      );
       section.appendChild(info);
 
       const strainInfo = document.createElement('p');
       strainInfo.className = 'phys-hint';
       strainInfo.dataset.role = 'cloth-strain';
-      strainInfo.textContent = `平均伸長 ${(cloth.avgStrain * 100).toFixed(2)}% / 最大 ${(cloth.maxStrain * 100).toFixed(2)}%`;
+      strainInfo.textContent = text(
+        'inspector.cloth.strain',
+        params => `Average Strain ${params.average}% / Max ${params.max}%`,
+        { average: (cloth.avgStrain * 100).toFixed(2), max: (cloth.maxStrain * 100).toFixed(2) }
+      );
       section.appendChild(strainInfo);
 
       const fatigueInfo = document.createElement('p');
       fatigueInfo.className = 'phys-hint';
       fatigueInfo.dataset.role = 'cloth-fatigue';
-      fatigueInfo.textContent = `疲労蓄積 ${ (cloth.fatigue || 0).toFixed(2) }`;
+      fatigueInfo.textContent = text('inspector.cloth.fatigue', params => `Fatigue ${params.value}`, { value: (cloth.fatigue || 0).toFixed(2) });
       section.appendChild(fatigueInfo);
 
-      const stiffLabel = document.createElement('label'); stiffLabel.textContent = `張力 (${cloth.structuralStiffness.toFixed(2)})`;
+      const stiffLabel = document.createElement('label');
+      const updateStiffLabel = () => {
+        stiffLabel.textContent = text('inspector.cloth.structural', params => `Structural (${params.value})`, { value: cloth.structuralStiffness.toFixed(2) });
+      };
+      updateStiffLabel();
       const stiffInput = document.createElement('input');
       stiffInput.type = 'range'; stiffInput.min = '0.2'; stiffInput.max = '1.5'; stiffInput.step = '0.01';
       stiffInput.value = String(cloth.structuralStiffness);
       stiffInput.addEventListener('input', () => {
         cloth.structuralStiffness = Number(stiffInput.value);
-        stiffLabel.textContent = `張力 (${cloth.structuralStiffness.toFixed(2)})`;
+        updateStiffLabel();
         cloth.constraints.forEach(c => { if (c.type === 'structural') c.stiffness = cloth.structuralStiffness; });
       });
 
-      const shearLabel = document.createElement('label'); shearLabel.textContent = `せん断 (${cloth.shearStiffness.toFixed(2)})`;
+      const shearLabel = document.createElement('label');
+      const updateShearLabel = () => {
+        shearLabel.textContent = text('inspector.cloth.shear', params => `Shear (${params.value})`, { value: cloth.shearStiffness.toFixed(2) });
+      };
+      updateShearLabel();
       const shearInput = document.createElement('input');
       shearInput.type = 'range'; shearInput.min = '0.1'; shearInput.max = '1.2'; shearInput.step = '0.01';
       shearInput.value = String(cloth.shearStiffness);
       shearInput.addEventListener('input', () => {
         cloth.shearStiffness = Number(shearInput.value);
-        shearLabel.textContent = `せん断 (${cloth.shearStiffness.toFixed(2)})`;
+        updateShearLabel();
         cloth.constraints.forEach(c => { if (c.type === 'shear') c.stiffness = cloth.shearStiffness; });
       });
 
-      const bendLabel = document.createElement('label'); bendLabel.textContent = `しなり (${cloth.bendStiffness.toFixed(2)})`;
+      const bendLabel = document.createElement('label');
+      const updateBendLabel = () => {
+        bendLabel.textContent = text('inspector.cloth.bend', params => `Bend (${params.value})`, { value: cloth.bendStiffness.toFixed(2) });
+      };
+      updateBendLabel();
       const bendInput = document.createElement('input');
       bendInput.type = 'range'; bendInput.min = '0.05'; bendInput.max = '1'; bendInput.step = '0.01';
       bendInput.value = String(cloth.bendStiffness);
       bendInput.addEventListener('input', () => {
         cloth.bendStiffness = Number(bendInput.value);
-        bendLabel.textContent = `しなり (${cloth.bendStiffness.toFixed(2)})`;
+        updateBendLabel();
         cloth.constraints.forEach(c => { if (c.type === 'bend') c.stiffness = cloth.bendStiffness; });
       });
 
-      const dampLabel = document.createElement('label'); dampLabel.textContent = `減衰 (${cloth.damping.toFixed(3)})`;
+      const dampLabel = document.createElement('label');
+      const updateDampLabel = () => {
+        dampLabel.textContent = text('inspector.cloth.damping', params => `Damping (${params.value})`, { value: cloth.damping.toFixed(3) });
+      };
+      updateDampLabel();
       const dampInput = document.createElement('input');
       dampInput.type = 'range'; dampInput.min = '0.6'; dampInput.max = '0.999'; dampInput.step = '0.001';
       dampInput.value = String(cloth.damping);
       dampInput.addEventListener('input', () => {
         cloth.damping = Number(dampInput.value);
-        dampLabel.textContent = `減衰 (${cloth.damping.toFixed(3)})`;
+        updateDampLabel();
       });
 
-      const tearLabel = document.createElement('label'); tearLabel.textContent = `破断倍率 (${cloth.tearFactor.toFixed(2)})`;
+      const tearLabel = document.createElement('label');
+      const updateTearLabel = () => {
+        tearLabel.textContent = text('inspector.cloth.tearFactor', params => `Tear Factor (${params.value})`, { value: cloth.tearFactor.toFixed(2) });
+      };
+      updateTearLabel();
       const tearInput = document.createElement('input');
       tearInput.type = 'range'; tearInput.min = '1.1'; tearInput.max = '3.5'; tearInput.step = '0.05';
       tearInput.value = String(cloth.tearFactor);
       tearInput.addEventListener('input', () => {
         cloth.tearFactor = Number(tearInput.value);
-        tearLabel.textContent = `破断倍率 (${cloth.tearFactor.toFixed(2)})`;
+        updateTearLabel();
       });
 
-      const windLabel = document.createElement('label'); windLabel.textContent = `風反応 (${cloth.windInfluence.toFixed(2)})`;
+      const windLabel = document.createElement('label');
+      const updateWindLabel = () => {
+        windLabel.textContent = text('inspector.cloth.windInfluence', params => `Wind Response (${params.value})`, { value: cloth.windInfluence.toFixed(2) });
+      };
+      updateWindLabel();
       const windInput = document.createElement('input');
       windInput.type = 'range'; windInput.min = '0'; windInput.max = '2.5'; windInput.step = '0.05';
       windInput.value = String(cloth.windInfluence);
       windInput.addEventListener('input', () => {
         cloth.windInfluence = Number(windInput.value);
-        windLabel.textContent = `風反応 (${cloth.windInfluence.toFixed(2)})`;
+        updateWindLabel();
       });
 
-      const colorLabel = document.createElement('label'); colorLabel.textContent = '色';
+      const colorLabel = document.createElement('label'); colorLabel.textContent = text('inspector.cloth.color', 'Color');
       const colorInput = document.createElement('input'); colorInput.type = 'color'; colorInput.value = cloth.color || '#cbd5f5';
       colorInput.addEventListener('input', () => { cloth.color = colorInput.value; });
 
       const pinButtons = document.createElement('div');
       pinButtons.className = 'phys-tool-group';
-      const repinTop = document.createElement('button'); repinTop.textContent = '上辺を固定';
+      const repinTop = document.createElement('button'); repinTop.textContent = text('inspector.cloth.pinTop', 'Pin Top Edge');
       repinTop.type = 'button';
       repinTop.addEventListener('click', () => {
         for (let c=0;c<cloth.cols;c++){
@@ -4396,7 +4705,7 @@
           if (node) node.pinned = true;
         }
       });
-      const unpinAll = document.createElement('button'); unpinAll.textContent = '固定解除';
+      const unpinAll = document.createElement('button'); unpinAll.textContent = text('inspector.cloth.unpinAll', 'Unpin All');
       unpinAll.type = 'button';
       unpinAll.addEventListener('click', () => {
         cloth.nodes.forEach(node => { node.pinned = false; });
@@ -4423,35 +4732,43 @@
         if (cloth) {
           const integrityEl = inspector.querySelector('[data-role="cloth-integrity"]');
           const linksEl = inspector.querySelector('[data-role="cloth-links"]');
-          if (integrityEl) integrityEl.textContent = `健全度 ${(cloth.integrity * 100).toFixed(1)}%`;
+          if (integrityEl) integrityEl.textContent = text('inspector.cloth.integrity', params => `Integrity ${params.percent}%`, { percent: (cloth.integrity * 100).toFixed(1) });
           if (linksEl) {
             const intact = cloth.constraints.filter(c => !c.broken).length;
-            linksEl.textContent = `節点 ${cloth.cols}×${cloth.rows} / 結合 ${intact}/${cloth.constraints.length}`;
+            linksEl.textContent = text(
+              'inspector.cloth.links',
+              params => `Nodes ${params.cols}×${params.rows} / Links ${params.intact}/${params.total}`,
+              { cols: cloth.cols, rows: cloth.rows, intact, total: cloth.constraints.length }
+            );
           }
           const strainEl = inspector.querySelector('[data-role="cloth-strain"]');
-          if (strainEl) strainEl.textContent = `平均伸長 ${(cloth.avgStrain * 100).toFixed(2)}% / 最大 ${(cloth.maxStrain * 100).toFixed(2)}%`;
+          if (strainEl) strainEl.textContent = text(
+            'inspector.cloth.strain',
+            params => `Average Strain ${params.average}% / Max ${params.max}%`,
+            { average: (cloth.avgStrain * 100).toFixed(2), max: (cloth.maxStrain * 100).toFixed(2) }
+          );
           const fatigueEl = inspector.querySelector('[data-role="cloth-fatigue"]');
-          if (fatigueEl) fatigueEl.textContent = `疲労蓄積 ${(cloth.fatigue || 0).toFixed(2)}`;
+          if (fatigueEl) fatigueEl.textContent = text('inspector.cloth.fatigue', params => `Fatigue ${params.value}`, { value: (cloth.fatigue || 0).toFixed(2) });
         }
       } else if (state.selectionKind === 'body') {
         const body = getSelected();
         if (body) {
           const damageEl = inspector.querySelector('[data-role="body-damage"]');
-          if (damageEl) damageEl.textContent = `損耗度: ${(Math.min(body.damage || 0, 1) * 100).toFixed(0)}%`;
+          if (damageEl) damageEl.textContent = text('inspector.body.damage', params => `Wear: ${params.percent}%`, { percent: (Math.min(body.damage || 0, 1) * 100).toFixed(0) });
           const integrityEl = inspector.querySelector('[data-role="body-integrity"]');
-          if (integrityEl) integrityEl.textContent = `健全度: ${((body.integrity ?? (1 - (body.damage || 0))) * 100).toFixed(1)}%`;
+          if (integrityEl) integrityEl.textContent = text('inspector.body.integrity', params => `Integrity: ${params.percent}%`, { percent: ((body.integrity ?? (1 - (body.damage || 0))) * 100).toFixed(1) });
           const fractureEl = inspector.querySelector('[data-role="body-fracture"]');
           if (fractureEl) {
             const threshold = body.fractureThreshold ? body.fractureThreshold.toFixed(0) : '---';
             const fragments = body.fragmentCount || 0;
-            fractureEl.textContent = `破断閾値: ${threshold} / 破片生成 ${fragments}回`;
+            fractureEl.textContent = text('inspector.body.fracture', params => `Fracture Threshold: ${params.threshold} / Fragments ${params.fragments}`, { threshold, fragments });
           }
           const stressEl = inspector.querySelector('[data-role="body-stress"]');
-          if (stressEl) stressEl.textContent = `応力指標: ${(body.stress || 0).toFixed(0)} kPa相当`;
+          if (stressEl) stressEl.textContent = text('inspector.body.stress', params => `Stress Index: ${params.value} kPa`, { value: (body.stress || 0).toFixed(0) });
           const strainEl = inspector.querySelector('[data-role="body-strain"]');
-          if (strainEl) strainEl.textContent = `ひずみ: ${((body.strain || 0) * 100).toFixed(1)}%`;
+          if (strainEl) strainEl.textContent = text('inspector.body.strain', params => `Strain: ${params.percent}%`, { percent: ((body.strain || 0) * 100).toFixed(1) });
           const heatFluxEl = inspector.querySelector('[data-role="body-heatflux"]');
-          if (heatFluxEl) heatFluxEl.textContent = `熱流指標: ${(body.heatFlux || 0).toFixed(1)}`;
+          if (heatFluxEl) heatFluxEl.textContent = text('inspector.body.heatFlux', params => `Heat Flux Index: ${params.value}`, { value: (body.heatFlux || 0).toFixed(1) });
         }
       }
     }

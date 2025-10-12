@@ -4,11 +4,13 @@
     const TOOL_ID = 'state-manager';
     const i18n = global.I18n || null;
 
+    const BASE_I18N_KEY = 'tools.sidebar.stateManager';
+
     const TOOL_LABEL_KEYS = Object.freeze({
-        modMaker: 'tools.stateManager.toolNames.modMaker',
-        blockDataEditor: 'tools.stateManager.toolNames.blockDataEditor',
-        sandbox: 'tools.stateManager.toolNames.sandbox',
-        imageViewer: 'tools.stateManager.toolNames.imageViewer'
+        modMaker: `${BASE_I18N_KEY}.toolNames.modMaker`,
+        blockDataEditor: `${BASE_I18N_KEY}.toolNames.blockDataEditor`,
+        sandbox: `${BASE_I18N_KEY}.toolNames.sandbox`,
+        imageViewer: `${BASE_I18N_KEY}.toolNames.imageViewer`
     });
 
     const TOOL_LABEL_FALLBACKS = Object.freeze({
@@ -19,16 +21,16 @@
     });
 
     const STATUS_MESSAGES = Object.freeze({
-        exportPreparing: { key: 'tools.stateManager.status.exportPreparing', fallback: '全体エクスポートを準備しています…', variant: null },
-        exportSuccess: { key: 'tools.stateManager.status.exportSuccess', fallback: ({ fileName } = {}) => `${fileName || ''} として保存しました。`, variant: 'success' },
-        exportError: { key: 'tools.stateManager.status.exportError', fallback: 'エクスポートに失敗しました。コンソールログを確認してください。', variant: 'error' },
-        importReading: { key: 'tools.stateManager.status.importReading', fallback: ({ fileName } = {}) => `${fileName || ''} を読み込み中です…`, variant: null },
-        importSuccess: { key: 'tools.stateManager.status.importSuccess', fallback: '全体インポートが完了しました。', variant: 'success' },
-        importError: { key: 'tools.stateManager.status.importError', fallback: 'インポートに失敗しました。ファイル形式を確認してください。', variant: 'error' }
+        exportPreparing: { key: `${BASE_I18N_KEY}.status.exportPreparing`, fallback: '全体エクスポートを準備しています…', variant: null },
+        exportSuccess: { key: `${BASE_I18N_KEY}.status.exportSuccess`, fallback: ({ fileName } = {}) => `${fileName || ''} として保存しました。`, variant: 'success' },
+        exportError: { key: `${BASE_I18N_KEY}.status.exportError`, fallback: 'エクスポートに失敗しました。コンソールログを確認してください。', variant: 'error' },
+        importReading: { key: `${BASE_I18N_KEY}.status.importReading`, fallback: ({ fileName } = {}) => `${fileName || ''} を読み込み中です…`, variant: null },
+        importSuccess: { key: `${BASE_I18N_KEY}.status.importSuccess`, fallback: '全体インポートが完了しました。', variant: 'success' },
+        importError: { key: `${BASE_I18N_KEY}.status.importError`, fallback: 'インポートに失敗しました。ファイル形式を確認してください。', variant: 'error' }
     });
 
     const MESSAGE_DESCRIPTORS = Object.freeze({
-        importComplete: { key: 'tools.stateManager.messages.importComplete', fallback: '状態データをインポートしました。' }
+        importComplete: { key: `${BASE_I18N_KEY}.messages.importComplete`, fallback: '状態データをインポートしました。' }
     });
 
     let lastStatusPayload = { key: null, params: null, fallback: '', variant: null };
@@ -56,7 +58,7 @@
     }
 
     function getDefaultSummary() {
-        return translate('tools.stateManager.summary.default', null, 'エクスポート／インポートの概要がここに表示されます。');
+        return translate(`${BASE_I18N_KEY}.summary.default`, null, 'エクスポート／インポートの概要がここに表示されます。');
     }
 
     function deepClone(value) {
@@ -100,7 +102,7 @@
     }
 
     function getToolSeparator() {
-        return translate('tools.stateManager.summary.toolSeparator', null, '、');
+        return translate(`${BASE_I18N_KEY}.summary.toolSeparator`, null, '、');
     }
 
     function getToolLabel(toolId) {
@@ -115,7 +117,7 @@
         }
         const lines = [];
         if (snapshot.exportedAt) {
-            lines.push(translate('tools.stateManager.summary.exportedAt', { value: snapshot.exportedAt }, () => `エクスポート日時: ${snapshot.exportedAt}`));
+            lines.push(translate(`${BASE_I18N_KEY}.summary.exportedAt`, { value: snapshot.exportedAt }, () => `エクスポート日時: ${snapshot.exportedAt}`));
         }
         const game = snapshot.game || {};
         const player = game.player || {};
@@ -123,30 +125,30 @@
         const hpText = Number.isFinite(player.maxHp)
             ? `${formatNumber(player.hp || 0)}/${formatNumber(player.maxHp)}`
             : '-';
-        lines.push(translate('tools.stateManager.summary.player', { level: levelText, hp: hpText }, () => `プレイヤー: Lv ${levelText} / HP ${hpText}`));
+        lines.push(translate(`${BASE_I18N_KEY}.summary.player`, { level: levelText, hp: hpText }, () => `プレイヤー: Lv ${levelText} / HP ${hpText}`));
         if (game.dungeonLevel != null || game.difficulty) {
             const floorText = game.dungeonLevel != null ? formatNumber(game.dungeonLevel) : '-';
             const difficulty = game.difficulty || '-';
-            lines.push(translate('tools.stateManager.summary.dungeon', { floor: floorText, difficulty }, () => `現在階層: ${floorText}F / 難易度: ${difficulty}`));
+            lines.push(translate(`${BASE_I18N_KEY}.summary.dungeon`, { floor: floorText, difficulty }, () => `現在階層: ${floorText}F / 難易度: ${difficulty}`));
         }
         const miniExp = game.miniExp || {};
         const recordCount = miniExp.records ? Object.keys(miniExp.records).length : 0;
         const selected = miniExp.selected != null && miniExp.selected !== '' ? miniExp.selected : '-';
         const recordText = formatNumber(recordCount);
-        lines.push(translate('tools.stateManager.summary.miniExp', { selected, records: recordText }, () => `MiniExp: 選択 ${selected} / 記録 ${recordText}件`));
+        lines.push(translate(`${BASE_I18N_KEY}.summary.miniExp`, { selected, records: recordText }, () => `MiniExp: 選択 ${selected} / 記録 ${recordText}件`));
         const bookmarks = Array.isArray(game.blockDimBookmarks) ? game.blockDimBookmarks.length : 0;
         const history = Array.isArray(game.blockDimHistory) ? game.blockDimHistory.length : 0;
         const historyText = formatNumber(history);
         const bookmarkText = formatNumber(bookmarks);
-        lines.push(translate('tools.stateManager.summary.blockDim', { history: historyText, bookmarks: bookmarkText }, () => `BlockDim: 履歴 ${historyText}件 / ブックマーク ${bookmarkText}件`));
+        lines.push(translate(`${BASE_I18N_KEY}.summary.blockDim`, { history: historyText, bookmarks: bookmarkText }, () => `BlockDim: 履歴 ${historyText}件 / ブックマーク ${bookmarkText}件`));
         const tools = snapshot.tools || {};
         const toolKeys = Object.keys(tools);
         if (toolKeys.length) {
             const separator = getToolSeparator();
             const names = toolKeys.map(key => getToolLabel(key)).join(separator);
-            lines.push(translate('tools.stateManager.summary.tools', { names }, () => `ツールデータ: ${names}`));
+            lines.push(translate(`${BASE_I18N_KEY}.summary.tools`, { names }, () => `ツールデータ: ${names}`));
         } else {
-            lines.push(translate('tools.stateManager.summary.noTools', null, 'ツールデータ: なし'));
+            lines.push(translate(`${BASE_I18N_KEY}.summary.noTools`, null, 'ツールデータ: なし'));
         }
         return lines.join('\n');
     }

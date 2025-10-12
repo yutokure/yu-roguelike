@@ -15135,6 +15135,18 @@
         "stateManager": {
           "label": "State Manager",
           "hint": "Export or import all game and tool data in one bundle.",
+          "panelAriaLabel": "State manager tool",
+          "header": {
+            "title": "State Manager",
+            "description": "Back up and restore dungeon progress, MiniExp and BlockDim history, and every Tools tab utility at once."
+          },
+          "body": {
+            "description": "Use \"Full Export\" to save the current state as a single JSON file, then \"Full Import\" to load that file and fully restore the game."
+          },
+          "actions": {
+            "export": "Full export",
+            "import": "Full import"
+          },
           "summary": {
             "default": "Export/import summary will appear here.",
             "exportedAt": "Exported at: {value}",

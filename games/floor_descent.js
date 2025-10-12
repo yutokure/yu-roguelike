@@ -21,17 +21,18 @@
     platformMaxWidth: 240,
     gapMin: 90,
     gapMax: 150,
-    baseCeilingSpeed: 42,
-    ceilingMaxSpeed: 160,
-    ceilingAccel: 0.022,
+    scrollBaseSpeed: 70,
+    scrollMaxSpeed: 200,
+    scrollAccel: 0.028,
     jumpBuffer: 0.14,
-    coyoteTime: 0.12
+    coyoteTime: 0.12,
+    spikeChance: 0.16
   };
 
   const DIFFICULTY_MODS = {
-    EASY:   { baseCeilingSpeed: 34, ceilingAccel: 0.016, gapMin: 70, gapMax: 120, conveyorForce: 140, springChance: 0.18, conveyorChance: 0.22, xpScale: 0.8 },
-    NORMAL: { baseCeilingSpeed: 42, ceilingAccel: 0.022, gapMin: 90, gapMax: 150, conveyorForce: 180, springChance: 0.24, conveyorChance: 0.26, xpScale: 1.0 },
-    HARD:   { baseCeilingSpeed: 52, ceilingAccel: 0.028, gapMin: 110, gapMax: 170, conveyorForce: 210, springChance: 0.3, conveyorChance: 0.3, xpScale: 1.25 }
+    EASY:   { scrollBaseSpeed: 58, scrollAccel: 0.018, gapMin: 70, gapMax: 120, conveyorForce: 140, springChance: 0.18, conveyorChance: 0.22, spikeChance: 0.12, xpScale: 0.8 },
+    NORMAL: { scrollBaseSpeed: 70, scrollAccel: 0.028, gapMin: 90, gapMax: 150, conveyorForce: 180, springChance: 0.24, conveyorChance: 0.26, spikeChance: 0.16, xpScale: 1.0 },
+    HARD:   { scrollBaseSpeed: 82, scrollAccel: 0.036, gapMin: 110, gapMax: 170, conveyorForce: 210, springChance: 0.3, conveyorChance: 0.3, spikeChance: 0.2, xpScale: 1.25 }
   };
 
   const COLORS = {
@@ -39,6 +40,7 @@
     platform: '#475569',
     conveyor: '#ea580c',
     spring: '#22d3ee',
+    spikePlatform: '#f87171',
     playerBody: '#f97316',
     playerOutline: '#0f172a',
     ceiling: '#cbd5f5',
@@ -151,6 +153,7 @@
       springPending: false,
       springBonusChain: 0,
       ceilingY: 40,
+      scrollSpeed: cfg.scrollBaseSpeed,
       platforms: [],
       nextPlatformY: 160,
       pendingEvents: [],
@@ -188,6 +191,7 @@
       state.pendingEvents.length = 0;
       state.cameraY = 0;
       state.nextPlatformY = 160;
+      state.scrollSpeed = cfg.scrollBaseSpeed;
       player.x = cfg.width * 0.5;
       player.y = 140;
       player.vx = 0;
@@ -214,9 +218,14 @@
         const x = randRange(cfg.spawnXMargin, cfg.width - cfg.spawnXMargin - width);
         const roll = Math.random();
         let type = 'solid';
-        if (roll < (cfg.springChance || 0.24)){
+        const spikeChance = cfg.spikeChance || 0.16;
+        const springChance = cfg.springChance || 0.24;
+        const conveyorChance = cfg.conveyorChance || 0.26;
+        if (roll < spikeChance){
+          type = 'spike';
+        } else if (roll < spikeChance + springChance){
           type = 'spring';
-        } else if (roll < (cfg.springChance || 0.24) + (cfg.conveyorChance || 0.26)) {
+        } else if (roll < spikeChance + springChance + conveyorChance) {
           type = 'conveyor';
         }
         const dir = type === 'conveyor' ? (Math.random() < 0.5 ? -1 : 1) : 0;
@@ -298,7 +307,9 @@
         simStep(stepDt);
       }
 
-      state.cameraY = Math.max(0, player.y - cfg.height * 0.35);
+      const targetScroll = Math.min(cfg.scrollMaxSpeed, cfg.scrollBaseSpeed + state.depth * (cfg.scrollAccel || 0));
+      state.scrollSpeed += (targetScroll - state.scrollSpeed) * Math.min(1, dt * 2.5);
+      state.cameraY += state.scrollSpeed * dt;
       state.depth = Math.max(state.depth, player.y - 140);
       state.bestDepth = Math.max(state.bestDepth, state.depth);
       state.floor = Math.max(0, Math.floor(state.depth / cfg.floorHeight));
@@ -397,6 +408,13 @@
           state.springPending = true;
           state.springBonusChain = 0;
           player.onGround = false;
+        } else if (landedPlatform.type === 'spike'){
+          if (applyDamage('spike_platform')){
+            player.y = landedPlatform.y - player.h / 2;
+            player.vy = 240;
+            player.onGround = false;
+            player.lastPlatform = null;
+          }
         } else {
           if (state.springPending){
             awardSpringBonus();
@@ -406,26 +424,53 @@
         }
       }
 
-      const targetCeilingSpeed = Math.min(cfg.ceilingMaxSpeed, cfg.baseCeilingSpeed + state.depth * cfg.ceilingAccel);
-      state.ceilingY += targetCeilingSpeed * dt;
-
+      state.ceilingY = state.cameraY + 40;
       if (player.y - player.h / 2 <= state.ceilingY + 4){
-        if (player.invuln <= 0){
-          state.lives -= 1;
-          state.flash = 0.4;
-          player.invuln = cfg.hitInvuln;
-          state.springPending = false;
-          if (state.lives <= 0){
-            endGame('ceiling');
-          } else {
-            player.y = state.ceilingY + player.h / 2 + 6;
-            player.vy = Math.max(player.vy, 60);
-          }
+        if (applyDamage('ceiling')){
+          dropToNearestPlatform();
         }
       }
 
-      if (player.y - state.cameraY > cfg.height + 120){
-        endGame('fall');
+      const topVisible = state.cameraY;
+      const bottomVisible = state.cameraY + cfg.height;
+      if (player.y + player.h / 2 < topVisible || player.y - player.h / 2 > bottomVisible){
+        endGame('scroll');
+      }
+    }
+
+    function applyDamage(){
+      if (player.invuln > 0 || state.ended) return false;
+      state.lives -= 1;
+      state.flash = 0.4;
+      player.invuln = cfg.hitInvuln;
+      state.springPending = false;
+      player.lastPlatform = null;
+      if (state.lives <= 0){
+        endGame('damage');
+        return false;
+      }
+      return true;
+    }
+
+    function dropToNearestPlatform(){
+      let target = null;
+      for (const plat of state.platforms){
+        if (plat.y > player.y + 10 && player.x + player.w / 2 > plat.x && player.x - player.w / 2 < plat.x + plat.width){
+          target = plat;
+          break;
+        }
+      }
+      if (target){
+        player.y = target.y - player.h / 2 - 1;
+        player.vy = 160;
+        player.onGround = false;
+        if (target.type === 'spring'){
+          player.vy = Math.max(player.vy, cfg.springVelocity * -0.25);
+        }
+      } else {
+        player.y += 90;
+        player.vy = 220;
+        player.onGround = false;
       }
     }
 
@@ -454,13 +499,30 @@
       // draw platforms
       for (const plat of state.platforms){
         const top = plat.y - 12;
-        ctx.fillStyle = plat.type === 'conveyor' ? COLORS.conveyor : (plat.type === 'spring' ? COLORS.spring : COLORS.platform);
+        let fill = COLORS.platform;
+        if (plat.type === 'conveyor') fill = COLORS.conveyor;
+        else if (plat.type === 'spring') fill = COLORS.spring;
+        else if (plat.type === 'spike') fill = COLORS.spikePlatform;
+        ctx.fillStyle = fill;
         if (ctx.roundRect){
           ctx.beginPath();
           ctx.roundRect(plat.x, plat.y - 12, plat.width, 20, 6);
           ctx.fill();
         } else {
           ctx.fillRect(plat.x, plat.y - 12, plat.width, 20);
+        }
+        if (plat.type === 'spike'){
+          ctx.fillStyle = '#fed7aa';
+          const spikes = Math.max(3, Math.floor(plat.width / 22));
+          const spikeWidth = plat.width / spikes;
+          for (let i = 0; i < spikes; i++){
+            const sx = plat.x + i * spikeWidth;
+            ctx.beginPath();
+            ctx.moveTo(sx, plat.y - 12);
+            ctx.lineTo(sx + spikeWidth / 2, plat.y - 2);
+            ctx.lineTo(sx + spikeWidth, plat.y - 12);
+            ctx.fill();
+          }
         }
         if (plat.type === 'conveyor'){
           ctx.strokeStyle = 'rgba(15,23,42,0.35)';

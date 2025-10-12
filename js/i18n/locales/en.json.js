@@ -15172,6 +15172,55 @@
           }
         }
       },
+      "imageViewer": {
+        "panelAriaLabel": "Image Viewer",
+        "header": {
+          "title": "Image Viewer",
+          "description": "Utility preview for reviewing screenshots with pan, zoom, rotation, stretch, and perspective transforms (preview only)."
+        },
+        "stage": {
+          "ariaLabel": "Image preview area",
+          "placeholder": "Select an image file or drag & drop it here.",
+          "hint": "Use the mouse wheel to zoom, drag to pan, and double-click to reset the view.",
+          "imageAlt": "Preview of the selected image"
+        },
+        "upload": {
+          "select": "Choose image file",
+          "resetView": "Reset view",
+          "resetAll": "Reset all"
+        },
+        "controls": {
+          "zoom": "Zoom",
+          "rotation": "Rotation",
+          "stretchX": "Horizontal stretch",
+          "stretchY": "Vertical stretch",
+          "perspective": "Perspective distance",
+          "rotateX": "Perspective X rotation",
+          "rotateY": "Perspective Y rotation"
+        },
+        "meta": {
+          "title": "Metadata",
+          "name": "File name",
+          "type": "Type",
+          "size": "Size",
+          "dimensions": "Image dimensions",
+          "modified": "Last modified",
+          "nameFallback": "(Untitled)",
+          "typeFallback": "Unknown",
+          "dimensionsValue": "{width} × {height} px"
+        },
+        "messages": {
+          "loadSuccess": "Image loaded.",
+          "loadError": "Failed to load the image.",
+          "invalidType": "Only image files are supported.",
+          "loading": "Loading image…",
+          "resetView": "View settings reset.",
+          "resetAll": "Image Viewer has been reset."
+        },
+        "errors": {
+          "missingElements": "[ImageViewer] Required elements not found."
+        }
+      },
       "blockdataEditor": {
         "panelAriaLabel": "Block Data Editor",
         "header": {

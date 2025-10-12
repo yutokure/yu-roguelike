@@ -1,7 +1,7 @@
 (function (root) {
   if (!root) return;
   var store = root.__i18nLocales = root.__i18nLocales || {};
-  store['ja'] = {
+  var locale = {
     "meta": {
       "title": "Yuローグライク"
     },
@@ -36,6 +36,24 @@
         "actions": {
           "return": "拠点に戻る",
           "retry": "再挑戦"
+        }
+        ,
+        "onigokko": {
+          "timer": {
+            "remaining": "残り {seconds}s"
+          },
+          "status": {
+            "start": "鬼ごっこ開始！矢印キー/WASDで移動",
+            "paused": "一時停止中",
+            "loading": "ステージ読み込み中…",
+            "ready": "準備完了！開始で鬼ごっこスタート",
+            "stage_generation_failed": "ステージ生成に失敗しました",
+            "api_unavailable": "ダンジョンAPIが利用できません",
+            "caught": "捕まった！",
+            "caught_no_reward": "捕まってしまった！獲得EXPなし",
+            "escaped": "見事逃げ切った！",
+            "escape_success": "逃げ切り成功！"
+          }
         }
       }
     },
@@ -759,7 +777,205 @@
           },
           "math_lab": {
             "name": "数学ラボ",
-            "description": "高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション"
+            "description": "高度な関数・単位変換・グラフ・テトレーション対応の数学ワークステーション",
+            "keypad": {
+              "groups": {
+                "standard": "標準関数",
+                "trigonometry": "三角・双曲線",
+                "complex": "複素数・行列",
+                "analysis": "解析・特殊関数",
+                "statistics": "確率・統計",
+                "numerical": "数値解法",
+                "programmer": "プログラマー・情報",
+                "constants": "定数・単位"
+              }
+            },
+            "units": {
+              "templates": {
+                "length": "長さ: 5 cm → inch",
+                "mass": "重さ: 70 kg → lb",
+                "energy": "エネルギー: 1 kWh → J",
+                "temperature": "温度: 25 degC → degF",
+                "speed": "速度: 100 km/h → m/s"
+              }
+            },
+            "ui": {
+              "unitTemplates": {
+                "title": "ユニット変換テンプレ",
+                "insert": "挿入"
+              },
+              "worksheet": { "title": "ワークシート" },
+              "inputMode": {
+                "classic": "関数表記",
+                "pretty": "数学記号"
+              },
+              "preview": { "title": "数式プレビュー" },
+              "actions": {
+                "evaluate": "計算 (Shift+Enter)",
+                "clear": "リセット",
+                "copyResult": "結果をコピー"
+              },
+              "history": {
+                "title": "計算履歴",
+                "empty": "ここに計算履歴が表示されます。"
+              },
+              "variables": {
+                "title": "スコープ変数",
+                "reset": "変数をクリア",
+                "empty": "（変数は未定義）"
+              },
+              "angle": {
+                "radians": "ラジアン",
+                "degrees": "度"
+              }
+            },
+            "placeholders": {
+              "worksheet": {
+                "classic": "式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem([\"x+y=3\",\"x-y=1\"],[\"x\",\"y\"]))",
+                "pretty": "例: √(2) + 1/3, 2π, (x+1)/(x−1) など数学記号で入力"
+              },
+              "preview": {
+                "expression": "（入力中の式がここに可視化されます）"
+              },
+              "graph": {
+                "expression": "f(x) を入力 (例: sin(x) / x)"
+              }
+            },
+            "status": {
+              "initializing": "準備中…",
+              "loading": "数学エンジンを読み込んでいます…",
+              "copySuccess": "結果をクリップボードにコピーしました。",
+              "copyFailure": "コピーに失敗しました…",
+              "scopeReset": "スコープを初期化しました。",
+              "inputModeClassic": "入力モード: 関数表記",
+              "inputModePretty": "入力モード: 数学記号",
+              "resultModeSymbolic": "結果表示: 分数/記号モード",
+              "resultModeNumeric": "結果表示: 小数モード",
+              "angleRadians": "角度単位: ラジアン",
+              "angleDegrees": "角度単位: 度",
+              "worksheetCleared": "ワークシートをクリアしました。",
+              "engineWaiting": "数学エンジンの初期化を待っています…",
+              "enterExpression": "式を入力してください。",
+              "calculationComplete": "計算が完了しました。",
+              "error": "エラー: {message}",
+              "enterGraphExpression": "グラフ式を入力してください。",
+              "ready": "数学ラボの準備が整いました。",
+              "engineInitialized": "数学エンジンを初期化しました。",
+              "loadFailed": "数学エンジンの読み込みに失敗しました。インターネット接続を確認してください。"
+            },
+            "results": {
+              "title": "結果",
+              "symbolicToggle": "分数/記号",
+              "numericToggle": "小数",
+              "symbolicLabel": "厳密値 / 記号",
+              "numericLabel": "近似値 (10進)",
+              "moreDigits": "桁を増やす",
+              "moreDigitsHint": "小数表示をさらに5桁延長",
+              "errorLabel": "エラー"
+            },
+            "graph": {
+              "title": "グラフ表示",
+              "plot": "グラフ描画",
+              "range": "範囲 (xmin, xmax)",
+              "info": "x軸・y軸は自動スケール。単位付き値・ベクトル・複素数の虚部は除外されます。",
+              "parseFailed": "式の解析に失敗しました: {message}",
+              "invalidRange": "範囲は有限で xmin < xmax となるように設定してください。",
+              "noPoints": "描画できる点がありません{detail}。",
+              "noPointsDetail": " (除外: {reasons})",
+              "summary": "描画ポイント: {count} / {total}",
+              "summaryExtra": " / 除外 {items}",
+              "reasons": {
+                "units": "単位付き: {count}",
+                "composite": "ベクトル/行列: {count}",
+                "complex": "複素数: {count}"
+              }
+            },
+            "errors": {
+              "radixRange": "基数は 2 以上 30 以下の整数で指定してください。",
+              "radixInvalidCharacter": "指定した基数に対応しない文字が含まれています。",
+              "expressionParse": "式を解釈できませんでした。文字列または math.js のノードを渡してください。",
+              "notFinite": "有限の数値ではありません。",
+              "numberConversion": "数値へ変換できませんでした。",
+              "positiveRealRequired": "正の実数を指定してください。",
+              "complexRealOnly": "複素数は実数部のみを使用できません。",
+              "matrixToScalar": "行列はスカラーに変換できません。",
+              "arrayToScalar": "配列はスカラーに変換できません。",
+              "graphUnitsUnsupported": "単位付きの値はグラフ化できません。",
+              "tetraRealOnly": "tetra は実数引数にのみ対応します。",
+              "slogPositiveBase": "slog は正の底と実数値に対応します。",
+              "slogBaseSeparated": "slog の底は 1 から十分に離れた値を指定してください。",
+              "divideByZero": "0 で割ることはできません。",
+              "integralNotReady": "数学エンジンの初期化を待ってから積分を実行してください。",
+              "integralSymbolicFailed": "指定した式の解析的積分を求められませんでした。numericIntegrate を利用してください。",
+              "integralRange": "積分範囲は有限の実数で指定してください。",
+              "integralBounds": "定積分を求める場合は下限と上限を両方指定してください。",
+              "newtonInitialValue": "初期値には有限の数値を指定してください。",
+              "newtonDerivativeZero": "導関数が 0 に近いためニュートン法が収束しません。",
+              "iterationDiverged": "反復計算が発散しました。",
+              "iterationNotConverged": "指定した反復回数内に収束しませんでした。",
+              "linearSolverUnavailable": "線形方程式ソルバが利用できません。",
+              "systemEquationsArray": "方程式の配列を渡してください。",
+              "systemVariableCount": "変数リストは方程式の数と一致している必要があります。",
+              "jacobianSolveFailed": "ヤコビ行列の解が取得できませんでした。",
+              "maximizeFoundMinimum": "指定の初期値付近では最大値ではなく最小値が見つかりました。",
+              "minimizeFoundMaximum": "指定の初期値付近では最小値ではなく最大値が見つかりました。",
+              "digammaFinite": "digamma の引数は有限の実数で指定してください。",
+              "digammaPositive": "digamma は正の実数引数にのみ対応します。",
+              "polygammaOrder": "polygamma の階数は 0 以上の整数を指定してください。",
+              "polygammaPositive": "polygamma は正の実数引数にのみ対応します。",
+              "harmonicFirstArg": "harmonic の第1引数には 1 以上の整数を指定してください。",
+              "harmonicSecondArg": "harmonic の第2引数には正の実数を指定してください。",
+              "zetaFinite": "zeta の引数は有限の実数で指定してください。",
+              "zetaOneDiverges": "zeta(1) は発散します。",
+              "zetaPositiveRegion": "この簡易実装では実部が正の領域でのみ定義されています。",
+              "logGammaFinite": "logGamma の引数は有限の実数で指定してください。",
+              "logGammaPositive": "logGamma は正の実数引数にのみ対応します。",
+              "gammaFinite": "gamma の引数は有限の実数で指定してください。",
+              "gammaPositive": "gamma は正の実数引数にのみ対応します。",
+              "betaFirstArg": "beta の第1引数には正の実数を指定してください。",
+              "betaSecondArg": "beta の第2引数には正の実数を指定してください。",
+              "lambertFinite": "lambertW の引数は有限の実数で指定してください。",
+              "lambertBranchInteger": "lambertW のブランチは整数で指定してください。",
+              "lambertBranchRange": "この実装では分枝 0 と -1 のみ対応しています。",
+              "lambertPrincipalDomain": "lambertW の主枝は x ≥ -1/e の範囲でのみ定義されます。",
+              "lambertNegativeDomain": "lambertW の分枝 -1 は -1/e ≤ x < 0 の範囲でのみ定義されます。",
+              "lambertNotConverged": "lambertW の計算が収束しませんでした。",
+              "normalPdfMean": "normalPdf の平均には有限の実数を指定してください。",
+              "normalPdfSigma": "normalPdf の標準偏差は正の実数で指定してください。",
+              "normalPdfInput": "normalPdf の第1引数は有限の実数で指定してください。",
+              "normalCdfMean": "normalCdf の平均には有限の実数を指定してください。",
+              "normalCdfSigma": "normalCdf の標準偏差は正の実数で指定してください。",
+              "normalCdfInput": "normalCdf の第1引数は有限の実数で指定してください。",
+              "normalInvProbability": "normalInv の確率は有限の実数で指定してください。",
+              "normalInvProbabilityRange": "normalInv の確率は 0 < p < 1 の範囲で指定してください。",
+              "normalInvSigma": "normalInv の標準偏差は正の実数で指定してください。",
+              "poissonMean": "poissonPmf の平均には正の実数を指定してください。",
+              "poissonCount": "poissonPmf の回数には 0 以上の整数を指定してください。",
+              "poissonCdfMean": "poissonCdf の平均には正の実数を指定してください。",
+              "poissonCdfCount": "poissonCdf の回数には 0 以上の整数を指定してください。",
+              "binomialTrials": "binomialPmf の試行回数には 0 以上の整数を指定してください。",
+              "binomialSuccesses": "binomialPmf の成功回数には 0 以上の整数を指定してください。",
+              "binomialProbability": "binomialPmf の成功確率は 0〜1 の範囲で指定してください。",
+              "binomialCdfTrials": "binomialCdf の試行回数には 0 以上の整数を指定してください。",
+              "binomialCdfSuccesses": "binomialCdf の成功回数には 0 以上の整数を指定してください。",
+              "binomialCdfProbability": "binomialCdf の成功確率は 0〜1 の範囲で指定してください。",
+              "logitFinite": "logit の引数は有限の実数で指定してください。",
+              "logitRange": "logit は 0 と 1 の間の値で指定してください。",
+              "sigmoidFinite": "sigmoid の引数は有限の実数で指定してください。",
+              "factorialNumeric": "factorial の引数には数値を指定してください。",
+              "factorialFinite": "factorial の引数には有限の実数を指定してください。",
+              "factorialReal": "factorial の引数には実数を指定してください。",
+              "factorialGreaterThanMinusOne": "factorial の引数は -1 より大きい実数を指定してください。",
+              "factorialNegativeInteger": "factorial は負の整数では定義されません。",
+              "factorialNonNegativeInteger": "factorial の引数には 0 以上の整数を指定してください。",
+              "permutationsRange": "permutations の第2引数は第1引数以下の整数で指定してください。",
+              "permutationsInteger": "permutations の引数には 0 以上の整数を指定してください。",
+              "combinationsRange": "combinations の第2引数は第1引数以下の整数で指定してください。",
+              "combinationsSecondArg": "combinations の第2引数には 0 以上の整数を指定してください。",
+              "combinationsInteger": "combinations の引数には 0 以上の整数を指定してください。",
+              "lnUnavailable": "自然対数関数 ln が利用できません。",
+              "erfcUnavailable": "erfc は現在利用できません。"
+            }
           },
           "calc_combo": {
             "name": "計算コンボ",
@@ -1637,7 +1853,125 @@
           },
           "memo_studio": {
             "name": "暗記スタジオ",
-            "description": "フラッシュカードを登録し間隔反復で学習する暗記アプリ"
+            "description": "フラッシュカードを登録し間隔反復で学習する暗記アプリ",
+            "title": "暗記スタジオ",
+            "badge": "TOY MOD",
+            "controls": {
+              "addDeck": "＋ デッキ追加",
+              "export": "エクスポート (JSON)",
+              "import": "インポート (JSON)"
+            },
+            "filters": {
+              "tag": {
+                "label": "タグフィルター",
+                "placeholder": "カンマ区切りで入力"
+              }
+            },
+            "form": {
+              "title": "カード登録",
+              "fields": {
+                "front": "表面 (タイトル)",
+                "back": "裏面 (解答)",
+                "hint": "ヒント / 説明 (任意)",
+                "tags": "タグ (カンマ区切り)",
+                "interval": "初期間隔（日）"
+              },
+              "preview": {
+                "label": "裏面プレビュー",
+                "empty": "入力するとプレビューが表示されます。"
+              },
+              "submit": "カードを追加",
+              "validation": {
+                "missingSides": "表面と裏面は必須です。"
+              }
+            },
+            "review": {
+              "controls": {
+                "show": "表示",
+                "good": "覚えた",
+                "hard": "難しい",
+                "again": "再学習",
+                "note": "ノート"
+              },
+              "deckName": "{name} ({count}枚)",
+              "noDeck": "デッキ未選択",
+              "queueInfo": "残り {count} 枚",
+              "empty": "レビュー対象のカードはありません。追加またはインポートしてください。",
+              "hintPrefix": "ヒント: "
+            },
+            "dialogs": {
+              "addDeck": {
+                "prompt": "新しいデッキ名を入力してください",
+                "defaultName": "新しいデッキ"
+              }
+            },
+            "import": {
+              "error": {
+                "invalidJson": "JSON を読み取れませんでした。",
+                "read": "ファイルの読み込みに失敗しました。"
+              }
+            },
+            "sparkline": {
+              "tooltip": "{date} / {reviewed}枚 / {accuracy}% / {xp}XP",
+              "empty": "履歴なし"
+            },
+            "deck": {
+              "empty": "デッキがありません。追加してください。",
+              "defaultName": "新しいデッキ",
+              "metrics": {
+                "total": "{count}枚",
+                "due": "期限 {count}枚",
+                "accuracy": "達成率 {percent}%"
+              }
+            },
+            "hud": {
+              "reviewed": {
+                "label": "レビュー済み",
+                "value": "{count}枚"
+              },
+              "accuracy": {
+                "label": "正答率",
+                "value": "{percent}%"
+              },
+              "sessionXp": {
+                "label": "セッションEXP",
+                "value": "{xp}XP"
+              },
+              "elapsed": {
+                "label": "経過時間",
+                "value": "{minutes}分{secondsPadded}秒"
+              }
+            },
+            "note": {
+              "title": "{front} のノート",
+              "actions": {
+                "cancel": "閉じる",
+                "save": "保存"
+              }
+            },
+            "defaults": {
+              "deckName": "スターターデッキ",
+              "tags": {
+                "web": "Web"
+              },
+              "cards": {
+                "html": {
+                  "front": "HTML",
+                  "back": "HyperText Markup Language",
+                  "hint": "Webページの骨組み"
+                },
+                "css": {
+                  "front": "CSS",
+                  "back": "Cascading Style Sheets",
+                  "hint": "見た目を装飾"
+                },
+                "javascript": {
+                  "front": "JavaScript",
+                  "back": "ブラウザで動作するプログラミング言語",
+                  "hint": "インタラクティブ"
+                }
+              }
+            }
           },
           "onigokko": {
             "name": "鬼ごっこ",
@@ -1751,7 +2085,8 @@
             "sequential": "シーケンシャル",
             "measurement": "計測",
             "output": "出力",
-            "other": "その他"
+            "other": "その他",
+            "misc": "その他"
           },
           "common": {
             "high": "HIGH",
@@ -1760,6 +2095,7 @@
             "off": "OFF",
             "set": "SET",
             "reset": "RESET",
+            "neutral": "---",
             "metastable": "不定状態",
             "metastableIndicator": "S=R=1 (不定)",
             "metastableMessage": "SとRが同時に1です。安定しません。",
@@ -1769,6 +2105,10 @@
             "periodMs": "周期 (ms)",
             "outLabel": "OUT: {value}",
             "muxStatus": "OUT:{out} (SEL={sel})"
+          },
+          "chips": {
+            "sessionXp": "セッションEXP: {value}",
+            "elapsedTime": "経過時間: {value}ms"
           },
           "ui": {
             "title": "論理回路シミュレータ",
@@ -1793,6 +2133,10 @@
             "truthTitle": "真理値表",
             "connectionCount": "{count} 本",
             "delayValue": "{value} ns",
+            "clockPeriodValue": "{value} ms",
+            "truthTable": {
+              "input": "IN{index}"
+            },
             "fields": {
               "id": "ID",
               "type": "タイプ",
@@ -1824,9 +2168,17 @@
               "label": "クロック",
               "description": "一定周期で振動するクロック入力"
             },
+            "const_high": {
+              "label": "定数1",
+              "description": "常にHIGHを出力する定数ソース"
+            },
             "constHigh": {
               "label": "定数1",
               "description": "常にHIGHを出力する定数ソース"
+            },
+            "const_low": {
+              "label": "定数0",
+              "description": "常にLOWを出力する定数ソース"
             },
             "constLow": {
               "label": "定数0",
@@ -1876,6 +2228,14 @@
               "label": "2-4デコーダ",
               "description": "2ビット入力からワンホットの4出力を生成するデコーダ"
             },
+            "d_ff": {
+              "label": "Dフリップフロップ",
+              "description": "立ち上がりクロックでD入力をラッチしQ/Q̅を出力する同期フリップフロップ (非同期リセット付)",
+              "inspect": {
+                "0": { "label": "ラッチ状態" },
+                "1": { "label": "前回クロック" }
+              }
+            },
             "dff": {
               "label": "Dフリップフロップ",
               "description": "立ち上がりクロックでD入力をラッチしQ/Q̅を出力する同期フリップフロップ (非同期リセット付)",
@@ -1883,10 +2243,25 @@
               "status": "Q={value}",
               "inspectLatch": "ラッチ状態"
             },
+            "sr_latch": {
+              "label": "SRラッチ",
+              "description": "NOR構成の基本SRラッチ。Sでセット、Rでリセット。",
+              "inspect": {
+                "0": { "label": "注意" }
+              }
+            },
             "srLatch": {
               "label": "SRラッチ",
               "description": "NOR構成の基本SRラッチ。Sでセット、Rでリセット。",
               "qStatus": "Q={value}"
+            },
+            "t_ff": {
+              "label": "Tフリップフロップ",
+              "description": "立ち上がりクロック毎にT入力がHIGHなら出力を反転。リセット入力付き。",
+              "inspect": {
+                "0": { "label": "トグル状態" },
+                "1": { "label": "前回クロック" }
+              }
             },
             "tff": {
               "label": "Tフリップフロップ",
@@ -13882,6 +14257,94 @@
           "upgradeHint": "Shift+クリックで砲塔を強化できます"
         }
       },
+      "physics_sandbox": {
+        "toolbar": {
+          "tools": {
+            "select": {
+              "label": "選択",
+              "title": "図形やエミッタを選択・ドラッグ"
+            },
+            "godFinger": {
+              "label": "神の指",
+              "title": "シミュレーション中の物体を直接つかんで動かす"
+            },
+            "addCircle": {
+              "label": "円",
+              "title": "円形の剛体を追加"
+            },
+            "addBox": {
+              "label": "箱",
+              "title": "箱型の剛体を追加"
+            },
+            "addCloth": {
+              "label": "布",
+              "title": "布のソフトボディを追加"
+            },
+            "addWall": {
+              "label": "絶対壁",
+              "title": "壊れない壁を描画"
+            },
+            "addFire": {
+              "label": "火",
+              "title": "炎エミッタを追加"
+            },
+            "addWater": {
+              "label": "水",
+              "title": "水エミッタを追加"
+            },
+            "addIce": {
+              "label": "氷",
+              "title": "氷結エミッタを追加"
+            },
+            "addWind": {
+              "label": "風",
+              "title": "風のエミッタを追加"
+            },
+            "addVine": {
+              "label": "ツタ",
+              "title": "ツタエミッタを追加"
+            },
+            "addLightning": {
+              "label": "雷",
+              "title": "雷エミッタを追加"
+            },
+            "addAcid": {
+              "label": "酸",
+              "title": "酸性エミッタを追加"
+            },
+            "addCircuit": {
+              "label": "回路",
+              "title": "回路ノードを追加"
+            }
+          },
+          "actions": {
+            "start": {
+              "label": "開始",
+              "title": "シミュレーションを開始/再開"
+            },
+            "pause": {
+              "label": "停止",
+              "title": "シミュレーションを一時停止"
+            },
+            "reset": {
+              "label": "リセット",
+              "title": "初期状態へ戻す"
+            },
+            "delete": {
+              "label": "削除",
+              "title": "選択中の図形/エミッタを削除"
+            },
+            "save": {
+              "label": "保存",
+              "title": "現在の配置を保存"
+            },
+            "load": {
+              "label": "読み込み",
+              "title": "保存した配置を読み込む"
+            }
+          }
+        }
+      },
       "imperial_realm": {
         "ui": {
           "logTitle": "作戦ログ",
@@ -13906,7 +14369,14 @@
           "waveStatus": "ウェーブ {current} / {total}",
           "waveInfo": "現在の波: {wave}/{total}\n敵TC耐久: {hp} / {max}",
           "commanderGoal": "司令官討伐",
-          "finalStand": "終局戦"
+          "finalStand": "終局戦",
+          "ageHeading": "帝国段階: {age}",
+          "ageProgress": "進化中… 残り{remaining}秒",
+          "ageReady": "進化可能",
+          "ageNext": "次: {age} / {requirement}",
+          "ageMax": "帝国期を維持しています。",
+          "momentumTitle": "帝国士気",
+          "momentumDetail": "攻撃補正 +{bonus}%"
         },
         "intel": {
           "summary": "村人: {villagers}\n軍事: {army}\n建物: {structures}"
@@ -13935,7 +14405,27 @@
             "tower": {
               "label": "建設: 見張り塔",
               "description": "自動射撃タワー"
+            },
+            "blacksmith": {
+              "label": "建設: 鍛冶場",
+              "description": "武具を鍛え士気を高める"
+            },
+            "stable": {
+              "label": "建設: 厩舎",
+              "description": "騎士の訓練施設"
+            },
+            "siegeWorkshop": {
+              "label": "建設: 攻城工房",
+              "description": "攻城兵器を製造"
             }
+          },
+          "ageUp": {
+            "label": "時代進化: {age}",
+            "time": "進化時間: {time}秒"
+          },
+          "requireAge": "必要時代: {age}",
+          "badge": {
+            "ageUp": "時代"
           },
           "train": {
             "button": "訓練: {unit}",
@@ -13958,6 +14448,11 @@
           "commanderArrived": "敵将軍が戦場に現れました！",
           "waveIncoming": "敵ウェーブ{wave}が接近中！",
           "waveCleared": "ウェーブ{wave}を撃退！補給物資を受領しました。",
+          "requireAge": "{age} に到達すると建設可能です。",
+          "ageResearchInProgress": "既に時代進化を研究中です。",
+          "ageResearchStarted": "{age} への進化を開始しました。",
+          "ageResearchCancelled": "タウンセンター喪失により時代進化が中断されました。",
+          "ageAdvanced": "{age} に進化しました！",
           "victory": "勝利！",
           "defeat": "敗北…"
         },
@@ -13976,7 +14471,10 @@
           "villager": "村人",
           "militia": "民兵",
           "archer": "弓兵",
+          "spearman": "槍兵",
+          "crossbowman": "クロスボウ兵",
           "raider": "略奪兵",
+          "knight": "騎士",
           "horseArcher": "騎馬弓兵",
           "commander": "敵将軍",
           "ram": "破城槌"
@@ -13986,7 +14484,24 @@
           "house": "家",
           "barracks": "兵舎",
           "archery": "弓兵小屋",
-          "tower": "見張り塔"
+          "tower": "見張り塔",
+          "blacksmith": "鍛冶場",
+          "stable": "厩舎",
+          "siegeWorkshop": "攻城工房"
+        },
+        "age": {
+          "labels": {
+            "frontier": "開拓期",
+            "feudal": "封建期",
+            "castle": "城塞期",
+            "imperial": "帝国期"
+          },
+          "summaries": {
+            "frontier": "村落の礎を築き、生存を優先する段階。",
+            "feudal": "歩兵の再編と防衛線の強化が可能になる。",
+            "castle": "重装兵と騎兵の整備で攻勢に転じられる。",
+            "imperial": "最先端の軍制で決定的な優位を築く。"
+          }
         }
       },
       "tic_tac_toe": {
@@ -16198,206 +16713,6 @@
           "progress": "全{total}件中 {current}件目"
         }
       },
-      "mathLab": {
-        "keypad": {
-          "groups": {
-            "standard": "標準関数",
-            "trigonometry": "三角・双曲線",
-            "complex": "複素数・行列",
-            "analysis": "解析・特殊関数",
-            "statistics": "確率・統計",
-            "numerical": "数値解法",
-            "programmer": "プログラマー・情報",
-            "constants": "定数・単位"
-          }
-        },
-        "units": {
-          "templates": {
-            "length": "長さ: 5 cm → inch",
-            "mass": "重さ: 70 kg → lb",
-            "energy": "エネルギー: 1 kWh → J",
-            "temperature": "温度: 25 degC → degF",
-            "speed": "速度: 100 km/h → m/s"
-          }
-        },
-        "ui": {
-          "unitTemplates": {
-            "title": "ユニット変換テンプレ",
-            "insert": "挿入"
-          },
-          "worksheet": { "title": "ワークシート" },
-          "inputMode": {
-            "classic": "関数表記",
-            "pretty": "数学記号"
-          },
-          "preview": { "title": "数式プレビュー" },
-          "actions": {
-            "evaluate": "計算 (Shift+Enter)",
-            "clear": "リセット",
-            "copyResult": "結果をコピー"
-          },
-          "history": {
-            "title": "計算履歴",
-            "empty": "ここに計算履歴が表示されます。"
-          },
-          "variables": {
-            "title": "スコープ変数",
-            "reset": "変数をクリア",
-            "empty": "（変数は未定義）"
-          },
-          "angle": {
-            "radians": "Radians",
-            "degrees": "Degrees"
-          }
-        },
-        "placeholders": {
-          "worksheet": {
-            "classic": "式やコマンドを入力 (例: integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem([\"x+y=3\",\"x-y=1\"],[\"x\",\"y\"]))",
-            "pretty": "例: √(2) + 1/3, 2π, (x+1)/(x−1) など数学記号で入力"
-          },
-          "preview": {
-            "expression": "（入力中の式がここに可視化されます）"
-          },
-          "graph": {
-            "expression": "f(x) を入力 (例: sin(x) / x)"
-          }
-        },
-        "status": {
-          "initializing": "準備中…",
-          "loading": "数学エンジンを読み込んでいます…",
-          "copySuccess": "結果をクリップボードにコピーしました。",
-          "copyFailure": "コピーに失敗しました…",
-          "scopeReset": "スコープを初期化しました。",
-          "inputModeClassic": "入力モード: 関数表記",
-          "inputModePretty": "入力モード: 数学記号",
-          "resultModeSymbolic": "結果表示: 分数/記号モード",
-          "resultModeNumeric": "結果表示: 小数モード",
-          "angleRadians": "角度単位: ラジアン",
-          "angleDegrees": "角度単位: 度",
-          "worksheetCleared": "ワークシートをクリアしました。",
-          "engineWaiting": "数学エンジンの初期化を待っています…",
-          "enterExpression": "式を入力してください。",
-          "calculationComplete": "計算が完了しました。",
-          "error": "エラー: {message}",
-          "enterGraphExpression": "グラフ式を入力してください。",
-          "ready": "数学ラボの準備が整いました。",
-          "engineInitialized": "数学エンジンを初期化しました。",
-          "loadFailed": "数学エンジンの読み込みに失敗しました。インターネット接続を確認してください。"
-        },
-        "results": {
-          "title": "結果",
-          "symbolicToggle": "分数/記号",
-          "numericToggle": "小数",
-          "symbolicLabel": "Exact / Symbolic",
-          "numericLabel": "Approximate (10進)",
-          "moreDigits": "More Digits",
-          "moreDigitsHint": "小数表示を+5桁拡張",
-          "errorLabel": "Error"
-        },
-        "graph": {
-          "title": "グラフ表示",
-          "plot": "グラフ描画",
-          "range": "範囲 (xmin, xmax)",
-          "info": "x軸・y軸は自動スケール。単位付き値・ベクトル・複素数の虚部は除外されます。",
-          "parseFailed": "式の解析に失敗しました: {message}",
-          "invalidRange": "範囲は有限で xmin < xmax となるように設定してください。",
-          "noPoints": "描画できる点がありません{detail}。",
-          "noPointsDetail": " (除外: {reasons})",
-          "summary": "描画ポイント: {count} / {total}",
-          "summaryExtra": " / 除外 {items}",
-          "reasons": {
-            "units": "単位付き: {count}",
-            "composite": "ベクトル/行列: {count}",
-            "complex": "複素数: {count}"
-          }
-        },
-        "errors": {
-          "radixRange": "基数は 2 以上 30 以下の整数で指定してください。",
-          "radixInvalidCharacter": "指定した基数に対応しない文字が含まれています。",
-          "expressionParse": "式を解釈できませんでした。文字列または math.js のノードを渡してください。",
-          "notFinite": "有限の数値ではありません。",
-          "numberConversion": "数値へ変換できませんでした。",
-          "positiveRealRequired": "正の実数を指定してください。",
-          "complexRealOnly": "複素数は実数部のみを使用できません。",
-          "matrixToScalar": "行列はスカラーに変換できません。",
-          "arrayToScalar": "配列はスカラーに変換できません。",
-          "graphUnitsUnsupported": "単位付きの値はグラフ化できません。",
-          "tetraRealOnly": "tetra は実数引数にのみ対応します。",
-          "slogPositiveBase": "slog は正の底と実数値に対応します。",
-          "slogBaseSeparated": "slog の底は 1 から十分に離れた値を指定してください。",
-          "divideByZero": "0 で割ることはできません。",
-          "integralNotReady": "数学エンジンの初期化を待ってから積分を実行してください。",
-          "integralSymbolicFailed": "指定した式の解析的積分を求められませんでした。numericIntegrate を利用してください。",
-          "integralRange": "積分範囲は有限の実数で指定してください。",
-          "integralBounds": "定積分を求める場合は下限と上限を両方指定してください。",
-          "newtonInitialValue": "初期値には有限の数値を指定してください。",
-          "newtonDerivativeZero": "導関数が 0 に近いためニュートン法が収束しません。",
-          "iterationDiverged": "反復計算が発散しました。",
-          "iterationNotConverged": "指定した反復回数内に収束しませんでした。",
-          "linearSolverUnavailable": "線形方程式ソルバが利用できません。",
-          "systemEquationsArray": "方程式の配列を渡してください。",
-          "systemVariableCount": "変数リストは方程式の数と一致している必要があります。",
-          "jacobianSolveFailed": "ヤコビ行列の解が取得できませんでした。",
-          "maximizeFoundMinimum": "指定の初期値付近では最大値ではなく最小値が見つかりました。",
-          "minimizeFoundMaximum": "指定の初期値付近では最小値ではなく最大値が見つかりました。",
-          "digammaFinite": "digamma の引数は有限の実数で指定してください。",
-          "digammaPositive": "digamma は正の実数引数にのみ対応します。",
-          "polygammaOrder": "polygamma の階数は 0 以上の整数を指定してください。",
-          "polygammaPositive": "polygamma は正の実数引数にのみ対応します。",
-          "harmonicFirstArg": "harmonic の第1引数には 1 以上の整数を指定してください。",
-          "harmonicSecondArg": "harmonic の第2引数には正の実数を指定してください。",
-          "zetaFinite": "zeta の引数は有限の実数で指定してください。",
-          "zetaOneDiverges": "zeta(1) は発散します。",
-          "zetaPositiveRegion": "この簡易実装では実部が正の領域でのみ定義されています。",
-          "logGammaFinite": "logGamma の引数は有限の実数で指定してください。",
-          "logGammaPositive": "logGamma は正の実数引数にのみ対応します。",
-          "gammaFinite": "gamma の引数は有限の実数で指定してください。",
-          "gammaPositive": "gamma は正の実数引数にのみ対応します。",
-          "betaFirstArg": "beta の第1引数には正の実数を指定してください。",
-          "betaSecondArg": "beta の第2引数には正の実数を指定してください。",
-          "lambertFinite": "lambertW の引数は有限の実数で指定してください。",
-          "lambertBranchInteger": "lambertW のブランチは整数で指定してください。",
-          "lambertBranchRange": "この実装では分枝 0 と -1 のみ対応しています。",
-          "lambertPrincipalDomain": "lambertW の主枝は x ≥ -1/e の範囲でのみ定義されます。",
-          "lambertNegativeDomain": "lambertW の分枝 -1 は -1/e ≤ x < 0 の範囲でのみ定義されます。",
-          "lambertNotConverged": "lambertW の計算が収束しませんでした。",
-          "normalPdfMean": "normalPdf の平均には有限の実数を指定してください。",
-          "normalPdfSigma": "normalPdf の標準偏差は正の実数で指定してください。",
-          "normalPdfInput": "normalPdf の第1引数は有限の実数で指定してください。",
-          "normalCdfMean": "normalCdf の平均には有限の実数を指定してください。",
-          "normalCdfSigma": "normalCdf の標準偏差は正の実数で指定してください。",
-          "normalCdfInput": "normalCdf の第1引数は有限の実数で指定してください。",
-          "normalInvProbability": "normalInv の確率は有限の実数で指定してください。",
-          "normalInvProbabilityRange": "normalInv の確率は 0 < p < 1 の範囲で指定してください。",
-          "normalInvSigma": "normalInv の標準偏差は正の実数で指定してください。",
-          "poissonMean": "poissonPmf の平均には正の実数を指定してください。",
-          "poissonCount": "poissonPmf の回数には 0 以上の整数を指定してください。",
-          "poissonCdfMean": "poissonCdf の平均には正の実数を指定してください。",
-          "poissonCdfCount": "poissonCdf の回数には 0 以上の整数を指定してください。",
-          "binomialTrials": "binomialPmf の試行回数には 0 以上の整数を指定してください。",
-          "binomialSuccesses": "binomialPmf の成功回数には 0 以上の整数を指定してください。",
-          "binomialProbability": "binomialPmf の成功確率は 0〜1 の範囲で指定してください。",
-          "binomialCdfTrials": "binomialCdf の試行回数には 0 以上の整数を指定してください。",
-          "binomialCdfSuccesses": "binomialCdf の成功回数には 0 以上の整数を指定してください。",
-          "binomialCdfProbability": "binomialCdf の成功確率は 0〜1 の範囲で指定してください。",
-          "logitFinite": "logit の引数は有限の実数で指定してください。",
-          "logitRange": "logit は 0 と 1 の間の値で指定してください。",
-          "sigmoidFinite": "sigmoid の引数は有限の実数で指定してください。",
-          "factorialNumeric": "factorial の引数には数値を指定してください。",
-          "factorialFinite": "factorial の引数には有限の実数を指定してください。",
-          "factorialReal": "factorial の引数には実数を指定してください。",
-          "factorialGreaterThanMinusOne": "factorial の引数は -1 より大きい実数を指定してください。",
-          "factorialNegativeInteger": "factorial は負の整数では定義されません。",
-          "factorialNonNegativeInteger": "factorial の引数には 0 以上の整数を指定してください。",
-          "permutationsRange": "permutations の第2引数は第1引数以下の整数で指定してください。",
-          "permutationsInteger": "permutations の引数には 0 以上の整数を指定してください。",
-          "combinationsRange": "combinations の第2引数は第1引数以下の整数で指定してください。",
-          "combinationsSecondArg": "combinations の第2引数には 0 以上の整数を指定してください。",
-          "combinationsInteger": "combinations の引数には 0 以上の整数を指定してください。",
-          "lnUnavailable": "自然対数関数 ln が利用できません。",
-          "erfcUnavailable": "erfc は現在利用できません。"
-        }
-      },
       "games": {
         "bowlingDuel": {
           "title": "ボウリング対決 MOD",
@@ -17077,6 +17392,12 @@
     }
 
   };
+  var mathLabLocale = (locale.games && locale.games.math_lab) ? locale.games.math_lab : {};
+  locale.mathLab = mathLabLocale;
+  if (locale.games) {
+    locale.games.mathLab = mathLabLocale;
+  }
+  store['ja'] = locale;
   if (!store['ja']) {
     store['ja'] = {};
   }
@@ -17111,8 +17432,8 @@
         "subtitle": "最新順に表示",
         "empty": "ラップを記録するとここに表示されます",
         "label": "ラップ {index}"
-      }
-    };
+        }
+      };
   }
   if (!jaGames.wording) {
     jaGames.wording = {

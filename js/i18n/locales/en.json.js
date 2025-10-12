@@ -1,7 +1,7 @@
 (function (root) {
   if (!root) return;
   var store = root.__i18nLocales = root.__i18nLocales || {};
-  store['en'] = {
+  var locale = {
     "meta": {
       "title": "Yu Roguelike"
     },
@@ -36,10 +36,26 @@
         "actions": {
           "return": "Return to Base",
           "retry": "Retry"
+        },
+        "onigokko": {
+          "timer": {
+            "remaining": "Time left: {seconds}s"
+          },
+          "status": {
+            "start": "Chase start! Move with Arrow keys / WASD.",
+            "paused": "Paused",
+            "loading": "Loading stage…",
+            "ready": "Ready! Press Start to begin the chase.",
+            "stage_generation_failed": "Stage generation failed",
+            "api_unavailable": "Dungeon API unavailable",
+            "caught": "Caught!",
+            "caught_no_reward": "Caught! No EXP earned.",
+            "escaped": "Escaped! Great job!",
+            "escape_success": "Escape successful!"
+          }
         }
       }
     },
-
     "messages": {
       "domainCrystal": {
         "spawn": "A mysterious domain crystal has appeared on this floor...!"
@@ -759,7 +775,205 @@
           },
           "math_lab": {
             "name": "Math Lab",
-            "description": "Explore advanced math tools—functions, conversions, graphs, even tetration—for EXP."
+            "description": "Explore advanced math tools—functions, conversions, graphs, even tetration—for EXP.",
+            "keypad": {
+              "groups": {
+                "standard": "Standard Functions",
+                "trigonometry": "Trigonometry & Hyperbolic",
+                "complex": "Complex & Matrices",
+                "analysis": "Analysis & Special Functions",
+                "statistics": "Probability & Statistics",
+                "numerical": "Numerical Methods",
+                "programmer": "Programmer & Info",
+                "constants": "Constants & Units"
+              }
+            },
+            "units": {
+              "templates": {
+                "length": "Length: 5 cm → inch",
+                "mass": "Mass: 70 kg → lb",
+                "energy": "Energy: 1 kWh → J",
+                "temperature": "Temperature: 25 degC → degF",
+                "speed": "Speed: 100 km/h → m/s"
+              }
+            },
+            "ui": {
+              "unitTemplates": {
+                "title": "Unit Conversion Presets",
+                "insert": "Insert"
+              },
+              "worksheet": { "title": "Worksheet" },
+              "inputMode": {
+                "classic": "Function Notation",
+                "pretty": "Mathematical Symbols"
+              },
+              "preview": { "title": "Expression Preview" },
+              "actions": {
+                "evaluate": "Evaluate (Shift+Enter)",
+                "clear": "Reset",
+                "copyResult": "Copy Result"
+              },
+              "history": {
+                "title": "History",
+                "empty": "Your computation history will appear here."
+              },
+              "variables": {
+                "title": "Scope Variables",
+                "reset": "Clear Variables",
+                "empty": "(No variables defined)"
+              },
+              "angle": {
+                "radians": "Radians",
+                "degrees": "Degrees"
+              }
+            },
+            "placeholders": {
+              "worksheet": {
+                "classic": "Enter expressions or commands (e.g., integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem([\"x+y=3\",\"x-y=1\"],[\"x\",\"y\"]))",
+                "pretty": "Examples: √(2) + 1/3, 2π, (x+1)/(x−1) using mathematical symbols"
+              },
+              "preview": {
+                "expression": "(The entered expression will be visualized here)"
+              },
+              "graph": {
+                "expression": "Enter f(x) (e.g., sin(x) / x)"
+              }
+            },
+            "status": {
+              "initializing": "Initializing…",
+              "loading": "Loading math engine…",
+              "copySuccess": "Copied result to clipboard.",
+              "copyFailure": "Failed to copy to clipboard.",
+              "scopeReset": "Scope reset.",
+              "inputModeClassic": "Input Mode: Function Notation",
+              "inputModePretty": "Input Mode: Mathematical Symbols",
+              "resultModeSymbolic": "Result Mode: Fraction/Symbolic",
+              "resultModeNumeric": "Result Mode: Decimal",
+              "angleRadians": "Angle Unit: Radians",
+              "angleDegrees": "Angle Unit: Degrees",
+              "worksheetCleared": "Worksheet cleared.",
+              "engineWaiting": "Waiting for math engine initialization…",
+              "enterExpression": "Enter an expression.",
+              "calculationComplete": "Calculation complete.",
+              "error": "Error: {message}",
+              "enterGraphExpression": "Enter an expression to plot.",
+              "ready": "Math Lab is ready.",
+              "engineInitialized": "Math engine initialized.",
+              "loadFailed": "Failed to load math engine. Check your internet connection."
+            },
+            "results": {
+              "title": "Result",
+              "symbolicToggle": "Fraction/Symbolic",
+              "numericToggle": "Decimal",
+              "symbolicLabel": "Exact / Symbolic",
+              "numericLabel": "Approximate (Base 10)",
+              "moreDigits": "More Digits",
+              "moreDigitsHint": "Extend decimal output by +5 digits",
+              "errorLabel": "Error"
+            },
+            "graph": {
+              "title": "Graph",
+              "plot": "Plot",
+              "range": "Range (xmin, xmax)",
+              "info": "Axes auto-scale. Values with units, vectors/matrices, and complex imaginary parts are omitted.",
+              "parseFailed": "Failed to parse expression: {message}",
+              "invalidRange": "Range must be finite with xmin < xmax.",
+              "noPoints": "No plottable points{detail}.",
+              "noPointsDetail": " (Excluded: {reasons})",
+              "summary": "Plotted points: {count} / {total}",
+              "summaryExtra": " / Excluded {items}",
+              "reasons": {
+                "units": "With units: {count}",
+                "composite": "Vectors/Matrices: {count}",
+                "complex": "Complex numbers: {count}"
+              }
+            },
+            "errors": {
+              "radixRange": "Radix must be an integer between 2 and 30.",
+              "radixInvalidCharacter": "The value contains characters not valid for the selected radix.",
+              "expressionParse": "Could not interpret the expression. Provide a string or math.js node.",
+              "notFinite": "Value must be a finite number.",
+              "numberConversion": "Unable to convert value to a number.",
+              "positiveRealRequired": "A positive real number is required.",
+              "complexRealOnly": "Cannot use only the real part of a complex number.",
+              "matrixToScalar": "Cannot convert a matrix to a scalar.",
+              "arrayToScalar": "Cannot convert an array to a scalar.",
+              "graphUnitsUnsupported": "Values with units cannot be graphed.",
+              "tetraRealOnly": "tetra is only defined for real arguments.",
+              "slogPositiveBase": "slog requires a positive base and real arguments.",
+              "slogBaseSeparated": "Choose a slog base sufficiently far from 1.",
+              "divideByZero": "Division by zero is not allowed.",
+              "integralNotReady": "Wait for the math engine to initialize before integrating.",
+              "integralSymbolicFailed": "Could not compute an analytic integral. Try numericIntegrate.",
+              "integralRange": "Integration bounds must be finite real numbers.",
+              "integralBounds": "Provide both lower and upper limits for a definite integral.",
+              "newtonInitialValue": "Initial value must be a finite number.",
+              "newtonDerivativeZero": "Newton's method failed: derivative near zero.",
+              "iterationDiverged": "Iterative computation diverged.",
+              "iterationNotConverged": "Failed to converge within the specified iterations.",
+              "linearSolverUnavailable": "Linear equation solver is unavailable.",
+              "systemEquationsArray": "Provide an array of equations.",
+              "systemVariableCount": "Variable list must match the number of equations.",
+              "jacobianSolveFailed": "Could not solve the Jacobian system.",
+              "maximizeFoundMinimum": "Search found a minimum near the starting point, not a maximum.",
+              "minimizeFoundMaximum": "Search found a maximum near the starting point, not a minimum.",
+              "digammaFinite": "digamma requires a finite real input.",
+              "digammaPositive": "digamma is only defined for positive real inputs.",
+              "polygammaOrder": "polygamma order must be an integer ≥ 0.",
+              "polygammaPositive": "polygamma is only defined for positive real inputs.",
+              "harmonicFirstArg": "harmonic requires an integer n ≥ 1.",
+              "harmonicSecondArg": "harmonic's second parameter must be a positive real number.",
+              "zetaFinite": "zeta argument must be a finite real number.",
+              "zetaOneDiverges": "zeta(1) diverges.",
+              "zetaPositiveRegion": "This simplified implementation is only defined where the real part is positive.",
+              "logGammaFinite": "logGamma requires a finite real input.",
+              "logGammaPositive": "logGamma is only defined for positive real inputs.",
+              "gammaFinite": "gamma requires a finite real input.",
+              "gammaPositive": "gamma is only defined for positive real inputs.",
+              "betaFirstArg": "beta's first argument must be a positive real number.",
+              "betaSecondArg": "beta's second argument must be a positive real number.",
+              "lambertFinite": "lambertW argument must be a finite real number.",
+              "lambertBranchInteger": "lambertW branch must be an integer.",
+              "lambertBranchRange": "This implementation only supports branches 0 and -1.",
+              "lambertPrincipalDomain": "lambertW principal branch is only defined for x ≥ -1/e.",
+              "lambertNegativeDomain": "lambertW branch -1 is only defined for -1/e ≤ x < 0.",
+              "lambertNotConverged": "lambertW calculation did not converge.",
+              "normalPdfMean": "normalPdf mean must be a finite real number.",
+              "normalPdfSigma": "normalPdf standard deviation must be a positive real number.",
+              "normalPdfInput": "normalPdf input must be a finite real number.",
+              "normalCdfMean": "normalCdf mean must be a finite real number.",
+              "normalCdfSigma": "normalCdf standard deviation must be a positive real number.",
+              "normalCdfInput": "normalCdf input must be a finite real number.",
+              "normalInvProbability": "normalInv probability must be a finite real number.",
+              "normalInvProbabilityRange": "normalInv probability must satisfy 0 < p < 1.",
+              "normalInvSigma": "normalInv standard deviation must be a positive real number.",
+              "poissonMean": "poissonPmf mean must be a positive real number.",
+              "poissonCount": "poissonPmf count must be an integer ≥ 0.",
+              "poissonCdfMean": "poissonCdf mean must be a positive real number.",
+              "poissonCdfCount": "poissonCdf count must be an integer ≥ 0.",
+              "binomialTrials": "binomialPmf trials must be an integer ≥ 0.",
+              "binomialSuccesses": "binomialPmf successes must be an integer ≥ 0.",
+              "binomialProbability": "binomialPmf success probability must be between 0 and 1.",
+              "binomialCdfTrials": "binomialCdf trials must be an integer ≥ 0.",
+              "binomialCdfSuccesses": "binomialCdf successes must be an integer ≥ 0.",
+              "binomialCdfProbability": "binomialCdf success probability must be between 0 and 1.",
+              "logitFinite": "logit argument must be a finite real number.",
+              "logitRange": "logit argument must satisfy 0 < x < 1.",
+              "sigmoidFinite": "sigmoid argument must be a finite real number.",
+              "factorialNumeric": "factorial argument must be numeric.",
+              "factorialFinite": "factorial argument must be a finite real number.",
+              "factorialReal": "factorial argument must be real.",
+              "factorialGreaterThanMinusOne": "factorial argument must be greater than -1.",
+              "factorialNegativeInteger": "factorial is undefined for negative integers.",
+              "factorialNonNegativeInteger": "factorial argument must be a non-negative integer.",
+              "permutationsRange": "permutations second argument must be an integer not exceeding the first.",
+              "permutationsInteger": "permutations arguments must be integers ≥ 0.",
+              "combinationsRange": "combinations second argument must be an integer not exceeding the first.",
+              "combinationsSecondArg": "combinations second argument must be an integer ≥ 0.",
+              "combinationsInteger": "combinations arguments must be integers ≥ 0.",
+              "lnUnavailable": "Natural logarithm function ln is unavailable.",
+              "erfcUnavailable": "erfc is currently unavailable."
+            }
           },
           "calc_combo": {
             "name": "Calc Combo",
@@ -1637,7 +1851,125 @@
           },
           "memo_studio": {
             "name": "Memory Studio",
-            "description": "Study flash cards with spaced repetition to strengthen memory for EXP."
+            "description": "Study flash cards with spaced repetition to strengthen memory for EXP.",
+            "title": "Memory Studio",
+            "badge": "TOY MOD",
+            "controls": {
+              "addDeck": "+ Add Deck",
+              "export": "Export (JSON)",
+              "import": "Import (JSON)"
+            },
+            "filters": {
+              "tag": {
+                "label": "Tag Filter",
+                "placeholder": "Enter comma-separated tags"
+              }
+            },
+            "form": {
+              "title": "Register Card",
+              "fields": {
+                "front": "Front (Prompt)",
+                "back": "Back (Answer)",
+                "hint": "Hint / Explanation (optional)",
+                "tags": "Tags (comma separated)",
+                "interval": "Initial Interval (days)"
+              },
+              "preview": {
+                "label": "Back Preview",
+                "empty": "Preview will appear once you enter text."
+              },
+              "submit": "Add Card",
+              "validation": {
+                "missingSides": "Front and back are required."
+              }
+            },
+            "review": {
+              "controls": {
+                "show": "Reveal",
+                "good": "Got it",
+                "hard": "Hard",
+                "again": "Relearn",
+                "note": "Notes"
+              },
+              "deckName": "{name} ({count} cards)",
+              "noDeck": "No deck selected.",
+              "queueInfo": "{count} remaining",
+              "empty": "No cards due for review. Add or import cards.",
+              "hintPrefix": "Hint: "
+            },
+            "dialogs": {
+              "addDeck": {
+                "prompt": "Enter a name for the new deck.",
+                "defaultName": "New Deck"
+              }
+            },
+            "import": {
+              "error": {
+                "invalidJson": "Failed to parse JSON.",
+                "read": "Failed to read file."
+              }
+            },
+            "sparkline": {
+              "tooltip": "{date} / Reviewed {reviewed} / Accuracy {accuracy}% / {xp} XP",
+              "empty": "No history"
+            },
+            "deck": {
+              "empty": "No decks yet. Add one.",
+              "defaultName": "New Deck",
+              "metrics": {
+                "total": "{count} cards",
+                "due": "Due {count}",
+                "accuracy": "Accuracy {percent}%"
+              }
+            },
+            "hud": {
+              "reviewed": {
+                "label": "Reviewed",
+                "value": "{count} cards"
+              },
+              "accuracy": {
+                "label": "Accuracy",
+                "value": "{percent}%"
+              },
+              "sessionXp": {
+                "label": "Session EXP",
+                "value": "{xp} XP"
+              },
+              "elapsed": {
+                "label": "Elapsed",
+                "value": "{minutes}m {secondsPadded}s"
+              }
+            },
+            "note": {
+              "title": "Notes for {front}",
+              "actions": {
+                "cancel": "Close",
+                "save": "Save"
+              }
+            },
+            "defaults": {
+              "deckName": "Starter Deck",
+              "tags": {
+                "web": "Web"
+              },
+              "cards": {
+                "html": {
+                  "front": "HTML",
+                  "back": "HyperText Markup Language",
+                  "hint": "Structure of a web page"
+                },
+                "css": {
+                  "front": "CSS",
+                  "back": "Cascading Style Sheets",
+                  "hint": "Styles presentation"
+                },
+                "javascript": {
+                  "front": "JavaScript",
+                  "back": "Programming language that runs in browsers",
+                  "hint": "Interactive"
+                }
+              }
+            }
           },
           "onigokko": {
             "name": "Tag Escape",
@@ -1751,7 +2083,8 @@
             "sequential": "Sequential",
             "measurement": "Measurement",
             "output": "Output",
-            "other": "Other"
+            "other": "Other",
+            "misc": "Other"
           },
           "common": {
             "high": "HIGH",
@@ -1760,6 +2093,7 @@
             "off": "OFF",
             "set": "SET",
             "reset": "RESET",
+            "neutral": "---",
             "metastable": "Metastable",
             "metastableIndicator": "S=R=1 (Invalid)",
             "metastableMessage": "S and R are both 1. Output is unstable.",
@@ -1769,6 +2103,10 @@
             "periodMs": "Period (ms)",
             "outLabel": "OUT: {value}",
             "muxStatus": "OUT:{out} (SEL={sel})"
+          },
+          "chips": {
+            "sessionXp": "Session EXP: {value}",
+            "elapsedTime": "Elapsed time: {value}ms"
           },
           "ui": {
             "title": "Logic Circuit Simulator",
@@ -1793,6 +2131,10 @@
             "truthTitle": "Truth table",
             "connectionCount": "{count} lines",
             "delayValue": "{value} ns",
+            "clockPeriodValue": "{value} ms",
+            "truthTable": {
+              "input": "IN{index}"
+            },
             "fields": {
               "id": "ID",
               "type": "Type",
@@ -1824,9 +2166,17 @@
               "label": "Clock",
               "description": "Clock input oscillating at a fixed interval"
             },
+            "const_high": {
+              "label": "Constant 1",
+              "description": "Constant source that always outputs HIGH"
+            },
             "constHigh": {
               "label": "Constant 1",
               "description": "Constant source that always outputs HIGH"
+            },
+            "const_low": {
+              "label": "Constant 0",
+              "description": "Constant source that always outputs LOW"
             },
             "constLow": {
               "label": "Constant 0",
@@ -1876,6 +2226,14 @@
               "label": "2-4 Decoder",
               "description": "Decoder producing one-hot outputs from a 2-bit input"
             },
+            "d_ff": {
+              "label": "D Flip-Flop",
+              "description": "Edge-triggered flip-flop that latches D on the rising clock (with async reset)",
+              "inspect": {
+                "0": { "label": "Latch state" },
+                "1": { "label": "Previous clock" }
+              }
+            },
             "dff": {
               "label": "D Flip-Flop",
               "description": "Edge-triggered flip-flop that latches D on the rising clock (with async reset)",
@@ -1883,10 +2241,25 @@
               "status": "Q={value}",
               "inspectLatch": "Latch state"
             },
+            "sr_latch": {
+              "label": "SR Latch",
+              "description": "Basic NOR SR latch. S sets, R resets.",
+              "inspect": {
+                "0": { "label": "Warning" }
+              }
+            },
             "srLatch": {
               "label": "SR Latch",
               "description": "Basic NOR SR latch. S sets, R resets.",
               "qStatus": "Q={value}"
+            },
+            "t_ff": {
+              "label": "T Flip-Flop",
+              "description": "Toggles output on each rising clock edge when T input is HIGH. Includes reset input.",
+              "inspect": {
+                "0": { "label": "Toggle state" },
+                "1": { "label": "Previous clock" }
+              }
             },
             "tff": {
               "label": "T Flip-Flop",
@@ -13878,6 +14251,94 @@
           "upgradeHint": "Shift+Click to upgrade a turret."
         }
       },
+      "physics_sandbox": {
+        "toolbar": {
+          "tools": {
+            "select": {
+              "label": "Select",
+              "title": "Select and drag bodies or emitters"
+            },
+            "godFinger": {
+              "label": "God Finger",
+              "title": "Grab live bodies directly during simulation"
+            },
+            "addCircle": {
+              "label": "Circle",
+              "title": "Add a circular rigid body"
+            },
+            "addBox": {
+              "label": "Box",
+              "title": "Add a box rigid body"
+            },
+            "addCloth": {
+              "label": "Cloth",
+              "title": "Add a cloth soft body"
+            },
+            "addWall": {
+              "label": "Absolute Wall",
+              "title": "Draw an indestructible wall"
+            },
+            "addFire": {
+              "label": "Fire",
+              "title": "Add a fire emitter"
+            },
+            "addWater": {
+              "label": "Water",
+              "title": "Add a water emitter"
+            },
+            "addIce": {
+              "label": "Ice",
+              "title": "Add an ice emitter"
+            },
+            "addWind": {
+              "label": "Wind",
+              "title": "Add a wind emitter"
+            },
+            "addVine": {
+              "label": "Vines",
+              "title": "Add a vine emitter"
+            },
+            "addLightning": {
+              "label": "Lightning",
+              "title": "Add a lightning emitter"
+            },
+            "addAcid": {
+              "label": "Acid",
+              "title": "Add an acid emitter"
+            },
+            "addCircuit": {
+              "label": "Circuit",
+              "title": "Add a circuit node"
+            }
+          },
+          "actions": {
+            "start": {
+              "label": "Start",
+              "title": "Start or resume the simulation"
+            },
+            "pause": {
+              "label": "Pause",
+              "title": "Pause the simulation"
+            },
+            "reset": {
+              "label": "Reset",
+              "title": "Reset to the initial state"
+            },
+            "delete": {
+              "label": "Delete",
+              "title": "Remove the selected body or emitter"
+            },
+            "save": {
+              "label": "Save",
+              "title": "Save the current layout"
+            },
+            "load": {
+              "label": "Load",
+              "title": "Load a saved layout"
+            }
+          }
+        }
+      },
       "imperial_realm": {
         "ui": {
           "logTitle": "Operations Log",
@@ -13894,6 +14355,20 @@
           "costEntry": "{resource} {amount}",
           "costSeparator": " / "
         },
+        "age": {
+          "labels": {
+            "frontier": "Frontier Age",
+            "feudal": "Feudal Age",
+            "castle": "Castle Age",
+            "imperial": "Imperial Age"
+          },
+          "summaries": {
+            "frontier": "Lay the settlement foundation and focus on survival.",
+            "feudal": "Reform infantry and strengthen defensive lines.",
+            "castle": "Equip heavy infantry and cavalry to go on the offensive.",
+            "imperial": "Deploy cutting-edge armies to claim decisive supremacy."
+          }
+        },
         "hud": {
           "nextWave": "Next Wave",
           "ready": "Ready",
@@ -13902,7 +14377,14 @@
           "waveStatus": "Wave {current} / {total}",
           "waveInfo": "Current Wave: {wave}/{total}\nEnemy TC HP: {hp} / {max}",
           "commanderGoal": "Defeat the Commander",
-          "finalStand": "Final Stand"
+          "finalStand": "Final Stand",
+          "ageHeading": "Imperial Age: {age}",
+          "ageProgress": "Advancing... {remaining}s remaining",
+          "ageReady": "Ready to advance",
+          "ageNext": "Next: {age} / {requirement}",
+          "ageMax": "Maintaining Imperial Age.",
+          "momentumTitle": "Imperial Morale",
+          "momentumDetail": "Attack bonus +{bonus}%"
         },
         "intel": {
           "summary": "Villagers: {villagers}\nMilitary: {army}\nStructures: {structures}"
@@ -13931,7 +14413,27 @@
             "tower": {
               "label": "Build: Watch Tower",
               "description": "Autonomous defense tower"
+            },
+            "blacksmith": {
+              "label": "Build: Blacksmith",
+              "description": "Forge equipment to boost morale"
+            },
+            "stable": {
+              "label": "Build: Stable",
+              "description": "Train knights"
+            },
+            "siegeWorkshop": {
+              "label": "Build: Siege Workshop",
+              "description": "Produce siege engines"
             }
+          },
+          "ageUp": {
+            "label": "Advance Age: {age}",
+            "time": "Research time: {time}s"
+          },
+          "requireAge": "Requires age: {age}",
+          "badge": {
+            "ageUp": "Age"
           },
           "train": {
             "button": "Train: {unit}",
@@ -13954,6 +14456,11 @@
           "commanderArrived": "Enemy commander has entered the battlefield!",
           "waveIncoming": "Enemy wave {wave} incoming!",
           "waveCleared": "Wave {wave} repelled! Supply crates secured.",
+          "requireAge": "Available after reaching {age}.",
+          "ageResearchInProgress": "Age advancement already in progress.",
+          "ageResearchStarted": "Began advancing to {age}.",
+          "ageResearchCancelled": "Age advancement cancelled after losing the Town Center.",
+          "ageAdvanced": "Advanced to {age}!",
           "victory": "Victory!",
           "defeat": "Defeat..."
         },
@@ -13972,7 +14479,10 @@
           "villager": "Villager",
           "militia": "Militia",
           "archer": "Archer",
+          "spearman": "Spearman",
+          "crossbowman": "Crossbowman",
           "raider": "Raider",
+          "knight": "Knight",
           "horseArcher": "Horse Archer",
           "commander": "Enemy Commander",
           "ram": "Battering Ram"
@@ -13982,7 +14492,10 @@
           "house": "House",
           "barracks": "Barracks",
           "archery": "Archery Range",
-          "tower": "Watch Tower"
+          "tower": "Watch Tower",
+          "blacksmith": "Blacksmith",
+          "stable": "Stable",
+          "siegeWorkshop": "Siege Workshop"
         }
       },
       "tic_tac_toe": {
@@ -16194,206 +16707,6 @@
           "progress": "Match {current} of {total}"
         }
       },
-      "mathLab": {
-        "keypad": {
-          "groups": {
-            "standard": "Standard Functions",
-            "trigonometry": "Trigonometry & Hyperbolic",
-            "complex": "Complex & Matrices",
-            "analysis": "Analysis & Special Functions",
-            "statistics": "Probability & Statistics",
-            "numerical": "Numerical Methods",
-            "programmer": "Programmer & Info",
-            "constants": "Constants & Units"
-          }
-        },
-        "units": {
-          "templates": {
-            "length": "Length: 5 cm → inch",
-            "mass": "Mass: 70 kg → lb",
-            "energy": "Energy: 1 kWh → J",
-            "temperature": "Temperature: 25 degC → degF",
-            "speed": "Speed: 100 km/h → m/s"
-          }
-        },
-        "ui": {
-          "unitTemplates": {
-            "title": "Unit Conversion Presets",
-            "insert": "Insert"
-          },
-          "worksheet": { "title": "Worksheet" },
-          "inputMode": {
-            "classic": "Function Notation",
-            "pretty": "Mathematical Symbols"
-          },
-          "preview": { "title": "Expression Preview" },
-          "actions": {
-            "evaluate": "Evaluate (Shift+Enter)",
-            "clear": "Reset",
-            "copyResult": "Copy Result"
-          },
-          "history": {
-            "title": "History",
-            "empty": "Your computation history will appear here."
-          },
-          "variables": {
-            "title": "Scope Variables",
-            "reset": "Clear Variables",
-            "empty": "(No variables defined)"
-          },
-          "angle": {
-            "radians": "Radians",
-            "degrees": "Degrees"
-          }
-        },
-        "placeholders": {
-          "worksheet": {
-            "classic": "Enter expressions or commands (e.g., integrate(sin(x), x), solveEq(sin(x)=0.5, x, 1), solveSystem([\"x+y=3\",\"x-y=1\"],[\"x\",\"y\"]))",
-            "pretty": "Examples: √(2) + 1/3, 2π, (x+1)/(x−1) using mathematical symbols"
-          },
-          "preview": {
-            "expression": "(The entered expression will be visualized here)"
-          },
-          "graph": {
-            "expression": "Enter f(x) (e.g., sin(x) / x)"
-          }
-        },
-        "status": {
-          "initializing": "Initializing…",
-          "loading": "Loading math engine…",
-          "copySuccess": "Copied result to clipboard.",
-          "copyFailure": "Failed to copy to clipboard.",
-          "scopeReset": "Scope reset.",
-          "inputModeClassic": "Input Mode: Function Notation",
-          "inputModePretty": "Input Mode: Mathematical Symbols",
-          "resultModeSymbolic": "Result Mode: Fraction/Symbolic",
-          "resultModeNumeric": "Result Mode: Decimal",
-          "angleRadians": "Angle Unit: Radians",
-          "angleDegrees": "Angle Unit: Degrees",
-          "worksheetCleared": "Worksheet cleared.",
-          "engineWaiting": "Waiting for math engine initialization…",
-          "enterExpression": "Enter an expression.",
-          "calculationComplete": "Calculation complete.",
-          "error": "Error: {message}",
-          "enterGraphExpression": "Enter an expression to plot.",
-          "ready": "Math Lab is ready.",
-          "engineInitialized": "Math engine initialized.",
-          "loadFailed": "Failed to load math engine. Check your internet connection."
-        },
-        "results": {
-          "title": "Result",
-          "symbolicToggle": "Fraction/Symbolic",
-          "numericToggle": "Decimal",
-          "symbolicLabel": "Exact / Symbolic",
-          "numericLabel": "Approximate (Base 10)",
-          "moreDigits": "More Digits",
-          "moreDigitsHint": "Extend decimal output by +5 digits",
-          "errorLabel": "Error"
-        },
-        "graph": {
-          "title": "Graph",
-          "plot": "Plot",
-          "range": "Range (xmin, xmax)",
-          "info": "Axes auto-scale. Values with units, vectors/matrices, and complex imaginary parts are omitted.",
-          "parseFailed": "Failed to parse expression: {message}",
-          "invalidRange": "Range must be finite with xmin < xmax.",
-          "noPoints": "No plottable points{detail}.",
-          "noPointsDetail": " (Excluded: {reasons})",
-          "summary": "Plotted points: {count} / {total}",
-          "summaryExtra": " / Excluded {items}",
-          "reasons": {
-            "units": "With units: {count}",
-            "composite": "Vectors/Matrices: {count}",
-            "complex": "Complex numbers: {count}"
-          }
-        },
-        "errors": {
-          "radixRange": "Radix must be an integer between 2 and 30.",
-          "radixInvalidCharacter": "The value contains characters not valid for the selected radix.",
-          "expressionParse": "Could not interpret the expression. Provide a string or math.js node.",
-          "notFinite": "Value must be a finite number.",
-          "numberConversion": "Unable to convert value to a number.",
-          "positiveRealRequired": "A positive real number is required.",
-          "complexRealOnly": "Cannot use only the real part of a complex number.",
-          "matrixToScalar": "Cannot convert a matrix to a scalar.",
-          "arrayToScalar": "Cannot convert an array to a scalar.",
-          "graphUnitsUnsupported": "Values with units cannot be graphed.",
-          "tetraRealOnly": "tetra is only defined for real arguments.",
-          "slogPositiveBase": "slog requires a positive base and real arguments.",
-          "slogBaseSeparated": "Choose a slog base sufficiently far from 1.",
-          "divideByZero": "Division by zero is not allowed.",
-          "integralNotReady": "Wait for the math engine to initialize before integrating.",
-          "integralSymbolicFailed": "Could not compute an analytic integral. Try numericIntegrate.",
-          "integralRange": "Integration bounds must be finite real numbers.",
-          "integralBounds": "Provide both lower and upper limits for a definite integral.",
-          "newtonInitialValue": "Initial value must be a finite number.",
-          "newtonDerivativeZero": "Newton's method failed: derivative near zero.",
-          "iterationDiverged": "Iterative computation diverged.",
-          "iterationNotConverged": "Failed to converge within the specified iterations.",
-          "linearSolverUnavailable": "Linear equation solver is unavailable.",
-          "systemEquationsArray": "Provide an array of equations.",
-          "systemVariableCount": "Variable list must match the number of equations.",
-          "jacobianSolveFailed": "Could not solve the Jacobian system.",
-          "maximizeFoundMinimum": "Search found a minimum near the starting point, not a maximum.",
-          "minimizeFoundMaximum": "Search found a maximum near the starting point, not a minimum.",
-          "digammaFinite": "digamma requires a finite real input.",
-          "digammaPositive": "digamma is only defined for positive real inputs.",
-          "polygammaOrder": "polygamma order must be an integer ≥ 0.",
-          "polygammaPositive": "polygamma is only defined for positive real inputs.",
-          "harmonicFirstArg": "harmonic requires an integer n ≥ 1.",
-          "harmonicSecondArg": "harmonic's second parameter must be a positive real number.",
-          "zetaFinite": "zeta argument must be a finite real number.",
-          "zetaOneDiverges": "zeta(1) diverges.",
-          "zetaPositiveRegion": "This simplified implementation is only defined where the real part is positive.",
-          "logGammaFinite": "logGamma requires a finite real input.",
-          "logGammaPositive": "logGamma is only defined for positive real inputs.",
-          "gammaFinite": "gamma requires a finite real input.",
-          "gammaPositive": "gamma is only defined for positive real inputs.",
-          "betaFirstArg": "beta's first argument must be a positive real number.",
-          "betaSecondArg": "beta's second argument must be a positive real number.",
-          "lambertFinite": "lambertW argument must be a finite real number.",
-          "lambertBranchInteger": "lambertW branch must be an integer.",
-          "lambertBranchRange": "This implementation only supports branches 0 and -1.",
-          "lambertPrincipalDomain": "lambertW principal branch is only defined for x ≥ -1/e.",
-          "lambertNegativeDomain": "lambertW branch -1 is only defined for -1/e ≤ x < 0.",
-          "lambertNotConverged": "lambertW calculation did not converge.",
-          "normalPdfMean": "normalPdf mean must be a finite real number.",
-          "normalPdfSigma": "normalPdf standard deviation must be a positive real number.",
-          "normalPdfInput": "normalPdf input must be a finite real number.",
-          "normalCdfMean": "normalCdf mean must be a finite real number.",
-          "normalCdfSigma": "normalCdf standard deviation must be a positive real number.",
-          "normalCdfInput": "normalCdf input must be a finite real number.",
-          "normalInvProbability": "normalInv probability must be a finite real number.",
-          "normalInvProbabilityRange": "normalInv probability must satisfy 0 < p < 1.",
-          "normalInvSigma": "normalInv standard deviation must be a positive real number.",
-          "poissonMean": "poissonPmf mean must be a positive real number.",
-          "poissonCount": "poissonPmf count must be an integer ≥ 0.",
-          "poissonCdfMean": "poissonCdf mean must be a positive real number.",
-          "poissonCdfCount": "poissonCdf count must be an integer ≥ 0.",
-          "binomialTrials": "binomialPmf trials must be an integer ≥ 0.",
-          "binomialSuccesses": "binomialPmf successes must be an integer ≥ 0.",
-          "binomialProbability": "binomialPmf success probability must be between 0 and 1.",
-          "binomialCdfTrials": "binomialCdf trials must be an integer ≥ 0.",
-          "binomialCdfSuccesses": "binomialCdf successes must be an integer ≥ 0.",
-          "binomialCdfProbability": "binomialCdf success probability must be between 0 and 1.",
-          "logitFinite": "logit argument must be a finite real number.",
-          "logitRange": "logit argument must satisfy 0 < x < 1.",
-          "sigmoidFinite": "sigmoid argument must be a finite real number.",
-          "factorialNumeric": "factorial argument must be numeric.",
-          "factorialFinite": "factorial argument must be a finite real number.",
-          "factorialReal": "factorial argument must be real.",
-          "factorialGreaterThanMinusOne": "factorial argument must be greater than -1.",
-          "factorialNegativeInteger": "factorial is undefined for negative integers.",
-          "factorialNonNegativeInteger": "factorial argument must be a non-negative integer.",
-          "permutationsRange": "permutations second argument must be an integer not exceeding the first.",
-          "permutationsInteger": "permutations arguments must be integers ≥ 0.",
-          "combinationsRange": "combinations second argument must be an integer not exceeding the first.",
-          "combinationsSecondArg": "combinations second argument must be an integer ≥ 0.",
-          "combinationsInteger": "combinations arguments must be integers ≥ 0.",
-          "lnUnavailable": "Natural logarithm function ln is unavailable.",
-          "erfcUnavailable": "erfc is currently unavailable."
-        }
-      },
       "games": {
         "bowlingDuel": {
           "title": "Bowling Duel MOD",
@@ -17072,6 +17385,12 @@
       }
     }
   };
+  var mathLabLocale = (locale.games && locale.games.math_lab) ? locale.games.math_lab : {};
+  locale.mathLab = mathLabLocale;
+  if (locale.games) {
+    locale.games.mathLab = mathLabLocale;
+  }
+  store['en'] = locale;
   if (!store['en']) {
     store['en'] = {};
   }

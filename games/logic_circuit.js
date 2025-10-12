@@ -635,9 +635,12 @@
       if (!root) throw new Error('Logic circuit simulator requires a container');
       ensureStyle();
 
-      const localization = opts?.localization || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
-        ? window.createMiniGameLocalization({ id: 'logic_circuit' })
-        : null);
+      const localization = (opts?.localization || (typeof window !== 'undefined' && window.createMiniGameLocalization))
+    ? window.createMiniGameLocalization({
+        id: 'logic_circuit',
+        localizationKey: 'selection.miniexp.logicCircuit'
+      })
+    : null;
 
       const text = (key, fallback, params) => {
         if (localization && typeof localization.t === 'function') {
@@ -683,14 +686,14 @@
       let currentLocaleId = null;
       let detachLocale = null;
       const categoryKeyMap = new Map([
-        ['入力', '.categories.inputs'],
-        ['ゲート', '.categories.gates'],
+        ['入力', '.categories.input'],
+        ['ゲート', '.categories.gate'],
         ['配線', '.categories.wiring'],
         ['複合', '.categories.composite'],
         ['シーケンシャル', '.categories.sequential'],
         ['計測', '.categories.measurement'],
-        ['出力', '.categories.outputs'],
-        ['その他', '.categories.misc']
+        ['出力', '.categories.output'],
+        ['その他', '.categories.other']
       ]);
 
       const getLocaleId = () => {
@@ -726,64 +729,64 @@
         }
         currentLocaleId = localeId;
         const signals = {
-          high: text('.signals.high', 'HIGH'),
-          low: text('.signals.low', 'LOW'),
-          on: text('.signals.on', 'ON'),
-          off: text('.signals.off', 'OFF'),
-          set: text('.signals.set', 'SET'),
-          reset: text('.signals.reset', 'RESET'),
-          neutral: text('.signals.neutral', '---')
+          high: text('common.high', 'HIGH'),
+          low: text('common.low', 'LOW'),
+          on: text('common.on', 'ON'),
+          off: text('common.off', 'OFF'),
+          set: text('common.set', 'SET'),
+          reset: text('common.reset', 'RESET'),
+          neutral: text('common.neutral', '---')
         };
 
         currentLabels = {
           signals,
           chips: {
-            sessionXp: text('.chips.sessionXp', 'セッションEXP: {value}'),
-            elapsedTime: text('.chips.elapsedTime', '経過時間: {value}ms')
+            sessionXp: text('ui.sessionXp', 'セッションEXP: {value}'),
+            elapsedTime: text('ui.elapsedTime', '経過時間: {value}ms')
           },
           controls: {
-            runStart: text('.controls.run.start', '▶ 再開'),
-            runStop: text('.controls.run.stop', '⏸ 停止'),
-            step: text('.controls.step', '⏭ ステップ'),
-            clear: text('.controls.clearCanvas', 'キャンバス初期化'),
-            deselect: text('.controls.deselectTool', 'ツール解除 (Esc)'),
-            stepLabel: text('.controls.stepLabel', 'ステップ(ms)')
+            runStart: text('ui.resume', '▶ 再開'),
+            runStop: text('ui.pause', '⏸ 停止'),
+            step: text('ui.step', '⏭ ステップ'),
+            clear: text('ui.clearCanvas', 'キャンバス初期化'),
+            deselect: text('ui.clearTool', 'ツール解除 (Esc)'),
+            stepLabel: text('ui.stepLabel', 'ステップ(ms)')
           },
           header: {
-            title: text('.header.title', '論理回路シミュレータ'),
-            subtitle: text('.header.subtitle', '入力ノードとゲートを並べ、リアルタイム評価で組み合わせ論理を検証')
+            title: text('ui.title', '論理回路シミュレータ'),
+            subtitle: text('ui.subtitle', '入力ノードとゲートを並べ、リアルタイム評価で組み合わせ論理を検証')
           },
           board: {
-            hint: text('.board.hint', 'ツールを選択し、キャンバスの空いている場所をクリックして配置します。出力ポート→入力ポートの順でクリックすると配線できます。Deleteキーで選択中の部品を削除。')
+            hint: text('hints.board', 'ツールを選択し、キャンバスの空いている場所をクリックして配置します。出力ポート→入力ポートの順でクリックすると配線できます。Deleteキーで選択中の部品を削除。')
           },
           inspector: {
-            title: text('.inspector.title', '部品インスペクタ'),
-            empty: text('.inspector.empty', '部品を選択すると詳細と真理値表を表示します。最大入力3本のゲートで真理値表を自動生成します。'),
-            truthTitle: text('.inspector.truthTitle', '真理値表'),
-            wiresHint: text('.inspector.wiresHint', '配線はパスをクリックで削除。Alt+入力クリックでその入力への配線を解除。'),
+            title: text('inspector.title', '部品インスペクタ'),
+            empty: text('inspector.empty', '部品を選択すると詳細と真理値表を表示します。最大入力3本のゲートで真理値表を自動生成します。'),
+            truthTitle: text('inspector.truthTitle', '真理値表'),
+            wiresHint: text('hints.wires', '配線はパスをクリックで削除。Alt+入力クリックでその入力への配線を解除。'),
             info: {
-              id: text('.inspector.info.id', 'ID'),
-              type: text('.inspector.info.type', 'タイプ'),
-              inputs: text('.inspector.info.inputs', '入力ポート'),
-              outputs: text('.inspector.info.outputs', '出力ポート'),
-              clockPeriod: text('.inspector.info.clockPeriod', '周期 (ms)'),
-              clockPeriodValue: text('.inspector.info.clockPeriodValue', '{value} ms'),
-              latestInputs: text('.inspector.info.latestInputs', '最新入力'),
-              latestOutputs: text('.inspector.info.latestOutputs', '最新出力'),
-              fanIn: text('.inspector.info.fanIn', '入力接続'),
-              fanOut: text('.inspector.info.fanOut', '出力接続'),
-              connections: text('.inspector.info.connections', '{count} 本'),
-              propagationDelay: text('.inspector.info.propagationDelay', '伝播遅延(目安)'),
-              propagationDelayValue: text('.inspector.info.propagationDelayValue', '{value} ns'),
-              description: text('.inspector.info.description', '説明')
+              id: text('inspector.fields.id', 'ID'),
+              type: text('inspector.fields.type', 'タイプ'),
+              inputs: text('inspector.fields.inputs', '入力ポート'),
+              outputs: text('inspector.fields.outputs', '出力ポート'),
+              clockPeriod: text('common.periodMs', '周期 (ms)'),
+              clockPeriodValue: text('inspector.clockPeriodValue', '{value} ms'),
+              latestInputs: text('inspector.fields.lastInputs', '最新入力'),
+              latestOutputs: text('inspector.fields.lastOutputs', '最新出力'),
+              fanIn: text('inspector.fields.inputConnections', '入力接続'),
+              fanOut: text('inspector.fields.outputConnections', '出力接続'),
+              connections: text('inspector.connectionCount', '{count} 本'),
+              propagationDelay: text('inspector.fields.delay', '伝播遅延(目安)'),
+              propagationDelayValue: text('inspector.delayValue', '{value} ns'),
+              description: text('inspector.fields.description', '説明')
             },
-            truthHeaderInput: text('.inspector.truthTable.input', 'IN{index}'),
-            truthHeaderOutput: text('.inspector.truthTable.output', 'OUT')
+            truthHeaderInput: text('inspector.truthTable.input', 'IN{index}'),
+            truthHeaderOutput: text('truthTable.out', 'OUT')
           },
-          footer: text('.footer.hint', 'ヒント: 入力をトグルして即座に出力を確認。シミュレーション制御で一時停止やステップ実行を行いながらシーケンシャル動作を解析できます。'),
+          footer: text('hints.footer', 'ヒント: 入力をトグルして即座に出力を確認。シミュレーション制御で一時停止やステップ実行を行いながらシーケンシャル動作を解析できます。'),
           ports: {
-            input: text('.ports.input', '入力 #{index}'),
-            output: text('.ports.output', '出力 #{index}')
+            input: text('ports.input', '入力 #{index}'),
+            output: text('ports.output', '出力 #{index}')
           },
           placeholders: {
             status: signals.neutral || '---'

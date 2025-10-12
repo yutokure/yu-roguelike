@@ -258,6 +258,11 @@
         return typeof key === 'string' ? key : String(key);
     }
 
+    function exists(key) {
+        if (!key) return false;
+        return getDictionaryValue(key) !== undefined;
+    }
+
     function formatNumber(value, options) {
         const locale = activeLocale || DEFAULT_LOCALE;
         try {
@@ -453,6 +458,7 @@
         resolveLocale,
         loadLocale: fetchDictionary,
         applyTranslations,
+        exists,
     };
 
     global.I18n = api;

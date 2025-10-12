@@ -224,20 +224,20 @@
   };
 
   const TOOLS = [
-    { id:'select', label:'選択', title:'図形やエミッタを選択・ドラッグ' },
-    { id:'god-finger', label:'神の指', title:'シミュレーション中の物体を直接つかんで動かす' },
-    { id:'add-circle', label:'円', title:'円形の剛体を追加' },
-    { id:'add-box', label:'箱', title:'箱型の剛体を追加' },
-    { id:'add-cloth', label:'布', title:'布のソフトボディを追加' },
-    { id:'add-wall', label:'絶対壁', title:'壊れない壁を描画' },
-    { id:'add-fire', label:'火', title:'炎エミッタを追加' },
-    { id:'add-water', label:'水', title:'水エミッタを追加' },
-    { id:'add-ice', label:'氷', title:'氷結エミッタを追加' },
-    { id:'add-wind', label:'風', title:'風のエミッタを追加' },
-    { id:'add-vine', label:'ツタ', title:'ツタエミッタを追加' },
-    { id:'add-lightning', label:'雷', title:'雷エミッタを追加' },
-    { id:'add-acid', label:'酸', title:'酸性エミッタを追加' },
-    { id:'add-circuit', label:'回路', title:'回路ノードを追加' }
+    { id:'select', label:'選択', title:'図形やエミッタを選択・ドラッグ', labelKey:'toolbar.tools.select.label', titleKey:'toolbar.tools.select.title' },
+    { id:'god-finger', label:'神の指', title:'シミュレーション中の物体を直接つかんで動かす', labelKey:'toolbar.tools.godFinger.label', titleKey:'toolbar.tools.godFinger.title' },
+    { id:'add-circle', label:'円', title:'円形の剛体を追加', labelKey:'toolbar.tools.addCircle.label', titleKey:'toolbar.tools.addCircle.title' },
+    { id:'add-box', label:'箱', title:'箱型の剛体を追加', labelKey:'toolbar.tools.addBox.label', titleKey:'toolbar.tools.addBox.title' },
+    { id:'add-cloth', label:'布', title:'布のソフトボディを追加', labelKey:'toolbar.tools.addCloth.label', titleKey:'toolbar.tools.addCloth.title' },
+    { id:'add-wall', label:'絶対壁', title:'壊れない壁を描画', labelKey:'toolbar.tools.addWall.label', titleKey:'toolbar.tools.addWall.title' },
+    { id:'add-fire', label:'火', title:'炎エミッタを追加', labelKey:'toolbar.tools.addFire.label', titleKey:'toolbar.tools.addFire.title' },
+    { id:'add-water', label:'水', title:'水エミッタを追加', labelKey:'toolbar.tools.addWater.label', titleKey:'toolbar.tools.addWater.title' },
+    { id:'add-ice', label:'氷', title:'氷結エミッタを追加', labelKey:'toolbar.tools.addIce.label', titleKey:'toolbar.tools.addIce.title' },
+    { id:'add-wind', label:'風', title:'風のエミッタを追加', labelKey:'toolbar.tools.addWind.label', titleKey:'toolbar.tools.addWind.title' },
+    { id:'add-vine', label:'ツタ', title:'ツタエミッタを追加', labelKey:'toolbar.tools.addVine.label', titleKey:'toolbar.tools.addVine.title' },
+    { id:'add-lightning', label:'雷', title:'雷エミッタを追加', labelKey:'toolbar.tools.addLightning.label', titleKey:'toolbar.tools.addLightning.title' },
+    { id:'add-acid', label:'酸', title:'酸性エミッタを追加', labelKey:'toolbar.tools.addAcid.label', titleKey:'toolbar.tools.addAcid.title' },
+    { id:'add-circuit', label:'回路', title:'回路ノードを追加', labelKey:'toolbar.tools.addCircuit.label', titleKey:'toolbar.tools.addCircuit.title' }
   ];
 
   function clamp(v, min, max){ return v < min ? min : (v > max ? max : v); }
@@ -515,6 +515,35 @@
     ensureStyleInjected();
     const difficulty = (opts && opts.difficulty) || 'NORMAL';
 
+    const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+      ? window.createMiniGameLocalization({
+          id: 'physics_sandbox',
+          localizationKey: 'minigame.physics_sandbox',
+          legacyKeyPrefixes: ['selection.miniexp.games.physics_sandbox']
+        })
+      : null);
+    const text = (key, fallback, params) => {
+      if (localization && typeof localization.t === 'function') {
+        try { return localization.t(key, fallback, params); } catch {}
+      }
+      if (typeof fallback === 'function') return fallback(params);
+      return fallback ?? '';
+    };
+    const localeBindings = [];
+    const bindLocale = (fn) => {
+      if (typeof fn !== 'function') return;
+      localeBindings.push(fn);
+      try { fn(); } catch {}
+    };
+    let detachLocale = null;
+    if (localization && typeof localization.onChange === 'function') {
+      detachLocale = localization.onChange(() => {
+        for (const fn of localeBindings) {
+          try { fn(); } catch {}
+        }
+      });
+    }
+
     const state = {
       tool:'select',
       running:false,
@@ -565,9 +594,11 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.dataset.tool = def.id;
-      btn.textContent = def.label;
-      btn.title = def.title;
       btn.className = 'phys-tool-btn';
+      bindLocale(() => {
+        btn.textContent = text(def.labelKey, def.label);
+        btn.title = text(def.titleKey, def.title);
+      });
       btn.addEventListener('click', () => setTool(def.id));
       toolGroup.appendChild(btn);
     });
@@ -576,12 +607,36 @@
     const actionGroup = document.createElement('div');
     actionGroup.className = 'phys-action-group';
 
-    const startBtn = createActionButton('開始', 'シミュレーションを開始/再開', () => setRunning(true));
-    const pauseBtn = createActionButton('停止', 'シミュレーションを一時停止', () => setRunning(false));
-    const resetBtn = createActionButton('リセット', '初期状態へ戻す', () => resetWorld());
-    const deleteBtn = createActionButton('削除', '選択中の図形/エミッタを削除', () => removeSelected());
-    const saveBtn = createActionButton('保存', '現在の配置を保存', () => promptSave());
-    const loadBtn = createActionButton('読み込み', '保存した配置を読み込む', () => promptLoad());
+    const startBtn = createActionButton(
+      'toolbar.actions.start.label', '開始',
+      'toolbar.actions.start.title', 'シミュレーションを開始/再開',
+      () => setRunning(true)
+    );
+    const pauseBtn = createActionButton(
+      'toolbar.actions.pause.label', '停止',
+      'toolbar.actions.pause.title', 'シミュレーションを一時停止',
+      () => setRunning(false)
+    );
+    const resetBtn = createActionButton(
+      'toolbar.actions.reset.label', 'リセット',
+      'toolbar.actions.reset.title', '初期状態へ戻す',
+      () => resetWorld()
+    );
+    const deleteBtn = createActionButton(
+      'toolbar.actions.delete.label', '削除',
+      'toolbar.actions.delete.title', '選択中の図形/エミッタを削除',
+      () => removeSelected()
+    );
+    const saveBtn = createActionButton(
+      'toolbar.actions.save.label', '保存',
+      'toolbar.actions.save.title', '現在の配置を保存',
+      () => promptSave()
+    );
+    const loadBtn = createActionButton(
+      'toolbar.actions.load.label', '読み込み',
+      'toolbar.actions.load.title', '保存した配置を読み込む',
+      () => promptLoad()
+    );
 
     actionGroup.append(startBtn, pauseBtn, resetBtn, deleteBtn, saveBtn, loadBtn);
     toolbar.appendChild(actionGroup);
@@ -612,12 +667,14 @@
     let drawPreview = null;
     let dragInfo = null;
 
-    function createActionButton(label, title, handler){
+    function createActionButton(labelKey, fallbackLabel, titleKey, fallbackTitle, handler){
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = label;
-      btn.title = title;
       btn.className = 'phys-action-btn';
+      bindLocale(() => {
+        btn.textContent = text(labelKey, fallbackLabel);
+        btn.title = text(titleKey, fallbackTitle);
+      });
       btn.addEventListener('click', handler);
       return btn;
     }
@@ -5038,6 +5095,10 @@
 
     function destroy(){
       stopLoop();
+      if (detachLocale) {
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       canvas.removeEventListener('mousedown', handleMouseDown);
       canvas.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);

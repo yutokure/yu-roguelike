@@ -21,15 +21,25 @@
       if (typeof fallback === 'function') return fallback(params);
       return fallback ?? '';
     };
-    const defaultTimerFallback = (params) => {
-      const seconds = Number(params?.seconds ?? 0);
-      return `残り ${seconds.toFixed(1)}s`;
-    };
     const timerState = {
-      key: 'miniexp.games.onigokko.timer.remaining',
-      fallback: defaultTimerFallback,
-      params: { seconds: 0 }
+      key: 'timer.remaining',
+      fallback: null,
+      params: {
+        seconds: '0.00',
+        secondsFormatted: '0.00',
+        secondsRounded: 0,
+        secondsRaw: 0
+      }
     };
+    const defaultTimerFallback = () => {
+      const formatted = typeof timerState.params?.seconds === 'string'
+        ? timerState.params.seconds
+        : Number.isFinite(timerState.params?.secondsRaw)
+          ? Number(timerState.params.secondsRaw).toFixed(2)
+          : '0.00';
+      return `残り ${formatted}s`;
+    };
+    timerState.fallback = defaultTimerFallback;
     let statusState = { key: null, fallback: '', params: undefined };
     let detachLocale = null;
     const refreshLocalizedTexts = () => {
@@ -85,7 +95,11 @@
     const SURVIVAL_EXP_PER_SECOND = 3;
     const SURVIVAL_BONUS = difficulty === 'HARD' ? 180 : difficulty === 'EASY' ? 110 : 140;
     const baseDuration = difficulty === 'HARD' ? 75 : difficulty === 'EASY' ? 55 : 65;
-    timerState.params.seconds = Math.max(0, baseDuration);
+    const initialSeconds = Math.max(0, baseDuration);
+    timerState.params.secondsRaw = initialSeconds;
+    timerState.params.secondsRounded = Math.round(initialSeconds * 100) / 100;
+    timerState.params.seconds = timerState.params.secondsRounded.toFixed(2);
+    timerState.params.secondsFormatted = timerState.params.seconds;
     refreshLocalizedTexts();
 
     const player = { x: 0, y: 0, radius: 10, speed: 80 };
@@ -116,8 +130,14 @@
       if (statusLabel) statusLabel.textContent = text(key, fallback, params);
     }
     function updateTimer(){
-      const seconds = Math.max(0, remaining);
-      timerState.params.seconds = seconds;
+      const secondsRaw = Math.max(0, remaining);
+      const finiteSeconds = Number.isFinite(secondsRaw) ? secondsRaw : 0;
+      const secondsRounded = Math.round(finiteSeconds * 100) / 100;
+      const secondsString = secondsRounded.toFixed(2);
+      timerState.params.secondsRaw = secondsRaw;
+      timerState.params.secondsRounded = secondsRounded;
+      timerState.params.seconds = secondsString;
+      timerState.params.secondsFormatted = secondsString;
       if (timerLabel) timerLabel.textContent = text(timerState.key, timerState.fallback, timerState.params);
     }
 
@@ -271,13 +291,13 @@
       cancelAnimationFrame(raf);
       enableHostShortcuts();
       if (result === 'caught'){
-        setStatus('miniexp.games.onigokko.status.caught_no_reward', '捕まってしまった！獲得EXPなし');
+        setStatus('status.caught_no_reward', '捕まってしまった！獲得EXPなし');
       } else if (result === 'escaped'){
         if (!victoryGranted){
           awardXp(SURVIVAL_BONUS, { reason: 'clear', gameId: 'onigokko' });
           victoryGranted = true;
         }
-        setStatus('miniexp.games.onigokko.status.escaped', '見事逃げ切った！');
+        setStatus('status.escaped', '見事逃げ切った！');
       }
     }
 
@@ -304,12 +324,12 @@
       draw();
 
       if (checkCaught()){
-        setStatus('miniexp.games.onigokko.status.caught', '捕まった！');
+        setStatus('status.caught', '捕まった！');
         endGame('caught');
         return;
       }
       if (remaining <= 0){
-        setStatus('miniexp.games.onigokko.status.escape_success', '逃げ切り成功！');
+        setStatus('status.escape_success', '逃げ切り成功！');
         endGame('escaped');
       }
     }
@@ -370,7 +390,7 @@
       elapsed = 0;
       lastTs = 0;
       updateTimer();
-      setStatus('miniexp.games.onigokko.status.start', '鬼ごっこ開始！矢印キー/WASDで移動');
+      setStatus('status.start', '鬼ごっこ開始！矢印キー/WASDで移動');
       disableHostShortcuts();
       raf = requestAnimationFrame(loop);
     }
@@ -380,16 +400,16 @@
       running = false;
       cancelAnimationFrame(raf);
       enableHostShortcuts();
-      setStatus('miniexp.games.onigokko.status.paused', '一時停止中');
+      setStatus('status.paused', '一時停止中');
     }
 
     function prepareStage(){
       if (!dungeonApi || typeof dungeonApi.generateStage !== 'function'){
-        setStatus('miniexp.games.onigokko.status.api_unavailable', 'ダンジョンAPIが利用できません');
+        setStatus('status.api_unavailable', 'ダンジョンAPIが利用できません');
         stageReady = false;
         return;
       }
-      setStatus('miniexp.games.onigokko.status.loading', 'ステージ読み込み中…');
+      setStatus('status.loading', 'ステージ読み込み中…');
       dungeonApi.generateStage({ type: 'mixed', tilesX: 40, tilesY: 30, tileSize: 18 }).then((generated) => {
         stage = generated;
         configureStageMetrics();
@@ -399,10 +419,10 @@
         stageReady = true;
         resetEntities();
         updateTimer();
-        setStatus('miniexp.games.onigokko.status.ready', '準備完了！開始で鬼ごっこスタート');
+        setStatus('status.ready', '準備完了！開始で鬼ごっこスタート');
         if (pendingStart) startLoop();
       }).catch(() => {
-        setStatus('miniexp.games.onigokko.status.stage_generation_failed', 'ステージ生成に失敗しました');
+        setStatus('status.stage_generation_failed', 'ステージ生成に失敗しました');
       });
     }
 
@@ -447,7 +467,7 @@
       }
     }
 
-    setStatus('miniexp.games.onigokko.status.loading', 'ステージ読み込み中…');
+    setStatus('status.loading', 'ステージ読み込み中…');
     attachLocaleListener();
 
     document.addEventListener('keydown', keyDownHandler, { passive: false });

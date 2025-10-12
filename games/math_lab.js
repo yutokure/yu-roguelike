@@ -5,48 +5,62 @@
   let mathLoader = null;
   let mathJaxLoader = null;
   let mathJaxInstance = null;
-  let i18n = (typeof window !== 'undefined' && window.I18n) ? window.I18n : null;
-
-  function getI18n(){
-    if (typeof window !== 'undefined' && window.I18n && i18n !== window.I18n){
-      i18n = window.I18n;
-    }
-    return i18n;
+  
+  // I18n関連の関数群をシンプルに書き換える
+  function getI18nInstance() {
+    return (typeof window !== 'undefined' && window.I18n) ? window.I18n : null;
   }
 
-  function evaluateFallbackValue(fallback){
-    if (typeof fallback === 'function') {
+  function translateText(key, fallback, params) {
+    const i18n = getI18nInstance();
+    if (key && i18n && typeof i18n.t === 'function') {
       try {
-        const result = fallback();
-        if (result == null) return '';
-        return typeof result === 'string' ? result : String(result);
-      } catch (error) {
-        console.warn('[math_lab:i18n] Failed to evaluate fallback text:', error);
-        return '';
-      }
-    }
-    if (fallback == null) return '';
-    return typeof fallback === 'string' ? fallback : String(fallback);
-  }
-
-  function translateText(key, fallback, params){
-    const instance = getI18n();
-    if (key && instance && typeof instance.t === 'function') {
-      try {
-        const translated = instance.t(key, params);
+        const translated = i18n.t(key, params);
         if (typeof translated === 'string' && translated !== key) {
           return translated;
         }
       } catch (error) {
-        console.warn('[math_lab:i18n] Failed to translate key:', key, error);
+        console.warn('[math_lab:i18n] Translation failed for key:', key, error);
       }
     }
-    return evaluateFallbackValue(fallback);
+    
+    if (typeof fallback === 'function') {
+      try {
+        const result = fallback();
+        return result != null ? String(result) : '';
+      } catch (error) {
+        console.warn('[math_lab:i18n] Fallback evaluation failed:', error);
+        return '';
+      }
+    }
+    return fallback != null ? String(fallback) : '';
   }
 
   function gameText(subKey, fallback, params){
-    const key = subKey ? `games.mathLab.${subKey}` : null;
-    return translateText(key, fallback, params);
+    const i18n = getI18nInstance();
+    if (subKey && i18n && typeof i18n.t === 'function') {
+      const candidates = [
+        `games.math_lab.${subKey}`,
+        `games.mathLab.${subKey}`,
+        `selection.miniexp.games.math_lab.${subKey}`,
+        `miniexp.games.math_lab.${subKey}`,
+        `mathLab.${subKey}`
+      ];
+      for (const candidate of candidates) {
+        try {
+          // I18nライブラリにキーが存在するかどうかを先に確認する
+          if (i18n.exists(candidate)) {
+            const translated = i18n.t(candidate, params);
+            // 翻訳結果がキー自身と異なることを確認（翻訳が存在することの保証）
+            if (typeof translated === 'string' && translated !== candidate) {
+              return translated;
+            }
+          }
+        } catch {}
+      }
+    }
+    // どの候補キーでも翻訳が見つからなかった場合にのみ、フォールバックを評価する
+    return translateText(null, fallback, params); // 第1引数を null にして、キーによる再翻訳をスキップ
   }
 
   const uiText = (key, fallback, params) => gameText(`ui.${key}`, fallback, params);
@@ -372,26 +386,38 @@
     }
 
     function setupLocaleSync(){
-      const instance = getI18n();
-      if (instance && typeof instance.onLocaleChanged === 'function') {
-        const detach = instance.onLocaleChanged(() => runLocaleBindings());
-        if (typeof detach === 'function') {
-          localeCleanup.push(detach);
+      const handler = () => {
+        const i18n = getI18nInstance();
+        // i18nインスタンスが存在し、isReady()がないか、isReady()がtrueを返す場合のみ実行
+        if (i18n && (typeof i18n.isReady !== 'function' || i18n.isReady())) {
+          runLocaleBindings();
         }
-      } else if (typeof document !== 'undefined') {
-        const handler = () => runLocaleBindings();
+      };
+
+      if (typeof document !== 'undefined') {
+        // main.jsが言語変更/初期化完了時に発火させるイベント
+        document.addEventListener('app:rerender', handler);
+        localeCleanup.push(() => document.removeEventListener('app:rerender', handler));
+
+        // 標準的なI18nライブラリが発火させる可能性のあるイベント
         document.addEventListener('i18n:locale-changed', handler);
         localeCleanup.push(() => document.removeEventListener('i18n:locale-changed', handler));
       }
-      if (instance && typeof instance.isReady === 'function' && !instance.isReady()) {
-        Promise.resolve().then(() => {
-          const latest = getI18n();
-          if (latest && typeof latest.isReady === 'function' && latest.isReady()) {
-            runLocaleBindings();
+
+      // I18nライブラリの準備が非同期で完了するのを待つためのポーリング処理
+      const i18n = getI18nInstance();
+      if (i18n && typeof i18n.isReady === 'function' && !i18n.isReady()) {
+        const interval = setInterval(() => {
+          const currentI18n = getI18nInstance();
+          if (currentI18n && currentI18n.isReady()) {
+            clearInterval(interval);
+            handler();
           }
-        });
+        }, 100);
+        localeCleanup.push(() => clearInterval(interval));
       } else {
-        runLocaleBindings();
+        // 同期的に利用可能な場合は即時実行
+        handler();
       }
     }
 

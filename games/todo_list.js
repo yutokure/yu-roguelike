@@ -15,8 +15,11 @@
 
   function clampXp(value){
     const num = Number(value);
-    if (!Number.isFinite(num) || num < 0) return 0;
-    return Math.min(MAX_XP, Math.floor(num));
+    if (!Number.isFinite(num)) return 0;
+    const rounded = num >= 0 ? Math.floor(num) : Math.ceil(num);
+    if (rounded > MAX_XP) return MAX_XP;
+    if (rounded < -MAX_XP) return -MAX_XP;
+    return rounded;
   }
 
   function clampRewardAmount(value, { min = 0, max = MAX_REWARD_AMOUNT } = {}){
@@ -56,11 +59,12 @@
     const itemSource = (source.item && typeof source.item === 'object') ? source.item : source;
     const itemEnabledRaw = itemSource.enabled === true || source.itemEnabled === true;
     const itemKey = sanitizeRewardKey(itemSource.key ?? itemSource.id ?? source.itemKey ?? '');
-    const itemAmount = clampRewardAmount(itemSource.amount ?? source.itemAmount ?? 1, { min: 1 });
+    const itemAmount = clampRewardAmount(itemSource.amount ?? source.itemAmount ?? 1, { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT });
+    const hasItemAmount = itemAmount !== 0;
     base.item = {
-      enabled: itemEnabledRaw && !!itemKey && itemAmount > 0,
+      enabled: itemEnabledRaw && !!itemKey && hasItemAmount,
       key: itemKey,
-      amount: itemAmount > 0 ? itemAmount : 1
+      amount: hasItemAmount ? itemAmount : 0
     };
 
     const spSource = (source.sp && typeof source.sp === 'object') ? source.sp : source;
@@ -388,7 +392,7 @@
 
     const xpInput = document.createElement('input');
     xpInput.type = 'number';
-    xpInput.min = '0';
+    xpInput.min = String(-MAX_XP);
     xpInput.max = String(MAX_XP);
     xpInput.step = '1';
     xpInput.required = true;
@@ -504,7 +508,7 @@
     const itemAmountText = document.createElement('span');
     const itemAmountInput = document.createElement('input');
     itemAmountInput.type = 'number';
-    itemAmountInput.min = '1';
+    itemAmountInput.min = String(-MAX_REWARD_AMOUNT);
     itemAmountInput.max = String(MAX_REWARD_AMOUNT);
     itemAmountInput.step = '1';
     itemAmountInput.value = '1';
@@ -847,14 +851,14 @@
       typeOptionSingle.textContent = translate('games.todoList.form.typeSingle', '単発');
       typeOptionRepeatable.textContent = translate('games.todoList.form.typeRepeatable', '繰り返し');
 
-      xpLabelText.textContent = translate('games.todoList.form.xp', '獲得EXP');
+      xpLabelText.textContent = translate('games.todoList.form.xp', 'EXP変化量（マイナスで没収）');
       rewardsTitle.textContent = translate('games.todoList.form.rewards.title', '追加報酬');
       passiveEnableText.textContent = translate('games.todoList.form.rewards.passiveOrb.label', 'パッシブオーブ');
       passiveOrbIdInput.placeholder = translate('games.todoList.form.rewards.passiveOrb.placeholder', '例: attackBoost');
       passiveAmountText.textContent = translate('games.todoList.form.rewards.passiveOrb.amount', '個数');
       itemEnableText.textContent = translate('games.todoList.form.rewards.item.label', 'アイテム');
       itemKeyInput.placeholder = translate('games.todoList.form.rewards.item.placeholder', '例: potion30');
-      itemAmountText.textContent = translate('games.todoList.form.rewards.item.amount', '個数');
+      itemAmountText.textContent = translate('games.todoList.form.rewards.item.amount', '個数（マイナスで没収）');
       spEnableText.textContent = translate('games.todoList.form.rewards.sp.label', 'SP');
       spAmountText.textContent = translate('games.todoList.form.rewards.sp.amount', '量');
       colorLabelText.textContent = translate('games.todoList.form.color', 'カラー');
@@ -1146,15 +1150,16 @@
 
     function applyTaskRewards(task, meta){
       const rewards = ensureTaskRewards(task);
-      let xpGained = 0;
-      if (task.xp > 0 && typeof awardXp === 'function'){
+      let xpDelta = 0;
+      const xpAmount = Number(task.xp) || 0;
+      if (xpAmount !== 0 && typeof awardXp === 'function'){
         try {
-          const gained = awardXp(task.xp, meta);
+          const gained = awardXp(xpAmount, meta);
           const numeric = Number(gained);
           if (Number.isFinite(numeric)){
-            xpGained = numeric;
-          } else {
-            xpGained = task.xp;
+            xpDelta = numeric;
+          } else if (Number.isFinite(xpAmount)){
+            xpDelta = xpAmount;
           }
         } catch {}
       }
@@ -1163,17 +1168,30 @@
           playerApi.adjustSp(rewards.sp.amount, { source: 'todo_list', reason: meta?.type || 'todo_list' });
         } catch {}
       }
-      if (playerApi && rewards.item.enabled && rewards.item.key && typeof playerApi.awardItems === 'function'){
-        try {
-          playerApi.awardItems({ [rewards.item.key]: rewards.item.amount }, { allowNegative: false });
-        } catch {}
+      if (playerApi && rewards.item.enabled && rewards.item.key){
+        const itemAmount = Number(rewards.item.amount) || 0;
+        if (itemAmount !== 0){
+          const payload = { [rewards.item.key]: itemAmount };
+          if (itemAmount > 0 && typeof playerApi.awardItems === 'function'){
+            try {
+              playerApi.awardItems(payload, { allowNegative: false });
+            } catch {}
+          } else if (itemAmount < 0){
+            const handler = typeof playerApi.adjustItems === 'function' ? playerApi.adjustItems : playerApi.awardItems;
+            if (typeof handler === 'function'){
+              try {
+                handler(payload, { allowNegative: true });
+              } catch {}
+            }
+          }
+        }
       }
       if (playerApi && rewards.passiveOrb.enabled && rewards.passiveOrb.orbId && typeof playerApi.awardPassiveOrb === 'function'){
         try {
           playerApi.awardPassiveOrb(rewards.passiveOrb.orbId, rewards.passiveOrb.amount, { source: meta?.type || 'todo_list' });
         } catch {}
       }
-      return xpGained > 0 ? xpGained : 0;
+      return xpDelta;
     }
 
     function deleteTask(id){
@@ -1199,7 +1217,7 @@
       if (task.status === 'completed'){
         const meta = { type: 'todo-complete', todoId: task.id, name: task.name };
         const gained = applyTaskRewards(task, meta);
-        if (gained > 0) state.sessionXp += gained;
+        if (gained !== 0) state.sessionXp += gained;
       }
       updateStats();
       renderLists();
@@ -1214,7 +1232,7 @@
       task.achievedCount = nextCount;
       const meta = { type: 'todo-achieve', todoId: task.id, name: task.name, count: nextCount };
       const gained = applyTaskRewards(task, meta);
-      if (gained > 0) state.sessionXp += gained;
+      if (gained !== 0) state.sessionXp += gained;
       persist();
       updateStats();
       renderLists();

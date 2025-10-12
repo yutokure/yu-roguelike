@@ -12718,6 +12718,81 @@
             "finished": "Secured place {place}"
           }
         },
+        "sevens": {
+          "players": {
+            "you": "You",
+            "north": "North",
+            "east": "East",
+            "west": "West"
+          },
+          "log": {
+            "startingCard": "{name} placed {card} to start.",
+            "playCard": "{name} placed {card}.",
+            "pass": "{name} passed."
+          },
+          "toast": {
+            "invalidCard": "You can't play that card.",
+            "cardsAvailable": "You still have cards you can play.",
+            "everyonePassed": "Everyone passed. Wait until the situation changes.",
+            "victory": "{name} wins!"
+          },
+          "actions": {
+            "restart": "Rematch (R)",
+            "pass": "Pass"
+          },
+          "player": {
+            "handCount": "Hand {count} cards"
+          },
+          "status": {
+            "turn": "Turn: {name} ・ Pass streak {passes}"
+          },
+          "hud": {
+            "leaderDetail": "{name} ({count} cards)",
+            "noLeader": "-",
+            "score": "Fewest cards: {summary}"
+          }
+        },
+        "daifugo": {
+          "players": {
+            "you": "You",
+            "north": "North",
+            "east": "East",
+            "west": "West"
+          },
+          "pile": {
+            "title": "Current Field",
+            "reset": "Reset",
+            "requirement": "Required value: {value}"
+          },
+          "status": {
+            "lead": "Lead: {name}",
+            "playAny": "Play any card.",
+            "mustBeatOrPass": "Play a stronger card or pass (P).",
+            "roundEnd": "Round complete"
+          },
+          "history": {
+            "playCard": "{name}: {card}",
+            "pass": "{name}: Pass"
+          },
+          "toast": {
+            "invalidCard": "You can't play that card.",
+            "cannotPassLead": "You can't pass on the opening lead."
+          },
+          "actions": {
+            "pass": "Pass (P)",
+            "restart": "Restart (R)",
+            "nextRound": "Next Round (R)"
+          },
+          "playersMeta": {
+            "finished": "Place {place}",
+            "handCount": "{count} cards"
+          },
+          "hud": {
+            "bestPlace": "Place {place}",
+            "noRecord": "---",
+            "scoreSummary": "Total {plays} games / Wins {wins} / Best {best}"
+          }
+        },
         "klondike": {
           "labels": {
             "stock": "Stock",

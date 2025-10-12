@@ -15,6 +15,7 @@
     [120,-25, 20,  5,  5, 20,-25,120]
   ];
   const HARD_DEPTH = 4;
+  const EASY_WEAKNESS_EXPONENT = 5;
 
   function create(root, awardXp, opts){
     const difficulty = (opts && opts.difficulty)||'NORMAL';
@@ -97,6 +98,76 @@
       const oppMoves = legalMoves(BLACK, simulated).length;
       score += (myFollow - oppMoves) * 1.2;
       return score;
+    }
+
+    function countDiscsOnBoard(targetBoard){
+      let white = 0, black = 0, empty = 0;
+      for (let y = 0; y < SIZE; y++){
+        for (let x = 0; x < SIZE; x++){
+          const cell = targetBoard[y][x];
+          if (cell === WHITE) white++;
+          else if (cell === BLACK) black++;
+          else empty++;
+        }
+      }
+      return { white, black, empty };
+    }
+
+    function isCorner(x, y){
+      return (x === 0 || x === SIZE-1) && (y === 0 || y === SIZE-1);
+    }
+
+    function isEdge(x, y){
+      return x === 0 || x === SIZE-1 || y === 0 || y === SIZE-1;
+    }
+
+    function evaluateMoveSabotage(mv){
+      const simulated = applyMoveOnBoard(board, mv, WHITE);
+      const counts = countDiscsOnBoard(simulated);
+      const oppMoves = legalMoves(BLACK, simulated);
+      const myMoves = legalMoves(WHITE, simulated);
+      let value = 0;
+      if (isCorner(mv.x, mv.y)) value -= 250;
+      else if (isEdge(mv.x, mv.y)) value -= 15;
+      if (isAdjacentToEmptyCorner(mv.x, mv.y, board)) value += 80;
+      const oppCornerChances = oppMoves.filter(m => isCorner(m.x, m.y)).length;
+      value += oppCornerChances * 140;
+      if (oppMoves.length === 0) value -= 40;
+      if (myMoves.length === 0 && oppMoves.length > 0) value += 60;
+      value += (oppMoves.length - myMoves.length) * 10;
+      value += (counts.black - counts.white) * 6;
+      value -= mv.flips.length * 3;
+      value += Math.random();
+      return value;
+    }
+
+    function pickWeakMove(moves, exponent = EASY_WEAKNESS_EXPONENT, options = {}){
+      if (moves.length === 0) return null;
+      const { randomBlunderChance = 0, preferSecondWhenLimited = false } = options;
+      if (randomBlunderChance > 0 && Math.random() < randomBlunderChance){
+        return moves[(Math.random()*moves.length)|0];
+      }
+      if (preferSecondWhenLimited && moves.length <= 2){
+        return moves[1 % moves.length];
+      }
+      const scored = moves.map(mv => ({ mv, value: evaluateMoveNormal(mv) }));
+      scored.sort((a,b)=>a.value - b.value);
+      const exp = exponent ?? EASY_WEAKNESS_EXPONENT;
+      let totalWeight = 0;
+      const weights = [];
+      for (let i=0;i<scored.length;i++){
+        const w = Math.pow(scored.length - i, exp);
+        weights.push(w);
+        totalWeight += w;
+      }
+      let r = Math.random() * totalWeight;
+      for (let i=0;i<scored.length;i++){
+        r -= weights[i];
+        if (r <= 0){
+          return scored[i].mv;
+        }
+      }
+      return scored[0].mv;
     }
 
     function evaluateBoard(targetBoard){
@@ -252,7 +323,16 @@
       }
       let choice = null;
       if (difficulty==='EASY'){
-        choice = moves[(Math.random()*moves.length)|0];
+        const sabotage = moves.map(mv => ({ mv, value: evaluateMoveSabotage(mv) }));
+        sabotage.sort((a,b)=>b.value - a.value);
+        const topValue = sabotage[0]?.value ?? -Infinity;
+        const topCandidates = sabotage.filter(s => (topValue - s.value) <= 20);
+        if (topCandidates.length>0){
+          choice = topCandidates[(Math.random()*topCandidates.length)|0].mv;
+        }
+        if (!choice){
+          choice = sabotage[0]?.mv || pickWeakMove(moves, EASY_WEAKNESS_EXPONENT, { preferSecondWhenLimited: true });
+        }
       } else {
         if (difficulty === 'NORMAL'){
           let best = -Infinity;

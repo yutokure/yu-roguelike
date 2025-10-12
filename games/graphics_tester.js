@@ -53,7 +53,7 @@
     @media (max-width:860px){ .gfx3d-main { grid-template-columns:1fr; } }
   `;
 
-  const I18N_NAMESPACE = 'games.graphicsTester';
+  const I18N_NAMESPACE = 'miniexp.games.graphicsTester';
   const i18n = typeof window !== 'undefined' ? window.I18n : null;
   let activeLocalizationInstance = null;
 

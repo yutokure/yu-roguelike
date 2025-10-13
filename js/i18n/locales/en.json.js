@@ -599,175 +599,50 @@
             }
           },
           "xiangqi": {
-            "name": "Xiangqi",
-            "description": "Command Chinese chess pieces, scoring EXP for captures, checks, and mates.",
-            "header": {
-              "title": "Xiangqi",
-              "subtitle": "{color} moves first"
-            },
-            "controls": {
-              "reset": "Reset position"
-            },
-            "board": {
-              "riverLabel": "Chu River  Han Border"
-            },
-            "color": {
-              "red": "Red",
-              "black": "Black",
-              "redPlayer": "Red (Bottom)",
-              "blackPlayer": "Black (Top)"
-            },
-            "pieces": {
-              "general": "General",
-              "advisor": "Advisor",
-              "elephant": "Elephant",
-              "horse": "Horse",
-              "chariot": "Chariot",
-              "cannon": "Cannon",
-              "soldier": "Soldier"
-            },
-            "expLabel": "EXP",
-            "piece": {
-              "description": "{color} {piece}"
-            },
-            "status": {
-              "turnLine": "Turn: {turn}",
-              "turn": {
-                "red": "It is {color}'s move.",
-                "black": "It is {color}'s move."
-              },
-              "scoreLine": "Total score: {score}",
-              "capture": "{actor} captured {target} (+{exp}{expLabel})",
-              "move": "{piece} moved.",
-              "win": "{loser} is checkmated. {winner} wins!",
-              "stalemate": "Stalemate (no legal moves).",
-              "check": "{defender} is in check (+{exp}{expLabel})"
-            }
+        "header": {
+          "title": "Xiangqi",
+          "subtitle": "{color} moves first"
+        },
+        "controls": {
+          "reset": "Reset position"
+        },
+        "board": {
+          "riverLabel": "Chu River  Han Border"
+        },
+        "color": {
+          "red": "Red",
+          "black": "Black",
+          "redPlayer": "Red (Bottom)",
+          "blackPlayer": "Black (Top)"
+        },
+        "pieces": {
+          "general": "General",
+          "advisor": "Advisor",
+          "elephant": "Elephant",
+          "horse": "Horse",
+          "chariot": "Chariot",
+          "cannon": "Cannon",
+          "soldier": "Soldier"
+        },
+        "expLabel": "EXP",
+        "piece": {
+          "description": "{color} {piece}"
+        },
+        "status": {
+          "turnLine": "Turn: {turn}",
+          "turn": {
+            "red": "It is {color}'s move.",
+            "black": "It is {color}'s move."
           },
-          "shogi": {
-            "name": "Shogi",
-            "description": "Use drops and promotions in Japanese chess to rack up move and capture EXP.",
-            "ui": {
-              "title": "Shogi",
-              "subtitle": "MiniExp Edition",
-              "legend": "Moves: +{moveExpFormatted} EXP / Drops: +{dropExpFormatted} EXP / Capture bonus / Promotion: +{promoteExpFormatted} EXP / Check: +{checkExpFormatted} EXP / Win bonus available",
-              "hands": {
-                "aiLabel": "Sente (CPU)",
-                "playerLabel": "Gote (You)",
-                "empty": "None",
-                "chip": "{piece}×{countFormatted}",
-                "total": "{countFormatted} pieces",
-                "totalNone": "None"
-              },
-              "actions": {
-                "restart": "Restart"
-              },
-              "confirm": {
-                "promote": "Promote this piece?"
-              }
-            },
-            "status": {
-              "playerTurn": "Your turn. Select a piece or click a captured piece.",
-              "aiThinking": "CPU is considering a move…",
-              "playerInCheck": "You're in check! Respond quickly.",
-              "aiInCheck": "Check! Press the attack."
-            },
-            "result": {
-              "playerWin": "Checkmate! You win.",
-              "playerLose": "Checkmated… Defeat.",
-              "draw": "Impasse / repetition draw."
-            },
-            "pieces": {
-              "glyph": {
-                "pawn": "歩",
-                "lance": "香",
-                "knight": "桂",
-                "silver": "銀",
-                "gold": "金",
-                "bishop": "角",
-                "rook": "飛",
-                "king": "玉",
-                "promotedPawn": "と",
-                "promotedLance": "成香",
-                "promotedKnight": "成桂",
-                "promotedSilver": "成銀",
-                "promotedBishop": "馬",
-                "promotedRook": "龍"
-              },
-              "label": {
-                "pawn": "Pawn",
-                "lance": "Lance",
-                "knight": "Knight",
-                "silver": "Silver",
-                "gold": "Gold",
-                "bishop": "Bishop",
-                "rook": "Rook",
-                "king": "King"
-              }
-            }
-          },
-          "riichi_mahjong": {
-            "name": "Riichi Mahjong Lite",
-            "description": "Play a quick east-round against three AI rivals and score EXP for riichi, tsumo, and ron wins."
-          },
-          "connect6": {
-            "name": "Connect Six",
-            "description": "Place twin stones to build six in a row and earn big EXP for reaches and victories."
-          },
-          "gomoku": {
-            "name": "Gomoku",
-            "description": "Form five in a row on a 15x15 grid, banking EXP for setups and wins."
-          },
-          "renju": {
-            "name": "Renju",
-            "description": "Master forbidden-move Gomoku rules and earn EXP for careful threats and triumphs."
-          },
-          "go": {
-            "name": "Go",
-            "description": "Surround territory, capture stones, and score EXP for smart invasions and victories.",
-            "info": {
-              "intro": "Go 9×9 — You play first (Black)"
-            },
-            "hud": {
-              "turn": {
-                "player": "Your turn (Black)",
-                "ai": "AI turn (White)"
-              },
-              "status": "{turn} | Black captures: {blackCaptures} | White captures: {whiteCaptures} (komi +{komi})",
-              "passNotice": "{actor} passed ({count} in a row)",
-              "aiThinking": "AI is thinking…"
-            },
-            "buttons": {
-              "pass": "Pass",
-              "resign": "Resign"
-            },
-            "messages": {
-              "koViolation": "That move violates the ko rule."
-            },
-            "actors": {
-              "player": "You",
-              "ai": "AI"
-            },
-            "result": {
-              "win": "You win!",
-              "loss": "AI wins…",
-              "draw": "Jigo (Draw)",
-              "summary": "{result} | Black {blackScore} - White {whiteScore}"
-            }
-          },
-          "backgammon": {
-            "name": "Backgammon",
-            "description": "Race your checkers home, hit blots, and bear off to collect EXP."
-          },
-          "connect4": {
-            "name": "Connect Four",
-            "description": "Drop discs into a vertical board and earn EXP for creating four in a row."
-          },
-          "tic_tac_toe": {
-            "name": "Tic-Tac-Toe",
-            "description": "Line up three marks before the AI to grab quick EXP."
-          },
-          "mancala": {
+          "scoreLine": "Total score: {score}",
+          "capture": "{actor} captured {target} (+{exp}{expLabel})",
+          "move": "{piece} moved.",
+          "win": "{loser} is checkmated. {winner} wins!",
+          "stalemate": "Stalemate (no legal moves).",
+          "check": "{defender} is in check (+{exp}{expLabel})"
+        }
+      },
+      "mancala": {
             "name": "Mancala",
             "description": "Sow seeds and capture pits in the Kalah rule set to outscore the AI for EXP."
           },
@@ -15537,6 +15412,353 @@
               "fast": "Fast",
               "ailment": "Status ailments"
             }
+          }
+        },
+        "playerPreview": {
+          "stats": "HP {hp} / ATK {attack} / DEF {defense}"
+        },
+        "player": {
+          "title": "Player Settings",
+          "level": {
+            "label": "Player level"
+          },
+          "preview": {
+            "label": "Projected stats"
+          },
+          "note": "Sandbox runs do not award EXP and your level returns to normal afterward.",
+          "interactive": {
+            "label": "Enable interactive mode",
+            "note": "Open the in-run menu to tweak parameters instantly."
+          }
+        },
+        "common": {
+          "actions": {
+            "select": "Select",
+            "delete": "Delete"
+          },
+          "axes": {
+            "x": "X",
+            "y": "Y"
+          }
+        },
+        "enemies": {
+          "title": "Enemy Placement",
+          "add": "+ Add enemy",
+          "note": "Select an enemy, then paint its position with the Enemy brush.",
+          "empty": "No enemies placed yet. Use \"Add Enemy\" to create one.",
+          "defaultName": "Enemy {index}",
+          "generatedName": "Enemy {index}",
+          "fields": {
+            "name": "Name",
+            "level": "Level",
+            "hp": "HP",
+            "attack": "Attack",
+            "defense": "Defense",
+            "x": "X position",
+            "y": "Y position",
+            "boss": "Mark as boss"
+          }
+        },
+        "domains": {
+          "title": "Domain Crystals",
+          "add": "+ Add crystal",
+          "note": "Select a crystal, then use the Domain brush to set its location and radius.",
+          "empty": "No crystals placed yet. Use \"Add Crystal\" to create one.",
+          "defaultName": "Crystal {index}",
+          "generatedName": "Domain {index}",
+          "fields": {
+            "name": "Name",
+            "radius": "Radius",
+            "effects": "Effects"
+          },
+          "params": {
+            "target": "{effect} target"
+          }
+        },
+        "portals": {
+          "title": "Portals / Gates",
+          "add": "+ Add portal",
+          "note": "Select a portal, then use the Stairs or Gate brush to place it on the map.",
+          "empty": "No portals placed yet. Use \"Add Portal\" to create one.",
+          "defaultName": "Portal {index}",
+          "fields": {
+            "name": "Name",
+            "type": "Type",
+            "targetMap": "Destination map",
+            "targetX": "Target X",
+            "targetY": "Target Y"
+          },
+          "types": {
+            "stairs": "Stairs",
+            "gate": "Gate"
+          }
+        },
+        "gimmicks": {
+          "empty": "No gimmicks yet. Use the button above to add one.",
+          "config": {
+            "noAdditionalSettings": "No additional configuration."
+          },
+          "pushableCrate": {
+            "label": "Crate",
+            "defaultName": "Crate",
+            "config": {
+              "mass": { "label": "Weight" },
+              "snapToGrid": { "label": "Snap to floor grid" },
+              "sticky": { "label": "Stick when on switches" }
+            },
+            "outputs": {
+              "pressed": "Load ON",
+              "released": "Load OFF",
+              "moved": "Moved"
+            }
+          },
+          "floorSwitch": {
+            "label": "Floor switch",
+            "defaultName": "Switch",
+            "config": {
+              "mode": {
+                "label": "Mode",
+                "options": {
+                  "momentary": "Hold to stay active",
+                  "toggle": "Toggle on each press",
+                  "sticky": "Latch after first press"
+                }
+              },
+              "defaultOn": { "label": "Start ON" },
+              "resettable": { "label": "Allow reset signal" }
+            },
+            "inputs": {
+              "set": "Force ON",
+              "reset": "Force OFF"
+            },
+            "outputs": {
+              "activated": "ON",
+              "deactivated": "OFF",
+              "state": "State"
+            }
+          },
+          "door": {
+            "label": "Door",
+            "defaultName": "Door",
+            "config": {
+              "initialState": {
+                "label": "Initial state",
+                "options": {
+                  "open": "Open",
+                  "closed": "Closed"
+                }
+              },
+              "autoClose": { "label": "Auto close" },
+              "autoCloseDelay": { "label": "Auto-close seconds" }
+            },
+            "inputs": {
+              "open": "Open",
+              "close": "Close",
+              "toggle": "Toggle"
+            },
+            "outputs": {
+              "opened": "Opened",
+              "closed": "Closed",
+              "state": "State"
+            }
+          },
+          "sensor": {
+            "label": "Sensor",
+            "defaultName": "Sensor",
+            "config": {
+              "target": {
+                "label": "Target",
+                "options": {
+                  "player": "Player",
+                  "enemy": "Enemy",
+                  "ally": "Ally",
+                  "any": "Any"
+                }
+              },
+              "radius": { "label": "Detection radius" },
+              "los": { "label": "Require line of sight" }
+            },
+            "inputs": {
+              "enable": "Enable",
+              "disable": "Disable"
+            },
+            "outputs": {
+              "detected": "Detected",
+              "lost": "Lost",
+              "count": "Count"
+            }
+          },
+          "logic": {
+            "label": "Logic node",
+            "defaultName": "Logic",
+            "config": {
+              "operator": {
+                "label": "Operator",
+                "options": {
+                  "and": "AND",
+                  "or": "OR",
+                  "xor": "XOR",
+                  "nand": "NAND",
+                  "nor": "NOR",
+                  "xnor": "XNOR",
+                  "not": "NOT"
+                }
+              },
+              "inputCount": { "label": "Inputs" },
+              "inverted": { "label": "Invert output" }
+            },
+            "inputs": {
+              "in1": "Input 1",
+              "in2": "Input 2"
+            },
+            "outputs": {
+              "true": "True",
+              "false": "False",
+              "state": "State"
+            }
+          },
+          "script": {
+            "label": "Script node",
+            "defaultName": "Script",
+            "config": {
+              "language": {
+                "label": "Language",
+                "options": {
+                  "js": "JavaScript",
+                  "lua": "Lua"
+                }
+              },
+              "autoRun": { "label": "Run every tick without signal" },
+              "code": { "label": "Code" }
+            },
+            "inputs": {
+              "run": "Run",
+              "param": "Parameter"
+            },
+            "outputs": {
+              "done": "Done",
+              "result": "Result",
+              "error": "Error"
+            }
+          },
+          "io": {
+            "label": "I/O node",
+            "defaultName": "I/O",
+            "config": {
+              "mode": {
+                "label": "Operation",
+                "options": {
+                  "read": "Read",
+                  "write": "Write",
+                  "append": "Append"
+                }
+              },
+              "path": { "label": "Path" },
+              "format": {
+                "label": "Format",
+                "options": {
+                  "json": "JSON",
+                  "text": "Text",
+                  "binary": "Binary"
+                }
+              },
+              "throttle": { "label": "Cooldown (s)" }
+            },
+            "inputs": {
+              "execute": "Execute",
+              "payload": "Payload"
+            },
+            "outputs": {
+              "success": "Success",
+              "data": "Result",
+              "failure": "Failure"
+            }
+          },
+          "alert": {
+            "label": "Alert",
+            "defaultName": "Alert",
+            "config": {
+              "message": { "label": "Message" },
+              "level": {
+                "label": "Level",
+                "options": {
+                  "info": "Info",
+                  "warning": "Warning",
+                  "error": "Error"
+                }
+              },
+              "cooldown": { "label": "Cooldown (s)" }
+            },
+            "inputs": {
+              "trigger": "Show",
+              "setMessage": "Set message"
+            },
+            "outputs": {
+              "shown": "Shown"
+            }
+          }
+        },
+        "wires": {
+          "empty": "No connections yet. Click an output port to create one.",
+          "signal": {
+            "binary": "Binary",
+            "pulse": "Pulse",
+            "value": "Value"
+          },
+          "status": {
+            "outputPort": "Output port",
+            "selectTarget": "Click a target for {label}.",
+            "addGimmick": "Add a gimmick to configure connections.",
+            "ready": "Click an output port to start a new connection.",
+            "selectOutputFirst": "Select an output port first.",
+            "samePort": "Cannot connect the same port to itself."
+          }
+        },
+        "palette": {
+          "empty": "No saved colors yet.",
+          "apply": "Apply color",
+          "remove": "Remove color"
+        },
+        "nodeMap": {
+          "empty": "No maps available."
+        },
+        "maps": {
+          "empty": "No maps yet. Use \"Add Map\" to create one."
+        },
+        "validation": {
+          "ready": "✅ Ready to start",
+          "enemies": {
+            "overLimit": "Enemy limit ({max}) exceeded. Remove enemies.",
+            "limitReached": "Enemy limit ({max}) reached. Remove an enemy to add another."
+          },
+          "gimmicks": {
+            "limitReached": "Gimmick limit ({max}) reached. Remove an existing gimmick."
+          },
+          "wires": {
+            "limitReached": "Wire limit ({max}) reached. Remove an existing connection."
+          },
+          "brush": {
+            "enemySelect": "Select an enemy before using the enemy brush.",
+            "domainSelect": "Select a domain crystal before using the domain brush."
+          }
+        },
+        "start": {
+          "defaultError": "Failed to start the sandbox."
+        },
+        "io": {
+          "export": {
+            "success": "Sandbox settings exported.",
+            "failure": "Export failed."
+          },
+          "import": {
+            "noFile": "No file selected.",
+            "loading": "Loading...",
+            "readError": "Could not read the file.",
+            "unsupported": "Unsupported file format.",
+            "genericFailure": "Import failed.",
+            "success": "Sandbox settings imported.",
+            "unknownError": "An unknown error occurred.",
+            "failedWithReason": "Import failed: {reason}"
           }
         },
         "controls": {

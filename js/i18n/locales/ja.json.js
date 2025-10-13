@@ -15485,6 +15485,353 @@
             }
           }
         },
+        "playerPreview": {
+          "stats": "HP {hp} / 攻撃 {attack} / 防御 {defense}"
+        },
+        "player": {
+          "title": "プレイヤー設定",
+          "level": {
+            "label": "プレイヤーレベル"
+          },
+          "preview": {
+            "label": "想定ステータス"
+          },
+          "note": "サンドボックス中は経験値が増えず、終了後に本来のレベルへ戻ります。",
+          "interactive": {
+            "label": "インタラクティブモードを有効にする",
+            "note": "探索中に専用メニューを開いてパラメータ調整や即時編集が行えます。"
+          }
+        },
+        "common": {
+          "actions": {
+            "select": "選択",
+            "delete": "削除"
+          },
+          "axes": {
+            "x": "X",
+            "y": "Y"
+          }
+        },
+        "enemies": {
+          "title": "敵配置",
+          "add": "+ 敵を追加",
+          "note": "敵を選択し「敵配置」ブラシでマップ上の位置を更新できます。",
+          "empty": "敵は未配置です。「敵を追加」ボタンから追加してください。",
+          "defaultName": "敵{index}",
+          "generatedName": "敵{index}",
+          "fields": {
+            "name": "名前",
+            "level": "レベル",
+            "hp": "HP",
+            "attack": "攻撃",
+            "defense": "防御",
+            "x": "X座標",
+            "y": "Y座標",
+            "boss": "ボス扱い"
+          }
+        },
+        "domains": {
+          "title": "領域効果クリスタル",
+          "add": "+ クリスタルを追加",
+          "note": "クリスタルを選択し「領域」ブラシでマップ上の位置と効果範囲を設定します。",
+          "empty": "クリスタルは未配置です。「クリスタルを追加」ボタンから追加してください。",
+          "defaultName": "クリスタル{index}",
+          "generatedName": "領域{index}",
+          "fields": {
+            "name": "名前",
+            "radius": "半径",
+            "effects": "効果"
+          },
+          "params": {
+            "target": "{effect}の対象"
+          }
+        },
+        "portals": {
+          "title": "ポータル / ゲート",
+          "add": "+ ポータルを追加",
+          "note": "ポータルを選択し「階段」または「ゲート」ブラシでマップ上の位置を設定します。",
+          "empty": "ポータルは未配置です。「ポータルを追加」ボタンから追加してください。",
+          "defaultName": "ポータル{index}",
+          "fields": {
+            "name": "名前",
+            "type": "種類",
+            "targetMap": "接続先マップ",
+            "targetX": "接続X",
+            "targetY": "接続Y"
+          },
+          "types": {
+            "stairs": "階段",
+            "gate": "ゲート"
+          }
+        },
+        "gimmicks": {
+          "empty": "ギミックがありません。右上のボタンから追加してください。",
+          "config": {
+            "noAdditionalSettings": "追加設定はありません。"
+          },
+          "pushableCrate": {
+            "label": "木箱",
+            "defaultName": "木箱",
+            "config": {
+              "mass": { "label": "重さ" },
+              "snapToGrid": { "label": "床グリッドに合わせる" },
+              "sticky": { "label": "スイッチに載ると固定" }
+            },
+            "outputs": {
+              "pressed": "荷重ON",
+              "released": "荷重OFF",
+              "moved": "移動"
+            }
+          },
+          "floorSwitch": {
+            "label": "スイッチ",
+            "defaultName": "スイッチ",
+            "config": {
+              "mode": {
+                "label": "モード",
+                "options": {
+                  "momentary": "踏んでいる間だけ",
+                  "toggle": "踏む度に切替",
+                  "sticky": "一度踏むと維持"
+                }
+              },
+              "defaultOn": { "label": "初期状態ON" },
+              "resettable": { "label": "リセット信号を許可" }
+            },
+            "inputs": {
+              "set": "強制ON",
+              "reset": "強制OFF"
+            },
+            "outputs": {
+              "activated": "ON",
+              "deactivated": "OFF",
+              "state": "状態"
+            }
+          },
+          "door": {
+            "label": "扉",
+            "defaultName": "扉",
+            "config": {
+              "initialState": {
+                "label": "初期状態",
+                "options": {
+                  "open": "開",
+                  "closed": "閉"
+                }
+              },
+              "autoClose": { "label": "自動で閉じる" },
+              "autoCloseDelay": { "label": "自動クローズ秒" }
+            },
+            "inputs": {
+              "open": "開く",
+              "close": "閉じる",
+              "toggle": "切り替え"
+            },
+            "outputs": {
+              "opened": "開状態",
+              "closed": "閉状態",
+              "state": "状態"
+            }
+          },
+          "sensor": {
+            "label": "センサー",
+            "defaultName": "センサー",
+            "config": {
+              "target": {
+                "label": "対象",
+                "options": {
+                  "player": "プレイヤー",
+                  "enemy": "敵",
+                  "ally": "味方",
+                  "any": "すべて"
+                }
+              },
+              "radius": { "label": "感知半径" },
+              "los": { "label": "視線判定あり" }
+            },
+            "inputs": {
+              "enable": "有効化",
+              "disable": "無効化"
+            },
+            "outputs": {
+              "detected": "検知",
+              "lost": "喪失",
+              "count": "検知数"
+            }
+          },
+          "logic": {
+            "label": "論理ノード",
+            "defaultName": "ロジック",
+            "config": {
+              "operator": {
+                "label": "演算",
+                "options": {
+                  "and": "AND",
+                  "or": "OR",
+                  "xor": "XOR",
+                  "nand": "NAND",
+                  "nor": "NOR",
+                  "xnor": "XNOR",
+                  "not": "NOT"
+                }
+              },
+              "inputCount": { "label": "入力数" },
+              "inverted": { "label": "出力を反転" }
+            },
+            "inputs": {
+              "in1": "入力1",
+              "in2": "入力2"
+            },
+            "outputs": {
+              "true": "真",
+              "false": "偽",
+              "state": "状態"
+            }
+          },
+          "script": {
+            "label": "コードノード",
+            "defaultName": "スクリプト",
+            "config": {
+              "language": {
+                "label": "言語",
+                "options": {
+                  "js": "JavaScript",
+                  "lua": "Lua"
+                }
+              },
+              "autoRun": { "label": "信号無しで毎Tick実行" },
+              "code": { "label": "コード" }
+            },
+            "inputs": {
+              "run": "実行",
+              "param": "引数"
+            },
+            "outputs": {
+              "done": "完了",
+              "result": "結果",
+              "error": "エラー"
+            }
+          },
+          "io": {
+            "label": "I/Oノード",
+            "defaultName": "I/O",
+            "config": {
+              "mode": {
+                "label": "動作",
+                "options": {
+                  "read": "読み込み",
+                  "write": "書き込み",
+                  "append": "追記"
+                }
+              },
+              "path": { "label": "パス" },
+              "format": {
+                "label": "形式",
+                "options": {
+                  "json": "JSON",
+                  "text": "テキスト",
+                  "binary": "バイナリ"
+                }
+              },
+              "throttle": { "label": "クールタイム(s)" }
+            },
+            "inputs": {
+              "execute": "実行",
+              "payload": "データ"
+            },
+            "outputs": {
+              "success": "成功",
+              "data": "結果",
+              "failure": "失敗"
+            }
+          },
+          "alert": {
+            "label": "アラート",
+            "defaultName": "アラート",
+            "config": {
+              "message": { "label": "メッセージ" },
+              "level": {
+                "label": "レベル",
+                "options": {
+                  "info": "情報",
+                  "warning": "警告",
+                  "error": "重大"
+                }
+              },
+              "cooldown": { "label": "クールタイム(s)" }
+            },
+            "inputs": {
+              "trigger": "表示",
+              "setMessage": "メッセージ設定"
+            },
+            "outputs": {
+              "shown": "表示完了"
+            }
+          }
+        },
+        "wires": {
+          "empty": "接続はありません。出力ポートをクリックして接続を作成してください。",
+          "signal": {
+            "binary": "バイナリ",
+            "pulse": "パルス",
+            "value": "値"
+          },
+          "status": {
+            "outputPort": "出力ポート",
+            "selectTarget": "{label} の接続先をクリックしてください。",
+            "addGimmick": "ギミックを追加すると接続を設定できます。",
+            "ready": "出力ポートをクリックして新しい接続を作成できます。",
+            "selectOutputFirst": "先に出力ポートを選択してください。",
+            "samePort": "同じポート同士は接続できません。"
+          }
+        },
+        "palette": {
+          "empty": "保存したカラーがありません。",
+          "apply": "カラーを適用",
+          "remove": "カラーを削除"
+        },
+        "nodeMap": {
+          "empty": "マップがありません。"
+        },
+        "maps": {
+          "empty": "マップがありません。「マップ追加」で新規作成してください。"
+        },
+        "validation": {
+          "ready": "✅ 開始できます",
+          "enemies": {
+            "overLimit": "敵の上限（{max}体）を超えています。敵を減らしてください。",
+            "limitReached": "敵の上限（{max}体）に達しています。新たに追加するには既存の敵を削除してください。"
+          },
+          "gimmicks": {
+            "limitReached": "ギミックの上限（{max}）に達しています。既存のギミックを削除してください。"
+          },
+          "wires": {
+            "limitReached": "ワイヤーの上限（{max}）に達しています。既存の接続を削除してください。"
+          },
+          "brush": {
+            "enemySelect": "敵配置ブラシを使う前に敵を選択してください。",
+            "domainSelect": "領域ブラシを使う前にクリスタルを選択してください。"
+          }
+        },
+        "start": {
+          "defaultError": "サンドボックスを開始できませんでした。"
+        },
+        "io": {
+          "export": {
+            "success": "設定をエクスポートしました。",
+            "failure": "エクスポートに失敗しました。"
+          },
+          "import": {
+            "noFile": "ファイルが選択されませんでした。",
+            "loading": "読み込み中...",
+            "readError": "ファイルを読み込めませんでした。",
+            "unsupported": "対応していないファイル形式です。",
+            "genericFailure": "インポートに失敗しました。",
+            "success": "サンドボックス設定をインポートしました。",
+            "unknownError": "不明なエラーが発生しました。",
+            "failedWithReason": "インポートに失敗しました: {reason}"
+          }
+        },
         "controls": {
           "domain": {
             "noneAvailable": "配置可能なクリスタルなし"

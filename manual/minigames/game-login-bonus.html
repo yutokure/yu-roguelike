@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミニゲーム: ログインボーナス</title>
+    <link rel="stylesheet" href="../manual.css">
+</head>
+<body>
+    <main>
+        <h1>ミニゲーム: ログインボーナス</h1>
+
+        <section>
+            <h2>概要</h2>
+            <p>
+                「ログインボーナス」ミニゲームは、日付ごとに設定された報酬をカレンダーから受け取れる
+                ユーティリティ MOD です。月間カレンダー、当日の報酬詳細、受取履歴のサマリーを 1 画面にまとめ、
+                プレイヤーの EXP やアイテム、SP を自動で付与します。受け取り情報はブラウザの
+                <code>localStorage</code>（キー: <code>mini_login_bonus_claims_v1</code>）に保存され、ページ再読込後も保持されます。
+            </p>
+        </section>
+
+        <section>
+            <h2>画面構成</h2>
+            <ul>
+                <li>
+                    <strong>ヘッダー</strong> — タイトルとサブタイトルに加え、
+                    「累計受け取り回数」「表示月の受け取り回数」を表示します。回数はローカライズ対応の
+                    <code>Intl.NumberFormat</code> で整形されます。【F:games/login_bonus.js†L530-L611】
+                </li>
+                <li>
+                    <strong>カレンダーカード</strong> — 月表示、前月/翌月ボタン、曜日行、日付セルを表示します。
+                    日付セルには報酬ラベルと受取済みバッジが描画され、当日は文字色がハイライトされます。
+                    セルをクリックすると右側の詳細が更新されます。【F:games/login_bonus.js†L548-L704】【F:games/login_bonus.js†L724-L799】
+                </li>
+                <li>
+                    <strong>詳細カード</strong> — 選択した日の長い日付表示、報酬名、効果説明、特別タグ、受取ステータス、
+                    「今日のボーナスを受け取る」ボタン、結果メッセージログを表示します。
+                    ステータスは「受取済み」「本日受け取れます」「期間終了」「まだ受け取れません」を切り替えます。【F:games/login_bonus.js†L786-L878】
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>報酬ローテーション</h2>
+            <p>
+                報酬は 7 種類の基本報酬と 3 種類の特別報酬で構成され、日付に応じて切り替わります。名称や説明文は
+                ローカライズ API に対応しており、プレースホルダーには報酬量を渡します。【F:games/login_bonus.js†L5-L138】
+            </p>
+            <ul>
+                <li><strong>基本報酬</strong> — 経験値（333/777/1300/2000）、回復アイテムセット、SP 回復などを 1 週間周期で巡回します。</li>
+                <li><strong>特別報酬</strong> — 日曜日は回復アイテム 10 個、月末は EXP 2500、1 月 1 日は EXP 10000 を授与します。特別日はバッジ表示も行います。【F:games/login_bonus.js†L140-L208】【F:games/login_bonus.js†L348-L413】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>受取フロー</h2>
+            <ol>
+                <li>カレンダーで当日が自動選択されます。別日をクリックすると詳細を確認できます。</li>
+                <li>当日分のみ受取ボタンが有効になります。過去分は履歴確認のみ、未来分はロック表示です。【F:games/login_bonus.js†L808-L839】</li>
+                <li>受取ボタンを押すと <code>grantReward()</code> が呼ばれ、報酬の種類別にプレイヤー API を介して成果を反映します。結果はメッセージログに逐次表示されます。【F:games/login_bonus.js†L880-L976】【F:games/login_bonus.js†L1010-L1066】</li>
+                <li>受け取った日付は <code>state.claims</code> に記録され、即座にカレンダーとサマリーが再描画されます。【F:games/login_bonus.js†L909-L930】</li>
+            </ol>
+            <p class="small-note">
+                セッション中に獲得した EXP は <code>state.sessionXp</code> に加算され、
+                MiniExp のスコアとして返却されます（<code>getScore()</code>）。【F:games/login_bonus.js†L217-L227】【F:games/login_bonus.js†L1079-L1103】
+            </p>
+        </section>
+
+        <section>
+            <h2>保存とローカライズ</h2>
+            <p>
+                受取履歴は <code>localStorage</code> に JSON で保存されます。破損したデータは読み込み時に排除され、
+                受取日時は ISO 形式（YYYY-MM-DD）で管理されます。ロケール変更イベントを購読し、タイトルやボタンなどを再翻訳します。【F:games/login_bonus.js†L210-L337】【F:games/login_bonus.js†L1121-L1134】
+            </p>
+        </section>
+
+        <section>
+            <h2>プレイヤー API との連携</h2>
+            <p>
+                オプション引数 <code>opts.player</code> に MiniExp 本編のプレイヤー API を渡すと、
+                以下のフックでゲーム内リソースを操作します。いずれも例外は握り潰さずログ出力し、失敗時はフォールバックのメッセージを表示します。【F:games/login_bonus.js†L214-L227】【F:games/login_bonus.js†L872-L1066】
+            </p>
+            <ul>
+                <li><code>awardXp(amount, meta)</code> — 経験値報酬。戻り値の EXP をセッション加算に使用。</li>
+                <li><code>awardItems(map, meta)</code> / <code>adjustItems(map, meta)</code> — アイテム付与。成功時は実際に加算された個数をメッセージに反映。</li>
+                <li><code>fillSp(meta)</code> / <code>adjustSp(amount, meta)</code> — SP 回復または変化。結果値でメッセージを切り替え。</li>
+            </ul>
+            <p>
+                アイテム名は <code>ITEM_DEFS</code> によるラベル定義を参照し、
+                <code>.format.itemSummary</code> などのローカライズキーを通じて多言語化されます。【F:games/login_bonus.js†L30-L109】【F:games/login_bonus.js†L238-L288】
+            </p>
+        </section>
+
+        <section>
+            <h2>カスタマイズのヒント</h2>
+            <ul>
+                <li>
+                    報酬の追加や差し替えは <code>BASE_REWARD_DEFS</code> と <code>SPECIAL_REWARD_DEFS</code> を編集します。
+                    特別タグ（<code>specialTag</code>）を設定すると詳細カードにバッジが表示されます。【F:games/login_bonus.js†L32-L209】【F:games/login_bonus.js†L820-L836】
+                </li>
+                <li>
+                    受取条件を変更したい場合は <code>canClaim()</code> や <code>grantReward()</code> 内のロジックを拡張してください。
+                    現在は「当日分のみ受け取り可能」で固定されています。【F:games/login_bonus.js†L194-L205】【F:games/login_bonus.js†L880-L939】
+                </li>
+                <li>
+                    受取履歴をリセットするには、ブラウザのストレージから <code>mini_login_bonus_claims_v1</code> を削除します。
+                </li>
+            </ul>
+        </section>
+
+    </main>
+</body>
+</html>

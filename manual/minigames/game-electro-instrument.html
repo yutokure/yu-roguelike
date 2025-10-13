@@ -3,13 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ミニゲーム: 電子楽器</title>
+    <title>ミニゲーム: 電子楽器スタジオ</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
-        <h1>ミニゲーム: 電子楽器</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <h1>ミニゲーム: 電子楽器スタジオ</h1>
+
+        <section>
+            <h2>概要</h2>
+            <p>電子鍵盤を自由に演奏し、押した音ごとにEXPを獲得できるトイ系ミニゲームです。4種類の音色を切り替えられ、マウス／タッチ操作とキーボード演奏の両方に対応しています。【F:games/electro_instrument.js†L170-L349】【F:games/electro_instrument.js†L584-L598】</p>
+            <ul>
+                <li>白鍵と黒鍵を備えた2オクターブ相当の鍵盤で、最大10音分の演奏履歴がタグとして表示されます。【F:games/electro_instrument.js†L233-L352】【F:games/electro_instrument.js†L313-L349】</li>
+                <li>演奏するたびにセッションEXPが加算され、XPメーターにリアルタイムで反映されます。【F:games/electro_instrument.js†L218-L230】【F:games/electro_instrument.js†L390-L395】</li>
+                <li>Web Audio API を使用しているため、初回の演奏時にオーディオコンテキストを起動します。【F:games/electro_instrument.js†L359-L372】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>画面構成</h2>
+            <h3>ヘッダーブロック</h3>
+            <p>タイトル行の右側に音色セレクター、マスターボリューム（0〜100%）、セッションEXPメーターが並びます。難易度やローカライズに応じてラベルが更新される設計です。【F:games/electro_instrument.js†L185-L349】</p>
+            <h3>鍵盤セクション</h3>
+            <p>白鍵は幅64px・黒鍵は幅44pxで配置され、押下中はハイライトされます。黒鍵は対応する白鍵の間に絶対配置され、押すと対応音の再生・ハイライト・履歴更新が行われます。【F:games/electro_instrument.js†L233-L552】【F:games/electro_instrument.js†L374-L388】</p>
+            <h3>インフォメーションパネル</h3>
+            <p>説明文と白鍵／黒鍵の凡例が表示され、右下には最新10音のタグ一覧が並びます。演奏履歴が空の場合はプレースホルダーが表示されます。【F:games/electro_instrument.js†L248-L349】</p>
+        </section>
+
+        <section>
+            <h2>操作方法</h2>
+            <h3>マウス／タッチ操作</h3>
+            <ul>
+                <li>鍵盤をクリック／タップすると音が鳴り、ボタンは押し込みアニメーションになります。【F:games/electro_instrument.js†L522-L574】</li>
+                <li>押した指をスライドして鍵盤外へドラッグした場合でも、押下状態のままなら指が離れるタイミングで音が止まります（pointercapture により操作が安定します）。【F:games/electro_instrument.js†L554-L573】</li>
+                <li>ボリュームスライダーで全体の出力ゲインをリアルタイムに調整できます。【F:games/electro_instrument.js†L205-L216】【F:games/electro_instrument.js†L589-L592】</li>
+            </ul>
+            <h3>キーボード演奏</h3>
+            <p>ブラウザフォーカスが入力欄に無い状態でキーを押すと音が鳴り、キーを離すと減衰が始まります。長押しの連打防止、入力欄への入力保護も実装されています。【F:games/electro_instrument.js†L501-L520】</p>
+            <table>
+                <thead>
+                    <tr><th>ノート</th><th>対応キー</th><th>ノート</th><th>対応キー</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>C4</td><td>A</td><td>C5</td><td>K</td></tr>
+                    <tr><td>C#4</td><td>W</td><td>C#5</td><td>O</td></tr>
+                    <tr><td>D4</td><td>S</td><td>D5</td><td>L</td></tr>
+                    <tr><td>D#4</td><td>E</td><td>D#5</td><td>P</td></tr>
+                    <tr><td>E4</td><td>D</td><td>E5</td><td>;</td></tr>
+                    <tr><td>F4</td><td>F</td><td>F5</td><td>'</td></tr>
+                    <tr><td>F#4</td><td>T</td><td>F#5</td><td>]</td></tr>
+                    <tr><td>G4</td><td>G</td><td>G5</td><td>Z</td></tr>
+                    <tr><td>G#4</td><td>Y</td><td>G#5</td><td>X</td></tr>
+                    <tr><td>A4</td><td>H</td><td>A5</td><td>C</td></tr>
+                    <tr><td>A#4</td><td>U</td><td>A#5</td><td>V</td></tr>
+                    <tr><td>B4</td><td>J</td><td>B5</td><td>B</td></tr>
+                </tbody>
+            </table>
+            <p class="note">※対応キーは <kbd>Shift</kbd> なしの英字入力を想定しています。【F:games/electro_instrument.js†L59-L88】</p>
+        </section>
+
+        <section>
+            <h2>EXPと難易度</h2>
+            <p>難易度設定によって音1回あたりの獲得EXPが変動します。EASYは0.6、NORMALは0.9、HARDは1.2ポイントが加算され、合計値はセッションEXPとして小数1桁表示されます。外部のXPシステムに渡すためのフックも用意されています。【F:games/electro_instrument.js†L153-L395】</p>
+            <p>最新10音を超えると古い音から自動的に削除されるため、EXPの伸びと演奏履歴が連動して確認できます。【F:games/electro_instrument.js†L381-L388】</p>
+        </section>
+
+        <section>
+            <h2>音源エンジン</h2>
+            <p>各音色は複数オシレーターとエンベロープ、任意のビブラートで構成されています。スタジオピアノ／シンセパッド／エレクトリックオルガン／デジタルストリングスの4種類から選択でき、セレクター変更時に使用中の楽器定義が切り替わります。【F:games/electro_instrument.js†L90-L139】【F:games/electro_instrument.js†L430-L495】【F:games/electro_instrument.js†L584-L586】</p>
+            <p>音の発音時にはアタック→ディケイ→サステインの包絡制御、ビブラートの遅延スタート、キーアップ時のリリース減衰とオシレーター停止処理が行われます。【F:games/electro_instrument.js†L430-L488】【F:games/electro_instrument.js†L398-L428】</p>
+        </section>
+
+        <section>
+            <h2>セッション管理</h2>
+            <p>ゲーム開始時にキーボードリスナーが登録され、停止・破棄時にはリスナーやアクティブな発音が解除されます。音声リソースは明示的にクローズされるため、他ミニゲームへの切り替えでもリソースリークを起こしません。【F:games/electro_instrument.js†L600-L641】</p>
+            <p>ミニゲームはID <code>electro_instrument</code> として登録され、カテゴリ「トイ」に分類されます。スタンドアロンでもミニゲームAPIからでも呼び出せる構造です。【F:games/electro_instrument.js†L644-L656】</p>
+        </section>
     </main>
 </body>
 </html>

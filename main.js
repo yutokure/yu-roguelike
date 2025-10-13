@@ -19168,12 +19168,68 @@ function setMiniExpPlaceholderState(mode, data = null, manifest = __miniManifest
     applyMiniExpPlaceholderState(manifest);
 }
 
+function safeAchievementRefresh() {
+    try {
+        window.AchievementSystem?.refresh?.();
+    } catch {}
+}
+
+function computeActiveDungeonGeneratorCount() {
+    try {
+        if (DungeonGenRegistry) {
+            if (typeof DungeonGenRegistry.size === 'number') {
+                const size = Number(DungeonGenRegistry.size);
+                return Number.isFinite(size) ? Math.max(0, Math.floor(size)) : 0;
+            }
+            if (typeof DungeonGenRegistry.keys === 'function') {
+                let count = 0;
+                for (const key of DungeonGenRegistry.keys()) {
+                    if (key !== undefined && key !== null) count += 1;
+                }
+                return count;
+            }
+        }
+    } catch {}
+    return 0;
+}
+
+const MINI_GAME_BUILTIN_AUTHORS = new Set(['builtin', 'builtin-sample', 'builtin_sample', 'core']);
+
+function computeMiniGameModCount() {
+    const seen = new Set();
+    let count = 0;
+    const consider = (entry) => {
+        if (!entry || !entry.id || seen.has(entry.id)) return;
+        seen.add(entry.id);
+        const authorRaw = entry.author;
+        if (!authorRaw) return;
+        const author = String(authorRaw).trim().toLowerCase();
+        if (!author || MINI_GAME_BUILTIN_AUTHORS.has(author)) return;
+        count += 1;
+    };
+    const manifestList = Array.isArray(__miniManifest)
+        ? __miniManifest
+        : (Array.isArray(window.MINIEXP_MANIFEST) ? window.MINIEXP_MANIFEST : []);
+    manifestList.forEach(consider);
+    if (__miniGameRegistry && typeof __miniGameRegistry === 'object') {
+        for (const id of Object.keys(__miniGameRegistry)) {
+            consider(__miniGameRegistry[id]);
+        }
+    }
+    return count;
+}
+
+function updateMiniManifestCache(list) {
+    __miniManifest = Array.isArray(list) ? list : [];
+    safeAchievementRefresh();
+    return __miniManifest;
+}
+
 async function loadMiniManifestOnce() {
     if (__miniManifest) return __miniManifest;
     // 1) すでに JS マニフェストが読み込まれていればそれを採用
     if (Array.isArray(window.MINIEXP_MANIFEST)) {
-        __miniManifest = window.MINIEXP_MANIFEST;
-        return __miniManifest;
+        return updateMiniManifestCache(window.MINIEXP_MANIFEST);
     }
     // 2) file:// 対応: JS 版マニフェストを <script> で読み込む
     try {
@@ -19184,21 +19240,19 @@ async function loadMiniManifestOnce() {
             document.head.appendChild(s);
         });
         if (Array.isArray(window.MINIEXP_MANIFEST)) {
-            __miniManifest = window.MINIEXP_MANIFEST;
-            return __miniManifest;
+            return updateMiniManifestCache(window.MINIEXP_MANIFEST);
         }
     } catch {}
     // 3) http(s) 環境では JSON を fetch（CORS を満たす場合）
     try {
         const res = await fetch('games/manifest.json', { cache: 'no-store' });
         if (res.ok) {
-            __miniManifest = await res.json();
-            if (!Array.isArray(__miniManifest)) __miniManifest = [];
-            return __miniManifest;
+            const data = await res.json();
+            return updateMiniManifestCache(Array.isArray(data) ? data : []);
         }
     } catch {}
     // 4) フォールバック（内蔵サンプル）
-    __miniManifest = [
+    return updateMiniManifestCache([
         {
             id: 'othello',
             name: 'オセロ',
@@ -19265,8 +19319,7 @@ async function loadMiniManifestOnce() {
             categories: ['パズル'],
             categoryIds: ['puzzle']
         },
-    ];
-    return __miniManifest;
+    ]);
 }
 function normalizeMiniExpDisplayMode(mode) {
     const fallback = 'detail';
@@ -19541,6 +19594,7 @@ window.registerMiniGame = function(def) {
         renderMiniExpList(__miniManifest);
         applyMiniExpPlaceholderState(__miniManifest);
     }
+    safeAchievementRefresh();
     const list = __miniGameWaiters[def.id];
     if (!list) return;
     list.forEach(entry => {
@@ -19555,6 +19609,9 @@ window.registerMiniGame = function(def) {
     });
     delete __miniGameWaiters[def.id];
 };
+
+window.getActiveDungeonGeneratorCount = computeActiveDungeonGeneratorCount;
+window.getMiniGameModCount = computeMiniGameModCount;
 
 function waitForMiniGame(id, opts = {}) {
     return new Promise((resolve, reject) => {
@@ -21195,6 +21252,7 @@ window.registerDungeonAddon = function(def) {
     try { updateDungeonTypeOverlay(); } catch {}
     try { refreshBlockDimLocaleSensitiveUi(); } catch {}
     console.log('[addon registered]', def.id);
+    safeAchievementRefresh();
 };
 
 function makeGenContext() {

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミニゲーム: ブロック崩し（キーボード）</title>
+    <link rel="stylesheet" href="../manual.css">
+</head>
+<body>
+    <main>
+        <h1>ミニゲーム: ブロック崩し（キーボード）</h1>
+        <section>
+            <h2>概要</h2>
+            <p>
+                キーボード操作専用のシンプルなブロック崩しです。左右にバーを動かし、ボールを反射させながら全てのブロックを破壊していきます。
+                ブロック破壊ごとの経験値獲得に加えて、ステージを一掃すると難易度に応じたクリアボーナスが得られます。
+            </p>
+        </section>
+        <section>
+            <h2>準備とゲーム開始</h2>
+            <ol>
+                <li>タイトルのミニゲーム一覧から <strong>ブロック崩しk</strong> を選択します。</li>
+                <li>ホスト設定で難易度（<strong>EASY</strong> / <strong>NORMAL</strong> / <strong>HARD</strong>）を切り替えると、バーの幅・ボール速度・残機数・クリアボーナスが変化します。</li>
+                <li>開始するとキャンバス中央にボールが配置され、最上段に 5 行 × 10 列のブロックが生成されます。最初のフレームからボールは自動的に落下を始めます。</li>
+            </ol>
+            <p class="small-note">ミニゲームタブを離れると自動的に停止します。再開時はステートがリセットされるため、集中できるタイミングで挑戦してください。</p>
+        </section>
+        <section>
+            <h2>操作方法</h2>
+            <ul>
+                <li><kbd>←</kbd> または <kbd>A</kbd>：バーを左へ移動します。</li>
+                <li><kbd>→</kbd> または <kbd>D</kbd>：バーを右へ移動します。</li>
+            </ul>
+            <p>マウスやタッチ操作には対応していません。キーは押しっぱなしで連続移動し、左右端では自動的に止まります。</p>
+        </section>
+        <section>
+            <h2>ルールと得点</h2>
+            <ul>
+                <li>ボールがブロックに当たるたびにそのブロックは消え、<strong>+1 XP</strong> を獲得します。</li>
+                <li>ブロックが全て消えると即座に新しい配置が生成され、難易度ごとのクリアボーナス（10 / 50 / 100 XP）が追加されます。</li>
+                <li>ボールを取り逃がして画面下に落とすと残機が 1 つ減少し、初期位置から再開します。残機が尽きるとブロックとスコアカウントがリセットされます。</li>
+                <li>画面上部の HUD では残機数・破壊数・難易度・操作ヒントが確認できます。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>難易度ごとの違い</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>設定</th>
+                        <th>バー幅</th>
+                        <th>ボール速度</th>
+                        <th>残機</th>
+                        <th>バー移動速度</th>
+                        <th>クリアボーナス</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>EASY</td>
+                        <td>120 px</td>
+                        <td>3.4 px / tick</td>
+                        <td>5</td>
+                        <td>7 px / tick</td>
+                        <td>10 XP</td>
+                    </tr>
+                    <tr>
+                        <td>NORMAL</td>
+                        <td>90 px</td>
+                        <td>4.2 px / tick</td>
+                        <td>3</td>
+                        <td>9 px / tick</td>
+                        <td>50 XP</td>
+                    </tr>
+                    <tr>
+                        <td>HARD</td>
+                        <td>66 px</td>
+                        <td>5.2 px / tick</td>
+                        <td>2</td>
+                        <td>11 px / tick</td>
+                        <td>100 XP</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>難易度が上がるほどバーが短くなりボール速度も上がるため、角度調整とリカバリーが重要になります。</p>
+        </section>
+        <section>
+            <h2>攻略のヒント</h2>
+            <ul>
+                <li>バー中央に当てると垂直に近い角度で反射します。左右端を使ってボールの飛ぶ方向をコントロールし、隙間を狙い撃ちましょう。</li>
+                <li>終盤にブロックが少なくなるとボール速度は維持されます。落下コースの先を予測し、バー位置を先回りさせると安全です。</li>
+                <li>残機が尽きると破壊数がリセットされるため、ハードでは防御重視でプレイし、確実にボーナスを獲得する方が効率的です。</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

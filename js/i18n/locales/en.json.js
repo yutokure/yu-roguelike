@@ -7,7 +7,9 @@
     },
 
     "header": {
-      "title": "Yu Roguelike"
+      "title": "Yu Roguelike",
+      "manual": "Read Manual",
+      "minigameManual": "Read Mini-Game Manual"
     },
 
     "ui": {

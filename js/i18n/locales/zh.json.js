@@ -7,7 +7,9 @@
       "title": "Yu Roguelike"
     },
     "header": {
-      "title": "Yu Roguelike"
+      "title": "Yu Roguelike",
+      "manual": "阅读手册",
+      "minigameManual": "阅读迷你游戏手册"
     },
     "ui": {
       "language": {

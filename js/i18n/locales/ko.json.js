@@ -6,7 +6,9 @@
       "title": "유 로그라이크"
     },
     "header": {
-      "title": "유 로그라이크"
+      "title": "유 로그라이크",
+      "manual": "매뉴얼 읽기",
+      "minigameManual": "미니게임 매뉴얼 읽기"
     },
     "ui": {
       "language": {

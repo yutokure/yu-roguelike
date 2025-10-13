@@ -16,7 +16,8 @@
         "ariaLabel": "Language selector",
         "option": {
           "ja": "Japanese",
-          "en": "English"
+          "en": "English",
+          "zh": "Chinese (Simplified)"
         }
       },
       "runResult": {

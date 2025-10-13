@@ -15505,12 +15505,45 @@
         "common": {
           "actions": {
             "select": "選択",
-            "delete": "削除"
+            "delete": "削除",
+            "duplicate": "複製"
           },
           "axes": {
             "x": "X",
             "y": "Y"
           }
+        },
+        "gimmickSuite": {
+          "title": "ギミック / ワイヤー",
+          "toolbarAria": "ギミック操作",
+          "addTypeLabel": "追加タイプ",
+          "add": "+ ギミックを追加",
+          "autoLayout": "自動整列",
+          "listAria": "ギミック一覧",
+          "fields": {
+            "name": "名前",
+            "namePlaceholder": "ギミック名",
+            "type": "種類",
+            "tags": "タグ (カンマ区切り)",
+            "tagsPlaceholder": "例: puzzle,door",
+            "locked": "ビジュアル上で固定",
+            "tileX": "タイルX",
+            "tileY": "タイルY",
+            "tileXPlaceholder": "X",
+            "tileYPlaceholder": "Y",
+            "notes": "メモ",
+            "notesPlaceholder": "メモや注意事項"
+          },
+          "actions": {
+            "useSelected": "選択セルを使用",
+            "clearTile": "解除",
+            "clearSelection": "選択解除"
+          },
+          "subheaders": {
+            "config": "設定",
+            "wires": "接続一覧"
+          },
+          "wireEditorAria": "ワイヤー編集エリア"
         },
         "enemies": {
           "title": "敵配置",

@@ -15434,12 +15434,45 @@
         "common": {
           "actions": {
             "select": "Select",
-            "delete": "Delete"
+            "delete": "Delete",
+            "duplicate": "Duplicate"
           },
           "axes": {
             "x": "X",
             "y": "Y"
           }
+        },
+        "gimmickSuite": {
+          "title": "Gimmicks / Wires",
+          "toolbarAria": "Gimmick controls",
+          "addTypeLabel": "Add type",
+          "add": "+ Add gimmick",
+          "autoLayout": "Auto layout",
+          "listAria": "Gimmick list",
+          "fields": {
+            "name": "Name",
+            "namePlaceholder": "Gimmick name",
+            "type": "Type",
+            "tags": "Tags (comma-separated)",
+            "tagsPlaceholder": "e.g. puzzle,door",
+            "locked": "Lock position in layout",
+            "tileX": "Tile X",
+            "tileY": "Tile Y",
+            "tileXPlaceholder": "X",
+            "tileYPlaceholder": "Y",
+            "notes": "Notes",
+            "notesPlaceholder": "Notes or warnings"
+          },
+          "actions": {
+            "useSelected": "Use selected cell",
+            "clearTile": "Clear",
+            "clearSelection": "Clear selection"
+          },
+          "subheaders": {
+            "config": "Configuration",
+            "wires": "Connections"
+          },
+          "wireEditorAria": "Wire editor area"
         },
         "enemies": {
           "title": "Enemy Placement",

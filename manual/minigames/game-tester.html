@@ -9,7 +9,164 @@
 <body>
     <main>
         <h1>ミニゲーム: テスターツール</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <p>JSテスターは、ブラウザ環境でのJavaScript動作確認、CPUベンチマーク計測、そしてブロック式アドベンチャー作成を1つにまとめた開発者向けミニゲームです。タブを切り替えながら、環境調査からインタラクティブなデモ制作までを手早く行えます。</p>
+
+        <section>
+            <h2>概要</h2>
+            <ul>
+                <li><strong>機能テスト</strong> ― 代表的なWeb APIをワンクリックで検証し、成功・失敗結果を記録します。【F:games/tester.js†L429-L549】【F:games/tester.js†L808-L889】</li>
+                <li><strong>CPUベンチマーク</strong> ― 1秒間の整数インクリメント回数を測定し、最新値・自己ベスト・累計回数を可視化します。【F:games/tester.js†L892-L1001】</li>
+                <li><strong>ブロックアドベンチャー</strong> ― テキストや分岐ブロックを組み合わせて簡易的なストーリーを作り、ログ・変数ビューアで挙動を確認できます。【F:games/tester.js†L1004-L1940】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>画面構成と操作の流れ</h2>
+            <p>画面上部のタブバーから各機能へ移動します。タブをクリックすると対応するセクションがアクティブになり、他のセクションは非表示になります。【F:games/tester.js†L706-L767】</p>
+            <ol>
+                <li>タブを選択して目的のツールを開く。</li>
+                <li>各セクション内の操作ボタンでテスト実行・計測・ストーリー編集を行う。</li>
+                <li>必要に応じて<strong>Restart</strong>（ゲームの再起動）を行うと全データが初期化されます。【F:games/tester.js†L2140-L2156】</li>
+            </ol>
+        </section>
+
+        <section id="tests">
+            <h2>タブ「機能テスト」</h2>
+            <p>カード内に用意されたテストを個別、または「すべて実行」ボタンから連続実行できます。各テストは完了後に <code>✅</code> または <code>❌</code> 付きのメッセージを表示し、結果はメモリに蓄積されます。【F:games/tester.js†L808-L889】</p>
+            <ol>
+                <li>「すべて実行」を押すと、定義済みテストを順番に走査します。途中で失敗したテストがあっても残りの項目は継続実行されます。【F:games/tester.js†L861-L888】</li>
+                <li>個別テストの「テスト実行」を押した場合は、その場で結果が更新されます。【F:games/tester.js†L820-L857】</li>
+                <li>テスト結果は直近の実行内容が上書きされ、後から「すべて実行」を押したときにも利用されます。【F:games/tester.js†L861-L889】</li>
+            </ol>
+
+            <h3>テスト項目一覧</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">テスト名</th>
+                        <th scope="col">検査内容</th>
+                        <th scope="col">成功時の出力例</th>
+                        <th scope="col">代表的な失敗要因</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">数値/BigInt</th>
+                        <td>BigInt演算や <code>Math.fround</code>、<code>Math.hypot</code> の計算精度を確認します。【F:games/tester.js†L429-L444】</td>
+                        <td><code>BigInt OK / fround=3.1416</code> のような計算結果が表示されます。【F:games/tester.js†L443-L444】</td>
+                        <td>BigIntが誤った値を返す、または <code>Math.hypot</code> の結果に許容以上の誤差が出た場合に失敗します。【F:games/tester.js†L438-L443】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">JSON &amp; structuredClone</th>
+                        <td>ネストしたオブジェクトのJSONシリアライズ/復元と <code>structuredClone</code> のMap保持を確認します。【F:games/tester.js†L447-L468】</td>
+                        <td><code>JSON長=123</code> のようにエンコード後の文字列長を返します。【F:games/tester.js†L467-L468】</td>
+                        <td>JSON復元に失敗した場合や、<code>structuredClone</code> が <code>Map</code> を保持できない場合にエラーになります。【F:games/tester.js†L459-L465】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Intlフォーマット</th>
+                        <td>現在ロケールを使用した日時/通貨フォーマットが期待どおりかを検証します。【F:games/tester.js†L471-L487】</td>
+                        <td>例: <code>2023年5月1日月曜日 ... / ￥123,456.79</code> といったフォーマット結果を返します。【F:games/tester.js†L482-L486】</td>
+                        <td>日付文字列に「5月」が含まれない、または通貨表記に「￥」が含まれない場合に失敗します。【F:games/tester.js†L483-L485】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Crypto API</th>
+                        <td>暗号学的乱数の生成と <code>SHA-256</code> ハッシュの計算を確認します。【F:games/tester.js†L489-L502】</td>
+                        <td><code>SHA-256 head=1a2b3c4d</code> のように計算したハッシュの先頭を表示します。【F:games/tester.js†L499-L501】</td>
+                        <td><code>crypto.getRandomValues</code> が利用できないなど、暗号APIが無効な環境ではエラーになります。【F:games/tester.js†L495-L499】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Storage API</th>
+                        <td><code>localStorage</code> と <code>sessionStorage</code> への書き込み・読み出し・削除をテストします。【F:games/tester.js†L504-L523】</td>
+                        <td><code>localStorage / sessionStorage OK</code> が表示されます。【F:games/tester.js†L523-L524】</td>
+                        <td>Storageがブロックされている場合や読み書き結果が一致しない場合に失敗します。【F:games/tester.js†L510-L522】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Canvas &amp; Offscreen</th>
+                        <td>Canvasへの描画とピクセル取得、<code>OffscreenCanvas</code> の存在を確認します。【F:games/tester.js†L526-L549】</td>
+                        <td><code>中心RGB=(96,164,247) / Offscreen=YES</code> のようなRGB値と対応状況を返します。【F:games/tester.js†L548-L549】</td>
+                        <td>ピクセルデータ取得に失敗した場合にエラーとなります。【F:games/tester.js†L546-L548】</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="benchmark">
+            <h2>タブ「CPUベンチマーク」</h2>
+            <p>「計測スタート (1秒)」ボタンを押すと、<code>performance.now()</code> を使って1秒間ループを回し、処理回数から「回/秒」を算出します。実行中は1秒間UIが固まる場合があるため、ログの注意書きを参照してください。【F:games/tester.js†L892-L1001】</p>
+            <ul>
+                <li><strong>最新結果 (回/秒)</strong> ― 直近の計測値。高速な端末ほど大きな値になります。【F:games/tester.js†L902-L919】【F:games/tester.js†L970-L999】</li>
+                <li><strong>自己ベスト (回/秒)</strong> ― 過去最高値。新記録時にはログに通知が追加されます。【F:games/tester.js†L920-L999】</li>
+                <li><strong>累計実行回数</strong> ― ボタンを押した回数をカウントし、学習やチューニングの進捗を把握できます。【F:games/tester.js†L930-L999】</li>
+                <li><strong>ログ</strong> ― タイムスタンプ付きで計測開始・結果・新記録を最大20件まで保存します。【F:games/tester.js†L1000-L1001】</li>
+            </ul>
+        </section>
+
+        <section id="blocks">
+            <h2>タブ「ブロックアドベンチャー」</h2>
+            <p>左ペインでブロックを並べ、右ペインでログ・変数・カスタムalertを確認しながらストーリーを再生します。ブロックの追加・削除・並べ替えはすべてUIボタンで行え、ブロック番号（#0, #1, ...）を指定して遷移先を制御します。【F:games/tester.js†L1004-L1340】</p>
+
+            <h3>左ペイン: ブロックエディタ</h3>
+            <ul>
+                <li>「ブロックを追加」で新しいブロックを末尾に挿入し、「全削除」でリストを初期化します。【F:games/tester.js†L1016-L1051】</li>
+                <li>各ブロックは種類セレクタと上下移動ボタン、削除ボタンを持ち、必要に応じて並び替えや入れ替えが可能です。【F:games/tester.js†L1244-L1320】</li>
+                <li>ブロック番号は0始まりで表示され、遷移先指定フィールドにこの番号を入力して分岐先を選びます。空欄の場合は次のブロックへ進みます。【F:games/tester.js†L1260-L1274】【F:games/tester.js†L1857-L1877】</li>
+            </ul>
+
+            <h3>ブロック種別と主なフィールド</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">種別</th>
+                        <th scope="col">用途</th>
+                        <th scope="col">主なフィールド</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">text</th>
+                        <td>テキストをログやカスタムalertに表示します。【F:games/tester.js†L1323-L1392】【F:games/tester.js†L1885-L1911】</td>
+                        <td><code>text</code>（本文）、<code>delivery</code>（log/alert/both）、<code>next</code>（次ブロック番号）。【F:games/tester.js†L1330-L1392】【F:games/tester.js†L1837-L1846】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">choice</th>
+                        <td>選択肢を表示し、選んだ値を変数に保存して分岐します。【F:games/tester.js†L1394-L1476】【F:games/tester.js†L1942-L1991】</td>
+                        <td><code>question</code>、<code>storeAs</code>、選択肢ごとの <code>label</code>/<code>value</code>/<code>target</code>。【F:games/tester.js†L1394-L1466】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">set</th>
+                        <td><code>flags</code> 変数に固定値を書き込みます。【F:games/tester.js†L1478-L1509】【F:games/tester.js†L1806-L1814】</td>
+                        <td><code>name</code>（変数名）、<code>value</code>（保存値）、<code>next</code>（遷移先）。【F:games/tester.js†L1478-L1509】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">jump</th>
+                        <td>指定変数の値を比較し、一致/不一致で異なるブロックへジャンプします。【F:games/tester.js†L1511-L1534】【F:games/tester.js†L1815-L1834】</td>
+                        <td><code>name</code>、<code>equals</code>、<code>target</code>、<code>elseTarget</code>。【F:games/tester.js†L1511-L1534】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">award</th>
+                        <td>経験値(EXP)の付与や減算を試せます。【F:games/tester.js†L1536-L1551】【F:games/tester.js†L1835-L1846】</td>
+                        <td><code>amount</code>（付与量）、<code>next</code>。【F:games/tester.js†L1536-L1551】</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">control</th>
+                        <td>確認ダイアログ（はい/いいえ）や入力プロンプトをログ上に生成します。【F:games/tester.js†L1553-L1684】【F:games/tester.js†L1912-L1991】</td>
+                        <td><code>mode</code>（confirm/prompt）、表示文、保存先、ボタン表示・遷移先などの詳細設定。【F:games/tester.js†L1553-L1684】【F:games/tester.js†L1949-L1991】</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>右ペイン: 実行支援</h3>
+            <ul>
+                <li>「ストーリー再生」でブロック列を実行し、ログに進行状況を追記します。最大999ステップで停止し、無限ループを防ぎます。【F:games/tester.js†L1158-L1189】【F:games/tester.js†L1792-L1834】</li>
+                <li>「停止」を押すと現在の実行トークンを失効させ、待機中のブロックを取り消します。【F:games/tester.js†L1191-L1203】【F:games/tester.js†L1931-L1991】</li>
+                <li>変数ビューには <code>flags</code> の内容がJSON形式で表示され、値が存在しない場合は「(空)」が表示されます。【F:games/tester.js†L1112-L1130】【F:games/tester.js†L1765-L1783】</li>
+                <li>ログにはテキスト表示やカスタムalertから渡された要素も挿入でき、スクロールは最新エントリまで自動で追従します。【F:games/tester.js†L1104-L1137】【F:games/tester.js†L1753-L1764】</li>
+            </ul>
+
+            <h3>カスタムalertの活用</h3>
+            <p>右ペイン上部でalert用のJavaScript関数を編集できます。関数は <code>(message, context)</code> を受け取り、<code>context.flags</code>（変数）、<code>context.log</code>（ログ出力）、<code>context.awardXp</code>（EXP付与）を利用できます。更新ボタンで適用し、テストボタンでサンプルメッセージを送信します。【F:games/tester.js†L1040-L1137】</p>
+            <p>デフォルトテンプレートではスタイル付きのDIVを生成してログに追加する例が示されています。エラーが発生した場合はステータス欄に <code>❌</code> 付きメッセージが表示されるため、修正して再適用してください。【F:games/tester.js†L1048-L1077】</p>
+        </section>
     </main>
 </body>
 </html>

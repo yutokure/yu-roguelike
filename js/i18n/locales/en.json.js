@@ -603,49 +603,146 @@
             }
           },
           "xiangqi": {
-        "header": {
-          "title": "Xiangqi",
-          "subtitle": "{color} moves first"
-        },
-        "controls": {
-          "reset": "Reset position"
-        },
-        "board": {
-          "riverLabel": "Chu River  Han Border"
-        },
-        "color": {
-          "red": "Red",
-          "black": "Black",
-          "redPlayer": "Red (Bottom)",
-          "blackPlayer": "Black (Top)"
-        },
-        "pieces": {
-          "general": "General",
-          "advisor": "Advisor",
-          "elephant": "Elephant",
-          "horse": "Horse",
-          "chariot": "Chariot",
-          "cannon": "Cannon",
-          "soldier": "Soldier"
-        },
-        "expLabel": "EXP",
-        "piece": {
-          "description": "{color} {piece}"
-        },
-        "status": {
-          "turnLine": "Turn: {turn}",
-          "turn": {
-            "red": "It is {color}'s move.",
-            "black": "It is {color}'s move."
+            "name": "Xiangqi",
+            "description": "Chinese chess. Capture pieces, deliver checks, and mate to earn EXP.",
+            "header": {
+              "title": "Xiangqi",
+              "subtitle": "{color} moves first"
+            },
+            "controls": {
+              "reset": "Reset position"
+            },
+            "board": {
+              "riverLabel": "Chu River  Han Border"
+            },
+            "color": {
+              "red": "Red",
+              "black": "Black",
+              "redPlayer": "Red (Bottom)",
+              "blackPlayer": "Black (Top)"
+            },
+            "pieces": {
+              "general": "General",
+              "advisor": "Advisor",
+              "elephant": "Elephant",
+              "horse": "Horse",
+              "chariot": "Chariot",
+              "cannon": "Cannon",
+              "soldier": "Soldier"
+            },
+            "expLabel": "EXP",
+            "piece": {
+              "description": "{color} {piece}"
+            },
+            "status": {
+              "turnLine": "Turn: {turn}",
+              "turn": {
+                "red": "It is {color}'s move.",
+                "black": "It is {color}'s move."
+              },
+              "scoreLine": "Total score: {score}",
+              "capture": "{actor} captured {target} (+{exp}{expLabel})",
+              "move": "{piece} moved.",
+              "win": "{loser} is checkmated. {winner} wins!",
+              "stalemate": "Stalemate (no legal moves).",
+              "check": "{defender} is in check (+{exp}{expLabel})"
+            }
           },
-          "scoreLine": "Total score: {score}",
-          "capture": "{actor} captured {target} (+{exp}{expLabel})",
-          "move": "{piece} moved.",
-          "win": "{loser} is checkmated. {winner} wins!",
-          "stalemate": "Stalemate (no legal moves).",
-          "check": "{defender} is in check (+{exp}{expLabel})"
-        }
-      },
+          "shogi": {
+            "name": "Shogi",
+            "description": "Authentic shogi. Use drops and promotions to aim for mate and earn EXP from moves, captures, and checks.",
+            "ui": {
+              "title": "Shogi",
+              "subtitle": "MiniExp Edition",
+              "legend": "Moves: +{moveExpFormatted} EXP / Drops: +{dropExpFormatted} EXP / Capture bonus / Promotion: +{promoteExpFormatted} EXP / Check: +{checkExpFormatted} EXP / Victory bonus",
+              "hands": {
+                "aiLabel": "Sente (CPU)",
+                "playerLabel": "Gote (You)",
+                "empty": "None",
+                "chip": "{piece}×{countFormatted}",
+                "total": "{countFormatted} pieces",
+                "totalNone": "None"
+              },
+              "actions": {
+                "restart": "Restart"
+              },
+              "confirm": {
+                "promote": "Promote this piece?"
+              }
+            },
+            "status": {
+              "playerTurn": "Your turn. Select a piece on the board or from your hand.",
+              "aiThinking": "CPU is considering its move…",
+              "playerInCheck": "You're in check! Respond carefully.",
+              "aiInCheck": "Check! Look for the finishing blow."
+            },
+            "result": {
+              "playerWin": "Checkmate! You win.",
+              "playerLose": "Checkmated… Defeat.",
+              "draw": "Impasse / repetition draw"
+            },
+            "pieces": {
+              "glyph": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉",
+                "promotedPawn": "と",
+                "promotedLance": "成香",
+                "promotedKnight": "成桂",
+                "promotedSilver": "成銀",
+                "promotedBishop": "馬",
+                "promotedRook": "龍"
+              },
+              "label": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉"
+              }
+            }
+          },
+          "go": {
+            "name": "Go",
+            "description": "Place stones, capture groups, and claim victory EXP.",
+            "info": {
+              "intro": "Go 9×9 — You play first (Black)"
+            },
+            "hud": {
+              "turn": {
+                "player": "Your turn (Black)",
+                "ai": "AI's turn (White)"
+              },
+              "status": "{turn} ｜ Black Captures:{blackCaptures} ｜ White Captures:{whiteCaptures} (Komi +{komi})",
+              "passNotice": "{actor} passed ({count} in a row)",
+              "aiThinking": "AI is thinking…"
+            },
+            "buttons": {
+              "pass": "Pass",
+              "resign": "Resign"
+            },
+            "messages": {
+              "koViolation": "That move is illegal due to ko."
+            },
+            "actors": {
+              "player": "You",
+              "ai": "AI"
+            },
+            "result": {
+              "win": "You win!",
+              "loss": "AI wins…",
+              "draw": "Jigo (Draw)",
+              "summary": "{result} ｜ Black {blackScore} - White {whiteScore}"
+            }
+          },
       "mancala": {
             "name": "Mancala",
             "description": "Sow seeds and capture pits in the Kalah rule set to outscore the AI for EXP."

@@ -608,47 +608,144 @@
             }
           },
           "xiangqi": {
+            "name": "象棋",
+            "description": "中国象棋。通过吃子、将军和将死获取经验值。",
             "header": {
               "title": "象棋",
-              "subtitle": "{color}移动"
+              "subtitle": "{color}先手"
             },
             "controls": {
-              "reset": "重置位置"
+              "reset": "恢复初始布局"
             },
             "board": {
-              "riverLabel": "楚河汉疆"
+              "riverLabel": "楚河　汉界"
             },
             "color": {
-              "red": "红色",
-              "black": "黑色",
-              "redPlayer": "红色（下）",
-              "blackPlayer": "黑色(上)"
+              "red": "红方",
+              "black": "黑方",
+              "redPlayer": "红方（下）",
+              "blackPlayer": "黑方（上）"
             },
             "pieces": {
-              "general": "一般",
-              "advisor": "顾问",
-              "elephant": "大象",
+              "general": "帅",
+              "advisor": "仕",
+              "elephant": "相",
               "horse": "马",
-              "chariot": "战车",
-              "cannon": "大炮",
-              "soldier": "士兵"
+              "chariot": "车",
+              "cannon": "炮",
+              "soldier": "兵"
             },
             "expLabel": "EXP",
             "piece": {
-              "description": "{color} {piece}"
+              "description": "{color}{piece}"
             },
             "status": {
-              "turnLine": "转动：{turn}",
+              "turnLine": "回合：{turn}",
               "turn": {
-                "red": "这是{color}的动作。",
-                "black": "这是{color}的动作。"
+                "red": "{color}行动",
+                "black": "{color}行动"
               },
               "scoreLine": "总分：{score}",
-              "capture": "{actor}捕获{target} (+{exp}{expLabel})",
-              "move": "{piece}移动。",
-              "win": "{loser}被将死。 {winner}获胜！",
-              "stalemate": "僵局（无合法动作）。",
-              "check": "{defender}处于检查状态"
+              "capture": "{actor}吃掉了{target}(+{exp}{expLabel})",
+              "move": "{piece}移动了。",
+              "win": "{loser}被将死，{winner}获胜！",
+              "stalemate": "僵局（无合法着法）。",
+              "check": "{defender}被将军 (+{exp}{expLabel})"
+            }
+          },
+          "shogi": {
+            "name": "将棋",
+            "description": "正统将棋。善用持驹和升变，通过着手、吃子与将军获得经验值。",
+            "ui": {
+              "title": "将棋",
+              "subtitle": "MiniExp 版",
+              "legend": "着手:+{moveExpFormatted} EXP / 打入:+{dropExpFormatted} EXP / 吃子奖励 / 升变:+{promoteExpFormatted} EXP / 将军:+{checkExpFormatted} EXP / 胜利奖励",
+              "hands": {
+                "aiLabel": "先手 (CPU)",
+                "playerLabel": "后手 (你)",
+                "empty": "无",
+                "chip": "{piece}×{countFormatted}",
+                "total": "{countFormatted}枚",
+                "totalNone": "无"
+              },
+              "actions": {
+                "restart": "重新开始"
+              },
+              "confirm": {
+                "promote": "要升变吗？"
+              }
+            },
+            "status": {
+              "playerTurn": "轮到你。请选择棋子或手持棋。",
+              "aiThinking": "CPU正在思考…",
+              "playerInCheck": "你被将军了！请应对。",
+              "aiInCheck": "将军！寻找制胜一手。"
+            },
+            "result": {
+              "playerWin": "将死！你赢了",
+              "playerLose": "被将死…失败",
+              "draw": "持将棋 / 千日手，平局"
+            },
+            "pieces": {
+              "glyph": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉",
+                "promotedPawn": "と",
+                "promotedLance": "成香",
+                "promotedKnight": "成桂",
+                "promotedSilver": "成銀",
+                "promotedBishop": "馬",
+                "promotedRook": "龍"
+              },
+              "label": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉"
+              }
+            }
+          },
+          "go": {
+            "name": "围棋",
+            "description": "落子+1 / 吃子奖励 / 胜利经验值",
+            "info": {
+              "intro": "围棋 9×9 — 你执黑先行"
+            },
+            "hud": {
+              "turn": {
+                "player": "你的回合（黑）",
+                "ai": "AI 的回合（白）"
+              },
+              "status": "{turn} ｜ 黑 提子:{blackCaptures} ｜ 白 提子:{whiteCaptures} (贴目+{komi})",
+              "passNotice": "{actor}选择了停着（连续{count}次）",
+              "aiThinking": "AI 正在思考…"
+            },
+            "buttons": {
+              "pass": "停着",
+              "resign": "认输"
+            },
+            "messages": {
+              "koViolation": "该手因劫争禁止。"
+            },
+            "actors": {
+              "player": "你",
+              "ai": "AI"
+            },
+            "result": {
+              "win": "你赢了！",
+              "loss": "AI 获胜…",
+              "draw": "持棋（平局）",
+              "summary": "{result} ｜ 黑 {blackScore} - 白 {whiteScore}"
             }
           },
           "mancala": {

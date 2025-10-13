@@ -9074,4 +9074,4 @@
   };
 
   store['zh'] = locale;
-})(typeof self !== 'undefined' ? self : this);
+})(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this);

@@ -17442,12 +17442,26 @@
             "passiveOrb": {
               "label": "Passive Orb",
               "placeholder": "e.g., attackBoost",
+              "selectPlaceholder": "Select a passive orb",
+              "customOption": "{value} (saved)",
               "amount": "Quantity"
             },
             "item": {
               "label": "Item",
               "placeholder": "e.g., potion30",
-              "amount": "Quantity"
+              "selectPlaceholder": "Select an item",
+              "customOption": "{value} (saved)",
+              "amount": "Quantity",
+              "defaults": {
+                "potion30": "Potion (30%)",
+                "hpBoost": "HP Boost",
+                "atkBoost": "ATK Boost",
+                "defBoost": "DEF Boost",
+                "hpBoostMajor": "Grand HP Boost",
+                "atkBoostMajor": "Grand ATK Boost",
+                "defBoostMajor": "Grand DEF Boost",
+                "spElixir": "SP Elixir"
+              }
             },
             "sp": {
               "label": "SP",

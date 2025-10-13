@@ -598,16 +598,22 @@
     })();
 
     const DEFAULT_ITEM_IDS = Object.freeze(['potion30', 'hpBoost', 'atkBoost', 'defBoost', 'hpBoostMajor', 'atkBoostMajor', 'defBoostMajor', 'spElixir']);
-    const DEFAULT_ITEM_LABEL_MAP = Object.freeze({
-      potion30: 'Potion (30%)',
-      hpBoost: 'HP Boost',
-      atkBoost: 'ATK Boost',
-      defBoost: 'DEF Boost',
-      hpBoostMajor: 'Grand HP Boost',
-      atkBoostMajor: 'Grand ATK Boost',
-      defBoostMajor: 'Grand DEF Boost',
-      spElixir: 'SP Elixir'
+    const DEFAULT_ITEM_LABEL_FALLBACKS = Object.freeze({
+      potion30: { key: 'games.todoList.form.rewards.item.defaults.potion30', defaultText: 'Potion (30%)' },
+      hpBoost: { key: 'games.todoList.form.rewards.item.defaults.hpBoost', defaultText: 'HP Boost' },
+      atkBoost: { key: 'games.todoList.form.rewards.item.defaults.atkBoost', defaultText: 'ATK Boost' },
+      defBoost: { key: 'games.todoList.form.rewards.item.defaults.defBoost', defaultText: 'DEF Boost' },
+      hpBoostMajor: { key: 'games.todoList.form.rewards.item.defaults.hpBoostMajor', defaultText: 'Grand HP Boost' },
+      atkBoostMajor: { key: 'games.todoList.form.rewards.item.defaults.atkBoostMajor', defaultText: 'Grand ATK Boost' },
+      defBoostMajor: { key: 'games.todoList.form.rewards.item.defaults.defBoostMajor', defaultText: 'Grand DEF Boost' },
+      spElixir: { key: 'games.todoList.form.rewards.item.defaults.spElixir', defaultText: 'SP Elixir' }
     });
+
+    function getDefaultItemLabel(id){
+      const fallback = DEFAULT_ITEM_LABEL_FALLBACKS[id];
+      if (!fallback) return id;
+      return translate(fallback.key, fallback.defaultText);
+    }
 
     function ensureSelectHasValue(select, value, label){
       if (!select || !value) return;
@@ -633,12 +639,12 @@
 
     function getItemLabel(id){
       if (!id) return '';
-      const fallback = DEFAULT_ITEM_LABEL_MAP[id] || id;
+      const fallback = DEFAULT_ITEM_IDS.includes(id) ? getDefaultItemLabel(id) : id;
       let label = translate(`game.items.${id}.label`, () => fallback);
       if ((!DEFAULT_ITEM_IDS.includes(id)) && (!label || label === fallback || label === id)){
         label = translate('games.todoList.form.rewards.item.customOption', '{value} (保存済み)', { value: id });
       }
-      return label || id;
+      return label || fallback || id;
     }
 
     function collectPassiveOrbIds(){

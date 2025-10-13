@@ -17388,12 +17388,26 @@
             "passiveOrb": {
               "label": "パッシブオーブ",
               "placeholder": "例: attackBoost",
+              "selectPlaceholder": "パッシブオーブを選択",
+              "customOption": "{value} (保存済み)",
               "amount": "個数"
             },
             "item": {
               "label": "アイテム",
               "placeholder": "例: potion30",
-              "amount": "個数"
+              "selectPlaceholder": "アイテムを選択",
+              "customOption": "{value} (保存済み)",
+              "amount": "個数",
+              "defaults": {
+                "potion30": "ポーション（30%）",
+                "hpBoost": "HPブースト",
+                "atkBoost": "攻撃ブースト",
+                "defBoost": "防御ブースト",
+                "hpBoostMajor": "特大HPブースト",
+                "atkBoostMajor": "特大攻撃ブースト",
+                "defBoostMajor": "特大防御ブースト",
+                "spElixir": "SPエリクサー"
+              }
             },
             "sp": {
               "label": "SP",

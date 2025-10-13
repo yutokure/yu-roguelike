@@ -773,6 +773,10 @@
               "summary": "{result} ｜ 黑 {blackScore} - 白 {whiteScore}"
             }
           },
+          "backgammon": {
+            "name": "西洋双陆棋",
+            "description": "在 24 个点位之间奔走，争取率先完成撤子。击打对手棋子和完成撤子都会获得 EXP。"
+          },
           "mancala": {
             "name": "曼卡拉",
             "description": "在 Kalah 规则设置中播种并捕获坑，以超越 AI 获得经验。"

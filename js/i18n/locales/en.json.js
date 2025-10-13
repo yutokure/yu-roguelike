@@ -727,6 +727,10 @@
             "name": "Renju",
             "description": "Five-in-a-row with forbidden move rules. Gain +1 EXP per placement, +10 for threats, and victory bonuses."
           },
+          "backgammon": {
+            "name": "Backgammon",
+            "description": "Race across 24 points and bear off your checkers. Earn EXP by hitting blots and completing bear-offs."
+          },
           "connect4": {
             "name": "Connect Four",
             "description": "Falling four-in-a-row battles. Earn +1 EXP per drop, +10 for threats, and difficulty-scaled victory EXP."

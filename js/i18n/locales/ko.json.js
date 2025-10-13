@@ -1508,6 +1508,10 @@
               "summary": "{result} ｜ 흑 {blackScore} - 백 {whiteScore}"
             }
           },
+          "backgammon": {
+            "name": "백개먼",
+            "description": "24개의 포인트를 누비며 베어오프를 노리는 백개먼입니다. 히트와 베어오프로 EXP를 획득하세요."
+          },
           "mancala": {
             "name": "만칼라",
             "description": "EXP에 대해 AI를 능가하는 Kalah 규칙 세트에서 씨앗을 뿌리고 구덩이를 캡처하세요."

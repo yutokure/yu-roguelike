@@ -9,13 +9,18 @@
 <body>
     <header class="site-header">
         <h1 data-i18n="header.title"></h1>
-        <div class="language-switcher">
+        <div class="header-actions">
+            <a class="header-link-button" href="manual/index.html" target="_blank" rel="noopener" data-i18n="header.manual"></a>
+            <a class="header-link-button" href="manual/minigame-guide.html" target="_blank" rel="noopener" data-i18n="header.minigameManual"></a>
+            <div class="language-switcher">
             <label for="language-select" data-i18n="ui.language.label"></label>
             <select id="language-select" aria-label="" data-i18n-attr="aria-label:ui.language.ariaLabel">
                 <option value="ja" data-i18n="ui.language.option.ja"></option>
                 <option value="en" data-i18n="ui.language.option.en"></option>
                 <option value="zh" data-i18n="ui.language.option.zh"></option>
+                <option value="ko" data-i18n="ui.language.option.ko"></option>
             </select>
+            </div>
         </div>
     </header>
     <div id="selection-screen">

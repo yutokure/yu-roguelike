@@ -7,7 +7,9 @@
     },
 
     "header": {
-      "title": "Yu Roguelike"
+      "title": "Yu Roguelike",
+      "manual": "Read Manual",
+      "minigameManual": "Read Mini-Game Manual"
     },
 
     "ui": {
@@ -17,7 +19,8 @@
         "option": {
           "ja": "Japanese",
           "en": "English",
-          "zh": "Chinese (Simplified)"
+          "zh": "Chinese (Simplified)",
+          "ko": "Korean"
         }
       },
       "runResult": {

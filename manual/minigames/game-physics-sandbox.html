@@ -9,7 +9,116 @@
 <body>
     <main>
         <h1>ミニゲーム: 物理サンドボックス</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <section>
+            <h2>概要</h2>
+            <p>
+                「物理遊び」は剛体・布・各種エフェクトエミッタを組み合わせ、火・水・氷・風・ツタ・雷・酸・電気回路といった反応を自由に試せるトイ系サンドボックスです。
+                シミュレーションの操作やオブジェクト同士の化学反応、衝突、配線、レイアウト保存などの行為が経験値に換算されるため、遊びながら育成要素も楽しめます。【F:games/physics_sandbox.js†L246-L260】【F:games/physics_sandbox.js†L726-L730】【F:games/physics_sandbox.js†L1675-L1726】【F:games/physics_sandbox.js†L3546-L3553】【F:games/physics_sandbox.js†L5360-L5369】
+            </p>
+        </section>
+        <section>
+            <h2>画面レイアウト</h2>
+            <p>
+                画面上部にはツールバーが並び、左から現在の描画ツールを選択するボタン群、右側にシミュレーション開始・停止・リセット・削除・保存・読み込みのアクションボタンが配置されています。【F:games/physics_sandbox.js†L612-L669】
+            </p>
+            <p>
+                中央は物理世界を描画するキャンバス、その右に選択中のオブジェクトや世界設定を調整するインスペクターパネルが並ぶ 2 カラム構成です。最下段には現在のオブジェクト数や重力値、温度統計、風情報などを表示する HUD が常時更新されます。【F:games/physics_sandbox.js†L671-L688】【F:games/physics_sandbox.js†L3556-L3622】
+            </p>
+        </section>
+        <section>
+            <h2>ツールバーの種類</h2>
+            <ul>
+                <li><strong>選択</strong>：既存の図形・エミッタ・布ノードを選び、ドラッグで移動させる基本モードです。【F:games/physics_sandbox.js†L246-L260】【F:games/physics_sandbox.js†L1511-L1627】</li>
+                <li><strong>神の指</strong>：シミュレーション中の剛体を直接つかみ、範囲内で位置を強制的に誘導できます。拘束はキャンバスの端を越えないよう自動制限されます。【F:games/physics_sandbox.js†L246-L260】【F:games/physics_sandbox.js†L1530-L1608】</li>
+                <li><strong>円 / 箱 / 絶対壁</strong>：クリック位置に剛体を生成し、ドラッグで半径または幅・高さを調整します。絶対壁は静的・破壊不可で、素材や摩擦を変更できません。【F:games/physics_sandbox.js†L246-L260】【F:games/physics_sandbox.js†L1555-L1596】【F:games/physics_sandbox.js†L4134-L4147】</li>
+                <li><strong>布</strong>：アンカー付きの布メッシュを生成します。ノードを選んで移動するとその点がピン留めされ、布のレイアウトを固定できます。【F:games/physics_sandbox.js†L246-L260】【F:games/physics_sandbox.js†L1564-L1565】【F:games/physics_sandbox.js†L1628-L1638】</li>
+                <li><strong>火 / 水 / 氷 / 風 / ツタ / 雷 / 酸</strong>：各種エミッタを配置し、粒子を継続的に放出させます。発射物の種類に応じて燃焼・浸水・凍結・風圧・植物絡みつき・放電・腐食などの影響が周囲の物体に及びます。【F:games/physics_sandbox.js†L246-L260】【F:games/physics_sandbox.js†L1661-L1670】【F:games/physics_sandbox.js†L1693-L1726】</li>
+                <li><strong>回路</strong>：電気ノードを追加します。配置直後に別ノードをクリックすると接続され、電力網を構成できます。【F:games/physics_sandbox.js†L246-L260】【F:games/physics_sandbox.js†L1567-L1571】【F:games/physics_sandbox.js†L1675-L1690】</li>
+            </ul>
+        </section>
+        <section>
+            <h2>シミュレーション操作</h2>
+            <ul>
+                <li><strong>開始 / 停止</strong>：シミュレーションの進行をトグルします。停止中でもオブジェクトの追加・編集は可能です。【F:games/physics_sandbox.js†L637-L646】</li>
+                <li><strong>リセット</strong>：キャンバスを初期状態に戻し、全オブジェクトと粒子を再生成します。【F:games/physics_sandbox.js†L647-L650】</li>
+                <li><strong>削除</strong>：選択中の剛体・エミッタ・布を一括削除します。キーボードの <kbd>Delete</kbd>/<kbd>Backspace</kbd> でも同様に削除可能です。【F:games/physics_sandbox.js†L651-L656】【F:games/physics_sandbox.js†L1652-L1654】</li>
+                <li><strong>保存 / 読み込み</strong>：現在の配置をスナップショットとして保存し、後から呼び戻せます。保存時には経験値ボーナスが発生します。【F:games/physics_sandbox.js†L657-L669】【F:games/physics_sandbox.js†L5360-L5378】</li>
+            </ul>
+        </section>
+        <section>
+            <h2>オブジェクトの配置と編集</h2>
+            <ol>
+                <li>ツールを選択してキャンバスをクリックすると、対応する剛体・布・エミッタがその地点に生成されます。剛体はドラッグで大きさを決められます。【F:games/physics_sandbox.js†L1511-L1596】</li>
+                <li>選択ツール中にオブジェクトをドラッグすると位置を変更でき、エミッタは端から一定距離内に収まるよう制限されます。【F:games/physics_sandbox.js†L1519-L1627】</li>
+                <li>布ノードをドラッグすると座標と速度がリセットされ、ピン留めされます。布の端点を固定したまま他のノードを動かすことでカーテン状の形状などが作れます。【F:games/physics_sandbox.js†L1628-L1638】</li>
+                <li>回路ツールでノードを置いた直後に別ノードを置くと自動で接続されます。既存ノードのインスペクターからリンクモードを有効化すると、クリックした順に接続を増やせます。【F:games/physics_sandbox.js†L1567-L1571】【F:games/physics_sandbox.js†L1675-L1683】【F:games/physics_sandbox.js†L4552-L4562】</li>
+            </ol>
+        </section>
+        <section>
+            <h2>ワールド設定</h2>
+            <p>
+                インスペクター上部には世界全体のパラメータを調整するセクションがあり、重力（上下 2000 の範囲）、空気抵抗、ソルバー反復回数、サブステップ数、環境温度、境界モードをスライダーと選択肢で切り替えられます。境界を「Void」にすると外へ出た剛体が距離に応じて消滅する仕様になるため、掃除に便利です。【F:games/physics_sandbox.js†L3625-L3750】
+            </p>
+        </section>
+        <section>
+            <h2>剛体インスペクター</h2>
+            <p>
+                剛体を選択すると、化学組成やダメージ、構造健全度、応力・歪み、熱流、破断しきい値、反応クールダウンなどの計測値が表示され、素材による物性の違いを把握できます。【F:games/physics_sandbox.js†L3968-L4039】
+            </p>
+            <p>
+                素材プリセットの切替え、質量表示、角度・角速度の確認、静的化スイッチ、反発係数・摩擦係数のスライダー、円形の場合は半径、箱形の場合は幅・高さのスライダー、カラー選択が用意されており、破壊不可能な絶対壁のみ該当コントロールが無効化されます。【F:games/physics_sandbox.js†L4041-L4213】
+            </p>
+            <p>
+                さらに「Chemical Customizer」を開くと元素リストから組成を編集し、密度・熱特性・融点・沸点・着火温度・危険タグなどを指定したカスタム素材を生成して適用できます。登録済みの危険タグは一覧表示され、必要ならリセットして組成を作り直せます。【F:games/physics_sandbox.js†L4220-L4480】
+            </p>
+        </section>
+        <section>
+            <h2>エミッタと回路</h2>
+            <p>
+                エミッタのインスペクターでは種類表示とともに放出レート（毎秒 0〜40）、強度（0.2〜5.0）のスライダーを調整でき、風エミッタのみ風向（0〜359 度）も設定できます。【F:games/physics_sandbox.js†L4491-L4526】
+            </p>
+            <p>
+                回路ノードには常時通電トグル、接続済みノードのリスト、リンクモードの切替ボタンがあり、ここから接続解除や追加リンクを操作可能です。リンク操作を完了すると経験値を獲得します。【F:games/physics_sandbox.js†L4527-L4562】【F:games/physics_sandbox.js†L1675-L1683】
+            </p>
+        </section>
+        <section>
+            <h2>布のプロパティ</h2>
+            <p>
+                布を選択すると、全体の耐久度・リンク数・平均／最大ひずみ・疲労値が表示され、構造／せん断／曲げの各剛性、減衰係数、裂けやすさ、質量係数、布色、自己接触設定など細かく調整できます。色変更はカラー入力で即時反映されます。【F:games/physics_sandbox.js†L4563-L4724】
+            </p>
+        </section>
+        <section>
+            <h2>物理・化学反応の要点</h2>
+            <ul>
+                <li>火炎は素材の可燃性と湿度に基づいて燃焼ゲージを伸ばし、温度を上昇させます。濡れているほど着火しにくく、燃焼が始まると経験値が入ります。【F:games/physics_sandbox.js†L1693-L1702】</li>
+                <li>水や氷は濡れ状態と凍結ゲージを増加させ、温度を下げる一方で燃焼ゲージを押し戻します。凍結を成立させるとボーナスが得られます。【F:games/physics_sandbox.js†L1704-L1719】</li>
+                <li>酸は腐食値を蓄積させ、温度にも影響します。腐食が進むと経験値が加算され、物体の健全度が下がり破断が起こりやすくなります。【F:games/physics_sandbox.js†L1721-L1726】【F:games/physics_sandbox.js†L3968-L4029】</li>
+                <li>素材のリアクティビティによっては高温・火花・雷などを受けた際に化学爆発が起こり、周囲へ衝撃と熱を与えるので配置に注意しましょう。【F:games/physics_sandbox.js†L1729-L1738】</li>
+            </ul>
+        </section>
+        <section>
+            <h2>HUD と経験値</h2>
+            <p>
+                HUD には剛体・エミッタ・布・粒子の総数、稼働中の回路ノード数、現在の重力・獲得経験値、ソルバー設定、平均／最大温度、物質状態の内訳、風の突風数とエミッタ数が表示されます。【F:games/physics_sandbox.js†L3556-L3622】
+            </p>
+            <p>
+                経験値は衝突インパクト、火炎・凍結・腐食・配線などの反応処理、レイアウト保存や読込によって得られます。積極的に実験し、HUD の XP 表示で成果を確認しましょう。【F:games/physics_sandbox.js†L726-L730】【F:games/physics_sandbox.js†L1675-L1726】【F:games/physics_sandbox.js†L3546-L3553】【F:games/physics_sandbox.js†L5360-L5384】
+            </p>
+        </section>
+        <section>
+            <h2>レイアウト管理</h2>
+            <p>
+                インスペクター最下部の「Saved Layouts」セクションから保存済みスナップショットの一覧を確認し、ロードや削除が行えます。保存データはローカルストレージに記録されるため、ブラウザを再読み込みしても残ります。【F:games/physics_sandbox.js†L3780-L3799】【F:games/physics_sandbox.js†L5387-L5400】
+            </p>
+        </section>
+        <section>
+            <h2>遊び方のヒント</h2>
+            <ul>
+                <li>「Void」境界と風エミッタを組み合わせると、不要な粒子や破片を素早く外へ排出できます。【F:games/physics_sandbox.js†L3724-L3735】【F:games/physics_sandbox.js†L3556-L3620】</li>
+                <li>布を複数ピン留めし、火炎や酸のエミッタを近づけると素材ごとの耐久度を観察できます。布インスペクターの剛性パラメータを調整すると破断挙動が大きく変化します。【F:games/physics_sandbox.js†L1628-L1638】【F:games/physics_sandbox.js†L4563-L4724】</li>
+                <li>カスタム素材で導電性や爆発性のタグを付けると、雷・回路との相互作用がよりドラマチックになります。危険タグを付けすぎた場合はリセットして再設計しましょう。【F:games/physics_sandbox.js†L4220-L4480】</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

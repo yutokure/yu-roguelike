@@ -505,47 +505,144 @@
             }
           },
           "xiangqi": {
+            "name": "샹치",
+            "description": "중국 장기. 기물을 포획하고 장군·체크메이트로 경험치를 얻으세요.",
             "header": {
               "title": "샹치",
-              "subtitle": "{color}이 먼저 이동합니다."
+              "subtitle": "{color}이 선공"
             },
             "controls": {
-              "reset": "위치 재설정"
+              "reset": "초기 배치로 리셋"
             },
             "board": {
-              "riverLabel": "추강 한 국경"
+              "riverLabel": "楚河　漢界"
             },
             "color": {
-              "red": "빨간색",
-              "black": "검은색",
-              "redPlayer": "빨간색(하단)",
-              "blackPlayer": "블랙(상의)"
+              "red": "홍",
+              "black": "흑",
+              "redPlayer": "홍 (아래)",
+              "blackPlayer": "흑 (위)"
             },
             "pieces": {
-              "general": "일반적인",
-              "advisor": "고문",
-              "elephant": "코끼리",
-              "horse": "말",
-              "chariot": "이륜 전차",
-              "cannon": "대포",
-              "soldier": "군인"
+              "general": "장군",
+              "advisor": "사",
+              "elephant": "상",
+              "horse": "마",
+              "chariot": "차",
+              "cannon": "포",
+              "soldier": "졸"
             },
-            "expLabel": "경험치",
+            "expLabel": "EXP",
             "piece": {
               "description": "{color} {piece}"
             },
             "status": {
-              "turnLine": "차례: {turn}",
+              "turnLine": "턴: {turn}",
               "turn": {
-                "red": "{color}의 움직임입니다.",
-                "black": "{color}의 움직임입니다."
+                "red": "{color} 차례입니다.",
+                "black": "{color} 차례입니다."
               },
-              "scoreLine": "총점: {score}",
-              "capture": "{actor} 캡처됨 {target} (+{exp}{expLabel})",
-              "move": "{piece} 이사했습니다.",
-              "win": "{loser}이(가) 체크메이트되었습니다. {winner} 승리!",
-              "stalemate": "교착상태(적법한 움직임 없음).",
-              "check": "{defender}이(가) 확인 중입니다(+{exp}{expLabel})."
+              "scoreLine": "총 점수: {score}",
+              "capture": "{actor}이(가) {target}을(를) 잡았습니다 (+{exp}{expLabel})",
+              "move": "{piece}이(가) 이동했습니다.",
+              "win": "{loser}이(가) 체크메이트당했습니다. {winner} 승리!",
+              "stalemate": "스테일메이트 (합법 수 없음).",
+              "check": "{defender}이(가) 장군을 당했습니다 (+{exp}{expLabel})"
+            }
+          },
+          "shogi": {
+            "name": "쇼기",
+            "description": "정통 쇼기. 손패와 승급을 활용해 체크메이트를 노리고, 착수·포획·장군으로 경험치를 얻으세요.",
+            "ui": {
+              "title": "쇼기",
+              "subtitle": "MiniExp 버전",
+              "legend": "수:+{moveExpFormatted} EXP / 손패 투입:+{dropExpFormatted} EXP / 포획 보너스 / 승급:+{promoteExpFormatted} EXP / 장군:+{checkExpFormatted} EXP / 승리 보너스",
+              "hands": {
+                "aiLabel": "선수 (CPU)",
+                "playerLabel": "후수 (당신)",
+                "empty": "없음",
+                "chip": "{piece}×{countFormatted}",
+                "total": "{countFormatted}개",
+                "totalNone": "없음"
+              },
+              "actions": {
+                "restart": "재시작"
+              },
+              "confirm": {
+                "promote": "승급하시겠습니까?"
+              }
+            },
+            "status": {
+              "playerTurn": "당신의 차례입니다. 기물 또는 손패를 선택하세요.",
+              "aiThinking": "CPU가 수를 계산 중…",
+              "playerInCheck": "장군을 당했습니다! 대응하세요.",
+              "aiInCheck": "장군! 마무리를 노려 보세요."
+            },
+            "result": {
+              "playerWin": "체크메이트! 당신의 승리",
+              "playerLose": "체크메이트 당했습니다… 패배",
+              "draw": "지장 / 천일수 무승부"
+            },
+            "pieces": {
+              "glyph": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉",
+                "promotedPawn": "と",
+                "promotedLance": "成香",
+                "promotedKnight": "成桂",
+                "promotedSilver": "成銀",
+                "promotedBishop": "馬",
+                "promotedRook": "龍"
+              },
+              "label": {
+                "pawn": "歩",
+                "lance": "香",
+                "knight": "桂",
+                "silver": "銀",
+                "gold": "金",
+                "bishop": "角",
+                "rook": "飛",
+                "king": "玉"
+              }
+            }
+          },
+          "go": {
+            "name": "바둑",
+            "description": "돌을 두면 +1 / 포획 보너스 / 승리 EXP",
+            "info": {
+              "intro": "바둑 9×9 — 당신이 선공 (흑)"
+            },
+            "hud": {
+              "turn": {
+                "player": "당신의 차례 (흑)",
+                "ai": "AI 차례 (백)"
+              },
+              "status": "{turn} ｜ 흑 포획:{blackCaptures} ｜ 백 포획:{whiteCaptures} (덤+{komi})",
+              "passNotice": "{actor}이(가) 패스했습니다 (연속 {count})",
+              "aiThinking": "AI가 수를 생각 중…"
+            },
+            "buttons": {
+              "pass": "패스",
+              "resign": "기권"
+            },
+            "messages": {
+              "koViolation": "그 수는 패 상황이라 둘 수 없습니다"
+            },
+            "actors": {
+              "player": "당신",
+              "ai": "AI"
+            },
+            "result": {
+              "win": "당신의 승리!",
+              "loss": "AI의 승리…",
+              "draw": "빅 (무승부)",
+              "summary": "{result} ｜ 흑 {blackScore} - 백 {whiteScore}"
             }
           },
           "mancala": {

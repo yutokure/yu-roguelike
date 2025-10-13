@@ -15776,6 +15776,13 @@
           }
         },
         "start": {
+          "title": "Launch",
+          "actions": {
+            "launch": "Start sandbox",
+            "export": "Export settings",
+            "import": "Import settings"
+          },
+          "warning": "Sandbox runs do not award EXP.",
           "defaultError": "Failed to start the sandbox."
         },
         "io": {

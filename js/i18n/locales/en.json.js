@@ -16284,7 +16284,8 @@
           "core": { "title": "Dungeon Records" },
           "blockdim": { "title": "Block Dimension Records" },
           "hatena": { "title": "Hatena Block Records" },
-          "tools": { "title": "Tools Usage" }
+          "tools": { "title": "Tools Usage" },
+          "addons": { "title": "Addon Status" }
         },
         "entries": {
           "core": {
@@ -16343,6 +16344,18 @@
             "blockdataSaves": { "label": "BlockData Saves", "description": "Times data was saved in the BlockData editor." },
             "blockdataDownloads": { "label": "BlockData Downloads", "description": "Times data was downloaded from the BlockData editor." },
             "sandboxSessions": { "label": "Sandbox Sessions", "description": "Times the sandbox interface was opened." }
+          },
+          "addons": {
+            "activeGenerators": {
+              "label": "Active generation types",
+              "description": "Number of registered addon generation types currently loaded.",
+              "value": "{value} types"
+            },
+            "miniGameMods": {
+              "label": "Mini game mods",
+              "description": "Count of MiniExp games provided by mods.",
+              "value": "{value} titles"
+            }
           }
         }
       },

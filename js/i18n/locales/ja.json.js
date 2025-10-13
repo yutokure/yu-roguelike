@@ -16355,7 +16355,8 @@
           "core": { "title": "ダンジョンの記録" },
           "blockdim": { "title": "ブロック次元の記録" },
           "hatena": { "title": "ハテナブロックの記録" },
-          "tools": { "title": "ツール利用状況" }
+          "tools": { "title": "ツール利用状況" },
+          "addons": { "title": "アドオン状況" }
         },
         "entries": {
           "core": {
@@ -16414,6 +16415,18 @@
             "blockdataSaves": { "label": "BlockData 保存回数", "description": "BlockData エディタで保存した回数。" },
             "blockdataDownloads": { "label": "BlockData ダウンロード回数", "description": "BlockData エディタからダウンロードした回数。" },
             "sandboxSessions": { "label": "サンドボックス操作回数", "description": "サンドボックスUIを開いた回数。" }
+          },
+          "addons": {
+            "activeGenerators": {
+              "label": "アクティブ生成タイプ数",
+              "description": "現在読み込まれている生成タイプ（MOD含む）の数。",
+              "value": "{value} 種類"
+            },
+            "miniGameMods": {
+              "label": "ミニゲームMOD数",
+              "description": "MiniExpに登録されているMOD提供ミニゲームの数。",
+              "value": "{value} タイトル"
+            }
           }
         }
       },

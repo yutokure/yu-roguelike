@@ -511,6 +511,46 @@
         }
     ];
 
+    function getActiveGeneratorCountFromGlobal() {
+        try {
+            if (typeof global.getActiveDungeonGeneratorCount === 'function') {
+                const result = global.getActiveDungeonGeneratorCount();
+                const numeric = Number(result);
+                if (Number.isFinite(numeric)) {
+                    return Math.max(0, Math.floor(numeric));
+                }
+            }
+        } catch {}
+        try {
+            const registry = global.DungeonGenRegistry;
+            if (registry && typeof registry.size === 'number') {
+                const size = Number(registry.size);
+                return Number.isFinite(size) ? Math.max(0, Math.floor(size)) : 0;
+            }
+            if (registry && typeof registry.keys === 'function') {
+                let count = 0;
+                for (const key of registry.keys()) {
+                    if (key !== undefined && key !== null) count += 1;
+                }
+                return count;
+            }
+        } catch {}
+        return 0;
+    }
+
+    function getMiniGameModCountFromGlobal() {
+        try {
+            if (typeof global.getMiniGameModCount === 'function') {
+                const result = global.getMiniGameModCount();
+                const numeric = Number(result);
+                if (Number.isFinite(numeric)) {
+                    return Math.max(0, Math.floor(numeric));
+                }
+            }
+        } catch {}
+        return 0;
+    }
+
     const STAT_SECTIONS = [
         {
             id: 'core',
@@ -931,6 +971,47 @@
                     formatter: formatNumber
                 }
             ]
+        },
+        {
+            id: 'addons',
+            titleKey: 'achievements.stats.sections.addons.title',
+            title: 'アドオン状況',
+            entries: [
+                {
+                    path: 'addons.activeGenerators',
+                    labelKey: 'achievements.stats.entries.addons.activeGenerators.label',
+                    label: 'アクティブ生成タイプ数',
+                    descriptionKey: 'achievements.stats.entries.addons.activeGenerators.description',
+                    description: '現在読み込まれている生成タイプ（MOD含む）の数。',
+                    getter: () => getActiveGeneratorCountFromGlobal(),
+                    formatter: (value) => {
+                        const numeric = Number.isFinite(value) ? value : 0;
+                        const formatted = formatNumber(numeric);
+                        return translate(
+                            'achievements.stats.entries.addons.activeGenerators.value',
+                            { value: formatted },
+                            `${formatted} 種類`
+                        );
+                    }
+                },
+                {
+                    path: 'addons.miniGameMods',
+                    labelKey: 'achievements.stats.entries.addons.miniGameMods.label',
+                    label: 'ミニゲームMOD数',
+                    descriptionKey: 'achievements.stats.entries.addons.miniGameMods.description',
+                    description: 'MiniExpに登録されているMOD提供ミニゲームの数。',
+                    getter: () => getMiniGameModCountFromGlobal(),
+                    formatter: (value) => {
+                        const numeric = Number.isFinite(value) ? value : 0;
+                        const formatted = formatNumber(numeric);
+                        return translate(
+                            'achievements.stats.entries.addons.miniGameMods.value',
+                            { value: formatted },
+                            `${formatted} タイトル`
+                        );
+                    }
+                }
+            ]
         }
     ];
 
@@ -1137,6 +1218,10 @@
                 blockdataSaves: 0,
                 blockdataDownloads: 0,
                 sandboxSessions: 0
+            },
+            addons: {
+                activeGenerators: 0,
+                miniGameMods: 0
             }
         };
     }
@@ -1623,7 +1708,9 @@
             const table = document.createElement('table');
             table.className = 'statistics-table';
             for (const entry of sectionDef.entries) {
-                const valueRaw = getStatValue(entry.path);
+                const valueRaw = typeof entry.getter === 'function'
+                    ? entry.getter(state.stats, entry)
+                    : getStatValue(entry.path);
                 const formatter = entry.formatter || formatNumber;
                 const display = formatter(valueRaw, state.stats);
                 const row = document.createElement('tr');

@@ -2,7 +2,8 @@
     const STORAGE_KEY = 'yu-roguelike:language';
     const DEFAULT_LOCALE = 'ja';
     const FALLBACK_LOCALE = 'ja';
-    const SUPPORTED_LOCALES = Object.freeze(['ja', 'en']);
+    const SUPPORTED_LOCALES = Object.freeze(['ja', 'en', 'zh']);
+    const LOCALE_FALLBACKS = Object.freeze({ zh: 'en' });
     const LOCALE_PATH = 'js/i18n/locales';
     const LOCALE_EXTENSION = '.json.js';
 
@@ -39,6 +40,7 @@
     let activeLocale = DEFAULT_LOCALE;
     let activeDictionary = {};
     let fallbackDictionary = {};
+    let activeFallbackLocale = FALLBACK_LOCALE;
     let ready = false;
 
     function resolveLocale(locale) {
@@ -48,6 +50,15 @@
             if (matched) return matched;
         }
         return DEFAULT_LOCALE;
+    }
+
+    function getFallbackLocaleFor(locale) {
+        if (!locale) return FALLBACK_LOCALE;
+        const fallback = LOCALE_FALLBACKS[locale];
+        if (typeof fallback === 'string' && fallback && SUPPORTED_LOCALES.includes(fallback) && fallback !== locale) {
+            return fallback;
+        }
+        return FALLBACK_LOCALE;
     }
 
     function getStoredLocale() {
@@ -233,12 +244,14 @@
             return resolved;
         }
         const dictionary = await fetchDictionary(resolved);
-        const fallback = resolved === FALLBACK_LOCALE
+        const fallbackLocale = getFallbackLocaleFor(resolved);
+        const fallback = resolved === fallbackLocale
             ? dictionary
-            : await fetchDictionary(FALLBACK_LOCALE);
+            : await fetchDictionary(fallbackLocale);
         activeLocale = resolved;
         activeDictionary = dictionary || {};
         fallbackDictionary = fallback || {};
+        activeFallbackLocale = fallbackLocale;
         ready = true;
         persistLocale(resolved);
         updateDocumentLanguage(resolved);
@@ -268,7 +281,8 @@
         try {
             return new Intl.NumberFormat(locale, options).format(value);
         } catch (error) {
-            return new Intl.NumberFormat(FALLBACK_LOCALE, options).format(value);
+            const fallbackLocale = activeFallbackLocale || FALLBACK_LOCALE;
+            return new Intl.NumberFormat(fallbackLocale, options).format(value);
         }
     }
 
@@ -279,7 +293,8 @@
         try {
             return new Intl.DateTimeFormat(locale, options).format(date);
         } catch (error) {
-            return new Intl.DateTimeFormat(FALLBACK_LOCALE, options).format(date);
+            const fallbackLocale = activeFallbackLocale || FALLBACK_LOCALE;
+            return new Intl.DateTimeFormat(fallbackLocale, options).format(date);
         }
     }
 
@@ -288,7 +303,8 @@
         try {
             return new Intl.RelativeTimeFormat(locale, options).format(value, unit);
         } catch (error) {
-            return new Intl.RelativeTimeFormat(FALLBACK_LOCALE, options).format(value, unit);
+            const fallbackLocale = activeFallbackLocale || FALLBACK_LOCALE;
+            return new Intl.RelativeTimeFormat(fallbackLocale, options).format(value, unit);
         }
     }
 
@@ -304,7 +320,7 @@
             // Ignore and fall back below.
         }
         try {
-            return String(left).localeCompare(String(right), FALLBACK_LOCALE, options);
+            return String(left).localeCompare(String(right), activeFallbackLocale || FALLBACK_LOCALE, options);
         } catch (error) {
             return 0;
         }
@@ -451,6 +467,7 @@
         getLocale,
         getDefaultLocale,
         getSupportedLocales,
+        getFallbackLocale: (locale) => getFallbackLocaleFor(locale || activeLocale),
         getStoredLocale,
         getStorageKey: () => STORAGE_KEY,
         isReady,

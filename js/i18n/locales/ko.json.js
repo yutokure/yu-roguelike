@@ -151,6 +151,844 @@
         }
       }
     },
+    "skills": {
+      "meta": {
+        "currentSp": "현재 SP: {value}",
+        "currentSpLabel": "현재 SP",
+        "costAndCurrent": "SP 소비: {cost} / 현재: {current}",
+        "reasonSuffix": " ({reason})",
+        "remainingTurns": "지속 중: {turns}턴 남음",
+        "use": "사용"
+      },
+      "modal": {
+        "title": "스킬"
+      },
+      "availability": {
+        "unlockLevel": "Lv100에서 해금",
+        "maxSpShortage": "SP 최대치가 부족합니다",
+        "notEnoughSp": "SP가 부족합니다",
+        "tooHard": "이 난이도에서는 효과가 없습니다",
+        "noWallAhead": "앞에 벽이 없습니다",
+        "noFloorAhead": "앞에 바닥이 없습니다",
+        "noRangedTarget": "닿는 대상이 없습니다",
+        "noFrontEnemy": "정면에 적이 없습니다",
+        "noAreaTargets": "범위 내에 적이 없습니다",
+        "noEnemies": "적이 없습니다",
+        "noWarpDestination": "워프 목적지가 없습니다",
+        "notYourTurn": "당신의 턴이 아닙니다",
+        "paralyzed": "마비 상태입니다"
+      },
+      "effects": {
+        "gimmickNullify": { "label": "기믹 무효화" },
+        "statusGuard": { "label": "상태 장벽" },
+        "enemyNullify": { "label": "특수 효과 봉인" },
+        "sureHit": { "label": "필중" }
+      },
+      "breakWall": {
+        "name": "벽 파괴",
+        "description": "정면의 벽을 파괴합니다."
+      },
+      "buildWall": {
+        "name": "벽 생성",
+        "description": "앞의 바닥을 벽으로 전환합니다."
+      },
+      "rangedAttack": {
+        "name": "원거리 공격",
+        "description": "정면의 일직선에 있는 적을 필중 공격으로 공격해 통상 피해의 1/3을 줍니다. 벽에 막힙니다."
+      },
+      "gimmickNullify": {
+        "name": "기믹 차단기",
+        "description": "던전 기믹을 10턴 동안 무효화합니다. 권장 레벨이 자신보다 8 이상 높으면 효과가 없습니다."
+      },
+      "statusGuard": {
+        "name": "상태 장벽",
+        "description": "10턴 동안 모든 상태 이상을 막습니다."
+      },
+      "enemyNullify": {
+        "name": "효과 봉인",
+        "description": "10턴 동안 적의 특수 효과를 무효화합니다."
+      },
+      "sureHit": {
+        "name": "필중",
+        "description": "10턴 동안 통상 공격이 반드시 적중합니다. 자신보다 레벨이 8 이상 높은 적에게는 통하지 않습니다."
+      },
+      "stairWarp": {
+        "name": "계단 워프",
+        "description": "계단 주변 칸으로 순간이동합니다."
+      },
+      "strongStrike": {
+        "name": "강타",
+        "description": "정면의 적에게 3배 피해의 필중 공격을 가합니다."
+      },
+      "areaAttack": {
+        "name": "범위 공격",
+        "description": "주변 적에게 통상 범위 피해를 줍니다."
+      },
+      "surehitArea": {
+        "name": "필중 범위 공격",
+        "description": "주변 적에게 필중 범위 피해를 줍니다."
+      },
+      "strongArea": {
+        "name": "강력 범위 공격",
+        "description": "주변 적에게 3배 범위 피해를 줍니다."
+      },
+      "surehitStrongArea": {
+        "name": "필중 강력 범위",
+        "description": "주변 적에게 필중 3배 범위 피해를 줍니다."
+      },
+      "surehitFloor": {
+        "name": "필중 전층 공격",
+        "description": "이 층의 모든 적에게 필중 공격을 가합니다."
+      },
+      "ruinAnnihilation": {
+        "name": "파멸 섬멸",
+        "description": "모든 적에게 3배의 필중 피해를 주고 벽과 기믹을 소멸시키며 보물상자를 획득합니다. 고레벨 적에게는 효과가 없습니다."
+      }
+    },
+    "dungeon": {
+      "types": {
+        "field": "필드형",
+        "cave": "동굴형",
+        "maze": "미궁형",
+        "rooms": "방과 복도",
+        "single-room": "단일 방",
+        "circle": "원형",
+        "narrow-maze": "협소 미궁",
+        "wide-maze": "광활 미궁",
+        "snake": "뱀형",
+        "mixed": "혼합형",
+        "circle-rooms": "원형 방과 복도",
+        "grid": "격자형",
+        "open-space": "개방 공간"
+      }
+    },
+    "dungeons": {
+      "base": {
+        "1": {
+          "name": "초보자의 숲",
+          "description": "넓은 초원 곳곳에 장애물이 있는 던전."
+        },
+        "11": {
+          "name": "암흑 동굴",
+          "description": "어두운 동굴이 얽힌 미로."
+        },
+        "21": {
+          "name": "폐허 미궁",
+          "description": "정교한 미로가 펼쳐진 고대 유적."
+        },
+        "31": {
+          "name": "지하 신전",
+          "description": "방과 복도로 구성된 신전."
+        },
+        "41": {
+          "name": "마법 정원",
+          "description": "마력이 가득한 원형 정원."
+        },
+        "51": {
+          "name": "수정 동굴",
+          "description": "수정이 늘어선 구불구불한 동굴."
+        },
+        "61": {
+          "name": "고대 미궁",
+          "description": "시공을 초월한 거대한 미궁."
+        },
+        "71": {
+          "name": "용의 둥지",
+          "description": "용의 소굴에 이어진 원형 방들."
+        },
+        "81": {
+          "name": "별빛 평원",
+          "description": "별빛이 비추는 거대한 단일 홀."
+        },
+        "91": {
+          "name": "황혼의 탑",
+          "description": "다양한 구조가 뒤섞인 세계의 끝 탑."
+        },
+        "X": {
+          "name": "극한의 영역",
+          "description": "25층으로 이루어진 궁극의 던전."
+        }
+      }
+    },
+    "game": {
+      "toolbar": {
+        "back": "돌아가기",
+        "items": "아이템",
+        "skills": "스킬",
+        "status": "상태",
+        "import": "가져오기",
+        "export": "내보내기",
+        "toggleDungeonName": "던전 이름 표시",
+        "sandboxMenu": "인터랙티브",
+        "godConsole": "창조자 콘솔",
+        "floor": {
+          "heading": "현재 층",
+          "label": "FLOOR"
+        }
+      },
+      "dungeonOverlay": {
+        "label": "던전 특성",
+        "titleFallback": "던전",
+        "typePlaceholder": "필드 유형",
+        "descriptionPlaceholder": "던전 특성이 여기에 표시됩니다.",
+        "badge": {
+          "none": "특이 사항 없음",
+          "dark": {
+            "active": "어둠",
+            "suppressed": "어둠 (억제됨)"
+          },
+          "poison": {
+            "active": "독 안개",
+            "suppressed": "독 안개 (억제됨)"
+          },
+          "noise": {
+            "active": "소음",
+            "suppressed": "소음 (억제됨)"
+          },
+          "nested": "NESTED x{value}"
+        }
+      },
+      "blockDim": {
+        "preview": {
+          "selection": "NESTED {nested} / 차원 {dimension}: {block1} · {block2} · {block3}"
+        }
+      },
+      "playerStats": {
+        "labels": {
+          "level": "레벨",
+          "attackShort": "공격",
+          "defenseShort": "방어",
+          "hp": "HP",
+          "satiety": "포만감",
+          "exp": "EXP",
+          "sp": "SP"
+        }
+      },
+      "statuses": {
+        "poison": "독",
+        "paralysis": "마비",
+        "abilityUp": "능력 상승",
+        "abilityDown": "능력 저하",
+        "levelDown": "레벨 감소"
+      },
+      "autoItem": {
+        "status": "오토 아이템 ON: 회복 아이템 x {count}"
+      },
+      "common": {
+        "count": "x {count}",
+        "none": "없음",
+        "floor": "{floor}F"
+      },
+      "miniExp": {
+        "dinoRunner": {
+          "comboLabel": "콤보 {combo}",
+          "startPromptPrimary": "Space / 클릭으로 시작",
+          "startPromptSecondary": "점프: ↑ 또는 Space, 숙이기: ↓",
+          "gameOver": "GAME OVER",
+          "restartHint": "Space / R 키로 재시작",
+          "distanceLabel": "거리 {distance}"
+        },
+        "ultimateTtt": {
+          "status": {
+            "player": "당신의 차례",
+            "ai": "AI의 차례",
+            "ended": "게임 오버"
+          },
+          "activeBoard": "목표 보드: ({x}, {y})",
+          "overlay": {
+            "restartHint": "R 키로 재시작"
+          },
+          "result": {
+            "playerWin": "당신의 승리!",
+            "aiWin": "AI의 승리…",
+            "draw": "무승부"
+          }
+        }
+      },
+      "backgammon": {
+        "actor": {
+          "player": "플레이어",
+          "ai": "AI"
+        },
+        "difficulty": {
+          "easy": "쉬움",
+          "normal": "보통",
+          "hard": "어려움"
+        },
+        "point": "{point} 포인트",
+        "bar": "바",
+        "dice": {
+          "none": "-"
+        },
+        "board": {
+          "playerOff": "{actor} 반출 ({countFormatted})",
+          "aiOff": "{actor} 반출 ({countFormatted})",
+          "barText": "{label}"
+        },
+        "action": {
+          "roll": "주사위 굴리기",
+          "rematch": "재대전"
+        },
+        "badge": {
+          "difficulty": "난이도: {difficulty}",
+          "hits": "히트: {hitsFormatted}",
+          "score": "점수: {scoreFormatted}"
+        },
+        "ui": {
+          "turn": "턴: {actor}{status}",
+          "turnFinishedSuffix": " (완료)",
+          "dice": {
+            "empty": "주사위: -",
+            "detail": "주사위: [{diceFormatted}] / 남은 수 [{remainingFormatted}]"
+          },
+          "bar": "{bar}: {playerLabel} {playerFormatted} / {aiLabel} {aiFormatted}",
+          "bearOff": {
+            "title": "반출",
+            "summary": "{title}: {playerLabel} {playerFormatted} / {aiLabel} {aiFormatted}"
+          }
+        },
+        "log": {
+          "bearOff": "{actor}이(가) {fromLabel}에서 반출 ({dieFormatted})",
+          "barHit": "{actor}이(가) {bar}에서 {toLabel}로 진입 ({dieFormatted}): 히트!",
+          "barEntry": "{actor}이(가) {bar}에서 {toLabel}로 진입 ({dieFormatted})",
+          "moveHit": "{actor}이(가) {fromLabel} → {toLabel} 이동 ({dieFormatted}): 히트!",
+          "move": "{actor}이(가) {fromLabel} → {toLabel} 이동 ({dieFormatted})",
+          "win": {
+            "player": "플레이어 승리! {rewardFormatted} EXP 획득.",
+            "ai": "AI 승리… 다시 도전해 보세요."
+          },
+          "aiDice": "AI 주사위: {diceFormatted}",
+          "aiNoMove": "AI가 움직일 수 없습니다.",
+          "playerDice": "플레이어 주사위: {diceFormatted}",
+          "noMoves": "합법적인 수가 없습니다.",
+          "newGame": "새 게임이 시작되었습니다. 플레이어가 선공입니다."
+        }
+      },
+      "runResult": {
+        "defaultCause": "게임 오버"
+      },
+      "death": {
+        "cause": {
+          "generic": "게임 오버",
+          "poison": "독에 쓰러졌다… 게임 오버.",
+          "starvation": "굶주림으로 쓰러졌다… 게임 오버.",
+          "wallCollision": "벽에 부딪혀 쓰러졌다… 게임 오버.",
+          "instantKill": "즉사 공격에 당했다… 게임 오버.",
+          "autoItemBackfire": "오토 아이템이 폭주해 쓰러졌다… 게임 오버.",
+          "reversedPotion": "뒤집힌 포션에 휘말려 쓰러졌다… 게임 오버."
+        }
+      },
+      "items": {
+        "modal": {
+          "title": "아이템"
+        },
+        "countPrefix": "x",
+        "actions": {
+          "use": "사용",
+          "eat": "섭취",
+          "offer": "봉헌",
+          "cleanse": "상태 이상 해제",
+          "throw": "던지기",
+          "enable": "사용 설정",
+          "close": "닫기"
+        },
+        "autoItem": {
+          "label": "오토 아이템",
+          "hint": "HP가 30% 미만으로 떨어지면 자동으로 회복합니다."
+        },
+        "potion30": {
+          "label": "HP 30% 포션"
+        },
+        "hpBoost": {
+          "label": "최대 HP 강화 아이템"
+        },
+        "atkBoost": {
+          "label": "공격력 강화 아이템"
+        },
+        "defBoost": {
+          "label": "방어력 강화 아이템"
+        },
+        "hpBoostMajor": {
+          "label": "최대 HP 특대 강화 (+25)"
+        },
+        "atkBoostMajor": {
+          "label": "공격력 특대 강화 (+10)"
+        },
+        "defBoostMajor": {
+          "label": "방어력 특대 강화 (+10)"
+        },
+        "spElixir": {
+          "label": "SP 엘릭서"
+        },
+        "passiveOrbs": {
+          "header": "패시브 오브"
+        },
+        "skillCharms": {
+          "header": "스킬 부적 (각 10턴)"
+        },
+        "errors": {
+          "noHealingItem": "회복 아이템이 없습니다.",
+          "noStatusToCleanse": "해제할 상태 이상이 없습니다."
+        }
+      },
+      "passiveOrb": {
+        "summary": "총 {total}개 ({unique}종)",
+        "empty": "보유한 패시브 오브가 없습니다.",
+        "noEffects": "효과 없음.",
+        "countDetail": "보유 {count}개",
+        "detailSeparator": " / ",
+        "obtainDetail": " ({details})",
+        "obtain": "패시브 오브 \"{label}\"을(를) 획득!{detail}",
+        "obtainMultiple": "패시브 오브 \"{label}\" ×{delta}을(를) 획득!{detail}",
+        "orbs": {
+          "attackBoost": {
+            "name": "공격 +1% 오브"
+          },
+          "defenseBoost": {
+            "name": "방어 +1% 오브"
+          },
+          "abilityBoost": {
+            "name": "모든 능력 +1% 오브"
+          },
+          "maxHpBoost": {
+            "name": "최대 HP +10% 오브"
+          },
+          "statusGuard": {
+            "name": "상태 이상 가드 오브"
+          },
+          "enemySpecialGuard": {
+            "name": "적 특수 방어 오브"
+          },
+          "poisonResist": {
+            "name": "독 내성 오브"
+          },
+          "paralysisResist": {
+            "name": "마비 내성 오브"
+          },
+          "abilityDownResist": {
+            "name": "능력 저하 내성 오브"
+          },
+          "levelDownResist": {
+            "name": "레벨 감소 내성 오브"
+          },
+          "instantDeathResist": {
+            "name": "즉사 내성 오브"
+          },
+          "knockbackResist": {
+            "name": "넉백 내성 오브"
+          },
+          "poisonDamageGuard": {
+            "name": "독 피해 가드 오브"
+          },
+          "bombDamageGuard": {
+            "name": "폭탄 피해 가드 오브"
+          },
+          "skillPowerBoost": {
+            "name": "스킬 위력 +10% 오브"
+          },
+          "damageDealtBoost": {
+            "name": "가한 피해 +10% 오브"
+          },
+          "damageTakenGuard": {
+            "name": "받는 피해 -10% 오브"
+          },
+          "evasionBoost": {
+            "name": "회피 +1% 오브"
+          },
+          "accuracyBoost": {
+            "name": "명중 +1% 오브"
+          },
+          "critDamageBoost": {
+            "name": "치명타 피해 +10% 오브"
+          }
+        },
+        "labels": {
+          "maxHpMul": "최대 HP",
+          "attackMul": "공격",
+          "defenseMul": "방어",
+          "damageDealtMul": "가한 피해",
+          "damageTakenMul": "받는 피해",
+          "skillPowerMul": "스킬 위력",
+          "accuracyMul": "명중",
+          "evasionMul": "회피",
+          "critDamageMul": "치명타 피해",
+          "statusChanceMul": "상태 이상 확률",
+          "enemySpecialChanceMul": "적 특수 확률",
+          "poisonStatusChanceMul": "독 부여 확률",
+          "paralysisStatusChanceMul": "마비 부여 확률",
+          "levelDownStatusChanceMul": "레벨 감소 확률",
+          "instantDeathChanceMul": "즉사 확률",
+          "knockbackChanceMul": "넉백 확률",
+          "poisonDamageMul": "독 피해",
+          "bombDamageMul": "폭탄 피해",
+          "abilityDownPenaltyMul": "능력 저하 심각도",
+          "status:poison": "독 부여 확률",
+          "status:paralysis": "마비 부여 확률",
+          "status:levelDown": "레벨 감소 확률",
+          "instantDeath": "즉사 확률",
+          "enemySpecial:knockback": "넉백 확률",
+          "poison": "독 피해",
+          "bomb": "폭탄 피해",
+          "abilityDownPenalty": "능력 저하 심각도"
+        }
+      },
+      "skillCharms": {
+        "use": "사용",
+        "empty": "보유한 부적이 없습니다."
+      },
+      "events": {
+        "hatena": {
+          "spawnSingle": "수수께끼 ? 블록이 나타났다!",
+          "spawnMultiple": "{count}개의 수수께끼 ? 블록이 나타났다!",
+          "bombGuard": "폭발의 충격이 무효화됐다!",
+          "bombHeal": "폭발이 반전되어 HP가 {amount} 회복됐다!",
+          "bombDamage": "폭발로 {amount}의 피해를 입었다!",
+          "bombDeath": "폭발에 휘말려 쓰러졌다… 게임 오버.",
+          "itemObtained": "{item}을(를) 얻었다!",
+          "trigger": "? 블록을 밟았다!",
+          "levelUp": "레벨이 {amount} 올랐다!",
+          "levelNoChange": "하지만 레벨은 변하지 않았다.",
+          "levelDown": "레벨이 {amount} 내려갔다...",
+          "levelDownNoEffect": "더 이상 레벨이 내려가지 않았다.",
+          "expGain": "{amount}의 EXP를 획득했다!",
+          "expGainNone": "EXP는 늘어나지 않았다.",
+          "expLoss": "{amount}의 EXP를 잃었다...",
+          "expLossNone": "잃을 EXP는 없었다.",
+          "enemyAmbush": "주위에 적이 나타났다!",
+          "noEnemies": "하지만 적은 나타나지 않았다.",
+          "poisonGuarded": "독이 무효화됐다!",
+          "statusNone": "상태 이상은 일어나지 않았다.",
+          "buffFailed": "능력 상승 효과가 발동하지 않았다.",
+          "debuffNone": "능력 저하는 발생하지 않았다.",
+          "rareChest": "눈부신 레어 보물상자가 나타났다!",
+          "chestNoSpace": "보물상자를 둘 공간이 없었다.",
+          "chest": "보물상자가 나타났다!",
+          "noChest": "보물상자는 나타나지 않았다.",
+          "chestRing": "보물상자에게 둘러싸였다!",
+          "nothing": "하지만 아무 일도 일어나지 않았다."
+        },
+        "skills": {
+          "statusGuarded": "스킬 효과로 상태 이상을 무효화했다!"
+        },
+        "sp": {
+          "unlocked": "SP 시스템이 해방됐다!",
+          "notUnlocked": "SP가 아직 해방되지 않았다.",
+          "notEnough": "SP가 부족하다.",
+          "maxIncreased": "SP 최대치가 {value}로 증가했다!",
+          "gained": "SP를 {amount} 획득했다.",
+          "spent": "SP를 {amount} 소비했다.",
+          "offered": "회복 아이템을 바쳐 SP를 {amount} 획득했다.",
+          "offerLocked": "SP 시스템이 해방된 후에 바칠 수 있다.",
+          "notUnlockedForItem": "SP가 해방되지 않아 사용할 수 없다.",
+          "noCapacity": "SP 최대치가 0이라 효과가 없다.",
+          "alreadyFull": "SP가 이미 가득 찼다.",
+          "elixirUsed": "SP 엘릭서를 사용! SP가 {amount} 회복됐다.",
+          "fullyRestored": "SP가 전부 회복됐다 (+{amount})."
+        },
+        "exp": {
+          "bossBonusSuffix": " (보스 보너스!)",
+          "enemyGain": "{amount} EXP를 획득했다!{bonus}",
+          "spent": "{amount} EXP를 소비했다. ({context})",
+          "gained": "{amount} EXP를 획득했다! ({context})"
+        },
+        "status": {
+          "paralyzed": "몸이 저려 움직일 수 없다...",
+          "paralyzedRemaining": "몸이 저려 움직일 수 없다... (남은 {turns}턴)",
+          "cured": {
+            "poison": "독이 사라졌다.",
+            "paralysis": "마비에서 벗어났다.",
+            "abilityUp": "능력 상승 효과가 끝났다.",
+            "abilityDown": "능력 저하에서 회복했다.",
+            "levelDown": "일시적인 레벨 감소가 해제됐다."
+          },
+          "applied": {
+            "poison": "독에 걸렸다! ({turns}턴)",
+            "paralysis": "몸이 저려 움직일 수 없다! ({turns}턴)",
+            "abilityUp": "힘이 넘친다! 최대 HP/공격/방어 상승 ({turns}턴)",
+            "abilityDown": "능력이 떨어졌다... 최대 HP/공격/방어 감소 ({turns}턴)",
+            "levelDown": "레벨이 일시적으로 내려갔다! ({turns}턴)"
+          }
+        },
+        "levelUp": {
+          "log": "레벨 업!\n레벨: {level} (+{levelDelta})\n최대 HP: {maxHp} (+{maxHpDelta})\n공격력: {attack} (+{attackDelta})\n방어력: {defense} (+{defenseDelta})"
+        },
+        "sandbox": {
+          "noExp": "샌드박스 모드에서는 EXP를 얻을 수 없습니다.",
+          "started": "샌드박스 모드를 시작했습니다. EXP는 지급되지 않습니다."
+        },
+        "console": {
+          "executed": "창조자 콘솔이 코드를 실행했습니다.",
+          "error": "창조자 콘솔 오류: {message}"
+        },
+        "unlocks": {
+          "nestedLegend": "NESTED 99999999을 클리어해 아노스급 신격을 얻었습니다!",
+          "consoleAlwaysOn": "창조자 콘솔과 샌드박스 전환을 항상 사용할 수 있게 되었습니다."
+        },
+        "actions": {
+          "wallDestroyed": "벽을 파괴했다!"
+        },
+        "dungeon": {
+          "darkness": "어둠이 시야를 뒤덮어 앞이 잘 보이지 않는다...",
+          "poisonFog": "독 안개가 자욱하다! 일반 바닥도 위험하다."
+        },
+        "charms": {
+          "unknown": "알 수 없는 부적은 사용할 수 없습니다.",
+          "notOwned": "그 부적은 가지고 있지 않습니다.",
+          "activated": "{label} 부적을 발동! 효과는 {turns}턴 지속됩니다."
+        },
+        "satiety": {
+          "enabled": "포만감 시스템이 활성화됐다!",
+          "disabled": "포만감 시스템이 해제됐다.",
+          "cannotEat": "포만감 시스템이 켜졌을 때만 먹을 수 있다.",
+          "alreadyFull": "포만감이 이미 최대치입니다.",
+          "damage": "허기로 {amount}의 피해를 입었다!"
+        },
+        "chest": {
+          "prefix": {
+            "normal": "보물상자를 열었다! ",
+            "rare": "황금 보물상자를 열었다! "
+          },
+          "reward": {
+            "potion30": "{prefix}HP 30% 회복 포션을 손에 넣었다!",
+            "hpBoost": "{prefix}최대 HP 강화 아이템을 손에 넣었다!",
+            "atkBoost": "{prefix}공격력 강화 아이템을 손에 넣었다!",
+            "defBoost": "{prefix}방어력 강화 아이템을 손에 넣었다!"
+          }
+        },
+        "goldenChest": {
+          "modal": {
+            "title": "황금 보물상자",
+            "status": "타이밍 바를 중앙에 맞추세요! (Space/Enter)",
+            "stop": "정지",
+            "hint": "Space / Enter 키로도 멈출 수 있습니다."
+          },
+          "elixir": "황금 보물상자에서 특제 SP 엘릭서를 손에 넣었다! SP가 크게 회복된다.",
+          "openedSafely": "황금 보물상자를 안전하게 열었다!",
+          "prompt": "황금 보물상자다! 타이밍 바를 노리자.",
+          "major": {
+            "hp": "황금 보물상자에서 최대 HP +{amount} 엘릭서를 발견했다!",
+            "atk": "황금 보물상자에서 ATK +{amount} 전술 오브를 발견했다!",
+            "def": "황금 보물상자에서 DEF +{amount} 가디언 실드 카드를 발견했다!"
+          },
+          "skillCharm": "황금 보물상자에서 스킬 부적 \"{effectName}\"을(를) 발견했다! ({turns}턴)"
+        },
+        "combat": {
+          "noEnemyInDirection": "그 방향에는 적이 없다!",
+          "sureHitIneffective": "레벨 차이로 필중 효과가 무효가 됐다...",
+          "miss": "빗나감",
+          "enemyDefeated": "적을 쓰러뜨렸다!",
+          "bossGate": "보스를 쓰러뜨려야 진행할 수 있다!",
+          "enemyMissed": "적이 공격을 빗나갔다!",
+          "enemyWarped": "적의 순간이동 공격에 휘말려 이동했다!",
+          "enemyAttackDamage": "적이 {amount}의 피해를 입혔다!",
+          "enemyWarpPopup": "워프",
+          "statusResistedByLevel": "레벨 차이로 상태 이상을 막았다!",
+          "teleportResistedByLevel": "레벨 차이로 워프 공격을 버텼다!",
+          "instantDeathResisted": "레벨 차이로 즉사 공격을 무효화했다!",
+          "instantDeathHit": "적의 즉사 공격이 적중했다…!",
+          "knockbackResistedByLevel": "레벨 차이로 넉백을 견뎠다!",
+          "playerDamage": "적에게 {amount}의 피해를 주었다!",
+          "knockbackCollision": "벽에 부딪혀 {amount}의 피해를 입었다!"
+        },
+        "orb": {
+          "statusAttackNegated": "오브의 가호가 상태 공격을 무효화했다!",
+          "statusAttackPrevented": "오브의 가호가 상태 공격을 막았다!",
+          "statusPrevented": "오브의 가호가 상태 이상을 막았다!",
+          "teleportNegated": "오브의 가호가 워프 공격을 무효화했다!",
+          "teleportPrevented": "오브의 가호가 워프 공격을 막았다!",
+          "instantDeathNegated": "오브의 가호가 즉사 공격을 무효화했다!",
+          "instantDeathPrevented": "오브의 가호로 즉사 공격을 버텼다!",
+          "knockbackNegated": "오브의 가호가 넉백을 무효화했다!",
+          "knockbackPrevented": "오브의 가호가 넉백을 막았다!"
+        },
+        "items": {
+          "noPotion": "포션이 없다.",
+          "noOfferingItem": "봉헌할 회복 아이템이 없다.",
+          "throwNoEnemies": "던질 범위에 적이 없다.",
+          "throwNoHealingItem": "던질 회복 아이템이 없다.",
+          "throwNoTarget": "던질 대상을 찾지 못했다.",
+          "throwIneffective": "적의 레벨이 높아 던져도 효과가 없었다...",
+          "throwNoEffect": "회복 아이템을 던졌지만 아무 일도 없었다.",
+          "throwDamage": "회복 아이템을 던져 적에게 {damage}의 피해를 입혔다!",
+          "autoSatietyRecovered": "오토 아이템 발동! 포만감이 {amount} 회복.",
+          "potionSatietyRecovered": "포션을 먹었다! 포만감이 {amount} 회복.",
+          "autoReversedDamage": "오토 아이템이 폭주해 {amount}의 피해를 입었다!",
+          "potionReversedDamage": "포션이 반전되어 {amount}의 피해를 입었다!",
+          "autoHpRecovered": "오토 아이템 발동! HP가 {amount} 회복.",
+          "potionHpRecovered": "포션을 사용! HP가 {amount} 회복.",
+          "autoNoEffect": "오토 아이템이 발동했지만 변화가 없었다.",
+          "potionNoEffect": "포션을 사용했지만 변화가 없었다.",
+          "cleansedStatus": "회복 아이템으로 {status} 상태 이상을 치료했다.",
+          "hpBoostUsed": "최대 HP 강화 아이템 사용! 최대 HP가 5 증가!",
+          "attackBoostUsed": "공격력 강화 아이템 사용! 공격력이 1 증가!",
+          "defenseBoostUsed": "방어력 강화 아이템 사용! 방어력이 1 증가!",
+          "hpBoostMajorUsed": "최대 HP 특대 강화 아이템 사용! 최대 HP가 {amount} 증가!",
+          "attackBoostMajorUsed": "공격력 특대 강화 아이템 사용! 공격력이 {amount} 증가!",
+          "defenseBoostMajorUsed": "방어력 특대 강화 아이템 사용! 방어력이 {amount} 증가!",
+          "notOwned": "그 아이템은 가지고 있지 않다.",
+          "noSpElixir": "SP 엘릭서를 가지고 있지 않다."
+        },
+        "data": {
+          "imported": "데이터를 가져왔습니다."
+        },
+        "blockdim": {
+          "selectionIncomplete": "블록 선택이 완전하지 않습니다."
+        },
+        "progress": {
+          "dungeonCleared": "던전을 클리어했다!",
+          "nextFloor": "다음 층으로 올라갔다! ({floor}F)"
+        }
+      }
+    },
+    "godConsole": {
+      "mode": {
+        "current": "현재: {mode}",
+        "sandbox": "샌드박스 모드",
+        "normal": "탐험 모드",
+        "toggle": {
+          "toSandbox": "샌드박스 모드로 전환",
+          "toNormal": "탐험 모드로 돌아가기"
+        }
+      },
+      "status": {
+        "prompt": "코드를 입력해 창조의 힘을 발휘하세요.",
+        "notAwakened": "창조자의 힘이 아직 깨어나지 않았습니다.",
+        "enterCode": "코드를 입력하세요.",
+        "running": "코드를 실행 중…",
+        "executedWithReturn": "코드를 실행했습니다 (반환값: {value})",
+        "executed": "코드를 실행했습니다.",
+        "error": "에러: {message}",
+        "requiresGodPower": "창조자의 힘이 필요합니다.",
+        "toggleRestricted": "던전을 탐험 중에만 전환할 수 있습니다.",
+        "sandboxEnabled": "샌드박스 모드를 활성화했습니다.",
+        "sandboxDisabled": "탐험 모드로 돌아왔습니다.",
+        "sampleInserted": "샘플 코드를 삽입했습니다.",
+        "cleared": "입력을 지웠습니다."
+      }
+    },
+    "enemy": {
+      "modal": {
+        "noiseBlocked": "잡음이 심해 적 정보를 읽을 수 없다...",
+        "title": {
+          "boss": "보스 정보",
+          "standard": "적 정보"
+        },
+        "sections": {
+          "damage": "피해 예측"
+        },
+        "labels": {
+          "level": "레벨:",
+          "type": "종류:",
+          "hp": "HP:",
+          "attack": "공격력:",
+          "defense": "방어력:",
+          "damageDeal": "가한 피해:",
+          "damageTake": "받는 피해:",
+          "hitRate": "명중률:",
+          "enemyHitRate": "적 명중률:"
+        },
+        "levelFormat": "Lv.{level}",
+        "typeDescription": {
+          "suppressed": "{description} (레벨 차이로 특수 효과 억제)"
+        },
+        "damage": {
+          "invincibleLabel": "무적",
+          "invincible": "0 ({label})",
+          "critLabel": "크리",
+          "reverseLabel": "회복",
+          "reverseRange": "{reverseLabel} {min}-{max} ({critLabel}: {critMin}-{critMax})",
+          "range": "{min}-{max} ({critLabel}: {critMin}-{critMax})"
+        },
+        "hitRate": "{value}%",
+        "enemyHitRate": "{value}%"
+      },
+      "types": {
+        "normal": {
+          "label": "통상형",
+          "description": "특별한 행동을 하지 않습니다."
+        },
+        "statusCaster": {
+          "label": "상태 이상사",
+          "description": "공격이 맞으면 독이나 마비를 걸 수 있습니다."
+        },
+        "warper": {
+          "label": "워퍼",
+          "description": "공격이 적중하면 플레이어를 다른 칸으로 워프시킬 수 있습니다."
+        },
+        "executioner": {
+          "label": "집행자",
+          "description": "낮은 확률로 즉사 공격을 쓰는 위험한 적입니다."
+        },
+        "knockback": {
+          "label": "돌격자",
+          "description": "플레이어를 밀쳐내며, 벽에 부딪히면 추가 피해를 줍니다."
+        },
+        "swift": {
+          "label": "쾌속 전사",
+          "description": "빠르게 움직여 플레이어 턴 중 두 번 행동합니다."
+        }
+      }
+    },
+    "statusModal": {
+      "title": "플레이어 상태",
+      "sections": {
+        "basic": "기본 스탯",
+        "inventory": "인벤토리",
+        "settings": "게임 설정",
+        "dungeon": "던전 정보"
+      },
+      "labels": {
+        "level": "레벨",
+        "exp": "경험치",
+        "hp": "HP",
+        "satiety": "포만감",
+        "sp": "SP",
+        "attack": "공격",
+        "defense": "방어",
+        "statusEffects": "상태 이상",
+        "skillEffects": "스킬 효과",
+        "floor": "현재 층"
+      },
+      "settings": {
+        "world": "선택한 월드",
+        "difficulty": "난이도"
+      },
+      "dungeon": {
+        "structure": "구조",
+        "type": "유형"
+      },
+      "effects": {
+        "none": "상태 이상이 없습니다.",
+        "remaining": "{label} {turns}턴 남음",
+        "entry": "{label} {turns}턴 남음"
+      },
+      "skillCharms": {
+        "entry": "{label} x{count}"
+      },
+      "world": {
+        "normal": "{world} 월드",
+        "blockdim": "BlockDim NESTED {nested} / {dimension}"
+      },
+      "dungeonSummary": {
+        "normal": "{world} 월드: {dungeon}",
+        "blockdim": "NESTED {nested} / 차원 {dimension}: {block1} · {block2} · {block3}"
+      },
+      "details": {
+        "floor": "층: {floor}",
+        "hpBaseSuffix": " (기본 {base})",
+        "level": "Lv.{value}",
+        "hp": "HP {current}/{max}{baseSuffix}",
+        "attack": "ATK {value}",
+        "defense": "DEF {value}",
+        "satiety": "포만감 {current}/{max}",
+        "line": "{level} {hp} {attack} {defense} {satiety}"
+      },
+      "stats": {
+        "valueWithBase": "{effective} (기본 {base})",
+        "levelWithBase": "Lv.{effective} (기본 {base})",
+        "hp": "{current}/{max}{baseSuffix}"
+      }
+    },
     "selection": {
       "title": "던전 선택",
       "difficulty": {

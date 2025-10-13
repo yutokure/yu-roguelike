@@ -3,13 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ミニゲーム: トリオミノコラム</title>
+    <title>ミニゲーム: トリオミノコラムス</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
-        <h1>ミニゲーム: トリオミノコラム</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <h1>ミニゲーム: トリオミノコラムス</h1>
+
+        <section>
+            <h2>概要</h2>
+            <p>
+                <strong>トリオミノコラムス</strong> は 5 列・10 行のフィールドでトリオミノ（3 ブロック）を積み上げ、
+                縦横 3 つ以上の同色を揃えて消していくトリオトス DX 風の落ち物パズルです。
+                ゲーム内解説にある通り「ラインスパーク」と「マルチブロック」が特徴で、
+                連鎖や特殊消去を駆使してスコアと攻撃ゲージを伸ばすのが目標となります。【F:games/triomino_columns.js†L80-L128】【F:games/triomino_columns.js†L273-L301】【F:games/triomino_columns.js†L1799-L1801】
+            </p>
+        </section>
+
+        <section>
+            <h2>モード構成</h2>
+            <ul>
+                <li><strong>ENDLESS</strong>：ゲームオーバーまでプレイする 1 人用モード。クリアラインやコンボなどの統計が最後に表示されます。【F:games/triomino_columns.js†L80-L118】【F:games/triomino_columns.js†L1324-L1343】</li>
+                <li><strong>VS.RIVAL (CPU 戦)</strong>：GEARS キャラクターと順番に対戦します。勝利すると次のライバルが解放され、結果画面から続けて挑戦できます。【F:games/triomino_columns.js†L98-L126】【F:games/triomino_columns.js†L1182-L1200】【F:games/triomino_columns.js†L1345-L1379】</li>
+                <li><strong>VS.2P</strong>：キーボード 2 人対戦。WASD/JK 系の専用キーで同じ画面を共有します。【F:games/triomino_columns.js†L98-L113】【F:games/triomino_columns.js†L1181-L1188】【F:games/triomino_columns.js†L1212-L1219】</li>
+            </ul>
+            <p>
+                CPU セレクトでは全 8 体のライバルカードが表示され、クリアした相手に応じて次の挑戦者が解放されます。
+                ハグルマンレディは 6 体目まで連勝すると常時解放、最終ボス「？？？」はレディ戦をノーコンティニューかつ累計 15 分以内に突破すると出現します。【F:games/triomino_columns.js†L130-L202】【F:games/triomino_columns.js†L1080-L1106】【F:games/triomino_columns.js†L1355-L1362】
+            </p>
+        </section>
+
+        <section>
+            <h2>操作方法</h2>
+            <h3>1P（共通 / CPU 戦）</h3>
+            <ul>
+                <li><kbd>←</kbd>/<kbd>→</kbd>：左右移動【F:games/triomino_columns.js†L328-L336】【F:games/triomino_columns.js†L1220-L1228】</li>
+                <li><kbd>↓</kbd>：ソフトドロップ（落下加速・微量 XP）【F:games/triomino_columns.js†L331-L336】【F:games/triomino_columns.js†L514-L520】</li>
+                <li><kbd>Space</kbd>：ハードドロップ（即着地）【F:games/triomino_columns.js†L332-L333】【F:games/triomino_columns.js†L505-L512】</li>
+                <li><kbd>↑</kbd>/<kbd>X</kbd>：右回転、<kbd>Z</kbd>：左回転【F:games/triomino_columns.js†L333-L335】【F:games/triomino_columns.js†L1220-L1228】</li>
+                <li><kbd>Shift</kbd>/<kbd>C</kbd>：ホールド（1 ピースにつき 1 回まで）【F:games/triomino_columns.js†L335-L336】【F:games/triomino_columns.js†L525-L544】</li>
+            </ul>
+            <h3>2P（VS.2P モード）</h3>
+            <ul>
+                <li><kbd>A</kbd>/<kbd>D</kbd>：左右移動</li>
+                <li><kbd>S</kbd>：ソフトドロップ</li>
+                <li><kbd>F</kbd>：ハードドロップ</li>
+                <li><kbd>W</kbd>/<kbd>R</kbd>：右回転、<kbd>E</kbd>：左回転</li>
+                <li><kbd>Q</kbd>：ホールド【F:games/triomino_columns.js†L338-L346】【F:games/triomino_columns.js†L1212-L1219】</li>
+            </ul>
+            <p class="small-note">ホールドは使用直後にロックし、次のピースが盤面に固定されるまで再使用できません。【F:games/triomino_columns.js†L525-L570】</p>
+        </section>
+
+        <section>
+            <h2>フィールドとブロック</h2>
+            <ul>
+                <li>フィールドは幅 5 列・高さ 12 行（うち 2 行は天井裏）で構成され、上まで詰まるとトップアウトです。【F:games/triomino_columns.js†L273-L276】【F:games/triomino_columns.js†L1020-L1038】</li>
+                <li>トリオミノの形状は縦 3 マスの <strong>I 型</strong> と折れ曲がった <strong>L 型</strong> の 2 種類。ランダムな 3 色で構成され、回転テーブルも実装されています。【F:games/triomino_columns.js†L295-L325】</li>
+                <li>マークは 6 色（太陽 / 葉っぱ / しずく / ベリー / ローズ / アンバー）。<strong>マルチブロック</strong>（白）はワイルド扱いでどの色にもマッチします。おじゃまブロックは濃紺色です。【F:games/triomino_columns.js†L284-L294】</li>
+                <li>ネクストキューは常に 4 個保持し、画面右のパネルには先頭 3 個とホールドピースが表示されます。【F:games/triomino_columns.js†L1155-L1178】【F:games/triomino_columns.js†L1691-L1706】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>消去とラインスパーク</h2>
+            <ul>
+                <li>縦横いずれかに同じマーク（マルチを含む）が 3 個以上つながると消去対象になります。すべてマルチだけの列は対象外です。【F:games/triomino_columns.js†L748-L760】【F:games/triomino_columns.js†L737-L745】</li>
+                <li>行全体が同じマークで埋まると<strong>ラインスパーク</strong>が発生し、その列と同色マークが盤面から一掃されます。対戦時は相手におじゃま攻撃が送られます。【F:games/triomino_columns.js†L715-L735】【F:games/triomino_columns.js†L957-L967】</li>
+                <li>消去後は自動的に落下処理が行われ、連続して新しいマッチが生まれるとコンボになります。【F:games/triomino_columns.js†L582-L621】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>コンボ・マルチ強化・攻撃</h2>
+            <ul>
+                <li>1 チェーンで複数回消すとコンボカウントが増加し、2 連鎖以上でコンボ演出と XP を獲得します。【F:games/triomino_columns.js†L623-L632】【F:games/triomino_columns.js†L936-L956】</li>
+                <li>6 個以上（マルチのみの塊を除く）の大連結を作ると、ネクストキューにマルチブロックを注入します。7 個で 2 個、8 個以上で 3 個、9 個以上では追加で<strong>マルチシャワー</strong>（盤面最上段にマルチ行が落ちる）を獲得します。【F:games/triomino_columns.js†L609-L614】【F:games/triomino_columns.js†L969-L975】【F:games/triomino_columns.js†L984-L1018】【F:games/triomino_columns.js†L1273-L1285】</li>
+                <li>対戦モードではマッチサイズ 3 以上の消去で攻撃ゲージが溜まり、6 ポイントごとに 1 行のおじゃまを相手へ送ります。ラインスパークでも追加のおじゃまが送信されます。【F:games/triomino_columns.js†L575-L631】【F:games/triomino_columns.js†L975-L977】【F:games/triomino_columns.js†L1288-L1305】</li>
+                <li>受け取ったおじゃま行は下から積み上がり、現在操作中のピースは自動的に上へ押し戻されます。【F:games/triomino_columns.js†L1034-L1040】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>スコア / XP と HUD</h2>
+            <p>
+                ソフトドロップ、ライン消去、コンボ勝利など各種アクションでミニゲーム経験値 (XP) が加算されます。
+                画面右側のパネルにはネクスト・ホールド・統計 (ライン / コンボ / スパーク / 攻撃ゲージ) が表示され、対戦時は各プレイヤー名の下にミニ統計が並びます。【F:games/triomino_columns.js†L514-L520】【F:games/triomino_columns.js†L936-L977】【F:games/triomino_columns.js†L1691-L1733】
+            </p>
+        </section>
+
+        <section>
+            <h2>CPU 戦の進行とアンロック</h2>
+            <p>
+                CPU は各ピースごとに回転・落下位置をシミュレートして最も高得点になる手を選択します。
+                アグレッション値が高い相手ほどラインスパークや大連鎖を狙う傾向が強く、落下速度レベルも上昇します。【F:games/triomino_columns.js†L1080-L1085】【F:games/triomino_columns.js†L1392-L1469】
+            </p>
+            <p>
+                CPU 戦で勝利すると進行状況が保存され、連勝を重ねることでハグルマンレディが解禁されます。
+                レディ撃破時にノーコンティニューかつ累計 900 秒以内で駆け抜けると「？？？」が出現し、同条件での最速クリアタイムも更新されます。【F:games/triomino_columns.js†L1088-L1106】【F:games/triomino_columns.js†L1355-L1379】
+            </p>
+        </section>
+
+        <section>
+            <h2>攻略ヒント</h2>
+            <ul>
+                <li>マルチブロックは中央列から優先的に注入されるため、連鎖の起点に残しておくと次のピースで色合わせがしやすくなります。【F:games/triomino_columns.js†L984-L1018】</li>
+                <li>ラインスパークは同色を盤面全体から消し飛ばすため、片側の色を温存して一気に消せば攻撃と盤面整理を同時に行えます。【F:games/triomino_columns.js†L715-L735】【F:games/triomino_columns.js†L957-L967】</li>
+                <li>マルチシャワーを得た直後はフィールド最上部にマルチ行が追加されるので、天井付近での発動はトップアウトに注意して余裕を確保しましょう。【F:games/triomino_columns.js†L1273-L1285】</li>
+                <li>攻撃ゲージは 6 ポイント単位で即時送信されるため、連鎖をまとめて決めるよりも細かく消し続けてプレッシャーをかける戦術も有効です。【F:games/triomino_columns.js†L575-L631】【F:games/triomino_columns.js†L1288-L1305】</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

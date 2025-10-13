@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミニゲーム: チェッカー</title>
+    <link rel="stylesheet" href="../manual.css">
+</head>
+<body>
+    <main>
+        <h1>ミニゲーム: チェッカー</h1>
+        <section>
+            <h2>概要</h2>
+            <p>
+                8×8 のボードで赤と青の駒を動かし、相手の駒をジャンプで取り合うターン制ボードゲームです。
+                MiniExp 版ではハイライトと移動候補が常に表示されるため、チェッカーの基本に触れながらテンポよく遊べます。
+                難易度は <strong>EASY</strong> / <strong>NORMAL</strong> / <strong>HARD</strong> の 3 段階に対応し、AI の思考ロジックが段階的に強化されます。
+            </p>
+        </section>
+        <section>
+            <h2>ゲームの始め方</h2>
+            <ol>
+                <li>ゲームセレクターから <strong>チェッカー</strong> を起動すると、即座に初期配置済みのボードが表示されます。</li>
+                <li>ホストメニューで難易度を選んでいる場合は、その設定が AI の強さに反映されます（未設定時は <strong>NORMAL</strong>）。</li>
+                <li>画面上部のガイドが「あなたの番」と表示されたら、プレイヤー（赤駒）のターンです。</li>
+            </ol>
+            <p class="small-note">ホスト側のリスタートショートカットは対局中に無効化され、終了後に自動で再び有効になります。</p>
+        </section>
+        <section>
+            <h2>操作方法</h2>
+            <ul>
+                <li>マウスクリック：自分の駒を選択し、表示された移動先のマスをクリックして指す。</li>
+                <li>マウス移動：カーソル下のマスが淡いハイライトで示され、選択しやすくなります。</li>
+                <li><kbd>R</kbd> キー：対局終了後、または自分の番のときに押すと初期配置から再スタート。</li>
+            </ul>
+            <p>移動先の候補マスはピンク色で塗られ、ジャンプで捕獲する経路も順番に表示されます。</p>
+        </section>
+        <section>
+            <h2>ルールと進行</h2>
+            <ul>
+                <li>赤駒は上向き、青駒は下向きに斜めへ 1 マスずつ前進できます。</li>
+                <li>相手駒が斜め前にあり、その先のマスが空いていればジャンプで捕獲します。連続ジャンプも可能です。</li>
+                <li>捕獲可能な手が存在する場合は、必ずジャンプを優先する強制取りルールです。</li>
+                <li>自陣側の最後列へ到達した駒は自動的に「王冠（キング）」となり、前後どちら向きにも進行・捕獲できます。</li>
+                <li>プレイヤーまたは AI のいずれかが指し手を失うか、すべての駒を失うと対局終了です。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>経験値と勝利ボーナス</h2>
+            <ul>
+                <li>通常の移動：<strong>+1 EXP</strong></li>
+                <li>捕獲ジャンプ：捕獲した駒 1 つにつき <strong>+6 EXP</strong></li>
+                <li>王冠への昇格：<strong>+12 EXP</strong></li>
+                <li>勝利ボーナス：<strong>EASY</strong> で <strong>+70 EXP</strong>、<strong>NORMAL</strong> で <strong>+160 EXP</strong>、<strong>HARD</strong> で <strong>+360 EXP</strong></li>
+            </ul>
+            <p>経験値の内訳は画面下部に常時表示され、上段のメッセージ欄には勝敗結果と再挑戦のヒントが表示されます。</p>
+        </section>
+        <section>
+            <h2>攻略のヒント</h2>
+            <ul>
+                <li>序盤は中央列に赤駒を集めておくと、AI の侵攻に対して反撃しやすくなります。</li>
+                <li>連続ジャンプが発生する位置をあらかじめ読み、捕獲後に安全な場所へ着地できるよう計画しましょう。</li>
+                <li>王冠を量産できれば勝利が近づきます。サイドラインを活用しつつ、ゴール前を守り切るのがコツです。</li>
+                <li><strong>HARD</strong> ではミニマックス探索で応手を選択するため、無理攻めは避けて堅実に優勢を築きましょう。</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

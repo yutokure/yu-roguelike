@@ -228,6 +228,8 @@ function getLocaleDisplayName(locale) {
             return '日本語';
         case 'en':
             return 'English';
+        case 'zh':
+            return '简体中文';
         default:
             return locale;
     }

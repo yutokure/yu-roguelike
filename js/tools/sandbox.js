@@ -2,9 +2,12 @@
     'use strict';
 
     const ToolsTab = global.ToolsTab;
-    const i18n = global.I18n || null;
+    function getI18n() {
+        return global.I18n || null;
+    }
 
     function translate(key, params, fallback) {
+        const i18n = getI18n();
         if (key && i18n && typeof i18n.t === 'function') {
             const value = i18n.t(key, params);
             if (value !== undefined && value !== null && value !== key) {
@@ -543,6 +546,7 @@
 
     let state = null;
     let detachLocaleChange = null;
+    let pendingLocaleSubscription = null;
     let mapSeq = 1;
     let portalSeq = 1;
     let enemySeq = 1;
@@ -4715,18 +4719,36 @@
         };
 
         const applyPanelTranslations = () => {
+            const i18n = getI18n();
             if (i18n && typeof i18n.applyTranslations === 'function' && refs?.panel) {
                 i18n.applyTranslations(refs.panel);
             }
         };
 
-        if (!detachLocaleChange && i18n && typeof i18n.onLocaleChanged === 'function') {
+        function ensureLocaleChangeSubscription() {
+            if (detachLocaleChange) return;
+            const i18n = getI18n();
+            if (!i18n || typeof i18n.onLocaleChanged !== 'function') {
+                if (!pendingLocaleSubscription && typeof global.setTimeout === 'function') {
+                    pendingLocaleSubscription = global.setTimeout(() => {
+                        pendingLocaleSubscription = null;
+                        ensureLocaleChangeSubscription();
+                    }, 100);
+                }
+                return;
+            }
             detachLocaleChange = i18n.onLocaleChanged(() => {
                 if (!state) return;
                 render();
                 applyPanelTranslations();
             });
+            if (typeof i18n.isReady !== 'function' || i18n.isReady()) {
+                render();
+                applyPanelTranslations();
+            }
         }
+
+        ensureLocaleChangeSubscription();
 
         const defaultMap = createMapRecord();
         state.maps.push(defaultMap);

@@ -1451,6 +1451,30 @@
               }
             }
           },
+          "riichi_mahjong": {
+            "name": "리치 마작 라이트",
+            "description": "3명의 AI와 동풍 1국을 치르는 간단한 리치 마작. 리치/쯔모/론과 점봉 정산을 지원합니다."
+          },
+          "connect6": {
+            "name": "커넥트 식스",
+            "description": "차례마다 돌 두 개를 놓아 여섯 줄을 노리는 대결. 착수 +1EXP, 위협 +10EXP, 승리 시 높은 보상."
+          },
+          "gomoku": {
+            "name": "오목",
+            "description": "돌을 놓을 때마다 +1EXP, 위협을 만들면 +10EXP, 승리 보너스가 지급됩니다."
+          },
+          "renju": {
+            "name": "렌주",
+            "description": "금수 규칙이 적용된 오목. 착수 +1EXP, 위협 +10EXP, 승리 보너스."
+          },
+          "connect4": {
+            "name": "커넥트 포",
+            "description": "말이 떨어지는 사목 게임. 착수 +1EXP, 위협 +10EXP, 난이도에 따라 승리 EXP가 주어집니다."
+          },
+          "tic_tac_toe": {
+            "name": "틱택토",
+            "description": "고전 삼목 게임. 착수 +1EXP, 위협 +10EXP, 승리는 소폭 보너스입니다."
+          },
           "go": {
             "name": "바둑",
             "description": "돌을 두면 +1 / 포획 보너스 / 승리 EXP",

@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "node tests/bowling-localization.test.js && node tests/tosochu-localization.test.js"
+    "test": "node tests/bowling-localization.test.js && node tests/tosochu-localization.test.js && node tests/minigame-metadata-localization.test.js"
   },
   "keywords": [],
   "author": "",

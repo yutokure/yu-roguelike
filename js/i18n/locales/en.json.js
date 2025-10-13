@@ -711,6 +711,30 @@
               }
             }
           },
+          "riichi_mahjong": {
+            "name": "Riichi Mahjong Lite",
+            "description": "Play a streamlined single-hand riichi mahjong round against three AI opponents with riichi/tsumo/ron scoring."
+          },
+          "connect6": {
+            "name": "Connect Six",
+            "description": "Place two stones per turn to chase six-in-a-row. Gain +1 EXP per placement, +10 for threats, and big victory rewards."
+          },
+          "gomoku": {
+            "name": "Gomoku",
+            "description": "Earn +1 EXP per placement, +10 for threats, and bonus EXP for victories in five-in-a-row duels."
+          },
+          "renju": {
+            "name": "Renju",
+            "description": "Five-in-a-row with forbidden move rules. Gain +1 EXP per placement, +10 for threats, and victory bonuses."
+          },
+          "connect4": {
+            "name": "Connect Four",
+            "description": "Falling four-in-a-row battles. Earn +1 EXP per drop, +10 for threats, and difficulty-scaled victory EXP."
+          },
+          "tic_tac_toe": {
+            "name": "Tic-Tac-Toe",
+            "description": "Classic three-in-a-row. Gain +1 EXP per move, +10 for threats, and modest victory bonuses."
+          },
           "go": {
             "name": "Go",
             "description": "Place stones, capture groups, and claim victory EXP.",

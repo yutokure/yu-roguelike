@@ -3,13 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ミニゲーム: 手先のワイヤーゲーム</title>
+    <title>ミニゲーム: イライラ棒</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
-        <h1>ミニゲーム: 手先のワイヤーゲーム</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <h1>ミニゲーム: イライラ棒</h1>
+
+        <section>
+            <h2>概要</h2>
+            <p>ランダム生成された細い通路を、スタートからゴールまでボールを接触させずに進める集中力ゲームです。難易度によって通路幅・進路の揺れ幅・キーボード移動速度が変化し、マウス操作とキーボード操作を切り替えられます。【F:games/steady_wire.js†L3-L105】【F:games/steady_wire.js†L532-L545】</p>
+            <ul>
+                <li>初回は操作方法の選択オーバーレイが表示され、モード選択後にゲームが開始します。【F:games/steady_wire.js†L166-L224】【F:games/steady_wire.js†L548-L560】</li>
+                <li>プレイ中は進行状況バーとステータス表示が更新され、チェックポイント通過でEXPポップアップが出現します。【F:games/steady_wire.js†L117-L305】【F:games/steady_wire.js†L455-L460】</li>
+                <li>失敗時も進捗に応じた部分EXPを受け取れるため、練習しながら報酬を得られます。【F:games/steady_wire.js†L338-L344】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>画面構成</h2>
+            <h3>インフォバー</h3>
+            <p>画面上部に現在のステータスメッセージと進捗ゲージが配置されます。ゲージは0〜100%で表示され、チェックポイント達成に合わせて幅とラベルが更新されます。【F:games/steady_wire.js†L117-L261】</p>
+            <h3>プレイフィールド</h3>
+            <p>中央のキャンバスにランダム生成された通路とスタート／ゴールが描画されます。外周は多層のラインで視認性を高めており、ゴールは緑色の円で強調されています。【F:games/steady_wire.js†L33-L83】【F:games/steady_wire.js†L463-L504】</p>
+            <h3>オーバーレイ</h3>
+            <p>操作モード選択やリトライ案内は半透明のオーバーレイで提示されます。ボタンは現在の状況に応じて表示／非表示が切り替わり、再挑戦時は直前に選んだモードで再開できます。【F:games/steady_wire.js†L166-L283】【F:games/steady_wire.js†L363-L384】</p>
+        </section>
+
+        <section>
+            <h2>操作方法</h2>
+            <h3>マウスモード</h3>
+            <ul>
+                <li>スタート円をクリックしてドラッグを開始すると、ボールがカーソルに追従します。【F:games/steady_wire.js†L538-L583】</li>
+                <li>ポインターを通路から外す、またはキャンバス外へ離脱すると即失敗扱いになります。【F:games/steady_wire.js†L441-L445】【F:games/steady_wire.js†L601-L615】</li>
+                <li>ドラッグ中は <code>pointercapture</code> が有効になり、カーソルが多少ずれても追従が安定します。【F:games/steady_wire.js†L574-L599】</li>
+            </ul>
+            <h3>キーボードモード</h3>
+            <ul>
+                <li><kbd>↑↓←→</kbd> または <kbd>WASD</kbd> で移動します。斜め移動時は正規化され一定速度で進みます。【F:games/steady_wire.js†L421-L438】</li>
+                <li>キー入力はブラウザ全体でフックされるため、フォーカスを気にせず遊べます（必要に応じて <code>preventDefault</code> 済み）。【F:games/steady_wire.js†L617-L636】</li>
+                <li>難易度によって移動速度が変化するため、狭いコースでは細かなタップ移動が推奨されます。【F:games/steady_wire.js†L3-L7】【F:games/steady_wire.js†L421-L438】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>ゲームの流れ</h2>
+            <ol>
+                <li>オーバーレイで操作方法を選択すると、通路が再生成されスタート位置にボールがセットされます。【F:games/steady_wire.js†L213-L301】【F:games/steady_wire.js†L532-L545】</li>
+                <li>スタート後は制限時間なしで前進できますが、通路判定から外れるとその場で失敗となり、再挑戦のオーバーレイが表示されます。【F:games/steady_wire.js†L441-L445】【F:games/steady_wire.js†L363-L384】</li>
+                <li>ゴール円に到達するとクリア。経過時間を計測し、難易度とタイムに応じた祝福メッセージが表示されます。【F:games/steady_wire.js†L447-L452】【F:games/steady_wire.js†L386-L418】</li>
+            </ol>
+            <p>通路は各挑戦ごとにランダムに生成されるため、同じ難易度でもライン取りが変化します。慣れてきたら高難度でより狭い通路に挑戦してみましょう。【F:games/steady_wire.js†L33-L50】【F:games/steady_wire.js†L3-L7】</p>
+        </section>
+
+        <section>
+            <h2>EXPとチェックポイント</h2>
+            <p>進捗20%ごとにチェックポイントが設定され、通過時に難易度別のEXPを獲得します。ゴール到達で追加EXP、失敗時は到達率に応じた救済EXPが授与されます。【F:games/steady_wire.js†L9-L344】【F:games/steady_wire.js†L455-L460】</p>
+            <ul>
+                <li>チェックポイント配列: 20%、40%、60%、80%。【F:games/steady_wire.js†L9-L10】</li>
+                <li>難易度別報酬: EASYは通路幅88px・チェックポイント4XP・クリア24XP、NORMALは62px/6XP/36XP、HARDは44px/9XP/52XP。【F:games/steady_wire.js†L3-L7】</li>
+                <li>失敗時の救済は最終到達率×フィニッシュXP×35%（小数点四捨五入）で算出されます。【F:games/steady_wire.js†L338-L344】</li>
+                <li>ポップアップ表示APIが利用可能な場合は、通過位置に即時エフェクトが表示されます。【F:games/steady_wire.js†L304-L334】</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>小技とヒント</h2>
+            <ul>
+                <li>マウスモードではスタート円を一度クリックし直すことで、手が滑ってもやり直しやすくなります。操作を離した瞬間にステータスが再表示されるので、落ち着いて再挑戦しましょう。【F:games/steady_wire.js†L538-L584】【F:games/steady_wire.js†L251-L283】</li>
+                <li>キーボードモードはマウスよりも通路から外れにくい反面、速度が一定なので細かな位置調整に時間がかかります。難易度HARDでは特に早めの減速操作を意識すると安定します。【F:games/steady_wire.js†L3-L7】【F:games/steady_wire.js†L421-L460】</li>
+                <li>ローカライズ変更時もボタンラベルやステータスは即時更新されるため、言語設定を切り替えた状態でもプレイが途切れません。【F:games/steady_wire.js†L85-L102】【F:games/steady_wire.js†L638-L651】</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

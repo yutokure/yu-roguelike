@@ -7,7 +7,9 @@
     },
 
     "header": {
-      "title": "Yuローグライク"
+      "title": "Yuローグライク",
+      "manual": "マニュアルを読む",
+      "minigameManual": "ミニゲームのマニュアルを読む"
     },
 
     "ui": {

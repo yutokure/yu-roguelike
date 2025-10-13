@@ -715,6 +715,30 @@
               }
             }
           },
+          "riichi_mahjong": {
+            "name": "立直麻将精简版",
+            "description": "与3名AI进行一局东风战立直麻将，支持立直/自摸/荣和与点棒结算。"
+          },
+          "connect6": {
+            "name": "连六棋",
+            "description": "每回合落两子争夺六连。落子+1EXP、形成威胁+10EXP、胜利奖励丰厚。"
+          },
+          "gomoku": {
+            "name": "五子棋",
+            "description": "每次落子+1EXP、形成冲四等威胁+10EXP、胜利可获额外奖励。"
+          },
+          "renju": {
+            "name": "连珠",
+            "description": "带禁手规则的五子棋。落子+1EXP、形成威胁+10EXP、胜利奖励。"
+          },
+          "connect4": {
+            "name": "四子连线",
+            "description": "棋子会下落的四子连线。落子+1EXP、形成威胁+10EXP、胜利按难度提供EXP。"
+          },
+          "tic_tac_toe": {
+            "name": "井字棋",
+            "description": "经典三子棋。落子+1EXP、形成威胁+10EXP、胜利奖励较为克制。"
+          },
           "go": {
             "name": "围棋",
             "description": "落子+1 / 吃子奖励 / 胜利经验值",

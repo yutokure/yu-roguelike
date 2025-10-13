@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミニゲーム: 暗記スタジオ</title>
+    <link rel="stylesheet" href="../manual.css">
+</head>
+<body>
+    <main>
+        <h1>ミニゲーム: 暗記スタジオ</h1>
+
+        <section>
+            <h2>概要</h2>
+            <p>
+                暗記スタジオは、フラッシュカードをデッキごとに管理し、間隔反復アルゴリズムで復習スケジュールを調整する学習支援ミニゲームです。
+                デッキ情報と学習履歴はローカルストレージに保存され、セッションをまたいでも復元されます。【F:games/memory_app.js†L2-L107】【F:games/memory_app.js†L215-L234】
+            </p>
+            <p>
+                ゲーム内の操作によって EXP が付与され、難易度設定に応じて倍率が変動します。
+                レビュー結果やボーナス達成時には即座に EXP が加算され、日次統計にも反映されます。【F:games/memory_app.js†L215-L233】【F:games/memory_app.js†L785-L799】【F:games/memory_app.js†L1022-L1051】
+            </p>
+            <p>
+                初回起動時にはスターターデッキとして Web 技術の基本語句が登録されており、カード追加やタグ付けの例として活用できます。【F:games/memory_app.js†L999-L1009】
+            </p>
+        </section>
+
+        <section>
+            <h2>画面構成</h2>
+            <ul>
+                <li>
+                    <strong>サイドバー</strong> — デッキ一覧、追加ボタン、JSON 入出力、タグフィルターがまとまっています。
+                    タグフィルターはカンマ区切りで入力でき、フィルター値の変更に応じてレビュー待ちキューが再構築されます。【F:games/memory_app.js†L239-L312】【F:games/memory_app.js†L505-L509】【F:games/memory_app.js†L652-L671】
+                </li>
+                <li>
+                    <strong>デッキカード</strong> — 各デッキごとにカード枚数・期限切れ枚数・達成率と進捗バーを表示し、クリックでアクティブデッキを切り替えます。【F:games/memory_app.js†L719-L783】
+                </li>
+                <li>
+                    <strong>カード登録フォーム</strong> — 表面・裏面・ヒント・タグ・初期間隔を入力するフォームと、裏面の Markdown プレビューがセットになっています。【F:games/memory_app.js†L325-L358】
+                </li>
+                <li>
+                    <strong>レビューカード</strong> — 現在のデッキ名と残り枚数、カード表面、ヒント、解答表示／採点ボタン、ノート編集ボタンをまとめています。【F:games/memory_app.js†L367-L434】
+                </li>
+                <li>
+                    <strong>HUD &amp; スパークライン</strong> — セッションごとのレビュー枚数・正答率・経過時間・獲得 EXP と、最大 60 日分の履歴を折れ線＋正答率ドットで可視化します。【F:games/memory_app.js†L436-L461】【F:games/memory_app.js†L829-L891】
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>デッキ管理</h2>
+            <p>
+                「＋ デッキ追加」を押すとデッキ名の入力プロンプトが開き、任意の名称で新規デッキを作成できます。
+                生成されたデッキにはカラーパレットからランダムなテーマ色が割り当てられ、デッキ一覧や進捗バーに反映されます。【F:games/memory_app.js†L472-L485】【F:games/memory_app.js†L981-L999】
+            </p>
+            <p>
+                アクティブデッキを変更すると、復習キューと画面表示が選択デッキに合わせて更新されます。【F:games/memory_app.js†L775-L783】
+            </p>
+            <p>
+                タグフィルターは部分一致で評価され、指定したすべてのタグを含むカードのみがレビュー対象になります。
+                期限を過ぎたカードが優先され、将来のカードは最長 10 枚まで先行表示されます。【F:games/memory_app.js†L652-L671】
+            </p>
+        </section>
+
+        <section>
+            <h2>カード登録とプレビュー</h2>
+            <p>
+                フォームでは表面と裏面が必須で、ヒントやタグ、初期間隔（日数）は任意に調整できます。
+                送信するとカード ID や初期の間隔・易しさ係数が設定され、期限日は指定した間隔で未来日が計算されます。【F:games/memory_app.js†L325-L548】
+            </p>
+            <p>
+                裏面の入力には簡易 Markdown が適用され、太字・斜体・インラインコードと改行がプレビューに反映されます。
+                入力が空のときは案内メッセージが表示されます。【F:games/memory_app.js†L339-L357】【F:games/memory_app.js†L551-L556】【F:games/memory_app.js†L122-L128】
+            </p>
+            <p>
+                新規カードの登録時にはキューが即座に再構築され、フォームは初期間隔 1 日でリセットされます。【F:games/memory_app.js†L541-L548】
+            </p>
+        </section>
+
+        <section>
+            <h2>レビューと間隔反復</h2>
+            <p>
+                レビュー画面では「表示」で解答を開示し、「覚えた」「難しい」「再学習」で結果を記録します。
+                結果に応じてレビュー待ちキューが更新され、ヒントや解答は現在のカードにあわせて差し替わります。【F:games/memory_app.js†L401-L433】【F:games/memory_app.js†L559-L567】【F:games/memory_app.js†L682-L717】
+            </p>
+            <p>
+                間隔反復アルゴリズムは、易しさ係数と間隔を調整しつつ次回期限を算出します。
+                正解時は間隔拡大と易しさ上昇、難しいでは間隔半減と易しさ減少、再学習では即時復習に戻し失敗回数をカウントします。【F:games/memory_app.js†L803-L826】
+            </p>
+            <p>
+                レビューごとに EXP が付与され、10 枚ごとにボーナスが発生します。
+                正答数と日次統計も同時に更新され、HUD とスパークラインが再描画されます。【F:games/memory_app.js†L785-L800】【F:games/memory_app.js†L829-L840】【F:games/memory_app.js†L606-L633】
+            </p>
+        </section>
+
+        <section>
+            <h2>ノートと補助機能</h2>
+            <p>
+                各カードには独自のノート欄を持たせることができ、専用ダイアログから編集します。
+                ノート保存時には更新日時が記録され、少量の EXP が加算されます。Esc キーや「閉じる」でダイアログを終了できます。【F:games/memory_app.js†L422-L427】【F:games/memory_app.js†L894-L939】
+            </p>
+            <p>
+                スパークラインをホバーすると日別のレビュー枚数・正答率・獲得 EXP をツールチップで確認でき、初回のみ追加 EXP を獲得します。【F:games/memory_app.js†L606-L628】
+            </p>
+        </section>
+
+        <section>
+            <h2>進捗管理と統計</h2>
+            <p>
+                日次統計はレビュー枚数・正答数・累計 EXP・経過時間を集計し、最新 90 日分を保持します。
+                セッション経過中は 1 秒ごとに経過時間が積算され、HUD が更新されます。【F:games/memory_app.js†L1022-L1066】
+            </p>
+            <p>
+                スパークラインは直近 60 日分を描画し、未データ時には「履歴なし」と表示されます。【F:games/memory_app.js†L606-L891】
+            </p>
+        </section>
+
+        <section>
+            <h2>データ入出力とセッション制御</h2>
+            <p>
+                サイドバーのボタンから現在の状態を JSON としてエクスポート・インポートできます。
+                インポート時には不足情報を補完しつつ既存データとマージされ、操作後にキューと表示がリロードされます。【F:games/memory_app.js†L274-L304】【F:games/memory_app.js†L487-L604】【F:games/memory_app.js†L635-L671】
+            </p>
+            <p>
+                ミニゲームは起動時にキュー構築・初回カード表示・ロケール更新・タイマー開始を順に行い、破棄時にはイベントリスナー解除と状態保存を行います。【F:games/memory_app.js†L1080-L1118】
+            </p>
+        </section>
+    </main>
+</body>
+</html>

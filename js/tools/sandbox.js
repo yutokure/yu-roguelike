@@ -36,6 +36,13 @@
     function ts(key, fallback, params) {
         return translateSandbox(key, params || null, fallback);
     }
+
+    function getPortalTypeLabel(type) {
+        return type === 'stairs'
+            ? ts('portals.types.stairs', '階段')
+            : ts('portals.types.gate', 'ゲート');
+    }
+
     let Bridge = null;
 
     if (!ToolsTab || typeof ToolsTab.registerTool !== 'function') {
@@ -1130,7 +1137,7 @@
         const portal = {
             id: portalId,
             type: 'stairs',
-            label: '階段',
+            label: getPortalTypeLabel('stairs'),
             direction: 'up',
             x: stairsX,
             y: stairsY,
@@ -1631,7 +1638,7 @@
                     portals: serialized?.stairs ? [{
                         id: serialized?.stairs?.id || 'portal-stairs-legacy',
                         type: 'stairs',
-                        label: '階段',
+                        label: getPortalTypeLabel('stairs'),
                         direction: 'up',
                         x: serialized.stairs.x,
                         y: serialized.stairs.y,
@@ -2033,7 +2040,7 @@
                 portal = {
                     id: `portal-${portalSeq++}`,
                     type,
-                    label: type === 'stairs' ? '階段' : 'ゲート',
+                    label: getPortalTypeLabel(type),
                     direction: type === 'stairs' ? 'up' : 'side',
                     x: null,
                     y: null,
@@ -2222,12 +2229,12 @@
             : null;
         if (portalHere) {
             if (portalHere.type === 'stairs') {
-                detailParts.push(translateSandbox('map.cell.details.stairs', null, '階段'));
+                detailParts.push(translateSandbox('map.cell.details.stairs', null, () => getPortalTypeLabel('stairs')));
             } else {
                 const label = (portalHere.label || '').trim();
                 detailParts.push(label
                     ? translateSandbox('map.cell.details.gateWithLabel', { label }, `ゲート: ${label}`)
-                    : translateSandbox('map.cell.details.gate', null, 'ゲート'));
+                    : translateSandbox('map.cell.details.gate', null, () => getPortalTypeLabel('gate')));
             }
         }
         if (cell === 0) {
@@ -3964,7 +3971,7 @@
         const portal = {
             id: `portal-${portalSeq++}`,
             type: 'gate',
-            label: ts('portals.types.gate', 'ゲート'),
+            label: getPortalTypeLabel('gate'),
             direction: 'side',
             x: null,
             y: null,

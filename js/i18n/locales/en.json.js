@@ -19,6 +19,7 @@
         "option": {
           "ja": "Japanese",
           "en": "English",
+          "fr": "French",
           "zh": "Chinese (Simplified)",
           "ko": "Korean"
         }

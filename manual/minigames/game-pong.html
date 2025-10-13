@@ -3,13 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ミニゲーム: ポン</title>
+    <title>ミニゲーム: ピンポン</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
-        <h1>ミニゲーム: ポン</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <h1>ミニゲーム: ピンポン</h1>
+        <section>
+            <h2>概要</h2>
+            <p>
+                左側のパドルを操作してボールを跳ね返し、右側の CPU パドルとのラリーで先に 5 点を獲得することを目指すクラシックなポン風ゲームです。
+                自分がポイントを取るたびに経験値が加算され、マッチに勝利すると難易度に応じた追加経験値を獲得できます。
+            </p>
+        </section>
+        <section>
+            <h2>起動と準備</h2>
+            <ol>
+                <li>ミニゲームハブで <strong>ピンポン</strong> を選ぶと、難易度選択ダイアログが表示されます。</li>
+                <li><strong>EASY</strong>／<strong>NORMAL</strong>／<strong>HARD</strong> のいずれかを選択して開始すると、中央にボール、左右にパドルが配置された状態でゲームが始まります。</li>
+                <li>画面上部には現在のスコア、下部には「First to 5」と選択中の難易度が表示されます。</li>
+            </ol>
+            <p class="small-note">難易度はホストメニューのリスタート操作からいつでも変更可能です。</p>
+        </section>
+        <section>
+            <h2>操作方法</h2>
+            <ul>
+                <li><kbd>↑</kbd> / <kbd>↓</kbd>：パドルを上・下に移動します。</li>
+                <li><kbd>W</kbd> / <kbd>S</kbd>：キーボードの代替入力としても利用できます。</li>
+            </ul>
+            <p>押し続けると連続的に移動し、パドル位置は自動的に画面端で制限されます。</p>
+        </section>
+        <section>
+            <h2>ルールと得点</h2>
+            <ul>
+                <li>ボールを相手側のゴールラインまで通過させると 1 点を獲得し、難易度に応じて <strong>+1 / +3 / +10 XP</strong> が付与されます（EASY → HARD）。</li>
+                <li>先に 5 点に到達した側がマッチの勝者となり、勝利時に追加で <strong>+20 / +100 / +400 XP</strong> を獲得します。</li>
+                <li>CPU に得点されると相手のスコアが増えますが、プレイヤー側の得点と経験値はリセットされません。</li>
+                <li>マッチが決着するとスコアが 0-0 にリセットされ、同じ難易度で次の試合が自動的に始まります。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>難易度の違い</h2>
+            <p>難易度はパドルの高さ・移動速度、ボール速度、CPU の追従精度と報酬量に影響します。</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>難易度</th>
+                        <th>パドル高さ</th>
+                        <th>パドル移動速度</th>
+                        <th>ボール初速</th>
+                        <th>CPU 追従係数</th>
+                        <th>ポイント XP</th>
+                        <th>勝利 XP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>EASY</td>
+                        <td>70 px</td>
+                        <td>7 px / フレーム</td>
+                        <td>4.0 px / フレーム</td>
+                        <td>0.25</td>
+                        <td>+1</td>
+                        <td>+20</td>
+                    </tr>
+                    <tr>
+                        <td>NORMAL</td>
+                        <td>60 px</td>
+                        <td>8.5 px / フレーム</td>
+                        <td>4.8 px / フレーム</td>
+                        <td>0.18</td>
+                        <td>+3</td>
+                        <td>+100</td>
+                    </tr>
+                    <tr>
+                        <td>HARD</td>
+                        <td>52 px</td>
+                        <td>10 px / フレーム</td>
+                        <td>5.6 px / フレーム</td>
+                        <td>0.10</td>
+                        <td>+10</td>
+                        <td>+400</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <section>
+            <h2>ゲームの流れ</h2>
+            <p>
+                ボールはラリーのたびにわずかに加速し、パドルの中央付近に当てると真っすぐ返球、端に近いほど大きな角度で返球されます。
+                壁に当たると反射し、CPU パドルはボールの位置を追跡しながら遅延して移動します。CPU の追従係数が小さいほど反応が鋭くなります。
+            </p>
+        </section>
+        <section>
+            <h2>攻略のヒント</h2>
+            <ul>
+                <li>ボールがパドルの端に当たるよう角度を付けると、CPU が追いつきにくいコースを作れます。</li>
+                <li>ラリーが長引くとボール速度が上がるため、カーソルを小刻みに動かして待ち構えると反応しやすくなります。</li>
+                <li>HARD では CPU の追従が速いので、パドル位置を早めに調整し、返球角度で勝負しましょう。</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

@@ -7,7 +7,9 @@
     },
 
     "header": {
-      "title": "Yuローグライク"
+      "title": "Yuローグライク",
+      "manual": "マニュアルを読む",
+      "minigameManual": "ミニゲームのマニュアルを読む"
     },
 
     "ui": {
@@ -17,7 +19,8 @@
         "option": {
           "ja": "日本語",
           "en": "English",
-          "zh": "中国語（簡体字）"
+          "zh": "中国語（簡体字）",
+          "ko": "韓国語"
         }
       },
       "runResult": {

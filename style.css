@@ -18,6 +18,7 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: 16px;
+    flex-wrap: wrap;
     padding: 18px 24px;
     margin-bottom: 20px;
     background: rgba(255, 255, 255, 0.88);
@@ -30,6 +31,41 @@ body {
     margin: 0;
     font-size: 28px;
     letter-spacing: 0.04em;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.header-link-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(37,99,235,0.28));
+    color: #1e3a8a;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.22);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.header-link-button:hover,
+.header-link-button:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+}
+
+.header-link-button:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline-offset: 2px;
 }
 
 .language-switcher {

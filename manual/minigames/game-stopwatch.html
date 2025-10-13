@@ -9,7 +9,41 @@
 <body>
     <main>
         <h1>ミニゲーム: ストップウォッチ</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <p>ストップウォッチ MOD は、スタイリッシュな単体タイマーにラップ管理と EXP 報酬を統合したユーティリティです。開始・一時停止・再開・リセットの各操作がワンクリックで行え、記録したラップは最大 60 件まで自動保存されます。<span class="cite">【F:games/stopwatch.js†L138-L289】【F:games/stopwatch.js†L490-L575】</span></p>
+
+        <h2>画面構成</h2>
+        <ul>
+            <li><strong>ヘッダー:</strong> タイトルと状態バッジを表示します。一時停止中はミント色、計測中はシアン系のバッジで視覚的に切り替わります。<span class="cite">【F:games/stopwatch.js†L172-L205】【F:games/stopwatch.js†L395-L405】</span></li>
+            <li><strong>メインタイマー:</strong> 時・分・秒と 1/100 秒を分離表示し、現在のラップ数・直近ラップ・セッション EXP を下部にまとめています。直近ラップ欄は記録がない場合「-」表示になります。<span class="cite">【F:games/stopwatch.js†L205-L241】【F:games/stopwatch.js†L376-L391】</span></li>
+            <li><strong>操作ボタン:</strong> <q>Start/Pause/Resume</q> ボタンと <q>Lap</q>、<q>Reset</q> の 3 つで構成され、計測状態に応じてスタイルと有効／無効が変化します。ラップは計測中のみ、リセットは停止中かつ記録が残っている場合のみ押せます。<span class="cite">【F:games/stopwatch.js†L242-L288】【F:games/stopwatch.js†L407-L424】</span></li>
+            <li><strong>ラップ一覧:</strong> 最新が先頭に並ぶ履歴エリアです。最速ラップには緑の ★、最遅には赤の ▼ が付与され、長時間の計測でもスクロールで確認できます。<span class="cite">【F:games/stopwatch.js†L290-L575】</span></li>
+        </ul>
+
+        <h2>基本操作</h2>
+        <ol>
+            <li><strong>計測開始:</strong> <q>Start</q> を押すと計測が始まり、ステータスが <q>Running</q> に変わります。すでに途中まで計測している場合は <q>Resume</q> と表示され、押下時に再開できます。<span class="cite">【F:games/stopwatch.js†L407-L461】</span></li>
+            <li><strong>一時停止:</strong> 計測中に同じボタンを押すと <q>Pause</q> を実行し、経過時間が保存されます。再度押せば再開できます。<span class="cite">【F:games/stopwatch.js†L407-L475】</span></li>
+            <li><strong>ラップ記録:</strong> 計測中に <q>Lap</q> を押すと累計時間と区間時間が記録され、直近ラップ欄と履歴に反映されます。履歴は 60 件を超えると古い記録から自動的に削除されます。<span class="cite">【F:games/stopwatch.js†L417-L571】</span></li>
+            <li><strong>リセット:</strong> 停止中に <q>Reset</q> を押すと経過時間とラップがクリアされ、情報欄が初期状態に戻ります。計測中は押せないため、誤操作の心配はありません。<span class="cite">【F:games/stopwatch.js†L420-L505】【F:games/stopwatch.js†L478-L487】</span></li>
+        </ol>
+
+        <h2>EXP の獲得ルール</h2>
+        <p>操作内容に応じてセッション EXP がリアルタイムで加算され、メイン表示下部に合計値が示されます。内部ロジックは次の通りです。</p>
+        <ul>
+            <li>計測開始／再開、一時停止、リセット（記録ありの場合）でそれぞれ +1 EXP。<span class="cite">【F:games/stopwatch.js†L357-L487】</span></li>
+            <li>ラップ記録ごとに +2 EXP。ラップ番号と区間時間もメタ情報として渡されます。<span class="cite">【F:games/stopwatch.js†L490-L507】</span></li>
+            <li>EXP は内部で蓄積され、小数表示が必要な場合は自動フォーマットされます。<span class="cite">【F:games/stopwatch.js†L357-L369】【F:games/stopwatch.js†L41-L43】</span></li>
+        </ul>
+
+        <h2>ラップ表示の読み方</h2>
+        <ul>
+            <li>各行は <q>Lap N</q>、区間タイム、累計タイムの 3 列で構成されます。区間タイムは 1 時間未満の場合に時間部が省略され、視認性を確保しています。<span class="cite">【F:games/stopwatch.js†L543-L567】【F:games/stopwatch.js†L29-L38】</span></li>
+            <li>直近ラップ数はヘッダー下の情報欄で確認でき、国際化対応フォーマッタで桁区切りが行われます。<span class="cite">【F:games/stopwatch.js†L225-L236】【F:games/stopwatch.js†L371-L389】</span></li>
+            <li>履歴が空の場合は説明文が表示され、初回ラップ記録の案内になります。<span class="cite">【F:games/stopwatch.js†L510-L519】</span></li>
+        </ul>
+
+        <h2>セッション管理</h2>
+        <p>ゲーム終了や別ミニゲームへの移動時には自動で一時停止し、必要に応じて再開できます。EXP の合計はそのセッション内でのみ有効です。<span class="cite">【F:games/stopwatch.js†L605-L658】</span></p>
     </main>
 </body>
 </html>

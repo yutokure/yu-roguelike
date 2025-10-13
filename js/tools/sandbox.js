@@ -29,6 +29,10 @@
         }
         return translate(key, params, fallback);
     }
+
+    function ts(key, fallback, params) {
+        return translateSandbox(key, params || null, fallback);
+    }
     let Bridge = null;
 
     if (!ToolsTab || typeof ToolsTab.registerTool !== 'function') {
@@ -115,250 +119,301 @@
     const WIRE_SIGNAL_TYPES = ['binary', 'pulse', 'value'];
     const DEFAULT_WIRE_SIGNAL_TYPE = 'binary';
 
-    const GIMMICK_TYPE_DEFINITIONS = {
+    
+    function makeLocaleEntry(key, fallback) {
+        return { key, fallback };
+    }
+
+    function localizeEntry(entry, fallback) {
+        if (!entry) return fallback || '';
+        if (typeof entry === 'string') return entry;
+        if (entry && typeof entry === 'object' && typeof entry.key === 'string') {
+            return ts(entry.key, entry.fallback != null ? entry.fallback : fallback);
+        }
+        return fallback || '';
+    }
+
+    function localizeField(field) {
+        const localized = { ...field };
+        localized.label = localizeEntry(field.label, field.id);
+        if (Array.isArray(field.options)) {
+            localized.options = field.options.map(option => ({
+                ...option,
+                label: localizeEntry(option.label, option.value)
+            }));
+        }
+        return localized;
+    }
+
+    function localizePort(port) {
+        return { ...port, label: localizeEntry(port.label, port.id || '') };
+    }
+
+    function localizeGimmickDefinition(template) {
+        const definition = {
+            id: template.id,
+            icon: template.icon,
+            defaultConfig: template.defaultConfig ? { ...template.defaultConfig } : {},
+            label: localizeEntry(template.label, template.id)
+        };
+        definition.defaultName = localizeEntry(template.defaultName, definition.label);
+        definition.configFields = Array.isArray(template.configFields)
+            ? template.configFields.map(localizeField)
+            : [];
+        definition.inputs = Array.isArray(template.inputs)
+            ? template.inputs.map(localizePort)
+            : [];
+        definition.outputs = Array.isArray(template.outputs)
+            ? template.outputs.map(localizePort)
+            : [];
+        return definition;
+    }
+
+    const GIMMICK_TYPE_TEMPLATES = {
         pushableCrate: {
             id: 'pushableCrate',
-            label: '木箱',
+            label: makeLocaleEntry('gimmicks.pushableCrate.label', '木箱'),
             icon: '📦',
-            defaultName: '木箱',
+            defaultName: makeLocaleEntry('gimmicks.pushableCrate.defaultName', '木箱'),
             defaultConfig: { mass: 1, snapToGrid: true, sticky: false },
             configFields: [
-                { id: 'mass', type: 'number', min: 0.1, max: 20, step: 0.1, label: '重さ' },
-                { id: 'snapToGrid', type: 'boolean', label: '床グリッドに合わせる' },
-                { id: 'sticky', type: 'boolean', label: 'スイッチに載ると固定' }
+                { id: 'mass', type: 'number', min: 0.1, max: 20, step: 0.1, label: makeLocaleEntry('gimmicks.pushableCrate.config.mass.label', '重さ') },
+                { id: 'snapToGrid', type: 'boolean', label: makeLocaleEntry('gimmicks.pushableCrate.config.snapToGrid.label', '床グリッドに合わせる') },
+                { id: 'sticky', type: 'boolean', label: makeLocaleEntry('gimmicks.pushableCrate.config.sticky.label', 'スイッチに載ると固定') }
             ],
             inputs: [],
             outputs: [
-                { id: 'pressed', label: '荷重ON', signal: 'binary' },
-                { id: 'released', label: '荷重OFF', signal: 'pulse' },
-                { id: 'moved', label: '移動', signal: 'pulse' }
+                { id: 'pressed', label: makeLocaleEntry('gimmicks.pushableCrate.outputs.pressed', '荷重ON'), signal: 'binary' },
+                { id: 'released', label: makeLocaleEntry('gimmicks.pushableCrate.outputs.released', '荷重OFF'), signal: 'pulse' },
+                { id: 'moved', label: makeLocaleEntry('gimmicks.pushableCrate.outputs.moved', '移動'), signal: 'pulse' }
             ]
         },
         floorSwitch: {
             id: 'floorSwitch',
-            label: 'スイッチ',
+            label: makeLocaleEntry('gimmicks.floorSwitch.label', 'スイッチ'),
             icon: '🔘',
-            defaultName: 'スイッチ',
+            defaultName: makeLocaleEntry('gimmicks.floorSwitch.defaultName', 'スイッチ'),
             defaultConfig: { mode: 'momentary', defaultOn: false, resettable: true },
             configFields: [
                 {
                     id: 'mode',
                     type: 'select',
-                    label: 'モード',
+                    label: makeLocaleEntry('gimmicks.floorSwitch.config.mode.label', 'モード'),
                     options: [
-                        { value: 'momentary', label: '踏んでいる間だけ' },
-                        { value: 'toggle', label: '踏む度に切替' },
-                        { value: 'sticky', label: '一度踏むと維持' }
+                        { value: 'momentary', label: makeLocaleEntry('gimmicks.floorSwitch.config.mode.options.momentary', '踏んでいる間だけ') },
+                        { value: 'toggle', label: makeLocaleEntry('gimmicks.floorSwitch.config.mode.options.toggle', '踏む度に切替') },
+                        { value: 'sticky', label: makeLocaleEntry('gimmicks.floorSwitch.config.mode.options.sticky', '一度踏むと維持') }
                     ]
                 },
-                { id: 'defaultOn', type: 'boolean', label: '初期状態ON' },
-                { id: 'resettable', type: 'boolean', label: 'リセット信号を許可' }
+                { id: 'defaultOn', type: 'boolean', label: makeLocaleEntry('gimmicks.floorSwitch.config.defaultOn.label', '初期状態ON') },
+                { id: 'resettable', type: 'boolean', label: makeLocaleEntry('gimmicks.floorSwitch.config.resettable.label', 'リセット信号を許可') }
             ],
             inputs: [
-                { id: 'set', label: '強制ON', signal: 'binary' },
-                { id: 'reset', label: '強制OFF', signal: 'binary' }
+                { id: 'set', label: makeLocaleEntry('gimmicks.floorSwitch.inputs.set', '強制ON'), signal: 'binary' },
+                { id: 'reset', label: makeLocaleEntry('gimmicks.floorSwitch.inputs.reset', '強制OFF'), signal: 'binary' }
             ],
             outputs: [
-                { id: 'activated', label: 'ON', signal: 'binary' },
-                { id: 'deactivated', label: 'OFF', signal: 'pulse' },
-                { id: 'state', label: '状態', signal: 'value' }
+                { id: 'activated', label: makeLocaleEntry('gimmicks.floorSwitch.outputs.activated', 'ON'), signal: 'binary' },
+                { id: 'deactivated', label: makeLocaleEntry('gimmicks.floorSwitch.outputs.deactivated', 'OFF'), signal: 'pulse' },
+                { id: 'state', label: makeLocaleEntry('gimmicks.floorSwitch.outputs.state', '状態'), signal: 'value' }
             ]
         },
         door: {
             id: 'door',
-            label: '扉',
+            label: makeLocaleEntry('gimmicks.door.label', '扉'),
             icon: '🚪',
-            defaultName: '扉',
+            defaultName: makeLocaleEntry('gimmicks.door.defaultName', '扉'),
             defaultConfig: { initialState: 'closed', autoClose: false, autoCloseDelay: 5 },
             configFields: [
                 {
                     id: 'initialState',
                     type: 'select',
-                    label: '初期状態',
+                    label: makeLocaleEntry('gimmicks.door.config.initialState.label', '初期状態'),
                     options: [
-                        { value: 'open', label: '開' },
-                        { value: 'closed', label: '閉' }
+                        { value: 'open', label: makeLocaleEntry('gimmicks.door.config.initialState.options.open', '開') },
+                        { value: 'closed', label: makeLocaleEntry('gimmicks.door.config.initialState.options.closed', '閉') }
                     ]
                 },
-                { id: 'autoClose', type: 'boolean', label: '自動で閉じる' },
-                { id: 'autoCloseDelay', type: 'number', label: '自動クローズ秒', min: 0, max: 120, step: 0.5 }
+                { id: 'autoClose', type: 'boolean', label: makeLocaleEntry('gimmicks.door.config.autoClose.label', '自動で閉じる') },
+                { id: 'autoCloseDelay', type: 'number', label: makeLocaleEntry('gimmicks.door.config.autoCloseDelay.label', '自動クローズ秒'), min: 0, max: 120, step: 0.5 }
             ],
             inputs: [
-                { id: 'open', label: '開く', signal: 'pulse' },
-                { id: 'close', label: '閉じる', signal: 'pulse' },
-                { id: 'toggle', label: '切り替え', signal: 'pulse' }
+                { id: 'open', label: makeLocaleEntry('gimmicks.door.inputs.open', '開く'), signal: 'pulse' },
+                { id: 'close', label: makeLocaleEntry('gimmicks.door.inputs.close', '閉じる'), signal: 'pulse' },
+                { id: 'toggle', label: makeLocaleEntry('gimmicks.door.inputs.toggle', '切り替え'), signal: 'pulse' }
             ],
             outputs: [
-                { id: 'opened', label: '開状態', signal: 'binary' },
-                { id: 'closed', label: '閉状態', signal: 'binary' },
-                { id: 'state', label: '状態', signal: 'value' }
+                { id: 'opened', label: makeLocaleEntry('gimmicks.door.outputs.opened', '開状態'), signal: 'binary' },
+                { id: 'closed', label: makeLocaleEntry('gimmicks.door.outputs.closed', '閉状態'), signal: 'binary' },
+                { id: 'state', label: makeLocaleEntry('gimmicks.door.outputs.state', '状態'), signal: 'value' }
             ]
         },
         sensor: {
             id: 'sensor',
-            label: 'センサー',
+            label: makeLocaleEntry('gimmicks.sensor.label', 'センサー'),
             icon: '📡',
-            defaultName: 'センサー',
+            defaultName: makeLocaleEntry('gimmicks.sensor.defaultName', 'センサー'),
             defaultConfig: { target: 'player', radius: 3, los: false },
             configFields: [
                 {
                     id: 'target',
                     type: 'select',
-                    label: '対象',
+                    label: makeLocaleEntry('gimmicks.sensor.config.target.label', '対象'),
                     options: [
-                        { value: 'player', label: 'プレイヤー' },
-                        { value: 'enemy', label: '敵' },
-                        { value: 'ally', label: '味方' },
-                        { value: 'any', label: 'すべて' }
+                        { value: 'player', label: makeLocaleEntry('gimmicks.sensor.config.target.options.player', 'プレイヤー') },
+                        { value: 'enemy', label: makeLocaleEntry('gimmicks.sensor.config.target.options.enemy', '敵') },
+                        { value: 'ally', label: makeLocaleEntry('gimmicks.sensor.config.target.options.ally', '味方') },
+                        { value: 'any', label: makeLocaleEntry('gimmicks.sensor.config.target.options.any', 'すべて') }
                     ]
                 },
-                { id: 'radius', type: 'number', label: '感知半径', min: 1, max: 20, step: 1 },
-                { id: 'los', type: 'boolean', label: '視線判定あり' }
+                { id: 'radius', type: 'number', label: makeLocaleEntry('gimmicks.sensor.config.radius.label', '感知半径'), min: 1, max: 20, step: 1 },
+                { id: 'los', type: 'boolean', label: makeLocaleEntry('gimmicks.sensor.config.los.label', '視線判定あり') }
             ],
             inputs: [
-                { id: 'enable', label: '有効化', signal: 'binary' },
-                { id: 'disable', label: '無効化', signal: 'binary' }
+                { id: 'enable', label: makeLocaleEntry('gimmicks.sensor.inputs.enable', '有効化'), signal: 'binary' },
+                { id: 'disable', label: makeLocaleEntry('gimmicks.sensor.inputs.disable', '無効化'), signal: 'binary' }
             ],
             outputs: [
-                { id: 'detected', label: '検知', signal: 'binary' },
-                { id: 'lost', label: '喪失', signal: 'pulse' },
-                { id: 'count', label: '検知数', signal: 'value' }
+                { id: 'detected', label: makeLocaleEntry('gimmicks.sensor.outputs.detected', '検知'), signal: 'binary' },
+                { id: 'lost', label: makeLocaleEntry('gimmicks.sensor.outputs.lost', '喪失'), signal: 'pulse' },
+                { id: 'count', label: makeLocaleEntry('gimmicks.sensor.outputs.count', '検知数'), signal: 'value' }
             ]
         },
         logic: {
             id: 'logic',
-            label: '論理ノード',
+            label: makeLocaleEntry('gimmicks.logic.label', '論理ノード'),
             icon: '⚙️',
-            defaultName: 'ロジック',
+            defaultName: makeLocaleEntry('gimmicks.logic.defaultName', 'ロジック'),
             defaultConfig: { operator: 'and', inputCount: 2, inverted: false },
             configFields: [
                 {
                     id: 'operator',
                     type: 'select',
-                    label: '演算',
+                    label: makeLocaleEntry('gimmicks.logic.config.operator.label', '演算'),
                     options: [
-                        { value: 'and', label: 'AND' },
-                        { value: 'or', label: 'OR' },
-                        { value: 'xor', label: 'XOR' },
-                        { value: 'nand', label: 'NAND' },
-                        { value: 'nor', label: 'NOR' },
-                        { value: 'xnor', label: 'XNOR' },
-                        { value: 'not', label: 'NOT' }
+                        { value: 'and', label: makeLocaleEntry('gimmicks.logic.config.operator.options.and', 'AND') },
+                        { value: 'or', label: makeLocaleEntry('gimmicks.logic.config.operator.options.or', 'OR') },
+                        { value: 'xor', label: makeLocaleEntry('gimmicks.logic.config.operator.options.xor', 'XOR') },
+                        { value: 'nand', label: makeLocaleEntry('gimmicks.logic.config.operator.options.nand', 'NAND') },
+                        { value: 'nor', label: makeLocaleEntry('gimmicks.logic.config.operator.options.nor', 'NOR') },
+                        { value: 'xnor', label: makeLocaleEntry('gimmicks.logic.config.operator.options.xnor', 'XNOR') },
+                        { value: 'not', label: makeLocaleEntry('gimmicks.logic.config.operator.options.not', 'NOT') }
                     ]
                 },
-                { id: 'inputCount', type: 'number', label: '入力数', min: 1, max: 6, step: 1 },
-                { id: 'inverted', type: 'boolean', label: '出力を反転' }
+                { id: 'inputCount', type: 'number', label: makeLocaleEntry('gimmicks.logic.config.inputCount.label', '入力数'), min: 1, max: 6, step: 1 },
+                { id: 'inverted', type: 'boolean', label: makeLocaleEntry('gimmicks.logic.config.inverted.label', '出力を反転') }
             ],
             inputs: [
-                { id: 'in1', label: '入力1', signal: 'binary' },
-                { id: 'in2', label: '入力2', signal: 'binary' }
+                { id: 'in1', label: makeLocaleEntry('gimmicks.logic.inputs.in1', '入力1'), signal: 'binary' },
+                { id: 'in2', label: makeLocaleEntry('gimmicks.logic.inputs.in2', '入力2'), signal: 'binary' }
             ],
             outputs: [
-                { id: 'true', label: '真', signal: 'binary' },
-                { id: 'false', label: '偽', signal: 'binary' },
-                { id: 'state', label: '状態', signal: 'value' }
+                { id: 'true', label: makeLocaleEntry('gimmicks.logic.outputs.true', '真'), signal: 'binary' },
+                { id: 'false', label: makeLocaleEntry('gimmicks.logic.outputs.false', '偽'), signal: 'binary' },
+                { id: 'state', label: makeLocaleEntry('gimmicks.logic.outputs.state', '状態'), signal: 'value' }
             ]
         },
         script: {
             id: 'script',
-            label: 'コードノード',
+            label: makeLocaleEntry('gimmicks.script.label', 'コードノード'),
             icon: '🧠',
-            defaultName: 'スクリプト',
+            defaultName: makeLocaleEntry('gimmicks.script.defaultName', 'スクリプト'),
             defaultConfig: { language: 'js', code: '', autoRun: false },
             configFields: [
                 {
                     id: 'language',
                     type: 'select',
-                    label: '言語',
+                    label: makeLocaleEntry('gimmicks.script.config.language.label', '言語'),
                     options: [
-                        { value: 'js', label: 'JavaScript' },
-                        { value: 'lua', label: 'Lua' }
+                        { value: 'js', label: makeLocaleEntry('gimmicks.script.config.language.options.js', 'JavaScript') },
+                        { value: 'lua', label: makeLocaleEntry('gimmicks.script.config.language.options.lua', 'Lua') }
                     ]
                 },
-                { id: 'autoRun', type: 'boolean', label: '信号無しで毎Tick実行' },
-                { id: 'code', type: 'textarea', label: 'コード', maxLength: 5000 }
+                { id: 'autoRun', type: 'boolean', label: makeLocaleEntry('gimmicks.script.config.autoRun.label', '信号無しで毎Tick実行') },
+                { id: 'code', type: 'textarea', label: makeLocaleEntry('gimmicks.script.config.code.label', 'コード'), maxLength: 5000 }
             ],
             inputs: [
-                { id: 'run', label: '実行', signal: 'pulse' },
-                { id: 'param', label: '引数', signal: 'value' }
+                { id: 'run', label: makeLocaleEntry('gimmicks.script.inputs.run', '実行'), signal: 'pulse' },
+                { id: 'param', label: makeLocaleEntry('gimmicks.script.inputs.param', '引数'), signal: 'value' }
             ],
             outputs: [
-                { id: 'done', label: '完了', signal: 'pulse' },
-                { id: 'result', label: '結果', signal: 'value' },
-                { id: 'error', label: 'エラー', signal: 'value' }
+                { id: 'done', label: makeLocaleEntry('gimmicks.script.outputs.done', '完了'), signal: 'pulse' },
+                { id: 'result', label: makeLocaleEntry('gimmicks.script.outputs.result', '結果'), signal: 'value' },
+                { id: 'error', label: makeLocaleEntry('gimmicks.script.outputs.error', 'エラー'), signal: 'value' }
             ]
         },
         io: {
             id: 'io',
-            label: 'I/Oノード',
+            label: makeLocaleEntry('gimmicks.io.label', 'I/Oノード'),
             icon: '🗃️',
-            defaultName: 'I/O',
+            defaultName: makeLocaleEntry('gimmicks.io.defaultName', 'I/O'),
             defaultConfig: { mode: 'read', path: 'data.json', format: 'json', throttle: 0 },
             configFields: [
                 {
                     id: 'mode',
                     type: 'select',
-                    label: '動作',
+                    label: makeLocaleEntry('gimmicks.io.config.mode.label', '動作'),
                     options: [
-                        { value: 'read', label: '読み込み' },
-                        { value: 'write', label: '書き込み' },
-                        { value: 'append', label: '追記' }
+                        { value: 'read', label: makeLocaleEntry('gimmicks.io.config.mode.options.read', '読み込み') },
+                        { value: 'write', label: makeLocaleEntry('gimmicks.io.config.mode.options.write', '書き込み') },
+                        { value: 'append', label: makeLocaleEntry('gimmicks.io.config.mode.options.append', '追記') }
                     ]
                 },
-                { id: 'path', type: 'text', label: 'パス', maxLength: 120 },
+                { id: 'path', type: 'text', label: makeLocaleEntry('gimmicks.io.config.path.label', 'パス'), maxLength: 120 },
                 {
                     id: 'format',
                     type: 'select',
-                    label: '形式',
+                    label: makeLocaleEntry('gimmicks.io.config.format.label', '形式'),
                     options: [
-                        { value: 'json', label: 'JSON' },
-                        { value: 'text', label: 'テキスト' },
-                        { value: 'binary', label: 'バイナリ' }
+                        { value: 'json', label: makeLocaleEntry('gimmicks.io.config.format.options.json', 'JSON') },
+                        { value: 'text', label: makeLocaleEntry('gimmicks.io.config.format.options.text', 'テキスト') },
+                        { value: 'binary', label: makeLocaleEntry('gimmicks.io.config.format.options.binary', 'バイナリ') }
                     ]
                 },
-                { id: 'throttle', type: 'number', label: 'クールタイム(s)', min: 0, max: 120, step: 0.5 }
+                { id: 'throttle', type: 'number', label: makeLocaleEntry('gimmicks.io.config.throttle.label', 'クールタイム(s)'), min: 0, max: 120, step: 0.5 }
             ],
             inputs: [
-                { id: 'execute', label: '実行', signal: 'pulse' },
-                { id: 'payload', label: 'データ', signal: 'value' }
+                { id: 'execute', label: makeLocaleEntry('gimmicks.io.inputs.execute', '実行'), signal: 'pulse' },
+                { id: 'payload', label: makeLocaleEntry('gimmicks.io.inputs.payload', 'データ'), signal: 'value' }
             ],
             outputs: [
-                { id: 'success', label: '成功', signal: 'pulse' },
-                { id: 'data', label: '結果', signal: 'value' },
-                { id: 'failure', label: '失敗', signal: 'value' }
+                { id: 'success', label: makeLocaleEntry('gimmicks.io.outputs.success', '成功'), signal: 'pulse' },
+                { id: 'data', label: makeLocaleEntry('gimmicks.io.outputs.data', '結果'), signal: 'value' },
+                { id: 'failure', label: makeLocaleEntry('gimmicks.io.outputs.failure', '失敗'), signal: 'value' }
             ]
         },
         alert: {
             id: 'alert',
-            label: 'アラート',
+            label: makeLocaleEntry('gimmicks.alert.label', 'アラート'),
             icon: '⚠️',
-            defaultName: 'アラート',
+            defaultName: makeLocaleEntry('gimmicks.alert.defaultName', 'アラート'),
             defaultConfig: { message: 'Alert!', level: 'info', cooldown: 0 },
             configFields: [
-                { id: 'message', type: 'textarea', label: 'メッセージ', maxLength: 280 },
+                { id: 'message', type: 'textarea', label: makeLocaleEntry('gimmicks.alert.config.message.label', 'メッセージ'), maxLength: 280 },
                 {
                     id: 'level',
                     type: 'select',
-                    label: 'レベル',
+                    label: makeLocaleEntry('gimmicks.alert.config.level.label', 'レベル'),
                     options: [
-                        { value: 'info', label: '情報' },
-                        { value: 'warning', label: '警告' },
-                        { value: 'error', label: '重大' }
+                        { value: 'info', label: makeLocaleEntry('gimmicks.alert.config.level.options.info', '情報') },
+                        { value: 'warning', label: makeLocaleEntry('gimmicks.alert.config.level.options.warning', '警告') },
+                        { value: 'error', label: makeLocaleEntry('gimmicks.alert.config.level.options.error', '重大') }
                     ]
                 },
-                { id: 'cooldown', type: 'number', label: 'クールタイム(s)', min: 0, max: 60, step: 0.5 }
+                { id: 'cooldown', type: 'number', label: makeLocaleEntry('gimmicks.alert.config.cooldown.label', 'クールタイム(s)'), min: 0, max: 60, step: 0.5 }
             ],
             inputs: [
-                { id: 'trigger', label: '表示', signal: 'pulse' },
-                { id: 'setMessage', label: 'メッセージ設定', signal: 'value' }
+                { id: 'trigger', label: makeLocaleEntry('gimmicks.alert.inputs.trigger', '表示'), signal: 'pulse' },
+                { id: 'setMessage', label: makeLocaleEntry('gimmicks.alert.inputs.setMessage', 'メッセージ設定'), signal: 'value' }
             ],
             outputs: [
-                { id: 'shown', label: '表示完了', signal: 'pulse' }
+                { id: 'shown', label: makeLocaleEntry('gimmicks.alert.outputs.shown', '表示完了'), signal: 'pulse' }
             ]
         }
     };
+    const GIMMICK_TYPES = Object.keys(GIMMICK_TYPE_TEMPLATES);
 
-    const GIMMICK_TYPES = Object.keys(GIMMICK_TYPE_DEFINITIONS);
+
 
     const LOGIC_OPERATORS = new Set(['and', 'or', 'xor', 'nand', 'nor', 'xnor', 'not']);
     const MAX_GIMMICKS_PER_MAP = 128;
@@ -487,6 +542,7 @@
     const DOMAIN_RADIUS_MAX = 20;
 
     let state = null;
+    let detachLocaleChange = null;
     let mapSeq = 1;
     let portalSeq = 1;
     let enemySeq = 1;
@@ -716,7 +772,8 @@
     }
 
     function getGimmickDefinition(type) {
-        return GIMMICK_TYPE_DEFINITIONS[sanitizeGimmickType(type)] || GIMMICK_TYPE_DEFINITIONS.floorSwitch;
+        const template = GIMMICK_TYPE_TEMPLATES[sanitizeGimmickType(type)] || GIMMICK_TYPE_TEMPLATES.floorSwitch;
+        return localizeGimmickDefinition(template);
     }
 
     function defaultGimmickName(type) {
@@ -800,7 +857,7 @@
     }
 
     function mergeGimmickConfig(definition, rawConfig) {
-        const def = definition || GIMMICK_TYPE_DEFINITIONS.floorSwitch;
+        const def = definition || getGimmickDefinition('floorSwitch');
         const config = { ...(def.defaultConfig || {}) };
         const fields = Array.isArray(def.configFields) ? def.configFields : [];
         fields.forEach(field => {
@@ -2079,7 +2136,7 @@
             if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
         } else if (brush === 'enemy') {
             if (!state.selectedEnemyId) {
-                state.tempMessage = '敵配置ブラシを使う前に敵を選択してください。';
+                state.tempMessage = ts('validation.brush.enemySelect', '敵配置ブラシを使う前に敵を選択してください。');
                 renderValidation();
                 return false;
             }
@@ -2098,7 +2155,7 @@
             }
         } else if (brush === 'domain') {
             if (!state.selectedDomainId) {
-                state.tempMessage = '領域ブラシを使う前にクリスタルを選択してください。';
+                state.tempMessage = ts('validation.brush.domainSelect', '領域ブラシを使う前にクリスタルを選択してください。');
                 renderValidation();
                 return false;
             }
@@ -2593,7 +2650,11 @@
     function renderPlayerPreview() {
         if (!refs.playerPreview || !Bridge) return;
         const stats = Bridge.computePlayerStats ? Bridge.computePlayerStats(state.playerLevel) : { maxHp: 100, attack: 10, defense: 10, level: state.playerLevel };
-        refs.playerPreview.textContent = `HP ${stats.maxHp} / 攻撃 ${stats.attack} / 防御 ${stats.defense}`;
+        refs.playerPreview.textContent = ts('playerPreview.stats', 'HP {hp} / 攻撃 {attack} / 防御 {defense}', {
+            hp: stats.maxHp,
+            attack: stats.attack,
+            defense: stats.defense
+        });
     }
 
     function renderEnemies() {
@@ -2601,7 +2662,7 @@
         refs.enemyList.innerHTML = '';
         if (!state.enemies.length) {
             const empty = document.createElement('p');
-            empty.textContent = '敵は未配置です。「敵を追加」ボタンから追加してください。';
+            empty.textContent = ts('enemies.empty', '敵は未配置です。「敵を追加」ボタンから追加してください。');
             empty.className = 'sandbox-note';
             refs.enemyList.appendChild(empty);
             state.selectedEnemyId = null;
@@ -2622,7 +2683,7 @@
             const header = document.createElement('div');
             header.className = 'sandbox-enemy-header';
             const title = document.createElement('h5');
-            title.textContent = enemy.name || `敵${index + 1}`;
+            title.textContent = enemy.name || ts('enemies.defaultName', '敵{index}', { index: index + 1 });
             header.appendChild(title);
 
             const actions = document.createElement('div');
@@ -2630,7 +2691,7 @@
             const selectBtn = document.createElement('button');
             selectBtn.type = 'button';
             selectBtn.className = 'select';
-            selectBtn.textContent = '選択';
+            selectBtn.textContent = ts('common.actions.select', '選択');
             selectBtn.addEventListener('click', () => {
                 state.selectedEnemyId = enemy.id;
                 render();
@@ -2640,7 +2701,7 @@
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
             deleteBtn.className = 'delete';
-            deleteBtn.textContent = '削除';
+            deleteBtn.textContent = ts('common.actions.delete', '削除');
             deleteBtn.addEventListener('click', () => {
                 state.enemies = state.enemies.filter(e => e.id !== enemy.id);
                 if (state.selectedEnemyId === enemy.id) {
@@ -2658,14 +2719,14 @@
             const fields = [
                 {
                     key: 'name',
-                    label: '名前',
+                    label: ts('enemies.fields.name', '名前'),
                     type: 'text',
                     value: enemy.name || '',
                     handler: (val) => { enemy.name = val; render(); }
                 },
                 {
                     key: 'level',
-                    label: 'レベル',
+                    label: ts('enemies.fields.level', 'レベル'),
                     type: 'number',
                     value: enemy.level,
                     attrs: { min: 1, max: maxLevel },
@@ -2676,7 +2737,7 @@
                 },
                 {
                     key: 'hp',
-                    label: 'HP',
+                    label: ts('enemies.fields.hp', 'HP'),
                     type: 'number',
                     value: enemy.hp,
                     attrs: { min: 1 },
@@ -2687,7 +2748,7 @@
                 },
                 {
                     key: 'attack',
-                    label: '攻撃',
+                    label: ts('enemies.fields.attack', '攻撃'),
                     type: 'number',
                     value: enemy.attack,
                     attrs: { min: 0 },
@@ -2698,7 +2759,7 @@
                 },
                 {
                     key: 'defense',
-                    label: '防御',
+                    label: ts('enemies.fields.defense', '防御'),
                     type: 'number',
                     value: enemy.defense,
                     attrs: { min: 0 },
@@ -2709,7 +2770,7 @@
                 },
                 {
                     key: 'x',
-                    label: 'X座標',
+                    label: ts('enemies.fields.x', 'X座標'),
                     type: 'number',
                     value: Number.isFinite(enemy.x) ? enemy.x : '',
                     attrs: { min: 0, max: state.width - 1 },
@@ -2726,7 +2787,7 @@
                 },
                 {
                     key: 'y',
-                    label: 'Y座標',
+                    label: ts('enemies.fields.y', 'Y座標'),
                     type: 'number',
                     value: Number.isFinite(enemy.y) ? enemy.y : '',
                     attrs: { min: 0, max: state.height - 1 },
@@ -2772,7 +2833,7 @@
                 render();
             });
             bossLabel.appendChild(bossInput);
-            bossLabel.appendChild(document.createTextNode('ボス扱い'));
+            bossLabel.appendChild(document.createTextNode(ts('enemies.fields.boss', 'ボス扱い')));
             grid.appendChild(bossLabel);
 
             card.appendChild(grid);
@@ -2785,7 +2846,7 @@
         refs.domainList.innerHTML = '';
         if (!state.domainEffects.length) {
             const empty = document.createElement('p');
-            empty.textContent = 'クリスタルは未配置です。「クリスタルを追加」ボタンから追加してください。';
+            empty.textContent = ts('domains.empty', 'クリスタルは未配置です。「クリスタルを追加」ボタンから追加してください。');
             empty.className = 'sandbox-note';
             refs.domainList.appendChild(empty);
             state.selectedDomainId = null;
@@ -2805,7 +2866,7 @@
             const header = document.createElement('div');
             header.className = 'sandbox-domain-header';
             const title = document.createElement('h5');
-            title.textContent = (effect.name || '').trim() || `クリスタル${index + 1}`;
+            title.textContent = (effect.name || '').trim() || ts('domains.defaultName', 'クリスタル{index}', { index: index + 1 });
             header.appendChild(title);
 
             const actions = document.createElement('div');
@@ -2814,7 +2875,7 @@
             const selectBtn = document.createElement('button');
             selectBtn.type = 'button';
             selectBtn.className = 'select';
-            selectBtn.textContent = '選択';
+            selectBtn.textContent = ts('common.actions.select', '選択');
             selectBtn.addEventListener('click', () => {
                 state.selectedDomainId = effect.id;
                 render();
@@ -2824,7 +2885,7 @@
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
             deleteBtn.className = 'delete';
-            deleteBtn.textContent = '削除';
+            deleteBtn.textContent = ts('common.actions.delete', '削除');
             deleteBtn.addEventListener('click', () => {
                 state.domainEffects = state.domainEffects.filter(d => d.id !== effect.id);
                 if (state.selectedDomainId === effect.id) {
@@ -2841,7 +2902,7 @@
             grid.className = 'sandbox-domain-grid';
 
             const nameLabel = document.createElement('label');
-            nameLabel.textContent = '名前';
+            nameLabel.textContent = ts('domains.fields.name', '名前');
             const nameInput = document.createElement('input');
             nameInput.type = 'text';
             nameInput.value = effect.name || '';
@@ -2854,7 +2915,7 @@
             grid.appendChild(nameLabel);
 
             const radiusLabel = document.createElement('label');
-            radiusLabel.textContent = '半径';
+            radiusLabel.textContent = ts('domains.fields.radius', '半径');
             const radiusInput = document.createElement('input');
             radiusInput.type = 'number';
             radiusInput.min = String(DOMAIN_RADIUS_MIN);
@@ -2870,7 +2931,7 @@
             grid.appendChild(radiusLabel);
 
             const xLabel = document.createElement('label');
-            xLabel.textContent = 'X';
+            xLabel.textContent = ts('common.axes.x', 'X');
             const xInput = document.createElement('input');
             xInput.type = 'number';
             xInput.min = '0';
@@ -2891,7 +2952,7 @@
             grid.appendChild(xLabel);
 
             const yLabel = document.createElement('label');
-            yLabel.textContent = 'Y';
+            yLabel.textContent = ts('common.axes.y', 'Y');
             const yInput = document.createElement('input');
             yInput.type = 'number';
             yInput.min = '0';
@@ -2912,14 +2973,14 @@
             grid.appendChild(yLabel);
 
             const effectsLabel = document.createElement('label');
-            effectsLabel.textContent = '効果';
+            effectsLabel.textContent = ts('domains.fields.effects', '効果');
             const effectSelect = document.createElement('select');
             effectSelect.multiple = true;
             effectSelect.size = Math.min(6, DOMAIN_EFFECT_OPTIONS.length);
             DOMAIN_EFFECT_OPTIONS.forEach(option => {
                 const opt = document.createElement('option');
                 opt.value = option.id;
-                opt.textContent = option.label;
+                opt.textContent = getDomainEffectLabel(option.id);
                 if (Array.isArray(effect.effects) && effect.effects.includes(option.id)) {
                     opt.selected = true;
                 }
@@ -2943,7 +3004,9 @@
             effect.effects.forEach(effectId => {
                 if (!domainEffectRequiresParam(effectId)) return;
                 const paramLabel = document.createElement('label');
-                paramLabel.textContent = `${getDomainEffectLabel(effectId)}の対象`;
+                paramLabel.textContent = ts('domains.params.target', '{effect}の対象', {
+                    effect: getDomainEffectLabel(effectId)
+                });
                 const paramSelect = document.createElement('select');
                 paramSelect.dataset.preserveKey = `domain-${effect.id}-param-${effectId}`;
                 const options = getDomainEffectParamOptions(effectId);
@@ -2998,7 +3061,7 @@
         if (!portals.length) {
             const empty = document.createElement('p');
             empty.className = 'sandbox-note';
-            empty.textContent = 'ポータルは未配置です。「ポータルを追加」ボタンから追加してください。';
+            empty.textContent = ts('portals.empty', 'ポータルは未配置です。「ポータルを追加」ボタンから追加してください。');
             refs.portalList.appendChild(empty);
             state.selectedPortalId = null;
             return;
@@ -3016,7 +3079,7 @@
             const header = document.createElement('div');
             header.className = 'sandbox-portal-header';
             const title = document.createElement('h5');
-            title.textContent = (portal.label || '').trim() || `ポータル${index + 1}`;
+            title.textContent = (portal.label || '').trim() || ts('portals.defaultName', 'ポータル{index}', { index: index + 1 });
             header.appendChild(title);
 
             const actions = document.createElement('div');
@@ -3025,7 +3088,7 @@
             const selectBtn = document.createElement('button');
             selectBtn.type = 'button';
             selectBtn.className = 'select';
-            selectBtn.textContent = '選択';
+            selectBtn.textContent = ts('common.actions.select', '選択');
             selectBtn.addEventListener('click', () => {
                 state.selectedPortalId = portal.id;
                 state.brush = portal.type === 'stairs' ? 'stairs' : 'gate';
@@ -3036,7 +3099,7 @@
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
             deleteBtn.className = 'delete';
-            deleteBtn.textContent = '削除';
+            deleteBtn.textContent = ts('common.actions.delete', '削除');
             deleteBtn.addEventListener('click', () => {
                 const idx = portals.indexOf(portal);
                 if (idx >= 0) portals.splice(idx, 1);
@@ -3054,7 +3117,7 @@
             grid.className = 'sandbox-portal-grid';
 
             const nameLabel = document.createElement('label');
-            nameLabel.textContent = '名前';
+            nameLabel.textContent = ts('portals.fields.name', '名前');
             const nameInput = document.createElement('input');
             nameInput.type = 'text';
             nameInput.value = portal.label || '';
@@ -3069,22 +3132,24 @@
             grid.appendChild(nameLabel);
 
             const typeLabel = document.createElement('label');
-            typeLabel.textContent = '種類';
+            typeLabel.textContent = ts('portals.fields.type', '種類');
             const typeSelect = document.createElement('select');
             ['stairs', 'gate'].forEach(type => {
                 const opt = document.createElement('option');
                 opt.value = type;
-                opt.textContent = type === 'stairs' ? '階段' : 'ゲート';
+                opt.textContent = type === 'stairs'
+                    ? ts('portals.types.stairs', '階段')
+                    : ts('portals.types.gate', 'ゲート');
                 if (portal.type === type) opt.selected = true;
                 typeSelect.appendChild(opt);
             });
             typeSelect.addEventListener('change', (e) => {
                 portal.type = e.target.value === 'gate' ? 'gate' : 'stairs';
-                if (portal.type === 'stairs' && (!portal.label || portal.label === 'ゲート')) {
-                    portal.label = '階段';
+                if (portal.type === 'stairs' && (!portal.label || portal.label === ts('portals.types.gate', 'ゲート'))) {
+                    portal.label = ts('portals.types.stairs', '階段');
                 }
-                if (portal.type === 'gate' && (!portal.label || portal.label === '階段')) {
-                    portal.label = 'ゲート';
+                if (portal.type === 'gate' && (!portal.label || portal.label === ts('portals.types.stairs', '階段'))) {
+                    portal.label = ts('portals.types.gate', 'ゲート');
                 }
                 state.brush = portal.type === 'stairs' ? 'stairs' : 'gate';
                 renderPortals();
@@ -3094,7 +3159,7 @@
             grid.appendChild(typeLabel);
 
             const targetLabel = document.createElement('label');
-            targetLabel.textContent = '接続先マップ';
+            targetLabel.textContent = ts('portals.fields.targetMap', '接続先マップ');
             const targetSelect = document.createElement('select');
             state.maps.forEach(map => {
                 const opt = document.createElement('option');
@@ -3111,7 +3176,7 @@
             grid.appendChild(targetLabel);
 
             const targetXLabel = document.createElement('label');
-            targetXLabel.textContent = '接続X';
+            targetXLabel.textContent = ts('portals.fields.targetX', '接続X');
             const targetXInput = document.createElement('input');
             targetXInput.type = 'number';
             targetXInput.min = '0';
@@ -3137,7 +3202,7 @@
             grid.appendChild(targetXLabel);
 
             const targetYLabel = document.createElement('label');
-            targetYLabel.textContent = '接続Y';
+            targetYLabel.textContent = ts('portals.fields.targetY', '接続Y');
             const targetYInput = document.createElement('input');
             targetYInput.type = 'number';
             targetYInput.min = '0';
@@ -3227,7 +3292,7 @@
         if (!state.gimmicks.length) {
             const empty = document.createElement('p');
             empty.className = 'sandbox-wire-empty';
-            empty.textContent = 'ギミックがありません。右上のボタンから追加してください。';
+            empty.textContent = ts('gimmicks.empty', 'ギミックがありません。右上のボタンから追加してください。');
             refs.gimmickList.appendChild(empty);
             return;
         }
@@ -3256,7 +3321,7 @@
             mainSpan.appendChild(nameSpan);
             const typeSpan = document.createElement('span');
             typeSpan.className = 'sandbox-gimmick-item-type';
-            typeSpan.textContent = GIMMICK_TYPE_DEFINITIONS[gimmick.type]?.label || gimmick.type;
+            typeSpan.textContent = getGimmickDefinition(gimmick.type)?.label || gimmick.type;
             titleRow.appendChild(mainSpan);
             titleRow.appendChild(typeSpan);
             button.appendChild(titleRow);
@@ -3304,7 +3369,7 @@
         });
         if (refs.gimmickTypeDisplay) {
             if (gimmick) {
-                const typeLabel = GIMMICK_TYPE_DEFINITIONS[gimmick.type]?.label || gimmick.type;
+                const typeLabel = getGimmickDefinition(gimmick.type)?.label || gimmick.type;
                 refs.gimmickTypeDisplay.value = `${getGimmickIcon(gimmick.type)} ${typeLabel}`.trim();
             } else {
                 refs.gimmickTypeDisplay.value = '';
@@ -3339,7 +3404,7 @@
         if (!fields.length) {
             const placeholder = document.createElement('p');
             placeholder.className = 'sandbox-wire-empty';
-            placeholder.textContent = '追加設定はありません。';
+            placeholder.textContent = ts('gimmicks.config.noAdditionalSettings', '追加設定はありません。');
             refs.gimmickConfigFields.appendChild(placeholder);
             return;
         }
@@ -3441,7 +3506,7 @@
         if (!state.wires.length) {
             const empty = document.createElement('p');
             empty.className = 'sandbox-wire-empty';
-            empty.textContent = '接続はありません。出力ポートをクリックして接続を作成してください。';
+            empty.textContent = ts('wires.empty', '接続はありません。出力ポートをクリックして接続を作成してください。');
             refs.wireList.appendChild(empty);
             return;
         }
@@ -3460,14 +3525,15 @@
             const targetLabel = target
                 ? `${getGimmickDisplayLabel(target)}.${getInputPortLabel(target, wire.target.portId)}`
                 : `${wire.target?.gimmickId || '?'}:${wire.target?.portId || '?'}`;
-            const signalLabel = wire.signal === 'pulse' ? 'Pulse' : (wire.signal === 'value' ? 'Value' : 'Binary');
+            const signalKey = wire.signal === 'pulse' ? 'pulse' : (wire.signal === 'value' ? 'value' : 'binary');
+            const signalLabel = ts(`wires.signal.${signalKey}`, signalKey === 'pulse' ? 'Pulse' : signalKey === 'value' ? 'Value' : 'Binary');
             const sourceIcon = source ? getGimmickIcon(source.type) : '⚙️';
             const targetIcon = target ? getGimmickIcon(target.type) : '⚙️';
             const text = document.createElement('span');
             text.textContent = `${sourceIcon} ${sourceLabel} → ${targetIcon} ${targetLabel} (${signalLabel})`;
             const remove = document.createElement('button');
             remove.type = 'button';
-            remove.textContent = '削除';
+            remove.textContent = ts('common.actions.delete', '削除');
             remove.addEventListener('click', (event) => {
                 event.stopPropagation();
                 removeWire(wire.id);
@@ -3550,7 +3616,7 @@
         node.appendChild(headerRow);
         const typeLabel = document.createElement('span');
         typeLabel.className = 'sandbox-wire-node-type';
-        typeLabel.textContent = GIMMICK_TYPE_DEFINITIONS[gimmick.type]?.label || gimmick.type;
+        typeLabel.textContent = getGimmickDefinition(gimmick.type)?.label || gimmick.type;
         node.appendChild(typeLabel);
 
         const portsWrapper = document.createElement('div');
@@ -3675,10 +3741,11 @@
         }
         if (state.pendingWire?.source) {
             const source = getGimmickById(state.pendingWire.source.gimmickId);
-                const label = source
-                    ? `${getGimmickDisplayLabel(source)}.${getOutputPortLabel(source, state.pendingWire.source.portId)}`
-                : '出力ポート';
-            refs.wireStatus.textContent = `${label} の接続先をクリックしてください。`;
+            const fallbackLabel = ts('wires.status.outputPort', '出力ポート');
+            const label = source
+                ? `${getGimmickDisplayLabel(source)}.${getOutputPortLabel(source, state.pendingWire.source.portId)}`
+                : fallbackLabel;
+            refs.wireStatus.textContent = ts('wires.status.selectTarget', '{label} の接続先をクリックしてください。', { label });
             return;
         }
         if (state.selectedWireId) {
@@ -3697,9 +3764,9 @@
             }
         }
         if (!state.gimmicks.length) {
-            refs.wireStatus.textContent = 'ギミックを追加すると接続を設定できます。';
+            refs.wireStatus.textContent = ts('wires.status.addGimmick', 'ギミックを追加すると接続を設定できます。');
         } else {
-            refs.wireStatus.textContent = '出力ポートをクリックして新しい接続を作成できます。';
+            refs.wireStatus.textContent = ts('wires.status.ready', '出力ポートをクリックして新しい接続を作成できます。');
         }
     }
 
@@ -3718,11 +3785,11 @@
         if (!state.pendingWire?.source) {
             state.selectedWireId = null;
             state.pendingWire = null;
-            updateWireStatus('先に出力ポートを選択してください。');
+            updateWireStatus(ts('wires.status.selectOutputFirst', '先に出力ポートを選択してください。'));
             return;
         }
         if (state.pendingWire.source.gimmickId === gimmickId && state.pendingWire.source.portId === portId) {
-            updateWireStatus('同じポート同士は接続できません。');
+            updateWireStatus(ts('wires.status.samePort', '同じポート同士は接続できません。'));
             return;
         }
         addWireConnection(state.pendingWire.source.gimmickId, state.pendingWire.source.portId, gimmickId, portId);
@@ -3795,7 +3862,7 @@
         if (!Array.isArray(state.colorPalette) || !state.colorPalette.length) {
             const note = document.createElement('p');
             note.className = 'sandbox-note';
-            note.textContent = '保存したカラーがありません。';
+            note.textContent = ts('palette.empty', '保存したカラーがありません。');
             paletteEl.appendChild(note);
             return;
         }
@@ -3805,7 +3872,7 @@
             const applyBtn = document.createElement('button');
             applyBtn.type = 'button';
             applyBtn.className = 'sandbox-palette-apply';
-            applyBtn.setAttribute('aria-label', 'カラーを適用');
+            applyBtn.setAttribute('aria-label', ts('palette.apply', 'カラーを適用'));
             const swatch = document.createElement('span');
             swatch.className = 'sandbox-palette-swatch';
             if (entry.kind === 'wall') {
@@ -3835,7 +3902,7 @@
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'sandbox-palette-remove';
-            removeBtn.setAttribute('aria-label', 'カラーを削除');
+            removeBtn.setAttribute('aria-label', ts('palette.remove', 'カラーを削除'));
             removeBtn.textContent = '✕';
             removeBtn.addEventListener('click', () => {
                 state.colorPalette.splice(index, 1);
@@ -3893,7 +3960,7 @@
         const portal = {
             id: `portal-${portalSeq++}`,
             type: 'gate',
-            label: 'ゲート',
+            label: ts('portals.types.gate', 'ゲート'),
             direction: 'side',
             x: null,
             y: null,
@@ -3931,7 +3998,7 @@
         if (!maps.length) {
             const note = document.createElement('p');
             note.className = 'sandbox-note';
-            note.textContent = 'マップがありません。';
+            note.textContent = ts('nodeMap.empty', 'マップがありません。');
             container.appendChild(note);
             return;
         }
@@ -4053,7 +4120,7 @@
         listEl.innerHTML = '';
         if (!Array.isArray(state.maps) || !state.maps.length) {
             const empty = document.createElement('p');
-            empty.textContent = 'マップがありません。「マップ追加」で新規作成してください。';
+            empty.textContent = ts('maps.empty', 'マップがありません。「マップ追加」で新規作成してください。');
             empty.className = 'sandbox-note';
             listEl.appendChild(empty);
             return;
@@ -4110,8 +4177,8 @@
         const maxEnemies = Number.isFinite(Bridge?.maxEnemies) ? Bridge.maxEnemies : null;
         if (maxEnemies !== null && state.enemies.length >= maxEnemies) {
             const limitMsg = state.enemies.length > maxEnemies
-                ? `敵の上限（${maxEnemies}体）を超えています。敵を減らしてください。`
-                : `敵の上限（${maxEnemies}体）に達しています。新たに追加するには既存の敵を削除してください。`;
+                ? ts('validation.enemies.overLimit', '敵の上限（{max}体）を超えています。敵を減らしてください。', { max: maxEnemies })
+                : ts('validation.enemies.limitReached', '敵の上限（{max}体）に達しています。新たに追加するには既存の敵を削除してください。', { max: maxEnemies });
             if (state.enemies.length > maxEnemies) {
                 errors.push(limitMsg);
             } else {
@@ -4150,7 +4217,7 @@
             refs.validation.appendChild(list);
         } else {
             const ok = document.createElement('span');
-            ok.textContent = '✅ 開始できます';
+            ok.textContent = ts('validation.ready', '✅ 開始できます');
             refs.validation.appendChild(ok);
         }
         if (refs.startButton) {
@@ -4281,7 +4348,7 @@
     function addEnemy() {
         const maxEnemies = Number.isFinite(Bridge?.maxEnemies) ? Bridge.maxEnemies : null;
         if (maxEnemies !== null && state.enemies.length >= maxEnemies) {
-            state.tempMessage = `敵の上限（${maxEnemies}体）に達しています。新たに追加するには既存の敵を削除してください。`;
+            state.tempMessage = ts('validation.enemies.limitReached', '敵の上限（{max}体）に達しています。新たに追加するには既存の敵を削除してください。', { max: maxEnemies });
             renderValidation();
             return;
         }
@@ -4289,7 +4356,7 @@
         const stats = defaultEnemyStats(state.playerLevel);
         const enemy = {
             id,
-            name: `敵${state.enemies.length + 1}`,
+            name: ts('enemies.generatedName', '敵{index}', { index: state.enemies.length + 1 }),
             level: state.playerLevel,
             hp: stats.hp,
             attack: stats.attack,
@@ -4307,7 +4374,7 @@
         const id = `domain-${domainSeq++}`;
         const domain = {
             id,
-            name: `領域${state.domainEffects.length + 1}`,
+            name: ts('domains.generatedName', '領域{index}', { index: state.domainEffects.length + 1 }),
             radius: 3,
             effects: [DOMAIN_EFFECT_OPTIONS[0].id],
             effectParams: {},
@@ -4325,7 +4392,7 @@
         const map = getActiveMapRecord();
         if (!map) return null;
         if (state.gimmicks.length >= MAX_GIMMICKS_PER_MAP) {
-            state.tempMessage = `ギミックの上限（${MAX_GIMMICKS_PER_MAP}）に達しています。既存のギミックを削除してください。`;
+            state.tempMessage = ts('validation.gimmicks.limitReached', 'ギミックの上限（{max}）に達しています。既存のギミックを削除してください。', { max: MAX_GIMMICKS_PER_MAP });
             renderValidation();
             return null;
         }
@@ -4358,7 +4425,7 @@
         const source = getGimmickById(gimmickId);
         if (!source) return false;
         if (state.gimmicks.length >= MAX_GIMMICKS_PER_MAP) {
-            state.tempMessage = `ギミックの上限（${MAX_GIMMICKS_PER_MAP}）に達しています。既存のギミックを削除してください。`;
+            state.tempMessage = ts('validation.gimmicks.limitReached', 'ギミックの上限（{max}）に達しています。既存のギミックを削除してください。', { max: MAX_GIMMICKS_PER_MAP });
             renderValidation();
             return false;
         }
@@ -4426,7 +4493,7 @@
         if (!map) return null;
         if (!sourceId || !targetId || !sourcePortId || !targetPortId) return null;
         if (state.wires.length >= MAX_WIRES_PER_MAP) {
-            state.tempMessage = `ワイヤーの上限（${MAX_WIRES_PER_MAP}）に達しています。既存の接続を削除してください。`;
+            state.tempMessage = ts('validation.wires.limitReached', 'ワイヤーの上限（{max}）に達しています。既存の接続を削除してください。', { max: MAX_WIRES_PER_MAP });
             renderValidation();
             return null;
         }
@@ -4646,6 +4713,20 @@
             eyedropper: { active: false },
             entryMapId: null
         };
+
+        const applyPanelTranslations = () => {
+            if (i18n && typeof i18n.applyTranslations === 'function' && refs?.panel) {
+                i18n.applyTranslations(refs.panel);
+            }
+        };
+
+        if (!detachLocaleChange && i18n && typeof i18n.onLocaleChanged === 'function') {
+            detachLocaleChange = i18n.onLocaleChanged(() => {
+                if (!state) return;
+                render();
+                applyPanelTranslations();
+            });
+        }
 
         const defaultMap = createMapRecord();
         state.maps.push(defaultMap);
@@ -4993,7 +5074,11 @@
                     refs.validation?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return;
                 }
-                const result = Bridge.start ? Bridge.start(buildConfigFromState()) : { ok: false, errors: ['サンドボックスを開始できませんでした。'], warnings: [] };
+                const result = Bridge.start ? Bridge.start(buildConfigFromState()) : {
+                    ok: false,
+                    errors: [ts('start.defaultError', 'サンドボックスを開始できませんでした。')],
+                    warnings: []
+                };
                 if (!result?.ok && result?.errors?.length) {
                     state.validation = { errors: result.errors, warnings: result.warnings || [] };
                     renderValidation();
@@ -5009,10 +5094,10 @@
                     const payload = buildExportBundle(snapshot);
                     const filename = `${EXPORT_FILE_PREFIX}-${formatTimestamp(new Date())}.json`;
                     triggerDownload(JSON.stringify(payload, null, 2), filename);
-                    updateIoStatus('success', '設定をエクスポートしました。');
+                    updateIoStatus('success', ts('io.export.success', '設定をエクスポートしました。'));
                 } catch (err) {
                     console.error('[SandboxTool] Failed to export sandbox configuration:', err);
-                    updateIoStatus('error', 'エクスポートに失敗しました。');
+                    updateIoStatus('error', ts('io.export.failure', 'エクスポートに失敗しました。'));
                 }
             });
         }
@@ -5026,14 +5111,14 @@
             refs.importFile.addEventListener('change', (event) => {
                 const file = event.target.files && event.target.files[0];
                 if (!file) {
-                    updateIoStatus('info', 'ファイルが選択されませんでした。');
+                    updateIoStatus('info', ts('io.import.noFile', 'ファイルが選択されませんでした。'));
                     return;
                 }
-                updateIoStatus('info', '読み込み中...');
+                updateIoStatus('info', ts('io.import.loading', '読み込み中...'));
                 const reader = new FileReader();
                 reader.addEventListener('error', () => {
                     console.error('[SandboxTool] Failed to read sandbox file:', reader.error);
-                    updateIoStatus('error', 'ファイルを読み込めませんでした。');
+                    updateIoStatus('error', ts('io.import.readError', 'ファイルを読み込めませんでした。'));
                 });
                 reader.addEventListener('load', () => {
                     try {
@@ -5043,17 +5128,17 @@
                         const parsed = JSON.parse(text);
                         const payload = extractSandboxPayload(parsed);
                         if (!payload) {
-                            throw new Error('対応していないファイル形式です。');
+                            throw new Error(ts('io.import.unsupported', '対応していないファイル形式です。'));
                         }
                         const ok = importSerializedState(payload);
                         if (!ok) {
-                            throw new Error('インポートに失敗しました。');
+                            throw new Error(ts('io.import.genericFailure', 'インポートに失敗しました。'));
                         }
-                        updateIoStatus('success', 'サンドボックス設定をインポートしました。');
+                        updateIoStatus('success', ts('io.import.success', 'サンドボックス設定をインポートしました。'));
                     } catch (err) {
                         console.error('[SandboxTool] Failed to import sandbox configuration:', err);
-                        const message = err && err.message ? err.message : '不明なエラーが発生しました。';
-                        updateIoStatus('error', `インポートに失敗しました: ${message}`);
+                        const message = err && err.message ? err.message : ts('io.import.unknownError', '不明なエラーが発生しました。');
+                        updateIoStatus('error', ts('io.import.failedWithReason', 'インポートに失敗しました: {reason}', { reason: message }));
                     }
                 });
                 reader.readAsText(file);
@@ -5061,6 +5146,7 @@
         }
 
         render();
+        applyPanelTranslations();
         if (pendingSerializedState) {
             const payload = pendingSerializedState;
             pendingSerializedState = null;

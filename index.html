@@ -488,7 +488,7 @@
                                             <button type="button" class="sandbox-brush" data-brush="enemy" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.enemy">敵配置</button>
                                             <button type="button" class="sandbox-brush" data-brush="domain" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.domain">領域</button>
                                         </div>
-                                        <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite">セルをクリックして編集します。</p>
+                                        <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite" data-i18n="tools.sandbox.map.selectedCell.hint">セルをクリックして編集します。</p>
                                         <section class="sandbox-subsection" aria-labelledby="sandbox-maplist-title">
                                             <div class="sandbox-subsection-header">
                                                 <h5 id="sandbox-maplist-title" data-i18n="tools.sandbox.map.list.title">マップ一覧</h5>
@@ -568,49 +568,49 @@
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-player-title">
                                         <div class="sandbox-section-header">
-                                            <h4 id="sandbox-player-title">プレイヤー設定</h4>
+                                            <h4 id="sandbox-player-title" data-i18n="tools.sandbox.player.title">プレイヤー設定</h4>
                                         </div>
                                         <div class="sandbox-form-grid">
-                                            <label>プレイヤーレベル
+                                            <label data-i18n="tools.sandbox.player.level.label">プレイヤーレベル
                                                 <input id="sandbox-player-level" type="number" min="1" max="999" value="1">
                                             </label>
                                             <div class="sandbox-player-preview" aria-live="polite">
-                                                <span class="label">想定ステータス</span>
+                                                <span class="label" data-i18n="tools.sandbox.player.preview.label">想定ステータス</span>
                                                 <span id="sandbox-player-preview">HP 100 / 攻撃 10 / 防御 10</span>
                                             </div>
                                         </div>
-                                        <p class="sandbox-note">サンドボックス中は経験値が増えず、終了後に本来のレベルへ戻ります。</p>
+                                        <p class="sandbox-note" data-i18n="tools.sandbox.player.note">サンドボックス中は経験値が増えず、終了後に本来のレベルへ戻ります。</p>
                                         <div class="sandbox-interactive-toggle">
                                             <label class="sandbox-toggle">
                                                 <input id="sandbox-interactive-mode" type="checkbox">
-                                                <span>インタラクティブモードを有効にする</span>
+                                                <span data-i18n="tools.sandbox.player.interactive.label">インタラクティブモードを有効にする</span>
                                             </label>
-                                            <p class="sandbox-note small">探索中に専用メニューを開いてパラメータ調整や即時編集が行えます。</p>
+                                            <p class="sandbox-note small" data-i18n="tools.sandbox.player.interactive.note">探索中に専用メニューを開いてパラメータ調整や即時編集が行えます。</p>
                                         </div>
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-enemy-title">
                                         <div class="sandbox-section-header">
-                                            <h4 id="sandbox-enemy-title">敵配置</h4>
-                                            <button type="button" id="sandbox-add-enemy">+ 敵を追加</button>
+                                            <h4 id="sandbox-enemy-title" data-i18n="tools.sandbox.enemies.title">敵配置</h4>
+                                            <button type="button" id="sandbox-add-enemy" data-i18n="tools.sandbox.enemies.add">+ 敵を追加</button>
                                         </div>
                                         <div id="sandbox-enemy-list" class="sandbox-enemy-list" aria-live="polite"></div>
-                                        <p class="sandbox-note">敵を選択し「敵配置」ブラシでマップ上の位置を更新できます。</p>
+                                        <p class="sandbox-note" data-i18n="tools.sandbox.enemies.note">敵を選択し「敵配置」ブラシでマップ上の位置を更新できます。</p>
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-domain-title">
                                         <div class="sandbox-section-header">
-                                            <h4 id="sandbox-domain-title">領域効果クリスタル</h4>
-                                            <button type="button" id="sandbox-add-domain">+ クリスタルを追加</button>
+                                            <h4 id="sandbox-domain-title" data-i18n="tools.sandbox.domains.title">領域効果クリスタル</h4>
+                                            <button type="button" id="sandbox-add-domain" data-i18n="tools.sandbox.domains.add">+ クリスタルを追加</button>
                                         </div>
                                         <div id="sandbox-domain-list" class="sandbox-domain-list" aria-live="polite"></div>
-                                        <p class="sandbox-note">クリスタルを選択し「領域」ブラシでマップ上の位置と効果範囲を設定します。</p>
+                                        <p class="sandbox-note" data-i18n="tools.sandbox.domains.note">クリスタルを選択し「領域」ブラシでマップ上の位置と効果範囲を設定します。</p>
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-portal-title">
                                         <div class="sandbox-section-header">
-                                            <h4 id="sandbox-portal-title">ポータル / ゲート</h4>
-                                            <button type="button" id="sandbox-add-portal">+ ポータルを追加</button>
+                                            <h4 id="sandbox-portal-title" data-i18n="tools.sandbox.portals.title">ポータル / ゲート</h4>
+                                            <button type="button" id="sandbox-add-portal" data-i18n="tools.sandbox.portals.add">+ ポータルを追加</button>
                                         </div>
                                         <div id="sandbox-portal-list" class="sandbox-portal-list" aria-live="polite"></div>
-                                        <p class="sandbox-note">ポータルを選択し「階段」または「ゲート」ブラシでマップ上の位置を設定します。</p>
+                                        <p class="sandbox-note" data-i18n="tools.sandbox.portals.note">ポータルを選択し「階段」または「ゲート」ブラシでマップ上の位置を設定します。</p>
                                     </section>
                                 </div>
                                 <div class="sandbox-map-wrapper">

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミニゲーム: ナイン・メンズ・モリス</title>
+    <link rel="stylesheet" href="../manual.css">
+</head>
+<body>
+    <main>
+        <h1>ミニゲーム: ナイン・メンズ・モリス</h1>
+        <section>
+            <h2>概要</h2>
+            <p>
+                3 重の正方形とそれらを結ぶ通路から成る 24 の交点に駒を配置し、縦横 3 つの列（ミル）を作って相手の駒を除去する伝統的なボードゲームです。
+                MiniExp 版ではプレイヤーが常に先手となり、盤上の駒が 9 個そろうまでの配置フェーズ、その後のスライド移動フェーズ、残り駒 3 個以下で解禁されるフライトモードを実装しています。
+                盤面のコントロールと駒数の圧迫が勝利への近道です。
+            </p>
+        </section>
+        <section>
+            <h2>画面構成</h2>
+            <ul>
+                <li><strong>ヘッダーカード</strong>：タイトルと現在の状態が表示されます。ミル成立時や AI の思考中はここで状況が切り替わります。【F:games/nine_mens_morris.js†L386-L557】</li>
+                <li><strong>盤面キャンバス</strong>：520×520px のキャンバスに木製ボード風の背景と全エッジが描画され、プレイヤー駒（黄）と AI 駒（青）が配置されます。直前の移動や選択中の駒、除去候補が色付きのリングで強調されます。【F:games/nine_mens_morris.js†L412-L658】</li>
+                <li><strong>情報パネル</strong>：右側に駒数と捕獲数、各陣営の現在フェーズ・残り配置数、操作チップスがまとめて表示されます。状況に応じて自動更新されるため、いま何をすべきか確認できます。【F:games/nine_mens_morris.js†L424-L557】</li>
+            </ul>
+        </section>
+        <section>
+            <h2>基本操作</h2>
+            <ul>
+                <li>配置フェーズ：空いている交点をクリックすると自駒を配置します。合法手であれば即座に配置され、必要に応じてミル判定が行われます。【F:games/nine_mens_morris.js†L803-L819】</li>
+                <li>移動フェーズ：自駒をクリックして選択し、続けて隣接する空点（フライトモード時は任意の空点）をクリックします。行き先は青いサークルで示されるため迷いにくくなっています。【F:games/nine_mens_morris.js†L833-L857】</li>
+                <li>ミル成立時：赤枠でハイライトされた相手駒をクリックすると除去できます。ミルに含まれない駒が優先候補として抽出される仕様です。【F:games/nine_mens_morris.js†L597-L776】</li>
+            </ul>
+        </section>
+        <section>
+            <h2>ゲームの流れ</h2>
+            <ol>
+                <li>プレイヤーから順番に空点へ駒を 1 個ずつ配置し、双方 9 個すべてを置き終えるまで続きます。ミルができた場合はその都度相手駒を 1 個除去します。【F:games/nine_mens_morris.js†L803-L819】【F:games/nine_mens_morris.js†L757-L776】</li>
+                <li>配置が完了すると移動フェーズに移行し、手番ごとに自駒を 1 個選んで隣接交点へスライドします。駒が 3 個以下になると、その陣営のみ任意の空点へジャンプできるフライトモードになります。【F:games/nine_mens_morris.js†L136-L140】【F:games/nine_mens_morris.js†L833-L857】</li>
+                <li>行き詰まりが発生しない限り、ミル成立→除去→相手手番という流れを繰り返します。AI 手番中は状態表示が「AI が思考中…」となり、自動で最善手を選択して着手します。【F:games/nine_mens_morris.js†L549-L737】</li>
+                <li>相手の盤上駒が 2 個以下になるか、9 個配置済みで合法手が無くなる、あるいは全駒を除去すると勝利です。条件を満たすと勝利／敗北メッセージとともにリザルト処理が行われます。【F:games/nine_mens_morris.js†L677-L692】【F:games/nine_mens_morris.js†L661-L674】</li>
+            </ol>
+        </section>
+        <section>
+            <h2>ルールのポイント</h2>
+            <ul>
+                <li><strong>ミルとは</strong>：同じ色の駒が一直線に 3 個並ぶ状態を指します。配置直後や移動直後にミルが完成した場合、その手番のうちに相手駒を 1 個除去できます。【F:games/nine_mens_morris.js†L70-L98】【F:games/nine_mens_morris.js†L803-L856】</li>
+                <li><strong>除去の優先順位</strong>：ミルに含まれていない相手駒が優先候補になり、すべての駒がミルに組み込まれているときだけ任意の駒を除去できます。【F:games/nine_mens_morris.js†L89-L99】【F:games/nine_mens_morris.js†L757-L766】</li>
+                <li><strong>フライトモード</strong>：盤上の自駒が 3 個以下になると、スライドではなく盤上の任意の空点へジャンプできるようになります。終盤の逆転に不可欠なルールです。【F:games/nine_mens_morris.js†L136-L140】【F:games/nine_mens_morris.js†L840-L857】</li>
+                <li><strong>勝利条件</strong>：相手駒が 2 個以下になる、合法手が無くなる、もしくは盤上駒が尽きると勝敗が決まります。これらは毎手番後に自動チェックされます。【F:games/nine_mens_morris.js†L677-L733】</li>
+            </ul>
+        </section>
+        <section>
+            <h2>獲得 EXP とスコア</h2>
+            <ul>
+                <li>駒を配置：<strong>+1 EXP</strong></li>
+                <li>スライド／フライト移動完了：<strong>+1 EXP</strong></li>
+                <li>ミル成立：<strong>+15 EXP</strong></li>
+                <li>相手駒除去：<strong>+6 EXP</strong></li>
+                <li>勝利ボーナス：難易度別に <strong>EASY 80</strong> / <strong>NORMAL 150</strong> / <strong>HARD 260 EXP</strong></li>
+            </ul>
+            <p class="small-note">EXP の配分と勝利ボーナスはコード内の定数と各アクション処理に紐づいており、配置・移動・ミル成立・捕獲・勝利で経験値が順次授与されます。【F:games/nine_mens_morris.js†L46-L50】【F:games/nine_mens_morris.js†L661-L868】</p>
+            <p>内部スコアは「プレイヤーの盤上駒数 − AI の盤上駒数」で算出され、終盤の優勢度を把握する指標になります。【F:games/nine_mens_morris.js†L916-L918】</p>
+        </section>
+        <section>
+            <h2>難易度と AI の思考</h2>
+            <p>
+                難易度設定は AI の探索深さと候補手数に影響します。EASY は深さ 1・候補 8 手からランダム、NORMAL は深さ 2、HARD は深さ 3・候補 6 手で αβ法を適用し、より先を読んだ応手を選択します。【F:games/nine_mens_morris.js†L52-L134】【F:games/nine_mens_morris.js†L209-L738】
+            </p>
+        </section>
+        <section>
+            <h2>戦略とヒント</h2>
+            <ul>
+                <li>配置フェーズでは自分の駒で「二つ揃い＋空き」の形を作り、次の手でミルを狙えるラインを複数用意しましょう。相手の潜在ミルを遮る配置も重要です。【F:games/nine_mens_morris.js†L108-L205】</li>
+                <li>移動フェーズではリング表示を活用して、安全にスライドできる駒を見極めましょう。直前に動かした駒や選択中の駒が色分けされるため、視覚的に把握しやすくなっています。【F:games/nine_mens_morris.js†L597-L658】</li>
+                <li>自駒が 3 個になったらフライトモードを活かし、相手のミル形成を妨害しつつ潜在ミルを作り直すことを意識すると逆転の余地が生まれます。【F:games/nine_mens_morris.js†L136-L205】</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミニゲーム: システム</title>
+    <link rel="stylesheet" href="../manual.css">
+</head>
+<body>
+    <main>
+        <h1>ミニゲーム: システム</h1>
+        <section>
+            <h2>概要</h2>
+            <p>
+                「システム」は PC・OS・ブラウザ・ネットワークの主要指標を 1 画面で確認できる情報ユーティリティです。
+                起動すると自動で PC タブの <q>情報</q> ビューが開き、ハードウェア推定値・OS 判別・ブラウザ情報を収集します。
+                IP 情報だけは外部 API へのアクセスが必要なため明示的に取得ボタンを押して呼び出します。
+            </p>
+            <p class="small-note">
+                セッション中に獲得した EXP はヘッダー右上のチップに累積表示され、コピー操作などでも付与されます。
+            </p>
+        </section>
+        <section>
+            <h2>画面構成</h2>
+            <ul>
+                <li><strong>ヘッダー:</strong> タイトル、用途サブタイトル、セッション EXP チップ、概要コピー用ボタンをまとめています。
+                    「概要をコピー」からは取得済みのハードウェア/OS/ブラウザ/IP サマリーをクリップボードへ書き出せます。
+                </li>
+                <li><strong>メインタブ:</strong> <q>PC</q>・<q>OS</q>・<q>ブラウザ</q>・<q>IP</q> の 4 つを切り替えられるボタンが用意されます。
+                    PC タブだけはさらに <q>情報</q>／<q>ハードウェアモニター</q> のサブタブを備えています。【F:games/system.js†L395-L647】【F:games/system.js†L1394-L1404】
+                </li>
+                <li><strong>共通レイアウト:</strong> 各タブは半透明カードと 2 列グリッドを採用し、項目名と値・注釈を見やすく整理しています。
+                    ほぼすべてのラベルがローカライズ対応で、言語切り替え時は自動で翻訳文字列が再適用されます。【F:games/system.js†L420-L590】
+                </li>
+            </ul>
+        </section>
+        <section>
+            <h2>PC タブ</h2>
+            <h3>情報サブタブ</h3>
+            <p>
+                Web 標準 API を通じて取得可能なハードウェア指標を集約します。CPU ファミリー推定、論理スレッド数、推定アーキテクチャ、
+                navigator.deviceMemory ベースの実メモリ概算、JS ヒープ上限、Storage API の quota/usage、タッチポイント数、WebGL から得られる GPU ベンダー／レンダラー、
+                Battery Status API の充電状況などを一覧で表示します。ブラウザから直接取得できない値（マザーボードや GPU メモリなど）は「取得不可」と注釈付きで明示されます。【F:games/system.js†L562-L958】【F:games/system.js†L1151-L1197】
+            </p>
+            <ul>
+                <li><strong>最新情報を取得:</strong> 収集中は全フィールドを <q>取得中…</q> 表示に切り替え、完了後に値を再描画します。再取得時は 2 EXP が付与されます。【F:games/system.js†L551-L576】【F:games/system.js†L1151-L1197】</li>
+                <li><strong>推定ロジック:</strong> CPU ファミリーとアーキテクチャは userAgent / User-Agent Client Hints を併用して判定し、
+                    WebGL の <code>WEBGL_debug_renderer_info</code> が無効な場合は代替の vendor/renderer を表示します。【F:games/system.js†L24-L118】【F:games/system.js†L930-L951】</li>
+                <li><strong>制限と注記:</strong> Battery API が無効、もしくは対応ブラウザ以外では「取得不可」とし、Chrome 系以外では JS ヒープ使用量が利用できない旨をノートに表示します。【F:games/system.js†L952-L979】</li>
+            </ul>
+            <h3>ハードウェアモニター</h3>
+            <p>
+                1 秒間隔のタイマーと requestAnimationFrame から、イベントループ遅延を CPU 使用率として推定し、
+                直近のフレームレートとヒープ使用量をカードに描画します。Chrome 系ブラウザでは usedJSHeapSize / jsHeapSizeLimit を利用し、
+                利用不可の場合は注意書きを添えたままダッシュ表示にします。navigator.deviceMemory が利用できる環境では実メモリ概算もカード化されます。【F:games/system.js†L619-L980】【F:games/system.js†L1257-L1308】
+            </p>
+            <p class="small-note">
+                モニターはミニゲーム開始時に自動起動し、停止時・破棄時にタイマーと rAF を確実に解除します。【F:games/system.js†L1394-L1423】
+            </p>
+        </section>
+        <section>
+            <h2>OS タブ</h2>
+            <p>
+                userAgent と navigator 情報をもとに OS 名、バージョン、推定ビット数、プラットフォーム文字列、タイムゾーン、ロケール、対応言語一覧、
+                ブラウザ稼働時間を時間換算した疑似アップタイムを表示します。再読み込みボタンを押すと即時に再計算し、手動更新時は 1 EXP を獲得します。【F:games/system.js†L650-L703】【F:games/system.js†L983-L1013】【F:games/system.js†L1198-L1202】
+            </p>
+            <p class="small-note">実 OS の起動時間は取得できないため、<code>performance.now()</code> からブラウザ稼働時間を推定した値を注釈付きで提示します。【F:games/system.js†L1004-L1011】</p>
+        </section>
+        <section>
+            <h2>ブラウザ タブ</h2>
+            <p>
+                レンダリングエンジン判別やバージョン抽出、User-Agent Client Hints 由来のブランド一覧、Do Not Track 状態、オンライン判定、Cookie 利用可否、
+                利用可能なストレージ API／主要 Web 機能／HTML5 API を列挙します。WebGPU や Web Bluetooth など実装状況に応じてラベルが増減し、
+                手動再分析で 1 EXP を加算します。【F:games/system.js†L705-L1067】【F:games/system.js†L1204-L1208】
+            </p>
+            <p class="small-note">Storage API や HTML5 対応は安全のため try-catch で判定し、アクセス禁止環境では「取得不可」を表示します。【F:games/system.js†L1039-L1067】</p>
+        </section>
+        <section>
+            <h2>IP タブ</h2>
+            <p>
+                外部の IP 検出 API（api.ipify.org → ipinfo.io → ifconfig.co の順にフェールオーバー）へリクエストを送り、
+                グローバル IP、ホスト名、地域、ASN、ユーザーエージェントなどを表示します。取得中はキャンセルボタンに切り替わり、
+                中止時には状態メッセージを赤色で表示します。成功時には取得元サービス名と更新時刻がステータスに並び、<q>結果をコピー</q> から JSON フィールドをまとめてクリップボードへ出力できます。【F:games/system.js†L14-L219】【F:games/system.js†L764-L1247】【F:games/system.js†L1358-L1391】
+            </p>
+            <ul>
+                <li><strong>IP情報を取得:</strong> 実行ごとに 3 EXP を付与。fetch は AbortController で管理され、連続実行時も安全に切り替えられます。【F:games/system.js†L1210-L1247】</li>
+                <li><strong>取得を中止:</strong> リクエスト中の Abort を発行し、キャンセル時は状態欄に中止メッセージを記録します。【F:games/system.js†L1249-L1254】【F:games/system.js†L1348-L1357】</li>
+                <li><strong>結果をコピー:</strong> 取得済みの key/value を列挙してコピー成功時に 2 EXP を加算します（未取得時は失敗扱いで 0 EXP）。【F:games/system.js†L1358-L1391】</li>
+            </ul>
+            <p class="small-note">ネットワークが遮断されている場合やファイアウォールでブロックされている場合は、失敗理由の一覧をまとめたエラーメッセージを表示します。【F:games/system.js†L196-L219】【F:games/system.js†L1231-L1236】</p>
+        </section>
+        <section>
+            <h2>EXP と連携のヒント</h2>
+            <p>
+                システムユーティリティでは以下の操作でセッション EXP が加算され、MiniExp のスコアとして利用できます。得点は <code>getScore()</code> から外部システムへ連携可能です。【F:games/system.js†L864-L1431】
+            </p>
+            <ul>
+                <li>PC 情報の手動更新: +2 EXP【F:games/system.js†L1151-L1197】</li>
+                <li>OS 再読み込み: +1 EXP【F:games/system.js†L1198-L1202】</li>
+                <li>ブラウザ再分析: +1 EXP【F:games/system.js†L1204-L1208】</li>
+                <li>IP 情報取得: +3 EXP（取得元サービス名をメタデータに記録）【F:games/system.js†L1210-L1231】</li>
+                <li>概要コピー / IP 結果コピー: それぞれ +2 EXP【F:games/system.js†L1311-L1391】</li>
+            </ul>
+            <p>
+                クリップボード API が使えない環境ではフォールバックとして非表示のテキストエリアを用いたコピーを試みます。
+                いずれも失敗してもエラーは投げず、次の操作へ進めます。【F:games/system.js†L1311-L1391】
+            </p>
+        </section>
+    </main>
+</body>
+</html>

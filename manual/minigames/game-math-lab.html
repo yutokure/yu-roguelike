@@ -3,13 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ミニゲーム: 算数ラボ</title>
+    <title>ミニゲーム: 数学ラボ</title>
     <link rel="stylesheet" href="../manual.css">
 </head>
 <body>
     <main>
-        <h1>ミニゲーム: 算数ラボ</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <h1>ミニゲーム: 数学ラボ</h1>
+        <section>
+            <h2>概要</h2>
+            <p>
+                数学ラボは <strong>math.js</strong> と <strong>MathJax</strong> を動的に読み込み、分数中心の厳密計算と高精度の数値計算を
+                同時に扱える研究用ワークシートです。行列・単位・複素数を含む式を解析しながら、解析学・統計学・数値解析向けの
+                拡張関数を多数備えています。計算を実行すると 12 XP、グラフ描画で 8 XP を獲得でき、累計処理数からスコアが算出されます。
+            </p>
+        </section>
+        <section>
+            <h2>画面構成</h2>
+            <ul>
+                <li><strong>機能キーパッド:</strong> 標準・三角関数・複素数/行列・解析・統計・プログラマー・定数の各グループから
+                    ワンタッチで関数名や定数を挿入できます。最後部には単位変換テンプレートのセレクタと挿入ボタンを備えています。</li>
+                <li><strong>トップバー:</strong> ラジアン/度の切り替えトグルと、最新イベントをタイムスタンプ付きで表示するステータスバーを配置しています。</li>
+                <li><strong>ワークシート:</strong> 関数表記（ASCII）と数学記号（記号混じり）を即座に切り替えられる入力欄、MathJax による数式プレビュー、計算・リセット・結果コピーの各ボタンを備えています。</li>
+                <li><strong>結果カード:</strong> 分数/記号と 10 進近似をトグルで切り替えられ、近似表示は「More Digits」で最大 120 桁まで 5 桁ずつ拡張できます。</li>
+                <li><strong>履歴パネル:</strong> 直近 80 件の式と結果を保存し、現在の表示モードに合わせてシンボリック/数値を表示します。</li>
+                <li><strong>スコープ変数:</strong> math.js のスコープを一覧表示し、ボタン一つで <code>ans</code> を除く変数を初期化できます。</li>
+                <li><strong>グラフカード:</strong> 表示範囲・関数入力・描画キャンバス・診断メッセージで構成され、単位付きや複素数を自動除外した結果を 321 点サンプリングで描画します。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>入力と実行の流れ</h2>
+            <ol>
+                <li>初期状態では関数表記入力欄が表示され、Shift+Enter で計算を実行します。モードを切り替えると入力欄が自動で同期し、プレビューも即時更新されます。</li>
+                <li>計算実行時は式を math.js で構文解析し、厳密結果と BigNumber ベースの近似結果をそれぞれ算出します。履歴・変数リスト・<code>ans</code> が同時に更新されます。</li>
+                <li>結果カードのコピー機能は現在表示中のモードに応じたテキストをクリップボードへ送ります。</li>
+                <li>リセットすると両方の入力欄と結果が初期化され、プレースホルダー表示に戻ります。</li>
+            </ol>
+        </section>
+        <section>
+            <h2>角度・単位・キーパッドの補助機能</h2>
+            <p>
+                ラジアン/度のトグルは三角・逆三角・双曲線関数にフックしており、行列や配列を含む入力にも適用されます。
+                キーパッドの挿入処理は現在の入力モードに合わせて ASCII ↔ 記号変換を行うため、記号モードでも括弧や関数名が崩れません。
+                右下の「ユニット変換テンプレ」からは代表的な単位変換式を選択して即座に挿入できます。
+            </p>
+        </section>
+        <section>
+            <h2>グラフ描画の仕様</h2>
+            <ul>
+                <li>入力された式は math.js で解析し、<code>x</code> に 321 点の等間隔サンプルを代入して評価します。評価に失敗した点は種類別にカウントされ、メッセージ欄に除外理由が表示されます。</li>
+                <li>描画できる点が無い場合は単位・行列/配列・複素数のいずれが原因かを明示し、範囲指定エラー時はガイド文を表示します。</li>
+                <li>描画に成功すると自動スケーリングした y 範囲で折れ線を描き、XP とグラフ回数が更新されます。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>履歴とスコープ管理</h2>
+            <p>
+                数学ラボは math.js のスコープを共有しており、代入式を評価すると変数カードに即座に反映されます。履歴は表示モードに合わせて内容を整形し、<code>ans</code> だけはクリア操作でも保持されます。必要に応じて「変数をクリア」で <code>ans</code> 以外を初期化し、ステータスバーに通知を出します。
+            </p>
+        </section>
+        <section>
+            <h2>ステータスとショートカット</h2>
+            <p>
+                ステータスバーは <code>notifyStatusKey</code> によって時刻付きメッセージを表示し、入力欄へフォーカスした場合はプレイ中ショートカット (<kbd>P</kbd>/<kbd>R</kbd>) を自動で無効化します。Shift+Enter 実行に加え、角度・結果モードの切り替えやグラフ描画時にも通知が更新されます。
+            </p>
+        </section>
+        <section>
+            <h2>スコアと経験値</h2>
+            <p>
+                計算 1 回につき 12 XP、グラフ描画 1 回につき 8 XP が <code>awardXp</code> に通知され、スコアは「計算×2 + グラフ×3」で集計されます。ミニゲーム起動時に <code>start()</code> が呼ばれ、準備完了メッセージを出した時点から計測が始まります。
+            </p>
+        </section>
+        <section>
+            <h2>数学ラボ専用関数リファレンス</h2>
+            <p>
+                math.js 本体の機能に加え、以下の拡張関数を上書き・追加しています。引数は math.js の構文に従い、行列や配列へもマップ処理されます。
+            </p>
+            <h3>基数・情報処理</h3>
+            <dl>
+                <dt><code>baseDecode(value, base)</code></dt>
+                <dd>文字列や配列を 2〜30 進から 10 進実数へ変換します。無効な桁はエラーになります。</dd>
+                <dt><code>baseEncode(value, base, precision?)</code></dt>
+                <dd>実数を指定した基数へ変換し、小数部は最大 24 桁・既定 12 桁まで出力します。</dd>
+                <dt><code>baseConvert(value, fromBase, toBase, precision?)</code></dt>
+                <dd>任意基数表記を読み取り、別の基数へ表現します。入力・出力ともに文字列として扱います。</dd>
+            </dl>
+            <h3>解析・特殊関数</h3>
+            <dl>
+                <dt><code>ln(value)</code></dt>
+                <dd>math.js の <code>log</code> が利用可能なコンテキストを優先し、存在しない場合は BigNumber 側をフォールバックに使用します。</dd>
+                <dt><code>integral(expr, variable, lower?, upper?, options?)</code></dt>
+                <dd>下限・上限が揃っていれば適応型シンプソン法で数値積分し、未指定の場合はシンボリック積分で原始関数を返します。</dd>
+                <dt><code>taylorSeries(expr, variable, order, center)</code></dt>
+                <dd>導関数を繰り返し評価して最大 32 次までのテイラー展開を文字列として生成します。</dd>
+                <dt><code>numericIntegrate(expr, variable, lower, upper, options?)</code></dt>
+                <dd>積分区間を与えて適応型シンプソン法を直接呼び出し、高精度な数値積分を行います。</dd>
+                <dt><code>tetra(base, height)</code></dt>
+                <dd>実数引数に限定したテトレーション（反復冪）を評価します。負の高さは逆数で処理します。</dd>
+                <dt><code>slog(base, value)</code></dt>
+                <dd>底が 1 から離れた正数であることを前提に、反復対数（スーパーログ）を計算します。</dd>
+                <dt><code>solveEq(expr, variable, guess, options?)</code></dt>
+                <dd>ニュートン法で 1 変数の根を探索します。初期値や許容誤差は <code>options</code> で指定可能です。</dd>
+                <dt><code>solveSystem(equations, variables, initialGuess?, options?)</code></dt>
+                <dd>ニュートン法を拡張した連立方程式ソルバで、ヤコビアンを自動生成して解を改善します。</dd>
+                <dt><code>solveLinear(matrix, vector)</code></dt>
+                <dd>行列とベクトルを受け取り、ガウス消去法で線形方程式を解きます。</dd>
+                <dt><code>minimize(expr, variable, guess, options?) / maximize(...)</code></dt>
+                <dd>ニュートン法ベースの 1 変数最適化を行い、勾配とヘッセ行列を評価して極値を探索します。</dd>
+                <dt><code>gamma</code>, <code>beta</code>, <code>digamma</code>, <code>polygamma</code>, <code>harmonic</code>, <code>zeta</code>, <code>logGamma</code>, <code>lambertW</code></dt>
+                <dd>ガンマ関数系・ゼータ関数・調和数・Lambert W などの特殊関数を実数域で実装し、配列や行列にも要素ごと適用されます。</dd>
+            </dl>
+            <h3>統計・確率</h3>
+            <dl>
+                <dt><code>normalPdf</code>, <code>normalCdf</code>, <code>normalInv</code></dt>
+                <dd>正規分布の密度・累積・逆累積を評価し、平均と標準偏差の検証を行います。</dd>
+                <dt><code>poissonPmf</code>, <code>poissonCdf</code></dt>
+                <dd>ポアソン分布の確率質量・累積分布を実装し、平均の正値チェックを行います。</dd>
+                <dt><code>binomialPmf</code>, <code>binomialCdf</code></dt>
+                <dd>二項分布の確率質量・累積分布を多倍長演算で評価します。</dd>
+                <dt><code>logit</code>, <code>sigmoid</code></dt>
+                <dd>ロジット変換とシグモイド関数を数値検証付きで提供します。</dd>
+                <dt><code>erfc</code></dt>
+                <dd>エラー関数の補数を math.js の <code>erf</code> と減算関数を組み合わせて算出します。</dd>
+            </dl>
+        </section>
+        <section>
+            <h2>数値安定性とフォールバック</h2>
+            <p>
+                数学ラボでは分数モードが原因で発生する型変換エラーを検出し、必要に応じて BigNumber 設定へフォールバックするラッパーを自動適用しています。特に <code>sqrt</code>・指数関数・三角関数・逆三角関数などは全て保護されています。
+                また <code>factorial</code>・<code>combinations</code>・<code>permutations</code> は BigInt を用いた正確な計算に切り替え、負数・非整数入力には詳細なエラーメッセージを返します。
+            </p>
+        </section>
     </main>
 </body>
 </html>

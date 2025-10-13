@@ -17694,94 +17694,6 @@
       }
     },
     "games": {
-      "todoList": {
-        "defaults": {
-          "untitled": "Untitled"
-        },
-        "header": {
-          "title": "To-Do List",
-          "today": "Today · {date}",
-          "stats": "Pending: {pending} / Completed: {completed} / Achievements: {achievements}"
-        },
-        "form": {
-          "titleCreate": "Add New To-Do",
-          "titleEdit": "Edit To-Do",
-          "name": "Name",
-          "namePlaceholder": "e.g., Send daily report",
-          "type": "Type",
-          "typeSingle": "Single",
-          "typeRepeatable": "Repeatable",
-          "xp": "EXP Reward",
-          "rewards": {
-            "title": "Additional Rewards",
-            "passiveOrb": {
-              "label": "Passive Orb",
-              "placeholder": "e.g., attackBoost",
-              "selectPlaceholder": "Select a passive orb",
-              "customOption": "{value} (saved)",
-              "amount": "Quantity"
-            },
-            "item": {
-              "label": "Item",
-              "placeholder": "e.g., potion30",
-              "selectPlaceholder": "Select an item",
-              "customOption": "{value} (saved)",
-              "amount": "Quantity",
-              "defaults": {
-                "potion30": "Potion (30%)",
-                "hpBoost": "HP Boost",
-                "atkBoost": "ATK Boost",
-                "defBoost": "DEF Boost",
-                "hpBoostMajor": "Grand HP Boost",
-                "atkBoostMajor": "Grand ATK Boost",
-                "defBoostMajor": "Grand DEF Boost",
-                "spElixir": "SP Elixir"
-              }
-            },
-            "sp": {
-              "label": "SP",
-              "amount": "Amount"
-            }
-          },
-          "color": "Color",
-          "memo": "Notes",
-          "memoPlaceholder": "Add notes or checkpoints",
-          "submitCreate": "Add",
-          "submitUpdate": "Update",
-          "cancel": "Cancel"
-        },
-        "sections": {
-          "pending": "Pending Tasks",
-          "completed": "Completed Tasks",
-          "emptyPending": "No pending to-dos.",
-          "emptyCompleted": "No completed to-dos yet."
-        },
-        "task": {
-          "xpChip": "{xp} EXP",
-          "rewards": {
-            "passiveOrb": "Orb: {orb} ×{amount}",
-            "item": "{item} ×{amount}",
-            "sp": "+{amount} SP"
-          },
-          "memoEmpty": "No notes",
-          "createdAt": "Created: {date}",
-          "completedAt": "Completed: {date}",
-          "repeatableCount": "Achieved: {count} times",
-          "statusCompleted": "Success",
-          "statusFailed": "Failed",
-          "actions": {
-            "achieve": "Achieve",
-            "complete": "Complete",
-            "fail": "Fail",
-            "edit": "Edit",
-            "delete": "Delete"
-          }
-        },
-        "dialogs": {
-          "confirmDelete": "Delete this to-do?",
-          "requireName": "Enter a name."
-        }
-      },
       "notepad": {
         "defaultFileName": "Untitled.txt",
         "confirm": {
@@ -18558,14 +18470,48 @@
         "header": {
           "title": "To-Do List",
           "today": "Today · {date}",
-          "stats": "Pending: {pending} / Completed: {completed}"
+          "stats": "Pending: {pending} / Completed: {completed} / Achievements: {achievements}"
         },
         "form": {
           "titleCreate": "Add New To-Do",
           "titleEdit": "Edit To-Do",
           "name": "Name",
           "namePlaceholder": "e.g., Send daily report",
+          "type": "Type",
+          "typeSingle": "Single",
+          "typeRepeatable": "Repeatable",
           "xp": "EXP Reward",
+          "rewards": {
+            "title": "Additional Rewards",
+            "passiveOrb": {
+              "label": "Passive Orb",
+              "placeholder": "e.g., attackBoost",
+              "selectPlaceholder": "Select a passive orb",
+              "customOption": "{value} (saved)",
+              "amount": "Quantity"
+            },
+            "item": {
+              "label": "Item",
+              "placeholder": "e.g., potion30",
+              "selectPlaceholder": "Select an item",
+              "customOption": "{value} (saved)",
+              "amount": "Quantity",
+              "defaults": {
+                "potion30": "Potion (30%)",
+                "hpBoost": "HP Boost",
+                "atkBoost": "ATK Boost",
+                "defBoost": "DEF Boost",
+                "hpBoostMajor": "Grand HP Boost",
+                "atkBoostMajor": "Grand ATK Boost",
+                "defBoostMajor": "Grand DEF Boost",
+                "spElixir": "SP Elixir"
+              }
+            },
+            "sp": {
+              "label": "SP",
+              "amount": "Amount"
+            }
+          },
           "color": "Color",
           "memo": "Notes",
           "memoPlaceholder": "Add notes or checkpoints",
@@ -18581,12 +18527,19 @@
         },
         "task": {
           "xpChip": "{xp} EXP",
+          "rewards": {
+            "passiveOrb": "Orb: {orb} ×{amount}",
+            "item": "{item} ×{amount}",
+            "sp": "+{amount} SP"
+          },
           "memoEmpty": "No notes",
           "createdAt": "Created: {date}",
           "completedAt": "Completed: {date}",
+          "repeatableCount": "Achieved: {count} times",
           "statusCompleted": "Success",
           "statusFailed": "Failed",
           "actions": {
+            "achieve": "Achieve",
             "complete": "Complete",
             "fail": "Fail",
             "edit": "Edit",

@@ -2,8 +2,8 @@
     const STORAGE_KEY = 'yu-roguelike:language';
     const DEFAULT_LOCALE = 'ja';
     const FALLBACK_LOCALE = 'ja';
-    const SUPPORTED_LOCALES = Object.freeze(['ja', 'en', 'zh']);
-    const LOCALE_FALLBACKS = Object.freeze({ zh: 'en' });
+    const SUPPORTED_LOCALES = Object.freeze(['ja', 'en', 'zh', 'ko']);
+    const LOCALE_FALLBACKS = Object.freeze({ zh: 'en', ko: 'ja' });
     const LOCALE_PATH = 'js/i18n/locales';
     const LOCALE_EXTENSION = '.json.js';
 

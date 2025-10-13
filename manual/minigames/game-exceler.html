@@ -9,7 +9,109 @@
 <body>
     <main>
         <h1>ミニゲーム: 表計算エクセラー</h1>
-        <p class="stub-note">このページは準備中です。詳細なガイドは今後のアップデートで追加されます。</p>
+        <section>
+            <h2>概要</h2>
+            <p>
+                表計算エクセラーは、MiniExp MOD に組み込まれている Excel 互換スプレッドシートです。最大 <strong>120 行 × 40 列</strong> のグリッドに対応し、セルの書式設定、数式の評価、複数シートの管理、XLSX 形式での読み書きを行えます。軽量ながらも XP と連動した編集体験を提供し、ダンジョンのドロップ表や経験値計画などのデータ整理に最適です。
+            </p>
+        </section>
+        <section>
+            <h2>起動と初期状態</h2>
+            <ol>
+                <li>MiniExp のランチャーから <strong>表計算エクセラー</strong> を起動すると、ローカルストレージに残っている前回の作業内容が自動的に復元されます。</li>
+                <li>初回起動またはリセット時は <code>Sheet1</code> を含む新規ブックが生成され、ファイル名は「新しいブック.xlsx」として設定されます。</li>
+                <li>編集内容は操作後約 2 秒で自動保存され、次回の起動時に継続できます。</li>
+            </ol>
+            <p class="small-note">未保存の状態で新規ブックを作成しようとすると確認ダイアログが表示されます。</p>
+        </section>
+        <section>
+            <h2>画面構成</h2>
+            <ul>
+                <li><strong>ヘッダー</strong>：現在のファイル名とアクティブシート名が表示され、「新規」「インポート」「エクスポート」「互換性」ボタンから主な操作を行います。</li>
+                <li><strong>リボン</strong>：<em>ホーム</em>・<em>数式</em>・<em>表示</em>の 3 つのタブで書式、関数、表示設定を切り替えます。グループごとにボタンやセレクターがまとまっています。</li>
+                <li><strong>数式バー</strong>：セル参照ボックスと数式入力欄を備え、<kbd>Enter</kbd> で確定、<kbd>Esc</kbd> で編集を取り消します。</li>
+                <li><strong>ワークシートグリッド</strong>：スクロール可能なビューポートに 120 行 × 40 列のセルが配置され、行・列ヘッダーから範囲選択が可能です。選択範囲は青いオーバーレイで強調されます。</li>
+                <li><strong>シートタブ</strong>：複数シートの追加・切り替え・名称変更・タブ色変更を行えます。右側の 🎨 ボタンから現在のシート色を変更したり、右クリックでクリアできます。</li>
+                <li><strong>ステータスバー</strong>：選択セルの位置と書式、計算済みのデータ型、セッション XP、互換性警告などを表示します。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>セル編集の基本操作</h2>
+            <ul>
+                <li>セルをクリックすると選択、ドラッグすると範囲選択ができます。行番号・列記号をクリックすると丸ごと選択され、ドラッグで複数行・列に拡張できます。</li>
+                <li><kbd>←</kbd> / <kbd>→</kbd> / <kbd>↑</kbd> / <kbd>↓</kbd> / <kbd>Tab</kbd> / <kbd>Enter</kbd> でカーソル移動、<kbd>Delete</kbd> または <kbd>Backspace</kbd> で選択セルの内容を削除します。</li>
+                <li>ダブルクリック、または文字キー入力でインライン編集を開始できます。<kbd>Enter</kbd> で確定、<kbd>Esc</kbd> でキャンセル、空文字を確定するとセルが消去されます。</li>
+                <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>C</kbd>・<kbd>V</kbd> でコピー＆ペースト、<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Z</kbd>・<kbd>Y</kbd> で元に戻す／やり直しが可能です。クリップボードが利用できない環境でも内部バッファに保持されます。</li>
+                <li>貼り付け時はタブ区切り・改行区切りのデータを自動整形し、数式（= から始まる文字列）もそのまま復元されます。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>書式設定と表示制御</h2>
+            <p>
+                <em>ホーム</em>タブからフォントスタイル（太字・斜体・下線）、フォントサイズ（8〜72pt）、文字色・塗りつぶし色、水平／垂直の配置、罫線色と罫線パターン（外枠・格子・上下左右・クリア）を適用できます。選択範囲全体に反映され、繰り返し適用で XP ボーナスが獲得できます。
+            </p>
+            <p>
+                数値書式は「標準」「数値」「通貨（JPY）」「パーセント」「桁区切り」「指数」「日付」「時刻」をサポートしています。日付・時刻は内部的にシリアル値で保持され、対応する書式を設定すると表示が整います。
+            </p>
+            <p>
+                <em>表示</em>タブではグリッド線の表示切り替えと 50%〜200% のズーム倍率を調整できます。ズームはセルサイズとフォントに反映され、ラベルにも現在の倍率が表示されます。
+            </p>
+        </section>
+        <section>
+            <h2>数式と関数</h2>
+            <p>
+                数式は <code>=</code> で始めてセル内または数式バーから入力します。セル参照（例: <code>A1</code>）と範囲参照（例: <code>A1:C3</code>）をサポートし、演算子 <code>+ - * / ^</code> と比較演算 <code>= &lt; &gt; &lt;&gt; &gt;= &lt;=</code> を利用できます。循環参照が検出されると <code>#CYCLE!</code> が表示されます。
+            </p>
+            <p>
+                サポートされる関数は以下のカテゴリに分類されます。関数名はリボンの<em>数式</em>タブから挿入でき、選択時に説明が表示されます。
+            </p>
+            <ul>
+                <li><strong>集計</strong>：SUM / AVERAGE / MIN / MAX / COUNT / COUNTA / PRODUCT / SUBTOTAL（コード 1〜9）</li>
+                <li><strong>条件付き集計</strong>：SUMIF / COUNTIF / AVERAGEIF（ワイルドカード <code>*</code>・<code>?</code> 対応）</li>
+                <li><strong>丸め・数値処理</strong>：ROUND / ROUNDUP / ROUNDDOWN / ABS / INT / MOD / POWER / SQRT</li>
+                <li><strong>テキスト</strong>：CONCAT / CONCATENATE / TEXT / LEN / LEFT / RIGHT / MID / TRIM / UPPER / LOWER</li>
+                <li><strong>論理</strong>：IF / IFERROR / MATCH（1 起点の位置を返す）</li>
+                <li><strong>検索</strong>：VLOOKUP / HLOOKUP / INDEX（行・列番号指定）</li>
+                <li><strong>日付・時刻</strong>：TODAY / NOW / DATE / TIME（書式設定と併用）</li>
+            </ul>
+            <p>
+                数式エラー時には <code>#DIV/0!</code>（0 除算）、<code>#N/A</code>（検索値が見つからない）、<code>#REF!</code>（範囲外）、<code>#VALUE!</code>（無効な引数）、<code>#NAME?</code>（未対応関数）、<code>#ERROR!</code>（構文エラー）などのメッセージでフィードバックされます。
+            </p>
+        </section>
+        <section>
+            <h2>シート管理</h2>
+            <ul>
+                <li><strong>追加</strong>：「＋」ボタンで新しいシートを追加すると、自動的に連番が割り当てられアクティブになります。</li>
+                <li><strong>切り替え</strong>：タブをクリックするとシートが切り替わり、選択範囲も各シートごとに保持されます。</li>
+                <li><strong>名称変更</strong>：タブをダブルクリックするとプロンプトで名前を変更できます。重複名は拒否されます。</li>
+                <li><strong>タブ色</strong>：タブの右クリック、または 🎨 ボタンからカラーピッカーを開き、シートごとに色を設定できます。 🎨 ボタンの右クリックで色をクリアします。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>ファイル操作と互換性</h2>
+            <ul>
+                <li><strong>新規</strong>：「新規」ボタンで空のブックを作成し、互換性注意のステータスを初期化します。未保存の変更がある場合は確認ダイアログが表示されます。</li>
+                <li><strong>インポート</strong>：「インポート」から最大 5MB の XLSX ファイルを読み込みます。図形・マクロ・外部参照・一部書式は破棄され、警告が表示されます。</li>
+                <li><strong>エクスポート</strong>：「エクスポート」で現在のブックを XLSX としてダウンロードできます。保存前に互換性注意が表示されます。</li>
+                <li><strong>互換性ガイド</strong>：「互換性」ボタンを押すと、複数シートの高度な設定、図形・マクロ、ピボット、外部リンク、条件付き書式、結合セルが未対応である旨が再表示されます。</li>
+            </ul>
+        </section>
+        <section>
+            <h2>自動保存と XP</h2>
+            <p>
+                編集・書式変更・シート操作はすべて Undo/Redo 履歴に記録され、操作後に自動的に保存されます。MiniExp の XP システムと連携しており、編集・書式・インポート・エクスポートなどの操作でセッション XP が加算され、ステータスバーに累計が表示されます。
+            </p>
+        </section>
+        <section>
+            <h2>主なショートカット</h2>
+            <ul>
+                <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Z</kbd>：元に戻す / <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Y</kbd>：やり直し</li>
+                <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>C</kbd>：コピー / <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>V</kbd>：貼り付け</li>
+                <li><kbd>Delete</kbd> または <kbd>Backspace</kbd>：セル内容をクリア</li>
+                <li><kbd>Enter</kbd>：編集確定と下方向へ移動 / <kbd>Tab</kbd>：右方向へ移動</li>
+                <li>矢印キー：セル間の移動、ヘッダーからのドラッグで行・列選択</li>
+            </ul>
+        </section>
     </main>
 </body>
 </html>

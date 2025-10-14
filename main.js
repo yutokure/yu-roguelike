@@ -52,6 +52,11 @@ const localeCompareLocalized = (a, b, options) => {
 const languageSelect = document.getElementById('language-select');
 const languageSelectLabel = document.querySelector('label[for="language-select"]');
 let languageDisplayNames = null;
+const DEFAULT_PAGE_TITLE = 'Yuローグライク';
+
+if (!document.title) {
+    document.title = DEFAULT_PAGE_TITLE;
+}
 
 function translateOrFallback(key, fallbackText, params) {
     const computeFallback = () => {
@@ -262,12 +267,27 @@ function refreshLanguageSwitcher(locale) {
     }
 }
 
+function refreshDocumentTitle() {
+    const titleElement = document.querySelector('title[data-i18n="meta.title"]');
+    const fallbackTitle = (titleElement?.dataset?.fallback || '').trim()
+        || (titleElement?.textContent || '').trim()
+        || DEFAULT_PAGE_TITLE;
+    const localizedTitle = translateOrFallback('meta.title', fallbackTitle) || fallbackTitle;
+    if (titleElement && titleElement.textContent !== localizedTitle) {
+        titleElement.textContent = localizedTitle;
+    }
+    if (document.title !== localizedTitle) {
+        document.title = localizedTitle;
+    }
+}
+
 document.addEventListener('i18n:locale-changed', (event) => {
     const locale = event?.detail?.locale || i18n.getLocale();
     refreshLanguageSwitcher(locale);
     if (typeof i18n.applyTranslations === 'function') {
-        i18n.applyTranslations(document.body);
+        i18n.applyTranslations(document);
     }
+    refreshDocumentTitle();
     const rerenderEvent = new CustomEvent('app:rerender', { detail: { locale } });
     document.dispatchEvent(rerenderEvent);
 });
@@ -278,8 +298,9 @@ const storedLocalePreference = typeof i18n.getStoredLocale === 'function' ? i18n
 const initialLocale = storedLocalePreference || (typeof i18n.getDefaultLocale === 'function' ? i18n.getDefaultLocale() : 'ja');
 await i18n.setLocale(initialLocale);
 if (typeof i18n.applyTranslations === 'function') {
-    i18n.applyTranslations(document.body);
+    i18n.applyTranslations(document);
 }
+refreshDocumentTitle();
 
 if (languageSelect) {
     languageSelect.addEventListener('change', async (event) => {

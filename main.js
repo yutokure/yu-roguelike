@@ -5292,8 +5292,6 @@ function startSandboxGame(rawConfig) {
     updateMapSize();
 
     if (selectionScreen) selectionScreen.style.display = 'none';
-    const tb = document.getElementById('toolbar');
-    if (tb) tb.style.display = 'flex';
     if (gameScreen) gameScreen.style.display = 'block';
     enterInGameLayout();
 
@@ -5393,7 +5391,7 @@ window.addEventListener('resize', resizeCanvasToStage);
 window.addEventListener('resize', () => {
     // in-game 時はツールバーの高さを再計測して反映
     if (document.body.classList.contains('in-game')) {
-        const tb = document.getElementById('toolbar');
+        const tb = document.getElementById('dungeontoolbar');
         const h = tb ? Math.ceil(tb.getBoundingClientRect().height) : 0;
         document.documentElement.style.setProperty('--toolbar-height', h + 'px');
     }
@@ -5412,7 +5410,10 @@ function refreshBdimListHeights() {
 function enterInGameLayout() {
     try {
         document.body.classList.add('in-game');
-        const tb = document.getElementById('toolbar');
+        const tb = document.getElementById('dungeontoolbar');
+        if (tb) {
+            tb.style.display = 'flex';
+        }
         const h = tb ? Math.ceil(tb.getBoundingClientRect().height) : 0;
         document.documentElement.style.setProperty('--toolbar-height', h + 'px');
         // 可視化時にキャンバスを再調整
@@ -5424,6 +5425,10 @@ function leaveInGameLayout() {
     try {
         document.body.classList.remove('in-game');
         document.body.classList.remove('modal-open');
+        const tb = document.getElementById('dungeontoolbar');
+        if (tb) {
+            tb.style.display = 'none';
+        }
         document.documentElement.style.removeProperty('--toolbar-height');
         setTimeout(resizeCanvasToStage, 0);
         updateGodConsoleAvailability();
@@ -5467,10 +5472,8 @@ function showSelectionScreen(opts = {}) {
 
     // 画面表示切り替え
     if (gameScreen) gameScreen.style.display = 'none';
-    const tb = document.getElementById('toolbar');
-    if (tb) tb.style.display = 'none';
-    if (selectionScreen) selectionScreen.style.display = 'flex';
     leaveInGameLayout();
+    if (selectionScreen) selectionScreen.style.display = 'flex';
     updateSandboxInteractivePrivilege();
 
     // 状態のリセット
@@ -18845,7 +18848,6 @@ function startGameFromSelection() {
     resetPlayerStatusEffects();
     beginDungeonRunContext({ source: 'selection' });
     selectionScreen.style.display = 'none';
-    document.getElementById('toolbar').style.display = 'flex';
     gameScreen.style.display = 'block';
     enterInGameLayout();
     
@@ -18878,7 +18880,6 @@ function startGameFromBlockDim() {
     resetPlayerStatusEffects();
     beginDungeonRunContext({ source: 'blockdim' });
     selectionScreen.style.display = 'none';
-    document.getElementById('toolbar').style.display = 'flex';
     gameScreen.style.display = 'block';
     enterInGameLayout();
     setTimeout(() => {
@@ -18907,7 +18908,7 @@ btnBack && btnBack.addEventListener('click', () => {
 });
 
 // 初期表示は選択画面
-document.getElementById('toolbar').style.display = 'none';
+leaveInGameLayout();
 selectionScreen.style.display = 'flex';
 gameScreen.style.display = 'none';
 buildSelection();

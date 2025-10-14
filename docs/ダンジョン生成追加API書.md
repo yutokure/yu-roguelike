@@ -471,7 +471,7 @@ window.DUNGEONTYPE_MANIFEST = [
 - Normal 側にも新タイプを直接選択できる UI セクション
 
 ---
-
+{% raw %}
 ## 14. 付録: JSDoc（エディタ補完用）
 ```ts
 /** @typedef {'less'|'normal'|'more'} ChestBias */
@@ -503,6 +503,7 @@ window.DUNGEONTYPE_MANIFEST = [
  * }} GenContext */
 /** @typedef {{id:string,name?:string,description?:string,floors?:{max?:number,bossFloors?:number[],maps:{floor?:number,layout:string[]}[]},algorithm:(ctx:GenContext)=>void|number[][],mixin?:{normalMixed?:number,blockDimMixed?:number,tags?:string[]}}} DungeonGeneratorDef */
 /** @typedef {{id:string,name?:string,version?:string,author?:string,description?:string,api?:string,blocks?:{dimensions?:Dimension[],blocks1?:BlockSpec[],blocks2?:BlockSpec[],blocks3?:BlockSpec[]},generators?:DungeonGeneratorDef[]}} DungeonAddon */
+{% endraw %}
 ```
 
 ---

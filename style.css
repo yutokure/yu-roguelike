@@ -112,7 +112,7 @@ body.in-game {
 body.in-game.modal-open { overflow: auto; }
 body.in-game h1 { display: none; }
 body.in-game #game-screen { width: 100vw; max-width: 100vw; padding-top: var(--toolbar-height, 0px); }
-body.in-game #toolbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+body.in-game #dungeontoolbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
 body.in-game #game-container { 
     width: 100vw; 
     max-width: 100vw; 
@@ -1224,7 +1224,7 @@ body.in-game #player-summary { display: none; }
     font-weight: bold;
 }
 
-#toolbar {
+#dungeontoolbar {
     position: sticky;
     top: 0;
     display: flex;
@@ -1256,7 +1256,7 @@ body.in-game #player-summary { display: none; }
     accent-color: #6366f1;
 }
 
-#toolbar button {
+#dungeontoolbar button {
     padding: 10px 16px;
     border: none;
     border-radius: 8px;
@@ -1269,7 +1269,7 @@ body.in-game #player-summary { display: none; }
     font-size: 14px;
 }
 
-#toolbar button:hover {
+#dungeontoolbar button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     background: linear-gradient(135deg, #5a6fd8, #6a4190);

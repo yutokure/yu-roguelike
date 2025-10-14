@@ -5391,7 +5391,7 @@ window.addEventListener('resize', resizeCanvasToStage);
 window.addEventListener('resize', () => {
     // in-game 時はツールバーの高さを再計測して反映
     if (document.body.classList.contains('in-game')) {
-        const tb = document.getElementById('toolbar');
+        const tb = document.getElementById('dungeontoolbar');
         const h = tb ? Math.ceil(tb.getBoundingClientRect().height) : 0;
         document.documentElement.style.setProperty('--toolbar-height', h + 'px');
     }
@@ -5410,7 +5410,7 @@ function refreshBdimListHeights() {
 function enterInGameLayout() {
     try {
         document.body.classList.add('in-game');
-        const tb = document.getElementById('toolbar');
+        const tb = document.getElementById('dungeontoolbar');
         if (tb) {
             tb.style.display = 'flex';
         }
@@ -5425,7 +5425,7 @@ function leaveInGameLayout() {
     try {
         document.body.classList.remove('in-game');
         document.body.classList.remove('modal-open');
-        const tb = document.getElementById('toolbar');
+        const tb = document.getElementById('dungeontoolbar');
         if (tb) {
             tb.style.display = 'none';
         }

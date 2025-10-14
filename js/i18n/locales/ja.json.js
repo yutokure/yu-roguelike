@@ -3,7 +3,12 @@
   var store = root.__i18nLocales = root.__i18nLocales || {};
   var locale = {
     "meta": {
-      "title": "Yuローグライク"
+      "title": "Yuローグライク",
+      "description": "Yuローグライクは456種類のダンジョン自動生成と75種類のMiniExpミニゲームを収録したMITライセンスのブラウザローグライクです。サンドボックスとパッシブシステムでビルドを拡張し、GitHubで開発に参加できます。",
+      "ogTitle": "Yuローグライク | 456種の自動生成とMiniExp 75種搭載のブラウザローグライク",
+      "ogDescription": "456種類のダンジョン生成と75種類のMiniExpミニゲームで遊べるMITライセンスのYuローグライク。ブラウザで遊びながら、GitHubで簡単に貢献できます。",
+      "twitterTitle": "Yuローグライク | 456種の自動生成とMiniExp 75種搭載のブラウザローグライク",
+      "twitterDescription": "456種類のダンジョン生成と75種類のMiniExpミニゲームを収録。Yuローグライクで冒険を設計し、コミュニティと開発を進めましょう。"
     },
 
     "header": {

@@ -3,7 +3,12 @@
   var store = root.__i18nLocales = root.__i18nLocales || {};
   var locale = {
     "meta": {
-      "title": "Yu Roguelike"
+      "title": "Yu Roguelike",
+      "description": "Yu Roguelike packs 456 procedural dungeon generators and 75 MiniExp mini-games under the MIT license. Build in the browser and contribute on GitHub.",
+      "ogTitle": "Yu Roguelike | Browser Roguelike with 456 Procedural Generators & 75 MiniExp Games",
+      "ogDescription": "Explore 456 dungeon generators and 75 MiniExp mini-games in Yu Roguelike, an MIT-licensed project you can play and extend via GitHub.",
+      "twitterTitle": "Yu Roguelike | 456 Procedural Generators & 75 MiniExp Mini-Games",
+      "twitterDescription": "Design runs with 456 procedural generators and 75 MiniExp mini-games. Collaborate on Yu Roguelike directly from the browser."
     },
 
     "header": {

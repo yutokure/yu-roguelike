@@ -79,6 +79,8 @@ Yu Roguelike is a dungeon crawler that runs entirely in the browser. Pick a worl
 ## Highlights
 - Simple project structure that makes it easy to add or edit dungeons and data.
 - Multiple tabs covering core exploration, Block Dimension, achievements/statistics, and creator-focused tools.
+- 456 dungeon generation types included.
+- 75 in 1 mini-games.
 - Late-game mechanics such as SP (unlocked after level 100) and the fullness system (recommended level 300+) keep high-level play engaging.
 - Interactive Sandbox panel and Creator God console for debugging, experiments, or cheats.
 

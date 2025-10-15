@@ -40,39 +40,95 @@
 
   function sanitizeTaskRewards(raw){
     const base = {
-      passiveOrb: { enabled: false, orbId: '', amount: 1 },
-      item: { enabled: false, key: '', amount: 1 },
+      passiveOrbs: { enabled: false, entries: [] },
+      items: { enabled: false, entries: [] },
       sp: { enabled: false, amount: 0 }
     };
     const source = raw && typeof raw === 'object' ? raw : {};
 
-    const passiveSource = (source.passiveOrb && typeof source.passiveOrb === 'object') ? source.passiveOrb : source;
-    const passiveEnabledRaw = passiveSource.enabled === true || source.passiveOrbEnabled === true;
-    const passiveId = sanitizeRewardKey(passiveSource.orbId ?? passiveSource.id ?? source.passiveOrbId ?? '');
-    const passiveAmount = clampRewardAmount(passiveSource.amount ?? source.passiveOrbAmount ?? 1, { min: 1 });
-    base.passiveOrb = {
-      enabled: passiveEnabledRaw && !!passiveId && passiveAmount > 0,
-      orbId: passiveId,
-      amount: passiveAmount > 0 ? passiveAmount : 1
+    function readEnabledFlag(possibleSources){
+      for (const value of possibleSources){
+        if (value === true) return true;
+        if (value === false) return false;
+      }
+      return null;
+    }
+
+    function sanitizeEntries(entries, { idKey = 'id', amountKey = 'amount', sanitizeId = sanitizeRewardKey, clampOptions = {} } = {}){
+      const list = Array.isArray(entries) ? entries : [];
+      const sanitized = [];
+      list.forEach(entry => {
+        if (!entry || typeof entry !== 'object') return;
+        const idValue = sanitizeId(entry[idKey] ?? entry.key ?? entry.orbId ?? entry.id ?? '');
+        if (!idValue) return;
+        const amountValue = clampRewardAmount(entry[amountKey] ?? entry.amount ?? entry.value ?? 0, clampOptions);
+        if (!Number.isFinite(amountValue) || amountValue === 0) return;
+        sanitized.push({ id: idValue, amount: amountValue });
+      });
+      return sanitized;
+    }
+
+    const passiveSources = [];
+    if (Array.isArray(source.passiveOrbs)) passiveSources.push(source.passiveOrbs);
+    if (source.passiveOrbs && typeof source.passiveOrbs === 'object' && Array.isArray(source.passiveOrbs.entries)){
+      passiveSources.push(source.passiveOrbs.entries);
+    }
+    if (Array.isArray(source.passiveOrbEntries)) passiveSources.push(source.passiveOrbEntries);
+    if (source.passiveOrb && typeof source.passiveOrb === 'object') passiveSources.push([source.passiveOrb]);
+    if (source.passiveOrbId){
+      passiveSources.push([{ orbId: source.passiveOrbId, amount: source.passiveOrbAmount ?? source.passiveOrb?.amount ?? source.amount }]);
+    }
+    const passiveEntriesRaw = passiveSources.find(entries => Array.isArray(entries)) || [];
+    const passiveEntries = sanitizeEntries(passiveEntriesRaw, {
+      idKey: 'orbId',
+      clampOptions: { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT }
+    }).map(entry => ({ orbId: entry.id, amount: entry.amount }));
+    const passiveEnabledFlag = readEnabledFlag([
+      source.passiveOrbs?.enabled,
+      source.passiveOrbsEnabled,
+      source.passiveOrbEnabled,
+      source.passiveOrb?.enabled
+    ]);
+    base.passiveOrbs = {
+      enabled: passiveEnabledFlag === null ? passiveEntries.length > 0 : passiveEnabledFlag,
+      entries: passiveEntries
     };
 
-    const itemSource = (source.item && typeof source.item === 'object') ? source.item : source;
-    const itemEnabledRaw = itemSource.enabled === true || source.itemEnabled === true;
-    const itemKey = sanitizeRewardKey(itemSource.key ?? itemSource.id ?? source.itemKey ?? '');
-    const itemAmount = clampRewardAmount(itemSource.amount ?? source.itemAmount ?? 1, { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT });
-    const hasItemAmount = itemAmount !== 0;
-    base.item = {
-      enabled: itemEnabledRaw && !!itemKey && hasItemAmount,
-      key: itemKey,
-      amount: hasItemAmount ? itemAmount : 0
+    const itemSources = [];
+    if (Array.isArray(source.items)) itemSources.push(source.items);
+    if (source.items && typeof source.items === 'object' && Array.isArray(source.items.entries)){
+      itemSources.push(source.items.entries);
+    }
+    if (Array.isArray(source.itemEntries)) itemSources.push(source.itemEntries);
+    if (source.item && typeof source.item === 'object') itemSources.push([source.item]);
+    if (source.itemKey){
+      itemSources.push([{ key: source.itemKey, amount: source.itemAmount ?? source.item?.amount ?? source.amount }]);
+    }
+    const itemEntriesRaw = itemSources.find(entries => Array.isArray(entries)) || [];
+    const itemEntries = sanitizeEntries(itemEntriesRaw, {
+      idKey: 'key',
+      clampOptions: { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT }
+    }).map(entry => ({ key: entry.id, amount: entry.amount }));
+    const itemEnabledFlag = readEnabledFlag([
+      source.items?.enabled,
+      source.itemsEnabled,
+      source.itemEnabled,
+      source.item?.enabled
+    ]);
+    base.items = {
+      enabled: itemEnabledFlag === null ? itemEntries.length > 0 : itemEnabledFlag,
+      entries: itemEntries
     };
 
     const spSource = (source.sp && typeof source.sp === 'object') ? source.sp : source;
-    const spEnabledRaw = spSource.enabled === true || source.spEnabled === true;
-    const spAmount = clampRewardAmount(spSource.amount ?? spSource.value ?? source.spAmount ?? source.spValue ?? 0, { min: 0 });
+    const spEnabledFlag = readEnabledFlag([spSource.enabled, source.spEnabled]);
+    const spAmount = clampRewardAmount(spSource.amount ?? spSource.value ?? source.spAmount ?? source.spValue ?? 0, {
+      min: -MAX_REWARD_AMOUNT,
+      max: MAX_REWARD_AMOUNT
+    });
     base.sp = {
-      enabled: spEnabledRaw && spAmount > 0,
-      amount: spAmount > 0 ? spAmount : 0
+      enabled: spEnabledFlag === null ? spAmount !== 0 : spEnabledFlag,
+      amount: spAmount
     };
 
     return base;
@@ -489,36 +545,33 @@
     passiveToggleLabel.appendChild(passiveEnableInput);
     passiveToggleLabel.appendChild(passiveEnableText);
 
-    const passiveOrbIdInput = document.createElement('select');
-    passiveOrbIdInput.style.padding = '8px 10px';
-    passiveOrbIdInput.style.borderRadius = '8px';
-    passiveOrbIdInput.style.border = '1px solid #cbd5f5';
-    passiveOrbIdInput.style.fontSize = '13px';
-    passiveOrbIdInput.style.minWidth = '200px';
-    passiveOrbIdInput.style.background = '#ffffff';
-    passiveOrbIdInput.style.color = '#111827';
-    passiveOrbIdInput.style.cursor = 'pointer';
-
-    const passiveAmountLabel = makeAmountLabel();
-    const passiveAmountText = document.createElement('span');
-    const passiveAmountInput = document.createElement('input');
-    passiveAmountInput.type = 'number';
-    passiveAmountInput.min = '1';
-    passiveAmountInput.max = String(MAX_REWARD_AMOUNT);
-    passiveAmountInput.step = '1';
-    passiveAmountInput.value = '1';
-    passiveAmountInput.style.width = '90px';
-    passiveAmountInput.style.padding = '6px 8px';
-    passiveAmountInput.style.borderRadius = '8px';
-    passiveAmountInput.style.border = '1px solid #cbd5f5';
-    passiveAmountInput.style.fontSize = '13px';
-    passiveAmountLabel.appendChild(passiveAmountText);
-    passiveAmountLabel.appendChild(passiveAmountInput);
+    const passiveAddButton = document.createElement('button');
+    passiveAddButton.type = 'button';
+    passiveAddButton.style.padding = '6px 12px';
+    passiveAddButton.style.borderRadius = '8px';
+    passiveAddButton.style.border = '1px solid #cbd5f5';
+    passiveAddButton.style.background = '#f3f4f6';
+    passiveAddButton.style.color = '#1f2937';
+    passiveAddButton.style.fontSize = '12px';
+    passiveAddButton.style.fontWeight = '600';
+    passiveAddButton.style.cursor = 'pointer';
+    passiveAddButton.textContent = '追加';
 
     passiveRow.appendChild(passiveToggleLabel);
-    passiveRow.appendChild(passiveOrbIdInput);
-    passiveRow.appendChild(passiveAmountLabel);
+    passiveRow.appendChild(passiveAddButton);
     rewardsSection.appendChild(passiveRow);
+
+    const passiveEntriesContainer = document.createElement('div');
+    passiveEntriesContainer.style.display = 'flex';
+    passiveEntriesContainer.style.flexDirection = 'column';
+    passiveEntriesContainer.style.gap = '6px';
+    passiveEntriesContainer.style.paddingLeft = '26px';
+    rewardsSection.appendChild(passiveEntriesContainer);
+
+    const passiveEntryRows = [];
+    const passiveAmountTexts = [];
+    let passiveSelectPlaceholderText = 'パッシブオーブを選択';
+    let passiveAmountLabelText = '個数（マイナスで没収）';
 
     const itemRow = makeRewardRow();
     const itemToggleLabel = makeToggleLabel();
@@ -528,36 +581,217 @@
     itemToggleLabel.appendChild(itemEnableInput);
     itemToggleLabel.appendChild(itemEnableText);
 
-    const itemKeyInput = document.createElement('select');
-    itemKeyInput.style.padding = '8px 10px';
-    itemKeyInput.style.borderRadius = '8px';
-    itemKeyInput.style.border = '1px solid #cbd5f5';
-    itemKeyInput.style.fontSize = '13px';
-    itemKeyInput.style.minWidth = '200px';
-    itemKeyInput.style.background = '#ffffff';
-    itemKeyInput.style.color = '#111827';
-    itemKeyInput.style.cursor = 'pointer';
-
-    const itemAmountLabel = makeAmountLabel();
-    const itemAmountText = document.createElement('span');
-    const itemAmountInput = document.createElement('input');
-    itemAmountInput.type = 'number';
-    itemAmountInput.min = String(-MAX_REWARD_AMOUNT);
-    itemAmountInput.max = String(MAX_REWARD_AMOUNT);
-    itemAmountInput.step = '1';
-    itemAmountInput.value = '1';
-    itemAmountInput.style.width = '90px';
-    itemAmountInput.style.padding = '6px 8px';
-    itemAmountInput.style.borderRadius = '8px';
-    itemAmountInput.style.border = '1px solid #cbd5f5';
-    itemAmountInput.style.fontSize = '13px';
-    itemAmountLabel.appendChild(itemAmountText);
-    itemAmountLabel.appendChild(itemAmountInput);
+    const itemAddButton = document.createElement('button');
+    itemAddButton.type = 'button';
+    itemAddButton.style.padding = '6px 12px';
+    itemAddButton.style.borderRadius = '8px';
+    itemAddButton.style.border = '1px solid #cbd5f5';
+    itemAddButton.style.background = '#f3f4f6';
+    itemAddButton.style.color = '#1f2937';
+    itemAddButton.style.fontSize = '12px';
+    itemAddButton.style.fontWeight = '600';
+    itemAddButton.style.cursor = 'pointer';
+    itemAddButton.textContent = '追加';
 
     itemRow.appendChild(itemToggleLabel);
-    itemRow.appendChild(itemKeyInput);
-    itemRow.appendChild(itemAmountLabel);
+    itemRow.appendChild(itemAddButton);
     rewardsSection.appendChild(itemRow);
+
+    const itemEntriesContainer = document.createElement('div');
+    itemEntriesContainer.style.display = 'flex';
+    itemEntriesContainer.style.flexDirection = 'column';
+    itemEntriesContainer.style.gap = '6px';
+    itemEntriesContainer.style.paddingLeft = '26px';
+    rewardsSection.appendChild(itemEntriesContainer);
+
+    const itemEntryRows = [];
+    const itemAmountTexts = [];
+    let itemSelectPlaceholderText = 'アイテムを選択';
+    let itemAmountLabelText = '個数（マイナスで没収）';
+
+    function createPassiveEntryRow(initial = {}){
+      const row = makeRewardRow();
+      const select = document.createElement('select');
+      select.style.padding = '8px 10px';
+      select.style.borderRadius = '8px';
+      select.style.border = '1px solid #cbd5f5';
+      select.style.fontSize = '13px';
+      select.style.minWidth = '200px';
+      select.style.background = '#ffffff';
+      select.style.color = '#111827';
+      select.style.cursor = 'pointer';
+
+      const amountLabel = makeAmountLabel();
+      const amountText = document.createElement('span');
+      const amountInput = document.createElement('input');
+      amountInput.type = 'number';
+      amountInput.min = String(-MAX_REWARD_AMOUNT);
+      amountInput.max = String(MAX_REWARD_AMOUNT);
+      amountInput.step = '1';
+      amountInput.value = String(Number.isFinite(Number(initial.amount)) ? initial.amount : 1);
+      amountInput.style.width = '90px';
+      amountInput.style.padding = '6px 8px';
+      amountInput.style.borderRadius = '8px';
+      amountInput.style.border = '1px solid #cbd5f5';
+      amountInput.style.fontSize = '13px';
+      amountLabel.appendChild(amountText);
+      amountLabel.appendChild(amountInput);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '×';
+      removeBtn.style.padding = '4px 8px';
+      removeBtn.style.borderRadius = '8px';
+      removeBtn.style.border = '1px solid #f87171';
+      removeBtn.style.background = '#fee2e2';
+      removeBtn.style.color = '#b91c1c';
+      removeBtn.style.cursor = 'pointer';
+      removeBtn.style.fontWeight = '600';
+
+      row.appendChild(select);
+      row.appendChild(amountLabel);
+      row.appendChild(removeBtn);
+      passiveEntriesContainer.appendChild(row);
+
+      const entry = { row, select, amountInput, removeBtn, amountText };
+      passiveEntryRows.push(entry);
+      passiveAmountTexts.push(amountText);
+
+      refreshPassiveOrbSelect(false);
+
+      removeBtn.addEventListener('click', () => {
+        if (row.parentNode) row.parentNode.removeChild(row);
+        const index = passiveEntryRows.indexOf(entry);
+        if (index !== -1) passiveEntryRows.splice(index, 1);
+        const labelIdx = passiveAmountTexts.indexOf(amountText);
+        if (labelIdx !== -1) passiveAmountTexts.splice(labelIdx, 1);
+        updatePassiveRowState();
+        refreshPassiveOrbSelect(false);
+      });
+
+      select.title = passiveSelectPlaceholderText;
+      select.setAttribute('aria-label', passiveSelectPlaceholderText);
+      amountText.textContent = passiveAmountLabelText;
+
+      if (initial.orbId){
+        ensureSelectHasValue(select, initial.orbId, getPassiveOrbLabel(initial.orbId));
+        select.value = initial.orbId;
+      }
+
+      return entry;
+    }
+
+    function createItemEntryRow(initial = {}){
+      const row = makeRewardRow();
+      const select = document.createElement('select');
+      select.style.padding = '8px 10px';
+      select.style.borderRadius = '8px';
+      select.style.border = '1px solid #cbd5f5';
+      select.style.fontSize = '13px';
+      select.style.minWidth = '200px';
+      select.style.background = '#ffffff';
+      select.style.color = '#111827';
+      select.style.cursor = 'pointer';
+
+      const amountLabel = makeAmountLabel();
+      const amountText = document.createElement('span');
+      const amountInput = document.createElement('input');
+      amountInput.type = 'number';
+      amountInput.min = String(-MAX_REWARD_AMOUNT);
+      amountInput.max = String(MAX_REWARD_AMOUNT);
+      amountInput.step = '1';
+      amountInput.value = String(Number.isFinite(Number(initial.amount)) ? initial.amount : 1);
+      amountInput.style.width = '90px';
+      amountInput.style.padding = '6px 8px';
+      amountInput.style.borderRadius = '8px';
+      amountInput.style.border = '1px solid #cbd5f5';
+      amountInput.style.fontSize = '13px';
+      amountLabel.appendChild(amountText);
+      amountLabel.appendChild(amountInput);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '×';
+      removeBtn.style.padding = '4px 8px';
+      removeBtn.style.borderRadius = '8px';
+      removeBtn.style.border = '1px solid #f87171';
+      removeBtn.style.background = '#fee2e2';
+      removeBtn.style.color = '#b91c1c';
+      removeBtn.style.cursor = 'pointer';
+      removeBtn.style.fontWeight = '600';
+
+      row.appendChild(select);
+      row.appendChild(amountLabel);
+      row.appendChild(removeBtn);
+      itemEntriesContainer.appendChild(row);
+
+      const entry = { row, select, amountInput, removeBtn, amountText };
+      itemEntryRows.push(entry);
+      itemAmountTexts.push(amountText);
+
+      refreshItemSelect(false);
+
+      removeBtn.addEventListener('click', () => {
+        if (row.parentNode) row.parentNode.removeChild(row);
+        const index = itemEntryRows.indexOf(entry);
+        if (index !== -1) itemEntryRows.splice(index, 1);
+        const labelIdx = itemAmountTexts.indexOf(amountText);
+        if (labelIdx !== -1) itemAmountTexts.splice(labelIdx, 1);
+        updateItemRowState();
+        refreshItemSelect(false);
+      });
+
+      select.title = itemSelectPlaceholderText;
+      select.setAttribute('aria-label', itemSelectPlaceholderText);
+      amountText.textContent = itemAmountLabelText;
+
+      if (initial.key){
+        ensureSelectHasValue(select, initial.key, getItemLabel(initial.key));
+        select.value = initial.key;
+      }
+
+      return entry;
+    }
+
+    passiveAddButton.addEventListener('click', () => {
+      if (!passiveEnableInput.checked){
+        passiveEnableInput.checked = true;
+      }
+      const entry = createPassiveEntryRow();
+      refreshPassiveOrbSelect(false);
+      updatePassiveRowState();
+      try { entry.select.focus(); } catch {}
+    });
+
+    itemAddButton.addEventListener('click', () => {
+      if (!itemEnableInput.checked){
+        itemEnableInput.checked = true;
+      }
+      const entry = createItemEntryRow();
+      refreshItemSelect(false);
+      updateItemRowState();
+      try { entry.select.focus(); } catch {}
+    });
+
+    function clearPassiveEntries(){
+      while (passiveEntryRows.length){
+        const entry = passiveEntryRows.pop();
+        if (entry.row?.parentNode) entry.row.parentNode.removeChild(entry.row);
+      }
+      passiveAmountTexts.length = 0;
+      passiveEntriesContainer.innerHTML = '';
+      refreshPassiveOrbSelect(false);
+    }
+
+    function clearItemEntries(){
+      while (itemEntryRows.length){
+        const entry = itemEntryRows.pop();
+        if (entry.row?.parentNode) entry.row.parentNode.removeChild(entry.row);
+      }
+      itemAmountTexts.length = 0;
+      itemEntriesContainer.innerHTML = '';
+      refreshItemSelect(false);
+    }
 
     const spRow = makeRewardRow();
     const spToggleLabel = makeToggleLabel();
@@ -571,7 +805,7 @@
     const spAmountText = document.createElement('span');
     const spAmountInput = document.createElement('input');
     spAmountInput.type = 'number';
-    spAmountInput.min = '1';
+    spAmountInput.min = String(-MAX_REWARD_AMOUNT);
     spAmountInput.max = String(MAX_REWARD_AMOUNT);
     spAmountInput.step = '1';
     spAmountInput.value = '10';
@@ -662,7 +896,14 @@
       }
       state.tasks.forEach(task => {
         const rewards = ensureTaskRewards(task);
-        if (rewards.passiveOrb?.orbId) ids.add(rewards.passiveOrb.orbId);
+        if (rewards.passiveOrbs?.entries){
+          rewards.passiveOrbs.entries.forEach(entry => {
+            if (entry?.orbId) ids.add(entry.orbId);
+          });
+        }
+      });
+      passiveEntryRows.forEach(entry => {
+        if (entry.select?.value) ids.add(entry.select.value);
       });
       return Array.from(ids).filter(Boolean);
     }
@@ -683,59 +924,74 @@
       }
       state.tasks.forEach(task => {
         const rewards = ensureTaskRewards(task);
-        if (rewards.item?.key) ids.add(rewards.item.key);
+        if (rewards.items?.entries){
+          rewards.items.entries.forEach(entry => {
+            if (entry?.key) ids.add(entry.key);
+          });
+        }
+      });
+      itemEntryRows.forEach(entry => {
+        if (entry.select?.value) ids.add(entry.select.value);
       });
       return Array.from(ids).filter(Boolean);
     }
 
     function refreshPassiveOrbSelect(preserveValue = true){
-      const previous = preserveValue ? passiveOrbIdInput.value : '';
       const placeholderText = translate('games.todoList.form.rewards.passiveOrb.selectPlaceholder', 'パッシブオーブを選択');
       const entries = collectPassiveOrbIds().map(id => ({
         value: id,
         label: getPassiveOrbLabel(id)
       })).sort((a, b) => a.label.localeCompare(b.label));
-      passiveOrbIdInput.innerHTML = '';
-      const placeholder = document.createElement('option');
-      placeholder.value = '';
-      placeholder.textContent = placeholderText;
-      passiveOrbIdInput.appendChild(placeholder);
-      entries.forEach(({ value, label }) => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = label;
-        passiveOrbIdInput.appendChild(option);
+      passiveEntryRows.forEach(entry => {
+        const select = entry.select;
+        if (!select) return;
+        const previous = preserveValue ? select.value : '';
+        select.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = placeholderText;
+        select.appendChild(placeholder);
+        entries.forEach(({ value, label }) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          select.appendChild(option);
+        });
+        if (previous && Array.from(select.options).some(option => option.value === previous)){
+          select.value = previous;
+        } else {
+          select.value = '';
+        }
       });
-      if (previous && Array.from(passiveOrbIdInput.options).some(option => option.value === previous)){
-        passiveOrbIdInput.value = previous;
-      } else {
-        passiveOrbIdInput.value = '';
-      }
     }
 
     function refreshItemSelect(preserveValue = true){
-      const previous = preserveValue ? itemKeyInput.value : '';
       const placeholderText = translate('games.todoList.form.rewards.item.selectPlaceholder', 'アイテムを選択');
       const entries = collectItemIds().map(id => ({
         value: id,
         label: getItemLabel(id)
       })).sort((a, b) => a.label.localeCompare(b.label));
-      itemKeyInput.innerHTML = '';
-      const placeholder = document.createElement('option');
-      placeholder.value = '';
-      placeholder.textContent = placeholderText;
-      itemKeyInput.appendChild(placeholder);
-      entries.forEach(({ value, label }) => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = label;
-        itemKeyInput.appendChild(option);
+      itemEntryRows.forEach(entry => {
+        const select = entry.select;
+        if (!select) return;
+        const previous = preserveValue ? select.value : '';
+        select.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = placeholderText;
+        select.appendChild(placeholder);
+        entries.forEach(({ value, label }) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          select.appendChild(option);
+        });
+        if (previous && Array.from(select.options).some(option => option.value === previous)){
+          select.value = previous;
+        } else {
+          select.value = '';
+        }
       });
-      if (previous && Array.from(itemKeyInput.options).some(option => option.value === previous)){
-        itemKeyInput.value = previous;
-      } else {
-        itemKeyInput.value = '';
-      }
     }
 
     refreshPassiveOrbSelect(false);
@@ -743,16 +999,26 @@
 
     function updatePassiveRowState(){
       const enabled = !!passiveEnableInput.checked;
-      passiveOrbIdInput.disabled = !enabled;
-      passiveAmountInput.disabled = !enabled;
+      passiveAddButton.disabled = !enabled;
       passiveRow.style.opacity = enabled ? '1' : '0.6';
+      passiveEntriesContainer.style.opacity = enabled ? '1' : '0.6';
+      passiveEntryRows.forEach(entry => {
+        entry.select.disabled = !enabled;
+        entry.amountInput.disabled = !enabled;
+        entry.removeBtn.disabled = !enabled;
+      });
     }
 
     function updateItemRowState(){
       const enabled = !!itemEnableInput.checked;
-      itemKeyInput.disabled = !enabled;
-      itemAmountInput.disabled = !enabled;
+      itemAddButton.disabled = !enabled;
       itemRow.style.opacity = enabled ? '1' : '0.6';
+      itemEntriesContainer.style.opacity = enabled ? '1' : '0.6';
+      itemEntryRows.forEach(entry => {
+        entry.select.disabled = !enabled;
+        entry.amountInput.disabled = !enabled;
+        entry.removeBtn.disabled = !enabled;
+      });
     }
 
     function updateSpRowState(){
@@ -761,8 +1027,18 @@
       spRow.style.opacity = enabled ? '1' : '0.6';
     }
 
-    passiveEnableInput.addEventListener('change', updatePassiveRowState);
-    itemEnableInput.addEventListener('change', updateItemRowState);
+    passiveEnableInput.addEventListener('change', () => {
+      if (passiveEnableInput.checked && passiveEntryRows.length === 0){
+        createPassiveEntryRow();
+      }
+      updatePassiveRowState();
+    });
+    itemEnableInput.addEventListener('change', () => {
+      if (itemEnableInput.checked && itemEntryRows.length === 0){
+        createItemEntryRow();
+      }
+      updateItemRowState();
+    });
     spEnableInput.addEventListener('change', updateSpRowState);
 
     updatePassiveRowState();
@@ -915,11 +1191,9 @@
       colorInput.value = '#f97316';
       memoInput.value = '';
       passiveEnableInput.checked = false;
-      passiveOrbIdInput.value = '';
-      passiveAmountInput.value = '1';
+      clearPassiveEntries();
       itemEnableInput.checked = false;
-      itemKeyInput.value = '';
-      itemAmountInput.value = '1';
+      clearItemEntries();
       spEnableInput.checked = false;
       spAmountInput.value = '10';
       updatePassiveRowState();
@@ -938,20 +1212,24 @@
       colorInput.value = task.color;
       memoInput.value = task.memo;
       const rewards = ensureTaskRewards(task);
-      passiveEnableInput.checked = !!rewards.passiveOrb.enabled;
-      if (rewards.passiveOrb?.orbId){
-        ensureSelectHasValue(passiveOrbIdInput, rewards.passiveOrb.orbId, getPassiveOrbLabel(rewards.passiveOrb.orbId));
+      passiveEnableInput.checked = !!rewards.passiveOrbs.enabled;
+      clearPassiveEntries();
+      if (Array.isArray(rewards.passiveOrbs.entries) && rewards.passiveOrbs.entries.length){
+        rewards.passiveOrbs.entries.forEach(entry => createPassiveEntryRow(entry));
       }
-      passiveOrbIdInput.value = rewards.passiveOrb.orbId || '';
-      passiveAmountInput.value = String(rewards.passiveOrb.amount || 1);
-      itemEnableInput.checked = !!rewards.item.enabled;
-      if (rewards.item?.key){
-        ensureSelectHasValue(itemKeyInput, rewards.item.key, getItemLabel(rewards.item.key));
+      if (passiveEnableInput.checked && passiveEntryRows.length === 0){
+        createPassiveEntryRow();
       }
-      itemKeyInput.value = rewards.item.key || '';
-      itemAmountInput.value = String(rewards.item.amount || 1);
+      itemEnableInput.checked = !!rewards.items.enabled;
+      clearItemEntries();
+      if (Array.isArray(rewards.items.entries) && rewards.items.entries.length){
+        rewards.items.entries.forEach(entry => createItemEntryRow(entry));
+      }
+      if (itemEnableInput.checked && itemEntryRows.length === 0){
+        createItemEntryRow();
+      }
       spEnableInput.checked = !!rewards.sp.enabled;
-      spAmountInput.value = String(rewards.sp.amount || 10);
+      spAmountInput.value = String(rewards.sp.amount || 0);
       updatePassiveRowState();
       updateItemRowState();
       updateSpRowState();
@@ -959,15 +1237,19 @@
 
     function readRewardsFromForm(){
       return sanitizeTaskRewards({
-        passiveOrb: {
+        passiveOrbs: {
           enabled: passiveEnableInput.checked,
-          orbId: passiveOrbIdInput.value,
-          amount: passiveAmountInput.value
+          entries: passiveEntryRows.map(entry => ({
+            orbId: entry.select.value,
+            amount: entry.amountInput.value
+          }))
         },
-        item: {
+        items: {
           enabled: itemEnableInput.checked,
-          key: itemKeyInput.value,
-          amount: itemAmountInput.value
+          entries: itemEntryRows.map(entry => ({
+            key: entry.select.value,
+            amount: entry.amountInput.value
+          }))
         },
         sp: {
           enabled: spEnableInput.checked,
@@ -1052,17 +1334,27 @@
       xpLabelText.textContent = translate('games.todoList.form.xp', 'EXP変化量（マイナスで没収）');
       rewardsTitle.textContent = translate('games.todoList.form.rewards.title', '追加報酬');
       passiveEnableText.textContent = translate('games.todoList.form.rewards.passiveOrb.label', 'パッシブオーブ');
-      const passiveSelectPlaceholder = translate('games.todoList.form.rewards.passiveOrb.selectPlaceholder', 'パッシブオーブを選択');
-      passiveOrbIdInput.title = passiveSelectPlaceholder;
-      passiveOrbIdInput.setAttribute('aria-label', passiveSelectPlaceholder);
-      passiveAmountText.textContent = translate('games.todoList.form.rewards.passiveOrb.amount', '個数');
+      passiveSelectPlaceholderText = translate('games.todoList.form.rewards.passiveOrb.selectPlaceholder', 'パッシブオーブを選択');
+      passiveAmountLabelText = translate('games.todoList.form.rewards.passiveOrb.amount', '個数（マイナスで没収）');
+      passiveAddButton.textContent = translate('games.todoList.form.rewards.passiveOrb.addEntry', '追加');
+      passiveEntryRows.forEach(entry => {
+        entry.select.title = passiveSelectPlaceholderText;
+        entry.select.setAttribute('aria-label', passiveSelectPlaceholderText);
+      });
+      passiveAmountTexts.forEach(node => { node.textContent = passiveAmountLabelText; });
+      refreshPassiveOrbSelect(true);
       itemEnableText.textContent = translate('games.todoList.form.rewards.item.label', 'アイテム');
-      const itemSelectPlaceholder = translate('games.todoList.form.rewards.item.selectPlaceholder', 'アイテムを選択');
-      itemKeyInput.title = itemSelectPlaceholder;
-      itemKeyInput.setAttribute('aria-label', itemSelectPlaceholder);
-      itemAmountText.textContent = translate('games.todoList.form.rewards.item.amount', '個数（マイナスで没収）');
+      itemSelectPlaceholderText = translate('games.todoList.form.rewards.item.selectPlaceholder', 'アイテムを選択');
+      itemAmountLabelText = translate('games.todoList.form.rewards.item.amount', '個数（マイナスで没収）');
+      itemAddButton.textContent = translate('games.todoList.form.rewards.item.addEntry', '追加');
+      itemEntryRows.forEach(entry => {
+        entry.select.title = itemSelectPlaceholderText;
+        entry.select.setAttribute('aria-label', itemSelectPlaceholderText);
+      });
+      itemAmountTexts.forEach(node => { node.textContent = itemAmountLabelText; });
+      refreshItemSelect(true);
       spEnableText.textContent = translate('games.todoList.form.rewards.sp.label', 'SP');
-      spAmountText.textContent = translate('games.todoList.form.rewards.sp.amount', '量');
+      spAmountText.textContent = translate('games.todoList.form.rewards.sp.amount', '変化量（マイナスで没収）');
       colorLabelText.textContent = translate('games.todoList.form.color', 'カラー');
       memoLabelText.textContent = translate('games.todoList.form.memo', 'メモ');
       memoInput.placeholder = translate('games.todoList.form.memoPlaceholder', '補足情報やチェックポイントなどを入力');
@@ -1206,27 +1498,40 @@
       );
       chipRow.appendChild(xpChip);
 
-      if (rewards.passiveOrb.enabled){
-        const passiveText = translate('games.todoList.task.rewards.passiveOrb', 'オーブ: {orb} ×{amount}', {
-          orb: rewards.passiveOrb.orbId,
-          amount: formatNumber(rewards.passiveOrb.amount, { maximumFractionDigits: 0 })
+      if (rewards.passiveOrbs.enabled && Array.isArray(rewards.passiveOrbs.entries)){
+        rewards.passiveOrbs.entries.forEach(entry => {
+          if (!entry?.orbId) return;
+          const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
+          const passiveText = translate('games.todoList.task.rewards.passiveOrb', 'オーブ: {orb} ×{amount}', {
+            orb: entry.orbId,
+            amount: amountText
+          });
+          chipRow.appendChild(makeChip(passiveText, '#ede9fe', '#5b21b6'));
         });
-        chipRow.appendChild(makeChip(passiveText, '#ede9fe', '#5b21b6'));
       }
 
-      if (rewards.item.enabled){
-        const itemText = translate('games.todoList.task.rewards.item', '{item} ×{amount}', {
-          item: rewards.item.key,
-          amount: formatNumber(rewards.item.amount, { maximumFractionDigits: 0 })
+      if (rewards.items.enabled && Array.isArray(rewards.items.entries)){
+        rewards.items.entries.forEach(entry => {
+          if (!entry?.key) return;
+          const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
+          const itemText = translate('games.todoList.task.rewards.item', '{item} ×{amount}', {
+            item: entry.key,
+            amount: amountText
+          });
+          chipRow.appendChild(makeChip(itemText, '#dbeafe', '#1d4ed8'));
         });
-        chipRow.appendChild(makeChip(itemText, '#dbeafe', '#1d4ed8'));
       }
 
       if (rewards.sp.enabled){
-        const spText = translate('games.todoList.task.rewards.sp', '+{amount} SP', {
-          amount: formatNumber(rewards.sp.amount, { maximumFractionDigits: 0 })
-        });
-        chipRow.appendChild(makeChip(spText, '#cffafe', '#0f766e'));
+        const spAmount = Number(rewards.sp.amount) || 0;
+        if (spAmount !== 0){
+          const absAmount = formatNumber(Math.abs(spAmount), { maximumFractionDigits: 0 });
+          const signed = spAmount > 0 ? `+${absAmount}` : `-${absAmount}`;
+          const spText = translate('games.todoList.task.rewards.sp', 'SP {amount}', {
+            amount: signed
+          });
+          chipRow.appendChild(makeChip(spText, '#cffafe', '#0f766e'));
+        }
       }
 
       const colorChip = document.createElement('span');
@@ -1368,33 +1673,50 @@
           }
         } catch {}
       }
-      if (playerApi && rewards.sp.enabled && rewards.sp.amount > 0 && typeof playerApi.adjustSp === 'function'){
-        try {
-          playerApi.adjustSp(rewards.sp.amount, { source: 'todo_list', reason: meta?.type || 'todo_list' });
-        } catch {}
+      if (playerApi && rewards.sp.enabled && typeof playerApi.adjustSp === 'function'){
+        const spAmount = Number(rewards.sp.amount) || 0;
+        if (spAmount !== 0){
+          try {
+            playerApi.adjustSp(spAmount, { source: 'todo_list', reason: meta?.type || 'todo_list' });
+          } catch {}
+        }
       }
-      if (playerApi && rewards.item.enabled && rewards.item.key){
-        const itemAmount = Number(rewards.item.amount) || 0;
-        if (itemAmount !== 0){
-          const payload = { [rewards.item.key]: itemAmount };
-          if (itemAmount > 0 && typeof playerApi.awardItems === 'function'){
+      if (playerApi && rewards.items.enabled && Array.isArray(rewards.items.entries)){
+        const positives = {};
+        const negatives = {};
+        rewards.items.entries.forEach(entry => {
+          const key = entry?.key;
+          const amount = Number(entry?.amount) || 0;
+          if (!key || amount === 0) return;
+          if (amount > 0){
+            positives[key] = (positives[key] || 0) + amount;
+          } else if (amount < 0){
+            negatives[key] = (negatives[key] || 0) + amount;
+          }
+        });
+        if (Object.keys(positives).length && typeof playerApi.awardItems === 'function'){
+          try {
+            playerApi.awardItems(positives, { allowNegative: false });
+          } catch {}
+        }
+        if (Object.keys(negatives).length){
+          const handler = typeof playerApi.adjustItems === 'function' ? playerApi.adjustItems : playerApi.awardItems;
+          if (typeof handler === 'function'){
             try {
-              playerApi.awardItems(payload, { allowNegative: false });
+              handler(negatives, { allowNegative: true });
             } catch {}
-          } else if (itemAmount < 0){
-            const handler = typeof playerApi.adjustItems === 'function' ? playerApi.adjustItems : playerApi.awardItems;
-            if (typeof handler === 'function'){
-              try {
-                handler(payload, { allowNegative: true });
-              } catch {}
-            }
           }
         }
       }
-      if (playerApi && rewards.passiveOrb.enabled && rewards.passiveOrb.orbId && typeof playerApi.awardPassiveOrb === 'function'){
-        try {
-          playerApi.awardPassiveOrb(rewards.passiveOrb.orbId, rewards.passiveOrb.amount, { source: meta?.type || 'todo_list' });
-        } catch {}
+      if (playerApi && rewards.passiveOrbs.enabled && Array.isArray(rewards.passiveOrbs.entries) && typeof playerApi.awardPassiveOrb === 'function'){
+        rewards.passiveOrbs.entries.forEach(entry => {
+          const orbId = entry?.orbId;
+          const amount = Number(entry?.amount) || 0;
+          if (!orbId || amount === 0) return;
+          try {
+            playerApi.awardPassiveOrb(orbId, amount, { source: meta?.type || 'todo_list' });
+          } catch {}
+        });
       }
       return xpDelta;
     }

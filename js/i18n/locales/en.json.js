@@ -18615,7 +18615,7 @@
           "type": "Type",
           "typeSingle": "Single",
           "typeRepeatable": "Repeatable",
-          "xp": "EXP Reward",
+          "xp": "EXP Change (use minus to revoke)",
           "rewards": {
             "title": "Additional Rewards",
             "passiveOrb": {
@@ -18623,14 +18623,16 @@
               "placeholder": "e.g., attackBoost",
               "selectPlaceholder": "Select a passive orb",
               "customOption": "{value} (saved)",
-              "amount": "Quantity"
+              "amount": "Quantity (negative to remove)",
+              "addEntry": "Add"
             },
             "item": {
               "label": "Item",
               "placeholder": "e.g., potion30",
               "selectPlaceholder": "Select an item",
               "customOption": "{value} (saved)",
-              "amount": "Quantity",
+              "amount": "Quantity (negative to remove)",
+              "addEntry": "Add",
               "defaults": {
                 "potion30": "Potion (30%)",
                 "hpBoost": "HP Boost",
@@ -18644,7 +18646,7 @@
             },
             "sp": {
               "label": "SP",
-              "amount": "Amount"
+              "amount": "Change (negative to deduct)"
             }
           },
           "color": "Color",
@@ -18665,7 +18667,7 @@
           "rewards": {
             "passiveOrb": "Orb: {orb} ×{amount}",
             "item": "{item} ×{amount}",
-            "sp": "+{amount} SP"
+            "sp": "SP {amount}"
           },
           "memoEmpty": "No notes",
           "createdAt": "Created: {date}",

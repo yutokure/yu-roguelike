@@ -17792,7 +17792,7 @@
           "type": "タイプ",
           "typeSingle": "単発",
           "typeRepeatable": "繰り返し",
-          "xp": "獲得EXP",
+          "xp": "EXP変化量（マイナスで没収）",
           "rewards": {
             "title": "追加報酬",
             "passiveOrb": {
@@ -17800,14 +17800,16 @@
               "placeholder": "例: attackBoost",
               "selectPlaceholder": "パッシブオーブを選択",
               "customOption": "{value} (保存済み)",
-              "amount": "個数"
+              "amount": "個数（マイナスで没収）",
+              "addEntry": "追加"
             },
             "item": {
               "label": "アイテム",
               "placeholder": "例: potion30",
               "selectPlaceholder": "アイテムを選択",
               "customOption": "{value} (保存済み)",
-              "amount": "個数",
+              "amount": "個数（マイナスで没収）",
+              "addEntry": "追加",
               "defaults": {
                 "potion30": "ポーション（30%）",
                 "hpBoost": "HPブースト",
@@ -17821,7 +17823,7 @@
             },
             "sp": {
               "label": "SP",
-              "amount": "回復量"
+              "amount": "変化量（マイナスで没収）"
             }
           },
           "color": "カラー",
@@ -17842,7 +17844,7 @@
           "rewards": {
             "passiveOrb": "オーブ: {orb} ×{amount}",
             "item": "{item} ×{amount}",
-            "sp": "SP +{amount}"
+            "sp": "SP {amount}"
           },
           "memoEmpty": "メモなし",
           "createdAt": "登録: {date}",

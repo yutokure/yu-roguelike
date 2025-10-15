@@ -8759,7 +8759,7 @@
           "type": "类型",
           "typeSingle": "单张",
           "typeRepeatable": "可重复",
-          "xp": "经验奖励",
+          "xp": "经验变化（负数为扣除）",
           "rewards": {
             "title": "额外奖励",
             "passiveOrb": {
@@ -8767,14 +8767,16 @@
               "placeholder": "例如，攻击Boost",
               "selectPlaceholder": "选择一个被动球体",
               "customOption": "{value}（已保存）",
-              "amount": "数量"
+              "amount": "数量（负数为扣除）",
+              "addEntry": "添加"
             },
             "item": {
               "label": "项目",
               "placeholder": "药水30",
               "selectPlaceholder": "选择项目",
               "customOption": "{value}（已保存）",
-              "amount": "数量",
+              "amount": "数量（负数为扣除）",
+              "addEntry": "添加",
               "defaults": {
                 "potion30": "药水(30%)",
                 "hpBoost": "生命值提升",
@@ -8788,7 +8790,7 @@
             },
             "sp": {
               "label": "SP",
-              "amount": "数量"
+              "amount": "变化量（负数为扣除）"
             }
           },
           "color": "颜色",
@@ -8809,7 +8811,7 @@
           "rewards": {
             "passiveOrb": "宝珠：{orb} ×{amount}",
             "item": "{item} ×{amount}",
-            "sp": "+{amount} SP"
+            "sp": "SP {amount}"
           },
           "memoEmpty": "无注释",
           "createdAt": "创建：{date}",

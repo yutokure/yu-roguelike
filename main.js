@@ -6600,12 +6600,17 @@ function grantPassiveOrb(source = 'unknown') {
 function awardPassiveOrbFromMini(orbId, amount = 1, opts = {}) {
     if (!PASSIVE_ORB_DEFS[orbId]) return null;
     const numericAmount = Number(amount);
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) return null;
+    if (!Number.isFinite(numericAmount) || Math.abs(numericAmount) < 1e-6) return null;
     const delta = numericAmount > 0 ? Math.floor(numericAmount) : Math.ceil(numericAmount);
-    if (delta <= 0) return null;
+    if (delta === 0) return null;
     const nextCount = incrementPassiveOrb(orbId, delta);
     const options = opts && typeof opts === 'object' ? opts : {};
-    handlePassiveOrbAcquisition(orbId, nextCount, delta, options.source || 'mini', options);
+    if (delta > 0) {
+        handlePassiveOrbAcquisition(orbId, nextCount, delta, options.source || 'mini', options);
+    } else {
+        markUiDirty();
+        saveAll();
+    }
     return { orbId, count: nextCount, delta };
 }
 

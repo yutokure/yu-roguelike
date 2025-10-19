@@ -4,6 +4,7 @@
   const MAX_SEGMENTS = 12;
   const MAX_NAME_LENGTH = 40;
   const MAX_ROULETTE_XP = 1000000;
+  const MAX_ROULETTE_WEIGHT = 1000;
   const MAX_RANDOM_RANGE = 1_000_000_000;
   const MAX_TEXT_LENGTH = 256;
   const MAX_CUSTOM_CHARACTERS = 200;
@@ -28,9 +29,9 @@
     activeTab: 'dice',
     diceCount: 2,
     rouletteSegments: [
-      { id: createId(), name: 'EXP100', xp: 100 },
-      { id: createId(), name: 'EXP250', xp: 250 },
-      { id: createId(), name: 'EXP500', xp: 500 }
+      { id: createId(), name: 'EXP100', xp: 100, weight: 1 },
+      { id: createId(), name: 'EXP250', xp: 250, weight: 1 },
+      { id: createId(), name: 'EXP500', xp: 500, weight: 1 }
     ],
     selectionList: ['選択肢A', '選択肢B', '選択肢C'],
     numberRange: { min: 1, max: 100 },
@@ -61,6 +62,12 @@
   function clampRouletteXp(raw){
     const value = Math.round(Math.max(0, safeNumber(raw, 0)));
     if (value > MAX_ROULETTE_XP) return MAX_ROULETTE_XP;
+    return value;
+  }
+
+  function clampRouletteWeight(raw){
+    const value = Math.round(Math.max(1, safeNumber(raw, 1)));
+    if (value > MAX_ROULETTE_WEIGHT) return MAX_ROULETTE_WEIGHT;
     return value;
   }
 
@@ -194,12 +201,13 @@
 
   function sanitizeSegment(raw){
     if (!raw || typeof raw !== 'object'){
-      return { id: createId(), name: 'EXP100', xp: 100 };
+      return { id: createId(), name: 'EXP100', xp: 100, weight: 1 };
     }
     const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id : createId();
     const name = clampName(raw.name) || 'EXP100';
     const xp = clampRouletteXp(raw.xp);
-    return { id, name, xp };
+    const weight = clampRouletteWeight(raw.weight);
+    return { id, name, xp, weight };
   }
 
   function saveState(state){
@@ -448,7 +456,7 @@
     return panel;
   }
 
-  function buildRoulettePanel({ text, formatNumber, state, awardXp, saveState }){
+  function buildRoulettePanel({ text, formatNumber, state, awardXp = () => {}, saveState }){
     const panel = document.createElement('div');
     panel.className = 'mini-random-tool__panel';
 
@@ -460,6 +468,9 @@
 
     const wheel = document.createElement('div');
     wheel.className = 'mini-random-tool__roulette-wheel';
+    const labelLayer = document.createElement('div');
+    labelLayer.className = 'mini-random-tool__roulette-label-layer';
+    wheel.appendChild(labelLayer);
 
     const pointer = document.createElement('div');
     pointer.className = 'mini-random-tool__roulette-pointer';
@@ -494,15 +505,18 @@
 
     let wheelRotation = 0;
     let spinTimer = null;
+    let wheelGeometry = [];
+    let rerenderScheduled = false;
 
     function getSegments(){
       return state.rouletteSegments
         .map((segment) => ({
           id: segment.id,
           name: clampName(segment.name),
-          xp: clampRouletteXp(segment.xp)
+          xp: clampRouletteXp(segment.xp),
+          weight: clampRouletteWeight(segment.weight)
         }))
-        .filter((segment) => segment.name);
+        .filter((segment) => segment.name && segment.weight > 0);
     }
 
     function persistSegments(segments){
@@ -523,7 +537,7 @@
     function removeSegment(id){
       const next = state.rouletteSegments.filter((segment) => segment.id !== id);
       if (!next.length){
-        next.push(sanitizeSegment({ name: 'EXP100', xp: 100 }));
+        next.push(sanitizeSegment({ name: 'EXP100', xp: 100, weight: 1 }));
       }
       persistSegments(next);
     }
@@ -556,11 +570,23 @@
         xpInput.placeholder = text('.roulette.xpPlaceholder', 'EXP');
         xpInput.min = '0';
         xpInput.max = String(MAX_ROULETTE_XP);
-        xpInput.value = segment.xp;
+        xpInput.value = String(clampRouletteXp(segment.xp));
         xpInput.addEventListener('change', () => {
           updateSegment(segment.id, { xp: clampRouletteXp(xpInput.value) });
         });
         row.appendChild(xpInput);
+
+        const weightInput = document.createElement('input');
+        weightInput.type = 'number';
+        weightInput.className = 'mini-random-tool__input mini-random-tool__segment-weight';
+        weightInput.placeholder = text('.roulette.weightPlaceholder', '重み');
+        weightInput.min = '1';
+        weightInput.max = String(MAX_ROULETTE_WEIGHT);
+        weightInput.value = String(clampRouletteWeight(segment.weight));
+        weightInput.addEventListener('change', () => {
+          updateSegment(segment.id, { weight: clampRouletteWeight(weightInput.value) });
+        });
+        row.appendChild(weightInput);
 
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
@@ -584,18 +610,57 @@
       const segments = getSegments();
       if (!segments.length){
         wheel.style.background = 'linear-gradient(135deg, #4b4b4b, #2b2b2b)';
+        labelLayer.innerHTML = '';
+        wheelGeometry = [];
         return;
       }
-      const slice = 360 / segments.length;
+      const totalWeight = segments.reduce((sum, segment) => sum + segment.weight, 0);
+      if (totalWeight <= 0){
+        wheel.style.background = 'linear-gradient(135deg, #4b4b4b, #2b2b2b)';
+        labelLayer.innerHTML = '';
+        wheelGeometry = [];
+        return;
+      }
+      const gradientParts = [];
       let current = 0;
-      const gradientParts = segments.map((segment, index) => {
+      const radiusRaw = wheel.offsetWidth ? wheel.offsetWidth / 2 : wheel.clientWidth / 2;
+      const radius = radiusRaw || 120;
+      const distance = Math.max(36, radius * 0.68);
+      labelLayer.innerHTML = '';
+      wheelGeometry = [];
+      segments.forEach((segment, index) => {
+        const fraction = segment.weight / totalWeight;
+        const sweep = fraction * 360;
         const start = current;
-        const end = current + slice;
+        let end = current + sweep;
+        if (index === segments.length - 1){
+          end = 360;
+        }
         current = end;
-        return `${WHEEL_COLORS[index % WHEEL_COLORS.length]} ${start}deg ${end}deg`;
+        const color = WHEEL_COLORS[index % WHEEL_COLORS.length];
+        gradientParts.push(`${color} ${start}deg ${end}deg`);
+        const actualSweep = end - start;
+        const mid = start + actualSweep / 2;
+        const label = document.createElement('div');
+        label.className = 'mini-random-tool__roulette-label';
+        label.style.transform = `rotate(${mid}deg) translateY(${-distance}px)`;
+        const textEl = document.createElement('span');
+        textEl.className = 'mini-random-tool__roulette-label-text';
+        textEl.textContent = segment.name;
+        textEl.style.transform = `rotate(${-mid}deg)`;
+        label.appendChild(textEl);
+        labelLayer.appendChild(label);
+        wheelGeometry.push({ id: segment.id, start, end, sweep: actualSweep });
       });
       wheel.style.background = `conic-gradient(${gradientParts.join(',')})`;
       wheel.setAttribute('data-segment-count', String(segments.length));
+      if (!wheel.offsetWidth && !rerenderScheduled && typeof requestAnimationFrame === 'function'){
+        rerenderScheduled = true;
+        requestAnimationFrame(() => {
+          rerenderScheduled = false;
+          renderWheel();
+        });
+      }
     }
 
     function spin(){
@@ -609,10 +674,21 @@
         ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
         : false;
 
-      const anglePer = 360 / segments.length;
-      const chosenIndex = Math.floor(Math.random() * segments.length);
-      const startAngle = anglePer * chosenIndex;
-      const offset = anglePer * (0.25 + Math.random() * 0.5);
+      const totalWeight = segments.reduce((sum, segment) => sum + segment.weight, 0);
+      let threshold = Math.random() * totalWeight;
+      let chosenSegment = segments[segments.length - 1];
+      for (const segment of segments){
+        threshold -= segment.weight;
+        if (threshold <= 0){
+          chosenSegment = segment;
+          break;
+        }
+      }
+      const geometry = wheelGeometry.find((entry) => entry.id === chosenSegment.id);
+      const fallbackSweep = 360 / segments.length;
+      const sweep = geometry ? geometry.sweep : fallbackSweep;
+      const startAngle = geometry ? geometry.start : segments.indexOf(chosenSegment) * fallbackSweep;
+      const offset = sweep * (0.2 + Math.random() * 0.6);
       const targetAngle = startAngle + offset;
       const extraSpins = prefersReducedMotion ? 0 : 2 + Math.floor(Math.random() * 3);
       const duration = prefersReducedMotion ? 0.6 : 3.2;
@@ -626,7 +702,7 @@
 
       if (spinTimer) clearTimeout(spinTimer);
       spinTimer = setTimeout(() => {
-        finishSpin(segments[chosenIndex]);
+        finishSpin(chosenSegment);
       }, duration * 1000 + 50);
     }
 
@@ -645,7 +721,12 @@
 
     addButton.addEventListener('click', () => {
       if (state.rouletteSegments.length >= MAX_SEGMENTS) return;
-      const next = state.rouletteSegments.concat({ id: createId(), name: text('.roulette.defaultName', 'EXP100'), xp: 100 });
+      const next = state.rouletteSegments.concat({
+        id: createId(),
+        name: text('.roulette.defaultName', 'EXP100'),
+        xp: 100,
+        weight: 1
+      });
       persistSegments(next);
     });
 
@@ -672,7 +753,7 @@
     return panel;
   }
 
-  function buildChoicePanel({ text, state, saveState }){
+  function buildChoicePanel({ text, state, saveState, awardXp = () => {} }){
     const panel = document.createElement('div');
     panel.className = 'mini-random-tool__panel';
 
@@ -708,6 +789,7 @@
       }
       const choice = options[Math.floor(Math.random() * options.length)];
       result.innerHTML = text('.choice.result', () => `選択結果: <strong>${choice}</strong>`, { choice });
+      awardXp(options.length);
     });
 
     panel.appendChild(textarea);
@@ -717,7 +799,7 @@
     return panel;
   }
 
-  function buildTextPanel({ text, state, saveState }){
+  function buildTextPanel({ text, state, saveState, awardXp = () => {} }){
     const panel = document.createElement('div');
     panel.className = 'mini-random-tool__panel';
 
@@ -764,6 +846,7 @@
       input.className = 'mini-random-tool__checkbox-input';
       input.checked = checked;
       const span = document.createElement('span');
+      span.className = 'mini-random-tool__checkbox-label';
       span.textContent = labelText;
       labelEl.appendChild(input);
       labelEl.appendChild(span);
@@ -1000,7 +1083,10 @@
         characters.push(pickRandomCharacter(pool));
       }
       shuffleArray(characters);
-      updateResult('password', characters.join(''));
+      const value = characters.join('');
+      updateResult('password', value);
+      const xpGain = Math.max(1, pool.length * length);
+      awardXp(xpGain);
     }
 
     function generateText(){
@@ -1015,7 +1101,10 @@
       for (let index = 0; index < length; index += 1){
         characters.push(pickRandomCharacter(pool));
       }
-      updateResult('text', characters.join(''));
+      const value = characters.join('');
+      updateResult('text', value);
+      const xpGain = Math.max(1, pool.length * length);
+      awardXp(xpGain);
     }
 
     passwordButton.addEventListener('click', generatePassword);
@@ -1063,7 +1152,7 @@
     return panel;
   }
 
-  function buildNumberPanel({ text, formatNumber, state, saveState }){
+  function buildNumberPanel({ text, formatNumber, state, saveState, awardXp = () => {} }){
     const panel = document.createElement('div');
     panel.className = 'mini-random-tool__panel';
 
@@ -1121,6 +1210,10 @@
       }
       const value = range.min + Math.floor(Math.random() * span);
       result.innerHTML = text('.number.result', () => `結果: <strong>${formatNumber(value)}</strong>`, { value: formatNumber(value) });
+      const maxAbs = Math.abs(range.max);
+      const digits = maxAbs === 0 ? 1 : Math.floor(Math.log10(maxAbs)) + 1;
+      const xpGain = Math.max(1, digits * 10);
+      awardXp(xpGain);
     });
 
     formRow.appendChild(minLabel);
@@ -1321,6 +1414,34 @@
         border: 8px solid rgba(148, 163, 184, 0.3);
         box-shadow: inset 0 0 30px rgba(15, 23, 42, 0.7), 0 12px 30px rgba(15, 23, 42, 0.6);
         transition: transform 0.4s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .mini-random-tool__roulette-label-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .mini-random-tool__roulette-label {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform-origin: center;
+      }
+      .mini-random-tool__roulette-label-text {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.75);
+        color: #f8fafc;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.45);
+        transform-origin: center;
       }
       .mini-random-tool__roulette-pointer {
         position: absolute;
@@ -1333,6 +1454,7 @@
         border-bottom: 18px solid #38bdf8;
         transform: translateX(-50%);
         filter: drop-shadow(0 4px 6px rgba(56, 189, 248, 0.4));
+        z-index: 3;
       }
       .mini-random-tool__spin-button {
         position: absolute;
@@ -1340,6 +1462,7 @@
         top: 50%;
         transform: translate(-50%, -50%);
         padding: 12px 20px;
+        z-index: 4;
       }
       .mini-random-tool__segment-list {
         flex: 1 1 200px;
@@ -1352,7 +1475,7 @@
       }
       .mini-random-tool__segment-row {
         display: grid;
-        grid-template-columns: 20px 1fr 100px 32px;
+        grid-template-columns: 20px minmax(0, 1fr) 100px 80px 32px;
         gap: 8px;
         align-items: center;
       }
@@ -1398,11 +1521,19 @@
         padding: 8px 10px;
         font-size: 0.9rem;
         cursor: pointer;
+        color: #e2e8f0;
       }
       .mini-random-tool__checkbox-input {
         width: 18px;
         height: 18px;
         accent-color: #38bdf8;
+      }
+      .mini-random-tool__checkbox-label {
+        color: #f1f5f9;
+        font-weight: 600;
+      }
+      .mini-random-tool__segment-weight {
+        text-align: center;
       }
       .mini-random-tool__custom-wrapper {
         display: flex;

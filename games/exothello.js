@@ -382,6 +382,7 @@
       defaultSize: { width: 8, height: 8 },
       allowSizeChange: true,
       descriptionKey: 'miniexp.games.exothello.modes.normal',
+      descriptionDefault: 'Classic Othello rules on a flexible board size.',
       labelKey: 'miniexp.games.exothello.modes.normal.short',
       setup(state) {
         const width = clampSize(state.settings.width, 4, 32);
@@ -396,6 +397,7 @@
       defaultSize: { width: 8, height: 8 },
       allowSizeChange: true,
       descriptionKey: 'miniexp.games.exothello.modes.cornerWalls',
+      descriptionDefault: 'Corner squares are locked as walls, reshaping opening play.',
       labelKey: 'miniexp.games.exothello.modes.cornerWalls.short',
       setup(state) {
         const width = clampSize(state.settings.width, 6, 32);
@@ -414,6 +416,7 @@
       defaultSize: { width: 8, height: 8 },
       allowSizeChange: true,
       descriptionKey: 'miniexp.games.exothello.modes.least',
+      descriptionDefault: 'Aim for the fewest discs to win instead of the most.',
       labelKey: 'miniexp.games.exothello.modes.least.short',
       setup(state) {
         const width = clampSize(state.settings.width, 6, 32);
@@ -428,6 +431,7 @@
       defaultSize: { width: 64, height: 32 },
       allowSizeChange: false,
       descriptionKey: 'miniexp.games.exothello.modes.river',
+      descriptionDefault: 'Fight along a 64×32 river channel carved through solid walls.',
       labelKey: 'miniexp.games.exothello.modes.river.short',
       setup(){
         const width = 64;
@@ -449,6 +453,7 @@
       defaultSize: { width: 8, height: 8 },
       allowSizeChange: true,
       descriptionKey: 'miniexp.games.exothello.modes.sandbox',
+      descriptionDefault: 'Free-build board editor for crafting and testing layouts.',
       labelKey: 'miniexp.games.exothello.modes.sandbox.short',
       setup(state){
         const width = clampSize(state.settings.width, 4, 32);
@@ -462,6 +467,7 @@
       defaultSize: { width: 16, height: 16 },
       allowSizeChange: true,
       descriptionKey: 'miniexp.games.exothello.modes.dungeon',
+      descriptionDefault: 'Battle through a procedurally carved dungeon of rooms and corridors.',
       labelKey: 'miniexp.games.exothello.modes.dungeon.short',
       async setup(state){
         const dungeonApi = state.opts?.dungeon;
@@ -1260,7 +1266,7 @@
       if (mode.id === 'sandbox'){
         statusBox.textContent = text('miniexp.games.exothello.status.sandboxHint', 'Sandbox: paint walls and stones in Edit mode, then switch to Play to test.');
       } else {
-        statusBox.textContent = text(mode.descriptionKey, '');
+        statusBox.textContent = text(mode.descriptionKey, mode.descriptionDefault);
       }
     }
 
@@ -1580,7 +1586,7 @@
           draw();
         } else {
           state.running = true;
-          setStatus(mode.descriptionKey, '');
+          setStatus(mode.descriptionKey, mode.descriptionDefault);
           updateSandboxControls();
           updateLegalMoves();
           checkEnd();

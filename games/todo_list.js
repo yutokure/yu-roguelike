@@ -2249,12 +2249,40 @@
     }
 
     const updateResultOverlayBounds = () => {
-      if (!resultOverlay || !root || !root.getBoundingClientRect) return;
+      if (!resultOverlay) return;
+
+      const overlayParent = resultOverlay.parentNode;
+      const viewportWidth = overlayWindow?.innerWidth
+        ?? overlayDoc?.documentElement?.clientWidth
+        ?? overlayDoc?.body?.clientWidth
+        ?? 0;
+      const viewportHeight = overlayWindow?.innerHeight
+        ?? overlayDoc?.documentElement?.clientHeight
+        ?? overlayDoc?.body?.clientHeight
+        ?? 0;
+
+      if (overlayParent && overlayDoc && overlayParent === overlayDoc.body && viewportWidth && viewportHeight){
+        resultOverlay.style.top = '0px';
+        resultOverlay.style.left = '0px';
+        resultOverlay.style.width = `${viewportWidth}px`;
+        resultOverlay.style.height = `${viewportHeight}px`;
+        return;
+      }
+
+      if (!root || !root.getBoundingClientRect) return;
+
       const rect = root.getBoundingClientRect();
-      resultOverlay.style.top = `${Math.max(rect.top, 0)}px`;
-      resultOverlay.style.left = `${Math.max(rect.left, 0)}px`;
-      resultOverlay.style.width = `${Math.max(rect.width, 0)}px`;
-      resultOverlay.style.height = `${Math.max(rect.height, 0)}px`;
+      const top = Math.max(rect.top, 0);
+      const left = Math.max(rect.left, 0);
+      const rightLimit = viewportWidth ? Math.min(rect.right, viewportWidth) : rect.right;
+      const bottomLimit = viewportHeight ? Math.min(rect.bottom, viewportHeight) : rect.bottom;
+      const width = Math.max((rightLimit - left), 0);
+      const height = Math.max((bottomLimit - top), 0);
+
+      resultOverlay.style.top = `${top}px`;
+      resultOverlay.style.left = `${left}px`;
+      resultOverlay.style.width = `${width}px`;
+      resultOverlay.style.height = `${height}px`;
     };
 
     let overlayResizeObserver = null;

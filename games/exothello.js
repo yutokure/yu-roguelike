@@ -7,6 +7,375 @@
     [1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]
   ];
 
+  const STYLE_ID = 'exothello-inline-style';
+
+  function ensureInlineStyles(){
+    if (typeof document === 'undefined') return;
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+/* Ex-Othello mini game */
+.exothello-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: min(960px, 100%);
+    margin: 0 auto;
+    padding: 24px 28px 40px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.92), rgba(219, 234, 254, 0.88));
+    box-shadow: 0 30px 70px rgba(22, 101, 52, 0.22);
+    border: 1px solid rgba(13, 148, 136, 0.18);
+    backdrop-filter: blur(14px);
+}
+
+.exothello-heading {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #064e3b;
+    margin: 0;
+}
+
+.exothello-subtitle {
+    margin: -6px auto 4px;
+    text-align: center;
+    max-width: 640px;
+    color: rgba(4, 47, 46, 0.72);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.exothello-control-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 22px 24px 26px;
+    border-radius: 18px;
+    background: linear-gradient(140deg, rgba(13, 148, 136, 0.12), rgba(59, 130, 246, 0.08));
+    box-shadow: 0 24px 50px rgba(15, 118, 110, 0.18);
+    border: 1px solid rgba(14, 116, 144, 0.18);
+}
+
+.exothello-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.exothello-section-description {
+    margin: -8px 0 8px;
+    color: rgba(15, 23, 42, 0.7);
+    font-size: 0.9rem;
+}
+
+.exothello-control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.exothello-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.exothello-field__label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.68);
+}
+
+.exothello-field__control {
+    width: 100%;
+}
+
+.exothello-input {
+    appearance: none;
+    border-radius: 14px;
+    border: 1px solid rgba(14, 116, 144, 0.28);
+    background: rgba(255, 255, 255, 0.92);
+    color: #0f2f21;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 10px 14px;
+    box-shadow: 0 10px 26px rgba(15, 118, 110, 0.16);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.exothello-input:focus {
+    outline: none;
+    border-color: rgba(15, 118, 110, 0.6);
+    box-shadow: 0 12px 30px rgba(15, 118, 110, 0.26);
+    transform: translateY(-1px);
+}
+
+.exothello-input--compact {
+    max-width: 92px;
+    text-align: center;
+}
+
+.exothello-size-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.exothello-size-multiply {
+    font-weight: 700;
+    color: rgba(15, 23, 42, 0.6);
+}
+
+.exothello-action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.exothello-action-bar__group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.exothello-inline-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(15, 23, 42, 0.75);
+}
+
+.exothello-primary {
+    appearance: none;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 26px;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    color: #ecfdf5;
+    background: linear-gradient(130deg, rgba(15, 118, 110, 0.95), rgba(14, 165, 233, 0.95));
+    box-shadow: 0 16px 38px rgba(14, 165, 233, 0.3);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exothello-primary:hover,
+.exothello-primary:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 20px 44px rgba(14, 165, 233, 0.38);
+    outline: none;
+}
+
+.exothello-secondary {
+    appearance: none;
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+    color: #0f172a;
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(14, 116, 144, 0.34);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.exothello-secondary:hover,
+.exothello-secondary:focus-visible {
+    transform: translateY(-1px);
+    background: rgba(14, 116, 144, 0.14);
+    box-shadow: 0 12px 30px rgba(14, 116, 144, 0.22);
+    outline: none;
+}
+
+.exothello-status {
+    min-height: 32px;
+    padding: 12px 18px;
+    border-radius: 14px;
+    background: linear-gradient(120deg, rgba(56, 189, 248, 0.12), rgba(16, 185, 129, 0.12));
+    border: 1px solid rgba(13, 148, 136, 0.24);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #0f172a;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.exothello-board-shell {
+    padding: 24px;
+    border-radius: 20px;
+    background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.2), rgba(13, 148, 136, 0.18));
+    box-shadow: 0 32px 64px rgba(15, 118, 110, 0.28);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.exothello-board {
+    display: block;
+    border-radius: 14px;
+    background: #0b6623;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.exothello-info {
+    text-align: center;
+    font-size: 0.85rem;
+    color: rgba(15, 23, 42, 0.75);
+    font-weight: 600;
+    margin: 0;
+}
+
+.exothello-sandbox-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 22px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(99, 102, 241, 0.1));
+    box-shadow: 0 22px 40px rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(59, 130, 246, 0.24);
+}
+
+.exothello-subheading {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.64);
+}
+
+.exothello-sandbox-mode-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.exothello-sandbox-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.exothello-chip-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(14, 116, 144, 0.3);
+    background: rgba(255, 255, 255, 0.78);
+    font-weight: 600;
+    color: #0f2f21;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.exothello-chip-button:hover,
+.exothello-chip-button:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(15, 118, 110, 0.22);
+    outline: none;
+}
+
+.exothello-chip-button--active {
+    background: linear-gradient(130deg, rgba(15, 118, 110, 0.92), rgba(14, 165, 233, 0.9));
+    color: #ecfdf5;
+    box-shadow: 0 16px 34px rgba(15, 118, 110, 0.3);
+    border-color: transparent;
+}
+
+.exothello-chip-button--tool {
+    font-size: 0.85rem;
+    padding: 8px 14px;
+}
+
+.exothello-tool-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(15, 23, 42, 0.35);
+    display: inline-block;
+}
+
+.exothello-tool-swatch--square {
+    border-radius: 4px;
+}
+
+@media (max-width: 640px) {
+    .exothello-wrapper {
+        padding: 20px 16px 32px;
+        border-radius: 18px;
+    }
+
+    .exothello-control-card {
+        padding: 18px 16px 22px;
+    }
+
+    .exothello-control-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exothello-action-bar {
+        justify-content: center;
+    }
+}
+`;
+    document.head.appendChild(style);
+  }
+
+  function isDungeonFloor(tile){
+    if (tile === 0) return true;
+    if (tile === null || tile === undefined) return false;
+    if (typeof tile === 'number') return tile === 0;
+    if (typeof tile === 'string'){
+      const normalized = tile.trim().toLowerCase();
+      if (!normalized) return false;
+      if (normalized === '0') return true;
+      if (normalized === 'wall' || normalized === 'solid' || normalized === 'void' || normalized === 'blocked'){
+        return false;
+      }
+      if (normalized === 'floor' || normalized === 'room' || normalized === 'path' || normalized === 'corridor' || normalized === 'hall' || normalized === 'hallway'){
+        return true;
+      }
+      const numeric = Number(normalized);
+      if (!Number.isNaN(numeric)) return numeric === 0;
+      return false;
+    }
+    if (typeof tile === 'object'){
+      if ('walkable' in tile && tile.walkable != null){
+        return !!tile.walkable;
+      }
+      if ('passable' in tile && tile.passable != null){
+        return !!tile.passable;
+      }
+      if ('solid' in tile && tile.solid != null){
+        return !tile.solid;
+      }
+      if ('type' in tile && tile.type != null){
+        return isDungeonFloor(tile.type);
+      }
+      if ('id' in tile && tile.id != null){
+        return isDungeonFloor(tile.id);
+      }
+      if ('value' in tile && tile.value != null){
+        return isDungeonFloor(tile.value);
+      }
+    }
+    return false;
+  }
+
   const MODE_CONFIGS = [
     {
       id: 'normal',
@@ -115,7 +484,7 @@
         for (let y = 0; y < height; y++){
           for (let x = 0; x < width; x++){
             const tile = generated?.tiles?.[y]?.[x];
-            if (tile && tile.type !== 'wall'){
+            if (isDungeonFloor(tile)){
               board[y][x] = EMPTY;
               floors.push({ x, y });
             }
@@ -403,6 +772,7 @@
   }
 
   function create(root, awardXp, opts){
+    ensureInlineStyles();
     const localization = (opts && opts.localization) || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization
       === 'function'
       ? window.createMiniGameLocalization({ id: 'exothello' })
@@ -441,180 +811,159 @@
 
     const wrapper = document.createElement('div');
     wrapper.className = 'exothello-wrapper';
-    wrapper.style.display = 'flex';
-    wrapper.style.flexDirection = 'column';
-    wrapper.style.alignItems = 'stretch';
-    wrapper.style.gap = '16px';
-    wrapper.style.maxWidth = '960px';
-    wrapper.style.margin = '0 auto';
-    wrapper.style.padding = '16px 24px 32px';
     root.appendChild(wrapper);
 
     const heading = document.createElement('div');
+    heading.className = 'exothello-heading';
     heading.textContent = text('miniexp.games.exothello.title', 'Ex-Othello');
-    heading.style.fontSize = '24px';
-    heading.style.fontWeight = '600';
-    heading.style.textAlign = 'center';
-    heading.style.color = '#0d301a';
     wrapper.appendChild(heading);
 
-    const controlPanel = document.createElement('div');
-    controlPanel.style.display = 'flex';
-    controlPanel.style.flexWrap = 'wrap';
-    controlPanel.style.gap = '12px';
-    controlPanel.style.alignItems = 'flex-end';
-    controlPanel.style.background = 'linear-gradient(135deg, rgba(11,102,35,0.08), rgba(11,102,35,0.16))';
-    controlPanel.style.padding = '16px';
-    controlPanel.style.borderRadius = '12px';
-    controlPanel.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)';
+    const headingNote = document.createElement('p');
+    headingNote.className = 'exothello-subtitle';
+    headingNote.textContent = text(
+      'miniexp.games.exothello.subtitle',
+      'Assemble your ideal ruleset and dive into a tactical Othello duel.'
+    );
+    wrapper.appendChild(headingNote);
+
+    const controlPanel = document.createElement('section');
+    controlPanel.className = 'exothello-control-card';
     wrapper.appendChild(controlPanel);
 
+    const controlHeading = document.createElement('div');
+    controlHeading.className = 'exothello-section-title';
+    controlHeading.textContent = text('miniexp.games.exothello.controls.sectionTitle', 'Match setup');
+    controlPanel.appendChild(controlHeading);
+
+    const controlDescription = document.createElement('p');
+    controlDescription.className = 'exothello-section-description';
+    controlDescription.textContent = text(
+      'miniexp.games.exothello.controls.sectionDescription',
+      'Choose a mode, tweak the board, and set the win conditions before starting.'
+    );
+    controlPanel.appendChild(controlDescription);
+
+    const controlGrid = document.createElement('div');
+    controlGrid.className = 'exothello-control-grid';
+    controlPanel.appendChild(controlGrid);
+
     const modeSelect = document.createElement('select');
-    modeSelect.style.flex = '1 1 180px';
+    modeSelect.className = 'exothello-input';
     for (const mode of MODE_CONFIGS){
       const option = document.createElement('option');
       option.value = mode.id;
       option.textContent = text(mode.labelKey, mode.id);
       modeSelect.appendChild(option);
     }
-    controlPanel.appendChild(labeled(text('miniexp.games.exothello.controls.mode', 'Mode'), modeSelect));
+    controlGrid.appendChild(labeled(text('miniexp.games.exothello.controls.mode', 'Mode'), modeSelect));
 
     const widthInput = document.createElement('input');
     widthInput.type = 'number';
     widthInput.min = '4';
     widthInput.max = '64';
     widthInput.value = '8';
-    widthInput.style.width = '72px';
+    widthInput.className = 'exothello-input exothello-input--compact';
     const heightInput = document.createElement('input');
     heightInput.type = 'number';
     heightInput.min = '4';
     heightInput.max = '64';
     heightInput.value = '8';
-    heightInput.style.width = '72px';
+    heightInput.className = 'exothello-input exothello-input--compact';
     const sizeContainer = document.createElement('div');
-    sizeContainer.style.display = 'flex';
-    sizeContainer.style.gap = '4px';
-    sizeContainer.style.alignItems = 'center';
+    sizeContainer.className = 'exothello-size-control';
     sizeContainer.appendChild(widthInput);
     const mul = document.createElement('span');
     mul.textContent = '×';
+    mul.className = 'exothello-size-multiply';
     sizeContainer.appendChild(mul);
     sizeContainer.appendChild(heightInput);
-    controlPanel.appendChild(labeled(text('miniexp.games.exothello.controls.size', 'Size'), sizeContainer));
+    controlGrid.appendChild(labeled(text('miniexp.games.exothello.controls.size', 'Size'), sizeContainer));
 
     const victorySelect = document.createElement('select');
+    victorySelect.className = 'exothello-input';
     victorySelect.appendChild(new Option(text('miniexp.games.exothello.controls.victoryMost', 'Most discs'), 'most'));
     victorySelect.appendChild(new Option(text('miniexp.games.exothello.controls.victoryLeast', 'Least discs'), 'least'));
-    controlPanel.appendChild(labeled(text('miniexp.games.exothello.controls.victoryLabel', 'Victory'), victorySelect));
+    controlGrid.appendChild(labeled(text('miniexp.games.exothello.controls.victoryLabel', 'Victory'), victorySelect));
 
     const playerColorSelect = document.createElement('select');
+    playerColorSelect.className = 'exothello-input';
     playerColorSelect.appendChild(new Option(text('miniexp.games.exothello.controls.playerBlack', 'Play Black (First)'), 'black'));
     playerColorSelect.appendChild(new Option(text('miniexp.games.exothello.controls.playerWhite', 'Play White (Second)'), 'white'));
-    controlPanel.appendChild(labeled(text('miniexp.games.exothello.controls.playerColor', 'Turn Order'), playerColorSelect));
+    controlGrid.appendChild(labeled(text('miniexp.games.exothello.controls.playerColor', 'Turn Order'), playerColorSelect));
 
     const difficultySelect = document.createElement('select');
+    difficultySelect.className = 'exothello-input';
     difficultySelect.appendChild(new Option(text('miniexp.games.exothello.controls.difficultyEasy', 'Easy'), 'EASY'));
     difficultySelect.appendChild(new Option(text('miniexp.games.exothello.controls.difficultyNormal', 'Normal'), 'NORMAL'));
     difficultySelect.appendChild(new Option(text('miniexp.games.exothello.controls.difficultyHard', 'Hard'), 'HARD'));
-    controlPanel.appendChild(labeled(text('miniexp.games.exothello.controls.difficultyLabel', 'Difficulty'), difficultySelect));
+    controlGrid.appendChild(labeled(text('miniexp.games.exothello.controls.difficultyLabel', 'Difficulty'), difficultySelect));
 
     const startButton = document.createElement('button');
     startButton.textContent = text('miniexp.games.exothello.controls.start', 'Start Game');
-    startButton.style.padding = '8px 16px';
-    startButton.style.cursor = 'pointer';
-    controlPanel.appendChild(startButton);
+    startButton.className = 'exothello-button exothello-button--primary';
 
     const resetButton = document.createElement('button');
     resetButton.textContent = text('miniexp.games.exothello.controls.reset', 'Reset');
-    resetButton.style.padding = '8px 12px';
-    resetButton.style.cursor = 'pointer';
+    resetButton.className = 'exothello-button exothello-button--ghost';
     resetButton.disabled = true;
-    controlPanel.appendChild(resetButton);
+
+    const actionBar = document.createElement('div');
+    actionBar.className = 'exothello-action-bar';
+    actionBar.appendChild(startButton);
+    actionBar.appendChild(resetButton);
+    controlPanel.appendChild(actionBar);
 
     const statusBox = document.createElement('div');
-    statusBox.style.minHeight = '28px';
-    statusBox.style.fontSize = '14px';
-    statusBox.style.padding = '10px 14px';
-    statusBox.style.borderRadius = '10px';
-    statusBox.style.background = 'rgba(13, 48, 26, 0.08)';
+    statusBox.className = 'exothello-status';
     wrapper.appendChild(statusBox);
 
     const boardContainer = document.createElement('div');
-    boardContainer.style.padding = '16px';
-    boardContainer.style.borderRadius = '16px';
-    boardContainer.style.background = '#f2f8f1';
-    boardContainer.style.boxShadow = '0 10px 22px rgba(0,0,0,0.18)';
-    boardContainer.style.display = 'flex';
-    boardContainer.style.justifyContent = 'center';
-    boardContainer.style.alignItems = 'center';
+    boardContainer.className = 'exothello-board-shell';
     wrapper.appendChild(boardContainer);
 
     const canvas = document.createElement('canvas');
-    canvas.style.borderRadius = '12px';
-    canvas.style.background = '#0b6623';
-    canvas.style.display = 'block';
-    canvas.style.boxShadow = 'inset 0 0 18px rgba(0,0,0,0.35)';
+    canvas.className = 'exothello-board';
     canvas.style.touchAction = 'none';
     boardContainer.appendChild(canvas);
     const ctx = canvas.getContext('2d');
 
     const infoBox = document.createElement('div');
-    infoBox.style.fontSize = '13px';
-    infoBox.style.textAlign = 'center';
-    infoBox.style.fontWeight = '500';
-    infoBox.style.padding = '6px 0 0';
+    infoBox.className = 'exothello-info';
     wrapper.appendChild(infoBox);
 
     const sandboxControls = document.createElement('div');
+    sandboxControls.className = 'exothello-sandbox-card';
     sandboxControls.style.display = 'none';
-    sandboxControls.style.flexDirection = 'column';
-    sandboxControls.style.gap = '10px';
-    sandboxControls.style.padding = '14px 18px';
-    sandboxControls.style.borderRadius = '12px';
-    sandboxControls.style.background = 'rgba(255,255,255,0.9)';
-    sandboxControls.style.boxShadow = '0 8px 18px rgba(0,0,0,0.18)';
-    sandboxControls.style.transition = 'opacity 120ms ease-out';
     wrapper.appendChild(sandboxControls);
 
     const sandboxModeLabel = document.createElement('div');
     sandboxModeLabel.textContent = text('miniexp.games.exothello.sandbox.modeLabel', 'Sandbox modes');
-    sandboxModeLabel.style.fontSize = '12px';
-    sandboxModeLabel.style.fontWeight = '600';
+    sandboxModeLabel.className = 'exothello-subheading';
     sandboxControls.appendChild(sandboxModeLabel);
 
     const sandboxModeRow = document.createElement('div');
-    sandboxModeRow.style.display = 'flex';
-    sandboxModeRow.style.gap = '8px';
+    sandboxModeRow.className = 'exothello-sandbox-mode-row';
     sandboxControls.appendChild(sandboxModeRow);
 
     const sandboxEditButton = document.createElement('button');
     sandboxEditButton.type = 'button';
     sandboxEditButton.textContent = text('miniexp.games.exothello.sandbox.edit', 'Edit board');
-    sandboxEditButton.style.padding = '6px 12px';
-    sandboxEditButton.style.borderRadius = '8px';
-    sandboxEditButton.style.border = '1px solid rgba(13,102,35,0.45)';
-    sandboxEditButton.style.cursor = 'pointer';
+    sandboxEditButton.className = 'exothello-chip-button';
     sandboxModeRow.appendChild(sandboxEditButton);
 
     const sandboxPlayButton = document.createElement('button');
     sandboxPlayButton.type = 'button';
     sandboxPlayButton.textContent = text('miniexp.games.exothello.sandbox.play', 'Play test');
-    sandboxPlayButton.style.padding = '6px 12px';
-    sandboxPlayButton.style.borderRadius = '8px';
-    sandboxPlayButton.style.border = '1px solid rgba(13,102,35,0.45)';
-    sandboxPlayButton.style.cursor = 'pointer';
+    sandboxPlayButton.className = 'exothello-chip-button';
     sandboxModeRow.appendChild(sandboxPlayButton);
 
     const sandboxPaletteLabel = document.createElement('div');
     sandboxPaletteLabel.textContent = text('miniexp.games.exothello.sandbox.paletteLabel', 'Paint tools');
-    sandboxPaletteLabel.style.fontSize = '12px';
-    sandboxPaletteLabel.style.fontWeight = '600';
+    sandboxPaletteLabel.className = 'exothello-subheading';
     sandboxControls.appendChild(sandboxPaletteLabel);
 
     const sandboxPaletteRow = document.createElement('div');
-    sandboxPaletteRow.style.display = 'flex';
-    sandboxPaletteRow.style.gap = '8px';
-    sandboxPaletteRow.style.flexWrap = 'wrap';
+    sandboxPaletteRow.className = 'exothello-sandbox-tools';
     sandboxControls.appendChild(sandboxPaletteRow);
 
     const sandboxToolButtons = new Map();
@@ -630,20 +979,12 @@
       button.type = 'button';
       button.textContent = tool.label;
       button.dataset.tool = tool.id;
-      button.style.display = 'flex';
-      button.style.alignItems = 'center';
-      button.style.gap = '6px';
-      button.style.padding = '6px 10px';
-      button.style.borderRadius = '20px';
-      button.style.border = '1px solid rgba(13,102,35,0.35)';
-      button.style.cursor = 'pointer';
-      button.style.background = 'rgba(255,255,255,0.6)';
+      button.className = 'exothello-chip-button exothello-chip-button--tool';
       const swatch = document.createElement('span');
-      swatch.style.display = 'inline-block';
-      swatch.style.width = '18px';
-      swatch.style.height = '18px';
-      swatch.style.borderRadius = tool.id === 'wall' ? '4px' : '50%';
-      swatch.style.border = '1px solid rgba(0,0,0,0.4)';
+      swatch.className = 'exothello-tool-swatch';
+      if (tool.id === 'wall'){
+        swatch.classList.add('exothello-tool-swatch--square');
+      }
       swatch.style.background = tool.preview;
       button.prepend(swatch);
       sandboxPaletteRow.appendChild(button);
@@ -681,9 +1022,7 @@
 
     function setButtonActive(button, active){
       if (!button) return;
-      button.style.background = active ? 'rgba(11,102,35,0.85)' : 'rgba(255,255,255,0.6)';
-      button.style.color = active ? '#f5fff5' : '#0b3418';
-      button.style.boxShadow = active ? '0 0 0 2px rgba(255,255,255,0.5)' : 'none';
+      button.classList.toggle('exothello-chip-button--active', !!active);
     }
 
     function updateSandboxToolButtons(){
@@ -785,13 +1124,14 @@
 
     function labeled(labelText, element){
       const wrapper = document.createElement('label');
-      wrapper.style.display = 'flex';
-      wrapper.style.flexDirection = 'column';
-      wrapper.style.fontSize = '12px';
-      wrapper.style.gap = '4px';
+      wrapper.className = 'exothello-field';
       const span = document.createElement('span');
+      span.className = 'exothello-field__label';
       span.textContent = labelText;
       wrapper.appendChild(span);
+      if (element && element.classList){
+        element.classList.add('exothello-field__control');
+      }
       wrapper.appendChild(element);
       return wrapper;
     }

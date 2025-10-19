@@ -1103,7 +1103,7 @@
       }
       const value = characters.join('');
       updateResult('text', value);
-      const xpGain = Math.max(1, pool.length * length);
+      const xpGain = Math.max(1, Math.floor((pool.length * length) / 7));
       awardXp(xpGain);
     }
 

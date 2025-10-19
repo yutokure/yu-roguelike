@@ -18914,6 +18914,17 @@
   if (locale.games) {
     locale.games.mathLab = mathLabLocale;
   }
+  if (locale.minigame && locale.minigame.exothello) {
+    if (!locale.miniexp) {
+      locale.miniexp = {};
+    }
+    if (!locale.miniexp.games) {
+      locale.miniexp.games = {};
+    }
+    if (!locale.miniexp.games.exothello) {
+      locale.miniexp.games.exothello = locale.minigame.exothello;
+    }
+  }
   store['en'] = locale;
   if (!store['en']) {
     store['en'] = {};

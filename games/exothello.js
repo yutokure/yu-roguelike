@@ -891,11 +891,16 @@
   }
 
   if (typeof window !== 'undefined' && typeof window.registerMiniGame === 'function'){
-    window.registerMiniGame('exothello', create, {
-      category: 'board',
+    window.registerMiniGame({
+      id: 'exothello',
       name: 'Ex-Othello',
+      nameKey: 'selection.miniexp.games.exothello.name',
+      description: '可変サイズ・壁・特殊勝利条件を選べる拡張オセロ',
+      descriptionKey: 'selection.miniexp.games.exothello.description',
+      categoryIds: ['board'],
       author: 'AI Generated',
-      icon: '🀄'
+      icon: '🀄',
+      create
     });
   }
 

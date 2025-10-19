@@ -506,7 +506,67 @@
     let wheelRotation = 0;
     let spinTimer = null;
     let wheelGeometry = [];
-    let rerenderScheduled = false;
+    let cancelWheelLayoutWait = null;
+
+    function cancelPendingWheelLayoutWait(){
+      if (typeof cancelWheelLayoutWait === 'function'){
+        cancelWheelLayoutWait();
+        cancelWheelLayoutWait = null;
+      }
+    }
+
+    function waitForWheelLayout(){
+      if (cancelWheelLayoutWait) return;
+
+      const cleanupFns = [];
+      const cancel = () => {
+        while (cleanupFns.length){
+          const cleanup = cleanupFns.pop();
+          cleanup();
+        }
+        cancelWheelLayoutWait = null;
+      };
+
+      const attemptRender = () => {
+        if (!wheel.offsetWidth) return;
+        cancel();
+        renderWheel();
+      };
+
+      if (typeof ResizeObserver === 'function'){
+        const observer = new ResizeObserver(() => {
+          attemptRender();
+        });
+        observer.observe(wheel);
+        cleanupFns.push(() => observer.disconnect());
+      } else {
+        const handleResize = () => {
+          attemptRender();
+        };
+        if (typeof window !== 'undefined'){
+          window.addEventListener('resize', handleResize);
+          cleanupFns.push(() => window.removeEventListener('resize', handleResize));
+        }
+
+        const handleTransitionEnd = () => {
+          attemptRender();
+        };
+        wheel.addEventListener('transitionend', handleTransitionEnd);
+        cleanupFns.push(() => wheel.removeEventListener('transitionend', handleTransitionEnd));
+      }
+
+      if (typeof document !== 'undefined'){
+        const handleVisibilityChange = () => {
+          if (!document.hidden){
+            attemptRender();
+          }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        cleanupFns.push(() => document.removeEventListener('visibilitychange', handleVisibilityChange));
+      }
+
+      cancelWheelLayoutWait = cancel;
+    }
 
     function getSegments(){
       return state.rouletteSegments
@@ -621,6 +681,11 @@
         wheelGeometry = [];
         return;
       }
+      if (!wheel.offsetWidth){
+        waitForWheelLayout();
+        return;
+      }
+      cancelPendingWheelLayoutWait();
       const gradientParts = [];
       let current = 0;
       const radiusRaw = wheel.offsetWidth ? wheel.offsetWidth / 2 : wheel.clientWidth / 2;
@@ -654,13 +719,6 @@
       });
       wheel.style.background = `conic-gradient(${gradientParts.join(',')})`;
       wheel.setAttribute('data-segment-count', String(segments.length));
-      if (!wheel.offsetWidth && !rerenderScheduled && typeof requestAnimationFrame === 'function'){
-        rerenderScheduled = true;
-        requestAnimationFrame(() => {
-          rerenderScheduled = false;
-          renderWheel();
-        });
-      }
     }
 
     function spin(){

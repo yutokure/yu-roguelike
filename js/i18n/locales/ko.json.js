@@ -1622,6 +1622,10 @@
             "name": "카운터 패드",
             "description": "조정 내용을 자동 저장하는 다중 카운터 버튼으로 번호를 추적하세요."
           },
+          "random_tool": {
+            "name": "랜덤 툴킷",
+            "description": "주사위 굴리기, 룰렛, 목록 추첨, 난수/문자열 생성을 모은 유틸리티."
+          },
           "notepad": {
             "name": "메모장",
             "description": "메모를 작성하고, 편집하고, 저장하여 추가 EXP를 얻으세요."
@@ -3240,6 +3244,80 @@
           "totalPlays": "총 플레이 수",
           "totalExp": "총 획득 경험치",
           "totalExpValue": "{sign}{value}"
+        }
+      }
+    },
+    "minigame": {
+      "random_tool": {
+        "title": "랜덤 툴킷",
+        "subtitle": "주사위, 룰렛, 목록 추첨, 난수/문자열 생성을 한곳에 모은 편리한 도구입니다.",
+        "tabs": {
+          "dice": "주사위",
+          "roulette": "룰렛",
+          "choice": "무작위 선택",
+          "text": "랜덤 텍스트",
+          "number": "무작위 숫자"
+        },
+        "dice": {
+          "countLabel": "주사위 개수",
+          "roll": "주사위 굴리기",
+          "placeholder": "주사위를 굴리면 결과가 표시됩니다.",
+          "summary": "결과: <strong>{values}</strong>",
+          "total": "합계 <strong>{total}</strong>",
+          "xp": "+{xp} EXP 획득!"
+        },
+        "roulette": {
+          "spin": "룰렛 돌리기",
+          "spinning": "회전 중…",
+          "placeholder": "이름과 EXP를 설정한 뒤 룰렛을 돌리세요.",
+          "addSegment": "섹션 추가",
+          "namePlaceholder": "이름",
+          "xpPlaceholder": "EXP",
+          "removeSegment": "이 섹션 삭제",
+          "noSegments": "최소 한 개 이상의 섹션을 추가하세요.",
+          "defaultName": "EXP100",
+          "result": "결과: <strong>{name}</strong>",
+          "xp": "+{xp} EXP 획득!"
+        },
+        "choice": {
+          "placeholder": "행마다 하나씩 옵션을 입력",
+          "pick": "무작위 선택",
+          "resultPlaceholder": "버튼을 눌러 결과를 확인하세요.",
+          "empty": "옵션이 없습니다. 위에 추가하세요.",
+          "result": "선택 결과: <strong>{choice}</strong>"
+        },
+        "text": {
+          "lengthLabel": "길이",
+          "charactersTitle": "사용할 문자",
+          "additionalOptions": "추가 설정",
+          "lowercase": "소문자 (a-z)",
+          "uppercase": "대문자 (A-Z)",
+          "numbers": "숫자 (0-9)",
+          "symbols": "기호 (!@# 등)",
+          "includeSpaces": "공백 포함(텍스트 생성 전용)",
+          "allowAmbiguous": "헷갈리는 문자 포함 (O/0/I/1/| 등)",
+          "customLabel": "추가 문자",
+          "customPlaceholder": "추가할 문자를 입력",
+          "customHelper": "중복 문자는 자동으로 제거되며 최대 200자까지 가능합니다.",
+          "generatePassword": "비밀번호 생성",
+          "generateText": "텍스트 생성",
+          "resultHeading": "생성 결과",
+          "passwordLabel": "비밀번호 생성 결과",
+          "textLabel": "텍스트 생성 결과",
+          "placeholder": "생성된 문자열이 여기에 표시됩니다.",
+          "copy": "복사",
+          "errorNoCharset": "최소 한 가지 문자 종류를 선택하세요.",
+          "errorLength": "선택한 문자 종류에는 최소 {min}자 이상이 필요합니다.",
+          "copied": "클립보드에 복사했습니다!",
+          "copyFailed": "복사에 실패했습니다."
+        },
+        "number": {
+          "minLabel": "최소값",
+          "maxLabel": "최대값",
+          "generate": "숫자 생성",
+          "placeholder": "범위를 설정한 후 숫자를 생성하세요.",
+          "invalid": "범위가 올바르지 않습니다.",
+          "result": "결과: <strong>{value}</strong>"
         }
       }
     },

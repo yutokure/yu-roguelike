@@ -893,6 +893,10 @@
             "name": "カウンターパッド",
             "description": "数値を増減するだけのマルチカウンター。操作内容は自動保存"
           },
+          "random_tool": {
+            "name": "ランダムツール",
+            "description": "サイコロ・ルーレット・ランダム選択・乱数/文字列生成をまとめたMODツール"
+          },
           "notepad": {
             "name": "メモ帳",
             "description": "開く+5 / 編集+1 / 保存+5 EXP"
@@ -13771,6 +13775,78 @@
         },
         "alerts": {
           "limitReached": "これ以上は追加できません (最大{max}件)"
+        }
+      },
+      "random_tool": {
+        "title": "ランダムツール",
+        "subtitle": "サイコロ、ルーレット、選択抽選、乱数・文字列生成をひとまとめにしたランダム支援ユーティリティ。",
+        "tabs": {
+          "dice": "サイコロ",
+          "roulette": "ルーレット",
+          "choice": "ランダム選択",
+          "text": "ランダムテキスト",
+          "number": "ランダム数字"
+        },
+        "dice": {
+          "countLabel": "サイコロの数",
+          "roll": "サイコロを振る",
+          "placeholder": "サイコロを振ると結果が表示されます。",
+          "summary": "結果: <strong>{values}</strong>",
+          "total": "合計 <strong>{total}</strong>",
+          "xp": "+{xp} EXP 獲得！"
+        },
+        "roulette": {
+          "spin": "ルーレットを回す",
+          "spinning": "回転中…",
+          "placeholder": "名前とEXPを設定してルーレットを回しましょう。",
+          "addSegment": "セグメントを追加",
+          "namePlaceholder": "名前",
+          "xpPlaceholder": "EXP",
+          "removeSegment": "このセグメントを削除",
+          "noSegments": "セグメントを追加してください。",
+          "defaultName": "EXP100",
+          "result": "結果: <strong>{name}</strong>",
+          "xp": "+{xp} EXP 獲得！"
+        },
+        "choice": {
+          "placeholder": "選択肢を1行ずつ入力",
+          "pick": "ランダムに選ぶ",
+          "resultPlaceholder": "選択ボタンで結果を表示します。",
+          "empty": "選択肢がありません。追加してください。",
+          "result": "選択結果: <strong>{choice}</strong>"
+        },
+        "text": {
+          "lengthLabel": "文字数",
+          "charactersTitle": "使用する文字種",
+          "additionalOptions": "追加設定",
+          "lowercase": "小文字 (a-z)",
+          "uppercase": "大文字 (A-Z)",
+          "numbers": "数字 (0-9)",
+          "symbols": "記号 (!@#など)",
+          "includeSpaces": "スペースを含める（テキスト生成のみ）",
+          "allowAmbiguous": "曖昧な文字を含める（O/0/I/1/|など）",
+          "customLabel": "追加する文字",
+          "customPlaceholder": "任意の文字を追加",
+          "customHelper": "重複は自動で削除されます。最大200文字まで。",
+          "generatePassword": "パスワードを生成",
+          "generateText": "テキストを生成",
+          "resultHeading": "生成結果",
+          "passwordLabel": "パスワード生成結果",
+          "textLabel": "テキスト生成結果",
+          "placeholder": "設定して文字列を生成するとここに表示されます。",
+          "copy": "コピー",
+          "errorNoCharset": "文字種を1つ以上選択してください。",
+          "errorLength": "選択した文字種では最低{min}文字が必要です。",
+          "copied": "コピーしました！",
+          "copyFailed": "コピーに失敗しました。"
+        },
+        "number": {
+          "minLabel": "最小値",
+          "maxLabel": "最大値",
+          "generate": "数字を生成",
+          "placeholder": "最小値と最大値を設定してから生成してください。",
+          "invalid": "範囲が正しくありません。",
+          "result": "結果: <strong>{value}</strong>"
         }
       },
       "calculator": {

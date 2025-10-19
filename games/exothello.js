@@ -101,7 +101,7 @@
         if (!dungeonApi || typeof dungeonApi.generateStage !== 'function'){
           const board = createBoard(width, height, EMPTY);
           placeRandomWalls(board, Math.floor(width * height * 0.12));
-          randomOpening(board);
+          placeClusterOpening(board);
           return { board, victory: state.settings.victory };
         }
         const generated = await dungeonApi.generateStage({
@@ -128,7 +128,7 @@
             }
           }
         }
-        randomOpening(board);
+        placeClusterOpening(board, { floors });
         return { board, victory: state.settings.victory };
       }
     }
@@ -177,24 +177,46 @@
     }
   }
 
-  function randomOpening(board){
+  function placeClusterOpening(board, options = {}){
     const height = board.length;
     const width = board[0].length;
-    const emptyCells = [];
-    for (let y = 0; y < height; y++){
-      for (let x = 0; x < width; x++){
-        if (board[y][x] === EMPTY){ emptyCells.push({ x, y }); }
+    const origins = [];
+    const allowedOrigins = Array.isArray(options.floors) && options.floors.length
+      ? options.floors
+      : null;
+    const tryPushOrigin = (x, y) => {
+      if (x < 0 || y < 0 || x + 1 >= width || y + 1 >= height) return;
+      const cells = [
+        board[y][x], board[y][x + 1],
+        board[y + 1][x], board[y + 1][x + 1]
+      ];
+      if (cells.every(cell => cell === EMPTY)){
+        origins.push({ x, y });
+      }
+    };
+    if (allowedOrigins){
+      for (const { x, y } of allowedOrigins){
+        tryPushOrigin(x, y);
       }
     }
-    shuffle(emptyCells);
-    const placements = emptyCells.slice(0, 4);
-    for (const { x, y } of placements){
-      board[y][x] = BLACK;
+    if (!origins.length){
+      for (let y = 0; y < height - 1; y++){
+        for (let x = 0; x < width - 1; x++){
+          tryPushOrigin(x, y);
+        }
+      }
     }
-    const placementsWhite = emptyCells.slice(4, 8);
-    for (const { x, y } of placementsWhite){
-      if (x != null && y != null) board[y][x] = WHITE;
+    shuffle(origins);
+    const origin = origins[0];
+    if (!origin){
+      placeStandardOpening(board);
+      return;
     }
+    const { x, y } = origin;
+    board[y][x] = WHITE;
+    board[y][x + 1] = BLACK;
+    board[y + 1][x] = BLACK;
+    board[y + 1][x + 1] = WHITE;
   }
 
   function shuffle(arr){
@@ -315,29 +337,33 @@
     return score;
   }
 
+  function evaluateBoardForColor(board, weights, victoryCondition, color){
+    const baseScore = evaluateBoard(board, weights, victoryCondition);
+    return color === WHITE ? baseScore : -baseScore;
+  }
+
   function cloneBoard(board){
     return board.map(row => row.slice());
   }
 
-  function minimax(board, depth, isWhiteTurn, weights, victoryCondition, alpha, beta){
+  function minimax(board, depth, currentColor, maximizingColor, weights, victoryCondition, alpha, beta){
     if (depth === 0){
-      return evaluateBoard(board, weights, victoryCondition);
+      return evaluateBoardForColor(board, weights, victoryCondition, maximizingColor);
     }
-    const color = isWhiteTurn ? WHITE : BLACK;
-    const moves = legalMoves(board, color);
+    const moves = legalMoves(board, currentColor);
     if (moves.length === 0){
-      const other = legalMoves(board, -color);
+      const other = legalMoves(board, -currentColor);
       if (other.length === 0){
-        return evaluateBoard(board, weights, victoryCondition);
+        return evaluateBoardForColor(board, weights, victoryCondition, maximizingColor);
       }
-      return minimax(board, depth - 1, !isWhiteTurn, weights, victoryCondition, alpha, beta);
+      return minimax(board, depth - 1, -currentColor, maximizingColor, weights, victoryCondition, alpha, beta);
     }
-    if (isWhiteTurn){
+    if (currentColor === maximizingColor){
       let best = -Infinity;
       for (const mv of moves){
         const next = cloneBoard(board);
-        applyMove(next, mv, WHITE);
-        const val = minimax(next, depth - 1, false, weights, victoryCondition, alpha, beta);
+        applyMove(next, mv, currentColor);
+        const val = minimax(next, depth - 1, -currentColor, maximizingColor, weights, victoryCondition, alpha, beta);
         best = Math.max(best, val);
         alpha = Math.max(alpha, val);
         if (beta <= alpha) break;
@@ -347,8 +373,8 @@
     let best = Infinity;
     for (const mv of moves){
       const next = cloneBoard(board);
-      applyMove(next, mv, BLACK);
-      const val = minimax(next, depth - 1, true, weights, victoryCondition, alpha, beta);
+      applyMove(next, mv, currentColor);
+      const val = minimax(next, depth - 1, -currentColor, maximizingColor, weights, victoryCondition, alpha, beta);
       best = Math.min(best, val);
       beta = Math.min(beta, val);
       if (beta <= alpha) break;
@@ -356,8 +382,8 @@
     return best;
   }
 
-  function pickAIMove(board, weights, victoryCondition, difficulty){
-    const moves = legalMoves(board, WHITE);
+  function pickAIMove(board, weights, victoryCondition, difficulty, aiColor){
+    const moves = legalMoves(board, aiColor);
     if (moves.length === 0) return null;
     const maxDim = Math.max(board.length, board[0].length);
     const baseDepth = difficulty === 'HARD' ? 3 : difficulty === 'NORMAL' ? 2 : 1;
@@ -366,8 +392,8 @@
     let bestScore = -Infinity;
     for (const mv of moves){
       const next = cloneBoard(board);
-      applyMove(next, mv, WHITE);
-      const score = minimax(next, depth - 1, false, weights, victoryCondition, -Infinity, Infinity);
+      applyMove(next, mv, aiColor);
+      const score = minimax(next, depth - 1, -aiColor, aiColor, weights, victoryCondition, -Infinity, Infinity);
       if (score > bestScore){
         bestScore = score;
         bestMove = mv;
@@ -418,16 +444,29 @@
     wrapper.style.display = 'flex';
     wrapper.style.flexDirection = 'column';
     wrapper.style.alignItems = 'stretch';
-    wrapper.style.gap = '12px';
+    wrapper.style.gap = '16px';
     wrapper.style.maxWidth = '960px';
     wrapper.style.margin = '0 auto';
+    wrapper.style.padding = '16px 24px 32px';
     root.appendChild(wrapper);
+
+    const heading = document.createElement('div');
+    heading.textContent = text('miniexp.games.exothello.title', 'Ex-Othello');
+    heading.style.fontSize = '24px';
+    heading.style.fontWeight = '600';
+    heading.style.textAlign = 'center';
+    heading.style.color = '#0d301a';
+    wrapper.appendChild(heading);
 
     const controlPanel = document.createElement('div');
     controlPanel.style.display = 'flex';
     controlPanel.style.flexWrap = 'wrap';
-    controlPanel.style.gap = '8px';
+    controlPanel.style.gap = '12px';
     controlPanel.style.alignItems = 'flex-end';
+    controlPanel.style.background = 'linear-gradient(135deg, rgba(11,102,35,0.08), rgba(11,102,35,0.16))';
+    controlPanel.style.padding = '16px';
+    controlPanel.style.borderRadius = '12px';
+    controlPanel.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)';
     wrapper.appendChild(controlPanel);
 
     const modeSelect = document.createElement('select');
@@ -468,6 +507,11 @@
     victorySelect.appendChild(new Option(text('miniexp.games.exothello.controls.victoryLeast', 'Least discs'), 'least'));
     controlPanel.appendChild(labeled(text('miniexp.games.exothello.controls.victoryLabel', 'Victory'), victorySelect));
 
+    const playerColorSelect = document.createElement('select');
+    playerColorSelect.appendChild(new Option(text('miniexp.games.exothello.controls.playerBlack', 'Play Black (First)'), 'black'));
+    playerColorSelect.appendChild(new Option(text('miniexp.games.exothello.controls.playerWhite', 'Play White (Second)'), 'white'));
+    controlPanel.appendChild(labeled(text('miniexp.games.exothello.controls.playerColor', 'Turn Order'), playerColorSelect));
+
     const difficultySelect = document.createElement('select');
     difficultySelect.appendChild(new Option(text('miniexp.games.exothello.controls.difficultyEasy', 'Easy'), 'EASY'));
     difficultySelect.appendChild(new Option(text('miniexp.games.exothello.controls.difficultyNormal', 'Normal'), 'NORMAL'));
@@ -488,23 +532,127 @@
     controlPanel.appendChild(resetButton);
 
     const statusBox = document.createElement('div');
-    statusBox.style.minHeight = '24px';
+    statusBox.style.minHeight = '28px';
     statusBox.style.fontSize = '14px';
+    statusBox.style.padding = '10px 14px';
+    statusBox.style.borderRadius = '10px';
+    statusBox.style.background = 'rgba(13, 48, 26, 0.08)';
     wrapper.appendChild(statusBox);
 
+    const boardContainer = document.createElement('div');
+    boardContainer.style.padding = '16px';
+    boardContainer.style.borderRadius = '16px';
+    boardContainer.style.background = '#f2f8f1';
+    boardContainer.style.boxShadow = '0 10px 22px rgba(0,0,0,0.18)';
+    boardContainer.style.display = 'flex';
+    boardContainer.style.justifyContent = 'center';
+    boardContainer.style.alignItems = 'center';
+    wrapper.appendChild(boardContainer);
+
     const canvas = document.createElement('canvas');
-    canvas.style.borderRadius = '8px';
+    canvas.style.borderRadius = '12px';
     canvas.style.background = '#0b6623';
     canvas.style.display = 'block';
-    canvas.style.margin = '0 auto';
-    canvas.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-    wrapper.appendChild(canvas);
+    canvas.style.boxShadow = 'inset 0 0 18px rgba(0,0,0,0.35)';
+    canvas.style.touchAction = 'none';
+    boardContainer.appendChild(canvas);
     const ctx = canvas.getContext('2d');
 
     const infoBox = document.createElement('div');
     infoBox.style.fontSize = '13px';
     infoBox.style.textAlign = 'center';
+    infoBox.style.fontWeight = '500';
+    infoBox.style.padding = '6px 0 0';
     wrapper.appendChild(infoBox);
+
+    const sandboxControls = document.createElement('div');
+    sandboxControls.style.display = 'none';
+    sandboxControls.style.flexDirection = 'column';
+    sandboxControls.style.gap = '10px';
+    sandboxControls.style.padding = '14px 18px';
+    sandboxControls.style.borderRadius = '12px';
+    sandboxControls.style.background = 'rgba(255,255,255,0.9)';
+    sandboxControls.style.boxShadow = '0 8px 18px rgba(0,0,0,0.18)';
+    sandboxControls.style.transition = 'opacity 120ms ease-out';
+    wrapper.appendChild(sandboxControls);
+
+    const sandboxModeLabel = document.createElement('div');
+    sandboxModeLabel.textContent = text('miniexp.games.exothello.sandbox.modeLabel', 'Sandbox modes');
+    sandboxModeLabel.style.fontSize = '12px';
+    sandboxModeLabel.style.fontWeight = '600';
+    sandboxControls.appendChild(sandboxModeLabel);
+
+    const sandboxModeRow = document.createElement('div');
+    sandboxModeRow.style.display = 'flex';
+    sandboxModeRow.style.gap = '8px';
+    sandboxControls.appendChild(sandboxModeRow);
+
+    const sandboxEditButton = document.createElement('button');
+    sandboxEditButton.type = 'button';
+    sandboxEditButton.textContent = text('miniexp.games.exothello.sandbox.edit', 'Edit board');
+    sandboxEditButton.style.padding = '6px 12px';
+    sandboxEditButton.style.borderRadius = '8px';
+    sandboxEditButton.style.border = '1px solid rgba(13,102,35,0.45)';
+    sandboxEditButton.style.cursor = 'pointer';
+    sandboxModeRow.appendChild(sandboxEditButton);
+
+    const sandboxPlayButton = document.createElement('button');
+    sandboxPlayButton.type = 'button';
+    sandboxPlayButton.textContent = text('miniexp.games.exothello.sandbox.play', 'Play test');
+    sandboxPlayButton.style.padding = '6px 12px';
+    sandboxPlayButton.style.borderRadius = '8px';
+    sandboxPlayButton.style.border = '1px solid rgba(13,102,35,0.45)';
+    sandboxPlayButton.style.cursor = 'pointer';
+    sandboxModeRow.appendChild(sandboxPlayButton);
+
+    const sandboxPaletteLabel = document.createElement('div');
+    sandboxPaletteLabel.textContent = text('miniexp.games.exothello.sandbox.paletteLabel', 'Paint tools');
+    sandboxPaletteLabel.style.fontSize = '12px';
+    sandboxPaletteLabel.style.fontWeight = '600';
+    sandboxControls.appendChild(sandboxPaletteLabel);
+
+    const sandboxPaletteRow = document.createElement('div');
+    sandboxPaletteRow.style.display = 'flex';
+    sandboxPaletteRow.style.gap = '8px';
+    sandboxPaletteRow.style.flexWrap = 'wrap';
+    sandboxControls.appendChild(sandboxPaletteRow);
+
+    const sandboxToolButtons = new Map();
+    const sandboxTools = [
+      { id: 'empty', label: text('miniexp.games.exothello.sandbox.tool.empty', 'Erase'), preview: '#d3e8d0' },
+      { id: 'black', label: text('miniexp.games.exothello.sandbox.tool.black', 'Black stone'), preview: '#0f0f0f' },
+      { id: 'white', label: text('miniexp.games.exothello.sandbox.tool.white', 'White stone'), preview: '#f5f5f5' },
+      { id: 'wall', label: text('miniexp.games.exothello.sandbox.tool.wall', 'Wall'), preview: '#3a3a3a' }
+    ];
+
+    for (const tool of sandboxTools){
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = tool.label;
+      button.dataset.tool = tool.id;
+      button.style.display = 'flex';
+      button.style.alignItems = 'center';
+      button.style.gap = '6px';
+      button.style.padding = '6px 10px';
+      button.style.borderRadius = '20px';
+      button.style.border = '1px solid rgba(13,102,35,0.35)';
+      button.style.cursor = 'pointer';
+      button.style.background = 'rgba(255,255,255,0.6)';
+      const swatch = document.createElement('span');
+      swatch.style.display = 'inline-block';
+      swatch.style.width = '18px';
+      swatch.style.height = '18px';
+      swatch.style.borderRadius = tool.id === 'wall' ? '4px' : '50%';
+      swatch.style.border = '1px solid rgba(0,0,0,0.4)';
+      swatch.style.background = tool.preview;
+      button.prepend(swatch);
+      sandboxPaletteRow.appendChild(button);
+      sandboxToolButtons.set(tool.id, button);
+      button.addEventListener('click', () => {
+        state.sandboxTool = tool.id;
+        updateSandboxToolButtons();
+      });
+    }
 
     const state = {
       opts,
@@ -513,14 +661,127 @@
       turn: BLACK,
       running: false,
       ended: false,
-      sandboxEditing: false,
+      isSandbox: false,
+      sandboxMode: null,
+      sandboxTool: 'black',
+      isPainting: false,
       lastMove: null,
       legal: [],
       settings: { width: 8, height: 8, victory: 'most' },
       modeId: 'normal',
       difficulty: 'NORMAL',
-      victory: 'most'
+      victory: 'most',
+      playerColor: BLACK,
+      aiColor: WHITE
     };
+
+    const describeColor = color => color === BLACK
+      ? text('miniexp.games.exothello.color.black', 'Black')
+      : text('miniexp.games.exothello.color.white', 'White');
+
+    function setButtonActive(button, active){
+      if (!button) return;
+      button.style.background = active ? 'rgba(11,102,35,0.85)' : 'rgba(255,255,255,0.6)';
+      button.style.color = active ? '#f5fff5' : '#0b3418';
+      button.style.boxShadow = active ? '0 0 0 2px rgba(255,255,255,0.5)' : 'none';
+    }
+
+    function updateSandboxToolButtons(){
+      for (const [toolId, button] of sandboxToolButtons.entries()){
+        setButtonActive(button, state.sandboxTool === toolId);
+      }
+    }
+
+    function updateSandboxModeButtons(){
+      setButtonActive(sandboxEditButton, state.sandboxMode === 'edit');
+      setButtonActive(sandboxPlayButton, state.sandboxMode === 'play');
+    }
+
+    function updateSandboxControls(){
+      if (state.isSandbox){
+        sandboxControls.style.display = 'flex';
+        sandboxControls.style.opacity = '1';
+      } else {
+        sandboxControls.style.display = 'none';
+        return;
+      }
+      sandboxPaletteLabel.style.opacity = state.sandboxMode === 'edit' ? '1' : '0.75';
+      sandboxPaletteRow.style.opacity = state.sandboxMode === 'edit' ? '1' : '0.55';
+      sandboxPaletteRow.style.pointerEvents = state.sandboxMode === 'edit' ? 'auto' : 'none';
+      updateSandboxToolButtons();
+      updateSandboxModeButtons();
+    }
+
+    function isSandboxEditing(){
+      return state.isSandbox && state.sandboxMode === 'edit';
+    }
+
+    function setSandboxMode(mode){
+      if (!state.isSandbox) return;
+      if (mode !== 'edit' && mode !== 'play') return;
+      if (state.sandboxMode === mode) return;
+      if (mode === 'edit'){
+        state.sandboxMode = 'edit';
+        state.running = false;
+        state.ended = false;
+        state.lastMove = null;
+        state.legal = [];
+        state.isPainting = false;
+        setStatus('miniexp.games.exothello.status.sandboxEditing', 'Sandbox edit: choose a tool and drag to paint the board.');
+        updateSandboxControls();
+        draw();
+        return;
+      }
+      const hasBlackMove = legalMoves(state.board, BLACK).length > 0;
+      const hasWhiteMove = legalMoves(state.board, WHITE).length > 0;
+      if (!hasBlackMove && !hasWhiteMove){
+        setStatus('miniexp.games.exothello.status.invalidSandbox', 'No valid moves for either side. Edit again.');
+        return;
+      }
+      state.sandboxMode = 'play';
+      state.running = true;
+      state.ended = false;
+      state.lastMove = null;
+      state.playerColor = playerColorSelect.value === 'white' ? WHITE : BLACK;
+      state.aiColor = -state.playerColor;
+      state.settings.victory = victorySelect.value === 'least' ? 'least' : 'most';
+      state.victory = state.settings.victory;
+      state.difficulty = difficultySelect.value;
+      state.settings.width = state.board[0].length;
+      state.settings.height = state.board.length;
+      state.turn = state.playerColor;
+      state.isPainting = false;
+      updateSandboxControls();
+      setStatus('miniexp.games.exothello.status.continue', 'Game in progress');
+      updateLegalMoves();
+      draw();
+      checkEnd();
+      if (!state.ended && state.turn === state.aiColor){
+        setTimeout(() => processAIMove(), 160);
+      }
+    }
+
+    function sandboxToolValue(){
+      switch (state.sandboxTool){
+      case 'black': return BLACK;
+      case 'white': return WHITE;
+      case 'wall': return WALL;
+      default: return EMPTY;
+      }
+    }
+
+    function paintSandboxCell(x, y){
+      if (!isSandboxEditing()) return;
+      const height = state.board.length;
+      const width = state.board[0].length;
+      if (x < 0 || y < 0 || x >= width || y >= height) return;
+      const targetValue = sandboxToolValue();
+      if (state.board[y][x] !== targetValue){
+        state.board[y][x] = targetValue;
+        state.lastMove = null;
+        draw();
+      }
+    }
 
     function labeled(labelText, element){
       const wrapper = document.createElement('label');
@@ -549,7 +810,7 @@
       }
       victorySelect.disabled = mode.id === 'least';
       if (mode.id === 'sandbox'){
-        statusBox.textContent = text('miniexp.games.exothello.status.sandboxHint', 'Sandbox: click cells to cycle Empty → Black → White → Wall. Start when ready.');
+        statusBox.textContent = text('miniexp.games.exothello.status.sandboxHint', 'Sandbox: paint walls and stones in Edit mode, then switch to Play to test.');
       } else {
         statusBox.textContent = text(mode.descriptionKey, '');
       }
@@ -565,6 +826,9 @@
       state.settings.height = parseInt(heightInput.value, 10) || 8;
       state.settings.victory = victorySelect.value === 'least' ? 'least' : 'most';
       state.difficulty = difficultySelect.value;
+      state.playerColor = playerColorSelect.value === 'white' ? WHITE : BLACK;
+      state.aiColor = -state.playerColor;
+      updateSandboxControls();
     }
 
     function updateLegalMoves(){
@@ -572,8 +836,8 @@
         state.legal = [];
         return;
       }
-      if (state.turn === BLACK){
-        state.legal = legalMoves(state.board, BLACK);
+      if (state.turn === state.playerColor){
+        state.legal = legalMoves(state.board, state.playerColor);
       } else {
         state.legal = [];
       }
@@ -626,7 +890,7 @@
             ctx.strokeRect(px + 1, py + 1, cellSize - 2, cellSize - 2);
             continue;
           }
-          if (legalSet.has(`${x},${y}`) && state.turn === BLACK && state.running){
+          if (legalSet.has(`${x},${y}`) && state.turn === state.playerColor && state.running){
             ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.beginPath();
             ctx.arc(px + cellSize / 2, py + cellSize / 2, cellSize * 0.28, 0, Math.PI * 2);
@@ -650,23 +914,44 @@
         }
       }
       const counts = countPieces(state.board);
-      const turnText = state.ended ? text('miniexp.games.exothello.turn.ended', 'Game over')
-        : state.turn === BLACK
+      const playerScore = state.playerColor === BLACK ? counts.black : counts.white;
+      const aiScore = state.aiColor === BLACK ? counts.black : counts.white;
+      const isPlayerTurn = state.running && !state.ended && state.turn === state.playerColor;
+      const isAiTurn = state.running && !state.ended && state.turn === state.aiColor;
+      const turnText = state.ended
+        ? text('miniexp.games.exothello.turn.ended', 'Game over')
+        : isPlayerTurn
           ? text('miniexp.games.exothello.turn.player', 'Your turn')
-          : text('miniexp.games.exothello.turn.ai', 'AI thinking');
+          : isAiTurn
+            ? text('miniexp.games.exothello.turn.ai', 'AI thinking')
+            : text('miniexp.games.exothello.turn.waiting', 'Waiting');
       const victoryKey = state.victory === 'least'
         ? 'miniexp.games.exothello.victoryCondition.least'
         : 'miniexp.games.exothello.victoryCondition.most';
-      const countsText = `${text('miniexp.games.exothello.counts.black', 'Black: ${0}', { value: counts.black })}` +
-        ` · ${text('miniexp.games.exothello.counts.white', 'White: ${0}', { value: counts.white })}`;
-      infoBox.textContent = `${turnText} / ${text(victoryKey, state.victory)} · ${countsText}`;
+      const infoSegments = [
+        turnText,
+        text(victoryKey, state.victory),
+        text('miniexp.games.exothello.info.player', 'You (${color}): ${count}', {
+          color: describeColor(state.playerColor),
+          count: playerScore
+        }),
+        text('miniexp.games.exothello.info.ai', 'AI (${color}): ${count}', {
+          color: describeColor(state.aiColor),
+          count: aiScore
+        }),
+        text('miniexp.games.exothello.info.totals', 'Totals — Black: ${black}, White: ${white}', {
+          black: counts.black,
+          white: counts.white
+        })
+      ];
+      infoBox.textContent = infoSegments.join(' · ');
     }
 
     function findMove(x, y){
       return state.legal.find(mv => mv.x === x && mv.y === y) || null;
     }
 
-    function handleCanvasClick(event){
+    function getCellFromEvent(event){
       const rect = canvas.getBoundingClientRect();
       const width = state.board[0].length;
       const height = state.board.length;
@@ -674,67 +959,104 @@
       const cellSizeY = canvas.height / height;
       const x = Math.floor((event.clientX - rect.left) / cellSizeX);
       const y = Math.floor((event.clientY - rect.top) / cellSizeY);
-      if (x < 0 || y < 0 || x >= width || y >= height) return;
-      if (state.sandboxEditing){
-        const current = state.board[y][x];
-        let next = EMPTY;
-        if (current === EMPTY) next = BLACK;
-        else if (current === BLACK) next = WHITE;
-        else if (current === WHITE) next = WALL;
-        else next = EMPTY;
-        state.board[y][x] = next;
-        draw();
+      if (x < 0 || y < 0 || x >= width || y >= height) return null;
+      return { x, y };
+    }
+
+    function handleCanvasClick(event){
+      const cell = getCellFromEvent(event);
+      if (!cell) return;
+      if (isSandboxEditing()){
+        paintSandboxCell(cell.x, cell.y);
         return;
       }
-      if (!state.running || state.turn !== BLACK || state.ended) return;
-      const mv = findMove(x, y);
+      if (!state.running || state.turn !== state.playerColor || state.ended) return;
+      const mv = findMove(cell.x, cell.y);
       if (!mv) return;
-      applyMove(state.board, mv, BLACK);
-      state.lastMove = { x, y, color: BLACK };
-      state.turn = WHITE;
+      applyMove(state.board, mv, state.playerColor);
+      state.lastMove = { x: cell.x, y: cell.y, color: state.playerColor };
+      state.turn = state.aiColor;
       updateLegalMoves();
       draw();
-      setTimeout(() => {
-        processAIMove();
-      }, 150);
+      checkEnd();
+      if (!state.ended){
+        setTimeout(() => {
+          processAIMove();
+        }, 150);
+      }
+    }
+
+    function handlePointerDown(event){
+      if (!isSandboxEditing()) return;
+      if (typeof event.button === 'number' && event.button !== 0) return;
+      const cell = getCellFromEvent(event);
+      if (!cell) return;
+      state.isPainting = true;
+      if (typeof event.pointerId === 'number' && typeof canvas.setPointerCapture === 'function'){
+        try { canvas.setPointerCapture(event.pointerId); } catch {}
+      }
+      paintSandboxCell(cell.x, cell.y);
+      event.preventDefault();
+    }
+
+    function handlePointerMove(event){
+      if (!state.isPainting) return;
+      const cell = getCellFromEvent(event);
+      if (!cell) return;
+      paintSandboxCell(cell.x, cell.y);
+      event.preventDefault();
+    }
+
+    function stopPainting(event){
+      if (event && typeof event.pointerId === 'number' && typeof canvas.releasePointerCapture === 'function'){
+        try { canvas.releasePointerCapture(event.pointerId); } catch {}
+      }
+      state.isPainting = false;
+    }
+
+    function handleSandboxEditClick(){
+      setSandboxMode('edit');
+    }
+
+    function handleSandboxPlayClick(){
+      setSandboxMode('play');
     }
 
     function processAIMove(){
-      if (state.ended || !state.running || state.turn !== WHITE) return;
-      const moves = legalMoves(state.board, WHITE);
+      if (state.ended || !state.running || state.turn !== state.aiColor) return;
+      const moves = legalMoves(state.board, state.aiColor);
       if (moves.length === 0){
-        state.turn = BLACK;
+        state.turn = state.playerColor;
         updateLegalMoves();
-        checkEnd();
         draw();
         checkEnd();
         return;
       }
-      const move = pickAIMove(state.board, state.weights, state.victory, state.difficulty);
+      const move = pickAIMove(state.board, state.weights, state.victory, state.difficulty, state.aiColor);
       if (!move){
-        state.turn = BLACK;
+        state.turn = state.playerColor;
         updateLegalMoves();
         draw();
         checkEnd();
         return;
       }
-      applyMove(state.board, move, WHITE);
-      state.lastMove = { x: move.x, y: move.y, color: WHITE };
-      state.turn = BLACK;
+      applyMove(state.board, move, state.aiColor);
+      state.lastMove = { x: move.x, y: move.y, color: state.aiColor };
+      state.turn = state.playerColor;
       updateLegalMoves();
       draw();
       checkEnd();
     }
 
     function checkEnd(){
-      const playerMoves = legalMoves(state.board, BLACK);
-      const aiMoves = legalMoves(state.board, WHITE);
+      const playerMoves = legalMoves(state.board, state.playerColor);
+      const aiMoves = legalMoves(state.board, state.aiColor);
       if (playerMoves.length === 0 && aiMoves.length === 0){
         state.ended = true;
         state.running = false;
         const counts = countPieces(state.board);
-        const playerScore = counts.black;
-        const aiScore = counts.white;
+        const playerScore = state.playerColor === BLACK ? counts.black : counts.white;
+        const aiScore = state.aiColor === BLACK ? counts.black : counts.white;
         let playerWins;
         if (state.victory === 'least'){
           playerWins = playerScore < aiScore;
@@ -757,16 +1079,26 @@
         }
         resetButton.disabled = false;
         draw();
-      } else if (playerMoves.length === 0){
-        state.turn = WHITE;
-        setStatus('miniexp.games.exothello.status.pass', 'No moves. Turn passes.');
-        setTimeout(() => processAIMove(), 160);
-      } else {
-        setStatus('miniexp.games.exothello.status.continue', 'Game in progress');
-        state.turn = BLACK;
+        return;
+      }
+      if (state.turn === state.playerColor && playerMoves.length === 0){
+        state.turn = state.aiColor;
         updateLegalMoves();
         draw();
+        setStatus('miniexp.games.exothello.status.pass', 'No moves. Turn passes.');
+        setTimeout(() => processAIMove(), 160);
+        return;
       }
+      if (state.turn === state.aiColor && aiMoves.length === 0){
+        state.turn = state.playerColor;
+        updateLegalMoves();
+        draw();
+        setStatus('miniexp.games.exothello.status.pass', 'No moves. Turn passes.');
+        return;
+      }
+      setStatus('miniexp.games.exothello.status.continue', 'Game in progress');
+      updateLegalMoves();
+      draw();
     }
 
     async function startGame(){
@@ -774,7 +1106,10 @@
       const mode = MODE_CONFIGS.find(m => m.id === state.modeId) || MODE_CONFIGS[0];
       state.running = false;
       state.ended = false;
-      state.sandboxEditing = false;
+      state.isSandbox = false;
+      state.sandboxMode = null;
+      state.isPainting = false;
+      updateSandboxControls();
       setStatus('miniexp.games.exothello.status.preparing', 'Preparing board...');
       try {
         const setupResult = await mode.setup(state);
@@ -783,27 +1118,32 @@
         state.weights = createWeights(state.board[0].length, state.board.length);
         state.turn = BLACK;
         state.lastMove = null;
-        state.running = true;
         state.ended = false;
-        state.sandboxEditing = !!setupResult.sandbox;
-        if (state.sandboxEditing){
-          state.running = false;
-          setStatus('miniexp.games.exothello.status.sandboxEditing', 'Sandbox editing: click cells to change. Start again when done.');
-        } else {
-          setStatus(mode.descriptionKey, '');
-        }
         state.modeId = mode.id;
         state.difficulty = difficultySelect.value;
         state.settings.victory = state.victory;
         state.legal = [];
         resizeCanvas();
-        updateLegalMoves();
-        checkEnd();
-        draw();
-        resetButton.disabled = false;
-        if (state.sandboxEditing){
+        state.isSandbox = !!setupResult.sandbox;
+        if (state.isSandbox){
+          state.sandboxMode = 'edit';
           state.running = false;
+          state.isPainting = false;
+          state.sandboxTool = state.sandboxTool || 'black';
+          setStatus('miniexp.games.exothello.status.sandboxEditing', 'Sandbox edit: choose a tool and drag to paint the board.');
+          updateSandboxControls();
+          draw();
+        } else {
+          state.running = true;
+          setStatus(mode.descriptionKey, '');
+          updateSandboxControls();
+          updateLegalMoves();
+          checkEnd();
+          if (!state.ended && state.turn === state.aiColor){
+            setTimeout(() => processAIMove(), 220);
+          }
         }
+        resetButton.disabled = false;
       } catch (error){
         console.error('[exothello] Failed to prepare mode', error);
         setStatus('miniexp.games.exothello.status.error', 'Failed to prepare board.');
@@ -820,39 +1160,27 @@
       state.victory = 'most';
       state.lastMove = null;
       state.legal = [];
-      state.sandboxEditing = false;
+      state.isSandbox = false;
+      state.sandboxMode = null;
+      state.isPainting = false;
+      state.sandboxTool = 'black';
+      state.playerColor = BLACK;
+      state.aiColor = WHITE;
       widthInput.value = '8';
       heightInput.value = '8';
       victorySelect.value = 'most';
       difficultySelect.value = 'NORMAL';
       modeSelect.value = 'normal';
+      playerColorSelect.value = 'black';
       resetButton.disabled = true;
       setStatus('miniexp.games.exothello.status.reset', 'Select a mode to begin.');
       resizeCanvas();
-      draw();
-    }
-
-    function confirmSandboxAndStart(){
-      if (!state.sandboxEditing) return;
-      if (!legalMoves(state.board, BLACK).length && !legalMoves(state.board, WHITE).length){
-        setStatus('miniexp.games.exothello.status.invalidSandbox', 'No possible moves for either side. Edit again.');
-        return;
-      }
-      state.sandboxEditing = false;
-      state.running = true;
-      state.turn = BLACK;
-      setStatus('miniexp.games.exothello.status.continue', 'Game in progress');
-      updateLegalMoves();
-      checkEnd();
+      updateSandboxControls();
       draw();
     }
 
     const handleStartClick = () => {
-      if (state.sandboxEditing){
-        confirmSandboxAndStart();
-      } else {
-        startGame();
-      }
+      startGame();
     };
     const handleModeChange = () => {
       updateSettingsFromControls();
@@ -865,8 +1193,17 @@
     heightInput.addEventListener('change', updateSettingsFromControls);
     victorySelect.addEventListener('change', updateSettingsFromControls);
     difficultySelect.addEventListener('change', updateSettingsFromControls);
+    playerColorSelect.addEventListener('change', updateSettingsFromControls);
+    sandboxEditButton.addEventListener('click', handleSandboxEditClick);
+    sandboxPlayButton.addEventListener('click', handleSandboxPlayClick);
     canvas.addEventListener('click', handleCanvasClick);
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerup', stopPainting);
+    canvas.addEventListener('pointercancel', stopPainting);
+    canvas.addEventListener('pointerleave', stopPainting);
 
+    updateSettingsFromControls();
     syncControlsWithMode();
     resizeCanvas();
     draw();
@@ -875,6 +1212,11 @@
     return {
       destroy(){
         try { canvas.removeEventListener('click', handleCanvasClick); } catch {}
+        try { canvas.removeEventListener('pointerdown', handlePointerDown); } catch {}
+        try { canvas.removeEventListener('pointermove', handlePointerMove); } catch {}
+        try { canvas.removeEventListener('pointerup', stopPainting); } catch {}
+        try { canvas.removeEventListener('pointercancel', stopPainting); } catch {}
+        try { canvas.removeEventListener('pointerleave', stopPainting); } catch {}
         try { startButton.removeEventListener('click', handleStartClick); } catch {}
         try { resetButton.removeEventListener('click', resetGame); } catch {}
         try { modeSelect.removeEventListener('change', handleModeChange); } catch {}
@@ -882,6 +1224,9 @@
         try { heightInput.removeEventListener('change', updateSettingsFromControls); } catch {}
         try { victorySelect.removeEventListener('change', updateSettingsFromControls); } catch {}
         try { difficultySelect.removeEventListener('change', updateSettingsFromControls); } catch {}
+        try { playerColorSelect.removeEventListener('change', updateSettingsFromControls); } catch {}
+        try { sandboxEditButton.removeEventListener('click', handleSandboxEditClick); } catch {}
+        try { sandboxPlayButton.removeEventListener('click', handleSandboxPlayClick); } catch {}
         if (detachLocale){
           try { detachLocale(); } catch (error){ console.warn('[exothello] Failed to detach locale listener', error); }
         }

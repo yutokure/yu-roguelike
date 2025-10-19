@@ -79,7 +79,10 @@ function setupEnvironment(){
     }
   };
 
-  const runtime = create(root, awardXp, { player: playerApi });
+  const runtime = create(root, awardXp, {
+    player: playerApi,
+    random: () => Math.random()
+  });
 
   const cleanup = () => {
     try {

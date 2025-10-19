@@ -95,7 +95,7 @@
     return !!(range && range.enabled && Number.isFinite(range.min) && Number.isFinite(range.max) && range.min !== range.max);
   }
 
-  function resolveRandomValue(baseValue, range, clampFn){
+  function resolveRandomValue(baseValue, range, clampFn, randomFn){
     const base = Number(baseValue) || 0;
     if (!isRangeEnabled(range)) return base;
     const clamp = typeof clampFn === 'function' ? clampFn : (value) => value;
@@ -120,8 +120,27 @@
     if (low === high) return low;
     const span = high - low;
     if (span <= 0) return low;
-    const value = low + Math.floor(Math.random() * (span + 1));
+    const generator = typeof randomFn === 'function' ? randomFn : getRandomFloat;
+    let sample;
+    try {
+      sample = generator();
+    } catch {}
+    if (!Number.isFinite(sample) || sample < 0 || sample >= 1){
+      sample = getRandomFloat();
+    }
+    const value = low + Math.floor(sample * (span + 1));
     return value;
+  }
+
+  function getRandomFloat(){
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function'){
+      try {
+        const array = new Uint32Array(1);
+        crypto.getRandomValues(array);
+        return array[0] / 0x100000000;
+      } catch {}
+    }
+    return Math.random();
   }
 
   function sanitizeRewardKey(value){
@@ -301,7 +320,7 @@
     const action = entry.action === 'achieved' ? 'achieved' : 'completed';
     const id = (typeof entry.id === 'string' && entry.id)
       ? entry.id
-      : `log_${timestamp}_${Math.random().toString(36).slice(2, 10)}`;
+      : `log_${timestamp}_${getRandomFloat().toString(36).slice(2, 10)}`;
     return { id, timestamp, name, action };
   }
 
@@ -346,7 +365,7 @@
       if (!Array.isArray(parsed)) return [];
       return parsed.map(item => {
         if (!item || typeof item !== 'object') return null;
-        const id = typeof item.id === 'string' && item.id ? item.id : `todo_${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
+        const id = typeof item.id === 'string' && item.id ? item.id : `todo_${crypto.randomUUID?.() || getRandomFloat().toString(36).slice(2)}`;
         const rawName = sanitizeString(item.name || '', '').slice(0, MAX_NAME).trim();
         const name = rawName || fallbackName;
         const memo = sanitizeString(item.memo || '', '');
@@ -412,6 +431,24 @@
     let i18n = (typeof window !== 'undefined' && typeof window.I18n === 'object') ? window.I18n : null;
     const playerApi = (opts && typeof opts === 'object' && opts.player && typeof opts.player === 'object') ? opts.player : null;
     const shortcuts = (opts && typeof opts === 'object' && opts.shortcuts && typeof opts.shortcuts === 'object') ? opts.shortcuts : null;
+    const randomOverride = typeof opts?.random === 'function' ? opts.random : null;
+
+    const clampRandomSample = (value) => {
+      if (!Number.isFinite(value)) return null;
+      if (value <= 0) return 0;
+      if (value >= 1) return 0.9999999999999999;
+      return value;
+    };
+
+    function useRandom(){
+      if (randomOverride){
+        try {
+          const candidate = clampRandomSample(Number(randomOverride()));
+          if (candidate !== null) return candidate;
+        } catch {}
+      }
+      return getRandomFloat();
+    }
 
     const HOST_SHORTCUT_KEYS = Object.freeze(['r', 'p']);
     let hostShortcutsSuppressed = false;
@@ -2122,7 +2159,10 @@
 
     const resultOverlay = document.createElement('div');
     resultOverlay.style.position = 'fixed';
-    resultOverlay.style.inset = '0';
+    resultOverlay.style.top = '0';
+    resultOverlay.style.left = '0';
+    resultOverlay.style.width = '0';
+    resultOverlay.style.height = '0';
     resultOverlay.style.display = 'none';
     resultOverlay.style.alignItems = 'center';
     resultOverlay.style.justifyContent = 'center';
@@ -2131,6 +2171,8 @@
     resultOverlay.style.zIndex = '9999';
     resultOverlay.style.transition = 'opacity 0.3s ease';
     resultOverlay.style.opacity = '0';
+    resultOverlay.setAttribute('role', 'dialog');
+    resultOverlay.setAttribute('aria-modal', 'true');
 
     const resultPanel = document.createElement('div');
     resultPanel.style.minWidth = '320px';
@@ -2169,32 +2211,122 @@
     resultRewardsWrap.style.fontSize = '14px';
     resultRewardsWrap.style.whiteSpace = 'pre-line';
 
+    const resultActions = document.createElement('div');
+    resultActions.style.display = 'flex';
+    resultActions.style.justifyContent = 'center';
+    resultActions.style.marginTop = '4px';
+
+    const resultCloseButton = document.createElement('button');
+    resultCloseButton.type = 'button';
+    resultCloseButton.style.background = 'linear-gradient(135deg, #38bdf8, #2563eb)';
+    resultCloseButton.style.color = '#f8fafc';
+    resultCloseButton.style.border = 'none';
+    resultCloseButton.style.borderRadius = '999px';
+    resultCloseButton.style.padding = '10px 28px';
+    resultCloseButton.style.fontSize = '15px';
+    resultCloseButton.style.fontWeight = '600';
+    resultCloseButton.style.cursor = 'pointer';
+    resultCloseButton.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.35)';
+
+    resultActions.appendChild(resultCloseButton);
+
     resultPanel.appendChild(resultTitle);
     resultPanel.appendChild(resultXpLine);
     resultPanel.appendChild(resultLevelLine);
     resultPanel.appendChild(resultRewardsWrap);
+    resultPanel.appendChild(resultActions);
     resultOverlay.appendChild(resultPanel);
-    wrapper.appendChild(resultOverlay);
 
     root.appendChild(wrapper);
 
-    let logEmptyText = '記録はまだありません。';
-    let resultOverlayTimer = null;
-    function hideResultOverlay(){
-      if (resultOverlayTimer){
-        clearTimeout(resultOverlayTimer);
-        resultOverlayTimer = null;
+    const overlayDoc = root?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+    const overlayMountTarget = overlayDoc?.body || wrapper;
+    const overlayWindow = overlayDoc?.defaultView || (typeof window !== 'undefined' ? window : null);
+    if (overlayMountTarget && overlayMountTarget !== wrapper) {
+      overlayMountTarget.appendChild(resultOverlay);
+    } else {
+      wrapper.appendChild(resultOverlay);
+    }
+
+    const updateResultOverlayBounds = () => {
+      if (!resultOverlay || !root || !root.getBoundingClientRect) return;
+      const rect = root.getBoundingClientRect();
+      resultOverlay.style.top = `${Math.max(rect.top, 0)}px`;
+      resultOverlay.style.left = `${Math.max(rect.left, 0)}px`;
+      resultOverlay.style.width = `${Math.max(rect.width, 0)}px`;
+      resultOverlay.style.height = `${Math.max(rect.height, 0)}px`;
+    };
+
+    let overlayResizeObserver = null;
+    let detachResultOverlayTracking = null;
+
+    function startResultOverlayTracking(){
+      if (detachResultOverlayTracking) return;
+      const passiveOptions = { passive: true };
+      if (overlayWindow && typeof overlayWindow.addEventListener === 'function'){
+        overlayWindow.addEventListener('scroll', updateResultOverlayBounds, passiveOptions);
+        overlayWindow.addEventListener('resize', updateResultOverlayBounds);
       }
+      if (root && typeof root.addEventListener === 'function'){
+        root.addEventListener('scroll', updateResultOverlayBounds, passiveOptions);
+      }
+      if (typeof ResizeObserver === 'function' && root){
+        overlayResizeObserver = new ResizeObserver(() => updateResultOverlayBounds());
+        try {
+          overlayResizeObserver.observe(root);
+        } catch {
+          overlayResizeObserver = null;
+        }
+      }
+      updateResultOverlayBounds();
+      detachResultOverlayTracking = () => {
+        if (overlayWindow && typeof overlayWindow.removeEventListener === 'function'){
+          overlayWindow.removeEventListener('scroll', updateResultOverlayBounds);
+          overlayWindow.removeEventListener('resize', updateResultOverlayBounds);
+        }
+        if (root && typeof root.removeEventListener === 'function'){
+          root.removeEventListener('scroll', updateResultOverlayBounds);
+        }
+        if (overlayResizeObserver){
+          overlayResizeObserver.disconnect();
+          overlayResizeObserver = null;
+        }
+        detachResultOverlayTracking = null;
+      };
+    }
+
+    function stopResultOverlayTracking(){
+      if (typeof detachResultOverlayTracking === 'function'){
+        detachResultOverlayTracking();
+      }
+    }
+
+    let logEmptyText = '記録はまだありません。';
+    function hideResultOverlay({ immediate = false } = {}){
       if (resultOverlay.style.display === 'none') return;
+      if (immediate){
+        resultOverlay.style.display = 'none';
+        stopResultOverlayTracking();
+        return;
+      }
       resultOverlay.style.opacity = '0';
       resultPanel.style.transform = 'scale(0.94)';
       resultPanel.style.opacity = '0';
       setTimeout(() => {
         resultOverlay.style.display = 'none';
+        stopResultOverlayTracking();
       }, 320);
     }
 
-    resultOverlay.addEventListener('click', hideResultOverlay);
+    resultCloseButton.addEventListener('click', () => {
+      hideResultOverlay();
+    });
+    resultCloseButton.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape'){
+        event.preventDefault();
+        hideResultOverlay();
+      }
+    });
 
     function capturePlayerSnapshot(){
       if (typeof playerApi?.getState === 'function'){
@@ -2333,20 +2465,20 @@
         });
       }
 
-      if (resultOverlayTimer){
-        clearTimeout(resultOverlayTimer);
-        resultOverlayTimer = null;
-      }
-
+      startResultOverlayTracking();
+      updateResultOverlayBounds();
       resultOverlay.style.display = 'flex';
       requestAnimationFrame(() => {
+        updateResultOverlayBounds();
         resultOverlay.style.opacity = '1';
         resultPanel.style.transform = 'scale(1)';
         resultPanel.style.opacity = '1';
+        try {
+          resultCloseButton.focus({ preventScroll: true });
+        } catch {
+          resultCloseButton.focus();
+        }
       });
-      resultOverlayTimer = setTimeout(() => {
-        hideResultOverlay();
-      }, 3200);
     }
 
     function renderLogs(){
@@ -2676,6 +2808,10 @@
 
       cancelBtn.textContent = translate('games.todoList.form.cancel', 'キャンセル');
 
+      const resultCloseText = translate('games.todoList.result.close', 'OK');
+      resultCloseButton.textContent = resultCloseText;
+      resultCloseButton.setAttribute('aria-label', resultCloseText);
+
       pendingSectionControls.setLabel(translate('games.todoList.sections.pending', '未完了タスク'));
       completedSectionControls.setLabel(translate('games.todoList.sections.completed', '完了済みタスク'));
 
@@ -2995,7 +3131,7 @@
         }
       };
 
-      const resolvedXp = resolveRandomValue(task.xp, task.xpRange, clampXp);
+      const resolvedXp = resolveRandomValue(task.xp, task.xpRange, clampXp, useRandom);
       if (resolvedXp !== 0 && typeof awardXp === 'function'){
         try {
           const gained = awardXp(resolvedXp, meta);
@@ -3016,7 +3152,7 @@
         const spAmount = resolveRandomValue(rewards.sp.amount, rewards.sp.range, (value) => clampRewardAmount(value, {
           min: -MAX_REWARD_AMOUNT,
           max: MAX_REWARD_AMOUNT
-        }));
+        }), useRandom);
         if (spAmount !== 0){
           try {
             playerApi.adjustSp(spAmount, { source: 'todo_list', reason: meta?.type || 'todo_list' });
@@ -3034,7 +3170,7 @@
           const amount = resolveRandomValue(entry.amount, entry.range, (value) => clampRewardAmount(value, {
             min: -MAX_REWARD_AMOUNT,
             max: MAX_REWARD_AMOUNT
-          }));
+          }), useRandom);
           if (amount === 0) return;
           if (amount > 0){
             itemPositives[key] = (itemPositives[key] || 0) + amount;
@@ -3053,7 +3189,7 @@
           const amount = resolveRandomValue(entry.amount, entry.range, (value) => clampRewardAmount(value, {
             min: -MAX_REWARD_AMOUNT,
             max: MAX_REWARD_AMOUNT
-          }));
+          }), useRandom);
           if (amount === 0) return;
           try {
             playerApi.awardPassiveOrb(orbId, amount, { source: meta?.type || 'todo_list' });
@@ -3070,7 +3206,7 @@
       if (lootConfig && lootConfig.enabled && Array.isArray(lootConfig.entries) && lootConfig.entries.length){
         result.loot.attempted = true;
         const chance = Math.max(0, Math.min(100, Number(lootConfig.dropChance) || 0));
-        if (Math.random() * 100 < chance){
+        if (useRandom() * 100 < chance){
           const weightedEntries = lootConfig.entries
             .map(entry => ({
               key: entry?.key,
@@ -3081,7 +3217,7 @@
             .filter(entry => entry.key && entry.weight > 0);
           const totalWeight = weightedEntries.reduce((sum, entry) => sum + entry.weight, 0);
           if (totalWeight > 0){
-            let roll = Math.random() * totalWeight;
+            let roll = useRandom() * totalWeight;
             let chosen = null;
             for (const entry of weightedEntries){
               if (roll < entry.weight){
@@ -3094,7 +3230,7 @@
               const amount = resolveRandomValue(chosen.amount, chosen.range, (value) => clampRewardAmount(value, {
                 min: 0,
                 max: MAX_REWARD_AMOUNT
-              }));
+              }), useRandom);
               if (amount > 0){
                 result.loot.dropped = true;
                 result.loot.entry = { key: chosen.key, amount };
@@ -3242,7 +3378,7 @@
         }
       } else {
         const now = Date.now();
-        const id = `todo_${now}_${Math.random().toString(36).slice(2, 8)}`;
+        const id = `todo_${now}_${getRandomFloat().toString(36).slice(2, 8)}`;
         state.tasks.push({
           id,
           name,
@@ -3302,6 +3438,10 @@
       if (typeof detachDocumentLocale === 'function'){
         detachDocumentLocale();
         detachDocumentLocale = null;
+      }
+      hideResultOverlay({ immediate: true });
+      if (resultOverlay.parentNode){
+        resultOverlay.parentNode.removeChild(resultOverlay);
       }
       root.removeChild(wrapper);
     }

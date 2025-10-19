@@ -1,10 +1,12 @@
 (function(){
   const STORAGE_KEY = 'mini_todo_tasks_v1';
+  const LOG_STORAGE_KEY = 'mini_todo_logs_v1';
   const MAX_NAME = 32;
   const MAX_MEMO = 256;
   const MAX_XP = 99999999;
   const MAX_REWARD_AMOUNT = 99999999;
   const MAX_REWARD_KEY_LENGTH = 64;
+  const MAX_LOG_ENTRIES = 500;
   const DEFAULT_AUTO_NAMES = new Set(['名称未設定', 'Untitled']);
   const TASK_TYPE_SINGLE = 'single';
   const TASK_TYPE_REPEATABLE = 'repeatable';
@@ -151,6 +153,50 @@
   function sanitizeString(value, fallback = ''){
     if (typeof value !== 'string') return fallback;
     return value.slice(0, MAX_MEMO);
+  }
+
+  function sanitizeLogEntry(entry, fallbackName){
+    if (!entry || typeof entry !== 'object') return null;
+    const fallback = sanitizeString(fallbackName || '', '名称未設定').slice(0, MAX_NAME).trim() || '名称未設定';
+    const timestamp = Number.isFinite(entry.timestamp) ? entry.timestamp : Date.now();
+    const rawName = sanitizeString(entry.name || '', '').slice(0, MAX_NAME).trim();
+    const name = rawName || fallback;
+    const action = entry.action === 'achieved' ? 'achieved' : 'completed';
+    const id = (typeof entry.id === 'string' && entry.id)
+      ? entry.id
+      : `log_${timestamp}_${Math.random().toString(36).slice(2, 10)}`;
+    return { id, timestamp, name, action };
+  }
+
+  function sanitizeLogList(logs, fallbackName){
+    const list = Array.isArray(logs) ? logs : [];
+    const sanitized = [];
+    list.forEach(entry => {
+      const normalized = sanitizeLogEntry(entry, fallbackName);
+      if (normalized) sanitized.push(normalized);
+    });
+    sanitized.sort((a, b) => b.timestamp - a.timestamp);
+    if (sanitized.length > MAX_LOG_ENTRIES){
+      sanitized.length = MAX_LOG_ENTRIES;
+    }
+    return sanitized;
+  }
+
+  function loadPersistentLogs(defaultName = '名称未設定'){
+    try {
+      const raw = localStorage.getItem(LOG_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return sanitizeLogList(parsed, defaultName);
+    } catch {
+      return [];
+    }
+  }
+
+  function writePersistentLogs(logs){
+    try {
+      localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logs));
+    } catch {}
   }
 
   function loadPersistentState(defaultName = '名称未設定'){
@@ -322,6 +368,7 @@
 
     const state = {
       tasks: loadPersistentState(defaultTaskName),
+      logs: loadPersistentLogs(defaultTaskName),
       editingTaskId: null,
       sessionXp: 0
     };
@@ -1164,11 +1211,276 @@
     listsWrap.appendChild(pendingSection);
     listsWrap.appendChild(completedSection);
 
+    const logSection = document.createElement('section');
+    logSection.style.background = '#f8fafc';
+    logSection.style.borderRadius = '12px';
+    logSection.style.padding = '18px';
+    logSection.style.boxShadow = '0 16px 36px rgba(15,23,42,0.08)';
+    logSection.style.display = 'flex';
+    logSection.style.flexDirection = 'column';
+    logSection.style.gap = '12px';
+
+    const logTitle = document.createElement('h3');
+    logTitle.style.margin = '0';
+    logTitle.style.fontSize = '18px';
+    logTitle.style.color = '#1f2937';
+
+    const logList = document.createElement('div');
+    logList.style.display = 'flex';
+    logList.style.flexDirection = 'column';
+    logList.style.gap = '8px';
+    logList.style.maxHeight = '240px';
+    logList.style.overflowY = 'auto';
+    logList.style.paddingRight = '4px';
+
+    logSection.appendChild(logTitle);
+    logSection.appendChild(logList);
+
     wrapper.appendChild(header);
     wrapper.appendChild(formCard);
     wrapper.appendChild(listsWrap);
+    wrapper.appendChild(logSection);
+
+    const resultOverlay = document.createElement('div');
+    resultOverlay.style.position = 'fixed';
+    resultOverlay.style.inset = '0';
+    resultOverlay.style.display = 'none';
+    resultOverlay.style.alignItems = 'center';
+    resultOverlay.style.justifyContent = 'center';
+    resultOverlay.style.background = 'rgba(15,23,42,0.78)';
+    resultOverlay.style.backdropFilter = 'blur(4px)';
+    resultOverlay.style.zIndex = '9999';
+    resultOverlay.style.transition = 'opacity 0.3s ease';
+    resultOverlay.style.opacity = '0';
+
+    const resultPanel = document.createElement('div');
+    resultPanel.style.minWidth = '320px';
+    resultPanel.style.maxWidth = '520px';
+    resultPanel.style.background = 'linear-gradient(135deg, #0f172a, #1e293b)';
+    resultPanel.style.color = '#f8fafc';
+    resultPanel.style.borderRadius = '18px';
+    resultPanel.style.padding = '28px';
+    resultPanel.style.boxShadow = '0 24px 60px rgba(2,6,23,0.45)';
+    resultPanel.style.display = 'flex';
+    resultPanel.style.flexDirection = 'column';
+    resultPanel.style.gap = '14px';
+    resultPanel.style.transform = 'scale(0.94)';
+    resultPanel.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    resultPanel.style.opacity = '0';
+
+    const resultTitle = document.createElement('div');
+    resultTitle.style.fontSize = '28px';
+    resultTitle.style.fontWeight = '700';
+    resultTitle.style.textAlign = 'center';
+
+    const resultXpLine = document.createElement('div');
+    resultXpLine.style.fontSize = '18px';
+    resultXpLine.style.fontWeight = '600';
+    resultXpLine.style.textAlign = 'center';
+
+    const resultLevelLine = document.createElement('div');
+    resultLevelLine.style.fontSize = '16px';
+    resultLevelLine.style.textAlign = 'center';
+    resultLevelLine.style.color = '#cbd5f5';
+
+    const resultRewardsWrap = document.createElement('div');
+    resultRewardsWrap.style.display = 'flex';
+    resultRewardsWrap.style.flexDirection = 'column';
+    resultRewardsWrap.style.gap = '6px';
+    resultRewardsWrap.style.fontSize = '14px';
+    resultRewardsWrap.style.whiteSpace = 'pre-line';
+
+    resultPanel.appendChild(resultTitle);
+    resultPanel.appendChild(resultXpLine);
+    resultPanel.appendChild(resultLevelLine);
+    resultPanel.appendChild(resultRewardsWrap);
+    resultOverlay.appendChild(resultPanel);
+    wrapper.appendChild(resultOverlay);
 
     root.appendChild(wrapper);
+
+    let logEmptyText = '記録はまだありません。';
+    let resultOverlayTimer = null;
+    function hideResultOverlay(){
+      if (resultOverlayTimer){
+        clearTimeout(resultOverlayTimer);
+        resultOverlayTimer = null;
+      }
+      if (resultOverlay.style.display === 'none') return;
+      resultOverlay.style.opacity = '0';
+      resultPanel.style.transform = 'scale(0.94)';
+      resultPanel.style.opacity = '0';
+      setTimeout(() => {
+        resultOverlay.style.display = 'none';
+      }, 320);
+    }
+
+    resultOverlay.addEventListener('click', hideResultOverlay);
+
+    function capturePlayerSnapshot(){
+      if (typeof playerApi?.getState === 'function'){
+        try {
+          return playerApi.getState();
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    function showResultOverlay(config){
+      const rewards = config?.rewards || {};
+      const action = config?.action === 'achieved' ? 'achieved' : 'completed';
+      const actionText = action === 'achieved'
+        ? translate('games.todoList.log.actionAchieved', '達成')
+        : translate('games.todoList.log.actionCompleted', '完了');
+      const name = sanitizeString(config?.name || '', '').slice(0, MAX_NAME).trim() || defaultTaskName;
+      resultTitle.textContent = translate('games.todoList.result.title', '{name}{action}！', {
+        name,
+        action: actionText
+      });
+
+      const xpAmount = Number(config?.xp) || 0;
+      const xpFormatted = (() => {
+        if (xpAmount > 0) return `+${formatNumber(xpAmount, { maximumFractionDigits: 0 })}`;
+        if (xpAmount < 0) return `-${formatNumber(Math.abs(xpAmount), { maximumFractionDigits: 0 })}`;
+        return '+0';
+      })();
+      resultXpLine.textContent = translate('games.todoList.result.xp', '獲得経験値 {amount}', { amount: xpFormatted });
+
+      const beforeLevel = Number.isFinite(config?.beforeLevel) ? config.beforeLevel : null;
+      const afterLevel = Number.isFinite(config?.afterLevel) ? config.afterLevel : null;
+      if (beforeLevel !== null && afterLevel !== null){
+        const delta = afterLevel - beforeLevel;
+        const beforeText = formatNumber(beforeLevel, { maximumFractionDigits: 0 });
+        const afterText = formatNumber(afterLevel, { maximumFractionDigits: 0 });
+        if (delta !== 0){
+          const deltaText = delta > 0
+            ? `+${formatNumber(delta, { maximumFractionDigits: 0 })}`
+            : `-${formatNumber(Math.abs(delta), { maximumFractionDigits: 0 })}`;
+          resultLevelLine.textContent = translate('games.todoList.result.levelChange', 'レベル{before}→{after}({delta})', {
+            before: beforeText,
+            after: afterText,
+            delta: deltaText
+          });
+          resultLevelLine.style.display = 'block';
+        } else {
+          resultLevelLine.textContent = translate('games.todoList.result.levelStatic', 'レベル{level}', {
+            level: afterText
+          });
+          resultLevelLine.style.display = 'block';
+        }
+      } else {
+        resultLevelLine.style.display = 'none';
+      }
+
+      resultRewardsWrap.innerHTML = '';
+      const lines = [];
+      const positiveItems = Array.isArray(rewards.items)
+        ? rewards.items.filter(entry => Number(entry.amount) > 0)
+        : [];
+      const positiveOrbs = Array.isArray(rewards.passiveOrbs)
+        ? rewards.passiveOrbs.filter(entry => Number(entry.amount) > 0)
+        : [];
+      if (Number.isFinite(rewards.spAmount) && rewards.spAmount !== 0){
+        const spSigned = rewards.spAmount > 0
+          ? `+${formatNumber(rewards.spAmount, { maximumFractionDigits: 0 })}`
+          : `-${formatNumber(Math.abs(rewards.spAmount), { maximumFractionDigits: 0 })}`;
+        lines.push(translate('games.todoList.result.sp', 'SP：{amount}', { amount: spSigned }));
+      }
+      if (positiveItems.length){
+        const itemText = positiveItems.map(entry => {
+          const label = getItemLabel(entry.key);
+          const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
+          return `${label}x${amountText}`;
+        }).join('、');
+        lines.push(translate('games.todoList.result.items', 'アイテム：{list}', { list: itemText }));
+      }
+      if (positiveOrbs.length){
+        const orbText = positiveOrbs.map(entry => {
+          const label = getPassiveOrbLabel(entry.orbId);
+          const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
+          return `${label}x${amountText}`;
+        }).join('、');
+        lines.push(translate('games.todoList.result.passiveOrbs', 'パッシブオーブ：{list}', { list: orbText }));
+      }
+
+      if (lines.length){
+        const header = document.createElement('div');
+        header.textContent = translate('games.todoList.result.rewardsHeader', '獲得');
+        header.style.fontWeight = '600';
+        header.style.fontSize = '15px';
+        resultRewardsWrap.appendChild(header);
+        lines.forEach(text => {
+          const row = document.createElement('div');
+          row.textContent = text;
+          resultRewardsWrap.appendChild(row);
+        });
+      }
+
+      if (resultOverlayTimer){
+        clearTimeout(resultOverlayTimer);
+        resultOverlayTimer = null;
+      }
+
+      resultOverlay.style.display = 'flex';
+      requestAnimationFrame(() => {
+        resultOverlay.style.opacity = '1';
+        resultPanel.style.transform = 'scale(1)';
+        resultPanel.style.opacity = '1';
+      });
+      resultOverlayTimer = setTimeout(() => {
+        hideResultOverlay();
+      }, 3200);
+    }
+
+    function renderLogs(){
+      logList.innerHTML = '';
+      if (!state.logs || state.logs.length === 0){
+        const empty = document.createElement('div');
+        empty.textContent = logEmptyText;
+        empty.style.color = '#6b7280';
+        empty.style.fontSize = '14px';
+        empty.style.textAlign = 'center';
+        empty.style.padding = '12px 0';
+        logList.appendChild(empty);
+        return;
+      }
+      state.logs.forEach(entry => {
+        const row = document.createElement('div');
+        row.style.background = '#ffffff';
+        row.style.borderRadius = '10px';
+        row.style.padding = '8px 12px';
+        row.style.fontSize = '13px';
+        row.style.color = '#0f172a';
+        row.style.boxShadow = '0 4px 12px rgba(148,163,184,0.18)';
+        const timestamp = formatDate(entry.timestamp, getI18n(), dateTimeOptions);
+        const actionText = entry.action === 'achieved'
+          ? translate('games.todoList.log.actionAchieved', '達成')
+          : translate('games.todoList.log.actionCompleted', '完了');
+        row.textContent = `[${timestamp}] ${entry.name} ${actionText}`;
+        logList.appendChild(row);
+      });
+    }
+
+    function recordLogEntry(task, action){
+      const entry = sanitizeLogEntry({
+        timestamp: Date.now(),
+        name: task?.name,
+        action
+      }, defaultTaskName);
+      if (!entry) return;
+      if (!Array.isArray(state.logs)){
+        state.logs = [entry];
+      } else {
+        state.logs.unshift(entry);
+      }
+      if (state.logs.length > MAX_LOG_ENTRIES){
+        state.logs.length = MAX_LOG_ENTRIES;
+      }
+      persist();
+      renderLogs();
+    }
 
     function setFormMode(mode){
       if (mode === 'edit'){
@@ -1265,6 +1577,8 @@
         ensureTaskRewards(task);
       });
       writePersistentState(state.tasks);
+      state.logs = sanitizeLogList(state.logs, defaultTaskName);
+      writePersistentLogs(state.logs);
     }
 
     function updateStats(){
@@ -1367,12 +1681,16 @@
       pendingSectionControls.setLabel(translate('games.todoList.sections.pending', '未完了タスク'));
       completedSectionControls.setLabel(translate('games.todoList.sections.completed', '完了済みタスク'));
 
+      logTitle.textContent = translate('games.todoList.log.title', '達成・完了ログ');
+      logEmptyText = translate('games.todoList.log.empty', '記録はまだありません。');
+
       setFormMode(state.editingTaskId ? 'edit' : 'create');
 
       if (includeDynamic || defaultChanged){
         updateStats();
         renderLists();
       }
+      renderLogs();
     }
 
     function makeCollapsibleSection(titleEl, listEl, key){
@@ -1742,9 +2060,25 @@
       task.completedAt = Date.now();
       persist();
       if (task.status === 'completed'){
+        const before = capturePlayerSnapshot();
         const meta = { type: 'todo-complete', todoId: task.id, name: task.name };
         const gained = applyTaskRewards(task, meta);
         if (gained !== 0) state.sessionXp += gained;
+        const after = capturePlayerSnapshot();
+        recordLogEntry(task, 'completed');
+        const rewards = ensureTaskRewards(task);
+        showResultOverlay({
+          name: task.name,
+          action: 'completed',
+          xp: gained,
+          beforeLevel: before?.level,
+          afterLevel: after?.level,
+          rewards: {
+            items: rewards.items?.entries,
+            passiveOrbs: rewards.passiveOrbs?.entries,
+            spAmount: rewards.sp?.enabled ? Number(rewards.sp.amount) || 0 : 0
+          }
+        });
       }
       updateStats();
       renderLists();
@@ -1757,10 +2091,26 @@
       if (task.type !== TASK_TYPE_REPEATABLE) return;
       const nextCount = Math.max(0, (task.achievedCount || 0) + 1);
       task.achievedCount = nextCount;
+      const before = capturePlayerSnapshot();
       const meta = { type: 'todo-achieve', todoId: task.id, name: task.name, count: nextCount };
       const gained = applyTaskRewards(task, meta);
       if (gained !== 0) state.sessionXp += gained;
       persist();
+      const after = capturePlayerSnapshot();
+      recordLogEntry(task, 'achieved');
+      const rewards = ensureTaskRewards(task);
+      showResultOverlay({
+        name: task.name,
+        action: 'achieved',
+        xp: gained,
+        beforeLevel: before?.level,
+        afterLevel: after?.level,
+        rewards: {
+          items: rewards.items?.entries,
+          passiveOrbs: rewards.passiveOrbs?.entries,
+          spAmount: rewards.sp?.enabled ? Number(rewards.sp.amount) || 0 : 0
+        }
+      });
       updateStats();
       renderLists();
     }
@@ -1899,6 +2249,7 @@
       };
     }
 
+    renderLogs();
     start();
     return runtime;
   }
@@ -1908,7 +2259,7 @@
     name: 'ToDoリスト', nameKey: 'selection.miniexp.games.todo_list.name',
     description: '完了で設定EXPを獲得 / 失敗は獲得なし', descriptionKey: 'selection.miniexp.games.todo_list.description', categoryIds: ['utility'],
     category: 'ユーティリティ',
-    version: '0.3.0',
+    version: '0.4.0',
     author: 'mod',
     create
   });

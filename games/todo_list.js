@@ -5,6 +5,7 @@
   const MAX_MEMO = 256;
   const MAX_XP = 99999999;
   const MAX_REWARD_AMOUNT = 99999999;
+  const MAX_REWARD_WEIGHT = 99999999;
   const MAX_REWARD_KEY_LENGTH = 64;
   const MAX_LOG_ENTRIES = 500;
   const DEFAULT_AUTO_NAMES = new Set(['名称未設定', 'Untitled']);
@@ -33,6 +34,96 @@
     return rounded;
   }
 
+  function clampRewardWeight(value){
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    const absolute = Math.abs(numeric);
+    if (absolute < 1) return 0;
+    const rounded = Math.floor(absolute);
+    return rounded > MAX_REWARD_WEIGHT ? MAX_REWARD_WEIGHT : rounded;
+  }
+
+  function clampDropChance(value, fallback = 100){
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    if (numeric <= 0) return 0;
+    if (numeric >= 100) return 100;
+    return Math.round(numeric * 100) / 100;
+  }
+
+  function sanitizeRandomRange(raw, clampFn, fallbackValue = 0){
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const enabledFlag = source.enabled === true || source.useRange === true || source.random === true || source.randomized === true;
+    const clamp = typeof clampFn === 'function' ? clampFn : (value) => value;
+    const fallback = clamp(fallbackValue);
+    const readValue = (keyCandidates, defaultValue) => {
+      for (const key of keyCandidates){
+        if (source[key] !== undefined) return source[key];
+      }
+      return defaultValue;
+    };
+    const minRaw = readValue([
+      'min',
+      'minValue',
+      'lower',
+      'start',
+      'from',
+      'amountMin'
+    ], fallback);
+    const maxRaw = readValue([
+      'max',
+      'maxValue',
+      'upper',
+      'end',
+      'to',
+      'amountMax'
+    ], fallback);
+    let min = clamp(minRaw);
+    let max = clamp(maxRaw);
+    if (!Number.isFinite(min)) min = fallback;
+    if (!Number.isFinite(max)) max = fallback;
+    if (min > max){
+      const tmp = min;
+      min = max;
+      max = tmp;
+    }
+    const enabled = enabledFlag && min !== max;
+    return { enabled, min, max };
+  }
+
+  function isRangeEnabled(range){
+    return !!(range && range.enabled && Number.isFinite(range.min) && Number.isFinite(range.max) && range.min !== range.max);
+  }
+
+  function resolveRandomValue(baseValue, range, clampFn){
+    const base = Number(baseValue) || 0;
+    if (!isRangeEnabled(range)) return base;
+    const clamp = typeof clampFn === 'function' ? clampFn : (value) => value;
+    let min = Number(range.min);
+    let max = Number(range.max);
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return base;
+    if (min > max){
+      const tmp = min;
+      min = max;
+      max = tmp;
+    }
+    min = clamp(min);
+    max = clamp(max);
+    if (min > max){
+      const tmp = min;
+      min = max;
+      max = tmp;
+    }
+    if (min === max) return min;
+    const low = Math.min(Math.round(min), Math.round(max));
+    const high = Math.max(Math.round(min), Math.round(max));
+    if (low === high) return low;
+    const span = high - low;
+    if (span <= 0) return low;
+    const value = low + Math.floor(Math.random() * (span + 1));
+    return value;
+  }
+
   function sanitizeRewardKey(value){
     if (typeof value !== 'string') return '';
     const trimmed = value.trim();
@@ -43,8 +134,8 @@
   function sanitizeTaskRewards(raw){
     const base = {
       passiveOrbs: { enabled: false, entries: [] },
-      items: { enabled: false, entries: [] },
-      sp: { enabled: false, amount: 0 }
+      items: { enabled: false, entries: [], lootTable: { enabled: false, dropChance: 100, entries: [] } },
+      sp: { enabled: false, amount: 0, range: { enabled: false, min: 0, max: 0 } }
     };
     const source = raw && typeof raw === 'object' ? raw : {};
 
@@ -56,16 +147,27 @@
       return null;
     }
 
-    function sanitizeEntries(entries, { idKey = 'id', amountKey = 'amount', sanitizeId = sanitizeRewardKey, clampOptions = {} } = {}){
+    function sanitizeEntries(entries, {
+      idKey = 'id',
+      amountKey = 'amount',
+      sanitizeId = sanitizeRewardKey,
+      clampOptions = {},
+      rangeSourceKey = 'range'
+    } = {}){
       const list = Array.isArray(entries) ? entries : [];
       const sanitized = [];
+      const clampValue = (value) => clampRewardAmount(value, clampOptions);
       list.forEach(entry => {
         if (!entry || typeof entry !== 'object') return;
         const idValue = sanitizeId(entry[idKey] ?? entry.key ?? entry.orbId ?? entry.id ?? '');
         if (!idValue) return;
-        const amountValue = clampRewardAmount(entry[amountKey] ?? entry.amount ?? entry.value ?? 0, clampOptions);
-        if (!Number.isFinite(amountValue) || amountValue === 0) return;
-        sanitized.push({ id: idValue, amount: amountValue });
+        const rawAmount = entry[amountKey] ?? entry.amount ?? entry.value ?? 0;
+        const amountValue = clampValue(rawAmount);
+        const rangeSource = entry[rangeSourceKey] ?? entry.randomRange ?? entry.random ?? entry.amountRange ?? {};
+        const range = sanitizeRandomRange(rangeSource, clampValue, amountValue);
+        if (!Number.isFinite(amountValue) && !range.enabled) return;
+        if (amountValue === 0 && !range.enabled) return;
+        sanitized.push({ id: idValue, amount: Number.isFinite(amountValue) ? amountValue : 0, range });
       });
       return sanitized;
     }
@@ -84,7 +186,7 @@
     const passiveEntries = sanitizeEntries(passiveEntriesRaw, {
       idKey: 'orbId',
       clampOptions: { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT }
-    }).map(entry => ({ orbId: entry.id, amount: entry.amount }));
+    }).map(entry => ({ orbId: entry.id, amount: entry.amount, range: entry.range }));
     const passiveEnabledFlag = readEnabledFlag([
       source.passiveOrbs?.enabled,
       source.passiveOrbsEnabled,
@@ -110,27 +212,62 @@
     const itemEntries = sanitizeEntries(itemEntriesRaw, {
       idKey: 'key',
       clampOptions: { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT }
-    }).map(entry => ({ key: entry.id, amount: entry.amount }));
+    }).map(entry => ({ key: entry.id, amount: entry.amount, range: entry.range }));
     const itemEnabledFlag = readEnabledFlag([
       source.items?.enabled,
       source.itemsEnabled,
       source.itemEnabled,
       source.item?.enabled
     ]);
+
+    const lootSource = (source.items && typeof source.items === 'object' && typeof source.items.lootTable === 'object')
+      ? source.items.lootTable
+      : (typeof source.itemLootTable === 'object' ? source.itemLootTable : {});
+    const lootEntriesRaw = Array.isArray(lootSource?.entries) ? lootSource.entries : [];
+    const lootEntries = [];
+    const clampLootAmount = (value) => clampRewardAmount(value, { min: 0, max: MAX_REWARD_AMOUNT });
+    lootEntriesRaw.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      const key = sanitizeRewardKey(entry.key ?? entry.id ?? entry.item ?? '');
+      if (!key) return;
+      const weight = clampRewardWeight(entry.weight ?? entry.chance ?? entry.rate ?? entry.weightValue ?? entry.w);
+      if (weight <= 0) return;
+      const rawAmount = entry.amount ?? entry.value ?? entry.count ?? 1;
+      const amount = clampLootAmount(rawAmount);
+      const rangeSource = entry.range ?? entry.randomRange ?? entry.random ?? entry.amountRange ?? {};
+      const range = sanitizeRandomRange(rangeSource, clampLootAmount, amount);
+      if (amount === 0 && !range.enabled) return;
+      lootEntries.push({ key, amount, weight, range });
+    });
+    const lootEnabledFlag = readEnabledFlag([
+      lootSource?.enabled,
+      lootSource?.useLootTable,
+      lootSource?.lootEnabled
+    ]);
+    const lootDropChance = clampDropChance(lootSource?.dropChance ?? lootSource?.chance ?? lootSource?.probability ?? 100, 100);
+
     base.items = {
-      enabled: itemEnabledFlag === null ? itemEntries.length > 0 : itemEnabledFlag,
-      entries: itemEntries
+      enabled: itemEnabledFlag === null ? itemEntries.length > 0 || lootEntries.length > 0 : itemEnabledFlag,
+      entries: itemEntries,
+      lootTable: {
+        enabled: lootEnabledFlag === null ? lootEntries.length > 0 : lootEnabledFlag,
+        dropChance: lootDropChance,
+        entries: lootEntries
+      }
     };
 
     const spSource = (source.sp && typeof source.sp === 'object') ? source.sp : source;
     const spEnabledFlag = readEnabledFlag([spSource.enabled, source.spEnabled]);
-    const spAmount = clampRewardAmount(spSource.amount ?? spSource.value ?? source.spAmount ?? source.spValue ?? 0, {
+    const clampSpValue = (value) => clampRewardAmount(value, {
       min: -MAX_REWARD_AMOUNT,
       max: MAX_REWARD_AMOUNT
     });
+    const spAmount = clampSpValue(spSource.amount ?? spSource.value ?? source.spAmount ?? source.spValue ?? 0);
+    const spRange = sanitizeRandomRange(spSource.range ?? spSource.randomRange ?? source.spRange ?? {}, clampSpValue, spAmount);
     base.sp = {
-      enabled: spEnabledFlag === null ? spAmount !== 0 : spEnabledFlag,
-      amount: spAmount
+      enabled: spEnabledFlag === null ? spAmount !== 0 || spRange.enabled : spEnabledFlag,
+      amount: spAmount,
+      range: spRange
     };
 
     return base;
@@ -214,6 +351,11 @@
         const name = rawName || fallbackName;
         const memo = sanitizeString(item.memo || '', '');
         const xp = clampXp(item.xp);
+        const xpRange = sanitizeRandomRange(
+          item.xpRange ?? item.xpRandomRange ?? item.randomXpRange ?? item.xpRandom ?? item.randomXp ?? {},
+          clampXp,
+          xp
+        );
         const color = sanitizeColor(item.color);
         const createdAt = Number.isFinite(item.createdAt) ? item.createdAt : Date.now();
         const completedAt = Number.isFinite(item.completedAt) ? item.completedAt : null;
@@ -228,7 +370,7 @@
           DEFAULT_AUTO_NAMES.add(name);
         }
         const rewards = sanitizeTaskRewards(item.rewards);
-        return { id, name, memo, xp, color, createdAt, completedAt, status, autoName, type, achievedCount, rewards };
+        return { id, name, memo, xp, xpRange, color, createdAt, completedAt, status, autoName, type, achievedCount, rewards };
       }).filter(Boolean);
     } catch {
       return [];
@@ -361,6 +503,23 @@
       return String(value);
     };
 
+    const formatSignedValue = (value) => {
+      const numeric = Number(value) || 0;
+      const formatted = formatNumber(Math.abs(numeric), { maximumFractionDigits: 0 });
+      if (numeric > 0) return `+${formatted}`;
+      if (numeric < 0) return `-${formatted}`;
+      return '0';
+    };
+
+    const formatRangeText = (base, range, { signed = false } = {}) => {
+      if (!isRangeEnabled(range)){
+        return signed ? formatSignedValue(base) : formatNumber(base, { maximumFractionDigits: 0 });
+      }
+      const minText = signed ? formatSignedValue(range.min) : formatNumber(range.min, { maximumFractionDigits: 0 });
+      const maxText = signed ? formatSignedValue(range.max) : formatNumber(range.max, { maximumFractionDigits: 0 });
+      return `${minText}~${maxText}`;
+    };
+
     let defaultTaskName = '名称未設定';
     DEFAULT_AUTO_NAMES.add(defaultTaskName);
     const dateTimeOptions = { dateStyle: 'medium', timeStyle: 'short' };
@@ -371,6 +530,17 @@
       logs: loadPersistentLogs(defaultTaskName),
       editingTaskId: null,
       sessionXp: 0
+    };
+    const randomRangeToggleNodes = [];
+    const randomRangeMinNodes = [];
+    const randomRangeMaxNodes = [];
+    const lootDropChanceTextNodes = [];
+    const lootWeightTextNodes = [];
+
+    const removeNodeReference = (list, node) => {
+      if (!Array.isArray(list) || !node) return;
+      const index = list.indexOf(node);
+      if (index !== -1) list.splice(index, 1);
     };
     const collapseState = {
       pending: false,
@@ -537,8 +707,93 @@
     xpInput.style.borderRadius = '8px';
     xpInput.style.border = '1px solid #cbd5f5';
     xpInput.style.fontSize = '14px';
+
+    const xpRangeControls = document.createElement('div');
+    xpRangeControls.style.display = 'flex';
+    xpRangeControls.style.flexWrap = 'wrap';
+    xpRangeControls.style.gap = '8px';
+    xpRangeControls.style.alignItems = 'center';
+    xpRangeControls.style.marginTop = '6px';
+
+    const xpRandomLabel = document.createElement('label');
+    xpRandomLabel.style.display = 'inline-flex';
+    xpRandomLabel.style.alignItems = 'center';
+    xpRandomLabel.style.gap = '6px';
+    xpRandomLabel.style.fontSize = '12px';
+    xpRandomLabel.style.fontWeight = '600';
+    const xpRandomInput = document.createElement('input');
+    xpRandomInput.type = 'checkbox';
+    const xpRandomText = document.createElement('span');
+    xpRandomLabel.appendChild(xpRandomInput);
+    xpRandomLabel.appendChild(xpRandomText);
+
+    const xpRangeInputs = document.createElement('div');
+    xpRangeInputs.style.display = 'none';
+    xpRangeInputs.style.flexWrap = 'wrap';
+    xpRangeInputs.style.gap = '6px';
+    xpRangeInputs.style.alignItems = 'center';
+
+    const xpRangeMinLabel = makeRangeLabel();
+    const xpRangeMinText = document.createElement('span');
+    const xpRangeMinInput = document.createElement('input');
+    xpRangeMinInput.type = 'number';
+    xpRangeMinInput.min = xpInput.min;
+    xpRangeMinInput.max = xpInput.max;
+    xpRangeMinInput.step = '1';
+    xpRangeMinInput.value = xpInput.value;
+    xpRangeMinInput.style.width = '90px';
+    xpRangeMinInput.style.padding = '6px 8px';
+    xpRangeMinInput.style.borderRadius = '8px';
+    xpRangeMinInput.style.border = '1px solid #cbd5f5';
+    xpRangeMinInput.style.fontSize = '13px';
+    xpRangeMinLabel.appendChild(xpRangeMinText);
+    xpRangeMinLabel.appendChild(xpRangeMinInput);
+
+    const xpRangeMaxLabel = makeRangeLabel();
+    const xpRangeMaxText = document.createElement('span');
+    const xpRangeMaxInput = document.createElement('input');
+    xpRangeMaxInput.type = 'number';
+    xpRangeMaxInput.min = xpInput.min;
+    xpRangeMaxInput.max = xpInput.max;
+    xpRangeMaxInput.step = '1';
+    xpRangeMaxInput.value = xpInput.value;
+    xpRangeMaxInput.style.width = '90px';
+    xpRangeMaxInput.style.padding = '6px 8px';
+    xpRangeMaxInput.style.borderRadius = '8px';
+    xpRangeMaxInput.style.border = '1px solid #cbd5f5';
+    xpRangeMaxInput.style.fontSize = '13px';
+    xpRangeMaxLabel.appendChild(xpRangeMaxText);
+    xpRangeMaxLabel.appendChild(xpRangeMaxInput);
+
+    xpRangeInputs.appendChild(xpRangeMinLabel);
+    xpRangeInputs.appendChild(xpRangeMaxLabel);
+
+    xpRangeControls.appendChild(xpRandomLabel);
+    xpRangeControls.appendChild(xpRangeInputs);
+    randomRangeToggleNodes.push(xpRandomText);
+    randomRangeMinNodes.push(xpRangeMinText);
+    randomRangeMaxNodes.push(xpRangeMaxText);
+
+    function updateXpRangeState(){
+      const enabled = !!xpRandomInput.checked;
+      xpRangeInputs.style.display = enabled ? 'inline-flex' : 'none';
+      xpRangeMinInput.disabled = !enabled;
+      xpRangeMaxInput.disabled = !enabled;
+    }
+
+    xpRandomInput.addEventListener('change', () => {
+      if (xpRandomInput.checked){
+        const value = clampXp(xpInput.value);
+        xpRangeMinInput.value = String(value);
+        xpRangeMaxInput.value = String(value);
+      }
+      updateXpRangeState();
+    });
+
     xpLabel.appendChild(xpLabelText);
     xpLabel.appendChild(xpInput);
+    xpLabel.appendChild(xpRangeControls);
+    updateXpRangeState();
 
     const rewardsSection = document.createElement('div');
     rewardsSection.style.gridColumn = '1 / -1';
@@ -581,6 +836,15 @@
       label.style.alignItems = 'center';
       label.style.gap = '6px';
       label.style.fontSize = '13px';
+      return label;
+    }
+
+    function makeRangeLabel(fontSize = '12px'){
+      const label = document.createElement('label');
+      label.style.display = 'inline-flex';
+      label.style.alignItems = 'center';
+      label.style.gap = '4px';
+      label.style.fontSize = fontSize;
       return label;
     }
 
@@ -656,6 +920,80 @@
     let itemSelectPlaceholderText = 'アイテムを選択';
     let itemAmountLabelText = '個数（マイナスで没収）';
 
+    const lootTableSection = document.createElement('div');
+    lootTableSection.style.display = 'flex';
+    lootTableSection.style.flexDirection = 'column';
+    lootTableSection.style.gap = '6px';
+    lootTableSection.style.padding = '12px';
+    lootTableSection.style.marginLeft = '26px';
+    lootTableSection.style.borderRadius = '10px';
+    lootTableSection.style.border = '1px dashed #cbd5f5';
+    lootTableSection.style.background = '#f9fafb';
+
+    const lootHeaderRow = makeRewardRow();
+    const lootToggleLabel = makeToggleLabel();
+    lootToggleLabel.style.fontSize = '12px';
+    const lootEnableInput = document.createElement('input');
+    lootEnableInput.type = 'checkbox';
+    const lootEnableText = document.createElement('span');
+    lootToggleLabel.appendChild(lootEnableInput);
+    lootToggleLabel.appendChild(lootEnableText);
+
+    const lootAddButton = document.createElement('button');
+    lootAddButton.type = 'button';
+    lootAddButton.style.padding = '6px 12px';
+    lootAddButton.style.borderRadius = '8px';
+    lootAddButton.style.border = '1px solid #cbd5f5';
+    lootAddButton.style.background = '#e0f2fe';
+    lootAddButton.style.color = '#0f172a';
+    lootAddButton.style.fontSize = '12px';
+    lootAddButton.style.fontWeight = '600';
+    lootAddButton.style.cursor = 'pointer';
+    lootAddButton.textContent = '追加';
+
+    lootHeaderRow.appendChild(lootToggleLabel);
+    lootHeaderRow.appendChild(lootAddButton);
+
+    const lootChanceRow = makeRewardRow();
+    const lootChanceLabel = makeAmountLabel();
+    lootChanceLabel.style.fontSize = '12px';
+    const lootChanceText = document.createElement('span');
+    const lootChanceInput = document.createElement('input');
+    lootChanceInput.type = 'number';
+    lootChanceInput.min = '0';
+    lootChanceInput.max = '100';
+    lootChanceInput.step = '0.1';
+    lootChanceInput.value = '100';
+    lootChanceInput.style.width = '90px';
+    lootChanceInput.style.padding = '6px 8px';
+    lootChanceInput.style.borderRadius = '8px';
+    lootChanceInput.style.border = '1px solid #cbd5f5';
+    lootChanceInput.style.fontSize = '13px';
+    lootChanceLabel.appendChild(lootChanceText);
+    lootChanceLabel.appendChild(lootChanceInput);
+    lootChanceRow.appendChild(lootChanceLabel);
+
+    const lootEntriesContainer = document.createElement('div');
+    lootEntriesContainer.style.display = 'flex';
+    lootEntriesContainer.style.flexDirection = 'column';
+    lootEntriesContainer.style.gap = '6px';
+
+    lootTableSection.appendChild(lootHeaderRow);
+    lootTableSection.appendChild(lootChanceRow);
+    lootTableSection.appendChild(lootEntriesContainer);
+    rewardsSection.appendChild(lootTableSection);
+    lootDropChanceTextNodes.push(lootChanceText);
+
+    const sanitizeLootChanceInput = () => {
+      const clamped = clampDropChance(lootChanceInput.value, 100);
+      lootChanceInput.value = String(clamped);
+    };
+    ['change', 'blur'].forEach(eventName => {
+      lootChanceInput.addEventListener(eventName, sanitizeLootChanceInput);
+    });
+
+    const lootEntryRows = [];
+
     function createPassiveEntryRow(initial = {}){
       const row = makeRewardRow();
       const select = document.createElement('select');
@@ -675,7 +1013,8 @@
       amountInput.min = String(-MAX_REWARD_AMOUNT);
       amountInput.max = String(MAX_REWARD_AMOUNT);
       amountInput.step = '1';
-      amountInput.value = String(Number.isFinite(Number(initial.amount)) ? initial.amount : 1);
+      const baseAmount = Number.isFinite(Number(initial.amount)) ? Number(initial.amount) : 1;
+      amountInput.value = String(baseAmount);
       amountInput.style.width = '90px';
       amountInput.style.padding = '6px 8px';
       amountInput.style.borderRadius = '8px';
@@ -683,6 +1022,56 @@
       amountInput.style.fontSize = '13px';
       amountLabel.appendChild(amountText);
       amountLabel.appendChild(amountInput);
+
+      const rangeToggle = makeToggleLabel();
+      rangeToggle.style.fontSize = '12px';
+      rangeToggle.style.fontWeight = '600';
+      const rangeCheckbox = document.createElement('input');
+      rangeCheckbox.type = 'checkbox';
+      const rangeToggleText = document.createElement('span');
+      rangeToggle.appendChild(rangeCheckbox);
+      rangeToggle.appendChild(rangeToggleText);
+
+      const rangeContainer = document.createElement('div');
+      rangeContainer.style.display = 'none';
+      rangeContainer.style.alignItems = 'center';
+      rangeContainer.style.flexWrap = 'wrap';
+      rangeContainer.style.gap = '6px';
+
+      const rangeMinLabel = makeRangeLabel();
+      const rangeMinText = document.createElement('span');
+      const rangeMinInput = document.createElement('input');
+      rangeMinInput.type = 'number';
+      rangeMinInput.min = String(-MAX_REWARD_AMOUNT);
+      rangeMinInput.max = String(MAX_REWARD_AMOUNT);
+      rangeMinInput.step = '1';
+      rangeMinInput.value = String(baseAmount);
+      rangeMinInput.style.width = '90px';
+      rangeMinInput.style.padding = '6px 8px';
+      rangeMinInput.style.borderRadius = '8px';
+      rangeMinInput.style.border = '1px solid #cbd5f5';
+      rangeMinInput.style.fontSize = '13px';
+      rangeMinLabel.appendChild(rangeMinText);
+      rangeMinLabel.appendChild(rangeMinInput);
+
+      const rangeMaxLabel = makeRangeLabel();
+      const rangeMaxText = document.createElement('span');
+      const rangeMaxInput = document.createElement('input');
+      rangeMaxInput.type = 'number';
+      rangeMaxInput.min = String(-MAX_REWARD_AMOUNT);
+      rangeMaxInput.max = String(MAX_REWARD_AMOUNT);
+      rangeMaxInput.step = '1';
+      rangeMaxInput.value = String(baseAmount);
+      rangeMaxInput.style.width = '90px';
+      rangeMaxInput.style.padding = '6px 8px';
+      rangeMaxInput.style.borderRadius = '8px';
+      rangeMaxInput.style.border = '1px solid #cbd5f5';
+      rangeMaxInput.style.fontSize = '13px';
+      rangeMaxLabel.appendChild(rangeMaxText);
+      rangeMaxLabel.appendChild(rangeMaxInput);
+
+      rangeContainer.appendChild(rangeMinLabel);
+      rangeContainer.appendChild(rangeMaxLabel);
 
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
@@ -697,12 +1086,36 @@
 
       row.appendChild(select);
       row.appendChild(amountLabel);
+      row.appendChild(rangeToggle);
+      row.appendChild(rangeContainer);
       row.appendChild(removeBtn);
       passiveEntriesContainer.appendChild(row);
 
-      const entry = { row, select, amountInput, removeBtn, amountText };
+      const entry = {
+        row,
+        select,
+        amountInput,
+        removeBtn,
+        amountText,
+        rangeToggleText,
+        rangeMinText,
+        rangeMaxText,
+        rangeCheckbox,
+        rangeMinInput,
+        rangeMaxInput,
+        rangeContainer,
+        updateRangeState(parentEnabled = !rangeCheckbox.disabled){
+          const rangeEnabled = parentEnabled && !!rangeCheckbox.checked;
+          rangeContainer.style.display = rangeEnabled ? 'inline-flex' : 'none';
+          rangeMinInput.disabled = !rangeEnabled;
+          rangeMaxInput.disabled = !rangeEnabled;
+        }
+      };
       passiveEntryRows.push(entry);
       passiveAmountTexts.push(amountText);
+      randomRangeToggleNodes.push(rangeToggleText);
+      randomRangeMinNodes.push(rangeMinText);
+      randomRangeMaxNodes.push(rangeMaxText);
 
       refreshPassiveOrbSelect(true);
 
@@ -710,10 +1123,21 @@
         if (row.parentNode) row.parentNode.removeChild(row);
         const index = passiveEntryRows.indexOf(entry);
         if (index !== -1) passiveEntryRows.splice(index, 1);
-        const labelIdx = passiveAmountTexts.indexOf(amountText);
-        if (labelIdx !== -1) passiveAmountTexts.splice(labelIdx, 1);
+        removeNodeReference(passiveAmountTexts, amountText);
+        removeNodeReference(randomRangeToggleNodes, rangeToggleText);
+        removeNodeReference(randomRangeMinNodes, rangeMinText);
+        removeNodeReference(randomRangeMaxNodes, rangeMaxText);
         updatePassiveRowState();
         refreshPassiveOrbSelect(true);
+      });
+
+      rangeCheckbox.addEventListener('change', () => {
+        if (rangeCheckbox.checked){
+          const value = clampRewardAmount(amountInput.value, { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT });
+          rangeMinInput.value = String(value);
+          rangeMaxInput.value = String(value);
+        }
+        entry.updateRangeState(!rangeCheckbox.disabled);
       });
 
       select.title = passiveSelectPlaceholderText;
@@ -725,6 +1149,13 @@
         select.value = initial.orbId;
       }
 
+      if (initial.range && initial.range.enabled){
+        rangeCheckbox.checked = true;
+        rangeMinInput.value = String(initial.range.min);
+        rangeMaxInput.value = String(initial.range.max);
+      }
+
+      entry.updateRangeState(!rangeCheckbox.disabled);
       return entry;
     }
 
@@ -747,7 +1178,8 @@
       amountInput.min = String(-MAX_REWARD_AMOUNT);
       amountInput.max = String(MAX_REWARD_AMOUNT);
       amountInput.step = '1';
-      amountInput.value = String(Number.isFinite(Number(initial.amount)) ? initial.amount : 1);
+      const baseAmount = Number.isFinite(Number(initial.amount)) ? Number(initial.amount) : 1;
+      amountInput.value = String(baseAmount);
       amountInput.style.width = '90px';
       amountInput.style.padding = '6px 8px';
       amountInput.style.borderRadius = '8px';
@@ -755,6 +1187,56 @@
       amountInput.style.fontSize = '13px';
       amountLabel.appendChild(amountText);
       amountLabel.appendChild(amountInput);
+
+      const rangeToggle = makeToggleLabel();
+      rangeToggle.style.fontSize = '12px';
+      rangeToggle.style.fontWeight = '600';
+      const rangeCheckbox = document.createElement('input');
+      rangeCheckbox.type = 'checkbox';
+      const rangeToggleText = document.createElement('span');
+      rangeToggle.appendChild(rangeCheckbox);
+      rangeToggle.appendChild(rangeToggleText);
+
+      const rangeContainer = document.createElement('div');
+      rangeContainer.style.display = 'none';
+      rangeContainer.style.alignItems = 'center';
+      rangeContainer.style.flexWrap = 'wrap';
+      rangeContainer.style.gap = '6px';
+
+      const rangeMinLabel = makeRangeLabel();
+      const rangeMinText = document.createElement('span');
+      const rangeMinInput = document.createElement('input');
+      rangeMinInput.type = 'number';
+      rangeMinInput.min = String(-MAX_REWARD_AMOUNT);
+      rangeMinInput.max = String(MAX_REWARD_AMOUNT);
+      rangeMinInput.step = '1';
+      rangeMinInput.value = String(baseAmount);
+      rangeMinInput.style.width = '90px';
+      rangeMinInput.style.padding = '6px 8px';
+      rangeMinInput.style.borderRadius = '8px';
+      rangeMinInput.style.border = '1px solid #cbd5f5';
+      rangeMinInput.style.fontSize = '13px';
+      rangeMinLabel.appendChild(rangeMinText);
+      rangeMinLabel.appendChild(rangeMinInput);
+
+      const rangeMaxLabel = makeRangeLabel();
+      const rangeMaxText = document.createElement('span');
+      const rangeMaxInput = document.createElement('input');
+      rangeMaxInput.type = 'number';
+      rangeMaxInput.min = String(-MAX_REWARD_AMOUNT);
+      rangeMaxInput.max = String(MAX_REWARD_AMOUNT);
+      rangeMaxInput.step = '1';
+      rangeMaxInput.value = String(baseAmount);
+      rangeMaxInput.style.width = '90px';
+      rangeMaxInput.style.padding = '6px 8px';
+      rangeMaxInput.style.borderRadius = '8px';
+      rangeMaxInput.style.border = '1px solid #cbd5f5';
+      rangeMaxInput.style.fontSize = '13px';
+      rangeMaxLabel.appendChild(rangeMaxText);
+      rangeMaxLabel.appendChild(rangeMaxInput);
+
+      rangeContainer.appendChild(rangeMinLabel);
+      rangeContainer.appendChild(rangeMaxLabel);
 
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
@@ -769,12 +1251,36 @@
 
       row.appendChild(select);
       row.appendChild(amountLabel);
+      row.appendChild(rangeToggle);
+      row.appendChild(rangeContainer);
       row.appendChild(removeBtn);
       itemEntriesContainer.appendChild(row);
 
-      const entry = { row, select, amountInput, removeBtn, amountText };
+      const entry = {
+        row,
+        select,
+        amountInput,
+        removeBtn,
+        amountText,
+        rangeToggleText,
+        rangeMinText,
+        rangeMaxText,
+        rangeCheckbox,
+        rangeMinInput,
+        rangeMaxInput,
+        rangeContainer,
+        updateRangeState(parentEnabled = !rangeCheckbox.disabled){
+          const rangeEnabled = parentEnabled && !!rangeCheckbox.checked;
+          rangeContainer.style.display = rangeEnabled ? 'inline-flex' : 'none';
+          rangeMinInput.disabled = !rangeEnabled;
+          rangeMaxInput.disabled = !rangeEnabled;
+        }
+      };
       itemEntryRows.push(entry);
       itemAmountTexts.push(amountText);
+      randomRangeToggleNodes.push(rangeToggleText);
+      randomRangeMinNodes.push(rangeMinText);
+      randomRangeMaxNodes.push(rangeMaxText);
 
       refreshItemSelect(true);
 
@@ -782,10 +1288,21 @@
         if (row.parentNode) row.parentNode.removeChild(row);
         const index = itemEntryRows.indexOf(entry);
         if (index !== -1) itemEntryRows.splice(index, 1);
-        const labelIdx = itemAmountTexts.indexOf(amountText);
-        if (labelIdx !== -1) itemAmountTexts.splice(labelIdx, 1);
+        removeNodeReference(itemAmountTexts, amountText);
+        removeNodeReference(randomRangeToggleNodes, rangeToggleText);
+        removeNodeReference(randomRangeMinNodes, rangeMinText);
+        removeNodeReference(randomRangeMaxNodes, rangeMaxText);
         updateItemRowState();
         refreshItemSelect(true);
+      });
+
+      rangeCheckbox.addEventListener('change', () => {
+        if (rangeCheckbox.checked){
+          const value = clampRewardAmount(amountInput.value, { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT });
+          rangeMinInput.value = String(value);
+          rangeMaxInput.value = String(value);
+        }
+        entry.updateRangeState(!rangeCheckbox.disabled);
       });
 
       select.title = itemSelectPlaceholderText;
@@ -797,6 +1314,207 @@
         select.value = initial.key;
       }
 
+      if (initial.range && initial.range.enabled){
+        rangeCheckbox.checked = true;
+        rangeMinInput.value = String(initial.range.min);
+        rangeMaxInput.value = String(initial.range.max);
+      }
+
+      entry.updateRangeState(!rangeCheckbox.disabled);
+      return entry;
+    }
+
+    function createLootEntryRow(initial = {}){
+      const row = makeRewardRow();
+      const select = document.createElement('select');
+      select.style.padding = '8px 10px';
+      select.style.borderRadius = '8px';
+      select.style.border = '1px solid #cbd5f5';
+      select.style.fontSize = '13px';
+      select.style.minWidth = '200px';
+      select.style.background = '#ffffff';
+      select.style.color = '#111827';
+      select.style.cursor = 'pointer';
+
+      const weightLabel = makeAmountLabel();
+      weightLabel.style.fontSize = '12px';
+      const weightText = document.createElement('span');
+      const weightInput = document.createElement('input');
+      weightInput.type = 'number';
+      weightInput.min = '1';
+      weightInput.max = String(MAX_REWARD_WEIGHT);
+      weightInput.step = '1';
+      weightInput.value = String(clampRewardWeight(initial.weight ?? 1) || 1);
+      weightInput.style.width = '80px';
+      weightInput.style.padding = '6px 8px';
+      weightInput.style.borderRadius = '8px';
+      weightInput.style.border = '1px solid #cbd5f5';
+      weightInput.style.fontSize = '13px';
+      weightLabel.appendChild(weightText);
+      weightLabel.appendChild(weightInput);
+
+      const amountLabel = makeAmountLabel();
+      amountLabel.style.fontSize = '12px';
+      const amountText = document.createElement('span');
+      const amountInput = document.createElement('input');
+      amountInput.type = 'number';
+      amountInput.min = '0';
+      amountInput.max = String(MAX_REWARD_AMOUNT);
+      amountInput.step = '1';
+      const baseAmount = Number.isFinite(Number(initial.amount)) ? Math.max(0, Number(initial.amount)) : 1;
+      amountInput.value = String(baseAmount);
+      amountInput.style.width = '90px';
+      amountInput.style.padding = '6px 8px';
+      amountInput.style.borderRadius = '8px';
+      amountInput.style.border = '1px solid #cbd5f5';
+      amountInput.style.fontSize = '13px';
+      amountLabel.appendChild(amountText);
+      amountLabel.appendChild(amountInput);
+
+      const rangeToggle = makeToggleLabel();
+      rangeToggle.style.fontSize = '12px';
+      rangeToggle.style.fontWeight = '600';
+      const rangeCheckbox = document.createElement('input');
+      rangeCheckbox.type = 'checkbox';
+      const rangeToggleText = document.createElement('span');
+      rangeToggle.appendChild(rangeCheckbox);
+      rangeToggle.appendChild(rangeToggleText);
+
+      const rangeContainer = document.createElement('div');
+      rangeContainer.style.display = 'none';
+      rangeContainer.style.alignItems = 'center';
+      rangeContainer.style.flexWrap = 'wrap';
+      rangeContainer.style.gap = '6px';
+
+      const rangeMinLabel = makeRangeLabel();
+      const rangeMinText = document.createElement('span');
+      const rangeMinInput = document.createElement('input');
+      rangeMinInput.type = 'number';
+      rangeMinInput.min = '0';
+      rangeMinInput.max = String(MAX_REWARD_AMOUNT);
+      rangeMinInput.step = '1';
+      rangeMinInput.value = String(baseAmount);
+      rangeMinInput.style.width = '90px';
+      rangeMinInput.style.padding = '6px 8px';
+      rangeMinInput.style.borderRadius = '8px';
+      rangeMinInput.style.border = '1px solid #cbd5f5';
+      rangeMinInput.style.fontSize = '13px';
+      rangeMinLabel.appendChild(rangeMinText);
+      rangeMinLabel.appendChild(rangeMinInput);
+
+      const rangeMaxLabel = makeRangeLabel();
+      const rangeMaxText = document.createElement('span');
+      const rangeMaxInput = document.createElement('input');
+      rangeMaxInput.type = 'number';
+      rangeMaxInput.min = '0';
+      rangeMaxInput.max = String(MAX_REWARD_AMOUNT);
+      rangeMaxInput.step = '1';
+      rangeMaxInput.value = String(baseAmount);
+      rangeMaxInput.style.width = '90px';
+      rangeMaxInput.style.padding = '6px 8px';
+      rangeMaxInput.style.borderRadius = '8px';
+      rangeMaxInput.style.border = '1px solid #cbd5f5';
+      rangeMaxInput.style.fontSize = '13px';
+      rangeMaxLabel.appendChild(rangeMaxText);
+      rangeMaxLabel.appendChild(rangeMaxInput);
+
+      rangeContainer.appendChild(rangeMinLabel);
+      rangeContainer.appendChild(rangeMaxLabel);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '×';
+      removeBtn.style.padding = '4px 8px';
+      removeBtn.style.borderRadius = '8px';
+      removeBtn.style.border = '1px solid #f87171';
+      removeBtn.style.background = '#fee2e2';
+      removeBtn.style.color = '#b91c1c';
+      removeBtn.style.cursor = 'pointer';
+      removeBtn.style.fontWeight = '600';
+
+      row.appendChild(select);
+      row.appendChild(weightLabel);
+      row.appendChild(amountLabel);
+      row.appendChild(rangeToggle);
+      row.appendChild(rangeContainer);
+      row.appendChild(removeBtn);
+      lootEntriesContainer.appendChild(row);
+
+      const entry = {
+        row,
+        select,
+        weightInput,
+        amountInput,
+        removeBtn,
+        amountText,
+        weightText,
+        rangeToggleText,
+        rangeMinText,
+        rangeMaxText,
+        rangeCheckbox,
+        rangeMinInput,
+        rangeMaxInput,
+        rangeContainer,
+        updateRangeState(parentEnabled = !rangeCheckbox.disabled){
+          const rangeEnabled = parentEnabled && !!rangeCheckbox.checked;
+          rangeContainer.style.display = rangeEnabled ? 'inline-flex' : 'none';
+          rangeMinInput.disabled = !rangeEnabled;
+          rangeMaxInput.disabled = !rangeEnabled;
+        }
+      };
+      lootEntryRows.push(entry);
+      randomRangeToggleNodes.push(rangeToggleText);
+      randomRangeMinNodes.push(rangeMinText);
+      randomRangeMaxNodes.push(rangeMaxText);
+      lootWeightTextNodes.push(weightText);
+
+      refreshItemSelect(true);
+
+      removeBtn.addEventListener('click', () => {
+        if (row.parentNode) row.parentNode.removeChild(row);
+        const index = lootEntryRows.indexOf(entry);
+        if (index !== -1) lootEntryRows.splice(index, 1);
+        removeNodeReference(randomRangeToggleNodes, rangeToggleText);
+        removeNodeReference(randomRangeMinNodes, rangeMinText);
+        removeNodeReference(randomRangeMaxNodes, rangeMaxText);
+        removeNodeReference(lootWeightTextNodes, weightText);
+        updateLootState();
+        refreshItemSelect(true);
+      });
+
+      const sanitizeWeightInput = () => {
+        const clamped = clampRewardWeight(weightInput.value);
+        weightInput.value = String(clamped > 0 ? clamped : 1);
+      };
+      ['change', 'blur'].forEach(eventName => {
+        weightInput.addEventListener(eventName, sanitizeWeightInput);
+      });
+
+      rangeCheckbox.addEventListener('change', () => {
+        if (rangeCheckbox.checked){
+          const value = clampRewardAmount(amountInput.value, { min: 0, max: MAX_REWARD_AMOUNT });
+          rangeMinInput.value = String(value);
+          rangeMaxInput.value = String(value);
+        }
+        entry.updateRangeState(!rangeCheckbox.disabled);
+      });
+
+      select.title = itemSelectPlaceholderText;
+      select.setAttribute('aria-label', itemSelectPlaceholderText);
+      amountText.textContent = itemAmountLabelText;
+
+      if (initial.key){
+        ensureSelectHasValue(select, initial.key, getItemLabel(initial.key));
+        select.value = initial.key;
+      }
+
+      if (initial.range && initial.range.enabled){
+        rangeCheckbox.checked = true;
+        rangeMinInput.value = String(initial.range.min);
+        rangeMaxInput.value = String(initial.range.max);
+      }
+
+      entry.updateRangeState(!rangeCheckbox.disabled);
       return entry;
     }
 
@@ -820,10 +1538,24 @@
       try { entry.select.focus(); } catch {}
     });
 
+    lootAddButton.addEventListener('click', () => {
+      if (!lootEnableInput.checked){
+        lootEnableInput.checked = true;
+      }
+      const entry = createLootEntryRow();
+      refreshItemSelect(true);
+      updateLootState();
+      try { entry.select.focus(); } catch {}
+    });
+
     function clearPassiveEntries(){
       while (passiveEntryRows.length){
         const entry = passiveEntryRows.pop();
         if (entry.row?.parentNode) entry.row.parentNode.removeChild(entry.row);
+        removeNodeReference(passiveAmountTexts, entry.amountText);
+        removeNodeReference(randomRangeToggleNodes, entry.rangeToggleText);
+        removeNodeReference(randomRangeMinNodes, entry.rangeMinText);
+        removeNodeReference(randomRangeMaxNodes, entry.rangeMaxText);
       }
       passiveAmountTexts.length = 0;
       passiveEntriesContainer.innerHTML = '';
@@ -834,9 +1566,26 @@
       while (itemEntryRows.length){
         const entry = itemEntryRows.pop();
         if (entry.row?.parentNode) entry.row.parentNode.removeChild(entry.row);
+        removeNodeReference(itemAmountTexts, entry.amountText);
+        removeNodeReference(randomRangeToggleNodes, entry.rangeToggleText);
+        removeNodeReference(randomRangeMinNodes, entry.rangeMinText);
+        removeNodeReference(randomRangeMaxNodes, entry.rangeMaxText);
       }
       itemAmountTexts.length = 0;
       itemEntriesContainer.innerHTML = '';
+      refreshItemSelect(false);
+    }
+
+    function clearLootEntries(){
+      while (lootEntryRows.length){
+        const entry = lootEntryRows.pop();
+        if (entry.row?.parentNode) entry.row.parentNode.removeChild(entry.row);
+        removeNodeReference(randomRangeToggleNodes, entry.rangeToggleText);
+        removeNodeReference(randomRangeMinNodes, entry.rangeMinText);
+        removeNodeReference(randomRangeMaxNodes, entry.rangeMaxText);
+        removeNodeReference(lootWeightTextNodes, entry.weightText);
+      }
+      lootEntriesContainer.innerHTML = '';
       refreshItemSelect(false);
     }
 
@@ -864,9 +1613,87 @@
     spAmountLabel.appendChild(spAmountText);
     spAmountLabel.appendChild(spAmountInput);
 
+    const spRangeControls = document.createElement('div');
+    spRangeControls.style.display = 'flex';
+    spRangeControls.style.flexWrap = 'wrap';
+    spRangeControls.style.gap = '6px';
+    spRangeControls.style.alignItems = 'center';
+
+    const spRandomLabel = makeToggleLabel();
+    spRandomLabel.style.fontSize = '12px';
+    const spRandomInput = document.createElement('input');
+    spRandomInput.type = 'checkbox';
+    const spRandomText = document.createElement('span');
+    spRandomLabel.appendChild(spRandomInput);
+    spRandomLabel.appendChild(spRandomText);
+
+    const spRangeContainer = document.createElement('div');
+    spRangeContainer.style.display = 'none';
+    spRangeContainer.style.flexWrap = 'wrap';
+    spRangeContainer.style.gap = '6px';
+    spRangeContainer.style.alignItems = 'center';
+
+    const spRangeMinLabel = makeRangeLabel();
+    const spRangeMinText = document.createElement('span');
+    const spRangeMinInput = document.createElement('input');
+    spRangeMinInput.type = 'number';
+    spRangeMinInput.min = String(-MAX_REWARD_AMOUNT);
+    spRangeMinInput.max = String(MAX_REWARD_AMOUNT);
+    spRangeMinInput.step = '1';
+    spRangeMinInput.value = spAmountInput.value;
+    spRangeMinInput.style.width = '90px';
+    spRangeMinInput.style.padding = '6px 8px';
+    spRangeMinInput.style.borderRadius = '8px';
+    spRangeMinInput.style.border = '1px solid #cbd5f5';
+    spRangeMinInput.style.fontSize = '13px';
+    spRangeMinLabel.appendChild(spRangeMinText);
+    spRangeMinLabel.appendChild(spRangeMinInput);
+
+    const spRangeMaxLabel = makeRangeLabel();
+    const spRangeMaxText = document.createElement('span');
+    const spRangeMaxInput = document.createElement('input');
+    spRangeMaxInput.type = 'number';
+    spRangeMaxInput.min = String(-MAX_REWARD_AMOUNT);
+    spRangeMaxInput.max = String(MAX_REWARD_AMOUNT);
+    spRangeMaxInput.step = '1';
+    spRangeMaxInput.value = spAmountInput.value;
+    spRangeMaxInput.style.width = '90px';
+    spRangeMaxInput.style.padding = '6px 8px';
+    spRangeMaxInput.style.borderRadius = '8px';
+    spRangeMaxInput.style.border = '1px solid #cbd5f5';
+    spRangeMaxInput.style.fontSize = '13px';
+    spRangeMaxLabel.appendChild(spRangeMaxText);
+    spRangeMaxLabel.appendChild(spRangeMaxInput);
+
+    spRangeContainer.appendChild(spRangeMinLabel);
+    spRangeContainer.appendChild(spRangeMaxLabel);
+
+    spRangeControls.appendChild(spRandomLabel);
+    spRangeControls.appendChild(spRangeContainer);
+
+    function updateSpRangeState(){
+      const enabled = spEnableInput.checked && spRandomInput.checked;
+      spRangeContainer.style.display = enabled ? 'inline-flex' : 'none';
+      spRangeMinInput.disabled = !enabled;
+      spRangeMaxInput.disabled = !enabled;
+    }
+
+    spRandomInput.addEventListener('change', () => {
+      if (spRandomInput.checked){
+        const value = clampRewardAmount(spAmountInput.value, { min: -MAX_REWARD_AMOUNT, max: MAX_REWARD_AMOUNT });
+        spRangeMinInput.value = String(value);
+        spRangeMaxInput.value = String(value);
+      }
+      updateSpRangeState();
+    });
+
     spRow.appendChild(spToggleLabel);
     spRow.appendChild(spAmountLabel);
+    spRow.appendChild(spRangeControls);
     rewardsSection.appendChild(spRow);
+    randomRangeToggleNodes.push(spRandomText);
+    randomRangeMinNodes.push(spRangeMinText);
+    randomRangeMaxNodes.push(spRangeMaxText);
 
     const PASSIVE_ORB_DEFS_REF = (typeof window !== 'undefined' && window.PASSIVE_ORB_DEFS && typeof window.PASSIVE_ORB_DEFS === 'object') ? window.PASSIVE_ORB_DEFS : {};
     const PASSIVE_ORB_KNOWN_IDS = (() => {
@@ -1039,10 +1866,49 @@
           select.value = '';
         }
       });
+      lootEntryRows.forEach(entry => {
+        const select = entry.select;
+        if (!select) return;
+        const previous = preserveValue ? select.value : '';
+        select.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = placeholderText;
+        select.appendChild(placeholder);
+        entries.forEach(({ value, label }) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          select.appendChild(option);
+        });
+        if (previous && Array.from(select.options).some(option => option.value === previous)){
+          select.value = previous;
+        } else {
+          select.value = '';
+        }
+      });
     }
 
     refreshPassiveOrbSelect(false);
     refreshItemSelect(false);
+
+    function updateLootState(){
+      const baseEnabled = !!itemEnableInput.checked;
+      const enabled = baseEnabled && !!lootEnableInput.checked;
+      lootTableSection.style.opacity = baseEnabled ? '1' : '0.6';
+      lootEntriesContainer.style.opacity = enabled ? '1' : '0.6';
+      lootEnableInput.disabled = !baseEnabled;
+      lootAddButton.disabled = !enabled;
+      lootChanceInput.disabled = !enabled;
+      lootEntryRows.forEach(entry => {
+        entry.select.disabled = !enabled;
+        entry.weightInput.disabled = !enabled;
+        entry.amountInput.disabled = !enabled;
+        entry.removeBtn.disabled = !enabled;
+        entry.rangeCheckbox.disabled = !enabled;
+        entry.updateRangeState(enabled);
+      });
+    }
 
     function updatePassiveRowState(){
       const enabled = !!passiveEnableInput.checked;
@@ -1053,6 +1919,8 @@
         entry.select.disabled = !enabled;
         entry.amountInput.disabled = !enabled;
         entry.removeBtn.disabled = !enabled;
+        entry.rangeCheckbox.disabled = !enabled;
+        entry.updateRangeState(enabled);
       });
     }
 
@@ -1065,13 +1933,18 @@
         entry.select.disabled = !enabled;
         entry.amountInput.disabled = !enabled;
         entry.removeBtn.disabled = !enabled;
+        entry.rangeCheckbox.disabled = !enabled;
+        entry.updateRangeState(enabled);
       });
+      updateLootState();
     }
 
     function updateSpRowState(){
       const enabled = !!spEnableInput.checked;
       spAmountInput.disabled = !enabled;
       spRow.style.opacity = enabled ? '1' : '0.6';
+      spRandomInput.disabled = !enabled;
+      updateSpRangeState();
     }
 
     passiveEnableInput.addEventListener('change', () => {
@@ -1085,6 +1958,12 @@
         createItemEntryRow();
       }
       updateItemRowState();
+    });
+    lootEnableInput.addEventListener('change', () => {
+      if (lootEnableInput.checked && lootEntryRows.length === 0){
+        createLootEntryRow();
+      }
+      updateLootState();
     });
     spEnableInput.addEventListener('change', updateSpRowState);
 
@@ -1376,11 +2255,17 @@
 
       resultRewardsWrap.innerHTML = '';
       const lines = [];
-      const positiveItems = Array.isArray(rewards.items)
+      const gainedItems = Array.isArray(rewards.items)
         ? rewards.items.filter(entry => Number(entry.amount) > 0)
         : [];
-      const positiveOrbs = Array.isArray(rewards.passiveOrbs)
+      const removedItems = Array.isArray(rewards.removedItems)
+        ? rewards.removedItems.filter(entry => Number(entry.amount) > 0)
+        : [];
+      const gainedOrbs = Array.isArray(rewards.passiveOrbs)
         ? rewards.passiveOrbs.filter(entry => Number(entry.amount) > 0)
+        : [];
+      const removedOrbs = Array.isArray(rewards.removedPassiveOrbs)
+        ? rewards.removedPassiveOrbs.filter(entry => Number(entry.amount) > 0)
         : [];
       if (Number.isFinite(rewards.spAmount) && rewards.spAmount !== 0){
         const spSigned = rewards.spAmount > 0
@@ -1388,21 +2273,51 @@
           : `-${formatNumber(Math.abs(rewards.spAmount), { maximumFractionDigits: 0 })}`;
         lines.push(translate('games.todoList.result.sp', 'SP：{amount}', { amount: spSigned }));
       }
-      if (positiveItems.length){
-        const itemText = positiveItems.map(entry => {
+      if (gainedItems.length){
+        const itemText = gainedItems.map(entry => {
           const label = getItemLabel(entry.key);
           const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
           return `${label}x${amountText}`;
         }).join('、');
         lines.push(translate('games.todoList.result.items', 'アイテム：{list}', { list: itemText }));
       }
-      if (positiveOrbs.length){
-        const orbText = positiveOrbs.map(entry => {
+      if (removedItems.length){
+        const itemText = removedItems.map(entry => {
+          const label = getItemLabel(entry.key);
+          const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
+          return `${label}x${amountText}`;
+        }).join('、');
+        lines.push(translate('games.todoList.result.itemsRemoved', '没収アイテム：{list}', { list: itemText }));
+      }
+      if (gainedOrbs.length){
+        const orbText = gainedOrbs.map(entry => {
           const label = getPassiveOrbLabel(entry.orbId);
           const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
           return `${label}x${amountText}`;
         }).join('、');
         lines.push(translate('games.todoList.result.passiveOrbs', 'パッシブオーブ：{list}', { list: orbText }));
+      }
+      if (removedOrbs.length){
+        const orbText = removedOrbs.map(entry => {
+          const label = getPassiveOrbLabel(entry.orbId);
+          const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
+          return `${label}x${amountText}`;
+        }).join('、');
+        lines.push(translate('games.todoList.result.passiveOrbsRemoved', '没収オーブ：{list}', { list: orbText }));
+      }
+      if (rewards.loot && rewards.loot.enabled){
+        const chanceText = formatNumber(Number(rewards.loot.dropChance) || 0, { maximumFractionDigits: 1 });
+        if (rewards.loot.dropped && rewards.loot.entry){
+          const label = getItemLabel(rewards.loot.entry.key);
+          const amountText = formatNumber(rewards.loot.entry.amount, { maximumFractionDigits: 0 });
+          lines.push(translate('games.todoList.result.lootSuccess', '抽選成功：{item} ×{amount} (確率 {chance}%)', {
+            item: label,
+            amount: amountText,
+            chance: chanceText
+          }));
+        } else if (rewards.loot.attempted) {
+          lines.push(translate('games.todoList.result.lootFailure', '抽選失敗（確率 {chance}%）', { chance: chanceText }));
+        }
       }
 
       if (lines.length){
@@ -1500,17 +2415,28 @@
       nameInput.value = '';
       typeSelect.value = TASK_TYPE_SINGLE;
       xpInput.value = '25';
+      xpRandomInput.checked = false;
+      xpRangeMinInput.value = xpInput.value;
+      xpRangeMaxInput.value = xpInput.value;
+      updateXpRangeState();
       colorInput.value = '#f97316';
       memoInput.value = '';
       passiveEnableInput.checked = false;
       clearPassiveEntries();
       itemEnableInput.checked = false;
       clearItemEntries();
+      lootEnableInput.checked = false;
+      lootChanceInput.value = '100';
+      clearLootEntries();
       spEnableInput.checked = false;
       spAmountInput.value = '10';
+      spRandomInput.checked = false;
+      spRangeMinInput.value = spAmountInput.value;
+      spRangeMaxInput.value = spAmountInput.value;
       updatePassiveRowState();
       updateItemRowState();
       updateSpRowState();
+      updateLootState();
     }
 
     function fillForm(task){
@@ -1521,6 +2447,16 @@
       nameInput.value = task.autoName ? '' : task.name;
       typeSelect.value = sanitizeTaskType(task.type);
       xpInput.value = String(task.xp);
+      if (task.xpRange && task.xpRange.enabled){
+        xpRandomInput.checked = true;
+        xpRangeMinInput.value = String(task.xpRange.min);
+        xpRangeMaxInput.value = String(task.xpRange.max);
+      } else {
+        xpRandomInput.checked = false;
+        xpRangeMinInput.value = String(task.xp);
+        xpRangeMaxInput.value = String(task.xp);
+      }
+      updateXpRangeState();
       colorInput.value = task.color;
       memoInput.value = task.memo;
       const rewards = ensureTaskRewards(task);
@@ -1540,11 +2476,31 @@
       if (itemEnableInput.checked && itemEntryRows.length === 0){
         createItemEntryRow();
       }
+      const lootConfig = rewards.items?.lootTable || {};
+      lootEnableInput.checked = !!lootConfig.enabled;
+      lootChanceInput.value = String(lootConfig.dropChance ?? 100);
+      clearLootEntries();
+      if (Array.isArray(lootConfig.entries) && lootConfig.entries.length){
+        lootConfig.entries.forEach(entry => createLootEntryRow(entry));
+      }
+      if (lootEnableInput.checked && lootEntryRows.length === 0){
+        createLootEntryRow();
+      }
       spEnableInput.checked = !!rewards.sp.enabled;
       spAmountInput.value = String(rewards.sp.amount || 0);
+      if (rewards.sp.range && rewards.sp.range.enabled){
+        spRandomInput.checked = true;
+        spRangeMinInput.value = String(rewards.sp.range.min);
+        spRangeMaxInput.value = String(rewards.sp.range.max);
+      } else {
+        spRandomInput.checked = false;
+        spRangeMinInput.value = spAmountInput.value;
+        spRangeMaxInput.value = spAmountInput.value;
+      }
       updatePassiveRowState();
       updateItemRowState();
       updateSpRowState();
+      updateLootState();
     }
 
     function readRewardsFromForm(){
@@ -1553,19 +2509,48 @@
           enabled: passiveEnableInput.checked,
           entries: passiveEntryRows.map(entry => ({
             orbId: entry.select.value,
-            amount: entry.amountInput.value
+            amount: entry.amountInput.value,
+            range: entry.rangeCheckbox.checked ? {
+              enabled: true,
+              min: entry.rangeMinInput.value,
+              max: entry.rangeMaxInput.value
+            } : {}
           }))
         },
         items: {
           enabled: itemEnableInput.checked,
           entries: itemEntryRows.map(entry => ({
             key: entry.select.value,
-            amount: entry.amountInput.value
-          }))
+            amount: entry.amountInput.value,
+            range: entry.rangeCheckbox.checked ? {
+              enabled: true,
+              min: entry.rangeMinInput.value,
+              max: entry.rangeMaxInput.value
+            } : {}
+          })),
+          lootTable: {
+            enabled: itemEnableInput.checked && lootEnableInput.checked,
+            dropChance: lootChanceInput.value,
+            entries: lootEntryRows.map(entry => ({
+              key: entry.select.value,
+              weight: entry.weightInput.value,
+              amount: entry.amountInput.value,
+              range: entry.rangeCheckbox.checked ? {
+                enabled: true,
+                min: entry.rangeMinInput.value,
+                max: entry.rangeMaxInput.value
+              } : {}
+            }))
+          }
         },
         sp: {
           enabled: spEnableInput.checked,
-          amount: spAmountInput.value
+          amount: spAmountInput.value,
+          range: spRandomInput.checked ? {
+            enabled: true,
+            min: spRangeMinInput.value,
+            max: spRangeMaxInput.value
+          } : {}
         }
       });
     }
@@ -1574,6 +2559,7 @@
       state.tasks.forEach(task => {
         if (!task || typeof task !== 'object') return;
         task.xp = clampXp(task.xp);
+        task.xpRange = sanitizeRandomRange(task.xpRange, clampXp, task.xp);
         ensureTaskRewards(task);
       });
       writePersistentState(state.tasks);
@@ -1667,6 +2653,18 @@
       });
       itemAmountTexts.forEach(node => { node.textContent = itemAmountLabelText; });
       refreshItemSelect(true);
+      const randomToggleText = translate('games.todoList.form.randomRange.toggle', 'ランダム範囲を使用');
+      const randomMinText = translate('games.todoList.form.randomRange.min', '最小値');
+      const randomMaxText = translate('games.todoList.form.randomRange.max', '最大値');
+      randomRangeToggleNodes.forEach(node => { node.textContent = randomToggleText; });
+      randomRangeMinNodes.forEach(node => { node.textContent = randomMinText; });
+      randomRangeMaxNodes.forEach(node => { node.textContent = randomMaxText; });
+      lootEnableText.textContent = translate('games.todoList.form.rewards.item.lootTable.label', 'ルートテーブル');
+      lootAddButton.textContent = translate('games.todoList.form.rewards.item.lootTable.addEntry', '追加');
+      const lootChanceLabelText = translate('games.todoList.form.rewards.item.lootTable.dropChance', 'ドロップ率(%)');
+      lootDropChanceTextNodes.forEach(node => { node.textContent = lootChanceLabelText; });
+      const lootWeightLabelText = translate('games.todoList.form.rewards.item.lootTable.weight', '重み');
+      lootWeightTextNodes.forEach(node => { node.textContent = lootWeightLabelText; });
       spEnableText.textContent = translate('games.todoList.form.rewards.sp.label', 'SP');
       spAmountText.textContent = translate('games.todoList.form.rewards.sp.amount', '変化量（マイナスで没収）');
       colorLabelText.textContent = translate('games.todoList.form.color', 'カラー');
@@ -1809,7 +2807,7 @@
 
       const xpChip = makeChip(
         translate('games.todoList.task.xpChip', '{xp} EXP', {
-          xp: formatNumber(task.xp, { maximumFractionDigits: 0 })
+          xp: formatRangeText(task.xp, task.xpRange, { signed: true })
         }),
         '#fee2e2',
         '#991b1b'
@@ -1819,7 +2817,7 @@
       if (rewards.passiveOrbs.enabled && Array.isArray(rewards.passiveOrbs.entries)){
         rewards.passiveOrbs.entries.forEach(entry => {
           if (!entry?.orbId) return;
-          const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
+          const amountText = formatRangeText(entry.amount, entry.range);
           const passiveText = translate('games.todoList.task.rewards.passiveOrb', 'オーブ: {orb} ×{amount}', {
             orb: entry.orbId,
             amount: amountText
@@ -1831,7 +2829,7 @@
       if (rewards.items.enabled && Array.isArray(rewards.items.entries)){
         rewards.items.entries.forEach(entry => {
           if (!entry?.key) return;
-          const amountText = formatNumber(entry.amount, { maximumFractionDigits: 0 });
+          const amountText = formatRangeText(entry.amount, entry.range);
           const itemText = translate('games.todoList.task.rewards.item', '{item} ×{amount}', {
             item: entry.key,
             amount: amountText
@@ -1841,15 +2839,20 @@
       }
 
       if (rewards.sp.enabled){
-        const spAmount = Number(rewards.sp.amount) || 0;
-        if (spAmount !== 0){
-          const absAmount = formatNumber(Math.abs(spAmount), { maximumFractionDigits: 0 });
-          const signed = spAmount > 0 ? `+${absAmount}` : `-${absAmount}`;
+        const spAmount = rewards.sp.amount;
+        const display = formatRangeText(spAmount, rewards.sp.range, { signed: true });
+        if (display !== '0'){
           const spText = translate('games.todoList.task.rewards.sp', 'SP {amount}', {
-            amount: signed
+            amount: display
           });
           chipRow.appendChild(makeChip(spText, '#cffafe', '#0f766e'));
         }
+      }
+
+      if (rewards.items?.lootTable?.enabled){
+        const chanceText = formatNumber(Number(rewards.items.lootTable.dropChance) || 0, { maximumFractionDigits: 1 });
+        const lootChipText = translate('games.todoList.task.rewards.loot', '抽選{chance}%', { chance: chanceText });
+        chipRow.appendChild(makeChip(lootChipText, '#fef3c7', '#92400e'));
       }
 
       const colorChip = document.createElement('span');
@@ -1978,65 +2981,146 @@
 
     function applyTaskRewards(task, meta){
       const rewards = ensureTaskRewards(task);
-      let xpDelta = 0;
-      const xpAmount = Number(task.xp) || 0;
-      if (xpAmount !== 0 && typeof awardXp === 'function'){
+      const result = {
+        xp: 0,
+        sp: 0,
+        items: { gained: [], removed: [] },
+        passiveOrbs: { gained: [], removed: [] },
+        loot: {
+          enabled: !!rewards.items?.lootTable?.enabled,
+          attempted: false,
+          dropped: false,
+          entry: null,
+          dropChance: Number(rewards.items?.lootTable?.dropChance) || 0
+        }
+      };
+
+      const resolvedXp = resolveRandomValue(task.xp, task.xpRange, clampXp);
+      if (resolvedXp !== 0 && typeof awardXp === 'function'){
         try {
-          const gained = awardXp(xpAmount, meta);
+          const gained = awardXp(resolvedXp, meta);
           const numeric = Number(gained);
           if (Number.isFinite(numeric)){
-            xpDelta = numeric;
-          } else if (Number.isFinite(xpAmount)){
-            xpDelta = xpAmount;
+            result.xp = numeric;
+          } else if (Number.isFinite(resolvedXp)){
+            result.xp = resolvedXp;
           }
-        } catch {}
+        } catch {
+          result.xp = resolvedXp;
+        }
+      } else if (Number.isFinite(resolvedXp)){
+        result.xp = resolvedXp;
       }
+
       if (playerApi && rewards.sp.enabled && typeof playerApi.adjustSp === 'function'){
-        const spAmount = Number(rewards.sp.amount) || 0;
+        const spAmount = resolveRandomValue(rewards.sp.amount, rewards.sp.range, (value) => clampRewardAmount(value, {
+          min: -MAX_REWARD_AMOUNT,
+          max: MAX_REWARD_AMOUNT
+        }));
         if (spAmount !== 0){
           try {
             playerApi.adjustSp(spAmount, { source: 'todo_list', reason: meta?.type || 'todo_list' });
+            result.sp = spAmount;
           } catch {}
         }
       }
+
+      const itemPositives = {};
+      const itemNegatives = {};
       if (playerApi && rewards.items.enabled && Array.isArray(rewards.items.entries)){
-        const positives = {};
-        const negatives = {};
         rewards.items.entries.forEach(entry => {
           const key = entry?.key;
-          const amount = Number(entry?.amount) || 0;
-          if (!key || amount === 0) return;
+          if (!key) return;
+          const amount = resolveRandomValue(entry.amount, entry.range, (value) => clampRewardAmount(value, {
+            min: -MAX_REWARD_AMOUNT,
+            max: MAX_REWARD_AMOUNT
+          }));
+          if (amount === 0) return;
           if (amount > 0){
-            positives[key] = (positives[key] || 0) + amount;
-          } else if (amount < 0){
-            negatives[key] = (negatives[key] || 0) + amount;
+            itemPositives[key] = (itemPositives[key] || 0) + amount;
+            result.items.gained.push({ key, amount });
+          } else {
+            itemNegatives[key] = (itemNegatives[key] || 0) + amount;
+            result.items.removed.push({ key, amount: Math.abs(amount) });
           }
         });
-        if (Object.keys(positives).length && typeof playerApi.awardItems === 'function'){
-          try {
-            playerApi.awardItems(positives, { allowNegative: false });
-          } catch {}
-        }
-        if (Object.keys(negatives).length){
-          const handler = typeof playerApi.adjustItems === 'function' ? playerApi.adjustItems : playerApi.awardItems;
-          if (typeof handler === 'function'){
-            try {
-              handler(negatives, { allowNegative: true });
-            } catch {}
-          }
-        }
       }
+
       if (playerApi && rewards.passiveOrbs.enabled && Array.isArray(rewards.passiveOrbs.entries) && typeof playerApi.awardPassiveOrb === 'function'){
         rewards.passiveOrbs.entries.forEach(entry => {
           const orbId = entry?.orbId;
-          const amount = Number(entry?.amount) || 0;
-          if (!orbId || amount === 0) return;
+          if (!orbId) return;
+          const amount = resolveRandomValue(entry.amount, entry.range, (value) => clampRewardAmount(value, {
+            min: -MAX_REWARD_AMOUNT,
+            max: MAX_REWARD_AMOUNT
+          }));
+          if (amount === 0) return;
           try {
             playerApi.awardPassiveOrb(orbId, amount, { source: meta?.type || 'todo_list' });
+            if (amount > 0){
+              result.passiveOrbs.gained.push({ orbId, amount });
+            } else {
+              result.passiveOrbs.removed.push({ orbId, amount: Math.abs(amount) });
+            }
           } catch {}
         });
       }
-      return xpDelta;
+
+      const lootConfig = rewards.items?.lootTable;
+      if (lootConfig && lootConfig.enabled && Array.isArray(lootConfig.entries) && lootConfig.entries.length){
+        result.loot.attempted = true;
+        const chance = Math.max(0, Math.min(100, Number(lootConfig.dropChance) || 0));
+        if (Math.random() * 100 < chance){
+          const weightedEntries = lootConfig.entries
+            .map(entry => ({
+              key: entry?.key,
+              weight: clampRewardWeight(entry?.weight ?? entry?.chance ?? 0),
+              amount: entry?.amount,
+              range: entry?.range
+            }))
+            .filter(entry => entry.key && entry.weight > 0);
+          const totalWeight = weightedEntries.reduce((sum, entry) => sum + entry.weight, 0);
+          if (totalWeight > 0){
+            let roll = Math.random() * totalWeight;
+            let chosen = null;
+            for (const entry of weightedEntries){
+              if (roll < entry.weight){
+                chosen = entry;
+                break;
+              }
+              roll -= entry.weight;
+            }
+            if (chosen){
+              const amount = resolveRandomValue(chosen.amount, chosen.range, (value) => clampRewardAmount(value, {
+                min: 0,
+                max: MAX_REWARD_AMOUNT
+              }));
+              if (amount > 0){
+                result.loot.dropped = true;
+                result.loot.entry = { key: chosen.key, amount };
+                itemPositives[chosen.key] = (itemPositives[chosen.key] || 0) + amount;
+                result.items.gained.push({ key: chosen.key, amount });
+              }
+            }
+          }
+        }
+      }
+
+      if (playerApi && Object.keys(itemPositives).length && typeof playerApi.awardItems === 'function'){
+        try {
+          playerApi.awardItems(itemPositives, { allowNegative: false });
+        } catch {}
+      }
+      if (playerApi && Object.keys(itemNegatives).length){
+        const handler = typeof playerApi.adjustItems === 'function' ? playerApi.adjustItems : playerApi.awardItems;
+        if (typeof handler === 'function'){
+          try {
+            handler(itemNegatives, { allowNegative: true });
+          } catch {}
+        }
+      }
+
+      return result;
     }
 
     function deleteTask(id){
@@ -2062,21 +3146,24 @@
       if (task.status === 'completed'){
         const before = capturePlayerSnapshot();
         const meta = { type: 'todo-complete', todoId: task.id, name: task.name };
-        const gained = applyTaskRewards(task, meta);
-        if (gained !== 0) state.sessionXp += gained;
+        const rewardResult = applyTaskRewards(task, meta);
+        const xpGained = Number(rewardResult?.xp) || 0;
+        if (xpGained !== 0) state.sessionXp += xpGained;
         const after = capturePlayerSnapshot();
         recordLogEntry(task, 'completed');
-        const rewards = ensureTaskRewards(task);
         showResultOverlay({
           name: task.name,
           action: 'completed',
-          xp: gained,
+          xp: xpGained,
           beforeLevel: before?.level,
           afterLevel: after?.level,
           rewards: {
-            items: rewards.items?.entries,
-            passiveOrbs: rewards.passiveOrbs?.entries,
-            spAmount: rewards.sp?.enabled ? Number(rewards.sp.amount) || 0 : 0
+            items: rewardResult?.items?.gained,
+            removedItems: rewardResult?.items?.removed,
+            passiveOrbs: rewardResult?.passiveOrbs?.gained,
+            removedPassiveOrbs: rewardResult?.passiveOrbs?.removed,
+            spAmount: rewardResult?.sp || 0,
+            loot: rewardResult?.loot
           }
         });
       }
@@ -2093,22 +3180,25 @@
       task.achievedCount = nextCount;
       const before = capturePlayerSnapshot();
       const meta = { type: 'todo-achieve', todoId: task.id, name: task.name, count: nextCount };
-      const gained = applyTaskRewards(task, meta);
-      if (gained !== 0) state.sessionXp += gained;
+      const rewardResult = applyTaskRewards(task, meta);
+      const xpGained = Number(rewardResult?.xp) || 0;
+      if (xpGained !== 0) state.sessionXp += xpGained;
       persist();
       const after = capturePlayerSnapshot();
       recordLogEntry(task, 'achieved');
-      const rewards = ensureTaskRewards(task);
       showResultOverlay({
         name: task.name,
         action: 'achieved',
-        xp: gained,
+        xp: xpGained,
         beforeLevel: before?.level,
         afterLevel: after?.level,
         rewards: {
-          items: rewards.items?.entries,
-          passiveOrbs: rewards.passiveOrbs?.entries,
-          spAmount: rewards.sp?.enabled ? Number(rewards.sp.amount) || 0 : 0
+          items: rewardResult?.items?.gained,
+          removedItems: rewardResult?.items?.removed,
+          passiveOrbs: rewardResult?.passiveOrbs?.gained,
+          removedPassiveOrbs: rewardResult?.passiveOrbs?.removed,
+          spAmount: rewardResult?.sp || 0,
+          loot: rewardResult?.loot
         }
       });
       updateStats();
@@ -2126,6 +3216,11 @@
         return;
       }
       const xp = clampXp(xpInput.value);
+      const xpRangeRaw = xpRandomInput.checked ? {
+        enabled: true,
+        min: xpRangeMinInput.value,
+        max: xpRangeMaxInput.value
+      } : {};
       const type = sanitizeTaskType(typeSelect.value);
       const color = sanitizeColor(colorInput.value);
       const memo = sanitizeString(memoInput.value || '', '');
@@ -2139,6 +3234,7 @@
           task.autoName = isAutoName;
           task.type = type;
           task.xp = xp;
+          task.xpRange = sanitizeRandomRange(xpRangeRaw, clampXp, xp);
           task.color = color;
           task.memo = memo;
           task.rewards = rewards;
@@ -2153,6 +3249,7 @@
           autoName: isAutoName,
           memo,
           xp,
+          xpRange: sanitizeRandomRange(xpRangeRaw, clampXp, xp),
           color,
           type,
           achievedCount: 0,
@@ -2209,11 +3306,41 @@
       root.removeChild(wrapper);
     }
 
+    const testUtils = {
+      applyTaskRewards: (task, meta) => applyTaskRewards(task, meta),
+      resolveRandomValue,
+      sanitizeRandomRange,
+      sanitizeTaskRewards,
+      clampRewardAmount,
+      clampRewardWeight,
+      clampDropChance,
+      getTranslationNodeCounts(){
+        return {
+          randomRangeToggle: randomRangeToggleNodes.length,
+          randomRangeMin: randomRangeMinNodes.length,
+          randomRangeMax: randomRangeMaxNodes.length,
+          passiveAmount: passiveAmountTexts.length,
+          itemAmount: itemAmountTexts.length,
+          lootWeight: lootWeightTextNodes.length
+        };
+      },
+      addPassiveEntry: (initial) => createPassiveEntryRow(initial || {}),
+      addItemEntry: (initial) => createItemEntryRow(initial || {}),
+      addLootEntry: (initial) => createLootEntryRow(initial || {}),
+      getLootChanceInput: () => lootChanceInput,
+      constants: {
+        MAX_REWARD_AMOUNT,
+        MAX_REWARD_WEIGHT,
+        MAX_XP
+      }
+    };
+
     const runtime = {
       start,
       stop,
       destroy,
-      getScore(){ return state.sessionXp; }
+      getScore(){ return state.sessionXp; },
+      __test: testUtils
     };
 
     applyTranslations(false);

@@ -17927,15 +17927,20 @@
           "titleEdit": "ToDoを編集",
           "name": "名前",
           "namePlaceholder": "例: 日次レポートを送信",
-          "type": "タイプ",
-          "typeSingle": "単発",
-          "typeRepeatable": "繰り返し",
-          "xp": "EXP変化量（マイナスで没収）",
-          "rewards": {
-            "title": "追加報酬",
-            "passiveOrb": {
-              "label": "パッシブオーブ",
-              "placeholder": "例: attackBoost",
+        "type": "タイプ",
+        "typeSingle": "単発",
+        "typeRepeatable": "繰り返し",
+        "xp": "EXP変化量（マイナスで没収）",
+        "randomRange": {
+          "toggle": "ランダム範囲を使用",
+          "min": "最小値",
+          "max": "最大値"
+        },
+        "rewards": {
+          "title": "追加報酬",
+          "passiveOrb": {
+            "label": "パッシブオーブ",
+            "placeholder": "例: attackBoost",
               "selectPlaceholder": "パッシブオーブを選択",
               "customOption": "{value} (保存済み)",
               "amount": "個数（マイナスで没収）",
@@ -17948,6 +17953,12 @@
               "customOption": "{value} (保存済み)",
               "amount": "個数（マイナスで没収）",
               "addEntry": "追加",
+              "lootTable": {
+                "label": "ルートテーブル",
+                "addEntry": "追加",
+                "dropChance": "ドロップ率(%)",
+                "weight": "重み"
+              },
               "defaults": {
                 "potion30": "ポーション（30%）",
                 "hpBoost": "HPブースト",
@@ -17982,7 +17993,8 @@
           "rewards": {
             "passiveOrb": "オーブ: {orb} ×{amount}",
             "item": "{item} ×{amount}",
-            "sp": "SP {amount}"
+            "sp": "SP {amount}",
+            "loot": "抽選{chance}%"
           },
           "memoEmpty": "メモなし",
           "createdAt": "登録: {date}",
@@ -17997,6 +18009,20 @@
             "edit": "編集",
             "delete": "削除"
           }
+        },
+        "result": {
+          "title": "{name}{action}！",
+          "xp": "獲得経験値 {amount}",
+          "levelChange": "レベル{before}→{after}({delta})",
+          "levelStatic": "レベル{level}",
+          "sp": "SP：{amount}",
+          "items": "アイテム：{list}",
+          "itemsRemoved": "没収アイテム：{list}",
+          "passiveOrbs": "パッシブオーブ：{list}",
+          "passiveOrbsRemoved": "没収オーブ：{list}",
+          "lootSuccess": "抽選成功：{item} ×{amount} (確率 {chance}%)",
+          "lootFailure": "抽選失敗（確率 {chance}%）",
+          "rewardsHeader": "獲得"
         },
         "dialogs": {
           "confirmDelete": "このToDoを削除しますか？",

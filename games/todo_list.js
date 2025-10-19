@@ -704,7 +704,7 @@
       passiveEntryRows.push(entry);
       passiveAmountTexts.push(amountText);
 
-      refreshPassiveOrbSelect(false);
+      refreshPassiveOrbSelect(true);
 
       removeBtn.addEventListener('click', () => {
         if (row.parentNode) row.parentNode.removeChild(row);
@@ -713,7 +713,7 @@
         const labelIdx = passiveAmountTexts.indexOf(amountText);
         if (labelIdx !== -1) passiveAmountTexts.splice(labelIdx, 1);
         updatePassiveRowState();
-        refreshPassiveOrbSelect(false);
+        refreshPassiveOrbSelect(true);
       });
 
       select.title = passiveSelectPlaceholderText;
@@ -776,7 +776,7 @@
       itemEntryRows.push(entry);
       itemAmountTexts.push(amountText);
 
-      refreshItemSelect(false);
+      refreshItemSelect(true);
 
       removeBtn.addEventListener('click', () => {
         if (row.parentNode) row.parentNode.removeChild(row);
@@ -785,7 +785,7 @@
         const labelIdx = itemAmountTexts.indexOf(amountText);
         if (labelIdx !== -1) itemAmountTexts.splice(labelIdx, 1);
         updateItemRowState();
-        refreshItemSelect(false);
+        refreshItemSelect(true);
       });
 
       select.title = itemSelectPlaceholderText;
@@ -805,7 +805,7 @@
         passiveEnableInput.checked = true;
       }
       const entry = createPassiveEntryRow();
-      refreshPassiveOrbSelect(false);
+      refreshPassiveOrbSelect(true);
       updatePassiveRowState();
       try { entry.select.focus(); } catch {}
     });
@@ -815,7 +815,7 @@
         itemEnableInput.checked = true;
       }
       const entry = createItemEntryRow();
-      refreshItemSelect(false);
+      refreshItemSelect(true);
       updateItemRowState();
       try { entry.select.focus(); } catch {}
     });

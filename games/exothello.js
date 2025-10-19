@@ -149,10 +149,18 @@
     const midX = Math.floor(width / 2);
     const midY = Math.floor(height / 2);
     if (width < 2 || height < 2) return;
-    board[midY-1]?.[midX-1] = WHITE;
-    board[midY]?.[midX] = WHITE;
-    board[midY-1]?.[midX] = BLACK;
-    board[midY]?.[midX-1] = BLACK;
+    const upperRow = board[midY - 1];
+    const lowerRow = board[midY];
+
+    if (upperRow){
+      if (midX - 1 >= 0 && midX - 1 < upperRow.length) upperRow[midX - 1] = WHITE;
+      if (midX >= 0 && midX < upperRow.length) upperRow[midX] = BLACK;
+    }
+
+    if (lowerRow){
+      if (midX >= 0 && midX < lowerRow.length) lowerRow[midX] = WHITE;
+      if (midX - 1 >= 0 && midX - 1 < lowerRow.length) lowerRow[midX - 1] = BLACK;
+    }
   }
 
   function placeRandomWalls(board, count){

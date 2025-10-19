@@ -14572,18 +14572,41 @@
         }
       },
       "exothello": {
+        "title": "拡張オセロ",
+        "subtitle": "好みのルールを組み合わせて戦略的なオセロ勝負に挑戦しよう。",
         "controls": {
+          "sectionTitle": "対局設定",
+          "sectionDescription": "モードと盤面、勝利条件を整えてから開始してください。",
           "mode": "モード",
           "size": "盤面サイズ",
           "victoryLabel": "勝利条件",
           "victoryMost": "石が多い方が勝ち",
           "victoryLeast": "石が少ない方が勝ち",
+          "playerColor": "手番",
+          "playerBlack": "先手 (黒) を担当",
+          "playerWhite": "後手 (白) を担当",
           "difficultyLabel": "難易度",
           "difficultyEasy": "かんたん",
           "difficultyNormal": "ふつう",
           "difficultyHard": "むずかしい",
           "start": "ゲーム開始",
           "reset": "リセット"
+        },
+        "sandbox": {
+          "modeLabel": "サンドボックスモード",
+          "edit": "盤面を編集",
+          "play": "テスト対局",
+          "paletteLabel": "ペイントツール",
+          "tool": {
+            "empty": "消しゴム",
+            "black": "黒石",
+            "white": "白石",
+            "wall": "壁"
+          }
+        },
+        "color": {
+          "black": "黒",
+          "white": "白"
         },
         "modes": {
           "normal": "壁なしの基本オセロ。盤面サイズを自由に設定できます。",
@@ -14613,6 +14636,7 @@
         "turn": {
           "player": "あなたの番",
           "ai": "AI思考中",
+          "waiting": "待機中",
           "ended": "対局終了"
         },
         "victoryCondition": {
@@ -14622,6 +14646,11 @@
         "counts": {
           "black": "黒: ${0}",
           "white": "白: ${0}"
+        },
+        "info": {
+          "player": "あなた (${color}): ${count}",
+          "ai": "AI (${color}): ${count}",
+          "totals": "合計 — 黒: ${black}、白: ${white}"
         },
         "result": {
           "win": "勝利！",

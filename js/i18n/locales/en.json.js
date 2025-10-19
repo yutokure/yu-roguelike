@@ -15406,6 +15406,95 @@
     },
     "miniexp": {
       "games": {
+        "exothello": {
+          "name": "Ex-Othello",
+          "description": "Experiment with variable board sizes, walls, and alternate win conditions.",
+          "title": "Ex-Othello",
+          "subtitle": "Mix unique boards, walls, and victory goals for a fresh take on Reversi.",
+          "controls": {
+            "sectionTitle": "Match setup",
+            "sectionDescription": "Choose a mode, adjust the board, and decide the win rule before you begin.",
+            "mode": "Mode",
+            "size": "Board size",
+            "victoryLabel": "Victory",
+            "victoryMost": "Most discs wins",
+            "victoryLeast": "Fewest discs wins",
+            "playerColor": "Turn order",
+            "playerBlack": "Play Black (First)",
+            "playerWhite": "Play White (Second)",
+            "difficultyLabel": "Difficulty",
+            "difficultyEasy": "Easy",
+            "difficultyNormal": "Normal",
+            "difficultyHard": "Hard",
+            "start": "Start Game",
+            "reset": "Reset"
+          },
+          "sandbox": {
+            "modeLabel": "Sandbox modes",
+            "edit": "Edit board",
+            "play": "Play test",
+            "paletteLabel": "Paint tools",
+            "tool": {
+              "empty": "Erase",
+              "black": "Black stone",
+              "white": "White stone",
+              "wall": "Wall"
+            }
+          },
+          "color": {
+            "black": "Black",
+            "white": "White"
+          },
+          "modes": {
+            "normal": "Standard Reversi without walls. Configure the board freely.",
+            "normal.short": "Normal",
+            "cornerWalls": "Corner squares are blocked by walls. Pick your board size.",
+            "cornerWalls.short": "Corner walls",
+            "least": "Misère Reversi where the player with fewer discs wins.",
+            "least.short": "Misère",
+            "river": "A 64×32 river map shaped by stone walls.",
+            "river.short": "River 64×32",
+            "sandbox": "Sandbox editor. Place stones and walls before starting.",
+            "sandbox.short": "Sandbox",
+            "dungeon": "Generate maze-like arenas via the dungeon API or random walls.",
+            "dungeon.short": "Dungeon"
+          },
+          "status": {
+            "ready": "Choose a mode and press Start.",
+            "preparing": "Preparing board...",
+            "sandboxHint": "Sandbox: click cells to cycle Empty → Black → White → Wall, then press Start.",
+            "sandboxEditing": "Sandbox editing enabled. Click cells and press Start when finished.",
+            "error": "Failed to prepare the board.",
+            "invalidSandbox": "No legal moves for either side. Adjust the layout.",
+            "continue": "Game in progress.",
+            "pass": "No legal moves. Turn passes to the AI.",
+            "reset": "Select a mode to begin."
+          },
+          "turn": {
+            "player": "Your turn",
+            "ai": "AI thinking",
+            "waiting": "Waiting",
+            "ended": "Game over"
+          },
+          "victoryCondition": {
+            "most": "Most discs wins",
+            "least": "Fewest discs wins"
+          },
+          "counts": {
+            "black": "Black: ${0}",
+            "white": "White: ${0}"
+          },
+          "info": {
+            "player": "You (${color}): ${count}",
+            "ai": "AI (${color}): ${count}",
+            "totals": "Totals — Black: ${black}, White: ${white}"
+          },
+          "result": {
+            "win": "You win!",
+            "draw": "Draw",
+            "lose": "You lose..."
+          }
+        },
         "tosochu": {
           "ui": {
             "timer": "Time Left {seconds}s",

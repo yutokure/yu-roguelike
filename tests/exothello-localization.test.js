@@ -27,10 +27,25 @@ assert.equal(exothello.color.black, '黒');
 assert.equal(exothello.turn.player, 'あなたの番');
 assert.equal(exothello.sandbox.tool.wall, '壁');
 
+assert.equal(exothelloEn.title, 'Ex-Othello');
+assert.equal(exothelloEn.subtitle, 'Mix unique boards, walls, and victory goals for a fresh take on Reversi.');
 assert.equal(exothelloEn.controls.start, 'Start Game');
+assert.equal(exothelloEn.controls.sectionTitle, 'Match setup');
+assert.equal(
+  exothelloEn.controls.sectionDescription,
+  'Choose a mode, adjust the board, and decide the win rule before you begin.'
+);
+assert.equal(exothelloEn.controls.playerColor, 'Turn order');
 assert.equal(exothelloEn.status.preparing, 'Preparing board...');
+assert.equal(
+  exothelloEn.status.sandboxHint,
+  'Sandbox: click cells to cycle Empty → Black → White → Wall, then press Start.'
+);
 assert.equal(exothelloEn.result.win, 'You win!');
 assert.equal(exothelloEn.turn.player, 'Your turn');
+assert.equal(exothelloEn.turn.waiting, 'Waiting');
+assert.equal(exothelloEn.sandbox.tool.wall, 'Wall');
+assert.equal(exothelloEn.info.totals, 'Totals — Black: ${black}, White: ${white}');
 
 console.log('Ex-Othello Japanese localization is configured for MiniExp.');
 console.log('Ex-Othello English localization is linked to MiniExp.');

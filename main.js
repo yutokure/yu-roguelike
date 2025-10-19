@@ -19013,17 +19013,37 @@ function createMiniGameLocalization(def) {
         return candidates;
     };
 
-    const computeFallback = (fallbackText) => {
+    const computeFallback = (fallbackText, params) => {
         if (typeof fallbackText === 'function') {
             try {
-                const result = fallbackText();
-                return typeof result === 'string' ? result : (result ?? '');
+                const result = fallbackText(params || {});
+                if (result == null) return '';
+                return typeof result === 'string' ? result : String(result);
             } catch (error) {
                 console.warn('[MiniExp] Mini game fallback text error:', error);
                 return '';
             }
         }
-        return fallbackText ?? '';
+        if (fallbackText == null) {
+            return '';
+        }
+        if (typeof fallbackText !== 'string') {
+            try {
+                return String(fallbackText);
+            } catch (error) {
+                console.warn('[MiniExp] Mini game fallback stringify error:', error);
+                return '';
+            }
+        }
+        if (!params || typeof params !== 'object') {
+            return fallbackText;
+        }
+        return fallbackText.replace(/\$\{([^{}]+)\}/g, (match, token) => {
+            const key = token.trim();
+            if (!key) return match;
+            const value = params[key];
+            return value === undefined || value === null ? match : String(value);
+        });
     };
 
     const translateText = (key, fallbackText, params) => {
@@ -19040,7 +19060,7 @@ function createMiniGameLocalization(def) {
                 }
             }
         }
-        return computeFallback(fallbackText);
+        return computeFallback(fallbackText, params);
     };
 
     const handleLocaleChange = (listener) => {

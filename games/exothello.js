@@ -658,7 +658,42 @@
     return counts;
   }
 
-  function createWeights(width, height){
+  function countWallNeighbors(board, x, y){
+    let count = 0;
+    for (const [dx, dy] of DIRS){
+      const nx = x + dx;
+      const ny = y + dy;
+      if (ny < 0 || ny >= board.length || nx < 0 || nx >= board[0].length){
+        count++;
+        continue;
+      }
+      if (board[ny][nx] === WALL){
+        count++;
+      }
+    }
+    return count;
+  }
+
+  function stabilityScore(board, x, y, color){
+    let score = 0;
+    for (const [dx, dy] of DIRS){
+      const nx = x + dx;
+      const ny = y + dy;
+      if (ny < 0 || ny >= board.length || nx < 0 || nx >= board[0].length){
+        score += 0.5;
+        continue;
+      }
+      const cell = board[ny][nx];
+      if (cell === color){
+        score += 0.75;
+      } else if (cell === WALL){
+        score += 0.5;
+      }
+    }
+    return score;
+  }
+
+  function createWeights(width, height, board){
     const weights = Array.from({ length: height }, () => Array(width).fill(4));
     const maxEdge = Math.max(width, height);
     const edgeBonus = Math.max(6, Math.floor(maxEdge / 3));
@@ -679,6 +714,12 @@
         if (minDistX <= 1 && minDistY <= 1 && dist === 0){
           value -= Math.floor(edgeBonus / 2);
         }
+        if (board && board[y] && board[y][x] === WALL){
+          value = -Infinity;
+        } else if (board){
+          const walls = countWallNeighbors(board, x, y);
+          value += walls * 2;
+        }
         weights[y][x] = value;
       }
     }
@@ -686,29 +727,66 @@
   }
 
   function evaluateBoard(board, weights, victoryCondition){
-    const counts = { black: 0, white: 0 };
     let score = 0;
+    let whiteCount = 0;
+    let blackCount = 0;
+    let whiteStability = 0;
+    let blackStability = 0;
+    const ruleSign = victoryCondition === 'least' ? -1 : 1;
     for (let y = 0; y < board.length; y++){
       for (let x = 0; x < board[0].length; x++){
         const cell = board[y][x];
         if (cell === WHITE){
-          score += weights[y][x];
-          counts.white++;
+          const weight = weights?.[y]?.[x] ?? 0;
+          score += ruleSign * weight;
+          whiteCount++;
+          whiteStability += stabilityScore(board, x, y, WHITE);
         } else if (cell === BLACK){
-          score -= weights[y][x];
-          counts.black++;
+          const weight = weights?.[y]?.[x] ?? 0;
+          score -= ruleSign * weight;
+          blackCount++;
+          blackStability += stabilityScore(board, x, y, BLACK);
         }
       }
     }
-    const diff = counts.white - counts.black;
-    const diffWeight = victoryCondition === 'least' ? -3 : 3;
-    score += diff * diffWeight;
+    const mobilityWhite = legalMoves(board, WHITE).length;
+    const mobilityBlack = legalMoves(board, BLACK).length;
+    const countDiff = (whiteCount - blackCount) * ruleSign * 6;
+    const mobilityDiff = (mobilityWhite - mobilityBlack) * 3;
+    const stabilityDiff = (whiteStability - blackStability) * ruleSign * 1.5;
+    score += countDiff + mobilityDiff + stabilityDiff;
     return score;
   }
 
   function evaluateBoardForColor(board, weights, victoryCondition, color){
     const baseScore = evaluateBoard(board, weights, victoryCondition);
     return color === WHITE ? baseScore : -baseScore;
+  }
+
+  function compareScores(playerScore, opponentScore, victoryCondition){
+    if (victoryCondition === 'least'){
+      if (playerScore < opponentScore) return 1;
+      if (playerScore > opponentScore) return -1;
+      return 0;
+    }
+    if (playerScore > opponentScore) return 1;
+    if (playerScore < opponentScore) return -1;
+    return 0;
+  }
+
+  function evaluateMoveHeuristic(board, move, color, victoryCondition, weights){
+    const next = cloneBoard(board);
+    applyMove(next, move, color);
+    const ruleSign = victoryCondition === 'least' ? -1 : 1;
+    const cellWeight = weights?.[move.y]?.[move.x] ?? 0;
+    const flips = move.flips.length;
+    const wallInfluence = countWallNeighbors(board, move.x, move.y);
+    const mobilityAfter = legalMoves(next, color).length - legalMoves(next, -color).length;
+    const positionalScore = cellWeight * ruleSign;
+    const flipWeight = victoryCondition === 'least' ? -4 : 4;
+    const mobilityScore = mobilityAfter * 2;
+    const wallScore = wallInfluence;
+    return positionalScore + flips * flipWeight + mobilityScore + wallScore;
   }
 
   function cloneBoard(board){
@@ -754,18 +832,45 @@
   function pickAIMove(board, weights, victoryCondition, difficulty, aiColor){
     const moves = legalMoves(board, aiColor);
     if (moves.length === 0) return null;
+    const scored = moves.map(move => ({
+      move,
+      score: evaluateMoveHeuristic(board, move, aiColor, victoryCondition, weights)
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    if (difficulty === 'EASY'){
+      const candidateCount = Math.max(1, Math.ceil(scored.length / 3));
+      const candidates = scored.slice(0, candidateCount);
+      const minScore = candidates.reduce((min, entry) => Math.min(min, entry.score), Infinity);
+      const weights = candidates.map(entry => {
+        if (!Number.isFinite(entry.score) || !Number.isFinite(minScore)) return 1;
+        const normalized = entry.score - minScore;
+        return Math.max(1, Math.floor(normalized) + 1);
+      });
+      const total = weights.reduce((sum, value) => sum + value, 0) || 1;
+      let roll = Math.random() * total;
+      for (let i = 0; i < candidates.length; i++){
+        const entry = candidates[i];
+        const weight = weights[i] || 1;
+        if ((roll -= weight) <= 0){
+          return entry.move;
+        }
+      }
+      return candidates[0].move;
+    }
     const maxDim = Math.max(board.length, board[0].length);
-    const baseDepth = difficulty === 'HARD' ? 3 : difficulty === 'NORMAL' ? 2 : 1;
-    const depth = Math.max(1, Math.min(baseDepth, Math.floor(12 / Math.log2(maxDim + 2))));
-    let bestMove = moves[0];
+    const depthBoost = difficulty === 'HARD' ? 1 : 0;
+    const baseDepth = difficulty === 'HARD' ? 4 : 2;
+    const depth = Math.max(1, Math.min(baseDepth + depthBoost, Math.floor(14 / Math.log2(maxDim + 2))));
+    let bestMove = scored[0].move;
     let bestScore = -Infinity;
-    for (const mv of moves){
+    for (const { move, score: heuristicScore } of scored){
       const next = cloneBoard(board);
-      applyMove(next, mv, aiColor);
-      const score = minimax(next, depth - 1, -aiColor, aiColor, weights, victoryCondition, -Infinity, Infinity);
-      if (score > bestScore){
-        bestScore = score;
-        bestMove = mv;
+      applyMove(next, move, aiColor);
+      const lookahead = minimax(next, depth - 1, -aiColor, aiColor, weights, victoryCondition, -Infinity, Infinity);
+      const combined = lookahead + heuristicScore * 0.05;
+      if (combined > bestScore){
+        bestScore = combined;
+        bestMove = move;
       }
     }
     return bestMove;
@@ -995,10 +1100,12 @@
       });
     }
 
+    const initialBoard = createBoard(8, 8, EMPTY);
+
     const state = {
       opts,
-      board: createBoard(8, 8, EMPTY),
-      weights: createWeights(8, 8),
+      board: initialBoard,
+      weights: createWeights(8, 8, initialBoard),
       turn: BLACK,
       running: false,
       ended: false,
@@ -1088,6 +1195,7 @@
       state.difficulty = difficultySelect.value;
       state.settings.width = state.board[0].length;
       state.settings.height = state.board.length;
+      state.weights = createWeights(state.board[0].length, state.board.length, state.board);
       state.turn = state.playerColor;
       state.isPainting = false;
       updateSandboxControls();
@@ -1397,24 +1505,21 @@
         const counts = countPieces(state.board);
         const playerScore = state.playerColor === BLACK ? counts.black : counts.white;
         const aiScore = state.aiColor === BLACK ? counts.black : counts.white;
-        let playerWins;
-        if (state.victory === 'least'){
-          playerWins = playerScore < aiScore;
-        } else {
-          playerWins = playerScore > aiScore;
-        }
+        const comparison = compareScores(playerScore, aiScore, state.victory);
+        const playerWins = comparison > 0;
+        const isDraw = comparison === 0;
         const resultKey = playerWins
           ? 'miniexp.games.exothello.result.win'
-          : playerScore === aiScore
+          : isDraw
             ? 'miniexp.games.exothello.result.draw'
             : 'miniexp.games.exothello.result.lose';
-        setStatus(resultKey, playerWins ? 'You win!' : playerScore === aiScore ? 'Draw' : 'You lose');
+        setStatus(resultKey, playerWins ? 'You win!' : isDraw ? 'Draw' : 'You lose');
         const baseXp = Math.max(80, Math.floor(state.board.length * state.board[0].length / 4));
         const difficultyBonus = state.difficulty === 'HARD' ? 2 : state.difficulty === 'NORMAL' ? 1.4 : 1;
         const victoryBonus = state.victory === 'least' ? 1.5 : 1;
         if (playerWins){
           awardXp(Math.floor(baseXp * difficultyBonus * victoryBonus), { reason: 'win', gameId: 'exothello', mode: state.modeId });
-        } else if (playerScore === aiScore){
+        } else if (isDraw){
           awardXp(Math.floor(baseXp * 0.3), { reason: 'draw', gameId: 'exothello', mode: state.modeId });
         }
         resetButton.disabled = false;
@@ -1455,7 +1560,7 @@
         const setupResult = await mode.setup(state);
         state.board = setupResult.board;
         state.victory = setupResult.victory || state.settings.victory || 'most';
-        state.weights = createWeights(state.board[0].length, state.board.length);
+        state.weights = createWeights(state.board[0].length, state.board.length, state.board);
         state.turn = BLACK;
         state.lastMove = null;
         state.ended = false;
@@ -1495,7 +1600,7 @@
       state.ended = false;
       state.board = createBoard(8, 8, EMPTY);
       placeStandardOpening(state.board);
-      state.weights = createWeights(8, 8);
+      state.weights = createWeights(8, 8, state.board);
       state.turn = BLACK;
       state.victory = 'most';
       state.lastMove = null;

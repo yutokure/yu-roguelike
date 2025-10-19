@@ -509,6 +509,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['utility']
   },
   {
+    id: 'random_tool',
+    name: 'ランダムツール',
+    nameKey: 'selection.miniexp.games.random_tool.name',
+    entry: 'games/random_tool.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'サイコロ・ルーレット・ランダム選択・乱数/文字列生成を備えたユーティリティ',
+    descriptionKey: 'selection.miniexp.games.random_tool.description',
+    category: 'ユーティリティ',
+    categories: ['ユーティリティ'],
+    categoryIds: ['utility']
+  },
+  {
     id: 'notepad',
     name: 'メモ帳',
     nameKey: 'selection.miniexp.games.notepad.name',

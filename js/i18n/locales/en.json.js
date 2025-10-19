@@ -891,6 +891,10 @@
             "name": "Counter Pad",
             "description": "Track numbers with multi-counter buttons that auto-save your adjustments."
           },
+          "random_tool": {
+            "name": "Random Toolkit",
+            "description": "Utility hub combining dice rolls, roulette spins, list picker, and number/text generators."
+          },
           "notepad": {
             "name": "Notepad",
             "description": "Write, edit, and save notes to earn incremental EXP."
@@ -13769,6 +13773,78 @@
         },
         "alerts": {
           "limitReached": "Cannot add more counters (limit {max})"
+        }
+      },
+      "random_tool": {
+        "title": "Random Toolkit",
+        "subtitle": "Convenient hub bundling dice rolls, roulette spins, list picker, and number/text generators.",
+        "tabs": {
+          "dice": "Dice",
+          "roulette": "Roulette",
+          "choice": "Random Picker",
+          "text": "Random Text",
+          "number": "Number Draw"
+        },
+        "dice": {
+          "countLabel": "Number of dice",
+          "roll": "Roll dice",
+          "placeholder": "Roll to see the results.",
+          "summary": "Results: <strong>{values}</strong>",
+          "total": "Total <strong>{total}</strong>",
+          "xp": "+{xp} EXP earned!"
+        },
+        "roulette": {
+          "spin": "Spin roulette",
+          "spinning": "Spinning…",
+          "placeholder": "Set names and EXP, then spin the wheel.",
+          "addSegment": "Add segment",
+          "namePlaceholder": "Name",
+          "xpPlaceholder": "EXP",
+          "removeSegment": "Remove this segment",
+          "noSegments": "Please add at least one segment.",
+          "defaultName": "EXP100",
+          "result": "Result: <strong>{name}</strong>",
+          "xp": "+{xp} EXP earned!"
+        },
+        "choice": {
+          "placeholder": "Enter options, one per line",
+          "pick": "Pick randomly",
+          "resultPlaceholder": "Press the button to pick an entry.",
+          "empty": "No options available. Add some above.",
+          "result": "Picked: <strong>{choice}</strong>"
+        },
+        "text": {
+          "lengthLabel": "Length",
+          "charactersTitle": "Character sets",
+          "additionalOptions": "Additional options",
+          "lowercase": "Lowercase (a-z)",
+          "uppercase": "Uppercase (A-Z)",
+          "numbers": "Numbers (0-9)",
+          "symbols": "Symbols (!@# etc.)",
+          "includeSpaces": "Include spaces (text generation only)",
+          "allowAmbiguous": "Include ambiguous characters (O/0/I/1/| etc.)",
+          "customLabel": "Custom characters",
+          "customPlaceholder": "Add extra characters",
+          "customHelper": "Duplicates are removed automatically. Up to 200 characters.",
+          "generatePassword": "Generate password",
+          "generateText": "Generate text",
+          "resultHeading": "Result",
+          "passwordLabel": "Password result",
+          "textLabel": "Text result",
+          "placeholder": "Generated strings will appear here.",
+          "copy": "Copy",
+          "errorNoCharset": "Select at least one character set.",
+          "errorLength": "Length must be at least {min} for the selected sets.",
+          "copied": "Copied to clipboard!",
+          "copyFailed": "Failed to copy."
+        },
+        "number": {
+          "minLabel": "Minimum",
+          "maxLabel": "Maximum",
+          "generate": "Generate",
+          "placeholder": "Set the range and generate a number.",
+          "invalid": "The range is invalid.",
+          "result": "Result: <strong>{value}</strong>"
         }
       },
       "calculator": {

@@ -887,6 +887,10 @@
             "name": "计数器垫",
             "description": "通过自动保存调整的多计数器按钮跟踪数字。"
           },
+          "random_tool": {
+            "name": "随机工具箱",
+            "description": "集合骰子、轮盘、列表抽取以及数字/文本生成的便利工具。"
+          },
           "notepad": {
             "name": "记事本",
             "description": "编写、编辑和保存笔记以赚取增量经验。"
@@ -4282,6 +4286,78 @@
         },
         "alerts": {
           "limitReached": "无法添加更多指示物（限制{max}）"
+        }
+      },
+      "random_tool": {
+        "title": "随机工具箱",
+        "subtitle": "将掷骰子、轮盘、列表抽选以及随机数字/文本生成整合为一体的实用工具。",
+        "tabs": {
+          "dice": "骰子",
+          "roulette": "轮盘",
+          "choice": "随机选择",
+          "text": "随机文本",
+          "number": "随机数字"
+        },
+        "dice": {
+          "countLabel": "骰子数量",
+          "roll": "掷骰子",
+          "placeholder": "掷骰子后会显示结果。",
+          "summary": "结果：<strong>{values}</strong>",
+          "total": "合计 <strong>{total}</strong>",
+          "xp": "+{xp} EXP 获得！"
+        },
+        "roulette": {
+          "spin": "旋转轮盘",
+          "spinning": "旋转中…",
+          "placeholder": "设置名称和经验值，然后旋转轮盘。",
+          "addSegment": "添加区块",
+          "namePlaceholder": "名称",
+          "xpPlaceholder": "EXP",
+          "removeSegment": "删除此区块",
+          "noSegments": "请先添加至少一个区块。",
+          "defaultName": "EXP100",
+          "result": "结果：<strong>{name}</strong>",
+          "xp": "+{xp} EXP 获得！"
+        },
+        "choice": {
+          "placeholder": "每行输入一个选项",
+          "pick": "随机选择",
+          "resultPlaceholder": "按下按钮即可抽选结果。",
+          "empty": "没有选项，请先添加。",
+          "result": "抽选结果：<strong>{choice}</strong>"
+        },
+        "text": {
+          "lengthLabel": "长度",
+          "charactersTitle": "字符集合",
+          "additionalOptions": "更多选项",
+          "lowercase": "小写字母 (a-z)",
+          "uppercase": "大写字母 (A-Z)",
+          "numbers": "数字 (0-9)",
+          "symbols": "符号 (!@# 等)",
+          "includeSpaces": "包含空格（仅用于文本生成）",
+          "allowAmbiguous": "包含易混淆字符（O/0/I/1/| 等）",
+          "customLabel": "自定义字符",
+          "customPlaceholder": "添加额外字符",
+          "customHelper": "重复字符会自动移除，最多 200 个。",
+          "generatePassword": "生成密码",
+          "generateText": "生成文本",
+          "resultHeading": "生成结果",
+          "passwordLabel": "密码生成结果",
+          "textLabel": "文本生成结果",
+          "placeholder": "生成的字符串会显示在这里。",
+          "copy": "复制",
+          "errorNoCharset": "请至少选择一个字符集合。",
+          "errorLength": "所选字符集合至少需要 {min} 个字符长度。",
+          "copied": "已复制到剪贴板！",
+          "copyFailed": "复制失败。"
+        },
+        "number": {
+          "minLabel": "最小值",
+          "maxLabel": "最大值",
+          "generate": "生成数字",
+          "placeholder": "设置范围后生成随机数字。",
+          "invalid": "范围无效。",
+          "result": "结果：<strong>{value}</strong>"
         }
       },
       "calculator": {

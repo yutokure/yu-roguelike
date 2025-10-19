@@ -569,6 +569,10 @@
             "name": "オセロ",
             "description": "ひっくり返し×0.5EXP＋勝利ボーナス"
           },
+          "exothello": {
+            "name": "拡張オセロ",
+            "description": "盤面サイズや壁、勝利条件を自由に切り替えられる拡張オセロ"
+          },
           "othello_weak": {
             "name": "最弱オセロ",
             "description": "石が少ないほど勝ち。難易度が高いほどAIがわざと悪手を選びます"
@@ -14489,6 +14493,64 @@
         },
         "popup": {
           "movePreview": "{flips}枚 / 予想+{xp}EXP"
+        }
+      },
+      "exothello": {
+        "controls": {
+          "mode": "モード",
+          "size": "盤面サイズ",
+          "victoryLabel": "勝利条件",
+          "victoryMost": "石が多い方が勝ち",
+          "victoryLeast": "石が少ない方が勝ち",
+          "difficultyLabel": "難易度",
+          "difficultyEasy": "かんたん",
+          "difficultyNormal": "ふつう",
+          "difficultyHard": "むずかしい",
+          "start": "ゲーム開始",
+          "reset": "リセット"
+        },
+        "modes": {
+          "normal": "壁なしの基本オセロ。盤面サイズを自由に設定できます。",
+          "normal.short": "通常",
+          "cornerWalls": "四隅が壁で塞がれた変則盤。サイズを選べます。",
+          "cornerWalls.short": "四隅壁",
+          "least": "石が少ない方が勝つ最弱ルールです。",
+          "least.short": "最弱",
+          "river": "64×32の川マップ。岸は壁で塞がれています。",
+          "river.short": "川マップ",
+          "sandbox": "サンドボックス。開始前に石と壁を自由に配置できます。",
+          "sandbox.short": "サンドボックス",
+          "dungeon": "ダンジョンAPIやランダム壁で迷路状の盤面を生成します。",
+          "dungeon.short": "ダンジョン"
+        },
+        "status": {
+          "ready": "モードを選んでスタートを押してください。",
+          "preparing": "盤面を準備中...",
+          "sandboxHint": "サンドボックス: セルをクリックすると 空→黒→白→壁 の順に切り替わります。準備できたらスタート。",
+          "sandboxEditing": "サンドボックス編集中。配置が完了したらスタートを押してください。",
+          "error": "盤面の準備に失敗しました。",
+          "invalidSandbox": "両者とも合法手がありません。配置を調整してください。",
+          "continue": "対局中です。",
+          "pass": "合法手がないためパスします。",
+          "reset": "モードを選択してください。"
+        },
+        "turn": {
+          "player": "あなたの番",
+          "ai": "AI思考中",
+          "ended": "対局終了"
+        },
+        "victoryCondition": {
+          "most": "石が多い方が勝ち",
+          "least": "石が少ない方が勝ち"
+        },
+        "counts": {
+          "black": "黒: ${0}",
+          "white": "白: ${0}"
+        },
+        "result": {
+          "win": "勝利！",
+          "draw": "引き分け",
+          "lose": "敗北..."
         }
       },
       "othello_weak": {

@@ -567,6 +567,10 @@
             "name": "Othello",
             "description": "Flip discs to swing the board and win for bonus EXP."
           },
+          "exothello": {
+            "name": "Ex-Othello",
+            "description": "Experiment with variable board sizes, walls, and alternate win conditions."
+          },
           "othello_weak": {
             "name": "Weakest Othello",
             "description": "A misère twist where fewer discs win and higher difficulties make the AI blunder on purpose."
@@ -14483,6 +14487,64 @@
         },
         "popup": {
           "movePreview": "{flips} flips / approx +{xp} EXP"
+        }
+      },
+      "exothello": {
+        "controls": {
+          "mode": "Mode",
+          "size": "Board size",
+          "victoryLabel": "Victory rule",
+          "victoryMost": "Most discs wins",
+          "victoryLeast": "Fewest discs wins",
+          "difficultyLabel": "Difficulty",
+          "difficultyEasy": "Easy",
+          "difficultyNormal": "Normal",
+          "difficultyHard": "Hard",
+          "start": "Start Game",
+          "reset": "Reset"
+        },
+        "modes": {
+          "normal": "Standard Reversi without walls. Configure the board size freely.",
+          "normal.short": "Normal",
+          "cornerWalls": "Corner squares are blocked by walls. Specify the board size.",
+          "cornerWalls.short": "Corner walls",
+          "least": "Misère Reversi where the player with fewer discs wins.",
+          "least.short": "Misère",
+          "river": "A 64×32 river map with walls shaping the banks.",
+          "river.short": "River 64×32",
+          "sandbox": "Sandbox editor. Place stones and walls before starting.",
+          "sandbox.short": "Sandbox",
+          "dungeon": "Generate irregular arenas via the dungeon API or random walls.",
+          "dungeon.short": "Dungeon"
+        },
+        "status": {
+          "ready": "Choose a mode and press Start.",
+          "preparing": "Preparing board...",
+          "sandboxHint": "Sandbox: click cells to cycle Empty → Black → White → Wall, then press Start.",
+          "sandboxEditing": "Sandbox editing enabled. Click cells and press Start to begin.",
+          "error": "Failed to prepare the board.",
+          "invalidSandbox": "No legal moves for either side. Adjust the layout.",
+          "continue": "Game in progress.",
+          "pass": "You have no valid moves. Turn passes to the AI.",
+          "reset": "Select a mode to begin."
+        },
+        "turn": {
+          "player": "Your turn",
+          "ai": "AI thinking",
+          "ended": "Game over"
+        },
+        "victoryCondition": {
+          "most": "Most discs wins",
+          "least": "Fewest discs wins"
+        },
+        "counts": {
+          "black": "Black: ${0}",
+          "white": "White: ${0}"
+        },
+        "result": {
+          "win": "You win!",
+          "draw": "Draw",
+          "lose": "You lose..."
         }
       },
       "othello_weak": {

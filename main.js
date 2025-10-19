@@ -5,6 +5,44 @@ if (!i18n) {
 }
 
 const translate = (key, params) => i18n.t(key, params);
+
+function formatTemplateString(template, params) {
+    if (template == null) {
+        return '';
+    }
+    if (typeof template !== 'string') {
+        try {
+            return String(template);
+        } catch (error) {
+            console.warn('[i18n] Failed to stringify template value:', error);
+            return '';
+        }
+    }
+    if (!params || typeof params !== 'object') {
+        return template;
+    }
+    const readParam = (token) => {
+        const key = token.trim();
+        if (!key) return undefined;
+        if (Array.isArray(params)) {
+            const index = Number(key);
+            if (Number.isInteger(index) && index >= 0 && index < params.length) {
+                return params[index];
+            }
+        }
+        if (key === '0' && Object.prototype.hasOwnProperty.call(params, 'value')) {
+            return params.value;
+        }
+        if (Object.prototype.hasOwnProperty.call(params, key)) {
+            return params[key];
+        }
+        return undefined;
+    };
+    return template.replace(/\$\{([^{}]+)\}/g, (match, token) => {
+        const value = readParam(token);
+        return value === undefined || value === null ? match : String(value);
+    });
+}
 const formatNumberLocalized = (value, options) => {
     if (typeof i18n?.formatNumber === 'function') {
         return i18n.formatNumber(value, options);
@@ -62,20 +100,20 @@ function translateOrFallback(key, fallbackText, params) {
     const computeFallback = () => {
         if (typeof fallbackText === 'function') {
             try {
-                const result = fallbackText();
-                return typeof result === 'string' ? result : (result ?? '');
+                const result = fallbackText(params || {});
+                return formatTemplateString(result, params);
             } catch (error) {
                 console.warn('[i18n] Failed to evaluate fallback text:', error);
                 return '';
             }
         }
-        return fallbackText ?? '';
+        return formatTemplateString(fallbackText, params);
     };
     if (!i18n || typeof i18n.t !== 'function') return computeFallback();
     try {
         const translated = translate(key, params);
         if (typeof translated === 'string' && translated !== key) {
-            return translated;
+            return formatTemplateString(translated, params);
         }
     } catch (error) {
         console.warn('[i18n] Failed to translate key:', key, error);
@@ -88,9 +126,14 @@ function resolveLocalizedText(key, fallbackText, params) {
         return translateOrFallback(key, fallbackText, params);
     }
     if (typeof fallbackText === 'function') {
-        return fallbackText();
+        try {
+            return formatTemplateString(fallbackText(params || {}), params);
+        } catch (error) {
+            console.warn('[i18n] Failed to evaluate inline fallback text:', error);
+            return '';
+        }
     }
-    return fallbackText ?? '';
+    return formatTemplateString(fallbackText, params);
 }
 
 function formatCountLabel(count) {
@@ -19013,17 +19056,20 @@ function createMiniGameLocalization(def) {
         return candidates;
     };
 
-    const computeFallback = (fallbackText) => {
+    const computeFallback = (fallbackText, params) => {
         if (typeof fallbackText === 'function') {
             try {
-                const result = fallbackText();
-                return typeof result === 'string' ? result : (result ?? '');
+                const result = fallbackText(params || {});
+                return formatTemplateString(result, params);
             } catch (error) {
                 console.warn('[MiniExp] Mini game fallback text error:', error);
                 return '';
             }
         }
-        return fallbackText ?? '';
+        if (fallbackText == null) {
+            return '';
+        }
+        return formatTemplateString(fallbackText, params);
     };
 
     const translateText = (key, fallbackText, params) => {
@@ -19033,14 +19079,14 @@ function createMiniGameLocalization(def) {
                 try {
                     const translated = i18n.t(candidate, params);
                     if (typeof translated === 'string' && translated !== candidate) {
-                        return translated;
+                        return formatTemplateString(translated, params);
                     }
                 } catch (error) {
                     console.warn('[MiniExp] Mini game translation failed for key:', candidate, error);
                 }
             }
         }
-        return computeFallback(fallbackText);
+        return computeFallback(fallbackText, params);
     };
 
     const handleLocaleChange = (listener) => {

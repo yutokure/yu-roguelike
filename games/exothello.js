@@ -778,15 +778,14 @@
     const next = cloneBoard(board);
     applyMove(next, move, color);
     const ruleSign = victoryCondition === 'least' ? -1 : 1;
-    const orientation = color === WHITE ? 1 : -1;
     const cellWeight = weights?.[move.y]?.[move.x] ?? 0;
     const flips = move.flips.length;
     const wallInfluence = countWallNeighbors(board, move.x, move.y);
     const mobilityAfter = legalMoves(next, color).length - legalMoves(next, -color).length;
-    const positionalScore = cellWeight * ruleSign * orientation;
-    const flipWeight = (victoryCondition === 'least' ? -4 : 4) * orientation;
+    const positionalScore = cellWeight * ruleSign;
+    const flipWeight = victoryCondition === 'least' ? -4 : 4;
     const mobilityScore = mobilityAfter * 2;
-    const wallScore = wallInfluence * orientation;
+    const wallScore = wallInfluence;
     return positionalScore + flips * flipWeight + mobilityScore + wallScore;
   }
 

@@ -28,6 +28,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['board']
   },
   {
+    id: 'exothello',
+    name: '拡張オセロ',
+    nameKey: 'selection.miniexp.games.exothello.name',
+    entry: 'games/exothello.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '可変サイズ・壁・特殊勝利条件を選べる拡張オセロ',
+    descriptionKey: 'selection.miniexp.games.exothello.description',
+    category: 'ボード',
+    categories: ['ボード'],
+    categoryIds: ['board']
+  },
+  {
     id: 'othello_weak',
     name: '最弱オセロ',
     nameKey: 'selection.miniexp.games.othello_weak.name',

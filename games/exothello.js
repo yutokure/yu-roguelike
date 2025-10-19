@@ -697,6 +697,7 @@
       if (moves.length === 0){
         state.turn = BLACK;
         updateLegalMoves();
+        checkEnd();
         draw();
         checkEnd();
         return;
@@ -789,6 +790,7 @@
         state.legal = [];
         resizeCanvas();
         updateLegalMoves();
+        checkEnd();
         draw();
         resetButton.disabled = false;
         if (state.sandboxEditing){
@@ -833,6 +835,7 @@
       state.turn = BLACK;
       setStatus('miniexp.games.exothello.status.continue', 'Game in progress');
       updateLegalMoves();
+      checkEnd();
       draw();
     }
 

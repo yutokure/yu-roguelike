@@ -689,6 +689,454 @@
     return Array.from({ length: height }, () => Array(width).fill(fill));
   }
 
+  // ---- Pattern-based evaluation (corners/edges with walls) ----
+  // Symbols used in pattern encoding (from the perspective of `color`):
+  // M = my disc, O = opponent disc, E = empty, W = wall/out-of-bounds
+  // Global tuning knobs (used by benchmark or advanced users)
+  const TUNING = { enablePatterns: true, patternScale: 1.0, edgeParityPrefersEven: true, edgeHeuristicScale: 1.0, avoidCornerAdjacencyStrong: true, enableOpeningBook: true };
+
+  // Structure cache keyed by static wall layout and board size.
+  const __STRUCT_CACHE = new Map();
+
+  function computeWallSignature(board){
+    let s = `${board[0].length}x${board.length}|`;
+    for (let y = 0; y < board.length; y++){
+      const row = board[y];
+      for (let x = 0; x < row.length; x++){
+        s += (row[x] === WALL ? '1' : '0');
+      }
+      s += ':';
+    }
+    return s;
+  }
+
+  function isWallOrOOB(board, x, y){
+    return (y < 0 || y >= board.length || x < 0 || x >= board[0].length) || board[y][x] === WALL;
+  }
+
+  // Detect blocks of consecutive blocked directions around a cell (for pseudo-corners)
+  function blockedRunCount(board, x, y){
+    // 8-neighborhood order clockwise starting from up
+    const dirs = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
+    let maxRun = 0;
+    let current = 0;
+    // iterate circularly twice to capture wrap-around
+    for (let i = 0; i < dirs.length * 2; i++){
+      const [dx, dy] = dirs[i % 8];
+      const blocked = isWallOrOOB(board, x + dx, y + dy);
+      if (blocked){
+        current++;
+        if (current > maxRun) maxRun = current;
+      } else {
+        current = 0;
+      }
+      if (i >= 8 && maxRun >= 8) break;
+    }
+    return maxRun;
+  }
+
+  // Analyze walls and outer boundary to identify structural corners and edges (including pseudo)
+  function analyzeBoardStructure(board){
+    const key = computeWallSignature(board);
+    const cached = __STRUCT_CACHE.get(key);
+    if (cached) return cached;
+
+    const height = board.length;
+    const width = board[0].length;
+
+    const cornersNormal = [];
+    const cornersPseudo = [];
+    const edgesNormal = [];
+    const edgesPseudo = [];
+
+    // Normal corners: four outer corners if not walls
+    const normalCornerCoords = [
+      { x: 0, y: 0 },
+      { x: width - 1, y: 0 },
+      { x: 0, y: height - 1 },
+      { x: width - 1, y: height - 1 }
+    ];
+    for (const c of normalCornerCoords){
+      if (board[c.y]?.[c.x] !== WALL){
+        cornersNormal.push(c);
+      }
+    }
+
+    // Pseudo-corners: cells where >=3 consecutive directions around are blocked by wall/OOB
+    for (let y = 0; y < height; y++){
+      for (let x = 0; x < width; x++){
+        if (board[y][x] === WALL) continue;
+        const run = blockedRunCount(board, x, y);
+        if (run >= 3){
+          cornersPseudo.push({ x, y });
+        }
+      }
+    }
+
+    // Build normal edge segments (outer boundary), split by walls
+    // Horizontal top/bottom
+    const pushSegment = (segments, cells, dir, insideDX, insideDY) => {
+      if (cells.length >= 2){
+        segments.push({ dir, cells: cells.slice(), inside: [insideDX, insideDY] });
+      }
+      cells.length = 0;
+    };
+    // Top row (inside is +y)
+    let acc = [];
+    for (let x = 0; x < width; x++){
+      if (board[0][x] !== WALL) acc.push({ x, y: 0 });
+      else pushSegment(edgesNormal, acc, 'H', 0, 1);
+    }
+    pushSegment(edgesNormal, acc, 'H', 0, 1);
+    // Bottom row (inside is -y)
+    acc = [];
+    for (let x = 0; x < width; x++){
+      if (board[height - 1][x] !== WALL) acc.push({ x, y: height - 1 });
+      else pushSegment(edgesNormal, acc, 'H', 0, -1);
+    }
+    pushSegment(edgesNormal, acc, 'H', 0, -1);
+    // Left column (inside is +x)
+    acc = [];
+    for (let y = 0; y < height; y++){
+      if (board[y][0] !== WALL) acc.push({ x: 0, y });
+      else pushSegment(edgesNormal, acc, 'V', 1, 0);
+    }
+    pushSegment(edgesNormal, acc, 'V', 1, 0);
+    // Right column (inside is -x)
+    acc = [];
+    for (let y = 0; y < height; y++){
+      if (board[y][width - 1] !== WALL) acc.push({ x: width - 1, y });
+      else pushSegment(edgesNormal, acc, 'V', -1, 0);
+    }
+    pushSegment(edgesNormal, acc, 'V', -1, 0);
+
+    // Pseudo edges: straight runs adjacent to a wall strip on one side and non-wall on the other
+    // Horizontal runs where the above or below is wall across the run
+    for (let y = 0; y < height; y++){
+      let run = [];
+      let side = null; // 'up' or 'down'
+      for (let x = 0; x < width; x++){
+        const cell = board[y][x];
+        if (cell === WALL){
+          if (run.length){
+            const insideDY = side === 'up' ? 1 : -1;
+            pushSegment(edgesPseudo, run, 'H', 0, insideDY);
+            run = [];
+            side = null;
+          }
+          continue;
+        }
+        const upBlocked = isWallOrOOB(board, x, y - 1);
+        const downBlocked = isWallOrOOB(board, x, y + 1);
+        const newSide = upBlocked && !downBlocked ? 'up' : (downBlocked && !upBlocked ? 'down' : null);
+        if (!newSide){
+          if (run.length){
+            const insideDY = side === 'up' ? 1 : -1;
+            pushSegment(edgesPseudo, run, 'H', 0, insideDY);
+            run = [];
+            side = null;
+          }
+          continue;
+        }
+        if (!run.length){
+          run.push({ x, y });
+          side = newSide;
+        } else if (side === newSide){
+          run.push({ x, y });
+        } else {
+          const insideDY = side === 'up' ? 1 : -1;
+          pushSegment(edgesPseudo, run, 'H', 0, insideDY);
+          run = [{ x, y }];
+          side = newSide;
+        }
+      }
+      if (run.length){
+        const insideDY = side === 'up' ? 1 : -1;
+        pushSegment(edgesPseudo, run, 'H', 0, insideDY);
+      }
+    }
+    // Vertical runs where the left or right is wall across the run
+    for (let x = 0; x < width; x++){
+      let run = [];
+      let side = null; // 'left' or 'right'
+      for (let y = 0; y < height; y++){
+        const cell = board[y][x];
+        if (cell === WALL){
+          if (run.length){
+            const insideDX = side === 'left' ? 1 : -1;
+            pushSegment(edgesPseudo, run, 'V', insideDX, 0);
+            run = [];
+            side = null;
+          }
+          continue;
+        }
+        const leftBlocked = isWallOrOOB(board, x - 1, y);
+        const rightBlocked = isWallOrOOB(board, x + 1, y);
+        const newSide = leftBlocked && !rightBlocked ? 'left' : (rightBlocked && !leftBlocked ? 'right' : null);
+        if (!newSide){
+          if (run.length){
+            const insideDX = side === 'left' ? 1 : -1;
+            pushSegment(edgesPseudo, run, 'V', insideDX, 0);
+            run = [];
+            side = null;
+          }
+          continue;
+        }
+        if (!run.length){
+          run.push({ x, y });
+          side = newSide;
+        } else if (side === newSide){
+          run.push({ x, y });
+        } else {
+          const insideDX = side === 'left' ? 1 : -1;
+          pushSegment(edgesPseudo, run, 'V', insideDX, 0);
+          run = [{ x, y }];
+          side = newSide;
+        }
+      }
+      if (run.length){
+        const insideDX = side === 'left' ? 1 : -1;
+        pushSegment(edgesPseudo, run, 'V', insideDX, 0);
+      }
+    }
+
+    // Build quick lookup sets
+    const cornerSet = new Set();
+    for (const c of cornersNormal) cornerSet.add(`${c.x},${c.y}`);
+    for (const c of cornersPseudo) cornerSet.add(`${c.x},${c.y}`);
+
+    const edgeCellToIndex = new Map();
+    const edgeCellSet = new Set();
+    const allEdges = edgesNormal.concat(edgesPseudo);
+    for (let i = 0; i < allEdges.length; i++){
+      const seg = allEdges[i];
+      for (const c of seg.cells){
+        const k = `${c.x},${c.y}`;
+        edgeCellToIndex.set(k, i);
+        edgeCellSet.add(k);
+      }
+    }
+
+    const analyzed = {
+      corners: {
+        normal: cornersNormal,
+        pseudo: cornersPseudo,
+        all: cornersNormal.concat(cornersPseudo),
+        set: cornerSet
+      },
+      edges: {
+        normal: edgesNormal,
+        pseudo: edgesPseudo,
+        all: allEdges,
+        cellToIndex: edgeCellToIndex,
+        cellSet: edgeCellSet
+      }
+    };
+    __STRUCT_CACHE.set(key, analyzed);
+    return analyzed;
+  }
+
+  // 3x3 transforms (D4 group): indices mapping for rotations/reflections
+  const T3 = {
+    // indices 0..8 in row-major
+    id:    [0,1,2,3,4,5,6,7,8],
+    rot90: [6,3,0,7,4,1,8,5,2],
+    rot180:[8,7,6,5,4,3,2,1,0],
+    rot270:[2,5,8,1,4,7,0,3,6],
+    flipH: [2,1,0,5,4,3,8,7,6],
+    flipV: [6,7,8,3,4,5,0,1,2],
+    flipD: [0,3,6,1,4,7,2,5,8], // main diagonal (transpose)
+    flipA: [8,5,2,7,4,1,6,3,0]  // anti-diagonal
+  };
+
+  const T3_LIST = [T3.id, T3.rot90, T3.rot180, T3.rot270, T3.flipH, T3.flipV, T3.flipD, T3.flipA];
+
+  function transform3x3(pattern, map){
+    let out = '';
+    for (let i = 0; i < 9; i++){
+      out += pattern[map[i]];
+    }
+    return out;
+  }
+
+  function encodeCellFor(color, cellValue){
+    if (cellValue === WALL) return 'W';
+    if (cellValue === EMPTY) return 'E';
+    if (cellValue === color) return 'M';
+    if (cellValue === -color) return 'O';
+    return 'E';
+  }
+
+  function extract3x3(board, cx, cy, color){
+    let s = '';
+    for (let dy = -1; dy <= 1; dy++){
+      for (let dx = -1; dx <= 1; dx++){
+        const x = cx + dx;
+        const y = cy + dy;
+        if (y < 0 || y >= board.length || x < 0 || x >= board[0].length){
+          s += 'W';
+        } else {
+          s += encodeCellFor(color, board[y][x]);
+        }
+      }
+    }
+    return s;
+  }
+
+  function patternMatch(str, pat){
+    // '.' in pattern works as wildcard
+    for (let i = 0; i < pat.length; i++){
+      const pc = pat[i];
+      if (pc !== '.' && str[i] !== pc) return false;
+    }
+    return true;
+  }
+
+  // Corner 3x3 patterns with scores (wildcards allowed). Keep table compact; rely on symmetry via transforms.
+  const CORNER_3x3_PATTERNS = [
+    // Strong: occupying a (pseudo-)corner center (centerMustBe handles the check)
+    { pattern: '.........', score: +1200, note: 'Own corner secured (center M).', centerMustBe: 'M' },
+    // Opponent on X-square while center empty: creates corner-taking threat
+    { pattern: '.........', score: -900, note: 'Opponent on X-square (diag) with center empty', centerMustBe: 'E', diagOnly: true }
+  ];
+
+  // Edge patterns. Strings may use '-' to indicate boundary/edge padding (treated as E/W).
+  const EDGE_PATTERNS = [
+    // Strong continuous ownership along edge, buffered by edge padding/wall
+    { pattern: '-MMMM-', score: +300 },
+    { pattern: 'WMMMM-', score: +500 },
+    { pattern: '-MMMMW', score: +500 },
+    // Safer near continuous sequences
+    { pattern: '-MMMN-', score: +180 } // N is not used; kept for table symmetry (see below)
+  ].filter(Boolean);
+
+  // Expand with a few risk shapes commonly seen (mountain-like and traps)
+  EDGE_PATTERNS.push(
+    { pattern: 'EMME', score: -400 }, // mountain
+    { pattern: 'EOMME', score: -420 },
+    { pattern: 'EMMMO', score: -420 },
+    { pattern: 'OMMO', score: -250 },
+    { pattern: 'EOMO', score: -260 }
+  );
+
+  function encodeLinearFor(color, cells){
+    // cells: array of {x,y}
+    let s = '';
+    for (const { x, y } of cells){
+      s += encodeCellFor(color, board[y][x]);
+    }
+    return s;
+  }
+
+  function edgeTokenFor(color, cell){
+    if (cell === 'B') return 'W';
+    return cell;
+  }
+
+  function matchEdgePatternAt(seq, start, pat){
+    // '-' in pattern matches either E or W or boundary 'B'
+    for (let i = 0; i < pat.length; i++){
+      const pc = pat[i];
+      const sc = seq[start + i];
+      if (pc === '-'){
+        if (!(sc === 'E' || sc === 'W' || sc === 'B')) return false;
+      } else if (pc !== '.' && sc !== pc){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function evaluateCornerPatterns(board, color, structure){
+    let total = 0;
+    const centers = structure?.corners?.all || [];
+    if (!centers.length) return 0;
+    for (const { x, y } of centers){
+      if (board[y]?.[x] === WALL) continue;
+      const s = extract3x3(board, x, y, color);
+      // Evaluate against pattern table under all symmetries
+      for (const entry of CORNER_3x3_PATTERNS){
+        // Optional center constraint
+        if (entry.centerMustBe){
+          const centerChar = s[4];
+          if (centerChar !== entry.centerMustBe) continue;
+        }
+        let matched = false;
+        for (const map of T3_LIST){
+          const t = transform3x3(s, map);
+          if (entry.diagOnly){
+            // Check if any of the diagonals is 'O' while center is E
+            const diagOK = (t[0] === 'O' || t[2] === 'O' || t[6] === 'O' || t[8] === 'O');
+            if (diagOK){ matched = true; break; }
+          } else if (patternMatch(t, entry.pattern)){
+            matched = true; break;
+          }
+        }
+        if (matched){ total += entry.score; }
+      }
+      // Supplemental logic-based heuristics for corner shapes
+      const center = s[4];
+      // Extra reward if my corner piece is adjacent to multiple walls (more stable)
+      if (center === 'M'){
+        let wCount = 0;
+        for (let i = 0; i < 9; i++) if (i !== 4 && s[i] === 'W') wCount++;
+        if (wCount >= 1) total += Math.min(2, wCount) * 300;
+        if (wCount >= 3) total += 600; // strong enclosure by walls
+      }
+      // Penalize C-plays: center empty and any orthogonal neighbor is my stone (risky)
+      if (center === 'E'){
+        const orth = [1,3,5,7];
+        let orthM = 0;
+        for (const idx of orth){ if (s[idx] === 'M') orthM++; }
+        if (orthM > 0){
+          total -= 1000 * orthM;
+          // Wall-adjacent C is even worse if any neighbor is a wall
+          let nearWall = false;
+          for (let i = 0; i < 9; i++) if (i !== 4 && s[i] === 'W') { nearWall = true; break; }
+          if (nearWall) total -= 500;
+        }
+      }
+    }
+    return total;
+  }
+
+  function evaluateEdgePatterns(board, color, structure){
+    let total = 0;
+    const segments = structure?.edges?.all || [];
+    for (const seg of segments){
+      if (seg.cells.length === 0) continue;
+      // Build sequence with padding at both ends (boundary marker 'B')
+      const padded = ['B'];
+      for (const c of seg.cells){
+        const ch = encodeCellFor(color, board[c.y][c.x]);
+        padded.push(ch);
+      }
+      padded.push('B');
+      // Slide windows and match patterns (both forward and reversed)
+      const seq = padded.join('');
+      const rseq = padded.slice().reverse().join('');
+      for (const entry of EDGE_PATTERNS){
+        const L = entry.pattern.length;
+        for (let i = 0; i + L <= seq.length; i++){
+          const window = seq.slice(i, i + L);
+          const rwindow = rseq.slice(i, i + L);
+          if (matchEdgePatternAt(window, 0, entry.pattern) || matchEdgePatternAt(rwindow, 0, entry.pattern)){
+            total += entry.score;
+          }
+        }
+      }
+    }
+    return total;
+  }
+
+  function evaluatePatternScore(board, color){
+    const structure = analyzeBoardStructure(board);
+    let score = 0;
+    score += evaluateCornerPatterns(board, color, structure);
+    score += evaluateEdgePatterns(board, color, structure);
+    return score;
+  }
+
   function placeStandardOpening(board){
     const height = board.length;
     const width = board[0].length;
@@ -1157,6 +1605,20 @@
     const potentialDiff = (whitePotential - blackPotential) * potentialWeight;
 
     score += countDiff + mobilityDiff + stabilityDiff + frontierDiff + potentialDiff;
+
+    // Pattern-based evaluation (corner/edge shapes with walls)
+    // Compute from both perspectives and take the difference (white-positive)
+    if (TUNING.enablePatterns){
+      const patternWeight = (0.5 + phase * 1.5) * (TUNING.patternScale ?? 1);
+      try {
+        const pWhite = evaluatePatternScore(board, WHITE);
+        const pBlack = evaluatePatternScore(board, BLACK);
+        const patternDiff = pWhite - pBlack;
+        score += patternDiff * patternWeight;
+      } catch (e) {
+        // fail-safe: ignore pattern errors to avoid breaking gameplay
+      }
+    }
     return score;
   }
 
@@ -1249,7 +1711,8 @@
     const stabilityGain = stabilityScore(nextBoard, move.x, move.y, color);
     const wallInfluence = countWallNeighbors(board, move.x, move.y);
     const myNextMoves = legalMoves(nextBoard, color).length;
-    const opponentNextMoves = legalMoves(nextBoard, -color).length;
+    const opponentMovesList = legalMoves(nextBoard, -color);
+    const opponentNextMoves = opponentMovesList.length;
     const mobilityDelta = myNextMoves - opponentNextMoves;
     const frontierPenaltyBase = isFrontierCell(nextBoard, move.x, move.y) ? -3.5 + stage * 2 : 0;
     const discBalance = color === BLACK
@@ -1258,6 +1721,69 @@
     const surroundDelta = computeSurroundDelta(board, nextBoard, move, color);
     const surroundWeight = (profile.surroundMultiplier ?? 1) * (3.2 + stage * 5.3);
     const surroundScore = surroundDelta * surroundWeight;
+    // C/X avoidance: penalize playing on C- or X-squares next to any (pseudo) corner when that corner is empty
+    let cxPenalty = 0;
+    try {
+      const structure = analyzeBoardStructure(board);
+      const cornerAdj = classifyCornerAdjacency(board, move.x, move.y, structure);
+      if (cornerAdj && board[cornerAdj.corner.y][cornerAdj.corner.x] === EMPTY){
+        const isX = cornerAdj.type === 'X';
+        const base = isX ? -3200 : -2400;
+        // If opponent can immediately take that corner after this move, add a severe penalty
+        const oppCanCorner = opponentMovesList.some(mv => mv.x === cornerAdj.corner.x && mv.y === cornerAdj.corner.y);
+        const threatPenalty = oppCanCorner ? (isX ? -2400 : -1800) : 0;
+        // Walls near the corner exacerbate instability of C/X
+        const wallsAroundCorner = countWallNeighbors(board, cornerAdj.corner.x, cornerAdj.corner.y);
+        const wallPenalty = wallsAroundCorner >= 2 ? -600 : (wallsAroundCorner >= 1 ? -300 : 0);
+        cxPenalty = (base + threatPenalty + wallPenalty) * (1.0 + 0.6 * (1 - stage)); // 序中盤ほど強く嫌う
+      }
+    } catch {}
+
+    // Edge-aware extras: parity on edge segments, corner risk suppression, opponent edge pressure
+    let edgeExtras = 0;
+    try {
+      const structure = analyzeBoardStructure(board);
+      const k = `${move.x},${move.y}`;
+      const segIndex = structure.edges.cellToIndex.get(k);
+      if (segIndex != null){
+        const seg = structure.edges.all[segIndex];
+        const cornerSet = structure.corners.set;
+        // Count flips that happened on this edge segment
+        let edgeFlipCount = 0;
+        for (const [fx, fy] of move.flips){
+          if (structure.edges.cellSet.has(`${fx},${fy}`)) edgeFlipCount++;
+        }
+        const edgeFlipScore = edgeFlipCount * (18 + 22 * stage) * (profile.flipFactor ?? 1);
+        // Parity on this segment (after my move, opponent to move)
+        let empties = 0;
+        for (const c of seg.cells){ if (nextBoard[c.y][c.x] === EMPTY) empties++; }
+        let paritySign = (empties % 2 === 0) ? 1 : -1; // default: prefer even for opponent's turn
+        if (!TUNING.edgeParityPrefersEven) paritySign = -paritySign;
+        const parityScore = paritySign * (28 + 32 * stage);
+        // Corner risk: if opponent gets corner on this segment endpoints, penalize heavily
+        const start = seg.cells[0];
+        const end = seg.cells[seg.cells.length - 1];
+        const epCorners = [];
+        if (cornerSet.has(`${start.x},${start.y}`)) epCorners.push(start);
+        if (cornerSet.has(`${end.x},${end.y}`)) epCorners.push(end);
+        let cornerThreat = false;
+        if (epCorners.length){
+          for (const mv of opponentMovesList){
+            if (epCorners.some(c => c.x === mv.x && c.y === mv.y)){ cornerThreat = true; break; }
+          }
+        }
+        const cornerPenalty = cornerThreat ? -(700 + 500 * stage) : 0;
+        // Opponent edge pressure: encourage pushing opponent moves to edges (excluding corners)
+        let oppEdge = 0;
+        for (const mv of opponentMovesList){
+          const mk = `${mv.x},${mv.y}`;
+          if (structure.edges.cellSet.has(mk) && !cornerSet.has(mk)) oppEdge++;
+        }
+        const oppRatio = opponentNextMoves > 0 ? oppEdge / opponentNextMoves : 0;
+        const edgePressure = oppRatio * (60 + 90 * stage);
+        edgeExtras = (edgeFlipScore + parityScore + edgePressure + cornerPenalty) * (TUNING.edgeHeuristicScale ?? 1);
+      }
+    } catch {}
     const objectiveScore = (
       cellWeight * (4 + stage * 3) * (profile.positionWeight ?? 1) +
       stabilityGain * (3 + stage * 2) * (profile.stabilityFactor ?? 1) +
@@ -1267,7 +1793,7 @@
     const wallScore = wallInfluence * (1.2 + stage * 0.5) * (profile.wallFactor ?? 1);
     const flipScore = flipCount * (2 + stage * 2.5) * (profile.flipFactor ?? 1);
     const frontierPenalty = frontierPenaltyBase * (profile.frontierFactor ?? 1);
-    return objectiveScore + mobilityScore + wallScore + frontierPenalty + flipScore + surroundScore;
+    return objectiveScore + mobilityScore + wallScore + frontierPenalty + flipScore + surroundScore + edgeExtras + cxPenalty;
   }
 
   const HEURISTIC_PROFILES = {
@@ -1391,12 +1917,110 @@
     return key;
   }
 
-  function negamaxRecursive(board, counts, depth, currentColor, aiColor, weights, victoryCondition, alpha, beta, deadline, transposition, heuristicProfile){
+  // ---- Search tunables and helpers ----
+  const DEFAULT_SEARCH_TUNING = {
+    useQuiescence: true,
+    quiescenceMaxDepth: 6,
+    quiescenceFlipThresholdBase: 4,
+    quiescenceConsiderCorners: true,
+    useNullMove: true,
+    nullMoveReduction: 2,
+    nullMoveMinDepth: 3,
+    nullMoveDisableEmptyThreshold: 12,
+    useAspiration: true,
+    aspirationWindow: 350,
+    aspirationGrowth: 1.9
+  };
+
+  function estimateQuiescenceFlipThreshold(board){
+    const h = board.length | 0;
+    const w = (board[0]?.length) | 0;
+    const area = Math.max(1, h * w);
+    return Math.max(3, Math.round(Math.sqrt(area) / 4));
+  }
+
+  function isCornerCell(board, x, y){
+    const h = board.length | 0;
+    const w = (board[0]?.length) | 0;
+    const isCorner = (x === 0 && y === 0)
+      || (x === w - 1 && y === 0)
+      || (x === 0 && y === h - 1)
+      || (x === w - 1 && y === h - 1);
+    return !!isCorner && board[y]?.[x] !== WALL;
+  }
+
+  function generateNoisyMoves(board, color, flipThreshold){
+    const moves = legalMoves(board, color);
+    if (!moves.length) return moves;
+    const thresh = Math.max(1, flipThreshold ?? estimateQuiescenceFlipThreshold(board));
+    const noisy = [];
+    for (const mv of moves){
+      if (mv.flips.length >= thresh || isCornerCell(board, mv.x, mv.y)) noisy.push(mv);
+    }
+    return noisy;
+  }
+
+  function quiescenceSearch(board, counts, alpha, beta, currentColor, aiColor, weights, victoryCondition, deadline, transposition, qDepth, tuning){
+    if (deadline && Date.now() >= deadline){
+      return { value: evaluateBoardForColor(board, weights, victoryCondition, aiColor), timeout: true };
+    }
+    const standPat = evaluateBoardForColor(board, weights, victoryCondition, aiColor);
+    if (standPat >= beta) return { value: beta, timeout: false };
+    if (standPat > alpha) alpha = standPat;
+
+    if (qDepth <= 0 || counts.empty === 0){
+      return { value: alpha, timeout: false };
+    }
+    const flipThreshold = (tuning?.quiescenceFlipThresholdBase) ?? estimateQuiescenceFlipThreshold(board);
+    const noisyMoves = generateNoisyMoves(board, currentColor, flipThreshold);
+    if (!noisyMoves.length){
+      return { value: alpha, timeout: false };
+    }
+    noisyMoves.sort((a, b) => b.flips.length - a.flips.length);
+    let best = alpha;
+    for (const mv of noisyMoves){
+      const next = cloneBoard(board);
+      applyMove(next, mv, currentColor);
+      const nextCounts = updateCountsAfterMove(counts, mv, currentColor);
+      const child = quiescenceSearch(
+        next,
+        nextCounts,
+        -beta,
+        -alpha,
+        -currentColor,
+        aiColor,
+        weights,
+        victoryCondition,
+        deadline,
+        transposition,
+        qDepth - 1,
+        tuning
+      );
+      if (child.timeout) return child;
+      const score = -child.value;
+      if (score > best) best = score;
+      if (score > alpha) alpha = score;
+      if (alpha >= beta) break;
+      if (deadline && Date.now() >= deadline){
+        return { value: alpha, timeout: true };
+      }
+    }
+    return { value: best, timeout: false };
+  }
+
+  function negamaxRecursive(board, counts, depth, currentColor, aiColor, weights, victoryCondition, alpha, beta, deadline, transposition, heuristicProfile, searchTuning, prevWasNull){
     const profile = heuristicProfile || HEURISTIC_PROFILES.DEFAULT;
+    const tuning = searchTuning || DEFAULT_SEARCH_TUNING;
     if (deadline && Date.now() >= deadline){
       return { value: evaluateBoardForColor(board, weights, victoryCondition, aiColor), timeout: true };
     }
     if (depth === 0 || counts.empty === 0){
+      if (tuning.useQuiescence && depth === 0 && counts.empty > 0){
+        const qDepth = Math.max(0, tuning.quiescenceMaxDepth | 0);
+        if (qDepth > 0){
+          return quiescenceSearch(board, counts, alpha, beta, currentColor, aiColor, weights, victoryCondition, deadline, transposition, qDepth, tuning);
+        }
+      }
       return { value: evaluateBoardForColor(board, weights, victoryCondition, aiColor), timeout: false };
     }
     const key = transposition ? createTranspositionKey(board, currentColor, depth, victoryCondition) : null;
@@ -1424,7 +2048,9 @@
         -alpha,
         deadline,
         transposition,
-        profile
+        profile,
+        tuning,
+        false
       );
       if (passResult.timeout) return passResult;
       const passValue = -passResult.value;
@@ -1432,6 +2058,32 @@
         transposition.set(key, { depth, value: passValue });
       }
       return { value: passValue, timeout: false };
+    }
+
+    // Null-move pruning
+    if (tuning.useNullMove && !prevWasNull && depth >= (tuning.nullMoveMinDepth ?? 3) && counts.empty > (tuning.nullMoveDisableEmptyThreshold ?? 12)){
+      const R = Math.max(1, tuning.nullMoveReduction | 0);
+      const nm = negamaxRecursive(
+        board,
+        counts,
+        depth - 1 - R,
+        -currentColor,
+        aiColor,
+        weights,
+        victoryCondition,
+        -beta,
+        -beta + 1,
+        deadline,
+        transposition,
+        profile,
+        tuning,
+        true
+      );
+      if (nm.timeout) return nm;
+      const nmScore = -nm.value;
+      if (nmScore >= beta){
+        return { value: nmScore, timeout: false };
+      }
     }
     const ordered = buildOrderedMoves(board, counts, moves, currentColor, victoryCondition, weights, profile);
     let bestValue = -Infinity;
@@ -1449,7 +2101,9 @@
         -localAlpha,
         deadline,
         transposition,
-        profile
+        profile,
+        tuning,
+        false
       );
       if (child.timeout) return child;
       const value = -child.value;
@@ -1472,7 +2126,7 @@
     return { value: bestValue, timeout: false };
   }
 
-  function negamaxRoot(board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile){
+  function negamaxRoot(board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile, alphaInit = -Infinity, betaInit = Infinity, searchTuning){
     const profile = heuristicProfile || HEURISTIC_PROFILES.DEFAULT;
     const moves = orderedMoves ?? buildOrderedMoves(
       board,
@@ -1488,8 +2142,8 @@
     }
     let bestMove = moves[0].move;
     let bestValue = -Infinity;
-    let alpha = -Infinity;
-    const beta = Infinity;
+    let alpha = alphaInit;
+    let beta = betaInit;
     for (const entry of moves){
       const child = negamaxRecursive(
         entry.nextBoard,
@@ -1503,7 +2157,9 @@
         -alpha,
         deadline,
         transposition,
-        profile
+        profile,
+        searchTuning,
+        false
       );
       if (child.timeout){
         return {
@@ -1557,6 +2213,121 @@
     return Math.max(1, depth);
   }
 
+  // ---- Endgame exact reading (solve to end when empties are small) ----
+  function shouldUseEndgameSolve(config, counts){
+    const thr = Math.max(0, config.endgameSolveThreshold | 0);
+    return counts.empty <= thr;
+  }
+
+  function createExactKey(board, color, victory){
+    // distinct namespace 'X' for exact search
+    let key = `X|${color}|${victory}|`;
+    for (let y = 0; y < board.length; y++){
+      const row = board[y];
+      for (let x = 0; x < row.length; x++){
+        key += String.fromCharCode(row[x] + 3 + 48);
+      }
+      key += ':';
+    }
+    return key;
+  }
+
+  function terminalValueFor(board, aiColor, victoryCondition){
+    const c = countPieces(board);
+    let diff = (aiColor === WHITE) ? (c.white - c.black) : (c.black - c.white);
+    if (victoryCondition === 'least') diff = -diff; // misère: 小さいほど良い
+    // Return raw difference; alpha-beta relies on ordering, not absolute scaling
+    return diff;
+  }
+
+  function orderEndgameMoves(board, color, moves){
+    const structure = analyzeBoardStructure(board);
+    const cornerSet = structure.corners.set;
+    return moves.slice().sort((a, b) => {
+      const ak = `${a.x},${a.y}`;
+      const bk = `${b.x},${b.y}`;
+      const acorner = cornerSet.has(ak) ? 1 : 0;
+      const bcorner = cornerSet.has(bk) ? 1 : 0;
+      if (acorner !== bcorner) return bcorner - acorner; // corners first
+      // then by flips descending (more forcing often better in low empties)
+      if (a.flips.length !== b.flips.length) return b.flips.length - a.flips.length;
+      return 0;
+    });
+  }
+
+  function endgameNegamax(board, color, aiColor, victoryCondition, alpha, beta, deadline, transposition){
+    if (deadline && Date.now() >= deadline){
+      return { value: terminalValueFor(board, aiColor, victoryCondition), timeout: true };
+    }
+    const key = transposition ? createExactKey(board, color, victoryCondition) : null;
+    if (key && transposition?.has(key)){
+      return transposition.get(key);
+    }
+    const moves = legalMoves(board, color);
+    if (moves.length === 0){
+      const omoves = legalMoves(board, -color);
+      if (omoves.length === 0){
+        const v = terminalValueFor(board, aiColor, victoryCondition);
+        const res = { value: v, timeout: false };
+        if (key && transposition) transposition.set(key, res);
+        return res;
+      }
+      // pass
+      const child = endgameNegamax(board, -color, aiColor, victoryCondition, -beta, -alpha, deadline, transposition);
+      if (child.timeout) return child;
+      const v = -child.value;
+      const res = { value: v, timeout: false };
+      if (key && transposition) transposition.set(key, res);
+      return res;
+    }
+    const ordered = orderEndgameMoves(board, color, moves);
+    let best = -Infinity;
+    let a = alpha;
+    for (const mv of ordered){
+      const next = cloneBoard(board);
+      applyMove(next, mv, color);
+      const child = endgameNegamax(next, -color, aiColor, victoryCondition, -beta, -a, deadline, transposition);
+      if (child.timeout) return child;
+      const val = -child.value;
+      if (val > best) best = val;
+      if (val > a) a = val;
+      if (a >= beta) break;
+      if (deadline && Date.now() >= deadline) break;
+    }
+    const res = { value: best, timeout: false };
+    if (key && transposition) transposition.set(key, res);
+    return res;
+  }
+
+  function endgameSolveRoot(board, counts, aiColor, victoryCondition, deadline, transposition){
+    const moves = legalMoves(board, aiColor);
+    if (!moves.length){
+      // either pass or game over; let existing logic handle
+      return { move: null, value: terminalValueFor(board, aiColor, victoryCondition), timeout: false };
+    }
+    const ordered = orderEndgameMoves(board, aiColor, moves);
+    let bestMove = ordered[0].move || ordered[0];
+    let bestVal = -Infinity;
+    let alpha = -Infinity; const beta = Infinity;
+    for (const mv of ordered){
+      const next = cloneBoard(board);
+      applyMove(next, mv, aiColor);
+      const child = endgameNegamax(next, -aiColor, aiColor, victoryCondition, -beta, -alpha, deadline, transposition);
+      if (child.timeout){
+        // Give up exact solve due to time; signal caller to fallback
+        return { move: null, value: terminalValueFor(board, aiColor, victoryCondition), timeout: true };
+      }
+      const val = -child.value;
+      if (val > bestVal){ bestVal = val; bestMove = mv; }
+      if (val > alpha){ alpha = val; }
+      if (alpha >= beta) break;
+      if (deadline && Date.now() >= deadline){
+        return { move: null, value: bestVal, timeout: true };
+      }
+    }
+    return { move: bestMove, value: bestVal, timeout: false };
+  }
+
   function chooseDeliberateMistakeMove(orderedMoves, config, aiColor, weights, victoryCondition, heuristicProfile){
     const poolRatio = Math.min(1, Math.max(0.2, config.poolRatio ?? 0.6));
     const poolSize = Math.max(1, Math.ceil(orderedMoves.length * poolRatio));
@@ -1581,7 +2352,9 @@
           Infinity,
           horizonDeadline,
           null,
-          heuristicProfile
+          heuristicProfile,
+          DEFAULT_SEARCH_TUNING,
+          false
         );
         const value = (result.timeout ? 0 : -result.value) + (Math.random() - 0.5) * 0.1;
         if (value < worstValue){
@@ -1630,8 +2403,38 @@
     const transposition = config.useTransposition ? new Map() : null;
     const depth = adjustSearchDepth(config, board, counts);
     const deadline = config.timeLimitMs ? Date.now() + config.timeLimitMs : null;
-    const result = negamaxRoot(board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile);
+    if (shouldUseEndgameSolve(config, counts)){
+      const solved = endgameSolveRoot(board, counts, aiColor, victoryCondition, deadline, transposition);
+      if (solved && solved.move) return solved.move;
+    }
+    const searchTuning = {
+      ...DEFAULT_SEARCH_TUNING,
+      useAspiration: false,
+      useQuiescence: config.useQuiescence ?? DEFAULT_SEARCH_TUNING.useQuiescence,
+      quiescenceMaxDepth: config.quiescenceMaxDepth ?? DEFAULT_SEARCH_TUNING.quiescenceMaxDepth,
+      quiescenceFlipThresholdBase: config.quiescenceFlipThresholdBase ?? DEFAULT_SEARCH_TUNING.quiescenceFlipThresholdBase,
+      useNullMove: config.useNullMove ?? DEFAULT_SEARCH_TUNING.useNullMove,
+      nullMoveReduction: config.nullMoveReduction ?? DEFAULT_SEARCH_TUNING.nullMoveReduction,
+      nullMoveMinDepth: config.nullMoveMinDepth ?? DEFAULT_SEARCH_TUNING.nullMoveMinDepth,
+      nullMoveDisableEmptyThreshold: config.nullMoveDisableEmptyThreshold ?? DEFAULT_SEARCH_TUNING.nullMoveDisableEmptyThreshold
+    };
+    const result = negamaxRoot(
+      board,
+      counts,
+      depth,
+      aiColor,
+      weights,
+      victoryCondition,
+      deadline,
+      transposition,
+      orderedMoves,
+      heuristicProfile,
+      -Infinity,
+      Infinity,
+      searchTuning
+    );
     let move = result.move ?? orderedMoves[0].move;
+    move = preferAvoidCornerAdjacency(board, orderedMoves, move, aiColor);
     if (config.randomness && Math.random() < config.randomness && orderedMoves.length > 1){
       move = orderedMoves[1].move;
     }
@@ -1643,22 +2446,63 @@
     const targetDepth = adjustSearchDepth(config, board, counts);
     const maxDepth = Math.max(targetDepth, config.maxDepth || targetDepth);
     const deadline = config.timeLimitMs ? Date.now() + config.timeLimitMs : null;
+    if (shouldUseEndgameSolve(config, counts)){
+      const solved = endgameSolveRoot(board, counts, aiColor, victoryCondition, deadline, transposition);
+      if (solved && solved.move) return solved.move;
+    }
     let bestMove = orderedMoves[0].move;
+    let lastScore = 0;
+    const searchTuningBase = {
+      ...DEFAULT_SEARCH_TUNING,
+      useAspiration: config.useAspiration ?? true,
+      aspirationWindow: config.aspirationWindow ?? DEFAULT_SEARCH_TUNING.aspirationWindow,
+      aspirationGrowth: config.aspirationGrowth ?? DEFAULT_SEARCH_TUNING.aspirationGrowth,
+      useQuiescence: config.useQuiescence ?? DEFAULT_SEARCH_TUNING.useQuiescence,
+      quiescenceMaxDepth: config.quiescenceMaxDepth ?? DEFAULT_SEARCH_TUNING.quiescenceMaxDepth,
+      quiescenceFlipThresholdBase: config.quiescenceFlipThresholdBase ?? DEFAULT_SEARCH_TUNING.quiescenceFlipThresholdBase,
+      useNullMove: config.useNullMove ?? DEFAULT_SEARCH_TUNING.useNullMove,
+      nullMoveReduction: config.nullMoveReduction ?? DEFAULT_SEARCH_TUNING.nullMoveReduction,
+      nullMoveMinDepth: config.nullMoveMinDepth ?? DEFAULT_SEARCH_TUNING.nullMoveMinDepth,
+      nullMoveDisableEmptyThreshold: config.nullMoveDisableEmptyThreshold ?? DEFAULT_SEARCH_TUNING.nullMoveDisableEmptyThreshold
+    };
     for (let depth = 1; depth <= maxDepth; depth++){
-      const result = negamaxRoot(board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile);
+      let alpha = -Infinity, beta = Infinity;
+      const searchTuning = { ...searchTuningBase };
+      if (searchTuning.useAspiration && depth > 1 && Number.isFinite(lastScore)){
+        const w = Math.max(50, searchTuning.aspirationWindow | 0);
+        alpha = lastScore - w;
+        beta = lastScore + w;
+      }
+      let result = negamaxRoot(
+        board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile, alpha, beta, searchTuning
+      );
+      if (!result.timeout && searchTuning.useAspiration && (result.value <= alpha || result.value >= beta)){
+        // Failed aspiration; widen window progressively
+        let window = Math.max(50, searchTuning.aspirationWindow | 0) * (searchTuning.aspirationGrowth || 2);
+        while (!result.timeout){
+          alpha = result.value <= alpha ? -Infinity : result.value - window;
+          beta = result.value >= beta ? Infinity : result.value + window;
+          result = negamaxRoot(
+            board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile, alpha, beta, searchTuning
+          );
+          if (!result.timeout && result.value > alpha && result.value < beta) break;
+          window *= (searchTuning.aspirationGrowth || 2);
+          if (deadline && Date.now() >= deadline) break;
+        }
+      }
       if (result.move){
         bestMove = result.move;
       }
-      if (result.timeout){
-        break;
+      if (typeof result.value === 'number' && Number.isFinite(result.value)){
+        lastScore = result.value;
       }
-      if (deadline && Date.now() >= deadline){
-        break;
-      }
+      if (result.timeout) break;
+      if (deadline && Date.now() >= deadline) break;
     }
     if (config.randomness && Math.random() < config.randomness && orderedMoves.length > 1){
       bestMove = orderedMoves[1].move;
     }
+    bestMove = preferAvoidCornerAdjacency(board, orderedMoves, bestMove, aiColor);
     return bestMove;
   }
 
@@ -1682,13 +2526,15 @@
       poolRatio: 0.9,
       sampleSize: 6,
       randomness: 0.7,
-      timeBudgetMs: 160
+      timeBudgetMs: 160,
+      endgameSolveThreshold: 0
     },
     EASY: {
       type: 'heuristic',
       candidateRatio: 0.3,
       pickFrom: 'worst',
-      randomness: 0.45
+      randomness: 0.45,
+      endgameSolveThreshold: 0
     },
     NORMAL: {
       type: 'search',
@@ -1696,7 +2542,15 @@
       endgameBonus: 1,
       timeLimitMs: 320,
       useTransposition: true,
-      randomness: 0.04
+      randomness: 0.04,
+      endgameSolveThreshold: 10,
+      // search features
+      useQuiescence: true,
+      quiescenceMaxDepth: 4,
+      useNullMove: true,
+      nullMoveReduction: 2,
+      nullMoveMinDepth: 3,
+      nullMoveDisableEmptyThreshold: 12
     },
     HARD: {
       type: 'search',
@@ -1704,7 +2558,14 @@
       endgameBonus: 3,
       timeLimitMs: 650,
       useTransposition: true,
-      randomness: 0
+      randomness: 0,
+      endgameSolveThreshold: 12,
+      useQuiescence: true,
+      quiescenceMaxDepth: 6,
+      useNullMove: true,
+      nullMoveReduction: 2,
+      nullMoveMinDepth: 3,
+      nullMoveDisableEmptyThreshold: 12
     },
     VERY_HARD: {
       type: 'iterative',
@@ -1712,34 +2573,272 @@
       maxDepth: 8,
       timeLimitMs: 1200,
       useTransposition: true,
-      randomness: 0
+      randomness: 0,
+      endgameSolveThreshold: 14,
+      // advanced features
+      useAspiration: true,
+      aspirationWindow: 350,
+      aspirationGrowth: 2.0,
+      useQuiescence: true,
+      quiescenceMaxDepth: 6,
+      useNullMove: true,
+      nullMoveReduction: 2,
+      nullMoveMinDepth: 3,
+      nullMoveDisableEmptyThreshold: 12
     }
   };
+
+  // Determine if a move is a C- or X-adjacent to any (pseudo) corner on the current board
+  function classifyCornerAdjacency(board, mx, my, structure){
+    const corners = structure?.corners?.all || [];
+    for (const c of corners){
+      const cx = c.x, cy = c.y;
+      if (board[cy]?.[cx] === WALL) continue;
+      const dx = mx - cx; const dy = my - cy;
+      const manhattan = Math.abs(dx) + Math.abs(dy);
+      if (manhattan === 1) return { type: 'C', corner: { x: cx, y: cy } };
+      if (Math.abs(dx) === 1 && Math.abs(dy) === 1) return { type: 'X', corner: { x: cx, y: cy } };
+    }
+    return null;
+  }
+
+  function isRiskyCornerAdjacencyMove(board, move){
+    try {
+      const structure = analyzeBoardStructure(board);
+      const adj = classifyCornerAdjacency(board, move.x, move.y, structure);
+      if (!adj) return false;
+      const center = board[adj.corner.y][adj.corner.x];
+      return center === EMPTY; // 角が空いているときのみ強く危険視
+    } catch { return false; }
+  }
+
+  function countImmediateCornerThreatsAfter(board, move, color){
+    const next = cloneBoard(board);
+    applyMove(next, move, color);
+    const structure = analyzeBoardStructure(board);
+    const corners = structure.corners.all;
+    const oppMoves = legalMoves(next, -color);
+    let count = 0;
+    for (const mv of oppMoves){
+      if (corners.some(c => c.x === mv.x && c.y === mv.y)) count++;
+    }
+    return count;
+  }
+
+  function preferAvoidCornerAdjacency(board, orderedMoves, pickedMove, aiColor){
+    // If picked move is C/X next to empty corner, try switch to first non-risky candidate
+    if (!pickedMove) return pickedMove;
+    if (!TUNING.avoidCornerAdjacencyStrong) return pickedMove;
+    if (!isRiskyCornerAdjacencyMove(board, pickedMove)) return pickedMove;
+    const structure = analyzeBoardStructure(board);
+    const nonRisky = orderedMoves.find(e => !classifyCornerAdjacency(board, e.move.x, e.move.y, structure));
+    if (nonRisky) return nonRisky.move;
+    // If all are risky, choose the one minimizing immediate corner threats; prefer C over X if tie
+    let best = pickedMove;
+    let bestScore = Infinity;
+    let bestType = 'X';
+    for (const e of orderedMoves){
+      const adj = classifyCornerAdjacency(board, e.move.x, e.move.y, structure);
+      if (!adj) continue;
+      const threats = countImmediateCornerThreatsAfter(board, e.move, aiColor);
+      const tiebreak = adj.type === 'C' ? -0.5 : 0.0;
+      const s = threats + tiebreak;
+      if (s < bestScore){ bestScore = s; best = e.move; bestType = adj.type; }
+    }
+    return best;
+  }
+
+  // ---- Opening Book (8x8, standard rules) ----
+  // Lightweight opening database used only on HARD or above to make early moves instant.
+  // - Active when: 8x8 board, no walls, normal victory, early stage (<= ~14 plies)
+  // - Position keyed by exact board layout (no canonicalization required) and side to move
+  // - Symmetry-expanded from a few principal lines generated with the engine
+  // - If a book move is not legal (e.g., player deviated), we fall back to normal search
+
+  const __OPENING_BOOK_STATE = { map: null };
+  const OPENING_MAX_PLIES = 14; // use book only for the first ~14 plies (about "十数手")
+
+  function hasAnyWalls(board){
+    for (let y = 0; y < board.length; y++){
+      for (let x = 0; x < board[0].length; x++){
+        if (board[y][x] === WALL) return true;
+      }
+    }
+    return false;
+  }
+
+  function isStandard8x8(board){
+    return Array.isArray(board) && board.length === 8 && Array.isArray(board[0]) && board[0].length === 8;
+  }
+
+  function algebraToXY(s){
+    if (!s || typeof s !== 'string') return null;
+    const m = s.trim().toLowerCase().match(/^([a-h])([1-8])$/);
+    if (!m) return null;
+    const x = m[1].charCodeAt(0) - 97; // 'a' -> 0
+    const y = parseInt(m[2], 10) - 1;  // '1' -> 0 (top-left origin)
+    return { x, y };
+  }
+
+  function xyToAlgebra(x, y){
+    return String.fromCharCode(97 + x) + String(1 + y);
+  }
+
+  // D8 symmetries for square boards (size n)
+  const SYM8 = [
+    (x, y, n) => ({ x, y }),                          // id
+    (x, y, n) => ({ x: n - 1 - y, y: x }),            // rot90
+    (x, y, n) => ({ x: n - 1 - x, y: n - 1 - y }),    // rot180
+    (x, y, n) => ({ x: y, y: n - 1 - x }),            // rot270
+    (x, y, n) => ({ x: n - 1 - x, y }),               // flipH
+    (x, y, n) => ({ x, y: n - 1 - y }),               // flipV
+    (x, y, n) => ({ x: y, y: x }),                    // flip main diagonal
+    (x, y, n) => ({ x: n - 1 - y, y: n - 1 - x })     // flip anti-diagonal
+  ];
+
+  function transformBoardSquare(board, sym){
+    const n = board.length;
+    const out = createBoard(n, n, EMPTY);
+    for (let y = 0; y < n; y++){
+      for (let x = 0; x < n; x++){
+        const t = sym(x, y, n);
+        out[t.y][t.x] = board[y][x];
+      }
+    }
+    return out;
+  }
+
+  function transformXYSquare(x, y, size, sym){
+    const t = sym(x, y, size);
+    return { x: t.x, y: t.y };
+  }
+
+  function boardKey8x8(board, color){
+    // Key: side|8x8|cells (row-major). Cells: B,W,E,S(=wall)
+    const side = color === WHITE ? 'w' : 'b';
+    let s = `${side}|8x8|`;
+    for (let y = 0; y < 8; y++){
+      for (let x = 0; x < 8; x++){
+        const v = board[y][x];
+        s += (v === BLACK) ? 'B' : (v === WHITE) ? 'W' : (v === EMPTY) ? 'E' : 'S';
+      }
+      s += ':';
+    }
+    return s;
+  }
+
+  function cloneBoardApplyMoveByXY(board, x, y, color){
+    const mv = legalMoves(board, color).find(m => m.x === x && m.y === y);
+    if (!mv) return null;
+    const next = cloneBoard(board);
+    applyMove(next, mv, color);
+    return next;
+  }
+
+  // Principal lines (algebraic, top-left origin). These were generated by the engine at HARD.
+  // Lines start from the initial position with Black to move.
+  const OPENING_LINES_ALGEBRA_8x8 = [
+    // If W replies f4
+    ['f5','f4','e3','d6','e6','f6','c6','c5','c4','d3','f3','b3'],
+    // If W replies f6
+    ['f5','f6','e6','f4','f3','d6','c6','e3','d3','c4','c5','c3'],
+    // If W replies d6
+    ['f5','d6','c6','f6','e6','f4','f3','c5','c4','e3','d3','c3'],
+    // Default engine-continuation if no reply constraint
+    ['f5','f6','e6','f4','f3','d6','c6','e3','d3','c4','c5','c3']
+  ];
+
+  function buildOpeningBook8x8(){
+    const map = new Map();
+    try {
+      for (const line of OPENING_LINES_ALGEBRA_8x8){
+        // Simulate along the line and record each position -> next move
+        let b = createBoard(8, 8, EMPTY);
+        placeStandardOpening(b);
+        let color = BLACK;
+        for (let ply = 0; ply < line.length; ply++){
+          const rec = algebraToXY(line[ply]);
+          if (!rec) break;
+          // Record this position across all symmetries
+          for (const sym of SYM8){
+            const tb = transformBoardSquare(b, sym);
+            const key = boardKey8x8(tb, color);
+            const tmove = transformXYSquare(rec.x, rec.y, 8, sym);
+            if (!map.has(key)){
+              map.set(key, { x: tmove.x, y: tmove.y, ply });
+            }
+          }
+          // Advance the position using the recommended move in original orientation
+          const next = cloneBoardApplyMoveByXY(b, rec.x, rec.y, color);
+          if (!next) break; // stop recording this line if it becomes illegal under some context
+          b = next;
+          color = -color;
+        }
+      }
+    } catch (e){ /* graceful: if book build fails, we just skip */ }
+    return map;
+  }
+
+  function ensureOpeningBook(){
+    if (!__OPENING_BOOK_STATE.map){
+      __OPENING_BOOK_STATE.map = buildOpeningBook8x8();
+    }
+    return __OPENING_BOOK_STATE.map;
+  }
+
+  function tryOpeningBookMove(board, aiColor, victoryCondition, difficulty){
+    if (!TUNING.enableOpeningBook) return null;
+    if (victoryCondition === 'least') return null; // Book is for standard victory assumptions
+    if (!(difficulty === 'HARD' || difficulty === 'VERY_HARD')) return null;
+    if (!isStandard8x8(board)) return null;
+    if (hasAnyWalls(board)) return null;
+    const counts = countPieces(board);
+    const pliesPlayed = (counts.black + counts.white) - 4; // after standard 4 discs
+    if (pliesPlayed < 0 || pliesPlayed > OPENING_MAX_PLIES) return null;
+    const key = boardKey8x8(board, aiColor);
+    const book = ensureOpeningBook();
+    const entry = book.get(key);
+    if (!entry) return null;
+    // Validate against current legal moves just in case the position matches but move is not allowed
+    const mv = legalMoves(board, aiColor).find(m => m.x === entry.x && m.y === entry.y);
+    return mv ? { x: mv.x, y: mv.y, flips: mv.flips } : null;
+  }
 
   function pickAIMove(board, weights, victoryCondition, difficulty, aiColor){
     const moves = legalMoves(board, aiColor);
     if (moves.length === 0) return null;
     const counts = countPieces(board);
+    // Opening book shortcut (HARD+ only). Skips heavy search in the first dozen plies.
+    const bookMove = tryOpeningBookMove(board, aiColor, victoryCondition, difficulty);
+    if (bookMove) return bookMove;
     const effectiveDifficulty = resolveEffectiveDifficulty(difficulty, victoryCondition);
     const config = DIFFICULTY_CONFIG[effectiveDifficulty] || DIFFICULTY_CONFIG.NORMAL;
     const heuristicProfile = HEURISTIC_PROFILES[effectiveDifficulty] || HEURISTIC_PROFILES.DEFAULT;
     const ordered = buildOrderedMoves(board, counts, moves, aiColor, victoryCondition, weights, heuristicProfile);
     if (!ordered.length) return null;
 
+    let selected = null;
     switch (config.type){
       case 'deliberate':
-        return chooseDeliberateMistakeMove(ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
+        selected = chooseDeliberateMistakeMove(ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
+        break;
       case 'heuristic': {
-        const move = chooseHeuristicMove(ordered, config);
-        return move ?? ordered[0].move;
+        selected = chooseHeuristicMove(ordered, config) ?? ordered[0].move;
+        break;
       }
       case 'search':
-        return chooseSearchMove(board, counts, ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
+        selected = chooseSearchMove(board, counts, ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
+        break;
       case 'iterative':
-        return chooseIterativeMove(board, counts, ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
+        selected = chooseIterativeMove(board, counts, ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
+        break;
       default:
-        return ordered[0].move;
+        selected = ordered[0].move;
+        break;
     }
+    // Final safety valve: avoid C/X if代替あり
+    selected = preferAvoidCornerAdjacency(board, ordered, selected, aiColor);
+    return selected;
   }
 
   function create(root, awardXp, opts){
@@ -2893,6 +3992,22 @@
   }
 
   if (typeof module !== 'undefined'){
-    module.exports = { create };
+    // Expose a tiny test API for benchmarking/tuning in Node.
+    module.exports = { create, __exothelloTestAPI: {
+      constants: { EMPTY, BLACK, WHITE, WALL },
+      TUNING,
+      createBoard,
+      placeStandardOpening,
+      placeRandomWalls,
+      placeClusterOpening,
+      legalMoves,
+      applyMove,
+      countPieces,
+      evaluateBoard,
+      evaluatePatternScore,
+      analyzeBoardStructure,
+      pickAIMove,
+      computeStageFromCounts
+    } };
   }
 })();

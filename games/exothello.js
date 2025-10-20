@@ -1376,15 +1376,15 @@
       const infoSegments = [
         turnText,
         text(victoryKey, state.victory),
-        text('miniexp.games.exothello.info.player', 'You (${color}): ${count}', {
+        text('miniexp.games.exothello.info.player', 'You ({color}): {count}', {
           color: describeColor(state.playerColor),
           count: playerScore
         }),
-        text('miniexp.games.exothello.info.ai', 'AI (${color}): ${count}', {
+        text('miniexp.games.exothello.info.ai', 'AI ({color}): {count}', {
           color: describeColor(state.aiColor),
           count: aiScore
         }),
-        text('miniexp.games.exothello.info.totals', 'Totals — Black: ${black}, White: ${white}', {
+        text('miniexp.games.exothello.info.totals', 'Totals — Black: {black}, White: {white}', {
           black: counts.black,
           white: counts.white
         })

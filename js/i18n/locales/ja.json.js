@@ -14588,9 +14588,11 @@
           "playerBlack": "先手 (黒) を担当",
           "playerWhite": "後手 (白) を担当",
           "difficultyLabel": "難易度",
+          "difficultyVeryEasy": "とても簡単",
           "difficultyEasy": "かんたん",
           "difficultyNormal": "ふつう",
           "difficultyHard": "むずかしい",
+          "difficultyVeryHard": "とても難しい",
           "start": "ゲーム開始",
           "reset": "リセット"
         },

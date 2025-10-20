@@ -14573,9 +14573,11 @@
           "victoryMost": "Most discs wins",
           "victoryLeast": "Fewest discs wins",
           "difficultyLabel": "Difficulty",
+          "difficultyVeryEasy": "Very Easy",
           "difficultyEasy": "Easy",
           "difficultyNormal": "Normal",
           "difficultyHard": "Hard",
+          "difficultyVeryHard": "Very Hard",
           "start": "Start Game",
           "reset": "Reset"
         },

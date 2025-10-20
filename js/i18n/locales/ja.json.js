@@ -14572,6 +14572,8 @@
         }
       },
       "exothello": {
+        "name": "拡張オセロ",
+        "description": "盤面サイズや壁、勝利条件を自由に切り替えられる拡張オセロ",
         "title": "拡張オセロ",
         "subtitle": "好みのルールを組み合わせて戦略的なオセロ勝負に挑戦しよう。",
         "controls": {
@@ -14643,14 +14645,10 @@
           "most": "石が多い方が勝ち",
           "least": "石が少ない方が勝ち"
         },
-        "counts": {
-          "black": "黒: ${0}",
-          "white": "白: ${0}"
-        },
         "info": {
-          "player": "あなた (${color}): ${count}",
-          "ai": "AI (${color}): ${count}",
-          "totals": "合計 — 黒: ${black}、白: ${white}"
+          "player": "あなた ({color}): {count}",
+          "ai": "AI ({color}): {count}",
+          "totals": "合計 — 黒: {black}、白: {white}"
         },
         "result": {
           "win": "勝利！",

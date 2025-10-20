@@ -888,51 +888,46 @@
       === 'function'
       ? window.createMiniGameLocalization({ id: 'exothello' })
       : null);
+    const formatText = (value, params) => {
+      if (!params || typeof value !== 'string') return value;
+      // 翻訳システム(index.js)に合わせて {key} 形式のみを処理する
+      return value.replace(/\{([^{}]+)\}/g, (match, token) => {
+        const key = token.trim();
+        if (key && Object.prototype.hasOwnProperty.call(params, key)) {
+          return String(params[key]);
+        }
+        // ${0} のような特殊ケースへのフォールバック（本来は避けるべき）
+        if (key === '0' && Object.prototype.hasOwnProperty.call(params, 'value')) {
+          return String(params['value']);
+        }
+        return match;
+      });
+    };
+
     const text = (key, fallback, params) => {
-      // 外部の翻訳システム (localization) が存在し、t() 関数が利用できる場合
-      if (localization && typeof localization.t === 'function') {
-        // localization.exists() のような関数があればより良いが、t() の結果で判断する
-        const translated = localization.t(key, params);
-        
-        // キーが存在し、翻訳が成功した場合（キー自体が返されなかった場合）
-        // かつ、翻訳結果が文字列の場合
-        if (typeof translated === 'string' && translated !== key) {
-          return translated; // 翻訳システムの結果をそのまま返す
+      if (localization && typeof localization.t === 'function'){
+        // 翻訳システムの t() は、キーが見つからない場合キー自体を返す
+        const localized = localization.t(key, params);
+
+        // 翻訳が見つからなかった場合（返り値がキーと同じ）、フォールバックを処理する
+        if (localized === key) {
+          if (typeof fallback === 'function') return fallback();
+          if (typeof fallback === 'string') {
+            // フォールバック文字列を自前のformatTextで処理
+            return formatText(fallback, params);
+          }
+          return fallback ?? '';
         }
+        // 翻訳が見つかった場合は、それをそのまま返す（既にパラメータ置換済み）
+        return localized;
       }
 
-      // 翻訳システムがない、またはキーが見つからなかった場合は、自前でフォールバックを処理する
-      let fallbackString;
-      if (typeof fallback === 'function') {
-        try {
-          fallbackString = fallback();
-        } catch (e) {
-          console.warn(`Fallback function for key "${key}" failed:`, e);
-          return '';
-        }
-      } else {
-        fallbackString = fallback;
+      // localization がない場合のフォールバック処理
+      if (typeof fallback === 'function') return fallback();
+      if (typeof fallback === 'string'){
+        return formatText(fallback, params);
       }
-      
-      if (typeof fallbackString !== 'string') {
-        return fallbackString ?? '';
-      }
-      
-      // 外部の翻訳システムの applyParams を利用してフォールバック文字列をフォーマットする
-      if (localization && typeof localization.applyParams === 'function') {
-        return localization.applyParams(fallbackString, params);
-      }
-      
-      // それもなければ、波括弧 {} 形式のシンプルな置換を自前で行う
-      if (params) {
-        return fallbackString.replace(/\{([^{}]+)\}/g, (match, token) => {
-          const key = token.trim();
-          const value = params[key];
-          return value !== undefined && value !== null ? String(value) : match;
-        });
-      }
-
-      return fallbackString;
+      return fallback ?? '';
     };
     const detachLocale = localization && typeof localization.onChange === 'function'
       ? localization.onChange(() => { try { draw(); } catch {} })
@@ -1403,15 +1398,15 @@
       const infoSegments = [
         turnText,
         text(victoryKey, state.victory),
-        text('miniexp.games.exothello.info.player', 'You (${color}): ${count}', {
+        text('miniexp.games.exothello.info.player', 'You ({color}): {count}', {
           color: describeColor(state.playerColor),
           count: playerScore
         }),
-        text('miniexp.games.exothello.info.ai', 'AI (${color}): ${count}', {
+        text('miniexp.games.exothello.info.ai', 'AI ({color}): {count}', {
           color: describeColor(state.aiColor),
           count: aiScore
         }),
-        text('miniexp.games.exothello.info.totals', 'Totals — Black: ${black}, White: ${white}', {
+        text('miniexp.games.exothello.info.totals', 'Totals — Black: {black}, White: {white}', {
           black: counts.black,
           white: counts.white
         })

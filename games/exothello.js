@@ -888,51 +888,24 @@
       === 'function'
       ? window.createMiniGameLocalization({ id: 'exothello' })
       : null);
+    const formatText = (value, params) => {
+      if (!params) return value;
+      return value;
+    };
+
     const text = (key, fallback, params) => {
-      // 外部の翻訳システム (localization) が存在し、t() 関数が利用できる場合
       if (localization && typeof localization.t === 'function') {
-        // localization.exists() のような関数があればより良いが、t() の結果で判断する
-        const translated = localization.t(key, params);
-        
-        // キーが存在し、翻訳が成功した場合（キー自体が返されなかった場合）
-        // かつ、翻訳結果が文字列の場合
-        if (typeof translated === 'string' && translated !== key) {
-          return translated; // 翻訳システムの結果をそのまま返す
-        }
+        return localization.t(key, fallback, params);
       }
 
-      // 翻訳システムがない、またはキーが見つからなかった場合は、自前でフォールバックを処理する
-      let fallbackString;
-      if (typeof fallback === 'function') {
-        try {
-          fallbackString = fallback();
-        } catch (e) {
-          console.warn(`Fallback function for key "${key}" failed:`, e);
-          return '';
-        }
-      } else {
-        fallbackString = fallback;
-      }
-      
-      if (typeof fallbackString !== 'string') {
-        return fallbackString ?? '';
-      }
-      
-      // 外部の翻訳システムの applyParams を利用してフォールバック文字列をフォーマットする
-      if (localization && typeof localization.applyParams === 'function') {
-        return localization.applyParams(fallbackString, params);
-      }
-      
-      // それもなければ、波括弧 {} 形式のシンプルな置換を自前で行う
-      if (params) {
-        return fallbackString.replace(/\{([^{}]+)\}/g, (match, token) => {
-          const key = token.trim();
-          const value = params[key];
-          return value !== undefined && value !== null ? String(value) : match;
+      let result = (typeof fallback === 'function') ? fallback() : fallback;
+      if (typeof result === 'string' && params) {
+        result = result.replace(/\$\{?(\w+)\}?/g, (match, token) => {
+          const value = params[token];
+          return value !== undefined ? String(value) : match;
         });
       }
-
-      return fallbackString;
+      return result ?? '';
     };
     const detachLocale = localization && typeof localization.onChange === 'function'
       ? localization.onChange(() => { try { draw(); } catch {} })

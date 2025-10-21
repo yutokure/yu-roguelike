@@ -693,7 +693,7 @@
   // Symbols used in pattern encoding (from the perspective of `color`):
   // M = my disc, O = opponent disc, E = empty, W = wall/out-of-bounds
   // Global tuning knobs (used by benchmark or advanced users)
-  const TUNING = { enablePatterns: true, patternScale: 1.0, edgeParityPrefersEven: true, edgeHeuristicScale: 1.0, avoidCornerAdjacencyStrong: true, enableOpeningBook: true };
+  const TUNING = { enablePatterns: false, patternScale: 1.0, edgeParityPrefersEven: true, edgeHeuristicScale: 1.0, avoidCornerAdjacencyStrong: false, enableOpeningBook: false };
 
   // Structure cache keyed by static wall layout and board size.
   const __STRUCT_CACHE = new Map();
@@ -1692,6 +1692,236 @@
     return entries[0];
   }
 
+  // ---- Mini Othello compatible helpers (for replacing AI logic) ----
+  function isCornerVar(board, x, y){
+    const h = board.length | 0;
+    const w = (board[0]?.length) | 0;
+    if (w <= 0 || h <= 0) return false;
+    const isCorner = ((x === 0 || x === w - 1) && (y === 0 || y === h - 1));
+    return !!isCorner && board[y]?.[x] !== WALL;
+  }
+
+  function isEdgeVar(board, x, y){
+    const h = board.length | 0;
+    const w = (board[0]?.length) | 0;
+    const atEdge = (x === 0 || x === w - 1 || y === 0 || y === h - 1);
+    return !!atEdge && board[y]?.[x] !== WALL;
+  }
+
+  function applyMoveOnBoard(srcBoard, mv, color){
+    const next = cloneBoard(srcBoard);
+    applyMove(next, mv, color);
+    return next;
+  }
+
+  function getEmptyCount(board){
+    const c = countPieces(board);
+    return c.empty | 0;
+  }
+
+  // ---- Simple Othello-like evaluation (for compatibility with mini Othello) ----
+  function isAdjacentToEmptyCornerClassic(board, x, y){
+    const h = board.length | 0;
+    const w = (board[0]?.length) | 0;
+    const corners = [
+      [0,0], [0,h-1], [w-1,0], [w-1,h-1]
+    ];
+    for (const [cx, cy] of corners){
+      if (cx < 0 || cy < 0 || cx >= w || cy >= h) continue;
+      if (board[cy]?.[cx] === EMPTY){
+        if (Math.abs(cx - x) <= 1 && Math.abs(cy - y) <= 1 && !(cx === x && cy === y)){
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function evaluateMoveMini(board, weights, move, color){
+    // Clone and apply to compute mobility deltas similar to games/othello.js
+    const next = cloneBoard(board);
+    applyMove(next, move, color);
+    const myFollow = legalMoves(next, color).length;
+    const oppFollow = legalMoves(next, -color).length;
+    let score = 0;
+    // flip count significance
+    score += move.flips.length * 1.6;
+    // positional weight (generalized by exothello dynamic weights)
+    const wv = weights?.[move.y]?.[move.x] ?? 0;
+    score += wv;
+    // avoid placing next to an empty corner (classic heuristic)
+    if (isAdjacentToEmptyCornerClassic(board, move.x, move.y)) score -= 15;
+    // mobility preference (favor our options, restrict opponent)
+    score += (myFollow - oppFollow) * 1.2;
+    return score;
+  }
+
+  function evaluateBoardMiniForColor(board, aiColor, weights){
+    // Lightweight board evaluator: position weights + mobility + disc balance
+    let value = 0;
+    let whiteCount = 0, blackCount = 0;
+    for (let y = 0; y < board.length; y++){
+      const row = board[y];
+      for (let x = 0; x < row.length; x++){
+        const v = row[x];
+        const wv = weights?.[y]?.[x] ?? 0;
+        if (v === WHITE){ value += wv; whiteCount++; }
+        else if (v === BLACK){ value -= wv; blackCount++; }
+      }
+    }
+    const mobility = legalMoves(board, WHITE).length - legalMoves(board, BLACK).length;
+    value += mobility * 5;
+    value += (whiteCount - blackCount) * 1.5;
+    return (aiColor === WHITE) ? value : -value;
+  }
+
+  function miniNegamax(board, depth, currentColor, aiColor, weights, alpha, beta, deadline){
+    if (deadline && Date.now() >= deadline){
+      return { value: evaluateBoardMiniForColor(board, aiColor, weights), timeout: true };
+    }
+    if (depth <= 0){
+      return { value: evaluateBoardMiniForColor(board, aiColor, weights), timeout: false };
+    }
+    const moves = legalMoves(board, currentColor);
+    if (moves.length === 0){
+      const oppMoves = legalMoves(board, -currentColor);
+      if (oppMoves.length === 0){
+        return { value: evaluateBoardMiniForColor(board, aiColor, weights), timeout: false };
+      }
+      const passRes = miniNegamax(board, depth - 1, -currentColor, aiColor, weights, -beta, -alpha, deadline);
+      if (passRes.timeout) return passRes;
+      return { value: -passRes.value, timeout: false };
+    }
+    let best = -Infinity;
+    for (const mv of moves){
+      const next = cloneBoard(board);
+      applyMove(next, mv, currentColor);
+      const child = miniNegamax(next, depth - 1, -currentColor, aiColor, weights, -beta, -alpha, deadline);
+      if (child.timeout) return child;
+      const score = -child.value;
+      if (score > best) best = score;
+      if (score > alpha) alpha = score;
+      if (alpha >= beta) break;
+      if (deadline && Date.now() >= deadline){
+        return { value: alpha, timeout: true };
+      }
+    }
+    return { value: best, timeout: false };
+  }
+
+  function chooseMiniWeak(moves, config, board, aiColor, weights){
+    // Weighted towards worse moves using the simple mini evaluation
+    if (!moves.length) return null;
+    const exponent = Math.max(0.5, config.exponent ?? 2.4);
+    const randomBlunderChance = Math.max(0, config.randomBlunderChance ?? 0);
+    const preferSecondWhenLimited = !!config.preferSecondWhenLimited;
+    if (randomBlunderChance > 0 && Math.random() < randomBlunderChance){
+      return moves[(Math.random() * moves.length) | 0];
+    }
+    if (preferSecondWhenLimited && moves.length <= 2){
+      return moves[1 % moves.length];
+    }
+    const scored = moves.map(mv => ({ mv, value: evaluateMoveMini(board, weights, mv, aiColor) }));
+    scored.sort((a,b) => a.value - b.value); // worse to better
+    let total = 0; const weightsArr = [];
+    for (let i = 0; i < scored.length; i++){
+      const w = Math.pow(scored.length - i, exponent);
+      weightsArr.push(w); total += w;
+    }
+    let r = Math.random() * total;
+    for (let i = 0; i < scored.length; i++){
+      r -= weightsArr[i];
+      if (r <= 0) return scored[i].mv;
+    }
+    return scored[0].mv;
+  }
+
+  function chooseMiniHeuristic(moves, config, board, aiColor, weights){
+    if (!moves.length) return null;
+    const ratio = Math.min(1, Math.max(0.1, config.candidateRatio ?? 0.4));
+    const pickFrom = config.pickFrom || 'best'; // 'best' or 'worst'
+    const randomness = Math.max(0, config.randomness ?? 0);
+    const entries = moves.map(mv => ({ mv, score: evaluateMoveMini(board, weights, mv, aiColor) }));
+    entries.sort((a,b) => b.score - a.score); // best first
+    const count = Math.max(1, Math.round(entries.length * ratio));
+    const candidates = (pickFrom === 'worst')
+      ? entries.slice(-count).reverse()
+      : entries.slice(0, count);
+    if (candidates.length === 1 || randomness === 0) return candidates[0].mv;
+    const exp = 1 / (1 + randomness * 4);
+    const base = (pickFrom === 'worst')
+      ? (max => c => Math.pow(Math.max(1e-6, max - c.score + 1), exp))(candidates.reduce((m,c)=>Math.max(m,c.score), -Infinity))
+      : (min => c => Math.pow(Math.max(1e-6, c.score - min + 1), exp))(candidates.reduce((m,c)=>Math.min(m,c.score), Infinity));
+    const weightsArr = candidates.map(base);
+    return weightedRandomChoice(candidates.map(c=>c.mv), weightsArr);
+  }
+
+  function chooseMiniSearch(board, moves, config, aiColor, weights){
+    if (!moves.length) return null;
+    const depth = Math.max(1, config.depth ?? 4);
+    const deadline = config.timeLimitMs ? Date.now() + config.timeLimitMs : null;
+    let best = moves[0];
+    let bestVal = -Infinity;
+    for (const mv of moves){
+      const next = cloneBoard(board);
+      applyMove(next, mv, aiColor);
+      const res = miniNegamax(next, depth - 1, -aiColor, aiColor, weights, -Infinity, Infinity, deadline);
+      if (res.timeout && !Number.isFinite(bestVal)){
+        // Fallback to heuristic if timed out immediately
+        return chooseMiniHeuristic(moves, { candidateRatio: 0.4 }, board, aiColor, weights) || moves[0];
+      }
+      const val = -res.value;
+      if (val > bestVal){ bestVal = val; best = mv; }
+      if (deadline && Date.now() >= deadline) break;
+    }
+    return best;
+  }
+
+  // ---- Weakest Othello HARD-equivalent move selection ----
+  function evaluateMoveSabotage(board, mv, aiColor){
+    const next = applyMoveOnBoard(board, mv, aiColor);
+    const counts = countPieces(next);
+    const oppMoves = legalMoves(next, -aiColor);
+    const myMoves = legalMoves(next, aiColor);
+    let value = 0;
+    if (isCornerVar(board, mv.x, mv.y)) value -= 250;
+    else if (isEdgeVar(board, mv.x, mv.y)) value -= 15;
+    if (isAdjacentToEmptyCornerClassic(board, mv.x, mv.y)) value += 80;
+    const oppCornerChances = oppMoves.filter(m => isCornerVar(board, m.x, m.y)).length;
+    value += oppCornerChances * 140;
+    if (oppMoves.length === 0) value -= 40;
+    if (myMoves.length === 0 && oppMoves.length > 0) value += 60;
+    value += (oppMoves.length - myMoves.length) * 10;
+    value += (counts.black - counts.white) * 6;
+    value -= mv.flips.length * 3;
+    value += Math.random();
+    return value;
+  }
+
+  function pickWeakMove(moves, exponent = 5, options = {}, board, aiColor, weights){
+    if (!moves.length) return null;
+    const { randomBlunderChance = 0, preferSecondWhenLimited = false } = options;
+    if (randomBlunderChance > 0 && Math.random() < randomBlunderChance){
+      return moves[(Math.random() * moves.length) | 0];
+    }
+    if (preferSecondWhenLimited && moves.length <= 2){
+      return moves[1 % moves.length];
+    }
+    const scored = moves.map(mv => ({ mv, value: evaluateMoveMini(board, weights, mv, aiColor) }));
+    scored.sort((a, b) => a.value - b.value);
+    let total = 0; const ws = [];
+    for (let i = 0; i < scored.length; i++){
+      const w = Math.pow(scored.length - i, exponent);
+      ws.push(w); total += w;
+    }
+    let r = Math.random() * total;
+    for (let i = 0; i < scored.length; i++){
+      r -= ws[i];
+      if (r <= 0) return scored[i].mv;
+    }
+    return scored[0].mv;
+  }
+
   function compareScores(playerScore, opponentScore, victoryCondition){
     if (victoryCondition === 'least'){
       if (playerScore < opponentScore) return 1;
@@ -1718,9 +1948,8 @@
     const discBalance = color === BLACK
       ? postCounts.black - postCounts.white
       : postCounts.white - postCounts.black;
-    const surroundDelta = computeSurroundDelta(board, nextBoard, move, color);
-    const surroundWeight = (profile.surroundMultiplier ?? 1) * (3.2 + stage * 5.3);
-    const surroundScore = surroundDelta * surroundWeight;
+    // Surround-based heuristic disabled while we rebalance overall evaluation stability.
+    const surroundScore = 0;
     // C/X avoidance: penalize playing on C- or X-squares next to any (pseudo) corner when that corner is empty
     let cxPenalty = 0;
     try {
@@ -1810,28 +2039,28 @@
       discFactor: 1
     },
     VERY_EASY: {
-      heuristicWeight: 0.4,
-      staticWeight: 0.6,
-      surroundMultiplier: 0.6,
-      mobilityScale: 0.6,
-      frontierFactor: 0.5,
-      flipFactor: 0.5,
-      wallFactor: 0.8,
-      stabilityFactor: 0.7,
-      positionWeight: 0.8,
-      discFactor: 0.5
+      heuristicWeight: 0.8,
+      staticWeight: 0.2,
+      surroundMultiplier: 0,
+      mobilityScale: 0.1,
+      frontierFactor: 0.1,
+      flipFactor: 1.2,
+      wallFactor: 0,
+      stabilityFactor: 0,
+      positionWeight: 0.2,
+      discFactor: 2.0
     },
     EASY: {
-      heuristicWeight: 0.55,
-      staticWeight: 0.45,
-      surroundMultiplier: 0.85,
-      mobilityScale: 0.85,
-      frontierFactor: 0.85,
-      flipFactor: 0.85,
-      wallFactor: 0.95,
-      stabilityFactor: 0.9,
-      positionWeight: 0.9,
-      discFactor: 0.8
+      heuristicWeight: 0.7,
+      staticWeight: 0.3,
+      surroundMultiplier: 0,
+      mobilityScale: 0.6,
+      frontierFactor: 0.5,
+      flipFactor: 1.0,
+      wallFactor: 0.5,
+      stabilityFactor: 0.5,
+      positionWeight: 1.0,
+      discFactor: 1.2
     },
     NORMAL: {
       heuristicWeight: 0.65,
@@ -2515,76 +2744,45 @@
   };
 
   function resolveEffectiveDifficulty(displayDifficulty, victoryCondition){
-    if (victoryCondition !== 'least') return displayDifficulty;
-    return MISERE_DIFFICULTY_ROUTING[displayDifficulty] || displayDifficulty;
+    // Misère（石が少ない方が勝ち）のときは EASY<->HARD を入れ替え、NORMALは据え置き。
+    if (victoryCondition === 'least'){
+      return MISERE_DIFFICULTY_ROUTING[displayDifficulty] || displayDifficulty;
+    }
+    return displayDifficulty;
   }
 
   const DIFFICULTY_CONFIG = {
     VERY_EASY: {
-      type: 'deliberate',
-      lookaheadDepth: 1,
-      poolRatio: 0.9,
-      sampleSize: 6,
-      randomness: 0.7,
-      timeBudgetMs: 160,
-      endgameSolveThreshold: 0
+      type: 'weakest_hard',
+      randomTopBand: 30,
+      fallbackExponent: 6.0,
+      preferSecondWhenLimited: true,
+      randomBlunderChance: 0.25
     },
+    // EASY -> Weakest Othello HARD 相当（自滅志向）
     EASY: {
-      type: 'heuristic',
-      candidateRatio: 0.3,
-      pickFrom: 'worst',
-      randomness: 0.45,
-      endgameSolveThreshold: 0
+      type: 'weakest_hard',
+      randomTopBand: 20,          // トップ帯の幅（othello_weak.js相当）
+      fallbackExponent: 5.0,      // pickWeakMove の指数（HARD）
+      preferSecondWhenLimited: true,
+      randomBlunderChance: 0.15
     },
+    // NORMAL -> Othello NORMAL 相当（単純ヒューリスティック）
     NORMAL: {
-      type: 'search',
-      baseDepth: 3,
-      endgameBonus: 1,
-      timeLimitMs: 320,
-      useTransposition: true,
-      randomness: 0.04,
-      endgameSolveThreshold: 10,
-      // search features
-      useQuiescence: true,
-      quiescenceMaxDepth: 4,
-      useNullMove: true,
-      nullMoveReduction: 2,
-      nullMoveMinDepth: 3,
-      nullMoveDisableEmptyThreshold: 12
+      type: 'othello_normal'
     },
+    // HARD -> Othello HARD 相当（ミニマックス）
     HARD: {
-      type: 'search',
-      baseDepth: 5,
-      endgameBonus: 3,
-      timeLimitMs: 650,
-      useTransposition: true,
-      randomness: 0,
-      endgameSolveThreshold: 12,
-      useQuiescence: true,
-      quiescenceMaxDepth: 6,
-      useNullMove: true,
-      nullMoveReduction: 2,
-      nullMoveMinDepth: 3,
-      nullMoveDisableEmptyThreshold: 12
+      type: 'othello_hard',
+      baseDepth: 4,
+      endgameExtraDepthThreshold: 10, // 空きが10以下で+1
+      timeLimitMs: 1200
     },
     VERY_HARD: {
-      type: 'iterative',
-      baseDepth: 5,
-      maxDepth: 8,
-      timeLimitMs: 1200,
-      useTransposition: true,
-      randomness: 0,
-      endgameSolveThreshold: 14,
-      // advanced features
-      useAspiration: true,
-      aspirationWindow: 350,
-      aspirationGrowth: 2.0,
-      useQuiescence: true,
-      quiescenceMaxDepth: 6,
-      useNullMove: true,
-      nullMoveReduction: 2,
-      nullMoveMinDepth: 3,
-      nullMoveDisableEmptyThreshold: 12
+      type: 'othello_hard',
+      baseDepth: 6,
+      endgameExtraDepthThreshold: 12,
+      timeLimitMs: 2400
     }
   };
 
@@ -2808,37 +3006,59 @@
     const moves = legalMoves(board, aiColor);
     if (moves.length === 0) return null;
     const counts = countPieces(board);
-    // Opening book shortcut (HARD+ only). Skips heavy search in the first dozen plies.
-    const bookMove = tryOpeningBookMove(board, aiColor, victoryCondition, difficulty);
-    if (bookMove) return bookMove;
     const effectiveDifficulty = resolveEffectiveDifficulty(difficulty, victoryCondition);
     const config = DIFFICULTY_CONFIG[effectiveDifficulty] || DIFFICULTY_CONFIG.NORMAL;
-    const heuristicProfile = HEURISTIC_PROFILES[effectiveDifficulty] || HEURISTIC_PROFILES.DEFAULT;
-    const ordered = buildOrderedMoves(board, counts, moves, aiColor, victoryCondition, weights, heuristicProfile);
-    if (!ordered.length) return null;
-
-    let selected = null;
     switch (config.type){
-      case 'deliberate':
-        selected = chooseDeliberateMistakeMove(ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
-        break;
-      case 'heuristic': {
-        selected = chooseHeuristicMove(ordered, config) ?? ordered[0].move;
-        break;
+      case 'weakest_hard': {
+        const sabotage = moves.map(mv => ({ mv, value: evaluateMoveSabotage(board, mv, aiColor) }));
+        sabotage.sort((a,b) => b.value - a.value);
+        const topVal = sabotage[0]?.value ?? -Infinity;
+        const band = Math.max(0, config.randomTopBand | 0);
+        const candidates = sabotage.filter(s => (topVal - s.value) <= band);
+        if (candidates.length > 0){
+          return candidates[(Math.random() * candidates.length) | 0].mv;
+        }
+        return pickWeakMove(
+          moves,
+          config.fallbackExponent ?? 5.0,
+          { preferSecondWhenLimited: !!config.preferSecondWhenLimited, randomBlunderChance: config.randomBlunderChance ?? 0 },
+          board,
+          aiColor,
+          weights
+        ) || moves[0];
       }
-      case 'search':
-        selected = chooseSearchMove(board, counts, ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
-        break;
-      case 'iterative':
-        selected = chooseIterativeMove(board, counts, ordered, config, aiColor, weights, victoryCondition, heuristicProfile);
-        break;
-      default:
-        selected = ordered[0].move;
-        break;
+      case 'othello_normal': {
+        let best = moves[0]; let bestScore = -Infinity;
+        for (const mv of moves){
+          const s = evaluateMoveMini(board, weights, mv, aiColor);
+          if (s > bestScore){ bestScore = s; best = mv; }
+        }
+        return best;
+      }
+      case 'othello_hard': {
+        let depth = Math.max(1, config.baseDepth | 0);
+        const empties = counts.empty | 0;
+        if (empties <= (config.endgameExtraDepthThreshold ?? 10)) depth += 1;
+        const deadline = Date.now() + (config.timeLimitMs ?? 1200);
+        let best = moves[0]; let bestVal = -Infinity;
+        for (const mv of moves){
+          const next = applyMoveOnBoard(board, mv, aiColor);
+          const res = miniNegamax(next, depth - 1, -aiColor, aiColor, weights, -Infinity, Infinity, deadline);
+          const val = res.timeout ? -Infinity : -res.value;
+          if (val > bestVal){ bestVal = val; best = mv; }
+        }
+        return best;
+      }
+      default: {
+        // fallback to simple heuristic best
+        let best = moves[0]; let bestScore = -Infinity;
+        for (const mv of moves){
+          const s = evaluateMoveMini(board, weights, mv, aiColor);
+          if (s > bestScore){ bestScore = s; best = mv; }
+        }
+        return best;
+      }
     }
-    // Final safety valve: avoid C/X if代替あり
-    selected = preferAvoidCornerAdjacency(board, ordered, selected, aiColor);
-    return selected;
   }
 
   function create(root, awardXp, opts){

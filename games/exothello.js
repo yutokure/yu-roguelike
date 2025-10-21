@@ -689,6 +689,11 @@
     return Array.from({ length: height }, () => Array(width).fill(fill));
   }
 
+  // Lightweight clone utility used by mini-evaluator/search
+  function cloneBoard(board){
+    return board.map(row => row.slice());
+  }
+
   // ---- Pattern-based evaluation (corners/edges with walls) ----
   // Symbols used in pattern encoding (from the perspective of `color`):
   // M = my disc, O = opponent disc, E = empty, W = wall/out-of-bounds
@@ -1674,23 +1679,7 @@
     return color === BLACK ? WHITE : BLACK;
   }
 
-  function weightedRandomChoice(entries, weights){
-    let total = 0;
-    for (const weight of weights){
-      total += weight;
-    }
-    if (total <= 0 || !Number.isFinite(total)){
-      return entries[0];
-    }
-    let roll = Math.random() * total;
-    for (let i = 0; i < entries.length; i++){
-      roll -= weights[i];
-      if (roll <= 0){
-        return entries[i];
-      }
-    }
-    return entries[0];
-  }
+  // (legacy weighted random choice removed)
 
   // ---- Mini Othello compatible helpers (for replacing AI logic) ----
   function isCornerVar(board, x, y){
@@ -1836,46 +1825,7 @@
     return scored[0].mv;
   }
 
-  function chooseMiniHeuristic(moves, config, board, aiColor, weights){
-    if (!moves.length) return null;
-    const ratio = Math.min(1, Math.max(0.1, config.candidateRatio ?? 0.4));
-    const pickFrom = config.pickFrom || 'best'; // 'best' or 'worst'
-    const randomness = Math.max(0, config.randomness ?? 0);
-    const entries = moves.map(mv => ({ mv, score: evaluateMoveMini(board, weights, mv, aiColor) }));
-    entries.sort((a,b) => b.score - a.score); // best first
-    const count = Math.max(1, Math.round(entries.length * ratio));
-    const candidates = (pickFrom === 'worst')
-      ? entries.slice(-count).reverse()
-      : entries.slice(0, count);
-    if (candidates.length === 1 || randomness === 0) return candidates[0].mv;
-    const exp = 1 / (1 + randomness * 4);
-    const base = (pickFrom === 'worst')
-      ? (max => c => Math.pow(Math.max(1e-6, max - c.score + 1), exp))(candidates.reduce((m,c)=>Math.max(m,c.score), -Infinity))
-      : (min => c => Math.pow(Math.max(1e-6, c.score - min + 1), exp))(candidates.reduce((m,c)=>Math.min(m,c.score), Infinity));
-    const weightsArr = candidates.map(base);
-    return weightedRandomChoice(candidates.map(c=>c.mv), weightsArr);
-  }
-
-  function chooseMiniSearch(board, moves, config, aiColor, weights){
-    if (!moves.length) return null;
-    const depth = Math.max(1, config.depth ?? 4);
-    const deadline = config.timeLimitMs ? Date.now() + config.timeLimitMs : null;
-    let best = moves[0];
-    let bestVal = -Infinity;
-    for (const mv of moves){
-      const next = cloneBoard(board);
-      applyMove(next, mv, aiColor);
-      const res = miniNegamax(next, depth - 1, -aiColor, aiColor, weights, -Infinity, Infinity, deadline);
-      if (res.timeout && !Number.isFinite(bestVal)){
-        // Fallback to heuristic if timed out immediately
-        return chooseMiniHeuristic(moves, { candidateRatio: 0.4 }, board, aiColor, weights) || moves[0];
-      }
-      const val = -res.value;
-      if (val > bestVal){ bestVal = val; best = mv; }
-      if (deadline && Date.now() >= deadline) break;
-    }
-    return best;
-  }
+  // (legacy mini heuristic/search helpers removed)
 
   // ---- Weakest Othello HARD-equivalent move selection ----
   function evaluateMoveSabotage(board, mv, aiColor){
@@ -1933,807 +1883,53 @@
     return 0;
   }
 
-  function evaluateMoveHeuristic(board, nextBoard, move, color, victoryCondition, weights, postCounts, heuristicProfile){
-    const profile = heuristicProfile || HEURISTIC_PROFILES.DEFAULT;
-    const stage = computeStageFromCounts(postCounts);
-    const cellWeight = weights?.[move.y]?.[move.x] ?? 0;
-    const flipCount = move.flips.length;
-    const stabilityGain = stabilityScore(nextBoard, move.x, move.y, color);
-    const wallInfluence = countWallNeighbors(board, move.x, move.y);
-    const myNextMoves = legalMoves(nextBoard, color).length;
-    const opponentMovesList = legalMoves(nextBoard, -color);
-    const opponentNextMoves = opponentMovesList.length;
-    const mobilityDelta = myNextMoves - opponentNextMoves;
-    const frontierPenaltyBase = isFrontierCell(nextBoard, move.x, move.y) ? -3.5 + stage * 2 : 0;
-    const discBalance = color === BLACK
-      ? postCounts.black - postCounts.white
-      : postCounts.white - postCounts.black;
-    // Surround-based heuristic disabled while we rebalance overall evaluation stability.
-    const surroundScore = 0;
-    // C/X avoidance: penalize playing on C- or X-squares next to any (pseudo) corner when that corner is empty
-    let cxPenalty = 0;
-    try {
-      const structure = analyzeBoardStructure(board);
-      const cornerAdj = classifyCornerAdjacency(board, move.x, move.y, structure);
-      if (cornerAdj && board[cornerAdj.corner.y][cornerAdj.corner.x] === EMPTY){
-        const isX = cornerAdj.type === 'X';
-        const base = isX ? -3200 : -2400;
-        // If opponent can immediately take that corner after this move, add a severe penalty
-        const oppCanCorner = opponentMovesList.some(mv => mv.x === cornerAdj.corner.x && mv.y === cornerAdj.corner.y);
-        const threatPenalty = oppCanCorner ? (isX ? -2400 : -1800) : 0;
-        // Walls near the corner exacerbate instability of C/X
-        const wallsAroundCorner = countWallNeighbors(board, cornerAdj.corner.x, cornerAdj.corner.y);
-        const wallPenalty = wallsAroundCorner >= 2 ? -600 : (wallsAroundCorner >= 1 ? -300 : 0);
-        cxPenalty = (base + threatPenalty + wallPenalty) * (1.0 + 0.6 * (1 - stage)); // 序中盤ほど強く嫌う
-      }
-    } catch {}
-
-    // Edge-aware extras: parity on edge segments, corner risk suppression, opponent edge pressure
-    let edgeExtras = 0;
-    try {
-      const structure = analyzeBoardStructure(board);
-      const k = `${move.x},${move.y}`;
-      const segIndex = structure.edges.cellToIndex.get(k);
-      if (segIndex != null){
-        const seg = structure.edges.all[segIndex];
-        const cornerSet = structure.corners.set;
-        // Count flips that happened on this edge segment
-        let edgeFlipCount = 0;
-        for (const [fx, fy] of move.flips){
-          if (structure.edges.cellSet.has(`${fx},${fy}`)) edgeFlipCount++;
-        }
-        const edgeFlipScore = edgeFlipCount * (18 + 22 * stage) * (profile.flipFactor ?? 1);
-        // Parity on this segment (after my move, opponent to move)
-        let empties = 0;
-        for (const c of seg.cells){ if (nextBoard[c.y][c.x] === EMPTY) empties++; }
-        let paritySign = (empties % 2 === 0) ? 1 : -1; // default: prefer even for opponent's turn
-        if (!TUNING.edgeParityPrefersEven) paritySign = -paritySign;
-        const parityScore = paritySign * (28 + 32 * stage);
-        // Corner risk: if opponent gets corner on this segment endpoints, penalize heavily
-        const start = seg.cells[0];
-        const end = seg.cells[seg.cells.length - 1];
-        const epCorners = [];
-        if (cornerSet.has(`${start.x},${start.y}`)) epCorners.push(start);
-        if (cornerSet.has(`${end.x},${end.y}`)) epCorners.push(end);
-        let cornerThreat = false;
-        if (epCorners.length){
-          for (const mv of opponentMovesList){
-            if (epCorners.some(c => c.x === mv.x && c.y === mv.y)){ cornerThreat = true; break; }
-          }
-        }
-        const cornerPenalty = cornerThreat ? -(700 + 500 * stage) : 0;
-        // Opponent edge pressure: encourage pushing opponent moves to edges (excluding corners)
-        let oppEdge = 0;
-        for (const mv of opponentMovesList){
-          const mk = `${mv.x},${mv.y}`;
-          if (structure.edges.cellSet.has(mk) && !cornerSet.has(mk)) oppEdge++;
-        }
-        const oppRatio = opponentNextMoves > 0 ? oppEdge / opponentNextMoves : 0;
-        const edgePressure = oppRatio * (60 + 90 * stage);
-        edgeExtras = (edgeFlipScore + parityScore + edgePressure + cornerPenalty) * (TUNING.edgeHeuristicScale ?? 1);
-      }
-    } catch {}
-    const objectiveScore = (
-      cellWeight * (4 + stage * 3) * (profile.positionWeight ?? 1) +
-      stabilityGain * (3 + stage * 2) * (profile.stabilityFactor ?? 1) +
-      discBalance * (stage * 5 - 2) * (profile.discFactor ?? 1)
-    );
-    const mobilityScore = mobilityDelta * (3.5 + (1 - stage) * 2.2) * (profile.mobilityScale ?? 1);
-    const wallScore = wallInfluence * (1.2 + stage * 0.5) * (profile.wallFactor ?? 1);
-    const flipScore = flipCount * (2 + stage * 2.5) * (profile.flipFactor ?? 1);
-    const frontierPenalty = frontierPenaltyBase * (profile.frontierFactor ?? 1);
-    return objectiveScore + mobilityScore + wallScore + frontierPenalty + flipScore + surroundScore + edgeExtras + cxPenalty;
-  }
-
-  const HEURISTIC_PROFILES = {
-    DEFAULT: {
-      heuristicWeight: 0.65,
-      staticWeight: 0.35,
-      surroundMultiplier: 1.15,
-      mobilityScale: 1,
-      frontierFactor: 1,
-      flipFactor: 1,
-      wallFactor: 1,
-      stabilityFactor: 1.05,
-      positionWeight: 1,
-      discFactor: 1
-    },
-    VERY_EASY: {
-      heuristicWeight: 0.8,
-      staticWeight: 0.2,
-      surroundMultiplier: 0,
-      mobilityScale: 0.1,
-      frontierFactor: 0.1,
-      flipFactor: 1.2,
-      wallFactor: 0,
-      stabilityFactor: 0,
-      positionWeight: 0.2,
-      discFactor: 2.0
-    },
-    EASY: {
-      heuristicWeight: 0.7,
-      staticWeight: 0.3,
-      surroundMultiplier: 0,
-      mobilityScale: 0.6,
-      frontierFactor: 0.5,
-      flipFactor: 1.0,
-      wallFactor: 0.5,
-      stabilityFactor: 0.5,
-      positionWeight: 1.0,
-      discFactor: 1.2
-    },
-    NORMAL: {
-      heuristicWeight: 0.65,
-      staticWeight: 0.35,
-      surroundMultiplier: 1.2,
-      mobilityScale: 1,
-      frontierFactor: 1.05,
-      flipFactor: 1,
-      wallFactor: 1.05,
-      stabilityFactor: 1.1,
-      positionWeight: 1,
-      discFactor: 1
-    },
-    HARD: {
-      heuristicWeight: 0.72,
-      staticWeight: 0.28,
-      surroundMultiplier: 1.35,
-      mobilityScale: 1.12,
-      frontierFactor: 1.2,
-      flipFactor: 1.1,
-      wallFactor: 1.15,
-      stabilityFactor: 1.25,
-      positionWeight: 1.1,
-      discFactor: 1.1
-    },
-    VERY_HARD: {
-      heuristicWeight: 0.75,
-      staticWeight: 0.25,
-      surroundMultiplier: 1.5,
-      mobilityScale: 1.22,
-      frontierFactor: 1.3,
-      flipFactor: 1.18,
-      wallFactor: 1.22,
-      stabilityFactor: 1.4,
-      positionWeight: 1.15,
-      discFactor: 1.15
-    }
-  };
+  // (legacy heuristic profile + complex evaluator removed)
 
   function cloneBoard(board){
     return board.map(row => row.slice());
   }
 
-  function buildOrderedMoves(board, counts, moves, color, victoryCondition, weights, heuristicProfile){
-    const entries = [];
-    const profile = heuristicProfile || HEURISTIC_PROFILES.DEFAULT;
-    const heuristicWeight = profile.heuristicWeight ?? 0.6;
-    const staticWeight = profile.staticWeight ?? 0.4;
-    const weightSum = heuristicWeight + staticWeight;
-    const normalizedHeuristicWeight = weightSum > 0 ? heuristicWeight / weightSum : 0.6;
-    const normalizedStaticWeight = weightSum > 0 ? staticWeight / weightSum : 0.4;
-    for (const move of moves){
-      const nextBoard = cloneBoard(board);
-      applyMove(nextBoard, move, color);
-      const postCounts = updateCountsAfterMove(counts, move, color);
-      const heuristicScore = evaluateMoveHeuristic(
-        board,
-        nextBoard,
-        move,
-        color,
-        victoryCondition,
-        weights,
-        postCounts,
-        profile
-      );
-      const staticScore = evaluateBoardForColor(nextBoard, weights, victoryCondition, color);
-      const combinedScore = heuristicScore * normalizedHeuristicWeight + staticScore * normalizedStaticWeight;
-      entries.push({ move, nextBoard, counts: postCounts, heuristicScore, staticScore, combinedScore });
-    }
-    entries.sort((a, b) => b.combinedScore - a.combinedScore);
-    return entries;
-  }
+  // (legacy move ordering removed)
 
-  function createTranspositionKey(board, color, depth, victoryCondition){
-    let key = `${color}|${depth}|${victoryCondition}|`;
-    for (let y = 0; y < board.length; y++){
-      const row = board[y];
-      for (let x = 0; x < row.length; x++){
-        key += String.fromCharCode(row[x] + 3 + 48);
-      }
-      key += ':';
-    }
-    return key;
-  }
+  // (legacy transposition key removed)
 
   // ---- Search tunables and helpers ----
-  const DEFAULT_SEARCH_TUNING = {
-    useQuiescence: true,
-    quiescenceMaxDepth: 6,
-    quiescenceFlipThresholdBase: 4,
-    quiescenceConsiderCorners: true,
-    useNullMove: true,
-    nullMoveReduction: 2,
-    nullMoveMinDepth: 3,
-    nullMoveDisableEmptyThreshold: 12,
-    useAspiration: true,
-    aspirationWindow: 350,
-    aspirationGrowth: 1.9
-  };
+  // (legacy search tuning removed)
 
-  function estimateQuiescenceFlipThreshold(board){
-    const h = board.length | 0;
-    const w = (board[0]?.length) | 0;
-    const area = Math.max(1, h * w);
-    return Math.max(3, Math.round(Math.sqrt(area) / 4));
-  }
+  // (legacy quiescence helpers removed)
 
-  function isCornerCell(board, x, y){
-    const h = board.length | 0;
-    const w = (board[0]?.length) | 0;
-    const isCorner = (x === 0 && y === 0)
-      || (x === w - 1 && y === 0)
-      || (x === 0 && y === h - 1)
-      || (x === w - 1 && y === h - 1);
-    return !!isCorner && board[y]?.[x] !== WALL;
-  }
+  // (legacy corner-cell helper removed)
 
-  function generateNoisyMoves(board, color, flipThreshold){
-    const moves = legalMoves(board, color);
-    if (!moves.length) return moves;
-    const thresh = Math.max(1, flipThreshold ?? estimateQuiescenceFlipThreshold(board));
-    const noisy = [];
-    for (const mv of moves){
-      if (mv.flips.length >= thresh || isCornerCell(board, mv.x, mv.y)) noisy.push(mv);
-    }
-    return noisy;
-  }
+  // (legacy noisy move generator removed)
 
-  function quiescenceSearch(board, counts, alpha, beta, currentColor, aiColor, weights, victoryCondition, deadline, transposition, qDepth, tuning){
-    if (deadline && Date.now() >= deadline){
-      return { value: evaluateBoardForColor(board, weights, victoryCondition, aiColor), timeout: true };
-    }
-    const standPat = evaluateBoardForColor(board, weights, victoryCondition, aiColor);
-    if (standPat >= beta) return { value: beta, timeout: false };
-    if (standPat > alpha) alpha = standPat;
+  // (legacy quiescence search removed)
 
-    if (qDepth <= 0 || counts.empty === 0){
-      return { value: alpha, timeout: false };
-    }
-    const flipThreshold = (tuning?.quiescenceFlipThresholdBase) ?? estimateQuiescenceFlipThreshold(board);
-    const noisyMoves = generateNoisyMoves(board, currentColor, flipThreshold);
-    if (!noisyMoves.length){
-      return { value: alpha, timeout: false };
-    }
-    noisyMoves.sort((a, b) => b.flips.length - a.flips.length);
-    let best = alpha;
-    for (const mv of noisyMoves){
-      const next = cloneBoard(board);
-      applyMove(next, mv, currentColor);
-      const nextCounts = updateCountsAfterMove(counts, mv, currentColor);
-      const child = quiescenceSearch(
-        next,
-        nextCounts,
-        -beta,
-        -alpha,
-        -currentColor,
-        aiColor,
-        weights,
-        victoryCondition,
-        deadline,
-        transposition,
-        qDepth - 1,
-        tuning
-      );
-      if (child.timeout) return child;
-      const score = -child.value;
-      if (score > best) best = score;
-      if (score > alpha) alpha = score;
-      if (alpha >= beta) break;
-      if (deadline && Date.now() >= deadline){
-        return { value: alpha, timeout: true };
-      }
-    }
-    return { value: best, timeout: false };
-  }
+  // (legacy negamax search removed)
 
-  function negamaxRecursive(board, counts, depth, currentColor, aiColor, weights, victoryCondition, alpha, beta, deadline, transposition, heuristicProfile, searchTuning, prevWasNull){
-    const profile = heuristicProfile || HEURISTIC_PROFILES.DEFAULT;
-    const tuning = searchTuning || DEFAULT_SEARCH_TUNING;
-    if (deadline && Date.now() >= deadline){
-      return { value: evaluateBoardForColor(board, weights, victoryCondition, aiColor), timeout: true };
-    }
-    if (depth === 0 || counts.empty === 0){
-      if (tuning.useQuiescence && depth === 0 && counts.empty > 0){
-        const qDepth = Math.max(0, tuning.quiescenceMaxDepth | 0);
-        if (qDepth > 0){
-          return quiescenceSearch(board, counts, alpha, beta, currentColor, aiColor, weights, victoryCondition, deadline, transposition, qDepth, tuning);
-        }
-      }
-      return { value: evaluateBoardForColor(board, weights, victoryCondition, aiColor), timeout: false };
-    }
-    const key = transposition ? createTranspositionKey(board, currentColor, depth, victoryCondition) : null;
-    if (key && transposition?.has(key)){
-      const cached = transposition.get(key);
-      if (cached.depth >= depth){
-        return { value: cached.value, timeout: false };
-      }
-    }
-    const moves = legalMoves(board, currentColor);
-    if (moves.length === 0){
-      const opponentMoves = legalMoves(board, -currentColor);
-      if (opponentMoves.length === 0){
-        return { value: evaluateBoardForColor(board, weights, victoryCondition, aiColor), timeout: false };
-      }
-      const passResult = negamaxRecursive(
-        board,
-        counts,
-        Math.max(0, depth - 1),
-        -currentColor,
-        aiColor,
-        weights,
-        victoryCondition,
-        -beta,
-        -alpha,
-        deadline,
-        transposition,
-        profile,
-        tuning,
-        false
-      );
-      if (passResult.timeout) return passResult;
-      const passValue = -passResult.value;
-      if (key && transposition){
-        transposition.set(key, { depth, value: passValue });
-      }
-      return { value: passValue, timeout: false };
-    }
+  // (legacy negamax root removed)
 
-    // Null-move pruning
-    if (tuning.useNullMove && !prevWasNull && depth >= (tuning.nullMoveMinDepth ?? 3) && counts.empty > (tuning.nullMoveDisableEmptyThreshold ?? 12)){
-      const R = Math.max(1, tuning.nullMoveReduction | 0);
-      const nm = negamaxRecursive(
-        board,
-        counts,
-        depth - 1 - R,
-        -currentColor,
-        aiColor,
-        weights,
-        victoryCondition,
-        -beta,
-        -beta + 1,
-        deadline,
-        transposition,
-        profile,
-        tuning,
-        true
-      );
-      if (nm.timeout) return nm;
-      const nmScore = -nm.value;
-      if (nmScore >= beta){
-        return { value: nmScore, timeout: false };
-      }
-    }
-    const ordered = buildOrderedMoves(board, counts, moves, currentColor, victoryCondition, weights, profile);
-    let bestValue = -Infinity;
-    let localAlpha = alpha;
-    for (const entry of ordered){
-      const child = negamaxRecursive(
-        entry.nextBoard,
-        entry.counts,
-        depth - 1,
-        -currentColor,
-        aiColor,
-        weights,
-        victoryCondition,
-        -beta,
-        -localAlpha,
-        deadline,
-        transposition,
-        profile,
-        tuning,
-        false
-      );
-      if (child.timeout) return child;
-      const value = -child.value;
-      if (value > bestValue){
-        bestValue = value;
-      }
-      if (value > localAlpha){
-        localAlpha = value;
-      }
-      if (localAlpha >= beta){
-        break;
-      }
-      if (deadline && Date.now() >= deadline){
-        break;
-      }
-    }
-    if (key && transposition){
-      transposition.set(key, { depth, value: bestValue });
-    }
-    return { value: bestValue, timeout: false };
-  }
-
-  function negamaxRoot(board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile, alphaInit = -Infinity, betaInit = Infinity, searchTuning){
-    const profile = heuristicProfile || HEURISTIC_PROFILES.DEFAULT;
-    const moves = orderedMoves ?? buildOrderedMoves(
-      board,
-      counts,
-      legalMoves(board, aiColor),
-      aiColor,
-      victoryCondition,
-      weights,
-      profile
-    );
-    if (!moves.length){
-      return { move: null, value: evaluateBoardForColor(board, weights, victoryCondition, aiColor), timeout: false };
-    }
-    let bestMove = moves[0].move;
-    let bestValue = -Infinity;
-    let alpha = alphaInit;
-    let beta = betaInit;
-    for (const entry of moves){
-      const child = negamaxRecursive(
-        entry.nextBoard,
-        entry.counts,
-        depth - 1,
-        oppositeColor(aiColor),
-        aiColor,
-        weights,
-        victoryCondition,
-        -beta,
-        -alpha,
-        deadline,
-        transposition,
-        profile,
-        searchTuning,
-        false
-      );
-      if (child.timeout){
-        return {
-          move: bestMove,
-          value: bestValue === -Infinity ? entry.combinedScore : bestValue,
-          timeout: true
-        };
-      }
-      const value = -child.value;
-      if (value > bestValue || bestMove == null){
-        bestValue = value;
-        bestMove = entry.move;
-      }
-      if (value > alpha){
-        alpha = value;
-      }
-      if (alpha >= beta){
-        break;
-      }
-      if (deadline && Date.now() >= deadline){
-        break;
-      }
-    }
-    if (transposition){
-      const key = createTranspositionKey(board, aiColor, depth, victoryCondition);
-      transposition.set(key, { depth, value: bestValue });
-    }
-    return { move: bestMove, value: bestValue, timeout: false };
-  }
-
-  function adjustSearchDepth(config, board, counts){
-    const baseDepth = Math.max(1, config.baseDepth || 2);
-    const area = board.length * board[0].length;
-    const empties = counts.empty;
-    let depth = baseDepth;
-    if (area > 196){
-      depth = Math.max(2, depth - 1);
-    }
-    if (area > 256){
-      depth = Math.max(2, depth - 2);
-    }
-    if (empties >= 40){
-      depth = Math.max(1, depth - 1);
-    }
-    const bonus = config.endgameBonus ?? 0;
-    if (empties <= 10){
-      depth += bonus + 1;
-    } else if (empties <= 18){
-      depth += Math.max(1, Math.ceil(bonus / 2));
-    }
-    return Math.max(1, depth);
-  }
+  // (legacy depth adjuster removed)
 
   // ---- Endgame exact reading (solve to end when empties are small) ----
-  function shouldUseEndgameSolve(config, counts){
-    const thr = Math.max(0, config.endgameSolveThreshold | 0);
-    return counts.empty <= thr;
-  }
+  // (legacy endgame switch removed)
 
-  function createExactKey(board, color, victory){
-    // distinct namespace 'X' for exact search
-    let key = `X|${color}|${victory}|`;
-    for (let y = 0; y < board.length; y++){
-      const row = board[y];
-      for (let x = 0; x < row.length; x++){
-        key += String.fromCharCode(row[x] + 3 + 48);
-      }
-      key += ':';
-    }
-    return key;
-  }
+  // (legacy exact-solve key removed)
 
-  function terminalValueFor(board, aiColor, victoryCondition){
-    const c = countPieces(board);
-    let diff = (aiColor === WHITE) ? (c.white - c.black) : (c.black - c.white);
-    if (victoryCondition === 'least') diff = -diff; // misère: 小さいほど良い
-    // Return raw difference; alpha-beta relies on ordering, not absolute scaling
-    return diff;
-  }
+  // (legacy terminal evaluator removed)
 
-  function orderEndgameMoves(board, color, moves){
-    const structure = analyzeBoardStructure(board);
-    const cornerSet = structure.corners.set;
-    return moves.slice().sort((a, b) => {
-      const ak = `${a.x},${a.y}`;
-      const bk = `${b.x},${b.y}`;
-      const acorner = cornerSet.has(ak) ? 1 : 0;
-      const bcorner = cornerSet.has(bk) ? 1 : 0;
-      if (acorner !== bcorner) return bcorner - acorner; // corners first
-      // then by flips descending (more forcing often better in low empties)
-      if (a.flips.length !== b.flips.length) return b.flips.length - a.flips.length;
-      return 0;
-    });
-  }
+  // (legacy endgame move ordering removed)
 
-  function endgameNegamax(board, color, aiColor, victoryCondition, alpha, beta, deadline, transposition){
-    if (deadline && Date.now() >= deadline){
-      return { value: terminalValueFor(board, aiColor, victoryCondition), timeout: true };
-    }
-    const key = transposition ? createExactKey(board, color, victoryCondition) : null;
-    if (key && transposition?.has(key)){
-      return transposition.get(key);
-    }
-    const moves = legalMoves(board, color);
-    if (moves.length === 0){
-      const omoves = legalMoves(board, -color);
-      if (omoves.length === 0){
-        const v = terminalValueFor(board, aiColor, victoryCondition);
-        const res = { value: v, timeout: false };
-        if (key && transposition) transposition.set(key, res);
-        return res;
-      }
-      // pass
-      const child = endgameNegamax(board, -color, aiColor, victoryCondition, -beta, -alpha, deadline, transposition);
-      if (child.timeout) return child;
-      const v = -child.value;
-      const res = { value: v, timeout: false };
-      if (key && transposition) transposition.set(key, res);
-      return res;
-    }
-    const ordered = orderEndgameMoves(board, color, moves);
-    let best = -Infinity;
-    let a = alpha;
-    for (const mv of ordered){
-      const next = cloneBoard(board);
-      applyMove(next, mv, color);
-      const child = endgameNegamax(next, -color, aiColor, victoryCondition, -beta, -a, deadline, transposition);
-      if (child.timeout) return child;
-      const val = -child.value;
-      if (val > best) best = val;
-      if (val > a) a = val;
-      if (a >= beta) break;
-      if (deadline && Date.now() >= deadline) break;
-    }
-    const res = { value: best, timeout: false };
-    if (key && transposition) transposition.set(key, res);
-    return res;
-  }
+  // (legacy endgame negamax removed)
 
-  function endgameSolveRoot(board, counts, aiColor, victoryCondition, deadline, transposition){
-    const moves = legalMoves(board, aiColor);
-    if (!moves.length){
-      // either pass or game over; let existing logic handle
-      return { move: null, value: terminalValueFor(board, aiColor, victoryCondition), timeout: false };
-    }
-    const ordered = orderEndgameMoves(board, aiColor, moves);
-    let bestMove = ordered[0].move || ordered[0];
-    let bestVal = -Infinity;
-    let alpha = -Infinity; const beta = Infinity;
-    for (const mv of ordered){
-      const next = cloneBoard(board);
-      applyMove(next, mv, aiColor);
-      const child = endgameNegamax(next, -aiColor, aiColor, victoryCondition, -beta, -alpha, deadline, transposition);
-      if (child.timeout){
-        // Give up exact solve due to time; signal caller to fallback
-        return { move: null, value: terminalValueFor(board, aiColor, victoryCondition), timeout: true };
-      }
-      const val = -child.value;
-      if (val > bestVal){ bestVal = val; bestMove = mv; }
-      if (val > alpha){ alpha = val; }
-      if (alpha >= beta) break;
-      if (deadline && Date.now() >= deadline){
-        return { move: null, value: bestVal, timeout: true };
-      }
-    }
-    return { move: bestMove, value: bestVal, timeout: false };
-  }
+  // (legacy endgame root removed)
 
-  function chooseDeliberateMistakeMove(orderedMoves, config, aiColor, weights, victoryCondition, heuristicProfile){
-    const poolRatio = Math.min(1, Math.max(0.2, config.poolRatio ?? 0.6));
-    const poolSize = Math.max(1, Math.ceil(orderedMoves.length * poolRatio));
-    const worstCandidates = orderedMoves.slice(-poolSize);
-    let selected = worstCandidates[0] ?? orderedMoves[orderedMoves.length - 1];
-    const lookahead = Math.max(0, config.lookaheadDepth | 0);
-    const horizonDeadline = Date.now() + (config.timeBudgetMs ?? 160);
-    if (lookahead > 0 && worstCandidates.length){
-      let worstValue = Infinity;
-      const sampleSize = Math.max(1, Math.min(worstCandidates.length, config.sampleSize ?? 5));
-      const sample = worstCandidates.slice(0, sampleSize);
-      for (const entry of sample){
-        const result = negamaxRecursive(
-          entry.nextBoard,
-          entry.counts,
-          lookahead - 1,
-          oppositeColor(aiColor),
-          aiColor,
-          weights,
-          victoryCondition,
-          -Infinity,
-          Infinity,
-          horizonDeadline,
-          null,
-          heuristicProfile,
-          DEFAULT_SEARCH_TUNING,
-          false
-        );
-        const value = (result.timeout ? 0 : -result.value) + (Math.random() - 0.5) * 0.1;
-        if (value < worstValue){
-          worstValue = value;
-          selected = entry;
-        }
-      }
-    }
-    if (Math.random() < (config.randomness ?? 0.35) && worstCandidates.length > 1){
-      selected = worstCandidates[(Math.random() * worstCandidates.length) | 0];
-    }
-    return selected.move;
-  }
+  // (legacy deliberate mistake picker removed)
 
-  function chooseHeuristicMove(orderedMoves, config){
-    if (!orderedMoves.length) return null;
-    const ratio = Math.min(1, Math.max(0.1, config.candidateRatio ?? 0.4));
-    const candidateCount = Math.max(1, Math.round(orderedMoves.length * ratio));
-    const pickWorst = config.pickFrom === 'worst';
-    const candidates = pickWorst
-      ? orderedMoves.slice(-candidateCount).reverse()
-      : orderedMoves.slice(0, candidateCount);
-    if (candidates.length === 1 || (config.randomness ?? 0) <= 0){
-      return candidates[0].move;
-    }
-    const exponent = 1 / (1 + (config.randomness ?? 0) * 4);
-    let weights;
-    if (pickWorst){
-      const maxScore = candidates.reduce((max, entry) => Math.max(max, entry.combinedScore), -Infinity);
-      weights = candidates.map(entry => {
-        const normalized = maxScore - entry.combinedScore + 1;
-        return Math.pow(Math.max(1e-6, normalized), exponent);
-      });
-    } else {
-      const minScore = candidates.reduce((min, entry) => Math.min(min, entry.combinedScore), Infinity);
-      weights = candidates.map(entry => {
-        const normalized = entry.combinedScore - minScore + 1;
-        return Math.pow(Math.max(1e-6, normalized), exponent);
-      });
-    }
-    const selection = weightedRandomChoice(candidates, weights);
-    return selection.move;
-  }
+  // (legacy chooseHeuristicMove removed)
 
-  function chooseSearchMove(board, counts, orderedMoves, config, aiColor, weights, victoryCondition, heuristicProfile){
-    const transposition = config.useTransposition ? new Map() : null;
-    const depth = adjustSearchDepth(config, board, counts);
-    const deadline = config.timeLimitMs ? Date.now() + config.timeLimitMs : null;
-    if (shouldUseEndgameSolve(config, counts)){
-      const solved = endgameSolveRoot(board, counts, aiColor, victoryCondition, deadline, transposition);
-      if (solved && solved.move) return solved.move;
-    }
-    const searchTuning = {
-      ...DEFAULT_SEARCH_TUNING,
-      useAspiration: false,
-      useQuiescence: config.useQuiescence ?? DEFAULT_SEARCH_TUNING.useQuiescence,
-      quiescenceMaxDepth: config.quiescenceMaxDepth ?? DEFAULT_SEARCH_TUNING.quiescenceMaxDepth,
-      quiescenceFlipThresholdBase: config.quiescenceFlipThresholdBase ?? DEFAULT_SEARCH_TUNING.quiescenceFlipThresholdBase,
-      useNullMove: config.useNullMove ?? DEFAULT_SEARCH_TUNING.useNullMove,
-      nullMoveReduction: config.nullMoveReduction ?? DEFAULT_SEARCH_TUNING.nullMoveReduction,
-      nullMoveMinDepth: config.nullMoveMinDepth ?? DEFAULT_SEARCH_TUNING.nullMoveMinDepth,
-      nullMoveDisableEmptyThreshold: config.nullMoveDisableEmptyThreshold ?? DEFAULT_SEARCH_TUNING.nullMoveDisableEmptyThreshold
-    };
-    const result = negamaxRoot(
-      board,
-      counts,
-      depth,
-      aiColor,
-      weights,
-      victoryCondition,
-      deadline,
-      transposition,
-      orderedMoves,
-      heuristicProfile,
-      -Infinity,
-      Infinity,
-      searchTuning
-    );
-    let move = result.move ?? orderedMoves[0].move;
-    move = preferAvoidCornerAdjacency(board, orderedMoves, move, aiColor);
-    if (config.randomness && Math.random() < config.randomness && orderedMoves.length > 1){
-      move = orderedMoves[1].move;
-    }
-    return move;
-  }
+  // (legacy chooseSearchMove removed)
 
-  function chooseIterativeMove(board, counts, orderedMoves, config, aiColor, weights, victoryCondition, heuristicProfile){
-    const transposition = config.useTransposition ? new Map() : null;
-    const targetDepth = adjustSearchDepth(config, board, counts);
-    const maxDepth = Math.max(targetDepth, config.maxDepth || targetDepth);
-    const deadline = config.timeLimitMs ? Date.now() + config.timeLimitMs : null;
-    if (shouldUseEndgameSolve(config, counts)){
-      const solved = endgameSolveRoot(board, counts, aiColor, victoryCondition, deadline, transposition);
-      if (solved && solved.move) return solved.move;
-    }
-    let bestMove = orderedMoves[0].move;
-    let lastScore = 0;
-    const searchTuningBase = {
-      ...DEFAULT_SEARCH_TUNING,
-      useAspiration: config.useAspiration ?? true,
-      aspirationWindow: config.aspirationWindow ?? DEFAULT_SEARCH_TUNING.aspirationWindow,
-      aspirationGrowth: config.aspirationGrowth ?? DEFAULT_SEARCH_TUNING.aspirationGrowth,
-      useQuiescence: config.useQuiescence ?? DEFAULT_SEARCH_TUNING.useQuiescence,
-      quiescenceMaxDepth: config.quiescenceMaxDepth ?? DEFAULT_SEARCH_TUNING.quiescenceMaxDepth,
-      quiescenceFlipThresholdBase: config.quiescenceFlipThresholdBase ?? DEFAULT_SEARCH_TUNING.quiescenceFlipThresholdBase,
-      useNullMove: config.useNullMove ?? DEFAULT_SEARCH_TUNING.useNullMove,
-      nullMoveReduction: config.nullMoveReduction ?? DEFAULT_SEARCH_TUNING.nullMoveReduction,
-      nullMoveMinDepth: config.nullMoveMinDepth ?? DEFAULT_SEARCH_TUNING.nullMoveMinDepth,
-      nullMoveDisableEmptyThreshold: config.nullMoveDisableEmptyThreshold ?? DEFAULT_SEARCH_TUNING.nullMoveDisableEmptyThreshold
-    };
-    for (let depth = 1; depth <= maxDepth; depth++){
-      let alpha = -Infinity, beta = Infinity;
-      const searchTuning = { ...searchTuningBase };
-      if (searchTuning.useAspiration && depth > 1 && Number.isFinite(lastScore)){
-        const w = Math.max(50, searchTuning.aspirationWindow | 0);
-        alpha = lastScore - w;
-        beta = lastScore + w;
-      }
-      let result = negamaxRoot(
-        board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile, alpha, beta, searchTuning
-      );
-      if (!result.timeout && searchTuning.useAspiration && (result.value <= alpha || result.value >= beta)){
-        // Failed aspiration; widen window progressively
-        let window = Math.max(50, searchTuning.aspirationWindow | 0) * (searchTuning.aspirationGrowth || 2);
-        while (!result.timeout){
-          alpha = result.value <= alpha ? -Infinity : result.value - window;
-          beta = result.value >= beta ? Infinity : result.value + window;
-          result = negamaxRoot(
-            board, counts, depth, aiColor, weights, victoryCondition, deadline, transposition, orderedMoves, heuristicProfile, alpha, beta, searchTuning
-          );
-          if (!result.timeout && result.value > alpha && result.value < beta) break;
-          window *= (searchTuning.aspirationGrowth || 2);
-          if (deadline && Date.now() >= deadline) break;
-        }
-      }
-      if (result.move){
-        bestMove = result.move;
-      }
-      if (typeof result.value === 'number' && Number.isFinite(result.value)){
-        lastScore = result.value;
-      }
-      if (result.timeout) break;
-      if (deadline && Date.now() >= deadline) break;
-    }
-    if (config.randomness && Math.random() < config.randomness && orderedMoves.length > 1){
-      bestMove = orderedMoves[1].move;
-    }
-    bestMove = preferAvoidCornerAdjacency(board, orderedMoves, bestMove, aiColor);
-    return bestMove;
-  }
+  // (legacy chooseIterativeMove removed)
 
   const MISERE_DIFFICULTY_ROUTING = {
     VERY_EASY: 'VERY_HARD',
@@ -2786,65 +1982,7 @@
     }
   };
 
-  // Determine if a move is a C- or X-adjacent to any (pseudo) corner on the current board
-  function classifyCornerAdjacency(board, mx, my, structure){
-    const corners = structure?.corners?.all || [];
-    for (const c of corners){
-      const cx = c.x, cy = c.y;
-      if (board[cy]?.[cx] === WALL) continue;
-      const dx = mx - cx; const dy = my - cy;
-      const manhattan = Math.abs(dx) + Math.abs(dy);
-      if (manhattan === 1) return { type: 'C', corner: { x: cx, y: cy } };
-      if (Math.abs(dx) === 1 && Math.abs(dy) === 1) return { type: 'X', corner: { x: cx, y: cy } };
-    }
-    return null;
-  }
-
-  function isRiskyCornerAdjacencyMove(board, move){
-    try {
-      const structure = analyzeBoardStructure(board);
-      const adj = classifyCornerAdjacency(board, move.x, move.y, structure);
-      if (!adj) return false;
-      const center = board[adj.corner.y][adj.corner.x];
-      return center === EMPTY; // 角が空いているときのみ強く危険視
-    } catch { return false; }
-  }
-
-  function countImmediateCornerThreatsAfter(board, move, color){
-    const next = cloneBoard(board);
-    applyMove(next, move, color);
-    const structure = analyzeBoardStructure(board);
-    const corners = structure.corners.all;
-    const oppMoves = legalMoves(next, -color);
-    let count = 0;
-    for (const mv of oppMoves){
-      if (corners.some(c => c.x === mv.x && c.y === mv.y)) count++;
-    }
-    return count;
-  }
-
-  function preferAvoidCornerAdjacency(board, orderedMoves, pickedMove, aiColor){
-    // If picked move is C/X next to empty corner, try switch to first non-risky candidate
-    if (!pickedMove) return pickedMove;
-    if (!TUNING.avoidCornerAdjacencyStrong) return pickedMove;
-    if (!isRiskyCornerAdjacencyMove(board, pickedMove)) return pickedMove;
-    const structure = analyzeBoardStructure(board);
-    const nonRisky = orderedMoves.find(e => !classifyCornerAdjacency(board, e.move.x, e.move.y, structure));
-    if (nonRisky) return nonRisky.move;
-    // If all are risky, choose the one minimizing immediate corner threats; prefer C over X if tie
-    let best = pickedMove;
-    let bestScore = Infinity;
-    let bestType = 'X';
-    for (const e of orderedMoves){
-      const adj = classifyCornerAdjacency(board, e.move.x, e.move.y, structure);
-      if (!adj) continue;
-      const threats = countImmediateCornerThreatsAfter(board, e.move, aiColor);
-      const tiebreak = adj.type === 'C' ? -0.5 : 0.0;
-      const s = threats + tiebreak;
-      if (s < bestScore){ bestScore = s; best = e.move; bestType = adj.type; }
-    }
-    return best;
-  }
+  // (legacy corner adjacency helpers removed)
 
   // ---- Opening Book (8x8, standard rules) ----
   // Lightweight opening database used only on HARD or above to make early moves instant.
@@ -2853,8 +1991,7 @@
   // - Symmetry-expanded from a few principal lines generated with the engine
   // - If a book move is not legal (e.g., player deviated), we fall back to normal search
 
-  const __OPENING_BOOK_STATE = { map: null };
-  const OPENING_MAX_PLIES = 14; // use book only for the first ~14 plies (about "十数手")
+  // (opening book state removed)
 
   function hasAnyWalls(board){
     for (let y = 0; y < board.length; y++){
@@ -4215,7 +3352,6 @@
     // Expose a tiny test API for benchmarking/tuning in Node.
     module.exports = { create, __exothelloTestAPI: {
       constants: { EMPTY, BLACK, WHITE, WALL },
-      TUNING,
       createBoard,
       placeStandardOpening,
       placeRandomWalls,
@@ -4223,11 +3359,8 @@
       legalMoves,
       applyMove,
       countPieces,
-      evaluateBoard,
-      evaluatePatternScore,
-      analyzeBoardStructure,
       pickAIMove,
-      computeStageFromCounts
+      createWeights
     } };
   }
 })();

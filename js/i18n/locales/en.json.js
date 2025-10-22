@@ -18843,8 +18843,13 @@
           "namePlaceholder": "e.g., Send daily report",
           "type": "Type",
           "typeSingle": "Single",
-          "typeRepeatable": "Repeatable",
+        "typeRepeatable": "Repeatable",
           "xp": "EXP Change (use minus to revoke)",
+          "randomRange": {
+            "toggle": "Use Random Range",
+            "min": "Min",
+            "max": "Max"
+          },
           "rewards": {
             "title": "Additional Rewards",
             "passiveOrb": {
@@ -18862,6 +18867,12 @@
               "customOption": "{value} (saved)",
               "amount": "Quantity (negative to remove)",
               "addEntry": "Add",
+              "lootTable": {
+                "label": "Loot Table",
+                "addEntry": "Add",
+                "dropChance": "Drop Chance (%)",
+                "weight": "Weight"
+              },
               "defaults": {
                 "potion30": "Potion (30%)",
                 "hpBoost": "HP Boost",
@@ -18896,7 +18907,8 @@
           "rewards": {
             "passiveOrb": "Orb: {orb} ×{amount}",
             "item": "{item} ×{amount}",
-            "sp": "SP {amount}"
+            "sp": "SP {amount}",
+            "loot": "Loot {chance}%"
           },
           "memoEmpty": "No notes",
           "createdAt": "Created: {date}",

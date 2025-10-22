@@ -3851,4 +3851,27 @@
     }
   };
   store["ko"] = locale;
+  if (!store["ko"]) { store["ko"] = {}; }
+  if (!store["ko"].games) { store["ko"].games = {}; }
+  var koGames = store["ko"].games;
+  koGames.todoList = koGames.todoList || {};
+  koGames.todoList.form = koGames.todoList.form || {};
+  koGames.todoList.form.randomRange = koGames.todoList.form.randomRange || {
+    "toggle": "무작위 범위 사용",
+    "min": "최소값",
+    "max": "최대값"
+  };
+  koGames.todoList.form.rewards = koGames.todoList.form.rewards || {};
+  koGames.todoList.form.rewards.item = koGames.todoList.form.rewards.item || {};
+  koGames.todoList.form.rewards.item.lootTable = koGames.todoList.form.rewards.item.lootTable || {
+    "label": "드랍 테이블",
+    "addEntry": "추가",
+    "dropChance": "드랍 확률(%)",
+    "weight": "가중치"
+  };
+  koGames.todoList.task = koGames.todoList.task || {};
+  koGames.todoList.task.rewards = koGames.todoList.task.rewards || {};
+  if (!koGames.todoList.task.rewards.loot) {
+    koGames.todoList.task.rewards.loot = "드랍 {chance}%";
+  }
 })(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this);

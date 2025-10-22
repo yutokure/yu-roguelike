@@ -8836,6 +8836,11 @@
           "typeSingle": "单张",
           "typeRepeatable": "可重复",
           "xp": "经验变化（负数为扣除）",
+          "randomRange": {
+            "toggle": "使用随机范围",
+            "min": "最小值",
+            "max": "最大值"
+          },
           "rewards": {
             "title": "额外奖励",
             "passiveOrb": {
@@ -8853,6 +8858,12 @@
               "customOption": "{value}（已保存）",
               "amount": "数量（负数为扣除）",
               "addEntry": "添加",
+              "lootTable": {
+                "label": "掉落表",
+                "addEntry": "添加",
+                "dropChance": "掉落率(%)",
+                "weight": "权重"
+              },
               "defaults": {
                 "potion30": "药水(30%)",
                 "hpBoost": "生命值提升",
@@ -8887,7 +8898,8 @@
           "rewards": {
             "passiveOrb": "宝珠：{orb} ×{amount}",
             "item": "{item} ×{amount}",
-            "sp": "SP {amount}"
+            "sp": "SP {amount}",
+            "loot": "抽取{chance}%"
           },
           "memoEmpty": "无注释",
           "createdAt": "创建：{date}",

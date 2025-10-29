@@ -1211,6 +1211,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['toy']
   },
   {
+    id: 'sanpo',
+    name: '散歩',
+    nameKey: 'selection.miniexp.games.sanpo.name',
+    entry: 'games/sanpo.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '完全ランダムのダンジョンを散歩して歩数×1EXPを獲得する自由行動モード',
+    descriptionKey: 'selection.miniexp.games.sanpo.description',
+    category: 'トイ',
+    categories: ['トイ'],
+    categoryIds: ['toy']
+  },
+  {
     id: 'darumasan',
     name: 'だるまさんがころんだ',
     nameKey: 'selection.miniexp.games.darumasan.name',

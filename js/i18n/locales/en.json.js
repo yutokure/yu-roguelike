@@ -1386,6 +1386,10 @@
               "simpleMode": "In YouTube simple mode, use the YouTube player shortcuts."
             }
           },
+          "image_viewer_mod": {
+            "name": "Image Viewer MOD",
+            "description": "Open images for EXP and earn extra based on how far you pan."
+          },
           "pomodoro": {
             "name": "Pomodoro Timer",
             "description": "Cycle focus and breaks, finishing sessions for EXP payouts."
@@ -14671,6 +14675,13 @@
         },
         "popup": {
           "movePreview": "{flips} flips / approx +{xp} EXP"
+        }
+      },
+      "image_viewer_mod": {
+        "header": {
+          "title": "Image Viewer MOD",
+          "subtitle": "Load images and earn EXP as you pan around them.",
+          "exp": "EXP Earned: {xp}"
         }
       },
       "pomodoro": {

@@ -743,6 +743,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['utility']
   },
   {
+    id: 'image_viewer_mod',
+    name: '画像ビューアMOD',
+    nameKey: 'selection.miniexp.games.image_viewer_mod.name',
+    entry: 'games/image_viewer_mod.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '画像を開いてEXP獲得、パン操作で距離に応じて経験値が入るユーティリティ',
+    descriptionKey: 'selection.miniexp.games.image_viewer_mod.description',
+    category: 'ユーティリティ',
+    categories: ['ユーティリティ'],
+    categoryIds: ['utility']
+  },
+  {
     id: 'pomodoro',
     name: 'ポモドーロタイマー',
     nameKey: 'selection.miniexp.games.pomodoro.name',

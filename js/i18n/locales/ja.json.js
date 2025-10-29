@@ -14601,6 +14601,12 @@
           "edit": "盤面を編集",
           "play": "テスト対局",
           "paletteLabel": "ペイントツール",
+          "sizeLabel": "盤面サイズ",
+          "sizeApply": "サイズを適用",
+          "dataLabel": "盤面データ",
+          "dataHint": "B=黒, W=白, .=空, #=壁",
+          "import": "インポート",
+          "export": "エクスポート",
           "tool": {
             "empty": "消しゴム",
             "black": "黒石",
@@ -14629,13 +14635,19 @@
         "status": {
           "ready": "モードを選んでスタートを押してください。",
           "preparing": "盤面を準備中...",
-          "sandboxHint": "サンドボックス: セルをクリックすると 空→黒→白→壁 の順に切り替わります。準備できたらスタート。",
+          "sandboxHint": "サンドボックス: 編集モードでツールを選び、ドラッグして盤面をペイントしてください。準備できたらテストを開始しましょう。",
           "sandboxEditing": "サンドボックス編集中。配置が完了したらスタートを押してください。",
           "error": "盤面の準備に失敗しました。",
           "invalidSandbox": "両者とも合法手がありません。配置を調整してください。",
           "continue": "対局中です。",
           "pass": "合法手がないためパスします。",
-          "reset": "モードを選択してください。"
+          "reset": "モードを選択してください。",
+          "sandboxResized": "盤面サイズを更新しました (${width}×${height})。",
+          "sandboxResizeUnchanged": "盤面サイズは既に ${width}×${height} です。",
+          "sandboxImported": "盤面データを読み込みました (${width}×${height})。",
+          "sandboxImportError": "盤面データの読み込みに失敗しました。${message}",
+          "sandboxExported": "盤面データを出力しました。",
+          "sandboxExportCopied": "盤面データをコピーしました。"
         },
         "turn": {
           "player": "あなたの番",

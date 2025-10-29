@@ -18,6 +18,9 @@
       return fallback ?? '';
     };
 
+    const STYLE_ID = 'sandbox-sokoban-style';
+    ensureStyles();
+
     const wrapper = document.createElement('div');
     wrapper.style.boxSizing = 'border-box';
     wrapper.style.width = '100%';
@@ -110,6 +113,59 @@
     let totalFits = 0;
     let widthControl;
     let heightControl;
+
+    function ensureStyles(){
+      if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return;
+      const style = document.createElement('style');
+      style.id = STYLE_ID;
+      style.textContent = `
+        .sandbox-sokoban-cell {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #ffffff;
+          color: #0f172a;
+          border: 1px solid #d4d4d8;
+          border-radius: 6px;
+          overflow: hidden;
+        }
+        .sandbox-sokoban-cell.wall {
+          background: #000000;
+          border-color: #000000;
+          color: #f8fafc;
+        }
+        .sandbox-sokoban-goal {
+          position: absolute;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #bae6fd;
+          border: 2px solid #38bdf8;
+          box-shadow: inset 0 0 6px rgba(14,165,233,0.45);
+        }
+        .sandbox-sokoban-crate {
+          position: relative;
+          width: 18px;
+          height: 18px;
+          border-radius: 4px;
+          background: #b45309;
+          border: 3px solid #78350f;
+          box-shadow: 0 3px 0 rgba(15,23,42,0.35);
+        }
+        .sandbox-sokoban-crate.on-goal {
+          box-shadow: 0 0 0 3px rgba(250,204,21,0.8), 0 3px 0 rgba(15,23,42,0.35);
+        }
+        .sandbox-sokoban-player {
+          position: relative;
+          font-size: 18px;
+          font-weight: 700;
+          color: #1e293b;
+          text-shadow: 0 1px 2px rgba(148,163,184,0.6);
+        }
+      `;
+      document.head.appendChild(style);
+    }
 
     function createInitialStage(){
       const width = 8;
@@ -486,45 +542,27 @@
           cell.dataset.y = String(y);
           cell.style.width = '32px';
           cell.style.height = '32px';
-          cell.style.border = '1px solid rgba(30,41,59,0.8)';
-          cell.style.borderRadius = '6px';
           cell.style.display = 'flex';
           cell.style.alignItems = 'center';
           cell.style.justifyContent = 'center';
           cell.style.fontSize = '16px';
           cell.style.fontWeight = '600';
           cell.style.cursor = 'pointer';
-          cell.style.background = stage.tiles[y][x] === 'wall' ? '#1f2937' : '#0f172a';
-          cell.style.color = '#e2e8f0';
+          cell.style.padding = '0';
+          cell.style.background = '#ffffff';
+          cell.style.border = '1px solid #d4d4d8';
+          cell.style.color = '#0f172a';
+          cell.className = 'sandbox-sokoban-cell sandbox-sokoban-cell--editor';
           const isGoal = hasGoal(x, y);
           const crateIndex = findCrateIndex(x, y);
           const isPlayer = stage.player && stage.player.x === x && stage.player.y === y;
-          let glyph = '';
-          if (stage.tiles[y][x] === 'wall'){
-            glyph = '■';
-            cell.style.color = '#94a3b8';
-          } else if (crateIndex !== -1 && isGoal){
-            glyph = '★';
-            cell.style.color = '#facc15';
-            cell.style.background = '#4338ca';
-          } else if (crateIndex !== -1){
-            glyph = '⬜';
-            cell.style.color = '#fbbf24';
-            cell.style.background = '#1e3a8a';
-          } else if (isPlayer){
-            glyph = '＠';
-            cell.style.color = '#34d399';
-            cell.style.background = '#065f46';
-          } else if (isGoal){
-            glyph = '◎';
-            cell.style.color = '#38bdf8';
-            cell.style.background = '#1d4ed8';
-          }
-          if (isPlayer && crateIndex !== -1){
-            cell.style.background = '#0f766e';
-            glyph = '⚠';
-          }
-          cell.textContent = glyph;
+          decorateCell(cell, {
+            wall: stage.tiles[y][x] === 'wall',
+            goal: isGoal,
+            crate: crateIndex !== -1,
+            crateOnGoal: crateIndex !== -1 && isGoal,
+            player: isPlayer,
+          });
           cell.addEventListener('click', () => applyTool(x, y));
           editorGrid.appendChild(cell);
         }
@@ -533,6 +571,54 @@
 
     function updateExportPreview(){
       ioArea.placeholder = JSON.stringify(serializeStage(), null, 2);
+    }
+
+    function decorateCell(cell, { wall, goal, crate, crateOnGoal, player }){
+      cell.innerHTML = '';
+      if (wall){
+        cell.classList.add('wall');
+        cell.style.background = '#000000';
+        cell.style.border = '1px solid #000000';
+        cell.style.color = '#f8fafc';
+        return;
+      }
+      cell.classList.remove('wall');
+      cell.style.background = '#ffffff';
+      cell.style.border = '1px solid #d4d4d8';
+      cell.style.color = '#0f172a';
+      if (goal){
+        cell.appendChild(createGoalMarker());
+      }
+      if (crate){
+        const crateEl = createCrateMarker();
+        if (crateOnGoal) crateEl.classList.add('on-goal');
+        cell.appendChild(crateEl);
+      }
+      if (player){
+        cell.appendChild(createPlayerMarker());
+      }
+    }
+
+    function createGoalMarker(){
+      const goal = document.createElement('div');
+      goal.className = 'sandbox-sokoban-goal';
+      goal.setAttribute('aria-hidden', 'true');
+      return goal;
+    }
+
+    function createCrateMarker(){
+      const crate = document.createElement('div');
+      crate.className = 'sandbox-sokoban-crate';
+      crate.setAttribute('aria-hidden', 'true');
+      return crate;
+    }
+
+    function createPlayerMarker(){
+      const player = document.createElement('div');
+      player.className = 'sandbox-sokoban-player';
+      player.textContent = '＠';
+      player.setAttribute('aria-hidden', 'true');
+      return player;
     }
 
     function setStatus(message, color){
@@ -572,7 +658,7 @@
     playBoard.style.display = 'grid';
     playBoard.style.gap = '2px';
     playBoard.style.justifyContent = 'start';
-    playBoard.style.background = 'rgba(2,6,23,0.85)';
+    playBoard.style.background = '#f8fafc';
     playBoard.style.padding = '12px';
     playBoard.style.borderRadius = '12px';
     playBoard.style.border = '1px solid rgba(148,163,184,0.25)';
@@ -656,46 +742,27 @@
           const cell = document.createElement('div');
           cell.style.width = '32px';
           cell.style.height = '32px';
-          cell.style.borderRadius = '6px';
           cell.style.display = 'flex';
           cell.style.alignItems = 'center';
           cell.style.justifyContent = 'center';
           cell.style.fontSize = '16px';
           cell.style.fontWeight = '600';
-          cell.style.border = '1px solid rgba(30,41,59,0.8)';
-          const isWall = playState.tiles[y][x] === 'wall';
+          cell.style.background = '#ffffff';
+          cell.style.border = '1px solid #d4d4d8';
+          cell.style.color = '#0f172a';
+          cell.className = 'sandbox-sokoban-cell sandbox-sokoban-cell--play';
+          const wall = playState.tiles[y][x] === 'wall';
           const goal = playState.goals.has(stageKey(x, y));
-          const crateIndex = playState.crates.findIndex(c => c.x === x && c.y === y);
+          const hasCrate = playState.crates.some(c => c.x === x && c.y === y);
+          const crateOnGoal = hasCrate && goal;
           const isPlayer = playState.player && playState.player.x === x && playState.player.y === y;
-          let glyph = '';
-          if (isWall){
-            glyph = '■';
-            cell.style.background = '#111827';
-            cell.style.color = '#94a3b8';
-          } else if (crateIndex !== -1 && goal){
-            glyph = '★';
-            cell.style.background = '#facc15';
-            cell.style.color = '#0f172a';
-          } else if (crateIndex !== -1){
-            glyph = '⬜';
-            cell.style.background = '#f97316';
-            cell.style.color = '#0f172a';
-          } else if (isPlayer && goal){
-            glyph = '⛳';
-            cell.style.background = '#22d3ee';
-            cell.style.color = '#0f172a';
-          } else if (isPlayer){
-            glyph = '＠';
-            cell.style.background = '#34d399';
-            cell.style.color = '#0f172a';
-          } else if (goal){
-            glyph = '◎';
-            cell.style.background = '#2563eb';
-            cell.style.color = '#e2e8f0';
-          } else {
-            cell.style.background = '#0f172a';
-            cell.style.color = '#e2e8f0';
-          }
+          decorateCell(cell, {
+            wall,
+            goal,
+            crate: hasCrate,
+            crateOnGoal,
+            player: isPlayer,
+          });
           playBoard.appendChild(cell);
         }
       }

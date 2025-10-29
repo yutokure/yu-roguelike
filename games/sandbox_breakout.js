@@ -43,6 +43,10 @@
     container.style.margin = '0 auto';
     container.style.fontFamily = "'Noto Sans JP', 'Segoe UI', sans-serif";
     container.style.color = '#e2e8f0';
+    container.style.background = 'linear-gradient(160deg, rgba(2,6,23,0.95), rgba(15,23,42,0.92))';
+    container.style.padding = '18px 18px 22px';
+    container.style.borderRadius = '18px';
+    container.style.boxShadow = '0 18px 42px rgba(15,23,42,0.55)';
 
     const title = document.createElement('h2');
     title.textContent = 'サンドボックスブロック崩し';
@@ -418,6 +422,7 @@
       ctx.fillText(`HITS ${hits}`, 300, 28);
       ctx.fillText('編集中に戻るとリセット', CANVAS_WIDTH - 220, 28);
       for (const brick of bricks) {
+        if (Number.isFinite(brick.hp) && brick.hp <= 0) continue;
         const { x,y,w,h,type,hp,maxHp,def } = brick;
         ctx.fillStyle = def.color;
         ctx.fillRect(x, y, w, h);

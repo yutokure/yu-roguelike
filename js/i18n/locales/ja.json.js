@@ -1388,6 +1388,10 @@
               "simpleMode": "YouTube 簡易モードでは YouTube 側のショートカットをご利用ください。"
             }
           },
+          "image_viewer_mod": {
+            "name": "画像ビューアMOD",
+            "description": "画像を開いてEXP獲得、パン移動距離に応じて追加EXPを得られるユーティリティ"
+          },
           "pomodoro": {
             "name": "ポモドーロタイマー",
             "description": "集中と休憩のサイクル管理で完了ごとにEXPを得られるタイマー"
@@ -14692,6 +14696,13 @@
         },
         "popup": {
           "movePreview": "{flips}枚 / 予想+{xp}EXP"
+        }
+      },
+      "image_viewer_mod": {
+        "header": {
+          "title": "画像ビューアMOD",
+          "subtitle": "画像を読み込み、パン操作でEXPを獲得できます。",
+          "exp": "獲得EXP: {xp}"
         }
       },
       "pomodoro": {

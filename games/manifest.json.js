@@ -392,6 +392,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'sandbox_sokoban',
+    name: 'サンドボックス倉庫番',
+    nameKey: 'selection.miniexp.games.sandbox_sokoban.name',
+    entry: 'games/sandbox_sokoban.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'ステージ編集とプレイをシームレスに行き来できる倉庫番。木箱+25EXP/クリア+100EXP',
+    descriptionKey: 'selection.miniexp.games.sandbox_sokoban.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'invaders',
     name: 'インベーダー風',
     nameKey: 'selection.miniexp.games.invaders.name',

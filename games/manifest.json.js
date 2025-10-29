@@ -249,6 +249,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['action']
   },
   {
+    id: 'sandbox_breakout',
+    name: 'サンドボックスブロック崩し',
+    nameKey: 'selection.miniexp.games.sandbox_breakout.name',
+    entry: 'games/sandbox_breakout.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '作ったステージをすぐにプレイできるブロック崩し。カスタム硬さとインポート/エクスポート対応',
+    descriptionKey: 'selection.miniexp.games.sandbox_breakout.description',
+    category: 'アクション',
+    categories: ['アクション'],
+    categoryIds: ['action']
+  },
+  {
     id: 'pinball_xp',
     name: 'XPピンボール',
     nameKey: 'selection.miniexp.games.pinball_xp.name',
@@ -400,6 +413,19 @@ window.MINIEXP_MANIFEST = [
     author: 'mod',
     description: '任意の画像と行列数を設定できるジグソーパズル',
     descriptionKey: 'selection.miniexp.games.jigsaw_puzzle.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
+    id: 'sandbox_sokoban',
+    name: 'サンドボックス倉庫番',
+    nameKey: 'selection.miniexp.games.sandbox_sokoban.name',
+    entry: 'games/sandbox_sokoban.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'ステージ編集とプレイをシームレスに行き来できる倉庫番。木箱+25EXP/クリア+100EXP',
+    descriptionKey: 'selection.miniexp.games.sandbox_sokoban.description',
     category: 'パズル',
     categories: ['パズル'],
     categoryIds: ['puzzle']

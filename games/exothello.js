@@ -200,16 +200,22 @@
     outline: none;
 }
 
-.exothello-status {
+.exothello-status-card {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     padding: 16px 18px;
     border-radius: 16px;
     background: linear-gradient(120deg, rgba(56, 189, 248, 0.14), rgba(16, 185, 129, 0.16));
     border: 1px solid rgba(13, 148, 136, 0.24);
     color: #0f172a;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.exothello-status {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .exothello-status__message {
@@ -373,6 +379,46 @@
     gap: 10px;
 }
 
+.exothello-sandbox-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.exothello-sandbox-size-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.exothello-sandbox-textarea {
+    min-height: 120px;
+    resize: vertical;
+    border-radius: 14px;
+    border: 1px solid rgba(14, 116, 144, 0.28);
+    background: rgba(255, 255, 255, 0.92);
+    color: #0f2f21;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 12px 14px;
+    box-shadow: 0 10px 26px rgba(15, 118, 110, 0.16);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.exothello-sandbox-textarea:focus {
+    outline: none;
+    border-color: rgba(15, 118, 110, 0.6);
+    box-shadow: 0 12px 30px rgba(15, 118, 110, 0.26);
+    transform: translateY(-1px);
+}
+
+.exothello-sandbox-button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 .exothello-chip-button {
     display: inline-flex;
     align-items: center;
@@ -436,7 +482,7 @@
         justify-content: center;
     }
 
-    .exothello-status {
+    .exothello-status-card {
         padding: 14px 16px;
         gap: 6px;
     }
@@ -627,8 +673,8 @@
       descriptionDefault: 'Free-build board editor for crafting and testing layouts.',
       labelKey: 'miniexp.games.exothello.modes.sandbox.short',
       setup(state){
-        const width = clampSize(state.settings.width, 4, 32);
-        const height = clampSize(state.settings.height, 4, 32);
+        const width = clampSize(state.settings.width, 4, 64);
+        const height = clampSize(state.settings.height, 4, 64);
         const board = createBoard(width, height, EMPTY);
         return Promise.resolve({ board, victory: state.settings.victory, sandbox: true });
       }
@@ -2212,7 +2258,7 @@
     const getLocaleCode = () => {
       const raw = localization?.getLocale?.();
       if (typeof raw === 'string' && raw) return raw.toLowerCase();
-      return 'ja';
+      return 'en';
     };
 
     const pickLocalized = (entry, fallbackValue) => {
@@ -2264,8 +2310,8 @@
       return `${name}${sep}${count}`;
     };
 
-    let statusMessageState = { key: null, fallback: null };
-    let statusDescriptionState = { key: null, fallback: null };
+    let statusMessageState = { key: null, fallback: null, params: null };
+    let statusDescriptionState = { key: null, fallback: null, params: null };
 
     const text = (key, fallback, params) => {
       if (localization && typeof localization.t === 'function') {
@@ -2398,6 +2444,8 @@
     actionBar.appendChild(resetButton);
     controlPanel.appendChild(actionBar);
 
+    const statusCard = document.createElement('div');
+    statusCard.className = 'exothello-status-card';
     const statusBox = document.createElement('div');
     statusBox.className = 'exothello-status';
     const statusMessageEl = document.createElement('div');
@@ -2414,7 +2462,6 @@
     const victoryBadgeEl = document.createElement('span');
     victoryBadgeEl.className = 'exothello-badge exothello-badge--victory';
     statusMetaEl.appendChild(victoryBadgeEl);
-    statusBox.appendChild(statusMetaEl);
     const scoreboardEl = document.createElement('div');
     scoreboardEl.className = 'exothello-scoreboard';
     const scoreboardLabelsEl = document.createElement('div');
@@ -2438,8 +2485,10 @@
     scoreboardEl.appendChild(scoreboardLabelsEl);
     scoreboardEl.appendChild(scoreboardBarEl);
     scoreboardEl.appendChild(scoreboardNoteEl);
-    statusBox.appendChild(scoreboardEl);
-    wrapper.appendChild(statusBox);
+    statusCard.appendChild(statusBox);
+    statusCard.appendChild(statusMetaEl);
+    statusCard.appendChild(scoreboardEl);
+    wrapper.appendChild(statusCard);
 
     const boardContainer = document.createElement('div');
     boardContainer.className = 'exothello-board-shell';
@@ -2489,6 +2538,80 @@
     const sandboxPaletteRow = document.createElement('div');
     sandboxPaletteRow.className = 'exothello-sandbox-tools';
     sandboxControls.appendChild(sandboxPaletteRow);
+
+    const sandboxSizeSection = document.createElement('div');
+    sandboxSizeSection.className = 'exothello-sandbox-section';
+    sandboxControls.appendChild(sandboxSizeSection);
+
+    const sandboxSizeLabel = document.createElement('div');
+    sandboxSizeLabel.className = 'exothello-subheading';
+    sandboxSizeLabel.textContent = text('miniexp.games.exothello.sandbox.sizeLabel', 'Board size');
+    sandboxSizeSection.appendChild(sandboxSizeLabel);
+
+    const sandboxSizeControls = document.createElement('div');
+    sandboxSizeControls.className = 'exothello-sandbox-size-controls';
+    sandboxSizeSection.appendChild(sandboxSizeControls);
+
+    const sandboxWidthInput = document.createElement('input');
+    sandboxWidthInput.type = 'number';
+    sandboxWidthInput.min = '4';
+    sandboxWidthInput.max = '64';
+    sandboxWidthInput.value = '8';
+    sandboxWidthInput.className = 'exothello-input exothello-input--compact';
+    sandboxSizeControls.appendChild(sandboxWidthInput);
+
+    const sandboxSizeMultiply = document.createElement('span');
+    sandboxSizeMultiply.textContent = '×';
+    sandboxSizeMultiply.className = 'exothello-size-multiply';
+    sandboxSizeControls.appendChild(sandboxSizeMultiply);
+
+    const sandboxHeightInput = document.createElement('input');
+    sandboxHeightInput.type = 'number';
+    sandboxHeightInput.min = '4';
+    sandboxHeightInput.max = '64';
+    sandboxHeightInput.value = '8';
+    sandboxHeightInput.className = 'exothello-input exothello-input--compact';
+    sandboxSizeControls.appendChild(sandboxHeightInput);
+
+    const sandboxResizeButton = document.createElement('button');
+    sandboxResizeButton.type = 'button';
+    sandboxResizeButton.textContent = text('miniexp.games.exothello.sandbox.sizeApply', 'Apply size');
+    sandboxResizeButton.className = 'exothello-chip-button';
+    sandboxSizeControls.appendChild(sandboxResizeButton);
+
+    const sandboxDataSection = document.createElement('div');
+    sandboxDataSection.className = 'exothello-sandbox-section';
+    sandboxControls.appendChild(sandboxDataSection);
+
+    const sandboxDataLabel = document.createElement('div');
+    sandboxDataLabel.className = 'exothello-subheading';
+    sandboxDataLabel.textContent = text('miniexp.games.exothello.sandbox.dataLabel', 'Board data');
+    sandboxDataSection.appendChild(sandboxDataLabel);
+
+    const sandboxDataTextarea = document.createElement('textarea');
+    sandboxDataTextarea.className = 'exothello-sandbox-textarea';
+    sandboxDataTextarea.placeholder = text(
+      'miniexp.games.exothello.sandbox.dataHint',
+      'Use B for black, W for white, . for empty, # for wall.'
+    );
+    sandboxDataTextarea.spellcheck = false;
+    sandboxDataSection.appendChild(sandboxDataTextarea);
+
+    const sandboxDataButtons = document.createElement('div');
+    sandboxDataButtons.className = 'exothello-sandbox-button-row';
+    sandboxDataSection.appendChild(sandboxDataButtons);
+
+    const sandboxImportButton = document.createElement('button');
+    sandboxImportButton.type = 'button';
+    sandboxImportButton.textContent = text('miniexp.games.exothello.sandbox.import', 'Import board');
+    sandboxImportButton.className = 'exothello-chip-button';
+    sandboxDataButtons.appendChild(sandboxImportButton);
+
+    const sandboxExportButton = document.createElement('button');
+    sandboxExportButton.type = 'button';
+    sandboxExportButton.textContent = text('miniexp.games.exothello.sandbox.export', 'Export board');
+    sandboxExportButton.className = 'exothello-chip-button';
+    sandboxDataButtons.appendChild(sandboxExportButton);
 
     const sandboxToolButtons = new Map();
     const sandboxTools = [
@@ -2561,19 +2684,19 @@
       return fallback ?? '';
     };
 
-    function setStatus(key, fallback){
-      statusMessageState = { key: key ?? null, fallback: fallback ?? null };
-      statusMessageEl.textContent = resolveLocalized(statusMessageState.key, statusMessageState.fallback);
+    function setStatus(key, fallback, params){
+      statusMessageState = { key: key ?? null, fallback: fallback ?? null, params: params ?? null };
+      statusMessageEl.textContent = resolveLocalized(statusMessageState.key, statusMessageState.fallback, statusMessageState.params);
     }
 
-    function setStatusDescription(key, fallback){
-      statusDescriptionState = { key: key ?? null, fallback: fallback ?? null };
-      statusDescriptionEl.textContent = resolveLocalized(statusDescriptionState.key, statusDescriptionState.fallback);
+    function setStatusDescription(key, fallback, params){
+      statusDescriptionState = { key: key ?? null, fallback: fallback ?? null, params: params ?? null };
+      statusDescriptionEl.textContent = resolveLocalized(statusDescriptionState.key, statusDescriptionState.fallback, statusDescriptionState.params);
     }
 
     function refreshStatusTexts(){
-      statusMessageEl.textContent = resolveLocalized(statusMessageState.key, statusMessageState.fallback);
-      statusDescriptionEl.textContent = resolveLocalized(statusDescriptionState.key, statusDescriptionState.fallback);
+      statusMessageEl.textContent = resolveLocalized(statusMessageState.key, statusMessageState.fallback, statusMessageState.params);
+      statusDescriptionEl.textContent = resolveLocalized(statusDescriptionState.key, statusDescriptionState.fallback, statusDescriptionState.params);
     }
 
     function updateRuleBadges(){
@@ -2679,8 +2802,25 @@
         sandboxControls.style.opacity = '1';
       } else {
         sandboxControls.style.display = 'none';
+        sandboxResizeButton.disabled = true;
+        sandboxImportButton.disabled = true;
+        sandboxExportButton.disabled = true;
+        sandboxWidthInput.disabled = true;
+        sandboxHeightInput.disabled = true;
+        sandboxDataTextarea.readOnly = true;
         return;
       }
+      const width = state.board?.[0]?.length || state.settings.width || 8;
+      const height = state.board?.length || state.settings.height || 8;
+      sandboxWidthInput.value = String(width);
+      sandboxHeightInput.value = String(height);
+      const editing = state.sandboxMode === 'edit';
+      sandboxWidthInput.disabled = !editing;
+      sandboxHeightInput.disabled = !editing;
+      sandboxResizeButton.disabled = !editing;
+      sandboxImportButton.disabled = !editing;
+      sandboxDataTextarea.readOnly = !editing;
+      sandboxExportButton.disabled = false;
       sandboxPaletteLabel.style.opacity = state.sandboxMode === 'edit' ? '1' : '0.75';
       sandboxPaletteRow.style.opacity = state.sandboxMode === 'edit' ? '1' : '0.55';
       sandboxPaletteRow.style.pointerEvents = state.sandboxMode === 'edit' ? 'auto' : 'none';
@@ -2770,6 +2910,110 @@
       }
     }
 
+    const SANDBOX_MIN_SIZE = 4;
+    const SANDBOX_MAX_SIZE = 64;
+    const SANDBOX_EXPORT_SYMBOL = {
+      [EMPTY]: '.',
+      [BLACK]: 'B',
+      [WHITE]: 'W',
+      [WALL]: '#'
+    };
+    const SANDBOX_IMPORT_SYMBOL = {
+      '.': EMPTY,
+      '0': EMPTY,
+      '-': EMPTY,
+      '_': EMPTY,
+      'e': EMPTY,
+      'b': BLACK,
+      'w': WHITE,
+      '#': WALL,
+      'x': WALL,
+      '1': WALL,
+      's': WALL
+    };
+
+    function serializeSandboxBoard(board){
+      if (!Array.isArray(board) || board.length === 0) return '';
+      return board
+        .map(row => row.map(cell => SANDBOX_EXPORT_SYMBOL[cell] ?? '.').join(''))
+        .join('\n');
+    }
+
+    function parseSandboxBoardText(raw){
+      if (typeof raw !== 'string'){
+        throw new Error('Board data must be text.');
+      }
+      const lines = raw.split(/\r?\n/).map(line => line.trim());
+      const filtered = lines.filter(line => line.length > 0);
+      if (!filtered.length){
+        throw new Error('Board data is empty.');
+      }
+      const rows = [];
+      let width = null;
+      for (const line of filtered){
+        const normalized = line.replace(/\s+/g, '');
+        if (!normalized.length) continue;
+        if (width == null){
+          width = normalized.length;
+        }
+        if (normalized.length !== width){
+          throw new Error('Row lengths must match.');
+        }
+        const row = [];
+        for (const ch of normalized){
+          const key = typeof ch === 'string' ? ch.toLowerCase() : ch;
+          if (!Object.prototype.hasOwnProperty.call(SANDBOX_IMPORT_SYMBOL, key)){
+            throw new Error(`Unsupported symbol: ${ch}`);
+          }
+          row.push(SANDBOX_IMPORT_SYMBOL[key]);
+        }
+        rows.push(row);
+      }
+      if (!rows.length || !width){
+        throw new Error('Board data is empty.');
+      }
+      if (width < SANDBOX_MIN_SIZE || width > SANDBOX_MAX_SIZE){
+        throw new Error(`Width must be between ${SANDBOX_MIN_SIZE} and ${SANDBOX_MAX_SIZE}.`);
+      }
+      if (rows.length < SANDBOX_MIN_SIZE || rows.length > SANDBOX_MAX_SIZE){
+        throw new Error(`Height must be between ${SANDBOX_MIN_SIZE} and ${SANDBOX_MAX_SIZE}.`);
+      }
+      return rows;
+    }
+
+    function applySandboxBoard(board){
+      state.board = board;
+      state.settings.width = board[0].length;
+      state.settings.height = board.length;
+      state.weights = createWeights(board[0].length, board.length, board);
+      state.lastMove = null;
+      state.legal = [];
+      state.running = false;
+      state.ended = false;
+      state.turn = BLACK;
+      state.isPainting = false;
+      state.isSandbox = true;
+      state.sandboxMode = 'edit';
+    }
+
+    function resizeSandboxBoard(width, height){
+      const currentWidth = state.board[0].length;
+      const currentHeight = state.board.length;
+      if (width === currentWidth && height === currentHeight){
+        return false;
+      }
+      const newBoard = createBoard(width, height, EMPTY);
+      const copyWidth = Math.min(width, currentWidth);
+      const copyHeight = Math.min(height, currentHeight);
+      for (let y = 0; y < copyHeight; y++){
+        for (let x = 0; x < copyWidth; x++){
+          newBoard[y][x] = state.board[y][x];
+        }
+      }
+      applySandboxBoard(newBoard);
+      return true;
+    }
+
     function paintSandboxCell(x, y){
       if (!isSandboxEditing()) return;
       const height = state.board.length;
@@ -2781,6 +3025,130 @@
         state.lastMove = null;
         draw();
       }
+    }
+
+    function handleSandboxResize(){
+      if (!state.isSandbox) return;
+      const desiredWidth = clampSize(parseInt(sandboxWidthInput.value, 10) || state.board[0].length, SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE);
+      const desiredHeight = clampSize(parseInt(sandboxHeightInput.value, 10) || state.board.length, SANDBOX_MIN_SIZE, SANDBOX_MAX_SIZE);
+      sandboxWidthInput.value = String(desiredWidth);
+      sandboxHeightInput.value = String(desiredHeight);
+      const changed = resizeSandboxBoard(desiredWidth, desiredHeight);
+      updateSandboxControls();
+      if (!changed){
+        setStatus(
+          'miniexp.games.exothello.status.sandboxResizeUnchanged',
+          () => {
+            const locale = getLocaleCode();
+            return locale.startsWith('ja')
+              ? `盤面サイズは既に ${desiredWidth}×${desiredHeight} です。`
+              : `Board size is already ${desiredWidth}×${desiredHeight}.`;
+          },
+          { width: desiredWidth, height: desiredHeight }
+        );
+        return;
+      }
+      resizeCanvas();
+      draw();
+      setStatus(
+        'miniexp.games.exothello.status.sandboxResized',
+        () => {
+          const locale = getLocaleCode();
+          return locale.startsWith('ja')
+            ? `盤面サイズを ${desiredWidth}×${desiredHeight} に更新しました。`
+            : `Board size updated to ${desiredWidth}×${desiredHeight}.`;
+        },
+        { width: desiredWidth, height: desiredHeight }
+      );
+    }
+
+    function handleSandboxImport(){
+      if (!state.isSandbox) return;
+      const raw = sandboxDataTextarea.value;
+      if (!raw || !raw.trim()){
+        const locale = getLocaleCode();
+        const reason = locale.startsWith('ja')
+          ? '盤面データが入力されていません。'
+          : 'No board data provided.';
+        setStatus(
+          'miniexp.games.exothello.status.sandboxImportError',
+          () => locale.startsWith('ja')
+            ? `盤面データの読み込みに失敗しました: ${reason}`
+            : `Failed to import board data: ${reason}`,
+          { message: reason }
+        );
+        return;
+      }
+      try {
+        const board = parseSandboxBoardText(raw);
+        applySandboxBoard(board);
+        updateSandboxControls();
+        resizeCanvas();
+        draw();
+        setStatus(
+          'miniexp.games.exothello.status.sandboxImported',
+          () => {
+            const locale = getLocaleCode();
+            return locale.startsWith('ja')
+              ? `盤面データを読み込みました (${board[0].length}×${board.length})。`
+              : `Imported board data (${board[0].length}×${board.length}).`;
+          },
+          { width: board[0].length, height: board.length }
+        );
+      } catch (error){
+        const message = error && error.message ? String(error.message) : (
+          getLocaleCode().startsWith('ja')
+            ? '形式を確認してください。'
+            : 'Please verify the format.'
+        );
+        setStatus(
+          'miniexp.games.exothello.status.sandboxImportError',
+          () => {
+            const locale = getLocaleCode();
+            return locale.startsWith('ja')
+              ? `盤面データの読み込みに失敗しました: ${message}`
+              : `Failed to import board data: ${message}`;
+          },
+          { message }
+        );
+      }
+    }
+
+    async function handleSandboxExport(){
+      if (!state.isSandbox) return;
+      const data = serializeSandboxBoard(state.board);
+      sandboxDataTextarea.value = data;
+      let copied = false;
+      if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function'){
+        try {
+          await navigator.clipboard.writeText(data);
+          copied = true;
+        } catch (error){
+          copied = false;
+        }
+      }
+      if (!copied){
+        try {
+          sandboxDataTextarea.focus();
+          sandboxDataTextarea.select();
+        } catch {}
+      }
+      setStatus(
+        copied
+          ? 'miniexp.games.exothello.status.sandboxExportCopied'
+          : 'miniexp.games.exothello.status.sandboxExported',
+        () => {
+          const locale = getLocaleCode();
+          if (copied){
+            return locale.startsWith('ja')
+              ? '盤面データをコピーしました。'
+              : 'Board data copied to clipboard.';
+          }
+          return locale.startsWith('ja')
+            ? '盤面データを出力しました。必要に応じてコピーしてください。'
+            : 'Board data exported. Copy it from the text area if needed.';
+        }
+      );
     }
 
     function labeled(labelText, element){
@@ -2824,6 +3192,9 @@
         setStatusDescription(mode.descriptionKey, () => getModeDescriptionFallback(mode.id));
       }
       updateRuleBadges();
+      if (!state.running && !state.ended){
+        setStatus(null, '');
+      }
     }
 
     function updateSettingsFromControls(){
@@ -3289,6 +3660,9 @@
     playerColorSelect.addEventListener('change', updateSettingsFromControls);
     sandboxEditButton.addEventListener('click', handleSandboxEditClick);
     sandboxPlayButton.addEventListener('click', handleSandboxPlayClick);
+    sandboxResizeButton.addEventListener('click', handleSandboxResize);
+    sandboxImportButton.addEventListener('click', handleSandboxImport);
+    sandboxExportButton.addEventListener('click', handleSandboxExport);
     canvas.addEventListener('click', handleCanvasClick);
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointermove', handlePointerMove);
@@ -3326,6 +3700,9 @@
         try { playerColorSelect.removeEventListener('change', updateSettingsFromControls); } catch {}
         try { sandboxEditButton.removeEventListener('click', handleSandboxEditClick); } catch {}
         try { sandboxPlayButton.removeEventListener('click', handleSandboxPlayClick); } catch {}
+        try { sandboxResizeButton.removeEventListener('click', handleSandboxResize); } catch {}
+        try { sandboxImportButton.removeEventListener('click', handleSandboxImport); } catch {}
+        try { sandboxExportButton.removeEventListener('click', handleSandboxExport); } catch {}
         if (detachLocale){
           try { detachLocale(); } catch (error){ console.warn('[exothello] Failed to detach locale listener', error); }
         }

@@ -14581,6 +14581,24 @@
           "start": "Start Game",
           "reset": "Reset"
         },
+        "sandbox": {
+          "modeLabel": "Sandbox mode",
+          "edit": "Edit board",
+          "play": "Play test",
+          "paletteLabel": "Paint tools",
+          "sizeLabel": "Board size",
+          "sizeApply": "Apply size",
+          "dataLabel": "Board data",
+          "dataHint": "Use B for black, W for white, . for empty, # for wall.",
+          "import": "Import",
+          "export": "Export",
+          "tool": {
+            "empty": "Erase",
+            "black": "Black stone",
+            "white": "White stone",
+            "wall": "Wall"
+          }
+        },
         "modes": {
           "normal": "Standard Reversi without walls. Configure the board size freely.",
           "normal.short": "Normal",
@@ -14598,13 +14616,19 @@
         "status": {
           "ready": "Choose a mode and press Start.",
           "preparing": "Preparing board...",
-          "sandboxHint": "Sandbox: click cells to cycle Empty → Black → White → Wall, then press Start.",
-          "sandboxEditing": "Sandbox editing enabled. Click cells and press Start to begin.",
+          "sandboxHint": "Sandbox: pick a tool in Edit mode, paint the board, then switch to Play to test.",
+          "sandboxEditing": "Sandbox editing enabled. Paint the layout before switching to Play.",
           "error": "Failed to prepare the board.",
           "invalidSandbox": "No legal moves for either side. Adjust the layout.",
           "continue": "Game in progress.",
           "pass": "You have no valid moves. Turn passes to the AI.",
-          "reset": "Select a mode to begin."
+          "reset": "Select a mode to begin.",
+          "sandboxResized": "Board size updated to ${width}×${height}.",
+          "sandboxResizeUnchanged": "Board size is already ${width}×${height}.",
+          "sandboxImported": "Imported board data (${width}×${height}).",
+          "sandboxImportError": "Failed to import board data: ${message}",
+          "sandboxExported": "Board data exported.",
+          "sandboxExportCopied": "Board data copied to clipboard."
         },
         "turn": {
           "player": "Your turn",

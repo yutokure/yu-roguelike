@@ -392,6 +392,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'jigsaw_puzzle',
+    name: 'ジグソーパズル',
+    nameKey: 'selection.miniexp.games.jigsaw_puzzle.name',
+    entry: 'games/jigsaw_puzzle.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '任意の画像と行列数を設定できるジグソーパズル',
+    descriptionKey: 'selection.miniexp.games.jigsaw_puzzle.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'invaders',
     name: 'インベーダー風',
     nameKey: 'selection.miniexp.games.invaders.name',

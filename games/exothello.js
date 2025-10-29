@@ -323,6 +323,79 @@
     color: rgba(15, 23, 42, 0.7);
 }
 
+.exothello-history-card {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 22px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.08), rgba(59, 130, 246, 0.05));
+    border: 1px solid rgba(14, 116, 144, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.exothello-history-card__title {
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.68);
+}
+
+.exothello-history-card__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.exothello-history-card__button {
+    appearance: none;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: rgba(15, 118, 110, 0.16);
+    color: #0f172a;
+    box-shadow: 0 12px 26px rgba(15, 118, 110, 0.16);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    cursor: pointer;
+}
+
+.exothello-history-card__button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px rgba(15, 118, 110, 0.24);
+    background: rgba(15, 118, 110, 0.24);
+}
+
+.exothello-history-card__button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.exothello-history-card__position {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(15, 23, 42, 0.76);
+    min-width: 140px;
+}
+
+.exothello-history-card__detail {
+    font-size: 0.8rem;
+    color: rgba(15, 23, 42, 0.62);
+}
+
+.exothello-history-card__hint {
+    font-size: 0.75rem;
+    color: rgba(15, 23, 42, 0.54);
+    line-height: 1.4;
+}
+
 .exothello-board-shell {
     padding: 24px;
     border-radius: 20px;
@@ -2485,9 +2558,53 @@
     scoreboardEl.appendChild(scoreboardLabelsEl);
     scoreboardEl.appendChild(scoreboardBarEl);
     scoreboardEl.appendChild(scoreboardNoteEl);
+
+    const historyCard = document.createElement('div');
+    historyCard.className = 'exothello-history-card';
+    const historyTitle = document.createElement('div');
+    historyTitle.className = 'exothello-history-card__title';
+    historyTitle.textContent = text('miniexp.games.exothello.history.title', 'Timeline controls');
+    historyCard.appendChild(historyTitle);
+    const historyControlsRow = document.createElement('div');
+    historyControlsRow.className = 'exothello-history-card__controls';
+    const historyStartButton = document.createElement('button');
+    historyStartButton.type = 'button';
+    historyStartButton.className = 'exothello-history-card__button';
+    historyStartButton.textContent = '⏮';
+    historyStartButton.title = text('miniexp.games.exothello.history.toStart', 'Jump to beginning');
+    const historyPrevButton = document.createElement('button');
+    historyPrevButton.type = 'button';
+    historyPrevButton.className = 'exothello-history-card__button';
+    historyPrevButton.textContent = '◀';
+    historyPrevButton.title = text('miniexp.games.exothello.history.previous', 'Previous step');
+    const historyPositionEl = document.createElement('div');
+    historyPositionEl.className = 'exothello-history-card__position';
+    const historyNextButton = document.createElement('button');
+    historyNextButton.type = 'button';
+    historyNextButton.className = 'exothello-history-card__button';
+    historyNextButton.textContent = '▶';
+    historyNextButton.title = text('miniexp.games.exothello.history.next', 'Next step');
+    const historyEndButton = document.createElement('button');
+    historyEndButton.type = 'button';
+    historyEndButton.className = 'exothello-history-card__button';
+    historyEndButton.textContent = '⏭';
+    historyEndButton.title = text('miniexp.games.exothello.history.toEnd', 'Jump to latest');
+    historyControlsRow.appendChild(historyStartButton);
+    historyControlsRow.appendChild(historyPrevButton);
+    historyControlsRow.appendChild(historyPositionEl);
+    historyControlsRow.appendChild(historyNextButton);
+    historyControlsRow.appendChild(historyEndButton);
+    historyCard.appendChild(historyControlsRow);
+    const historyDetailEl = document.createElement('div');
+    historyDetailEl.className = 'exothello-history-card__detail';
+    historyCard.appendChild(historyDetailEl);
+    const historyHintEl = document.createElement('div');
+    historyHintEl.className = 'exothello-history-card__hint';
+    historyCard.appendChild(historyHintEl);
     statusCard.appendChild(statusBox);
     statusCard.appendChild(statusMetaEl);
     statusCard.appendChild(scoreboardEl);
+    statusCard.appendChild(historyCard);
     wrapper.appendChild(statusCard);
 
     const boardContainer = document.createElement('div');
@@ -2657,6 +2774,9 @@
       isPainting: false,
       lastMove: null,
       legal: [],
+      history: [],
+      historyIndex: -1,
+      isReviewingHistory: false,
       settings: { width: 8, height: 8, victory: 'most' },
       modeId: 'normal',
       difficulty: 'NORMAL',
@@ -2664,6 +2784,8 @@
       playerColor: BLACK,
       aiColor: WHITE
     };
+
+    let pendingAiTimeout = null;
 
     const describeColor = (color) => {
       const key = color === BLACK
@@ -2808,6 +2930,7 @@
         sandboxWidthInput.disabled = true;
         sandboxHeightInput.disabled = true;
         sandboxDataTextarea.readOnly = true;
+        updateHistoryHint();
         return;
       }
       const width = state.board?.[0]?.length || state.settings.width || 8;
@@ -2826,6 +2949,338 @@
       sandboxPaletteRow.style.pointerEvents = state.sandboxMode === 'edit' ? 'auto' : 'none';
       updateSandboxToolButtons();
       updateSandboxModeButtons();
+      updateHistoryHint();
+    }
+
+    function cloneStatusState(source){
+      if (!source){
+        return { key: null, fallback: null, params: null };
+      }
+      const params = source.params && typeof source.params === 'object'
+        ? { ...source.params }
+        : source.params ?? null;
+      return {
+        key: source.key ?? null,
+        fallback: source.fallback ?? null,
+        params
+      };
+    }
+
+    function cloneMeta(meta){
+      if (!meta || typeof meta !== 'object') return {};
+      const result = {};
+      for (const [key, value] of Object.entries(meta)){
+        if (value && typeof value === 'object' && !Array.isArray(value)){
+          result[key] = { ...value };
+        } else {
+          result[key] = value;
+        }
+      }
+      return result;
+    }
+
+    function boardsEqual(a, b){
+      if (!a || !b) return false;
+      if (a.length !== b.length) return false;
+      for (let y = 0; y < a.length; y++){
+        const rowA = a[y];
+        const rowB = b[y];
+        if (!rowA || !rowB || rowA.length !== rowB.length) return false;
+        for (let x = 0; x < rowA.length; x++){
+          if (rowA[x] !== rowB[x]) return false;
+        }
+      }
+      return true;
+    }
+
+    function movesEqual(a, b){
+      if (!a && !b) return true;
+      if (!a || !b) return false;
+      return a.x === b.x && a.y === b.y && a.color === b.color;
+    }
+
+    function captureSnapshot(meta = {}){
+      return {
+        board: state.board.map(row => row.slice()),
+        turn: state.turn,
+        running: state.running,
+        ended: state.ended,
+        victory: state.victory,
+        playerColor: state.playerColor,
+        aiColor: state.aiColor,
+        lastMove: state.lastMove ? { ...state.lastMove } : null,
+        modeId: state.modeId,
+        meta: cloneMeta(meta),
+        statusMessageState: cloneStatusState(statusMessageState),
+        statusDescriptionState: cloneStatusState(statusDescriptionState)
+      };
+    }
+
+    function snapshotsEquivalent(a, b){
+      if (!a || !b) return false;
+      return boardsEqual(a.board, b.board)
+        && a.turn === b.turn
+        && a.running === b.running
+        && a.ended === b.ended
+        && a.victory === b.victory
+        && a.playerColor === b.playerColor
+        && a.aiColor === b.aiColor
+        && movesEqual(a.lastMove, b.lastMove);
+    }
+
+    function resetHistory(){
+      state.history = [];
+      state.historyIndex = -1;
+      state.isReviewingHistory = false;
+      updateHistoryControls();
+    }
+
+    function commitHistory(meta = {}){
+      if (!Array.isArray(state.history)){
+        state.history = [];
+      }
+      const isSandboxPlay = state.isSandbox && state.sandboxMode === 'play';
+      if (state.historyIndex < state.history.length - 1){
+        if (isSandboxPlay){
+          state.history.splice(state.historyIndex + 1);
+        } else {
+          state.historyIndex = state.history.length - 1;
+        }
+      }
+      const snapshot = captureSnapshot({ ...meta, nextTurn: state.turn });
+      const lastSnapshot = state.history[state.history.length - 1];
+      if (lastSnapshot && snapshotsEquivalent(lastSnapshot, snapshot)){
+        state.history[state.history.length - 1] = snapshot;
+      } else {
+        state.history.push(snapshot);
+      }
+      state.historyIndex = state.history.length - 1;
+      state.isReviewingHistory = false;
+      updateHistoryControls();
+      updateHistoryHint();
+    }
+
+    function restoreHistory(index){
+      if (!state.history || state.history.length === 0) return;
+      const target = Math.min(Math.max(index, 0), state.history.length - 1);
+      const snapshot = state.history[target];
+      if (!snapshot) return;
+      clearAIMoveTimeout();
+      state.historyIndex = target;
+      state.board = snapshot.board.map(row => row.slice());
+      state.turn = snapshot.turn;
+      state.running = snapshot.running;
+      state.ended = snapshot.ended;
+      state.victory = snapshot.victory;
+      state.playerColor = snapshot.playerColor;
+      state.aiColor = snapshot.aiColor;
+      state.lastMove = snapshot.lastMove ? { ...snapshot.lastMove } : null;
+      state.modeId = snapshot.modeId ?? state.modeId;
+      statusMessageState = cloneStatusState(snapshot.statusMessageState);
+      statusDescriptionState = cloneStatusState(snapshot.statusDescriptionState);
+      refreshStatusTexts();
+      updateRuleBadges();
+      updateSandboxControls();
+      state.isReviewingHistory = target !== state.history.length - 1;
+      state.legal = [];
+      updateLegalMoves();
+      resizeCanvas();
+      if (!state.isReviewingHistory && state.running && !state.ended && state.turn === state.aiColor){
+        scheduleAIMove(220);
+      }
+      updateHistoryControls();
+      updateHistoryHint();
+    }
+
+    function goToHistory(index){
+      if (!state.history || state.history.length === 0) return;
+      restoreHistory(index);
+    }
+
+    function updateHistoryControls(){
+      const total = state.history?.length ?? 0;
+      const hasHistory = total > 0;
+      const index = Math.min(Math.max(state.historyIndex, hasHistory ? 0 : -1), hasHistory ? total - 1 : -1);
+      const live = hasHistory && index === total - 1;
+      historyStartButton.disabled = !hasHistory || index <= 0;
+      historyPrevButton.disabled = !hasHistory || index <= 0;
+      historyNextButton.disabled = !hasHistory || index >= total - 1;
+      historyEndButton.disabled = !hasHistory || index >= total - 1;
+      if (!hasHistory){
+        historyPositionEl.textContent = text(
+          'miniexp.games.exothello.history.positionEmpty',
+          () => {
+            const locale = getLocaleCode();
+            return locale.startsWith('ja') ? '履歴はまだありません。' : 'No timeline data yet.';
+          }
+        );
+        historyDetailEl.textContent = '';
+        return;
+      }
+      const snapshot = state.history[index];
+      const stepLabel = text(
+        live
+          ? 'miniexp.games.exothello.history.positionLive'
+          : 'miniexp.games.exothello.history.positionReview',
+        () => {
+          const locale = getLocaleCode();
+          const base = locale.startsWith('ja')
+            ? `${index + 1} / ${total} 手`
+            : `Step ${index + 1} / ${total}`;
+          if (live){
+            return locale.startsWith('ja') ? `${base} ｜ ライブ` : `${base} · Live`;
+          }
+          return locale.startsWith('ja') ? `${base} ｜ 過去を再生中` : `${base} · Reviewing`;
+        },
+        { current: index + 1, total, live }
+      );
+      historyPositionEl.textContent = stepLabel;
+      let detail = '';
+      if (snapshot && snapshot.meta){
+        const meta = snapshot.meta;
+        const moveLabel = meta.move ? xyToAlgebra(meta.move.x, meta.move.y) : null;
+        if (meta.event === 'move' && moveLabel){
+          const key = meta.actor === 'player'
+            ? 'miniexp.games.exothello.history.detail.playerMove'
+            : 'miniexp.games.exothello.history.detail.aiMove';
+          detail = text(key, () => {
+            const locale = getLocaleCode();
+            const actor = meta.actor === 'player'
+              ? getParticipantLabel('player')
+              : getParticipantLabel('ai');
+            return locale.startsWith('ja')
+              ? `${actor}が${moveLabel}に打ちました。`
+              : `${actor} played ${moveLabel}.`;
+          }, { move: moveLabel });
+        } else if (meta.event === 'pass'){ 
+          const key = meta.actor === 'player'
+            ? 'miniexp.games.exothello.history.detail.playerPass'
+            : 'miniexp.games.exothello.history.detail.aiPass';
+          detail = text(key, () => {
+            const locale = getLocaleCode();
+            const actor = meta.actor === 'player'
+              ? getParticipantLabel('player')
+              : getParticipantLabel('ai');
+            return locale.startsWith('ja')
+              ? `${actor}がパスしました。`
+              : `${actor} passed.`;
+          });
+        } else if (meta.event === 'end'){
+          detail = text('miniexp.games.exothello.history.detail.end', () => {
+            const locale = getLocaleCode();
+            if (meta.result === 'win'){
+              return locale.startsWith('ja') ? '対局終了: あなたの勝ち。' : 'Game over: You win.';
+            }
+            if (meta.result === 'draw'){
+              return locale.startsWith('ja') ? '対局終了: 引き分け。' : 'Game over: Draw.';
+            }
+            return locale.startsWith('ja') ? '対局終了: あなたの負け。' : 'Game over: You lose.';
+          }, { result: meta.result });
+        } else if (meta.event === 'start'){
+          detail = text('miniexp.games.exothello.history.detail.start', () => {
+            const locale = getLocaleCode();
+            return locale.startsWith('ja') ? '初期配置が完了しました。' : 'Initial position ready.';
+          });
+        } else if (meta.event === 'continue'){
+          const nextActor = snapshot.turn === snapshot.playerColor ? 'player' : 'ai';
+          const key = nextActor === 'player'
+            ? 'miniexp.games.exothello.history.detail.nextPlayer'
+            : 'miniexp.games.exothello.history.detail.nextAi';
+          detail = text(key, () => {
+            const locale = getLocaleCode();
+            const actor = nextActor === 'player'
+              ? getParticipantLabel('player')
+              : getParticipantLabel('ai');
+            return locale.startsWith('ja')
+              ? `次の手番: ${actor}`
+              : `Next to move: ${actor}`;
+          });
+        }
+      }
+      historyDetailEl.textContent = detail;
+    }
+
+    function updateHistoryHint(){
+      const locale = getLocaleCode();
+      if (!historyHintEl) return;
+      if (!state.history || state.history.length === 0){
+        historyHintEl.textContent = locale.startsWith('ja')
+          ? '対局を開始すると履歴が記録されます。'
+          : 'Start a match to record the timeline.';
+        return;
+      }
+      const sandboxPlay = state.isSandbox && state.sandboxMode === 'play';
+      if (sandboxPlay){
+        if (state.historyIndex < state.history.length - 1){
+          historyHintEl.textContent = locale.startsWith('ja')
+            ? 'サンドボックス: この地点から別の手を打つと未来を上書きできます。'
+            : 'Sandbox: play a move here to overwrite the future timeline.';
+        } else {
+          historyHintEl.textContent = locale.startsWith('ja')
+            ? 'サンドボックス: いつでも戻って手をやり直せます。'
+            : 'Sandbox: you can rewind and change past moves.';
+        }
+        return;
+      }
+      if (state.historyIndex < state.history.length - 1){
+        historyHintEl.textContent = locale.startsWith('ja')
+          ? '過去を再生中: 最新の手番に戻ると対局を再開できます。'
+          : 'Reviewing: jump to the latest step to resume play.';
+      } else {
+        historyHintEl.textContent = locale.startsWith('ja')
+          ? 'タイムライン: ボタンで対局を振り返りましょう。'
+          : 'Timeline: use the controls to review any move.';
+      }
+    }
+
+    function ensureCanPlayFromCurrentHistory(){
+      if (!state.history || state.history.length === 0) return true;
+      const atLatest = state.historyIndex >= state.history.length - 1;
+      if (atLatest) return true;
+      if (state.isSandbox && state.sandboxMode === 'play'){
+        state.history.splice(state.historyIndex + 1);
+        state.historyIndex = state.history.length - 1;
+        state.isReviewingHistory = false;
+        updateHistoryControls();
+        updateHistoryHint();
+        setStatus(
+          'miniexp.games.exothello.history.timelineFork',
+          () => {
+            const locale = getLocaleCode();
+            return locale.startsWith('ja')
+              ? '未来を切り替えました: この先の手は新しい履歴として記録されます。'
+              : 'Timeline forked: future moves will follow this new branch.';
+          }
+        );
+        return true;
+      }
+      setStatus(
+        'miniexp.games.exothello.history.liveRequired',
+        () => {
+          const locale = getLocaleCode();
+          return locale.startsWith('ja')
+            ? '最新の局面に戻ってから手を打ってください。'
+            : 'Return to the latest position before making a move.';
+        }
+      );
+      return false;
+    }
+
+    function clearAIMoveTimeout(){
+      if (pendingAiTimeout !== null){
+        try {
+          clearTimeout(pendingAiTimeout);
+        } catch {}
+        pendingAiTimeout = null;
+      }
+    }
+
+    function scheduleAIMove(delay = 160){
+      clearAIMoveTimeout();
+      pendingAiTimeout = setTimeout(() => {
+        pendingAiTimeout = null;
+        processAIMove();
+      }, delay);
     }
 
     function isSandboxEditing(){
@@ -2837,12 +3292,14 @@
       if (mode !== 'edit' && mode !== 'play') return;
       if (state.sandboxMode === mode) return;
       if (mode === 'edit'){
+        clearAIMoveTimeout();
         state.sandboxMode = 'edit';
         state.running = false;
         state.ended = false;
         state.lastMove = null;
         state.legal = [];
         state.isPainting = false;
+        resetHistory();
         setStatus(
           'miniexp.games.exothello.status.sandboxEditing',
           () => {
@@ -2853,6 +3310,7 @@
           }
         );
         updateSandboxControls();
+        updateHistoryHint();
         draw();
         return;
       }
@@ -2870,6 +3328,7 @@
         );
         return;
       }
+      clearAIMoveTimeout();
       state.sandboxMode = 'play';
       state.running = true;
       state.ended = false;
@@ -2885,6 +3344,7 @@
       state.weights = createWeights(state.board[0].length, state.board.length, state.board);
       state.turn = state.playerColor;
       state.isPainting = false;
+      resetHistory();
       updateSandboxControls();
       setStatus(
         'miniexp.games.exothello.status.continue',
@@ -2893,11 +3353,12 @@
           return locale.startsWith('ja') ? '対局中です。' : 'Game in progress.';
         }
       );
+      updateHistoryHint();
       updateLegalMoves();
       draw();
-      checkEnd();
+      checkEnd({ event: 'start' });
       if (!state.ended && state.turn === state.aiColor){
-        setTimeout(() => processAIMove(), 160);
+        scheduleAIMove(160);
       }
     }
 
@@ -3367,6 +3828,7 @@
         return;
       }
       if (!state.running || state.turn !== state.playerColor || state.ended) return;
+      if (!ensureCanPlayFromCurrentHistory()) return;
       const mv = findMove(cell.x, cell.y);
       if (!mv) return;
       applyMove(state.board, mv, state.playerColor);
@@ -3374,11 +3836,9 @@
       state.turn = state.aiColor;
       updateLegalMoves();
       draw();
-      checkEnd();
+      checkEnd({ event: 'move', actor: 'player', move: { x: cell.x, y: cell.y } });
       if (!state.ended){
-        setTimeout(() => {
-          processAIMove();
-        }, 150);
+        scheduleAIMove(150);
       }
     }
 
@@ -3419,13 +3879,17 @@
     }
 
     function processAIMove(){
+      if (pendingAiTimeout !== null){
+        pendingAiTimeout = null;
+      }
       if (state.ended || !state.running || state.turn !== state.aiColor) return;
+      if (state.history && state.historyIndex < state.history.length - 1) return;
       const moves = legalMoves(state.board, state.aiColor);
       if (moves.length === 0){
         state.turn = state.playerColor;
         updateLegalMoves();
         draw();
-        checkEnd();
+        checkEnd({ event: 'pass', actor: 'ai' });
         return;
       }
       const move = pickAIMove(state.board, state.weights, state.victory, state.difficulty, state.aiColor);
@@ -3433,7 +3897,7 @@
         state.turn = state.playerColor;
         updateLegalMoves();
         draw();
-        checkEnd();
+        checkEnd({ event: 'pass', actor: 'ai' });
         return;
       }
       applyMove(state.board, move, state.aiColor);
@@ -3441,15 +3905,16 @@
       state.turn = state.playerColor;
       updateLegalMoves();
       draw();
-      checkEnd();
+      checkEnd({ event: 'move', actor: 'ai', move: { x: move.x, y: move.y } });
     }
 
-    function checkEnd(){
+    function checkEnd(meta = {}){
       const playerMoves = legalMoves(state.board, state.playerColor);
       const aiMoves = legalMoves(state.board, state.aiColor);
       if (playerMoves.length === 0 && aiMoves.length === 0){
         state.ended = true;
         state.running = false;
+        clearAIMoveTimeout();
         const counts = countPieces(state.board);
         const playerScore = state.playerColor === BLACK ? counts.black : counts.white;
         const aiScore = state.aiColor === BLACK ? counts.black : counts.white;
@@ -3484,6 +3949,7 @@
         }
         resetButton.disabled = false;
         draw();
+        commitHistory({ ...meta, event: 'end', result: playerWins ? 'win' : isDraw ? 'draw' : 'lose' });
         return;
       }
       if (state.turn === state.playerColor && playerMoves.length === 0){
@@ -3497,7 +3963,8 @@
             return locale.startsWith('ja') ? '打てる場所がありません。手番をパスします。' : 'No moves available. Turn passes.';
           }
         );
-        setTimeout(() => processAIMove(), 160);
+        commitHistory({ ...meta, event: 'pass', actor: 'player' });
+        scheduleAIMove(160);
         return;
       }
       if (state.turn === state.aiColor && aiMoves.length === 0){
@@ -3511,6 +3978,7 @@
             return locale.startsWith('ja') ? '打てる場所がありません。手番をパスします。' : 'No moves available. Turn passes.';
           }
         );
+        commitHistory({ ...meta, event: 'pass', actor: 'ai' });
         return;
       }
       setStatus(
@@ -3522,6 +3990,8 @@
       );
       updateLegalMoves();
       draw();
+      const event = meta && meta.event ? meta.event : 'continue';
+      commitHistory({ ...meta, event });
     }
 
     async function startGame(){
@@ -3533,6 +4003,7 @@
       state.sandboxMode = null;
       state.isPainting = false;
       updateSandboxControls();
+      clearAIMoveTimeout();
       setStatus(
         'miniexp.games.exothello.status.preparing',
         () => {
@@ -3560,6 +4031,7 @@
           state.running = false;
           state.isPainting = false;
           state.sandboxTool = state.sandboxTool || 'black';
+          resetHistory();
           setStatus(
             'miniexp.games.exothello.status.sandboxEditing',
             () => {
@@ -3570,16 +4042,19 @@
             }
           );
           updateSandboxControls();
+          updateHistoryHint();
           draw();
         } else {
           state.running = true;
           setStatus(mode.descriptionKey, () => getModeDescriptionFallback(mode.id));
           updateRuleBadges();
           updateSandboxControls();
+          resetHistory();
+          updateHistoryHint();
           updateLegalMoves();
-          checkEnd();
+          checkEnd({ event: 'start' });
           if (!state.ended && state.turn === state.aiColor){
-            setTimeout(() => processAIMove(), 220);
+            scheduleAIMove(220);
           }
         }
         resetButton.disabled = false;
@@ -3596,6 +4071,7 @@
     }
 
     function resetGame(){
+      clearAIMoveTimeout();
       state.running = false;
       state.ended = false;
       state.board = createBoard(8, 8, EMPTY);
@@ -3630,6 +4106,8 @@
       syncControlsWithMode();
       resizeCanvas();
       updateSandboxControls();
+      resetHistory();
+      updateHistoryHint();
       draw();
     }
 
@@ -3650,6 +4128,19 @@
       updateSettingsFromControls();
       syncControlsWithMode();
     };
+    const handleHistoryStart = () => {
+      goToHistory(0);
+    };
+    const handleHistoryPrev = () => {
+      goToHistory(state.historyIndex - 1);
+    };
+    const handleHistoryNext = () => {
+      goToHistory(state.historyIndex + 1);
+    };
+    const handleHistoryEnd = () => {
+      if (!state.history || state.history.length === 0) return;
+      goToHistory(state.history.length - 1);
+    };
     startButton.addEventListener('click', handleStartClick);
     resetButton.addEventListener('click', resetGame);
     modeSelect.addEventListener('change', handleModeChange);
@@ -3658,6 +4149,10 @@
     victorySelect.addEventListener('change', updateSettingsFromControls);
     difficultySelect.addEventListener('change', updateSettingsFromControls);
     playerColorSelect.addEventListener('change', updateSettingsFromControls);
+    historyStartButton.addEventListener('click', handleHistoryStart);
+    historyPrevButton.addEventListener('click', handleHistoryPrev);
+    historyNextButton.addEventListener('click', handleHistoryNext);
+    historyEndButton.addEventListener('click', handleHistoryEnd);
     sandboxEditButton.addEventListener('click', handleSandboxEditClick);
     sandboxPlayButton.addEventListener('click', handleSandboxPlayClick);
     sandboxResizeButton.addEventListener('click', handleSandboxResize);
@@ -3681,6 +4176,8 @@
         return locale.startsWith('ja') ? 'モードを選んでスタートを押してください。' : 'Choose a mode and press Start.';
       }
     );
+    resetHistory();
+    updateHistoryHint();
 
     return {
       destroy(){
@@ -3698,11 +4195,16 @@
         try { victorySelect.removeEventListener('change', updateSettingsFromControls); } catch {}
         try { difficultySelect.removeEventListener('change', updateSettingsFromControls); } catch {}
         try { playerColorSelect.removeEventListener('change', updateSettingsFromControls); } catch {}
+        try { historyStartButton.removeEventListener('click', handleHistoryStart); } catch {}
+        try { historyPrevButton.removeEventListener('click', handleHistoryPrev); } catch {}
+        try { historyNextButton.removeEventListener('click', handleHistoryNext); } catch {}
+        try { historyEndButton.removeEventListener('click', handleHistoryEnd); } catch {}
         try { sandboxEditButton.removeEventListener('click', handleSandboxEditClick); } catch {}
         try { sandboxPlayButton.removeEventListener('click', handleSandboxPlayClick); } catch {}
         try { sandboxResizeButton.removeEventListener('click', handleSandboxResize); } catch {}
         try { sandboxImportButton.removeEventListener('click', handleSandboxImport); } catch {}
         try { sandboxExportButton.removeEventListener('click', handleSandboxExport); } catch {}
+        clearAIMoveTimeout();
         if (detachLocale){
           try { detachLocale(); } catch (error){ console.warn('[exothello] Failed to detach locale listener', error); }
         }

@@ -1893,6 +1893,34 @@
               "vault": { "label": "ハイリスク金庫を解錠" }
             }
           },
+          "sanpo": {
+            "name": "散歩",
+            "description": "完全ランダムのダンジョンを散歩して歩数×1EXPを獲得する自由行動モード",
+            "ui": {
+              "regenerate": "ステージ再生成",
+              "zoomLabel": "ズーム",
+              "minimapTitle": "ミニマップ",
+              "stageInfo": "タイプ: {type} / サイズ: {size} / タイル: {tileSize}",
+              "seedInfo": "シード: {seed}",
+              "stepsInfo": "歩数: {steps}",
+              "stageInfoEmpty": "タイプ: -",
+              "seedInfoEmpty": "シード: -",
+              "stepsInfoEmpty": "歩数: 0",
+              "zoomInfo": "ズーム: {value}x",
+              "zoomDisplay": "{value}x",
+              "hideMap": "ミニマップOFF",
+              "showMap": "ミニマップON",
+              "status": {
+                "paused": "一時停止中",
+                "walk": "散歩中… WASD/矢印キーで移動。Mでミニマップ切替、[ / ] でズーム。",
+                "noApi": "ダンジョンAPIが利用できません",
+                "generating": "ステージ生成中…",
+                "failed": "ステージ生成に失敗しました",
+                "ready": "準備完了！開始ボタンで散歩を始めよう",
+                "initializing": "ロード中…"
+              }
+            }
+          },
           "ten_ten": {
             "name": "1010パズル",
             "description": "ラインでEXP／クロス消しは倍増",
@@ -17633,6 +17661,34 @@
           "subtitle": "最新順に表示",
           "empty": "ラップを記録するとここに表示されます",
           "label": "ラップ {index}"
+        }
+      },
+      "sanpo": {
+        "name": "散歩",
+        "description": "完全ランダムのダンジョンを散歩して歩数×1EXPを獲得する自由行動モード",
+        "ui": {
+          "regenerate": "ステージ再生成",
+          "zoomLabel": "ズーム",
+          "minimapTitle": "ミニマップ",
+          "stageInfo": "タイプ: {type} / サイズ: {size} / タイル: {tileSize}",
+          "seedInfo": "シード: {seed}",
+          "stepsInfo": "歩数: {steps}",
+          "stageInfoEmpty": "タイプ: -",
+          "seedInfoEmpty": "シード: -",
+          "stepsInfoEmpty": "歩数: 0",
+          "zoomInfo": "ズーム: {value}x",
+          "zoomDisplay": "{value}x",
+          "hideMap": "ミニマップOFF",
+          "showMap": "ミニマップON",
+          "status": {
+            "paused": "一時停止中",
+            "walk": "散歩中… WASD/矢印キーで移動。Mでミニマップ切替、[ / ] でズーム。",
+            "noApi": "ダンジョンAPIが利用できません",
+            "generating": "ステージ生成中…",
+            "failed": "ステージ生成に失敗しました",
+            "ready": "準備完了！開始ボタンで散歩を始めよう",
+            "initializing": "ロード中…"
+          }
         }
       },
       "diagramMaker": {

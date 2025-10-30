@@ -1913,6 +1913,34 @@
               }
             }
           },
+          "sanpo": {
+            "name": "散步",
+            "description": "在随机生成的迷宫中散步，每一步获得 1 点经验。",
+            "ui": {
+              "regenerate": "重新生成关卡",
+              "zoomLabel": "缩放",
+              "minimapTitle": "小地图",
+              "stageInfo": "类型：{type} / 尺寸：{size} / 单元：{tileSize}",
+              "seedInfo": "种子：{seed}",
+              "stepsInfo": "步数：{steps}",
+              "stageInfoEmpty": "类型：-",
+              "seedInfoEmpty": "种子：-",
+              "stepsInfoEmpty": "步数：0",
+              "zoomInfo": "缩放：{value}x",
+              "zoomDisplay": "{value}x",
+              "hideMap": "小地图关闭",
+              "showMap": "小地图开启",
+              "status": {
+                "paused": "已暂停",
+                "walk": "散步中… 使用 WASD/方向键移动。按 M 切换小地图，[ / ] 缩放。",
+                "noApi": "迷宫 API 不可用",
+                "generating": "正在生成关卡…",
+                "failed": "关卡生成失败",
+                "ready": "准备就绪！按开始按钮开始散步。",
+                "initializing": "加载中…"
+              }
+            }
+          },
           "ten_ten": {
             "name": "1010谜题",
             "description": "放置方块来清除线，十字清除使你的经验加倍。",
@@ -9049,6 +9077,34 @@
           "subtitle": "最近的第一个",
           "empty": "记录后你的圈数将出现在此处。",
           "label": "圈{index}"
+        }
+      },
+      "sanpo": {
+        "name": "散步",
+        "description": "在随机生成的迷宫中散步，每一步获得 1 点经验。",
+        "ui": {
+          "regenerate": "重新生成关卡",
+          "zoomLabel": "缩放",
+          "minimapTitle": "小地图",
+          "stageInfo": "类型：{type} / 尺寸：{size} / 单元：{tileSize}",
+          "seedInfo": "种子：{seed}",
+          "stepsInfo": "步数：{steps}",
+          "stageInfoEmpty": "类型：-",
+          "seedInfoEmpty": "种子：-",
+          "stepsInfoEmpty": "步数：0",
+          "zoomInfo": "缩放：{value}x",
+          "zoomDisplay": "{value}x",
+          "hideMap": "小地图关闭",
+          "showMap": "小地图开启",
+          "status": {
+            "paused": "已暂停",
+            "walk": "散步中… 使用 WASD/方向键移动。按 M 切换小地图，[ / ] 缩放。",
+            "noApi": "迷宫 API 不可用",
+            "generating": "正在生成关卡…",
+            "failed": "关卡生成失败",
+            "ready": "准备就绪！按开始按钮开始散步。",
+            "initializing": "加载中…"
+          }
         }
       },
       "wording": {

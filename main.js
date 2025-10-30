@@ -1881,6 +1881,10 @@ const miniexpRestartBtn = document.getElementById('miniexp-restart');
 const miniexpDifficulty = document.getElementById('miniexp-difficulty');
 const miniexpContainer = document.getElementById('miniexp-container');
 const miniexpDisplayModes = document.getElementById('miniexp-display-modes');
+const miniexpSearchInput = document.getElementById('miniexp-search');
+const miniexpSourceFilterSelect = document.getElementById('miniexp-source-filter');
+const miniexpFavoritesToggle = document.getElementById('miniexp-favorites-toggle');
+const miniexpFavoritesContainer = document.getElementById('miniexp-favorites');
 const miniexpHudSp = document.getElementById('miniexp-hud-sp');
 // BlockDim UI elements
 // BlockDim listbox UI elements
@@ -1945,6 +1949,7 @@ const MINI_EXP_DISPLAY_MODES = Object.freeze([
     { id: 'wrap' },
     { id: 'detail' }
 ]);
+const MINI_EXP_SOURCE_FILTERS = Object.freeze(['all', 'builtin', 'mod']);
 function resolveMiniExpDisplayModeLabel(modeId) {
     const fallbackMap = {
         tile: 'タイル',
@@ -2659,7 +2664,21 @@ function createMiniShortcutController() {
         }
     };
 }
-let miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail' };
+function createDefaultMiniExpState() {
+    return {
+        selected: null,
+        difficulty: 'NORMAL',
+        records: {},
+        category: MINI_ALL_CATEGORY,
+        displayMode: 'detail',
+        searchQuery: '',
+        sourceFilter: 'all',
+        showFavoritesOnly: false,
+        favorites: []
+    };
+}
+
+let miniExpState = createDefaultMiniExpState();
 let __miniExpInited = false;
 let __miniManifest = null; // [{id,name,entry,version,author,icon,description}]
 let __miniGameRegistry = {}; // id -> def
@@ -12063,15 +12082,20 @@ function applyGameStateSnapshot(snapshot, options = {}) {
 
     if (snapshot.miniExp && typeof snapshot.miniExp === 'object') {
         const miniSnap = deepClone(snapshot.miniExp);
+        const defaults = createDefaultMiniExpState();
         miniExpState = {
-            selected: miniSnap.selected ?? null,
-            difficulty: typeof miniSnap.difficulty === 'string' ? miniSnap.difficulty : 'NORMAL',
-            records: miniSnap.records && typeof miniSnap.records === 'object' ? miniSnap.records : {},
-            category: typeof miniSnap.category === 'string' ? miniSnap.category : MINI_ALL_CATEGORY,
-            displayMode: normalizeMiniExpDisplayMode(miniSnap.displayMode) || 'detail'
+            selected: miniSnap.selected ?? defaults.selected,
+            difficulty: typeof miniSnap.difficulty === 'string' ? miniSnap.difficulty : defaults.difficulty,
+            records: miniSnap.records && typeof miniSnap.records === 'object' ? miniSnap.records : defaults.records,
+            category: typeof miniSnap.category === 'string' ? miniSnap.category : defaults.category,
+            displayMode: normalizeMiniExpDisplayMode(miniSnap.displayMode) || defaults.displayMode,
+            searchQuery: typeof miniSnap.searchQuery === 'string' ? miniSnap.searchQuery : defaults.searchQuery,
+            sourceFilter: normalizeMiniExpSourceFilter(miniSnap.sourceFilter),
+            showFavoritesOnly: !!miniSnap.showFavoritesOnly,
+            favorites: normalizeMiniExpFavorites(miniSnap.favorites)
         };
     } else {
-        miniExpState = { selected: null, difficulty: 'NORMAL', records: {}, category: MINI_ALL_CATEGORY, displayMode: 'detail' };
+        miniExpState = createDefaultMiniExpState();
     }
 
     if (snapshot.miniShortcutState) applyMiniShortcutStateSnapshot(snapshot.miniShortcutState);
@@ -12116,6 +12140,8 @@ function applyGameStateSnapshot(snapshot, options = {}) {
             renderMiniExpCategories(__miniManifest);
             renderMiniExpDisplayModes(__miniManifest);
             renderMiniExpList(__miniManifest);
+            renderMiniExpFavorites(__miniManifest);
+            syncMiniExpFilterControls();
             renderMiniExpRecords();
             applyMiniExpPlaceholderState(__miniManifest);
         }
@@ -19402,6 +19428,67 @@ function normalizeMiniExpDisplayMode(mode) {
     return MINI_EXP_DISPLAY_MODES.some(opt => opt.id === mode) ? mode : fallback;
 }
 
+function normalizeMiniExpSourceFilter(filter) {
+    if (!filter) return 'all';
+    const normalized = String(filter || '').toLowerCase();
+    return MINI_EXP_SOURCE_FILTERS.includes(normalized) ? normalized : 'all';
+}
+
+function normalizeMiniExpFavorites(value) {
+    if (!Array.isArray(value)) return [];
+    const seen = new Set();
+    const result = [];
+    for (const entry of value) {
+        if (entry == null) continue;
+        const id = String(entry || '').trim();
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        result.push(id);
+    }
+    return result;
+}
+
+function getMiniExpSourceFilter() {
+    const normalized = normalizeMiniExpSourceFilter(miniExpState.sourceFilter);
+    if (miniExpState.sourceFilter !== normalized) miniExpState.sourceFilter = normalized;
+    return normalized;
+}
+
+function getMiniGameSource(def) {
+    try {
+        const author = String(def?.author || '').trim().toLowerCase();
+        if (!author || MINI_GAME_BUILTIN_AUTHORS.has(author)) return 'builtin';
+        return 'mod';
+    } catch {
+        return 'builtin';
+    }
+}
+
+function toggleMiniExpFavorite(gameId) {
+    if (!gameId && gameId !== 0) return;
+    const id = String(gameId || '').trim();
+    if (!id) return;
+    const favorites = normalizeMiniExpFavorites(miniExpState.favorites);
+    const index = favorites.indexOf(id);
+    if (index >= 0) {
+        favorites.splice(index, 1);
+    } else {
+        favorites.push(id);
+    }
+    miniExpState.favorites = favorites;
+}
+
+function selectMiniExpGame(def, manifest = __miniManifest) {
+    if (!def || !def.id) return;
+    const list = manifest || __miniManifest || [];
+    miniExpState.selected = def.id;
+    renderMiniExpList(list);
+    const fallbackName = resolveMiniGameText(def, 'name') || def.id;
+    setMiniExpPlaceholderState('selected', { id: def.id, fallbackName }, list);
+    renderMiniExpRecords();
+    saveAll();
+}
+
 function getMiniExpDisplayMode() {
     const normalized = normalizeMiniExpDisplayMode(miniExpState.displayMode);
     if (miniExpState.displayMode !== normalized) miniExpState.displayMode = normalized;
@@ -19488,57 +19575,215 @@ function renderMiniExpList(manifest) {
     if (!miniexpList) return;
     const list = manifest || __miniManifest || [];
     const mode = getMiniExpDisplayMode();
+    const favorites = normalizeMiniExpFavorites(miniExpState.favorites);
+    const favoritesSet = new Set(favorites);
+    const searchQuery = String(miniExpState.searchQuery || '').trim().toLowerCase();
+    const sourceFilter = getMiniExpSourceFilter();
+    const showFavoritesOnly = !!miniExpState.showFavoritesOnly;
     miniexpList.innerHTML = '';
     miniexpList.classList.remove('mode-detail', 'mode-tile', 'mode-list', 'mode-wrap');
     miniexpList.classList.add(`mode-${mode}`);
-    const filtered = getFilteredManifest(list);
-    if (!filtered || filtered.length === 0) {
+    const filteredByCategory = getFilteredManifest(list);
+    const filtered = filteredByCategory.filter((def) => {
+        if (!def || !def.id) return false;
+        if (showFavoritesOnly && !favoritesSet.has(def.id)) return false;
+        if (sourceFilter === 'builtin' && getMiniGameSource(def) !== 'builtin') return false;
+        if (sourceFilter === 'mod' && getMiniGameSource(def) !== 'mod') return false;
+        if (searchQuery) {
+            const haystacks = [];
+            const push = (value) => {
+                if (value == null) return;
+                const normalized = String(value).toLowerCase();
+                if (normalized) haystacks.push(normalized);
+            };
+            push(resolveMiniGameText(def, 'name'));
+            push(resolveMiniGameText(def, 'description'));
+            push(def.id);
+            push(def.author);
+            if (Array.isArray(def.categories)) def.categories.forEach(push);
+            if (Array.isArray(def.categoryIds)) def.categoryIds.forEach(push);
+            if (Array.isArray(def.tags)) def.tags.forEach(push);
+            if (!haystacks.some((text) => text.includes(searchQuery))) return false;
+        }
+        return true;
+    });
+
+    if (!filtered.length) {
         const p = document.createElement('div');
-        p.textContent = translateOrFallback('selection.miniexp.list.empty', '該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。');
+        let key = 'selection.miniexp.list.empty';
+        let fallback = '該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。';
+        if (filteredByCategory.length > 0) {
+            if (showFavoritesOnly && favoritesSet.size === 0 && !searchQuery && sourceFilter === 'all') {
+                key = 'selection.miniexp.favorites.empty';
+                fallback = 'お気に入りに登録したミニゲームはまだありません。';
+            } else {
+                key = 'selection.miniexp.list.noMatch';
+                fallback = '検索条件に一致するミニゲームが見つかりませんでした。条件を調整してください。';
+            }
+        }
+        p.textContent = translateOrFallback(key, fallback);
         miniexpList.appendChild(p);
+        renderMiniExpFavorites(list);
         return;
     }
+
     const selectLabel = translateOrFallback('selection.miniexp.actions.select', '選択');
     const selectedLabel = translateOrFallback('selection.miniexp.actions.selected', '選択中');
+    const favoriteLabel = translateOrFallback('selection.miniexp.actions.favorite', 'お気に入りに追加');
+    const unfavoriteLabel = translateOrFallback('selection.miniexp.actions.unfavorite', 'お気に入りから削除');
+
+    const createFavoriteButton = (def, isFavorite) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'miniexp-favorite-btn' + (isFavorite ? ' active' : '');
+        const label = isFavorite ? unfavoriteLabel : favoriteLabel;
+        btn.setAttribute('aria-label', label);
+        btn.setAttribute('aria-pressed', isFavorite ? 'true' : 'false');
+        btn.title = label;
+        btn.textContent = isFavorite ? '★' : '☆';
+        btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleMiniExpFavorite(def.id);
+            renderMiniExpList(list);
+            renderMiniExpFavorites(list);
+            saveAll();
+        });
+        return btn;
+    };
+
     filtered.forEach(def => {
         const isSelected = miniExpState.selected === def.id;
+        const isFavorite = favoritesSet.has(def.id);
         const name = resolveMiniGameText(def, 'name') || def.id;
         const description = resolveMiniGameText(def, 'description');
-        const selectGame = () => {
-            miniExpState.selected = def.id;
-            renderMiniExpList(list);
-            const selectedDef = findMiniGameDefinitionById(def.id, list) || def;
-            const resolvedName = resolveMiniGameText(selectedDef, 'name') || def.id;
-            setMiniExpPlaceholderState('selected', { id: def.id, fallbackName: resolvedName }, list);
-            renderMiniExpRecords();
-            saveAll();
-        };
         if (mode === 'detail') {
             const card = document.createElement('div');
-            card.className = 'miniexp-card' + (isSelected ? ' selected' : '');
-            const h = document.createElement('h4'); h.textContent = name;
+            card.className = 'miniexp-card' + (isSelected ? ' selected' : '') + (isFavorite ? ' favorite' : '');
+            const header = document.createElement('div');
+            header.className = 'miniexp-card-header';
+            const h = document.createElement('h4');
+            h.textContent = name;
+            const favBtn = createFavoriteButton(def, isFavorite);
+            header.appendChild(h);
+            header.appendChild(favBtn);
             const d = document.createElement('div'); d.className = 'desc'; d.textContent = description || '';
             const m = document.createElement('div'); m.className = 'meta'; m.textContent = `v${def.version||'0.0.0'} ${def.author?(' / '+def.author):''}`;
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.textContent = isSelected ? selectedLabel : selectLabel;
-            btn.addEventListener('click', selectGame);
-            card.appendChild(h);
+            btn.addEventListener('click', () => selectMiniExpGame(def, list));
+            card.appendChild(header);
             card.appendChild(d);
             card.appendChild(m);
             card.appendChild(btn);
             miniexpList.appendChild(card);
         } else {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'miniexp-entry-wrapper' + (isFavorite ? ' favorite' : '');
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'miniexp-entry' + (isSelected ? ' selected' : '');
+            btn.className = 'miniexp-entry' + (isSelected ? ' selected' : '') + (isFavorite ? ' favorite' : '');
             btn.textContent = name;
             if (description) btn.title = description;
-            btn.addEventListener('click', selectGame);
-            miniexpList.appendChild(btn);
+            btn.addEventListener('click', () => selectMiniExpGame(def, list));
+            const favBtn = createFavoriteButton(def, isFavorite);
+            wrapper.appendChild(btn);
+            wrapper.appendChild(favBtn);
+            miniexpList.appendChild(wrapper);
         }
     });
+
+    renderMiniExpFavorites(list);
 }
+
+function renderMiniExpFavorites(manifest) {
+    if (!miniexpFavoritesContainer) return;
+    const list = manifest || __miniManifest || [];
+    const favorites = normalizeMiniExpFavorites(miniExpState.favorites);
+    miniexpFavoritesContainer.innerHTML = '';
+    if (!favorites.length) {
+        const empty = document.createElement('div');
+        empty.className = 'miniexp-favorites-empty';
+        empty.textContent = translateOrFallback('selection.miniexp.favorites.empty', 'お気に入りに登録したミニゲームはまだありません。');
+        miniexpFavoritesContainer.appendChild(empty);
+        return;
+    }
+    const title = document.createElement('div');
+    title.className = 'miniexp-favorites-title';
+    title.textContent = translateOrFallback('selection.miniexp.favorites.title', 'お気に入り');
+    miniexpFavoritesContainer.appendChild(title);
+    const listEl = document.createElement('div');
+    listEl.className = 'miniexp-favorites-list';
+    favorites.forEach((id) => {
+        const def = findMiniGameDefinitionById(id, list);
+        const name = resolveMiniGameText(def, 'name') || id;
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'miniexp-favorite-chip' + (miniExpState.selected === id ? ' selected' : '');
+        chip.textContent = name;
+        chip.addEventListener('click', () => {
+            const targetDef = def || { id, name };
+            selectMiniExpGame(targetDef, list);
+        });
+        listEl.appendChild(chip);
+    });
+    miniexpFavoritesContainer.appendChild(listEl);
+}
+
+function syncMiniExpFilterControls() {
+    if (miniexpSearchInput) {
+        const value = miniExpState.searchQuery || '';
+        if (miniexpSearchInput.value !== value) {
+            miniexpSearchInput.value = value;
+        }
+    }
+    if (miniexpSourceFilterSelect) {
+        const value = getMiniExpSourceFilter();
+        if (miniexpSourceFilterSelect.value !== value) {
+            miniexpSourceFilterSelect.value = value;
+        }
+    }
+    if (miniexpFavoritesToggle) {
+        const checked = !!miniExpState.showFavoritesOnly;
+        if (miniexpFavoritesToggle.checked !== checked) {
+            miniexpFavoritesToggle.checked = checked;
+        }
+    }
+}
+
+function initializeMiniExpFilterControls() {
+    if (miniexpSearchInput) {
+        miniexpSearchInput.value = miniExpState.searchQuery || '';
+        miniexpSearchInput.addEventListener('input', () => {
+            miniExpState.searchQuery = miniexpSearchInput.value || '';
+            renderMiniExpList(__miniManifest);
+            renderMiniExpFavorites(__miniManifest);
+            scheduleSaveAll();
+        });
+    }
+    if (miniexpSourceFilterSelect) {
+        miniexpSourceFilterSelect.value = getMiniExpSourceFilter();
+        miniexpSourceFilterSelect.addEventListener('change', () => {
+            miniExpState.sourceFilter = normalizeMiniExpSourceFilter(miniexpSourceFilterSelect.value);
+            renderMiniExpList(__miniManifest);
+            renderMiniExpFavorites(__miniManifest);
+            saveAll();
+        });
+    }
+    if (miniexpFavoritesToggle) {
+        miniexpFavoritesToggle.checked = !!miniExpState.showFavoritesOnly;
+        miniexpFavoritesToggle.addEventListener('change', () => {
+            miniExpState.showFavoritesOnly = !!miniexpFavoritesToggle.checked;
+            renderMiniExpList(__miniManifest);
+            renderMiniExpFavorites(__miniManifest);
+            saveAll();
+        });
+    }
+}
+
+initializeMiniExpFilterControls();
+renderMiniExpFavorites(__miniManifest);
 
 document.addEventListener('app:rerender', () => {
     try {
@@ -19552,7 +19797,9 @@ document.addEventListener('app:rerender', () => {
         renderMiniExpCategories(__miniManifest);
         renderMiniExpDisplayModes(__miniManifest);
         renderMiniExpList(__miniManifest);
+        renderMiniExpFavorites(__miniManifest);
     }
+    syncMiniExpFilterControls();
     applyMiniExpPlaceholderState(__miniManifest);
     renderMiniExpRecords();
     updateMiniExpPauseButtonLabel();
@@ -19594,6 +19841,8 @@ async function initMiniExpUI() {
         miniExpState.displayMode = normalizeMiniExpDisplayMode(miniExpState.displayMode);
         renderMiniExpDisplayModes(list);
         renderMiniExpList(list);
+        renderMiniExpFavorites(list);
+        syncMiniExpFilterControls();
         if (miniExpState.selected) {
             const sel = list.find(x=>x.id===miniExpState.selected);
             if (sel) {

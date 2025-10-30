@@ -84,7 +84,7 @@
     zoomLabel.style.gap = '4px';
     zoomLabel.style.alignItems = 'center';
     zoomLabel.style.color = '#cbd5f5';
-    zoomLabel.textContent = text('games.sanpo.ui.zoom', 'ズーム');
+    zoomLabel.textContent = text('games.sanpo.ui.zoomLabel', 'ズーム');
 
     const zoomSlider = document.createElement('input');
     zoomSlider.type = 'range';
@@ -125,7 +125,7 @@
     miniMapContainer.style.gap = '6px';
 
     const miniMapTitle = document.createElement('div');
-    miniMapTitle.textContent = text('games.sanpo.ui.minimap', 'ミニマップ');
+    miniMapTitle.textContent = text('games.sanpo.ui.minimapTitle', 'ミニマップ');
     miniMapTitle.style.color = '#cbd5f5';
     miniMapTitle.style.fontSize = '0.9rem';
 
@@ -215,15 +215,39 @@
         const typeName = stage.type || stage.requestedType || 'unknown';
         const sizeText = `${stage.width}×${stage.height}`;
         const tileSizeText = `${stage.tileSize}px`;
-        stageInfo.textContent = text('games.sanpo.ui.stage', () => `タイプ: ${typeName} / サイズ: ${sizeText} / タイル: ${tileSizeText}`);
-        seedInfo.textContent = text('games.sanpo.ui.seed', () => `シード: ${formatSeed(stageSeed)}`);
-        stepsInfo.textContent = text('games.sanpo.ui.steps', () => `歩数: ${stepsTaken}`);
+        const stageParams = { type: typeName, size: sizeText, tileSize: tileSizeText };
+        stageInfo.textContent = text(
+          'games.sanpo.ui.stageInfo',
+          (params = {}) => {
+            const type = params.type ?? typeName;
+            const size = params.size ?? sizeText;
+            const tile = params.tileSize ?? tileSizeText;
+            return `タイプ: ${type} / サイズ: ${size} / タイル: ${tile}`;
+          },
+          stageParams
+        );
+        const seedText = formatSeed(stageSeed);
+        seedInfo.textContent = text(
+          'games.sanpo.ui.seedInfo',
+          (params = {}) => `シード: ${params.seed ?? seedText}`,
+          { seed: seedText }
+        );
+        stepsInfo.textContent = text(
+          'games.sanpo.ui.stepsInfo',
+          (params = {}) => `歩数: ${params.steps ?? stepsTaken}`,
+          { steps: stepsTaken }
+        );
       } else {
-        stageInfo.textContent = text('games.sanpo.ui.stage.none', 'タイプ: -');
-        seedInfo.textContent = text('games.sanpo.ui.seed.none', 'シード: -');
-        stepsInfo.textContent = text('games.sanpo.ui.steps.none', '歩数: 0');
+        stageInfo.textContent = text('games.sanpo.ui.stageInfoEmpty', 'タイプ: -');
+        seedInfo.textContent = text('games.sanpo.ui.seedInfoEmpty', 'シード: -');
+        stepsInfo.textContent = text('games.sanpo.ui.stepsInfoEmpty', '歩数: 0');
       }
-      zoomInfo.textContent = text('games.sanpo.ui.zoomValue', () => `ズーム: ${currentZoom.toFixed(2)}x`);
+      const zoomText = currentZoom.toFixed(2);
+      zoomInfo.textContent = text(
+        'games.sanpo.ui.zoomInfo',
+        (params = {}) => `ズーム: ${(params.value ?? zoomText)}x`,
+        { value: zoomText }
+      );
     }
 
     function updateStatus(message){
@@ -296,8 +320,17 @@
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      zoomValue.textContent = `${currentZoom.toFixed(2)}x`;
-      zoomInfo.textContent = text('games.sanpo.ui.zoomValue', () => `ズーム: ${currentZoom.toFixed(2)}x`);
+      const zoomText = currentZoom.toFixed(2);
+      zoomValue.textContent = text(
+        'games.sanpo.ui.zoomDisplay',
+        (params = {}) => `${params.value ?? zoomText}x`,
+        { value: zoomText }
+      );
+      zoomInfo.textContent = text(
+        'games.sanpo.ui.zoomInfo',
+        (params = {}) => `ズーム: ${(params.value ?? zoomText)}x`,
+        { value: zoomText }
+      );
 
       const maxWidth = stage.pixelWidth || (stage.width * stage.tileSize);
       const maxHeight = stage.pixelHeight || (stage.height * stage.tileSize);
@@ -357,7 +390,11 @@
           if (lastTile !== null){
             stepsTaken += 1;
             awardXp(1, { reason: 'step', gameId: 'sanpo' });
-            stepsInfo.textContent = text('games.sanpo.ui.steps', () => `歩数: ${stepsTaken}`);
+            stepsInfo.textContent = text(
+              'games.sanpo.ui.stepsInfo',
+              (params = {}) => `歩数: ${params.steps ?? stepsTaken}`,
+              { steps: stepsTaken }
+            );
           }
           lastTile = tile;
         }
@@ -378,7 +415,7 @@
       cancelAnimationFrame(raf);
       shortcuts?.enableKey?.('r');
       shortcuts?.enableKey?.('p');
-      updateStatus(text('games.sanpo.ui.status.paused', '一時停止中')); 
+      updateStatus(text('games.sanpo.ui.status.paused', '一時停止中'));
     }
 
     function startLoop(){
@@ -400,7 +437,7 @@
       player.speed = Math.max(60, stage.tileSize * 5.2);
       lastTile = stage.toTile(player.x, player.y);
       stepsTaken = 0;
-      stepsInfo.textContent = text('games.sanpo.ui.steps', () => '歩数: 0');
+      stepsInfo.textContent = text('games.sanpo.ui.stepsInfoEmpty', '歩数: 0');
     }
 
     function configureCanvas(){
@@ -416,14 +453,14 @@
       currentZoom = 1;
       targetZoom = 1;
       zoomSlider.value = '1';
-      zoomValue.textContent = '1.00x';
+      zoomValue.textContent = text('games.sanpo.ui.zoomDisplay', (params = {}) => `${params.value ?? '1.00'}x`, { value: '1.00' });
       miniMapCanvas.width = clamp(Math.floor(stage.width * 4), 120, 260);
       miniMapCanvas.height = clamp(Math.floor(stage.height * 4), 120, 220);
     }
 
     async function prepareStage(){
       if (!dungeonApi || typeof dungeonApi.generateStage !== 'function'){
-        updateStatus(text('games.sanpo.ui.status.noApi', 'ダンジョンAPIが利用できません')); 
+        updateStatus(text('games.sanpo.ui.status.noApi', 'ダンジョンAPIが利用できません'));
         stageReady = false;
         return;
       }
@@ -456,7 +493,7 @@
       resetPlayer();
       updateStageInfo();
       stageReady = true;
-      updateStatus(text('games.sanpo.ui.status.ready', '準備完了！開始ボタンで散歩を始めよう')); 
+      updateStatus(text('games.sanpo.ui.status.ready', '準備完了！開始ボタンで散歩を始めよう'));
       if (pendingStart) startLoop();
       draw();
     }

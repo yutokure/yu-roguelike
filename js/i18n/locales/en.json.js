@@ -536,13 +536,34 @@
           "wrap": "Wrap",
           "detail": "Detail"
         },
+        "search": {
+          "label": "Search",
+          "placeholder": "Search by name or description",
+          "groupLabel": "Search and filter"
+        },
+        "filters": {
+          "source": {
+            "label": "Source",
+            "all": "All",
+            "builtin": "Official",
+            "mod": "Mods / Community"
+          },
+          "favoritesOnly": "Show favorites only"
+        },
         "actions": {
           "select": "Select",
-          "selected": "Selected"
+          "selected": "Selected",
+          "favorite": "Add to favorites",
+          "unfavorite": "Remove from favorites"
         },
         "list": {
           "label": "Mini-game list",
-          "empty": "No mini-games found for this category. Add more under games/."
+          "empty": "No mini-games found for this category. Add more under games/.",
+          "noMatch": "No mini-games matched your filters. Adjust them and try again."
+        },
+        "favorites": {
+          "title": "Favorites",
+          "empty": "You haven't favorited any mini-games yet."
         },
         "category": {
           "all": "All",
@@ -833,6 +854,10 @@
           "sudoku": {
             "name": "Number Place",
             "description": "Fill the grid with correct digits to gain EXP and a completion bonus."
+          },
+          "sandbox_sokoban": {
+            "name": "Sandbox Sokoban",
+            "description": "Edit and test Sokoban layouts seamlessly. Slot crates for +25 EXP and clear stages for +100 EXP."
           },
           "ultimate_ttt": {
             "name": "Ultimate Tic-Tac-Toe",
@@ -1864,6 +1889,34 @@
               "data": { "label": "Hack the data terminal" },
               "box": { "label": "Disarm the hunter box" },
               "vault": { "label": "Crack the high-risk vault" }
+            }
+          },
+          "sanpo": {
+            "name": "Stroll",
+            "description": "Stroll through a randomly generated dungeon and earn steps ×1 EXP.",
+            "ui": {
+              "regenerate": "Regenerate Stage",
+              "zoomLabel": "Zoom",
+              "minimapTitle": "Minimap",
+              "stageInfo": "Type: {type} / Size: {size} / Tile: {tileSize}",
+              "seedInfo": "Seed: {seed}",
+              "stepsInfo": "Steps: {steps}",
+              "stageInfoEmpty": "Type: -",
+              "seedInfoEmpty": "Seed: -",
+              "stepsInfoEmpty": "Steps: 0",
+              "zoomInfo": "Zoom: {value}x",
+              "zoomDisplay": "{value}x",
+              "hideMap": "Minimap OFF",
+              "showMap": "Minimap ON",
+              "status": {
+                "paused": "Paused",
+                "walk": "Strolling… Move with WASD/arrow keys. Toggle the minimap with M, zoom with [ / ].",
+                "noApi": "Dungeon API unavailable",
+                "generating": "Generating stage…",
+                "failed": "Failed to generate the stage",
+                "ready": "Ready! Press Start to begin strolling.",
+                "initializing": "Loading…"
+              }
             }
           },
           "ten_ten": {
@@ -15443,6 +15496,61 @@
     },
     "miniexp": {
       "games": {
+        "sandbox_sokoban": {
+          "title": "Sandbox Sokoban",
+          "description": "Create custom Sokoban stages and swap between edit and play. Slot crates for +25 EXP and clear the stage for +100 EXP.",
+          "status": {
+            "ready": "Edit mode: pick a tool on the left to start painting.",
+            "updated": "Cell updated.",
+            "summary": "Crates {crates} / Goals {goals} / Worker {workers}",
+            "exported": "Stage data exported. Copy and save it anywhere.",
+            "import": {
+              "empty": "Paste JSON to import a stage.",
+              "success": "Stage imported.",
+              "error": "Failed to parse JSON. Check the format."
+            },
+            "reset": "Restored the initial stage.",
+            "resetPlay": "Stage reset.",
+            "play": "Play mode: push crates onto every goal!",
+            "crateFit": "Crate slotted! +25 EXP",
+            "cleared": "Stage clear! +100 EXP",
+            "editMode": "Back in edit mode."
+          },
+          "tool": {
+            "floor": { "label": "Floor", "hint": "Basic walkable tile" },
+            "wall": { "label": "Wall", "hint": "Impassable wall" },
+            "goal": { "label": "Goal", "hint": "Target tile for crates" },
+            "crate": { "label": "Crate", "hint": "Pushable crate (click to place/remove)" },
+            "player": { "label": "Worker", "hint": "Starting position (only one)" }
+          },
+          "editor": {
+            "title": "Stage Editor",
+            "width": "Width",
+            "height": "Height",
+            "export": "Export",
+            "import": "Import",
+            "clear": "Reset",
+            "io": "Import / Export (JSON)"
+          },
+          "play": {
+            "title": "Playtest",
+            "hint": "Use arrow keys or WASD. Reset to try again.",
+            "reset": "Reset",
+            "info": "Moves {moves} / Crates {cratesOnGoal}/{cratesTotal}"
+          },
+          "validate": {
+            "player": "Set the worker's starting position.",
+            "crate": "Place at least one crate.",
+            "goal": "Place at least one goal.",
+            "balance": "Goals must be at least equal to crates.",
+            "crateWall": "Crates cannot sit on walls.",
+            "playerWall": "The worker cannot start on a wall."
+          },
+          "mode": {
+            "editor": "Edit",
+            "play": "Play"
+          }
+        },
         "exothello": {
           "name": "Ex-Othello",
           "description": "Experiment with variable board sizes, walls, and alternate win conditions.",
@@ -17741,6 +17849,34 @@
           "label": "Lap {index}"
         }
       },
+      "sanpo": {
+        "name": "Stroll",
+        "description": "Stroll through a randomly generated dungeon and earn steps ×1 EXP.",
+        "ui": {
+          "regenerate": "Regenerate Stage",
+          "zoomLabel": "Zoom",
+          "minimapTitle": "Minimap",
+          "stageInfo": "Type: {type} / Size: {size} / Tile: {tileSize}",
+          "seedInfo": "Seed: {seed}",
+          "stepsInfo": "Steps: {steps}",
+          "stageInfoEmpty": "Type: -",
+          "seedInfoEmpty": "Seed: -",
+          "stepsInfoEmpty": "Steps: 0",
+          "zoomInfo": "Zoom: {value}x",
+          "zoomDisplay": "{value}x",
+          "hideMap": "Minimap OFF",
+          "showMap": "Minimap ON",
+          "status": {
+            "paused": "Paused",
+            "walk": "Strolling… Move with WASD/arrow keys. Toggle the minimap with M, zoom with [ / ].",
+            "noApi": "Dungeon API unavailable",
+            "generating": "Generating stage…",
+            "failed": "Failed to generate the stage",
+            "ready": "Ready! Press Start to begin strolling.",
+            "initializing": "Loading…"
+          }
+        }
+      },
       "diagramMaker": {
         "errors": {
           "containerMissing": "MiniExp Diagram Maker requires a container",
@@ -19159,6 +19295,64 @@
       }
     };
   }
+  if (!store['en'].miniexp) {
+    store['en'].miniexp = {};
+  }
+  if (!store['en'].miniexp.games) {
+    store['en'].miniexp.games = {};
+  }
+  var enMiniExpGames = store['en'].miniexp.games;
+  if (!enMiniExpGames.jigsaw_puzzle) {
+    enMiniExpGames.jigsaw_puzzle = {
+      "title": "Jigsaw Puzzle",
+      "description": "Assemble any image by dragging jigsaw pieces. Choose the rows, columns, and picture freely.",
+      "controls": {
+        "rowsLabel": "Rows",
+        "colsLabel": "Columns",
+        "applySize": "Update size",
+        "chooseFile": "Choose image…",
+        "urlPlaceholder": "Enter image URL",
+        "loadUrl": "Load URL",
+        "shuffle": "Shuffle and start"
+      },
+      "info": {
+        "moves": "Moves",
+        "time": "Time",
+        "correct": "Correct pieces",
+        "clears": "Clears"
+      },
+      "status": {
+        "loading": "Loading image…",
+        "error": "Failed to load the image",
+        "cleared": "Completed! {moves} moves / {time} EXP: {xp}",
+        "ready": "{size} puzzle shuffled. Drag the pieces to solve!",
+        "noImage": "Please load an image",
+        "errorFile": "Failed to read the file",
+        "errorUrl": "Failed to load the image",
+        "errorGenerate": "Failed to generate an image"
+      },
+      "defaultImage": {
+        "title": "Jigsaw",
+        "subtitle": "Puzzle"
+      }
+    };
+  }
+  if (!store['en'].selection) {
+    store['en'].selection = {};
+  }
+  if (!store['en'].selection.miniexp) {
+    store['en'].selection.miniexp = {};
+  }
+  if (!store['en'].selection.miniexp.games) {
+    store['en'].selection.miniexp.games = {};
+  }
+  if (!store['en'].selection.miniexp.games.jigsaw_puzzle) {
+    store['en'].selection.miniexp.games.jigsaw_puzzle = {
+      "name": "Jigsaw Puzzle",
+      "description": "Assemble any image by dragging jigsaw pieces. Choose the rows, columns, and picture freely."
+    };
+  }
+
   if (!enGames.wording) {
     enGames.wording = {
         "name": "Wording",

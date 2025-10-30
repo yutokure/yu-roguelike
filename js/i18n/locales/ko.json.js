@@ -1271,13 +1271,34 @@
           "wrap": "포장하다",
           "detail": "세부 사항"
         },
+        "search": {
+          "label": "검색",
+          "placeholder": "이름이나 설명으로 검색",
+          "groupLabel": "검색 및 필터"
+        },
+        "filters": {
+          "source": {
+            "label": "출처",
+            "all": "전체",
+            "builtin": "공식",
+            "mod": "MOD/커뮤니티"
+          },
+          "favoritesOnly": "즐겨찾기만 표시"
+        },
         "actions": {
           "select": "선택하다",
-          "selected": "선택된"
+          "selected": "선택된",
+          "favorite": "즐겨찾기에 추가",
+          "unfavorite": "즐겨찾기에서 제거"
         },
         "list": {
           "label": "미니게임 목록",
-          "empty": "해당 카테고리에 해당하는 미니게임이 없습니다. games/ 아래에 더 추가하세요."
+          "empty": "해당 카테고리에 해당하는 미니게임이 없습니다. games/ 아래에 더 추가하세요.",
+          "noMatch": "조건에 맞는 미니게임을 찾지 못했습니다. 필터를 조정하세요."
+        },
+        "favorites": {
+          "title": "즐겨찾기",
+          "empty": "즐겨찾기에 등록한 미니게임이 아직 없습니다."
         },
         "category": {
           "all": "모두",
@@ -2627,6 +2648,34 @@
               }
             }
           },
+          "sanpo": {
+            "name": "산책",
+            "description": "무작위로 생성된 던전을 산책하며 걸음 수 ×1 EXP를 획득하세요.",
+            "ui": {
+              "regenerate": "스테이지 재생성",
+              "zoomLabel": "줌",
+              "minimapTitle": "미니맵",
+              "stageInfo": "타입: {type} / 크기: {size} / 타일: {tileSize}",
+              "seedInfo": "시드: {seed}",
+              "stepsInfo": "걸음 수: {steps}",
+              "stageInfoEmpty": "타입: -",
+              "seedInfoEmpty": "시드: -",
+              "stepsInfoEmpty": "걸음 수: 0",
+              "zoomInfo": "줌: {value}x",
+              "zoomDisplay": "{value}x",
+              "hideMap": "미니맵 끄기",
+              "showMap": "미니맵 켜기",
+              "status": {
+                "paused": "일시 정지",
+                "walk": "산책 중… WASD/화살표 키로 이동하세요. M으로 미니맵, [ / ]로 줌을 조절하세요.",
+                "noApi": "던전 API를 사용할 수 없습니다",
+                "generating": "스테이지 생성 중…",
+                "failed": "스테이지 생성에 실패했습니다",
+                "ready": "준비 완료! 시작을 눌러 산책을 시작하세요.",
+                "initializing": "불러오는 중…"
+              }
+            }
+          },
           "ten_ten": {
             "name": "1010 퍼즐",
             "description": "라인을 클리어하기 위해 블록을 배치하고 크로스 클리어를 통해 EXP를 두 배로 늘리세요.",
@@ -3854,6 +3903,34 @@
   if (!store["ko"]) { store["ko"] = {}; }
   if (!store["ko"].games) { store["ko"].games = {}; }
   var koGames = store["ko"].games;
+  koGames.sanpo = {
+    "name": "산책",
+    "description": "무작위로 생성된 던전을 산책하며 걸음 수 ×1 EXP를 획득하세요.",
+    "ui": {
+      "regenerate": "스테이지 재생성",
+      "zoomLabel": "줌",
+      "minimapTitle": "미니맵",
+      "stageInfo": "타입: {type} / 크기: {size} / 타일: {tileSize}",
+      "seedInfo": "시드: {seed}",
+      "stepsInfo": "걸음 수: {steps}",
+      "stageInfoEmpty": "타입: -",
+      "seedInfoEmpty": "시드: -",
+      "stepsInfoEmpty": "걸음 수: 0",
+      "zoomInfo": "줌: {value}x",
+      "zoomDisplay": "{value}x",
+      "hideMap": "미니맵 끄기",
+      "showMap": "미니맵 켜기",
+      "status": {
+        "paused": "일시 정지",
+        "walk": "산책 중… WASD/화살표 키로 이동하세요. M으로 미니맵, [ / ]로 줌을 조절하세요.",
+        "noApi": "던전 API를 사용할 수 없습니다",
+        "generating": "스테이지 생성 중…",
+        "failed": "스테이지 생성에 실패했습니다",
+        "ready": "준비 완료! 시작을 눌러 산책을 시작하세요.",
+        "initializing": "불러오는 중…"
+      }
+    }
+  };
   koGames.todoList = koGames.todoList || {};
   koGames.todoList.form = koGames.todoList.form || {};
   koGames.todoList.form.randomRange = koGames.todoList.form.randomRange || {

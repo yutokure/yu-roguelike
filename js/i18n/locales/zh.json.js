@@ -536,13 +536,34 @@
           "wrap": "包裹",
           "detail": "细节"
         },
+        "search": {
+          "label": "搜索",
+          "placeholder": "按名称或说明搜索",
+          "groupLabel": "搜索与筛选"
+        },
+        "filters": {
+          "source": {
+            "label": "来源",
+            "all": "全部",
+            "builtin": "内置",
+            "mod": "MOD / 社区"
+          },
+          "favoritesOnly": "仅显示收藏"
+        },
         "actions": {
           "select": "选择",
-          "selected": "选定"
+          "selected": "选定",
+          "favorite": "加入收藏",
+          "unfavorite": "从收藏移除"
         },
         "list": {
           "label": "小游戏列表",
-          "empty": "没有找到该类别的迷你游戏。在 games/ 下添加更多内容。"
+          "empty": "没有找到该类别的迷你游戏。在 games/ 下添加更多内容。",
+          "noMatch": "没有符合筛选条件的小游戏。请调整条件后重试。"
+        },
+        "favorites": {
+          "title": "收藏",
+          "empty": "尚未收藏任何小游戏。"
         },
         "category": {
           "all": "全部",
@@ -1889,6 +1910,34 @@
               },
               "vault": {
                 "label": "破解高危金库"
+              }
+            }
+          },
+          "sanpo": {
+            "name": "散步",
+            "description": "在随机生成的迷宫中散步，每一步获得 1 点经验。",
+            "ui": {
+              "regenerate": "重新生成关卡",
+              "zoomLabel": "缩放",
+              "minimapTitle": "小地图",
+              "stageInfo": "类型：{type} / 尺寸：{size} / 单元：{tileSize}",
+              "seedInfo": "种子：{seed}",
+              "stepsInfo": "步数：{steps}",
+              "stageInfoEmpty": "类型：-",
+              "seedInfoEmpty": "种子：-",
+              "stepsInfoEmpty": "步数：0",
+              "zoomInfo": "缩放：{value}x",
+              "zoomDisplay": "{value}x",
+              "hideMap": "小地图关闭",
+              "showMap": "小地图开启",
+              "status": {
+                "paused": "已暂停",
+                "walk": "散步中… 使用 WASD/方向键移动。按 M 切换小地图，[ / ] 缩放。",
+                "noApi": "迷宫 API 不可用",
+                "generating": "正在生成关卡…",
+                "failed": "关卡生成失败",
+                "ready": "准备就绪！按开始按钮开始散步。",
+                "initializing": "加载中…"
               }
             }
           },
@@ -9028,6 +9077,34 @@
           "subtitle": "最近的第一个",
           "empty": "记录后你的圈数将出现在此处。",
           "label": "圈{index}"
+        }
+      },
+      "sanpo": {
+        "name": "散步",
+        "description": "在随机生成的迷宫中散步，每一步获得 1 点经验。",
+        "ui": {
+          "regenerate": "重新生成关卡",
+          "zoomLabel": "缩放",
+          "minimapTitle": "小地图",
+          "stageInfo": "类型：{type} / 尺寸：{size} / 单元：{tileSize}",
+          "seedInfo": "种子：{seed}",
+          "stepsInfo": "步数：{steps}",
+          "stageInfoEmpty": "类型：-",
+          "seedInfoEmpty": "种子：-",
+          "stepsInfoEmpty": "步数：0",
+          "zoomInfo": "缩放：{value}x",
+          "zoomDisplay": "{value}x",
+          "hideMap": "小地图关闭",
+          "showMap": "小地图开启",
+          "status": {
+            "paused": "已暂停",
+            "walk": "散步中… 使用 WASD/方向键移动。按 M 切换小地图，[ / ] 缩放。",
+            "noApi": "迷宫 API 不可用",
+            "generating": "正在生成关卡…",
+            "failed": "关卡生成失败",
+            "ready": "准备就绪！按开始按钮开始散步。",
+            "initializing": "加载中…"
+          }
         }
       },
       "wording": {

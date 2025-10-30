@@ -538,13 +538,34 @@
           "wrap": "羅列",
           "detail": "詳細"
         },
+        "search": {
+          "label": "検索",
+          "placeholder": "名前や説明で検索",
+          "groupLabel": "検索とフィルター"
+        },
+        "filters": {
+          "source": {
+            "label": "種類",
+            "all": "すべて",
+            "builtin": "公式",
+            "mod": "MOD/コミュニティ"
+          },
+          "favoritesOnly": "お気に入りのみ表示"
+        },
         "actions": {
           "select": "選択",
-          "selected": "選択中"
+          "selected": "選択中",
+          "favorite": "お気に入りに追加",
+          "unfavorite": "お気に入りから削除"
         },
         "list": {
           "label": "ミニゲーム一覧",
-          "empty": "該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。"
+          "empty": "該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。",
+          "noMatch": "検索条件に一致するミニゲームが見つかりませんでした。条件を調整してください。"
+        },
+        "favorites": {
+          "title": "お気に入り",
+          "empty": "お気に入りに登録したミニゲームはまだありません。"
         },
         "category": {
           "all": "すべて",
@@ -835,6 +856,10 @@
           "sudoku": {
             "name": "ナンプレ",
             "description": "正解入力でEXP / クリアボーナス"
+          },
+          "sandbox_sokoban": {
+            "name": "サンドボックス倉庫番",
+            "description": "ステージ編集＆プレイを行き来できる倉庫番。木箱で+25EXP、クリアで+100EXP。"
           },
           "ultimate_ttt": {
             "name": "スーパー三目並べ",
@@ -1866,6 +1891,34 @@
               "data": { "label": "情報端末をハック" },
               "box": { "label": "ハンターボックスを解除" },
               "vault": { "label": "ハイリスク金庫を解錠" }
+            }
+          },
+          "sanpo": {
+            "name": "散歩",
+            "description": "完全ランダムのダンジョンを散歩して歩数×1EXPを獲得する自由行動モード",
+            "ui": {
+              "regenerate": "ステージ再生成",
+              "zoomLabel": "ズーム",
+              "minimapTitle": "ミニマップ",
+              "stageInfo": "タイプ: {type} / サイズ: {size} / タイル: {tileSize}",
+              "seedInfo": "シード: {seed}",
+              "stepsInfo": "歩数: {steps}",
+              "stageInfoEmpty": "タイプ: -",
+              "seedInfoEmpty": "シード: -",
+              "stepsInfoEmpty": "歩数: 0",
+              "zoomInfo": "ズーム: {value}x",
+              "zoomDisplay": "{value}x",
+              "hideMap": "ミニマップOFF",
+              "showMap": "ミニマップON",
+              "status": {
+                "paused": "一時停止中",
+                "walk": "散歩中… WASD/矢印キーで移動。Mでミニマップ切替、[ / ] でズーム。",
+                "noApi": "ダンジョンAPIが利用できません",
+                "generating": "ステージ生成中…",
+                "failed": "ステージ生成に失敗しました",
+                "ready": "準備完了！開始ボタンで散歩を始めよう",
+                "initializing": "ロード中…"
+              }
             }
           },
           "ten_ten": {
@@ -15404,6 +15457,61 @@
     },
     "miniexp": {
       "games": {
+        "sandbox_sokoban": {
+          "title": "サンドボックス倉庫番",
+          "description": "編集とプレイを行き来しながら、自分だけの倉庫番ステージを作成できます。木箱をはめると25EXP、完全クリアで100EXP獲得。",
+          "status": {
+            "ready": "編集中: 左のツールから配置してみましょう。",
+            "updated": "マスを更新しました。",
+            "summary": "木箱 {crates} / ゴール {goals} / 作業員 {workers}",
+            "exported": "ステージデータを出力しました。コピーして保存できます。",
+            "import": {
+              "empty": "インポートするJSONを入力してください。",
+              "success": "ステージを読み込みました。",
+              "error": "JSONの解析に失敗しました。形式を確認してください。"
+            },
+            "reset": "初期ステージに戻しました。",
+            "resetPlay": "ステージをリセットしました。",
+            "play": "プレイモード: 箱をゴールに押し込みましょう！",
+            "crateFit": "木箱をはめました！ +25EXP",
+            "cleared": "ステージクリア！ +100EXP",
+            "editMode": "編集モードに戻りました。"
+          },
+          "tool": {
+            "floor": { "label": "床", "hint": "基本の床マス" },
+            "wall": { "label": "壁", "hint": "移動できない壁" },
+            "goal": { "label": "ゴール", "hint": "木箱をはめる目標地点" },
+            "crate": { "label": "木箱", "hint": "押して動かす木箱 (クリックで配置/削除)" },
+            "player": { "label": "作業員", "hint": "開始位置 (1つのみ)" }
+          },
+          "editor": {
+            "title": "ステージエディタ",
+            "width": "幅",
+            "height": "高さ",
+            "export": "エクスポート",
+            "import": "インポート",
+            "clear": "初期化",
+            "io": "インポート / エクスポート (JSON)"
+          },
+          "play": {
+            "title": "プレイテスト",
+            "hint": "矢印キーまたはWASDで操作。リセットで再挑戦。",
+            "reset": "リセット",
+            "info": "手数 {moves} / 木箱 {cratesOnGoal}/{cratesTotal}"
+          },
+          "validate": {
+            "player": "作業員の開始位置が必要です。",
+            "crate": "最低1つの木箱を配置してください。",
+            "goal": "最低1つのゴールを配置してください。",
+            "balance": "ゴール数は木箱以上にしましょう。",
+            "crateWall": "壁の上に木箱は置けません。",
+            "playerWall": "作業員の位置が壁になっています。"
+          },
+          "mode": {
+            "editor": "編集",
+            "play": "プレイ"
+          }
+        },
         "tosochu": {
           "ui": {
             "timer": "残り {seconds}s",
@@ -17613,6 +17721,34 @@
           "label": "ラップ {index}"
         }
       },
+      "sanpo": {
+        "name": "散歩",
+        "description": "完全ランダムのダンジョンを散歩して歩数×1EXPを獲得する自由行動モード",
+        "ui": {
+          "regenerate": "ステージ再生成",
+          "zoomLabel": "ズーム",
+          "minimapTitle": "ミニマップ",
+          "stageInfo": "タイプ: {type} / サイズ: {size} / タイル: {tileSize}",
+          "seedInfo": "シード: {seed}",
+          "stepsInfo": "歩数: {steps}",
+          "stageInfoEmpty": "タイプ: -",
+          "seedInfoEmpty": "シード: -",
+          "stepsInfoEmpty": "歩数: 0",
+          "zoomInfo": "ズーム: {value}x",
+          "zoomDisplay": "{value}x",
+          "hideMap": "ミニマップOFF",
+          "showMap": "ミニマップON",
+          "status": {
+            "paused": "一時停止中",
+            "walk": "散歩中… WASD/矢印キーで移動。Mでミニマップ切替、[ / ] でズーム。",
+            "noApi": "ダンジョンAPIが利用できません",
+            "generating": "ステージ生成中…",
+            "failed": "ステージ生成に失敗しました",
+            "ready": "準備完了！開始ボタンで散歩を始めよう",
+            "initializing": "ロード中…"
+          }
+        }
+      },
       "diagramMaker": {
         "errors": {
           "containerMissing": "MiniExp Diagram Maker を表示するコンテナが必要です",
@@ -19046,6 +19182,64 @@
         }
       };
   }
+  if (!store['ja'].miniexp) {
+    store['ja'].miniexp = {};
+  }
+  if (!store['ja'].miniexp.games) {
+    store['ja'].miniexp.games = {};
+  }
+  var jaMiniExpGames = store['ja'].miniexp.games;
+  if (!jaMiniExpGames.jigsaw_puzzle) {
+    jaMiniExpGames.jigsaw_puzzle = {
+      "title": "ジグソーパズル",
+      "description": "任意の画像をピースで組み立てるジグソーパズル",
+      "controls": {
+        "rowsLabel": "行数",
+        "colsLabel": "列数",
+        "applySize": "サイズを更新",
+        "chooseFile": "画像を選択…",
+        "urlPlaceholder": "画像URLを入力",
+        "loadUrl": "URLを読み込み",
+        "shuffle": "シャッフルして開始"
+      },
+      "info": {
+        "moves": "手数",
+        "time": "タイム",
+        "correct": "正しい位置",
+        "clears": "クリア数"
+      },
+      "status": {
+        "loading": "画像を読み込み中…",
+        "error": "画像の読み込みに失敗しました",
+        "cleared": "完成！ {moves} 手 / {time} EXP: {xp}",
+        "ready": "{size} のピースをシャッフルしました。ドラッグで組み立てよう！",
+        "noImage": "画像を読み込んでください",
+        "errorFile": "ファイルの読み込みに失敗しました",
+        "errorUrl": "画像の読み込みに失敗しました",
+        "errorGenerate": "画像の生成に失敗しました"
+      },
+      "defaultImage": {
+        "title": "Jigsaw",
+        "subtitle": "Puzzle"
+      }
+    };
+  }
+  if (!store['ja'].selection) {
+    store['ja'].selection = {};
+  }
+  if (!store['ja'].selection.miniexp) {
+    store['ja'].selection.miniexp = {};
+  }
+  if (!store['ja'].selection.miniexp.games) {
+    store['ja'].selection.miniexp.games = {};
+  }
+  if (!store['ja'].selection.miniexp.games.jigsaw_puzzle) {
+    store['ja'].selection.miniexp.games.jigsaw_puzzle = {
+      "name": "ジグソーパズル",
+      "description": "任意の画像をピースで組み立てるジグソーパズル"
+    };
+  }
+
   if (!jaGames.wording) {
     jaGames.wording = {
         "name": "Wording",

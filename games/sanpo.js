@@ -139,14 +139,20 @@
 
     controlPanel.appendChild(slideshowLabel);
 
+    const VIEWPORT_RENDER_SIZE = 640;
+    const MINIMAP_RENDER_SIZE = 220;
+
     const canvas = document.createElement('canvas');
-    canvas.width = 640;
-    canvas.height = 480;
+    canvas.width = VIEWPORT_RENDER_SIZE;
+    canvas.height = VIEWPORT_RENDER_SIZE;
     canvas.style.display = 'block';
     canvas.style.margin = '0 auto';
     canvas.style.borderRadius = '12px';
     canvas.style.boxShadow = '0 18px 34px rgba(15,23,42,0.45)';
     canvas.style.background = '#020617';
+    canvas.style.maxWidth = `${VIEWPORT_RENDER_SIZE}px`;
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
 
     const miniMapContainer = document.createElement('div');
     miniMapContainer.style.background = 'rgba(15,23,42,0.9)';
@@ -162,10 +168,11 @@
     miniMapTitle.style.fontSize = '0.9rem';
 
     const miniMapCanvas = document.createElement('canvas');
-    miniMapCanvas.width = 220;
-    miniMapCanvas.height = 160;
+    miniMapCanvas.width = MINIMAP_RENDER_SIZE;
+    miniMapCanvas.height = MINIMAP_RENDER_SIZE;
     miniMapCanvas.style.width = '100%';
     miniMapCanvas.style.height = 'auto';
+    miniMapCanvas.style.maxWidth = `${MINIMAP_RENDER_SIZE}px`;
     miniMapCanvas.style.borderRadius = '10px';
     miniMapCanvas.style.background = '#020617';
 
@@ -200,8 +207,8 @@
     let showMiniMap = true;
     let targetZoom = 1;
     let currentZoom = 1;
-    let cameraBaseWidth = 640;
-    let cameraBaseHeight = 480;
+    let cameraBaseWidth = VIEWPORT_RENDER_SIZE;
+    let cameraBaseHeight = VIEWPORT_RENDER_SIZE;
     let preparingStage = false;
 
     let slideshowEnabled = false;
@@ -583,18 +590,16 @@
       if (!stage) return;
       const pixelWidth = stage.pixelWidth || (stage.width * stage.tileSize);
       const pixelHeight = stage.pixelHeight || (stage.height * stage.tileSize);
-      const baseWidth = clamp(Math.round(pixelWidth * 0.7), 320, 880);
-      const baseHeight = clamp(Math.round(pixelHeight * 0.7), 240, 720);
-      canvas.width = baseWidth;
-      canvas.height = baseHeight;
-      cameraBaseWidth = Math.min(pixelWidth, baseWidth);
-      cameraBaseHeight = Math.min(pixelHeight, baseHeight);
+      canvas.width = VIEWPORT_RENDER_SIZE;
+      canvas.height = VIEWPORT_RENDER_SIZE;
+      cameraBaseWidth = Math.min(pixelWidth, VIEWPORT_RENDER_SIZE);
+      cameraBaseHeight = Math.min(pixelHeight, VIEWPORT_RENDER_SIZE);
       currentZoom = 1;
       targetZoom = 1;
       zoomSlider.value = '1';
       zoomValue.textContent = text('games.sanpo.ui.zoomDisplay', (params = {}) => `${params.value ?? '1.00'}x`, { value: '1.00' });
-      miniMapCanvas.width = clamp(Math.floor(stage.width * 4), 120, 260);
-      miniMapCanvas.height = clamp(Math.floor(stage.height * 4), 120, 220);
+      miniMapCanvas.width = MINIMAP_RENDER_SIZE;
+      miniMapCanvas.height = MINIMAP_RENDER_SIZE;
     }
 
     async function prepareStage(){

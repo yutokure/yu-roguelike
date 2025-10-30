@@ -19124,6 +19124,64 @@
         }
       };
   }
+  if (!store['ja'].miniexp) {
+    store['ja'].miniexp = {};
+  }
+  if (!store['ja'].miniexp.games) {
+    store['ja'].miniexp.games = {};
+  }
+  var jaMiniExpGames = store['ja'].miniexp.games;
+  if (!jaMiniExpGames.jigsaw_puzzle) {
+    jaMiniExpGames.jigsaw_puzzle = {
+      "title": "ジグソーパズル",
+      "description": "任意の画像をピースで組み立てるジグソーパズル",
+      "controls": {
+        "rowsLabel": "行数",
+        "colsLabel": "列数",
+        "applySize": "サイズを更新",
+        "chooseFile": "画像を選択…",
+        "urlPlaceholder": "画像URLを入力",
+        "loadUrl": "URLを読み込み",
+        "shuffle": "シャッフルして開始"
+      },
+      "info": {
+        "moves": "手数",
+        "time": "タイム",
+        "correct": "正しい位置",
+        "clears": "クリア数"
+      },
+      "status": {
+        "loading": "画像を読み込み中…",
+        "error": "画像の読み込みに失敗しました",
+        "cleared": "完成！ {moves} 手 / {time} EXP: {xp}",
+        "ready": "{size} のピースをシャッフルしました。ドラッグで組み立てよう！",
+        "noImage": "画像を読み込んでください",
+        "errorFile": "ファイルの読み込みに失敗しました",
+        "errorUrl": "画像の読み込みに失敗しました",
+        "errorGenerate": "画像の生成に失敗しました"
+      },
+      "defaultImage": {
+        "title": "Jigsaw",
+        "subtitle": "Puzzle"
+      }
+    };
+  }
+  if (!store['ja'].selection) {
+    store['ja'].selection = {};
+  }
+  if (!store['ja'].selection.miniexp) {
+    store['ja'].selection.miniexp = {};
+  }
+  if (!store['ja'].selection.miniexp.games) {
+    store['ja'].selection.miniexp.games = {};
+  }
+  if (!store['ja'].selection.miniexp.games.jigsaw_puzzle) {
+    store['ja'].selection.miniexp.games.jigsaw_puzzle = {
+      "name": "ジグソーパズル",
+      "description": "任意の画像をピースで組み立てるジグソーパズル"
+    };
+  }
+
   if (!jaGames.wording) {
     jaGames.wording = {
         "name": "Wording",

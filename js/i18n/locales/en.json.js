@@ -19237,6 +19237,64 @@
       }
     };
   }
+  if (!store['en'].miniexp) {
+    store['en'].miniexp = {};
+  }
+  if (!store['en'].miniexp.games) {
+    store['en'].miniexp.games = {};
+  }
+  var enMiniExpGames = store['en'].miniexp.games;
+  if (!enMiniExpGames.jigsaw_puzzle) {
+    enMiniExpGames.jigsaw_puzzle = {
+      "title": "Jigsaw Puzzle",
+      "description": "Assemble any image by dragging jigsaw pieces. Choose the rows, columns, and picture freely.",
+      "controls": {
+        "rowsLabel": "Rows",
+        "colsLabel": "Columns",
+        "applySize": "Update size",
+        "chooseFile": "Choose image…",
+        "urlPlaceholder": "Enter image URL",
+        "loadUrl": "Load URL",
+        "shuffle": "Shuffle and start"
+      },
+      "info": {
+        "moves": "Moves",
+        "time": "Time",
+        "correct": "Correct pieces",
+        "clears": "Clears"
+      },
+      "status": {
+        "loading": "Loading image…",
+        "error": "Failed to load the image",
+        "cleared": "Completed! {moves} moves / {time} EXP: {xp}",
+        "ready": "{size} puzzle shuffled. Drag the pieces to solve!",
+        "noImage": "Please load an image",
+        "errorFile": "Failed to read the file",
+        "errorUrl": "Failed to load the image",
+        "errorGenerate": "Failed to generate an image"
+      },
+      "defaultImage": {
+        "title": "Jigsaw",
+        "subtitle": "Puzzle"
+      }
+    };
+  }
+  if (!store['en'].selection) {
+    store['en'].selection = {};
+  }
+  if (!store['en'].selection.miniexp) {
+    store['en'].selection.miniexp = {};
+  }
+  if (!store['en'].selection.miniexp.games) {
+    store['en'].selection.miniexp.games = {};
+  }
+  if (!store['en'].selection.miniexp.games.jigsaw_puzzle) {
+    store['en'].selection.miniexp.games.jigsaw_puzzle = {
+      "name": "Jigsaw Puzzle",
+      "description": "Assemble any image by dragging jigsaw pieces. Choose the rows, columns, and picture freely."
+    };
+  }
+
   if (!enGames.wording) {
     enGames.wording = {
         "name": "Wording",

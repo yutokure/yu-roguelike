@@ -293,6 +293,7 @@
     let boardAreaHeight = 0;
     let hostRestartDisabled = false;
     let statusState = { mode: '', data: {} };
+    let detachLocale = null;
     let activePiece = null;
     let activePointerId = null;
     let pointerOffsetX = 0;
@@ -318,8 +319,8 @@
       return Math.min(12, Math.max(2, num));
     }
 
-    function formatBoardSize(){
-      return `${rows}×${cols}`;
+    function formatBoardSize(targetRows = rows, targetCols = cols){
+      return `${targetRows}×${targetCols}`;
     }
 
     function updateInfo(){
@@ -336,23 +337,41 @@
         statusBar.textContent = text('.status.loading', '画像を読み込み中…');
         statusBar.style.color = '#38bdf8';
       } else if (mode === 'error'){
-        statusBar.textContent = payload?.message || text('.status.error', '画像の読み込みに失敗しました');
+        const errorMessage = payload?.messageKey
+          ? text(payload.messageKey, payload.messageFallback ?? '', payload.messageParams)
+          : payload?.message;
+        statusBar.textContent = errorMessage || text('.status.error', '画像の読み込みに失敗しました');
         statusBar.style.color = '#f87171';
       } else if (mode === 'clear'){
-        const timeText = formatTime(payload?.timeMs ?? elapsedMs);
-        const xpText = formatNumber(payload?.xp ?? 0, { maximumFractionDigits: 2 });
-        statusBar.textContent = text('.status.cleared', () => `完成！ ${moves} 手 / ${timeText} EXP: ${xpText}`, {
-          moves,
+        const resolvedRows = payload?.rows ?? rows;
+        const resolvedCols = payload?.cols ?? cols;
+        const movesValue = payload?.moves ?? moves;
+        const movesText = formatNumber(movesValue, { maximumFractionDigits: 0 });
+        const timeMs = payload?.timeMs ?? elapsedMs;
+        const timeText = formatTime(timeMs);
+        const xpValue = payload?.xp ?? 0;
+        const xpText = formatNumber(xpValue, { maximumFractionDigits: 2 });
+        const sizeText = formatBoardSize(resolvedRows, resolvedCols);
+        statusBar.textContent = text('.status.cleared', () => `完成！ ${movesText} 手 / ${timeText} EXP: ${xpText}`, {
+          moves: movesText,
+          movesValue,
           time: timeText,
+          timeMs,
           xp: xpText,
-          rows,
-          cols,
+          xpValue,
+          rows: resolvedRows,
+          cols: resolvedCols,
+          size: sizeText,
         });
         statusBar.style.color = '#facc15';
       } else if (mode === 'ready'){
-        statusBar.textContent = text('.status.ready', () => `${formatBoardSize()} のピースをシャッフルしました。ドラッグで組み立てよう！`, {
-          rows,
-          cols,
+        const resolvedRows = payload?.rows ?? rows;
+        const resolvedCols = payload?.cols ?? cols;
+        const sizeText = formatBoardSize(resolvedRows, resolvedCols);
+        statusBar.textContent = text('.status.ready', () => `${sizeText} のピースをシャッフルしました。ドラッグで組み立てよう！`, {
+          rows: resolvedRows,
+          cols: resolvedCols,
+          size: sizeText,
         });
         statusBar.style.color = '#cbd5f5';
       } else if (mode === 'noImage'){
@@ -696,7 +715,7 @@
       }
       prepareSourceCanvas();
       buildPieces();
-      setStatus('ready');
+      setStatus('ready', { rows, cols });
       if (running){
         resetStats();
         startTimer();
@@ -747,7 +766,7 @@
           solveCount++;
           const bonus = rows * cols * solveRewardMultiplier;
           giveXp(bonus, { type: 'completed', rows, cols, moves, timeMs: elapsedMs });
-          setStatus('clear', { timeMs: elapsedMs, xp: bonus });
+          setStatus('clear', { timeMs: elapsedMs, xp: bonus, moves, rows, cols });
           correctPieces = pieces.length;
           updateInfo();
         }
@@ -846,17 +865,17 @@
           rebuildPuzzle();
         };
         img.onerror = () => {
-          setStatus('error', { message: text('.status.errorFile', 'ファイルの読み込みに失敗しました') });
+          setStatus('error', { messageKey: '.status.errorFile', messageFallback: 'ファイルの読み込みに失敗しました' });
         };
         img.src = reader.result;
       };
       reader.onerror = () => {
-        setStatus('error', { message: text('.status.errorFile', 'ファイルの読み込みに失敗しました') });
+        setStatus('error', { messageKey: '.status.errorFile', messageFallback: 'ファイルの読み込みに失敗しました' });
       };
       try {
         reader.readAsDataURL(file);
       } catch {
-        setStatus('error', { message: text('.status.errorFile', 'ファイルの読み込みに失敗しました') });
+        setStatus('error', { messageKey: '.status.errorFile', messageFallback: 'ファイルの読み込みに失敗しました' });
       }
     }
 
@@ -872,7 +891,7 @@
         rebuildPuzzle();
       };
       img.onerror = () => {
-        setStatus('error', { message: text('.status.errorUrl', '画像の読み込みに失敗しました') });
+        setStatus('error', { messageKey: '.status.errorUrl', messageFallback: '画像の読み込みに失敗しました' });
       };
       img.src = url;
     }
@@ -910,7 +929,7 @@
       if (url){
         loadImageFromUrl(url);
       } else {
-        setStatus('error', { message: text('.status.error', '画像の生成に失敗しました') });
+        setStatus('error', { messageKey: '.status.errorGenerate', messageFallback: '画像の生成に失敗しました' });
       }
     }
 
@@ -932,6 +951,16 @@
     }
 
     refreshLocalizedTexts();
+
+    if (!detachLocale && localization && typeof localization.onChange === 'function'){
+      try {
+        detachLocale = localization.onChange(() => {
+          try {
+            refreshLocalizedTexts();
+          } catch {}
+        });
+      } catch {}
+    }
 
     function onResize(){
       if (!currentImage) return;
@@ -970,7 +999,7 @@
       if (running){
         startTimer();
       }
-      setStatus('ready');
+      setStatus('ready', { rows, cols });
     });
 
     fileInput.addEventListener('change', (event) => {
@@ -1031,6 +1060,10 @@
       stopTimer();
       detachPointerEvents();
       window.removeEventListener('resize', onResize);
+      if (detachLocale){
+        try { detachLocale(); } catch {}
+        detachLocale = null;
+      }
       if (hostRestartDisabled && enableHostRestart){
         enableHostRestart();
         hostRestartDisabled = false;

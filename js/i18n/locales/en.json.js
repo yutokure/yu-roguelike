@@ -855,6 +855,10 @@
             "name": "Number Place",
             "description": "Fill the grid with correct digits to gain EXP and a completion bonus."
           },
+          "sandbox_sokoban": {
+            "name": "Sandbox Sokoban",
+            "description": "Edit and test Sokoban layouts seamlessly. Slot crates for +25 EXP and clear stages for +100 EXP."
+          },
           "ultimate_ttt": {
             "name": "Ultimate Tic-Tac-Toe",
             "description": "Control mini-boards and claim the macro victory for layered EXP rewards."
@@ -15464,6 +15468,61 @@
     },
     "miniexp": {
       "games": {
+        "sandbox_sokoban": {
+          "title": "Sandbox Sokoban",
+          "description": "Create custom Sokoban stages and swap between edit and play. Slot crates for +25 EXP and clear the stage for +100 EXP.",
+          "status": {
+            "ready": "Edit mode: pick a tool on the left to start painting.",
+            "updated": "Cell updated.",
+            "summary": "Crates {crates} / Goals {goals} / Worker {workers}",
+            "exported": "Stage data exported. Copy and save it anywhere.",
+            "import": {
+              "empty": "Paste JSON to import a stage.",
+              "success": "Stage imported.",
+              "error": "Failed to parse JSON. Check the format."
+            },
+            "reset": "Restored the initial stage.",
+            "resetPlay": "Stage reset.",
+            "play": "Play mode: push crates onto every goal!",
+            "crateFit": "Crate slotted! +25 EXP",
+            "cleared": "Stage clear! +100 EXP",
+            "editMode": "Back in edit mode."
+          },
+          "tool": {
+            "floor": { "label": "Floor", "hint": "Basic walkable tile" },
+            "wall": { "label": "Wall", "hint": "Impassable wall" },
+            "goal": { "label": "Goal", "hint": "Target tile for crates" },
+            "crate": { "label": "Crate", "hint": "Pushable crate (click to place/remove)" },
+            "player": { "label": "Worker", "hint": "Starting position (only one)" }
+          },
+          "editor": {
+            "title": "Stage Editor",
+            "width": "Width",
+            "height": "Height",
+            "export": "Export",
+            "import": "Import",
+            "clear": "Reset",
+            "io": "Import / Export (JSON)"
+          },
+          "play": {
+            "title": "Playtest",
+            "hint": "Use arrow keys or WASD. Reset to try again.",
+            "reset": "Reset",
+            "info": "Moves {moves} / Crates {cratesOnGoal}/{cratesTotal}"
+          },
+          "validate": {
+            "player": "Set the worker's starting position.",
+            "crate": "Place at least one crate.",
+            "goal": "Place at least one goal.",
+            "balance": "Goals must be at least equal to crates.",
+            "crateWall": "Crates cannot sit on walls.",
+            "playerWall": "The worker cannot start on a wall."
+          },
+          "mode": {
+            "editor": "Edit",
+            "play": "Play"
+          }
+        },
         "exothello": {
           "name": "Ex-Othello",
           "description": "Experiment with variable board sizes, walls, and alternate win conditions.",

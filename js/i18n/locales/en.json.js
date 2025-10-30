@@ -1866,6 +1866,34 @@
               "vault": { "label": "Crack the high-risk vault" }
             }
           },
+          "sanpo": {
+            "name": "Stroll",
+            "description": "Stroll through a randomly generated dungeon and earn steps ×1 EXP.",
+            "ui": {
+              "regenerate": "Regenerate Stage",
+              "zoomLabel": "Zoom",
+              "minimapTitle": "Minimap",
+              "stageInfo": "Type: {type} / Size: {size} / Tile: {tileSize}",
+              "seedInfo": "Seed: {seed}",
+              "stepsInfo": "Steps: {steps}",
+              "stageInfoEmpty": "Type: -",
+              "seedInfoEmpty": "Seed: -",
+              "stepsInfoEmpty": "Steps: 0",
+              "zoomInfo": "Zoom: {value}x",
+              "zoomDisplay": "{value}x",
+              "hideMap": "Minimap OFF",
+              "showMap": "Minimap ON",
+              "status": {
+                "paused": "Paused",
+                "walk": "Strolling… Move with WASD/arrow keys. Toggle the minimap with M, zoom with [ / ].",
+                "noApi": "Dungeon API unavailable",
+                "generating": "Generating stage…",
+                "failed": "Failed to generate the stage",
+                "ready": "Ready! Press Start to begin strolling.",
+                "initializing": "Loading…"
+              }
+            }
+          },
           "ten_ten": {
             "name": "1010 Puzzle",
             "description": "Place blocks to clear lines, with cross clears doubling your EXP.",
@@ -17681,6 +17709,34 @@
           "subtitle": "Most recent first",
           "empty": "Your laps will appear here once recorded.",
           "label": "Lap {index}"
+        }
+      },
+      "sanpo": {
+        "name": "Stroll",
+        "description": "Stroll through a randomly generated dungeon and earn steps ×1 EXP.",
+        "ui": {
+          "regenerate": "Regenerate Stage",
+          "zoomLabel": "Zoom",
+          "minimapTitle": "Minimap",
+          "stageInfo": "Type: {type} / Size: {size} / Tile: {tileSize}",
+          "seedInfo": "Seed: {seed}",
+          "stepsInfo": "Steps: {steps}",
+          "stageInfoEmpty": "Type: -",
+          "seedInfoEmpty": "Seed: -",
+          "stepsInfoEmpty": "Steps: 0",
+          "zoomInfo": "Zoom: {value}x",
+          "zoomDisplay": "{value}x",
+          "hideMap": "Minimap OFF",
+          "showMap": "Minimap ON",
+          "status": {
+            "paused": "Paused",
+            "walk": "Strolling… Move with WASD/arrow keys. Toggle the minimap with M, zoom with [ / ].",
+            "noApi": "Dungeon API unavailable",
+            "generating": "Generating stage…",
+            "failed": "Failed to generate the stage",
+            "ready": "Ready! Press Start to begin strolling.",
+            "initializing": "Loading…"
+          }
         }
       },
       "diagramMaker": {

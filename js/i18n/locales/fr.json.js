@@ -885,6 +885,42 @@
     if (!locale.games && enLocale.games) {
       locale.games = clone(enLocale.games);
     }
+    if (locale.games) {
+      locale.games.sanpo = {
+        "name": "Balade",
+        "description": "Parcourez un donjon généré aléatoirement et gagnez des EXP à raison de 1 par pas.",
+        "ui": {
+          "regenerate": "Régénérer la zone",
+          "zoomLabel": "Zoom",
+          "minimapTitle": "Mini-carte",
+          "stageInfo": "Type : {type} / Taille : {size} / Tuile : {tileSize}",
+          "seedInfo": "Graine : {seed}",
+          "stepsInfo": "Pas : {steps}",
+          "stageInfoEmpty": "Type : -",
+          "seedInfoEmpty": "Graine : -",
+          "stepsInfoEmpty": "Pas : 0",
+          "zoomInfo": "Zoom : {value}x",
+          "zoomDisplay": "{value}x",
+          "hideMap": "Mini-carte OFF",
+          "showMap": "Mini-carte ON",
+          "status": {
+            "paused": "En pause",
+            "walk": "En balade… Déplacez-vous avec WASD/flèches. M pour la mini-carte, [ / ] pour le zoom.",
+            "noApi": "API de donjon indisponible",
+            "generating": "Génération de la zone…",
+            "failed": "Échec de la génération de la zone",
+            "ready": "Prêt ! Appuyez sur Démarrer pour lancer la balade.",
+            "initializing": "Chargement…"
+          }
+        }
+      };
+    }
+    if (locale.selection && locale.selection.miniexp && locale.selection.miniexp.games) {
+      locale.selection.miniexp.games.sanpo = {
+        "name": "Balade",
+        "description": "Parcourez un donjon généré aléatoirement et gagnez 1 EXP par pas."
+      };
+    }
     if (!locale.statusModal && enLocale.statusModal) {
       locale.statusModal = clone(enLocale.statusModal);
     }

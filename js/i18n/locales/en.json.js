@@ -17605,6 +17605,64 @@
       }
     },
     "games": {
+      "sandboxBreakout": {
+        "title": "Sandbox Breakout",
+        "modeInfo": "Arrange blocks in the editor and jump straight into play. Supports stage import/export.",
+        "mode": {
+          "label": {
+            "edit": "Mode: Edit",
+            "play": "Mode: Play"
+          }
+        },
+        "buttons": {
+          "play": "▶ Start Play",
+          "returnToEdit": "⏹ Return to Edit",
+          "clearAll": "Clear All",
+          "export": "Export",
+          "import": "Import",
+          "copy": "Copy"
+        },
+        "grid": {
+          "columns": "Columns",
+          "rows": "Rows"
+        },
+        "palette": {
+          "label": "Block to place:"
+        },
+        "hardness": {
+          "label": "Custom hardness:"
+        },
+        "io": {
+          "placeholder": "Import/export JSON will appear here."
+        },
+        "blocks": {
+          "empty": "Empty",
+          "normal": "Normal block",
+          "hard": "Hard block (2)",
+          "unbreakable": "Unbreakable block",
+          "bonus": "Bonus block",
+          "custom": "Custom hardness"
+        },
+        "hud": {
+          "editHint": "Edit mode: click to place, right-click to remove / Blocks: {blockCount}",
+          "score": "SCORE {score}",
+          "lives": "LIVES {lives}",
+          "hits": "HITS {hits}",
+          "returnHint": "Returning to edit resets progress"
+        },
+        "messages": {
+          "placeBlocks": "Place some blocks first.",
+          "exported": "Stage data exported.",
+          "imported": "Stage imported.",
+          "importFailed": "Import failed: {error}",
+          "copyUnsupported": "Copy not supported in this browser.",
+          "copySuccess": "Copied to clipboard.",
+          "copyFailed": "Copy failed: {error}"
+        },
+        "errors": {
+          "invalidCells": "The \"cells\" field is invalid."
+        }
+      },
       "timer": {
         "header": {
           "title": "Timer Utility",

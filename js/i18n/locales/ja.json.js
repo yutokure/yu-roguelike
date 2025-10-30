@@ -17477,6 +17477,64 @@
       }
     },
     "games": {
+      "sandboxBreakout": {
+        "title": "サンドボックスブロック崩し",
+        "modeInfo": "エディタで配置 → そのままプレイ / ステージのインポート・エクスポートに対応",
+        "mode": {
+          "label": {
+            "edit": "モード: 編集",
+            "play": "モード: プレイ"
+          }
+        },
+        "buttons": {
+          "play": "▶ プレイ開始",
+          "returnToEdit": "⏹ 編集に戻る",
+          "clearAll": "全消去",
+          "export": "エクスポート",
+          "import": "インポート",
+          "copy": "コピー"
+        },
+        "grid": {
+          "columns": "列",
+          "rows": "行"
+        },
+        "palette": {
+          "label": "配置するブロック:"
+        },
+        "hardness": {
+          "label": "カスタム硬さ:"
+        },
+        "io": {
+          "placeholder": "インポート/エクスポート用JSONがここに表示されます"
+        },
+        "blocks": {
+          "empty": "空",
+          "normal": "通常ブロック",
+          "hard": "硬いブロック(2)",
+          "unbreakable": "壊れないブロック",
+          "bonus": "高得点ブロック",
+          "custom": "カスタム硬さ"
+        },
+        "hud": {
+          "editHint": "編集モード: クリックで配置、右クリックで削除 / ブロック数: {blockCount}",
+          "score": "スコア {score}",
+          "lives": "残機 {lives}",
+          "hits": "ヒット {hits}",
+          "returnHint": "編集中に戻るとリセット"
+        },
+        "messages": {
+          "placeBlocks": "ブロックを配置してください",
+          "exported": "ステージデータをエクスポートしました。",
+          "imported": "ステージをインポートしました。",
+          "importFailed": "インポートに失敗しました: {error}",
+          "copyUnsupported": "クリップボード非対応のためコピーできません",
+          "copySuccess": "コピーしました",
+          "copyFailed": "コピーに失敗: {error}"
+        },
+        "errors": {
+          "invalidCells": "cellsが不正です"
+        }
+      },
       "timer": {
         "header": {
           "title": "タイマー",

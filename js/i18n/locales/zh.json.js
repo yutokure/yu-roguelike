@@ -536,13 +536,34 @@
           "wrap": "包裹",
           "detail": "细节"
         },
+        "search": {
+          "label": "搜索",
+          "placeholder": "按名称或说明搜索",
+          "groupLabel": "搜索与筛选"
+        },
+        "filters": {
+          "source": {
+            "label": "来源",
+            "all": "全部",
+            "builtin": "内置",
+            "mod": "MOD / 社区"
+          },
+          "favoritesOnly": "仅显示收藏"
+        },
         "actions": {
           "select": "选择",
-          "selected": "选定"
+          "selected": "选定",
+          "favorite": "加入收藏",
+          "unfavorite": "从收藏移除"
         },
         "list": {
           "label": "小游戏列表",
-          "empty": "没有找到该类别的迷你游戏。在 games/ 下添加更多内容。"
+          "empty": "没有找到该类别的迷你游戏。在 games/ 下添加更多内容。",
+          "noMatch": "没有符合筛选条件的小游戏。请调整条件后重试。"
+        },
+        "favorites": {
+          "title": "收藏",
+          "empty": "尚未收藏任何小游戏。"
         },
         "category": {
           "all": "全部",

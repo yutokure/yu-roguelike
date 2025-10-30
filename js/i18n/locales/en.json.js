@@ -536,13 +536,34 @@
           "wrap": "Wrap",
           "detail": "Detail"
         },
+        "search": {
+          "label": "Search",
+          "placeholder": "Search by name or description",
+          "groupLabel": "Search and filter"
+        },
+        "filters": {
+          "source": {
+            "label": "Source",
+            "all": "All",
+            "builtin": "Official",
+            "mod": "Mods / Community"
+          },
+          "favoritesOnly": "Show favorites only"
+        },
         "actions": {
           "select": "Select",
-          "selected": "Selected"
+          "selected": "Selected",
+          "favorite": "Add to favorites",
+          "unfavorite": "Remove from favorites"
         },
         "list": {
           "label": "Mini-game list",
-          "empty": "No mini-games found for this category. Add more under games/."
+          "empty": "No mini-games found for this category. Add more under games/.",
+          "noMatch": "No mini-games matched your filters. Adjust them and try again."
+        },
+        "favorites": {
+          "title": "Favorites",
+          "empty": "You haven't favorited any mini-games yet."
         },
         "category": {
           "all": "All",

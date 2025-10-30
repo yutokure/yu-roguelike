@@ -741,15 +741,17 @@ body.in-game #game-container {
 .miniexp-layout {
     display: grid;
     grid-template-columns: 260px 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: repeat(4, auto) 1fr;
     gap: 12px;
     width: 100%;
     align-items: start;
 }
 .miniexp-cat-list { grid-column: 1; grid-row: 1; }
 .miniexp-display-toolbar { grid-column: 1; grid-row: 2; }
-.miniexp-list { grid-column: 1; grid-row: 3; }
-.miniexp-panel { grid-column: 2; grid-row: 1 / span 3; width: 100%; }
+.miniexp-search-bar { grid-column: 1; grid-row: 3; }
+.miniexp-favorites { grid-column: 1; grid-row: 4; }
+.miniexp-list { grid-column: 1; grid-row: 5; }
+.miniexp-panel { grid-column: 2; grid-row: 1 / span 5; width: 100%; }
 .miniexp-cat-list {
     width: 100%;
     padding: 6px;
@@ -784,6 +786,114 @@ body.in-game #game-container {
     flex-wrap: wrap;
     gap: 6px;
     align-items: center;
+}
+.miniexp-search-bar {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid rgba(102,126,234,0.4);
+    border-radius: 8px;
+    background: #f8f9ff;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+.miniexp-search-input,
+.miniexp-filter-control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+}
+.miniexp-search-input label,
+.miniexp-filter-control label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #4b5563;
+}
+.miniexp-search-input input[type="search"] {
+    padding: 8px 12px;
+    border: 1px solid rgba(102,126,234,0.45);
+    border-radius: 999px;
+    background: #fff;
+    color: #1f2937;
+    font-weight: 600;
+    min-width: 200px;
+}
+.miniexp-search-input input[type="search"]:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+}
+.miniexp-filter-control select {
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(102,126,234,0.45);
+    background: #fff;
+    color: #1f2937;
+    font-weight: 600;
+    cursor: pointer;
+}
+.miniexp-filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4338ca;
+    cursor: pointer;
+    user-select: none;
+}
+.miniexp-filter-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6366f1;
+    cursor: pointer;
+}
+.miniexp-favorites {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed rgba(99,102,241,0.4);
+    border-radius: 10px;
+    background: rgba(238,242,255,0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.miniexp-favorites-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4338ca;
+}
+.miniexp-favorites-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.miniexp-favorite-chip {
+    appearance: none;
+    border: 1px solid rgba(99,102,241,0.35);
+    border-radius: 999px;
+    background: #fff;
+    color: #4338ca;
+    font-weight: 700;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.miniexp-favorite-chip:hover {
+    background: #e0e7ff;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+}
+.miniexp-favorite-chip.selected {
+    background: linear-gradient(135deg,#4338ca,#6366f1);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 16px rgba(99,102,241,0.35);
+}
+.miniexp-favorites-empty {
+    font-size: 12px;
+    color: #6b7280;
 }
 .miniexp-display-toolbar .display-btn {
     padding: 6px 12px;
@@ -836,6 +946,15 @@ body.in-game #game-container {
     gap: 6px;
     align-items: flex-start;
 }
+.miniexp-list.mode-tile .miniexp-entry-wrapper { width: 100%; }
+.miniexp-list.mode-list .miniexp-entry-wrapper { width: 100%; }
+.miniexp-list.mode-wrap .miniexp-entry-wrapper {
+    flex: 0 1 auto;
+    min-width: 120px;
+}
+.miniexp-entry-wrapper {
+    position: relative;
+}
 .miniexp-entry {
     appearance: none;
     border: 1px solid rgba(102,126,234,0.45);
@@ -843,7 +962,7 @@ body.in-game #game-container {
     background: #eef2ff;
     color: #1f2937;
     font-weight: 700;
-    padding: 10px 12px;
+    padding: 10px 36px 10px 12px;
     cursor: pointer;
     transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
     display: flex;
@@ -862,6 +981,60 @@ body.in-game #game-container {
     color: #fff;
     border-color: transparent;
     box-shadow: 0 8px 20px rgba(79,70,229,0.35);
+}
+.miniexp-entry.favorite {
+    border-color: rgba(245,158,11,0.65);
+}
+.miniexp-entry-wrapper .miniexp-favorite-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(251,191,36,0.5);
+    background: rgba(255,255,255,0.95);
+    color: #f59e0b;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.miniexp-entry-wrapper .miniexp-favorite-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(245,158,11,0.35);
+}
+.miniexp-entry-wrapper .miniexp-favorite-btn.active {
+    background: linear-gradient(135deg,#f59e0b,#fbbf24);
+    color: #fff;
+    border-color: transparent;
+}
+.miniexp-entry-wrapper .miniexp-favorite-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(245,158,11,0.35);
+}
+.miniexp-card.favorite {
+    border-color: rgba(245,158,11,0.65);
+}
+.miniexp-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+.miniexp-card-header h4 {
+    flex: 1;
+}
+.miniexp-card .miniexp-favorite-btn {
+    position: static;
+    width: 32px;
+    height: 32px;
+}
+.miniexp-card .miniexp-favorite-btn.active {
+    box-shadow: 0 4px 12px rgba(245,158,11,0.35);
 }
 .miniexp-list.mode-tile .miniexp-entry { min-height: 72px; }
 .miniexp-list.mode-list .miniexp-entry {

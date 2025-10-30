@@ -1271,13 +1271,34 @@
           "wrap": "포장하다",
           "detail": "세부 사항"
         },
+        "search": {
+          "label": "검색",
+          "placeholder": "이름이나 설명으로 검색",
+          "groupLabel": "검색 및 필터"
+        },
+        "filters": {
+          "source": {
+            "label": "출처",
+            "all": "전체",
+            "builtin": "공식",
+            "mod": "MOD/커뮤니티"
+          },
+          "favoritesOnly": "즐겨찾기만 표시"
+        },
         "actions": {
           "select": "선택하다",
-          "selected": "선택된"
+          "selected": "선택된",
+          "favorite": "즐겨찾기에 추가",
+          "unfavorite": "즐겨찾기에서 제거"
         },
         "list": {
           "label": "미니게임 목록",
-          "empty": "해당 카테고리에 해당하는 미니게임이 없습니다. games/ 아래에 더 추가하세요."
+          "empty": "해당 카테고리에 해당하는 미니게임이 없습니다. games/ 아래에 더 추가하세요.",
+          "noMatch": "조건에 맞는 미니게임을 찾지 못했습니다. 필터를 조정하세요."
+        },
+        "favorites": {
+          "title": "즐겨찾기",
+          "empty": "즐겨찾기에 등록한 미니게임이 아직 없습니다."
         },
         "category": {
           "all": "모두",

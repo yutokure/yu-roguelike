@@ -7,16 +7,27 @@
   function create(root, awardXp, opts){
     const shortcuts = opts?.shortcuts;
     const dungeonApi = opts?.dungeon;
-    const localization = opts?.localization;
+    const localization = opts?.localization
+      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({ id: 'sanpo' })
+        : null);
 
     const text = (key, fallback, params) => {
       if (key && localization && typeof localization.t === 'function'){
-        return localization.t(key, fallback, params);
+        try {
+          const localized = localization.t(key, fallback, params);
+          if (localized != null) {
+            return localized;
+          }
+        } catch (error) {
+          console.warn('[MiniExp][Sanpo] Failed to translate key:', key, error);
+        }
       }
       if (typeof fallback === 'function'){
         try {
           return fallback(params);
-        } catch {
+        } catch (error) {
+          console.warn('[MiniExp][Sanpo] Failed to compute fallback text for key:', key, error);
           return '';
         }
       }

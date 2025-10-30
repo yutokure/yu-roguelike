@@ -22,12 +22,12 @@
   const MAX_CUSTOM_HARDNESS = 12;
 
   const BLOCK_TYPES = [
-    { id: 'empty', label: '空', color: 'rgba(255,255,255,0)', editorOnly: true },
-    { id: 'normal', label: '通常ブロック', color: '#38bdf8', hp: 1, score: 100, xp: 1 },
-    { id: 'hard', label: '硬いブロック(2)', color: '#f97316', hp: 2, score: 200, xp: 2 },
-    { id: 'unbreakable', label: '壊れないブロック', color: '#94a3b8', hp: Infinity, score: 0, xp: 0 },
-    { id: 'bonus', label: '高得点ブロック', color: '#facc15', hp: 1, score: 500, xp: 5 },
-    { id: 'custom', label: 'カスタム硬さ', color: '#34d399', hp: 3, score: 150, xp: 1 }
+    { id: 'empty', labelKey: 'blocks.empty', labelFallback: '空', color: 'rgba(255,255,255,0)', editorOnly: true },
+    { id: 'normal', labelKey: 'blocks.normal', labelFallback: '通常ブロック', color: '#38bdf8', hp: 1, score: 100, xp: 1 },
+    { id: 'hard', labelKey: 'blocks.hard', labelFallback: '硬いブロック(2)', color: '#f97316', hp: 2, score: 200, xp: 2 },
+    { id: 'unbreakable', labelKey: 'blocks.unbreakable', labelFallback: '壊れないブロック', color: '#94a3b8', hp: Infinity, score: 0, xp: 0 },
+    { id: 'bonus', labelKey: 'blocks.bonus', labelFallback: '高得点ブロック', color: '#facc15', hp: 1, score: 500, xp: 5 },
+    { id: 'custom', labelKey: 'blocks.custom', labelFallback: 'カスタム硬さ', color: '#34d399', hp: 3, score: 150, xp: 1 }
   ];
 
   function cloneStage(stage){
@@ -35,6 +35,36 @@
   }
 
   function create(root, awardXp){
+    const i18n = typeof window !== 'undefined' ? window.I18n : null;
+    const I18N_PREFIX = 'games.sandboxBreakout';
+
+    function computeFallback(fallback, params){
+      if (typeof fallback === 'function'){
+        try {
+          const value = fallback(params || {});
+          return value == null ? '' : String(value);
+        } catch (error){
+          console.warn('[sandbox_breakout] Failed to evaluate fallback text:', error);
+          return '';
+        }
+      }
+      return fallback ?? '';
+    }
+
+    function text(key, fallback, params){
+      const fullKey = key ? `${I18N_PREFIX}.${key}` : key;
+      if (fullKey && typeof i18n?.t === 'function'){
+        try {
+          const result = i18n.t(fullKey, params);
+          if (typeof result === 'string' && result !== fullKey) return result;
+          if (result !== undefined && result !== null && result !== fullKey) return result;
+        } catch (error){
+          console.warn('[sandbox_breakout] Failed to translate key:', fullKey, error);
+        }
+      }
+      return computeFallback(fallback, params);
+    }
+
     const container = document.createElement('div');
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
@@ -49,7 +79,7 @@
     container.style.boxShadow = '0 18px 42px rgba(15,23,42,0.55)';
 
     const title = document.createElement('h2');
-    title.textContent = 'サンドボックスブロック崩し';
+    title.textContent = text('title', 'サンドボックスブロック崩し');
     title.style.textAlign = 'center';
     title.style.margin = '12px 0 0 0';
     title.style.fontSize = '20px';
@@ -58,7 +88,7 @@
     const modeInfo = document.createElement('div');
     modeInfo.style.textAlign = 'center';
     modeInfo.style.fontSize = '13px';
-    modeInfo.textContent = 'エディタで配置 → そのままプレイ / ステージのインポート・エクスポートに対応';
+    modeInfo.textContent = text('modeInfo', 'エディタで配置 → そのままプレイ / ステージのインポート・エクスポートに対応');
     container.appendChild(modeInfo);
 
     const canvas = document.createElement('canvas');
@@ -82,23 +112,23 @@
     container.appendChild(toolbar);
 
     const modeLabel = document.createElement('span');
-    modeLabel.textContent = 'モード: 編集';
+    modeLabel.textContent = text('mode.label.edit', 'モード: 編集');
     modeLabel.style.fontWeight = '600';
     toolbar.appendChild(modeLabel);
 
     const playButton = document.createElement('button');
-    playButton.textContent = '▶ プレイ開始';
+    playButton.textContent = text('buttons.play', '▶ プレイ開始');
     styleButton(playButton);
     toolbar.appendChild(playButton);
 
     const editButton = document.createElement('button');
-    editButton.textContent = '⏹ 編集に戻る';
+    editButton.textContent = text('buttons.returnToEdit', '⏹ 編集に戻る');
     styleButton(editButton);
     editButton.disabled = true;
     toolbar.appendChild(editButton);
 
     const clearButton = document.createElement('button');
-    clearButton.textContent = '全消去';
+    clearButton.textContent = text('buttons.clearAll', '全消去');
     styleButton(clearButton);
     toolbar.appendChild(clearButton);
 
@@ -110,8 +140,8 @@
     gridControls.style.flexWrap = 'wrap';
     container.appendChild(gridControls);
 
-    const colsInput = labelledNumber('列', DEFAULT_COLS, MIN_COLS, MAX_COLS);
-    const rowsInput = labelledNumber('行', DEFAULT_ROWS, MIN_ROWS, MAX_ROWS);
+    const colsInput = labelledNumber(text('grid.columns', '列'), DEFAULT_COLS, MIN_COLS, MAX_COLS);
+    const rowsInput = labelledNumber(text('grid.rows', '行'), DEFAULT_ROWS, MIN_ROWS, MAX_ROWS);
     gridControls.appendChild(colsInput.wrapper);
     gridControls.appendChild(rowsInput.wrapper);
 
@@ -124,7 +154,7 @@
     container.appendChild(palette);
 
     const paletteLabel = document.createElement('div');
-    paletteLabel.textContent = '配置するブロック:';
+    paletteLabel.textContent = text('palette.label', '配置するブロック:');
     paletteLabel.style.textAlign = 'center';
     paletteLabel.style.fontSize = '13px';
     paletteLabel.style.marginBottom = '4px';
@@ -138,7 +168,7 @@
     hardnessWrapper.style.fontSize = '13px';
     hardnessWrapper.style.marginBottom = '4px';
     const hardnessLabel = document.createElement('span');
-    hardnessLabel.textContent = 'カスタム硬さ:';
+    hardnessLabel.textContent = text('hardness.label', 'カスタム硬さ:');
     const hardnessInput = document.createElement('input');
     hardnessInput.type = 'number';
     hardnessInput.min = '1';
@@ -155,7 +185,7 @@
     container.insertBefore(hardnessWrapper, palette.nextSibling);
 
     const exportArea = document.createElement('textarea');
-    exportArea.placeholder = 'インポート/エクスポート用JSONがここに表示されます';
+    exportArea.placeholder = text('io.placeholder', 'インポート/エクスポート用JSONがここに表示されます');
     exportArea.style.width = '100%';
     exportArea.style.minHeight = '80px';
     exportArea.style.padding = '8px';
@@ -173,13 +203,13 @@
     ioControls.style.alignItems = 'center';
 
     const exportButton = document.createElement('button');
-    exportButton.textContent = 'エクスポート';
+    exportButton.textContent = text('buttons.export', 'エクスポート');
     styleButton(exportButton);
     const importButton = document.createElement('button');
-    importButton.textContent = 'インポート';
+    importButton.textContent = text('buttons.import', 'インポート');
     styleButton(importButton);
     const copyButton = document.createElement('button');
-    copyButton.textContent = 'コピー';
+    copyButton.textContent = text('buttons.copy', 'コピー');
     styleButton(copyButton);
 
     const message = document.createElement('div');
@@ -204,7 +234,7 @@
       if (block.id === 'empty') continue;
       const btn = document.createElement('button');
       styleButton(btn);
-      btn.textContent = block.label;
+      btn.textContent = text(block.labelKey, block.labelFallback);
       btn.style.background = 'linear-gradient(135deg, ' + lighten(block.color, 0.2) + ', ' + block.color + ')';
       btn.style.border = '2px solid transparent';
       btn.dataset.blockId = block.id;
@@ -409,7 +439,15 @@
       ctx.font = '14px sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText('編集モード: クリックで配置、右クリックで削除 / ブロック数: ' + countBlocks(stage), 20, CANVAS_HEIGHT - 24);
+      ctx.fillText(
+        text(
+          'hud.editHint',
+          ({ blockCount }) => `編集モード: クリックで配置、右クリックで削除 / ブロック数: ${blockCount}`,
+          { blockCount: countBlocks(stage) }
+        ),
+        20,
+        CANVAS_HEIGHT - 24
+      );
     }
 
     function drawGameplay(){
@@ -417,10 +455,10 @@
       ctx.fillRect(0,0,CANVAS_WIDTH,48);
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '16px sans-serif';
-      ctx.fillText(`SCORE ${score}`, 20, 28);
-      ctx.fillText(`LIVES ${lives}`, 180, 28);
-      ctx.fillText(`HITS ${hits}`, 300, 28);
-      ctx.fillText('編集中に戻るとリセット', CANVAS_WIDTH - 220, 28);
+      ctx.fillText(text('hud.score', ({ score }) => `SCORE ${score}`, { score }), 20, 28);
+      ctx.fillText(text('hud.lives', ({ lives }) => `LIVES ${lives}`, { lives }), 180, 28);
+      ctx.fillText(text('hud.hits', ({ hits }) => `HITS ${hits}`, { hits }), 300, 28);
+      ctx.fillText(text('hud.returnHint', '編集中に戻るとリセット'), CANVAS_WIDTH - 220, 28);
       for (const brick of bricks) {
         if (Number.isFinite(brick.hp) && brick.hp <= 0) continue;
         const { x,y,w,h,type,hp,maxHp,def } = brick;
@@ -586,12 +624,12 @@
     function startPlay(){
       if (mode === 'play') return;
       if (countBlocks(stage) === 0) {
-        message.textContent = 'ブロックを配置してください';
+        message.textContent = text('messages.placeBlocks', 'ブロックを配置してください');
         return;
       }
       message.textContent = '';
       mode = 'play';
-      modeLabel.textContent = 'モード: プレイ';
+      modeLabel.textContent = text('mode.label.play', 'モード: プレイ');
       playButton.disabled = true;
       editButton.disabled = false;
       canvas.style.cursor = 'none';
@@ -607,7 +645,7 @@
     function stopPlay(){
       if (mode === 'edit') return;
       mode = 'edit';
-      modeLabel.textContent = 'モード: 編集';
+      modeLabel.textContent = text('mode.label.edit', 'モード: 編集');
       playButton.disabled = false;
       editButton.disabled = true;
       canvas.style.cursor = 'pointer';
@@ -704,13 +742,13 @@
         cells: cloneStage(stage)
       };
       exportArea.value = JSON.stringify(data);
-      message.textContent = 'ステージデータをエクスポートしました。';
+      message.textContent = text('messages.exported', 'ステージデータをエクスポートしました。');
     });
 
     importButton.addEventListener('click', () => {
       try {
         const parsed = JSON.parse(exportArea.value);
-        if (!parsed || !Array.isArray(parsed.cells)) throw new Error('cellsが不正です');
+        if (!parsed || !Array.isArray(parsed.cells)) throw new Error(text('errors.invalidCells', 'cellsが不正です'));
         let rows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, parsed.rows || parsed.cells.length));
         let cols = Math.max(MIN_COLS, Math.min(MAX_COLS, parsed.cols || (parsed.cells[0] ? parsed.cells[0].length : MIN_COLS)));
         const newStage = createEmptyStage(rows, cols);
@@ -732,23 +770,25 @@
         stage = newStage;
         colsInput.input.value = String(cols);
         rowsInput.input.value = String(rows);
-        message.textContent = 'ステージをインポートしました。';
+        message.textContent = text('messages.imported', 'ステージをインポートしました。');
         draw();
       } catch (err) {
-        message.textContent = 'インポートに失敗しました: ' + err.message;
+        const errorMessage = err?.message || String(err);
+        message.textContent = text('messages.importFailed', ({ error }) => `インポートに失敗しました: ${error}`, { error: errorMessage });
       }
     });
 
     copyButton.addEventListener('click', async () => {
       if (!navigator.clipboard) {
-        message.textContent = 'クリップボード非対応のためコピーできません';
+        message.textContent = text('messages.copyUnsupported', 'クリップボード非対応のためコピーできません');
         return;
       }
       try {
         await navigator.clipboard.writeText(exportArea.value);
-        message.textContent = 'コピーしました';
+        message.textContent = text('messages.copySuccess', 'コピーしました');
       } catch (err) {
-        message.textContent = 'コピーに失敗: ' + err.message;
+        const errorMessage = err?.message || String(err);
+        message.textContent = text('messages.copyFailed', ({ error }) => `コピーに失敗: ${error}`, { error: errorMessage });
       }
     });
 

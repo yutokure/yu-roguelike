@@ -7,16 +7,27 @@
   function create(root, awardXp, opts){
     const shortcuts = opts?.shortcuts;
     const dungeonApi = opts?.dungeon;
-    const localization = opts?.localization;
+    const localization = opts?.localization
+      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({ id: 'sanpo' })
+        : null);
 
     const text = (key, fallback, params) => {
       if (key && localization && typeof localization.t === 'function'){
-        return localization.t(key, fallback, params);
+        try {
+          const localized = localization.t(key, fallback, params);
+          if (localized != null) {
+            return localized;
+          }
+        } catch (error) {
+          console.warn('[MiniExp][Sanpo] Failed to translate key:', key, error);
+        }
       }
       if (typeof fallback === 'function'){
         try {
           return fallback(params);
-        } catch {
+        } catch (error) {
+          console.warn('[MiniExp][Sanpo] Failed to compute fallback text for key:', key, error);
           return '';
         }
       }
@@ -107,6 +118,27 @@
     controlPanel.appendChild(toggleMapBtn);
     controlPanel.appendChild(zoomLabel);
 
+    const slideshowLabel = document.createElement('label');
+    slideshowLabel.style.display = 'flex';
+    slideshowLabel.style.alignItems = 'center';
+    slideshowLabel.style.gap = '6px';
+    slideshowLabel.style.color = '#cbd5f5';
+    slideshowLabel.style.fontWeight = '600';
+
+    const slideshowCheckbox = document.createElement('input');
+    slideshowCheckbox.type = 'checkbox';
+    slideshowCheckbox.style.width = '18px';
+    slideshowCheckbox.style.height = '18px';
+    slideshowCheckbox.title = text('games.sanpo.ui.slideshowLabel', 'スライドショーモード');
+
+    const slideshowText = document.createElement('span');
+    slideshowText.textContent = text('games.sanpo.ui.slideshowLabel', 'スライドショーモード');
+
+    slideshowLabel.appendChild(slideshowCheckbox);
+    slideshowLabel.appendChild(slideshowText);
+
+    controlPanel.appendChild(slideshowLabel);
+
     const canvas = document.createElement('canvas');
     canvas.width = 640;
     canvas.height = 480;
@@ -170,6 +202,16 @@
     let currentZoom = 1;
     let cameraBaseWidth = 640;
     let cameraBaseHeight = 480;
+    let preparingStage = false;
+
+    let slideshowEnabled = false;
+    let slideshowDirection = null;
+    let slideshowElapsed = 0;
+    let slideshowNextRegen = 0;
+    let slideshowPendingRegen = false;
+
+    const SLIDESHOW_MIN_REGEN = 18;
+    const SLIDESHOW_MAX_REGEN = 32;
 
     const player = {
       x: 0,
@@ -375,16 +417,109 @@
       }
     }
 
+    function randomSlideshowDirection(){
+      const angle = Math.random() * Math.PI * 2;
+      return { dx: Math.cos(angle), dy: Math.sin(angle) };
+    }
+
+    function resetSlideshowCycle(){
+      if (!stage){
+        slideshowDirection = null;
+        slideshowElapsed = 0;
+        slideshowNextRegen = 0;
+        slideshowPendingRegen = false;
+        return;
+      }
+      slideshowDirection = randomSlideshowDirection();
+      slideshowElapsed = 0;
+      slideshowPendingRegen = false;
+      slideshowNextRegen = SLIDESHOW_MIN_REGEN + Math.random() * (SLIDESHOW_MAX_REGEN - SLIDESHOW_MIN_REGEN);
+    }
+
+    function applyRunningStatus(){
+      if (!running) return;
+      updateStatus(
+        slideshowEnabled
+          ? text('games.sanpo.ui.status.slideshow', 'スライドショー中… 自動でカメラが散歩します。')
+          : text('games.sanpo.ui.status.walk', '散歩中… WASD/矢印キーで移動。Mでミニマップ切替、[ / ] でズーム。')
+      );
+    }
+
+    function setSlideshowEnabled(enabled){
+      slideshowEnabled = enabled;
+      slideshowCheckbox.checked = enabled;
+      if (enabled){
+        pressedKeys.clear();
+        pendingStart = true;
+        if (stageReady){
+          resetPlayer();
+          resetSlideshowCycle();
+          draw();
+          if (!running){
+            updateStatus(text('games.sanpo.ui.status.readySlideshow', '準備完了！開始するとスライドショーが始まります'));
+          }
+        }
+        if (stageReady && !running){
+          startLoop();
+        } else if (!stageReady && !preparingStage){
+          prepareStage();
+        }
+      } else {
+        slideshowPendingRegen = false;
+        slideshowDirection = null;
+        if (!running){
+          pendingStart = false;
+          if (stageReady){
+            updateStatus(text('games.sanpo.ui.status.ready', '準備完了！開始ボタンで散歩を始めよう'));
+          }
+        }
+      }
+      applyRunningStatus();
+    }
+
     function loop(ts){
       if (!running) return;
       if (!lastTs) lastTs = ts;
       const delta = Math.min(0.05, Math.max(0, (ts - lastTs) / 1000));
       lastTs = ts;
 
-      const { dx, dy } = readInputVector();
+      if (slideshowEnabled && stage && !slideshowDirection){
+        resetSlideshowCycle();
+      }
+
+      let dx = 0;
+      let dy = 0;
+
+      if (slideshowEnabled && stage){
+        dx = slideshowDirection?.dx ?? 0;
+        dy = slideshowDirection?.dy ?? 0;
+        slideshowElapsed += delta;
+        if (!slideshowPendingRegen && slideshowNextRegen > 0 && slideshowElapsed >= slideshowNextRegen){
+          slideshowPendingRegen = true;
+        }
+      } else {
+        ({ dx, dy } = readInputVector());
+      }
+
+      if (slideshowEnabled && slideshowPendingRegen && !preparingStage){
+        slideshowPendingRegen = false;
+        slideshowElapsed = 0;
+        pendingStart = true;
+        prepareStage();
+        return;
+      }
+
       if ((dx !== 0 || dy !== 0) && stage){
         const speed = player.speed;
+        const prevX = player.x;
+        const prevY = player.y;
         moveCircle(player, dx * speed * delta, dy * speed * delta, player.radius);
+        if (slideshowEnabled){
+          const moved = Math.hypot(player.x - prevX, player.y - prevY);
+          if (moved < 0.5){
+            slideshowDirection = randomSlideshowDirection();
+          }
+        }
         const tile = stage.toTile(player.x, player.y);
         if (tile && (lastTile == null || tile.x !== lastTile.x || tile.y !== lastTile.y)){
           if (lastTile !== null){
@@ -415,7 +550,11 @@
       cancelAnimationFrame(raf);
       shortcuts?.enableKey?.('r');
       shortcuts?.enableKey?.('p');
-      updateStatus(text('games.sanpo.ui.status.paused', '一時停止中'));
+      updateStatus(
+        slideshowEnabled
+          ? text('games.sanpo.ui.status.slideshowPaused', 'スライドショー一時停止中')
+          : text('games.sanpo.ui.status.paused', '一時停止中')
+      );
     }
 
     function startLoop(){
@@ -424,7 +563,7 @@
       shortcuts?.disableKey?.('r');
       shortcuts?.disableKey?.('p');
       lastTs = 0;
-      updateStatus(text('games.sanpo.ui.status.walk', '散歩中… WASD/矢印キーで移動。Mでミニマップ切替、[ / ] でズーム。'));
+      applyRunningStatus();
       raf = requestAnimationFrame(loop);
     }
 
@@ -459,43 +598,59 @@
     }
 
     async function prepareStage(){
+      if (preparingStage) return;
       if (!dungeonApi || typeof dungeonApi.generateStage !== 'function'){
         updateStatus(text('games.sanpo.ui.status.noApi', 'ダンジョンAPIが利用できません'));
         stageReady = false;
         return;
       }
-      stopLoop();
-      stageReady = false;
-      stage = null;
-      background = null;
-      updateStageInfo();
-      updateStatus(text('games.sanpo.ui.status.generating', 'ステージ生成中…'));
-      const options = randomStageOptions();
-      const prevRandom = Math.random;
-      const setSeededRandom = typeof window !== 'undefined' ? window.setSeededRandom : null;
-      const restoreRandom = typeof window !== 'undefined' ? window.restoreRandom : null;
-      let generated = null;
+      preparingStage = true;
       try {
-        if (typeof setSeededRandom === 'function') setSeededRandom(stageSeed);
-        generated = await dungeonApi.generateStage(options);
-      } catch (error){
-        console.warn('[sanpo] Failed to generate stage', error);
-        updateStatus(text('games.sanpo.ui.status.failed', 'ステージ生成に失敗しました'));
+        stopLoop();
+        stageReady = false;
+        stage = null;
+        background = null;
         updateStageInfo();
-        return;
+        updateStatus(text('games.sanpo.ui.status.generating', 'ステージ生成中…'));
+        const options = randomStageOptions();
+        const prevRandom = Math.random;
+        const setSeededRandom = typeof window !== 'undefined' ? window.setSeededRandom : null;
+        const restoreRandom = typeof window !== 'undefined' ? window.restoreRandom : null;
+        let generated = null;
+        try {
+          if (typeof setSeededRandom === 'function') setSeededRandom(stageSeed);
+          generated = await dungeonApi.generateStage(options);
+        } catch (error){
+          console.warn('[sanpo] Failed to generate stage', error);
+          updateStatus(text('games.sanpo.ui.status.failed', 'ステージ生成に失敗しました'));
+          updateStageInfo();
+          return;
+        } finally {
+          if (typeof restoreRandom === 'function') restoreRandom();
+          else Math.random = prevRandom;
+        }
+        if (!generated) return;
+        stage = generated;
+        background = dungeonApi.renderStage(stage, { tileSize: stage.tileSize, showGrid: false });
+        configureCanvas();
+        resetPlayer();
+        if (slideshowEnabled){
+          resetSlideshowCycle();
+        } else {
+          slideshowDirection = null;
+        }
+        updateStageInfo();
+        stageReady = true;
+        updateStatus(
+          slideshowEnabled
+            ? text('games.sanpo.ui.status.readySlideshow', '準備完了！開始するとスライドショーが始まります')
+            : text('games.sanpo.ui.status.ready', '準備完了！開始ボタンで散歩を始めよう')
+        );
+        if (pendingStart) startLoop();
+        draw();
       } finally {
-        if (typeof restoreRandom === 'function') restoreRandom();
-        else Math.random = prevRandom;
+        preparingStage = false;
       }
-      stage = generated;
-      background = dungeonApi.renderStage(stage, { tileSize: stage.tileSize, showGrid: false });
-      configureCanvas();
-      resetPlayer();
-      updateStageInfo();
-      stageReady = true;
-      updateStatus(text('games.sanpo.ui.status.ready', '準備完了！開始ボタンで散歩を始めよう'));
-      if (pendingStart) startLoop();
-      draw();
     }
 
     function start(){
@@ -515,6 +670,7 @@
       regenerateBtn.removeEventListener('click', regenerateHandler);
       toggleMapBtn.removeEventListener('click', toggleMapHandler);
       zoomSlider.removeEventListener('input', zoomInputHandler);
+      slideshowCheckbox.removeEventListener('change', slideshowChangeHandler);
       try { wrapper.remove(); } catch {}
     }
 
@@ -529,13 +685,18 @@
     }
 
     function regenerateHandler(){
-      const shouldResume = running || pendingStart;
+      if (preparingStage) return;
+      const shouldResume = slideshowEnabled ? true : (running || pendingStart);
       pendingStart = shouldResume;
       prepareStage();
     }
 
     function zoomInputHandler(){
       updateZoomFromSlider();
+    }
+
+    function slideshowChangeHandler(){
+      setSlideshowEnabled(slideshowCheckbox.checked);
     }
 
     function keyDownHandler(e){
@@ -571,6 +732,7 @@
     regenerateBtn.addEventListener('click', regenerateHandler);
     toggleMapBtn.addEventListener('click', toggleMapHandler);
     zoomSlider.addEventListener('input', zoomInputHandler);
+    slideshowCheckbox.addEventListener('change', slideshowChangeHandler);
     document.addEventListener('keydown', keyDownHandler, { passive: false });
     document.addEventListener('keyup', keyUpHandler, { passive: true });
 

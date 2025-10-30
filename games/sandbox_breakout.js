@@ -34,9 +34,11 @@
     return stage.map(row => row.map(cell => ({ type: cell.type, hardness: cell.hardness })));
   }
 
-  function create(root, awardXp){
-    const i18n = typeof window !== 'undefined' ? window.I18n : null;
-    const I18N_PREFIX = 'games.sandboxBreakout';
+  function create(root, awardXp, opts){
+    const localization = opts?.localization
+      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({ id: 'sandbox_breakout', textKeyPrefix: 'games.sandboxBreakout' })
+        : null);
 
     function computeFallback(fallback, params){
       if (typeof fallback === 'function'){
@@ -48,18 +50,22 @@
           return '';
         }
       }
-      return fallback ?? '';
+      if (fallback == null) return '';
+      try {
+        return String(fallback);
+      } catch (error){
+        console.warn('[sandbox_breakout] Failed to stringify fallback text:', error);
+        return '';
+      }
     }
 
     function text(key, fallback, params){
-      const fullKey = key ? `${I18N_PREFIX}.${key}` : key;
-      if (fullKey && typeof i18n?.t === 'function'){
+      if (localization && typeof localization.t === 'function'){
         try {
-          const result = i18n.t(fullKey, params);
-          if (typeof result === 'string' && result !== fullKey) return result;
-          if (result !== undefined && result !== null && result !== fullKey) return result;
+          const translated = localization.t(key, fallback, params);
+          if (translated != null) return typeof translated === 'string' ? translated : String(translated);
         } catch (error){
-          console.warn('[sandbox_breakout] Failed to translate key:', fullKey, error);
+          console.warn('[sandbox_breakout] Failed to translate key via localization:', key, error);
         }
       }
       return computeFallback(fallback, params);

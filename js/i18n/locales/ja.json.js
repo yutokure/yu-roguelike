@@ -538,13 +538,34 @@
           "wrap": "羅列",
           "detail": "詳細"
         },
+        "search": {
+          "label": "検索",
+          "placeholder": "名前や説明で検索",
+          "groupLabel": "検索とフィルター"
+        },
+        "filters": {
+          "source": {
+            "label": "種類",
+            "all": "すべて",
+            "builtin": "公式",
+            "mod": "MOD/コミュニティ"
+          },
+          "favoritesOnly": "お気に入りのみ表示"
+        },
         "actions": {
           "select": "選択",
-          "selected": "選択中"
+          "selected": "選択中",
+          "favorite": "お気に入りに追加",
+          "unfavorite": "お気に入りから削除"
         },
         "list": {
           "label": "ミニゲーム一覧",
-          "empty": "該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。"
+          "empty": "該当カテゴリのミニゲームが見つかりません。games/ にミニゲームを追加してください。",
+          "noMatch": "検索条件に一致するミニゲームが見つかりませんでした。条件を調整してください。"
+        },
+        "favorites": {
+          "title": "お気に入り",
+          "empty": "お気に入りに登録したミニゲームはまだありません。"
         },
         "category": {
           "all": "すべて",

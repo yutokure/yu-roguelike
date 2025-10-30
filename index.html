@@ -195,6 +195,25 @@
                     <div class="miniexp-layout">
                         <div id="miniexp-cat-list" class="miniexp-cat-list" role="listbox" aria-label="" tabindex="0" data-i18n-attr="aria-label:selection.miniexp.categories"></div>
                         <div id="miniexp-display-modes" class="miniexp-display-toolbar" role="group" aria-label="" data-i18n-attr="aria-label:selection.miniexp.displayModes"></div>
+                        <div class="miniexp-search-bar" role="group" aria-label="" data-i18n-attr="aria-label:selection.miniexp.search.groupLabel">
+                            <div class="miniexp-search-input">
+                                <label for="miniexp-search" data-i18n="selection.miniexp.search.label"></label>
+                                <input type="search" id="miniexp-search" autocomplete="off" data-i18n-attr="placeholder:selection.miniexp.search.placeholder">
+                            </div>
+                            <div class="miniexp-filter-control">
+                                <label for="miniexp-source-filter" data-i18n="selection.miniexp.filters.source.label"></label>
+                                <select id="miniexp-source-filter">
+                                    <option value="all" data-i18n="selection.miniexp.filters.source.all"></option>
+                                    <option value="builtin" data-i18n="selection.miniexp.filters.source.builtin"></option>
+                                    <option value="mod" data-i18n="selection.miniexp.filters.source.mod"></option>
+                                </select>
+                            </div>
+                            <label class="miniexp-filter-toggle" for="miniexp-favorites-toggle">
+                                <input type="checkbox" id="miniexp-favorites-toggle">
+                                <span data-i18n="selection.miniexp.filters.favoritesOnly"></span>
+                            </label>
+                        </div>
+                        <div id="miniexp-favorites" class="miniexp-favorites" role="region" aria-live="polite"></div>
                         <div id="miniexp-list" class="miniexp-list" role="listbox" aria-label="" tabindex="0" data-i18n-attr="aria-label:selection.miniexp.list.label"></div>
                         <div class="miniexp-panel">
                             <div class="miniexp-toolbar">

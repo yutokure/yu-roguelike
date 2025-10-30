@@ -96,11 +96,11 @@
     panels.appendChild(playPanel);
 
     const TOOL_TYPES = [
-      { id: 'floor', label: text('.tool.floor', '床'), hint: text('.tool.floor.hint', '基本の床マス') },
-      { id: 'wall', label: text('.tool.wall', '壁'), hint: text('.tool.wall.hint', '移動できない壁') },
-      { id: 'goal', label: text('.tool.goal', 'ゴール'), hint: text('.tool.goal.hint', '木箱をはめる目標地点') },
-      { id: 'crate', label: text('.tool.crate', '木箱'), hint: text('.tool.crate.hint', '押して動かす木箱 (クリックで配置/削除)') },
-      { id: 'player', label: text('.tool.player', '作業員'), hint: text('.tool.player.hint', '開始位置 (1つのみ)') },
+      { id: 'floor', label: text('.tool.floor.label', '床'), hint: text('.tool.floor.hint', '基本の床マス') },
+      { id: 'wall', label: text('.tool.wall.label', '壁'), hint: text('.tool.wall.hint', '移動できない壁') },
+      { id: 'goal', label: text('.tool.goal.label', 'ゴール'), hint: text('.tool.goal.hint', '木箱をはめる目標地点') },
+      { id: 'crate', label: text('.tool.crate.label', '木箱'), hint: text('.tool.crate.hint', '押して動かす木箱 (クリックで配置/削除)') },
+      { id: 'player', label: text('.tool.player.label', '作業員'), hint: text('.tool.player.hint', '開始位置 (1つのみ)') },
     ];
 
     const MIN_SIZE = 4;
@@ -265,11 +265,11 @@
     function updateStatusExtra(){
       const crateCount = stage.crates.length;
       const goalCount = stage.goals.size;
-      const hasPlayer = !!stage.player;
-      statusExtra.textContent = text('.status.summary', () => `木箱 ${crateCount} / ゴール ${goalCount} / 作業員 ${hasPlayer ? '1' : '0'}`, {
+      const workers = stage.player ? 1 : 0;
+      statusExtra.textContent = text('.status.summary', () => `木箱 ${crateCount} / ゴール ${goalCount} / 作業員 ${workers}`, {
         crates: crateCount,
         goals: goalCount,
-        hasPlayer,
+        workers,
       });
     }
 
@@ -770,10 +770,12 @@
 
     function updatePlayInfo(){
       const cratesOnGoal = playState ? countCratesOnGoals() : 0;
-      playInfo.textContent = text('.play.info', () => `手数 ${playState?.moves ?? 0} / 木箱 ${cratesOnGoal} / ${playState?.crates.length ?? 0}`, {
-        moves: playState?.moves ?? 0,
+      const moves = playState?.moves ?? 0;
+      const cratesTotal = playState?.crates.length ?? 0;
+      playInfo.textContent = text('.play.info', () => `手数 ${moves} / 木箱 ${cratesOnGoal}/${cratesTotal}`, {
+        moves,
         cratesOnGoal,
-        cratesTotal: playState?.crates.length ?? 0,
+        cratesTotal,
       });
     }
 

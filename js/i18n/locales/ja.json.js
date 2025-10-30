@@ -836,6 +836,10 @@
             "name": "ナンプレ",
             "description": "正解入力でEXP / クリアボーナス"
           },
+          "sandbox_sokoban": {
+            "name": "サンドボックス倉庫番",
+            "description": "ステージ編集＆プレイを行き来できる倉庫番。木箱で+25EXP、クリアで+100EXP。"
+          },
           "ultimate_ttt": {
             "name": "スーパー三目並べ",
             "description": "小盤制覇+25/配置+1/リーチ+10/勝利ボーナス"
@@ -15404,6 +15408,61 @@
     },
     "miniexp": {
       "games": {
+        "sandbox_sokoban": {
+          "title": "サンドボックス倉庫番",
+          "description": "編集とプレイを行き来しながら、自分だけの倉庫番ステージを作成できます。木箱をはめると25EXP、完全クリアで100EXP獲得。",
+          "status": {
+            "ready": "編集中: 左のツールから配置してみましょう。",
+            "updated": "マスを更新しました。",
+            "summary": "木箱 {crates} / ゴール {goals} / 作業員 {workers}",
+            "exported": "ステージデータを出力しました。コピーして保存できます。",
+            "import": {
+              "empty": "インポートするJSONを入力してください。",
+              "success": "ステージを読み込みました。",
+              "error": "JSONの解析に失敗しました。形式を確認してください。"
+            },
+            "reset": "初期ステージに戻しました。",
+            "resetPlay": "ステージをリセットしました。",
+            "play": "プレイモード: 箱をゴールに押し込みましょう！",
+            "crateFit": "木箱をはめました！ +25EXP",
+            "cleared": "ステージクリア！ +100EXP",
+            "editMode": "編集モードに戻りました。"
+          },
+          "tool": {
+            "floor": { "label": "床", "hint": "基本の床マス" },
+            "wall": { "label": "壁", "hint": "移動できない壁" },
+            "goal": { "label": "ゴール", "hint": "木箱をはめる目標地点" },
+            "crate": { "label": "木箱", "hint": "押して動かす木箱 (クリックで配置/削除)" },
+            "player": { "label": "作業員", "hint": "開始位置 (1つのみ)" }
+          },
+          "editor": {
+            "title": "ステージエディタ",
+            "width": "幅",
+            "height": "高さ",
+            "export": "エクスポート",
+            "import": "インポート",
+            "clear": "初期化",
+            "io": "インポート / エクスポート (JSON)"
+          },
+          "play": {
+            "title": "プレイテスト",
+            "hint": "矢印キーまたはWASDで操作。リセットで再挑戦。",
+            "reset": "リセット",
+            "info": "手数 {moves} / 木箱 {cratesOnGoal}/{cratesTotal}"
+          },
+          "validate": {
+            "player": "作業員の開始位置が必要です。",
+            "crate": "最低1つの木箱を配置してください。",
+            "goal": "最低1つのゴールを配置してください。",
+            "balance": "ゴール数は木箱以上にしましょう。",
+            "crateWall": "壁の上に木箱は置けません。",
+            "playerWall": "作業員の位置が壁になっています。"
+          },
+          "mode": {
+            "editor": "編集",
+            "play": "プレイ"
+          }
+        },
         "tosochu": {
           "ui": {
             "timer": "残り {seconds}s",

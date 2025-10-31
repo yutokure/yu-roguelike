@@ -819,9 +819,9 @@
   window.registerMiniGame({
     id: 'sandbox_breakout',
     name: 'サンドボックスブロック崩し',
-    nameKey: 'selection.miniexp.games.sandbox_breakout.name',
+    nameKey: 'minigame.games.sandbox_breakout.name',
     description: 'ステージを自分で作り、そのままプレイできるブロック崩し。カスタム硬さ・インポート/エクスポート対応',
-    descriptionKey: 'selection.miniexp.games.sandbox_breakout.description',
+    descriptionKey: 'minigame.games.sandbox_breakout.description',
     categoryIds: ['action'],
     create
   });

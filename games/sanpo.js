@@ -749,9 +749,9 @@
   window.registerMiniGame({
     id: 'sanpo',
     name: '散歩',
-    nameKey: 'selection.miniexp.games.sanpo.name',
+    nameKey: 'minigame.games.sanpo.name',
     description: 'ランダム生成ダンジョンを散歩して歩数×1EXP',
-    descriptionKey: 'selection.miniexp.games.sanpo.description',
+    descriptionKey: 'minigame.games.sanpo.description',
     categoryIds: ['toy'],
     create
   });

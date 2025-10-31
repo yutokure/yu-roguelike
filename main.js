@@ -4,6 +4,60 @@ if (!i18n) {
     throw new Error('I18n module failed to load');
 }
 
+/**
+ * ミニゲーム用のローカライズヘルパーを生成します。
+ * 各ミニゲームにスコープされた翻訳キーを解決し、グローバルなI18n機能に接続します。
+ * @param {object} def - ミニゲームの定義オブジェクト ({ id, textKeyPrefix })
+ * @returns {{ t: function(string, string|Function, object): string }|null}
+ */
+window.createMiniGameLocalization = function(def) {
+    const i18n = window.I18n;
+    if (!i18n || typeof i18n.t !== 'function') {
+        console.warn('[createMiniGameLocalization] Global I18n object not found.');
+        return null;
+    }
+
+    const prefixes = [];
+    if (def?.textKeyPrefix) {
+        prefixes.push(def.textKeyPrefix);
+    }
+    if (def?.id) {
+        prefixes.push(`minigame.games.${def.id}`);
+        prefixes.push(`games.${def.id}`);
+    }
+
+    const computeFallback = (fallback, params) => {
+        if (typeof fallback === 'function') {
+            try {
+                const value = fallback(params || {});
+                return value == null ? '' : String(value);
+            } catch (error) {
+                console.warn(`[createMiniGameLocalization] Failed to evaluate fallback for ${def?.id}:`, error);
+                return '';
+            }
+        }
+        return fallback == null ? '' : String(fallback);
+    };
+
+    return {
+        t: function(key, fallback, params) {
+            if (!key) {
+                return computeFallback(fallback, params);
+            }
+            for (const prefix of prefixes) {
+                const fullKey = `${prefix}.${key}`;
+                if (i18n.exists(fullKey)) {
+                    return i18n.t(fullKey, params);
+                }
+            }
+            if (i18n.exists(key)) {
+                return i18n.t(key, params);
+            }
+            return computeFallback(fallback, params);
+        }
+    };
+};
+
 const translate = (key, params) => i18n.t(key, params);
 
 function formatTemplateString(template, params) {

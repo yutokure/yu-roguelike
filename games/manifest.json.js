@@ -251,12 +251,12 @@ window.MINIEXP_MANIFEST = [
   {
     id: 'sandbox_breakout',
     name: 'サンドボックスブロック崩し',
-    nameKey: 'selection.miniexp.games.sandbox_breakout.name',
+    nameKey: 'minigame.games.sandbox_breakout.name',
     entry: 'games/sandbox_breakout.js',
     version: '0.1.0',
     author: 'mod',
     description: '作ったステージをすぐにプレイできるブロック崩し。カスタム硬さとインポート/エクスポート対応',
-    descriptionKey: 'selection.miniexp.games.sandbox_breakout.description',
+    descriptionKey: 'minigame.games.sandbox_breakout.description',
     category: 'アクション',
     categories: ['アクション'],
     categoryIds: ['action']

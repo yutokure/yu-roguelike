@@ -7,10 +7,7 @@
   function create(root, awardXp, opts){
     const shortcuts = opts?.shortcuts;
     const dungeonApi = opts?.dungeon;
-    const localization = opts?.localization
-      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
-        ? window.createMiniGameLocalization({ id: 'sanpo' })
-        : null);
+    const localization = opts?.localization || null;
 
     const text = (key, fallback, params) => {
       if (key && localization && typeof localization.t === 'function'){

@@ -35,10 +35,7 @@
   }
 
   function create(root, awardXp, opts){
-    const localization = opts?.localization
-      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
-        ? window.createMiniGameLocalization({ id: 'sandbox_breakout', textKeyPrefix: 'games.sandboxBreakout' })
-        : null);
+    const localization = opts?.localization || null;
 
     function computeFallback(fallback, params){
       if (typeof fallback === 'function'){

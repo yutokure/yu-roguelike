@@ -2,6 +2,12 @@
   'use strict';
 
   const STYLE_ID = 'mini-image-viewer-style';
+  const ZOOM_SLIDER_MIN = -100;
+  const ZOOM_SLIDER_MAX = 100;
+  const ZOOM_SLIDER_STEP = 1;
+  const ZOOM_WHEEL_STEP = 2;
+  const ZOOM_MIN = Math.pow(2, ZOOM_SLIDER_MIN / 10);
+  const ZOOM_MAX = Math.pow(2, ZOOM_SLIDER_MAX / 10);
   const DEFAULT_STATE = Object.freeze({
     zoom: 1,
     rotation: 0,
@@ -13,8 +19,6 @@
     rotateY: 0,
     perspective: 800
   });
-  const ZOOM_MIN = 0.1;
-  const ZOOM_MAX = 8;
   const STRETCH_MIN = 0.2;
   const STRETCH_MAX = 4;
   const PERSPECTIVE_MIN = 200;
@@ -24,6 +28,10 @@
   const XP_ON_LOAD = 10;
 
   const i18n = window.I18n || null;
+
+  function getUserLocale(){
+    return (i18n && typeof i18n.getLocale === 'function' && i18n.getLocale()) || 'ja-JP';
+  }
 
   function translate(key, fallback){
     if (key && i18n && typeof i18n.t === 'function'){
@@ -59,13 +67,13 @@
 .mini-image-viewer-title { margin:0; font-size:22px; font-weight:700; color:#0f172a; }
 .mini-image-viewer-subtitle { margin:0; font-size:14px; color:#475569; }
 .mini-image-viewer-exp { margin:0; font-size:13px; color:#1d4ed8; font-weight:600; }
-.mini-image-viewer-body { display:flex; flex-wrap:wrap; gap:16px; }
-.mini-image-viewer-stage-wrapper { flex:1 1 360px; display:flex; flex-direction:column; gap:8px; }
-.mini-image-viewer-stage { position:relative; border:1px solid rgba(102,126,234,0.35); border-radius:12px; background:rgba(238,242,255,0.85); min-height:260px; height:min(60vh, 720px); max-height:min(70vh, 720px); width:100%; max-width:100%; flex:1 1 100%; align-self:stretch; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:grab; transition:border-color 0.2s ease, box-shadow 0.2s ease; }
+.mini-image-viewer-body { display:flex; flex-wrap:wrap; gap:16px; align-items:stretch; }
+.mini-image-viewer-stage-wrapper { flex:1 1 360px; display:flex; flex-direction:column; gap:8px; min-width:0; }
+.mini-image-viewer-stage { position:relative; border:1px solid rgba(102,126,234,0.35); border-radius:12px; background:rgba(238,242,255,0.85); min-height:260px; height:min(60vh, 720px); max-height:min(70vh, 720px); width:100%; max-width:100%; flex:1 1 100%; align-self:stretch; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:grab; transition:border-color 0.2s ease, box-shadow 0.2s ease; min-width:0; }
 .mini-image-viewer-stage:focus-visible { outline:3px solid rgba(102,126,234,0.6); outline-offset:2px; }
 .mini-image-viewer-stage.dragging { cursor:grabbing; border-color:rgba(102,126,234,0.65); box-shadow:inset 0 0 0 2px rgba(102,126,234,0.15); }
 .mini-image-viewer-stage.drag-over { border-color:#60a5fa; box-shadow:0 0 0 3px rgba(96,165,250,0.35); }
-.mini-image-viewer-stage img { max-width:none; max-height:none; transform-origin:center center; user-select:none; pointer-events:none; display:none; }
+.mini-image-viewer-stage img { max-width:100%; max-height:100%; transform-origin:center center; user-select:none; pointer-events:none; display:none; }
 .mini-image-viewer-stage.has-image img { display:block; }
 .mini-image-viewer-placeholder { position:absolute; inset:16px; display:flex; align-items:center; justify-content:center; text-align:center; color:#64748b; font-size:14px; line-height:1.5; pointer-events:none; transition:opacity 0.2s ease; }
 .mini-image-viewer-stage.has-image .mini-image-viewer-placeholder { opacity:0; }
@@ -73,7 +81,7 @@
 .mini-image-viewer-message { min-height:22px; font-size:13px; color:#0f172a; }
 .mini-image-viewer-message.error { color:#b91c1c; }
 .mini-image-viewer-message.success { color:#166534; }
-.mini-image-viewer-controls { flex:1 1 260px; display:flex; flex-direction:column; gap:12px; }
+.mini-image-viewer-controls { flex:1 1 260px; display:flex; flex-direction:column; gap:12px; min-width:0; }
 .mini-image-viewer-upload { display:flex; flex-direction:column; gap:8px; }
 .mini-image-viewer-file-label { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 16px; background:linear-gradient(135deg,#667eea,#764ba2); color:#f8fafc; border-radius:999px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(102,126,234,0.25); transition:transform 0.2s ease, box-shadow 0.2s ease; }
 .mini-image-viewer-file-label:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(102,126,234,0.35); }
@@ -107,7 +115,11 @@
   }
 
   function formatPercent(value){
-    return `${Math.round(value * 100)}%`;
+    if (!Number.isFinite(value)) return '0%';
+    const percentage = value * 100;
+    const abs = Math.abs(percentage);
+    const digits = abs >= 100 ? 0 : abs >= 10 ? 1 : 2;
+    return `${percentage.toFixed(digits)}%`;
   }
 
   function formatDegrees(value){
@@ -133,7 +145,7 @@
     if (!Number.isFinite(timestamp)) return '-';
     const date = new Date(timestamp);
     if (Number.isNaN(date.getTime())) return '-';
-    const locale = (i18n && typeof i18n.getLocale === 'function' && i18n.getLocale()) || 'ja-JP';
+    const locale = getUserLocale();
     try {
       return new Intl.DateTimeFormat(locale, {
         year: 'numeric',
@@ -158,7 +170,7 @@
   function formatExp(value){
     const number = Number(value) || 0;
     const formatter = (typeof Intl !== 'undefined' && Intl.NumberFormat)
-      ? new Intl.NumberFormat((i18n && typeof i18n.getLocale === 'function' && i18n.getLocale()) || 'ja-JP', { maximumFractionDigits: 2 })
+      ? new Intl.NumberFormat(getUserLocale(), { maximumFractionDigits: 2 })
       : null;
     return formatter ? formatter.format(number) : number.toFixed(2);
   }
@@ -177,6 +189,48 @@
 
   function cloneDefaultState(){
     return { ...DEFAULT_STATE };
+  }
+
+  function getEffectiveScale(currentState){
+    if (!currentState) return { x: 1, y: 1 };
+    const scaleX = clamp(currentState.zoom * currentState.stretchX, ZOOM_MIN * STRETCH_MIN, ZOOM_MAX * STRETCH_MAX);
+    const scaleY = clamp(currentState.zoom * currentState.stretchY, ZOOM_MIN * STRETCH_MIN, ZOOM_MAX * STRETCH_MAX);
+    return { x: scaleX, y: scaleY };
+  }
+
+  function zoomFromSliderValue(value){
+    const slider = clamp(Number(value), ZOOM_SLIDER_MIN, ZOOM_SLIDER_MAX);
+    const snapped = Math.round(slider / ZOOM_SLIDER_STEP) * ZOOM_SLIDER_STEP;
+    const exponent = snapped / 10;
+    const zoom = Math.pow(2, exponent);
+    return clamp(zoom, ZOOM_MIN, ZOOM_MAX);
+  }
+
+  function sliderValueFromZoom(zoom){
+    if (!Number.isFinite(zoom) || zoom <= 0) return 0;
+    const log2 = typeof Math.log2 === 'function'
+      ? Math.log2(zoom)
+      : Math.log(zoom) / Math.log(2);
+    const sliderValue = log2 * 10;
+    const clamped = clamp(sliderValue, ZOOM_SLIDER_MIN, ZOOM_SLIDER_MAX);
+    return Math.round(clamped / ZOOM_SLIDER_STEP) * ZOOM_SLIDER_STEP;
+  }
+
+  function formatZoomMultiplier(value){
+    if (!Number.isFinite(value) || value <= 0) return '0倍';
+    const locale = getUserLocale();
+    const abs = Math.abs(value);
+    let digits;
+    if (abs >= 100) digits = 0;
+    else if (abs >= 10) digits = 1;
+    else if (abs >= 1) digits = 2;
+    else if (abs >= 0.1) digits = 3;
+    else digits = 4;
+    const formatter = (typeof Intl !== 'undefined' && Intl.NumberFormat)
+      ? new Intl.NumberFormat(locale, { minimumFractionDigits: 0, maximumFractionDigits: digits })
+      : null;
+    const formatted = formatter ? formatter.format(value) : value.toFixed(digits);
+    return `${formatted}倍`;
   }
 
   function create(root, awardXp){
@@ -268,7 +322,7 @@
           <div class="mini-image-viewer-control-group">
             <label for="${ids.zoom}">${escapeHtml(zoomLabel)}</label>
             <div class="mini-image-viewer-control">
-              <input type="range" id="${ids.zoom}" min="${ZOOM_MIN}" max="${ZOOM_MAX}" step="0.01" value="1" />
+              <input type="range" id="${ids.zoom}" min="${ZOOM_SLIDER_MIN}" max="${ZOOM_SLIDER_MAX}" step="${ZOOM_SLIDER_STEP}" value="0" />
               <span id="${ids.zoomValue}" class="mini-image-viewer-value">100%</span>
             </div>
           </div>
@@ -453,7 +507,7 @@
 
     function updateValueLabels(){
       if (!refs.zoomValue) return;
-      refs.zoomValue.textContent = formatPercent(state.zoom);
+      refs.zoomValue.textContent = `${formatPercent(state.zoom)} (${formatZoomMultiplier(state.zoom)})`;
       refs.rotationValue.textContent = formatDegrees(state.rotation);
       refs.stretchXValue.textContent = formatPercent(state.stretchX);
       refs.stretchYValue.textContent = formatPercent(state.stretchY);
@@ -464,7 +518,7 @@
 
     function syncInputs(){
       if (!refs.zoom) return;
-      refs.zoom.value = state.zoom;
+      refs.zoom.value = String(sliderValueFromZoom(state.zoom));
       refs.rotation.value = state.rotation;
       refs.stretchX.value = state.stretchX;
       refs.stretchY.value = state.stretchY;
@@ -603,10 +657,35 @@
     function onWheel(event){
       if (!currentFile) return;
       event.preventDefault();
+      const oldScale = getEffectiveScale(state);
+      const { panX: currentPanX = 0, panY: currentPanY = 0 } = state;
+      let pointerOffset = null;
+      if (refs.stage && typeof event.clientX === 'number' && typeof event.clientY === 'number'){
+        const rect = refs.stage.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        pointerOffset = {
+          x: event.clientX - centerX,
+          y: event.clientY - centerY
+        };
+      }
       const direction = event.deltaY < 0 ? 1 : -1;
-      const factor = direction > 0 ? 1.1 : 0.9;
-      state.zoom = clamp(state.zoom * factor, ZOOM_MIN, ZOOM_MAX);
-      refs.zoom.value = state.zoom;
+      const currentSlider = sliderValueFromZoom(state.zoom);
+      const nextSlider = clamp(currentSlider + direction * ZOOM_WHEEL_STEP, ZOOM_SLIDER_MIN, ZOOM_SLIDER_MAX);
+      if (nextSlider === currentSlider) return;
+      state.zoom = zoomFromSliderValue(nextSlider);
+      refs.zoom.value = String(nextSlider);
+      const newScale = getEffectiveScale(state);
+      if (pointerOffset){
+        const scaleRatioX = newScale.x / oldScale.x;
+        const scaleRatioY = newScale.y / oldScale.y;
+        if (Number.isFinite(scaleRatioX) && scaleRatioX > 0){
+          state.panX = pointerOffset.x - scaleRatioX * (pointerOffset.x - currentPanX);
+        }
+        if (Number.isFinite(scaleRatioY) && scaleRatioY > 0){
+          state.panY = pointerOffset.y - scaleRatioY * (pointerOffset.y - currentPanY);
+        }
+      }
       updateTransform();
       updateValueLabels();
     }
@@ -650,7 +729,9 @@
     }
 
     function onZoomInput(){
-      state.zoom = Number(refs.zoom.value);
+      const sliderValue = Number(refs.zoom.value);
+      state.zoom = zoomFromSliderValue(sliderValue);
+      refs.zoom.value = String(sliderValueFromZoom(state.zoom));
       updateTransform();
       updateValueLabels();
     }

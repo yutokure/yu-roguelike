@@ -141,6 +141,7 @@
 
     const VIEWPORT_RENDER_SIZE = 640;
     const MINIMAP_RENDER_SIZE = 220;
+    const BASE_TILE_PIXEL = 25;
 
     const canvas = document.createElement('canvas');
     canvas.width = VIEWPORT_RENDER_SIZE;
@@ -397,12 +398,40 @@
       camX = clamp(camX, 0, maxWidth - cameraWidth);
       camY = clamp(camY, 0, maxHeight - cameraHeight);
 
-      ctx.drawImage(background.canvas, camX, camY, cameraWidth, cameraHeight, 0, 0, canvas.width, canvas.height);
+      const canvasAspect = canvas.width / canvas.height;
+      const cameraAspect = cameraHeight > 0 ? (cameraWidth / cameraHeight) : 1;
+      let destWidth = canvas.width;
+      let destHeight = canvas.height;
+      let destOffsetX = 0;
+      let destOffsetY = 0;
+      if (cameraAspect > 0){
+        if (cameraAspect > canvasAspect){
+          destHeight = destWidth / cameraAspect;
+          destOffsetY = (canvas.height - destHeight) * 0.5;
+        } else if (cameraAspect < canvasAspect){
+          destWidth = destHeight * cameraAspect;
+          destOffsetX = (canvas.width - destWidth) * 0.5;
+        }
+      }
 
-      const scaleX = canvas.width / cameraWidth;
-      const scaleY = canvas.height / cameraHeight;
-      const screenX = (player.x - camX) * scaleX;
-      const screenY = (player.y - camY) * scaleY;
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        background.canvas,
+        camX,
+        camY,
+        cameraWidth,
+        cameraHeight,
+        destOffsetX,
+        destOffsetY,
+        destWidth,
+        destHeight
+      );
+
+      const scaleX = destWidth / cameraWidth;
+      const scaleY = destHeight / cameraHeight;
+      const screenX = destOffsetX + (player.x - camX) * scaleX;
+      const screenY = destOffsetY + (player.y - camY) * scaleY;
       const radius = Math.max(4, player.radius * (scaleX + scaleY) * 0.5);
 
       ctx.fillStyle = '#38bdf8';
@@ -416,10 +445,40 @@
       if (showMiniMap){
         const miniCtx = miniMapCanvas.getContext('2d');
         miniCtx.clearRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
-        miniCtx.drawImage(background.canvas, 0, 0, miniMapCanvas.width, miniMapCanvas.height);
-        const px = (player.x / maxWidth) * miniMapCanvas.width;
-        const py = (player.y / maxHeight) * miniMapCanvas.height;
-        const miniR = Math.max(3, player.radius * Math.min(miniMapCanvas.width, miniMapCanvas.height) / Math.max(maxWidth, maxHeight));
+        miniCtx.fillStyle = '#020617';
+        miniCtx.fillRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
+        const mapAspect = maxHeight > 0 ? (maxWidth / maxHeight) : 1;
+        const miniCanvasAspect = miniMapCanvas.width / miniMapCanvas.height;
+        let miniWidth = miniMapCanvas.width;
+        let miniHeight = miniMapCanvas.height;
+        let miniOffsetX = 0;
+        let miniOffsetY = 0;
+        if (mapAspect > 0){
+          if (mapAspect > miniCanvasAspect){
+            miniHeight = miniWidth / mapAspect;
+            miniOffsetY = (miniMapCanvas.height - miniHeight) * 0.5;
+          } else if (mapAspect < miniCanvasAspect){
+            miniWidth = miniHeight * mapAspect;
+            miniOffsetX = (miniMapCanvas.width - miniWidth) * 0.5;
+          }
+        }
+        miniCtx.drawImage(
+          background.canvas,
+          0,
+          0,
+          maxWidth,
+          maxHeight,
+          miniOffsetX,
+          miniOffsetY,
+          miniWidth,
+          miniHeight
+        );
+        const safeMaxWidth = Math.max(1, maxWidth);
+        const safeMaxHeight = Math.max(1, maxHeight);
+        const px = miniOffsetX + (player.x / safeMaxWidth) * miniWidth;
+        const py = miniOffsetY + (player.y / safeMaxHeight) * miniHeight;
+        const miniScale = Math.min(miniWidth / safeMaxWidth, miniHeight / safeMaxHeight);
+        const miniR = Math.max(3, player.radius * miniScale);
         miniCtx.fillStyle = '#facc15';
         miniCtx.beginPath();
         miniCtx.arc(px, py, miniR, 0, Math.PI * 2);
@@ -595,8 +654,10 @@
       const pixelHeight = stage.pixelHeight || (stage.height * stage.tileSize);
       canvas.width = VIEWPORT_RENDER_SIZE;
       canvas.height = VIEWPORT_RENDER_SIZE;
-      cameraBaseWidth = Math.min(pixelWidth, VIEWPORT_RENDER_SIZE);
-      cameraBaseHeight = Math.min(pixelHeight, VIEWPORT_RENDER_SIZE);
+      const desiredBaseWidth = Math.max(stage.tileSize * 2, (VIEWPORT_RENDER_SIZE * stage.tileSize) / BASE_TILE_PIXEL);
+      const desiredBaseHeight = Math.max(stage.tileSize * 2, (VIEWPORT_RENDER_SIZE * stage.tileSize) / BASE_TILE_PIXEL);
+      cameraBaseWidth = Math.min(pixelWidth, desiredBaseWidth);
+      cameraBaseHeight = Math.min(pixelHeight, desiredBaseHeight);
       currentZoom = 1;
       targetZoom = 1;
       zoomSlider.value = '1';

@@ -35,7 +35,19 @@
   }
 
   function create(root, awardXp, opts){
-    const localization = opts?.localization || null;
+    // Align localization handling with other mini games (e.g., othello, physics_sandbox)
+    // Ensure standalone use resolves keys under games.sandboxBreakout.* by passing explicit prefixes.
+    const localization = (opts && opts.localization)
+      || (typeof window !== 'undefined' && typeof window.createMiniGameLocalization === 'function'
+        ? window.createMiniGameLocalization({
+            id: 'sandbox_breakout',
+            // In‑game UI texts live under games.sandboxBreakout.* in locales
+            localizationKey: 'games.sandboxBreakout',
+            textKeyPrefix: 'games.sandboxBreakout',
+            legacyKeyPrefixes: ['games.sandboxBreakout']
+          })
+        : null);
+
 
     function computeFallback(fallback, params){
       if (typeof fallback === 'function'){
@@ -57,15 +69,23 @@
     }
 
     function text(key, fallback, params){
-      if (localization && typeof localization.t === 'function'){
+      if (key && localization && typeof localization.t === 'function'){
         try {
-          const translated = localization.t(key, fallback, params);
-          if (translated != null) return typeof translated === 'string' ? translated : String(translated);
-        } catch (error){
-          console.warn('[sandbox_breakout] Failed to translate key via localization:', key, error);
+          const localized = localization.t(key, fallback, params);
+          if (localized != null){
+            return localized;
+          }
+        } catch (error) {
+          console.warn('[sandbox_breakout] Failed to translate key:', key, error);
         }
       }
-      return computeFallback(fallback, params);
+      if (typeof fallback === 'function'){
+        try { return fallback(params); } catch (error) {
+          console.warn('[sandbox_breakout] Failed to compute fallback text for key:', key, error);
+          return '';
+        }
+      }
+      return fallback ?? '';
     }
 
     const container = document.createElement('div');
@@ -82,7 +102,7 @@
     container.style.boxShadow = '0 18px 42px rgba(15,23,42,0.55)';
 
     const title = document.createElement('h2');
-    title.textContent = text('title', 'サンドボックスブロック崩し');
+    title.textContent = text('games.sandboxBreakout.title', 'サンドボックスブロック崩し');
     title.style.textAlign = 'center';
     title.style.margin = '12px 0 0 0';
     title.style.fontSize = '20px';
@@ -91,7 +111,7 @@
     const modeInfo = document.createElement('div');
     modeInfo.style.textAlign = 'center';
     modeInfo.style.fontSize = '13px';
-    modeInfo.textContent = text('modeInfo', 'エディタで配置 → そのままプレイ / ステージのインポート・エクスポートに対応');
+    modeInfo.textContent = text('games.sandboxBreakout.modeInfo', 'エディタで配置 → そのままプレイ / ステージのインポート・エクスポートに対応');
     container.appendChild(modeInfo);
 
     const canvas = document.createElement('canvas');
@@ -115,23 +135,23 @@
     container.appendChild(toolbar);
 
     const modeLabel = document.createElement('span');
-    modeLabel.textContent = text('mode.label.edit', 'モード: 編集');
+    modeLabel.textContent = text('games.sandboxBreakout.mode.label.edit', 'モード: 編集');
     modeLabel.style.fontWeight = '600';
     toolbar.appendChild(modeLabel);
 
     const playButton = document.createElement('button');
-    playButton.textContent = text('buttons.play', '▶ プレイ開始');
+    playButton.textContent = text('games.sandboxBreakout.buttons.play', '▶ プレイ開始');
     styleButton(playButton);
     toolbar.appendChild(playButton);
 
     const editButton = document.createElement('button');
-    editButton.textContent = text('buttons.returnToEdit', '⏹ 編集に戻る');
+    editButton.textContent = text('games.sandboxBreakout.buttons.returnToEdit', '⏹ 編集に戻る');
     styleButton(editButton);
     editButton.disabled = true;
     toolbar.appendChild(editButton);
 
     const clearButton = document.createElement('button');
-    clearButton.textContent = text('buttons.clearAll', '全消去');
+    clearButton.textContent = text('games.sandboxBreakout.buttons.clearAll', '全消去');
     styleButton(clearButton);
     toolbar.appendChild(clearButton);
 
@@ -143,8 +163,8 @@
     gridControls.style.flexWrap = 'wrap';
     container.appendChild(gridControls);
 
-    const colsInput = labelledNumber(text('grid.columns', '列'), DEFAULT_COLS, MIN_COLS, MAX_COLS);
-    const rowsInput = labelledNumber(text('grid.rows', '行'), DEFAULT_ROWS, MIN_ROWS, MAX_ROWS);
+    const colsInput = labelledNumber(text('games.sandboxBreakout.grid.columns', '列'), DEFAULT_COLS, MIN_COLS, MAX_COLS);
+    const rowsInput = labelledNumber(text('games.sandboxBreakout.grid.rows', '行'), DEFAULT_ROWS, MIN_ROWS, MAX_ROWS);
     gridControls.appendChild(colsInput.wrapper);
     gridControls.appendChild(rowsInput.wrapper);
 
@@ -157,7 +177,7 @@
     container.appendChild(palette);
 
     const paletteLabel = document.createElement('div');
-    paletteLabel.textContent = text('palette.label', '配置するブロック:');
+    paletteLabel.textContent = text('games.sandboxBreakout.palette.label', '配置するブロック:');
     paletteLabel.style.textAlign = 'center';
     paletteLabel.style.fontSize = '13px';
     paletteLabel.style.marginBottom = '4px';
@@ -171,7 +191,7 @@
     hardnessWrapper.style.fontSize = '13px';
     hardnessWrapper.style.marginBottom = '4px';
     const hardnessLabel = document.createElement('span');
-    hardnessLabel.textContent = text('hardness.label', 'カスタム硬さ:');
+    hardnessLabel.textContent = text('games.sandboxBreakout.hardness.label', 'カスタム硬さ:');
     const hardnessInput = document.createElement('input');
     hardnessInput.type = 'number';
     hardnessInput.min = '1';
@@ -188,7 +208,7 @@
     container.insertBefore(hardnessWrapper, palette.nextSibling);
 
     const exportArea = document.createElement('textarea');
-    exportArea.placeholder = text('io.placeholder', 'インポート/エクスポート用JSONがここに表示されます');
+    exportArea.placeholder = text('games.sandboxBreakout.io.placeholder', 'インポート/エクスポート用JSONがここに表示されます');
     exportArea.style.width = '100%';
     exportArea.style.minHeight = '80px';
     exportArea.style.padding = '8px';
@@ -206,13 +226,13 @@
     ioControls.style.alignItems = 'center';
 
     const exportButton = document.createElement('button');
-    exportButton.textContent = text('buttons.export', 'エクスポート');
+    exportButton.textContent = text('games.sandboxBreakout.buttons.export', 'エクスポート');
     styleButton(exportButton);
     const importButton = document.createElement('button');
-    importButton.textContent = text('buttons.import', 'インポート');
+    importButton.textContent = text('games.sandboxBreakout.buttons.import', 'インポート');
     styleButton(importButton);
     const copyButton = document.createElement('button');
-    copyButton.textContent = text('buttons.copy', 'コピー');
+    copyButton.textContent = text('games.sandboxBreakout.buttons.copy', 'コピー');
     styleButton(copyButton);
 
     const message = document.createElement('div');
@@ -237,7 +257,7 @@
       if (block.id === 'empty') continue;
       const btn = document.createElement('button');
       styleButton(btn);
-      btn.textContent = text(block.labelKey, block.labelFallback);
+      btn.textContent = text(`games.sandboxBreakout.${block.labelKey}`, block.labelFallback);
       btn.style.background = 'linear-gradient(135deg, ' + lighten(block.color, 0.2) + ', ' + block.color + ')';
       btn.style.border = '2px solid transparent';
       btn.dataset.blockId = block.id;
@@ -356,7 +376,7 @@
       btn.style.fontSize = '13px';
     }
 
-    function labelledNumber(labelText, value, min, max){
+  function labelledNumber(labelText, value, min, max){
       const wrapper = document.createElement('label');
       wrapper.style.display = 'flex';
       wrapper.style.flexDirection = 'column';
@@ -379,6 +399,37 @@
       wrapper.appendChild(span);
       wrapper.appendChild(input);
       return { wrapper, input };
+    }
+
+    // Re-apply visible UI texts based on the active locale
+    function refreshTexts(){
+      try {
+        title.textContent = text('games.sandboxBreakout.title', 'サンドボックスブロック崩し');
+        modeInfo.textContent = text('games.sandboxBreakout.modeInfo', 'エディタで配置 → そのままプレイ / ステージのインポート・エクスポートに対応');
+        const currentMode = (typeof mode === 'string') ? mode : 'edit';
+        modeLabel.textContent = (currentMode === 'edit')
+          ? text('games.sandboxBreakout.mode.label.edit', 'モード: 編集')
+          : text('games.sandboxBreakout.mode.label.play', 'モード: プレイ');
+        playButton.textContent = text('games.sandboxBreakout.buttons.play', '▶ プレイ開始');
+        editButton.textContent = text('games.sandboxBreakout.buttons.returnToEdit', '⏹ 編集に戻る');
+        clearButton.textContent = text('games.sandboxBreakout.buttons.clearAll', '全消去');
+        const colsLabelEl = colsInput.wrapper.querySelector('span');
+        if (colsLabelEl) colsLabelEl.textContent = text('games.sandboxBreakout.grid.columns', '列');
+        const rowsLabelEl = rowsInput.wrapper.querySelector('span');
+        if (rowsLabelEl) rowsLabelEl.textContent = text('games.sandboxBreakout.grid.rows', '行');
+        paletteLabel.textContent = text('games.sandboxBreakout.palette.label', '配置するブロック:');
+        hardnessLabel.textContent = text('games.sandboxBreakout.hardness.label', 'カスタム硬さ:');
+        exportArea.placeholder = text('games.sandboxBreakout.io.placeholder', 'インポート/エクスポート用JSONがここに表示されます');
+        exportButton.textContent = text('games.sandboxBreakout.buttons.export', 'エクスポート');
+        importButton.textContent = text('games.sandboxBreakout.buttons.import', 'インポート');
+        copyButton.textContent = text('games.sandboxBreakout.buttons.copy', 'コピー');
+        for (const btn of paletteButtons) {
+          const id = btn?.dataset?.blockId;
+          if (!id) continue;
+          const def = BLOCK_TYPES.find(b => b.id === id);
+          if (def) btn.textContent = text(`games.sandboxBreakout.${def.labelKey}`, def.labelFallback);
+        }
+      } catch {}
     }
 
     function lighten(color, amount){
@@ -444,7 +495,7 @@
       ctx.textBaseline = 'alphabetic';
       ctx.fillText(
         text(
-          'hud.editHint',
+          'games.sandboxBreakout.hud.editHint',
           ({ blockCount }) => `編集モード: クリックで配置、右クリックで削除 / ブロック数: ${blockCount}`,
           { blockCount: countBlocks(stage) }
         ),
@@ -458,10 +509,10 @@
       ctx.fillRect(0,0,CANVAS_WIDTH,48);
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '16px sans-serif';
-      ctx.fillText(text('hud.score', ({ score }) => `SCORE ${score}`, { score }), 20, 28);
-      ctx.fillText(text('hud.lives', ({ lives }) => `LIVES ${lives}`, { lives }), 180, 28);
-      ctx.fillText(text('hud.hits', ({ hits }) => `HITS ${hits}`, { hits }), 300, 28);
-      ctx.fillText(text('hud.returnHint', '編集中に戻るとリセット'), CANVAS_WIDTH - 220, 28);
+      ctx.fillText(text('games.sandboxBreakout.hud.score', ({ score }) => `SCORE ${score}`, { score }), 20, 28);
+      ctx.fillText(text('games.sandboxBreakout.hud.lives', ({ lives }) => `LIVES ${lives}`, { lives }), 180, 28);
+      ctx.fillText(text('games.sandboxBreakout.hud.hits', ({ hits }) => `HITS ${hits}`, { hits }), 300, 28);
+      ctx.fillText(text('games.sandboxBreakout.hud.returnHint', '編集中に戻るとリセット'), CANVAS_WIDTH - 220, 28);
       for (const brick of bricks) {
         if (Number.isFinite(brick.hp) && brick.hp <= 0) continue;
         const { x,y,w,h,type,hp,maxHp,def } = brick;
@@ -627,12 +678,12 @@
     function startPlay(){
       if (mode === 'play') return;
       if (countBlocks(stage) === 0) {
-        message.textContent = text('messages.placeBlocks', 'ブロックを配置してください');
+        message.textContent = text('games.sandboxBreakout.messages.placeBlocks', 'ブロックを配置してください');
         return;
       }
       message.textContent = '';
       mode = 'play';
-      modeLabel.textContent = text('mode.label.play', 'モード: プレイ');
+      modeLabel.textContent = text('games.sandboxBreakout.mode.label.play', 'モード: プレイ');
       playButton.disabled = true;
       editButton.disabled = false;
       canvas.style.cursor = 'none';
@@ -648,7 +699,7 @@
     function stopPlay(){
       if (mode === 'edit') return;
       mode = 'edit';
-      modeLabel.textContent = text('mode.label.edit', 'モード: 編集');
+      modeLabel.textContent = text('games.sandboxBreakout.mode.label.edit', 'モード: 編集');
       playButton.disabled = false;
       editButton.disabled = true;
       canvas.style.cursor = 'pointer';
@@ -745,13 +796,13 @@
         cells: cloneStage(stage)
       };
       exportArea.value = JSON.stringify(data);
-      message.textContent = text('messages.exported', 'ステージデータをエクスポートしました。');
+      message.textContent = text('games.sandboxBreakout.messages.exported', 'ステージデータをエクスポートしました。');
     });
 
     importButton.addEventListener('click', () => {
       try {
         const parsed = JSON.parse(exportArea.value);
-        if (!parsed || !Array.isArray(parsed.cells)) throw new Error(text('errors.invalidCells', 'cellsが不正です'));
+        if (!parsed || !Array.isArray(parsed.cells)) throw new Error(text('games.sandboxBreakout.errors.invalidCells', 'cellsが不正です'));
         let rows = Math.max(MIN_ROWS, Math.min(MAX_ROWS, parsed.rows || parsed.cells.length));
         let cols = Math.max(MIN_COLS, Math.min(MAX_COLS, parsed.cols || (parsed.cells[0] ? parsed.cells[0].length : MIN_COLS)));
         const newStage = createEmptyStage(rows, cols);
@@ -773,30 +824,31 @@
         stage = newStage;
         colsInput.input.value = String(cols);
         rowsInput.input.value = String(rows);
-        message.textContent = text('messages.imported', 'ステージをインポートしました。');
+        message.textContent = text('games.sandboxBreakout.messages.imported', 'ステージをインポートしました。');
         draw();
       } catch (err) {
         const errorMessage = err?.message || String(err);
-        message.textContent = text('messages.importFailed', ({ error }) => `インポートに失敗しました: ${error}`, { error: errorMessage });
+        message.textContent = text('games.sandboxBreakout.messages.importFailed', ({ error }) => `インポートに失敗しました: ${error}`, { error: errorMessage });
       }
     });
 
     copyButton.addEventListener('click', async () => {
       if (!navigator.clipboard) {
-        message.textContent = text('messages.copyUnsupported', 'クリップボード非対応のためコピーできません');
+        message.textContent = text('games.sandboxBreakout.messages.copyUnsupported', 'クリップボード非対応のためコピーできません');
         return;
       }
       try {
         await navigator.clipboard.writeText(exportArea.value);
-        message.textContent = text('messages.copySuccess', 'コピーしました');
+        message.textContent = text('games.sandboxBreakout.messages.copySuccess', 'コピーしました');
       } catch (err) {
         const errorMessage = err?.message || String(err);
-        message.textContent = text('messages.copyFailed', ({ error }) => `コピーに失敗: ${error}`, { error: errorMessage });
+        message.textContent = text('games.sandboxBreakout.messages.copyFailed', ({ error }) => `コピーに失敗: ${error}`, { error: errorMessage });
       }
     });
 
     function destroy(){
       stopPlay();
+      try { if (typeof detachLocaleChange === 'function') detachLocaleChange(); } catch {}
       window.removeEventListener('keydown', keyHandler);
       canvas.removeEventListener('mousemove', mouseMovePlay);
       canvas.removeEventListener('touchmove', touchMovePlay);
@@ -804,6 +856,25 @@
     }
 
     draw();
+
+    // Listen for locale changes to refresh visible labels
+    let detachLocaleChange = null;
+    if (localization && typeof localization.onChange === 'function') {
+      try {
+        detachLocaleChange = localization.onChange(() => {
+          refreshTexts();
+          try { draw(); } catch {}
+        });
+      } catch {}
+    }
+    try {
+      document.addEventListener('i18n:locale-changed', () => {
+        refreshTexts();
+        try { draw(); } catch {}
+      });
+    } catch {}
+    // Apply once for current locale
+    refreshTexts();
 
     return {
       start(){},
@@ -816,9 +887,13 @@
   window.registerMiniGame({
     id: 'sandbox_breakout',
     name: 'サンドボックスブロック崩し',
-    nameKey: 'minigame.games.sandbox_breakout.name',
+    // Selection list localizes via selection.miniexp.* keys
+    nameKey: 'selection.miniexp.games.sandbox_breakout.name',
+    // In-game UI texts live under games.sandboxBreakout.* in locales
+    textKeyPrefix: 'games.sandboxBreakout',
     description: 'ステージを自分で作り、そのままプレイできるブロック崩し。カスタム硬さ・インポート/エクスポート対応',
-    descriptionKey: 'minigame.games.sandbox_breakout.description',
+    descriptionKey: 'selection.miniexp.games.sandbox_breakout.description',
+    legacyKeyPrefixes: ['games.sandboxBreakout'],
     categoryIds: ['action'],
     create
   });

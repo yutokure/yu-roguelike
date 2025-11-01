@@ -20935,7 +20935,10 @@ async function startSelectedMiniGame() {
             adjustSp: (delta, opts) => adjustPlayerSpFromMini(delta, opts || {}),
             fillSp: (opts) => fillPlayerSpFromMini(opts || {})
         };
-        const localization = createMiniGameLocalization(def);
+        // Use the registered mod definition for localization so that
+        // any runtime-provided prefixes (e.g. textKeyPrefix/localizationKey)
+        // from registerMiniGame() are respected.
+        const localization = createMiniGameLocalization(mod);
         const createOptions = {
             difficulty: (miniexpDifficulty?.value || 'NORMAL'),
             shortcuts: shortcutController,

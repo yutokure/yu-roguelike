@@ -32,6 +32,7 @@
     const dictionaryCache = new Map();
     const loadingCache = new Map();
     const listeners = new Set();
+    const fallbackWarningCache = Object.create(null);
     const TEXT_NODE = typeof Node !== 'undefined' ? Node.TEXT_NODE : 3;
     const ELEMENT_CTOR = typeof Element !== 'undefined' ? Element : null;
     const DOCUMENT_CTOR = typeof Document !== 'undefined' ? Document : null;
@@ -43,11 +44,48 @@
     let activeFallbackLocale = FALLBACK_LOCALE;
     let ready = false;
 
+    function warnFallback(namespace, key, message, detail, level = 'warn') {
+        const cacheKey = key === undefined || key === null ? null : String(key);
+        if (cacheKey !== null) {
+            if (!fallbackWarningCache[namespace]) {
+                fallbackWarningCache[namespace] = new Set();
+            }
+            const store = fallbackWarningCache[namespace];
+            if (store.has(cacheKey)) return;
+            store.add(cacheKey);
+        }
+        if (typeof console === 'undefined') return;
+        const logger = typeof console[level] === 'function'
+            ? console[level].bind(console)
+            : typeof console.warn === 'function'
+                ? console.warn.bind(console)
+                : null;
+        if (!logger) return;
+        if (detail !== undefined) {
+            logger(`[i18n] ${message}`, detail);
+        } else {
+            logger(`[i18n] ${message}`);
+        }
+    }
+
+    function serializeOptions(options) {
+        if (!options) return 'default';
+        try {
+            return JSON.stringify(options);
+        } catch (error) {
+            warnFallback('options-serialization', null, 'Failed to serialize Intl options for fallback warning; using generic descriptor.', error);
+            return 'unserializable';
+        }
+    }
+
     function resolveLocale(locale) {
         if (typeof locale === 'string' && locale.trim()) {
             const normalized = locale.trim().toLowerCase();
             const matched = SUPPORTED_LOCALES.find((candidate) => candidate.toLowerCase() === normalized);
             if (matched) return matched;
+            warnFallback('locale', `unsupported:${normalized}`, `Unsupported locale "${locale}" requested; falling back to default "${DEFAULT_LOCALE}".`);
+        } else if (locale !== undefined && locale !== null) {
+            warnFallback('locale', `invalid:${String(locale)}`, `Invalid locale value "${String(locale)}" provided; falling back to default "${DEFAULT_LOCALE}".`);
         }
         return DEFAULT_LOCALE;
     }
@@ -57,6 +95,9 @@
         const fallback = LOCALE_FALLBACKS[locale];
         if (typeof fallback === 'string' && fallback && SUPPORTED_LOCALES.includes(fallback) && fallback !== locale) {
             return fallback;
+        }
+        if (locale && locale !== FALLBACK_LOCALE) {
+            warnFallback('fallback-locale', `default:${locale}`, `No specific fallback locale registered for "${locale}"; using default fallback "${FALLBACK_LOCALE}".`, undefined, 'info');
         }
         return FALLBACK_LOCALE;
     }
@@ -119,7 +160,12 @@
         const primary = dig(activeDictionary, key);
         if (primary !== undefined) return primary;
         const fallback = dig(fallbackDictionary, key);
-        if (fallback !== undefined) return fallback;
+        if (fallback !== undefined) {
+            if (activeFallbackLocale && activeFallbackLocale !== activeLocale) {
+                warnFallback('translation', `${activeLocale}|${activeFallbackLocale}|${key}`, `Missing translation for "${key}" in locale "${activeLocale}"; using fallback locale "${activeFallbackLocale}".`);
+            }
+            return fallback;
+        }
         return undefined;
     }
 
@@ -231,8 +277,28 @@
             }
         });
         if (typeof document !== 'undefined') {
-            const event = new CustomEvent('i18n:locale-changed', { detail: { locale } });
-            document.dispatchEvent(event);
+            const detail = { locale };
+            let event = null;
+            if (typeof CustomEvent === 'function') {
+                event = new CustomEvent('i18n:locale-changed', { detail });
+            } else if (typeof document.createEvent === 'function') {
+                try {
+                    const created = document.createEvent('CustomEvent');
+                    if (created && typeof created.initCustomEvent === 'function') {
+                        created.initCustomEvent('i18n:locale-changed', false, false, detail);
+                        event = created;
+                        warnFallback('custom-event', 'createEvent', 'CustomEvent constructor missing; using document.createEvent fallback.');
+                    }
+                } catch (error) {
+                    warnFallback('custom-event', 'createEvent:failure', 'Failed to create fallback CustomEvent; dispatching plain object event.', error);
+                }
+            }
+            if (!event) {
+                warnFallback('custom-event', 'plain-object', 'CustomEvent APIs unavailable; dispatching plain object event.');
+            }
+            if (typeof document.dispatchEvent === 'function') {
+                document.dispatchEvent(event || { type: 'i18n:locale-changed', detail });
+            }
         }
     }
 
@@ -282,6 +348,12 @@
             return new Intl.NumberFormat(locale, options).format(value);
         } catch (error) {
             const fallbackLocale = activeFallbackLocale || FALLBACK_LOCALE;
+            warnFallback(
+                'format-number',
+                `${locale}|${fallbackLocale}|${serializeOptions(options)}`,
+                `Intl.NumberFormat failed for locale "${locale}"; falling back to "${fallbackLocale}".`,
+                error,
+            );
             return new Intl.NumberFormat(fallbackLocale, options).format(value);
         }
     }
@@ -294,6 +366,12 @@
             return new Intl.DateTimeFormat(locale, options).format(date);
         } catch (error) {
             const fallbackLocale = activeFallbackLocale || FALLBACK_LOCALE;
+            warnFallback(
+                'format-date',
+                `${locale}|${fallbackLocale}|${serializeOptions(options)}`,
+                `Intl.DateTimeFormat failed for locale "${locale}"; falling back to "${fallbackLocale}".`,
+                error,
+            );
             return new Intl.DateTimeFormat(fallbackLocale, options).format(date);
         }
     }
@@ -304,6 +382,12 @@
             return new Intl.RelativeTimeFormat(locale, options).format(value, unit);
         } catch (error) {
             const fallbackLocale = activeFallbackLocale || FALLBACK_LOCALE;
+            warnFallback(
+                'format-relative-time',
+                `${locale}|${fallbackLocale}|${unit}|${serializeOptions(options)}`,
+                `Intl.RelativeTimeFormat failed for locale "${locale}"; falling back to "${fallbackLocale}".`,
+                error,
+            );
             return new Intl.RelativeTimeFormat(fallbackLocale, options).format(value, unit);
         }
     }
@@ -318,6 +402,13 @@
             }
         } catch (error) {
             // Ignore and fall back below.
+            const fallbackLocale = activeFallbackLocale || FALLBACK_LOCALE;
+            warnFallback(
+                'locale-compare',
+                `${primary}|${fallbackLocale}|${serializeOptions(options)}`,
+                `String.localeCompare failed for locale "${primary}"; falling back to "${fallbackLocale}".`,
+                error,
+            );
         }
         try {
             return String(left).localeCompare(String(right), activeFallbackLocale || FALLBACK_LOCALE, options);

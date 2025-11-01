@@ -12087,6 +12087,70 @@
     },
 
     "minigame": {
+      "games": {
+        "sandbox_breakout": {
+          "name": "Sandbox Breakout",
+          "description": "Create a stage and play it instantly. Supports custom hardness and import/export."
+        },
+        "sandboxBreakout": {
+          "title": "Sandbox Breakout",
+          "modeInfo": "Arrange blocks in the editor and jump straight into play. Supports stage import/export.",
+          "mode": {
+            "label": {
+              "edit": "Mode: Edit",
+              "play": "Mode: Play"
+            }
+          },
+          "buttons": {
+            "play": "▶ Start Play",
+            "returnToEdit": "⏹ Return to Edit",
+            "clearAll": "Clear All",
+            "export": "Export",
+            "import": "Import",
+            "copy": "Copy"
+          },
+          "grid": {
+            "columns": "Columns",
+            "rows": "Rows"
+          },
+          "palette": {
+            "label": "Block to place:"
+          },
+          "hardness": {
+            "label": "Custom hardness:"
+          },
+          "io": {
+            "placeholder": "Import/export JSON will appear here."
+          },
+          "blocks": {
+            "empty": "Empty",
+            "normal": "Normal block",
+            "hard": "Hard block (2)",
+            "unbreakable": "Unbreakable block",
+            "bonus": "Bonus block",
+            "custom": "Custom hardness"
+          },
+          "hud": {
+            "editHint": "Edit mode: click to place, right-click to remove / Blocks: {blockCount}",
+            "score": "SCORE {score}",
+            "lives": "LIVES {lives}",
+            "hits": "HITS {hits}",
+            "returnHint": "Returning to edit resets progress"
+          },
+          "messages": {
+            "placeBlocks": "Place some blocks first.",
+            "exported": "Stage data exported.",
+            "imported": "Stage imported.",
+            "importFailed": "Import failed: {error}",
+            "copyUnsupported": "Copy not supported in this browser.",
+            "copySuccess": "Copied to clipboard.",
+            "copyFailed": "Copy failed: {error}"
+          },
+          "errors": {
+            "invalidCells": "The \"cells\" field is invalid."
+          }
+        }
+      },
       "clock_hub": {
         "errors": {
           "noContainer": "Clock Hub requires a container"
@@ -19265,6 +19329,40 @@
     store['en'].games = {};
   }
   var enGames = store['en'].games;
+  if (!enGames.sanpo) {
+    enGames.sanpo = {
+      "name": "Stroll",
+      "description": "Wander a randomly generated dungeon and gain 1 EXP per step.",
+      "ui": {
+        "regenerate": "Regenerate",
+        "zoomLabel": "Zoom",
+        "slideshowLabel": "Slideshow mode",
+        "minimapTitle": "Minimap",
+        "stageInfo": "Type: {type} / Size: {size} / Tile: {tileSize}",
+        "seedInfo": "Seed: {seed}",
+        "stepsInfo": "Steps: {steps}",
+        "stageInfoEmpty": "Type: -",
+        "seedInfoEmpty": "Seed: -",
+        "stepsInfoEmpty": "Steps: 0",
+        "zoomInfo": "Zoom: {value}x",
+        "zoomDisplay": "{value}x",
+        "hideMap": "Minimap OFF",
+        "showMap": "Minimap ON",
+        "status": {
+          "paused": "Paused",
+          "walk": "Walking… Move with WASD/arrow keys. M toggles minimap, [ / ] adjust zoom.",
+          "noApi": "Dungeon API unavailable",
+          "generating": "Generating stage…",
+          "failed": "Failed to generate stage",
+          "ready": "Ready! Press Start to begin your stroll.",
+          "initializing": "Loading…",
+          "slideshow": "Slideshow on… The camera auto‑strolls.",
+          "readySlideshow": "Ready! Starting will begin the slideshow.",
+          "slideshowPaused": "Slideshow paused"
+        }
+      }
+    };
+  }
   if (!enGames.stopwatch) {
     enGames.stopwatch = {
       "header": {
@@ -19350,6 +19448,18 @@
     store['en'].selection.miniexp.games.jigsaw_puzzle = {
       "name": "Jigsaw Puzzle",
       "description": "Assemble any image by dragging jigsaw pieces. Choose the rows, columns, and picture freely."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.sanpo) {
+    store['en'].selection.miniexp.games.sanpo = {
+      "name": "Stroll",
+      "description": "Wander a randomly generated dungeon and gain 1 EXP per step."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.sandbox_breakout) {
+    store['en'].selection.miniexp.games.sandbox_breakout = {
+      "name": "Sandbox Breakout",
+      "description": "Create a stage and play it instantly. Supports custom hardness and import/export."
     };
   }
 

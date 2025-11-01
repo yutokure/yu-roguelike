@@ -19216,6 +19216,40 @@
     store['ja'].games = {};
   }
   var jaGames = store['ja'].games;
+  if (!jaGames.sanpo) {
+    jaGames.sanpo = {
+      "name": "散歩",
+      "description": "ランダム生成ダンジョンを散歩して歩数×1EXP",
+      "ui": {
+        "regenerate": "ステージ再生成",
+        "zoomLabel": "ズーム",
+        "slideshowLabel": "スライドショーモード",
+        "minimapTitle": "ミニマップ",
+        "stageInfo": "タイプ: {type} / サイズ: {size} / タイル: {tileSize}",
+        "seedInfo": "シード: {seed}",
+        "stepsInfo": "歩数: {steps}",
+        "stageInfoEmpty": "タイプ: -",
+        "seedInfoEmpty": "シード: -",
+        "stepsInfoEmpty": "歩数: 0",
+        "zoomInfo": "ズーム: {value}x",
+        "zoomDisplay": "{value}x",
+        "hideMap": "ミニマップOFF",
+        "showMap": "ミニマップON",
+        "status": {
+          "paused": "一時停止中",
+          "walk": "散歩中… WASD/矢印キーで移動。Mでミニマップ切替、[ / ] でズーム。",
+          "noApi": "ダンジョンAPIが利用できません",
+          "generating": "ステージ生成中…",
+          "failed": "ステージ生成に失敗しました",
+          "ready": "準備完了！開始ボタンで散歩を始めよう",
+          "initializing": "ロード中…",
+          "slideshow": "スライドショー中… 自動でカメラが散歩します。",
+          "readySlideshow": "準備完了！開始するとスライドショーが始まります",
+          "slideshowPaused": "スライドショー一時停止中"
+        }
+      }
+    };
+  }
   if (!jaGames.stopwatch) {
     jaGames.stopwatch = {
       "header": {
@@ -19301,6 +19335,18 @@
     store['ja'].selection.miniexp.games.jigsaw_puzzle = {
       "name": "ジグソーパズル",
       "description": "任意の画像をピースで組み立てるジグソーパズル"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.sanpo) {
+    store['ja'].selection.miniexp.games.sanpo = {
+      "name": "散歩",
+      "description": "ランダム生成ダンジョンを散歩して歩数×1EXP"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.sandbox_breakout) {
+    store['ja'].selection.miniexp.games.sandbox_breakout = {
+      "name": "サンドボックスブロック崩し",
+      "description": "作ったステージをすぐにプレイできるブロック崩し。カスタム硬さとインポート/エクスポート対応"
     };
   }
 

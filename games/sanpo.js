@@ -65,6 +65,9 @@
     controlPanel.style.display = 'flex';
     controlPanel.style.flexWrap = 'wrap';
     controlPanel.style.gap = '8px';
+    controlPanel.style.background = 'rgba(15,23,42,0.92)';
+    controlPanel.style.padding = '10px 12px';
+    controlPanel.style.borderRadius = '12px';
 
     const regenerateBtn = document.createElement('button');
     regenerateBtn.type = 'button';
@@ -119,7 +122,7 @@
     slideshowLabel.style.display = 'flex';
     slideshowLabel.style.alignItems = 'center';
     slideshowLabel.style.gap = '6px';
-    slideshowLabel.style.color = '#cbd5f5';
+    slideshowLabel.style.color = '#e2e8f0';
     slideshowLabel.style.fontWeight = '600';
 
     const slideshowCheckbox = document.createElement('input');
@@ -177,8 +180,11 @@
     miniMapContainer.appendChild(miniMapCanvas);
 
     const statusLabel = document.createElement('div');
-    statusLabel.style.color = '#94a3b8';
+    statusLabel.style.color = '#cbd5f5';
     statusLabel.style.fontSize = '0.9rem';
+    statusLabel.style.background = 'rgba(15,23,42,0.9)';
+    statusLabel.style.padding = '10px 12px';
+    statusLabel.style.borderRadius = '12px';
 
     wrapper.appendChild(infoPanel);
     wrapper.appendChild(controlPanel);
@@ -667,6 +673,7 @@
 
     function destroy(){
       stopLoop();
+      try { if (typeof detachLocaleChange === 'function') detachLocaleChange(); } catch {}
       document.removeEventListener('keydown', keyDownHandler);
       document.removeEventListener('keyup', keyUpHandler);
       regenerateBtn.removeEventListener('click', regenerateHandler);
@@ -727,9 +734,30 @@
       }
     }
 
+    // Locale-aware UI setup
+    function applyLocale(){
+      try {
+        miniMapTitle.textContent = text('games.sanpo.ui.minimapTitle', 'ミニマップ');
+        regenerateBtn.textContent = text('games.sanpo.ui.regenerate', 'ステージ再生成');
+        slideshowCheckbox.title = text('games.sanpo.ui.slideshowLabel', 'スライドショーモード');
+        slideshowText.textContent = text('games.sanpo.ui.slideshowLabel', 'スライドショーモード');
+        // Keep children intact; touch only the label text node
+        try { if (zoomLabel.firstChild && zoomLabel.firstChild.nodeType === 3) { zoomLabel.firstChild.nodeValue = text('games.sanpo.ui.zoomLabel', 'ズーム'); } } catch {}
+        updateStageInfo();
+        updateMiniMapVisibility();
+        applyRunningStatus();
+        const z = currentZoom.toFixed(2);
+        zoomValue.textContent = text('games.sanpo.ui.zoomDisplay', (p = {}) => `${p.value ?? z}x`, { value: z });
+      } catch {}
+    }
     updateMiniMapVisibility();
     updateStageInfo();
     updateStatus(text('games.sanpo.ui.status.initializing', 'ロード中…'));
+    let detachLocaleChange = null;
+    if (localization && typeof localization.onChange === 'function') {
+      try { detachLocaleChange = localization.onChange(() => applyLocale()); } catch {}
+    }
+    applyLocale();
 
     regenerateBtn.addEventListener('click', regenerateHandler);
     toggleMapBtn.addEventListener('click', toggleMapHandler);
@@ -746,10 +774,12 @@
   window.registerMiniGame({
     id: 'sanpo',
     name: '散歩',
-    nameKey: 'minigame.games.sanpo.name',
+    // Selection list should use selection.miniexp.* keys
+    nameKey: 'selection.miniexp.games.sanpo.name',
     description: 'ランダム生成ダンジョンを散歩して歩数×1EXP',
-    descriptionKey: 'minigame.games.sanpo.description',
+    descriptionKey: 'selection.miniexp.games.sanpo.description',
     categoryIds: ['toy'],
+    legacyKeyPrefixes: ['games.sanpo'],
     create
   });
 })();

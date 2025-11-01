@@ -118,6 +118,40 @@
     controlPanel.appendChild(toggleMapBtn);
     controlPanel.appendChild(zoomLabel);
 
+    const ZOOM_STORAGE_KEY = 'mini-sanpo.zoom';
+
+    function clampZoomValue(value){
+      const min = Number(zoomSlider.min);
+      const max = Number(zoomSlider.max);
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function loadPersistedZoom(){
+      if (typeof window === 'undefined') return null;
+      try {
+        const raw = window.localStorage?.getItem(ZOOM_STORAGE_KEY);
+        if (raw == null) return null;
+        const parsed = Number(raw);
+        return Number.isFinite(parsed) ? parsed : null;
+      } catch {}
+      return null;
+    }
+
+    function persistZoom(value){
+      if (typeof window === 'undefined') return;
+      try { window.localStorage?.setItem(ZOOM_STORAGE_KEY, String(value)); } catch {}
+    }
+
+    const storedZoom = loadPersistedZoom();
+    const initialZoom = clampZoomValue(Number.isFinite(storedZoom) ? storedZoom : 1);
+    const initialZoomText = initialZoom.toFixed(2);
+    zoomSlider.value = initialZoomText;
+    zoomValue.textContent = text(
+      'games.sanpo.ui.zoomDisplay',
+      (params = {}) => `${params.value ?? initialZoomText}x`,
+      { value: initialZoomText }
+    );
+
     const slideshowLabel = document.createElement('label');
     slideshowLabel.style.display = 'flex';
     slideshowLabel.style.alignItems = 'center';
@@ -209,8 +243,8 @@
     let stepsTaken = 0;
     let lastTile = null;
     let showMiniMap = true;
-    let targetZoom = 1;
-    let currentZoom = 1;
+    let targetZoom = initialZoom;
+    let currentZoom = initialZoom;
     let cameraBaseWidth = VIEWPORT_RENDER_SIZE;
     let cameraBaseHeight = VIEWPORT_RENDER_SIZE;
     let preparingStage = false;
@@ -317,13 +351,19 @@
     function updateZoomFromSlider(){
       const value = Number(zoomSlider.value);
       if (Number.isFinite(value)){
-        targetZoom = clamp(value, Number(zoomSlider.min), Number(zoomSlider.max));
+        const clamped = clampZoomValue(value);
+        targetZoom = clamped;
+        persistZoom(clamped);
+        if (!running){
+          currentZoom = clamped;
+          draw();
+        }
       }
     }
 
     function adjustZoom(delta){
       const currentValue = Number(zoomSlider.value);
-      const next = clamp(currentValue + delta, Number(zoomSlider.min), Number(zoomSlider.max));
+      const next = clampZoomValue(currentValue + delta);
       zoomSlider.value = next.toFixed(2);
       updateZoomFromSlider();
     }
@@ -658,10 +698,17 @@
       const desiredBaseHeight = Math.max(stage.tileSize * 2, (VIEWPORT_RENDER_SIZE * stage.tileSize) / BASE_TILE_PIXEL);
       cameraBaseWidth = Math.min(pixelWidth, desiredBaseWidth);
       cameraBaseHeight = Math.min(pixelHeight, desiredBaseHeight);
-      currentZoom = 1;
-      targetZoom = 1;
-      zoomSlider.value = '1';
-      zoomValue.textContent = text('games.sanpo.ui.zoomDisplay', (params = {}) => `${params.value ?? '1.00'}x`, { value: '1.00' });
+      const clampedZoom = clampZoomValue(targetZoom);
+      targetZoom = clampedZoom;
+      currentZoom = clampedZoom;
+      const zoomText = clampedZoom.toFixed(2);
+      zoomSlider.value = zoomText;
+      zoomValue.textContent = text(
+        'games.sanpo.ui.zoomDisplay',
+        (params = {}) => `${params.value ?? zoomText}x`,
+        { value: zoomText }
+      );
+      persistZoom(clampedZoom);
       miniMapCanvas.width = MINIMAP_RENDER_SIZE;
       miniMapCanvas.height = MINIMAP_RENDER_SIZE;
     }

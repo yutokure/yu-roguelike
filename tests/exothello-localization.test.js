@@ -35,6 +35,8 @@ assert.equal(
   exothelloEn.controls.sectionDescription,
   'Choose a mode, adjust the board, and decide the win rule before you begin.'
 );
+assert.equal(exothelloEn.controls.difficultyVeryEasy, 'Very Easy');
+assert.equal(exothelloEn.controls.difficultyVeryHard, 'Very Hard');
 assert.equal(exothelloEn.controls.playerColor, 'Turn order');
 assert.equal(exothelloEn.status.preparing, 'Preparing board...');
 assert.equal(
@@ -45,6 +47,15 @@ assert.equal(exothelloEn.result.win, 'You win!');
 assert.equal(exothelloEn.turn.player, 'Your turn');
 assert.equal(exothelloEn.turn.waiting, 'Waiting');
 assert.equal(exothelloEn.sandbox.tool.wall, 'Wall');
+assert.equal(exothelloEn.sandbox.sizeLabel, 'Board size');
+assert.equal(exothelloEn.sandbox.sizeApply, 'Apply size');
+assert.equal(exothelloEn.sandbox.dataLabel, 'Board data');
+assert.equal(
+  exothelloEn.sandbox.dataHint,
+  'Use B for black, W for white, . for empty, # for wall.'
+);
+assert.equal(exothelloEn.sandbox.import, 'Import');
+assert.equal(exothelloEn.sandbox.export, 'Export');
 assert.equal(exothelloEn.info.totals, 'Totals — Black: ${black}, White: ${white}');
 
 console.log('Ex-Othello Japanese localization is configured for MiniExp.');

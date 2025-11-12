@@ -863,6 +863,10 @@
             "name": "生命双六",
             "description": "驾驭生活事件，增长你的资产，并在职业棋盘游戏中积累经验。"
           },
+          "arrow_escape": {
+            "name": "箭头脱出",
+            "description": "按照逆向生成的顺序让箭头方块依次逃出棋盘。"
+          },
           "sliding_puzzle": {
             "name": "滑动拼图",
             "description": "解决8、15-和24格滑动谜题以获得经验。"
@@ -4829,6 +4833,26 @@
           "easy": "简单",
           "normal": "普通",
           "hard": "困难"
+        }
+      },
+      "arrow_escape": {
+        "title": "箭头脱出 ({difficulty})",
+        "description": "点击箭头方块，让它沿箭头方向滑出棋盘；路径被阻挡时无法移动。",
+        "actions": {
+          "reset": "重置"
+        },
+        "info": {
+          "remaining": "剩余方块",
+          "escaped": "已逃出",
+          "time": "耗时",
+          "clears": "通关次数"
+        },
+        "status": {
+          "clear": "通关！ {time} / 经验 {xp}",
+          "intro": "观察逆向生成的顺序，规划每一步的脱出路线。"
+        },
+        "block": {
+          "ariaLabel": "{direction} 方块"
         }
       },
       "sliding_puzzle": {

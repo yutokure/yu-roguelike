@@ -19216,6 +19216,29 @@
     store['ja'].games = {};
   }
   var jaGames = store['ja'].games;
+  if (!jaGames.arrow_escape) {
+    jaGames.arrow_escape = {
+      "name": "アローエスケープ",
+      "description": "矢印ブロックを順番に脱出させる逆再生パズル",
+      "title": "アローエスケープ ({difficulty})",
+      "actions": {
+        "reset": "リセット"
+      },
+      "info": {
+        "remaining": "残りブロック",
+        "escaped": "脱出済み",
+        "time": "経過時間",
+        "clears": "累計クリア"
+      },
+      "status": {
+        "clear": "クリア！ {time} / 取得EXP {xp}",
+        "intro": "逆再生法で生成された順番を読み解こう。"
+      },
+      "block": {
+        "ariaLabel": "{direction} ブロック"
+      }
+    };
+  }
   if (!jaGames.sanpo) {
     jaGames.sanpo = {
       "name": "散歩",
@@ -19287,6 +19310,28 @@
     store['ja'].miniexp.games = {};
   }
   var jaMiniExpGames = store['ja'].miniexp.games;
+  if (!jaMiniExpGames.arrow_escape) {
+    jaMiniExpGames.arrow_escape = {
+      "title": "アローエスケープ ({difficulty})",
+      "description": "矢印方向にクリックしてすべてのブロックを外へ脱出させよう。進路に他のブロックがあると動けません。",
+      "actions": {
+        "reset": "リセット"
+      },
+      "info": {
+        "remaining": "残りブロック",
+        "escaped": "脱出済み",
+        "time": "経過時間",
+        "clears": "累計クリア"
+      },
+      "status": {
+        "clear": "クリア！ {time} / 取得EXP {xp}",
+        "intro": "逆再生法で生成された順番を読み解こう。"
+      },
+      "block": {
+        "ariaLabel": "{direction} ブロック"
+      }
+    };
+  }
   if (!jaMiniExpGames.jigsaw_puzzle) {
     jaMiniExpGames.jigsaw_puzzle = {
       "title": "ジグソーパズル",
@@ -19330,6 +19375,12 @@
   }
   if (!store['ja'].selection.miniexp.games) {
     store['ja'].selection.miniexp.games = {};
+  }
+  if (!store['ja'].selection.miniexp.games.arrow_escape) {
+    store['ja'].selection.miniexp.games.arrow_escape = {
+      "name": "アローエスケープ",
+      "description": "矢印ブロックを順番に脱出させる逆再生パズル"
+    };
   }
   if (!store['ja'].selection.miniexp.games.jigsaw_puzzle) {
     store['ja'].selection.miniexp.games.jigsaw_puzzle = {

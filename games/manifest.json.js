@@ -392,6 +392,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['board']
   },
   {
+    id: 'arrow_escape',
+    name: 'アローエスケープ',
+    nameKey: 'selection.miniexp.games.arrow_escape.name',
+    entry: 'games/arrow_escape.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '矢印ブロックを順番に脱出させる逆再生パズル',
+    descriptionKey: 'selection.miniexp.games.arrow_escape.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'sliding_puzzle',
     name: 'スライドパズル',
     nameKey: 'selection.miniexp.games.sliding_puzzle.name',

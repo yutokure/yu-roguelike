@@ -1598,6 +1598,10 @@
             "name": "라이프 스고로쿠",
             "description": "커리어 보드 게임에서 인생의 사건을 탐색하고, 자산을 늘리고, 경험치를 쌓으세요."
           },
+          "arrow_escape": {
+            "name": "애로우 이스케이프",
+            "description": "역재생으로 생성된 순서를 따라 화살표 블록을 차례로 탈출시키세요."
+          },
           "sliding_puzzle": {
             "name": "슬라이딩 퍼즐",
             "description": "EXP를 위해 8타일, 15타일, 24타일 슬라이딩 퍼즐을 풀어보세요."
@@ -3903,6 +3907,27 @@
   if (!store["ko"]) { store["ko"] = {}; }
   if (!store["ko"].games) { store["ko"].games = {}; }
   var koGames = store["ko"].games;
+  koGames.arrow_escape = {
+    "name": "애로우 이스케이프",
+    "description": "역재생으로 생성된 순서를 따라 화살표 블록을 차례로 탈출시키세요.",
+    "title": "애로우 이스케이프 ({difficulty})",
+    "actions": {
+      "reset": "리셋"
+    },
+    "info": {
+      "remaining": "남은 블록",
+      "escaped": "탈출 완료",
+      "time": "경과 시간",
+      "clears": "클리어 수"
+    },
+    "status": {
+      "clear": "클리어! {time} / EXP {xp}",
+      "intro": "역재생으로 만든 순서를 파악해 탈출 경로를 계획하세요."
+    },
+    "block": {
+      "ariaLabel": "{direction} 블록"
+    }
+  };
   koGames.sanpo = {
     "name": "산책",
     "description": "무작위로 생성된 던전을 산책하며 걸음 수 ×1 EXP를 획득하세요.",

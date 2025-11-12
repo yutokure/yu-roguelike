@@ -353,6 +353,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'number_sum_sudoku',
+    name: 'ナンバーサム合計ナンプレ',
+    nameKey: 'selection.miniexp.games.number_sum_sudoku.name',
+    entry: 'games/number_sum_sudoku.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '行・列・エリアの合計が示す値になる数字を○で囲む推理パズル',
+    descriptionKey: 'selection.miniexp.games.number_sum_sudoku.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'ultimate_ttt',
     name: 'スーパー三目並べ',
     nameKey: 'selection.miniexp.games.ultimate_ttt.name',

@@ -224,6 +224,8 @@
     const grid = document.createElement('div');
     grid.className = 'numbersum-grid';
     grid.setAttribute('data-mode', state.mode);
+    grid.style.gridColumn = '2 / span ' + puzzle.size;
+    grid.style.gridRow = '2 / span ' + puzzle.size;
 
     board.appendChild(document.createElement('div'));
     board.appendChild(topLabels);

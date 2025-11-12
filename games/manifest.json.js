@@ -522,6 +522,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'falling_2048',
+    name: '落下式2048',
+    nameKey: 'selection.miniexp.games.falling_2048.name',
+    entry: 'games/falling_2048.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'テトリス風にタイルを落として2048を狙うモード',
+    descriptionKey: 'selection.miniexp.games.falling_2048.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'todo_list',
     name: 'ToDoリスト',
     nameKey: 'selection.miniexp.games.todo_list.name',

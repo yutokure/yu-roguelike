@@ -353,6 +353,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'rubiks_cube',
+    name: 'ルービック・キューブ',
+    nameKey: 'selection.miniexp.games.rubiks_cube.name',
+    entry: 'games/rubiks_cube.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '6面同時表示で揃えるルービック・キューブ。難易度でスクランブル手数が変化',
+    descriptionKey: 'selection.miniexp.games.rubiks_cube.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'ultimate_ttt',
     name: 'スーパー三目並べ',
     nameKey: 'selection.miniexp.games.ultimate_ttt.name',

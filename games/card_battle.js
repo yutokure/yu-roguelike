@@ -876,7 +876,9 @@
       turnCount: 0,
       firstPlayer: null,
       winner: null,
-      ui: { selectedCardId: null }
+      ui: { selectedCardId: null },
+      paused: true,
+      destroyed: false
     };
 
     const elements = {
@@ -901,6 +903,25 @@
       winTitle,
       winText
     };
+
+    const activeTimeouts = new Set();
+    const pausedTasks = [];
+
+    function scheduleTask(fn, delay){
+      if (state.destroyed) return null;
+      const task = { fn };
+      task.id = setTimeout(() => {
+        activeTimeouts.delete(task);
+        if (state.destroyed) return;
+        if (state.paused){
+          pausedTasks.push(fn);
+          return;
+        }
+        fn();
+      }, delay);
+      activeTimeouts.add(task);
+      return task.id;
+    }
 
     // Helper functions inside create
     function award(amount, meta){
@@ -1292,6 +1313,7 @@
     }
 
     function handleSummon(side, instanceId, mode){
+      if (state.paused || state.destroyed) return;
       if (state.winner || state.turnPlayer !== side) return;
       const player = state.players[side];
       if (!player || player.actionUsed) return;
@@ -1317,6 +1339,7 @@
     }
 
     function handleSpell(side, instanceId){
+      if (state.paused || state.destroyed) return;
       if (state.winner || state.turnPlayer !== side) return;
       const player = state.players[side];
       if (!player || player.actionUsed) return;
@@ -1436,6 +1459,7 @@
     }
 
     function resolveBattle(attackerId){
+      if (state.paused || state.destroyed) return;
       if (state.winner) return;
       const attacker = state.players[attackerId];
       const defenderId = attackerId === 'player' ? 'ai' : 'player';
@@ -1519,13 +1543,15 @@
     }
 
     function endTurn(side){
+      if (state.paused || state.destroyed) return;
       if (state.turnPlayer !== side || state.winner) return;
       pushLog(`${state.players[side].name}のターン終了。`);
       const next = side === 'player' ? 'ai' : 'player';
-      setTimeout(() => beginTurn(next), 450);
+      scheduleTask(() => beginTurn(next), 450);
     }
 
     function beginTurn(side, opts = {}){
+      if (state.paused || state.destroyed) return;
       if (state.winner) return;
       state.turnPlayer = side;
       state.turnCount += 1;
@@ -1549,11 +1575,12 @@
       } else {
         pushLog('AIのターン。');
         renderAll();
-        setTimeout(() => aiTakeTurn(), 650);
+        scheduleTask(() => aiTakeTurn(), 650);
       }
     }
 
     function aiTakeTurn(){
+      if (state.paused || state.destroyed) return;
       if (state.winner || state.turnPlayer !== 'ai') return;
       const ai = state.players.ai;
       if (!ai) return;
@@ -1567,12 +1594,15 @@
         }
       }
       renderAll();
-      setTimeout(() => {
+      scheduleTask(() => {
+        if (state.paused || state.destroyed) return;
         if (state.winner) return;
         if (ai.field.monster && !ai.attackedThisTurn){
           resolveBattle('ai');
         }
-        if (!state.winner) setTimeout(() => endTurn('ai'), 600);
+        if (!state.winner){
+          scheduleTask(() => endTurn('ai'), 600);
+        }
       }, 600);
     }
 
@@ -1602,6 +1632,7 @@
     }
 
     function startNewDuel(ruleId){
+      if (state.destroyed) return;
       const rule = RULE_MAP[ruleId] || RULES[0];
       state.rule = rule;
       state.turnCount = 0;
@@ -1624,7 +1655,7 @@
       renderAll();
       const first = Math.random() < 0.5 ? 'player' : 'ai';
       state.firstPlayer = first;
-      setTimeout(() => beginTurn(first, { initial: true }), 500);
+      scheduleTask(() => beginTurn(first, { initial: true }), 500);
     }
 
     function chooseRule(ruleId){
@@ -1635,26 +1666,88 @@
     }
 
     // Event bindings
-    ruleSelect.addEventListener('change', () => {
+    const onRuleChange = () => {
+      if (state.paused || state.destroyed) return;
       chooseRule(ruleSelect.value);
-    });
+    };
 
-    newDuelBtn.addEventListener('click', () => {
+    const onNewDuelClick = () => {
+      if (state.paused || state.destroyed) return;
       startNewDuel(ruleSelect.value);
-    });
+    };
 
-    battleBtn.addEventListener('click', () => {
+    const onBattleClick = () => {
+      if (state.paused || state.destroyed) return;
       if (state.turnPlayer !== 'player' || state.winner) return;
       resolveBattle('player');
-    });
+    };
 
-    endTurnBtn.addEventListener('click', () => {
+    const onEndTurnClick = () => {
+      if (state.paused || state.destroyed) return;
       endTurn('player');
-    });
+    };
+
+    ruleSelect.addEventListener('change', onRuleChange);
+
+    newDuelBtn.addEventListener('click', onNewDuelClick);
+
+    battleBtn.addEventListener('click', onBattleClick);
+
+    endTurnBtn.addEventListener('click', onEndTurnClick);
 
     // initialize
     chooseRule(RULES[0].id);
     startNewDuel(RULES[0].id);
+
+    function start(){
+      if (state.destroyed){
+        return;
+      }
+      const wasPaused = state.paused;
+      state.paused = false;
+      if (!wasPaused) return;
+      while (!state.paused && pausedTasks.length){
+        const task = pausedTasks.shift();
+        try {
+          task();
+        } catch (error){
+          console.error(error);
+        }
+      }
+    }
+
+    function stop(opts = {}){
+      if (state.destroyed) return;
+      if (state.paused && !opts.discardPending) return;
+      state.paused = true;
+      activeTimeouts.forEach(task => {
+        clearTimeout(task.id);
+        if (!opts.discardPending){
+          pausedTasks.push(task.fn);
+        }
+      });
+      activeTimeouts.clear();
+      if (opts.discardPending){
+        pausedTasks.length = 0;
+      }
+    }
+
+    function destroy(){
+      if (state.destroyed) return;
+      stop({ discardPending: true });
+      state.destroyed = true;
+      ruleSelect.removeEventListener('change', onRuleChange);
+      newDuelBtn.removeEventListener('click', onNewDuelClick);
+      battleBtn.removeEventListener('click', onBattleClick);
+      endTurnBtn.removeEventListener('click', onEndTurnClick);
+      container.remove();
+    }
+
+    return {
+      start,
+      stop,
+      destroy
+    };
   }
 
   if (typeof window !== 'undefined' && typeof window.registerMiniGame === 'function'){

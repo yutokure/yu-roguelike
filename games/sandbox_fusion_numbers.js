@@ -726,9 +726,11 @@
 
     function getHighestTileLevel(){
       let maxLevel = -1;
+      const rows = Array.isArray(state.board) ? state.board : [];
       for (let y = 0; y < state.height; y++){
+        const row = rows[y];
         for (let x = 0; x < state.width; x++){
-          const tile = state.board[y][x];
+          const tile = row?.[x] ?? null;
           if (tile && tile.level > maxLevel){
             maxLevel = tile.level;
           }
@@ -857,9 +859,11 @@
 
     function hasMovesAvailable(){
       if (getEmptyCells().length > 0) return true;
+      const rows = Array.isArray(state.board) ? state.board : [];
       for (let y = 0; y < state.height; y++){
+        const row = rows[y];
         for (let x = 0; x < state.width; x++){
-          const tile = state.board[y][x];
+          const tile = row?.[x] ?? null;
           if (!tile) continue;
           const right = x + 1 < state.width ? state.board[y][x + 1] : null;
           const down = y + 1 < state.height ? state.board[y + 1][x] : null;
@@ -904,9 +908,11 @@
       boardCtx.textAlign = 'center';
       boardCtx.textBaseline = 'middle';
 
+      const rows = Array.isArray(state.board) ? state.board : [];
       for (let y = 0; y < state.height; y++){
+        const row = rows[y];
         for (let x = 0; x < state.width; x++){
-          const tile = state.board[y][x];
+          const tile = row?.[x] ?? null;
           const px = padding + x * cellSize;
           const py = padding + y * cellSize;
           const innerPad = Math.max(2, Math.floor(cellSize * 0.18));

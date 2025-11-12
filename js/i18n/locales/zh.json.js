@@ -3269,6 +3269,10 @@
           "pageone": {
             "title": "第一页",
             "description": "经典脱落 启发UNO的游戏。"
+          },
+          "uno": {
+            "title": "UNO",
+            "description": "在 UNO 风格的游戏中匹配颜色和数字。"
           }
         },
         "common": {
@@ -3620,6 +3624,81 @@
           },
           "hud": {
             "scoreSummary": "总共 {plays} 局 / 胜利 {wins}"
+          }
+        },
+        "uno": {
+          "players": {
+            "you": "你",
+            "north": "北",
+            "east": "东",
+            "west": "西方"
+          },
+          "labels": {
+            "deck": "牌堆",
+            "discard": "弃牌堆",
+            "deckCount": "{count}张牌",
+            "currentColor": "当前颜色: {color}",
+            "unoDeclared": "UNO!"
+          },
+          "colors": {
+            "red": "红色",
+            "yellow": "黄色",
+            "green": "绿色",
+            "blue": "蓝色",
+            "none": "未指定"
+          },
+          "cards": {
+            "skip": "跳过",
+            "reverse": "反转",
+            "draw2": "抽两张",
+            "wild": "万能牌",
+            "wild4": "万能抽四"
+          },
+          "actions": {
+            "draw": "抽牌 (D)",
+            "pass": "过牌 (Space)",
+            "declare": "喊UNO (U)",
+            "restart": "重新开始 (R)",
+            "choose": {
+              "red": "选红色",
+              "yellow": "选黄色",
+              "green": "选绿色",
+              "blue": "选蓝色"
+            }
+          },
+          "status": {
+            "yourTurn": "轮到你了。",
+            "turnOf": "轮到{name}了",
+            "chooseColor": "请选择要宣告的颜色。",
+            "winner": "{name}获胜！",
+            "currentCard": "牌堆: {card}",
+            "currentColor": "当前颜色: {color}",
+            "directionClockwise": "顺时针",
+            "directionCounterClockwise": "逆时针"
+          },
+          "toast": {
+            "missedUno": "忘记喊 UNO！罚抽 2 张。",
+            "aiMissedUno": "{name} 忘记喊 UNO，被罚抽 2 张。",
+            "invalidDeclare": "只剩 1 张牌时才能喊 UNO。",
+            "alreadyDeclared": "已经喊过 UNO。",
+            "declared": "UNO！",
+            "drawLimit": "每回合只能抽 1 张牌。",
+            "emptyDeck": "没有可抽的牌。",
+            "drawnPlayable": "抽到 1 张牌，可以出符合条件的牌。",
+            "noPlayable": "没有可出的牌，自动过牌。",
+            "mustDraw": "过牌前请先抽一张。",
+            "invalidCard": "这张牌无法出。",
+            "reminderUno": "只剩 1 张牌！请按“喊UNO”。",
+            "aiUno": "{name} 喊了 UNO！",
+            "colorChosen": "已选择 {color}。",
+            "forcedDraw": "{name} 抽了 {count} 张牌。",
+            "skip": "{name} 被跳过。"
+          },
+          "hud": {
+            "scoreSummary": "总共 {plays} 局 / 胜利 {wins}"
+          },
+          "opponent": {
+            "handCount": "{count}张牌"
           }
         },
         "jiji": {

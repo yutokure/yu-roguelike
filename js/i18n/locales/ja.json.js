@@ -12836,6 +12836,10 @@
           "pageone": {
             "title": "ページワン",
             "description": "UNOの祖先とされる定番ゲーム。"
+          },
+          "uno": {
+            "title": "UNO",
+            "description": "色と数字を合わせるUNO風ゲーム。"
           }
         },
         "common": {
@@ -13187,6 +13191,81 @@
           },
           "hud": {
             "scoreSummary": "通算 {plays} 回 / 勝利 {wins} 回"
+          }
+        },
+        "uno": {
+          "players": {
+            "you": "あなた",
+            "north": "北",
+            "east": "東",
+            "west": "西"
+          },
+          "labels": {
+            "deck": "山札",
+            "discard": "捨て札",
+            "deckCount": "{count} 枚",
+            "currentColor": "現在の色: {color}",
+            "unoDeclared": "UNO!"
+          },
+          "colors": {
+            "red": "赤",
+            "yellow": "黄",
+            "green": "緑",
+            "blue": "青",
+            "none": "未指定"
+          },
+          "cards": {
+            "skip": "スキップ",
+            "reverse": "リバース",
+            "draw2": "ドロー2",
+            "wild": "ワイルド",
+            "wild4": "ワイルドドロー4"
+          },
+          "actions": {
+            "draw": "ドロー (D)",
+            "pass": "パス (Space)",
+            "declare": "UNO宣言 (U)",
+            "restart": "リスタート (R)",
+            "choose": {
+              "red": "赤にする",
+              "yellow": "黄にする",
+              "green": "緑にする",
+              "blue": "青にする"
+            }
+          },
+          "status": {
+            "yourTurn": "あなたの番です。",
+            "turnOf": "{name} の番",
+            "chooseColor": "出す色を選んでください。",
+            "winner": "{name} の勝利！",
+            "currentCard": "場: {card}",
+            "currentColor": "現在の色: {color}",
+            "directionClockwise": "時計回り",
+            "directionCounterClockwise": "反時計回り"
+          },
+          "toast": {
+            "missedUno": "UNO宣言を忘れたため +2 枚。",
+            "aiMissedUno": "{name} がUNO宣言を忘れたため +2 枚。",
+            "invalidDeclare": "UNOを宣言できるのは残り1枚のときです。",
+            "alreadyDeclared": "すでにUNOを宣言しています。",
+            "declared": "「UNO！」",
+            "drawLimit": "1ターンに引けるのは1枚までです。",
+            "emptyDeck": "引けるカードがありません。",
+            "drawnPlayable": "1枚ドローしました。出すカードを選べます。",
+            "noPlayable": "出せるカードがありません。自動的にパスします。",
+            "mustDraw": "パスする前にカードを引いてください。",
+            "invalidCard": "そのカードは出せません。",
+            "reminderUno": "残り1枚！「UNO宣言」を押してください。",
+            "aiUno": "{name} がUNOを宣言しました！",
+            "colorChosen": "{color} を選択しました。",
+            "forcedDraw": "{name} は {count} 枚ドロー。",
+            "skip": "{name} はスキップされました。"
+          },
+          "hud": {
+            "scoreSummary": "通算 {plays} 回 / 勝利 {wins}"
+          },
+          "opponent": {
+            "handCount": "{count} 枚"
           }
         },
         "jiji": {

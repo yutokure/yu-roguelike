@@ -37,7 +37,8 @@
     { id: 'poker', title: 'ポーカー（ドロー）', titleKey: 'games.poker.title', descriptionKey: 'games.poker.description', icon: '♠️', phase: 2, implemented: true, description: '役を完成させて高得点を狙う。' },
     { id: 'jiji', title: 'ジジ抜き', titleKey: 'games.jiji.title', descriptionKey: 'games.jiji.description', icon: '👴', phase: 2, implemented: true, description: 'ジョーカー設定可のババ抜き拡張。' },
     { id: 'daifugo', title: '大富豪', titleKey: 'games.daifugo.title', descriptionKey: 'games.daifugo.description', icon: '👑', phase: 3, implemented: true, description: '革命必至の手札管理ゲーム。' },
-    { id: 'pageone', title: 'ページワン', titleKey: 'games.pageone.title', descriptionKey: 'games.pageone.description', icon: '📖', phase: 2, implemented: true, description: 'UNOの祖先とされる定番ゲーム。' }
+    { id: 'pageone', title: 'ページワン', titleKey: 'games.pageone.title', descriptionKey: 'games.pageone.description', icon: '📖', phase: 2, implemented: true, description: 'UNOの祖先とされる定番ゲーム。' },
+    { id: 'uno', title: 'UNO', titleKey: 'games.uno.title', descriptionKey: 'games.uno.description', icon: '🎨', phase: 2, implemented: true, description: '色と数字を合わせるUNO風ゲーム。' }
   ];
 
   const CARD_BACK_OPTIONS = [
@@ -231,6 +232,42 @@
     .mini-trump-pageone-hand button{border:none;border-radius:8px;background:rgba(59,130,246,0.25);color:#e2e8f0;padding:8px 12px;font-weight:600;cursor:pointer;}
     .mini-trump-pageone-hand button.disabled{opacity:0.4;cursor:not-allowed;}
     .mini-trump-pageone-status{font-size:12px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;text-align:center;}
+    .mini-trump-uno{display:flex;flex-direction:column;gap:18px;align-items:center;width:100%;padding-top:8px;}
+    .mini-trump-uno-board{width:100%;max-width:900px;display:flex;flex-direction:column;gap:18px;}
+    .mini-trump-uno-opponents{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+    .mini-trump-uno-opponent{background:rgba(15,23,42,0.4);border:1px solid rgba(148,163,184,0.18);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;transition:border .2s,box-shadow .2s;}
+    .mini-trump-uno-opponent.active{border-color:rgba(37,99,235,0.62);box-shadow:0 0 0 2px rgba(37,99,235,0.32);}
+    .mini-trump-uno-opponent .name{font-weight:600;color:#e2e8f0;}
+    .mini-trump-uno-opponent .meta{font-size:12px;color:#94a3b8;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+    .mini-trump-uno-opponent .badge{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(59,130,246,0.25);color:#bfdbfe;}
+    .mini-trump-uno-center{display:flex;gap:18px;align-items:stretch;justify-content:center;flex-wrap:wrap;}
+    .mini-trump-uno-center .pile{background:rgba(15,23,42,0.38);border:1px solid rgba(148,163,184,0.22);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;min-width:160px;}
+    .mini-trump-uno-center h4{margin:0;font-size:13px;color:#e2e8f0;}
+    .mini-trump-uno-center .count{font-size:12px;color:#cbd5f5;}
+    .mini-trump-uno-color-badge{min-width:140px;border-radius:10px;padding:10px 12px;text-align:center;font-weight:600;font-size:13px;color:#0f172a;background:rgba(148,163,184,0.22);border:1px solid rgba(148,163,184,0.3);transition:background .2s,border .2s,color .2s;}
+    .mini-trump-uno-color-badge[data-color="red"]{background:linear-gradient(135deg,#b91c1c,#ef4444);border-color:rgba(248,113,113,0.65);color:#fee2e2;}
+    .mini-trump-uno-color-badge[data-color="yellow"]{background:linear-gradient(135deg,#b45309,#facc15);border-color:rgba(250,204,21,0.6);color:#fef9c3;}
+    .mini-trump-uno-color-badge[data-color="green"]{background:linear-gradient(135deg,#166534,#22c55e);border-color:rgba(74,222,128,0.6);color:#dcfce7;}
+    .mini-trump-uno-color-badge[data-color="blue"]{background:linear-gradient(135deg,#1d4ed8,#38bdf8);border-color:rgba(96,165,250,0.65);color:#dbeafe;}
+    .mini-trump-uno-color-badge[data-color="none"]{background:rgba(148,163,184,0.22);border-color:rgba(148,163,184,0.35);color:#e2e8f0;}
+    .mini-trump-uno-direction{font-size:28px;color:#e2e8f0;display:flex;align-items:center;gap:8px;font-weight:600;}
+    .mini-trump-uno-direction .label{font-size:12px;color:#cbd5f5;font-weight:400;}
+    .mini-trump-uno-hand{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;padding:6px;}
+    .mini-trump-uno-card-btn{border:none;background:transparent;padding:0;cursor:pointer;position:relative;}
+    .mini-trump-uno-card-btn.disabled{cursor:not-allowed;opacity:0.5;}
+    .mini-trump-uno-card-btn:not(.disabled):hover .mini-trump-uno-card{transform:translateY(-6px);box-shadow:0 14px 28px rgba(37,99,235,0.32);}
+    .mini-trump-uno-card-btn.playable .mini-trump-uno-card{outline:2px solid rgba(253,224,71,0.85);outline-offset:-4px;}
+    .mini-trump-uno-card{min-width:84px;height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#0f172a;background:#f8fafc;border:2px solid rgba(148,163,184,0.6);box-shadow:0 8px 18px rgba(15,23,42,0.35);transition:transform .18s,box-shadow .18s;}
+    .mini-trump-uno-card.small{min-width:68px;height:96px;font-size:18px;}
+    .mini-trump-uno-card.large{min-width:96px;height:136px;font-size:24px;}
+    .mini-trump-uno-card.red{background:linear-gradient(135deg,#991b1b,#ef4444);border-color:rgba(248,113,113,0.85);color:#fee2e2;}
+    .mini-trump-uno-card.yellow{background:linear-gradient(135deg,#b45309,#facc15);border-color:rgba(250,204,21,0.8);color:#fef3c7;}
+    .mini-trump-uno-card.green{background:linear-gradient(135deg,#166534,#22c55e);border-color:rgba(74,222,128,0.85);color:#dcfce7;}
+    .mini-trump-uno-card.blue{background:linear-gradient(135deg,#1d4ed8,#38bdf8);border-color:rgba(96,165,250,0.85);color:#dbeafe;}
+    .mini-trump-uno-card.wild{background:linear-gradient(135deg,#0f172a,#334155);border-color:rgba(148,163,184,0.7);color:#f8fafc;}
+    .mini-trump-uno-card .label{padding:0 8px;text-align:center;}
+    .mini-trump-uno-status{font-size:12px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;text-align:center;}
+    .mini-trump-uno-status strong{color:#f8fafc;font-weight:600;}
     @media (max-width:960px){
       .mini-trump-wrapper{flex-direction:column;}
       .mini-trump-nav{width:100%;flex-direction:row;}
@@ -1186,6 +1223,7 @@
         else if (def.id === 'jiji') runtime = createJijiGame(gameRoot, context);
         else if (def.id === 'daifugo') runtime = createDaifugoGame(gameRoot, context);
         else if (def.id === 'pageone') runtime = createPageOneGame(gameRoot, context);
+        else if (def.id === 'uno') runtime = createUnoGame(gameRoot, context);
         else if (def.id === 'memory') runtime = createMemoryGame(gameRoot, context);
         else if (def.id === 'blackjack') runtime = createBlackjackGame(gameRoot, context);
         else if (def.id === 'baba') runtime = createBabaGame(gameRoot, context);
@@ -5870,6 +5908,795 @@
       stop(){},
       destroy(){ if (typeof detachLocale === 'function') detachLocale(); },
       getScore(){ return players[0].finishedAt || 0; }
+    };
+  }
+
+  function createUnoGame(container, ctx){
+    const text = createTextResolver(ctx);
+    const colorDefs = [
+      { id: 'red', key: 'minigame.trump_games.uno.colors.red', fallback: '赤' },
+      { id: 'yellow', key: 'minigame.trump_games.uno.colors.yellow', fallback: '黄' },
+      { id: 'green', key: 'minigame.trump_games.uno.colors.green', fallback: '緑' },
+      { id: 'blue', key: 'minigame.trump_games.uno.colors.blue', fallback: '青' }
+    ];
+    const cardTexts = {
+      skip: { key: 'minigame.trump_games.uno.cards.skip', fallback: 'スキップ' },
+      reverse: { key: 'minigame.trump_games.uno.cards.reverse', fallback: 'リバース' },
+      draw2: { key: 'minigame.trump_games.uno.cards.draw2', fallback: 'ドロー2' },
+      wild: { key: 'minigame.trump_games.uno.cards.wild', fallback: 'ワイルド' },
+      wild4: { key: 'minigame.trump_games.uno.cards.wild4', fallback: 'ワイルドドロー4' }
+    };
+    const colorOrder = { red: 0, yellow: 1, green: 2, blue: 3 };
+    const actionOrder = { skip: 10, reverse: 11, draw2: 12, wild: 13, wild4: 14 };
+    const playerConfigs = [
+      { id: 0, key: 'minigame.trump_games.uno.players.you', fallback: 'あなた', human: true },
+      { id: 1, key: 'minigame.trump_games.uno.players.north', fallback: '北', human: false },
+      { id: 2, key: 'minigame.trump_games.uno.players.east', fallback: '東', human: false },
+      { id: 3, key: 'minigame.trump_games.uno.players.west', fallback: '西', human: false }
+    ];
+    const players = playerConfigs.map(config => ({
+      id: config.id,
+      name: text(config.key, config.fallback),
+      human: config.human,
+      hand: [],
+      declared: false
+    }));
+    const state = {
+      deck: [],
+      discard: [],
+      turn: 0,
+      direction: 1,
+      finished: false,
+      drawnThisTurn: false,
+      canPass: false,
+      pendingDraw: null,
+      skipNext: null,
+      pendingColorChoice: null,
+      activeColor: 'none',
+      activeValue: null,
+      awaitingUno: null,
+      turnCount: 0,
+      lastWinner: null
+    };
+    let cardIdCounter = 0;
+
+    const root = document.createElement('div');
+    root.className = 'mini-trump-uno';
+    const board = document.createElement('div');
+    board.className = 'mini-trump-uno-board';
+    const opponentRow = document.createElement('div');
+    opponentRow.className = 'mini-trump-uno-opponents';
+    const center = document.createElement('div');
+    center.className = 'mini-trump-uno-center';
+    const deckBox = document.createElement('div');
+    deckBox.className = 'pile';
+    const deckTitle = document.createElement('h4');
+    deckTitle.textContent = text('minigame.trump_games.uno.labels.deck', '山札');
+    const deckCount = document.createElement('div');
+    deckCount.className = 'count';
+    deckBox.appendChild(deckTitle);
+    deckBox.appendChild(deckCount);
+    const discardBox = document.createElement('div');
+    discardBox.className = 'pile';
+    const discardTitle = document.createElement('h4');
+    discardTitle.textContent = text('minigame.trump_games.uno.labels.discard', '捨て札');
+    const discardTop = document.createElement('div');
+    discardBox.appendChild(discardTitle);
+    discardBox.appendChild(discardTop);
+    const colorBadge = document.createElement('div');
+    colorBadge.className = 'mini-trump-uno-color-badge';
+    colorBadge.dataset.color = 'none';
+    const directionBox = document.createElement('div');
+    directionBox.className = 'mini-trump-uno-direction';
+    const directionIcon = document.createElement('span');
+    directionIcon.textContent = '↻';
+    const directionLabel = document.createElement('span');
+    directionLabel.className = 'label';
+    directionBox.appendChild(directionIcon);
+    directionBox.appendChild(directionLabel);
+    center.appendChild(deckBox);
+    center.appendChild(discardBox);
+    center.appendChild(colorBadge);
+    center.appendChild(directionBox);
+    const handRow = document.createElement('div');
+    handRow.className = 'mini-trump-uno-hand';
+    const statusBox = document.createElement('div');
+    statusBox.className = 'mini-trump-uno-status';
+
+    container.innerHTML = '';
+    container.appendChild(root);
+    root.appendChild(board);
+    board.appendChild(opponentRow);
+    board.appendChild(center);
+    board.appendChild(handRow);
+    board.appendChild(statusBox);
+
+    const opponentRefs = players.slice(1).map(player => {
+      const el = document.createElement('div');
+      el.className = 'mini-trump-uno-opponent';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'name';
+      nameEl.textContent = player.name;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      el.appendChild(nameEl);
+      el.appendChild(meta);
+      opponentRow.appendChild(el);
+      return { player, el, meta, nameEl };
+    });
+
+    function refreshPlayerNames(){
+      playerConfigs.forEach((config, idx) => {
+        const player = players[idx];
+        if (!player) return;
+        player.name = text(config.key, config.fallback);
+      });
+      opponentRefs.forEach(ref => {
+        if (!ref || !ref.player) return;
+        ref.nameEl.textContent = ref.player.name;
+      });
+    }
+
+    function colorLabel(id){
+      if (!id || id === 'none') {
+        return text('minigame.trump_games.uno.colors.none', '未指定');
+      }
+      const def = colorDefs.find(entry => entry.id === id);
+      if (!def) return text('minigame.trump_games.uno.colors.none', '未指定');
+      return text(def.key, def.fallback);
+    }
+
+    function cardLabel(card){
+      if (!card) {
+        return text('minigame.trump_games.common.labels.empty', '---');
+      }
+      if (card.type === 'number') {
+        return String(card.value);
+      }
+      const def = cardTexts[card.value];
+      if (!def) return String(card.value);
+      return text(def.key, def.fallback);
+    }
+
+    function formatCard(card){
+      if (!card) {
+        return text('minigame.trump_games.common.labels.empty', '---');
+      }
+      const label = cardLabel(card);
+      if (!card.color) {
+        return label;
+      }
+      return `${colorLabel(card.color)} ${label}`;
+    }
+
+    function createCardElement(card, opts = {}){
+      const el = document.createElement('div');
+      el.className = 'mini-trump-uno-card';
+      if (opts.size === 'large') el.classList.add('large');
+      else if (opts.size === 'small') el.classList.add('small');
+      if (card?.color) el.classList.add(card.color);
+      else if (card?.type === 'wild') el.classList.add('wild');
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = cardLabel(card);
+      el.appendChild(label);
+      return el;
+    }
+
+    const makeCard = (color, value, type) => ({
+      id: `uno-${cardIdCounter++}`,
+      color,
+      value,
+      type
+    });
+
+    function createUnoDeck(){
+      const deck = [];
+      const numbers = ['0','1','2','3','4','5','6','7','8','9'];
+      colorDefs.forEach(({ id: color }) => {
+        deck.push(makeCard(color, '0', 'number'));
+        numbers.slice(1).forEach(num => {
+          deck.push(makeCard(color, num, 'number'));
+          deck.push(makeCard(color, num, 'number'));
+        });
+        ['skip','reverse','draw2'].forEach(action => {
+          deck.push(makeCard(color, action, 'action'));
+          deck.push(makeCard(color, action, 'action'));
+        });
+      });
+      for (let i = 0; i < 4; i++) {
+        deck.push(makeCard(null, 'wild', 'wild'));
+        deck.push(makeCard(null, 'wild4', 'wild'));
+      }
+      ctx.cardUtils.shuffle(deck);
+      return deck;
+    }
+
+    function rebuildDeck(){
+      if (state.discard.length <= 1) return;
+      const top = state.discard[state.discard.length - 1];
+      const pool = state.discard.slice(0, -1);
+      ctx.cardUtils.shuffle(pool);
+      state.deck = pool;
+      state.discard = [top];
+    }
+
+    function drawFromDeck(){
+      if (state.deck.length === 0) {
+        rebuildDeck();
+      }
+      return state.deck.pop() || null;
+    }
+
+    function drawCards(player, count){
+      const drawn = [];
+      for (let i = 0; i < count; i++) {
+        const card = drawFromDeck();
+        if (!card) break;
+        player.hand.push(card);
+        drawn.push(card);
+      }
+      if (drawn.length) {
+        sortHand(player.hand);
+      }
+      return drawn;
+    }
+
+    function sortHand(hand){
+      hand.sort((a, b) => {
+        const colorA = a.color || 'wild';
+        const colorB = b.color || 'wild';
+        const colorOrderA = colorA === 'wild' ? 99 : colorOrder[colorA];
+        const colorOrderB = colorB === 'wild' ? 99 : colorOrder[colorB];
+        if (colorOrderA !== colorOrderB) return colorOrderA - colorOrderB;
+        const valueA = a.type === 'number' ? parseInt(a.value, 10) : (actionOrder[a.value] || 50);
+        const valueB = b.type === 'number' ? parseInt(b.value, 10) : (actionOrder[b.value] || 50);
+        if (!Number.isNaN(valueA) && !Number.isNaN(valueB)) {
+          return valueA - valueB;
+        }
+        return valueA - valueB;
+      });
+    }
+
+    function getTopCard(){
+      return state.discard[state.discard.length - 1] || null;
+    }
+
+    function canPlayCard(card){
+      if (!card) return false;
+      if (state.pendingColorChoice) return false;
+      const top = getTopCard();
+      if (!top) return true;
+      if (card.type === 'wild') return true;
+      if (card.color && card.color === state.activeColor) return true;
+      if (state.activeValue && card.value === state.activeValue && card.type !== 'wild') return true;
+      if (card.type === 'action' && card.value === top.value) return true;
+      return false;
+    }
+
+    function legalCards(player){
+      return player.hand.filter(card => canPlayCard(card));
+    }
+
+    function getNextPlayerId(current){
+      const total = players.length;
+      let next = current;
+      do {
+        next = (next + state.direction + total) % total;
+      } while (next === current);
+      return next;
+    }
+
+    function enforceUnoPenalty(){
+      const id = state.awaitingUno;
+      if (id == null) return;
+      const player = players.find(p => p.id === id);
+      if (!player) {
+        state.awaitingUno = null;
+        return;
+      }
+      if (player.declared || player.hand.length !== 1) {
+        state.awaitingUno = null;
+        return;
+      }
+      const cards = drawCards(player, 2);
+      player.declared = false;
+      state.awaitingUno = null;
+      if (player.human) {
+        ctx.award(-15, { type: 'uno-penalty' });
+        ctx.showToast(text('minigame.trump_games.uno.toast.missedUno', 'UNO宣言を忘れたため +2 枚。'), { type: 'warn', duration: 2200 });
+      } else {
+        ctx.showToast(text('minigame.trump_games.uno.toast.aiMissedUno', '{name} がUNO宣言を忘れたため +2 枚。', { name: player.name }), { duration: 2000 });
+      }
+      if (cards.length) render();
+    }
+
+    function advanceTurnFrom(currentId, opts = {}){
+      if (!opts.skipPenalty) enforceUnoPenalty();
+      if (state.finished) return;
+      const next = getNextPlayerId(currentId);
+      beginTurn(next);
+    }
+
+    function handleStartEffects(playerId){
+      let handled = false;
+      if (state.pendingDraw && state.pendingDraw.target === playerId) {
+        const amount = state.pendingDraw.amount || 0;
+        const player = players[playerId];
+        if (amount > 0 && player) {
+          drawCards(player, amount);
+          ctx.showToast(text('minigame.trump_games.uno.toast.forcedDraw', '{name} は {count} 枚ドロー。', { name: player.name, count: amount }), { duration: 1800 });
+          if (player.human) ctx.award(-5 * amount, { type: 'uno-forced-draw', amount });
+        }
+        state.pendingDraw = null;
+        if (state.skipNext === playerId) state.skipNext = null;
+        render();
+        handled = true;
+        setTimeout(() => advanceTurnFrom(playerId, { skipPenalty: true }), 480);
+      } else if (state.skipNext === playerId) {
+        const player = players[playerId];
+        if (player) {
+          ctx.showToast(text('minigame.trump_games.uno.toast.skip', '{name} はスキップされました。', { name: player.name }), { duration: 1400 });
+        }
+        state.skipNext = null;
+        handled = true;
+        setTimeout(() => advanceTurnFrom(playerId, { skipPenalty: true }), 420);
+      }
+      return handled;
+    }
+
+    function updateStatusMessage(){
+      if (state.finished) {
+        const name = state.lastWinner?.name || '';
+        ctx.setStatus(text('minigame.trump_games.uno.status.winner', '{name} の勝利！', { name }));
+        return;
+      }
+      if (state.pendingColorChoice && state.pendingColorChoice.playerId === 0) {
+        ctx.setStatus(text('minigame.trump_games.uno.status.chooseColor', '出す色を選んでください。'));
+        return;
+      }
+      if (state.turn === 0) {
+        ctx.setStatus(text('minigame.trump_games.uno.status.yourTurn', 'あなたの番です。'));
+      } else {
+        const name = players[state.turn]?.name || '';
+        ctx.setStatus(text('minigame.trump_games.uno.status.turnOf', '{name} の番', { name }));
+      }
+    }
+
+    function beginTurn(playerId){
+      state.turn = playerId;
+      state.drawnThisTurn = false;
+      state.canPass = false;
+      render();
+      updateHud();
+      if (handleStartEffects(playerId)) {
+        updateActions();
+        return;
+      }
+      updateStatusMessage();
+      updateActions();
+      if (state.finished) return;
+      if (playerId !== 0) {
+        setTimeout(() => aiTurn(players[playerId]), 620);
+      }
+    }
+
+    function updateHud(){
+      const stats = ctx.stats();
+      const params = { plays: stats.plays || 0, wins: stats.wins || 0 };
+      ctx.setScore(text('minigame.trump_games.uno.hud.scoreSummary', '通算 {plays} 回 / 勝利 {wins}', params));
+    }
+
+    function render(){
+      renderOpponents();
+      renderCenter();
+      renderHand();
+      renderStatus();
+    }
+
+    function renderOpponents(){
+      opponentRefs.forEach(ref => {
+        const { player, el, meta } = ref;
+        if (!player) return;
+        if (state.turn === player.id && !state.finished) el.classList.add('active'); else el.classList.remove('active');
+        meta.innerHTML = '';
+        const count = document.createElement('span');
+        count.textContent = text('minigame.trump_games.uno.opponent.handCount', '{count} 枚', { count: player.hand.length });
+        meta.appendChild(count);
+        if (player.hand.length === 1 && player.declared) {
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = text('minigame.trump_games.uno.labels.unoDeclared', 'UNO!');
+          meta.appendChild(badge);
+        }
+      });
+    }
+
+    function renderCenter(){
+      deckTitle.textContent = text('minigame.trump_games.uno.labels.deck', '山札');
+      discardTitle.textContent = text('minigame.trump_games.uno.labels.discard', '捨て札');
+      deckCount.textContent = text('minigame.trump_games.uno.labels.deckCount', '{count} 枚', { count: state.deck.length });
+      discardTop.innerHTML = '';
+      const top = getTopCard();
+      if (top) {
+        discardTop.appendChild(createCardElement(top, { size: 'large' }));
+      } else {
+        discardTop.textContent = text('minigame.trump_games.common.labels.empty', '---');
+      }
+      const activeColor = state.activeColor || 'none';
+      colorBadge.dataset.color = activeColor;
+      colorBadge.textContent = text('minigame.trump_games.uno.labels.currentColor', '現在の色: {color}', { color: colorLabel(activeColor) });
+      const clockwise = state.direction === 1;
+      directionIcon.textContent = clockwise ? '↻' : '↺';
+      const dirLabel = clockwise
+        ? text('minigame.trump_games.uno.status.directionClockwise', '時計回り')
+        : text('minigame.trump_games.uno.status.directionCounterClockwise', '反時計回り');
+      directionLabel.textContent = dirLabel;
+    }
+
+    function renderHand(){
+      handRow.innerHTML = '';
+      const player = players[0];
+      const playable = state.turn === 0 && !state.finished && !state.pendingColorChoice ? legalCards(player) : [];
+      player.hand.forEach(card => {
+        const btn = document.createElement('button');
+        btn.className = 'mini-trump-uno-card-btn';
+        const cardEl = createCardElement(card, { size: 'small' });
+        btn.appendChild(cardEl);
+        const isPlayable = playable.some(c => c.id === card.id);
+        if (!isPlayable || state.finished || state.turn !== 0) {
+          btn.classList.add('disabled');
+          btn.disabled = true;
+        } else {
+          btn.classList.add('playable');
+          btn.addEventListener('click', () => handleHumanPlay(card));
+        }
+        handRow.appendChild(btn);
+      });
+    }
+
+    function renderStatus(){
+      statusBox.innerHTML = '';
+      const top = getTopCard();
+      const line1 = document.createElement('div');
+      line1.textContent = text('minigame.trump_games.uno.status.currentCard', '場: {card}', { card: formatCard(top) });
+      const line2 = document.createElement('div');
+      line2.textContent = text('minigame.trump_games.uno.status.currentColor', '現在の色: {color}', { color: colorLabel(state.activeColor) });
+      const line3 = document.createElement('div');
+      const name = players[state.turn]?.name || '';
+      if (state.finished) {
+        const winner = state.lastWinner?.name || '';
+        line3.innerHTML = `<strong>${text('minigame.trump_games.uno.status.winner', '{name} の勝利！', { name: winner })}</strong>`;
+      } else if (state.pendingColorChoice && state.pendingColorChoice.playerId === 0) {
+        line3.textContent = text('minigame.trump_games.uno.status.chooseColor', '出す色を選んでください。');
+      } else if (state.turn === 0) {
+        line3.textContent = text('minigame.trump_games.uno.status.yourTurn', 'あなたの番です。');
+      } else {
+        line3.textContent = text('minigame.trump_games.uno.status.turnOf', '{name} の番', { name });
+      }
+      statusBox.appendChild(line1);
+      statusBox.appendChild(line2);
+      statusBox.appendChild(line3);
+    }
+
+    function handleDeclareUno(){
+      const player = players[0];
+      if (player.hand.length !== 1) {
+        ctx.showToast(text('minigame.trump_games.uno.toast.invalidDeclare', 'UNOを宣言できるのは残り1枚のときです。'), { type: 'warn', duration: 1600 });
+        return;
+      }
+      if (player.declared) {
+        ctx.showToast(text('minigame.trump_games.uno.toast.alreadyDeclared', 'すでにUNOを宣言しています。'), { duration: 1400 });
+        return;
+      }
+      player.declared = true;
+      state.awaitingUno = null;
+      ctx.award(15, { type: 'uno-declare' });
+      ctx.showToast(text('minigame.trump_games.uno.toast.declared', '「UNO！」'), { duration: 1600 });
+      render();
+      updateActions();
+    }
+
+    function handleDraw(){
+      if (state.turn !== 0 || state.finished) return;
+      if (state.pendingColorChoice) return;
+      if (state.drawnThisTurn) {
+        ctx.showToast(text('minigame.trump_games.uno.toast.drawLimit', '1ターンに引けるのは1枚までです。'), { type: 'warn', duration: 1500 });
+        return;
+      }
+      ctx.playClick && ctx.playClick();
+      const drawn = drawCards(players[0], 1);
+      state.drawnThisTurn = true;
+      state.canPass = true;
+      if (!drawn.length) {
+        ctx.showToast(text('minigame.trump_games.uno.toast.emptyDeck', '引けるカードがありません。'), { type: 'warn', duration: 1500 });
+        state.canPass = false;
+        setTimeout(() => advanceTurnFrom(0), 600);
+        return;
+      }
+      const card = drawn[drawn.length - 1];
+      render();
+      if (canPlayCard(card)) {
+        ctx.showToast(text('minigame.trump_games.uno.toast.drawnPlayable', '1枚ドローしました。出すカードを選べます。'), { duration: 1700 });
+      } else {
+        ctx.showToast(text('minigame.trump_games.uno.toast.noPlayable', '出せるカードがありません。自動的にパスします。'), { duration: 1700 });
+        state.canPass = false;
+        setTimeout(() => advanceTurnFrom(0), 900);
+      }
+      updateActions();
+    }
+
+    function handlePass(){
+      if (state.turn !== 0 || state.finished) return;
+      if (!state.drawnThisTurn) {
+        ctx.showToast(text('minigame.trump_games.uno.toast.mustDraw', 'パスする前にカードを引いてください。'), { type: 'warn', duration: 1500 });
+        return;
+      }
+      if (!state.canPass) return;
+      ctx.playClick && ctx.playClick();
+      advanceTurnFrom(0);
+    }
+
+    function handleHumanPlay(card){
+      if (state.turn !== 0 || state.finished) return;
+      if (state.pendingColorChoice) return;
+      if (!canPlayCard(card)) {
+        ctx.showToast(text('minigame.trump_games.uno.toast.invalidCard', 'そのカードは出せません。'), { type: 'warn', duration: 1500 });
+        return;
+      }
+      playCard(players[0], card);
+    }
+
+    function chooseAiColor(player){
+      const counts = { red: 0, yellow: 0, green: 0, blue: 0 };
+      player.hand.forEach(card => {
+        if (card.color && counts.hasOwnProperty(card.color)) counts[card.color] += 1;
+      });
+      let selected = 'red';
+      let best = -1;
+      Object.keys(counts).forEach(color => {
+        const value = counts[color];
+        if (value > best) {
+          best = value;
+          selected = color;
+        }
+      });
+      if (best <= 0) {
+        const colors = colorDefs.map(c => c.id);
+        selected = colors[Math.floor(Math.random() * colors.length)] || 'red';
+      }
+      return selected;
+    }
+
+    function applyWildChoice(player, card, color){
+      state.activeColor = color || 'none';
+      ctx.showToast(text('minigame.trump_games.uno.toast.colorChosen', '{color} を選択しました。', { color: colorLabel(color) }), { duration: 1500 });
+      state.pendingColorChoice = null;
+      if (card.value === 'wild4') {
+        const target = getNextPlayerId(player.id);
+        state.pendingDraw = { amount: 4, target };
+        state.skipNext = target;
+        if (player.human) ctx.award(20, { type: 'uno-wild4' });
+      }
+      completePlay(card, player);
+    }
+
+    function applyCardEffect(card, player){
+      if (card.value === 'skip') {
+        state.skipNext = getNextPlayerId(player.id);
+        if (player.human) ctx.award(10, { type: 'uno-skip' });
+      } else if (card.value === 'reverse') {
+        state.direction *= -1;
+        if (players.length === 2) {
+          state.skipNext = getNextPlayerId(player.id);
+        }
+        if (player.human) ctx.award(12, { type: 'uno-reverse' });
+      } else if (card.value === 'draw2') {
+        const target = getNextPlayerId(player.id);
+        state.pendingDraw = { amount: 2, target };
+        state.skipNext = target;
+        if (player.human) ctx.award(14, { type: 'uno-draw2' });
+      }
+      completePlay(card, player);
+    }
+
+    function completePlay(card, player){
+      state.turnCount += 1;
+      render();
+      if (player.hand.length === 0) {
+        finishGame(player);
+        return;
+      }
+      if (player.hand.length === 1) {
+        if (player.human) {
+          player.declared = false;
+          state.awaitingUno = player.id;
+          ctx.showToast(text('minigame.trump_games.uno.toast.reminderUno', '残り1枚！「UNO宣言」を押してください。'), { duration: 2000 });
+        } else {
+          player.declared = true;
+          ctx.showToast(text('minigame.trump_games.uno.toast.aiUno', '{name} がUNOを宣言しました！', { name: player.name }), { duration: 1700 });
+        }
+      } else {
+        player.declared = false;
+        if (state.awaitingUno === player.id) state.awaitingUno = null;
+      }
+      updateActions();
+      advanceTurnFrom(player.id);
+    }
+
+    function playCard(player, card){
+      const index = player.hand.findIndex(c => c.id === card.id);
+      if (index === -1) return;
+      player.hand.splice(index, 1);
+      state.discard.push(card);
+      state.activeValue = card.type === 'wild' ? null : card.value;
+      if (card.color) state.activeColor = card.color; else if (!card.color) state.activeColor = 'none';
+      state.drawnThisTurn = false;
+      state.canPass = false;
+      if (player.human) {
+        ctx.award(6, { type: 'uno-play', value: card.value, color: card.color });
+      }
+      if (card.type === 'wild') {
+        if (player.human) {
+          state.pendingColorChoice = { playerId: player.id, card };
+          updateStatusMessage();
+          updateActions();
+          render();
+        } else {
+          const color = chooseAiColor(player);
+          applyWildChoice(player, card, color);
+        }
+        return;
+      }
+      applyCardEffect(card, player);
+    }
+
+    function aiCardPriority(card){
+      if (card.type === 'wild') return card.value === 'wild4' ? 6 : 5;
+      if (card.value === 'draw2') return 4;
+      if (card.value === 'skip') return 3;
+      if (card.value === 'reverse') return 2;
+      return 1;
+    }
+
+    function aiTurn(player){
+      if (!player || state.turn !== player.id || state.finished) return;
+      if (state.pendingColorChoice) return;
+      const playable = legalCards(player);
+      if (playable.length) {
+        playable.sort((a, b) => aiCardPriority(b) - aiCardPriority(a));
+        const chosen = playable[0];
+        setTimeout(() => playCard(player, chosen), 420);
+        return;
+      }
+      const drawn = drawCards(player, 1);
+      render();
+      if (drawn.length) {
+        const latest = drawn[drawn.length - 1];
+        if (canPlayCard(latest)) {
+          setTimeout(() => playCard(player, latest), 420);
+          return;
+        }
+      }
+      setTimeout(() => advanceTurnFrom(player.id), 500);
+    }
+
+    function updateActions(){
+      if (state.finished) return;
+      if (state.pendingColorChoice && state.pendingColorChoice.playerId === 0) {
+        const actions = colorDefs.map(def => ({
+          labelKey: `minigame.trump_games.uno.actions.choose.${def.id}`,
+          label: text(`minigame.trump_games.uno.actions.choose.${def.id}`, '{color}にする', { color: text(def.key, def.fallback) }),
+          variant: 'primary',
+          onClick: () => handleColorChoice(def.id)
+        }));
+        ctx.setActions(actions);
+        return;
+      }
+      const actions = [];
+      if (state.turn === 0 && !state.finished) {
+        if (!state.drawnThisTurn) {
+          actions.push({ labelKey: 'minigame.trump_games.uno.actions.draw', label: text('minigame.trump_games.uno.actions.draw', 'ドロー (D)'), variant: 'primary', hotkey: 'D', onClick: () => handleDraw() });
+        }
+        if (state.drawnThisTurn && state.canPass) {
+          actions.push({ labelKey: 'minigame.trump_games.uno.actions.pass', label: text('minigame.trump_games.uno.actions.pass', 'パス (Space)'), variant: 'secondary', hotkey: ' ', onClick: () => handlePass() });
+        }
+        if (players[0].hand.length === 1 && !players[0].declared) {
+          actions.push({ labelKey: 'minigame.trump_games.uno.actions.declare', label: text('minigame.trump_games.uno.actions.declare', 'UNO宣言 (U)'), variant: 'secondary', hotkey: 'U', onClick: () => handleDeclareUno() });
+        }
+      }
+      actions.push({ labelKey: 'minigame.trump_games.uno.actions.restart', label: text('minigame.trump_games.uno.actions.restart', 'リスタート (R)'), variant: 'secondary', hotkey: 'R', onClick: () => initGame() });
+      ctx.setActions(actions);
+    }
+
+    function handleColorChoice(color){
+      if (!state.pendingColorChoice || state.pendingColorChoice.playerId !== 0) return;
+      const card = state.pendingColorChoice.card;
+      applyWildChoice(players[0], card, color);
+    }
+
+    function finishGame(winner){
+      state.finished = true;
+      state.lastWinner = winner;
+      state.pendingColorChoice = null;
+      state.awaitingUno = null;
+      const humanWin = winner?.human === true;
+      if (humanWin) {
+        ctx.award(140, { type: 'uno-win', turns: state.turnCount });
+      }
+      ctx.commitStats({ wins: humanWin ? 1 : 0, score: humanWin ? 1 : 0, bestMode: 'higher' });
+      updateHud();
+      updateStatusMessage();
+      ctx.setActions([
+        { labelKey: 'minigame.trump_games.uno.actions.restart', label: text('minigame.trump_games.uno.actions.restart', 'リスタート (R)'), variant: 'primary', hotkey: 'R', onClick: () => initGame() },
+        { labelKey: 'minigame.trump_games.common.actions.returnToList', label: text('minigame.trump_games.common.actions.returnToList', 'ゲーム一覧 (B)'), variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
+      ]);
+      render();
+    }
+
+    function initGame(){
+      players.forEach(player => { player.hand = []; player.declared = false; });
+      state.deck = createUnoDeck();
+      state.discard = [];
+      state.direction = 1;
+      state.finished = false;
+      state.drawnThisTurn = false;
+      state.canPass = false;
+      state.pendingDraw = null;
+      state.skipNext = null;
+      state.pendingColorChoice = null;
+      state.activeColor = 'none';
+      state.activeValue = null;
+      state.awaitingUno = null;
+      state.turnCount = 0;
+      state.lastWinner = null;
+      for (let i = 0; i < 7; i++) {
+        players.forEach(player => { drawCards(player, 1); });
+      }
+      let starter = drawFromDeck();
+      while (starter && starter.value === 'wild4' && state.deck.length) {
+        state.deck.push(starter);
+        ctx.cardUtils.shuffle(state.deck);
+        starter = drawFromDeck();
+      }
+      if (!starter) {
+        starter = makeCard('red', '0', 'number');
+      }
+      state.discard.push(starter);
+      state.activeColor = starter.color || 'none';
+      state.activeValue = starter.type === 'wild' ? null : starter.value;
+      if (starter.value === 'skip') {
+        state.skipNext = 0;
+      } else if (starter.value === 'reverse') {
+        state.direction = -1;
+      } else if (starter.value === 'draw2') {
+        state.pendingDraw = { amount: 2, target: 0 };
+        state.skipNext = 0;
+      } else if (starter.value === 'wild') {
+        state.activeColor = colorDefs[Math.floor(Math.random() * colorDefs.length)]?.id || 'red';
+      }
+      ctx.commitStats({ plays: 1 });
+      updateHud();
+      render();
+      updateStatusMessage();
+      updateActions();
+      beginTurn(0);
+    }
+
+    const detachLocale = ctx.onLocaleChange(() => {
+      refreshPlayerNames();
+      updateStatusMessage();
+      render();
+      updateActions();
+    });
+
+    initGame();
+
+    return {
+      start(){},
+      stop(){},
+      destroy(){ if (typeof detachLocale === 'function') detachLocale(); },
+      getScore(){ const stats = ctx.stats(); return stats.wins || 0; }
     };
   }
 

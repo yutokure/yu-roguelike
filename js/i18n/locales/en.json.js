@@ -12834,6 +12834,10 @@
           "pageone": {
             "title": "Page One",
             "description": "Classic shedding game that inspired UNO."
+          },
+          "uno": {
+            "title": "UNO",
+            "description": "Match colours and numbers in a UNO-inspired game."
           }
         },
         "common": {
@@ -13185,6 +13189,81 @@
           },
           "hud": {
             "scoreSummary": "Total {plays} games / Wins {wins}"
+          }
+        },
+        "uno": {
+          "players": {
+            "you": "You",
+            "north": "North",
+            "east": "East",
+            "west": "West"
+          },
+          "labels": {
+            "deck": "Deck",
+            "discard": "Discard",
+            "deckCount": "{count} cards",
+            "currentColor": "Current colour: {color}",
+            "unoDeclared": "UNO!"
+          },
+          "colors": {
+            "red": "Red",
+            "yellow": "Yellow",
+            "green": "Green",
+            "blue": "Blue",
+            "none": "Unset"
+          },
+          "cards": {
+            "skip": "Skip",
+            "reverse": "Reverse",
+            "draw2": "Draw Two",
+            "wild": "Wild",
+            "wild4": "Wild Draw Four"
+          },
+          "actions": {
+            "draw": "Draw (D)",
+            "pass": "Pass (Space)",
+            "declare": "Call UNO (U)",
+            "restart": "Restart (R)",
+            "choose": {
+              "red": "Choose Red",
+              "yellow": "Choose Yellow",
+              "green": "Choose Green",
+              "blue": "Choose Blue"
+            }
+          },
+          "status": {
+            "yourTurn": "Your turn.",
+            "turnOf": "{name}'s turn",
+            "chooseColor": "Select the colour to continue.",
+            "winner": "{name} wins!",
+            "currentCard": "Pile: {card}",
+            "currentColor": "Current colour: {color}",
+            "directionClockwise": "Clockwise",
+            "directionCounterClockwise": "Counter-clockwise"
+          },
+          "toast": {
+            "missedUno": "You forgot to call UNO! Draw 2 cards.",
+            "aiMissedUno": "{name} forgot to call UNO and draws 2.",
+            "invalidDeclare": "You can only call UNO with one card left.",
+            "alreadyDeclared": "You've already called UNO.",
+            "declared": "UNO!",
+            "drawLimit": "You can only draw once per turn.",
+            "emptyDeck": "No cards left to draw.",
+            "drawnPlayable": "Drew 1 card. You may play it if it matches.",
+            "noPlayable": "No playable cards. Passing automatically.",
+            "mustDraw": "Draw a card before passing.",
+            "invalidCard": "You can't play that card.",
+            "reminderUno": "One card left! Press Call UNO.",
+            "aiUno": "{name} calls UNO!",
+            "colorChosen": "{color} selected.",
+            "forcedDraw": "{name} draws {count} card(s).",
+            "skip": "{name} is skipped."
+          },
+          "hud": {
+            "scoreSummary": "Total {plays} games / Wins {wins}"
+          },
+          "opponent": {
+            "handCount": "{count} cards"
           }
         },
         "jiji": {

@@ -105,6 +105,12 @@
 
     const MIN_SIZE = 4;
     const MAX_SIZE = 18;
+    const DIRS = [
+      { dx: 1, dy: 0 },
+      { dx: -1, dy: 0 },
+      { dx: 0, dy: 1 },
+      { dx: 0, dy: -1 },
+    ];
 
     const stage = createInitialStage();
     let selectedTool = 'wall';
@@ -113,6 +119,7 @@
     let totalFits = 0;
     let widthControl;
     let heightControl;
+    let generatorLevelControl;
 
     function ensureStyles(){
       if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return;
@@ -321,6 +328,12 @@
     heightControl = createLabeledInput(text('.editor.height', '高さ'), stage.height, value => resizeStage(stage.width, value));
     editorControls.appendChild(widthControl.element);
     editorControls.appendChild(heightControl.element);
+    generatorLevelControl = createLabeledSelect(
+      text('.generator.level', '生成レベル'),
+      1,
+      Array.from({ length: 10 }, (_, index) => ({ value: index + 1, label: `${text('.generator.levelPrefix', 'Lv.')} ${index + 1}` }))
+    );
+    editorControls.appendChild(generatorLevelControl.element);
 
     function createLabeledInput(labelText, initialValue, onChange){
       const wrapper = document.createElement('label');
@@ -365,6 +378,69 @@
         }
       };
     }
+
+    function createLabeledSelect(labelText, initialValue, options){
+      const wrapper = document.createElement('label');
+      wrapper.style.display = 'flex';
+      wrapper.style.flexDirection = 'column';
+      wrapper.style.gap = '6px';
+      const span = document.createElement('span');
+      span.textContent = labelText;
+      span.style.fontSize = '12px';
+      span.style.opacity = '0.75';
+      const select = document.createElement('select');
+      select.style.background = 'rgba(15,23,42,0.85)';
+      select.style.border = '1px solid rgba(148,163,184,0.35)';
+      select.style.borderRadius = '10px';
+      select.style.padding = '6px 10px';
+      select.style.color = '#e2e8f0';
+      select.style.fontSize = '14px';
+      options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = String(option.value);
+        opt.textContent = option.label;
+        select.appendChild(opt);
+      });
+      select.value = String(initialValue);
+      wrapper.appendChild(span);
+      wrapper.appendChild(select);
+      return {
+        element: wrapper,
+        getValue(){
+          return select.value;
+        },
+        setValue(value){
+          select.value = String(value);
+        }
+      };
+    }
+
+    const generatorRow = document.createElement('div');
+    generatorRow.style.display = 'flex';
+    generatorRow.style.flexWrap = 'wrap';
+    generatorRow.style.gap = '8px';
+    generatorRow.style.alignItems = 'flex-end';
+    generatorRow.style.marginBottom = '12px';
+
+    const generateBtn = createActionButton(text('.generator.generate', '逆再生で生成'), () => {
+      const level = Math.max(1, Math.min(10, parseInt(generatorLevelControl.getValue(), 10) || 1));
+      const generated = generateStageByReverse(level);
+      if (generated){
+        applyImportedStage(generated);
+        setStatus(text('.status.generated', () => `レベル${level}のステージを生成しました。`), '#4ade80');
+      } else {
+        setStatus(text('.status.generateFailed', '生成に失敗しました。条件を調整して再試行してください。'), '#f87171');
+      }
+    });
+    generatorRow.appendChild(generateBtn);
+    const generatorHelp = document.createElement('div');
+    generatorHelp.textContent = text('.generator.help', '逆再生法でランダム生成。レベルが高いほど複雑になります。');
+    generatorHelp.style.fontSize = '12px';
+    generatorHelp.style.opacity = '0.7';
+    generatorHelp.style.flexBasis = '100%';
+    generatorHelp.style.marginTop = '4px';
+    generatorRow.appendChild(generatorHelp);
+    editorPanel.appendChild(generatorRow);
 
     const editorGrid = document.createElement('div');
     editorGrid.style.display = 'grid';
@@ -461,6 +537,338 @@
       btn.addEventListener('mouseleave', () => btn.style.background = 'rgba(15,23,42,0.75)');
       btn.addEventListener('click', onClick);
       return btn;
+    }
+
+    function generateStageByReverse(level){
+      const config = createGeneratorConfig(level);
+      for (let attempt = 0; attempt < 25; attempt++){ // retry a few times for tougher levels
+        const base = createGeneratorBase(config);
+        if (!base) continue;
+        const simulated = runReverseSimulation(base, config);
+        if (!simulated) continue;
+        return serializeGeneratedStage(simulated);
+      }
+      return null;
+    }
+
+    function createGeneratorConfig(levelInput){
+      const level = Math.max(1, Math.min(10, Math.floor(levelInput || 1)));
+      const crateCount = Math.min(2 + Math.floor(level / 2), 6);
+      const pushTarget = 6 + level * 4;
+      const minPushes = Math.max(4, Math.floor(pushTarget * 0.55));
+      const width = Math.min(MAX_SIZE, 6 + Math.floor((level + 1) / 2) * 2);
+      const height = Math.min(MAX_SIZE, 6 + Math.floor(level / 2) * 2);
+      const wallDensity = Math.min(0.22, 0.04 + level * 0.015);
+      const minCratesOffGoal = Math.min(crateCount, Math.max(1, Math.floor(level / 3) + 1));
+      return { level, crateCount, pushTarget, minPushes, width, height, wallDensity, minCratesOffGoal };
+    }
+
+    function createGeneratorBase(config){
+      const width = clampSize(config.width);
+      const height = clampSize(config.height);
+      if (width < MIN_SIZE || height < MIN_SIZE) return null;
+      const tiles = Array.from({ length: height }, () => Array.from({ length: width }, () => 'floor'));
+      for (let x = 0; x < width; x++){
+        tiles[0][x] = 'wall';
+        tiles[height - 1][x] = 'wall';
+      }
+      for (let y = 0; y < height; y++){
+        tiles[y][0] = 'wall';
+        tiles[y][width - 1] = 'wall';
+      }
+      const interiorCells = [];
+      for (let y = 1; y < height - 1; y++){
+        for (let x = 1; x < width - 1; x++){
+          interiorCells.push({ x, y });
+        }
+      }
+      const wallTargets = Math.min(interiorCells.length, Math.round(interiorCells.length * config.wallDensity));
+      const wallCandidates = interiorCells.slice();
+      shuffle(wallCandidates);
+      let placedWalls = 0;
+      for (const cell of wallCandidates){
+        if (placedWalls >= wallTargets) break;
+        // avoid cluttering around starting area by keeping at least one free neighbour
+        tiles[cell.y][cell.x] = 'wall';
+        if (!isFloorConnected(tiles)){
+          tiles[cell.y][cell.x] = 'floor';
+          continue;
+        }
+        placedWalls += 1;
+      }
+      const goalCandidates = interiorCells.filter(cell => tiles[cell.y][cell.x] !== 'wall' && !isCornerCell(cell.x, cell.y, tiles));
+      if (goalCandidates.length < config.crateCount) return null;
+      shuffle(goalCandidates);
+      const selectedGoals = goalCandidates.slice(0, config.crateCount);
+      const goals = new Set(selectedGoals.map(cell => stageKey(cell.x, cell.y)));
+      const crates = selectedGoals.map(cell => ({ x: cell.x, y: cell.y }));
+      const playerCandidates = interiorCells.filter(cell => tiles[cell.y][cell.x] !== 'wall' && !goals.has(stageKey(cell.x, cell.y)));
+      if (!playerCandidates.length) return null;
+      shuffle(playerCandidates);
+      const playerCell = playerCandidates[0];
+      return {
+        width,
+        height,
+        tiles,
+        goals,
+        crates,
+        player: { x: playerCell.x, y: playerCell.y },
+      };
+    }
+
+    function runReverseSimulation(base, config){
+      const state = {
+        width: base.width,
+        height: base.height,
+        tiles: base.tiles.map(row => row.slice()),
+        goals: new Set(base.goals),
+        crates: base.crates.map(c => ({ x: c.x, y: c.y })),
+        player: { x: base.player.x, y: base.player.y },
+      };
+      const crateMap = new Map();
+      state.crates.forEach((crate, index) => {
+        crateMap.set(stageKey(crate.x, crate.y), index);
+      });
+      const visitedStates = new Set();
+      visitedStates.add(createSignature(state.crates, state.player));
+
+      let pushes = 0;
+      let iterations = 0;
+      let idleMoves = 0;
+      let lastPush = null;
+      const maxIterations = config.pushTarget * 25;
+
+      while (pushes < config.pushTarget && iterations < maxIterations){
+        iterations += 1;
+        const reachable = computeReachableCells(state, crateMap);
+        if (!reachable.length) break;
+        const pushCandidates = collectPushCandidates(state, reachable, crateMap, lastPush, visitedStates);
+        if (!pushCandidates.length){
+          idleMoves += 1;
+          if (idleMoves > config.pushTarget * 4) break;
+          const reposition = reachable[Math.floor(Math.random() * reachable.length)];
+          state.player = { x: reposition.x, y: reposition.y };
+          continue;
+        }
+        idleMoves = 0;
+        const choice = randomChoice(pushCandidates);
+        state.player = { x: choice.from.x, y: choice.from.y };
+        const crate = state.crates[choice.crateIndex];
+        const oldKey = stageKey(crate.x, crate.y);
+        crateMap.delete(oldKey);
+        crate.x = choice.target.x;
+        crate.y = choice.target.y;
+        const newKey = stageKey(crate.x, crate.y);
+        crateMap.set(newKey, choice.crateIndex);
+        state.player = { x: choice.from.x + choice.dir.dx, y: choice.from.y + choice.dir.dy };
+        pushes += 1;
+        lastPush = { crateIndex: choice.crateIndex, dir: choice.dir };
+        visitedStates.add(createSignature(state.crates, state.player));
+      }
+
+      if (pushes < config.minPushes) return null;
+      if (countCratesOffGoal(state) < config.minCratesOffGoal) return null;
+
+      const reachable = computeReachableCells(state, crateMap);
+      if (reachable.length){
+        const crateKeys = new Set();
+        crateMap.forEach((_, key) => crateKeys.add(key));
+        const safeCells = reachable.filter(pos => !crateKeys.has(stageKey(pos.x, pos.y)) && !isAdjacentToCrate(pos.x, pos.y, crateKeys));
+        const chosen = safeCells.length ? randomChoice(safeCells) : randomChoice(reachable);
+        state.player = { x: chosen.x, y: chosen.y };
+      }
+
+      return state;
+    }
+
+    function computeReachableCells(state, crateMap){
+      const reachable = [];
+      const visited = new Set();
+      const queue = [{ x: state.player.x, y: state.player.y }];
+      const crateKeys = new Set(crateMap.keys());
+      while (queue.length){
+        const current = queue.shift();
+        const key = stageKey(current.x, current.y);
+        if (visited.has(key)) continue;
+        visited.add(key);
+        reachable.push({ x: current.x, y: current.y });
+        for (const dir of DIRS){
+          const nx = current.x + dir.dx;
+          const ny = current.y + dir.dy;
+          if (!isInsideBounds(nx, ny, state.width, state.height)) continue;
+          if (state.tiles[ny][nx] === 'wall') continue;
+          if (crateKeys.has(stageKey(nx, ny))) continue;
+          const nKey = stageKey(nx, ny);
+          if (!visited.has(nKey)){
+            queue.push({ x: nx, y: ny });
+          }
+        }
+      }
+      return reachable;
+    }
+
+    function collectPushCandidates(state, reachable, crateMap, lastPush, visitedStates){
+      const candidates = [];
+      const fallback = [];
+      for (const pos of reachable){
+        for (const dir of DIRS){
+          const crateX = pos.x + dir.dx;
+          const crateY = pos.y + dir.dy;
+          if (!isInsideBounds(crateX, crateY, state.width, state.height)) continue;
+          const crateKey = stageKey(crateX, crateY);
+          if (!crateMap.has(crateKey)) continue;
+          const pushX = crateX + dir.dx;
+          const pushY = crateY + dir.dy;
+          if (!isInsideBounds(pushX, pushY, state.width, state.height)) continue;
+          if (state.tiles[pushY][pushX] === 'wall') continue;
+          const pushKey = stageKey(pushX, pushY);
+          if (crateMap.has(pushKey)) continue;
+          const crateIndex = crateMap.get(crateKey);
+          if (wouldBeDeadlock(pushX, pushY, crateMap, crateKey, state.tiles, state.goals)) continue;
+          const playerAfter = { x: pos.x + dir.dx, y: pos.y + dir.dy };
+          const signature = signatureWithMove(state.crates, crateIndex, pushX, pushY, playerAfter);
+          if (visitedStates.has(signature)) continue;
+          const candidate = {
+            from: { x: pos.x, y: pos.y },
+            dir,
+            crateIndex,
+            target: { x: pushX, y: pushY },
+            signature,
+          };
+          if (lastPush && lastPush.crateIndex === crateIndex && isOppositeDirection(lastPush.dir, dir)){
+            fallback.push(candidate);
+          } else {
+            candidates.push(candidate);
+          }
+        }
+      }
+      return candidates.length ? candidates : fallback;
+    }
+
+    function wouldBeDeadlock(targetX, targetY, crateMap, movingKey, tiles, goals){
+      if (goals.has(stageKey(targetX, targetY))) return false;
+      const occupied = new Set();
+      crateMap.forEach((_, key) => {
+        if (key !== movingKey) occupied.add(key);
+      });
+      occupied.add(stageKey(targetX, targetY));
+      const blockedLeft = isBlockedCell(targetX - 1, targetY, occupied, tiles);
+      const blockedRight = isBlockedCell(targetX + 1, targetY, occupied, tiles);
+      const blockedUp = isBlockedCell(targetX, targetY - 1, occupied, tiles);
+      const blockedDown = isBlockedCell(targetX, targetY + 1, occupied, tiles);
+      if ((blockedUp || blockedDown) && (blockedLeft || blockedRight)) return true;
+      return false;
+    }
+
+    function isBlockedCell(x, y, occupied, tiles){
+      if (y < 0 || y >= tiles.length || x < 0 || x >= tiles[0].length) return true;
+      if (tiles[y][x] === 'wall') return true;
+      if (occupied.has(stageKey(x, y))) return true;
+      return false;
+    }
+
+    function isAdjacentToCrate(x, y, crateKeys){
+      for (const dir of DIRS){
+        if (crateKeys.has(stageKey(x + dir.dx, y + dir.dy))) return true;
+      }
+      return false;
+    }
+
+    function isOppositeDirection(a, b){
+      return a && b && a.dx === -b.dx && a.dy === -b.dy;
+    }
+
+    function createSignature(crates, player){
+      const crateKeys = crates.map(crate => stageKey(crate.x, crate.y)).sort();
+      return `${crateKeys.join('|')}|P:${player.x},${player.y}`;
+    }
+
+    function signatureWithMove(crates, crateIndex, newX, newY, playerAfter){
+      const crateKeys = crates.map((crate, index) => {
+        if (index === crateIndex) return stageKey(newX, newY);
+        return stageKey(crate.x, crate.y);
+      }).sort();
+      return `${crateKeys.join('|')}|P:${playerAfter.x},${playerAfter.y}`;
+    }
+
+    function countCratesOffGoal(state){
+      let off = 0;
+      for (const crate of state.crates){
+        if (!state.goals.has(stageKey(crate.x, crate.y))) off += 1;
+      }
+      return off;
+    }
+
+    function serializeGeneratedStage(state){
+      const walls = [];
+      for (let y = 0; y < state.height; y++){
+        for (let x = 0; x < state.width; x++){
+          if (state.tiles[y][x] === 'wall') walls.push([x, y]);
+        }
+      }
+      return {
+        width: state.width,
+        height: state.height,
+        walls,
+        goals: [...state.goals].map(key => key.split(',').map(Number)),
+        crates: state.crates.map(crate => [crate.x, crate.y]),
+        player: state.player ? [state.player.x, state.player.y] : null,
+      };
+    }
+
+    function isFloorConnected(tiles){
+      let start = null;
+      let floorCount = 0;
+      for (let y = 0; y < tiles.length; y++){
+        for (let x = 0; x < tiles[0].length; x++){
+          if (tiles[y][x] !== 'wall'){
+            floorCount += 1;
+            if (!start) start = { x, y };
+          }
+        }
+      }
+      if (!start) return false;
+      const visited = new Set();
+      const queue = [start];
+      while (queue.length){
+        const current = queue.shift();
+        const key = stageKey(current.x, current.y);
+        if (visited.has(key)) continue;
+        visited.add(key);
+        for (const dir of DIRS){
+          const nx = current.x + dir.dx;
+          const ny = current.y + dir.dy;
+          if (!isInsideBounds(nx, ny, tiles[0].length, tiles.length)) continue;
+          if (tiles[ny][nx] === 'wall') continue;
+          const nKey = stageKey(nx, ny);
+          if (!visited.has(nKey)) queue.push({ x: nx, y: ny });
+        }
+      }
+      return visited.size === floorCount;
+    }
+
+    function isCornerCell(x, y, tiles){
+      const left = tiles[y][x - 1] === 'wall';
+      const right = tiles[y][x + 1] === 'wall';
+      const up = tiles[y - 1][x] === 'wall';
+      const down = tiles[y + 1][x] === 'wall';
+      return (left || right) && (up || down);
+    }
+
+    function isInsideBounds(x, y, width, height){
+      return x >= 0 && x < width && y >= 0 && y < height;
+    }
+
+    function shuffle(array){
+      for (let i = array.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function randomChoice(array){
+      return array[Math.floor(Math.random() * array.length)];
     }
 
     function serializeStage(){

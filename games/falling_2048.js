@@ -171,17 +171,25 @@
       return false;
     }
 
+    function canEnterFromSpawn(){
+      if (!board || board.length === 0) return true;
+      const topRow = board[0];
+      if (!topRow) return true;
+      for (let x = 0; x < N; x++){
+        if (topRow[x] === 0) return true;
+      }
+      return false;
+    }
+
     function spawnTile(){
       const startX = Math.floor(N / 2);
       const startY = -1;
-      const tile = { x: startX, y: startY, value: randomTile(), displayX: startX, displayY: startY };
+      const tile = { x: startX, y: startY, value: randomTile(), displayX: startX, displayY: startY, entered: false };
       current = tile;
       fallTimer = 0;
       lockTimer = 0;
       currentDelay = baseFallDelay();
-      if (collides(tile.x, tile.y + 1)){
-        tile.y = -1;
-        tile.displayY = -1;
+      if (!canEnterFromSpawn()){
         settleCurrent();
       }
     }
@@ -286,6 +294,9 @@
         return false;
       }
       current.y = ny;
+      if (!current.entered && current.y >= 0){
+        current.entered = true;
+      }
       return true;
     }
 
@@ -295,6 +306,9 @@
       while (!collides(current.x, current.y + 1)){
         current.y += 1;
         dist++;
+      }
+      if (!current.entered && current.y >= 0){
+        current.entered = true;
       }
       if (dist > 0 && typeof awardXp === 'function'){
         awardXp(dist * 0.2, { type: 'harddrop' });
@@ -401,9 +415,14 @@
           if (tryMoveDown()){
             lockTimer = 0;
           } else {
-            lockTimer += currentDelay;
-            if (lockTimer >= 0.5){
-              settleCurrent();
+            const awaitingEntry = (!current.entered && current.y < 0 && canEnterFromSpawn());
+            if (awaitingEntry){
+              lockTimer = 0;
+            } else {
+              lockTimer += currentDelay;
+              if (lockTimer >= 0.5){
+                settleCurrent();
+              }
             }
           }
         }

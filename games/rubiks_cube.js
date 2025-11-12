@@ -546,6 +546,7 @@
     }
 
     function undoLastMove(){
+      if (solved) return;
       if (!moveHistory.length) return;
       const last = moveHistory.pop();
       const inverse = inverseMove(last);

@@ -15,6 +15,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['action']
   },
   {
+    id: 'color_sort',
+    name: 'カラーソート',
+    nameKey: 'selection.miniexp.games.color_sort.name',
+    entry: 'games/color_sort.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'カラーボールを試験管へ色分けする論理パズル。移し替えとクリアでEXP獲得。',
+    descriptionKey: 'selection.miniexp.games.color_sort.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'othello',
     name: 'オセロ',
     nameKey: 'selection.miniexp.games.othello.name',

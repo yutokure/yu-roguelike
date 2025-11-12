@@ -273,7 +273,8 @@
           ghost.style.border = '2px dashed rgba(148,163,184,0.3)';
           tubeEl.appendChild(ghost);
         }
-        tube.forEach(color => {
+        for (let i = tube.length - 1; i >= 0; i--){
+          const color = tube[i];
           const bead = document.createElement('div');
           bead.style.width = '48px';
           bead.style.height = '48px';
@@ -283,7 +284,7 @@
           bead.style.border = '2px solid rgba(15,23,42,0.25)';
           bead.style.transition = 'transform 0.12s ease';
           tubeEl.appendChild(bead);
-        });
+        }
         tubesWrapper.appendChild(tubeEl);
       });
     }

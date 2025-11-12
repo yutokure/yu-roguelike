@@ -258,6 +258,7 @@
     }
 
     function resetChain(){
+      const shouldRestart = gameOver || animationId == null;
       spawnBag = Array.from({ length: cfg.spawnCount }, () => Math.floor(Math.random() * cfg.colors));
       chain = [];
       spawnIndex = 0;
@@ -283,6 +284,7 @@
       }
       loadNextShot();
       render();
+      if (shouldRestart) start();
     }
 
     resetChain();

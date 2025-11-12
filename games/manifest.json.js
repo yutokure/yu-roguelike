@@ -496,6 +496,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'watermelon_stack',
+    name: 'スイカスタック',
+    nameKey: 'selection.miniexp.games.watermelon_stack.name',
+    entry: 'games/watermelon_stack.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '同じフルーツを落として合体させ巨大なスイカを目指す物理パズル。合体でEXP獲得',
+    descriptionKey: 'selection.miniexp.games.watermelon_stack.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'triomino_columns',
     name: 'トリオミノコラムス',
     nameKey: 'selection.miniexp.games.triomino_columns.name',

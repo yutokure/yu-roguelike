@@ -19470,6 +19470,12 @@
       "description": "Create a stage and play it instantly. Supports custom hardness and import/export."
     };
   }
+  if (!store['en'].selection.miniexp.games.watermelon_stack) {
+    store['en'].selection.miniexp.games.watermelon_stack = {
+      "name": "Watermelon Stack",
+      "description": "Drop matching fruits to merge them into larger ones in a physics puzzle inspired by the Suika Game. Earn EXP with every merge."
+    };
+  }
 
   if (!enGames.wording) {
     enGames.wording = {

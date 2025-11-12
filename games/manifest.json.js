@@ -405,6 +405,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'maze',
+    name: '迷路ウォーク',
+    nameKey: 'selection.miniexp.games.maze.name',
+    entry: 'games/maze.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'シンプルな迷路を歩いてゴールを目指そう。難易度でサイズと複雑さが変化',
+    descriptionKey: 'selection.miniexp.games.maze.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'jigsaw_puzzle',
     name: 'ジグソーパズル',
     nameKey: 'selection.miniexp.games.jigsaw_puzzle.name',

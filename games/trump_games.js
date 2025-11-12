@@ -6212,10 +6212,9 @@
     }
 
     function advanceTurnFrom(currentId, opts = {}){
-      if (!opts.skipPenalty) enforceUnoPenalty();
       if (state.finished) return;
       const next = getNextPlayerId(currentId);
-      beginTurn(next);
+      beginTurn(next, opts);
     }
 
     function handleStartEffects(playerId){
@@ -6263,22 +6262,41 @@
       }
     }
 
-    function beginTurn(playerId){
+    function beginTurn(playerId, opts = {}){
       state.turn = playerId;
       state.drawnThisTurn = false;
       state.canPass = false;
       render();
       updateHud();
-      if (handleStartEffects(playerId)) {
+      const continueTurn = () => {
+        if (handleStartEffects(playerId)) {
+          updateActions();
+          return;
+        }
+        updateStatusMessage();
         updateActions();
-        return;
+        if (state.finished) return;
+        if (playerId !== 0) {
+          setTimeout(() => aiTurn(players[playerId]), 620);
+        }
+      };
+      if (!opts.skipPenalty && state.awaitingUno != null) {
+        const awaiting = players.find(p => p.id === state.awaitingUno);
+        const humanAwaiting = awaiting?.human;
+        if (humanAwaiting) {
+          updateStatusMessage();
+          updateActions();
+          setTimeout(() => {
+            enforceUnoPenalty();
+            if (state.finished) return;
+            continueTurn();
+          }, 900);
+          return;
+        }
+        enforceUnoPenalty();
+        if (state.finished) return;
       }
-      updateStatusMessage();
-      updateActions();
-      if (state.finished) return;
-      if (playerId !== 0) {
-        setTimeout(() => aiTurn(players[playerId]), 620);
-      }
+      continueTurn();
     }
 
     function updateHud(){
@@ -6594,6 +6612,7 @@
         return;
       }
       const actions = [];
+      const awaitingHumanUno = !state.finished && state.awaitingUno === 0 && players[0].hand.length === 1 && !players[0].declared;
       if (state.turn === 0 && !state.finished) {
         if (!state.drawnThisTurn) {
           actions.push({ labelKey: 'minigame.trump_games.uno.actions.draw', label: text('minigame.trump_games.uno.actions.draw', 'ドロー (D)'), variant: 'primary', hotkey: 'D', onClick: () => handleDraw() });
@@ -6601,9 +6620,11 @@
         if (state.drawnThisTurn && state.canPass) {
           actions.push({ labelKey: 'minigame.trump_games.uno.actions.pass', label: text('minigame.trump_games.uno.actions.pass', 'パス (Space)'), variant: 'secondary', hotkey: ' ', onClick: () => handlePass() });
         }
-        if (players[0].hand.length === 1 && !players[0].declared) {
+        if (awaitingHumanUno) {
           actions.push({ labelKey: 'minigame.trump_games.uno.actions.declare', label: text('minigame.trump_games.uno.actions.declare', 'UNO宣言 (U)'), variant: 'secondary', hotkey: 'U', onClick: () => handleDeclareUno() });
         }
+      } else if (awaitingHumanUno) {
+        actions.push({ labelKey: 'minigame.trump_games.uno.actions.declare', label: text('minigame.trump_games.uno.actions.declare', 'UNO宣言 (U)'), variant: 'secondary', hotkey: 'U', onClick: () => handleDeclareUno() });
       }
       actions.push({ labelKey: 'minigame.trump_games.uno.actions.restart', label: text('minigame.trump_games.uno.actions.restart', 'リスタート (R)'), variant: 'secondary', hotkey: 'R', onClick: () => initGame() });
       ctx.setActions(actions);

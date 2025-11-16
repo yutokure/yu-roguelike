@@ -379,6 +379,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'number_link',
+    name: 'ナンバーリンク',
+    nameKey: 'selection.miniexp.games.number_link.name',
+    entry: 'games/number_link.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '同じ数字のペアを一筆書きで結ぶパズル',
+    descriptionKey: 'selection.miniexp.games.number_link.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'number_sum_sudoku',
     name: 'ナンバーサム合計ナンプレ',
     nameKey: 'selection.miniexp.games.number_sum_sudoku.name',

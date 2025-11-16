@@ -632,18 +632,18 @@
       const visitedStates = new Set();
       visitedStates.add(createSignature(state.crates, state.player));
 
-      let pushes = 0;
+      let reverseMoves = 0;
       let iterations = 0;
       let idleMoves = 0;
-      let lastPush = null;
+      let lastMove = null;
       const maxIterations = config.pushTarget * 25;
 
-      while (pushes < config.pushTarget && iterations < maxIterations){
+      while (reverseMoves < config.pushTarget && iterations < maxIterations){
         iterations += 1;
         const reachable = computeReachableCells(state, crateMap);
         if (!reachable.length) break;
-        const pushCandidates = collectPushCandidates(state, reachable, crateMap, lastPush, visitedStates);
-        if (!pushCandidates.length){
+        const pullCandidates = collectPullCandidates(state, reachable, crateMap, lastMove, visitedStates);
+        if (!pullCandidates.length){
           idleMoves += 1;
           if (idleMoves > config.pushTarget * 4) break;
           const reposition = reachable[Math.floor(Math.random() * reachable.length)];
@@ -651,7 +651,7 @@
           continue;
         }
         idleMoves = 0;
-        const choice = randomChoice(pushCandidates);
+        const choice = randomChoice(pullCandidates);
         state.player = { x: choice.from.x, y: choice.from.y };
         const crate = state.crates[choice.crateIndex];
         const oldKey = stageKey(crate.x, crate.y);
@@ -660,14 +660,15 @@
         crate.y = choice.target.y;
         const newKey = stageKey(crate.x, crate.y);
         crateMap.set(newKey, choice.crateIndex);
-        state.player = { x: choice.from.x + choice.dir.dx, y: choice.from.y + choice.dir.dy };
-        pushes += 1;
-        lastPush = { crateIndex: choice.crateIndex, dir: choice.dir };
+        state.player = { x: choice.to.x, y: choice.to.y };
+        reverseMoves += 1;
+        lastMove = { crateIndex: choice.crateIndex, dir: choice.dir };
         visitedStates.add(createSignature(state.crates, state.player));
       }
 
-      if (pushes < config.minPushes) return null;
+      if (reverseMoves < config.minPushes) return null;
       if (countCratesOffGoal(state) < config.minCratesOffGoal) return null;
+      if (!isGeneratedStateConsistent(state)) return null;
 
       const reachable = computeReachableCells(state, crateMap);
       if (reachable.length){
@@ -707,35 +708,36 @@
       return reachable;
     }
 
-    function collectPushCandidates(state, reachable, crateMap, lastPush, visitedStates){
+    function collectPullCandidates(state, reachable, crateMap, lastMove, visitedStates){
       const candidates = [];
       const fallback = [];
       for (const pos of reachable){
         for (const dir of DIRS){
-          const crateX = pos.x + dir.dx;
-          const crateY = pos.y + dir.dy;
+          const crateX = pos.x - dir.dx;
+          const crateY = pos.y - dir.dy;
           if (!isInsideBounds(crateX, crateY, state.width, state.height)) continue;
           const crateKey = stageKey(crateX, crateY);
           if (!crateMap.has(crateKey)) continue;
-          const pushX = crateX + dir.dx;
-          const pushY = crateY + dir.dy;
-          if (!isInsideBounds(pushX, pushY, state.width, state.height)) continue;
-          if (state.tiles[pushY][pushX] === 'wall') continue;
-          const pushKey = stageKey(pushX, pushY);
-          if (crateMap.has(pushKey)) continue;
+          const playerNextX = pos.x + dir.dx;
+          const playerNextY = pos.y + dir.dy;
+          if (!isInsideBounds(playerNextX, playerNextY, state.width, state.height)) continue;
+          if (state.tiles[playerNextY][playerNextX] === 'wall') continue;
+          const playerNextKey = stageKey(playerNextX, playerNextY);
+          if (crateMap.has(playerNextKey)) continue;
           const crateIndex = crateMap.get(crateKey);
-          if (wouldBeDeadlock(pushX, pushY, crateMap, crateKey, state.tiles, state.goals)) continue;
-          const playerAfter = { x: pos.x + dir.dx, y: pos.y + dir.dy };
-          const signature = signatureWithMove(state.crates, crateIndex, pushX, pushY, playerAfter);
+          if (wouldBeDeadlock(pos.x, pos.y, crateMap, crateKey, state.tiles, state.goals)) continue;
+          const playerAfter = { x: playerNextX, y: playerNextY };
+          const signature = signatureWithMove(state.crates, crateIndex, pos.x, pos.y, playerAfter);
           if (visitedStates.has(signature)) continue;
           const candidate = {
             from: { x: pos.x, y: pos.y },
             dir,
             crateIndex,
-            target: { x: pushX, y: pushY },
+            target: { x: pos.x, y: pos.y },
+            to: playerAfter,
             signature,
           };
-          if (lastPush && lastPush.crateIndex === crateIndex && isOppositeDirection(lastPush.dir, dir)){
+          if (lastMove && lastMove.crateIndex === crateIndex && isOppositeDirection(lastMove.dir, dir)){
             fallback.push(candidate);
           } else {
             candidates.push(candidate);
@@ -797,6 +799,32 @@
         if (!state.goals.has(stageKey(crate.x, crate.y))) off += 1;
       }
       return off;
+    }
+
+    function isGeneratedStateConsistent(state){
+      if (!state || !Array.isArray(state.crates)) return false;
+      if (!state.goals || typeof state.goals.size !== 'number') return false;
+      if (state.goals.size !== state.crates.length) return false;
+      const seenCrates = new Set();
+      for (const crate of state.crates){
+        if (!Number.isInteger(crate.x) || !Number.isInteger(crate.y)) return false;
+        if (!isInsideBounds(crate.x, crate.y, state.width, state.height)) return false;
+        if (state.tiles[crate.y][crate.x] === 'wall') return false;
+        const crateKey = stageKey(crate.x, crate.y);
+        if (seenCrates.has(crateKey)) return false;
+        seenCrates.add(crateKey);
+      }
+      for (const key of state.goals){
+        const [gx, gy] = key.split(',').map(n => parseInt(n, 10));
+        if (!Number.isInteger(gx) || !Number.isInteger(gy)) return false;
+        if (!isInsideBounds(gx, gy, state.width, state.height)) return false;
+        if (state.tiles[gy][gx] === 'wall') return false;
+      }
+      if (state.player){
+        if (!isInsideBounds(state.player.x, state.player.y, state.width, state.height)) return false;
+        if (state.tiles[state.player.y][state.player.x] === 'wall') return false;
+      }
+      return true;
     }
 
     function serializeGeneratedStage(state){

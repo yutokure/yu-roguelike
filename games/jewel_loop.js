@@ -39,6 +39,7 @@
     const palette = ['#f97316','#ef4444','#22c55e','#0ea5e9','#a855f7','#facc15','#14b8a6','#fb7185'];
     const RADIUS = 18;
     const SPACING = RADIUS * 2.2;
+    const COLLISION_MAX_PATH_DELTA = SPACING * 1.25;
     const BULLET_SPEED = 520;
     const SHOOTER_COOLDOWN = 0.28;
     const PROJECTILE_RADIUS = 14;
@@ -56,6 +57,37 @@
 
     function randRange(min, max){
       return min + Math.random() * (max - min);
+    }
+
+    function cross(a, b, c){
+      return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    }
+
+    function boundingBoxesOverlap(a, b, c, d){
+      return Math.max(a.x, b.x) >= Math.min(c.x, d.x)
+        && Math.max(c.x, d.x) >= Math.min(a.x, b.x)
+        && Math.max(a.y, b.y) >= Math.min(c.y, d.y)
+        && Math.max(c.y, d.y) >= Math.min(a.y, b.y);
+    }
+
+    function segmentsIntersect(segA, segB){
+      if (!boundingBoxesOverlap(segA.a, segA.b, segB.a, segB.b)) return false;
+      const d1 = cross(segA.a, segA.b, segB.a);
+      const d2 = cross(segA.a, segA.b, segB.b);
+      const d3 = cross(segB.a, segB.b, segA.a);
+      const d4 = cross(segB.a, segB.b, segA.b);
+      return d1 * d2 < 0 && d3 * d4 < 0;
+    }
+
+    function pathHasIntersections(segments){
+      for (let i = 0; i < segments.length; i++) {
+        for (let j = i + 2; j < segments.length; j++) {
+          if (segmentsIntersect(segments[i], segments[j])) {
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     function drawRoundedRectPath(ctx, x, y, width, height, radius){
@@ -114,28 +146,35 @@
       baseNormalized.push({ x: shooterNormalized.x, y: shooterNormalized.y - 0.005 });
       baseNormalized.push({ x: shooterNormalized.x, y: shooterNormalized.y });
 
-      const points = baseNormalized.map((p, i) => {
-        const rx = p.x + randRange(-0.03, 0.03) * (i === 0 ? 0.4 : 1);
-        const ry = p.y + randRange(-0.03, 0.03) * (i >= baseNormalized.length - 6 ? 0.2 : 1);
-        const clampedX = Math.max(0.02, Math.min(0.98, rx));
-        const clampedY = Math.max(0.02, Math.min(0.98, ry));
-        return {
-          x: PLAY_LEFT + PLAY_WIDTH * clampedX,
-          y: PLAY_TOP + PLAY_HEIGHT * clampedY
-        };
-      });
-      const segments = [];
-      let total = 0;
-      for (let i = 0; i < points.length - 1; i++) {
-        const a = points[i];
-        const b = points[i + 1];
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const len = Math.hypot(dx, dy);
-        segments.push({ a, b, len, dx, dy, nx: dx / len, ny: dy / len, acc: total });
-        total += len;
+      const MAX_PATH_ATTEMPTS = 12;
+      let attempt = 0;
+      while (true) {
+        const points = baseNormalized.map((p, i) => {
+          const rx = p.x + randRange(-0.03, 0.03) * (i === 0 ? 0.4 : 1);
+          const ry = p.y + randRange(-0.03, 0.03) * (i >= baseNormalized.length - 6 ? 0.2 : 1);
+          const clampedX = Math.max(0.02, Math.min(0.98, rx));
+          const clampedY = Math.max(0.02, Math.min(0.98, ry));
+          return {
+            x: PLAY_LEFT + PLAY_WIDTH * clampedX,
+            y: PLAY_TOP + PLAY_HEIGHT * clampedY
+          };
+        });
+        const segments = [];
+        let total = 0;
+        for (let i = 0; i < points.length - 1; i++) {
+          const a = points[i];
+          const b = points[i + 1];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const len = Math.hypot(dx, dy);
+          segments.push({ a, b, len, dx, dy, nx: dx / len, ny: dy / len, acc: total });
+          total += len;
+        }
+        if (!pathHasIntersections(segments) || attempt >= MAX_PATH_ATTEMPTS) {
+          return { points, segments, total };
+        }
+        attempt++;
       }
-      return { points, segments, total };
     }
 
     const path = generatePath();
@@ -187,6 +226,21 @@
         }
       }
       return best;
+    }
+
+    function clampInsertionDistance(hitIndex, estimatedDist){
+      const bead = chain[hitIndex];
+      if (!bead) return estimatedDist;
+      const lowerBound = bead.dist + SPACING * 0.1;
+      let upperBound;
+      const nextBead = hitIndex + 1 < chain.length ? chain[hitIndex + 1] : null;
+      if (nextBead) {
+        upperBound = nextBead.dist - SPACING * 0.1;
+      } else {
+        upperBound = Math.min(path.total, bead.dist + SPACING * 2);
+      }
+      if (upperBound < lowerBound) upperBound = lowerBound;
+      return Math.min(Math.max(estimatedDist, lowerBound), upperBound);
     }
 
     let chain = [];
@@ -340,8 +394,23 @@
       return index;
     }
 
+    function collapseGap(start, count){
+      if (count <= 0) return;
+      const shift = SPACING * count;
+      for (let i = start; i < chain.length; i++) {
+        chain[i].dist -= shift;
+      }
+      if (chain.length > 0 && chain[0].dist < -SPACING * 4) {
+        const correction = -SPACING * 4 - chain[0].dist;
+        for (const bead of chain) {
+          bead.dist += correction;
+        }
+      }
+    }
+
     function removeRange(start, count){
       chain.splice(start, count);
+      collapseGap(start, count);
       enforceBackward();
     }
 
@@ -453,9 +522,13 @@
         if (p.x < -40 || p.x > WIDTH + 40 || p.y < HUD_H - 40 || p.y > HEIGHT + 40) {
           continue;
         }
+        const proj = projectToPath(p.x, p.y);
         let hitIndex = -1;
         for (let i = 0; i < chain.length; i++) {
           const bead = chain[i];
+          if (Math.abs(bead.dist - proj.distance) > COLLISION_MAX_PATH_DELTA) {
+            continue;
+          }
           const pos = pointAt(bead.dist);
           const dx = pos.x - p.x;
           const dy = pos.y - p.y;
@@ -466,8 +539,8 @@
           }
         }
         if (hitIndex >= 0) {
-          const proj = projectToPath(p.x, p.y);
-          const inserted = insertBead(p.color, proj.distance);
+          const insertionDist = clampInsertionDistance(hitIndex, proj.distance);
+          const inserted = insertBead(p.color, insertionDist);
           resolveMatches(inserted);
           pruneShotQueue();
           refillShotQueue();
@@ -550,7 +623,7 @@
       const barrelLen = 52;
       ctx.save();
       ctx.translate(SHOOTER_POS.x, SHOOTER_POS.y);
-      ctx.rotate(angle);
+      ctx.rotate(angle - Math.PI / 2);
       ctx.fillStyle = '#1f2937';
       ctx.beginPath();
       ctx.arc(0, 0, 32, 0, Math.PI * 2);

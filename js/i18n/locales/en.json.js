@@ -19416,6 +19416,7 @@
     store['en'].games = {};
   }
   var enGames = store['en'].games;
+  var enMinigame = store['en'].minigame;
   if (!enGames.arrow_escape) {
     enGames.arrow_escape = {
       "name": "Arrow Escape",
@@ -19436,6 +19437,213 @@
       },
       "block": {
         "ariaLabel": "{direction} block"
+      }
+    };
+  }
+  if (!enGames.sandbox_fusion_numbers) {
+    enGames.sandbox_fusion_numbers = {
+      "name": "Sandbox Fusion Numbers",
+      "description": "A fusion-number sandbox where you can freely configure board size, spawn counts, and addition/multiplication rules.",
+      "title": "Sandbox Fusion Numbers",
+      "subtitle": "Experimental 2048 sandbox with an auto-shuffle safety net.",
+      "sections": {
+        "boardSettings": "Board Settings",
+        "spawnSettings": "Spawn Settings",
+        "modeSettings": "Fusion Rules",
+        "autoPlay": "Auto Mode",
+        "actions": "Actions"
+      },
+      "labels": {
+        "width": "Width",
+        "height": "Height",
+        "spawnCountMode": "Spawn by count",
+        "spawnRatioMode": "Spawn by ratio",
+        "spawnCount": "Tiles per spawn",
+        "spawnRatio": "Ratio of empty cells",
+        "dynamicSpawn": "Dynamic spawn (offset from max tile)",
+        "dynamicOffset": "Offset (negative makes smaller)",
+        "additionMode": "Addition mode",
+        "multiplicationMode": "Multiplication mode",
+        "baseValue": "Base value",
+        "additionStep": "Addition step",
+        "mergeRequirement": "No upgrade until tiles merge n times",
+        "mergeRequirementCount": "Required merges n",
+        "mode": "Mode",
+        "autoPlay": "Auto play while running",
+        "autoInterval": "Action interval (sec)",
+        "autoMode": "Auto pattern",
+        "autoRandom": "Random",
+        "autoCycle": "Cycle"
+      },
+      "buttons": {
+        "start": "Apply settings & start",
+        "reset": "Clear board",
+        "shuffle": "Force shuffle",
+        "export": "Export",
+        "import": "Import & apply",
+        "up": "↑ Up",
+        "down": "↓ Down",
+        "left": "← Left",
+        "right": "→ Right"
+      },
+      "placeholders": {
+        "importExport": "Paste import/export JSON here"
+      },
+      "stats": {
+        "moves": "Moves",
+        "merges": "Merges",
+        "highest": "Highest tile",
+        "lastGain": "Latest gain / EXP"
+      },
+      "hint": "Use the arrow keys or buttons. If the board jams, it auto-shuffles."
+    };
+  }
+  if (!enGames.sandboxFusionNumbers && enGames.sandbox_fusion_numbers) {
+    enGames.sandboxFusionNumbers = enGames.sandbox_fusion_numbers;
+  }
+  if (!enGames.number_sum_sudoku) {
+    enGames.number_sum_sudoku = {
+      "title": "Number Sum Sudoku",
+      "description": "Circle the digits whose row, column, and region totals match the given sums. Switch modes to add or remove circles.",
+      "controls": {
+        "circle": "Circle",
+        "erase": "Erase",
+        "reset": "Reset"
+      },
+      "status": {
+        "reset": "Circle the numbers so each total matches.",
+        "keepGoing": "Adjust the circles until every row, column, and region matches its sum.",
+        "completed": "Great! Every sum matches."
+      }
+    };
+  }
+  if (!enGames.tsum_chain) {
+    enGames.tsum_chain = {
+      "popup": {
+        "combo": "{combo} Combo!"
+      },
+      "ui": {
+        "timer": "Time: {seconds}s",
+        "score": "Cleared: {score}",
+        "finished": "Time Up!",
+        "total": "Total Cleared: {score}"
+      }
+    };
+  }
+  if (!enGames.number_link) {
+    enGames.number_link = {
+      "title": "Number Link",
+      "description": "Connect each matching pair with a single stroke. Paths cannot overlap—link them all to clear the board.",
+      "info": {
+        "difficulty": "Difficulty",
+        "progress": "Connected",
+        "pathCells": "Used cells",
+        "progressValue": "{connected}/{total}"
+      },
+      "actions": {
+        "reset": "Reset",
+        "shuffle": "New puzzle"
+      },
+      "status": {
+        "cleared": "Cleared!"
+      },
+      "difficulty": {
+        "easy": "Easy",
+        "normal": "Normal",
+        "hard": "Hard"
+      }
+    };
+  }
+  if (!enGames.watermelon_stack) {
+    enGames.watermelon_stack = {
+      "hud": {
+        "title": "WATERMELON STACK",
+        "score": "SCORE",
+        "maxLevel": "MAX LEVEL",
+        "merges": "MERGES",
+        "next": "NEXT",
+        "gameOver": "Game Over",
+        "restart": "Press R to retry"
+      }
+    };
+  }
+  if (!enGames.color_sort) {
+    enGames.color_sort = {
+      "title": "Color Sort",
+      "description": "Pour balls between test tubes to group each color. Click to select, then click the destination. Press {key} to reset.",
+      "controls": {
+        "reset": "Reset ({key})"
+      },
+      "status": {
+        "intro": "Group each color into a single tube. Capacity is {capacity}. Use empty tubes to rearrange.",
+        "clear": "Cleared! {moves} moves / {time} EXP {xp}",
+        "invalid": "You can't make that move."
+      }
+    };
+  }
+  if (!enGames.rubiks_cube) {
+    enGames.rubiks_cube = {
+      "title": "Rubik's Cube",
+      "description": "Solve all six faces on a 2D net. Difficulty {difficulty} uses a {scramble}-move scramble. Use the buttons to rotate faces.",
+      "info": {
+        "difficulty": { "label": "Difficulty" },
+        "scramble": { "label": "Scramble" },
+        "moves": { "label": "Moves" },
+        "solves": { "label": "Clears" },
+        "sequence": { "label": "Current scramble" }
+      },
+      "controls": {
+        "scramble": "Scramble again",
+        "undo": "Undo last move"
+      },
+      "faces": {
+        "u": "Up",
+        "d": "Down",
+        "l": "Left",
+        "r": "Right",
+        "f": "Front",
+        "b": "Back"
+      },
+      "history": {
+        "moves": "History: {sequence}"
+      },
+      "status": {
+        "cleared": "Solved! {moves} moves total. Clear reward {xp} EXP",
+        "running": "Scramble: {scramble} moves / Current {moves}",
+        "ready": "Press Scramble to start."
+      }
+    };
+  }
+  if (!enGames.falling2048) {
+    enGames.falling2048 = {
+      "setup": {
+        "sizeLabel": "Board size: ",
+        "startButton": "Start",
+        "boardSizeOption": "{size}×{size}"
+      },
+      "ui": {
+        "title": "Falling 2048",
+        "maxTile": "Highest tile: {value}",
+        "hint": "←→ to move / ↓ soft drop / Space hard drop",
+        "gameOver": "Game Over",
+        "restartHint": "Press R to restart"
+      }
+    };
+  }
+  if (!enGames.jewel_loop) {
+    enGames.jewel_loop = {
+      "hud": {
+        "score": "SCORE: ",
+        "shots": "SHOTS: ",
+        "combo": "BEST COMBO: ",
+        "remaining": "REMAINING: ",
+        "difficulty": "Difficulty: ",
+        "hint": "SPACE/Tap to fire · Q to swap shots",
+        "restart_hint": "Press R to retry"
+      },
+      "result": {
+        "victory": "CONGRATULATIONS! You cleared every jewel.",
+        "defeat": "They breached the rails…"
       }
     };
   }
@@ -19532,6 +19740,36 @@
       }
     };
   }
+  if (!enMiniExpGames.sandbox_fusion_numbers && enGames.sandbox_fusion_numbers) {
+    enMiniExpGames.sandbox_fusion_numbers = enGames.sandbox_fusion_numbers;
+  }
+  if (!enMiniExpGames.number_sum_sudoku && enGames.number_sum_sudoku) {
+    enMiniExpGames.number_sum_sudoku = enGames.number_sum_sudoku;
+  }
+  if (!enMiniExpGames.tsum_chain && enGames.tsum_chain) {
+    enMiniExpGames.tsum_chain = enGames.tsum_chain;
+  }
+  if (!enMiniExpGames.number_link && enGames.number_link) {
+    enMiniExpGames.number_link = enGames.number_link;
+  }
+  if (!enMiniExpGames.watermelon_stack && enGames.watermelon_stack) {
+    enMiniExpGames.watermelon_stack = enGames.watermelon_stack;
+  }
+  if (!enMiniExpGames.color_sort && enGames.color_sort) {
+    enMiniExpGames.color_sort = enGames.color_sort;
+  }
+  if (!enMiniExpGames.rubiks_cube && enGames.rubiks_cube) {
+    enMiniExpGames.rubiks_cube = enGames.rubiks_cube;
+  }
+  if (!enMiniExpGames.falling2048 && enGames.falling2048) {
+    enMiniExpGames.falling2048 = enGames.falling2048;
+  }
+  if (!enMiniExpGames.jewel_loop && enGames.jewel_loop) {
+    enMiniExpGames.jewel_loop = enGames.jewel_loop;
+  }
+  if (!enMiniExpGames.trump_games && enMinigame && enMinigame.trump_games) {
+    enMiniExpGames.trump_games = enMinigame.trump_games;
+  }
   if (!enMiniExpGames.jigsaw_puzzle) {
     enMiniExpGames.jigsaw_puzzle = {
       "title": "Jigsaw Puzzle",
@@ -19604,6 +19842,54 @@
     store['en'].selection.miniexp.games.watermelon_stack = {
       "name": "Watermelon Stack",
       "description": "Drop matching fruits to merge them into larger ones in a physics puzzle inspired by the Suika Game. Earn EXP with every merge."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.sandbox_fusion_numbers) {
+    store['en'].selection.miniexp.games.sandbox_fusion_numbers = {
+      "name": "Sandbox Fusion Numbers",
+      "description": "Configure board size, spawn rules, and fusion modes in a fully customizable 2048 sandbox."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.number_sum_sudoku) {
+    store['en'].selection.miniexp.games.number_sum_sudoku = {
+      "name": "Number Sum Sudoku",
+      "description": "Logic puzzle about circling the digits whose row, column, and region sums match the targets."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.tsum_chain) {
+    store['en'].selection.miniexp.games.tsum_chain = {
+      "name": "Tsum Chain",
+      "description": "Race the clock by tracing chains of same-colour tsumtsum blobs. Longer chains and combos earn more EXP."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.number_link) {
+    store['en'].selection.miniexp.games.number_link = {
+      "name": "Number Link",
+      "description": "Draw single-stroke paths to connect each matching pair without crossing."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.color_sort) {
+    store['en'].selection.miniexp.games.color_sort = {
+      "name": "Color Sort",
+      "description": "A logic puzzle about pouring colourful balls between test tubes to group each hue."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.rubiks_cube) {
+    store['en'].selection.miniexp.games.rubiks_cube = {
+      "name": "Rubik's Cube",
+      "description": "Solve a full cube with a six-face net view. Scramble length scales with difficulty."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.falling_2048) {
+    store['en'].selection.miniexp.games.falling_2048 = {
+      "name": "Falling 2048",
+      "description": "Drop tiles in a Tetris-like field and merge them to reach 2048."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.jewel_loop) {
+    store['en'].selection.miniexp.games.jewel_loop = {
+      "name": "Jewel Loop",
+      "description": "Fire matching gems into the moving chain to clear it before it reaches the goal."
     };
   }
 

@@ -188,17 +188,17 @@
     const toggle = document.createElement('div');
     toggle.className = 'numbersum-mode-toggle';
     const circleBtn = document.createElement('button');
-    circleBtn.textContent = '○ マーク';
+    circleBtn.textContent = text('controls.circle', '○ マーク');
     circleBtn.classList.add('active');
     const eraseBtn = document.createElement('button');
-    eraseBtn.textContent = '消去';
+    eraseBtn.textContent = text('controls.erase', '消去');
     toggle.appendChild(circleBtn);
     toggle.appendChild(eraseBtn);
     controls.appendChild(toggle);
 
     const resetBtn = document.createElement('button');
     resetBtn.className = 'numbersum-reset';
-    resetBtn.textContent = 'リセット';
+    resetBtn.textContent = text('controls.reset', 'リセット');
     controls.appendChild(resetBtn);
 
     rootContainer.appendChild(controls);

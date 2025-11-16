@@ -19295,6 +19295,7 @@
     store['ja'].games = {};
   }
   var jaGames = store['ja'].games;
+  var jaMinigame = store['ja'].minigame;
   if (!jaGames.arrow_escape) {
     jaGames.arrow_escape = {
       "name": "アローエスケープ",
@@ -19315,6 +19316,213 @@
       },
       "block": {
         "ariaLabel": "{direction} ブロック"
+      }
+    };
+  }
+  if (!jaGames.sandbox_fusion_numbers) {
+    jaGames.sandbox_fusion_numbers = {
+      "name": "サンドボックス融合数字",
+      "description": "盤面サイズや出現数、加算/乗算ルールを自由に設定できる融合数字サンドボックス",
+      "title": "サンドボックス融合数字",
+      "subtitle": "2048を自由に拡張する実験モード。詰んだら自動シャッフルします。",
+      "sections": {
+        "boardSettings": "盤面設定",
+        "spawnSettings": "出現設定",
+        "modeSettings": "融合ルール",
+        "autoPlay": "自動モード",
+        "actions": "操作"
+      },
+      "labels": {
+        "width": "幅",
+        "height": "高さ",
+        "spawnCountMode": "個数指定",
+        "spawnRatioMode": "割合指定",
+        "spawnCount": "一度に出現する数",
+        "spawnRatio": "空きマスに対する割合",
+        "dynamicSpawn": "動的出現数字 (最大値からのオフセット)",
+        "dynamicOffset": "オフセット (負値で小さく)",
+        "additionMode": "加算モード",
+        "multiplicationMode": "乗算モード",
+        "baseValue": "初期数字",
+        "additionStep": "加算モードのステップ",
+        "mergeRequirement": "n回くっつくまでは数字アップなし",
+        "mergeRequirementCount": "必要融合回数 n",
+        "mode": "モード",
+        "autoPlay": "プレイ中に自動操作",
+        "autoInterval": "操作間隔 (秒)",
+        "autoMode": "自動操作パターン",
+        "autoRandom": "ランダム",
+        "autoCycle": "ぐるぐる"
+      },
+      "buttons": {
+        "start": "設定を適用して開始",
+        "reset": "盤面をクリア",
+        "shuffle": "強制シャッフル",
+        "export": "エクスポート",
+        "import": "インポートして適用",
+        "up": "↑ 上",
+        "down": "↓ 下",
+        "left": "← 左",
+        "right": "→ 右"
+      },
+      "placeholders": {
+        "importExport": "インポート/エクスポートJSONをここに入力"
+      },
+      "stats": {
+        "moves": "移動回数",
+        "merges": "融合回数",
+        "highest": "最大数字",
+        "lastGain": "直近獲得値/EXP"
+      },
+      "hint": "矢印キーまたはボタンで操作できます。詰んだら自動でシャッフルします。"
+    };
+  }
+  if (!jaGames.sandboxFusionNumbers && jaGames.sandbox_fusion_numbers) {
+    jaGames.sandboxFusionNumbers = jaGames.sandbox_fusion_numbers;
+  }
+  if (!jaGames.number_sum_sudoku) {
+    jaGames.number_sum_sudoku = {
+      "title": "ナンバーサム合計ナンプレ",
+      "description": "行・列・エリア横の合計に一致する数字を○で囲むパズルです。モードを切り替えて○を付けたり外したりしましょう。",
+      "controls": {
+        "circle": "○ マーク",
+        "erase": "消去",
+        "reset": "リセット"
+      },
+      "status": {
+        "reset": "合計が一致するように数字を○で囲みましょう。",
+        "keepGoing": "行・列・エリアの合計が示された値になるよう調整しましょう。",
+        "completed": "お見事！すべての合計が揃いました。"
+      }
+    };
+  }
+  if (!jaGames.tsum_chain) {
+    jaGames.tsum_chain = {
+      "popup": {
+        "combo": "{combo} コンボ！"
+      },
+      "ui": {
+        "timer": "残り: {seconds}秒",
+        "score": "消去数: {score}",
+        "finished": "タイムアップ！",
+        "total": "合計消去: {score}"
+      }
+    };
+  }
+  if (!jaGames.number_link) {
+    jaGames.number_link = {
+      "title": "ナンバーリンク",
+      "description": "同じ数字のペアを一筆書きでつなげるロジックパズル。線は交差できません。すべてのペアを結んでクリアを目指しましょう。",
+      "info": {
+        "difficulty": "難易度",
+        "progress": "接続済み",
+        "pathCells": "使用マス",
+        "progressValue": "{connected}/{total}"
+      },
+      "actions": {
+        "reset": "リセット",
+        "shuffle": "新しいパズル"
+      },
+      "status": {
+        "cleared": "クリア！"
+      },
+      "difficulty": {
+        "easy": "EASY",
+        "normal": "NORMAL",
+        "hard": "HARD"
+      }
+    };
+  }
+  if (!jaGames.watermelon_stack) {
+    jaGames.watermelon_stack = {
+      "hud": {
+        "title": "スイカスタック",
+        "score": "スコア",
+        "maxLevel": "最大レベル",
+        "merges": "合体数",
+        "next": "NEXT",
+        "gameOver": "ゲームオーバー",
+        "restart": "Rキーでリトライ"
+      }
+    };
+  }
+  if (!jaGames.color_sort) {
+    jaGames.color_sort = {
+      "title": "カラーソート",
+      "description": "上からボールを移し替えて、同じ色だけの試験管を作ろう。クリックで選択、もう一度クリックで移動先を決定。{key}でリセット。",
+      "controls": {
+        "reset": "リセット ({key})"
+      },
+      "status": {
+        "intro": "同じ色のボールを1本の試験管にまとめよう。容量は{capacity}個。空の試験管を使って並べ替えてね。",
+        "clear": "クリア！ {moves} 手 / {time} 取得EXP: {xp}",
+        "invalid": "その移動はできません。"
+      }
+    };
+  }
+  if (!jaGames.rubiks_cube) {
+    jaGames.rubiks_cube = {
+      "title": "ルービック・キューブ",
+      "description": "2Dネットで6面を同時に眺めながら揃えるミニゲームです。難易度{difficulty}はスクランブル{scramble}手。ボタンで面を回転し、全ての色を揃えましょう。",
+      "info": {
+        "difficulty": { "label": "難易度" },
+        "scramble": { "label": "スクランブル" },
+        "moves": { "label": "手数" },
+        "solves": { "label": "クリア数" },
+        "sequence": { "label": "現在のスクランブル" }
+      },
+      "controls": {
+        "scramble": "再スクランブル",
+        "undo": "直前の手を戻す"
+      },
+      "faces": {
+        "u": "上面",
+        "d": "下面",
+        "l": "左面",
+        "r": "右面",
+        "f": "前面",
+        "b": "背面"
+      },
+      "history": {
+        "moves": "履歴: {sequence}"
+      },
+      "status": {
+        "cleared": "クリア！ 合計{moves}手。クリア報酬 {xp} EXP",
+        "running": "スクランブル: {scramble} 手 / 現在 {moves} 手",
+        "ready": "スクランブルを開始するとプレイできます。"
+      }
+    };
+  }
+  if (!jaGames.falling2048) {
+    jaGames.falling2048 = {
+      "setup": {
+        "sizeLabel": "盤面サイズ: ",
+        "startButton": "開始",
+        "boardSizeOption": "{size}×{size}"
+      },
+      "ui": {
+        "title": "落下式2048",
+        "maxTile": "最大タイル: {value}",
+        "hint": "←→で移動 / ↓でソフトドロップ / Spaceで即落下",
+        "gameOver": "ゲームオーバー",
+        "restartHint": "Rキーでリスタート"
+      }
+    };
+  }
+  if (!jaGames.jewel_loop) {
+    jaGames.jewel_loop = {
+      "hud": {
+        "score": "スコア: ",
+        "shots": "ショット: ",
+        "combo": "ベストコンボ: ",
+        "remaining": "残り: ",
+        "difficulty": "難易度: ",
+        "hint": "SPACE/タップで発射・Qで弾入れ替え",
+        "restart_hint": "Rキーでやり直し"
+      },
+      "result": {
+        "victory": "おめでとう！ 全てのジュエルを消去しました",
+        "defeat": "レールを突破されました…"
       }
     };
   }
@@ -19411,6 +19619,36 @@
       }
     };
   }
+  if (!jaMiniExpGames.sandbox_fusion_numbers && jaGames.sandbox_fusion_numbers) {
+    jaMiniExpGames.sandbox_fusion_numbers = jaGames.sandbox_fusion_numbers;
+  }
+  if (!jaMiniExpGames.number_sum_sudoku && jaGames.number_sum_sudoku) {
+    jaMiniExpGames.number_sum_sudoku = jaGames.number_sum_sudoku;
+  }
+  if (!jaMiniExpGames.tsum_chain && jaGames.tsum_chain) {
+    jaMiniExpGames.tsum_chain = jaGames.tsum_chain;
+  }
+  if (!jaMiniExpGames.number_link && jaGames.number_link) {
+    jaMiniExpGames.number_link = jaGames.number_link;
+  }
+  if (!jaMiniExpGames.watermelon_stack && jaGames.watermelon_stack) {
+    jaMiniExpGames.watermelon_stack = jaGames.watermelon_stack;
+  }
+  if (!jaMiniExpGames.color_sort && jaGames.color_sort) {
+    jaMiniExpGames.color_sort = jaGames.color_sort;
+  }
+  if (!jaMiniExpGames.rubiks_cube && jaGames.rubiks_cube) {
+    jaMiniExpGames.rubiks_cube = jaGames.rubiks_cube;
+  }
+  if (!jaMiniExpGames.falling2048 && jaGames.falling2048) {
+    jaMiniExpGames.falling2048 = jaGames.falling2048;
+  }
+  if (!jaMiniExpGames.jewel_loop && jaGames.jewel_loop) {
+    jaMiniExpGames.jewel_loop = jaGames.jewel_loop;
+  }
+  if (!jaMiniExpGames.trump_games && jaMinigame && jaMinigame.trump_games) {
+    jaMiniExpGames.trump_games = jaMinigame.trump_games;
+  }
   if (!jaMiniExpGames.jigsaw_puzzle) {
     jaMiniExpGames.jigsaw_puzzle = {
       "title": "ジグソーパズル",
@@ -19483,6 +19721,54 @@
     store['ja'].selection.miniexp.games.watermelon_stack = {
       "name": "スイカスタック",
       "description": "同じフルーツを落として合体させ巨大なスイカを目指す物理パズル。合体でEXP獲得"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.sandbox_fusion_numbers) {
+    store['ja'].selection.miniexp.games.sandbox_fusion_numbers = {
+      "name": "サンドボックス融合数字",
+      "description": "盤面サイズや出現数、加算/乗算ルールを自由に設定できる融合数字サンドボックス"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.number_sum_sudoku) {
+    store['ja'].selection.miniexp.games.number_sum_sudoku = {
+      "name": "ナンバーサム合計ナンプレ",
+      "description": "行と列、エリアの合計を満たす数字を○で囲む推理パズル"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.tsum_chain) {
+    store['ja'].selection.miniexp.games.tsum_chain = {
+      "name": "チェインツム",
+      "description": "同色ツムをなぞって消す制限時間パズル。チェイン数＆コンボで高EXP"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.number_link) {
+    store['ja'].selection.miniexp.games.number_link = {
+      "name": "ナンバーリンク",
+      "description": "同じ数字のペアを一筆書きで結ぶパズル"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.color_sort) {
+    store['ja'].selection.miniexp.games.color_sort = {
+      "name": "カラーソート",
+      "description": "カラフルなボールを試験管に色分けするロジックパズル。移し替えとクリアでEXP獲得。"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.rubiks_cube) {
+    store['ja'].selection.miniexp.games.rubiks_cube = {
+      "name": "ルービック・キューブ",
+      "description": "6面同時表示で揃えるルービック・キューブ。難易度でスクランブル手数が変化"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.falling_2048) {
+    store['ja'].selection.miniexp.games.falling_2048 = {
+      "name": "落下式2048",
+      "description": "テトリス風にタイルを落として2048を狙うモード"
+    };
+  }
+  if (!store['ja'].selection.miniexp.games.jewel_loop) {
+    store['ja'].selection.miniexp.games.jewel_loop = {
+      "name": "ジュエルループ",
+      "description": "レールを進むジュエルに同色の石を撃ち込み、チェーンを消してゴールを守るアクションパズル"
     };
   }
 

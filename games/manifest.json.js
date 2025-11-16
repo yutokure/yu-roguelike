@@ -340,6 +340,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'tsum_chain',
+    name: 'チェインツム',
+    nameKey: 'selection.miniexp.games.tsum_chain.name',
+    entry: 'games/tsum_chain.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '同色ツムをなぞって消す制限時間パズル。チェイン数＆コンボで高EXP',
+    descriptionKey: 'selection.miniexp.games.tsum_chain.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'minesweeper',
     name: 'マインスイーパー',
     nameKey: 'selection.miniexp.games.minesweeper.name',

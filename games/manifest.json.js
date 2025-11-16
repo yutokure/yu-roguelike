@@ -1042,6 +1042,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'jewel_loop',
+    name: 'ジュエルループ',
+    nameKey: 'selection.miniexp.games.jewel_loop.name',
+    entry: 'games/jewel_loop.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'レールを進むジュエルに同色の石を撃ち込み、チェーンを消してゴールを守るアクションパズル',
+    descriptionKey: 'selection.miniexp.games.jewel_loop.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'virus_buster',
     name: 'ドクターマリオ風',
     nameKey: 'selection.miniexp.games.virus_buster.name',

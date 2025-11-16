@@ -132,6 +132,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['board']
   },
   {
+    id: 'card_battle',
+    name: 'カードバトル：エレメントクロニクル',
+    nameKey: 'selection.miniexp.games.card_battle.name',
+    entry: 'games/card_battle.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '属性シナジーやルール切り替えで戦うデッキバトル。召喚・魔法・属性連携でEXP獲得',
+    descriptionKey: 'selection.miniexp.games.card_battle.description',
+    category: 'ボード',
+    categories: ['ボード'],
+    categoryIds: ['board']
+  },
+  {
     id: 'connect6',
     name: 'コネクトシックス',
     nameKey: 'selection.miniexp.games.connect6.name',

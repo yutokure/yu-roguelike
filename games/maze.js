@@ -6,6 +6,24 @@
     NORMAL: { width: 21, height: 17, loops: 0.18, label: 'NORMAL', xp: 90 },
     HARD: { width: 27, height: 23, loops: 0.08, label: 'HARD', xp: 140 }
   };
+  const MAZE_COLORS = {
+    path: '#ffffff',
+    wallOuter: '#000000',
+    wallInner: '#111111'
+  };
+  const CARVE_DIRECTIONS = [
+    { dx: 2, dy: 0 },
+    { dx: -2, dy: 0 },
+    { dx: 0, dy: 2 },
+    { dx: 0, dy: -2 }
+  ];
+  const PATH_DIRECTIONS = [
+    { dx: 1, dy: 0 },
+    { dx: -1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: 0, dy: -1 }
+  ];
+  const HARD_EVALUATION_ATTEMPTS = 10;
 
   function create(root, awardXp, opts){
     const difficultyKey = (opts && opts.difficulty) || 'NORMAL';
@@ -128,7 +146,7 @@
         .maze-mod-canvas {
           width: 100%;
           display: block;
-          background: #020617;
+          background: ${MAZE_COLORS.path};
           border-radius: 12px;
           border: 1px solid rgba(148, 163, 184, 0.25);
           box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.15);
@@ -170,29 +188,46 @@
 
     function initialize(){
       ensureCanvasSize();
-      mazeState = createMazeState(difficulty.width, difficulty.height, difficulty.loops);
+      mazeState = createMazeState(difficulty.width, difficulty.height, difficulty.loops, difficultyKey);
       draw();
       updateInfo();
     }
 
-    function createMazeState(width, height, loopFactor){
-      const grid = Array.from({ length: height }, () => Array(width).fill(1));
-      const stack = [];
+    function createMazeState(width, height, loopFactor, difficultyKey = 'NORMAL'){
       const start = { x: 1, y: 1 };
       const goal = { x: width - 2, y: height - 2 };
+      const grid = difficultyKey === 'HARD'
+        ? generateHighQualityHardGrid(width, height, start, goal)
+        : generateDefaultMazeGrid(width, height, loopFactor, start, goal);
+      grid[start.y][start.x] = 0;
+      grid[goal.y][goal.x] = 0;
+      return {
+        grid,
+        width,
+        height,
+        start,
+        goal,
+        player: { x: start.x, y: start.y },
+        steps: 0,
+        completed: false,
+        message: 'スタート地点にいます。ゴールを目指しましょう！'
+      };
+    }
+
+    function generateDefaultMazeGrid(width, height, loopFactor, start, goal) {
+      const grid = Array.from({ length: height }, () => Array(width).fill(1));
+      const stack = [];
       grid[start.y][start.x] = 0;
       stack.push({ x: start.x, y: start.y });
-      const directions = [
-        { dx: 2, dy: 0 },
-        { dx: -2, dy: 0 },
-        { dx: 0, dy: 2 },
-        { dx: 0, dy: -2 }
-      ];
 
       while (stack.length) {
         const current = stack[stack.length - 1];
-        const candidates = directions
-          .map(d => ({ x: current.x + d.dx, y: current.y + d.dy, between: { x: current.x + d.dx / 2, y: current.y + d.dy / 2 } }))
+        const candidates = CARVE_DIRECTIONS
+          .map(d => ({
+            x: current.x + d.dx,
+            y: current.y + d.dy,
+            between: { x: current.x + d.dx / 2, y: current.y + d.dy / 2 }
+          }))
           .filter(n => n.x > 0 && n.x < width - 1 && n.y > 0 && n.y < height - 1 && grid[n.y][n.x] === 1);
         if (candidates.length === 0) {
           stack.pop();
@@ -224,33 +259,154 @@
 
       grid[start.y][start.x] = 0;
       grid[goal.y][goal.x] = 0;
+      return grid;
+    }
 
-      return {
-        grid,
-        width,
-        height,
-        start,
-        goal,
-        player: { x: start.x, y: start.y },
-        steps: 0,
-        completed: false,
-        message: 'スタート地点にいます。ゴールを目指しましょう！'
-      };
+    function generateHighQualityHardGrid(width, height, start, goal) {
+      let bestGrid = null;
+      let bestScore = -Infinity;
+      for (let attempt = 0; attempt < HARD_EVALUATION_ATTEMPTS; attempt++) {
+        const grid = generatePerfectMazeGrid(width, height, start);
+        grid[goal.y][goal.x] = 0;
+        const path = solveMazePath(grid, start, goal);
+        if (!path) continue;
+        const score = evaluateHardPath(grid, path, width, height);
+        if (score > bestScore) {
+          bestScore = score;
+          bestGrid = grid;
+        }
+      }
+      if (!bestGrid) {
+        bestGrid = generatePerfectMazeGrid(width, height, start);
+        bestGrid[goal.y][goal.x] = 0;
+      }
+      return bestGrid;
+    }
+
+    function generatePerfectMazeGrid(width, height, start) {
+      const grid = Array.from({ length: height }, () => Array(width).fill(1));
+      const stack = [{ x: start.x, y: start.y }];
+      grid[start.y][start.x] = 0;
+      while (stack.length) {
+        const current = stack[stack.length - 1];
+        const candidates = shuffleArray(CARVE_DIRECTIONS)
+          .map(d => ({
+            x: current.x + d.dx,
+            y: current.y + d.dy,
+            between: { x: current.x + d.dx / 2, y: current.y + d.dy / 2 }
+          }))
+          .filter(n => n.x > 0 && n.x < width - 1 && n.y > 0 && n.y < height - 1 && grid[n.y][n.x] === 1);
+        if (candidates.length === 0) {
+          stack.pop();
+          continue;
+        }
+        const next = candidates[0];
+        grid[next.between.y][next.between.x] = 0;
+        grid[next.y][next.x] = 0;
+        stack.push({ x: next.x, y: next.y });
+      }
+      return grid;
+    }
+
+    function solveMazePath(grid, start, goal) {
+      const height = grid.length;
+      const width = grid[0].length;
+      const queue = [{ x: start.x, y: start.y }];
+      const parents = Array.from({ length: height }, () => Array(width).fill(null));
+      const visited = Array.from({ length: height }, () => Array(width).fill(false));
+      visited[start.y][start.x] = true;
+      while (queue.length) {
+        const current = queue.shift();
+        if (current.x === goal.x && current.y === goal.y) break;
+        for (const dir of PATH_DIRECTIONS) {
+          const nx = current.x + dir.dx;
+          const ny = current.y + dir.dy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          if (visited[ny][nx] || grid[ny][nx] === 1) continue;
+          visited[ny][nx] = true;
+          parents[ny][nx] = { x: current.x, y: current.y };
+          queue.push({ x: nx, y: ny });
+        }
+      }
+      if (!visited[goal.y][goal.x]) return null;
+      const path = [];
+      let pointer = { x: goal.x, y: goal.y };
+      while (pointer) {
+        path.push({ x: pointer.x, y: pointer.y });
+        pointer = parents[pointer.y][pointer.x];
+      }
+      return path.reverse();
+    }
+
+    function evaluateHardPath(grid, path, width, height) {
+      if (!path || path.length === 0) {
+        return 0;
+      }
+      const pathLength = path.length;
+      let turns = 0;
+      for (let i = 1; i < pathLength - 1; i++) {
+        const prev = path[i - 1];
+        const current = path[i];
+        const next = path[i + 1];
+        const dirA = { x: current.x - prev.x, y: current.y - prev.y };
+        const dirB = { x: next.x - current.x, y: next.y - current.y };
+        if (dirA.x !== dirB.x || dirA.y !== dirB.y) {
+          turns += 1;
+        }
+      }
+      const choices = countChoicesOnPath(grid, path);
+      const normalizedLength = Math.min(pathLength / ((width * height) * 0.38), 1);
+      const normalizedTurns = Math.min(turns / Math.max(pathLength / 4, 1), 1);
+      const normalizedChoices = Math.min(choices / Math.max(pathLength / 5, 1), 1);
+      return normalizedLength * 0.55 + normalizedTurns * 0.25 + normalizedChoices * 0.2;
+    }
+
+    function countChoicesOnPath(grid, path) {
+      if (!path || path.length === 0) return 0;
+      let choices = 0;
+      const height = grid.length;
+      const width = grid[0].length;
+      for (let idx = 0; idx < path.length - 1; idx++) {
+        const point = path[idx];
+        let available = 0;
+        for (const dir of PATH_DIRECTIONS) {
+          const nx = point.x + dir.dx;
+          const ny = point.y + dir.dy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          if (grid[ny][nx] === 0) {
+            available += 1;
+          }
+        }
+        const bias = idx === 0 ? 1 : 2;
+        if (available > bias) {
+          choices += available - bias;
+        }
+      }
+      return choices;
+    }
+
+    function shuffleArray(source) {
+      const array = source.slice();
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
     }
 
     function draw(){
       if (!mazeState) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#020617';
+      ctx.fillStyle = MAZE_COLORS.path;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       for (let y = 0; y < mazeState.height; y++) {
         for (let x = 0; x < mazeState.width; x++) {
           const cell = mazeState.grid[y][x];
           if (cell === 1) {
-            ctx.fillStyle = '#111827';
+            ctx.fillStyle = MAZE_COLORS.wallOuter;
             ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-            ctx.fillStyle = 'rgba(30, 41, 59, 0.75)';
+            ctx.fillStyle = MAZE_COLORS.wallInner;
             ctx.fillRect(x * CELL_SIZE + 4, y * CELL_SIZE + 4, CELL_SIZE - 8, CELL_SIZE - 8);
           }
         }
@@ -326,7 +482,7 @@
     }
 
     function regenerate(){
-      mazeState = createMazeState(difficulty.width, difficulty.height, difficulty.loops);
+      mazeState = createMazeState(difficulty.width, difficulty.height, difficulty.loops, difficultyKey);
       draw();
       updateInfo();
     }

@@ -103,6 +103,7 @@
     controlsPanel.style.display = 'flex';
     controlsPanel.style.flexDirection = 'column';
     controlsPanel.style.gap = '12px';
+    controlsPanel.style.color = '#e2e8f0';
 
     const boardPanel = document.createElement('div');
     boardPanel.style.flex = '1 1 320px';
@@ -129,14 +130,16 @@
     }
 
     function createLabeledInput(labelText, input){
-      const wrapper = document.createElement('label');
-      wrapper.style.display = 'flex';
-      wrapper.style.flexDirection = 'column';
-      wrapper.style.gap = '4px';
-      wrapper.style.fontSize = '13px';
-      const span = document.createElement('span');
-      span.textContent = labelText;
-      span.style.opacity = '0.85';
+    const wrapper = document.createElement('label');
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.gap = '4px';
+    wrapper.style.fontSize = '13px';
+    wrapper.style.color = '#e2e8f0';
+    const span = document.createElement('span');
+    span.textContent = labelText;
+    span.style.opacity = '0.9';
+    span.style.color = '#f8fafc';
       wrapper.appendChild(span);
       wrapper.appendChild(input);
       return wrapper;
@@ -186,17 +189,19 @@
 
     function createRadio(name, value, labelText, checked){
       const wrapper = document.createElement('label');
-      wrapper.style.display = 'inline-flex';
-      wrapper.style.alignItems = 'center';
-      wrapper.style.gap = '4px';
-      wrapper.style.fontSize = '13px';
-      const input = document.createElement('input');
-      input.type = 'radio';
+    wrapper.style.display = 'inline-flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.gap = '4px';
+    wrapper.style.fontSize = '13px';
+    wrapper.style.color = '#f8fafc';
+    const input = document.createElement('input');
+    input.type = 'radio';
       input.name = name;
       input.value = value;
       input.checked = checked;
-      const span = document.createElement('span');
-      span.textContent = labelText;
+    const span = document.createElement('span');
+    span.textContent = labelText;
+    span.style.color = '#f8fafc';
       wrapper.appendChild(input);
       wrapper.appendChild(span);
       return { wrapper, input };
@@ -223,11 +228,13 @@
     dynamicToggleRow.style.alignItems = 'center';
     dynamicToggleRow.style.gap = '6px';
     dynamicToggleRow.style.fontSize = '13px';
+    dynamicToggleRow.style.color = '#f8fafc';
     const dynamicToggle = document.createElement('input');
     dynamicToggle.type = 'checkbox';
     dynamicToggle.checked = state.dynamicSpawnEnabled;
     const dynamicLabel = document.createElement('span');
     dynamicLabel.textContent = text('labels.dynamicSpawn', '動的出現数字 (最大値からのオフセット)');
+    dynamicLabel.style.color = '#f8fafc';
     dynamicToggleRow.appendChild(dynamicToggle);
     dynamicToggleRow.appendChild(dynamicLabel);
 
@@ -270,6 +277,7 @@
     mergeRequirementRow.style.alignItems = 'center';
     mergeRequirementRow.style.gap = '6px';
     mergeRequirementRow.style.fontSize = '13px';
+    mergeRequirementRow.style.color = '#f8fafc';
     const mergeRequirementToggle = document.createElement('input');
     mergeRequirementToggle.type = 'checkbox';
     mergeRequirementToggle.checked = state.mergeRequirementEnabled;
@@ -297,11 +305,13 @@
     autoToggleRow.style.alignItems = 'center';
     autoToggleRow.style.gap = '6px';
     autoToggleRow.style.fontSize = '13px';
+    autoToggleRow.style.color = '#f8fafc';
     const autoToggle = document.createElement('input');
     autoToggle.type = 'checkbox';
     autoToggle.checked = state.autoEnabled;
     const autoToggleSpan = document.createElement('span');
     autoToggleSpan.textContent = text('labels.autoPlay', 'プレイ中に自動操作');
+    autoToggleSpan.style.color = '#f8fafc';
     autoToggleRow.appendChild(autoToggle);
     autoToggleRow.appendChild(autoToggleSpan);
 
@@ -423,6 +433,32 @@
     boardCanvas.style.boxShadow = '0 12px 32px rgba(15,23,42,0.55)';
 
     const boardCtx = boardCanvas.getContext('2d');
+    const tilePalette = ['#475569', '#2563eb', '#22d3ee', '#34d399', '#facc15', '#f97316', '#ef4444', '#a855f7'];
+    const animationState = {
+      running: false,
+      tiles: [],
+      spawnTiles: [],
+      startTime: 0,
+      duration: 260,
+      onComplete: null
+    };
+    let animationFrameId = null;
+    const requestFrame = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+      ? window.requestAnimationFrame.bind(window)
+      : (callback) => setTimeout(() => callback(Date.now()), 16);
+    const cancelFrame = (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function')
+      ? window.cancelAnimationFrame.bind(window)
+      : (id) => clearTimeout(id);
+    function getTimestamp(){
+      if (typeof performance === 'object' && typeof performance.now === 'function'){
+        return performance.now();
+      }
+      return Date.now();
+    }
+    function easeOutCubic(value){
+      const clamped = Math.max(0, Math.min(1, value));
+      return 1 - Math.pow(1 - clamped, 3);
+    }
 
     const statsBox = document.createElement('div');
     statsBox.style.display = 'grid';
@@ -741,7 +777,7 @@
 
     function spawnTile(){
       const empties = getEmptyCells();
-      if (!empties.length) return false;
+      if (!empties.length) return null;
       const { x, y } = empties[(Math.random() * empties.length) | 0];
       let level = 0;
       if (state.dynamicSpawnEnabled){
@@ -756,12 +792,12 @@
       if (value > state.stats.highestValue){
         state.stats.highestValue = value;
       }
-      return true;
+      return { x, y };
     }
 
     function spawnTilesAfterMove(){
       const empties = getEmptyCells();
-      if (!empties.length) return;
+      if (!empties.length) return [];
       let toSpawn = 1;
       if (state.spawnMode === 'count'){
         toSpawn = Math.max(1, Math.min(empties.length, state.spawnCount));
@@ -769,9 +805,13 @@
         const ratio = Math.max(0, Math.min(1, state.spawnRatio));
         toSpawn = Math.max(1, Math.min(empties.length, Math.round(empties.length * ratio)));
       }
+      const spawned = [];
       for (let i = 0; i < toSpawn; i++){
-        if (!spawnTile()) break;
+        const cell = spawnTile();
+        if (!cell) break;
+        spawned.push(cell);
       }
+      return spawned;
     }
 
     function slideLine(cells){
@@ -783,6 +823,7 @@
         }
       }
       const resultTiles = [];
+      const moveMeta = [];
       let i = 0;
       let moved = false;
       while (i < tiles.length){
@@ -791,13 +832,16 @@
         if (next && canMerge(current, next)){
           const merged = mergeTiles(current, next);
           resultTiles.push(merged);
+          moveMeta.push({ from: tiles[i].cell, merged: true });
           i += 2;
           moved = true;
         } else {
           resultTiles.push(current);
+          moveMeta.push({ from: tiles[i].cell, merged: false });
           i += 1;
         }
       }
+      const moves = [];
       for (let idx = 0; idx < cells.length; idx++){
         const cell = cells[idx];
         const tile = resultTiles[idx] || null;
@@ -812,8 +856,20 @@
           }
         }
         state.board[cell.y][cell.x] = tile ? { level: tile.level, progress: tile.progress || 0 } : null;
+        if (tile){
+          const meta = moveMeta[idx];
+          const needsAnimation = meta && (meta.from.x !== cell.x || meta.from.y !== cell.y || meta.merged);
+          if (needsAnimation){
+            moves.push({
+              from: { x: meta.from.x, y: meta.from.y },
+              to: { x: cell.x, y: cell.y },
+              tile: cloneTile(tile),
+              merged: !!meta.merged
+            });
+          }
+        }
       }
-      return moved;
+      return { moved, moves };
     }
 
     function handleMove(direction){
@@ -841,19 +897,39 @@
         }
       }
       let moved = false;
+      const moveAnimations = [];
       for (const line of lines){
-        if (slideLine(line)){
+        const result = slideLine(line);
+        if (result.moved){
           moved = true;
+        }
+        if (result.moves && result.moves.length){
+          moveAnimations.push(...result.moves);
         }
       }
       if (moved){
         state.stats.moves += 1;
-        spawnTilesAfterMove();
-        if (!hasMovesAvailable()){
-          shuffleBoard();
-        }
-        drawBoard();
         updateStatsUI();
+        const spawnedCells = spawnTilesAfterMove();
+        const spawnAnimations = [];
+        for (const cell of spawnedCells){
+          const row = state.board[cell.y];
+          const tile = row ? row[cell.x] : null;
+          if (tile){
+            spawnAnimations.push({
+              cell,
+              tile: cloneTile(tile)
+            });
+          }
+        }
+        const needShuffle = !hasMovesAvailable();
+        const finishAnimation = () => {
+          if (needShuffle){
+            shuffleBoard();
+          }
+          drawBoard();
+        };
+        startTileAnimation(moveAnimations, spawnAnimations, finishAnimation);
       }
     }
 
@@ -896,7 +972,30 @@
       }
     }
 
-    function drawBoard(){
+    function drawTileVisual(tile, cellX, cellY, innerSize, scale = 1){
+      const tileSize = Math.max(1, innerSize * scale);
+      const offset = (innerSize - tileSize) / 2;
+      const drawX = cellX + offset;
+      const drawY = cellY + offset;
+      const value = getTileValue(tile);
+      const color = tilePalette[tile.level % tilePalette.length];
+      boardCtx.fillStyle = color;
+      boardCtx.fillRect(drawX, drawY, tileSize, tileSize);
+      boardCtx.fillStyle = value >= 1000 ? '#f8fafc' : '#e2e8f0';
+      boardCtx.fillText(String(value), drawX + tileSize / 2, drawY + tileSize / 2);
+      if (state.mergeRequirementEnabled && state.mergeRequirementCount > 1){
+        const progressValue = tile.progress || 0;
+        const ratio = Math.min(1, progressValue / state.mergeRequirementCount);
+        const barHeight = Math.max(2, Math.floor(8 * Math.max(0.3, scale)));
+        const barY = drawY + tileSize - barHeight - 2;
+        boardCtx.fillStyle = 'rgba(15,23,42,0.6)';
+        boardCtx.fillRect(drawX, barY, tileSize, barHeight);
+        boardCtx.fillStyle = 'rgba(248,250,252,0.8)';
+        boardCtx.fillRect(drawX, barY, Math.max(0, tileSize * ratio), barHeight);
+      }
+    }
+
+    function renderBoardFrame(progress = 1){
       const padding = 16;
       const maxSize = 560 - padding * 2;
       const cellSize = Math.max(10, Math.floor(maxSize / Math.max(state.width, state.height)));
@@ -908,39 +1007,121 @@
       boardCtx.textAlign = 'center';
       boardCtx.textBaseline = 'middle';
 
+      const innerPad = Math.max(2, Math.floor(cellSize * 0.18));
+      const innerSize = cellSize - innerPad;
+      const cellOffset = innerPad / 2;
       const rows = Array.isArray(state.board) ? state.board : [];
+      const isAnimating = animationState.running && progress < 1;
+      const skipCells = new Set();
+      if (isAnimating){
+        for (const move of animationState.tiles){
+          skipCells.add(`${move.to.x},${move.to.y}`);
+        }
+        for (const spawn of animationState.spawnTiles){
+          skipCells.add(`${spawn.cell.x},${spawn.cell.y}`);
+        }
+      }
       for (let y = 0; y < state.height; y++){
         const row = rows[y];
         for (let x = 0; x < state.width; x++){
-          const tile = row?.[x] ?? null;
           const px = padding + x * cellSize;
           const py = padding + y * cellSize;
-          const innerPad = Math.max(2, Math.floor(cellSize * 0.18));
-          const innerSize = cellSize - innerPad;
-          const offset = innerPad / 2;
-          const cellX = px + offset;
-          const cellY = py + offset;
+          const cellX = px + cellOffset;
+          const cellY = py + cellOffset;
           boardCtx.fillStyle = '#0f172a';
           boardCtx.fillRect(cellX, cellY, innerSize, innerSize);
-          if (tile){
-            const value = getTileValue(tile);
-            const palette = ['#475569', '#2563eb', '#22d3ee', '#34d399', '#facc15', '#f97316', '#ef4444', '#a855f7'];
-            const color = palette[tile.level % palette.length];
-            boardCtx.fillStyle = color;
-            boardCtx.fillRect(cellX, cellY, innerSize, innerSize);
-            boardCtx.fillStyle = value >= 1000 ? '#f8fafc' : '#e2e8f0';
-            boardCtx.fillText(String(value), cellX + innerSize / 2, cellY + innerSize / 2);
-            if (state.mergeRequirementEnabled && state.mergeRequirementCount > 1){
-              const progress = tile.progress || 0;
-              boardCtx.fillStyle = 'rgba(15,23,42,0.6)';
-              boardCtx.fillRect(cellX, cellY + innerSize - 10, innerSize, 8);
-              const ratio = Math.min(1, progress / state.mergeRequirementCount);
-              boardCtx.fillStyle = 'rgba(248,250,252,0.8)';
-              boardCtx.fillRect(cellX, cellY + innerSize - 10, innerSize * ratio, 8);
-            }
+          const tile = row?.[x] ?? null;
+          if (tile && !(isAnimating && skipCells.has(`${x},${y}`))) {
+            drawTileVisual(tile, cellX, cellY, innerSize);
           }
         }
       }
+      if (isAnimating){
+        const animatedProgress = easeOutCubic(progress);
+        for (const move of animationState.tiles){
+          const fromX = padding + move.from.x * cellSize + cellOffset;
+          const fromY = padding + move.from.y * cellSize + cellOffset;
+          const toX = padding + move.to.x * cellSize + cellOffset;
+          const toY = padding + move.to.y * cellSize + cellOffset;
+          const currentX = fromX + (toX - fromX) * animatedProgress;
+          const currentY = fromY + (toY - fromY) * animatedProgress;
+          const scale = move.merged ? 1 + 0.15 * Math.sin(Math.PI * animatedProgress) : 1;
+          drawTileVisual(move.tile, currentX, currentY, innerSize, scale);
+        }
+        for (const spawn of animationState.spawnTiles){
+          const spawnX = padding + spawn.cell.x * cellSize + cellOffset;
+          const spawnY = padding + spawn.cell.y * cellSize + cellOffset;
+          const spawnScale = Math.max(0.3, animatedProgress);
+          drawTileVisual(spawn.tile, spawnX, spawnY, innerSize, spawnScale);
+        }
+      }
+    }
+
+    function drawBoard(){
+      if (animationFrameId != null){
+        cancelFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      if (animationState.running){
+        animationState.running = false;
+        const callback = animationState.onComplete;
+        animationState.onComplete = null;
+        animationState.tiles = [];
+        animationState.spawnTiles = [];
+        if (typeof callback === 'function'){
+          callback();
+          return;
+        }
+      }
+      renderBoardFrame(1);
+    }
+
+    function stepAnimationFrame(timestamp){
+      if (!animationState.running){
+        return;
+      }
+      const time = typeof timestamp === 'number' ? timestamp : getTimestamp();
+      const elapsed = time - animationState.startTime;
+      const duration = Math.max(1, animationState.duration || 260);
+      const progress = Math.min(1, Math.max(0, elapsed / duration));
+      renderBoardFrame(progress);
+      if (progress < 1){
+        animationFrameId = requestFrame(stepAnimationFrame);
+        return;
+      }
+      animationState.running = false;
+      animationFrameId = null;
+      const callback = animationState.onComplete;
+      animationState.onComplete = null;
+      animationState.tiles = [];
+      animationState.spawnTiles = [];
+      if (typeof callback === 'function'){
+        callback();
+      } else {
+        renderBoardFrame(1);
+      }
+    }
+
+    function startTileAnimation(moves, spawns, onComplete){
+      const tiles = Array.isArray(moves) ? moves.slice() : [];
+      const spawnTiles = Array.isArray(spawns) ? spawns.slice() : [];
+      if (!tiles.length && !spawnTiles.length){
+        if (typeof onComplete === 'function'){
+          onComplete();
+        } else {
+          renderBoardFrame(1);
+        }
+        return;
+      }
+      animationState.tiles = tiles;
+      animationState.spawnTiles = spawnTiles;
+      animationState.startTime = getTimestamp();
+      animationState.running = true;
+      animationState.onComplete = typeof onComplete === 'function' ? onComplete : null;
+      if (animationFrameId != null){
+        cancelFrame(animationFrameId);
+      }
+      animationFrameId = requestFrame(stepAnimationFrame);
     }
 
     function exportState(){

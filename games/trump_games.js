@@ -95,6 +95,7 @@
     .mini-trump-actions button.primary:hover{transform:translateY(-1px);}
     .mini-trump-actions button.secondary{background:rgba(37,99,235,0.18);border-color:rgba(59,130,246,0.6);}
     .mini-trump-actions button:disabled{opacity:0.5;cursor:not-allowed;}
+    .mini-trump-wrapper[data-active-game=\"uno\"] .mini-trump-actions{display:none;}
     .mini-trump-toast-container{position:absolute;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
     .mini-trump-toast{min-width:200px;padding:10px 14px;border-radius:10px;background:rgba(15,23,42,0.88);border:1px solid rgba(148,163,184,0.4);box-shadow:0 8px 20px rgba(0,0,0,0.35);font-size:13px;opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;}
     .mini-trump-toast.show{opacity:1;transform:translateY(0);}
@@ -243,7 +244,14 @@
     .mini-trump-uno-center{display:flex;gap:18px;align-items:stretch;justify-content:center;flex-wrap:wrap;}
     .mini-trump-uno-center .pile{background:rgba(15,23,42,0.38);border:1px solid rgba(148,163,184,0.22);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;min-width:160px;}
     .mini-trump-uno-center h4{margin:0;font-size:13px;color:#e2e8f0;}
+    .mini-trump-uno-log{min-height:16px;font-size:11px;color:#e5e7eb;text-align:center;opacity:0.9;}
     .mini-trump-uno-center .count{font-size:12px;color:#cbd5f5;}
+    .mini-trump-uno-actions{width:100%;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;}
+    .mini-trump-uno-actions button{min-width:120px;height:32px;border-radius:9px;border:1px solid rgba(148,163,184,0.28);background:rgba(148,163,184,0.12);color:#e2e8f0;font-weight:600;cursor:pointer;transition:background .2s,border .2s,transform .15s;font-size:12px;padding:0 10px;}
+    .mini-trump-uno-actions button.primary{background:linear-gradient(135deg,#22d3ee,#06b6d4);border-color:rgba(6,182,212,0.8);color:#0f172a;}
+    .mini-trump-uno-actions button.primary:hover{transform:translateY(-1px);}
+    .mini-trump-uno-actions button.secondary{background:rgba(37,99,235,0.18);border-color:rgba(59,130,246,0.6);}
+    .mini-trump-uno-actions button:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
     .mini-trump-uno-color-badge{min-width:140px;border-radius:10px;padding:10px 12px;text-align:center;font-weight:600;font-size:13px;color:#0f172a;background:rgba(148,163,184,0.22);border:1px solid rgba(148,163,184,0.3);transition:background .2s,border .2s,color .2s;}
     .mini-trump-uno-color-badge[data-color="red"]{background:linear-gradient(135deg,#b91c1c,#ef4444);border-color:rgba(248,113,113,0.65);color:#fee2e2;}
     .mini-trump-uno-color-badge[data-color="yellow"]{background:linear-gradient(135deg,#b45309,#facc15);border-color:rgba(250,204,21,0.6);color:#fef9c3;}
@@ -252,21 +260,23 @@
     .mini-trump-uno-color-badge[data-color="none"]{background:rgba(148,163,184,0.22);border-color:rgba(148,163,184,0.35);color:#e2e8f0;}
     .mini-trump-uno-direction{font-size:28px;color:#e2e8f0;display:flex;align-items:center;gap:8px;font-weight:600;}
     .mini-trump-uno-direction .label{font-size:12px;color:#cbd5f5;font-weight:400;}
-    .mini-trump-uno-hand{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;padding:6px;}
+    .mini-trump-uno-hand{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:6px;}
+    .mini-trump-uno.your-turn .mini-trump-uno-hand{background:rgba(37,99,235,0.18);border-radius:12px;box-shadow:0 0 0 1px rgba(59,130,246,0.6);}
     .mini-trump-uno-card-btn{border:none;background:transparent;padding:0;cursor:pointer;position:relative;}
     .mini-trump-uno-card-btn.disabled{cursor:not-allowed;opacity:0.5;}
     .mini-trump-uno-card-btn:not(.disabled):hover .mini-trump-uno-card{transform:translateY(-6px);box-shadow:0 14px 28px rgba(37,99,235,0.32);}
     .mini-trump-uno-card-btn.playable .mini-trump-uno-card{outline:2px solid rgba(253,224,71,0.85);outline-offset:-4px;}
-    .mini-trump-uno-card{min-width:84px;height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#0f172a;background:#f8fafc;border:2px solid rgba(148,163,184,0.6);box-shadow:0 8px 18px rgba(15,23,42,0.35);transition:transform .18s,box-shadow .18s;}
-    .mini-trump-uno-card.small{min-width:68px;height:96px;font-size:18px;}
+    .mini-trump-uno-card{min-width:80px;height:112px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#0f172a;background:#f8fafc;border:2px solid rgba(148,163,184,0.6);box-shadow:0 8px 18px rgba(15,23,42,0.35);transition:transform .18s,box-shadow .18s;}
+    .mini-trump-uno-card.small{min-width:60px;height:88px;font-size:16px;}
     .mini-trump-uno-card.large{min-width:96px;height:136px;font-size:24px;}
     .mini-trump-uno-card.red{background:linear-gradient(135deg,#991b1b,#ef4444);border-color:rgba(248,113,113,0.85);color:#fee2e2;}
     .mini-trump-uno-card.yellow{background:linear-gradient(135deg,#b45309,#facc15);border-color:rgba(250,204,21,0.8);color:#fef3c7;}
     .mini-trump-uno-card.green{background:linear-gradient(135deg,#166534,#22c55e);border-color:rgba(74,222,128,0.85);color:#dcfce7;}
     .mini-trump-uno-card.blue{background:linear-gradient(135deg,#1d4ed8,#38bdf8);border-color:rgba(96,165,250,0.85);color:#dbeafe;}
     .mini-trump-uno-card.wild{background:linear-gradient(135deg,#0f172a,#334155);border-color:rgba(148,163,184,0.7);color:#f8fafc;}
-    .mini-trump-uno-card .label{padding:0 8px;text-align:center;}
+    .mini-trump-uno-card .label{padding:0 6px;text-align:center;}
     .mini-trump-uno-status{font-size:12px;color:#94a3b8;display:flex;flex-direction:column;gap:4px;text-align:center;}
+    .mini-trump-uno-status .turn-order{font-size:11px;color:#cbd5f5;opacity:0.9;}
     .mini-trump-uno-status strong{color:#f8fafc;font-weight:600;}
     @media (max-width:960px){
       .mini-trump-wrapper{flex-direction:column;}
@@ -1037,6 +1047,7 @@
       state.localeListeners.clear();
       board.innerHTML = '';
       board.appendChild(placeholder);
+      delete wrapper.dataset.activeGame;
       setTitle(text('layout.title', 'トランプセレクション'), { key: 'layout.title', fallback: 'トランプセレクション' });
       setStatus(text('status.selectGame', 'ゲームを選択してください。'), { key: 'status.selectGame', fallback: 'ゲームを選択してください。' });
       setScore('');
@@ -1172,6 +1183,7 @@
       state.localeListeners.clear();
       state.currentGame = def;
       state.selectedGameId = def.id;
+      wrapper.dataset.activeGame = def.id;
       queueSave();
       clearBoard();
 
@@ -5956,7 +5968,9 @@
       activeValue: null,
       awaitingUno: null,
       turnCount: 0,
-      lastWinner: null
+      lastWinner: null,
+      pendingOpponentAcknowledgement: null,
+      lastActionMessage: ''
     };
     let cardIdCounter = 0;
 
@@ -5980,8 +5994,11 @@
     discardBox.className = 'pile';
     const discardTitle = document.createElement('h4');
     discardTitle.textContent = text('minigame.trump_games.uno.labels.discard', '捨て札');
+    const discardLog = document.createElement('div');
+    discardLog.className = 'mini-trump-uno-log';
     const discardTop = document.createElement('div');
     discardBox.appendChild(discardTitle);
+    discardBox.appendChild(discardLog);
     discardBox.appendChild(discardTop);
     const colorBadge = document.createElement('div');
     colorBadge.className = 'mini-trump-uno-color-badge';
@@ -5994,10 +6011,13 @@
     directionLabel.className = 'label';
     directionBox.appendChild(directionIcon);
     directionBox.appendChild(directionLabel);
+    const actionRow = document.createElement('div');
+    actionRow.className = 'mini-trump-uno-actions';
     center.appendChild(deckBox);
     center.appendChild(discardBox);
     center.appendChild(colorBadge);
     center.appendChild(directionBox);
+    center.appendChild(actionRow);
     const handRow = document.createElement('div');
     handRow.className = 'mini-trump-uno-hand';
     const statusBox = document.createElement('div');
@@ -6010,6 +6030,32 @@
     board.appendChild(center);
     board.appendChild(handRow);
     board.appendChild(statusBox);
+
+    function renderLocalActions(defs){
+      actionRow.innerHTML = '';
+      const actions = defs || [];
+      if (!actions.length) return;
+      actions.forEach(entry => {
+        const btn = document.createElement('button');
+        const labelText = entry.labelKey
+          ? text(entry.labelKey, entry.label || '')
+          : (entry.label != null ? entry.label : text('actions.default', 'Action'));
+        btn.textContent = labelText;
+        if (entry.variant === 'primary') btn.classList.add('primary');
+        if (entry.variant === 'secondary') btn.classList.add('secondary');
+        btn.disabled = !!entry.disabled;
+        if (typeof entry.onClick === 'function') {
+          btn.addEventListener('click', entry.onClick);
+        }
+        actionRow.appendChild(btn);
+      });
+    }
+
+    const originalSetActions = ctx.setActions ? ctx.setActions.bind(ctx) : null;
+    const setActions = (defs) => {
+      if (originalSetActions) originalSetActions(defs);
+      renderLocalActions(defs);
+    };
 
     const opponentRefs = players.slice(1).map(player => {
       const el = document.createElement('div');
@@ -6213,6 +6259,7 @@
 
     function advanceTurnFrom(currentId, opts = {}){
       if (state.finished) return;
+      if (state.pendingOpponentAcknowledgement) return;
       const next = getNextPlayerId(currentId);
       beginTurn(next, opts);
     }
@@ -6226,20 +6273,39 @@
           drawCards(player, amount);
           ctx.showToast(text('minigame.trump_games.uno.toast.forcedDraw', '{name} は {count} 枚ドロー。', { name: player.name, count: amount }), { duration: 1800 });
           if (player.human) ctx.award(-5 * amount, { type: 'uno-forced-draw', amount });
+          state.lastActionMessage = text('minigame.trump_games.uno.log.forcedDraw', '{name} は {count} 枚ドローした', { name: player.name, count: amount });
         }
         state.pendingDraw = null;
         if (state.skipNext === playerId) state.skipNext = null;
         render();
         handled = true;
-        setTimeout(() => advanceTurnFrom(playerId, { skipPenalty: true }), 480);
+        if (player && !player.human) {
+          state.pendingOpponentAcknowledgement = {
+            type: 'forcedDraw',
+            playerId,
+            amount
+          };
+          updateActions();
+        } else {
+          setTimeout(() => advanceTurnFrom(playerId, { skipPenalty: true }), 480);
+        }
       } else if (state.skipNext === playerId) {
         const player = players[playerId];
         if (player) {
           ctx.showToast(text('minigame.trump_games.uno.toast.skip', '{name} はスキップされました。', { name: player.name }), { duration: 1400 });
+          state.lastActionMessage = text('minigame.trump_games.uno.log.skipResult', '{name} はスキップされた', { name: player.name });
         }
         state.skipNext = null;
         handled = true;
-        setTimeout(() => advanceTurnFrom(playerId, { skipPenalty: true }), 420);
+        if (player && !player.human) {
+          state.pendingOpponentAcknowledgement = {
+            type: 'skip',
+            playerId
+          };
+          updateActions();
+        } else {
+          setTimeout(() => advanceTurnFrom(playerId, { skipPenalty: true }), 420);
+        }
       }
       return handled;
     }
@@ -6306,6 +6372,7 @@
     }
 
     function render(){
+      root.classList.toggle('your-turn', state.turn === 0 && !state.finished);
       renderOpponents();
       renderCenter();
       renderHand();
@@ -6335,6 +6402,7 @@
       discardTitle.textContent = text('minigame.trump_games.uno.labels.discard', '捨て札');
       deckCount.textContent = text('minigame.trump_games.uno.labels.deckCount', '{count} 枚', { count: state.deck.length });
       discardTop.innerHTML = '';
+      discardLog.textContent = state.lastActionMessage || '';
       const top = getTopCard();
       if (top) {
         discardTop.appendChild(createCardElement(top, { size: 'large' }));
@@ -6373,6 +6441,26 @@
       });
     }
 
+    function formatTurnOrderText(){
+      if (!players || !players.length) return '';
+      const arrow = state.direction === 1 ? '→' : '←';
+      const names = [];
+      let current = state.turn;
+      const total = players.length;
+      for (let i = 0; i < total; i++) {
+        const player = players[current];
+        if (!player) break;
+        let name = player.name || '';
+        if (player.id === 0) {
+          name = text('minigame.trump_games.uno.labels.youWithMarker', '{name}(あなた)', { name });
+        }
+        names.push(name);
+        current = getNextPlayerId(current);
+      }
+      const order = names.join(` ${arrow} `);
+      return text('minigame.trump_games.uno.status.turnOrder', '順番: {order}', { order });
+    }
+
     function renderStatus(){
       statusBox.innerHTML = '';
       const top = getTopCard();
@@ -6392,9 +6480,16 @@
       } else {
         line3.textContent = text('minigame.trump_games.uno.status.turnOf', '{name} の番', { name });
       }
+      const turnOrderText = formatTurnOrderText();
       statusBox.appendChild(line1);
       statusBox.appendChild(line2);
       statusBox.appendChild(line3);
+      if (turnOrderText) {
+        const line4 = document.createElement('div');
+        line4.className = 'turn-order';
+        line4.textContent = turnOrderText;
+        statusBox.appendChild(line4);
+      }
     }
 
     function handleDeclareUno(){
@@ -6411,6 +6506,7 @@
       state.awaitingUno = null;
       ctx.award(15, { type: 'uno-declare' });
       ctx.showToast(text('minigame.trump_games.uno.toast.declared', '「UNO！」'), { duration: 1600 });
+      state.lastActionMessage = text('minigame.trump_games.uno.log.declareUno', '{name} が UNO を宣言した', { name: player.name });
       render();
       updateActions();
     }
@@ -6423,7 +6519,8 @@
         return;
       }
       ctx.playClick && ctx.playClick();
-      const drawn = drawCards(players[0], 1);
+      const player = players[0];
+      const drawn = drawCards(player, 1);
       state.drawnThisTurn = true;
       state.canPass = true;
       if (!drawn.length) {
@@ -6433,6 +6530,7 @@
         return;
       }
       const card = drawn[drawn.length - 1];
+      state.lastActionMessage = text('minigame.trump_games.uno.log.draw', '{name} が 1 枚ドローした', { name: player.name });
       render();
       if (canPlayCard(card)) {
         ctx.showToast(text('minigame.trump_games.uno.toast.drawnPlayable', '1枚ドローしました。出すカードを選べます。'), { duration: 1700 });
@@ -6452,6 +6550,7 @@
       }
       if (!state.canPass) return;
       ctx.playClick && ctx.playClick();
+      state.lastActionMessage = text('minigame.trump_games.uno.log.pass', 'あなたはパスした', {});
       advanceTurnFrom(0);
     }
 
@@ -6496,6 +6595,8 @@
         state.skipNext = target;
         if (player.human) ctx.award(20, { type: 'uno-wild4' });
       }
+      const cardText = formatCard(card);
+      state.lastActionMessage = text('minigame.trump_games.uno.log.wild', '{name} が {card} を出して色を {color} にした', { name: player.name, card: cardText, color: colorLabel(color) });
       completePlay(card, player);
     }
 
@@ -6514,6 +6615,20 @@
         state.pendingDraw = { amount: 2, target };
         state.skipNext = target;
         if (player.human) ctx.award(14, { type: 'uno-draw2' });
+      }
+      if (card.value === 'skip') {
+        const target = getNextPlayerId(player.id);
+        const targetName = players[target]?.name || '';
+        state.lastActionMessage = text('minigame.trump_games.uno.log.skip', '{name} がスキップを出した（{target} はスキップ）', { name: player.name, target: targetName });
+      } else if (card.value === 'reverse') {
+        state.lastActionMessage = text('minigame.trump_games.uno.log.reverse', '{name} がリバースを出した', { name: player.name });
+      } else if (card.value === 'draw2') {
+        const target = getNextPlayerId(player.id);
+        const targetName = players[target]?.name || '';
+        state.lastActionMessage = text('minigame.trump_games.uno.log.draw2', '{name} がドロー2を出した（{target} は +2）', { name: player.name, target: targetName });
+      } else if (card.type === 'number') {
+        const cardText = formatCard(card);
+        state.lastActionMessage = text('minigame.trump_games.uno.log.play', '{name} が {card} を出した', { name: player.name, card: cardText });
       }
       completePlay(card, player);
     }
@@ -6538,8 +6653,17 @@
         player.declared = false;
         if (state.awaitingUno === player.id) state.awaitingUno = null;
       }
-      updateActions();
-      advanceTurnFrom(player.id);
+      if (player.human) {
+        updateActions();
+        advanceTurnFrom(player.id);
+      } else {
+        state.pendingOpponentAcknowledgement = {
+          type: 'turnEnd',
+          playerId: player.id,
+          card
+        };
+        updateActions();
+      }
     }
 
     function playCard(player, card){
@@ -6579,7 +6703,7 @@
 
     function aiTurn(player){
       if (!player || state.turn !== player.id || state.finished) return;
-      if (state.pendingColorChoice) return;
+      if (state.pendingColorChoice || state.pendingOpponentAcknowledgement) return;
       const playable = legalCards(player);
       if (playable.length) {
         playable.sort((a, b) => aiCardPriority(b) - aiCardPriority(a));
@@ -6588,19 +6712,65 @@
         return;
       }
       const drawn = drawCards(player, 1);
-      render();
       if (drawn.length) {
         const latest = drawn[drawn.length - 1];
+        state.lastActionMessage = text('minigame.trump_games.uno.log.draw', '{name} が 1 枚ドローした', { name: player.name });
+        render();
         if (canPlayCard(latest)) {
           setTimeout(() => playCard(player, latest), 420);
           return;
         }
+      } else {
+        render();
       }
-      setTimeout(() => advanceTurnFrom(player.id), 500);
+      state.pendingOpponentAcknowledgement = {
+        type: 'pass',
+        playerId: player.id
+      };
+      updateActions();
     }
 
     function updateActions(){
       if (state.finished) return;
+      if (state.pendingOpponentAcknowledgement && state.turn !== 0) {
+        const info = state.pendingOpponentAcknowledgement;
+        const opponent = players.find(p => p.id === info.playerId);
+        const name = opponent?.name || '';
+        let labelFallback = '読んだ (次は {name})';
+        let labelKey = 'minigame.trump_games.uno.actions.nextAfterOpponent';
+        let params = { name };
+        if (info.type === 'forcedDraw') {
+          labelKey = 'minigame.trump_games.uno.actions.nextAfterForcedDraw';
+          labelFallback = '{name} の強制ドローを読んだ (次へ)';
+          params = { name, count: info.amount || 0 };
+        } else if (info.type === 'skip') {
+          labelKey = 'minigame.trump_games.uno.actions.nextAfterSkip';
+          labelFallback = '{name} のスキップを読んだ (次へ)';
+          params = { name };
+        } else if (info.type === 'turnEnd') {
+          labelKey = 'minigame.trump_games.uno.actions.nextAfterPlay';
+          const cardText = formatCard(info.card);
+          labelFallback = '{name} の手番 ({card}) を読んだ (次へ)';
+          params = { name, card: cardText };
+        } else if (info.type === 'pass') {
+          labelKey = 'minigame.trump_games.uno.actions.nextAfterPass';
+          labelFallback = '{name} が何もしなかったのを読んだ (次へ)';
+          params = { name };
+        }
+        const actions = [{
+          labelKey,
+          label: text(labelKey, labelFallback, params),
+          variant: 'primary',
+          onClick: () => {
+            const fromId = info.playerId;
+            state.pendingOpponentAcknowledgement = null;
+            updateActions();
+            advanceTurnFrom(fromId);
+          }
+        }];
+        setActions(actions);
+        return;
+      }
       if (state.pendingColorChoice && state.pendingColorChoice.playerId === 0) {
         const actions = colorDefs.map(def => ({
           labelKey: `minigame.trump_games.uno.actions.choose.${def.id}`,
@@ -6608,7 +6778,7 @@
           variant: 'primary',
           onClick: () => handleColorChoice(def.id)
         }));
-        ctx.setActions(actions);
+        setActions(actions);
         return;
       }
       const actions = [];
@@ -6627,7 +6797,7 @@
         actions.push({ labelKey: 'minigame.trump_games.uno.actions.declare', label: text('minigame.trump_games.uno.actions.declare', 'UNO宣言 (U)'), variant: 'secondary', hotkey: 'U', onClick: () => handleDeclareUno() });
       }
       actions.push({ labelKey: 'minigame.trump_games.uno.actions.restart', label: text('minigame.trump_games.uno.actions.restart', 'リスタート (R)'), variant: 'secondary', hotkey: 'R', onClick: () => initGame() });
-      ctx.setActions(actions);
+      setActions(actions);
     }
 
     function handleColorChoice(color){
@@ -6648,10 +6818,11 @@
       ctx.commitStats({ wins: humanWin ? 1 : 0, score: humanWin ? 1 : 0, bestMode: 'higher' });
       updateHud();
       updateStatusMessage();
-      ctx.setActions([
+      const finishActions = [
         { labelKey: 'minigame.trump_games.uno.actions.restart', label: text('minigame.trump_games.uno.actions.restart', 'リスタート (R)'), variant: 'primary', hotkey: 'R', onClick: () => initGame() },
         { labelKey: 'minigame.trump_games.common.actions.returnToList', label: text('minigame.trump_games.common.actions.returnToList', 'ゲーム一覧 (B)'), variant: 'secondary', hotkey: 'B', onClick: () => ctx.exitToHub() }
-      ]);
+      ];
+      setActions(finishActions);
       render();
     }
 
@@ -6671,6 +6842,8 @@
       state.awaitingUno = null;
       state.turnCount = 0;
       state.lastWinner = null;
+       state.pendingOpponentAcknowledgement = null;
+       state.lastActionMessage = '';
       for (let i = 0; i < 7; i++) {
         players.forEach(player => { drawCards(player, 1); });
       }

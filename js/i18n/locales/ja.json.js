@@ -19349,6 +19349,12 @@
       "description": "作ったステージをすぐにプレイできるブロック崩し。カスタム硬さとインポート/エクスポート対応"
     };
   }
+  if (!store['ja'].selection.miniexp.games.watermelon_stack) {
+    store['ja'].selection.miniexp.games.watermelon_stack = {
+      "name": "スイカスタック",
+      "description": "同じフルーツを落として合体させ巨大なスイカを目指す物理パズル。合体でEXP獲得"
+    };
+  }
 
   if (!jaGames.wording) {
     jaGames.wording = {

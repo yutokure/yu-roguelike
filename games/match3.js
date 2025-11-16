@@ -44,6 +44,9 @@
     let sel = null; // {x,y}
     let running = false;
     let totalCleared = 0; // score
+    let clearBursts = []; // { cells, time, duration, combo }
+    let fallAnimations = []; // { x, fromY, toY, time, duration, color }
+    let particles = []; // { x,y,vx,vy,time,duration,color }
 
     const hue = (i)=> `hsl(${(i*57)%360} 70% 60%)`;
     const rnd = (n)=> (Math.random()*n)|0;
@@ -127,21 +130,34 @@
         const mult = Math.pow(1.5, chain-1);
         const exp = base * mult;
         awardXp && awardXp(exp, { chain, base }); awardedTotal += exp;
-        // shrink animation before clear
-        const set = new Set(cells.map(([x,y])=>`${x},${y}`));
-        for (let t=0;t<=1.001;t+=0.16){
-          ctx.fillStyle = '#0b1220'; ctx.fillRect(0,0,W,H); draw();
-          const s = 1 - t;
-          for(const [x,y] of cells){ const px=PAD+x*CELL, py=PAD+24+y*CELL; const cx=px+CELL/2, cy=py+CELL/2; ctx.save(); ctx.translate(cx,cy); ctx.scale(s,s); ctx.translate(-cx,-cy); ctx.fillStyle='#94a3b8'; ctx.fillRect(px+4,py+4,CELL-8,CELL-8); ctx.restore(); }
-          await delay(28);
+        // burst + particles
+        const uniqueCells = cells.map(([x,y]) => ({ x, y }));
+        clearBursts.push({ cells: uniqueCells, time: 0, duration: 0.35, combo: chain });
+        for(const [x,y] of cells){
+          const val = board[y][x];
+          const px = PAD + x*CELL + CELL/2;
+          const py = PAD + 24 + y*CELL + CELL/2;
+          const count = 8 + Math.min(16, cells.length);
+          for(let i=0;i<count;i++){
+            const ang = Math.random()*Math.PI*2;
+            const spd = 60 + Math.random()*160;
+            particles.push({
+              x: px,
+              y: py,
+              vx: Math.cos(ang)*spd,
+              vy: Math.sin(ang)*spd - 40,
+              time: 0,
+              duration: 0.7 + Math.random()*0.4,
+              color: hue(val),
+            });
+          }
+          board[y][x] = -1;
         }
-        // clear
-        for(const [x,y] of cells) { board[y][x] = -1; }
         clearedTotal += cells.length;
         draw();
-        await delay(60);
+        await delay(40);
         // collapse columns
-        // compute moves and animate falling
+        // compute moves to animate falling
         const moves=[]; // {color, fromY, toY, x}
         for(let x=0;x<COLS;x++){
           let write = ROWS-1;
@@ -150,24 +166,40 @@
           }
           for(let y=write;y>=0;y--) board[y][x] = -1;
         }
-        // fall animation
-        const frames=8; for(let f=1; f<=frames; f++){
-          draw();
-          const p = f/frames;
-          for(const m of moves){ const px=PAD+m.x*CELL, sy=PAD+24+m.fromY*CELL, ty=PAD+24+m.toY*CELL; const y = sy + (ty-sy)*p; ctx.fillStyle = hue(m.color); ctx.fillRect(px+4, y+4, CELL-8, CELL-8); }
-          await delay(20);
-        }
-        draw(); await delay(60);
+        // register fall animations
+        moves.forEach(m => {
+          const distance = Math.max(1, m.fromY - m.toY);
+          fallAnimations.push({
+            x: m.x,
+            fromY: m.fromY,
+            toY: m.toY,
+            time: 0,
+            duration: 0.22 + distance*0.035,
+            color: hue(m.color),
+          });
+        });
+        draw();
+        await delay(80);
         // refill
         const drops=[]; // {color,x, fromY, toY}
-        for(let x=0;x<COLS;x++) for(let y=0;y<ROWS;y++) if(board[y][x]<0){ const c=newColor(); board[y][x]=c; drops.push({ color:c, x, fromY: -rnd(3)-1, toY: y }); }
-        const frames2=10; for(let f=1; f<=frames2; f++){
-          draw();
-          const p=f/frames2;
-          for(const d of drops){ const px=PAD+d.x*CELL, sy=PAD+24+d.fromY*CELL, ty=PAD+24+d.toY*CELL; const y = sy + (ty-sy)*p; ctx.fillStyle=hue(d.color); ctx.fillRect(px+4, y+4, CELL-8, CELL-8); }
-          await delay(18);
+        for(let x=0;x<COLS;x++) for(let y=0;y<ROWS;y++) if(board[y][x]<0){
+          const c=newColor();
+          board[y][x]=c;
+          drops.push({ color:c, x, fromY: -rnd(3)-1, toY: y });
         }
-        draw(); await delay(60);
+        drops.forEach(d => {
+          const distance = d.toY - d.fromY;
+          fallAnimations.push({
+            x: d.x,
+            fromY: d.fromY,
+            toY: d.toY,
+            time: 0,
+            duration: 0.26 + distance*0.03,
+            color: hue(d.color),
+          });
+        });
+        draw();
+        await delay(80);
       }
       totalCleared += clearedTotal;
       return { chains: chain, exp: awardedTotal, tiles: clearedTotal };
@@ -189,15 +221,76 @@
         rawTiles: totalCleared,
       });
       ctx.fillText(statusText, 8, 18);
+      // base tiles
       for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
         const val = board[y][x]; const px = PAD + x*CELL; const py = PAD + 24 + y*CELL;
-        if (val<0) { ctx.fillStyle='rgba(148,163,184,0.2)'; ctx.fillRect(px+4,py+4,CELL-8,CELL-8); continue; }
+        if (val<0) { ctx.fillStyle='rgba(148,163,184,0.18)'; ctx.fillRect(px+4,py+4,CELL-8,CELL-8); continue; }
         ctx.fillStyle = hue(val);
         ctx.fillRect(px+4, py+4, CELL-8, CELL-8);
       }
       if (sel){
         const px = PAD + sel.x*CELL; const py = PAD + 24 + sel.y*CELL;
         ctx.strokeStyle='#fde68a'; ctx.lineWidth=3; ctx.strokeRect(px+2,py+2,CELL-4,CELL-4);
+      }
+
+      // fall animations
+      for (let i=fallAnimations.length-1;i>=0;i--){
+        const f = fallAnimations[i];
+        f.time += 0.016;
+        const prog = f.time / f.duration;
+        if (prog >= 1){ fallAnimations.splice(i,1); continue; }
+        const ease = 1 - Math.pow(1-prog,3);
+        const row = f.fromY + (f.toY - f.fromY)*ease;
+        const px = PAD + f.x*CELL;
+        const py = PAD + 24 + row*CELL;
+        const wobble = Math.sin(prog*Math.PI)*2;
+        ctx.save();
+        ctx.globalAlpha = 0.4 + 0.6*(1-prog);
+        ctx.fillStyle = f.color;
+        ctx.translate(px+CELL/2 + wobble, py+CELL/2);
+        ctx.fillRect(-CELL/2+4, -CELL/2+4, CELL-8, CELL-8);
+        ctx.restore();
+      }
+
+      // clear bursts
+      for (let i=clearBursts.length-1;i>=0;i--){
+        const b = clearBursts[i];
+        b.time += 0.016;
+        const prog = b.time / b.duration;
+        if (prog >= 1){ clearBursts.splice(i,1); continue; }
+        const alpha = 1 - prog;
+        const scale = 1 + prog*0.7;
+        ctx.save();
+        ctx.globalAlpha = alpha*0.9;
+        b.cells.forEach(c=>{
+          const px = PAD + c.x*CELL + CELL/2;
+          const py = PAD + 24 + c.y*CELL + CELL/2;
+          ctx.beginPath();
+          ctx.arc(px,py,(CELL/2-6)*scale,0,Math.PI*2);
+          ctx.strokeStyle = b.combo >= 2 ? 'rgba(251,191,36,0.95)' : 'rgba(248,250,252,0.9)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      // particles
+      for (let i=particles.length-1;i>=0;i--){
+        const p = particles[i];
+        p.time += 0.016;
+        const prog = p.time / p.duration;
+        if (prog >= 1){ particles.splice(i,1); continue; }
+        const ratio = 1 - prog;
+        p.x += p.vx * 0.016;
+        p.y += p.vy * 0.016;
+        p.vy += 220 * 0.016;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ratio);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2 + (1-ratio)*2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
       }
     }
 

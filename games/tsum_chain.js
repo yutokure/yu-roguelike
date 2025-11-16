@@ -54,8 +54,14 @@
     let timerId = null;
     let remaining = cfg.time;
     let lastFrame = null;
+    let lastNow = 0;
     let comboLevel = 0;
     let lastClearTime = 0;
+    let inputLocked = false;
+
+    let clearAnimations = [];
+    let fallAnimations = [];
+    let particles = [];
 
     const nowMs = () => {
       try {
@@ -118,7 +124,7 @@
     }
 
     function startSelection(ev){
-      if (!running) return;
+      if (!running || inputLocked) return;
       const cell = cellFromPoint(ev.clientX, ev.clientY);
       if (!cell) return;
       selection = [cell];
@@ -163,16 +169,69 @@
       const count = selection.length;
       const set = new Set(selection.map(({ x, y }) => `${x},${y}`));
       if (count < 3) return;
+      inputLocked = true;
+      const now = nowMs();
       for(const key of set){
         const [xStr, yStr] = key.split(',');
         const x = Number(xStr);
         const y = Number(yStr);
+        const colorIndex = board[y][x];
+        if (colorIndex >= 0){
+          clearAnimations.push({
+            x,
+            y,
+            colorIndex,
+            start: now,
+            duration: 260
+          });
+          const centerX = PAD + x * CELL + CELL / 2;
+          const centerY = PAD + HEADER + y * CELL + CELL / 2;
+          const particleCount = 10 + Math.min(10, count * 2);
+          for(let i=0;i<particleCount;i++){
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 60 + Math.random() * 140;
+            particles.push({
+              x: centerX,
+              y: centerY,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 40,
+              radius: 2.5 + Math.random() * 2.5,
+              life: 0.45 + Math.random() * 0.35,
+              maxLife: 0.8,
+              colorIndex
+            });
+          }
+        }
         board[y][x] = -1;
       }
-      collapseBoard();
-      refillBoard();
+      const moves = collapseBoard();
+      const spawns = refillBoard();
+      const baseFallDuration = 240;
+      const perCellFall = 55;
+      for(const move of moves){
+        const distance = Math.max(1, Math.abs(move.toY - move.fromY));
+        fallAnimations.push({
+          x: move.x,
+          fromRow: move.fromY,
+          toRow: move.toY,
+          colorIndex: move.colorIndex,
+          start: now,
+          duration: baseFallDuration + distance * perCellFall
+        });
+      }
+      for(const spawn of spawns){
+        const fromRow = -1 - Math.floor(Math.random() * 3);
+        const distance = spawn.y - fromRow;
+        fallAnimations.push({
+          x: spawn.x,
+          fromRow,
+          toRow: spawn.y,
+          colorIndex: spawn.colorIndex,
+          start: now,
+          duration: baseFallDuration + distance * perCellFall
+        });
+      }
       totalCleared += count;
-      const now = nowMs();
       if (now - lastClearTime <= 2600) {
         comboLevel += 1;
       } else {
@@ -193,10 +252,19 @@
     }
 
     function collapseBoard(){
+      const moves = [];
       for(let x=0;x<COLS;x++){
         let write = ROWS - 1;
         for(let y=ROWS-1;y>=0;y--){
           if (board[y][x] >= 0){
+            if (write !== y){
+              moves.push({
+                x,
+                fromY: y,
+                toY: write,
+                colorIndex: board[y][x]
+              });
+            }
             board[write][x] = board[y][x];
             if (write !== y) board[y][x] = -1;
             write--;
@@ -206,19 +274,55 @@
           board[y][x] = -1;
         }
       }
+      return moves;
     }
 
     function refillBoard(){
+      const spawns = [];
       for(let x=0;x<COLS;x++){
         for(let y=0;y<ROWS;y++){
           if (board[y][x] === -1){
-            board[y][x] = newColor();
+            const colorIndex = newColor();
+            board[y][x] = colorIndex;
+            spawns.push({ x, y, colorIndex });
           }
         }
+      }
+      return spawns;
+    }
+
+    function hasActiveAnimations(){
+      return clearAnimations.length > 0 || fallAnimations.length > 0 || particles.length > 0;
+    }
+
+    function updateAnimations(dt){
+      const now = nowMs();
+      clearAnimations = clearAnimations.filter((anim) => {
+        const t = (now - anim.start) / anim.duration;
+        return t < 1;
+      });
+      fallAnimations = fallAnimations.filter((anim) => {
+        const t = (now - anim.start) / anim.duration;
+        return t < 1;
+      });
+      particles = particles.filter((p) => {
+        p.life -= dt;
+        if (p.life <= 0) return false;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += (120 * dt);
+        return true;
+      });
+      if (!hasActiveAnimations()){
+        inputLocked = false;
       }
     }
 
     function draw(){
+      if (!lastNow){
+        lastNow = nowMs();
+      }
+      const animNow = lastNow;
       ctx.clearRect(0,0,W,H);
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0,0,W,H);
@@ -235,6 +339,14 @@
       ctx.textAlign = 'right';
       ctx.fillText(scoreText, W - PAD - 12, PAD + (HEADER - PAD / 2) / 2);
 
+      const fallingTargets = new Set();
+      for (const anim of fallAnimations){
+        const t = Math.min(1, (animNow - anim.start) / anim.duration);
+        if (t < 1){
+          fallingTargets.add(`${anim.x},${anim.toRow}`);
+        }
+      }
+
       for(let y=0;y<ROWS;y++){
         for(let x=0;x<COLS;x++){
           const px = PAD + x * CELL;
@@ -242,13 +354,72 @@
           ctx.fillStyle = '#1e293b';
           ctx.fillRect(px + 2, py + 2, CELL - 4, CELL - 4);
           const v = board[y][x];
-          if (v >= 0){
+          if (v >= 0 && !fallingTargets.has(`${x},${y}`)){
             ctx.fillStyle = hue(v);
             drawRoundedRect(px + 6, py + 6, CELL - 12, CELL - 12, 16);
             ctx.fill();
           }
       }
     }
+
+      if (clearAnimations.length > 0){
+        ctx.save();
+        for (const anim of clearAnimations){
+          const tRaw = (animNow - anim.start) / anim.duration;
+          if (tRaw <= 0) continue;
+          const t = Math.min(1, tRaw);
+          const ease = t * t * (3 - 2 * t);
+          const scale = 1 - ease;
+          if (scale <= 0.02) continue;
+          const alpha = 1 - ease * 0.8;
+          const cx = PAD + anim.x * CELL + CELL / 2;
+          const cy = PAD + HEADER + anim.y * CELL + CELL / 2;
+          const w = (CELL - 12) * scale;
+          const h = (CELL - 12) * scale;
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = hue(anim.colorIndex);
+          drawRoundedRect(cx - w / 2, cy - h / 2, w, h, 16 * scale);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      if (fallAnimations.length > 0){
+        ctx.save();
+        for (const anim of fallAnimations){
+          const tRaw = (animNow - anim.start) / anim.duration;
+          if (tRaw <= 0) continue;
+          const t = Math.min(1, tRaw);
+          const ease = 1 - Math.pow(1 - t, 3);
+          const row = anim.fromRow + (anim.toRow - anim.fromRow) * ease;
+          const px = PAD + anim.x * CELL;
+          const py = PAD + HEADER + row * CELL;
+          const centerX = px + CELL / 2;
+          const centerY = py + CELL / 2;
+          const wobble = Math.sin(t * Math.PI) * 3;
+          ctx.save();
+          ctx.translate(centerX + wobble, centerY);
+          ctx.fillStyle = hue(anim.colorIndex);
+          drawRoundedRect(- (CELL - 12) / 2, - (CELL - 12) / 2, CELL - 12, CELL - 12, 16);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+
+      if (particles.length > 0){
+        ctx.save();
+        for (const p of particles){
+          const lifeRatio = Math.max(0, Math.min(1, p.life / p.maxLife));
+          if (lifeRatio <= 0) continue;
+          ctx.globalAlpha = lifeRatio;
+          ctx.fillStyle = hue(p.colorIndex);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
 
       if (selection.length > 0){
         ctx.save();
@@ -288,22 +459,26 @@
     }
 
     function tick(now){
-      if (!running) return;
       if (!lastFrame) lastFrame = now;
       const dt = (now - lastFrame) / 1000;
       lastFrame = now;
-      remaining -= dt;
-      if (remaining <= 0){
-        remaining = 0;
-        running = false;
-        stopTimer();
-        removeListeners();
-        pointerActive = false;
-        selection = [];
+      lastNow = now;
+      if (running){
+        remaining -= dt;
+        if (remaining <= 0){
+          remaining = 0;
+          running = false;
+          removeListeners();
+          pointerActive = false;
+          selection = [];
+        }
       }
+      updateAnimations(dt);
       draw();
-      if (running) {
+      if (running || hasActiveAnimations()) {
         timerId = window.requestAnimationFrame(tick);
+      } else {
+        timerId = null;
       }
     }
 
@@ -327,6 +502,10 @@
       totalCleared = 0;
       comboLevel = 0;
       lastClearTime = 0;
+      clearAnimations = [];
+      fallAnimations = [];
+      particles = [];
+      inputLocked = false;
       running = true;
       addListeners();
       draw();

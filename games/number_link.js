@@ -26,6 +26,7 @@
 
     const configMap = {
       EASY: {
+        pathBias: 0,
         width: 5,
         height: 5,
         pairs: 3,
@@ -35,6 +36,7 @@
         clearXp: 65
       },
       NORMAL: {
+        pathBias: 0.3,
         width: 6,
         height: 6,
         pairs: 4,
@@ -47,10 +49,11 @@
         width: 7,
         height: 7,
         pairs: 5,
-        minPath: 7,
-        maxPath: 13,
-        pairXp: 18,
-        clearXp: 260
+        minPath: 9,
+        maxPath: 15,
+        pairXp: 20,
+        clearXp: 320,
+        pathBias: 0.8
       }
     };
     const config = configMap[difficulty] || configMap.NORMAL;
@@ -221,7 +224,7 @@
     }
 
     function generatePuzzle(params){
-      const { width, height, pairs, minPath, maxPath } = params;
+      const { width, height, pairs, minPath, maxPath, pathBias = 0 } = params;
       const totalCells = width * height;
       const minLenClamp = Math.max(2, minPath);
       const maxLenClamp = Math.max(minLenClamp, maxPath);
@@ -259,7 +262,13 @@
             }
             if (neighbors.length === 0) continue;
             for (let trial = 0; trial < 120; trial++){
-              const targetLen = usableMin + ((Math.random() * (Math.max(1, usableMax - usableMin + 1))) | 0);
+              const range = Math.max(1, usableMax - usableMin + 1);
+              const clampedBias = Math.max(0, Math.min(1, pathBias));
+              const rawRand = Math.random();
+              const weightedRand = clampedBias > 0
+                ? 1 - Math.pow(1 - rawRand, 1 + clampedBias * 2)
+                : rawRand;
+              const targetLen = usableMin + Math.floor(weightedRand * range);
               const path = [startIdx];
               const visited = new Set(path);
               let successWalk = false;
@@ -308,7 +317,7 @@
 
       let minLen = minLenClamp;
       let maxLen = maxLenClamp;
-      for (let attempt = 0; attempt < 60; attempt++){
+      for (let attemptIndex = 0; attemptIndex < 60; attemptIndex++){
         const result = attempt(minLen, maxLen);
         if (result) return result;
         if (minLen > 3){
@@ -402,6 +411,8 @@
 
     function indexFromEvent(e){
       const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
       const size = Math.min(canvas.width, canvas.height);
       const padding = 24;
       const cellSize = Math.floor((size - padding * 2) / Math.max(puzzle.width, puzzle.height));
@@ -409,8 +420,8 @@
       const boardSizeY = cellSize * puzzle.height;
       const startX = (canvas.width - boardSizeX) / 2;
       const startY = (canvas.height - boardSizeY) / 2;
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
       const gridX = Math.floor((x - startX) / cellSize);
       const gridY = Math.floor((y - startY) / cellSize);
       if (gridX < 0 || gridX >= puzzle.width || gridY < 0 || gridY >= puzzle.height){

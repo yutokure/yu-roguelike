@@ -262,6 +262,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['action']
   },
   {
+    id: 'sandbox_fusion_numbers',
+    name: 'サンドボックス融合数字',
+    nameKey: 'selection.miniexp.games.sandbox_fusion_numbers.name',
+    entry: 'games/sandbox_fusion_numbers.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '盤面サイズや出現数、加算/乗算ルールを自由に設定できる融合数字サンドボックス',
+    descriptionKey: 'selection.miniexp.games.sandbox_fusion_numbers.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'pinball_xp',
     name: 'XPピンボール',
     nameKey: 'selection.miniexp.games.pinball_xp.name',
@@ -327,6 +340,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'tsum_chain',
+    name: 'チェインツム',
+    nameKey: 'selection.miniexp.games.tsum_chain.name',
+    entry: 'games/tsum_chain.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '同色ツムをなぞって消す制限時間パズル。チェイン数＆コンボで高EXP',
+    descriptionKey: 'selection.miniexp.games.tsum_chain.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'minesweeper',
     name: 'マインスイーパー',
     nameKey: 'selection.miniexp.games.minesweeper.name',
@@ -361,6 +387,19 @@ window.MINIEXP_MANIFEST = [
     author: 'mod',
     description: '同じ数字のペアを一筆書きで結ぶパズル',
     descriptionKey: 'selection.miniexp.games.number_link.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
+    id: 'number_sum_sudoku',
+    name: 'ナンバーサム合計ナンプレ',
+    nameKey: 'selection.miniexp.games.number_sum_sudoku.name',
+    entry: 'games/number_sum_sudoku.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '行・列・エリアの合計が示す値になる数字を○で囲む推理パズル',
+    descriptionKey: 'selection.miniexp.games.number_sum_sudoku.description',
     category: 'パズル',
     categories: ['パズル'],
     categoryIds: ['puzzle']

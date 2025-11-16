@@ -15,6 +15,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['action']
   },
   {
+    id: 'color_sort',
+    name: 'カラーソート',
+    nameKey: 'selection.miniexp.games.color_sort.name',
+    entry: 'games/color_sort.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'カラーボールを試験管へ色分けする論理パズル。移し替えとクリアでEXP獲得。',
+    descriptionKey: 'selection.miniexp.games.color_sort.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'othello',
     name: 'オセロ',
     nameKey: 'selection.miniexp.games.othello.name',
@@ -262,6 +275,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['action']
   },
   {
+    id: 'sandbox_fusion_numbers',
+    name: 'サンドボックス融合数字',
+    nameKey: 'selection.miniexp.games.sandbox_fusion_numbers.name',
+    entry: 'games/sandbox_fusion_numbers.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '盤面サイズや出現数、加算/乗算ルールを自由に設定できる融合数字サンドボックス',
+    descriptionKey: 'selection.miniexp.games.sandbox_fusion_numbers.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'pinball_xp',
     name: 'XPピンボール',
     nameKey: 'selection.miniexp.games.pinball_xp.name',
@@ -327,6 +353,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'tsum_chain',
+    name: 'チェインツム',
+    nameKey: 'selection.miniexp.games.tsum_chain.name',
+    entry: 'games/tsum_chain.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '同色ツムをなぞって消す制限時間パズル。チェイン数＆コンボで高EXP',
+    descriptionKey: 'selection.miniexp.games.tsum_chain.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'minesweeper',
     name: 'マインスイーパー',
     nameKey: 'selection.miniexp.games.minesweeper.name',
@@ -361,6 +400,32 @@ window.MINIEXP_MANIFEST = [
     author: 'mod',
     description: '6面同時表示で揃えるルービック・キューブ。難易度でスクランブル手数が変化',
     descriptionKey: 'selection.miniexp.games.rubiks_cube.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
+    id: 'number_link',
+    name: 'ナンバーリンク',
+    nameKey: 'selection.miniexp.games.number_link.name',
+    entry: 'games/number_link.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '同じ数字のペアを一筆書きで結ぶパズル',
+    descriptionKey: 'selection.miniexp.games.number_link.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
+    id: 'number_sum_sudoku',
+    name: 'ナンバーサム合計ナンプレ',
+    nameKey: 'selection.miniexp.games.number_sum_sudoku.name',
+    entry: 'games/number_sum_sudoku.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '行・列・エリアの合計が示す値になる数字を○で囲む推理パズル',
+    descriptionKey: 'selection.miniexp.games.number_sum_sudoku.description',
     category: 'パズル',
     categories: ['パズル'],
     categoryIds: ['puzzle']
@@ -405,6 +470,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['board']
   },
   {
+    id: 'arrow_escape',
+    name: 'アローエスケープ',
+    nameKey: 'selection.miniexp.games.arrow_escape.name',
+    entry: 'games/arrow_escape.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '矢印ブロックを順番に脱出させる逆再生パズル',
+    descriptionKey: 'selection.miniexp.games.arrow_escape.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'sliding_puzzle',
     name: 'スライドパズル',
     nameKey: 'selection.miniexp.games.sliding_puzzle.name',
@@ -413,6 +491,19 @@ window.MINIEXP_MANIFEST = [
     author: 'mod',
     description: '難易度で8/15/24のスライドパズル',
     descriptionKey: 'selection.miniexp.games.sliding_puzzle.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
+    id: 'maze',
+    name: '迷路ウォーク',
+    nameKey: 'selection.miniexp.games.maze.name',
+    entry: 'games/maze.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'シンプルな迷路を歩いてゴールを目指そう。難易度でサイズと複雑さが変化',
+    descriptionKey: 'selection.miniexp.games.maze.description',
     category: 'パズル',
     categories: ['パズル'],
     categoryIds: ['puzzle']
@@ -504,6 +595,19 @@ window.MINIEXP_MANIFEST = [
     author: 'mod',
     description: '4つ同色で消去。連鎖で倍率UP',
     descriptionKey: 'selection.miniexp.games.falling_puyos.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
+    id: 'watermelon_stack',
+    name: 'スイカスタック',
+    nameKey: 'selection.miniexp.games.watermelon_stack.name',
+    entry: 'games/watermelon_stack.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '同じフルーツを落として合体させ巨大なスイカを目指す物理パズル。合体でEXP獲得',
+    descriptionKey: 'selection.miniexp.games.watermelon_stack.description',
     category: 'パズル',
     categories: ['パズル'],
     categoryIds: ['puzzle']

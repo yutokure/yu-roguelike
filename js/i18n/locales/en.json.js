@@ -19337,6 +19337,29 @@
     store['en'].games = {};
   }
   var enGames = store['en'].games;
+  if (!enGames.arrow_escape) {
+    enGames.arrow_escape = {
+      "name": "Arrow Escape",
+      "description": "Reverse-play puzzles about freeing arrow blocks in the right order",
+      "title": "Arrow Escape ({difficulty})",
+      "actions": {
+        "reset": "Reset"
+      },
+      "info": {
+        "remaining": "Remaining",
+        "escaped": "Escaped",
+        "time": "Time",
+        "clears": "Clears"
+      },
+      "status": {
+        "clear": "Cleared! {time} / EXP {xp}",
+        "intro": "Work out the release order generated in reverse."
+      },
+      "block": {
+        "ariaLabel": "{direction} block"
+      }
+    };
+  }
   if (!enGames.sanpo) {
     enGames.sanpo = {
       "name": "Stroll",
@@ -19408,6 +19431,28 @@
     store['en'].miniexp.games = {};
   }
   var enMiniExpGames = store['en'].miniexp.games;
+  if (!enMiniExpGames.arrow_escape) {
+    enMiniExpGames.arrow_escape = {
+      "title": "Arrow Escape ({difficulty})",
+      "description": "Click the arrow blocks to launch them off the board; any block in the lane will stop the escape.",
+      "actions": {
+        "reset": "Reset"
+      },
+      "info": {
+        "remaining": "Remaining",
+        "escaped": "Escaped",
+        "time": "Time",
+        "clears": "Clears"
+      },
+      "status": {
+        "clear": "Cleared! {time} / EXP {xp}",
+        "intro": "Work out the reverse-generated release order."
+      },
+      "block": {
+        "ariaLabel": "{direction} block"
+      }
+    };
+  }
   if (!enMiniExpGames.jigsaw_puzzle) {
     enMiniExpGames.jigsaw_puzzle = {
       "title": "Jigsaw Puzzle",
@@ -19452,6 +19497,12 @@
   if (!store['en'].selection.miniexp.games) {
     store['en'].selection.miniexp.games = {};
   }
+  if (!store['en'].selection.miniexp.games.arrow_escape) {
+    store['en'].selection.miniexp.games.arrow_escape = {
+      "name": "Arrow Escape",
+      "description": "Reverse-play puzzles about freeing arrow blocks in the right order"
+    };
+  }
   if (!store['en'].selection.miniexp.games.jigsaw_puzzle) {
     store['en'].selection.miniexp.games.jigsaw_puzzle = {
       "name": "Jigsaw Puzzle",
@@ -19468,6 +19519,12 @@
     store['en'].selection.miniexp.games.sandbox_breakout = {
       "name": "Sandbox Breakout",
       "description": "Create a stage and play it instantly. Supports custom hardness and import/export."
+    };
+  }
+  if (!store['en'].selection.miniexp.games.watermelon_stack) {
+    store['en'].selection.miniexp.games.watermelon_stack = {
+      "name": "Watermelon Stack",
+      "description": "Drop matching fruits to merge them into larger ones in a physics puzzle inspired by the Suika Game. Earn EXP with every merge."
     };
   }
 

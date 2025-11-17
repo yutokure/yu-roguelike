@@ -431,6 +431,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'slitherlink',
+    name: 'スリザーリンク',
+    nameKey: 'selection.miniexp.games.slitherlink.name',
+    entry: 'games/slitherlink.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: '数字の指示通りに線を引き、閉じたループを作るパズル。完成で難易度別EXP',
+    descriptionKey: 'selection.miniexp.games.slitherlink.description',
+    category: 'パズル',
+    categories: ['パズル'],
+    categoryIds: ['puzzle']
+  },
+  {
     id: 'number_sum_sudoku',
     name: 'ナンバーサム合計ナンプレ',
     nameKey: 'selection.miniexp.games.number_sum_sudoku.name',

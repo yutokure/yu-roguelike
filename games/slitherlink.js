@@ -485,11 +485,12 @@
     function countAroundCell(x, y){
       const { width, height } = currentPuzzle;
       if (x < 0 || y < 0 || x >= width || y >= height) return 0;
+      const edgeValue = (value) => (value === 1 ? 1 : 0);
       return (
-        hState[y][x] +
-        hState[y + 1][x] +
-        vState[y][x] +
-        vState[y][x + 1]
+        edgeValue(hState[y][x]) +
+        edgeValue(hState[y + 1][x]) +
+        edgeValue(vState[y][x]) +
+        edgeValue(vState[y][x + 1])
       );
     }
 

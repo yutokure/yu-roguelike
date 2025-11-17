@@ -561,6 +561,19 @@ window.MINIEXP_MANIFEST = [
     categoryIds: ['puzzle']
   },
   {
+    id: 'sandbox_sugoroku',
+    name: 'サンドボックスすごろく',
+    nameKey: 'selection.miniexp.games.sandbox_sugoroku.name',
+    entry: 'games/sandbox_sugoroku.js',
+    version: '0.1.0',
+    author: 'mod',
+    description: 'ノード配置・効果設定・インポート/エクスポート対応の人生すごろくエディタ',
+    descriptionKey: 'selection.miniexp.games.sandbox_sugoroku.description',
+    category: 'ボード',
+    categories: ['ボード'],
+    categoryIds: ['board']
+  },
+  {
     id: 'invaders',
     name: 'インベーダー風',
     nameKey: 'selection.miniexp.games.invaders.name',

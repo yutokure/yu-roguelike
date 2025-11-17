@@ -699,14 +699,16 @@
       moveTo(targetId);
     }
 
-    function moveTo(nodeId){
+    const MAX_JUMP_CHAIN = 32;
+
+    function moveTo(nodeId, jumpDepth = 0){
       playState.currentNodeId = nodeId;
       renderPlayBoard();
       if (playState.pendingSteps > 0){
         playState.pendingSteps -= 1;
         continueMovement();
       } else {
-        resolveNodeEffect();
+        resolveNodeEffect(jumpDepth);
       }
     }
 
@@ -742,7 +744,7 @@
       });
     }
 
-    function resolveNodeEffect(){
+    function resolveNodeEffect(jumpDepth = 0){
       const node = getNode(playState.currentNodeId);
       if (!node) return;
       let logMessage = `${node.name || node.id} に到着`;
@@ -770,10 +772,18 @@
           break;
         case 'jump':
           if (node.jumpTargetId){
+            if (node.jumpTargetId === node.id){
+              logMessage += ' / 自分自身へのジャンプは無視されました';
+              break;
+            }
+            if (jumpDepth >= MAX_JUMP_CHAIN){
+              logMessage += ` / ジャンプが${MAX_JUMP_CHAIN}回を超えたため中断`;
+              break;
+            }
             logMessage += ' / ワープ発動';
             pushLog(logMessage);
-            moveTo(node.jumpTargetId);
             refreshPlayInfo();
+            moveTo(node.jumpTargetId, jumpDepth + 1);
             return;
           }
           break;

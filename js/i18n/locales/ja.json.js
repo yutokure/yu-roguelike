@@ -17265,6 +17265,21 @@
           "sp": "SP"
         }
       },
+      "controlsCheatsheet": {
+        "title": "操作チートシート",
+        "subtitle": "ダンジョン突入前に基本操作を確認しましょう。",
+        "dismiss": "次回から表示しない",
+        "labels": {
+          "arrows": "矢印キー",
+          "space": "スペース",
+          "toolbar": "ツールバー"
+        },
+        "descriptions": {
+          "arrows": "移動・探索し、敵にぶつかると攻撃。",
+          "space": "その場で向いている方向へ攻撃。",
+          "toolbar": "戻る・アイテム・スキル・ステータスなどのショートカット。"
+        }
+      },
       "statuses": {
         "poison": "毒",
         "paralysis": "麻痺",

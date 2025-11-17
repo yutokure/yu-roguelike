@@ -529,6 +529,8 @@ const satietyBar = document.getElementById('satiety-bar');
 const satietyBarContainer = document.getElementById('satiety-bar-container');
 const autoItemStatusText = document.getElementById('auto-item-status');
 const messageLogDiv = document.getElementById('message-log');
+const controlsCheatsheet = document.getElementById('controls-cheatsheet');
+const controlsCheatsheetDismissButton = document.getElementById('controls-cheatsheet-dismiss');
 const floorIndicatorValue = document.getElementById('floor-indicator-value');
 const dungeonTypeOverlay = document.getElementById('dungeon-type-overlay');
 const dungeonTypeOverlayName = document.getElementById('dungeon-type-overlay-type');
@@ -575,6 +577,7 @@ const DIFFICULTY_DAMAGE_PROFILE = Object.freeze({
     'Very Hard': Object.freeze({ deal: 1.0, take: 1.0 }),
 });
 const RARE_CHEST_CHANCE = 0.08;
+const CONTROLS_CHEATSHEET_STORAGE_KEY = 'yu-roguelike:controlsCheatsheetHidden';
 
 const RARE_CHEST_CONFIG = Object.freeze({
     successWindow: 0.1,
@@ -584,6 +587,58 @@ const RARE_CHEST_CONFIG = Object.freeze({
     levelGapBonus: 0.1,
     levelGapRelief: 0.08,
 });
+
+function readControlsCheatsheetHiddenPreference() {
+    if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+        return false;
+    }
+    try {
+        return window.localStorage.getItem(CONTROLS_CHEATSHEET_STORAGE_KEY) === '1';
+    } catch (error) {
+        console.warn('Failed to read controls cheat sheet preference', error);
+        return false;
+    }
+}
+
+function persistControlsCheatsheetHiddenPreference(hidden) {
+    if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+        return;
+    }
+    try {
+        if (hidden) {
+            window.localStorage.setItem(CONTROLS_CHEATSHEET_STORAGE_KEY, '1');
+        } else {
+            window.localStorage.removeItem(CONTROLS_CHEATSHEET_STORAGE_KEY);
+        }
+    } catch (error) {
+        console.warn('Failed to persist controls cheat sheet preference', error);
+    }
+}
+
+function applyControlsCheatsheetHiddenState(hidden) {
+    if (!controlsCheatsheet) return;
+    controlsCheatsheet.classList.toggle('controls-cheatsheet--hidden', hidden);
+}
+
+function initializeControlsCheatsheetPreference() {
+    if (!controlsCheatsheet) return;
+    applyControlsCheatsheetHiddenState(readControlsCheatsheetHiddenPreference());
+    if (controlsCheatsheetDismissButton) {
+        controlsCheatsheetDismissButton.addEventListener('click', () => {
+            persistControlsCheatsheetHiddenPreference(true);
+            applyControlsCheatsheetHiddenState(true);
+        });
+    }
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+        window.addEventListener('storage', (event) => {
+            if (event.key === CONTROLS_CHEATSHEET_STORAGE_KEY) {
+                applyControlsCheatsheetHiddenState(event.newValue === '1');
+            }
+        });
+    }
+}
+
+initializeControlsCheatsheetPreference();
 
 function applyDungeonOverlayDimState() {
     if (!dungeonTypeOverlay) return;

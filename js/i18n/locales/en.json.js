@@ -17401,6 +17401,21 @@
           "sp": "SP"
         }
       },
+      "controlsCheatsheet": {
+        "title": "Controls Cheatsheet",
+        "subtitle": "Keep these moves handy during your first few runs.",
+        "dismiss": "Don't show again",
+        "labels": {
+          "arrows": "Arrow keys",
+          "space": "Space",
+          "toolbar": "Toolbar shortcuts"
+        },
+        "descriptions": {
+          "arrows": "Move, explore, and bump into enemies to strike.",
+          "space": "Attack in the direction you're facing without moving.",
+          "toolbar": "Use Return, Items, Skills, Status, Import/Export from the top toolbar."
+        }
+      },
       "statuses": {
         "poison": "Poison",
         "paralysis": "Paralysis",

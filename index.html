@@ -1270,6 +1270,29 @@
             </div>
         </div>
             <div id="message-log"></div>
+            <section id="controls-cheatsheet" class="controls-cheatsheet card" role="region" aria-live="polite">
+                <header class="controls-cheatsheet__header">
+                    <div class="controls-cheatsheet__intro">
+                        <h3 class="controls-cheatsheet__title" data-i18n="game.controlsCheatsheet.title">操作チートシート</h3>
+                        <p class="controls-cheatsheet__subtitle" data-i18n="game.controlsCheatsheet.subtitle">ダンジョン突入前に基本操作を確認しましょう。</p>
+                    </div>
+                    <button type="button" id="controls-cheatsheet-dismiss" class="controls-cheatsheet__dismiss" data-i18n="game.controlsCheatsheet.dismiss">次回から表示しない</button>
+                </header>
+                <ul class="controls-cheatsheet__list">
+                    <li class="controls-cheatsheet__row">
+                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.arrows">矢印キー</span>
+                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.arrows">移動・探索し、敵にぶつかると攻撃。</span>
+                    </li>
+                    <li class="controls-cheatsheet__row">
+                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.space">スペース</span>
+                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.space">その場で向いている方向へ攻撃。</span>
+                    </li>
+                    <li class="controls-cheatsheet__row">
+                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.toolbar">ツールバー</span>
+                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.toolbar">戻る・アイテム・スキル・ステータスなどのショートカット。</span>
+                    </li>
+                </ul>
+            </section>
         </div>
         <!-- 右側ポップアップ用の常時空白スペース -->
         <div id="popup-spacer" aria-hidden="true"></div>

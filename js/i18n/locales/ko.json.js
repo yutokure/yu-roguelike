@@ -365,6 +365,21 @@
           "sp": "SP"
         }
       },
+      "controlsCheatsheet": {
+        "title": "조작 치트시트",
+        "subtitle": "첫 탐험 전에 필수 조작을 확인하세요.",
+        "dismiss": "다시 보지 않기",
+        "labels": {
+          "arrows": "화살표 키",
+          "space": "스페이스",
+          "toolbar": "툴바 바로가기"
+        },
+        "descriptions": {
+          "arrows": "이동하며 탐색하고 적과 부딪혀 공격합니다.",
+          "space": "제자리에서 바라보는 방향으로 공격합니다.",
+          "toolbar": "상단 툴바에서 귀환, 아이템, 스킬, 상태, 가져오기/내보내기를 즉시 엽니다."
+        }
+      },
       "statuses": {
         "poison": "독",
         "paralysis": "마비",

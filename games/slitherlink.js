@@ -11,7 +11,7 @@
     HARD: { label: 'HARD', xp: 260 }
   };
 
-  const puzzlePools = {
+  const fallbackPuzzles = {
     EASY: [
       {
         width: 5,
@@ -65,6 +65,119 @@
       }
     ]
   };
+
+  const difficultySettings = {
+    EASY: { width: 5, height: 5, minLoopLength: 12 },
+    NORMAL: { width: 6, height: 6, minLoopLength: 16 },
+    HARD: { width: 8, height: 6, minLoopLength: 22 }
+  };
+
+  function createMatrix(rows, cols, fill){
+    return Array.from({ length: rows }, () => Array(cols).fill(fill));
+  }
+
+  function shuffleArray(arr){
+    const clone = arr.slice();
+    for (let i = clone.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [clone[i], clone[j]] = [clone[j], clone[i]];
+    }
+    return clone;
+  }
+
+  function getVertexNeighbors(vertex, width, height){
+    const neighbors = [];
+    if (vertex.x > 0) neighbors.push({ x: vertex.x - 1, y: vertex.y });
+    if (vertex.x < width) neighbors.push({ x: vertex.x + 1, y: vertex.y });
+    if (vertex.y > 0) neighbors.push({ x: vertex.x, y: vertex.y - 1 });
+    if (vertex.y < height) neighbors.push({ x: vertex.x, y: vertex.y + 1 });
+    return neighbors;
+  }
+
+  function buildRandomLoop(width, height, minLength){
+    const maxAttempts = 160;
+    const vertexCount = (width + 1) * (height + 1);
+    for (let attempt = 0; attempt < maxAttempts; attempt++){
+      const start = {
+        x: Math.floor(Math.random() * (width + 1)),
+        y: Math.floor(Math.random() * (height + 1))
+      };
+      const extra = Math.floor(Math.random() * Math.max(1, Math.floor((width + height) / 2)));
+      const targetLength = Math.max(minLength, Math.min(vertexCount - 1, minLength + extra));
+      const visited = new Set([`${start.x},${start.y}`]);
+      const path = [start];
+      let found = null;
+
+      function dfs(current){
+        if (found) return true;
+        if (path.length >= targetLength){
+          const neighbors = getVertexNeighbors(current, width, height);
+          if (neighbors.some(n => n.x === start.x && n.y === start.y)){
+            found = path.slice();
+            return true;
+          }
+        }
+        const nextOptions = shuffleArray(getVertexNeighbors(current, width, height));
+        for (const next of nextOptions){
+          const key = `${next.x},${next.y}`;
+          if (visited.has(key)) continue;
+          visited.add(key);
+          path.push(next);
+          if (dfs(next)) return true;
+          path.pop();
+          visited.delete(key);
+        }
+        return false;
+      }
+
+      dfs(start);
+      if (found && found.length >= 4) return found;
+    }
+    return null;
+  }
+
+  function convertPathToEdges(path, width, height){
+    const hEdges = createMatrix(height + 1, width, 0);
+    const vEdges = createMatrix(height, width + 1, 0);
+    for (let i = 0; i < path.length; i++){
+      const current = path[i];
+      const next = path[(i + 1) % path.length];
+      if (current.y === next.y){
+        const y = current.y;
+        const x = Math.min(current.x, next.x);
+        if (x >= 0 && x < width && y >= 0 && y <= height){
+          hEdges[y][x] = 1;
+        }
+      } else {
+        const x = current.x;
+        const y = Math.min(current.y, next.y);
+        if (x >= 0 && x <= width && y >= 0 && y < height){
+          vEdges[y][x] = 1;
+        }
+      }
+    }
+    return { hEdges, vEdges };
+  }
+
+  function generatePuzzle(diff){
+    const settings = difficultySettings[diff] || difficultySettings.NORMAL;
+    const { width, height, minLoopLength } = settings;
+    const loop = buildRandomLoop(width, height, minLoopLength);
+    if (!loop) return null;
+    const { hEdges, vEdges } = convertPathToEdges(loop, width, height);
+    const clues = createMatrix(height, width, null);
+    for (let y = 0; y < height; y++){
+      for (let x = 0; x < width; x++){
+        let around = 0;
+        if (hEdges[y][x] === 1) around++;
+        if (hEdges[y + 1][x] === 1) around++;
+        if (vEdges[y][x] === 1) around++;
+        if (vEdges[y][x + 1] === 1) around++;
+        clues[y][x] = around;
+      }
+    }
+    return { width, height, clues };
+  }
 
   function ensureStyles(){
     if (typeof document === 'undefined') return;
@@ -177,25 +290,83 @@
       }
       .slitherlink-edge {
         position: absolute;
-        border-radius: 6px;
-        background: rgba(248, 250, 252, 0.18);
-        transition: background 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 999px;
+        background: transparent;
+        transition: transform 0.2s ease;
         cursor: pointer;
+        overflow: visible;
+        box-sizing: border-box;
+        pointer-events: auto;
+        z-index: 10; /* Increased z-index for better clickability */
+        /* Hitbox size */
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* Visual line part using pseudo-element */
+      .slitherlink-edge::before {
+        content: '';
+        position: absolute;
+        background: rgba(15, 118, 110, 0.4);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+        border-radius: 999px;
       }
       .slitherlink-edge.horizontal {
-        height: ${EDGE_THICKNESS}px;
-        margin-top: -${EDGE_THICKNESS / 2}px;
+        margin-top: -18px; /* Half of 36px height */
+        margin-left: -18px; /* Center horizontally on the midpoint */
       }
       .slitherlink-edge.vertical {
+        margin-left: -18px; /* Half of 36px width */
+        margin-top: -18px; /* Center vertically on the midpoint */
+      }
+      /* Horizontal visual line dimensions */
+      .slitherlink-edge.horizontal::before {
+        width: ${CELL_SIZE}px;
+        height: ${EDGE_THICKNESS}px;
+      }
+      /* Vertical visual line dimensions */
+      .slitherlink-edge.vertical::before {
         width: ${EDGE_THICKNESS}px;
-        margin-left: -${EDGE_THICKNESS / 2}px;
+        height: ${CELL_SIZE}px;
       }
-      .slitherlink-edge.line {
-        background: linear-gradient(90deg, #38bdf8, #a855f7);
-        box-shadow: 0 0 8px rgba(59, 130, 246, 0.65);
+
+      .slitherlink-edge.line::before {
+        opacity: 1;
+        background: linear-gradient(90deg, #22d3ee, #a855f7);
       }
+      .slitherlink-edge.cross::before {
+        opacity: 0.35;
+        background: rgba(248, 113, 113, 0.35);
+      }
+      .slitherlink-edge.line::after {
+        content: '';
+        position: absolute;
+        /* Glow effect needs to match the visual line size */
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(56, 189, 248, 0.55), rgba(168, 85, 247, 0.55));
+        opacity: 0.6;
+        filter: blur(6px);
+        pointer-events: none;
+      }
+      /* Adjust glow size for orientation */
+      .slitherlink-edge.horizontal.line::after {
+        width: ${CELL_SIZE}px;
+        height: ${EDGE_THICKNESS}px;
+      }
+      .slitherlink-edge.vertical.line::after {
+        width: ${EDGE_THICKNESS}px;
+        height: ${CELL_SIZE}px;
+      }
+
       .slitherlink-edge.cross {
-        background: rgba(248, 113, 113, 0.2);
+        /* Remove background from container, handled by pseudo */
+        background: transparent;
       }
       .slitherlink-edge.cross::after {
         content: '×';
@@ -203,10 +374,11 @@
         position: absolute;
         left: 50%;
         top: 50%;
-        transform: translate(-50%, -55%);
+        transform: translate(-50%, -50%);
         font-weight: 600;
-        font-size: 16px;
+        font-size: 20px;
         pointer-events: none;
+        z-index: 11;
       }
       .slitherlink-clue {
         position: absolute;
@@ -222,6 +394,7 @@
         font-size: 18px;
         color: #cbd5f5;
         transition: background 0.2s ease, color 0.2s ease;
+        pointer-events: none; /* Allow clicks to pass through to edges if they overlap */
       }
       .slitherlink-clue.match {
         background: rgba(45, 212, 191, 0.14);
@@ -237,6 +410,29 @@
         border-radius: 12px;
         background: rgba(15, 23, 42, 0.6);
         font-size: 13px;
+      }
+      .slitherlink-mode-toggle {
+        display: flex;
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 999px;
+        padding: 2px;
+        margin-right: auto; /* Push to left or separate from other controls */
+      }
+      .slitherlink-mode-btn {
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .slitherlink-mode-btn.active {
+        background: #334155;
+        color: #f8fafc;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
       }
     `;
     document.head.appendChild(style);
@@ -293,6 +489,34 @@
       difficultySelect.appendChild(opt);
     });
     controls.appendChild(difficultySelect);
+
+    // Mode Toggle
+    const modeToggle = document.createElement('div');
+    modeToggle.className = 'slitherlink-mode-toggle';
+    
+    const modeLine = document.createElement('button');
+    modeLine.className = 'slitherlink-mode-btn active';
+    modeLine.textContent = 'Line';
+    
+    const modeCross = document.createElement('button');
+    modeCross.className = 'slitherlink-mode-btn';
+    modeCross.textContent = '×';
+
+    modeToggle.appendChild(modeLine);
+    modeToggle.appendChild(modeCross);
+    controls.appendChild(modeToggle);
+
+    let inputMode = 'line'; // 'line' or 'cross'
+    modeLine.addEventListener('click', () => {
+      inputMode = 'line';
+      modeLine.classList.add('active');
+      modeCross.classList.remove('active');
+    });
+    modeCross.addEventListener('click', () => {
+      inputMode = 'cross';
+      modeCross.classList.add('active');
+      modeLine.classList.remove('active');
+    });
 
     const newButton = document.createElement('button');
     newButton.className = 'slitherlink-button-primary';
@@ -357,13 +581,22 @@
     let hEdges = [];
     let vEdges = [];
     let clueRefs = [];
-
-    function createMatrix(rows, cols, fill){
-      return Array.from({ length: rows }, () => Array(cols).fill(fill));
+    const pointerState = {
+      active: false,
+      markMode: false,
+      targetState: 1
+    };
+    const pointerUpHandler = () => {
+      pointerState.active = false;
+    };
+    if (typeof window !== 'undefined'){
+      window.addEventListener('pointerup', pointerUpHandler);
     }
 
     function pickPuzzle(diff){
-      const pool = puzzlePools[diff] || puzzlePools.NORMAL;
+      const generated = generatePuzzle(diff);
+      if (generated) return generated;
+      const pool = fallbackPuzzles[diff] || fallbackPuzzles.NORMAL;
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
@@ -396,7 +629,7 @@
         for (let x = 0; x < width; x++){
           const edge = document.createElement('div');
           edge.className = 'slitherlink-edge horizontal';
-          edge.style.width = `${CELL_SIZE}px`;
+          // Removed incorrect + CELL_SIZE / 2 offset
           edge.style.left = `${BOARD_PADDING + x * CELL_SIZE + CELL_SIZE / 2}px`;
           edge.style.top = `${BOARD_PADDING + y * CELL_SIZE}px`;
           setupEdgeInteraction(edge, 'h', y, x);
@@ -409,7 +642,7 @@
         for (let x = 0; x <= width; x++){
           const edge = document.createElement('div');
           edge.className = 'slitherlink-edge vertical';
-          edge.style.height = `${CELL_SIZE}px`;
+          // Removed incorrect + CELL_SIZE / 2 offset
           edge.style.left = `${BOARD_PADDING + x * CELL_SIZE}px`;
           edge.style.top = `${BOARD_PADDING + y * CELL_SIZE + CELL_SIZE / 2}px`;
           setupEdgeInteraction(edge, 'v', y, x);
@@ -434,22 +667,32 @@
     function setupEdgeInteraction(edge, type, y, x){
       edge.addEventListener('pointerdown', ev => {
         ev.preventDefault();
-        const markMode = ev.button === 2 || ev.altKey;
+        const markMode = ev.button === 2 || ev.altKey || inputMode === 'cross';
+        pointerState.active = true;
+        pointerState.markMode = markMode;
+        pointerState.targetState = markMode ? 2 : 1;
         handleEdgeInput(type, y, x, markMode);
+      });
+      edge.addEventListener('pointerenter', () => {
+        if (!pointerState.active) return;
+        handleEdgeInput(type, y, x, pointerState.markMode, { forceState: pointerState.targetState });
       });
       edge.addEventListener('contextmenu', ev => ev.preventDefault());
     }
 
-    function handleEdgeInput(type, y, x, markMode){
+    function handleEdgeInput(type, y, x, markMode, options = {}){
       if (!currentPuzzle) return;
       const matrix = type === 'h' ? hState : vState;
       const prev = matrix[y][x];
-      let next = prev;
-      if (markMode){
+      let next;
+      if (options.forceState !== undefined){
+        next = options.forceState;
+      } else if (markMode){
         next = prev === 2 ? 0 : 2;
       } else {
         next = prev === 1 ? 0 : 1;
       }
+      if (prev === next) return;
       matrix[y][x] = next;
       updateEdgeVisual(type, y, x);
       updateClues();
@@ -666,6 +909,9 @@
 
     return {
       destroy(){
+        if (typeof window !== 'undefined'){
+          window.removeEventListener('pointerup', pointerUpHandler);
+        }
         wrapper.remove();
       }
     };

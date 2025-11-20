@@ -2895,6 +2895,16 @@ function getSandboxGimmickDisplayName(gimmick) {
     return getSandboxGimmickLabel(gimmick.type);
 }
 
+function logSandboxGimmickEvent(gimmick, stateLabel) {
+    if (!gimmick || !stateLabel) return;
+    const name = gimmick.name || getSandboxGimmickLabel(gimmick.type);
+    try {
+        addMessage(`【ギミック】${name}が${stateLabel}になった`);
+    } catch {
+        // ログ出力が失敗してもゲーム進行を止めない
+    }
+}
+
 function ensureSandboxGimmickRuntime(map) {
     if (!isSandboxActive()) {
         sandboxGimmickRuntime = null;
@@ -3163,15 +3173,18 @@ function queueSandboxSignal(runtime, sourceNodeId, portId, value, signalType = '
 function processSandboxSignalQueue(runtime, depthGuard = 0) {
     const MAX_DEPTH = 128;
     let iterations = 0;
+    let processed = false;
     while (runtime.signalQueue.length && iterations < MAX_DEPTH) {
         iterations += 1;
         const event = runtime.signalQueue.shift();
+        processed = true;
         deliverSandboxSignal(runtime, event.wire, event.value, event.signalType);
     }
     if (runtime.signalQueue.length > 0) {
         runtime.signalQueue.length = 0;
         console.warn('[Sandbox] Signal queue overflow prevented. Check for cyclical wiring.');
     }
+    return processed;
 }
 
 function deliverSandboxSignal(runtime, wire, value, signalType) {
@@ -3383,6 +3396,7 @@ function updateSandboxGimmickState(context = {}) {
             if (!node.state.active && prevActive) {
                 setSandboxNodeOutput(runtime, node, 'deactivated', true, 'pulse');
             }
+            logSandboxGimmickEvent(node, node.state.active ? 'ON' : 'OFF');
         } else {
             // keep state output up to date for downstream value wires
             setSandboxNodeOutput(runtime, node, 'state', node.state.active);
@@ -3444,6 +3458,7 @@ function updateSandboxGimmickState(context = {}) {
             if (!isActive && wasActive) {
                 setSandboxNodeOutput(runtime, node, 'lost', true, 'pulse');
             }
+            logSandboxGimmickEvent(node, isActive ? '検知' : '未検知');
         } else {
             setSandboxNodeOutput(runtime, node, 'state', isActive);
         }
@@ -3504,6 +3519,7 @@ function updateSandboxGimmickState(context = {}) {
         runtime.doors.forEach((node) => {
             let command = node.state.pendingCommand;
             node.state.pendingCommand = null;
+            const prevOpen = node.state.open;
             if (command === 'toggle') {
                 node.state.open = !node.state.open;
                 pendingWork = true;
@@ -3529,6 +3545,9 @@ function updateSandboxGimmickState(context = {}) {
             setSandboxNodeOutput(runtime, node, 'opened', node.state.open);
             setSandboxNodeOutput(runtime, node, 'closed', !node.state.open);
             setSandboxNodeOutput(runtime, node, 'state', node.state.open);
+            if (node.state.open !== prevOpen) {
+                logSandboxGimmickEvent(node, node.state.open ? '開いた' : '閉じた');
+            }
         });
 
         runtime.scripts.forEach((node) => {
@@ -3601,8 +3620,8 @@ function updateSandboxGimmickState(context = {}) {
             }
         });
 
-        processSandboxSignalQueue(runtime);
-        if (runtime.signalQueue.length > 0) {
+        const delivered = processSandboxSignalQueue(runtime);
+        if (delivered || runtime.signalQueue.length > 0) {
             pendingWork = true;
         }
     }

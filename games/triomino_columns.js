@@ -346,6 +346,21 @@
     };
 
     const nowMs = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
+    const INPUT_CONFIG = { DAS: 0.14, ARR: 0.05, SOFT_REPEAT: 0.05 };
+
+    function createInputState(){
+      return {
+        left: false,
+        right: false,
+        soft: false,
+        hardHeld: false,
+        holdHeld: false,
+        dasTimer: 0,
+        arrTimer: 0,
+        softTimer: 0,
+        lastDirPress: { left: 0, right: 0 },
+      };
+    }
 
     function cloneBlocks(blocks){
       return blocks.map(c => ({ ...c }));
@@ -576,6 +591,7 @@
       let largestGroup = 0;
       let multiRewards = [];
       let multiShowerCount = 0;
+      const fallMoves = [];
       let attackMeter = 0;
       const sparkMarks = new Set();
 
@@ -617,7 +633,7 @@
         if (cleared > 0){
           boardState.boardPulse = Math.max(boardState.boardPulse, 0.28 + combo * 0.05);
         }
-        applyGravity(boardState.grid);
+        applyGravity(boardState.grid, fallMoves);
       }
 
       return {
@@ -629,6 +645,7 @@
         multiShowerCount,
         attackMeter,
         sparkMarks: Array.from(sparkMarks),
+        fallMoves,
       };
     }
 
@@ -829,13 +846,16 @@
       return cleared;
     }
 
-    function applyGravity(grid){
+    function applyGravity(grid, movesOut){
       for (let x = 0; x < COLS; x++){
         let writeRow = ROWS - 1;
         for (let y = ROWS - 1; y >= 0; y--){
           const cell = grid[y][x];
           if (cell) {
             if (writeRow !== y) {
+              if (movesOut){
+                movesOut.push({ fromX: x, fromY: y, toX: x, toY: writeRow, cell });
+              }
               grid[writeRow][x] = cell;
               grid[y][x] = null;
             }
@@ -1025,6 +1045,10 @@
       }
       const result = resolveBoard(boardState);
       handleAfterClear(boardState, result);
+      if (result && result.fallMoves && result.fallMoves.length){
+        boardState.fallAnim = { moves: result.fallMoves, time: 0, duration: 0.22 };
+        return;
+      }
       if (boardState.pendingSpawn) {
         spawnPiece(boardState);
         boardState.pendingSpawn = false;
@@ -1166,7 +1190,7 @@
         pendingGarbage: 0,
         attackGauge: 0,
         multiShower: 0,
-        inputs: {},
+        inputs: createInputState(),
         cpu: opts.cpu || null,
         dropLevel: 0,
         lastAttackAt: 0,
@@ -1208,10 +1232,10 @@
     }
 
     document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
 
     function onKeyDown(e){
-      if (!running) return;
-      if (!currentMode) return;
+      if (!running || !currentMode) return;
       if (currentMode === 'ENDLESS' || currentMode === 'VS_CPU') handlePlayerInput(boards[0], e, true);
       else if (currentMode === 'VS_2P') {
         handlePlayerInput(boards[0], e, true, KEYMAP_P1);
@@ -1219,16 +1243,82 @@
       }
     }
 
+    function onKeyUp(e){
+      if (!running || !currentMode) return;
+      if (currentMode === 'ENDLESS' || currentMode === 'VS_CPU') handlePlayerInput(boards[0], e, false);
+      else if (currentMode === 'VS_2P') {
+        handlePlayerInput(boards[0], e, false, KEYMAP_P1);
+        handlePlayerInput(boards[1], e, false, KEYMAP_P2);
+      }
+    }
+
+    function resolveAction(code, keymap){
+      const entries = Object.entries(keymap);
+      for (const [action, codes] of entries){
+        if (codes.includes(code)) return action;
+      }
+      return null;
+    }
+
     function handlePlayerInput(boardState, e, pressed, keymap = KEYMAP_P1){
       if (!boardState.alive) return;
-      if (!pressed) return;
-      if (keymap.left.includes(e.code)) { movePiece(boardState, -1); e.preventDefault(); }
-      else if (keymap.right.includes(e.code)) { movePiece(boardState, +1); e.preventDefault(); }
-      else if (keymap.soft.includes(e.code)) { softDrop(boardState); e.preventDefault(); }
-      else if (keymap.hard.includes(e.code)) { hardDrop(boardState); e.preventDefault(); }
-      else if (keymap.rotateCW.includes(e.code)) { if (rotatePiece(boardState, 1)) awardXp(0.05, { type:'rotate', dir:'cw' }); e.preventDefault(); }
-      else if (keymap.rotateCCW.includes(e.code)) { if (rotatePiece(boardState, -1)) awardXp(0.05, { type:'rotate', dir:'ccw' }); e.preventDefault(); }
-      else if (keymap.hold.includes(e.code)) { holdPiece(boardState); e.preventDefault(); }
+      const action = resolveAction(e.code, keymap);
+      if (!action) return;
+      const inputs = boardState.inputs || (boardState.inputs = createInputState());
+      const now = nowMs();
+      if (action === 'left' || action === 'right'){
+        inputs[action] = pressed;
+        if (pressed){
+          inputs.lastDirPress[action] = now;
+          movePiece(boardState, action === 'left' ? -1 : 1);
+          inputs.dasTimer = INPUT_CONFIG.DAS;
+          inputs.arrTimer = INPUT_CONFIG.ARR;
+        } else {
+          inputs.dasTimer = 0;
+          inputs.arrTimer = 0;
+        }
+        e.preventDefault();
+        return;
+      }
+      if (action === 'soft'){
+        inputs.soft = pressed;
+        if (pressed){
+          inputs.softTimer = 0;
+          softDrop(boardState);
+        }
+        e.preventDefault();
+        return;
+      }
+      if (action === 'hard'){
+        if (pressed && !inputs.hardHeld){
+          hardDrop(boardState);
+          inputs.hardHeld = true;
+        } else if (!pressed) {
+          inputs.hardHeld = false;
+        }
+        e.preventDefault();
+        return;
+      }
+      if (action === 'hold'){
+        if (pressed && !inputs.holdHeld){
+          holdPiece(boardState);
+          inputs.holdHeld = true;
+        } else if (!pressed){
+          inputs.holdHeld = false;
+        }
+        e.preventDefault();
+        return;
+      }
+      if (pressed && action === 'rotateCW'){
+        if (rotatePiece(boardState, 1)) awardXp(0.05, { type:'rotate', dir:'cw' });
+        e.preventDefault();
+        return;
+      }
+      if (pressed && action === 'rotateCCW'){
+        if (rotatePiece(boardState, -1)) awardXp(0.05, { type:'rotate', dir:'ccw' });
+        e.preventDefault();
+        return;
+      }
     }
 
     function update(dt){
@@ -1238,6 +1328,18 @@
       boards.forEach((board, idx) => {
         updateBoardVisuals(board, dt);
         if (!board.alive) return;
+        if (board.fallAnim){
+          board.fallAnim.time += dt;
+          if (board.fallAnim.time >= board.fallAnim.duration){
+            board.fallAnim = null;
+            if (board.pendingSpawn) {
+              spawnPiece(board);
+              board.pendingSpawn = false;
+            }
+          }
+          return;
+        }
+        processInputRepeat(board, dt);
         if (board.postSettleTimer > 0) {
           board.postSettleTimer -= dt;
           if (board.postSettleTimer <= 0) {
@@ -1275,8 +1377,45 @@
           board.multiShower -= 1;
         }
       });
+      if (boards.some(b => b.fallAnim)) return;
       resolveAttacks();
       checkWinConditions();
+    }
+
+    function processInputRepeat(boardState, dt){
+      const inputs = boardState.inputs || (boardState.inputs = createInputState());
+      const dir = resolveHeldDirection(inputs);
+      if (dir){
+        if (inputs.dasTimer > 0){
+          inputs.dasTimer -= dt;
+          if (inputs.dasTimer <= 0){
+            movePiece(boardState, dir === 'left' ? -1 : 1);
+            inputs.arrTimer = INPUT_CONFIG.ARR;
+          }
+        } else {
+          inputs.arrTimer -= dt;
+          if (inputs.arrTimer <= 0){
+            movePiece(boardState, dir === 'left' ? -1 : 1);
+            inputs.arrTimer = INPUT_CONFIG.ARR;
+          }
+        }
+      }
+      if (inputs.soft){
+        inputs.softTimer -= dt;
+        if (inputs.softTimer <= 0){
+          softDrop(boardState);
+          inputs.softTimer = INPUT_CONFIG.SOFT_REPEAT;
+        }
+      }
+    }
+
+    function resolveHeldDirection(inputs){
+      if (inputs.left && inputs.right){
+        return inputs.lastDirPress.right > inputs.lastDirPress.left ? 'right' : 'left';
+      }
+      if (inputs.left) return 'left';
+      if (inputs.right) return 'right';
+      return null;
     }
 
     function dropMultiShower(board){
@@ -1403,6 +1542,7 @@
       if (!current) return null;
       const proto = detachPiece(current);
       const aggression = boardState.cpu?.info?.aggression || 0.7;
+      const nextProto = boardState.queue && boardState.queue[0] ? detachPiece(boardState.queue[0]) : null;
       const shape = SHAPES[proto.shape];
       let best = null;
       for (let rotIdx = 0; rotIdx < shape.rotations.length; rotIdx++){
@@ -1410,7 +1550,11 @@
         for (let col = 0; col <= COLS - rot.width; col++){
           const sim = simulatePlacement(boardState.grid, proto, rotIdx, col);
           if (!sim) continue;
-          const score = (sim.cleared * 2.2 + sim.combo * 4 + sim.spark * 7) * aggression - sim.height * 0.4;
+          let score = evaluatePlacement(sim, aggression);
+          if (nextProto && sim.grid){
+            const look = bestNextPlacement(sim.grid, nextProto, aggression);
+            if (look) score += look.score * 0.65;
+          }
           if (!best || score > best.score){
             best = {
               column: col,
@@ -1441,8 +1585,8 @@
       const { grid: mergedGrid } = settleNewBlocks(baseGrid, blocks);
       const simGrid = mergedGrid.map(row => row.slice());
       const result = resolveSimGrid(simGrid);
-      const height = computeBoardHeight(simGrid);
-      return { cleared: result.cleared, combo: result.combo, spark: result.spark, height };
+      const stats = computeBoardStats(simGrid);
+      return { cleared: result.cleared, combo: result.combo, spark: result.spark, height: stats.topHeight, holes: stats.holes, heightVar: stats.heightVar, grid: simGrid };
     }
 
     function collidesWithGrid(grid, proto, px, py, rotationIdx){
@@ -1480,6 +1624,55 @@
         }
       }
       return 0;
+    }
+
+    function computeBoardStats(grid){
+      let topHeight = 0;
+      let holes = 0;
+      const heights = [];
+      for (let x = 0; x < COLS; x++){
+        let colHeight = 0;
+        let seen = false;
+        let colHoles = 0;
+        for (let y = 0; y < ROWS; y++){
+          const cell = grid[y][x];
+          if (cell){
+            seen = true;
+            colHeight = ROWS - y;
+          } else if (seen){
+            colHoles += 1;
+          }
+        }
+        topHeight = Math.max(topHeight, colHeight);
+        holes += colHoles;
+        heights.push(colHeight);
+      }
+      const mean = heights.reduce((a,b) => a + b, 0) / heights.length;
+      const variance = heights.reduce((a,h) => a + Math.pow(h - mean, 2), 0) / heights.length;
+      return { topHeight, holes, heightVar: Math.sqrt(variance) };
+    }
+
+    function evaluatePlacement(simResult, aggression){
+      const attackValue = simResult.cleared * 3 + simResult.combo * 5 + simResult.spark * 8;
+      const defensePenalty = simResult.holes * 1.6 + simResult.heightVar * 0.5 + simResult.height * 0.6;
+      return attackValue * (0.85 + aggression * 0.5) - defensePenalty;
+    }
+
+    function bestNextPlacement(grid, proto, aggression){
+      const shape = SHAPES[proto.shape];
+      let best = null;
+      for (let rotIdx = 0; rotIdx < shape.rotations.length; rotIdx++){
+        const rot = shape.rotations[rotIdx];
+        for (let col = 0; col <= COLS - rot.width; col++){
+          const sim = simulatePlacement(grid, proto, rotIdx, col);
+          if (!sim) continue;
+          const score = evaluatePlacement(sim, aggression);
+          if (!best || score > best.score){
+            best = { score };
+          }
+        }
+      }
+      return best;
     }
 
     function executeCpu(boardState, dt){
@@ -1568,6 +1761,9 @@
         ctx.restore();
       }
       // grid
+      const animDestMask = new Set(
+        (board.fallAnim?.moves || []).map(m => coordKey(m.toX, m.toY))
+      );
       for (let y = 0; y < VISIBLE_ROWS; y++){
         for (let x = 0; x < COLS; x++){
           const gy = y + HIDDEN_ROWS;
@@ -1576,7 +1772,7 @@
           const py = y * cellSize;
           ctx.strokeStyle = 'rgba(148,163,184,0.15)';
           ctx.strokeRect(px + 0.5, py + 0.5, cellSize - 1, cellSize - 1);
-          if (cell) {
+          if (cell && !animDestMask.has(coordKey(x, gy))) {
             ctx.fillStyle = cell.multi ? MULTI_COLOR : (cell.garbage ? GARBAGE_COLOR : cell.color || '#94a3b8');
             ctx.fillRect(px + 2, py + 2, cellSize - 4, cellSize - 4);
           }
@@ -1686,6 +1882,22 @@
         ctx.textAlign = 'start';
         ctx.restore();
       });
+      if (board.fallAnim){
+        const prog = Math.min(1, board.fallAnim.time / board.fallAnim.duration);
+        const ease = 1 - Math.pow(1 - prog, 2);
+        board.fallAnim.moves.forEach(move => {
+          const startY = move.fromY - HIDDEN_ROWS;
+          const endY = move.toY - HIDDEN_ROWS;
+          if (endY < 0 || startY >= VISIBLE_ROWS) return;
+          const px = move.toX * cellSize;
+          const py = (startY + (endY - startY) * ease) * cellSize;
+          const cell = move.cell;
+          ctx.save();
+          ctx.fillStyle = cell.multi ? MULTI_COLOR : (cell.garbage ? GARBAGE_COLOR : cell.color || '#94a3b8');
+          ctx.fillRect(px + 2, py + 2, cellSize - 4, cellSize - 4);
+          ctx.restore();
+        });
+      }
     }
 
     function drawPanels(board, x, y, cellSize){
@@ -1787,6 +1999,7 @@
     function destroy(){
       cancelAnimationFrame(rafHandle);
       document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
       try { wrapper.remove(); } catch {}
     }
 

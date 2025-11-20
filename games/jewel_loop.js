@@ -43,6 +43,9 @@
     const BULLET_SPEED = 520;
     const SHOOTER_COOLDOWN = 0.28;
     const PROJECTILE_RADIUS = 14;
+    const GRID_SPACING = 44;
+    const DANGER_THRESHOLD = 0.78;
+    const SLOW_TIME_SECONDS = 0.8;
 
     const canvas = document.createElement('canvas');
     canvas.width = WIDTH;
@@ -247,6 +250,8 @@
     let spawnBag = Array.from({ length: cfg.spawnCount }, () => Math.floor(Math.random() * cfg.colors));
     let spawnIndex = 0;
     let projectiles = [];
+    let particles = [];
+    let floatTexts = [];
     let pointer = { x: SHOOTER_POS.x, y: SHOOTER_POS.y - 120 };
 
     function updatePointerFromClient(clientX, clientY){
@@ -265,6 +270,7 @@
     let score = 0;
     let shotsFired = 0;
     let longestCombo = 0;
+    let slowTimer = 0;
 
     const shotQueue = [];
     let loadedColor = 0;
@@ -317,10 +323,13 @@
       chain = [];
       spawnIndex = 0;
       projectiles = [];
+      particles = [];
+      floatTexts = [];
       cooldown = 0;
       score = 0;
       shotsFired = 0;
       longestCombo = 0;
+      slowTimer = 0;
       gameOver = false;
       victory = false;
       running = true;
@@ -414,6 +423,31 @@
       enforceBackward();
     }
 
+    function spawnMatchEffects(points, color, count){
+      if (!points || points.length === 0) return;
+      const main = palette[color % palette.length];
+      for (const p of points) {
+        const burst = 9;
+        for (let i = 0; i < burst; i++) {
+          const ang = randRange(0, Math.PI * 2);
+          const spd = randRange(90, 240);
+          particles.push({
+            x: p.x,
+            y: p.y,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd,
+            life: 0,
+            ttl: 0.8,
+            size: randRange(2.5, 5.5),
+            color: main
+          });
+        }
+      }
+      const avgX = points.reduce((s, p) => s + p.x, 0) / points.length;
+      const avgY = points.reduce((s, p) => s + p.y, 0) / points.length;
+      floatTexts.push({ x: avgX, y: avgY, vy: -24, text: `x${count}`, color: main, life: 0, ttl: 0.9 });
+    }
+
     function resolveMatches(index){
       if (index < 0 || index >= chain.length) return;
       const color = chain[index].color;
@@ -423,10 +457,16 @@
       while (right + 1 < chain.length && chain[right + 1].color === color) right++;
       const count = right - left + 1;
       if (count >= 3) {
+        const matchPoints = [];
+        for (let i = left; i <= right; i++) {
+          matchPoints.push(pointAt(chain[i].dist));
+        }
         removeRange(left, count);
         score += count * 5;
         longestCombo = Math.max(longestCombo, count);
         awardXp?.(count);
+        slowTimer = Math.max(slowTimer, SLOW_TIME_SECONDS);
+        spawnMatchEffects(matchPoints, color, count);
         resolveMatches(Math.max(0, left - 1));
         resolveMatches(Math.min(chain.length - 1, left));
       }
@@ -503,9 +543,10 @@
     function update(dt){
       if (!running || gameOver) return;
       if (cooldown > 0) cooldown = Math.max(0, cooldown - dt);
+      if (slowTimer > 0) slowTimer = Math.max(0, slowTimer - dt);
 
       // Move chain
-      const speed = cfg.speed;
+      const speed = cfg.speed * (slowTimer > 0 ? 0.6 : 1);
       for (const bead of chain) {
         bead.dist += speed * dt;
       }
@@ -550,6 +591,28 @@
       }
       projectiles = remainingProjectiles;
 
+      // Animate particles and float texts
+      const nextParticles = [];
+      for (const p of particles) {
+        p.life += dt;
+        if (p.life > p.ttl) continue;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 220 * dt;
+        nextParticles.push(p);
+      }
+      particles = nextParticles;
+
+      const nextTexts = [];
+      for (const t of floatTexts) {
+        t.life += dt;
+        if (t.life > t.ttl) continue;
+        t.y += t.vy * dt;
+        t.vy -= 40 * dt;
+        nextTexts.push(t);
+      }
+      floatTexts = nextTexts;
+
       enforceBackward();
 
       // Victory / defeat conditions
@@ -563,6 +626,28 @@
         victory = false;
         gameOver = true;
         enableHostRestart();
+      }
+    }
+
+    function drawBackground(){
+      const grad = ctx.createLinearGradient(0, HUD_H, 0, HEIGHT);
+      grad.addColorStop(0, '#0b1220');
+      grad.addColorStop(1, '#0a1a2f');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, HUD_H, WIDTH, HEIGHT - HUD_H);
+      ctx.strokeStyle = 'rgba(148,163,184,0.08)';
+      ctx.lineWidth = 1;
+      for (let x = PLAY_LEFT - 8; x <= PLAY_RIGHT + 8; x += GRID_SPACING) {
+        ctx.beginPath();
+        ctx.moveTo(x, HUD_H);
+        ctx.lineTo(x, HEIGHT);
+        ctx.stroke();
+      }
+      for (let y = PLAY_TOP - 20; y <= PLAY_BOTTOM + 40; y += GRID_SPACING) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(WIDTH, y);
+        ctx.stroke();
       }
     }
 
@@ -587,6 +672,82 @@
         ctx.lineTo(p.x, p.y);
       }
       ctx.stroke();
+    }
+
+    function drawParticles(){
+      for (const p of particles) {
+        const t = 1 - Math.min(1, p.life / p.ttl);
+        ctx.fillStyle = p.color + Math.floor(120 * t).toString(16).padStart(2, '0');
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * (0.8 + 0.4 * t), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawFloatTexts(){
+      ctx.font = 'bold 22px "Noto Sans JP", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (const t of floatTexts) {
+        const alpha = 1 - Math.min(1, t.life / t.ttl);
+        ctx.fillStyle = `rgba(255,255,255,${alpha * 0.9})`;
+        ctx.strokeStyle = `${t.color}55`;
+        ctx.lineWidth = 3;
+        ctx.strokeText(t.text, t.x, t.y);
+        ctx.fillText(t.text, t.x, t.y);
+      }
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    function drawAimGuide(){
+      const dx = pointer.x - SHOOTER_POS.x;
+      const dy = pointer.y - SHOOTER_POS.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const maxLen = 780;
+      const nx = dx / len;
+      const ny = dy / len;
+      const gx = SHOOTER_POS.x + nx * Math.min(len, maxLen);
+      const gy = SHOOTER_POS.y + ny * Math.min(len, maxLen);
+      ctx.save();
+      ctx.setLineDash([8, 10]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(56,189,248,0.42)';
+      ctx.beginPath();
+      ctx.moveTo(SHOOTER_POS.x, SHOOTER_POS.y);
+      ctx.lineTo(gx, gy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(125,211,252,0.5)';
+      ctx.beginPath();
+      ctx.arc(gx, gy, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawDangerMeter(){
+      if (chain.length === 0) return;
+      const tail = chain[chain.length - 1];
+      const ratio = Math.min(1, tail.dist / END_DISTANCE);
+      const barW = 260;
+      const barH = 12;
+      const x = WIDTH / 2 - barW / 2;
+      const y = HEIGHT - 28;
+      ctx.fillStyle = 'rgba(15,23,42,0.7)';
+      ctx.fillRect(x - 4, y - 4, barW + 8, barH + 8);
+      const grad = ctx.createLinearGradient(x, y, x + barW, y);
+      grad.addColorStop(0, '#22c55e');
+      grad.addColorStop(0.6, '#facc15');
+      grad.addColorStop(1, '#ef4444');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, barW * ratio, barH);
+      ctx.strokeStyle = 'rgba(148,163,184,0.4)';
+      ctx.strokeRect(x, y, barW, barH);
+      if (ratio > DANGER_THRESHOLD) {
+        const pulse = 0.45 + 0.35 * Math.sin(performance.now() / 120);
+        ctx.fillStyle = `rgba(239,68,68,${pulse})`;
+        ctx.fillRect(x, y, barW * ratio, barH);
+      }
     }
 
     function drawBeads(){
@@ -699,13 +860,16 @@
 
     function render(){
       ctx.clearRect(0, 0, WIDTH, HEIGHT);
-      ctx.fillStyle = '#111827';
-      ctx.fillRect(0, HUD_H, WIDTH, HEIGHT - HUD_H);
+      drawBackground();
       drawHUD();
       drawPath();
       drawBeads();
+      drawParticles();
       drawProjectiles();
+      drawAimGuide();
       drawShooter();
+      drawFloatTexts();
+      drawDangerMeter();
       if (gameOver) {
         if (victory) {
           drawBanner(text('result.victory', 'CONGRATULATIONS! 全てのジュエルを消去しました'), '#4ade80');

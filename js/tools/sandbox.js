@@ -212,8 +212,9 @@
             label: makeLocaleEntry('gimmicks.floorSwitch.label', 'スイッチ'),
             icon: '🔘',
             defaultName: makeLocaleEntry('gimmicks.floorSwitch.defaultName', 'スイッチ'),
-            defaultConfig: { mode: 'momentary', defaultOn: false, resettable: true },
+            defaultConfig: { mode: 'momentary', defaultOn: false, resettable: true, useToggle: false },
             configFields: [
+                { id: 'useToggle', type: 'boolean', label: makeLocaleEntry('gimmicks.floorSwitch.config.useToggle.label', 'トグルスイッチを使用する') },
                 {
                     id: 'mode',
                     type: 'select',
@@ -229,7 +230,8 @@
             ],
             inputs: [
                 { id: 'set', label: makeLocaleEntry('gimmicks.floorSwitch.inputs.set', '強制ON'), signal: 'binary' },
-                { id: 'reset', label: makeLocaleEntry('gimmicks.floorSwitch.inputs.reset', '強制OFF'), signal: 'binary' }
+                { id: 'reset', label: makeLocaleEntry('gimmicks.floorSwitch.inputs.reset', '強制OFF'), signal: 'binary' },
+                { id: 'toggle', label: makeLocaleEntry('gimmicks.floorSwitch.inputs.toggle', '切り替え'), signal: 'pulse' }
             ],
             outputs: [
                 { id: 'activated', label: makeLocaleEntry('gimmicks.floorSwitch.outputs.activated', 'ON'), signal: 'binary' },
@@ -887,6 +889,14 @@
                 config[field.id] = sanitizeGimmickFieldValue(field, value);
             }
         });
+        if (def.id === 'floorSwitch') {
+            config.useToggle = !!(config.useToggle || config.mode === 'toggle');
+            if (config.useToggle) {
+                config.mode = 'toggle';
+            } else if (config.mode === 'toggle') {
+                config.mode = 'momentary';
+            }
+        }
         if (rawConfig && typeof rawConfig === 'object') {
             Object.keys(rawConfig).forEach(key => {
                 if (typeof config[key] === 'undefined') {
@@ -3529,6 +3539,10 @@
                     control.checked = !!currentValue;
                     control.addEventListener('change', () => {
                         gimmick.config[field.id] = control.checked;
+                        if (field.id === 'useToggle') {
+                            // 「トグルスイッチを使用」が有効ならモードも合わせてトグルにする
+                            gimmick.config.mode = control.checked ? 'toggle' : 'momentary';
+                        }
                         cleanupInvalidWires();
                         render();
                     });
@@ -3548,6 +3562,9 @@
                         : (options[0]?.value || '');
                     control.addEventListener('change', () => {
                         gimmick.config[field.id] = control.value;
+                        if (field.id === 'mode') {
+                            gimmick.config.useToggle = control.value === 'toggle';
+                        }
                         cleanupInvalidWires();
                         render();
                     });

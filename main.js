@@ -2883,10 +2883,11 @@ const SANDBOX_GIMMICK_DEFINITIONS = Object.freeze({
     floorSwitch: {
         label: 'スイッチ',
         icon: '🔘',
-        defaultConfig: { mode: 'momentary', defaultOn: false, resettable: true },
+        defaultConfig: { mode: 'momentary', defaultOn: false, resettable: true, useToggle: false },
         inputs: [
             { id: 'set', signal: 'binary' },
-            { id: 'reset', signal: 'binary' }
+            { id: 'reset', signal: 'binary' },
+            { id: 'toggle', signal: 'pulse' }
         ],
         outputs: [
             { id: 'activated', signal: 'binary' },
@@ -3151,12 +3152,16 @@ function initializeSandboxNodeState(node) {
             break;
         }
         case 'floorSwitch': {
+            const useToggle = !!node.config.useToggle || node.config.mode === 'toggle';
+            const mode = useToggle ? 'toggle' : (node.config.mode || 'momentary');
             node.state = {
-                mode: node.config.mode || 'momentary',
+                mode,
+                useToggle,
                 defaultOn: !!node.config.defaultOn,
                 resettable: node.config.resettable !== false,
                 active: !!node.config.defaultOn,
-                pressed: false
+                pressed: false,
+                pendingToggle: 0
             };
             node.outputs.set('activated', node.state.active);
             node.outputs.set('state', node.state.active);
@@ -3298,17 +3303,30 @@ function deliverSandboxSignal(runtime, wire, value, signalType) {
 function applySandboxNodeInput(node, portId, value, signalType = 'binary') {
     switch (node.type) {
         case 'floorSwitch': {
-            if (portId === 'set') {
-                if (signalType === 'pulse') {
-                    node.state.forceSet = node.state.forceSet || !!value;
-                } else {
-                    node.state.remoteSet = !!value;
+            const isToggleMode = node.state?.mode === 'toggle' || node.state?.useToggle;
+            const shouldToggle = () => {
+                if (signalType === 'pulse') return !!value;
+                return !!value;
+            };
+            if (isToggleMode) {
+                if (portId === 'toggle' || portId === 'set' || portId === 'reset') {
+                    if (shouldToggle()) {
+                        node.state.pendingToggle = (Number(node.state.pendingToggle) || 0) + 1;
+                    }
                 }
-            } else if (portId === 'reset') {
-                if (signalType === 'pulse') {
-                    node.state.forceReset = node.state.forceReset || !!value;
-                } else {
-                    node.state.remoteReset = !!value;
+            } else {
+                if (portId === 'set') {
+                    if (signalType === 'pulse') {
+                        node.state.forceSet = node.state.forceSet || !!value;
+                    } else {
+                        node.state.remoteSet = !!value;
+                    }
+                } else if (portId === 'reset') {
+                    if (signalType === 'pulse') {
+                        node.state.forceReset = node.state.forceReset || !!value;
+                    } else {
+                        node.state.remoteReset = !!value;
+                    }
                 }
             }
             break;
@@ -3458,8 +3476,9 @@ function updateSandboxGimmickState(context = {}) {
         const pressedNow = pressedByPlayer || pressedByCrate;
         node.state.pressed = pressedNow;
 
-        const mode = node.state.mode || 'momentary';
+        const mode = node.state.mode || (node.state.useToggle ? 'toggle' : 'momentary');
         let active = node.state.active;
+        const toggleCount = Math.max(0, Number(node.state.pendingToggle) || 0);
 
         if (node.state.forceSet || node.state.remoteSet) {
             active = true;
@@ -3474,6 +3493,9 @@ function updateSandboxGimmickState(context = {}) {
             active = pressedNow || node.state.remoteSet || node.state.forceSet || false;
         } else if (mode === 'toggle') {
             if (pressedNow && !wasPressed) {
+                active = !active;
+            }
+            if (toggleCount % 2 === 1) {
                 active = !active;
             }
         } else if (mode === 'sticky') {
@@ -3491,6 +3513,7 @@ function updateSandboxGimmickState(context = {}) {
         node.state.forceReset = false;
         node.state.remoteSet = false;
         node.state.remoteReset = false;
+        node.state.pendingToggle = 0;
 
         if (node.state.active !== prevActive) {
             setSandboxNodeOutput(runtime, node, 'activated', node.state.active);
@@ -3775,6 +3798,12 @@ function sanitizeSandboxGimmickConfig(type, rawConfig) {
             config.mode = SANDBOX_SWITCH_MODES.has(raw.mode) ? raw.mode : config.mode;
             config.defaultOn = !!raw.defaultOn;
             config.resettable = !!raw.resettable;
+            config.useToggle = !!raw.useToggle || config.mode === 'toggle';
+            if (config.useToggle) {
+                config.mode = 'toggle';
+            } else if (config.mode === 'toggle') {
+                config.mode = 'momentary';
+            }
             break;
         case 'door':
             config.initialState = raw.initialState === 'open' ? 'open' : 'closed';

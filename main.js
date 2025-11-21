@@ -19472,15 +19472,20 @@ function computeActiveDungeonGeneratorCount() {
 const MINI_GAME_BUILTIN_AUTHORS = new Set(['builtin', 'builtin-sample', 'builtin_sample', 'core']);
 
 function computeMiniGameModCount() {
+    // Kick off manifest preload so the stats tab can reflect mods even before
+    // the MiniExp UI is opened.
+    triggerMiniManifestPreload();
+
     const seen = new Set();
     let count = 0;
     const consider = (entry) => {
         if (!entry || !entry.id || seen.has(entry.id)) return;
         seen.add(entry.id);
-        const authorRaw = entry.author;
-        if (!authorRaw) return;
+        const authorRaw = entry.author ?? entry.source ?? entry.provider ?? '';
         const author = String(authorRaw).trim().toLowerCase();
-        if (!author || MINI_GAME_BUILTIN_AUTHORS.has(author)) return;
+        // Treat entries without an explicit author as MODs unless they are clearly built-in.
+        const isBuiltin = author && MINI_GAME_BUILTIN_AUTHORS.has(author);
+        if (isBuiltin) return;
         count += 1;
     };
     const manifestList = Array.isArray(__miniManifest)
@@ -19597,6 +19602,22 @@ async function loadMiniManifestOnce() {
         },
     ]);
 }
+
+let __miniManifestPreloadPromise = null;
+function triggerMiniManifestPreload() {
+    if (__miniManifest || __miniManifestPreloadPromise) return;
+    if (typeof loadMiniManifestOnce !== 'function') return;
+    __miniManifestPreloadPromise = loadMiniManifestOnce()
+        .then((list) => {
+            __miniManifest = __miniManifest || list;
+            safeAchievementRefresh();
+            return list;
+        })
+        .catch(() => {
+            __miniManifestPreloadPromise = null;
+        });
+}
+
 function normalizeMiniExpDisplayMode(mode) {
     const fallback = 'detail';
     if (!mode) return fallback;

@@ -1066,6 +1066,13 @@
     function formatNumber(value) {
         if (!Number.isFinite(value)) return '0';
         const numeric = Math.floor(value);
+        // Prevent layout breakage on the statistics tab by switching to
+        // scientific notation once the integer part reaches 15+ digits.
+        const abs = Math.abs(numeric);
+        const digitCount = abs === 0 ? 1 : Math.floor(Math.log10(abs)) + 1;
+        if (digitCount >= 15) {
+            return numeric.toExponential(2);
+        }
         const i18n = getI18n();
         if (i18n && typeof i18n.formatNumber === 'function') {
             return i18n.formatNumber(numeric);

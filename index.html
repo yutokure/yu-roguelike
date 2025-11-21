@@ -499,112 +499,77 @@
                                 <h3 data-i18n="tools.sandbox.header.title">サンドボックスダンジョン</h3>
                                 <p data-i18n="tools.sandbox.header.description">自由にマップと敵を配置して、経験値に影響しないテスト用ダンジョンをその場で試走できます。</p>
                             </header>
+                            <section class="sandbox-section sandbox-start" aria-labelledby="sandbox-start-title">
+                                <div class="sandbox-section-header">
+                                    <h4 id="sandbox-start-title" data-i18n="tools.sandbox.start.title">起動</h4>
+                                </div>
+                                <div id="sandbox-validation" class="sandbox-validation" aria-live="polite"></div>
+                                <div class="sandbox-start-actions">
+                                    <div class="sandbox-primary-actions">
+                                        <button type="button" id="sandbox-start-button" class="sandbox-start-button" data-i18n="tools.sandbox.start.actions.launch">サンドボックスを開始</button>
+                                        <button type="button" id="sandbox-export-button" class="sandbox-secondary-button" data-i18n="tools.sandbox.start.actions.export">設定をエクスポート</button>
+                                        <button type="button" id="sandbox-import-button" class="sandbox-secondary-button" data-i18n="tools.sandbox.start.actions.import">設定をインポート</button>
+                                        <input type="file" id="sandbox-import-file" accept="application/json" hidden>
+                                    </div>
+                                    <span class="sandbox-warning" data-i18n="tools.sandbox.start.warning">※ サンドボックスでは経験値を獲得できません。</span>
+                                </div>
+                                <p id="sandbox-io-status" class="sandbox-io-status" role="status" aria-live="polite"></p>
+                            </section>
                             <div class="sandbox-layout">
                                 <div class="sandbox-config">
-                                    <section class="sandbox-section" aria-labelledby="sandbox-map-title">
+                                    <section class="sandbox-section" aria-labelledby="sandbox-brush-options-title">
                                         <div class="sandbox-section-header">
-                                            <h4 id="sandbox-map-title" data-i18n="tools.sandbox.map.title">マップ設定</h4>
-                                            <div class="sandbox-map-actions">
-                                                <button type="button" id="sandbox-fill-floor" data-i18n="tools.sandbox.map.actions.fillFloor">全て床</button>
-                                                <button type="button" id="sandbox-fill-wall" data-i18n="tools.sandbox.map.actions.fillWall">全て壁</button>
-                                                <button type="button" id="sandbox-clear-markers" data-i18n="tools.sandbox.map.actions.resetMarkers">階段/開始位置をリセット</button>
-                                            </div>
+                                            <h4 id="sandbox-brush-options-title" data-i18n="tools.sandbox.map.options.title">ブラシオプション</h4>
                                         </div>
-                                        <div class="sandbox-form-grid">
-                                            <label data-i18n="tools.sandbox.map.fields.width.label">幅
-                                                <input id="sandbox-width" type="number" min="5" max="60" value="21">
+                                        <div class="sandbox-brush-option-grid">
+                                            <label class="sandbox-field-group" data-i18n="tools.sandbox.map.options.floorType.label">床タイプ
+                                                <select id="sandbox-brush-floor-type">
+                                                    <option value="normal" data-i18n="tools.sandbox.map.options.floorType.options.normal">通常</option>
+                                                    <option value="ice" data-i18n="tools.sandbox.map.options.floorType.options.ice">氷</option>
+                                                    <option value="poison" data-i18n="tools.sandbox.map.options.floorType.options.poison">毒</option>
+                                                    <option value="bomb" data-i18n="tools.sandbox.map.options.floorType.options.bomb">爆弾</option>
+                                                    <option value="conveyor" data-i18n="tools.sandbox.map.options.floorType.options.conveyor">コンベヤー</option>
+                                                    <option value="one-way" data-i18n="tools.sandbox.map.options.floorType.options.oneWay">一方通行</option>
+                                                    <option value="vertical" data-i18n="tools.sandbox.map.options.floorType.options.vertical">縦通行のみ</option>
+                                                    <option value="horizontal" data-i18n="tools.sandbox.map.options.floorType.options.horizontal">横通行のみ</option>
+                                                </select>
                                             </label>
-                                            <label data-i18n="tools.sandbox.map.fields.height.label">高さ
-                                                <input id="sandbox-height" type="number" min="5" max="60" value="15">
+                                            <label class="sandbox-field-group" data-i18n="tools.sandbox.map.options.floorDirection.label">進行方向
+                                                <select id="sandbox-brush-floor-direction">
+                                                    <option value="" data-i18n="tools.sandbox.map.options.floorDirection.options.none">指定なし</option>
+                                                    <option value="up" data-i18n="tools.sandbox.map.options.floorDirection.options.up">↑ 上</option>
+                                                    <option value="right" data-i18n="tools.sandbox.map.options.floorDirection.options.right">→ 右</option>
+                                                    <option value="down" data-i18n="tools.sandbox.map.options.floorDirection.options.down">↓ 下</option>
+                                                    <option value="left" data-i18n="tools.sandbox.map.options.floorDirection.options.left">← 左</option>
+                                                </select>
+                                                <span class="sandbox-hint" data-i18n="tools.sandbox.map.options.floorDirection.hint">※ コンベヤー / 一方通行床で使用</span>
                                             </label>
-                                        </div>
-                                        <div class="sandbox-brush-select" role="radiogroup" aria-label="ブラシ選択" data-i18n-attr="aria-label:tools.sandbox.map.brush.ariaLabel">
-                                            <button type="button" class="sandbox-brush" data-brush="select" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.select">選択</button>
-                                            <button type="button" class="sandbox-brush" data-brush="floor" aria-pressed="true" data-i18n="tools.sandbox.map.brush.modes.floor">床</button>
-                                            <button type="button" class="sandbox-brush" data-brush="wall" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.wall">壁</button>
-                                            <button type="button" class="sandbox-brush" data-brush="start" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.start">開始位置</button>
-                                            <button type="button" class="sandbox-brush" data-brush="stairs" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.stairs">階段</button>
-                                            <button type="button" class="sandbox-brush" data-brush="gate" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.gate">ゲート</button>
-                                            <button type="button" class="sandbox-brush" data-brush="enemy" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.enemy">敵配置</button>
-                                            <button type="button" class="sandbox-brush" data-brush="domain" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.domain">領域</button>
-                                        </div>
-                                        <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite" data-i18n="tools.sandbox.map.selectedCell.hint">セルをクリックして編集します。</p>
-                                        <section class="sandbox-subsection" aria-labelledby="sandbox-maplist-title">
-                                            <div class="sandbox-subsection-header">
-                                                <h5 id="sandbox-maplist-title" data-i18n="tools.sandbox.map.list.title">マップ一覧</h5>
-                                                <div class="sandbox-maplist-actions">
-                                                    <button type="button" id="sandbox-add-map" data-i18n="tools.sandbox.map.list.actions.add">+ マップ追加</button>
-                                                    <button type="button" id="sandbox-node-map-button" data-i18n="tools.sandbox.map.list.actions.node">ノードマップ</button>
+                                            <label class="sandbox-field-group" data-i18n="tools.sandbox.map.options.floorColor.label">床の色
+                                                <div class="sandbox-color-control">
+                                                    <input id="sandbox-brush-floor-color" type="color" value="#ced6e0" data-has-custom="false">
+                                                    <button type="button" id="sandbox-brush-floor-color-clear" class="sandbox-color-clear" data-i18n="tools.sandbox.map.options.color.auto">自動</button>
+                                                </div>
+                                                <span class="sandbox-color-hint" id="sandbox-floor-color-hint" data-i18n="tools.sandbox.map.options.color.auto">自動</span>
+                                            </label>
+                                            <label class="sandbox-field-group" data-i18n="tools.sandbox.map.options.wallColor.label">壁の色
+                                                <div class="sandbox-color-control">
+                                                    <input id="sandbox-brush-wall-color" type="color" value="#2f3542" data-has-custom="false">
+                                                    <button type="button" id="sandbox-brush-wall-color-clear" class="sandbox-color-clear" data-i18n="tools.sandbox.map.options.color.auto">自動</button>
+                                                </div>
+                                                <span class="sandbox-color-hint" id="sandbox-wall-color-hint" data-i18n="tools.sandbox.map.options.color.auto">自動</span>
+                                            </label>
+                                            <div class="sandbox-field-group sandbox-palette-group">
+                                                <span data-i18n="tools.sandbox.map.palette.title">カラーパレット</span>
+                                                <div id="sandbox-color-palette" class="sandbox-color-palette" role="listbox" aria-label="保存済みカラー" data-i18n-attr="aria-label:tools.sandbox.map.palette.ariaLabel"></div>
+                                                <div class="sandbox-palette-actions">
+                                                    <button type="button" id="sandbox-save-floor-color" data-i18n="tools.sandbox.map.palette.actions.saveFloor">床色を保存</button>
+                                                    <button type="button" id="sandbox-save-wall-color" data-i18n="tools.sandbox.map.palette.actions.saveWall">壁色を保存</button>
+                                                    <button type="button" id="sandbox-clear-palette" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.palette.actions.clear">パレットをクリア</button>
+                                                    <button type="button" id="sandbox-eyedropper-button" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.palette.actions.eyedropper">スポイト</button>
                                                 </div>
                                             </div>
-                                            <div class="sandbox-maplist">
-                                                <div id="sandbox-map-list" class="sandbox-map-list" role="listbox" aria-label="マップ一覧" data-i18n-attr="aria-label:tools.sandbox.map.list.ariaLabel"></div>
-                                                <div class="sandbox-map-detail">
-                                                    <label data-i18n="tools.sandbox.map.list.fields.name.label">名前
-                                                        <input id="sandbox-map-name" type="text" maxlength="40" data-preserve-key="map-name">
-                                                    </label>
-                                                    <label data-i18n="tools.sandbox.map.list.fields.floor.label">階層
-                                                        <input id="sandbox-map-floor" type="number" min="1" max="999" data-preserve-key="map-floor">
-                                                    </label>
-                                                    <label data-i18n="tools.sandbox.map.list.fields.branch.label">ブランチキー
-                                                        <input id="sandbox-map-branch" type="text" maxlength="12" data-preserve-key="map-branch">
-                                                    </label>
-                                                    <button type="button" id="sandbox-set-entry-map" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.list.actions.setEntry">開始マップに設定</button>
-                                                </div>
-                                            </div>
-                                        </section>
-                                        <div class="sandbox-brush-options" aria-labelledby="sandbox-brush-options-title">
-                                            <h5 id="sandbox-brush-options-title" data-i18n="tools.sandbox.map.options.title">ブラシオプション</h5>
-                                            <div class="sandbox-brush-option-grid">
-                                                <label class="sandbox-field-group" data-i18n="tools.sandbox.map.options.floorType.label">床タイプ
-                                                    <select id="sandbox-brush-floor-type">
-                                                        <option value="normal" data-i18n="tools.sandbox.map.options.floorType.options.normal">通常</option>
-                                                        <option value="ice" data-i18n="tools.sandbox.map.options.floorType.options.ice">氷</option>
-                                                        <option value="poison" data-i18n="tools.sandbox.map.options.floorType.options.poison">毒</option>
-                                                        <option value="bomb" data-i18n="tools.sandbox.map.options.floorType.options.bomb">爆弾</option>
-                                                        <option value="conveyor" data-i18n="tools.sandbox.map.options.floorType.options.conveyor">コンベヤー</option>
-                                                        <option value="one-way" data-i18n="tools.sandbox.map.options.floorType.options.oneWay">一方通行</option>
-                                                        <option value="vertical" data-i18n="tools.sandbox.map.options.floorType.options.vertical">縦通行のみ</option>
-                                                        <option value="horizontal" data-i18n="tools.sandbox.map.options.floorType.options.horizontal">横通行のみ</option>
-                                                    </select>
-                                                </label>
-                                                <label class="sandbox-field-group" data-i18n="tools.sandbox.map.options.floorDirection.label">進行方向
-                                                    <select id="sandbox-brush-floor-direction">
-                                                        <option value="" data-i18n="tools.sandbox.map.options.floorDirection.options.none">指定なし</option>
-                                                        <option value="up" data-i18n="tools.sandbox.map.options.floorDirection.options.up">↑ 上</option>
-                                                        <option value="right" data-i18n="tools.sandbox.map.options.floorDirection.options.right">→ 右</option>
-                                                        <option value="down" data-i18n="tools.sandbox.map.options.floorDirection.options.down">↓ 下</option>
-                                                        <option value="left" data-i18n="tools.sandbox.map.options.floorDirection.options.left">← 左</option>
-                                                    </select>
-                                                    <span class="sandbox-hint" data-i18n="tools.sandbox.map.options.floorDirection.hint">※ コンベヤー / 一方通行床で使用</span>
-                                                </label>
-                                                <label class="sandbox-field-group" data-i18n="tools.sandbox.map.options.floorColor.label">床の色
-                                                    <div class="sandbox-color-control">
-                                                        <input id="sandbox-brush-floor-color" type="color" value="#ced6e0" data-has-custom="false">
-                                                        <button type="button" id="sandbox-brush-floor-color-clear" class="sandbox-color-clear" data-i18n="tools.sandbox.map.options.color.auto">自動</button>
-                                                    </div>
-                                                    <span class="sandbox-color-hint" id="sandbox-floor-color-hint" data-i18n="tools.sandbox.map.options.color.auto">自動</span>
-                                                </label>
-                                                <label class="sandbox-field-group" data-i18n="tools.sandbox.map.options.wallColor.label">壁の色
-                                                    <div class="sandbox-color-control">
-                                                        <input id="sandbox-brush-wall-color" type="color" value="#2f3542" data-has-custom="false">
-                                                        <button type="button" id="sandbox-brush-wall-color-clear" class="sandbox-color-clear" data-i18n="tools.sandbox.map.options.color.auto">自動</button>
-                                                    </div>
-                                                    <span class="sandbox-color-hint" id="sandbox-wall-color-hint" data-i18n="tools.sandbox.map.options.color.auto">自動</span>
-                                                </label>
-                                                <div class="sandbox-field-group sandbox-palette-group">
-                                                    <span data-i18n="tools.sandbox.map.palette.title">カラーパレット</span>
-                                                    <div id="sandbox-color-palette" class="sandbox-color-palette" role="listbox" aria-label="保存済みカラー" data-i18n-attr="aria-label:tools.sandbox.map.palette.ariaLabel"></div>
-                                                    <div class="sandbox-palette-actions">
-                                                        <button type="button" id="sandbox-save-floor-color" data-i18n="tools.sandbox.map.palette.actions.saveFloor">床色を保存</button>
-                                                        <button type="button" id="sandbox-save-wall-color" data-i18n="tools.sandbox.map.palette.actions.saveWall">壁色を保存</button>
-                                                        <button type="button" id="sandbox-clear-palette" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.palette.actions.clear">パレットをクリア</button>
-                                                        <button type="button" id="sandbox-eyedropper-button" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.palette.actions.eyedropper">スポイト</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <p class="sandbox-note small" data-i18n="tools.sandbox.map.notes.apply">選択セルや塗りつぶすマスに色・床タイプを適用できます。</p>
                                         </div>
+                                        <p class="sandbox-note small" data-i18n="tools.sandbox.map.notes.apply">選択セルや塗りつぶすマスに色・床タイプを適用できます。</p>
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-player-title">
                                         <div class="sandbox-section-header">
@@ -654,27 +619,82 @@
                                     </section>
                                 </div>
                                 <div class="sandbox-map-wrapper">
-                                    <div class="sandbox-map-header">
-                                        <h4 data-i18n="tools.sandbox.map.preview.title">マッププレビュー</h4>
-                                    </div>
-                                    <div id="sandbox-grid" class="sandbox-grid" role="grid" aria-label="サンドボックスマップ" data-i18n-attr="aria-label:tools.sandbox.map.preview.ariaLabel">
-                                        <canvas id="sandbox-grid-canvas" role="presentation" aria-hidden="true"></canvas>
-                                        <div id="sandbox-grid-aria" class="visually-hidden" aria-live="polite"></div>
-                                    </div>
-                                    <dl class="sandbox-legend">
-                                        <div><dt>■</dt><dd data-i18n="tools.sandbox.map.preview.legend.wall">壁</dd></div>
-                                        <div><dt>□</dt><dd data-i18n="tools.sandbox.map.preview.legend.floor">床</dd></div>
-                                        <div><dt>★</dt><dd data-i18n="tools.sandbox.map.preview.legend.start">開始位置</dd></div>
-                                        <div><dt>⬆</dt><dd data-i18n="tools.sandbox.map.preview.legend.stairs">階段</dd></div>
-                                        <div><dt>✦</dt><dd data-i18n="tools.sandbox.map.preview.legend.enemy">敵</dd></div>
-                                        <div><dt class="legend-ice">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.ice">氷床</dd></div>
-                                        <div><dt class="legend-poison">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.poison">毒床</dd></div>
-                                        <div><dt class="legend-bomb">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.bomb">爆弾床</dd></div>
-                                        <div><dt class="legend-conveyor">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.conveyor">コンベヤー床</dd></div>
-                                        <div><dt class="legend-oneway">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.oneWay">一方通行床</dd></div>
-                                        <div><dt class="legend-vertical">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.vertical">縦通行のみ床</dd></div>
-                                        <div><dt class="legend-horizontal">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.horizontal">横通行のみ床</dd></div>
-                                    </dl>
+                                    <section class="sandbox-section" aria-labelledby="sandbox-map-title">
+                                        <div class="sandbox-section-header">
+                                            <h4 id="sandbox-map-title" data-i18n="tools.sandbox.map.title">マップ設定</h4>
+                                            <div class="sandbox-map-actions">
+                                                <button type="button" id="sandbox-fill-floor" data-i18n="tools.sandbox.map.actions.fillFloor">全て床</button>
+                                                <button type="button" id="sandbox-fill-wall" data-i18n="tools.sandbox.map.actions.fillWall">全て壁</button>
+                                                <button type="button" id="sandbox-clear-markers" data-i18n="tools.sandbox.map.actions.resetMarkers">階段/開始位置をリセット</button>
+                                            </div>
+                                        </div>
+                                        <div class="sandbox-form-grid">
+                                            <label data-i18n="tools.sandbox.map.fields.width.label">幅
+                                                <input id="sandbox-width" type="number" min="5" max="60" value="21">
+                                            </label>
+                                            <label data-i18n="tools.sandbox.map.fields.height.label">高さ
+                                                <input id="sandbox-height" type="number" min="5" max="60" value="15">
+                                            </label>
+                                        </div>
+                                        <div class="sandbox-brush-select" role="radiogroup" aria-label="ブラシ選択" data-i18n-attr="aria-label:tools.sandbox.map.brush.ariaLabel">
+                                            <button type="button" class="sandbox-brush" data-brush="select" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.select">選択</button>
+                                            <button type="button" class="sandbox-brush" data-brush="floor" aria-pressed="true" data-i18n="tools.sandbox.map.brush.modes.floor">床</button>
+                                            <button type="button" class="sandbox-brush" data-brush="wall" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.wall">壁</button>
+                                            <button type="button" class="sandbox-brush" data-brush="start" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.start">開始位置</button>
+                                            <button type="button" class="sandbox-brush" data-brush="stairs" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.stairs">階段</button>
+                                            <button type="button" class="sandbox-brush" data-brush="gate" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.gate">ゲート</button>
+                                            <button type="button" class="sandbox-brush" data-brush="enemy" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.enemy">敵配置</button>
+                                            <button type="button" class="sandbox-brush" data-brush="domain" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.domain">領域</button>
+                                        </div>
+                                        <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite" data-i18n="tools.sandbox.map.selectedCell.hint">セルをクリックして編集します。</p>
+                                    </section>
+                                    <section class="sandbox-section sandbox-map-preview-section" aria-labelledby="sandbox-map-preview-title">
+                                        <div class="sandbox-map-header">
+                                            <h4 id="sandbox-map-preview-title" data-i18n="tools.sandbox.map.preview.title">マッププレビュー</h4>
+                                        </div>
+                                        <div id="sandbox-grid" class="sandbox-grid" role="grid" aria-label="サンドボックスマップ" data-i18n-attr="aria-label:tools.sandbox.map.preview.ariaLabel">
+                                            <canvas id="sandbox-grid-canvas" role="presentation" aria-hidden="true"></canvas>
+                                            <div id="sandbox-grid-aria" class="visually-hidden" aria-live="polite"></div>
+                                        </div>
+                                        <dl class="sandbox-legend">
+                                            <div><dt>■</dt><dd data-i18n="tools.sandbox.map.preview.legend.wall">壁</dd></div>
+                                            <div><dt>□</dt><dd data-i18n="tools.sandbox.map.preview.legend.floor">床</dd></div>
+                                            <div><dt>★</dt><dd data-i18n="tools.sandbox.map.preview.legend.start">開始位置</dd></div>
+                                            <div><dt>⬆</dt><dd data-i18n="tools.sandbox.map.preview.legend.stairs">階段</dd></div>
+                                            <div><dt>✦</dt><dd data-i18n="tools.sandbox.map.preview.legend.enemy">敵</dd></div>
+                                            <div><dt class="legend-ice">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.ice">氷床</dd></div>
+                                            <div><dt class="legend-poison">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.poison">毒床</dd></div>
+                                            <div><dt class="legend-bomb">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.bomb">爆弾床</dd></div>
+                                            <div><dt class="legend-conveyor">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.conveyor">コンベヤー床</dd></div>
+                                            <div><dt class="legend-oneway">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.oneWay">一方通行床</dd></div>
+                                            <div><dt class="legend-vertical">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.vertical">縦通行のみ床</dd></div>
+                                            <div><dt class="legend-horizontal">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.horizontal">横通行のみ床</dd></div>
+                                        </dl>
+                                    </section>
+                                    <section class="sandbox-section" aria-labelledby="sandbox-maplist-title">
+                                        <div class="sandbox-subsection-header">
+                                            <h5 id="sandbox-maplist-title" data-i18n="tools.sandbox.map.list.title">マップ一覧</h5>
+                                            <div class="sandbox-maplist-actions">
+                                                <button type="button" id="sandbox-add-map" data-i18n="tools.sandbox.map.list.actions.add">+ マップ追加</button>
+                                                <button type="button" id="sandbox-node-map-button" data-i18n="tools.sandbox.map.list.actions.node">ノードマップ</button>
+                                            </div>
+                                        </div>
+                                        <div class="sandbox-maplist">
+                                            <div id="sandbox-map-list" class="sandbox-map-list" role="listbox" aria-label="マップ一覧" data-i18n-attr="aria-label:tools.sandbox.map.list.ariaLabel"></div>
+                                            <div class="sandbox-map-detail">
+                                                <label data-i18n="tools.sandbox.map.list.fields.name.label">名前
+                                                    <input id="sandbox-map-name" type="text" maxlength="40" data-preserve-key="map-name">
+                                                </label>
+                                                <label data-i18n="tools.sandbox.map.list.fields.floor.label">階層
+                                                    <input id="sandbox-map-floor" type="number" min="1" max="999" data-preserve-key="map-floor">
+                                                </label>
+                                                <label data-i18n="tools.sandbox.map.list.fields.branch.label">ブランチキー
+                                                    <input id="sandbox-map-branch" type="text" maxlength="12" data-preserve-key="map-branch">
+                                                </label>
+                                                <button type="button" id="sandbox-set-entry-map" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.list.actions.setEntry">開始マップに設定</button>
+                                            </div>
+                                        </div>
+                                    </section>
                                 </div>
                             </div>
                             <section class="sandbox-section sandbox-gimmick-suite" aria-labelledby="sandbox-gimmick-title">
@@ -756,22 +776,6 @@
                                         </div>
                                     </div>
                                 </div>
-                            </section>
-                            <section class="sandbox-section sandbox-start" aria-labelledby="sandbox-start-title">
-                                <div class="sandbox-section-header">
-                                    <h4 id="sandbox-start-title" data-i18n="tools.sandbox.start.title">起動</h4>
-                                </div>
-                                <div id="sandbox-validation" class="sandbox-validation" aria-live="polite"></div>
-                                <div class="sandbox-start-actions">
-                                    <div class="sandbox-primary-actions">
-                                        <button type="button" id="sandbox-start-button" class="sandbox-start-button" data-i18n="tools.sandbox.start.actions.launch">サンドボックスを開始</button>
-                                        <button type="button" id="sandbox-export-button" class="sandbox-secondary-button" data-i18n="tools.sandbox.start.actions.export">設定をエクスポート</button>
-                                        <button type="button" id="sandbox-import-button" class="sandbox-secondary-button" data-i18n="tools.sandbox.start.actions.import">設定をインポート</button>
-                                        <input type="file" id="sandbox-import-file" accept="application/json" hidden>
-                                    </div>
-                                    <span class="sandbox-warning" data-i18n="tools.sandbox.start.warning">※ サンドボックスでは経験値を獲得できません。</span>
-                                </div>
-                                <p id="sandbox-io-status" class="sandbox-io-status" role="status" aria-live="polite"></p>
                             </section>
                             <div id="sandbox-node-map-dialog" class="sandbox-node-map-dialog" aria-hidden="true">
                                 <div class="sandbox-node-map-content" role="dialog" aria-modal="true" aria-labelledby="sandbox-node-map-title">

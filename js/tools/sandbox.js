@@ -50,6 +50,15 @@
     }
 
     const clamp = (min, max, value) => Math.max(min, Math.min(max, value));
+    const defaultView = () => ({
+        scale: 1,
+        offsetX: 0,
+        offsetY: 0,
+        minScale: 0.5,
+        maxScale: 3,
+        initialized: false,
+        needsFit: true
+    });
     const DEFAULT_WIDTH = 21;
     const DEFAULT_HEIGHT = 15;
     const DEFAULT_LEVEL = 1;
@@ -562,6 +571,7 @@
     let wireSeq = 1;
     let pendingSerializedState = null;
     const paintState = { active: false, pointerId: null, lastKey: null, blockClick: false };
+    const panState = { active: false, pointerId: null, lastX: 0, lastY: 0, moved: false, blockClick: false };
     const EXPORT_FILE_PREFIX = 'sandbox-dungeon';
     const EXPORT_SCHEMA = 'yu.sandbox.dungeon';
     const EXPORT_KIND = 'sandbox_dungeon';
@@ -1887,6 +1897,7 @@
         state.ioStatus = { type: 'idle', message: '' };
         state.colorPalette = Array.isArray(payload.colorPalette) ? payload.colorPalette.map(entry => ({ ...entry })) : [];
         state.eyedropper = payload.eyedropper ? { ...payload.eyedropper } : { active: false };
+        state.view = defaultView();
 
         const activated = activateMap(payload.activeMapId, { preserveSelection: false });
         if (!activated && state.maps.length) {
@@ -1999,6 +2010,9 @@
         });
         if (map) {
             map.gimmicks = state.gimmicks;
+        }
+        if (state.view) {
+            state.view.needsFit = true;
         }
     }
 
@@ -2526,6 +2540,72 @@
                 }
             }
         }
+
+        updateViewConstraints();
+    }
+
+    function getGridContentMetrics() {
+        if (!refs?.grid) return null;
+        const rect = refs.grid.getBoundingClientRect();
+        const width = Math.max(0, rect.width);
+        const height = Math.max(0, rect.height);
+        return {
+            rect,
+            width,
+            height,
+            contentLeft: rect.left,
+            contentTop: rect.top
+        };
+    }
+
+    function clampViewOffset() {
+        if (!state?.view || !state.renderMetrics || !refs?.grid) return;
+        const metrics = getGridContentMetrics();
+        if (!metrics) return;
+        const { width: viewWidth, height: viewHeight } = metrics;
+        const scaledWidth = (state.renderMetrics.width || 0) * (state.view.scale || 1);
+        const scaledHeight = (state.renderMetrics.height || 0) * (state.view.scale || 1);
+        const minX = Math.min(0, viewWidth - scaledWidth);
+        const minY = Math.min(0, viewHeight - scaledHeight);
+        state.view.offsetX = clamp(minX, viewWidth > 0 ? viewWidth : 0, state.view.offsetX);
+        state.view.offsetY = clamp(minY, viewHeight > 0 ? viewHeight : 0, state.view.offsetY);
+    }
+
+    function applyViewportTransform() {
+        if (!refs?.gridCanvas || !state?.view) return;
+        refs.gridCanvas.style.transformOrigin = '0 0';
+        refs.gridCanvas.style.transform = `translate(${state.view.offsetX}px, ${state.view.offsetY}px) scale(${state.view.scale})`;
+    }
+
+    function updateViewConstraints({ forceFit = false } = {}) {
+        if (!state) return;
+        if (!state.view) state.view = defaultView();
+        const metrics = getGridContentMetrics();
+        if (!metrics || !state.renderMetrics) return;
+        const { width: viewWidth, height: viewHeight } = metrics;
+        const mapWidth = state.renderMetrics.width || 1;
+        const mapHeight = state.renderMetrics.height || 1;
+        if (!viewWidth || !viewHeight) return;
+
+        const fitScale = Math.min(viewWidth / mapWidth, viewHeight / mapHeight, 1);
+        const minScale = Math.max(0.25, fitScale * 0.5);
+        const maxScale = Math.max(1.5, fitScale * 4);
+        state.view.minScale = minScale;
+        state.view.maxScale = maxScale;
+
+        if (forceFit || state.view.needsFit || !state.view.initialized) {
+            const scale = clamp(minScale, maxScale, fitScale);
+            const offsetX = (viewWidth - mapWidth * scale) / 2;
+            const offsetY = (viewHeight - mapHeight * scale) / 2;
+            state.view.scale = scale;
+            state.view.offsetX = offsetX;
+            state.view.offsetY = offsetY;
+            state.view.needsFit = false;
+            state.view.initialized = true;
+        } else {
+            clampViewOffset();
+        }
+        applyViewportTransform();
     }
 
     function getCellFromOffset(offsetX, offsetY) {
@@ -2545,16 +2625,14 @@
     }
 
     function getCellFromEvent(event) {
-        const canvas = refs.gridCanvas;
-        if (!canvas) return null;
-        const rect = canvas.getBoundingClientRect();
-        if (!rect.width || !rect.height) return null;
-        const metrics = state?.renderMetrics || {};
-        const displayWidth = metrics.width || rect.width;
-        const displayHeight = metrics.height || rect.height;
-        const offsetX = ((event.clientX - rect.left) / rect.width) * displayWidth;
-        const offsetY = ((event.clientY - rect.top) / rect.height) * displayHeight;
-        return getCellFromOffset(offsetX, offsetY);
+        const metrics = getGridContentMetrics();
+        if (!metrics || !state?.view) return null;
+        const { contentLeft, contentTop } = metrics;
+        const px = event.clientX - contentLeft;
+        const py = event.clientY - contentTop;
+        const worldX = (px - state.view.offsetX) / state.view.scale;
+        const worldY = (py - state.view.offsetY) / state.view.scale;
+        return getCellFromOffset(worldX, worldY);
     }
 
     function updateBrushButtons() {
@@ -4273,8 +4351,7 @@
     function handleGridPointerDown(event) {
         if (typeof event.button === 'number' && event.button !== 0) return;
         const cell = getCellFromEvent(event);
-        if (!cell) return;
-        if (state.eyedropper?.active) {
+        if (state.eyedropper?.active && cell) {
             event.preventDefault();
             applyEyedropper(cell.x, cell.y);
             state.eyedropper.active = false;
@@ -4282,6 +4359,26 @@
             render();
             return;
         }
+        if (state.brush === 'select') {
+            if (cell) {
+                setSelectedCell(cell.x, cell.y);
+                render();
+            }
+            panState.active = true;
+            panState.pointerId = event.pointerId;
+            panState.lastX = event.clientX;
+            panState.lastY = event.clientY;
+            panState.moved = false;
+            panState.blockClick = false;
+            if (refs.gridCanvas && typeof refs.gridCanvas.setPointerCapture === 'function') {
+                try {
+                    refs.gridCanvas.setPointerCapture(event.pointerId);
+                } catch (err) {}
+            }
+            event.preventDefault();
+            return;
+        }
+        if (!cell) return;
         paintState.active = true;
         paintState.pointerId = event.pointerId;
         paintState.lastKey = `${cell.x},${cell.y}`;
@@ -4299,6 +4396,21 @@
     }
 
     function handleGridPointerMove(event) {
+        if (panState.active && panState.pointerId === event.pointerId) {
+            const dx = event.clientX - panState.lastX;
+            const dy = event.clientY - panState.lastY;
+            if (dx !== 0 || dy !== 0) {
+                panState.moved = panState.moved || Math.abs(dx) + Math.abs(dy) > 1;
+                state.view.offsetX += dx;
+                state.view.offsetY += dy;
+                clampViewOffset();
+                applyViewportTransform();
+                panState.blockClick = panState.moved;
+            }
+            panState.lastX = event.clientX;
+            panState.lastY = event.clientY;
+            return;
+        }
         if (!paintState.active || paintState.pointerId !== event.pointerId) return;
         const cell = getCellFromEvent(event);
         if (!cell) return;
@@ -4307,6 +4419,26 @@
         paintState.lastKey = key;
         applyBrushToCell(cell.x, cell.y, { updateSelection: true });
         render();
+    }
+
+    function handleGridWheel(event) {
+        if (!state) return;
+        if (!state.view) state.view = defaultView();
+        const metrics = getGridContentMetrics();
+        if (!metrics) return;
+        event.preventDefault();
+        const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
+        const nextScale = clamp(state.view.minScale || 0.25, state.view.maxScale || 4, state.view.scale * zoomFactor);
+        if (nextScale === state.view.scale) return;
+        const px = event.clientX - metrics.contentLeft;
+        const py = event.clientY - metrics.contentTop;
+        const worldX = (px - state.view.offsetX) / state.view.scale;
+        const worldY = (py - state.view.offsetY) / state.view.scale;
+        state.view.scale = nextScale;
+        state.view.offsetX = px - worldX * nextScale;
+        state.view.offsetY = py - worldY * nextScale;
+        clampViewOffset();
+        applyViewportTransform();
     }
 
     function endPointerPaint(pointerId) {
@@ -4324,18 +4456,50 @@
         setTimeout(() => { paintState.blockClick = false; }, 0);
     }
 
+    function endPan(pointerId, event) {
+        if (!panState.active || panState.pointerId !== pointerId) return false;
+        if (refs.gridCanvas && typeof refs.gridCanvas.releasePointerCapture === 'function') {
+            try {
+                refs.gridCanvas.releasePointerCapture(pointerId);
+            } catch (err) {}
+        }
+        const moved = panState.moved;
+        panState.active = false;
+        panState.pointerId = null;
+        panState.moved = false;
+        panState.lastX = 0;
+        panState.lastY = 0;
+        panState.blockClick = moved;
+        setTimeout(() => { panState.blockClick = false; }, 0);
+        if (!moved && event) {
+            const cell = getCellFromEvent(event);
+            if (cell) {
+                setSelectedCell(cell.x, cell.y);
+                render();
+            }
+        }
+        return true;
+    }
+
     function handleGlobalPointerUp(event) {
+        if (endPan(event.pointerId, event)) return;
         endPointerPaint(event.pointerId);
     }
 
     function handleGridClick(event) {
-        if (paintState.blockClick) {
+        if (paintState.blockClick || panState.blockClick) {
             paintState.blockClick = false;
+            panState.blockClick = false;
             event.preventDefault();
             return;
         }
         const cell = getCellFromEvent(event);
         if (!cell) return;
+        if (state.brush === 'select') {
+            setSelectedCell(cell.x, cell.y);
+            render();
+            return;
+        }
         const portalsHere = Array.isArray(state.portals)
             ? state.portals.filter(portal => portal && portal.x === cell.x && portal.y === cell.y)
             : [];
@@ -4722,7 +4886,8 @@
             activeMapId: null,
             colorPalette: [],
             eyedropper: { active: false },
-            entryMapId: null
+            entryMapId: null,
+            view: defaultView()
         };
 
         const applyPanelTranslations = () => {
@@ -4767,8 +4932,12 @@
             refs.gridCanvas.addEventListener('pointerdown', handleGridPointerDown);
             refs.gridCanvas.addEventListener('pointermove', handleGridPointerMove);
         }
+        if (refs.grid) {
+            refs.grid.addEventListener('wheel', handleGridWheel, { passive: false });
+        }
         window.addEventListener('pointerup', handleGlobalPointerUp);
         window.addEventListener('pointercancel', handleGlobalPointerUp);
+        window.addEventListener('resize', () => updateViewConstraints({ forceFit: false }));
         if (refs.brushButtons?.length) {
             refs.brushButtons.forEach(btn => btn.addEventListener('click', handleBrushClick));
         }

@@ -360,6 +360,21 @@
           "sp": "SP"
         }
       },
+      "controlsCheatsheet": {
+        "title": "Aide-mémoire des commandes",
+        "subtitle": "Gardez ces gestes en tête pour vos premières expéditions.",
+        "dismiss": "Ne plus afficher",
+        "labels": {
+          "arrows": "Flèches directionnelles",
+          "space": "Barre d'espace",
+          "toolbar": "Raccourcis de la barre d'outils"
+        },
+        "descriptions": {
+          "arrows": "Se déplacer, explorer et percuter les ennemis pour les attaquer.",
+          "space": "Attaquer dans la direction actuelle sans bouger.",
+          "toolbar": "Ouvrir Retour, Objets, Compétences, Statut et Import/Export depuis la barre d'outils supérieure."
+        }
+      },
       "statuses": {
         "poison": "Poison",
         "paralysis": "Paralysie",

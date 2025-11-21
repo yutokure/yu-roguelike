@@ -7872,6 +7872,21 @@
           "sp": "SP"
         }
       },
+      "controlsCheatsheet": {
+        "title": "操作速查表",
+        "subtitle": "首次冒险前先确认这些基本操作。",
+        "dismiss": "不再显示",
+        "labels": {
+          "arrows": "方向键",
+          "space": "空格键",
+          "toolbar": "工具栏快捷键"
+        },
+        "descriptions": {
+          "arrows": "移动、探索，碰到敌人即可攻击。",
+          "space": "原地朝面对的方向攻击。",
+          "toolbar": "通过顶部工具栏快速打开返回、道具、技能、状态以及导入/导出。"
+        }
+      },
       "statuses": {
         "poison": "毒",
         "paralysis": "瘫痪",

@@ -2989,8 +2989,117 @@ h1 {
     box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
-.log-line { 
-    white-space: pre-wrap; 
+#controls-cheatsheet {
+    margin-top: 12px;
+    background: rgba(255,255,255,0.95);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #1f2937;
+}
+
+.controls-cheatsheet__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.controls-cheatsheet__intro {
+    flex: 1;
+    min-width: 220px;
+}
+
+.controls-cheatsheet__title {
+    margin: 0;
+    font-size: 15px;
+    color: #1e3a8a;
+}
+
+.controls-cheatsheet__subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #475569;
+}
+
+.controls-cheatsheet__dismiss {
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #312e81;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.controls-cheatsheet__dismiss:hover,
+.controls-cheatsheet__dismiss:focus-visible {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.6);
+    color: #1e1b4b;
+}
+
+.controls-cheatsheet__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.controls-cheatsheet__row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.controls-cheatsheet__label {
+    font-weight: 600;
+    color: #1f2937;
+    min-width: 120px;
+}
+
+.controls-cheatsheet__detail {
+    color: #334155;
+    flex: 1;
+    min-width: 180px;
+}
+
+.controls-cheatsheet--hidden {
+    display: none !important;
+}
+
+@media (max-width: 640px) {
+    #controls-cheatsheet {
+        padding: 14px;
+    }
+    .controls-cheatsheet__row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .controls-cheatsheet__label,
+    .controls-cheatsheet__detail {
+        min-width: auto;
+    }
+}
+
+.log-line {
+    white-space: pre-wrap;
     color: #2c3e50;
     padding: 2px 0;
     border-radius: 4px;

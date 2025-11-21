@@ -531,6 +531,8 @@ const autoItemStatusText = document.getElementById('auto-item-status');
 const messageLogDiv = document.getElementById('message-log');
 const controlsCheatsheet = document.getElementById('controls-cheatsheet');
 const controlsCheatsheetDismissButton = document.getElementById('controls-cheatsheet-dismiss');
+const controlsCheatsheetToggle = document.getElementById('controls-cheatsheet-toggle');
+const controlsCheatsheetContent = document.getElementById('controls-cheatsheet-content');
 const floorIndicatorValue = document.getElementById('floor-indicator-value');
 const dungeonTypeOverlay = document.getElementById('dungeon-type-overlay');
 const dungeonTypeOverlayName = document.getElementById('dungeon-type-overlay-type');
@@ -578,6 +580,7 @@ const DIFFICULTY_DAMAGE_PROFILE = Object.freeze({
 });
 const RARE_CHEST_CHANCE = 0.08;
 const CONTROLS_CHEATSHEET_STORAGE_KEY = 'yu-roguelike:controlsCheatsheetHidden';
+const CONTROLS_CHEATSHEET_COLLAPSED_KEY = 'yu-roguelike:controlsCheatsheetCollapsed';
 
 const RARE_CHEST_CONFIG = Object.freeze({
     successWindow: 0.1,
@@ -615,24 +618,68 @@ function persistControlsCheatsheetHiddenPreference(hidden) {
     }
 }
 
+function readControlsCheatsheetCollapsedPreference() {
+    if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+        return false;
+    }
+    try {
+        return window.localStorage.getItem(CONTROLS_CHEATSHEET_COLLAPSED_KEY) === '1';
+    } catch (error) {
+        console.warn('Failed to read controls cheat sheet collapsed preference', error);
+        return false;
+    }
+}
+
+function persistControlsCheatsheetCollapsedPreference(collapsed) {
+    if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+        return;
+    }
+    try {
+        if (collapsed) {
+            window.localStorage.setItem(CONTROLS_CHEATSHEET_COLLAPSED_KEY, '1');
+        } else {
+            window.localStorage.removeItem(CONTROLS_CHEATSHEET_COLLAPSED_KEY);
+        }
+    } catch (error) {
+        console.warn('Failed to persist controls cheat sheet collapsed preference', error);
+    }
+}
+
 function applyControlsCheatsheetHiddenState(hidden) {
     if (!controlsCheatsheet) return;
     controlsCheatsheet.classList.toggle('controls-cheatsheet--hidden', hidden);
 }
 
+function applyControlsCheatsheetCollapsedState(collapsed) {
+    if (!controlsCheatsheet || !controlsCheatsheetContent || !controlsCheatsheetToggle) return;
+    controlsCheatsheet.classList.toggle('controls-cheatsheet--collapsed', collapsed);
+    controlsCheatsheetContent.hidden = !!collapsed;
+    controlsCheatsheetToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+}
+
 function initializeControlsCheatsheetPreference() {
     if (!controlsCheatsheet) return;
     applyControlsCheatsheetHiddenState(readControlsCheatsheetHiddenPreference());
+    applyControlsCheatsheetCollapsedState(readControlsCheatsheetCollapsedPreference());
     if (controlsCheatsheetDismissButton) {
         controlsCheatsheetDismissButton.addEventListener('click', () => {
             persistControlsCheatsheetHiddenPreference(true);
             applyControlsCheatsheetHiddenState(true);
         });
     }
+    if (controlsCheatsheetToggle) {
+        controlsCheatsheetToggle.addEventListener('click', () => {
+            const next = !controlsCheatsheet.classList.contains('controls-cheatsheet--collapsed');
+            persistControlsCheatsheetCollapsedPreference(next);
+            applyControlsCheatsheetCollapsedState(next);
+        });
+    }
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
         window.addEventListener('storage', (event) => {
             if (event.key === CONTROLS_CHEATSHEET_STORAGE_KEY) {
                 applyControlsCheatsheetHiddenState(event.newValue === '1');
+            } else if (event.key === CONTROLS_CHEATSHEET_COLLAPSED_KEY) {
+                applyControlsCheatsheetCollapsedState(event.newValue === '1');
             }
         });
     }
@@ -5602,7 +5649,7 @@ function enterInGameLayout() {
         document.body.classList.add('in-game');
         const tb = document.getElementById('dungeontoolbar');
         if (tb) {
-            tb.style.display = 'flex';
+            tb.style.display = 'grid';
         }
         const h = tb ? Math.ceil(tb.getBoundingClientRect().height) : 0;
         document.documentElement.style.setProperty('--toolbar-height', h + 'px');

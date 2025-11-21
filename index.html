@@ -1087,24 +1087,53 @@
     </div>
     <div id="player-summary"></div>
     <div id="dungeontoolbar">
-        <button id="btn-back" data-i18n="game.toolbar.back">戻る</button>
-        <button id="btn-items" data-i18n="game.toolbar.items">アイテム</button>
-        <button id="btn-skills" data-i18n="game.toolbar.skills">スキル</button>
-        <button id="btn-status" data-i18n="game.toolbar.status">ステータス</button>
-        <button id="btn-import" data-i18n="game.toolbar.import">インポート</button>
-        <button id="btn-export" data-i18n="game.toolbar.export">エクスポート</button>
-        <label for="toggle-dungeon-name" class="toolbar-toggle">
-            <input type="checkbox" id="toggle-dungeon-name" checked>
-            <span data-i18n="game.toolbar.toggleDungeonName">ダンジョン名を表示する</span>
-        </label>
-        <button id="btn-sandbox-menu" class="sandbox-menu-button" type="button" aria-expanded="false" aria-controls="sandbox-interactive-panel" style="display:none;" data-i18n="game.toolbar.sandboxMenu">インタラクティブ</button>
-        <button id="btn-god-console" class="god-console-button" type="button" aria-expanded="false" aria-controls="god-console-panel" style="display:none;" data-i18n="game.toolbar.godConsole">創造神コンソール</button>
-        <input type="file" id="import-file" accept="application/json" style="display:none" />
+        <div class="toolbar-actions">
+            <button id="btn-back" data-i18n="game.toolbar.back">戻る</button>
+            <button id="btn-items" data-i18n="game.toolbar.items">アイテム</button>
+            <button id="btn-skills" data-i18n="game.toolbar.skills">スキル</button>
+            <button id="btn-status" data-i18n="game.toolbar.status">ステータス</button>
+            <button id="btn-import" data-i18n="game.toolbar.import">インポート</button>
+            <button id="btn-export" data-i18n="game.toolbar.export">エクスポート</button>
+            <label for="toggle-dungeon-name" class="toolbar-toggle">
+                <input type="checkbox" id="toggle-dungeon-name" checked>
+                <span data-i18n="game.toolbar.toggleDungeonName">ダンジョン名を表示する</span>
+            </label>
+            <button id="btn-sandbox-menu" class="sandbox-menu-button" type="button" aria-expanded="false" aria-controls="sandbox-interactive-panel" style="display:none;" data-i18n="game.toolbar.sandboxMenu">インタラクティブ</button>
+            <button id="btn-god-console" class="god-console-button" type="button" aria-expanded="false" aria-controls="god-console-panel" style="display:none;" data-i18n="game.toolbar.godConsole">創造神コンソール</button>
+            <input type="file" id="import-file" accept="application/json" style="display:none" />
+        </div>
         <div id="floor-indicator" aria-live="polite">
             <span class="floor-indicator__heading" data-i18n="game.toolbar.floor.heading">現在のフロア</span>
             <span id="floor-indicator-value" class="floor-indicator__value">1F</span>
             <span class="floor-indicator__label" data-i18n="game.toolbar.floor.label">FLOOR</span>
         </div>
+        <section id="controls-cheatsheet" class="controls-cheatsheet card controls-cheatsheet--toolbar" role="region" aria-live="polite">
+            <header class="controls-cheatsheet__header">
+                <button type="button" id="controls-cheatsheet-toggle" class="controls-cheatsheet__toggle" aria-expanded="true" aria-controls="controls-cheatsheet-content">
+                    <div class="controls-cheatsheet__intro">
+                        <h3 class="controls-cheatsheet__title" data-i18n="game.controlsCheatsheet.title">操作チートシート</h3>
+                        <p class="controls-cheatsheet__subtitle" data-i18n="game.controlsCheatsheet.subtitle">ダンジョン突入前に基本操作を確認しましょう。</p>
+                    </div>
+                </button>
+                <button type="button" id="controls-cheatsheet-dismiss" class="controls-cheatsheet__dismiss" data-i18n="game.controlsCheatsheet.dismiss">次回から表示しない</button>
+            </header>
+            <div id="controls-cheatsheet-content">
+                <ul class="controls-cheatsheet__list">
+                    <li class="controls-cheatsheet__row">
+                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.arrows">矢印キー</span>
+                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.arrows">移動・探索し、敵にぶつかると攻撃。</span>
+                    </li>
+                    <li class="controls-cheatsheet__row">
+                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.space">スペース</span>
+                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.space">その場で向いている方向へ攻撃。</span>
+                    </li>
+                    <li class="controls-cheatsheet__row">
+                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.toolbar">ツールバー</span>
+                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.toolbar">戻る・アイテム・スキル・ステータスなどのショートカット。</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
     </div>
     <div id="sandbox-interactive-panel" class="sandbox-interactive-panel" role="dialog" aria-modal="false" aria-hidden="true" tabindex="-1">
         <div class="sandbox-interactive-header">
@@ -1270,29 +1299,6 @@
             </div>
         </div>
             <div id="message-log"></div>
-            <section id="controls-cheatsheet" class="controls-cheatsheet card" role="region" aria-live="polite">
-                <header class="controls-cheatsheet__header">
-                    <div class="controls-cheatsheet__intro">
-                        <h3 class="controls-cheatsheet__title" data-i18n="game.controlsCheatsheet.title">操作チートシート</h3>
-                        <p class="controls-cheatsheet__subtitle" data-i18n="game.controlsCheatsheet.subtitle">ダンジョン突入前に基本操作を確認しましょう。</p>
-                    </div>
-                    <button type="button" id="controls-cheatsheet-dismiss" class="controls-cheatsheet__dismiss" data-i18n="game.controlsCheatsheet.dismiss">次回から表示しない</button>
-                </header>
-                <ul class="controls-cheatsheet__list">
-                    <li class="controls-cheatsheet__row">
-                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.arrows">矢印キー</span>
-                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.arrows">移動・探索し、敵にぶつかると攻撃。</span>
-                    </li>
-                    <li class="controls-cheatsheet__row">
-                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.space">スペース</span>
-                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.space">その場で向いている方向へ攻撃。</span>
-                    </li>
-                    <li class="controls-cheatsheet__row">
-                        <span class="controls-cheatsheet__label" data-i18n="game.controlsCheatsheet.labels.toolbar">ツールバー</span>
-                        <span class="controls-cheatsheet__detail" data-i18n="game.controlsCheatsheet.descriptions.toolbar">戻る・アイテム・スキル・ステータスなどのショートカット。</span>
-                    </li>
-                </ul>
-            </section>
         </div>
         <!-- 右側ポップアップ用の常時空白スペース -->
         <div id="popup-spacer" aria-hidden="true"></div>

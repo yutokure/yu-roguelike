@@ -1400,10 +1400,11 @@ body.in-game #player-summary { display: none; }
 #dungeontoolbar {
     position: sticky;
     top: 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: 1fr minmax(220px, 260px);
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 12px 16px;
     background: rgba(255,255,255,0.95);
     backdrop-filter: blur(10px);
     padding: 12px 16px;
@@ -1411,6 +1412,15 @@ body.in-game #player-summary { display: none; }
     margin-bottom: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     border: 1px solid rgba(255,255,255,0.2);
+}
+
+.toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    grid-column: 1;
+    grid-row: 1;
 }
 
 .toolbar-toggle {
@@ -1446,6 +1456,28 @@ body.in-game #player-summary { display: none; }
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     background: linear-gradient(135deg, #5a6fd8, #6a4190);
+}
+
+.controls-cheatsheet--toolbar {
+    margin-top: 0;
+    grid-column: 1;
+    grid-row: 2;
+}
+
+@media (max-width: 1024px) {
+    #dungeontoolbar {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    #floor-indicator {
+        grid-column: 1;
+        grid-row: 2;
+        min-width: auto;
+    }
+    .controls-cheatsheet--toolbar {
+        grid-row: 3;
+        grid-column: 1;
+    }
 }
 
 .sandbox-menu-button[aria-expanded="true"] {
@@ -2016,8 +2048,7 @@ body.in-game #player-summary { display: none; }
 }
 
 #floor-indicator {
-    margin-left: auto;
-    flex: 0 0 auto;
+    justify-self: stretch;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -2031,6 +2062,9 @@ body.in-game #player-summary { display: none; }
     overflow: hidden;
     color: #0f172a;
     isolation: isolate;
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: start;
 }
 
 #floor-indicator::before {
@@ -3004,12 +3038,57 @@ h1 {
     color: #1f2937;
 }
 
+.controls-cheatsheet--collapsed {
+    padding: 10px 12px;
+    gap: 0;
+}
+
+.controls-cheatsheet--collapsed .controls-cheatsheet__header {
+    margin-bottom: 0;
+}
+
+.controls-cheatsheet--collapsed #controls-cheatsheet-content {
+    display: none;
+}
+
 .controls-cheatsheet__header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+.controls-cheatsheet__toggle {
+    border: none;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 12px 14px;
+    margin: 0;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex: 1;
+    min-width: 220px;
+    position: relative;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.controls-cheatsheet__toggle::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: translateY(-50%) rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.controls-cheatsheet--collapsed .controls-cheatsheet__toggle::after {
+    transform: translateY(-50%) rotate(-135deg);
 }
 
 .controls-cheatsheet__intro {
@@ -3020,13 +3099,13 @@ h1 {
 .controls-cheatsheet__title {
     margin: 0;
     font-size: 15px;
-    color: #1e3a8a;
+    color: #fff;
 }
 
 .controls-cheatsheet__subtitle {
     margin: 4px 0 0;
     font-size: 13px;
-    color: #475569;
+    color: #e5e7ff;
 }
 
 .controls-cheatsheet__dismiss {
@@ -3056,6 +3135,10 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+#controls-cheatsheet-content[hidden] {
+    display: none;
 }
 
 .controls-cheatsheet__row {

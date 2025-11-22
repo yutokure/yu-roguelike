@@ -8219,6 +8219,7 @@ const DUNGEON_TYPE_NAME_FALLBACKS = Object.freeze({
     'field': 'フィールド型',
     'cave': '洞窟型',
     'maze': '迷路型',
+    'imperfect-maze': '不完全な迷路型',
     'rooms': '部屋＆通路型',
     'single-room': '単部屋型',
     'circle': '円型',
@@ -9601,6 +9602,7 @@ const BUILTIN_GENERATOR_TYPE_IDS = [
     'grid',
     'open-space',
     'maze',
+    'imperfect-maze',
     'rooms',
     'single-room',
     'circle',
@@ -9867,7 +9869,7 @@ function runSingleBlockDimDungeonTest(genType, seed, mixedPool) {
     const normalizedSeed = Number.isFinite(seed) ? seed >>> 0 : randomTestSeed();
     const pool = Array.isArray(mixedPool) ? mixedPool.filter(id => id && id !== 'mixed') : [];
     const typePool = pool.length ? Array.from(new Set(pool)) : [
-        'field', 'cave', 'maze', 'rooms', 'single-room', 'circle', 'circle-rooms', 'narrow-maze', 'wide-maze', 'snake', 'grid', 'open-space'
+        'field', 'cave', 'maze', 'imperfect-maze', 'rooms', 'single-room', 'circle', 'circle-rooms', 'narrow-maze', 'wide-maze', 'snake', 'grid', 'open-space'
     ];
     const spec = {
         level: 1,
@@ -12619,6 +12621,9 @@ function generateMap() {
         case 'maze':
             generateMazeType();
             break;
+        case 'imperfect-maze':
+            generateImperfectMazeType();
+            break;
         case 'rooms':
             generateRoomsType();
             break;
@@ -12939,6 +12944,81 @@ function generateMazeType() {
         }
     }
     
+    ensureConnectivity();
+}
+
+// Imperfect maze type - uses the Mini Game NORMAL maze algorithm (DFS backtracker with extra loops)
+function generateImperfectMazeType() {
+    const width = MAP_WIDTH;
+    const height = MAP_HEIGHT;
+    const start = { x: 1, y: 1 };
+    const goal = { x: width - 2, y: height - 2 };
+    const loopFactor = 0.18; // Same loop density as mini-game NORMAL
+
+    // Initialize grid with walls
+    const grid = Array.from({ length: height }, () => Array(width).fill(1));
+    const stack = [];
+    grid[start.y]?.[start.x] = 0;
+    stack.push({ x: start.x, y: start.y });
+
+    const carveDirs = [
+        { dx: 2, dy: 0 },
+        { dx: -2, dy: 0 },
+        { dx: 0, dy: 2 },
+        { dx: 0, dy: -2 }
+    ];
+
+    // Depth-first backtracking carve
+    while (stack.length) {
+        const current = stack[stack.length - 1];
+        const candidates = carveDirs
+            .map(d => ({
+                x: current.x + d.dx,
+                y: current.y + d.dy,
+                between: { x: current.x + d.dx / 2, y: current.y + d.dy / 2 }
+            }))
+            .filter(n => n.x > 0 && n.x < width - 1 && n.y > 0 && n.y < height - 1 && grid[n.y][n.x] === 1);
+
+        if (candidates.length === 0) {
+            stack.pop();
+            continue;
+        }
+
+        const next = candidates[Math.floor(Math.random() * candidates.length)];
+        grid[next.between.y][next.between.x] = 0;
+        grid[next.y][next.x] = 0;
+        stack.push({ x: next.x, y: next.y });
+    }
+
+    // Add imperfect connectors to create loops
+    const connectors = [];
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            if (grid[y][x] !== 1) continue;
+            const horizontal = grid[y][x - 1] === 0 && grid[y][x + 1] === 0;
+            const vertical = grid[y - 1][x] === 0 && grid[y + 1][x] === 0;
+            if (horizontal || vertical) connectors.push({ x, y });
+        }
+    }
+    const extraOpens = Math.floor(connectors.length * loopFactor);
+    for (let i = 0; i < extraOpens; i++) {
+        if (!connectors.length) break;
+        const idx = Math.floor(Math.random() * connectors.length);
+        const cell = connectors.splice(idx, 1)[0];
+        grid[cell.y][cell.x] = 0;
+    }
+
+    // Ensure start/goal are clear
+    grid[start.y][start.x] = 0;
+    grid[goal.y]?.[goal.x] = 0;
+
+    // Write back to global map
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            map[y][x] = grid[y][x];
+        }
+    }
+
     ensureConnectivity();
 }
 
@@ -13783,6 +13863,7 @@ function generateMixedType() {
     let types = [
         'field', 'cave', 'maze', 'rooms', 'single-room',
         'circle', 'circle-rooms', 'narrow-maze', 'wide-maze',
+        'imperfect-maze',
         'snake', 'grid', 'open-space'
     ];
     // BlockDim の場合は選択ブロック由来のプールを使用（空ならデフォルト）
@@ -13823,6 +13904,9 @@ function generateMixedType() {
             break;
         case 'maze':
             generateMazeType();
+            break;
+        case 'imperfect-maze':
+            generateImperfectMazeType();
             break;
         case 'rooms':
             generateRoomsType();
@@ -20371,6 +20455,7 @@ const MINI_GAME_BUILTIN_GENERATOR_TYPES = Object.freeze([
     'grid',
     'open-space',
     'maze',
+    'imperfect-maze',
     'rooms',
     'single-room',
     'circle',
@@ -20461,6 +20546,9 @@ function createMiniGameDungeonApi() {
                 break;
             case 'maze':
                 generateMazeType();
+                break;
+            case 'imperfect-maze':
+                generateImperfectMazeType();
                 break;
             case 'rooms':
                 generateRoomsType();

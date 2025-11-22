@@ -11372,6 +11372,9 @@
           "b1o001": {
             "name": "空の広間"
           },
+          "b3101": {
+            "name": "Imperfect Labyrinth"
+          },
           "b2002": {
             "name": "錆びた"
           },
@@ -17287,6 +17290,7 @@
         "field": "Field Type",
         "cave": "Cave Type",
         "maze": "Maze Type",
+        "imperfect-maze": "Imperfect Maze",
         "rooms": "Rooms & Corridors",
         "single-room": "Single Room",
         "circle": "Circular Type",

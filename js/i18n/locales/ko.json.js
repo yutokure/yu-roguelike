@@ -251,6 +251,7 @@
         "field": "필드형",
         "cave": "동굴형",
         "maze": "미궁형",
+        "imperfect-maze": "불완전 미궁형",
         "rooms": "방과 복도",
         "single-room": "단일 방",
         "circle": "원형",

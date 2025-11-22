@@ -1146,6 +1146,17 @@ window.__BLOCKDATA =
       "type": "narrow-maze",
       "bossFloors": [],
       "nameKey": "dungeon.blockdim.blocks.b1o001.name"
+    },
+    {
+      "key": "b3101",
+      "name": "未完成ラビリンス",
+      "level": 2,
+      "size": 0,
+      "depth": 0,
+      "chest": "normal",
+      "type": "imperfect-maze",
+      "bossFloors": [],
+      "nameKey": "dungeon.blockdim.blocks.b3101.name"
     }
   ],
   "blocks2": [

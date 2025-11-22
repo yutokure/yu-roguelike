@@ -2574,6 +2574,7 @@
         "field": "字段类型",
         "cave": "洞穴类型",
         "maze": "迷宫类型",
+        "imperfect-maze": "不完全迷宫",
         "rooms": "房间和走廊",
         "single-room": "单人间",
         "circle": "圆形型",

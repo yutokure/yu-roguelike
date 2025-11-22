@@ -65,7 +65,7 @@
     const MIN_SIZE_FALLBACK = 5;
     const MAX_SIZE_FALLBACK = 60;
     const MAX_LEVEL_FALLBACK = 999;
-    const BRUSHES = ['select', 'floor', 'wall', 'start', 'stairs', 'gate', 'enemy', 'domain'];
+    const BRUSHES = ['select', 'floor', 'wall', 'start', 'stairs', 'gate', 'enemy', 'domain', 'hatena'];
     const BRUSH_CURSOR = {
         select: 'default',
         floor: 'pointer',
@@ -74,8 +74,10 @@
         stairs: 'pointer',
         gate: 'pointer',
         enemy: 'pointer',
-        domain: 'pointer'
+        domain: 'pointer',
+        hatena: 'pointer'
     };
+    const HATENA_MODES = ['random', 'fixed', 'none'];
     const FLOOR_TYPES = ['normal', 'ice', 'poison', 'bomb', 'conveyor', 'one-way', 'vertical', 'horizontal'];
     const FLOOR_TYPES_NEED_DIRECTION = new Set(['conveyor', 'one-way']);
     const FLOOR_DIRECTION_OPTIONS = ['', 'up', 'down', 'left', 'right'];
@@ -98,6 +100,7 @@
     const GRID_SELECTED_ENEMY_COLOR = '#f97316';
     const GRID_DOMAIN_COLOR = '#7c3aed';
     const GRID_GATE_COLOR = '#f59f00';
+    const GRID_HATENA_COLOR = '#1c7ed6';
     const FLOOR_TYPE_DEFINITIONS = {
         normal: { key: 'tools.sandbox.map.options.floorType.options.normal', fallback: '通常' },
         ice: { key: 'tools.sandbox.map.options.floorType.options.ice', fallback: '氷' },
@@ -568,6 +571,7 @@
     let mapSeq = 1;
     let portalSeq = 1;
     let enemySeq = 1;
+    let hatenaSeq = 1;
     let domainSeq = 1;
     let gimmickSeq = 1;
     let wireSeq = 1;
@@ -1180,6 +1184,8 @@
             playerStart: { x: startX, y: startY },
             portals: [portal],
             enemies: [],
+            hatenaMode: 'random',
+            hatenaBlocks: [],
             domainEffects: [],
             gimmicks: [],
             wires: []
@@ -1213,6 +1219,9 @@
         if (!Array.isArray(map.portals)) map.portals = [];
         state.portals = map.portals;
         state.enemies = map.enemies;
+        state.hatenaMode = HATENA_MODES.includes(map.hatenaMode) ? map.hatenaMode : 'random';
+        if (!Array.isArray(map.hatenaBlocks)) map.hatenaBlocks = [];
+        state.hatenaBlocks = map.hatenaBlocks;
         state.domainEffects = map.domainEffects;
         if (!Array.isArray(map.gimmicks)) map.gimmicks = [];
         if (!Array.isArray(map.wires)) map.wires = [];
@@ -1220,6 +1229,7 @@
         state.wires = map.wires;
         if (!preserveSelection) {
             state.selectedEnemyId = map.enemies[0]?.id || null;
+            state.selectedHatenaId = map.hatenaBlocks[0]?.id || null;
             state.selectedDomainId = map.domainEffects[0]?.id || null;
             state.selectedPortalId = map.portals && map.portals.length ? map.portals[0].id : null;
             state.selectedGimmickId = map.gimmicks && map.gimmicks.length ? map.gimmicks[0].id : null;
@@ -1394,6 +1404,33 @@
         };
     }
 
+    function ensureHatenaCollection() {
+        const map = getActiveMapRecord();
+        if (!map) return;
+        if (!Array.isArray(map.hatenaBlocks)) map.hatenaBlocks = [];
+        state.hatenaBlocks = map.hatenaBlocks;
+    }
+
+    function getHatenaById(id) {
+        if (!id) return null;
+        return Array.isArray(state.hatenaBlocks) ? state.hatenaBlocks.find(block => block && block.id === id) : null;
+    }
+
+    function removeHatenaAt(x, y) {
+        if (!Array.isArray(state.hatenaBlocks) || state.hatenaBlocks.length === 0) return false;
+        const filtered = state.hatenaBlocks.filter(block => !(block && block.x === x && block.y === y));
+        const changed = filtered.length !== state.hatenaBlocks.length;
+        if (changed) {
+            state.hatenaBlocks = filtered;
+            const map = getActiveMapRecord();
+            if (map) map.hatenaBlocks = filtered;
+            if (state.selectedHatenaId && !filtered.some(b => b.id === state.selectedHatenaId)) {
+                state.selectedHatenaId = filtered[0]?.id || null;
+            }
+        }
+        return changed;
+    }
+
     function getDomainEffectLabel(effectId) {
         const option = DOMAIN_EFFECT_OPTIONS.find(opt => opt.id === effectId);
         if (!option) {
@@ -1483,6 +1520,13 @@
                 tileMeta: mapMeta,
                 playerStart: map.playerStart ? { ...map.playerStart } : null,
                 portals: sanitizePortals,
+                hatenaMode: HATENA_MODES.includes(map.hatenaMode) ? map.hatenaMode : 'random',
+                hatenaBlocks: Array.isArray(map.hatenaBlocks) ? map.hatenaBlocks.map(block => ({
+                    id: block.id,
+                    name: block.name,
+                    x: Number.isFinite(block.x) ? block.x : null,
+                    y: Number.isFinite(block.y) ? block.y : null
+                })) : [],
                 enemies: (map.enemies || []).map(enemy => ({
                     id: enemy.id,
                     name: enemy.name,
@@ -1547,6 +1591,13 @@
                     targetX: Number.isFinite(portal.targetX) ? portal.targetX : null,
                     targetY: Number.isFinite(portal.targetY) ? portal.targetY : null
                 })) : [],
+                hatenaMode: map.hatenaMode,
+                hatenaBlocks: Array.isArray(map.hatenaBlocks) ? map.hatenaBlocks.map(block => ({
+                    id: block.id,
+                    name: block.name,
+                    x: Number.isFinite(block.x) ? block.x : null,
+                    y: Number.isFinite(block.y) ? block.y : null
+                })) : [],
                 enemies: (map.enemies || []).map(enemy => ({
                     id: enemy.id,
                     name: enemy.name,
@@ -1575,6 +1626,7 @@
             playerLevel: state.playerLevel,
             interactiveMode: !!state.interactiveMode,
             selectedEnemyId: state.selectedEnemyId || null,
+            selectedHatenaId: state.selectedHatenaId || null,
             selectedDomainId: state.selectedDomainId || null,
             selectedPortalId: state.selectedPortalId || null,
              selectedGimmickId: state.selectedGimmickId || null,
@@ -1699,6 +1751,13 @@
                     targetX: Number.isFinite(portal.targetX) ? Math.floor(portal.targetX) : null,
                     targetY: Number.isFinite(portal.targetY) ? Math.floor(portal.targetY) : null
                 })) : [],
+                hatenaMode: HATENA_MODES.includes(map.hatenaMode) ? map.hatenaMode : 'random',
+                hatenaBlocks: Array.isArray(map.hatenaBlocks) ? map.hatenaBlocks.map(block => ({
+                    id: typeof block.id === 'string' ? block.id : `hatena-${hatenaSeq++}`,
+                    name: typeof block.name === 'string' ? block.name : '',
+                    x: Number.isFinite(block.x) ? clamp(0, width - 1, Math.floor(block.x)) : null,
+                    y: Number.isFinite(block.y) ? clamp(0, height - 1, Math.floor(block.y)) : null
+                })) : [],
                 enemies: Array.isArray(map.enemies) ? map.enemies.map(enemy => ({
                     id: typeof enemy.id === 'string' ? enemy.id : null,
                     name: typeof enemy.name === 'string' ? enemy.name : '',
@@ -1742,6 +1801,7 @@
             playerLevel: clamp(1, maxLevel, Math.floor(Number(sanitizedConfig?.playerLevel) || DEFAULT_LEVEL)),
             interactiveMode: !!sanitizedConfig?.interactiveMode,
             selectedEnemyId: typeof serialized?.selectedEnemyId === 'string' ? serialized.selectedEnemyId : null,
+            selectedHatenaId: typeof serialized?.selectedHatenaId === 'string' ? serialized.selectedHatenaId : null,
             selectedDomainId: typeof serialized?.selectedDomainId === 'string' ? serialized.selectedDomainId : null,
             selectedPortalId: typeof serialized?.selectedPortalId === 'string' ? serialized.selectedPortalId : null,
             selectedGimmickId: typeof serialized?.selectedGimmickId === 'string' ? serialized.selectedGimmickId : null,
@@ -1806,6 +1866,13 @@
                     targetX: Number.isFinite(portal.targetX) ? portal.targetX : null,
                     targetY: Number.isFinite(portal.targetY) ? portal.targetY : null
                 })) : [],
+                hatenaMode: HATENA_MODES.includes(map.hatenaMode) ? map.hatenaMode : 'random',
+                hatenaBlocks: Array.isArray(map.hatenaBlocks) ? map.hatenaBlocks.map(block => ({
+                    id: typeof block.id === 'string' ? block.id : `hatena-${hatenaSeq++}`,
+                    name: typeof block.name === 'string' ? block.name : '',
+                    x: Number.isFinite(block.x) ? block.x : null,
+                    y: Number.isFinite(block.y) ? block.y : null
+                })) : [],
                 enemies: Array.isArray(map.enemies) ? map.enemies.map(enemy => ({
                     id: enemy.id || `enemy-${enemySeq++}`,
                     name: typeof enemy.name === 'string' ? enemy.name : '',
@@ -1867,6 +1934,15 @@
             return Math.max(max, localMax);
         }, 0);
         enemySeq = Math.max(enemySeq, Number.isFinite(maxEnemySeq) ? maxEnemySeq + 1 : enemySeq);
+        const maxHatenaSeq = state.maps.reduce((max, map) => {
+            if (!Array.isArray(map.hatenaBlocks)) return max;
+            const localMax = map.hatenaBlocks.reduce((hMax, block) => {
+                const num = extractNumericSuffix(block.id);
+                return Number.isFinite(num) ? Math.max(hMax, num) : hMax;
+            }, 0);
+            return Math.max(max, localMax);
+        }, 0);
+        hatenaSeq = Math.max(hatenaSeq, Number.isFinite(maxHatenaSeq) ? maxHatenaSeq + 1 : hatenaSeq);
         const maxDomainSeq = state.maps.reduce((max, map) => {
             const localMax = map.domainEffects.reduce((dMax, effect) => {
                 const num = extractNumericSuffix(effect.id);
@@ -1917,6 +1993,9 @@
         state.selectedEnemyId = state.enemies.some(enemy => enemy.id === payload.selectedEnemyId)
             ? payload.selectedEnemyId
             : (state.enemies[0]?.id || null);
+        state.selectedHatenaId = state.hatenaBlocks.some(block => block.id === payload.selectedHatenaId)
+            ? payload.selectedHatenaId
+            : (state.hatenaBlocks[0]?.id || null);
         state.selectedDomainId = state.domainEffects.some(effect => effect.id === payload.selectedDomainId)
             ? payload.selectedDomainId
             : (state.domainEffects[0]?.id || null);
@@ -2008,6 +2087,18 @@
         if (map) {
             map.domainEffects = state.domainEffects;
         }
+        state.hatenaBlocks = state.hatenaBlocks.map(block => {
+            if (!Number.isFinite(block?.x) || !Number.isFinite(block?.y)) {
+                return { ...block, x: null, y: null };
+            }
+            if (block.x < 0 || block.x >= width || block.y < 0 || block.y >= height) {
+                return { ...block, x: null, y: null };
+            }
+            return block;
+        });
+        if (map) {
+            map.hatenaBlocks = state.hatenaBlocks;
+        }
         state.gimmicks = state.gimmicks.filter(Boolean).map(gimmick => {
             if (!gimmick.tile) return gimmick;
             if (!Number.isFinite(gimmick.tile.x) || !Number.isFinite(gimmick.tile.y)) {
@@ -2046,6 +2137,8 @@
         if (updateSelection) {
             setSelectedCell(x, y);
         }
+
+        ensureHatenaCollection();
 
         const mapConfig = getActiveMapRecord();
         const portals = Array.isArray(state.portals)
@@ -2131,6 +2224,7 @@
                 return enemy;
             });
             if (enemyChanged) changed = true;
+            if (removeHatenaAt(x, y)) changed = true;
             let domainChanged = false;
             state.domainEffects = state.domainEffects.map(effect => {
                 if (effect.x === x && effect.y === y) {
@@ -2205,6 +2299,33 @@
                     effect.y = y;
                     changed = true;
                 }
+                if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
+            }
+        } else if (brush === 'hatena') {
+            if (state.hatenaMode !== 'fixed') {
+                state.tempMessage = 'ハテナ出現モードを「固定出現」にすると配置できます。';
+                renderValidation();
+                return false;
+            }
+            if (!state.selectedHatenaId) {
+                state.tempMessage = 'ハテナブロックを選択してから配置してください。';
+                renderValidation();
+                return false;
+            }
+            const block = getHatenaById(state.selectedHatenaId);
+            if (block) {
+                if (state.grid[y][x] !== 0) {
+                    state.grid[y][x] = 0;
+                    changed = true;
+                }
+                // Remove any existing hatena occupying the cell
+                removeHatenaAt(x, y);
+                if (block.x !== x || block.y !== y) {
+                    block.x = x;
+                    block.y = y;
+                    changed = true;
+                }
+                if (mapConfig) mapConfig.hatenaBlocks = state.hatenaBlocks;
                 if (applyFloorMetaToCell(x, y, { useBrushSettings: false })) changed = true;
             }
         }
@@ -2351,6 +2472,17 @@
             const summary = labels.join(domainSeparator);
             detailParts.push(translateSandbox('map.cell.details.domain.summary', { summary }, `領域: ${summary}`));
         }
+        if (state.hatenaMode === 'fixed') {
+            const hatenaHere = Array.isArray(state.hatenaBlocks)
+                ? state.hatenaBlocks.filter(block => block && block.x === x && block.y === y)
+                : [];
+            if (hatenaHere.length) {
+                const countLabel = hatenaHere.length > 1
+                    ? `ハテナ×${hatenaHere.length}`
+                    : (hatenaHere[0].name ? `ハテナ: ${hatenaHere[0].name}` : 'ハテナブロック');
+                detailParts.push(countLabel);
+            }
+        }
         if (!detailParts.length) {
             return baseLabel;
         }
@@ -2469,6 +2601,16 @@
                     iconColor = '#1f2937';
                     fontSize = Math.floor(cellSize * 0.62);
                 }
+                if (!icon && state.hatenaMode === 'fixed') {
+                    const hatenaHere = Array.isArray(state.hatenaBlocks)
+                        ? state.hatenaBlocks.filter(block => block && block.x === x && block.y === y)
+                        : [];
+                    if (hatenaHere.length) {
+                        icon = hatenaHere.length > 1 ? `?${hatenaHere.length}` : '?';
+                        fontSize = hatenaHere.length > 1 ? Math.floor(cellSize * 0.48) : Math.floor(cellSize * 0.58);
+                        iconColor = GRID_HATENA_COLOR;
+                    }
+                }
                 if (!icon && enemiesHere.length) {
                     icon = enemiesHere.length > 1 ? `✦${enemiesHere.length}` : '✦';
                     fontSize = enemiesHere.length > 1 ? Math.floor(cellSize * 0.5) : Math.floor(cellSize * 0.6);
@@ -2544,6 +2686,17 @@
                         ctx.save();
                         ctx.strokeStyle = '#2563eb';
                         ctx.lineWidth = 1.4;
+                        ctx.strokeRect(originX + 2.5, originY + 2.5, cellSize - 5, cellSize - 5);
+                        ctx.restore();
+                    }
+                }
+
+                if (state.selectedHatenaId && Array.isArray(state.hatenaBlocks)) {
+                    const isSelectedHatena = state.hatenaBlocks.some(block => block && block.id === state.selectedHatenaId && block.x === x && block.y === y);
+                    if (isSelectedHatena) {
+                        ctx.save();
+                        ctx.strokeStyle = '#2563eb';
+                        ctx.lineWidth = 1.6;
                         ctx.strokeRect(originX + 2.5, originY + 2.5, cellSize - 5, cellSize - 5);
                         ctx.restore();
                     }
@@ -2937,6 +3090,151 @@
 
             card.appendChild(grid);
             refs.enemyList.appendChild(card);
+        });
+    }
+
+    function renderHatenaBlocks() {
+        if (!refs.hatenaList) return;
+        ensureHatenaCollection();
+        if (!Array.isArray(state.hatenaBlocks)) state.hatenaBlocks = [];
+        const fixedMode = state.hatenaMode === 'fixed';
+        refs.hatenaList.innerHTML = '';
+        if (refs.addHatenaButton) {
+            refs.addHatenaButton.disabled = !fixedMode;
+        }
+
+        if (!fixedMode) {
+            const note = document.createElement('p');
+            note.textContent = '「固定出現」モードのときのみ編集できます。';
+            note.className = 'sandbox-note';
+            refs.hatenaList.appendChild(note);
+            return;
+        }
+
+        if (!state.hatenaBlocks.length) {
+            const empty = document.createElement('p');
+            empty.textContent = 'ハテナブロックは未配置です。「ハテナを追加」ボタンから追加してください。';
+            empty.className = 'sandbox-note';
+            refs.hatenaList.appendChild(empty);
+            state.selectedHatenaId = null;
+            return;
+        }
+
+        if (!state.selectedHatenaId || !state.hatenaBlocks.some(b => b.id === state.selectedHatenaId)) {
+            state.selectedHatenaId = state.hatenaBlocks[0].id;
+        }
+
+        state.hatenaBlocks.forEach((block, index) => {
+            const card = document.createElement('div');
+            card.className = 'sandbox-domain-card';
+            if (block.id === state.selectedHatenaId) {
+                card.classList.add('selected');
+            }
+            card.dataset.hatenaId = block.id;
+
+            const header = document.createElement('div');
+            header.className = 'sandbox-domain-header';
+            const title = document.createElement('h5');
+            title.textContent = (block.name || '').trim() || `ハテナ${index + 1}`;
+            header.appendChild(title);
+
+            const actions = document.createElement('div');
+            actions.className = 'sandbox-domain-actions';
+
+            const selectBtn = document.createElement('button');
+            selectBtn.type = 'button';
+            selectBtn.className = 'select';
+            selectBtn.textContent = ts('common.actions.select', '選択');
+            selectBtn.addEventListener('click', () => {
+                state.selectedHatenaId = block.id;
+                state.brush = 'hatena';
+                render();
+            });
+            actions.appendChild(selectBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'delete';
+            deleteBtn.textContent = ts('common.actions.delete', '削除');
+            deleteBtn.addEventListener('click', () => {
+                state.hatenaBlocks = state.hatenaBlocks.filter(b => b.id !== block.id);
+                const map = getActiveMapRecord();
+                if (map) map.hatenaBlocks = state.hatenaBlocks;
+                if (state.selectedHatenaId === block.id) {
+                    state.selectedHatenaId = state.hatenaBlocks[0]?.id || null;
+                }
+                render();
+            });
+            actions.appendChild(deleteBtn);
+            header.appendChild(actions);
+            card.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'sandbox-domain-grid';
+
+            const nameLabel = document.createElement('label');
+            nameLabel.textContent = '名前';
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = block.name || '';
+            nameInput.dataset.preserveKey = `hatena-${block.id}-name`;
+            nameInput.addEventListener('input', (e) => {
+                block.name = e.target.value.slice(0, 40);
+                renderHatenaBlocks();
+            });
+            nameLabel.appendChild(nameInput);
+            grid.appendChild(nameLabel);
+
+            const xLabel = document.createElement('label');
+            xLabel.textContent = ts('common.axes.x', 'X');
+            const xInput = document.createElement('input');
+            xInput.type = 'number';
+            xInput.min = '0';
+            xInput.max = String(state.width - 1);
+            xInput.value = Number.isFinite(block.x) ? block.x : '';
+            xInput.dataset.preserveKey = `hatena-${block.id}-x`;
+            xInput.addEventListener('change', (e) => {
+                const value = Math.floor(Number(e.target.value));
+                if (!Number.isFinite(value)) {
+                    block.x = null;
+                    e.target.value = '';
+                } else {
+                    block.x = clamp(0, state.width - 1, value);
+                    e.target.value = block.x;
+                    state.brush = 'hatena';
+                    state.selectedHatenaId = block.id;
+                }
+                render();
+            });
+            xLabel.appendChild(xInput);
+            grid.appendChild(xLabel);
+
+            const yLabel = document.createElement('label');
+            yLabel.textContent = ts('common.axes.y', 'Y');
+            const yInput = document.createElement('input');
+            yInput.type = 'number';
+            yInput.min = '0';
+            yInput.max = String(state.height - 1);
+            yInput.value = Number.isFinite(block.y) ? block.y : '';
+            yInput.dataset.preserveKey = `hatena-${block.id}-y`;
+            yInput.addEventListener('change', (e) => {
+                const value = Math.floor(Number(e.target.value));
+                if (!Number.isFinite(value)) {
+                    block.y = null;
+                    e.target.value = '';
+                } else {
+                    block.y = clamp(0, state.height - 1, value);
+                    e.target.value = block.y;
+                    state.brush = 'hatena';
+                    state.selectedHatenaId = block.id;
+                }
+                render();
+            });
+            yLabel.appendChild(yInput);
+            grid.appendChild(yLabel);
+
+            card.appendChild(grid);
+            refs.hatenaList.appendChild(card);
         });
     }
 
@@ -4263,6 +4561,13 @@
             refs.mapBranchInput.value = activeMap?.branchKey || '';
             refs.mapBranchInput.disabled = !activeMap;
         }
+        if (refs.hatenaModeSelect) {
+            const mode = activeMap?.hatenaMode && HATENA_MODES.includes(activeMap.hatenaMode)
+                ? activeMap.hatenaMode
+                : 'random';
+            refs.hatenaModeSelect.value = mode;
+            refs.hatenaModeSelect.disabled = !activeMap;
+        }
         if (refs.setEntryMapButton) {
             refs.setEntryMapButton.disabled = !activeMap;
         }
@@ -4562,6 +4867,29 @@
         render();
     }
 
+    function addHatenaBlock() {
+        ensureHatenaCollection();
+        if (!Array.isArray(state.hatenaBlocks)) state.hatenaBlocks = [];
+        if (state.hatenaMode !== 'fixed') {
+            state.tempMessage = 'ハテナ出現モードを「固定出現」にしてください。';
+            renderValidation();
+            return;
+        }
+        const id = `hatena-${hatenaSeq++}`;
+        const block = {
+            id,
+            name: `ハテナ${state.hatenaBlocks.length + 1}`,
+            x: state.lastCell?.x ?? null,
+            y: state.lastCell?.y ?? null
+        };
+        state.hatenaBlocks.push(block);
+        const map = getActiveMapRecord();
+        if (map) map.hatenaBlocks = state.hatenaBlocks;
+        state.selectedHatenaId = id;
+        state.brush = 'hatena';
+        render();
+    }
+
     function addDomain() {
         const id = `domain-${domainSeq++}`;
         const domain = {
@@ -4764,10 +5092,13 @@
             state.portals = [];
             state.enemies = state.enemies.map(enemy => ({ ...enemy, x: null, y: null }));
             state.domainEffects = state.domainEffects.map(effect => ({ ...effect, x: null, y: null }));
+            state.hatenaBlocks = [];
+            state.selectedHatenaId = null;
             if (map) {
                 map.playerStart = null;
                 map.portals = state.portals;
                 map.enemies = state.enemies;
+                map.hatenaBlocks = state.hatenaBlocks;
                 map.domainEffects = state.domainEffects;
             }
         }
@@ -4810,6 +5141,8 @@
             addEnemyButton: panel.querySelector('#sandbox-add-enemy'),
             domainList: panel.querySelector('#sandbox-domain-list'),
             addDomainButton: panel.querySelector('#sandbox-add-domain'),
+            hatenaList: panel.querySelector('#sandbox-hatena-list'),
+            addHatenaButton: panel.querySelector('#sandbox-add-hatena'),
             fillFloorButton: panel.querySelector('#sandbox-fill-floor'),
             fillWallButton: panel.querySelector('#sandbox-fill-wall'),
             clearMarkersButton: panel.querySelector('#sandbox-clear-markers'),
@@ -4831,6 +5164,7 @@
             mapNameInput: panel.querySelector('#sandbox-map-name'),
             mapFloorInput: panel.querySelector('#sandbox-map-floor'),
             mapBranchInput: panel.querySelector('#sandbox-map-branch'),
+            hatenaModeSelect: panel.querySelector('#sandbox-hatena-mode'),
             setEntryMapButton: panel.querySelector('#sandbox-set-entry-map'),
             nodeMapButton: panel.querySelector('#sandbox-node-map-button'),
             portalList: panel.querySelector('#sandbox-portal-list'),
@@ -4882,6 +5216,9 @@
             playerLevel: DEFAULT_LEVEL,
             enemies: [],
             selectedEnemyId: null,
+            hatenaBlocks: [],
+            selectedHatenaId: null,
+            hatenaMode: 'random',
             domainEffects: [],
             selectedDomainId: null,
             portals: [],
@@ -4999,6 +5336,9 @@
         }
         if (refs.addDomainButton) {
             refs.addDomainButton.addEventListener('click', addDomain);
+        }
+        if (refs.addHatenaButton) {
+            refs.addHatenaButton.addEventListener('click', addHatenaBlock);
         }
         if (refs.fillFloorButton) {
             refs.fillFloorButton.addEventListener('click', () => fillGrid(0));
@@ -5139,6 +5479,19 @@
                 renderMapList();
                 renderNodeMap();
                 renderPortals();
+            });
+        }
+        if (refs.hatenaModeSelect) {
+            refs.hatenaModeSelect.addEventListener('change', (e) => {
+                const map = getActiveMapRecord();
+                if (!map) return;
+                const value = HATENA_MODES.includes(e.target.value) ? e.target.value : 'random';
+                map.hatenaMode = value;
+                state.hatenaMode = value;
+                if (value !== 'fixed') {
+                    state.selectedHatenaId = null;
+                }
+                render();
             });
         }
         if (refs.setEntryMapButton) {

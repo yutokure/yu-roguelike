@@ -1430,8 +1430,9 @@ function removeHatenaBlockAt(x, y) {
     }
 }
 
-function spawnHatenaBlocks(recommendedLevel) {
-    if (isSandboxActive()) return;
+function spawnHatenaBlocks(recommendedLevel, options = {}) {
+    const allowSandbox = !!options.allowSandbox;
+    if (isSandboxActive() && !allowSandbox) return;
     if (isBossFloor(dungeonLevel)) return;
     const playerLevel = Number.isFinite(player?.level) ? player.level : 1;
     if (!Number.isFinite(recommendedLevel) || recommendedLevel < playerLevel - 3) return;
@@ -2856,6 +2857,7 @@ const SANDBOX_MAX_LEVEL = 999;
 const SANDBOX_CONFIG_VERSION = 3;
 const SANDBOX_PORTAL_TYPES = new Set(['stairs', 'gate']);
 const SANDBOX_PORTAL_DIRECTIONS = new Set(['up', 'down', 'side']);
+const SANDBOX_HATENA_MODES = new Set(['random', 'fixed', 'none']);
 const SANDBOX_GIMMICK_TYPES = new Set(['pushableCrate', 'floorSwitch', 'door', 'sensor', 'logic', 'script', 'io', 'alert']);
 const SANDBOX_LOGIC_OPERATORS = new Set(['and', 'or', 'xor', 'nand', 'nor', 'xnor', 'not']);
 const SANDBOX_WIRE_SIGNAL_TYPES = new Set(['binary', 'pulse', 'value']);
@@ -4913,8 +4915,10 @@ function sanitizeSandboxConfig(raw) {
     const mapIdSet = new Set();
     const gimmickIdSet = new Set();
     const wireIdSet = new Set();
+    const hatenaIdSet = new Set();
     let mapSeq = 1;
     let portalSeq = 1;
+    let hatenaSeq = 1;
     let gimmickSeq = 1;
     let wireSeq = 1;
 
@@ -4929,6 +4933,13 @@ function sanitizeSandboxConfig(raw) {
         let id = `portal-${portalSeq++}`;
         while (used.has(id)) id = `portal-${portalSeq++}`;
         used.add(id);
+        return id;
+    };
+
+    const nextHatenaId = () => {
+        let id = `hatena-${hatenaSeq++}`;
+        while (hatenaIdSet.has(id)) id = `hatena-${hatenaSeq++}`;
+        hatenaIdSet.add(id);
         return id;
     };
 
@@ -5017,6 +5028,33 @@ function sanitizeSandboxConfig(raw) {
             });
         }
         return domainEffects;
+    };
+
+    const sanitizeHatenaList = (list, normalizePos, grid) => {
+        const blocks = [];
+        if (!Array.isArray(list)) return blocks;
+        const used = new Set();
+        for (const entry of list) {
+            if (!entry || typeof entry !== 'object') continue;
+            const pos = normalizePos(entry);
+            if (!pos) continue;
+            if (grid?.[pos.y]?.[pos.x] !== 0) continue;
+            let id = typeof entry.id === 'string' && entry.id.trim() ? entry.id.trim() : '';
+            if (!id || used.has(id) || hatenaIdSet.has(id)) {
+                id = nextHatenaId();
+            } else {
+                used.add(id);
+                hatenaIdSet.add(id);
+            }
+            const name = typeof entry.name === 'string' ? entry.name.trim().slice(0, 40) : '';
+            blocks.push({
+                id,
+                name,
+                x: pos.x,
+                y: pos.y
+            });
+        }
+        return blocks;
     };
 
     const sanitizeGimmickList = (list, normalizePos, width, height) => {
@@ -5200,6 +5238,9 @@ function sanitizeSandboxConfig(raw) {
         const portals = sanitizePortalList(mapSource, mapId, normalizePos, () => playerStart || null);
         const gimmicks = sanitizeGimmickList(mapSource.gimmicks, normalizePos, width, height);
         const wires = sanitizeWireList(mapSource.wires, gimmicks);
+        const hatenaBlocks = sanitizeHatenaList(mapSource.hatenaBlocks, normalizePos, grid);
+        const hatenaModeRaw = typeof mapSource.hatenaMode === 'string' ? mapSource.hatenaMode.trim().toLowerCase() : 'random';
+        const hatenaMode = SANDBOX_HATENA_MODES.has(hatenaModeRaw) ? hatenaModeRaw : 'random';
 
         sanitizedMaps.push({
             id: mapId,
@@ -5212,6 +5253,8 @@ function sanitizeSandboxConfig(raw) {
             tileMeta,
             playerStart,
             enemies,
+            hatenaMode,
+            hatenaBlocks,
             domainEffects,
             portals,
             gimmicks,
@@ -5324,6 +5367,24 @@ function validateSandboxConfig(config) {
                     errors.push(`${prefix}: 敵${enemyIndex + 1}のHPが無効です。`);
                 }
             });
+        }
+        const hatenaMode = SANDBOX_HATENA_MODES.has(map.hatenaMode) ? map.hatenaMode : 'random';
+        map.hatenaMode = hatenaMode;
+        if (hatenaMode === 'fixed') {
+            const hatenaBlocks = Array.isArray(map.hatenaBlocks) ? map.hatenaBlocks : [];
+            if (!hatenaBlocks.length) {
+                warnings.push(`${prefix}: ハテナブロックが配置されていません（固定出現）。`);
+            } else {
+                hatenaBlocks.forEach((block, blockIndex) => {
+                    if (block.x === null || block.y === null) {
+                        errors.push(`${prefix}: ハテナ${blockIndex + 1}の座標が未設定です。`);
+                    } else if (map.grid?.[block.y]?.[block.x] !== 0) {
+                        errors.push(`${prefix}: ハテナ${blockIndex + 1}は床マスに配置してください。`);
+                    }
+                });
+            }
+        } else if (hatenaMode === 'none' && Array.isArray(map.hatenaBlocks) && map.hatenaBlocks.length) {
+            warnings.push(`${prefix}: 「出現なし」のためハテナ配置は無視されます。`);
         }
         if (Array.isArray(map.domainEffects)) {
             map.domainEffects.forEach((effect, effectIndex) => {
@@ -13929,6 +13990,34 @@ function generateEntities() {
                     configRef: effect,
                     configIndex: index
                 }));
+        }
+
+        hatenaBlocks = [];
+        const hatenaMode = cfg.hatenaMode || 'random';
+        const sandboxRecommended = sandboxRuntime.config?.playerLevel ?? player.level ?? 1;
+        if (hatenaMode === 'fixed' && Array.isArray(cfg.hatenaBlocks)) {
+            const placed = [];
+            cfg.hatenaBlocks.forEach(block => {
+                if (!Number.isFinite(block?.x) || !Number.isFinite(block?.y)) return;
+                const bx = Math.floor(block.x);
+                const by = Math.floor(block.y);
+                if (!map[by] || map[by][bx] !== 0) return;
+                const meta = ensureTileMeta(bx, by);
+                if (meta) {
+                    meta.floorType = FLOOR_TYPE_HATENA;
+                    delete meta.floorDir;
+                    markTileVisualDirty(bx, by);
+                }
+                placed.push({ x: bx, y: by, name: typeof block.name === 'string' ? block.name : '' });
+            });
+            hatenaBlocks = placed;
+            if (hatenaBlocks.length) {
+                try {
+                    recordAchievementEvent('hatena_block_spawned', { count: hatenaBlocks.length });
+                } catch {}
+            }
+        } else if (hatenaMode === 'random') {
+            spawnHatenaBlocks(sandboxRecommended, { allowSandbox: true });
         }
 
         sandboxGimmickRuntime = buildSandboxGimmickRuntime(cfg);

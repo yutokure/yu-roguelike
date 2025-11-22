@@ -617,6 +617,14 @@
                                         <div id="sandbox-portal-list" class="sandbox-portal-list" aria-live="polite"></div>
                                         <p class="sandbox-note" data-i18n="tools.sandbox.portals.note">ポータルを選択し「階段」または「ゲート」ブラシでマップ上の位置を設定します。</p>
                                     </section>
+                                    <section class="sandbox-section" aria-labelledby="sandbox-hatena-title">
+                                        <div class="sandbox-section-header">
+                                            <h4 id="sandbox-hatena-title">ハテナブロック</h4>
+                                            <button type="button" id="sandbox-add-hatena">+ ハテナを追加</button>
+                                        </div>
+                                        <div id="sandbox-hatena-list" class="sandbox-hatena-list" aria-live="polite"></div>
+                                        <p class="sandbox-note">固定出現モード時のみ配置できます。</p>
+                                    </section>
                                 </div>
                                 <div class="sandbox-map-wrapper">
                                     <section class="sandbox-section" aria-labelledby="sandbox-map-title">
@@ -645,6 +653,7 @@
                                             <button type="button" class="sandbox-brush" data-brush="gate" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.gate">ゲート</button>
                                             <button type="button" class="sandbox-brush" data-brush="enemy" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.enemy">敵配置</button>
                                             <button type="button" class="sandbox-brush" data-brush="domain" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.domain">領域</button>
+                                            <button type="button" class="sandbox-brush" data-brush="hatena" aria-pressed="false">ハテナ</button>
                                         </div>
                                         <p id="sandbox-selected-cell" class="sandbox-selected-cell" aria-live="polite" data-i18n="tools.sandbox.map.selectedCell.hint">セルをクリックして編集します。</p>
                                     </section>
@@ -669,6 +678,7 @@
                                             <div><dt class="legend-oneway">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.oneWay">一方通行床</dd></div>
                                             <div><dt class="legend-vertical">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.vertical">縦通行のみ床</dd></div>
                                             <div><dt class="legend-horizontal">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.horizontal">横通行のみ床</dd></div>
+                                            <div><dt>?</dt><dd>ハテナブロック</dd></div>
                                         </dl>
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-maplist-title">
@@ -690,6 +700,13 @@
                                                 </label>
                                                 <label data-i18n="tools.sandbox.map.list.fields.branch.label">ブランチキー
                                                     <input id="sandbox-map-branch" type="text" maxlength="12" data-preserve-key="map-branch">
+                                                </label>
+                                                <label>ハテナ出現モード
+                                                    <select id="sandbox-hatena-mode" data-preserve-key="map-hatena-mode">
+                                                        <option value="random">ランダム出現</option>
+                                                        <option value="fixed">固定出現</option>
+                                                        <option value="none">出現なし</option>
+                                                    </select>
                                                 </label>
                                                 <button type="button" id="sandbox-set-entry-map" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.list.actions.setEntry">開始マップに設定</button>
                                             </div>

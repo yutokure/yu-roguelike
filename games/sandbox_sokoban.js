@@ -120,6 +120,7 @@
     let widthControl;
     let heightControl;
     let generatorLevelControl;
+    let generatorSymmetryControl;
 
     function ensureStyles(){
       if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return;
@@ -169,6 +170,28 @@
           font-weight: 700;
           color: #1e293b;
           text-shadow: 0 1px 2px rgba(148,163,184,0.6);
+          z-index: 10;
+        }
+        .sandbox-sokoban-entity {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+          will-change: transform;
+          pointer-events: none;
+        }
+        .sandbox-sokoban-layer {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
         }
       `;
       document.head.appendChild(style);
@@ -328,12 +351,24 @@
     heightControl = createLabeledInput(text('.editor.height', '高さ'), stage.height, value => resizeStage(stage.width, value));
     editorControls.appendChild(widthControl.element);
     editorControls.appendChild(heightControl.element);
+    editorControls.appendChild(heightControl.element);
     generatorLevelControl = createLabeledSelect(
       text('.generator.level', '生成レベル'),
       1,
       Array.from({ length: 10 }, (_, index) => ({ value: index + 1, label: `${text('.generator.levelPrefix', 'Lv.')} ${index + 1}` }))
     );
     editorControls.appendChild(generatorLevelControl.element);
+    generatorSymmetryControl = createLabeledSelect(
+      text('.generator.symmetry', '対称性'),
+      'none',
+      [
+        { value: 'none', label: text('.symmetry.none', 'なし') },
+        { value: 'horizontal', label: text('.symmetry.horizontal', '左右対称') },
+        { value: 'vertical', label: text('.symmetry.vertical', '上下対称') },
+        { value: 'rotational', label: text('.symmetry.rotational', '点対称 (180°)') },
+      ]
+    );
+    editorControls.appendChild(generatorSymmetryControl.element);
 
     function createLabeledInput(labelText, initialValue, onChange){
       const wrapper = document.createElement('label');
@@ -422,9 +457,11 @@
     generatorRow.style.alignItems = 'flex-end';
     generatorRow.style.marginBottom = '12px';
 
+
     const generateBtn = createActionButton(text('.generator.generate', '逆再生で生成'), () => {
       const level = Math.max(1, Math.min(10, parseInt(generatorLevelControl.getValue(), 10) || 1));
-      const generated = generateStageByReverse(level);
+      const symmetry = generatorSymmetryControl.getValue();
+      const generated = generateStageByReverse(level, symmetry);
       if (generated){
         applyImportedStage(generated);
         setStatus(text('.status.generated', () => `レベル${level}のステージを生成しました。`), '#4ade80');
@@ -539,8 +576,8 @@
       return btn;
     }
 
-    function generateStageByReverse(level){
-      const config = createGeneratorConfig(level);
+    function generateStageByReverse(level, symmetry){
+      const config = createGeneratorConfig(level, symmetry);
       for (let attempt = 0; attempt < 25; attempt++){ // retry a few times for tougher levels
         const base = createGeneratorBase(config);
         if (!base) continue;
@@ -551,7 +588,7 @@
       return null;
     }
 
-    function createGeneratorConfig(levelInput){
+    function createGeneratorConfig(levelInput, symmetry){
       const level = Math.max(1, Math.min(10, Math.floor(levelInput || 1)));
       const crateCount = Math.min(2 + Math.floor(level / 2), 6);
       const pushTarget = 6 + level * 4;
@@ -560,7 +597,7 @@
       const height = Math.min(MAX_SIZE, 6 + Math.floor(level / 2) * 2);
       const wallDensity = Math.min(0.22, 0.04 + level * 0.015);
       const minCratesOffGoal = Math.min(crateCount, Math.max(1, Math.floor(level / 3) + 1));
-      return { level, crateCount, pushTarget, minPushes, width, height, wallDensity, minCratesOffGoal };
+      return { level, crateCount, pushTarget, minPushes, width, height, wallDensity, minCratesOffGoal, symmetry };
     }
 
     function createGeneratorBase(config){
@@ -586,22 +623,59 @@
       const wallCandidates = interiorCells.slice();
       shuffle(wallCandidates);
       let placedWalls = 0;
+      
+      const getSym = (x, y) => {
+        if (config.symmetry === 'horizontal') return { x: width - 1 - x, y };
+        if (config.symmetry === 'vertical') return { x, y: height - 1 - y };
+        if (config.symmetry === 'rotational') return { x: width - 1 - x, y: height - 1 - y };
+        return null;
+      };
+
       for (const cell of wallCandidates){
         if (placedWalls >= wallTargets) break;
-        // avoid cluttering around starting area by keeping at least one free neighbour
+        if (tiles[cell.y][cell.x] === 'wall') continue;
+
+        const sym = getSym(cell.x, cell.y);
+        
         tiles[cell.y][cell.x] = 'wall';
+        if (sym) tiles[sym.y][sym.x] = 'wall';
+
         if (!isFloorConnected(tiles)){
           tiles[cell.y][cell.x] = 'floor';
+          if (sym) tiles[sym.y][sym.x] = 'floor';
           continue;
         }
         placedWalls += 1;
+        if (sym && (sym.x !== cell.x || sym.y !== cell.y)) placedWalls += 1;
       }
+
       const goalCandidates = interiorCells.filter(cell => tiles[cell.y][cell.x] !== 'wall' && !isCornerCell(cell.x, cell.y, tiles));
       if (goalCandidates.length < config.crateCount) return null;
       shuffle(goalCandidates);
-      const selectedGoals = goalCandidates.slice(0, config.crateCount);
-      const goals = new Set(selectedGoals.map(cell => stageKey(cell.x, cell.y)));
-      const crates = selectedGoals.map(cell => ({ x: cell.x, y: cell.y }));
+      
+      const goals = new Set();
+      const crates = [];
+      
+      for (const cell of goalCandidates){
+        if (goals.size >= config.crateCount) break;
+        if (goals.has(stageKey(cell.x, cell.y))) continue;
+        
+        const sym = getSym(cell.x, cell.y);
+        
+        goals.add(stageKey(cell.x, cell.y));
+        crates.push({ x: cell.x, y: cell.y });
+        
+        if (sym && !goals.has(stageKey(sym.x, sym.y)) && goals.size < config.crateCount){
+           // Check if symmetric spot is also valid (it should be if walls are symmetric)
+           if (tiles[sym.y][sym.x] !== 'wall' && !isCornerCell(sym.x, sym.y, tiles)){
+             goals.add(stageKey(sym.x, sym.y));
+             crates.push({ x: sym.x, y: sym.y });
+           }
+        }
+      }
+
+      if (crates.length < 1) return null;
+
       const playerCandidates = interiorCells.filter(cell => tiles[cell.y][cell.x] !== 'wall' && !goals.has(stageKey(cell.x, cell.y)));
       if (!playerCandidates.length) return null;
       shuffle(playerCandidates);
@@ -1098,6 +1172,8 @@
     playBoard.style.padding = '12px';
     playBoard.style.borderRadius = '12px';
     playBoard.style.border = '1px solid rgba(148,163,184,0.25)';
+    playBoard.style.position = 'relative';
+    playBoard.style.touchAction = 'none';
     playBoard.setAttribute('tabindex', '0');
     playPanel.appendChild(playBoard);
 
@@ -1119,6 +1195,10 @@
         setStatus(text('.status.resetPlay', 'ステージをリセットしました。'), '#38bdf8');
       }
     });
+    const undoBtn = createActionButton(text('.play.undo', '戻す (Z)'), () => {
+      undo();
+    });
+    playButtons.appendChild(undoBtn);
     playButtons.appendChild(resetBtn);
     playPanel.appendChild(playButtons);
 
@@ -1158,9 +1238,11 @@
         ...validation.stage,
         moves: 0,
         completed: false,
+        history: [],
       };
       updatePlayInfo();
-      renderPlayBoard();
+      initializePlayBoard();
+      updateEntities();
       playBoard.focus();
       setStatus(text('.status.play', 'プレイモード: 箱をゴールに押し込みましょう！'), '#38bdf8');
       return true;
@@ -1170,9 +1252,15 @@
       return playState.crates.reduce((acc, crate) => acc + (playState.goals.has(stageKey(crate.x, crate.y)) ? 1 : 0), 0);
     }
 
-    function renderPlayBoard(){
+    let entityLayer = null;
+    let crateElements = [];
+    let playerElement = null;
+
+    function initializePlayBoard(){
       playBoard.innerHTML = '';
       playBoard.style.gridTemplateColumns = `repeat(${playState.width}, 32px)`;
+      
+      // Static grid
       for (let y = 0; y < playState.height; y++){
         for (let x = 0; x < playState.width; x++){
           const cell = document.createElement('div');
@@ -1187,20 +1275,59 @@
           cell.style.border = '1px solid #d4d4d8';
           cell.style.color = '#0f172a';
           cell.className = 'sandbox-sokoban-cell sandbox-sokoban-cell--play';
+          
           const wall = playState.tiles[y][x] === 'wall';
           const goal = playState.goals.has(stageKey(x, y));
-          const hasCrate = playState.crates.some(c => c.x === x && c.y === y);
-          const crateOnGoal = hasCrate && goal;
-          const isPlayer = playState.player && playState.player.x === x && playState.player.y === y;
-          decorateCell(cell, {
-            wall,
-            goal,
-            crate: hasCrate,
-            crateOnGoal,
-            player: isPlayer,
-          });
+          
+          decorateCell(cell, { wall, goal });
           playBoard.appendChild(cell);
         }
+      }
+
+      // Entity layer
+      entityLayer = document.createElement('div');
+      entityLayer.className = 'sandbox-sokoban-layer';
+      playBoard.appendChild(entityLayer);
+
+      // Create elements
+      crateElements = playState.crates.map(() => {
+        const el = document.createElement('div');
+        el.className = 'sandbox-sokoban-entity';
+        const inner = createCrateMarker();
+        el.appendChild(inner);
+        entityLayer.appendChild(el);
+        return { el, inner };
+      });
+
+      playerElement = document.createElement('div');
+      playerElement.className = 'sandbox-sokoban-entity';
+      playerElement.style.zIndex = '20';
+      playerElement.appendChild(createPlayerMarker());
+      entityLayer.appendChild(playerElement);
+    }
+
+    function updateEntities(){
+      if (!playState) return;
+      
+      const cellSize = 32;
+      const gap = 2;
+      const padding = 12;
+      const pitch = cellSize + gap;
+
+      // Update Crates
+      playState.crates.forEach((crate, i) => {
+        if (crateElements[i]){
+          const { el, inner } = crateElements[i];
+          el.style.transform = `translate(${crate.x * pitch + padding}px, ${crate.y * pitch + padding}px)`;
+          const onGoal = playState.goals.has(stageKey(crate.x, crate.y));
+          if (onGoal) inner.classList.add('on-goal');
+          else inner.classList.remove('on-goal');
+        }
+      });
+
+      // Update Player
+      if (playState.player && playerElement){
+        playerElement.style.transform = `translate(${playState.player.x * pitch + padding}px, ${playState.player.y * pitch + padding}px)`;
       }
     }
 
@@ -1221,31 +1348,60 @@
       const nextY = playState.player.y + dy;
       if (nextX < 0 || nextY < 0 || nextX >= playState.width || nextY >= playState.height) return;
       if (playState.tiles[nextY][nextX] === 'wall') return;
+      
       const crateIndex = playState.crates.findIndex(c => c.x === nextX && c.y === nextY);
       let crateMoved = false;
+      let nextCratePos = null;
+
       if (crateIndex !== -1){
         const pushX = nextX + dx;
         const pushY = nextY + dy;
         if (pushX < 0 || pushY < 0 || pushX >= playState.width || pushY >= playState.height) return;
         if (playState.tiles[pushY][pushX] === 'wall') return;
         if (playState.crates.some(c => c.x === pushX && c.y === pushY)) return;
-        const wasGoal = playState.goals.has(stageKey(nextX, nextY));
-        const willBeGoal = playState.goals.has(stageKey(pushX, pushY));
-        playState.crates[crateIndex] = { x: pushX, y: pushY };
+        nextCratePos = { x: pushX, y: pushY };
         crateMoved = true;
+      }
+
+      pushHistory();
+
+      if (crateMoved){
+        const wasGoal = playState.goals.has(stageKey(nextX, nextY));
+        const willBeGoal = playState.goals.has(stageKey(nextCratePos.x, nextCratePos.y));
+        playState.crates[crateIndex] = nextCratePos;
         if (!wasGoal && willBeGoal){
           totalFits += 1;
-          awardXp && awardXp(25, { type: 'crate_goal', x: pushX, y: pushY });
+          awardXp && awardXp(25, { type: 'crate_goal', x: nextCratePos.x, y: nextCratePos.y });
           setStatus(text('.status.crateFit', '木箱をはめました！ +25EXP'), '#facc15');
         }
       }
       playState.player = { x: nextX, y: nextY };
       playState.moves += 1;
-      renderPlayBoard();
+      updateEntities();
       updatePlayInfo();
       if (crateMoved){
         checkClear();
       }
+    }
+
+    function pushHistory(){
+      if (!playState) return;
+      playState.history.push({
+        player: { ...playState.player },
+        crates: playState.crates.map(c => ({ ...c })),
+        moves: playState.moves
+      });
+    }
+
+    function undo(){
+      if (!playState || !playState.history.length || playState.completed) return;
+      const prev = playState.history.pop();
+      playState.player = prev.player;
+      playState.crates = prev.crates;
+      playState.moves = prev.moves;
+      updateEntities();
+      updatePlayInfo();
+      setStatus(text('.status.undo', '1手戻しました。'), '#38bdf8');
     }
 
     function checkClear(){
@@ -1267,12 +1423,45 @@
         w: [0, -1], W: [0, -1], s: [0, 1], S: [0, 1], a: [-1, 0], A: [-1, 0], d: [1, 0], D: [1, 0]
       };
       const dir = keyMap[event.key];
+      if (event.key === 'z' || event.key === 'Z'){
+        undo();
+        return;
+      }
       if (!dir) return;
       event.preventDefault();
       tryMove(dir[0], dir[1]);
     }
 
     playBoard.addEventListener('keydown', handleKeydown);
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    function handleTouchStart(e){
+      if (e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
+
+    function handleTouchEnd(e){
+      if (e.changedTouches.length !== 1) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      
+      if (Math.max(absX, absY) > 30){
+        if (absX > absY){
+          tryMove(dx > 0 ? 1 : -1, 0);
+        } else {
+          tryMove(0, dy > 0 ? 1 : -1);
+        }
+        e.preventDefault();
+      }
+    }
+
+    playBoard.addEventListener('touchstart', handleTouchStart, { passive: false });
+    playBoard.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     function setMode(mode){
       if (mode === 'play'){
@@ -1328,6 +1517,8 @@
     function stop(){}
     function destroy(){
       playBoard.removeEventListener('keydown', handleKeydown);
+      playBoard.removeEventListener('touchstart', handleTouchStart);
+      playBoard.removeEventListener('touchend', handleTouchEnd);
       wrapper.remove();
     }
     function getScore(){

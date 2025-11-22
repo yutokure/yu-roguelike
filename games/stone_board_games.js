@@ -363,16 +363,16 @@
 
     if (overlineSeq){
       const cells = dedupeCells(overlineSeq.stones || []);
-      return { type: 'renju_overline', cells };
+      return { type: 'renju_overline', cells, origin: { x, y } };
     }
     if (!hasWin){
       if (patterns.openFours.length >= 2){
         const cells = dedupeCells(patterns.openFours.slice(0, 2).flat());
-        return { type: 'renju_double_four', cells };
+        return { type: 'renju_double_four', cells, origin: { x, y } };
       }
       if (patterns.openThrees.length >= 2){
         const cells = dedupeCells(patterns.openThrees.slice(0, 2).flat());
-        return { type: 'renju_double_three', cells };
+        return { type: 'renju_double_three', cells, origin: { x, y } };
       }
     }
     return null;
@@ -657,6 +657,17 @@
       let score = evaluateMove(board, cfg, mv, AI);
       if (difficulty === 'HARD'){
         board[mv.y][mv.x] = AI;
+        const aiNextWins = immediateWinCount(board, cfg, AI);
+        if (aiNextWins >= 2) score += 480 + aiNextWins * 60;
+        else if (aiNextWins === 1) score += 180;
+
+        const playerImmediateWins = immediateWinCount(board, cfg, PLAYER);
+        if (playerImmediateWins >= 2){
+          board[mv.y][mv.x] = EMPTY;
+          score -= 540 + playerImmediateWins * 80;
+          if (score <= bestScore - 120) continue;
+        }
+
         const branchLimit = cfg.dropMode ? 5 : 6;
         const replies = prioritizeMovesForColor(board, cfg, PLAYER, branchLimit);
         let worstThreat = 0;
@@ -1016,7 +1027,8 @@
         if (renjuFoulHint && renjuFoulHint.cells && renjuFoulHint.cells.length){
           ctx.save();
           const accent = renjuFoulHint.type === 'renju_overline' ? [220,38,38] : [249,115,22];
-          ctx.strokeStyle = `rgba(${accent[0]},${accent[1]},${accent[2]},0.85)`;
+          const strokeStyle = `rgba(${accent[0]},${accent[1]},${accent[2]},0.85)`;
+          ctx.strokeStyle = strokeStyle;
           ctx.lineWidth = 3;
           ctx.setLineDash([4,4]);
           for (const cellPos of renjuFoulHint.cells){
@@ -1024,6 +1036,21 @@
             const cy = offsetY + (cellPos.y + 0.5) * cell;
             ctx.beginPath();
             ctx.arc(cx, cy, cell * 0.46, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          const origin = renjuFoulHint.origin || renjuFoulHint.cells[0];
+          if (origin){
+            const cx = offsetX + (origin.x + 0.5) * cell;
+            const cy = offsetY + (origin.y + 0.5) * cell;
+            const crossR = cell * 0.42;
+            ctx.setLineDash([]);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = `rgba(220,38,38,0.95)`;
+            ctx.beginPath();
+            ctx.moveTo(cx - crossR, cy - crossR);
+            ctx.lineTo(cx + crossR, cy + crossR);
+            ctx.moveTo(cx - crossR, cy + crossR);
+            ctx.lineTo(cx + crossR, cy - crossR);
             ctx.stroke();
           }
           ctx.restore();

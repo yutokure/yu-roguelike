@@ -15,7 +15,7 @@
     .phys-action-group .phys-action-btn:nth-child(5),
     .phys-action-group .phys-action-btn:nth-child(6) { background:rgba(226,232,240,0.15); color:#f8fafc; border:1px solid rgba(226,232,240,0.35); }
     .phys-layout { display:grid; grid-template-columns: minmax(320px, 2fr) minmax(220px, 1fr); gap:12px; }
-    .phys-viewport { background:#0f172a; border-radius:12px; border:1px solid rgba(15,23,42,0.45); min-height:420px; position:relative; overflow:hidden; }
+    .phys-viewport { background:#0f172a; border-radius:12px; border:1px solid rgba(15,23,42,0.45); min-height:420px; position:relative; overflow:hidden; aspect-ratio:1/1; }
     .phys-canvas { width:100%; height:100%; display:block; background:transparent; }
     .phys-inspector { background:rgba(15,23,42,0.85); color:#e2e8f0; border-radius:12px; padding:12px; border:1px solid rgba(148,163,184,0.35); max-height:520px; overflow:auto; }
     .phys-inspector h3 { margin-top:0; font-size:16px; letter-spacing:0.02em; }
@@ -1460,12 +1460,11 @@
 
     function resizeCanvas(){
       const rect = viewport.getBoundingClientRect();
-      const width = Math.max(480, Math.floor(rect.width));
-      const height = Math.max(360, Math.floor(rect.height));
-      canvas.width = width;
-      canvas.height = height;
-      state.bounds.width = width;
-      state.bounds.height = height;
+      const size = Math.max(420, Math.floor(Math.min(rect.width, rect.height)));
+      canvas.width = size;
+      canvas.height = size;
+      state.bounds.width = size;
+      state.bounds.height = size;
     }
 
     function worldFromEvent(evt){

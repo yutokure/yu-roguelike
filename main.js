@@ -12958,7 +12958,9 @@ function generateImperfectMazeType() {
     // Initialize grid with walls
     const grid = Array.from({ length: height }, () => Array(width).fill(1));
     const stack = [];
-    grid[start.y]?.[start.x] = 0;
+    if (grid[start.y]) {
+        grid[start.y][start.x] = 0;
+    }
     stack.push({ x: start.x, y: start.y });
 
     const carveDirs = [
@@ -13010,7 +13012,9 @@ function generateImperfectMazeType() {
 
     // Ensure start/goal are clear
     grid[start.y][start.x] = 0;
-    grid[goal.y]?.[goal.x] = 0;
+    if (grid[goal.y]) {
+        grid[goal.y][goal.x] = 0;
+    }
 
     // Write back to global map
     for (let y = 0; y < height; y++) {

@@ -674,7 +674,16 @@
     }
 
     function cloneScope(source = scope){
-      const target = Object.create(null);
+      const target = {};
+      if (!source) return target;
+      Object.keys(source).forEach(key => {
+        target[key] = source[key];
+      });
+      return target;
+    }
+
+    function cloneScopePlain(source = scope){
+      const target = {};
       if (!source) return target;
       Object.keys(source).forEach(key => {
         target[key] = source[key];
@@ -691,6 +700,14 @@
     }
 
     function normalizeEquation(expr){
+      if (expr && expr.isOperatorNode && expr.op === '=' && Array.isArray(expr.args) && expr.args.length === 2) {
+        try {
+          const lhs = expr.args[0].toString({ parenthesis: 'auto' });
+          const rhs = expr.args[1].toString({ parenthesis: 'auto' });
+          return math.parse(`(${lhs}) - (${rhs})`);
+        } catch {}
+        return expr;
+      }
       if (typeof expr !== 'string') return expr;
       if (!expr.includes('=')) return expr;
       const [lhs, rhs] = expr.split('=').map(part => part.trim());
@@ -2247,6 +2264,61 @@
       return target;
     }
 
+    function isMathNode(value){
+      return Boolean(value && value.isNode === true);
+    }
+
+    function unwrapRawArg(value, evalScope, { allowNode = false, flattenParenthesis = true, preserveSymbolName = false } = {}){
+      if (value == null) return value;
+      if (value && typeof value.isParenthesisNode === 'boolean' && value.isParenthesisNode && value.content && flattenParenthesis){
+        return unwrapRawArg(value.content, evalScope, { allowNode, flattenParenthesis });
+      }
+      if (value && typeof value.isArrayNode === 'boolean' && value.isArrayNode && Array.isArray(value.items)){
+        return value.items.map(item => unwrapRawArg(item, evalScope, { allowNode, flattenParenthesis }));
+      }
+      if (Array.isArray(value)){
+        return value.map(item => unwrapRawArg(item, evalScope, { allowNode, flattenParenthesis }));
+      }
+      if (value && value.isSymbolNode && typeof value.name === 'string'){
+        if (preserveSymbolName) return value.name;
+        if (!allowNode && typeof value.evaluate === 'function'){
+          try { return value.evaluate(evalScope); } catch {}
+        }
+        return value.name;
+      }
+      if (isMathNode(value)){
+        if (allowNode) return value;
+        if (typeof value.evaluate === 'function'){
+          return value.evaluate(evalScope);
+        }
+      }
+      return value;
+    }
+
+    function buildEvalScope(rawScope){
+      const base = cloneScopePlain(scope);
+      if (rawScope && rawScope.constructor === Object) {
+        Object.assign(base, rawScope);
+      }
+      return base;
+    }
+
+    function evaluateNodeSafely(node, localScope){
+      if (!node || typeof node.evaluate !== 'function') return node;
+      try {
+        return node.evaluate(localScope);
+      } catch (err) {
+        if (numericMath && typeof node.toString === 'function') {
+          const exprText = node.toString({ parenthesis: 'auto' });
+          try {
+            const numericScope = buildNumericScope(localScope);
+            return numericMath.evaluate(exprText, numericScope);
+          } catch {}
+        }
+        throw err;
+      }
+    }
+
     function formatApproxValue(value){
       if (value == null) return 'null';
       if (!numericMath) return beautifySymbols(String(value));
@@ -2906,7 +2978,7 @@
       const fn = (x) => {
         const localScope = cloneScope(baseScope);
         localScope[varName] = x;
-        const value = node.evaluate(localScope);
+        const value = evaluateNodeSafely(node, localScope);
         return ensureFiniteNumber(value);
       };
       if (lowerBound === upperBound) return 0;
@@ -2924,21 +2996,51 @@
       const maxIter = Number(options.maxIterations ?? 32);
       const tol = Number(options.tolerance ?? 1e-10);
       const snapshot = cloneScope(scope);
-      for (let i = 0; i < maxIter; i++) {
-        const local = cloneScope(snapshot);
-        local[varName] = x;
-        const fx = ensureFiniteNumber(node.evaluate(local));
-        if (Math.abs(fx) < tol) return x;
-        const dfx = ensureFiniteNumber(derivative.evaluate(local));
-        if (!Number.isFinite(dfx) || Math.abs(dfx) < 1e-12) {
-          throw new Error(errorText('newtonDerivativeZero', '導関数が 0 に近いためニュートン法が収束しません。'));
+      try {
+        for (let i = 0; i < maxIter; i++) {
+          const local = cloneScope(snapshot);
+          local[varName] = x;
+          const fx = ensureFiniteNumber(evaluateNodeSafely(node, local));
+          if (Math.abs(fx) < tol) return x;
+          const dfx = ensureFiniteNumber(evaluateNodeSafely(derivative, local));
+          if (!Number.isFinite(dfx) || Math.abs(dfx) < 1e-12) {
+            throw new Error(errorText('newtonDerivativeZero', '導関数が 0 に近いためニュートン法が収束しません。'));
+          }
+          const next = x - fx / dfx;
+          if (!Number.isFinite(next)) throw new Error(errorText('iterationDiverged', '反復計算が発散しました。'));
+          if (Math.abs(next - x) < tol) return next;
+          x = next;
         }
-        const next = x - fx / dfx;
-        if (!Number.isFinite(next)) throw new Error(errorText('iterationDiverged', '反復計算が発散しました。'));
-        if (Math.abs(next - x) < tol) return next;
-        x = next;
+        throw new Error(errorText('iterationNotConverged', '指定した反復回数内に収束しませんでした。'));
+      } catch (err) {
+        const exprText = typeof normalized === 'string'
+          ? normalized
+          : (normalized && typeof normalized.toString === 'function'
+            ? normalized.toString({ parenthesis: 'auto' })
+            : null);
+        if (!numericMath || !exprText) throw err;
+        try {
+          const numericNode = numericMath.parse(exprText);
+          const numericDerivative = numericMath.derivative(numericNode, varName);
+          const numericBase = buildNumericScope(scope);
+          let current = Number(guess);
+          for (let i = 0; i < maxIter; i++) {
+            const local = Object.assign({}, numericBase);
+            local[varName] = numericMath.bignumber ? numericMath.bignumber(current) : current;
+            const fx = ensureFiniteNumber(evaluateNodeSafely(numericNode, local));
+            if (Math.abs(fx) < tol) return ensureFiniteNumber(current);
+            const dfx = ensureFiniteNumber(evaluateNodeSafely(numericDerivative, local));
+            if (!Number.isFinite(dfx) || Math.abs(dfx) < 1e-12) {
+              break;
+            }
+            const next = current - fx / dfx;
+            if (!Number.isFinite(next)) break;
+            if (Math.abs(next - current) < tol) return next;
+            current = next;
+          }
+        } catch {}
+        throw err;
       }
-      throw new Error(errorText('iterationNotConverged', '指定した反復回数内に収束しませんでした。'));
     }
 
     function solveLinearSystem(matrix, vector){
@@ -2975,13 +3077,13 @@
       for (let iter = 0; iter < maxIter; iter++) {
         const local = cloneScope(snapshot);
         varNames.forEach((name, idx) => { local[name] = current[idx]; });
-        const fValues = nodes.map(node => ensureFiniteNumber(node.evaluate(local)));
+        const fValues = nodes.map(node => ensureFiniteNumber(evaluateNodeSafely(node, local)));
         if (fValues.every(val => Math.abs(val) < tol)) {
           const result = {};
           varNames.forEach((name, idx) => { result[name] = current[idx]; });
           return result;
         }
-        const jacobianMatrix = jacNodes.map(row => row.map(cell => ensureFiniteNumber(cell.evaluate(local))));
+        const jacobianMatrix = jacNodes.map(row => row.map(cell => ensureFiniteNumber(evaluateNodeSafely(cell, local))));
         const delta = solveLinearSystem(jacobianMatrix, fValues.map(val => [val]));
         if (!Array.isArray(delta) || delta.length !== size) {
           throw new Error(errorText('jacobianSolveFailed', 'ヤコビ行列の解が取得できませんでした。'));
@@ -3009,7 +3111,7 @@
       const root = newtonSolve(first, varName, guess, options);
       const local = cloneScope(scope);
       local[varName] = root;
-      const curvature = ensureFiniteNumber(second.evaluate(local));
+      const curvature = ensureFiniteNumber(evaluateNodeSafely(second, local));
       const curvatureTol = Math.abs(Number(options.curvatureTolerance ?? 1e-7));
       if (maximize && curvature > curvatureTol) {
         throw new Error(errorText('maximizeFoundMinimum', '指定の初期値付近では最大値ではなく最小値が見つかりました。'));
@@ -3017,7 +3119,7 @@
       if (!maximize && curvature < -curvatureTol) {
         throw new Error(errorText('minimizeFoundMaximum', '指定の初期値付近では最小値ではなく最大値が見つかりました。'));
       }
-      return { point: root, value: ensureFiniteNumber(node.evaluate(local)) };
+      return { point: root, value: ensureFiniteNumber(evaluateNodeSafely(node, local)) };
     }
 
     function digammaReal(x){
@@ -3899,27 +4001,91 @@
         overrides.beta = function(a, b){
           return mapStructure(targetMath, a, left => mapStructure(targetMath, b, right => betaReal(left, right)));
         };
-        overrides.taylorSeries = function(expr, variable, order, center){
-          return computeTaylorSeries(expr, variable, order, center);
+        overrides.taylorSeries = function taylorSeriesWrapper(args, injectedMath, rawScope){
+          if (Array.isArray(args)) {
+            const evalScope = buildEvalScope(rawScope);
+            const exprArg = unwrapRawArg(args[0], evalScope, { allowNode: true });
+            const variableArg = unwrapRawArg(args[1], evalScope, { allowNode: false, preserveSymbolName: true });
+            const orderArg = unwrapRawArg(args[2], evalScope, { allowNode: false });
+            const centerArg = unwrapRawArg(args[3], evalScope, { allowNode: false });
+            return computeTaylorSeries(exprArg, variableArg, orderArg, centerArg);
+          }
+          return computeTaylorSeries(args, injectedMath, rawScope, arguments[3]);
         };
-        overrides.numericIntegrate = function(expr, variable, lower, upper, options){
-          return numericIntegrate(expr, variable, lower, upper, options);
+        overrides.taylorSeries.rawArgs = true;
+
+        overrides.numericIntegrate = function numericIntegrateWrapper(args, injectedMath, rawScope){
+          if (Array.isArray(args)) {
+            const evalScope = buildEvalScope(rawScope);
+            const exprArg = unwrapRawArg(args[0], evalScope, { allowNode: true });
+            const variableArg = unwrapRawArg(args[1], evalScope, { allowNode: false, preserveSymbolName: true });
+            const lowerArg = unwrapRawArg(args[2], evalScope, { allowNode: false });
+            const upperArg = unwrapRawArg(args[3], evalScope, { allowNode: false });
+            const optionsArg = unwrapRawArg(args[4], evalScope, { allowNode: false });
+            return numericIntegrate(exprArg, variableArg, lowerArg, upperArg, optionsArg);
+          }
+          return numericIntegrate(args, injectedMath, rawScope, arguments[3], arguments[4]);
         };
-        overrides.solveEq = function(expr, variable, guess, options){
-          return newtonSolve(expr, variable, guess, options);
+        overrides.numericIntegrate.rawArgs = true;
+
+        overrides.solveEq = function solveEqWrapper(args, injectedMath, rawScope){
+          if (Array.isArray(args)) {
+            const evalScope = buildEvalScope(rawScope);
+            const exprArg = unwrapRawArg(args[0], evalScope, { allowNode: true });
+            const exprValue = isMathNode(exprArg) ? exprArg.toString({ parenthesis: 'auto' }) : exprArg;
+            const variableArg = unwrapRawArg(args[1], evalScope, { allowNode: false, preserveSymbolName: true });
+            const guessArg = unwrapRawArg(args[2], evalScope, { allowNode: false });
+            const optionsArg = unwrapRawArg(args[3], evalScope, { allowNode: false });
+            return newtonSolve(exprValue, variableArg, guessArg, optionsArg);
+          }
+          return newtonSolve(args, injectedMath, rawScope, arguments[3]);
         };
-        overrides.solveSystem = function(equations, variables, initialGuess, options){
-          return newtonSystem(equations, variables, initialGuess, options);
+        overrides.solveEq.rawArgs = true;
+
+        overrides.solveSystem = function solveSystemWrapper(args, injectedMath, rawScope){
+          if (Array.isArray(args)) {
+            const evalScope = buildEvalScope(rawScope);
+            const equationsRaw = unwrapRawArg(args[0], evalScope, { allowNode: true });
+            const equationsArg = Array.isArray(equationsRaw)
+              ? equationsRaw.map(item => isMathNode(item) ? item.toString({ parenthesis: 'auto' }) : item)
+              : (isMathNode(equationsRaw) ? equationsRaw.toString({ parenthesis: 'auto' }) : equationsRaw);
+            const variablesArg = unwrapRawArg(args[1], evalScope, { allowNode: false, preserveSymbolName: true });
+            const guessArg = unwrapRawArg(args[2], evalScope, { allowNode: false });
+            const optionsArg = unwrapRawArg(args[3], evalScope, { allowNode: false });
+            return newtonSystem(equationsArg, variablesArg, guessArg, optionsArg);
+          }
+          return newtonSystem(args, injectedMath, rawScope, arguments[3]);
         };
+        overrides.solveSystem.rawArgs = true;
+
         overrides.solveLinear = function(matrix, vector){
           return solveLinearSystem(matrix, vector);
         };
-        overrides.minimize = function(expr, variable, guess, options){
-          return optimize(expr, variable, guess, options, false);
+        overrides.minimize = function minimizeWrapper(args, injectedMath, rawScope){
+          if (Array.isArray(args)) {
+            const evalScope = buildEvalScope(rawScope);
+            const exprArg = unwrapRawArg(args[0], evalScope, { allowNode: true });
+            const variableArg = unwrapRawArg(args[1], evalScope, { allowNode: false, preserveSymbolName: true });
+            const guessArg = unwrapRawArg(args[2], evalScope, { allowNode: false });
+            const optionsArg = unwrapRawArg(args[3], evalScope, { allowNode: false });
+            return optimize(exprArg, variableArg, guessArg, optionsArg, false);
+          }
+          return optimize(args, injectedMath, rawScope, arguments[3], false);
         };
-        overrides.maximize = function(expr, variable, guess, options){
-          return optimize(expr, variable, guess, options, true);
+        overrides.minimize.rawArgs = true;
+
+        overrides.maximize = function maximizeWrapper(args, injectedMath, rawScope){
+          if (Array.isArray(args)) {
+            const evalScope = buildEvalScope(rawScope);
+            const exprArg = unwrapRawArg(args[0], evalScope, { allowNode: true });
+            const variableArg = unwrapRawArg(args[1], evalScope, { allowNode: false, preserveSymbolName: true });
+            const guessArg = unwrapRawArg(args[2], evalScope, { allowNode: false });
+            const optionsArg = unwrapRawArg(args[3], evalScope, { allowNode: false });
+            return optimize(exprArg, variableArg, guessArg, optionsArg, true);
+          }
+          return optimize(args, injectedMath, rawScope, arguments[3], true);
         };
+        overrides.maximize.rawArgs = true;
         overrides.digamma = function(x){
           return digammaReal(x);
         };

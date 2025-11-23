@@ -577,7 +577,8 @@
     let wireSeq = 1;
     let pendingSerializedState = null;
     const paintState = { active: false, pointerId: null, lastKey: null, blockClick: false };
-    const panState = { active: false, pointerId: null, lastX: 0, lastY: 0, moved: false, blockClick: false };
+    const panState = { active: false, pointerId: null, lastX: 0, lastY: 0, moved: false, blockClick: false, prevCursor: '' };
+    const contextMenuState = { visible: false, cell: null };
     const EXPORT_FILE_PREFIX = 'sandbox-dungeon';
     const EXPORT_SCHEMA = 'yu.sandbox.dungeon';
     const EXPORT_KIND = 'sandbox_dungeon';
@@ -4670,7 +4671,35 @@
         restoreActiveInput(focusSnapshot);
     }
 
+    function beginPan(event, { allowSelect = true } = {}) {
+        const cell = allowSelect ? getCellFromEvent(event) : null;
+        if (allowSelect && cell) {
+            setSelectedCell(cell.x, cell.y);
+        }
+        panState.active = true;
+        panState.pointerId = event.pointerId;
+        panState.lastX = event.clientX;
+        panState.lastY = event.clientY;
+        panState.moved = false;
+        panState.blockClick = false;
+        panState.prevCursor = refs.gridCanvas?.style.cursor || '';
+        if (refs.gridCanvas) {
+            refs.gridCanvas.style.cursor = 'grabbing';
+        }
+        if (refs.gridCanvas && typeof refs.gridCanvas.setPointerCapture === 'function') {
+            try {
+                refs.gridCanvas.setPointerCapture(event.pointerId);
+            } catch (err) {}
+        }
+    }
+
     function handleGridPointerDown(event) {
+        if (event.button === 1) {
+            event.preventDefault();
+            beginPan(event, { allowSelect: false });
+            return;
+        }
+        if (event.button === 2) return;
         if (typeof event.button === 'number' && event.button !== 0) return;
         const cell = getCellFromEvent(event);
         if (state.eyedropper?.active && cell) {
@@ -4682,21 +4711,9 @@
             return;
         }
         if (state.brush === 'select') {
-            if (cell) {
-                setSelectedCell(cell.x, cell.y);
-                render();
-            }
-            panState.active = true;
-            panState.pointerId = event.pointerId;
-            panState.lastX = event.clientX;
-            panState.lastY = event.clientY;
-            panState.moved = false;
-            panState.blockClick = false;
-            if (refs.gridCanvas && typeof refs.gridCanvas.setPointerCapture === 'function') {
-                try {
-                    refs.gridCanvas.setPointerCapture(event.pointerId);
-                } catch (err) {}
-            }
+            if (cell) setSelectedCell(cell.x, cell.y);
+            render();
+            beginPan(event);
             event.preventDefault();
             return;
         }
@@ -4728,6 +4745,7 @@
                 clampViewOffset();
                 applyViewportTransform();
                 panState.blockClick = panState.moved;
+                repositionContextMenuIfNeeded();
             }
             panState.lastX = event.clientX;
             panState.lastY = event.clientY;
@@ -4749,6 +4767,7 @@
         const metrics = getGridContentMetrics();
         if (!metrics) return;
         event.preventDefault();
+        hideContextMenu();
         const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
         const nextScale = clamp(state.view.minScale || 0.25, state.view.maxScale || 4, state.view.scale * zoomFactor);
         if (nextScale === state.view.scale) return;
@@ -4761,6 +4780,120 @@
         state.view.offsetY = py - worldY * nextScale;
         clampViewOffset();
         applyViewportTransform();
+        repositionContextMenuIfNeeded();
+    }
+
+    function hideContextMenu() {
+        const menu = refs.gridMenu;
+        if (!menu) return;
+        contextMenuState.visible = false;
+        contextMenuState.cell = null;
+        menu.style.left = '-9999px';
+        menu.style.top = '-9999px';
+        menu.classList.remove('visible');
+        menu.style.display = 'none';
+    }
+
+    function getCellClientPosition(cell) {
+        if (!cell || !state?.renderMetrics || !state?.view) return null;
+        const metrics = getGridContentMetrics();
+        if (!metrics) return null;
+        const cellSize = state.renderMetrics.cellSize || RENDER_CELL_SIZE;
+        const gap = typeof state.renderMetrics.gap === 'number' ? state.renderMetrics.gap : RENDER_CELL_GAP;
+        const total = cellSize + gap;
+        const originX = cell.x * total;
+        const originY = cell.y * total;
+        const x = metrics.contentLeft + state.view.offsetX + originX * state.view.scale;
+        const y = metrics.contentTop + state.view.offsetY + originY * state.view.scale;
+        return { x, y };
+    }
+
+    function positionContextMenu(clientX, clientY) {
+        const menu = refs.gridMenu;
+        if (!menu) return;
+        const offset = 8;
+        const scrollX = typeof window !== 'undefined' ? window.scrollX || window.pageXOffset || 0 : 0;
+        const scrollY = typeof window !== 'undefined' ? window.scrollY || window.pageYOffset || 0 : 0;
+        menu.style.display = 'block';
+        const left = clientX + scrollX + offset;
+        const top = clientY + scrollY + offset;
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
+    }
+
+    function repositionContextMenuIfNeeded() {
+        if (!contextMenuState.visible || !contextMenuState.cell) return;
+        const pos = getCellClientPosition(contextMenuState.cell);
+        if (!pos) return;
+        positionContextMenu(pos.x, pos.y);
+    }
+
+    function handleWindowScroll() {
+        if (!contextMenuState.visible) return;
+        repositionContextMenuIfNeeded();
+    }
+
+    function showContextMenu(cell, event) {
+        const menu = refs.gridMenu;
+        if (!menu || !cell) return;
+        contextMenuState.visible = true;
+        contextMenuState.cell = cell;
+        positionContextMenu(event.clientX, event.clientY);
+        menu.classList.add('visible');
+    }
+
+    function handleContextMenuAction(action) {
+        if (!contextMenuState.cell) return hideContextMenu();
+        const { x, y } = contextMenuState.cell;
+        const brushMap = {
+            floor: 'floor',
+            wall: 'wall',
+            start: 'start',
+            stairs: 'stairs',
+            gate: 'gate'
+        };
+        if (action === 'close') {
+            hideContextMenu();
+            return;
+        }
+        const specialFloorAction = action.startsWith('floor-');
+        if (!brushMap[action] && !specialFloorAction) {
+            hideContextMenu();
+            return;
+        }
+        if (specialFloorAction) {
+            const typeKey = action.replace('floor-', '');
+            const prevBrush = state.brush;
+            const prevSettings = { ...state.brushSettings };
+            const needsDirection = FLOOR_TYPES_NEED_DIRECTION.has(typeKey === 'one-way' ? 'one-way' : typeKey === 'conveyor' ? 'conveyor' : typeKey);
+            let floorDir = prevSettings.floorDir || '';
+            if (needsDirection && !FLOOR_DIRECTION_OPTIONS.includes(floorDir)) {
+                floorDir = 'up';
+            }
+            state.brushSettings = { ...prevSettings, floorType: typeKey, floorDir };
+            state.brush = 'floor';
+            applyBrushToCell(x, y, { updateSelection: true });
+            state.brushSettings = prevSettings;
+            state.brush = prevBrush;
+            render();
+            hideContextMenu();
+            return;
+        }
+        const prevBrush = state.brush;
+        state.brush = brushMap[action];
+        applyBrushToCell(x, y, { updateSelection: true });
+        state.brush = prevBrush;
+        render();
+        hideContextMenu();
+    }
+
+    function handleGridContextMenu(event) {
+        const cell = getCellFromEvent(event);
+        hideContextMenu();
+        if (!cell) return;
+        event.preventDefault();
+        setSelectedCell(cell.x, cell.y);
+        showContextMenu(cell, event);
     }
 
     function endPointerPaint(pointerId) {
@@ -4792,6 +4925,9 @@
         panState.lastX = 0;
         panState.lastY = 0;
         panState.blockClick = moved;
+        if (refs.gridCanvas) {
+            refs.gridCanvas.style.cursor = panState.prevCursor || '';
+        }
         setTimeout(() => { panState.blockClick = false; }, 0);
         if (!moved && event) {
             const cell = getCellFromEvent(event);
@@ -4800,15 +4936,18 @@
                 render();
             }
         }
+        updateGridCursor();
         return true;
     }
 
     function handleGlobalPointerUp(event) {
         if (endPan(event.pointerId, event)) return;
         endPointerPaint(event.pointerId);
+        repositionContextMenuIfNeeded();
     }
 
     function handleGridClick(event) {
+        hideContextMenu();
         if (paintState.blockClick || panState.blockClick) {
             paintState.blockClick = false;
             panState.blockClick = false;
@@ -4834,6 +4973,22 @@
         }
         applyBrushToCell(cell.x, cell.y, { updateSelection: true });
         render();
+    }
+
+    function handleContextMenuClick(event) {
+        const actionButton = event.target.closest('[data-menu-action]');
+        if (!actionButton) return;
+        const action = actionButton.dataset.menuAction;
+        event.preventDefault();
+        handleContextMenuAction(action);
+    }
+
+    function handleGlobalPointerDown(event) {
+        if (!contextMenuState.visible) return;
+        const menu = refs.gridMenu;
+        if (!menu) return;
+        if (menu.contains(event.target)) return;
+        hideContextMenu();
     }
 
     function handleBrushClick(event) {
@@ -5131,6 +5286,7 @@
             grid: panel.querySelector('#sandbox-grid'),
             gridCanvas: panel.querySelector('#sandbox-grid-canvas'),
             gridAria: panel.querySelector('#sandbox-grid-aria'),
+            gridMenu: panel.querySelector('#sandbox-grid-menu'),
             brushButtons: Array.from(panel.querySelectorAll('.sandbox-brush')),
             selectedCell: panel.querySelector('#sandbox-selected-cell'),
             widthInput: panel.querySelector('#sandbox-width'),
@@ -5204,6 +5360,12 @@
             wireClearSelection: panel.querySelector('#sandbox-wire-clear-selection'),
             wireStatusbar: panel.querySelector('#sandbox-wire-editor .sandbox-wire-statusbar')
         };
+
+        // Place the context menu directly under body so its positioning is not altered by ancestor scroll/transform.
+        if (refs.gridMenu && !refs.gridMenu.dataset.detachedToBody) {
+            document.body.appendChild(refs.gridMenu);
+            refs.gridMenu.dataset.detachedToBody = 'true';
+        }
 
         state = {
             width: DEFAULT_WIDTH,
@@ -5285,12 +5447,18 @@
             refs.gridCanvas.addEventListener('click', handleGridClick);
             refs.gridCanvas.addEventListener('pointerdown', handleGridPointerDown);
             refs.gridCanvas.addEventListener('pointermove', handleGridPointerMove);
+            refs.gridCanvas.addEventListener('contextmenu', handleGridContextMenu);
         }
         if (refs.grid) {
             refs.grid.addEventListener('wheel', handleGridWheel, { passive: false });
         }
+        if (refs.gridMenu) {
+            refs.gridMenu.addEventListener('click', handleContextMenuClick);
+        }
+        window.addEventListener('pointerdown', handleGlobalPointerDown);
         window.addEventListener('pointerup', handleGlobalPointerUp);
         window.addEventListener('pointercancel', handleGlobalPointerUp);
+        window.addEventListener('scroll', handleWindowScroll, { passive: true });
         window.addEventListener('resize', () => updateViewConstraints({ forceFit: false }));
         if (refs.brushButtons?.length) {
             refs.brushButtons.forEach(btn => btn.addEventListener('click', handleBrushClick));

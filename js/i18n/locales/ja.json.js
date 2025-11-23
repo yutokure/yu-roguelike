@@ -19307,6 +19307,37 @@
     }
   }
   store['ja'] = locale;
+  // Sandbox group tools localization additions
+  if (!locale.tools) locale.tools = {};
+  if (!locale.tools.sandbox) locale.tools.sandbox = {};
+  if (!locale.tools.sandbox.map) locale.tools.sandbox.map = {};
+  if (!locale.tools.sandbox.map.brush) locale.tools.sandbox.map.brush = { modes: {} };
+  if (!locale.tools.sandbox.map.brush.modes) locale.tools.sandbox.map.brush.modes = {};
+  locale.tools.sandbox.map.brush.modes.group = "グループ選択";
+  locale.tools.sandbox.map.group = {
+    create: "グループ化",
+    clear: "解除",
+    rotateLeft: "左回転",
+    rotateRight: "右回転",
+    moveUp: "上に移動",
+    moveDown: "下に移動",
+    moveLeft: "左に移動",
+    moveRight: "右に移動",
+    copy: "選択をコピー",
+    cut: "選択を切り取り",
+    paste: "貼り付け",
+    status: "選択: {count}マス / グループ: {group}",
+    save: "選択を保存",
+    apply: "選択を配置",
+    remove: "削除",
+    palette: { title: "構造パレット", ariaLabel: "保存した構造", empty: "まだ構造がありません" },
+    defaultName: "構造{index}",
+    errors: {
+      outOfBounds: "配置範囲がマップ外です。",
+      cannotMove: "これ以上移動できません。",
+      rotateClipped: "回転後のサイズが収まりません。位置をずらしてください。"
+    }
+  };
   if (!store['ja']) {
     store['ja'] = {};
   }

@@ -65,9 +65,10 @@
     const MIN_SIZE_FALLBACK = 5;
     const MAX_SIZE_FALLBACK = 60;
     const MAX_LEVEL_FALLBACK = 999;
-    const BRUSHES = ['select', 'floor', 'wall', 'start', 'stairs', 'gate', 'enemy', 'domain', 'hatena'];
+    const BRUSHES = ['select', 'group', 'floor', 'wall', 'start', 'stairs', 'gate', 'enemy', 'domain', 'hatena'];
     const BRUSH_CURSOR = {
         select: 'default',
+        group: 'crosshair',
         floor: 'pointer',
         wall: 'pointer',
         start: 'pointer',
@@ -95,6 +96,7 @@
     const GRID_BORDER_FLOOR = '#cbd5f5';
     const GRID_BORDER_WALL = '#0f172a';
     const GRID_SELECTION_COLOR = '#38bdf8';
+    const GRID_GROUP_SELECTION_COLOR = '#22c55e';
     const GRID_START_COLOR = '#22d3ee';
     const GRID_STAIRS_COLOR = '#f97316';
     const GRID_SELECTED_ENEMY_COLOR = '#f97316';
@@ -578,6 +580,7 @@
     let pendingSerializedState = null;
     const paintState = { active: false, pointerId: null, lastKey: null, blockClick: false };
     const panState = { active: false, pointerId: null, lastX: 0, lastY: 0, moved: false, blockClick: false, prevCursor: '' };
+    const selectionState = { active: false, start: null, end: null, pointerId: null, moved: false, blockClick: false };
     const contextMenuState = { visible: false, cell: null };
     const EXPORT_FILE_PREFIX = 'sandbox-dungeon';
     const EXPORT_SCHEMA = 'yu.sandbox.dungeon';
@@ -791,6 +794,21 @@
     function cloneMetaGrid(meta) {
         if (!Array.isArray(meta)) return [];
         return meta.map(row => Array.isArray(row) ? row.map(cell => (cell ? { ...cell } : null)) : []);
+    }
+
+    function cloneSnapshot(snapshot) {
+        if (!snapshot) return null;
+        return {
+            width: snapshot.width,
+            height: snapshot.height,
+            grid: cloneGrid(snapshot.grid || []),
+            meta: cloneMetaGrid(snapshot.meta || []),
+            portals: Array.isArray(snapshot.portals) ? snapshot.portals.map(p => ({ ...p })) : [],
+            enemies: Array.isArray(snapshot.enemies) ? snapshot.enemies.map(e => ({ ...e })) : [],
+            domainEffects: Array.isArray(snapshot.domainEffects) ? snapshot.domainEffects.map(d => ({ ...d })) : [],
+            hatenaBlocks: Array.isArray(snapshot.hatenaBlocks) ? snapshot.hatenaBlocks.map(h => ({ ...h })) : [],
+            playerStart: snapshot.playerStart ? { ...snapshot.playerStart } : null
+        };
     }
 
     function sanitizeGimmickType(type) {
@@ -1432,6 +1450,258 @@
         return changed;
     }
 
+    function clearRectArea(x, y, width, height) {
+        const map = getActiveMapRecord();
+        for (let py = y; py < y + height; py++) {
+            for (let px = x; px < x + width; px++) {
+                if (px < 0 || py < 0 || px >= state.width || py >= state.height) continue;
+                state.grid[py][px] = 0;
+                state.meta[py][px] = normalizeMetaObject(null, true);
+                if (state.playerStart && state.playerStart.x === px && state.playerStart.y === py) {
+                    state.playerStart = null;
+                    if (map) map.playerStart = null;
+                }
+            }
+        }
+        const isInside = (px, py) => px >= x && px < x + width && py >= y && py < y + height;
+        state.portals = state.portals.filter(portal => !(portal && Number.isFinite(portal.x) && Number.isFinite(portal.y) && isInside(portal.x, portal.y)));
+        state.enemies = state.enemies.map(enemy => isInside(enemy.x, enemy.y) ? { ...enemy, x: null, y: null } : enemy);
+        state.domainEffects = state.domainEffects.map(effect => isInside(effect.x, effect.y) ? { ...effect, x: null, y: null } : effect);
+        state.hatenaBlocks = state.hatenaBlocks.map(block => isInside(block?.x, block?.y) ? { ...block, x: null, y: null } : block);
+        if (map) {
+            map.grid = state.grid;
+            map.meta = state.meta;
+            map.portals = state.portals;
+            map.enemies = state.enemies;
+            map.domainEffects = state.domainEffects;
+            map.hatenaBlocks = state.hatenaBlocks;
+        }
+    }
+
+    function captureSnapshotFromSelection(selection = state.selection) {
+        if (!selection?.cells?.size) return null;
+        const bounds = selection.bounds || computeBoundsFromSelection(selection.cells);
+        if (!bounds) return null;
+        const grid = createEmptyGrid(bounds.width, bounds.height, 1);
+        const meta = createEmptyMeta(bounds.width, bounds.height);
+        for (let y = 0; y < bounds.height; y++) {
+            for (let x = 0; x < bounds.width; x++) {
+                const gx = bounds.x + x;
+                const gy = bounds.y + y;
+                grid[y][x] = state.grid?.[gy]?.[gx] ?? 0;
+                meta[y][x] = normalizeMetaObject(state.meta?.[gy]?.[gx], grid[y][x] === 0);
+            }
+        }
+        const copyEntities = (list, predicate, mapper) => (Array.isArray(list) ? list.filter(predicate).map(mapper) : []);
+        const inBounds = (item) => Number.isFinite(item?.x) && Number.isFinite(item?.y) && item.x >= bounds.x && item.x < bounds.x + bounds.width && item.y >= bounds.y && item.y < bounds.y + bounds.height;
+        const portals = copyEntities(state.portals, inBounds, portal => ({ ...portal, x: portal.x - bounds.x, y: portal.y - bounds.y }));
+        const enemies = copyEntities(state.enemies, inBounds, enemy => ({ ...enemy, x: enemy.x - bounds.x, y: enemy.y - bounds.y }));
+        const domains = copyEntities(state.domainEffects, inBounds, effect => ({ ...effect, x: effect.x - bounds.x, y: effect.y - bounds.y }));
+        const hatenas = copyEntities(state.hatenaBlocks, inBounds, block => ({ ...block, x: block.x - bounds.x, y: block.y - bounds.y }));
+        const playerStart = state.playerStart && inBounds(state.playerStart)
+            ? { x: state.playerStart.x - bounds.x, y: state.playerStart.y - bounds.y }
+            : null;
+        return {
+            width: bounds.width,
+            height: bounds.height,
+            grid,
+            meta,
+            portals,
+            enemies,
+            domainEffects: domains,
+            hatenaBlocks: hatenas,
+            playerStart
+        };
+    }
+
+    function applySnapshotAt(snapshot, originX, originY, options = {}) {
+        if (!snapshot) return false;
+        const { updateSelection = true } = options;
+        if (originX < 0 || originY < 0 || originX + snapshot.width > state.width || originY + snapshot.height > state.height) {
+            state.tempMessage = ts('map.group.errors.outOfBounds', '配置範囲がマップ外です。');
+            renderValidation();
+            return false;
+        }
+        clearRectArea(originX, originY, snapshot.width, snapshot.height);
+        for (let y = 0; y < snapshot.height; y++) {
+            for (let x = 0; x < snapshot.width; x++) {
+                const gx = originX + x;
+                const gy = originY + y;
+                state.grid[gy][gx] = snapshot.grid?.[y]?.[x] ?? 0;
+                state.meta[gy][gx] = normalizeMetaObject(snapshot.meta?.[y]?.[x], state.grid[gy][gx] === 0);
+            }
+        }
+        const toAbsolute = (item) => ({ ...item, x: item.x + originX, y: item.y + originY });
+        const map = getActiveMapRecord();
+        if (Array.isArray(snapshot.portals)) {
+            state.portals = state.portals.concat(snapshot.portals.map(toAbsolute));
+            if (map) map.portals = state.portals;
+        }
+        if (Array.isArray(snapshot.enemies)) {
+            state.enemies = state.enemies.concat(snapshot.enemies.map(toAbsolute));
+            if (map) map.enemies = state.enemies;
+        }
+        if (Array.isArray(snapshot.domainEffects)) {
+            state.domainEffects = state.domainEffects.concat(snapshot.domainEffects.map(toAbsolute));
+            if (map) map.domainEffects = state.domainEffects;
+        }
+        if (Array.isArray(snapshot.hatenaBlocks)) {
+            state.hatenaBlocks = state.hatenaBlocks.concat(snapshot.hatenaBlocks.map(toAbsolute));
+            if (map) map.hatenaBlocks = state.hatenaBlocks;
+        }
+        if (snapshot.playerStart) {
+            state.playerStart = { x: snapshot.playerStart.x + originX, y: snapshot.playerStart.y + originY };
+            if (map) map.playerStart = { ...state.playerStart };
+        }
+        if (updateSelection) {
+            const cells = new Set();
+            for (let y = 0; y < snapshot.height; y++) {
+                for (let x = 0; x < snapshot.width; x++) {
+                    cells.add(`${originX + x},${originY + y}`);
+                }
+            }
+            state.selection = { cells, bounds: { x: originX, y: originY, width: snapshot.width, height: snapshot.height } };
+        }
+        return true;
+    }
+
+    function buildSelectionFromSnapshot(origin, snapshot) {
+        if (!snapshot) return;
+        const cells = new Set();
+        for (let y = 0; y < snapshot.height; y++) {
+            for (let x = 0; x < snapshot.width; x++) {
+                cells.add(`${origin.x + x},${origin.y + y}`);
+            }
+        }
+        state.selection = { cells, bounds: { x: origin.x, y: origin.y, width: snapshot.width, height: snapshot.height } };
+    }
+
+    function setActiveGroupFromSelection() {
+        if (!selectionCount()) return false;
+        const snapshot = captureSnapshotFromSelection();
+        if (!snapshot) return false;
+        const bounds = state.selection.bounds || computeBoundsFromSelection(state.selection.cells);
+        state.activeGroup = { snapshot, origin: { x: bounds.x, y: bounds.y } };
+        state.groupClipboard = snapshot;
+        return true;
+    }
+
+    function moveActiveGroup(dx, dy) {
+        if (!state.activeGroup) return false;
+        const origin = state.activeGroup.origin;
+        const target = { x: origin.x + dx, y: origin.y + dy };
+        if (target.x < 0 || target.y < 0 || target.x + state.activeGroup.snapshot.width > state.width || target.y + state.activeGroup.snapshot.height > state.height) {
+            state.tempMessage = ts('map.group.errors.cannotMove', 'これ以上移動できません。');
+            renderValidation();
+            return false;
+        }
+        clearRectArea(origin.x, origin.y, state.activeGroup.snapshot.width, state.activeGroup.snapshot.height);
+        applySnapshotAt(state.activeGroup.snapshot, target.x, target.y, { updateSelection: true });
+        state.activeGroup.origin = target;
+        return true;
+    }
+
+    function rotateSnapshot(snapshot, direction) {
+        if (!snapshot) return snapshot;
+        const cw = direction === 'cw';
+        const newWidth = snapshot.height;
+        const newHeight = snapshot.width;
+        const grid = createEmptyGrid(newWidth, newHeight, 1);
+        const meta = createEmptyMeta(newWidth, newHeight);
+        for (let y = 0; y < snapshot.height; y++) {
+            for (let x = 0; x < snapshot.width; x++) {
+                const nx = cw ? newWidth - 1 - y : y;
+                const ny = cw ? x : newHeight - 1 - x;
+                grid[ny][nx] = snapshot.grid[y][x];
+                meta[ny][nx] = snapshot.meta[y][x];
+            }
+        }
+        const rotatePoint = (pt) => {
+            if (!pt) return null;
+            const nx = cw ? newWidth - 1 - pt.y : pt.y;
+            const ny = cw ? pt.x : newHeight - 1 - pt.x;
+            return { x: nx, y: ny };
+        };
+        return {
+            ...snapshot,
+            width: newWidth,
+            height: newHeight,
+            grid,
+            meta,
+            portals: Array.isArray(snapshot.portals) ? snapshot.portals.map(p => ({ ...p, ...rotatePoint(p) })) : [],
+            enemies: Array.isArray(snapshot.enemies) ? snapshot.enemies.map(e => ({ ...e, ...rotatePoint(e) })) : [],
+            domainEffects: Array.isArray(snapshot.domainEffects) ? snapshot.domainEffects.map(d => ({ ...d, ...rotatePoint(d) })) : [],
+            hatenaBlocks: Array.isArray(snapshot.hatenaBlocks) ? snapshot.hatenaBlocks.map(h => ({ ...h, ...rotatePoint(h) })) : [],
+            playerStart: rotatePoint(snapshot.playerStart)
+        };
+    }
+
+    function rotateActiveGroup(direction) {
+        if (!state.activeGroup) return false;
+        const rotated = rotateSnapshot(state.activeGroup.snapshot, direction);
+        if (!rotated) return false;
+        if (state.activeGroup.origin.x + rotated.width > state.width || state.activeGroup.origin.y + rotated.height > state.height) {
+            state.tempMessage = ts('map.group.errors.rotateClipped', '回転後のサイズが収まりません。位置をずらしてください。');
+            renderValidation();
+            return false;
+        }
+        state.activeGroup.snapshot = rotated;
+        applySnapshotAt(rotated, state.activeGroup.origin.x, state.activeGroup.origin.y, { updateSelection: true });
+        return true;
+    }
+
+    function saveSelectionToPalette() {
+        const snapshot = captureSnapshotFromSelection();
+        if (!snapshot) return false;
+        const index = state.structurePalette.length + 1;
+        const id = `structure-${index}`;
+        const name = ts('map.group.defaultName', '構造{index}', { index });
+        state.structurePalette.push({ id, name, snapshot });
+        state.selectedStructureId = id;
+        return true;
+    }
+
+    function getSelectedStructure() {
+        if (!state?.selectedStructureId) return null;
+        return state.structurePalette.find(item => item.id === state.selectedStructureId) || null;
+    }
+
+    function renderStructurePalette() {
+        if (!refs.structureList) return;
+        refs.structureList.innerHTML = '';
+        state.structurePalette.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'sandbox-structure-item';
+            if (item.id === state.selectedStructureId) el.classList.add('active');
+            el.setAttribute('role', 'option');
+            el.dataset.structureId = item.id;
+            const title = document.createElement('strong');
+            title.textContent = item.name || item.id;
+            const meta = document.createElement('small');
+            meta.textContent = `${item.snapshot.width}×${item.snapshot.height}`;
+            el.appendChild(title);
+            el.appendChild(meta);
+            el.addEventListener('click', () => {
+                state.selectedStructureId = item.id;
+                renderStructurePalette();
+            });
+            refs.structureList.appendChild(el);
+        });
+        if (!state.structurePalette.length) {
+            const empty = document.createElement('div');
+            empty.textContent = ts('map.group.palette.empty', 'まだ構造がありません');
+            empty.className = 'sandbox-note';
+            refs.structureList.appendChild(empty);
+        }
+    }
+
+    function renderGroupStatus() {
+        if (!refs.groupStatus) return;
+        const count = selectionCount();
+        const active = state.activeGroup ? `${state.activeGroup.snapshot.width}×${state.activeGroup.snapshot.height}` : '-';
+        refs.groupStatus.textContent = ts('map.group.status', '選択: {count}マス / グループ: {group}', { count, group: active });
+    }
+
     function getDomainEffectLabel(effectId) {
         const option = DOMAIN_EFFECT_OPTIONS.find(opt => opt.id === effectId);
         if (!option) {
@@ -1641,7 +1911,11 @@
             tempMessage: state.tempMessage || '',
             brushSettings: state.brushSettings ? { ...state.brushSettings } : { floorType: 'normal', floorColor: '', wallColor: '', floorDir: '' },
             colorPalette: Array.isArray(state.colorPalette) ? state.colorPalette.slice() : [],
-            eyedropper: state.eyedropper ? { ...state.eyedropper } : { active: false }
+            eyedropper: state.eyedropper ? { ...state.eyedropper } : { active: false },
+            selection: selectionCount() ? { cells: getSelectionArray(), bounds: state.selection.bounds } : null,
+            groupClipboard: state.groupClipboard ? cloneSnapshot(state.groupClipboard) : null,
+            structurePalette: Array.isArray(state.structurePalette) ? state.structurePalette.map(item => ({ id: item.id, name: item.name, snapshot: cloneSnapshot(item.snapshot) })) : [],
+            selectedStructureId: state.selectedStructureId || null
         };
     }
 
@@ -1833,7 +2107,11 @@
             }, []) : [],
             eyedropper: serialized?.eyedropper && typeof serialized.eyedropper === 'object'
                 ? { active: !!serialized.eyedropper.active }
-                : { active: false }
+                : { active: false },
+            selection: serialized?.selection || null,
+            groupClipboard: serialized?.groupClipboard || null,
+            structurePalette: Array.isArray(serialized?.structurePalette) ? serialized.structurePalette : [],
+            selectedStructureId: typeof serialized?.selectedStructureId === 'string' ? serialized.selectedStructureId : null
         };
     }
 
@@ -1985,6 +2263,20 @@
         state.colorPalette = Array.isArray(payload.colorPalette) ? payload.colorPalette.map(entry => ({ ...entry })) : [];
         state.eyedropper = payload.eyedropper ? { ...payload.eyedropper } : { active: false };
         state.view = defaultView();
+        clearSelection();
+        if (payload.selection && Array.isArray(payload.selection.cells)) {
+            const cells = new Set(payload.selection.cells.map(cell => `${cell.x},${cell.y}`));
+            state.selection = { cells, bounds: payload.selection.bounds || computeBoundsFromSelection(cells) };
+        }
+        ensureSelectionWithinBounds();
+        state.activeGroup = null;
+        state.groupClipboard = payload.groupClipboard ? cloneSnapshot(payload.groupClipboard) : null;
+        state.structurePalette = Array.isArray(payload.structurePalette)
+            ? payload.structurePalette.map(item => ({ id: item.id, name: item.name, snapshot: cloneSnapshot(item.snapshot) }))
+            : [];
+        state.selectedStructureId = state.structurePalette.some(item => item.id === payload.selectedStructureId)
+            ? payload.selectedStructureId
+            : (state.structurePalette[0]?.id || null);
 
         const activated = activateMap(payload.activeMapId, { preserveSelection: false });
         if (!activated && state.maps.length) {
@@ -2115,6 +2407,13 @@
         }
         if (state.view) {
             state.view.needsFit = true;
+        }
+        ensureSelectionWithinBounds();
+        if (state.activeGroup) {
+            const { origin, snapshot } = state.activeGroup;
+            if (!origin || !snapshot || origin.x + snapshot.width > state.width || origin.y + snapshot.height > state.height) {
+                state.activeGroup = null;
+            }
         }
     }
 
@@ -2564,6 +2863,7 @@
                 const hasSelectedPortal = state.selectedPortalId && portalsHere.some(portal => portal.id === state.selectedPortalId);
                 const enemiesHere = Array.isArray(state.enemies) ? state.enemies.filter(e => e.x === x && e.y === y) : [];
                 const hasSelectedEnemy = state.selectedEnemyId && enemiesHere.some(e => e.id === state.selectedEnemyId);
+                const inSelection = selectionIncludes(x, y);
 
                 if (isStart) {
                     drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_START_COLOR, 2.4);
@@ -2579,6 +2879,9 @@
                 }
                 if (hasSelectedPortal) {
                     drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, '#1c7ed6', 2.2);
+                }
+                if (inSelection) {
+                    drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_GROUP_SELECTION_COLOR, 2.2);
                 }
                 if (state.lastCell && state.lastCell.x === x && state.lastCell.y === y) {
                     drawRoundedRect(ctx, originX, originY, cellSize, cellSize, RENDER_CELL_RADIUS, null, GRID_SELECTION_COLOR, 2);
@@ -2816,11 +3119,90 @@
         }
     }
 
+    function clearSelection() {
+        if (!state) return;
+        state.selection = { cells: new Set(), bounds: null };
+        selectionState.active = false;
+        selectionState.start = null;
+        selectionState.end = null;
+        selectionState.pointerId = null;
+    }
+
+    function selectionIncludes(x, y) {
+        if (!state?.selection?.cells) return false;
+        return state.selection.cells.has(`${x},${y}`);
+    }
+
+    function selectionCount() {
+        return state?.selection?.cells ? state.selection.cells.size : 0;
+    }
+
+    function computeBoundsFromSelection(cells) {
+        if (!cells || !cells.size) return null;
+        let minX = Number.POSITIVE_INFINITY;
+        let minY = Number.POSITIVE_INFINITY;
+        let maxX = Number.NEGATIVE_INFINITY;
+        let maxY = Number.NEGATIVE_INFINITY;
+        cells.forEach(key => {
+            const [sx, sy] = key.split(',').map(Number);
+            minX = Math.min(minX, sx);
+            minY = Math.min(minY, sy);
+            maxX = Math.max(maxX, sx);
+            maxY = Math.max(maxY, sy);
+        });
+        if (!Number.isFinite(minX)) return null;
+        return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+    }
+
+    function setSelectionFromRect(x1, y1, x2, y2) {
+        if (!state) return;
+        const minX = clamp(0, state.width - 1, Math.min(x1, x2));
+        const maxX = clamp(0, state.width - 1, Math.max(x1, x2));
+        const minY = clamp(0, state.height - 1, Math.min(y1, y2));
+        const maxY = clamp(0, state.height - 1, Math.max(y1, y2));
+        const cells = new Set();
+        for (let y = minY; y <= maxY; y++) {
+            for (let x = minX; x <= maxX; x++) {
+                cells.add(`${x},${y}`);
+            }
+        }
+        state.selection = { cells, bounds: { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 } };
+    }
+
+    function ensureSelectionWithinBounds() {
+        if (!state?.selection?.cells?.size) return;
+        const filtered = new Set();
+        state.selection.cells.forEach(key => {
+            const [x, y] = key.split(',').map(Number);
+            if (x >= 0 && x < state.width && y >= 0 && y < state.height) {
+                filtered.add(key);
+            }
+        });
+        state.selection.cells = filtered;
+        state.selection.bounds = computeBoundsFromSelection(filtered);
+        if (!filtered.size) {
+            clearSelection();
+        }
+    }
+
+    function getSelectionArray() {
+        if (!state?.selection?.cells?.size) return [];
+        const arr = [];
+        state.selection.cells.forEach(key => {
+            const [x, y] = key.split(',').map(Number);
+            arr.push({ x, y });
+        });
+        return arr;
+    }
+
     function updateSelectedCellLabel() {
         const fallbackText = translateSandbox('map.selectedCell.hint', null, 'セルをクリックして編集します。');
         const description = state.lastCell ? describeCell(state.lastCell.x, state.lastCell.y) : '';
         if (refs.selectedCell) {
-            if (state.lastCell && description) {
+            const multi = selectionCount();
+            if (multi > 1) {
+                refs.selectedCell.textContent = `選択セル: ${multi}マス (${state.lastCell ? `${state.lastCell.x},${state.lastCell.y}` : '-'})`;
+            } else if (state.lastCell && description) {
                 refs.selectedCell.textContent = translateSandbox(
                     'map.selectedCell.selectedWithDescription',
                     { description },
@@ -4655,6 +5037,7 @@
         updateBrushButtons();
         updateGridCursor();
         updateSelectedCellLabel();
+        renderGroupStatus();
         syncBrushControls();
         renderMapList();
         renderPlayerPreview();
@@ -4663,6 +5046,7 @@
         renderPortals();
         renderGimmickPanel();
         renderColorPalette();
+        renderStructurePalette();
         renderValidation();
         renderIoStatus();
         if (refs.interactiveModeInput) {
@@ -4702,6 +5086,25 @@
         if (event.button === 2) return;
         if (typeof event.button === 'number' && event.button !== 0) return;
         const cell = getCellFromEvent(event);
+        if (state.brush === 'group') {
+            if (event.ctrlKey || event.metaKey) {
+                event.preventDefault();
+                return;
+            }
+            if (cell) {
+                selectionState.active = true;
+                selectionState.start = cell;
+                selectionState.end = cell;
+                selectionState.pointerId = event.pointerId;
+                selectionState.moved = false;
+                selectionState.blockClick = false;
+                setSelectionFromRect(cell.x, cell.y, cell.x, cell.y);
+                setSelectedCell(cell.x, cell.y);
+                render();
+            }
+            event.preventDefault();
+            return;
+        }
         if (state.eyedropper?.active && cell) {
             event.preventDefault();
             applyEyedropper(cell.x, cell.y);
@@ -4735,6 +5138,20 @@
     }
 
     function handleGridPointerMove(event) {
+        if (selectionState.active && selectionState.pointerId === event.pointerId) {
+            const cell = getCellFromEvent(event);
+            if (cell) {
+                const changed = !selectionState.end || selectionState.end.x !== cell.x || selectionState.end.y !== cell.y;
+                selectionState.end = cell;
+                if (changed) {
+                    selectionState.moved = true;
+                }
+                setSelectionFromRect(selectionState.start.x, selectionState.start.y, cell.x, cell.y);
+                setSelectedCell(cell.x, cell.y);
+                render();
+            }
+            return;
+        }
         if (panState.active && panState.pointerId === event.pointerId) {
             const dx = event.clientX - panState.lastX;
             const dy = event.clientY - panState.lastY;
@@ -4814,9 +5231,23 @@
         const offset = 8;
         const scrollX = typeof window !== 'undefined' ? window.scrollX || window.pageXOffset || 0 : 0;
         const scrollY = typeof window !== 'undefined' ? window.scrollY || window.pageYOffset || 0 : 0;
+        const viewportWidth = typeof document !== 'undefined' ? document.documentElement.clientWidth || window.innerWidth || 0 : 0;
+        const viewportHeight = typeof document !== 'undefined' ? document.documentElement.clientHeight || window.innerHeight || 0 : 0;
+
         menu.style.display = 'block';
-        const left = clientX + scrollX + offset;
-        const top = clientY + scrollY + offset;
+        const { width, height } = menu.getBoundingClientRect();
+
+        // Place the menu to the lower-left of the pointer, clamped to the viewport.
+        const desiredLeft = clientX + scrollX - width - offset;
+        const desiredTop = clientY + scrollY + offset;
+        const minLeft = scrollX + 5;
+        const maxLeft = scrollX + Math.max(0, viewportWidth - width - 5);
+        const minTop = scrollY + 5;
+        const maxTop = scrollY + Math.max(0, viewportHeight - height - 5);
+
+        const left = clamp(minLeft, maxLeft, desiredLeft);
+        const top = clamp(minTop, maxTop, desiredTop);
+
         menu.style.left = `${left}px`;
         menu.style.top = `${top}px`;
     }
@@ -4838,6 +5269,13 @@
         if (!menu || !cell) return;
         contextMenuState.visible = true;
         contextMenuState.cell = cell;
+        const clipboardGroup = menu.querySelector('[data-menu-group="clipboard"]');
+        if (clipboardGroup) {
+            clipboardGroup.hidden = selectionCount() === 0 && !state.groupClipboard;
+            clipboardGroup.querySelectorAll('button[data-menu-action="paste-selection"]').forEach(btn => {
+                btn.disabled = !state.groupClipboard;
+            });
+        }
         positionContextMenu(event.clientX, event.clientY);
         menu.classList.add('visible');
     }
@@ -4845,6 +5283,7 @@
     function handleContextMenuAction(action) {
         if (!contextMenuState.cell) return hideContextMenu();
         const { x, y } = contextMenuState.cell;
+        const targets = selectionCount() ? getSelectionArray() : [{ x, y }];
         const brushMap = {
             floor: 'floor',
             wall: 'wall',
@@ -4853,6 +5292,31 @@
             gate: 'gate'
         };
         if (action === 'close') {
+            hideContextMenu();
+            return;
+        }
+        if (action === 'copy-selection') {
+            state.groupClipboard = captureSnapshotFromSelection() || captureSnapshotFromSelection({ cells: new Set([`${x},${y}`]), bounds: { x, y, width: 1, height: 1 } });
+            hideContextMenu();
+            return;
+        }
+        if (action === 'cut-selection') {
+            const snap = captureSnapshotFromSelection();
+            if (snap) {
+                state.groupClipboard = snap;
+                const bounds = state.selection.bounds || computeBoundsFromSelection(state.selection.cells);
+                clearRectArea(bounds.x, bounds.y, bounds.width, bounds.height);
+                clearSelection();
+                render();
+            }
+            hideContextMenu();
+            return;
+        }
+        if (action === 'paste-selection') {
+            if (state.groupClipboard) {
+                applySnapshotAt(state.groupClipboard, x, y, { updateSelection: true });
+                render();
+            }
             hideContextMenu();
             return;
         }
@@ -4872,7 +5336,8 @@
             }
             state.brushSettings = { ...prevSettings, floorType: typeKey, floorDir };
             state.brush = 'floor';
-            applyBrushToCell(x, y, { updateSelection: true });
+            targets.forEach(cell => applyBrushToCell(cell.x, cell.y, { updateSelection: false }));
+            if (targets.length) setSelectedCell(targets[0].x, targets[0].y);
             state.brushSettings = prevSettings;
             state.brush = prevBrush;
             render();
@@ -4881,7 +5346,8 @@
         }
         const prevBrush = state.brush;
         state.brush = brushMap[action];
-        applyBrushToCell(x, y, { updateSelection: true });
+        targets.forEach(cell => applyBrushToCell(cell.x, cell.y, { updateSelection: false }));
+        if (targets.length) setSelectedCell(targets[0].x, targets[0].y);
         state.brush = prevBrush;
         render();
         hideContextMenu();
@@ -4940,22 +5406,58 @@
         return true;
     }
 
+    function endSelectionDrag(pointerId) {
+        if (!selectionState.active || selectionState.pointerId !== pointerId) return false;
+        const moved = selectionState.moved;
+        selectionState.active = false;
+        selectionState.pointerId = null;
+        selectionState.start = null;
+        selectionState.end = null;
+        selectionState.moved = false;
+        if (moved) {
+            selectionState.blockClick = true;
+            setTimeout(() => { selectionState.blockClick = false; }, 0);
+        }
+        renderGroupStatus();
+        return true;
+    }
+
     function handleGlobalPointerUp(event) {
         if (endPan(event.pointerId, event)) return;
+        endSelectionDrag(event.pointerId);
         endPointerPaint(event.pointerId);
         repositionContextMenuIfNeeded();
     }
 
     function handleGridClick(event) {
         hideContextMenu();
-        if (paintState.blockClick || panState.blockClick) {
+        if (paintState.blockClick || panState.blockClick || selectionState.blockClick) {
             paintState.blockClick = false;
             panState.blockClick = false;
+            selectionState.blockClick = false;
             event.preventDefault();
             return;
         }
         const cell = getCellFromEvent(event);
         if (!cell) return;
+        if (state.brush === 'group') {
+            if (event.ctrlKey || event.metaKey) {
+                const current = state.selection?.cells ? new Set(state.selection.cells) : new Set();
+                const key = `${cell.x},${cell.y}`;
+                if (current.has(key)) {
+                    current.delete(key);
+                } else {
+                    current.add(key);
+                }
+                const bounds = current.size ? computeBoundsFromSelection(current) : null;
+                state.selection = { cells: current, bounds };
+            } else {
+                setSelectionFromRect(cell.x, cell.y, cell.x, cell.y);
+            }
+            setSelectedCell(cell.x, cell.y);
+            render();
+            return;
+        }
         if (state.brush === 'select') {
             setSelectedCell(cell.x, cell.y);
             render();
@@ -5288,6 +5790,15 @@
             gridAria: panel.querySelector('#sandbox-grid-aria'),
             gridMenu: panel.querySelector('#sandbox-grid-menu'),
             brushButtons: Array.from(panel.querySelectorAll('.sandbox-brush')),
+            groupStatus: panel.querySelector('#sandbox-group-status'),
+            groupCreateButton: panel.querySelector('#sandbox-group-create'),
+            groupRotateLeftButton: panel.querySelector('#sandbox-group-rotate-left'),
+            groupRotateRightButton: panel.querySelector('#sandbox-group-rotate-right'),
+            groupMoveUpButton: panel.querySelector('#sandbox-group-move-up'),
+            groupMoveDownButton: panel.querySelector('#sandbox-group-move-down'),
+            groupMoveLeftButton: panel.querySelector('#sandbox-group-move-left'),
+            groupMoveRightButton: panel.querySelector('#sandbox-group-move-right'),
+            groupClearButton: panel.querySelector('#sandbox-group-clear'),
             selectedCell: panel.querySelector('#sandbox-selected-cell'),
             widthInput: panel.querySelector('#sandbox-width'),
             heightInput: panel.querySelector('#sandbox-height'),
@@ -5315,6 +5826,10 @@
             saveWallColorButton: panel.querySelector('#sandbox-save-wall-color'),
             clearPaletteButton: panel.querySelector('#sandbox-clear-palette'),
             eyedropperButton: panel.querySelector('#sandbox-eyedropper-button'),
+            structureList: panel.querySelector('#sandbox-structure-list'),
+            structureSaveButton: panel.querySelector('#sandbox-structure-save'),
+            structureApplyButton: panel.querySelector('#sandbox-structure-apply'),
+            structureDeleteButton: panel.querySelector('#sandbox-structure-delete'),
             mapList: panel.querySelector('#sandbox-map-list'),
             addMapButton: panel.querySelector('#sandbox-add-map'),
             mapNameInput: panel.querySelector('#sandbox-map-name'),
@@ -5403,6 +5918,11 @@
             colorPalette: [],
             eyedropper: { active: false },
             entryMapId: null,
+            selection: { cells: new Set(), bounds: null },
+            groupClipboard: null,
+            activeGroup: null,
+            structurePalette: [],
+            selectedStructureId: null,
             view: defaultView()
         };
 
@@ -5427,12 +5947,12 @@
             }
             detachLocaleChange = i18n.onLocaleChanged(() => {
                 if (!state) return;
-                render();
                 applyPanelTranslations();
+                render();
             });
             if (typeof i18n.isReady !== 'function' || i18n.isReady()) {
-                render();
                 applyPanelTranslations();
+                render();
             }
         }
 
@@ -5463,6 +5983,15 @@
         if (refs.brushButtons?.length) {
             refs.brushButtons.forEach(btn => btn.addEventListener('click', handleBrushClick));
         }
+        const bind = (el, handler) => { if (el) el.addEventListener('click', handler); };
+        bind(refs.groupCreateButton, () => { setActiveGroupFromSelection(); render(); });
+        bind(refs.groupRotateLeftButton, () => { rotateActiveGroup('ccw'); render(); });
+        bind(refs.groupRotateRightButton, () => { rotateActiveGroup('cw'); render(); });
+        bind(refs.groupMoveUpButton, () => { moveActiveGroup(0, -1); render(); });
+        bind(refs.groupMoveDownButton, () => { moveActiveGroup(0, 1); render(); });
+        bind(refs.groupMoveLeftButton, () => { moveActiveGroup(-1, 0); render(); });
+        bind(refs.groupMoveRightButton, () => { moveActiveGroup(1, 0); render(); });
+        bind(refs.groupClearButton, () => { clearSelection(); state.activeGroup = null; render(); });
         if (refs.widthInput) {
             refs.widthInput.value = state.width;
             refs.widthInput.addEventListener('change', (e) => {
@@ -5611,6 +6140,30 @@
                 state.eyedropper = { active: next };
                 if (next) refs.eyedropperButton.classList.add('active');
                 else refs.eyedropperButton.classList.remove('active');
+            });
+        }
+        if (refs.structureSaveButton) {
+            refs.structureSaveButton.addEventListener('click', () => {
+                saveSelectionToPalette();
+                renderStructurePalette();
+            });
+        }
+        if (refs.structureApplyButton) {
+            refs.structureApplyButton.addEventListener('click', () => {
+                const target = state.lastCell || { x: 0, y: 0 };
+                const selected = getSelectedStructure();
+                if (selected) {
+                    applySnapshotAt(selected.snapshot, target.x, target.y, { updateSelection: true });
+                    render();
+                }
+            });
+        }
+        if (refs.structureDeleteButton) {
+            refs.structureDeleteButton.addEventListener('click', () => {
+                if (!state.selectedStructureId) return;
+                state.structurePalette = state.structurePalette.filter(item => item.id !== state.selectedStructureId);
+                state.selectedStructureId = state.structurePalette[0]?.id || null;
+                renderStructurePalette();
             });
         }
         if (refs.addMapButton) {
@@ -5881,8 +6434,8 @@
             });
         }
 
-        render();
         applyPanelTranslations();
+        render();
         if (pendingSerializedState) {
             const payload = pendingSerializedState;
             pendingSerializedState = null;

@@ -646,6 +646,7 @@
                                         </div>
                                         <div class="sandbox-brush-select" role="radiogroup" aria-label="ブラシ選択" data-i18n-attr="aria-label:tools.sandbox.map.brush.ariaLabel">
                                             <button type="button" class="sandbox-brush" data-brush="select" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.select">選択</button>
+                                            <button type="button" class="sandbox-brush" data-brush="group" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.group">グループ選択</button>
                                             <button type="button" class="sandbox-brush" data-brush="floor" aria-pressed="true" data-i18n="tools.sandbox.map.brush.modes.floor">床</button>
                                             <button type="button" class="sandbox-brush" data-brush="wall" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.wall">壁</button>
                                             <button type="button" class="sandbox-brush" data-brush="start" aria-pressed="false" data-i18n="tools.sandbox.map.brush.modes.start">開始位置</button>
@@ -660,9 +661,48 @@
                                     <section class="sandbox-section sandbox-map-preview-section" aria-labelledby="sandbox-map-preview-title">
                                         <div class="sandbox-map-header">
                                             <h4 id="sandbox-map-preview-title" data-i18n="tools.sandbox.map.preview.title">マッププレビュー</h4>
+                                            <div class="sandbox-group-toolbar" aria-live="polite">
+                                                <div class="sandbox-group-actions">
+                                                    <button type="button" id="sandbox-group-create" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.group.create">グループ化</button>
+                                                    <button type="button" id="sandbox-group-rotate-left" title="左回転" aria-label="左回転" data-i18n-attr="title:tools.sandbox.map.group.rotateLeft;aria-label:tools.sandbox.map.group.rotateLeft">↺</button>
+                                                    <button type="button" id="sandbox-group-rotate-right" title="右回転" aria-label="右回転" data-i18n-attr="title:tools.sandbox.map.group.rotateRight;aria-label:tools.sandbox.map.group.rotateRight">↻</button>
+                                                    <button type="button" id="sandbox-group-move-up" title="上に移動" aria-label="上に移動" data-i18n-attr="title:tools.sandbox.map.group.moveUp;aria-label:tools.sandbox.map.group.moveUp">↑</button>
+                                                    <button type="button" id="sandbox-group-move-down" title="下に移動" aria-label="下に移動" data-i18n-attr="title:tools.sandbox.map.group.moveDown;aria-label:tools.sandbox.map.group.moveDown">↓</button>
+                                                    <button type="button" id="sandbox-group-move-left" title="左に移動" aria-label="左に移動" data-i18n-attr="title:tools.sandbox.map.group.moveLeft;aria-label:tools.sandbox.map.group.moveLeft">←</button>
+                                                    <button type="button" id="sandbox-group-move-right" title="右に移動" aria-label="右に移動" data-i18n-attr="title:tools.sandbox.map.group.moveRight;aria-label:tools.sandbox.map.group.moveRight">→</button>
+                                                    <button type="button" id="sandbox-group-clear" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.group.clear">解除</button>
+                                                </div>
+                                                <div id="sandbox-group-status" class="sandbox-group-status" data-i18n="tools.sandbox.map.group.status">選択: 0マス</div>
+                                            </div>
                                         </div>
                                         <div id="sandbox-grid" class="sandbox-grid" role="grid" aria-label="サンドボックスマップ" data-i18n-attr="aria-label:tools.sandbox.map.preview.ariaLabel">
                                             <canvas id="sandbox-grid-canvas" role="presentation" aria-hidden="true"></canvas>
+                                            <div id="sandbox-grid-menu" class="sandbox-grid-menu" role="menu" aria-label="クイック編集メニュー">
+                                                <div class="sandbox-grid-menu-group" data-menu-group="clipboard">
+                                                    <button type="button" data-menu-action="copy-selection" data-i18n="tools.sandbox.map.group.copy">選択をコピー</button>
+                                                    <button type="button" data-menu-action="cut-selection" data-i18n="tools.sandbox.map.group.cut">選択を切り取り</button>
+                                                    <button type="button" data-menu-action="paste-selection" data-i18n="tools.sandbox.map.group.paste">貼り付け</button>
+                                                    <hr>
+                                                </div>
+                                                <button type="button" data-menu-action="floor">このマスを床にする</button>
+                                                <button type="button" data-menu-action="wall">このマスを壁にする</button>
+                                                <button type="button" data-menu-action="start">開始位置に設定</button>
+                                                <button type="button" data-menu-action="stairs">階段を配置</button>
+                                                <button type="button" data-menu-action="gate">ゲートを配置</button>
+                                                <div class="sandbox-grid-menu-sub">
+                                                    <span>特殊タイルにする</span>
+                                                    <div class="sandbox-grid-menu-sub-buttons">
+                                                        <button type="button" data-menu-action="floor-ice">氷床</button>
+                                                        <button type="button" data-menu-action="floor-poison">毒床</button>
+                                                        <button type="button" data-menu-action="floor-bomb">爆弾床</button>
+                                                        <button type="button" data-menu-action="floor-conveyor">コンベヤー床</button>
+                                                        <button type="button" data-menu-action="floor-one-way">一方通行床</button>
+                                                        <button type="button" data-menu-action="floor-vertical">縦通行のみ床</button>
+                                                        <button type="button" data-menu-action="floor-horizontal">横通行のみ床</button>
+                                                    </div>
+                                                </div>
+                                                <button type="button" data-menu-action="close">メニューを閉じる</button>
+                                            </div>
                                             <div id="sandbox-grid-aria" class="visually-hidden" aria-live="polite"></div>
                                         </div>
                                         <dl class="sandbox-legend">
@@ -680,6 +720,17 @@
                                             <div><dt class="legend-horizontal">■</dt><dd data-i18n="tools.sandbox.map.preview.legend.horizontal">横通行のみ床</dd></div>
                                             <div><dt>?</dt><dd>ハテナブロック</dd></div>
                                         </dl>
+                                        <section class="sandbox-section" aria-labelledby="sandbox-structure-title">
+                                            <div class="sandbox-subsection-header">
+                                                <h5 id="sandbox-structure-title" data-i18n="tools.sandbox.map.group.palette.title">構造パレット</h5>
+                                                <div class="sandbox-structure-actions">
+                                                    <button type="button" id="sandbox-structure-save" data-i18n="tools.sandbox.map.group.save">選択を保存</button>
+                                                    <button type="button" id="sandbox-structure-apply" data-i18n="tools.sandbox.map.group.apply">選択を配置</button>
+                                                    <button type="button" id="sandbox-structure-delete" class="sandbox-secondary-button" data-i18n="tools.sandbox.map.group.remove">削除</button>
+                                                </div>
+                                            </div>
+                                            <div id="sandbox-structure-list" class="sandbox-structure-list" role="listbox" aria-label="保存した構造" data-i18n-attr="aria-label:tools.sandbox.map.group.palette.ariaLabel"></div>
+                                        </section>
                                     </section>
                                     <section class="sandbox-section" aria-labelledby="sandbox-maplist-title">
                                         <div class="sandbox-subsection-header">

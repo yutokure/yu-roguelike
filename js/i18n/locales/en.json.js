@@ -19428,6 +19428,37 @@
     }
   }
   store['en'] = locale;
+  // Sandbox group tools localization additions
+  if (!locale.tools) locale.tools = {};
+  if (!locale.tools.sandbox) locale.tools.sandbox = {};
+  if (!locale.tools.sandbox.map) locale.tools.sandbox.map = {};
+  if (!locale.tools.sandbox.map.brush) locale.tools.sandbox.map.brush = { modes: {} };
+  if (!locale.tools.sandbox.map.brush.modes) locale.tools.sandbox.map.brush.modes = {};
+  locale.tools.sandbox.map.brush.modes.group = "Group select";
+  locale.tools.sandbox.map.group = {
+    create: "Create group",
+    clear: "Clear",
+    rotateLeft: "Rotate left",
+    rotateRight: "Rotate right",
+    moveUp: "Move up",
+    moveDown: "Move down",
+    moveLeft: "Move left",
+    moveRight: "Move right",
+    copy: "Copy selection",
+    cut: "Cut selection",
+    paste: "Paste",
+    status: "Selected: {count} cells / Group: {group}",
+    save: "Save selection",
+    apply: "Place selection",
+    remove: "Delete",
+    palette: { title: "Structure palette", ariaLabel: "Saved structures", empty: "No saved structures yet" },
+    defaultName: "Structure {index}",
+    errors: {
+      outOfBounds: "Placement is outside the map.",
+      cannotMove: "Cannot move further.",
+      rotateClipped: "Rotated group would not fit. Move it first."
+    }
+  };
   if (!store['en']) {
     store['en'] = {};
   }

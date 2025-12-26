@@ -15723,6 +15723,10 @@
           "label": "画像ビューア",
           "hint": "スクリーンショットなどを拡大・回転・遠近表示しながらメタ情報を確認できます。"
         },
+        "powerDiff": {
+          "label": "戦力差計算機",
+          "hint": "レベル差計算を元に、レベル1の戦力100から戦力の伸びを可視化します。"
+        },
         "stateManager": {
           "label": "状態管理",
           "hint": "ゲームとツールの全データをまとめてエクスポート／インポートします。",
@@ -15766,6 +15770,30 @@
           "messages": {
             "importComplete": "状態データをインポートしました。"
           }
+        }
+      },
+      "powerDiff": {
+        "panelAriaLabel": "戦力差計算機",
+        "header": {
+          "title": "戦力差計算機",
+          "description": "レベル1の戦力を100として、レベル差計算を元に戦力の数値を可視化します。"
+        },
+        "fields": {
+          "level": { "label": "レベル" },
+          "format": { "label": "表記" }
+        },
+        "formats": {
+          "comma": "カンマ表記",
+          "scientific": "指数表記",
+          "kmbt": "kMBT表記",
+          "smartphone": "スマホゲーム表記",
+          "tetrational": "テトレーショナル表記",
+          "manoku": "万億兆表記"
+        },
+        "output": {
+          "label": "戦力",
+          "note": "計算はレベル差倍率を対数で処理し、doubleの範囲を超える値も表記できます。",
+          "meta": "レベル差: {diff} / log10(戦力): {log10}"
         }
       },
       "sandbox": {

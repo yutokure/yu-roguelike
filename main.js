@@ -14786,14 +14786,21 @@ function damageMultiplierByLevelDiff(levelDiff) {
     const abs = Math.abs(levelDiff);
     if (abs === 0) return 1.0;
     if (abs <= 4) return levelDiff > 0 ? 1.0 + (abs * 0.25) : 1.0 - (abs * 0.125);
-    if (abs === 5) return levelDiff > 0 ? 2.0 : 0.5;
-    if (abs <= 9) return levelDiff > 0 ? 2.0 * Math.pow(1.6, abs - 5) : 0.5 * Math.pow(0.625, abs - 5);
-    if (abs === 10) return levelDiff > 0 ? 10.0 : 0.1;
-    if (abs <= 19) return levelDiff > 0 ? 10.0 * Math.pow(1.26, abs - 10) : 0.1 * Math.pow(0.794, abs - 10);
-    if (abs === 20) return levelDiff > 0 ? 100.0 : 0.01;
-    // 以降は10レベル差ごとに10倍/0.1倍
-    const groups = Math.floor((abs - 20) / 10);
-    return levelDiff > 0 ? 100.0 * Math.pow(10, groups) : 0.01 * Math.pow(0.1, groups);
+    const log10Two = Math.log10(2);
+    let log10Multiplier;
+    if (abs <= 10) {
+        // 5〜10の間は2x→10xを対数で滑らかに補間
+        const progress = (abs - 5) / 5;
+        log10Multiplier = log10Two + (1 - log10Two) * progress;
+    } else if (abs <= 20) {
+        // 10〜20の間は10x→100xを対数で滑らかに補間
+        log10Multiplier = 1 + (abs - 10) / 10;
+    } else {
+        // 20以降は10レベル差ごとに10倍になるよう滑らかに増加
+        log10Multiplier = 2 + (abs - 20) / 10;
+    }
+    const multiplier = Math.pow(10, log10Multiplier);
+    return levelDiff > 0 ? multiplier : 1 / multiplier;
 }
 
 function getDifficultyDamageMultipliers() {

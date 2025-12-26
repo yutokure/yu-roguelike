@@ -7,11 +7,6 @@
 
     const BASE_POWER_LOG10 = Math.log10(100);
     const LOG10_TWO = Math.log10(2);
-    const LOG10_HALF = Math.log10(0.5);
-    const LOG10_1_6 = Math.log10(1.6);
-    const LOG10_0_625 = Math.log10(0.625);
-    const LOG10_1_26 = Math.log10(1.26);
-    const LOG10_0_794 = Math.log10(0.794);
 
     const KMBT_SUFFIXES = Object.freeze([
         '', 'k', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No',
@@ -215,21 +210,16 @@
             const multiplier = levelDiff > 0 ? 1 + (abs * 0.25) : 1 - (abs * 0.125);
             return Math.log10(multiplier);
         }
-        if (abs === 5) return levelDiff > 0 ? LOG10_TWO : LOG10_HALF;
-        if (abs <= 9) {
-            return levelDiff > 0
-                ? LOG10_TWO + (abs - 5) * LOG10_1_6
-                : LOG10_HALF + (abs - 5) * LOG10_0_625;
+        let log10Multiplier;
+        if (abs <= 10) {
+            const progress = (abs - 5) / 5;
+            log10Multiplier = LOG10_TWO + (1 - LOG10_TWO) * progress;
+        } else if (abs <= 20) {
+            log10Multiplier = 1 + (abs - 10) / 10;
+        } else {
+            log10Multiplier = 2 + (abs - 20) / 10;
         }
-        if (abs === 10) return levelDiff > 0 ? 1 : -1;
-        if (abs <= 19) {
-            return levelDiff > 0
-                ? 1 + (abs - 10) * LOG10_1_26
-                : -1 + (abs - 10) * LOG10_0_794;
-        }
-        if (abs === 20) return levelDiff > 0 ? 2 : -2;
-        const groups = Math.floor((abs - 20) / 10);
-        return levelDiff > 0 ? 2 + groups : -(2 + groups);
+        return levelDiff > 0 ? log10Multiplier : -log10Multiplier;
     }
 
     function calculateLog10Power(level) {

@@ -15859,6 +15859,10 @@
           "label": "Image Viewer",
           "hint": "Review screenshots with zoom, rotation, perspective, and metadata."
         },
+        "powerDiff": {
+          "label": "Power Gap Calculator",
+          "hint": "Visualize power growth from level 1 (power 100) using level-difference scaling."
+        },
         "stateManager": {
           "label": "State Manager",
           "hint": "Export or import all game and tool data in one bundle.",
@@ -15902,6 +15906,30 @@
           "messages": {
             "importComplete": "Imported state data."
           }
+        }
+      },
+      "powerDiff": {
+        "panelAriaLabel": "Power gap calculator",
+        "header": {
+          "title": "Power Gap Calculator",
+          "description": "Visualize power values with level-difference scaling, assuming level 1 power is 100."
+        },
+        "fields": {
+          "level": { "label": "Level" },
+          "format": { "label": "Notation" }
+        },
+        "formats": {
+          "comma": "Comma notation",
+          "scientific": "Scientific notation",
+          "kmbt": "kMBT notation",
+          "smartphone": "Mobile-game notation",
+          "tetrational": "Tetrational notation",
+          "manoku": "Man-oku-cho notation"
+        },
+        "output": {
+          "label": "Power",
+          "note": "Calculations use logarithms so values beyond the double range can still be rendered.",
+          "meta": "Level diff: {diff} / log10(power): {log10}"
         }
       },
       "sandbox": {

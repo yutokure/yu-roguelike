@@ -256,6 +256,8 @@
                             <p class="tool-hint" data-i18n="tools.sidebar.blockdata.hint">BlockDim向けのブロック定義をGUIで確認・編集し、JSONをエクスポートできます。</p>
                             <button id="tool-button-image-viewer" class="tool-item" type="button" data-tool-target="image-viewer" data-i18n="tools.sidebar.imageViewer.label">画像ビューア</button>
                             <p class="tool-hint" data-i18n="tools.sidebar.imageViewer.hint">スクリーンショットなどを拡大・回転・遠近表示しながらメタ情報を確認できます。</p>
+                            <button id="tool-button-power-diff" class="tool-item" type="button" data-tool-target="power-diff" data-i18n="tools.sidebar.powerDiff.label">戦力差計算機</button>
+                            <p class="tool-hint" data-i18n="tools.sidebar.powerDiff.hint">レベル差計算を元に、レベル1の戦力100から戦力の伸びを可視化します。</p>
                             <button id="tool-button-state-manager" class="tool-item" type="button" data-tool-target="state-manager" data-i18n="tools.sidebar.stateManager.label">状態管理</button>
                             <p class="tool-hint" data-i18n="tools.sidebar.stateManager.hint">ゲームとツールの全データをまとめてエクスポート／インポートします。</p>
                         </aside>
@@ -477,6 +479,37 @@
                                     </div>
                                 </div>
                             </section>
+                        </section>
+                        <section id="tool-power-diff" class="tool-panel" data-tool-panel="power-diff" aria-label="戦力差計算機" data-i18n-attr="aria-label:tools.powerDiff.panelAriaLabel">
+                            <header class="tool-panel-header">
+                                <h3 data-i18n="tools.powerDiff.header.title">戦力差計算機</h3>
+                                <p data-i18n="tools.powerDiff.header.description">レベル1の戦力を100として、レベル差計算を元に戦力の数値を可視化します。</p>
+                            </header>
+                            <div class="power-diff-layout">
+                                <div class="power-diff-controls">
+                                    <label data-i18n="tools.powerDiff.fields.level.label">レベル
+                                        <input id="power-diff-level" type="number" min="1" value="1" step="1" inputmode="numeric">
+                                    </label>
+                                    <label data-i18n="tools.powerDiff.fields.format.label">表記
+                                        <select id="power-diff-format">
+                                            <option value="comma" data-i18n="tools.powerDiff.formats.comma">カンマ表記</option>
+                                            <option value="scientific" data-i18n="tools.powerDiff.formats.scientific">指数表記</option>
+                                            <option value="kmbt" data-i18n="tools.powerDiff.formats.kmbt">kMBT表記</option>
+                                            <option value="smartphone" data-i18n="tools.powerDiff.formats.smartphone">スマホゲーム表記</option>
+                                            <option value="tetrational" data-i18n="tools.powerDiff.formats.tetrational">テトレーショナル表記</option>
+                                            <option value="manoku" data-i18n="tools.powerDiff.formats.manoku">万億兆表記</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div class="power-diff-output">
+                                    <div class="power-diff-value-row">
+                                        <span class="power-diff-label" data-i18n="tools.powerDiff.output.label">戦力</span>
+                                        <span id="power-diff-value" class="power-diff-value">100</span>
+                                    </div>
+                                    <div class="power-diff-meta" id="power-diff-meta"></div>
+                                    <p class="power-diff-note" data-i18n="tools.powerDiff.output.note">計算はレベル差倍率を対数で処理し、doubleの範囲を超える値も表記できます。</p>
+                                </div>
+                            </div>
                         </section>
                         <section id="tool-state-manager" class="tool-panel" data-tool-panel="state-manager" aria-label="状態管理ツール" data-i18n-attr="aria-label:tools.sidebar.stateManager.panelAriaLabel">
                             <header class="tool-panel-header">
@@ -1701,6 +1734,7 @@
     <script src="js/tools/blockdata-editor.js"></script>
     <script src="js/tools/sandbox.js"></script>
     <script src="js/tools/image-viewer.js"></script>
+    <script src="js/tools/power-diff.js"></script>
     <script src="js/achievements.js"></script>
     <script src="js/i18n/locales/ja.json.js"></script>
     <script src="js/i18n/locales/en.json.js"></script>

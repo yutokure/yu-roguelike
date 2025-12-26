@@ -151,16 +151,30 @@
         });
     }
 
+    function calculateSuperLog2(log2Value) {
+        if (!Number.isFinite(log2Value)) return null;
+        if (log2Value <= 1) {
+            return Math.pow(2, log2Value) - 1;
+        }
+        let height = 0;
+        let current = log2Value;
+        let guard = 0;
+        while (current > 1 && guard < 10000) {
+            current = Math.log2(current);
+            height += 1;
+            guard += 1;
+        }
+        if (guard >= 10000) return null;
+        const remainder = Math.pow(2, current) - 1;
+        return height + remainder;
+    }
+
     function formatTetrational(log10Value) {
         if (!Number.isFinite(log10Value)) return '-';
-        let log2Value = log10Value * Math.LOG2_10;
+        const log2Value = log10Value * Math.LOG2_10;
         if (!Number.isFinite(log2Value)) return '-';
-        let steps = 0;
-        while (log2Value > 2 && steps < 10000) {
-            log2Value = Math.log2(log2Value);
-            steps += 1;
-        }
-        const height = steps + Math.max(0, log2Value - 1);
+        const height = calculateSuperLog2(log2Value);
+        if (!Number.isFinite(height)) return '-';
         return `2↑↑${formatMantissa(height, 2)}`;
     }
 

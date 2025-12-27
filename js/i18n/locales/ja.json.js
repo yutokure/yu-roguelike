@@ -15788,7 +15788,9 @@
           "kmbt": "kMBT表記",
           "smartphone": "スマホゲーム表記",
           "tetrational": "テトレーショナル表記",
-          "manoku": "万億兆表記"
+          "manoku": "万億兆表記",
+          "log": "対数表記",
+          "arrow": "矢印表記"
         },
         "output": {
           "label": "戦力",

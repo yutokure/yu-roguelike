@@ -7,13 +7,13 @@
 
     const BASE_POWER_LOG10 = Math.log10(100);
     const LOG10_TWO = Math.log10(2);
+    const LOG2_10 = Math.LOG2_10 || (Math.log(10) / Math.log(2));
 
-    const KMBT_SUFFIXES = Object.freeze([
-        '', 'k', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No',
-        'Dc', 'Ud', 'Dd', 'Td', 'Qad', 'Qid', 'Sxd', 'Spd', 'Ocd',
-        'Nod', 'Vg', 'Uvg', 'Dvg', 'Tvg', 'Qavg', 'Qivg', 'Sxvg',
-        'Spvg', 'Ocvg', 'Novg', 'Tg'
-    ]);
+    const KMBT_SUFFIXES = Object.freeze(['', 'k']);
+    const ILLION_BASES = Object.freeze(['', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
+    const ILLION_UNIT_PREFIXES = Object.freeze(['', 'U', 'D', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No']);
+    const ILLION_TENS_PREFIXES = Object.freeze(['', 'd', 'vg', 'tg', 'qag', 'qig', 'sxg', 'spg', 'ocg', 'nog']);
+    const ILLION_HUNDREDS_PREFIXES = Object.freeze(['', 'Ce', 'DuCe', 'TrCe', 'QaCe', 'QiCe', 'SxCe', 'SpCe', 'OcCe', 'NoCe']);
 
     const JAPANESE_UNITS = Object.freeze([
         '', '万', '億', '兆', '京', '垓', '秭', '穣', '溝', '澗',
@@ -89,6 +89,9 @@
 
     function formatComma(log10Value) {
         if (!Number.isFinite(log10Value)) return '-';
+        if (log10Value >= 10000) {
+            return formatCopyNotation(log10Value);
+        }
         if (log10Value < 0) {
             return formatSmallNumber(Math.pow(10, log10Value), { maximumFractionDigits: 12 });
         }
@@ -98,6 +101,14 @@
         return addCommas(buildIntegerString(log10Value));
     }
 
+    function formatCopyNotation(log10Value) {
+        const exponent = Math.floor(log10Value);
+        const mantissa = Math.pow(10, log10Value - exponent);
+        const digits = exponent + 1;
+        const repeatCount = Math.max(1, digits - 1);
+        return `${formatMantissa(mantissa, 2)}×9[${repeatCount}]`;
+    }
+
     function formatScientific(log10Value) {
         if (!Number.isFinite(log10Value)) return '-';
         const exponent = Math.floor(log10Value);
@@ -105,8 +116,116 @@
         return `${formatMantissa(mantissa, 2)}×10^${exponent}`;
     }
 
+    function formatLogarithm(log10Value) {
+        if (!Number.isFinite(log10Value)) return '-';
+        return `e${formatMantissa(log10Value, 3)}`;
+    }
+
+    function formatArrow(log10Value) {
+        if (!Number.isFinite(log10Value)) return '-';
+        return `10↑${formatMantissa(log10Value, 2)}`;
+    }
+
+    function capitalizeFirst(value) {
+        if (!value) return value;
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    function buildIllionPrefix(index) {
+        const value = Math.floor(index);
+        if (!Number.isFinite(value) || value <= 0) return null;
+        if (value < 10) {
+            return ILLION_UNIT_PREFIXES[value] || null;
+        }
+        if (value < 20) {
+            if (value === 10) return 'd';
+            const unitPrefix = ILLION_UNIT_PREFIXES[value - 10];
+            return unitPrefix ? `${unitPrefix}d` : null;
+        }
+        if (value < 100) {
+            const units = value % 10;
+            const tens = Math.floor(value / 10);
+            const unitPrefix = units ? ILLION_UNIT_PREFIXES[units] : '';
+            let tensPrefix = ILLION_TENS_PREFIXES[tens] || '';
+            if (!unitPrefix && tensPrefix) {
+                tensPrefix = capitalizeFirst(tensPrefix);
+            }
+            return unitPrefix || tensPrefix ? `${unitPrefix}${tensPrefix}` : null;
+        }
+        if (value < 1000) {
+            const units = value % 10;
+            const tens = Math.floor(value / 10) % 10;
+            const hundreds = Math.floor(value / 100) % 10;
+            const hundredPrefix = ILLION_HUNDREDS_PREFIXES[hundreds] || '';
+            const tensPrefix = tens ? ILLION_TENS_PREFIXES[tens] : '';
+            const unitPrefix = units ? ILLION_UNIT_PREFIXES[units] : '';
+            const combined = `${hundredPrefix}${tensPrefix}${unitPrefix}`;
+            return combined || null;
+        }
+        return null;
+    }
+
+    function buildMilliaAbbrev(value) {
+        const groups = [];
+        let remaining = value;
+        while (remaining > 0) {
+            groups.push(remaining % 1000);
+            remaining = Math.floor(remaining / 1000);
+        }
+        let result = '';
+        for (let i = groups.length - 1; i >= 1; i -= 1) {
+            const groupValue = groups[i];
+            const prefix = groupValue === 0 ? '' : (groupValue === 1 ? '' : buildIllionPrefix(groupValue));
+            if (prefix === null) return null;
+            result += `${prefix}m`;
+        }
+        const remainder = groups[0] || 0;
+        if (remainder > 0) {
+            const remainderPrefix = buildIllionPrefix(remainder);
+            if (remainderPrefix === null) return null;
+            result += remainderPrefix;
+        }
+        return result || null;
+    }
+
+    function buildMyriaAbbrev(value) {
+        if (value < 10000 || value >= 100000) return null;
+        const tensOfThousands = Math.floor(value / 10000);
+        const myPrefix = tensOfThousands === 1 ? '' : (ILLION_UNIT_PREFIXES[tensOfThousands] || null);
+        if (myPrefix === null) return null;
+        const base = `${myPrefix}my`;
+        const remainder = value % 10000;
+        if (remainder === 0) return base;
+        const remainderSuffix = buildMilliaAbbrev(remainder);
+        if (!remainderSuffix) return null;
+        return `${base}${remainderSuffix}`;
+    }
+
+    function buildIllionAbbrev(index) {
+        const value = Math.floor(index);
+        if (!Number.isFinite(value) || value <= 0) return null;
+        if (value < ILLION_BASES.length) {
+            return ILLION_BASES[value];
+        }
+        if (value === 10) return 'Dc';
+        if (value < 1000) {
+            return buildIllionPrefix(value);
+        }
+        if (value < 10000) {
+            return buildMilliaAbbrev(value);
+        }
+        if (value < 100000) {
+            return buildMyriaAbbrev(value);
+        }
+        return buildMilliaAbbrev(value);
+    }
+
     function resolveKmbtSuffix(group) {
-        return KMBT_SUFFIXES[group] || null;
+        if (group <= 1) {
+            return KMBT_SUFFIXES[group] || null;
+        }
+        const illionIndex = group - 1;
+        return buildIllionAbbrev(illionIndex);
     }
 
     function alphabetSuffix(index, minLength = 2) {
@@ -166,11 +285,11 @@
 
     function formatTetrational(log10Value) {
         if (!Number.isFinite(log10Value)) return '-';
-        const log2Value = log10Value * Math.LOG2_10;
+        const log2Value = log10Value * LOG2_10;
         if (!Number.isFinite(log2Value)) return '-';
         const height = calculateSuperLog2(log2Value);
         if (!Number.isFinite(height)) return '-';
-        return `2↑↑${formatMantissa(height, 2)}`;
+        return `2↑↑${formatMantissa(height, 4)}`;
     }
 
     function formatJapaneseGroup(log10Value) {
@@ -244,6 +363,10 @@
                 return formatTetrational(log10Value);
             case 'manoku':
                 return formatManOkuCho(log10Value);
+            case 'log':
+                return formatLogarithm(log10Value);
+            case 'arrow':
+                return formatArrow(log10Value);
             case 'comma':
             default:
                 return formatComma(log10Value);

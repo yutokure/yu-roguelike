@@ -6913,7 +6913,10 @@ class Inventory {
             if (!Number.isFinite(numeric) || Math.abs(numeric) < 1e-6) continue;
             const delta = numeric > 0 ? Math.floor(numeric) : Math.ceil(numeric);
             if (delta === 0) continue;
-            const current = Inventory.normalizeItemCount(this[key]);
+            const currentRaw = Number(this[key]);
+            const current = opts.allowNegative
+                ? (Number.isFinite(currentRaw) ? Math.trunc(currentRaw) : 0)
+                : Inventory.normalizeItemCount(currentRaw);
             let next = current + delta;
             if (!opts.allowNegative && next < 0) next = 0;
             if (!Number.isFinite(next)) next = 0;

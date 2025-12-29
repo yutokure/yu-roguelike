@@ -552,10 +552,119 @@ const noiseUiState = {
     canvasCleanup: null
 };
 let autoItemCheckScheduled = false;
-let currentRunContext = null;
 let lastRunResultSummary = null;
 let runResultOverlayState = null;
 let isGameOver = false;
+const createGameOverSequenceState = () => ({
+    active: false,
+    burstTimeoutId: null,
+    overlayTimeoutId: null,
+    causeMessage: '',
+    origin: null,
+    startedAt: 0,
+});
+
+class GameEngine {
+    constructor({ onEvent } = {}) {
+        this.onEvent = typeof onEvent === 'function' ? onEvent : null;
+        this.listeners = new Map();
+        this.currentRunContext = null;
+        this.gameOverSequence = createGameOverSequenceState();
+        this.difficulty = 'Normal';
+        this.selectedWorld = 'A';
+        this.selectedDungeonBase = 1;
+    }
+
+    on(eventName, handler) {
+        if (typeof handler !== 'function') return () => {};
+        const list = this.listeners.get(eventName) || [];
+        list.push(handler);
+        this.listeners.set(eventName, list);
+        return () => {
+            const next = (this.listeners.get(eventName) || []).filter(fn => fn !== handler);
+            if (next.length) {
+                this.listeners.set(eventName, next);
+            } else {
+                this.listeners.delete(eventName);
+            }
+        };
+    }
+
+    emit(eventName, payload) {
+        if (this.onEvent) {
+            try {
+                this.onEvent(eventName, payload);
+            } catch (error) {
+                console.warn('[GameEngine] event callback failed', error);
+            }
+        }
+        const handlers = this.listeners.get(eventName);
+        if (!handlers?.length) return;
+        handlers.forEach(handler => {
+            try {
+                handler(payload);
+            } catch (error) {
+                console.warn(`[GameEngine] handler failed for ${eventName}`, error);
+            }
+        });
+    }
+
+    beginDungeonRunContext(meta = {}) {
+        const baseLevel = Number.isFinite(player?.level) ? Math.max(1, Math.floor(player.level)) : 1;
+        const baseExp = Number.isFinite(player?.exp) ? Math.max(0, Math.floor(player.exp)) : 0;
+        const baseHp = Number.isFinite(player?.hp) ? player.hp : player?.maxHp;
+        const baseMaxHp = Number.isFinite(player?.maxHp) ? player.maxHp : PLAYER_BASE_MAX_HP;
+        this.currentRunContext = {
+            startedAt: Date.now(),
+            startLevel: baseLevel,
+            startExp: baseExp,
+            startTotalExp: computeTotalExpForState(baseLevel, baseExp),
+            startHp: Number.isFinite(baseHp) ? baseHp : baseMaxHp,
+            startMaxHp: baseMaxHp,
+            metrics: {
+                damageTaken: 0,
+                healingItemsUsed: 0,
+                healingBreakdown: Object.create(null)
+            },
+            meta: {
+                mode: currentMode,
+                difficulty: this.difficulty,
+                world: this.selectedWorld,
+                dungeonBase: this.selectedDungeonBase,
+                ...meta
+            }
+        };
+        this.emit('runContextStarted', { context: this.currentRunContext });
+        return this.currentRunContext;
+    }
+
+    resetDungeonRunContext() {
+        this.currentRunContext = null;
+        this.emit('runContextReset');
+    }
+
+    isDungeonRunActive() {
+        return !!this.currentRunContext;
+    }
+
+    trackRunEvent(type, payload) {
+        if (!this.currentRunContext) return;
+        switch (type) {
+            case 'damage_taken': {
+                const amount = Number(payload?.amount);
+                if (Number.isFinite(amount) && amount > 0) {
+                    this.currentRunContext.metrics.damageTaken += Math.max(0, Math.floor(amount));
+                }
+                break;
+            }
+            default:
+                break;
+        }
+        this.emit('runEventTracked', { type, payload });
+    }
+}
+
+const engine = new GameEngine();
 
 const RUN_RESULT_REASON_KEYS = Object.freeze({
     gameOver: 'ui.runResult.reason.gameOver',
@@ -1001,14 +1110,6 @@ const GAME_OVER_BURST_DELAY_MS = 500;
 const GAME_OVER_OVERLAY_DELAY_MS = 1000;
 const GAME_OVER_RESULT_DELAY_MS = 350;
 const PLAYER_BURST_EFFECT_DURATION_MS = 500;
-let gameOverSequence = {
-    active: false,
-    burstTimeoutId: null,
-    overlayTimeoutId: null,
-    causeMessage: '',
-    origin: null,
-    startedAt: 0,
-};
 let playerBurstEffect = null;
 // Toolbar / Modals
 const btnBack = document.getElementById('btn-back');
@@ -1123,7 +1224,7 @@ let __achievementsTabInitialized = false;
 
 function recordAchievementEvent(type, payload) {
     try {
-        trackRunEvent(type, payload);
+        engine.trackRunEvent(type, payload);
         if (window.AchievementSystem && typeof window.AchievementSystem.recordEvent === 'function') {
             window.AchievementSystem.recordEvent(type, payload);
         }
@@ -1139,62 +1240,28 @@ function computeTotalExpForState(level, expRemainder) {
 }
 
 function beginDungeonRunContext(meta = {}) {
-    const baseLevel = Number.isFinite(player?.level) ? Math.max(1, Math.floor(player.level)) : 1;
-    const baseExp = Number.isFinite(player?.exp) ? Math.max(0, Math.floor(player.exp)) : 0;
-    const baseHp = Number.isFinite(player?.hp) ? player.hp : player?.maxHp;
-    const baseMaxHp = Number.isFinite(player?.maxHp) ? player.maxHp : PLAYER_BASE_MAX_HP;
-    currentRunContext = {
-        startedAt: Date.now(),
-        startLevel: baseLevel,
-        startExp: baseExp,
-        startTotalExp: computeTotalExpForState(baseLevel, baseExp),
-        startHp: Number.isFinite(baseHp) ? baseHp : baseMaxHp,
-        startMaxHp: baseMaxHp,
-        metrics: {
-            damageTaken: 0,
-            healingItemsUsed: 0,
-            healingBreakdown: Object.create(null)
-        },
-        meta: {
-            mode: currentMode,
-            difficulty,
-            world: selectedWorld,
-            dungeonBase: selectedDungeonBase,
-            ...meta
-        }
-    };
+    return engine.beginDungeonRunContext(meta);
 }
 
 function resetDungeonRunContext() {
-    currentRunContext = null;
+    engine.resetDungeonRunContext();
 }
 
 function isDungeonRunActive() {
-    return !!currentRunContext;
+    return engine.isDungeonRunActive();
 }
 
 function trackRunEvent(type, payload) {
-    if (!currentRunContext) return;
-    switch (type) {
-        case 'damage_taken': {
-            const amount = Number(payload?.amount);
-            if (Number.isFinite(amount) && amount > 0) {
-                currentRunContext.metrics.damageTaken += Math.max(0, Math.floor(amount));
-            }
-            break;
-        }
-        default:
-            break;
-    }
+    engine.trackRunEvent(type, payload);
 }
 
 function registerRunHealingItemUse(itemId) {
-    if (currentRunContext) {
-        currentRunContext.metrics.healingItemsUsed += 1;
-        if (!currentRunContext.metrics.healingBreakdown[itemId]) {
-            currentRunContext.metrics.healingBreakdown[itemId] = 0;
+    if (engine.currentRunContext) {
+        engine.currentRunContext.metrics.healingItemsUsed += 1;
+        if (!engine.currentRunContext.metrics.healingBreakdown[itemId]) {
+            engine.currentRunContext.metrics.healingBreakdown[itemId] = 0;
         }
-        currentRunContext.metrics.healingBreakdown[itemId] += 1;
+        engine.currentRunContext.metrics.healingBreakdown[itemId] += 1;
     }
     recordAchievementEvent('healing_item_used', { item: itemId || 'unknown' });
 }
@@ -1220,14 +1287,14 @@ function formatRunResultSigned(value, { zeroPrefix = '+' } = {}) {
 }
 
 function buildRunResultSummary(reason = 'return', { cause = '' } = {}) {
-    if (!currentRunContext) return null;
-    const endLevel = Number.isFinite(player?.level) ? Math.max(1, Math.floor(player.level)) : currentRunContext.startLevel;
+    if (!engine.currentRunContext) return null;
+    const endLevel = Number.isFinite(player?.level) ? Math.max(1, Math.floor(player.level)) : engine.currentRunContext.startLevel;
     const endExp = Number.isFinite(player?.exp) ? Math.max(0, Math.floor(player.exp)) : 0;
     const endTotalExp = computeTotalExpForState(endLevel, endExp);
-    const totalDelta = endTotalExp - currentRunContext.startTotalExp;
-    const levelDiff = endLevel - currentRunContext.startLevel;
-    const damageTaken = Math.max(0, Math.floor(currentRunContext.metrics?.damageTaken || 0));
-    const healingUsed = Math.max(0, Math.floor(currentRunContext.metrics?.healingItemsUsed || 0));
+    const totalDelta = endTotalExp - engine.currentRunContext.startTotalExp;
+    const levelDiff = endLevel - engine.currentRunContext.startLevel;
+    const damageTaken = Math.max(0, Math.floor(engine.currentRunContext.metrics?.damageTaken || 0));
+    const healingUsed = Math.max(0, Math.floor(engine.currentRunContext.metrics?.healingItemsUsed || 0));
     const reasonLabel = getRunResultReasonLabel(reason);
     const now = Date.now();
     return {
@@ -1235,10 +1302,10 @@ function buildRunResultSummary(reason = 'return', { cause = '' } = {}) {
         reasonLabel,
         title: translate('ui.runResult.title'),
         level: {
-            start: currentRunContext.startLevel,
+            start: engine.currentRunContext.startLevel,
             end: endLevel,
             diff: levelDiff,
-            display: `${currentRunContext.startLevel}→${endLevel} (${formatRunResultSigned(levelDiff)})`
+            display: `${engine.currentRunContext.startLevel}→${endLevel} (${formatRunResultSigned(levelDiff)})`
         },
         exp: {
             delta: totalDelta,
@@ -1248,21 +1315,21 @@ function buildRunResultSummary(reason = 'return', { cause = '' } = {}) {
         damageDisplay: formatRunResultNumber(damageTaken),
         healingItemsUsed: healingUsed,
         healingDisplay: formatRunResultNumber(healingUsed),
-        healingBreakdown: { ...(currentRunContext.metrics?.healingBreakdown || {}) },
-        startedAt: currentRunContext.startedAt,
+        healingBreakdown: { ...(engine.currentRunContext.metrics?.healingBreakdown || {}) },
+        startedAt: engine.currentRunContext.startedAt,
         endedAt: now,
-        durationMs: Math.max(0, now - (currentRunContext.startedAt || now)),
-        meta: { ...(currentRunContext.meta || {}) },
+        durationMs: Math.max(0, now - (engine.currentRunContext.startedAt || now)),
+        meta: { ...(engine.currentRunContext.meta || {}) },
         floor: dungeonLevel,
         cause: cause || ''
     };
 }
 
 function finalizeDungeonRunResult(reason = 'return', options = {}) {
-    if (!currentRunContext) return null;
+    if (!engine.currentRunContext) return null;
     const summary = buildRunResultSummary(reason, options);
     lastRunResultSummary = summary;
-    resetDungeonRunContext();
+    engine.resetDungeonRunContext();
     return summary;
 }
 
@@ -1723,7 +1790,7 @@ function triggerHatenaBlock(block) {
 
     let recommended = null;
     try {
-        recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+        recommended = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     } catch {
         recommended = null;
     }
@@ -4266,7 +4333,7 @@ function hasSandboxInteractivePrivilege() {
     if (!Number.isFinite(playerLevel) || playerLevel <= 1025) return false;
     let recommended = null;
     try {
-        recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+        recommended = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     } catch {
         recommended = null;
     }
@@ -5528,9 +5595,9 @@ function captureSandboxSnapshot() {
     ensurePassiveOrbInventory();
     sandboxRuntime.snapshot = {
         player: JSON.parse(JSON.stringify(player)),
-        difficulty,
-        selectedWorld,
-        selectedDungeonBase,
+        difficulty: engine.difficulty,
+        selectedWorld: engine.selectedWorld,
+        selectedDungeonBase: engine.selectedDungeonBase,
         dungeonLevel,
         mode: currentMode,
         selectionFooterCollapsed
@@ -5553,9 +5620,9 @@ function restoreSandboxSnapshotIfNeeded() {
             ensurePassiveOrbInventory();
         }
     }
-    if (typeof snap?.difficulty !== 'undefined') difficulty = snap.difficulty;
-    if (typeof snap?.selectedWorld !== 'undefined') selectedWorld = snap.selectedWorld;
-    if (typeof snap?.selectedDungeonBase !== 'undefined') selectedDungeonBase = snap.selectedDungeonBase;
+    if (typeof snap?.difficulty !== 'undefined') engine.difficulty = snap.difficulty;
+    if (typeof snap?.selectedWorld !== 'undefined') engine.selectedWorld = snap.selectedWorld;
+    if (typeof snap?.selectedDungeonBase !== 'undefined') engine.selectedDungeonBase = snap.selectedDungeonBase;
     if (typeof snap?.dungeonLevel !== 'undefined') dungeonLevel = snap.dungeonLevel;
     if (typeof snap?.selectionFooterCollapsed !== 'undefined') selectionFooterCollapsed = snap.selectionFooterCollapsed;
     currentMode = snap?.mode || 'normal';
@@ -6953,7 +7020,7 @@ function maybeGrantPassiveOrb(source, chance = 1) {
 }
 
 function tryGrantBossPassiveOrbReward() {
-    const recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    const recommended = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     const playerLevel = Number.isFinite(player?.level) ? player.level : null;
     if (!Number.isFinite(recommended) || !Number.isFinite(playerLevel)) return null;
     const gap = recommended - playerLevel;
@@ -7943,7 +8010,7 @@ function updateGeneratorHazardsForFloor(generatorId) {
         recommended = sandboxRuntime.config?.playerLevel ?? null;
     } else {
         try {
-            recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+            recommended = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
         } catch {
             recommended = null;
         }
@@ -8256,9 +8323,6 @@ function getDungeonBaseData(world, baseId) {
 
 // ダンジョンレベル
 let dungeonLevel = 1;
-let selectedWorld = 'A'; // A..J or X
-let selectedDungeonBase = 1; // 1,11,...,91
-let difficulty = 'Normal';
 let chests = [];
 const rareChestState = {
     active: false,
@@ -8351,7 +8415,7 @@ function updateDungeonTypeOverlay() {
     if (!dungeonTypeOverlay) return;
 
     const generatorId = getCurrentFloorGeneratorId();
-    const baseData = getDungeonBaseData(selectedWorld, selectedDungeonBase) || null;
+    const baseData = getDungeonBaseData(engine.selectedWorld, engine.selectedDungeonBase) || null;
 
     const overlayTitleFallback = translateOrFallback('game.dungeonOverlay.titleFallback', 'ダンジョン');
     let title = resolveLocalizedText(baseData?.nameKey, () => baseData?.name || overlayTitleFallback) || overlayTitleFallback;
@@ -8580,7 +8644,7 @@ function getMaxFloor() {
             return Math.max(1, Math.floor(bundle.max));
         }
     }
-    return selectedWorld === 'X' ? 25 : 10;
+    return engine.selectedWorld === 'X' ? 25 : 10;
 }
 
 function isBossFloor(level) {
@@ -8603,7 +8667,7 @@ function isBossFloor(level) {
             if (Number.isFinite(bundle.max) && level === Math.floor(bundle.max)) return true;
         }
     }
-    return level === (selectedWorld === 'X' ? 25 : 10);
+    return level === (engine.selectedWorld === 'X' ? 25 : 10);
 }
 
 let blockDataLoadPromise = null;
@@ -9748,8 +9812,8 @@ function captureBlockDimTestEnvironment() {
         currentMode,
         blockDimState: deepClone(blockDimState),
         dungeonLevel,
-        selectedWorld,
-        selectedDungeonBase,
+        selectedWorld: engine.selectedWorld,
+        selectedDungeonBase: engine.selectedDungeonBase,
         lastGeneratedGenType,
         currentGeneratorHazards: Object.assign({}, currentGeneratorHazards),
         seededActive: __seededActive,
@@ -9767,8 +9831,8 @@ function applyBlockDimTestEnvironment(snapshot) {
     currentMode = snapshot.currentMode ?? currentMode;
     blockDimState = snapshot.blockDimState ? deepClone(snapshot.blockDimState) : createDefaultBlockDimState();
     dungeonLevel = snapshot.dungeonLevel ?? dungeonLevel;
-    selectedWorld = snapshot.selectedWorld ?? selectedWorld;
-    selectedDungeonBase = snapshot.selectedDungeonBase ?? selectedDungeonBase;
+    engine.selectedWorld = snapshot.selectedWorld ?? engine.selectedWorld;
+    engine.selectedDungeonBase = snapshot.selectedDungeonBase ?? engine.selectedDungeonBase;
     lastGeneratedGenType = snapshot.lastGeneratedGenType ?? lastGeneratedGenType;
     if (snapshot.currentGeneratorHazards && typeof snapshot.currentGeneratorHazards === 'object') {
         const h = snapshot.currentGeneratorHazards;
@@ -11954,9 +12018,9 @@ function createGodConsoleContext() {
         domainCrystals,
         sandboxGimmicks,
         runtime: {
-            difficulty,
-            selectedWorld,
-            selectedDungeonBase,
+            difficulty: engine.difficulty,
+            selectedWorld: engine.selectedWorld,
+            selectedDungeonBase: engine.selectedDungeonBase,
             currentMode,
             dungeonLevel,
             blockDimState,
@@ -12127,8 +12191,8 @@ function unlockAnosGodhood(details = {}) {
     godhoodState.summary = {
         nested: godhoodState.nested,
         dimKey: details.dimKey || null,
-        difficulty: details.difficulty || difficulty,
-        world: details.world || selectedWorld,
+        difficulty: details.difficulty || engine.difficulty,
+        world: details.world || engine.selectedWorld,
         level: details.level ?? null
     };
     godConsoleState.defaultInjected = false;
@@ -12188,9 +12252,9 @@ function getGameStateSnapshot() {
     return {
         dungeonLevel,
         player: playerSnapshot,
-        selectedWorld,
-        selectedDungeonBase,
-        difficulty,
+        selectedWorld: engine.selectedWorld,
+        selectedDungeonBase: engine.selectedDungeonBase,
+        difficulty: engine.difficulty,
         mode: currentMode,
         selectionFooterCollapsed,
         godhood: {
@@ -12324,9 +12388,9 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     enforceEffectiveHpCap();
     updatePlayerSpCap({ silent: true });
 
-    if (snapshot.selectedWorld) selectedWorld = snapshot.selectedWorld;
-    if (typeof snapshot.selectedDungeonBase !== 'undefined') selectedDungeonBase = snapshot.selectedDungeonBase;
-    if (snapshot.difficulty) difficulty = snapshot.difficulty;
+    if (snapshot.selectedWorld) engine.selectedWorld = snapshot.selectedWorld;
+    if (typeof snapshot.selectedDungeonBase !== 'undefined') engine.selectedDungeonBase = snapshot.selectedDungeonBase;
+    if (snapshot.difficulty) engine.difficulty = snapshot.difficulty;
     if (snapshot.mode) currentMode = snapshot.mode;
     if (typeof snapshot.selectionFooterCollapsed === 'boolean') selectionFooterCollapsed = snapshot.selectionFooterCollapsed;
 
@@ -12397,7 +12461,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     markSkillsListDirty();
 
     if (applyUI) {
-        if (difficultySelect) difficultySelect.value = difficulty;
+        if (difficultySelect) difficultySelect.value = engine.difficulty;
         buildSelection();
         renderHistoryAndBookmarks();
         markUiDirty();
@@ -12469,7 +12533,7 @@ function isFloor(x, y) {
 
 function canPlayerBreakWalls() {
     if (player.level < 500) return false;
-    const recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    const recommended = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     if (!Number.isFinite(recommended)) return false;
     return recommended <= player.level - 5;
 }
@@ -12669,9 +12733,9 @@ function resolveCurrentGeneratorType() {
     if (currentMode === 'blockdim' && blockDimState?.spec) {
         return blockDimState.spec.type || 'mixed';
     }
-    const dungeonData = getDungeonBaseData(selectedWorld, selectedDungeonBase);
-    if (!dungeonData) return selectedWorld === 'X' ? 'mixed' : 'field';
-    return dungeonData.type || (selectedWorld === 'X' ? 'mixed' : 'field');
+    const dungeonData = getDungeonBaseData(engine.selectedWorld, engine.selectedDungeonBase);
+    if (!dungeonData) return engine.selectedWorld === 'X' ? 'mixed' : 'field';
+    return dungeonData.type || (engine.selectedWorld === 'X' ? 'mixed' : 'field');
 }
 
 function getFixedMapRecord(bundle, floor) {
@@ -14167,7 +14231,7 @@ function generateEntities() {
     const enemyMinDist = Math.max(3, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) * 0.08));
     const enemyPositions = pickSpreadFloorPositions(enemyCount, enemyMinDist, [{ x: player.x, y: player.y }]);
     for (const pos of enemyPositions) {
-        const baseRec = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+        const baseRec = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
         const lvl = Math.max(1, baseRec + (Math.floor(Math.random() * 9) - 4));
         const maxHp = 50 + 5 * (lvl - 1);
         const typeId = determineEnemyType(baseRec);
@@ -14187,7 +14251,7 @@ function generateEntities() {
     // items = []; // No standalone items, only treasure chests
 
     // 宝箱（推奨+5以上なら設置しない、サイズベース生成）
-    const rec = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    const rec = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     const allowChests = player.level < rec + 5;
     const chestBase = Math.floor((MAP_WIDTH + MAP_HEIGHT) / 15);
     let chestMul = 1.0;
@@ -14323,7 +14387,7 @@ function generateBossRoom() {
     const bossX = startX + Math.floor(roomW / 2);
     const bossY = startY + Math.floor(roomH / 2);
     
-    const rec = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    const rec = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     const bossLevel = rec + 5;
     const bossMaxHp = 1000 + 50 * (bossLevel - 1);
     
@@ -14386,14 +14450,14 @@ function getDungeonTypeName(type) {
 }
 
 function showDungeonDetail(dungeonBase) {
-    const dungeonData = getDungeonBaseData(selectedWorld, dungeonBase);
+    const dungeonData = getDungeonBaseData(engine.selectedWorld, dungeonBase);
 
     if (!dungeonData) {
         dungeonDetailCard.style.display = 'none';
         return;
     }
     
-    const recommendedLevel = recommendedLevelForSelection(selectedWorld, dungeonBase, 1);
+    const recommendedLevel = recommendedLevelForSelection(engine.selectedWorld, dungeonBase, 1);
     const difficultyData = {
         'Very Easy': { deal: 4.0, take: 0.25 },
         'Easy': { deal: 2.0, take: 0.35 },
@@ -14402,7 +14466,7 @@ function showDungeonDetail(dungeonBase) {
         'Hard': { deal: 1.2, take: 0.85 },
         'Very Hard': { deal: 1.0, take: 1.0 },
     };
-    const multiplier = difficultyData[difficulty] || difficultyData['Normal'];
+    const multiplier = difficultyData[engine.difficulty] || difficultyData['Normal'];
     
     const dungeonName = resolveLocalizedText(dungeonData.nameKey, () => dungeonData.name || `${dungeonBase}`);
     dungeonNameEl.textContent = dungeonName || '';
@@ -14666,7 +14730,7 @@ function getCurrentRecommendedLevelForHazards() {
         return currentGeneratorHazards.recommendedLevel;
     }
     try {
-        return recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+        return recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     } catch {
         return null;
     }
@@ -14803,7 +14867,7 @@ function damageMultiplierByLevelDiff(levelDiff) {
 }
 
 function getDifficultyDamageMultipliers() {
-    return DIFFICULTY_DAMAGE_PROFILE[difficulty] || DIFFICULTY_DAMAGE_PROFILE['Normal'];
+    return DIFFICULTY_DAMAGE_PROFILE[engine.difficulty] || DIFFICULTY_DAMAGE_PROFILE['Normal'];
 }
 
 function getDifficultyDamageMultiplier(type) {
@@ -16109,10 +16173,10 @@ function updateUI() {
             const dimensionName = resolveDimensionNameByKey(dimKey) || (dimKey || '').toUpperCase();
             modalWorld.textContent = formatBlockDimWorldLabel(nested, dimensionName || '');
         } else {
-            modalWorld.textContent = formatWorldLabel(selectedWorld);
+            modalWorld.textContent = formatWorldLabel(engine.selectedWorld);
         }
     }
-    if (modalDifficulty) modalDifficulty.textContent = difficulty;
+    if (modalDifficulty) modalDifficulty.textContent = engine.difficulty;
     // ダンジョン情報（BlockDim ではブロック構成を表示）
     if (modalDungeonSummary) {
         if (currentMode === 'blockdim' && blockDimState?.spec) {
@@ -16133,9 +16197,9 @@ function updateUI() {
                 modalDungeonType.textContent = formatSpecType(blockDimState.spec);
             }
         } else {
-            const dData = getDungeonBaseData(selectedWorld, selectedDungeonBase);
+            const dData = getDungeonBaseData(engine.selectedWorld, engine.selectedDungeonBase);
             const name = dData ? resolveLocalizedText(dData.nameKey, () => dData.name || '-') : '-';
-            modalDungeonSummary.textContent = formatDungeonSummaryLabel(selectedWorld, name);
+            modalDungeonSummary.textContent = formatDungeonSummaryLabel(engine.selectedWorld, name);
             if (modalDungeonTypeRow && modalDungeonType) {
                 modalDungeonTypeRow.style.display = '';
                 modalDungeonType.textContent = dData ? getDungeonTypeName(dData.type) : '-';
@@ -16240,7 +16304,7 @@ function shouldActivateSatietySystem() {
     if (isSandboxActive()) return false;
     if (isGameOver) return false;
     if (!gameScreen || gameScreen.style.display === 'none') return false;
-    const recommended = recommendedLevelForSelection(selectedWorld, selectedDungeonBase, dungeonLevel);
+    const recommended = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     if (!Number.isFinite(recommended)) return false;
     if (recommended < 300) return false;
     const playerLevel = Number.isFinite(player.level) ? player.level : 1;
@@ -17302,7 +17366,7 @@ function handlePlayerDeath(message) {
         () => translateOrFallback('game.runResult.defaultCause', 'ゲームオーバー')
     );
     const deathMessage = (typeof message === 'string' && message.trim()) ? message : defaultCause;
-    recordAchievementEvent('death', { cause: deathMessage, mode: currentMode, floor: dungeonLevel, difficulty });
+    recordAchievementEvent('death', { cause: deathMessage, mode: currentMode, floor: dungeonLevel, difficulty: engine.difficulty });
     addMessage(deathMessage);
 
     if (player) {
@@ -17311,25 +17375,25 @@ function handlePlayerDeath(message) {
     }
     markUiDirty();
 
-    if (gameOverSequence.burstTimeoutId) {
-        clearTimeout(gameOverSequence.burstTimeoutId);
+    if (engine.gameOverSequence.burstTimeoutId) {
+        clearTimeout(engine.gameOverSequence.burstTimeoutId);
     }
-    if (gameOverSequence.overlayTimeoutId) {
-        clearTimeout(gameOverSequence.overlayTimeoutId);
+    if (engine.gameOverSequence.overlayTimeoutId) {
+        clearTimeout(engine.gameOverSequence.overlayTimeoutId);
     }
 
     playerBurstEffect = null;
 
     const origin = {
-        x: Number.isFinite(player?.x) ? player.x : (gameOverSequence.origin?.x ?? 0),
-        y: Number.isFinite(player?.y) ? player.y : (gameOverSequence.origin?.y ?? 0),
+        x: Number.isFinite(player?.x) ? player.x : (engine.gameOverSequence.origin?.x ?? 0),
+        y: Number.isFinite(player?.y) ? player.y : (engine.gameOverSequence.origin?.y ?? 0),
     };
     const now = (typeof performance !== 'undefined' && typeof performance.now === 'function')
         ? performance.now()
         : Date.now();
     const causeMessage = getLastMeaningfulLogLine() || deathMessage;
 
-    gameOverSequence = {
+    engine.gameOverSequence = {
         active: true,
         burstTimeoutId: null,
         overlayTimeoutId: null,
@@ -17338,12 +17402,12 @@ function handlePlayerDeath(message) {
         startedAt: now,
     };
 
-    gameOverSequence.burstTimeoutId = setTimeout(() => {
+    engine.gameOverSequence.burstTimeoutId = setTimeout(() => {
         startPlayerBurstEffect();
     }, GAME_OVER_BURST_DELAY_MS);
 
-    gameOverSequence.overlayTimeoutId = setTimeout(() => {
-        const cause = getLastMeaningfulLogLine() || gameOverSequence.causeMessage || defaultCause;
+    engine.gameOverSequence.overlayTimeoutId = setTimeout(() => {
+        const cause = getLastMeaningfulLogLine() || engine.gameOverSequence.causeMessage || defaultCause;
         const normalizedCause = (typeof cause === 'string' && cause.trim()) ? cause : defaultCause;
         playerBurstEffect = null;
         stopGameLoop();
@@ -17358,18 +17422,18 @@ function handlePlayerDeath(message) {
 }
 
 function cancelGameOverSequence() {
-    if (gameOverSequence.burstTimeoutId) {
-        clearTimeout(gameOverSequence.burstTimeoutId);
+    if (engine.gameOverSequence.burstTimeoutId) {
+        clearTimeout(engine.gameOverSequence.burstTimeoutId);
     }
-    if (gameOverSequence.overlayTimeoutId) {
-        clearTimeout(gameOverSequence.overlayTimeoutId);
+    if (engine.gameOverSequence.overlayTimeoutId) {
+        clearTimeout(engine.gameOverSequence.overlayTimeoutId);
     }
-    gameOverSequence.burstTimeoutId = null;
-    gameOverSequence.overlayTimeoutId = null;
-    gameOverSequence.active = false;
-    gameOverSequence.causeMessage = '';
-    gameOverSequence.origin = null;
-    gameOverSequence.startedAt = 0;
+    engine.gameOverSequence.burstTimeoutId = null;
+    engine.gameOverSequence.overlayTimeoutId = null;
+    engine.gameOverSequence.active = false;
+    engine.gameOverSequence.causeMessage = '';
+    engine.gameOverSequence.origin = null;
+    engine.gameOverSequence.startedAt = 0;
 }
 
 function returnToSelectionAfterRunResult() {
@@ -17386,7 +17450,7 @@ function returnToSelectionAfterRunResult() {
 }
 
 function presentGameOverResult(cause) {
-    if (!currentRunContext) {
+    if (!engine.currentRunContext) {
         returnToSelectionAfterRunResult();
         return;
     }
@@ -17397,8 +17461,8 @@ function presentGameOverResult(cause) {
 }
 
 function startPlayerBurstEffect() {
-    if (!gameOverSequence.active) return;
-    const origin = gameOverSequence.origin || {
+    if (!engine.gameOverSequence.active) return;
+    const origin = engine.gameOverSequence.origin || {
         x: Number.isFinite(player?.x) ? player.x : 0,
         y: Number.isFinite(player?.y) ? player.y : 0,
     };
@@ -17642,9 +17706,9 @@ function applyPostMoveEffects() {
                     restoreSatietyToMax();
                     recordAchievementEvent('dungeon_cleared', {
                         mode: currentMode,
-                        difficulty,
-                        world: selectedWorld,
-                        dungeonBase: selectedDungeonBase,
+                        difficulty: engine.difficulty,
+                        world: engine.selectedWorld,
+                        dungeonBase: engine.selectedDungeonBase,
                         nested: blockDimState?.nested || 1
                     });
                     if (currentMode === 'blockdim' && (blockDimState?.nested | 0) === 99999999) {
@@ -17652,8 +17716,8 @@ function applyPostMoveEffects() {
                             nested: blockDimState?.nested || 99999999,
                             dimKey: blockDimState?.dimKey || null,
                             level: blockDimState?.spec?.level,
-                            world: selectedWorld,
-                            difficulty
+                            world: engine.selectedWorld,
+                            difficulty: engine.difficulty
                         });
                     }
                     stopGameLoop();
@@ -17670,7 +17734,7 @@ function applyPostMoveEffects() {
                         previousFloor,
                         floor: dungeonLevel,
                         mode: currentMode,
-                        difficulty
+                        difficulty: engine.difficulty
                     });
                     const floorDisplay = formatNumberLocalized(dungeonLevel);
                     addMessage({
@@ -19161,29 +19225,29 @@ function buildSelection() {
     worlds.forEach(w => {
         const b = document.createElement('button');
         b.textContent = w;
-        if (w === selectedWorld) b.classList.add('selected');
+        if (w === engine.selectedWorld) b.classList.add('selected');
         b.addEventListener('click', () => {
-            selectedWorld = w;
+            engine.selectedWorld = w;
             buildSelection();
             persistSelection();
         });
         worldButtonsDiv.appendChild(b);
     });
     // ダンジョンボタン 1,11,..,91（Xは1のみ扱い、内部で25F運用）
-    const bases = selectedWorld === 'X' ? [1] : [1,11,21,31,41,51,61,71,81,91];
+    const bases = engine.selectedWorld === 'X' ? [1] : [1,11,21,31,41,51,61,71,81,91];
     dungeonButtonsDiv.innerHTML = '';
     bases.forEach(base => {
         const b = document.createElement('button');
-        const dungeonData = getDungeonBaseData(selectedWorld, base);
+        const dungeonData = getDungeonBaseData(engine.selectedWorld, base);
         const label = dungeonData
             ? resolveLocalizedText(dungeonData.nameKey, () => dungeonData.name || `${base}`)
             : `${base}`;
         b.textContent = label || `${base}`;
-        if (base === selectedDungeonBase) b.classList.add('selected');
+        if (base === engine.selectedDungeonBase) b.classList.add('selected');
         // Normalプレビューは常に normal 基準で
         const prevMode = currentMode;
         currentMode = 'normal';
-        const recommendedLevelValue = recommendedLevelForSelection(selectedWorld, base, 1);
+        const recommendedLevelValue = recommendedLevelForSelection(engine.selectedWorld, base, 1);
         b.title = translateOrFallback(
             'selection.dungeons.tooltip',
             () => `推奨Lv: ${recommendedLevelValue}`,
@@ -19191,18 +19255,18 @@ function buildSelection() {
         );
         currentMode = prevMode;
         b.addEventListener('click', () => {
-            selectedDungeonBase = base;
+            engine.selectedDungeonBase = base;
             buildSelection();
             showDungeonDetail(base); // 詳細情報表示
             persistSelection();
         });
         dungeonButtonsDiv.appendChild(b);
     });
-    difficultySelect.value = difficulty;
+    difficultySelect.value = engine.difficulty;
     difficultySelect.onchange = () => { 
-        difficulty = difficultySelect.value; 
-        if (selectedDungeonBase) {
-            showDungeonDetail(selectedDungeonBase); // 難易度変更時に更新
+        engine.difficulty = difficultySelect.value; 
+        if (engine.selectedDungeonBase) {
+            showDungeonDetail(engine.selectedDungeonBase); // 難易度変更時に更新
         }
         persistSelection(); 
         saveAll(); 
@@ -19267,8 +19331,8 @@ function buildSelection() {
     measureSelectionFooterHeight();
     
     // 初期選択時の詳細表示
-    if (selectedDungeonBase) {
-        showDungeonDetail(selectedDungeonBase);
+    if (engine.selectedDungeonBase) {
+        showDungeonDetail(engine.selectedDungeonBase);
     } else {
         dungeonDetailCard.style.display = 'none';
     }
@@ -19287,7 +19351,7 @@ function startGameFromSelection() {
     dungeonLevel = 1;
     updateMapSize(); // Ensure proper map size for level 1
     resetPlayerStatusEffects();
-    beginDungeonRunContext({ source: 'selection' });
+    engine.beginDungeonRunContext({ source: 'selection' });
     selectionScreen.style.display = 'none';
     gameScreen.style.display = 'block';
     enterInGameLayout();
@@ -19319,7 +19383,7 @@ function startGameFromBlockDim() {
     updateMapSize();
     reseedBlockDimForFloor();
     resetPlayerStatusEffects();
-    beginDungeonRunContext({ source: 'blockdim' });
+    engine.beginDungeonRunContext({ source: 'blockdim' });
     selectionScreen.style.display = 'none';
     gameScreen.style.display = 'block';
     enterInGameLayout();
@@ -19372,7 +19436,7 @@ dungeonButtonsDiv.addEventListener('click', (e) => {
 
 // ダンジョン開始ボタンのイベントリスナー
 startDungeonBtn && startDungeonBtn.addEventListener('click', () => {
-    if (selectedDungeonBase) {
+    if (engine.selectedDungeonBase) {
         startGameFromSelection();
         markUiDirty(); // Update UI when starting game
     }
@@ -20195,8 +20259,8 @@ document.addEventListener('app:rerender', () => {
         if (typeof buildSelection === 'function') {
             buildSelection();
         }
-        if (typeof showDungeonDetail === 'function' && selectedDungeonBase) {
-            showDungeonDetail(selectedDungeonBase);
+        if (typeof showDungeonDetail === 'function' && engine.selectedDungeonBase) {
+            showDungeonDetail(engine.selectedDungeonBase);
         }
     } catch (err) {
         console.warn('[app] Failed to rebuild selection on rerender', err);

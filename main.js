@@ -411,106 +411,190 @@ if (languageSelect) {
     });
 }
 
+class MapRenderer {
+    constructor({ canvas, ctx }) {
+        this.canvas = canvas;
+        this.ctx = ctx;
+        this.mapBuffer = null;
+        this.mapBufferCtx = null;
+        this.mapBufferNeedsFullRedraw = true;
+        this.mapBufferDirtyTiles = new Set();
+    }
+
+    ensureMapBufferSize(mapState) {
+        const width = mapState?.width;
+        const height = mapState?.height;
+        if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+            this.mapBuffer = null;
+            this.mapBufferCtx = null;
+            this.mapBufferNeedsFullRedraw = true;
+            this.mapBufferDirtyTiles.clear();
+            return;
+        }
+        const nextWidth = Math.max(1, Math.floor(width));
+        const nextHeight = Math.max(1, Math.floor(height));
+        if (!this.mapBuffer) {
+            this.mapBuffer = document.createElement('canvas');
+            this.mapBufferCtx = this.mapBuffer.getContext('2d');
+            this.mapBufferNeedsFullRedraw = true;
+            this.mapBufferDirtyTiles.clear();
+        }
+        if (this.mapBuffer.width !== nextWidth || this.mapBuffer.height !== nextHeight) {
+            this.mapBuffer.width = nextWidth;
+            this.mapBuffer.height = nextHeight;
+            if (this.mapBufferCtx) {
+                this.mapBufferCtx.imageSmoothingEnabled = false;
+                this.mapBufferCtx.clearRect(0, 0, nextWidth, nextHeight);
+            }
+            this.mapBufferNeedsFullRedraw = true;
+            this.mapBufferDirtyTiles.clear();
+        }
+    }
+
+    markMapDirty() {
+        this.mapBufferNeedsFullRedraw = true;
+        this.mapBufferDirtyTiles.clear();
+    }
+
+    markTileVisualDirty(mapState, x, y) {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) {
+            this.markMapDirty();
+            return;
+        }
+        const tx = Math.floor(x);
+        const ty = Math.floor(y);
+        if (!mapState?.inBounds(tx, ty)) return;
+        if (this.mapBufferNeedsFullRedraw) {
+            this.mapBufferDirtyTiles.add(`${tx},${ty}`);
+            return;
+        }
+        this.mapBufferDirtyTiles.add(`${tx},${ty}`);
+    }
+
+    redrawEntireMapBuffer(mapState) {
+        this.ensureMapBufferSize(mapState);
+        if (!this.mapBuffer || !this.mapBufferCtx) return;
+        this.mapBufferCtx.imageSmoothingEnabled = false;
+        this.mapBufferCtx.clearRect(0, 0, this.mapBuffer.width, this.mapBuffer.height);
+        for (let y = 0; y < mapState.height; y++) {
+            const row = mapState.map[y];
+            for (let x = 0; x < mapState.width; x++) {
+                const isWall = !row || row[x] === 1;
+                this.mapBufferCtx.fillStyle = mapState.getTileRenderColor(x, y, isWall);
+                this.mapBufferCtx.fillRect(x, y, 1, 1);
+            }
+        }
+    }
+
+    redrawDirtyTiles(mapState) {
+        if (!this.mapBufferCtx || this.mapBufferDirtyTiles.size === 0) return;
+        this.mapBufferCtx.imageSmoothingEnabled = false;
+        for (const key of this.mapBufferDirtyTiles) {
+            const [xStr, yStr] = key.split(',');
+            const x = Number(xStr);
+            const y = Number(yStr);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+            if (!mapState.inBounds(x, y)) continue;
+            const row = mapState.map[y];
+            const isWall = !row || row[x] === 1;
+            this.mapBufferCtx.fillStyle = mapState.getTileRenderColor(x, y, isWall);
+            this.mapBufferCtx.fillRect(x, y, 1, 1);
+        }
+        this.mapBufferDirtyTiles.clear();
+    }
+
+    syncMapBuffer(mapState) {
+        this.ensureMapBufferSize(mapState);
+        if (!this.mapBuffer || !this.mapBufferCtx) return;
+        if (this.mapBufferNeedsFullRedraw) {
+            this.redrawEntireMapBuffer(mapState);
+            this.mapBufferNeedsFullRedraw = false;
+            this.mapBufferDirtyTiles.clear();
+            return;
+        }
+        if (this.mapBufferDirtyTiles.size > 0) {
+            this.redrawDirtyTiles(mapState);
+        }
+    }
+
+    render(mapState) {
+        this.syncMapBuffer(mapState);
+
+        const startX = camera.x;
+        const startY = camera.y;
+        const endX = startX + VIEWPORT_WIDTH;
+        const endY = startY + VIEWPORT_HEIGHT;
+
+        const cellW = this.canvas.width / VIEWPORT_WIDTH;
+        const cellH = this.canvas.height / VIEWPORT_HEIGHT;
+
+        if (this.mapBuffer) {
+            const availableW = Math.max(0, Math.min(VIEWPORT_WIDTH, this.mapBuffer.width - startX));
+            const availableH = Math.max(0, Math.min(VIEWPORT_HEIGHT, this.mapBuffer.height - startY));
+            if (availableW > 0 && availableH > 0) {
+                const prevSmoothing = this.ctx.imageSmoothingEnabled;
+                this.ctx.imageSmoothingEnabled = false;
+                this.ctx.drawImage(
+                    this.mapBuffer,
+                    startX,
+                    startY,
+                    availableW,
+                    availableH,
+                    0,
+                    0,
+                    availableW * cellW,
+                    availableH * cellH
+                );
+                this.ctx.imageSmoothingEnabled = prevSmoothing;
+            }
+        }
+
+        const darknessActive = isDarknessActive();
+
+        for (let y = startY; y < endY; y++) {
+            for (let x = startX; x < endX; x++) {
+                const screenX = (x - startX) * cellW;
+                const screenY = (y - startY) * cellH;
+                if (!mapState.inBounds(x, y)) {
+                    this.ctx.fillStyle = DEFAULT_WALL_COLOR;
+                    this.ctx.fillRect(screenX, screenY, cellW, cellH);
+                    continue;
+                }
+
+                const row = mapState.map[y];
+                const isWall = !row || row[x] === 1;
+                const visible = !darknessActive || isTileVisible(x, y);
+
+                if (darknessActive && !visible) {
+                    this.ctx.fillStyle = DARKNESS_FILL_COLOR;
+                    this.ctx.fillRect(screenX, screenY, cellW, cellH);
+                    continue;
+                }
+
+                if (!isWall && visible) {
+                    drawFloorGimmickOverlay(x, y, screenX, screenY, cellW, cellH);
+                }
+            }
+        }
+
+        if (stairs) {
+            const sx = stairs.x - startX;
+            const sy = stairs.y - startY;
+            if (sx >= 0 && sy >= 0 && sx < VIEWPORT_WIDTH && sy < VIEWPORT_HEIGHT) {
+                if (!darknessActive || isTileVisible(stairs.x, stairs.y)) {
+                    const screenX = sx * cellW;
+                    const screenY = sy * cellH;
+                    this.ctx.fillStyle = '#f1c40f';
+                    this.ctx.fillRect(screenX + 4, screenY + 4, cellW - 8, cellH - 8);
+                }
+            }
+        }
+    }
+}
+
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
-let mapBuffer = null;
-let mapBufferCtx = null;
-let mapBufferNeedsFullRedraw = true;
-const mapBufferDirtyTiles = new Set();
-
-function ensureMapBufferSize() {
-    if (!Number.isFinite(MAP_WIDTH) || !Number.isFinite(MAP_HEIGHT) || MAP_WIDTH <= 0 || MAP_HEIGHT <= 0) {
-        mapBuffer = null;
-        mapBufferCtx = null;
-        mapBufferNeedsFullRedraw = true;
-        mapBufferDirtyTiles.clear();
-        return;
-    }
-    const width = Math.max(1, Math.floor(MAP_WIDTH));
-    const height = Math.max(1, Math.floor(MAP_HEIGHT));
-    if (!mapBuffer) {
-        mapBuffer = document.createElement('canvas');
-        mapBufferCtx = mapBuffer.getContext('2d');
-        mapBufferNeedsFullRedraw = true;
-        mapBufferDirtyTiles.clear();
-    }
-    if (mapBuffer.width !== width || mapBuffer.height !== height) {
-        mapBuffer.width = width;
-        mapBuffer.height = height;
-        if (mapBufferCtx) {
-            mapBufferCtx.imageSmoothingEnabled = false;
-            mapBufferCtx.clearRect(0, 0, width, height);
-        }
-        mapBufferNeedsFullRedraw = true;
-        mapBufferDirtyTiles.clear();
-    }
-}
-
-function markMapBufferDirty() {
-    mapBufferNeedsFullRedraw = true;
-    mapBufferDirtyTiles.clear();
-}
-
-function markTileVisualDirty(x, y) {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        markMapBufferDirty();
-        return;
-    }
-    const tx = Math.floor(x);
-    const ty = Math.floor(y);
-    if (tx < 0 || ty < 0 || tx >= MAP_WIDTH || ty >= MAP_HEIGHT) return;
-    if (mapBufferNeedsFullRedraw) {
-        mapBufferDirtyTiles.add(`${tx},${ty}`);
-        return;
-    }
-    mapBufferDirtyTiles.add(`${tx},${ty}`);
-}
-
-function redrawEntireMapBuffer() {
-    ensureMapBufferSize();
-    if (!mapBuffer || !mapBufferCtx) return;
-    mapBufferCtx.imageSmoothingEnabled = false;
-    mapBufferCtx.clearRect(0, 0, mapBuffer.width, mapBuffer.height);
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        const row = map[y];
-        for (let x = 0; x < MAP_WIDTH; x++) {
-            const isWall = !row || row[x] === 1;
-            mapBufferCtx.fillStyle = getTileRenderColor(x, y, isWall);
-            mapBufferCtx.fillRect(x, y, 1, 1);
-        }
-    }
-}
-
-function redrawDirtyTiles() {
-    if (!mapBufferCtx || mapBufferDirtyTiles.size === 0) return;
-    mapBufferCtx.imageSmoothingEnabled = false;
-    for (const key of mapBufferDirtyTiles) {
-        const [xStr, yStr] = key.split(',');
-        const x = Number(xStr);
-        const y = Number(yStr);
-        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-        if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) continue;
-        const row = map[y];
-        const isWall = !row || row[x] === 1;
-        mapBufferCtx.fillStyle = getTileRenderColor(x, y, isWall);
-        mapBufferCtx.fillRect(x, y, 1, 1);
-    }
-    mapBufferDirtyTiles.clear();
-}
-
-function syncMapBuffer() {
-    ensureMapBufferSize();
-    if (!mapBuffer || !mapBufferCtx) return;
-    if (mapBufferNeedsFullRedraw) {
-        redrawEntireMapBuffer();
-        mapBufferNeedsFullRedraw = false;
-        mapBufferDirtyTiles.clear();
-        return;
-    }
-    if (mapBufferDirtyTiles.size > 0) {
-        redrawDirtyTiles();
-    }
-}
+const mapRenderer = new MapRenderer({ canvas, ctx });
 const playerStatsDiv = document.getElementById('player-stats');
 const statLevel = document.getElementById('stat-level');
 const statAtk = document.getElementById('stat-atk');
@@ -1445,7 +1529,7 @@ function generateDomainCrystalsForFloor(recommendedLevel) {
     exclude.push(...enemies.map(e => ({ x: e.x, y: e.y })));
     exclude.push(...chests.map(c => ({ x: c.x, y: c.y })));
 
-    const minDist = Math.max(4, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) * 0.08));
+    const minDist = Math.max(4, Math.floor(Math.min(mapState.width, mapState.height) * 0.08));
     const positions = pickSpreadFloorPositions(count, minDist, exclude);
 
     domainCrystals = positions.map((pos, index) => {
@@ -1518,7 +1602,7 @@ function spawnHatenaBlocks(recommendedLevel, options = {}) {
     chests.forEach(chest => exclude.push({ x: chest.x, y: chest.y }));
     domainCrystals.forEach(crystal => exclude.push({ x: crystal.x, y: crystal.y }));
 
-    const minDist = Math.max(2, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) * 0.05));
+    const minDist = Math.max(2, Math.floor(Math.min(mapState.width, mapState.height) * 0.05));
     const positions = pickSpreadFloorPositions(count, minDist, exclude);
 
     const placed = [];
@@ -1528,7 +1612,7 @@ function spawnHatenaBlocks(recommendedLevel, options = {}) {
         if (!meta) continue;
         meta.floorType = FLOOR_TYPE_HATENA;
         delete meta.floorDir;
-        markTileVisualDirty(pos.x, pos.y);
+        mapRenderer.markTileVisualDirty(mapState, pos.x, pos.y);
         placed.push({ x: pos.x, y: pos.y });
     }
 
@@ -1590,7 +1674,7 @@ function adjustPlayerLevel(delta) {
 }
 
 function hatenaPlaceChestAt(x, y, rarity = 'normal') {
-    if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return false;
+    if (x < 0 || x >= mapState.width || y < 0 || y >= mapState.height) return false;
     if (!map[y] || map[y][x] !== 0) return false;
     if (x === player.x && y === player.y) return false;
     if (stairs && stairs.x === x && stairs.y === y) return false;
@@ -1658,7 +1742,7 @@ function hatenaSummonEnemiesAroundPlayer(recommendedLevel) {
     for (const { dx, dy } of offsets) {
         const x = player.x + dx;
         const y = player.y + dy;
-        if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) continue;
+        if (x < 0 || x >= mapState.width || y < 0 || y >= mapState.height) continue;
         if (!map[y] || map[y][x] !== 0) continue;
         if (stairs && stairs.x === x && stairs.y === y) continue;
         if (enemies.some(enemy => enemy.x === x && enemy.y === y)) continue;
@@ -2156,8 +2240,6 @@ const enemyModalTypeDesc = document.getElementById('enemy-modal-type-desc');
 // ゲームの定数
 const TILE_SIZE = 20;
 // マップはビューポートより大きくする (動的サイズ: 15 + 階層 × 5)
-let MAP_WIDTH = 60;  // Will be updated dynamically
-let MAP_HEIGHT = 45; // Will be updated dynamically
 // ビューポート（カメラ）サイズ（タイル数）
 const VIEWPORT_WIDTH = 20;
 const VIEWPORT_HEIGHT = 15;
@@ -4685,7 +4767,7 @@ function applySandboxTool() {
     const dir = getDirectionVector(player.facing || 'down') || { dx: 0, dy: 1 };
     const targetX = player.x + dir.dx;
     const targetY = player.y + dir.dy;
-    if (targetX < 0 || targetX >= MAP_WIDTH || targetY < 0 || targetY >= MAP_HEIGHT) {
+    if (targetX < 0 || targetX >= mapState.width || targetY < 0 || targetY >= mapState.height) {
         sandboxLog('マップ範囲外は編集できません。');
         return;
     }
@@ -4736,7 +4818,7 @@ function applySandboxTool() {
                     cfgMetaRow[targetX] = cfgMeta;
                 }
             }
-            markTileVisualDirty(targetX, targetY);
+            mapRenderer.markTileVisualDirty(mapState, targetX, targetY);
             sandboxLog('床を編集しました。');
             break;
         }
@@ -4751,7 +4833,7 @@ function applySandboxTool() {
             if (cfgMetaRow) {
                 cfgMetaRow[targetX] = null;
             }
-            markTileVisualDirty(targetX, targetY);
+            mapRenderer.markTileVisualDirty(mapState, targetX, targetY);
             sandboxLog('床を通常状態に戻しました。');
             break;
         }
@@ -4774,7 +4856,7 @@ function applySandboxTool() {
                     rebuildSandboxActivePortals();
                 }
             }
-            markTileVisualDirty(targetX, targetY);
+            mapRenderer.markTileVisualDirty(mapState, targetX, targetY);
             sandboxLog('壁を設置しました。');
             break;
         }
@@ -4824,7 +4906,7 @@ function applySandboxTool() {
                 }
                 rebuildSandboxActivePortals();
             }
-            markTileVisualDirty(targetX, targetY);
+            mapRenderer.markTileVisualDirty(mapState, targetX, targetY);
             sandboxLog('階段の位置を更新しました。');
             break;
         }
@@ -4926,7 +5008,7 @@ function applySandboxTool() {
                 return ai - bi;
             });
 
-            markTileVisualDirty(targetX, targetY);
+            mapRenderer.markTileVisualDirty(mapState, targetX, targetY);
 
             markUiDirty();
             sandboxLog(`${formatSandboxDomainLabel(effect, selectedIndex)}を配置しました。`);
@@ -5753,8 +5835,7 @@ function updateMapSize() {
     if (isSandboxActive()) {
         const map = ensureSandboxCurrentMap();
         if (map) {
-            MAP_WIDTH = map.width;
-            MAP_HEIGHT = map.height;
+            mapState.setSize(map.width, map.height);
         }
         return;
     }
@@ -5767,8 +5848,7 @@ function updateMapSize() {
         width = Math.max(15, baseSize + delta);
         height = Math.max(15, baseSize + delta);
     }
-    MAP_WIDTH = width;
-    MAP_HEIGHT = height;
+    mapState.setSize(width, height);
 }
 
 // キャンバスのサイズ設定（親ステージに追従）
@@ -5926,7 +6006,142 @@ function toggleSelectionFooter(forceCollapsed) {
 }
 
 // マップデータ
-let map = [];
+class Tile {
+    constructor({ x, y, isWall, meta, mapState }) {
+        this.x = x;
+        this.y = y;
+        this.isWall = !!isWall;
+        this.meta = meta || null;
+        this.mapState = mapState;
+    }
+
+    getFloorType() {
+        if (this.isWall) return FLOOR_TYPE_NORMAL;
+        let type = FLOOR_TYPE_NORMAL;
+        if (this.meta && this.meta.floorType) {
+            const normalized = normalizeFloorType(this.meta.floorType);
+            if (FLOOR_TYPE_SET.has(normalized)) {
+                type = normalized;
+            }
+        }
+        if (type === FLOOR_TYPE_NORMAL && this.mapState.isPoisonFogActive()) {
+            return FLOOR_TYPE_POISON;
+        }
+        return type;
+    }
+
+    getFloorDirection() {
+        const type = this.getFloorType();
+        if (!floorTypeNeedsDirection(type)) return null;
+        if (!this.meta) return null;
+        const dir = normalizeFloorDirection(this.meta.floorDir || this.meta.direction || this.meta.floorDirection);
+        return dir && FLOOR_DIRECTION_VALUES.includes(dir) ? dir : null;
+    }
+
+    getRenderColor() {
+        if (this.isWall) {
+            return (this.meta && this.meta.wallColor) || DEFAULT_WALL_COLOR;
+        }
+        if (this.meta && this.meta.floorColor) {
+            return this.meta.floorColor;
+        }
+        const type = this.getFloorType();
+        if (type === FLOOR_TYPE_ICE) return '#74c0fc';
+        if (type === FLOOR_TYPE_POISON) return '#94d82d';
+        if (type === FLOOR_TYPE_BOMB) return '#ff8787';
+        if (type === FLOOR_TYPE_CONVEYOR) return '#ffe066';
+        if (type === FLOOR_TYPE_ONE_WAY) return '#b197fc';
+        if (type === FLOOR_TYPE_VERTICAL_ONLY) return '#38d9a9';
+        if (type === FLOOR_TYPE_HORIZONTAL_ONLY) return '#ffa94d';
+        if (type === FLOOR_TYPE_HATENA) return '#4dabf7';
+        return DEFAULT_FLOOR_COLOR;
+    }
+}
+
+class MapState {
+    constructor({ map = [], width = 60, height = 45, tileMeta = [], isPoisonFogActive = () => false } = {}) {
+        this.map = map;
+        this.width = width;
+        this.height = height;
+        this.tileMeta = tileMeta;
+        this.isPoisonFogActive = isPoisonFogActive;
+    }
+
+    setMap(nextMap) {
+        this.map = Array.isArray(nextMap) ? nextMap : [];
+        return this.map;
+    }
+
+    setSize(width, height) {
+        if (Number.isFinite(width)) {
+            this.width = Math.max(1, Math.floor(width));
+        }
+        if (Number.isFinite(height)) {
+            this.height = Math.max(1, Math.floor(height));
+        }
+    }
+
+    inBounds(x, y) {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
+    }
+
+    resetTileMeta() {
+        this.tileMeta = Array.from({ length: this.height }, () => Array(this.width).fill(null));
+        return this.tileMeta;
+    }
+
+    setTileMetaGrid(grid) {
+        this.tileMeta = Array.isArray(grid) ? grid : [];
+        return this.tileMeta;
+    }
+
+    getTileMeta(x, y) {
+        if (!this.inBounds(x, y)) return null;
+        return this.tileMeta[y] ? this.tileMeta[y][x] : null;
+    }
+
+    ensureTileMeta(x, y) {
+        if (!this.inBounds(x, y)) return null;
+        if (!this.tileMeta[y]) this.tileMeta[y] = Array(this.width).fill(null);
+        if (!this.tileMeta[y][x]) this.tileMeta[y][x] = {};
+        return this.tileMeta[y][x];
+    }
+
+    getTile(x, y) {
+        if (!this.inBounds(x, y)) return null;
+        const row = this.map[y];
+        const isWall = !row || row[x] === 1;
+        const meta = this.getTileMeta(x, y);
+        return new Tile({ x, y, isWall, meta, mapState: this });
+    }
+
+    getTileFloorType(x, y) {
+        const tile = this.getTile(x, y);
+        return tile ? tile.getFloorType() : FLOOR_TYPE_NORMAL;
+    }
+
+    getTileFloorDirection(x, y) {
+        const tile = this.getTile(x, y);
+        return tile ? tile.getFloorDirection() : null;
+    }
+
+    getTileRenderColor(x, y, isWallOverride) {
+        const tile = this.getTile(x, y);
+        if (!tile) return DEFAULT_WALL_COLOR;
+        if (typeof isWallOverride === 'boolean') {
+            tile.isWall = isWallOverride;
+        }
+        return tile.getRenderColor();
+    }
+}
+
+const mapState = new MapState({
+    width: 60,
+    height: 45,
+    isPoisonFogActive: () => isPoisonFogActive()
+});
+let map = mapState.map;
+let tileMeta = mapState.tileMeta;
 
 // タイルの表示・挙動拡張
 const DEFAULT_WALL_COLOR = '#2f3542';
@@ -5967,7 +6182,6 @@ const FLOOR_DIRECTION_VECTORS = {
 const FLOOR_TYPES_REQUIRING_DIRECTION = new Set([FLOOR_TYPE_CONVEYOR, FLOOR_TYPE_ONE_WAY]);
 const CONVEYOR_CHAIN_LIMIT = 20;
 const COLOR_HEX_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
-let tileMeta = [];
 
 const DOMAIN_EFFECT_DEFINITIONS = {
     attackUp: {
@@ -6636,15 +6850,12 @@ function getGeneratorHazardFlags(id) {
 }
 
 function resetTileMetadata() {
-    tileMeta = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
-    markMapBufferDirty();
+    tileMeta = mapState.resetTileMeta();
+    mapRenderer.markMapDirty();
 }
 
 function ensureTileMeta(x, y) {
-    if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return null;
-    if (!tileMeta[y]) tileMeta[y] = Array(MAP_WIDTH).fill(null);
-    if (!tileMeta[y][x]) tileMeta[y][x] = {};
-    return tileMeta[y][x];
+    return mapState.ensureTileMeta(x, y);
 }
 
 function ensureSandboxConfigGridRow(y, x) {
@@ -6700,38 +6911,20 @@ function ensureSandboxConfigTileMetaRow(y, x) {
 }
 
 function getTileMeta(x, y) {
-    if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return null;
-    return tileMeta[y] ? tileMeta[y][x] : null;
+    return mapState.getTileMeta(x, y);
 }
 
 function getTileFloorType(x, y) {
-    if (!map[y] || map[y][x] !== 0) return FLOOR_TYPE_NORMAL;
-    const meta = getTileMeta(x, y);
-    let type = FLOOR_TYPE_NORMAL;
-    if (meta && meta.floorType) {
-        const t = normalizeFloorType(meta.floorType);
-        if (FLOOR_TYPE_SET.has(t)) {
-            type = t;
-        }
-    }
-    if (type === FLOOR_TYPE_NORMAL && isPoisonFogActive()) {
-        return FLOOR_TYPE_POISON;
-    }
-    return type;
+    return mapState.getTileFloorType(x, y);
 }
 
 function getTileFloorDirection(x, y) {
-    const type = getTileFloorType(x, y);
-    if (!floorTypeNeedsDirection(type)) return null;
-    const meta = getTileMeta(x, y);
-    if (!meta) return null;
-    const dir = normalizeFloorDirection(meta.floorDir || meta.direction || meta.floorDirection);
-    return dir && FLOOR_DIRECTION_VALUES.includes(dir) ? dir : null;
+    return mapState.getTileFloorDirection(x, y);
 }
 
 function clearFloorTypeAt(x, y) {
-    if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;
-    const meta = getTileMeta(x, y);
+    if (y < 0 || y >= mapState.height || x < 0 || x >= mapState.width) return;
+    const meta = mapState.getTileMeta(x, y);
     if (!meta) return;
     delete meta.floorType;
     delete meta.floorDir;
@@ -6744,27 +6937,7 @@ function clearFloorTypeAt(x, y) {
             hatenaBlocks.splice(index, 1);
         }
     }
-    markTileVisualDirty(x, y);
-}
-
-function getTileRenderColor(x, y, isWall) {
-    const meta = getTileMeta(x, y);
-    if (isWall) {
-        return (meta && meta.wallColor) || DEFAULT_WALL_COLOR;
-    }
-    if (meta && meta.floorColor) {
-        return meta.floorColor;
-    }
-    const type = getTileFloorType(x, y);
-    if (type === FLOOR_TYPE_ICE) return '#74c0fc';
-    if (type === FLOOR_TYPE_POISON) return '#94d82d';
-    if (type === FLOOR_TYPE_BOMB) return '#ff8787';
-    if (type === FLOOR_TYPE_CONVEYOR) return '#ffe066';
-    if (type === FLOOR_TYPE_ONE_WAY) return '#b197fc';
-    if (type === FLOOR_TYPE_VERTICAL_ONLY) return '#38d9a9';
-    if (type === FLOOR_TYPE_HORIZONTAL_ONLY) return '#ffa94d';
-    if (type === FLOOR_TYPE_HATENA) return '#4dabf7';
-    return DEFAULT_FLOOR_COLOR;
+    mapRenderer.markTileVisualDirty(mapState, x, y);
 }
 
 class Inventory {
@@ -7563,7 +7736,7 @@ function activateSkillEffect(effectId, turns, { silent = false } = {}) {
         clearSkillEffect(effectId, { silent: true });
     }
     if (effectId === 'gimmickNullify') {
-        markMapBufferDirty();
+        mapRenderer.markMapDirty();
     }
     markSkillsListDirty();
     return normalized;
@@ -7582,7 +7755,7 @@ function clearSkillEffect(effectId, { silent = false } = {}) {
     }
     if (wasActive) markSkillsListDirty();
     if (wasActive && effectId === 'gimmickNullify') {
-        markMapBufferDirty();
+        mapRenderer.markMapDirty();
     }
 }
 
@@ -8098,7 +8271,7 @@ function refreshGeneratorHazardSuppression() {
     currentGeneratorHazards.poisonFogActive = currentGeneratorHazards.basePoisonFog && !suppressed;
     currentGeneratorHazards.noiseActive = currentGeneratorHazards.baseNoise && !suppressed;
     if (currentGeneratorHazards.poisonFogActive !== prevPoisonActive) {
-        markMapBufferDirty();
+        mapRenderer.markMapDirty();
     }
     updateDungeonTypeOverlay();
     updateNoiseUiEffects();
@@ -8960,7 +9133,7 @@ function findEnemyAlongFacingLine() {
     let x = player.x + dx;
     let y = player.y + dy;
     let steps = 0;
-    while (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
+    while (x >= 0 && x < mapState.width && y >= 0 && y < mapState.height) {
         steps += 1;
         const enemy = enemies.find(e => e.x === x && e.y === y);
         if (enemy) {
@@ -9035,7 +9208,7 @@ function canBuildWallInFront() {
     const targetX = player.x + dx;
     const targetY = player.y + dy;
     if (!map[targetY] || map[targetY][targetX] !== 0) return false;
-    if (targetX < 0 || targetX >= MAP_WIDTH || targetY < 0 || targetY >= MAP_HEIGHT) return false;
+    if (targetX < 0 || targetX >= mapState.width || targetY < 0 || targetY >= mapState.height) return false;
     if (stairs && stairs.x === targetX && stairs.y === targetY) return false;
     if (enemies.some(enemy => enemy.x === targetX && enemy.y === targetY)) return false;
     if (chests.some(chest => chest.x === targetX && chest.y === targetY)) return false;
@@ -9300,7 +9473,7 @@ function useSkillBuildWall() {
     if (tileMeta[targetY]) {
         tileMeta[targetY][targetX] = null;
     }
-    markTileVisualDirty(targetX, targetY);
+    mapRenderer.markTileVisualDirty(mapState, targetX, targetY);
     addMessage({ key: 'messages.skills.buildWall.success', fallback: 'SPスキル：壁を生成した！', params: { skillName } });
     playSfx('bomb');
     return true;
@@ -9499,9 +9672,9 @@ function useSkillRuinAnnihilation() {
     }
     if (resisted) addMessage({ key: 'messages.skills.ruinAnnihilation.resisted', fallback: '一部の高レベルの敵には破滅の力が届かなかった…', params: { skillName } });
 
-    for (let y = 0; y < MAP_HEIGHT; y++) {
+    for (let y = 0; y < mapState.height; y++) {
         if (!map[y]) continue;
-        for (let x = 0; x < MAP_WIDTH; x++) {
+        for (let x = 0; x < mapState.width; x++) {
             map[y][x] = 0;
             if (tileMeta[y]) tileMeta[y][x] = null;
         }
@@ -9512,7 +9685,7 @@ function useSkillRuinAnnihilation() {
     currentGeneratorHazards.darkActive = false;
     currentGeneratorHazards.poisonFogActive = false;
     currentGeneratorHazards.noiseActive = false;
-    markMapBufferDirty();
+    mapRenderer.markMapDirty();
 
     if (Array.isArray(chests) && chests.length) {
         const copy = chests.slice();
@@ -9876,8 +10049,8 @@ function captureBlockDimTestEnvironment() {
     return {
         map: cloneTestMapData(map),
         tileMeta: cloneTestTileMeta(tileMeta),
-        width: MAP_WIDTH,
-        height: MAP_HEIGHT,
+        width: mapState.width,
+        height: mapState.height,
         currentMode,
         blockDimState: deepClone(blockDimState),
         dungeonLevel,
@@ -9893,10 +10066,9 @@ function captureBlockDimTestEnvironment() {
 
 function applyBlockDimTestEnvironment(snapshot) {
     if (!snapshot || typeof snapshot !== 'object') return;
-    MAP_WIDTH = snapshot.width ?? MAP_WIDTH;
-    MAP_HEIGHT = snapshot.height ?? MAP_HEIGHT;
-    map = cloneTestMapData(snapshot.map);
-    tileMeta = cloneTestTileMeta(snapshot.tileMeta);
+    mapState.setSize(snapshot.width ?? mapState.width, snapshot.height ?? mapState.height);
+    map = mapState.setMap(cloneTestMapData(snapshot.map));
+    tileMeta = mapState.setTileMetaGrid(cloneTestTileMeta(snapshot.tileMeta));
     currentMode = snapshot.currentMode ?? currentMode;
     blockDimState = snapshot.blockDimState ? deepClone(snapshot.blockDimState) : createDefaultBlockDimState();
     dungeonLevel = snapshot.dungeonLevel ?? dungeonLevel;
@@ -9923,7 +10095,7 @@ function applyBlockDimTestEnvironment(snapshot) {
     if (snapshot.lastSelectionKey !== undefined) {
         __lastSavedBlockDimSelectionKey = snapshot.lastSelectionKey;
     }
-    markMapBufferDirty();
+    mapRenderer.markMapDirty();
 }
 
 function gatherAllGeneratorTypeIdsForTest() {
@@ -10041,8 +10213,8 @@ function runSingleBlockDimDungeonTest(genType, seed, mixedPool) {
     } finally {
         restoreRandom();
     }
-    const width = MAP_WIDTH;
-    const height = MAP_HEIGHT;
+    const width = mapState.width;
+    const height = mapState.height;
     let floorCount = 0;
     if (Array.isArray(map)) {
         for (const row of map) {
@@ -12590,8 +12762,8 @@ function updateCamera() {
     const halfH = Math.floor(VIEWPORT_HEIGHT / 2);
     let camX = player.x - halfW;
     let camY = player.y - halfH;
-    camX = Math.max(0, Math.min(MAP_WIDTH - VIEWPORT_WIDTH, camX));
-    camY = Math.max(0, Math.min(MAP_HEIGHT - VIEWPORT_HEIGHT, camY));
+    camX = Math.max(0, Math.min(mapState.width - VIEWPORT_WIDTH, camX));
+    camY = Math.max(0, Math.min(mapState.height - VIEWPORT_HEIGHT, camY));
     camera.x = camX;
     camera.y = camY;
 }
@@ -12609,13 +12781,13 @@ function canPlayerBreakWalls() {
 
 function breakWallAt(x, y) {
     if (!map[y] || map[y][x] !== 1) return false;
-    if (x <= 0 || x >= MAP_WIDTH - 1 || y <= 0 || y >= MAP_HEIGHT - 1) return false;
+    if (x <= 0 || x >= mapState.width - 1 || y <= 0 || y >= mapState.height - 1) return false;
 
     map[y][x] = 0;
     if (tileMeta[y]) {
         tileMeta[y][x] = null;
     }
-    markTileVisualDirty(x, y);
+    mapRenderer.markTileVisualDirty(mapState, x, y);
 
     addMessage({
         key: 'game.events.actions.wallDestroyed',
@@ -12627,8 +12799,8 @@ function breakWallAt(x, y) {
 
 function countFloorTiles() {
     let n = 0;
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        for (let x = 0; x < MAP_WIDTH; x++) {
+    for (let y = 0; y < mapState.height; y++) {
+        for (let x = 0; x < mapState.width; x++) {
             if (map[y][x] === 0) n++;
         }
     }
@@ -12639,11 +12811,11 @@ function ensureMinimumFloors(minTiles = 10) {
     const floors = countFloorTiles();
     if (floors >= minTiles) return;
     // Carve a small room at center as a safety fallback
-    const cx = Math.floor(MAP_WIDTH / 2);
-    const cy = Math.floor(MAP_HEIGHT / 2);
-    const half = Math.max(1, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) * 0.05)); // ~5% size
-    for (let y = Math.max(1, cy - half); y <= Math.min(MAP_HEIGHT - 2, cy + half); y++) {
-        for (let x = Math.max(1, cx - half); x <= Math.min(MAP_WIDTH - 2, cx + half); x++) {
+    const cx = Math.floor(mapState.width / 2);
+    const cy = Math.floor(mapState.height / 2);
+    const half = Math.max(1, Math.floor(Math.min(mapState.width, mapState.height) * 0.05)); // ~5% size
+    for (let y = Math.max(1, cy - half); y <= Math.min(mapState.height - 2, cy + half); y++) {
+        for (let x = Math.max(1, cx - half); x <= Math.min(mapState.width - 2, cx + half); x++) {
             map[y][x] = 0;
         }
     }
@@ -12651,22 +12823,22 @@ function ensureMinimumFloors(minTiles = 10) {
 
 function randomFloorPosition(excludePositions = []) {
     const excludeSet = new Set(excludePositions.map(p => `${p.x},${p.y}`));
-    const maxTries = Math.max(2000, MAP_WIDTH * MAP_HEIGHT * 4);
+    const maxTries = Math.max(2000, mapState.width * mapState.height * 4);
     for (let t = 0; t < maxTries; t++) {
-        const x = Math.floor(Math.random() * MAP_WIDTH);
-        const y = Math.floor(Math.random() * MAP_HEIGHT);
+        const x = Math.floor(Math.random() * mapState.width);
+        const y = Math.floor(Math.random() * mapState.height);
         if (map[y] && map[y][x] === 0 && !excludeSet.has(`${x},${y}`)) {
             return { x, y };
         }
     }
     // Fallback: scan for any floor not excluded
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
+    for (let y = 1; y < mapState.height - 1; y++) {
+        for (let x = 1; x < mapState.width - 1; x++) {
             if (map[y][x] === 0 && !excludeSet.has(`${x},${y}`)) return { x, y };
         }
     }
     // As a last resort, carve the center tile
-    const cx = Math.floor(MAP_WIDTH / 2), cy = Math.floor(MAP_HEIGHT / 2);
+    const cx = Math.floor(mapState.width / 2), cy = Math.floor(mapState.height / 2);
     map[cy][cx] = 0;
     return { x: cx, y: cy };
 }
@@ -12701,30 +12873,29 @@ function generateMap() {
     if (isSandboxActive()) {
         const cfg = ensureSandboxCurrentMap();
         if (!cfg) return;
-        MAP_WIDTH = cfg.width;
-        MAP_HEIGHT = cfg.height;
-        map = Array.from({ length: MAP_HEIGHT }, (_, y) => {
-            return Array.from({ length: MAP_WIDTH }, (_, x) => cfg.grid?.[y]?.[x] === 0 ? 0 : 1);
-        });
-        tileMeta = Array.from({ length: MAP_HEIGHT }, (_, y) => {
-            return Array.from({ length: MAP_WIDTH }, (_, x) => {
+        mapState.setSize(cfg.width, cfg.height);
+        map = mapState.setMap(Array.from({ length: mapState.height }, (_, y) => {
+            return Array.from({ length: mapState.width }, (_, x) => cfg.grid?.[y]?.[x] === 0 ? 0 : 1);
+        }));
+        tileMeta = mapState.setTileMetaGrid(Array.from({ length: mapState.height }, (_, y) => {
+            return Array.from({ length: mapState.width }, (_, x) => {
                 const meta = cfg.tileMeta?.[y]?.[x];
                 if (!meta || typeof meta !== 'object') return null;
                 const isFloor = cfg.grid?.[y]?.[x] === 0;
                 const entry = sanitizeTileMetaEntry(meta, isFloor);
                 return entry;
             });
-        });
+        }));
         lastGeneratedGenType = 'sandbox';
-        markMapBufferDirty();
+        mapRenderer.markMapDirty();
         return;
     }
-    map = [];
-    tileMeta = [];
-    for (let y = 0; y < MAP_HEIGHT; y++) {
+    map = mapState.setMap([]);
+    tileMeta = mapState.setTileMetaGrid([]);
+    for (let y = 0; y < mapState.height; y++) {
         map[y] = [];
-        tileMeta[y] = Array(MAP_WIDTH).fill(null);
-        for (let x = 0; x < MAP_WIDTH; x++) {
+        tileMeta[y] = Array(mapState.width).fill(null);
+        for (let x = 0; x < mapState.width; x++) {
             map[y][x] = 1; // Start with all walls
         }
     }
@@ -12785,17 +12956,17 @@ function generateMap() {
     }
     
     // Ensure borders are always walls
-    for (let x = 0; x < MAP_WIDTH; x++) {
+    for (let x = 0; x < mapState.width; x++) {
         map[0][x] = 1;
-        map[MAP_HEIGHT - 1][x] = 1;
+        map[mapState.height - 1][x] = 1;
     }
-    for (let y = 0; y < MAP_HEIGHT; y++) {
+    for (let y = 0; y < mapState.height; y++) {
         map[y][0] = 1;
-        map[y][MAP_WIDTH - 1] = 1;
+        map[y][mapState.width - 1] = 1;
     }
     // Fallback safety: ensure there are some floor tiles to avoid infinite loops
     ensureMinimumFloors(10);
-    markMapBufferDirty();
+    mapRenderer.markMapDirty();
 }
 
 function resolveCurrentGeneratorType() {
@@ -12824,9 +12995,8 @@ function getFixedMapRecord(bundle, floor) {
 function reshapeMap(width, height, ctx) {
     const w = Math.max(3, Math.floor(width));
     const h = Math.max(3, Math.floor(height));
-    if (MAP_WIDTH !== w || MAP_HEIGHT !== h) {
-        MAP_WIDTH = w;
-        MAP_HEIGHT = h;
+    if (mapState.width !== w || mapState.height !== h) {
+        mapState.setSize(w, h);
     }
     map.length = h;
     for (let y = 0; y < h; y++) {
@@ -12836,7 +13006,7 @@ function reshapeMap(width, height, ctx) {
             map[y][x] = 1;
         }
     }
-    tileMeta = Array.from({ length: h }, () => Array(w).fill(null));
+    tileMeta = mapState.setTileMetaGrid(Array.from({ length: h }, () => Array(w).fill(null)));
     if (ctx) {
         ctx.width = w;
         ctx.height = h;
@@ -12901,18 +13071,17 @@ function prepareFixedMapDimensionsIfNeeded() {
     if (!bundle) return;
     const record = getFixedMapRecord(bundle, dungeonLevel);
     if (!record) return;
-    MAP_WIDTH = record.width;
-    MAP_HEIGHT = record.height;
+    mapState.setSize(record.width, record.height);
 }
 
 function generateFieldType() {
     // Open field with scattered obstacles - scale density with map size
     const baseDensity = 0.15; // Base wall density
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20; // Scale factor based on map size
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20; // Scale factor based on map size
     const wallDensity = Math.max(0.08, baseDensity / Math.sqrt(sizeFactor)); // Reduce density for larger maps
     
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
+    for (let y = 1; y < mapState.height - 1; y++) {
+        for (let x = 1; x < mapState.width - 1; x++) {
             map[y][x] = Math.random() < wallDensity ? 1 : 0;
         }
     }
@@ -12924,20 +13093,20 @@ function generateGridType() {
     // Start with walls (already set by caller)
     const step = 2; // spacing=1 wall cell between corridors
     // Horizontal corridors (1-cell thickness)
-    for (let y = 2; y < MAP_HEIGHT - 2; y += step) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) map[y][x] = 0;
+    for (let y = 2; y < mapState.height - 2; y += step) {
+        for (let x = 1; x < mapState.width - 1; x++) map[y][x] = 0;
     }
     // Vertical corridors (1-cell thickness)
-    for (let x = 2; x < MAP_WIDTH - 2; x += step) {
-        for (let y = 1; y < MAP_HEIGHT - 1; y++) map[y][x] = 0;
+    for (let x = 2; x < mapState.width - 2; x += step) {
+        for (let y = 1; y < mapState.height - 1; y++) map[y][x] = 0;
     }
     ensureConnectivity();
 }
 
 // Open-space type - everything inside border is floor
 function generateOpenSpaceType() {
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
+    for (let y = 1; y < mapState.height - 1; y++) {
+        for (let x = 1; x < mapState.width - 1; x++) {
             map[y][x] = 0;
         }
     }
@@ -12947,11 +13116,11 @@ function generateOpenSpaceType() {
 function generateCaveType() {
     // Constrained Drunkard's Walk + light CA smoothing for varied cave systems
     // 1) Start with all walls (keep border walls outside)
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) map[y][x] = 1;
+    for (let y = 1; y < mapState.height - 1; y++) {
+        for (let x = 1; x < mapState.width - 1; x++) map[y][x] = 1;
     }
 
-    const area = (MAP_WIDTH - 2) * (MAP_HEIGHT - 2);
+    const area = (mapState.width - 2) * (mapState.height - 2);
     const targetFill = Math.floor(area * 0.42); // target floor tiles
     const maxSteps = area * 4; // safety
     const turnRate = 0.28;     // chance to pick a new dir per step
@@ -12968,17 +13137,17 @@ function generateCaveType() {
 
     function clampInside(x, y) {
         return {
-            x: Math.max(1, Math.min(MAP_WIDTH - 2, x)),
-            y: Math.max(1, Math.min(MAP_HEIGHT - 2, y))
+            x: Math.max(1, Math.min(mapState.width - 2, x)),
+            y: Math.max(1, Math.min(mapState.height - 2, y))
         };
     }
 
     const walkers = [];
-    const wcount = Math.max(2, Math.min(maxWalkers, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) / 10)));
+    const wcount = Math.max(2, Math.min(maxWalkers, Math.floor(Math.min(mapState.width, mapState.height) / 10)));
     for (let i = 0; i < wcount; i++) {
         walkers.push({
-            x: 1 + Math.floor(Math.random() * (MAP_WIDTH - 2)),
-            y: 1 + Math.floor(Math.random() * (MAP_HEIGHT - 2)),
+            x: 1 + Math.floor(Math.random() * (mapState.width - 2)),
+            y: 1 + Math.floor(Math.random() * (mapState.height - 2)),
             dir: randDir(null)
         });
     }
@@ -13038,20 +13207,20 @@ function generateCaveType() {
 
 function generateMazeType() {
     // Create guaranteed path first
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
+    for (let y = 1; y < mapState.height - 1; y++) {
+        for (let x = 1; x < mapState.width - 1; x++) {
             map[y][x] = 0; // Start with all floors
         }
     }
     
     // Scale maze density with map size
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     const stepSize = Math.max(2, Math.floor(2 * sizeFactor)); // Scale step size
     const wallProbability = Math.max(0.4, 0.6 - (sizeFactor - 1) * 0.1); // Reduce wall probability for larger mazes
     
     // Add maze walls while maintaining connectivity
-    for (let y = stepSize; y < MAP_HEIGHT - stepSize; y += stepSize) {
-        for (let x = stepSize; x < MAP_WIDTH - stepSize; x += stepSize) {
+    for (let y = stepSize; y < mapState.height - stepSize; y += stepSize) {
+        for (let x = stepSize; x < mapState.width - stepSize; x += stepSize) {
             if (Math.random() < wallProbability) {
                 map[y][x] = 1;
                 // Add connecting wall in random direction
@@ -13059,7 +13228,7 @@ function generateMazeType() {
                 const dir = directions[Math.floor(Math.random() * directions.length)];
                 const newX = x + dir[0];
                 const newY = y + dir[1];
-                if (newX > 0 && newX < MAP_WIDTH-1 && newY > 0 && newY < MAP_HEIGHT-1) {
+                if (newX > 0 && newX < mapState.width-1 && newY > 0 && newY < mapState.height-1) {
                     map[newY][newX] = 1;
                 }
             }
@@ -13067,10 +13236,10 @@ function generateMazeType() {
     }
     
     // Add some random walls for complexity
-    const additionalWalls = Math.floor((MAP_WIDTH * MAP_HEIGHT) * 0.05);
+    const additionalWalls = Math.floor((mapState.width * mapState.height) * 0.05);
     for (let i = 0; i < additionalWalls; i++) {
-        const x = 1 + Math.floor(Math.random() * (MAP_WIDTH - 2));
-        const y = 1 + Math.floor(Math.random() * (MAP_HEIGHT - 2));
+        const x = 1 + Math.floor(Math.random() * (mapState.width - 2));
+        const y = 1 + Math.floor(Math.random() * (mapState.height - 2));
         if (Math.random() < 0.3) {
             map[y][x] = 1;
         }
@@ -13081,8 +13250,8 @@ function generateMazeType() {
 
 // Imperfect maze type - uses the Mini Game NORMAL maze algorithm (DFS backtracker with extra loops)
 function generateImperfectMazeType() {
-    const width = MAP_WIDTH;
-    const height = MAP_HEIGHT;
+    const width = mapState.width;
+    const height = mapState.height;
     const start = { x: 1, y: 1 };
     const goal = { x: width - 2, y: height - 2 };
     const loopFactor = 0.18; // Same loop density as mini-game NORMAL
@@ -13160,7 +13329,7 @@ function generateImperfectMazeType() {
 
 function generateRoomsType() {
     // Rooms via Poisson Disk placement + MST corridors (with A* digging)
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     const baseRooms = Math.max(4, Math.floor(4 + sizeFactor * 2));
     const numRoomsTarget = baseRooms + Math.floor(Math.random() * Math.max(2, Math.floor(sizeFactor)));
 
@@ -13219,7 +13388,7 @@ function generateRoomsType() {
     }
 
     // Generate candidate centers and instantiate rooms
-    const pts = poissonDisk(MAP_WIDTH, MAP_HEIGHT, r);
+    const pts = poissonDisk(mapState.width, mapState.height, r);
     const rooms = [];
     function rectsOverlap(a, b, gap = 2) {
         return !(a.x + a.w + gap <= b.x || b.x + b.w + gap <= a.x || a.y + a.h + gap <= b.y || b.y + b.h + gap <= a.y);
@@ -13228,8 +13397,8 @@ function generateRoomsType() {
         if (rooms.length >= numRoomsTarget) break;
         const w = minRoomSize + Math.floor(Math.random() * (maxRoomSize - minRoomSize + 1));
         const h = minRoomSize + Math.floor(Math.random() * (maxRoomSize - minRoomSize + 1));
-        const x = Math.max(1, Math.min(MAP_WIDTH - 1 - w, Math.floor(p.x - Math.floor(w / 2))));
-        const y = Math.max(1, Math.min(MAP_HEIGHT - 1 - h, Math.floor(p.y - Math.floor(h / 2))));
+        const x = Math.max(1, Math.min(mapState.width - 1 - w, Math.floor(p.x - Math.floor(w / 2))));
+        const y = Math.max(1, Math.min(mapState.height - 1 - h, Math.floor(p.y - Math.floor(h / 2))));
         const rect = { x, y, w, h, cx: x + Math.floor(w / 2), cy: y + Math.floor(h / 2) };
         if (rooms.every(rm => !rectsOverlap(rect, rm, 2))) rooms.push(rect);
     }
@@ -13243,8 +13412,8 @@ function generateRoomsType() {
             let roomX, roomY;
             let attempts = 0;
             do {
-                roomX = 2 + Math.floor(Math.random() * (MAP_WIDTH - roomW - 4));
-                roomY = 2 + Math.floor(Math.random() * (MAP_HEIGHT - roomH - 4));
+                roomX = 2 + Math.floor(Math.random() * (mapState.width - roomW - 4));
+                roomY = 2 + Math.floor(Math.random() * (mapState.height - roomH - 4));
                 attempts++;
             } while (attempts < 80 && rooms.some(rm => !(roomX >= rm.x + rm.w + 2 || roomX + roomW + 2 <= rm.x || roomY >= rm.y + rm.h + 2 || roomY + roomH + 2 <= rm.y)));
             if (attempts < 80) rooms.push({ x: roomX, y: roomY, w: roomW, h: roomH, cx: roomX + Math.floor(roomW / 2), cy: roomY + Math.floor(roomH / 2) });
@@ -13317,8 +13486,8 @@ function smoothMap() {
 
 function smoothMapWithThreshold(threshold) {
     const newMap = map.map(row => [...row]);
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
+    for (let y = 1; y < mapState.height - 1; y++) {
+        for (let x = 1; x < mapState.width - 1; x++) {
             let wallCount = 0;
             // Count walls in 3x3 neighborhood
             for (let dy = -1; dy <= 1; dy++) {
@@ -13330,23 +13499,23 @@ function smoothMapWithThreshold(threshold) {
             newMap[y][x] = wallCount >= threshold ? 1 : 0;
         }
     }
-    map = newMap;
+    map = mapState.setMap(newMap);
 }
 
 function createCaveChambers() {
     // Create larger open areas that resemble cave chambers
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     const numChambers = Math.max(2, Math.floor(sizeFactor * 0.8));
     
     for (let i = 0; i < numChambers; i++) {
         const chamberRadius = Math.max(3, Math.floor(3 + Math.random() * sizeFactor));
-        const centerX = chamberRadius + 2 + Math.floor(Math.random() * (MAP_WIDTH - 2 * chamberRadius - 4));
-        const centerY = chamberRadius + 2 + Math.floor(Math.random() * (MAP_HEIGHT - 2 * chamberRadius - 4));
+        const centerX = chamberRadius + 2 + Math.floor(Math.random() * (mapState.width - 2 * chamberRadius - 4));
+        const centerY = chamberRadius + 2 + Math.floor(Math.random() * (mapState.height - 2 * chamberRadius - 4));
         
         // Create irregular chamber shape
         for (let y = centerY - chamberRadius; y <= centerY + chamberRadius; y++) {
             for (let x = centerX - chamberRadius; x <= centerX + chamberRadius; x++) {
-                if (x > 0 && x < MAP_WIDTH - 1 && y > 0 && y < MAP_HEIGHT - 1) {
+                if (x > 0 && x < mapState.width - 1 && y > 0 && y < mapState.height - 1) {
                     const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
                     // Create irregular chamber with some randomness
                     const threshold = chamberRadius * (0.7 + Math.random() * 0.3);
@@ -13362,8 +13531,8 @@ function createCaveChambers() {
 function cleanupCaveEdges() {
     const newMap = map.map(row => [...row]);
     
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
+    for (let y = 1; y < mapState.height - 1; y++) {
+        for (let x = 1; x < mapState.width - 1; x++) {
             if (map[y][x] === 1) {
                 // Count adjacent floor tiles
                 let floorCount = 0;
@@ -13380,12 +13549,12 @@ function cleanupCaveEdges() {
         }
     }
     
-    map = newMap;
+    map = mapState.setMap(newMap);
 }
 
 // ---------- Pathfinding & corridor carving (A* based) ----------
 function inBounds(x, y) {
-    return x >= 1 && x < MAP_WIDTH - 1 && y >= 1 && y < MAP_HEIGHT - 1;
+    return x >= 1 && x < mapState.width - 1 && y >= 1 && y < mapState.height - 1;
 }
 
 function neighbors4(x, y) {
@@ -13517,8 +13686,8 @@ function ensureConnectivity() {
     function getComponents() {
         const comps = [];
         const seen = new Set();
-        for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-            for (let x = 1; x < MAP_WIDTH - 1; x++) {
+        for (let y = 1; y < mapState.height - 1; y++) {
+            for (let x = 1; x < mapState.width - 1; x++) {
                 if (map[y][x] !== 0) continue;
                 const key0 = `${x},${y}`;
                 if (seen.has(key0)) continue;
@@ -13594,11 +13763,11 @@ function ensureConnectivity() {
 
 // Single room type - one medium-sized rectangular room
 function generateSingleRoomType() {
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     const roomW = Math.max(8, Math.floor(8 + sizeFactor * 2));
     const roomH = Math.max(8, Math.floor(8 + sizeFactor * 2));
-    const startX = Math.floor((MAP_WIDTH - roomW) / 2);
-    const startY = Math.floor((MAP_HEIGHT - roomH) / 2);
+    const startX = Math.floor((mapState.width - roomW) / 2);
+    const startY = Math.floor((mapState.height - roomH) / 2);
     
     // Create room
     for (let y = startY; y < startY + roomH; y++) {
@@ -13610,14 +13779,14 @@ function generateSingleRoomType() {
 
 // Circle type - medium-sized circular room
 function generateCircleType() {
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     const radius = Math.max(6, Math.floor(6 + sizeFactor * 1.5));
-    const centerX = Math.floor(MAP_WIDTH / 2);
-    const centerY = Math.floor(MAP_HEIGHT / 2);
+    const centerX = Math.floor(mapState.width / 2);
+    const centerY = Math.floor(mapState.height / 2);
     
     // Create circular room
-    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-        for (let x = 1; x < MAP_WIDTH - 1; x++) {
+    for (let y = 1; y < mapState.height - 1; y++) {
+        for (let x = 1; x < mapState.width - 1; x++) {
             const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
             if (distance <= radius) {
                 map[y][x] = 0;
@@ -13629,8 +13798,8 @@ function generateCircleType() {
 // Narrow maze type - fine detailed maze with narrow passages using recursive backtracking
 function generateNarrowMazeType() {
     // Start with all walls
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        for (let x = 0; x < MAP_WIDTH; x++) {
+    for (let y = 0; y < mapState.height; y++) {
+        for (let x = 0; x < mapState.width; x++) {
             map[y][x] = 1;
         }
     }
@@ -13662,8 +13831,8 @@ function generateNarrowMazeType() {
             const newX = current.x + dir.dx;
             const newY = current.y + dir.dy;
             
-            if (newX > 0 && newX < MAP_WIDTH - 1 && 
-                newY > 0 && newY < MAP_HEIGHT - 1 && 
+            if (newX > 0 && newX < mapState.width - 1 && 
+                newY > 0 && newY < mapState.height - 1 && 
                 !visited.has(`${newX},${newY}`)) {
                 neighbors.push({ x: newX, y: newY, wallX: current.x + dir.dx / 2, wallY: current.y + dir.dy / 2 });
             }
@@ -13686,12 +13855,12 @@ function generateNarrowMazeType() {
     }
     
     // Add some additional random connections for complexity (but maintain narrow feel)
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     const extraConnections = Math.floor(sizeFactor * 2);
     
     for (let i = 0; i < extraConnections; i++) {
-        const x = 2 + Math.floor(Math.random() * (MAP_WIDTH - 4));
-        const y = 2 + Math.floor(Math.random() * (MAP_HEIGHT - 4));
+        const x = 2 + Math.floor(Math.random() * (mapState.width - 4));
+        const y = 2 + Math.floor(Math.random() * (mapState.height - 4));
         
         if (map[y][x] === 1) {
             // Check if this creates a useful connection
@@ -13714,8 +13883,8 @@ function generateNarrowMazeType() {
 // Wide maze type - same algorithm as narrow maze but with thickness 3
 function generateWideMazeType() {
     // Start with all walls
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        for (let x = 0; x < MAP_WIDTH; x++) {
+    for (let y = 0; y < mapState.height; y++) {
+        for (let x = 0; x < mapState.width; x++) {
             map[y][x] = 1;
         }
     }
@@ -13732,7 +13901,7 @@ function generateWideMazeType() {
     // Create initial thick corridor (3x3 block)
     for (let dy = 0; dy < scale; dy++) {
         for (let dx = 0; dx < scale; dx++) {
-            if (startX + dx < MAP_WIDTH && startY + dy < MAP_HEIGHT) {
+            if (startX + dx < mapState.width && startY + dy < mapState.height) {
                 map[startY + dy][startX + dx] = 0;
             }
         }
@@ -13757,8 +13926,8 @@ function generateWideMazeType() {
             const newX = current.x + dir.dx;
             const newY = current.y + dir.dy;
             
-            if (newX >= scale && newX < MAP_WIDTH - scale && 
-                newY >= scale && newY < MAP_HEIGHT - scale && 
+            if (newX >= scale && newX < mapState.width - scale && 
+                newY >= scale && newY < mapState.height - scale && 
                 !visited.has(`${newX},${newY}`)) {
                 neighbors.push({ x: newX, y: newY, wallX: current.x + dir.dx / 2, wallY: current.y + dir.dy / 2 });
             }
@@ -13771,7 +13940,7 @@ function generateWideMazeType() {
             // Create thick corridor at destination (3x3 block)
             for (let dy = 0; dy < scale; dy++) {
                 for (let dx = 0; dx < scale; dx++) {
-                    if (next.x + dx < MAP_WIDTH && next.y + dy < MAP_HEIGHT) {
+                    if (next.x + dx < mapState.width && next.y + dy < mapState.height) {
                         map[next.y + dy][next.x + dx] = 0;
                     }
                 }
@@ -13780,7 +13949,7 @@ function generateWideMazeType() {
             // Create thick connecting corridor (3x3 block)
             for (let dy = 0; dy < scale; dy++) {
                 for (let dx = 0; dx < scale; dx++) {
-                    if (next.wallX + dx < MAP_WIDTH && next.wallY + dy < MAP_HEIGHT) {
+                    if (next.wallX + dx < mapState.width && next.wallY + dy < mapState.height) {
                         map[next.wallY + dy][next.wallX + dx] = 0;
                     }
                 }
@@ -13795,19 +13964,19 @@ function generateWideMazeType() {
     }
     
     // Add some additional random connections for complexity (but maintain thick style)
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     const extraConnections = Math.floor(sizeFactor * 2);
     
     for (let i = 0; i < extraConnections; i++) {
-        const x = scale + Math.floor(Math.random() * (MAP_WIDTH - scale * 2));
-        const y = scale + Math.floor(Math.random() * (MAP_HEIGHT - scale * 2));
+        const x = scale + Math.floor(Math.random() * (mapState.width - scale * 2));
+        const y = scale + Math.floor(Math.random() * (mapState.height - scale * 2));
         
         if (map[y][x] === 1) {
             // Check if this creates a useful connection
             let floorNeighbors = 0;
             const dirs = [[0,scale], [scale,0], [0,-scale], [-scale,0]];
             for (const [dx, dy] of dirs) {
-                if (y + dy >= 0 && y + dy < MAP_HEIGHT && x + dx >= 0 && x + dx < MAP_WIDTH) {
+                if (y + dy >= 0 && y + dy < mapState.height && x + dx >= 0 && x + dx < mapState.width) {
                     if (map[y + dy][x + dx] === 0) floorNeighbors++;
                 }
             }
@@ -13817,7 +13986,7 @@ function generateWideMazeType() {
                 // Create thick connection (3x3 block)
                 for (let dy = 0; dy < scale; dy++) {
                     for (let dx = 0; dx < scale; dx++) {
-                        if (x + dx < MAP_WIDTH && y + dy < MAP_HEIGHT) {
+                        if (x + dx < mapState.width && y + dy < mapState.height) {
                             map[y + dy][x + dx] = 0;
                         }
                     }
@@ -13831,15 +14000,15 @@ function generateWideMazeType() {
 
 // Snake type - winding passage with no branches (single path, no blocks)
 function generateSnakeType() {
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     // Path width should be 1 for single path, optionally 2 for slightly wider corridors
     const pathWidth = Math.min(1, Math.floor(sizeFactor * 0.3)); // Keep it narrow, avoid blocks
     
     // Start from top-left corner (2,2), target bottom-right corner as specified
     let currentX = 2;
     let currentY = 2;
-    const targetX = MAP_WIDTH - 3;
-    const targetY = MAP_HEIGHT - 3;
+    const targetX = mapState.width - 3;
+    const targetY = mapState.height - 3;
     
     let currentDirection = 0; // 0=right, 1=down, 2=left, 3=up
     const directions = [[1,0], [0,1], [-1,0], [0,-1]]; // right, down, left, up
@@ -13889,8 +14058,8 @@ function generateSnakeType() {
             const aheadY = currentY + moveDir[1] * 2;
             
             // Boundary checking
-            if (nextX <= 1 || nextX >= MAP_WIDTH - 2 || 
-                nextY <= 1 || nextY >= MAP_HEIGHT - 2) {
+            if (nextX <= 1 || nextX >= mapState.width - 2 || 
+                nextY <= 1 || nextY >= mapState.height - 2) {
                 continue;
             }
             
@@ -13900,8 +14069,8 @@ function generateSnakeType() {
             }
             
             // Look-ahead collision detection - check if 2 steps ahead would hit existing path
-            if (aheadX > 1 && aheadX < MAP_WIDTH - 2 && 
-                aheadY > 1 && aheadY < MAP_HEIGHT - 2) {
+            if (aheadX > 1 && aheadX < mapState.width - 2 && 
+                aheadY > 1 && aheadY < mapState.height - 2) {
                 if (pathCells.has(`${aheadX},${aheadY}`)) {
                     continue;
                 }
@@ -13961,8 +14130,8 @@ function generateSnakeType() {
                     const adjX = currentX + dx;
                     const adjY = currentY + dy;
                     
-                    if (adjX > 1 && adjX < MAP_WIDTH - 2 && 
-                        adjY > 1 && adjY < MAP_HEIGHT - 2 && 
+                    if (adjX > 1 && adjX < mapState.width - 2 && 
+                        adjY > 1 && adjY < mapState.height - 2 && 
                         !pathCells.has(`${adjX},${adjY}`)) {
                         
                         // Only add if it doesn't create unwanted connections
@@ -14080,7 +14249,7 @@ function generateMixedType() {
 // Circle rooms type - multiple circular rooms connected by corridors
 function generateCircleRoomsType() {
     const rooms = [];
-    const sizeFactor = Math.min(MAP_WIDTH, MAP_HEIGHT) / 20;
+    const sizeFactor = Math.min(mapState.width, mapState.height) / 20;
     const baseRooms = Math.max(3, Math.floor(3 + sizeFactor * 1.5));
     const numRooms = baseRooms + Math.floor(Math.random() * Math.max(2, Math.floor(sizeFactor)));
     
@@ -14095,8 +14264,8 @@ function generateCircleRoomsType() {
         
         // Try to place room without overlap
         do {
-            centerX = radius + 2 + Math.floor(Math.random() * (MAP_WIDTH - 2 * radius - 4));
-            centerY = radius + 2 + Math.floor(Math.random() * (MAP_HEIGHT - 2 * radius - 4));
+            centerX = radius + 2 + Math.floor(Math.random() * (mapState.width - 2 * radius - 4));
+            centerY = radius + 2 + Math.floor(Math.random() * (mapState.height - 2 * radius - 4));
             attempts++;
         } while (attempts < 100 && rooms.some(r => {
             const distance = Math.sqrt((centerX - r.x) ** 2 + (centerY - r.y) ** 2);
@@ -14105,8 +14274,8 @@ function generateCircleRoomsType() {
         
         if (attempts < 100) {
             // Create circular room
-            for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-                for (let x = 1; x < MAP_WIDTH - 1; x++) {
+            for (let y = 1; y < mapState.height - 1; y++) {
+                for (let x = 1; x < mapState.width - 1; x++) {
                     const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
                     if (distance <= radius) {
                         map[y][x] = 0;
@@ -14226,7 +14395,7 @@ function generateEntities() {
                 if (meta) {
                     meta.floorType = FLOOR_TYPE_HATENA;
                     delete meta.floorDir;
-                    markTileVisualDirty(bx, by);
+                    mapRenderer.markTileVisualDirty(mapState, bx, by);
                 }
                 placed.push({ x: bx, y: by, name: typeof block.name === 'string' ? block.name : '' });
             });
@@ -14257,8 +14426,8 @@ function generateEntities() {
     // プレイヤーの初期位置
     if (genType === 'snake') {
         // Snake type: place player at top-left corner on floor
-        for (let y = 1; y < MAP_HEIGHT - 1; y++) {
-            for (let x = 1; x < MAP_WIDTH - 1; x++) {
+        for (let y = 1; y < mapState.height - 1; y++) {
+            for (let x = 1; x < mapState.width - 1; x++) {
                 if (map[y][x] === 0) { // Find first floor tile from top-left
                     player.x = x;
                     player.y = y;
@@ -14277,8 +14446,8 @@ function generateEntities() {
         // Other types: normal placement
         if (dungeonLevel === 1) {
             // For first level, try center but ensure it's accessible
-            const centerX = Math.floor(MAP_WIDTH / 2);
-            const centerY = Math.floor(MAP_HEIGHT / 2);
+            const centerX = Math.floor(mapState.width / 2);
+            const centerY = Math.floor(mapState.height / 2);
             if (map[centerY] && map[centerY][centerX] === 0) {
                 player.x = centerX;
                 player.y = centerY;
@@ -14296,8 +14465,8 @@ function generateEntities() {
     }
 
     // 敵を配置（サイズベース生成：幅+高さ8で割った数） Poisson分散で最小距離を確保
-    const enemyCount = Math.max(1, Math.floor((MAP_WIDTH + MAP_HEIGHT) / 8));
-    const enemyMinDist = Math.max(3, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) * 0.08));
+    const enemyCount = Math.max(1, Math.floor((mapState.width + mapState.height) / 8));
+    const enemyMinDist = Math.max(3, Math.floor(Math.min(mapState.width, mapState.height) * 0.08));
     const enemyPositions = pickSpreadFloorPositions(enemyCount, enemyMinDist, [{ x: player.x, y: player.y }]);
     for (const pos of enemyPositions) {
         const baseRec = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
@@ -14322,13 +14491,13 @@ function generateEntities() {
     // 宝箱（推奨+5以上なら設置しない、サイズベース生成）
     const rec = recommendedLevelForSelection(engine.selectedWorld, engine.selectedDungeonBase, dungeonLevel);
     const allowChests = player.level < rec + 5;
-    const chestBase = Math.floor((MAP_WIDTH + MAP_HEIGHT) / 15);
+    const chestBase = Math.floor((mapState.width + mapState.height) / 15);
     let chestMul = 1.0;
     if (currentMode === 'blockdim' && blockDimState?.spec) {
         chestMul = blockDimState.spec.chestBias === 'less' ? 0.7 : blockDimState.spec.chestBias === 'more' ? 1.3 : 1.0;
     }
     const chestCount = allowChests ? Math.max(0, Math.round(chestBase * chestMul)) : 0;
-    const chestMinDist = Math.max(3, Math.floor(Math.min(MAP_WIDTH, MAP_HEIGHT) * 0.06));
+    const chestMinDist = Math.max(3, Math.floor(Math.min(mapState.width, mapState.height) * 0.06));
     const chestPositions = pickSpreadFloorPositions(
         chestCount,
         chestMinDist,
@@ -14349,8 +14518,8 @@ function generateEntities() {
     if (genType === 'snake') {
         // Snake type: place stairs at bottom-right corner on floor
         let stairsPlaced = false;
-        for (let y = MAP_HEIGHT - 2; y >= 1; y--) {
-            for (let x = MAP_WIDTH - 2; x >= 1; x--) {
+        for (let y = mapState.height - 2; y >= 1; y--) {
+            for (let x = mapState.width - 2; x >= 1; x--) {
                 if (map[y][x] === 0) { // Find first floor tile from bottom-right
                     stairs = { x: x, y: y };
                     stairsPlaced = true;
@@ -14428,14 +14597,14 @@ function generateLevel() {
 function generateBossRoom() {
     const roomW = 10; // Fixed 10×10 size
     const roomH = 10;
-    const startX = Math.floor((MAP_WIDTH - roomW) / 2);
-    const startY = Math.floor((MAP_HEIGHT - roomH) / 2);
+    const startX = Math.floor((mapState.width - roomW) / 2);
+    const startY = Math.floor((mapState.height - roomH) / 2);
 
     resetTileMetadata();
 
     // Clear entire map to walls
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        for (let x = 0; x < MAP_WIDTH; x++) {
+    for (let y = 0; y < mapState.height; y++) {
+        for (let x = 0; x < mapState.width; x++) {
             map[y][x] = 1;
         }
     }
@@ -14492,7 +14661,7 @@ function generateBossRoom() {
         });
     }
 
-    markMapBufferDirty();
+    mapRenderer.markMapDirty();
     items = [];
 }
 
@@ -14949,82 +15118,6 @@ function applyDifficultyDamageMultipliers(type, value) {
     return value * getDifficultyDamageMultiplier(type);
 }
 
-function drawMap() {
-    syncMapBuffer();
-
-    const startX = camera.x;
-    const startY = camera.y;
-    const endX = startX + VIEWPORT_WIDTH;
-    const endY = startY + VIEWPORT_HEIGHT;
-
-    const cellW = canvas.width / VIEWPORT_WIDTH;
-    const cellH = canvas.height / VIEWPORT_HEIGHT;
-
-    if (mapBuffer) {
-        const availableW = Math.max(0, Math.min(VIEWPORT_WIDTH, mapBuffer.width - startX));
-        const availableH = Math.max(0, Math.min(VIEWPORT_HEIGHT, mapBuffer.height - startY));
-        if (availableW > 0 && availableH > 0) {
-            const prevSmoothing = ctx.imageSmoothingEnabled;
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(
-                mapBuffer,
-                startX,
-                startY,
-                availableW,
-                availableH,
-                0,
-                0,
-                availableW * cellW,
-                availableH * cellH
-            );
-            ctx.imageSmoothingEnabled = prevSmoothing;
-        }
-    }
-
-    const darknessActive = isDarknessActive();
-
-    for (let y = startY; y < endY; y++) {
-        for (let x = startX; x < endX; x++) {
-            const screenX = (x - startX) * cellW;
-            const screenY = (y - startY) * cellH;
-            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) {
-                ctx.fillStyle = DEFAULT_WALL_COLOR;
-                ctx.fillRect(screenX, screenY, cellW, cellH);
-                continue;
-            }
-
-            const isWall = map[y][x] === 1;
-            const visible = !darknessActive || isTileVisible(x, y);
-
-            if (darknessActive && !visible) {
-                ctx.fillStyle = DARKNESS_FILL_COLOR;
-                ctx.fillRect(screenX, screenY, cellW, cellH);
-                continue;
-            }
-
-            if (!isWall && visible) {
-                drawFloorGimmickOverlay(x, y, screenX, screenY, cellW, cellH);
-            }
-        }
-    }
-
-    // 階段
-    if (stairs) {
-        const sx = stairs.x - startX;
-        const sy = stairs.y - startY;
-        if (sx >= 0 && sy >= 0 && sx < VIEWPORT_WIDTH && sy < VIEWPORT_HEIGHT) {
-            if (!darknessActive || isTileVisible(stairs.x, stairs.y)) {
-                const cellW = canvas.width / VIEWPORT_WIDTH;
-                const cellH = canvas.height / VIEWPORT_HEIGHT;
-                const screenX = sx * cellW;
-                const screenY = sy * cellH;
-                ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(screenX + 4, screenY + 4, cellW - 8, cellH - 8);
-            }
-        }
-    }
-}
-
 function drawDomainEffects() {
     if (!Array.isArray(domainCrystals) || !domainCrystals.length) return;
     const startX = camera.x;
@@ -15063,9 +15156,9 @@ function drawDomainEffects() {
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         for (let ty = minTileY; ty <= maxTileY; ty++) {
-            if (ty < 0 || ty >= MAP_HEIGHT) continue;
+            if (ty < 0 || ty >= mapState.height) continue;
             for (let tx = minTileX; tx <= maxTileX; tx++) {
-                if (tx < 0 || tx >= MAP_WIDTH) continue;
+                if (tx < 0 || tx >= mapState.width) continue;
                 const dx = tx - cx;
                 const dy = ty - cy;
                 if (dx * dx + dy * dy > radiusSq) continue;
@@ -17846,8 +17939,8 @@ function attemptPlayerStep(dx, dy) {
     const targetY = player.y + dy;
 
     if (noClip) {
-        const destX = Math.max(0, Math.min(MAP_WIDTH - 1, targetX));
-        const destY = Math.max(0, Math.min(MAP_HEIGHT - 1, targetY));
+        const destX = Math.max(0, Math.min(mapState.width - 1, targetX));
+        const destY = Math.max(0, Math.min(mapState.height - 1, targetY));
         const distance = Math.abs(destX - player.x) + Math.abs(destY - player.y);
         addSeparator();
         player.x = destX;
@@ -17943,7 +18036,7 @@ function gameLoop() {
     // 描画処理
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    drawMap();
+    mapRenderer.render(mapState);
     drawDomainEffects();
     drawSandboxGimmicks(isSandboxActive());
     drawPlayer();
@@ -20837,14 +20930,14 @@ function createMiniGameDungeonApi() {
         const normalizedInput = normalizeTypeInput(options.type);
         let targetType = findMatchingType(normalizedInput, availableTypes);
         if (!targetType) targetType = pickRandomFrom(availableTypes) || 'field';
-        const width = clampDimension(options.tilesX ?? options.width ?? options.cols ?? options.columns, MAP_WIDTH || 60);
-        const height = clampDimension(options.tilesY ?? options.height ?? options.rows ?? options.lines, MAP_HEIGHT || 45);
+        const width = clampDimension(options.tilesX ?? options.width ?? options.cols ?? options.columns, mapState.width || 60);
+        const height = clampDimension(options.tilesY ?? options.height ?? options.rows ?? options.lines, mapState.height || 45);
         const floorNumber = Number.isFinite(options.floor) ? Math.max(1, Math.floor(options.floor)) : 1;
         const prevState = {
             map,
             tileMeta,
-            MAP_WIDTH,
-            MAP_HEIGHT,
+            width: mapState.width,
+            height: mapState.height,
             dungeonLevel,
             lastGeneratedGenType
         };
@@ -20853,10 +20946,9 @@ function createMiniGameDungeonApi() {
         let actualType = targetType;
         let generationError = null;
         try {
-            MAP_WIDTH = width;
-            MAP_HEIGHT = height;
-            map = Array.from({ length: height }, () => Array(width).fill(1));
-            tileMeta = Array.from({ length: height }, () => Array(width).fill(null));
+            mapState.setSize(width, height);
+            map = mapState.setMap(Array.from({ length: height }, () => Array(width).fill(1)));
+            tileMeta = mapState.setTileMetaGrid(Array.from({ length: height }, () => Array(width).fill(null)));
             dungeonLevel = floorNumber;
             lastGeneratedGenType = targetType;
             if (DungeonGenRegistry && DungeonGenRegistry.has(targetType)) {
@@ -20872,13 +20964,13 @@ function createMiniGameDungeonApi() {
             } else {
                 runBuiltinGenerator(targetType);
             }
-            for (let x = 0; x < MAP_WIDTH; x++) {
+            for (let x = 0; x < mapState.width; x++) {
                 map[0][x] = 1;
-                map[MAP_HEIGHT - 1][x] = 1;
+                map[mapState.height - 1][x] = 1;
             }
-            for (let y = 0; y < MAP_HEIGHT; y++) {
+            for (let y = 0; y < mapState.height; y++) {
                 map[y][0] = 1;
-                map[y][MAP_WIDTH - 1] = 1;
+                map[y][mapState.width - 1] = 1;
             }
             ensureMinimumFloors(10);
             tilesSnapshot = cloneTiles(map);
@@ -20891,10 +20983,9 @@ function createMiniGameDungeonApi() {
             actualType = 'field';
             console.error('MiniGame dungeon stage generation failed', err);
         } finally {
-            map = prevState.map;
-            tileMeta = prevState.tileMeta;
-            MAP_WIDTH = prevState.MAP_WIDTH;
-            MAP_HEIGHT = prevState.MAP_HEIGHT;
+            map = mapState.setMap(prevState.map);
+            tileMeta = mapState.setTileMetaGrid(prevState.tileMeta);
+            mapState.setSize(prevState.width, prevState.height);
             dungeonLevel = prevState.dungeonLevel;
             lastGeneratedGenType = prevState.lastGeneratedGenType;
         }
@@ -22090,15 +22181,15 @@ window.registerDungeonAddon = function(def) {
 
 function makeGenContext() {
     const ctx = {
-        width: MAP_WIDTH,
-        height: MAP_HEIGHT,
+        width: mapState.width,
+        height: mapState.height,
         map,
         floor: dungeonLevel,
         maxFloor: getMaxFloor(),
         generatorId: null,
         addonId: null,
         random: Math.random,
-        inBounds(x,y){ return x>=1 && x<MAP_WIDTH-1 && y>=1 && y<MAP_HEIGHT-1; },
+        inBounds(x,y){ return x>=1 && x<mapState.width-1 && y>=1 && y<mapState.height-1; },
         set(x,y,v){
             if (!ctx.inBounds(x,y)) return;
             map[y][x] = v ? 1 : 0;
@@ -22111,7 +22202,7 @@ function makeGenContext() {
                     if (!meta.wallColor && !Object.keys(meta).length) tileMeta[y][x] = null;
                 }
             }
-            markTileVisualDirty(x, y);
+            mapRenderer.markTileVisualDirty(mapState, x, y);
         },
         get(x,y){ return map[y] && (map[y][x] ? 1 : 0); },
         ensureConnectivity: () => { try { ensureConnectivity(); } catch {} },
@@ -22119,21 +22210,21 @@ function makeGenContext() {
         aStar: (s, g, opts) => { try { return aStarPath(s, g, opts) || []; } catch { return []; } },
         setFloorColor: (x, y, color) => {
             if (!color) return;
-            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;
+            if (y < 0 || y >= mapState.height || x < 0 || x >= mapState.width) return;
             if (!ctx.inBounds(x, y) && map[y]?.[x] !== 0) return;
             const meta = ensureTileMeta(x, y);
             if (meta) {
                 meta.floorColor = color;
-                markTileVisualDirty(x, y);
+                mapRenderer.markTileVisualDirty(mapState, x, y);
             }
         },
         setWallColor: (x, y, color) => {
             if (!color) return;
-            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;
+            if (y < 0 || y >= mapState.height || x < 0 || x >= mapState.width) return;
             const meta = ensureTileMeta(x, y);
             if (meta) {
                 meta.wallColor = color;
-                markTileVisualDirty(x, y);
+                mapRenderer.markTileVisualDirty(mapState, x, y);
             }
         },
         setFloorType: (x, y, type, options) => {
@@ -22150,7 +22241,7 @@ function makeGenContext() {
             if (!targetType || normalized === FLOOR_TYPE_NORMAL) {
                 delete meta.floorType;
                 delete meta.floorDir;
-                markTileVisualDirty(x, y);
+                mapRenderer.markTileVisualDirty(mapState, x, y);
                 return;
             }
             if (!FLOOR_TYPE_SET.has(normalized) || normalized === FLOOR_TYPE_NORMAL) {
@@ -22164,7 +22255,7 @@ function makeGenContext() {
             } else if (!floorTypeNeedsDirection(normalized)) {
                 delete meta.floorDir;
             }
-            markTileVisualDirty(x, y);
+            mapRenderer.markTileVisualDirty(mapState, x, y);
         },
         setFloorDirection: (x, y, direction) => {
             if (!ctx.inBounds(x, y)) return;
@@ -22173,7 +22264,7 @@ function makeGenContext() {
             const currentType = normalizeFloorType(meta.floorType);
             if (!floorTypeNeedsDirection(currentType)) {
                 delete meta.floorDir;
-                markTileVisualDirty(x, y);
+                mapRenderer.markTileVisualDirty(mapState, x, y);
                 return;
             }
             const dir = normalizeFloorDirection(direction);
@@ -22182,15 +22273,15 @@ function makeGenContext() {
             } else {
                 delete meta.floorDir;
             }
-            markTileVisualDirty(x, y);
+            mapRenderer.markTileVisualDirty(mapState, x, y);
         },
         clearTileMeta: (x, y) => {
-            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return;
+            if (y < 0 || y >= mapState.height || x < 0 || x >= mapState.width) return;
             tileMeta[y][x] = null;
-            markTileVisualDirty(x, y);
+            mapRenderer.markTileVisualDirty(mapState, x, y);
         },
         getTileMeta: (x, y) => {
-            if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) return null;
+            if (y < 0 || y >= mapState.height || x < 0 || x >= mapState.width) return null;
             return getTileMeta(x, y);
         }
     };
@@ -22213,7 +22304,7 @@ function runAddonGenerator(id) {
     }
     if (hasAlgorithm) {
         const out = def.algorithm(ctx);
-        if (Array.isArray(out)) map = out;
+        if (Array.isArray(out)) map = mapState.setMap(out);
     } else if (!applied && !bundle) {
         generateFieldType();
     }

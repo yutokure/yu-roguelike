@@ -592,38 +592,1086 @@ class MapRenderer {
     }
 }
 
-const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
-const mapRenderer = new MapRenderer({ canvas, ctx });
-const playerStatsDiv = document.getElementById('player-stats');
-const statLevel = document.getElementById('stat-level');
-const statAtk = document.getElementById('stat-atk');
-const statDef = document.getElementById('stat-def');
-const statHpText = document.getElementById('stat-hp-text');
-const statExpText = document.getElementById('stat-exp-text');
-const statStatusEffects = document.getElementById('stat-status-effects');
-const statDomainEffects = document.getElementById('stat-domain-effects');
-const hpBar = document.getElementById('hp-bar');
-const expBar = document.getElementById('exp-bar');
-const statSpText = document.getElementById('stat-sp-text');
-const spBar = document.getElementById('sp-bar');
-const spBarContainer = document.getElementById('sp-bar-container');
-const statSatietyText = document.getElementById('stat-satiety-text');
-const satietyBar = document.getElementById('satiety-bar');
-const satietyBarContainer = document.getElementById('satiety-bar-container');
-const autoItemStatusText = document.getElementById('auto-item-status');
-const messageLogDiv = document.getElementById('message-log');
-const controlsCheatsheet = document.getElementById('controls-cheatsheet');
-const controlsCheatsheetDismissButton = document.getElementById('controls-cheatsheet-dismiss');
-const controlsCheatsheetToggle = document.getElementById('controls-cheatsheet-toggle');
-const controlsCheatsheetContent = document.getElementById('controls-cheatsheet-content');
-const floorIndicatorValue = document.getElementById('floor-indicator-value');
-const dungeonTypeOverlay = document.getElementById('dungeon-type-overlay');
-const dungeonTypeOverlayName = document.getElementById('dungeon-type-overlay-type');
-const dungeonTypeOverlayFeatures = document.getElementById('dungeon-type-overlay-features');
-const dungeonTypeOverlayDescription = document.getElementById('dungeon-type-overlay-description');
-const dungeonNameToggle = document.getElementById('toggle-dungeon-name');
-const autoItemToggle = document.getElementById('auto-item-toggle');
+class GameView {
+    constructor(doc = document) {
+        this.document = doc;
+        this.listeners = new Map();
+        const canvas = doc.getElementById('game-canvas');
+        const ctx = canvas ? canvas.getContext('2d') : null;
+        this.mapRenderer = canvas && ctx ? new MapRenderer({ canvas, ctx }) : null;
+        this.elements = {
+            canvas,
+            ctx,
+            playerStatsDiv: doc.getElementById('player-stats'),
+            statLevel: doc.getElementById('stat-level'),
+            statAtk: doc.getElementById('stat-atk'),
+            statDef: doc.getElementById('stat-def'),
+            statHpText: doc.getElementById('stat-hp-text'),
+            statExpText: doc.getElementById('stat-exp-text'),
+            statStatusEffects: doc.getElementById('stat-status-effects'),
+            statDomainEffects: doc.getElementById('stat-domain-effects'),
+            hpBar: doc.getElementById('hp-bar'),
+            expBar: doc.getElementById('exp-bar'),
+            statSpText: doc.getElementById('stat-sp-text'),
+            spBar: doc.getElementById('sp-bar'),
+            spBarContainer: doc.getElementById('sp-bar-container'),
+            statSatietyText: doc.getElementById('stat-satiety-text'),
+            satietyBar: doc.getElementById('satiety-bar'),
+            satietyBarContainer: doc.getElementById('satiety-bar-container'),
+            autoItemStatusText: doc.getElementById('auto-item-status'),
+            messageLogDiv: doc.getElementById('message-log'),
+            controlsCheatsheet: doc.getElementById('controls-cheatsheet'),
+            controlsCheatsheetDismissButton: doc.getElementById('controls-cheatsheet-dismiss'),
+            controlsCheatsheetToggle: doc.getElementById('controls-cheatsheet-toggle'),
+            controlsCheatsheetContent: doc.getElementById('controls-cheatsheet-content'),
+            floorIndicatorValue: doc.getElementById('floor-indicator-value'),
+            dungeonTypeOverlay: doc.getElementById('dungeon-type-overlay'),
+            dungeonTypeOverlayName: doc.getElementById('dungeon-type-overlay-type'),
+            dungeonTypeOverlayFeatures: doc.getElementById('dungeon-type-overlay-features'),
+            dungeonTypeOverlayDescription: doc.getElementById('dungeon-type-overlay-description'),
+            dungeonNameToggle: doc.getElementById('toggle-dungeon-name'),
+            autoItemToggle: doc.getElementById('auto-item-toggle'),
+            btnBack: doc.getElementById('btn-back'),
+            btnItems: doc.getElementById('btn-items'),
+            btnSkills: doc.getElementById('btn-skills'),
+            btnStatus: doc.getElementById('btn-status'),
+            btnImport: doc.getElementById('btn-import'),
+            btnExport: doc.getElementById('btn-export'),
+            importFileInput: doc.getElementById('import-file'),
+            itemsModal: doc.getElementById('items-modal'),
+            statusModal: doc.getElementById('status-modal'),
+            skillsModal: doc.getElementById('skills-modal'),
+            skillsList: doc.getElementById('skills-list'),
+            skillsSpText: doc.getElementById('skills-current-sp'),
+            invPotion30: doc.getElementById('inv-potion30'),
+            invHpBoost: doc.getElementById('inv-hp-boost'),
+            invAtkBoost: doc.getElementById('inv-atk-boost'),
+            invDefBoost: doc.getElementById('inv-def-boost'),
+            invHpBoostMajor: doc.getElementById('inv-hp-boost-major'),
+            invAtkBoostMajor: doc.getElementById('inv-atk-boost-major'),
+            invDefBoostMajor: doc.getElementById('inv-def-boost-major'),
+            invSpElixir: doc.getElementById('inv-sp-elixir'),
+            skillCharmList: doc.getElementById('skill-charm-list'),
+            passiveOrbSummaryEl: doc.getElementById('passive-orb-summary'),
+            passiveOrbAggregateEl: doc.getElementById('passive-orb-aggregate'),
+            passiveOrbListEl: doc.getElementById('passive-orb-list'),
+            usePotion30Btn: doc.getElementById('use-potion30'),
+            eatPotion30Btn: doc.getElementById('eat-potion30'),
+            offerPotion30Btn: doc.getElementById('offer-potion30'),
+            cleansePotion30Btn: doc.getElementById('cleanse-potion30'),
+            useHpBoostBtn: doc.getElementById('use-hp-boost'),
+            useAtkBoostBtn: doc.getElementById('use-atk-boost'),
+            useDefBoostBtn: doc.getElementById('use-def-boost'),
+            useHpBoostMajorBtn: doc.getElementById('use-hp-boost-major'),
+            useAtkBoostMajorBtn: doc.getElementById('use-atk-boost-major'),
+            useDefBoostMajorBtn: doc.getElementById('use-def-boost-major'),
+            useSpElixirBtn: doc.getElementById('use-sp-elixir'),
+            throwPotion30Btn: doc.getElementById('throw-potion30'),
+            sandboxMenuButton: doc.getElementById('btn-sandbox-menu'),
+            sandboxInteractivePanel: doc.getElementById('sandbox-interactive-panel'),
+            sandboxInteractiveClose: doc.getElementById('sandbox-interactive-close'),
+            sandboxGodModeInput: doc.getElementById('sandbox-god-mode'),
+            sandboxNoClipInput: doc.getElementById('sandbox-no-clip'),
+            sandboxFullHealButton: doc.getElementById('sandbox-full-heal'),
+            sandboxResetStatsButton: doc.getElementById('sandbox-reset-stats'),
+            sandboxApplyStatsButton: doc.getElementById('sandbox-apply-stats'),
+            sandboxStatLevelInput: doc.getElementById('sandbox-stat-level'),
+            sandboxStatMaxHpInput: doc.getElementById('sandbox-stat-maxhp'),
+            sandboxStatHpInput: doc.getElementById('sandbox-stat-hp'),
+            sandboxStatAtkInput: doc.getElementById('sandbox-stat-atk'),
+            sandboxStatDefInput: doc.getElementById('sandbox-stat-def'),
+            sandboxStatMaxSpInput: doc.getElementById('sandbox-stat-maxsp'),
+            sandboxStatSpInput: doc.getElementById('sandbox-stat-sp'),
+            sandboxStatSatietyInput: doc.getElementById('sandbox-stat-satiety'),
+            sandboxToolSelect: doc.getElementById('sandbox-tool-select'),
+            sandboxToolFloorType: doc.getElementById('sandbox-tool-floor-type'),
+            sandboxToolFloorDir: doc.getElementById('sandbox-tool-floor-dir'),
+            sandboxToolDomainSelect: doc.getElementById('sandbox-tool-domain'),
+            sandboxToolApplyButton: doc.getElementById('sandbox-tool-apply'),
+            godConsoleButton: doc.getElementById('btn-god-console'),
+            godConsolePanel: doc.getElementById('god-console-panel'),
+            godConsoleClose: doc.getElementById('god-console-close'),
+            godConsoleRunButton: doc.getElementById('god-console-run'),
+            godConsoleClearButton: doc.getElementById('god-console-clear'),
+            godConsoleInput: doc.getElementById('god-console-input'),
+            godConsoleStatus: doc.getElementById('god-console-status'),
+            godConsoleSandboxToggle: doc.getElementById('god-console-toggle-sandbox'),
+            godConsoleModeLabel: doc.getElementById('god-console-mode-label'),
+            modalStatusEffects: doc.getElementById('modal-status-effects'),
+            modalSkillEffects: doc.getElementById('modal-skill-effects'),
+            modalSpRow: doc.getElementById('modal-sp-row'),
+            modalSpValue: doc.getElementById('modal-sp'),
+            modalPassiveOrbSummary: doc.getElementById('modal-passive-orb-summary'),
+            modalPassiveOrbAggregate: doc.getElementById('modal-passive-orb-aggregate'),
+            modalLevel: doc.getElementById('modal-level'),
+            modalExp: doc.getElementById('modal-exp'),
+            modalHp: doc.getElementById('modal-hp'),
+            modalAttack: doc.getElementById('modal-attack'),
+            modalDefense: doc.getElementById('modal-defense'),
+            modalSatiety: doc.getElementById('modal-satiety'),
+            modalSatietyRow: doc.getElementById('modal-satiety-row'),
+            modalFloor: doc.getElementById('modal-floor'),
+            modalPotion30: doc.getElementById('modal-potion30'),
+            modalHpBoost: doc.getElementById('modal-hp-boost'),
+            modalAtkBoost: doc.getElementById('modal-atk-boost'),
+            modalDefBoost: doc.getElementById('modal-def-boost'),
+            modalHpBoostMajor: doc.getElementById('modal-hp-boost-major'),
+            modalAtkBoostMajor: doc.getElementById('modal-atk-boost-major'),
+            modalDefBoostMajor: doc.getElementById('modal-def-boost-major'),
+            modalSpElixir: doc.getElementById('modal-sp-elixir'),
+            modalSkillCharms: doc.getElementById('modal-skill-charms'),
+            modalWorld: doc.getElementById('modal-world'),
+            modalDifficulty: doc.getElementById('modal-difficulty'),
+            modalDungeonSummary: doc.getElementById('modal-dungeon-summary'),
+            modalDungeonType: doc.getElementById('modal-dungeon-type'),
+            modalDungeonTypeRow: doc.getElementById('modal-dungeon-type-row'),
+            rareChestModal: doc.getElementById('rare-chest-modal'),
+            rareChestPointer: doc.getElementById('rare-chest-pointer'),
+            rareChestStopButton: doc.getElementById('rare-chest-stop'),
+            rareChestStatus: doc.getElementById('rare-chest-status'),
+            runResultOverlay: doc.getElementById('run-result-overlay'),
+            runResultBadge: doc.getElementById('run-result-badge'),
+            runResultTitleElement: doc.getElementById('run-result-title'),
+            runResultLevelValue: doc.getElementById('run-result-level'),
+            runResultExpValue: doc.getElementById('run-result-exp'),
+            runResultDamageValue: doc.getElementById('run-result-damage'),
+            runResultHealingValue: doc.getElementById('run-result-healing'),
+            runResultCauseText: doc.getElementById('run-result-cause'),
+            runResultPrimaryButton: doc.getElementById('run-result-primary'),
+            runResultRetryButton: doc.getElementById('run-result-retry'),
+            selectionScreen: doc.getElementById('selection-screen'),
+            gameScreen: doc.getElementById('game-screen'),
+            difficultySelect: doc.getElementById('difficulty-select'),
+            worldButtonsDiv: doc.getElementById('world-buttons'),
+            dungeonButtonsDiv: doc.getElementById('dungeon-buttons'),
+            playerSummaryDiv: doc.getElementById('player-summary')
+        };
+        this.elements.skillsSpValueText = this.elements.skillsSpText
+            ? this.elements.skillsSpText.querySelector('.skills-sp-value')
+            : null;
+        this.elements.skillsSpBarFill = this.elements.skillsSpText
+            ? this.elements.skillsSpText.querySelector('.skills-sp-bar-fill')
+            : null;
+        this.elements.hpBarElement = doc.querySelector('.bar.hp') || this.elements.statHpText;
+        this.elements.expBarElement = doc.querySelector('.bar.exp') || this.elements.statExpText;
+        doc.querySelectorAll('.modal[aria-hidden="true"]').forEach(modal => {
+            if (typeof modal.setAttribute === 'function') {
+                modal.setAttribute('inert', '');
+            }
+        });
+        this.bindEvents();
+    }
+
+    on(eventName, handler) {
+        if (typeof handler !== 'function') return () => {};
+        const list = this.listeners.get(eventName) || [];
+        list.push(handler);
+        this.listeners.set(eventName, list);
+        return () => {
+            const next = (this.listeners.get(eventName) || []).filter(fn => fn !== handler);
+            if (next.length) {
+                this.listeners.set(eventName, next);
+            } else {
+                this.listeners.delete(eventName);
+            }
+        };
+    }
+
+    emit(eventName, payload) {
+        const handlers = this.listeners.get(eventName);
+        if (!handlers?.length) return;
+        handlers.forEach(handler => {
+            try {
+                handler(payload);
+            } catch (error) {
+                console.warn(`[GameView] handler failed for ${eventName}`, error);
+            }
+        });
+    }
+
+    bindEvents() {
+        const {
+            runResultPrimaryButton,
+            runResultRetryButton,
+            btnItems,
+            btnSkills,
+            btnStatus
+        } = this.elements;
+        if (runResultPrimaryButton) {
+            runResultPrimaryButton.addEventListener('click', () => this.emit('runResult:primary'));
+        }
+        if (runResultRetryButton) {
+            runResultRetryButton.addEventListener('click', () => this.emit('runResult:retry'));
+        }
+        if (btnItems) {
+            btnItems.addEventListener('click', () => this.emit('toolbar:items'));
+        }
+        if (btnSkills) {
+            btnSkills.addEventListener('click', () => this.emit('toolbar:skills'));
+        }
+        if (btnStatus) {
+            btnStatus.addEventListener('click', () => this.emit('toolbar:status'));
+        }
+    }
+
+    isAnyModalOpen() {
+        if (__openModalCount > 0) return true;
+        try {
+            const modals = this.document.querySelectorAll('.modal');
+            for (const m of modals) {
+                const s = window.getComputedStyle(m);
+                if (s && s.display !== 'none' && s.visibility !== 'hidden' && parseFloat(s.opacity || '1') > 0) {
+                    return true;
+                }
+            }
+        } catch {}
+        return false;
+    }
+
+    updateModalBodyState() {
+        if (this.isAnyModalOpen()) this.document.body.classList.add('modal-open');
+        else this.document.body.classList.remove('modal-open');
+    }
+
+    openModal(el) {
+        if (!el) return;
+        const alreadyOpen = el.classList ? el.classList.contains('modal--open') : (el.style.display === 'flex');
+        if (el.classList && !alreadyOpen) {
+            el.classList.add('modal--open');
+        }
+        if (el.style.display !== 'flex') {
+            el.style.display = 'flex';
+        }
+        if (typeof el.setAttribute === 'function') {
+            el.removeAttribute('inert');
+            el.setAttribute('aria-hidden', 'false');
+        }
+        if (!alreadyOpen) {
+            const previouslyFocused = this.document.activeElement;
+            if (previouslyFocused && previouslyFocused !== this.document.body && typeof previouslyFocused.focus === 'function' && !el.contains(previouslyFocused)) {
+                el.__previousActiveElement = previouslyFocused;
+            } else {
+                el.__previousActiveElement = null;
+            }
+            __openModalCount++;
+            focusInitialModalElement(el);
+        }
+        this.updateModalBodyState();
+    }
+
+    closeModal(el) {
+        if (!el) return;
+        const hadClass = el.classList ? el.classList.contains('modal--open') : false;
+        const displayed = el.style.display !== 'none';
+        if (!hadClass && !displayed) return;
+        const activeElement = this.document.activeElement;
+        if (activeElement && el.contains(activeElement) && typeof activeElement.blur === 'function') {
+            activeElement.blur();
+        }
+        if (el.classList) {
+            el.classList.remove('modal--open');
+        }
+        if (displayed) {
+            el.style.display = 'none';
+        }
+        if (typeof el.setAttribute === 'function') {
+            el.setAttribute('aria-hidden', 'true');
+            el.setAttribute('inert', '');
+        }
+        if (hadClass || displayed) {
+            __openModalCount = Math.max(0, __openModalCount - 1);
+            const toFocus = el.__previousActiveElement;
+            if (toFocus && toFocus instanceof Element && this.document.contains(toFocus) && typeof toFocus.focus === 'function') {
+                try {
+                    toFocus.focus({ preventScroll: true });
+                } catch {
+                    try { toFocus.focus(); } catch {}
+                }
+            }
+            el.__previousActiveElement = null;
+            cleanupModalFocusState(el);
+        }
+        this.updateModalBodyState();
+    }
+
+    showStatChangePopup({ element, change, isPositive, type }) {
+        if (!element) return;
+        const popupData = {
+            element,
+            change,
+            isPositive,
+            type
+        };
+        addToPopupGroup(popupData);
+    }
+
+    renderPlayerStatus(payload) {
+        const {
+            baseLevel,
+            effectiveLevel,
+            baseAttack,
+            effectiveAttack,
+            baseDefense,
+            effectiveDefense,
+            currentHp,
+            effectiveMaxHp,
+            exp,
+            expDisp,
+            expMax,
+            hpPct,
+            expPct,
+            abilityStatusActive,
+            spUnlocked,
+            spMax,
+            currentSp,
+            spIsInfinite,
+            spPct,
+            satietySystemActive,
+            satietyIsInfinite,
+            satietyDisplayText,
+            satietyCapText,
+            satietyRaw,
+            combinedStatusList,
+            playerDomain,
+            statusList,
+            skillEffects,
+            dungeonLevel,
+            passiveOrbAggregateEntries,
+            totalPassiveOrbCount,
+            uniquePassiveOrbCount,
+            potion30Count,
+            hpBoostCount,
+            atkBoostCount,
+            defBoostCount,
+            hpBoostMajorCount,
+            atkBoostMajorCount,
+            defBoostMajorCount,
+            spElixirCount,
+            skillCharmCounts
+        } = payload;
+        const {
+            statLevel,
+            statAtk,
+            statDef,
+            statHpText,
+            statExpText,
+            hpBar,
+            expBar,
+            spBarContainer,
+            statSpText,
+            spBar,
+            satietyBarContainer,
+            statSatietyText,
+            satietyBar,
+            statStatusEffects,
+            statDomainEffects,
+            modalLevel,
+            modalExp,
+            modalHp,
+            modalAttack,
+            modalDefense,
+            modalSatietyRow,
+            modalSatiety,
+            modalSpRow,
+            modalSpValue,
+            modalFloor,
+            modalStatusEffects,
+            modalSkillEffects,
+            modalPotion30,
+            modalHpBoost,
+            modalAtkBoost,
+            modalDefBoost,
+            modalHpBoostMajor,
+            modalAtkBoostMajor,
+            modalDefBoostMajor,
+            modalSpElixir,
+            modalSkillCharms,
+            modalPassiveOrbSummary,
+            modalPassiveOrbAggregate,
+            modalWorld,
+            modalDifficulty,
+            modalDungeonSummary,
+            modalDungeonTypeRow,
+            modalDungeonType,
+            floorIndicatorValue
+        } = this.elements;
+
+        const formatValue = (value) => Number.isFinite(value) ? Math.floor(value) : '∞';
+        const formatStatWithBase = (effective, base) => {
+            const effectiveText = formatValue(effective);
+            const baseText = formatValue(base);
+            if (effectiveText === baseText) return String(effectiveText);
+            return translateOrFallback(
+                'statusModal.stats.valueWithBase',
+                () => `${effectiveText} (基${baseText})`,
+                { effective: effectiveText, base: baseText }
+            );
+        };
+
+        if (statLevel) {
+            statLevel.textContent = formatStatWithBase(effectiveLevel, baseLevel);
+        }
+        if (statAtk) {
+            statAtk.textContent = formatStatWithBase(effectiveAttack, baseAttack);
+        }
+        if (statDef) {
+            statDef.textContent = formatStatWithBase(effectiveDefense, baseDefense);
+        }
+        if (statHpText) {
+            const currentText = formatValue(currentHp);
+            const maxText = formatValue(effectiveMaxHp);
+            const baseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp
+                ? translateOrFallback(
+                    'statusModal.details.hpBaseSuffix',
+                    () => ` (基${formatValue(player.maxHp)})`,
+                    { base: formatValue(player.maxHp) }
+                )
+                : '';
+            statHpText.textContent = translateOrFallback(
+                'statusModal.stats.hp',
+                () => `${currentText}/${maxText}${baseSuffix}`,
+                { current: currentText, max: maxText, baseSuffix }
+            );
+        }
+        if (statExpText) statExpText.textContent = Number.isFinite(exp) ? `${expDisp}/${expMax}` : '∞/∞';
+        if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(1, hpPct)) * 100}%`;
+        if (expBar) expBar.style.width = `${expPct * 100}%`;
+        if (spBarContainer) spBarContainer.style.display = spUnlocked && spMax > 0 ? '' : 'none';
+        if (statSpText) {
+            if (spIsInfinite) {
+                statSpText.textContent = '∞/∞';
+            } else {
+                const spDisplayCurrent = floorSpValue(currentSp);
+                const spDisplayMax = floorSpValue(spMax);
+                statSpText.textContent = spUnlocked && spDisplayMax > 0 ? `${spDisplayCurrent}/${spDisplayMax}` : '0/0';
+            }
+        }
+        if (spBar && spUnlocked && spMax > 0) {
+            spBar.style.width = `${Math.max(0, Math.min(1, spPct)) * 100}%`;
+        }
+        if (satietyBarContainer) satietyBarContainer.style.display = satietySystemActive ? '' : 'none';
+        if (satietySystemActive) {
+            if (statSatietyText) statSatietyText.textContent = satietyIsInfinite ? `∞/${satietyCapText}` : `${satietyDisplayText}/${satietyCapText}`;
+            if (satietyBar) satietyBar.style.width = `${(satietyIsInfinite ? 1 : (satietyRaw / SATIETY_MAX)) * 100}%`;
+        }
+
+        if (statStatusEffects) {
+            if (!combinedStatusList.length) {
+                statStatusEffects.textContent = translateOrFallback(
+                    'statusModal.effects.none',
+                    '状態異常なし'
+                );
+            } else {
+                statStatusEffects.innerHTML = combinedStatusList.map(status => {
+                    const classes = ['status-badge'];
+                    if (status.badgeClass) classes.push(status.badgeClass);
+                    const remainingText = translateOrFallback(
+                        'statusModal.effects.remaining',
+                        () => `${status.label} 残り${status.remaining}`,
+                        { label: status.label, turns: status.remaining }
+                    );
+                    return `<span class="${classes.join(' ')}">${remainingText}</span>`;
+                }).join('');
+            }
+        }
+
+        if (statDomainEffects) {
+            if (!playerDomain.definitions.length) {
+                statDomainEffects.innerHTML = '';
+                statDomainEffects.style.display = 'none';
+            } else {
+                statDomainEffects.style.display = '';
+                statDomainEffects.innerHTML = playerDomain.definitions.map(def => {
+                    const color = def.color || '#845ef7';
+                    const icon = def.icon || '◇';
+                    return `<span class="status-badge" style="background-color:${color};">${icon} ${def.label}</span>`;
+                }).join('');
+            }
+        }
+
+        if (modalLevel) modalLevel.textContent = formatStatValueWithBase(effectiveLevel, baseLevel, 'statusModal.stats.levelWithBase');
+        if (modalExp) modalExp.textContent = `${expDisp} / ${expMax}`;
+        if (modalHp) {
+            const baseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? formatHpBaseSuffix(player.maxHp) : '';
+            modalHp.textContent = translateOrFallback(
+                'statusModal.stats.hp',
+                () => `${currentHp} / ${effectiveMaxHp}${baseSuffix}`,
+                { current: currentHp, max: effectiveMaxHp, baseSuffix }
+            );
+        }
+        if (modalAttack) modalAttack.textContent = formatStatValueWithBase(effectiveAttack, baseAttack);
+        if (modalDefense) modalDefense.textContent = formatStatValueWithBase(effectiveDefense, baseDefense);
+        if (modalSatietyRow) modalSatietyRow.style.display = satietySystemActive ? '' : 'none';
+        if (modalSatiety && satietySystemActive) modalSatiety.textContent = satietyIsInfinite ? `∞ / ${satietyCapText}` : `${satietyDisplayText} / ${satietyCapText}`;
+        if (modalSpRow) modalSpRow.style.display = spUnlocked && spMax > 0 ? '' : 'none';
+        if (modalSpValue && spUnlocked && spMax > 0) {
+            const spDisplayCurrent = floorSpValue(currentSp);
+            const spDisplayMax = floorSpValue(spMax);
+            modalSpValue.textContent = `${spDisplayCurrent} / ${spDisplayMax}`;
+        }
+        if (modalFloor) modalFloor.textContent = formatFloorLabel(dungeonLevel);
+        if (modalStatusEffects) {
+            modalStatusEffects.textContent = statusList.length
+                ? statusList.map(s => formatEffectEntry(s.label, s.remaining)).join('\n')
+                : getNoneText();
+        }
+        if (modalSkillEffects) {
+            modalSkillEffects.textContent = skillEffects.length
+                ? skillEffects.map(s => formatEffectEntry(s.label, s.remaining)).join('\n')
+                : getNoneText();
+        }
+        if (modalPotion30) modalPotion30.textContent = formatCountLabel(potion30Count);
+        if (modalHpBoost) modalHpBoost.textContent = formatCountLabel(hpBoostCount);
+        if (modalAtkBoost) modalAtkBoost.textContent = formatCountLabel(atkBoostCount);
+        if (modalDefBoost) modalDefBoost.textContent = formatCountLabel(defBoostCount);
+        if (modalHpBoostMajor) modalHpBoostMajor.textContent = formatCountLabel(hpBoostMajorCount);
+        if (modalAtkBoostMajor) modalAtkBoostMajor.textContent = formatCountLabel(atkBoostMajorCount);
+        if (modalDefBoostMajor) modalDefBoostMajor.textContent = formatCountLabel(defBoostMajorCount);
+        if (modalSpElixir) modalSpElixir.textContent = formatCountLabel(spElixirCount);
+        if (modalSkillCharms) {
+            const summary = Object.keys(SKILL_EFFECT_DEFS)
+                .map(effectId => {
+                    const count = Math.max(0, Math.floor(Number(skillCharmCounts[effectId]) || 0));
+                    if (count <= 0) return null;
+                    const label = getSkillEffectLabel(effectId);
+                    return translateOrFallback(
+                        'statusModal.skillCharms.entry',
+                        () => `${label} x${count}`,
+                        { label, count }
+                    );
+                })
+                .filter(Boolean)
+                .join(' / ');
+            modalSkillCharms.textContent = summary || getNoneText();
+        }
+        if (modalPassiveOrbSummary) {
+            modalPassiveOrbSummary.textContent = totalPassiveOrbCount > 0
+                ? formatPassiveOrbSummary(totalPassiveOrbCount, uniquePassiveOrbCount)
+                : getNoneText();
+        }
+        if (modalPassiveOrbAggregate) {
+            if (passiveOrbAggregateEntries.length) {
+                modalPassiveOrbAggregate.innerHTML = passiveOrbAggregateEntries.map(entry => {
+                    const label = escapeHtml(entry.label);
+                    const value = escapeHtml(entry.value);
+                    return `
+                    <div class="passive-orb-aggregate__item passive-orb-aggregate__item--compact">
+                        <span class="passive-orb-aggregate__label">${label}</span>
+                        <span class="passive-orb-aggregate__value">${value}</span>
+                    </div>
+                    `.trim();
+                }).join('');
+                modalPassiveOrbAggregate.style.display = '';
+            } else {
+                modalPassiveOrbAggregate.innerHTML = '';
+                modalPassiveOrbAggregate.style.display = 'none';
+            }
+        }
+        if (modalWorld) {
+            if (currentMode === 'blockdim') {
+                const nested = blockDimState?.nested || 1;
+                const dimKey = blockDimState?.dimKey || '';
+                const dimensionName = resolveDimensionNameByKey(dimKey) || (dimKey || '').toUpperCase();
+                modalWorld.textContent = formatBlockDimWorldLabel(nested, dimensionName || '');
+            } else {
+                modalWorld.textContent = formatWorldLabel(engine.selectedWorld);
+            }
+        }
+        if (modalDifficulty) modalDifficulty.textContent = engine.difficulty;
+        if (modalDungeonSummary) {
+            if (currentMode === 'blockdim' && blockDimState?.spec) {
+                const dimName = resolveDimensionNameByKey(blockDimState.dimKey || 'a');
+                const b1 = resolveBlockNameByKey(blockDimTables.blocks1, blockDimState.b1Key) || (blockDimState.b1Key || '');
+                const b2 = resolveBlockNameByKey(blockDimTables.blocks2, blockDimState.b2Key) || (blockDimState.b2Key || '');
+                const b3 = resolveBlockNameByKey(blockDimTables.blocks3, blockDimState.b3Key) || (blockDimState.b3Key || '');
+                const nested = blockDimState?.nested || 1;
+                modalDungeonSummary.textContent = formatBlockDimDungeonSummaryLabel({
+                    nested,
+                    dimensionName: dimName || (blockDimState.dimKey || '').toUpperCase(),
+                    block1: b1,
+                    block2: b2,
+                    block3: b3
+                });
+                if (modalDungeonTypeRow && modalDungeonType) {
+                    modalDungeonTypeRow.style.display = '';
+                    modalDungeonType.textContent = formatSpecType(blockDimState.spec);
+                }
+            } else {
+                const dData = getDungeonBaseData(engine.selectedWorld, engine.selectedDungeonBase);
+                const name = dData ? resolveLocalizedText(dData.nameKey, () => dData.name || '-') : '-';
+                modalDungeonSummary.textContent = formatDungeonSummaryLabel(engine.selectedWorld, name);
+                if (modalDungeonTypeRow && modalDungeonType) {
+                    modalDungeonTypeRow.style.display = '';
+                    modalDungeonType.textContent = dData ? getDungeonTypeName(dData.type) : '-';
+                }
+            }
+        }
+
+        if (floorIndicatorValue) floorIndicatorValue.textContent = formatFloorLabel(dungeonLevel);
+    }
+
+    renderInventory(payload) {
+        const {
+            potion30Count,
+            hpBoostCount,
+            atkBoostCount,
+            defBoostCount,
+            hpBoostMajorCount,
+            atkBoostMajorCount,
+            defBoostMajorCount,
+            spElixirCount,
+            passiveOrbAggregateEntries,
+            ownedPassiveOrbs,
+            totalPassiveOrbCount,
+            uniquePassiveOrbCount,
+            autoItemEnabled,
+            autoItemCount,
+            satietySystemActive,
+            hasNegativeStatusAilment,
+            throwTargetsAvailable,
+            playerDomainAllowPotionThrow,
+            skillCharmCounts
+        } = payload;
+        const {
+            invPotion30,
+            invHpBoost,
+            invAtkBoost,
+            invDefBoost,
+            invHpBoostMajor,
+            invAtkBoostMajor,
+            invDefBoostMajor,
+            invSpElixir,
+            passiveOrbSummaryEl,
+            passiveOrbAggregateEl,
+            passiveOrbListEl,
+            autoItemStatusText,
+            autoItemToggle,
+            skillCharmList,
+            eatPotion30Btn,
+            cleansePotion30Btn,
+            throwPotion30Btn
+        } = this.elements;
+
+        if (autoItemStatusText) {
+            if (autoItemToggle && autoItemEnabled) {
+                const potionDisplayCount = Math.max(0, Math.floor(Number(autoItemCount) || 0));
+                autoItemStatusText.style.display = '';
+                autoItemStatusText.textContent = translateOrFallback(
+                    'game.autoItem.status',
+                    () => `オートアイテムON：回復アイテム x ${potionDisplayCount}`,
+                    { count: potionDisplayCount }
+                );
+            } else {
+                autoItemStatusText.textContent = '';
+                autoItemStatusText.style.display = 'none';
+            }
+        }
+
+        if (invPotion30) invPotion30.textContent = potion30Count;
+        if (invHpBoost) invHpBoost.textContent = hpBoostCount;
+        if (invAtkBoost) invAtkBoost.textContent = atkBoostCount;
+        if (invDefBoost) invDefBoost.textContent = defBoostCount;
+        if (invHpBoostMajor) invHpBoostMajor.textContent = hpBoostMajorCount;
+        if (invAtkBoostMajor) invAtkBoostMajor.textContent = atkBoostMajorCount;
+        if (invDefBoostMajor) invDefBoostMajor.textContent = defBoostMajorCount;
+        if (invSpElixir) invSpElixir.textContent = spElixirCount;
+        if (passiveOrbSummaryEl) {
+            passiveOrbSummaryEl.textContent = totalPassiveOrbCount > 0
+                ? formatPassiveOrbSummary(totalPassiveOrbCount, uniquePassiveOrbCount)
+                : getPassiveOrbEmptyText();
+        }
+        if (passiveOrbAggregateEl) {
+            passiveOrbAggregateEl.innerHTML = passiveOrbAggregateEntries.length
+                ? passiveOrbAggregateEntries.map(entry => {
+                    const label = escapeHtml(entry.label);
+                    const value = escapeHtml(entry.value);
+                    return `
+                    <div class="passive-orb-aggregate__item">
+                        <span class="passive-orb-aggregate__label">${label}</span>
+                        <span class="passive-orb-aggregate__value">${value}</span>
+                    </div>
+                    `.trim();
+                }).join('')
+                : `<div class="passive-orb-empty">${escapeHtml(getPassiveOrbNoEffectText())}</div>`;
+        }
+        if (passiveOrbListEl) {
+            passiveOrbListEl.innerHTML = ownedPassiveOrbs.length
+                ? ownedPassiveOrbs.map(entry => {
+                    const label = escapeHtml(entry.label);
+                    const effectMarkup = entry.effectText
+                        ? `<span class="passive-orb-effect">${escapeHtml(entry.effectText)}</span>`
+                        : '';
+                    return `
+                    <div class="item-row passive-orb-row">
+                        <div class="passive-orb-row__info">
+                            <span class="passive-orb-name">${label}</span>
+                            ${effectMarkup}
+                        </div>
+                        <span class="passive-orb-count">${escapeHtml(formatCountLabel(entry.count))}</span>
+                    </div>
+                    `.trim();
+                }).join('')
+                : `<div class="passive-orb-empty">${escapeHtml(getPassiveOrbEmptyText())}</div>`;
+        }
+        if (skillCharmList) renderSkillCharmInventory(skillCharmCounts);
+        if (eatPotion30Btn) eatPotion30Btn.style.display = satietySystemActive ? '' : 'none';
+        if (cleansePotion30Btn) {
+            const lacksPotion = potion30Count <= 0;
+            cleansePotion30Btn.disabled = lacksPotion || !hasNegativeStatusAilment;
+            if (lacksPotion) {
+                cleansePotion30Btn.title = translateOrFallback('game.items.errors.noHealingItem', '回復アイテムを持っていない。');
+            } else if (!hasNegativeStatusAilment) {
+                cleansePotion30Btn.title = translateOrFallback('game.items.errors.noStatusToCleanse', '治療できる状態異常がない。');
+            } else {
+                cleansePotion30Btn.removeAttribute('title');
+            }
+        }
+        if (throwPotion30Btn) {
+            const canThrow = playerDomainAllowPotionThrow && throwTargetsAvailable;
+            if (canThrow) {
+                throwPotion30Btn.style.display = '';
+                throwPotion30Btn.disabled = potion30Count <= 0;
+            } else {
+                throwPotion30Btn.style.display = 'none';
+            }
+        }
+    }
+
+    renderRunResult(summary, { showRetry } = {}) {
+        const {
+            runResultOverlay,
+            runResultBadge,
+            runResultTitleElement,
+            runResultLevelValue,
+            runResultExpValue,
+            runResultDamageValue,
+            runResultHealingValue,
+            runResultCauseText,
+            runResultPrimaryButton,
+            runResultRetryButton
+        } = this.elements;
+        if (!summary || !runResultOverlay) return;
+        if (runResultBadge) {
+            runResultBadge.textContent = summary.reasonLabel || getRunResultReasonLabel('return');
+        }
+        if (runResultTitleElement) {
+            runResultTitleElement.textContent = summary.title || translate('ui.runResult.title');
+        }
+        if (runResultLevelValue) {
+            runResultLevelValue.textContent = summary.level?.display || '';
+        }
+        if (runResultExpValue) {
+            runResultExpValue.textContent = summary.exp?.display || formatRunResultSigned(0);
+        }
+        if (runResultDamageValue) {
+            runResultDamageValue.textContent = summary.damageDisplay ?? formatRunResultNumber(0);
+        }
+        if (runResultHealingValue) {
+            runResultHealingValue.textContent = summary.healingDisplay ?? formatRunResultNumber(0);
+        }
+        if (runResultCauseText) {
+            if (summary.cause) {
+                runResultCauseText.textContent = summary.cause;
+                runResultCauseText.style.display = '';
+            } else {
+                runResultCauseText.textContent = '';
+                runResultCauseText.style.display = 'none';
+            }
+        }
+        if (runResultRetryButton) {
+            runResultRetryButton.style.display = showRetry ? '' : 'none';
+        }
+        runResultOverlay.style.display = 'flex';
+        runResultOverlay.classList.add('run-result--visible');
+        if (runResultPrimaryButton) {
+            setTimeout(() => {
+                try { runResultPrimaryButton.focus(); } catch (err) {}
+            }, 0);
+        }
+    }
+
+    hideRunResult() {
+        const { runResultOverlay } = this.elements;
+        if (!runResultOverlay) return;
+        runResultOverlay.classList.remove('run-result--visible');
+        runResultOverlay.style.display = 'none';
+    }
+
+    renderPlayerSummaryCard({
+        baseLevel = player.level || 1,
+        effectiveLevel = getEffectivePlayerLevel(),
+        currentHp = Number.isFinite(player.hp) ? player.hp : player.maxHp,
+        effectiveMaxHp = getEffectivePlayerMaxHp(),
+        baseAttack = player.attack || 0,
+        effectiveAttack = getEffectivePlayerAttack(),
+        baseDefense = player.defense || 0,
+        effectiveDefense = getEffectivePlayerDefense(),
+        expDisp = Math.floor(Number.isFinite(player.exp) ? player.exp : 0),
+        expMax = 1000,
+        currentSp = Number(player.sp),
+        spMax = Number(player.maxSp),
+        spUnlocked = isSpUnlocked()
+    } = {}) {
+        const { playerSummaryDiv } = this.elements;
+        if (!playerSummaryDiv) return;
+        const card = playerSummaryDiv.querySelector('.player-status-card');
+        if (!card) return;
+
+        const levelEl = card.querySelector('.stat-value.level');
+        const hpEl = card.querySelector('.stat-value.hp');
+        const expEl = card.querySelector('.stat-value.exp');
+        const atkEl = card.querySelector('.stat-value.attack');
+        const defEl = card.querySelector('.stat-value.defense');
+        const satietyValueEl = card.querySelector('.stat-value.satiety');
+        const satietyItemEl = card.querySelector('.stat-item.satiety');
+        const spValueEl = card.querySelector('.stat-value.sp');
+        const spItemEl = card.querySelector('.stat-item.sp');
+
+        const normalizedHp = Number.isFinite(currentHp) && Number.isFinite(effectiveMaxHp)
+            ? Math.min(currentHp, effectiveMaxHp)
+            : (Number.isFinite(currentHp) ? currentHp : effectiveMaxHp);
+        const normalizedSpMax = Number.isFinite(spMax) ? Math.max(0, spMax) : Infinity;
+        const normalizedSp = Number.isFinite(currentSp) && Number.isFinite(normalizedSpMax)
+            ? Math.max(0, Math.min(normalizedSpMax, currentSp))
+            : (Number.isFinite(currentSp) ? currentSp : normalizedSpMax);
+        const satietyIsInfinite = !Number.isFinite(player.satiety);
+        const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
+        const satietyRaw = satietyIsInfinite ? satietyCap : Math.max(0, Math.min(satietyCap, Number(player.satiety)));
+        const satietyDisplayValue = satietyIsInfinite ? satietyCap : Math.round(satietyRaw * 100) / 100;
+        const satietyDisplayText = satietyIsInfinite ? '∞' : formatSatietyDisplay(satietyDisplayValue);
+        const satietyCapText = formatSatietyDisplay(satietyCap);
+        const spIsInfinite = !Number.isFinite(normalizedSp) || !Number.isFinite(normalizedSpMax);
+        const abilityStatusMulCard = getAbilityStatusMultiplier();
+        const abilityStatusActiveCard = !nearlyEqual(abilityStatusMulCard, 1);
+
+        const formatValue = (value) => Number.isFinite(value) ? Math.floor(value) : '∞';
+        const formatStatWithBase = (effective, base) => {
+            const effectiveText = formatValue(effective);
+            const baseText = formatValue(base);
+            if (effectiveText === baseText) return String(effectiveText);
+            return translateOrFallback(
+                'statusModal.stats.valueWithBase',
+                () => `${effectiveText} (基${baseText})`,
+                { effective: effectiveText, base: baseText }
+            );
+        };
+
+        if (levelEl) levelEl.textContent = formatStatWithBase(effectiveLevel, baseLevel);
+        if (hpEl) {
+            const currentText = formatValue(normalizedHp);
+            const maxText = formatValue(effectiveMaxHp);
+            const baseSuffix = abilityStatusActiveCard && player.maxHp !== effectiveMaxHp
+                ? translateOrFallback(
+                    'statusModal.details.hpBaseSuffix',
+                    () => ` (基${formatValue(player.maxHp)})`,
+                    { base: formatValue(player.maxHp) }
+                )
+                : '';
+            hpEl.textContent = translateOrFallback(
+                'statusModal.stats.hp',
+                () => `${currentText}/${maxText}${baseSuffix}`,
+                { current: currentText, max: maxText, baseSuffix }
+            );
+        }
+        if (expEl) expEl.textContent = Number.isFinite(player.exp) ? `${expDisp}/${expMax}` : '∞/∞';
+        if (atkEl) atkEl.textContent = formatStatWithBase(effectiveAttack, baseAttack);
+        if (defEl) defEl.textContent = formatStatWithBase(effectiveDefense, baseDefense);
+        if (satietyItemEl) satietyItemEl.style.display = satietySystemActive ? '' : 'none';
+        if (satietyValueEl) satietyValueEl.textContent = satietyIsInfinite ? `∞/${satietyCapText}` : `${satietyDisplayText}/${satietyCapText}`;
+        if (spItemEl) spItemEl.style.display = spUnlocked && normalizedSpMax > 0 ? '' : 'none';
+        if (spValueEl) {
+            if (spUnlocked && normalizedSpMax > 0) {
+                spValueEl.textContent = spIsInfinite ? '∞/∞' : `${Math.floor(normalizedSp)}/${Math.floor(normalizedSpMax)}`;
+            } else {
+                spValueEl.textContent = '0/0';
+            }
+        }
+    }
+}
+
+class GamePresenter {
+    constructor({ view, engine }) {
+        this.view = view;
+        this.engine = engine;
+        this.prevHp = 100;
+        this.prevExp = 0;
+        this.prevSp = 0;
+        this.runResultState = null;
+        this.bindViewEvents();
+    }
+
+    bindViewEvents() {
+        this.view.on('runResult:primary', () => this.handleRunResultPrimaryAction());
+        this.view.on('runResult:retry', () => this.handleRunResultRetryAction());
+        this.view.on('toolbar:items', () => this.openModal(this.view.elements.itemsModal));
+        this.view.on('toolbar:skills', () => {
+            markSkillsListDirty();
+            this.openModal(this.view.elements.skillsModal);
+            refreshSkillsModal({ force: true });
+        });
+        this.view.on('toolbar:status', () => {
+            this.openModal(this.view.elements.statusModal);
+            markUiDirty();
+        });
+    }
+
+    hasRunResultOverlay() {
+        return !!this.runResultState;
+    }
+
+    isAnyModalOpen() {
+        return this.view.isAnyModalOpen();
+    }
+
+    openModal(el) {
+        this.view.openModal(el);
+    }
+
+    closeModal(el) {
+        this.view.closeModal(el);
+    }
+
+    renderPlayerStatus(payload) {
+        const hpChange = Number.isFinite(payload.currentHp) && Number.isFinite(this.prevHp)
+            ? payload.currentHp - this.prevHp
+            : 0;
+        const expChange = Number.isFinite(payload.exp) && Number.isFinite(this.prevExp)
+            ? payload.exp - this.prevExp
+            : 0;
+        const spChange = Number.isFinite(payload.currentSp) && Number.isFinite(this.prevSp)
+            ? payload.currentSp - this.prevSp
+            : 0;
+
+        if (Number.isFinite(payload.currentHp) && Number.isFinite(this.prevHp) && hpChange !== 0) {
+            const hpBarElement = this.view.elements.hpBarElement;
+            const popupData = {
+                element: hpBarElement,
+                change: Math.abs(hpChange),
+                isPositive: hpChange > 0,
+                type: hpChange > 0 ? 'healing' : 'damage_taken'
+            };
+            this.view.showStatChangePopup(popupData);
+        }
+        if (Number.isFinite(payload.exp) && expChange > 0) {
+            const expBarElement = this.view.elements.expBarElement;
+            const popupData = {
+                element: expBarElement,
+                change: expChange,
+                isPositive: true,
+                type: 'exp'
+            };
+            this.view.showStatChangePopup(popupData);
+        }
+        if (Number.isFinite(payload.currentSp) && Number.isFinite(this.prevSp) && spChange !== 0) {
+            if (this.view.elements.spBarContainer && this.view.elements.spBarContainer.style.display !== 'none') {
+                const popupData = {
+                    element: this.view.elements.spBarContainer,
+                    change: Math.abs(spChange),
+                    isPositive: spChange > 0,
+                    type: 'sp'
+                };
+                this.view.showStatChangePopup(popupData);
+            }
+        }
+        this.prevHp = payload.currentHp;
+        this.prevExp = payload.exp;
+        this.prevSp = payload.currentSp;
+        this.view.renderPlayerStatus(payload);
+    }
+
+    renderInventory(payload) {
+        this.view.renderInventory(payload);
+    }
+
+    renderPlayerSummaryCard(payload) {
+        this.view.renderPlayerSummaryCard(payload);
+    }
+
+    resetStatHistory({ currentHp, exp, currentSp } = {}) {
+        if (Number.isFinite(currentHp)) {
+            this.prevHp = currentHp;
+        }
+        if (Number.isFinite(exp)) {
+            this.prevExp = exp;
+        }
+        if (Number.isFinite(currentSp)) {
+            this.prevSp = currentSp;
+        }
+    }
+
+    showRunResult(summary, { onReturn, onRetry } = {}) {
+        if (!summary || !this.view.elements.runResultOverlay) {
+            if (typeof onReturn === 'function') onReturn();
+            return;
+        }
+        this.runResultState = {
+            summary,
+            onReturn: typeof onReturn === 'function' ? onReturn : null,
+            onRetry: typeof onRetry === 'function' ? onRetry : null
+        };
+        this.view.renderRunResult(summary, { showRetry: !!this.runResultState.onRetry });
+    }
+
+    hideRunResult() {
+        this.view.hideRunResult();
+    }
+
+    handleRunResultPrimaryAction() {
+        const state = this.runResultState;
+        this.hideRunResult();
+        this.runResultState = null;
+        if (state?.onReturn) {
+            state.onReturn();
+        }
+    }
+
+    handleRunResultRetryAction() {
+        const state = this.runResultState;
+        this.hideRunResult();
+        this.runResultState = null;
+        if (state?.onRetry) {
+            state.onRetry();
+        } else if (state?.onReturn) {
+            state.onReturn();
+        }
+    }
+}
+
+const gameView = new GameView();
+const mapRenderer = gameView.mapRenderer;
+const {
+    canvas,
+    ctx,
+    playerStatsDiv,
+    statLevel,
+    statAtk,
+    statDef,
+    statHpText,
+    statExpText,
+    statStatusEffects,
+    statDomainEffects,
+    hpBar,
+    expBar,
+    statSpText,
+    spBar,
+    spBarContainer,
+    statSatietyText,
+    satietyBar,
+    satietyBarContainer,
+    autoItemStatusText,
+    messageLogDiv,
+    controlsCheatsheet,
+    controlsCheatsheetDismissButton,
+    controlsCheatsheetToggle,
+    controlsCheatsheetContent,
+    floorIndicatorValue,
+    dungeonTypeOverlay,
+    dungeonTypeOverlayName,
+    dungeonTypeOverlayFeatures,
+    dungeonTypeOverlayDescription,
+    dungeonNameToggle,
+    autoItemToggle
+} = gameView.elements;
 let dungeonOverlayHoverState = false;
 let dungeonOverlayPlayerZoneState = false;
 let dungeonOverlayLastPointer = null;
@@ -637,7 +1685,6 @@ const noiseUiState = {
 };
 let autoItemCheckScheduled = false;
 let lastRunResultSummary = null;
-let runResultOverlayState = null;
 let isGameOver = false;
 const createGameOverSequenceState = () => ({
     active: false,
@@ -749,6 +1796,7 @@ class GameEngine {
 }
 
 const engine = new GameEngine();
+const gamePresenter = new GamePresenter({ view: gameView, engine });
 
 const RUN_RESULT_REASON_KEYS = Object.freeze({
     gameOver: 'ui.runResult.reason.gameOver',
@@ -1141,7 +2189,7 @@ if (typeof window !== 'undefined') {
     window.addEventListener('scroll', reassessOverlayHover, { passive: true });
     window.addEventListener('resize', reassessOverlayHover);
     window.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && runResultOverlayState) {
+        if (event.key === 'Escape' && gamePresenter.hasRunResultOverlay()) {
             event.preventDefault();
             handleRunResultPrimaryAction();
         }
@@ -1196,113 +2244,107 @@ const GAME_OVER_RESULT_DELAY_MS = 350;
 const PLAYER_BURST_EFFECT_DURATION_MS = 500;
 let playerBurstEffect = null;
 // Toolbar / Modals
-const btnBack = document.getElementById('btn-back');
-const btnItems = document.getElementById('btn-items');
-const btnSkills = document.getElementById('btn-skills');
-const btnStatus = document.getElementById('btn-status');
-const btnImport = document.getElementById('btn-import');
-const btnExport = document.getElementById('btn-export');
-const importFileInput = document.getElementById('import-file');
-const itemsModal = document.getElementById('items-modal');
-const statusModal = document.getElementById('status-modal');
-const skillsModal = document.getElementById('skills-modal');
-const skillsList = document.getElementById('skills-list');
-const skillsSpText = document.getElementById('skills-current-sp');
-const skillsSpValueText = skillsSpText ? skillsSpText.querySelector('.skills-sp-value') : null;
-const skillsSpBarFill = skillsSpText ? skillsSpText.querySelector('.skills-sp-bar-fill') : null;
-const invPotion30 = document.getElementById('inv-potion30');
-const invHpBoost = document.getElementById('inv-hp-boost');
-const invAtkBoost = document.getElementById('inv-atk-boost');
-const invDefBoost = document.getElementById('inv-def-boost');
-const invHpBoostMajor = document.getElementById('inv-hp-boost-major');
-const invAtkBoostMajor = document.getElementById('inv-atk-boost-major');
-const invDefBoostMajor = document.getElementById('inv-def-boost-major');
-const invSpElixir = document.getElementById('inv-sp-elixir');
-const skillCharmList = document.getElementById('skill-charm-list');
-const passiveOrbSummaryEl = document.getElementById('passive-orb-summary');
-const passiveOrbAggregateEl = document.getElementById('passive-orb-aggregate');
-const passiveOrbListEl = document.getElementById('passive-orb-list');
+const {
+    btnBack,
+    btnItems,
+    btnSkills,
+    btnStatus,
+    btnImport,
+    btnExport,
+    importFileInput,
+    itemsModal,
+    statusModal,
+    skillsModal,
+    skillsList,
+    skillsSpText,
+    invPotion30,
+    invHpBoost,
+    invAtkBoost,
+    invDefBoost,
+    invHpBoostMajor,
+    invAtkBoostMajor,
+    invDefBoostMajor,
+    invSpElixir,
+    skillCharmList,
+    passiveOrbSummaryEl,
+    passiveOrbAggregateEl,
+    passiveOrbListEl
+} = gameView.elements;
+const { skillsSpValueText, skillsSpBarFill } = gameView.elements;
 let lastSkillCharmMarkup = '';
-const usePotion30Btn = document.getElementById('use-potion30');
-const eatPotion30Btn = document.getElementById('eat-potion30');
-const offerPotion30Btn = document.getElementById('offer-potion30');
-const cleansePotion30Btn = document.getElementById('cleanse-potion30');
-const useHpBoostBtn = document.getElementById('use-hp-boost');
-const useAtkBoostBtn = document.getElementById('use-atk-boost');
-const useDefBoostBtn = document.getElementById('use-def-boost');
-const useHpBoostMajorBtn = document.getElementById('use-hp-boost-major');
-const useAtkBoostMajorBtn = document.getElementById('use-atk-boost-major');
-const useDefBoostMajorBtn = document.getElementById('use-def-boost-major');
-const useSpElixirBtn = document.getElementById('use-sp-elixir');
-const throwPotion30Btn = document.getElementById('throw-potion30');
-const sandboxMenuButton = document.getElementById('btn-sandbox-menu');
-const sandboxInteractivePanel = document.getElementById('sandbox-interactive-panel');
-const sandboxInteractiveClose = document.getElementById('sandbox-interactive-close');
-const sandboxGodModeInput = document.getElementById('sandbox-god-mode');
-const sandboxNoClipInput = document.getElementById('sandbox-no-clip');
-const sandboxFullHealButton = document.getElementById('sandbox-full-heal');
-const sandboxResetStatsButton = document.getElementById('sandbox-reset-stats');
-const sandboxApplyStatsButton = document.getElementById('sandbox-apply-stats');
-const sandboxStatLevelInput = document.getElementById('sandbox-stat-level');
-const sandboxStatMaxHpInput = document.getElementById('sandbox-stat-maxhp');
-const sandboxStatHpInput = document.getElementById('sandbox-stat-hp');
-const sandboxStatAtkInput = document.getElementById('sandbox-stat-atk');
-const sandboxStatDefInput = document.getElementById('sandbox-stat-def');
-const sandboxStatMaxSpInput = document.getElementById('sandbox-stat-maxsp');
-const sandboxStatSpInput = document.getElementById('sandbox-stat-sp');
-const sandboxStatSatietyInput = document.getElementById('sandbox-stat-satiety');
-const sandboxToolSelect = document.getElementById('sandbox-tool-select');
-const sandboxToolFloorType = document.getElementById('sandbox-tool-floor-type');
-const sandboxToolFloorDir = document.getElementById('sandbox-tool-floor-dir');
-const sandboxToolDomainSelect = document.getElementById('sandbox-tool-domain');
-const sandboxToolApplyButton = document.getElementById('sandbox-tool-apply');
-const godConsoleButton = document.getElementById('btn-god-console');
-const godConsolePanel = document.getElementById('god-console-panel');
-const godConsoleClose = document.getElementById('god-console-close');
-const godConsoleRunButton = document.getElementById('god-console-run');
-const godConsoleClearButton = document.getElementById('god-console-clear');
-const godConsoleInput = document.getElementById('god-console-input');
-const godConsoleStatus = document.getElementById('god-console-status');
-const godConsoleSandboxToggle = document.getElementById('god-console-toggle-sandbox');
-const godConsoleModeLabel = document.getElementById('god-console-mode-label');
-const modalStatusEffects = document.getElementById('modal-status-effects');
-const modalSkillEffects = document.getElementById('modal-skill-effects');
-const modalSpRow = document.getElementById('modal-sp-row');
-const modalSpValue = document.getElementById('modal-sp');
-const modalPassiveOrbSummary = document.getElementById('modal-passive-orb-summary');
-const modalPassiveOrbAggregate = document.getElementById('modal-passive-orb-aggregate');
-const rareChestModal = document.getElementById('rare-chest-modal');
-const rareChestPointer = document.getElementById('rare-chest-pointer');
-const rareChestStopButton = document.getElementById('rare-chest-stop');
-const rareChestStatus = document.getElementById('rare-chest-status');
-const runResultOverlay = document.getElementById('run-result-overlay');
-const runResultBadge = document.getElementById('run-result-badge');
-const runResultTitleElement = document.getElementById('run-result-title');
-const runResultLevelValue = document.getElementById('run-result-level');
-const runResultExpValue = document.getElementById('run-result-exp');
-const runResultDamageValue = document.getElementById('run-result-damage');
-const runResultHealingValue = document.getElementById('run-result-healing');
-const runResultCauseText = document.getElementById('run-result-cause');
-const runResultPrimaryButton = document.getElementById('run-result-primary');
-const runResultRetryButton = document.getElementById('run-result-retry');
-if (runResultPrimaryButton) {
-    runResultPrimaryButton.addEventListener('click', handleRunResultPrimaryAction);
-}
-if (runResultRetryButton) {
-    runResultRetryButton.addEventListener('click', handleRunResultRetryAction);
-}
-document.querySelectorAll('.modal[aria-hidden="true"]').forEach(modal => {
-    if (typeof modal.setAttribute === 'function') {
-        modal.setAttribute('inert', '');
-    }
-});
+const {
+    usePotion30Btn,
+    eatPotion30Btn,
+    offerPotion30Btn,
+    cleansePotion30Btn,
+    useHpBoostBtn,
+    useAtkBoostBtn,
+    useDefBoostBtn,
+    useHpBoostMajorBtn,
+    useAtkBoostMajorBtn,
+    useDefBoostMajorBtn,
+    useSpElixirBtn,
+    throwPotion30Btn,
+    sandboxMenuButton,
+    sandboxInteractivePanel,
+    sandboxInteractiveClose,
+    sandboxGodModeInput,
+    sandboxNoClipInput,
+    sandboxFullHealButton,
+    sandboxResetStatsButton,
+    sandboxApplyStatsButton,
+    sandboxStatLevelInput,
+    sandboxStatMaxHpInput,
+    sandboxStatHpInput,
+    sandboxStatAtkInput,
+    sandboxStatDefInput,
+    sandboxStatMaxSpInput,
+    sandboxStatSpInput,
+    sandboxStatSatietyInput,
+    sandboxToolSelect,
+    sandboxToolFloorType,
+    sandboxToolFloorDir,
+    sandboxToolDomainSelect,
+    sandboxToolApplyButton,
+    godConsoleButton,
+    godConsolePanel,
+    godConsoleClose,
+    godConsoleRunButton,
+    godConsoleClearButton,
+    godConsoleInput,
+    godConsoleStatus,
+    godConsoleSandboxToggle,
+    godConsoleModeLabel,
+    modalStatusEffects,
+    modalSkillEffects,
+    modalSpRow,
+    modalSpValue,
+    modalPassiveOrbSummary,
+    modalPassiveOrbAggregate,
+    rareChestModal,
+    rareChestPointer,
+    rareChestStopButton,
+    rareChestStatus,
+    runResultOverlay,
+    runResultBadge,
+    runResultTitleElement,
+    runResultLevelValue,
+    runResultExpValue,
+    runResultDamageValue,
+    runResultHealingValue,
+    runResultCauseText,
+    runResultPrimaryButton,
+    runResultRetryButton
+} = gameView.elements;
 // Selection screen
-const selectionScreen = document.getElementById('selection-screen');
-const gameScreen = document.getElementById('game-screen');
-const difficultySelect = document.getElementById('difficulty-select');
-const worldButtonsDiv = document.getElementById('world-buttons');
-const dungeonButtonsDiv = document.getElementById('dungeon-buttons');
-const playerSummaryDiv = document.getElementById('player-summary');
+const {
+    selectionScreen,
+    gameScreen,
+    difficultySelect,
+    worldButtonsDiv,
+    dungeonButtonsDiv,
+    playerSummaryDiv
+} = gameView.elements;
 let selectionFooterCollapsed = false; // 選択画面フッターの折りたたみ状態
 let __achievementsTabInitialized = false;
 
@@ -1418,79 +2460,19 @@ function finalizeDungeonRunResult(reason = 'return', options = {}) {
 }
 
 function showRunResultOverlay(summary, { onReturn, onRetry } = {}) {
-    if (!summary || !runResultOverlay) {
-        if (typeof onReturn === 'function') onReturn();
-        return;
-    }
-    runResultOverlayState = {
-        summary,
-        onReturn: typeof onReturn === 'function' ? onReturn : null,
-        onRetry: typeof onRetry === 'function' ? onRetry : null
-    };
-    if (runResultBadge) {
-        runResultBadge.textContent = summary.reasonLabel || getRunResultReasonLabel('return');
-    }
-    if (runResultTitleElement) {
-        runResultTitleElement.textContent = summary.title || translate('ui.runResult.title');
-    }
-    if (runResultLevelValue) {
-        runResultLevelValue.textContent = summary.level?.display || '';
-    }
-    if (runResultExpValue) {
-        runResultExpValue.textContent = summary.exp?.display || formatRunResultSigned(0);
-    }
-    if (runResultDamageValue) {
-        runResultDamageValue.textContent = summary.damageDisplay ?? formatRunResultNumber(0);
-    }
-    if (runResultHealingValue) {
-        runResultHealingValue.textContent = summary.healingDisplay ?? formatRunResultNumber(0);
-    }
-    if (runResultCauseText) {
-        if (summary.cause) {
-            runResultCauseText.textContent = summary.cause;
-            runResultCauseText.style.display = '';
-        } else {
-            runResultCauseText.textContent = '';
-            runResultCauseText.style.display = 'none';
-        }
-    }
-    if (runResultRetryButton) {
-        const showRetry = !!runResultOverlayState.onRetry;
-        runResultRetryButton.style.display = showRetry ? '' : 'none';
-    }
-    runResultOverlay.style.display = 'flex';
-    runResultOverlay.classList.add('run-result--visible');
-    if (runResultPrimaryButton) {
-        setTimeout(() => {
-            try { runResultPrimaryButton.focus(); } catch (err) {}
-        }, 0);
-    }
+    gamePresenter.showRunResult(summary, { onReturn, onRetry });
 }
 
 function hideRunResultOverlay() {
-    if (!runResultOverlay) return;
-    runResultOverlay.classList.remove('run-result--visible');
-    runResultOverlay.style.display = 'none';
+    gamePresenter.hideRunResult();
 }
 
 function handleRunResultPrimaryAction() {
-    const state = runResultOverlayState;
-    hideRunResultOverlay();
-    runResultOverlayState = null;
-    if (state?.onReturn) {
-        state.onReturn();
-    }
+    gamePresenter.handleRunResultPrimaryAction();
 }
 
 function handleRunResultRetryAction() {
-    const state = runResultOverlayState;
-    hideRunResultOverlay();
-    runResultOverlayState = null;
-    if (state?.onRetry) {
-        state.onRetry();
-    } else if (state?.onReturn) {
-        state.onReturn();
-    }
+    gamePresenter.handleRunResultRetryAction();
 }
 
 function exitDungeonWithResult(reason, { onReturn, onRetry, cause } = {}) {
@@ -7831,6 +8813,7 @@ function updatePlayerSpCap({ silent = false } = {}) {
         player.maxSp = Infinity;
         player.sp = Infinity;
         prevSp = Infinity;
+        gamePresenter.resetStatHistory({ currentSp: prevSp });
         return Infinity;
     }
     const previousMax = Math.max(0, Number(player.maxSp) || 0);
@@ -7841,6 +8824,7 @@ function updatePlayerSpCap({ silent = false } = {}) {
             player.sp = 0;
         }
         prevSp = 0;
+        gamePresenter.resetStatHistory({ currentSp: prevSp });
         if (hadSp) markSkillsListDirty();
         return 0;
     }
@@ -8358,80 +9342,16 @@ function cleanupModalFocusState(modal) {
     }
 }
 function isAnyModalOpen() {
-    if (__openModalCount > 0) return true;
-    try {
-        const modals = document.querySelectorAll('.modal');
-        for (const m of modals) {
-            const s = window.getComputedStyle(m);
-            if (s && s.display !== 'none' && s.visibility !== 'hidden' && parseFloat(s.opacity || '1') > 0) {
-                return true;
-            }
-        }
-    } catch {}
-    return false;
+    return gamePresenter.isAnyModalOpen();
 }
 function updateModalBodyState() {
-    if (isAnyModalOpen()) document.body.classList.add('modal-open');
-    else document.body.classList.remove('modal-open');
+    gameView.updateModalBodyState();
 }
 function openModal(el) {
-    if (!el) return;
-    const alreadyOpen = el.classList ? el.classList.contains('modal--open') : (el.style.display === 'flex');
-    if (el.classList && !alreadyOpen) {
-        el.classList.add('modal--open');
-    }
-    if (el.style.display !== 'flex') {
-        el.style.display = 'flex';
-    }
-    if (typeof el.setAttribute === 'function') {
-        el.removeAttribute('inert');
-        el.setAttribute('aria-hidden', 'false');
-    }
-    if (!alreadyOpen) {
-        const previouslyFocused = document.activeElement;
-        if (previouslyFocused && previouslyFocused !== document.body && typeof previouslyFocused.focus === 'function' && !el.contains(previouslyFocused)) {
-            el.__previousActiveElement = previouslyFocused;
-        } else {
-            el.__previousActiveElement = null;
-        }
-        __openModalCount++;
-        focusInitialModalElement(el);
-    }
-    updateModalBodyState();
+    gamePresenter.openModal(el);
 }
 function closeModal(el) {
-    if (!el) return;
-    const hadClass = el.classList ? el.classList.contains('modal--open') : false;
-    const displayed = el.style.display !== 'none';
-    if (!hadClass && !displayed) return;
-    const activeElement = document.activeElement;
-    if (activeElement && el.contains(activeElement) && typeof activeElement.blur === 'function') {
-        activeElement.blur();
-    }
-    if (el.classList) {
-        el.classList.remove('modal--open');
-    }
-    if (displayed) {
-        el.style.display = 'none';
-    }
-    if (typeof el.setAttribute === 'function') {
-        el.setAttribute('aria-hidden', 'true');
-        el.setAttribute('inert', '');
-    }
-    if (hadClass || displayed) {
-        __openModalCount = Math.max(0, __openModalCount - 1);
-        const toFocus = el.__previousActiveElement;
-        if (toFocus && toFocus instanceof Element && document.contains(toFocus) && typeof toFocus.focus === 'function') {
-            try {
-                toFocus.focus({ preventScroll: true });
-            } catch {
-                try { toFocus.focus(); } catch {}
-            }
-        }
-        el.__previousActiveElement = null;
-        cleanupModalFocusState(el);
-    }
-    updateModalBodyState();
+    gamePresenter.closeModal(el);
 }
 let items = [];
 let POTION_COUNT = 5;
@@ -12696,6 +13616,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
     prevHp = Math.min(player.hp || 0, getEffectivePlayerMaxHp());
     prevExp = player.exp || 0;
     prevSp = Math.max(0, Math.min(Number(player.sp) || 0, Number(player.maxSp) || 0));
+    gamePresenter.resetStatHistory({ currentHp: prevHp, exp: prevExp, currentSp: prevSp });
 
     refreshGeneratorHazardSuppression();
     refreshSatietyActivation({ notify: false });
@@ -15964,155 +16885,6 @@ function updateUI() {
 
     refreshDungeonOverlayPlayerDimState();
 
-    // Show value change indicators
-    if (Number.isFinite(currentHp) && Number.isFinite(prevHp) && currentHp !== prevHp) {
-        const hpChange = currentHp - prevHp;
-        const changeType = hpChange > 0 ? 'healing' : 'damage_taken';
-        const hpBarElement = document.querySelector('.bar.hp') || document.getElementById('stat-hp-text');
-        const popupData = {
-            element: hpBarElement,
-            change: Math.abs(hpChange),
-            isPositive: hpChange > 0,
-            type: changeType
-        };
-        addToPopupGroup(popupData);
-    }
-    prevHp = currentHp;
-    if (Number.isFinite(exp) && exp !== prevExp) {
-        const expChange = exp - prevExp;
-        if (expChange > 0) {
-            const expBarElement = document.querySelector('.bar.exp') || document.getElementById('stat-exp-text');
-            const popupData = {
-                element: expBarElement,
-                change: expChange,
-                isPositive: true,
-                type: 'exp'
-            };
-            addToPopupGroup(popupData);
-        }
-        prevExp = exp;
-    }
-
-    if (Number.isFinite(currentSp) && Number.isFinite(prevSp) && currentSp !== prevSp) {
-        const delta = currentSp - prevSp;
-        if (delta !== 0 && spBarContainer && spBarContainer.style.display !== 'none') {
-            const popupData = {
-                element: spBarContainer,
-                change: Math.abs(delta),
-                isPositive: delta > 0,
-                type: 'sp'
-            };
-            addToPopupGroup(popupData);
-        }
-    }
-    prevSp = currentSp;
-
-    const formatValue = (value) => Number.isFinite(value) ? Math.floor(value) : '∞';
-    const formatStatWithBase = (effective, base) => {
-        const effectiveText = formatValue(effective);
-        const baseText = formatValue(base);
-        if (effectiveText === baseText) return String(effectiveText);
-        return translateOrFallback(
-            'statusModal.stats.valueWithBase',
-            () => `${effectiveText} (基${baseText})`,
-            { effective: effectiveText, base: baseText }
-        );
-    };
-
-    if (statLevel) {
-        statLevel.textContent = formatStatWithBase(effectiveLevel, baseLevel);
-    }
-    if (statAtk) {
-        statAtk.textContent = formatStatWithBase(effectiveAttack, baseAttack);
-    }
-    if (statDef) {
-        statDef.textContent = formatStatWithBase(effectiveDefense, baseDefense);
-    }
-    if (statHpText) {
-        const currentText = formatValue(currentHp);
-        const maxText = formatValue(effectiveMaxHp);
-        const baseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp
-            ? translateOrFallback(
-                'statusModal.details.hpBaseSuffix',
-                () => ` (基${formatValue(player.maxHp)})`,
-                { base: formatValue(player.maxHp) }
-            )
-            : '';
-        statHpText.textContent = translateOrFallback(
-            'statusModal.stats.hp',
-            () => `${currentText}/${maxText}${baseSuffix}`,
-            { current: currentText, max: maxText, baseSuffix }
-        );
-    }
-    if (statExpText) statExpText.textContent = Number.isFinite(exp) ? `${expDisp}/${expMax}` : '∞/∞';
-    if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(1, hpPct)) * 100}%`;
-    if (expBar) expBar.style.width = `${expPct * 100}%`;
-    if (spBarContainer) spBarContainer.style.display = spUnlocked && spMax > 0 ? '' : 'none';
-    if (statSpText) {
-        if (spIsInfinite) {
-            statSpText.textContent = '∞/∞';
-        } else {
-            const spDisplayCurrent = floorSpValue(currentSp);
-            const spDisplayMax = floorSpValue(spMax);
-            statSpText.textContent = spUnlocked && spDisplayMax > 0 ? `${spDisplayCurrent}/${spDisplayMax}` : '0/0';
-        }
-    }
-    if (spBar && spUnlocked && spMax > 0) {
-        spBar.style.width = `${Math.max(0, Math.min(1, spPct)) * 100}%`;
-    }
-    if (satietyBarContainer) satietyBarContainer.style.display = satietySystemActive ? '' : 'none';
-    if (satietySystemActive) {
-    if (statSatietyText) statSatietyText.textContent = satietyIsInfinite ? `∞/${satietyCapText}` : `${satietyDisplayText}/${satietyCapText}`;
-    if (satietyBar) satietyBar.style.width = `${(satietyIsInfinite ? 1 : (satietyRaw / SATIETY_MAX)) * 100}%`;
-    }
-
-    updatePlayerSummaryCard({
-        baseLevel,
-        effectiveLevel,
-        currentHp,
-        effectiveMaxHp,
-        baseAttack,
-        effectiveAttack,
-        baseDefense,
-        effectiveDefense,
-        expDisp,
-        expMax
-    });
-
-    if (statStatusEffects) {
-        if (!combinedStatusList.length) {
-            statStatusEffects.textContent = translateOrFallback(
-                'statusModal.effects.none',
-                '状態異常なし'
-            );
-        } else {
-            statStatusEffects.innerHTML = combinedStatusList.map(status => {
-                const classes = ['status-badge'];
-                if (status.badgeClass) classes.push(status.badgeClass);
-                const remainingText = translateOrFallback(
-                    'statusModal.effects.remaining',
-                    () => `${status.label} 残り${status.remaining}`,
-                    { label: status.label, turns: status.remaining }
-                );
-                return `<span class="${classes.join(' ')}">${remainingText}</span>`;
-            }).join('');
-        }
-    }
-
-    if (statDomainEffects) {
-        if (!playerDomain.definitions.length) {
-            statDomainEffects.innerHTML = '';
-            statDomainEffects.style.display = 'none';
-        } else {
-            statDomainEffects.style.display = '';
-            statDomainEffects.innerHTML = playerDomain.definitions.map(def => {
-                const color = def.color || '#845ef7';
-                const icon = def.icon || '◇';
-                return `<span class="status-badge" style="background-color:${color};">${icon} ${def.label}</span>`;
-            }).join('');
-        }
-    }
-
     // Update item modal - fix NaN issue
     const skillCharmCounts = player.inventory.ensureSkillCharms();
     const passiveOrbStore = player.inventory.ensurePassiveOrbs();
@@ -16139,237 +16911,90 @@ function updateUI() {
     const uniquePassiveOrbCount = ownedPassiveOrbs.length;
     const passiveOrbModifiers = getPassiveOrbModifiers() || {};
     const passiveOrbAggregateEntries = buildPassiveOrbAggregateEntries(passiveOrbModifiers);
-
-    if (autoItemStatusText) {
-        if (autoItemToggle && autoItemToggle.checked) {
-            const potionDisplayCount = Math.max(0, Math.floor(Number(potion30Count) || 0));
-            autoItemStatusText.style.display = '';
-            autoItemStatusText.textContent = translateOrFallback(
-                'game.autoItem.status',
-                () => `オートアイテムON：回復アイテム x ${potionDisplayCount}`,
-                { count: potionDisplayCount }
-            );
-        } else {
-            autoItemStatusText.textContent = '';
-            autoItemStatusText.style.display = 'none';
-        }
-    }
-
-    if (invPotion30) invPotion30.textContent = potion30Count;
-    if (invHpBoost) invHpBoost.textContent = hpBoostCount;
-    if (invAtkBoost) invAtkBoost.textContent = atkBoostCount;
-    if (invDefBoost) invDefBoost.textContent = defBoostCount;
-    if (invHpBoostMajor) invHpBoostMajor.textContent = hpBoostMajorCount;
-    if (invAtkBoostMajor) invAtkBoostMajor.textContent = atkBoostMajorCount;
-    if (invDefBoostMajor) invDefBoostMajor.textContent = defBoostMajorCount;
-    if (invSpElixir) invSpElixir.textContent = spElixirCount;
-    if (passiveOrbSummaryEl) {
-        passiveOrbSummaryEl.textContent = totalPassiveOrbCount > 0
-            ? formatPassiveOrbSummary(totalPassiveOrbCount, uniquePassiveOrbCount)
-            : getPassiveOrbEmptyText();
-    }
-    if (passiveOrbAggregateEl) {
-        passiveOrbAggregateEl.innerHTML = passiveOrbAggregateEntries.length
-            ? passiveOrbAggregateEntries.map(entry => {
-                const label = escapeHtml(entry.label);
-                const value = escapeHtml(entry.value);
-                return `
-                <div class="passive-orb-aggregate__item">
-                    <span class="passive-orb-aggregate__label">${label}</span>
-                    <span class="passive-orb-aggregate__value">${value}</span>
-                </div>
-                `.trim();
-            }).join('')
-            : `<div class="passive-orb-empty">${escapeHtml(getPassiveOrbNoEffectText())}</div>`;
-    }
-    if (passiveOrbListEl) {
-        passiveOrbListEl.innerHTML = ownedPassiveOrbs.length
-            ? ownedPassiveOrbs.map(entry => {
-                const label = escapeHtml(entry.label);
-                const effectMarkup = entry.effectText
-                    ? `<span class="passive-orb-effect">${escapeHtml(entry.effectText)}</span>`
-                    : '';
-                return `
-                <div class="item-row passive-orb-row">
-                    <div class="passive-orb-row__info">
-                        <span class="passive-orb-name">${label}</span>
-                        ${effectMarkup}
-                    </div>
-                    <span class="passive-orb-count">${escapeHtml(formatCountLabel(entry.count))}</span>
-                </div>
-                `.trim();
-            }).join('')
-            : `<div class="passive-orb-empty">${escapeHtml(getPassiveOrbEmptyText())}</div>`;
-    }
-    if (skillCharmList) renderSkillCharmInventory(skillCharmCounts);
-    if (eatPotion30Btn) eatPotion30Btn.style.display = satietySystemActive ? '' : 'none';
     const hasNegativeStatusAilment = NEGATIVE_STATUS_EFFECT_IDS.some(id => isPlayerStatusActive(id));
-    if (cleansePotion30Btn) {
-        const lacksPotion = !player.inventory || player.inventory.potion30 <= 0;
-        cleansePotion30Btn.disabled = lacksPotion || !hasNegativeStatusAilment;
-        if (lacksPotion) {
-            cleansePotion30Btn.title = translateOrFallback('game.items.errors.noHealingItem', '回復アイテムを持っていない。');
-        } else if (!hasNegativeStatusAilment) {
-            cleansePotion30Btn.title = translateOrFallback('game.items.errors.noStatusToCleanse', '治療できる状態異常がない。');
-        } else {
-            cleansePotion30Btn.removeAttribute('title');
-        }
-    }
-    if (throwPotion30Btn) {
-        const throwTargets = getPotionThrowTargets();
-        const canThrow = playerDomain.allowPotionThrow && throwTargets.length > 0;
-        if (canThrow) {
-            throwPotion30Btn.style.display = '';
-            throwPotion30Btn.disabled = player.inventory?.potion30 <= 0;
-        } else {
-            throwPotion30Btn.style.display = 'none';
-        }
-    }
-    
-    // Update detailed status modal
-    const modalLevel = document.getElementById('modal-level');
-    const modalExp = document.getElementById('modal-exp');
-    const modalHp = document.getElementById('modal-hp');
-    const modalAttack = document.getElementById('modal-attack');
-    const modalDefense = document.getElementById('modal-defense');
-    const modalSatiety = document.getElementById('modal-satiety');
-    const modalSatietyRow = document.getElementById('modal-satiety-row');
-    const modalFloor = document.getElementById('modal-floor');
-    const modalPotion30 = document.getElementById('modal-potion30');
-    const modalHpBoost = document.getElementById('modal-hp-boost');
-    const modalAtkBoost = document.getElementById('modal-atk-boost');
-    const modalDefBoost = document.getElementById('modal-def-boost');
-    const modalHpBoostMajor = document.getElementById('modal-hp-boost-major');
-    const modalAtkBoostMajor = document.getElementById('modal-atk-boost-major');
-    const modalDefBoostMajor = document.getElementById('modal-def-boost-major');
-    const modalSpElixir = document.getElementById('modal-sp-elixir');
-    const modalSkillCharms = document.getElementById('modal-skill-charms');
-    const modalWorld = document.getElementById('modal-world');
-    const modalDifficulty = document.getElementById('modal-difficulty');
-    const modalDungeonSummary = document.getElementById('modal-dungeon-summary');
-    const modalDungeonType = document.getElementById('modal-dungeon-type');
-    const modalDungeonTypeRow = document.getElementById('modal-dungeon-type-row');
-    
-    if (modalLevel) modalLevel.textContent = formatStatValueWithBase(effectiveLevel, baseLevel, 'statusModal.stats.levelWithBase');
-    if (modalExp) modalExp.textContent = `${expDisp} / ${expMax}`;
-    if (modalHp) {
-        const baseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? formatHpBaseSuffix(player.maxHp) : '';
-        modalHp.textContent = translateOrFallback(
-            'statusModal.stats.hp',
-            () => `${currentHp} / ${effectiveMaxHp}${baseSuffix}`,
-            { current: currentHp, max: effectiveMaxHp, baseSuffix }
-        );
-    }
-    if (modalAttack) modalAttack.textContent = formatStatValueWithBase(effectiveAttack, baseAttack);
-    if (modalDefense) modalDefense.textContent = formatStatValueWithBase(effectiveDefense, baseDefense);
-    if (modalSatietyRow) modalSatietyRow.style.display = satietySystemActive ? '' : 'none';
-    if (modalSatiety && satietySystemActive) modalSatiety.textContent = satietyIsInfinite ? `∞ / ${satietyCapText}` : `${satietyDisplayText} / ${satietyCapText}`;
-    if (modalSpRow) modalSpRow.style.display = spUnlocked && spMax > 0 ? '' : 'none';
-    if (modalSpValue && spUnlocked && spMax > 0) {
-        const spDisplayCurrent = floorSpValue(currentSp);
-        const spDisplayMax = floorSpValue(spMax);
-        modalSpValue.textContent = `${spDisplayCurrent} / ${spDisplayMax}`;
-    }
-    if (modalFloor) modalFloor.textContent = formatFloorLabel(dungeonLevel);
-    if (modalStatusEffects) {
-        modalStatusEffects.textContent = statusList.length
-            ? statusList.map(s => formatEffectEntry(s.label, s.remaining)).join('\n')
-            : getNoneText();
-    }
-    if (modalSkillEffects) {
-        modalSkillEffects.textContent = skillEffects.length
-            ? skillEffects.map(s => formatEffectEntry(s.label, s.remaining)).join('\n')
-            : getNoneText();
-    }
-    if (modalPotion30) modalPotion30.textContent = formatCountLabel(potion30Count);
-    if (modalHpBoost) modalHpBoost.textContent = formatCountLabel(hpBoostCount);
-    if (modalAtkBoost) modalAtkBoost.textContent = formatCountLabel(atkBoostCount);
-    if (modalDefBoost) modalDefBoost.textContent = formatCountLabel(defBoostCount);
-    if (modalHpBoostMajor) modalHpBoostMajor.textContent = formatCountLabel(hpBoostMajorCount);
-    if (modalAtkBoostMajor) modalAtkBoostMajor.textContent = formatCountLabel(atkBoostMajorCount);
-    if (modalDefBoostMajor) modalDefBoostMajor.textContent = formatCountLabel(defBoostMajorCount);
-    if (modalSpElixir) modalSpElixir.textContent = formatCountLabel(spElixirCount);
-    if (modalSkillCharms) {
-        const summary = Object.keys(SKILL_EFFECT_DEFS)
-            .map(effectId => {
-                const count = Math.max(0, Math.floor(Number(skillCharmCounts[effectId]) || 0));
-                if (count <= 0) return null;
-                const label = getSkillEffectLabel(effectId);
-                return translateOrFallback(
-                    'statusModal.skillCharms.entry',
-                    () => `${label} x${count}`,
-                    { label, count }
-                );
-            })
-            .filter(Boolean)
-            .join(' / ');
-        modalSkillCharms.textContent = summary || getNoneText();
-    }
-    if (modalPassiveOrbSummary) {
-        modalPassiveOrbSummary.textContent = totalPassiveOrbCount > 0
-            ? formatPassiveOrbSummary(totalPassiveOrbCount, uniquePassiveOrbCount)
-            : getNoneText();
-    }
-    if (modalPassiveOrbAggregate) {
-        if (passiveOrbAggregateEntries.length) {
-            modalPassiveOrbAggregate.innerHTML = passiveOrbAggregateEntries.map(entry => {
-                const label = escapeHtml(entry.label);
-                const value = escapeHtml(entry.value);
-                return `
-                <div class="passive-orb-aggregate__item passive-orb-aggregate__item--compact">
-                    <span class="passive-orb-aggregate__label">${label}</span>
-                    <span class="passive-orb-aggregate__value">${value}</span>
-                </div>
-                `.trim();
-            }).join('');
-            modalPassiveOrbAggregate.style.display = '';
-        } else {
-            modalPassiveOrbAggregate.innerHTML = '';
-            modalPassiveOrbAggregate.style.display = 'none';
-        }
-    }
-    if (modalWorld) {
-        if (currentMode === 'blockdim') {
-            const nested = blockDimState?.nested || 1;
-            const dimKey = blockDimState?.dimKey || '';
-            const dimensionName = resolveDimensionNameByKey(dimKey) || (dimKey || '').toUpperCase();
-            modalWorld.textContent = formatBlockDimWorldLabel(nested, dimensionName || '');
-        } else {
-            modalWorld.textContent = formatWorldLabel(engine.selectedWorld);
-        }
-    }
-    if (modalDifficulty) modalDifficulty.textContent = engine.difficulty;
-    // ダンジョン情報（BlockDim ではブロック構成を表示）
-    if (modalDungeonSummary) {
-        if (currentMode === 'blockdim' && blockDimState?.spec) {
-            const dimName = resolveDimensionNameByKey(blockDimState.dimKey || 'a');
-            const b1 = resolveBlockNameByKey(blockDimTables.blocks1, blockDimState.b1Key) || (blockDimState.b1Key || '');
-            const b2 = resolveBlockNameByKey(blockDimTables.blocks2, blockDimState.b2Key) || (blockDimState.b2Key || '');
-            const b3 = resolveBlockNameByKey(blockDimTables.blocks3, blockDimState.b3Key) || (blockDimState.b3Key || '');
-            const nested = blockDimState?.nested || 1;
-            modalDungeonSummary.textContent = formatBlockDimDungeonSummaryLabel({
-                nested,
-                dimensionName: dimName || (blockDimState.dimKey || '').toUpperCase(),
-                block1: b1,
-                block2: b2,
-                block3: b3
-            });
-            if (modalDungeonTypeRow && modalDungeonType) {
-                modalDungeonTypeRow.style.display = '';
-                modalDungeonType.textContent = formatSpecType(blockDimState.spec);
-            }
-        } else {
-            const dData = getDungeonBaseData(engine.selectedWorld, engine.selectedDungeonBase);
-            const name = dData ? resolveLocalizedText(dData.nameKey, () => dData.name || '-') : '-';
-            modalDungeonSummary.textContent = formatDungeonSummaryLabel(engine.selectedWorld, name);
-            if (modalDungeonTypeRow && modalDungeonType) {
-                modalDungeonTypeRow.style.display = '';
-                modalDungeonType.textContent = dData ? getDungeonTypeName(dData.type) : '-';
-            }
-        }
-    }
-    
-    if (floorIndicatorValue) floorIndicatorValue.textContent = formatFloorLabel(dungeonLevel);
+    const autoItemEnabled = !!autoItemToggle?.checked;
+    const throwTargets = getPotionThrowTargets();
+    const throwTargetsAvailable = throwTargets.length > 0;
+
+    gamePresenter.renderPlayerStatus({
+        baseLevel,
+        effectiveLevel,
+        baseAttack,
+        effectiveAttack,
+        baseDefense,
+        effectiveDefense,
+        currentHp,
+        effectiveMaxHp,
+        exp,
+        expDisp,
+        expMax,
+        hpPct,
+        expPct,
+        abilityStatusActive,
+        spUnlocked,
+        spMax,
+        currentSp,
+        spIsInfinite,
+        spPct,
+        satietySystemActive,
+        satietyIsInfinite,
+        satietyDisplayText,
+        satietyCapText,
+        satietyRaw,
+        combinedStatusList,
+        playerDomain,
+        statusList,
+        skillEffects,
+        dungeonLevel,
+        passiveOrbAggregateEntries,
+        totalPassiveOrbCount,
+        uniquePassiveOrbCount,
+        potion30Count,
+        hpBoostCount,
+        atkBoostCount,
+        defBoostCount,
+        hpBoostMajorCount,
+        atkBoostMajorCount,
+        defBoostMajorCount,
+        spElixirCount,
+        skillCharmCounts
+    });
+
+    gamePresenter.renderInventory({
+        potion30Count,
+        hpBoostCount,
+        atkBoostCount,
+        defBoostCount,
+        hpBoostMajorCount,
+        atkBoostMajorCount,
+        defBoostMajorCount,
+        spElixirCount,
+        passiveOrbAggregateEntries,
+        ownedPassiveOrbs,
+        totalPassiveOrbCount,
+        uniquePassiveOrbCount,
+        autoItemEnabled,
+        autoItemCount: potion30Count,
+        satietySystemActive,
+        hasNegativeStatusAilment,
+        throwTargetsAvailable,
+        playerDomainAllowPotionThrow: playerDomain.allowPotionThrow,
+        skillCharmCounts
+    });
+
+    gamePresenter.renderPlayerSummaryCard({
+        baseLevel,
+        effectiveLevel,
+        currentHp,
+        effectiveMaxHp,
+        baseAttack,
+        effectiveAttack,
+        baseDefense,
+        effectiveDefense,
+        expDisp,
+        expMax
+    });
+
     updateDungeonTypeOverlay();
 
     refreshSkillsModal();
@@ -16601,79 +17226,21 @@ function updatePlayerSummaryCard({
     spMax = Number(player.maxSp),
     spUnlocked = isSpUnlocked()
 } = {}) {
-    if (!playerSummaryDiv) return;
-    const card = playerSummaryDiv.querySelector('.player-status-card');
-    if (!card) return;
-
-    const levelEl = card.querySelector('.stat-value.level');
-    const hpEl = card.querySelector('.stat-value.hp');
-    const expEl = card.querySelector('.stat-value.exp');
-    const atkEl = card.querySelector('.stat-value.attack');
-    const defEl = card.querySelector('.stat-value.defense');
-    const satietyValueEl = card.querySelector('.stat-value.satiety');
-    const satietyItemEl = card.querySelector('.stat-item.satiety');
-    const spValueEl = card.querySelector('.stat-value.sp');
-    const spItemEl = card.querySelector('.stat-item.sp');
-
-    const normalizedHp = Number.isFinite(currentHp) && Number.isFinite(effectiveMaxHp)
-        ? Math.min(currentHp, effectiveMaxHp)
-        : (Number.isFinite(currentHp) ? currentHp : effectiveMaxHp);
-    const normalizedSpMax = Number.isFinite(spMax) ? Math.max(0, spMax) : Infinity;
-    const normalizedSp = Number.isFinite(currentSp) && Number.isFinite(normalizedSpMax)
-        ? Math.max(0, Math.min(normalizedSpMax, currentSp))
-        : (Number.isFinite(currentSp) ? currentSp : normalizedSpMax);
-    const satietyIsInfinite = !Number.isFinite(player.satiety);
-    const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
-    const satietyRaw = satietyIsInfinite ? satietyCap : Math.max(0, Math.min(satietyCap, Number(player.satiety)));
-    const satietyDisplayValue = satietyIsInfinite ? satietyCap : Math.round(satietyRaw * 100) / 100;
-    const satietyDisplayText = satietyIsInfinite ? '∞' : formatSatietyDisplay(satietyDisplayValue);
-    const satietyCapText = formatSatietyDisplay(satietyCap);
-    const spIsInfinite = !Number.isFinite(normalizedSp) || !Number.isFinite(normalizedSpMax);
-    const abilityStatusMulCard = getAbilityStatusMultiplier();
-    const abilityStatusActiveCard = !nearlyEqual(abilityStatusMulCard, 1);
-
-    const formatValue = (value) => Number.isFinite(value) ? Math.floor(value) : '∞';
-    const formatStatWithBase = (effective, base) => {
-        const effectiveText = formatValue(effective);
-        const baseText = formatValue(base);
-        if (effectiveText === baseText) return String(effectiveText);
-        return translateOrFallback(
-            'statusModal.stats.valueWithBase',
-            () => `${effectiveText} (基${baseText})`,
-            { effective: effectiveText, base: baseText }
-        );
-    };
-
-    if (levelEl) levelEl.textContent = formatStatWithBase(effectiveLevel, baseLevel);
-    if (hpEl) {
-        const currentText = formatValue(normalizedHp);
-        const maxText = formatValue(effectiveMaxHp);
-        const baseSuffix = abilityStatusActiveCard && player.maxHp !== effectiveMaxHp
-            ? translateOrFallback(
-                'statusModal.details.hpBaseSuffix',
-                () => ` (基${formatValue(player.maxHp)})`,
-                { base: formatValue(player.maxHp) }
-            )
-            : '';
-        hpEl.textContent = translateOrFallback(
-            'statusModal.stats.hp',
-            () => `${currentText}/${maxText}${baseSuffix}`,
-            { current: currentText, max: maxText, baseSuffix }
-        );
-    }
-    if (expEl) expEl.textContent = Number.isFinite(player.exp) ? `${expDisp}/${expMax}` : '∞/∞';
-    if (atkEl) atkEl.textContent = formatStatWithBase(effectiveAttack, baseAttack);
-    if (defEl) defEl.textContent = formatStatWithBase(effectiveDefense, baseDefense);
-    if (satietyItemEl) satietyItemEl.style.display = satietySystemActive ? '' : 'none';
-    if (satietyValueEl) satietyValueEl.textContent = satietyIsInfinite ? `∞/${satietyCapText}` : `${satietyDisplayText}/${satietyCapText}`;
-    if (spItemEl) spItemEl.style.display = spUnlocked && normalizedSpMax > 0 ? '' : 'none';
-    if (spValueEl) {
-        if (spUnlocked && normalizedSpMax > 0) {
-            spValueEl.textContent = spIsInfinite ? '∞/∞' : `${Math.floor(normalizedSp)}/${Math.floor(normalizedSpMax)}`;
-        } else {
-            spValueEl.textContent = '0/0';
-        }
-    }
+    gamePresenter.renderPlayerSummaryCard({
+        baseLevel,
+        effectiveLevel,
+        currentHp,
+        effectiveMaxHp,
+        baseAttack,
+        effectiveAttack,
+        baseDefense,
+        effectiveDefense,
+        expDisp,
+        expMax,
+        currentSp,
+        spMax,
+        spUnlocked
+    });
 }
 
 function resolveLogMessage(message, fallback, params) {
@@ -18758,13 +19325,6 @@ function cleanseNegativeStatusWithPotion() {
 
 // ゲームの開始
 // UI: モーダル/入出力
-btnItems && btnItems.addEventListener('click', () => { openModal(itemsModal); });
-btnSkills && btnSkills.addEventListener('click', () => {
-    markSkillsListDirty();
-    openModal(skillsModal);
-    refreshSkillsModal({ force: true });
-});
-btnStatus && btnStatus.addEventListener('click', () => { openModal(statusModal); markUiDirty(); });
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', (e) => {
     const target = e.currentTarget.getAttribute('data-target');
     const modal = document.getElementById(target);

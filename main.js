@@ -1080,7 +1080,6 @@ const godConsoleInput = document.getElementById('god-console-input');
 const godConsoleStatus = document.getElementById('god-console-status');
 const godConsoleSandboxToggle = document.getElementById('god-console-toggle-sandbox');
 const godConsoleModeLabel = document.getElementById('god-console-mode-label');
-const statusDetails = document.getElementById('status-details');
 const modalStatusEffects = document.getElementById('modal-status-effects');
 const modalSkillEffects = document.getElementById('modal-skill-effects');
 const modalSpRow = document.getElementById('modal-sp-row');
@@ -16144,26 +16143,6 @@ function updateUI() {
         }
     }
     
-    if (statusDetails) {
-        const levelText = effectiveLevel === baseLevel ? baseLevel : `${effectiveLevel} (基${baseLevel})`;
-        const hpBaseSuffix = abilityStatusActive && player.maxHp !== effectiveMaxHp ? formatHpBaseSuffix(player.maxHp) : '';
-        const atkText = effectiveAttack === baseAttack ? String(effectiveAttack) : `${effectiveAttack} (基${baseAttack})`;
-        const defText = effectiveDefense === baseDefense ? String(effectiveDefense) : `${effectiveDefense} (基${baseDefense})`;
-        const levelSegment = formatLevelSegment(levelText);
-        const hpSegment = formatHpSegment(currentHp, effectiveMaxHp, hpBaseSuffix);
-        const attackSegment = formatAttackSegment(atkText);
-        const defenseSegment = formatDefenseSegment(defText);
-        const satietySegment = satietySystemActive ? formatSatietySegment(satietyDisplayText, satietyCapText) : '';
-        const detailLine = formatStatusDetailLine({
-            level: levelSegment,
-            hp: hpSegment,
-            attack: attackSegment,
-            defense: defenseSegment,
-            satiety: satietySegment
-        });
-        const floorLine = formatStatusDetailFloor(dungeonLevel);
-        statusDetails.innerHTML = `${escapeHtml(floorLine)}<br>${escapeHtml(detailLine)}`;
-    }
     if (floorIndicatorValue) floorIndicatorValue.textContent = formatFloorLabel(dungeonLevel);
     updateDungeonTypeOverlay();
 

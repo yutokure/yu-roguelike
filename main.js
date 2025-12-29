@@ -1008,7 +1008,7 @@ function getAutoItemIntent({ effectiveMaxHp, currentHp, currentSatiety }) {
 
     if (satietySystemActive && Number.isFinite(currentSatiety)) {
         if (currentSatiety < AUTO_ITEM_SATIETY_THRESHOLD) {
-            const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+            const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
             const beforeSatiety = Number.isFinite(player?.satiety) ? Number(player.satiety) : 0;
             const recoverCandidate = Math.ceil(satietyCap * SATIETY_RECOVERY_PERCENT);
             const potential = Math.min(recoverCandidate, Math.max(0, satietyCap - beforeSatiety));
@@ -1029,7 +1029,7 @@ function requestAutoItemCheck() {
         if (!player || isGameOver) return;
         const effectiveMaxHp = getEffectivePlayerMaxHp();
         const rawHp = Number.isFinite(player?.hp) ? Math.max(0, player.hp) : effectiveMaxHp;
-        const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+        const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
         const satietyValue = satietySystemActive
             ? (Number.isFinite(player?.satiety) ? Math.max(0, Math.floor(player.satiety)) : satietyCap)
             : null;
@@ -1566,7 +1566,7 @@ function adjustPlayerLevel(delta) {
             changed += 1;
         }
         player.hp = player.maxHp;
-        restoreSatietyToMax();
+        player.restoreSatietyToMax();
     } else {
         const steps = Math.abs(delta);
         for (let i = 0; i < steps; i++) {
@@ -1578,7 +1578,7 @@ function adjustPlayerLevel(delta) {
             changed -= 1;
         }
         player.hp = Math.min(player.hp, player.maxHp);
-        recalculateSatietyMax({ clampCurrent: true });
+        player.recalculateSatietyMax({ clampCurrent: true });
     }
     if (changed !== 0) {
         enforceEffectiveHpCap();
@@ -1765,7 +1765,7 @@ function hatenaGrantRandomItem() {
         { key: 'spElixir', labelKey: 'game.items.spElixir.label', fallbackLabel: 'SPエリクサー' }
     ];
     const pick = options[randomIntInclusive(0, options.length - 1)];
-    incrementInventoryCounter(pick.key, 1);
+    player.inventory.incrementItem(pick.key, 1);
     const itemLabel = translateOrFallback(
         pick.labelKey,
         () => pick.fallbackLabel || pick.key
@@ -4465,7 +4465,7 @@ function handleSandboxFullHeal() {
     } else {
         player.hp = Number.isFinite(player.maxHp) ? player.maxHp : effectiveMax;
         if (satietySystemActive) {
-            restoreSatietyToMax();
+            player.restoreSatietyToMax();
         }
         if (Number.isFinite(player.maxSp)) {
             player.sp = player.maxSp;
@@ -4497,7 +4497,7 @@ function resetSandboxStatsToDefaults() {
     player.maxSp = 0;
     player.sp = 0;
     player.satietySystemStartLevel = null;
-    restoreSatietyToMax();
+    player.restoreSatietyToMax();
     player.exp = 0;
     enforceEffectiveHpCap();
     if (!sandboxInteractiveState.godMode) {
@@ -4521,7 +4521,7 @@ function applySandboxStatChanges() {
     const def = parseSandboxInputValue(sandboxStatDefInput, { fallback: player.defense, clampMin: 0 });
     const maxSp = parseSandboxInputValue(sandboxStatMaxSpInput, { fallback: player.maxSp, clampMin: 0 });
     const sp = parseSandboxInputValue(sandboxStatSpInput, { fallback: player.sp, clampMin: 0 });
-    const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+    const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
     const satiety = parseSandboxInputValue(sandboxStatSatietyInput, { fallback: player.satiety, clampMin: 0, clampMax: satietyCap });
 
     player.level = level;
@@ -4532,7 +4532,7 @@ function applySandboxStatChanges() {
     player.maxSp = maxSp;
     player.sp = sp;
     player.satiety = satiety;
-    recalculateSatietyMax({ clampCurrent: true });
+    player.recalculateSatietyMax({ clampCurrent: true });
     enforceEffectiveHpCap();
     updatePlayerSpCap({ silent: true });
     markUiDirty();
@@ -5592,7 +5592,7 @@ function validateSandboxConfig(config) {
 }
 
 function captureSandboxSnapshot() {
-    ensurePassiveOrbInventory();
+    player.inventory.ensurePassiveOrbs();
     sandboxRuntime.snapshot = {
         player: JSON.parse(JSON.stringify(player)),
         difficulty: engine.difficulty,
@@ -5616,8 +5616,8 @@ function restoreSandboxSnapshotIfNeeded() {
             }
         });
         if (savedPlayer.inventory) {
-            player.inventory = JSON.parse(JSON.stringify(savedPlayer.inventory));
-            ensurePassiveOrbInventory();
+            player.inventory = new Inventory(JSON.parse(JSON.stringify(savedPlayer.inventory)));
+            player.inventory.ensurePassiveOrbs();
         }
     }
     if (typeof snap?.difficulty !== 'undefined') engine.difficulty = snap.difficulty;
@@ -5873,7 +5873,7 @@ function showSelectionScreen(opts = {}) {
     if (refillHp) {
         resetPlayerStatusEffects();
         player.hp = player.maxHp;
-        restoreSatietyToMax();
+        player.restoreSatietyToMax();
         enforceEffectiveHpCap(); // Apply cap after clearing debuffs so full heal sticks
     }
     isGameOver = false;
@@ -6767,70 +6767,225 @@ function getTileRenderColor(x, y, isWall) {
     return DEFAULT_FLOOR_COLOR;
 }
 
+class Inventory {
+    constructor(data = {}) {
+        this.potion30 = Inventory.normalizeItemCount(data.potion30);
+        this.hpBoost = Inventory.normalizeItemCount(data.hpBoost);
+        this.atkBoost = Inventory.normalizeItemCount(data.atkBoost);
+        this.defBoost = Inventory.normalizeItemCount(data.defBoost);
+        this.hpBoostMajor = Inventory.normalizeItemCount(data.hpBoostMajor);
+        this.atkBoostMajor = Inventory.normalizeItemCount(data.atkBoostMajor);
+        this.defBoostMajor = Inventory.normalizeItemCount(data.defBoostMajor);
+        this.spElixir = Inventory.normalizeItemCount(data.spElixir);
+        this.skillCharms = Inventory.normalizeSkillCharms(data.skillCharms);
+        this.passiveOrbs = Inventory.normalizePassiveOrbs(data.passiveOrbs);
+        if (data && typeof data === 'object') {
+            for (const [key, value] of Object.entries(data)) {
+                if (key in this || key === 'skillCharms' || key === 'passiveOrbs') continue;
+                if (Number.isFinite(Number(value))) {
+                    this[key] = Inventory.normalizeItemCount(value);
+                } else if (value && typeof value === 'object') {
+                    this[key] = deepClone(value);
+                }
+            }
+        }
+    }
+
+    static normalizeItemCount(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return 0;
+        const rounded = numeric >= 0 ? Math.floor(numeric) : Math.ceil(numeric);
+        return rounded < 0 ? 0 : rounded;
+    }
+
+    static createEmptyPassiveOrbs() {
+        const orbs = {};
+        for (const id of PASSIVE_ORB_IDS) {
+            orbs[id] = 0;
+        }
+        return orbs;
+    }
+
+    static normalizePassiveOrbs(source) {
+        const normalized = Inventory.createEmptyPassiveOrbs();
+        if (!source || typeof source !== 'object') return normalized;
+        for (const id of PASSIVE_ORB_IDS) {
+            const value = Number(source[id]);
+            if (Number.isFinite(value)) {
+                const rounded = value >= 0 ? Math.floor(value) : Math.ceil(value);
+                normalized[id] = rounded < 0 ? 0 : rounded;
+            }
+        }
+        return normalized;
+    }
+
+    static normalizeSkillCharms(source) {
+        if (!source || typeof source !== 'object') return {};
+        const normalized = {};
+        for (const [key, value] of Object.entries(source)) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric)) continue;
+            const rounded = numeric >= 0 ? Math.floor(numeric) : Math.ceil(numeric);
+            if (rounded > 0) normalized[key] = rounded;
+        }
+        return normalized;
+    }
+
+    incrementItem(key, amount = 1) {
+        const numericAmount = Number(amount);
+        if (!Number.isFinite(numericAmount) || !key) return 0;
+        const base = Inventory.normalizeItemCount(this[key]);
+        const delta = numericAmount > 0 ? Math.floor(numericAmount) : Math.ceil(numericAmount);
+        const next = Math.max(0, base + delta);
+        this[key] = next;
+        return next;
+    }
+
+    ensureSkillCharms() {
+        if (!this.skillCharms || typeof this.skillCharms !== 'object') {
+            this.skillCharms = {};
+        }
+        return this.skillCharms;
+    }
+
+    incrementSkillCharm(effectId, amount = 1) {
+        if (!effectId) return 0;
+        const charms = this.ensureSkillCharms();
+        const base = Number(charms[effectId]) || 0;
+        const next = Math.max(0, Math.floor(base + amount));
+        if (next === 0) {
+            delete charms[effectId];
+        } else {
+            charms[effectId] = next;
+        }
+        return next;
+    }
+
+    ensurePassiveOrbs() {
+        if (!this.passiveOrbs || typeof this.passiveOrbs !== 'object') {
+            this.passiveOrbs = Inventory.createEmptyPassiveOrbs();
+            return this.passiveOrbs;
+        }
+        const store = this.passiveOrbs;
+        for (const id of PASSIVE_ORB_IDS) {
+            const raw = Number(store[id]);
+            if (Number.isFinite(raw)) {
+                const rounded = raw >= 0 ? Math.floor(raw) : Math.ceil(raw);
+                store[id] = rounded < 0 ? 0 : rounded;
+            } else {
+                store[id] = 0;
+            }
+        }
+        for (const key of Object.keys(store)) {
+            if (!PASSIVE_ORB_DEFS[key]) delete store[key];
+        }
+        return store;
+    }
+
+    normalizePassiveOrbs(source = this.passiveOrbs) {
+        return Inventory.normalizePassiveOrbs(source);
+    }
+
+    incrementPassiveOrb(orbId, amount = 1) {
+        if (!PASSIVE_ORB_DEFS[orbId]) return 0;
+        const store = this.ensurePassiveOrbs();
+        const current = Number.isFinite(Number(store[orbId])) ? Math.floor(Number(store[orbId])) : 0;
+        const numericAmount = Number(amount);
+        if (!Number.isFinite(numericAmount) || Math.abs(numericAmount) < 1e-6) {
+            return current;
+        }
+        const delta = numericAmount > 0 ? Math.floor(numericAmount) : Math.ceil(numericAmount);
+        let next = current + delta;
+        if (next < 0) next = 0;
+        store[orbId] = next;
+        return next;
+    }
+
+    applyDelta(changes, opts = {}) {
+        if (!changes || typeof changes !== 'object') {
+            return { applied: {}, mutated: false };
+        }
+        const applied = {};
+        let mutated = false;
+        for (const [key, rawDelta] of Object.entries(changes)) {
+            if (key === 'skillCharms' || key === 'passiveOrbs') continue;
+            const numeric = Number(rawDelta);
+            if (!Number.isFinite(numeric) || Math.abs(numeric) < 1e-6) continue;
+            const delta = numeric > 0 ? Math.floor(numeric) : Math.ceil(numeric);
+            if (delta === 0) continue;
+            const current = Inventory.normalizeItemCount(this[key]);
+            let next = current + delta;
+            if (!opts.allowNegative && next < 0) next = 0;
+            if (!Number.isFinite(next)) next = 0;
+            next = Math.floor(next);
+            const appliedDelta = next - current;
+            if (appliedDelta === 0) continue;
+            this[key] = next;
+            applied[key] = appliedDelta;
+            mutated = true;
+        }
+        return { applied, mutated };
+    }
+}
+
+class Player {
+    constructor(data = {}) {
+        this.x = Number.isFinite(data.x) ? data.x : 0;
+        this.y = Number.isFinite(data.y) ? data.y : 0;
+        this.level = Number.isFinite(data.level) ? Math.max(1, Math.floor(data.level)) : 1;
+        this.exp = Number.isFinite(data.exp) ? data.exp : 0;
+        this.maxHp = Number.isFinite(data.maxHp) ? Math.max(1, Math.floor(data.maxHp)) : 100;
+        this.hp = Number.isFinite(data.hp) ? Math.max(0, Math.floor(data.hp)) : this.maxHp;
+        this.satiety = Number.isFinite(data.satiety) ? data.satiety : SATIETY_MAX;
+        this.satietySystemStartLevel = Number.isFinite(data.satietySystemStartLevel)
+            ? Math.max(1, Math.floor(data.satietySystemStartLevel))
+            : null;
+        this.sp = Number.isFinite(data.sp) ? data.sp : 0;
+        this.maxSp = Number.isFinite(data.maxSp) ? data.maxSp : 0;
+        this.attack = Number.isFinite(data.attack) ? Math.max(0, Math.floor(data.attack)) : 10;
+        this.defense = Number.isFinite(data.defense) ? Math.max(0, Math.floor(data.defense)) : 10;
+        this.facing = typeof data.facing === 'string' ? data.facing : 'down';
+        this.inventory = data.inventory instanceof Inventory ? data.inventory : new Inventory(data.inventory);
+        this.statusEffects = data.statusEffects && typeof data.statusEffects === 'object'
+            ? data.statusEffects
+            : createInitialStatusEffects();
+    }
+
+    resolveSatietySystemStartLevel() {
+        if (Number.isFinite(this.satietySystemStartLevel) && this.satietySystemStartLevel > 0) {
+            return Math.max(1, Math.floor(this.satietySystemStartLevel));
+        }
+        const fallbackLevel = Number.isFinite(this.level) ? Math.max(1, Math.floor(this.level)) : 1;
+        return fallbackLevel;
+    }
+
+    setSatietySystemStartLevel(level) {
+        const normalized = Math.max(1, Math.floor(Number(level) || 0));
+        this.satietySystemStartLevel = normalized;
+    }
+
+    recalculateSatietyMax({ clampCurrent = true } = {}) {
+        const startLevel = this.resolveSatietySystemStartLevel();
+        const playerLevel = Number.isFinite(this.level) ? Math.max(1, Number(this.level)) : 1;
+        const extra = Math.max(0, (playerLevel - startLevel) * 0.1);
+        const rawMax = SATIETY_BASE_MAX + extra;
+        const normalizedMax = Math.max(SATIETY_BASE_MAX, Math.round(rawMax * 1000) / 1000);
+        SATIETY_MAX = normalizedMax;
+        if (clampCurrent && Number.isFinite(this.satiety)) {
+            this.satiety = Math.max(0, Math.min(SATIETY_MAX, Number(this.satiety)));
+        }
+        return SATIETY_MAX;
+    }
+
+    restoreSatietyToMax() {
+        const cap = this.recalculateSatietyMax({ clampCurrent: false });
+        this.satiety = cap;
+        return cap;
+    }
+}
+
 // プレイヤー
-const player = {
-    x: 0, // Will be set dynamically
-    y: 0, // Will be set dynamically
-    level: 1,
-    exp: 0,
-    maxHp: 100,
-    hp: 100,
-    satiety: SATIETY_MAX,
-    satietySystemStartLevel: null,
-    sp: 0,
-    maxSp: 0,
-    attack: 10,
-    defense: 10,
-    facing: 'down',
-    inventory: { 
-        potion30: 0,
-        hpBoost: 0,
-        atkBoost: 0,
-        defBoost: 0,
-        hpBoostMajor: 0,
-        atkBoostMajor: 0,
-        defBoostMajor: 0,
-        spElixir: 0,
-        skillCharms: {},
-        passiveOrbs: createEmptyPassiveOrbInventory()
-    },
-    statusEffects: createInitialStatusEffects()
-};
-
-function resolveSatietySystemStartLevel() {
-    if (player && Number.isFinite(player.satietySystemStartLevel) && player.satietySystemStartLevel > 0) {
-        return Math.max(1, Math.floor(player.satietySystemStartLevel));
-    }
-    const fallbackLevel = Number.isFinite(player?.level) ? Math.max(1, Math.floor(player.level)) : 1;
-    return fallbackLevel;
-}
-
-function setSatietySystemStartLevel(level) {
-    if (!player) return;
-    const normalized = Math.max(1, Math.floor(Number(level) || 0));
-    player.satietySystemStartLevel = normalized;
-}
-
-function recalculateSatietyMax({ clampCurrent = true } = {}) {
-    const startLevel = resolveSatietySystemStartLevel();
-    const playerLevel = Number.isFinite(player?.level) ? Math.max(1, Number(player.level)) : 1;
-    const extra = Math.max(0, (playerLevel - startLevel) * 0.1);
-    const rawMax = SATIETY_BASE_MAX + extra;
-    const normalizedMax = Math.max(SATIETY_BASE_MAX, Math.round(rawMax * 1000) / 1000);
-    SATIETY_MAX = normalizedMax;
-    if (clampCurrent && player && Number.isFinite(player.satiety)) {
-        player.satiety = Math.max(0, Math.min(SATIETY_MAX, Number(player.satiety)));
-    }
-    return SATIETY_MAX;
-}
-
-function restoreSatietyToMax() {
-    const cap = recalculateSatietyMax({ clampCurrent: false });
-    if (player) {
-        player.satiety = cap;
-    }
-    return cap;
-}
+const player = new Player();
 
 function formatSatietyDisplay(value) {
     if (!Number.isFinite(value)) return '∞';
@@ -6839,86 +6994,12 @@ function formatSatietyDisplay(value) {
     return rounded.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 }
 
-recalculateSatietyMax({ clampCurrent: true });
+player.recalculateSatietyMax({ clampCurrent: true });
 
 if (dungeonNameToggle) {
     updateDungeonOverlayVisibility();
 }
 
-function ensureInventoryContainer() {
-    if (!player.inventory || typeof player.inventory !== 'object') {
-        player.inventory = {};
-    }
-    if (!player.inventory.passiveOrbs || typeof player.inventory.passiveOrbs !== 'object') {
-        player.inventory.passiveOrbs = createEmptyPassiveOrbInventory();
-    }
-    return player.inventory;
-}
-
-function incrementInventoryCounter(key, amount = 1) {
-    const inv = ensureInventoryContainer();
-    const base = Number(inv[key]) || 0;
-    inv[key] = Math.max(0, Math.floor(base + amount));
-    return inv[key];
-}
-
-function createEmptyPassiveOrbInventory() {
-    const orbs = {};
-    for (const id of PASSIVE_ORB_IDS) {
-        orbs[id] = 0;
-    }
-    return orbs;
-}
-
-function normalizePassiveOrbInventory(source) {
-    const normalized = createEmptyPassiveOrbInventory();
-    if (!source || typeof source !== 'object') return normalized;
-    for (const id of PASSIVE_ORB_IDS) {
-        const value = Number(source[id]);
-        if (Number.isFinite(value)) {
-            const rounded = value >= 0 ? Math.floor(value) : Math.ceil(value);
-            normalized[id] = rounded < 0 ? 0 : rounded;
-        }
-    }
-    return normalized;
-}
-
-function ensurePassiveOrbInventory() {
-    const inv = ensureInventoryContainer();
-    if (!inv.passiveOrbs || typeof inv.passiveOrbs !== 'object') {
-        inv.passiveOrbs = createEmptyPassiveOrbInventory();
-        return inv.passiveOrbs;
-    }
-    const store = inv.passiveOrbs;
-    for (const id of PASSIVE_ORB_IDS) {
-        const raw = Number(store[id]);
-        if (Number.isFinite(raw)) {
-            const rounded = raw >= 0 ? Math.floor(raw) : Math.ceil(raw);
-            store[id] = rounded < 0 ? 0 : rounded;
-        } else {
-            store[id] = 0;
-        }
-    }
-    for (const key of Object.keys(store)) {
-        if (!PASSIVE_ORB_DEFS[key]) delete store[key];
-    }
-    return store;
-}
-
-function incrementPassiveOrb(orbId, amount = 1) {
-    if (!PASSIVE_ORB_DEFS[orbId]) return 0;
-    const store = ensurePassiveOrbInventory();
-    const current = Number.isFinite(Number(store[orbId])) ? Math.floor(Number(store[orbId])) : 0;
-    const numericAmount = Number(amount);
-    if (!Number.isFinite(numericAmount) || Math.abs(numericAmount) < 1e-6) {
-        return current;
-    }
-    const delta = numericAmount > 0 ? Math.floor(numericAmount) : Math.ceil(numericAmount);
-    let next = current + delta;
-    if (next < 0) next = 0;
-    store[orbId] = next;
-    return next;
-}
 
 function pickRandomPassiveOrbIdByWeight() {
     const weighted = [];
@@ -6985,7 +7066,7 @@ function handlePassiveOrbAcquisition(orbId, nextCount, delta, source, opts = {})
 function grantPassiveOrb(source = 'unknown') {
     const orbId = pickRandomPassiveOrbIdByWeight();
     if (!orbId) return null;
-    const nextCount = incrementPassiveOrb(orbId, 1);
+    const nextCount = player.inventory.incrementPassiveOrb(orbId, 1);
     handlePassiveOrbAcquisition(orbId, nextCount, 1, source);
     return { orbId, count: nextCount };
 }
@@ -6996,7 +7077,7 @@ function awardPassiveOrbFromMini(orbId, amount = 1, opts = {}) {
     if (!Number.isFinite(numericAmount) || Math.abs(numericAmount) < 1e-6) return null;
     const delta = numericAmount > 0 ? Math.floor(numericAmount) : Math.ceil(numericAmount);
     if (delta === 0) return null;
-    const nextCount = incrementPassiveOrb(orbId, delta);
+    const nextCount = player.inventory.incrementPassiveOrb(orbId, delta);
     const options = opts && typeof opts === 'object' ? opts : {};
     if (delta > 0) {
         handlePassiveOrbAcquisition(orbId, nextCount, delta, options.source || 'mini', options);
@@ -7032,7 +7113,7 @@ let cachedPassiveOrbSignature = null;
 let cachedPassiveOrbModifiers = null;
 
 function getPassiveOrbModifiers() {
-    const store = ensurePassiveOrbInventory();
+    const store = player.inventory.ensurePassiveOrbs();
     let signature = '';
     const stackCounts = {};
     for (const id of PASSIVE_ORB_IDS) {
@@ -7296,21 +7377,6 @@ function computeStatusInflictionChance(effectId, baseChance = 1) {
         return applyPassiveChanceMultiplier(`status:${effectId}`, baseChance);
     }
     return applyPassiveChanceMultiplier('status', baseChance);
-}
-
-function ensureSkillCharmInventory() {
-    const inv = ensureInventoryContainer();
-    if (!inv.skillCharms || typeof inv.skillCharms !== 'object') {
-        inv.skillCharms = {};
-    }
-    return inv.skillCharms;
-}
-
-function incrementSkillCharm(effectId, amount = 1) {
-    const charms = ensureSkillCharmInventory();
-    const base = Number(charms[effectId]) || 0;
-    charms[effectId] = Math.max(0, Math.floor(base + amount));
-    return charms[effectId];
 }
 
 function ensurePlayerStatusContainer() {
@@ -12233,7 +12299,7 @@ function cloneMiniShortcutOverrides(source) {
 
 function getGameStateSnapshot() {
     ensureSkillEffectContainer();
-    ensurePassiveOrbInventory();
+    player.inventory.ensurePassiveOrbs();
     const blockDimSnapshot = blockDimState?.enabled ? {
         enabled: true,
         nested: blockDimState.nested || 1,
@@ -12248,7 +12314,7 @@ function getGameStateSnapshot() {
     if (!playerSnapshot.inventory || typeof playerSnapshot.inventory !== 'object') {
         playerSnapshot.inventory = {};
     }
-    playerSnapshot.inventory.passiveOrbs = normalizePassiveOrbInventory(playerSnapshot.inventory.passiveOrbs);
+    playerSnapshot.inventory.passiveOrbs = Inventory.normalizePassiveOrbs(playerSnapshot.inventory.passiveOrbs);
     return {
         dungeonLevel,
         player: playerSnapshot,
@@ -12341,7 +12407,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
             if (count > 0) skillCharmStore[effectId] = count;
         }
     }
-    player.inventory = {
+    player.inventory = new Inventory({
         potion30: Math.max(0, Math.floor(Number(invSnap.potion30) || 0)),
         hpBoost: Math.max(0, Math.floor(Number(invSnap.hpBoost) || 0)),
         atkBoost: Math.max(0, Math.floor(Number(invSnap.atkBoost) || 0)),
@@ -12351,9 +12417,9 @@ function applyGameStateSnapshot(snapshot, options = {}) {
         defBoostMajor: Math.max(0, Math.floor(Number(invSnap.defBoostMajor) || 0)),
         spElixir: Math.max(0, Math.floor(Number(invSnap.spElixir) || 0)),
         skillCharms: skillCharmStore,
-        passiveOrbs: normalizePassiveOrbInventory(invSnap.passiveOrbs)
-    };
-    ensurePassiveOrbInventory();
+        passiveOrbs: Inventory.normalizePassiveOrbs(invSnap.passiveOrbs)
+    });
+    player.inventory.ensurePassiveOrbs();
     if (playerSnap.statusEffects && typeof playerSnap.statusEffects === 'object') {
         const restored = createInitialStatusEffects();
         for (const key of Object.keys(PLAYER_STATUS_EFFECTS)) {
@@ -12382,7 +12448,7 @@ function applyGameStateSnapshot(snapshot, options = {}) {
             skillState.pendingTickSkip = Object.create(null);
         }
     }
-    const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+    const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
     player.satiety = Math.max(0, Math.min(satietyCap, Number(player.satiety)));
 
     enforceEffectiveHpCap();
@@ -15952,8 +16018,8 @@ function updateUI() {
     }
 
     // Update item modal - fix NaN issue
-    const skillCharmCounts = ensureSkillCharmInventory();
-    const passiveOrbStore = ensurePassiveOrbInventory();
+    const skillCharmCounts = player.inventory.ensureSkillCharms();
+    const passiveOrbStore = player.inventory.ensurePassiveOrbs();
     const potion30Count = player.inventory?.potion30 || 0;
     const hpBoostCount = player.inventory?.hpBoost || 0;
     const atkBoostCount = player.inventory?.atkBoost || 0;
@@ -16269,7 +16335,7 @@ function useSkillCharm(effectId) {
         });
         return false;
     }
-    const charms = ensureSkillCharmInventory();
+    const charms = player.inventory.ensureSkillCharms();
     const current = Math.max(0, Math.floor(Number(charms[effectId]) || 0));
     if (current <= 0) {
         addMessage({
@@ -16278,7 +16344,7 @@ function useSkillCharm(effectId) {
         });
         return false;
     }
-    incrementSkillCharm(effectId, -1);
+    player.inventory.incrementSkillCharm(effectId, -1);
     const label = getSkillEffectLabel(effectId);
     markUiDirty();
     saveAll();
@@ -16317,9 +16383,9 @@ function refreshSatietyActivation({ notify = false } = {}) {
     if (isActive && !satietySystemActive) {
         if (!isSandboxGodModeEnabled()) {
             if (!Number.isFinite(player?.satietySystemStartLevel) || player.satietySystemStartLevel <= 0) {
-                setSatietySystemStartLevel(player?.level || 1);
+                player.setSatietySystemStartLevel(player?.level || 1);
             }
-            const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+            const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
             if (!Number.isFinite(player.satiety) || player.satiety <= 0 || player.satiety > satietyCap) {
                 player.satiety = satietyCap;
             } else {
@@ -16346,7 +16412,7 @@ function refreshSatietyActivation({ notify = false } = {}) {
     }
     satietySystemActive = isActive;
     if (!isSandboxGodModeEnabled()) {
-        recalculateSatietyMax({ clampCurrent: true });
+        player.recalculateSatietyMax({ clampCurrent: true });
     }
     return satietySystemActive;
 }
@@ -16365,7 +16431,7 @@ function handleSatietyTurnTick(actionType = 'move') {
         return !isGameOver;
     }
 
-    const satietyCap = recalculateSatietyMax({ clampCurrent: true });
+    const satietyCap = player.recalculateSatietyMax({ clampCurrent: true });
     if (!Number.isFinite(player.satiety)) {
         player.satiety = satietyCap;
     }
@@ -16461,7 +16527,7 @@ function updatePlayerSummaryCard({
         ? Math.max(0, Math.min(normalizedSpMax, currentSp))
         : (Number.isFinite(currentSp) ? currentSp : normalizedSpMax);
     const satietyIsInfinite = !Number.isFinite(player.satiety);
-    const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+    const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
     const satietyRaw = satietyIsInfinite ? satietyCap : Math.max(0, Math.min(satietyCap, Number(player.satiety)));
     const satietyDisplayValue = satietyIsInfinite ? satietyCap : Math.round(satietyRaw * 100) / 100;
     const satietyDisplayText = satietyIsInfinite ? '∞' : formatSatietyDisplay(satietyDisplayValue);
@@ -16733,7 +16799,7 @@ function grantNormalChestReward({ rarity = 'normal' } = {}) {
     const roll = Math.random();
     let rewardInfo = null;
     if (roll < 0.9) {
-        incrementInventoryCounter('potion30', 1);
+        player.inventory.incrementItem('potion30', 1);
         addMessage({
             key: 'game.events.chest.reward.potion30',
             fallback: () => `${prefix}HP30%回復ポーションを手に入れた！`,
@@ -16743,7 +16809,7 @@ function grantNormalChestReward({ rarity = 'normal' } = {}) {
     } else {
         const boostType = Math.floor(Math.random() * 3);
         if (boostType === 0) {
-            incrementInventoryCounter('hpBoost', 1);
+            player.inventory.incrementItem('hpBoost', 1);
             addMessage({
                 key: 'game.events.chest.reward.hpBoost',
                 fallback: () => `${prefix}最大HP強化アイテムを手に入れた！`,
@@ -16751,7 +16817,7 @@ function grantNormalChestReward({ rarity = 'normal' } = {}) {
             });
             rewardInfo = { rewardType: 'hpBoost', category: 'boost' };
         } else if (boostType === 1) {
-            incrementInventoryCounter('atkBoost', 1);
+            player.inventory.incrementItem('atkBoost', 1);
             addMessage({
                 key: 'game.events.chest.reward.atkBoost',
                 fallback: () => `${prefix}攻撃力強化アイテムを手に入れた！`,
@@ -16759,7 +16825,7 @@ function grantNormalChestReward({ rarity = 'normal' } = {}) {
             });
             rewardInfo = { rewardType: 'atkBoost', category: 'boost' };
         } else {
-            incrementInventoryCounter('defBoost', 1);
+            player.inventory.incrementItem('defBoost', 1);
             addMessage({
                 key: 'game.events.chest.reward.defBoost',
                 fallback: () => `${prefix}防御力強化アイテムを手に入れた！`,
@@ -16784,7 +16850,7 @@ function grantRareChestSpecialReward() {
     if (roll < 0.4) {
         const options = ['hpBoostMajor', 'atkBoostMajor', 'defBoostMajor'];
         const key = options[Math.floor(Math.random() * options.length)];
-        incrementInventoryCounter(key, 1);
+        player.inventory.incrementItem(key, 1);
         if (key === 'hpBoostMajor') {
             const amount = formatNumberLocalized(MAJOR_HP_BOOST_VALUE);
             addMessage({
@@ -16811,7 +16877,7 @@ function grantRareChestSpecialReward() {
     } else if (roll < 0.75) {
         const effects = SKILL_EFFECT_IDS;
         const effectId = effects[Math.floor(Math.random() * effects.length)];
-        incrementSkillCharm(effectId, 1);
+        player.inventory.incrementSkillCharm(effectId, 1);
         const effectName = getSkillEffectLabel(effectId);
         const turnsDisplay = formatNumberLocalized(SKILL_CHARM_DURATION_TURNS);
         addMessage({
@@ -16821,7 +16887,7 @@ function grantRareChestSpecialReward() {
         });
         rewardInfo = { rewardType: `skillCharm:${effectId}`, category: 'skillCharm' };
     } else {
-        incrementInventoryCounter('spElixir', 1);
+        player.inventory.incrementItem('spElixir', 1);
         addMessage({
             key: 'game.events.goldenChest.elixir',
             fallback: '黄金の宝箱から特製SPエリクサーを手に入れた！SPが大幅に回復する。'
@@ -17703,7 +17769,7 @@ function applyPostMoveEffects() {
                     });
                     player.hp = player.maxHp;
                     enforceEffectiveHpCap();
-                    restoreSatietyToMax();
+                    player.restoreSatietyToMax();
                     recordAchievementEvent('dungeon_cleared', {
                         mode: currentMode,
                         difficulty: engine.difficulty,
@@ -18404,7 +18470,7 @@ function eatPotion30({ reason = 'manual' } = {}) {
         }
         return false;
     }
-    const satietyCap = recalculateSatietyMax({ clampCurrent: false });
+    const satietyCap = player.recalculateSatietyMax({ clampCurrent: false });
     const beforeSatiety = Number.isFinite(player.satiety) ? Number(player.satiety) : 0;
     const recoverCandidate = Math.ceil(satietyCap * SATIETY_RECOVERY_PERCENT);
     const actualRecovered = Math.min(recoverCandidate, Math.max(0, satietyCap - beforeSatiety));
@@ -19157,7 +19223,7 @@ function grantExp(amount, opts = { source: 'misc', reason: '', popup: true }) {
         player.attack += 1;
         player.defense += 1;
         player.hp = player.maxHp;
-        restoreSatietyToMax();
+        player.restoreSatietyToMax();
         enforceEffectiveHpCap();
         updatePlayerSpCap({ silent: false });
         leveled++;
@@ -21115,30 +21181,11 @@ function getMiniGamePlayerSnapshot() {
 
 function applyMiniGameInventoryDelta(changes, opts = {}) {
     if (!changes || typeof changes !== 'object') return {};
-    if (!player.inventory || typeof player.inventory !== 'object') {
-        player.inventory = {};
+    if (!(player.inventory instanceof Inventory)) {
+        player.inventory = new Inventory(player.inventory);
     }
-    ensurePassiveOrbInventory();
-    const applied = {};
-    let mutated = false;
-    for (const [key, rawDelta] of Object.entries(changes)) {
-        if (key === 'skillCharms' || key === 'passiveOrbs') continue;
-        const numeric = Number(rawDelta);
-        if (!Number.isFinite(numeric) || Math.abs(numeric) < 1e-6) continue;
-        const delta = numeric > 0 ? Math.floor(numeric) : Math.ceil(numeric);
-        if (delta === 0) continue;
-        const currentRaw = Number(player.inventory[key]);
-        const current = Number.isFinite(currentRaw) ? Math.floor(currentRaw) : 0;
-        let next = current + delta;
-        if (!opts.allowNegative && next < 0) next = 0;
-        if (!Number.isFinite(next)) next = 0;
-        next = Math.floor(next);
-        const appliedDelta = next - current;
-        if (appliedDelta === 0) continue;
-        player.inventory[key] = next;
-        applied[key] = appliedDelta;
-        mutated = true;
-    }
+    player.inventory.ensurePassiveOrbs();
+    const { applied, mutated } = player.inventory.applyDelta(changes, opts);
     if (mutated) {
         try { markUiDirty(); } catch {}
         try { renderMiniExpPlayerHud(); } catch {}

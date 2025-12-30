@@ -8623,58 +8623,257 @@ const STATUS_APPLY_MESSAGE_FACTORIES = {
     })
 };
 
-function clearPlayerStatusEffect(effectId, { silent = false } = {}) {
-    const status = getPlayerStatus(effectId);
-    const wasActive = isPlayerStatusActive(effectId);
-    status.remaining = 0;
-    delete status.justApplied;
-    if (!silent && wasActive) {
-        const factory = STATUS_CLEAR_MESSAGE_FACTORIES[effectId];
-        if (factory) {
-            const descriptor = factory();
-            addMessage(descriptor);
-        }
+/**
+ * @typedef {object} Effect
+ * @property {string} id
+ * @property {(target: object, context?: object) => boolean|void} apply
+ * @property {(target: object, context?: object) => void} expire
+ * @property {(target: object, context?: object) => void|{alive?: boolean}} onTurn
+ */
+
+class BaseStatusEffect {
+    constructor(def) {
+        this.id = def?.id || '';
+        this.def = def || {};
     }
-    if (wasActive) markSkillsListDirty();
+
+    apply(target, { duration, silent = false } = {}) {
+        if (!this.def?.id) return false;
+        if (isSandboxGodModeEnabled()) {
+            return false;
+        }
+        if (isSkillEffectActive('statusGuard')) {
+            if (!silent) {
+                addMessage({
+                    key: 'game.events.skills.statusGuarded',
+                    fallback: 'スキル効果により状態異常を無効化した！'
+                });
+            }
+            return false;
+        }
+        const turns = Math.max(1, Math.floor(Number.isFinite(duration) ? Number(duration) : this.def.defaultDuration || 1));
+        const status = getPlayerStatus(this.def.id);
+        status.remaining = turns;
+        if (this.def.id === 'paralysis') {
+            status.justApplied = true;
+        } else {
+            delete status.justApplied;
+        }
+        if (!silent) {
+            const turnsDisplay = formatNumberLocalized(turns);
+            const factory = STATUS_APPLY_MESSAGE_FACTORIES[this.def.id];
+            if (factory) {
+                const descriptor = factory(turnsDisplay);
+                addMessage(descriptor);
+            }
+        }
+        if (this.def.id === 'abilityDown') {
+            enforceEffectiveHpCap();
+        }
+        markSkillsListDirty();
+        markUiDirty();
+        return true;
+    }
+
+    expire(target, { silent = false } = {}) {
+        if (!this.def?.id) return;
+        const status = getPlayerStatus(this.def.id);
+        const wasActive = isPlayerStatusActive(this.def.id);
+        status.remaining = 0;
+        delete status.justApplied;
+        if (!silent && wasActive) {
+            const factory = STATUS_CLEAR_MESSAGE_FACTORIES[this.def.id];
+            if (factory) {
+                const descriptor = factory();
+                addMessage(descriptor);
+            }
+        }
+        if (wasActive) markSkillsListDirty();
+    }
+
+    onTurn(target, context = {}) {
+        return { alive: true };
+    }
+}
+
+class TimedStatusEffect extends BaseStatusEffect {
+    onTurn(target, context = {}) {
+        if (!isPlayerStatusActive(this.def.id)) {
+            return { alive: true };
+        }
+        const status = getPlayerStatus(this.def.id);
+        if (status.remaining <= 1) {
+            this.expire(target);
+        } else {
+            status.remaining -= 1;
+        }
+        return { alive: true };
+    }
+}
+
+class PoisonStatusEffect extends BaseStatusEffect {
+    onTurn(target, context = {}) {
+        if (!isPlayerStatusActive(this.def.id)) {
+            return { alive: true };
+        }
+        let alive = true;
+        const effects = ensurePlayerStatusContainer();
+        const ratio = Number.isFinite(this.def.damageRatio) ? this.def.damageRatio : 0.1;
+        const baseDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
+        const scaledDamage = applyPassiveDamageReduction('poison:status', baseDamage);
+        const statusResult = resolveDomainInteraction({
+            amount: scaledDamage,
+            baseEffect: 'damage',
+            attackerType: 'enemy',
+            defenderType: 'player',
+            attackerPos: { x: player.x, y: player.y },
+            defenderPos: { x: player.x, y: player.y }
+        });
+        if (statusResult.prevented || statusResult.amount <= 0) {
+            addMessage(translate('messages.domain.poisonNegated'));
+            addPopup(player.x, player.y, 'Guard', '#74c0fc');
+        } else if (statusResult.effectType === 'healing') {
+            const beforeHp = player.hp;
+            const effectiveMax = getEffectivePlayerMaxHp();
+            player.hp = Math.min(effectiveMax, player.hp + statusResult.amount);
+            enforceEffectiveHpCap();
+            const healed = Math.max(0, player.hp - beforeHp);
+            if (healed > 0) {
+                const healedDisplay = formatNumberLocalized(healed);
+                addMessage(translate('messages.domain.poisonReversed', { amount: healedDisplay }));
+                addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
+                playSfx('pickup');
+            } else {
+                addPopup(player.x, player.y, 'Guard', '#74c0fc');
+            }
+        } else {
+            const damage = statusResult.amount;
+            player.hp = Math.max(0, player.hp - damage);
+            const damageDisplay = formatNumberLocalized(damage);
+            addMessage(translate('messages.domain.poisonDamage', { amount: damageDisplay }));
+            addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#94d82d');
+            playSfx('damage');
+            if (player.hp <= 0) {
+                handlePlayerDeath(
+                    translateOrFallback('game.death.cause.poison', '毒で倒れた…ゲームオーバー')
+                );
+                alive = false;
+            }
+        }
+        if (alive) {
+            if (effects.poison.remaining <= 1) {
+                this.expire(target);
+            } else {
+                effects.poison.remaining -= 1;
+            }
+        }
+        return { alive };
+    }
+}
+
+const STATUS_EFFECT_IMPLEMENTATIONS = Object.freeze({
+    poison: new PoisonStatusEffect(PLAYER_STATUS_EFFECTS.poison),
+    paralysis: new BaseStatusEffect(PLAYER_STATUS_EFFECTS.paralysis),
+    abilityUp: new TimedStatusEffect(PLAYER_STATUS_EFFECTS.abilityUp),
+    abilityDown: new TimedStatusEffect(PLAYER_STATUS_EFFECTS.abilityDown),
+    levelDown: new TimedStatusEffect(PLAYER_STATUS_EFFECTS.levelDown)
+});
+const STATUS_EFFECT_LIST = Object.freeze(Object.values(STATUS_EFFECT_IMPLEMENTATIONS));
+
+function getStatusEffectImplementation(effectId) {
+    return STATUS_EFFECT_IMPLEMENTATIONS[effectId] || null;
+}
+
+function clearPlayerStatusEffect(effectId, { silent = false } = {}) {
+    const effect = getStatusEffectImplementation(effectId);
+    if (!effect) return;
+    effect.expire(player, { silent });
 }
 
 function applyPlayerStatusEffect(effectId, { duration, silent = false } = {}) {
-    const def = PLAYER_STATUS_EFFECTS[effectId];
-    if (!def) return false;
-    if (isSandboxGodModeEnabled()) {
-        return false;
+    const effect = getStatusEffectImplementation(effectId);
+    if (!effect) return false;
+    return !!effect.apply(player, { duration, silent });
+}
+
+class SkillEffect {
+    constructor(def) {
+        this.id = def?.id || '';
+        this.def = def || {};
     }
-    if (isSkillEffectActive('statusGuard')) {
-        if (!silent) {
-            addMessage({
-                key: 'game.events.skills.statusGuarded',
-                fallback: 'スキル効果により状態異常を無効化した！'
-            });
+
+    apply(target, { turns, silent = false } = {}) {
+        if (!this.id) return 0;
+        const normalized = Math.max(0, Math.floor(Number(turns) || 0));
+        const effects = ensureSkillEffectContainer();
+        effects[this.id] = normalized;
+        if (normalized > 0) {
+            skillState.pendingTickSkip[this.id] = true;
+            if (!silent) {
+                const label = this.def ? translateOrFallback(this.def.labelKey, this.def.label || this.id) : this.id;
+                if (label) {
+                    addMessage({ key: 'messages.skills.effects.applied', fallback: '{label}の効果が発動！（{turns}ターン）', params: { label, turns: normalized } });
+                }
+            }
+        } else if (!silent) {
+            this.expire(target, { silent: true });
         }
-        return false;
+        if (this.id === 'gimmickNullify') {
+            mapRenderer.markMapDirty();
+        }
+        markSkillsListDirty();
+        return normalized;
     }
-    const turns = Math.max(1, Math.floor(Number.isFinite(duration) ? Number(duration) : def.defaultDuration || 1));
-    const status = getPlayerStatus(effectId);
-    status.remaining = turns;
-    if (effectId === 'paralysis') {
-        status.justApplied = true;
-    } else {
-        delete status.justApplied;
-    }
-    if (!silent) {
-        const turnsDisplay = formatNumberLocalized(turns);
-        const factory = STATUS_APPLY_MESSAGE_FACTORIES[effectId];
-        if (factory) {
-            const descriptor = factory(turnsDisplay);
-            addMessage(descriptor);
+
+    expire(target, { silent = false } = {}) {
+        if (!this.id) return;
+        const effects = ensureSkillEffectContainer();
+        const wasActive = effects[this.id] > 0;
+        effects[this.id] = 0;
+        delete skillState.pendingTickSkip?.[this.id];
+        if (wasActive && !silent) {
+            if (this.def?.expireKey || this.def?.expireMessage) {
+                addMessage({ key: this.def?.expireKey, fallback: this.def?.expireMessage });
+            }
+        }
+        if (wasActive) markSkillsListDirty();
+        if (wasActive && this.id === 'gimmickNullify') {
+            mapRenderer.markMapDirty();
         }
     }
-    if (effectId === 'abilityDown') {
-        enforceEffectiveHpCap();
+
+    onTurn(target, context = {}) {
+        if (!this.id) return false;
+        const effects = ensureSkillEffectContainer();
+        const turns = Math.max(0, Number(effects[this.id]) || 0);
+        if (turns <= 0) {
+            delete skillState.pendingTickSkip?.[this.id];
+            return false;
+        }
+        if (skillState.pendingTickSkip && skillState.pendingTickSkip[this.id]) {
+            delete skillState.pendingTickSkip[this.id];
+            return false;
+        }
+        const next = Math.max(0, Math.floor(turns - 1));
+        effects[this.id] = next;
+        if (next === 0 && this.def?.expireMessage) {
+            addMessage(this.def.expireMessage);
+        }
+        return true;
     }
-    markSkillsListDirty();
-    markUiDirty();
-    return true;
+}
+
+const SKILL_EFFECT_IMPLEMENTATIONS = Object.freeze(
+    Object.keys(SKILL_EFFECT_DEFS).reduce((acc, key) => {
+        const def = SKILL_EFFECT_DEFS[key];
+        acc[key] = new SkillEffect({ id: key, ...def });
+        return acc;
+    }, {})
+);
+const SKILL_EFFECT_LIST = Object.freeze(Object.values(SKILL_EFFECT_IMPLEMENTATIONS));
+
+function getSkillEffectImplementation(effectId) {
+    return SKILL_EFFECT_IMPLEMENTATIONS[effectId] || null;
 }
 
 function ensureSkillEffectContainer() {
@@ -8702,43 +8901,15 @@ function isSkillEffectActive(effectId) {
 }
 
 function activateSkillEffect(effectId, turns, { silent = false } = {}) {
-    const normalized = Math.max(0, Math.floor(Number(turns) || 0));
-    const effects = ensureSkillEffectContainer();
-    effects[effectId] = normalized;
-    if (normalized > 0) {
-        skillState.pendingTickSkip[effectId] = true;
-        if (!silent) {
-            const def = SKILL_EFFECT_DEFS[effectId];
-            const label = def ? translateOrFallback(def.labelKey, def.label || effectId) : effectId;
-            if (label) {
-                addMessage({ key: 'messages.skills.effects.applied', fallback: '{label}の効果が発動！（{turns}ターン）', params: { label, turns: normalized } });
-            }
-        }
-    } else if (!silent) {
-        clearSkillEffect(effectId, { silent: true });
-    }
-    if (effectId === 'gimmickNullify') {
-        mapRenderer.markMapDirty();
-    }
-    markSkillsListDirty();
-    return normalized;
+    const effect = getSkillEffectImplementation(effectId);
+    if (!effect) return 0;
+    return effect.apply(player, { turns, silent });
 }
 
 function clearSkillEffect(effectId, { silent = false } = {}) {
-    const effects = ensureSkillEffectContainer();
-    const wasActive = effects[effectId] > 0;
-    effects[effectId] = 0;
-    delete skillState.pendingTickSkip?.[effectId];
-    if (wasActive && !silent) {
-        const def = SKILL_EFFECT_DEFS[effectId];
-        if (def?.expireKey || def?.expireMessage) {
-            addMessage({ key: def?.expireKey, fallback: def?.expireMessage });
-        }
-    }
-    if (wasActive) markSkillsListDirty();
-    if (wasActive && effectId === 'gimmickNullify') {
-        mapRenderer.markMapDirty();
-    }
+    const effect = getSkillEffectImplementation(effectId);
+    if (!effect) return;
+    effect.expire(player, { silent });
 }
 
 function getActiveSkillEffectList() {
@@ -8759,24 +8930,11 @@ function getActiveSkillEffectList() {
 }
 
 function advanceSkillEffects() {
-    const effects = ensureSkillEffectContainer();
     let updated = false;
-    for (const key of Object.keys(effects)) {
-        const turns = Math.max(0, Number(effects[key]) || 0);
-        if (turns <= 0) {
-            delete skillState.pendingTickSkip?.[key];
-            continue;
-        }
-        if (skillState.pendingTickSkip && skillState.pendingTickSkip[key]) {
-            delete skillState.pendingTickSkip[key];
-            continue;
-        }
-        const next = Math.max(0, Math.floor(turns - 1));
-        effects[key] = next;
-        updated = true;
-        if (next === 0) {
-            const def = SKILL_EFFECT_DEFS[key];
-            if (def?.expireMessage) addMessage(def.expireMessage);
+    for (const effect of SKILL_EFFECT_LIST) {
+        const changed = effect.onTurn(player);
+        if (changed) {
+            updated = true;
         }
     }
     if (updated) markSkillsListDirty();
@@ -9066,93 +9224,17 @@ function getPlayerStatusDisplayList() {
 }
 
 function processPlayerStatusTurnStart() {
-    let alive = true;
-    const effects = ensurePlayerStatusContainer();
-
     if (isSandboxGodModeEnabled()) {
         resetPlayerStatusEffects();
         return true;
     }
 
-    if (isPlayerStatusActive('poison')) {
-        const poisonDef = PLAYER_STATUS_EFFECTS.poison;
-        const ratio = Number.isFinite(poisonDef.damageRatio) ? poisonDef.damageRatio : 0.1;
-        const baseDamage = Math.max(1, Math.floor(getEffectivePlayerMaxHp() * ratio));
-        const scaledDamage = applyPassiveDamageReduction('poison:status', baseDamage);
-        const statusResult = resolveDomainInteraction({
-            amount: scaledDamage,
-            baseEffect: 'damage',
-            attackerType: 'enemy',
-            defenderType: 'player',
-            attackerPos: { x: player.x, y: player.y },
-            defenderPos: { x: player.x, y: player.y }
-        });
-        if (statusResult.prevented || statusResult.amount <= 0) {
-            addMessage(translate('messages.domain.poisonNegated'));
-            addPopup(player.x, player.y, 'Guard', '#74c0fc');
-        } else if (statusResult.effectType === 'healing') {
-            const beforeHp = player.hp;
-            const effectiveMax = getEffectivePlayerMaxHp();
-            player.hp = Math.min(effectiveMax, player.hp + statusResult.amount);
-            enforceEffectiveHpCap();
-            const healed = Math.max(0, player.hp - beforeHp);
-            if (healed > 0) {
-                const healedDisplay = formatNumberLocalized(healed);
-                addMessage(translate('messages.domain.poisonReversed', { amount: healedDisplay }));
-                addPopup(player.x, player.y, `+${Math.min(healed, 999999999)}${healed>999999999?'+':''}`, '#4dabf7');
-                playSfx('pickup');
-            } else {
-                addPopup(player.x, player.y, 'Guard', '#74c0fc');
-            }
-        } else {
-            const damage = statusResult.amount;
-            player.hp = Math.max(0, player.hp - damage);
-            const damageDisplay = formatNumberLocalized(damage);
-            addMessage(translate('messages.domain.poisonDamage', { amount: damageDisplay }));
-            addPopup(player.x, player.y, `-${Math.min(damage, 999999999)}${damage > 999999999 ? '+' : ''}`, '#94d82d');
-            playSfx('damage');
-            if (player.hp <= 0) {
-                handlePlayerDeath(
-                    translateOrFallback('game.death.cause.poison', '毒で倒れた…ゲームオーバー')
-                );
-                alive = false;
-            }
-        }
-        if (alive) {
-            if (effects.poison.remaining <= 1) {
-                clearPlayerStatusEffect('poison');
-            } else {
-                effects.poison.remaining -= 1;
-            }
-        }
-    }
-
-    if (!alive) {
-        markUiDirty();
-        return false;
-    }
-
-    if (isPlayerStatusActive('abilityUp')) {
-        if (effects.abilityUp.remaining <= 1) {
-            clearPlayerStatusEffect('abilityUp');
-        } else {
-            effects.abilityUp.remaining -= 1;
-        }
-    }
-
-    if (isPlayerStatusActive('abilityDown')) {
-        if (effects.abilityDown.remaining <= 1) {
-            clearPlayerStatusEffect('abilityDown');
-        } else {
-            effects.abilityDown.remaining -= 1;
-        }
-    }
-
-    if (isPlayerStatusActive('levelDown')) {
-        if (effects.levelDown.remaining <= 1) {
-            clearPlayerStatusEffect('levelDown');
-        } else {
-            effects.levelDown.remaining -= 1;
+    const effects = ensurePlayerStatusContainer();
+    for (const effect of STATUS_EFFECT_LIST) {
+        const result = effect.onTurn(player, { effects });
+        if (result && result.alive === false) {
+            markUiDirty();
+            return false;
         }
     }
 
@@ -15642,37 +15724,84 @@ function showDungeonDetail(dungeonBase) {
     dungeonDetailCard.style.display = 'block';
 }
 
-function calculateDamageRange(attacker, defender) {
-    const base = Math.max(1, attacker.attack - Math.floor(defender.defense / 2));
-    const levelDiff = attacker.level - defender.level;
-    let mult = damageMultiplierByLevelDiff(levelDiff);
-    // Guard against NaN due to overflow in alternative implementations
-    if (!Number.isFinite(mult)) mult = (levelDiff > 0 ? Infinity : 0);
-    
-    // Calculate min and max damage (70% to 120% variation)
-    const minRand = 0.7;
-    const maxRand = 1.2;
-    
-    // Normal damage range
-    const minDamage = Math.ceil(base * mult * minRand);
-    const maxDamage = Math.ceil(base * mult * maxRand);
-    
-    // Critical damage range (1.5x multiplier)
-    const minCrit = Math.ceil(base * mult * minRand * 1.5);
-    const maxCrit = Math.ceil(base * mult * maxRand * 1.5);
-    
-    return { minDamage, maxDamage, minCrit, maxCrit };
-}
+class CombatSystem {
+    static calculateDamageRange(attacker, defender) {
+        const base = Math.max(1, attacker.attack - Math.floor(defender.defense / 2));
+        const levelDiff = attacker.level - defender.level;
+        let mult = damageMultiplierByLevelDiff(levelDiff);
+        // Guard against NaN due to overflow in alternative implementations
+        if (!Number.isFinite(mult)) mult = (levelDiff > 0 ? Infinity : 0);
 
-function calculateHitRate(attackerLevel, defenderLevel) {
-    const diff = attackerLevel - defenderLevel;
-    const abs = Math.abs(diff);
-    
-    if (abs <= 2) return 80;
-    if (abs >= 7 && diff < 0) return 0;
-    if (abs >= 3 && diff > 0) return 100;
-    if (abs >= 5 && diff < 0) return 50;
-    return 80;
+        // Calculate min and max damage (70% to 120% variation)
+        const minRand = 0.7;
+        const maxRand = 1.2;
+
+        // Normal damage range
+        const minDamage = Math.ceil(base * mult * minRand);
+        const maxDamage = Math.ceil(base * mult * maxRand);
+
+        // Critical damage range (1.5x multiplier)
+        const minCrit = Math.ceil(base * mult * minRand * 1.5);
+        const maxCrit = Math.ceil(base * mult * maxRand * 1.5);
+
+        return { minDamage, maxDamage, minCrit, maxCrit };
+    }
+
+    static calculateHitRate(attackerLevel, defenderLevel) {
+        const diff = attackerLevel - defenderLevel;
+        const abs = Math.abs(diff);
+
+        if (abs <= 2) return 80;
+        if (abs >= 7 && diff < 0) return 0;
+        if (abs >= 3 && diff > 0) return 100;
+        if (abs >= 5 && diff < 0) return 50;
+        return 80;
+    }
+
+    static resolveAttack(attacker, defender, context = {}) {
+        const attackerLevel = Number.isFinite(attacker?.level) ? attacker.level : 1;
+        const defenderLevel = Number.isFinite(defender?.level) ? defender.level : 1;
+        const accuracyMul = Number.isFinite(context.accuracyMul) ? context.accuracyMul : 1;
+        const evasionMul = Number.isFinite(context.evasionMul) ? context.evasionMul : 1;
+        const forceHit = !!context.forceHit;
+        if (!forceHit && !hitCheck(attackerLevel || 1, defenderLevel || 1, { accuracyMul, evasionMul })) {
+            return { hit: false, damage: 0, crit: false, domainResult: null };
+        }
+
+        const base = Math.max(1, attacker.attack - Math.floor(defender.defense / 2));
+        const levelDiff = attackerLevel - defenderLevel;
+        let mult = damageMultiplierByLevelDiff(levelDiff);
+        if (!Number.isFinite(mult)) mult = (levelDiff > 0 ? Infinity : 0);
+        const critFlag = isCritical(attackerLevel, defenderLevel);
+        const rand = 0.7 + Math.random() * 0.5;
+        const damageMul = Number.isFinite(context.damageDealtMul) && context.damageDealtMul > 0 ? context.damageDealtMul : 1;
+        const critBonus = Number.isFinite(context.critDamageMul) && context.critDamageMul > 0 ? context.critDamageMul : 1;
+        const critMul = critFlag ? 1.5 * critBonus : 1;
+        let dmg = Math.ceil(base * mult * damageMul * rand * critMul);
+        if (dmg < 1 && dmg < 0.5) dmg = 0;
+
+        const difficultyType = context.difficultyType === 'take' ? 'take' : 'deal';
+        const difficultyAdjusted = Math.ceil(applyDifficultyDamageMultipliers(difficultyType, dmg));
+        const preDomainMultiplier = Number.isFinite(context.preDomainMultiplier) ? context.preDomainMultiplier : 1;
+        const preDomainAmount = difficultyAdjusted * preDomainMultiplier;
+        const domainResult = resolveDomainInteraction({
+            amount: preDomainAmount,
+            baseEffect: 'damage',
+            attackerType: context.attackerType,
+            defenderType: context.defenderType,
+            attackerPos: context.attackerPos,
+            defenderPos: context.defenderPos
+        });
+
+        return {
+            hit: true,
+            crit: critFlag,
+            damage: dmg,
+            difficultyAdjusted,
+            preDomainAmount,
+            domainResult
+        };
+    }
 }
 
 function showEnemyInfo(enemy) {
@@ -15728,13 +15857,13 @@ function showEnemyInfo(enemy) {
     const playerEffectiveDefense = getEffectivePlayerDefense();
 
     // プレイヤーから敵へのダメージ
-    const playerToEnemy = calculateDamageRange(
+    const playerToEnemy = CombatSystem.calculateDamageRange(
         { level: playerEffectiveLevel, attack: playerEffectiveAttack },
         { level: enemyEffectiveLevel, defense: enemyEffectiveDefense }
     );
 
     // 敵からプレイヤーへのダメージ
-    const enemyToPlayer = calculateDamageRange(
+    const enemyToPlayer = CombatSystem.calculateDamageRange(
         { level: enemyEffectiveLevel, attack: enemyEffectiveAttack },
         { level: playerEffectiveLevel, defense: playerEffectiveDefense }
     );
@@ -15846,8 +15975,8 @@ function showEnemyInfo(enemy) {
     damageTakeRange.textContent = takeText;
 
     // 命中率表示
-    const playerHitRate = calculateHitRate(playerEffectiveLevel, enemyEffectiveLevel);
-    const enemyHitRateValue = calculateHitRate(enemyEffectiveLevel, playerEffectiveLevel);
+    const playerHitRate = CombatSystem.calculateHitRate(playerEffectiveLevel, enemyEffectiveLevel);
+    const enemyHitRateValue = CombatSystem.calculateHitRate(enemyEffectiveLevel, playerEffectiveLevel);
     
     if (hitRate) {
         hitRate.textContent = translateOrFallback(
@@ -17754,39 +17883,29 @@ function performAttack(enemyAtTarget) {
         });
     }
     const accuracyMul = Number.isFinite(passiveMods?.accuracyMul) ? passiveMods.accuracyMul : 1;
-    if (!forceHit && !hitCheck(playerEffectiveLevel || 1, enemyLevel, { attackerType: 'player', accuracyMul })) {
+    const attackResult = CombatSystem.resolveAttack(
+        { level: playerEffectiveLevel, attack: playerEffectiveAttack },
+        { level: enemyLevel, defense: enemyEffectiveDefense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2) },
+        {
+            attackerType: 'player',
+            defenderType: 'enemy',
+            attackerPos: { x: player.x, y: player.y },
+            defenderPos: { x: enemyAtTarget.x, y: enemyAtTarget.y },
+            forceHit,
+            accuracyMul,
+            damageDealtMul: passiveMods?.damageDealtMul,
+            critDamageMul: passiveMods?.critDamageMul,
+            difficultyType: 'deal'
+        }
+    );
+    if (!attackResult.hit) {
         addMessage({
             key: 'game.events.combat.miss',
             fallback: 'Miss'
         });
         addPopup(enemyAtTarget.x, enemyAtTarget.y, 'Miss', '#74c0fc');
     } else {
-        const baseDef = enemyEffectiveDefense || Math.floor((5 + Math.floor(dungeonLevel / 2)) / 2);
-        const attacker = { level: playerEffectiveLevel, attack: playerEffectiveAttack };
-        const defender = { level: enemyLevel, defense: baseDef };
-        const { dmg, crit } = (function(att, def, passive){
-            const base = Math.max(1, att.attack - Math.floor(def.defense / 2));
-            const levelDiff = att.level - def.level;
-            let mult = damageMultiplierByLevelDiff(levelDiff);
-            if (!Number.isFinite(mult)) mult = (levelDiff > 0 ? Infinity : 0);
-            const critFlag = isCritical(att.level, def.level);
-            const rand = 0.7 + Math.random() * 0.5;
-            const damageMul = Number.isFinite(passive?.damageDealtMul) && passive.damageDealtMul > 0 ? passive.damageDealtMul : 1;
-            const critBonus = Number.isFinite(passive?.critDamageMul) && passive.critDamageMul > 0 ? passive.critDamageMul : 1;
-            const critMul = critFlag ? 1.5 * critBonus : 1;
-            let d = Math.ceil(base * mult * damageMul * rand * critMul);
-            if (d < 1 && d < 0.5) d = 0;
-            return { dmg: d, crit: critFlag };
-        })(attacker, defender, passiveMods);
-        const difficultyAdjusted = Math.ceil(applyDifficultyDamageMultipliers('deal', dmg));
-        const domainResult = resolveDomainInteraction({
-            amount: difficultyAdjusted,
-            baseEffect: 'damage',
-            attackerType: 'player',
-            defenderType: 'enemy',
-            attackerPos: { x: player.x, y: player.y },
-            defenderPos: { x: enemyAtTarget.x, y: enemyAtTarget.y }
-        });
+        const domainResult = attackResult.domainResult;
         playSfx('attack');
         if (domainResult.prevented || domainResult.amount <= 0) {
             addMessage(translate('messages.domain.damageBlocked'));
@@ -17817,7 +17936,7 @@ function performAttack(enemyAtTarget) {
             fallback: () => `プレイヤーは敵に ${damageDisplay} のダメージを与えた！`,
             params: { amount: damageDisplay }
         });
-        const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied>999999999?'+':''}`;
+        const dmgText = (attackResult.crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied>999999999?'+':''}`;
         if (enemyAtTarget.hp <= 0) {
             addMessage({
                 key: 'game.events.combat.enemyDefeated',
@@ -17835,7 +17954,7 @@ function performAttack(enemyAtTarget) {
             if (enemyAtTarget.boss) bossAlive = false;
             enemies.splice(enemies.indexOf(enemyAtTarget), 1);
         } else {
-            addPopup(enemyAtTarget.x, enemyAtTarget.y, dmgText, crit ? '#ffa94d' : '#ffffff', crit ? 1.15 : 1);
+            addPopup(enemyAtTarget.x, enemyAtTarget.y, dmgText, attackResult.crit ? '#ffa94d' : '#ffffff', attackResult.crit ? 1.15 : 1);
         }
     }
 }
@@ -18790,7 +18909,22 @@ function executeEnemyAttack(enemy, stepX, stepY) {
     const playerEffectiveDefense = getEffectivePlayerDefense();
     const enemyEffectiveLevel = getEffectiveEnemyLevel(enemy);
     const evasionMul = Number.isFinite(passiveMods?.evasionMul) && passiveMods.evasionMul > 0 ? passiveMods.evasionMul : 1;
-    if (!hitCheck(enemyEffectiveLevel || 1, playerEffectiveLevel || 1, { attackerType: 'enemy', defenderType: 'player', evasionMul })) {
+    const attackResult = CombatSystem.resolveAttack(
+        { level: enemyEffectiveLevel, attack: getEffectiveEnemyAttack(enemy) },
+        { level: playerEffectiveLevel, defense: playerEffectiveDefense },
+        {
+            attackerType: 'enemy',
+            defenderType: 'player',
+            attackerPos: { x: enemy.x, y: enemy.y },
+            defenderPos: { x: player.x, y: player.y },
+            evasionMul,
+            difficultyType: 'take',
+            preDomainMultiplier: Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0
+                ? passiveMods.damageTakenMul
+                : 1
+        }
+    );
+    if (!attackResult.hit) {
         addMessage({
             key: 'game.events.combat.enemyMissed',
             fallback: '敵は外した！'
@@ -18798,32 +18932,7 @@ function executeEnemyAttack(enemy, stepX, stepY) {
         addPopup(player.x, player.y, 'Miss', '#74c0fc');
         return;
     }
-
-    const attacker = { level: enemyEffectiveLevel, attack: getEffectiveEnemyAttack(enemy) };
-    const defender = { level: playerEffectiveLevel, defense: playerEffectiveDefense };
-    const { dmg, crit } = (function(att, def){
-        const base = Math.max(1, att.attack - Math.floor(def.defense / 2));
-        const levelDiff = att.level - def.level;
-        let mult = damageMultiplierByLevelDiff(levelDiff);
-        if (!Number.isFinite(mult)) mult = (levelDiff > 0 ? Infinity : 0);
-        const critFlag = isCritical(att.level, def.level);
-        const rand = 0.7 + Math.random() * 0.5;
-        let d = Math.ceil(base * mult * rand * (critFlag ? 1.5 : 1));
-        if (d < 1 && d < 0.5) d = 0;
-        return { dmg: d, crit: critFlag };
-    })(attacker, defender);
-
-    const difficultyAdjusted = Math.ceil(applyDifficultyDamageMultipliers('take', dmg));
-    const damageTakenMul = Number.isFinite(passiveMods?.damageTakenMul) && passiveMods.damageTakenMul > 0 ? passiveMods.damageTakenMul : 1;
-    const preDomainAmount = difficultyAdjusted * damageTakenMul;
-    const domainResult = resolveDomainInteraction({
-        amount: preDomainAmount,
-        baseEffect: 'damage',
-        attackerType: 'enemy',
-        defenderType: 'player',
-        attackerPos: { x: enemy.x, y: enemy.y },
-        defenderPos: { x: player.x, y: player.y }
-    });
+    const domainResult = attackResult.domainResult;
 
     if (domainResult.prevented || domainResult.amount <= 0) {
         addMessage(translate('messages.domain.enemyAttackGuarded'));
@@ -18857,8 +18966,8 @@ function executeEnemyAttack(enemy, stepX, stepY) {
         fallback: () => `敵はプレイヤーに ${damageDisplay} のダメージを与えた！`,
         params: { amount: damageDisplay }
     });
-    const dmgText = (crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied > 999999999 ? '+' : ''}`;
-    addPopup(player.x, player.y, dmgText, crit ? '#ffa94d' : '#ff6b6b', crit ? 1.15 : 1);
+    const dmgText = (attackResult.crit ? '!' : '') + `${Math.min(applied, 999999999)}${applied > 999999999 ? '+' : ''}`;
+    addPopup(player.x, player.y, dmgText, attackResult.crit ? '#ffa94d' : '#ff6b6b', attackResult.crit ? 1.15 : 1);
     playSfx('damage');
 
     if (player.hp <= 0) {

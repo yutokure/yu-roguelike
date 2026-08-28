@@ -29,10 +29,24 @@
     let lastKey = 'ArrowRight';
 
     function spawnFood(){
-      while(true){
-        const f = { x: (Math.random()*COLS|0), y:(Math.random()*ROWS|0) };
-        if (!snake.some(s=>s.x===f.x && s.y===f.y)) return f;
+      const occupied = new Set(snake.map(s => `${s.x},${s.y}`));
+      const totalCells = COLS * ROWS;
+      if (occupied.size >= totalCells) return null;
+      const start = Math.floor(Math.random() * totalCells);
+      for (let offset = 0; offset < totalCells; offset++){
+        const index = (start + offset) % totalCells;
+        const f = { x: index % COLS, y: Math.floor(index / COLS) };
+        if (!occupied.has(`${f.x},${f.y}`)) return f;
       }
+      return null;
+    }
+
+    function resetRound(){
+      snake = [{x:Math.floor(COLS/2), y:Math.floor(ROWS/2)}];
+      dir = [1,0];
+      nextDir = [1,0];
+      grow = 0;
+      food = spawnFood();
     }
 
     function keydown(e){
@@ -59,14 +73,18 @@
         const factor = (difficulty==='HARD') ? 0.75 : (difficulty==='NORMAL') ? 0.5 : 0.25;
         awardXp && awardXp(len * factor, { type:'fail' });
         // reset
-        snake = [ {x:Math.floor(COLS/2), y:Math.floor(ROWS/2)} ];
-        dir = [1,0]; nextDir = [1,0]; grow = 0; food = spawnFood();
+        resetRound();
       } else {
         snake.unshift(head);
         if (head.x===food.x && head.y===food.y) {
           grow += 1;
           awardXp && awardXp(1);
           food = spawnFood();
+          if (!food){
+            resetRound();
+            draw();
+            return;
+          }
         }
         if (grow>0) { grow--; } else { snake.pop(); }
       }
@@ -82,8 +100,10 @@
       for(let y=0;y<=ROWS;y++){ ctx.moveTo(0,y*CELL+0.5); ctx.lineTo(canvas.width,y*CELL+0.5); }
       ctx.stroke();
       // food
-      ctx.fillStyle = '#f43f5e';
-      ctx.fillRect(food.x*CELL+2, food.y*CELL+2, CELL-4, CELL-4);
+      if (food){
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillRect(food.x*CELL+2, food.y*CELL+2, CELL-4, CELL-4);
+      }
       // snake
       for(let i=snake.length-1;i>=0;i--){
         const s = snake[i];

@@ -51,6 +51,24 @@
     let hover = null;    // {x,y}
     let anims = [];      // flip animations {x,y,t:0..1,color}
     let rafId=0;
+    const aiTimeouts = new Set();
+
+    function scheduleAi(callback, delay){
+      let timerId = null;
+      timerId = setTimeout(() => {
+        aiTimeouts.delete(timerId);
+        if (!running || ended) return;
+        callback();
+      }, delay);
+      aiTimeouts.add(timerId);
+    }
+
+    function clearAiTimeouts(){
+      for (const timerId of aiTimeouts){
+        clearTimeout(timerId);
+      }
+      aiTimeouts.clear();
+    }
 
     // init center
     board[3][3]=WHITE; board[4][4]=WHITE; board[3][4]=BLACK; board[4][3]=BLACK;
@@ -312,12 +330,13 @@
     }
 
     function aiMove(){
+      if (!running || ended || turn !== WHITE) return;
       const moves = legalMoves(WHITE);
       if (moves.length===0){
         const state = endIfNoMoves();
         draw();
         if (state === 'player_passed'){
-          setTimeout(()=>{ if (!ended) aiMove(); }, 240);
+          scheduleAi(() => aiMove(), 240);
         }
         return;
       }
@@ -357,7 +376,7 @@
       const state = endIfNoMoves();
       draw();
       if (state === 'player_passed'){
-        setTimeout(()=>{ if (!ended) aiMove(); }, 240);
+        scheduleAi(() => aiMove(), 240);
       }
     }
 
@@ -384,7 +403,7 @@
         }
       }
     }
-    function click(e){ if (ended || turn!==BLACK) return; const rect = canvas.getBoundingClientRect(); const cs = canvas.width/SIZE; const x = Math.floor((e.clientX-rect.left)/cs); const y = Math.floor((e.clientY-rect.top)/cs); const mv = legalMoves(BLACK).find(m=>m.x===x && m.y===y); if (!mv) return; applyMove(mv, BLACK, true); turn = WHITE; animate(); setTimeout(()=>{ const state = endIfNoMoves(); if (state === 'turn_has_moves') aiMove(); }, 120); }
+    function click(e){ if (ended || !running || turn!==BLACK) return; const rect = canvas.getBoundingClientRect(); const cs = canvas.width/SIZE; const x = Math.floor((e.clientX-rect.left)/cs); const y = Math.floor((e.clientY-rect.top)/cs); const mv = legalMoves(BLACK).find(m=>m.x===x && m.y===y); if (!mv) return; applyMove(mv, BLACK, true); turn = WHITE; animate(); scheduleAi(()=>{ if (turn !== WHITE) return; const state = endIfNoMoves(); if (state === 'turn_has_moves') aiMove(); }, 120); }
 
     function animate(){ cancelAnimationFrame(rafId); const step=()=>{ let done=true; for(const a of anims){ a.t = Math.min(1, a.t + 0.12); if (a.t<1) done=false; } draw(); if(!done) rafId=requestAnimationFrame(step); else anims.length=0; }; rafId=requestAnimationFrame(step); }
     function start(){
@@ -396,13 +415,13 @@
         const state = endIfNoMoves();
         if (state === 'ended') return;
         if (state === 'player_passed'){
-          setTimeout(()=>{ if (!ended) aiMove(); }, 240);
+          scheduleAi(() => aiMove(), 240);
         } else if (turn===WHITE){
           aiMove();
         }
       }
     }
-    function stop(){ if (running){ running=false; canvas.removeEventListener('click', click); canvas.removeEventListener('mousemove', mousemove); cancelAnimationFrame(rafId); } }
+    function stop(){ running=false; clearAiTimeouts(); canvas.removeEventListener('click', click); canvas.removeEventListener('mousemove', mousemove); cancelAnimationFrame(rafId); rafId=0; }
     function destroy(){ try{ stop(); root && root.removeChild(canvas); }catch{} finally { try { detachLocale && detachLocale(); } catch {} } }
     function getScore(){ const s=score(); return s.b - s.w; }
 

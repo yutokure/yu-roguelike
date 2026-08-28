@@ -267,6 +267,22 @@
     let availableMoves = [];
     let legalMoves = [];
     let hover = null;
+    let aiTimer = null;
+
+    function clearAiTimer(){
+      if (aiTimer !== null){
+        clearTimeout(aiTimer);
+        aiTimer = null;
+      }
+    }
+
+    function scheduleAiTurn(delay){
+      clearAiTimer();
+      aiTimer = setTimeout(() => {
+        aiTimer = null;
+        aiTurn();
+      }, delay);
+    }
 
     function disableHostRestart(){
       shortcuts?.disableKey('r');
@@ -277,6 +293,7 @@
     }
 
     function setupBoard(){
+      clearAiTimer();
       disableHostRestart();
       for (let y = 0; y < SIZE; y++){
         for (let x = 0; x < SIZE; x++){
@@ -496,7 +513,7 @@
     }
 
     function aiTurn(){
-      if (ended) return;
+      if (!running || ended || turn !== AI) return;
       const move = aiChooseMove();
       if (!move){
         finishGame({ key: 'minigame.checkers.overlay.result.win', fallback: '勝利！' });
@@ -525,7 +542,7 @@
         if (!checkForEnd()){
           turn = AI;
           drawBoard();
-          setTimeout(aiTurn, difficulty === 'HARD' ? 320 : 180);
+          scheduleAiTurn(difficulty === 'HARD' ? 320 : 180);
         } else {
           drawBoard();
         }
@@ -559,7 +576,7 @@
         setupBoard();
         drawBoard();
         if (turn === AI){
-          setTimeout(aiTurn, 200);
+          scheduleAiTurn(200);
         }
       }
     }
@@ -577,8 +594,8 @@
     }
 
     function stop(opts = {}){
-      if (!running) return;
       running = false;
+      clearAiTimer();
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('mousemove', handleMove);
       canvas.removeEventListener('mouseleave', handleLeave);

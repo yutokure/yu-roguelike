@@ -2782,10 +2782,12 @@
       difficulty: 'NORMAL',
       victory: 'most',
       playerColor: BLACK,
-      aiColor: WHITE
+      aiColor: WHITE,
+      matchStarted: false
     };
 
     let pendingAiTimeout = null;
+    let destroyed = false;
 
     const describeColor = (color) => {
       const key = color === BLACK
@@ -2823,7 +2825,7 @@
 
     function updateRuleBadges(){
       const mode = MODE_CONFIGS.find(m => m.id === state.modeId) || MODE_CONFIGS[0];
-      const currentVictory = state.running || state.ended ? state.victory : state.settings.victory;
+      const currentVictory = state.matchStarted || state.ended ? state.victory : state.settings.victory;
       const modeLabel = text(mode.labelKey, () => getModeLabelFallback(mode.id));
       modeBadgeEl.textContent = text(
         'miniexp.games.exothello.badge.mode',
@@ -3004,6 +3006,7 @@
         board: state.board.map(row => row.slice()),
         turn: state.turn,
         running: state.running,
+        matchStarted: state.matchStarted,
         ended: state.ended,
         victory: state.victory,
         playerColor: state.playerColor,
@@ -3021,6 +3024,7 @@
       return boardsEqual(a.board, b.board)
         && a.turn === b.turn
         && a.running === b.running
+        && a.matchStarted === b.matchStarted
         && a.ended === b.ended
         && a.victory === b.victory
         && a.playerColor === b.playerColor
@@ -3070,6 +3074,7 @@
       state.board = snapshot.board.map(row => row.slice());
       state.turn = snapshot.turn;
       state.running = snapshot.running;
+      state.matchStarted = snapshot.matchStarted !== false;
       state.ended = snapshot.ended;
       state.victory = snapshot.victory;
       state.playerColor = snapshot.playerColor;
@@ -3295,6 +3300,7 @@
         clearAIMoveTimeout();
         state.sandboxMode = 'edit';
         state.running = false;
+        state.matchStarted = false;
         state.ended = false;
         state.lastMove = null;
         state.legal = [];
@@ -3331,6 +3337,7 @@
       clearAIMoveTimeout();
       state.sandboxMode = 'play';
       state.running = true;
+      state.matchStarted = true;
       state.ended = false;
       state.lastMove = null;
       state.playerColor = playerColorSelect.value === 'white' ? WHITE : BLACK;
@@ -3450,6 +3457,7 @@
       state.lastMove = null;
       state.legal = [];
       state.running = false;
+      state.matchStarted = false;
       state.ended = false;
       state.turn = BLACK;
       state.isPainting = false;
@@ -3995,9 +4003,11 @@
     }
 
     async function startGame(){
+      if (destroyed) return;
       updateSettingsFromControls();
       const mode = MODE_CONFIGS.find(m => m.id === state.modeId) || MODE_CONFIGS[0];
       state.running = false;
+      state.matchStarted = false;
       state.ended = false;
       state.isSandbox = false;
       state.sandboxMode = null;
@@ -4013,6 +4023,7 @@
       );
       try {
         const setupResult = await mode.setup(state);
+        if (destroyed) return;
         state.board = setupResult.board;
         state.victory = setupResult.victory || state.settings.victory || 'most';
         state.weights = createWeights(state.board[0].length, state.board.length, state.board);
@@ -4045,6 +4056,7 @@
           updateHistoryHint();
           draw();
         } else {
+          state.matchStarted = true;
           state.running = true;
           setStatus(mode.descriptionKey, () => getModeDescriptionFallback(mode.id));
           updateRuleBadges();
@@ -4059,6 +4071,7 @@
         }
         resetButton.disabled = false;
       } catch (error){
+        if (destroyed) return;
         console.error('[exothello] Failed to prepare mode', error);
         setStatus(
           'miniexp.games.exothello.status.error',
@@ -4073,6 +4086,7 @@
     function resetGame(){
       clearAIMoveTimeout();
       state.running = false;
+      state.matchStarted = false;
       state.ended = false;
       state.board = createBoard(8, 8, EMPTY);
       placeStandardOpening(state.board);
@@ -4108,6 +4122,26 @@
       updateSandboxControls();
       resetHistory();
       updateHistoryHint();
+      draw();
+    }
+
+    function startRuntime(){
+      if (destroyed || state.running || state.ended || !state.matchStarted) return;
+      state.running = true;
+      state.isPainting = false;
+      updateLegalMoves();
+      draw();
+      if (state.turn === state.aiColor){
+        scheduleAIMove(160);
+      }
+    }
+
+    function stopRuntime(){
+      clearAIMoveTimeout();
+      if (!state.matchStarted) return;
+      state.running = false;
+      state.isPainting = false;
+      updateLegalMoves();
       draw();
     }
 
@@ -4180,7 +4214,11 @@
     updateHistoryHint();
 
     return {
+      start: startRuntime,
+      stop: stopRuntime,
       destroy(){
+        destroyed = true;
+        stopRuntime();
         try { canvas.removeEventListener('click', handleCanvasClick); } catch {}
         try { canvas.removeEventListener('pointerdown', handlePointerDown); } catch {}
         try { canvas.removeEventListener('pointermove', handlePointerMove); } catch {}

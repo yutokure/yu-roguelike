@@ -502,11 +502,20 @@
     }
 
     function start(){
-      if (running) return;
-      resetGame();
+      if (running || solved) return;
+      if (startedOnce){
+        // Resume the existing round without counting the paused time.
+        startTimestamp = Date.now() - elapsedMs;
+      }
+      running = true;
+      if (disableHostRestart) disableHostRestart();
     }
 
     function stop(){
+      if (running && startedOnce){
+        elapsedMs = Math.max(0, Date.now() - startTimestamp);
+        updateTimeDisplay();
+      }
       running = false;
       if (enableHostRestart) enableHostRestart();
     }
